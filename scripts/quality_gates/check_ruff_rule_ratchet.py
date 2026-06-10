@@ -131,14 +131,26 @@ def load_baseline(path: Path | None = None) -> Baseline:
 
 
 def write_baseline(observed: dict[str, dict[str, int]], existing: Baseline, path: Path | None = None) -> None:
-    """Persist a new baseline, clamping counts DOWN — never raised."""
+    """Persist a new baseline, clamping counts DOWN — never raised.
+
+    CRITICAL: only repos actually OBSERVED in this run are updated. A SCOPED
+    `--update-baseline --scope <repo>` run must leave every other repo's row
+    untouched — the prior behaviour treated unobserved repos as seen=0 and the
+    down-clamp zeroed the whole fleet (incident 2026-06-10: a PM-scoped update
+    clobbered 24 repos' baselines to 0, which would have reddened every
+    service repo's next STEP 5.95).
+    """
     baseline_file = path if path is not None else _baseline_path()
     merged: dict[str, dict[str, int]] = {}
     all_repos = set(observed) | set(existing.counts)
     for repo in sorted(all_repos):
+        if repo not in observed:
+            # Not scanned this run — carry the existing row forward verbatim.
+            merged[repo] = {g: existing.allowed(repo, g) for g in RULE_GROUPS}
+            continue
         row: dict[str, int] = {}
         for group in RULE_GROUPS:
-            seen = int(observed.get(repo, {}).get(group, 0))
+            seen = int(observed[repo].get(group, 0))
             prior = existing.allowed(repo, group)
             row[group] = min(seen, prior) if repo in existing.counts else seen
         merged[repo] = row

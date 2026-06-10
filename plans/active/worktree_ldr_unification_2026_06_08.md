@@ -13,7 +13,7 @@ orchestrated_by: plans/active/cicd_contract_hardening_2026_06_01.md
 related_plans:
   - plans/active/per_agent_worktrees_2026_05_10.md
   - plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md
-  - plans/active/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md
+  - plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md
   - plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md
 source:
   - chat design session 2026-06-08 (operator + vm-planning)

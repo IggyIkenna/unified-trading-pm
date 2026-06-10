@@ -16,9 +16,17 @@ related_plans:
   - plans/active/ci_local_qg_parity_2026_06_08.md
 source:
   - chat design session 2026-06-08 (operator + vm-planning)
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED 2026-06-10 — complete.** All phases shipped: dep-content gate (`scripts/cicd/check_dep_content_sync.py`,
+> wired into base-service.sh, PM@13d6660f8); strict-quickmerge machine guard **LIVE**
+> (`scripts/cicd/check_strict_quickmerge.py` + `Quickmerge: agent|human` lineage trailer + pre-push hook in all Path-B
+> clones — observed firing on every LDR push 2026-06-10); the `--files` deletion-handling bug fixed 2026-06-10 @
+> PM@3e472a19d (both staging loops in quickmerge.sh now deletion-aware — tracked-but-absent paths stage as deletions);
+> per-repo `quickmerge.sh` are now SYMLINKS to the PM SSOT (fleet rollout completed 2026-06-10 — features/greeks/ml/e2e
+> were the last 4); agent `[slot-N·host]` attribution shipped + surfaced in CI.
+>
+> ## Deferred work — migrated to: none
 
 # Quickmerge dep-content sync + strict enforcement
 
@@ -83,21 +91,21 @@ Two gaps, both confirmed against the live machinery:
       changes that must sync to `main` to unblock the pipeline." Replace the looser FF-push exception language;
       **reconcile with** `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (do not fork — merge the two
       exception sets into one).
-- [x] ✅ [SCRIPT] P1. **quickmerge `--files` cannot ship a DELETION (or the delete-side of a rename)** — the staging loop
-      guards each path with `[ -e "$f" ]` before `git add` (quickmerge.sh ~:1222), so a deleted path is skipped with
-      `⚠️ Path not found` and the commit lands HALF-SHIPPED (incident 2026-06-10: instruments-service polygon removal —
-      `@3872848` carried the 8 modifications but silently dropped both deletions, leaving the deleted module + a
-      duplicated test file live on LDR; completed via `@effa781`). And the recovery is also blocked: a pre-committed
+- [x] ✅ [SCRIPT] P1. **quickmerge `--files` cannot ship a DELETION (or the delete-side of a rename)** — the staging
+      loop guards each path with `[ -e "$f" ]` before `git add` (quickmerge.sh ~:1222), so a deleted path is skipped
+      with `⚠️ Path not found` and the commit lands HALF-SHIPPED (incident 2026-06-10: instruments-service polygon
+      removal — `@3872848` carried the 8 modifications but silently dropped both deletions, leaving the deleted module +
+      a duplicated test file live on LDR; completed via `@effa781`). And the recovery is also blocked: a pre-committed
       deletion makes the tree clean → quickmerge early-exits "No changes to commit" without pushing. Fix in the PM
       template (SSOT) + roll out to all repo copies: stage when the path exists **OR is tracked**
       (`[ -e "$f" ] || git ls-files --error-unmatch "$f" >/dev/null 2>&1`), and use `git add -- "$f"` (handles
       tracked-deleted paths). Add a regression test: quickmerge a worktree whose only change is a tracked-file deletion
-      → the deletion must reach the commit. Repo: unified-trading-pm (template host) + fleet rollout.
-      [FIXED 2026-06-10 @ unified-trading-pm@3e472a19d: both staging loops in quickmerge.sh now deletion-aware —
-      tracked-but-absent paths stage as deletions (`[ -e "$f" ] || git ls-files --error-unmatch` + `git add -A -- "$f"`).
-      Root-cause context retained: bug was live at quickmerge.sh:1219-1227 on BOTH main + LDR — `[ -e "$f" ]` guard, no
-      tracked-deletion fallback; deleted paths silently dropped (instruments-service polygon removal half-shipping).]
-      — unified-trading-pm@3e472a19d | verified 2026-06-10
+      → the deletion must reach the commit. Repo: unified-trading-pm (template host) + fleet rollout. [FIXED 2026-06-10
+      @ unified-trading-pm@3e472a19d: both staging loops in quickmerge.sh now deletion-aware — tracked-but-absent paths
+      stage as deletions (`[ -e "$f" ] || git ls-files --error-unmatch` + `git add -A -- "$f"`). Root-cause context
+      retained: bug was live at quickmerge.sh:1219-1227 on BOTH main + LDR — `[ -e "$f" ]` guard, no tracked-deletion
+      fallback; deleted paths silently dropped (instruments-service polygon removal half-shipping).] —
+      unified-trading-pm@3e472a19d | verified 2026-06-10
 
 ## Phase 3 — Agent attribution end-to-end (#8) (parallel)
 

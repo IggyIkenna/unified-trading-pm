@@ -204,7 +204,7 @@ done
 # end). Splitting pip-audit out would fork that counter — high-risk surgery on the
 # fleet's critical gate for ~3min of pip-audit that runs in PARALLEL with the 715s
 # pytest slice anyway (it is NOT on the critical path). Tradeoff documented in
-# plans/active/cicd_v2_latency_reduction_2026_06_10.md Progress Log.
+# plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md Progress Log.
 #
 # Sentinel safety: a sliced run is a PARTIAL run by definition, so it must NEVER
 # write `.qg_last_passed_sha` / `.qg_content_sentinel` (QG_SLICE forces

@@ -16,35 +16,35 @@
 note: Seeded 2026-06-10 — harden_grepable_rules_into_ci_gates Phase 3 (QG STEP 5.95).
 repos:
   agent-orchestrator:
-    dtz: 0
-    tid251: 0
+    dtz: 8
+    tid251: 3
   alerting-service:
-    dtz: 0
+    dtz: 3
     tid251: 0
   batch-live-reconciliation-service:
-    dtz: 0
+    dtz: 1
     tid251: 0
   client-reporting-api:
-    dtz: 0
-    tid251: 0
+    dtz: 4
+    tid251: 1
   deployment-api:
-    dtz: 0
-    tid251: 0
+    dtz: 12
+    tid251: 20
   deployment-service:
-    dtz: 0
-    tid251: 0
+    dtz: 7
+    tid251: 14
   deployment-ui:
     dtz: 0
     tid251: 0
   e2e-testing:
-    dtz: 0
-    tid251: 0
+    dtz: 6
+    tid251: 10
   execution-service:
-    dtz: 0
-    tid251: 0
+    dtz: 10
+    tid251: 10
   features-service:
-    dtz: 0
-    tid251: 0
+    dtz: 18
+    tid251: 10
   fund-administration-service:
     dtz: 0
     tid251: 0
@@ -55,38 +55,38 @@ repos:
     dtz: 0
     tid251: 0
   instruments-service:
-    dtz: 0
-    tid251: 0
+    dtz: 25
+    tid251: 59
   market-data-processing-service:
-    dtz: 0
-    tid251: 0
+    dtz: 7
+    tid251: 9
   market-tick-data-service:
-    dtz: 0
-    tid251: 0
+    dtz: 32
+    tid251: 59
   ml-service:
-    dtz: 0
+    dtz: 3
     tid251: 0
   strategy-service:
-    dtz: 0
-    tid251: 0
+    dtz: 12
+    tid251: 8
   system-integration-tests:
     dtz: 0
     tid251: 0
   trading-agent-service:
-    dtz: 0
+    dtz: 2
     tid251: 0
   unified-api-contracts:
-    dtz: 0
+    dtz: 12
     tid251: 0
   unified-trading-api:
     dtz: 0
     tid251: 0
   unified-trading-library:
-    dtz: 0
-    tid251: 0
+    dtz: 10
+    tid251: 3
   unified-trading-pm:
     dtz: 7
     tid251: 4
   unified-trading-system-ui:
-    dtz: 0
+    dtz: 1
     tid251: 0

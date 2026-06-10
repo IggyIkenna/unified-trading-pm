@@ -35,12 +35,15 @@ canonical there. Do not duplicate the list here — read the registry.
 > renamed to `planning` 2026-06-05) = `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7` (m8i.4xlarge, ap-northeast-1,
 > **Elastic IP**). It is **THE single central API + CI-responder** —
 > `api.agent-orchestrator.odum-research.com → 13.113.200.22` — backend uvicorn `:8765` behind nginx :443. **This is the
-> only VM whose health/alerts matter.** **Slots = `tab/planning/N`** (being renamed from the transitional `tab/vm-0/N`;
-> 5-slot composition: Ikenna / Harsh interactive · review · CI-escalation · plan-health). **Behaviour (operator
-> 2026-06-05): it auto-spawns the SLOTS (tmux) but does NOT auto-assign backlog jobs to the human planning slots** —
-> Ikenna/Harsh drive those like a laptop; CI-escalation + plan-health are **ping-driven** (CI `POST /api/escalate`), not
-> backlog auto-assignment. Rename + AutoSpawn-job scoping tracked in
-> `plans/active/planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05.md`.
+> only VM whose health/alerts matter.** **Slots = `tab/planning/N`** (renamed 2026-06-05 from the transitional
+> `tab/vm-0/N` — re-provisioned clean, 0 `vm-0` worktrees left; 5-slot composition: Ikenna / Harsh interactive · review
+> · CI-escalation · plan-health). **Behaviour (operator 2026-06-05): it auto-spawns the SLOTS (tmux) but does NOT
+> auto-assign backlog jobs to the human planning slots** — Ikenna/Harsh drive those like a laptop; CI-escalation +
+> plan-health are **ping-driven** (CI `POST /api/escalate`), not backlog auto-assignment. **Verified 2026-06-10:
+> SSM-Online and running the CURRENT escalation code (`plan_health` + `ldr_qg_failure` wall types accepted by the live
+> process)** — any older "vm-planning to restore / not SSM-reachable" framing is stale. Rename + AutoSpawn-job scoping
+> shipped via `plans/archive/2026_06/planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05.md` (archived
+> 2026-06-10).
 >
 > **NOT live (do NOT treat their silence — or alerts about them — as an incident):**
 >

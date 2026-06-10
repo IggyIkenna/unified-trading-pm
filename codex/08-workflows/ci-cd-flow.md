@@ -57,8 +57,8 @@ path to `main`** until the next quickmerge opens a new one.
 - **Automated drain (codified 2026-06-09): `ldr-to-main-promote.yml`** — the PM-only analogue of
   `ldr-to-staging-promote`. Every 15 min (tightened from 30 min 2026-06-10) (+ `workflow_dispatch` +
   `repository_dispatch: ldr-to-main`) it opens (or reuses) the standing LDR→main PR with v2-gated auto-merge **whenever
-  PM's LDR has real content ahead of main** — gated on the CHANGED-FILE count of `compare/main...live-defi-rollout`
-  (0 files → no-op, immune to squash-accounting noise), reusing any open PR (incl. quickmerge's) so it never duplicates,
+  PM's LDR has real content ahead of main** — gated on the CHANGED-FILE count of `compare/main...live-defi-rollout` (0
+  files → no-op, immune to squash-accounting noise), reusing any open PR (incl. quickmerge's) so it never duplicates,
   and self-recovering the v2-never-reported deadlock (close+reopen). So direct pushes now drain within a ~30-min SLA
   without waiting on the next quickmerge.
 - **Manual immediate drain (the bot's fallback — when you don't want to wait up to 15 min):**
@@ -127,6 +127,10 @@ Pass 2 — Quickmerge (--agent fast-path)
   • stages ONLY --files; if a pre-commit hook reformats files and the first commit
     fails, the RETRY re-stages ONLY --files again (never `git add -A`) — a hook can't
     bundle foreign modified files into a scoped commit
+  • --files staging is DELETION-AWARE (fix 2026-06-10, PM@3e472a19d): a tracked-but-
+    absent path stages as a deletion (`[ -e "$f" ]` OR `git ls-files --error-unmatch`,
+    then `git add -A -- "$f"`) in BOTH staging loops — previously the bare `[ -e ]`
+    guard silently dropped deletions/rename-deletes, half-shipping removals
   • commits, creates PR targeting staging, enables auto-merge
   • --to-staging routes to staging instead of main (for breaking changes)
 ```
@@ -147,7 +151,9 @@ Pass 2 — Quickmerge (--agent fast-path)
 > reflow residue stopped a slot's FF-sync). `git add -A` violated that rule — it didn't rescue foreign edits, it
 > mis-attributed them into an unrelated PR. Foreign dirt from another process (e.g. the inventory regen) is its owner's
 > to commit, or the FF-pull autostash's to carry — not quickmerge's. A HAND `git commit` is NOT covered — re-stage by
-> name after any hook reformat, never `-A`. Fleet propagation: `scripts/propagation/rollout-quickmerge.py`.
+> name after any hook reformat, never `-A`. Fleet propagation: per-repo `scripts/quickmerge.sh` are **symlinks to the PM
+> SSOT copy** (rollout completed 2026-06-10 via `scripts/propagation/rollout-quickmerge.py`; features/greeks/ml/e2e were
+> the last 4) — edit ONLY the PM script; there are no per-repo copies left to drift.
 
 ### STAGE 0.4 Not-Behind Gate — behind-remote reconcile (multi-agent safety)
 
@@ -293,8 +299,16 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   promoted repo leaves the pending set; stale entries are pruned).
 - **Why**: the dangling-lock fleet deadlock (2026-06-07/08) was a `feat`-level 0.x MINOR on `execution-service` mis-read
   as breaking → permanent "Breaking MINOR bump cascade" lock + failing SIT. Content-based detection is the root fix.
+- **Cascade execution (`cascade-qg-ordering.yml`) runs in its OWN concurrency group (fixed 2026-06-10, PM@b6576fc27)**:
+  it formerly shared the high-frequency `manifest-update` group, and GitHub holds only ONE pending run per group — so
+  every queued cascade was EVICTED before it ran (run 27264972415: cancelled in 4s, 0 jobs; the cascade had never
+  executed a level live). The H2 manifest-write-loss concern that motivated the sharing is covered IN-CODE by the
+  workflow's retry-with-rebase manifest push — never re-share the group "for write safety" (redundant for safety, fatal
+  for liveness). Detail: `codex/08-workflows/dependency-cascade.md` § "Concurrency + manifest-write safety".
 
-SSOT: `plans/active/sit_breaking_detection_content_based_2026_06_08.md`.
+SSOT: `plans/archive/2026_06/sit_breaking_detection_content_based_2026_06_08.md`. Cross-link:
+`ci_local_qg_parity_2026_06_08.md` — SIT is the assembled-invariant LAYER (cross-repo, now breaking-gated); QG-v2 is the
+per-repo layer that still runs on every staging PR.
 
 ### Dependency promotion — range pins absorb minor/patch; only MAJOR forces a consumer rebuild (codified 2026-06-09)
 
@@ -346,21 +360,22 @@ the branches force-sync to LDR.
 
 ### Workflow-template rollout is a TWO-half operation — the second half (commit fleet-wide) is mandatory (HARD RULE, 2026-06-10)
 
-`rollout-workflow-templates.sh` only does HALF the job: it **writes** the SSOT template (`scripts/workflow-templates/<wf>.yml`)
-into all 24 repos' `.github/workflows/` **working trees**. The second, mandatory half is to **commit + push the per-repo
-change to each repo's `live-defi-rollout`** in the same unit (a per-repo `ci(workflow-templates): roll out <wf>` commit —
-exactly like a fleet GHA version bump). **A rollout left as uncommitted working-tree churn is the #1 cause of stale
-clones**: the `*/5` `slot-cron-ff-pull` cron skips any clone with a dirty tree (`[skip:dirty]` — it preserves WIP, never
-overwrites), so a clone with rolled-out-but-uncommitted workflow files **falls behind LDR indefinitely**. On a worker VM
-that strands the executor PM clone → the orchestrator's `PlanRegenLoop`/plan-health read stale plans → the backlog
-starves. **Incident 2026-06-10**: a committed `main-backmerge-to-ldr.yml` template change (GH_PAT conflict-PR fix) was
-never rolled-out-and-committed → `detect_template_drift --workflows` flagged ~19 repos drifted, AND the rollout's
-working-tree output had been left dirty fleet-wide → vm-planning + all 28 main clones stranded 13–545 commits behind →
-empty backlog, idle review agent. **Definition of done for any template edit**: (1) `detect_template_drift.py
---workflows` exits 0, AND (2) `git status .github/workflows/` is clean in every repo (no rolled-out-but-uncommitted
-copies). Verify BOTH before declaring it shipped. Can't finish in-session → it's a tracked plan todo; never leave silent
-fleet drift, because the FF-pull cron cannot self-heal a dirty tree (only `detect_template_drift` surfaces it, and that's
-a local-only post-gate, a CI no-op).
+`rollout-workflow-templates.sh` only does HALF the job: it **writes** the SSOT template
+(`scripts/workflow-templates/<wf>.yml`) into all 24 repos' `.github/workflows/` **working trees**. The second, mandatory
+half is to **commit + push the per-repo change to each repo's `live-defi-rollout`** in the same unit (a per-repo
+`ci(workflow-templates): roll out <wf>` commit — exactly like a fleet GHA version bump). **A rollout left as uncommitted
+working-tree churn is the #1 cause of stale clones**: the `*/5` `slot-cron-ff-pull` cron skips any clone with a dirty
+tree (`[skip:dirty]` — it preserves WIP, never overwrites), so a clone with rolled-out-but-uncommitted workflow files
+**falls behind LDR indefinitely**. On a worker VM that strands the executor PM clone → the orchestrator's
+`PlanRegenLoop`/plan-health read stale plans → the backlog starves. **Incident 2026-06-10**: a committed
+`main-backmerge-to-ldr.yml` template change (GH_PAT conflict-PR fix) was never rolled-out-and-committed →
+`detect_template_drift --workflows` flagged ~19 repos drifted, AND the rollout's working-tree output had been left dirty
+fleet-wide → vm-planning + all 28 main clones stranded 13–545 commits behind → empty backlog, idle review agent.
+**Definition of done for any template edit**: (1) `detect_template_drift.py --workflows` exits 0, AND (2)
+`git status .github/workflows/` is clean in every repo (no rolled-out-but-uncommitted copies). Verify BOTH before
+declaring it shipped. Can't finish in-session → it's a tracked plan todo; never leave silent fleet drift, because the
+FF-pull cron cannot self-heal a dirty tree (only `detect_template_drift` surfaces it, and that's a local-only post-gate,
+a CI no-op).
 
 SSOTs: `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` +
 `plans/active/ci_local_qg_parity_2026_06_08.md` (local LDR-checkout QG in dep order is the staging oracle).
@@ -378,10 +393,15 @@ staging PR. The **closed carve-out set** (the only sanctioned direct pushes; rec
 3. **PM `scripts/**`+ any repo's`.github/**` workflow** change that must reach `main` to unblock the pipeline (the
    chicken-and-egg — a corrected gate can't pass through the gate it's fixing); operator/admin authority.
 
-Everything else is HARD-blocked. **Enforcement**: policy is the floor (CLAUDE.md + `SUB_AGENT_MANDATORY_RULES.md`); the
-machine guard (reject a non-carve-out integration-branch code commit lacking a quickmerge lineage marker, local +
-server-side) is the open Phase-2 hardening in `quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` — held
-for a dedicated pass (a wrong fleet-wide guard mid-live-session is the rule-11 anti-pattern).
+Everything else is HARD-blocked. **Enforcement — the machine guard is LIVE (shipped 2026-06-08; observed firing on every
+LDR push 2026-06-10)**: quickmerge stamps a `Quickmerge: agent|human` lineage trailer on every commit it ships;
+`scripts/cicd/check_strict_quickmerge.py` flags a CODE-source commit (`*.py`/`*.ts` outside scripts/tests/.github)
+reaching the integration branch without that trailer that is not a carve-out
+(docs/plans/codex/.github/scripts/config/merge/[skip ci]/bot). It runs as a `pre-push` hook
+(`scripts/dev/hooks/pre-push-strict-quickmerge.sh`, installed in all Path-B clones + wired into `setup-tab-worktrees.sh`
+for new clones); WARN-default, `STRICT_QUICKMERGE_BLOCK=1` to hard-block; the staging-PR `quality-gates-v2` is the
+server backstop (LDR has no remote CI). Policy + guard shipped via
+`plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` (archived 2026-06-10).
 
 ## Local ↔ CI QG parity matrix (the confidence model; codified 2026-06-08)
 
@@ -389,13 +409,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
@@ -558,7 +578,11 @@ green-iff-all-legs-pass. **The aggregation job's `name:` is load-bearing**: a fr
 canary). Wall-time → `max(slice)` not `sum`. A `content-gate` job (git-tree-hash GHA cache) short-circuits redundant
 byte-identical re-runs to GREEN (fail-safe: a miss runs the full gate; never false-greens). Coverage + the required
 check are unchanged; only the within-repo wall-time drops (cross-repo was already parallel). SSOT: `quality-gates.md` §
-"CI parallel slice jobs + `QG_SLICE`" + `plans/active/cicd_v2_latency_reduction_2026_06_10.md`.
+"CI parallel slice jobs + `QG_SLICE`" + `plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md`. **Gotcha
+(incident, 2026-06-10):** the slice early-exit `_qg_slice_done` must be PHASE-aware — the first shipped cut exited the
+`typecheck` slice green at the post-TESTS call site BEFORE basedpyright ran, making every repo's CI typecheck leg a
+silent no-op (fleet-wide false-green; fixed PM@71a2e103b, main via PR #204). Detail: `quality-gates.md` § "CI parallel
+slice jobs + `QG_SLICE`".
 
 **Status across workspace** (per `codex/06-coding-standards/feature-branch-workflow.md` § "Per-repo required-check
 matrix"):

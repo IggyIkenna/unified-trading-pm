@@ -6,12 +6,18 @@ source:
   - scripts/quality-gates-base/base-library.sh
   - scripts/quality-gates-base/base-service.sh
   - scripts/quickmerge.sh
-locked_by: live-defi-rollout
 priority: P2
 status: active
 ---
 
-> **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE.** base-library.sh:1130 writes `.qg_last_passed_sha` on green (parity with base-service.sh:2950); UTL sources the template directly so the fix propagates fleet-wide with no per-repo rollout. Verified on origin/main. Move to plans/archive/ next sweep.
+> **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE.** base-library.sh:1130 writes `.qg_last_passed_sha` on green (parity
+> with base-service.sh:2950); UTL sources the template directly so the fix propagates fleet-wide with no per-repo
+> rollout. Verified on origin/main.
+>
+> **ACKED-INTO-CODE** → archived 2026-06-10 — fix shipped in unified-trading-pm@09137833
+> (`fix(qg): base-library.sh writes .qg_last_passed_sha (SHA sentinel) like base-service — unblocks library agent-quickmerge`),
+> ancestor of origin/main. Codex updated: `codex/06-coding-standards/quality-gates.md` § "Library SHA-sentinel gap" now
+> reads RESOLVED (hand-bridge workaround retired).
 
 ## What I found
 

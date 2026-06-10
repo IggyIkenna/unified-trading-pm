@@ -253,6 +253,26 @@ architecture. See
 
 ---
 
+## Dep-content gate — editable deps must be clean + == LDR (`check_dep_content_sync.py`, 2026-06-08)
+
+Local QG resolves internal deps via **editable paths** (`tool.uv.sources … path = "../X", editable = true`), so it tests
+against your **working-tree** copy of every dep — an uncommitted or LDR-divergent dep edit (same version) passes locally
+but fails at staging, and the version-typed quickmerge gates (STAGE 1.6/1.7) never see it. The pre-test QG step
+`scripts/cicd/check_dep_content_sync.py` (wired into `base-service.sh`) closes this: it walks the **transitive**
+editable-dep DAG (consumer → mtds → utl/uac) and classifies each dep:
+
+- **dirty OR ahead-of-LDR-unpushed** → **BLOCK** — commit+push the dep to LDR first; local QG is otherwise testing
+  against content staging will never see.
+- **behind its committed manifest-version ref** → WARN (stale base).
+- **clean + == `origin/live-defi-rollout`** → PASS — local-green now means "green vs the shared base".
+
+Rollout mode: WARN-default, `DEP_CONTENT_GATE_BLOCK=1` to enforce. Human-only `--allow-dirty-deps` escape **taints** the
+sentinel (`.qg_last_passed_sha` records `DIRTY_DEPS`) so it can never satisfy a quickmerge promotion — mirrors the
+`--dep-branch` / `--skip-dep-tier-gate` human-only pattern. Shipped PM@13d6660f8; plan:
+`plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md`.
+
+---
+
 ## CI parallel slice jobs + `QG_SLICE` (latency reduction, 2026-06-10)
 
 The remote `quality-gates-v2` check (the required CI gate) used to run the **entire** `quality-gates.sh --no-fix`
@@ -270,6 +290,15 @@ lost coverage — every check the monolith ran runs in exactly one slice. **Unse
 | `typecheck`  | ENV + [4] TYPE CHECK only (early-exit after basedpyright)                                                      |
 | `lint-codex` | ENV + [2] LINT + [3.5]/[3.6] + all of [5] CODEX (incl. pip-audit + bandit) + [5.5]/[5.6] + the stub POST-GATES |
 | _(unset)_    | the full gate (every phase) — the only mode any LOCAL/quickmerge run ever uses                                 |
+
+**The slice early-exit `_qg_slice_done` is PHASE-AWARE — typecheck false-green incident (2026-06-10, fixed PM@71a2e103b
+/ PR #204).** Each slice exits via `_qg_slice_done <phase>` placed immediately AFTER its phase (`_qg_slice_done tests`
+after [3] TESTS; `_qg_slice_done typecheck` after [4] TYPE CHECK), exiting ONLY when `QG_SLICE` equals the just-finished
+phase. The original arg-less version matched `tests|typecheck` at the single post-TESTS call site, so
+`QG_SLICE=typecheck` exited GREEN **before basedpyright ever ran** — every repo's CI typecheck leg was a silent no-op
+(fleet-wide CI false-green; local full runs, `QG_SLICE` unset, were the honest side). **Gotcha for any future slice:**
+key the early-exit on the phase NAME and place it after that phase completes — never a bare slice-name match at a shared
+call site.
 
 **3-way, not 4-way (pip-audit folds into `lint-codex`):** the entire [5] CODEX section accumulates a SHARED `V`
 violation counter (codex + size-checks + pip-audit + bandit → one ceiling check), so pip-audit cannot be split into its
@@ -294,7 +323,7 @@ not BLOCKED). The green marker is SAVED only on a real full-green miss (never on
 a miss (incl. GHA cross-branch cache-scope limits) just runs the full gate — it can NEVER false-green or block a PR;
 worst case is "no speedup". This kills the redundant byte-identical re-runs (v2 fires on push AND PR to main+staging).
 The local `.qg_content_sentinel` / `.qg_last_passed_sha` quickmerge fast-path is UNAFFECTED (CI never reads them; sliced
-runs are partial → never write them). SSOT: `plans/active/cicd_v2_latency_reduction_2026_06_10.md`.
+runs are partial → never write them). SSOT: `plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md`.
 
 ---
 
@@ -1570,14 +1599,14 @@ When a library's `reportUnknown*` strict rules surface a large residual (UTL: 96
    **Banned:** blanket file-level `# pyright: reportX=false`, broad `# type: ignore` (no rule code), or a global
    pyproject `"none"` downgrade — these "institutionalise the downgrade." Net-new broad/blanket suppressions must be 0.
 
-### Library SHA-sentinel gap (`quickmerge --agent` on a library) — KNOWN, 2026-06-08
+### Library SHA-sentinel gap (`quickmerge --agent` on a library) — RESOLVED 2026-06-10
 
-`quickmerge --agent`'s Stage-3 fast-path verifies `.qg_last_passed_sha == HEAD`. **`base-service.sh` writes
-`.qg_last_passed_sha` on a green run; `base-library.sh` writes only `.qg_content_sentinel` and NOT
-`.qg_last_passed_sha`.** So a green local QG on a _library_ leaves quickmerge `--agent` failing Stage 3 ("SHA
-mismatch"). Workaround until base-library is fixed: after a green `quality-gates.sh`,
-`git rev-parse HEAD > .qg_last_passed_sha` (honest — the QG passed on that HEAD's content), then quickmerge. Root-cause
-fix tracked in `plans/active/issues/base_library_qg_sha_sentinel_gap_2026_06_08.md`.
+`quickmerge --agent`'s Stage-3 fast-path verifies `.qg_last_passed_sha == HEAD`. **Both base scripts now write the SHA
+sentinel on a green run**: `base-service.sh` always did; `base-library.sh` gained the parity write 2026-06-10 (see the
+`git rev-parse HEAD > .qg_last_passed_sha` block near the content-sentinel write, ~line 1170) — library repos source the
+PM template directly, so the fix propagates fleet-wide with no per-repo rollout. The interim hand-bridge
+(`git rev-parse HEAD > .qg_last_passed_sha` after a green run) is RETIRED — never hand-write the sentinel; a green
+`quality-gates.sh` produces it. History: `plans/archive/issues/base_library_qg_sha_sentinel_gap_2026_06_08.md`.
 
 ---
 
@@ -2675,6 +2704,32 @@ spot-check that the integration-test exclusion logic still holds).
 > `@pytest.mark.requires_credentials` integration tests in `tests/cefi/integration/` are skipped by default (no real
 > venue credentials in CI). These tests are skipped, not excluded — they will run when credentials land per
 > `BLOCKED-CREDENTIALS` workflow.
+
+---
+
+## STEP 5.94 + 5.95 — grep-able-rule ratchets (fallback-imports · DTZ · TID251) — SHIPPED 2026-06-10
+
+Three CLAUDE.md rules that previously relied on agent memory are CI-enforced count-ratchets (PM@71a2e103b; plan
+`plans/archive/2026_06/harden_grepable_rules_into_ci_gates_2026_06_02.md`):
+
+- **STEP 5.94** — `scripts/quality_gates/check_no_fallback_imports.py` (AST): flags
+  `try: import X / except ImportError:` fallback shims (incl. re-raise wrappers + imports-only try-bodies with
+  broad/bare except). Per-line opt-out: `# noqa: fallback-import` + reason. Baseline:
+  `no_fallback_imports_baseline.yaml` (seed 75 fleet-wide).
+- **STEP 5.95** — `scripts/quality_gates/check_ruff_rule_ratchet.py`: ruff `--isolated` runs of the pinned **DTZ** set
+  (DTZ001-007/011/012/901 — UTC-datetimes-always) + **TID251** banned-api (`google.cloud`/`boto3` direct imports —
+  cloud-agnostic-I/O; UTL `cloud_interface/` path-exempt). Config SSOT:
+  `scripts/pyproject-templates/canonical-tool-sections.toml`. Baseline: `ruff_rule_ratchet_baseline.yaml` (seed 180
+  dtz + 211 tid251). Per-line opt-out: ruff `# noqa: DTZ00x|TID251` + one-line reason — **on the `from`/call line the
+  rule reports** (a parenthesized-import continuation line does NOT suppress; pair with `RUF100` in repos whose own ruff
+  config doesn't enable the rule, e.g. `# noqa: TID251, RUF100 -- reason`).
+
+Mechanics (both): SHRINKING per-repo baselines — counts only ratchet DOWN (`--update-baseline` after fixing sites); a
+count above baseline = a NEW violation landed → fix it, never raise the number. **Scoped `--update-baseline` only
+rewrites the rows it scanned** — unobserved repos carry forward verbatim (the 2026-06-10 incident: an early version
+treated unobserved repos as seen=0 and the down-clamp zeroed 24 repos' rows; fixed same day + baselines restored).
+Enforcement needs NO per-repo rollout: the steps live in `base-service.sh`/`base-library.sh`, sourced (local) /
+PM-cloned (CI) by every repo's `quality-gates.sh` stub.
 
 ---
 

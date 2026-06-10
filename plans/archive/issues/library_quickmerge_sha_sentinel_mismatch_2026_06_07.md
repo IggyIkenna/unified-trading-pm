@@ -6,12 +6,16 @@ source:
   - unified-trading-pm/scripts/quality-gates-base/base-service.sh (writes .qg_last_passed_sha)
   - unified-trading-pm/scripts/quickmerge.sh (STAGE 3 AGENT_MODE checks .qg_last_passed_sha)
   - plans/active/cicd_contract_hardening_2026_06_01.md (live cicd track)
-locked_by:
 priority: P2
 status: active
 ---
 
-> **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE (dup of base_library_qg_sha_sentinel_gap).** Fixed by base-library.sh:1130 writing `.qg_last_passed_sha` on green. Verified on origin/main.
+> **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE (dup of base_library_qg_sha_sentinel_gap).** Fixed by
+> base-library.sh:1130 writing `.qg_last_passed_sha` on green. Verified on origin/main.
+>
+> **ACKED-INTO-CODE** → archived 2026-06-10 — fix shipped in unified-trading-pm@09137833 (duplicate of
+> `base_library_qg_sha_sentinel_gap_2026_06_08.md`, archived same sweep). The interim hand-written-sentinel bridge
+> described below is RETIRED — a green `quality-gates.sh` now writes the SHA sentinel itself.
 
 ## What I found
 

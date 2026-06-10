@@ -118,6 +118,13 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
 - Dockerfiles: `ARG PROJECT_ID` +
   `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
+  — **migrating to digest-pinned (FROM-digest ratchet, machinery live 2026-06-10)**: target shape adds a checked-in
+  `ARG BASE_IMAGE_DIGEST=sha256:<digest>` consumed as `...@${BASE_IMAGE_DIGEST}`; digest freshness rides the
+  dependency-update fan-out (a UTL bump resolves `:latest`'s digest + dispatches it; each repo's
+  `update-dependency-version.yml` rewrites the ARG → digest-refresh PR). Convert a repo with
+  `scripts/propagation/add-dockerfile-digest-arg.py --repo <name>`; QG STEP 5.79 enforces strictly ONCE a Dockerfile is
+  converted (unconverted = warn-only — no fleet redness until rollout completes). SSOT:
+  `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 6.
 
 ### Git discipline
 
@@ -171,9 +178,9 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
     `ldr-to-main-promote.yml` (PM-only, **`*/15`** — tightened from `*/30` 2026-06-10) opens/reuses the standing PR
     whenever LDR has real content (changed-file count, not squash-accounting `ahead_by`) ahead of main, ensures
     auto-merge is on, and self-recovers the v2-never-reported deadlock (head missing the required check → close+reopen
-    re-fires v2; a genuine v2 *failure* is left blocked until the bad content is fixed on LDR, then it auto-merges on the
-    next green) — so direct pushes drain within a **~30-min SLA** (≤2 ticks) without a
-    manual PR. The manual fallback when you don't want to wait ≤30 min:
+    re-fires v2; a genuine v2 _failure_ is left blocked until the bad content is fixed on LDR, then it auto-merges on
+    the next green) — so direct pushes drain within a **~30-min SLA** (≤2 ticks) without a manual PR. The manual
+    fallback when you don't want to wait ≤30 min:
     `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash` (v2-gated). Verify a push
     actually landed on `main`: `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` — but note
     squash-merges keep LDR perpetually `ahead_by=N / behind_by=0` by COMMIT count even when CONTENT matches, so check
@@ -234,6 +241,12 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - No `os.getenv()` — use `UnifiedCloudConfig`. No `# type: ignore`. No `try/except ImportError`.
 - `logger.warning("%s", _err.message)` not `logger.warning(_err.message)`.
 - No hardcoded `"/tmp"` — use `tempfile.gettempdir()`. SSOT: `codex/06-coding-standards/quality-gates.md`.
+- **UTC-datetime (DTZ), cloud-SDK-direct (TID251) and fallback-import bans are QG-ENFORCED ratchets since 2026-06-10**
+  (STEP 5.94 `check_no_fallback_imports.py` + STEP 5.95 `check_ruff_rule_ratchet.py`, per-repo baselines in
+  `scripts/quality_gates/*_baseline.yaml` — counts only go DOWN; per-line opt-out = ruff `# noqa: <code>` with a
+  one-line reason **on the `from`/call line the checker matches**, not a continuation line). Enforcement rides
+  PM-sourced `base-*.sh` — fleet-live with NO per-repo rollout. SSOT: `codex/06-coding-standards/quality-gates.md`;
+  archived plan `harden_grepable_rules_into_ci_gates_2026_06_02.md`.
 - **Lazy-import heavy ML deps** (`optuna`/`sklearn`/`lightgbm`) INSIDE the methods that use them, never module-level —
   UTL loads via the `__init__` chain in every service, so a module-level ML import crashes non-ML repos (e.g. the API
   gateway). SSOT: `codex/06-coding-standards/README.md` § imports.
@@ -679,6 +692,14 @@ fetch → `CLIENT_READY`; failure → `CLIENT_QUARANTINED`. GIL-free parallelism
 - **Version graduation**: `feat!` on 0.x.x = MINOR. **NEVER bump manually** — semver-agent handles all. Graduate:
   `gh workflow run request-major-bump.yml --repo IggyIkenna/<repo> -f proposed_version="1.0.0"` → comment `/approve`.
   Post-1.0.0: `feat!` = MAJOR.
+- **Manifest version-surface semantics (diagnosed 2026-06-10 — do NOT "fix" apparent inconsistency blindly)**: only
+  `versions{}` ↔ source `pyproject.version` must agree (split = promotion lag, gate-flagged); `repositories{}.version`
+  is a VESTIGIAL display fallback (harmless when stale); dep-edge floors (`>=0.x,<1.0.0`) are INTENTIONAL range-pin
+  floors — syncing them to latest would defeat the pull-not-push model. `assert_version_coherence.py` checks all three
+  (VERSION_SPLIT / VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE) and runs `--warn-only` in PM QG post-gates.
+  Semver-agent carries a **bump-rate circuit breaker** (≥3 pending staging bumps in 1h or consecutive at tip → refuse +
+  CRITICAL page) + retried/alerting PM version-bump dispatch (no more silent SPOF). SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion".
 - **PM/Codex fast-path**: plans/docs/cursor rules (`*.md`, `*.mdc`) → PR targets **main**. Scripts/workflows → PR
   targets **staging**.
 - **Plan locking**: `locked_by: live-defi-rollout` + `locked_since: <date>` prevents archival without `[unlock-plan]` in
@@ -861,9 +882,14 @@ breaking**; a removed-or-renamed public export, incompatible signature, removed/
 HTTP route **is**. `feat!:` is an explicit human override. **`quality-gates-v2` still runs on EVERY staging PR** (the
 breaking-gate narrows SIT, never QG). SIT dispatches only for repos in `staging_status.breaking_pending`; non-breaking
 promotions drain `LDR→staging→main` on QG/`MAIN_GREEN` alone. Never re-introduce the old
-`git diff __init__.py | grep '^-'` heuristic (it flagged any removed line → spurious cascade locks). SSOT:
-`codex/08-workflows/ci-cd-flow.md` § "Breaking = public-surface change"; plan
-`sit_breaking_detection_content_based_2026_06_08.md`.
+`git diff __init__.py | grep '^-'` heuristic (it flagged any removed line → spurious cascade locks). **The breaking
+CASCADE (`cascade-qg-ordering.yml`) runs in its OWN concurrency group — never share `manifest-update`** (GitHub keeps
+ONE pending run per group → every queued cascade was evicted pre-execution and the cascade had never run live; fixed
+PM@b6576fc27; H2 manifest-write safety is the in-workflow retry-with-rebase, not group-sharing). SSOT:
+`codex/08-workflows/ci-cd-flow.md` § "Breaking = public-surface change"; archived plans
+`sit_breaking_detection_content_based_2026_06_08.md` + `cicd_v2_latency_reduction_2026_06_10.md` (the latter carries the
+v2-slice gotcha: **`_qg_slice_done` is PHASE-aware** — a bare early-exit at a shared call site false-greened the fleet's
+CI typecheck leg for a day; fixed PM@71a2e103b).
 
 ## LDR is the SSOT — staging/main are projections; clean-start force-sync + drift-tick (2026-06-08)
 
@@ -895,10 +921,13 @@ staging PR. **The ONLY sanctioned direct pushes** (the closed carve-out set, rec
    chicken-and-egg: a corrected gate/workflow can't pass through the gate it is fixing) — operator/admin authority,
    relax→do→re-enable.
 
-Everything else is HARD-blocked. Enforcement: policy is the floor; a machine guard (reject a non-carve-out
-integration-branch code commit lacking a quickmerge lineage marker) is the open hardening item in
-`quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` Phase 2. SSOT: `codex/08-workflows/ci-cd-flow.md` §
-"Two-Pass Workflow Model" + § strict-quickmerge.
+Everything else is HARD-blocked. Enforcement: the machine guard is **LIVE** (2026-06-10) — quickmerge stamps a
+`Quickmerge: agent|human` lineage trailer; `scripts/cicd/check_strict_quickmerge.py` (pre-push hook in all Path-B
+clones; `STRICT_QUICKMERGE_BLOCK=1` to hard-block) rejects non-carve-out integration-branch code commits lacking it;
+staging-PR `quality-gates-v2` is the server backstop. Also: **`--files` staging is deletion-aware** (tracked-but-absent
+paths stage as deletions — never silently dropped; fixed PM@3e472a19d after the instruments-service polygon half-ship),
+and **per-repo `quickmerge.sh` are SYMLINKS to the PM SSOT** (a PM quickmerge fix is fleet-live immediately; never
+commit a per-repo copy). SSOT: `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model" + § strict-quickmerge.
 
 ## CI Verification After Every Push (HARD RULE)
 
@@ -962,23 +991,25 @@ integration-branch code commit lacking a quickmerge lineage marker) is the open 
 - **A workflow-template rollout is NOT done until every per-repo copy is COMMITTED + pushed fleet-wide; never leave
   rollout output as uncommitted working-tree churn (HARD RULE, codified 2026-06-10)**: `rollout-workflow-templates.sh`
   WRITES the template into all 24 repos' WORKING TREES — that is half the operation. The other half is **commit + push
-  the per-repo change to each repo's `live-defi-rollout` in the SAME unit** (per-repo `ci(workflow-templates): roll out
-  <wf>` commit, like a node24 bump). Leaving the rolled-out copies dirty is the #1 cause of stale clones: the `*/5`
-  `slot-cron-ff-pull` cron `[skip:dirty]`s any clone with uncommitted changes → it falls behind LDR indefinitely → on a
-  worker VM that starves the orchestrator's `PlanRegenLoop`/plan-health (incident 2026-06-10: vm-planning + 28 main
-  clones stranded 13–545 commits behind on stale rollout churn; backlog empty). **Definition of done = `detect_template_drift.py
-  --workflows` exits 0 AND no repo's `.github/workflows/` is dirty** (verify both before declaring the rollout complete).
-  A template you edit + commit but don't roll-out-and-commit leaves silent fleet drift the cron can't self-heal (it
-  preserves dirty trees, never overwrites them) — it must be a tracked plan todo if you can't finish it in-session.
-- **When bumping a GHA action version, VERIFY the target ref actually RESOLVES — never assume a floating major tag exists
-  (HARD RULE, codified 2026-06-10)**: not every action maintains floating major tags. `astral-sh/setup-uv` keeps `v5` +
-  `v7` floating but the v8 series is **pin-only** (`@v8.2.0`); there is **no `@v8`** → a `uses: astral-sh/setup-uv@v8`
-  fails at "Set up job" with `unable to resolve action … unable to find version v8`, breaking the whole workflow (incident
-  2026-06-10: a `setup-uv@v5→v8` bump broke `update-dependency-version.yml` fleet-wide + reddened a promoted `main` line).
-  Before committing a version bump, prove the ref resolves: `curl -so /dev/null -w '%{http_code}'
-  https://raw.githubusercontent.com/<owner>/<action>/<ref>/action.yml` must return **200** (404 = the ref doesn't exist),
-  AND smoke at least one consumer CI run for any action you can't statically prove (the `@v8` slipped because it was the
-  one second-tier action NOT smoked). If a floating major is missing, pin the latest specific tag (`@vX.Y.Z`) instead.
+  the per-repo change to each repo's `live-defi-rollout` in the SAME unit** (per-repo
+  `ci(workflow-templates): roll out <wf>` commit, like a node24 bump). Leaving the rolled-out copies dirty is the #1
+  cause of stale clones: the `*/5` `slot-cron-ff-pull` cron `[skip:dirty]`s any clone with uncommitted changes → it
+  falls behind LDR indefinitely → on a worker VM that starves the orchestrator's `PlanRegenLoop`/plan-health (incident
+  2026-06-10: vm-planning + 28 main clones stranded 13–545 commits behind on stale rollout churn; backlog empty).
+  **Definition of done = `detect_template_drift.py --workflows` exits 0 AND no repo's `.github/workflows/` is dirty**
+  (verify both before declaring the rollout complete). A template you edit + commit but don't roll-out-and-commit leaves
+  silent fleet drift the cron can't self-heal (it preserves dirty trees, never overwrites them) — it must be a tracked
+  plan todo if you can't finish it in-session.
+- **When bumping a GHA action version, VERIFY the target ref actually RESOLVES — never assume a floating major tag
+  exists (HARD RULE, codified 2026-06-10)**: not every action maintains floating major tags. `astral-sh/setup-uv` keeps
+  `v5` + `v7` floating but the v8 series is **pin-only** (`@v8.2.0`); there is **no `@v8`** → a
+  `uses: astral-sh/setup-uv@v8` fails at "Set up job" with `unable to resolve action … unable to find version v8`,
+  breaking the whole workflow (incident 2026-06-10: a `setup-uv@v5→v8` bump broke `update-dependency-version.yml`
+  fleet-wide + reddened a promoted `main` line). Before committing a version bump, prove the ref resolves:
+  `curl -so /dev/null -w '%{http_code}' https://raw.githubusercontent.com/<owner>/<action>/<ref>/action.yml` must return
+  **200** (404 = the ref doesn't exist), AND smoke at least one consumer CI run for any action you can't statically
+  prove (the `@v8` slipped because it was the one second-tier action NOT smoked). If a floating major is missing, pin
+  the latest specific tag (`@vX.Y.Z`) instead.
 
 ---
 

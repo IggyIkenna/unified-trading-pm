@@ -8,13 +8,22 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 created: 2026-06-02
-locked_by: live-defi-rollout
-locked_since: 2026-06-02
 related_plans:
   - plans/active/agent_context_and_memory_hygiene_2026_06_02.md
   - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
   - plans/epics/plan_hygiene_master.md
 ---
+
+> **✅ ARCHIVED 2026-06-10 — complete.** All 3 grep-able rules are CI-enforced ratchets: STEP 5.94
+> (`check_no_fallback_imports.py`, baseline 75) + STEP 5.95 (`check_ruff_rule_ratchet.py`: DTZ 180 / TID251 211),
+> shipped PM@71a2e103b, fleet-live via PM-sourced base scripts (NO per-repo rollout — verified on deployment-service's
+> full QG). 18 unit tests; fire→clean proven; CLAUDE.md § "Imports + types" cites the enforcement. Incident caught at
+> verification: scoped `--update-baseline` zeroed unobserved repos' baselines — both checkers fixed + baselines restored
+> same day. Codex SSOT: `codex/06-coding-standards/quality-gates.md` § "STEP 5.94 + 5.95".
+>
+> ## Deferred work — migrated to: none (per-repo pyproject `[tool.ruff]` IDE-sync is a non-enforcement nicety,
+>
+> covered by the canonical-tool-sections template when repos next touch their pyproject).
 
 # Harden grep-able CLAUDE.md rules into CI gates
 
@@ -81,11 +90,12 @@ durable form. The principle: _anything grep-able or count-able should be a gate,
       `scripts/` migration/backfill `from google.cloud import storage`), deployment-api 18, deployment-service 15, UTL
       4-real. ~118 of 264 are migration-script structural debt in the two big repos.
 - [x] ✅ [SCRIPT] P2. **fallback-import count — MEASURED 2026-06-10: 73 raw / ~67 real** (≈6 false positives: docstring
-      mentions in UTL + legit optional-feature/observability-probe guards). Worst: features-service 19 (a single repeated
-      `scripts/*/smoke_matrix.py` shim → one template fixes most), unified-trading-library 14 (mostly legit optional-dep
-      guards), unified-api-contracts 7, system-integration-tests 7, execution-service 5.
-- [x] ✅ [DOC] P2. **Blast-radius table compiled (above) — all 3 rules are HIGH count (121 / 264 / 73) → RATCHET-BASELINE
-      for all three** (fix-in-place is infeasible atomically). This is the Phase-2 decision input; decision recorded below.
+      mentions in UTL + legit optional-feature/observability-probe guards). Worst: features-service 19 (a single
+      repeated `scripts/*/smoke_matrix.py` shim → one template fixes most), unified-trading-library 14 (mostly legit
+      optional-dep guards), unified-api-contracts 7, system-integration-tests 7, execution-service 5.
+- [x] ✅ [DOC] P2. **Blast-radius table compiled (above) — all 3 rules are HIGH count (121 / 264 / 73) →
+      RATCHET-BASELINE for all three** (fix-in-place is infeasible atomically). This is the Phase-2 decision input;
+      decision recorded below.
 
 ### Phase 2 — OPERATOR APPROVAL GATE `BLOCKED-OPERATOR-DECISION`
 
@@ -95,9 +105,9 @@ durable form. The principle: _anything grep-able or count-able should be a gate,
       violations a hard gate would redden every green repo, which is forbidden — so the gate baselines the existing set
       (the count can only go DOWN; a NEW violation fails the PR, existing ones are grandfathered). This is exactly the
       plan's stated "ratchet-baseline" option and the only fleet-safe path. Per-rule: (1) UTC/DTZ → ratchet-baseline;
-      (2) cloud-SDK/TID251 → ratchet-baseline + exempt the UTL `cloud_interface/` wrapper via path; (3) fallback-imports →
-      new `check_no_fallback_imports.py` + `*_baseline.yaml` ratchet. A future fix-down pass for the 5 worst repos is a
-      separate NICE-TO-HAVE, not a blocker. No `[ack]` wait — decision made + recorded here.
+      (2) cloud-SDK/TID251 → ratchet-baseline + exempt the UTL `cloud_interface/` wrapper via path; (3) fallback-imports
+      → new `check_no_fallback_imports.py` + `*_baseline.yaml` ratchet. A future fix-down pass for the 5 worst repos is
+      a separate NICE-TO-HAVE, not a blocker. No `[ack]` wait — decision made + recorded here.
 
 ### Phase 3 — INTEGRATE + TEST + ROLLOUT _(agent-executable AFTER the Phase-2 `[ack]`)_
 
@@ -111,8 +121,8 @@ durable form. The principle: _anything grep-able or count-able should be a gate,
 - [x] ✅ [INFRA] P2. **cloud-SDK** — add `[tool.ruff.lint.flake8-tidy-imports.banned-api]` (`TID251`) banning
       `google.cloud` + `boto3` with message "use `get_storage_client()` / `get_secret_client()`"; exempt
       unified-cloud-interface internals via `per-file-ignores` / path exclusion. TID251 banned-api added to
-      `canonical-tool-sections.toml`; ratcheted via STEP 5.95 (TID251 baseline 211) —
-      unified-trading-pm@71a2e103b | verified 2026-06-10
+      `canonical-tool-sections.toml`; ratcheted via STEP 5.95 (TID251 baseline 211) — unified-trading-pm@71a2e103b |
+      verified 2026-06-10
 - [x] ✅ [SCRIPT] P2. **fallback-imports** — write `scripts/quality_gates/check_no_fallback_imports.py` (AST:
       `try: import     X … except (ImportError|ModuleNotFoundError)`) mirroring the existing `check_*.py` +
       `*_baseline.yaml` ratchet; wire into `quality-gates-base` as a numbered STEP (record it). Shipped as STEP 5.94
@@ -123,13 +133,18 @@ durable form. The principle: _anything grep-able or count-able should be a gate,
       captured output** into this plan. The fallback check also gets a unit test (positive + negative + baseline) run
       via the repo's own QG. Verified fire→clean during implementation; 18 unit tests shipped covering both checkers
       (positive + negative + baseline) — unified-trading-pm@71a2e103b | verified 2026-06-10
-- [ ] [SCRIPT] P2. **Baseline + roll out** to all repos via `rollout-quality-gates-unified.py`; baseline the approved
-      pre-existing violations so no green repo breaks. Verify on ≥1 sample repo that `quality-gates.sh` actually RUNS
-      the 3 new gates (not just that the config landed).
-      [READY 2026-06-10: template + checkers + baselines shipped @71a2e103b — rollout is the remaining step]
-- [ ] [DOC] P2. Update `cursor-configs/CLAUDE.md` so the 3 rules cite their enforcement ("ruff DTZ / TID251 enforces",
-      "QG STEP X enforces") — the UTC + cloud-SDK lines in § "Cross-Cutting Rules › Python specifics" + a note that
-      fallback-imports are now gated.
+- [x] ✅ [SCRIPT] P2. **Baseline + roll out — DONE-BY-ARCHITECTURE, verified on a sample repo 2026-06-10.** No per-repo
+      rollout is needed: enforcement rides the PM-sourced `base-service.sh`/`base-library.sh` (STEPS 5.94/5.95), which
+      every repo's `quality-gates.sh` stub sources — fleet-live the moment PM main carried them (PR #204). Sample-repo
+      proof: deployment-service's full QG ran BOTH steps green (`STEP 5.94 ✅` + `STEP 5.95 ✅` in its 2026-06-10 run).
+      Baselines seeded per-repo in `ruff_rule_ratchet_baseline.yaml` (180 dtz + 211 tid251) +
+      `no_fallback_imports_baseline.yaml` (75); fleet sweep vs baselines = 0 fails. **Incident caught during
+      verification**: a scoped `--update-baseline` zeroed unobserved repos' rows (down-clamp on seen=0) — fixed in both
+      checkers (unobserved rows now carried verbatim) + baselines restored from the 71a2e103b seed. —
+      unified-trading-pm@71a2e103b + this commit | verified 2026-06-10
+- [x] ✅ [DOC] P2. CLAUDE.md updated 2026-06-10 — § "Imports + types" now carries the gate-enforced line (STEP
+      5.94/5.95, baseline ratchets, noqa-on-the-matched-line discipline, no-rollout-needed architecture) with codex
+      pointer. — this commit | verified 2026-06-10
 
 ## Success criteria (PLAN_FORMAT §8) — testing is the point of this plan
 

@@ -8,13 +8,22 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 created: 2026-06-05
-locked_by: live-defi-rollout
 source:
   - operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM spin-up + static-IP/topology clarification
 related_plans:
   - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
   - plans/active/cicd_contract_hardening_2026_06_01.md
 ---
+
+> **✅ ARCHIVED 2026-06-10 — complete.** Central/planning VM canonically branded + provisioned: 5 `tab/planning/N` slots
+> live on `i-0c9b283b31d6b5ca7` / EIP `13.113.200.22` (`api.agent-orchestrator.odum-research.com`); registry id ==
+> `ORCHESTRATOR_VM_ID` == branch prefix == `planning`; plan-health dispatch wired to each LDR→main reconciliation;
+> durable `ORCHESTRATOR_VM_ID=planning` in the launcher + canonical `launch-central-brain-aws.sh`; stale
+> `vm-orchestrator`/dead-IP docs swept. **vm-0 (`i-0c9b283b31d6b5ca7`) verified 2026-06-10 as SSM-Online and running the
+> current escalation code (`plan_health` + `ldr_qg_failure` wall types accepted by the live process)** — the old
+> "vm-planning to restore / not SSM-reachable" framings are stale.
+>
+> ## Deferred work — migrated to: none
 
 # Planning-VM canonical bring-up + topology reconciliation
 

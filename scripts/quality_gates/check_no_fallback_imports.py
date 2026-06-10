@@ -160,7 +160,13 @@ def write_baseline(counts: dict[str, int], existing: Baseline, path: Path | None
     merged: dict[str, dict[str, int]] = {}
     all_repos = set(counts) | set(existing.counts)
     for repo in sorted(all_repos):
-        observed = int(counts.get(repo, 0))
+        if repo not in counts:
+            # Not scanned this run (scoped --update-baseline) — carry the existing
+            # row forward verbatim. Treating unobserved as 0 + down-clamp zeroes the
+            # fleet (same defect class as check_ruff_rule_ratchet, incident 2026-06-10).
+            merged[repo] = {"count": existing.allowed(repo)}
+            continue
+        observed = int(counts[repo])
         prior = existing.allowed(repo)
         merged[repo] = {"count": min(observed, prior) if repo in existing.counts else observed}
     header = (

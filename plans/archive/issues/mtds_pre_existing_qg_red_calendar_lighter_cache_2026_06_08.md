@@ -5,12 +5,17 @@ title:
 created: 2026-06-08
 source:
   - "slot-6 tradfi-migration MTDS quality-gate run 2026-06-08 (full suite: 2662 passed / 6 failed / 17 skipped)"
-locked_by: live-defi-rollout
 priority: P2
 status: active
 ---
 
-> **✅ RESOLVED 2026-06-10.** All three test fixes landed (calendar ← 14d212a3, rate-limit/cache ← b1360a59, lighter OHLCV ← 0aebc2e7); commits are ancestors of main + LDR. ARCHIVE CANDIDATE.
+> **✅ RESOLVED 2026-06-10.** All three test fixes landed (calendar ← 14d212a3, rate-limit/cache ← b1360a59, lighter
+> OHLCV ← 0aebc2e7); commits are ancestors of main + LDR. ARCHIVE CANDIDATE.
+>
+> **ACKED-INTO-CODE** → archived 2026-06-10 — fixes shipped in market-tick-data-service@14d212a3 (calendar
+> future-date-skip) + mtds@b1360a59 (hyperliquid cache TTL / rate-limit) + mtds@0aebc2e7 (lighter canonical OHLCV
+> schema); all verified ancestors of origin/main. Both in-doc todos flipped `- [x] ✅` with SHAs — no deferred work
+> migrates.
 
 ## What I found
 
@@ -54,4 +59,5 @@ contributors (ComsicTrader 2026-05-15, the lighter bot 2026-05-07):
       regression in the future-skip logic OR a stale test). Repo: market-tick-data-service. parent_epic:
       mtds_mdps_master. — mtds@14d212a3 | verified 2026-06-10
 - [x] ✅ [TEST] P2. Fix `test_adapter_rate_limit_and_cache.py` hyperliquid cache TTL-expiry + `test_lighter_candles.py`
-      canonical OHLCV schema. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. — mtds@b1360a59 (rate-limit/cache) + mtds@0aebc2e7 (lighter OHLCV) | verified 2026-06-10
+      canonical OHLCV schema. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. — mtds@b1360a59
+      (rate-limit/cache) + mtds@0aebc2e7 (lighter OHLCV) | verified 2026-06-10

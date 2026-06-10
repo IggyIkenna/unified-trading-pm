@@ -15,9 +15,23 @@ related_plans:
   - plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md
 source:
   - chat design session 2026-06-08 (operator + vm-planning)
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED 2026-06-10 — all phases complete.** `is_breaking` is now the verdict of the content-based AST
+> public-surface differ `scripts/cicd/detect_breaking_change.py` (not the 0.x-minor version phase; `feat!:` stays the
+> explicit human override); SIT + cascade-lock fire only on real public-surface changes via
+> `staging_status.breaking_pending`; `quality-gates-v2` still gates every staging PR. Shipped PM@1f9260ebc, rule-11
+> proven on UTL+UAC.
+>
+> **Annotation (discovered 2026-06-10, post-completion):** where this plan says the breaking-gated cascade/SIT "runs",
+> read it as "is correctly DISPATCHED" — the companion `cascade-qg-ordering.yml` had a concurrency-eviction defect: it
+> shared the high-frequency `manifest-update` concurrency group, and GitHub holds only ONE pending run per group, so
+> **every queued cascade run was evicted before executing** (run 27264972415: cancelled in 4s, 0 jobs — the cascade had
+> NEVER executed a level live). Fixed **PM@b6576fc27**: own `concurrency.group: cascade-qg-ordering`
+> (`cancel-in-progress: false`); the H2 manifest-write-safety that motivated the group-sharing is covered IN-CODE by the
+> workflow's retry-with-rebase manifest push. The gating logic this plan shipped was correct throughout.
+>
+> ## Deferred work — migrated to: none
 
 # Content-based breaking-detection — SIT only on real breaking changes
 
@@ -91,6 +105,10 @@ heuristic.
 
 ## Progress / evidence (2026-06-08, slot-1 autonomous)
 
-- **DONE + shipped to LDR** — PM@1f9260ebc (scripts/cicd/detect_breaking_change.py AST differ + 8 unit tests; semver-agent.yml + .tmpl + update-repo-version + sit-debounce-trigger wired; rule-11 proven on UTL+UAC: internal-refactor/docstring=non-breaking, removed-export/sig/field/route=breaking).
-- Differ scans CHANGED files + the package `__init__.py` only (fast: UAC 6.7s); export-anchored + bare-name keyed so a class MOVED between modules is NOT a false 'removed'. QG-v2 unchanged (still every staging PR). SIT now breaking-gated via `staging_status.breaking_pending`.
+- **DONE + shipped to LDR** — PM@1f9260ebc (scripts/cicd/detect_breaking_change.py AST differ + 8 unit tests;
+  semver-agent.yml + .tmpl + update-repo-version + sit-debounce-trigger wired; rule-11 proven on UTL+UAC:
+  internal-refactor/docstring=non-breaking, removed-export/sig/field/route=breaking).
+- Differ scans CHANGED files + the package `__init__.py` only (fast: UAC 6.7s); export-anchored + bare-name keyed so a
+  class MOVED between modules is NOT a false 'removed'. QG-v2 unchanged (still every staging PR). SIT now breaking-gated
+  via `staging_status.breaking_pending`.
 - Codex SSOT update: see `codex/08-workflows/ci-cd-flow.md` § breaking=public-surface (folded in the docs pass).

@@ -8,7 +8,6 @@ status: active
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2.0
-locked_by: live-defi-rollout
 created: 2026-06-10
 source:
   - operator 2026-06-10 ("this is really slow, barely committing code, ~12 min per attempt and per repo")
@@ -17,6 +16,23 @@ source:
 related:
   - plans/active/cicd_contract_hardening_2026_06_01.md
 ---
+
+> **✅ ARCHIVED 2026-06-10 — all phases complete.** `quality-gates-v2` fanned into parallel matrix slices (tests /
+> typecheck / lint-codex via `QG_SLICE`) + CI `pytest -n auto` + a tree-hash content-sentinel skip of redundant
+> byte-identical re-runs — ~12 min serial gate → max-leg (~107s on the PM canary); proven on a consumer (rule 11) +
+> auto-inherited fleet-wide via the reusable workflow.
+>
+> **Incident recorded same-day (post-ship, archive honesty):** the slice mechanism shipped with a critical bug — the
+> original arg-less `_qg_slice_done` exited the `typecheck` slice GREEN at the single post-TESTS call site, **BEFORE
+> basedpyright ever ran**, so every repo's CI typecheck leg was a silent no-op (**fleet-wide CI false-green**; local
+> full runs — `QG_SLICE` unset — were the honest side). Fixed **PM@71a2e103b** (phase-aware `_qg_slice_done <phase>`;
+> the typecheck exit moved AFTER [4] TYPE CHECK), on `main` via **PR #204**. Gotcha codified in
+> `codex/06-coding-standards/quality-gates.md` § "CI parallel slice jobs + `QG_SLICE`".
+>
+> ## Deferred work — migrated to: none
+>
+> (The one adjacent finding — 24-repo `main-backmerge-to-ldr.yml` template drift — was pre-existing/foreign and already
+> tracked in `staging_clean_start_and_stale_pr_hygiene_2026_06_08.md`.)
 
 # CI/CD v2 latency reduction
 
