@@ -292,6 +292,50 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `cleanup_may4_bait_sentinels.py:117`, MTDS `cleanup_*`). These are QG-baselined; counts only go down.
 - [ ] [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase); quickmerge.
 
+## Phase 9 — Service↔service dependency violations + DEAD enforcement gate (operator sweep 2026-06-10)
+
+> Operator-requested sweep found **4 service→service path-dep edges** that the documented HARD RULE
+> (`codex/04-architecture/tier-and-import-architecture.md` § "No service ↔ service imports") forbids — live on the
+> integration branch because **the QG gate is dead**: `base-service.sh:615` invokes
+> `unified-trading-pm/scripts/check-no-service-deps.py` but the file is at `scripts/validation/check-no-service-deps.py`
+> → the `[ -f ]` guard is false → **the check never runs, fleet-wide**; and even if pathed, `get_service_repos()`
+> matches only `type=="service"` (misses `api-service`/`batch-service`/`api`). The sweep surfaced THREE distinct classes
+> — fix each correctly, do NOT blanket-force HTTP boundaries.
+
+- [ ] [AGENT] P1. **DEAD-GATE FIX (do this LAST — after the violations below are remediated, else it red-walls the 3
+      repos):** correct `base-service.sh` to invoke `scripts/validation/check-no-service-deps.py`, AND broaden
+      `get_service_repos()` to treat `type ∈ {service, api-service, batch-service, api}` as deployable services (keep
+      `library`/`infrastructure`/`tool`/`devops`/`ui`/`test-harness` as non-service). Extend the check to also catch a
+      raw `import <other_service>` in source/tests (not just `[tool.uv.sources]` path deps) — the current check is
+      path-dep-only. Roll out via PM SSOT; unit-test the broadened classifier. SSOT:
+      `codex/04-architecture/tier-and-import-architecture.md`.
+- [ ] [AGENT] P1. **TRUE VIOLATION — deployment-api → strategy-service** (`routes/treasury_routes.py:27` imports
+      `compute_unified_nav` + `compute_nav_by_client` from `strategy_service.position.core.treasury_monitor`; the DTOs
+      are already correctly in UAC `internal.domain.treasury`). **Relocate the two pure NAV-rollup functions to UTL**
+      (`unified_trading_library.treasury/`, which exists); strategy-service + deployment-api both import from UTL. (Or,
+      if they need live position state, deployment-api calls strategy-service's treasury HTTP endpoint.) Removes the
+      service→service edge.
+- [ ] [AGENT] P1. **MISCLASSIFICATION — deployment-api → deployment-service is NOT a real violation**:
+      deployment-service is functionally a deployment **engine/library** (`deployments_registry`,
+      `cloud-providers.yaml`, terraform, VM launchers), consumed as a package by deployment-api (6 files import
+      `deployment_service.deployments_registry`). **Fix the manifest `type` for deployment-service → library/engine**
+      (not `service`) so the gate correctly treats the API↔engine pairing as legitimate. Do NOT force an HTTP boundary
+      between an API and its own engine. Confirm deployment-service is not independently run as a live service before
+      reclassifying.
+- [ ] [AGENT] P2. **market-data-processing-service → market-tick-data-service** (`app/core/canonical_writer.py:59`
+      imports `market_tick_data_service.market_interface.adapters.tradfi.databento_classifier`, currently
+      `# noqa:     qg-deep-import`). Relocate the shared `databento_classifier` to UTL/UAC (it is
+      reference-classification logic, a library concern), or have MDPS consume the classification via the contract.
+      Removes the cross-service deep-import.
+- [ ] [AGENT] P2. **strategy-service → market-tick-data-service** (test-only:
+      `tests/position/integration/     test_split_libraries.py`
+      `importorskip("market_tick_data_service.market_interface")`). Per the contract-test rule, rewrite the integration
+      test to assert against the UAC `market_interface` contract + a mock/fake, then **drop the
+      `market-tick-data-service` path-dep from strategy-service `pyproject.toml`** — removing the test-only dep that
+      gates every strategy-service ship (the root cause of the 2026-06-10 dirty-MTDS ship-block).
+- [ ] [VERIFY] P1. After all four edges are resolved + classifications fixed, enable the gate (todo 1) and confirm
+      `check-no-service-deps.py` exits 0 fleet-wide; add a regression unit test per fixed edge.
+
 ## Phase 8 — Codex SSOT + archive (HARD RULE)
 
 - [ ] [AUDIT] P1. Update codex for every contract this plan changes: `codex/06-coding-standards/README.md`

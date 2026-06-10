@@ -567,8 +567,25 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   `GCP_PROJECT_ID` (never `GOOGLE_CLOUD_PROJECT` / `GCP_PROJECT`); API keys from Secret Manager, never `os.environ`.
 - **Event metadata** (`setup_events`/`log_event`, 11 lifecycle events) — `correlation_id` on coordination events,
   `duration_ms` on COMPLETED, `stack_trace` on FAILED, `client_order_id` on execution events.
-- **Dep tiers** — T0 (no unified deps) → T1 (T0 only) → T2 (T0+T1); no circular imports. **CI test-in-image** — quality
-  gates run INSIDE the Docker image; never git-clone source in Cloud Build.
+- **Dep tiers (5-tier T0–T4) + NO service↔service deps (HARD RULE)** — a deployable **service** (T4) may declare as a
+  cross-repo dependency ONLY shared **libraries** (UTL / UAC / the `unified-*-interface` packages, T0–T3) — **never
+  another service** (no `[tool.uv.sources]` path dep on a peer service, and no `import other_service` in source OR
+  tests). Services integrate by **API contract + data transfer** (HTTP / events / GCS), with the contract/schemas held
+  in UAC/UTL as the SSOT — so an integration test asserts against the UAC contract + mocks, it does **not** import the
+  peer service (Layer-1.5; cross-service interaction is Layer-3 / SIT only, HTTP/PubSub/GCS, zero cross-service Python
+  imports). No circular imports. SSOT: `codex/04-architecture/tier-and-import-architecture.md` (5-tier model + "No
+  service ↔ service imports") + `codex/06-coding-standards/integration-testing-layers.md` (Layers 0/1.5/3). **⚠️
+  Enforcement is currently DEAD** — `check-no-service-deps.py` is wired at a wrong path in `base-service.sh` (file lives
+  in `scripts/validation/`) so it never runs, and it only classifies `type=="service"` (misses `api-service` /
+  `batch-service`); known live violations + the gate fix are tracked in
+  `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § "Service-dependency violations".
+- **SIT ≠ local QG** — local `quality-gates.sh` / quickmerge runs **unit + contract + per-component (mocked) layers
+  only** (credential-free, `--block-network`); **SIT** (real credentials / auth / cross-service API interaction /
+  performance) is a **separate e2e environment that fires at the staging promotion boundary** (on a real breaking
+  public-surface change), NOT on every dev push. Local focus = unit-test coverage. SSOT:
+  `codex/06-coding-standards/integration-testing-layers.md` § "When Each Layer Runs" +
+  `codex/08-workflows/ci-cd-flow.md` § branch model / SIT scope.
+- **CI test-in-image** — quality gates run INSIDE the Docker image; never git-clone source in Cloud Build.
 
 ### UI (TypeScript) specifics
 

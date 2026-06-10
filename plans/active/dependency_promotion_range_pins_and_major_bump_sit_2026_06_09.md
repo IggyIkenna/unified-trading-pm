@@ -173,7 +173,13 @@ clean fix is to relax it.
       writers can evict each other during the hold → stale ci_status → dep-order gate friction. Structural fix = the
       ci_status Firestore side-store (per-repo document partitioning,
       plans/active/ci_status_firestore_side_store_2026_06_10.md) — its dual-write sequencing guard is therefore doubly
-      important.
+      important. **[OBSERVED LIVE ~19:50Z same day — eviction is eating version-bump runs THEMSELVES]**:
+      update-repo-version runs CANCELLED at 13:34(×4)/14:57/17:38 — so the digest fan-out for UTL's new image
+      (`d41011e1…`, built 17:06) NEVER dispatched and consumers' pins stayed at the morning's `058d589f…` (a direct
+      cause of the first digest-pinned build failures, alongside the unauthenticated-pull defect — the latter fixed in
+      `cloudbuild-service-template.yaml`'s digest-aware pre-pull, which makes stale-but-existing pins build correctly
+      and demotes this eviction class from build-breaking to staleness-lag). Raises the side-store's priority and/or a
+      dedicated concurrency group for version-bump runs (mirror of the cascade's own-group fix).
 
 ### Phase 3 — Escalate to vm-planning ONLY IF the cascade FAILS (pass → auto-promote) — P1
 
@@ -400,25 +406,17 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       (d) STEP 5.79 narrowed MONOTONICALLY (converted Dockerfile → strict @digest enforcement; unconverted → legacy
       skip + warn — no fleet redness); (e) PILOT converted: deployment-service/Dockerfile @ sha256:058d589f… (docker
       build --check green). Current digest resolved live via gcloud.
-- [ ] [INFRA] P1. **FROM-digest ships — 14/16 LANDED on LDR (2026-06-10 ~13:30Z); 2 parked on live-peer collision.**
-      LANDED (digest pin verified on each repo's `origin/live-defi-rollout`): alerting, blr, client-reporting,
-      execution, features, fund-admin(×2 FROMs), greeks, instruments, mtds, ml, trading-agent, strategy, mdps,
-      agent-orchestrator (6343874 — incl. the QG-stub venv-on-PATH fix it surfaced). REMAINING TWO (both blocked by a
-      CONCURRENT LIVE SESSION doing a ci(aws)/QG sweep in the same slot clones — do NOT race it):
-      1. **deployment-service**: the peer hard-reset the clone and DISCARDED the locally-rebased BoM+pilot commit —
-         **work PRESERVED at `origin/wip-preserve/bom-deployment-service-2026-06-10` (= 3eeb824**, carries
-         `deployment_service/bom.py` + registry fields + heartbeat writers + wired VersionRegistry + 11 test files +
-         the Dockerfile pilot pin; QG-certified pre-rebase @c5f589d). RE-LAND when the clone is quiet:
-         `git cherry-pick 3eeb824` onto fresh LDR (or `git checkout origin/wip-preserve/bom-deployment-service-2026-06-10 -- <paths>`
-         on conflicts) → `quality-gates.sh --no-fix` → `quickmerge --agent --files 'Dockerfile deployment_service/bom.py
-         deployment_service/deployments_registry.py deployment_service/deployment_config.py
-         deployment_service/live_deployment.py deployment_service/backends/cloud_run.py deployment_service/backends/vm.py
-         deployment_service/vm/heartbeat_cli.py scripts/vm/deployment_heartbeat.py tests/unit/test_bom.py
-         tests/unit/test_deployments_registry.py'`.
-      2. **deployment-api**: both converted Dockerfiles sit dirty in its tree, ship blocked by the peer's uncommitted
-         UTL WIP (`unified-trading-library/scripts/quality-gates.sh` modified — theirs, protected). When UTL is clean:
-         `bash scripts/quality-gates.sh --no-fix && quickmerge --agent --files 'Dockerfile Dockerfile.dashboard'`.
-      After BOTH land: flip STEP 5.79's legacy `${`-skip to hard-fail (the final ratchet).
+- [x] ✅ [INFRA] P1. **FROM-digest ships — 16/16 LANDED on LDR (completed 2026-06-10 ~19:35Z; pins content-verified on
+      each repo's `origin/live-defi-rollout`).** alerting, blr, client-reporting, execution, features, fund-admin
+      (×2 FROMs), greeks, instruments, mtds, ml, trading-agent, strategy, mdps, agent-orchestrator (6343874 — incl.
+      the QG-stub venv-on-PATH fix it surfaced), **deployment-service** (BoM + pilot — re-landed from
+      `origin/wip-preserve/bom-deployment-service-2026-06-10` after a live-peer reset; the re-land itself shipped
+      through and thereby PROVED the new quickmerge committed-ahead fall-through @331c7c183), and **deployment-api**
+      (×2 Dockerfiles — landed in the all-deps-clean window after the peer's UTL/strategy sweep finished; QG-green +
+      quickmerge). Collision handling per liveness rules throughout: peer WIP protected, discarded work recovered via
+      wip-preserve, three latent tooling defects the arc exposed all fixed same-day (committed-ahead stranding
+      @331c7c183, checkout-blind dep-gate heal @1537b36dc, in-repo .qg_cache @4c6c5679d).
+      **NEXT (the final ratchet)**: flip STEP 5.79's legacy `${`-skip to hard-fail — see the conflict-guard below.
       **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL
       cloud build (Cloud Build / buildspec) proving the @${BASE_IMAGE_DIGEST} FROM path end-to-end — docker build
       --check is NOT sufficient; flipping first could block the fleet on an unproven build shape.
