@@ -4948,15 +4948,16 @@ Open follow-ups:
 
 ### Squash-body [skip ci] suppression of the staging drain (bug #7, found live 2026-06-10 slot-3)
 
-- [ ] [CI] P1. **Sanitize the Tier C auto-drain squash body**: the LDR→staging promote PR squash-merges with the default
-      body (= list of squashed commit subjects). Any squashed commit whose SUBJECT merely MENTIONS a CI-suppression
-      token poisons the squash message — observed live: subject `ci: drop [skip ci] from dep-pin     commit…` (a fix
-      ABOUT removing [skip ci]) suppressed ALL workflows on the staging push for deployment-ui#41 / deployment-api#43 /
-      e2e-testing#26 → v2-on-staging never ran → semver never fired → staging→main dead, silently. Fix in
-      `ldr-to-staging-promote` template (and PM `ldr-to-main-promote.yml`): set an explicit squash commit message/body
-      at auto-merge-arm time (`gh pr merge --squash --subject … --body "Squash of N commits — see PR"`) OR strip the
-      token set (`[skip ci] [ci skip] [no ci] [skip actions] [actions skip]`) from the body. Recovery used 2026-06-10:
-      `gh workflow run quality-gates-v2.yml --ref staging` per repo.
+- [x] ✅ [CI] P1. DONE 2026-06-10 — unified-trading-pm `ldr-to-staging-promote.yml` (live on main; verified
+      `gh api .../contents/...@main` carries it). **Sanitize the Tier C auto-drain squash body**: BOTH
+      `gh pr merge     --auto --squash` fallback paths (the `--rebase`-not-armable primary fallback @ll.207-210, and the
+      close+reopen re-arm @ll.265-268) now pass an EXPLICIT
+      `--subject "chore(promote): LDR → staging (Tier C auto-drain)"` + `--body "… squash fallback …"` so no inherited
+      LDR commit-subject `[skip ci]`/`[ci skip]`/`[no ci]`/`[skip     actions]` token can poison the staging push
+      (closes hardening @4941). `ldr-to-main-promote.yml` uses `--merge` (merge-commit message, not a subject
+      concatenation) → not susceptible. The primary `--rebase` path replays individual commits (no body concatenation);
+      individual-commit `[skip ci]` toward a v2-gated branch is already banned by the CLAUDE.md `[skip ci]` HARD RULE.
+      Recovery used 2026-06-10 before the fix: `gh workflow run     quality-gates-v2.yml --ref staging` per repo.
 - [ ] [CODE] P2. Dashboard alert-parity: the Repos-CI overview should flag a staging head with ZERO check runs (the
       silent-suppression signature) — composes with the failure-injection matrix in
       `monitoring_control_plane_master_2026_06_10.md`.
