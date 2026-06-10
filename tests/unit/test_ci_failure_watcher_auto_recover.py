@@ -45,6 +45,7 @@ def _pr(
     v2_present: bool,
     head: str = "live-defi-rollout",
     head_message: str = "ci: real change",
+    head_oid: str = "cafebabe",
 ) -> dict:
     return {
         "repo": "mtds",
@@ -56,6 +57,7 @@ def _pr(
         "base": "staging",
         "age_min": 40,
         "head_message": head_message,
+        "head_oid": head_oid,
     }
 
 
@@ -96,39 +98,95 @@ class TestAutoRecoverStuckPrs:
 
 
 class TestAutoRecoverMechanism:
-    """The recovery COMMAND must differ by head kind (the 2026-06-10 refinement)."""
+    """The recovery COMMAND must differ by head kind (2026-06-10, corrected same day).
+
+    A CI-suppression-token head gets ZERO push/pull_request runs, close+reopen re-fires an
+    equally-suppressed pull_request, and a workflow_dispatch run's check is NOT associated
+    with the PR so its green does not satisfy the required check (verified live: 3× green
+    dispatch runs on the exact head SHA, PR stayed BLOCKED). The only working lever is
+    SUPERSEDING the head with an empty clean-message commit via the git-data API.
+    """
 
     def _capture_gh_calls(self, monkeypatch, stuck: list[dict]) -> list[list[str]]:
         calls: list[list[str]] = []
 
         class _R:
             returncode = 0
+            stderr = ""
+            stdout = ""
 
-        def _fake_run(cmd, *args, **kwargs):
+        def _fake_run(cmd, *_args, **_kwargs):
             calls.append(cmd)
-            return _R()
+            r = _R()
+            joined = " ".join(str(c) for c in cmd)
+            if "git/commits/" in joined:  # GET head commit (tree lookup)
+                r.stdout = '{"sha": "headsha", "tree": {"sha": "tree1"}, "message": "x"}'
+            elif joined.endswith("git/commits") or "git/commits -f" in joined or (
+                "git/commits" in joined and "message=" in joined
+            ):  # POST create empty commit
+                r.stdout = '{"sha": "newsha"}'
+            elif "git/refs/heads/" in joined:  # PATCH advance branch ref
+                r.stdout = '{"object": {"sha": "newsha"}}'
+            return r
 
         monkeypatch.setattr(MOD.subprocess, "run", _fake_run)
         _recover(stuck, dry_run=False)
         return calls
 
-    def test_skip_ci_head_uses_workflow_dispatch_not_reopen(self, monkeypatch) -> None:
+    def test_skip_ci_head_superseded_by_empty_commit(self, monkeypatch) -> None:
         calls = self._capture_gh_calls(
             monkeypatch,
             [_pr(7, state="BLOCKED", failed_check=False, v2_present=False, head_message="pin y [skip ci]")],
         )
-        assert len(calls) == 1
-        assert calls[0][:4] == ["gh", "workflow", "run", "quality-gates-v2.yml"]
-        assert "--ref" in calls[0] and "live-defi-rollout" in calls[0]
-        # never close+reopen a [skip ci] head — it would not re-fire v2.
+        joined = [" ".join(str(x) for x in c) for c in calls]
+        # 1. read head commit tree, 2. create same-tree commit, 3. advance the branch ref.
+        assert any("git/commits/cafebabe" in j for j in joined), joined
+        assert any("message=" in j and "parents[]=cafebabe" in j for j in joined), joined
+        assert any("git/refs/heads/live-defi-rollout" in j and "sha=newsha" in j for j in joined), joined
+        # never close+reopen a suppressed head (futile) and never workflow_dispatch (doesn't count).
         assert not any(c[:3] == ["gh", "pr", "close"] for c in calls)
+        assert not any(c[:3] == ["gh", "workflow", "run"] for c in calls)
 
-    def test_ci_skip_marker_variant_also_dispatches(self, monkeypatch) -> None:
+    def test_ci_skip_marker_variant_also_superseded(self, monkeypatch) -> None:
         calls = self._capture_gh_calls(
             monkeypatch,
             [_pr(8, state="BLOCKED", failed_check=False, v2_present=False, head_message="release [ci skip]")],
         )
-        assert calls[0][:4] == ["gh", "workflow", "run", "quality-gates-v2.yml"]
+        assert any("git/refs/heads/" in " ".join(str(x) for x in c) for c in calls)
+
+    def test_skip_token_mid_message_mention_also_superseded(self, monkeypatch) -> None:
+        # The 2026-06-10 foot-gun: a recovery commit that merely MENTIONS the token in its
+        # subject ("advance past [skip ci] bump head") is itself suppressed by GitHub.
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [
+                _pr(
+                    10,
+                    state="BLOCKED",
+                    failed_check=False,
+                    v2_present=False,
+                    head_message="chore(ci): re-trigger v2 — advance past [skip ci] bump head",
+                )
+            ],
+        )
+        assert any("git/refs/heads/" in " ".join(str(x) for x in c) for c in calls)
+        assert not any(c[:3] == ["gh", "pr", "close"] for c in calls)
+
+    def test_recovery_marker_head_is_never_stacked(self, monkeypatch) -> None:
+        # A head that IS our recovery commit must not get a second recovery on top.
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [
+                _pr(
+                    11,
+                    state="BLOCKED",
+                    failed_check=False,
+                    v2_present=False,
+                    head_message="ci: re-fire quality-gates-v2 — supersede CI-suppressed head",
+                )
+            ],
+        )
+        assert calls == []
 
     def test_normal_head_still_close_reopen(self, monkeypatch) -> None:
         calls = self._capture_gh_calls(
