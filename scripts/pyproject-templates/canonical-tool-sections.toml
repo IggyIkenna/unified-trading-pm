@@ -29,17 +29,52 @@ indent-style = "space"
 # the 2026-05-26 audit). E/F/W (pyflakes+pycodestyle), I (isort), N (pep8-naming),
 # UP (pyupgrade), B (bugbear), C4 (comprehensions), SIM (simplify), RUF (ruff),
 # G (logging-format), C90 (mccabe complexity). Security (S / flake8-bandit): pending.
-select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "G", "C90"]
+#
+# DTZ (flake8-datetimez) — UTC-datetime ban (harden_grepable_rules_into_ci_gates_2026_06_02.md
+# Phase 3). Enforces CLAUDE.md "UTC datetimes always": `datetime.now(timezone.utc)`,
+# never naive `datetime.now()` / `datetime.utcnow()` / `date.today()` / zone-less
+# `strptime`. The exact approved code set (pinned — do NOT widen/narrow ad hoc):
+#   DTZ001 datetime() w/o tzinfo · DTZ002 datetime.today() · DTZ003 datetime.utcnow()
+#   DTZ004 datetime.utcfromtimestamp() · DTZ005 datetime.now() w/o tz
+#   DTZ006 datetime.fromtimestamp() w/o tz · DTZ007 strptime() w/o %z
+#   DTZ011 date.today() · DTZ012 date.fromtimestamp() · DTZ901 datetime.min/max w/o tz
+# Until a repo's pre-existing DTZ sites are fixed, QG STEP 5.95 enforces this as a
+# per-repo COUNT RATCHET (ruff_rule_ratchet_baseline.yaml) — new sites fail, the
+# baselined set only shrinks.
+#
+# TID251 (flake8-tidy-imports banned-api) — direct cloud-SDK ban; see
+# [tool.ruff.lint.flake8-tidy-imports.banned-api] below.
+select = [
+    "E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "G", "C90",
+    "DTZ001", "DTZ002", "DTZ003", "DTZ004", "DTZ005", "DTZ006", "DTZ007",
+    "DTZ011", "DTZ012", "DTZ901",
+    "TID251",
+]
 extend-ignore = ["G003", "G004"]
 ignore = ["E402"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 26
 
+# ── Direct cloud-SDK ban (TID251) ────────────────────────────────────────────────
+# CLAUDE.md "Cloud-agnostic I/O": all storage/secrets via get_storage_client() /
+# get_secret_client() (the unified cloud interface in UTL `cloud_interface/`) —
+# never `from google.cloud import …` / `import boto3` directly.
+# SSOT: harden_grepable_rules_into_ci_gates_2026_06_02.md Phase 3.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"google.cloud".msg = "Direct cloud SDK banned — use get_storage_client()/get_secret_client() from unified_trading_library.cloud_interface (CLAUDE.md 'Cloud-agnostic I/O')."
+"boto3".msg = "Direct cloud SDK banned — use get_storage_client()/get_secret_client() from unified_trading_library.cloud_interface (CLAUDE.md 'Cloud-agnostic I/O')."
+
 [tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["F401", "E402"]
-"tests/*" = ["F401", "F841", "F811"]
+# DTZ exempt in tests (fixtures legitimately pin naive datetimes; matches the
+# Phase-1 audit scope which measured the 121-violation baseline tests-excluded).
+"tests/*" = ["F401", "F841", "F811", "DTZ"]
 "tests/conftest.py" = ["E402"]
+# unified-trading-library ONLY — the sanctioned cloud-interface wrapper internals
+# legitimately import google.cloud/boto3 (there is no separate unified-cloud-interface
+# repo; the wrapper lives inside UTL). Uncomment in UTL's pyproject.toml at rollout:
+# "unified_trading_library/cloud_interface/**" = ["TID251"]
 
 # ── basedpyright (typecheck) — CONSOLIDATED; delete pyrightconfig.json ──────────
 [tool.basedpyright]

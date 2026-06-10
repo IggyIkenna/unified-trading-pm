@@ -419,13 +419,15 @@ the baseline writer is healthy. Option C needs a baseline-independent re-entry b
       `workflow_run.head_commit` message starts `chore(release): bump version` (re-entry brake independent of baseline
       state); keep the range-based classification for the genuine-bump path. Repo: `unified-trading-pm`
       (`semver-agent.yml` template) + fleet rollout.
-- [ ] [SCRIPT] P1. **Bump-rate circuit breaker** — semver-agent refuses (+ pages CRITICAL) when the repo already has ≥3
+- [x] ✅ [SCRIPT] P1. **Bump-rate circuit breaker** — semver-agent refuses (+ pages CRITICAL) when the repo already has ≥3
       `chore(release):` commits on staging in the last hour; a runaway must self-halt, not wait for a human to notice
-      version 0.30.0. Repo: `unified-trading-pm` (template) + fleet.
-- [ ] [SCRIPT] P2. **Baseline-writer SPOF**: when the PM `version-bump` dispatch fails (non-2xx) or
+      version 0.30.0. Repo: `unified-trading-pm` (template) + fleet. Shipped: ≥3 bumps-in-1h-or-consecutive on staging
+      → refuse + CRITICAL Slack, in template + PM copy — unified-trading-pm@6a0128906 | verified 2026-06-10
+- [x] ✅ [SCRIPT] P2. **Baseline-writer SPOF**: when the PM `version-bump` dispatch fails (non-2xx) or
       `update-repo-version` reports failure, semver-agent must treat the baseline as UNRELIABLE and halt further bumps
       for that repo until a successful manifest write — the writer's health gates the loop's fuel line. Repo:
-      `unified-trading-pm`.
+      `unified-trading-pm`. Shipped: version-bump dispatch gets a 3-attempt retry + CRITICAL page on exhaustion, in
+      template + PM copy — unified-trading-pm@6a0128906 | verified 2026-06-10
 - [ ] [SCRIPT] P2. **Action-pin existence gate** — a QG/template-rollout step that resolves every
       `uses: owner/action@ref` against the action repo's tags before a workflow change lands (the node24 bump assumed
       floating major tags universally exist). Repo: `unified-trading-pm` (`scripts/quality_gates/` + template rollout

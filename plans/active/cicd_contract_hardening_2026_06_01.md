@@ -405,12 +405,15 @@ what the operator is seeing:
       PM→main. Shipped: `plan_health` wall type in `agent-orchestrator@03017c4` (escalation.py + models.py +
       escalate.md) + the gate dispatch in `unified-trading-pm` (plan-health-agent.yml + escalate-to-orchestrator.yml; on
       main via PR #178).
-- [ ] [DEVOPS] P1. **ACTIVATION: redeploy orchestrator (vm-0) with the new `escalation.py` so it accepts `plan_health`
-      dispatches.** The running orchestrator is `version 0.6.0` and validates `wall_type` against its DEPLOYED
-      `WALL_TYPES` — a `plan_health` (or `ldr_qg_failure`) dispatch is REJECTED until vm-0 redeploys with
-      `agent-orchestrator@03017c4`. The PM-side wiring + the AO code are committed; the feature goes fully live on the
-      next AO deploy cycle. Until then the gate dispatch will no-op-reject (advisory gate stays red, no wedge). repo:
-      agent-orchestrator (deploy).
+- [x] ✅ [DEVOPS] P1. **ACTIVATION: redeploy orchestrator (vm-0) with the new `escalation.py` so it accepts `plan_health`
+      dispatches — DONE, verified against the RUNNING process 2026-06-10.** vm-0 (`i-0c9b283b31d6b5ca7`, SSM Online)
+      restarted its uvicorn 2026-06-10T08:16:20Z onto a checkout carrying the new code; the LIVE process's
+      `GET /openapi.json` → `EscalateRequest.wall_type` enum = `["merge_conflict", "label_mismatch", "sit_failure",
+      "stuck_promotion_pr", "ldr_qg_failure", "plan_health"]` — both new wall types accepted by the deployed server (the
+      definitive runtime check, not a source grep). End-to-end proof same day: the 08:14Z escalation burst dispatched
+      conflict-resolvers that cleared the locked cascade (lock → `locked:false`). Residual (non-blocking): watchdog
+      NULL-reap fix `68116f7` is LDR-only, not on the vm-0 checkout — rides the next AO deploy (tracked in
+      `plans/epics/orchestrator_master.md` P3).
 
 - [x] ✅ [SCRIPT] P2. **Resolved-bookend alerts are ON by default — earlier "they're OFF" diagnosis was WRONG.**
       `--resolved-hours` argparse `default=0.5` (since `da81a1414`), so `detect_resolved_prs` runs even when the GHA

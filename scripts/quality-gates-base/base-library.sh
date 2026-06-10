@@ -118,12 +118,15 @@ if [ -n "$QG_SLICE" ]; then
         lint-codex) RUN_LINT=true;  RUN_TESTS=false; SKIP_TYPECHECK=true;  _QG_RUN_CODEX=true  ;;
     esac
 fi
+# _qg_slice_done <phase>: exit cleanly when the CURRENT slice's OWN phase just completed
+# (arg = phase that finished). BUG FIX 2026-06-10: the arg-less version exited for
+# tests|typecheck at the single post-TESTS call site, so QG_SLICE=typecheck exited
+# BEFORE [4] TYPE CHECK ran (CI typecheck leg = silent no-op / false green).
 _qg_slice_done() {
-    case "$QG_SLICE" in
-        tests|typecheck)
-            echo -e "\n${GREEN:-}✅ QG_SLICE=${QG_SLICE} PASSED${NC:-}"
-            exit 0 ;;
-    esac
+    if [ -n "$QG_SLICE" ] && [ "$QG_SLICE" = "${1:-}" ]; then
+        echo -e "\n${GREEN:-}✅ QG_SLICE=${QG_SLICE} PASSED${NC:-}"
+        exit 0
+    fi
 }
 
 # ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
@@ -310,7 +313,7 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_success "All pytest.mark.skip have reason comments"
 fi
 # QG_SLICE=tests finishes here (its one phase is the pytest run above).
-_qg_slice_done
+_qg_slice_done tests
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
 # Codex-adjacent static check → lint-codex slice (typecheck slice skips via _QG_RUN_CODEX).
@@ -1031,6 +1034,45 @@ if [ -f "$_CANON_MODEL_CHECKER" ]; then
     else
         log_fail "STEP 5.93: NEW canonical-model regression (not baselined). Use source-aware batch_<source> / prefix-match readers / Era-B data_type=trades for chains:"
         cat /tmp/canonical_model_regressions_qg.log
+        exit 1
+    fi
+fi
+
+# ── STEP 5.94: try/except-ImportError fallback-import ratchet ─────────────────
+# Library-repo parity with base-service.sh STEP 5.94 (no-empty-fallbacks.mdc §
+# "No try/except ImportError Fallbacks" — applies to ALL tiers, no exception).
+# Baseline-ratchet: no_fallback_imports_baseline.yaml. Per-line opt-out:
+# `# noqa: fallback-import` + a one-line reason.
+# SSOT: harden_grepable_rules_into_ci_gates_2026_06_02.md Phase 3.
+_NOFB_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_fallback_imports.py"
+if [ -f "$_NOFB_CHECKER" ]; then
+    _FB_REPO=$(basename "$PROJECT_ROOT")
+    if "${PYTHON_CMD:-python3}" "$_NOFB_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_FB_REPO" >/tmp/no_fallback_imports_qg.log 2>&1; then
+        log_ok "STEP 5.94: No NEW try/except-ImportError fallback-import shims (baseline-ratchet, no-empty-fallbacks)"
+    else
+        log_fail "STEP 5.94: NEW try/except-ImportError fallback-import shim (not baselined). Import directly + declare the dep in pyproject, or add '# noqa: fallback-import' with a one-line reason:"
+        cat /tmp/no_fallback_imports_qg.log
+        exit 1
+    fi
+fi
+
+# ── STEP 5.95: ruff DTZ (UTC-datetime) + TID251 (cloud-SDK) count ratchet ─────
+# Library-repo parity with base-service.sh STEP 5.95. CLAUDE.md "UTC datetimes
+# always" (pinned DTZ001-007/011/012/901) + "Cloud-agnostic I/O" (TID251 bans
+# google.cloud/boto3; UTL cloud_interface/ wrapper internals exempt by path).
+# Baseline-ratchet: ruff_rule_ratchet_baseline.yaml. Config SSOT:
+# scripts/pyproject-templates/canonical-tool-sections.toml.
+# SSOT: harden_grepable_rules_into_ci_gates_2026_06_02.md Phase 3.
+_RUFFRR_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py"
+if [ -f "$_RUFFRR_CHECKER" ]; then
+    _RR_REPO=$(basename "$PROJECT_ROOT")
+    if "${PYTHON_CMD:-python3}" "$_RUFFRR_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_RR_REPO" >/tmp/ruff_rule_ratchet_qg.log 2>&1; then
+        log_ok "STEP 5.95: No NEW naive-datetime (DTZ) / direct cloud-SDK (TID251) sites (baseline-ratchet)"
+    else
+        log_fail "STEP 5.95: NEW naive-datetime (DTZ) / direct cloud-SDK (TID251) site (not baselined). Use datetime.now(timezone.utc) / get_storage_client()/get_secret_client(), or a ruff '# noqa: <code>' with a one-line reason:"
+        cat /tmp/ruff_rule_ratchet_qg.log
         exit 1
     fi
 fi

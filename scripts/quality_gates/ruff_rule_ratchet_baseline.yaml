@@ -1,0 +1,92 @@
+# Baseline for QG STEP 5.95 — ruff DTZ (UTC-datetime) + TID251 (cloud-SDK) count ratchet.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].{dtz,tid251}` is the number of
+# ruff violations (tests/ excluded; UTL cloud_interface/ exempt for tid251)
+# the gate tolerates in that repo. A repo whose live count EXCEEDS its
+# baseline fails CI — a NEW naive-datetime / direct-SDK site landed; fix it
+# (`datetime.now(timezone.utc)` / `get_storage_client()`), or add a ruff
+# `# noqa: DTZ00x` / `# noqa: TID251` with a one-line reason.
+#
+# LOWER counts (re-run `--update-baseline`) as violations are fixed.
+# NEVER raise a count. Repos not listed default to 0.
+#
+# SSOT: CLAUDE.md 'UTC datetimes always' + 'Cloud-agnostic I/O' +
+# plans/active/harden_grepable_rules_into_ci_gates_2026_06_02.md. Config SSOT:
+# scripts/pyproject-templates/canonical-tool-sections.toml ([tool.ruff.lint]).
+note: Seeded 2026-06-10 — harden_grepable_rules_into_ci_gates Phase 3 (QG STEP 5.95).
+repos:
+  agent-orchestrator:
+    dtz: 8
+    tid251: 3
+  alerting-service:
+    dtz: 3
+    tid251: 0
+  batch-live-reconciliation-service:
+    dtz: 1
+    tid251: 0
+  client-reporting-api:
+    dtz: 4
+    tid251: 1
+  deployment-api:
+    dtz: 12
+    tid251: 20
+  deployment-service:
+    dtz: 7
+    tid251: 14
+  deployment-ui:
+    dtz: 0
+    tid251: 0
+  e2e-testing:
+    dtz: 6
+    tid251: 10
+  execution-service:
+    dtz: 10
+    tid251: 10
+  features-service:
+    dtz: 18
+    tid251: 10
+  fund-administration-service:
+    dtz: 0
+    tid251: 0
+  greeks-service:
+    dtz: 0
+    tid251: 0
+  ibkr-gateway-infra:
+    dtz: 0
+    tid251: 0
+  instruments-service:
+    dtz: 25
+    tid251: 59
+  market-data-processing-service:
+    dtz: 7
+    tid251: 9
+  market-tick-data-service:
+    dtz: 32
+    tid251: 59
+  ml-service:
+    dtz: 3
+    tid251: 0
+  strategy-service:
+    dtz: 12
+    tid251: 8
+  system-integration-tests:
+    dtz: 0
+    tid251: 0
+  trading-agent-service:
+    dtz: 2
+    tid251: 0
+  unified-api-contracts:
+    dtz: 12
+    tid251: 0
+  unified-trading-api:
+    dtz: 0
+    tid251: 0
+  unified-trading-library:
+    dtz: 10
+    tid251: 3
+  unified-trading-pm:
+    dtz: 7
+    tid251: 5
+  unified-trading-system-ui:
+    dtz: 1
+    tid251: 0

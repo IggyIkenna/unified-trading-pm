@@ -106,9 +106,10 @@ clean consumer repo, costing triage time chasing a ref that exists in no current
       same 7 via the uac feat(defi-caps) expansion), and shipped via quickmerge. Slot is ancestor-or-equal of LDR;
       STAGE 0.4 passes. (Surfaced a quickmerge `--files` gap: it can't stage a pure deletion — `instruction.py` deletion
       had to be direct-pushed; worth a follow-up to make `--files` handle tracked deletions.)
-- [ ] [SCRIPT] P3. Finding 6 — `quickmerge.sh` `--files` cannot ship a pure file DELETION: the staging loop guards on
+- [x] ✅ [SCRIPT] P3. Finding 6 — `quickmerge.sh` `--files` cannot ship a pure file DELETION: the staging loop guards on
       `[ -e "$f" ]` and skips a deleted path (`⚠️ Path not found`), so a removed-but-tracked file silently never reaches
       the commit (hit shipping UAC 5a — `instruction.py` deletion had to be direct-pushed). Fix: also stage tracked
       deletions, e.g. `if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -A -- "$f"`.
       SSOT is the PM template `scripts/workflow-templates/` → roll out via `rollout-workflow-templates.sh`. Repo:
-      `unified-trading-pm` (+ per-repo `scripts/quickmerge.sh` rollout).
+      `unified-trading-pm` (+ per-repo `scripts/quickmerge.sh` rollout). FIXED: both staging loops now deletion-aware
+      (tracked-but-absent stages as deletion) — unified-trading-pm@3e472a19d | verified 2026-06-10

@@ -208,11 +208,18 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       handles dependency-constraint alignment only — NOT the repo's own `version` field — so this needs the
       version-bump/tag flow per repo (or the semver-agent re-run), not that script.
 
-- [ ] [SCRIPT] P1. Reconcile workspace-manifest.json INTERNAL version inconsistency (VERIFIED 2026-06-10): the
-      `versions{}` block, the `repositories{}` block, and source pyproject disagree per repo — UAC: versions=0.5.0 vs
-      repositories=0.1.20 vs source=0.5.1; UTL: versions=0.4.0 vs repositories/dep-range=0.3.167 vs source=0.4.0. The
-      "UTL never graduated / UAC 0.2.0 never published" framing is STALE (sources are now 0.4.0 / 0.5.1). Make the three
-      surfaces agree per repo + audit all 25 for the same split.
+- [ ] [SCRIPT] P2 (downgraded from P1 after the 2026-06-10 semantics diagnosis — do NOT blind-sync). Workspace-manifest
+      version-surface reconciliation, scoped by what each field MEANS: **(a) dep-edge floors (`repositories{}.dependencies[].version`
+      `>=0.1.20,<1.0.0` style) are the INTENTIONAL range-pin floors — never "fix" them to latest** (that would defeat the
+      pull-not-push promotion model and force consumer re-pins); `check-internal-version-constraints.py` already verifies
+      satisfiability. **(b) `repositories{}.version` scalar is VESTIGIAL** — written only opportunistically by
+      `run-version-alignment.sh --fix`, read only as a display fallback (`generate_workspace_dag.py:283`); either delete the
+      field per-repo or extend `assert_version_coherence.py` to require it equals `versions{}[repo]` when present.
+      **(c) `versions{}` vs source pyproject is the ONLY pair that must agree** — `assert_version_coherence.py:111` already
+      flags it (UAC 0.5.0 vs 0.5.1 was live promotion lag, self-draining). Remaining concrete work: extend
+      `assert_version_coherence.py` with (1) the `repositories{}.version`==`versions{}` check (or vestigial-field deletion),
+      (2) fold in dep-edge floor SATISFIABILITY (floor ≤ versions{}[dep] < ceiling — explicitly NOT floor==latest), and
+      (3) wire it `--warn-only` into PM QG post-gates (today it only runs inside `admin-force-sync-all-to-main.sh:750`).
 
 - [ ] [INFRA] P2. **FINDING (2026-06-09) — `get_version_tag` in `python-quality-gates-v2.yml` is silently degraded:
       the Clone step runs BEFORE `uv sync`, so `from packaging.version import Version` fails → it returns "" → the
