@@ -238,13 +238,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
     operational tail (partly operator/per-AG backfill).
   - **HARD-STOP respected**: everything up to `--apply` only; G4 `--apply` + G4.5 verified-delete `--apply` stay
     operator-gated.
-- 2026-06-10 (slot-3) — **⚠️ SHIP BLOCKED — fleet-wide staging-lane CI incident (NOT this work).** The shared staging
-  promotion lane has been locked since ~01:41Z (~7.5h) through two failure modes: (1) the `ml-service=0.3.0`
-  breaking-MINOR cascade's SIT failing on a **dep-version-coherence** error (a pinned dep resolved to an
-  unpublished/force-sync-reverted version — "publish the pinned version / run `assert_version_coherence.py`"), then (2)
-  a **stuck `staging_status.locked=true reason="SIT running"`** with NO promotion activity since 08:08Z (~70 min stale —
-  a SIT that set the lock but never cleared it). quickmerge has no staging-lock override (only
-  `QUICKMERGE_ALLOW_BEHIND`), and the lock is also a server-side required check, so the code (V0 + redirect + 5
-  scaffolds, all QG/test-green) cannot promote until the lane is unstuck — a slot-1/orchestrator/CI concern, not
-  unilaterally-clearable from here (clearing a live lock risks racing unvalidated breaking changes). PM docs ship via
-  the docs(plans) direct-LDR carve-out (lock-independent). Code auto-ships on unlock (monitored).
+- 2026-06-10 (slot-3) — **SHIP PENDING — an active (legitimately-converging) breaking-cascade staging lock, NOT this
+  work.** The shared staging lane is locked (`reason="SIT running"`, `since=07:07Z`, ~73 min) for the in-flight
+  `ml-service` / `deployment-api` / `deployment-service` breaking cascade (`breaking_pending` = those 3). It is
+  CONVERGING, not stuck — `system-integration-tests` went STAGING*GREEN 08:04Z and several repos MAIN_GREEN 08:15-17Z;
+  the per-repo "Staging Lock Check" failures on other promotes are by-design (the lane is serialized while a breaking
+  cascade validates). quickmerge correctly refuses to enter a locked staging (no override; the lock is also a
+  server-side required check), so the code (V0 + redirect + 5 scaffolds, all QG/test-green) promotes once the cascade
+  clears — no intervention needed, no incident. PM docs ship via the docs(plans) direct-LDR carve-out (lock-independent;
+  `pm@3d95dbb49`, `pm@f9ee262b3`). Code auto-ships on unlock. *(An earlier note here overstated this as a ~7.5h stuck
+  incident — that was a local-vs-UTC timestamp misread; corrected: it is a normal ~73 min converging cascade.)\_
