@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.0",
     "unified-api-contracts": "0.5.0",
     "unified-trading-library": "0.4.0",
-    "unified-trading-pm": "1.2.61",
+    "unified-trading-pm": "1.2.65",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
     "agent-orchestrator": "0.8.0",
@@ -1146,7 +1146,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1791,16 +1791,17 @@
   },
   "staging_versions": {
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
-    "batch-live-reconciliation-service": "0.1.0",
+    "batch-live-reconciliation-service": "0.2.0",
     "deployment-ui": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "agent-orchestrator": "0.8.0",
     "unified-trading-library": "0.4.0",
-    "instruments-service": "0.2.0",
-    "strategy-service": "0.1.0",
+    "instruments-service": "0.30.0",
+    "strategy-service": "0.2.0",
     "market-data-processing-service": "0.3.0",
-    "ml-service": "0.3.0"
+    "ml-service": "0.3.0",
+    "e2e-testing": "0.2.1"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1826,19 +1827,19 @@
       "version": "0.4.0"
     },
     "instruments-service": {
-      "branch": "staging",
-      "sha": "5763f159f1936e4bd9058d85b551425fb8803289",
-      "version": "0.2.0"
+      "version": "0.30.0",
+      "sha": "b580a21ba",
+      "branch": "staging"
     },
     "strategy-service": {
-      "branch": "staging",
-      "sha": "3fc31bffd388f62d89e2ee98fce2ee16aebae6f4",
-      "version": "0.2.0"
+      "version": "0.2.0",
+      "sha": "a0880bf0b",
+      "branch": "staging"
     },
     "batch-live-reconciliation-service": {
-      "branch": "staging",
-      "sha": "4bf1600cf1f50760879078ec144e97a3f9e9fddb",
-      "version": "0.2.0"
+      "version": "0.2.0",
+      "sha": "13e5762a6",
+      "branch": "staging"
     },
     "market-data-processing-service": {
       "branch": "staging",
@@ -1849,6 +1850,11 @@
       "branch": "staging",
       "sha": "bd3d687c165e8656fb0995cb35fe73aae13bb8c5",
       "version": "0.3.0"
+    },
+    "e2e-testing": {
+      "version": "0.2.1",
+      "sha": "f50e83f5735d0439d7ef76d16b9e181584e7ddfe",
+      "branch": "staging"
     }
   },
   "main_commits": {
