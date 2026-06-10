@@ -39,6 +39,32 @@ local; one trivial LOW stub only).
 
 ---
 
+## Progress Log (append-only — autonomous run started 2026-06-10; rule 6 memory across context compression)
+
+> Resume protocol for a compressed-context future-me: read this log + the severity ledger + each Phase's checkboxes.
+> Everything marked `[x] ✅` is shipped + verified. Continue from the first `[ ]` in dependency order (UTL/UAC T0 first,
+> then consumers, dead-gate enable LAST after all 4 service-dep edges are fixed + fleet-wide proof per rule 11).
+
+- **SHIPPED** Plan + 2 corrections to PM (riding to main).
+- **SHIPPED** Phase 1a — `account_equity_proxy()` SSOT + constant-5.0 leverage bug + uPnL regression test —
+  `strategy-service@67ecc156` (60 tests, basedpyright 0, QG 0). Flipped.
+- **SHIPPED** Service-dep governance — sweep (4 edges), codified no-service↔service rule into CLAUDE.md +
+  SUB_AGENT_MANDATORY_RULES, plan Phase 9 — PM PR#226 merged.
+- **SHIPPED** Phase 9 strategy→MTDS dep removal — `strategy-service@d1f5a6a8` + `manifest@4af80fd83` (alignment True).
+  Flipped (PR#228). Permanently fixes the dirty-MTDS ship-block.
+- **DECISION (rule 1/2)** Phase 9 deployment-service: NOT a misclassification — it IS a deployed service (Dockerfile +
+  cloudbuild + FastAPI api/main.py). Corrected fix = extract the GCS-backed `deployments_registry` (UTL-only deps) into
+  UTL; both deployment-service + deployment-api import from UTL. Shipped plan correction PR#229.
+- **SHIPPED** Wave A (4 parallel sub-agents, all verified on origin/LDR, QG 0 each): execution-service@b7ea5e725
+  (custody secret-fetch + Solana GCS → UTL), instruments-service@66165f2e (VenueError → UAC VenueErrorClassification),
+  client-reporting-api@9cd77cc (dead auth.py + google.oauth2 deleted), deployment-service@6710f26 (VM scripts → UTL
+  get_storage_client). Remaining split-out: deployment-api routes half (#12b).
+- **PENDING** Wave B (UTL/UAC T0 extensions — serialize, one repo): deployments_registry→UTL, treasury NAV→UTL,
+  `create_api_auth` X-API-Key path, `ModelRegistry` writegate/manifest/allowlist, UTL retry helper, sports
+  FunctionBuilderEntry, MDPS classifier→UTL/UAC. Then Wave C consumers. Then Phase 1b risk. Dead-gate enable LAST.
+
+---
+
 ## Severity ledger (every finding, critical → low)
 
 | #   | Sev      | Repo                               | Finding                                                                                                                | Merge decision (strongest combination)                                                                                                                                                                                                                                         | Phase |
@@ -161,11 +187,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       (`verify_api_key` + DISABLE_AUTH guard); change `api/main.py` to depend on UTL
       `create_api_auth("alerting-service")`. Verify an `X-API-Key` caller still authenticates (it is **wired in
       production**). Highest urgency of the three.
-- [ ] [AGENT] P0. **client-reporting-api** (no UTL extension needed — pure dead-code deletion): delete the dead
-      `client_reporting_api/auth.py` (`verify_api_key` + `verify_service_token` + `GoogleOAuthMiddleware`). Live path
-      (`api/main.py` + `auth_standardized.py`) already uses `create_api_auth` / `create_s2s_auth_dependency`. Deleting
-      it also removes the direct `google.oauth2`/`google.auth` SDK import (`_google_auth_sync.py`/`auth.py:123`). Grep
-      for any residual importers of the dead module before deleting.
+- [x] ✅ [AGENT] P0. **client-reporting-api** — DONE `client-reporting-api@9cd77cc` (579 tests ✓, coverage 71.2%, QG 0).
+      Deleted dead `auth.py` + `_google_auth_sync.py` (+ their tests); repointed the 2 live importers (`main.py`,
+      `api/main.py`) to `config.get_config()`; cleared the `DISABLE_AUTH` toggle from 16 test fixtures (live path
+      already on UTL `create_api_auth`). Direct `google.oauth2`/`google.auth` SDK import removed with the files.
 - [ ] [AGENT] P1. **unified-trading-api** (depends on UTL extension above): migrate `middleware/auth.py` X-API-Key
       validation core to UTL `create_api_auth(...)`'s new legacy path; preserve the gateway-specific mock/app_state
       wiring (the only local-specific bit).
@@ -231,10 +256,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 
 ## Phase 5 — Cloud-SDK-direct → UTL cloud_interface (findings #6, #7, #9, #12)
 
-- [ ] [AGENT] P1. **execution-service**: `custody/cloud_kms.py:118` + `custody/withdrawal_signing.py:37` — replace the
-      hand-rolled GCP/AWS secret-fetch branching with UTL `get_secret_client()`. **Keep** the KMS Decrypt half (no UTL
-      equivalent). `providers/solana_amm_depth_provider.py:281` — replace GCP-only `gcs.Client` blob loop with UTL
-      `get_storage_client()`/`io.download_parquet` (fixes the AWS-blind correctness/portability bug).
+- [x] ✅ [AGENT] P1. **execution-service** — DONE `execution-service@b7ea5e725` (116 custody + 24 AMM tests ✓, QG 0).
+      `custody/cloud_kms.py` + `custody/withdrawal_signing.py` secret-fetch → UTL `get_secret_client()` (KMS Decrypt
+      kept local); `providers/solana_amm_depth_provider.py` GCP-only `gcs.Client` blob loop → UTL `get_storage_client()`
+      (now cloud-agnostic / AWS-safe). Tests updated to the `SecretClient` interface.
 - [ ] [AGENT] P1. **agent-orchestrator**: `server/gcs_sync.py:30` raw `boto3`+`google.cloud.storage` → UTL
       `get_storage_client()` (already cloud-agnostic incl. S3). `server/auth.py:99` gs:// secret fetch → UTL
       `get_storage_client()`/`get_secret_client()`. **Keep the HS256/ES256 JWT signing logic** (intentional custom per
@@ -245,19 +270,21 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `aggregator_route_handler.py:385`, `lending_indices_handler.py:333`, `lst_rates_handler.py:687`,
       `liquidations_handler.py:218`) with UTL `get_secret()` (cloud-agnostic, no swallow, matches the documented adapter
       convention).
-- [ ] [AGENT] P2. **deployment-service / deployment-api**: route the GCS-storage `storage.Client()` calls in
-      `scripts/vm/{vm_log_archival_cron,vm_serial_capture_cron,vm_zombie_watchdog,validate_vm_prefix_mapping}.py` and
-      `deployment_api/routes/{builds_history,builds}.py` + `services/shard_detail.py:828` through UTL
-      `get_storage_client()` (also fixes the repo's own `_gcp_sdk` boundary bypass). **Keep** `compute_v1` VM
-      control-plane (no UTL abstraction exists yet) and pubsub/secretmanager liveness probes.
+- [x] ✅ [AGENT] P2. **deployment-service** (scripts half) — DONE `deployment-service@6710f26` (QG 0).
+      `scripts/vm/{vm_log_archival_cron,vm_serial_capture_cron,vm_zombie_watchdog,validate_vm_prefix_mapping}.py`
+      `storage.Client()` → UTL `get_storage_client()`/`upload_to_storage`/`storage_exists`/`gcs_copy_object`;
+      `compute_v1` control-plane kept.
+- [ ] [AGENT] P2. **deployment-api** (routes half — REMAINING): route
+      `deployment_api/routes/{builds_history,builds}.py` + `services/shard_detail.py:828` GCS-storage `storage.Client()`
+      through UTL `get_storage_client()`. Keep `compute_v1` + pubsub/secretmanager liveness probes.
 - [ ] [VERIFY] P1. Per repo: secret fetch + GCS read still work against emulator/mock; `quality-gates.sh` green;
       quickmerge.
 
 ## Phase 6 — Venue-error, health router, retry helper (findings #8, #10, #11)
 
-- [ ] [AGENT] P1. **instruments-service**: route `engine/urdi_reference_provider.py:42 VenueError` classification
-      through UAC `classify_venue_error()` → `VenueErrorClassification` (single-source retryable/permanent with the
-      adapters). Keep the `VenueFetchResult` orchestration wrapper.
+- [x] ✅ [AGENT] P1. **instruments-service** — DONE `instruments-service@66165f2e` (23 tests ✓, QG 0; direct-push
+      carve-out — UTL was transiently dirty). Deleted local `VenueError`; all 8 construction sites now build UAC
+      `VenueErrorClassification` (`retry_safe`/`reconnect`/`action: ErrorAction`); `VenueFetchResult` wrapper kept.
 - [ ] [AGENT] P2. **execution-service**: fold the second hand-rolled `/health`+`/ready`+`/readiness` in `api/app.py:209`
       onto UTL `make_health_router(...)` with a `data_freshness` callback (QG STEP 5.62), so the service has ONE health
       surface (the canonical `api/main.py` already uses it).
