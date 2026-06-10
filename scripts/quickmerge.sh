@@ -1222,8 +1222,14 @@ if [ -n "$FILES_ARG" ]; then
     if [ -e "$f" ]; then
       git add "$f"
       ADDED_ANY=1
+    elif git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
+      # Tracked but absent from the worktree = a DELETION — stage it. The old
+      # `[ -e ]`-only guard silently dropped deleted paths from scoped commits
+      # (half-shipped removals, e.g. instruments-service polygon 2026-06-10).
+      git add -- "$f"
+      ADDED_ANY=1
     else
-      echo "[$REPO_NAME] ⚠️  Path not found: $f"
+      echo "[$REPO_NAME] ⚠️  Path not found (and not tracked): $f"
     fi
   done
   if [ "$ADDED_ANY" = 0 ]; then
@@ -1265,7 +1271,10 @@ elif ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
   # --files is set, re-stage ONLY those paths (the hook's edits to YOUR files re-stage;
   # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
   if [ -n "$FILES_ARG" ]; then
-    for f in $FILES_ARG; do [ -e "$f" ] && git add "$f"; done
+    for f in $FILES_ARG; do
+      # Deletion-aware re-stage (same rule as the primary loop): tracked-but-absent = deletion.
+      if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -- "$f"; fi
+    done
   else
     git add -A
   fi
