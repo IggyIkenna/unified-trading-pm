@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.0",
     "unified-api-contracts": "0.5.0",
     "unified-trading-library": "0.4.0",
-    "unified-trading-pm": "1.2.65",
+    "unified-trading-pm": "1.2.69",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
     "agent-orchestrator": "0.8.0",
@@ -973,7 +973,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 \u2014 coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1796,23 +1796,27 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "agent-orchestrator": "0.8.0",
-    "unified-trading-library": "0.4.0",
+    "unified-trading-library": "0.5.0",
     "instruments-service": "0.30.0",
-    "strategy-service": "0.2.0",
+    "strategy-service": "0.2.1",
     "market-data-processing-service": "0.3.0",
     "ml-service": "0.3.0",
-    "e2e-testing": "0.2.1"
+    "e2e-testing": "0.2.1",
+    "system-integration-tests": "0.3.2",
+    "unified-api-contracts": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": "Heal 2026-06-10: SPURIOUS breaking-cascade cleared. deployment-api/deployment-service/ml-service 0.3.0 minor bumps are NON-breaking per the SSOT differ; the lock fired from the 0.0.0-baseline gap (manifest staging_versions read 0.0.0 -> semver-agent scanned ALL history -> caught an ancient feat!: -> fake breaking). That gap is now FIXED + ROLLED OUT to all 18 release repos' main (bounded-scan; ml-service was the last holdout, landed via #22). So the cascade cannot re-fire; pruned breaking_pending. SSOT: dependency_promotion...2026_06_09.md Phase 3.5 + cicd_contract_hardening Option C.",
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-10T08:54:36.438183Z",
+    "locked_reason": "Breaking MINOR bump cascade: unified-trading-library=0.5.0 (pre-1.0.0)",
+    "lock_version": "0.5.0",
     "pending_repos": [],
     "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": []
+    "breaking_pending": [
+      "unified-trading-library"
+    ]
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
@@ -1822,9 +1826,9 @@
       "version": "0.8.1"
     },
     "unified-trading-library": {
-      "branch": "staging",
-      "sha": "beddc15f084bb753d8ca50259f962dafadf2f59b",
-      "version": "0.4.0"
+      "version": "0.5.0",
+      "sha": "7620870fa4aca08797507ee2a75c5a835fa854fb",
+      "branch": "staging"
     },
     "instruments-service": {
       "version": "0.30.0",
@@ -1832,8 +1836,8 @@
       "branch": "staging"
     },
     "strategy-service": {
-      "version": "0.2.0",
-      "sha": "a0880bf0b",
+      "version": "0.2.1",
+      "sha": "698f886de942b1bb758e2f85ce2d5b3d7473ad0d",
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
@@ -1854,6 +1858,16 @@
     "e2e-testing": {
       "version": "0.2.1",
       "sha": "f50e83f5735d0439d7ef76d16b9e181584e7ddfe",
+      "branch": "staging"
+    },
+    "system-integration-tests": {
+      "version": "0.3.2",
+      "sha": "785224ad9ab1d575ec7a09ee09011a7874d16fe8",
+      "branch": "staging"
+    },
+    "unified-api-contracts": {
+      "version": "0.6.0",
+      "sha": "c86d0f4a0c0ee7cae279f68ffeb7ee9c138c7d48",
       "branch": "staging"
     }
   },
