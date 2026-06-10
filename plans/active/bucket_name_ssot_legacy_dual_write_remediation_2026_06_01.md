@@ -388,10 +388,19 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       sibling-walk (in-tree workspace copy still wins locally) — always-available in a standalone clone. Verified:
       standalone-simulated resolution (`_find_workspace_root→None`) resolves `dex-pools-prd-test-project`; UTL QG green
       (sentinel 5d2c8533) — unified-trading-library@75c001ec. Fixes the T0→T4 tier inversion + sibling-walk fragility.
-- [ ] [SCRIPT] P2. **Flip the consumers: deployment-service + PM consume the UAC canonical, not own it.** Replace
-      `deployment-service/configs/cloud-providers.yaml` + `unified-trading-pm/configs/cloud-providers.yaml` with a
-      sync/symlink FROM the UAC canonical (T4 service must READ, never OWN, the config). Update QG STEP 5.69 + both
-      CLAUDE.md "deployment-service/configs/cloud-providers.yaml is canonical" statements to name UAC as canonical.
+- [x] ✅ [SCRIPT] P2. **Flip the consumers: deployment-service + PM consume the UAC canonical, not own it.** UAC is now
+      named the canonical SSOT in `cursor-configs/CLAUDE.md` § Bucket-name SSOT + `codex/02-data/bucket-naming-and-config.md`
+      (deployment-service = authoring/env_substitutor read, PM = byte-identical mirror). Synced the **stale PM mirror**
+      `unified-trading-pm/configs/cloud-providers.yaml` (was 110 lines / wrong format) to byte-match the 366-line canonical.
+      deployment-service's copy already matched (the relocation copied from it). **Decided AGAINST symlinks** — a symlink
+      to a sibling breaks standalone CI clones (the original bug class); kept real byte-identical copies. — unified-trading-pm@da0cd88c.
+- [x] ✅ [SCRIPT] P1. **ROOT-CAUSE of the UTL CI red (found this run, not the sibling-walk): the CI test fixture
+      `scripts/quality-gates-base/ci-test-cloud-providers.yaml` was a STALE PRE-SUBSTITUTED snapshot** (templates baked to
+      literals `test-account` / `archetype-state-test-test-project` — no `${AWS_ACCOUNT_ID}` / `${DEPLOYMENT_ENV_SHORT}`),
+      so `test_bucket_naming_cell_sweep.py`'s AWS/env-tier assertions passed locally (repo fixture / sibling-walk = templated)
+      but FAILED in CI (CI points the env override at this stale PM file). Synced it byte-identical to the canonical
+      (templated). Verified CI-parity: `execution-store-cefi-123456789012`, `strategy-store-123456789012`, `archetype-state-stg-…`
+      all resolve correctly with the CI env. This — not the production sibling-walk — was the live UTL CI blocker. — unified-trading-pm@da0cd88c.
 - [x] ✅ [TEST] P2. **Reconcile the UTL "not-found" error-path tests** with always-available UAC packaging. `test_yaml_not_found_raises`
       now also patches `_packaged_uac_yaml_path → None` (alongside `_find_workspace_root → None`) — the genuine
       "no yaml anywhere" simulation. The malformed/invalid-syntax tests already point the env override at a present-but-bad
