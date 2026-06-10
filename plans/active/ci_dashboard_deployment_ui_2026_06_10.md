@@ -116,6 +116,14 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       on the Repos CI dashboard: a small "degraded repos" strip listing each `{repo, error}` so a per-repo GitHub-5xx
       degradation is VISIBLE, not just present in the payload. Repo: deployment-ui (add `errors` to `RepoCiOverview`
       client type + render). Pairs with the failure-injection matrix billing-block/rate-limit honest-degrade verify.
+- [x] ✅ [TEST] P2. DONE 2026-06-10 — deployment-api@3521b95 (QG green; reproductions 13 & 57 passed, were 2/6 failed).
+      **Pre-existing deployment-api test pollution fixed** (found while shipping the errors[] reconcile, unrelated to it):
+      `test_lifespan.py` runs the real FastAPI lifespan whose `fastapi_uei_lifespan` else-branch calls
+      `setup_service_observability(mode=<non-test>)` and never restores the shared `unified_trading_library.events`
+      `_mode`/`_writer` globals → later `log_event` callers (tarball `trigger_refresh`/`ensure_fresh`, `vm_events`
+      real-mode) raised "Event logging not initialized", surfacing under `pytest -n` work-stealing as deterministic
+      "flaky" 2–3 failures (6 serial). Fix: autouse `_isolate_events_globals` fixture (snapshot+restore) in
+      `tests/unit/conftest.py`, sibling to the existing rate-limiter reset. Root-caused via a diagnosis sub-agent.
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-api@6d6fdce + unified-trading-pm@b03eb5371. **STEP 5.90 false-positive
       fix**: the data-status canonical-coverage gate flagged `data_status_tardis_windows.py`, which returns Tardis
       free-tier access RULES + key status (no bucket, no manifest, no coverage) — forcing the coverage helper would
