@@ -128,7 +128,9 @@ def _default_firestore_module() -> _FirestoreModuleProto:
     """Lazily import ``google.cloud.firestore``. Lazy so importing this module for ``resolve_status``
     or a fake-injected test never needs the SDK installed (same rationale as UTL firestore_lifecycle).
     """
-    from google.cloud import (
+    # Deliberate lazy in-function import (docstring above) — sanctioned markers for both QG checks
+    # live on the `from` line (the line both the rg and the AST checker match):
+    from google.cloud import (  # noqa: imports-inside-functions # noqa: cloud-sdk-direct
         firestore,  # pyright: ignore[reportMissingImports, reportAttributeAccessIssue, reportUnknownVariableType]
     )
 

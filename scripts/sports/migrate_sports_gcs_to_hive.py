@@ -125,7 +125,8 @@ def migrate_odds_data(dry_run: bool = True, date_range: tuple[str, str] | None =
 
     Server-side copy where possible (same project, just reorganise paths).
     """
-    from google.cloud import storage
+    # One-shot migration script; predates UTL gcs_copy_object (TID251 lives only in the 5.95 ratchet config):
+    from google.cloud import storage  # noqa: TID251, RUF100
 
     client = storage.Client(project=PROJECT_ID)
     old_bucket = client.bucket(OLD_ODDS)
@@ -221,7 +222,8 @@ def migrate_features(dry_run: bool = True) -> list[str]:
 
     Server-side copy (no data transformation needed).
     """
-    from google.cloud import storage
+    # One-shot migration script; predates UTL gcs_copy_object (TID251 lives only in the 5.95 ratchet config):
+    from google.cloud import storage  # noqa: TID251, RUF100
 
     client = storage.Client(project=PROJECT_ID)
     old_bucket = client.bucket(OLD_FEATURES)
