@@ -1,7 +1,6 @@
 ---
 title: GitHub API rate-budget reduction + low-budget alerting/visibility (shared-PAT exhaustion)
 created: 2026-06-10
-author: ikennaigboaka [slot-1·laptop]
 source:
   - chat/2026-06-10 operator: "how can we use less gh rates without hurting functionality" + "slack alert when approaching rate limits" + "tracker inside the /repos page in the deployment UIs"
   - live probe 2026-06-10: gh core REST remaining=0/5000 (fleet-exhausted) → CIReconcile 403-blinded
