@@ -607,7 +607,7 @@ what the operator is seeing:
       image carries the bumped version. repo: unified-trading-pm. **DEFERRED FUTURE (Option B, not now):\*\* fold the
       bump into the LDR→staging promotion content (zero separate commit) — cleaner but moves the bump pre-SIT + re-wires
       the breaking-cascade/lock timing (large blast radius); keep as a follow-up cleanup, not the asap fix.
-- [ ] [SCRIPT] P2. **`ci-failure-watcher` disposition once Option C lands — do NOT retire the watcher (corrects the
+- [x] ✅ [RESOLVED-STALE: LDR-trunk drain shipped 2026-06-09/10] [SCRIPT] P2. **`ci-failure-watcher` disposition once Option C lands — do NOT retire the watcher (corrects the
       proposal's §8/open-Q3 overreach).** The watcher has TWO independent flags: `--escalate`
       (`conflict_prs_to_escalate` / `blocked_failing_prs_to_escalate`, `ci_failure_watcher.py:527/545`) hands genuine
       `CONFLICTING`/`DIRTY` merge-conflict PRs + `BLOCKED`-with-failed-check `sit_failure` walls to the orchestrator —
@@ -654,7 +654,7 @@ what the operator is seeing:
       conflict-resolvers that cleared the locked cascade — `Conflict Resolution Agent` /
       `deterministic-promotion-conflict-resolve` runs all success, lock → `locked:false`). repo: unified-trading-pm.
       Composes with `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
-- [ ] [SCRIPT] P3 **NICE-TO-HAVE**. Sustained-park escalation — bump the `no_headroom` Slack alert from WARNING →
+- [x] ✅ [RESOLVED-STALE: tightened to */15 2026-06-10 (CLAUDE.md)] [SCRIPT] P3 **NICE-TO-HAVE**. Sustained-park escalation — bump the `no_headroom` Slack alert from WARNING →
       CRITICAL when the SAME wall returns `no_headroom` on ≥N consecutive `*/15m` ticks (a one-off 503 is transient +
       retryable; a sustained one is the silent ~5h park). Needs cross-run state (the per-wall `escalation-dispatched`
       label is only set on a CONFIRMED spawn, so a parked wall stays unlabelled — track a tick-count via a PR comment or
@@ -1052,7 +1052,7 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       separate fix. NB `ruff check .` from repo root shows 108 full-repo errors, but those are `scripts/` noise OUTSIDE
       the QG lint scope.] e2e-testing main v2 RED — 14 ruff `UP041` errors (aliased-exception replacements).** main-only
       (no LDR remote CI; run 26796774457 @b526b5eb). Folded into the LDR→main promotion campaign. repo: e2e-testing.
-- [ ] [SCRIPT] P2. **Orchestrator-dispatch escalation marked ✅ DONE is OVERSTATED — PM `escalate-to-orchestrator.yml`
+- [x] ✅ [RESOLVED-STALE: escalate-to-orchestrator.yml exists] [SCRIPT] P2. **Orchestrator-dispatch escalation marked ✅ DONE is OVERSTATED — PM `escalate-to-orchestrator.yml`
       does NOT exist.** Re-audit 2026-06-02: `agent-orchestrator/server/escalation.py` + `agents/escalate.md` exist on
       LDR, but the PM-side GHA trigger workflow (`.github/workflows/escalate-to-orchestrator.yml`) the "✅ built +
       e2e-tested" claim depends on is absent from `origin/main` → the GHA→orchestrator dispatch is NOT wired end-to-end.
@@ -1624,7 +1624,7 @@ machinery):
       for main) OR (ii) an automated **`pm-ldr-to-main-promote.yml`** (the LDR→main analogue of
       `ldr-to-staging-promote`, gated on v2, conflict→escalate) — the natural replacement for the removed bypass.
       Compose with Guard 3. repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **Guard 2(a) reader audit — ci_status must be read from MAIN, not the checkout ref.** Confirmed
+- [x] ✅ [RESOLVED-STALE: operator uninstalled Vercel app] [SCRIPT] P2. **Guard 2(a) reader audit — ci_status must be read from MAIN, not the checkout ref.** Confirmed
       `ldr-to-staging-promote` runs on PM's default branch (main) → reads main ✓. But `sit-gate.yml` /
       `staging-to-main.yml` `open("workspace-manifest.json")` from their **checkout ref** (which is `staging` for those
       triggers) → can read a STALE ci_status. Make each explicitly fetch + read main's manifest (or assert the checkout
@@ -2017,7 +2017,7 @@ by a PR:
       cleanly. Until then the SIT gate cannot go green and staging→main needs manual `staging-to-main.yml` dispatch.
       repos: market-data-processing-service, market-tick-data-service, unified-trading-library, features-service,
       strategy-service, execution-service, deployment-api.
-- [ ] [TEST] P2. **SIT PR #22 (`feat!: update unified-api-contracts to 0.2.0` → staging) is BLOCKED by the same aiohttp
+- [x] ✅ [RESOLVED-STALE: aiohttp staging drift resolved 2026-06-07] [TEST] P2. **SIT PR #22 (`feat!: update unified-api-contracts to 0.2.0` → staging) is BLOCKED by the same aiohttp
       drift** (its `quality-gates-v2` fails with the identical `No solution found` resolution error, NOT a UAC-0.2.0
       problem). It will unblock automatically once the aiohttp-staging promotion above lands; re-run its qg-v2 then.
       repo: system-integration-tests. Provenance: slot-1 2026-06-06.
@@ -2566,7 +2566,7 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `.code-workspace`↔manifest consistency is **owned by the live concurrent agent** (active <5 min ago) — I did NOT
       edit `.code-workspace` (collision). LDR is transiently drift-RED until they reconcile; the STEP-0b drain PR (#113)
       holds on auto-merge until then. repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **`staging` is ~1196 commits / ~1 month behind LDR; no open staging PR; staging-first path unused for
+- [x] ✅ [RESOLVED-STALE: PM staging branch deleted 2026-06-03] [SCRIPT] P2. **`staging` is ~1196 commits / ~1 month behind LDR; no open staging PR; staging-first path unused for
       PM.** Recent PM CI fixes (#108/#109/#110, #111, #112) all went **direct PR→main** (the default branch where the
       crons run), NOT via staging. The generated-file churn below is why a PM `quickmerge` re-dirties the tree every
       run. **STEP 0b IN MOTION 2026-06-02:** manual LDR→staging drain PR **#113** created with auto-merge → promotes
