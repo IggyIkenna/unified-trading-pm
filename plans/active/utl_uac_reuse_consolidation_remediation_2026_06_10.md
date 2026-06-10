@@ -121,9 +121,22 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
       diverging. Preserve local: notional math (`_compute_notional_for_qty` inverse/linear), staleness, market-hours,
       cash-reserve, VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract.
-- [ ] [AGENT] P0. **Fix the local quality bug found in passing**: `pre_trade_check_engine.py:579` uses a hardcoded
-      `equity = exposure / Decimal("5")` proxy instead of real equity in the leverage check. Replace with the actual
-      equity estimate.
+- [x] ✅ [AGENT] P0. **Fix the local quality bug found in passing**: `pre_trade_check_engine.py:579` used a hardcoded
+      `equity = new_position_value / Decimal("5")` proxy → made leverage a **constant 5.0** for every book, so
+      `leverage > max_leverage` could never fire. **Shipped (CODE VERIFIED, ship pending — see status note below):**
+      extracted `account_equity_proxy()` in `risk_calculator.py` as the equity-formula SSOT (`value/maxlev + uPnL`,
+      floored at 1); both `RiskCalculator.estimate_account_equity` and the pre-trade engine now use it; pre-trade bases
+      equity on the **post-trade** value (neutral uPnL → `leverage == max_leverage` baseline preserved; negative uPnL →
+      higher leverage → can breach). Added uPnL-sensitivity regression test. Evidence: 60 risk tests green, basedpyright
+      0 errors, full `quality-gates.sh` exit 0. **This also delivers the first slice of the P0 "dedupe twin equity
+      helper" above** (the equity-proxy formula is now single-sourced).
+
+> **🟡 STATUS 2026-06-10:** the leverage-fix code is committed-ready and fully verified on `strategy-service`, but the
+> `quickmerge` ship is **BLOCKED**: `market-tick-data-service` (a path-dependency of strategy-service) carries active
+> foreign uncommitted WIP in this slot (an in-progress migration-scripts refactor — 50+ dirty files). quickmerge's dep
+> pre-flight refuses while a dep is dirty, and the rules forbid committing another session's WIP. Ship + flip to `[x]`
+> lands the moment MTDS is clean.
+
 - [ ] [AGENT] P1. **Extract one local `equity_curve_drawdown()` helper** for the duplicated peak/max-drawdown loop in
       `engine/core/components/pnl_monitor.py:214-222` and `engine/core/output_builders.py:153-158`. Keep it **local**
       (do NOT route to UTL `hwm_invariants` — wrong domain). Leave fee-crystallization HWM to UTL `post_trade`.
@@ -133,20 +146,36 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 - [ ] [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
       quickmerge.
 
-## Phase 2 — API auth dedup (findings #2, #3, #7b) — delete hand-rolled, wire `create_api_auth`
+## Phase 2 — API auth dedup (findings #2, #3, #7b)
 
-- [ ] [AGENT] P0. **alerting-service**: delete `alerting_service/auth.py` (`verify_api_key` + DISABLE_AUTH guard);
-      change `api/main.py` to depend on UTL `create_api_auth("alerting-service")` (mirror client-reporting-api's live
-      `api/main.py`). This one is **wired in production** — highest urgency of the three.
-- [ ] [AGENT] P0. **client-reporting-api**: delete the dead `client_reporting_api/auth.py` (`verify_api_key` +
-      `verify_service_token` + `GoogleOAuthMiddleware`). Live path (`api/main.py` + `auth_standardized.py`) already uses
-      `create_api_auth` / `create_s2s_auth_dependency`. Deleting it also removes the direct
-      `google.oauth2`/`google.auth` SDK import (`_google_auth_sync.py`/`auth.py:123`). If OIDC is genuinely still
-      needed, route via UTL, not `google.oauth2` directly.
-- [ ] [AGENT] P1. **unified-trading-api**: migrate `middleware/auth.py` X-API-Key validation core to UTL
-      `create_api_auth(...)`; preserve the gateway-specific mock/app_state wiring (the only local-specific bit).
-- [ ] [VERIFY] P0. Auth smoke per repo (200 with valid key, 401 without, DISABLE_AUTH refused in prod mode);
-      `quality-gates.sh` green; quickmerge each.
+> **⚠️ ACCURACY CORRECTION (verified 2026-06-10 during execution — do NOT blind-swap):** UTL `create_api_auth`
+> authenticates via **Bearer JWT + X-Service-Token (S2S) + DISABLE_AUTH only — it does NOT read `X-API-Key`** (the
+> `AuthContext.is_api_key` field is unused; client-reporting-api's "X-API-Key (legacy)" comment refers to its OWN dead
+> `auth.py`, not UTL). alerting-service `verify_api_key` and unified-trading-api `middleware/auth.py` authenticate via
+> **`X-API-Key`**. So replacing them with `create_api_auth` as-is would **break every X-API-Key caller** (prod auth
+> regression on alerting-service). The strongest-combination is **UTL-extension-first** (like Phase 3): add a 4th
+> `X-API-Key` (legacy) path to `create_api_auth` validating against `UnifiedCloudConfig.api_key`, MINOR-bump UTL, THEN
+> migrate the services. client-reporting-api (#3) is unaffected — it is pure dead-code deletion (already on the JWT/S2S
+> path).
+
+- [ ] [AGENT] P0. **UTL extension FIRST**: add an `X-API-Key` (legacy) branch to `cloud_interface/api_auth.py`
+      `create_api_auth` — read the `X-API-Key` header, validate against `UnifiedCloudConfig().api_key`, return an
+      internal/admin `AuthContext` (set `is_api_key=True`), 401 on missing/invalid. Preserves the existing JWT + S2S +
+      DISABLE_AUTH paths. Ship as a UTL MINOR bump. (Prevents the prod-auth regression on the two X-API-Key services.)
+- [ ] [AGENT] P0. **alerting-service** (depends on UTL extension above): delete `alerting_service/auth.py`
+      (`verify_api_key` + DISABLE_AUTH guard); change `api/main.py` to depend on UTL
+      `create_api_auth("alerting-service")`. Verify an `X-API-Key` caller still authenticates (it is **wired in
+      production**). Highest urgency of the three.
+- [ ] [AGENT] P0. **client-reporting-api** (no UTL extension needed — pure dead-code deletion): delete the dead
+      `client_reporting_api/auth.py` (`verify_api_key` + `verify_service_token` + `GoogleOAuthMiddleware`). Live path
+      (`api/main.py` + `auth_standardized.py`) already uses `create_api_auth` / `create_s2s_auth_dependency`. Deleting
+      it also removes the direct `google.oauth2`/`google.auth` SDK import (`_google_auth_sync.py`/`auth.py:123`). Grep
+      for any residual importers of the dead module before deleting.
+- [ ] [AGENT] P1. **unified-trading-api** (depends on UTL extension above): migrate `middleware/auth.py` X-API-Key
+      validation core to UTL `create_api_auth(...)`'s new legacy path; preserve the gateway-specific mock/app_state
+      wiring (the only local-specific bit).
+- [ ] [VERIFY] P0. Auth smoke per repo (200 with valid **X-API-Key**, 200 with Bearer JWT / X-Service-Token, 401
+      without, DISABLE_AUTH refused in prod mode); `quality-gates.sh` green; quickmerge each.
 
 ## Phase 3 — ml-service ModelRegistry (findings #4, #13) — EXTEND UTL FIRST
 

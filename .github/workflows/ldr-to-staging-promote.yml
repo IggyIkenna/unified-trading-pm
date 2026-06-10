@@ -163,7 +163,15 @@ jobs:
 
             if [ -n "$PR_URL" ]; then
               echo "  PR: $PR_URL"
+              # --rebase fails to ARM when LDR is merge-laden ("This branch can't be rebased": backmerge
+              # bot / resolved backmerges) → auto-merge silently never arms → promote PR piles up. Fall
+              # back to --squash (always armable) with an EXPLICIT sanitized subject/body so no inherited
+              # LDR commit-message [skip ci] poisons the staging push (closes hardening @4941).
               gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                || gh pr merge "$PR_URL" --auto --squash \
+                     --subject "chore(promote): LDR → staging (Tier C auto-drain)" \
+                     --body "Tier C automated drain — squash fallback (LDR not rebaseable); sanitized body." \
+                     --repo "$OWNER/$REPO" 2>/dev/null \
                 || echo "  WARN: auto-merge unavailable for $REPO — merge manually: $PR_URL"
               PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
               continue
@@ -217,7 +225,11 @@ jobs:
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
                     sleep 3
                     gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                      && gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null || true
+                      && { gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                           || gh pr merge "$PR_NUM" --auto --squash \
+                                --subject "chore(promote): LDR → staging (Tier C auto-drain)" \
+                                --body "Tier C automated drain — squash fallback." \
+                                --repo "$OWNER/$REPO" 2>/dev/null; } || true
                     echo "    re-triggered (fresh pull_request event → v2 on current head)"
                     PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
                   else

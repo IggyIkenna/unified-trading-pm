@@ -1953,7 +1953,7 @@ by a PR:
     600s/concurrency debounce or wire the orphaned `staging-changed` dispatch properly (payload SHA + checkout); (c) e2e
     verify push-SIT-staging → gate completes → `sit-lock`→PM `sit-gate` locks → `staging-validated`→`staging-to-main`
     promotes. P1 #5's notify fix (shipped) removes the run-failure noise that previously masked this.
-- [ ] [TEST] P1. **SIT suite content is STALE — a real gate run FAILS today (surfaced by #257 dry-exercise
+- [x] ✅ [TEST] P1. **SIT suite content is STALE — a real gate run FAILS today (surfaced by #257 dry-exercise
       2026-06-01).** The chain WIRING is revived + green, but the integration TESTS rotted over ~4 months while the gate
       was dead. Local run (`.venv`, CLOUD_MOCK_MODE): `abbreviated_sit` 22/23 pass; **`code_test` COLLECTION ERROR** —
       `tests/integration/test_cross_venue_aggregation_e2e.py:40` imports
@@ -1966,6 +1966,15 @@ by a PR:
       (`pbms_aggregator._VenueData` → `.VenueData`); `pytest tests/ -m code_test --collect-only` now exits 0
       (**4235/4722 collected, 487 deselected**, only harmless `full_e2e` unknown-mark warnings). **REMAINING:** full
       symbol-drift sweep across the rest of `tests/`, `deployment_test` re-green, and one run-to-completion — kept open.
+      **DONE 2026-06-10 (harsh slot-1, `system-integration-tests@086a949`):** full sweep + run-to-completion COMPLETE.
+      Built the SIT venv (`uv sync`) and `--collect-only` the WHOLE `tests/` tree → **5236 tests collected, 0 import/
+      symbol-drift errors** — the `_VenueData` repoint was the ONLY drift; nothing else rotted. `code_test`
+      **run-to-completion: 4736 passed, 4 skipped**; the single failure (`test_cascade_workflows_have_secrets_inherit`)
+      was a TEST false-positive — it matched a COMMENT that merely mentions `persist-cicd-event.yml` (the real `uses:`
+      call carries `secrets: inherit` correctly), now restricted to `uses:` lines + re-verified passing. Registered the
+      `full_e2e` pytest marker (killed the unknown-mark warning). `deployment_test` collects clean; its RUN is
+      docker-gated → CI's `deployment-tests` job. Full SIT `quality-gates.sh` green (163s). The gate no longer fails on
+      stale content.
 - [x] ✅ [SCRIPT] P0. DONE 2026-06-06 (slot-1 SIT diagnosis): **smoke-test-gate.yml never assembled the editable-dep
       sibling workspace before `uv pip install -e .` → Smoke Test Gate FAILED on every staging-promotion dispatch →
       `staging-validated` never fired → staging→main needed manual nudges.** Root cause (run 27066432311
