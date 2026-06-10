@@ -195,15 +195,31 @@ fi
 if [[ -z "${_ghtok}" ]]; then
     soft_bad "no GH_TOKEN — gh/HTTPS workflow edits will be refused (run: source scripts/workspace/load-gh-token.sh)"
 else
-    _code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
-        -H "Authorization: token ${_ghtok}" -H "Accept: application/vnd.github+json" \
-        "https://api.github.com/repos/IggyIkenna/unified-trading-pm/contents/.github/workflows/quality-gates-v2.yml" \
-        -d '{"message":"symcheck probe","content":"eA==","sha":"0000000000000000000000000000000000000000","branch":"live-defi-rollout"}' 2>/dev/null || echo "000")
-    case "${_code}" in
-        409|422) ok "GH_TOKEN is workflow-capable (Workflows:write)" ;;
-        403)     soft_bad "GH_TOKEN lacks Workflows:write (HTTP 403) — workflow migrations will block (no workflow-scoped PAT loadable on this host; surfaced at push time)" ;;
-        *)       soft_bad "GH_TOKEN workflow-capability probe inconclusive (HTTP ${_code})" ;;
-    esac
+    # FREE rate-limit pre-check (codified 2026-06-10). GET /rate_limit does NOT count against the
+    # quota. GitHub meters the 5000/hr PRIMARY limit PER-USER (shared across ALL that user's PATs —
+    # .act-secrets + Secret-Manager tokens for the same login draw ONE pool), so when it's spent
+    # EVERY authenticated REST call — incl. the workflow PUT below — returns 403 "rate limit
+    # exceeded". The old check did the mutating PUT regardless, got that 403, and MISREPORTED it as
+    # "lacks Workflows:write" — the false signal that paged the hk laptop for ~9h (incident
+    # 2026-06-10; the token scope was fine, user CosmicTrader's quota was just exhausted, and a
+    # second token would not help since the pool is per-user). So: if there's no headroom, skip the
+    # PUT entirely and report the rate-limit TRUTH; only probe scope when a call can actually land.
+    _rl_remaining=$(curl -s -H "Authorization: token ${_ghtok}" -H "Accept: application/vnd.github+json" \
+        "https://api.github.com/rate_limit" 2>/dev/null \
+        | python3 -c 'import json,sys; print(json.load(sys.stdin)["resources"]["core"]["remaining"])' 2>/dev/null || echo "")
+    if [[ "${_rl_remaining}" =~ ^[0-9]+$ ]] && [[ ${_rl_remaining} -lt 5 ]]; then
+        soft_bad "GH workflow-capability probe SKIPPED — GitHub API rate limit exhausted (${_rl_remaining}/5000 core remaining for this token's user; PER-USER pool, resets hourly). This is QUOTA, not token scope — not a permission problem."
+    else
+        _code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
+            -H "Authorization: token ${_ghtok}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/IggyIkenna/unified-trading-pm/contents/.github/workflows/quality-gates-v2.yml" \
+            -d '{"message":"symcheck probe","content":"eA==","sha":"0000000000000000000000000000000000000000","branch":"live-defi-rollout"}' 2>/dev/null || echo "000")
+        case "${_code}" in
+            409|422) ok "GH_TOKEN is workflow-capable (Workflows:write)" ;;
+            403)     soft_bad "GH workflow PUT 403 WITH rate-limit headroom (${_rl_remaining} remaining) — likely genuine missing Workflows:write scope or SSO-unauthorized (surfaced at push time)" ;;
+            *)       soft_bad "GH_TOKEN workflow-capability probe inconclusive (HTTP ${_code})" ;;
+        esac
+    fi
 fi
 
 # Snapshot the PAGE-WORTHY host-SYMMETRY failures BEFORE the per-worktree checks below. Two
