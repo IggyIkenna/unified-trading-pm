@@ -325,7 +325,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
             # The head commit message decides the auto-recovery MECHANISM (see auto_recover_stuck_prs):
             # a `[skip ci]` head suppresses BOTH push and pull_request, so close+reopen cannot re-fire
             # v2 — and a workflow_dispatch run is NOT associated with the PR, so its green does NOT
-            # satisfy the required check (verified live 2026-06-10: 3× green dispatch runs on the
+            # satisfy the required check (verified live 2026-06-10: 3x green dispatch runs on the
             # exact head SHA, PR stayed BLOCKED). The only working lever is superseding the head with
             # a fresh clean-message EMPTY commit. `commits` is PR-ordered; the head is last.
             commits = pr.get("commits") or []
@@ -712,7 +712,8 @@ def _refire_v2_with_empty_commit(repo: str, branch: str, head_sha: str) -> bool:
         "Plan: semver_version_bump_skip_ci_promotion_block_2026_06_09."
     )
     new = gh_json(
-        ["api", f"repos/{ORG}/{repo}/git/commits", "-f", f"message={msg}", "-f", f"tree={tree}", "-f", f"parents[]={head_sha}"]
+        ["api", f"repos/{ORG}/{repo}/git/commits", "-f", f"message={msg}", "-f", f"tree={tree}",
+         "-f", f"parents[]={head_sha}"]
     )
     new_sha = new.get("sha") if isinstance(new, dict) else None
     if not new_sha:
@@ -738,7 +739,7 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
         semver bump / dep pin / a manual recovery commit that merely MENTIONS the token) →
         close+reopen is INEFFECTIVE (the re-fired pull_request is equally suppressed) and a
         ``workflow_dispatch`` run does NOT satisfy the PR's required check (its check suite is
-        not associated with the PR — verified live 2026-06-10: 3× green dispatch runs on the
+        not associated with the PR — verified live 2026-06-10: 3x green dispatch runs on the
         exact head SHA, PR stayed BLOCKED). Recover by SUPERSEDING the head with an empty
         clean-message commit (same tree) via the git-data API → real push/pull_request runs
         fire and count. The new head changes the PR head SHA, so the next tick sees v2
