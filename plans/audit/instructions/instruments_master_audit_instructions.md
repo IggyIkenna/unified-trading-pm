@@ -183,6 +183,23 @@ constant said v8 while 0% of 7.4M rows were v8).
 - [ ] (expected) instrument-exists-but-data-not-backfilled → `expected_unattempted` (via `was_instrument_alive` +
       genesis/launch), never silently absent.
 
+## CF-16 — catalogue-seeded denominator at ZERO captured data (added 2026-06-10; instruments owns the could-exist denominator)
+
+> Concrete re-runnable steady-state check for the migration-verification CF-16 added by
+> `migration_verification_orphan_safety_2026_06_10.md` (V7). instruments-service is the could-exist ROOT, so it owns the
+> proof that a 0-captured cell still materialises a FULL `expected_unattempted` denominator (NOT silent absence). SSOT:
+> `canonical_form_cross_service_audit_checklist.md` CF-16.
+
+- [ ] (CF-16) **catalogue-seeded denominator at zero data + CeFi/Prediction enumerators are FULL (not STUB)** — pick a
+      `(venue, data_type, instrument_type)` with **0 captured rows** but instruments listed in the IS catalogue; assert
+      `enumerate_expected_universe.py --asset-group <ag>` materialises a complete `expected_unattempted` denominator
+      from the `build_instrument_catalogue.py` lifecycle roll-up (NOT silent absence — the could-exist universe still
+      populates rows). Specifically assert the **CeFi** and **Prediction** enumerators are FULL via the v2 shape-aware
+      producer (`_enumerate_v2_cefi` / `_enumerate_v2_prediction`), no longer the STUB path (CeFi was "needs IS catalog
+      per-instrument lifecycle", Prediction was STUB on `PREDICTION_GROUPS` — both unblocked by
+      `build_instrument_catalogue.py` shipped 2026-06-05). Green: a 0-captured cell shows a fully-enumerated denominator
+      for every AG; `_enumerate_v2_cefi` / `_enumerate_v2_prediction` are exercised (no STUB return), grep-verified.
+
 ## Success Criteria
 
 - All 7 checklist items GREEN (especially QG STEP 5.70 triple-pass)
