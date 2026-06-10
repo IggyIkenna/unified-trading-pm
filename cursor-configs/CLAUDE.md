@@ -331,8 +331,15 @@ live-only data_types; distinct field sets; deriving `available_at` at read-time.
 ### Bucket-name SSOT
 
 Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)` — never inline
-`gs://` f-string. `deployment-service/configs/cloud-providers.yaml` is canonical. QG STEP 5.69 enforces. SSOT:
-`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`.
+`gs://` f-string. **Canonical `cloud-providers.yaml` = the UAC-packaged copy
+`unified_api_contracts/config/cloud-providers.yaml`** (relocated 2026-06-10: UTL is T0 and used to read it by walking up
+to the T4 `deployment-service/` dir, which is ABSENT in a standalone CI clone → `BucketNamingError`; UAC is a genuinely
+lower-tier installed package UTL hard-depends on, so the yaml is always available there — `bucket_naming` reads it via
+`importlib.resources` as the always-available default). The `deployment-service/configs/` copy stays the authoring
+location + the local `deployment_service.env_substitutor` read, and `unified-trading-pm/configs/` is a byte-identical
+mirror — both kept in sync with the UAC canonical. QG STEP 5.69 enforces the no-inline-`gs://` rule. SSOT:
+`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` +
+`plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
 
 ### UI changes — playwright gate (HARD RULE — codified 2026-05-23)
 

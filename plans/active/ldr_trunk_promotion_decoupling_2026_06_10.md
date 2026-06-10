@@ -293,7 +293,7 @@ always available) — captured as P1/P2 todos in `bucket_name_ssot_legacy_dual_w
       `quality-gates-v2` on main the only gate (no protection bypass, no whole-trunk promote). Triple-guarded: `[hotfix-main]`
       marker + operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize the live path) + service-repo-only.
       Both refusal guards smoke-verified; `bash -n` + shellcheck clean. The live main-mutation path is operator-gated (inert
-      by default) so it's safe-shipped without a risky live test. — unified-trading-pm@<pending>.
+      by default) so it's safe-shipped without a risky live test. — unified-trading-pm@da0cd88c.
 - [ ] [SCRIPT] P3. **D5 host stale-PR/checkout monitoring** — extend the slot Slack monitoring; composes with
       `verify-slot-host-symmetry.sh`. Spec in the Track-D todo above.
 - [x] ✅ [SCRIPT] P1. **UAC relocation of cloud-providers.yaml** — canonical yaml packaged in UAC
