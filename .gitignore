@@ -164,3 +164,7 @@ logs/
 .smoke-dirt.txt
 # Benchmark evidence CSVs (committed as plan evidence per qg-bench-aggregate)
 !scripts/dev/qg-bench-under-load-*.csv
+
+# Orchestrator plan-health agent generated digests (written into the PM executor clone; regenerated each run)
+plan_health_digest.md
+plan_skeleton.md
