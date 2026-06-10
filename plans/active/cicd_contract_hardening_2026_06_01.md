@@ -4487,3 +4487,28 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       **Proven:** unit-tested the exact counter/skip/ escalate-once/auto-clear logic across 5 simulated runs
       (fail×3→quarantine+escalate-once→skip-forever→success- auto-clears); CRITICAL goes silent once quarantined,
       WARNING fires once. `actionlint .github/workflows/     staging-to-main.yml` exit 0. — unified-trading-pm@2ebd75b9b
+
+### Tasks 3+4 — same session (2026-06-10, slot-1)
+
+- [x] **Task 3 — RESOLVED bookend VERIFIED firing (no fix needed).** Ran
+      `ci_failure_watcher.py --repo <ui-repo>     --resolved-hours 2` as a local dry-run (no `GITHUB_OUTPUT` → prints
+      report, posts nothing; no `--escalate` → no dispatch). Both UI promotion PRs merged ~00:59–01:03Z rendered the
+      bookend:
+      `:ballot_box_with_check: 1 promotion PR(s) RESOLVED (merged/closed): deployment-ui #35 live-defi-rollout→main     merged`
+      and `unified-trading-system-ui #32 live-defi-rollout→main merged`. The `mergedAt` fix (line ~362, was the invalid
+      `merged` field that 404'd the whole query) is live and the merged/closed verb resolves correctly. The bookend
+      posts as INFO + still triggers the notify (build_report returns alert-or-resolved True). No code change.
+- [ ] **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
+      state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard `ldr-to-staging-promote` had already
+      opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they were stuck: ml-service #15 had
+      **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but the v2 `workflow_dispatch` run
+      on the SAME SHA `766207b8` SUCCEEDED, confirming the code is green, just dep-clone WARN noise on the PR-event
+      run); deployment-service #39 had auto-merge ON but **v2 had never reported on its head `3313121c`** (empty rollup
+      = v2-never-reported deadlock; AWS CodeBuild was the only status and it is NOT a required context — only
+      `Quality Gates (deployment-service) / quality-gates-v2` is required on staging, confirmed via ruleset + classic).
+      **Actions (standard-path unstick, NOT hand-merge):** re-triggered `quality-gates-v2.yml --ref live-defi-rollout`
+      on both heads; enabled auto-merge (`gh pr merge 15 --auto --squash`) on ml-service #15. **Result so far:**
+      ml-service #15 **MERGED** → `SPURIOUS=1` now on **ml-service staging** (✓ LDR→staging done); deployment-service
+      #39 still OPEN + auto-merge ON with v2 in-progress on `3313121c` (will merge on green). **Remaining:** both still
+      need staging→main (SIT-driven `staging-validated` → `staging-to-main.yml`) to land the marker on `main`.
+      Monitoring the marker reach `main` for both. (deployment-api already had it on main per dispatch context.)
