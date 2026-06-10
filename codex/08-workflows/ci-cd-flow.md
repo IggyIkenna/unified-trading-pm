@@ -306,6 +306,35 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   workflow's retry-with-rebase manifest push — never re-share the group "for write safety" (redundant for safety, fatal
   for liveness). Detail: `codex/08-workflows/dependency-cascade.md` § "Concurrency + manifest-write safety".
 
+- **Cascade poll semantics (fixed 2026-06-10, exec-svc 0.6.0 jam — PM#209 + PM@670a15aac)**: `poll_level` judges
+  dispatched repos by manifest `ci_status`, which carries TWO traps now guarded in-code. (1) **Baseline-aware**: a repo
+  whose ci_status was ALREADY `FAILING` pre-dispatch counts as PENDING until it flips (the dispatched run hasn't
+  reported yet) — the prior code insta-failed the whole cascade at t=0s on stale redness (run 27271453887: died in 31s;
+  the freshly dispatched QG passed 2 min later). (2) **`PASSING_STATUSES` includes `MAIN_GREEN` + `SIT_VALIDATED`** —
+  the set was missing the two HIGHEST lifecycle states, so an already-MAIN_GREEN dependent polled as "pending" for the
+  full 15-min level timeout (run 27273116468). `"VALIDATED"` was a phantom value no writer emits. Also: the workflow
+  configures git identity (the downstream-invalidation commit previously died on `fatal: empty ident name` and the
+  manifest write was silently lost). Post-fix proof: same cascade green in 29 s.
+- **The SIT loop is CLOSED end-to-end (fixed 2026-06-10 — TWO links were missing)**: the chain is `sit-debounce-trigger`
+  → `sit-gate` (locks staging "SIT running" **+ dispatches `full-workspace-sit`** — previously it locked and dispatched
+  NOTHING, so the SIT only ever ran on its nightly schedule and every lock dangled) → `full-workspace-sit`
+  (system-integration-tests; **reports `sit-passed`/`sit-failed` back to PM on completion** — previously it reported
+  nothing) → `sit-unlock` (**handles BOTH events** — previously only `sit-failed`, which nothing sent: a GREEN SIT could
+  never unlock staging). `sit-passed` unlocks + clears `breaking_pending` + `pending_repos` + resets `sit_retry_count`.
+  This pair was the systemic root of "staging is always locked".
+- **Breaking fan-out multiplier (OPEN policy issue, filed 2026-06-10)**: one genuine breaking bump (e.g. UTL 0.5.0) fans
+  out as `feat!:` re-pin commits to every consumer — each consumer's bump then classifies breaking BY INHERITANCE (the
+  `feat!` override bypasses the AST differ) → N+1 `breaking_pending` entries + N+1 serialized cascade/lock windows for
+  ONE surface change. Direction (tracked in `cicd_contract_hardening_2026_06_01.md` § "Cascade fan-out batching"): (a)
+  batch the fan-out set into ONE cascade (union of dependents — the SIT side already batches via sit-debounce); (b) run
+  the AST differ on the CONSUMER's own surface at re-pin time instead of inheriting `feat!` (a dep re-pin almost never
+  changes the consumer's exports → most re-pins should be non-breaking, no lock at all).
+- **Lock granularity (design note, operator direction 2026-06-10)**: the global lock's attributability argument only
+  binds OVERLAPPING dependency cones — DISJOINT cones could freeze + SIT-validate in parallel (per-batch traceability is
+  exactly what the Repos-CI dashboard SIT panel provides; see `codex/03-observability/monitoring-control-plane.md`).
+  Tracked as a design item in `cicd_contract_hardening_2026_06_01.md`; do NOT implement ad-hoc — it interacts with
+  sit-debounce batching and the manifest's single `staging_status`.
+
 SSOT: `plans/archive/2026_06/sit_breaking_detection_content_based_2026_06_08.md`. Cross-link:
 `ci_local_qg_parity_2026_06_08.md` — SIT is the assembled-invariant LAYER (cross-repo, now breaking-gated); QG-v2 is the
 per-repo layer that still runs on every staging PR.

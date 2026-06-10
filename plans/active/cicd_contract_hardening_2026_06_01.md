@@ -4862,3 +4862,45 @@ Both template fixes need `rollout-workflow-templates.sh` to the fleet (same chan
       re-pin time instead of unconditionally inheriting `feat!` — most consumer surfaces don't change, so most re-pins
       shouldn't be breaking at all. Repo: unified-trading-pm (`update-dependency-version.yml` template +
       `cascade-qg-ordering.yml`).
+
+### SIT-loop + cascade-poll repairs (landed 2026-06-10, slot-3 — postmortem of the exec-svc 0.6.0 jam)
+
+Landed (do NOT undo; conflicts reconciled below):
+
+- [x] ✅ [CI] Cascade baseline-aware poll + git identity — PM#209 (was: t=0 stale-read insta-fail + lost invalidation
+      writes).
+- [x] ✅ [CI] `PASSING_STATUSES` += `MAIN_GREEN`, `SIT_VALIDATED` — PM@670a15aac (was: highest-state repos polled
+      pending → 15-min timeout fail; `"VALIDATED"` is a phantom no writer emits).
+- [x] ✅ [CI] SIT loop closed end-to-end — PM@d22674456 (sit-gate now DISPATCHES full-workspace-sit after locking;
+      sit-unlock handles `sit-passed`: unlock + clear breaking_pending/pending_repos/sit_retry_count) +
+      system-integration-tests@6ee429a (full-workspace-sit reports `sit-passed`/`sit-failed` to PM). Was: lock set, SIT
+      never dispatched, no success consumer — a green SIT could never unlock staging.
+- [x] ✅ [CI] Harness repos `MANIFEST_ALIGNMENT_SKIP=true` — e2e-testing@396610d + system-integration-tests@19fea22
+      (their imports live under tests/, excluded by the 2026-06-10 alignment-scanner parity change).
+
+**Conflict notes (read before touching these surfaces):**
+
+- `sit-debounce-trigger.yml`'s dangling-lock auto-clear (>10 min, pending empty) STAYS — it is now the backstop, not the
+  primary unlock (the primary is `sit-passed`). Do not remove either thinking the other covers it.
+- The sit-repo `full-workspace-sit.yml` report-back is committed on its LDR; **dispatch-triggered workflows run from the
+  DEFAULT branch** → it is INERT until promoted to system-integration-tests `main`. Until then, the operator-side
+  fallback after a manual/nightly green SIT is
+  `gh api repos/IggyIkenna/unified-trading-pm/dispatches -X POST -f event_type=sit-passed`.
+- `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` ("MAJOR bump → cascade of QGs, escalate only on
+  fail") is UNCHANGED in semantics — these fixes make that contract actually executable (the cascade had never completed
+  a level honestly before today).
+
+Open follow-ups:
+
+- [ ] [CI] P2. Promote system-integration-tests LDR → main so the SIT report-back goes live (blocked-then-unblocked by
+      this very unlock chain; verify with a staged breaking bump end-to-end: lock → SIT auto-runs → sit-passed →
+      auto-unlock with NO manual dispatch).
+- [ ] [CI] P2. Consumer re-pin breaking verdict: run `detect_breaking_change.py` on the CONSUMER's own surface at
+      `update-dependency-version.yml` re-pin time instead of unconditionally titling `feat!:` — most re-pins don't
+      change the consumer's exports → no breaking classification → no lock window. Composes with "Cascade fan-out
+      batching" above; does NOT weaken the content-based rule (it EXTENDS it to re-pins).
+- [ ] [CI] P3. **Per-cone parallel staging locks (operator direction 2026-06-10)** — design item: disjoint dependency
+      cones freeze + SIT-validate in parallel (attributability holds within a cone; per-batch traceability via the
+      Repos-CI dashboard SIT panel). Lock duration becomes the longest cone, not the sum. Requires: per-cone
+      staging_status partitions + sit-debounce batching by cone + overlap detection (overlapping cones still serialize).
+      Design doc before code; interacts with `staging_status` being a single manifest object.
