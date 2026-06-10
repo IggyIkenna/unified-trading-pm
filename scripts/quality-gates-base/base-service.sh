@@ -183,6 +183,62 @@ for arg in "$@"; do
     esac
 done
 
+# ── QG_SLICE — CI parallel-jobs selector (latency reduction 2026-06-10) ───────
+# The CI reusable workflow (python-quality-gates-v2.yml) fans the ONE monolithic
+# ~12-min serial gate into PARALLEL jobs, each invoking this script with a slice:
+#   QG_SLICE=tests       → ENVIRONMENT + [3] TESTS only        (the pytest cost; dominant)
+#   QG_SLICE=typecheck   → ENVIRONMENT + [4] TYPE CHECK only   (basedpyright cost)
+#   QG_SLICE=lint-codex  → ENVIRONMENT + [2] LINT + [3.5/3.6] + [5] CODEX (incl.
+#                          pip-audit + bandit) + [5.5] WORKFLOW LINT + [5.6] SERVICE
+#                          INFRA + the per-repo stub POST-GATES (falls through to stub)
+# Wall-time becomes max(slice), not sum(slices). The three slices PARTITION the gate
+# with ZERO overlap and ZERO lost coverage — every check the monolith ran runs in
+# exactly one slice. UNSET (the default) = the full, untouched monolithic run, so
+# every LOCAL invocation + every existing caller is behaviour-identical. The
+# tests/typecheck slice jobs early-exit after their phase; lint-codex and the full
+# run fall through to the stub's post-gates.
+#
+# WHY pip-audit is folded into lint-codex (not its own 4th slice): the entire [5]
+# CODEX section accumulates a SHARED violation counter `V` (codex checks + size
+# checks + pip-audit + bandit all `V=$((V+1))` into one ceiling check at section
+# end). Splitting pip-audit out would fork that counter — high-risk surgery on the
+# fleet's critical gate for ~3min of pip-audit that runs in PARALLEL with the 715s
+# pytest slice anyway (it is NOT on the critical path). Tradeoff documented in
+# plans/active/cicd_v2_latency_reduction_2026_06_10.md Progress Log.
+#
+# Sentinel safety: a sliced run is a PARTIAL run by definition, so it must NEVER
+# write `.qg_last_passed_sha` / `.qg_content_sentinel` (QG_SLICE forces
+# QG_SENTINEL_DISABLE + the sentinel-write block is additionally guarded on QG_SLICE
+# being empty). The CI aggregation job reports the required context only when ALL
+# slices pass.
+QG_SLICE="${QG_SLICE:-}"
+case "$QG_SLICE" in
+    ""|tests|typecheck|lint-codex) : ;;
+    *) echo "❌ invalid QG_SLICE='${QG_SLICE}' (allowed: tests|typecheck|lint-codex|unset)" >&2; exit 2 ;;
+esac
+# _QG_RUN_CODEX — run [3.5]/[3.6] + the [5] CODEX-compliance body + [5.5]/[5.6] +
+# stub post-gates. Default (full run): true. tests/typecheck slices set it false.
+_QG_RUN_CODEX=true
+if [ -n "$QG_SLICE" ]; then
+    # A slice is a partial run — never touch the sentinel (it certifies the FULL surface).
+    export QG_SENTINEL_DISABLE=true
+    case "$QG_SLICE" in
+        tests)      RUN_LINT=false; RUN_TESTS=true;  SKIP_TYPECHECK=true;  _QG_RUN_CODEX=false ;;
+        typecheck)  RUN_LINT=false; RUN_TESTS=false; SKIP_TYPECHECK=false; _QG_RUN_CODEX=false ;;
+        lint-codex) RUN_LINT=true;  RUN_TESTS=false; SKIP_TYPECHECK=true;  _QG_RUN_CODEX=true  ;;
+    esac
+fi
+# _qg_slice_done: a slice job has finished its one phase → exit cleanly BEFORE the
+# stub's post-gates (which belong to the lint-codex slice). No-op for the full run
+# (QG_SLICE empty) and for lint-codex (it must fall through to run the post-gates).
+_qg_slice_done() {
+    case "$QG_SLICE" in
+        tests|typecheck)
+            echo -e "\n${GREEN:-}✅ QG_SLICE=${QG_SLICE} PASSED${NC:-}"
+            exit 0 ;;
+    esac
+}
+
 # ── QG_PROFILE forces a COMPLETE, no-skip run ────────────────────────────────
 # Profiling must measure EVERY path, so all bypass flags (--no-fix / --quick /
 # --skip-tests / --skip-lint / --skip-typecheck / --skip-codex) are overridden and the
@@ -193,6 +249,7 @@ if [[ "${QG_PROFILE:-}" == "1" ]]; then
     unset SKIP_CODEX_FLAG
     export QG_SENTINEL_DISABLE=true
     IGNORE_TIMEOUT=true
+    QG_SLICE=""   # profiling measures the whole gate — ignore any slice selector
 fi
 
 # ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
@@ -394,7 +451,24 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     # TO REVERT: comment NEW line below, uncomment OLD pair above.
     # SSOT: codex/06-coding-standards/quality-gates-memory-governance.md
     # ╚════════════════════════════════════════════════════════════════════════╝
-    PARGS="-n ${PYTEST_WORKERS:-1} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header"
+    # ── PYTEST PARALLELISM (latency reduction 2026-06-10) ────────────────────
+    # The OOM mitigation above (default 1 worker) targets the SHARED 93 GB dev box
+    # running ~8 slots concurrently — its risk is many slots × many workers. In CI
+    # each quality-gates-v2 leg runs ALONE on its OWN GitHub runner (no shared host,
+    # no slot contention), so xdist `-n auto` (= core count, 2-4 on ubuntu-latest)
+    # is safe + cuts the dominant pytest leg ~2-4×. forks isolation is preserved
+    # (xdist spawns worker SUBPROCESSES; --block-network-equivalent allow-hosts kept
+    # below). LOCAL default stays 1 (the OOM-safe value) unless PYTEST_WORKERS is set.
+    # Override precedence: explicit PYTEST_WORKERS (per-repo / per-call) wins; else CI
+    # → auto, local → 1.
+    if [ -n "${PYTEST_WORKERS:-}" ]; then
+        _PYTEST_N="${PYTEST_WORKERS}"
+    elif [ -n "${GITHUB_ACTIONS:-}" ] || [ -n "${CI:-}" ]; then
+        _PYTEST_N="auto"
+    else
+        _PYTEST_N="1"
+    fi
+    PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header"
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to point at a different layout (e.g. PYTEST_UNIT_DIR="tests/" for per-family layouts).
     PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
@@ -514,8 +588,13 @@ PYEOF
     log_ok "All pytest.mark.skip have reason comments"
     qg_prof end tests
 fi
+# QG_SLICE=tests finishes here (its one phase is the pytest run above).
+_qg_slice_done
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
+# [3.5]+[3.6] are codex-adjacent static checks → part of the lint-codex slice
+# (skipped by the tests/typecheck/pip-audit slices via _QG_RUN_CODEX).
+if [ "${_QG_RUN_CODEX}" = true ]; then
 log_section "[3.5/6] IMPORT PATTERNS"
 IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
@@ -534,6 +613,7 @@ NSD="${REPO_ROOT}/unified-trading-pm/scripts/check-no-service-deps.py"
 if [ -f "$NSD" ]; then
     $PYTHON_CMD "$NSD" 2>/dev/null && log_success "No service-as-package deps" || { log_fail "Service must not depend on another service repo (use messaging per topology)"; exit 1; }
 fi
+fi  # _QG_RUN_CODEX (import-patterns + service-deps)
 
 # ── [4] TYPE CHECK (basedpyright, 120s, zombie cleanup) ──────────────────────
 log_section "[4/6] TYPE CHECK"
@@ -633,6 +713,11 @@ fi
 # are done; the lighter codex/validator phases run ungoverned. (OS auto-frees on exit.)
 # No-op when a sentinel hit meant we never acquired.
 [ "${_QG_SENTINEL_HIT:-false}" = true ] || qg_governor_release
+
+# QG_SLICE=tests and QG_SLICE=typecheck have already exited above (TESTS / TYPE CHECK
+# are their only phases). Everything from [5] onward (codex + pip-audit + bandit +
+# [5.5]/[5.6] + the stub post-gates) is the lint-codex slice and the full run — both
+# reach here, so [5] needs no extra slice guard (the early-exits did the partition).
 
 # ── [5] CODEX COMPLIANCE ──────────────────────────────────────────────────────
 # All checks are blocking unless excluded via QUALITY_GATE_BYPASS_AUDIT.md.
@@ -2846,6 +2931,7 @@ if [[ "${RUN_TESTS}" == "true" ]] && \
    [[ "${RUN_LINT}" == "true" ]] && \
    [[ "${QUICK_MODE}" == "false" ]] && \
    [[ "${ACT_MODE}" == "false" ]] && \
+   [[ -z "${QG_SLICE:-}" ]] && \
    [[ -z "${SKIP_CODEX_FLAG:-}" ]]; then
     # Write to PROJECT_ROOT (the gated repo's root — same dir the content sentinel below
     # uses), NOT REPO_ROOT: qg-common.sh resolves REPO_ROOT to PROJECT_ROOT/.. (the WORKSPACE
