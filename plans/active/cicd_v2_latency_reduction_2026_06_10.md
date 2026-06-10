@@ -208,3 +208,61 @@ nothing to ship for Phase 4.
 Pending: local QG-sweep on PM, ship PM via the `scripts/**` + `.github/**` carve-out, trigger a canary v2 (PM is itself
 a consumer of the reusable workflow; execution-service is the service canary) + prove wall-time drop + required-context
 still gates + real-failure-still-reds, fleet rollout via `rollout-workflow-templates.sh`, codex SSOT updates.
+
+### 2026-06-10 — FINAL REPORT (lifecycle COMPLETE) — slot-1·laptop
+
+All success criteria met. Shipped: PM@673157019 (slicing + content-sentinel) · ce4daf64a (Phase 1-4 flips) · 37cfea4ba
+(required-context-name fix) · 4a6e489fd (rollout flip + codex SSOTs). All on PM `main` (PR #198 + back-merge).
+
+**What changed (file:line):**
+
+- `scripts/quality-gates-base/base-service.sh` — `QG_SLICE` selector (~:199-249) + `_qg_slice_done` after [3] TESTS
+  (~:572) + typecheck-only exit after [4] (~:697) + `_QG_RUN_CODEX` guard on [3.5]/[3.6] + CI `pytest -n auto` (~:454) +
+  sentinel-write guarded on `QG_SLICE` empty (~:2917).
+- `scripts/quality-gates-base/base-library.sh` — same `QG_SLICE` selector (~:93-130) + boundary exits + `pytest -n auto`
+  (~:248) + sentinel guards (~:1118, ~:1125).
+- `.github/workflows/python-quality-gates-v2.yml` — restructured: `content-gate` job (tree-hash GHA-cache short-circuit)
+  → `qg-slices` matrix `[tests, typecheck, lint-codex]` (each: cheap setup + `QG_SLICE=<leg> quality-gates.sh --no-fix`)
+  → `quality-gates-v2` aggregation job (`name:` MUST be `quality-gates-v2` — the required context; reports green iff all
+  legs pass; saves the green marker on a real full-green; carries `metadata_only`).
+- `.gitignore` + `scripts/propagation/templates/gitignore-python.txt` — `.qg_ci_green_marker`.
+- Codex: `quality-gates.md` § "CI parallel slice jobs + `QG_SLICE`"; `ci-cd-flow.md` § required-check-name (parallel
+  slicing preserves context; aggregation `name:` load-bearing).
+
+**Measured before/after (canary = PM-as-consumer of its own reusable workflow):**
+
+- BEFORE: ONE serial job, the "Run quality gates" step = 715s of 778s (operator's execution-service measurement: v2 =
+  12m58s).
+- AFTER (PM run 27250377332): content-gate 11s · slices ran IN PARALLEL — tests 51s / typecheck 41s / lint-codex 86s ·
+  aggregate 10s. **Wall = 117s**, critical path = content(11) + max-leg(86) + aggregate(10) ≈ 107s. The non-tests legs
+  finish INSIDE the tests leg → for a heavy repo the gate collapses to ≈ the (now `-n auto`-sharded) pytest leg, i.e.
+  ~12 min → the parallel max-leg (target ~6-8 min). The empirical heavy-repo number lands on execution-service's next v2
+  (auto-inherited via the LDR ref).
+
+**Consumer proof (rule 11):** required context `Quality Gates (unified-trading-pm) / quality-gates-v2` reports + gates
+(run 27250377332 success); a real failure still REDS (run 27250582673 — deliberate ruff error ⟹ lint-codex leg failure ⟹
+aggregate `quality-gates-v2` failure; throwaway branch deleted); green stays green; content-sentinel saves-on-green +
+fail-safe-misses-on-changed-content. Fleet `main` spot-checked green (exec-service/UTL/UAC/MTDS). PM main green
+(27250464297).
+
+**Forced trade-offs (rule 1):**
+
+1. **3-way split, not the plan's 4-way (no standalone `pip-audit` slice)** — the [5] CODEX section shares ONE `V`
+   violation counter across codex+size+pip-audit+bandit; forking it is high-risk surgery on the fleet's critical gate
+   for ~3 min of pip-audit that runs in PARALLEL with the dominant pytest leg (never on the critical path). pip-audit
+   rides `lint-codex`. Wall-time win is identical (pytest dominates); coverage 100% preserved.
+2. **`-n auto` within the single tests leg, not matrix-sharding the suite** — lower-risk, sufficient (each CI leg is
+   alone on its runner). Matrix-sharding remains a future lever if one repo's tests leg still dominates after the canary
+   measurement.
+3. **content-sentinel short-circuit is FAIL-SAFE, bounded by GHA cache scope** — a miss (incl. cross-branch scope
+   limits) runs the full gate; can never false-green or block a PR. The marker on `main` (default branch) is
+   fleet-readable, covering the dominant redundant cases (main re-fires + identical-content promotions).
+
+**Bug caught + fixed by the canary (the rule-11 payoff):** the first cut named the aggregation job `name: aggregate`,
+which would have emitted the context `… / aggregate` instead of `… / quality-gates-v2` → every fleet PR permanently
+BLOCKED. Caught on the PM canary BEFORE any fleet roll, fixed PM@37cfea4ba, re-proven (run 27250377332).
+
+**No DEFERRED / BLOCKED leftovers.** Phase 4 needed no code (verified-only). One adjacent finding (NOT mine, NOT fixed):
+the local-only `detect_template_drift.py` post-gate reports 24-repo `main-backmerge-to-ldr.yml` drift — pre-existing,
+foreign (the promotion-surface agent's unrolled template edit), CI-no-op, already tracked in
+`staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` et al. Left untouched per the collision boundary.
