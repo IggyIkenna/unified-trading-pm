@@ -211,8 +211,8 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       2026-06-10 — extended `assert_version_coherence.py` with VESTIGIAL_SCALAR_DRIFT (repositories{}.version must ==
       versions{} when present; remedy: run-version-alignment.sh --fix or delete the field) + DEP_FLOOR_UNSATISFIABLE
       (packaging SpecifierSet: floor ≤ versions{}[dep] < ceiling, explicitly NOT floor==latest) + wired `--warn-only`
-      into PM quality-gates.sh post-gates (non-blocking; blocking flip is a later ratchet) — unified-trading-pm@<sha> —
-      pending commit. Findings TODAY: 17 VESTIGIAL_SCALAR_DRIFT (incl. UAC 0.1.20 vs 0.5.0, UTL 0.3.167 vs 0.4.0, PM
+      into PM quality-gates.sh post-gates (non-blocking; blocking flip is a later ratchet) — unified-trading-pm@8605171b1 |
+      verified 2026-06-10. Findings TODAY: 17 VESTIGIAL_SCALAR_DRIFT (incl. UAC 0.1.20 vs 0.5.0, UTL 0.3.167 vs 0.4.0, PM
       1.2.0 vs 1.2.69), 10 pre-existing VERSION_SPLITs (source ahead of versions{} — promotion lag class), 0
       DEP_FLOOR_UNSATISFIABLE (all dep-edge floors satisfiable). Original task text below:** Workspace-manifest
       version-surface reconciliation, scoped by what each field MEANS: **(a) dep-edge floors
