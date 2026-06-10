@@ -20,11 +20,11 @@ name: ldr-to-staging-promote
 # check is what actually merges it. A merge conflict dispatches the conflict-resolution-agent (same as
 # staging-to-main). `dry_run` input lists what WOULD promote without opening PRs.
 #
-# Triggers: every 30min (drain cadence) + manual dispatch + repository_dispatch from a Tier-A/B green signal.
+# Triggers: every 15min (drain cadence) + manual dispatch + repository_dispatch from a Tier-A/B green signal.
 
 on:
   schedule:
-    - cron: "13,43 * * * *" # every 30 min, off the top/bottom-of-hour to avoid cron congestion
+    - cron: "2,17,32,47 * * * *" # every 15 min, offset from the quarter-hour to avoid cron congestion
   workflow_dispatch:
     inputs:
       dry_run:

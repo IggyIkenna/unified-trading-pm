@@ -102,6 +102,40 @@ if ! flock -n 9 2>/dev/null; then
     exit 0
 fi
 
+# Cron-liveness result file (fleet_git_health_orchestrator_2026_06_10.md Phase 3).
+# Each sweep records its worst per-repo outcome + run timestamp here; the per-slot
+# reporter (slot-git-status-report.sh) reads it and attests ff_pull_last_run /
+# ff_pull_last_result on its POST so the orchestrator can flag a dead FF-pull cron
+# (ff_cron_stale) as a first-class fleet state. Host-global (one FF-pull cron per
+# host covers every slot). Tokens collect to a temp file (single-line appends are
+# atomic across the parallel workers); aggregated worst-of at sweep end.
+FF_RESULT_FILE="${SLOT_FF_PULL_RESULT_FILE:-${TMPDIR:-/tmp}/slot-cron-ff-pull.result.json}"
+FF_TOKENS_FILE="$(mktemp -t ffpulltokens.XXXXXX 2>/dev/null || echo "${TMPDIR:-/tmp}/ffpulltokens.$$")"
+trap 'rm -f "${FF_TOKENS_FILE}" 2>/dev/null || true' EXIT
+
+# Record one per-repo outcome token: ok | skip:dirty | conflict | fail.
+_ff_record() { printf '%s\n' "$1" >> "${FF_TOKENS_FILE}" 2>/dev/null || true; }
+
+# Aggregate the run's worst outcome + write the result file atomically (tmp+mv).
+# Worst-of precedence: conflict > fail > skip:dirty > ok (an empty run = ok, the
+# cron ran and had nothing stuck).
+_write_ff_result() {
+    local worst="ok" now tmp
+    if [[ -s "${FF_TOKENS_FILE}" ]]; then
+        if grep -q '^conflict$' "${FF_TOKENS_FILE}" 2>/dev/null; then
+            worst="conflict"
+        elif grep -q '^fail$' "${FF_TOKENS_FILE}" 2>/dev/null; then
+            worst="fail"
+        elif grep -q '^skip:dirty$' "${FF_TOKENS_FILE}" 2>/dev/null; then
+            worst="skip:dirty"
+        fi
+    fi
+    now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    tmp="$(mktemp -t ffpullresult.XXXXXX 2>/dev/null || echo "${FF_RESULT_FILE}.tmp.$$")"
+    printf '{"ff_pull_last_run":"%s","ff_pull_last_result":"%s"}\n' "${now}" "${worst}" > "${tmp}"
+    mv -f "${tmp}" "${FF_RESULT_FILE}" 2>/dev/null || true
+}
+
 ff_one() {
     local repo_dir="$1"
     local do_fetch="${2:-1}"
@@ -220,6 +254,7 @@ ff_one() {
     fi
     if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
         log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes"
+        _ff_record "skip:dirty"
         popd >/dev/null
         return 0
     fi
@@ -234,6 +269,7 @@ ff_one() {
     if [[ "${do_fetch}" -eq 1 ]]; then
         if ! git fetch --quiet --tags --force origin "${int_branch}" 2>/dev/null; then
             log "[skip:fetch-fail] ${repo_name} (${branch}) — fetch failed (offline? missing branch?)"
+            _ff_record "fail"
             popd >/dev/null
             return 0
         fi
@@ -250,6 +286,7 @@ ff_one() {
     # Step 3: already up-to-date?
     if [[ "${local_sha}" == "${remote_sha}" ]]; then
         log_quiet "[ok:up-to-date] ${repo_name} (${branch} → ${int_branch})"
+        _ff_record "ok"
         popd >/dev/null
         return 0
     fi
@@ -288,12 +325,15 @@ ff_one() {
                 log "[dry-run:adopt-rebase] ${repo_name} (${branch}) — ${ahead} ahead all mirrored to ${int_branch}; would rebase-adopt to ${remote_sha:0:8}"
             elif git rebase "origin/${int_branch}" >/dev/null 2>&1; then
                 log "[adopt-rebase] ${repo_name} (${branch}) — dropped ${ahead} mirrored dup(s); now == ${int_branch} ${remote_sha:0:8}"
+                _ff_record "ok"
             else
                 git rebase --abort >/dev/null 2>&1 || true
                 log "[skip:adopt-failed] ${repo_name} (${branch}) — rebase aborted unexpectedly; manual inspection"
+                _ff_record "conflict"
             fi
         else
             log "[skip:diverged] ${repo_name} (${branch} → ${int_branch}) — ahead ${ahead} (${genuine_ahead} genuine), behind ${behind}${dirty:+, dirty tree}; manual/mirror will handle"
+            _ff_record "conflict"
         fi
         popd >/dev/null
         return 0
@@ -306,8 +346,10 @@ ff_one() {
     else
         if git merge --ff-only --quiet "origin/${int_branch}" 2>/dev/null; then
             log "[ff] ${repo_name} (${branch} → ${int_branch}) — FF +${behind} → ${remote_sha:0:8}"
+            _ff_record "ok"
         else
             log "[skip:ff-failed] ${repo_name} (${branch} → ${int_branch}) — --ff-only refused; manual inspection needed"
+            _ff_record "conflict"
         fi
     fi
     popd >/dev/null
@@ -367,6 +409,7 @@ fi
 
 if [[ "${MODE}" == "single-slot" ]]; then
     walk_slot "${cwd}" 1
+    _write_ff_result
     exit 0
 fi
 
@@ -423,6 +466,10 @@ done
 for pid in "${pids[@]}"; do
     wait "${pid}" || true
 done
+
+# Aggregate the parallel workers' per-repo outcome tokens into the host-global
+# cron-liveness result file the reporter reads (fleet_git_health Phase 3).
+_write_ff_result
 
 # Heartbeat: write ONE line every run, even in --quiet on a fully-idle no-op sweep, so the
 # log mtime always refreshes while the cron is alive. verify-slot-host-symmetry.sh check 3

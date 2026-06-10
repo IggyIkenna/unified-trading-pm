@@ -19,8 +19,9 @@
 # context that bypasses the ghost cache (Option D).
 #
 # ## Trigger surface:
-#   push to [main, staging] + pull_request to [main, staging] + workflow_dispatch
-#   (live-defi-rollout removed from triggers — post-cutover scope; no remote CI on LDR)
+#   push to [main] + pull_request to [main, staging] + workflow_dispatch
+#   (live-defi-rollout never triggers — no remote CI on the gateless trunk;
+#    push:[staging] dropped 2026-06-10 A3 — staging-green inherits from the LDR→staging PR's v2)
 #
 # ## Substitution placeholders (rendered by rollout-workflow-templates.sh):
 #   - {{DEP_REPOS}}   — transitive editable closure from the repo's pyproject
@@ -32,8 +33,13 @@
 name: quality-gates-v2
 
 on:
+  # A3 (ldr_trunk_promotion_decoupling_2026_06_10): NO QG on push:[staging]. The LDR→staging promote
+  # PR's v2 (pull_request below, head=LDR base=staging) runs on the exact tree that lands on staging
+  # and IS the staging gate; STAGING_GREEN inherits from that PR's pass (A1), so a second
+  # push:[staging] run is redundant. push:[main] stays (records MAIN_GREEN post-merge);
+  # pull_request:[main,staging] stays (the actual gates).
   push:
-    branches: [main, staging]
+    branches: [main]
   pull_request:
     branches: [main, staging]
   workflow_dispatch:

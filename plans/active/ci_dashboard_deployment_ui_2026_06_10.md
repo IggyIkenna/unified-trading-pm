@@ -180,10 +180,26 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       lands when sub-plan B's endpoint ships. Repo: deployment-api + deployment-ui (+ cross-ref
       fleet_git_health_orchestrator_2026_06_10.md Phase 2 note).
 
+- [ ] [CODE] P1. [UI] **Click-through deep-links on every status atom (operator add 2026-06-10)** — make every status
+      chip/SHA/PR/check a link to the authoritative existing UI (master plan § "Click-through to the existing UIs"):
+      GitHub for GitHub-authoritative atoms (SHA → `…/commit/<sha>`; `quality-gates-v2` conclusion → check-run/run URL;
+      PR → `…/pull/<n>`; branch → `…/tree/<branch>`); agent-orchestrator UI for fleet/git-health atoms (dirty/behind/
+      diverged/reporter/ff-cron → the orchestrator Fleet Git-Health page / per-slot view). Covers Repos CI overview +
+      drill-down, per-service CI tab, Stuck panel, SIT-run panel, errors[] strip, Fleet Git page. Repo: deployment-ui (+
+      deployment-api must surface the `github_url`/run-id/PR-number fields the links need). pw:L2 + regression spec.
 - [ ] [CI] P1. **Alert-ledger fleet rollout** — notify-slack.yml is a fleet template; the alert-persist step
       (PM@794b1e3a7) must roll out via `rollout-workflow-templates.sh --template notify-slack.yml` + per-repo commits
       (rollout-is-not-done-until-committed HARD RULE) so per-repo alerts (v2 failures etc.) also reach the ledger.
       PM-side alerts (SIT/cascade/lock/watcher/promotion — the CI lifecycle set) are covered as of PM main.
+
+- [ ] [INFRA] P2. **Image column unknown on the LOCAL dev stack — Cloud Build API 400s from the laptop env** (found
+      2026-06-10 verifying operator trust): even with GCP_PROJECT_ID + GCS_REGION=asia-northeast1 exported,
+      `ListBuildTriggers` returns `400 InvalidArgument` from the dev process — the LEGACY `/api/cloud-builds/triggers`
+      route 500s on the same call (no degradation), while repo-ci degrades to honest-unknown. Likely ADC-user-vs-SA or
+      quota-project shape; works on the deployed API. Diagnose `gcloud builds triggers list` works from the same shell
+      (it does) vs the python client call; fix the dev-stack env recipe in `restart-deployment-stack.sh` (compose with
+      the GCP_PROJECT_ID launcher todo in quality_gates_speed_and_config_ssot). Until then: Image=unknown locally is
+      HONEST degradation, not fake data; the deployed instance shows real build data.
 
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 

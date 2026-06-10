@@ -933,6 +933,17 @@ the SAME change. SSOTs: `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT";
 
 ## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
 
+> **LDR-trunk decoupling (live 2026-06-10)** — `quickmerge --agent --files` now **lands on `live-defi-rollout` and
+> stops** for a service repo (no per-unit staging PR); the **Tier-C drain** (`ldr-to-staging-promote`, every **15 min**)
+> promotes LDR→staging, and that drain PR's `quality-gates-v2` (head=LDR, base=staging) is the server gate — **LDR never
+> runs QG**. STAGE 1.5 (staging-lock) / 1.7 (dep-tier) are **`--hotfix`-scoped**; 1.6 (dep-version) WARNs on a normal
+> landing, BLOCKs on `--hotfix`. `--hotfix` requires a `[hotfix]` marker (auditable break-glass; still hits the staging
+> lock). `STAGING_GREEN` **inherits** from the LDR→staging PR's v2 (A1; `push:[staging]` QG dropped). The promote bots
+> (`ldr-to-staging-promote` + `ldr-to-main-promote`) run `check_strict_quickmerge.py` over the promote range and **won't
+> arm auto-merge** on a non-carve-out commit lacking the `Quickmerge:` trailer (D1). SSOT:
+> `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
+> decoupling".
+
 CODE reaches the integration branch **only** through `quickmerge --agent --files` (Pass-1 QG sentinel → Pass-2 commit +
 auto-merging staging PR). A direct `git push` of code to `live-defi-rollout`/`staging`/`main` is banned: it dodges the
 dep-version gate (STAGE 1.6), the dep-tier-readiness gate (STAGE 1.7) and the dep-content gate, and (`quickmerge`

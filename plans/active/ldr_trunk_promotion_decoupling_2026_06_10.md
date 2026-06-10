@@ -106,9 +106,10 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P0. **Drain cadence 6h → 30min.** `ldr-to-staging-promote.yml:26` cron `"17 */6 * * *"` →
-      `"13,43 * * * *"` (off top/bottom-of-hour). PM-only workflow; must land on PM `main` to fire (scheduled workflows
-      fire only from the default branch). — unified-trading-pm@ef76571 (PR #219 → main)
+- [x] ✅ [SCRIPT] P0. **Drain cadence 6h → 15min.** `ldr-to-staging-promote.yml` cron `"17 */6 * * *"` →
+      `"13,43 * * * *"` (30min, PR #219) → **`"2,17,32,47 * * * *"` (15min, operator 2026-06-10)** — QG runs in <10min
+      so 15min keeps the queue fresh; staging-lock still gates, so a >15min run just defers new content to the next
+      tick. PM-only workflow; fires from PM `main`. — unified-trading-pm@ef76571 + @<sha>
 - [x] ✅ [SCRIPT] P0. **quickmerge: land-on-LDR, skip per-unit staging PR for service repos.** After the LDR push, for a
       commit that is NOT PM, NOT `[skip ci]`, NOT `--hotfix` → do **not** `gh pr create --base staging`; print "landed
       on LDR — Tier-C drain (≤30min) promotes to staging". PM→main and `[skip ci]`→main paths unchanged. File:
@@ -134,8 +135,10 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
 - [x] ✅ [DOCS] P1. **codex SSOT update — codex DONE, CLAUDE.md deferred.** Added a "LDR-trunk decoupling" subsection to
       `codex/08-workflows/ci-cd-flow.md` § Two-Pass (land-on-LDR, hotfix-scoped gates, 30min drain, A1 inheritance, D1
       provenance gate, `[hotfix]` marker, `--hotfix-to-main` not-yet-shipped). — unified-trading-pm@305014936
-  - [ ] **CLAUDE.md one-liner DEFERRED** until the model is complete (A3 dropped `push:[staging]` + `--hotfix-to-main`
-        shipped) — a pointer to a half-built model in the most-loaded context file is premature.
+  - [x] ✅ **CLAUDE.md DONE** — added an LDR-trunk pointer blockquote to the "Strict quickmerge" section of
+        `cursor-configs/CLAUDE.md` (land-on-LDR, 15min drain, hotfix-scoped gates + `[hotfix]` marker, A1 inheritance,
+        D1 provenance gate, codex/plan SSOT refs). — unified-trading-pm@4398109e. (`--hotfix-to-main` noted as
+        not-yet-shipped.)
 - [ ] [SCRIPT] P1.5. **Compose with @4228 (dep-clone ref-determinism).** Confirm the LDR→staging PR resolves _all_
       internal deps at the staging ref consistently (no mixed staging-new/main-old set). Cross-linked,
       verify-on-first-green.
@@ -153,12 +156,14 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       @4950 is built, a staging head with no _push_ check must be treated as LEGITIMATE when its merged promote PR
       carried the v2 check (flag only no-check AND no-merged-PR-check), else it false-positives on every drain merge
       post-A3.
-- [ ] [CI] P1. **Drop `push:[staging]` QG — STEP 3 of 3 (template + rollout).** Remove `staging` from the `push:`
-      branches in `scripts/workflow-templates/quality-gates-v2.yml.tmpl` (keep `pull_request:[main,staging]` +
-      `push:[main]`), then `rollout-workflow-templates.sh --template quality-gates-v2` to all 24 repos + commit each
-      per-repo copy (rollout is not done until `detect_template_drift.py --workflows` is clean and no repo's
-      `.github/workflows/` is dirty). **Gated on STEP 1 being live.** Verify v2-on-staging count drops to zero while
-      `STAGING_GREEN` still populates + the drain keeps promoting.
+- [x] ✅ [CI] P1. **Drop `push:[staging]` QG — STEP 3 of 3 (template + rollout) — DONE.** A1 verified live first
+      (instruments-service drain PR logged `Recording ci_status=STAGING_GREEN … base=staging effective=staging`).
+      Template `quality-gates-v2.yml.tmpl` → `push:[main]` (kept `pull_request:[main,staging]`). Rolled out via a
+      **surgical patch of only the `push:` block** to **all 25 repos** (not a full re-render — avoids pushing
+      accumulated template drift) + committed/pushed each to LDR (`.github` carve-out). features-service also dropped
+      its stray `live-defi-rollout` push-trigger → `[main]`. **Safe-by-construction:** `push:[staging]` keeps firing
+      until the `[main]`-only workflow propagates to staging via the drain, by which point A1 is the `STAGING_GREEN`
+      source — no starvation gap. — 25 repos @LDR + unified-trading-pm@4398109e.
 - [ ] [TEST] P2. **First-use watch.** After PM ships: confirm (a) a normal `quickmerge --agent` lands on LDR with no
       staging PR + a clean message, (b) the 30min drain opens the LDR→staging PR and it auto-merges on v2-green, (c)
       `--hotfix` still hits the lock when staging is locked. Record evidence here.
