@@ -430,13 +430,23 @@ the baseline writer is healthy. Option C needs a baseline-independent re-entry b
       `uses: owner/action@ref` against the action repo's tags before a workflow change lands (the node24 bump assumed
       floating major tags universally exist). Repo: `unified-trading-pm` (`scripts/quality_gates/` + template rollout
       pre-flight).
-- [ ] [SCRIPT] P2. **Manifest catch-up re-dispatches** (after the pin fix is live on main): `version-bump` for
+- [x] ✅ [SCRIPT] P2. **Manifest catch-up re-dispatches** (after the pin fix is live on main): `version-bump` for
       `batch-live-reconciliation-service@13e5762a6` (0.2.0) + `strategy-service@a0880bf0b` (0.2.0), `branch=staging`,
       `is_breaking=false` (their 01:13Z dispatches were lost to a CANCELLED `update-repo-version` run at 01:15Z despite
-      `cancel-in-progress: false` — investigate that cancellation separately). `agent-orchestrator=0.8.1` drift is
-      June-7 `[skip ci]`-era + mid-migration — reconcile in the AO G6 plan, not here.
-- [ ] [OPERATOR] P1. **instruments-service staging version decision**: accept `0.30.0` + sync the manifest baseline to
-      it (cheapest; pre-1.0 numbers are free; avoids surgery on a protected branch) vs roll staging back to the correct
-      `0.3.0` (clean history; needs an admin-gated staging edit + consumers never re-pinned the artifact versions since
-      the dependency-update dispatches died with the writer). Then re-enable the IS semver-agent (safe once baseline ==
-      staging version: the next scan range is chore-only → skip fires).
+      `cancel-in-progress: false`). `agent-orchestrator=0.8.1` drift is June-7 `[skip ci]`-era + mid-migration —
+      reconcile in the AO G6 plan, not here. — **DONE 2026-06-10 ~08:0x: ss=0.2.0 (07:50, `b370ce962`), blrs=0.2.0 +
+      IS=0.30.0 (retry-until-recorded loop; blrs needed 4 dispatches — the queue-snipe REPRODUCED LIVE 3×: GitHub's
+      `manifest-update` concurrency group holds 1 running + ONLY 1 queued slot, a newer dispatch REPLACES the queued one
+      (`cancel-in-progress: false` protects only the RUNNING run) → every contended dispatch pair silently loses a
+      record. That is the root cause of the 01:15Z loss too — the lossy-queue fix is the open P1 below.**
+- [ ] [SCRIPT] P1. **Lossy dispatch queue (verified live)** — make `update-repo-version` records loss-proof: retry/
+      re-dispatch on cancellation (the canceller knows the payload), or drop the GH concurrency group for a
+      payload-queue (e.g. append dispatches to a queue file/issue and have one serialized worker drain it), or have
+      semver-agent verify-and-retry its dispatch until the manifest reflects it. Repo: `unified-trading-pm`.
+- [x] ✅ [OPERATOR] P1. **instruments-service staging version decision**: accept `0.30.0` + sync the manifest baseline
+      to it (cheapest; pre-1.0 numbers are free; avoids surgery on a protected branch) vs roll staging back to `0.3.0`.
+      — **RESOLVED 2026-06-10: operator (Harsh) proceeded with accept-0.30.0 after consumer verification: exactly ONE
+      workspace consumer (system-integration-tests), range-pinned `>=0.1.0,<1.0.0` + editable path source → 0.30.0
+      auto-satisfied, zero re-pins fired during the loop (dispatcher was dead), zero release tags created. Baseline
+      synced to 0.30.0 + IS semver-agent RE-ENABLED (safe: baseline == staging version → chore-only scan range → skip
+      fires).**
