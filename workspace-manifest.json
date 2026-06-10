@@ -1804,9 +1804,9 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
+    "locked": true,
+    "locked_since": "2026-06-10T07:07:57.924732Z",
+    "locked_reason": "SIT running",
     "lock_version": null,
     "pending_repos": [
       "ml-service"
