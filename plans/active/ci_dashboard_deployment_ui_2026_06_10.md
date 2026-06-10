@@ -74,10 +74,12 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       `sit_last_run {url, status, conclusion, age_min,     jobs: [{name, status, conclusion}]}` from the GitHub jobs API
       on the newest `cascade-qg-ordering` run — answers "which repos were in the last SIT run, which passed/failed,
       what's in progress" continuously.
-- [ ] [CODE] P2. **Repo drill-down cross-links (operator add 2026-06-10 — don't redo existing tabs)** — repo detail
-      panel deep-links the EXISTING surfaces for the same repo: data-status tab (domain/service), deployments/monitor
-      tab (is it running), VM logs tab, and the orchestrator fleet git-health page filtered to the repo ("is this repo
-      in anyone's worktree" — live data when sub-plan B's endpoint ships).
+- [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 | pw:L2 ✓ (182/182) | regression:
+      tests/smoke/repos-tab.spec.ts ("repo drill-down cross-links to GitHub / data-status / fleet"). **Repo drill-down
+      cross-links** — the repo detail panel (`repo-detail-crosslinks`) deep-links the EXISTING surfaces for the repo:
+      GitHub repo, `/service/<repo>/data-status`, `/service/<repo>/monitor` (deployments), and the `/fleet` Fleet Git
+      page (the orchestrator git-health surface; per-repo-filter is live when the `ORCHESTRATOR_API_TOKEN` lands).
+      Don't-redo-those-tabs honored (react-router `Link`, no surface re-build).
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@093f80a (trigger-list + latest-builds reuse, 300 s cache,
       image*stale; AWS side = honest-unknown pending cloud-toggle todo). Was: **Image deploy signal (image-level v1)** —
       reuse

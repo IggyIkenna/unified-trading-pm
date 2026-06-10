@@ -115,10 +115,11 @@ page) — P2, after both v1s ship.
       digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
 - [ ] [CODE] P3. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
       Cloud Run revisions / VM heartbeats) and diff its SHA vs `main` HEAD. Repo: deployment-api + deployment-ui.
-- [ ] [CODE] P2. **Repo detail ⇄ fleet worktree presence (operator add 2026-06-10)** — the CI dashboard's repo
-      drill-down shows "is this repo dirty/checked-out in anyone's worktree" from the orchestrator's
-      `/api/fleet/git-health` (sub-plan B endpoint) filtered by repo. v1 ships a deep-link; live data lands when B's
-      endpoint exists. Repo: deployment-api (proxy or UI-direct read) + deployment-ui.
+- [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
+      the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
+      `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
+      repo dirty in anyone's worktree") lands with the live `ORCHESTRATOR_API_TOKEN` (BLOCKED-CREDS) — the deep-link is
+      live now; the live fleet data is gated on the token.
 - [ ] [CODE] P3. **Alert-parity audit** — walk every watcher/alert class (`ci-failure-watcher`, `promotion-lag-monitor`,
       git-health guard, billing block, consolidator watchdog) and verify each has a paired live state element on one of
       the two surfaces; file gaps as todos here. Repo: unified-trading-pm (audit) + the owning surface.
@@ -223,16 +224,17 @@ manual session because firing breaking/red/billing states on the live fleet jams
 
 ## Deferred work after 2026-06-10 (slot-3 session)
 
-| Item                                                                                                                                      | Where tracked                                     | State                          |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------ |
-| deployment-api/deployment-ui/e2e content → `main` (drain converging; mtds#177/features#36/exec#250 PRs open; dep-api waits on bump PR#44) | this plan + dashboard stuck panel                 | IN-FLIGHT (pipeline-automatic) |
-| Squash-body `[skip ci]` sanitization in Tier C promote                                                                                    | cicd_contract_hardening § bug #7                  | `- [ ]` P1                     |
-| Failure-injection verification matrix (every alert class fake-triggered + seen on monitor)                                                | this plan § matrix                                | `- [ ]` P1–P3                  |
-| Fleet git-health page (sub-plan B)                                                                                                        | fleet_git_health_orchestrator_2026_06_10.md       | orchestrator backlog           |
-| GH_PAT `Checks: read` permission                                                                                                          | ci_dashboard plan + pings/slot_3.md               | BLOCKED-CREDENTIALS            |
-| AWS/CodeBuild cloud-toggle parity for image signal                                                                                        | ci_dashboard plan                                 | `- [ ]` P1                     |
-| `restart-deployment-stack.sh` must export GCP_PROJECT_ID (live 500 root cause on stack)                                                   | quality_gates_speed_and_config_ssot (filed below) | `- [ ]` P2                     |
-| sit-repo full-workspace-sit report-back is LDR-only (inert until its main promotion)                                                      | cicd_contract_hardening conflict notes            | `- [ ]` P2                     |
+| Item                                                                                                                                      | Where tracked                                     | State                                              |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------- |
+| deployment-api/deployment-ui/e2e content → `main` (drain converging; mtds#177/features#36/exec#250 PRs open; dep-api waits on bump PR#44) | this plan + dashboard stuck panel                 | IN-FLIGHT (pipeline-automatic)                     |
+| Squash-body `[skip ci]` sanitization in Tier C promote                                                                                    | cicd_contract_hardening § bug #7                  | ✅ DONE (live on PM main)                          |
+| Failure-injection verification matrix (mock+pw + live obs; disruptive-live triggers scoped)                                               | this plan § matrix (outcomes table)               | ✅ DONE (table filled)                             |
+| Fleet git-health page (sub-plan B — backend + dashboard + reporter + deployment-ui /fleet tab)                                            | fleet_git_health_orchestrator_2026_06_10.md       | ✅ SHIPPED (live cross-host verify gated on token) |
+| GH_PAT `Checks: read` permission                                                                                                          | ci_dashboard plan + pings/slot_3.md               | BLOCKED-CREDENTIALS                                |
+| `ORCHESTRATOR_API_TOKEN` for the fleet-git-health proxy (live fleet data)                                                                 | ci_dashboard plan + pings/slot_3.md               | BLOCKED-CREDENTIALS                                |
+| AWS/CodeBuild cloud-toggle parity for image signal                                                                                        | ci_dashboard plan                                 | `- [ ]` P1                                         |
+| `restart-deployment-stack.sh` must export GCP_PROJECT_ID (live 500 root cause on stack)                                                   | quality_gates_speed_and_config_ssot (filed below) | `- [ ]` P2                                         |
+| sit-repo full-workspace-sit report-back is LDR-only (inert until its main promotion)                                                      | cicd_contract_hardening conflict notes            | `- [ ]` P2                                         |
 
 ## Codex SSOT updates (post-phase audit obligations)
 
