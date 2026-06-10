@@ -306,7 +306,7 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       trades/quotes are accessible on the current key anyway, via `/futures/v1/*` + `us_options_opra/trades_v1` +
       `us_futures_*/{trades,quotes}_v1` — unaffected by this decision.) Re-open the equity-tick entitlement only if/when
       a tick-consuming archetype lands. Repo: market-tick-data-service.
-- [ ] [UAC/UTL] P1. **EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push).** Massive returns fields Databento
+- [ ] [UAC] [UTL] P1. **EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push).** Massive returns fields Databento
       does NOT, surfaced by the 2026-06-08 live probe. Decide per field: (A) DROP on normalize to hold strict
       Databento-parity, (B) ADD as new canonical column(s) on BOTH sources (Databento backfills/computes them where
       possible), or (C) keep as Massive-only optional columns (consumers ignore unknown cols — breaks strict parity but

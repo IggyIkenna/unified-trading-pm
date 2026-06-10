@@ -518,18 +518,30 @@ what the operator is seeing:
       a `[skip ci]` head and `git commit --amend`-off the marker (needs branch-push perms on a protected branch — risky)
       OR document that `--auto-recover` only handles NON-`[skip ci]` never-reported cases and Option C is mandatory for
       the semver path. repo: unified-trading-pm. Composes with the Option C + watcher-disposition todos above.
-- [ ] [INFRA] P1. **vm-planning escalation target is DOWN — failing cascades currently have NOWHERE to auto-route (fix
-      later; manual stand-in for now).** The dependency_promotion Phase 3 path ("MAJOR/breaking cascade FAILS → escalate
-      to vm-planning") and `ci-failure-watcher --escalate` (`sit_failure` / `merge_conflict` walls) both dispatch
-      `escalate-to-orchestrator` to vm-planning — but vm-planning is not running (operator 2026-06-09), so a failing
-      breaking-cascade silently parks (observed: UAC 0.5.0 → execution-service #232 `quality-gates-v2` FAILED, SIT
-      `sit_retry_count=3`, staging locked since 13:48Z with no worker picking it up). **Until vm-planning is restored, a
-      human/slot must stand in** (this incident was handled by a manually-dispatched execution-service worker prompt).
-      **Fix:** (a) restore/redeploy the vm-planning orchestrator VM, OR (b) repoint the `escalate-to-orchestrator`
-      target (PM `escalate-to-orchestrator.yml` + `cascade-qg-ordering.yml` `escalate-on-failure`) to the LIVE
-      orchestrator (`vm-0`/`agent-orchestrator-vm-1`) so failing cascades reach an AutoSpawn-capable host; add a
-      watchdog alert when a `sit_failure` escalation finds no live target. repo: unified-trading-pm (+
-      agent-orchestrator). Composes with `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
+- [x] ✅ [INFRA] P1. **Escalation headroom alert — RE-SCOPED + DONE 2026-06-10 (PM@dfac3713d). The original "vm-planning
+      is DOWN, restore it" framing was a PHANTOM:** `vm-planning` == `vm-0` == `agent-orchestrator-vm-1` ==
+      `i-0c9b283b31d6b5ca7` (EIP 13.113.200.22 / `api.agent-orchestrator.odum-research.com`) — ONE box, many aliases
+      (confirmed in `orchestrator_vm_registry.yaml`: id `planning` carries that exact instance id). There is **no
+      separate planning VM to restore**, and `escalate-to-orchestrator.yml` already POSTs to that live box
+      (`ORCHESTRATOR_URL || api.agent-orchestrator…` → 13.113.200.22), so fix-option (b) "repoint to vm-0" was already
+      true and (a) "restore vm-planning" was a no-op. The REAL condition behind the ~5h park (2026-06-10) is **headroom
+      exhaustion**: `dependency_promotion` Phase-3 + `ci-failure-watcher --escalate` dispatch `POST /api/escalate`, which
+      returns **503 (no free slot)** when AutoSpawn has no headroom → the wall PARKS, re-fires every ~15 min, and won't
+      self-resolve until a slot frees — capacity, NOT a host being down. **What shipped:** `escalate-to-orchestrator.yml`
+      now classifies the POST outcome (`dispatched` / `no_escalation_id` / `no_headroom`) and the Slack notify raises a
+      **distinct, actionable `no_headroom` WARNING** ("HEADROOM EXHAUSTED — {repo}#{pr} PARKED, no worker; stand in
+      manually if it persists; vm-0 IS the orchestrator, capacity not host-down") instead of the prior generic OR'd
+      message that let the park slip by silently. **Verified:** `actionlint` clean + YAML parses + the live escalation
+      path was proven end-to-end the SAME day (the 08:14Z escalation burst dispatched conflict-resolvers that cleared the
+      locked cascade — `Conflict Resolution Agent` / `deterministic-promotion-conflict-resolve` runs all success, lock →
+      `locked:false`). repo: unified-trading-pm. Composes with
+      `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
+- [ ] [SCRIPT] P3 **NICE-TO-HAVE**. Sustained-park escalation — bump the `no_headroom` Slack alert from WARNING →
+      CRITICAL when the SAME wall returns `no_headroom` on ≥N consecutive `*/15m` ticks (a one-off 503 is transient +
+      retryable; a sustained one is the silent ~5h park). Needs cross-run state (the per-wall `escalation-dispatched`
+      label is only set on a CONFIRMED spawn, so a parked wall stays unlabelled — track a tick-count via a PR comment or
+      the orchestrator). File/implement only if the per-tick WARNING proves insufficient. repo: unified-trading-pm.
+      Provenance: cicd-521 re-scope 2026-06-10. Composes with `ci-failure-watcher` `--escalate`.
 - [x] ✅ [DEVOPS] P0. **semver-agent can stamp versions onto `staging` again — admin-role ruleset bypass + classic
       `enforce_admins` off, FLEET-WIDE (operator chose this approach 2026-06-08).** Was: `semver-agent.yml.tmpl` (auth
       `GH_PAT`) DIRECT-PUSHES the post-QG `chore(release)` bump to `staging`, but staging's CLASSIC protection
@@ -4569,7 +4581,7 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       and `unified-trading-system-ui #32 live-defi-rollout→main merged`. The `mergedAt` fix (line ~362, was the invalid
       `merged` field that 404'd the whole query) is live and the merged/closed verb resolves correctly. The bookend
       posts as INFO + still triggers the notify (build_report returns alert-or-resolved True). No code change.
-- [ ] **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
+- [ ] [CICD] P1. **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
       state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard `ldr-to-staging-promote` had already
       opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they were stuck: ml-service #15 had
       **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but the v2 `workflow_dispatch` run
@@ -4640,3 +4652,85 @@ Remaining genuinely-open cicd items are gated on **live infra this laptop slot c
 non-SSM redeploy; admin-bootstrap fleet rollouts) or are tracked under their canonical item — see the session-end
 completion report. Code-doable residual (e.g. `auto_recover_stuck_prs` `[skip ci]`-head refine ~4380, GHA version bumps
 ~4233-4241) handled in the same session's Phase 1/2 — flipped there with `repo@sha`.
+
+---
+
+## 🔴 ROOT-CAUSE + FIX 2026-06-10 — staging-to-main promote STARVED by concurrency-group displacement (harsh slot-1)
+
+> **The "3 hours to promote 5 repos" mechanism (operator-reported by Ikenna 2026-06-10 07:58 IST).** The SIT lock
+> "always being the issue" is the SYMPTOM — the lock is designed to live ~5-10 min; the step that CLEARS it
+> (`staging-to-main`) was being killed in the queue, so the lock outstayed indefinitely and dammed the fleet.
+
+### Defect (proven 4× on 2026-06-10)
+
+`staging-to-main.yml` shared `concurrency: group: manifest-update` with `ci-status-update.yml` (fires on EVERY fleet v2
+completion, near-continuous in work hours) + `update-repo-version.yml`. GitHub keeps at most **one queued run per
+concurrency group — each new arrival CANCELS the previously-queued run**. A dispatched promote therefore almost never
+survived the queue under traffic, and a cancelled `repository_dispatch` payload is **not replayable** → the promotion
+silently vanishes; the staging lock (set by sit-gate at cycle start) is never cleared; the debounce **skips while
+locked**; the dangling-lock auto-clear only covers `pending=[]`; the starvation detector only ALERTS. Net: lock wedged
+until a human notices; every repo's →staging promotion blocked behind it.
+
+**Evidence (run IDs, all `completed/cancelled` with ZERO jobs = killed while queued):**
+
+- 07:14Z run `27259762201` — the organic ml-service 0.3.0 promote (lock set 07:07 by sit-gate; this was its clearer).
+- 08:23Z manual rescue dispatch — displaced the same way.
+- 08:31Z run `27263334447` — second manual rescue, displaced **12s after dispatch**; displacers caught live:
+  `ci-status-update` (in_progress) + `ci-status-update` (pending).
+- Healthy-path control: 06:48 sit-gate → 06:55 staging-to-main SUCCESS → deployment-service promoted, lock cleared in 7
+  min — the design works whenever the promote actually RUNS.
+
+### Fix (3 files, PM `.github/workflows/`, shipped this commit)
+
+1. **`staging-to-main.yml`** — moved to its **own** `concurrency: group: staging-to-main` (cancel-in-progress: false).
+   Status noise can no longer displace the promote. Self-contention is safe: every promote run re-derives the pending
+   set from the manifest (full sweep) → a displaced QUEUED promote's work is covered by the surviving run. Manifest
+   write-safety was never the group's job here: the promote's manifest push already carries the 5-attempt rebase-retry
+   loop (staging-to-main.yml "Retry-with-rebase").
+2. **`ci-status-update.yml`** — its bare `git push origin HEAD` → the same 5-attempt rebase-retry loop (it can now race
+   the promote's manifest commit; bare push would fail non-FF and silently drop the ci_status write). NOTE: under the
+   OLD shared group, ci-status-updates displaced EACH OTHER (one queued max) → status writes were already being dropped
+   silently today; this loop + de-grouping strictly improves that.
+3. **`update-repo-version.yml`** — its bare `git push` → same retry loop (same exposure; its dispatch is also
+   non-replayable).
+
+### Rollback (if anything misbehaves)
+
+Single revert of this commit restores the prior state exactly (shared group + bare pushes). The retry loops are
+strictly-additive hardening (a clean first push exits the loop on attempt 1) — reverting them is safe but should never
+be needed independently. Watch-fors post-ship: (a) `staging-to-main` + `ci-status-update` runs overlapping → expect
+occasional "Push rejected (attempt 1); rebasing" lines, NOT failures; (b) a `FATAL: could not push ... after 5 attempts`
+= real contention storm → re-run the workflow, then investigate group membership.
+
+### Recovery runbook — "promote starved / staging lock stuck" (NEXT TIME)
+
+Symptoms: `staging_status.locked=true` with non-empty `pending_repos` for >30 min; fleet-wide `Staging Lock Check` reds;
+no `full-workspace-sit` / `staging-to-main` run in-flight; ml-style repo stranded with
+`staging_versions[X] != versions[X]`.
+
+1. Confirm the clearer died: `gh run list --repo IggyIkenna/unified-trading-pm --workflow staging-to-main.yml --limit 5`
+   → look for `completed/cancelled` runs with zero jobs (queue-displacement signature) or a real failure (read its log).
+2. Recover in-band: `gh workflow run staging-to-main.yml --repo IggyIkenna/unified-trading-pm -f reason="<why>"` — the
+   workflow_dispatch path re-derives pending from the manifest (full sweep; optional `start_from_repo` to resume).
+3. Verify: run goes in_progress → `chore(manifest): promote staging_versions → versions, clear staging lock` lands on
+   main → `staging_status.locked=false` → blocked →staging PRs' Staging Lock Check turns green on re-run.
+4. If the dispatch itself gets cancelled with zero jobs → you are seeing THIS defect again: check `concurrency:` in
+   staging-to-main.yml hasn't been re-folded into a shared group.
+
+### Follow-ups (discovered, not in the hot fix)
+
+- [ ] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` group membership — same displacement exposure class
+      (low-frequency/high-value runs sharing `manifest-update` with high-frequency writers). De-group or
+      defer-and-replay; their manifest pushes need the retry loop first if de-grouped. — provenance: this finding
+- [ ] [SCRIPT] P2. `cloud-build-router.yml` also sits in `concurrency: manifest-update` — same review (its qg-passed
+      payloads are equally non-replayable; the freeze path already has defer-and-replay to copy from). — provenance:
+      this finding
+- [ ] [SCRIPT] P3. Upgrade `sit-starvation-detector.yml` from alert-only → auto-redispatch `staging-to-main`
+      (workflow_dispatch, reason="starvation auto-recovery") when locked>30min + pending non-empty + no promote/SIT
+      in-flight — turns this whole class self-healing. — provenance: this finding
+- [ ] [SCRIPT] P2. Local-vs-CI basedpyright count drift on PM: local QG counted 1548 > ratchet 1511 while CI v2
+      (same script, same ratchet) passed green on near-identical LDR content (72ddfde4 08:23Z) — error files all
+      last-touched ≤06-03, so the +37 is environment drift (venv resolution / stub coverage), not new code. Root-cause
+      under `ci_local_qg_parity_2026_06_08.md`; until fixed it blocks local sentinels on PM for non-Python diffs
+      (hit 2026-06-10 shipping the staging-to-main concurrency fix → used the codified `.github/**` carve-out + the
+      v2-gated main PR instead). — provenance: this fix's Pass-1

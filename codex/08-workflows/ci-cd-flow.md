@@ -55,12 +55,13 @@ squash-merges, the standing sweep is gone** — a LATER direct push to LDR has n
 path to `main`** until the next quickmerge opens a new one.
 
 - **Automated drain (codified 2026-06-09): `ldr-to-main-promote.yml`** — the PM-only analogue of
-  `ldr-to-staging-promote`. Every 30 min (+ `workflow_dispatch` + `repository_dispatch: ldr-to-main`) it opens (or
-  reuses) the standing LDR→main PR with v2-gated auto-merge **whenever PM's LDR has real content ahead of main** — gated
-  on the CHANGED-FILE count of `compare/main...live-defi-rollout` (0 files → no-op, immune to squash-accounting noise),
-  reusing any open PR (incl. quickmerge's) so it never duplicates, and self-recovering the v2-never-reported deadlock
-  (close+reopen). So direct pushes now drain within the 1-hour SLA without waiting on the next quickmerge.
-- **Manual immediate drain (the bot's fallback — when you don't want to wait up to 30 min):**
+  `ldr-to-staging-promote`. Every 15 min (tightened from 30 min 2026-06-10) (+ `workflow_dispatch` +
+  `repository_dispatch: ldr-to-main`) it opens (or reuses) the standing LDR→main PR with v2-gated auto-merge **whenever
+  PM's LDR has real content ahead of main** — gated on the CHANGED-FILE count of `compare/main...live-defi-rollout`
+  (0 files → no-op, immune to squash-accounting noise), reusing any open PR (incl. quickmerge's) so it never duplicates,
+  and self-recovering the v2-never-reported deadlock (close+reopen). So direct pushes now drain within a ~30-min SLA
+  without waiting on the next quickmerge.
+- **Manual immediate drain (the bot's fallback — when you don't want to wait up to 15 min):**
   `gh pr create --base main --head live-defi-rollout --title "chore(promote): LDR→main sweep …" && gh pr merge <n> --auto --squash`
   (v2-gated, auto-merges when green). This re-establishes the standing sweep and drains the accumulated direct pushes.
 - **Verify a push actually reached `main` by CONTENT, not commit count:** a squash-merge lands all the changes as ONE
@@ -342,6 +343,24 @@ the branches force-sync to LDR.
   sweeps the accumulated drift, so "`main` never ahead of LDR" holds in steady state (modulo the ≤20-min window), not
   just eventually-converges. (Edit the SSOT template + `rollout-workflow-templates.sh` fleet-wide — a template-only edit
   drifts every per-repo copy and reddens the PM drift gate.)
+
+### Workflow-template rollout is a TWO-half operation — the second half (commit fleet-wide) is mandatory (HARD RULE, 2026-06-10)
+
+`rollout-workflow-templates.sh` only does HALF the job: it **writes** the SSOT template (`scripts/workflow-templates/<wf>.yml`)
+into all 24 repos' `.github/workflows/` **working trees**. The second, mandatory half is to **commit + push the per-repo
+change to each repo's `live-defi-rollout`** in the same unit (a per-repo `ci(workflow-templates): roll out <wf>` commit —
+exactly like a fleet GHA version bump). **A rollout left as uncommitted working-tree churn is the #1 cause of stale
+clones**: the `*/5` `slot-cron-ff-pull` cron skips any clone with a dirty tree (`[skip:dirty]` — it preserves WIP, never
+overwrites), so a clone with rolled-out-but-uncommitted workflow files **falls behind LDR indefinitely**. On a worker VM
+that strands the executor PM clone → the orchestrator's `PlanRegenLoop`/plan-health read stale plans → the backlog
+starves. **Incident 2026-06-10**: a committed `main-backmerge-to-ldr.yml` template change (GH_PAT conflict-PR fix) was
+never rolled-out-and-committed → `detect_template_drift --workflows` flagged ~19 repos drifted, AND the rollout's
+working-tree output had been left dirty fleet-wide → vm-planning + all 28 main clones stranded 13–545 commits behind →
+empty backlog, idle review agent. **Definition of done for any template edit**: (1) `detect_template_drift.py
+--workflows` exits 0, AND (2) `git status .github/workflows/` is clean in every repo (no rolled-out-but-uncommitted
+copies). Verify BOTH before declaring it shipped. Can't finish in-session → it's a tracked plan todo; never leave silent
+fleet drift, because the FF-pull cron cannot self-heal a dirty tree (only `detect_template_drift` surfaces it, and that's
+a local-only post-gate, a CI no-op).
 
 SSOTs: `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` +
 `plans/active/ci_local_qg_parity_2026_06_08.md` (local LDR-checkout QG in dep order is the staging oracle).

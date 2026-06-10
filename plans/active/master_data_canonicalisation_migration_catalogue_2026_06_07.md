@@ -771,7 +771,7 @@ does not require a second whole-corpus walk.
       `instrument_availability/     by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is
       empty). Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic:
       manifest_master.
-- [ ] [UAC+MTDS] P1. **Era-B legacy retirement — the per-AG v8→v9 migrator drops ALL `data_type=options_chain`/
+- [ ] [UAC] [MTDS] P1. **Era-B legacy retirement — the per-AG v8→v9 migrator drops ALL `data_type=options_chain`/
       `futures_chain` recognition as its FINAL ATOMIC STEP, right after it relabels the on-disk rows to `trades`** 🟢
       **SAFETY GUARD SHIPPED (uac@93961df3, slot-7 2026-06-08)**: `assert_era_b_purge_safe()`
       (`canonical/crosscutting/era_b_legacy_purge.py`) simulates the legacy drop in-memory + asserts every closed-set
@@ -1320,7 +1320,7 @@ P1 redirect todo below.)
       `gsutil` per-object. Snapshot each `_index` to `_index/snapshots/pre_delete_<date>.parquet` first (rollback).
       Owner: vm-defi (operator sign-off on the bucket deletes — destructive). parent_epic: manifest_master. Provenance:
       slot-2 orphan audit 2026-06-08.
-- [ ] [UAC+SCRIPT] P2. **Solana DeFi source = actual names (folds the prior P2 + the live-handler Solana stamp).** Once
+- [ ] [UAC] [SCRIPT] P2. **Solana DeFi source = actual names (folds the prior P2 + the live-handler Solana stamp).** Once
       Solana writes land in the dedicated buckets (redirect above), the migrator/rebuild + live handlers must stamp the
       ACTUAL Solana source, not the chain-agnostic `onchain_subgraph`: add Solana venue overrides to UTL
       `_VENUE_OVERRIDES` (ORCA/RAYDIUM/PHOENIX/KAMINO/MARINADE/JITO→`BATCH_SOLANA_RPC`; DRIFT→`BATCH_HELIUS_RPC`;
@@ -1535,7 +1535,7 @@ speed-note (both deferred optimisations, non-blocking).
 
 ## Master coordination todos (this plan's OWN work — pure coordination, no execution)
 
-- [ ] [UAC+IS] P1. **G1-ENUM present-set asymmetry — combo/chain underlyings get PHANTOM
+- [ ] [UAC] [IS] P1. **G1-ENUM present-set asymmetry — combo/chain underlyings get PHANTOM
       `(options_chain|futures_chain, trades)` `expected_unattempted` seeds (CROSS-AG: tradfi + cefi; found slot-6
       2026-06-08 tradfi pre-apply audit).** `enumerate_expected_universe.py` rolls the CATALOG's option/combo leaves up
       to a per-underlying `options_chain`/`futures_chain` bundle candidate with `data_type=trades`
@@ -1613,7 +1613,7 @@ speed-note (both deferred optimisations, non-blocking).
       migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do NOT
       need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service + instruments-service.
       parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
-- [ ] [DEFI/CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
+- [ ] [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
       (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
       rebuild** ✅ source-aware (mtds@f80c50f1) but the **41 inline `pipeline_mode="batch"` literals in the DeFi LIVE

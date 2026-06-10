@@ -224,12 +224,20 @@ accounts on first deploy. `account_is_auth_failed` kept as the raw-status check 
 green).
 
 - [x] ✅ [AGENT] P0. Cooldown auto-recovery for `auth_failed` — code shipped (agent-orchestrator, QG-green).
-- [ ] [OPERATOR] P0. On the LIVE orchestrator (`i-0c9b283b31d6b5ca7`, not SSM-reachable): **(a)** redeploy
-      agent-orchestrator so the new code + migration take effect; the NULL-timestamp auto-heal then un-latches
-      `sub-b-iggy2london` / `sub-c-ikenna-odum` on the next rotation tick. **(b)** Immediate unblock before redeploy:
-      from the dashboard force a spawn with `account_id=sub-b-iggy2london` (explicit `/api/slots/{N}/spawn` bypasses the
-      usable gate) → on heartbeat `server.py` auto-clears its `auth_failed`. Repeat for `sub-c-ikenna-odum`. Confirm
-      `~/.claude-accounts/sub-b-iggy2london.env` is present on the live VM (re-sync from the creds bucket if not).
+- [x] ✅ [OPERATOR] P0. **(a) DONE — verified 2026-06-10.** The two stale premises are both FALSE now: `i-0c9b283b31d6b5ca7`
+      **IS SSM-reachable** (`PingStatus: Online`, last ping 2026-06-10T09:23Z), and the new code is **already deployed +
+      running** — the live uvicorn (`server.server:app` :8765, nginx-fronted) restarted 2026-06-10T08:16:20Z onto a checkout
+      that carries `auth_failed` cooldown (`state_store.py` 11 hits) + `plan_health`/`ldr_qg_failure` (`escalation.py`), 0
+      uncommitted. So the NULL-timestamp auto-heal is live and un-latches `sub-b-iggy2london`/`sub-c-ikenna-odum` on the next
+      rotation tick without operator action.
+- [ ] [OPERATOR] P2. **(b) residual — verify only.** Confirm `sub-b-iggy2london`/`sub-c-ikenna-odum` actually un-latched
+      post-08:16 redeploy (dashboard or `/api/slots`); if still `auth_failed`, force `/api/slots/{N}/spawn` (bypasses the
+      usable gate → heartbeat auto-clears) and confirm `~/.claude-accounts/sub-b-iggy2london.env` is on the VM (re-sync from
+      creds bucket if absent). Downgraded P0→P2: the cooldown auto-heal is now running so this is a confirmation, not a fix.
+- [ ] [INFRA] P3. Watchdog NULL/stale-`last_ping` reap fix (`68116f7`, LDR-only) is **not** on the running vm-0 checkout
+      (verified `merge-base --is-ancestor` = NO 2026-06-10) — `pm-pull.timer` only FF-pulls the PM plans clone, NOT the
+      agent-orchestrator code, so the orchestrator code refreshes only on an explicit redeploy. Carry `68116f7` on the next
+      ao code redeploy; it's a minor liveness improvement, not blocking.
 
 ### LDR integration has no hard regression-gate (discovery 2026-06-01, fleet code-freeze)
 

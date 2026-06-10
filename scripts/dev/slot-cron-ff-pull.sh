@@ -157,6 +157,14 @@ ff_one() {
         for _cov in $(git ls-files -m -- 'coverage*.xml' 2>/dev/null); do
             git checkout -q -- "${_cov}" 2>/dev/null || true
         done
+        # plan_health_digest.md / plan_skeleton.md : the orchestrator plan-health agent writes these
+        # untracked digests into the PM EXECUTOR clone root. Untracked files show in `git status
+        # --porcelain` → trigger [skip:dirty] below → the clone falls behind → the PlanRegenLoop +
+        # plan-health agent that read plans/active/ FROM this clone are starved (incident 2026-06-10:
+        # vm-planning PM clone 545 commits behind → empty backlog, no CI-failure/plan-health work).
+        # They are pure generated output (regenerated each run) → safe to clean so the FF proceeds.
+        # Absent in non-PM repos → no-op. (Should also be gitignored; this is the per-tick safety net.)
+        git clean -fq -- plan_health_digest.md plan_skeleton.md 2>/dev/null || true
         if ! git diff --quiet -- workspace-manifest.json 2>/dev/null; then
             _nonstatus=$(git diff -- workspace-manifest.json 2>/dev/null \
                 | grep -E '^[+-]' | grep -vE '^[+-]{3}' | grep -vE '"ci_status":' || true)

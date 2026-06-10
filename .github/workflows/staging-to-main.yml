@@ -34,7 +34,18 @@ permissions:
   contents: write
 
 concurrency:
-  group: manifest-update # unify-manifest-concurrency-groups: all manifest-mutating workflows share this group
+  # OWN group, deliberately NOT the shared `manifest-update` group (changed 2026-06-10).
+  # GitHub keeps at most ONE queued run per concurrency group — each new arrival cancels the
+  # previously-queued run. ci-status-update fires on every fleet v2 completion (near-continuous
+  # in work hours), so a queued promote was displaced before it could start (4× on 2026-06-10,
+  # incl. two manual rescue dispatches; the repository_dispatch payload is NOT replayable) →
+  # staging lock held for hours, every repo's →staging promotion blocked behind it.
+  # Manifest write-safety does NOT need the shared group here: the promote's manifest commit
+  # uses the 5-attempt rebase-retry push below ("Retry-with-rebase"), and the other manifest
+  # writers carry the same retry pattern. Self-contention is safe: every promote run re-derives
+  # the pending set from the manifest (full sweep), so a displaced QUEUED promote's work is
+  # covered by the survivor.
+  group: staging-to-main
   cancel-in-progress: false
 
 jobs:

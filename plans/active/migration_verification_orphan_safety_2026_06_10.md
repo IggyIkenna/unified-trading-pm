@@ -70,42 +70,48 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## V0 — Canonical possible-manifest registry (CF-15) — slot-3, BLOCKS all per-AG
 
-- [ ] [UAC] P0. Build `unified_api_contracts/registry/possible_manifest.py`: `PossibleManifestSpec[asset_group]` +
-      `enumerate_possible_shard_keys(asset_group, *, catalogue) -> Iterator[ShardKey]` + `is_valid_shard_key(...)` +
-      `canonical_path_templates(asset_group)`. **Composes (imports, never re-declares)** `SHARD_AXIS_MATRIX` (axis
-      names) × `data_type_capability`/`archetype_capability_matrix` (value-domains) × the
-      `(instrument_type × data_type)` validity matrix. Unit tests per AG. unified-api-contracts.
-- [ ] [UAC] P0. Assert axis-completeness: each AG's spec declares every dimension its data physically carries (no AG
-      silently missing a shard axis) — the CF-15/CF-18 join. Test fails RED on a missing axis. unified-api-contracts.
-- [ ] [REFACTOR] P0. **Redirect + DELETE the scattered re-derivations** (no parallel paths): (a)
-      `instruments-service/scripts/enumerate_expected_universe.py` drives from `enumerate_possible_shard_keys`; (b)
-      `reconcile_phantom_manifest_rows_all.py` `prefix_tpls` derives from `canonical_path_templates`; (c) deployment-api
-      denominator calls the registry (no re-derived genesis/launch). Grep-verify 0 bespoke cross-products remain.
+- [x] ✅ [UAC] P0. Build `unified_api_contracts/registry/possible_manifest.py` (`PossibleManifestSpec` /
+      `enumerate_possible_shard_keys` / `is_valid_shard_key` / `canonical_path_templates`); composes the 3 layers, never
+      re-declares; `canonical_path_templates` GENERATES the `pipeline_mode=batch_<source>/` prefixes from the source
+      registry (Axis-10 de-scatter at the root). 41 tests. — uac@483e8c2a (QG-green, staging PR #119).
+- [x] ✅ [UAC] P0. Axis-completeness assertion (each AG's spec declares every physical shard axis; DeFi `chain` guarded;
+      RED on a missing axis) — the CF-15/CF-18 join. — uac@483e8c2a.
+- [x] ✅ [REFACTOR] P0. Redirect + DELETE the scattered re-derivations: (b) `reconcile_phantom_manifest_rows_all.py`
+      `prefix_tpls` now DERIVES from `canonical_path_templates` (hand-list DELETED; **byte-identical superset** verified
+      for all 4 AGs) — is@da74c72c; (a) `enumerate_expected_universe.py` already reads the UAC validity layer (G1-ENUM,
+      2026-06-07) — STUB docstring corrected to FULL is@da74c72c; (c) deployment-api VERIFIED already-canonical (counts
+      the materialised 4-state per F4 + reads canonical UAC `get_chain_genesis_date`/`get_protocol_launch_date` — no
+      bespoke cross-product to redirect). Grep-verified.
 
 ## V1 — Catalogue-seeded denominator at zero data (CF-16) — per-AG
 
-- [ ] [SCRIPT] P0. **CeFi**: complete the `enumerate_expected_universe.py` CeFi path (was STUB "needs IS catalog
-      per-instrument lifecycle" — now unblocked by `build_instrument_catalogue.py` shipped 2026-06-05) via V0's
-      generator; a 0-captured (venue, data_type) shows a full `expected_unattempted` denominator. **Cross-check
-      master-plan G1-ENUM before writing — do not double-implement.** slot-3. instruments-service.
-- [ ] [SCRIPT] P0. **Prediction**: complete the enumerator Prediction path (was STUB on `PREDICTION_GROUPS`) via V0.
-      slot-3.
+- [x] ✅ [SCRIPT] P0. **CeFi**: VERIFIED FULL (not re-implemented) — the G1-ENUM shape-aware v2 producer
+      (`_enumerate_v2_cefi`, is@6ea46565, 2026-06-07) already completed the CeFi path via the now-shipped
+      `build_instrument_catalogue.py` + the UAC validity matrix; the stale STUB docstring is corrected is@da74c72c.
+      Cross-checked master-plan G1-ENUM — no double-implementation.
+- [x] ✅ [SCRIPT] P0. **Prediction**: VERIFIED FULL — `_enumerate_v2_prediction` (G1-ENUM) drives per-market lifecycle +
+      per-row data_type grain-binding from the prediction catalogue; STUB docstring corrected is@da74c72c.
 - [ ] [VERIFY] P0. **DeFi / TradFi / Sports**: verify the FULL enumerators now read V0's generator (no regression);
       0-data cell → `expected_unattempted` denominator. slot-2. instruments-service.
 
 ## V2 — Orphan sweep + bucket prefix taxonomy + sizing (CF-17) — slot-3 tool, both run
 
-- [ ] [SCRIPT] P0. Build the **orphan sweep** (GCS-object→manifest, the inverse of the phantom reconciler): walk each AG
-      bucket once; classify every object into (A) canonical+manifested / (B) legacy-duplicate-of-A / (C) manifest-infra
-      / (C2) **non-data** (vm logs, run-artifacts, terraform, tarballs — understood, NEVER deleted) / (D) junk / (E)
-      **real data with no manifest row**. Emit `_index/audit/orphan_sweep_<AG>.parquet`. **Single GCS walk** also
-      produces V3 footers + sizing. instruments-service or mtds (per-AG owner). slot-3 builds, both run.
-- [ ] [SCRIPT] P0. **Bucket prefix taxonomy**: every top-level prefix → labelled class; **0 `unknown` prefixes** is the
-      acceptance bar ("every byte accounted for"). slot-3 tool.
-- [ ] [SCRIPT] P0. **Sizing rollup**: bytes + object-count per `(asset_group, data_type, venue, pipeline_mode)` →
-      `_index/audit/data_sizing_<AG>.parquet`; flag biggest cells for pre-download. Rides the same walk.
-- [ ] [RUN] P0. Per-AG acceptance: `phantom_count==0` ∧ `orphan_class_E==0`. **Class (E) = backfill `record_captured`,
-      NEVER delete** (it's the v10 hole). cefi/pred = slot-3; defi/tradfi/sports = slot-2.
+- [x] ✅ [SCRIPT] P0. Built the **orphan sweep** `migration_orphan_sweep.py` (GCS→manifest, the phantom-reconciler
+      inverse): single walk → forced 6-class taxonomy (A/B/C/C2/D/E) with **grain-aware wildcard covering** (manifest
+      coarser than objects → blank manifest field = wildcard; the fix for the prediction `A=0` false-orphan class). 18
+      tests. — is@da74c72c. **RAN on real prod GCS** (cefi 5.3M obj + prediction).
+- [x] ✅ [SCRIPT] P0. **Bucket prefix taxonomy**: every top-level prefix labelled (incl. the separate
+      `processed_candles` corpus + vm-staging/logs, understood + never raw-tick-deleted); **`unknown_prefixes==0`
+      verified on the full cefi + prediction walks** ("every byte accounted for"). — is@da74c72c.
+- [x] ✅ [SCRIPT] P0. **Sizing rollup** published: cefi total **22.8 TiB** across 101 cells (biggest: DERIBIT trades
+      ~3.6 TiB, OKX/BINANCE/KRAKEN book_snapshot_5 ~1 TiB each — pre-download candidates); prediction 22.7 GiB. Rides
+      the single walk. — is@da74c72c.
+- [ ] [RUN] P0. Per-AG acceptance: `phantom_count==0` ∧ `orphan_class_E==0`. **🔴 NOT YET CLEAN** (tool shipped + run;
+      verdict is RED, as designed — the "no-v10" check found candidate holes): **prediction E=61,014** (corrected from a
+      563k false count by the grain-fix; objects on dates/data_types outside the manifest's captured coverage) + ~512k
+      legacy-B awaiting G4 migration; **cefi** corrected re-run in flight. **Class (E) → backfill `record_captured`,
+      NEVER delete** — this is the per-AG backfill tail before G4 (partly operator/per-AG). cefi/pred = slot-3;
+      defi/tradfi/sports = slot-2.
 - [ ] [SCRIPT] P0. **Manifest-diff tool (projected-vs-current) — operator 2026-06-10.** Build
       `instruments-service/scripts/manifest_diff.py`: load TWO `_index` parquets (the `beta_manifest_writer` PROJECTED
       v9 vs the CURRENT/live consolidated `_index`), diff by shard-key → report added / removed / changed cells +
@@ -116,8 +122,9 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## V3 — Schema-attribute completeness (CF-18) — slot-3 framework, both run
 
-- [ ] [SCRIPT] P0. Framework: sample recent source/legacy parquets per (AG, data_type, venue); union footer columns;
-      diff vs the v9 UAC canonical contract. slot-3.
+- [x] ✅ [SCRIPT] P0. Framework `migration_schema_completeness.py`: footer-column union per (AG, data_type, venue) vs
+      the v9 UAC canonical contract (`schema_spec.find_schema`); RED on any silently-dropped column; partition/meta
+      columns excluded; rides the orphan-sweep object list (single-walk). 8 tests. — is@da74c72c.
 - [ ] [RUN] P0. Per-AG: any source column not carried into v9 = RED → carry it (extend canonical schema BEFORE apply) or
       operator-ack the drop in this plan. **Zero silent truncation.** cefi/pred=slot-3; defi/tradfi/sports=slot-2.
 
@@ -130,9 +137,10 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## V5 — Projected-manifest preview + data-status render (CF-20, ⑭) — slot-3 harness, both render
 
-- [ ] [SCRIPT] P1. Add `--beta-manifest-out gs://<dev-bucket>/_index/availability_index.parquet` to the rebuild dry-run
-      — writes the projected v9 `_index` (schema_version stays 9; "v9 projected", not a new schema), no objects moved.
-      slot-3.
+- [x] ✅ [SCRIPT] P1. `beta_manifest_writer.py` — `write_projected_index(df, --beta-manifest-out gs://<dev>/…)` writes
+      the projected v9 `_index` (schema*version stays 9 = "v9 projected"); **dev-target HARD-guard** (refuses any
+      prod/staging `_index`); no objects moved. Migrator dry-runs call it. 4 tests. — is@da74c72c. *(The per-AG dev
+      render + operator goalpost eyeball remains — next item.)\_
 - [ ] [VERIFY] P1. Per-AG: drop the projected `_index` in the **dev** bucket, run `restart-deployment-stack.sh --api`
       with `DEPLOYMENT_ENV_SHORT=dev`; confirm data-status/deployment-UI render coverage % + 4-state + could-exist
       denominator + drilldowns; operator eyeballs the goalposts. Delete the dev `_index` after. cefi/pred=slot-3;
@@ -142,10 +150,11 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 - [ ] [VERIFY] P0. Per-AG pre-apply verdict: ⑬–⑲ all GREEN (added to that AG's ①–⑫ audit verdict). Feeds the master
       coordinator's G4 gate. cefi/pred=slot-3; defi/tradfi/sports=slot-2.
-- [ ] [SCRIPT] P0. **G4.5 verified-delete** (`cleanup_legacy_twins_<AG>.py --dry-run|--apply`): a legacy object is
-      deletable ONLY if its canonical twin is in the manifest (`captured`) AND `crc32c(legacy)==crc32c(canonical)`;
-      class (C)/(C2)/(E) never deleted. `--apply` operator-gated like G4. Post-apply re-run orphan sweep (E still 0).
-      slot-3 tool, both run.
+- [x] ✅ [SCRIPT] P0. **G4.5 verified-delete** `cleanup_legacy_twins.py` — the 'genetic' gate: a legacy object is
+      deletable ONLY if its canonical twin is in the manifest (`captured`) AND `crc32c(legacy)==crc32c(canonical)`
+      (byte-identical, fetched per-object); never delete a canonical object; class (C)/(C2)/(E) never candidates.
+      `--dry-run` default; `--apply` requires `--i-understand` + operator-gated like G4. 8 tests. — is@da74c72c. _(The
+      `--apply` RUN stays operator-gated — post-apply re-runs the orphan sweep, E still 0.)_ slot-3 tool, both run.
 
 ## V7 — Durability: re-runnable audit instructions (operator 2026-06-10) — slot-3, cross-cutting
 

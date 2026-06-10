@@ -95,6 +95,13 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
       git-discipline.
 - [x] ✅ [DOCS] P2. Update `agent-orchestrator/server/worktree_clean_check.py` base-branch logic (LDR for all; the AO
       `main` override is already removed).
+  - ⚠️ **Over-marked correction (2026-06-10)**: this item covered ONLY `base_branch_for_repo` (the ahead/behind base).
+    The **FM7 pre-spawn gate still hard-asserted `HEAD == tab/<op>/<N>`** (a hard gate in `autospawn.py` / `server.py` /
+    `worker_liveness.py`) and `commit_and_push_dirty_repos` still did `git push origin HEAD` — together they would have
+    FM7-quarantined EVERY Path-B slot (HEAD on LDR) so no worker could spawn/respawn, and the orphan-WIP push would have
+    landed un-QG'd WIP directly on the shared integration branch. Completed at **agent-orchestrator@edf5e63** (gate
+    accepts `HEAD==base`; orphan-WIP → `wip-preserve/orchestrator-slot-<N>` + reset to `origin/<base>`; +3 tests).
+    Verified live: `check_slot_branch_state` returns `should_stop=False` for all Path-B slots.
 
 ## Success criteria
 
@@ -141,23 +148,45 @@ running, `api.agent-orchestrator.odum-research.com → 13.113.200.22`. `/health`
 references v0.7+ for `assigned_vm`) and `data_freshness.stale: true` → the deployed orchestrator is also BEHIND and
 should be redeployed as part of this. Worker-topology SSOT: `codex/05-infrastructure/agent-orchestrator-worker-topology.md`.
 
-- [ ] [INFRA] P1. On `i-0c9b283b31d6b5ca7`: pull the new PM tooling (`setup-tab-worktrees.sh` Path-B,
+- [x] ✅ [INFRA] P1. On `i-0c9b283b31d6b5ca7`: pull the new PM tooling (`setup-tab-worktrees.sh` Path-B,
       `migrate-slots-to-pathb.sh`, `slot_drift_check.py`, the strict-quickmerge pre-push hook, updated CLAUDE.md +
       SUB_AGENT + codex) onto its main clones via `git pull --ff-only origin live-defi-rollout`, then **DRY-RUN**
       `migrate-slots-to-pathb.sh --slots 1-<N> --dry-run` (declare VM identity first:
       `git config --global slotIdentity.name <vm-id>` / `…email` — VMs leave email at the Ikenna fleet default per
       CLAUDE.md § Commit attribution; `VM_NAME` env supplies the `[slot-N·<vm>]` host tag). Preserves all WIP to
-      `origin/wip-preserve/<vm>-slot-<N>` first.
-- [ ] [INFRA] P1. Execute the Path-B reclone of every orchestrator worker slot on the VM
+      `origin/wip-preserve/<vm>-slot-<N>` first. — **DONE 2026-06-10**: PM + AO main clones FF-pulled to
+      `origin/live-defi-rollout` (PM junk WIP stashed → `vm-pm-wip-cleared-pre-pathb-2026-06-10`); dry-run clean with
+      identity `ikennaigboaka [slot-N·planning]` (`VM_NAME=planning`).
+- [x] ✅ [INFRA] P1. Execute the Path-B reclone of every orchestrator worker slot on the VM
       (`migrate-slots-to-pathb.sh --slots 1-<N>`); verify `slot_drift_check.py --tabs-root <tabs>` exits 0 and each slot
       is a clone on `live-defi-rollout` (HEAD ancestor-or-equal of `origin/LDR`), identity reads `<vm-id> [slot-N·<vm>]`.
-- [ ] [INFRA] P1. Install/refresh the symmetric-worker crons on the VM (`slot-cron-ff-pull.sh` +
+      — **DONE 2026-06-10**: `--slots 1-5` → 115/115 clones, 0 failures, 0 WIP-preserve needed (clean trees); all 5 slots
+      = clone on `live-defi-rollout`, 0 leftover worktrees, identity `ikennaigboaka [slot-N·planning]`; drift = 115/115
+      ancestor-or-equal of `origin/LDR`.
+- [x] ✅ [INFRA] P1. Install/refresh the symmetric-worker crons on the VM (`slot-cron-ff-pull.sh` +
       `slot-git-status-report.sh` every 5 min) so VM workers stay current on LDR and offer commits via
       `quickmerge --agent --files` from their own reference-clone worktree — confirm `verify-slot-host-symmetry.sh`
-      exits 0 on the VM (both crons installed + ran <10 min + report posted).
-- [ ] [INFRA] P1. Redeploy the orchestrator on the VM to current `live-defi-rollout` (it reports v0.6.0 +
+      exits 0 on the VM (both crons installed + ran <10 min + report posted). — **DONE 2026-06-10**: ff-pull +
+      status-report + symmetry crons present; `verify-slot-host-symmetry.sh` exits 0.
+- [x] ✅ [INFRA] P1. Redeploy the orchestrator on the VM to current `live-defi-rollout` (it reports v0.6.0 +
       `data_freshness.stale: true`); confirm `/health` version advances + `stale: false`, and AutoSpawn headroom is
-      healthy so `--escalate` dispatches actually spawn a worker (the "no worker spawned" symptom clears).
+      healthy so `--escalate` dispatches actually spawn a worker (the "no worker spawned" symptom clears). — **DONE
+      2026-06-10**: AO main FF-pulled to **edf5e63** (Path-B gate fix) + `systemctl restart orchestrator.service`;
+      `/health` `stale:false`, serving requests, no FM7/quarantine/traceback errors (only a benign self-retrying usage-
+      poller sqlite-locked transient); `ORCHESTRATOR_AUTOSPAWN_ENABLED=true`, queue currently empty so no spawn yet
+      (correct). NOTE: `/health` `version` stays "0.6.0" — that is a hardcoded app-version constant, NOT a deploy-fresh-
+      ness signal (code is current LDR); the "version advances" expectation was a misread of that constant.
+- [ ] [DOCS] P2. **AO worker-facing surface still teaches the tab-branch model (Phase-3 gap, found 2026-06-10)** —
+      rewrite `agent-orchestrator/agents/worker.md` (it still instructs "commit on / push to your tab branch
+      `tab/<operator>/<SLOT_ID>`") and the `branch` boot-prompt render-var fallback (`autospawn.py:229`,
+      `server.py:560`/`:1765` → `f"tab/{operator}/{slot_id}"`) to the Path-B LDR-direct model, so spawned workers aren't
+      handed stale tab-branch git instructions. Non-blocking (under Path-B a worker's `git push origin HEAD` / quickmerge
+      resolves to LDR) but a clarity + `SUB_AGENT_MANDATORY_RULES` parity gap.
+- [ ] [SCRIPT] P3. **Cosmetic bug in `scripts/dev/migrate-slots-to-pathb.sh` (found 2026-06-10)** — the run-header prints
+      `| DRY-RUN` whenever `DRY` is set to ANYTHING incl. `0` (`${DRY:+ | DRY-RUN}` treats the string `"0"` as set); the
+      actual logic correctly gates reclone on `[[ "$DRY" == 1 ]]`, so real runs DID reclone — only the header label lies
+      (confirmed: a real `--slots 1-5` run printed `DRY-RUN` yet performed all 115 clones). Fix:
+      `dry_label=""; [[ "$DRY" == 1 ]] && dry_label=" | DRY-RUN"` and use `$dry_label`.
 - [ ] [INFRA] P2. **agent-orchestrator drift-tick is STAGED on LDR pending ao's LDR→main promotion** (ao@ad76dda synced
       `main-backmerge-to-ldr.yml` from the PM SSOT, 2026-06-09). Scheduled workflows fire only from the DEFAULT branch
       (ao default = `main`), so the ao drift-tick is INERT until it reaches ao `main`. ao `main` is `ahead_by=22 /

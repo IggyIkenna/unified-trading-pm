@@ -282,7 +282,22 @@ jobs:
           git add uv.lock 2>/dev/null || true
           git add plans/audit/manifest-mutations.jsonl 2>/dev/null || true
           git commit -m "chore(manifest): update ${{ steps.update.outputs.repo }} to ${{ steps.update.outputs.version }}, bump PM to ${{ steps.update.outputs.pm_version }} [skip ci]"
-          git push
+          # Retry-with-rebase (2026-06-10): staging-to-main runs in its OWN concurrency group now,
+          # so its manifest commit can land between our checkout and push — a bare push then fails
+          # non-fast-forward and the version-bump manifest write is lost (the dispatch is not
+          # replayable). Same proven loop as staging-to-main's manifest push.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest version update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest version update after 5 attempts."
+              exit 1
+            fi
+          done
 
       - name: Validate manifest DAG (cycle guard — add-cascade-cycle-guard)
         if: steps.update.outputs.skip != 'true'

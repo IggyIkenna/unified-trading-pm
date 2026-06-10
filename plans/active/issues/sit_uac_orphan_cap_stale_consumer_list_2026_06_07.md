@@ -85,7 +85,7 @@ stack of latent harness failures, fixed/relaxed in sequence to unblock the v0.2.
       SIT gate on the 328 and **re-block the entire promotion cascade**. `EXEMPTION_CAP` left at 80 (union 65, ~23%
       headroom — already correct). **(An earlier sub-agent draft mis-set cap=20 from a misread `exit 0`; caught + reverted
       by independent re-measurement before any commit.)** Repo: system-integration-tests.
-- [ ] [SCRIPT] P2 **NICE-TO-HAVE / follow-up (surfaced 2026-06-10)**. Drive the 328 genuinely down: the
+- [ ] [SCRIPT] P2. **NICE-TO-HAVE / follow-up (surfaced 2026-06-10)**. Drive the 328 genuinely down: the
       terminal-consumer set excludes `unified-trading-library` (a T0 lib that re-exports many UAC schemas) and
       `grep_service()` matches by class name only (misses `from unified_api_contracts import X` facade re-exports). Decide
       whether (a) to add UTL to the scanned consumer set, and/or (b) follow facade/`__all__` re-exports so a schema
