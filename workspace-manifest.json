@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.6.0",
     "unified-trading-library": "0.5.0",
-    "unified-trading-pm": "1.2.82",
+    "unified-trading-pm": "1.2.83",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.9.0",
@@ -169,7 +169,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "STAGING_GREEN",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -1793,7 +1793,8 @@
     "batch-live-reconciliation-service": "0.4.0",
     "execution-service": "0.8.0",
     "fund-administration-service": "0.3.0",
-    "deployment-service": "0.8.1"
+    "deployment-service": "0.8.1",
+    "unified-trading-library": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1831,6 +1832,11 @@
     "deployment-service": {
       "version": "0.8.1",
       "sha": "621dae79235efa0701d047b686d8cfc8f11560f1",
+      "branch": "staging"
+    },
+    "unified-trading-library": {
+      "version": "0.6.0",
+      "sha": "da45d50f26738da01bb2cff5f455cc6b3b387d08",
       "branch": "staging"
     }
   },
