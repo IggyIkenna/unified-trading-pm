@@ -35,6 +35,7 @@ jobs:
       branch: ${{ steps.update.outputs.branch }}
       bump_type: ${{ steps.update.outputs.bump_type }}
       loop_breaker_triggered: ${{ steps.dispatch.outputs.loop_breaker_triggered }}
+      fanout_unresolvable: ${{ steps.resolve-gate.outputs.retries_exhausted }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -58,6 +59,15 @@ jobs:
           COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
           IS_BREAKING="${{ github.event.client_payload.is_breaking }}"
           IS_BREAKING="${IS_BREAKING:-false}"
+
+          # DEFECT-2 (dependency_promotion_range_pins_and_major_bump_sit_2026_06_09):
+          # fanout_retry > 0 marks a resolvability-gate re-dispatch of the SAME event
+          # (see the "Resolvability gate" step below). bump_type, when present in the
+          # payload, is the ORIGINAL run's verdict riding the retry — the manifest already
+          # records the new version on a retry, so recomputing below would yield "patch".
+          FANOUT_RETRY="${{ github.event.client_payload.fanout_retry }}"
+          if ! [[ "$FANOUT_RETRY" =~ ^[0-9]+$ ]]; then FANOUT_RETRY=0; fi
+          BUMP_TYPE_OVERRIDE="${{ github.event.client_payload.bump_type }}"
 
           if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
             echo "Missing repo or version in client_payload. Skipping."
@@ -111,6 +121,14 @@ jobs:
               bump_type = "minor"
           else:
               bump_type = "patch"
+
+          # DEFECT-2 resolvability-gate retry override: a fan-out retry re-dispatch carries
+          # the ORIGINAL bump_type. On the retry, current == version (the original run already
+          # wrote the manifest), so the comparison above degrades to "patch" — a MAJOR retry
+          # would then mis-route consumers to the direct-commit path and skip the lock/cascade.
+          bump_override = "${BUMP_TYPE_OVERRIDE}"
+          if bump_override in ("major", "minor", "patch"):
+              bump_type = bump_override
 
           # Update the appropriate section
           if branch == "staging":
@@ -193,6 +211,14 @@ jobs:
             echo "FATAL: could not parse current PM version from pyproject.toml"
             exit 1
           fi
+          # DEFECT-2: a resolvability-gate RETRY run must not mint another PM version —
+          # the ORIGINAL run already bumped PM + wrote the manifest (idempotent retry).
+          # NOTE: the else-body keeps its original column because the python3 -c string
+          # below must stay at column 0 after YAML block-strip (python -c rejects indent).
+          if [ "$FANOUT_RETRY" -gt 0 ]; then
+            NEW_PM_VERSION="$CURRENT"
+            echo "fanout_retry=${FANOUT_RETRY} — skipping PM self-bump (already done by the original run)"
+          else
           IFS='.' read -r PMAJOR PMINOR PPATCH <<< "$CURRENT"
           NEW_PPATCH=$((PPATCH + 1))
           NEW_PM_VERSION="${PMAJOR}.${PMINOR}.${NEW_PPATCH}"
@@ -224,6 +250,7 @@ jobs:
           "
 
           echo "PM version: $CURRENT → $NEW_PM_VERSION"
+          fi
 
           # (c) Find all direct dependents and build their new constraint (include bump_type)
           python3 - > /tmp/dependents.txt <<PYEOF
@@ -357,9 +384,131 @@ jobs:
             echo "digest=" >> "$GITHUB_OUTPUT"
           fi
 
+      # ── DEFECT-2: dependency-FIRST ordering for the consumer fan-out ──
+      # (plan dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md, Phase 3.5)
+      # Consumers resolve a fanned-out pin via python-quality-gates-v2 clone_repo():
+      #   (1) in-range release TAG → (2) the consumer's BRANCH NAME on the dep repo
+      #   (= the dep's `staging` for the direct-commit pin path) → (3) the PR BASE tier
+      #   (staging/main) → (4) manifest released-version tag → (5) main.
+      # NO workflow creates release tags today, so a FRESH bump is resolvable IFF the
+      # dep's {branch} pyproject.toml already carries `version = "{VERSION}"` (paths 2/3).
+      # semver-agent pushes the chore(release) commit to the dep's staging BEFORE
+      # dispatching version-bump here, so attempt 1 normally succeeds — this gate closes
+      # the race where that push lags/regresses and the fan-out pins consumers to an
+      # unresolvable version (incident shape: assert_dep_in_range "resolved X < floor Y",
+      # exec-service PR #232). Bounded poll: 10 × 30s (≤5 min — deliberately under the
+      # 10-min spec because this run HOLDS the manifest-update concurrency group; a long
+      # hold risks evicting sibling version-bump runs from the single pending slot = lost
+      # baselines, the DEFECT-1 eviction class). On timeout we do NOT dispatch blindly:
+      # re-dispatch the SAME version-bump event with fanout_retry+1 (max 3 — the
+      # chain-depth loop-breaker idiom), each retry run re-polling ≈5 min more. Retries
+      # exhausted → CRITICAL Slack via notify-fanout-unresolvable below.
+      - name: Resolvability gate — dep promoted before consumer fan-out (DEFECT-2)
+        id: resolve-gate
+        if: steps.update.outputs.skip != 'true'
+        env:
+          TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ steps.update.outputs.repo }}
+          VERSION: ${{ steps.update.outputs.version }}
+          BRANCH: ${{ steps.update.outputs.branch }}
+          BUMP_TYPE: ${{ steps.update.outputs.bump_type }}
+          IS_BREAKING: ${{ steps.update.outputs.is_breaking }}
+        run: |
+          set -euo pipefail
+
+          echo "retries_exhausted=false" >> "$GITHUB_OUTPUT"
+
+          if [ -z "${TOKEN:-}" ]; then
+            # No PAT → the dispatch step no-ops anyway; don't block on an unpollable gate.
+            echo "GH_PAT not set — skipping resolvability gate (dispatch step will no-op too)."
+            echo "resolvable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Nothing to fan out and no cascade → vacuously resolvable (skip the poll).
+          DEPENDENT_COUNT=$(grep -c . /tmp/dependents.txt 2>/dev/null || true)
+          DEPENDENT_COUNT="${DEPENDENT_COUNT:-0}"
+          if [ "$DEPENDENT_COUNT" -eq 0 ] && [ "$BUMP_TYPE" != "major" ] && [ "$IS_BREAKING" != "true" ]; then
+            echo "No dependents and no cascade — resolvability gate not needed."
+            echo "resolvable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          check_resolvable() {
+            # (a) exact release tag v{VERSION} — clone_repo()'s FIRST resolution path.
+            local code
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$OWNER/$REPO/git/ref/tags/v$VERSION" || echo "000")
+            if [ "$code" = "200" ]; then
+              echo "  tag v$VERSION exists on $REPO"
+              return 0
+            fi
+            # (b) the dep's {BRANCH} pyproject carries the version — the branch-name /
+            #     base-ref-tier resolution paths (canonical location for a fresh staging bump).
+            local pyproject
+            pyproject=$(curl -s -H "Authorization: Bearer $TOKEN" \
+              -H "Accept: application/vnd.github.raw" \
+              "https://api.github.com/repos/$OWNER/$REPO/contents/pyproject.toml?ref=$BRANCH" || echo "")
+            if printf '%s\n' "$pyproject" | grep -qF "version = \"$VERSION\""; then
+              echo "  $REPO@$BRANCH pyproject.toml carries version $VERSION"
+              return 0
+            fi
+            return 1
+          }
+
+          RESOLVED=false
+          for ATTEMPT in $(seq 1 10); do
+            echo "Resolvability check $ATTEMPT/10: $REPO=$VERSION (branch=$BRANCH)"
+            if check_resolvable; then RESOLVED=true; break; fi
+            [ "$ATTEMPT" -lt 10 ] && sleep 30
+          done
+
+          if [ "$RESOLVED" = "true" ]; then
+            echo "Dependency $REPO=$VERSION is resolvable — proceeding with consumer fan-out."
+            echo "resolvable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "resolvable=false" >> "$GITHUB_OUTPUT"
+
+          FANOUT_RETRY="${{ github.event.client_payload.fanout_retry }}"
+          if ! [[ "$FANOUT_RETRY" =~ ^[0-9]+$ ]]; then FANOUT_RETRY=0; fi
+          NEXT_RETRY=$((FANOUT_RETRY + 1))
+          MAX_FANOUT_RETRY=3
+
+          if [ "$FANOUT_RETRY" -ge "$MAX_FANOUT_RETRY" ]; then
+            echo "::error::Resolvability gate EXHAUSTED (${FANOUT_RETRY} retries): $REPO=$VERSION is still not resolvable (no tag v$VERSION; $BRANCH pyproject lacks it). Consumer fan-out HALTED — check the dep's chore(release) push (semver-agent apply step)."
+            echo "retries_exhausted=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "::warning::$REPO=$VERSION not yet resolvable after ~5 min — re-dispatching version-bump with fanout_retry=$NEXT_RETRY (max $MAX_FANOUT_RETRY); consumer fan-out deferred to the retry run."
+          CHAIN_DEPTH="${{ github.event.client_payload.chain_depth }}"
+          if [ -z "$CHAIN_DEPTH" ] || [ "$CHAIN_DEPTH" = "null" ]; then
+            CHAIN_DEPTH="${{ github.event.client_payload.cascade_depth }}"
+          fi
+          if ! [[ "$CHAIN_DEPTH" =~ ^[0-9]+$ ]]; then CHAIN_DEPTH=0; fi
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          # Same logical event → chain_depth preserved (loop protection here is fanout_retry).
+          # bump_type rides the payload so the retry run doesn't recompute it as "patch".
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"$REPO\", \"version\": \"$VERSION\", \"branch\": \"$BRANCH\", \"commit_sha\": \"$COMMIT_SHA\", \"is_breaking\": \"$IS_BREAKING\", \"bump_type\": \"$BUMP_TYPE\", \"chain_depth\": $CHAIN_DEPTH, \"fanout_retry\": $NEXT_RETRY}}") || HTTP="000"
+          if [ "$HTTP" = "204" ]; then
+            echo "  ✅ retry dispatched (fanout_retry=$NEXT_RETRY)"
+          else
+            echo "::error::retry dispatch failed (HTTP $HTTP) — fan-out for $REPO=$VERSION is LOST without a manual re-dispatch."
+            echo "retries_exhausted=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Dispatch dependency-update to downstream repos
         id: dispatch
-        if: steps.update.outputs.skip != 'true'
+        # DEFECT-2: gated on the dep being resolvable where consumers resolve it — on a
+        # gate timeout the fan-out is deferred to the fanout_retry re-dispatch, never blind.
+        if: steps.update.outputs.skip != 'true' && steps.resolve-gate.outputs.resolvable == 'true'
         env:
           BASE_IMAGE_DIGEST: ${{ steps.base-digest.outputs.digest }}
         run: |
@@ -459,10 +608,15 @@ jobs:
       #    full dep-order QG cascade (cascade-qg-ordering.yml runs QG across transitively-affected
       #    repos in topological level order, fail-fast). minor/patch bumps are absorbed by the
       #    consumer's range pin → NO cascade, NO consumer rebuild (the `if` below excludes them).
+      # DEFECT-2: also gated on resolvability — the cascade's per-repo QGs clone the dep
+      # exactly like consumer QGs do, so firing it against an unresolvable dep guarantees
+      # a spurious red cascade (+ a spurious escalate-to-orchestrator). On a gate timeout
+      # the cascade fires from the fanout_retry re-dispatch run instead (bump_type rides
+      # the retry payload, so the major/breaking routing is preserved).
       - name: Trigger dep-order QG cascade on MAJOR / breaking bump (Phase 2)
         if:
-          steps.update.outputs.skip != 'true' && (steps.update.outputs.bump_type == 'major' ||
-          steps.update.outputs.is_breaking == 'true')
+          steps.update.outputs.skip != 'true' && steps.resolve-gate.outputs.resolvable == 'true' &&
+          (steps.update.outputs.bump_type == 'major' || steps.update.outputs.is_breaking == 'true')
         env:
           OWNER: ${{ github.repository_owner }}
           TOKEN: ${{ secrets.GH_PAT }}
@@ -510,6 +664,24 @@ jobs:
         "Version Bump Loop Breaker Triggered | Repo: ${{ needs.update-manifest.outputs.repo }} v${{
         needs.update-manifest.outputs.version }} | Downstream dispatches HALTED to prevent infinite loop. Investigate:
         are downstream repos missing [skip ci] on dependency updates?"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-fanout-unresolvable:
+    name: Slack — Dep Fan-out Unresolvable
+    needs: [update-manifest]
+    if: always() && needs.update-manifest.outputs.fanout_unresolvable == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Dependency fan-out HALTED (resolvability gate, DEFECT-2) | ${{ needs.update-manifest.outputs.repo }} v${{
+        needs.update-manifest.outputs.version }} (branch ${{ needs.update-manifest.outputs.branch }}, bump ${{
+        needs.update-manifest.outputs.bump_type }}) is NOT resolvable where consumers resolve it (no v-tag; branch
+        pyproject lacks the version) after the bounded poll + retries. Consumer dep-update dispatches were NOT sent.
+        Check the dep's chore(release) push (semver-agent apply step), then re-dispatch version-bump manually."
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
