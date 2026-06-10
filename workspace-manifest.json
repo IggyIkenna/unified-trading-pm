@@ -1804,20 +1804,14 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-10T07:07:57.924732Z",
-    "locked_reason": "SIT running",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": "Heal 2026-06-10: SPURIOUS breaking-cascade cleared. deployment-api/deployment-service/ml-service 0.3.0 minor bumps are NON-breaking per the SSOT differ; the lock fired from the 0.0.0-baseline gap (manifest staging_versions read 0.0.0 -> semver-agent scanned ALL history -> caught an ancient feat!: -> fake breaking). That gap is now FIXED + ROLLED OUT to all 18 release repos' main (bounded-scan; ml-service was the last holdout, landed via #22). So the cascade cannot re-fire; pruned breaking_pending. SSOT: dependency_promotion...2026_06_09.md Phase 3.5 + cicd_contract_hardening Option C.",
     "lock_version": null,
-    "pending_repos": [
-      "ml-service"
-    ],
-    "sit_retry_count": 2,
+    "pending_repos": [],
+    "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": [
-      "deployment-api",
-      "deployment-service",
-      "ml-service"
-    ]
+    "breaking_pending": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
