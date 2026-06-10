@@ -4398,12 +4398,15 @@ Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment 
   `gh workflow run quality-gates-v2.yml --ref staging` (workflow_dispatch IGNORES `[skip ci]`, so the required check
   reports on the bump head → PR merges → UAC main = 0.2.1).
 
-- [ ] [INFRA] P1. **`ci-failure-watcher --auto-recover` close+reopen does NOT fix the `[skip ci]`-HEAD deadlock
-      variant** (only the token-suppressed-`pull_request` variant). `[skip ci]` suppresses BOTH `push` AND
-      `pull_request` events, so reopening a `[skip ci]`-head PR still emits no v2 run. Refine
-      `auto_recover_stuck_prs()`: when the stuck PR's head commit message contains `[skip ci]`/`[ci skip]`, recover via
-      `gh workflow run quality-gates-v2.yml --ref <head-branch>` (workflow_dispatch) INSTEAD of close+reopen. Add a unit
-      test for the `[skip ci]`-head branch.
+- [x] ✅ [INFRA] P1. **LANDED 2026-06-10 (PM@9ad60ee07).** `ci-failure-watcher --auto-recover` close+reopen does NOT
+      fix the `[skip ci]`-HEAD deadlock variant (only the token-suppressed-`pull_request` variant). `[skip ci]`
+      suppresses BOTH `push` AND `pull_request` events, so reopening a `[skip ci]`-head PR still emits no v2 run. FIX:
+      `detect_stuck_prs()` now captures the head commit message (added `commits` to the `gh pr list --json`);
+      `auto_recover_stuck_prs()` branches — a `[skip ci]`/`[ci skip]` head recovers via
+      `gh workflow run quality-gates-v2.yml --ref <head-branch>` (workflow_dispatch, not subject to `[skip ci]`) INSTEAD
+      of the ineffective close+reopen; non-skip-ci heads keep close+reopen. +4 unit tests (skip-ci-qualifies,
+      dispatch-not-reopen, ci-skip-variant, normal-head-still-close-reopen) → 10/10 green; ruff + basedpyright clean.
+      This automates the manual `gh workflow run` recovery performed ~4× by hand during the 2026-06-10 incident.
 - [x] ✅ [INFRA] P1. **SUPERSEDED BY the canonical `[skip ci]`-head fix (line ~4380, `auto_recover_stuck_prs` workflow_dispatch) + Option C (semver `[skip ci]`-drop, landed+rolled-out 2026-06-09); dedup 2026-06-10.** Semver minor bumps recurrently deadlock `staging→main` because the `[skip ci]` bump commit becomes
       the promotion-PR head. Durable fix options: (a) the version-bump flow auto-fires v2 on the bump head, or (b)
       `staging-to-main`/`ldr-to-staging-promote` detect a `[skip ci]` head and `workflow_dispatch` v2 (mirror of the
