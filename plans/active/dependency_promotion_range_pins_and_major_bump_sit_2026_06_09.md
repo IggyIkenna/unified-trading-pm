@@ -69,27 +69,26 @@ gates pass, the major promotes automatically with no human/vm-planning involveme
 - ✅ Breaking-change differ exists (`detect_breaking_change.py`) + SIT/cascade-lock fire on real public-surface change.
 - ✅ UAC `main(0.1.20)`-vs-`staging(0.2.1)` split healed by PR #108 (the actual cause of the MTDS loud-fail).
 - ❌ No "MAJOR bump → cascade of quality gates (full SIT in dep order) → escalate to vm-planning ONLY IF the cascade
-  fails" wiring. **This is the remaining work.**
-  [STATUS CORRECTION 2026-06-10: the cascade IS wired — update-repo-version.yml:132-153+387-407 dispatches
-  cascade-qg-trigger → cascade-qg-ordering.yml (per-consumer QG in manifest topologicalOrder levels,
-  escalate-on-failure → orchestrator) since PM@cb44b85d4. Remaining: live verification on a real MAJOR bump +
-  DEFECT-2 dependency-FIRST ordering (promote dep + tag before consumer pin fan-out).]
-  [LIVE-RUN OBSERVED 2026-06-10 — PARTIAL: UTL 0.5.0 breaking-MINOR exercised the LOCK + fan-out legs but NOT the
-  cascade-QG leg. Evidence: update-repo-version run 27264928435 success 08:54:04Z → manifest 843e3ebcc 08:54:38Z
-  engaged lock ("Breaking MINOR bump cascade: unified-trading-library=0.5.0 (pre-1.0.0)"); consumer fan-out fired
-  green at 08:54:47-48Z (update-dependency-version success in mtds + execution-service + features-service; no pin
-  PRs expected — 0.5.0 stays in the `<1.0.0` range); cascade-qg-trigger dispatch DID fire (cascade-qg-ordering run
-  27264972415, repository_dispatch 08:54:52Z) but was CANCELLED 4 s later (08:54:56Z) with ZERO jobs — displaced in
-  the shared `manifest-update` concurrency group (the H2 fix; `cancel-in-progress: false` protects a RUNNING run but
-  GitHub keeps only ONE pending run per group, so a newer queued manifest writer evicts a queued cascade). All 5
-  most-recent cascade-qg-ordering runs are cancelled/failure — the cascade has never completed a level live. The
-  lock was cleared NOT by the cascade but by staging-to-main.yml run 27265597852 (workflow_dispatch, success
-  09:05:58Z) → 786c71d79 "chore(manifest): promote staging_versions → versions, clear staging lock" 09:06:40Z +
-  staging-unlocked dispatch 09:06:58Z. UNPROVEN LEG: per-level dep-order QG execution + escalate-on-failure
-  skip-on-green. breaking_pending residual `['unified-trading-library']` post-unlock is an EXPECTED transient —
-  staging-to-main clears only the lock; sit-debounce-trigger.yml:156-163 prunes stale entries (breaking_pending −
-  pending) on its next tick, and a stale entry is fail-safe meanwhile (worst case forces an extra SIT if the repo
-  re-enters pending). Do NOT flip this item until a cascade run survives the concurrency group and runs its levels.]
+  fails" wiring. **This is the remaining work.** [STATUS CORRECTION 2026-06-10: the cascade IS wired —
+  update-repo-version.yml:132-153+387-407 dispatches cascade-qg-trigger → cascade-qg-ordering.yml (per-consumer QG in
+  manifest topologicalOrder levels, escalate-on-failure → orchestrator) since PM@cb44b85d4. Remaining: live verification
+  on a real MAJOR bump + DEFECT-2 dependency-FIRST ordering (promote dep + tag before consumer pin fan-out).] [LIVE-RUN
+  OBSERVED 2026-06-10 — PARTIAL: UTL 0.5.0 breaking-MINOR exercised the LOCK + fan-out legs but NOT the cascade-QG leg.
+  Evidence: update-repo-version run 27264928435 success 08:54:04Z → manifest 843e3ebcc 08:54:38Z engaged lock ("Breaking
+  MINOR bump cascade: unified-trading-library=0.5.0 (pre-1.0.0)"); consumer fan-out fired green at 08:54:47-48Z
+  (update-dependency-version success in mtds + execution-service + features-service; no pin PRs expected — 0.5.0 stays
+  in the `<1.0.0` range); cascade-qg-trigger dispatch DID fire (cascade-qg-ordering run 27264972415, repository_dispatch
+  08:54:52Z) but was CANCELLED 4 s later (08:54:56Z) with ZERO jobs — displaced in the shared `manifest-update`
+  concurrency group (the H2 fix; `cancel-in-progress: false` protects a RUNNING run but GitHub keeps only ONE pending
+  run per group, so a newer queued manifest writer evicts a queued cascade). All 5 most-recent cascade-qg-ordering runs
+  are cancelled/failure — the cascade has never completed a level live. The lock was cleared NOT by the cascade but by
+  staging-to-main.yml run 27265597852 (workflow_dispatch, success 09:05:58Z) → 786c71d79 "chore(manifest): promote
+  staging_versions → versions, clear staging lock" 09:06:40Z + staging-unlocked dispatch 09:06:58Z. UNPROVEN LEG:
+  per-level dep-order QG execution + escalate-on-failure skip-on-green. breaking_pending residual
+  `['unified-trading-library']` post-unlock is an EXPECTED transient — staging-to-main clears only the lock;
+  sit-debounce-trigger.yml:156-163 prunes stale entries (breaking_pending − pending) on its next tick, and a stale entry
+  is fail-safe meanwhile (worst case forces an extra SIT if the repo re-enters pending). Do NOT flip this item until a
+  cascade run survives the concurrency group and runs its levels.]
 
 ## Phases
 
@@ -144,16 +143,30 @@ clean fix is to relax it.
 - [ ] [SCRIPT] P1. **DEFECT (live-found 2026-06-10): cascade-qg-ordering runs are evicted from the queue by the shared
       `manifest-update` concurrency group before any job starts** — UTL 0.5.0 dispatch fired (run 27264972415,
       08:54:52Z) but was cancelled in 4 s with zero jobs; all 5 most-recent cascade runs are cancelled/failure, so the
-      cascade has never executed a level live. `cancel-in-progress: false` only protects a RUNNING run — GitHub keeps
-      a single PENDING slot per group, so any newer manifest writer (version-bump, ci_status) evicts a queued cascade.
+      cascade has never executed a level live. `cancel-in-progress: false` only protects a RUNNING run — GitHub keeps a
+      single PENDING slot per group, so any newer manifest writer (version-bump, ci_status) evicts a queued cascade.
       Fix: give the cascade its own concurrency group (manifest mutation can be made atomic via retry-with-rebase as
       staging-to-main already does) OR a queue-tolerant re-dispatch/retry so eviction is not silent loss. The H2
       serialise-with-manifest-writers intent must not cost the cascade its execution. Repo: unified-trading-pm
       (`.github/workflows/cascade-qg-ordering.yml:32-36`).
-- [ ] [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — promote the dep + tag BEFORE
-      the consumer pin fan-out, so consumer dep-update PRs/QGs resolve against the already-promoted dep (today the
-      fan-out can race the dep's own promotion; see Phase 3.5 incident + line ~188 resolution log). Repo:
-      unified-trading-pm (`update-repo-version.yml` ordering).
+- [x] ✅ [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — DONE 2026-06-10 — unified-trading-pm@c4e9f3c9c. Mechanism: `update-repo-version.yml` gained a **bounded resolvability gate** (`resolve-gate` step) between
+      the digest-resolution steps and the consumer dispatch loop. It polls (10 × 30 s ≈ 5 min — kept under 10 min
+      because the run HOLDS the `manifest-update` concurrency group and a long hold risks the DEFECT-1 pending-slot
+      eviction of sibling version-bump runs) until the bumped version is resolvable **the way consumers resolve it**
+      (clone_repo() order: exact tag `v{VERSION}` via `git/ref/tags`, OR the dep's `{branch}` pyproject carrying
+      `version = "{VERSION}"` via the contents API — NO workflow creates release tags today, so the branch pyproject is
+      the canonical fresh-bump location). Success → fan-out + cascade dispatch proceed (both `if:`-gated on
+      `resolve-gate.outputs.resolvable`). Timeout → NO blind dispatch: `::warning` + re-dispatch of the SAME
+      `version-bump` event with `fanout_retry: N+1` (max 3, chain-depth loop-breaker idiom; `chain_depth` preserved;
+      original `bump_type` rides the retry payload so the retry run doesn't recompute it as "patch" off the
+      already-updated manifest — a `bump_override` hook in the manifest python honors it, and retry runs skip the PM
+      self-bump so they never mint extra PM versions). Retries exhausted (or retry-dispatch HTTP failure) →
+      `retries_exhausted=true` → new `notify-fanout-unresolvable` Slack job (CRITICAL, notify-slack.yml pattern).
+      Cascade gating justified: its per-repo QGs clone the dep exactly like consumer QGs — firing it unresolvable
+      guarantees a spurious red cascade + spurious escalation; on retry it fires with major/breaking routing intact.
+      Verified: yaml.safe_load OK, actionlint exit 0, `bash -n` on all 3 modified run scripts, both python heredocs
+      compile. Residual: a retry dispatch itself can be evicted by the `manifest-update` pending-slot race — that is the
+      DEFECT-1 concurrency item above, not re-tracked here. Repo: unified-trading-pm (`update-repo-version.yml`).
 
 ### Phase 3 — Escalate to vm-planning ONLY IF the cascade FAILS (pass → auto-promote) — P1
 
@@ -176,9 +189,12 @@ clean fix is to relax it.
 > escalation target is DOWN", already filed). Root cause is NOT an execution-service code break — there is no code to
 > fix. **Two coupled defects below.**
 
-- [x] ✅ [SCRIPT] P0. **RESOLVED 2026-06-09 — see "RESOLUTION LOG — 2026-06-09" below (DEFECT 1 FIXED, `unified-trading-pm@0cfac845e`, semver-agent.yml.tmpl pickaxe baseline-resolution + module→package-move regression test, rolled out 24/24); verified 2026-06-10 (commit + test + template all in-tree). DEFECT 1 — `is_breaking=true` was stamped for a bump the canonical differ calls NON-breaking → the
-      cascade + fleet staging-lock fired SPURIOUSLY.** On 2026-06-09 13:48Z `update-repo-version.yml` locked staging
-      with `locked_reason="Breaking MINOR bump cascade: unified-api-contracts=0.5.0 (pre-1.0.0)"`,
+- [x] ✅ [SCRIPT] P0. **RESOLVED 2026-06-09 — see "RESOLUTION LOG — 2026-06-09" below (DEFECT 1 FIXED,
+      `unified-trading-pm@0cfac845e`, semver-agent.yml.tmpl pickaxe baseline-resolution + module→package-move regression
+      test, rolled out 24/24); verified 2026-06-10 (commit + test + template all in-tree). DEFECT 1 — `is_breaking=true`
+      was stamped for a bump the canonical differ calls NON-breaking → the cascade + fleet staging-lock fired
+      SPURIOUSLY.** On 2026-06-09 13:48Z `update-repo-version.yml` locked staging with
+      `locked_reason="Breaking MINOR bump cascade: unified-api-contracts=0.5.0 (pre-1.0.0)"`,
       `breaking_pending=[execution-service, unified-api-contracts]`, `sit_retry_count=3` (retry-exhausted). But the SSOT
       AST differ `scripts/cicd/detect_breaking_change.py --source-dir unified_api_contracts` returns
       **`is_breaking:     false`** for BOTH `origin/main(0.3.0)→origin/staging(0.5.0)` (exports 960→960) AND
@@ -214,29 +230,33 @@ clean fix is to relax it.
       unified-api-contracts (`semver-agent.yml` DIFF_BASE) + unified-trading-pm (`detect_breaking_change.py` + tests).
       Per the model a non-breaking minor must drain LDR→staging→main on QG alone — NO lock, NO SIT, NO consumer
       pin-push.
-- [x] ✅ [SCRIPT] P0. **RESOLVED 2026-06-09 — see "RESOLUTION LOG" below (incident cleared: 18 spurious dep-update fan-out PRs CLOSED incl. execution-service#232, lock healed; the durable dependency-first-ordering fix tracked in Phase 6.x — see line ~320 FROM-digest ratchet + cascade-ordering items); verified 2026-06-10. DEFECT 2 — even IF it were breaking, the SIT could not converge: the consumer was pinned to a UAC
-      version stranded on `staging`, unresolvable from where its CI clones.** The cascade auto-opened execution-service
-      dep-update PR #232 (`feat!: update unified-api-contracts to 0.5.0`, head `dep-update/unified-api-contracts-0.5.0`
-      → `staging`) which is a PURE pin bump `unified-api-contracts>=0.3.0` → `>=0.5.0` (no code change). Its
-      `quality-gates-v2` FAILS at the **dep-clone range gate BEFORE any test/typecheck**: `check_version_constraint()`
-      clones UAC by branch-fallback (head-branch-name → manifest-tag v0.2.0 → **main=0.3.0**) and never tries the PR's
-      BASE branch (`staging`, where 0.5.0 actually lives) nor a v0.5.0 tag (none exists) → `assert_dep_in_range` fails
-      `resolved 0.3.0 < floor 0.5.0`. This is the dependency-ORDER violation: the cascade pinned the CONSUMER
-      (execution-service) to a UAC version that the DEPENDENCY (UAC) had not yet promoted to a resolvable location
-      (main/tag). Per `cicd_contract_hardening` § ROOT FIX line ~122 ("UAC move together; non-clone repos follow; then
-      re-trigger the stuck heads") the dependency must converge FIRST. UAC has a 3-way version split (main 0.3.0 / LDR
-      0.4.0 / staging 0.5.0) and NO open UAC `staging→main` PR. **Fix (when a breaking cascade IS genuine):** the
-      version-aware clone must resolve the dependency from the consumer-PR's BASE branch (or the cascade must promote
-      the dep dependency-first + tag) before pinning + re-triggering consumers. repo: unified-trading-pm
+- [x] ✅ [SCRIPT] P0. **RESOLVED 2026-06-09 — see "RESOLUTION LOG" below (incident cleared: 18 spurious dep-update
+      fan-out PRs CLOSED incl. execution-service#232, lock healed; the durable dependency-first-ordering fix tracked in
+      Phase 6.x — see line ~320 FROM-digest ratchet + cascade-ordering items); verified 2026-06-10. DEFECT 2 — even IF
+      it were breaking, the SIT could not converge: the consumer was pinned to a UAC version stranded on `staging`,
+      unresolvable from where its CI clones.** The cascade auto-opened execution-service dep-update PR #232
+      (`feat!: update unified-api-contracts to 0.5.0`, head `dep-update/unified-api-contracts-0.5.0` → `staging`) which
+      is a PURE pin bump `unified-api-contracts>=0.3.0` → `>=0.5.0` (no code change). Its `quality-gates-v2` FAILS at
+      the **dep-clone range gate BEFORE any test/typecheck**: `check_version_constraint()` clones UAC by branch-fallback
+      (head-branch-name → manifest-tag v0.2.0 → **main=0.3.0**) and never tries the PR's BASE branch (`staging`, where
+      0.5.0 actually lives) nor a v0.5.0 tag (none exists) → `assert_dep_in_range` fails `resolved 0.3.0 < floor 0.5.0`.
+      This is the dependency-ORDER violation: the cascade pinned the CONSUMER (execution-service) to a UAC version that
+      the DEPENDENCY (UAC) had not yet promoted to a resolvable location (main/tag). Per `cicd_contract_hardening` §
+      ROOT FIX line ~122 ("UAC move together; non-clone repos follow; then re-trigger the stuck heads") the dependency
+      must converge FIRST. UAC has a 3-way version split (main 0.3.0 / LDR 0.4.0 / staging 0.5.0) and NO open UAC
+      `staging→main` PR. **Fix (when a breaking cascade IS genuine):** the version-aware clone must resolve the
+      dependency from the consumer-PR's BASE branch (or the cascade must promote the dep dependency-first + tag) before
+      pinning + re-triggering consumers. repo: unified-trading-pm
       (`setup-workspace-from-manifest.sh check_version_constraint` + cascade ordering).
-- [x] ✅ [SCRIPT] P0. **DONE 2026-06-09 (operator chose "full fix: clear + durable" + authorized admin) — see "RESOLUTION LOG" below; verified 2026-06-10. RESOLUTION for THIS incident:** clear
-      the spurious staging-lock (retry-exhausted + differ says non-breaking) exactly as the 2026-06-07 session-#3
-      precedent did, and close execution-service PR #232 (revert the unnecessary pin — the existing `>=0.3.0,<1.0.0`
-      range already absorbs 0.5.0; promotion is PULL not PUSH for non-breaking minors). UAC then promotes
-      LDR→staging→main normally via its range (PR #112 LDR→staging is open + MERGEABLE). Provenance: execution-service
-      consumes NONE of the changed UAC symbols (`rg` verified — it imports the `unified_api_contracts.instruction` root
-      facade, not the deleted `internal/validation/instruction` subtree; the Infura refs are local script/test strings,
-      not the removed dict key).
+- [x] ✅ [SCRIPT] P0. **DONE 2026-06-09 (operator chose "full fix: clear + durable" + authorized admin) — see
+      "RESOLUTION LOG" below; verified 2026-06-10. RESOLUTION for THIS incident:** clear the spurious staging-lock
+      (retry-exhausted + differ says non-breaking) exactly as the 2026-06-07 session-#3 precedent did, and close
+      execution-service PR #232 (revert the unnecessary pin — the existing `>=0.3.0,<1.0.0` range already absorbs 0.5.0;
+      promotion is PULL not PUSH for non-breaking minors). UAC then promotes LDR→staging→main normally via its range (PR
+      #112 LDR→staging is open + MERGEABLE). Provenance: execution-service consumes NONE of the changed UAC symbols
+      (`rg` verified — it imports the `unified_api_contracts.instruction` root facade, not the deleted
+      `internal/validation/instruction` subtree; the Infura refs are local script/test strings, not the removed dict
+      key).
 
 #### 🏁 RESOLUTION LOG — 2026-06-09 (autonomous finish, vm-planning stand-in, operator-authorized admin)
 
@@ -356,42 +376,40 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       `RepoDigests` / Cloud Run revision digest, injects via `--build-arg BASE_IMAGE_DIGEST`). Done = rebuilding any
       service commit yields a byte-identical image (reproducibility) AND the Dockerfile records exactly which UTL/UAC
       went in (provenance). This is the operator's answer to both "reproducible cloud builds" and "reverse-engineer the
-      code version in a build".
-      [DESIGN SHARPENED 2026-06-10: STEP 5.79 (base-service.sh:2361-2413) is currently TOOTHLESS against the canonical
-      FROM lines — the line-2395 `${` exemption skips every FROM that uses `${PROJECT_ID}`. Sound mechanism: (1) each
-      consumer Dockerfile carries a checked-in `ARG BASE_IMAGE_DIGEST=sha256:<digest>` default consumed in FROM;
-      (2) digest freshness rides the existing dependency-update fan-out (update-repo-version.yml → per-repo
-      update-dependency-version.yml PRs rewrite the ARG line on base-image publish); (3) THEN narrow 5.79: registry
-      FROMs must carry @sha256 literally or via an ARG BASE_IMAGE_DIGEST default in the same Dockerfile — closing the
-      blanket `${` skip. Sequencing hard requirement: Dockerfile ARG rollout lands fleet-wide BEFORE the 5.79
-      narrowing, else every repo QG reddens.]
-      **[MACHINERY SHIPPED 2026-06-10 — remaining = per-repo conversion ships]** Landed in PM: (a)
+      code version in a build". [DESIGN SHARPENED 2026-06-10: STEP 5.79 (base-service.sh:2361-2413) is currently
+      TOOTHLESS against the canonical FROM lines — the line-2395 `${` exemption skips every FROM that uses
+      `${PROJECT_ID}`. Sound mechanism: (1) each consumer Dockerfile carries a checked-in `ARG
+      BASE_IMAGE_DIGEST=sha256:<digest>` default consumed in FROM; (2) digest freshness rides the existing
+      dependency-update fan-out (update-repo-version.yml → per-repo update-dependency-version.yml PRs rewrite the ARG
+      line on base-image publish); (3) THEN narrow 5.79: registry FROMs must carry @sha256 literally or via an ARG
+      BASE_IMAGE_DIGEST default in the same Dockerfile — closing the blanket `${` skip. Sequencing hard requirement:
+      Dockerfile ARG rollout lands fleet-wide BEFORE the 5.79 narrowing, else every repo QG reddens.] **[MACHINERY
+      SHIPPED 2026-06-10 — remaining = per-repo conversion ships]** Landed in PM: (a)
       `scripts/propagation/add-dockerfile-digest-arg.py` (idempotent Dockerfile rewriter, handles direct-UTL +
       instruments `ARG BASE_IMAGE=` shapes; `--dry-run/--repo/--digest`); (b) `update-dependency-version.yml`
       template+propagation copy: digest-refresh step (validates optional `base_image_digest` payload, sed-rewrites the
-      ARG, digest-only PRs); (c) `update-repo-version.yml`: on a unified-trading-library bump, WIF/SA-key auth →
-      resolve `:latest` digest → attach `base_image_digest` to every dependency-update dispatch (non-fatal when
-      unresolvable); (d) STEP 5.79 narrowed MONOTONICALLY (converted Dockerfile → strict @digest enforcement;
-      unconverted → legacy skip + warn — no fleet redness); (e) PILOT converted: deployment-service/Dockerfile @
-      sha256:058d589f… (docker build --check green). Current digest resolved live via gcloud.
-- [ ] [INFRA] P1. **FROM-digest per-repo conversion ships — CONVERSION DONE 15/15 + QG-GREEN; only the SHIP leg
-      remains, parked behind the live breaking convergence (state as of 2026-06-10 ~11:05Z).** All 15 repos (16
-      Dockerfiles incl. deployment-api ×2) are converted in their slot-1 trees with fresh QG sentinels; quickmerge
-      correctly refused promotion mid-convergence (first the UTL dep-order gate, then the 10:57Z staging lock —
-      `execution-service=0.6.0` cascade; breaking_pending: blr/exec/greeks/mtds/UTL). **To finish once the lock
-      clears + UTL ≥ STAGING_GREEN: run `bash /tmp/dockerfile_digest_fleet_rollout.sh`** (pass-2-aware: ships
-      dirty-only-Dockerfile trees directly, re-QGs only stale sentinels; log → /tmp/digest_rollout_results.log; if
-      /tmp was cleaned, re-run the converter per repo — idempotent). agent-orchestrator (4f60485: Dockerfile + the
-      QG-stub venv-on-PATH fix it surfaced) and deployment-service (c5f589d: Dockerfile + the BoM feature) are
-      COMMITTED-AHEAD locally — ship each via
+      ARG, digest-only PRs); (c) `update-repo-version.yml`: on a unified-trading-library bump, WIF/SA-key auth → resolve
+      `:latest` digest → attach `base_image_digest` to every dependency-update dispatch (non-fatal when unresolvable);
+      (d) STEP 5.79 narrowed MONOTONICALLY (converted Dockerfile → strict @digest enforcement; unconverted → legacy
+      skip + warn — no fleet redness); (e) PILOT converted: deployment-service/Dockerfile @ sha256:058d589f… (docker
+      build --check green). Current digest resolved live via gcloud.
+- [ ] [INFRA] P1. **FROM-digest per-repo conversion ships — CONVERSION DONE 15/15 + QG-GREEN; only the SHIP leg remains,
+      parked behind the live breaking convergence (state as of 2026-06-10 ~11:05Z).** All 15 repos (16 Dockerfiles incl.
+      deployment-api ×2) are converted in their slot-1 trees with fresh QG sentinels; quickmerge correctly refused
+      promotion mid-convergence (first the UTL dep-order gate, then the 10:57Z staging lock — `execution-service=0.6.0`
+      cascade; breaking_pending: blr/exec/greeks/mtds/UTL). **To finish once the lock clears + UTL ≥ STAGING_GREEN: run
+      `bash /tmp/dockerfile_digest_fleet_rollout.sh`** (pass-2-aware: ships dirty-only-Dockerfile trees directly, re-QGs
+      only stale sentinels; log → /tmp/digest_rollout_results.log; if /tmp was cleaned, re-run the converter per repo —
+      idempotent). agent-orchestrator (4f60485: Dockerfile + the QG-stub venv-on-PATH fix it surfaced) and
+      deployment-service (c5f589d: Dockerfile + the BoM feature) are COMMITTED-AHEAD locally — ship each via
       `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` (quickmerge's ahead-of-main path pushes the
       existing commit; no re-commit). After ALL 15 ship: flip STEP 5.79's legacy `${`-skip to hard-fail (the final
       ratchet).
 - [ ] [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
       an image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM
-      workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL
-      consumers (stateless — consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern
-      from `update-repo-version.yml`.
+      workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL consumers
+      (stateless — consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern from
+      `update-repo-version.yml`.
 - [ ] [CODE] P1. **Deployment-registry bill-of-materials — record digest + commit + dep-versions** (deployment-service).
       TODAY the registry persists ONLY a mutable `image_tag` (`monitor.py:39` / `live_deployment.py:42,63` /
       `backends/base.py:135`); the `git_commit` field exists (`monitor.py:40`) but its writer
@@ -409,9 +427,9 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       digest-from-pinned-ref only — omits-not-fabricates); BoM stamped at both registry writers
       (`deployment_heartbeat.py cmd_register` + `heartbeat_cli.py` daemon, round-trips via HeartbeatEntry.metadata);
       dead `VersionRegistry.register_version` WIRED on the live deploy path (`LiveDeployer.deploy` →
-      `_register_deployed_version()` post-health-gate, best-effort). 33/33 new+touched tests, 239 adjacent green,
-      0 new basedpyright errors. Cloud Run live services: `run_v2` exposes no tag→digest resolve — provenance =
-      FROM-digest ratchet + passthrough (documented in code).
+      `_register_deployed_version()` post-health-gate, best-effort). 33/33 new+touched tests, 239 adjacent green, 0 new
+      basedpyright errors. Cloud Run live services: `run_v2` exposes no tag→digest resolve — provenance = FROM-digest
+      ratchet + passthrough (documented in code).
 - [ ] [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** — deployment-api's
       `VmDeploymentEntryModel` (`deployment_api/routes/vm_deployments.py:42`) builds from `asdict(entry)` and pydantic
       silently DROPS unknown keys, so BoM reaches the GCS rows but not the API response until the model adds

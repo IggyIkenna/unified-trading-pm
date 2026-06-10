@@ -55,7 +55,7 @@ _qg_content_hash() {
         git rev-parse HEAD 2>/dev/null || echo no-head
         git diff HEAD 2>/dev/null
         git ls-files --others --exclude-standard 2>/dev/null \
-            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
+            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|\.qg_cache/|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
             | sort | while IFS= read -r _f; do [ -f "$_f" ] && sha256sum "$_f" 2>/dev/null; done
         sha256sum "${BASH_SOURCE[0]}" "${BASH_SOURCE[0]%/*}/qg-host-governor.sh" 2>/dev/null
         "${RUFF_CMD:-ruff}" --version 2>/dev/null
@@ -128,6 +128,19 @@ _qg_slice_done() {
         exit 0
     fi
 }
+
+# ── QG_PROFILE forces a COMPLETE, no-skip run (mirror of base-service.sh) ─────
+# Profiling must measure EVERY path, so all bypass flags (--no-fix / --quick /
+# --skip-tests / --skip-typecheck) are overridden and the green content-sentinel is
+# disabled. The <MAX_DURATION> meta-gate is the one thing relaxed (the wall-time IS
+# the measurement — a slow single-core profile run must not false-fail).
+if [[ "${QG_PROFILE:-}" == "1" ]]; then
+    FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false
+    _QG_RUN_CODEX=true
+    export QG_SENTINEL_DISABLE=true
+    IGNORE_TIMEOUT=true
+    QG_SLICE=""   # profiling measures the whole gate — ignore any slice selector
+fi
 
 # ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
 _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality-gates-base/version-alignment-gate.sh"
@@ -206,6 +219,7 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 # See: 06-coding-standards/quality-gates.md § Formatter Conflict Resolution
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
+    qg_prof start autofix
     if command -v npx &>/dev/null; then
         npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore --ignore-path .prettierignore >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
@@ -215,12 +229,15 @@ if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     run_timeout 30 $RUFF_CMD format $SOURCE_DIRS >/dev/null 2>&1 || :
     run_timeout 30 $RUFF_CMD check --fix $SOURCE_DIRS >/dev/null 2>&1 || :
     log_success "Auto-fix complete"
+    qg_prof end autofix
 fi
 
 # ── [2] LINT (ruff, 30s) ──────────────────────────────────────────────────────
 if [ "$RUN_LINT" = true ]; then
     log_section "[2/6] LINT"
+    qg_prof start lint
     _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
+    qg_prof end lint
 fi
 
 # ── GREEN SENTINEL + GOVERNOR (mirror of base-service.sh) ──
@@ -240,6 +257,7 @@ fi
 # ── [3] TESTS (pytest — unit always, integration when tests/integration/ exists) ──
 if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_section "[3/6] TESTS"
+    qg_prof start tests
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
     COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
@@ -311,6 +329,7 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
         | grep -v "# reason:\|# noqa\|^--\|skipif\|reason=" | grep "@pytest\.mark\.skip" || :)
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_success "All pytest.mark.skip have reason comments"
+    qg_prof end tests
 fi
 # QG_SLICE=tests finishes here (its one phase is the pytest run above).
 _qg_slice_done tests
@@ -377,10 +396,12 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
     BP_PID=""
     trap '''[[ -n "$BP_PID" ]] && kill -9 $BP_PID 2>/dev/null''' INT TERM
     _bp_out="/tmp/bp_out.$$"
+    qg_prof start typecheck
     run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     BP_PID=$!
     wait $BP_PID || true
     PYRIGHT_EXIT=$?
+    qg_prof end typecheck
     trap - INT TERM
     PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
     if [ "$PYRIGHT_EXIT" -ne 0 ]; then echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout"; exit 1; fi
@@ -407,6 +428,7 @@ fi
 # ── [5] CODEX COMPLIANCE (library variant) ────────────────────────────────────
 # Same checks as service variant with library-specific exceptions noted inline.
 log_section "[5/6] CODEX COMPLIANCE"
+qg_prof start codex
 V=0
 
 rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/testing/**" "$SOURCE_DIR/" 2>/dev/null \
@@ -746,6 +768,7 @@ BYPASS=$(rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/quality
 
 # File size (exclude build artifacts and test dirs — tests get warn-only treatment)
 # Optional: SIZE_EXTRA_EXCLUDES array of extra ! -path patterns (set before sourcing)
+qg_prof start size-checks
 SVIOL=""; SWARN=""
 _size_extra_args=()
 for _excl in "${SIZE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _size_extra_args+=("!" "-path" "$_excl"); done
@@ -784,8 +807,10 @@ except: pass
     [[ -n "$out" ]] && FSIZES="${FSIZES}\n${out}"
 done
 [[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
+qg_prof end size-checks
 
 # Security: pip-audit (prefer project venv to avoid workspace transitive vulns)
+qg_prof start pip-audit
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-4539: pygments 2.19.2 (latest, no fix version) — transitive via pytest+rich
     # CVE-2026-45409: idna 3.14 follow-up to CVE-2024-3651; fix: upgrade to idna>=3.15
@@ -797,20 +822,47 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-47265: aiohttp <=3.13.5 cookies re-sent after cross-origin redirect; fix_versions=[3.14.0] (same
     #   vcrpy block). The aiohttp-3.13.5 CVE set grows until the fleet can reach 3.14.0 (vcrpy-unblock).
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265"
-    _pa_out=$($PYTHON_CMD -m pip_audit $_pa_extra 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
+    # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3;
+    # parity with base-service.sh): the OSV query runs only when the deps-hash (pyproject.toml
+    # + uv.lock + ignore set + pip-audit version) changed, OR the cached clean result is older
+    # than QG_PIP_AUDIT_MAX_AGE_HOURS (default 24h — cron-equivalent freshness bound for
+    # newly-published advisories). ONLY a clean run is cached (.qg_cache/pip_audit_deps_hash).
+    # Bypass: QG_NO_CACHE=1 forces the full OSV query.
+    _pa_key=$({ cat pyproject.toml uv.lock 2>/dev/null || :; echo "$_pa_extra"; $PYTHON_CMD -m pip_audit --version 2>/dev/null || :; } | _qg_hash)
+    if qg_cache_hit pip_audit_deps_hash "$_pa_key" "${QG_PIP_AUDIT_MAX_AGE_HOURS:-24}"; then
+        log_success "pip-audit: cached (deps unchanged, age $(_qg_cache_age_hours pip_audit_deps_hash || echo '?')h)"
+    else
+        _pa_out=$($PYTHON_CMD -m pip_audit $_pa_extra 2>&1) \
+            && qg_cache_store pip_audit_deps_hash "$_pa_key" \
+            || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
+    fi
 elif command -v pip-audit &>/dev/null; then
+    # Bare-PATH fallback (no venv pip_audit): rare path — uncached by design.
     _pa_out=$(pip-audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
 else
     log_fail "pip-audit required: uv pip install pip-audit"; V=$(( V + 1 ))
 fi
+qg_prof end pip-audit
 
 # Security: bandit (use python -m bandit for venv reliability)
+# CONTENT-HASH CACHE (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3; parity
+# with base-service.sh): key = source content (index blobs + worktree diff + untracked)
+# under SOURCE_DIR + pyproject.toml + bandit version → .qg_cache/bandit_content_hash.
+# ONLY a clean run is cached — issues always re-run + re-print. Bypass: QG_NO_CACHE=1.
+qg_prof start bandit
 if $PYTHON_CMD -c "import bandit" 2>/dev/null; then
-    _bandit_out=$(run_timeout 30 $PYTHON_CMD -m bandit -r "$SOURCE_DIR/" -ll 2>&1) \
-        || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
+    _bandit_key=$({ _qg_src_content_key "$SOURCE_DIR" pyproject.toml; $PYTHON_CMD -m bandit --version 2>/dev/null || :; } | _qg_hash)
+    if qg_cache_hit bandit_content_hash "$_bandit_key"; then
+        log_success "bandit: cached (source content unchanged)"
+    else
+        _bandit_out=$(run_timeout 30 $PYTHON_CMD -m bandit -r "$SOURCE_DIR/" -ll 2>&1) \
+            && qg_cache_store bandit_content_hash "$_bandit_key" \
+            || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
+    fi
 else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
 fi
+qg_prof end bandit
 
 # ============================================================
 # STEP 5.23 — UAC import surface enforcement
@@ -863,6 +915,7 @@ if [[ $V -gt $_max_v ]]; then
     exit 1
 fi
 log_success "Codex compliance PASSED"
+qg_prof end codex
 
 # ── [5.6] DEAD CODE DETECTION (vulture — warn/fail thresholds) ───────────────
 # vulture detects unused functions, classes, and variables.
@@ -1156,9 +1209,11 @@ if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
 fi
 
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
+# IGNORE_TIMEOUT honoured (mirror of base-service.sh): QG_PROFILE=1 sets it so a slow
+# single-core profile run cannot false-fail the meta-gate; unset → unchanged behaviour.
 MAX_DURATION=${MAX_DURATION:-300}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
-[ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
+[ "${IGNORE_TIMEOUT:-false}" != "true" ] && [ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # ── QG SENTINEL (SHA fingerprint for quickmerge --agent fast-path) — mirror of

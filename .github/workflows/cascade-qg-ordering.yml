@@ -204,7 +204,11 @@ jobs:
           POLL_INTERVAL = 30  # seconds
           LEVEL_TIMEOUT = 15 * 60  # 15 minutes per level
 
-          PASSING_STATUSES = {"FEATURE_GREEN", "STAGING_GREEN", "LOCAL_PASS", "VALIDATED"}
+          # MAIN_GREEN + SIT_VALIDATED added 2026-06-10 (run 27273116468): the set was missing the
+          # two HIGHEST lifecycle states, so a dispatched repo already at MAIN_GREEN polled as
+          # "pending" for the full 15-min level timeout and failed the cascade. ("VALIDATED" was a
+          # phantom — no writer emits it; kept out.)
+          PASSING_STATUSES = {"FEATURE_GREEN", "STAGING_GREEN", "LOCAL_PASS", "SIT_VALIDATED", "MAIN_GREEN"}
           FAILING_STATUSES = {"FAILING", "BROKEN"}
 
           def poll_level(repos: list[str], baseline: dict[str, str]) -> tuple[bool, list[str]]:

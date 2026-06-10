@@ -4851,3 +4851,14 @@ Both template fixes need `rollout-workflow-templates.sh` to the fleet (same chan
 - [ ] [SCRIPT] P2. 4 repos lack `scripts/quickmerge.sh` (greeks-service ✅ fixed via probe commit, ml-service,
       e2e-testing, features-service) — they cannot follow the mandated quickmerge path; propagate the canonical copy. —
       provenance: probe 2026-06-10
+
+## Cascade fan-out batching (filed 2026-06-10, slot-3 — from the exec-svc 0.6.0 jam postmortem)
+
+- [ ] [CI] P2. **Batch the breaking fan-out into ONE cascade**: a breaking UTL bump fans out as `feat!` re-pins to every
+      consumer (exec-svc/greeks/mtds/blrs each became their own `breaking_pending` entry + serialized cascade dispatch)
+      — 1 genuine breaking change → ~5 sequential lock windows. Instead: when the dep-update fan-out stems from one
+      source bump, enqueue ONE cascade over the UNION of transitive dependents (the sit-debounce already batches the SIT
+      side; the cascade side should match). Also consider: run the AST differ on the CONSUMER's own public surface at
+      re-pin time instead of unconditionally inheriting `feat!` — most consumer surfaces don't change, so most re-pins
+      shouldn't be breaking at all. Repo: unified-trading-pm (`update-dependency-version.yml` template +
+      `cascade-qg-ordering.yml`).

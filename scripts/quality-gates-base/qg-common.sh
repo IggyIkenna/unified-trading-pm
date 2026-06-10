@@ -115,3 +115,61 @@ run_timeout() {
     elif command -v perl &>/dev/null; then perl -e 'alarm shift; exec @ARGV' -- "$secs" "$@"
     else "$@"; fi
 }
+
+# ── QG STEP-RESULT CACHE (.qg_cache/, gitignored) ────────────────────────────
+# Content-keyed skip cache for FIXED-COST gate steps (pip-audit / bandit /
+# actionlint). Plan: plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
+# Phase 3 (per-step cost reduction). Contract:
+#   - Cache files live under ${PROJECT_ROOT}/.qg_cache/ — per-repo, local-only,
+#     gitignored (canonical template scripts/propagation/templates/gitignore-python.txt).
+#     CI safety: the dir does not exist in a fresh CI checkout → first run is always
+#     a full run (correct by construction).
+#   - A step stores its key ONLY after a CLEAN (green) run — failures / timeouts are
+#     never cached, so a red step always re-runs.
+#   - Bypass: QG_NO_CACHE=1 forces full runs (qg_cache_hit always reports miss).
+if command -v sha256sum &>/dev/null; then
+    _qg_hash() { sha256sum 2>/dev/null | awk '{print $1}'; }
+else
+    _qg_hash() { shasum -a 256 2>/dev/null | awk '{print $1}'; }   # stock macOS
+fi
+_QG_CACHE_DIR="${PROJECT_ROOT}/.qg_cache"
+
+# Content key for a set of repo paths. Content-accurate (not mtime-based):
+#   tracked-clean   → index blob hashes (`git ls-files -s`)
+#   tracked-dirty   → worktree diff content (`git diff`)
+#   untracked       → file names + contents (rare in the QG flow, but covered)
+# `|| :` on every producer: CI runs under `set -eo pipefail`.
+_qg_src_content_key() {
+    {
+        git ls-files -s -- "$@" 2>/dev/null || :
+        git diff -- "$@" 2>/dev/null || :
+        git ls-files -o --exclude-standard -- "$@" 2>/dev/null | LC_ALL=C sort \
+            | while IFS= read -r _f; do printf '%s:' "$_f"; cat "$_f" 2>/dev/null || :; done
+    } | _qg_hash
+}
+
+_qg_cache_age_hours() {  # $1=cache name → prints integer age in hours; rc 1 if absent
+    local _f="${_QG_CACHE_DIR}/$1" _mt
+    [ -f "$_f" ] || return 1
+    _mt=$(stat -f %m "$_f" 2>/dev/null || stat -c %Y "$_f" 2>/dev/null) || return 1
+    echo $(( ( $(date +%s) - _mt ) / 3600 ))
+}
+
+qg_cache_hit() {  # $1=name $2=key [$3=max_age_hours] → rc 0 = HIT (safe to skip step)
+    [ "${QG_NO_CACHE:-0}" = "1" ] && return 1
+    local _f="${_QG_CACHE_DIR}/$1"
+    [ -f "$_f" ] || return 1
+    [ -n "$2" ] || return 1                                  # malformed key never hits
+    [ "$(cat "$_f" 2>/dev/null)" = "$2" ] || return 1
+    if [ -n "${3:-}" ]; then
+        local _age
+        _age=$(_qg_cache_age_hours "$1") || return 1
+        [ "$_age" -lt "$3" ] || return 1                     # stale → re-run (cron bound)
+    fi
+    return 0
+}
+
+qg_cache_store() {  # $1=name $2=key — call ONLY after a clean/green step run
+    mkdir -p "$_QG_CACHE_DIR" 2>/dev/null || return 0
+    printf '%s' "$2" > "${_QG_CACHE_DIR}/$1" 2>/dev/null || :
+}
