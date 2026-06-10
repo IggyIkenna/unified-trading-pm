@@ -30,9 +30,15 @@ permissions:
 
 # Only one cascade at a time — serialise, never cancel a running cascade.
 concurrency:
-  # manifest-mutating workflow → share the manifest-update group so it serialises with every other
-  # manifest writer and cannot silently lose an update (finding H2). Was `cascade-qg-ordering`.
-  group: manifest-update
+  # OWN group (reverted from the shared `manifest-update` group 2026-06-10): GitHub holds only ONE
+  # PENDING run per group, so sharing with the high-frequency manifest writers meant every queued
+  # cascade was EVICTED before it ran — live evidence: run 27264972415 (UTL 0.5.0 breaking cascade,
+  # 2026-06-10) cancelled in 4s with 0 jobs; ALL prior cascade runs cancelled the same way — the
+  # cascade had never executed a level. The H2 manifest-write-loss concern that motivated the shared
+  # group is already covered IN-CODE by this workflow's retry-with-rebase manifest push (see the
+  # "Retry-with-rebase (finding H2)" step below) — group-sharing was redundant for safety and fatal
+  # for liveness.
+  group: cascade-qg-ordering
   cancel-in-progress: false
 
 jobs:
