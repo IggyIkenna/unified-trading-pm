@@ -4652,3 +4652,85 @@ Remaining genuinely-open cicd items are gated on **live infra this laptop slot c
 non-SSM redeploy; admin-bootstrap fleet rollouts) or are tracked under their canonical item — see the session-end
 completion report. Code-doable residual (e.g. `auto_recover_stuck_prs` `[skip ci]`-head refine ~4380, GHA version bumps
 ~4233-4241) handled in the same session's Phase 1/2 — flipped there with `repo@sha`.
+
+---
+
+## 🔴 ROOT-CAUSE + FIX 2026-06-10 — staging-to-main promote STARVED by concurrency-group displacement (harsh slot-1)
+
+> **The "3 hours to promote 5 repos" mechanism (operator-reported by Ikenna 2026-06-10 07:58 IST).** The SIT lock
+> "always being the issue" is the SYMPTOM — the lock is designed to live ~5-10 min; the step that CLEARS it
+> (`staging-to-main`) was being killed in the queue, so the lock outstayed indefinitely and dammed the fleet.
+
+### Defect (proven 4× on 2026-06-10)
+
+`staging-to-main.yml` shared `concurrency: group: manifest-update` with `ci-status-update.yml` (fires on EVERY fleet v2
+completion, near-continuous in work hours) + `update-repo-version.yml`. GitHub keeps at most **one queued run per
+concurrency group — each new arrival CANCELS the previously-queued run**. A dispatched promote therefore almost never
+survived the queue under traffic, and a cancelled `repository_dispatch` payload is **not replayable** → the promotion
+silently vanishes; the staging lock (set by sit-gate at cycle start) is never cleared; the debounce **skips while
+locked**; the dangling-lock auto-clear only covers `pending=[]`; the starvation detector only ALERTS. Net: lock wedged
+until a human notices; every repo's →staging promotion blocked behind it.
+
+**Evidence (run IDs, all `completed/cancelled` with ZERO jobs = killed while queued):**
+
+- 07:14Z run `27259762201` — the organic ml-service 0.3.0 promote (lock set 07:07 by sit-gate; this was its clearer).
+- 08:23Z manual rescue dispatch — displaced the same way.
+- 08:31Z run `27263334447` — second manual rescue, displaced **12s after dispatch**; displacers caught live:
+  `ci-status-update` (in_progress) + `ci-status-update` (pending).
+- Healthy-path control: 06:48 sit-gate → 06:55 staging-to-main SUCCESS → deployment-service promoted, lock cleared in 7
+  min — the design works whenever the promote actually RUNS.
+
+### Fix (3 files, PM `.github/workflows/`, shipped this commit)
+
+1. **`staging-to-main.yml`** — moved to its **own** `concurrency: group: staging-to-main` (cancel-in-progress: false).
+   Status noise can no longer displace the promote. Self-contention is safe: every promote run re-derives the pending
+   set from the manifest (full sweep) → a displaced QUEUED promote's work is covered by the surviving run. Manifest
+   write-safety was never the group's job here: the promote's manifest push already carries the 5-attempt rebase-retry
+   loop (staging-to-main.yml "Retry-with-rebase").
+2. **`ci-status-update.yml`** — its bare `git push origin HEAD` → the same 5-attempt rebase-retry loop (it can now race
+   the promote's manifest commit; bare push would fail non-FF and silently drop the ci_status write). NOTE: under the
+   OLD shared group, ci-status-updates displaced EACH OTHER (one queued max) → status writes were already being dropped
+   silently today; this loop + de-grouping strictly improves that.
+3. **`update-repo-version.yml`** — its bare `git push` → same retry loop (same exposure; its dispatch is also
+   non-replayable).
+
+### Rollback (if anything misbehaves)
+
+Single revert of this commit restores the prior state exactly (shared group + bare pushes). The retry loops are
+strictly-additive hardening (a clean first push exits the loop on attempt 1) — reverting them is safe but should never
+be needed independently. Watch-fors post-ship: (a) `staging-to-main` + `ci-status-update` runs overlapping → expect
+occasional "Push rejected (attempt 1); rebasing" lines, NOT failures; (b) a `FATAL: could not push ... after 5 attempts`
+= real contention storm → re-run the workflow, then investigate group membership.
+
+### Recovery runbook — "promote starved / staging lock stuck" (NEXT TIME)
+
+Symptoms: `staging_status.locked=true` with non-empty `pending_repos` for >30 min; fleet-wide `Staging Lock Check` reds;
+no `full-workspace-sit` / `staging-to-main` run in-flight; ml-style repo stranded with
+`staging_versions[X] != versions[X]`.
+
+1. Confirm the clearer died: `gh run list --repo IggyIkenna/unified-trading-pm --workflow staging-to-main.yml --limit 5`
+   → look for `completed/cancelled` runs with zero jobs (queue-displacement signature) or a real failure (read its log).
+2. Recover in-band: `gh workflow run staging-to-main.yml --repo IggyIkenna/unified-trading-pm -f reason="<why>"` — the
+   workflow_dispatch path re-derives pending from the manifest (full sweep; optional `start_from_repo` to resume).
+3. Verify: run goes in_progress → `chore(manifest): promote staging_versions → versions, clear staging lock` lands on
+   main → `staging_status.locked=false` → blocked →staging PRs' Staging Lock Check turns green on re-run.
+4. If the dispatch itself gets cancelled with zero jobs → you are seeing THIS defect again: check `concurrency:` in
+   staging-to-main.yml hasn't been re-folded into a shared group.
+
+### Follow-ups (discovered, not in the hot fix)
+
+- [ ] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` group membership — same displacement exposure class
+      (low-frequency/high-value runs sharing `manifest-update` with high-frequency writers). De-group or
+      defer-and-replay; their manifest pushes need the retry loop first if de-grouped. — provenance: this finding
+- [ ] [SCRIPT] P2. `cloud-build-router.yml` also sits in `concurrency: manifest-update` — same review (its qg-passed
+      payloads are equally non-replayable; the freeze path already has defer-and-replay to copy from). — provenance:
+      this finding
+- [ ] [SCRIPT] P3. Upgrade `sit-starvation-detector.yml` from alert-only → auto-redispatch `staging-to-main`
+      (workflow_dispatch, reason="starvation auto-recovery") when locked>30min + pending non-empty + no promote/SIT
+      in-flight — turns this whole class self-healing. — provenance: this finding
+- [ ] [SCRIPT] P2. Local-vs-CI basedpyright count drift on PM: local QG counted 1548 > ratchet 1511 while CI v2
+      (same script, same ratchet) passed green on near-identical LDR content (72ddfde4 08:23Z) — error files all
+      last-touched ≤06-03, so the +37 is environment drift (venv resolution / stub coverage), not new code. Root-cause
+      under `ci_local_qg_parity_2026_06_08.md`; until fixed it blocks local sentinels on PM for non-Python diffs
+      (hit 2026-06-10 shipping the staging-to-main concurrency fix → used the codified `.github/**` carve-out + the
+      v2-gated main PR instead). — provenance: this fix's Pass-1
