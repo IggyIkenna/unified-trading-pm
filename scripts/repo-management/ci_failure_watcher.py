@@ -712,10 +712,6 @@ def _refire_v2_with_empty_commit(repo: str, branch: str, head_sha: str) -> bool:
         "Plan: semver_version_bump_skip_ci_promotion_block_2026_06_09."
     )
     new = gh_json(
-<<<<<<< Updated upstream
-        ["api", f"repos/{ORG}/{repo}/git/commits", "-f", f"message={msg}", "-f", f"tree={tree}",
-         "-f", f"parents[]={head_sha}"]
-=======
         [
             "api",
             f"repos/{ORG}/{repo}/git/commits",
@@ -726,7 +722,6 @@ def _refire_v2_with_empty_commit(repo: str, branch: str, head_sha: str) -> bool:
             "-f",
             f"parents[]={head_sha}",
         ]
->>>>>>> Stashed changes
     )
     new_sha = new.get("sha") if isinstance(new, dict) else None
     if not new_sha:

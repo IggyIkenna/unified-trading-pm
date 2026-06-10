@@ -102,7 +102,7 @@ class TestAutoRecoverMechanism:
 
     A CI-suppression-token head gets ZERO push/pull_request runs, close+reopen re-fires an
     equally-suppressed pull_request, and a workflow_dispatch run's check is NOT associated
-    with the PR so its green does not satisfy the required check (verified live: 3× green
+    with the PR so its green does not satisfy the required check (verified live: 3x green
     dispatch runs on the exact head SHA, PR stayed BLOCKED). The only working lever is
     SUPERSEDING the head with an empty clean-message commit via the git-data API.
     """
