@@ -130,6 +130,11 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
      it falls behind LDR forever (on a worker VM this starves the orchestrator's plan-regen — incident 2026-06-10). Done
      = `detect_template_drift.py --workflows` exits 0 AND no `.github/workflows/` is dirty fleet-wide. Can't finish
      in-session → file a plan todo; never leave silent fleet drift (the cron preserves dirty trees, can't self-heal it).
+   - **Bumping a GHA action version: VERIFY the ref RESOLVES — never assume a floating major tag exists (HARD RULE
+     2026-06-10).** Some actions are pin-only past a point: `astral-sh/setup-uv` has `v5`/`v7` floating but **no `@v8`**
+     (only `@v8.2.0`) → `setup-uv@v8` fails at "Set up job" (`unable to find version v8`) and breaks the workflow. Prove
+     it before commit: `curl -so /dev/null -w '%{http_code}' https://raw.githubusercontent.com/<owner>/<action>/<ref>/action.yml`
+     == 200 (404 = missing), AND smoke ≥1 consumer run. Missing floating major → pin the latest specific tag (`@vX.Y.Z`).
 4. **Conditional push (multi-agent safety)**: before any push,
    `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
    document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main

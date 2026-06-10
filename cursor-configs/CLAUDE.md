@@ -967,6 +967,15 @@ integration-branch code commit lacking a quickmerge lineage marker) is the open 
   --workflows` exits 0 AND no repo's `.github/workflows/` is dirty** (verify both before declaring the rollout complete).
   A template you edit + commit but don't roll-out-and-commit leaves silent fleet drift the cron can't self-heal (it
   preserves dirty trees, never overwrites them) — it must be a tracked plan todo if you can't finish it in-session.
+- **When bumping a GHA action version, VERIFY the target ref actually RESOLVES — never assume a floating major tag exists
+  (HARD RULE, codified 2026-06-10)**: not every action maintains floating major tags. `astral-sh/setup-uv` keeps `v5` +
+  `v7` floating but the v8 series is **pin-only** (`@v8.2.0`); there is **no `@v8`** → a `uses: astral-sh/setup-uv@v8`
+  fails at "Set up job" with `unable to resolve action … unable to find version v8`, breaking the whole workflow (incident
+  2026-06-10: a `setup-uv@v5→v8` bump broke `update-dependency-version.yml` fleet-wide + reddened a promoted `main` line).
+  Before committing a version bump, prove the ref resolves: `curl -so /dev/null -w '%{http_code}'
+  https://raw.githubusercontent.com/<owner>/<action>/<ref>/action.yml` must return **200** (404 = the ref doesn't exist),
+  AND smoke at least one consumer CI run for any action you can't statically prove (the `@v8` slipped because it was the
+  one second-tier action NOT smoked). If a floating major is missing, pin the latest specific tag (`@vX.Y.Z`) instead.
 
 ---
 
