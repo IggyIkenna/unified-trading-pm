@@ -877,14 +877,13 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       deps); pyproject re-adds it editable for the 14 test files importing deployment_api.routes/utils/main. staging
       clears via promotion. I diagnosed identically but did not push a competing fix.] deployment-service LDR + staging
       v2 RED — orphaned cross-repo test import after the circular-dep cut.** `tests/mocks.py:10` hard-imports
-      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the
-      deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
-      pyproject **on LDR** (main still declares it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the
-      STALE side; LDR @2ab4cce5 = RED, run 26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is
-      already guarded (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard
-      top-level import. Fix on LDR (the correct post-cut side): make the import resilient OR relocate
-      `CombinatoricEntry` to a shared contract — do NOT re-add deployment-api as a dep (re-creates the just-removed
-      cycle). repo: deployment-service.
+      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the deployment-api↔deployment-service
+      circular-dep removal dropped `deployment-api` from deployment-service's pyproject **on LDR** (main still declares
+      it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the STALE side; LDR @2ab4cce5 = RED, run
+      26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is already guarded
+      (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard top-level import. Fix
+      on LDR (the correct post-cut side): make the import resilient OR relocate `CombinatoricEntry` to a shared contract
+      — do NOT re-add deployment-api as a dep (re-creates the just-removed cycle). repo: deployment-service.
 - [x] ✅ [LINT] P2. **[PROMOTION-LAG, not fresh debt — re-audit 2026-06-02: the 14 QG-scope ruff errors are ALREADY
       FIXED on LDR @eabdf05 "fix(lint): green all 14 ruff errors in QG scope (tests/ lint pass)"; e2e LDR is 10 commits
       ahead of main. main red (run 26796774457 @b526b5eb) clears via the LDR→main promotion campaign (P1 below), NOT a
@@ -2522,8 +2521,8 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 **F. Drift / reconciliation gaps:**
 
 - [x] ✅ [SCRIPT] P2. **behind/ahead reporter — DONE via PR #145** (flow-health reporter computes all 3 pairs as message
-      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR
-      is watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
+      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR is
+      watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. **staging→LDR backmerge — DONE 2026-06-05** (`unified-trading-pm@8cd62f42e` retains
       `.github/workflows/staging-backmerge-to-ldr.yml`: staging→LDR no-ff merge, 5× FF-retry, conflict PR + escalation;
       shares backmerge-to-ldr concurrency w/ main-backmerge). ORIG: staging→LDR backmerge — only main-backmerge existed.
@@ -2728,8 +2727,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
-> workflow FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
+> FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the
@@ -3833,12 +3832,11 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
 - **infra_slot_sync remaining**: cleanup sub-agent in-flight (backlog.mock P1, AutoSpawn-SQLAlchemy P3, ui-semver
   checkout P2); operator-gated #1/#2 stay BLOCKED-OPERATOR.
 - **plan-health-gate PIN — HELD (do NOT pin yet).** Functionally green (#152) but RED on PM PRs due to the pre-existing
-  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated
-  promotion. **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate`
-  (verify via `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
-- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead;
-  `main-backmerge-to-ldr` alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then
-  LDR→main promote.
+  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated promotion.
+  **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate` (verify via
+  `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
+- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead; `main-backmerge-to-ldr`
+  alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then LDR→main promote.
 
 ### Resolved blockers (were operator-gated; now cleared)
 
@@ -4038,7 +4036,7 @@ been the sole required check fleet-wide for weeks.
 | `CI RECOVERED: instruments/mdps/mtds/execution …`                                         | **HEALTHY** — cascade converging                                                                   | none                                                                                                                                                                                                                                                                                                                                                                                   |
 | `sit-unlock: SIT Failed — staging unlocked`                                               | **HEALTHY** — the intended fail-safe (SIT runs, fails on real incoherence, unlocks for fixes)      | none (machinery now correct after the sit-gate fixes #165/#166)                                                                                                                                                                                                                                                                                                                        |
 | `ldr-ci-monitor: unified-trading-pm RED→GREEN`                                            | **HEALTHY** — my PM credential-ratchet fix recovered                                               | none                                                                                                                                                                                                                                                                                                                                                                                   |
-| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                       |
+| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                        |
 | `mdps/mtds FAILING — AttributeError BATCH_HYPERLIQUID_REST`                               | **REAL — the #1 blocker**                                                                          | the UAC+UTL `BATCH_HYPERLIQUID` enum migration is coherent on LDR+staging but **main lags for BOTH** (data-value change `batch_hyperliquid_rest`→`batch_hyperliquid`); consumer/SIT QGs that clone UTL@main hit the old name. Needs the **coordinated UAC+UTL staging→main promotion** (data-track; see finding below). Do NOT fix piecemeal (my UTL #250 was closed for exactly this) |
 | `execution #216 QG: STEP 5.21 reportUnknown* warning/none + 5.12b gs:// URI`              | **REAL** — pre-existing execution-service QG-debt surfaced by the dep-update PR                    | execution-service's own plan (basedpyright strict config + replace `gs://` f-string in `evidence_router.py:66` with `resolve_bucket_name`)                                                                                                                                                                                                                                             |
 | `mtds #133 QG: pydantic ValidationError CandleBoundaryCrossedEvent`                       | **REAL** — likely the same enum-value migration touching a UAC event model                         | resolves with the coordinated enum migration; verify the event's `pipeline_mode` field accepts the new value                                                                                                                                                                                                                                                                           |
@@ -4286,8 +4284,8 @@ rollout, never per-repo).
 
 ### What shipped (all to LDR; PM Option-B → main)
 
-1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes
-   DOWN to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
+1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes DOWN
+   to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
 2. **Step 1 content-based breaking-detection** — `scripts/cicd/detect_breaking_change.py` (AST public-surface differ; 8
    unit tests; rule-11 proven on UTL+UAC) replaces the crude `grep '^-' __init__.py` heuristic; wired into
    semver-agent.yml + .tmpl + **rolled out to all 23 repos' LDR**; SIT now breaking-gated via `breaking_pending`
@@ -4454,3 +4452,38 @@ recurring friction the operator has hit repeatedly.
       merge-commit promotion fix above makes the PM backmerge a clean FF, so the conflict→PR-create fallback is rarely
       hit; PM's own copy (the repo that actually hit the incident) is fixed, so the residual fleet pass is hardening for
       the other 23. Not marked ✅ until pushed (Commit+Push+Flip: pushed = real).
+
+## 🟢 Progress Log — 2026-06-10 promotion-automation hardening (slot-1, append-only)
+
+Dispatched worker task: eliminate two false-CRITICAL alert sources + add a missing retry cap in the staging→main
+promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestration workflow; NOT a rolled-out template
+— `scripts/workflow-templates/` has no `staging-to-main` entry, so edit-in-place is correct).
+
+- [x] **Task 1 — exclude PM (main-direct) from the staging→main promotion set.** Root-caused from run `27243592803`
+      (conclusion=success but `notify-partial-failure` RAN → CRITICAL): the promote step logged
+      `Failed (1):     unified-trading-pm`. PM is Option-B (no `staging` branch — `gh api .../branches/staging` → 404
+      confirmed), yet its `staging_versions` (1.2.45) ≠ `versions` (1.2.58) put it in the `promoting`/`changed` set; the
+      `gh pr create --base main --head staging` then could not succeed → counted as FAILED every run. **Fix:** a
+      `MAIN_DIRECT_REPOS = {"unified-trading-pm"}` exclusion added in ALL THREE places that build the promote set — the
+      readiness gate, STAGE 1.8 dep-order gate, and the promote-loop `changed` builder — mirroring
+      `promotion_lag_monitor.py`'s `repo == "unified-trading-pm" and "staging" in label` skip. agent-orchestrator is
+      left on the standard path (it currently has staging_versions==versions so is NOT in the set; comment notes it
+      joins MAIN_DIRECT only until its staging branch lands, per CLAUDE.md § AO branch model). **Proven:** ran the
+      actual `changed`-builder logic against the live manifest — PM was the SOLE member of the old promote set
+      (`['unified-     trading-pm']`); after the fix the set is `[]` → no false failure. — unified-trading-pm@2ebd75b9b
+- [x] **Task 2 — promotion quarantine cap (`PROMOTION_MAX_ATTEMPTS`, default 3).** New `Quarantine cap` step (id:
+      `quarantine`) after the promote step. State in `workspace-manifest.json`: `promotion_failures: {repo: count}`
+      (consecutive failures) + `promotion_quarantine: {repo: {since, attempts, escalated}}`. Each run: increment for
+      every promote-step FAILED repo, reset (drop) for every PROMOTED repo. On hitting the threshold a repo is
+      quarantined → (a) the promote-loop builder SKIPS it on this + every future run (queue never blocked), (b)
+      escalated ONCE via the existing `escalate-to-orchestrator` `repository_dispatch` (idempotent via the per-repo
+      `escalated` flag, set only on a GitHub-accepted dispatch so a transient API failure retries next run), (c) the
+      recurring CRITICAL is DOWNGRADED — `notify-partial-failure` now keys off `unquarantined_failed_count` (genuine
+      failures only; falls back to the raw `failed_count` if the quarantine step produced no output), and a new
+      `notify-quarantine` job posts a SINGLE `WARNING — repo quarantined after N failed promotions, needs attention`.
+      Counter + quarantine auto-clear on the next successful promotion. **Threshold:** env `PROMOTION_MAX_ATTEMPTS`,
+      default `3`, override via repo/org var. **State location:** `workspace-manifest.json` (`promotion_failures` +
+      `promotion_quarantine`), written in canonical form (`json.dump(indent=2, ensure_ascii=False)` + trailing `\n`).
+      **Proven:** unit-tested the exact counter/skip/ escalate-once/auto-clear logic across 5 simulated runs
+      (fail×3→quarantine+escalate-once→skip-forever→success- auto-clears); CRITICAL goes silent once quarantined,
+      WARNING fires once. `actionlint .github/workflows/     staging-to-main.yml` exit 0. — unified-trading-pm@2ebd75b9b
