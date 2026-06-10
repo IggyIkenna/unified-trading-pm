@@ -1,0 +1,257 @@
+name: cloud-build-failure-watcher
+
+# Cloud Build failure/rejection watcher — Gap 2 of
+# plans/active/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md.
+#
+# The webhook-triggered per-repo GCB image builds run OUTSIDE GitHub Actions, so
+# ci-failure-watcher (which watches GH workflow runs) never sees them, and there is no
+# Pub/Sub -> Slack pipe on the cloud-builds topic. This poller closes that hole:
+# every 15 min it lists recent Cloud Builds (regional + global) and pages
+# #ci-failures for every FAILURE / TIMEOUT / INTERNAL_ERROR / EXPIRED build.
+#
+# It also calls out the SILENT CONFIG-REJECTION class: a push whose cloudbuild.yaml
+# fails Cloud Build's substitution validation leaves a FAILURE record with EMPTY
+# substitutions (no repo, no SHA, no trigger context) and reports NOTHING to GitHub —
+# from the developer's side it is indistinguishable from "no build configured".
+#
+# Dedup window: we look back 20 minutes on a 15-minute cron (5-min overlap so a build
+# created right at a tick boundary is never missed). A failed build can therefore
+# alert AT MOST TWICE — accepted tradeoff vs. missing one entirely.
+#
+# DEFAULT-BRANCH GOTCHA: GitHub `schedule:` triggers fire ONLY from the DEFAULT branch
+# (main). This workflow is INERT on live-defi-rollout until it reaches main via the
+# standing LDR->main promote (ldr-to-main-promote.yml). Use workflow_dispatch to run
+# on demand meanwhile.
+#
+# Auth: WIF (OIDC) preferred, GCP_SA_KEY fallback — same dual-path pattern as
+# cloud-build-router.yml; see codex/07-security/gha-wif-migration.md. If neither
+# auth secret is present (forks / unprovisioned clones), the run no-ops gracefully.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # every 15 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # Required for GCP Workload Identity Federation (OIDC) auth
+
+env:
+  GCP_PROJECT: central-element-323112
+  CLOUD_BUILD_REGION: asia-northeast1
+  LOOKBACK_MINUTES: "20"
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Secrets are not directly testable in `if:` without exposing them; map to env
+      # in a probe step and emit presence flags so the auth steps can be skipped
+      # cleanly when unprovisioned (graceful no-op on forks).
+      - name: Detect GCP auth secrets
+        id: detect
+        env:
+          WIF_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${WIF_PROVIDER:-}" ]; then
+            echo "has_wif=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_wif=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -n "${SA_KEY:-}" ]; then
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: No GCP auth available — graceful no-op
+        if: steps.detect.outputs.has_wif != 'true' && steps.detect.outputs.has_key != 'true'
+        run: |
+          set -euo pipefail
+          echo "::notice::cloud-build-failure-watcher: neither WORKLOAD_IDENTITY_PROVIDER nor GCP_SA_KEY secret is present — skipping Cloud Build poll (fork / unprovisioned repo)."
+
+      # Auth is dual-path: WIF (keyless OIDC) preferred, SA-key fallback — mirrors
+      # cloud-build-router.yml. WIF impersonates
+      # github-actions-deploy@central-element-323112. If WIF fails (e.g. pool not yet
+      # provisioned), it falls through to the GCP_SA_KEY path.
+      - name: Authenticate to GCP via WIF (preferred)
+        id: auth-wif
+        if: steps.detect.outputs.has_wif == 'true'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.detect.outputs.has_key == 'true' && steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Poll recent Cloud Builds + classify failures
+        id: poll
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        run: |
+          set -euo pipefail
+
+          # List recent builds newest-first (gcloud default ordering) from BOTH the
+          # regional pool (router-triggered image builds) and global, then filter
+          # locally by createTime + status — server-side create_time filters proved
+          # flaky across regions, so the time window is enforced in python below.
+          gcloud builds list \
+            --project="$GCP_PROJECT" \
+            --region="$CLOUD_BUILD_REGION" \
+            --limit=30 \
+            --format=json > /tmp/cb_builds_regional.json \
+            || echo "[]" > /tmp/cb_builds_regional.json
+          gcloud builds list \
+            --project="$GCP_PROJECT" \
+            --limit=30 \
+            --format=json > /tmp/cb_builds_global.json \
+            || echo "[]" > /tmp/cb_builds_global.json
+
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timedelta, timezone
+
+          FAILURE_STATUSES = {"FAILURE", "TIMEOUT", "INTERNAL_ERROR", "EXPIRED"}
+          # Builtins a GitHub-trigger build carries + the router-passed user subs.
+          REPO_KEYS = ("_REPO_NAME", "REPO_NAME", "REPO_FULL_NAME")
+          SHA_KEYS = ("_SHA", "COMMIT_SHA", "SHORT_SHA", "REVISION_ID")
+          MAX_LINES = 8  # cap per tick; overflow collapses to "+N more"
+
+          lookback = timedelta(minutes=int(os.environ.get("LOOKBACK_MINUTES", "20")))
+          cutoff = datetime.now(timezone.utc) - lookback
+
+          builds: dict[str, dict] = {}
+          for path in ("/tmp/cb_builds_regional.json", "/tmp/cb_builds_global.json"):
+              try:
+                  with open(path, encoding="utf-8") as fh:
+                      payload = json.load(fh)
+              except (OSError, json.JSONDecodeError):
+                  continue
+              if not isinstance(payload, list):
+                  continue
+              for build in payload:
+                  if isinstance(build, dict) and build.get("id"):
+                      builds.setdefault(str(build["id"]), build)
+
+          failed: list[tuple[bool, str]] = []  # (is_silent_rejection, message_line)
+          for build in builds.values():
+              status = str(build.get("status", ""))
+              if status not in FAILURE_STATUSES:
+                  continue
+              # createTime is RFC3339 with nanosecond fractions; parse the stable
+              # first 19 chars (YYYY-MM-DDTHH:MM:SS, always UTC from GCB).
+              raw_ts = str(build.get("createTime", ""))
+              try:
+                  created = datetime.strptime(raw_ts[:19], "%Y-%m-%dT%H:%M:%S").replace(
+                      tzinfo=timezone.utc
+                  )
+              except ValueError:
+                  continue  # unparseable timestamp -> not a recent-window candidate
+              if created < cutoff:
+                  continue
+
+              build_id = str(build.get("id", "unknown-id"))
+              log_url = str(build.get("logUrl") or "no logUrl")
+              # The rejection class: substitutions may be missing entirely, None, or
+              # an empty map — never assume the key exists or is a dict.
+              subs = build.get("substitutions")
+              if not isinstance(subs, dict):
+                  subs = {}
+              repo = next((subs[k] for k in REPO_KEYS if subs.get(k)), "")
+              sha = next((subs[k] for k in SHA_KEYS if subs.get(k)), "")
+
+              if not repo and not sha:
+                  # Silent config-rejection signature: the trigger never got far
+                  # enough to stamp repo/sha — the push's cloudbuild.yaml was
+                  # rejected at validation and GitHub shows NOTHING.
+                  failed.append(
+                      (
+                          True,
+                          ":rotating_light: Cloud Build CONFIG REJECTED (silent class) — "
+                          "a push's cloudbuild.yaml failed validation; no build ran, "
+                          f"GitHub shows nothing — build {build_id} ({status}) — {log_url}",
+                      )
+                  )
+              else:
+                  repo_label = repo or "unknown-repo"
+                  sha_label = (sha[:7] if sha else "unknown-sha")
+                  failed.append(
+                      (
+                          False,
+                          f":x: Cloud Build {status} {repo_label}@{sha_label} — "
+                          f"build {build_id} — {log_url}",
+                      )
+                  )
+
+          # Silent rejections first — they are the invisible class.
+          failed.sort(key=lambda item: (not item[0]))
+          silent_count = sum(1 for is_silent, _ in failed if is_silent)
+
+          lines = [msg for _, msg in failed[:MAX_LINES]]
+          if len(failed) > MAX_LINES:
+              lines.append(f"... +{len(failed) - MAX_LINES} more failed build(s) this tick")
+
+          if failed:
+              header = (
+                  f":building_construction: cloud-build-failure-watcher: {len(failed)} failed "
+                  f"Cloud Build(s) in the last {int(lookback.total_seconds() // 60)}m "
+                  f"({silent_count} silent config-rejection(s)) — project "
+                  f"{os.environ.get('GCP_PROJECT', 'central-element-323112')}"
+              )
+              with open("/tmp/cb_failure_report.txt", "w", encoding="utf-8") as fh:
+                  fh.write(header + "\n" + "\n".join(lines) + "\n")
+              print(header)
+              for line in lines:
+                  print(line)
+          else:
+              print(
+                  f"No failed Cloud Builds in the last "
+                  f"{int(lookback.total_seconds() // 60)}m across "
+                  f"{len(builds)} recent build(s). All clear."
+              )
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"alert={'true' if failed else 'false'}\n")
+              fh.write(f"count={len(failed)}\n")
+              fh.write(f"silent={silent_count}\n")
+          PY
+
+      # One Slack message per tick carrying one line per failed build (capped above) —
+      # same inline webhook pattern as semver-agent / ci-failure-watcher.
+      - name: Page Slack (#ci-failures)
+        if: steps.poll.outputs.alert == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          case "${SLACK_WEBHOOK_URL:-}" in
+            https://*)
+              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                --data "$(jq -n --rawfile t /tmp/cb_failure_report.txt '{text:$t}')" \
+                && echo "Cloud Build failure page sent to Slack" || true ;;
+            *)
+              echo "::warning::SLACK_CI_WEBHOOK_URL / SLACK_WEBHOOK_URL not set/https — cannot page Slack; report is in the step log above" ;;
+          esac
+
+      - name: Job-log summary
+        if: steps.poll.outputs.alert == 'true'
+        env:
+          FAILED_COUNT: ${{ steps.poll.outputs.count }}
+          SILENT_COUNT: ${{ steps.poll.outputs.silent }}
+        run: |
+          set -euo pipefail
+          echo "::warning::cloud-build-failure-watcher: ${FAILED_COUNT} failed Cloud Build(s) in the last ${LOOKBACK_MINUTES}m (${SILENT_COUNT} silent config-rejection(s)) — see report below"
+          cat /tmp/cb_failure_report.txt

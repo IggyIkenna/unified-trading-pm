@@ -388,6 +388,11 @@ pointer before acting on any of them.
   PROGRESS metric not just `done`; poll **short (~30–45 s) first then EXPAND**; a FLAT metric = **STALL → diagnose the
   blocker now** (`gh run view --log-failed`), never wait it out; rely on harness auto-re-invoke for tracked tasks; stay
   productive meanwhile. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+- **Watcher coverage (2026-06-10)**: a background watcher must reach a TERMINAL verdict on every path (watch
+  `state != OPEN` not the success marker; PRINT a verdict line — silence must be impossible), and before any wait >5 min
+  NAME the mechanism that fires the next hop (`rg` the trigger chain) — can't name it = diagnose, don't wait; one
+  deadline = one cadence interval, then stop + diagnose, never re-arm after a silent expiry. SSOT:
+  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § Watcher coverage.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **QG-sweep**: batch the GATE not the commits; shared-host ≤2 full QGs at once (governor floor raised 1→2, 2026-06-05);
   never bulk-kill another slot's `pytest`/QG/`basedpyright`; bump `MAX_DURATION=600` over suppressing the `<300s` check.

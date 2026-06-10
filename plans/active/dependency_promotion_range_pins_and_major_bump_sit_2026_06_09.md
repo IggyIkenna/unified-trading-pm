@@ -383,7 +383,17 @@ PENDING-RATCHET)**. Reframe + prioritize it: pinning `FROM …@sha256:<digest>` 
 its Dockerfile pins `unified-trading-library@sha256:…` → that digest = a specific UTL build = UTL version+commit → UAC
 commit baked in = a deterministic single-SHA provenance chain, with zero `uv.lock` dependency.
 
-- [ ] [INFRA] P1. **Complete the 5.79 FROM-digest ratchet** — drive every production Dockerfile's `FROM` from
+- [x] ✅ [INFRA] P1. **COMPLETE 2026-06-10 — the full FROM-digest ratchet, end to end.** Final state: 16/16 consumer
+      Dockerfiles digest-pinned on LDR; cloudbuild fleet (18 repos) carries the digest-aware pre-pull (proof: mtds
+      build `fc2d4b07` SUCCESS through `FROM @${BASE_IMAGE_DIGEST}`); **STEP 5.79 flipped to HARD-FAIL**
+      (unified-trading-pm@52f33275f — legacy `${`-warn branch closed; blast radius verified zero pre-flip, incl.
+      instruments' indirect `ARG BASE_IMAGE=` shape). Build-path incidents found+fixed en route: unauthenticated
+      daemon digest-pulls (digest-aware pre-pull in `configs/cloudbuild-service-template.yaml`), GCB substitution
+      grammar (×2 silent rejections → `check_cloudbuild_substitutions.py` QG STEP 5.19 + render gate +
+      `cloud-build-failure-watcher.yml`; see `issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md`).
+      Remaining related-but-separate items: the registry-poller edge (P2 below) + deployment-api BoM surface (P2) +
+      eviction-class fan-out reliability (KNOWN TENSION note). Original task text below:
+      ~~Complete the 5.79 FROM-digest ratchet~~ — drive every production Dockerfile's `FROM` from
       `:latest`/`:tag` → `@sha256:<digest>` and flip STEP 5.79 from PENDING-RATCHET to BLOCKING
       (`base-service.sh:2221-2264`). Resolve the digest at build time (cloudbuild reads the freshly-pushed base image's
       `RepoDigests` / Cloud Run revision digest, injects via `--build-arg BASE_IMAGE_DIGEST`). Done = rebuilding any

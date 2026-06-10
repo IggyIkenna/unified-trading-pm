@@ -69,3 +69,33 @@ done
 - **CI verification after every push** (`CLAUDE.md`) — `gh run list` + `gh run view --log-failed` are the poll tools.
 - **Plans run to actual completion** — "operationally shipped" is verified by polling the real signal to completion, not
   assumed from a green smoke test.
+
+## Watcher coverage — never infinitely wait (HARD RULE, codified 2026-06-10)
+
+Incident (2026-06-10, slot-3): a `run_in_background` until-loop watched for three repos' content to appear on `main`. It
+died at its Bash timeout with **zero output** — no verdict, no notification semantics — and the session read the silence
+as "still waiting". Worse, the awaited mechanism **could never fire**: the staging→main drain iterates
+`staging_commits`, which only sit-gate's lock step writes, so non-breaking staging merges were invisible to it (bug #11,
+`cicd_contract_hardening_2026_06_01.md`). Any watcher duration would have failed. Two distinct sins:
+
+1. **Coverage sin** — the watcher only matched the success condition. Rules:
+   - Watch the TERMINAL set, not the happy path: `state != OPEN` (merged/closed/failed all land), `status == completed`
+     (then read the conclusion), never `until <success-marker>` alone.
+   - PRINT an explicit verdict line on every exit path (`SUCCESS: …` / `FAILED: …` / `DEADLINE: …`) — an empty output
+     file must be impossible. The verdict line is what the resuming agent reads; silence is indistinguishable from
+     "still running".
+   - Size the loop's own deadline INSIDE the harness timeout (e.g. a counter that prints `DEADLINE` and exits 0 before
+     the kill), so expiry is a reported outcome, not a silent kill.
+
+2. **Phantom-mechanism sin** — waiting on an automated hop nobody fires. Rules:
+   - Before arming any wait >5 min on a pipeline hop, **name the mover**: `rg` the trigger chain (which workflow /
+     `repository_dispatch` / cron advances this state?). "The automation handles it" without a named workflow + trigger
+     is a diagnosis task, not a wait.
+   - One deadline = ONE expected-cadence interval of the named mover (a `*/15` cron gets ≤2 ticks ≈ 30 min; a
+     dispatch-driven hop gets one dispatch-plus-runtime). On expiry: STOP, diagnose the mover (`gh run list` — did it
+     even fire?), never re-arm the same watcher.
+   - When the mover turns out not to exist, that is a FINDING (file it per Findings Triage) — the wait converts into a
+     fix or a sanctioned manual fallback, as bug #11 did (per-repo staging→main PRs).
+
+Composes with: Poll cadence + stall-intervention (above) — a flat metric and a silent watcher are the same smell;
+Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running" until a verdict line says which.

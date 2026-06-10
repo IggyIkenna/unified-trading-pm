@@ -65,6 +65,21 @@ jobs:
           set -euo pipefail
           ACTION="noop"; PR=""
 
+          # ── Provenance gate (D1 mirror, ldr_trunk_promotion_decoupling_2026_06_10): PM's LDR→main
+          # promotes only quickmerge-provenanced content. PM is checked out here (fetch-depth 0), so
+          # check the range directly. FAIL-OPEN on a checker error (never jam the PM main drain). PM
+          # content is mostly carve-outs (docs(plans)/scripts/.github), so this rarely fires.
+          git fetch -q --no-tags origin main live-defi-rollout 2>/dev/null || true
+          PROV_BLOCKED=0
+          PROV_OUT="$(python3 scripts/cicd/check_strict_quickmerge.py --range "origin/main..origin/live-defi-rollout" --block 2>&1)" && PROV_RC=0 || PROV_RC=$?
+          if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
+            PROV_BLOCKED=1
+            echo "⛔ provenance: PM LDR carries non-quickmerge CODE — LDR→main auto-merge will NOT be armed:"
+            printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
+          elif [ "${PROV_RC:-0}" -ne 0 ]; then
+            echo "WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. $PROV_OUT"
+          fi
+
           # ── Reuse an existing open LDR→main PR (quickmerge's standing sweep or a prior bot run) ──
           PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
             --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
@@ -94,6 +109,12 @@ jobs:
               [ -z "$PR_NUM" ] && { echo "WARN: PR create failed and none found"; { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"; exit 0; }
             else
               echo "  opened $PR_URL ($FILES changed file(s))"
+              if [ "$PROV_BLOCKED" = 1 ]; then
+                echo "  ⛔ provenance-blocked — NOT arming auto-merge (PR left open)"
+                gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Option-B drain)** — PM's LDR→main carries code that bypassed quickmerge. Auto-merge not armed; re-ship via \`quickmerge\` or revert on \`live-defi-rollout\`." 2>/dev/null || true
+                { echo "action=provenance_blocked"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
               gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null \
                 || echo "  WARN: auto-merge unavailable — merge manually: $PR_URL"
               { echo "action=opened"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
@@ -105,6 +126,12 @@ jobs:
           # ── deadlock (required check ABSENT on the current head → close+reopen re-fires v2).     ──
           PR="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
           echo "  existing open LDR→main PR #$PR_NUM ($PR)"
+          if [ "$PROV_BLOCKED" = 1 ]; then
+            echo "  ⛔ provenance-blocked — leaving PR open, not arming auto-merge"
+            gh pr comment "$PR_NUM" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Option-B drain)** — non-quickmerge code on \`live-defi-rollout\`; auto-merge not armed until LDR is clean." 2>/dev/null || true
+            { echo "action=provenance_blocked"; echo "pr=$PR"; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
 
           MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")

@@ -106,6 +106,30 @@ path to `main`** until the next quickmerge opens a new one.
 > commits (e.g. `docs(plans):` flips) take the prek hook only — full QG is a source gate. Reach for quickmerge first (or
 > skip flags) and either it hard-refuses or — worse — the change ships with tests never having run.
 
+### LDR-trunk decoupling — quickmerge lands on LDR; the drain promotes; hotfix is the only break-glass (2026-06-10)
+
+`live-defi-rollout` is the **gateless integration trunk in practice**. SSOT: `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md`. What is **live**:
+
+- **`quickmerge --agent --files` lands on LDR and stops** — for a service repo it no longer opens a per-unit LDR→staging
+  PR (PM→main and `[skip ci]`→main paths are unchanged). The local `quality-gates.sh` sentinel is the LDR-landing gate.
+- **Promotion is the Tier-C batched drain** (`ldr-to-staging-promote.yml`, **every 30 min** `13,43 * * * *`), tier-ordered
+  + dep-order-gated. Its LDR→staging PR's `quality-gates-v2` (deps resolved against **staging-tier**, `base_ref=staging`)
+  is the authoritative server gate — that PR's head IS `live-defi-rollout`, so it *is* "CI on LDR content". **LDR never
+  runs server QG itself** (a raw LDR-push QG lacks the staging base-ref → would re-break the dep-floor / BLR class).
+- **The staging-coupled gates are scoped to `--hotfix`** — quickmerge STAGE 1.5 (staging-lock) and STAGE 1.7 (dep-tier)
+  fire only on a `--hotfix`; a normal LDR landing skips them (the drain re-gates dep-order). STAGE 1.6 (dep-version) is a
+  WARN for a normal landing, a BLOCK on `--hotfix`.
+- **`--hotfix` is an auditable break-glass** — requires a `[hotfix]` marker in the commit message, opens an immediate
+  staging PR, and **still hits the staging lock** (a queue-jumping change must reconcile with what's converging). A
+  `--hotfix-to-main` (operator-gated; **not yet shipped** — needs a dedicated single-commit branch off main, since a raw
+  LDR→main PR would promote the *whole* trunk) is the exceptional main-direct path, gated only by `quality-gates-v2` on main.
+- **`STAGING_GREEN` inherits from the promote PR (A1, live)** — `python-quality-gates-v2.yml` maps a green PR *into*
+  staging (`base_ref=staging`) to `STAGING_GREEN`; the redundant `push:[staging]` QG run is slated to be dropped (A3).
+- **The promote bot promotes only quickmerge-provenanced content (D1, live)** — both `ldr-to-staging-promote.yml` and
+  `ldr-to-main-promote.yml` run `check_strict_quickmerge.py` over the promote range before arming auto-merge; a
+  non-carve-out CODE commit lacking the `Quickmerge:` trailer leaves the PR open (auto-merge not armed). Fail-open on a
+  checker error.
+
 Every shippable unit goes through exactly two passes:
 
 ```

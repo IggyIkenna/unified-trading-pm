@@ -1402,6 +1402,33 @@ else
 fi
 
 # ============================================================
+# STEP 5.19 — cloudbuild.yaml unescaped-substitution validation
+# Cloud Build substitution-scans EVERY step string (args/script/env), bash
+# comments included; an unescaped $WORD that is neither a builtin nor a
+# _-prefixed user substitution makes GCB SILENTLY reject the whole config
+# (no build record, no GitHub check, no Slack). Shell vars / command
+# substitutions inside cloudbuild bash blocks need $$ ($$VAR, $$(cmd)).
+# Issue: plans/active/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md (Gap 3)
+# ============================================================
+if [ -f "cloudbuild.yaml" ]; then
+    _CB_SUBST_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_cloudbuild_substitutions.py"
+    if [ -f "$_CB_SUBST_CHECKER" ]; then
+        if run_timeout 30 "$PYTHON_CMD" "$_CB_SUBST_CHECKER" cloudbuild.yaml >/tmp/cloudbuild_subst_qg.log 2>&1; then
+            log_success "STEP 5.19: cloudbuild.yaml substitutions OK (no unescaped \$VAR / \$( — \$\$-escape honored)"
+        else
+            log_fail "STEP 5.19: cloudbuild.yaml has unescaped substitution(s) — Cloud Build will SILENTLY reject this config (file:step-id:varname):"
+            cat /tmp/cloudbuild_subst_qg.log
+            log_fail "         Remedy: shell vars in cloudbuild bash blocks need \$\$; even COMMENT lines are scanned by the validator"
+            V=$(( V + 1 ))
+        fi
+    else
+        log_success "STEP 5.19: skipped (cloudbuild substitution checker not provisioned in this PM checkout)"
+    fi
+else
+    log_success "STEP 5.19: no cloudbuild.yaml (skipped)"
+fi
+
+# ============================================================
 if [ -d ".github/workflows" ]; then
     WT_VALIDATOR="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-workflow-tokens.py"
     if [ -f "$WT_VALIDATOR" ]; then
@@ -2550,7 +2577,13 @@ while IFS= read -r -d '' _df_579; do
                 fi
                 [[ "$_digest_ok_579" -eq 1 ]] || _DF_VIOLATIONS_579+=("$_df_579: $_line_579")
             else
-                log_warn "STEP 5.79: FROM not digest-pinned (5.79 ratchet pending rollout — convert via add-dockerfile-digest-arg.py): $_df_579: $_line_579"
+                # HARD-FAIL (flipped 2026-06-10 — the final FROM-digest ratchet): the legacy
+                # warn-only path is closed. Gate was operator-ratified to flip ONLY after a
+                # REAL cloud build proved the @digest path end-to-end: proof = mtds build
+                # fc2d4b07 SUCCESS through FROM @${BASE_IMAGE_DIGEST} with the digest-aware
+                # pre-pull; all 16 consumer Dockerfiles converted (16/16 on LDR). Convert a
+                # new/regressed Dockerfile via scripts/propagation/add-dockerfile-digest-arg.py.
+                _DF_VIOLATIONS_579+=("$_df_579 (registry FROM without ARG BASE_IMAGE_DIGEST pin): $_line_579")
             fi
             continue
         fi

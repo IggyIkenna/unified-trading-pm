@@ -211,6 +211,18 @@ if [ "$AGENT_MODE" = true ] && [ -z "$FILES_ARG" ]; then
   exit 1
 fi
 
+# B (ldr_trunk_promotion_decoupling_2026_06_10): --hotfix is an auditable break-glass. Require an
+# explicit [hotfix] marker in the commit message so a queue-jumping immediate staging promote is
+# never silent (it bypasses the batched Tier-C drain + opens a staging PR that hits the staging lock).
+if [ "$HOTFIX" = true ]; then
+  if ! echo "$COMMIT_MSG" | grep -q '\[hotfix\]'; then
+    echo "❌ --hotfix requires a [hotfix] marker in the commit message (auditable break-glass)."
+    echo "   --hotfix jumps the Tier-C drain queue → opens an immediate staging PR + respects the staging lock."
+    echo "   Add [hotfix], e.g.: quickmerge.sh 'fix: <incident> [hotfix]' --hotfix --files '<paths>'"
+    exit 1
+  fi
+fi
+
 if [ "$TO_STAGING" = true ] && [ -n "$DEP_BRANCH" ]; then
   echo "❌ --dep-branch cannot be used with the staging-first model."
   echo "   All human commits now route through staging automatically."

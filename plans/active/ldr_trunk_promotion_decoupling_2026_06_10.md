@@ -53,6 +53,18 @@ Two live symptoms on 2026-06-10 share one root cause — **per-commit promotion 
   a queue-jumping change must reconcile with whatever is converging on staging). An exceptional `--hotfix-to-main` opens
   a main PR whose **only gate is `quality-gates-v2` on main** (no SIT, no staging hop). Both require an explicit
   operator signal + a commit-message marker; agents cannot self-authorize.
+- **The promote bot promotes only quickmerge-provenanced content (operator direction 2026-06-10).** Two layers, in
+  priority order: (1) **promote-PR provenance gate (the enforcement)** — the LDR→staging promote PR runs
+  `check_strict_quickmerge.py` over its commit range; any **non-carve-out CODE commit lacking the `Quickmerge:`
+  trailer** → the PR is **not merged** (this, not the push, is what stops un-QG'd code reaching staging). Carve-outs
+  (`docs(plans):`, dirty-dep, `.github/**`) are legitimately trailer-less and pass. (2) **push tripwire (faster
+  detection, optional)** — a non-blocking `push: live-defi-rollout` GHA running the same checker; a violation fires a
+  `#ci-failures` alert so a bypass is caught at push, not ≤30 min later at the drain. **LDR itself never runs QG.**
+  **Head-of-line is accepted by design:** the promote PR is the whole LDR→staging diff, so one un-promotable commit
+  (bypass or red) freezes that repo's promotion until reverted/retro-QG'd — fail-safe, nothing jumps a bad commit.
+- **Stale/superseded promote PRs auto-close (no manual cleanup).** A GHA closes any LDR→staging PR whose commits are
+  already in `staging` — by **patch-id/content equivalence, NOT SHA** (the drain rebases/squashes → staging SHAs differ;
+  a SHA-membership check never matches → never closes). Bundle into the existing `ci_failure_watcher` hygiene.
 
 ## Decisions recorded (so they aren't re-litigated)
 
@@ -82,15 +94,15 @@ Two live symptoms on 2026-06-10 share one root cause — **per-commit promotion 
 
 Checked all ~50 open todos. **No hard conflicts.** Interactions:
 
-| Hardening todo                                                    | Relationship                       | Action here                                                                                                                                                                                                               |
-| ----------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| @2559 staging behind LDR / staging-first unused (P2)              | **This plan completes it**         | Making the drain the sole path + 30min is the resolution.                                                                                                                                                                 |
-| @4228 QG dep-clone ref-determinism (P2)                           | **Complement / prerequisite-soft** | The model leans on deps resolving at the _same_ (staging) ref. Cross-link; not blocking — fail today is a mixed-ref edge, our model reduces its blast radius.                                                             |
-| @4941 sanitize Tier-C squash body `[skip ci]` (P1)                | **NOT triggered by current drain** | The live drain uses `--auto --rebase` (lines 166/220), not squash → no squash-body poisoning. **Verify before declaring done**; the bug lives on the `ldr-to-main`/`staging-to-main` _squash_ paths, out of this tranche. |
-| @4950 flag staging head w/ ZERO check runs (P2)                   | **Must adapt (was a blocker)**     | Dropping `push:[staging]` (D1) makes a checkless staging head LEGITIMATE — the detector must flag only heads with no check AND no merged-PR check (else false-positive on every drain merge). Sequenced todo below.       |
-| @4933 per-cone parallel staging locks (P3)                        | **Composes (future)**              | 30min drain + per-cone locks compose; lock duration → longest cone. No change needed now.                                                                                                                                 |
-| @4882 4 repos lack `quickmerge.sh` (P2)                           | **Coverage gap**                   | ml-service et al. won't get the new behavior until they have the symlinked script. Out of scope; cross-link.                                                                                                              |
-| @4843-4849 sit-gate/cloud-build-router concurrency review (P2/P3) | **Adjacent**                       | Unaffected; promotion ordering unchanged.                                                                                                                                                                                 |
+| Hardening todo                                                    | Relationship                                     | Action here                                                                                                                                                                                                                                                                                       |
+| ----------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| @2559 staging behind LDR / staging-first unused (P2)              | **This plan completes it**                       | Making the drain the sole path + 30min is the resolution.                                                                                                                                                                                                                                         |
+| @4228 QG dep-clone ref-determinism (P2)                           | **Complement / prerequisite-soft**               | The model leans on deps resolving at the _same_ (staging) ref. Cross-link; not blocking — fail today is a mixed-ref edge, our model reduces its blast radius.                                                                                                                                     |
+| @4941 sanitize Tier-C squash body `[skip ci]` (P1)                | **Now applies (drain gained a squash fallback)** | The drain now does `--auto --rebase \|\| --auto --squash` (PM@84fe257ae — rebase can't arm on a merge-laden LDR); the squash path re-touches @4941 and was **pre-sanitized** in the same fix (explicit subject/body). The separate `ldr-to-main`/`staging-to-main` squash paths still need @4941. |
+| @4950 flag staging head w/ ZERO check runs (P2)                   | **Must adapt (was a blocker)**                   | Dropping `push:[staging]` (D1) makes a checkless staging head LEGITIMATE — the detector must flag only heads with no check AND no merged-PR check (else false-positive on every drain merge). Sequenced todo below.                                                                               |
+| @4933 per-cone parallel staging locks (P3)                        | **Composes (future)**                            | 30min drain + per-cone locks compose; lock duration → longest cone. No change needed now.                                                                                                                                                                                                         |
+| @4882 4 repos lack `quickmerge.sh` (P2)                           | **Coverage gap**                                 | ml-service et al. won't get the new behavior until they have the symlinked script. Out of scope; cross-link.                                                                                                                                                                                      |
+| @4843-4849 sit-gate/cloud-build-router concurrency review (P2/P3) | **Adjacent**                                     | Unaffected; promotion ordering unchanged.                                                                                                                                                                                                                                                         |
 
 ## Todos
 
@@ -110,27 +122,37 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       against a dep that is version-behind-staging is legitimate on the LDR trunk; the drain + SIT catch real
       incompatibilities. Keep the hard BLOCK on the `--hotfix` path (a hotfix must reconcile with staging). —
       unified-trading-pm@ef76571
-- [ ] [SCRIPT] P1. **quickmerge: harden `--hotfix` + add `--hotfix-to-main`.** `--hotfix` requires a `[hotfix]` marker
-      in the commit message (else refuse) and keeps the staging-lock respect. New `--hotfix-to-main`: requires
-      `[hotfix-main]` marker **and** explicit operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot
-      self-authorize); opens a **main** PR with auto-merge whose only gate is `quality-gates-v2` on main (no SIT, no
-      staging). **Does NOT script a protection bypass / direct push** — the operator does that manually via the
-      documented relax→push→re-enable if ever truly needed.
-- [ ] [DOCS] P1. **codex SSOT update.** `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model" + §
-      strict-quickmerge: record that the service-repo staging PR is now drain-only, the staging-lock/dep-tier gates are
-      hotfix-scoped, and the hotfix/hotfix-to-main break-glass contract. Update
-      [CLAUDE.md](../../cursor-configs/CLAUDE.md) one-liners (strict-quickmerge carve-out set) to match.
+- [x] ✅ [SCRIPT] P1. **quickmerge: harden `--hotfix` (marker) — DONE.** `--hotfix` now requires a `[hotfix]` marker in
+      the commit message (else refuse), in the FLAG VALIDATION block. Keeps the staging-lock respect. —
+      unified-trading-pm@305014936
+  - [ ] **`--hotfix-to-main` — DEFERRED (design finding).** The naive "PR_BASE=main on the existing flow" is WRONG: the
+        PR head is `live-defi-rollout`, so a LDR→main PR would promote the **whole trunk**, not just the hotfix. A
+        correct `--hotfix-to-main` needs a **dedicated single-commit branch off `main`** (cherry-pick the fix → PR that
+        branch → main, v2-on-main the only gate) + `[hotfix-main]` marker + operator env
+        `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize). Until built, the operator uses the manual
+        relax→push→re-enable path. **Does NOT script a protection bypass.**
+- [x] ✅ [DOCS] P1. **codex SSOT update — codex DONE, CLAUDE.md deferred.** Added a "LDR-trunk decoupling" subsection to
+      `codex/08-workflows/ci-cd-flow.md` § Two-Pass (land-on-LDR, hotfix-scoped gates, 30min drain, A1 inheritance, D1
+      provenance gate, `[hotfix]` marker, `--hotfix-to-main` not-yet-shipped). — unified-trading-pm@305014936
+  - [ ] **CLAUDE.md one-liner DEFERRED** until the model is complete (A3 dropped `push:[staging]` + `--hotfix-to-main`
+        shipped) — a pointer to a half-built model in the most-loaded context file is premature.
 - [ ] [SCRIPT] P1.5. **Compose with @4228 (dep-clone ref-determinism).** Confirm the LDR→staging PR resolves _all_
       internal deps at the staging ref consistently (no mixed staging-new/main-old set). Cross-linked,
       verify-on-first-green.
-- [ ] [SCRIPT] P1. **Drop `push:[staging]` QG — STEP 1 of 3 (inheritance FIRST).** Wire `FEATURE_GREEN → STAGING_GREEN`
-      inheritance in `ci-status-update.yml`: when a repo's LDR→staging PR merges green (its `quality-gates-v2` passed =
-      the staging gate, same tree), set ci_status `STAGING_GREEN` at merge — do NOT depend on a `push:[staging]` QG run.
-      **MUST land before STEP 3** or the Tier-C dep-order gate (`tier_c_promotion_gate.py`, reads `STAGING_GREEN`)
-      starves → drain jams fleet-wide. repo: unified-trading-pm.
-- [ ] [CODE] P2. **Drop `push:[staging]` QG — STEP 2 of 3 (detector).** Teach the @4950 zero-check-run detector
-      (Repos-CI dashboard) that a staging head with no _push_ check is legitimate when its merged PR carries the v2
-      check; flag only no-check AND no-merged-PR-check. Composes with `monitoring_control_plane_master_2026_06_10.md`.
+- [x] ✅ [SCRIPT] P1. **Drop `push:[staging]` QG — STEP 1 of 3 (inheritance FIRST).** Wire
+      `FEATURE_GREEN → STAGING_GREEN` inheritance. **Implemented in `python-quality-gates-v2.yml` (the reusable v2
+      workflow, pinned `@live-defi-rollout` → live fleet-wide) NOT `ci-status-update.yml`** — that's where the
+      branch→status mapping lives: the "Record CI status" step now reads `github.base_ref` and a green PR _into_ staging
+      maps to `STAGING_GREEN` (the promote PR's v2 IS the staging gate). Additive — `push:[staging]` still also sets it
+      until STEP 3, so no regression. Only `staging` is inherited (not `main`). **MUST stay ahead of STEP 3.** —
+      unified-trading-pm@e9938a425
+- [x] ✅ [CODE] P2. **Drop `push:[staging]` QG — STEP 2 of 3 (detector) — recorded as a forward constraint.** The @4950
+      zero-check-run detector **does not exist yet** (it's an open "should" in `cicd_contract_hardening` @4950, future
+      `monitoring_control_plane_master_2026_06_10.md` dashboard work) — so there is nothing to _adapt_ today, and A3 is
+      NOT currently blocked by a false-positive. **Constraint recorded** (here + the codex LDR-trunk section): when
+      @4950 is built, a staging head with no _push_ check must be treated as LEGITIMATE when its merged promote PR
+      carried the v2 check (flag only no-check AND no-merged-PR-check), else it false-positives on every drain merge
+      post-A3.
 - [ ] [CI] P1. **Drop `push:[staging]` QG — STEP 3 of 3 (template + rollout).** Remove `staging` from the `push:`
       branches in `scripts/workflow-templates/quality-gates-v2.yml.tmpl` (keep `pull_request:[main,staging]` +
       `push:[main]`), then `rollout-workflow-templates.sh --template quality-gates-v2` to all 24 repos + commit each
@@ -150,6 +172,41 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       `--auto --squash` arms + merges (execution-service #254 merged via the probe). **VERIFY end-to-end** once it
       reaches PM `main` (Option-B) + the next :13/:43 tick auto-merges a promote via the squash fallback. Finding + fix:
       harsh slot, 2026-06-10.
+
+### Track D — LDR integrity (promote-PR provenance + push tripwire + PR hygiene)
+
+- [x] ✅ [CI] P1. **Promote-PR provenance gate (the enforcement) — staging drain DONE.** **Implementation pivot:**
+      `check_strict_quickmerge.py` is NOT present in target-repo checkouts (only in PM), so it can't run in the per-repo
+      v2 aggregation job. Implemented instead **in the Tier-C drain itself** (`ldr-to-staging-promote.yml`, which checks
+      out PM and HAS the script) — exactly the "promote _bot_ gates" framing: before arming auto-merge for a repo, the
+      drain shallow-fetches that repo's `staging`+`live-defi-rollout` into a temp repo and runs the SSOT checker over
+      `origin/staging..origin/live-defi-rollout --block`. A **clear** violation → auto-merge NOT armed, PR left open +
+      commented, counted BLOCKED. **FAIL-OPEN** on fetch/checker error (distinguishes a real violation — output contains
+      `bypassed quickmerge` — from an internal error, so a checker bug never jams promotion). Reuses the checker's
+      carve-out classification (PB1). **Note vs original spec:** this is a "don't-arm-auto-merge" gate (PR sits open),
+      NOT a v2-RED hard-block — bad content can't auto-promote, but isn't admin-unmergeable. —
+      unified-trading-pm@e9938a425
+  - [x] ✅ **Mirror DONE:** the gate is now in `ldr-to-main-promote.yml` (PM's LDR→main; range
+        `origin/main..origin/live-defi-rollout`, checked directly since PM is the checkout; gates both arm sites).
+        PM-only so mostly carve-outs. — unified-trading-pm@3cae03cf5. (Optional stronger variant: a true v2-RED
+        hard-block would need the checker fetched into the per-repo v2 job — deferred; the drain gate is sufficient for
+        "bot promotes only provenanced content".)
+- [ ] [CI] P2. **Push tripwire (faster detection — optional, build after P1).** Non-blocking `push: live-defi-rollout`
+      GHA running the SAME `check_strict_quickmerge.py`; a violation fires a `#ci-failures` alert (+ optional QG) so a
+      bypass is caught at push, not ≤30 min later at the drain. Latency-reduction only — the promote-PR gate (above) is
+      the actual safety. **LDR never runs QG on a clean (trailered) push.**
+- [ ] [SCRIPT] P2. **Auto-close stale/superseded promote PRs (no manual cleanup).** Extend `ci_failure_watcher.py`:
+      close any LDR→staging (or →main) PR whose commits are already in the base by **`git patch-id`/`git cherry` content
+      equivalence — NOT SHA membership** (the drain rebases/squashes → staging SHAs differ; SHA checks never match → PRs
+      never close → the pile-up). Composes with the now-fixed `--squash` auto-merge arming (line 143 todo).
+- [ ] [SCRIPT] P2. **Parallelize the drain + SIT within a tier.** `ldr-to-staging-promote.yml` reads
+      `topologicalOrder.levels[]` (correct order) but iterates **serially** in a bash for-loop — repos in the same tier
+      with no inter-dep (e.g. instruments-service ∥ MTDS) run one-after-another. Fan them out (background jobs + a
+      `wait` barrier between tiers) so promotion wall-clock = longest dependency chain, not the sum. Same for the
+      `full-workspace-sit` assembly. Composes with @4933 (per-cone locks).
+- [ ] [SCRIPT] P3. **Stale-checkout / stale-PR host monitoring.** Extend the slot Slack monitoring to flag stale promote
+      PRs + stale branch checkouts on any host (laptops ikenna/harsh · vm-0/vm-planning · epic VMs when up). Composes
+      with `verify-slot-host-symmetry.sh`.
 
 ## Success criteria
 

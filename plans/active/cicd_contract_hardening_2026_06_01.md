@@ -412,20 +412,20 @@ what the operator is seeing:
       (active escalation worker) left protected; VM PM clone was 60 behind on auto-inventory churn → stash + ff-pull →
       PlanRegenLoop unblocked. Also killed 5 orphaned claude procs from May-29/Jun-01 (not panes of any session).
 - [~] [DEVOPS] P1. **`sit-debounce-trigger` \*/5 cron is effectively DEAD + `staging-changed` repository_dispatch not
-      arriving — the ONLY staging-unlock mechanism silently stalls (found 2026-06-10, slot-1).** The 10:57Z
-      execution-service v0.6.0 cascade lock dangled 1.5h+ because sit-debounce-trigger (owner of both the SIT dispatch
-      AND the dangling-lock auto-clear) last ran 10:02Z — run history shows sparse event-triggered runs
-      (06:47/07:07/08:33/10:02), NOT \*/5 cron firings, and the 11:44–11:57Z staging pushes produced ZERO
-      `staging-changed` dispatches. Manual `gh workflow run sit-debounce-trigger.yml` (run 27272500217, 11:17Z) was the
-      unblock. FIX (repo: `unified-trading-pm`): (1) diagnose why the `schedule:` isn't firing (GitHub silently disables
-      schedules in some states; check the workflow-enabled bit + actor) and why `staging-changed` dispatch senders
-      stopped; (2) `promotion_lag_monitor.py` should page when `staging_status.locked` age > 30 min with no
-      sit-debounce-trigger run since lock-set (the lock-dangle signature); (3) consider folding the dangling-lock
-      auto-clear into `ci-failure-watcher` (which provably runs every 15 min) so unlock liveness doesn't depend on a
-      single stallable workflow. Context: the cascade stale-read mis-read (run 27271453887 — pre-dispatch FAILING repos
-      counted as cascade failures at t=0s) was already root-fixed on main (STALE-READ GUARD in
-      `cascade-qg-ordering.yml`); the remaining gap is unlock LIVENESS, not cascade correctness.
-      **PARTIAL FIX 2026-06-10 (harsh slot-2) — diagnosis CORRECTED + 2 of 3 parts landed (`unified-trading-pm`):**
+  arriving — the ONLY staging-unlock mechanism silently stalls (found 2026-06-10, slot-1).** The 10:57Z
+  execution-service v0.6.0 cascade lock dangled 1.5h+ because sit-debounce-trigger (owner of both the SIT dispatch AND
+  the dangling-lock auto-clear) last ran 10:02Z — run history shows sparse event-triggered runs
+  (06:47/07:07/08:33/10:02), NOT \*/5 cron firings, and the 11:44–11:57Z staging pushes produced ZERO `staging-changed`
+  dispatches. Manual `gh workflow run sit-debounce-trigger.yml` (run 27272500217, 11:17Z) was the unblock. FIX (repo:
+  `unified-trading-pm`): (1) diagnose why the `schedule:` isn't firing (GitHub silently disables schedules in some
+  states; check the workflow-enabled bit + actor) and why `staging-changed` dispatch senders stopped; (2)
+  `promotion_lag_monitor.py` should page when `staging_status.locked` age > 30 min with no sit-debounce-trigger run
+  since lock-set (the lock-dangle signature); (3) consider folding the dangling-lock auto-clear into
+  `ci-failure-watcher` (which provably runs every 15 min) so unlock liveness doesn't depend on a single stallable
+  workflow. Context: the cascade stale-read mis-read (run 27271453887 — pre-dispatch FAILING repos counted as cascade
+  failures at t=0s) was already root-fixed on main (STALE-READ GUARD in `cascade-qg-ordering.yml`); the remaining gap is
+  unlock LIVENESS, not cascade correctness. **PARTIAL FIX 2026-06-10 (harsh slot-2) — diagnosis CORRECTED + 2 of 3 parts
+  landed (`unified-trading-pm`):**
   - ✅ **De-grouped `sit-debounce-trigger` from the shared `manifest-update` concurrency group → its OWN
     `sit-debounce-trigger` group.** ROOT CAUSE was NOT "schedule disabled": the `schedule:` DOES fire, but (a) GitHub
     THROTTLES the `*/5` cron to ~75 min, and (b) the near-continuous `ci-status-update` (same `manifest-update` group)
@@ -438,14 +438,15 @@ what the operator is seeing:
   - ❌ **CORRECTION to original fix #3:** `ci-failure-watcher` is throttled to ~75 min IDENTICALLY (NOT "provably every
     15 min" — verified its actual run cadence) AND is `contents: read` (cannot write the manifest), so folding the
     dangling-lock auto-clear into it would NOT help. Superseded by the de-group + lag-paging above.
-  - [x] ✅ **REMAINING → DONE 2026-06-10 (harsh slot-1, `update-repo-version.yml@d2dd1f673`):** the real-time trigger was
-    DEAD CODE (no sender) — sit-debounce listens for `repository_dispatch: [staging-changed]`, but a fleet grep showed the
-    only `staging-changed` sends target `system-integration-tests`; every PM-targeted dispatch used
-    `promotion-conflict`/`tier-ab-green`/etc. So unlock relied ENTIRELY on the ~75-min throttled cron. FIX (turned out
-    **PM-only — NO fleet rollout**, since `update-repo-version.yml` is a PM workflow, not a per-repo template): added a
-    `staging-changed` dispatch to PM right after `update-repo-version.yml` records `staging_versions` (branch=staging) —
-    the precise "a repo promoted to staging" signal → sit-debounce wakes in seconds. Loop-free (sit-debounce forwards to
-    SIT, never `version-bump`; update-repo-version only listens for `version-bump`). yaml-valid. repo: unified-trading-pm.
+  - [x] ✅ **REMAINING → DONE 2026-06-10 (harsh slot-1, `update-repo-version.yml@d2dd1f673`):** the real-time trigger
+        was DEAD CODE (no sender) — sit-debounce listens for `repository_dispatch: [staging-changed]`, but a fleet grep
+        showed the only `staging-changed` sends target `system-integration-tests`; every PM-targeted dispatch used
+        `promotion-conflict`/`tier-ab-green`/etc. So unlock relied ENTIRELY on the ~75-min throttled cron. FIX (turned
+        out **PM-only — NO fleet rollout**, since `update-repo-version.yml` is a PM workflow, not a per-repo template):
+        added a `staging-changed` dispatch to PM right after `update-repo-version.yml` records `staging_versions`
+        (branch=staging) — the precise "a repo promoted to staging" signal → sit-debounce wakes in seconds. Loop-free
+        (sit-debounce forwards to SIT, never `version-bump`; update-repo-version only listens for `version-bump`).
+        yaml-valid. repo: unified-trading-pm.
 - [x] ✅ [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCK — RESOLVED by operator 2026-06-08 ("budget is updated"); CI
       runs again.** Verified: PM canary leg-A + #179 `quality-gates-v2` both ran (9-step jobs, not 0-step setup-fails)
       after the operator raised the Actions spending limit. Follow-up (separate item below): a billing-block DETECTOR
@@ -4962,3 +4963,26 @@ Open follow-ups:
 - [ ] [DOCS] P2. ci_local_qg_parity evidence: local QG green ×3 while CI lint-codex red on the same tree (deployment-api
       2026-06-10, budget 24>23 counted differently local-vs-CI) — add reproducer to `ci_local_qg_parity_2026_06_08.md`
       scope.
+
+### CI/CD event persistence had NEVER persisted (bug #10, found 2026-06-10 slot-3)
+
+- [x] ✅ [INFRA] The persist-cicd-event default bucket `unified-trading-cicd-events` did not exist and no
+      `CICD_EVENTS_BUCKET` var overrode it — every persist job since inception silently no-opped (best-effort
+      `||     true` swallowed it; silence read as success). Bucket CREATED 2026-06-10 (asia-northeast1, UBLA); read path
+      verified end-to-end (ledger → /api/repo-ci/alerts → Alerts tab).
+- [ ] [CI] P2. Persist failures must be VISIBLE: persist-cicd-event + the notify-slack ledger step should emit a
+      ::warning (and the failure-injection matrix must cover "ledger write failing") — best-effort must not mean
+      silent-forever again.
+- [ ] [INFRA] P3. Confirm the GHA runner SA (GCP_SA_KEY) has objectAdmin on the new bucket — first real persist after
+      bucket creation is the proof (check cicd/events/ fills on the next workflow completion).
+
+### staging_commits only populated on SIT-locked cycles (bug #11, found 2026-06-10 slot-3)
+
+- [ ] [CI] P1. **Non-breaking staging merges are INVISIBLE to the staging→main drain**: `staging-to-main.yml` iterates
+      `staging_status`/`staging_commits`, which only sit-gate's LOCK step records — a non-breaking squash-merge to
+      staging (the common case!) never registers, so the drain never promotes it (observed:
+      deployment-api/deployment-ui/e2e-testing repo-ci ships sat in staging with no path to main; drained manually via
+      per-repo staging→main PRs #51/#43/#28 — the CLAUDE.md-sanctioned fallback). Fix direction: either (a) record
+      staging merges into staging_commits on EVERY staging push (a light workflow or the staging-backmerge hook), or (b)
+      make staging-to-main enumerate repos by `compare(main...staging).files > 0` instead of the manifest record.
+      Composes with bug #7 (squash-body [skip ci]) — both hit the same drain.

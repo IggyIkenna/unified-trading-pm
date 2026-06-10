@@ -116,13 +116,19 @@ steps:
       - "-c"
       - |
         set -euo pipefail
+        # NOTE: double-dollar escapes shell vars from Cloud Build's OWN substitution pass
+        # (PROJECT_ID is deliberately single-dollar — it IS a Cloud Build substitution).
+        # The substitution validator scans this WHOLE block INCLUDING these comment lines,
+        # so even prose may not contain dollar-PIN/dollar-BASE (live incident 2026-06-10:
+        # the config was rejected twice — first for unescaped shell vars, then for the
+        # explanatory comment that mentioned them with dollars).
         BASE="asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library"
-        PIN=$(sed -n 's/^ARG BASE_IMAGE_DIGEST=\(sha256:[0-9a-f]\{64\}\).*/\1/p' Dockerfile | head -1 || true)
-        if [ -n "$PIN" ]; then
-          echo "pinned base digest: $PIN — pre-pulling the PINNED manifest"
-          docker pull "${BASE}@${PIN}"
+        PIN=$$(sed -n 's/^ARG BASE_IMAGE_DIGEST=\(sha256:[0-9a-f]\{64\}\).*/\1/p' Dockerfile | head -1 || true)
+        if [ -n "$$PIN" ]; then
+          echo "pinned base digest: $$PIN — pre-pulling the PINNED manifest"
+          docker pull "$${BASE}@$${PIN}"
         fi
-        docker pull "${BASE}:latest" || true
+        docker pull "$${BASE}:latest" || true
     waitFor: ["configure-docker"]
 
   # ── STEP 4: Build Docker image ────────────────────────────────────────────
