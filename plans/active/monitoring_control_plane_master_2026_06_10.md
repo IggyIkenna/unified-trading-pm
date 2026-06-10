@@ -125,3 +125,19 @@ page) — P2, after both v1s ship.
 - Replacing Slack alerting or changing watcher cadences — alerting stays as-is; this master only adds read surfaces.
 - Write actions from the CI dashboard (re-trigger v2, merge PRs) — read-only v1; any write surface is a future plan with
   its own auth review.
+
+## Progress log
+
+- **2026-06-10 (slot-3)** — deployment-api aggregator BUILT + live-verified (25 repos, real SHAs, 10 real stuck
+  conflict-wall PRs surfaced on first run; detail endpoint shows per-branch history with slot-attributed authors).
+  deployment-ui Repos CI page built (route `/repos`, SIT panel + stuck panel + matrix + dropdown), vitest 8/8, pw
+  164/164 smoke + regression spec green. Ships pending staging unlock.
+- **2026-06-10 — the dashboard's domain found three live CI bugs while building it** (all fixed in real time):
+  1. `cascade-qg-ordering.yml` t=0 stale-read instant-fail (judged dispatched repos by CURRENT ci_status — a
+     pre-dispatch FAILING killed the cascade in 31s while the fresh QG passed 2 min later) + missing git identity
+     (invalidation manifest write silently lost). Fixed PM@ea45791a6 → main via PR #209 (baseline-aware poll).
+  2. e2e-testing + system-integration-tests QG red: the 2026-06-10 manifest-alignment parity change excluded `tests/`
+     from import scanning — harness repos' imports ALL live there → every declared dep flagged. Fixed with the
+     documented `MANIFEST_ALIGNMENT_SKIP=true` (e2e-testing@396610d, system-integration-tests@19fea22).
+  3. deployment-api `get_secret_client` first positional is `provider` not `project_id` (live 500) — fixed with keyword
+     arg; checks-API 403s degraded per-repo (shard-level isolation), never response-fatal.
