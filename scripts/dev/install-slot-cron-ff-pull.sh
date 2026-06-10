@@ -82,7 +82,16 @@ INTEGRATION_BRANCH="live-defi-rollout"
 # mode-dirty (100755→100644) vs HEAD → the FF-pull/git-status crons then see the root clone as dirty
 # and SKIP it, so it silently falls behind (the exec-bit-drop drift). Restoring 755 keeps the managed
 # script clean + executable. (cron-branch-overrides.txt is data, not a script → checked out directly.)
-SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/dev/slot-cron-ff-pull.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/dev/slot-cron-ff-pull.sh && chmod 755 scripts/dev/slot-cron-ff-pull.sh; else rm -f \"\$t\"; fi; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/cron-branch-overrides.txt 2>/dev/null; } || true"
+# H7 (2026-06-10): keep the ROOT PM clone's CONTENT current too — not just self-pull its own script.
+# The orchestrator's PlanRegenLoop + plan-health agent read plans/active/ from THIS clone, so a stale
+# root clone starves the backlog + runs plan-health against stale data (incident 2026-06-10: vm-planning
+# root clone 545 commits behind → backlog empty, no CI-failure/plan-health work picked up). The root
+# clone is an EXECUTOR, not a workspace, so it must track LDR exactly → FF-only (never merge-commit /
+# rebase). It can go dirty from generated churn (plan-health digests, hygiene auto-fix); a plain FF then
+# fails, so on FF-failure we bounded-autostash: DROP any prior `cron-rootclone-autostash` (so stashes
+# never pile across ticks) then stash -u the current churn (reversible — the latest is always recoverable)
+# and FF. `ahead:0` is the invariant here (an executor clone never commits), so nothing is ever lost.
+SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/dev/slot-cron-ff-pull.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/dev/slot-cron-ff-pull.sh && chmod 755 scripts/dev/slot-cron-ff-pull.sh; else rm -f \"\$t\"; fi; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/cron-branch-overrides.txt 2>/dev/null; if [ \"\$(git rev-list --count HEAD..origin/${INTEGRATION_BRANCH} 2>/dev/null || echo 0)\" != 0 ]; then git merge --ff-only origin/${INTEGRATION_BRANCH} 2>/dev/null || { git stash list 2>/dev/null | grep -F cron-rootclone-autostash | sed 's/:.*//' | tac | xargs -r -n1 git stash drop 2>/dev/null; git stash push -u -q -m cron-rootclone-autostash 2>/dev/null; git merge --ff-only origin/${INTEGRATION_BRANCH} 2>/dev/null; }; fi; } || true"
 SELF_PULL_VERIFY="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/verify-slot-host-symmetry.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/verify-slot-host-symmetry.sh && chmod 755 scripts/verify-slot-host-symmetry.sh; else rm -f \"\$t\"; fi; } || true"
 
 # Periodic symmetry verify + Slack-alert-on-drift — ENFORCES the symmetric-host
