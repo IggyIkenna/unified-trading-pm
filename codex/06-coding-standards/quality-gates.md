@@ -436,6 +436,15 @@ list of pure Pydantic stub packages that have no conditional logic (vendored sch
 legitimate if: (1) `grep -c "def \|if \|for \|while \|match " <file>` returns 0 (no branching logic), AND (2) the
 package has 0 branch hits in `coverage.xml`. Plan: `plans/active/uac_coverage_90pct_2026_06_10.md`.
 
+**`market-data-processing-service` (MDPS) special target — 85% combined (2026-06-10)**: MDPS is a **service** repo (70%
+floor) self-elevated to **85% combined** (statement+branch, `branch=True`, `fail_under = 85`). Unlike UAC, MDPS has
+almost no pure-stub surface, so the 85% is held almost entirely by **logic + branch-edge tests**, not omit-list shrink:
+the only omit is the `__main__.py` entry-point shim (`run_cli()`, no logic). The two modules measured at 0%
+(`engine/mock_data_provider.py`, `api/main.py`) are **real runtime logic** (mock_data_provider is imported by
+`cli/handlers/process_handler.py`) and were **tested, not omitted**. Actual at lock time: 86.71% (statement 89.7% /
+branch 77.3%). The numba-compiled `app/calculators/numba_kernels.py` is left under-covered (needs `NUMBA_DISABLE_JIT=1`
+to instrument) — acceptable because 85% clears without it. Plan: `plans/active/mdps_coverage_85pct_2026_06_10.md`.
+
 **Rule:** `MIN_COVERAGE = max(floor, actual_coverage - 1)`. The `-1` allows one percentage point of natural churn; the
 floor is an absolute minimum that cannot be undercut.
 
