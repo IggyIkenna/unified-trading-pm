@@ -89,8 +89,11 @@ vitest/tsc (dashboard).
 
 ## Phase 4 — ship + docs
 
-- [ ] [DOCS] P2. `codex/04-architecture/agent-orchestrator-overview.md` § new "Fleet git-health page"; contribute the
-      fleet-surface section to `codex/03-observability/monitoring-control-plane.md` (master obligation).
+- [x] ✅ [DOCS] P2. DONE 2026-06-10 — `codex/04-architecture/agent-orchestrator-overview.md` § "Fleet git-health page
+      (shipped 2026-06-10)" (endpoint + scope fan-out + reporter_stale/ff_cron_stale/drift derivations + vm_errors +
+      `/fleet-git` page + deployment-ui single-pane mirror) + `codex/03-observability/monitoring-control-plane.md` §
+      "Fleet git-health (agent-orchestrator) — SHIPPED" + § "Click-through to the existing UIs" (operator click-through
+      rule: GitHub + AO deep-links).
 - [ ] [TEST] P3. **NICE-TO-HAVE — add a vitest harness to the orchestrator dashboard** (provenance: slot-3 2026-06-10
       fleet-git-health ship). The `agent-orchestrator/dashboard` repo has NO vitest/eslint installed (only
       `tsc`+`vite     build`+prettier), so the FleetGit pure mappers (`repoStateColor`/`slotBadges`/`summaryChips`,

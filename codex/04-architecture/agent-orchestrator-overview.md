@@ -159,6 +159,31 @@ See the "Secrets + buckets" table above for the current cloud bucket layout + th
 
 ---
 
+## Fleet git-health page (shipped 2026-06-10)
+
+`GET /api/fleet/git-health?scope=fleet|local` (`server/server.py`) aggregates every slot's stored `SlotGitStatus`
+(`POST/GET /api/slots/{id}/git-status`) into a hosts → slots → repos surface. `scope=fleet` (default) merges this host's
+local view with every registered VM's `scope=local` view via the existing `/api/vms/<id>/*` proxy fan-out (the
+`/api/fleet/summary` pattern); `scope=local` is the per-VM leaf (no recursion). Derivations beyond the per-slot badge:
+
+- `reporter_stale` — `reported_at` older than 10 min (a dead `slot-git-status-report.sh` cron is a first-class red
+  state, not a silent gap).
+- `ff_cron_stale` — `git_status_ff_pull_last_run` older than 15 min, **only when attested** (the reporter posts
+  `ff_pull_last_run`/`ff_pull_last_result` from the host-global result file `slot-cron-ff-pull.sh` writes each sweep);
+  un-attested = honest-unknown, never falsely "dead".
+- `drift_violation` — per repo, state `ahead`/`diverged` vs `origin/live-defi-rollout` (the Path-B invariant from
+  `scripts/cicd/slot_drift_check.py`); rolled up to `drift_violations[]`.
+- `vm_errors[]` — honest per-VM proxy failure (unreachable/bad-payload), never a fabricated row.
+
+Dashboard: the `/fleet-git` SPA route (`dashboard/src/FleetGit.tsx`) — summary chips + per-host slot rows with
+worst-first badges (reporter-dead / ff-pull-dead / drift / dirty / behind) + expandable per-repo detail. Per operator
+decision v2 (2026-06-10) the PRIMARY operator view is mirrored into **deployment-ui** (`/fleet` tab, via deployment-api
+`GET /api/repo-ci/fleet-git-health` proxying this endpoint with the SM `ORCHESTRATOR_API_TOKEN`); this orchestrator page
+stays for worker-ops use. Plan: `fleet_git_health_orchestrator_2026_06_10.md`; full division-of-surfaces + click-through
+contract: `codex/03-observability/monitoring-control-plane.md`.
+
+---
+
 ## Local dev — port 8765
 
 Port 8765 is registered in `unified-trading-pm/scripts/dev/ui-api-mapping.json`.
