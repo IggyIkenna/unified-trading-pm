@@ -657,9 +657,14 @@ fi
 echo ""
 
 # ============================================================================
-# STAGE 1.5: STAGING LOCK CHECK (--to-staging only) + PM DEPENDENCY ALIGNMENT
+# STAGE 1.5: STAGING LOCK CHECK (--hotfix only) + PM DEPENDENCY ALIGNMENT
+# LDR-trunk model (ldr_trunk_promotion_decoupling_2026_06_10): a normal commit
+# lands on the gateless LDR trunk and does NOT touch staging, so the staging lock
+# does not apply. Only a --hotfix (which opens an immediate staging PR, jumping the
+# Tier-C drain queue) must reconcile with whatever is converging on staging → it
+# alone respects the lock.
 # ============================================================================
-if [ "$TO_STAGING" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]; then
+if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]; then
   echo "=========================================="
   echo "STAGE 1.5: Staging Lock Check"
   echo "=========================================="
@@ -867,20 +872,30 @@ for dep in deps:
           && echo "[$REPO_NAME] ↻ dispatched main-backmerge-to-ldr (manifest lands on $_PM_BRANCH in ~1-3 min)" \
           || true
       fi
-      echo "[$REPO_NAME] ❌ BLOCKED: dependency version(s) still behind staging/main after PM pull:"
-      echo "$DEP_BEHIND"
-      echo "   Your deps must not be behind their staging-promoted (SIT-tested) versions."
-      if [ "$_PM_BRANCH" = "main" ] || [ -z "$_PM_BRANCH" ]; then
-        echo "   Sync PM + re-align, then re-run:"
-        echo "     cd unified-trading-pm && git pull origin main"
+      # LDR-trunk model: building against a dep that is version-behind-staging is a legitimate
+      # local deviation on the gateless trunk — the Tier-C drain + SIT re-gate dep-order before
+      # staging. So for a normal landing this is a WARN, not a block. A --hotfix (immediate staging
+      # PR) must still reconcile with the staging-promoted (SIT-tested) versions → it stays a BLOCK.
+      if [ "$HOTFIX" != true ]; then
+        echo "[$REPO_NAME] ⚠️  dep version(s) behind staging/main — LDR-trunk landing allowed (WARN, not block):"
+        echo "$DEP_BEHIND"
+        echo "   The Tier-C drain + SIT re-gate dep-order before staging. (--hotfix would BLOCK here.)"
       else
-        echo "   PM checkout is '$_PM_BRANCH' (Path-B slot): the newer manifest reaches it via the"
-        echo "   main→LDR backmerge (dispatched above, best-effort). Wait ~1-3 min, then re-run after:"
-        echo "     cd unified-trading-pm && git pull --rebase --autostash origin $_PM_BRANCH"
+        echo "[$REPO_NAME] ❌ BLOCKED (--hotfix): dependency version(s) still behind staging/main after PM pull:"
+        echo "$DEP_BEHIND"
+        echo "   A hotfix must reconcile with the staging-promoted (SIT-tested) versions."
+        if [ "$_PM_BRANCH" = "main" ] || [ -z "$_PM_BRANCH" ]; then
+          echo "   Sync PM + re-align, then re-run:"
+          echo "     cd unified-trading-pm && git pull origin main"
+        else
+          echo "   PM checkout is '$_PM_BRANCH' (Path-B slot): the newer manifest reaches it via the"
+          echo "   main→LDR backmerge (dispatched above, best-effort). Wait ~1-3 min, then re-run after:"
+          echo "     cd unified-trading-pm && git pull --rebase --autostash origin $_PM_BRANCH"
+        fi
+        echo "     python scripts/manifest/fix_external_dependency_alignment.py --apply   # if pyproject pins drifted"
+        echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+        exit 1
       fi
-      echo "     python scripts/manifest/fix_external_dependency_alignment.py --apply   # if pyproject pins drifted"
-      echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
-      exit 1
     fi
     echo ""
   fi
@@ -904,8 +919,11 @@ fi
 # Exempt from check:              no dependencies, manifest not found, dep not in manifest
 #
 # Human-only escape: --skip-dep-tier-gate (agents MUST NOT use; see flag guard above).
+# LDR-trunk model: a normal commit lands on LDR, where the Tier-C drain
+# (ldr-to-staging-promote) re-enforces dep-order before staging — so this gate is
+# scoped to --hotfix (the only path that promotes to staging immediately).
 # ============================================================================
-if [ "$TO_STAGING" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]; then
+if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]; then
   if [ "$SKIP_DEP_TIER_GATE" = "true" ]; then
     echo "=========================================="
     echo "STAGE 1.7: Dependency Tier-Readiness Gate"
@@ -1354,6 +1372,22 @@ elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"
+fi
+
+# ============================================================================
+# LDR-TRUNK MODEL (ldr_trunk_promotion_decoupling_2026_06_10): a normal service-repo
+# commit LANDS ON LDR AND STOPS. The Tier-C drain (ldr-to-staging-promote, every 30min)
+# promotes LDR→staging in tier order with the dep-order gate, and that drain PR's
+# quality-gates-v2 (deps resolved against staging-tier) is the authoritative server gate.
+# We do NOT open a per-unit staging PR here — that re-couples every commit to staging
+# state (the staging-lock serialization + the direct-resolution failure class). Only
+# --hotfix opens an immediate staging PR (break-glass, respects the lock above).
+# PM (Option B) and [skip ci] keep their direct-to-main PR below.
+# ============================================================================
+if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH. Tier-C drain (≤30min) promotes LDR→staging (v2-gated, dep-order-checked)."
+  echo "[$REPO_NAME]    Need it on staging now? re-run with --hotfix (opens a staging PR; respects the staging lock)."
+  exit 0
 fi
 
 # Check staging lock status and inform user (do not abort — GitHub auto-merge queue will hold the PR)
