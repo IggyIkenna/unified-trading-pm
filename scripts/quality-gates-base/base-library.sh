@@ -1223,7 +1223,9 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # the tests/typecheck phases; refreshing would let quickmerge ship without re-running tests).
 # Written to PROJECT_ROOT (the gated repo root — where quickmerge --agent reads it), same dir
 # as the content sentinel below. Guarded identically to that write (full green: tests ran, not quick).
-if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ -z "${QG_SLICE:-}" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
+# SENTINEL CONTRACT (HARD, 2026-06-10): QG_FAST (the future change-scoped fast tier) is excluded
+# like QG_SLICE — partial-surface runs must NEVER write this file (mirror of base-service.sh).
+if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
     git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"

@@ -116,14 +116,18 @@ run_timeout() {
     else "$@"; fi
 }
 
-# ── QG STEP-RESULT CACHE (.qg_cache/, gitignored) ────────────────────────────
+# ── QG STEP-RESULT CACHE (out-of-repo, ~/.cache/qg/<repo>/) ──────────────────
 # Content-keyed skip cache for FIXED-COST gate steps (pip-audit / bandit /
 # actionlint). Plan: plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
 # Phase 3 (per-step cost reduction). Contract:
-#   - Cache files live under ${PROJECT_ROOT}/.qg_cache/ — per-repo, local-only,
-#     gitignored (canonical template scripts/propagation/templates/gitignore-python.txt).
-#     CI safety: the dir does not exist in a fresh CI checkout → first run is always
-#     a full run (correct by construction).
+#   - Cache lives OUTSIDE the repo: ${QG_CACHE_ROOT:-$HOME/.cache/qg}/<repo-name>/.
+#     MOVED out of ${PROJECT_ROOT}/.qg_cache 2026-06-10 same-day: an in-repo untracked
+#     dir made EVERY post-QG tree dirty until the fleet gitignore rollout, which tripped
+#     quickmerge's dirty-DEPS pre-flight for every CONSUMER of that repo (live incident:
+#     deployment-api's ship blocked on deployment-service's .qg_cache). Out-of-repo =
+#     no dirt, no gitignore rollout dependency, pre-flight clean by construction.
+#     CI safety unchanged: the dir does not exist on a fresh CI runner → first run is
+#     always a full run (correct by construction).
 #   - A step stores its key ONLY after a CLEAN (green) run — failures / timeouts are
 #     never cached, so a red step always re-runs.
 #   - Bypass: QG_NO_CACHE=1 forces full runs (qg_cache_hit always reports miss).
@@ -132,7 +136,7 @@ if command -v sha256sum &>/dev/null; then
 else
     _qg_hash() { shasum -a 256 2>/dev/null | awk '{print $1}'; }   # stock macOS
 fi
-_QG_CACHE_DIR="${PROJECT_ROOT}/.qg_cache"
+_QG_CACHE_DIR="${QG_CACHE_ROOT:-${HOME}/.cache/qg}/$(basename "${PROJECT_ROOT}")"
 
 # Content key for a set of repo paths. Content-accurate (not mtime-based):
 #   tracked-clean   → index blob hashes (`git ls-files -s`)

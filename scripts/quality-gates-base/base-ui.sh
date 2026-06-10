@@ -480,6 +480,15 @@ if [[ "${GITHUB_ACTIONS:-}" != "true" ]] && [[ -n "${WORKSPACE_ROOT:-}" ]]; then
     fi
 fi
 
+# SHA sentinel for quickmerge Pass-2 (parity fix 2026-06-10): base-service.sh writes
+# .qg_last_passed_sha on every COMPLETE green run, but base-ui.sh never did — so
+# `quickmerge --agent` in UI repos ALWAYS hard-refused with "Pass 1 not run (SHA mismatch)"
+# even straight after a green gate. Write it here, the single complete-green exit point.
+_UI_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+git rev-parse HEAD > "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null \
+    && echo "Sentinel written: .qg_last_passed_sha=$(cat "${_UI_REPO_ROOT}/.qg_last_passed_sha")" \
+    || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL UI QUALITY GATES PASSED (${DUR}s) — base-ui.sh v2.0${NC}"
 echo "======================================================================"

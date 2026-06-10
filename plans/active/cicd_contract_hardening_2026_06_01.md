@@ -333,10 +333,17 @@ v2**, so re-trigger + scoped-lock clears them (no force).
       _failed_ — not never-reported — required check; PM SSOT + UTL + UAC moved together; non-clone repos followed)
       landed and the stuck heads were re-triggered (close+reopen under PAT → fires v2 + scoped lock-check). — verified
       2026-06-10: template + per-repo copies present and running.
-- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR** — operator should add **Checks: Read** to the fine-grained `GH_PAT` (Secret
-      Manager) so the scoped staging-lock-check's `…/check-runs` calls don't 403 and the rollout can be cleanly
-      monitored / registered as a scoped required check. Residual operator-permission piece split out of the now-done #1
-      rollout (2026-06-10).
+- [x] ✅ [SCRIPT] P2. **Checks: Read — PREMISE DEAD, resolved code-side 2026-06-10.** The operator attempted the grant
+      live and GitHub's fine-grained-token permission picker **offers NO "Checks" permission at all** (full picker list
+      verified: Actions…Workflows — no Checks entry), so the `…/check-runs` 403 is **not grantable**; GraphQL
+      `statusCheckRollup` ALSO 403s per-CheckRun-node with the PAT (earlier in-session successes rode the gh keyring's
+      OAuth token, which doesn't exist in CI). **Fix shipped instead**: (a) both promote workflows' `HAS_V2` probes
+      (`ldr-to-main-promote.yml` + `ldr-to-staging-promote.yml`) now use the **Actions-API run lookup**
+      (`gh run list --workflow quality-gates-v2.yml` filtered by head SHA — works with the PAT's Actions permission;
+      live-verified) **with ERR≠0 distinction** — the old `|| echo 0` made every 403 read as "v2 never reported" →
+      **every blocked PR was being close+reopened spuriously on every tick** (live churn defect, now fail-safe); (b)
+      `ci_failure_watcher._run_is_billing_block` gains a structural fallback (annotations unreadable + ALL jobs
+      zero-step → billing signature) — annotation-403 had silently disabled billing-outage detection entirely.
 - [x] ✅ [SCRIPT] P0. **#3 tab-mirror leg-A → `GH_PAT` — DONE + VERIFIED + ROLLED OUT FLEET-WIDE 2026-06-08 (slot-1).**
       Canary (PM `tab/ikennaigboaka/1`) leg-A ran GREEN (9 steps) and FF'd PM `live-defi-rollout` to the PAT-swap
       commit; then rolled out to **all 24 repos** (`unified-trading-pm@1bd99d67b`/`28106739c` SSOT → per-repo `.github`)
@@ -2351,20 +2358,23 @@ by a PR:
       authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
       workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA
       dispatch + a worker prompt; build + e2e-test on one repo before fleet-wide.
-- [ ] [SCRIPT] P1. **Wire the ci-failure-watcher stuck-PR output INTO the orchestrator-dispatch escalation (auto-triage,
-      not just a Slack page).** Today the watcher's auto-merge-stuck poller (`ci_failure_watcher.py` →
-      `detect_stuck_prs`) only pages `#ci-failures`; a human/agent then manually triages **close-superseded vs
-      resolve-conflict-on-LDR** — done by hand 2026-06-01 for 7 wedged PRs (execution#176, mtds#65, deployment-api#9,
-      deployment-ui#8, batch-live#5, uac#54, ibkr#7 — all stale, each superseded by a newer merged promotion into the
-      same base; closed-with-"superseded by #N"- comment, branches retained). **Automate via the now-built escalation**
-      (`agent-orchestrator/server/escalation.py` + `.github/workflows/escalate-to-orchestrator.yml` +
-      `agents/escalate.md`): (1) add a `stuck_promotion_pr` member to `WALL_TYPES` (today
-      `merge_conflict|label_mismatch|sit_failure`); (2) extend `agents/escalate.md` with the stuck-PR triage rubric —
-      **FIRST check supersession** (a newer merged PR into the same base, or head fully behind base → **close with a
-      `superseded by #N` comment**, retain branch), **ELSE resolve the conflict ON `live-defi-rollout`** per the
-      force-rule + re-enable auto-merge (never a throwaway branch); **never unilaterally close a FOREIGN slot's PR**
-      (`tab/hk/*`) → ping the authoring slot/Harsh instead; (3) have the watcher (or a thin companion) dispatch
-      `escalate-to-orchestrator.yml` once per stuck PR it surfaces (pass `repo`, `pr_number`,
+- [x] ✅ DONE-BY-OTHER-MEANS / superseded (2026-06-10) — the codified auto-recover-vs-escalate split (CLAUDE.md
+      2026-06-09) already routes mechanical deadlocks in-band and genuine conflict walls via --escalate; today's
+      Actions-API fix made the recovery probes fail-safe. Wiring stuck-PRs into escalation as written would
+      double-handle and re-create headroom-exhaustion noise. Was: [SCRIPT] P1. **Wire the ci-failure-watcher stuck-PR
+      output INTO the orchestrator-dispatch escalation (auto-triage, not just a Slack page).** Today the watcher's
+      auto-merge-stuck poller (`ci_failure_watcher.py` → `detect_stuck_prs`) only pages `#ci-failures`; a human/agent
+      then manually triages **close-superseded vs resolve-conflict-on-LDR** — done by hand 2026-06-01 for 7 wedged PRs
+      (execution#176, mtds#65, deployment-api#9, deployment-ui#8, batch-live#5, uac#54, ibkr#7 — all stale, each
+      superseded by a newer merged promotion into the same base; closed-with-"superseded by #N"- comment, branches
+      retained). **Automate via the now-built escalation** (`agent-orchestrator/server/escalation.py` +
+      `.github/workflows/escalate-to-orchestrator.yml` + `agents/escalate.md`): (1) add a `stuck_promotion_pr` member to
+      `WALL_TYPES` (today `merge_conflict|label_mismatch|sit_failure`); (2) extend `agents/escalate.md` with the
+      stuck-PR triage rubric — **FIRST check supersession** (a newer merged PR into the same base, or head fully behind
+      base → **close with a `superseded by #N` comment**, retain branch), **ELSE resolve the conflict ON
+      `live-defi-rollout`** per the force-rule + re-enable auto-merge (never a throwaway branch); **never unilaterally
+      close a FOREIGN slot's PR** (`tab/hk/*`) → ping the authoring slot/Harsh instead; (3) have the watcher (or a thin
+      companion) dispatch `escalate-to-orchestrator.yml` once per stuck PR it surfaces (pass `repo`, `pr_number`,
       `wall_type=stuck_promotion_pr`, `context`=mergeStateStatus+age+supersession-candidate, `authoring_slot` parsed
       from the `tab/<op>/<N>` head), gated to auto-merge-ON / promotion-contract heads exactly like the poller, with
       **per-PR dedup so it dispatches once, not every 15-min tick**. This is the DETERMINISTIC-detect →
@@ -4904,3 +4914,21 @@ Open follow-ups:
       Repos-CI dashboard SIT panel). Lock duration becomes the longest cone, not the sum. Requires: per-cone
       staging_status partitions + sit-debounce batching by cone + overlap detection (overlapping cones still serialize).
       Design doc before code; interacts with `staging_status` being a single manifest object.
+
+### Squash-body [skip ci] suppression of the staging drain (bug #7, found live 2026-06-10 slot-3)
+
+- [ ] [CI] P1. **Sanitize the Tier C auto-drain squash body**: the LDR→staging promote PR squash-merges with the default
+      body (= list of squashed commit subjects). Any squashed commit whose SUBJECT merely MENTIONS a CI-suppression
+      token poisons the squash message — observed live: subject `ci: drop [skip ci] from dep-pin     commit…` (a fix
+      ABOUT removing [skip ci]) suppressed ALL workflows on the staging push for deployment-ui#41 / deployment-api#43 /
+      e2e-testing#26 → v2-on-staging never ran → semver never fired → staging→main dead, silently. Fix in
+      `ldr-to-staging-promote` template (and PM `ldr-to-main-promote.yml`): set an explicit squash commit message/body
+      at auto-merge-arm time (`gh pr merge --squash --subject … --body "Squash of N commits — see PR"`) OR strip the
+      token set (`[skip ci] [ci skip] [no ci] [skip actions] [actions skip]`) from the body. Recovery used 2026-06-10:
+      `gh workflow run quality-gates-v2.yml --ref staging` per repo.
+- [ ] [CODE] P2. Dashboard alert-parity: the Repos-CI overview should flag a staging head with ZERO check runs (the
+      silent-suppression signature) — composes with the failure-injection matrix in
+      `monitoring_control_plane_master_2026_06_10.md`.
+- [ ] [DOCS] P2. ci_local_qg_parity evidence: local QG green ×3 while CI lint-codex red on the same tree (deployment-api
+      2026-06-10, budget 24>23 counted differently local-vs-CI) — add reproducer to `ci_local_qg_parity_2026_06_08.md`
+      scope.

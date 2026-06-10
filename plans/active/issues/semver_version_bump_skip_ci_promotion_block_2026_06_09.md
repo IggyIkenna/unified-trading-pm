@@ -419,10 +419,10 @@ the baseline writer is healthy. Option C needs a baseline-independent re-entry b
       `workflow_run.head_commit` message starts `chore(release): bump version` (re-entry brake independent of baseline
       state); keep the range-based classification for the genuine-bump path. Repo: `unified-trading-pm`
       (`semver-agent.yml` template) + fleet rollout.
-- [x] ✅ [SCRIPT] P1. **Bump-rate circuit breaker** — semver-agent refuses (+ pages CRITICAL) when the repo already has ≥3
-      `chore(release):` commits on staging in the last hour; a runaway must self-halt, not wait for a human to notice
-      version 0.30.0. Repo: `unified-trading-pm` (template) + fleet. Shipped: ≥3 bumps-in-1h-or-consecutive on staging
-      → refuse + CRITICAL Slack, in template + PM copy — unified-trading-pm@6a0128906 | verified 2026-06-10
+- [x] ✅ [SCRIPT] P1. **Bump-rate circuit breaker** — semver-agent refuses (+ pages CRITICAL) when the repo already has
+      ≥3 `chore(release):` commits on staging in the last hour; a runaway must self-halt, not wait for a human to notice
+      version 0.30.0. Repo: `unified-trading-pm` (template) + fleet. Shipped: ≥3 bumps-in-1h-or-consecutive on staging →
+      refuse + CRITICAL Slack, in template + PM copy — unified-trading-pm@6a0128906 | verified 2026-06-10
 - [x] ✅ [SCRIPT] P2. **Baseline-writer SPOF**: when the PM `version-bump` dispatch fails (non-2xx) or
       `update-repo-version` reports failure, semver-agent must treat the baseline as UNRELIABLE and halt further bumps
       for that repo until a successful manifest write — the writer's health gates the loop's fuel line. Repo:
@@ -441,6 +441,9 @@ the baseline writer is healthy. Option C needs a baseline-independent re-entry b
       `manifest-update` concurrency group holds 1 running + ONLY 1 queued slot, a newer dispatch REPLACES the queued one
       (`cancel-in-progress: false` protects only the RUNNING run) → every contended dispatch pair silently loses a
       record. That is the root cause of the 01:15Z loss too — the lossy-queue fix is the open P1 below.**
+      **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: re-dispatches must be SPACED to respect the
+      new >=3-pending-bump circuit breaker (semver-agent, shipped 2026-06-10) — a mass re-dispatch trips it by design
+      and pages CRITICAL. One repo at a time, confirm each bump lands before the next.
 - [ ] [SCRIPT] P1. **Lossy dispatch queue (verified live)** — make `update-repo-version` records loss-proof: retry/
       re-dispatch on cancellation (the canceller knows the payload), or drop the GH concurrency group for a
       payload-queue (e.g. append dispatches to a queue file/issue and have one serialized worker drain it), or have

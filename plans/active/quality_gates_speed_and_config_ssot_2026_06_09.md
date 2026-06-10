@@ -126,11 +126,11 @@ source:
       source/omit/branch, pytest testpaths/addopts/markers, bandit skips, ruff/basedpyright/python version pins, exclude
       lists) record (a) toml location, (b) stub/base location, (c) does base pass a CLI flag that overrides toml?, (d)
       verdict ∈ {agree, drift, shadowed, bash-only}. Seed from the MTDS findings already gathered. Land as
-      `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md`. ✅ — landed 2026-06-10 (unified-trading-pm@779dc3683): all concepts
-      classified (a)–(d); per-repo NUMERIC sweep complete for coverage (5 confirmed drifts: alerting 76/78 · mdps 70/77
-      · mtds 28/71 · SIT 2/0 · uta 77/70 — uta/SIT are the silent-loosen direction) + `[tool.bandit]` presence (~20
-      repos, ALL dead — see next item). Residual depth (per-repo testpaths/omit/version-pin value columns) only needed
-      if Phase 1 hits a repo-specific surprise — concept-level verdicts already decide the mechanism.
+      `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md`. ✅ — landed 2026-06-10 (unified-trading-pm@779dc3683):
+      all concepts classified (a)–(d); per-repo NUMERIC sweep complete for coverage (5 confirmed drifts: alerting 76/78
+      · mdps 70/77 · mtds 28/71 · SIT 2/0 · uta 77/70 — uta/SIT are the silent-loosen direction) + `[tool.bandit]`
+      presence (~20 repos, ALL dead — see next item). Residual depth (per-repo testpaths/omit/version-pin value columns)
+      only needed if Phase 1 hits a repo-specific surprise — concept-level verdicts already decide the mechanism.
 - [x] [AUDIT] P1. Verify the bandit-`-c` question definitively: does base-service.sh `bandit -r … -ll` (no
       `-c pyproject.toml`) actually read `[tool.bandit]`? If not, the per-repo `[tool.bandit] skips` are DEAD config (a
       shadowed-by-absence case). ✅ — VERDICT: **DEAD (shadowed-by-absence)**, verified empirically on bandit 1.9.4 /
@@ -145,7 +145,8 @@ source:
       governor/mem-cap/MAX_DURATION/PYTEST_WORKERS/codex-exclude-globs/pip-audit-ignores/size-limits — toml has no
       native home). This classification decides Phase 1's mechanism. ✅ — **13 TIER-A / 27 TIER-B**, full tables with
       per-knob migration notes in `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md`; headline: `SOURCE_DIR` is
-      the deepest duplication (5 declarations), QG\_\* env knobs stay host/session-scoped (NOT toml). (unified-trading-pm@779dc3683)
+      the deepest duplication (5 declarations), QG\_\* env knobs stay host/session-scoped (NOT toml).
+      (unified-trading-pm@779dc3683)
 
 ---
 
@@ -168,14 +169,14 @@ single-core pinned), output under gitignored `.qg_profile/`.
       was accidentally serving as it). SSOT: check_removed_symbols.py docstring "run separately via CI cron".
 - [x] [INFRA] P0. ✅ **pip-audit = 38 s (8%) OSV network** (now visible after decomposing the codex blob). Cache OSV
       results and/or move pip-audit to a deps-change/cron trigger instead of every gate run. Advisory gate → safe to
-      move off the hot path. — unified-trading-pm base-service.sh + base-library.sh (unified-trading-pm@779dc3683): ONE mechanism
-      covers both halves — deps-change trigger (key = pyproject.toml + uv.lock + ignore-set + pip-audit version →
-      `.qg_cache/pip_audit_deps_hash`) + 24h freshness bound (`QG_PIP_AUDIT_MAX_AGE_HOURS`, the cron-equivalent for
-      newly-published advisories). Clean-run-only caching (vulns/timeouts never cached); internal-advisories check stays
-      uncached (PM-yaml input, not deps); SBOM upload moved inside the miss branch (a hit must not re-upload another
-      repo's stale /tmp output); `QG_NO_CACHE=1` bypass; `.qg_cache/` gitignored (PM + canonical template) + excluded
-      from the green-sentinel untracked hash. Verified in isolation: cold=MISS / unchanged+fresh=HIT / deps-change=MISS
-      / 25h-stale=MISS / bypass=MISS.
+      move off the hot path. — unified-trading-pm base-service.sh + base-library.sh (unified-trading-pm@779dc3683): ONE
+      mechanism covers both halves — deps-change trigger (key = pyproject.toml + uv.lock + ignore-set + pip-audit
+      version → `.qg_cache/pip_audit_deps_hash`) + 24h freshness bound (`QG_PIP_AUDIT_MAX_AGE_HOURS`, the
+      cron-equivalent for newly-published advisories). Clean-run-only caching (vulns/timeouts never cached);
+      internal-advisories check stays uncached (PM-yaml input, not deps); SBOM upload moved inside the miss branch (a
+      hit must not re-upload another repo's stale /tmp output); `QG_NO_CACHE=1` bypass; `.qg_cache/` gitignored (PM +
+      canonical template) + excluded from the green-sentinel untracked hash. Verified in isolation: cold=MISS /
+      unchanged+fresh=HIT / deps-change=MISS / 25h-stale=MISS / bypass=MISS.
 - [x] [SCRIPT] P0. **Instrument base-library.sh** with the same `qg_prof` spans + `QG_PROFILE` full-run override
       (UTL/UAC are libraries — the heaviest repos, 5.27 GB peak — and currently have NO span instrumentation). Needed
       before the full 22-repo sweep covers libraries. ✅ — 2026-06-10 (unified-trading-pm@779dc3683): 8 span pairs
@@ -210,7 +211,11 @@ single-core pinned), output under gitignored `.qg_profile/`.
 - [ ] [REFACTOR] P1. Per-repo: move TIER-A duplicates out of the stub (rely on toml), collapse the duplicated exclude
       intent (e.g. "exclude market_interface" expressed in ~7 places) to the minimum each tool genuinely needs.
       Reconcile honest coverage values (MTDS: settle 28-vs-71 per the Axis-A outcome — likely 28 now, ratchet to 71 as
-      ISS-031 tests land).
+      ISS-031 tests land). **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: when syncing canonical [tool.ruff]
+      sections into per-repo pyprojects, the DTZ + TID251 select entries must be EXCLUDED (they stay ratchet-only via
+      STEP 5.95) OR per-repo per-file-ignores baselines must ship FIRST — otherwise every repo's plain ruff lint step
+      hard-fails on the ~180 DTZ + ~211 TID251 pre-existing sites (instant fleet redness; the exact failure mode the
+      ratchet design exists to avoid).
 - [ ] [DOCS] P1. Update `codex/06-coding-standards/quality-gates.md` § config-SSOT: toml is the single home, the
       `[tool.quality-gates]` contract, the "base must never shadow toml on the CLI" rule.
 
@@ -226,7 +231,12 @@ single-core pinned), output under gitignored `.qg_profile/`.
 - [ ] [DESIGN] P0. Specify the two-tier contract + the trigger: a new `--fast` (or `--scoped`) mode that diffs
       HEAD/worktree, computes the changed file set, and runs only impacted work. Reuse the existing green-sentinel
       (unchanged→skip) as the degenerate case; this adds the "small change → impacted subset" case between "unchanged"
-      and "full."
+      and "full." **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the fast tier must NEVER write
+      .qg_last_passed_sha (that sentinel = "COMPLETE green run" and is what quickmerge ships on — a fast write silently
+      dissolves the commit-quality boundary). Design REQUIRES: (a) its own .qg_fast_sentinel; (b) an explicit quickmerge
+      policy decision for what a fast-sentinel permits (likely: nothing on the promote path; fast = inner-loop only);
+      (c) the base scripts ALREADY hard-exclude QG_FAST from the full-sentinel write (defense-in-depth shipped
+      2026-06-10) — the tier must set QG_FAST=1.
 - [ ] [DESIGN] P0. Coverage-preservation design (THE hard part). Options to evaluate with Phase 0 data: (a)
       `pytest-testmon` to select only tests impacted by changed code; (b) maintain a coverage cache/DB so the fast tier
       reports combined (cached + delta) coverage; (c) fast tier runs impacted tests WITHOUT the coverage gate, and the
@@ -248,11 +258,11 @@ single-core pinned), output under gitignored `.qg_profile/`.
 
 - [x] [INFRA] P1. ✅ pip-audit: it is advisory + has an 180s OSV network timeout. Move to cached OSV results and/or a
       periodic cron (e.g. on dependency change only) instead of every gate run. Big fixed-cost removal from the hot
-      loop. — unified-trading-pm@779dc3683; same unit as the Phase-0 pip-audit item above (deps-hash trigger + 24h freshness bound,
-      both bases in parity).
+      loop. — unified-trading-pm@779dc3683; same unit as the Phase-0 pip-audit item above (deps-hash trigger + 24h
+      freshness bound, both bases in parity).
 - [x] [INFRA] P2. ✅ bandit + actionlint: cache results keyed by content hash. — unified-trading-pm base-service.sh +
-      base-library.sh + qg-common.sh helpers (unified-trading-pm@779dc3683). bandit key = content (`git ls-files -s` index blobs +
-      `git diff` worktree delta + untracked contents) over SOURCE_DIR + pyproject.toml + bandit version +
+      base-library.sh + qg-common.sh helpers (unified-trading-pm@779dc3683). bandit key = content (`git ls-files -s`
+      index blobs + `git diff` worktree delta + untracked contents) over SOURCE_DIR + pyproject.toml + bandit version +
       BANDIT_EXTRA_ARGS → `.qg_cache/bandit_content_hash`; actionlint key = workflow file names+contents (plain cat —
       `_WF_LINT_DIR` can resolve outside the repo pathspec in CI) + actionlint version + SHELLCHECK_OPTS →
       `.qg_cache/actionlint_content_hash`. Clean-run-only store; `QG_NO_CACHE=1` bypass; CI-safe (no `.qg_cache` in a
@@ -313,3 +323,19 @@ single-core pinned), output under gitignored `.qg_profile/`.
 - Every QG setting has exactly ONE home (toml); the dual-SSOT matrix shows zero `drift`/`shadowed` rows.
 - Differential harness proves: fast tier catches in-scope violations; merge tier catches everything; no coverage floor
   silently changed.
+
+## UI build warm-cache (filed 2026-06-10, slot-3 — cold-clone build tripped the 90s gate; warm = 365 ms)
+
+Operator direction: if fundamental deps don't change, the build cache should be warm ALWAYS — only our code rebuilds.
+
+- [ ] [CODE] P2. `tsc` incremental for UI repos: `"incremental": true` + gitignored `.tsbuildinfo` (deployment-ui +
+      unified-trading-system-ui tsconfigs) — only changed files re-check; cold cost limited to a fresh clone's first
+      build. Repo: deployment-ui, unified-trading-system-ui.
+- [ ] [CODE] P2. Pre-warm in `setup.sh`: run one `npm run build` at clone-setup time so the QG gate never pays the
+      cold-cache cost (the cold build moves to where there is no timeout). Repo: unified-trading-pm
+      (`scripts/quality-gates-base` setup template) + the two UI repos.
+- [ ] [INFRA] P3. Evaluate pnpm global content-addressable store for UI repos: hardlinked node_modules → identical
+      inodes across ALL slot clones → OS page cache warm fleet-wide while deps are unchanged (npm copies per-clone: N×
+      disk + N× cold reads). Decision item — changes lockfile format + CI install steps.
+- [ ] [SCRIPT] P3. base-ui.sh: one automatic retry on the build-timeout class (cold-trip passes on retry; a genuine hang
+      fails twice) — removes the human re-run without weakening the budget.

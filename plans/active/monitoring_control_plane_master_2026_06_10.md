@@ -96,6 +96,37 @@ page) — P2, after both v1s ship.
       git-health guard, billing block, consolidator watchdog) and verify each has a paired live state element on one of
       the two surfaces; file gaps as todos here. Repo: unified-trading-pm (audit) + the owning surface.
 
+## Failure-injection verification matrix (operator add 2026-06-10 — completion gate for this master)
+
+**This master is NOT complete until every CI-failure type/possibility has been VERIFIED ON THE MONITOR** — observed
+rendering correctly on the dashboard, initially driven by agents, even where the failure must be mock-generated or
+fake-triggered (a throwaway small change, a synthetic breaking change, a deliberately-failing check). Mock-mode fixtures
+pin the UI contract, but the completion bar is the LIVE signal path: trigger → watcher/state → dashboard.
+
+- [ ] [VERIFY] P1. **Stuck-PR classes ×5** — fake-trigger each (`conflicting`: PR with a manufactured conflict;
+      `v2_never_reported`: a `[skip ci]`-free head pushed by a suppressing token; `skip_ci_jammed`: a `[skip ci]` head
+      on a gated PR; `failing_check`: a deliberately red check; `automerge_stuck`: armed auto-merge held past threshold)
+      and verify each renders in the Stuck panel with the right class + age. Repo: throwaway branches on a low-traffic
+      repo; tear down after.
+- [ ] [VERIFY] P1. **SIT lifecycle** — fake breaking change (or replay a real one): verify lock chip flips ON with
+      reason, SIT-run panel shows the dispatched run in-progress → per-repo jobs → conclusion, `sit-passed` unlock
+      clears the chip + breaking_pending, AND the Slack lock/unlock bookends both post. (Partially proven live
+      2026-06-10 during the exec-svc 0.6.0 jam — re-verify on a CLEAN synthetic cycle with no manual dispatches.)
+- [ ] [VERIFY] P1. **Cascade failure path** — synthetic dependent-QG failure mid-cascade: verify
+      `stuck_in_sit`/cascade-failed state renders, downstream invalidation (`STAGING_PENDING`) shows on the matrix, and
+      the escalation fires once (not per-tick).
+- [ ] [VERIFY] P2. **Promotion-lag + drift states** — hold a commit on LDR without promoting: verify content-delta
+      badges + lag rendering; verify squash-skew shows "in sync (squash skew)" not a phantom delta.
+- [ ] [VERIFY] P2. **Image staleness** — land a main commit without a rebuild: verify `image_stale` flips; then rebuild
+      and verify it clears.
+- [ ] [VERIFY] P2. **Fleet git-health states** (sub-plan B surface) — dirty worktree, behind-LDR clone, killed reporter
+      cron (`reporter_stale`), killed FF-pull cron (`ff_cron_stale`), drift violation — each fake-triggered on one slot
+      and observed on the fleet page.
+- [ ] [VERIFY] P3. **Billing-block + rate-limit** — simulate (or replay logs of) the GitHub Actions billing freeze + a
+      GH rate-limit exhaustion: verify the dashboard degrades honestly (503 with retry_after; no fabricated rows).
+- [ ] [DOCS] P3. Record the matrix outcomes as a `| failure class | trigger used | verified on | date |` table here; a
+      class without a row is NOT covered (silence is not success).
+
 ## Success criteria (master)
 
 - One screen answers "state of all 25 repos" (overview matrix) and one dropdown answers "state of THIS repo" (SHA

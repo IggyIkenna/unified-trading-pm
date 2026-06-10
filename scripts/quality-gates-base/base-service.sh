@@ -3088,11 +3088,19 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # Only written on a COMPLETE run (no skip flags). Partial runs (--skip-tests,
 # --skip-lint, --quick, --lint-only, --skip-codex) must NOT write the sentinel
 # because they do not verify the full gate surface.
+#
+# SENTINEL CONTRACT (HARD, operator-ratified 2026-06-10): `.qg_last_passed_sha` means
+# "a COMPLETE green gate ran on this HEAD" — it is what `quickmerge --agent` ships on.
+# ANY partial-surface mode must be excluded here: QG_SLICE (CI parallel slices) and the
+# future change-scoped fast tier (QG_FAST — quality_gates_speed Phase 2). The fast tier
+# gets its OWN `.qg_fast_sentinel` + an explicit quickmerge policy; it must NEVER write
+# this file, or partial gates silently dissolve the commit-quality boundary.
 if [[ "${RUN_TESTS}" == "true" ]] && \
    [[ "${RUN_LINT}" == "true" ]] && \
    [[ "${QUICK_MODE}" == "false" ]] && \
    [[ "${ACT_MODE}" == "false" ]] && \
    [[ -z "${QG_SLICE:-}" ]] && \
+   [[ -z "${QG_FAST:-}" ]] && \
    [[ -z "${SKIP_CODEX_FLAG:-}" ]]; then
     # Write to PROJECT_ROOT (the gated repo's root — same dir the content sentinel below
     # uses), NOT REPO_ROOT: qg-common.sh resolves REPO_ROOT to PROJECT_ROOT/.. (the WORKSPACE
