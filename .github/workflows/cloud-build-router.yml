@@ -150,6 +150,18 @@ jobs:
           COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
           REPO_TYPE="${{ github.event.client_payload.repo_type }}"
 
+          # repo_type from the dispatch payload is UNRELIABLE — the semver-agent dispatch
+          # (semver-agent.yml.tmpl) omits repo_type, so it arrives empty. Derive it from
+          # workspace-manifest.json (the authoritative SSOT) when absent, so library repos
+          # (e.g. unified-api-contracts — builds a wheel, no Docker/Cloud Build) are correctly
+          # classified and the build/notify steps (guarded `repo_type != 'library'`) skip them.
+          # Without this an empty repo_type reads as non-library → the router tries to build a
+          # library via Cloud Build → "trigger not configured" → spurious WARNING (incident 2026-06-10).
+          if [ -z "$REPO_TYPE" ] || [ "$REPO_TYPE" = "null" ]; then
+            REPO_TYPE=$(jq -r --arg r "$REPO" '.repositories[$r].type // ""' workspace-manifest.json 2>/dev/null || echo "")
+            echo "repo_type was empty in payload → derived from manifest: '$REPO_TYPE'"
+          fi
+
           echo "repo=$REPO branch=$BRANCH version=$VERSION type=$REPO_TYPE sha=$COMMIT_SHA"
 
           # Determine GCP project + image tag from branch
