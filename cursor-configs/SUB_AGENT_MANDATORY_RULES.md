@@ -123,6 +123,13 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
      `ahead_by=N/behind_by=0` by commit-count even when content matches — check content, not the count.)
    - **A workflow `.yml` change fires only from the DEFAULT branch** — editing a `schedule:`/trigger and landing it only
      on LDR is INERT until it reaches `main`. Promote it to take effect.
+   - **A workflow-template rollout is NOT done until every per-repo copy is COMMITTED + pushed (HARD RULE 2026-06-10).**
+     `rollout-workflow-templates.sh` WRITES the template into all 24 repos' WORKING TREES — you MUST then commit + push
+     the per-repo change to each repo's `live-defi-rollout` (per-repo `ci(workflow-templates): roll out <wf>` commit).
+     Leaving rolled-out copies dirty strands clones: the `*/5` `slot-cron-ff-pull` cron `[skip:dirty]`s any dirty clone →
+     it falls behind LDR forever (on a worker VM this starves the orchestrator's plan-regen — incident 2026-06-10). Done
+     = `detect_template_drift.py --workflows` exits 0 AND no `.github/workflows/` is dirty fleet-wide. Can't finish
+     in-session → file a plan todo; never leave silent fleet drift (the cron preserves dirty trees, can't self-heal it).
 4. **Conditional push (multi-agent safety)**: before any push,
    `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
    document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main

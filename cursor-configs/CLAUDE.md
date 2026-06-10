@@ -956,6 +956,17 @@ integration-branch code commit lacking a quickmerge lineage marker) is the open 
   `rollout-workflow-templates.sh --repo <name> --template <wf>` (PM's OWN copy is hand-maintained — rollout skips it, so
   align it to the template by hand). `detect_template_drift.py` is a local-only post-gate (CI no-op); `--baseline-write`
   re-baselines intentional drift.
+- **A workflow-template rollout is NOT done until every per-repo copy is COMMITTED + pushed fleet-wide; never leave
+  rollout output as uncommitted working-tree churn (HARD RULE, codified 2026-06-10)**: `rollout-workflow-templates.sh`
+  WRITES the template into all 24 repos' WORKING TREES — that is half the operation. The other half is **commit + push
+  the per-repo change to each repo's `live-defi-rollout` in the SAME unit** (per-repo `ci(workflow-templates): roll out
+  <wf>` commit, like a node24 bump). Leaving the rolled-out copies dirty is the #1 cause of stale clones: the `*/5`
+  `slot-cron-ff-pull` cron `[skip:dirty]`s any clone with uncommitted changes → it falls behind LDR indefinitely → on a
+  worker VM that starves the orchestrator's `PlanRegenLoop`/plan-health (incident 2026-06-10: vm-planning + 28 main
+  clones stranded 13–545 commits behind on stale rollout churn; backlog empty). **Definition of done = `detect_template_drift.py
+  --workflows` exits 0 AND no repo's `.github/workflows/` is dirty** (verify both before declaring the rollout complete).
+  A template you edit + commit but don't roll-out-and-commit leaves silent fleet drift the cron can't self-heal (it
+  preserves dirty trees, never overwrites them) — it must be a tracked plan todo if you can't finish it in-session.
 
 ---
 
