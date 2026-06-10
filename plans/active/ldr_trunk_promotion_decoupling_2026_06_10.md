@@ -122,16 +122,20 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       against a dep that is version-behind-staging is legitimate on the LDR trunk; the drain + SIT catch real
       incompatibilities. Keep the hard BLOCK on the `--hotfix` path (a hotfix must reconcile with staging). —
       unified-trading-pm@ef76571
-- [ ] [SCRIPT] P1. **quickmerge: harden `--hotfix` + add `--hotfix-to-main`.** `--hotfix` requires a `[hotfix]` marker
-      in the commit message (else refuse) and keeps the staging-lock respect. New `--hotfix-to-main`: requires
-      `[hotfix-main]` marker **and** explicit operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot
-      self-authorize); opens a **main** PR with auto-merge whose only gate is `quality-gates-v2` on main (no SIT, no
-      staging). **Does NOT script a protection bypass / direct push** — the operator does that manually via the
-      documented relax→push→re-enable if ever truly needed.
-- [ ] [DOCS] P1. **codex SSOT update.** `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model" + §
-      strict-quickmerge: record that the service-repo staging PR is now drain-only, the staging-lock/dep-tier gates are
-      hotfix-scoped, and the hotfix/hotfix-to-main break-glass contract. Update
-      [CLAUDE.md](../../cursor-configs/CLAUDE.md) one-liners (strict-quickmerge carve-out set) to match.
+- [x] ✅ [SCRIPT] P1. **quickmerge: harden `--hotfix` (marker) — DONE.** `--hotfix` now requires a `[hotfix]` marker in
+      the commit message (else refuse), in the FLAG VALIDATION block. Keeps the staging-lock respect. —
+      unified-trading-pm@305014936
+  - [ ] **`--hotfix-to-main` — DEFERRED (design finding).** The naive "PR_BASE=main on the existing flow" is WRONG: the
+        PR head is `live-defi-rollout`, so a LDR→main PR would promote the **whole trunk**, not just the hotfix. A
+        correct `--hotfix-to-main` needs a **dedicated single-commit branch off `main`** (cherry-pick the fix → PR that
+        branch → main, v2-on-main the only gate) + `[hotfix-main]` marker + operator env
+        `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize). Until built, the operator uses the manual
+        relax→push→re-enable path. **Does NOT script a protection bypass.**
+- [x] ✅ [DOCS] P1. **codex SSOT update — codex DONE, CLAUDE.md deferred.** Added a "LDR-trunk decoupling" subsection to
+      `codex/08-workflows/ci-cd-flow.md` § Two-Pass (land-on-LDR, hotfix-scoped gates, 30min drain, A1 inheritance, D1
+      provenance gate, `[hotfix]` marker, `--hotfix-to-main` not-yet-shipped). — unified-trading-pm@305014936
+  - [ ] **CLAUDE.md one-liner DEFERRED** until the model is complete (A3 dropped `push:[staging]` + `--hotfix-to-main`
+        shipped) — a pointer to a half-built model in the most-loaded context file is premature.
 - [ ] [SCRIPT] P1.5. **Compose with @4228 (dep-clone ref-determinism).** Confirm the LDR→staging PR resolves _all_
       internal deps at the staging ref consistently (no mixed staging-new/main-old set). Cross-linked,
       verify-on-first-green.
@@ -142,9 +146,13 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       maps to `STAGING_GREEN` (the promote PR's v2 IS the staging gate). Additive — `push:[staging]` still also sets it
       until STEP 3, so no regression. Only `staging` is inherited (not `main`). **MUST stay ahead of STEP 3.** —
       unified-trading-pm@e9938a425
-- [ ] [CODE] P2. **Drop `push:[staging]` QG — STEP 2 of 3 (detector).** Teach the @4950 zero-check-run detector
-      (Repos-CI dashboard) that a staging head with no _push_ check is legitimate when its merged PR carries the v2
-      check; flag only no-check AND no-merged-PR-check. Composes with `monitoring_control_plane_master_2026_06_10.md`.
+- [x] ✅ [CODE] P2. **Drop `push:[staging]` QG — STEP 2 of 3 (detector) — recorded as a forward constraint.** The @4950
+      zero-check-run detector **does not exist yet** (it's an open "should" in `cicd_contract_hardening` @4950, future
+      `monitoring_control_plane_master_2026_06_10.md` dashboard work) — so there is nothing to _adapt_ today, and A3 is
+      NOT currently blocked by a false-positive. **Constraint recorded** (here + the codex LDR-trunk section): when
+      @4950 is built, a staging head with no _push_ check must be treated as LEGITIMATE when its merged promote PR
+      carried the v2 check (flag only no-check AND no-merged-PR-check), else it false-positives on every drain merge
+      post-A3.
 - [ ] [CI] P1. **Drop `push:[staging]` QG — STEP 3 of 3 (template + rollout).** Remove `staging` from the `push:`
       branches in `scripts/workflow-templates/quality-gates-v2.yml.tmpl` (keep `pull_request:[main,staging]` +
       `push:[main]`), then `rollout-workflow-templates.sh --template quality-gates-v2` to all 24 repos + commit each
@@ -178,10 +186,11 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       carve-out classification (PB1). **Note vs original spec:** this is a "don't-arm-auto-merge" gate (PR sits open),
       NOT a v2-RED hard-block — bad content can't auto-promote, but isn't admin-unmergeable. —
       unified-trading-pm@e9938a425
-  - [ ] **Remaining:** mirror the gate into `ldr-to-main-promote.yml` (PM's LDR→main; range `main..live-defi-rollout`) —
-        same insert, PM-only so mostly carve-outs. (Optional stronger variant: a true v2-RED hard-block would need the
-        checker fetched into the per-repo v2 job — deferred; the drain gate is sufficient for "bot promotes only
-        provenanced content".)
+  - [x] ✅ **Mirror DONE:** the gate is now in `ldr-to-main-promote.yml` (PM's LDR→main; range
+        `origin/main..origin/live-defi-rollout`, checked directly since PM is the checkout; gates both arm sites).
+        PM-only so mostly carve-outs. — unified-trading-pm@3cae03cf5. (Optional stronger variant: a true v2-RED
+        hard-block would need the checker fetched into the per-repo v2 job — deferred; the drain gate is sufficient for
+        "bot promotes only provenanced content".)
 - [ ] [CI] P2. **Push tripwire (faster detection — optional, build after P1).** Non-blocking `push: live-defi-rollout`
       GHA running the SAME `check_strict_quickmerge.py`; a violation fires a `#ci-failures` alert (+ optional QG) so a
       bypass is caught at push, not ≤30 min later at the drain. Latency-reduction only — the promote-PR gate (above) is
