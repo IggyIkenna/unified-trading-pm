@@ -182,9 +182,9 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
       fleet-wide; also remove/repoint the `test_cascade_flow.py` assertion in `system-integration-tests` that expects it
       wired. If breaking-dep auto-fix is still wanted, route via `escalate-to-orchestrator` (`wall_type=ldr_qg_failure`
       already exists).
-- [ ] [SCRIPT] P1. Delete `contract-replay.yml` + `contract-drift-record.yml` (`unified-trading-pm`) — echo-only stubs,
+- [x] ✅ [DONE 2026-06-11: contract-replay.yml DELETED (PM@8d23d2047, 0 callers); contract-drift-record.yml RETAINED — has a live schedule cron, needs operator confirm it is superseded by cassette-drift-check.yml] [SCRIPT] P1. Delete `contract-replay.yml` + `contract-drift-record.yml` (`unified-trading-pm`) — echo-only stubs,
       0 callers, superseded by `cassette-drift-check.yml`.
-- [ ] [SCRIPT] P1. Delete `request-major-bump-reusable.yml` (`unified-trading-pm`) — 0 `uses:` callers; identical to
+- [x] ✅ [DONE 2026-06-11: DELETED PM@8d23d2047 — 0 uses: callers fleet-wide; byte-identical to non-reusable request-major-bump.yml] [SCRIPT] P1. Delete `request-major-bump-reusable.yml` (`unified-trading-pm`) — 0 `uses:` callers; identical to
       `request-major-bump.yml`.
 
 ### Tier 2 — fix B1 (real defect) + align the backmerge concurrency contract

@@ -37,30 +37,42 @@ budgeting means a second PAT for the same account does **not** help (it correlat
 
 ## Open todos (cross-repo fan-out + structural levers)
 
-- [ ] [UI] P1. **Add the GitHub rate-budget tracker to the deployment-ui /repos page** (the v2 PRIMARY operator view per
-      `fleet_git_health_orchestrator_2026_06_10.md`). Consume `GET /api/gh-rate-limit` (shape:
-      `{fetched_at, alert_pct, alerted:[...], resources:{core:{limit,remaining,used,reset}, graphql:{...}}}`). Mirror
-      the orchestrator-dashboard `FleetGit.tsx` `GhRateLimit` component + `rateBudgetTone` mapper. Target repo:
-      `deployment-ui`. (pw:L2 + regression spec required per the UI playwright gate.)
-- [ ] [UI] P2. **Same tracker in unified-trading-system-ui** wherever it surfaces repo/CI health. Target repo:
-      `unified-trading-system-ui`.
-- [ ] [INFRA] P1. **Evaluate a GitHub App installation token for the orchestrator's read-only pollers** — a GitHub App
-      gets its OWN rate pool (separate from the user PAT), so moving CIReconcile + the rate monitor + promotion-lag
-      reads onto an App token gives the fleet a second 5000+/hr budget without touching the workers' push PAT. Confirm
-      the App can read Actions runs (the classic PAT could NOT read `checkSuites` via GraphQL —
-      `Resource not accessible by personal access token`). Target repo: `agent-orchestrator` (+ deployment-service for
-      the App creds/secret wiring).
-- [ ] [INFRA] P2. **Audit the top REST burners across the fleet on the shared PAT** and ETag/cache them — the
-      orchestrator poll is now cheap, but slot-worker `gh` usage + the `ci-failure-watcher` / `promotion-lag-monitor` /
-      promote-bot crons still draw from the same pool. Confirm Actions-triggered work uses the per-repo `GITHUB_TOKEN`
-      (separate 1000/hr/repo pool), not the PAT. Target repos: `agent-orchestrator`, `unified-trading-pm` (workflow
-      templates).
-
-- [ ] [CODE] P2. **Persist the CIReconcile ETag cache across restarts** (small JSON under `data/`). The cache is
-      in-memory today, so a service restart while `core` is already at 0 can't make the first (un-conditioned) 200 to
-      capture an ETag → that cold sweep 403s until the hourly reset (observed 2026-06-10 right after deploy). A
-      disk-persisted cache survives restarts so 304s keep flowing even through an exhausted window. Target repo:
-      `agent-orchestrator`.
+- [x] ✅ [CODE] P2. **Persist the CIReconcile ETag cache across restarts** (`data/state/ci_reconcile_etag_cache.json`,
+      gitignored runtime). A cold in-memory cache couldn't make the first un-conditioned 200 to capture an ETag while
+      `core` was already at 0 → 403 until the hourly reset (observed right after the first deploy). Disk-backed now via
+      `load_etag_cache`/`save_etag_cache` (guarded to the real poll path — no disk I/O under an injected conclusion_fn).
+      agent-orchestrator@6a78f1c | deployed vm-0.
+- [ ] [UI] P1. **GitHub rate-budget tracker in deployment-ui** (the v2 PRIMARY operator view) — IN FLIGHT 2026-06-10
+      (sub-agent). deployment-ui reaches deployment-api (not the orchestrator), so the data source is a NEW
+      deployment-api `GET /api/repos/gh-rate-limit` (free poll). Tracker mirrors `FleetGit.tsx`
+      `GhRateLimit`/`rateBudgetTone`. Target repos: `deployment-ui` + `deployment-api`. (pw:L2 + regression spec per the
+      UI playwright gate.)
+- [ ] [PERF] P1. **ETag `deployment-api/deployment_api/routes/_repo_ci_github.py`** — the **biggest** fleet REST burner
+      (~8 GitHub calls × ~25 repos per coverage refresh; TTL-cached but NO ETag). IN FLIGHT 2026-06-10 (sub-agent): add
+      `If-None-Match` to the shared `gh_get_json` (304 = free) + the free rate-limit route above. Target repo:
+      `deployment-api`.
+- [ ] [INFRA] P1 (**BLOCKED-OPERATOR-DECISION**). **Create a GitHub App installation token for the read-only pollers** —
+      a GitHub App gets its OWN rate pool (separate from the user PAT), giving the fleet a second 5000+/hr REST budget
+      without touching the workers' push PAT. **Operator-gated**: the current PAT lacks app-management scope
+      (`admin:public_key, gist, read:org, repo`) + App registration needs the GitHub UI/manifest flow — an agent cannot
+      create it. Decision: register an App (recommended) vs. live with the shared PAT + the ETag wins. Once it exists,
+      point CIReconcile + the rate monitor + deployment-api reads at it. Target repos: `agent-orchestrator` +
+      `deployment-api` (+ `deployment-service` secret wiring).
+- [ ] [INFRA] P2. **The promotion/monitor Actions burn the shared PAT, not the free per-repo `GITHUB_TOKEN`** (verified
+      2026-06-10): `ldr-to-main-promote.yml` / `ldr-to-staging-promote.yml` / `ci-failure-watcher` /
+      `promotion-lag-monitor.yml` all run `runs-on: ubuntu-latest` with `GH_TOKEN: ${{ secrets.GH_PAT }}` (+ checkout
+      `token: GH_PAT`). At `*/15`–`*/20` across the fleet this is a **major** continuous draw on the same 5000/hr pool
+      that CIReconcile competes for. **NOT a safe blind swap** (this is why it's P2, not a quick fix): the built-in
+      `GITHUB_TOKEN` (a) is **repo-scoped** — a PM-run workflow can't read OTHER repos' runs with it, so cross-repo
+      monitors/promoters genuinely need the PAT; and (b) **cannot trigger downstream workflows** — a promotion PR opened
+      with `GITHUB_TOKEN` won't fire `quality-gates-v2`, which is the whole point of the PAT here. Safe subset to pursue
+      in a dedicated, tested change: switch ONLY the same-repo READ-only `gh` calls (run lists / compares / rate checks)
+      to `GITHUB_TOKEN`, keep the PAT for the cross-repo reads + the PR-create/merge that must trigger v2. Target repos:
+      `unified-trading-pm` (workflow templates → `rollout-workflow-templates.sh`). High blast radius (promotion
+      pipeline) — own change + verification, not a drive-by edit.
+- [x] N/A [UI] P2. ~~Same tracker in unified-trading-system-ui~~ — **dropped**: uts-ui has **no** repo/CI/git-health
+      surface (verified 2026-06-10, 0 matches) → no natural home. The repos surface lives in deployment-ui (above) + the
+      orchestrator dashboard (shipped). Re-open only if uts-ui gains a CI/repos view.
 
 ## Recommended decision
 

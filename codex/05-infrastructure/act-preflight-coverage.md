@@ -45,7 +45,6 @@ local run actually proves.
 | `conflict-resolution-agent.yml`       | 🔴 REMOTE-ONLY | Spawns Claude API agent run                                                        |
 | `conflict-resolution-merged.yml`      | 🔴 REMOTE-ONLY | PR-merge-driven                                                                    |
 | `contract-drift-record.yml`           | ✅ FULL        | Computes diff vs `unified_api_contracts` and writes artifact                       |
-| `contract-replay.yml`                 | 🟡 PARTIAL     | Replay log loads locally; cassette artifact upload step is remote                  |
 | `downstream-fix-agent.yml`            | 🔴 REMOTE-ONLY | Cross-repo dispatch + Claude API                                                   |
 | `fix-approval-timeout.yml`            | ⚙️ N/A         | Scheduled cron only                                                                |
 | `hotfix-mode.yml`                     | 🔴 REMOTE-ONLY | PR label-driven; cross-repo                                                        |
@@ -62,7 +61,6 @@ local run actually proves.
 | `python-quality-gates.yml`            | ✅ FULL        | Repo-local pytest + ruff + basedpyright (assuming `.venv` resolvable in container) |
 | `quality-gates.yml`                   | ✅ FULL        | Top-level orchestrator; calls only repo-local scripts                              |
 | `readiness-verifier.yml`              | 🟡 PARTIAL     | Plan-inventory regen runs locally; GCP-status step is remote                       |
-| `request-major-bump-reusable.yml`     | 🔴 REMOTE-ONLY | Reusable workflow dispatched from semver-agent                                     |
 | `request-major-bump.yml`              | 🔴 REMOTE-ONLY | Issue-creation flow                                                                |
 | `rollout-action-ref.yml`              | 🔴 REMOTE-ONLY | PR fan-out across repos                                                            |
 | `rules-alignment-agent.yml`           | 🔴 REMOTE-ONLY | Claude API spawn                                                                   |

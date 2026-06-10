@@ -12,9 +12,11 @@ models. **Counter:** `contract_smoke_total{repo, result}` **Labels:** `result` i
 
 ### 2. Replay Lane
 
-**Trigger:** On-demand via `contract-replay.yml` (reusable workflow). **Scope:** Replays VCR cassettes against current
-Pydantic models. Catches schema changes that break existing recorded interactions. **Counter:**
-`contract_replay_total{repo, cassette, result}` **Labels:** `result` in `{pass, fail, skip}`
+**Trigger:** NOT CURRENTLY WIRED — the `contract-replay.yml` reusable was an echo-only stub (zero callers fleet-wide)
+and was removed 2026-06-11 (cicd_workflow_sprawl_audit). Cassette-replay coverage is provided by `cassette-drift-check.yml`
++ the per-commit `tests/test_cassette_schema_parity.py` in unified-api-contracts. **Scope (if re-introduced):** Replays VCR
+cassettes against current Pydantic models. **Counter:** `contract_replay_total{repo, cassette, result}` **Labels:**
+`result` in `{pass, fail, skip}`
 
 ### 3. Live Lane
 
