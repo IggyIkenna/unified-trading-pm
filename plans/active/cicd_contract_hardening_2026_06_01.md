@@ -518,18 +518,30 @@ what the operator is seeing:
       a `[skip ci]` head and `git commit --amend`-off the marker (needs branch-push perms on a protected branch — risky)
       OR document that `--auto-recover` only handles NON-`[skip ci]` never-reported cases and Option C is mandatory for
       the semver path. repo: unified-trading-pm. Composes with the Option C + watcher-disposition todos above.
-- [ ] [INFRA] P1. **vm-planning escalation target is DOWN — failing cascades currently have NOWHERE to auto-route (fix
-      later; manual stand-in for now).** The dependency_promotion Phase 3 path ("MAJOR/breaking cascade FAILS → escalate
-      to vm-planning") and `ci-failure-watcher --escalate` (`sit_failure` / `merge_conflict` walls) both dispatch
-      `escalate-to-orchestrator` to vm-planning — but vm-planning is not running (operator 2026-06-09), so a failing
-      breaking-cascade silently parks (observed: UAC 0.5.0 → execution-service #232 `quality-gates-v2` FAILED, SIT
-      `sit_retry_count=3`, staging locked since 13:48Z with no worker picking it up). **Until vm-planning is restored, a
-      human/slot must stand in** (this incident was handled by a manually-dispatched execution-service worker prompt).
-      **Fix:** (a) restore/redeploy the vm-planning orchestrator VM, OR (b) repoint the `escalate-to-orchestrator`
-      target (PM `escalate-to-orchestrator.yml` + `cascade-qg-ordering.yml` `escalate-on-failure`) to the LIVE
-      orchestrator (`vm-0`/`agent-orchestrator-vm-1`) so failing cascades reach an AutoSpawn-capable host; add a
-      watchdog alert when a `sit_failure` escalation finds no live target. repo: unified-trading-pm (+
-      agent-orchestrator). Composes with `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
+- [x] ✅ [INFRA] P1. **Escalation headroom alert — RE-SCOPED + DONE 2026-06-10 (PM@dfac3713d). The original "vm-planning
+      is DOWN, restore it" framing was a PHANTOM:** `vm-planning` == `vm-0` == `agent-orchestrator-vm-1` ==
+      `i-0c9b283b31d6b5ca7` (EIP 13.113.200.22 / `api.agent-orchestrator.odum-research.com`) — ONE box, many aliases
+      (confirmed in `orchestrator_vm_registry.yaml`: id `planning` carries that exact instance id). There is **no
+      separate planning VM to restore**, and `escalate-to-orchestrator.yml` already POSTs to that live box
+      (`ORCHESTRATOR_URL || api.agent-orchestrator…` → 13.113.200.22), so fix-option (b) "repoint to vm-0" was already
+      true and (a) "restore vm-planning" was a no-op. The REAL condition behind the ~5h park (2026-06-10) is **headroom
+      exhaustion**: `dependency_promotion` Phase-3 + `ci-failure-watcher --escalate` dispatch `POST /api/escalate`, which
+      returns **503 (no free slot)** when AutoSpawn has no headroom → the wall PARKS, re-fires every ~15 min, and won't
+      self-resolve until a slot frees — capacity, NOT a host being down. **What shipped:** `escalate-to-orchestrator.yml`
+      now classifies the POST outcome (`dispatched` / `no_escalation_id` / `no_headroom`) and the Slack notify raises a
+      **distinct, actionable `no_headroom` WARNING** ("HEADROOM EXHAUSTED — {repo}#{pr} PARKED, no worker; stand in
+      manually if it persists; vm-0 IS the orchestrator, capacity not host-down") instead of the prior generic OR'd
+      message that let the park slip by silently. **Verified:** `actionlint` clean + YAML parses + the live escalation
+      path was proven end-to-end the SAME day (the 08:14Z escalation burst dispatched conflict-resolvers that cleared the
+      locked cascade — `Conflict Resolution Agent` / `deterministic-promotion-conflict-resolve` runs all success, lock →
+      `locked:false`). repo: unified-trading-pm. Composes with
+      `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
+- [ ] [SCRIPT] P3 **NICE-TO-HAVE**. Sustained-park escalation — bump the `no_headroom` Slack alert from WARNING →
+      CRITICAL when the SAME wall returns `no_headroom` on ≥N consecutive `*/15m` ticks (a one-off 503 is transient +
+      retryable; a sustained one is the silent ~5h park). Needs cross-run state (the per-wall `escalation-dispatched`
+      label is only set on a CONFIRMED spawn, so a parked wall stays unlabelled — track a tick-count via a PR comment or
+      the orchestrator). File/implement only if the per-tick WARNING proves insufficient. repo: unified-trading-pm.
+      Provenance: cicd-521 re-scope 2026-06-10. Composes with `ci-failure-watcher` `--escalate`.
 - [x] ✅ [DEVOPS] P0. **semver-agent can stamp versions onto `staging` again — admin-role ruleset bypass + classic
       `enforce_admins` off, FLEET-WIDE (operator chose this approach 2026-06-08).** Was: `semver-agent.yml.tmpl` (auth
       `GH_PAT`) DIRECT-PUSHES the post-QG `chore(release)` bump to `staging`, but staging's CLASSIC protection
