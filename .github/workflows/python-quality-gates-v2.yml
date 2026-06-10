@@ -487,7 +487,12 @@ jobs:
   # the metadata_only output (re-detected here so the caller can skip the cloud-build
   # dispatch). Cheap: a depth-2 checkout + the result roll-up, no gate work.
   quality-gates-v2:
-    name: aggregate
+    # CRITICAL: the `name:` MUST stay literally `quality-gates-v2` (NOT a friendly label
+    # like "aggregate") — the required check context is `<caller job name> / <THIS job's
+    # display name>` = `Quality Gates (<repo>) / quality-gates-v2`. Setting name: aggregate
+    # would emit `… / aggregate` and the required context would NEVER report → every PR
+    # permanently BLOCKED. Verified live: the display name is what the check context uses.
+    name: quality-gates-v2
     needs: [content-gate, qg-slices]
     if: always()
     runs-on: ubuntu-latest
