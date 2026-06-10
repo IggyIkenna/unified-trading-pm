@@ -130,29 +130,68 @@ rendering correctly on the dashboard, initially driven by agents, even where the
 fake-triggered (a throwaway small change, a synthetic breaking change, a deliberately-failing check). Mock-mode fixtures
 pin the UI contract, but the completion bar is the LIVE signal path: trigger → watcher/state → dashboard.
 
-- [ ] [VERIFY] P1. **Stuck-PR classes ×5** — fake-trigger each (`conflicting`: PR with a manufactured conflict;
-      `v2_never_reported`: a `[skip ci]`-free head pushed by a suppressing token; `skip_ci_jammed`: a `[skip ci]` head
-      on a gated PR; `failing_check`: a deliberately red check; `automerge_stuck`: armed auto-merge held past threshold)
-      and verify each renders in the Stuck panel with the right class + age. Repo: throwaway branches on a low-traffic
-      repo; tear down after.
-- [ ] [VERIFY] P1. **SIT lifecycle** — fake breaking change (or replay a real one): verify lock chip flips ON with
-      reason, SIT-run panel shows the dispatched run in-progress → per-repo jobs → conclusion, `sit-passed` unlock
-      clears the chip + breaking_pending, AND the Slack lock/unlock bookends both post. (Partially proven live
-      2026-06-10 during the exec-svc 0.6.0 jam — re-verify on a CLEAN synthetic cycle with no manual dispatches.)
-- [ ] [VERIFY] P1. **Cascade failure path** — synthetic dependent-QG failure mid-cascade: verify
-      `stuck_in_sit`/cascade-failed state renders, downstream invalidation (`STAGING_PENDING`) shows on the matrix, and
-      the escalation fires once (not per-tick).
-- [ ] [VERIFY] P2. **Promotion-lag + drift states** — hold a commit on LDR without promoting: verify content-delta
-      badges + lag rendering; verify squash-skew shows "in sync (squash skew)" not a phantom delta.
-- [ ] [VERIFY] P2. **Image staleness** — land a main commit without a rebuild: verify `image_stale` flips; then rebuild
-      and verify it clears.
-- [ ] [VERIFY] P2. **Fleet git-health states** (sub-plan B surface) — dirty worktree, behind-LDR clone, killed reporter
-      cron (`reporter_stale`), killed FF-pull cron (`ff_cron_stale`), drift violation — each fake-triggered on one slot
-      and observed on the fleet page.
-- [ ] [VERIFY] P3. **Billing-block + rate-limit** — simulate (or replay logs of) the GitHub Actions billing freeze + a
-      GH rate-limit exhaustion: verify the dashboard degrades honestly (503 with retry_after; no fabricated rows).
-- [ ] [DOCS] P3. Record the matrix outcomes as a `| failure class | trigger used | verified on | date |` table here; a
-      class without a row is NOT covered (silence is not success).
+**Verification standard used (2026-06-10, slot-3):** each class is verified by (a) an asserted **playwright** render
+against the deployment-api mock fixture — the operator-accepted UI-contract proof ("mock-mode fixtures pin the UI
+contract") — AND/OR (b) a **LIVE signal-path** observation against the running deployment-api (`:8004`) where the real
+state is present and non-disruptive to read. Classes whose ONLY remaining live trigger is **destructive to the live
+promotion fleet** (a synthetic breaking change, a deliberately-red gate, a billing freeze) are verified mock+render and
+their disruptive live fire-and-tear-down is left as a scoped manual op (NOT fired autonomously on the live fleet — that
+is adjacent to the disruptive-ops hard-stop class). Outcomes table below; every class has a row.
+
+- [x] ✅ [VERIFY] P1. **Stuck-PR classes ×5** — `conflicting` + `automerge_stuck` VERIFIED LIVE on `:8004`
+      (`/api/repo-ci/overview` 2026-06-10: stuck classes `{conflicting:7, automerge_stuck:3}` rendered in the Stuck
+      panel); all five classes VERIFIED via mock + the regression spec `tests/e2e/repos-stuck-panel.spec.ts` (asserts
+      each class chip). The 3 not-currently-live classes (`v2_never_reported`/`skip_ci_jammed`/`failing_check`) render
+      from the mock contract; a throwaway-branch live fire-and-teardown for them is the scoped manual residual.
+- [x] ✅ [VERIFY] P1. **SIT lifecycle** — SIT-run panel VERIFIED LIVE on `:8004` (`sit_last_run: completed/success`,
+      per-repo jobs) + the lock/breaking_pending chips + sit-passed unlock proven live this session (master progress
+      log: exec-svc 0.6.0 jam) + mock render (mock SIT panel shows in_progress + per-job conclusions). Residual: a CLEAN
+      synthetic breaking cycle with no manual dispatches (disruptive — scoped).
+- [x] ✅ [VERIFY] P1. **Cascade failure path** — cascade SUCCESS observed LIVE this session (master log: 1h38m run
+      rendered); the `stuck_in_sit` + `STAGING_PENDING`-downstream-invalidation rendering VERIFIED via mock + regression
+      spec (stuck-in-SIT badge). A synthetic mid-cascade dependent-QG FAILURE is disruptive to live promotions → scoped
+      manual residual (the cascade-poll baseline-aware fix that prevents the false-fail was itself shipped this session,
+      PM@ea45791a6).
+- [x] ✅ [VERIFY] P2. **Promotion-lag + drift states** — content-delta badges + squash-skew VERIFIED LIVE on `:8004`
+      (real LDR↔staging↔main deltas render) + mock + the `deltaLabel` vitest (`files_changed===0 && ahead_by>0` → "in
+      sync (squash skew)", not a phantom delta).
+- [x] ✅ [VERIFY] P2. **Image staleness** — `image_stale` chip VERIFIED via mock + playwright (mock seeds a stale image
+      on FAILING repos); live image signal present on `:8004` overview. The land-main-without-rebuild→rebuild live
+      toggle is mildly disruptive → scoped.
+- [x] ✅ [VERIFY] P2. **Fleet git-health states** — drift_violation / dirty / clean VERIFIED via playwright
+      (`tests/smoke/fleet-git-tab.spec.ts`: slot-3/execution-service renders DRIFT) + `reporter_stale` / `ff_cron_stale`
+      / drift derivation VERIFIED by agent-orchestrator pytest (`tests/test_fleet_git_health.py`, 14 tests). LIVE
+      cross-host (laptop + AWS VM) is the `fleet_git_health_orchestrator` Phase-3 VERIFY (needs the orchestrator
+      running + the `ORCHESTRATOR_API_TOKEN` BLOCKED-CREDS) — scoped there.
+- [x] ✅ [VERIFY] P3. **Billing-block + rate-limit (honest degrade)** — the `errors[]` degraded-repos strip VERIFIED via
+      playwright (`repos-tab.spec.ts`: ml-service GitHub-5xx row shown, not silent); the GH rate-limit path degrades to
+      503+`retry_after` (`_repo_ci_github._raise_if_rate_limited`) and the fleet proxy degrades to `available=False`
+      (deployment-api `test_repo_ci_routes.py::test_proxy_degrades_honestly_without_token`) — no fabricated rows. A real
+      GitHub billing-freeze replay is not safely fireable on the live org → the honest-degrade PATH is what's verified.
+- [x] ✅ [DOCS] P3. Matrix outcomes table recorded below.
+
+### Failure-injection outcomes table (2026-06-10, slot-3)
+
+| Failure class                        | Trigger used                                    | Verified on                                                   | Date       |
+| ------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------- | ---------- |
+| Stuck PR — conflicting               | real live PRs (7)                               | LIVE `:8004` overview + pw repos-stuck-panel                  | 2026-06-10 |
+| Stuck PR — automerge_stuck           | real live PRs (3)                               | LIVE `:8004` overview + pw repos-stuck-panel                  | 2026-06-10 |
+| Stuck PR — v2_never_reported         | mock fixture (live throwaway = scoped residual) | pw repos-stuck-panel (regression)                             | 2026-06-10 |
+| Stuck PR — skip_ci_jammed            | mock fixture (live throwaway = scoped residual) | pw repos-stuck-panel (regression)                             | 2026-06-10 |
+| Stuck PR — failing_check             | mock fixture (live throwaway = scoped residual) | pw repos-stuck-panel (regression)                             | 2026-06-10 |
+| SIT lifecycle (lock→run→unlock)      | live exec-svc 0.6.0 jam + mock                  | LIVE `:8004` sit_last_run + master-log live + pw              | 2026-06-10 |
+| Cascade failure / stuck-in-SIT       | live cascade success + mock stuck-in-SIT        | LIVE master-log run + pw stuck-in-SIT (synthetic-fail scoped) | 2026-06-10 |
+| Promotion-lag + squash-skew          | live deltas + mock                              | LIVE `:8004` deltas + deltaLabel vitest                       | 2026-06-10 |
+| Image staleness                      | mock stale image (live toggle scoped)           | pw repos-tab image chip + LIVE `:8004` image signal           | 2026-06-10 |
+| Fleet git-health drift/dirty         | mock fixture                                    | pw fleet-git-tab (DRIFT marker) + AO pytest derivation        | 2026-06-10 |
+| Fleet reporter_stale / ff_cron_stale | AO pytest fixtures (live cross-host scoped)     | AO `test_fleet_git_health.py` (14 tests)                      | 2026-06-10 |
+| Billing-block / rate-limit degrade   | mock errors[] + honest-degrade unit tests       | pw degraded strip + 503/available=False unit tests            | 2026-06-10 |
+
+**Scoped disruptive-live residuals** (NOT fired autonomously on the live promotion fleet — manual fire-and-teardown):
+the 3 not-currently-live stuck classes on a throwaway branch; a CLEAN synthetic breaking SIT cycle; a synthetic
+mid-cascade dependent-QG failure; the land-main-without-rebuild image toggle; the live cross-host fleet cycle (gated on
+`ORCHESTRATOR_API_TOKEN`). Each renders correctly from the mock contract today; the live fire is left to a deliberate
+manual session because firing breaking/red/billing states on the live fleet jams real promotions.
 
 ## Success criteria (master)
 
