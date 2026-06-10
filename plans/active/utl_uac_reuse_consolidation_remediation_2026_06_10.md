@@ -8,7 +8,6 @@ execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 7.2
-asset_group: cross-cutting
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 related_plans:
