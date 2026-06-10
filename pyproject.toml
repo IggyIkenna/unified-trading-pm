@@ -221,9 +221,9 @@ omit = [
 ]
 
 [tool.coverage.report]
-# DEVIATION (scripts-only): fail_under = 0 — no packaged coverage gate; scripts
-# are run as executables and not fully unit-testable without live infra.
-fail_under = 0
+# PM scripts/ ARE prod (CI/CD gates, backlog regen, ci_failure_watcher, detect_breaking_change).
+# Baseline 2026-06-10: 74.5% across 24 measured scripts. Floor set at 70% as a regression guard.
+fail_under = 70
 skip_empty = true
 show_missing = true
 

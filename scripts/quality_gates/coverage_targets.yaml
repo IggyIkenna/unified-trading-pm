@@ -89,6 +89,23 @@ surfaces:
       - "strategy-service/strategy_service/engine/**/*.py"
       - "strategy-service/strategy_service/colocated_engine.py"
 
+  pm_prod_scripts:
+    target_pct: 70
+    rationale:
+      "PM scripts run in prod CI/CD (ci_failure_watcher, detect_breaking_change, tier_c_promotion_gate, etc.) — baseline
+      2026-06-10: 74.5%; floor prevents regression"
+    glob_patterns:
+      - "unified-trading-pm/check-repo-readiness.py"
+      - "unified-trading-pm/extract_api_keys.py"
+      - "unified-trading-pm/run_validators.py"
+      - "unified-trading-pm/cicd/*.py"
+      - "unified-trading-pm/manifest/*.py"
+      - "unified-trading-pm/quality_gates/check_no_fallback_imports.py"
+      - "unified-trading-pm/quality_gates/check_workspace_code_workspace_drift.py"
+      - "unified-trading-pm/repo-management/ci_failure_watcher.py"
+      - "unified-trading-pm/validation/*.py"
+      - "unified-trading-pm/validators/*.py"
+
   default:
     target_pct: 80
     rationale: "Reasonable baseline for everything not surface-tagged"
