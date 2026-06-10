@@ -91,6 +91,41 @@ for arg in "$@"; do
     esac
 done
 
+# ── QG_SLICE — CI parallel-jobs selector (latency reduction 2026-06-10) ───────
+# Mirrors base-service.sh. The CI reusable workflow fans the monolithic gate into
+# PARALLEL jobs, each invoking this script with a slice:
+#   QG_SLICE=tests       → ENVIRONMENT + [3] TESTS only        (pytest cost; dominant)
+#   QG_SLICE=typecheck   → ENVIRONMENT + [4] TYPE CHECK only   (basedpyright cost)
+#   QG_SLICE=lint-codex  → ENVIRONMENT + [2] LINT + [3.5] + [5] CODEX (incl. pip-audit
+#                          + bandit) + [5.6] DEAD CODE + post-gates (falls through)
+# UNSET (default) = the full, untouched monolithic run — behaviour-identical for
+# every LOCAL invocation + existing caller. The three slices PARTITION the gate with
+# ZERO overlap and ZERO lost coverage. pip-audit folds into lint-codex (shared [5] `V`
+# counter; not on the critical path — see base-service.sh comment + the plan).
+# A slice is a PARTIAL run → never writes the sentinel (QG_SENTINEL_DISABLE forced +
+# the sentinel-write guard checks QG_SLICE empty).
+QG_SLICE="${QG_SLICE:-}"
+case "$QG_SLICE" in
+    ""|tests|typecheck|lint-codex) : ;;
+    *) echo "❌ invalid QG_SLICE='${QG_SLICE}' (allowed: tests|typecheck|lint-codex|unset)" >&2; exit 2 ;;
+esac
+_QG_RUN_CODEX=true
+if [ -n "$QG_SLICE" ]; then
+    export QG_SENTINEL_DISABLE=true
+    case "$QG_SLICE" in
+        tests)      RUN_LINT=false; RUN_TESTS=true;  SKIP_TYPECHECK=true;  _QG_RUN_CODEX=false ;;
+        typecheck)  RUN_LINT=false; RUN_TESTS=false; SKIP_TYPECHECK=false; _QG_RUN_CODEX=false ;;
+        lint-codex) RUN_LINT=true;  RUN_TESTS=false; SKIP_TYPECHECK=true;  _QG_RUN_CODEX=true  ;;
+    esac
+fi
+_qg_slice_done() {
+    case "$QG_SLICE" in
+        tests|typecheck)
+            echo -e "\n${GREEN:-}✅ QG_SLICE=${QG_SLICE} PASSED${NC:-}"
+            exit 0 ;;
+    esac
+}
+
 # ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
 _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality-gates-base/version-alignment-gate.sh"
 [[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"
@@ -210,7 +245,18 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)
     # Memory-frugal default (was $_DEFAULT_WORKERS = cpu_count//4 → oversubscription on
     # a shared host; UTL peaks 5.27 GB). Per-repo opt-in: export PYTEST_WORKERS=N.
-    PARGS="-n ${PYTEST_WORKERS:-1} --timeout=60 -q -r a --tb=short --no-header"
+    # ── PYTEST PARALLELISM (latency reduction 2026-06-10) — mirror of base-service.sh ──
+    # In CI each quality-gates-v2 leg runs ALONE on its own runner (no shared-host OOM
+    # risk), so xdist `-n auto` cuts the dominant pytest leg ~2-4×. LOCAL stays 1 (the
+    # OOM-safe value). Explicit PYTEST_WORKERS wins; else CI → auto, local → 1.
+    if [ -n "${PYTEST_WORKERS:-}" ]; then
+        _PYTEST_N="${PYTEST_WORKERS}"
+    elif [ -n "${GITHUB_ACTIONS:-}" ] || [ -n "${CI:-}" ]; then
+        _PYTEST_N="auto"
+    else
+        _PYTEST_N="1"
+    fi
+    PARGS="-n ${_PYTEST_N} --timeout=60 -q -r a --tb=short --no-header"
 
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to add per-family unit test dirs (e.g. PYTEST_UNIT_DIR="tests/unit/ tests/events/unit/").
@@ -263,8 +309,12 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_success "All pytest.mark.skip have reason comments"
 fi
+# QG_SLICE=tests finishes here (its one phase is the pytest run above).
+_qg_slice_done
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
+# Codex-adjacent static check → lint-codex slice (typecheck slice skips via _QG_RUN_CODEX).
+if [ "${_QG_RUN_CODEX}" = true ]; then
 log_section "[3.5/6] IMPORT PATTERNS"
 IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
@@ -279,6 +329,7 @@ elif [ -f "$IP" ]; then
 else
     log_warn "check-import-patterns.py not found (unified-trading-pm/scripts/)"
 fi
+fi  # _QG_RUN_CODEX (import-patterns)
 
 # ── [4] TYPE CHECK (basedpyright, 120s, zombie cleanup) ──────────────────────
 log_section "[4/6] TYPE CHECK"
@@ -341,6 +392,14 @@ fi
 
 # ── HOST CONCURRENCY GOVERNOR: release after the heavy phases (no-op on sentinel hit) ──
 [ "${_QG_SENTINEL_HIT:-false}" = true ] || qg_governor_release
+
+# QG_SLICE=typecheck finishes here (basedpyright was its only phase). Everything from
+# [5] onward (codex + pip-audit + bandit + dead-code + post-gates) is the lint-codex
+# slice + the full run — both reach here, so [5] needs no extra slice guard.
+if [ "$QG_SLICE" = typecheck ]; then
+    echo -e "\n${GREEN:-}✅ QG_SLICE=typecheck PASSED${NC:-}"
+    exit 0
+fi
 
 # ── [5] CODEX COMPLIANCE (library variant) ────────────────────────────────────
 # Same checks as service variant with library-specific exceptions noted inline.
@@ -1067,14 +1126,14 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # the tests/typecheck phases; refreshing would let quickmerge ship without re-running tests).
 # Written to PROJECT_ROOT (the gated repo root — where quickmerge --agent reads it), same dir
 # as the content sentinel below. Guarded identically to that write (full green: tests ran, not quick).
-if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
+if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ -z "${QG_SLICE:-}" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
     git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
 fi
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.
-if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ]; then
+if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ -z "${QG_SLICE:-}" ]; then
     echo "$_QG_CONTENT_HASH" > "${PROJECT_ROOT}/.qg_content_sentinel" 2>/dev/null \
         && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
 fi
