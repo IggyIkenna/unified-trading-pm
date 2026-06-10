@@ -380,17 +380,20 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
 > and the fixture is now the FULL canonical copy (was 16-line minimal lacking `execution-store`). Tracked in
 > `ldr_trunk_promotion_decoupling_2026_06_10.md` Progress Log.
 
-- [ ] [SCRIPT] P1. **Package the canonical `cloud-providers.yaml` in UAC + UTL reads it from the installed package.**
-      UTL depends on UAC (`unified-api-contracts>=0.6.0`), UAC does NOT depend on UTL → UAC is genuinely lower-tier and
-      is an installed Python package, so UTL can read the yaml via `importlib.resources.files("unified_api_contracts")`
-      — **always available, even in a standalone CI clone** (fixes the tier inversion + removes the sibling-walk
-      fragility + the test-fixture copy). Add `unified_api_contracts/configs/cloud-providers.yaml` (hatchling packages
-      `unified_api_contracts/`); add a UAC-package probe candidate to `bucket_naming._candidate_yaml_paths()` (after the
-      env override, as the canonical default). repo: unified-api-contracts + unified-trading-library.
+- [x] ✅ [SCRIPT] P1. **Package the canonical `cloud-providers.yaml` in UAC + UTL reads it from the installed package.**
+      Shipped `unified_api_contracts/config/cloud-providers.yaml` (used the existing UAC `config/` dir — consistent with
+      `credentials_per_archetype.yaml`; hatchling already packages `config/*.yaml`; verbatim copy of the 366-line
+      deployment-service canonical) — unified-api-contracts@ba92d0e3. UTL `bucket_naming._packaged_uac_yaml_path()` reads
+      it via `importlib.resources.files("unified_api_contracts")`, appended to `_candidate_yaml_paths()` AFTER the
+      sibling-walk (in-tree workspace copy still wins locally) — always-available in a standalone clone. Verified:
+      standalone-simulated resolution (`_find_workspace_root→None`) resolves `dex-pools-prd-test-project`; UTL QG green
+      (sentinel 5d2c8533) — unified-trading-library@75c001ec. Fixes the T0→T4 tier inversion + sibling-walk fragility.
 - [ ] [SCRIPT] P2. **Flip the consumers: deployment-service + PM consume the UAC canonical, not own it.** Replace
       `deployment-service/configs/cloud-providers.yaml` + `unified-trading-pm/configs/cloud-providers.yaml` with a
       sync/symlink FROM the UAC canonical (T4 service must READ, never OWN, the config). Update QG STEP 5.69 + both
       CLAUDE.md "deployment-service/configs/cloud-providers.yaml is canonical" statements to name UAC as canonical.
-- [ ] [TEST] P2. **Reconcile the UTL "not-found" error-path tests** with always-available UAC packaging (a test that
-      expects `BucketNamingError` on no-yaml must mock the UAC resource lookup to be absent, since the package copy is
-      now always present). Then drop the full-copy test fixture once UAC provides it.
+- [x] ✅ [TEST] P2. **Reconcile the UTL "not-found" error-path tests** with always-available UAC packaging. `test_yaml_not_found_raises`
+      now also patches `_packaged_uac_yaml_path → None` (alongside `_find_workspace_root → None`) — the genuine
+      "no yaml anywhere" simulation. The malformed/invalid-syntax tests already point the env override at a present-but-bad
+      file (probed first), so they were unaffected. unified-trading-library@75c001ec. (Dropping the repo-local test
+      fixture + conftest env-override is harmless follow-up cleanup — left in as a defensive default; NICE-TO-HAVE below.)
