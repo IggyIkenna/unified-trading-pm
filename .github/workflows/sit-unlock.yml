@@ -183,11 +183,17 @@ jobs:
       # Message MUST reflect whether the unlock PUSH actually landed. If unlock-staging failed
       # (e.g. the 5× rebase-retry loop exhausted on a non-FF race), the lock is STILL set and the
       # fleet is blocked — a "staging unlocked" message would be a dangerous lie. (incident 2026-06-02)
+      # Event-aware since 2026-06-10 (operator: "why don't I get a Slack alert when staging
+      # unlocks?"): the green-path unlock is the bookend that lets the channel distinguish a live
+      # SIT queue from a dangling lock — sit-gate posts the LOCK, this posts the UNLOCK, both ways.
       message:
-        ${{ needs.unlock-staging.result == 'success' && 'SIT Failed — staging unlocked. Staging is open for fixes.' ||
-        '❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges blocked. Manual fix — rerun gh workflow run
-        sit-unlock.yml (or clear staging_status.locked in workspace-manifest.json).' }}
-      severity: "CRITICAL"
+        ${{ needs.unlock-staging.result != 'success' && '❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges
+        blocked. Manual fix — rerun gh workflow run sit-unlock.yml (or clear staging_status.locked in
+        workspace-manifest.json).' || github.event.action == 'sit-passed' && '✅ SIT PASSED — staging UNLOCKED,
+        breaking_pending cleared. Promotion queue flowing.' || 'SIT Failed — staging unlocked. Staging is open for
+        fixes (breaking_pending kept — the set still needs a green SIT to promote).' }}
+      severity: ${{ needs.unlock-staging.result == 'success' && github.event.action == 'sit-passed' && 'INFO' ||
+        'CRITICAL' }}
       conclusion: ${{ needs.unlock-staging.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
