@@ -91,8 +91,8 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       — basedpyright clean, QG green. Was: **AWS/GCP cloud-toggle parity for the build signal (operator add
       2026-06-10)** — the image/build half of the aggregator must follow the deployment-ui cloud toggle like the
       existing Cloud Builds tab: GCP path reuses `_cloud_builds_trigger/_cloud_builds_history`; AWS path reuses
-      `_code_builds_aws.py` (CodeBuild). The GitHub/manifest half is cloud-agnostic (no toggle). `_latest_builds_by_repo`
-      returns honestly-unknown (None) for the inactive/unavailable provider — never fabricated.
+      `_code_builds_aws.py` (CodeBuild). The GitHub/manifest half is cloud-agnostic (no toggle).
+      `_latest_builds_by_repo` returns honestly-unknown (None) for the inactive/unavailable provider — never fabricated.
 - [x] ✅ [TEST] P1. DONE 2026-06-10 — deployment-api@093f80a (31 tests across test_repo_ci_stuck/manifest/routes.py;
       mock fixtures pin every stuck class). Was: Unit tests: manifest accessor (fixture manifest), stuck-PR classifier
       (one case per signature), SIT-state derivation (pending/locked/stuck threshold), mocked-GitHub branch/compare
@@ -130,8 +130,10 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       tests/smoke/repos-tab.spec.ts (per-service CI tab spec); live-verified via MCP playwright (mtds → CI tab →
       MAIN_GREEN + PR cards + SHA history). Was: **Per-service "CI" tab (operator add 2026-06-10)** — reuse the repo
       drill-down panel inside the home per-service tab system (next to Builds/Data Status), so a selected service shows
-      its branches/PRs/SIT without leaving the service context. Note: some deployment service names ≠ repo names (e.g.
-      features-delta-one-service vs features-service) — map or degrade honestly.
+      its branches/PRs/SIT without leaving the service context. Mapping RESOLVED 2026-06-10 — deployment-api@00a7074:
+      detail endpoint resolves service names via manifest `consolidates[]` (live-verified: features-delta-one-service →
+      features-service). Historical note: some deployment service names ≠ repo names (e.g. features-delta-one-service vs
+      features-service) — map or degrade honestly.
 - [x] ✅ [CODE] P1. [UI] DONE 2026-06-10 — deployment-ui@dd7efab | pw:L2 ✓ (repos-tab.spec 7/7; full smoke 170 passed,
       lone failure stateful-flows:326 is pre-existing + unrelated — fails identically on original source) | regression:
       tests/smoke/repos-tab.spec.ts ("Repos CI is a landing tab in the home shell" + "deep-link to /repos opens the
