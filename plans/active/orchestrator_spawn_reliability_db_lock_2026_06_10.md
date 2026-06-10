@@ -103,6 +103,14 @@ source:
       / removed-slot-prune / working-stale-dedup). agent-orchestrator@93ca070 | QG 457 passed | deployed vm-0 (service
       restarted, dedup verified live).
 
+- [ ] [CODE] P2. **Distinguish "idle-available (cleanly /done-exited, no queued work)" from "idle-worker-loop-dead" in
+      the health idle-stale pass.** Today a worker that cleanly `/done`-exits leaves an idle slot with a frozen
+      last_ping; after IDLE_STALE_THRESHOLD it trips the "Worker heartbeat loop dead — re-spawn" alert even though
+      nothing is wrong (slot 5, 2026-06-10: last_msg `DONE: deployment-ui#43 ... merged`). The dedup caps it to one
+      alert, but the alert is still a false-positive. Fix: on a clean worker exit (last `/done`), either clear the slot's
+      stale-alert eligibility or only fire the "loop dead" alert when the slot has a `current_task` (was mid-work).
+      Target: agent-orchestrator `server/health.py` + `worker /done` handler.
+
 ## Success criteria
 
 - A spawn whose boot-paste momentarily misses self-heals within one watchdog interval (no permanent
