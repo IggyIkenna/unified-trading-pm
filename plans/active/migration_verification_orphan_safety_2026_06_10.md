@@ -106,6 +106,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       `_index/audit/data_sizing_<AG>.parquet`; flag biggest cells for pre-download. Rides the same walk.
 - [ ] [RUN] P0. Per-AG acceptance: `phantom_count==0` ∧ `orphan_class_E==0`. **Class (E) = backfill `record_captured`,
       NEVER delete** (it's the v10 hole). cefi/pred = slot-3; defi/tradfi/sports = slot-2.
+- [ ] [SCRIPT] P0. **Manifest-diff tool (projected-vs-current) — operator 2026-06-10.** Build
+      `instruments-service/scripts/manifest_diff.py`: load TWO `_index` parquets (the `beta_manifest_writer` PROJECTED
+      v9 vs the CURRENT/live consolidated `_index`), diff by shard-key → report added / removed / changed cells +
+      `capture_status` transitions + per-(AG,data_type,venue) row deltas. This is the manifest-vs-manifest diff
+      (distinct from the orphan sweep's GCS-vs-manifest and the beta writer's projection) — it's what lets us SEE the
+      goalposts as a delta before `--apply`. Reuses `possible_manifest.canonical_path_templates` for key alignment.
+      slot-3 (cross-cutting tool); both AGs run it as part of the V5 projected-preview verdict.
 
 ## V3 — Schema-attribute completeness (CF-18) — slot-3 framework, both run
 
@@ -206,7 +213,38 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   - **V7 (durability)** — CF-15…CF-21 concrete re-runnable checks encoded into the 4 owning per-service instruction
     files.
   - **B** — `config_version` per-config design folded into the mvp_scope plan.
-  - **Per-AG RUNS (V2-V6) LAUNCHED** — full cefi + prediction orphan sweeps running against real prod GCS for the
-    pre-apply orphan verdict (the up-to-`--apply` deliverable). Verdicts appended on completion.
+  - **V6 (CF-21) — `cleanup_legacy_twins.py`** verified-delete (the 'genetic' crc32c + in-manifest gate; legacy object
+    deletable ONLY if crc32c-identical to an in-manifest canonical twin; `--apply` operator-gated + `--i-understand`) +
+    8 unit tests.
+- 2026-06-10 (slot-3, per-AG RUN against real prod GCS — corrected verdict):
+  - **Orphan-sweep matching CORRECTNESS FIX (found by running it at scale, not by unit tests).** The first full walks
+    reported implausible counts (**prediction `A_canonical_manifested=0`** was the tell). Root cause: the manifest is
+    keyed at a COARSER grain than the per-instrument object path — manifest rows carry blank `chain`/`instrument_type`
+    (and sometimes blank `venue`) meaning "any", while objects carry `chain=POLYGON` etc. An exact 5-tuple match
+    over-discriminated → false orphans. **Fixed**: grain-aware "wildcard covering" (`build_covered_index` +
+    `is_covered`, a fixed 8-way blank-combination lookup — manifest blank field = wildcard) + 2 regression tests; 68
+    scaffold tests green. This is the operator's "validate, don't assert" discipline paying off — the bug would have
+    falsely reported a massive migration hole.
+  - **CeFi full walk (5.3M objects, 22.8 TiB)**: `unknown_prefixes=0` (every byte accounted for) + sizing rollup
+    published (biggest cells: DERIBIT trades ~3.6 TiB, OKX/BINANCE/KRAKEN book_snapshot_5 ~1 TiB each — pre-download
+    candidates). Legacy-B vs orphan-E split being re-derived with the corrected matcher.
+  - **Prediction full walk (corrected matcher)**: A=85 / **B=512,437 legacy** (pre-G4: the prediction corpus is still at
+    the legacy `category=prediction/data_source=…` shape, not yet migrated to canonical `pipeline_mode=`) / C2=583k
+    non-data / D=0 / **E=61,014 candidate orphans** / `unknown_prefixes=0`. The false-orphan count collapsed **563,281 →
+    61,014** with the fix. **Verdict: prediction is NOT orphan-clean** — the 61k candidate-E (objects on
+    dates/data_types outside the manifest's captured coverage: 402 dates 2025-03-13→2026-04-29, data_types
+    `{trades, prediction_trades, ''}`) need per-AG characterization + **`record_captured` backfill before G4** (class E
+    → backfill, NEVER delete). This is the "no-v10" check WORKING (it found candidate holes); closing them is the per-AG
+    operational tail (partly operator/per-AG backfill).
   - **HARD-STOP respected**: everything up to `--apply` only; G4 `--apply` + G4.5 verified-delete `--apply` stay
     operator-gated.
+- 2026-06-10 (slot-3) — **⚠️ SHIP BLOCKED — fleet-wide staging-lane CI incident (NOT this work).** The shared staging
+  promotion lane has been locked since ~01:41Z (~7.5h) through two failure modes: (1) the `ml-service=0.3.0`
+  breaking-MINOR cascade's SIT failing on a **dep-version-coherence** error (a pinned dep resolved to an
+  unpublished/force-sync-reverted version — "publish the pinned version / run `assert_version_coherence.py`"), then (2)
+  a **stuck `staging_status.locked=true reason="SIT running"`** with NO promotion activity since 08:08Z (~70 min stale —
+  a SIT that set the lock but never cleared it). quickmerge has no staging-lock override (only
+  `QUICKMERGE_ALLOW_BEHIND`), and the lock is also a server-side required check, so the code (V0 + redirect + 5
+  scaffolds, all QG/test-green) cannot promote until the lane is unstuck — a slot-1/orchestrator/CI concern, not
+  unilaterally-clearable from here (clearing a live lock risks racing unvalidated breaking changes). PM docs ship via
+  the docs(plans) direct-LDR carve-out (lock-independent). Code auto-ships on unlock (monitored).
