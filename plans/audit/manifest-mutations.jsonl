@@ -78,3 +78,5 @@
 {"timestamp": "2026-06-10T13:32:41Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "fund-administration-service=0.3.0 (branch=staging, bump=minor)", "commit_sha": "494084aae84ec49483afbc799bf135b205a85ff3"}
 {"timestamp": "2026-06-10T13:35:52Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-data-processing-service=0.6.0 (branch=staging, bump=minor)", "commit_sha": "d76a071f17e0b68c6888e773c61f3ea015842c11"}
 {"timestamp": "2026-06-10T13:37:27Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "execution-service=0.7.0 (branch=staging, bump=minor)", "commit_sha": "0da57277495f3bb02247ea50ceff5bb4229d156d"}
+{"timestamp": "2026-06-10T21:32:27Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "execution-service=0.8.0 (branch=staging, bump=minor)", "commit_sha": "9f1fad5c4c9178350d77986cfd11136083775f2f"}
+{"timestamp": "2026-06-10T21:46:05Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.8.1 (branch=staging, bump=minor)", "commit_sha": "0fc5cadfda7220908eb6ecee024f29763a7453c0"}
