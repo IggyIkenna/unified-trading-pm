@@ -55,12 +55,13 @@ squash-merges, the standing sweep is gone** — a LATER direct push to LDR has n
 path to `main`** until the next quickmerge opens a new one.
 
 - **Automated drain (codified 2026-06-09): `ldr-to-main-promote.yml`** — the PM-only analogue of
-  `ldr-to-staging-promote`. Every 30 min (+ `workflow_dispatch` + `repository_dispatch: ldr-to-main`) it opens (or
-  reuses) the standing LDR→main PR with v2-gated auto-merge **whenever PM's LDR has real content ahead of main** — gated
-  on the CHANGED-FILE count of `compare/main...live-defi-rollout` (0 files → no-op, immune to squash-accounting noise),
-  reusing any open PR (incl. quickmerge's) so it never duplicates, and self-recovering the v2-never-reported deadlock
-  (close+reopen). So direct pushes now drain within the 1-hour SLA without waiting on the next quickmerge.
-- **Manual immediate drain (the bot's fallback — when you don't want to wait up to 30 min):**
+  `ldr-to-staging-promote`. Every 15 min (tightened from 30 min 2026-06-10) (+ `workflow_dispatch` +
+  `repository_dispatch: ldr-to-main`) it opens (or reuses) the standing LDR→main PR with v2-gated auto-merge **whenever
+  PM's LDR has real content ahead of main** — gated on the CHANGED-FILE count of `compare/main...live-defi-rollout`
+  (0 files → no-op, immune to squash-accounting noise), reusing any open PR (incl. quickmerge's) so it never duplicates,
+  and self-recovering the v2-never-reported deadlock (close+reopen). So direct pushes now drain within a ~30-min SLA
+  without waiting on the next quickmerge.
+- **Manual immediate drain (the bot's fallback — when you don't want to wait up to 15 min):**
   `gh pr create --base main --head live-defi-rollout --title "chore(promote): LDR→main sweep …" && gh pr merge <n> --auto --squash`
   (v2-gated, auto-merges when green). This re-establishes the standing sweep and drains the accumulated direct pushes.
 - **Verify a push actually reached `main` by CONTENT, not commit count:** a squash-merge lands all the changes as ONE

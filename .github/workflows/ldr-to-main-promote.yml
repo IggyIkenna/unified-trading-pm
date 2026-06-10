@@ -22,7 +22,7 @@ name: ldr-to-main-promote
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # every 30 min → drains within the 1-hour LDR→main SLA
+    - cron: "*/15 * * * *" # every 15 min → drains within a ~30-min LDR→main SLA (tightened from */30 2026-06-10)
   workflow_dispatch:
     inputs:
       dry_run:
