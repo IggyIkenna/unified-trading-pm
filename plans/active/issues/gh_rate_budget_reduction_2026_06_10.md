@@ -58,10 +58,18 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       create it. Decision: register an App (recommended) vs. live with the shared PAT + the ETag wins. Once it exists,
       point CIReconcile + the rate monitor + deployment-api reads at it. Target repos: `agent-orchestrator` +
       `deployment-api` (+ `deployment-service` secret wiring).
-- [ ] [INFRA] P2. **Confirm the cron callers use the right pool** — `ci-failure-watcher` / `promotion-lag-monitor` /
-      promote-bots: any that run **as GitHub Actions** already use the per-repo `GITHUB_TOKEN` (separate 1000/hr/repo
-      pool); verify none shell a PAT-authed `gh` from a VM. Target repos: `agent-orchestrator`, `unified-trading-pm`
-      (workflow templates).
+- [ ] [INFRA] P2. **The promotion/monitor Actions burn the shared PAT, not the free per-repo `GITHUB_TOKEN`** (verified
+      2026-06-10): `ldr-to-main-promote.yml` / `ldr-to-staging-promote.yml` / `ci-failure-watcher` /
+      `promotion-lag-monitor.yml` all run `runs-on: ubuntu-latest` with `GH_TOKEN: ${{ secrets.GH_PAT }}` (+ checkout
+      `token: GH_PAT`). At `*/15`–`*/20` across the fleet this is a **major** continuous draw on the same 5000/hr pool
+      that CIReconcile competes for. **NOT a safe blind swap** (this is why it's P2, not a quick fix): the built-in
+      `GITHUB_TOKEN` (a) is **repo-scoped** — a PM-run workflow can't read OTHER repos' runs with it, so cross-repo
+      monitors/promoters genuinely need the PAT; and (b) **cannot trigger downstream workflows** — a promotion PR opened
+      with `GITHUB_TOKEN` won't fire `quality-gates-v2`, which is the whole point of the PAT here. Safe subset to pursue
+      in a dedicated, tested change: switch ONLY the same-repo READ-only `gh` calls (run lists / compares / rate checks)
+      to `GITHUB_TOKEN`, keep the PAT for the cross-repo reads + the PR-create/merge that must trigger v2. Target repos:
+      `unified-trading-pm` (workflow templates → `rollout-workflow-templates.sh`). High blast radius (promotion
+      pipeline) — own change + verification, not a drive-by edit.
 - [x] N/A [UI] P2. ~~Same tracker in unified-trading-system-ui~~ — **dropped**: uts-ui has **no** repo/CI/git-health
       surface (verified 2026-06-10, 0 matches) → no natural home. The repos surface lives in deployment-ui (above) + the
       orchestrator dashboard (shipped). Re-open only if uts-ui gains a CI/repos view.
