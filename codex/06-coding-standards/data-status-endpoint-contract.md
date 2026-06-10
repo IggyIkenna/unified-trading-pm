@@ -37,10 +37,31 @@ Alternatively, higher-level consumers may call `compute_honest_coverage(counts)`
 - Returning `{"coverage_pct": ...}` or `{"completion_pct": ...}` as the primary coverage field — use
   `{"coverage": float}` for the canonical 5-field ratio.
 
+## Exemption — non-coverage `/data-status` endpoints
+
+The contract governs endpoints that report **manifest coverage** (a `captured / (captured + empty + failed + …)`
+ratio over a bucket). Some endpoints live under the `/api/data-status/*` namespace but return a different kind of
+payload — access **rules**, credential/key **status**, or static metadata — with no bucket and no manifest to read.
+The coverage helper does not apply to them, and calling it would fabricate a meaningless ratio (a banned pattern
+above).
+
+Such an endpoint declares the inline marker `# QG-allow: data-status-no-coverage` with a one-line reason on (or
+directly above) its route decorator. STEP 5.90 then skips that file. Example:
+
+```python
+# QG-allow: data-status-no-coverage — returns Tardis free-tier access RULES + key status, not coverage.
+@router.get("/api/data-status/venue-tardis-windows", response_model=VenueTardisWindowsResponse)
+async def get_venue_tardis_windows() -> VenueTardisWindowsResponse: ...
+```
+
+The marker is the only sanctioned way to exempt a `/data-status` route — never drop the route from the namespace or
+inline-fake a coverage field to dodge the gate. Reach for it ONLY when the endpoint genuinely returns no coverage; a
+real coverage endpoint must use the canonical helper.
+
 ## Enforcement
 
 QG STEP 5.90 (`check_data_status_endpoint_canonical.sh`) scans every `*.py` file in `SOURCE_DIR` that defines a
-`GET /data-status` route. If any such file does not import `compute_coverage_for_bucket` or `compute_honest_coverage`,
-the QG step fails.
+`GET /data-status` route. If any such file does not import `compute_coverage_for_bucket` or `compute_honest_coverage`
+(and does not carry the `# QG-allow: data-status-no-coverage` exemption marker), the QG step fails.
 
 SSOT: `honest_coverage_formula_consolidation_2026_05_19.md` Phase 1 P1.
