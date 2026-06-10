@@ -26,17 +26,17 @@ source:
 
 ## Phase 0 — GCS data-state reads (BEFORE code changes; ADC available on slot-4 host)
 
-- [ ] [DATA] P0. Manifest reality check for the affected cells: read `_index/availability_index.parquet` per
+- [x] ✅ [DATA] P0. Manifest reality check for the affected cells: read `_index/availability_index.parquet` per
       `market-data-tick-defi-*` (+ cefi for tardis): distribution of `capture_status × empty_confirmed_reason` for
       venues AAVE/COMPOUND/MORPHO (lending_indices), MARINADE/JITO (solana_defi lst_rates), PYTH×SOLANA (oracle_prices),
       GMX (perp_funding), SOLEND (lending backfill), and a tardis cefi venue sample — how many
       `SOURCE_RETURNED_ZERO`/`empty_confirmed` rows exist that may be mislabeled outages. Record counts here as the
       fix's before-state.
-- [ ] [DATA] P0. v9 `schema_version` distribution while in the buckets (unblocks audit item (g)/v9 BLOCKED-DATA): actual
-      % at v9 per `market-data-tick-<ag>` `_index`.
-- [ ] [DATA] P0. Raw tradfi ohlcv column-name census (`ts_event` vs `timestamp`) — decisive for the bar-edge METASTABLE
-      P0 (`bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1); sample N files per day-range across the databento
-      corpus.
+- [x] ✅ [DATA] P0. v9 `schema_version` distribution while in the buckets (unblocks audit item (g)/v9 BLOCKED-DATA):
+      actual % at v9 per `market-data-tick-<ag>` `_index`.
+- [x] ✅ [DATA] P0. Raw tradfi ohlcv column-name census (`ts_event` vs `timestamp`) — decisive for the bar-edge
+      METASTABLE P0 (`bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1); sample N files per day-range across
+      the databento corpus.
 
 ## Phase 1 — P0 swallow fixes (one QG-sweep batch; per-unit commits via quickmerge)
 
@@ -82,3 +82,21 @@ source:
 ## Progress journal
 
 - 2026-06-10: plan created from the re-verified audit (slot-4). Phase 0 starting.
+- 2026-06-10 Phase-0 RESULTS (read from actual prod GCS, slot-4 host ADC):
+  - **v9 = 0.0% in ALL THREE consolidated `_index`es** — defi 1.9M rows (v6=308k/v8=307k/v7=8.5k), cefi 35.8M rows
+    (99.9% v8), tradfi 579k rows (v8=488k/v6=39k/v4=17k). The `source` + `empty_confirmed_reason` columns DO NOT EXIST
+    yet in these indexes (v8 shape). Audit item (g)/(v9) is **RED on data**; the canonicalisation walk has not reached
+    these buckets (or the consolidated index lags it). Item (j)/(n) data-side verification is MOOT until v9 lands on
+    data — the writer-side fixes remain correct.
+  - **Swallow before-state (defi)**: JITO `lst_rates` **497 empty_confirmed vs 30 attempted_failed** (the swallow's
+    signature); MARINADE 486 captured / 40 empty; SOLEND `lending_indices` **331 empty_confirmed vs 195 captured**
+    (suspicious ratio); PYTH venue rows absent from top-cells (verify venue label when fixing oracle_prices);
+    AAVE_V3/MORPHO write `rate_indices`/`utilization`/`risk_params` data_types (no `lending_indices` cells — handler
+    name ≠ data_type; flag for the relabel pass). No reason split available pre-v9.
+  - **ts_event census: 24/24 sampled raw tradfi ohlcv parquets are `timestamp`-named (zero `ts_event`)** — e.g.
+    `raw_tick_data/by_date/day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/...` (note: OLD pre-canonical path shape with
+    dashes). The MDPS name-keyed shift will NOT fire on any of these → the bar-edge METASTABLE P0 is one rebuild from
+    corpus-wide left-shift; census decisively supports the MTDS-converts + MDPS-content-aware fix
+    (`bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1 P0).
+  - Follow-up filed: after Phase-1 ships, the mislabeled `empty_confirmed` cells (JITO/SOLEND et al.) need a
+    relabel/re-fetch pass; and the v9=0% finding needs routing to the canonicalisation programme owner.
