@@ -1805,14 +1805,14 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-10T01:41:52.134950Z",
-    "locked_reason": "Breaking MINOR bump cascade: ml-service=0.3.0 (pre-1.0.0)",
-    "lock_version": "0.3.0",
+    "locked_since": "2026-06-10T06:48:18.865189Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "ml-service"
     ],
     "sit_retry_count": 1,
-    "locked_alert_sent": true,
+    "locked_alert_sent": false,
     "breaking_pending": [
       "deployment-api",
       "deployment-service",
@@ -1852,9 +1852,9 @@
       "version": "0.3.0"
     },
     "ml-service": {
-      "version": "0.3.0",
+      "branch": "staging",
       "sha": "bd3d687c165e8656fb0995cb35fe73aae13bb8c5",
-      "branch": "staging"
+      "version": "0.3.0"
     }
   },
   "main_commits": {
