@@ -326,6 +326,37 @@ jobs:
             fi
           done
 
+      # ── Real-time unlock trigger (2026-06-10) ──
+      # Wake sit-debounce-trigger.yml (repository_dispatch: [staging-changed]) the MOMENT a repo's
+      # staging_versions entry is recorded. This trigger was DEAD CODE — nothing dispatched
+      # staging-changed to PM — so the debounce / SIT-trigger / dangling-lock auto-clear ran ONLY on
+      # the GitHub-throttled ~75-min */5 cron, and a staging cascade lock dangled ~1.5h (2026-06-10).
+      # Fired AFTER the manifest push so sit-debounce reads the fresh staging_versions. Loop-free:
+      # sit-debounce dispatches staging-changed onward to system-integration-tests (SIT), never
+      # version-bump back here (and update-repo-version only listens for version-bump).
+      - name: Notify sit-debounce of staging change (real-time unlock trigger)
+        if: steps.update.outputs.skip != 'true' && steps.update.outputs.branch == 'staging'
+        env:
+          TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ steps.update.outputs.repo }}
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ]; then
+            echo "GH_PAT not set — skipping staging-changed dispatch (cron fallback remains)."
+            exit 0
+          fi
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"staging-changed\", \"client_payload\": {\"reason\": \"staging-version-recorded\", \"repo\": \"$REPO\", \"version\": \"$VERSION\"}}") || HTTP="000"
+          if [ "$HTTP" = "204" ]; then
+            echo "  staging-changed dispatched to PM (sit-debounce real-time wake)"
+          else
+            echo "::warning::staging-changed dispatch failed (HTTP $HTTP) — sit-debounce falls back to the cron"
+          fi
+
       - name: Validate manifest DAG (cycle guard — add-cascade-cycle-guard)
         if: steps.update.outputs.skip != 'true'
         run: |
