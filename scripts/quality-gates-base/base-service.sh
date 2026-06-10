@@ -228,15 +228,18 @@ if [ -n "$QG_SLICE" ]; then
         lint-codex) RUN_LINT=true;  RUN_TESTS=false; SKIP_TYPECHECK=true;  _QG_RUN_CODEX=true  ;;
     esac
 fi
-# _qg_slice_done: a slice job has finished its one phase → exit cleanly BEFORE the
-# stub's post-gates (which belong to the lint-codex slice). No-op for the full run
-# (QG_SLICE empty) and for lint-codex (it must fall through to run the post-gates).
+# _qg_slice_done <phase>: a slice job exits cleanly when ITS OWN phase just completed
+# (arg = the phase that finished: tests|typecheck). No-op for the full run (QG_SLICE
+# empty), for lint-codex (it must fall through to run the post-gates), and for a slice
+# whose phase hasn't run yet. BUG FIX 2026-06-10: the previous arg-less version exited
+# for tests|typecheck at the single post-TESTS call site, so QG_SLICE=typecheck exited
+# BEFORE [4] TYPE CHECK ever ran — CI's typecheck leg was a silent no-op (false green;
+# see ci_local_qg_parity_2026_06_08.md "PM basedpyright count skew").
 _qg_slice_done() {
-    case "$QG_SLICE" in
-        tests|typecheck)
-            echo -e "\n${GREEN:-}✅ QG_SLICE=${QG_SLICE} PASSED${NC:-}"
-            exit 0 ;;
-    esac
+    if [ -n "$QG_SLICE" ] && [ "$QG_SLICE" = "${1:-}" ]; then
+        echo -e "\n${GREEN:-}✅ QG_SLICE=${QG_SLICE} PASSED${NC:-}"
+        exit 0
+    fi
 }
 
 # ── QG_PROFILE forces a COMPLETE, no-skip run ────────────────────────────────
@@ -589,7 +592,7 @@ PYEOF
     qg_prof end tests
 fi
 # QG_SLICE=tests finishes here (its one phase is the pytest run above).
-_qg_slice_done
+_qg_slice_done tests
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
 # [3.5]+[3.6] are codex-adjacent static checks → part of the lint-codex slice
@@ -713,6 +716,9 @@ fi
 # are done; the lighter codex/validator phases run ungoverned. (OS auto-frees on exit.)
 # No-op when a sentinel hit meant we never acquired.
 [ "${_QG_SENTINEL_HIT:-false}" = true ] || qg_governor_release
+
+# QG_SLICE=typecheck finishes here (basedpyright [4] was its only phase).
+_qg_slice_done typecheck
 
 # QG_SLICE=tests and QG_SLICE=typecheck have already exited above (TESTS / TYPE CHECK
 # are their only phases). Everything from [5] onward (codex + pip-audit + bandit +
@@ -2048,6 +2054,72 @@ if [ -f "$_NOPID_CHECKER" ]; then
     fi
 else
     log_success "STEP 5.93: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# STEP 5.94 — try/except-ImportError fallback-import ratchet (no-empty-fallbacks)
+#
+# Enforces .cursor/rules/standards/no-empty-fallbacks.mdc § "No try/except
+# ImportError Fallbacks" as CI (harden_grepable_rules_into_ci_gates_2026_06_02.md
+# Phase 3): never wrap imports in try/except (ImportError|ModuleNotFoundError) —
+# or an imports-only try with a broad except — to provide a fallback; fail LOUD
+# at import time. AST-based (docstrings/comments never trigger). Per-repo
+# SHRINKING count ratchet: no_fallback_imports_baseline.yaml grandfathers the
+# audited pre-existing set (2026-06-10: 75 sites fleet-wide); a NEW shim fails.
+# Per-line opt-out: `# noqa: fallback-import` on the try: line + a reason.
+_NOFB_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_fallback_imports.py"
+if [ -f "$_NOFB_CHECKER" ]; then
+    _FB_REPO=$(basename "$PROJECT_ROOT")
+    _FB_WS="$REPO_ROOT"
+    if $PYTHON_CMD "$_NOFB_CHECKER" \
+            --workspace-root "$_FB_WS" --scope "$_FB_REPO" >/tmp/no_fallback_imports_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/no_fallback_imports_qg.log 2>/dev/null; then
+            log_warn "STEP 5.94: below the fallback-import baseline — ratchet no_fallback_imports_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.94: No new try/except-ImportError fallback-import shims (baseline-ratchet, no-empty-fallbacks)"
+        fi
+    else
+        log_fail "STEP 5.94: NEW try/except-ImportError fallback-import shim(s) above the per-repo baseline. Import directly + declare the dep in pyproject, or add '# noqa: fallback-import' with a one-line reason (no-empty-fallbacks.mdc):"
+        cat /tmp/no_fallback_imports_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/no_fallback_imports_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_fallback_imports.py --workspace-root $_FB_WS --scope $_FB_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.94: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# STEP 5.95 — ruff DTZ (UTC-datetime ban) + TID251 (cloud-SDK ban) count ratchet
+#
+# Hardens CLAUDE.md "UTC datetimes always" (`datetime.now(timezone.utc)`, never
+# naive now()/utcnow()/today()/zone-less strptime — pinned DTZ001-007/011/012/901)
+# and "Cloud-agnostic I/O" (get_storage_client()/get_secret_client(), never
+# `from google.cloud import …` / `import boto3` — TID251 banned-api) into CI
+# (harden_grepable_rules_into_ci_gates_2026_06_02.md Phase 3). The canonical
+# [tool.ruff] template (scripts/pyproject-templates/canonical-tool-sections.toml)
+# carries the rules as config SSOT; this step enforces them TODAY as a per-repo
+# SHRINKING count ratchet (ruff_rule_ratchet_baseline.yaml; 2026-06-10 seed:
+# 180 dtz + 211 tid251 fleet-wide; tests/ excluded; UTL cloud_interface/ exempt
+# for tid251). Per-line opt-out: ruff `# noqa: DTZ00x|TID251` + a reason.
+_RUFFRR_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py"
+if [ -f "$_RUFFRR_CHECKER" ]; then
+    _RR_REPO=$(basename "$PROJECT_ROOT")
+    _RR_WS="$REPO_ROOT"
+    if $PYTHON_CMD "$_RUFFRR_CHECKER" \
+            --workspace-root "$_RR_WS" --scope "$_RR_REPO" >/tmp/ruff_rule_ratchet_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/ruff_rule_ratchet_qg.log 2>/dev/null; then
+            log_warn "STEP 5.95: below the DTZ/TID251 baseline — ratchet ruff_rule_ratchet_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.95: No new naive-datetime (DTZ) / direct cloud-SDK (TID251) sites (baseline-ratchet)"
+        fi
+    else
+        log_fail "STEP 5.95: NEW naive-datetime (DTZ) / direct cloud-SDK (TID251) site(s) above the per-repo baseline. Use datetime.now(timezone.utc) / get_storage_client()/get_secret_client(), or add a ruff '# noqa: <code>' with a one-line reason:"
+        cat /tmp/ruff_rule_ratchet_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/ruff_rule_ratchet_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py --workspace-root $_RR_WS --scope $_RR_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.95: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
 # STEP 5.70 — Explicit pipeline_mode= kwarg at every ManifestWriter.record_* call

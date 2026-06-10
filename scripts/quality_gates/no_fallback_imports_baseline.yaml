@@ -1,0 +1,67 @@
+# Baseline for QG STEP 5.94 — try/except-ImportError fallback-import ratchet.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of
+# `try: import X … except (ImportError|ModuleNotFoundError|broad)` fallback
+# shims (WITHOUT a `# noqa: fallback-import` marker) the gate tolerates in
+# that repo (tests/ excluded; scripts/ INCLUDED). A repo whose live count
+# EXCEEDS its baseline fails CI — a NEW shim landed; import directly +
+# declare the dep in pyproject, or add `# noqa: fallback-import` on the
+# try: line with a one-line reason.
+#
+# LOWER a count (re-run `--update-baseline`) the moment shims are removed.
+# NEVER raise a count. Repos not listed default to count=0.
+#
+# SSOT: .cursor/rules/standards/no-empty-fallbacks.mdc § 'No try/except
+# ImportError Fallbacks' + plans/active/harden_grepable_rules_into_ci_gates_2026_06_02.md.
+note: Seeded 2026-06-10 — harden_grepable_rules_into_ci_gates Phase 3 (QG STEP 5.94).
+repos:
+  agent-orchestrator:
+    count: 0
+  alerting-service:
+    count: 0
+  batch-live-reconciliation-service:
+    count: 0
+  client-reporting-api:
+    count: 0
+  deployment-api:
+    count: 2
+  deployment-service:
+    count: 2
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 4
+  execution-service:
+    count: 4
+  features-service:
+    count: 20
+  fund-administration-service:
+    count: 0
+  greeks-service:
+    count: 0
+  ibkr-gateway-infra:
+    count: 0
+  instruments-service:
+    count: 3
+  market-data-processing-service:
+    count: 3
+  market-tick-data-service:
+    count: 3
+  ml-service:
+    count: 0
+  strategy-service:
+    count: 2
+  system-integration-tests:
+    count: 2
+  trading-agent-service:
+    count: 0
+  unified-api-contracts:
+    count: 3
+  unified-trading-api:
+    count: 0
+  unified-trading-library:
+    count: 10
+  unified-trading-pm:
+    count: 17
+  unified-trading-system-ui:
+    count: 0
