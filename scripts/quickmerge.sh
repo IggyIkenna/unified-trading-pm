@@ -1037,8 +1037,19 @@ if [ "$NO_PR" != "true" ]; then
   fi
 
   if [ -z "$(git status --porcelain)" ]; then
-    echo "[$REPO_NAME] No changes to commit"
-    exit 0
+    # Committed-ahead fall-through (fixed 2026-06-10): a clean tree with UNPUSHED commits
+    # used to early-exit here, stranding pre-committed QG-green work and making the
+    # Stage-5 "changes already committed — proceeding to push + PR" path unreachable
+    # (incident: the deployment-service BoM commit could never ship; the carve-out's
+    # 'quickmerge early-exits nothing-to-commit on a clean tree' gotcha in CLAUDE.md is
+    # THIS guard). Only exit when clean AND nothing unpushed to the integration branch.
+    _UNPUSHED=$(git rev-list --count origin/live-defi-rollout..HEAD 2>/dev/null || echo 0)
+    if [ "${_UNPUSHED:-0}" != "0" ]; then
+      echo "[$REPO_NAME] clean tree with ${_UNPUSHED} unpushed commit(s) ahead of origin/live-defi-rollout — shipping the committed work"
+    else
+      echo "[$REPO_NAME] No changes to commit"
+      exit 0
+    fi
   fi
 fi
 
