@@ -834,21 +834,50 @@ for dep in deps:
     echo "=========================================="
     echo "[$REPO_NAME] pinned dependency version(s) BEHIND staging/main (un-integration-tested base):"
     echo "$DEP_BEHIND"
-    echo "[$REPO_NAME] auto-pulling PM manifest (origin/main) to pick up promoted versions..."
-    if (cd "$PM_DIR" && git pull --ff-only origin main --quiet 2>/dev/null); then
-      DEP_BEHIND="$(_dep_versions_behind)"
+    # Checkout-AWARE auto-heal (fixed 2026-06-10): the old heal was a bare
+    # `git pull --ff-only origin main` — on a Path-B slot's PM clone (checked out on
+    # live-defi-rollout, i.e. EVERY slot) that silently no-ops (2>/dev/null swallowed the
+    # divergence error), so the stale-manifest block persisted across retries with a
+    # misleading remedy (incident: mdps+strategy FROM-digest ships blocked twice on a
+    # manifest the heal could never refresh). Now: pull the PM clone's OWN branch (the
+    # */20 main-backmerge drift-tick keeps LDR ≥ main); if still behind, auto-dispatch
+    # the backmerge so the NEXT attempt self-heals, and print a remedy that matches the
+    # actual checkout.
+    _PM_BRANCH=$(cd "$PM_DIR" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    echo "[$REPO_NAME] auto-pulling PM manifest (PM checkout: ${_PM_BRANCH:-unknown}) to pick up promoted versions..."
+    if [ "$_PM_BRANCH" = "main" ]; then
+      (cd "$PM_DIR" && git pull --ff-only origin main --quiet 2>/dev/null) || \
+        echo "[$REPO_NAME] ⚠️  PM main pull failed (diverged/dirty) — manifest may stay stale"
+    elif [ -n "$_PM_BRANCH" ]; then
+      (cd "$PM_DIR" && git pull --rebase --autostash origin "$_PM_BRANCH" --quiet 2>/dev/null) || \
+        echo "[$REPO_NAME] ⚠️  PM $_PM_BRANCH pull failed (rebase conflict?) — manifest may stay stale"
     fi
+    DEP_BEHIND="$(_dep_versions_behind)"
     if [ -z "$DEP_BEHIND" ]; then
       echo "[$REPO_NAME] ✅ resolved after PM pull — dep versions now current with staging/main"
     elif [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
       echo "[$REPO_NAME] ⚠️  still behind after pull — QUICKMERGE_ALLOW_BEHIND=1, continuing:"
       echo "$DEP_BEHIND"
     else
+      # Still behind on a non-main PM checkout ⇒ main's newer manifest hasn't backmerged to
+      # this branch yet (≤20-min drift-tick window). Fire the backmerge now (best-effort) so
+      # the next attempt self-heals.
+      if [ "$_PM_BRANCH" != "main" ] && command -v gh >/dev/null 2>&1; then
+        gh workflow run main-backmerge-to-ldr.yml --repo "IggyIkenna/unified-trading-pm" >/dev/null 2>&1 \
+          && echo "[$REPO_NAME] ↻ dispatched main-backmerge-to-ldr (manifest lands on $_PM_BRANCH in ~1-3 min)" \
+          || true
+      fi
       echo "[$REPO_NAME] ❌ BLOCKED: dependency version(s) still behind staging/main after PM pull:"
       echo "$DEP_BEHIND"
       echo "   Your deps must not be behind their staging-promoted (SIT-tested) versions."
-      echo "   Sync PM + re-align, then re-run:"
-      echo "     cd unified-trading-pm && git pull origin main"
+      if [ "$_PM_BRANCH" = "main" ] || [ -z "$_PM_BRANCH" ]; then
+        echo "   Sync PM + re-align, then re-run:"
+        echo "     cd unified-trading-pm && git pull origin main"
+      else
+        echo "   PM checkout is '$_PM_BRANCH' (Path-B slot): the newer manifest reaches it via the"
+        echo "   main→LDR backmerge (dispatched above, best-effort). Wait ~1-3 min, then re-run after:"
+        echo "     cd unified-trading-pm && git pull --rebase --autostash origin $_PM_BRANCH"
+      fi
       echo "     python scripts/manifest/fix_external_dependency_alignment.py --apply   # if pyproject pins drifted"
       echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
       exit 1
