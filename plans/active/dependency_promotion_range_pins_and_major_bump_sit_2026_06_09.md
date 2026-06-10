@@ -374,15 +374,19 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       unresolvable); (d) STEP 5.79 narrowed MONOTONICALLY (converted Dockerfile → strict @digest enforcement;
       unconverted → legacy skip + warn — no fleet redness); (e) PILOT converted: deployment-service/Dockerfile @
       sha256:058d589f… (docker build --check green). Current digest resolved live via gcloud.
-- [ ] [INFRA] P1. **FROM-digest per-repo conversion ships (15 repos / 16 Dockerfiles)** — run
-      `python3 unified-trading-pm/scripts/propagation/add-dockerfile-digest-arg.py --repo <name>` then ship via that
-      repo's `quickmerge --agent --files Dockerfile*` (Dockerfile is gate-checked source — full Pass-1 QG per repo;
-      slot clones need a `git pull --ff-only` first to clear the stale-version drift block). Repos (dry-run verified
-      2026-06-10): agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api,
-      deployment-api (×2 Dockerfiles), execution-service, features-service, fund-administration-service, greeks-service,
-      instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
-      trading-agent-service. deployment-service pilot already converted. After ALL 15 ship: flip STEP 5.79's legacy
-      `${`-skip to hard-fail (the final ratchet).
+- [ ] [INFRA] P1. **FROM-digest per-repo conversion ships — CONVERSION DONE 15/15 + QG-GREEN; only the SHIP leg
+      remains, parked behind the live breaking convergence (state as of 2026-06-10 ~11:05Z).** All 15 repos (16
+      Dockerfiles incl. deployment-api ×2) are converted in their slot-1 trees with fresh QG sentinels; quickmerge
+      correctly refused promotion mid-convergence (first the UTL dep-order gate, then the 10:57Z staging lock —
+      `execution-service=0.6.0` cascade; breaking_pending: blr/exec/greeks/mtds/UTL). **To finish once the lock
+      clears + UTL ≥ STAGING_GREEN: run `bash /tmp/dockerfile_digest_fleet_rollout.sh`** (pass-2-aware: ships
+      dirty-only-Dockerfile trees directly, re-QGs only stale sentinels; log → /tmp/digest_rollout_results.log; if
+      /tmp was cleaned, re-run the converter per repo — idempotent). agent-orchestrator (4f60485: Dockerfile + the
+      QG-stub venv-on-PATH fix it surfaced) and deployment-service (c5f589d: Dockerfile + the BoM feature) are
+      COMMITTED-AHEAD locally — ship each via
+      `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` (quickmerge's ahead-of-main path pushes the
+      existing commit; no re-commit). After ALL 15 ship: flip STEP 5.79's legacy `${`-skip to hard-fail (the final
+      ratchet).
 - [ ] [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
       an image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM
       workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL
