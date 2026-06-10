@@ -105,8 +105,17 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       unknown (handled gracefully — shard-level isolation, never response-fatal). Operator ask: add **Checks: read** to
       the fine-grained GH_PAT (Secret Manager `GH_PAT`, both clouds). Ping: `ikenna_orchestrator/pings/slot_3.md`
       2026-06-10.
-- [ ] [CODE] P3. Overview response surfaces per-repo aggregation errors (an `errors[]` block) instead of silently
-      dropping a degraded row — found during live verify (rows degrade on per-repo GitHub 5xx; currently log-only).
+- [x] ✅ [CODE] P3. DONE 2026-06-10 — deployment-api@62bbec1 (basedpyright 0 errors; QG green; unit test
+      `test_errors_block_present`). Overview response surfaces per-repo aggregation errors (an `errors[]` block) instead
+      of silently dropping a degraded row — found during live verify (rows degrade on per-repo GitHub 5xx; was
+      log-only). Now `_overview_row` returns a typed `RepoErrorDict` on per-repo HTTP/timeout failure (503 rate-limit
+      still surfaced globally), `get_overview` splits rows from `errors[]`, `OverviewResponseDict.errors` added,
+      `_mock_overview` seeds one sample. Layered onto #46's AWS/GCP build-signal parity (reconciled — duplicate AWS WIP
+      dropped). **Follow-up below: deployment-ui errors[] panel consumes this.**
+- [ ] [CODE] P3. [UI] **deployment-ui errors[] panel** — consume the new `OverviewResponseDict.errors[]` (deployment-api@62bbec1)
+      on the Repos CI dashboard: a small "degraded repos" strip listing each `{repo, error}` so a per-repo GitHub-5xx
+      degradation is VISIBLE, not just present in the payload. Repo: deployment-ui (add `errors` to `RepoCiOverview`
+      client type + render). Pairs with the failure-injection matrix billing-block/rate-limit honest-degrade verify.
 
 ## Phase 2 — deployment-ui "Repos" page
 
