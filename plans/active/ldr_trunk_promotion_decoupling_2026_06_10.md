@@ -135,11 +135,13 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
 - [ ] [SCRIPT] P1.5. **Compose with @4228 (dep-clone ref-determinism).** Confirm the LDR→staging PR resolves _all_
       internal deps at the staging ref consistently (no mixed staging-new/main-old set). Cross-linked,
       verify-on-first-green.
-- [ ] [SCRIPT] P1. **Drop `push:[staging]` QG — STEP 1 of 3 (inheritance FIRST).** Wire `FEATURE_GREEN → STAGING_GREEN`
-      inheritance in `ci-status-update.yml`: when a repo's LDR→staging PR merges green (its `quality-gates-v2` passed =
-      the staging gate, same tree), set ci_status `STAGING_GREEN` at merge — do NOT depend on a `push:[staging]` QG run.
-      **MUST land before STEP 3** or the Tier-C dep-order gate (`tier_c_promotion_gate.py`, reads `STAGING_GREEN`)
-      starves → drain jams fleet-wide. repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **Drop `push:[staging]` QG — STEP 1 of 3 (inheritance FIRST).** Wire
+      `FEATURE_GREEN → STAGING_GREEN` inheritance. **Implemented in `python-quality-gates-v2.yml` (the reusable v2
+      workflow, pinned `@live-defi-rollout` → live fleet-wide) NOT `ci-status-update.yml`** — that's where the
+      branch→status mapping lives: the "Record CI status" step now reads `github.base_ref` and a green PR _into_ staging
+      maps to `STAGING_GREEN` (the promote PR's v2 IS the staging gate). Additive — `push:[staging]` still also sets it
+      until STEP 3, so no regression. Only `staging` is inherited (not `main`). **MUST stay ahead of STEP 3.** —
+      unified-trading-pm@e9938a425
 - [ ] [CODE] P2. **Drop `push:[staging]` QG — STEP 2 of 3 (detector).** Teach the @4950 zero-check-run detector
       (Repos-CI dashboard) that a staging head with no _push_ check is legitimate when its merged PR carries the v2
       check; flag only no-check AND no-merged-PR-check. Composes with `monitoring_control_plane_master_2026_06_10.md`.
@@ -165,13 +167,21 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
 
 ### Track D — LDR integrity (promote-PR provenance + push tripwire + PR hygiene)
 
-- [ ] [CI] P1. **Promote-PR provenance gate (the enforcement).** The LDR→staging promote PR (and PM's LDR→main PR) runs
-      `scripts/cicd/check_strict_quickmerge.py` over its commit range as a **required, blocking** check: any
-      non-carve-out CODE commit lacking the `Quickmerge:` trailer → the PR does **not** merge. **MUST reuse the existing
-      checker's carve-out classification** (`docs(plans):` / dirty-dep / `.github/**` are legitimately trailer-less) — a
-      naive "all-commits-trailered" scan would jam promotion on every plan flip. This, not the push tripwire, is what
-      keeps un-QG'd code out of staging. repo: unified-trading-pm + `ldr-to-staging-promote.yml` /
-      `ldr-to-main-promote.yml`.
+- [x] ✅ [CI] P1. **Promote-PR provenance gate (the enforcement) — staging drain DONE.** **Implementation pivot:**
+      `check_strict_quickmerge.py` is NOT present in target-repo checkouts (only in PM), so it can't run in the per-repo
+      v2 aggregation job. Implemented instead **in the Tier-C drain itself** (`ldr-to-staging-promote.yml`, which checks
+      out PM and HAS the script) — exactly the "promote _bot_ gates" framing: before arming auto-merge for a repo, the
+      drain shallow-fetches that repo's `staging`+`live-defi-rollout` into a temp repo and runs the SSOT checker over
+      `origin/staging..origin/live-defi-rollout --block`. A **clear** violation → auto-merge NOT armed, PR left open +
+      commented, counted BLOCKED. **FAIL-OPEN** on fetch/checker error (distinguishes a real violation — output contains
+      `bypassed quickmerge` — from an internal error, so a checker bug never jams promotion). Reuses the checker's
+      carve-out classification (PB1). **Note vs original spec:** this is a "don't-arm-auto-merge" gate (PR sits open),
+      NOT a v2-RED hard-block — bad content can't auto-promote, but isn't admin-unmergeable. —
+      unified-trading-pm@e9938a425
+  - [ ] **Remaining:** mirror the gate into `ldr-to-main-promote.yml` (PM's LDR→main; range `main..live-defi-rollout`) —
+        same insert, PM-only so mostly carve-outs. (Optional stronger variant: a true v2-RED hard-block would need the
+        checker fetched into the per-repo v2 job — deferred; the drain gate is sufficient for "bot promotes only
+        provenanced content".)
 - [ ] [CI] P2. **Push tripwire (faster detection — optional, build after P1).** Non-blocking `push: live-defi-rollout`
       GHA running the SAME `check_strict_quickmerge.py`; a violation fires a `#ci-failures` alert (+ optional QG) so a
       bypass is caught at push, not ≤30 min later at the drain. Latency-reduction only — the promote-PR gate (above) is
