@@ -1803,9 +1803,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-10T10:57:04.878822Z",
-    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.6.0 (pre-1.0.0)",
-    "lock_version": "0.6.0",
+    "locked_since": "2026-06-10T11:18:33.019286Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "market-tick-data-service",
       "batch-live-reconciliation-service",
@@ -1830,24 +1830,24 @@
       "version": "0.3.0"
     },
     "market-tick-data-service": {
-      "version": "0.6.0",
+      "branch": "staging",
       "sha": "3a113ab5bfa0a80ffcd83f0c01c00a0f42153ee2",
-      "branch": "staging"
+      "version": "0.6.0"
     },
     "batch-live-reconciliation-service": {
-      "version": "0.3.0",
+      "branch": "staging",
       "sha": "67734304b333b7931780ef131bb1b612a9b536b3",
-      "branch": "staging"
+      "version": "0.3.0"
     },
     "features-service": {
-      "version": "0.1.2",
+      "branch": "staging",
       "sha": "1a67c96862defe16ff6ebe4cb5fe8a19701b66d2",
-      "branch": "staging"
+      "version": "0.1.2"
     },
     "execution-service": {
-      "version": "0.6.0",
+      "branch": "staging",
       "sha": "5dffa138887987c3591ce2e016c5587922b1c053",
-      "branch": "staging"
+      "version": "0.6.0"
     }
   },
   "main_commits": {
