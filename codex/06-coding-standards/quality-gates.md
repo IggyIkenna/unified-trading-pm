@@ -253,6 +253,51 @@ architecture. See
 
 ---
 
+## CI parallel slice jobs + `QG_SLICE` (latency reduction, 2026-06-10)
+
+The remote `quality-gates-v2` check (the required CI gate) used to run the **entire** `quality-gates.sh --no-fix`
+monolith in ONE serial job (~12 min; the single "Run quality gates" step measured 715s of 778s). The reusable workflow
+`.github/workflows/python-quality-gates-v2.yml` now fans it into a **matrix of parallel slice legs** so wall-time →
+`max(slice)` not `sum(slices)` (pytest dominates, so the gate drops to ≈ the pytest leg).
+
+**`QG_SLICE` selector (base-service.sh + base-library.sh).** A new env var partitions the gate with ZERO overlap + ZERO
+lost coverage — every check the monolith ran runs in exactly one slice. **Unset = the full monolithic run**
+(behaviour-identical for every LOCAL invocation + existing caller — local `quality-gates.sh` is unchanged):
+
+| `QG_SLICE`   | Runs                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| `tests`      | ENV + [3] TESTS only (early-exit after pytest)                                                                 |
+| `typecheck`  | ENV + [4] TYPE CHECK only (early-exit after basedpyright)                                                      |
+| `lint-codex` | ENV + [2] LINT + [3.5]/[3.6] + all of [5] CODEX (incl. pip-audit + bandit) + [5.5]/[5.6] + the stub POST-GATES |
+| _(unset)_    | the full gate (every phase) — the only mode any LOCAL/quickmerge run ever uses                                 |
+
+**3-way, not 4-way (pip-audit folds into `lint-codex`):** the entire [5] CODEX section accumulates a SHARED `V`
+violation counter (codex + size-checks + pip-audit + bandit → one ceiling check), so pip-audit cannot be split into its
+own slice without forking that counter. It rides `lint-codex` — harmless because pip-audit (~3 min, network-bound) runs
+in PARALLEL with the dominant pytest leg and is never on the critical path.
+
+**Required-check context is preserved.** The legs emit `Quality Gates (<repo>) / QG slice (tests)` etc. (NOT required).
+A `needs:`-all aggregation job **keyed AND display-named `quality-gates-v2`** reports the branch-protection-required
+context `Quality Gates (<repo>) / quality-gates-v2` (= `<caller job name> / <reusable job display name>`), green iff
+EVERY leg passed (`fail-fast: false` so a failing leg gives full signal but still reds the rollup). **The aggregation
+job's `name:` MUST stay literally `quality-gates-v2`** — a friendly label (e.g. `aggregate`) makes the required context
+never report → every PR permanently BLOCKED (caught live by the PM canary 2026-06-10).
+
+**Pytest parallelism.** The CI `tests` leg runs `pytest -n auto` (xdist; each leg is alone on its runner — no
+shared-host OOM risk). LOCAL stays `-n 1` (the OOM-safe default for the shared dev box); explicit `PYTEST_WORKERS`
+overrides both.
+
+**Content-sentinel CI short-circuit.** A `content-gate` job computes the git **TREE hash** (`git rev-parse HEAD^{tree}`
+— content-addressed, survives squash/promote re-SHA) folded with the per-repo workflow-file hash, and probes the GHA
+cache. A HIT ⟹ every leg skips its work (reports GREEN in seconds); the aggregate still reports the required context (PR
+not BLOCKED). The green marker is SAVED only on a real full-green miss (never on a hit / metadata-only). **FAIL-SAFE**:
+a miss (incl. GHA cross-branch cache-scope limits) just runs the full gate — it can NEVER false-green or block a PR;
+worst case is "no speedup". This kills the redundant byte-identical re-runs (v2 fires on push AND PR to main+staging).
+The local `.qg_content_sentinel` / `.qg_last_passed_sha` quickmerge fast-path is UNAFFECTED (CI never reads them; sliced
+runs are partial → never write them). SSOT: `plans/active/cicd_v2_latency_reduction_2026_06_10.md`.
+
+---
+
 ## Tool Version Pinning and Environment Isolation
 
 ### Three Environments, Three Purposes
