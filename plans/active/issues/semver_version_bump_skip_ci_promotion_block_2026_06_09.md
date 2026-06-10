@@ -328,3 +328,51 @@ carve-out (quickmerge STAGE 1.5 hard-blocks on the very lock the fix clears), th
       `unified-trading-pm`.
 - [ ] [PROCESS] P3. A lint-red commit reached SIT LDR at all — QG-before-commit should have caught RUF003 locally. Audit
       the producing path (direct push without Pass-1 QG, or ruff version/config skew on the producing host).
+
+## 14. CORRECTION 2026-06-10 (Harsh, slot-2) — workflow_dispatch greens do NOT unblock an open PR; verified mechanism = empty-commit supersede
+
+> **Corrects §11's "fires on workflow_dispatch (manual recovery fast)" and §12's recovery claim, and the `9ad60ee07`
+> watcher mechanism — all relied on `workflow_dispatch` satisfying the PR's required check. Live evidence shows it does
+> not.**
+
+### Disproof (live, two repos)
+
+- `deployment-service#46` (BLOCKED, head `44d4b560`): **three** `workflow_dispatch` `quality-gates-v2` runs on that
+  exact head SHA, all `completed/success` (03:47 / 05:33 / 07:10Z) — PR stayed **BLOCKED** with `gh pr checks` = "no
+  checks reported". A dispatch run's check suite is **not associated with the PR**, so its green never satisfies the
+  required context on an open PR.
+- `market-tick-data-service#167` (BLOCKED 7 h, head `435802ae` `chore(deps): pin … [skip ci]`): close+reopened **twice**
+  by the watcher (01:28, 02:26Z) — futile (the re-fired `pull_request` is equally suppressed by the token head); a fresh
+  dispatch green (06:45Z, fast-path, ~20 s) also did **not** unblock it.
+- **Foot-gun within the foot-gun**: #46's head was itself a _manual recovery commit_ titled
+  `chore(ci): re-trigger v2 — advance past [skip ci] bump head…` — GitHub matches the token **anywhere** in the message,
+  so the recovery commit **self-suppressed** (zero push/pull_request runs on it). Recovery commit messages must never
+  contain the literal bracketed tokens.
+
+### Verified working mechanism (piloted, then encoded in the watcher)
+
+**Supersede the suppressed head with an EMPTY clean-message commit (same tree) via the git-data API** —
+`GET git/commits/<head>` (tree) → `POST git/commits` (same tree, clean message) → `PATCH git/refs/heads/<branch>`. The
+ref update fires real `push` + `pull_request` runs whose v2 **counts**; same-tree means the suppressed content itself
+finally gets a counting CI validation. Requires the PAT to bypass the staging push ruleset (repo-admin bypass — true for
+the fleet `GH_PAT`; an SSH push as a non-admin operator is rejected).
+
+- Pilot: `market-tick-data-service#167` — empty commit `110f8c16` → v2 green on **both** `push` and `pull_request` → PR
+  **BLOCKED → CLEAN**.
+- Sweep: `deployment-service#46` — superseded `44d4b560` with `6f812144` via the fixed watcher → v2 in-flight on both
+  events at time of writing.
+
+### Watcher corrected (PM LDR `038182d48`, corrects `9ad60ee07`)
+
+`auto_recover_stuck_prs` now: clean-message token-suppressed head → close+reopen (unchanged, proven for that class);
+**CI-suppression-token head → empty-commit supersede** (the verified lever); never stacks a second recovery on its own
+marker commit (`ci: re-fire quality-gates-v2`); `_SKIP_CI_MARKERS` extended to GitHub's full token set (5 bracketed
+tokens + the `skip-checks: true` trailer) so mid-message mentions are matched too. Converges by construction: the new
+head's v2 appears in the rollup → next tick sees `v2_present` (the dispatch mechanism never converged — it re-fired on
+the same head every 15-min tick forever). 12 hermetic unit tests. **Takes effect when PM LDR→main promotes** (the cron
+runs from `main`).
+
+### Still the real fix (unchanged, §12 residual action)
+
+Complete the fleet rollout of `update-dependency-version.yml` (drop `[skip ci]`) — the watcher correction makes
+recurrences self-heal, but the producer is still live on ~17 repos' `main`.
