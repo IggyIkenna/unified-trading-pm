@@ -544,8 +544,17 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   actively polling to keep cache warm; 20–30 min only for idle waits). A **flat** metric across ticks = **STALL → STOP
   and diagnose the blocker** (`gh run view --log-failed`), never wait it out — a jammed pipeline does not self-unstick
   (incident: a frozen `ci_status` writer caught in ~6 min by short polling that a 16-min done-watcher would have
-  wasted). Stay productive on independent work during the wait; never idle-burn the window. SSOT:
-  `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  wasted). Stay productive on independent work during the wait; never idle-burn the window. **Watcher-coverage (HARD
+  RULE, codified 2026-06-10 — never infinitely wait)**: (1) a watcher must reach a TERMINAL verdict on EVERY path —
+  watch `state != OPEN` (covers merged/closed/failed), never only the success marker, and PRINT an explicit verdict line
+  so empty output is impossible (a timeout-killed silent watcher reads as "still waiting" forever — incident 2026-06-10:
+  a main-arrival watcher died at its Bash timeout with zero output while the awaited drain could never fire); (2)
+  **verify the awaited MECHANISM exists before arming a long wait** — name who fires the next hop (`rg` the trigger
+  chain: which workflow/dispatch/cron moves it?); if you cannot name it, that is a diagnosis task, not a wait (the drain
+  gap was bug #11: `staging_commits` was never written for non-breaking merges, so no watcher duration would ever have
+  succeeded); (3) ONE deadline = one expected-cadence interval of the mechanism, then STOP and diagnose — never re-arm
+  the same watcher after a silent expiry. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher
+  coverage".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
