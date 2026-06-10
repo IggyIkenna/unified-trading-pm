@@ -126,15 +126,16 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
    - **A workflow-template rollout is NOT done until every per-repo copy is COMMITTED + pushed (HARD RULE 2026-06-10).**
      `rollout-workflow-templates.sh` WRITES the template into all 24 repos' WORKING TREES — you MUST then commit + push
      the per-repo change to each repo's `live-defi-rollout` (per-repo `ci(workflow-templates): roll out <wf>` commit).
-     Leaving rolled-out copies dirty strands clones: the `*/5` `slot-cron-ff-pull` cron `[skip:dirty]`s any dirty clone →
-     it falls behind LDR forever (on a worker VM this starves the orchestrator's plan-regen — incident 2026-06-10). Done
-     = `detect_template_drift.py --workflows` exits 0 AND no `.github/workflows/` is dirty fleet-wide. Can't finish
+     Leaving rolled-out copies dirty strands clones: the `*/5` `slot-cron-ff-pull` cron `[skip:dirty]`s any dirty clone
+     → it falls behind LDR forever (on a worker VM this starves the orchestrator's plan-regen — incident 2026-06-10).
+     Done = `detect_template_drift.py --workflows` exits 0 AND no `.github/workflows/` is dirty fleet-wide. Can't finish
      in-session → file a plan todo; never leave silent fleet drift (the cron preserves dirty trees, can't self-heal it).
    - **Bumping a GHA action version: VERIFY the ref RESOLVES — never assume a floating major tag exists (HARD RULE
      2026-06-10).** Some actions are pin-only past a point: `astral-sh/setup-uv` has `v5`/`v7` floating but **no `@v8`**
      (only `@v8.2.0`) → `setup-uv@v8` fails at "Set up job" (`unable to find version v8`) and breaks the workflow. Prove
-     it before commit: `curl -so /dev/null -w '%{http_code}' https://raw.githubusercontent.com/<owner>/<action>/<ref>/action.yml`
-     == 200 (404 = missing), AND smoke ≥1 consumer run. Missing floating major → pin the latest specific tag (`@vX.Y.Z`).
+     it before commit:
+     `curl -so /dev/null -w '%{http_code}' https://raw.githubusercontent.com/<owner>/<action>/<ref>/action.yml` == 200
+     (404 = missing), AND smoke ≥1 consumer run. Missing floating major → pin the latest specific tag (`@vX.Y.Z`).
 4. **Conditional push (multi-agent safety)**: before any push,
    `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
    document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main
@@ -252,6 +253,13 @@ back-merges to LDR — so a `quality-gates.sh`-green commit is the per-repo boun
   `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)` (QG STEP 5.69 ratchet enforces).
 - ❌ Fire-and-forget VM launches — every VM launch MUST be paired with active event-stream verification (STARTED +
   progress + STOPPED). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md`.
+- ❌ **Service → service dependency** — a deployable service (T4) MUST NOT depend on another service (no
+  `[tool.uv.sources]` path dep, no `import other_service` in source OR tests). Cross-repo deps = shared LIBRARIES only
+  (UTL / UAC / `unified-*-interface`). Services integrate by **API contract + data transfer** (HTTP/events/GCS), the
+  contract held in UAC/UTL; integration tests assert the UAC contract + mocks, never import the peer service (Layer-1.5;
+  real cross-service interaction is Layer-3 / SIT only). SIT (creds/auth/cross-service/perf) runs at the staging
+  boundary, NOT in local quality-gates — local focus is unit coverage. SSOT:
+  `codex/04-architecture/tier-and-import-architecture.md` + `codex/06-coding-standards/integration-testing-layers.md`.
 
 ## Service infrastructure requirements (every service)
 
