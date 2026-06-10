@@ -315,13 +315,17 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       (`unified_trading_library.treasury/`, which exists); strategy-service + deployment-api both import from UTL. (Or,
       if they need live position state, deployment-api calls strategy-service's treasury HTTP endpoint.) Removes the
       service→service edge.
-- [ ] [AGENT] P1. **MISCLASSIFICATION — deployment-api → deployment-service is NOT a real violation**:
-      deployment-service is functionally a deployment **engine/library** (`deployments_registry`,
-      `cloud-providers.yaml`, terraform, VM launchers), consumed as a package by deployment-api (6 files import
-      `deployment_service.deployments_registry`). **Fix the manifest `type` for deployment-service → library/engine**
-      (not `service`) so the gate correctly treats the API↔engine pairing as legitimate. Do NOT force an HTTP boundary
-      between an API and its own engine. Confirm deployment-service is not independently run as a live service before
-      reclassifying.
+- [ ] [AGENT] P1. **deployment-api → deployment-service — EXTRACT the shared registry to UTL (NOT reclassification;
+      corrected 2026-06-10).** The initial "reclassify deployment-service to library" idea was **wrong**:
+      deployment-service genuinely IS a deployed service (has `Dockerfile` + `cloudbuild.yaml` + `buildspec.aws.yaml` +
+      a live FastAPI `api/main.py` with ServiceBootstrap/uvicorn). BUT the coupling is **library-like** — the 6
+      deployment-api files import `deployment_service.deployments_registry`, a **529-line GCS-backed data-access layer**
+      (`DeploymentsRegistry` + `DeploymentRegistryEntry` + VM-log URI helpers + `is_entry_stale`) that depends only on
+      UTL (`StorageClient`/`UnifiedCloudConfig`) and is needed by BOTH deployment-service (writer/control-plane) and
+      deployment-api (reader/dashboard). **Fix: relocate `deployments_registry.py` into UTL** (e.g.
+      `unified_trading_library.deployment_registry`); both services import it from UTL — removes the service→service
+      edge with no forced HTTP boundary. (Same shared-accessor-to-library pattern as the strategy NAV-functions fix.)
+      Keep deployment-service `type=service`.
 - [ ] [AGENT] P2. **market-data-processing-service → market-tick-data-service** (`app/core/canonical_writer.py:59`
       imports `market_tick_data_service.market_interface.adapters.tradfi.databento_classifier`, currently
       `# noqa:     qg-deep-import`). Relocate the shared `databento_classifier` to UTL/UAC (it is
