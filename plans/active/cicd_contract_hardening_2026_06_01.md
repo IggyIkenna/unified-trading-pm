@@ -4737,3 +4737,30 @@ no `full-workspace-sit` / `staging-to-main` run in-flight; ml-style repo strande
       under `ci_local_qg_parity_2026_06_08.md`; until fixed it blocks local sentinels on PM for non-Python diffs
       (hit 2026-06-10 shipping the staging-to-main concurrency fix → used the codified `.github/**` carve-out + the
       v2-gated main PR instead). — provenance: this fix's Pass-1
+
+### ADDENDUM 2026-06-10 (same session) — probe found 3 more promotion-latency defects; all fixed
+
+E2E probe (greeks docs change, T0 09:24:00Z → main 09:56:09Z = 32 min, target ~5): LDR→staging took 109s (healthy); the
+remaining ~30 min was three defects, each repaired by hand mid-probe and then fixed in code:
+
+1. **Promote records repos it never merged** — `staging-to-main.yml` counted PROMOTED + wrote `versions[]` right after
+   `gh pr merge --auto` even when the arm was REFUSED (greeks: `allow_auto_merge=false`) → manifest said greeks=0.3.0
+   while its main sat at 0.2.0. FIX (staging-to-main.yml ~:603): count PROMOTED only when the arm succeeds OR a
+   direct-merge fallback (retry ≤3 min for in-flight checks) lands; else FAILED — the manifest can no longer lie.
+2. **Dep-update PRs never armed auto-merge** — greeks PR #21 sat ~50 min all-green waiting for a human. FIX
+   (`update-dependency-version.yml` template): arm `gh pr merge --auto --squash` at creation; loud `::warning` if the
+   repo refuses the arm.
+3. **`staging-unlocked` dispatch never refreshed PR verdicts** — a repository_dispatch run executes on the
+   default-branch ref and cannot re-report a required check on a PR head, so `check-staging-lock` FAILs recorded during
+   a lock outlived the unlock (greeks #21: stale ~50 min). FIX (`staging-lock-check.yml` template): the check job is now
+   PR-context-only; a new `refresh-open-prs` job on dispatch re-runs each open staging PR's own failed lock-check run
+   (the only mechanism that re-reports on the PR head).
+
+Both template fixes need `rollout-workflow-templates.sh` to the fleet (same change set).
+
+- [ ] [OPERATOR] P1. Enable `allow_auto_merge` on **greeks-service** (Settings → General → "Allow auto-merge") — both
+      available tokens lack admin on that repo (404 on PATCH). Until flipped, greeks promote PRs take the direct-merge
+      fallback path. — provenance: probe 2026-06-10
+- [ ] [SCRIPT] P2. 4 repos lack `scripts/quickmerge.sh` (greeks-service ✅ fixed via probe commit, ml-service,
+      e2e-testing, features-service) — they cannot follow the mandated quickmerge path; propagate the canonical copy. —
+      provenance: probe 2026-06-10

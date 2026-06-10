@@ -602,11 +602,35 @@ jobs:
 
             if [ -n "$PR_URL" ]; then
               echo "  PR created: $PR_URL"
-              # Enable auto-merge (requires branch protection to be configured)
-              gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null || \
-                echo "  WARNING: auto-merge not available for $REPO — merge PR manually: $PR_URL"
-              PROMOTED="$PROMOTED $REPO"
-              PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              # Enable auto-merge (requires branch protection to be configured).
+              # If the arm is REFUSED (repo allow_auto_merge=false / protection mismatch), fall back
+              # to a direct merge with a retry window for in-flight checks. A repo is counted
+              # PROMOTED only when the merge is armed or landed — recording an unmerged PR writes
+              # versions[] for content that never reached main (manifest-vs-reality divergence,
+              # incident 2026-06-10: greeks-service recorded 0.3.0 while its main stayed 0.2.0).
+              if gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null; then
+                PROMOTED="$PROMOTED $REPO"
+                PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              else
+                echo "  auto-merge arm refused for $REPO — direct-merge fallback (retry up to 3m for checks)"
+                MERGED_OK=""
+                for _i in 1 2 3 4 5 6 7 8 9; do
+                  if gh pr merge "$PR_URL" --rebase --repo "$OWNER/$REPO" 2>/dev/null; then
+                    MERGED_OK=1
+                    break
+                  fi
+                  sleep 20
+                done
+                if [ -n "$MERGED_OK" ]; then
+                  echo "  direct merge landed for $REPO"
+                  PROMOTED="$PROMOTED $REPO"
+                  PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+                else
+                  echo "  ERROR: $REPO promote PR could not be merged (checks pending/red or merge refused) — NOT recording as promoted: $PR_URL"
+                  FAILED="$FAILED $REPO"
+                  FAILED_COUNT=$((FAILED_COUNT + 1))
+                fi
+              fi
             else
               echo "  PR already exists or merge conflict — checking mergeable state..."
               FAILED="$FAILED $REPO"
