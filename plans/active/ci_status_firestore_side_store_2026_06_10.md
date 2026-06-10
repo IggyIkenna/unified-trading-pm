@@ -85,11 +85,11 @@ the git copy is a cache.
 
 ### Phase 1 — Firestore writer + the CAS (P2)
 
-- [ ] [CODE] P2. Add `scripts/cicd/ci_status_store.py` — `set_status(repo, status, branch, sha)` doing the Layer-2 CAS
+- [x] ✅ [CODE] P2. DONE 2026-06-10 — `scripts/cicd/ci_status_store.py` (`resolve_status` pure CAS decision + `set_status` Firestore txn + `get_all`); 10 unit tests green (rank/no-downgrade/FAILING-unconditional/main-authoritative), ruff + basedpyright clean. Was: `set_status(repo, status, branch, sha)` doing the Layer-2 CAS
       in a Firestore transaction (rank map + the `FAILING`-unconditional carve-out), and `get_all() -> dict[repo,...]`
       for readers. Cloud-agnostic via `get_firestore_client()`; unit-tested (mock Firestore) incl. the out-of-order +
       `FAILING` cases.
-- [ ] [CI] P2. `ci-status-update.yml` (+ the `Recording ci_status` step the reusable `python-quality-gates-v2.yml`
+- [x] ✅ [CI] P2. DONE 2026-06-10 — `ci-status-update.yml` dual-write wired (gated behind `vars.CI_STATUS_FIRESTORE_DUALWRITE`, `continue-on-error` so it can never redden the run / block the git commit; mirrors the persist-cicd-event GCP-auth pattern). Was: `ci-status-update.yml` (+ the `Recording ci_status` step the reusable `python-quality-gates-v2.yml`
       dispatches) **DUAL-WRITE**: keep the existing git commit AND call `ci_status_store.set_status(...)`. No reader
       change yet — pure additive, lets us validate Firestore mirrors git before cutover.
 - [ ] [VERIFY] P2. Run a drain / a few transitions; assert the Firestore docs match the manifest `ci_status` (rank +
