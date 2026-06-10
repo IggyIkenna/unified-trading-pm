@@ -4569,7 +4569,7 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       and `unified-trading-system-ui #32 live-defi-rollout→main merged`. The `mergedAt` fix (line ~362, was the invalid
       `merged` field that 404'd the whole query) is live and the merged/closed verb resolves correctly. The bookend
       posts as INFO + still triggers the notify (build_report returns alert-or-resolved True). No code change.
-- [ ] **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
+- [ ] [CICD] P1. **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
       state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard `ldr-to-staging-promote` had already
       opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they were stuck: ml-service #15 had
       **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but the v2 `workflow_dispatch` run

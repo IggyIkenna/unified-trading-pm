@@ -124,7 +124,7 @@ noted.
 
 ### 📝 Doc fixes (PM)
 
-- [ ] [CLAUDE.md] P2. Correct the over-broad "instruments-service owns all venue URLs via `InstrumentRecord`" line —
+- [ ] [CLAUDE-MD] P2. Correct the over-broad "instruments-service owns all venue URLs via `InstrumentRecord`" line —
       `InstrumentRecord` carries only `source_archive_url_template` + coverage windows; live REST/WS endpoints are UAC
       registries (codex SSOT is accurate). Prevents agents hunting for a nonexistent field.
 - [ ] [AUDIT] P2. Fix `instruments_master_audit_instructions.md` item (g): "`rg URDI` → 0 hits" is factually wrong —
