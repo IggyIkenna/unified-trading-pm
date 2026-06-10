@@ -336,6 +336,42 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # ── STEP 4: agentic RESOLUTION — dispatch each finding to the orchestrator ──────
+      # The detector above is REPORT-ONLY; a non-empty result is handed to the BUILT plan_health
+      # resolver (server/escalation.py wall_type=plan_health + agent-orchestrator/agents/plan-health.md)
+      # so a worker RESOLVES the contradiction / doc-drift on live-defi-rollout — not just a Slack
+      # one-liner. One escalate dispatch per finding (the conservative detector + the orchestrator's
+      # 503/no-headroom backpressure naturally throttle). Non-fatal: a dispatch hiccup must not redden
+      # the plan-health badge. Daily/dispatch only (this whole job is `!= pull_request`).
+      - name: Dispatch findings to orchestrator (agentic resolution)
+        if: always() && env.ANTHROPIC_API_KEY != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          CONTRA_JSON=$(grep -oE '\{.*"contradictions".*\}' agent_out.txt 2>/dev/null | tail -1 || true)
+          [ -z "$CONTRA_JSON" ] && CONTRA_JSON='{"contradictions": [], "doc_drift": []}'
+          N=$(printf '%s' "$CONTRA_JSON" | jq '([.contradictions[]?] + [.doc_drift[]?]) | length' 2>/dev/null || echo 0)
+          if [ "${N:-0}" -eq 0 ]; then
+            echo "No contradictions / doc-drift — nothing to dispatch (report-only run)."
+            exit 0
+          fi
+          echo "Dispatching ${N} plan-health finding(s) to the orchestrator for agentic resolution…"
+          dispatch_wall() {  # $1 = context string
+            gh workflow run escalate-to-orchestrator.yml -R "${GITHUB_REPOSITORY}" \
+              -f repo=unified-trading-pm -f pr_number=0 -f wall_type=plan_health \
+              -f authoring_slot=plan-health-agent -f context="$1" \
+              && echo "  ✓ dispatched plan_health: $1" || echo "  ✗ dispatch failed (non-fatal): $1"
+          }
+          printf '%s' "$CONTRA_JSON" | jq -c '.contradictions[]?' 2>/dev/null | while IFS= read -r c; do
+            dispatch_wall "CONTRADICTION between $(printf '%s' "$c" | jq -r '.plan_a') and $(printf '%s' "$c" | jq -r '.plan_b'): $(printf '%s' "$c" | jq -r '.description')"
+          done
+          printf '%s' "$CONTRA_JSON" | jq -c '.doc_drift[]?' 2>/dev/null | while IFS= read -r d; do
+            dispatch_wall "DOC-DRIFT: $(printf '%s' "$d" | jq -r '.doc') claim contradicted by $(printf '%s' "$d" | jq -r '.contradicted_by'): $(printf '%s' "$d" | jq -r '.description')"
+          done
+          echo "agentic-resolution dispatch complete."
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Plan Health Agent

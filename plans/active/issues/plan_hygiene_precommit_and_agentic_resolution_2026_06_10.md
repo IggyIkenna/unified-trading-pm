@@ -54,11 +54,14 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone `plan-health-gate` GHA job —
       **RULE-11 prove-then-retire**: prove the prek + v2-step combo catches the same hard failures on PM before deleting
       the job (don't open a gap). repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. **24h agentic contradiction RESOLUTION** — the daily plan-health agent is REPORT-ONLY; wire it so a
-      non-empty `contradictions[]` / `doc_drift[]` result DISPATCHES each finding to the built `plan_health`
-      orchestrator path (`POST /api/escalate wall_type=plan_health` → `agents/plan-health.md` worker resolves on LDR),
-      instead of only posting to Slack. Reuse `escalate-to-orchestrator.yml`. repo: unified-trading-pm (+
-      agent-orchestrator).
+- [x] ✅ [SCRIPT] P1. **24h agentic contradiction RESOLUTION** — DONE 2026-06-10 (`plan-health-agent.yml` STEP 4). Added
+      STEP 4 to the daily `plan-health-agent.yml` job: a non-empty `contradictions[]` / `doc_drift[]` result now
+      DISPATCHES one `escalate-to-orchestrator.yml` run per finding with `wall_type=plan_health` → the built
+      `plan_health` resolver (`server/escalation.py` + `agent-orchestrator/agents/plan-health.md`) resolves it on LDR,
+      instead of only posting to Slack. Daily/dispatch only (`!= pull_request`); non-fatal per dispatch (a hiccup never
+      reddens the badge); the conservative detector + the orchestrator's 503/no-headroom backpressure throttle volume.
+      Verified: actionlint clean + YAML parses; a live contradiction (needed to see a real dispatch) is rare-by-design,
+      so verification is logic+lint, not a forced finding. repo: unified-trading-pm (+ agent-orchestrator).
 - [ ] [DOC] P3. Pre-existing frontmatter violation: `plans/active/ci_status_firestore_side_store_2026_06_10.md` is
       missing `locked_by` (another agent's new plan today). Staged-scoping means it only blocks a commit that touches
       that file — but it should be fixed at source. Owner: whoever owns that plan. repo: unified-trading-pm.
