@@ -42,15 +42,15 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       `core` was already at 0 → 403 until the hourly reset (observed right after the first deploy). Disk-backed now via
       `load_etag_cache`/`save_etag_cache` (guarded to the real poll path — no disk I/O under an injected conclusion_fn).
       agent-orchestrator@6a78f1c | deployed vm-0.
-- [ ] [UI] P1. **GitHub rate-budget tracker in deployment-ui** (the v2 PRIMARY operator view) — IN FLIGHT 2026-06-10
-      (sub-agent). deployment-ui reaches deployment-api (not the orchestrator), so the data source is a NEW
-      deployment-api `GET /api/repos/gh-rate-limit` (free poll). Tracker mirrors `FleetGit.tsx`
-      `GhRateLimit`/`rateBudgetTone`. Target repos: `deployment-ui` + `deployment-api`. (pw:L2 + regression spec per the
-      UI playwright gate.)
-- [ ] [PERF] P1. **ETag `deployment-api/deployment_api/routes/_repo_ci_github.py`** — the **biggest** fleet REST burner
-      (~8 GitHub calls × ~25 repos per coverage refresh; TTL-cached but NO ETag). IN FLIGHT 2026-06-10 (sub-agent): add
-      `If-None-Match` to the shared `gh_get_json` (304 = free) + the free rate-limit route above. Target repo:
-      `deployment-api`.
+- [x] ✅ [UI] P1. **GitHub rate-budget tracker in deployment-ui** (the v2 PRIMARY operator view) — renders on the repos
+      Coverage tab (`RepoCoverageTab` header): REST+GraphQL budget bars, `rateBudgetTone` red<10%/amber<25%, polls the
+      deployment-api `/api/repos/gh-rate-limit` every 60s. `src/api/ghRateLimit.ts` + `src/components/GhRateBudget.tsx`
+      (+ mock handler). deployment-ui@1ef784c | tsc clean | vitest 785 passed (8 new) | **pw:L2 ✓** regression:
+      `tests/smoke/gh_rate_budget.spec.ts`.
+- [x] ✅ [PERF] P1. **ETag `deployment-api/deployment_api/routes/_repo_ci_github.py`** — the **biggest** fleet REST
+      burner (~8 GitHub calls × ~25 repos per coverage refresh). `If-None-Match` added to the shared `gh_get_json` (304
+      = free; TTL-cache extended to hold the ETag + last body) + the free `GET /api/repos/gh-rate-limit` route
+      (mock-mode aware). deployment-api@061a1b5f | QG green (170s) | 5 ETag tests. This is the dominant REST reduction.
 - [ ] [INFRA] P1 (**BLOCKED-OPERATOR-DECISION**). **Create a GitHub App installation token for the read-only pollers** —
       a GitHub App gets its OWN rate pool (separate from the user PAT), giving the fleet a second 5000+/hr REST budget
       without touching the workers' push PAT. **Operator-gated**: the current PAT lacks app-management scope
