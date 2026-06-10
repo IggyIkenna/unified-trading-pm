@@ -149,8 +149,7 @@ clean fix is to relax it.
       staging-to-main already does) OR a queue-tolerant re-dispatch/retry so eviction is not silent loss. The H2
       serialise-with-manifest-writers intent must not cost the cascade its execution. Repo: unified-trading-pm
       (`.github/workflows/cascade-qg-ordering.yml:32-36`).
-- [x] ✅ [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — DONE 2026-06-10 — pending
-      commit. Mechanism: `update-repo-version.yml` gained a **bounded resolvability gate** (`resolve-gate` step) between
+- [x] ✅ [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — DONE 2026-06-10 — unified-trading-pm@c4e9f3c9c. Mechanism: `update-repo-version.yml` gained a **bounded resolvability gate** (`resolve-gate` step) between
       the digest-resolution steps and the consumer dispatch loop. It polls (10 × 30 s ≈ 5 min — kept under 10 min
       because the run HOLDS the `manifest-update` concurrency group and a long hold risks the DEFECT-1 pending-slot
       eviction of sibling version-bump runs) until the bumped version is resolvable **the way consumers resolve it**
