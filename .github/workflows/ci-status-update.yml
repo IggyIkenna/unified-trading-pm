@@ -153,6 +153,36 @@ jobs:
 
           python3 scripts/manifest/generate_workspace_dag.py
 
+      # ── Phase-1 DUAL-WRITE: mirror ci_status into the Firestore side store ───────────────────
+      # SSOT: plans/active/ci_status_firestore_side_store_2026_06_10.md. The manifest commit above
+      # stays the SSOT in Phase 1; this ADDITIONALLY writes Firestore (doc-per-repo + CAS-on-rank,
+      # scripts/cicd/ci_status_store.py) so the store can be validated against the manifest before
+      # any reader is cut over (Phase 2). DORMANT until `vars.CI_STATUS_FIRESTORE_DUALWRITE == 'true'`
+      # (flip it once the GCP_SA_KEY + Firestore collection are provisioned). Every step is
+      # continue-on-error → a missing key / SDK / transient Firestore error can NEVER redden this run
+      # or block the git commit.
+      - name: Authenticate to GCP (Firestore dual-write — best-effort)
+        id: gcp_auth_ciss
+        if: steps.update.outputs.skip != 'true' && vars.CI_STATUS_FIRESTORE_DUALWRITE == 'true'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Dual-write ci_status to Firestore (best-effort, non-fatal)
+        if: steps.update.outputs.skip != 'true' && steps.gcp_auth_ciss.outcome == 'success'
+        continue-on-error: true
+        env:
+          REPO: ${{ github.event.client_payload.repo }}
+          STATUS: ${{ github.event.client_payload.status }}
+          BRANCH: ${{ github.event.client_payload.branch || '' }}
+          SHA: ${{ github.event.client_payload.sha || '' }}
+          GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          python3 -m pip install --quiet "google-cloud-firestore>=2,<3" \
+            || { echo "firestore SDK install failed — skipping dual-write (manifest remains SSOT)"; exit 0; }
+          python3 scripts/cicd/ci_status_store.py "$REPO" "$STATUS" "$BRANCH" "$SHA" \
+            || echo "Firestore dual-write failed (non-fatal in Phase 1; manifest remains SSOT)"
+
       - name: Commit and push
         if: steps.update.outputs.skip != 'true'
         run: |
