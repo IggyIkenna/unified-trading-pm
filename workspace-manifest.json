@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.6.0",
     "unified-trading-library": "0.5.0",
-    "unified-trading-pm": "1.2.75",
+    "unified-trading-pm": "1.2.76",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.9.0",
@@ -283,7 +283,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/).",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1135,7 +1135,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1165,7 +1165,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-api": {
       "github_url": "https://github.com/IggyIkenna/unified-trading-api",
@@ -1281,7 +1281,7 @@
       ],
       "completion_path": "infrastructure",
       "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 \u2014 absorbed into strategy-service dep.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "e2e",
@@ -1798,29 +1798,19 @@
     "market-tick-data-service": "0.6.0",
     "batch-live-reconciliation-service": "0.3.0",
     "features-service": "0.1.2",
-    "execution-service": "0.6.0"
+    "execution-service": "0.6.0",
+    "deployment-api": "0.4.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-10T11:18:33.019286Z",
-    "locked_reason": "SIT running",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": "SIT passed \u2014 validated + unlocked",
     "lock_version": null,
-    "pending_repos": [
-      "market-tick-data-service",
-      "batch-live-reconciliation-service",
-      "features-service",
-      "execution-service"
-    ],
-    "sit_retry_count": 1,
+    "pending_repos": [],
+    "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": [
-      "batch-live-reconciliation-service",
-      "execution-service",
-      "greeks-service",
-      "market-tick-data-service",
-      "unified-trading-library"
-    ]
+    "breaking_pending": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
@@ -1848,6 +1838,11 @@
       "branch": "staging",
       "sha": "5dffa138887987c3591ce2e016c5587922b1c053",
       "version": "0.6.0"
+    },
+    "deployment-api": {
+      "version": "0.4.0",
+      "sha": "8fc067fc1bfc450e666d7f08c9d3317578f3a834",
+      "branch": "staging"
     }
   },
   "main_commits": {
