@@ -288,15 +288,15 @@ v2**, so re-trigger + scoped-lock clears them (no force).
 - [x] ✅ [SCRIPT] P0. **Scoped staging-lock-check (#1) ROLLOUT — DONE + VERIFIED 2026-06-10.** SOURCE DONE + tested
       (cohort logic + fail-safe: `pending_repos` None/missing → block) on the SSOT template
       (`scripts/workflow-templates/staging-lock-check.yml`); template + per-repo copies present in every repo's
-      `.github/workflows/staging-lock-check.yml` and actively running. The CIRCULAR admin-bootstrap rollout
-      (deploying the changed required-check workflow to each repo's `main` past an independently-red v2 via
-      admin-bypass of the _failed_ — not never-reported — required check; PM SSOT + UTL + UAC moved together; non-clone
-      repos followed) landed and the stuck heads were re-triggered (close+reopen under PAT → fires v2 + scoped
-      lock-check). — verified 2026-06-10: template + per-repo copies present and running.
+      `.github/workflows/staging-lock-check.yml` and actively running. The CIRCULAR admin-bootstrap rollout (deploying
+      the changed required-check workflow to each repo's `main` past an independently-red v2 via admin-bypass of the
+      _failed_ — not never-reported — required check; PM SSOT + UTL + UAC moved together; non-clone repos followed)
+      landed and the stuck heads were re-triggered (close+reopen under PAT → fires v2 + scoped lock-check). — verified
+      2026-06-10: template + per-repo copies present and running.
 - [ ] [SCRIPT] P2. **BLOCKED-OPERATOR** — operator should add **Checks: Read** to the fine-grained `GH_PAT` (Secret
       Manager) so the scoped staging-lock-check's `…/check-runs` calls don't 403 and the rollout can be cleanly
-      monitored / registered as a scoped required check. Residual operator-permission piece split out of the
-      now-done #1 rollout (2026-06-10).
+      monitored / registered as a scoped required check. Residual operator-permission piece split out of the now-done #1
+      rollout (2026-06-10).
 - [x] ✅ [SCRIPT] P0. **#3 tab-mirror leg-A → `GH_PAT` — DONE + VERIFIED + ROLLED OUT FLEET-WIDE 2026-06-08 (slot-1).**
       Canary (PM `tab/ikennaigboaka/1`) leg-A ran GREEN (9 steps) and FF'd PM `live-defi-rollout` to the PAT-swap
       commit; then rolled out to **all 24 repos** (`unified-trading-pm@1bd99d67b`/`28106739c` SSOT → per-repo `.github`)
@@ -332,6 +332,30 @@ BUILT (`ci_failure_watcher.py` detects stuck PRs + `--escalate` dispatches `merg
 `escalate-to-orchestrator.yml` → conflict-resolver worker, which pings the operator on undecidable). Four gaps explain
 what the operator is seeing:
 
+- [ ] [BUG] P1. **agent-orchestrator: escalation slot-starvation — spawn never persists
+      `tmux_session`/`last_spawned_at`, so WorkerLivenessWatchdog is BLIND to sessions whose worker skips `/boot`
+      (incident 2026-06-10, central VM).** Symptom: all 6 slots `status=stale` with live `orch-slot-N` tmux sessions;
+      `POST /api/escalate` 503'd "no free configured slot" from 09:50Z while 5 stuck promotion PRs waited; watchdog made
+      ZERO kills. Mechanism: the watchdog tick skips rows with NULL `tmux_session`
+      (`server/worker_liveness_watchdog.py::_tick_once`), while `escalation._pick_free_slot` checks PHYSICAL tmux
+      (`has_session(session_name(N))`) — a never-`/boot`ed session is "occupied to the dispatcher, invisible to the
+      reaper" forever. Feeder: AutoSpawn `_ensure_review_agents` review/escalate spawns don't post the
+      `/boot → /progress → /done` lifecycle, so their SlotRows keep days-old `last_ping` + NULL `tmux_session`
+      (`server/autospawn.py::_do_spawn` deliberately does NOT update the SlotRow — "the worker's first /boot will update
+      it"), and AutoSpawn kept spawning replacement review agents into fresh slots (08:38/08:57/09:06/09:16Z) until the
+      pool was eaten. FIX (repo: `agent-orchestrator`): (1) `_do_spawn` stamps `slot.tmux_session` + `last_spawned_at`
+      transactionally at spawn — the 2026-06-08 NULL-last_ping watchdog fix added a `last_spawned_at` fallback that
+      nothing on this spawn path actually SETS; (2) watchdog falls back to `session_name(slot_id)` + `has_session()`
+      when the row's `tmux_session` is NULL (symmetry with `_pick_free_slot`); (3) review/escalate boot prompts carry
+      the lifecycle posts (or are exempted from slot occupancy); (4) **`tmux_spawn.has_session` PREFIX-MATCH bug**:
+      `tmux has-session -t orch-slot-1` matches `orch-slot-10` (tmux `-t` is a prefix/fnmatch target) → slot-1 reads
+      OCCUPIED to `_pick_free_slot` whenever slot-10 has a session — use exact-match `-t "=<name>"` (and audit every
+      other `-t` call in `tmux_spawn.py`/`tmux_pruner.py` for the same gotcha). Regression test: spawn → worker dies
+      pre-`/boot` → watchdog reaps within 2 ticks → escalate finds a free slot; plus has_session("orch-slot-1") is False
+      while only orch-slot-10 exists. MANUAL RECOVERY already applied 2026-06-10 (slot-1 laptop, via SSM):
+      `UPDATE slots SET     tmux_session='orch-slot-N'` for finished slots 1/2/4/5/9 → watchdog reaped them; slot-10
+      (active escalation worker) left protected; VM PM clone was 60 behind on auto-inventory churn → stash + ff-pull →
+      PlanRegenLoop unblocked. Also killed 5 orphaned claude procs from May-29/Jun-01 (not panes of any session).
 - [x] ✅ [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCK — RESOLVED by operator 2026-06-08 ("budget is updated"); CI
       runs again.** Verified: PM canary leg-A + #179 `quality-gates-v2` both ran (9-step jobs, not 0-step setup-fails)
       after the operator raised the Actions spending limit. Follow-up (separate item below): a billing-block DETECTOR
@@ -405,15 +429,15 @@ what the operator is seeing:
       PM→main. Shipped: `plan_health` wall type in `agent-orchestrator@03017c4` (escalation.py + models.py +
       escalate.md) + the gate dispatch in `unified-trading-pm` (plan-health-agent.yml + escalate-to-orchestrator.yml; on
       main via PR #178).
-- [x] ✅ [DEVOPS] P1. **ACTIVATION: redeploy orchestrator (vm-0) with the new `escalation.py` so it accepts `plan_health`
-      dispatches — DONE, verified against the RUNNING process 2026-06-10.** vm-0 (`i-0c9b283b31d6b5ca7`, SSM Online)
-      restarted its uvicorn 2026-06-10T08:16:20Z onto a checkout carrying the new code; the LIVE process's
-      `GET /openapi.json` → `EscalateRequest.wall_type` enum = `["merge_conflict", "label_mismatch", "sit_failure",
-      "stuck_promotion_pr", "ldr_qg_failure", "plan_health"]` — both new wall types accepted by the deployed server (the
-      definitive runtime check, not a source grep). End-to-end proof same day: the 08:14Z escalation burst dispatched
-      conflict-resolvers that cleared the locked cascade (lock → `locked:false`). Residual (non-blocking): watchdog
-      NULL-reap fix `68116f7` is LDR-only, not on the vm-0 checkout — rides the next AO deploy (tracked in
-      `plans/epics/orchestrator_master.md` P3).
+- [x] ✅ [DEVOPS] P1. **ACTIVATION: redeploy orchestrator (vm-0) with the new `escalation.py` so it accepts
+      `plan_health` dispatches — DONE, verified against the RUNNING process 2026-06-10.** vm-0 (`i-0c9b283b31d6b5ca7`,
+      SSM Online) restarted its uvicorn 2026-06-10T08:16:20Z onto a checkout carrying the new code; the LIVE process's
+      `GET /openapi.json` → `EscalateRequest.wall_type` enum =
+      `["merge_conflict", "label_mismatch", "sit_failure",     "stuck_promotion_pr", "ldr_qg_failure", "plan_health"]` —
+      both new wall types accepted by the deployed server (the definitive runtime check, not a source grep). End-to-end
+      proof same day: the 08:14Z escalation burst dispatched conflict-resolvers that cleared the locked cascade (lock →
+      `locked:false`). Residual (non-blocking): watchdog NULL-reap fix `68116f7` is LDR-only, not on the vm-0 checkout —
+      rides the next AO deploy (tracked in `plans/epics/orchestrator_master.md` P3).
 
 - [x] ✅ [SCRIPT] P2. **Resolved-bookend alerts are ON by default — earlier "they're OFF" diagnosis was WRONG.**
       `--resolved-hours` argparse `default=0.5` (since `da81a1414`), so `detect_resolved_prs` runs even when the GHA
@@ -528,17 +552,17 @@ what the operator is seeing:
       separate planning VM to restore**, and `escalate-to-orchestrator.yml` already POSTs to that live box
       (`ORCHESTRATOR_URL || api.agent-orchestrator…` → 13.113.200.22), so fix-option (b) "repoint to vm-0" was already
       true and (a) "restore vm-planning" was a no-op. The REAL condition behind the ~5h park (2026-06-10) is **headroom
-      exhaustion**: `dependency_promotion` Phase-3 + `ci-failure-watcher --escalate` dispatch `POST /api/escalate`, which
-      returns **503 (no free slot)** when AutoSpawn has no headroom → the wall PARKS, re-fires every ~15 min, and won't
-      self-resolve until a slot frees — capacity, NOT a host being down. **What shipped:** `escalate-to-orchestrator.yml`
-      now classifies the POST outcome (`dispatched` / `no_escalation_id` / `no_headroom`) and the Slack notify raises a
-      **distinct, actionable `no_headroom` WARNING** ("HEADROOM EXHAUSTED — {repo}#{pr} PARKED, no worker; stand in
-      manually if it persists; vm-0 IS the orchestrator, capacity not host-down") instead of the prior generic OR'd
-      message that let the park slip by silently. **Verified:** `actionlint` clean + YAML parses + the live escalation
-      path was proven end-to-end the SAME day (the 08:14Z escalation burst dispatched conflict-resolvers that cleared the
-      locked cascade — `Conflict Resolution Agent` / `deterministic-promotion-conflict-resolve` runs all success, lock →
-      `locked:false`). repo: unified-trading-pm. Composes with
-      `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
+      exhaustion**: `dependency_promotion` Phase-3 + `ci-failure-watcher --escalate` dispatch `POST /api/escalate`,
+      which returns **503 (no free slot)** when AutoSpawn has no headroom → the wall PARKS, re-fires every ~15 min, and
+      won't self-resolve until a slot frees — capacity, NOT a host being down. **What shipped:**
+      `escalate-to-orchestrator.yml` now classifies the POST outcome (`dispatched` / `no_escalation_id` / `no_headroom`)
+      and the Slack notify raises a **distinct, actionable `no_headroom` WARNING** ("HEADROOM EXHAUSTED — {repo}#{pr}
+      PARKED, no worker; stand in manually if it persists; vm-0 IS the orchestrator, capacity not host-down") instead of
+      the prior generic OR'd message that let the park slip by silently. **Verified:** `actionlint` clean + YAML
+      parses + the live escalation path was proven end-to-end the SAME day (the 08:14Z escalation burst dispatched
+      conflict-resolvers that cleared the locked cascade — `Conflict Resolution Agent` /
+      `deterministic-promotion-conflict-resolve` runs all success, lock → `locked:false`). repo: unified-trading-pm.
+      Composes with `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
 - [ ] [SCRIPT] P3 **NICE-TO-HAVE**. Sustained-park escalation — bump the `no_headroom` Slack alert from WARNING →
       CRITICAL when the SAME wall returns `no_headroom` on ≥N consecutive `*/15m` ticks (a one-off 503 is transient +
       retryable; a sustained one is the silent ~5h park). Needs cross-run state (the per-wall `escalation-dispatched`
@@ -4584,20 +4608,21 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       and `unified-trading-system-ui #32 live-defi-rollout→main merged`. The `mergedAt` fix (line ~362, was the invalid
       `merged` field that 404'd the whole query) is live and the merged/closed verb resolves correctly. The bookend
       posts as INFO + still triggers the notify (build_report returns alert-or-resolved True). No code change.
-- [ ] [CICD] P1. **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
-      state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard `ldr-to-staging-promote` had already
-      opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they were stuck: ml-service #15 had
-      **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but the v2 `workflow_dispatch` run
-      on the SAME SHA `766207b8` SUCCEEDED, confirming the code is green, just dep-clone WARN noise on the PR-event
-      run); deployment-service #39 had auto-merge ON but **v2 had never reported on its head `3313121c`** (empty rollup
-      = v2-never-reported deadlock; AWS CodeBuild was the only status and it is NOT a required context — only
-      `Quality Gates (deployment-service) / quality-gates-v2` is required on staging, confirmed via ruleset + classic).
-      **Actions (standard-path unstick, NOT hand-merge):** re-triggered `quality-gates-v2.yml --ref live-defi-rollout`
-      on both heads; enabled auto-merge (`gh pr merge 15 --auto --squash`) on ml-service #15. **Result so far:**
-      ml-service #15 **MERGED** → `SPURIOUS=1` now on **ml-service staging** (✓ LDR→staging done); deployment-service
-      #39 still OPEN + auto-merge ON with v2 in-progress on `3313121c` (will merge on green). **Remaining:** both still
-      need staging→main (SIT-driven `staging-validated` → `staging-to-main.yml`) to land the marker on `main`.
-      Monitoring the marker reach `main` for both. (deployment-api already had it on main per dispatch context.)
+- [ ] [CICD] P1. **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard
+      path).** Marker state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard
+      `ldr-to-staging-promote` had already opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they
+      were stuck: ml-service #15 had **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but
+      the v2 `workflow_dispatch` run on the SAME SHA `766207b8` SUCCEEDED, confirming the code is green, just dep-clone
+      WARN noise on the PR-event run); deployment-service #39 had auto-merge ON but **v2 had never reported on its head
+      `3313121c`** (empty rollup = v2-never-reported deadlock; AWS CodeBuild was the only status and it is NOT a
+      required context — only `Quality Gates (deployment-service) / quality-gates-v2` is required on staging, confirmed
+      via ruleset + classic). **Actions (standard-path unstick, NOT hand-merge):** re-triggered
+      `quality-gates-v2.yml --ref live-defi-rollout` on both heads; enabled auto-merge
+      (`gh pr merge 15 --auto --squash`) on ml-service #15. **Result so far:** ml-service #15 **MERGED** → `SPURIOUS=1`
+      now on **ml-service staging** (✓ LDR→staging done); deployment-service #39 still OPEN + auto-merge ON with v2
+      in-progress on `3313121c` (will merge on green). **Remaining:** both still need staging→main (SIT-driven
+      `staging-validated` → `staging-to-main.yml`) to land the marker on `main`. Monitoring the marker reach `main` for
+      both. (deployment-api already had it on main per dispatch context.)
 
 #### Task 4 — drain progress (2026-06-10 01:28Z)
 
@@ -4731,12 +4756,12 @@ no `full-workspace-sit` / `staging-to-main` run in-flight; ml-style repo strande
 - [ ] [SCRIPT] P3. Upgrade `sit-starvation-detector.yml` from alert-only → auto-redispatch `staging-to-main`
       (workflow_dispatch, reason="starvation auto-recovery") when locked>30min + pending non-empty + no promote/SIT
       in-flight — turns this whole class self-healing. — provenance: this finding
-- [ ] [SCRIPT] P2. Local-vs-CI basedpyright count drift on PM: local QG counted 1548 > ratchet 1511 while CI v2
-      (same script, same ratchet) passed green on near-identical LDR content (72ddfde4 08:23Z) — error files all
-      last-touched ≤06-03, so the +37 is environment drift (venv resolution / stub coverage), not new code. Root-cause
-      under `ci_local_qg_parity_2026_06_08.md`; until fixed it blocks local sentinels on PM for non-Python diffs
-      (hit 2026-06-10 shipping the staging-to-main concurrency fix → used the codified `.github/**` carve-out + the
-      v2-gated main PR instead). — provenance: this fix's Pass-1
+- [ ] [SCRIPT] P2. Local-vs-CI basedpyright count drift on PM: local QG counted 1548 > ratchet 1511 while CI v2 (same
+      script, same ratchet) passed green on near-identical LDR content (72ddfde4 08:23Z) — error files all last-touched
+      ≤06-03, so the +37 is environment drift (venv resolution / stub coverage), not new code. Root-cause under
+      `ci_local_qg_parity_2026_06_08.md`; until fixed it blocks local sentinels on PM for non-Python diffs (hit
+      2026-06-10 shipping the staging-to-main concurrency fix → used the codified `.github/**` carve-out + the v2-gated
+      main PR instead). — provenance: this fix's Pass-1
 
 ### ADDENDUM 2026-06-10 (same session) — probe found 3 more promotion-latency defects; all fixed
 
