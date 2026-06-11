@@ -359,11 +359,14 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       the granularity-aware producer). Full evidence + 3 new todos (producer rebuild P0; CME re-probe P1;
       silent-thinning hardening P2): `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` § "Progress Log —
       R4-IS-freeze execution".
-- [ ] [AUDIT] P0. **R5-service-smoke — per-(service × asset_group) credential + data-fetch smoke matrix**: prove
-      instrument fetch + market tick fetch per AG with REAL credentials; audit every failure (assume nothing); **block
-      failing shards at (asset_group × data_type × venue) grain ONLY** — emit the pending-post-migration- backfill shard
-      ledger into this plan; never block a whole AG. Run AFTER worktrees clean + all tonight's ships verified on `main`
-      (image rebuilds ride that). slot-2+slot-3 split by AG ownership. Repos: mtds, instruments-service.
+- [x] ✅ [AUDIT] P0. **R5-service-smoke — per-(service × asset_group) credential + data-fetch smoke matrix — DONE
+      (slot-4 resume 2026-06-11)**: 26 live probes (12 predecessor + 14 resume; logs `/tmp/r5_smoke/*.log` on the worker
+      host) across IS definitions ×5 AGs + mtds tick fetch per source (tardis, databento, massive, hyperliquid, onchain
+      RPC eth+solana, thegraph subgraph, polymarket clob+gamma, kalshi, odds_api, footystats, yahoo; barchart = static
+      GCS preload by design — no live adapter exists to smoke). Every failure audited + classified (auth / 4xx / empty /
+      precondition / code-bug); BLOCKED shards emitted at (AG × data_type × venue) grain in "### R5 smoke ledger" below
+      — no whole-AG blocks. Promotion-to-main snapshot included (NO repo's 2026-06-10/11 LDR ships have fully reached
+      `main` yet — stale-image caveat recorded). 1 credential ask (Databento account LOCKED).
 - [x] ✅ [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies — DONE (slot-4 resume 2026-06-11, pm@a28cbd4d7 +
       pm@51863c157 + pm@05456c343)**: 5 per-AG plans de-coarsened (gate banners reconciled to M-COORD-1/R6-codex;
       defi+cefi deep-annotated — every remaining coarse/`hyperliquid_rest` token is a marked legacy-state/historical
@@ -380,6 +383,106 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       characterize/backfill to E==0; sports v1_archive `(date,league,fixture_id)` ROW-coverage proven before any drop;
       prediction dry plan REGENERATED on final HEAD, attached to its verdict for sign-off. sports=slot-2 (tool assist
       slot-3), prediction=slot-3. Repos: instruments-service + mtds.
+
+### R5 smoke ledger — pending-post-migration-backfill shards (2026-06-11)
+
+> **Method**: 26 live probes (12 by the session-limited predecessor 08:12–08:29 UTC + 14 on resume 09:12–09:35 UTC), all
+> from the MAIN clones' `.venv` CLIs with real ADC + Secret Manager credentials, `--dry-run` +
+> `VM_NAME=smoke-probe-<ag>` + `MANIFEST_PER_VM_SHARDS=true` (no prod manifest writes), 1 recent day, 1–2
+> symbols/venues, `--max-instruments`. Raw logs: `/tmp/r5_smoke/*.log` (worker host). IS probes re-ran with
+> `MANIFEST_ALLOW_STALE_FALLBACK=true` after every first-pass IS probe loud-failed on the DOWN consolidator (see
+> cross-cutting findings). **Verdict grain = (asset_group × data_type × venue) — never whole-AG.**
+
+#### BLOCKED shards (the pending-post-migration-backfill set)
+
+| AG         | data_type (shard)                                                 | venue × source                                                           | Classification           | Evidence + detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cefi       | `trades`, `book_snapshot_5`, `derivative_ticker`, `futures_chain` | BINANCE-FUTURES × tardis (and any venue on the shared tardis batch path) | **CODE-BUG**             | `Invalid comparison between dtype=datetime64[ns] and date` — deterministic on HEAD mtds@eb33603, raised inside the venue shard (shard-isolated), instruments load fine (10 instruments). Repro: `--operation download --asset-group cefi --venues BINANCE-FUTURES --start-date 2026-06-09 --data-types trades --max-instruments 1 --dry-run`. Log `mtds-cefi-tardis-retry.log`. Tardis key present + ApiKeyReloader-validated; bug fires BEFORE any tardis HTTP, so actual CSV download remains unproven. |
+| tradfi     | `ohlcv_1m` (+ all databento data_types)                           | CME, NASDAQ × databento                                                  | **BLOCKED-CREDENTIALS**  | `403 auth_account_locked` — "Your account has been locked for security reasons" on GLBX.MDP3, XNAS.ITCH, DBEQ.BASIC (mtds) AND on IS definitions fetch. Logs `mtds-tradfi-{cme,nasdaq}-ohlcv1m.log`, `is-tradfi-databento-cme-fb.log`. **Operator ask: unlock the Databento account** (vendor support / dashboard).                                                                                                                                                                                       |
+| tradfi     | `instrument_definitions`                                          | CME × massive                                                            | **BLOCKED-UPSTREAM-4XX** | MASSIVE_API_KEY valid (auth passes); `https://api.polygon.io/futures/vX/contracts?product_code=MES&…` → 404 ×3 attempts. Same finding as R4's CME re-probe P1 todo (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`) — endpoint shape, not creds. Log `is-tradfi-massive-cme-fb.log`.                                                                                                                                                                                                        |
+| tradfi     | `ohlcv_24h` (FX daily)                                            | FX × yahoo                                                               | **CODE-BUG**             | Yahoo fetch GREEN (KRWUSD=X, 1 row) but write fails pre-write validation: `[missing_column] required column 'instrument_id' missing from dataframe`. Log `mtds-tradfi-fx-ohlcv24h.log`.                                                                                                                                                                                                                                                                                                                   |
+| defi       | `lst_rates` (14 EVM + 2 Solana tokens)                            | LIDO-ETHEREUM et al × onchain/subgraph                                   | **BLOCKED-PRECONDITION** | `assert_defi_catalog_fresh` routes honest absence — defi instrument-catalog stale/missing at probe time (age=None). Creds present (thegraph/RPC). R4 has since re-promoted catalogues → **re-probe post-R4** before classifying further. Logs `mtds-defi-lst-rates*.log`.                                                                                                                                                                                                                                 |
+| defi       | `dex_pools` (subgraph daily metrics)                              | UNISWAP_V3-ETHEREUM × thegraph                                           | **BLOCKED-PRECONDITION** | Same `assert_defi_catalog_fresh` gate (catalog age=None at 09:16 UTC, post-R4-promote — verify catalogue freshness contract). TheGraph credential proven GREEN out-of-band (gateway HTTP 200, pool data, key `thegraph-api-key`). Log `mtds-defi-dexpools-subgraph.log`.                                                                                                                                                                                                                                  |
+| prediction | `instrument_definitions`                                          | KALSHI × kalshi REST                                                     | **BLOCKED-UPSTREAM-4XX** | `GET https://api.elections.kalshi.com/trade-api/v2/markets?limit=200&status=active` → HTTP 400 Bad Request (×retries, classified AUTH-free public endpoint — request shape, likely the `status=active` param no longer valid). Logs `is-pred-kalshi{,-fb}.log`.                                                                                                                                                                                                                                           |
+| prediction | `trades`                                                          | KALSHI × kalshi REST                                                     | **BLOCKED-PRECONDITION** | mtds: "No active venues for date=2026-06-09" — zero KALSHI rows in `instruments-store-pred-prd` (`instrument_availability/by_date/day=2026-06-09/` carries POLYMARKET only). Downstream of the KALSHI 400 above. Log `mtds-pred-kalshi.log`.                                                                                                                                                                                                                                                              |
+| sports     | `ODDS` (IS footystats odds snapshot — manifest write)             | FOOTYSTATS × footystats                                                  | **CODE-BUG**             | Fetch GREEN (8 odds rows) but manifest write rejected: `source='odds_api' … not a registered source for asset_group='sports' data_type='ODDS'. Allowed: ['footystats']` (UAC SOURCE_PRIORITY fail_fast). Wrong source label in `instruments-service.footystats_odds_fetch`. Logs `is-sports-footystats{,-fb}.log`.                                                                                                                                                                                        |
+
+Non-blocking / N-A rows (recorded so nobody re-probes them as gaps): tradfi `trades` × CME = **expected drop** (UAC
+declares trades unsupported for CME — pre-flight drops it, not a failure); tradfi × BARCHART = **N/A by design** (VIX
+15m 2020→2025-11 is a static GCS preload via `scripts/upload_vix_barchart_local.py`; no live Barchart adapter exists);
+prediction `trades` × POLYMARKET on 2026-06-09 = **honest-empty** (clob fetch GREEN — 914 ticks returned — but lifecycle
+gating dropped all as post-settlement for that date's settled markets; fetchability proven); mtds massive market-tick
+path = **not wired** (`MassiveTradfiRestConnector` exists in mtds but has zero consumers — IS `--source massive` is the
+only live massive surface; tracked in remediation todos below).
+
+#### GREEN per AG (probe-grain counts)
+
+| AG         | GREEN probes                                                                                                                                                                                            | BLOCKED shards (table above)  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| cefi       | 1 — IS definitions × BINANCE-FUTURES (fresh `by_date` through 2026-06-11 post-R4; tardis/hyperliquid/aster keys validated)                                                                              | 1 (tardis tick path)          |
+| defi       | 5 — IS definitions (320 records, 2 venues); `gas_fees` × ETHEREUM RPC (449 rows); `gas_fees` × SOLANA RPC (109 rows); `perp_funding` × HYPERLIQUID (5,520 rows); thegraph credential (gateway HTTP 200) | 2 (both catalog-precondition) |
+| tradfi     | 1 — `ohlcv_15m` × CBOE VIX via yahoo (52 rows) (+2 N/A-by-design rows)                                                                                                                                  | 4                             |
+| sports     | 2 — mtds `trades`(odds) × ODDS_API (699 rows / 20 bookmakers); IS footystats fetch (8 predictions + 1 match + 8 odds)                                                                                   | 1 (manifest source label)     |
+| prediction | 2 — IS definitions × POLYMARKET gamma (9,420 instruments); mtds `trades` × POLYMARKET clob (914 ticks fetched; honest-empty for the probed date)                                                        | 2 (both KALSHI)               |
+
+#### Cross-cutting findings
+
+1. **Manifest consolidator DOWN/stale for every probed bucket** — consolidated `availability_index` ages at probe time:
+   `instruments-store-*` ≈ 3.2 d, `gas-fees` ≈ 21.8 d, `perp-funding` ≈ 21.8 d, `lst-rates` ≈ 9.8 d, `dex-pools` ≈ 12.2
+   d — all > the 120 s threshold while per-VM shards exist, so EVERY IS CLI run loud-fails
+   (`ManifestConsolidatorStaleError`) without `MANIFEST_ALLOW_STALE_FALLBACK=true`. Partially expected under the
+   pre-migration drain, but the instruments-store consolidator gates R-wave tooling too — needs the Cloud Run Job +
+   Scheduler back before (or as part of) the post-apply restart.
+2. **Predecessor's 08:15/08:19 cefi failures explained**: `day=2026-05-21` instruments parquet 404 = the R4 IS capture
+   freeze (now backfilled); the `cannot access local variable 'pq'` error no longer reproduces on HEAD (tardis_adapter
+   split mtds@eb33603); the datetime64-vs-date bug DOES reproduce (table row 1).
+
+#### Promotion-to-main snapshot (2026-06-11 ~09:15 UTC) — stale-image caveat
+
+**NO repo's 2026-06-10/11 LDR ships have fully reached `origin/main`** — every repo in the workspace carries real
+content delta LDR→main (so Cloud Build images on `main` are stale relative to all R-wave/canonicalisation code). Key
+repos (main-tip → LDR-tip, content delta):
+
+| Repo                     | `origin/main` tip                   | LDR tip                                 | LDR ahead (content)                                                           |
+| ------------------------ | ----------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------- |
+| market-tick-data-service | b1bffd4 06-10 15:02 (promote #177)  | eb33603 06-11 04:43 (tardis split)      | 57 commits / 130 files                                                        |
+| instruments-service      | b0df1c6 06-10 08:47                 | 87f93ff 06-11 08:54 (CF-18 alias-aware) | 108 commits / 82 files                                                        |
+| unified-api-contracts    | 1adfc65 06-11 03:33 (hotfix merge)  | 0e0ed8c 06-11 08:53                     | 60 commits / 44 files                                                         |
+| unified-trading-library  | e0c557be 06-11 03:36 (hotfix merge) | 6680ea26 06-11 02:36                    | 14 commits / 3 files (+422); PM ci_status marks UTL **FAILING** on main 09:10 |
+| deployment-service       | 7f0b720 06-10 22:45 (promote #46)   | 04e3d20 06-11 01:36                     | 35 commits / 12 files                                                         |
+| unified-trading-pm       | a07ea1042 06-11 09:10               | 44bc76cfc 06-11 10:11                   | 3 commits / 11 files (standing PR drains ~15 min)                             |
+
+Remaining 19 service repos: 7–64 commits of real content each ahead of main (full sweep in the R5 session log). The R5
+smoke matrix therefore ran on LDR-tip code (the MAIN clones), NOT the stale main images — correct for proving
+current-code fetchability; the image-rebuild ride happens when the LDR→staging→main drains catch up.
+
+#### R5 remediation todos (dispatch — surface per repo)
+
+- [ ] [BUG] P0. **R5-fix-1 — cefi tardis datetime64-vs-date comparison**: locate + fix the shard-isolated
+      `Invalid comparison between dtype=datetime64[ns] and date` in the cefi tardis batch download path (instruments
+      load OK; bug fires pre-HTTP). Repro in R5 ledger row 1. Then re-smoke BINANCE-FUTURES trades 1-day dry-run to
+      GREEN (proves the actual tardis CSV download + creds end-to-end). Repo: market-tick-data-service.
+- [ ] [BUG] P1. **R5-fix-2 — tradfi FX yahoo writer missing `instrument_id`**: FX daily ohlcv_24h dataframe lacks the
+      required `instrument_id` column at StreamingParquetWriter pre-write validation. Add the column derivation (same
+      pattern as the CBOE/VIX path which passes). Repo: market-tick-data-service.
+- [ ] [BUG] P1. **R5-fix-3 — footystats ODDS manifest source label**: `footystats_odds_fetch` stamps `source='odds_api'`
+      but UAC `SOURCE_PRIORITY[(sports, ODDS)]` allows only `footystats` — fix the source param (or, if odds_api is
+      genuinely the upstream, extend SOURCE_PRIORITY deliberately). Repo: instruments-service (+UAC if priority change).
+- [ ] [BUG] P1. **R5-fix-4 — kalshi instruments 400**: kalshi `GET /markets?limit=200&status=active` returns HTTP 400 —
+      fix the request shape against current Kalshi API docs (public endpoint, no creds), then run the prediction IS
+      backfill so KALSHI `instrument_availability` exists and the mtds kalshi trades path unblocks. Repo:
+      instruments-service (adapter), mtds re-smoke after.
+- [ ] [INFRA] P1. **R5-fix-5 — restore manifest consolidator** for `instruments-store-*` (+ the defi data buckets) as
+      part of the post-apply restart sequencing — every IS CLI loud-fails on the stale index today
+      (`MANIFEST_ALLOW_STALE_FALLBACK=true` is the interim recovery). Repo: deployment-service (Cloud Run Job +
+      Scheduler).
+- [ ] [DATA] P2. **R5-fix-6 — wire or retire the mtds `MassiveTradfiRestConnector`**: the connector ships in mtds with
+      zero consumers (massive tick data unreachable from the CLI); either wire it into the tradfi dispatch behind the
+      source axis or delete it per delete-deprecated-code (IS keeps `--source massive` for definitions). Repo:
+      market-tick-data-service. **DEFERRED** until the massive futures endpoint 404 (R4 P1 todo) resolves.
+- [ ] [DATA] P2. **R5-fix-7 — re-probe defi `lst_rates` + `dex_pools` post-R4 catalog re-promote** (the probes hit the
+      stale-catalog honest-absence gate even after R4's re-promote — verify the catalogue freshness contract the
+      preflight reads, then 1-day dry-run both to GREEN). Repo: market-tick-data-service.
 
 ## Cross-cutting audit verdict (slot-7 / vm-cross-cutting) — 2026-06-08
 
