@@ -88,6 +88,47 @@ paired dashboard state element (review gate for alerting changes).
 Cross-links: each surface deep-links the other (repo row → its fleet git-health filter; slot repo row → its CI repo
 page) — P2, after both v1s ship.
 
+## Work-split framing (Harsh ↔ Ikenna, 2026-06-11)
+
+Harsh owns all three monitoring surfaces this cycle; Ikenna owns the Firestore migration
+(`ci_status_firestore_side_store_2026_06_10.md` + `issues/gh_rate_budget_reduction_2026_06_10.md` — do NOT step on
+those). Harsh's three-surface charter (verbatim to Ikenna):
+
+- **Monitoring UI** — "see the whole fleet properly, all the aspects that we care about: all the branches, builds,
+  **last green sha and time**, current SIT run, and so on." (mostly shipped v1; remaining: G1 + the last-green-sha
+  refinement N2 below + the 2 creds.)
+- **ci-failures** — "failed alerts and fail-to-green alerts with **more proper info so we get the reason, not ad-hoc
+  messages**." → NEW requirement N1 below (alert-body enrichment).
+- **Orchestrator side** — "make the agents **stable** and **picking up the failed PR and their fixes**." → the
+  main-v2-red → orchestrator escalation closed-loop (the P2 below) + the existing self-heal
+  (watchdog/autospawn/failover, CLAUDE.md § orchestrator self-heal).
+
+### New todos from the charter
+
+- [ ] [CODE] P1. **(N1) ci-failures alert enrichment — reason, not ad-hoc.** `ci_failure_watcher.py` Slack bodies must
+      carry the actionable reason: the failing **check/job name**, a short **`gh run view --log-failed` excerpt** (last
+      error lines, truncated), and the **run/PR deep-link** — for both the FAIL and the fail→green RECOVER bookend.
+      Compose with the alert-ledger persist (already shipped) so the enriched body is queryable too. Repo:
+      unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py` + `notify-slack.yml` body).
+- [ ] [CODE] P2. **(N2) Last-green SHA + time column** on the `/repos` overview — per repo per branch, the most-recent
+      SHA whose `quality-gates-v2` concluded success + its timestamp ("green as of <sha> · <age>"). Distinct from the
+      current branch-head SHA (head may be red/pending). Needs the per-SHA v2 conclusion → **gated on GH_PAT
+      `Checks: read`** (cred below); degrades to "unknown" until then. Repo: deployment-api + deployment-ui.
+
+### Credential status (re-probed 2026-06-11 — both still BLOCKED)
+
+- **GH_PAT** is in GCP Secret Manager (`central-element-323112`) but **still lacks `Checks: read`** — functional probe
+  2026-06-11: `GET /repos/.../commits/{sha}/check-runs` → `403 "Resource not accessible by personal access token"`.
+  Until the permission is added to the fine-grained PAT, per-SHA `quality-gates-v2` conclusions (and N2 last-green-sha)
+  stay "unknown" (graceful degrade). **Operator action: add `Checks: read` to the GH_PAT fine-grained token, re-store in
+  SM.**
+- **ORCHESTRATOR_API_TOKEN** — deployment-api resolves it ONLY from SM
+  (`get_secret_client().get_secret("ORCHESTRATOR_API_TOKEN")`, `_repo_ci_fleet.py:35`). Re-probe 2026-06-11: **not in
+  SM, not in `agent-orchestrator/.env.local`, not in the `ORCHESTRATOR_ENV_LOCAL` bundle, not in this shell** — so the
+  live fleet-git proxy still degrades to `available=False`
+  - AO deep-link. **Operator action: mint the orchestrator API token + store it in SM as `ORCHESTRATOR_API_TOKEN` (both
+    clouds).**
+
 ## Sub-plans (the execution units)
 
 - [x] ✅ [PLAN] P1. v1 SHIPPED 2026-06-10 — `ci_dashboard_deployment_ui_2026_06_10.md`: repo dropdown + 25-repo overview
