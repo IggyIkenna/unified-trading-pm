@@ -754,7 +754,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -896,7 +896,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -980,7 +980,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "trading-agent-service": {
       "type": "service",
@@ -1075,7 +1075,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-library": {
       "type": "library",
@@ -1120,7 +1120,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-trading-pm": {
       "type": "devops",
