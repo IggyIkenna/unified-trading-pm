@@ -55,6 +55,11 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
+from _capability_annotations import (
+    build_annotation_index,
+    merge_annotations_into_edges,
+    render_annotation_orphan_section,
+)
 from _capability_extract import (
     extract_archetypes_and_families,
     extract_data_sources,
@@ -122,8 +127,17 @@ def _dedup_nodes(nodes: list[CapabilityNode]) -> list[CapabilityNode]:
     return list(by_key.values())
 
 
-def build_manifest(workspace_root: Path, uac_root: Path) -> CapabilityManifest:
-    """Assemble the full manifest from every extractor."""
+def build_manifest(
+    workspace_root: Path,
+    uac_root: Path,
+    sidecar_path: Path | None = None,
+) -> tuple[CapabilityManifest, list[tuple[str, str, str]]]:
+    """Assemble the full manifest from every extractor.
+
+    Returns ``(manifest, annotation_orphans)`` where ``annotation_orphans`` is
+    a list of ``(from_node, to_node, relation)`` tuples from the sidecar that
+    had no matching edge (empty when no sidecar or all entries matched).
+    """
     all_nodes: list[CapabilityNode] = []
     all_edges: list[CapabilityEdge] = []
 
@@ -159,13 +173,23 @@ def build_manifest(workspace_root: Path, uac_root: Path) -> CapabilityManifest:
 
     nodes = _dedup_nodes(all_nodes)
 
+    # 7. Merge sidecar annotations into matching edges.
+    annotation_orphans: list[tuple[str, str, str]] = []
+    if sidecar_path is not None:
+        logger.info("7. Merging sidecar annotations from %s...", sidecar_path)
+        annotation_index = build_annotation_index(sidecar_path)
+        if annotation_index:
+            all_edges, annotation_orphans = merge_annotations_into_edges(all_edges, annotation_index)
+    else:
+        logger.info("7. No sidecar path provided — skipping annotation merge")
+
     manifest = CapabilityManifest(
         manifest_version=MANIFEST_VERSION,
         generated_from_commit=_read_uac_head_sha(uac_root),
         nodes=nodes,
         edges=all_edges,
     )
-    return manifest
+    return manifest, annotation_orphans
 
 
 def main() -> None:
@@ -173,6 +197,12 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=None, help="Output directory (default: UAC openapi/)")
     parser.add_argument("--workspace-root", type=Path, default=None, help="Workspace root (default: PM's parent)")
     parser.add_argument("--uac-root", type=Path, default=None, help="unified-api-contracts repo (default: sibling)")
+    parser.add_argument(
+        "--sidecar",
+        type=Path,
+        default=None,
+        help="Path to capability-annotations.yaml sidecar (default: same dir as this script)",
+    )
     args = parser.parse_args()
 
     workspace_root = args.workspace_root or _SCRIPT_DIR.parent.parent.parent
@@ -180,8 +210,11 @@ def main() -> None:
     output_dir = args.output_dir or (uac_root / "openapi")
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Default sidecar: same directory as this script
+    sidecar_path = args.sidecar or (_SCRIPT_DIR / "capability-annotations.yaml")
+
     logger.info("Generating capability manifest (workspace=%s)...", workspace_root)
-    manifest = build_manifest(workspace_root, uac_root)
+    manifest, annotation_orphans = build_manifest(workspace_root, uac_root, sidecar_path=sidecar_path)
 
     canonical = manifest.to_canonical_dict()
 
@@ -189,11 +222,12 @@ def main() -> None:
     orphans = find_orphan_nodes(manifest.nodes, manifest.edges)
     unbuilt, logical = find_dead_ends(manifest.nodes, manifest.edges)
     # Fold the orphan/dead-end headline counts into the serialised gaps block.
-    gaps_block = canonical.get("gaps", {})
+    gaps_block = canonical.get("gaps", {})  # noqa: qg-empty-fallback
     if isinstance(gaps_block, dict):
         gaps_block["orphan_nodes"] = len(orphans)
         gaps_block["unbuilt_dead_ends"] = len(unbuilt)
         gaps_block["logical_dead_ends"] = len(logical)
+        gaps_block["annotation_orphans"] = len(annotation_orphans)
 
     output_path = output_dir / "capability-manifest.json"
     with open(output_path, "w") as f:
@@ -209,6 +243,8 @@ def main() -> None:
         manifest.manifest_version,
         manifest.generated_from_commit,
     )
+    # Append the annotation-orphan section (loud listing — never silent)
+    report += render_annotation_orphan_section(annotation_orphans)
     report_path = output_dir / "capability-orphan-report.txt"
     with open(report_path, "w") as f:
         f.write(report)
@@ -219,6 +255,7 @@ def main() -> None:
 
     node_kinds = Counter(str(n.kind) for n in manifest.nodes)
     edge_status = Counter(str(e.status) for e in manifest.edges)
+    annotated = sum(1 for e in manifest.edges if e.agent_annotation is not None)
     print("\n" + "=" * 60)
     print("CAPABILITY MANIFEST — GENERATION SUMMARY")
     print("=" * 60)
@@ -235,6 +272,7 @@ def main() -> None:
     for k in sorted(gaps_block):
         print(f"  {k}: {gaps_block[k]}")
     print(f"orphans: {len(orphans)}  unbuilt dead-ends: {len(unbuilt)}  logical dead-ends: {len(logical)}")
+    print(f"annotated edges: {annotated}  annotation orphans: {len(annotation_orphans)}")
     print(f"\nOutput: {output_path}")
     print("=" * 60)
 
