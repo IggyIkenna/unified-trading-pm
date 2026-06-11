@@ -12,7 +12,6 @@
 #   - major-bump-issue-handler.yml   (canonical flat copy)
 #   - staging-lock-check.yml         (canonical flat copy)
 #   - update-dependency-version.yml  (canonical flat copy)
-#   - tab-mirror-to-ldr.yml          (auto-FF push tab/** -> live-defi-rollout)
 #   - quality-gates-v2.yml.tmpl      (the required CI check, DEP_REPOS substituted)
 #   - semver-agent.yml.tmpl          (per-repo semver-agent invocation)
 #
@@ -20,6 +19,8 @@
 # guarded by _is_retired() below — even if a stale template reappears here, it is NEVER
 # rolled out (a blanket rollout would otherwise resurrect dead CI fleet-wide). The stale
 # `workspace-qg.yml.tmpl` was deleted 2026-06-07 (workspace-qg retired 2026-05-29).
+# `tab-mirror-to-ldr.yml` was RETIRED 2026-06-11 (Path-B slots live on LDR — no tab branch
+# to mirror; the `*/15` sweep was ~2,400 no-op invocations/day fleet-wide).
 #
 # UI-only workflows (tier 2) — added 2026-05-15 to fix dead-copies-everywhere bug:
 #   - uac-registry-sync.yml          (receives uac-registry-updated dispatch in UI repo)
@@ -86,7 +87,7 @@ fi
 # 2026-05-29, superseded by `quality-gates-v2`). Belt-and-suspenders: even if a retired
 # template reappears in this dir, never roll it out. The real fix is deleting the stale
 # template; this denylist is the guard so the mistake can't silently propagate again.
-RETIRED_WORKFLOWS="workspace-qg.yml python-quality-gates.yml quality-gates.yml version-bump.yml"
+RETIRED_WORKFLOWS="workspace-qg.yml python-quality-gates.yml quality-gates.yml version-bump.yml tab-mirror-to-ldr.yml"
 _is_retired() {
   local name="$1"
   for r in $RETIRED_WORKFLOWS; do [ "$name" = "$r" ] && return 0; done

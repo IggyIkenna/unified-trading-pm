@@ -193,11 +193,11 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       the top: current build **status + source** (Cloud Build / CodeBuild), **last build time**, **commit sha** built,
       and a **link to the build log**. The Image-column click-through (B1) and this header share the same build signal.
       Repos: deployment-api (detail endpoint adds the build block) + deployment-ui (drill-down header).
-- [ ] [CODE] [UI] P2. **(B3) LDR→main delta — show commit count alongside files (UI-ONLY)** — verified 2026-06-11:
-      `ahead_by` is ALREADY in `BranchDeltaDict` on `/overview` (backend done — no change needed). Pure deployment-ui
-      render tweak: show the raw commit count beside the content delta (e.g. "+3 files · 5 commits"); keep
-      `files_changed` (the squash-skew-safe truth) — commit count is squash-inflated, label both clearly. Repo:
-      deployment-ui only.
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@ccbb742 | pw:L2 ✓ | regression:
+      tests/e2e/repos-promotion-blocked.spec.ts. **(B3) LDR→main delta — show commit count alongside files (UI-ONLY)** —
+      `deltaLabel(files, aheadBy)` now renders "N files ahead · M commits" (and "in sync · M commits (squash skew)" when
+      `files_changed==0 && ahead_by>0`), keeping `files_changed` as the content truth and `ahead_by` labelled as the
+      squash-inflated commit count. Unit test updated (`repoCi.test.ts`). Repo: deployment-ui only.
 - [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
       per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
       relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
@@ -225,11 +225,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `/api/repo-ci/overview` (sorted quarantined-first then fail-count desc), `PromotionBlockedDict` added, mock seeds
       2 samples, 4 unit tests (union/sort/tolerance/empty) + the FastAPI-router-detach bug I introduced caught+fixed. QG
       green. **UI panel is the remaining half → G1-UI below.** Repo: deployment-api.
-- [ ] [CODE] [UI] P1. **(G1-UI) Promotion-blocked panel** — render a "Promotion blocked (N)" amber panel on `/repos`
-      (above/near the stuck panel) listing each `promotion_blocked` repo: quarantined badge + consecutive-fail count +
-      `since`/`attempts`/`escalated` + deep-link to the repo's GitHub PRs (`…/pulls?q=base:main`).
-      `RepoCiPromotionBlocked` client type + `promotion_blocked?` on `RepoCiOverview`; mock-api seeds the 2 samples.
-      `pw:L2` + regression spec in `tests/smoke/repos-tab.spec.ts`. Repo: deployment-ui.
+- [x] ✅ [CODE] [UI] P1. DONE 2026-06-11 — deployment-ui@ccbb742 | pw:L2 ✓ | regression:
+      tests/e2e/repos-promotion-blocked.spec.ts. **(G1-UI) Promotion-blocked panel** — always-visible
+      `PromotionBlockedPanel` on `/repos` (3-up grid beside SIT-run + stuck panels) listing each `promotion_blocked` repo:
+      quarantined→red / failing→yellow chip (`promotionBlockedTone`/`promotionBlockedLabel`), fail count, escalated flag,
+      `since` date; empty-state "Nothing parked — staging→main draining cleanly." `RepoCiPromotionBlocked` client type +
+      `promotion_blocked?` on `RepoCiOverview` added; mock-api seeds greeks-service (quarantined) + execution-service
+      (failing). 2 new unit tests + a dedicated e2e regression spec (chose `tests/e2e/repos-promotion-blocked.spec.ts`
+      over folding into repos-tab — cleaner isolation). UI QG green (coverage 75.01% ≥ 70%). Repo: deployment-ui.
 - [ ] [CODE] P2. **(G2) Semver-agent health has no standing state** — the bump-rate circuit-breaker (≥3 pending bumps/hr
       or consecutive-at-tip) + version-bump dispatch-failure are CRITICAL pages with no UI element AND they bypass the
       alert ledger (the inline-curl tail already filed in `ci_dashboard_deployment_ui` P3). Add a semver-agent health

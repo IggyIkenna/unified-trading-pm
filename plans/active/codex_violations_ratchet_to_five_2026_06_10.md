@@ -91,10 +91,10 @@ unchanged:
 
 > **2026-06-11 ratchet snapshot (this plan's session 1)** — budgets now: deployment-api **24** (25-bump reverted),
 > execution-service **21**, market-tick-data-service 16 (V=15 — ratchet to 15 rides the adapters-tail unit),
-> strategy-service **10**, market-data-processing-service **7**, deployment-service **1**, ibkr **1**, ml-service
-> **3**, instruments 4, unified-trading-api **0 (pinned)**, batch-live-recon 1, features/UTL/PM 0, UAC 7
-> (ratcheted 7→2 @128e065; lxml = execution-service+canonical-range todo). All six P1 monoliths + the P2 >1k tail are SPLIT and shipped; the table
-> below is the original baseline for reference.
+> strategy-service **10**, market-data-processing-service **7**, deployment-service **1**, ibkr **1**, ml-service **3**,
+> instruments 4, unified-trading-api **0 (pinned)**, batch-live-recon 1, features/UTL/PM 0, UAC 7 (ratcheted 7→2
+> @128e065; lxml = execution-service+canonical-range todo). All six P1 monoliths + the P2 >1k tail are SPLIT and
+> shipped; the table below is the original baseline for reference.
 
 | Repo                           | Budget | Over 5? | Worst file (lines)                 | Notes                                                |
 | ------------------------------ | ------ | ------- | ---------------------------------- | ---------------------------------------------------- |
@@ -121,14 +121,14 @@ unchanged:
 
 - [x] ✅ [AUDIT] P1. DONE 2026-06-10 (slot live-defi-rollout) — census written to
       `plans/audit/results/codex_violation_census_2026_06_10.md`: 25 repos run, 5 over-ceiling (deployment-api 24,
-      execution-service 22, MTDS 15, strategy 10, MDPS 7), 3 immediate no-code ratchets (deployment-service 8→1,
-      ibkr 4→1, ml 5→3), `none`-budget repos all at 0 current violations (agent-orchestrator runs a custom gate with
-      no codex section — budget-pin todo stays in Phase 4). Original: For EVERY service+library repo, run
-      `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` (now
-      honest post-parity-fix) and record the per-class breakdown (which of the ~24 check-classes fire, and the file/line
-      offenders for each) into `plans/audit/results/codex_violation_census_2026_06_10.md`. This is the remediation
-      matrix: it converts each repo's opaque budget number into a concrete fix-list. Capture the `none`-budget repos'
-      real counts. Repo: unified-trading-pm (audit doc) — read-only across the fleet.
+      execution-service 22, MTDS 15, strategy 10, MDPS 7), 3 immediate no-code ratchets (deployment-service 8→1, ibkr
+      4→1, ml 5→3), `none`-budget repos all at 0 current violations (agent-orchestrator runs a custom gate with no codex
+      section — budget-pin todo stays in Phase 4). Original: For EVERY service+library repo, run
+      `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` (now honest post-parity-fix) and record the per-class
+      breakdown (which of the ~24 check-classes fire, and the file/line offenders for each) into
+      `plans/audit/results/codex_violation_census_2026_06_10.md`. This is the remediation matrix: it converts each
+      repo's opaque budget number into a concrete fix-list. Capture the `none`-budget repos' real counts. Repo:
+      unified-trading-pm (audit doc) — read-only across the fleet.
 
 ## Phase 1 — Split the egregious oversized files (biggest maintainability win; each is its own dispatchable unit)
 
@@ -138,38 +138,37 @@ unchanged:
 > violation away in the same commit.
 
 - [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — features-service@82918a6d: registry.py 18,328 L → 411 L loader+validator;
-      1,382 specs moved to `features_service/delta_one/app/features/registry_specs.yaml` (human-editable SSOT);
-      one-shot `scripts/dump_registry_to_yaml.py` migration; YAML-load equality + closed-set validation test
+      1,382 specs moved to `features_service/delta_one/app/features/registry_specs.yaml` (human-editable SSOT); one-shot
+      `scripts/dump_registry_to_yaml.py` migration; YAML-load equality + closed-set validation test
       (tests/delta_one/unit/test_registry_yaml_loader.py); pyyaml promoted to direct dep; registry.py removed from
-      FUNCTION_SIZE_EXTRA_EXCLUDES; budget stays 0; full QG green (16,980 tests; one unrelated calendar
-      ordering-flake verified pass-in-isolation + green on rerun). Original: **features-service `registry.py`
-      (18,328 L) — it's DATA, not code (operator 2026-06-10).** The file
-      is **1,382 `FeatureSpec(...)` literals + only 11 functions** — a declarative data table living in a `.py`. Do NOT
-      "split into per-group .py modules" (still code-shaped data). Instead **separate the data from the loader**: - Move
-      the 1,382 specs into a **data file** — `registry/specs.yaml` (human-editable SSOT; one block per spec:
-      name/group/period/formula_version/implementation/status/…) OR a generated `specs.parquet` if a generator is
-      preferred. "Adding a feature = add a row" stays true, in YAML not Python. - `registry.py` shrinks to a **~80-line
-      loader+validator**: read the data file → build the `FeatureSpec` objects → run the closed-set validation the
-      docstring describes (group ∈ CALCULATOR_REGISTRY, status ∈ enum, version is int) at import → expose
-      `get_specs_by_group` / `max(formula_version)` unchanged. Tests 2.2–2.5 keep parametrising over the loaded specs
-      (public surface identical). - If round-tripping by hand is error-prone, ship a one-shot
-      `scripts/dump_registry_to_yaml.py` that emits the data file from the current literals (the migration), then delete
-      the literals. Remove the `FUNCTION_SIZE_EXTRA_EXCLUDES` glob. Repo: features-service.
+      FUNCTION_SIZE_EXTRA_EXCLUDES; budget stays 0; full QG green (16,980 tests; one unrelated calendar ordering-flake
+      verified pass-in-isolation + green on rerun). Original: **features-service `registry.py` (18,328 L) — it's DATA,
+      not code (operator 2026-06-10).** The file is **1,382 `FeatureSpec(...)` literals + only 11 functions** — a
+      declarative data table living in a `.py`. Do NOT "split into per-group .py modules" (still code-shaped data).
+      Instead **separate the data from the loader**: - Move the 1,382 specs into a **data file** — `registry/specs.yaml`
+      (human-editable SSOT; one block per spec: name/group/period/formula_version/implementation/status/…) OR a
+      generated `specs.parquet` if a generator is preferred. "Adding a feature = add a row" stays true, in YAML not
+      Python. - `registry.py` shrinks to a **~80-line loader+validator**: read the data file → build the `FeatureSpec`
+      objects → run the closed-set validation the docstring describes (group ∈ CALCULATOR_REGISTRY, status ∈ enum,
+      version is int) at import → expose `get_specs_by_group` / `max(formula_version)` unchanged. Tests 2.2–2.5 keep
+      parametrising over the loaded specs (public surface identical). - If round-tripping by hand is error-prone, ship a
+      one-shot `scripts/dump_registry_to_yaml.py` that emits the data file from the current literals (the migration),
+      then delete the literals. Remove the `FUNCTION_SIZE_EXTRA_EXCLUDES` glob. Repo: features-service.
 - [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — instruments-service@cb51c98: orchestrator.py 8,192 L → `engine/orchestrator/`
-      package (16 cohesion modules + 863-line thin `__init__` re-exporting every symbol; defi/sports(×5)/prediction…
-      per the plan grouping extended by real cohesion); weather.py deep-import flipped to the new one-level facade
-      (cleared the surfaced deep-import class → V back to 4/4); FUNCTION_SIZE exclude narrowed from the whole monolith
-      to 2 carrying modules (process.py 1,963 L legacy `process_instruments` body + sports_reference.py — justified
-      in-file citing this plan); contract-call conservation verified (114 ≥ baseline 99); full QG green. Follow-up:
-      decompose `process_instruments()` (next todo). Original: **instruments-service `orchestrator.py` (8,192 L / 89
-      functions) — abstract by asset-group + core.**
+      package (16 cohesion modules + 863-line thin `__init__` re-exporting every symbol; defi/sports(×5)/prediction… per
+      the plan grouping extended by real cohesion); weather.py deep-import flipped to the new one-level facade (cleared
+      the surfaced deep-import class → V back to 4/4); FUNCTION_SIZE exclude narrowed from the whole monolith to 2
+      carrying modules (process.py 1,963 L legacy `process_instruments` body + sports_reference.py — justified in-file
+      citing this plan); contract-call conservation verified (114 ≥ baseline 99); full QG green. Follow-up: decompose
+      `process_instruments()` (next todo). Original: **instruments-service `orchestrator.py` (8,192 L / 89 functions) —
+      abstract by asset-group + core.**
 - [x] ✅ [REFACTOR] P3. DONE 2026-06-11 — instruments-service@a576a29: `process_instruments()` 1,931 L decomposed by
-      stage into process_{preflight,fetch,enrichment,write,zero_records,completeness}.py (316–642 L each; process.py
-      now 322 L facade); sports_reference fetcher 882 L → sports_reference_{core,fixtures}.py (sports_reference.py 212);
+      stage into process*{preflight,fetch,enrichment,write,zero_records,completeness}.py (316–642 L each; process.py now
+      322 L facade); sports_reference fetcher 882 L → sports_reference*{core,fixtures}.py (sports_reference.py 212);
       both FUNCTION_SIZE_EXTRA_EXCLUDES entries REMOVED; 2 surfaced lazy imports hoisted; budget ratcheted 4→3
       (remaining: os.getenv / pip-install-in-Dockerfile / broad-except); full QG green. Original: decompose
-      `process_instruments()` + remove the excludes. The module mixes per-asset-group logic with venue/date core + sink. Suggested package
-      `engine/orchestrator/`: `defi.py`
+      `process_instruments()` + remove the excludes. The module mixes per-asset-group logic with venue/date core + sink.
+      Suggested package `engine/orchestrator/`: `defi.py`
       (`_build_defi_venues`/`clear_defi_universe_cache`/`_get_defi_manifest_high_watermarks`/
       `_enforce_defi_monotonicity`/`filter_defi_instruments_by_relevance`/`_normalize_wrapped_token`), `sports.py`
       (`_canonical_league_id`/`_af_id_from_canonical`/`_lifecycle_columns_from_af_response`/
@@ -182,20 +181,21 @@ unchanged:
 - [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — deployment-api@6b7aa69: data_status_service.py 6,663 L → 638-line facade +
       15-module `services/data_status/` package (defi/sports/coverage/manifest/missing_shards/venue_resolution/cli/
       breakdowns/mtds/rollup_cache/... all ≤864 L); `DataStatusService` keeps all 80 public methods (delegation, zero
-      caller churn). Mid-flight foreign F4 seeded-4state-denominator fix (deployment-api@644e439) GRAFTED into the
-      split layout (helpers + seeded branch in data_status/mtds.py; its test adapted to load mtds.py — all 147
-      data-status tests green). Bonus: last strategy_service import (treasury NAV) flipped to UTL → strategy-service
-      path-dep REMOVED from pyproject + PM workspace-manifest (no-service↔service HARD RULE), budget ratcheted back
-      25→24 (the transient 25th class was the manifest-alignment edge). drilldown/routes follow-up stays below.
-      Original: **deployment-api `data_status_service.py` (6,663 L / 69-method god-class) — abstract the domain logic
-      out (operator 2026-06-10).**
+      caller churn). Mid-flight foreign F4 seeded-4state-denominator fix (deployment-api@644e439) GRAFTED into the split
+      layout (helpers + seeded branch in data_status/mtds.py; its test adapted to load mtds.py — all 147 data-status
+      tests green). Bonus: last strategy_service import (treasury NAV) flipped to UTL → strategy-service path-dep
+      REMOVED from pyproject + PM workspace-manifest (no-service↔service HARD RULE), budget ratcheted back 25→24 (the
+      transient 25th class was the manifest-alignment edge). drilldown/routes follow-up stays below. Original:
+      **deployment-api `data_status_service.py` (6,663 L / 69-method god-class) — abstract the domain logic out
+      (operator 2026-06-10).**
 - [x] ✅ [REFACTOR] P2. DONE 2026-06-11 — deployment-api@5127517: routes/data_status.py 2,550 → package (5 modules);
       services/data_status_drilldown.py 2,586 → package (5 modules); routes/deployments.py 968 → package (crud/
       lifecycle); services/shard_detail.py 1,777 → package; + Phase-2b facade flips (routes/config.py +
       utils/path_combinatorics.py to one-level registry imports). **budget 24→22** (file-size + deep-imports classes
       CLEARED — all 8 two-level registry call sites flipped; supersedes the plan's "23→24 revert" item, landing below
       23); honest measured 22; full QG green. Remaining classes to ≤5 per the in-file comment: fn-size, os.getenv,
-      Any-types, schema-provenance (Phase 3) et al. Original: drilldown + routes facade treatment. Suggested package `services/data_status/`: `defi.py`
+      Any-types, schema-provenance (Phase 3) et al. Original: drilldown + routes facade treatment. Suggested package
+      `services/data_status/`: `defi.py`
       (`_is_legacy_defi_venue_row`/`_read_defi_merged_index`/`_allowed_defi_venue_chain_pairs`/
       `_filter_to_canonical_defi_venues`/`_filter_legacy_defi_rows`), `sports.py` (`_is_sports_reference_venue`/
       `_is_understat_venue`/`_is_transfer_window_venue`/`_is_sparse_sports_entity`/`_get_reference_expected_dates`),
@@ -209,7 +209,7 @@ unchanged:
       caller churn. `data_status_drilldown.py` (2,586) + `data_status.py` (2,550) get the same treatment. Repo:
       deployment-api.
 - [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — unified-trading-api@42f12ab: seed.py confirmed DATA → 5,169 L → 470 L thin
-      loader + 72 `mock_data/seed_data/*.json` domain files; seed.py excludes removed from FUNCTION_SIZE/EMPTY_*/
+      loader + 72 `mock_data/seed_data/*.json` domain files; seed.py excludes removed from FUNCTION*SIZE/EMPTY*\*/
       IMPORT_INSIDE globs; `CODEX_MAX_VIOLATIONS=0` pinned; equality + org-integrity tests extended
       (tests/unit/test_seed_quality.py); full QG green. Original: **unified-trading-api `seed.py` (5,169 L)** — if it's
       seed DATA (fixtures/records), same pattern as registry.py: move the data to a data file + a thin seeding loader;
@@ -219,7 +219,7 @@ unchanged:
       (232–830 L each) + `_deps.py`; route table (76 APIRoutes: path/method/endpoint/response_model/deps/status)
       byte-identical pre/post via worktree diff; runtime smoke on :8799 (live :8765 untouched, no restart); 480 tests
       green; zero caller/test edits. worker_liveness/state_store reviewed: NOT split (next todo). Original:
-      **agent-orchestrator `server.py` (4,470 L)** — split by surface into routes/*.
+      **agent-orchestrator `server.py` (4,470 L)** — split by surface into routes/\*.
 - [ ] [REFACTOR] P3. **agent-orchestrator `worker_liveness.py` (1,215 L) + `state_store.py` (1,118 L) decomposition
       requires test edits** — 2026-06-11 review: worker_liveness is one ~1,050-line `WorkerLivenessKicker` class whose
       tests fire ~30 namespace patches at `server.worker_liveness.*`, and state_store is a flat CRUD namespace with
@@ -227,41 +227,39 @@ unchanged:
       zero-caller-edit split is impossible (mixins = banned shim). Proper unit: decompose by entity/concern AND migrate
       the test patch targets in the same commit (pre-audit the full patch manifest first). Repo: agent-orchestrator.
 - [x] ✅ [REFACTOR] P1. COMPLETE 2026-06-11 — orchestrator half @1681f85 (below) + **adapters half @eb33603**:
-      tardis_adapter 2,907→449 facade + 5 transport/concern modules (symbol_resolution/csv_transport/cefi_shards/
+      tardis*adapter 2,907→449 facade + 5 transport/concern modules (symbol_resolution/csv_transport/cefi_shards/
       batch_download/bulk_download, all <900); solana_defi_handler 2,175→658 facade + 3 venue/stage modules
       (drift/amm/yield); 255 patch-surface tests green, 94/94 defs conserved, zero cross-repo code refs; budget
       ratcheted 16→15 (file-size class still fires on websocket_runner 912 / solana_lst_archival 988 /
-      rebuild_sports_manifest_v9 1137 / migrate_*_v9 1284+1056 — named next targets in-file). Original half:
-      market-tick-data-service@1681f85: orchestrator.py
-      4,219 L → `engine/orchestrator/` package (7 modules ≤824 L: venue_fetch / partitioned_writer / sentinels /
-      manifest_finalize / preflight / symbol_rules / _state + thin `__init__`); namespace-patch regression in the
-      dt-start-date gate fixed (sentinels route UAC gates via `_orch.`); foreign asset_group-provenance fix
-      (MTDS@5df7872-adjacent) grafted into manifest_finalize; contract-call conservation 79 ≥ baseline 67; full QG
-      green. REMAINING in this item: `tardis_adapter.py` (2,880) + `solana_defi_handler.py` (2,125) — decompose by
-      venue/transport. Repo: market-tick-data-service.
-- [x] ✅ [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
-      + 6 archetype-family modules; batch_handler.py 1,570→847 + 4 concern modules; TARGET_UNIVERSE content-hash
+      rebuild_sports_manifest_v9 1137 / migrate*\*\_v9 1284+1056 — named next targets in-file). Original half:
+      market-tick-data-service@1681f85: orchestrator.py 4,219 L → `engine/orchestrator/` package (7 modules ≤824 L:
+      venue_fetch / partitioned_writer / sentinels / manifest_finalize / preflight / symbol_rules / \_state + thin
+      `__init__`); namespace-patch regression in the dt-start-date gate fixed (sentinels route UAC gates via `_orch.`);
+      foreign asset_group-provenance fix (MTDS@5df7872-adjacent) grafted into manifest_finalize; contract-call
+      conservation 79 ≥ baseline 67; full QG green. REMAINING in this item: `tardis_adapter.py` (2,880) +
+      `solana_defi_handler.py` (2,125) — decompose by venue/transport. Repo: market-tick-data-service.
+- [x] ✅ [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line
+      facade + 6 archetype-family modules; batch_handler.py 1,570→847 + 4 concern modules; TARGET_UNIVERSE content-hash
       identical pre/post; budget ratcheted 11→10 (census-honest). Cross-repo finding surfaced: execution-service
-      `defi_target_universe_rebalance_recommender.py:310` imports `specs_for_archetype` from the strategy-service
-      module path — KNOWN/sanctioned via UAC `service_contract_map.py:216` forbidden_exceptions + deprecation_ledger
-      (move to UAC registry long-term); facade preserves the path so the consumer is unaffected.
-      **MDPS DONE 2026-06-11** — market-data-processing-service@1cdf3ec: canonical_writer 2,412→536 facade + 4 modules
-      (manifest/shaping/stamping/streaming); live_workers 1,731→516 + 2 modules (chain/streaming); databento
-      classifier import flipped to its new UAC `external/databento` home + the banned MTDS path-dep REMOVED from
-      pyproject (no-service↔service); budget ratcheted 10→7 (census-honest); full QG green.
-      **execution-service DONE 2026-06-11** — execution-service@48eec983: kraken_rest_adapter 1,299→683+443+283 /
-      uniswap 1,245→565+478+342 / aave 1,136→629+578 / manual_instruction_api 1,085→815+368 / gcs_data_loading
-      1,012→781+281 + amm/betfair companions, all below 900 with facade modules preserved; budget ratcheted 24→21
-      (census-honest); full QG green (292s). lxml advisory: not a direct execution-service dep (transitive) — tracked
-      under the pip-audit class in Phase 4. ITEM COMPLETE — flipping checkbox:
+      `defi_target_universe_rebalance_recommender.py:310` imports `specs_for_archetype` from the strategy-service module
+      path — KNOWN/sanctioned via UAC `service_contract_map.py:216` forbidden_exceptions + deprecation_ledger (move to
+      UAC registry long-term); facade preserves the path so the consumer is unaffected. **MDPS DONE 2026-06-11** —
+      market-data-processing-service@1cdf3ec: canonical_writer 2,412→536 facade + 4 modules
+      (manifest/shaping/stamping/streaming); live_workers 1,731→516 + 2 modules (chain/streaming); databento classifier
+      import flipped to its new UAC `external/databento` home + the banned MTDS path-dep REMOVED from pyproject
+      (no-service↔service); budget ratcheted 10→7 (census-honest); full QG green. **execution-service DONE 2026-06-11**
+      — execution-service@48eec983: kraken_rest_adapter 1,299→683+443+283 / uniswap 1,245→565+478+342 / aave
+      1,136→629+578 / manual_instruction_api 1,085→815+368 / gcs_data_loading 1,012→781+281 + amm/betfair companions,
+      all below 900 with facade modules preserved; budget ratcheted 24→21 (census-honest); full QG green (292s). lxml
+      advisory: not a direct execution-service dep (transitive) — tracked under the pip-audit class in Phase 4. ITEM
+      COMPLETE — flipping checkbox:
 - [x] ✅ [REFACTOR] P3. COMPLETE 2026-06-11 — **cloud_feature_provider DONE** — ml-service@e011c82: 1,202→774 facade +
       `feature_query_support.py` (298) + `sports_feature_loader.py` (219); the loader resolves `get_storage_client`
-      through the facade module so the existing test patch surface
-      (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests).
-      **training_orchestrator DONE 2026-06-11** — ml-service@b62c9fe: 1,027→879 + `training_targets.py` (243, pure
-      functions, patch surface intact); `_add_ml_training_args` 243 L → 7-line dispatcher over 6 section helpers;
-      both census Any-sites cleared; budget ratcheted 3→1 (only schema-provenance remains — Phase 3);
-      MAX_FILE_LINES 1300→1000 (one 963 L file left, drop-to-900 noted in-file).
+      through the facade module so the existing test patch surface (`cloud_feature_provider.get_storage_client`) keeps
+      intercepting; full QG green (2,181 tests). **training_orchestrator DONE 2026-06-11** — ml-service@b62c9fe:
+      1,027→879 + `training_targets.py` (243, pure functions, patch surface intact); `_add_ml_training_args` 243 L →
+      7-line dispatcher over 6 section helpers; both census Any-sites cleared; budget ratcheted 3→1 (only
+      schema-provenance remains — Phase 3); MAX_FILE_LINES 1300→1000 (one 963 L file left, drop-to-900 noted in-file).
       **PM scripts DONE 2026-06-11** — unified-trading-pm@075f64279: generate-ui-vision-pptx 1,717→21-line entry +
       `scripts/ui_vision_pptx/` package (6 modules ≤607, python-pptx pyright carve-out extended to the package);
       `gcs_migration_bundle_2026_05_08.py` (1,143) + its tests DELETED per script-homes (one-off whose migration
@@ -269,33 +267,33 @@ unchanged:
 
 ## Phase 1.5 — >900-line tail (post-sweep inventory 2026-06-11; the named worst offenders above are ALL split)
 
-- [ ] [REFACTOR] P1. **UTL `manifest_writer.py` is 5,716 lines** — NEW worst-offender discovery (2026-06-11 fleet
-      sweep; hidden behind UTL's size excludes at budget 0). Same treatment as the P1 monsters: decompose by concern
-      (record_* write paths / consolidation / validation / emission-policy) behind a re-exporting facade, namespace-
+- [ ] [REFACTOR] P1. **UTL `manifest_writer.py` is 5,716 lines** — NEW worst-offender discovery (2026-06-11 fleet sweep;
+      hidden behind UTL's size excludes at budget 0). Same treatment as the P1 monsters: decompose by concern
+      (record\_\* write paths / consolidation / validation / emission-policy) behind a re-exporting facade, namespace-
       patch pre-audit first (manifest_writer is the most-patched module in the fleet). Also UTL
       `manifest_consolidator.py` (1,360) + `__init__.py` 2,279 (facade — sanctioned, verify). Repo:
       unified-trading-library.
-- [ ] [REFACTOR] P2. MTDS >900 tail (11 files): umi_tick_provider 2,093 / evm_defi_handler 1,430 / lending_indices
-      1,390 / perp_funding 1,363 / databento_adapter 1,360 / dex_pools 1,097 / oracle_prices 1,085 / polymarket_adapter
-      1,023 / solana_lst_archival 988 / dex_swaps 980 / gas_fee 944 / websocket_runner 912 — split below 900 by
-      venue/stage (drops the file-size class → 15→14). Repo: market-tick-data-service.
+- [ ] [REFACTOR] P2. MTDS >900 tail (11 files): umi_tick_provider 2,093 / evm_defi_handler 1,430 / lending_indices 1,390
+      / perp_funding 1,363 / databento_adapter 1,360 / dex_pools 1,097 / oracle_prices 1,085 / polymarket_adapter 1,023
+      / solana_lst_archival 988 / dex_swaps 980 / gas_fee 944 / websocket_runner 912 — split below 900 by venue/stage
+      (drops the file-size class → 15→14). Repo: market-tick-data-service.
 - [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
-      polymarket 1,184 / _solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922),
-      strategy archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958,
-      agent-orchestrator worker_liveness/state_store/worktree_clean_check/models (separate todo above),
-      alerting router 1,022, ml uniform_training_pipeline 963. UAC's >900 set is largely declarative data registries +
-      `__init__` facades (sanctioned re-export exception) — audit non-facade ones (honest_coverage 1,141,
-      contracts.py 1,349) case-by-case. Repos: per file.
+      polymarket 1,184 / \_solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922), strategy
+      archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958, agent-orchestrator
+      worker_liveness/state_store/worktree_clean_check/models (separate todo above), alerting router 1,022, ml
+      uniform_training_pipeline 963. UAC's >900 set is largely declarative data registries + `__init__` facades
+      (sanctioned re-export exception) — audit non-facade ones (honest_coverage 1,141, contracts.py 1,349) case-by-case.
+      Repos: per file.
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
 - [x] ✅ [REFACTOR] P2. COMPLETE 2026-06-11 — facade: UAC@c8287d3 (all 46 fleet-consumed two-level symbols at the
-      one-level facade; 3 modules via PEP 562 lazy `__getattr__` for root-init cycles). Consumer call-site flips
-      shipped per-repo: deployment-api@5127517 (all 8 sites, class CLEARED), execution-service@fb116d98 (class
-      CLEARED), strategy-service@6aff0c48 (class CLEARED, zero deep sites remain), MDPS@4b6c53a (class CLEARED),
+      one-level facade; 3 modules via PEP 562 lazy `__getattr__` for root-init cycles). Consumer call-site flips shipped
+      per-repo: deployment-api@5127517 (all 8 sites, class CLEARED), execution-service@fb116d98 (class CLEARED),
+      strategy-service@6aff0c48 (class CLEARED, zero deep sites remain), MDPS@4b6c53a (class CLEARED),
       instruments-service@cb51c98 (weather.py), SIT@a458443 (3 test files). MTDS's remaining deep imports are
-      `canonical.partition_paths` in migration scripts (NOT registry symbols — outside this item's scope, stays in
-      its V=15 accounting). Deep-path removal from UAC deferred until a fleet-wide pre-audit shows zero importers
+      `canonical.partition_paths` in migration scripts (NOT registry symbols — outside this item's scope, stays in its
+      V=15 accounting). Deep-path removal from UAC deferred until a fleet-wide pre-audit shows zero importers
       (additive-first contract). Original: Re-export the two-level symbols at the UAC one-level facade
       ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
       tardis_free_coverage, …}), then switch the call sites to `from unified_api_contracts.registry import <X>` and drop
@@ -303,9 +301,9 @@ unchanged:
       execution-service, instruments-service, market-data-processing-service, market-tick-data-service,
       strategy-service, system-integration-tests. Repo: unified-api-contracts (facade) + the 7 consumers (call sites +
       ratchet).
-- [x] ✅ [CODE] P1. SUPERSEDED-SATISFIED 2026-06-11 — deployment-api@5127517 ratcheted 24→**22** (below the 23
-      target): Phase 2 cleared the deep-import class AND the route/service splits cleared file-size. (Interim
-      history: a transient 24→25 bump by slot-1 for manifest-alignment was reverted same-day @6b7aa69 once the PM
+- [x] ✅ [CODE] P1. SUPERSEDED-SATISFIED 2026-06-11 — deployment-api@5127517 ratcheted 24→**22** (below the 23 target):
+      Phase 2 cleared the deep-import class AND the route/service splits cleared file-size. (Interim history: a
+      transient 24→25 bump by slot-1 for manifest-alignment was reverted same-day @6b7aa69 once the PM
       workspace-manifest dep edge was fixed.) Original: budget 23→24 revert once deep-imports clear. Repo:
       deployment-api.
 
@@ -318,27 +316,43 @@ unchanged:
 
 ## Phase 4 — Residual violation classes
 
+- [x] ✅ [CODE] P1. **ml-service CODEX_MAX_VIOLATIONS=0 ACHIEVED 2026-06-12 (Phase-3 pilot)** — ml-service@00855f6:
+      schema-provenance cleared honestly (29 `# CORRECT-LOCAL` markers on genuinely process-local types, 4 dead
+      TypedDicts deleted; no UAC moves needed), budget 1→0. First repo to complete the full 5→0 journey.
+- [x] ✅ [CODE] P2. **deployment-api 22→16 (2026-06-12)** — deployment-api@0686968: os.getenv class + comment
+      false-positives + empty-fallback sites cleared across 17 files (honest measured V=16); full QG green. Remaining to
+      ≤5: fn-size, Any-types, schema-provenance (Phase 3) et al per in-file comment.
+- [x] ✅ [CODE] P2. **execution-service 11→7 (2026-06-12)** — empty-fallback + project-id classes cleared + the lxml
+      pip-audit class (>=6.1.0 bump rode this unit); honest measured V=7. Remaining: schema-provenance (~183 types,
+      Phase 3), fn-size, cloud-SDK (KMS facade gap), domain-client (stale check target), deep-imports.
+- [ ] [REFACTOR] P1. **UTL manifest_writer split — IN FLIGHT, WIP stashed** — wave-3 agent died at session limit with 12
+      staged concern-modules (UTL stash@{0} "manifest_writer split WIP"); facade wiring + namespace-patch preservation +
+      consumer smokes remain. Respawn pops the stash and finishes. Repo: unified-trading-library.
 - [x] ✅ [CODE] P2. **execution-service imports-inside-functions class CLEARED 2026-06-11** —
       execution-service@2fdc348c: 116 sites across 57 files (51 hoisted: stdlib/UAC/UTL/light deps; 65 justified
       per-line `# noqa: imports-inside-functions`: lazy heavy SDKs nautilus/web3/driftpy/solana, per-provider KMS,
-      call-time patch surfaces, sanctioned/tracked cross-service); budget ratcheted 12→11; full QG green (7,692
-      tests; the isolation_policy/rpc_fallback patch-surface lazies were load-bearing and kept lazy). BONUS finding:
-      2 UNSANCTIONED cross-service imports surfaced (leg_controller_runner→strategy_service.position,
+      call-time patch surfaces, sanctioned/tracked cross-service); budget ratcheted 12→11; full QG green (7,692 tests;
+      the isolation_policy/rpc_fallback patch-surface lazies were load-bearing and kept lazy). BONUS finding: 2
+      UNSANCTIONED cross-service imports surfaced (leg_controller_runner→strategy_service.position,
       mtds_book_provider→market_tick_data_service.reader + its path dep) — filed in
       utl_uac_reuse_consolidation_remediation_2026_06_10.md. Shipped via the dirty-deps carve-out (UAC/MTDS carry the
       mtds_coverage_75 lane's WIP).
 
-- [ ] [CODE] P2. **lxml PYSEC-2026-87 fleet bump (coordinated unit)** — 2026-06-11 diagnosis: lxml is NOT a UAC dep;
-      the vulnerable 5.4.0 lock lives in execution-service (direct dep `lxml>=5.0,<6.0` pyproject:290) +
-      e2e-testing/system-integration-tests locks, and the fleet canonical range `lxml>=5.0,<6.0`
-      (PM `workspace-constraints.toml:58` + `canonical-dependency-manifest.json:204-205`) CONFLICTS with the ≥6.1.0
-      fix. One unit: widen the PM canonical range to `>=6.1.0,<7.0.0`, bump execution-service (+e2e/SIT) pyproject,
-      re-lock, full tests (lxml 6.x API check on the consuming code), ratchet execution-service's pip-audit class.
-      Repos: unified-trading-pm + execution-service + e2e-testing + system-integration-tests.
+- [x] ✅ [CODE] P2. COMPLETE 2026-06-12 — coordinated lxml bump: PM canonical range widened to `>=6.1.0,<7.0.0`
+      (workspace-constraints.toml + canonical-dependency-manifest.json, shipped by the wave-3 lxml agent);
+      e2e-testing@eaa2f37 + system-integration-tests@8000740 re-locked; execution-service bumped its direct dep (lxml
+      used only as the BeautifulSoup parser backend — no direct lxml API use) + re-locked, rode the 11→7 ratchet unit.
+      Original: **lxml PYSEC-2026-87 fleet bump (coordinated unit)** — 2026-06-11 diagnosis: lxml is NOT a UAC dep; the
+      vulnerable 5.4.0 lock lives in execution-service (direct dep `lxml>=5.0,<6.0` pyproject:290) +
+      e2e-testing/system-integration-tests locks, and the fleet canonical range `lxml>=5.0,<6.0` (PM
+      `workspace-constraints.toml:58` + `canonical-dependency-manifest.json:204-205`) CONFLICTS with the ≥6.1.0 fix. One
+      unit: widen the PM canonical range to `>=6.1.0,<7.0.0`, bump execution-service (+e2e/SIT) pyproject, re-lock, full
+      tests (lxml 6.x API check on the consuming code), ratchet execution-service's pip-audit class. Repos:
+      unified-trading-pm + execution-service + e2e-testing + system-integration-tests.
 
 - [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
-      (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
-      QG running). All three QG-green at the new budgets before commit.
+      (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight, QG
+      running). All three QG-green at the new budgets before commit.
 - [x] ✅ [CODE] P2d. **MDPS ≤5 ACHIEVED 2026-06-11** — market-data-processing-service@4b6c53a: budget 7→1 (only
       schema-provenance remains — Phase 3). Cleared: deep-imports (registry sites flipped to one-level facade),
       os.getenv, asyncio.run-in-loop, imports-in-fn, run_lifecycle pairing (live_mode_handler), preflight
@@ -350,10 +364,10 @@ unchanged:
       collected failures in the same unit. Repo: market-tick-data-service.
 - [x] ✅ [CODE] P2c. **none-budget repos pinned at 0 (census-honest) 2026-06-11** — alerting-service@c41baf1,
       client-reporting-api@c8a32ff, fund-administration-service@3d32a3e, greeks-service@9efb1e7,
-      trading-agent-service@09d8dae (each double-QG-green at budget 0 before ship);
-      system-integration-tests pinned 0 + QG-green, quickmerge pending peer-clean deps (this plan's other lanes) —
-      shipped by the orchestrating slot when lanes land. unified-trading-api was pinned 0 earlier (@42f12ab);
-      agent-orchestrator runs a custom gate without a codex section (pin N/A — documented census exception).
+      trading-agent-service@09d8dae (each double-QG-green at budget 0 before ship); system-integration-tests pinned 0 +
+      QG-green, quickmerge pending peer-clean deps (this plan's other lanes) — shipped by the orchestrating slot when
+      lanes land. unified-trading-api was pinned 0 earlier (@42f12ab); agent-orchestrator runs a custom gate without a
+      codex section (pin N/A — documented census exception).
 - [x] ✅ [CODE] P2b. **strategy-service ≤5 ACHIEVED 2026-06-11** — strategy-service@6aff0c48: budget 10→4. Cleared 6
       classes: deep-imports (both registry sites flipped to the one-level facade, zero deep sites remain), os.getenv
       (recovery_event_helper → StrategyServiceConfig fields), imports-in-fn (8 sites hoisted), empty-dict/list (5
