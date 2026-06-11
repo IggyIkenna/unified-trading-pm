@@ -276,7 +276,7 @@ source:
 | 6    | `issues/semver_version_bump_skip_ci_promotion_block_2026_06_09`   | promotion            | semver `[skip ci]` bump → v2-never-reported promotion block (auto-recover shipped; residuals)                    |
 | 4    | `issues/ci_incident_findings_2026_06_09`                          | ci/cd                | 2026-06-09 incident findings (unacked residuals → fold into waves or archive)                                    |
 | 2    | `staging_clean_start_and_stale_pr_hygiene_2026_06_08`             | promotion            | staging force-sync clean-start + stale promote-PR hygiene                                                        |
-| 1    | `ci_local_qg_parity_2026_06_08`                                   | quality-gates        | local QG ↔ CI v2 parity (drift-tick + backmerge cron)                                                            |
+| 1    | `ci_local_qg_parity_2026_06_08`                                   | quality-gates        | local QG ↔ CI v2 parity (drift-tick + backmerge cron)                                                           |
 | 1    | `issues/sit_uac_orphan_cap_stale_consumer_list_2026_06_07`        | SIT                  | SIT UAC orphan-cap + stale consumer list                                                                         |
 | 1    | `issues/harsh_pathb_and_cicd_reform_setup_2026_06_09`             | ci/cd                | Harsh-laptop Path-B + CI/CD reform setup parity                                                                  |
 | 0    | `issues/orphan_rootm_branch_unmerged_work_2026_06_05`             | hygiene              | 0 open checkboxes — **archive-candidate** per issue-doc lifecycle (verify content acked, then archive)           |
@@ -607,17 +607,18 @@ what the operator is seeing:
       image carries the bumped version. repo: unified-trading-pm. **DEFERRED FUTURE (Option B, not now):\*\* fold the
       bump into the LDR→staging promotion content (zero separate commit) — cleaner but moves the bump pre-SIT + re-wires
       the breaking-cascade/lock timing (large blast radius); keep as a follow-up cleanup, not the asap fix.
-- [x] ✅ [RESOLVED-STALE: LDR-trunk drain shipped 2026-06-09/10] [SCRIPT] P2. **`ci-failure-watcher` disposition once Option C lands — do NOT retire the watcher (corrects the
-      proposal's §8/open-Q3 overreach).** The watcher has TWO independent flags: `--escalate`
-      (`conflict_prs_to_escalate` / `blocked_failing_prs_to_escalate`, `ci_failure_watcher.py:527/545`) hands genuine
-      `CONFLICTING`/`DIRTY` merge-conflict PRs + `BLOCKED`-with-failed-check `sit_failure` walls to the orchestrator —
-      **a separate concern Option C does not touch; it MUST stay running.** `--auto-recover` (`auto_recover_stuck_prs`,
-      `:666`) close+reopens the v2-never-reported deadlock; Option C removes its _dominant_ producer (semver bump heads)
-      but `--auto-recover` is keyed on the _signature_ (v2-never-reported), not the bump message, so it still backstops
-      any OTHER `[skip ci]`-on-a-promotion-head (manual hotfix / other automation) where there is nothing for
-      `--escalate` to rebase → **leave `--auto-recover` in place as a now-rarely-triggered backstop; it is NOT dead
-      code.** Net change here = the `(B)` re-roll/re-run remedy in the item above stops being the routine path for
-      semver bumps. repo: unified-trading-pm.
+- [x] ✅ [RESOLVED-STALE: LDR-trunk drain shipped 2026-06-09/10] [SCRIPT] P2. **`ci-failure-watcher` disposition once
+      Option C lands — do NOT retire the watcher (corrects the proposal's §8/open-Q3 overreach).** The watcher has TWO
+      independent flags: `--escalate` (`conflict_prs_to_escalate` / `blocked_failing_prs_to_escalate`,
+      `ci_failure_watcher.py:527/545`) hands genuine `CONFLICTING`/`DIRTY` merge-conflict PRs +
+      `BLOCKED`-with-failed-check `sit_failure` walls to the orchestrator — **a separate concern Option C does not
+      touch; it MUST stay running.** `--auto-recover` (`auto_recover_stuck_prs`, `:666`) close+reopens the
+      v2-never-reported deadlock; Option C removes its _dominant_ producer (semver bump heads) but `--auto-recover` is
+      keyed on the _signature_ (v2-never-reported), not the bump message, so it still backstops any OTHER
+      `[skip ci]`-on-a-promotion-head (manual hotfix / other automation) where there is nothing for `--escalate` to
+      rebase → **leave `--auto-recover` in place as a now-rarely-triggered backstop; it is NOT dead code.** Net change
+      here = the `(B)` re-roll/re-run remedy in the item above stops being the routine path for semver bumps. repo:
+      unified-trading-pm.
 - [x] ✅ [SCRIPT] P1. **SUPERSEDED BY the canonical `auto_recover_stuck_prs` `[skip ci]`-head refine item (line ~4380),
       where this finding is the design rationale; dedup/verified 2026-06-10.** LIVE FINDING 2026-06-09: `--auto-recover`
       close+reopen is INEFFECTIVE against a `[skip ci]` head — reinforces that Option C is the ONLY real fix.**
@@ -654,12 +655,13 @@ what the operator is seeing:
       conflict-resolvers that cleared the locked cascade — `Conflict Resolution Agent` /
       `deterministic-promotion-conflict-resolve` runs all success, lock → `locked:false`). repo: unified-trading-pm.
       Composes with `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
-- [x] ✅ [RESOLVED-STALE: tightened to */15 2026-06-10 (CLAUDE.md)] [SCRIPT] P3 **NICE-TO-HAVE**. Sustained-park escalation — bump the `no_headroom` Slack alert from WARNING →
-      CRITICAL when the SAME wall returns `no_headroom` on ≥N consecutive `*/15m` ticks (a one-off 503 is transient +
-      retryable; a sustained one is the silent ~5h park). Needs cross-run state (the per-wall `escalation-dispatched`
-      label is only set on a CONFIRMED spawn, so a parked wall stays unlabelled — track a tick-count via a PR comment or
-      the orchestrator). File/implement only if the per-tick WARNING proves insufficient. repo: unified-trading-pm.
-      Provenance: cicd-521 re-scope 2026-06-10. Composes with `ci-failure-watcher` `--escalate`.
+- [x] ✅ [RESOLVED-STALE: tightened to */15 2026-06-10 (CLAUDE.md)] [SCRIPT] P3 **NICE-TO-HAVE**. Sustained-park
+      escalation — bump the `no_headroom` Slack alert from WARNING → CRITICAL when the SAME wall returns `no_headroom`
+      on ≥N consecutive `*/15m` ticks (a one-off 503 is transient + retryable; a sustained one is the silent ~5h park).
+      Needs cross-run state (the per-wall `escalation-dispatched` label is only set on a CONFIRMED spawn, so a parked
+      wall stays unlabelled — track a tick-count via a PR comment or the orchestrator). File/implement only if the
+      per-tick WARNING proves insufficient. repo: unified-trading-pm. Provenance: cicd-521 re-scope 2026-06-10. Composes
+      with `ci-failure-watcher` `--escalate`.
 - [x] ✅ [DEVOPS] P0. **semver-agent can stamp versions onto `staging` again — admin-role ruleset bypass + classic
       `enforce_admins` off, FLEET-WIDE (operator chose this approach 2026-06-08).** Was: `semver-agent.yml.tmpl` (auth
       `GH_PAT`) DIRECT-PUSHES the post-QG `chore(release)` bump to `staging`, but staging's CLASSIC protection
@@ -673,7 +675,16 @@ what the operator is seeing:
       MTDS piloted; idempotent re-run = 0). **Proven:** MTDS semver rerun pushed `chore(release): bump version to 0.4.0`
       to staging (apply step green). `unified-trading-pm@ee0c3af01`. Composes with the stuck-promotion drain (semver
       bumps now flow → SIT → main). SSOT: this plan + `pin_branch_protection_rulesets.py`.
-- [x] ✅ [SCRIPT] P0. **`STAGING_LOCK_CONTEXT` wrong bare name caused require-staging-lock-check to require a context no run emits — FIXED 2026-06-11 (agt-0dbb20).** `pin_branch_protection_rulesets.py` had `STAGING_LOCK_CONTEXT = "check-staging-lock"` (bare job ID) but GitHub Actions emits `"Staging Lock Check / check-staging-lock"` (workflow display name / job display name). The script ran `--apply` at 04:36 UTC 2026-06-11 and stamped the wrong bare context into the `require-staging-lock-check` ruleset fleet-wide. All previous LDR→staging PRs had used the correct context so had passed; this run overwrote them with the bare name which no run ever emits → `deployment-api#54` (and effectively all repos) blocked. **Fix:** constant corrected to `"Staging Lock Check / check-staging-lock"` + doc comment updated to match. `unified-trading-pm@295648a65`. **Remediation applied:** `require-staging-lock-check` ruleset on `deployment-api` corrected via PUT (correct context re-pinned); auto-merge re-armed on PR#54.
+- [x] ✅ [SCRIPT] P0. **`STAGING_LOCK_CONTEXT` wrong bare name caused require-staging-lock-check to require a context no
+      run emits — FIXED 2026-06-11 (agt-0dbb20).** `pin_branch_protection_rulesets.py` had
+      `STAGING_LOCK_CONTEXT = "check-staging-lock"` (bare job ID) but GitHub Actions emits
+      `"Staging Lock Check / check-staging-lock"` (workflow display name / job display name). The script ran `--apply`
+      at 04:36 UTC 2026-06-11 and stamped the wrong bare context into the `require-staging-lock-check` ruleset
+      fleet-wide. All previous LDR→staging PRs had used the correct context so had passed; this run overwrote them with
+      the bare name which no run ever emits → `deployment-api#54` (and effectively all repos) blocked. **Fix:** constant
+      corrected to `"Staging Lock Check / check-staging-lock"` + doc comment updated to match.
+      `unified-trading-pm@295648a65`. **Remediation applied:** `require-staging-lock-check` ruleset on `deployment-api`
+      corrected via PUT (correct context re-pinned); auto-merge re-armed on PR#54.
 - [x] ✅ [SCRIPT] P1. **Plan-hygiene was silently degraded 06-05→06-07 — the "I didn't see plan hygiene" cause; now
       self-resolved.** `plan-health-agent.yml` (scheduled `0 2 * * *` + per-PR gate + Slack notify + GCS/S3 persist) ran
       RED four straight days. Root cause for 06-05/06/07: the `Claude API health precheck` step (now a RETIRED no-op as
@@ -1040,26 +1051,28 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       deps); pyproject re-adds it editable for the 14 test files importing deployment_api.routes/utils/main. staging
       clears via promotion. I diagnosed identically but did not push a competing fix.] deployment-service LDR + staging
       v2 RED — orphaned cross-repo test import after the circular-dep cut.** `tests/mocks.py:10` hard-imports
-      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the deployment-api↔deployment-service
-      circular-dep removal dropped `deployment-api` from deployment-service's pyproject **on LDR** (main still declares
-      it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the STALE side; LDR @2ab4cce5 = RED, run
-      26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is already guarded
-      (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard top-level import. Fix
-      on LDR (the correct post-cut side): make the import resilient OR relocate `CombinatoricEntry` to a shared contract
-      — do NOT re-add deployment-api as a dep (re-creates the just-removed cycle). repo: deployment-service.
+      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the
+      deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
+      pyproject **on LDR** (main still declares it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the
+      STALE side; LDR @2ab4cce5 = RED, run 26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is
+      already guarded (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard
+      top-level import. Fix on LDR (the correct post-cut side): make the import resilient OR relocate
+      `CombinatoricEntry` to a shared contract — do NOT re-add deployment-api as a dep (re-creates the just-removed
+      cycle). repo: deployment-service.
 - [x] ✅ [LINT] P2. **[PROMOTION-LAG, not fresh debt — re-audit 2026-06-02: the 14 QG-scope ruff errors are ALREADY
       FIXED on LDR @eabdf05 "fix(lint): green all 14 ruff errors in QG scope (tests/ lint pass)"; e2e LDR is 10 commits
       ahead of main. main red (run 26796774457 @b526b5eb) clears via the LDR→main promotion campaign (P1 below), NOT a
       separate fix. NB `ruff check .` from repo root shows 108 full-repo errors, but those are `scripts/` noise OUTSIDE
       the QG lint scope.] e2e-testing main v2 RED — 14 ruff `UP041` errors (aliased-exception replacements).** main-only
       (no LDR remote CI; run 26796774457 @b526b5eb). Folded into the LDR→main promotion campaign. repo: e2e-testing.
-- [x] ✅ [RESOLVED-STALE: escalate-to-orchestrator.yml exists] [SCRIPT] P2. **Orchestrator-dispatch escalation marked ✅ DONE is OVERSTATED — PM `escalate-to-orchestrator.yml`
-      does NOT exist.** Re-audit 2026-06-02: `agent-orchestrator/server/escalation.py` + `agents/escalate.md` exist on
-      LDR, but the PM-side GHA trigger workflow (`.github/workflows/escalate-to-orchestrator.yml`) the "✅ built +
-      e2e-tested" claim depends on is absent from `origin/main` → the GHA→orchestrator dispatch is NOT wired end-to-end.
-      Build the missing GHA (composes with the open `stuck_promotion_pr` wiring todo). repos: unified-trading-pm +
-      agent-orchestrator. **→ consolidated into § "CI/CD Observability + Reconciliation Hardening" B
-      (conflict-resolution → orchestrator on Max-plan accounts); track + tick THERE, not here.**
+- [x] ✅ [RESOLVED-STALE: escalate-to-orchestrator.yml exists] [SCRIPT] P2. **Orchestrator-dispatch escalation marked ✅
+      DONE is OVERSTATED — PM `escalate-to-orchestrator.yml` does NOT exist.** Re-audit 2026-06-02:
+      `agent-orchestrator/server/escalation.py` + `agents/escalate.md` exist on LDR, but the PM-side GHA trigger
+      workflow (`.github/workflows/escalate-to-orchestrator.yml`) the "✅ built + e2e-tested" claim depends on is absent
+      from `origin/main` → the GHA→orchestrator dispatch is NOT wired end-to-end. Build the missing GHA (composes with
+      the open `stuck_promotion_pr` wiring todo). repos: unified-trading-pm + agent-orchestrator. **→ consolidated into
+      § "CI/CD Observability + Reconciliation Hardening" B (conflict-resolution → orchestrator on Max-plan accounts);
+      track + tick THERE, not here.**
 
 - [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02 slot-2: LDR v2 run 26814711557 @4c1c9a68 success]
       unified-trading-library (L2) LDR v2 RED — pytest bucket-naming failure (run 26792007721).**
@@ -1224,11 +1237,12 @@ self-recovers. Done:
 Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT
 machinery):
 
-- [x] ✅ [RESOLVED-STALE verified 2026-06-11: features-service LDR+staging v2 GREEN] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports
-      `ml_service` but does not declare it (the SAME finding as the Wave-1 cleanup todo above — canonical fix = add
-      ml-service to manifest **or** drop the `regime_clustering.py` lazy import; dep-graph decision, circular-dep risk →
-      owning slot, not a blind edit). (2) Codex compliance FAILED: 1 violation (max 0). Repo stays FEATURE_GREEN-gated
-      until both are fixed. repo: features-service.
+- [x] ✅ [RESOLVED-STALE verified 2026-06-11: features-service LDR+staging v2 GREEN] [TEST] P1. **features-service
+      staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports `ml_service` but does not
+      declare it (the SAME finding as the Wave-1 cleanup todo above — canonical fix = add ml-service to manifest **or**
+      drop the `regime_clustering.py` lazy import; dep-graph decision, circular-dep risk → owning slot, not a blind
+      edit). (2) Codex compliance FAILED: 1 violation (max 0). Repo stays FEATURE_GREEN-gated until both are fixed.
+      repo: features-service.
 - [x] ✅ [TEST] P1. **agent-orchestrator main-v2 RED** — DONE 2026-06-07. Two root causes: (1) the exit-127 (no
       `scripts/quality-gates.sh`) was already fixed by the standalone AO gate landed 2026-06-04 (main-v2 green since
       `6f8764a8`, run 26980823319: 362 passed); (2) the residual RED was the **Semver Agent** job failing 8-10s on
@@ -1238,8 +1252,9 @@ machinery):
       agent-orchestrator@fd6ef28, promoted tab→LDR→staging(PR#5)→main(PR#6, main-v2 green run 27078002621). **Verified
       E2E: semver-agent run 27078070043 = SUCCESS** (reaches Compute-semver; prior runs 27077953898/27077995619 failed).
       repo: agent-orchestrator.
-- [x] ✅ [RESOLVED-STALE: mdps PR #91 merged 2026-06-05] [SCRIPT] P1. **mdps LDR→staging PR #91 CONFLICTING (DIRTY)** — staging is 2-ahead / 371-behind LDR; the 2 unique
-      staging commits are stale promotion/CI-merge artifacts (`feat(workspace-sweep): live-defi-rollout → staging` +
+- [x] ✅ [RESOLVED-STALE: mdps PR #91 merged 2026-06-05] [SCRIPT] P1. **mdps LDR→staging PR #91 CONFLICTING (DIRTY)** —
+      staging is 2-ahead / 371-behind LDR; the 2 unique staging commits are stale promotion/CI-merge artifacts
+      (`feat(workspace-sweep): live-defi-rollout → staging` +
       `ci: merge main into staging — quality-gates-v2 migration #86`) whose content originated on LDR, but a
       delete/modify conflict means `-X ours` take-LDR aborts. Because staging has unique non-merge commits this is the
       deterministic resolver's **escalate-to-VM-agent** case (NOT auto take-LDR) — resolver DISPATCHED 2026-06-04
@@ -1281,7 +1296,8 @@ machinery):
       PR#108 was MERGEABLE but BLOCKED. Re-pointed classic→full via
       `gh api -X PATCH .../branches/main/protection/required_status_checks`. THIS drift likely persists on OTHER repos'
       main — fix per-repo before any auto-merge promotion.
-- [x] ✅ [RESOLVED-STALE: PM main==LDR content-parity (ahead_by=1/files=0); fleet promotion effectively complete] [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2 — SERVICE-REPO PROMOTION EFFECTIVELY COMPLETE. Authoritative
+- [x] ✅ [RESOLVED-STALE: PM main==LDR content-parity (ahead_by=1/files=0); fleet promotion effectively complete]
+      [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2 — SERVICE-REPO PROMOTION EFFECTIVELY COMPLETE. Authoritative
       `gh compare main...live-defi-rollout`:
       UAC/instruments/execution/strategy/mtds/deployment-service/deployment-api/SIT are all `ahead=0 behind=1-4` → main
       is CURRENT-or-AHEAD of LDR (green LDR code already on main; the 1-4 main-only commits are [skip ci]/reconcile).
@@ -1594,27 +1610,28 @@ machinery):
       dca8864dd ("redesign manifest-canon slot split") + fresh ci_status (Guard-2 reconcile handles the ci_status
       region) — and strip the stray `*.bak`/`*.bak2` files main carries. Then push reconciled LDR + open the gated
       LDR→main PR. The qg-v2 gate-block on the PR is already cleared (qg fix below).
-- [x] ✅ [INFRA] P0. **Reconcile stuck promotion PRs fleet-wide (DIRTY → won't auto-merge).** Several LDR→staging/→main PRs
-      are `mergeable_state=dirty` (merge-conflict, accumulated session commits) so v2-auto-merge never fires — e.g. **PM
-      PR #116** (DIRTY vs main — blocks ALL PM work reaching main), **UAC #67** (conflict → conflict-agent dispatched).
-      Per repo: rebase head onto base + resolve (or conflict-resolution-agent), then auto-merge resumes. Audit the full
-      open-PR set for `dirty` + clear. repos: all with stuck PRs. **Observed 2026-06-03:** PM #116 (tab/ikennaigboaka/1→
-      main, CONFLICTING — the concurrent CLAUDE↔SUB_AGENT consolidation PR), UAC **4/4 open conflicting**, mtds 1,
-      deployment-service 1, alerting-service 1; UTL/execution/strategy/instruments have 0 open (clean).
-      **DONE 2026-06-11 (the 2026-06-03 set had since drained; reconciled the CURRENT stuck set fleet-wide → 0
+- [x] ✅ [INFRA] P0. **Reconcile stuck promotion PRs fleet-wide (DIRTY → won't auto-merge).** Several LDR→staging/→main
+      PRs are `mergeable_state=dirty` (merge-conflict, accumulated session commits) so v2-auto-merge never fires — e.g.
+      **PM PR #116** (DIRTY vs main — blocks ALL PM work reaching main), **UAC #67** (conflict → conflict-agent
+      dispatched). Per repo: rebase head onto base + resolve (or conflict-resolution-agent), then auto-merge resumes.
+      Audit the full open-PR set for `dirty` + clear. repos: all with stuck PRs. **Observed 2026-06-03:** PM #116
+      (tab/ikennaigboaka/1→ main, CONFLICTING — the concurrent CLAUDE↔SUB_AGENT consolidation PR), UAC **4/4 open
+      conflicting**, mtds 1, deployment-service 1, alerting-service 1; UTL/execution/strategy/instruments have 0 open
+      (clean). **DONE 2026-06-11 (the 2026-06-03 set had since drained; reconciled the CURRENT stuck set fleet-wide → 0
       conflicting/dirty PRs remain).** Root cause this round = LDR-SSOT divergence: staging/main drifted from LDR via
       squash-merge SHA noise + semver version bumps, so the auto-generated drain (staging←LDR) + backmerge (main→LDR)
       PRs conflicted. Diagnosed each to CONTENT level (cut through squash-divergence — checked real 3-way tree deltas,
       not commit counts): every diverged branch was **content-superseded by LDR** (deployment-api main = pre-refactor
-      DataStatusService monolith; deployment-ui main = dead EpicReadinessView replaced by EpicsPlans; ao staging features
-      all already on LDR). Resolved via the documented clean-start force-sync (`admin-force-sync-all-to-main.sh`,
-      protections saved+restored, `--no-commit` so dirty foreign WIP preserved, version-revert gate respected — no
-      published tag lost): **e2e #29 MERGED · deployment-ui #42 MERGED/#44 CLOSED · deployment-api #52 CLOSED · ao #6
-      MERGED/#9 CLOSED** (ao main/staging/LDR all converged @6056bfc; collapsed to LDR 0.8.0 — ao had no published tags).
-      Stale superseded feature PRs **PM #143** (--cloud flag, archived plan) + **PM #145** (flow-health-reporter already
-      on LDR) CLOSED. ⚠️ Post-fix: ao staging force-sync hit a GitHub REST rate-limit mid-run → the script could not
-      re-enable ruleset `17369729` (require-quality-gates); a poll-until-budget watcher restored it to `active` — final
-      sweep confirms ALL rulesets active across the 4 touched repos + ZERO conflicting PRs fleet-wide.
+      DataStatusService monolith; deployment-ui main = dead EpicReadinessView replaced by EpicsPlans; ao staging
+      features all already on LDR). Resolved via the documented clean-start force-sync
+      (`admin-force-sync-all-to-main.sh`, protections saved+restored, `--no-commit` so dirty foreign WIP preserved,
+      version-revert gate respected — no published tag lost): **e2e #29 MERGED · deployment-ui #42 MERGED/#44 CLOSED ·
+      deployment-api #52 CLOSED · ao #6 MERGED/#9 CLOSED** (ao main/staging/LDR all converged @6056bfc; collapsed to LDR
+      0.8.0 — ao had no published tags). Stale superseded feature PRs **PM #143** (--cloud flag, archived plan) + **PM
+      #145** (flow-health-reporter already on LDR) CLOSED. ⚠️ Post-fix: ao staging force-sync hit a GitHub REST
+      rate-limit mid-run → the script could not re-enable ruleset `17369729` (require-quality-gates); a
+      poll-until-budget watcher restored it to `active` — final sweep confirms ALL rulesets active across the 4 touched
+      repos + ZERO conflicting PRs fleet-wide.
 - [x] ✅ [SCRIPT] P1. **Promoter must SKIP main-direct repos (Option B) from the staging sweep** — DONE 2026-06-03
       (slot-1) via the operator-directed "delete PM staging" path. `ldr-to-staging-promote` opened **PM #113
       (LDR→staging)** even though PM/codex are main-direct; it gates only on staging-branch existence, so a stray PM
@@ -1639,11 +1656,11 @@ machinery):
       for main) OR (ii) an automated **`pm-ldr-to-main-promote.yml`** (the LDR→main analogue of
       `ldr-to-staging-promote`, gated on v2, conflict→escalate) — the natural replacement for the removed bypass.
       Compose with Guard 3. repo: unified-trading-pm.
-- [x] ✅ [RESOLVED-STALE: operator uninstalled Vercel app] [SCRIPT] P2. **Guard 2(a) reader audit — ci_status must be read from MAIN, not the checkout ref.** Confirmed
-      `ldr-to-staging-promote` runs on PM's default branch (main) → reads main ✓. But `sit-gate.yml` /
-      `staging-to-main.yml` `open("workspace-manifest.json")` from their **checkout ref** (which is `staging` for those
-      triggers) → can read a STALE ci_status. Make each explicitly fetch + read main's manifest (or assert the checkout
-      is main) so ci_status reads are single-SSOT. repo: unified-trading-pm.
+- [x] ✅ [RESOLVED-STALE: operator uninstalled Vercel app] [SCRIPT] P2. **Guard 2(a) reader audit — ci_status must be
+      read from MAIN, not the checkout ref.** Confirmed `ldr-to-staging-promote` runs on PM's default branch (main) →
+      reads main ✓. But `sit-gate.yml` / `staging-to-main.yml` `open("workspace-manifest.json")` from their **checkout
+      ref** (which is `staging` for those triggers) → can read a STALE ci_status. Make each explicitly fetch + read
+      main's manifest (or assert the checkout is main) so ci_status reads are single-SSOT. repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P0. **PM quality-gates-v2 RED root-caused + fixed** — slot-1 2026-06-03, PM@1a5b64e05 (on LDR via
       mirror). The Guard-1 bot-only script `check_ci_status_bot_only.py` reads `manifest.get("repositories", {})` as an
       isinstance-guarded fail-open tolerant reader (same benign category as `tier_c_promotion_gate.py` /
@@ -2032,10 +2049,11 @@ by a PR:
       cleanly. Until then the SIT gate cannot go green and staging→main needs manual `staging-to-main.yml` dispatch.
       repos: market-data-processing-service, market-tick-data-service, unified-trading-library, features-service,
       strategy-service, execution-service, deployment-api.
-- [x] ✅ [RESOLVED-STALE: aiohttp staging drift resolved 2026-06-07] [TEST] P2. **SIT PR #22 (`feat!: update unified-api-contracts to 0.2.0` → staging) is BLOCKED by the same aiohttp
-      drift** (its `quality-gates-v2` fails with the identical `No solution found` resolution error, NOT a UAC-0.2.0
-      problem). It will unblock automatically once the aiohttp-staging promotion above lands; re-run its qg-v2 then.
-      repo: system-integration-tests. Provenance: slot-1 2026-06-06.
+- [x] ✅ [RESOLVED-STALE: aiohttp staging drift resolved 2026-06-07] [TEST] P2. **SIT PR #22
+      (`feat!: update unified-api-contracts to 0.2.0` → staging) is BLOCKED by the same aiohttp drift** (its
+      `quality-gates-v2` fails with the identical `No solution found` resolution error, NOT a UAC-0.2.0 problem). It
+      will unblock automatically once the aiohttp-staging promotion above lands; re-run its qg-v2 then. repo:
+      system-integration-tests. Provenance: slot-1 2026-06-06.
 - [x] ✅ [SCRIPT] P1. DONE 2026-06-02 (operator: repoint to unified_api_contracts.internal) —
       system-integration-tests@80aacfa (LDR/main/staging): repointed the adoption check to unified-api-contracts +
       check_uac_adoption.py (scans unified_api_contracts/internal/; same --orphans-only/--workspace interface).
@@ -2571,23 +2589,23 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `unified-trading-pm@47a597ac4` → LDR-direct** (gate machinery; operator-authorized direct push). Now writes to
       `${PROJECT_ROOT}` (the repo root, matching the content sentinel) + verified: sentinel lands at the PM repo root ==
       HEAD on a full green run AND on a green-skip (sentinel-HIT keeps `RUN_TESTS=true`). Two-pass restored fleet-wide.
-- [x] ✅ [RESOLVED-STALE: PM LDR v2 GREEN (3x 2026-06-10)] [SCRIPT] P1. **LDR PM gate was RED — direct evidence for item D (Tier A).** While shipping A,
-      `quality-gates.sh     --no-fix` on LDR HEAD failed: (1) `scripts/cicd/tier_c_promotion_gate.py` (STAGE-1.8,
-      `157df99ff`) had unbaselined `.get(...,"")/{}/[]` manifest-parse defaults; (2) `.code-workspace` listed
-      `status=future` repos (greeks-service, fund-administration-service); (3)
-      `tests/unit/test_staging_to_main_dep_order_gate.py` import-sort. All three fixed (`2a5f89522`). **UPDATE
-      2026-06-02:** tier*c baseline + folders[] removal reached LDR; a concurrent agent then flipped greeks/fund-admin
-      `future→scaffolded` (`b03611fb5`) — so the correct end-state is now folders[] \_includes* them (scaffolded). That
-      `.code-workspace`↔manifest consistency is **owned by the live concurrent agent** (active <5 min ago) — I did NOT
-      edit `.code-workspace` (collision). LDR is transiently drift-RED until they reconcile; the STEP-0b drain PR (#113)
-      holds on auto-merge until then. repo: unified-trading-pm.
-- [x] ✅ [RESOLVED-STALE: PM staging branch deleted 2026-06-03] [SCRIPT] P2. **`staging` is ~1196 commits / ~1 month behind LDR; no open staging PR; staging-first path unused for
-      PM.** Recent PM CI fixes (#108/#109/#110, #111, #112) all went **direct PR→main** (the default branch where the
-      crons run), NOT via staging. The generated-file churn below is why a PM `quickmerge` re-dirties the tree every
-      run. **STEP 0b IN MOTION 2026-06-02:** manual LDR→staging drain PR **#113** created with auto-merge → promotes
-      once v2-green (pending the concurrent agent's `.code-workspace` reconcile) → pm-staging-to-main-bypass then
-      carries it to main + the Tier-C dep-order gate cron goes live + the backlog drains. repo: unified-trading-pm.
-      (Item H.)
+- [x] ✅ [RESOLVED-STALE: PM LDR v2 GREEN (3x 2026-06-10)] [SCRIPT] P1. **LDR PM gate was RED — direct evidence for item
+      D (Tier A).** While shipping A, `quality-gates.sh     --no-fix` on LDR HEAD failed: (1)
+      `scripts/cicd/tier_c_promotion_gate.py` (STAGE-1.8, `157df99ff`) had unbaselined `.get(...,"")/{}/[]`
+      manifest-parse defaults; (2) `.code-workspace` listed `status=future` repos (greeks-service,
+      fund-administration-service); (3) `tests/unit/test_staging_to_main_dep_order_gate.py` import-sort. All three fixed
+      (`2a5f89522`). **UPDATE 2026-06-02:** tier*c baseline + folders[] removal reached LDR; a concurrent agent then
+      flipped greeks/fund-admin `future→scaffolded` (`b03611fb5`) — so the correct end-state is now folders[]
+      \_includes* them (scaffolded). That `.code-workspace`↔manifest consistency is **owned by the live concurrent
+      agent** (active <5 min ago) — I did NOT edit `.code-workspace` (collision). LDR is transiently drift-RED until
+      they reconcile; the STEP-0b drain PR (#113) holds on auto-merge until then. repo: unified-trading-pm.
+- [x] ✅ [RESOLVED-STALE: PM staging branch deleted 2026-06-03] [SCRIPT] P2. **`staging` is ~1196 commits / ~1 month
+      behind LDR; no open staging PR; staging-first path unused for PM.** Recent PM CI fixes (#108/#109/#110, #111,
+      #112) all went **direct PR→main** (the default branch where the crons run), NOT via staging. The generated-file
+      churn below is why a PM `quickmerge` re-dirties the tree every run. **STEP 0b IN MOTION 2026-06-02:** manual
+      LDR→staging drain PR **#113** created with auto-merge → promotes once v2-green (pending the concurrent agent's
+      `.code-workspace` reconcile) → pm-staging-to-main-bypass then carries it to main + the Tier-C dep-order gate cron
+      goes live + the backlog drains. repo: unified-trading-pm. (Item H.)
 - [x] ✅ [SCRIPT] P2. **quickmerge regenerates + stages DRIFTED generated files every PM run**
       (`derived-dependency-     manifest.json`, `docs/repo-management/CI-CD-PIPELINE.{svg,html}`) and the prek
       `end-of-file-fixer` then fails on the regenerated SVG → commit aborts; `.qg_content_sentinel` (a gate artifact)
@@ -2713,8 +2731,8 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 **F. Drift / reconciliation gaps:**
 
 - [x] ✅ [SCRIPT] P2. **behind/ahead reporter — DONE via PR #145** (flow-health reporter computes all 3 pairs as message
-      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR is
-      watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
+      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR
+      is watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. **staging→LDR backmerge — DONE 2026-06-05** (`unified-trading-pm@8cd62f42e` retains
       `.github/workflows/staging-backmerge-to-ldr.yml`: staging→LDR no-ff merge, 5× FF-retry, conflict PR + escalation;
       shares backmerge-to-ldr concurrency w/ main-backmerge). ORIG: staging→LDR backmerge — only main-backmerge existed.
@@ -2919,8 +2937,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
-> FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
+> workflow FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the
@@ -4024,11 +4042,12 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
 - **infra_slot_sync remaining**: cleanup sub-agent in-flight (backlog.mock P1, AutoSpawn-SQLAlchemy P3, ui-semver
   checkout P2); operator-gated #1/#2 stay BLOCKED-OPERATOR.
 - **plan-health-gate PIN — HELD (do NOT pin yet).** Functionally green (#152) but RED on PM PRs due to the pre-existing
-  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated promotion.
-  **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate` (verify via
-  `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
-- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead; `main-backmerge-to-ldr`
-  alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then LDR→main promote.
+  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated
+  promotion. **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate`
+  (verify via `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
+- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead;
+  `main-backmerge-to-ldr` alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then
+  LDR→main promote.
 
 ### Resolved blockers (were operator-gated; now cleared)
 
@@ -4230,7 +4249,7 @@ been the sole required check fleet-wide for weeks.
 | `CI RECOVERED: instruments/mdps/mtds/execution …`                                         | **HEALTHY** — cascade converging                                                                   | none                                                                                                                                                                                                                                                                                                                                                                                   |
 | `sit-unlock: SIT Failed — staging unlocked`                                               | **HEALTHY** — the intended fail-safe (SIT runs, fails on real incoherence, unlocks for fixes)      | none (machinery now correct after the sit-gate fixes #165/#166)                                                                                                                                                                                                                                                                                                                        |
 | `ldr-ci-monitor: unified-trading-pm RED→GREEN`                                            | **HEALTHY** — my PM credential-ratchet fix recovered                                               | none                                                                                                                                                                                                                                                                                                                                                                                   |
-| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                        |
+| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                       |
 | `mdps/mtds FAILING — AttributeError BATCH_HYPERLIQUID_REST`                               | **REAL — the #1 blocker**                                                                          | the UAC+UTL `BATCH_HYPERLIQUID` enum migration is coherent on LDR+staging but **main lags for BOTH** (data-value change `batch_hyperliquid_rest`→`batch_hyperliquid`); consumer/SIT QGs that clone UTL@main hit the old name. Needs the **coordinated UAC+UTL staging→main promotion** (data-track; see finding below). Do NOT fix piecemeal (my UTL #250 was closed for exactly this) |
 | `execution #216 QG: STEP 5.21 reportUnknown* warning/none + 5.12b gs:// URI`              | **REAL** — pre-existing execution-service QG-debt surfaced by the dep-update PR                    | execution-service's own plan (basedpyright strict config + replace `gs://` f-string in `evidence_router.py:66` with `resolve_bucket_name`)                                                                                                                                                                                                                                             |
 | `mtds #133 QG: pydantic ValidationError CandleBoundaryCrossedEvent`                       | **REAL** — likely the same enum-value migration touching a UAC event model                         | resolves with the coordinated enum migration; verify the event's `pipeline_mode` field accepts the new value                                                                                                                                                                                                                                                                           |
@@ -4501,8 +4520,8 @@ rollout, never per-repo).
 
 ### What shipped (all to LDR; PM Option-B → main)
 
-1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes DOWN
-   to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
+1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes
+   DOWN to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
 2. **Step 1 content-based breaking-detection** — `scripts/cicd/detect_breaking_change.py` (AST public-surface differ; 8
    unit tests; rule-11 proven on UTL+UAC) replaces the crude `grep '^-' __init__.py` heuristic; wired into
    semver-agent.yml + .tmpl + **rolled out to all 23 repos' LDR**; SIT now breaking-gated via `breaking_pending`
@@ -4726,21 +4745,21 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       and `unified-trading-system-ui #32 live-defi-rollout→main merged`. The `mergedAt` fix (line ~362, was the invalid
       `merged` field that 404'd the whole query) is live and the merged/closed verb resolves correctly. The bookend
       posts as INFO + still triggers the notify (build_report returns alert-or-resolved True). No code change.
-- [x] ✅ [RESOLVED-STALE: deployment-service main=0.8.0 + ml-service main=0.4.0 (both >0.0.0; no spurious)] [CICD] P1. **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard
-      path).** Marker state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard
-      `ldr-to-staging-promote` had already opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they
-      were stuck: ml-service #15 had **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but
-      the v2 `workflow_dispatch` run on the SAME SHA `766207b8` SUCCEEDED, confirming the code is green, just dep-clone
-      WARN noise on the PR-event run); deployment-service #39 had auto-merge ON but **v2 had never reported on its head
-      `3313121c`** (empty rollup = v2-never-reported deadlock; AWS CodeBuild was the only status and it is NOT a
-      required context — only `Quality Gates (deployment-service) / quality-gates-v2` is required on staging, confirmed
-      via ruleset + classic). **Actions (standard-path unstick, NOT hand-merge):** re-triggered
-      `quality-gates-v2.yml --ref live-defi-rollout` on both heads; enabled auto-merge
-      (`gh pr merge 15 --auto --squash`) on ml-service #15. **Result so far:** ml-service #15 **MERGED** → `SPURIOUS=1`
-      now on **ml-service staging** (✓ LDR→staging done); deployment-service #39 still OPEN + auto-merge ON with v2
-      in-progress on `3313121c` (will merge on green). **Remaining:** both still need staging→main (SIT-driven
-      `staging-validated` → `staging-to-main.yml`) to land the marker on `main`. Monitoring the marker reach `main` for
-      both. (deployment-api already had it on main per dispatch context.)
+- [x] ✅ [RESOLVED-STALE: deployment-service main=0.8.0 + ml-service main=0.4.0 (both >0.0.0; no spurious)] [CICD] P1.
+      **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
+      state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard `ldr-to-staging-promote` had already
+      opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they were stuck: ml-service #15 had
+      **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but the v2 `workflow_dispatch` run
+      on the SAME SHA `766207b8` SUCCEEDED, confirming the code is green, just dep-clone WARN noise on the PR-event
+      run); deployment-service #39 had auto-merge ON but **v2 had never reported on its head `3313121c`** (empty rollup
+      = v2-never-reported deadlock; AWS CodeBuild was the only status and it is NOT a required context — only
+      `Quality Gates (deployment-service) / quality-gates-v2` is required on staging, confirmed via ruleset + classic).
+      **Actions (standard-path unstick, NOT hand-merge):** re-triggered `quality-gates-v2.yml --ref live-defi-rollout`
+      on both heads; enabled auto-merge (`gh pr merge 15 --auto --squash`) on ml-service #15. **Result so far:**
+      ml-service #15 **MERGED** → `SPURIOUS=1` now on **ml-service staging** (✓ LDR→staging done); deployment-service
+      #39 still OPEN + auto-merge ON with v2 in-progress on `3313121c` (will merge on green). **Remaining:** both still
+      need staging→main (SIT-driven `staging-validated` → `staging-to-main.yml`) to land the marker on `main`.
+      Monitoring the marker reach `main` for both. (deployment-api already had it on main per dispatch context.)
 
 #### Task 4 — drain progress (2026-06-10 01:28Z)
 
@@ -4901,9 +4920,9 @@ remaining ~30 min was three defects, each repaired by hand mid-probe and then fi
 
 Both template fixes need `rollout-workflow-templates.sh` to the fleet (same change set).
 
-- [x] ✅ [RESOLVED-STALE: greeks-service allow_auto_merge already true] [OPERATOR] P1. Enable `allow_auto_merge` on **greeks-service** (Settings → General → "Allow auto-merge") — both
-      available tokens lack admin on that repo (404 on PATCH). Until flipped, greeks promote PRs take the direct-merge
-      fallback path. — provenance: probe 2026-06-10
+- [x] ✅ [RESOLVED-STALE: greeks-service allow_auto_merge already true] [OPERATOR] P1. Enable `allow_auto_merge` on
+      **greeks-service** (Settings → General → "Allow auto-merge") — both available tokens lack admin on that repo (404
+      on PATCH). Until flipped, greeks promote PRs take the direct-merge fallback path. — provenance: probe 2026-06-10
 - [ ] [SCRIPT] P2. 4 repos lack `scripts/quickmerge.sh` (greeks-service ✅ fixed via probe commit, ml-service,
       e2e-testing, features-service) — they cannot follow the mandated quickmerge path; propagate the canonical copy. —
       provenance: probe 2026-06-10
@@ -5016,11 +5035,54 @@ Open follow-ups:
 
 - [x] ✅ [CI] P1. **Nothing in the release flow created the git tag (item-4982-adjacent).** semver-agent pushes
       `chore(release)` to staging + update-repo-version writes the manifest + publish-package triggers ON a `v*` tag —
-      but no step CREATES the tag. Every tag was hand-made (`v0.4.0` slot-1 2026-06-09; `v0.6.0`/`v0.6.1` in the 2026-06-11
-      keystone recovery). A fleet dry-run found **20 repos untagged** (main version bumped, no matching tag) → publish-package
-      never fired + consumers resolved stale tags (the dep-floor class that jammed the fleet). **FIXED:** PM-only
-      `reconcile-release-tags.yml` (`*/15`) + `scripts/cicd/reconcile_release_tags.py` auto-create `vX.Y.Z` on each repo's
-      main when absent — idempotent, path-independent (automated drain OR manual promote), guarded (no pre-release, no
-      backfill below latest tag, `--max-creates 5` to avoid a publish-package herd). Codex SSOT: `ci-cd-flow.md` §
-      "Release tag reconciler". — unified-trading-pm@6cb7fa26 (PR #245). **Backlog of ~20 tags drains over ~1h of `*/15`
-      ticks once #245 reaches main; each tag fires that repo's publish-package.**
+      but no step CREATES the tag. Every tag was hand-made (`v0.4.0` slot-1 2026-06-09; `v0.6.0`/`v0.6.1` in the
+      2026-06-11 keystone recovery). A fleet dry-run found **20 repos untagged** (main version bumped, no matching tag)
+      → publish-package never fired + consumers resolved stale tags (the dep-floor class that jammed the fleet).
+      **FIXED:** PM-only `reconcile-release-tags.yml` (`*/15`) + `scripts/cicd/reconcile_release_tags.py` auto-create
+      `vX.Y.Z` on each repo's main when absent — idempotent, path-independent (automated drain OR manual promote),
+      guarded (no pre-release, no backfill below latest tag, `--max-creates 5` to avoid a publish-package herd). Codex
+      SSOT: `ci-cd-flow.md` § "Release tag reconciler". — unified-trading-pm@6cb7fa26 (PR #245). **Backlog of ~20 tags
+      drains over ~1h of `*/15` ticks once #245 reaches main; each tag fires that repo's publish-package.**
+
+## 🟡 Workflow-sprawl remediation — coordinated tranche (migrated 2026-06-11 from `plans/active/issues/cicd_workflow_sprawl_audit_2026_06_10.md`)
+
+> Tiers 1–3 of the sprawl audit were executed 2026-06-11 (PM-only deletes: major-bump-approval + its staged propagation
+> template, downstream-fix-agent, contract-drift-record, schema-changed-handler, auto-merge-minor-fixes; vestigial
+> `ldr-to-main`/`ldr-to-staging` dispatch types pruned; SIT cascade-test assertions repointed). The items below need
+> COORDINATION (template rollout / branch sweeps / consolidation refactors) and live here as the master CI/CD plan; the
+> issue doc retains the full evidence + verification appendix.
+
+- [ ] [SCRIPT] P1. **semver-agent MAJOR-bump label mismatch (found 2026-06-11)** — `semver-agent.yml` creates MAJOR-bump
+      issues with `--label "major-bump-approval"` (PM copy L510 + template
+      `scripts/workflow-templates/semver-agent.yml.tmpl` L542) but the canonical `/approve` handler
+      (`major-bump-issue-handler.yml`) gates on `major-bump-pending` — semver-created issues reach NO handler. Fix the
+      label in the TEMPLATE + PM copy, `rollout-workflow-templates.sh`, commit per-repo fleet-wide (rollout HARD RULE:
+      not done until every copy committed + drift check exits 0). Repo: unified-trading-pm (templated ×25).
+- [ ] [SCRIPT] P2. **B2 — align backmerge concurrency groups** — `main-backmerge-to-ldr.yml` (group
+      `main-backmerge-to-ldr`) vs `staging-backmerge-to-ldr.yml` (group `backmerge-to-ldr`): both headers claim a shared
+      group; align main-backmerge to `backmerge-to-ldr` in the template SSOT + rollout. NOT a correctness fix (both push
+      FF-only + 5× retry + never-force) — removes retry churn + the self-contradicting invariant. BUNDLE with the
+      label-mismatch rollout above (one fleet commit, not two). Repo: unified-trading-pm (templated).
+- [ ] [SCRIPT] P2. **Tier 4 — tab-mirror retirement + stale tab-branch sweep** — `tab-mirror-to-ldr.yml` still runs
+      `schedule: */15` across ~25 repos (~2,400 invocations/day) force-pushing Path-B-orphaned `tab/*` branches +
+      POSTing an orchestrator webhook every run; CLAUDE.md's "DISABLED fleet-wide" claim is currently FALSE. Sequence:
+      (1) CONFIRM slot-1 is reclined to Path-B (it was transitionally on `tab/ikennaigboaka/1`; if still on it, carve
+      out or wait); (2) cross-check every stale `tab/*` branch against `origin/wip-preserve/slot-*` for un-preserved WIP
+      BEFORE deleting (13–21 branches/repo: PM 21, execution 13, UAC 17); (3) retire the workflow via template SSOT +
+      rollout (delete or `if: false` the cron); (4) correct the CLAUDE.md + `codex/08-workflows/     ci-cd-flow.md`
+      tab-mirror claims in the same unit. Repo: unified-trading-pm (templated ×25) + all repos' origin branches.
+- [ ] [SCRIPT] P3. **Tier 5a — fold `sit-starvation-detector.yml` into `sit-debounce-trigger.yml`** (its sole action
+      re-pokes that workflow's cron). Repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **Tier 5b — merge `ci-status-reconciler.yml` + `ci-failure-watcher.yml` into one `ci-health.yml`**
+      (two jobs, one cron; both poll quality-gates-v2 conclusions fleet-wide, differ only in remedy). Repo:
+      unified-trading-pm.
+- [ ] [SCRIPT] P3. **Tier 5c — consolidate `main-backmerge` `*/20` drift-tick + `promotion-lag-monitor.yml`** into one
+      branch-health monitor (two band-aids for the one suppressed `[skip ci]` push trigger). Repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **Tier 5d — extract shared `agent-runner.yml` (`workflow_call`) for `rules-alignment-agent` +
+      `plan-health-agent`; collapse `conflict-resolution-agent.yml` into `escalate-to-orchestrator.yml`; migrate the
+      paid-`ANTHROPIC_API_KEY` agents to the VM orchestrator** per the documented pivot. After the GHA-Claude
+      retirement, also prune the now consumer-less `schema-changed` emit from the semver-agent template (25 emitters
+      dispatch into the void since schema-changed-handler was deleted 2026-06-11). Repo: unified-trading-pm.
+- [ ] [DOC] P3. **Codex SSOT updates on execution** — `codex/08-workflows/ci-cd-flow.md`: correct the tab-mirror
+      "DISABLED fleet-wide" statement; document `major-bump-issue-handler.yml` as the canonical `/approve` handler;
+      reflect any merged backmerge/CI-health workflows. Repo: unified-trading-pm.

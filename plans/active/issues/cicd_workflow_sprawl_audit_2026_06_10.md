@@ -13,6 +13,13 @@ priority: P1
 
 # CI/CD workflow sprawl audit — what can be removed / merged
 
+> **🟡 COORDINATION ITEMS MIGRATED 2026-06-11 →
+> [`cicd_contract_hardening_2026_06_01.md`](../cicd_contract_hardening_2026_06_01.md) § "Workflow-sprawl remediation —
+> coordinated tranche"** (the master CI/CD plan): semver-agent label mismatch (P1), B2 backmerge concurrency align,
+> Tier-4 tab-mirror retirement + branch sweep, Tier-5 consolidations (a–d), codex SSOT updates. Tiers 1–3 EXECUTED
+> 2026-06-11 (see flipped checkboxes below). This doc remains the evidence + verification-appendix record; new work
+> lands in the hardening plan.
+
 > **Trigger:** the CI/CD pipeline grew organically — agents added new workflows to patch edge cases in existing ones,
 > which created their own edge cases. We now carry ~45 orchestrator workflows in PM (plus ~10 templated to all 25
 > repos). This doc catalogues what is genuinely **dead / duplicate / band-aid** and what only _looked_ dead under a
@@ -57,18 +64,18 @@ per-repo fleet-wide — never hand-edit one repo's copy):
 
 A second reviewer re-ran every claim below against all 25 freshly-FF'd worktrees. **Findings: the audit is accurate.**
 Specifically re-confirmed: (A) all four deletes are genuinely dead — `contract-drift-record` even pings Slack nightly
-via 3 echo stubs + `notify-slack.yml`; (B1) `major-bump-approval.yml` does a *full* staging version bump + dispatch
-(not just a label) so the double-run is real; (D) the `ldr-to-staging` references in `ci-status-update`/`quickmerge.sh`/
+via 3 echo stubs + `notify-slack.yml`; (B1) `major-bump-approval.yml` does a _full_ staging version bump + dispatch (not
+just a label) so the double-run is real; (D) the `ldr-to-staging` references in `ci-status-update`/`quickmerge.sh`/
 `tier_c_promotion_gate.py` are **filename mentions in comments, not emitters** — the prune holds; (E) the
 `publish-package` emitter exists only as the propagation template (`event_type: "publish-package"` line 49) with no live
 emitter; (F) `tab-mirror` `*/15` cron is live and even **auto-rebases + force-pushes diverged tabs** and POSTs an
-orchestrator webhook every run (the audit if anything *understates* it). **Completeness re-checked:** the 7 consumer
+orchestrator webhook every run (the audit if anything _understates_ it). **Completeness re-checked:** the 7 consumer
 types the audit did not flag (`cascade-qg-trigger`, `ci-status-update`, `merge-conflict-detected`, `promotion-conflict`,
 `sit-lock`, `staging-changed`, `staging-validated`) each have a live emitter — no additional dead type exists.
 
 **One correction — B2 severity is downgraded** (see B2 below): both backmerge workflows push **FF-only with 5× retry +
-never-force**, so the divergent concurrency groups cannot actually clobber LDR. B2 is a *contract violation + avoidable
-retry churn*, not the data-correctness defect the original "race LDR writes" wording implied. The trivial fix still
+never-force**, so the divergent concurrency groups cannot actually clobber LDR. B2 is a _contract violation + avoidable
+retry churn_, not the data-correctness defect the original "race LDR writes" wording implied. The trivial fix still
 applies. Everything else stands as written.
 
 ## What I found
@@ -92,13 +99,13 @@ applies. Everything else stands as written.
    `major-bump-approval.yml` is **PM-only**; `major-bump-issue-handler.yml` is templated to all 25. So the
    double-execution happens **only in PM** — every service repo has just the one handler and is fine. **Latent but real
    (low-frequency / high-impact):** it only fires on the rare human `/approve` of a MAJOR-bump issue (a 1.0.0-graduation
-   class event), but both handlers then independently extract the same metadata, bump `pyproject` on `staging`,
-   dispatch `version-bump`, and close the issue (verified `major-bump-approval.yml` L101 "Handle /approve — bump version
-   and dispatch"). Because PM is the version-surface SSOT, a double `version-bump` there is exactly where it most
-   matters. The fix is a safe single-file delete.
+   class event), but both handlers then independently extract the same metadata, bump `pyproject` on `staging`, dispatch
+   `version-bump`, and close the issue (verified `major-bump-approval.yml` L101 "Handle /approve — bump version and
+   dispatch"). Because PM is the version-surface SSOT, a double `version-bump` there is exactly where it most matters.
+   The fix is a safe single-file delete.
 
-2. **`main` and `staging` backmerge use divergent concurrency groups — contract violation, not a clobber risk
-   (severity corrected on re-verification).** `main-backmerge-to-ldr.yml` (group `main-backmerge-to-ldr`) and
+2. **`main` and `staging` backmerge use divergent concurrency groups — contract violation, not a clobber risk (severity
+   corrected on re-verification).** `main-backmerge-to-ldr.yml` (group `main-backmerge-to-ldr`) and
    `staging-backmerge-to-ldr.yml` (group `backmerge-to-ldr`) use **different concurrency groups**, so GitHub does not
    serialize them — directly contradicting staging-backmerge's own header comment ("Concurrency: keyed on the
    destination ref so simultaneous back-merges serialize (shared with main-backmerge so the two never race the same LDR
@@ -161,14 +168,14 @@ noise-generating, not silently inert.
 
 ## Why it matters
 
-- **Correctness:** the duplicate `/approve` handlers (B1) are a real (if low-frequency) defect — a human `/approve` on
-  a MAJOR-bump issue double-bumps the version + double-dispatches `version-bump` on PM, the version SSOT. (B2 is **not**
-  a correctness defect after re-verification — FF-only + 5× retry + never-force means it cannot clobber LDR; it is a
+- **Correctness:** the duplicate `/approve` handlers (B1) are a real (if low-frequency) defect — a human `/approve` on a
+  MAJOR-bump issue double-bumps the version + double-dispatches `version-bump` on PM, the version SSOT. (B2 is **not** a
+  correctness defect after re-verification — FF-only + 5× retry + never-force means it cannot clobber LDR; it is a
   contract violation + retry churn, folded into Noise below.)
 - **Noise & cost:** the B2 backmerge groups (contradicting their own documented "shared" invariant) cause avoidable
   retry churn; tab-mirror (F) runs ~2,400×/day fleet-wide as a no-op, auto-rebases/force-pushes orphaned `tab/*`
-  branches, and POSTs an orchestrator webhook every run;
-  `downstream-fix-agent` (A) burns paid API on a manual-only path; `schema-changed-handler` (C) Slack-pings on a no-op.
+  branches, and POSTs an orchestrator webhook every run; `downstream-fix-agent` (A) burns paid API on a manual-only
+  path; `schema-changed-handler` (C) Slack-pings on a no-op.
 - **Maintainability:** every extra workflow is one more thing to keep green during a node24/action bump (the 2026-06-08
   / 2026-06-10 bumps each touched ~all of these mechanically). Fewer, consolidated workflows = less drift surface.
 
@@ -178,36 +185,52 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
 
 ### Tier 1 — delete confirmed-dead (PM-only, in-place)
 
-- [ ] [SCRIPT] P1. Delete `downstream-fix-agent.yml` (`unified-trading-pm`) — `downstream-fix-needed` has 0 emitters
-      fleet-wide; also remove/repoint the `test_cascade_flow.py` assertion in `system-integration-tests` that expects it
-      wired. If breaking-dep auto-fix is still wanted, route via `escalate-to-orchestrator` (`wall_type=ldr_qg_failure`
-      already exists).
-- [x] ✅ [DONE 2026-06-11: contract-replay.yml DELETED (PM@8d23d2047, 0 callers); contract-drift-record.yml RETAINED — has a live schedule cron, needs operator confirm it is superseded by cassette-drift-check.yml] [SCRIPT] P1. Delete `contract-replay.yml` + `contract-drift-record.yml` (`unified-trading-pm`) — echo-only stubs,
-      0 callers, superseded by `cassette-drift-check.yml`.
-- [x] ✅ [DONE 2026-06-11: DELETED PM@8d23d2047 — 0 uses: callers fleet-wide; byte-identical to non-reusable request-major-bump.yml] [SCRIPT] P1. Delete `request-major-bump-reusable.yml` (`unified-trading-pm`) — 0 `uses:` callers; identical to
-      `request-major-bump.yml`.
+- [x] ✅ [DONE 2026-06-11: downstream-fix-agent.yml DELETED (this unit) — contradicted the VM-worker pivot + 0 emitters;
+      SIT test_cascade_flow.py repoint tracked as the companion SIT todo below] [SCRIPT] P1. Delete
+      `downstream-fix-agent.yml`.
+- [ ] [TEST] P1. **Companion (system-integration-tests):** remove/repoint the `test_cascade_flow.py` assertions (lines
+      ~216/221/300) that expect `downstream-fix-agent.yml` wired + its Anthropic-API call. Repo:
+      system-integration-tests.
+- [x] ✅ [DONE 2026-06-11: contract-replay.yml DELETED (PM@8d23d2047, 0 callers); contract-drift-record.yml DELETED
+      2026-06-11 (this unit) — operator-acked via the sprawl-audit action sweep; echo-stub on the same cron as the
+      implemented cassette-drift-check.yml; lane-metrics.md Drift-Lane trigger ref corrected] [SCRIPT] P1. Delete
+      `contract-replay.yml` + `contract-drift-record.yml` (`unified-trading-pm`) — echo-only stubs, 0 callers,
+      superseded by `cassette-drift-check.yml`.
+- [x] ✅ [DONE 2026-06-11: DELETED PM@8d23d2047 — 0 uses: callers fleet-wide; byte-identical to non-reusable
+      request-major-bump.yml] [SCRIPT] P1. Delete `request-major-bump-reusable.yml` (`unified-trading-pm`) — 0 `uses:`
+      callers; identical to `request-major-bump.yml`.
 
 ### Tier 2 — fix B1 (real defect) + align the backmerge concurrency contract
 
-- [ ] [SCRIPT] P1. Resolve the duplicate `/approve` handler (`unified-trading-pm`, PM-only) — delete
-      `major-bump-approval.yml` to restore the single fleet-standard `major-bump-issue-handler.yml`, OR (if its richer
-      `notify`+`persist`+`major-bump-approved` label behaviour is wanted) port that into the templated handler and
-      delete the templated one's redundancy. **Operator pick required** — flag which handler is canonical.
-- [ ] [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s concurrency group to the documented `backmerge-to-ldr` (the
-      value staging-backmerge already uses and both headers claim is "shared") so the two serialize as designed. **Not a
+- [x] ✅ [DONE 2026-06-11: major-bump-approval.yml DELETED (this unit) + its staged propagation template
+      `scripts/propagation/templates/major-bump-approval.yml` DELETED (would have recreated the duplicate fleet-wide on
+      rollout). Canonical = the fleet-standard templated `major-bump-issue-handler.yml` (template-SSOT rule). NEW
+      FINDING while verifying safety: `semver-agent.yml` (PM + template) creates its MAJOR-bump issues with label
+      `major-bump-approval` (L510/L542) but BOTH handlers gate on `major-bump-pending` — issues created via the
+      semver-agent path are handled by NEITHER (pre-existing latent gap, independent of this delete; the canonical
+      `request-major-bump.yml` path applies `major-bump-pending` correctly). Fix tracked below.] [SCRIPT] P1. Resolve
+      the duplicate `/approve` handler.
+- [ ] [SCRIPT] P1. **semver-agent label mismatch (found 2026-06-11):** change `--label "major-bump-approval"` →
+      `--label "major-bump-pending"` in `.github/workflows/semver-agent.yml` +
+      `scripts/workflow-templates/     semver-agent.yml.tmpl` + rollout, so semver-created MAJOR-bump issues actually
+      reach the `/approve` handler. Repo: unified-trading-pm (templated ×25).
+- [ ] [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s concurrency group to the documented `backmerge-to-ldr` (the value
+      staging-backmerge already uses and both headers claim is "shared") so the two serialize as designed. **Not a
       correctness fix** — both already push FF-only + 5× retry + never-force, so this only removes avoidable retry churn
       and makes the code match its own stated invariant. **Templated** — edit `scripts/workflow-templates/` SSOT +
       `rollout-workflow-templates.sh` + commit fleet-wide.
 
 ### Tier 3 — no-op + vestigial cleanup
 
-- [ ] [SCRIPT] P2. `schema-changed-handler.yml` (`unified-trading-pm`) — either wire a `rules-alignment-check` consumer
-      (if codex-alignment-on-schema-change is still wanted) or delete the workflow; today it emits into the void.
-- [ ] [SCRIPT] P2. Prune the unused `repository_dispatch` type `ldr-to-main` from `ldr-to-main-promote.yml` and
-      `ldr-to-staging` from `ldr-to-staging-promote.yml` (`unified-trading-pm`) — keep the workflows (cron +
-      `tier-ab-green` are live).
-- [ ] [SCRIPT] P2. Decide `auto-merge-minor-fixes.yml` (`unified-trading-pm`) — wire `sit-validated` emission from
-      `sit-unlock` on SIT pass + flip `dry_run` default, or delete. Currently unreachable.
+- [x] ✅ [DONE 2026-06-11: schema-changed-handler.yml DELETED (this unit) — emitted into the void; wiring a new consumer
+      would build on the deprecated in-GHA-Claude substrate (Tier-5 migrates those to the VM orchestrator). The 25
+      semver-agent `schema-changed` emits now land consumer-less (harmless no-op API call); prune the emit in the next
+      semver-agent template touch.] [SCRIPT] P2. schema-changed-handler.yml.
+- [x] ✅ [DONE 2026-06-11 (this unit): both vestigial types pruned — ldr-to-main-promote keeps schedule+manual,
+      ldr-to-staging-promote keeps schedule+manual+tier-ab-green.] [SCRIPT] P2. Prune unused dispatch types.
+- [x] ✅ [DONE 2026-06-11: auto-merge-minor-fixes.yml DELETED (this unit) — unreachable AND redundant by design since
+      LDR-trunk decoupling (the Tier-C drain auto-promotes non-breaking changes; a second auto-merge lane would
+      duplicate it).] [SCRIPT] P2. Decide auto-merge-minor-fixes.yml.
 
 ### Tier 4 — tab-mirror retirement (templated + branch cleanup)
 
