@@ -1078,7 +1078,11 @@ qg_prof start size-checks
 # into ONE python process per check. Same find exclusions + same thresholds + the AST visitor
 # copied verbatim → byte-identical violations; only N spawns → 2. Helps every QG context
 # (local/CI/SIT), not just the change-scoped fast tier.
-_SIZE_FILES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null)
+# `|| true`: set-e-safety. The original `for f in $(find …)` tolerated a non-zero find exit
+# (e.g. a repo whose FUNCTION_SIZE_EXTRA_EXCLUDES uses rg `--glob` syntax that find rejects, or a
+# broken symlink) — the for-loop just iterated an empty list. As a bare ASSIGNMENT, a non-zero
+# find trips `set -e` and kills the whole gate (regression: mtds + any --glob-exclude repo).
+_SIZE_FILES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null || true)
 
 # File-size: line count is `wc -l` semantics == number of '\n' bytes.
 SVIOL=$(printf '%s\n' "$_SIZE_FILES" | $PYTHON_CMD -c "
