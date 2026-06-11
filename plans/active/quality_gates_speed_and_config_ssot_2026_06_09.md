@@ -366,17 +366,20 @@ single-core pinned), output under gitignored `.qg_profile/`.
       cache persistence in CI** (each CI container is cold → the local content-hash caches don't carry over; an
       `actions/cache` mount would close it — a CI-workflow change, separate surface). Provenance: 2026-06-11 size-checks
       decomposition.
-- [ ] [INFRA] P2. **pip-audit CI robustness — a transient OSV/output failure reddens a promotion PR (finding
-      2026-06-11).** PM PR #258's `lint-codex` slice failed with `❌ pip-audit vulnerabilities found` whose real cause
-      (one line up) was
-      `could not parse pip-audit output: [Errno 2] No such file or directory:     '/tmp/pip-audit-output.json'` — i.e.
-      pip-audit never WROTE its JSON (OSV network blip / cold-cache miss in the fresh CI container), and the
-      missing-output path is counted as a vulnerability → 1 codex violation → PM's tolerance-0 slice FAILS → auto-merge
-      blocked until a manual re-run. Every actual STEP check was ✅; PR #256 passed the same slice minutes earlier,
-      confirming transience. Fix options: (a) on "could not parse output" treat as pip-audit INFRA-ERROR (retry once,
-      then warn — do NOT count as a vuln); (b) persist the deps-hash cache across CI runs (the `actions/cache` item
-      above) so cold containers don't re-hit OSV. This is a "commits don't reach main fast" tax (a green change blocked
-      on a network blip). Provenance: PM PR #258 CI run 27336748810.
+- [x] ✅ [INFRA] P1. **pip-audit infra-error misclassification — FIXED in both bases (2026-06-11).** PM PR #258's
+      `lint-codex` slice failed with `❌ pip-audit vulnerabilities found` whose real cause (one line up) was
+      `could not parse pip-audit output: [Errno 2] No such file or directory: '/tmp/pip-audit-output.json'` — pip-audit
+      exited non-zero on an OSV/network ERROR **without writing its `-o` json**, and the code bucketed the exit code as
+      `0`=clean / `124`=timeout-advisory / **else=vulnerabilities-FOUND** → so a network blip fell into the vuln-FAIL
+      branch and reddened a green PR (PM tolerance-0 → blocked auto-merge; the run passed on re-run, confirming it was
+      an infra blip not a vuln). **Fix (option a): classify by WHAT pip-audit PRODUCED, not just the exit code** — only
+      FAIL when the json EXISTS and parses to ≥1 dependency with `vulns`; a non-zero exit with no vuln report is now an
+      **advisory `log_warn`** (same intent as the existing rc-124 timeout branch), not a gate fail. **Does NOT weaken
+      security**: a genuine finding always writes the json and still fails (verified: vuln-json→FAIL,
+      clean/missing/empty -json→advisory). Applied to `base-service.sh` (json `-o` path) + `base-library.sh` (main json
+      path + the bare-PATH fallback via a `known vulnerabilit` signature). Option (b) — persist the deps-hash cache
+      across cold CI containers via `actions/cache` — remains the complementary follow-up under the CI-cache item above.
+      — base-service.sh + base-library.sh @<sha>
 
 ---
 

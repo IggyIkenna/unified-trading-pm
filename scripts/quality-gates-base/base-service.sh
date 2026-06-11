@@ -1161,12 +1161,33 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
         # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
         _pa_rc=0
         run_timeout 180 "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null || _pa_rc=$?
+        # Classify the pip-audit outcome by WHAT IT PRODUCED, not just the exit code:
+        #   rc 0                      → clean
+        #   rc 124                    → OSV timeout → advisory (network, not a vuln)
+        #   json written WITH vulns   → REAL vulnerabilities → FAIL
+        #   non-zero, NO vuln report  → INFRA error (OSV unreachable / crash) → advisory, NOT a gate fail
+        # The last branch fixes a misclassification: pip-audit exits non-zero on a network/OSV
+        # ERROR *without writing the -o json*, which previously fell into the vuln-FAIL branch and
+        # reddened a green PR (symptom: "could not parse pip-audit output: No such file"). An infra
+        # outage is advisory — same intent as the rc 124 timeout case (the deps-hash cache + 24h
+        # freshness still catch a real advisory on the next reachable run). Does NOT mask real vulns:
+        # a genuine finding always writes the json and still fails here.
+        _pa_has_vulns() {
+            [[ -s /tmp/pip-audit-output.json ]] && python3 -c "
+import json, sys
+try:
+    data = json.load(open('/tmp/pip-audit-output.json'))
+    sys.exit(0 if any(d.get('vulns') for d in data.get('dependencies', [])) else 1)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null
+        }
         if [[ $_pa_rc -eq 0 ]]; then
             log_success "pip-audit clean"
             qg_cache_store pip_audit_deps_hash "$_pa_key"
         elif [[ $_pa_rc -eq 124 ]]; then
             log_warn "pip-audit: OSV query timed out after 180s (Cloud Build network) — skipping vulnerability gate (advisory)"
-        else
+        elif _pa_has_vulns; then
             log_fail "pip-audit vulnerabilities found"
             python3 -c "
 import json, sys
@@ -1180,6 +1201,8 @@ except Exception as e:
     print(f'  (could not parse pip-audit output: {e})')
 " 2>/dev/null || :
             V=$(( V + 1 ))
+        else
+            log_warn "pip-audit: infra error (rc=$_pa_rc, no vuln report written — OSV unreachable?) — skipping vulnerability gate (advisory)"
         fi
         # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build).
         # Inside the cache-miss branch: on a cache hit /tmp holds another repo's stale output.
