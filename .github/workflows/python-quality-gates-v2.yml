@@ -407,18 +407,13 @@ jobs:
           " 2>/dev/null || echo "OK parse-error")
             case "$verdict" in
               FAIL*)
-                # NON-BLOCKING (operator decision 2026-06-11): a version-aware clone landing OUTSIDE the
-                # pinned range is NOT a build failure. Typecheck needs the dep's CONTENT (the cloned HEAD),
-                # not an exact pinned version — clone_repo already fell back to the branch/main HEAD, so the
-                # real code is present and is installed below. Range + breaking are enforced CONTENT-based
-                # (detect_breaking_change AST public-surface differ) and versions are bumped idempotently by
-                # semver at the staging layer, so a version-only pyproject diff is NOT a content difference
-                # and must not red the fleet during a promotion window (the recurring "dep-resolution skew"
-                # that false-failed PM/UTL/e2e mid-promotion). WARN (audited in the run) + continue. Versions
-                # still resolved above (clone is version-aware for tag preference + image naming) — only the
-                # range GATE is downgraded. SSOT: ci-cd-flow.md content-sync model + check_dep_content_sync +
-                # quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md.
-                echo "::warning::dependency ${name}: ${verdict#FAIL } — clone resolved outside the pinned range (NON-BLOCKING; typecheck uses the cloned HEAD content; range enforced content-based downstream)"
+                echo "::error::dependency ${name}: ${verdict#FAIL } — version-aware clone landed OUTSIDE the pinned range"
+                if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
+                  MSG=":rotating_light: *QG dep-pin UNRESOLVABLE* — \`${GITHUB_REPOSITORY}\` on \`${BRANCH}\`: dependency \`${name}\` ${verdict#FAIL }. The version-aware clone fell back to a version OUTSIDE the pinned range. ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+                  BODY=$(MSG="$MSG" python3 -c 'import json,os; print(json.dumps({"text": os.environ["MSG"]}))')
+                  curl -s -X POST "${SLACK_CI_WEBHOOK_URL}" -H "Content-Type: application/json" -d "${BODY}" >/dev/null && echo "Slack alert sent to #ci-failures" || true
+                fi
+                exit 1
                 ;;
               *) echo "dep ${name}: ${verdict}" ;;
             esac
