@@ -4996,3 +4996,16 @@ Open follow-ups:
       noise "Vercel / Vercel Preview Comments" checks disappear from deployment-ui (+ any other repo) PRs. Code side
       already clean: zero vercel.json / .vercel directories fleet-wide (verified). After uninstall, confirm a fresh
       deployment-ui PR shows no Vercel checks.
+
+## Release-machinery tag-creation gap — CLOSED (2026-06-11)
+
+- [x] ✅ [CI] P1. **Nothing in the release flow created the git tag (item-4982-adjacent).** semver-agent pushes
+      `chore(release)` to staging + update-repo-version writes the manifest + publish-package triggers ON a `v*` tag —
+      but no step CREATES the tag. Every tag was hand-made (`v0.4.0` slot-1 2026-06-09; `v0.6.0`/`v0.6.1` in the 2026-06-11
+      keystone recovery). A fleet dry-run found **20 repos untagged** (main version bumped, no matching tag) → publish-package
+      never fired + consumers resolved stale tags (the dep-floor class that jammed the fleet). **FIXED:** PM-only
+      `reconcile-release-tags.yml` (`*/15`) + `scripts/cicd/reconcile_release_tags.py` auto-create `vX.Y.Z` on each repo's
+      main when absent — idempotent, path-independent (automated drain OR manual promote), guarded (no pre-release, no
+      backfill below latest tag, `--max-creates 5` to avoid a publish-package herd). Codex SSOT: `ci-cd-flow.md` §
+      "Release tag reconciler". — unified-trading-pm@6cb7fa26 (PR #245). **Backlog of ~20 tags drains over ~1h of `*/15`
+      ticks once #245 reaches main; each tag fires that repo's publish-package.**

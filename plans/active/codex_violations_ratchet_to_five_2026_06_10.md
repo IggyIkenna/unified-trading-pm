@@ -93,7 +93,7 @@ unchanged:
 > execution-service **21**, market-tick-data-service 16 (V=15 — ratchet to 15 rides the adapters-tail unit),
 > strategy-service **10**, market-data-processing-service **7**, deployment-service **1**, ibkr **1**, ml-service
 > **3**, instruments 4, unified-trading-api **0 (pinned)**, batch-live-recon 1, features/UTL/PM 0, UAC 7
-> (Phase-4 target: lxml advisory + re-pin). All six P1 monoliths + the P2 >1k tail are SPLIT and shipped; the table
+> (ratcheted 7→2 @128e065; lxml = execution-service+canonical-range todo). All six P1 monoliths + the P2 >1k tail are SPLIT and shipped; the table
 > below is the original baseline for reference.
 
 | Repo                           | Budget | Over 5? | Worst file (lines)                 | Notes                                                |
@@ -243,11 +243,13 @@ unchanged:
 - [ ] [REFACTOR] P3. **cloud_feature_provider DONE 2026-06-11** — ml-service@e011c82: 1,202→774 facade +
       `feature_query_support.py` (298) + `sports_feature_loader.py` (219); the loader resolves `get_storage_client`
       through the facade module so the existing test patch surface
-      (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests). REMAINING in this
-      item: ml-service `training_orchestrator` (1,027 — extract the defi/sports target-generation cluster to a
-      `training_targets.py` module, keep thin delegating methods + the `CloudFeatureProvider`/`ModelRegistry`
-      module-attr patch surface) + **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 /
-      `gcs_migration_bundle` 1,143). Repos: ml-service / unified-trading-pm.
+      (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests).
+      **training_orchestrator DONE 2026-06-11** — ml-service@b62c9fe: 1,027→879 + `training_targets.py` (243, pure
+      functions, patch surface intact); `_add_ml_training_args` 243 L → 7-line dispatcher over 6 section helpers;
+      both census Any-sites cleared; budget ratcheted 3→1 (only schema-provenance remains — Phase 3);
+      MAX_FILE_LINES 1300→1000 (one 963 L file left, drop-to-900 noted in-file). REMAINING in this item:
+      **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143).
+      Repo: unified-trading-pm.
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
@@ -276,9 +278,25 @@ unchanged:
 
 ## Phase 4 — Residual violation classes
 
+- [ ] [CODE] P2. **lxml PYSEC-2026-87 fleet bump (coordinated unit)** — 2026-06-11 diagnosis: lxml is NOT a UAC dep;
+      the vulnerable 5.4.0 lock lives in execution-service (direct dep `lxml>=5.0,<6.0` pyproject:290) +
+      e2e-testing/system-integration-tests locks, and the fleet canonical range `lxml>=5.0,<6.0`
+      (PM `workspace-constraints.toml:58` + `canonical-dependency-manifest.json:204-205`) CONFLICTS with the ≥6.1.0
+      fix. One unit: widen the PM canonical range to `>=6.1.0,<7.0.0`, bump execution-service (+e2e/SIT) pyproject,
+      re-lock, full tests (lxml 6.x API check on the consuming code), ratchet execution-service's pip-audit class.
+      Repos: unified-trading-pm + execution-service + e2e-testing + system-integration-tests.
+
 - [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
       (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
       QG running). All three QG-green at the new budgets before commit.
+- [x] ✅ [CODE] P2b. **strategy-service ≤5 ACHIEVED 2026-06-11** — strategy-service@6aff0c48: budget 10→4. Cleared 6
+      classes: deep-imports (both registry sites flipped to the one-level facade, zero deep sites remain), os.getenv
+      (recovery_event_helper → StrategyServiceConfig fields), imports-in-fn (8 sites hoisted), empty-dict/list (5
+      justified noqas), prod-project-id-in-tests, fn-size (close_all execute()s + PreflightRunner.run +
+      SportsFeatureSubscriber extracted). Remaining 4: empty-str (~85 sites), broad-except (17), BaseModel routers
+      (Phase 3), STEP 5.37 Reg-T. FINDING: UAC `LIQUIDATION_PARAMS_REGISTRY` has NO REG_T MarginModel row and
+      `LiquidationParams` lacks initial-margin fields — `risk/v2/greek_model.py`'s 0.5/1.5 Reg-T multipliers cannot be
+      wired to the registry until UAC adds them (UAC-side todo for the 5.37 class).
 - [ ] [CODE] P2. Per repo, clear the remaining check-classes the census surfaces — `os.getenv` → `UnifiedCloudConfig`,
       `Any` → specific types, empty-string/dict/list fallbacks → fail-fast, backward-compat shims → delete,
       function/method-size > limits → extract. Ratchet `CODEX_MAX_VIOLATIONS` down to ≤5 per repo as classes clear.
