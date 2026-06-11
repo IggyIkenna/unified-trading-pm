@@ -140,7 +140,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -310,7 +310,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -728,7 +728,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -781,7 +781,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "ml-service": {
       "type": "service",
@@ -896,7 +896,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -1035,7 +1035,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-api-contracts": {
       "type": "library",
