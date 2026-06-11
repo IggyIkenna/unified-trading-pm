@@ -32,7 +32,7 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health"
+        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health"
         required: true
         type: string
       context:
@@ -60,10 +60,10 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health"
+        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health"
         required: true
         type: choice
-        options: [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, plan_health]
+        options: [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, main_ci_red, plan_health]
       context:
         description: "Free-text context for the worker"
         required: true
@@ -128,9 +128,9 @@ jobs:
 
           # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
           case "$IN_WALL" in
-            merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health) ;;
+            merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health) ;;
             *)
-              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health)"
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health)"
               exit 1
               ;;
           esac
@@ -277,10 +277,10 @@ jobs:
         (Agents panel) → <{4}|open dashboard>.', needs.escalate.outputs.escalation_id, needs.escalate.outputs.slot_id,
         needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) ||
         (needs.escalate.outputs.outcome == 'no_headroom' && format('⚠️ HEADROOM EXHAUSTED — the live orchestrator (vm-0,
-        api.agent-orchestrator) has NO free slot, so {0}#{1} is PARKED with no worker. It re-fires every ~15 min but will
-        NOT self-resolve until a slot frees — if it persists across ticks, manually stand in a worker on the dashboard.
-        (No separate vm-planning VM to restore; vm-0 IS the orchestrator — this is capacity, not a host being down.) →
-        <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
+        api.agent-orchestrator) has NO free slot, so {0}#{1} is PARKED with no worker. It re-fires every ~15 min but
+        will NOT self-resolve until a slot frees — if it persists across ticks, manually stand in a worker on the
+        dashboard. (No separate vm-planning VM to restore; vm-0 IS the orchestrator — this is capacity, not a host being
+        down.) → <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
         needs.escalate.outputs.orch_url) || format('⚠️ Escalation NOT confirmed for {0}#{1} — NO worker was spawned
         (orchestrator returned no escalation_id, or was unreachable). The wall is STILL OPEN. Check the run log +
         dashboard → <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
