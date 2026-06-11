@@ -112,7 +112,8 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       legacy-B awaiting G4 migration; **cefi** corrected re-run in flight. **Class (E) → backfill `record_captured`,
       NEVER delete** — this is the per-AG backfill tail before G4 (partly operator/per-AG). cefi/pred = slot-3;
       defi/tradfi/sports = slot-2.
-- [ ] [SCRIPT] P0. **Manifest-diff tool (projected-vs-current) — operator 2026-06-10.** Build
+- [x] ✅ [SCRIPT] P0. (is@d4190ba — scripts/manifest_diff.py + tests, grain-aware wildcard covering via
+      possible_manifest, human + --out JSON) **Manifest-diff tool (projected-vs-current) — operator 2026-06-10.** Build
       `instruments-service/scripts/manifest_diff.py`: load TWO `_index` parquets (the `beta_manifest_writer` PROJECTED
       v9 vs the CURRENT/live consolidated `_index`), diff by shard-key → report added / removed / changed cells +
       `capture_status` transitions + per-(AG,data_type,venue) row deltas. This is the manifest-vs-manifest diff
