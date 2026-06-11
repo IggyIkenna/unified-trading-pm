@@ -296,14 +296,14 @@ post-config (combinatorial explosion is avoided because the wizard fixed the con
 
 - [x] ✅ [IMPLEMENT] P1. `needs_code_scan` gap → agent-orchestrator task (existing planning-VM workflow); agent answer
       written back as manifest `agent_annotation` so the question is never paid for twice. Strict gating: agents only
-      when script/registry cannot answer (operator rule).
-      DONE 2026-06-11 — PM@f84a119 (capability-annotations.yaml sidecar + _capability_annotations.py + generate_capability_manifest.py
-      merge step; emit_capability_gap_todos.py escalation emitter; 2 gap edges annotated + 1 P2 todo emitted; 0 annotation orphans).
-- [x] ✅ [IMPLEMENT] P2. Backtest-on-demand: wizard config → `strategy_service/engine/backtest/runner.py` over last N years
-      → metrics into the prospectus ("want to see a 5-year backtest of your configured preference?"). Depends on
-      data-availability precheck via deployment-api.
-      DONE 2026-06-11 — e2e-testing@194d66b (backtest_from_wizard_config.py; GroupBRunner wired; honest data precheck;
-      PRECHECK_UNAVAILABLE{cloud data unavailable on this host} verdict confirmed on apd_price_dispersion_btc.json).
+      when script/registry cannot answer (operator rule). DONE 2026-06-11 — PM@f84a119 (capability-annotations.yaml
+      sidecar + \_capability_annotations.py + generate_capability_manifest.py merge step; emit_capability_gap_todos.py
+      escalation emitter; 2 gap edges annotated + 1 P2 todo emitted; 0 annotation orphans).
+- [x] ✅ [IMPLEMENT] P2. Backtest-on-demand: wizard config → `strategy_service/engine/backtest/runner.py` over last N
+      years → metrics into the prospectus ("want to see a 5-year backtest of your configured preference?"). Depends on
+      data-availability precheck via deployment-api. DONE 2026-06-11 — e2e-testing@194d66b
+      (backtest_from_wizard_config.py; GroupBRunner wired; honest data precheck; PRECHECK_UNAVAILABLE{cloud data
+      unavailable on this host} verdict confirmed on apd_price_dispersion_btc.json).
 - [ ] [DEFERRED] P3. Client-lite wizard mode (use case 4) — named successor plan once internal wizard is hardened.
 
 ## Wave 2 — proposed enhancements (Claude 2026-06-11; PENDING OPERATOR SIGN-OFF, do not dispatch)
@@ -474,7 +474,12 @@ for every agent on this plan:
   dedup-idempotent `[AGENT] P2.` todos). Regenerated UAC outputs: 2 annotated edges, 0 annotation orphans, 1 P2 todo
   emitted for gap_registry:order_semantics → execution-service. UAC outputs re-committed via quickmerge. (2) Backtest-
   on-demand: e2e-testing@194d66b — `backtest_from_wizard_config.py`; data-availability precheck via
-  `read_availability_index` + `resolve_bucket_name`; GroupBRunner wired (real code path, batch=live HARD RULE);
-  honest typed verdict `PRECHECK_UNAVAILABLE{...}` confirmed on `apd_price_dispersion_btc.json` (30 synthetic ticks,
-  0 fills, 0 pnl — expected in CLOUD_MOCK_MODE); results JSON + markdown written. QG passes: strategy-service
-  peripheral (basedpyright + ruff) green; e2e-testing QG green. See F20 for GroupBRunner API findings.
+  `read_availability_index` + `resolve_bucket_name`; GroupBRunner wired (real code path, batch=live HARD RULE); honest
+  typed verdict `PRECHECK_UNAVAILABLE{...}` confirmed on `apd_price_dispersion_btc.json` (30 synthetic ticks, 0 fills, 0
+  pnl — expected in CLOUD_MOCK_MODE); results JSON + markdown written. QG passes: strategy-service peripheral
+  (basedpyright + ruff) green; e2e-testing QG green. See F20 for GroupBRunner API findings.
+- 2026-06-11 — Phase 5 SHIPPED (PM@507d14f: capability-annotations.yaml sidecar + write-back merge + escalation emitter,
+  2 edges annotated; UAC@c3a3494 regenerated outputs; e2e-testing@194d66b backtest-on-demand with honest precheck).
+  Wizard stepper stage SHIPPED (uts-ui@9f087aa8, pw:L2 12/12; help-text markdown fix). Operator walkthrough caught F22
+  (multi-leg restrictions collapsed to single staking cell) → Phase 2.6 added (leg-level restriction model); dispatching
+  UAC leg-spec schema + exporter + leg-aware wizard stages.
