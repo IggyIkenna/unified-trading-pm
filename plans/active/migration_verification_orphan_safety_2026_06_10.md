@@ -195,6 +195,27 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~13:20Z, autonomous run) — **R1 round-2: cefi + defi GREEN; tradfi/prediction residuals**. Round-2 tool
+  (is@c49d957: record-EVERY-converted-cell with footer-exact frames + cefi record-only support + legacy instrument_type
+  canonicalisation) applied clean: prediction 34 converted/17 cells · tradfi 28,483/248 cells · cefi 74,392/7,965 cells
+  — 0 escalations/verify-fails. **KEY MECHANISM FOUND**: backfill records land in PER-VM shards; the sweep reads the
+  CONSOLIDATED index and the consolidators are drained → ran ONE-SHOT manual
+  `manifest_consolidator.consolidate(force=True)` on all 4 market-data-tick `-prd` buckets (success=True; **NO data loss
+  — every index ≥ its `pre_migration_2026_06_08` snapshot**: tradfi 144,314 vs 144,062 · pred 16,839 vs 16,812 · cefi
+  2,728,435 vs 2,640,864 · defi 1,578,922 vs 1,569,805; the old "579k/35.8M" Phase-0 numbers were the LEGACY buckets).
+  **POST-CONSOLIDATION SWEEPS: defi E=0 ✅ · cefi E=0 ✅ (was 74,392) · tradfi E=995 (was 28,491) · prediction E=7,445
+  (REGRESSION from 34 — pre-consolidation)**; unknown_prefixes=0 everywhere.
+  - **Prediction regression hypothesis (diagnose first)**: consolidation `dedup_dropped=14,315/31,154` — if dedup
+    survivors (newer smoke-probe/backfill shard rows) carry different venue-spelling/grain fields than the dropped
+    twins, wildcard coverage flips and previously-covered objects re-orphan. Characterize the 7,445 E in the refreshed
+    `orphan_sweep_prediction.parquet` against the dropped-row keys BEFORE re-recording anything (do not blindly
+    re-backfill — fix the dedup-vs-coverage interaction or the matcher).
+  - tradfi 995 = one residual family — characterize from the refreshed report.
+  - NEXT: diagnose prediction dedup interaction → fix (consolidator dedup priority or sweep matcher) → re-apply
+    residuals → consolidate → re-sweep → E==0 ×4 → flip V2 acceptance. ALSO: the R5 smoke shards (VM_NAME=
+    smoke-probe-\*) GOT CONSOLIDATED into the prod indexes by the force pass — verify their rows are honest probe rows
+    or prune them in the same fix.
+
 - 2026-06-11 (~11:15Z, autonomous run) — **R1 backfill EXECUTED + first acceptance re-sweeps (mixed)**. Tool
   `backfill_orphan_class_e.py` (is@0a2e542 + refinements) ran on real prod: **the matcher refinements proved most E was
   FALSE-POSITIVE** (venue-spelling/grain): defi 254,984→**ALL already-covered**; prediction 60,997/61,014 covered
