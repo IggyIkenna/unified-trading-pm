@@ -214,17 +214,22 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       working/paused/blocked states render, but the watchdog's kill / daily-cap-dormancy / autospawn-flap /
       respawn-escalation events are transition-only. Add a watchdog-health panel (kills today vs cap, dormant?, recent
       flap) to the orchestrator dashboard. Repo: agent-orchestrator.
-- [ ] [CODE] P2. **No auto-escalation for a GENUINE main `quality-gates-v2` failure (gap found 2026-06-11, operator
-      Q).** `ci-failure-watcher --escalate` only hands **conflict-wall** promotion PRs (CONFLICTING/DIRTY) to
-      `escalate-to-orchestrator.yml`, and the v2-never-reported **deadlock** auto-recovers in-band (close+reopen). A
-      real red main v2 (code actually broken — e.g. the 4 repos with `main` red / LDR recovered on 2026-06-11:
-      batch-live-reconciliation / e2e-testing / greeks-service + the LDR-red mdps) → **Slack page only, NO backlog
-      dispatch to a vm-planning agent to FIX it**. Decide + implement the closed loop: classify a persistent main-v2
-      failure (red ≥N ticks, not a deadlock, not a conflict) → `repository_dispatch` to `escalate-to-orchestrator.yml`
-      with a `main-ci-red` reason → backlog task naming the repo + the failing check/log. Compose with the dashboard's
-      alert-parity (the red-main state is already shown by the new `branch_ci` chip — `FAILING(main)` — this closes the
-      ACT half). Repos: unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py` +
-      `escalate-to-orchestrator.yml`).
+- [x] ✅ [CODE] P2. DONE 2026-06-11 — agent-orchestrator@cd1c36de + unified-trading-pm@7facf6b81. **main-v2-red →
+      orchestrator escalation closed.** Implemented in the EXISTING closed loop rather than the PM watcher:
+      `CIReconcile` (`agent-orchestrator/server/ci_reconcile.py`) already polled per-repo `quality-gates-v2` on
+      `live-defi-rollout` + dispatched `ldr_qg_failure` fixers — it now ALSO sweeps `main` and dispatches a new
+      **`main_ci_red`** wall_type for a repo **red on main but GREEN on LDR** (the "main red / LDR recovered" case). The
+      fixer context tells the worker to PROMOTE/backport (classify: promotion-PR stuck → unblock/re-fire; OR main-only
+      `[skip ci]`/stale-workflow → re-roll/re-fire) — NOT re-fix code already green on LDR. A repo red on BOTH branches
+      stays owned by the `ldr_qg_failure` fixer (excluded → no double-dispatch). Separate per-branch ETag cache +
+      cooldown. Added `main_ci_red` to `server/escalation.py` `WALL_TYPES` (routes to the generic `escalate` worker, not
+      the conflict-resolver) + `escalate-to-orchestrator.yml`'s wall_type enum/gate (manual + repository_dispatch path).
+      5 new CIReconcile tests (main-red-LDR-green dispatches; red-on-both = LDR-only; main scan survives the
+      all-LDR-green early-return; main cooldown; default-noop) + fixed a latent host test-infra bug (`_git` helper now
+      passes `-c safe.bareRepository=all`). QG green both repos (AO 492 passed; PM gate). Chose CIReconcile over the PM
+      watcher because it already owns the polling/ETag/in-memory-idempotency/dispatch — the watcher would have
+      duplicated detection + needed a new state-file for idempotency. The dashboard ACT-half pairs with the
+      `FAILING(main)` branch chip (alert-parity). Repos: agent-orchestrator + unified-trading-pm.
 
 ## Failure-injection verification matrix (operator add 2026-06-10 — completion gate for this master)
 
