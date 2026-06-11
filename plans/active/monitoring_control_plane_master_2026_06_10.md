@@ -184,11 +184,11 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       the top: current build **status + source** (Cloud Build / CodeBuild), **last build time**, **commit sha** built,
       and a **link to the build log**. The Image-column click-through (B1) and this header share the same build signal.
       Repos: deployment-api (detail endpoint adds the build block) + deployment-ui (drill-down header).
-- [ ] [CODE] P2. **(B3) LDR→main delta — show commit count alongside files** — the overview delta currently shows the
-      content delta (`files_changed`, the squash-skew-safe truth per the LDR-is-SSOT rule). Operator also wants the raw
-      **commit count** (`ahead_by`) shown beside it (e.g. "+3 files · 5 commits"). ADD it, do not replace files_changed
-      (commit count is squash-inflated — keep both, label clearly). `ahead_by` is already fetched in `compare_branches`.
-      Repos: deployment-api (surface `ahead_by` in the delta dict) + deployment-ui (render).
+- [ ] [CODE] [UI] P2. **(B3) LDR→main delta — show commit count alongside files (UI-ONLY)** — verified 2026-06-11:
+      `ahead_by` is ALREADY in `BranchDeltaDict` on `/overview` (backend done — no change needed). Pure deployment-ui
+      render tweak: show the raw commit count beside the content delta (e.g. "+3 files · 5 commits"); keep
+      `files_changed` (the squash-skew-safe truth) — commit count is squash-inflated, label both clearly. Repo:
+      deployment-ui only.
 - [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
       per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
       relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
