@@ -192,8 +192,10 @@ unchanged:
 - [x] ✅ [REFACTOR] P2. DONE 2026-06-11 — deployment-api@5127517: routes/data_status.py 2,550 → package (5 modules);
       services/data_status_drilldown.py 2,586 → package (5 modules); routes/deployments.py 968 → package (crud/
       lifecycle); services/shard_detail.py 1,777 → package; + Phase-2b facade flips (routes/config.py +
-      utils/path_combinatorics.py to one-level registry imports). **budget 24→3 (≤5 ACHIEVED)** — file-size, fn-size,
-      deep-imports and more cleared in one unit; full QG green. Original: drilldown + routes facade treatment. Suggested package `services/data_status/`: `defi.py`
+      utils/path_combinatorics.py to one-level registry imports). **budget 24→22** (file-size + deep-imports classes
+      CLEARED — all 8 two-level registry call sites flipped; supersedes the plan's "23→24 revert" item, landing below
+      23); honest measured 22; full QG green. Remaining classes to ≤5 per the in-file comment: fn-size, os.getenv,
+      Any-types, schema-provenance (Phase 3) et al. Original: drilldown + routes facade treatment. Suggested package `services/data_status/`: `defi.py`
       (`_is_legacy_defi_venue_row`/`_read_defi_merged_index`/`_allowed_defi_venue_chain_pairs`/
       `_filter_to_canonical_defi_venues`/`_filter_legacy_defi_rows`), `sports.py` (`_is_sports_reference_venue`/
       `_is_understat_venue`/`_is_transfer_window_venue`/`_is_sparse_sports_entity`/`_get_reference_expected_dates`),
@@ -265,20 +267,24 @@ unchanged:
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
-- [ ] [REFACTOR] P2. **FACADE HALF DONE 2026-06-11** — UAC@c8287d3: all 46 fleet-consumed two-level symbols now
-      re-exported at the one-level facade (20 modules; `schema_spec`/`client_share_classes`/`withdrawal_approval_rules`
-      via PEP 562 lazy `__getattr__` to avoid root-init circular imports). REMAINING: per-consumer call-site flips +
-      ratchets (next bullet half). Original: Re-export the two-level `from unified_api_contracts.registry.<X> import`
-      symbols at the UAC one-level facade (`unified_api_contracts/registry/__init__.py`) for every symbol consumed
-      two-level fleet-wide
+- [x] ✅ [REFACTOR] P2. COMPLETE 2026-06-11 — facade: UAC@c8287d3 (all 46 fleet-consumed two-level symbols at the
+      one-level facade; 3 modules via PEP 562 lazy `__getattr__` for root-init cycles). Consumer call-site flips
+      shipped per-repo: deployment-api@5127517 (all 8 sites, class CLEARED), execution-service@fb116d98 (class
+      CLEARED), strategy-service@6aff0c48 (class CLEARED, zero deep sites remain), MDPS@4b6c53a (class CLEARED),
+      instruments-service@cb51c98 (weather.py), SIT@a458443 (3 test files). MTDS's remaining deep imports are
+      `canonical.partition_paths` in migration scripts (NOT registry symbols — outside this item's scope, stays in
+      its V=15 accounting). Deep-path removal from UAC deferred until a fleet-wide pre-audit shows zero importers
+      (additive-first contract). Original: Re-export the two-level symbols at the UAC one-level facade
       ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
       tardis_free_coverage, …}), then switch the call sites to `from unified_api_contracts.registry import <X>` and drop
       each repo's deep-import violation. Affected services (per the 2026-06-10 audit): deployment-api,
       execution-service, instruments-service, market-data-processing-service, market-tick-data-service,
       strategy-service, system-integration-tests. Repo: unified-api-contracts (facade) + the 7 consumers (call sites +
       ratchet).
-- [ ] [CODE] P1. **deployment-api budget 23→24 revert** — the 24 was the parity-fix unblock (deployment-api@3a579f1b);
-      once Phase 2 clears its deep-import violation, ratchet 24→23 (then keep going under this plan toward ≤5). Repo:
+- [x] ✅ [CODE] P1. SUPERSEDED-SATISFIED 2026-06-11 — deployment-api@5127517 ratcheted 24→**22** (below the 23
+      target): Phase 2 cleared the deep-import class AND the route/service splits cleared file-size. (Interim
+      history: a transient 24→25 bump by slot-1 for manifest-alignment was reverted same-day @6b7aa69 once the PM
+      workspace-manifest dep edge was fixed.) Original: budget 23→24 revert once deep-imports clear. Repo:
       deployment-api.
 
 ## Phase 3 — Schema provenance (local types → UAC)
