@@ -127,6 +127,27 @@ python "$SCRIPT_DIR/generate_capability_manifest.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 
 # ---------------------------------------------------------------------------
+# Strategy prospectus (per-archetype markdown docs: 7 sections, machine+codex)
+# Deterministic (run twice = byte-identical).  Output: UAC openapi/prospectus/
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Generating Strategy Prospectus Docs ==="
+python "$SCRIPT_DIR/generate_strategy_prospectus.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi/prospectus"
+
+# ---------------------------------------------------------------------------
+# Two-sided audit: StrategyArchetype enum vs codex archetype docs
+# Outputs: openapi/prospectus/prospectus-codex-audit.md
+#          Appends to plans/active/issues/ (findings + gap tracker)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Running Prospectus vs Codex Audit ==="
+python "$SCRIPT_DIR/audit_prospectus_vs_codex.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi/prospectus"
+
+# ---------------------------------------------------------------------------
 # Sync to UI repos (if present as sibling directories)
 # ---------------------------------------------------------------------------
 echo ""

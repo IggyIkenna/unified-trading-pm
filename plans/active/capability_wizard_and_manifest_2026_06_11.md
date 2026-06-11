@@ -263,9 +263,10 @@ post-config (combinatorial explosion is avoided because the wizard fixed the con
 - [ ] [AGENT][UI] P1. Wizard output: strategy configuration artifact + onboarding checklist — required API
       keys/credentials per selected venue (from ENDPOINT_REGISTRY auth requirements), deposit currency/cadence,
       collateral placement — the "what I need from you to get started" surface.
-- [ ] [AGENT][UI] P1. `deployment-ui`: **Capability tab** next to Data Status — full matrix view (archetype × venue ×
+- [x] [AGENT][UI] P1. `deployment-ui`: **Capability tab** next to Data Status — full matrix view (archetype × venue ×
       instrument × mode × algo), orphan/dead-end report, batch-live symmetry view; leaf data-availability questions call
       existing `/api/data-status/*` (drilldown/schema/shard-info) — no rebuild. pw:L2 gate.
+      — deployment-ui@13ac831 | pw:L2 ✓ (6/6 tests pass) | regression: tests/smoke/capability_tab.spec.ts + tests/unit/capability-helpers.test.ts (22 tests)
 - [ ] [IMPLEMENT] P2. Wizard "isolation mode": flat queries (what strategies/venues/algos/instructions exist) alongside
       the chained walkthrough — same manifest, two query styles.
 
