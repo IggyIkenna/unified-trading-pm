@@ -294,8 +294,19 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
     [ ! -d ".venv" ] && uv venv .venv
     [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
+    # LOCAL_DEPS (e.g. unified-trading-library / unified-api-contracts) are SIBLING repos at the
+    # WORKSPACE ROOT, not nested under this repo — resolve workspace-root-first (the Path-B slot +
+    # flat-workspace layout), falling back to the nested path for any legacy layout. The old
+    # `${REPO_ROOT}/$lib`-only check silently skipped the editable install (the dir is never nested
+    # under the repo) → workspace libs unresolved → a basedpyright `Unknown`-type CASCADE → the LOCAL
+    # typecheck count inflated vs CI's in-image env (which has these installed). This is the PM
+    # local↔CI parity gap: PM declares no UTL/UAC project dep, so this loop is its ONLY install path.
+    # SSOT: plans/active/ci_local_qg_parity_2026_06_08.md.
+    _ws_root="${WORKSPACE_ROOT:-$(cd "${REPO_ROOT:-.}/.." && pwd)}"
     for lib in "${LOCAL_DEPS[@]}"; do
-        [ -d "${REPO_ROOT}/$lib" ] && uv pip install -e "${REPO_ROOT}/$lib" --quiet 2>/dev/null || :
+        for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
+            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --quiet 2>/dev/null || :; break; }
+        done
     done
     uv pip install -e . --quiet 2>/dev/null || :
 fi
