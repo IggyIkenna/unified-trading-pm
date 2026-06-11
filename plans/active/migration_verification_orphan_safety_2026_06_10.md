@@ -238,9 +238,30 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
     trades objects but NO book_snapshot_5 object; 828+655 BINANCE-SPOT book/trades + DERIBIT chains) → the HONEST
     correction, presented per the tradfi precedent, not suppressed; empty→attempted_failed=3,853 = the CF-11
     GUARANTEED_WHEN_LISTED within-bounds reclassification (BY DESIGN).
-  - **prediction** (pred-prd, 2025-01-01→2026-06-11): re-run IN FLIGHT on the extended parser (573,536 candidates listed
-    vs 2,836 pre-fix; classifier spot-verified on a real legacy object → BTC_UP_DOWN_DAILY); verdict appended on
-    completion.
+  - **prediction** (pred-prd, 2025-01-01→2026-06-11): 573,536 objects read (full corpus, 2,102 s) → 1,355 captured cqg
+    bundles + 542,169 ClassifierConfidenceLow + 2,330 empty / 2 failed re-emits = 545,855 projected rows | added=352
+    (the NEW canonical `prediction_canonical_question_group` cells), removed=3,588 — the legacy RAW-grain cell families
+    (`trades` / `prediction_trades` per-date rows incl. blank/UNKNOWN-venue artifacts and the btc/eth/other
+    pseudo-itypes from `ticks_migrated_*` bundles) — SUPERSEDED BY DESIGN by the bundled cqg atom (the E5 rewrite spec:
+    the canonical shard atom replaces the raw grain; live writer emits ONLY bundles); captured→empty=4 (2026-04-26..29 —
+    dates where ZERO objects classify into any cqg, see the finding below); 7,462 residual unparseable = the 2026-04-19
+    `ticks_migrated_*` per-underlying bundles (same by-design class as defi; no per-cid identity, unmanifestable at the
+    canonical atom). **Cross-checks**: tradfi's `write_projected_index` coalesce regression-tested
+    (`tests/unit/test_rebuild_projection_dates.py`); all CF-11 unit suites retrofitted with the `_no_consolidated()`
+    failing-storage seam. Diff JSONs: `/tmp/manifest_diff_{defi,cefi,sports,prediction}.json` on the worker host.
+- [ ] [DATA] P1. **Prediction cqg classifier coverage decision BEFORE the pred G4 apply**: 542,169/573,536 objects
+      (94.5%) route to `attempted_failed[ClassifierConfidenceLow]` under the operator-corrected contract (None → NOT
+      bundled, no "OTHER" fallback), and captured cqg bundles END 2026-04-14 (the 4 trail dates 2026-04-26..29 have real
+      trades objects but ZERO classifiable bundles → honest captured→failed downgrade at the canonical grain). Either
+      EXTEND the UAC `canonical_question_group` registry coverage (most Polymarket markets are
+      sports/politics/entertainment outside the MVP crypto set) or operator-ratify that out-of-registry markets stay
+      failed-for-retry. Repos: unified-api-contracts (+ rebuild re-run). Provenance: /tmp/r7_proj/prediction2.log
+      2026-06-11.
+- [ ] [DATA] P1. **Sports CF-5 oracle relabel fired ZERO relabels on the MDPS dry-run** (584,257/584,257
+      `keep_src_zero`; truth set 189,740 pairs loaded, league match-rate 61.8%) — the step 4–7 gates all fall through
+      (suspect league_id resolution / venue=bookmaker rows carrying no league mapping). Reason-level CF-5 relabel is
+      currently INERT on MDPS (status-level diff unaffected — GREEN). Diagnose before relying on the relabel for the
+      sports verdict pack. Repo: market-tick-data-service. Provenance: /tmp/r7_proj/sports.log 2026-06-11.
 
 - 2026-06-11 (~19:10Z, autonomous run) — **FINAL SIGN-OFF SWEEP SNAPSHOT: ALL FIVE AGs GREEN on final HEAD** — defi E=0
   (18:52Z) · cefi E=0 (19:00Z) · prediction E=0 (19:02Z) · tradfi E=0 (19:07Z) · sports odds E=0 + reference E=0
