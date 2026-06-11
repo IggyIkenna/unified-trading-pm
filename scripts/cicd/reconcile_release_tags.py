@@ -37,6 +37,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import os
 import re
 import subprocess
 import sys
@@ -163,12 +164,29 @@ def _manifest_repos(manifest_path: Path) -> list[str] | None:
     return sorted(str(k) for k in cast("dict[str, object]", repos))
 
 
+def _write_firestore_release_tags(repo_versions: dict[str, str], project_id: str) -> None:
+    """Best-effort write of the latest release version+tag per repo to ``repo_state/{repo}/release_tag``
+    in Firestore, so downstream tag-readers query Firestore instead of the GitHub tags API (separate
+    free quota domain, zero PAT/App REST calls for reads). GOOGLE_CLOUD_PROJECT-gated; any failure
+    (SDK absent / no creds / network) is swallowed so the reconciler's core job never blocks on it."""
+    try:
+        from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+
+        client = firestore.Client(project=project_id)
+        for repo, version in repo_versions.items():
+            doc_ref = client.collection("repo_state").document(repo)
+            doc_ref.set({"release_tag": {"version": version, "tag": f"v{version}"}}, merge=True)
+    except Exception:  # Firestore unavailable → best-effort write
+        pass
+
+
 def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) -> int:
     repos = _manifest_repos(manifest_path)
     if repos is None:
         return 1
 
     created: list[str] = []
+    repo_versions: dict[str, str] = {}  # repo -> latest resolvable main version (for the Firestore write-through)
     skipped = 0
     for repo in repos:
         # PM itself is Option-B + not a published Python package — its versioning is the manifest, not a tag.
@@ -178,6 +196,7 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) 
         if version is None:
             skipped += 1
             continue  # no resolvable main pyproject version (UI repos, archived, transient API miss)
+        repo_versions[repo] = version
         tag = f"v{version}"
         if _tag_exists(owner, repo, tag):
             continue  # idempotent — already released
@@ -206,6 +225,12 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) 
     print(f"\nRelease-tag reconcile: {verb} {len(created)} tag(s); {skipped} repo(s) had no main version.")
     if created:
         print("  " + ", ".join(created))
+
+    # Firestore write-through: persist latest tag per repo so tag-readers query Firestore (free quota,
+    # zero GitHub REST) instead of the GitHub tags API. Best-effort, GOOGLE_CLOUD_PROJECT-gated.
+    gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if gcp_project and not dry_run and repo_versions:
+        _write_firestore_release_tags(repo_versions, gcp_project)
     return 0
 
 

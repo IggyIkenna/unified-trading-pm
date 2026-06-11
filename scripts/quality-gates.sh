@@ -223,6 +223,7 @@ BE_EXCLUDE_GLOBS+=("**/tier_c_promotion_gate.py")
 # documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-11)
 BE_EXCLUDE_GLOBS+=("**/promotion_lag_monitor.py")
 BE_EXCLUDE_GLOBS+=("**/ci_failure_watcher.py")
+BE_EXCLUDE_GLOBS+=("**/reconcile_release_tags.py")
 
 # requests CVE-2026-25645: no fix version available yet (fix in requests>=2.33.0, not released)
 # urllib3 PYSEC-2026-141/142: fix in urllib3>=2.7.0 (transitive dep, not yet updated upstream)

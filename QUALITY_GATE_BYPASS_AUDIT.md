@@ -172,6 +172,11 @@ explicitly best-effort; the monitor's core function (lag detection + alerting) i
 Firestore unavailability never blocks the CI watcher from scanning and paging. The write is explicitly best-effort.
 Added 2026-06-11.
 
+**Additional:** `scripts/cicd/reconcile_release_tags.py` — `_write_firestore_release_tags()` catches `Exception` so a
+missing Firestore SDK or absent credentials never blocks the release-tag reconciler from creating tags. The write
+(latest tag per repo → `repo_state/{repo}/release_tag`, so tag-readers query Firestore instead of the GitHub tags API)
+is explicitly best-effort. Added 2026-06-11.
+
 **Audit trail:** Added 2026-03-04. validate-manifest-dag.py added 2026-03-13.
 
 ---
