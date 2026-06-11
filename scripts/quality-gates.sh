@@ -219,6 +219,9 @@ EMPTY_STR_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-stat
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 IMPORT_INSIDE_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
 BE_EXCLUDE_GLOBS+=("**/generate-cicd-diagram.py")
+# tier_c_promotion_gate.py: except Exception is a Firestore-unavailable fallback guard —
+# documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-11)
+BE_EXCLUDE_GLOBS+=("**/tier_c_promotion_gate.py")
 
 # requests CVE-2026-25645: no fix version available yet (fix in requests>=2.33.0, not released)
 # urllib3 PYSEC-2026-141/142: fix in urllib3>=2.7.0 (transitive dep, not yet updated upstream)

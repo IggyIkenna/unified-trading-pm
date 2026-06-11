@@ -261,6 +261,73 @@ regardless. **Blast radius note**: ANY Cloud Run job on a 2026-06-10-or-older im
 without `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` has this same failure class — worth a sweep once the new images land
 (filed as a todo in the G3.5 plan owner's queue via this note).
 
+## ⚖️ OPERATOR RATIFICATION 2026-06-11 — the COMPLETE pre-apply gate set (interactive Q&A, 8 decisions)
+
+> These 8 decisions close the "what's left before G4" question. NOTHING else gates the applies; each decision below is
+> the ratified thoroughness level. Todos carry the work; the per-AG ⑬–⑲ verdict is the assembly point.
+
+1. **Orphan-E backfills = middle-ground-PLUS (operator: "don't be lazy")**: characterize per data_type against actual
+   CODE USE-CASES (especially defi + sports — many data_types), and **canonicalise orphans to v9-grade schemas/paths AS
+   PART of the backfill** even where the orphaned capture predates v9 — never stamp a non-canonical object into the
+   manifest as-is. Sample-verify per cell; re-sweep to E==0.
+2. **Schema completeness = CITADEL**: extend the v9 UAC schemas to carry ALL source columns (the 11 polymarket columns
+   included) + add the missing defi/tradfi SchemaSpecs; re-run CF-18 to GREEN. No acked drops.
+3. **V5/V6 = CITADEL**: full per-AG projected-`_index` dev render + operator eyeball + manifest_diff report attached to
+   every ⑬–⑲ verdict.
+4. **IS capture freeze = CITADEL**: diagnose + resume IS definition collection NOW and backfill the ~2026-05-21→now
+   definition gap BEFORE any could-exist seed; re-run catalogue roll-ups + enumerates per AG after.
+5. **Stale images + service health = OPERATOR DIRECTIVE (new scope)**: wait for clean worktrees (other agents live),
+   then verify ALL shipped code completed the promotion cycle to `main`; MEANWHILE **smoke-test every service per asset
+   group** — credentials valid, instrument + market tick data actually fetchable; AUDIT what doesn't work (assume
+   nothing); **block at SHARD granularity** (asset_group × data_type × venue × …), never the whole AG — producing the
+   explicit pending-post-migration-backfill shard ledger.
+6. **Codex/doc reconcile = CITADEL, BEFORE applies**: rewrite the 5 per-AG plans' stale coarse tokens; purge
+   `hyperliquid_rest` from `pipeline-mode-and-batch-live-reconciliation.md`; write the missing sports/tradfi/prediction
+   batch-live seam docs; lift the M1–M8 live/replay TARGET design into codex as settled contract (plans reference it,
+   not vice versa).
+7. **Re-dry-run = CITADEL**: every AG's migrator + rebuild `--dry-run` re-proven on CURRENT HEAD against real prod GCS,
+   writing the projected `_index` in the same pass (feeds V5).
+8. **Prediction/sports = CITADEL**: sports-specific orphan sweep built + run to E==0 (same backfill discipline); sports
+   v1_archive ROW-coverage proven before any drop; prediction dry plan REGENERATED on final HEAD and signed off only
+   within its full ⑬–⑲ verdict.
+
+### Ratification todos (the dispatch — owners per slot map)
+
+- [ ] [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→record_captured backfill** (defi 254,984 /
+      tradfi 47,102 / prediction 61,014; sweep reports in `_index/audit/orphan_sweep_<ag>.parquet`): group E objects per
+      (venue, data_type); map each data_type to its code use-case (readers/features consumers); CONVERT non-v9-shape
+      objects to canonical schema/path during backfill (never manifest a non-canonical object); sample-verify per cell;
+      re-run `migration_orphan_sweep` to E==0. defi+tradfi=slot-2, prediction=slot-3. Repos: instruments-service (+mtds
+      schemas). Also: add the defi legacy-tree prefix labels (`dex_pools/`, `lending_indices/`, `_manifests/`,
+      `configs/`) + tradfi unknown-prefix labels to the sweep taxonomy → unknown_prefixes==0 re-proven; cefi corrected
+      re-run to a recorded verdict.
+- [ ] [UAC] P0. **R2-schema — carry ALL dropped columns into v9**: extend `CEFI/PREDICTION/...` schema specs so CF-18 is
+      GREEN per AG — the 11 polymarket trades columns (amount, asset, conditionId, outcomeIndex, transactionHash,
+      data_source, market_type, resolution_period, symbol, timestamp, underlying) + SchemaSpecs for defi
+      rewards/risk_params/utilization(+rest of RED list) + tradfi/trades. Re-run `migration_schema_completeness` per AG
+      to 0 RED. slot-3. Repo: unified-api-contracts (+instruments-service rerun).
+- [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: re-dry-run migrator+rebuild on CURRENT HEAD (R7)
+      writing projected `_index` → `manifest_diff` report vs live `_index` → dev `restart-deployment-stack.sh     --api`
+      render → operator eyeballs goalposts → assemble ⑬–⑲ verdict in the AG plan. ALL 5 AGs. per-AG slots.
+- [ ] [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
+      could-exist seed**; then re-run `build_instrument_catalogue` + `enumerate_expected_universe v2` per AG. (Note:
+      collection is reference-data — independent of the drained market-data writers; resuming does NOT violate the
+      pre-migration drain.) slot-3. Repos: instruments-service + deployment-service.
+- [ ] [AUDIT] P0. **R5-service-smoke — per-(service × asset_group) credential + data-fetch smoke matrix**: prove
+      instrument fetch + market tick fetch per AG with REAL credentials; audit every failure (assume nothing); **block
+      failing shards at (asset_group × data_type × venue) grain ONLY** — emit the pending-post-migration- backfill shard
+      ledger into this plan; never block a whole AG. Run AFTER worktrees clean + all tonight's ships verified on `main`
+      (image rebuilds ride that). slot-2+slot-3 split by AG ownership. Repos: mtds, instruments-service.
+- [ ] [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies**: 5 per-AG plans de-coarsened;
+      `pipeline-mode-and-batch-live-reconciliation.md` hyperliquid_rest purge; write
+      `sports/tradfi/prediction-batch-live.md` seam docs; codify M1–M8 live/replay TARGET design into
+      `codex/02-data/pipeline-mode-partition.md` (+`batch-live-architecture.md`) as settled contract. slot-7. Repo:
+      unified-trading-pm.
+- [ ] [DATA] P0. **R8-sports/pred gates**: sports-specific orphan sweep (candidate_parquet_paths-driven) built + run →
+      characterize/backfill to E==0; sports v1_archive `(date,league,fixture_id)` ROW-coverage proven before any drop;
+      prediction dry plan REGENERATED on final HEAD, attached to its verdict for sign-off. sports=slot-2 (tool assist
+      slot-3), prediction=slot-3. Repos: instruments-service + mtds.
+
 ## Cross-cutting audit verdict (slot-7 / vm-cross-cutting) — 2026-06-08
 
 > **REGRESSION RISK: NONE** for the per-AG `--apply`. All slot-7 cross-cutting work is **gate-only / consumer-side /

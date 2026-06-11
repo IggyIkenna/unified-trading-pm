@@ -139,6 +139,28 @@ def evaluate_repo(manifest: dict[str, object], repo: str) -> GateResult:
     return GateResult(repo, True, "PASS: LDR CI not red + all tracked deps on staging")
 
 
+def _overlay_firestore_ci_status(manifest: dict[str, object]) -> None:
+    """Overlay Firestore-authoritative ci_status values into manifest repos in-place.
+
+    Phase 2 reader migration (ci_status_firestore_side_store plan): the manifest is the
+    offline fallback cache; Firestore is the live SSOT. Safe no-op when Firestore is
+    unavailable (google-cloud-firestore not installed, no GCP credentials, or network error)
+    — the manifest ci_status values are already the fallback for evaluate_repo().
+    """
+    try:
+        from ci_status_store import resolve_ci_status_map  # noqa: imports-inside-functions
+
+        ci_map = resolve_ci_status_map(manifest)
+        repos_obj = manifest.get("repositories", {})
+        if isinstance(repos_obj, dict):
+            for r, s in ci_map.items():
+                r_obj = repos_obj.get(r)
+                if isinstance(r_obj, dict):
+                    cast("dict[str, object]", r_obj)["ci_status"] = s
+    except Exception:  # Firestore unavailable → manifest fallback
+        pass
+
+
 def load_manifest(path: str | Path) -> dict[str, object]:
     """Load the workspace manifest; raise FileNotFoundError/JSONDecodeError to caller."""
     with open(path) as fh:
@@ -162,6 +184,8 @@ def main(argv: list[str] | None = None) -> int:
         # Fail-open: no manifest data → pass (matches STAGE 1.8 safe-default).
         print(f"PASS: manifest unreadable ({exc}) — gate skipped (safe-default)")
         return 0
+
+    _overlay_firestore_ci_status(manifest)
 
     result = evaluate_repo(manifest, repo)
     print(result.reason)

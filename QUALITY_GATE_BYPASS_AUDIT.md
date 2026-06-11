@@ -160,6 +160,10 @@ dangerous.
 **Additional:** `scripts/validate-manifest-dag.py` — `send_telegram_alert()` catches `Exception` so Telegram API
 failures (network, timeout, HTTP errors) never block the DAG validation script. Alert delivery is best-effort.
 
+**Additional:** `scripts/cicd/tier_c_promotion_gate.py` — `_overlay_firestore_ci_status()` catches `Exception` so
+Firestore unavailability (SDK missing, no credentials, network error) never blocks the promotion gate. Falling back to
+the manifest ci_status values on any error is the intended safe-default behaviour. Added 2026-06-11.
+
 **Audit trail:** Added 2026-03-04. validate-manifest-dag.py added 2026-03-13.
 
 ---

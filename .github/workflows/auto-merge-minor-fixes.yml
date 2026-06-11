@@ -72,6 +72,7 @@ jobs:
           import os
           import subprocess
           import sys
+          sys.path.insert(0, "scripts/cicd")
 
           owner = os.environ["OWNER"]
           dry_run = os.environ.get("DRY_RUN", "true").lower() == "true"
@@ -80,13 +81,21 @@ jobs:
           with open("workspace-manifest.json") as f:
               manifest = json.load(f)
 
+          # Phase 2: Firestore-authoritative ci_status (manifest fallback when Firestore unavailable).
+          try:
+              from ci_status_store import resolve_ci_status_map
+              _ci_map = resolve_ci_status_map(manifest, project_id=os.environ.get("GCP_PROJECT_ID"))
+          except Exception:
+              _rd = manifest.get("repositories", {})
+              _ci_map = {k: v.get("ci_status", "") for k, v in _rd.items() if isinstance(v, dict)}
+
           repos_data = manifest.get("repositories", {})
           versions = manifest.get("versions", {})
 
           # Step 1: Find all repos with ci_status=SIT_VALIDATED
           sit_validated_repos = []
-          for repo_name, repo_info in repos_data.items():
-              if repo_info.get("ci_status") == "SIT_VALIDATED":
+          for repo_name in repos_data:
+              if _ci_map.get(repo_name) == "SIT_VALIDATED":
                   sit_validated_repos.append(repo_name)
 
           if not sit_validated_repos:
