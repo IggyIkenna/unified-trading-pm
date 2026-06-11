@@ -1073,38 +1073,50 @@ SWALLOWED=$(codex_rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_D
 # File size — tests excluded (test files are often long due to fixtures/assertions)
 # FUNCTION_SIZE_EXTRA_EXCLUDES also applies here for consistency (same variable, same dirs to skip)
 qg_prof start size-checks
-SVIOL=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
-    lines=$(wc -l < "$f" 2>/dev/null || echo 0)
-    [[ "$lines" -gt $MAX_FILE_LINES ]] && SVIOL="${SVIOL}\n  $f: $lines L"
-done
-[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
+# ONE find feeds TWO batched python passes — collapses the per-file subprocess spawn
+# (was 1 `wc` + 1 `python` PER source file = O(files) process launches, the size-check cost)
+# into ONE python process per check. Same find exclusions + same thresholds + the AST visitor
+# copied verbatim → byte-identical violations; only N spawns → 2. Helps every QG context
+# (local/CI/SIT), not just the change-scoped fast tier.
+_SIZE_FILES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null)
+
+# File-size: line count is `wc -l` semantics == number of '\n' bytes.
+SVIOL=$(printf '%s\n' "$_SIZE_FILES" | $PYTHON_CMD -c "
+import sys
+mx=$MAX_FILE_LINES
+out=[]
+for p in (line.strip() for line in sys.stdin):
+  if not p: continue
+  try:
+    with open(p,'rb') as fp: n=fp.read().count(b'\n')
+  except OSError: continue
+  if n>mx: out.append(f'  {p}: {n} L')
+print('\n'.join(out))
+" 2>/dev/null || :)
+[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:\n$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
 
 # Function/class/method size — tests excluded (test functions are often long)
 # FUNCTION_SIZE_EXTRA_EXCLUDES: optional array of extra ! -path args set in quality-gates.sh
 # e.g. FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./features_service/*" "! -path ./examples/*")
-FSIZES=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
-    out=$($PYTHON_CMD -c "
+FSIZES=$(printf '%s\n' "$_SIZE_FILES" | $PYTHON_CMD -c "
 import ast, sys
-p=sys.argv[1]
-try:
-  with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
-  def v(n,par=None):
-    if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
-      l=(n.end_lineno or n.lineno)-n.lineno+1
-      if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
-      elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
-    elif isinstance(n,ast.ClassDef):
-      l=(n.end_lineno or n.lineno)-n.lineno+1
-      l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
-    for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
-  v(tree)
-except: pass
-" "$f" 2>/dev/null || :)
-    [[ -n "$out" ]] && FSIZES="${FSIZES}\n${out}"
-done
-[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
+for p in (line.strip() for line in sys.stdin):
+  if not p: continue
+  try:
+    with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
+    def v(n,par=None):
+      if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
+        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
+      elif isinstance(n,ast.ClassDef):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
+      for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
+    v(tree)
+  except Exception: pass
+" 2>/dev/null || :)
+[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:\n$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
 qg_prof end size-checks
 
 # Security: pip-audit (BLOCKING — OSV vulnerability database check)
