@@ -195,6 +195,21 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~11:15Z, autonomous run) — **R1 backfill EXECUTED + first acceptance re-sweeps (mixed)**. Tool
+  `backfill_orphan_class_e.py` (is@0a2e542 + refinements) ran on real prod: **the matcher refinements proved most E was
+  FALSE-POSITIVE** (venue-spelling/grain): defi 254,984→**ALL already-covered**; prediction 60,997/61,014 covered
+  - 17 converted+recorded (clean); tradfi 32,387 covered + **14,707 objects converted to canonical v9** (8 zero-row junk
+    skipped, 0 escalations) + 249 cells recorded after the row-key fix (omit empty `chain` — MalformedRowKeyError; is
+    ship) + tbbo spec extended (ts*init + bid_size/ask_size aliases — uac ship). **RE-SWEEP VERDICTS**: defi **E=0 ✅
+    unknown=0** · prediction E=34 (small residual — characterize) · tradfi E=28,495 (**tool gap: the record pass only
+    records cells with a retained representative frame — the other converted-twin cells stay unrecorded; must record
+    EVERY cell touched by conversion**) · cefi **E=74,392 — the tool's --asset-group choices EXCLUDE cefi** (first
+    refined-matcher cefi verdict; needs cefi support in characterize/convert maps). unknown_prefixes=0 on ALL FOUR
+    (taxonomy fully labelled). NEXT (the iterate-to-green loop, in order): (1) tool: record all converted cells (group
+    objects→cells independent of frame retention; read a frame per cell on demand); (2) tool: add cefi to CLI +
+    characterization (tardis corpus shapes); (3) prediction 34 residual characterization; (4) re-apply tradfi+cefi →
+    re-sweep all → E==0. Reports: `\_index/audit/orphan_backfill*<ag>.parquet` + refreshed orphan_sweep parquets.
+
 - 2026-06-11 (~09:00Z, autonomous run) — **V3/CF-18 GREEN (R2 ratified decision #2 COMPLETE)**: UAC carries every source
   column (prediction trades/prediction*trades incl. the 11 polymarket columns + trader-profile payload, defi
   rewards/risk_params/utilization/dex_pool_swaps subgraph fields, tradfi trades/tbbo) via `source_aliases` rename maps

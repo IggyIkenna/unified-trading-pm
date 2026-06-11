@@ -863,7 +863,17 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
     # CVE-2026-47265: aiohttp <=3.13.5 cookies re-sent after cross-origin redirect; fix_versions=[3.14.0] (same
     #   vcrpy block). The aiohttp-3.13.5 CVE set grows until the fleet can reach 3.14.0 (vcrpy-unblock).
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265"
+    # The three pip advisories below MUST stay in parity with base-service.sh — they are sanctioned
+    # ignores for the SAME shared pip dep (operator-accepted 2026-06-05); a library-vs-service drift
+    # here reddens UTL/UAC while services pass (incident 2026-06-11: PYSEC-2026-196 published, present
+    # in base-service but missing here → UTL pip-audit failed once its 24h cache expired).
+    # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
+    # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
+    # PYSEC-2026-196: pip 26.0.1 console_scripts/gui_scripts treated as paths without sanitizing the
+    #   resolved absolute path. Fleet stays on the vulnerable pip line because the next pip release is
+    #   incompatible with the pinned vcrpy. Exploit surface nil — the fleet never pip-installs untrusted
+    #   packages at runtime. SUCCESSOR (remove all three): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3;
     # parity with base-service.sh): the OSV query runs only when the deps-hash (pyproject.toml
     # + uv.lock + ignore set + pip-audit version) changed, OR the cached clean result is older

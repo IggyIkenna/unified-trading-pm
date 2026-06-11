@@ -338,6 +338,18 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 - [ ] [AGENT] P3. **strategy-service**: noqa-with-reason (or `UnifiedCloudConfig`) the un-annotated `os.environ.get` in
       `recovery_event_helper.py:41,90` and `pnl/engine/mock_data_provider.py:38` (mirror the existing
       `position/engine/mock_data_provider.py` noqa pattern).
+- [ ] [CODE] P2. **execution-service cross-service imports surfaced by the 2026-06-11 imports-in-fn sweep (codex ratchet
+      plan)** — two UNSANCTIONED sites were hiding behind lazy in-function imports (now carrying tracked
+      `# noqa: imports-inside-functions` markers): (1) `execution_service/algo_library/leg_controller_runner.py:222`
+      imports `strategy_service.position.core.leg_snapshot_builder` — `strategy_service.position` is in the UAC
+      `service_contract_map` **forbidden_imports** for execution-service and NOT in forbidden_exceptions (unlike the
+      sanctioned target_universe.catalog site); move `leg_snapshot_builder` to UTL/UAC or add a justified
+      forbidden_exception + deprecation-ledger entry. (2) `execution_service/algo_library/mtds_book_provider.py:93`
+      imports `market_tick_data_service.reader.CanonicalParquetReader` AND execution-service pyproject declares
+      `../market-tick-data-service` as a path dep (pyproject ~L124) — same no-service↔service violation class the
+      MDPS/deployment-api removals fixed 2026-06-11; needs the reader surface promoted to a shared lib (UTL) or the
+      manifest-read path flipped to the UAC contract + GCS. Repos: execution-service + strategy-service +
+      market-tick-data-service + unified-api-contracts.
 - [ ] [AGENT] P3. **lint ratchet tail (opportunistic, not blocking)**: in MTDS/IS/execution/deployment one-off
       `scripts/` (~70 files), convert `from google.cloud import storage` → `get_storage_client()`, `gs://` →
       `resolve_bucket_name`, per-object `gsutil`/`gcloud` subprocess → UTL `gcs_copy/delete/describe_object`, and fix

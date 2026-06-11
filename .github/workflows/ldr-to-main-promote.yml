@@ -46,16 +46,26 @@ jobs:
       action: ${{ steps.promote.outputs.action }}
       pr: ${{ steps.promote.outputs.pr }}
     steps:
+      # GitHub App installation token — separate 5000/hr pool from the shared user PAT.
+      # owner-scoped (cross-repo) + can create/merge PRs and trigger downstream workflows
+      # (quality-gates-v2 on the promotion PR), which the repo-scoped GITHUB_TOKEN cannot.
+      # App perms: Contents+PullRequests+Actions R/W.
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
       - name: Checkout PM
         uses: actions/checkout@v5
         with:
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
       - name: Drain LDR → main (content-gated, reuse open PR, self-recover v2-never-reported)
         id: promote
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}

@@ -318,6 +318,16 @@ unchanged:
 
 ## Phase 4 — Residual violation classes
 
+- [x] ✅ [CODE] P2. **execution-service imports-inside-functions class CLEARED 2026-06-11** —
+      execution-service@2fdc348c: 116 sites across 57 files (51 hoisted: stdlib/UAC/UTL/light deps; 65 justified
+      per-line `# noqa: imports-inside-functions`: lazy heavy SDKs nautilus/web3/driftpy/solana, per-provider KMS,
+      call-time patch surfaces, sanctioned/tracked cross-service); budget ratcheted 12→11; full QG green (7,692
+      tests; the isolation_policy/rpc_fallback patch-surface lazies were load-bearing and kept lazy). BONUS finding:
+      2 UNSANCTIONED cross-service imports surfaced (leg_controller_runner→strategy_service.position,
+      mtds_book_provider→market_tick_data_service.reader + its path dep) — filed in
+      utl_uac_reuse_consolidation_remediation_2026_06_10.md. Shipped via the dirty-deps carve-out (UAC/MTDS carry the
+      mtds_coverage_75 lane's WIP).
+
 - [ ] [CODE] P2. **lxml PYSEC-2026-87 fleet bump (coordinated unit)** — 2026-06-11 diagnosis: lxml is NOT a UAC dep;
       the vulnerable 5.4.0 lock lives in execution-service (direct dep `lxml>=5.0,<6.0` pyproject:290) +
       e2e-testing/system-integration-tests locks, and the fleet canonical range `lxml>=5.0,<6.0`
