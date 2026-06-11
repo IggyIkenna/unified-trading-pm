@@ -67,6 +67,7 @@ from _prospectus_codex import (
 from _prospectus_manifest import (
     build_fund_flow_mermaid,
     get_execution_algos,
+    get_leg_structure,
     get_manifest_provenance,
     load_manifest,
 )
@@ -308,6 +309,64 @@ def _section_exposures(
     return "\n".join(lines)
 
 
+def _section_leg_structure(
+    archetype_id: str,
+    manifest: dict,  # type: ignore[type-arg]
+) -> str:
+    """Section: per-leg restriction table (F22).
+
+    Honest gap line when the archetype has no leg structure in
+    ARCHETYPE_LEG_STRUCTURES (vs. a populated table when it does).
+    """
+    lines: list[str] = []
+    lines.append("## Leg Structure")
+    lines.append("")
+    legs = get_leg_structure(manifest, archetype_id)
+    if not legs:
+        lines.append(
+            "**[GAP — no leg structure]** This archetype has no entry in "
+            "`ARCHETYPE_LEG_STRUCTURES` yet, so its structural per-leg restrictions "
+            "(roles, per-leg instrument types, per-leg venue eligibility, conditional "
+            "constraints) are not modelled — only the flat `(asset_group, instrument_type)` "
+            "capability cells above apply. Tracked as a leg-truth gap (F22)."
+        )
+        lines.append("")
+        return "\n".join(lines)
+
+    coupling = legs[0].get("execution_coupling", "") if legs else ""
+    lines.append(
+        "**[MACHINE-DERIVED]** Structural legs from `ARCHETYPE_LEG_STRUCTURES` (F22 "
+        "leg-truth SSOT) — the exhaustive per-leg restriction surface the flat capability "
+        f"cells cannot express. Execution coupling: `{coupling}`."
+    )
+    lines.append("")
+    lines.append("| Leg | Role | Required | Instrument types | Eligible venues |")
+    lines.append("|---|---|---|---|---|")
+    for leg in legs:
+        its = ", ".join(f"`{t}`" for t in leg["instrument_types"]) or "—"
+        venues = ", ".join(f"`{v}`" for v in leg["venues"]) or "—"
+        lines.append(f"| `{leg['leg_id']}` | `{leg['role']}` | {leg['required']} | {its} | {venues} |")
+    lines.append("")
+
+    # Conditional constraints (the staked-vs-straight-basis conditional etc.)
+    constraint_rows: list[tuple[str, str, str]] = []
+    for leg in legs:
+        for c in leg["constraints"]:
+            constraint_rows.append((leg["leg_id"], c["relation"], c["reason"]))
+    if constraint_rows:
+        lines.append("**Conditional leg constraints:**")
+        lines.append("")
+        lines.append("| Leg | Constraint (kind / params / fallback) | Condition |")
+        lines.append("|---|---|---|")
+        for leg_id, rel, reason in constraint_rows:
+            rel_s = rel.replace("|", " · ")
+            reason_s = reason.replace("|", "\\|").replace("\n", " ")
+            lines.append(f"| `{leg_id}` | `{rel_s}` | {reason_s} |")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
 def _section_fund_flow(
     archetype_id: str,
     venue_categories: list[str],
@@ -533,6 +592,7 @@ def render_prospectus(
         _section_what_it_does(archetype_id, family, codex_body, capability_cells, venue_categories),
         _section_universe_execution(archetype_id, codex_body, codex_frontmatter, manifest_edges, exec_algos),
         _section_exposures(archetype_id, codex_body),
+        _section_leg_structure(archetype_id, manifest),
         _section_fund_flow(archetype_id, venue_categories, capability_cells),
         _section_risk(archetype_id, codex_body),
         _section_performance(archetype_id),

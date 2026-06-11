@@ -116,6 +116,55 @@ def get_execution_algos(manifest: dict) -> list[dict]:  # type: ignore[type-arg]
     return [n for n in nodes if n.get("kind") == "execution_algo"]
 
 
+def get_leg_structure(manifest: dict, archetype_id: str) -> list[dict]:  # type: ignore[type-arg]
+    """Return the per-leg restriction rows for an archetype (F22).
+
+    Reads the leg nodes/edges emitted by ``extract_leg_structures``. Each row:
+    ``{leg_id, role, required, instrument_types, venues, constraints}``. Empty
+    list when the archetype has no leg structure (honest gap — the caller renders
+    a gap line). Uses the canonical edge keys ``from_node_id``/``to_node_id``/
+    ``relation`` (NOT ``source``/``target`` — those legacy keys are absent from
+    ``to_canonical_dict`` output).
+    """
+    edges = manifest.get("edges", [])
+    nodes_by_id: dict[str, dict] = {n["node_id"]: n for n in manifest.get("nodes", [])}  # type: ignore[type-arg]
+
+    # leg nodes for this archetype (node_id prefix leg:<archetype>:)
+    leg_prefix = f"leg:{archetype_id}:"
+    leg_node_ids = sorted(nid for nid in nodes_by_id if nid.startswith(leg_prefix))
+
+    rows: list[dict] = []  # type: ignore[type-arg]
+    for leg_node_id in leg_node_ids:
+        node = nodes_by_id[leg_node_id]
+        meta = node.get("metadata", {})
+        instrument_types: list[str] = []
+        venues: list[str] = []
+        constraints: list[dict[str, str]] = []
+        for e in edges:
+            if e.get("from_node_id") != leg_node_id:
+                continue
+            rel = str(e.get("relation", ""))
+            tgt = str(e.get("to_node_id", ""))
+            if rel == "trades_instrument" and tgt.startswith("instrument_type:"):
+                instrument_types.append(tgt.split(":", 1)[1])
+            elif rel == "supports" and tgt.startswith("venue:"):
+                venues.append(tgt.split(":", 1)[1])
+            elif rel.startswith("leg_constraint:"):
+                constraints.append({"relation": rel, "reason": str(e.get("reason") or "")})
+        rows.append(
+            {
+                "leg_id": leg_node_id.split(":", 2)[2],
+                "role": str(meta.get("role", "")),
+                "required": str(meta.get("required", "")),
+                "execution_coupling": str(meta.get("execution_coupling", "")),
+                "instrument_types": sorted(instrument_types),
+                "venues": sorted(venues),
+                "constraints": constraints,
+            }
+        )
+    return rows
+
+
 def get_manifest_provenance(manifest: dict) -> dict[str, str]:  # type: ignore[type-arg]
     """Return manifest_version + generated_from_commit."""
     return {

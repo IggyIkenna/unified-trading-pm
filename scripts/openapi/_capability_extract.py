@@ -45,6 +45,8 @@ REL_USES_FEATURE_GROUP = "uses_feature_group"
 REL_USES_MODEL = "uses_model"
 REL_MIN_DATA_TO_RUN = "min_data_to_run"
 REL_OFFERS = "offers"
+REL_HAS_LEG = "has_leg"
+REL_LEG_CONSTRAINT = "leg_constraint"
 
 
 def _node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> CapabilityNode:
@@ -148,6 +150,142 @@ def extract_archetypes_and_families() -> tuple[list[CapabilityNode], list[Capabi
                 )
 
     logger.info("  archetypes/families: %d nodes, %d edges", len(nodes), len(edges))
+    return nodes, edges
+
+
+# ---------------------------------------------------------------------------
+# (a2) Archetype leg structures (F22 — structural multi-leg restriction model)
+# ---------------------------------------------------------------------------
+
+
+def extract_leg_structures() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
+    """ARCHETYPE_LEG_STRUCTURES — the per-leg restriction SSOT (F22).
+
+    The flat ``ARCHETYPE_CAPABILITY_REGISTRY`` models a multi-leg archetype as a
+    set of ``(asset_group, instrument_type)`` cells; this gives the wizard only a
+    single instrument choice per cell (the F22 bug: a basis trade offered only
+    "Staking"). The leg registry refines that into structural legs. For each
+    seeded archetype we emit:
+
+      - a ``leg`` node per leg (id ``leg:<archetype>:<leg_id>``);
+      - ``archetype --has_leg--> leg`` (metadata: ``role`` + ``required``);
+      - ``leg --trades_instrument--> instrument_type`` per leg instrument type;
+      - ``leg --supports--> venue`` per eligible venue (the per-leg venue
+        restriction the flat mixed ``venue_ids`` list cannot express);
+      - ``leg --leg_constraint--> leg`` (self-edge) per typed constraint,
+        carrying the conditional in metadata (``constraint_kind`` +
+        ``fallback_variant`` + the constraint ``params``). The staked-basis
+        ``requires_collateral_acceptance`` conditional with its
+        ``straight_basis`` fallback is the headline.
+
+    Archetypes WITHOUT a leg structure get ONE ``not_registered`` ``legs`` gap
+    edge each (``archetype --has_leg--> archetype`` self-edge, gap
+    ``missing_registry``) — exhaustive honesty, never a silent omission.
+    """
+    from unified_api_contracts.internal.architecture_v2.archetype_leg_spec import (  # noqa: qg-deep-import
+        ARCHETYPE_LEG_STRUCTURES,
+        archetypes_without_leg_structures,
+    )
+
+    nodes: list[CapabilityNode] = []
+    edges: list[CapabilityEdge] = []
+    seen_nodes: set[tuple[str, str]] = set()
+
+    def add_node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> None:
+        key = (str(kind), node_id)
+        if key not in seen_nodes:
+            seen_nodes.add(key)
+            nodes.append(_node(kind, node_id, label, **meta))
+
+    for archetype in sorted(ARCHETYPE_LEG_STRUCTURES, key=lambda a: a.value):
+        struct = ARCHETYPE_LEG_STRUCTURES[archetype]
+        arch_id = archetype.value
+        add_node(CapabilityNodeKind.ARCHETYPE, arch_id, _titleize(arch_id))
+        for leg in struct.legs:
+            leg_node_id = f"leg:{arch_id}:{leg.leg_id}"
+            add_node(
+                CapabilityNodeKind.LEG,
+                leg_node_id,
+                f"{_titleize(arch_id)} — {leg.leg_id}",
+                role=leg.role.value,
+                required=str(leg.required).lower(),
+                archetype=arch_id,
+                execution_coupling=struct.execution_coupling.value,
+            )
+            edges.append(
+                CapabilityEdge(
+                    from_node_id=arch_id,
+                    to_node_id=leg_node_id,
+                    relation=REL_HAS_LEG,
+                    status=CapabilityEdgeStatus.AVAILABLE,
+                    reason=f"role={leg.role.value}; required={str(leg.required).lower()}",
+                )
+            )
+            # leg -> instrument_type (the per-leg instrument restriction)
+            for it in sorted(t.value for t in leg.instrument_types):
+                it_node_id = f"instrument_type:{it}"
+                add_node(CapabilityNodeKind.INSTRUMENT_TYPE, it_node_id, _titleize(it))
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=leg_node_id,
+                        to_node_id=it_node_id,
+                        relation=REL_TRADES_INSTRUMENT,
+                        status=CapabilityEdgeStatus.AVAILABLE,
+                    )
+                )
+            # leg -> venue (the per-leg eligible-venue restriction)
+            for venue_id in sorted(leg.eligible_venue_ids):
+                vid = f"venue:{venue_id}"
+                add_node(CapabilityNodeKind.VENUE, vid, _titleize(venue_id))
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=leg_node_id,
+                        to_node_id=vid,
+                        relation=REL_SUPPORTS,
+                        status=CapabilityEdgeStatus.AVAILABLE,
+                    )
+                )
+            # leg -> leg (self-edge) per typed constraint — the conditional
+            # restriction surface (collateral-acceptance / same-venue / atomic).
+            # CapabilityEdge has no metadata field, so the conditional (kind +
+            # sorted params + fallback_variant) is encoded deterministically in
+            # the relation string; the human description rides ``reason``.
+            for constraint in leg.constraints:
+                params_str = ";".join(f"{k}={constraint.params[k]}" for k in sorted(constraint.params))
+                relation = f"{REL_LEG_CONSTRAINT}:{constraint.kind.value}"
+                if params_str:
+                    relation += f"|{params_str}"
+                if constraint.fallback_variant is not None:
+                    relation += f"|fallback_variant={constraint.fallback_variant}"
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=leg_node_id,
+                        to_node_id=leg_node_id,
+                        relation=relation,
+                        status=CapabilityEdgeStatus.AVAILABLE,
+                        reason=constraint.description,
+                    )
+                )
+
+    # Honest gap: archetypes with NO leg structure → one not_registered gap edge.
+    for archetype in archetypes_without_leg_structures():
+        arch_id = archetype.value
+        add_node(CapabilityNodeKind.ARCHETYPE, arch_id, _titleize(arch_id))
+        edges.append(
+            CapabilityEdge(
+                from_node_id=arch_id,
+                to_node_id=arch_id,
+                relation=f"{REL_HAS_LEG}:legs",
+                status=CapabilityEdgeStatus.NOT_REGISTERED,
+                gap_type=CapabilityGapType.MISSING_REGISTRY,
+                reason=(
+                    f"{arch_id} has no leg structure in ARCHETYPE_LEG_STRUCTURES yet — "
+                    "structural per-leg restrictions not modelled (F22 leg-truth gap)"
+                ),
+            )
+        )
+
+    logger.info("  leg structures: %d nodes, %d edges", len(nodes), len(edges))
     return nodes, edges
 
 
