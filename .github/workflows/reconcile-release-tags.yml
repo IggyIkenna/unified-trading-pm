@@ -1,0 +1,61 @@
+name: reconcile-release-tags
+
+# PM-only release-tag reconciler — closes the tag-creation gap in the release machinery (2026-06-11).
+#
+# WHY: the release flow had a MISSING LINK. semver-agent pushes `chore(release): bump version to X` to
+# `staging` and dispatches the bump to PM (update-repo-version writes the manifest); `publish-package`
+# triggers ON a `v*` tag — but NOTHING creates that tag. Every release tag to date was hand-created
+# (`v0.4.0` by slot-1 2026-06-09; `v0.6.0`/`v0.6.1` during the 2026-06-11 keystone recovery). So a
+# staging→main promotion — automated drain OR a manual `gh pr create --base main --head staging` — leaves
+# `main` at the new version with no tag → `publish-package` never fires → consumers' version-aware dep-clone
+# keeps resolving the stale tag (the exact dep-floor class that jammed the fleet 2026-06-11).
+#
+# WHAT: for every manifest repo, compare `main`'s `pyproject.toml` version to the existing `v*` tags and
+# create the matching `vX.Y.Z` tag on `main` HEAD when absent. Idempotent (skips if the tag exists),
+# path-independent (catches the automated drain AND a manual promote), guarded (never tags a pre-release or
+# a version BELOW the latest tag — no backfill of a reverted version). Creating the tag is what then fires
+# each repo's `publish-package` (`push: tags: v*`).
+#
+# SAFETY: only CREATES tags (never moves/deletes); a tag is created solely when `main`'s own source version
+# has no matching tag, so it always agrees with the promoted source. SSOT:
+# codex/08-workflows/ci-cd-flow.md § "Release tag reconciler".
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # within ~15 min of a release reaching main → publish-package fires promptly
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report what WOULD be tagged without creating"
+        type: boolean
+        required: false
+        default: false
+  repository_dispatch:
+    types: [reconcile-release-tags]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reconcile-release-tags
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Reconcile release tags
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          DRY=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then DRY="--dry-run"; fi
+          # --max-creates 5: a one-time fleet backlog (≈20 untagged released versions, 2026-06-11) drains
+          # over a few */15 ticks instead of firing 20 publish-package runs at once (shared-rate-limit safe);
+          # a normal single release is well under the cap and tags within one tick.
+          python3 scripts/cicd/reconcile_release_tags.py $DRY --max-creates 5

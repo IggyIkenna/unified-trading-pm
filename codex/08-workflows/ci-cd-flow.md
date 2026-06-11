@@ -108,22 +108,26 @@ path to `main`** until the next quickmerge opens a new one.
 
 ### LDR-trunk decoupling — quickmerge lands on LDR; the drain promotes; hotfix is the only break-glass (2026-06-10)
 
-`live-defi-rollout` is the **gateless integration trunk in practice**. SSOT: `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md`. What is **live**:
+`live-defi-rollout` is the **gateless integration trunk in practice**. SSOT:
+`plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md`. What is **live**:
 
 - **`quickmerge --agent --files` lands on LDR and stops** — for a service repo it no longer opens a per-unit LDR→staging
   PR (PM→main and `[skip ci]`→main paths are unchanged). The local `quality-gates.sh` sentinel is the LDR-landing gate.
-- **Promotion is the Tier-C batched drain** (`ldr-to-staging-promote.yml`, **every 30 min** `13,43 * * * *`), tier-ordered
-  + dep-order-gated. Its LDR→staging PR's `quality-gates-v2` (deps resolved against **staging-tier**, `base_ref=staging`)
-  is the authoritative server gate — that PR's head IS `live-defi-rollout`, so it *is* "CI on LDR content". **LDR never
-  runs server QG itself** (a raw LDR-push QG lacks the staging base-ref → would re-break the dep-floor / BLR class).
+- **Promotion is the Tier-C batched drain** (`ldr-to-staging-promote.yml`, **every 30 min** `13,43 * * * *`),
+  tier-ordered
+  - dep-order-gated. Its LDR→staging PR's `quality-gates-v2` (deps resolved against **staging-tier**,
+    `base_ref=staging`) is the authoritative server gate — that PR's head IS `live-defi-rollout`, so it _is_ "CI on LDR
+    content". **LDR never runs server QG itself** (a raw LDR-push QG lacks the staging base-ref → would re-break the
+    dep-floor / BLR class).
 - **The staging-coupled gates are scoped to `--hotfix`** — quickmerge STAGE 1.5 (staging-lock) and STAGE 1.7 (dep-tier)
-  fire only on a `--hotfix`; a normal LDR landing skips them (the drain re-gates dep-order). STAGE 1.6 (dep-version) is a
-  WARN for a normal landing, a BLOCK on `--hotfix`.
+  fire only on a `--hotfix`; a normal LDR landing skips them (the drain re-gates dep-order). STAGE 1.6 (dep-version) is
+  a WARN for a normal landing, a BLOCK on `--hotfix`.
 - **`--hotfix` is an auditable break-glass** — requires a `[hotfix]` marker in the commit message, opens an immediate
   staging PR, and **still hits the staging lock** (a queue-jumping change must reconcile with what's converging). A
   `--hotfix-to-main` (operator-gated; **not yet shipped** — needs a dedicated single-commit branch off main, since a raw
-  LDR→main PR would promote the *whole* trunk) is the exceptional main-direct path, gated only by `quality-gates-v2` on main.
-- **`STAGING_GREEN` inherits from the promote PR (A1, live)** — `python-quality-gates-v2.yml` maps a green PR *into*
+  LDR→main PR would promote the _whole_ trunk) is the exceptional main-direct path, gated only by `quality-gates-v2` on
+  main.
+- **`STAGING_GREEN` inherits from the promote PR (A1, live)** — `python-quality-gates-v2.yml` maps a green PR _into_
   staging (`base_ref=staging`) to `STAGING_GREEN`; the redundant `push:[staging]` QG run is slated to be dropped (A3).
 - **The promote bot promotes only quickmerge-provenanced content (D1, live)** — both `ldr-to-staging-promote.yml` and
   `ldr-to-main-promote.yml` run `check_strict_quickmerge.py` over the promote range before arming auto-merge; a
@@ -462,13 +466,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
@@ -943,3 +947,29 @@ gh workflow run quality-gates-v2.yml --repo IggyIkenna/<repo> --ref <pr-head-bra
 on `live-defi-rollout` jammed its LDR→`main` promotion PR #9 — v2 never ran on the deletion commit, so the required
 check was missing and admin-merge was refused. Fixed by dispatching `quality-gates-v2` on the head. Composes with the
 AUTONOMOUS_AGENT_RULES Rule 11 (verify blast radius / all branches before declaring a fleet/branch change done).
+
+## Release tag reconciler — the missing link in the release machinery (codified 2026-06-11)
+
+The release flow has THREE parts but a missing fourth: `semver-agent` pushes `chore(release): bump version to X` to
+`staging` + dispatches the bump to PM; `update-repo-version.yml` records the version in `workspace-manifest.json`;
+`publish-package.yml` triggers **on a `v*` tag** (`push: tags: v*` / `release: created`) → publishes. **Nothing creates
+the git tag.** Every release tag was hand-created (`v0.4.0` by slot-1 2026-06-09 "reconcile UTL source…to match
+manifest"; `v0.6.0`/`v0.6.1` during the 2026-06-11 keystone recovery). So a staging→main promotion — the automated drain
+OR a manual `gh pr create --base main --head staging` — leaves `main` at the new version with **no tag** →
+`publish-package` never fires, and consumers' version-aware dep-clone keeps resolving the **stale** tag. A 2026-06-11
+fleet dry-run found **20 repos** in exactly this state (main version bumped, no matching tag) — the same dep-floor class
+that jammed the fleet that day (a consumer pinning `dep>=X` while the dep's latest _tag_ was `<X`).
+
+**The fix — `reconcile-release-tags.yml` (PM-only, `*/15` + `workflow_dispatch` + `repository_dispatch`).** For every
+manifest repo it compares `main`'s `pyproject.toml` version to the existing `v*` tags and creates the matching `vX.Y.Z`
+tag on `main` HEAD when absent (`scripts/cicd/reconcile_release_tags.py`). It is **idempotent** (skips if the tag
+exists), **path-independent** (catches the automated drain AND a manual promote — no reliance on `staging-to-main`), and
+**guarded**: only plain `X.Y.Z` releases (no pre-release suffix), never a version _below_ the latest tag (no backfill of
+a reverted/clean-start version), and `--max-creates 5` so a one-time backlog drains over a few ticks instead of firing N
+`publish-package` runs at once (shared-rate-limit safe — see the rate-limit note below). Creating the tag is what then
+fires each repo's `publish-package`. SSOT script: `scripts/cicd/reconcile_release_tags.py`.
+
+**Shared-rate-limit caveat (2026-06-11):** the CI runners' dep-clone steps authenticate as the **same GitHub user**
+(`41865197`) that `gh` calls + polling monitors use, so aggressive local polling **starves the runners' 5000/hr budget**
+and makes CI runs fail spuriously at the dep-clone step (it broke two keystone runs mid-recovery). Keep
+release/promotion monitors low-frequency, and the reconciler caps its per-run creations for the same reason.
