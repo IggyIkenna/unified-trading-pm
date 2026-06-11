@@ -168,9 +168,12 @@ unchanged:
       `DataStatusService` becomes a thin **facade** that composes these (mixins or delegation) — same public methods, no
       caller churn. `data_status_drilldown.py` (2,586) + `data_status.py` (2,550) get the same treatment. Repo:
       deployment-api.
-- [ ] [REFACTOR] P1. **unified-trading-api `seed.py` (5,169 L)** — if it's seed DATA (fixtures/records), same pattern as
-      registry.py: move the data to a data file + a thin seeding loader; if it's seed LOGIC, split by domain. Census
-      (Phase 0) confirms which. Repo: unified-trading-api.
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — unified-trading-api@42f12ab: seed.py confirmed DATA → 5,169 L → 470 L thin
+      loader + 72 `mock_data/seed_data/*.json` domain files; seed.py excludes removed from FUNCTION_SIZE/EMPTY_*/
+      IMPORT_INSIDE globs; `CODEX_MAX_VIOLATIONS=0` pinned; equality + org-integrity tests extended
+      (tests/unit/test_seed_quality.py); full QG green. Original: **unified-trading-api `seed.py` (5,169 L)** — if it's
+      seed DATA (fixtures/records), same pattern as registry.py: move the data to a data file + a thin seeding loader;
+      if it's seed LOGIC, split by domain. Census (Phase 0) confirms which. Repo: unified-trading-api.
 - [ ] [REFACTOR] P1. **agent-orchestrator `server.py` (4,470 L)** — split the FastAPI route module by surface into
       `server/routes/*.py` (slots / git-status+fleet / vms+proxy / accounts / backlog / agents), each an `APIRouter`
       mounted on the app; the view-helpers (`_slot_to_view`/`_build_local_git_health`/`_summarise_git_health`) move with
