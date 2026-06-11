@@ -95,12 +95,13 @@ source:
   - [x] ✅ [INFRA] P0. **Measurement must NOT dirty the trees — TWO leak/dirt mechanisms found + fixed (2026-06-11).**
         (1) **Auto-fix dirtied 20+ repos**: `QG_PROFILE=1` was forcing `FIX_MODE=true`, so every profiled repo got a
         tree-wide `prettier --write "**/*"` + `ruff --fix` — the exact churn `FIX_MODE` defaults false to avoid. Fixed
-        in `base-service.sh` (QG_PROFILE keeps `FIX_MODE=false`, matching this plan's "--no-fix during measurement"
-        methodology); the small auto-fix span cost is not worth dirtying the fleet. (2) **Markers leaked into repos**: a
-        RELATIVE `--outdir` resolved against the gate's `cwd=<repo>`, writing `<repo>.markers.jsonl` into 22 repo trees.
-        Fixed: outdir resolved ABSOLUTE + a guard refuses any git-tracked outdir. Cleanup: removed all leaked
-        markers/smoke dirs + reverted 72 auto-fixed (formatting-only, token-identical-to-HEAD) files across the fleet;
-        real-content WIP left untouched. — base-service.sh + profile_qg_resources.py (unified-trading-pm@<sha>)
+        in BOTH `base-service.sh` + `base-library.sh` (QG_PROFILE keeps `FIX_MODE=false`, matching this plan's "--no-fix
+        during measurement" methodology); the small auto-fix span cost is not worth dirtying the fleet. (2) **Markers
+        leaked into repos**: a RELATIVE `--outdir` resolved against the gate's `cwd=<repo>`, writing
+        `<repo>.markers.jsonl` into 22 repo trees. Fixed: outdir resolved ABSOLUTE + a guard refuses any git-tracked
+        outdir. Cleanup: removed all leaked markers/smoke dirs + reverted 72 auto-fixed (formatting-only,
+        token-identical-to-HEAD) files across the fleet; real-content WIP left untouched. — base-service.sh +
+        profile_qg_resources.py (unified-trading-pm@022c3113e)
 
 ### Phase 0 todos
 
@@ -112,17 +113,17 @@ source:
       multi-repo mode, `--output` alias for `--outdir`, macOS portability (ps-pgid RSS fallback + unpinned-when-no-
       taskset, flagged in report) so smokes run on operator laptops. — unified-trading-pm (unified-trading-pm@779dc3683)
 - [x] ✅ [SCRIPT] P0. **Parallel-pinned measurement runner — DONE** (`profile_qg_resources.py --parallel`,
-      unified-trading-pm@<sha>). Each repo runs on its OWN core (`taskset -c`, pool `--cores`, default nproc-4) under a
-      weighted **RAM-token budget** (`--ram-budget-gb`, default 0.8×MemAvailable; per-repo `--per-repo-gb` 4G / heavy
-      UTL+UAC `--heavy-gb` 6.5G) so two heavies never overlap + the host never swaps — two limiters compose (free-core
-      queue × RAM-token Condition). `--all` discovers every sibling repo with a `quality-gates.sh`. Each concurrent run
-      still measures TRUE single-core wall (own pinned core + `QG_THREAD_CAP=1`/`PYTEST_WORKERS=1`). Uses the evolved
-      **`QG_PROFILE=1`** full-no-skip override (supersedes the plan's original `QG_SENTINEL_DISABLE=true … --no-fix`
-      combo — `QG_PROFILE=1` disables the sentinel, forces a complete run, relaxes only the `<MAX_DURATION>` meta-gate,
-      in BOTH bases) + `QG_GOVERNOR_DISABLE=true QG_MEM_CAP=0`. Per-repo raw stdout → `<repo>.log` (no interleave),
-      per-repo JSON/txt + combined CSV + a cross-repo summary with a **`complete`/`⚠PARTIAL`** flag. Validated by a
-      3-repo parallel smoke (cores 2–4, budget tracked 28.8→20.8G, distinct per-repo wall+peak). —
-      unified-trading-pm@<sha>
+      unified-trading-pm@022c3113e). Each repo runs on its OWN core (`taskset -c`, pool `--cores`, default nproc-4)
+      under a weighted **RAM-token budget** (`--ram-budget-gb`, default 0.8×MemAvailable; per-repo `--per-repo-gb` 4G /
+      heavy UTL+UAC `--heavy-gb` 6.5G) so two heavies never overlap + the host never swaps — two limiters compose
+      (free-core queue × RAM-token Condition). `--all` discovers every sibling repo with a `quality-gates.sh`. Each
+      concurrent run still measures TRUE single-core wall (own pinned core + `QG_THREAD_CAP=1`/`PYTEST_WORKERS=1`). Uses
+      the evolved **`QG_PROFILE=1`** full-no-skip override (supersedes the plan's original
+      `QG_SENTINEL_DISABLE=true … --no-fix` combo — `QG_PROFILE=1` disables the sentinel, forces a complete run, relaxes
+      only the `<MAX_DURATION>` meta-gate, in BOTH bases) + `QG_GOVERNOR_DISABLE=true QG_MEM_CAP=0`. Per-repo raw stdout
+      → `<repo>.log` (no interleave), per-repo JSON/txt + combined CSV + a cross-repo summary with a
+      **`complete`/`⚠PARTIAL`** flag. Validated by a 3-repo parallel smoke (cores 2–4, budget tracked 28.8→20.8G,
+      distinct per-repo wall+peak). — unified-trading-pm@022c3113e
   - [ ] [INFRA] P1. **Measurement-prerequisite finding (smoke 2026-06-11): some repo `.venv`s are incomplete → the gate
         EARLY-BAILS at TESTS and the profile is PARTIAL, not full.** greeks-service exited at `[3/6] TESTS` in 10 s on
         `❌ pytest-timeout required: uv pip install pytest-timeout` (vs ibkr/alerting which ran all of `[0/6]→[5/6]` and

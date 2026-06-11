@@ -9,8 +9,8 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 created: 2026-06-10
 source:
-  - operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md) — "crumbs from
-    each machine — my hashes, the AWS VMs — dirty local worktrees vs the LDR remote, on the agent-orchestrator website"
+  - 'operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md) — "crumbs from
+    each machine — my hashes, the AWS VMs — dirty local worktrees vs the LDR remote, on the agent-orchestrator website"'
 related_plans:
   - plans/active/monitoring_control_plane_master_2026_06_10.md
 locked_by: live-defi-rollout

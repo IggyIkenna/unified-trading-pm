@@ -123,6 +123,13 @@ else
   done
 fi
 
+# Strict machine-readability gate: the block must PARSE as YAML, not just contain the
+# field lines (grep-presence passed while yaml.safe_load failed → blank-everywhere plans;
+# incident 2026-06-11, Epics-dashboard false orphans). Same skip rules, same FILES mode.
+if ! timeout 60 python3 "$PM_DIR/scripts/plan-hygiene/check_frontmatter_yaml.py" "${FILES[@]+"${FILES[@]}"}"; then
+  FAILURES=$(( FAILURES + 1 ))
+fi
+
 echo ""
 if [ "$FAILURES" -gt 0 ]; then
   echo "❌ check_frontmatter: ${FAILURES} file(s) with violations"
