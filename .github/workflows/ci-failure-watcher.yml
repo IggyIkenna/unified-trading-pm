@@ -36,6 +36,18 @@ jobs:
         with:
           python-version: "3.13"
 
+      # GitHub App installation token — draws from the App's OWN 5000 req/hr pool
+      # (separate from the shared user PAT). owner: IggyIkenna scopes it fleet-wide
+      # (cross-repo run/PR reads + the close/reopen/supersede/close-superseded writes
+      # + the escalate repository_dispatch, all of which an App token CAN trigger,
+      # unlike the repo-scoped GITHUB_TOKEN). App perms: Contents+PullRequests+Actions R/W.
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+
       - name: Authenticate to GCP (Firestore repo-state write — best-effort)
         id: gcp_auth_watcher
         continue-on-error: true
@@ -50,9 +62,9 @@ jobs:
       - name: Scan fleet for CI transitions + stuck promotion PRs
         id: scan
         env:
-          # Cross-repo run/PR reads need fleet-wide access; the default GITHUB_TOKEN is
-          # scoped to this repo only. GH_PAT carries the fleet read scope.
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          # Cross-repo run/PR reads + recovery writes via the App token (separate 5000/hr
+          # pool). owner-scoped, so fleet-wide — unlike the repo-scoped GITHUB_TOKEN.
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
         # --auto-recover: deterministically fix the v2-NEVER-REPORTED deadlock in-band. Two
         #   mechanisms by head kind: clean-message token-suppressed head → close+reopen
