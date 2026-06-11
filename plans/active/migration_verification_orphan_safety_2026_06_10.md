@@ -126,8 +126,12 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 - [x] ✅ [SCRIPT] P0. Framework `migration_schema_completeness.py`: footer-column union per (AG, data_type, venue) vs
       the v9 UAC canonical contract (`schema_spec.find_schema`); RED on any silently-dropped column; partition/meta
       columns excluded; rides the orphan-sweep object list (single-walk). 8 tests. — is@da74c72c.
-- [ ] [RUN] P0. Per-AG: any source column not carried into v9 = RED → carry it (extend canonical schema BEFORE apply) or
-      operator-ack the drop in this plan. **Zero silent truncation.** cefi/pred=slot-3; defi/tradfi/sports=slot-2.
+- [x] ✅ [RUN] P0. (2026-06-11 R2 COMPLETE — CITADEL, zero acked drops: uac@715e2ed carries ALL source columns incl. the
+      11 polymarket cols via source_aliases rename maps + new defi/tradfi/prediction SchemaSpecs; alias-aware matching
+      via UAC carried_column_names shipped in the checker; VERDICTS: defi 0 RED/32 cells, tradfi 0 RED/19, prediction 0
+      RED/2; cefi re-verifies on R1's sweep re-run) Per-AG: any source column not carried into v9 = RED → carry it
+      (extend canonical schema BEFORE apply) or operator-ack the drop in this plan. **Zero silent truncation.**
+      cefi/pred=slot-3; defi/tradfi/sports=slot-2.
 
 ## V4 — Candle edge-timestamp audit (CF-19) — per-AG owner of the external OHLCV source
 
@@ -190,6 +194,16 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 6. CF-15…CF-21 encoded in the checklist + owning per-service instruction files (re-runnable forever).
 
 ## Progress Log
+
+- 2026-06-11 (~09:00Z, autonomous run) — **V3/CF-18 GREEN (R2 ratified decision #2 COMPLETE)**: UAC carries every source
+  column (prediction trades/prediction*trades incl. the 11 polymarket columns + trader-profile payload, defi
+  rewards/risk_params/utilization/dex_pool_swaps subgraph fields, tradfi trades/tbbo) via `source_aliases` rename maps
+  in new
+  `registry/\_schema_spec*{defi,prediction,tradfi}.py`(uac@715e2ed); the completeness checker now matches via UAC`carried_column_names`
+  (canonical ∪ aliases — renamed-but-carried is GREEN, genuine drop stays RED; is ship). RE-RUN VERDICTS vs real prod
+  GCS: **defi 0 RED (32 cells) · tradfi 0 RED (19) · prediction 0 RED (2)**. cefi re-verifies when R1's sweep re-run
+  produces its report parquet. NOTE: the R-wave agents hit the account session limit (resets 10:10Z) — R2 was finished
+  INLINE from their preserved WIP; R1/R4/R5/R6 resume per the brief in the master plan.
 
 - 2026-06-10 — plan filed from audit `migration_orphan_safety_goalpost_verification_2026_06_10.md`; CF-15…CF-21 drafted
   into the canonical checklist (V7 item 1); registered as G3.5 in the master coordinator. Awaiting operator review +

@@ -112,6 +112,7 @@ ignore = [
     "scripts/generators/generate_strategy_manifest_dag.py",
     "scripts/generators/reverse-dependency-lookup.py",
     "scripts/generate-ui-vision-pptx.py",
+    "scripts/ui_vision_pptx",
     "scripts/agents/rollup_resolved_pings.py",
     "scripts/cascade/invalidate-ci-status.py",
     "scripts/catalogue/sync-catalogue-yaml.py",
@@ -218,6 +219,7 @@ omit = [
     "scripts/check-cross-plan-gates.py",  # Plan-gate checker; requires live filesystem, not unit-tested
     "scripts/validate-manifest-dag.py",  # DAG validator; integration-only, not unit-tested
     "scripts/generate-ui-vision-pptx.py",  # Requires python-pptx which is not a project dependency
+    "scripts/ui_vision_pptx",  # pptx deck package (split from the script 2026-06-11) — same python-pptx carve-out
 ]
 
 [tool.coverage.report]
