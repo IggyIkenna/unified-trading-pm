@@ -75,7 +75,7 @@
     "features-service": "0.1.2",
     "fund-administration-service": "0.3.0",
     "ibkr-gateway-infra": "0.1.0",
-    "instruments-service": "0.30.0",
+    "instruments-service": "0.4.0",
     "market-tick-data-service": "0.6.0",
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.6.0",
@@ -632,7 +632,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.1.22",
+      "version": "0.4.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -1788,22 +1788,13 @@
     "locked_since": null,
     "locked_reason": null,
     "lock_version": null,
-    "pending_repos": [
-      "instruments-service"
-    ],
+    "pending_repos": [],
     "sit_retry_count": 3,
     "locked_alert_sent": false,
-    "breaking_pending": [
-      "instruments-service"
-    ]
+    "breaking_pending": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "instruments-service": {
-      "version": "0.4.0",
-      "sha": "d5de34bae02b19ce845d2c54bca2b0aefd458079",
-      "branch": "staging"
-    },
     "batch-live-reconciliation-service": {
       "version": "0.5.0",
       "sha": "96b79526d858f5244082bcc6cb07fce9e973d9df",
@@ -1956,8 +1947,6 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {
-    "instruments-service": 2
-  },
+  "promotion_failures": {},
   "promotion_quarantine": {}
 }
