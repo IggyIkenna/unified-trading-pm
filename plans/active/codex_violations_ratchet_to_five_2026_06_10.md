@@ -169,8 +169,18 @@ unchanged:
       `filter_instruments_by_date`), `sink.py` (`_gated_sink_write`/`_coerce_adapter_output`), `failure.py`
       (`_classify_adapter_failure`). `orchestrator.py` becomes the thin coordinator that imports + sequences these.
       Repo: instruments-service.
-- [ ] [REFACTOR] P1. **deployment-api `data_status_service.py` (6,663 L / 69-method `DataStatusService` god-class) —
-      abstract the domain logic out (operator 2026-06-10).** Suggested package `services/data_status/`: `defi.py`
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — deployment-api@6b7aa69: data_status_service.py 6,663 L → 638-line facade +
+      15-module `services/data_status/` package (defi/sports/coverage/manifest/missing_shards/venue_resolution/cli/
+      breakdowns/mtds/rollup_cache/... all ≤864 L); `DataStatusService` keeps all 80 public methods (delegation, zero
+      caller churn). Mid-flight foreign F4 seeded-4state-denominator fix (deployment-api@644e439) GRAFTED into the
+      split layout (helpers + seeded branch in data_status/mtds.py; its test adapted to load mtds.py — all 147
+      data-status tests green). Bonus: last strategy_service import (treasury NAV) flipped to UTL → strategy-service
+      path-dep REMOVED from pyproject + PM workspace-manifest (no-service↔service HARD RULE), budget ratcheted back
+      25→24 (the transient 25th class was the manifest-alignment edge). drilldown/routes follow-up stays below.
+      Original: **deployment-api `data_status_service.py` (6,663 L / 69-method god-class) — abstract the domain logic
+      out (operator 2026-06-10).**
+- [ ] [REFACTOR] P2. **deployment-api `data_status_drilldown.py` (2,586 L) + `routes/data_status.py` (2,550 L)** —
+      same facade treatment as the service split (routers preserved byte-identical). Repo: deployment-api. Suggested package `services/data_status/`: `defi.py`
       (`_is_legacy_defi_venue_row`/`_read_defi_merged_index`/`_allowed_defi_venue_chain_pairs`/
       `_filter_to_canonical_defi_venues`/`_filter_legacy_defi_rows`), `sports.py` (`_is_sports_reference_venue`/
       `_is_understat_venue`/`_is_transfer_window_venue`/`_is_sparse_sports_entity`/`_get_reference_expected_dates`),
@@ -208,15 +218,21 @@ unchanged:
       (MTDS@5df7872-adjacent) grafted into manifest_finalize; contract-call conservation 79 ≥ baseline 67; full QG
       green. REMAINING in this item: `tardis_adapter.py` (2,880) + `solana_defi_handler.py` (2,125) — decompose by
       venue/transport. Repo: market-tick-data-service.
-- [ ] [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
+- [x] ✅ [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
       + 6 archetype-family modules; batch_handler.py 1,570→847 + 4 concern modules; TARGET_UNIVERSE content-hash
       identical pre/post; budget ratcheted 11→10 (census-honest). Cross-repo finding surfaced: execution-service
       `defi_target_universe_rebalance_recommender.py:310` imports `specs_for_archetype` from the strategy-service
       module path — KNOWN/sanctioned via UAC `service_contract_map.py:216` forbidden_exceptions + deprecation_ledger
-      (move to UAC registry long-term); facade preserves the path so the consumer is unaffected. REMAINING in this
-      item: **market-data-processing `canonical_writer.py` (2,412)** + **execution-service** adapters >1k
-      (`kraken_rest_adapter` 1,299 / `uniswap` 1,245 / `aave` 1,136) — split each below 900 (agents in flight).
-      Repos: market-data-processing-service / execution-service.
+      (move to UAC registry long-term); facade preserves the path so the consumer is unaffected.
+      **MDPS DONE 2026-06-11** — market-data-processing-service@1cdf3ec: canonical_writer 2,412→536 facade + 4 modules
+      (manifest/shaping/stamping/streaming); live_workers 1,731→516 + 2 modules (chain/streaming); databento
+      classifier import flipped to its new UAC `external/databento` home + the banned MTDS path-dep REMOVED from
+      pyproject (no-service↔service); budget ratcheted 10→7 (census-honest); full QG green.
+      **execution-service DONE 2026-06-11** — execution-service@48eec983: kraken_rest_adapter 1,299→683+443+283 /
+      uniswap 1,245→565+478+342 / aave 1,136→629+578 / manual_instruction_api 1,085→815+368 / gcs_data_loading
+      1,012→781+281 + amm/betfair companions, all below 900 with facade modules preserved; budget ratcheted 24→21
+      (census-honest); full QG green (292s). lxml advisory: not a direct execution-service dep (transitive) — tracked
+      under the pip-audit class in Phase 4. ITEM COMPLETE — flipping checkbox:
 - [ ] [REFACTOR] P3. **ml-service** (`cloud_feature_provider` 1,202 / `training_orchestrator` 1,027) +
       **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143) — split the >900
       tail. Repos: ml-service / unified-trading-pm.
