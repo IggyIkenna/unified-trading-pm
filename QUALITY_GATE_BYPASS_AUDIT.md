@@ -164,6 +164,14 @@ failures (network, timeout, HTTP errors) never block the DAG validation script. 
 Firestore unavailability (SDK missing, no credentials, network error) never blocks the promotion gate. Falling back to
 the manifest ci_status values on any error is the intended safe-default behaviour. Added 2026-06-11.
 
+**Additional:** `scripts/cicd/promotion_lag_monitor.py` — `_write_firestore_promotion_lag()` catches `Exception` so a
+missing Firestore SDK or absent credentials never blocks the lag monitor from running and alerting. The write is
+explicitly best-effort; the monitor's core function (lag detection + alerting) is independent. Added 2026-06-11.
+
+**Additional:** `scripts/repo-management/ci_failure_watcher.py` — `_write_firestore_ci_watcher()` catches `Exception` so
+Firestore unavailability never blocks the CI watcher from scanning and paging. The write is explicitly best-effort.
+Added 2026-06-11.
+
 **Audit trail:** Added 2026-03-04. validate-manifest-dag.py added 2026-03-13.
 
 ---

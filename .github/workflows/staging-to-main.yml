@@ -326,11 +326,26 @@ jobs:
           import json
           import os
           import sys
+          sys.path.insert(0, "scripts/cicd")
 
           MANIFEST = "workspace-manifest.json"
 
           # Statuses that mean dep IS on main (PASS)
           ON_MAIN_STATUSES = {"MAIN_GREEN", "SIT_VALIDATED"}
+
+          # Phase 2: Firestore-authoritative ci_status overlay — safe no-op if unavailable.
+          def _fs_overlay(manifest):
+              try:
+                  from ci_status_store import resolve_ci_status_map  # noqa: imports-inside-functions
+                  ci_map = resolve_ci_status_map(manifest)
+                  repos_obj = manifest.get("repositories", {})
+                  if isinstance(repos_obj, dict):
+                      for r, s in ci_map.items():
+                          r_obj = repos_obj.get(r)
+                          if isinstance(r_obj, dict):
+                              r_obj["ci_status"] = s
+              except Exception:
+                  pass
 
           def export_ready(repos):
               """Write the READY set to GITHUB_ENV so downstream steps filter to it.
@@ -359,6 +374,8 @@ jobs:
               # Cannot read manifest → cannot derive a ready subset; let downstream
               # re-derive the full pending set (READY_REPOS unset = no filter).
               sys.exit(0)
+
+          _fs_overlay(manifest)
 
           staging_versions = manifest.get("staging_versions", {})
           stable_versions = manifest.get("versions", {})
@@ -908,10 +925,25 @@ jobs:
           set -euo pipefail
 
           python3 - <<PYEOF
-          import json, datetime, os
+          import json, datetime, os, sys
+          sys.path.insert(0, "scripts/cicd")
+
+          def _fs_overlay(m):
+              try:
+                  from ci_status_store import resolve_ci_status_map
+                  ci_map = resolve_ci_status_map(m)
+                  repos_obj = m.get("repositories", {})
+                  if isinstance(repos_obj, dict):
+                      for r, s in ci_map.items():
+                          r_obj = repos_obj.get(r)
+                          if isinstance(r_obj, dict):
+                              r_obj["ci_status"] = s
+              except Exception:
+                  pass
 
           with open("workspace-manifest.json") as f:
               manifest = json.load(f)
+          _fs_overlay(manifest)
 
           staging_versions = manifest.get("staging_versions", {})
           stable_versions = manifest.get("versions", {})
