@@ -123,15 +123,15 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       cells, total UIC enums 227 (up from single-digits).
 - [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
       `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift. **PARTIAL 2026-06-11
-      (capability-exporter, slot-4):** UAC-importable outputs regenerated + committed —
-      `ui-reference-data.json` (byte-identical to committed = already current post-Phase-0),
-      `capability-manifest.json` (new, unified-api-contracts@1bc2f07). **STILL BLOCKED ON-HOST:**
-      `config-registry.json` + `unified-trading-system.openapi.json` need every service importable in ONE interpreter
-      (`.venv-workspace`), which is ABSENT on this host — `generate_config_registry.py` extracts 0/32 and would EMPTY
-      the registry if committed (restored via `git checkout`; finding F12). The per-service `.venv`s exist (the
-      capability exporter uses them via subprocess), but the aggregate spec generator does not yet do per-service-venv
-      extraction. Full run must happen on the laptop / CI runner with `.venv-workspace`; the `uic-openapi-sync` CI
-      regenerates TS types on its runner regardless.
+      (capability-exporter, slot-4):** UAC-importable outputs regenerated + committed — `ui-reference-data.json`
+      (byte-identical to committed = already current post-Phase-0), `capability-manifest.json` (new,
+      unified-api-contracts@1bc2f07). **STILL BLOCKED ON-HOST:** `config-registry.json` +
+      `unified-trading-system.openapi.json` need every service importable in ONE interpreter (`.venv-workspace`), which
+      is ABSENT on this host — `generate_config_registry.py` extracts 0/32 and would EMPTY the registry if committed
+      (restored via `git checkout`; finding F12). The per-service `.venv`s exist (the capability exporter uses them via
+      subprocess), but the aggregate spec generator does not yet do per-service-venv extraction. Full run must happen on
+      the laptop / CI runner with `.venv-workspace`; the `uic-openapi-sync` CI regenerates TS types on its runner
+      regardless.
 - [x] ✅ [VERIFY] P0. Drift CI gate: `_validate_service_coverage()` now exits nonzero on mismatch (fail-on-drift
       implemented in-run). DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Scheduled workflow is a Phase 1 item
       (deferred — fail-on-run counts as the enforcement gate for now).
@@ -144,38 +144,39 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       `missing_registry | missing_extraction | needs_code_scan | logical_dead_end` + `agent_annotation` field for
       written-back agent answers. DONE 2026-06-11 — unified-api-contracts@6f31f59 (capability_manifest.py: 14 node
       kinds, deterministic to_canonical_dict(), 40 unit tests green, QG exit 0).
-- [x] ✅ [IMPLEMENT] P0. Extract: STRATEGY_REGISTRY + ARCHETYPE_CAPABILITY_REGISTRY (archetype × venue_category ×
+- [x] ✅ [IMPLEMENT] P0. Extract: STRATEGY*REGISTRY + ARCHETYPE_CAPABILITY_REGISTRY (archetype × venue_category ×
       instrument_type), venue/instrument universe (ENDPOINT_REGISTRY incl. per-venue access_mode/auth requirements +
       VENUE_CATEGORY_MAP/INSTRUMENT_TYPES_BY_VENUE/DEFI_VENUE_TO_PROTOCOL/CHAIN_RPC_TEMPLATES), execution algos
       (per-service venv), feature groups (34, per-group lookback), ML model registry, KillSwitchReason + RiskGateLayer,
       data sources + transports, gap registries (collateral/fees/sim/fund/order/agent + treasury split). DONE 2026-06-11
-      — unified-trading-pm@78b2e893a (generate_capability_manifest.py + _capability_{extract,gaps,orphan}.py) →
+      — unified-trading-pm@78b2e893a (generate_capability_manifest.py + \_capability*{extract,gaps,orphan}.py) →
       unified-api-contracts@1bc2f07 (capability-manifest.json: 409 nodes, 663 edges). NOTE: instruments-service
       `InstrumentRecord` / sports-leagues-from-snapshot / deployments-topology NOT yet wired (venue/instrument universe
       comes from UAC registries, which is sufficient for v1); those are v2 enrichments. instruction-types/order-type/TIF
       enums surface via the order_semantics gap-registry node (honest-empty until backfill).
 - [x] ✅ [IMPLEMENT] P1. Source-mode matrix extraction: batch is emitted `available` per source; live/replay per source
       emit typed `missing_registry` gap edges (the matrix lives in the manual
-      `source-mode-capability-matrix_2026-06-07.md` audit, NOT a UAC registry — per task direction, gap rather than parse
-      the markdown). Transport edges use `default_transport_for_source`. DONE 2026-06-11 — unified-trading-pm@78b2e893a
-      (_capability_extract.py extract_data_sources). The matrix→UAC-registry codification is the gap-close follow-up
-      (tracked in gap-discovery doc 2026-06-11 entry).
+      `source-mode-capability-matrix_2026-06-07.md` audit, NOT a UAC registry — per task direction, gap rather than
+      parse the markdown). Transport edges use `default_transport_for_source`. DONE 2026-06-11 —
+      unified-trading-pm@78b2e893a (\_capability_extract.py extract_data_sources). The matrix→UAC-registry codification
+      is the gap-close follow-up (tracked in gap-discovery doc 2026-06-11 entry).
 - [x] ✅ [IMPLEMENT] P1. Derived edges: **min-data-to-run** — feature-lookback component IS derived (max feature-group
       bar `period`, from features-service); the ML training-window factor is a runtime config with NO static registry
       constant, so the full `feature_lookback × training_window` edge is emitted `partial` + typed `missing_extraction`
-      (honest typed-gap state per task direction). DONE 2026-06-11 — unified-trading-pm@78b2e893a (_capability_gaps.py).
+      (honest typed-gap state per task direction). DONE 2026-06-11 — unified-trading-pm@78b2e893a
+      (\_capability_gaps.py).
 - [x] ✅ [IMPLEMENT] P1. Orphan + dead-end report: orphan nodes (no edges) + unbuilt dead-ends (registry-available
       archetype/instrument with no supporting venue) vs logical dead-ends (registry-blocked combos). Folded into the
       manifest gaps summary AND a human-readable `capability-orphan-report.txt` beside the existing `orphan-report.txt`.
-      DONE 2026-06-11 — unified-trading-pm@78b2e893a (_capability_orphan.py) → unified-api-contracts@1bc2f07
-      (124 orphans, 25 unbuilt, 16 logical).
+      DONE 2026-06-11 — unified-trading-pm@78b2e893a (\_capability_orphan.py) → unified-api-contracts@1bc2f07 (124
+      orphans, 25 unbuilt, 16 logical).
 - [x] ✅ [VERIFY] P1. Determinism: generator runs twice → byte-identical capability-manifest.json + orphan report
-      (verified). `generated_from_commit` = UAC HEAD sha via git (no timestamps). Wired into `generate-unified-openapi.sh`
-      after the audits + into the UI-sync block. DONE 2026-06-11 — unified-trading-pm@78b2e893a.
-      **NOTE (F14): the uic-openapi-sync workflow ships TS types ONLY, NOT registry JSONs** — capability-manifest.json
-      reaches `unified-trading-system-ui/lib/registry/` via the generate-unified-openapi.sh sync block, not that
-      workflow. The "ships via uic-openapi-sync" framing is inaccurate; UNticked sub-claim re-homed to the generator
-      sync block (see F14 + Progress Log).
+      (verified). `generated_from_commit` = UAC HEAD sha via git (no timestamps). Wired into
+      `generate-unified-openapi.sh` after the audits + into the UI-sync block. DONE 2026-06-11 —
+      unified-trading-pm@78b2e893a. **NOTE (F14): the uic-openapi-sync workflow ships TS types ONLY, NOT registry
+      JSONs** — capability-manifest.json reaches `unified-trading-system-ui/lib/registry/` via the
+      generate-unified-openapi.sh sync block, not that workflow. The "ships via uic-openapi-sync" framing is inaccurate;
+      UNticked sub-claim re-homed to the generator sync block (see F14 + Progress Log).
 
 ## Phase 2 — gap registries in unified-api-contracts (schema first = forcing function; PARALLEL items)
 
@@ -206,39 +207,36 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
 
 ## Phase 3 — strategy prospectus generator (script first, UI later; PARALLEL with Phase 2)
 
-- [x] ✅ [IMPLEMENT] P0. `generate_strategy_prospectus.py`: input = strategy config + capability manifest → markdown: what
-      the strategy does, decision logic (FULL alpha disclosure — debugging mode; curtailment flag later),
+- [x] ✅ [IMPLEMENT] P0. `generate_strategy_prospectus.py`: input = strategy config + capability manifest → markdown:
+      what the strategy does, decision logic (FULL alpha disclosure — debugging mode; curtailment flag later),
       position-by-scenario table ("in this scenario the strategy will be positioned…"), expected
       returns/Sharpe/max-drawdown (from `performance_metrics.py` over backtest output), written as if presenting to the
-      internal allocation team / a potential investor.
-      PM@(see PR#272) + UAC@fe37eae — 57 archetype prospectus docs in `openapi/prospectus/`, 7 sections each,
-      deterministic (byte-identical on two runs). 57/57 archetypes have codex docs.
+      internal allocation team / a potential investor. PM@(see PR#272) + UAC@fe37eae — 57 archetype prospectus docs in
+      `openapi/prospectus/`, 7 sections each, deterministic (byte-identical on two runs). 57/57 archetypes have codex
+      docs.
 - [x] ✅ [IMPLEMENT] P1. Exposure section: per-leg exposures and normalization — staked-ETH vs ETH equivalence,
       base-currency-neutral views; pull from greeks-service / ledger exposure models where available, else emit
-      `not_registered` gap.
-      Shipped: Section 3 "Exposures & Normalization" renders codex risk/PnL content + honest gap line for
-      staked-vs-spot equivalence (F-class finding, cites gap tracker). UAC@fe37eae.
+      `not_registered` gap. Shipped: Section 3 "Exposures & Normalization" renders codex risk/PnL content + honest gap
+      line for staked-vs-spot equivalence (F-class finding, cites gap tracker). UAC@fe37eae.
 - [x] ✅ [IMPLEMENT] P1. **Fund-flow mermaid**: venues/wallets as boxes (treasury vs trading/hot per
       `wallet-hierarchy-and-capital-flow.md` + `capital_router.py` AllocationTargets), deposit→conversion→venue paths
-      (e.g. deposit ETH → receive stETH → post to CeFi venue → short perp), cross-balance movement arrows.
-      Shipped: Section 4 "Fund Flow" — `build_fund_flow_mermaid()` in `_prospectus_manifest.py`; staked-basis archetypes
-      include deposit→STAKING→LST→CEFI_VENUE→PERP_SHORT legs; TREASURY_SPLIT_POLICIES seeded from UAC
-      collateral_registry.py (DeFi 20/80, CeFi 0/100, Sports 0/100). UAC@fe37eae.
+      (e.g. deposit ETH → receive stETH → post to CeFi venue → short perp), cross-balance movement arrows. Shipped:
+      Section 4 "Fund Flow" — `build_fund_flow_mermaid()` in `_prospectus_manifest.py`; staked-basis archetypes include
+      deposit→STAKING→LST→CEFI_VENUE→PERP_SHORT legs; TREASURY_SPLIT_POLICIES seeded from UAC collateral_registry.py
+      (DeFi 20/80, CeFi 0/100, Sports 0/100). UAC@fe37eae.
 - [x] ✅ [IMPLEMENT] P1. Risk section: applicable KillSwitchReason set + RiskGateLayer placement for the configured
-      archetype/venues, configurable circuit-breaker parameters, liquidation monitoring surface.
-      Shipped: Section 5 "Risk & Circuit Breakers" — full KillSwitchReason enum + RiskGateLayer placement + codex
-      config-schema parameter extraction. UAC@fe37eae.
+      archetype/venues, configurable circuit-breaker parameters, liquidation monitoring surface. Shipped: Section 5
+      "Risk & Circuit Breakers" — full KillSwitchReason enum + RiskGateLayer placement + codex config-schema parameter
+      extraction. UAC@fe37eae.
 - [x] ✅ [AUDIT] P1. **Two-sided audit**: diff generated prospectus vs the hand-written codex archetype doc
       (`codex/09-strategy/architecture-v2/archetypes/<archetype>.md`) for all 57 archetypes; discrepancy report feeds
-      the gap tracker (wizard-thinks vs codex-says vs code-does).
-      Shipped: `audit_prospectus_vs_codex.py` → `openapi/prospectus/prospectus-codex-audit.md` (deterministic).
-      Results: (a) 0 enum-without-doc, (b) 2 orphan docs, (c) 1 venue-category contradiction (F15 filed).
-      PM@(see PR#272) + UAC@fe37eae.
-- [x] ✅ [VERIFY] P2. Pin a regression test per fixed discrepancy (operator rule: as issues are found, build tests around
-      them).
-      Shipped: `tests/unit/test_prospectus_generators.py` — 19 tests (16 unit + 3 integration): determinism x2,
-      audit 57-archetype count, codex doc count, all 7 sections present, honesty labels, fund-flow mermaid structure.
-      PM@(see PR#272).
+      the gap tracker (wizard-thinks vs codex-says vs code-does). Shipped: `audit_prospectus_vs_codex.py` →
+      `openapi/prospectus/prospectus-codex-audit.md` (deterministic). Results: (a) 0 enum-without-doc, (b) 2 orphan
+      docs, (c) 1 venue-category contradiction (F15 filed). PM@(see PR#272) + UAC@fe37eae.
+- [x] ✅ [VERIFY] P2. Pin a regression test per fixed discrepancy (operator rule: as issues are found, build tests
+      around them). Shipped: `tests/unit/test_prospectus_generators.py` — 19 tests (16 unit + 3 integration):
+      determinism x2, audit 57-archetype count, codex doc count, all 7 sections present, honesty labels, fund-flow
+      mermaid structure. PM@(see PR#272).
 
 ## Phase 3.5 — interactive scenario stepper (operator direction 2026-06-11, second session message)
 
@@ -252,38 +250,43 @@ rebalance, each KillSwitchReason), and **distance-to-trigger** for every armed t
 viable TODAY (pre-backfill/pre-migration), upgrading to the Phase 5 real-data backtest when data lands. Per-archetype,
 post-config (combinatorial explosion is avoided because the wizard fixed the config first).
 
-- [ ] [SPEC] P1. Stepper contract in UAC architecture_v2: `StepInput` (user-supplied key numbers keyed by
-      instrument/venue/feature + RNG seed for fillers) + `StepReport` (instructions, fills, position/PnL deltas, trigger
-      evaluations value-vs-threshold, risk-gate decisions per RiskGateLayer) — deterministic given (config, inputs,
-      seed).
-- [ ] [IMPLEMENT] P1. `e2e-testing/scripts/strategy/scenario_stepper.py` (peripheral-script rule: wired into
-      strategy-service QG): JSON-in/JSON-out per step + interactive REPL mode; drives the real archetype engine with
-      SyntheticMarketState + benchmark fills. NOTE: strategy-service engine is under LOGIC FREEZE (surface-only) — v1
-      derives the trigger map from emitted events + risk-gate decisions WITHOUT engine edits; engine-side predicate
-      tracing is a post-unfreeze enhancement todo.
-- [ ] [IMPLEMENT] P1. Trigger map + distance-to-trigger: enumerate armed thresholds for the configured archetype/venues
-      (kill switches, stop loss, entry/exit conditions from config) and report current-value vs threshold each step.
+- [x] ✅ [SPEC] P1. Stepper contract in UAC architecture_v2. DONE 2026-06-11 — unified-api-contracts@6262c3f
+      (scenario_step.py: StepInput/TriggerEvaluation/RiskGateDecisionRecord/StepFill/StepReport/ScenarioConfigRef/
+      ScenarioSession/TriggerKind; reuses StrategyInstructionEnvelope + RiskGateLayer/Decision/KillSwitchReason/
+      BenchmarkFillMode — no duplicates; 12 unit tests; QG green).
+- [x] ✅ [IMPLEMENT] P1. `e2e-testing/scripts/strategy/scenario_stepper.py`. DONE 2026-06-11 — e2e-testing@3e41ecb
+      (scenario_stepper.py + \_stepper_engine.py; --steps JSON + --interactive REPL; drives real V2BatchHarness.on_tick
+      credential-free; introspection_gap reported for runtime-fired kill/stop predicates per LOGIC FREEZE) +
+      strategy-service@e0ed11c (peripheral QG wiring, surface-only, replicates scripts/defi block).
+- [x] ✅ [IMPLEMENT] P1. Trigger map + distance-to-trigger. DONE 2026-06-11 — e2e-testing@3e41ecb
+      (build_trigger_evaluations: entry/exit/rebalance from config thresholds + emitted events; signed
+      distance_to_trigger; kill_switch/stop_loss honest introspection_gap until post-unfreeze engine tracing).
 - [ ] [AGENT][UI] P2. Wizard "Step through it" stage after config: feed key numbers, render StepReports as a timeline
-      (trades/positions/PnL/triggers). pw:L2 gate.
-- [ ] [VERIFY] P1. Stepper smoke per MVP archetype (carry_staked_basis + arbitrage_price_dispersion first): N scripted
-      steps produce coherent position/PnL arithmetic and at least one forced kill-switch trip.
+      (trades/positions/PnL/triggers). pw:L2 gate. (v1 ships a stub panel in the wizard output stage — see Phase 4.)
+- [x] ✅ [VERIFY] P1. Stepper smoke per MVP archetype. DONE 2026-06-11 — e2e-testing@3e41ecb
+      (test_scenario_stepper_smoke.py 3/3; apd_price_dispersion_btc.json 6-step: ATOMIC entries @50/70bps → +250/+350
+      PnL, forced DAILY_LOSS_BREACH @step4 → killed+REJECTED, post-kill above-threshold emits NOTHING;
+      csb_staked_basis_eth.json 5-step entry/exit/rebalance/kill coherent. carry_staked_basis entry-EMISSION blocked
+      on-host by empty perp collateral registry — the Phase 2 collateral gap made concrete, not a stepper bug).
 
 ## Phase 4 — wizard UI + capability matrix tab (PARALLEL across repos)
 
-- [ ] [AGENT][UI] P1. `unified-trading-system-ui`: new self-contained route group `app/(wizard)/` + `lib/wizard/`.
-      Manifest-driven progressive configuration: each step's options filtered to what remains possible given prior
-      answers; unavailable options visible-but-greyed with reason + gap type; every config field shows side-by-side help
-      text sourced from pydantic `Field(description=…)` (extend config-registry extraction to carry descriptions). Seeds
-      vocabulary from `lib/questionnaire/` axes. pw:L2 gate.
-- [ ] [AGENT][UI] P1. Wizard output: strategy configuration artifact + onboarding checklist — required API
-      keys/credentials per selected venue (from ENDPOINT_REGISTRY auth requirements), deposit currency/cadence,
-      collateral placement — the "what I need from you to get started" surface.
+- [x] ✅ [AGENT][UI] P1. `unified-trading-system-ui`: new self-contained route group `app/(wizard)/` + `lib/wizard/` —
+      manifest-driven progressive walkthrough (stages A–J subset: category→family→archetype→instruments→venues→
+      sources→execution→risk→capital→review), greyed-not-hidden unavailable options with status+gap_type chips, side
+      help per stage. — unified-trading-system-ui@9f40331 | pw:L2 ✓ (8/8 smoke) | regression:
+      tests/smoke/wizard.spec.ts + tests/unit/wizard/graph.test.ts (41 tests). Route: /wizard.
+- [x] ✅ [AGENT][UI] P1. Wizard output: strategy configuration artifact (download + localStorage) + onboarding checklist
+      from selected venues' auth metadata + "Step through it" stub panel (stepper UI = Phase 3.5 leftover). —
+      unified-trading-system-ui@9f40331 | pw:L2 ✓ | regression: tests/smoke/wizard.spec.ts.
 - [x] [AGENT][UI] P1. `deployment-ui`: **Capability tab** next to Data Status — full matrix view (archetype × venue ×
       instrument × mode × algo), orphan/dead-end report, batch-live symmetry view; leaf data-availability questions call
-      existing `/api/data-status/*` (drilldown/schema/shard-info) — no rebuild. pw:L2 gate.
-      — deployment-ui@13ac831 | pw:L2 ✓ (6/6 tests pass) | regression: tests/smoke/capability_tab.spec.ts + tests/unit/capability-helpers.test.ts (22 tests)
-- [ ] [IMPLEMENT] P2. Wizard "isolation mode": flat queries (what strategies/venues/algos/instructions exist) alongside
-      the chained walkthrough — same manifest, two query styles.
+      existing `/api/data-status/*` (drilldown/schema/shard-info) — no rebuild. pw:L2 gate. — deployment-ui@13ac831 |
+      pw:L2 ✓ (6/6 tests pass) | regression: tests/smoke/capability_tab.spec.ts + tests/unit/capability-helpers.test.ts
+      (22 tests)
+- [x] ✅ [IMPLEMENT] P2. Wizard "isolation mode": flat "Ask one thing" queries (strategies/venues/algos/sources tables
+      with filters) alongside the walkthrough — same manifest accessors. — unified-trading-system-ui@9f40331 | pw:L2 ✓ |
+      regression: tests/smoke/wizard.spec.ts.
 
 ## Phase 5 — agent escalation + backtest-on-demand
 
@@ -404,34 +407,34 @@ for every agent on this plan:
   item deferred: scheduled workflow for drift CI gate (fail-on-run is the current gate).
 - 2026-06-11 — **Phase 1 capability-manifest exporter v1 SHIPPED** (capability-exporter, slot-4).
   `generate_capability_manifest.py` + `_capability_{extract,gaps,orphan}.py` (PM@78b2e893a, PR #270) → consumes the UAC
-  `CapabilityManifest` schema (imported, never redefined). Output `capability-manifest.json` (UAC@1bc2f07): **409 nodes /
-  663 edges** (available 441, partial 140, not_registered 63, not_available 19; typed gaps: 60 missing_registry, 3
+  `CapabilityManifest` schema (imported, never redefined). Output `capability-manifest.json` (UAC@1bc2f07): **409 nodes
+  / 663 edges** (available 441, partial 140, not_registered 63, not_available 19; typed gaps: 60 missing_registry, 3
   needs_code_scan, 1 missing_extraction, 19 logical_dead_end). Orphan report `capability-orphan-report.txt`: **124
-  orphans, 25 unbuilt dead-ends, 16 logical dead-ends**. Coverage: (a) archetypes/families + ARCHETYPE_CAPABILITY_REGISTRY,
-  (b) venues/chains/instrument-types + auth/access from ENDPOINT_REGISTRY, (c) data sources + transports + modes (live/
-  replay = typed gap, NOT markdown-parsed), (d) all 6 gap registries + treasury split → real wallet nodes, (e) risk
-  surface (KillSwitchReason × RiskGateLayer), (f) **service-resident registries imported via per-service `.venv`
-  subprocess — exec algos (7), feature groups (34 w/ lookback), ML model variant config ALL imported OK on this host**
-  (no gap'd source). Determinism verified (run twice = byte-identical); `generated_from_commit` = UAC HEAD via git, no
-  timestamps. Wired into `generate-unified-openapi.sh` + its UI-sync block. Min-data-to-run: feature-lookback derived,
-  ML-training-window factor is `missing_extraction` (runtime config, no static constant). Findings F12 (config-registry
-  un-regenerable on non-workspace-venv host — destructive empty), F13 (SOURCE_PRIORITY no clean facade), F14
-  (uic-openapi-sync ships TS types only, NOT registry JSONs) appended. Gap-discovery 2026-06-11 entry quantifies the
-  surface. **Unticked**: Phase-0 full-suite regen (config-registry.json + full openapi spec need `.venv-workspace`,
-  absent on-host — F12; partial UAC-output regen done); uic-openapi-sync-shipping sub-claim (F14 — wrong workflow; manifest
-  ships via the generator sync block).
+  orphans, 25 unbuilt dead-ends, 16 logical dead-ends**. Coverage: (a) archetypes/families +
+  ARCHETYPE_CAPABILITY_REGISTRY, (b) venues/chains/instrument-types + auth/access from ENDPOINT_REGISTRY, (c) data
+  sources + transports + modes (live/ replay = typed gap, NOT markdown-parsed), (d) all 6 gap registries + treasury
+  split → real wallet nodes, (e) risk surface (KillSwitchReason × RiskGateLayer), (f) **service-resident registries
+  imported via per-service `.venv` subprocess — exec algos (7), feature groups (34 w/ lookback), ML model variant config
+  ALL imported OK on this host** (no gap'd source). Determinism verified (run twice = byte-identical);
+  `generated_from_commit` = UAC HEAD via git, no timestamps. Wired into `generate-unified-openapi.sh` + its UI-sync
+  block. Min-data-to-run: feature-lookback derived, ML-training-window factor is `missing_extraction` (runtime config,
+  no static constant). Findings F12 (config-registry un-regenerable on non-workspace-venv host — destructive empty), F13
+  (SOURCE_PRIORITY no clean facade), F14 (uic-openapi-sync ships TS types only, NOT registry JSONs) appended.
+  Gap-discovery 2026-06-11 entry quantifies the surface. **Unticked**: Phase-0 full-suite regen (config-registry.json +
+  full openapi spec need `.venv-workspace`, absent on-host — F12; partial UAC-output regen done);
+  uic-openapi-sync-shipping sub-claim (F14 — wrong workflow; manifest ships via the generator sync block).
 
 - 2026-06-11 — **Phase 3 strategy prospectus generator SHIPPED** (capability-wizard Phase 3, slot-5).
-  `generate_strategy_prospectus.py` + `_prospectus_{codex,manifest}.py` + `audit_prospectus_vs_codex.py` (PM PR #272)
-  → 57 archetype prospectus docs + `prospectus-codex-audit.md` (UAC@fe37eae, `openapi/prospectus/`). All 4 helper
-  modules under 900-line cap; quality gates exit 0. Determinism verified (byte-identical on two full runs).
-  **Per-section honesty stats**: 57/57 archetypes have codex docs (0 machine-only); all 57 render 7 sections including
+  `generate_strategy_prospectus.py` + `_prospectus_{codex,manifest}.py` + `audit_prospectus_vs_codex.py` (PM PR #272) →
+  57 archetype prospectus docs + `prospectus-codex-audit.md` (UAC@fe37eae, `openapi/prospectus/`). All 4 helper modules
+  under 900-line cap; quality gates exit 0. Determinism verified (byte-identical on two full runs). **Per-section
+  honesty stats**: 57/57 archetypes have codex docs (0 machine-only); all 57 render 7 sections including
   [MACHINE-DERIVED] + [CODEX-DERIVED] labels, honest no-backtest performance block, fund-flow mermaid with
-  TREASURY_SPLIT_POLICIES (DeFi 20/80, CeFi 0/100, Sports 0/100), KillSwitchReason + RiskGateLayer risk section.
-  **Audit headline**: (a) 0 enum-without-doc, (b) 2 orphan codex docs (doc-without-enum), (c) 1 venue-category
-  contradiction filed as F15. Gap tracker: 2 orphan docs appended. 19 regression tests (determinism, 57-archetype
-  count, all 7 sections, honesty labels, fund-flow LST legs, mermaid fence). Wired into `generate-unified-openapi.sh`.
-  SHAs: PM PR #272 + UAC@fe37eae.
+  TREASURY_SPLIT_POLICIES (DeFi 20/80, CeFi 0/100, Sports 0/100), KillSwitchReason + RiskGateLayer risk section. **Audit
+  headline**: (a) 0 enum-without-doc, (b) 2 orphan codex docs (doc-without-enum), (c) 1 venue-category contradiction
+  filed as F15. Gap tracker: 2 orphan docs appended. 19 regression tests (determinism, 57-archetype count, all 7
+  sections, honesty labels, fund-flow LST legs, mermaid fence). Wired into `generate-unified-openapi.sh`. SHAs: PM PR
+  #272 + UAC@fe37eae.
 
 ## Out of scope / named successors
 
@@ -439,3 +442,13 @@ for every agent on this plan:
 - Replacing the public strategy questionnaire — it stays as demand capture; wizard supersedes it only for onboarding.
 - Rebuilding any part of the data-status drilldown — delegation only.
 - Live integration beyond deployment-api data-status + backtest runner calls (wizard is registry/code-driven by design).
+- 2026-06-11 — **Wave 2+3 DONE.** Exporter shipped (PM@78b2e893a PR#270 MERGED; UAC@1bc2f07: capability-manifest.json
+  409 nodes/663 edges, all service registries imported via per-service venvs, orphan report: 124 orphans / 25 unbuilt
+  dead-ends / 16 logical; F12–F14). Prospectus shipped (PM PR#272 + UAC@fe37eae: 57/57 archetype docs, two-sided audit →
+  0 enum-without-doc, 2 orphan docs, 1 contradiction = F15; 19 tests). Scenario stepper shipped (UAC@6262c3f +
+  strategy-service@e0ed11c + e2e-testing@3e41ecb: real V2BatchHarness, apd full-emission proof + forced
+  DAILY_LOSS_BREACH kill trips, 3/3 smoke; carry entry-emission blocked by empty collateral registry = the Phase 2 gap
+  made concrete; F16/F17). Wizard UI shipped (unified-trading-system-ui@9f40331, /wizard, pw:L2 8/8, 41 unit tests).
+  Capability tab shipped (deployment-ui@13ac831, pw:L2 6/6, 22 unit tests; F18/F19). Remaining: Phase 3.5 UI stepper
+  stage, Phase 5 (escalation write-back + backtest-on-demand), registry backfills, Wave-2 enhancements (operator
+  sign-off pending).
