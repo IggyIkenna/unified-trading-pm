@@ -297,6 +297,17 @@ unchanged:
       surfaces preserved via facade-namespace routing; the moved 87L manifest method honestly split to satisfy the
       50L method cap its old home was excluded from); 10,290 tests green, quickmerge proper. onchain orchestrator
       (1,409) remains in the tail below.
+- [x] ✅ [REFACTOR] P3-partial. **features onchain orchestrator DONE 2026-06-12** — features-service@06a83fb6:
+      1,409→835 facade + 3 stage mixins (manifest/calculators/daily-loop, delta_one pattern; all patch surfaces
+      module-bound via `X as X` aliases; >50L moved methods honestly split); 1,286 onchain unit + 12 integration
+      tests green; full QG green at budget 0.
+- [x] ✅ [REFACTOR] P3-partial. **UAC >900 audit DONE 2026-06-12** — unified-api-contracts@f1599ee: 4 logic-heavy
+      splits behind unchanged paths (honest_coverage 1,141→788 / source_priority 1,018→562 / strategy_service
+      instruction 913→49+2 / synthetic 930→822; 76/76 symbols AST-identical) + 7 declarative exemptions DOCUMENTED
+      with measured decl ratios in the SIZE_EXTRA_EXCLUDES header (errors/defi 90%, alerting/rules 84%,
+      _sports_match_contracts 92%, data_type_capability 91%, contracts.py, events.py, ml/schemas.py) + the operator
+      data-registry set; 3 split entries REMOVED from the exclude list (size-exclude ratcheted); 363 module tests +
+      444 cassette-parity green; restaking_rewards.py deferred (lives in the wizard lane's architecture_v2 WIP).
 - [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
       polymarket 1,184 / \_solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922), strategy
       archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958, agent-orchestrator
