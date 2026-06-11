@@ -1,7 +1,6 @@
 ---
 title: "instruments-service version phantom — manifest/main 0.30.0 vs tag v0.2.1 (needs reconciliation)"
 created: 2026-06-11
-author: slot-1 (CI firefight)
 locked_by: live-defi-rollout
 priority: P2
 status: active
