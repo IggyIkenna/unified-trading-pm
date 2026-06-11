@@ -416,6 +416,32 @@ cascade violation and fail the alignment job.
 | Max class lines                 | **900**                       | `MAX_CLASS_LINES=900`                     |
 | McCabe complexity               | **10**                        | `max-complexity = 10` in ruff             |
 
+## CODEX_MAX_VIOLATIONS is a ratchet-down, ≤5 ceiling (HARD RULE, operator 2026-06-10)
+
+`CODEX_MAX_VIOLATIONS` (per-repo, in `scripts/quality-gates.sh`) is a **temporary ceiling for PRE-EXISTING lint-codex
+violations that only ever shrinks toward 0** — never a budget to grow into. The fleet target is **≤ 5 per repo** (0 is
+the ideal); the ratchet contract (`plans/active/codex_violations_ratchet_to_five_2026_06_10.md`):
+
+1. The budget equals the count of CURRENTLY-failing check-classes (each class is a binary `V += 1`; class list SSOT =
+   `scripts/quality-gates-base/base-service.sh`).
+2. **Every fix ratchets the budget DOWN in the same commit**, with a dated in-file comment naming what cleared and
+   citing the driving plan. Never leave a fixed class with a stale higher budget.
+3. **A budget BUMP is review-blocking.** A bump caused by a TRANSIENT cross-repo state (e.g. a dep edge removed in
+   pyproject but not yet in `workspace-manifest.json` firing manifest-import-alignment) is fixed at the source and
+   ratcheted back — not normalised (incident 2026-06-11: deployment-api 24→25→24).
+4. **File-size + function-size are first-class violation classes** — a `FUNCTION_SIZE_EXTRA_EXCLUDES` /
+   `SIZE_EXTRA_EXCLUDES` glob hiding an oversized file is HIDDEN debt, not an exemption. An exclude is acceptable only
+   when (a) scoped to the SPECIFIC carrying module (never a whole package/monolith), and (b) justified in-file with the
+   named successor plan + date (see § 2.1 File Size Exceptions).
+5. Local == CI counts since the 2026-06-10 `grep -P` → `rg --pcre2` parity fix — a slot proves a ratchet-down locally
+   before pushing; CI v2 enforces no regression.
+
+2026-06-11 ratchet state (the big-file splits): registry.py 18,328→YAML+loader (features 0), instruments orchestrator
+8,192→16 modules (4), deployment-api DataStatusService 6,663→16 modules (24), seed.py 5,169→JSON+loader (uta pinned 0),
+agent-orchestrator server.py 4,505→9 routers (custom gate), MTDS orchestrator 4,219→7 modules (16), strategy
+catalog+batch_handler (11→10), MDPS canonical_writer+live_workers (10→7), execution adapters (24→21), deployment-service
+8→1, ibkr 4→1, ml-service 5→3.
+
 ### Coverage by repo type
 
 | Repo type      | Floor (minimum) | Formula                        |
