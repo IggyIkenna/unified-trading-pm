@@ -1593,13 +1593,27 @@ machinery):
       dca8864dd ("redesign manifest-canon slot split") + fresh ci_status (Guard-2 reconcile handles the ci_status
       region) — and strip the stray `*.bak`/`*.bak2` files main carries. Then push reconciled LDR + open the gated
       LDR→main PR. The qg-v2 gate-block on the PR is already cleared (qg fix below).
-- [ ] [INFRA] P0. **Reconcile stuck promotion PRs fleet-wide (DIRTY → won't auto-merge).** Several LDR→staging/→main PRs
+- [x] ✅ [INFRA] P0. **Reconcile stuck promotion PRs fleet-wide (DIRTY → won't auto-merge).** Several LDR→staging/→main PRs
       are `mergeable_state=dirty` (merge-conflict, accumulated session commits) so v2-auto-merge never fires — e.g. **PM
       PR #116** (DIRTY vs main — blocks ALL PM work reaching main), **UAC #67** (conflict → conflict-agent dispatched).
       Per repo: rebase head onto base + resolve (or conflict-resolution-agent), then auto-merge resumes. Audit the full
       open-PR set for `dirty` + clear. repos: all with stuck PRs. **Observed 2026-06-03:** PM #116 (tab/ikennaigboaka/1→
       main, CONFLICTING — the concurrent CLAUDE↔SUB_AGENT consolidation PR), UAC **4/4 open conflicting**, mtds 1,
       deployment-service 1, alerting-service 1; UTL/execution/strategy/instruments have 0 open (clean).
+      **DONE 2026-06-11 (the 2026-06-03 set had since drained; reconciled the CURRENT stuck set fleet-wide → 0
+      conflicting/dirty PRs remain).** Root cause this round = LDR-SSOT divergence: staging/main drifted from LDR via
+      squash-merge SHA noise + semver version bumps, so the auto-generated drain (staging←LDR) + backmerge (main→LDR)
+      PRs conflicted. Diagnosed each to CONTENT level (cut through squash-divergence — checked real 3-way tree deltas,
+      not commit counts): every diverged branch was **content-superseded by LDR** (deployment-api main = pre-refactor
+      DataStatusService monolith; deployment-ui main = dead EpicReadinessView replaced by EpicsPlans; ao staging features
+      all already on LDR). Resolved via the documented clean-start force-sync (`admin-force-sync-all-to-main.sh`,
+      protections saved+restored, `--no-commit` so dirty foreign WIP preserved, version-revert gate respected — no
+      published tag lost): **e2e #29 MERGED · deployment-ui #42 MERGED/#44 CLOSED · deployment-api #52 CLOSED · ao #6
+      MERGED/#9 CLOSED** (ao main/staging/LDR all converged @6056bfc; collapsed to LDR 0.8.0 — ao had no published tags).
+      Stale superseded feature PRs **PM #143** (--cloud flag, archived plan) + **PM #145** (flow-health-reporter already
+      on LDR) CLOSED. ⚠️ Post-fix: ao staging force-sync hit a GitHub REST rate-limit mid-run → the script could not
+      re-enable ruleset `17369729` (require-quality-gates); a poll-until-budget watcher restored it to `active` — final
+      sweep confirms ALL rulesets active across the 4 touched repos + ZERO conflicting PRs fleet-wide.
 - [x] ✅ [SCRIPT] P1. **Promoter must SKIP main-direct repos (Option B) from the staging sweep** — DONE 2026-06-03
       (slot-1) via the operator-directed "delete PM staging" path. `ldr-to-staging-promote` opened **PM #113
       (LDR→staging)** even though PM/codex are main-direct; it gates only on staging-branch existence, so a stray PM

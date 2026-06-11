@@ -289,6 +289,12 @@ unchanged:
 - [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
       (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
       QG running). All three QG-green at the new budgets before commit.
+- [x] ✅ [CODE] P2c. **none-budget repos pinned at 0 (census-honest) 2026-06-11** — alerting-service@c41baf1,
+      client-reporting-api@c8a32ff, fund-administration-service@3d32a3e, greeks-service@9efb1e7,
+      trading-agent-service@09d8dae (each double-QG-green at budget 0 before ship);
+      system-integration-tests pinned 0 + QG-green, quickmerge pending peer-clean deps (this plan's other lanes) —
+      shipped by the orchestrating slot when lanes land. unified-trading-api was pinned 0 earlier (@42f12ab);
+      agent-orchestrator runs a custom gate without a codex section (pin N/A — documented census exception).
 - [x] ✅ [CODE] P2b. **strategy-service ≤5 ACHIEVED 2026-06-11** — strategy-service@6aff0c48: budget 10→4. Cleared 6
       classes: deep-imports (both registry sites flipped to the one-level facade, zero deep sites remain), os.getenv
       (recovery_event_helper → StrategyServiceConfig fields), imports-in-fn (8 sites hoisted), empty-dict/list (5

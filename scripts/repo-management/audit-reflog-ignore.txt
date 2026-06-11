@@ -77,5 +77,10 @@ fund-administration-service:77f2989
 ml-service:5edac74
 ml-training-service:6515277
 
+# Intentional resets to origin/live-defi-rollout during stuck-PR clean-start force-sync 2026-06-11
+# Clean tree, reset moved TO the canonical LDR ref (no work discarded); e2e only its staging was
+# force-synced so cc0e9a6 isn't on e2e main yet — will auto-resolve once promotion carries it to main.
+e2e-testing:cc0e9a6
+
 # Intentional reset to origin/live-defi-rollout — branch alignment 2026-06-03
 batch-live-reconciliation-service:ab4b25a

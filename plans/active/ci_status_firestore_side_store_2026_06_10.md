@@ -98,9 +98,43 @@ the git copy is a cache.
       the reusable `python-quality-gates-v2.yml` dispatches) **DUAL-WRITE**: keep the existing git commit AND call
       `ci_status_store.set_status(...)`. No reader change yet — pure additive, lets us validate Firestore mirrors git
       before cutover.
-- [ ] [VERIFY] P2. Run a drain / a few transitions; assert the Firestore docs match the manifest `ci_status` (rank +
-      no-downgrade behaviour identical). Confirm concurrent multi-repo transitions produce NO contention (vs the git
-      push-retries today).
+- [x] ✅ [VERIFY] P2. DONE 2026-06-11 (slot-2) — **MECHANISM verified against REAL Firestore (emulator-backed
+      integration test).** New `tests/integration/test_ci_status_store_firestore.py` (7 tests, green ×2) drives the
+      production SDK path (`set_status`/`get_all` with the real `_default_firestore_module`, real `@transactional` CAS)
+      against a throwaway `gcloud emulators firestore` instance — credential-free, skips cleanly where the emulator/JRE
+      is absent. Closes the gap the unit suite left: those use an injected FAKE whose `transactional` just calls the
+      body once (no real atomicity/retry/concurrency). Covers: real-txn fresh-advance / no-downgrade /
+      FAILING-unconditional / main-authoritative; a 12-step out-of-order multi-repo **drain whose Firestore docs equal
+      an INDEPENDENT re-implementation of the manifest no-downgrade rule** (`assert got ==     expected` — a genuine
+      cross-check, not a tautology); **Layer-1** concurrent 25-repo write → all land, zero contention; **Layer-2**
+      concurrent same-repo lower-rank writers → MAIN_GREEN survives. Evidence: `unified-trading-pm@<sha>` |
+      `pytest tests/integration/test_ci_status_store_firestore.py` → 7 passed (~16s), ruff + format clean. **Findings
+      (3, captured below).**
+  - **Finding 1 (semantics, by-design — documented not bug):** `FAILING` is unconditional ON THE WRITE THAT SETS IT, but
+    a LATER non-main green re-run (rank ≥ 1 > `FAILING` rank 0) legitimately CLEARS it — i.e. a fix landing on LDR
+    recovers the repo out of FAILING. Both `resolve_status` and the independent manifest rule agree. (My first draft's
+    sanity assertion wrongly expected FAILING to persist through a subsequent green — corrected. The genuinely-durable
+    failure is one that arrives OVER a green and is the last write, which the test now asserts via a separate `greeks`
+    cell.)
+  - **Finding 2 (robustness, NICE-TO-HAVE):** `set_status` relies on the Firestore SDK transaction's DEFAULT retry
+    budget; under heavy same-document burst contention the budget can exhaust → `ValueError` ("couldn't commit in N
+    attempts") / `DeadlineExceeded`. Non-issue for ci_status in practice (per-repo transitions are sequential, seconds
+    apart — never N-way simultaneous) AND the dual-write step is `continue-on-error`, so a rare miss is harmless in
+    Phase 1. If a future high-contention reuse appears, give `set_status` an explicit `@transactional(max_attempts=…)`
+    or an app-level retry. (Filed as the new P3 todo below.)
+  - **Finding 3 (test-infra):** the Firestore emulator is a SEPARATE gcloud component
+    (`google-cloud-cli-firestore-emulator`, needs a JRE) — installed on this host. The test self-manages it in its own
+    process group (killpg teardown; a leaked Java grandchild holding the inherited stdout fd SIGTERMs the parent shell →
+    exit 144). NOT wired into the PM gate (PM QG collects `tests/unit/` only) — it is an on-demand verify harness.
+- [ ] [VERIFY] P2. **LIVE-fleet dual-write observation (now UNBLOCKED — the mechanism is proven above).** Flip
+      `vars.CI_STATUS_FIRESTORE_DUALWRITE=true` on the PM repo (+ confirm the GHA `GCP_SA_KEY` SA can write the
+      `ci_status` Firestore collection in the live project), then over a real drain assert the live Firestore docs match
+      `workspace-manifest.json.ci_status` and that concurrent multi-repo transitions produce zero push-retry churn. This
+      is the one infra/operator-gated step left in Phase 1 before Phase-2 reader migration.
+- [ ] [CODE] P3. **(Finding 2, NICE-TO-HAVE)** give `ci_status_store.set_status` an explicit transaction `max_attempts`
+      (or thin app-level retry on `Aborted`/`DeadlineExceeded`) so a future high-contention reuse of the store cannot
+      drop a write on retry-budget exhaustion. Not needed for ci_status (sequential per-repo writes +
+      `continue-on-error` dual-write).
 
 ### Phase 2 — migrate readers to Firestore (P2) — the inventory (verified 2026-06-10)
 

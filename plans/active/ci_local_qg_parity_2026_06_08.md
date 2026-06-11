@@ -65,6 +65,22 @@ defect in the parity, and it gets audited and closed, not normalized.
       47s, no [4/6] banner). Local always counted honestly (current count 1344 ≤ 1511 ratchet → local GREEN at HEAD).
       Fixed: `_qg_slice_done` now phase-aware — unified-trading-pm@71a2e103b | verified 2026-06-10. Expect first
       post-fix CI typecheck legs ~3-4 min (real basedpyright).
+- [x] ✅ [SCRIPT] P1. **PM basedpyright skew — SECOND root cause: `LOCAL_DEPS` editable install silently no-ops on a
+      fresh `.venv` (slot-2 2026-06-11).** The 2026-06-10 entry above concluded "local counts honestly at 1344" — but
+      that assumed a `.venv` already carrying UTL/UAC. On a **freshly-created** `.venv` (the gate's
+      `[ ! -d .venv ] && uv venv .venv` path) PM's local QG counts **1541 > 1511 → RED**, while CI (test-in-image,
+      UTL-based image) is green. Root cause: `base-service.sh` bootstrap installs `LOCAL_DEPS` (`unified-api-contracts`,
+      `unified-trading-library`) with `[ -d "${REPO_ROOT}/$lib" ]` — but those are **sibling** repos at the WORKSPACE
+      ROOT (`.tabs/<N>/unified-trading-library`), never nested under the repo, so the dir-check fails and the editable
+      install is **silently skipped** (`|| :`). UTL/UAC then unresolved → basedpyright `Unknown`-type CASCADE (12
+      `reportMissingImports`: numpy/pyarrow/pandas/UTL/services → +89 just from numpy/pyarrow/pandas, ~+197 total). PM
+      is the repo this bites because it declares **no** UTL/UAC project dep, so this loop is its ONLY install path
+      (service repos pull UTL via their own `[tool.uv.sources]` editable path on `uv pip install -e .`). **Fixed**: the
+      loop now resolves `${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/$lib` first (the existing canonical idiom used
+      elsewhere in base-service), with the nested `${REPO_ROOT}/$lib` as a backward-compat fallback. Local-only (CI is
+      env-guarded out of the bootstrap). Verified: fresh-venv PM QG `1541 RED → 1452/1511 GREEN` (QG_EXIT=0). Evidence:
+      `unified-trading-pm@<sha>` | `scripts/quality-gates-base/base-service.sh`. base-service is SOURCED from PM by
+      every repo (no per-repo copy) → fleet-live for all local runs, no rollout needed.
 
 - [x] ✅ [SCRIPT] P2. **Manifest-import-alignment parity gap — FIXED 2026-06-10.** (1) Code reconciled to the docstring:
       `tests` added to `EXCLUDE_SEGMENTS` — the prior in-code "tests included" comment conflated EXTERNAL flat-deps with
