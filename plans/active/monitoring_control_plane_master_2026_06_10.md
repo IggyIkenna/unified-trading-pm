@@ -178,19 +178,23 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 
 ### Operator enhancements (2026-06-11, Harsh + Ikenna)
 
-- [x] ✅ [CODE] [UI] P1. DONE 2026-06-11 — deployment-api@0676afc (signal) + deployment-api@3c29dac (ROOT-CAUSE region
-      fix) + deployment-ui@c984541 (Image cell render) | pw:L2 ✓ | regression:
+- [x] ✅ [CODE] [UI] P1. DONE 2026-06-11 — deployment-api@0676afc (signal fields) + deployment-api@3c29dac
+      (trigger-region fix) + deployment-api@98d0d40 (build-LIST region + REPO_NAME match — completes the fix) +
+      deployment-ui@c984541 + deployment-ui@1ad86d5 (sha render) | pw:L2 ✓ | regression:
       tests/e2e/repos-promotion-blocked.spec.ts. **(B1) Image/build column — real status, not "unknown".** **ROOT CAUSE
-      of the "unknown": wrong region.** The backend queried Cloud Build triggers in `us-central1` (its `gcs_region`),
-      but ALL 57 triggers live in **asia-northeast1** (the workspace canonical region; `gcloud builds triggers list`:
-      global=0, us-central1=0, asia-northeast1=57, mapping 1:1 to repos) → 0 found → every repo honest-unknown. Fix:
-      pinned a dedicated `CLOUD_BUILD_REGION = "asia-northeast1"` constant (mirrors AWS `_code_builds_aws._AWS_REGION =
-      "ap-northeast-1"`, the operator matched-region 2026-05-11) used by the cloud-build queries — NOT `GCS_REGION`
-      (which leaks the us-central1 default). **AWS was already correct** (CodeBuild pinned ap-northeast-1). Backend
-      `BuildSignal` now carries `finish_time` + `log_url`; `ImageSignalDict` gains `last_build_time` +
-      `last_build_log_url`; the UI `ImageCell` renders status chip + build time + a click-through to the GCP Cloud Build
-      / AWS CodeBuild console log (honest-unknown stays "unknown" — no fabricated link). Repos: deployment-api
-      (`_cloud_builds_*`/`_code_builds_aws`/settings) + deployment-ui (`ImageCell` + `buildTimeLabel` + mock).
+      was a region mismatch in TWO places, fixed in two commits:** (1) `3c29dac` pinned
+      `CLOUD_BUILD_REGION = "asia-northeast1"` for the TRIGGER list
+      (`_cloud_builds_trigger.py`/`cloud_builds.py`/`settings.py`) — was reading `gcs_region` (`us-central1`) where 0 of
+      57 triggers live; (2) `98d0d40` fixed the BUILD-LIST path the trigger fix didn't reach: `_cloud_builds_history.py`
+      ALSO read `GCS_REGION` → `list_builds` in us-central1 (none there) AND the regional `list_builds` API
+      **400-rejects the `build_trigger_id="..."` filter** (proven: no-filter OK, filter → 400 InvalidArgument), so
+      `_gcp_builds_by_repo` was rewired to match builds→repos by the **`REPO_NAME` substitution** every build carries
+      (1:1, robust to trigger recreation — only 4/11 matched by trigger-id). Net: 9 repos now populate at the HTTP route
+      (the rest have no Cloud Build → honest "unknown"). **AWS was already correct** (CodeBuild pinned ap-northeast-1).
+      Backend `BuildSignal` carries `finish_time`/`log_url`; `ImageSignalDict` gains
+      `last_build_time`/`last_build_log_url`; the UI `ImageCell` renders status chip (→build log) + **built commit sha
+      (→GitHub commit)** + build time. Repos: deployment-api (`_cloud_builds_history`/`repo_ci`/`_repo_ci_types`) +
+      deployment-ui (`ImageCell`/`buildTimeLabel`/`shortSha`/mock).
 - [ ] [CODE] P1. **(B1-followup) `gcs_region=us-central1` prod-config anomaly — BIG FINDING** — the running prod
       deployment-api reports `gcs_region: us-central1` + `zones: us-central1-a/b/c` while ALL data + Cloud Build
       triggers + the Artifact Registry are in `asia-northeast1` (workspace SSOT: "all GCS data is in asia-northeast1;
@@ -200,23 +204,39 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       mislocate VM-launch zones / GCS region / cross-region-egress checks. Operator decision needed: fix the
       `effective_region` default + prod config to `asia-northeast1` (blast radius: VM zones, GCS) vs leave compute in
       us-central1 deliberately. Repo: deployment-api. **Surfaced to operator 2026-06-11.**
-- [ ] [CODE] [UI] P2. **(test-robustness) `DependenciesPanel` intermittently white-screens the whole app** — in
-      `deployment-ui` `tests/smoke/stateful-flows.spec.ts` "Tab navigation sequence", navigating Deploy→…→Status
-      intermittently (~50% of isolated runs) trips the root ErrorBoundary with `Cannot read properties of undefined
-      (reading 'length')`; stack → `ServiceDetails.tsx` `DependenciesPanel`/`DependencyDag`. Fixed two contributing
-      stale mock-contract shapes (`mock-api.ts` `/dependencies` → real `DependenciesResponse` w/ `downstream_dependents`
-      + `outputs`; `/checklist` already correct) — that did NOT fully resolve it, so a deeper render-timing trigger
-      remains in `DependenciesPanel`/`DependencyDag` (a nested array transiently undefined during the rapid tab
-      transition). Durable fix = guard the nested-array `.length`/`.map` reads in `DependenciesPanel` + `DependencyDag`
-      so a partial/late payload renders empty instead of white-screening (a per-tab error boundary would also contain
-      blast radius). NOTE: this smoke suite does NOT run in any deployment-ui CI workflow (only `quality-gates-v2`/
-      `ui-quality-gates-v2`, neither runs `tests/smoke/`) — so it does not block promotion; it's a real app-robustness
-      bug + flaky local test. **Leftover: `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip` placeholder) needs `rm` —
-      sandbox-denied this session.** Repo: deployment-ui. Provenance: B1 investigation 2026-06-11.
-- [ ] [CODE] [UI] P2. **(B2) Repo drill-down build header** — when a repo is opened, populate a build-details header at
-      the top: current build **status + source** (Cloud Build / CodeBuild), **last build time**, **commit sha** built,
-      and a **link to the build log**. The Image-column click-through (B1) and this header share the same build signal.
-      Repos: deployment-api (detail endpoint adds the build block) + deployment-ui (drill-down header).
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@f4a6d45 (on branch `feat/monitoring-slot26`, pending combined
+      PR) | pw:L2 ✓ (full smoke 188/188 green) | regression: src/components/ServiceDetails.test.tsx +
+      tests/smoke/stateful-flows.spec.ts. **(test-robustness) `DependenciesPanel` white-screen crash — FIXED.** Root
+      cause was systemic: multiple service-detail tabs read `.length`/`.map` on partial/raced API payloads → root
+      ErrorBoundary → whole-app white-screen → sibling tabs (Status) unreachable. Two-part durable fix: (1)
+      `ServiceDetails.tsx` — `DependenciesPanel`/`DependencyDag` guard every array read (`?? []`), with a
+      `ServiceDetails.test.tsx` partial-payload regression (3 cases); (2) `App.tsx` — a per-tab `<ErrorBoundary
+      key={activeTab}>` around the TabsContent region so ANY tab's render crash is contained (tab strip survives +
+      recovers on switch) instead of nuking the app. Full smoke went 187/1 (flaky) → **188/188 green**. NOTE: this smoke
+      suite does NOT run in deployment-ui CI (neither `quality-gates-v2` nor `ui-quality-gates-v2` runs `tests/smoke/`) —
+      so it never blocked promotion; this fixes a real app-robustness bug + the flaky local test. **Leftover (slot 4):
+      `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip`) needs `rm` — sandbox-denied.** Repo: deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@1ad86d5 | pw:L2 ✓ | regression:
+      tests/e2e/repos-promotion-blocked.spec.ts (B2 header test). **(B2) Repo drill-down build header** — opening a repo
+      now renders a build-details header at the top: build **status** + **source** (Cloud Build/CodeBuild, derived from
+      the log-URL host via `buildSourceLabel`) + **last build time** + **built commit sha** (→GitHub commit) + **build
+      log link**. Shares the B1 image signal; honest-absent ("no Cloud Build / CodeBuild for this repo") when the repo
+      has no build. UI-only — the detail endpoint already returned `image` (now populated by the B1 fix). Repo:
+      deployment-ui (`RepoDetailPanel` build header + `buildSourceLabel` helper).
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-api@98d0d40 + deployment-ui@1ad86d5 | pw:L2 ✓ | regression:
+      tests/e2e/repos-promotion-blocked.spec.ts (last-success tests) + tests/unit (backend). **(B-lastsuccess) Show the
+      LAST SUCCESSFUL build when the latest is red** (operator ask 2026-06-11: "if the current build fails, how do I see
+      the last successful build?"). Backend: `_recent_builds_by_repo_name` now returns per repo a
+      `(latest, last_success)` pair (one scan keeps the first build = latest AND the first SUCCESS = last good build);
+      `BuildSignal` + `ImageSignalDict` gain `last_success_sha`/`last_success_time`/`last_success_log_url`;
+      **`image_stale` now compares main HEAD vs the SUCCESS sha** (the sha actually in the running image — a failed
+      latest produced no new image), not the latest build's sha. UI: the Image cell shows a green `✓ <sha>` (→commit)
+      when the latest build is red; the drill-down adds a green "Last successful build" row (status + time +
+      sha→GitHub + log). Honest "(none in window)" when no SUCCESS in the ~400-build scan (`max_scan` bumpable).
+      Verified live: deployment-service `FAILURE 7f0b720` surfaces last-good `6994b31`. AWS last-success is best-effort
+      (latest-if-green); a deeper CodeBuild-history scan is a follow-up. Repos: deployment-api
+      (`_cloud_builds_history`/`repo_ci`/`_repo_ci_types`) + deployment-ui
+      (`ImageCell`/`RepoDetailPanel`/`client`/mock).
 - [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@ccbb742 | pw:L2 ✓ | regression:
       tests/e2e/repos-promotion-blocked.spec.ts. **(B3) LDR→main delta — show commit count alongside files (UI-ONLY)** —
       `deltaLabel(files, aheadBy)` now renders "N files ahead · M commits" (and "in sync · M commits (squash skew)" when
@@ -251,12 +271,13 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       green. **UI panel is the remaining half → G1-UI below.** Repo: deployment-api.
 - [x] ✅ [CODE] [UI] P1. DONE 2026-06-11 — deployment-ui@ccbb742 | pw:L2 ✓ | regression:
       tests/e2e/repos-promotion-blocked.spec.ts. **(G1-UI) Promotion-blocked panel** — always-visible
-      `PromotionBlockedPanel` on `/repos` (3-up grid beside SIT-run + stuck panels) listing each `promotion_blocked` repo:
-      quarantined→red / failing→yellow chip (`promotionBlockedTone`/`promotionBlockedLabel`), fail count, escalated flag,
-      `since` date; empty-state "Nothing parked — staging→main draining cleanly." `RepoCiPromotionBlocked` client type +
-      `promotion_blocked?` on `RepoCiOverview` added; mock-api seeds greeks-service (quarantined) + execution-service
-      (failing). 2 new unit tests + a dedicated e2e regression spec (chose `tests/e2e/repos-promotion-blocked.spec.ts`
-      over folding into repos-tab — cleaner isolation). UI QG green (coverage 75.01% ≥ 70%). Repo: deployment-ui.
+      `PromotionBlockedPanel` on `/repos` (3-up grid beside SIT-run + stuck panels) listing each `promotion_blocked`
+      repo: quarantined→red / failing→yellow chip (`promotionBlockedTone`/`promotionBlockedLabel`), fail count,
+      escalated flag, `since` date; empty-state "Nothing parked — staging→main draining cleanly."
+      `RepoCiPromotionBlocked` client type + `promotion_blocked?` on `RepoCiOverview` added; mock-api seeds
+      greeks-service (quarantined) + execution-service (failing). 2 new unit tests + a dedicated e2e regression spec
+      (chose `tests/e2e/repos-promotion-blocked.spec.ts` over folding into repos-tab — cleaner isolation). UI QG green
+      (coverage 75.01% ≥ 70%). Repo: deployment-ui.
 - [ ] [CODE] P2. **(G2) Semver-agent health has no standing state** — the bump-rate circuit-breaker (≥3 pending bumps/hr
       or consecutive-at-tip) + version-bump dispatch-failure are CRITICAL pages with no UI element AND they bypass the
       alert ledger (the inline-curl tail already filed in `ci_dashboard_deployment_ui` P3). Add a semver-agent health

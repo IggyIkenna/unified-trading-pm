@@ -115,6 +115,18 @@ python "$SCRIPT_DIR/audit_api_ui_coverage.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 
 # ---------------------------------------------------------------------------
+# Capability manifest (typed graph over archetypes/venues/sources/risk/gaps)
+# Deterministic (run twice = byte-identical). Service-resident registries are
+# imported in each service's own .venv subprocess; unimportable sources emit
+# typed gap edges so the manifest always generates.
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Generating Capability Manifest ==="
+python "$SCRIPT_DIR/generate_capability_manifest.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
 # Sync to UI repos (if present as sibling directories)
 # ---------------------------------------------------------------------------
 echo ""
@@ -134,6 +146,7 @@ for UI_REPO in unified-trading-system-ui unified-trading-system-ui\ copy; do
         [[ -f "$OUTPUT_DIR/instruments-snapshot.json" ]] && cp "$OUTPUT_DIR/instruments-snapshot.json" "$REGISTRY_DIR/instruments-snapshot.json"
         [[ -f "$OUTPUT_DIR/config-registry.json" ]] && cp "$OUTPUT_DIR/config-registry.json" "$REGISTRY_DIR/config-registry.json"
         [[ -f "$OUTPUT_DIR/system-topology.json" ]] && cp "$OUTPUT_DIR/system-topology.json" "$REGISTRY_DIR/system-topology.json"
+        [[ -f "$OUTPUT_DIR/capability-manifest.json" ]] && cp "$OUTPUT_DIR/capability-manifest.json" "$REGISTRY_DIR/capability-manifest.json"
         echo "  Synced spec → $UI_REPO/lib/registry/"
 
         # Deduplicate operationIds (multiple services share /health and /readiness)

@@ -112,15 +112,15 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       path fixed to `config.service_config`; market-tick-data-service path fixed to `market_interface.config`.
       features-service + ml-service: no root config.py exists (per-family only) — documented in registry comment.
 - [x] ✅ [IMPLEMENT] P0. Auto-discover services from `workspace-manifest.json` instead of hardcoded lists;
-      `_validate_service_coverage()` FAILS the run on disk-vs-registry mismatch (today it only warns). DONE 2026-06-11
-      — unified-trading-pm@50bdbcd36. Added `_load_service_registry(workspace_root)` + `_OVERRIDE_MODULE_PATHS` +
+      `_validate_service_coverage()` FAILS the run on disk-vs-registry mismatch (today it only warns). DONE 2026-06-11 —
+      unified-trading-pm@50bdbcd36. Added `_load_service_registry(workspace_root)` + `_OVERRIDE_MODULE_PATHS` +
       `_NO_API_REPOS`; `_validate_service_coverage()` now calls `sys.exit(1)` on mismatch.
 - [x] ✅ [IMPLEMENT] P0. Extend `extract_uic_enums()` to recursively walk `unified_api_contracts.internal` submodules
       (`architecture_v2.*`) so all 53-archetype/9-family enums + ARCHETYPE_CAPABILITY_REGISTRY land in
-      `ui-reference-data.json`. DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Added architecture_v2 submodule walk
-      + `extract_architecture_v2_capability_registry()`. Verified output: StrategyArchetype 57 values (count grew
-      from audited 53 — 4 new archetypes landed), StrategyFamily 9 values, ARCHETYPE_CAPABILITY_REGISTRY 22 archetypes
-      / 98 cells, total UIC enums 227 (up from single-digits).
+      `ui-reference-data.json`. DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Added architecture_v2 submodule walk +
+      `extract_architecture_v2_capability_registry()`. Verified output: StrategyArchetype 57 values (count grew from
+      audited 53 — 4 new archetypes landed), StrategyFamily 9 values, ARCHETYPE_CAPABILITY_REGISTRY 22 archetypes / 98
+      cells, total UIC enums 227 (up from single-digits).
 - [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
       `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift.
 - [x] ✅ [VERIFY] P0. Drift CI gate: `_validate_service_coverage()` now exits nonzero on mismatch (fail-on-drift
@@ -129,11 +129,12 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
 
 ## Phase 1 — capability manifest exporter v1 (`generate_capability_manifest.py`)
 
-- [ ] [SPEC] P0. `CapabilityManifest` pydantic schema in unified-api-contracts: nodes (archetype, family, venue, chain,
-      instrument_type, algo, feature_group, model, data_source, fund_structure, wallet, broker) + typed edges with
-      status `available | partial | not_available | not_registered` + gap type
+- [x] ✅ [SPEC] P0. `CapabilityManifest` pydantic schema in unified-api-contracts: nodes (archetype, family, venue,
+      chain, instrument_type, algo, feature_group, model, data_source, fund_structure, wallet, broker) + typed edges
+      with status `available | partial | not_available | not_registered` + gap type
       `missing_registry | missing_extraction | needs_code_scan | logical_dead_end` + `agent_annotation` field for
-      written-back agent answers.
+      written-back agent answers. DONE 2026-06-11 — unified-api-contracts@6f31f59 (capability_manifest.py: 14 node
+      kinds, deterministic to_canonical_dict(), 40 unit tests green, QG exit 0).
 - [ ] [IMPLEMENT] P0. Extract: STRATEGY_REGISTRY + ARCHETYPE_CAPABILITY_REGISTRY (archetype × venue_category ×
       instrument_type), venue/instrument universe (instruments-service `InstrumentRecord` + ENDPOINT_REGISTRY incl.
       per-venue access_mode/auth requirements), execution algos + instruction types + order-type/TIF enums
@@ -152,22 +153,28 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
 
 ## Phase 2 — gap registries in unified-api-contracts (schema first = forcing function; PARALLEL items)
 
-- [ ] [SPEC] P0. **Collateral registry**: accepted collateral per venue, haircut per collateral, max/liquidation LTV,
-      maintenance vs liquidation margin, liquidation protocol description per platform, broker list. Today derived from
-      wallet structure (DeFi 20/80 treasury/hot, CeFi 0/100) — must become declarative.
-- [ ] [SPEC] P1. **Fees registry**: exchange/gas/broker/clearing fees, queryable at venue, instrument-type, and tier
-      granularity.
-- [ ] [SPEC] P1. **Simulation-assumptions registry**: simulatable candle granularities, matching/fill assumptions per
-      archetype area, backtest-live symmetry nuances per venue/instrument.
-- [ ] [SPEC] P1. **Fund-structure manifest**: pooled/SMA/prop structures, subscription/redemption cadence (daily
-      withdraw/deposit support), rebalance cadence — fund-administration-service state machines stay the runtime truth;
-      this declares what is _offerable_.
-- [ ] [SPEC] P1. **Order-semantics-per-venue-adapter declarations**: which TIF/post-only/make-take each adapter honors;
-      ref-pricing modes (fixed entry vs delta-adjusted to underlying); **multi-leg/spread handling** — which algo owns
-      delta risk between legs of basis/spread/option-combo instructions; auth-wired status per venue.
-- [ ] [SPEC] P2. **Trading-agent/LLM capability declarations**: which archetypes permit agent-driven instruction
-      generation over features, permitted models, parameter-guidance scope (trading-agent-service ↔ strategy registry
-      link, today absent).
+- [x] ✅ [SPEC] P0. **Collateral registry** schema. DONE 2026-06-11 — unified-api-contracts@6f31f59
+      (collateral_registry.py: CollateralPolicy/AssetHaircut/BrokerEntry/TreasurySplitPolicy; TREASURY_SPLIT_POLICIES
+      seeded — DeFi 20/80, CeFi 0/100, Sports no-split, sourced from wallet-hierarchy codex; COLLATERAL_REGISTRY +
+      BROKER_REGISTRY honest-empty — per-venue haircuts/LTVs are a backfill, numbers never invented).
+- [x] ✅ [SPEC] P1. **Fees registry** schema. DONE 2026-06-11 — unified-api-contracts@6f31f59 (fees_registry.py:
+      FeeComponent/FeeUnit/FeeSchedule; FEES_REGISTRY honest-empty — backfill).
+- [x] ✅ [SPEC] P1. **Simulation-assumptions registry** schema. DONE 2026-06-11 — unified-api-contracts@6f31f59
+      (simulation_assumptions.py: MatchingModel mapped to existing BenchmarkFillMode; SIM_ASSUMPTIONS_REGISTRY
+      honest-empty — needs_code_scan of backtest runner, see finding F11).
+- [x] ✅ [SPEC] P1. **Fund-structure manifest** schema. DONE 2026-06-11 — unified-api-contracts@6f31f59
+      (fund_structures.py: FundStructureKind/CadenceKind/FundStructureOffering, reuses existing ShareClass enum;
+      OFFERED_FUND_STRUCTURES honest-empty).
+- [x] ✅ [SPEC] P1. **Order-semantics-per-venue-adapter declarations** schema. DONE 2026-06-11 —
+      unified-api-contracts@6f31f59 (order_semantics.py: canonical TimeInForce (none pre-existed in UAC — F10),
+      RefPricingMode fixed|delta_adjusted_to_underlying, MultiLegDeltaOwner, VenueOrderSemantics with auth_wired;
+      VENUE_ORDER_SEMANTICS honest-empty — per-adapter honor matrix is a code-scan backfill).
+- [x] ✅ [SPEC] P2. **Trading-agent/LLM capability declarations** schema. DONE 2026-06-11 —
+      unified-api-contracts@6f31f59 (trading_agent_capability.py; TRADING_AGENT_CAPABILITIES honest-empty).
+- [ ] [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty): per-venue
+      collateral/haircut/LTV/maintenance-margin entries, fee tiers, per-adapter order-semantics honor matrices, sim
+      assumptions from backtest-runner scan, offerable fund structures — each backfill PR cites its source of truth;
+      `needs_code_scan` items route through Phase 5 agent escalation.
 - [ ] [IMPLEMENT] P1. Manifest exporter consumes each new registry as it lands; until then emits honest `not_registered`
       edges (never silently omits the dimension).
 
@@ -191,6 +198,34 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       the gap tracker (wizard-thinks vs codex-says vs code-does).
 - [ ] [VERIFY] P2. Pin a regression test per fixed discrepancy (operator rule: as issues are found, build tests around
       them).
+
+## Phase 3.5 — interactive scenario stepper (operator direction 2026-06-11, second session message)
+
+After the wizard produces a config, the user can **step through the strategy like a paper run without real data**: the
+stepper drives the REAL strategy engine loop (batch=live HARD RULE — never a parallel engine) with a
+**SyntheticMarketState** the user steers — key numbers fed by hand (funding rate, prices, quotes, feature values) or
+seeded-random fillers — and mock fills via the existing BenchmarkFillMode. Each step reports: instructions emitted,
+fills, positions, PnL delta, **which triggers/predicates evaluated and how they resolved** (entry, exit, stop loss,
+rebalance, each KillSwitchReason), and **distance-to-trigger** for every armed threshold ("DAILY_LOSS_BREACH arms at
+−5%, you are at −1.2%"). This is decision-tree auditing: walking the archetype's code-path branches by steering inputs,
+viable TODAY (pre-backfill/pre-migration), upgrading to the Phase 5 real-data backtest when data lands. Per-archetype,
+post-config (combinatorial explosion is avoided because the wizard fixed the config first).
+
+- [ ] [SPEC] P1. Stepper contract in UAC architecture_v2: `StepInput` (user-supplied key numbers keyed by
+      instrument/venue/feature + RNG seed for fillers) + `StepReport` (instructions, fills, position/PnL deltas, trigger
+      evaluations value-vs-threshold, risk-gate decisions per RiskGateLayer) — deterministic given (config, inputs,
+      seed).
+- [ ] [IMPLEMENT] P1. `e2e-testing/scripts/strategy/scenario_stepper.py` (peripheral-script rule: wired into
+      strategy-service QG): JSON-in/JSON-out per step + interactive REPL mode; drives the real archetype engine with
+      SyntheticMarketState + benchmark fills. NOTE: strategy-service engine is under LOGIC FREEZE (surface-only) — v1
+      derives the trigger map from emitted events + risk-gate decisions WITHOUT engine edits; engine-side predicate
+      tracing is a post-unfreeze enhancement todo.
+- [ ] [IMPLEMENT] P1. Trigger map + distance-to-trigger: enumerate armed thresholds for the configured archetype/venues
+      (kill switches, stop loss, entry/exit conditions from config) and report current-value vs threshold each step.
+- [ ] [AGENT][UI] P2. Wizard "Step through it" stage after config: feed key numbers, render StepReports as a timeline
+      (trades/positions/PnL/triggers). pw:L2 gate.
+- [ ] [VERIFY] P1. Stepper smoke per MVP archetype (carry_staked_basis + arbitrage_price_dispersion first): N scripted
+      steps produce coherent position/PnL arithmetic and at least one forced kill-switch trip.
 
 ## Phase 4 — wizard UI + capability matrix tab (PARALLEL across repos)
 
@@ -310,11 +345,18 @@ for every agent on this plan:
 - 2026-06-11 — Plan + codex SSOT (`capability-wizard.md`) + question bank + gap tracker + findings doc authored;
   strategy_master related_plans updated (+ duplicate section fix = F6). Autonomous execution started: Wave 1 = Phase 0
   generator repair (PM, sub-agent) ∥ UAC capability/gap schemas (sub-agent). Wave 2 = exporter → prospectus → UI.
+- 2026-06-11 — **Wave 1 DONE.** Phase 0 shipped (unified-trading-pm@50bdbcd36, PR #268: manifest-driven service
+  auto-discovery + sys.exit(1) on drift; architecture_v2 extraction — 57 archetypes/227 UIC enums/22-archetype
+  capability registry now in ui-reference-data.json; findings F4-confirmed/F8/F9 appended @706e1196a). UAC schemas
+  shipped (unified-api-contracts@6f31f59: capability_manifest + 6 gap-registry modules, TREASURY_SPLIT_POLICIES seeded,
+  rest honest-empty, 40 tests, QG 216s green). Open from Phase 0: full-suite regeneration commit (host lacks full
+  .venv-workspace — exporter wave handles what it can, else documented). **Operator added Phase 3.5 (scenario stepper)
+  mid-flight — baked into plan.** Wave 2 dispatching: capability manifest exporter (PM) + UAC output commit.
 - 2026-06-11 — **Phase 0 COMPLETE** (unified-trading-pm@50bdbcd36, PR #268). Three generator files repaired:
   `generate_unified_spec.py` — SERVICE_REGISTRY auto-derived from workspace-manifest.json, 13 phantom services removed,
   fail-on-drift enforcement; `generate_config_registry.py` — phantom services removed, 4 real services added with
-  verified import paths, 2 consolidated-monorepo services documented (no root config); `generate_ui_reference_data.py`
-  — architecture_v2 submodule walk added, ARCHETYPE_CAPABILITY_REGISTRY serialised deterministically, StrategyArchetype
+  verified import paths, 2 consolidated-monorepo services documented (no root config); `generate_ui_reference_data.py` —
+  architecture_v2 submodule walk added, ARCHETYPE_CAPABILITY_REGISTRY serialised deterministically, StrategyArchetype
   (57), StrategyFamily (9), total UIC enums 227. Quality gates passed. Generator run verified with UAC venv. Finding F4
   confirmed (archetype_capability_manifest.json hand-maintained alongside Python registry, no drift check). One Phase 0
   item deferred: scheduled workflow for drift CI gate (fail-on-run is the current gate).

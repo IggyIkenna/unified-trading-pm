@@ -52,9 +52,9 @@ replacing — check the script for idempotency before next run).
 
 ### F7 — Collateral policy is derivation, not declaration
 
-**Status**: TRIAGED → gap tracker (missing_registry). Wallet-hierarchy doc states DeFi 20/80, CeFi 0/100; no
+**Status**: TRIAGED → gap tracker (missing*registry). Wallet-hierarchy doc states DeFi 20/80, CeFi 0/100; no
 declarative, queryable registry; per-venue accepted collateral/haircuts/LTV/maintenance margin live nowhere.
-Cross-listed because prospectus/risk answers currently require _inferring_ policy from deployment config — an
+Cross-listed because prospectus/risk answers currently require \_inferring* policy from deployment config — an
 understanding gap with correctness consequences.
 
 ## Discovered during build (append below — date + agent + entry)
@@ -63,27 +63,29 @@ understanding gap with correctness consequences.
 
 **Status**: OPEN — no drift check exists. Confirmed 2026-06-11 during Phase 0 build.
 
-**Evidence**: `unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json` (1958 lines, committed)
-is the "deterministic serialised form" loaded at import into `ARCHETYPE_CAPABILITY_REGISTRY`. The SSOT docstring says the
-manifest is generated first and the Python registry loads it — so the JSON is the truth and the Python objects are
-derived. BUT: there is no drift-check script between the JSON and `archetype_capability.py` — if someone edits
-`ARCHETYPE_CAPABILITY_REGISTRY` in Python without updating the manifest, or vice versa, the mismatch would be invisible.
+**Evidence**: `unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json` (1958 lines,
+committed) is the "deterministic serialised form" loaded at import into `ARCHETYPE_CAPABILITY_REGISTRY`. The SSOT
+docstring says the manifest is generated first and the Python registry loads it — so the JSON is the truth and the
+Python objects are derived. BUT: there is no drift-check script between the JSON and `archetype_capability.py` — if
+someone edits `ARCHETYPE_CAPABILITY_REGISTRY` in Python without updating the manifest, or vice versa, the mismatch would
+be invisible.
 
-**Why it matters**: Two authoritative representations of archetype×instrument truth. The `sync-archetype-capability-to-ui.sh`
-script propagates manifest → UI `coverage.ts`, but there is no test that the Python objects match the manifest content.
-A codex parity test (Phase 10 in the code comment) is planned but not yet implemented.
+**Why it matters**: Two authoritative representations of archetype×instrument truth. The
+`sync-archetype-capability-to-ui.sh` script propagates manifest → UI `coverage.ts`, but there is no test that the Python
+objects match the manifest content. A codex parity test (Phase 10 in the code comment) is planned but not yet
+implemented.
 
-**Remedy**: Add a pytest in UAC that re-serialises `ARCHETYPE_CAPABILITY_REGISTRY` to JSON and diffs against the committed
-manifest (same pattern as `check_openapi_drift.py`). Until then, treat the manifest JSON as the SSOT and the Python
-loader as read-only derived.
+**Remedy**: Add a pytest in UAC that re-serialises `ARCHETYPE_CAPABILITY_REGISTRY` to JSON and diffs against the
+committed manifest (same pattern as `check_openapi_drift.py`). Until then, treat the manifest JSON as the SSOT and the
+Python loader as read-only derived.
 
 ### F8 — features-service and ml-service have no root config.py (per-family split)
 
 **Status**: DOCUMENTED — not a bug, by design. Confirmed 2026-06-11 during Phase 0 CONFIG_REGISTRY sweep.
 
 **Evidence**: `features-service` has 8 per-family configs (`calendar/config.py`, `delta_one/config.py`, etc.) but no
-`features_service/config.py`. `ml-service` has `training/config.py` + `inference/config.py` but no root config.
-The consolidated monorepo architecture uses family-level config isolation, not a single root class.
+`features_service/config.py`. `ml-service` has `training/config.py` + `inference/config.py` but no root config. The
+consolidated monorepo architecture uses family-level config isolation, not a single root class.
 
 **Why it matters**: CONFIG_REGISTRY previously listed phantom per-family services (features-calendar-service etc.) with
 their old config classes. After consolidation there is no single top-level config to list. Registry comment documents
@@ -105,3 +107,16 @@ hardcodes 53.
 
 **Remedy**: Success criteria updated by Phase 0 progress log entry (57 confirmed). Future plans should reference
 `len(StrategyArchetype)` rather than a hardcoded count.
+
+### F10 — TimeInForce had no canonical UAC definition
+
+**Status**: OPEN (canonical home now exists). 2026-06-11, UAC schemas agent: workspace grep found zero pre-existing
+TimeInForce enum in UAC — order TIF semantics were implicit per venue adapter. Canonical enum now lives in
+`unified_api_contracts/internal/architecture_v2/order_semantics.py` (UAC@6f31f59). Follow-up scan: any adapter-local
+TIF/order-type enums in execution-service are now dual implementations to remediate against the canonical.
+
+### F11 — Backtest OHLC fill interpolation method undiscoverable by grep
+
+**Status**: OPEN — needs_code_scan. `MatchingModel.CANDLE_OHLC_INTERPOLATED → BenchmarkFillMode` mapping left None: the
+exact interpolation the strategy-service backtest runner uses could not be established by grep (empty results). Route
+through Phase 5 agent escalation; answer lands in SIM_ASSUMPTIONS_REGISTRY + manifest annotation.

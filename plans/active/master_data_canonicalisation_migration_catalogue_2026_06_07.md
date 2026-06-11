@@ -325,14 +325,15 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
 
 ### Ratification todos (the dispatch — owners per slot map)
 
-- [ ] [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→record_captured backfill** (defi 254,984 /
-      tradfi 47,102 / prediction 61,014; sweep reports in `_index/audit/orphan_sweep_<ag>.parquet`): group E objects per
-      (venue, data_type); map each data_type to its code use-case (readers/features consumers); CONVERT non-v9-shape
-      objects to canonical schema/path during backfill (never manifest a non-canonical object); sample-verify per cell;
-      re-run `migration_orphan_sweep` to E==0. defi+tradfi=slot-2, prediction=slot-3. Repos: instruments-service (+mtds
-      schemas). Also: add the defi legacy-tree prefix labels (`dex_pools/`, `lending_indices/`, `_manifests/`,
-      `configs/`) + tradfi unknown-prefix labels to the sweep taxonomy → unknown_prefixes==0 re-proven; cefi corrected
-      re-run to a recorded verdict.
+- [x] ✅ [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→record_captured backfill** — **E==0 +
+      unknown_prefixes==0 GREEN on all four hive AGs 2026-06-11 ~14:32Z** (defi/cefi/prediction/tradfi; sports = R8).
+      Tool `backfill_orphan_class_e.py` (is@0a2e542 + c49d957 + row-key/parser/footer fixes through is@f73abe4+):
+      characterize→convert-to-v9→record*captured with per-cell sample-verify; headline: most E was matcher
+      false-positive (venue-spelling/grain — defi 254,984 ALL covered); real backfills = tradfi 15,694 converted,
+      prediction 7,462 converted, cefi 74,392 record-only; tbbo spec carries (uac@715e2ed lineage + ts_init/bid_size/
+      ask_size); one-shot consolidations merged backfill shards (index ≥ snapshot everywhere — no loss). Full
+      narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
+      `\_index/audit/orphan_sweep*<ag>.parquet`+`orphan*backfill*<ag>.parquet`.
 - [ ] [UAC] P0. **R2-schema — carry ALL dropped columns into v9**: extend `CEFI/PREDICTION/...` schema specs so CF-18 is
       GREEN per AG — the 11 polymarket trades columns (amount, asset, conditionId, outcomeIndex, transactionHash,
       data_source, market_type, resolution_period, symbol, timestamp, underlying) + SchemaSpecs for defi

@@ -106,12 +106,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 - [x] ✅ [SCRIPT] P0. **Sizing rollup** published: cefi total **22.8 TiB** across 101 cells (biggest: DERIBIT trades
       ~3.6 TiB, OKX/BINANCE/KRAKEN book_snapshot_5 ~1 TiB each — pre-download candidates); prediction 22.7 GiB. Rides
       the single walk. — is@da74c72c.
-- [ ] [RUN] P0. Per-AG acceptance: `phantom_count==0` ∧ `orphan_class_E==0`. **🔴 NOT YET CLEAN** (tool shipped + run;
-      verdict is RED, as designed — the "no-v10" check found candidate holes): **prediction E=61,014** (corrected from a
-      563k false count by the grain-fix; objects on dates/data_types outside the manifest's captured coverage) + ~512k
-      legacy-B awaiting G4 migration; **cefi** corrected re-run in flight. **Class (E) → backfill `record_captured`,
-      NEVER delete** — this is the per-AG backfill tail before G4 (partly operator/per-AG). cefi/pred = slot-3;
-      defi/tradfi/sports = slot-2.
+- [x] ✅ [RUN] P0. Per-AG acceptance: `orphan_class_E==0` ∧ `unknown_prefixes==0` — **🟢 GREEN ON ALL FOUR HIVE AGs
+      (2026-06-11 ~14:32Z)**: defi E=0 (13:14Z) · cefi E=0 (13:14Z, was 74,392) · prediction E=0 (13:28Z, was 61,014) ·
+      tradfi E=0 (14:32Z, was 47,102); unknown*prefixes=0 everywhere. Mechanics: backfill applies (prediction 17+7,445
+      converted/2,477 cells; tradfi 14,707+987 converted/~350 cells; cefi 74,392 record-only/7,965 cells; defi 100%
+      matcher-false-positive — 0 needed) + one-shot `manifest_consolidator.consolidate(force=True)` per bucket (per-VM
+      backfill shards → consolidated index; NO data loss — every index ≥ its pre_migration_2026_06_08 snapshot) + sweep
+      fixes (pre-hive blank-venue derivation via shared backfill parser is@f73abe4; lazy footer read via UCI
+      `download_bytes` — 7 weekend 0-row shells honestly split to class D). Final reports:
+      `\_index/audit/orphan_sweep*<ag>.parquet` (refreshed per AG). **Sports = R8** (candidate_parquet_paths-driven
+      sweep, separate item). NOTE for R7/R3 verdict packs: re-run all four sweeps once more on final HEAD for the
+      sign-off snapshot (defi/cefi/pred verdicts predate the last two sweep fixes — non-material to their corpora, but
+      Citadel re-verifies on final code).
 - [x] ✅ [SCRIPT] P0. (is@d4190ba — scripts/manifest_diff.py + tests, grain-aware wildcard covering via
       possible_manifest, human + --out JSON) **Manifest-diff tool (projected-vs-current) — operator 2026-06-10.** Build
       `instruments-service/scripts/manifest_diff.py`: load TWO `_index` parquets (the `beta_manifest_writer` PROJECTED
@@ -194,6 +200,29 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 6. CF-15…CF-21 encoded in the checklist + owning per-service instruction files (re-runnable forever).
 
 ## Progress Log
+
+- 2026-06-11 (~14:50Z, autonomous run) — **R8 part 1: sports v1_archive ROW-coverage gate GREEN — fully superseded,
+  drop-safe**. Archive integrity first (operator asked "is it corrupt?"): 398 daily fixtures parquets (364×2018 +
+  2019/2020 COVID tail + 2024–2026 stragglers), 72,522 rows, **0 corrupt / 0 zero-row / 0 null keys**, 8 within-file
+  duplicate fixture_ids (~0.01%, postponed-replay listings), source=api_football, `league` is a nested struct, and
+  **home_xg/away_xg are NULL in ALL 72,522 rows** (schema-only — strengthens the 2026-06-01 column-supersession verdict:
+  no xG values to lose). ROW gate: first join on v1 `fixture_id` read 100% missing — namespace mismatch (v1 id is a
+  synthetic `LEAGUE:HOME_v_AWAY:date` string); the TRUE key is **v1 `source_fixture_id` ↔ v2 `af_fixture_id`**, and on
+  that key **398/398 days OK, 72,522/72,522 rows covered, 0 uncovered**. v1_archive is superseded column-wise
+  (2026-06-01 verdict) AND row-wise (today) → eligible for the G4.5 verified-delete list (operator-gated; nothing
+  dropped yet). Remaining R8: sports orphan sweep (candidate_parquet_paths-driven) + the prediction dry plan regen on
+  final HEAD.
+
+- 2026-06-11 (~14:35Z, autonomous run) — **R1 COMPLETE: orphan_class_E==0 + unknown_prefixes==0 on ALL FOUR hive AGs**.
+  Closing loop after the 13:20Z entry: tradfi 995 residual root-caused twice — (1) pre-hive blank-venue paths
+  (`data_type=ohlcv_15m/indices/CBOE/...`) could NEVER read covered (venue is identity, never wildcarded) → sweep now
+  derives (venue, instrument_type) for blank-venue objects via the SHARED backfill parser (importlib, single-source);
+  995→7. (2) The last 7 = weekend 0-row schema shells (footer num_rows=0, ~4KB; legacy writer artifacts on non-trading
+  days) — the sweep's docstring PROMISED a lazy footer read for would-be-E but never implemented it; now implemented via
+  UCI `client.download_bytes` (first attempt used `blob.download_as_bytes` — UCI `list_blobs` yields read-surface-less
+  `BlobMetadata`, silently no-opped) → honest class-D split → **tradfi E=0 (14:32Z)**. V2 [RUN] acceptance flipped
+  GREEN; master plan R1 todo flipped. Remaining in this plan: R8 sports gates; R7/R3 re-run all four sweeps on final
+  HEAD for the sign-off verdict packs.
 
 - 2026-06-11 (~13:20Z, autonomous run) — **R1 round-2: cefi + defi GREEN; tradfi/prediction residuals**. Round-2 tool
   (is@c49d957: record-EVERY-converted-cell with footer-exact frames + cefi record-only support + legacy instrument_type
