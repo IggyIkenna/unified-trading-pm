@@ -310,7 +310,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "deployment-service": {
       "type": "infrastructure",
