@@ -17,7 +17,8 @@ The required QG context is DERIVED from the repo's live workflow file (no hardco
 check names), so re-running after a workflow migration auto-re-pins:
   - repo has ``.github/workflows/quality-gates-v2.yml`` →  ``<job name:> / quality-gates-v2``
   - else repo has ``.github/workflows/workspace-qg.yml``  →  ``<job name:> / quality-gates``
-Staging additionally always requires the stable bare context ``check-staging-lock``.
+Staging additionally always requires the context ``Staging Lock Check / check-staging-lock``
+(workflow name / job name as emitted by staging-lock-check.yml).
 
 Idempotent: only rulesets whose current contexts differ from the desired set are PUT.
 Default is DRY-RUN. Pass ``--apply`` to perform the writes.
@@ -41,7 +42,7 @@ import sys
 
 ORG = "IggyIkenna"
 WORKFLOW_REF_DEFAULT = "live-defi-rollout"
-STAGING_LOCK_CONTEXT = "check-staging-lock"
+STAGING_LOCK_CONTEXT = "Staging Lock Check / check-staging-lock"
 
 # semver-agent stamps the post-QG `chore(release)` bump by DIRECT-PUSHing to `staging` (as the
 # admin GH_PAT, after quality-gates-v2 already passed pre-SIT). The staging required-checks would

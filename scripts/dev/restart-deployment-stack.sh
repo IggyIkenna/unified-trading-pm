@@ -94,8 +94,13 @@ start_api() {
   # even though no individual endpoint is slow. Each worker has its own
   # in-process _ROLLUP_CACHE; the 30-min TTL means they all warm up after
   # one cold hit each.
+  # GCP_PROJECT_ID is required: the Repo-CI tab resolves the GH_PAT secret via
+  # get_secret_client() -> get_project_id(), which raises if the project id is
+  # unset (every other tab reads GCS via ADC and doesn't need it). Honour an
+  # already-exported value; default to the canonical prod project otherwise.
   env CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false DISABLE_AUTH=true \
       ENVIRONMENT=development DEPLOYMENT_ENV=prod \
+      GCP_PROJECT_ID="${GCP_PROJECT_ID:-central-element-323112}" \
     nohup .venv/bin/python -m uvicorn deployment_api.main:app \
       --host 0.0.0.0 --port "$API_PORT" --workers 4 \
     > "$logfile" 2>&1 &
