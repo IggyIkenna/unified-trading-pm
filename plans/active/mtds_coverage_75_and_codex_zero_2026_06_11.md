@@ -139,3 +139,23 @@ locked_since: 2026-06-11
 - Bonus finds fixed: real UnboundLocalError bug in upbit_spot_ws._parse_upbit_trade (caught by a new test);
   11 stale asserts from the same-day fleet-wide massive-first/-USD flips (independently also fixed upstream
   by a sibling session — reconciled to the merged combination).
+
+## Wave 3 (operator extension 2026-06-11): FUNCTION_SIZE_EXTRA_EXCLUDES 33 → 0
+
+- [ ] [REFACTOR] P1. Split the 8 >900L excluded files + 2 market_interface >900 files (databento_adapter 1,361,
+      polymarket_adapter 1,022); extract 6 fns >200L + ~150 methods >50L across the 30 working entries + the
+      market_interface glob (75 violations); delete ALL exclude entries (2 stale ones removed immediately);
+      REUSE UTL for cross-cutting pure calculations (operator direction) — search UTL before writing helpers,
+      flag promotion candidates. Repo: market-tick-data-service.
+- 2026-06-11: Wave 3 SHIPPED — market-tick-data-service@33a14c1 (100 files). FUNCTION_SIZE_EXTRA_EXCLUDES
+  33 → 10 entries (market_interface wholesale size-exclusion REMOVED — now enforced); all >900L files split
+  (umi_tick_provider 2,095→874+4, evm_defi 1,431→574+2, lending_indices 1,391→851+3, perp_funding 1,364→458+3,
+  dex_pools 1,098→568+2, oracle/dex_swaps/gas_fee/databento_adapter/polymarket_adapter all <900); ~140 oversized
+  methods extracted; codex V=0 holds at CODEX_MAX_VIOLATIONS=0 (no budget bump needed — grep-exclusion globs
+  extended to the new stage modules so the moved code keeps its documented exclusions; dropped QG-allow /
+  bar-edge annotations restored; 1 real fix: tick_data_handler skip-sentinel collision). Coverage floors pinned
+  per operator: pyproject fail_under=79.7 / MIN_COVERAGE=79 — the REAL gate metric is pytest-cov's
+  branch-combined total (79.8%; line-rate is 82.7%). 4,928 tests green. Remaining for next session: (1) the 10
+  exclude entries (one 51-90L method each); (2) PM adapter_contract_baseline regen — now also covering the UTL
+  manifest_writer rename + tardis_batch_download docstring trims (STEP 5.83 warn-level) — still blocked on the
+  sibling PM session's red prospectus WIP; (3) ratchet-plan Phase 1.5 MTDS row can flip when (1) lands.
