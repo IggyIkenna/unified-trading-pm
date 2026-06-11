@@ -140,7 +140,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -310,7 +310,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -781,7 +781,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "ml-service": {
       "type": "service",
@@ -980,7 +980,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "trading-agent-service": {
       "type": "service",
@@ -1035,7 +1035,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-api-contracts": {
       "type": "library",
@@ -1075,7 +1075,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-trading-library": {
       "type": "library",
@@ -1099,7 +1099,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
