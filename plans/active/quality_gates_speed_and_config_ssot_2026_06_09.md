@@ -325,12 +325,19 @@ single-core pinned), output under gitignored `.qg_profile/`.
       (execution-service 178 / mtds 63 / deployment-api 92 / instruments 0 / uta 0). **Result: schema-provenance 157s →
       0.4s (~390×)** on execution-service; env_canon 10s + manifest 1.5s also drop. Runs in every service-repo codex
       block → fleet-wide. — unified-trading-pm@<sha>
-  - [ ] [INFRA] P2. **Sweep the remaining no-prune `.py` checks for the same `.venv`-enumeration waste** (audit found
-        ~12 more with `rglob`/`glob` + post-filter, mostly PM-only: `check_plan_discipline.py`,
-        `check-circular-imports`, `check_cost_leakage`, `audit-library-imports`, `validate-*`, `detect_template_drift`,
-        …). Lower priority (not on the service-repo codex hot path) but the operator wants the redundant dirs excluded
-        everywhere — apply the same `os.walk` + `EXCLUDE_DIR_NAMES` exclusion. Provenance: 2026-06-11 walk-pattern
-        audit.
+  - [x] ✅ [INFRA] P2. **Sweep DONE (2026-06-11) — audited all 14 FS-walking checks in
+        `scripts/{validation,quality_gates,cicd}/`; only 2 genuinely descended a `.venv`-bearing root.** Methodical grep
+        (`rglob|glob|os.walk`) → 8 candidates → on inspecting each walk ROOT: `check-circular-imports` (argv
+        `source_dir` = package dir, no .venv), `validate-strategy-manifest` (deep `engine/strategies`),
+        `check-integration-dep-coverage` (`tests/{unit,integration}`), `check_cost_leakage` (bounded
+        `app/(public)/**`,`marketing-static/**`,`codex/**` globs), `check-cursor-plan-format` (`plans/*.plan.md`),
+        `check-workflow-bash-guards` (`.github/workflows/*.yml`), `check_plan_discipline`/ `detect_template_drift` (no
+        broad walk) — **none enumerate `.venv`**; `audit-library-imports` + `check-import-patterns` **already** exclude
+        it. The two real offenders **`rglob` over `WORKSPACE_ROOT`** (descending every repo's `.venv` +
+        `.venv-workspace` + UI `node_modules`): `validate-cloudbuild.py` `find_cloudbuild_files` +
+        `validate-buildspec.py` `find_buildspec_files` → converted to `os.walk` + `EXCLUDE_DIR_NAMES`. **VERIFIED
+        byte-identical** found-file sets (cloudbuild 544 / buildspec 351, diff empty) with **cloudbuild 40.8s→8.0s
+        (~5×)** + **buildspec 13.7s→4.9s (~2.8×)** — ~42 s off the PM gate. — unified-trading-pm@<sha>
 - [ ] [INFRA] P2. bandit fast-tier scoping: scope bandit to changed files on the `--fast` tier (residual from the cache
       item above — depends on the Phase-2 fast-tier mechanism landing; the content-hash cache already covers the
       unchanged-tree case).

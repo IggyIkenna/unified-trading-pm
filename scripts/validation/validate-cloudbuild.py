@@ -13,14 +13,24 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import http.client
 import importlib.util
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import cast
+
+# Directory names EXCLUDED from the recursive walk (never descended into). These are
+# build/cache/dependency trees that hold no cloudbuild yaml — descending every repo's
+# .venv across the workspace is pure walk-waste. Excluded ≠ pruned/removed: the dirs
+# stay on disk, the walk just doesn't enter them.
+EXCLUDE_DIR_NAMES: frozenset[str] = frozenset(
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+)
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_URL = "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/cloudbuild.json"
@@ -71,8 +81,19 @@ def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | No
 
 
 def find_cloudbuild_files(root: Path) -> list[Path]:
-    """Find all cloudbuild*.yaml files under root."""
-    return sorted(root.rglob("cloudbuild*.yaml"))
+    """Find all cloudbuild*.yaml files under root, skipping EXCLUDE_DIR_NAMES trees.
+
+    Behaviour-identical to ``root.rglob("cloudbuild*.yaml")`` (which descends every .venv) —
+    excluded dirs contain no cloudbuild yaml, so the result set is unchanged while the walk
+    no longer enumerates dependency/build trees.
+    """
+    found: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIR_NAMES]
+        for name in filenames:
+            if fnmatch.fnmatch(name, "cloudbuild*.yaml"):
+                found.append(Path(dirpath) / name)
+    return sorted(found)
 
 
 def main() -> None:
