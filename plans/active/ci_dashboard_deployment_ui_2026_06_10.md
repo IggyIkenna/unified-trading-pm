@@ -210,6 +210,16 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       both; notify-slack.yml lines 196-228 = the persist step. **The one un-persisted tail** (scoped below) is the
       per-repo `semver-agent.yml` inline-curl circuit-breaker / dispatch-fail PAGES (rare; on the promotion-critical
       workflow which has no GCP auth step).
+- [ ] [CODE] P1. **Epics endpoint GitHub-quota budget — batch the ~92-request cold load (found 2026-06-11, REPRODUCED:
+      live 503 "GitHub rate limit exhausted", retry_after≈22 min, after a handful of dashboard cache-miss loads)** —
+      `/api/epics/plans` issues 2 listing calls + ~90 per-file `gh_raw_file` fetches on every 300 s cache miss; stacked
+      with the Repos-CI tab's polling this exhausts the GH_PAT 5,000/hr core budget in normal browsing. Fix in
+      deployment-api `_epics_plans.py`: replace per-file fetches with ONE GraphQL query batching all
+      `plans/epics/*.md` + `plans/active/*.md` blobs (or `GET /git/trees?recursive=1` + conditional-request ETags so
+      304s are quota-free); keep the 300 s TTL; on 403-rate-limit serve the LAST cached payload with a `stale: true`
+      marker instead of a 503 (alert-parity: degraded ≠ blank). Add a unit test asserting ≤3 GitHub calls per cold load.
+      Repo: deployment-api.
+
 - [ ] [CI] P3. **Persist the per-repo semver-agent inline-curl pages to the ledger (tail, scoped 2026-06-10)** — the
       bump-rate circuit-breaker + dispatch-fail CRITICAL pages in `scripts/workflow-templates/semver-agent.yml.tmpl`
       `curl` the Slack webhook directly (no ledger write) because semver-agent has no GCP-auth step (unlike
