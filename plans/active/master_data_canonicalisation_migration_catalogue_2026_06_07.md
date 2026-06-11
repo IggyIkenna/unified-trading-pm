@@ -312,7 +312,7 @@ restart** (inherited-dirty-WIP rule: makers are dead, inherit):
   `pipeline-mode-and-batch-live-reconciliation.md` (hyperliquid_rest purge), `batch-live-architecture.md`,
   `cefi-batch-live.md`, `tradfi-batch-live.md`, `replay-subsystem.md` (+ more). REMAINS: finish per-AG plan
   de-coarsening + prediction/sports seam docs + M1–M8 target codification, prettier, docs commits, flip M-COORD-1. **→
-  RESUMED + COMPLETED 2026-06-11 (slot-4): pm@645648a03 (codex contract) + pm@55f9cf9c3 (seam docs) + the docs(plans)
+  RESUMED + COMPLETED 2026-06-11 (slot-4): pm@a28cbd4d7 (codex contract) + pm@51863c157 (seam docs) + the docs(plans)
   de-coarsen/flip commit — R6-codex + M-COORD-1 ticked below.**
 - **R4 (no tree WIP found)**: investigation state unknown — restart the diagnosis from the task spec (decision #4);
   check `gcloud scheduler jobs describe` for the IS jobs + instruments-store `by_date/` last-written days first.
@@ -350,8 +350,8 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       failing shards at (asset_group × data_type × venue) grain ONLY** — emit the pending-post-migration- backfill shard
       ledger into this plan; never block a whole AG. Run AFTER worktrees clean + all tonight's ships verified on `main`
       (image rebuilds ride that). slot-2+slot-3 split by AG ownership. Repos: mtds, instruments-service.
-- [x] ✅ [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies — DONE (slot-4 resume 2026-06-11, pm@645648a03 +
-      pm@55f9cf9c3 + this commit)**: 5 per-AG plans de-coarsened (gate banners reconciled to M-COORD-1/R6-codex;
+- [x] ✅ [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies — DONE (slot-4 resume 2026-06-11, pm@a28cbd4d7 +
+      pm@51863c157 + pm@05456c343)**: 5 per-AG plans de-coarsened (gate banners reconciled to M-COORD-1/R6-codex;
       defi+cefi deep-annotated — every remaining coarse/`hyperliquid_rest` token is a marked legacy-state/historical
       record, never spec; defi A12f-col CLOSED by ratification); `pipeline-mode-and-batch-live-reconciliation.md`
       hyperliquid_rest purged (vendor-only + transport column; sole remaining mention = the documented retirement) +
@@ -1774,8 +1774,8 @@ speed-note (both deferred optimisations, non-blocking).
       unified-api-contracts (validity matrix). parent_epic: manifest_master. Provenance: tradfi pre-apply audit, slot-6
       2026-06-08.
 
-- [x] ✅ [DOCS] P0. **M-COORD-1 — G0 doc-coherence reconcile GREEN (R6-codex closure, slot-4 2026-06-11 — pm@645648a03 +
-      pm@55f9cf9c3 + this commit)**: CLAUDE.md + the codex layer (`pipeline-mode-partition.md` now carries the M1–M8
+- [x] ✅ [DOCS] P0. **M-COORD-1 — G0 doc-coherence reconcile GREEN (R6-codex closure, slot-4 2026-06-11 — pm@a28cbd4d7 +
+      pm@51863c157 + pm@05456c343)**: CLAUDE.md + the codex layer (`pipeline-mode-partition.md` now carries the M1–M8
       settled-contract section, `availability-manifest-and-data-status.md` live-taxonomy reconciled) +
       `SUB_AGENT_MANDATORY_RULES.md` + **all 5 per-AG plans** acknowledge the source-aware
       `{mode}_{source}[_{transport}]` model + the apply-gate. parent_epic: manifest_master. **SSOT layer DONE
