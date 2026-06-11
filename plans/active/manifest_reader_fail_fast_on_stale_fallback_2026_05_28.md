@@ -163,9 +163,11 @@ shipped is retained as the read-side enforcement of that contract):
       `CONSOLIDATOR_DOWN` alert event** when a bucket misses > N cycles (default N=5 at `*/1`). The heartbeat already
       exists (incl. no-op ping) — only the watcher is missing. Cadence: own Cloud Run Job + Scheduler, OR fold into the
       existing freshness-monitor (`feature_service_base/health.py` / freshness_monitor).
-- [ ] [UTL] P1. **Wire `MANIFEST_CONSOLIDATION_FAILED` to alerting** — it is emitted on every failed cycle but currently
-      consumed by nothing. Route it to the same alert sink as `CONSOLIDATOR_DOWN` so a crash-looping consolidator pages
-      instead of silently degrading.
+- [x] ✅ [UTL] P1. (alerting@dec309b 2026-06-11 — alerting_service/rules/consolidator_rules.py consumes BOTH
+      `CONSOLIDATOR_DOWN` (CRITICAL/page) + `MANIFEST_CONSOLIDATION_FAILED` (WARN→CRITICAL on repeat), wired into
+      alert_subscriber + tests) **Wire `MANIFEST_CONSOLIDATION_FAILED` to alerting** — it is emitted on every failed
+      cycle but currently consumed by nothing. Route it to the same alert sink as `CONSOLIDATOR_DOWN` so a crash-looping
+      consolidator pages instead of silently degrading.
 - [ ] [UTL] P1. **Promote read-path fail-fast from opt-in → DEFAULT** — flip the default of
       `MANIFEST_FAIL_ON_STALE_FALLBACK` so a stale/missing consolidated index RAISES `ManifestConsolidatorStaleError` +
       emits a `CONSOLIDATOR_STALE` alert by default. The ~1700-shard per-VM merge stops being an automatic reader path
