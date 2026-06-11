@@ -180,11 +180,18 @@ unchanged:
       (tests/unit/test_seed_quality.py); full QG green. Original: **unified-trading-api `seed.py` (5,169 L)** — if it's
       seed DATA (fixtures/records), same pattern as registry.py: move the data to a data file + a thin seeding loader;
       if it's seed LOGIC, split by domain. Census (Phase 0) confirms which. Repo: unified-trading-api.
-- [ ] [REFACTOR] P1. **agent-orchestrator `server.py` (4,470 L)** — split the FastAPI route module by surface into
-      `server/routes/*.py` (slots / git-status+fleet / vms+proxy / accounts / backlog / agents), each an `APIRouter`
-      mounted on the app; the view-helpers (`_slot_to_view`/`_build_local_git_health`/`_summarise_git_health`) move with
-      their routes. `worker_liveness.py` (1,215) + `state_store.py` (1,118) reviewed for method-size too. Repo:
-      agent-orchestrator.
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — agent-orchestrator@951e3e6: server.py 4,505 L → 597 L (lifespan + app
+      assembly + account-rotation helpers kept for test patch-surface) + 9 `server/routes/*.py` APIRouter modules
+      (232–830 L each) + `_deps.py`; route table (76 APIRoutes: path/method/endpoint/response_model/deps/status)
+      byte-identical pre/post via worktree diff; runtime smoke on :8799 (live :8765 untouched, no restart); 480 tests
+      green; zero caller/test edits. worker_liveness/state_store reviewed: NOT split (next todo). Original:
+      **agent-orchestrator `server.py` (4,470 L)** — split by surface into routes/*.
+- [ ] [REFACTOR] P3. **agent-orchestrator `worker_liveness.py` (1,215 L) + `state_store.py` (1,118 L) decomposition
+      requires test edits** — 2026-06-11 review: worker_liveness is one ~1,050-line `WorkerLivenessKicker` class whose
+      tests fire ~30 namespace patches at `server.worker_liveness.*`, and state_store is a flat CRUD namespace with
+      module-attr patch surfaces (`server.state_store.utcnow/to_utc/log_activity`) + bare-name cross-calls — a
+      zero-caller-edit split is impossible (mixins = banned shim). Proper unit: decompose by entity/concern AND migrate
+      the test patch targets in the same commit (pre-audit the full patch manifest first). Repo: agent-orchestrator.
 - [ ] [REFACTOR] P1. **market-tick-data-service `orchestrator.py` (4,219 L)** + `tardis_adapter.py` (2,880) +
       `solana_defi_handler.py` (2,125) — decompose by venue/transport. Repo: market-tick-data-service.
 - [ ] [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
