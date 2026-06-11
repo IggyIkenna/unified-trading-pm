@@ -71,9 +71,7 @@ def extract_uac_registries() -> dict[str, object]:
         )
 
         data["venue_category_map"] = {str(k): str(v) for k, v in VENUE_CATEGORY_MAP.items()}
-        # sorted() the inner values: INSTRUMENT_TYPES_BY_VENUE values are sets, so an unsorted
-        # list comprehension emits a non-deterministic order → the registry-drift CI diff would
-        # false-fail every run. (HARD RULE: generators MUST emit deterministically.)
+        # sorted() inner values: sets are non-deterministic; registry-drift CI depends on stable output.
         data["instrument_types_by_venue"] = {
             str(k): sorted(str(t) for t in v) for k, v in INSTRUMENT_TYPES_BY_VENUE.items()
         }
@@ -83,7 +81,6 @@ def extract_uac_registries() -> dict[str, object]:
         data["sports_venues"] = sorted(str(v) for v in SPORTS_VENUES)
         data["zero_alpha_venues"] = sorted(str(v) for v in ZERO_ALPHA_VENUES)
 
-        # DeFi protocol registry — full venue→protocol mapping + chain context
         try:
             from unified_api_contracts.registry import (  # noqa: qg-deep-import
                 DEFI_PROTOCOLS,
@@ -100,7 +97,6 @@ def extract_uac_registries() -> dict[str, object]:
         except Exception as e:
             logger.warning("  Failed to extract DeFi protocol registry: %s", e)
 
-        # Chain RPC templates — chain_id → RPC URL template
         try:
             from unified_api_contracts.registry import CHAIN_RPC_TEMPLATES  # noqa: qg-deep-import
 
@@ -109,7 +105,6 @@ def extract_uac_registries() -> dict[str, object]:
         except Exception as e:
             logger.warning("  Failed to extract CHAIN_RPC_TEMPLATES: %s", e)
 
-        # Solana DeFi protocols
         try:
             from unified_api_contracts.registry import SOLANA_DEFI_PROTOCOLS  # noqa: qg-deep-import
 
@@ -120,7 +115,6 @@ def extract_uac_registries() -> dict[str, object]:
         except Exception as e:
             logger.warning("  Failed to extract SOLANA_DEFI_PROTOCOLS: %s", e)
 
-        # DeFi pool pairs
         try:
             from unified_api_contracts.registry import DEFI_POOL_PAIRS  # noqa: qg-deep-import
 
@@ -128,7 +122,6 @@ def extract_uac_registries() -> dict[str, object]:
         except Exception as e:
             logger.warning("  Failed to extract DEFI_POOL_PAIRS: %s", e)
 
-        # Endpoint registry — extract venue capabilities
         endpoint_data = {}
         registry_items = (
             ENDPOINT_REGISTRY.items() if isinstance(ENDPOINT_REGISTRY, dict) else enumerate(ENDPOINT_REGISTRY)
@@ -172,23 +165,107 @@ def extract_uac_enums() -> dict[str, list[str]]:
 
 
 def extract_uic_enums() -> dict[str, list[str]]:
-    """Extract all enum values from UIC."""
-    enums: dict[str, list[str]] = {}
+    """Extract enum values from UIC root exports + architecture_v2 submodules.
 
+    architecture_v2 enums are NOT re-exported at ``unified_api_contracts.internal``
+    root, so dir(uic) misses them. Walk the submodules explicitly.
+    """
+    enums: dict[str, list[str]] = {}
+    import importlib
+
+    # Root-level UIC exports
     try:
         import unified_api_contracts.internal as uic
 
-        for name in dir(uic):
+        for name in sorted(dir(uic)):
             obj = getattr(uic, name, None)
             if obj and isinstance(obj, type) and issubclass(obj, enum.Enum) and obj is not enum.Enum:
                 with contextlib.suppress(Exception):
                     enums[name] = extract_enum_values(obj)
-
-        logger.info("  Extracted %d UIC enums", len(enums))
+        logger.info("  UIC root exports: %d enums", len(enums))
     except Exception as e:
-        logger.warning("  Failed to extract UIC enums: %s", e)
+        logger.warning("  Failed to extract UIC root enums: %s", e)
 
+    # architecture_v2 submodules (not re-exported at root)
+    arch_v2_submodules = [
+        "unified_api_contracts.internal.architecture_v2.enums",
+        "unified_api_contracts.internal.architecture_v2.archetype_capability",
+    ]
+    before = len(enums)
+    for mod_path in arch_v2_submodules:
+        try:
+            mod = importlib.import_module(mod_path)
+            for name in sorted(dir(mod)):
+                obj = getattr(mod, name, None)
+                if (
+                    obj
+                    and isinstance(obj, type)
+                    and issubclass(obj, enum.Enum)
+                    and obj is not enum.Enum
+                    and name not in enums
+                ):
+                    with contextlib.suppress(Exception):
+                        enums[name] = extract_enum_values(obj)
+        except Exception as e:
+            logger.warning("  Failed to walk %s: %s", mod_path, e)
+
+    logger.info("  architecture_v2: +%d enums; total UIC: %d", len(enums) - before, len(enums))
     return enums
+
+
+def extract_architecture_v2_capability_registry() -> dict[str, object]:
+    """Serialise ARCHETYPE_CAPABILITY_REGISTRY deterministically (sorted by archetype_id)."""
+    result: dict[str, object] = {}
+    try:
+        from unified_api_contracts.internal.architecture_v2.archetype_capability import (  # noqa: qg-deep-import
+            ARCHETYPE_CAPABILITY_REGISTRY,
+        )
+
+        rows = sorted(ARCHETYPE_CAPABILITY_REGISTRY, key=lambda r: r.archetype_id.value)
+        summary_list: list[dict[str, object]] = []
+        per_archetype: dict[str, object] = {}
+
+        for entry in rows:
+            key = entry.archetype_id.value
+            cells: list[dict[str, object]] = sorted(
+                [
+                    {
+                        "asset_group": c.asset_group.value,
+                        "instrument_type": c.instrument_type.value,
+                        "status": c.status.value,
+                        "roll_mode": c.roll_mode.value,
+                        "venue_ids": sorted(c.venue_ids),
+                        "signal_variants": sorted(c.signal_variants),
+                        "block_list_refs": sorted(c.block_list_refs),
+                        "representative_slot_labels": sorted(c.representative_slot_labels),
+                        "notes": c.notes,
+                    }
+                    for c in entry.cells
+                ],
+                key=lambda c: (c["asset_group"], c["instrument_type"]),  # type: ignore[arg-type]
+            )
+            summary_list.append(
+                {
+                    "archetype_id": key,
+                    "family": entry.family.value,
+                    "uses_rolling_futures": entry.uses_rolling_futures,
+                    "cell_count": len(entry.cells),
+                    "supported_count": sum(1 for c in cells if c["status"] == "SUPPORTED"),
+                    "partial_count": sum(1 for c in cells if c["status"] == "PARTIAL"),
+                    "blocked_count": sum(1 for c in cells if c["status"] == "BLOCKED"),
+                }
+            )
+            per_archetype[key] = cells
+
+        result["archetype_count"] = len(rows)
+        result["archetypes"] = summary_list
+        result["per_archetype"] = per_archetype
+        total_cells = sum(int(s["cell_count"]) for s in summary_list)  # type: ignore[arg-type]
+        logger.info("  ARCHETYPE_CAPABILITY_REGISTRY: %d archetypes, %d cells", len(rows), total_cells)
+    except Exception as e:
+        logger.warning("  Failed to extract ARCHETYPE_CAPABILITY_REGISTRY: %s", e)
+        traceback.print_exc()
+    return result
 
 
 def extract_config_schema_universe() -> dict[str, object]:
@@ -566,13 +643,7 @@ def extract_client_registry() -> dict[str, object]:
 
 
 def extract_strategy_instance_catalogue() -> dict[str, object]:
-    """Extract the 5-dim strategy-instance catalogue (Plan A UAC foundation).
-
-    ``STRATEGY_INSTANCE_CATALOGUE`` materialises the cross-product of archetype,
-    venue-set-variant and share-class — the UI's <FamilyArchetypePicker> 3rd
-    cascade feeds off this, and <PerformanceOverlay> uses the instance_id as
-    the series key for backtest / paper / live data.
-    """
+    """Extract the 5-dim strategy-instance catalogue (Plan A — archetype x venue-set x share-class)."""
     catalogue: dict[str, object] = {}
     try:
         from unified_api_contracts.internal.domain.strategy_service import (
@@ -590,12 +661,7 @@ def extract_strategy_instance_catalogue() -> dict[str, object]:
 
 
 def extract_venue_set_variants() -> list[dict[str, object]]:
-    """Extract the venue-set variant ladder (Plan A UAC foundation).
-
-    Each archetype has one or more named venue-set variants (Elysium has 4 —
-    base_3cex → premium_6cex → multi_evm → multi_evm_plus_sol). The UI picker
-    renders these as the 3rd cascade tier with the pricing_tier label.
-    """
+    """Extract the venue-set variant ladder (Plan A — per-archetype named venue-set tiers)."""
     variants: list[dict[str, object]] = []
     try:
         from unified_api_contracts.internal.domain.strategy_service import (
@@ -621,13 +687,7 @@ def extract_venue_set_variants() -> list[dict[str, object]]:
 
 
 def extract_lifecycle_enums() -> dict[str, list[str]]:
-    """Extract Plan A lifecycle enum values for UI dropdowns.
-
-    ``StrategyMaturityPhase`` drives the 9-phase admin editor and the
-    ``<PerformanceOverlay>`` gating. ``ProductRouting`` gates which product
-    surfaces can see each instance. ``AccountType`` distinguishes odum-paper
-    / odum-live seeds from live customer accounts.
-    """
+    """Extract Plan A lifecycle enum values (StrategyMaturityPhase, ProductRouting, AccountType)."""
     result: dict[str, list[str]] = {}
     try:
         from unified_api_contracts.internal.domain.strategy_service import (
@@ -652,60 +712,36 @@ def extract_lifecycle_enums() -> dict[str, list[str]]:
 
 
 def validate_config_registry_coverage(pm_root: Path, uac_root: Path, repos_root: Path) -> None:
-    """Check which service/api repos have config files vs config-registry.json coverage."""
+    """Check which service repos have config files vs config-registry.json coverage."""
     manifest_path = pm_root / "workspace-manifest.json"
     config_registry_path = uac_root / "openapi" / "config-registry.json"
-    workspace_root = repos_root  # per-repo existence probe below (lenient — absent repos skipped)
-
     if not manifest_path.exists():
         logger.warning("  workspace-manifest.json not found at %s", manifest_path)
         return
-
     with open(manifest_path) as f:
         manifest = json.load(f)
-
-    # Get repos of type "service" or "api"
     repos = manifest.get("repos", manifest.get("folders", []))  # noqa: qg-empty-fallback
-    service_repos: list[dict[str, str]] = []
-    for repo in repos:
-        repo_type = repo.get("type", "")
-        if repo_type in ("service", "api"):
-            service_repos.append(repo)
-
-    # Find which service repos have a config.py or service_config.py
     repos_with_config: list[str] = []
-    for repo in service_repos:
-        repo_name = repo.get("name", repo.get("path", ""))
-        repo_path = workspace_root / repo_name
-        if not repo_path.exists():
+    for repo in repos:
+        if repo.get("type", "") not in ("service", "api"):
             continue
-        # Derive package name: repo-name -> repo_name
+        repo_name = repo.get("name", repo.get("path", ""))
         pkg_name = repo_name.replace("-", "_")
-        config_candidates = [
-            repo_path / pkg_name / "config.py",
-            repo_path / pkg_name / "service_config.py",
-        ]
-        for candidate in config_candidates:
-            if candidate.exists():
+        for suffix in ("config.py", "service_config.py"):
+            if (repos_root / repo_name / pkg_name / suffix).exists():
                 repos_with_config.append(repo_name)
                 break
-
-    # Load config-registry.json if it exists
     registry_repos: set[str] = set()
     if config_registry_path.exists():
         with open(config_registry_path) as f:
             config_registry = json.load(f)
         for entry in config_registry if isinstance(config_registry, list) else config_registry.values():
             source = entry.get("source", "") if isinstance(entry, dict) else str(entry)
-            # Extract repo name from source like "unified-trading-library (config_interface/)"
             if isinstance(source, str) and source:
                 registry_repos.add(source.split(" ")[0].split("/")[0])
-        # Also check top-level keys which may be service names
         if isinstance(config_registry, dict):
             for key in config_registry:
                 registry_repos.add(key.replace("_", "-"))
-
-    # Report
     missing = [r for r in repos_with_config if r not in registry_repos]
     logger.info(
         "  Services with config files: %d | In config-registry.json: %d",
@@ -780,47 +816,35 @@ def main() -> None:
 
     logger.info("\n7. Extracting strategy configs from system-topology...")
     reference["strategy_configs"] = extract_strategy_configs(ui_root, uac_root)
-
     logger.info("\n8. Extracting execution algo definitions...")
     reference["execution_algos"] = extract_execution_algos()
-
     logger.info("\n9. Extracting sports bookmaker registry...")
     reference["sports_bookmaker_registry"] = extract_sports_bookmaker_registry()
-
     logger.info("\n10. Extracting DeFi protocol capabilities...")
     reference["defi_protocol_capabilities"] = extract_defi_protocol_capabilities()
-
     logger.info("\n11. Extracting TradFi exchange calendars...")
     reference["tradfi_exchange_calendars"] = extract_tradfi_exchange_calendars()
-
     logger.info("\n12. Extracting venue data availability...")
     reference["venue_data_availability"] = extract_venue_data_availability()
-
     logger.info("\n13. Extracting venue coordinates...")
     reference["venue_coordinates"] = extract_venue_coordinates()
-
     logger.info("\n14. Extracting TradFi tick data windows...")
     reference["tradfi_tick_data_windows"] = extract_tradfi_tick_data_windows()
-
     logger.info("\n15. Extracting MVP CME exchange codes...")
     reference["mvp_cme_exchange_codes"] = extract_mvp_cme_exchange_codes()
-
     logger.info("\n16. Extracting strategy registry...")
     reference["strategy_registry"] = extract_strategy_registry()
-
     logger.info("\n17. Extracting client registry...")
     reference["client_registry"] = extract_client_registry()
-
     logger.info("\n18. Extracting strategy-instance catalogue (Plan A 5-dim)...")
     reference["strategy_instance_catalogue"] = extract_strategy_instance_catalogue()
-
     logger.info("\n19. Extracting venue-set variants (Plan A)...")
     reference["venue_set_variants"] = extract_venue_set_variants()
-
     logger.info("\n20. Extracting lifecycle enums (Plan A maturity/routing/account)...")
     reference["lifecycle_enums"] = extract_lifecycle_enums()
-
-    logger.info("\n21. Validating config registry coverage...")
+    logger.info("\n21. Extracting architecture_v2 capability registry...")
+    reference["archetype_capability_registry"] = extract_architecture_v2_capability_registry()
+    logger.info("\n23. Validating config registry coverage...")
     validate_config_registry_coverage(pm_root, uac_root, workspace_root)
 
     # Write output
@@ -833,45 +857,27 @@ def main() -> None:
     logger.info("\nOutput written: %s", output_path)
 
     # Summary
+    def _n(key: str, sub: str | None = None) -> int:
+        v = reference.get(key, {})  # noqa: qg-empty-fallback
+        if sub:
+            v = v.get(sub, v) if isinstance(v, dict) else v  # type: ignore[union-attr]
+        return len(v) if isinstance(v, (list, dict)) else 0
+
+    regs = reference.get("registries", {})  # noqa: qg-empty-fallback
+    uic_e = reference.get("uic_enums", {})  # noqa: qg-empty-fallback
+    acr = reference.get("archetype_capability_registry", {})  # noqa: qg-empty-fallback
     print("\n" + "=" * 60)
     print("UI REFERENCE DATA — GENERATION SUMMARY")
     print("=" * 60)
-    regs = reference.get("registries", {})  # noqa: qg-empty-fallback
     print(f"Venues in category map:  {len(regs.get('venue_category_map', {}))}")  # noqa: qg-empty-fallback
-    print(f"DeFi venue→protocol:     {len(regs.get('defi_venue_to_protocol', {}))}")  # noqa: qg-empty-fallback
-    print(f"DeFi protocols:          {len(regs.get('defi_protocols', []))}")  # noqa: qg-empty-fallback
-    print(f"Chain RPC templates:     {len(regs.get('chain_rpc_templates', {}))}")  # noqa: qg-empty-fallback
-    print(f"UAC enums:               {len(reference.get('uac_enums', {}))}")  # noqa: qg-empty-fallback
-    print(f"UIC enums:               {len(reference.get('uic_enums', {}))}")  # noqa: qg-empty-fallback
-    print(f"Config schemas:          {len(reference.get('config_schemas', {}))}")  # noqa: qg-empty-fallback
-    print(f"Service stacks:          {len(reference.get('service_port_registry', {}))}")  # noqa: qg-empty-fallback
-    print(f"Strategy configs:        {len(reference.get('strategy_configs', []))}")  # noqa: qg-empty-fallback
-    print(f"Execution algos:         {len(reference.get('execution_algos', {}).get('algorithms', []))}")  # noqa: qg-empty-fallback
-    print(f"Bookmakers:              {len(reference.get('sports_bookmaker_registry', {}))}")  # noqa: qg-empty-fallback
-    print(f"DeFi protocols:          {len(reference.get('defi_protocol_capabilities', {}).get('protocols', []))}")  # noqa: qg-empty-fallback
-    print(f"Exchange calendars:      {len(reference.get('tradfi_exchange_calendars', {}))}")  # noqa: qg-empty-fallback
-    print(f"Venue data availability: {len(reference.get('venue_data_availability', {}))}")  # noqa: qg-empty-fallback
-    print(f"Venue coordinates:       {len(reference.get('venue_coordinates', {}))}")  # noqa: qg-empty-fallback
-    print(f"TradFi tick windows:     {len(reference.get('tradfi_tick_data_windows', []))}")  # noqa: qg-empty-fallback
-    print(f"MVP CME exchange codes:  {len(reference.get('mvp_cme_exchange_codes', []))}")  # noqa: qg-empty-fallback
-    sr = reference.get("strategy_registry", {})  # noqa: qg-empty-fallback
-    sr_strategies = sr.get("strategies", sr) if isinstance(sr, dict) else sr
-    sr_count = len(sr_strategies) if isinstance(sr_strategies, (list, dict)) else 0
-    print(f"Strategy registry:       {sr_count} strategies")
-    cr = reference.get("client_registry", {})  # noqa: qg-empty-fallback
-    cr_clients = cr.get("clients", cr) if isinstance(cr, dict) else cr
-    cr_count = len(cr_clients) if isinstance(cr_clients, (list, dict)) else 0
-    print(f"Client registry:         {cr_count} clients")
-    sic = reference.get("strategy_instance_catalogue", {})  # noqa: qg-empty-fallback
-    sic_instances = sic.get("instances", []) if isinstance(sic, dict) else []  # noqa: qg-empty-fallback
-    sic_count = len(sic_instances) if isinstance(sic_instances, list) else 0
-    print(f"Strategy instance catalogue: {sic_count} instances")
-    vsv = reference.get("venue_set_variants", [])  # noqa: qg-empty-fallback
-    vsv_count = len(vsv) if isinstance(vsv, list) else 0
-    print(f"Venue-set variants:      {vsv_count}")
-    le = reference.get("lifecycle_enums", {})  # noqa: qg-empty-fallback
-    le_phases = le.get("strategy_maturity_phases", []) if isinstance(le, dict) else []  # noqa: qg-empty-fallback
-    print(f"Maturity phases:         {len(le_phases) if isinstance(le_phases, list) else 0}")
+    sa_count = len(uic_e.get("StrategyArchetype", []))  # noqa: qg-empty-fallback
+    sf_count = len(uic_e.get("StrategyFamily", []))  # noqa: qg-empty-fallback
+    acr_n = acr.get("archetype_count", 0) if isinstance(acr, dict) else 0
+    print(f"UAC enums: {_n('uac_enums')}  UIC enums: {_n('uic_enums')}  Config: {_n('config_schemas')}")
+    print(f"StrategyArchetype: {sa_count}  StrategyFamily: {sf_count}  Archetypes: {acr_n}")
+    print(f"Bookmakers: {_n('sports_bookmaker_registry')}  Calendars: {_n('tradfi_exchange_calendars')}")
+    print(f"Strategy: {_n('strategy_registry', 'strategies')}  Clients: {_n('client_registry', 'clients')}")
+    print(f"Instances: {_n('strategy_instance_catalogue', 'instances')}  Variants: {_n('venue_set_variants')}")
     print(f"\nOutput: {output_path}")
     print("=" * 60)
 
