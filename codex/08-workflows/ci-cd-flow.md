@@ -379,10 +379,19 @@ fleet-wide. The model (operator 2026-06-09):
 - **`uv.lock` is already correct — do NOT "fix" it.** Internal deps are recorded as `source = { editable = "../…" }`
   (the `version =` is a snapshot; the install resolves from the source PATH, not the recorded version), external deps
   lock exact (reproducibility). There is **no exact-pin bug** and no "range-aware lock gate" to build (a 2026-06-09
-  false-start — tombstoned in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`). The real "honor
-  ranges" mechanism is the **version-aware clone**, already closed by the loud-fail preflight
-  (`setup-workspace-from-manifest.sh:139/305` hard-fails a required dep clone; quickmerge fallback
-  `clone -b staging → -b main`, `quickmerge.sh:1301`).
+  false-start — tombstoned in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`).
+- **Dep resolution in CI is CONTENT-FIRST (LDR-HEAD clone) + the range check is NON-BLOCKING (2026-06-11; SUPERSEDES the
+  version-aware-clone loud-fail).** `python-quality-gates-v2.yml::clone_repo` clones each internal dep at its
+  **`live-defi-rollout` HEAD** — the SSOT content local editable siblings resolve against — so CI typechecks the dep's
+  actual content, not a pinned-tag snapshot (the version-aware tag chain is now only a FALLBACK when the LDR clone
+  fails). `assert_dep_in_range` then verifies the cloned version vs the consumer's pinned range but **WARNs
+  (`::warning::`), never `exit 1`**: a clone outside the pinned range uses the cloned HEAD content; the range is enforced
+  content-based downstream (`check_dep_content_sync.py`). **Why**: during a promotion window a dep's `versions{}`
+  legitimately leads its released tag — and a phantom (instruments-service's runaway `0.30.0` vs tag `v0.2.1` made a
+  consumer `>=0.30.0` floor unsatisfiable-by-tag) — so the old loud-fail false-failed PM/UTL/e2e on this skew. **A "CI
+  count over ceiling but local fine" symptom is therefore a RE-RUN, not a ceiling-bump.** SSOT: the reusable workflow's
+  `clone_repo`/`assert_dep_in_range` steps + `check_dep_content_sync.py`; archived
+  `ci_local_qg_parity_2026_06_08.md`.
 - **A MAJOR bump (crosses `<1.0.0`) FORCES the consumer to re-pin** → it must **trigger a cascade of quality gates (full
   SIT in dependency order)** across dependents. **vm-planning is escalated ONLY IF that cascade FAILS** — a GREEN
   cascade promotes the major automatically with **no human/orchestrator involvement**. Mechanical jams (the
@@ -391,7 +400,7 @@ fleet-wide. The model (operator 2026-06-09):
 - **What is major vs minor** is the breaking-change matrix above (`detect_breaking_change.py` + the schema/API-contract
   rules), refined deliberately — never a version-phase guess.
 
-Status: model + version-aware-clone loud-fail are LIVE; the MAJOR→cascade→escalate-only-on-fail wiring is the open work.
+Status: model + content-first LDR-HEAD clone (non-blocking range warn) are LIVE; the MAJOR→cascade→escalate-only-on-fail wiring is the open work.
 SSOT: `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
 
 ## LDR is the SSOT — clean-start force-sync + drift-tick (codified 2026-06-08)
