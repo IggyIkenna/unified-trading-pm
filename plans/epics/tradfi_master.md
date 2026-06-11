@@ -267,7 +267,34 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       `features-service@5900ac89` (`treasury_yields_calculator.py` → 32 features: per-tenor level + bp-changes, term
       spreads, scale-free ratios, butterflies, **no-arbitrage forward rates** incl. the 5y5y, and z-scores of the 10Y
       level + 10Y-3M slope; 11 tests). Validated on the live Yahoo curve (`spread_us10y_us3m=89.3bp`, `fwd_5y5y=4.80%`
-      above the 10Y spot for the current upward curve). Mirror of the VIX/DXY path.
+      above the 10Y spot for the current upward curve). Mirror of the VIX/DXY path. **Data-correctness hardening
+      (2026-06-11, follow-up to operator review):** UTC ✅ + no-lookahead ✅ (right-edge `t_close` via
+      `compute_bar_close_boundary`, CF-19; `available_at`=write-time). Genesis fixed — `YahooIndexDef` now carries a
+      **required** `first_available_date` (VIX 1990-01-02 / DXY 2019-01-02 / treasuries 2000-01-03), replacing a
+      hardcoded `2004-03-26` that was wrong for every Yahoo index; both reference adapters now emit the **canonical
+      `-USD` instrument_key** (`CBOE:INDEX:VIX-USD`) matching the data-write path (`VIX_INSTRUMENT_KEY`), the symbology
+      GCS key and the source resolvers (previously the no-suffix record key silently failed `get_source_for_instrument`).
+      QG-gate added (UAC): every `YAHOO_INDICES` entry must declare a plausible genesis AND have a `_SOURCE_RESOLVERS`
+      entry under its canonical key — a new index can't ship without a genesis or a source. Plus a `features-service`
+      forward-premium (term-premium) family → calculator now **35 features** (13 tests). Hardening shas: `uac@32d0d403`
+      (genesis field + canonical `-USD` resolver keys + `normalize_massive_index` `-USD` + QG gate) |
+      `instruments-service@24297354` (canonical `-USD` record key + per-instrument genesis wiring) |
+      `features-service@d3d04a1f` (forward-premium features).
+- [ ] [DATA] P1. **Yahoo index instruments (VIX/DXY/US-treasuries) into the data-status could-exist universe** — repo:
+      `instruments-service`. `scripts/enumerate_expected_universe.py` + `build_instrument_catalogue.py` have ZERO
+      references to `YAHOO_INDICES`, so these instruments are absent from the expected-universe denominator → their
+      data-status coverage is invisible. Add them (venue=CBOE/ICE, `ohlcv_24h`/`ohlcv_15m`, genesis from
+      `YahooIndexDef.first_available_date`) so `% captured` counts them. Provenance: operator review 2026-06-11 (slot-3).
+- [ ] [DATA] P2. **Holiday-aware data-status for Yahoo index instruments** — repo: `instruments-service` / `mtds`. The
+      venue→calendar map exists (`_XCAL_MAPPING`: CBOE/ICE→XNYS, `_is_trading_holiday` via `exchange_calendars`) but the
+      Yahoo index records only carry `tz`; ensure data-status resolves NYSE holidays for these venues so a
+      market-closed day is `expected_unattempted`/holiday, not `attempted_failed`. Provenance: operator review
+      2026-06-11 (slot-3).
+- [ ] [DATA] P3. **INDEX instrument_key canonicalisation audit** — repo: `unified-api-contracts`. `build_instrument_id(INDEX, "SPX")`
+      still returns no-suffix `CBOE:INDEX:SPX` while VIX/DXY/treasuries + `VIX_INSTRUMENT_KEY` + source resolvers use the
+      `-USD` form. Audit where SPX (and any other index) data physically lands and converge `build_instrument_id` /
+      symbology / adapters on ONE canonical INDEX key form fleet-wide. Provenance: surfaced during the treasury
+      canonical-key alignment 2026-06-11 (slot-3).
 - [ ] [AGENT] P4. Smoke `ml-training-service` 1-month ES window; features land in feature store. [AUDIT 2026-05-07:
       FRESH — actionable]
 - [ ] [AGENT] P4. Full backtest 2020-01-01 → 2024-12-31 (train) / 2025-01-01 → 2026-05-05 (test). OOS Sharpe + max
