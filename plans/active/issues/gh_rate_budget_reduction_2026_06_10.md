@@ -94,8 +94,29 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       surface (verified 2026-06-10, 0 matches) → no natural home. The repos surface lives in deployment-ui (above) + the
       orchestrator dashboard (shipped). Re-open only if uts-ui gains a CI/repos view.
 
+## Firebase read-cache strategy (operator direction 2026-06-11)
+
+Write GitHub state to Firestore on every scheduled poll; all UI/dashboard reads hit Firestore instead of calling the
+GitHub API. Firebase is free-tier generous + a separate quota domain — zero PAT/App REST calls for reads. The pattern
+extends the existing `resolve_ci_status_map` Firestore-authoritative path (Phase-2 primitive landed in PM@6b1ece9e1).
+
+- [ ] [INFRA] P2. **Firestore write-through for `promotion-lag-monitor`** — after each scan, write the 25-repo ×
+      4-direction comparison result set to `repo_state/{repo}/promotion_lag` in Firestore. Deployment-api + orchestrator
+      dashboard read from Firestore instead of calling `gh api compare`. Eliminates ~300 PAT calls/hr after the Firebase
+      cache warms (first run per key still hits GitHub; subsequent reads are free). Target: `unified-trading-pm` +
+      `deployment-api`.
+- [ ] [INFRA] P2. **Firestore write-through for `ci-failure-watcher`** — on each scan, write per-repo CI status (last
+      run conclusion, PR state, blocking reason) to `repo_state/{repo}/ci_status`. Orchestrator + deployment-ui read
+      Firestore for display; only the watcher's write path calls GitHub. Target: `unified-trading-pm` + `agent-orchestrator`.
+- [ ] [INFRA] P3. **Firestore write-through for `reconcile-release-tags`** — persist latest tag per repo to Firestore;
+      downstream tag-readers query Firestore instead of GitHub API. Target: `unified-trading-pm`.
+
+**Architecture note**: Firestore write happens in the scheduled GHA runner (has PAT budget, writes once per cycle); all
+read consumers (orchestrator API, deployment-api, UIs) query Firestore (zero GitHub quota, fast, free). The App token
+pool covers the remaining read-only GHA runners. This is the durable structural fix beyond ETag caching.
+
 ## Recommended decision
 
 The ETag win + free rate monitor are the big easy wins (shipped). The durable structural fix is the GitHub App token (a
-genuinely separate budget) — recommend prioritising the INFRA P1 above; a same-account second PAT is a non-fix (shared
-per-user pool).
+genuinely separate budget, shipped 2026-06-11) + Firebase read-cache for polling consumers (direction set
+2026-06-11).
