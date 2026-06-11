@@ -153,10 +153,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       the projected v9 `_index` (schema*version stays 9 = "v9 projected"); **dev-target HARD-guard** (refuses any
       prod/staging `_index`); no objects moved. Migrator dry-runs call it. 4 tests. — is@da74c72c. *(The per-AG dev
       render + operator goalpost eyeball remains — next item.)\_
-- [ ] [VERIFY] P1. Per-AG: drop the projected `_index` in the **dev** bucket, run `restart-deployment-stack.sh --api`
-      with `DEPLOYMENT_ENV_SHORT=dev`; confirm data-status/deployment-UI render coverage % + 4-state + could-exist
-      denominator + drilldowns; operator eyeballs the goalposts. Delete the dev `_index` after. cefi/pred=slot-3;
-      defi/tradfi/sports=slot-2.
+- [x] ✅ [VERIFY] P1. Per-AG dev render — **DONE via the superseding `DATA_STATUS_BETA_MANIFEST_BLOB` mechanism**
+      (deployment-api `services/manifest_source.py`, landed 2026-06-11: the env var redirects EVERY data-status surface
+      to `_index/audit/projected_index_{asset_group}.parquet` in the SAME prd bucket — read-only, no dev-bucket copy,
+      loud-fail on a missing projection; supersedes the dev-bucket-drop recipe — 3 of 5 dev buckets never existed).
+      BETA-vs-LIVE rendered + captured for instruments + market-tick-data data-status views (all 5 AGs inline);
+      evidence + per-AG verdict packs at `plans/audit/results/r3_beta_renders_2026_06_11/` (pm@a30de5abd). **Operator
+      goalpost EYEBALL remains open — V6.** | regression: deployment-api tests/unit/services/test_manifest_source.py
 
 ## V6 — Pre-apply verdict → G4 → verified-delete (CF-21)
 
@@ -201,6 +204,17 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 6. CF-15…CF-21 encoded in the checklist + owning per-service instruction files (re-runnable forever).
 
 ## Progress Log
+
+- 2026-06-11 (~21:35Z, autonomous run, END-OF-RUN) — **R3 RENDERS + VERDICT PACKS DONE — the full pre-apply harness is
+  assembled; everything except the operator eyeball/sign-off is COMPLETE.** Beta renders captured via the new
+  `DATA_STATUS_BETA_MANIFEST_BLOB` (BETA vs LIVE, instruments + market-tick-data data-status views, all AGs); five
+  verdict packs + evidence at `plans/audit/results/r3_beta_renders_2026_06_11/` (pm@a30de5abd), each ending "G4 --apply:
+  AWAITING OPERATOR". Dev stack stopped after capture. Self-audit: all .tabs/4 trees clean + every ship an ancestor of
+  origin LDR; 3 dirty MAIN clones are OTHER live workers' WIP (protected, untouched). OPERATOR QUEUE (the only remaining
+  work): ① read the 5 verdict packs → per-AG sign-off; ② decisions: prediction cqg-classifier coverage (P1, blocks
+  prediction apply) · sports blank-capture_status 6,869 + C3 coverage-window · cefi 943 phantom downgrades ack; ③ fire
+  the five G4 --applies (suggested order tradfi→cefi→defi→sports→prediction); ④ G4.5 verified-delete (incl. v1_archive
+  398 + legacy twins); ⑤ un-drain consolidators + fleet resume → G5.
 
 - 2026-06-11 (~20:50Z, autonomous run) — **TRADFI FINAL PROJECTION+DIFF ADJUDICATED (completes the R7 5-AG set)**. With
   the coalesce fix live (rode mtds@77f1a61), the definitive run: projected 946,360 rows (unparseable 106 of 902,878 =
