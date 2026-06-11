@@ -187,8 +187,12 @@ unchanged:
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
-- [ ] [REFACTOR] P2. Re-export the two-level `from unified_api_contracts.registry.<X> import` symbols at the UAC
-      one-level facade (`unified_api_contracts/registry/__init__.py`) for every symbol consumed two-level fleet-wide
+- [ ] [REFACTOR] P2. **FACADE HALF DONE 2026-06-11** — UAC@c8287d3: all 46 fleet-consumed two-level symbols now
+      re-exported at the one-level facade (20 modules; `schema_spec`/`client_share_classes`/`withdrawal_approval_rules`
+      via PEP 562 lazy `__getattr__` to avoid root-init circular imports). REMAINING: per-consumer call-site flips +
+      ratchets (next bullet half). Original: Re-export the two-level `from unified_api_contracts.registry.<X> import`
+      symbols at the UAC one-level facade (`unified_api_contracts/registry/__init__.py`) for every symbol consumed
+      two-level fleet-wide
       ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
       tardis_free_coverage, …}), then switch the call sites to `from unified_api_contracts.registry import <X>` and drop
       each repo's deep-import violation. Affected services (per the 2026-06-10 audit): deployment-api,
@@ -208,6 +212,9 @@ unchanged:
 
 ## Phase 4 — Residual violation classes
 
+- [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
+      (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
+      QG running). All three QG-green at the new budgets before commit.
 - [ ] [CODE] P2. Per repo, clear the remaining check-classes the census surfaces — `os.getenv` → `UnifiedCloudConfig`,
       `Any` → specific types, empty-string/dict/list fallbacks → fail-fast, backward-compat shims → delete,
       function/method-size > limits → extract. Ratchet `CODEX_MAX_VIOLATIONS` down to ≤5 per repo as classes clear.
