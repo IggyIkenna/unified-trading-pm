@@ -29,9 +29,12 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       `If-None-Match`; a `304 Not Modified` (unchanged run, the common case between 15-min sweeps) is **free**
       (verified: 3× 304 cost 0 rate, 1× 200 cost 1). ~90%+ fewer _counted_ REST calls, identical freshness.
       agent-orchestrator@481232d | QG 465 passed.
-- [x] ✅ [CODE] P0. **GhRateLimitMonitor + Slack alert** — polls the free `rate_limit` endpoint every 120s, Slack-alerts
-      (state-transition deduped, hysteresis-cleared at 25%) when `core`/`graphql` drops below 10% remaining
-      (`notify_gh_rate_limit_low`). agent-orchestrator@bfe62fd | deployed vm-0 (running, interval=120s).
+- [x] ✅ [CODE] P0. **GhRateLimitMonitor + GRADUATED Slack alerts** — polls the free `rate_limit` endpoint every 120s
+      and fires escalating alerts as `core`/`graphql` crosses **50% (NOTICE) / 80% (WARNING) / 95% (HIGH) / 100%
+      (CRITICAL) used**, each **with the reset time**. Fires once per crossing; re-arms when usage drops below a level
+      (5-pt hysteresis); a budget reset re-arms all levels (`notify_gh_rate_limit_threshold`, `USED_THRESHOLDS`).
+      agent-orchestrator@60c2035 (graduated; was bfe62fd single-threshold) | deployed vm-0
+      (used-thresholds=[50,80,95,100]%).
 - [x] ✅ [CODE] P1. **`GET /api/gh-rate-limit`** snapshot endpoint + **FleetGit (Fleet Git-Health) tracker widget**
       (REST + GraphQL budget bars, red<10%/amber<25%). agent-orchestrator@bfe62fd | dashboard rebuilt on vm-0.
 
@@ -42,11 +45,12 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       `core` was already at 0 → 403 until the hourly reset (observed right after the first deploy). Disk-backed now via
       `load_etag_cache`/`save_etag_cache` (guarded to the real poll path — no disk I/O under an injected conclusion_fn).
       agent-orchestrator@6a78f1c | deployed vm-0.
-- [x] ✅ [UI] P1. **GitHub rate-budget tracker in deployment-ui** (the v2 PRIMARY operator view) — renders on the repos
-      Coverage tab (`RepoCoverageTab` header): REST+GraphQL budget bars, `rateBudgetTone` red<10%/amber<25%, polls the
-      deployment-api `/api/repos/gh-rate-limit` every 60s. `src/api/ghRateLimit.ts` + `src/components/GhRateBudget.tsx`
-      (+ mock handler). deployment-ui@1ef784c | tsc clean | vitest 785 passed (8 new) | **pw:L2 ✓** regression:
-      `tests/smoke/gh_rate_budget.spec.ts`.
+- [x] ✅ [UI] P1. **GitHub rate-budget tracker in deployment-ui** (the v2 PRIMARY operator view) — renders on the
+      **Repos-CI page** (`/repos`, `RepoCiContent` header — the dedicated repos+CI dashboard; relocated from the
+      Coverage tab where the first pass landed it): REST+GraphQL budget bars, `rateBudgetTone` red<10%/amber<25%, polls
+      the deployment-api `/api/repos/gh-rate-limit` every 60s. `src/api/ghRateLimit.ts` +
+      `src/components/GhRateBudget.tsx` (+ mock handler). deployment-ui@a4f61e8 (relocated; built on 1ef784c) | tsc
+      clean | vitest 8/8 | **pw:L2 ✓** regression: `tests/smoke/gh_rate_budget.spec.ts` (navigates to /repos).
 - [x] ✅ [PERF] P1. **ETag `deployment-api/deployment_api/routes/_repo_ci_github.py`** — the **biggest** fleet REST
       burner (~8 GitHub calls × ~25 repos per coverage refresh). `If-None-Match` added to the shared `gh_get_json` (304
       = free; TTL-cache extended to hold the ETag + last body) + the free `GET /api/repos/gh-rate-limit` route
