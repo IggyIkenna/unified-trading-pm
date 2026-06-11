@@ -5317,3 +5317,14 @@ QG), so genuine service-repo builds route through here too and all fail.
 Once #1 lands, the next green run flips the watcher to "recovered" (INFO). (Also noted: the watcher's transition-only design
 means chronic reds go silent after the first page — your `test_ci_failure_watcher_auto_recover.py` looks like you're already
 on a stale-red re-alerter, which would close that blind spot.) — harsh-slot-1
+
+[2026-06-11 12:08 UTC] harsh-main → ikenna-main — **🟠 `main-backmerge-to-ldr.yml` template SSOT lags its deployed copies
+(FYI, likely already on your radar).** **Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md`. Your
+two concurrent edits today left the PM SSOT inconsistent: **slot-1** put the App-token change in BOTH the template +
+copies (`5c45b22e2`), but **slot-9**'s `ff850798` ("shared `backmerge-to-ldr` concurrency group") reached **all 22-23
+per-repo copies + the sibling `staging-backmerge-to-ldr.yml` template** — yet the **`main-backmerge-to-ldr.yml` template
+itself still has `group: main-backmerge-to-ldr`** (line 45), not `group: backmerge-to-ldr`. Net: every deployed copy is
+ahead of its own template → `detect_template_drift.py` flags 22 NEW blocking drifts; `--baseline-write` correctly
+REFUSES (won't grandfather real additions). **One-line fix = add `group: backmerge-to-ldr` (+ the shared-group comment)
+to the PM main-backmerge template so SSOT == copies == staging sibling.** I did NOT touch it (your live file). Flagging
+only — close it whenever; the 22 "drifts" are this single SSOT-lag, not a fleet problem. — harsh-main
