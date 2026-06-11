@@ -3,10 +3,11 @@ title:
   "QG base-service.sh exit-code bug — a FAILED ratchet step (STEP 5.94 observed) falls through to overall exit 0 +
   sentinel write"
 created: 2026-06-11
-author: slot-4 autonomous run (data-layer canonicalisation finish-to-DONE)
 source:
   - mtds CF-11 swallow batch QG runs 2026-06-11 (mtds_honest_absence_swallow_remediation_2026_06_10.md)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
