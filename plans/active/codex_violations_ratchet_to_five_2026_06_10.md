@@ -297,6 +297,46 @@ unchanged:
       surfaces preserved via facade-namespace routing; the moved 87L manifest method honestly split to satisfy the
       50L method cap its old home was excluded from); 10,290 tests green, quickmerge proper. onchain orchestrator
       (1,409) remains in the tail below.
+- [x] ✅ [REFACTOR] P3-partial. **features onchain orchestrator DONE 2026-06-12** — features-service@06a83fb6:
+      1,409→835 facade + 3 stage mixins (manifest/calculators/daily-loop, delta_one pattern; all patch surfaces
+      module-bound via `X as X` aliases; >50L moved methods honestly split); 1,286 onchain unit + 12 integration
+      tests green; full QG green at budget 0.
+- [x] ✅ [REFACTOR] P3-partial. **UAC >900 audit DONE 2026-06-12** — unified-api-contracts@f1599ee: 4 logic-heavy
+      splits behind unchanged paths (honest_coverage 1,141→788 / source_priority 1,018→562 / strategy_service
+      instruction 913→49+2 / synthetic 930→822; 76/76 symbols AST-identical) + 7 declarative exemptions DOCUMENTED
+      with measured decl ratios in the SIZE_EXTRA_EXCLUDES header (errors/defi 90%, alerting/rules 84%,
+      _sports_match_contracts 92%, data_type_capability 91%, contracts.py, events.py, ml/schemas.py) + the operator
+      data-registry set; 3 split entries REMOVED from the exclude list (size-exclude ratcheted); 363 module tests +
+      444 cassette-parity green; restaking_rewards.py deferred (lives in the wizard lane's architecture_v2 WIP).
+- [x] ✅ [CODE] P1. **execution-service ≤5 ACHIEVED 2026-06-12** — execution-service@5b17132e: budget 7→**3**.
+      Schema-provenance CLEARED honestly (167 measured sites: 160 `# CORRECT-LOCAL` with role-specific reasons incl.
+      11 UAC-name-collision disambiguations, 4 dead types deleted, 0 moves — cross-repo grep found zero genuine
+      external consumers); BaseModel-in-service cleared by the same markers; cloud-KMS glob documented
+      (BYPASS_AUDIT §15, no UCI KMS facade exists); domain-client cleared via UTL.domain flip + base-gate bug
+      confirmed. Remaining 3 honest: fn-size (25 pre-existing 51–133L methods, tracked in the 2026-05-17 issue),
+      pip-audit (lxml FIXED; new mako/ujson/twisted/pyarrow advisories — coordinated unit below), project-id
+      (2 unregistered-bucket sites needing cloud-providers.yaml registration first). 1,254 relevant tests green.
+- [x] ✅ [REFACTOR] P3-partial. **strategy >900 tail DONE 2026-06-12** — strategy-service@08582739:
+      archetype_slot_resolver 1,199→93 facade + 5 asset-group modules (STRATEGY_TYPE_TO_SLOT SHA-256 identical
+      pre/post); legacy_strategy_mapping 1,048→172 loader + 55-row YAML SSOT + byte-equality pin test (registry.py
+      precedent); portfolio archetypes 958→112 + base/simple/rank modules; zero caller churn, zero patch targets,
+      basedpyright strict 0; budget stays 4 (file-size was excluded-dir hidden debt, honestly removed).
+- [ ] [CODE] P2. **pip-audit follow-ups surfaced 2026-06-12 (execution unit)** — pyarrow 23.0.0 fix needs 24.0.0 but
+      PM canonical caps `<24.0.0` (workspace-constraints.toml:80) → coordinated widen unit like the lxml one;
+      + twisted 25.5.0 (fix 26.4.0 = major, via binance-futures-connector), mako 1.3.12 + ujson 5.12.1 in-range
+      bumps. Repos: unified-trading-pm + execution-service (+lockers).
+- [ ] [CODE] P2. **domain-client base-gate check is STALE + self-contradictory (confirmed 2026-06-12)** — it demands
+      `unified_domain_client` which exists NOWHERE in the workspace (clients live in `unified_trading_library.domain`),
+      has no opt-out, and CONTRADICTS the deep-import check for the same symbol (top-level import fires one check,
+      submodule import fires the other). Fix: retarget the check in base-service.sh to `unified_trading_library.domain`
+      (or build the UDC package per the original architecture). Repo: unified-trading-pm.
+- [ ] [CODE] P3. **UAC `internal/domain/execution_service/defi_position.py` STALE vs the live local copy** — UAC
+      hardcodes liquidation threshold 1.1; the execution-service local uses
+      `LIQUIDATION_PARAMS_REGISTRY[MarginModel.AAVE_V3].health_factor_critical` (1.15). Reconcile UAC to the
+      registry-driven form. Repo: unified-api-contracts.
+- [ ] [CODE] P3. **`execution_service/engine/delta_proxy_repricer.py` is unreferenced** (zero imports repo-wide,
+      2026-06-12 sweep) — dead-code delete candidate per the delete-deprecated rule; needs a quick operator/architect
+      confirm it isn't a planned consumer's WIP. Repo: execution-service.
 - [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
       polymarket 1,184 / \_solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922), strategy
       archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958, agent-orchestrator

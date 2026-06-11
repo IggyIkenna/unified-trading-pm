@@ -168,6 +168,23 @@ on the PR (head=LDR commit) — noise, not a staging build.
 - [ ] [WORKFLOW] P3. Stop the LDR build's CodeBuild check from posting on LDR→staging drain PRs (the red noise) — once
   main-build is the gate, the LDR build is opt-in feedback only.
 
+**Build-trigger surface map (3 interlocked paths — fully traced 2026-06-11; the implementation MUST reconcile all 3,
+which is why this is canary-first, not a one-shot edit):**
+1. **AWS CodeBuild webhook** (`terraform/modules/cloud-build/aws/main.tf`, single filter group): `EVENT=PUSH,
+   HEAD_REF=^refs/heads/live-defi-rollout$` — direct, LDR-only.
+2. **GCP Cloud Build triggers** (3 per service): `…-live-defi-rollout`, `…-feature-build`, `…-build` (the `…-build` is
+   the intended main trigger — confirm its `branch_pattern`).
+3. **v2 workflow step** `Dispatch cloud-build trigger (staging only)` in `scripts/workflow-templates/quality-gates-v2.yml.tmpl`
+   (line ~72): `if: event_name=='push' && ref=='refs/heads/staging' && metadata_only!='true'` → `repository_dispatch
+   qg-passed` to **`cloud-build-router.yml`** in PM. So builds ALSO fan out from a staging push via the router.
+   The `--build` flag must thread through THIS step (read the `Build-LDR:` trailer) for the LDR path, while the AWS/GCP
+   main trigger handles the always-on gate. quickmerge flag insertion point: `scripts/quickmerge.sh` arg `case` block
+   (~line 116) + the trailer-stamp site.
+**Canary order (MTDS)**: (1) quickmerge `--build`→trailer; (2) v2 step reads trailer (conditional LDR dispatch via
+router); (3) test a quickmerge WITH and WITHOUT `--build`, confirm the LDR build fires/doesn't; (4) add main build
+trigger (AWS filter group + GCP `…-build`); (5) add the build check to MTDS `main` required_status_checks + watch ONE
+real staging→main gate on a green image; **only then** fleet-roll the template + TF + protection (skip PM/e2e/SIT).
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first dep-resolution

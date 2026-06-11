@@ -339,9 +339,18 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       data_source, market_type, resolution_period, symbol, timestamp, underlying) + SchemaSpecs for defi
       rewards/risk_params/utilization(+rest of RED list) + tradfi/trades. Re-run `migration_schema_completeness` per AG
       to 0 RED. slot-3. Repo: unified-api-contracts (+instruments-service rerun).
-- [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: re-dry-run migrator+rebuild on CURRENT HEAD (R7)
-      writing projected `_index` → `manifest_diff` report vs live `_index` → dev `restart-deployment-stack.sh     --api`
-      render → operator eyeballs goalposts → assemble ⑬–⑲ verdict in the AG plan. ALL 5 AGs. per-AG slots.
+- [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: ✅ **R7 rebuild leg DONE for ALL FIVE AGs
+      (2026-06-11 ~20:40Z)** — CF-20 `--beta-manifest-out` wired into defi/cefi/prediction/sports rebuilds
+      (mtds@77f1a61 + mtds@03fbc9b; tradfi = the parallel reference loop), full-history projections run on prod →
+      `gs://market-data-tick-<tag>-prd-…/_index/audit/projected_index_<ag>.parquet`, `manifest_diff` adjudicated
+      CITADEL-grade per AG (sports GREEN 0/0; defi 0 regressions + 5,320 removed all justified respelling-supersession;
+      cefi 943 genuine-phantom honest downgrades + 733 garbage-venue removals + 3,853 by-design CF-11 reclassifies;
+      prediction legacy grain superseded by the cqg atom — full table in
+      `migration_verification_orphan_safety_2026_06_10.md` Progress Log 2026-06-11 ~20:30Z). REMAINS for this box: dev
+      `restart-deployment-stack.sh --api` render per AG → operator goalpost eyeballs → ⑬–⑲ verdict packs. Original spec:
+      re-dry-run migrator+rebuild on CURRENT HEAD (R7) writing projected `_index` → `manifest_diff` report vs live
+      `_index` → dev `restart-deployment-stack.sh     --api` render → operator eyeballs goalposts → assemble ⑬–⑲ verdict
+      in the AG plan. ALL 5 AGs. per-AG slots.
 - [x] ✅ [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
       could-exist seed**; then re-run `build_instrument_catalogue` + `enumerate_expected_universe v2` per AG. (Note:
       collection is reference-data — independent of the drained market-data writers; resuming does NOT violate the

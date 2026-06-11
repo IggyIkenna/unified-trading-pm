@@ -63,6 +63,7 @@ from _capability_annotations import (
 from _capability_extract import (
     extract_archetypes_and_families,
     extract_data_sources,
+    extract_leg_structures,
     extract_venues,
 )
 from _capability_gaps import (
@@ -143,6 +144,11 @@ def build_manifest(
 
     logger.info("1. Archetypes / families + capability registry...")
     n, e = extract_archetypes_and_families()
+    all_nodes += n
+    all_edges += e
+
+    logger.info("1b. Archetype leg structures (F22 — per-leg restriction model)...")
+    n, e = extract_leg_structures()
     all_nodes += n
     all_edges += e
 

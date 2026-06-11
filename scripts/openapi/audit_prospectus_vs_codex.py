@@ -74,6 +74,56 @@ try:
 except Exception as _exc:
     logger.warning("ARCHETYPE_CAPABILITY_REGISTRY unavailable: %s", _exc)
 
+# F22 leg-truth SSOT: archetypes whose cell prose implies multi-leg structure
+# (notes mentioning ATOMIC / hedge / a "+" leg join) but which have NO entry in
+# ARCHETYPE_LEG_STRUCTURES are "legs-in-prose drift" — the structural restriction
+# lives only as free text. The audit (d) flags them.
+_LEG_STRUCTURES_KEYSET: set = set()  # type: ignore[type-arg]
+_LEG_REGISTRY_AVAILABLE = False
+try:
+    from unified_api_contracts.internal.architecture_v2.archetype_leg_spec import (
+        ARCHETYPE_LEG_STRUCTURES as _RAW_LEG_STRUCTURES,
+    )
+
+    _LEG_STRUCTURES_KEYSET = {a.value for a in _RAW_LEG_STRUCTURES}
+    _LEG_REGISTRY_AVAILABLE = True
+except Exception as _exc:
+    logger.warning("ARCHETYPE_LEG_STRUCTURES unavailable: %s", _exc)
+
+# Prose pattern implying an unmodelled multi-leg structure (ATOMIC bundle, a
+# hedge leg, or a "leg + leg" join).
+_LEGS_IN_PROSE_RE = re.compile(r"ATOMIC|hedge|\+", re.IGNORECASE)
+
+
+def detect_legs_in_prose_drift() -> list[dict[str, str]]:  # type: ignore[type-arg]
+    """Audit (d): cells whose notes imply legs but have no leg spec.
+
+    For each archetype in ARCHETYPE_CAPABILITY_REGISTRY, if any cell's ``notes``
+    matches ``ATOMIC|hedge|\\+`` (a multi-leg signal in prose) AND the archetype
+    is absent from ARCHETYPE_LEG_STRUCTURES, flag it as legs-in-prose drift —
+    the structural restriction is text-only, not the queryable leg SSOT.
+    """
+    if not (_REGISTRY_AVAILABLE and _LEG_REGISTRY_AVAILABLE):
+        return []
+    drift: list[dict[str, str]] = []  # type: ignore[type-arg]
+    for archetype_id, item in _CAPABILITY_REGISTRY_DICT.items():
+        arch_str = str(archetype_id)
+        if arch_str in _LEG_STRUCTURES_KEYSET:
+            continue  # already has a structural leg spec — not drift
+        matched_notes: list[str] = []
+        for cell in getattr(item, "cells", []):
+            notes = str(getattr(cell, "notes", "") or "")
+            if notes and _LEGS_IN_PROSE_RE.search(notes):
+                matched_notes.append(notes.strip())
+        if matched_notes:
+            drift.append(
+                {
+                    "archetype_id": arch_str,
+                    "prose": " | ".join(sorted(set(matched_notes)))[:240],
+                }
+            )
+    return sorted(drift, key=lambda d: d["archetype_id"])
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -196,14 +246,19 @@ def run_audit() -> dict[str, object]:  # type: ignore[type-arg]
     # With codex doc
     with_codex_doc = [a for a in all_archetype_ids if load_codex_doc(a) is not None]
 
+    # (d) Legs-in-prose drift (F22): cell notes imply legs but no leg spec.
+    legs_in_prose_drift = detect_legs_in_prose_drift()
+
     return {
         "enum_without_doc": sorted(enum_without_doc),
         "doc_without_enum": sorted(doc_without_enum),
         "contradictions": sorted(contradictions, key=lambda c: c["archetype_id"]),
+        "legs_in_prose_drift": legs_in_prose_drift,
         "total_archetype_ids": len(all_archetype_ids),
         "total_codex_docs": len(all_codex_stems),
         "with_codex_doc": sorted(with_codex_doc),
         "registry_available": _REGISTRY_AVAILABLE,
+        "leg_registry_available": _LEG_REGISTRY_AVAILABLE,
     }
 
 
@@ -217,10 +272,12 @@ def render_audit_report(result: dict[str, object]) -> str:  # type: ignore[type-
     enum_without_doc: list[str] = result["enum_without_doc"]  # type: ignore[assignment]
     doc_without_enum: list[str] = result["doc_without_enum"]  # type: ignore[assignment]
     contradictions: list[dict[str, str]] = result["contradictions"]  # type: ignore[assignment]
+    legs_in_prose_drift: list[dict[str, str]] = result["legs_in_prose_drift"]  # type: ignore[assignment]
     total_archetype_ids: int = result["total_archetype_ids"]  # type: ignore[assignment]
     total_codex_docs: int = result["total_codex_docs"]  # type: ignore[assignment]
     with_codex_doc: list[str] = result["with_codex_doc"]  # type: ignore[assignment]
     registry_available: bool = result["registry_available"]  # type: ignore[assignment]
+    leg_registry_available: bool = result["leg_registry_available"]  # type: ignore[assignment]
 
     lines: list[str] = []
     lines.append("# Prospectus vs Codex Two-Sided Audit")
@@ -241,8 +298,12 @@ def render_audit_report(result: dict[str, object]) -> str:  # type: ignore[type-
     lines.append(f"| Archetypes WITHOUT codex doc (a) | {len(enum_without_doc)} |")
     lines.append(f"| Codex docs WITHOUT enum entry (b) | {len(doc_without_enum)} |")
     lines.append(f"| Venue-category contradictions (c) | {len(contradictions)} |")
+    lines.append(f"| Legs-in-prose drift (d) | {len(legs_in_prose_drift)} |")
     lines.append(
         f"| ARCHETYPE_CAPABILITY_REGISTRY available | {'yes' if registry_available else 'no — audit (c) skipped'} |"
+    )
+    lines.append(
+        f"| ARCHETYPE_LEG_STRUCTURES available | {'yes' if leg_registry_available else 'no — audit (d) skipped'} |"
     )
     lines.append("")
 
@@ -304,6 +365,32 @@ def render_audit_report(result: dict[str, object]) -> str:  # type: ignore[type-
         lines.append(
             "_No clear structured venue-category contradictions found. "
             "(Codex frontmatter venue_universe aligns with ARCHETYPE_CAPABILITY_REGISTRY.)_"
+        )
+    lines.append("")
+
+    # Section (d) — legs-in-prose drift (F22)
+    lines.append("## (d) Legs-in-Prose Drift (F22 — multi-leg structure only as text)")
+    lines.append("")
+    if not leg_registry_available:
+        lines.append("> ARCHETYPE_LEG_STRUCTURES was not importable on this host. Legs-in-prose audit (d) was skipped.")
+    elif legs_in_prose_drift:
+        lines.append(
+            "These archetypes have ARCHETYPE_CAPABILITY_REGISTRY cell `notes` that imply a "
+            "multi-leg structure (match `ATOMIC|hedge|+`) but have NO entry in "
+            "ARCHETYPE_LEG_STRUCTURES — so the per-leg restriction lives ONLY as prose, not "
+            "as the queryable leg SSOT the wizard/prospectus can render. Each should get a "
+            "leg structure (the F22 fix pattern)."
+        )
+        lines.append("")
+        lines.append("| Archetype | Cell notes (prose implying legs) |")
+        lines.append("|---|---|")
+        for d in legs_in_prose_drift:
+            prose = d["prose"].replace("|", "\\|").replace("\n", " ")
+            lines.append(f"| `{d['archetype_id']}` | {prose} |")
+    else:
+        lines.append(
+            "_No legs-in-prose drift. Every archetype whose cell notes imply a multi-leg "
+            "structure already has an ARCHETYPE_LEG_STRUCTURES entry._"
         )
     lines.append("")
 
