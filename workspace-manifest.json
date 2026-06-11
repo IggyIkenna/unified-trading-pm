@@ -310,7 +310,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -1150,7 +1150,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-api": {
       "github_url": "https://github.com/IggyIkenna/unified-trading-api",
@@ -1239,7 +1239,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "skipped_gates": [],
       "semver_policy": "agent",
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "e2e-testing": {
       "type": "test-harness",
