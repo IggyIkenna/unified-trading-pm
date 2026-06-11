@@ -267,3 +267,19 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   green; **quickmerge held on a concurrent in-slot UTL WIP clearing the dep-audit — ships next** (the V2 checkbox flips
   on the sha). `migrate_instruments_store_v9.py` setup_events (M-COORD-6 IS slice) rode the same batch. V1 (B6) per-AG
   enumerator-reads-V0 verification evidence lands with the ship report.
+- 2026-06-11 (slot-4, autonomous run) — **V2 per-AG sweeps RUN on real prod GCS for the 3 remaining AGs** (defi / tradfi
+  / prediction; report parquets at `gs://market-data-tick-<ag>-prd-…/_index/audit/orphan_sweep_<ag>.parquet`). **All
+  three RED, as the no-v10 check is designed to be pre-backfill:**
+  - **defi: E=254,984 · B=60,727 · D=42,531 · unknown_prefixes=6,010** (78.27 GiB sized cells). CHARACTERIZATION: the E
+    sample is **CANONICAL-shaped** paths (`…/asset_group=defi/venue=ORCA|RAYDIUM|SOLEND|KAMINO/chain=SOLANA/…`, written
+    2026-05-04) — i.e. the `solana_defi_legacy_migration_2026_05_27` Gate-2 outputs that were migrated but never
+    `record_captured`'d into the `_index`; and the unknown prefixes are exactly the known legacy top-level trees from
+    that same plan (`dex_pools/` 3,606 + `lending_indices/` 2,402 + `_manifests/` + `configs/`). → the defi E-fix = the
+    planned record_captured backfill + finishing Solana Gates 2/3 (NOT new holes); the sweep taxonomy needs those 3
+    legacy-tree prefix labels added (tool follow-up, slot-3).
+  - **tradfi: E=47,102 · B=1,597,119 legacy twins · A=1,641 · D=163,112 · unknown_prefixes=7,147** (108.42 GiB sized).
+    E + unknown characterization rides the report parquet; B≈1.6M = the expected pre-G4 legacy corpus (the CF-21
+    verified-delete candidates post-apply).
+  - **prediction: E=61,014 (UNCHANGED vs the corrected 2026-06-10 count — stable) · B=512,437 · unknown=0.**
+  - Per ⑬ the G4 `--apply` stays HARD-BLOCKED until E==0 per AG: the per-AG `record_captured` backfill (class E, never
+    delete) is the operational tail. cefi corrected re-run queued next (walk slot freed).
