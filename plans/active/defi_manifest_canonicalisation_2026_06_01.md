@@ -24,6 +24,12 @@ source:
 > `source`, `cadence`, `transport` — so running `--apply` before that code lands bakes in the old model + forces a
 > banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.** (DeFi additionally: fix
 > the `rebuild_defi_manifest.py` blank-`pipeline_mode`/`source` bug #1 from that plan in Phase 0.3 before its dry-run.)
+>
+> **📐 DOC-RECONCILED 2026-06-11 (M-COORD-1/R6-codex)** — this plan's TARGET/spec statements are aligned to the
+> source-aware `{mode}_{source}[_{transport}]` standard (settled contract: codex `02-data/pipeline-mode-partition.md` +
+> `02-data/pipeline-mode-and-batch-live-reconciliation.md` + `04-architecture/defi-data-pipeline.md`; this plan
+> REFERENCES codex, not vice versa). Remaining coarse `pipeline_mode=batch/`/`live/` tokens below are ANNOTATED
+> historical/legacy-state records (shipped-at-the-time evidence, on-disk observations) — never the target.
 
 > ## 🟡 RE-VERIFY ENUMERATE BEFORE G4 — DeFi could-exist universe EXPANDED 2026-06-09 (slot-7 → slot-2)
 >
@@ -332,16 +338,16 @@ before cutover).
 
 ### Canonical target form — what "right format" means (every in-scope object + manifest row)
 
-| Dimension        | Legacy (now)                            | Canonical (target)                                                                            |
-| ---------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Bucket env split | `oracle-prices-{project}` (no env)      | `oracle-prices-{env}-{project}` (`-prd`/`-test`) — or fold into `market-data-tick-defi-{env}` |
-| Asset-group key  | `category=defi`                         | `asset_group=defi`                                                                            |
-| Pipeline mode    | absent in path                          | `pipeline_mode=` hive partition (value `batch` or `live`)                                     |
-| Schema version   | v4–v8 spread                            | v9                                                                                            |
-| data_type name   | hyphen / `staking_yields`               | underscore canonical (`lst_rates`, `dex_pools`, …)                                            |
-| Venue / chain    | `UNISWAPV3-ETHEREUM`, blank chain       | flat `venue` + populated `chain`                                                              |
-| Empty reason     | blank / `SOURCE_RETURNED_ZERO` mislabel | typed (`EXPECTED_PRE_GENESIS_CHAIN`, …)                                                       |
-| 4th state        | absent                                  | `expected_unattempted` materialised by the run (B0)                                           |
+| Dimension        | Legacy (now)                            | Canonical (target)                                                                                                                                                                                                                                                                                                                    |
+| ---------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bucket env split | `oracle-prices-{project}` (no env)      | `oracle-prices-{env}-{project}` (`-prd`/`-test`) — or fold into `market-data-tick-defi-{env}`                                                                                                                                                                                                                                         |
+| Asset-group key  | `category=defi`                         | `asset_group=defi`                                                                                                                                                                                                                                                                                                                    |
+| Pipeline mode    | absent in path                          | `pipeline_mode=` hive partition — SOURCE-AWARE `{mode}_{source}` via `derive_pipeline_mode_for_row` (`batch_onchain_rpc`/`batch_solana_rpc`/`batch_hyperliquid`/…; live = transitional `live_websocket` alias until the gated `live_<source>` tranche; NEVER coarse `batch`/`live` — G0 + codex `02-data/pipeline-mode-partition.md`) |
+| Schema version   | v4–v8 spread                            | v9                                                                                                                                                                                                                                                                                                                                    |
+| data_type name   | hyphen / `staking_yields`               | underscore canonical (`lst_rates`, `dex_pools`, …)                                                                                                                                                                                                                                                                                    |
+| Venue / chain    | `UNISWAPV3-ETHEREUM`, blank chain       | flat `venue` + populated `chain`                                                                                                                                                                                                                                                                                                      |
+| Empty reason     | blank / `SOURCE_RETURNED_ZERO` mislabel | typed (`EXPECTED_PRE_GENESIS_CHAIN`, …)                                                                                                                                                                                                                                                                                               |
+| 4th state        | absent                                  | `expected_unattempted` materialised by the run (B0)                                                                                                                                                                                                                                                                                   |
 
 All of the above land in **one bundled single-walk** per bucket (C2–C5 + C7 + C9 + env-split), then the consolidated
 `_index` + data-status reflect the canonical form, then backfills run into the correct structure.
@@ -965,19 +971,25 @@ What to verify/wire (B0 corrected scope):
         column-vocab reconcile (P2, decoupled below as A12f-col):** the on-disk PATH segment is now coarse `batch`
         everywhere, but the manifest pipeline_mode COLUMN still differs (migrator stamps coarse `"batch"` string; live
         recorders pass fine `PipelineMode` enum to record*\*). Path-match (the deliverable) is closed; column-vocab is a
-        forward-compat consistency item. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P2. A12f-col — **pipeline_mode COLUMN vocab reconcile** (decoupled from A12f): pick ONE vocab for the
-        manifest `pipeline_mode` column — coarse `batch`/`live` (matches the path segment + migrator) vs the fine
-        `PipelineMode` enum the live recorders currently pass to `record_captured`/`record_empty`/`record_failed`. Today
-        the column is path-derived (coarse) at read-time so this is forward-compat, not a current-correctness bug; ties
-        to the cross-AG `PipelineMode` vocabulary decision. Repo: market-tick-data-service (+ UAC). parent_epic:
-        mtds_mdps_master.
+        forward-compat consistency item. Repo: market-tick-data-service. parent*epic: mtds_mdps_master. \*\*⚠️
+        LEGACY-STATE record (annotated 2026-06-11, R6-codex): the coarse `pipeline_mode=batch/` this item shipped was
+        the PRE-G0 state — SUPERSEDED by the source-aware
+        `{mode}*{source}`standard (migrator+rebuild mtds@f80c50f1;     the 41 live-handler coarse literals mtds@57242af5 per M-COORD-7). The TARGET is`batch\_<source>`;
+        this record stays as history, not spec.\*\*
+  - [x] ✅ [CODE] P2. A12f-col — **pipeline_mode COLUMN vocab reconcile — RESOLVED BY RATIFICATION (G0 standard
+        2026-06-05 + operator R4 2026-06-07; closed 2026-06-11 R6-codex)**: the vocab decision this item left open is
+        DECIDED — the manifest `pipeline_mode` COLUMN carries the SAME source-aware `{mode}_{source}` value as the path
+        segment (NEVER coarse `batch`/`live`; `transport` is its own column). Implemented: migrator + rebuild stamp
+        source-aware in path+column (mtds@f80c50f1); live handlers swept off coarse literals (mtds@57242af5, M-COORD-7);
+        UTL `add()` auto-derives via `derive_pipeline_mode_for_row` (utl@d0745bde). SSOT: codex
+        `02-data/pipeline-mode-partition.md`. Repo: market-tick-data-service (+ UAC). parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P1. A12g — **DONE** (mtds@b66b15d2): added `tests/unit/scripts/test_migrate_defi_full_v9_canonical.py`
         (13 tests) covering the v9 migrator the launcher actually runs — asserts `_canonical_path` emits
         `pipeline_mode=batch/` left of `asset_group=defi/`, `_conform` stamps
-        schema_version=9/asset_group/pipeline_mode/ source/available_at + LOUD-fails columns outside the union, and
+        schema*version=9/asset_group/pipeline_mode/ source/available_at + LOUD-fails columns outside the union, and
         dry-run plans without writing (fake in-memory gcsfs, credential-free). Repo: market-tick-data-service.
-        parent_epic: mtds_mdps_master.
+        parent_epic: mtds_mdps_master. *(Historical record — the coarse `pipeline_mode=batch/` assertion was the pre-G0
+        shape; the migrator + both test files now assert source-aware `batch_<source>` per mtds@f80c50f1.)\_
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
@@ -1129,14 +1141,16 @@ What to verify/wire (B0 corrected scope):
 >       unit-tests green; GCS-facing dry-run is the VM gate). parent_epic: manifest_master.
 > - [x] ✅ [CODE] P0. C0-RD2 — **dedup overlapping cells**: most-complete row set → freshest layer (L3>L2>L1) → latest
 >       write ts; never two objects per canonical cell; complementary cells preserved. **DONE — mtds@e14d656b.**
-> - [x] ✅ [CODE] P0. C0-RD3 — **SUPERSET-UNION v9 conform** (operator-chosen lossless): footer-discovered per-data_type
+> - [x] ✅ [CODE] P0. C0-RD3 — **SUPERSET-UNION v9 conform** (operator-chosen lossless): footer-discovered per-data*type
 >       column union (`--phase discover`) + v9 metadata (schema_version=9/asset_group/pipeline_mode/source/available_at)
 >       → reindex → identical column set across every output object regardless of source layout → write ONCE to
 >       env-split `{stem}-prd-{pid}` canonical path
 >       `raw_tick_data/by_date/day=/pipeline_mode=batch/asset_group=defi/venue=/chain=/instrument_type=/data_type=/…`;
 >       perp funding-derive; unattributable rows→`_needs_attribution/` (never guess-then-delete). Perf-contract
 >       conformant (ThreadPool/--workers/--start-end date-shard/idempotent/per-cell isolation). **DONE —
->       mtds@e14d656b.**
+>       mtds@e14d656b.** *(Historical record — `pipeline_mode=batch/` was the pre-G0 coarse shape at that commit; the
+>       migrator now stamps source-aware `batch_<source>` in path+column per mtds@f80c50f1; the R7 re-dry-run re-proves
+>       the projected `_index` at the source-aware form.)\_
 > - [x] ✅ [DATA] P0. C0-RD3b — **VM dry-run validation — GREEN** (in-region VM
 >       `canonical-migration-defi-20260601-214111`, 2022-01 L1-heavy slice, pinned mtds@e14d656b). **0 errors, 0
 >       UNRECOGNISED trees, `_needs_attribution=0` across ALL 6 buckets** (lst token→venue split, oracle CHAINLINK+chain
@@ -1217,11 +1231,14 @@ What to verify/wire (B0 corrected scope):
 - [x] ✅ [CODE] P0. C0-CN4 — **features-onchain reader pipeline_mode-aware**: `mtds_canonical_reader`
       `read_canonical_defi_parquets` probes `pipeline_mode=batch`→bare→`pipeline_mode=live`→legacy via UAC
       `build_defi_partition_path(pipeline_mode=)`; `_PATH_DATA_TYPE` identity. **features-service@dec1b687, QG green.**
-      parent_epic: features_and_ml_master.
+      parent*epic: features_and_ml_master. *(Historical record — the exact-coarse probe was the pre-G0 shape; SUPERSEDED
+      by features@c487e04b: day-level mode-agnostic listing, prefix-match `batch_*`/`live_*`/`replay_*` + bare + legacy,
+      canonical-over-legacy ranked.)\_
 - [x] ✅ [CODE] P0. C0-CN5 — **MDPS reader pipeline_mode-aware + canonical data_type**: `orchestration_scanner`
       `_blob_matches_data_type_partition` accepts `dex_pool_state`/`dex_pool_swaps` (+ legacy) under
-      `pipeline_mode={batch|live}` (day-prefix listing captures the segment). **mdps@4b9e6e5, QG green.** parent_epic:
-      mtds_mdps_master.
+      `pipeline_mode={batch|live}` (day-prefix listing captures the segment). **mdps@4b9e6e5, QG green.** parent*epic:
+      mtds_mdps_master. *(Historical record — day-listing was already mode-agnostic; the source-aware leak fix +
+      source-aware fixtures landed mdps@d59749c per the C-PATH inventory.)\_
 - [x] ✅ [CODE] P0. C0-CN6 — **UAC**: `build_defi_partition_path(pipeline_mode=)` canonical (candidate_parquet_paths
       delegates); `to_canonical_chain_wire`+`CHAIN_WIRE_VALUE_OVERRIDES` resolve HL→`HYPERLIQUID` (non-breaking alias);
       `DEFI_ONCHAIN_INSTRUMENT_TYPES`+=`PERPETUAL`. **uac@dad96e42, QG green.** parent_epic: mtds_mdps_master.
@@ -1258,7 +1275,7 @@ What to verify/wire (B0 corrected scope):
         slice (rolls into C0b dry VM).
   - [ ] [DATA] P0. C0b — **dry VM** (`launch-canonical-migration-vm.sh defi <start> <end> dry`) → review the planned
         rewrites in the VM log (sample legacy→canonical paths, venue canonicalisation,
-        v9/source/pipeline_mode/available_at). **Discover-phase CORPUS SCOPING DONE** (local dry-run 2026-06-03,
+        v9/source/pipeline*mode/available_at). **Discover-phase CORPUS SCOPING DONE** (local dry-run 2026-06-03,
         workers=32, read-only): 6 buckets / **~458,486 objects** / discover wall ~2.2h — dex-pools 191,451 (53 union
         cols), lending-indices 138,325 (43), dex-swaps 69,236, lst-rates 34,821 (17), oracle-prices 13,167, perp-funding
         11,486. Sharding/perf: dex-pools+lending+swaps ≈88% of objects → most date-shards/workers there; the launcher's
@@ -1267,7 +1284,9 @@ What to verify/wire (B0 corrected scope):
         / objects_read=96 / cells_written=0 (DRY) / **0 errors / 0 needs_attr / 0 dedup_dropped**; sample PLAN cells
         (COINBASE/STADER/STAKEWISE/MARINADE...) correctly identified for canonical `pipeline_mode=batch/` rewrite +
         migrate=6.3s. Migrator dry-run confirmed end-to-end. Remaining = the full dry VM over ALL 6 buckets (operational
-        C0b step) once the pre-migration drain (C0c) is scheduled.
+        C0b step) once the pre-migration drain (C0c) is scheduled. *(Legacy-state observation — that dry-run ran the
+        pre-G0 coarse migrator; the migrator now plans source-aware `batch_<source>` paths (mtds@f80c50f1) and the R7
+        re-dry-run on CURRENT HEAD is the authoritative pre-apply proof.)\_
   - [ ] [DATA] P0. C0c — **pre-migration drain (HARD RULE)**: stop GCP+AWS fleet (`vm_zombie_watchdog.py` inventory →
         per-prefix SIGTERM → wait STOPPED) + run consolidator + snapshot each in-scope `_index` to
         `_index/snapshots/pre_migration_2026_06_01.parquet`. Confirm the bucket-remediation DeFi seed is NOT mid-walk
@@ -1442,30 +1461,25 @@ What to verify/wire (B0 corrected scope):
 
 - [ ] [DATA] P0. G1 Launch the full 2024-06-01 → 2026-06-01 backfill VM (Drift V2 historical + Solana spot DEX state).
       Operator-launched from laptop OR `vm-defi`. Recipe: the four CLI scripts in
-      `market_tick_data_service/scripts/backfill_drift_v2_historical.py` (perp_funding + perp_trades) +
+      `market_tick_data_service/scripts/backfill_drift_v2_historical.py` (perp*funding + perp_trades) +
       `backfill_solana_dex_state.py` (Orca Whirlpool + Raydium classic AMM) for each day in window; estimated ~36GB
       total payload across the 730-day window. **GATED on C-GREEN for the dedicated DeFi buckets** that hold these
-      writes (env-split + `pipeline_mode=batch` + `asset_group=defi`). Verification (per CLAUDE.md "Plans Run To Actual
-      Completion"):
-      `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
-      returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
-      `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
-      equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
-      days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
-      `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
-      wall-clock; not a dispatch).**
+      writes (env-split + source-aware
+      `pipeline_mode=batch*<source>`per`derive*pipeline_mode_for_row`+    `asset_group=defi`). Verification (per CLAUDE.md "Plans Run To Actual Completion"):     `gsutil
+      ls
+      gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=\*/pipeline_mode=batch*\*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`     returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty     `funding_rate`, `oracle_price_twap`, `mark_price_twap`columns; manifest-verified row count > 0 per day-shard;     equivalent checks for`perp_trades`(active days only; allow`empty_confirmed[SOURCE_RETURNED_ZERO]`on quiet     days) +`dex_pool_state`for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed    `empty_confirmed`reason (not`attempted_failed`).
+      parent_epic: mtds_mdps_master. **Operator-launched (long wall-clock; not a dispatch).**
 - [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
       Terminal A:
       `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP --live     --continuous --interval-seconds 3600 --data-types funding`
       (hourly). Terminal B:
       `python -m market_tick_data_service.scripts.backfill_solana_dex_state --venues orca,raydium --live --continuous     --interval-seconds 60 --samples-per-day 60 --data-types pool_state`
-      (1-min). These run as long-lived VMs on `vm-defi` (lifecycle_class=LONG_LIVED_LIVE per CLAUDE.md vm naming SSOT).
+      (1-min). These run as long-lived VMs on `vm-defi` (lifecycle*class=LONG_LIVED_LIVE per CLAUDE.md vm naming SSOT).
       **GATED on G1** (need backfilled history to be loadable as warmup) + **C-GREEN** (writes target canonical
       structure). Verification (per CLAUDE.md "Plans Run To Actual Completion"): T+5min check post-launch — both VMs
       RUNNING in `gcloud compute instances describe`; ≥1 parquet under
-      `day=<TODAY>/pipeline_mode=live/asset_group=defi/…` within the first interval (1 min for DEX, 1 h for Drift
-      funding); manifest `capture_status=captured` rows generated. Symptom of regression: `SolanaBasisGcsLoader` logs
-      `no perp_funding rows for live`. Depends on G1 (backfill warmup) before paper trade can run a meaningful history.
+      `day=<TODAY>/pipeline_mode=live*\*/asset*group=defi/…`(the transitional`live_websocket`alias until the gated    `live*<source>`tranche lands — never coarse`live`) within the first interval (1 min for DEX, 1 h for Drift     funding); manifest `capture_status=captured`rows generated. Symptom of regression:`SolanaBasisGcsLoader`logs    `no
+      perp_funding rows for live`. Depends on G1 (backfill warmup) before paper trade can run a meaningful history.
       parent_epic: mtds_mdps_master. **Operator-launched.**
 - [ ] [PLAY] P0. G3 Run 24h paper trade via `e2e-testing/scripts/defi/run-paper.sh --strategy SOL_BASIS`. Recipe:
       `bash     cd e2e-testing && bash scripts/defi/run-paper.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \         --execution-provider solana-devnet --initial-capital-usd 100000     `

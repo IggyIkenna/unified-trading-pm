@@ -311,7 +311,9 @@ restart** (inherited-dirty-WIP rule: makers are dead, inherit):
 - **R6 (.tabs/4/unified-trading-pm, ~12 dirty)**: codex edits in flight — `pipeline-mode-partition.md`,
   `pipeline-mode-and-batch-live-reconciliation.md` (hyperliquid_rest purge), `batch-live-architecture.md`,
   `cefi-batch-live.md`, `tradfi-batch-live.md`, `replay-subsystem.md` (+ more). REMAINS: finish per-AG plan
-  de-coarsening + prediction/sports seam docs + M1–M8 target codification, prettier, docs commits, flip M-COORD-1.
+  de-coarsening + prediction/sports seam docs + M1–M8 target codification, prettier, docs commits, flip M-COORD-1. **→
+  RESUMED + COMPLETED 2026-06-11 (slot-4): pm@645648a03 (codex contract) + pm@55f9cf9c3 (seam docs) + the docs(plans)
+  de-coarsen/flip commit — R6-codex + M-COORD-1 ticked below.**
 - **R4 (no tree WIP found)**: investigation state unknown — restart the diagnosis from the task spec (decision #4);
   check `gcloud scheduler jobs describe` for the IS jobs + instruments-store `by_date/` last-written days first.
 - **R5 (no tree WIP found)**: smoke matrix probes were running (125 tool calls); no ledger written — restart from the
@@ -348,10 +350,17 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       failing shards at (asset_group × data_type × venue) grain ONLY** — emit the pending-post-migration- backfill shard
       ledger into this plan; never block a whole AG. Run AFTER worktrees clean + all tonight's ships verified on `main`
       (image rebuilds ride that). slot-2+slot-3 split by AG ownership. Repos: mtds, instruments-service.
-- [ ] [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies**: 5 per-AG plans de-coarsened;
-      `pipeline-mode-and-batch-live-reconciliation.md` hyperliquid_rest purge; write
-      `sports/tradfi/prediction-batch-live.md` seam docs; codify M1–M8 live/replay TARGET design into
-      `codex/02-data/pipeline-mode-partition.md` (+`batch-live-architecture.md`) as settled contract. slot-7. Repo:
+- [x] ✅ [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies — DONE (slot-4 resume 2026-06-11, pm@645648a03 +
+      pm@55f9cf9c3 + this commit)**: 5 per-AG plans de-coarsened (gate banners reconciled to M-COORD-1/R6-codex;
+      defi+cefi deep-annotated — every remaining coarse/`hyperliquid_rest` token is a marked legacy-state/historical
+      record, never spec; defi A12f-col CLOSED by ratification); `pipeline-mode-and-batch-live-reconciliation.md`
+      hyperliquid_rest purged (vendor-only + transport column; sole remaining mention = the documented retirement) +
+      reconciled to M1–M8 (replay stratum + reconciliation-facing M1–M8 slice); `sports-batch-live.md` (NEW) +
+      `prediction-batch-live.md` + `tradfi-batch-live.md` seam docs shipped at cefi depth (phantom empty-reasons
+      corrected against real UAC closed set); M1–M8 live/replay TARGET design codified as settled contract in
+      `codex/02-data/pipeline-mode-partition.md` § "Ratified TARGET design" (+`batch-live-architecture.md` §10.5/§13,
+      `cefi-batch-live.md` §7, `replay-subsystem.md` SUPERSEDED banner, `availability-manifest-and-data-status.md`
+      live-taxonomy reconcile) — ratified-with-gated-tranche named (`M1-BREAKING`). slot-7→slot-4. Repo:
       unified-trading-pm.
 - [ ] [DATA] P0. **R8-sports/pred gates**: sports-specific orphan sweep (candidate_parquet_paths-driven) built + run →
       characterize/backfill to E==0; sports v1_archive `(date,league,fixture_id)` ROW-coverage proven before any drop;
@@ -1765,16 +1774,19 @@ speed-note (both deferred optimisations, non-blocking).
       unified-api-contracts (validity matrix). parent_epic: manifest_master. Provenance: tradfi pre-apply audit, slot-6
       2026-06-08.
 
-- [ ] [DOCS] P0. **M-COORD-1 — drive the G0 doc-coherence reconcile (the standardisation plan's item 0.8) to GREEN**:
-      CLAUDE.md + the codex layer (`pipeline-mode-partition.md`, `availability-manifest-and-data-status.md`) +
-      `SUB_AGENT_MANDATORY_RULES.md` + **all 5 per-AG plans + downstream + instruments** acknowledge the source-aware
-      `{mode}_{source}[_{transport}]` model + the apply-gate. Today the per-AG plans (2026-06-01) PREDATE the standard
-      (2026-06-05) → stale. parent_epic: manifest_master. **SSOT layer DONE (vm-cross-cutting 2026-06-07)**: the codex
-      reconciliation doc, the workspace `CLAUDE.md`, and the sub-agent rules were rewritten to the source-aware
-      mode/source/transport model (replay tier + hyperliquid vendor, retiring the glued-transport antipattern).
-      **REMAINING**: the 5 per-AG plans carry stale tokens left to each AG owner (they intermix factual on-disk object
-      counts that must not be falsified), plus `availability-manifest-and-data-status.md` and the downstream/instruments
-      plans on next touch.
+- [x] ✅ [DOCS] P0. **M-COORD-1 — G0 doc-coherence reconcile GREEN (R6-codex closure, slot-4 2026-06-11 — pm@645648a03 +
+      pm@55f9cf9c3 + this commit)**: CLAUDE.md + the codex layer (`pipeline-mode-partition.md` now carries the M1–M8
+      settled-contract section, `availability-manifest-and-data-status.md` live-taxonomy reconciled) +
+      `SUB_AGENT_MANDATORY_RULES.md` + **all 5 per-AG plans** acknowledge the source-aware
+      `{mode}_{source}[_{transport}]` model + the apply-gate. parent_epic: manifest_master. **SSOT layer DONE
+      (vm-cross-cutting 2026-06-07)**: the codex reconciliation doc, the workspace `CLAUDE.md`, and the sub-agent rules
+      were rewritten to the source-aware mode/source/transport model (replay tier + hyperliquid vendor, retiring the
+      glued-transport antipattern). **Per-AG-plan layer DONE (2026-06-11)**: all 5 plans' gate banners point at the
+      codex settled contract; factual on-disk observations were NOT falsified — remaining coarse/ `hyperliquid_rest`
+      tokens are explicitly annotated legacy-state/historical records. Seam docs
+      (`tradfi/sports/prediction-batch-live.md`) shipped; `batch-live-architecture.md` §11 table GREEN for 4/5 AGs (defi
+      full narrative still pending — tracked there). **Residual (non-gating, next-touch)**: the downstream/instruments
+      plans' stale tokens + repointing those plans' `master:` frontmatter at this coordinator (M-COORD-2 residual).
 - [x] ✅ [DOCS] P0. **M-COORD-2 — DONE (2026-06-07): gate banners added** to the DeFi §MASTER (demoted) + all 6
       cross-AG/ downstream/instruments plans (cefi/sports/prediction/tradfi `--apply` apply-gate; instruments = G1-root;
       downstream = G2). Additive banners only (slot precedence respected). **Residual (folds into M-COORD-1)**: repoint

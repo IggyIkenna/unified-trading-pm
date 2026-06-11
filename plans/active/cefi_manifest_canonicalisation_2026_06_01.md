@@ -28,7 +28,7 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
 > data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
-> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard, reconcile per M-COORD-1/2) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
+> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** (the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`; this plan REFERENCES it — remaining coarse/`hyperliquid_rest` tokens below are annotated legacy-state observations, not spec) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
 > BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
@@ -1414,13 +1414,13 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 ## Canonical target form (cefi)
 
-| Dimension       | Legacy                                     | Canonical                                                                             |
-| --------------- | ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Bucket          | `market-data-tick-cefi-{project}` (no env) | `market-data-tick-cefi-prd-{project}`                                                 |
-| asset-group key | `category=cefi`                            | `asset_group=cefi`                                                                    |
-| pipeline_mode   | absent in path                             | `pipeline_mode=` partition (`batch_tardis`/`batch_hyperliquid_rest`/`live_websocket`) |
-| schema_version  | legacy spread                              | v9                                                                                    |
-| source          | (per `data_source_provenance` cefi)        | `tardis` / `<venue>` multi-source                                                     |
+| Dimension       | Legacy                                     | Canonical                                                                                                                                                                                                                                                                                                                                |
+| --------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bucket          | `market-data-tick-cefi-{project}` (no env) | `market-data-tick-cefi-prd-{project}`                                                                                                                                                                                                                                                                                                    |
+| asset-group key | `category=cefi`                            | `asset_group=cefi`                                                                                                                                                                                                                                                                                                                       |
+| pipeline_mode   | absent in path                             | `pipeline_mode=` partition, SOURCE-AWARE `{mode}_{source}` (`batch_tardis`/`batch_hyperliquid` — vendor only, `transport=rest` is a COLUMN per R4; live = transitional `live_websocket` alias until the gated `live_<source>` tranche). On-disk `batch_hyperliquid_rest/` objects are LEGACY (pre-R4 rename) → renamed in the apply walk |
+| schema_version  | legacy spread                              | v9                                                                                                                                                                                                                                                                                                                                       |
+| source          | (per `data_source_provenance` cefi)        | `tardis` / `<venue>` multi-source                                                                                                                                                                                                                                                                                                        |
 
 ## Phased execution
 
@@ -1519,11 +1519,13 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       build handled ONLY the 9 L-flat orphans → would have MISSED the 2,613 L-bulk day-dirs (the exact "we keep missing
       things" trap the operator flagged). FIXED** to cover all three: L-bulk/L-canon = path-only `gcs_copy_object`
       inserting `pipeline_mode=` after `day=` (server-side ~250x; L-canon dest==src → no-op); L-flat =
-      read+regroup-by-day+ fan-out. All via the UAC `candidate_parquet_paths` SSOT (byte-exact batch=live; pipeline_mode
-      from venue, HYPERLIQUID→ hyperliquid_rest else tardis). Parquet content untouched (v9 cols at E5 rebuild). CF-7
-      blank/`UNKNOWN` venue + blank data_type skip+logged for E6. Candles = pipeline_mode insert. Knobs
-      `--workers`/`--start-date`/`--end-date`/`--also-legacy` + `python -u` + per-object isolation + idempotent. All 3
-      layout transforms unit-validated; lint+typecheck clean. — market-tick-data-service@844124f7, slot-3 2026-06-01.
+      read+regroup-by-day+ fan-out. All via the UAC `candidate_parquet_paths` SSOT (byte-exact batch=live; pipeline*mode
+      from venue, HYPERLIQUID→ hyperliquid_rest else tardis — \_historical record: `hyperliquid_rest` was the pre-R4
+      enum value; the consumer sweep mtds@c567962e renamed it `hyperliquid` (vendor only, transport=rest column)*).
+      Parquet content untouched (v9 cols at E5 rebuild). CF-7 blank/`UNKNOWN` venue + blank data_type skip+logged for
+      E6. Candles = pipeline_mode insert. Knobs `--workers`/`--start-date`/`--end-date`/`--also-legacy` + `python -u` +
+      per-object isolation + idempotent. All 3 layout transforms unit-validated; lint+typecheck clean. —
+      market-tick-data-service@844124f7, slot-3 2026-06-01.
 - [x] ✅ [DATA] P0. E3 Confirm cefi writer drained + snapshot `cefi-prd/_index` — **DONE (slot-3, 2026-06-03).** No live
       cefi writer VM (`gcloud compute instances list --filter="name~cefi OR name~mdps-backfill-cefi"` → empty);
       `_index/per_vm/` holds only the stale `_legacy_seed.parquet` (2026-05-12, no active shard emission). Consolidated
@@ -1539,6 +1541,8 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       `day=2024-06-03/asset_group=cefi/` = **474 OLD/orphan** objects + `pipeline_mode=batch_tardis/` +
       `batch_hyperliquid_rest/` = **482 MIGRATED** objects. So the corpus-wide `pipeline_mode=` insert already ran (a
       prior `--apply`); `gcs_copy_object` copies (not moves) → the old `day=/asset_group=cefi/` objects remain ORPHANS.
+      _(Legacy-state observation: the on-disk `batch_hyperliquid_rest/` segment is the pre-R4 value — the TARGET is
+      `batch_hyperliquid` (vendor only, transport=rest column); the rename rides the cefi apply walk.)_
 - [ ] [DATA] P0. **❌ RETRACTION of the earlier "E4-BUG / we-keep-missing-things" P0 (it was WRONG).** I read
       `moved=0` + a `head -3` listing (which shows `asset_group=` paths — they sort BEFORE `pipeline_mode=`) and wrongly
       concluded "no `pipeline_mode=` sibling / migrator no-ops L-bulk". The FULL listing shows the `pipeline_mode=`
@@ -1574,19 +1578,20 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       regexes + `prefix_templates` do NOT account for the NEW `pipeline_mode=` segment between `day=` and `asset_group=`
       → list per `raw_tick_data/by_date/day={d}/` and extend `parse_hive_path` to capture an optional
       `pipeline_mode=(?P<pipeline_mode>[^/]+)/`; (2) stamp v9 cols: pass `source` (cefi single-source `tardis`;
-      HYPERLIQUID→`hyperliquid_rest`) + `pipeline_mode`. **INTERNALS Q — RESOLVED (slot-3 2026-06-01):** `add()`
-      persists `source` (auto-resolved via SOURCE_PRIORITY at manifest_writer.py:236) but does **NOT** persist
-      `pipeline_mode` (no kwarg; goes to `**kwargs` → dropped) — that is exactly why CF-3 reads blank corpus-wide (the
-      live per-instrument cefi `add()` at orchestrator.py:2957 also omits it). `record_captured_from_counts`
-      (mw.py:2840) takes `pipeline_mode` but **REQUIRES** `expected_root_clusters` + `observed_clusters` +
-      `available_at_envelope` (the BUNDLED path). `record_captured` takes `pipeline_mode` but needs a `df` (read every
-      parquet). **DESIGN FORK (pick deliberately — feeds the irreversible delete):** (A) **[RECOMMENDED]** add a
-      back-compatible `pipeline_mode: PipelineMode|str = ""` kwarg to `ManifestWriter.add()` that coerces
-      (`_coerce_pipeline_mode`) + persists it like `source` (default "" = today's behavior → zero back-compat risk; ALSO
-      closes the live-writer CF-3 gap so batch=live). Then rebuild via `add(...,     pipeline_mode=, source=)`. Needs
-      UTL QG. (B) use `record_captured_from_counts` with trivial single-cluster maps (`{instrument_id: rows}` as both
-      expected+observed) — hacky for per-instrument. (C) `record_captured(df=...)` reading each parquet — correct but
-      slow. `available_at`: parquet col if present, else day-EOD-UTC (never migration-time). Same fork applies to
+      HYPERLIQUID→`hyperliquid_rest` — _retired pre-R4 token; now `hyperliquid` + transport=rest column_) +
+      `pipeline_mode`. **INTERNALS Q — RESOLVED (slot-3 2026-06-01):** `add()` persists `source` (auto-resolved via
+      SOURCE_PRIORITY at manifest_writer.py:236) but does **NOT** persist `pipeline_mode` (no kwarg; goes to `**kwargs`
+      → dropped) — that is exactly why CF-3 reads blank corpus-wide (the live per-instrument cefi `add()` at
+      orchestrator.py:2957 also omits it). `record_captured_from_counts` (mw.py:2840) takes `pipeline_mode` but
+      **REQUIRES** `expected_root_clusters` + `observed_clusters` + `available_at_envelope` (the BUNDLED path).
+      `record_captured` takes `pipeline_mode` but needs a `df` (read every parquet). **DESIGN FORK (pick deliberately —
+      feeds the irreversible delete):** (A) **[RECOMMENDED]** add a back-compatible
+      `pipeline_mode: PipelineMode|str = ""` kwarg to `ManifestWriter.add()` that coerces (`_coerce_pipeline_mode`) +
+      persists it like `source` (default "" = today's behavior → zero back-compat risk; ALSO closes the live-writer CF-3
+      gap so batch=live). Then rebuild via `add(...,     pipeline_mode=, source=)`. Needs UTL QG. (B) use
+      `record_captured_from_counts` with trivial single-cluster maps (`{instrument_id: rows}` as both expected+observed)
+      — hacky for per-instrument. (C) `record_captured(df=...)` reading each parquet — correct but slow. `available_at`:
+      parquet col if present, else day-EOD-UTC (never migration-time). Same fork applies to
       `rebuild_prediction_manifest.py`. **Do NOT build until the fork is chosen** — wrong choice corrupts the `_index`
       that gates L6 delete.
 - [ ] [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't bulk).
