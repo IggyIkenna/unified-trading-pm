@@ -265,6 +265,26 @@ unchanged:
       **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143).
       Repo: unified-trading-pm.
 
+## Phase 1.5 — >900-line tail (post-sweep inventory 2026-06-11; the named worst offenders above are ALL split)
+
+- [ ] [REFACTOR] P1. **UTL `manifest_writer.py` is 5,716 lines** — NEW worst-offender discovery (2026-06-11 fleet
+      sweep; hidden behind UTL's size excludes at budget 0). Same treatment as the P1 monsters: decompose by concern
+      (record_* write paths / consolidation / validation / emission-policy) behind a re-exporting facade, namespace-
+      patch pre-audit first (manifest_writer is the most-patched module in the fleet). Also UTL
+      `manifest_consolidator.py` (1,360) + `__init__.py` 2,279 (facade — sanctioned, verify). Repo:
+      unified-trading-library.
+- [ ] [REFACTOR] P2. MTDS >900 tail (11 files): umi_tick_provider 2,093 / evm_defi_handler 1,430 / lending_indices
+      1,390 / perp_funding 1,363 / databento_adapter 1,360 / dex_pools 1,097 / oracle_prices 1,085 / polymarket_adapter
+      1,023 / solana_lst_archival 988 / dex_swaps 980 / gas_fee 944 / websocket_runner 912 — split below 900 by
+      venue/stage (drops the file-size class → 15→14). Repo: market-tick-data-service.
+- [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
+      polymarket 1,184 / _solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922),
+      strategy archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958,
+      agent-orchestrator worker_liveness/state_store/worktree_clean_check/models (separate todo above),
+      alerting router 1,022, ml uniform_training_pipeline 963. UAC's >900 set is largely declarative data registries +
+      `__init__` facades (sanctioned re-export exception) — audit non-facade ones (honest_coverage 1,141,
+      contracts.py 1,349) case-by-case. Repos: per file.
+
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
 - [x] ✅ [REFACTOR] P2. COMPLETE 2026-06-11 — facade: UAC@c8287d3 (all 46 fleet-consumed two-level symbols at the
