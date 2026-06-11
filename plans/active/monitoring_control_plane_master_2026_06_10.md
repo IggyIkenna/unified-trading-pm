@@ -166,6 +166,34 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
 - [ ] [CODE] P3. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
       Cloud Run revisions / VM heartbeats) and diff its SHA vs `main` HEAD. Repo: deployment-api + deployment-ui.
+
+### Operator enhancements (2026-06-11, Harsh + Ikenna)
+
+- [ ] [CODE] P1. **(B1) Image/build column — real status, not "unknown" (Cloud Build + CodeBuild)** — the Image column
+      currently shows "unknown" for all repos. Surface the LATEST build's **status** (passed / in-progress / failed) +
+      **time** + **commit sha** + a **deep-link to the build log** (GCP Cloud Build console for GCP; CodeBuild console
+      for AWS) — click the Image cell → the failing build's logs. Track BOTH **Cloud Build (GCP)** and **CodeBuild
+      (AWS)** per the deployment-ui cloud toggle (the AWS/GCP build-signal dispatch already exists —
+      deployment-api@15fc1e4; this enriches status/time/sha/log-link + fixes the unknowns). Motivating incident: a
+      deployment-api **CodeBuild** failure blocked a merge to main with no dashboard signal. **Compose with the existing
+      diagnosis todo** in `ci_dashboard_deployment_ui_2026_06_10.md` ("Image column unknown on the LOCAL dev stack —
+      Cloud Build API 400s from the laptop env") — root-cause the local 400 (ADC-user-vs-SA / quota-project) so it's not
+      just honest-unknown locally. Repos: deployment-api (`_cloud_builds_*`/`_code_builds_aws` enrich) + deployment-ui
+      (Image cell link + status/time).
+- [ ] [CODE] [UI] P2. **(B2) Repo drill-down build header** — when a repo is opened, populate a build-details header at
+      the top: current build **status + source** (Cloud Build / CodeBuild), **last build time**, **commit sha** built,
+      and a **link to the build log**. The Image-column click-through (B1) and this header share the same build signal.
+      Repos: deployment-api (detail endpoint adds the build block) + deployment-ui (drill-down header).
+- [ ] [CODE] P2. **(B3) LDR→main delta — show commit count alongside files** — the overview delta currently shows the
+      content delta (`files_changed`, the squash-skew-safe truth per the LDR-is-SSOT rule). Operator also wants the raw
+      **commit count** (`ahead_by`) shown beside it (e.g. "+3 files · 5 commits"). ADD it, do not replace files_changed
+      (commit count is squash-inflated — keep both, label clearly). `ahead_by` is already fetched in `compare_branches`.
+      Repos: deployment-api (surface `ahead_by` in the delta dict) + deployment-ui (render).
+- [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
+      per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
+      relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
+      content is ahead of staging/main but the drain is stale/failing (bug #11 class). Full spec + 3 sub-todos:
+      `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md`. Repos: deployment-api + deployment-ui.
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
@@ -181,13 +209,18 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `ln_alert` (VERIFIED — `dashboard/src/types.ts`, NOT a gap)**. **7 gaps filed as todos below (G1–G7).**
       Verification: grep+read of deployment-ui/src, deployment-api repo_ci routes, agent-orchestrator/dashboard/src —
       each claimed gap confirmed absent in the UI (false-gap caught + dropped: account/token health is covered).
-- [ ] [CODE] P1. **(G1) Promotion quarantine/failures have NO paired standing state** — staging-to-main emits a CRITICAL
-      "genuine failures" page + a WARNING "newly-quarantined" page, but `promotion_failures`/`promotion_quarantine` are
-      **neither rendered in deployment-ui NOR read by the repo-ci aggregator** (grep 2026-06-11: 0 hits in
-      `deployment_api/routes/_repo_ci_*.py` + `deployment-ui/src/`). The manifest carries both fields. Wire
-      `ManifestView` to expose them + render a "Promotion quarantine (N)" panel on `/repos` (which repos are parked out
-      of promotion + why) — alert-parity for the most promotion-blocking page class. Repos: deployment-api +
-      deployment-ui.
+- [x] ✅ [CODE] P1. BACKEND DONE 2026-06-11 — deployment-api@0c74a11. **(G1) Promotion quarantine/failures** — the
+      aggregator now exposes both: `ManifestView.promotion_failures()` (`{repo: count}`, type-tolerant) +
+      `promotion_quarantine()` (`{repo: {since, attempts, escalated}}`); `_build_promotion_blocked()` unions them into a
+      typed `promotion_blocked: [{repo, failures, quarantined, since?, attempts?, escalated?}]` on
+      `/api/repo-ci/overview` (sorted quarantined-first then fail-count desc), `PromotionBlockedDict` added, mock seeds
+      2 samples, 4 unit tests (union/sort/tolerance/empty) + the FastAPI-router-detach bug I introduced caught+fixed. QG
+      green. **UI panel is the remaining half → G1-UI below.** Repo: deployment-api.
+- [ ] [CODE] [UI] P1. **(G1-UI) Promotion-blocked panel** — render a "Promotion blocked (N)" amber panel on `/repos`
+      (above/near the stuck panel) listing each `promotion_blocked` repo: quarantined badge + consecutive-fail count +
+      `since`/`attempts`/`escalated` + deep-link to the repo's GitHub PRs (`…/pulls?q=base:main`).
+      `RepoCiPromotionBlocked` client type + `promotion_blocked?` on `RepoCiOverview`; mock-api seeds the 2 samples.
+      `pw:L2` + regression spec in `tests/smoke/repos-tab.spec.ts`. Repo: deployment-ui.
 - [ ] [CODE] P2. **(G2) Semver-agent health has no standing state** — the bump-rate circuit-breaker (≥3 pending bumps/hr
       or consecutive-at-tip) + version-bump dispatch-failure are CRITICAL pages with no UI element AND they bypass the
       alert ledger (the inline-curl tail already filed in `ci_dashboard_deployment_ui` P3). Add a semver-agent health
