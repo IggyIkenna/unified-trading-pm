@@ -32,19 +32,87 @@ import argparse
 import datetime as dt
 import json
 import os.path
+import re
 import subprocess
 import sys
 from typing import cast
 
 OWNER = "IggyIkenna"
 
+# ETag cache for conditional requests: api-path -> (etag, body_text). GitHub does
+# NOT count a `304 Not Modified` against the rate limit, and most branch-pairs are
+# unchanged between 20-min runs, so this collapses ~300 PAT calls/hr (25 repos x 4
+# directions x 3 runs) to mostly free 304s. Persisted across CI runs via
+# actions/cache (see promotion-lag-monitor.yml); in-memory only when unset.
+_ETAG_CACHE: dict[str, tuple[str, str]] = {}
+
+
+def _parse_gh_api_i(raw: str) -> tuple[int | None, str | None, str | None]:
+    """Parse a `gh api -i` response → (http_status, etag, body_text). Pure (testable).
+
+    `gh api -i` exits non-zero on a 304, so callers read the parsed status line
+    here, never the subprocess return code.
+    """
+    if not raw:
+        return None, None, None
+    first = raw.split("\n", 1)[0].strip()
+    m = re.match(r"HTTP/[\d.]+\s+(\d{3})", first)
+    status = int(m.group(1)) if m else None
+    em = re.search(r"(?im)^etag:\s*(.+?)\s*$", raw)
+    etag = em.group(1).strip() if em else None
+    if status == 304:
+        return 304, etag, None
+    parts = re.split(r"\r?\n\r?\n", raw, maxsplit=1)
+    body = parts[1] if len(parts) > 1 else ""
+    return status, etag, body
+
+
+def load_etag_cache(path: str) -> None:
+    """Restore the persisted ETag cache (`{path: [etag, body]}`). Best-effort."""
+    try:
+        with open(path) as f:
+            raw = cast("object", json.load(f))
+    except (OSError, ValueError):
+        return
+    if isinstance(raw, dict):
+        for k, v in cast("dict[str, object]", raw).items():
+            if isinstance(v, list):
+                vl = cast("list[object]", v)
+                if len(vl) == 2 and all(isinstance(x, str) for x in vl):
+                    _ETAG_CACHE[k] = (cast("str", vl[0]), cast("str", vl[1]))
+
+
+def save_etag_cache(path: str) -> None:
+    """Persist the ETag cache as `{path: [etag, body]}`. Best-effort."""
+    try:
+        with open(path, "w") as f:
+            json.dump({k: [e, b] for k, (e, b) in _ETAG_CACHE.items()}, f)
+    except OSError:
+        pass
+
 
 def _gh_json(path: str) -> object:
-    r = subprocess.run(["gh", "api", path], capture_output=True, text=True)
-    if r.returncode != 0:
+    """GET an api.github.com path as JSON, behind an ETag conditional request.
+
+    A cached ETag → `If-None-Match`; a `304` reuses the cached body for **free**
+    (no rate cost). Returns None on any non-200/304 (preserves prior behaviour).
+    """
+    cached = _ETAG_CACHE.get(path)
+    cmd = ["gh", "api", "-i", path]
+    if cached:
+        cmd += ["-H", f"If-None-Match: {cached[0]}"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    status, etag, body = _parse_gh_api_i(r.stdout)
+    if status == 304 and cached:
+        body = cached[1]  # free: not counted against the rate limit
+    elif status != 200:
+        return None
+    elif etag and body:
+        _ETAG_CACHE[path] = (etag, body)
+    if not body:
         return None
     try:
-        return cast("object", json.loads(r.stdout))
+        return cast("object", json.loads(body))
     except json.JSONDecodeError:
         return None
 
@@ -149,6 +217,11 @@ def main() -> int:
     now_iso = cast(str, args.now_iso)
     as_slack = cast(bool, args.slack)
 
+    # Persisted ETag cache (CI: a path under actions/cache; else in-memory only).
+    cache_file = os.environ.get("GH_ETAG_CACHE_FILE")
+    if cache_file:
+        load_etag_cache(cache_file)
+
     if now_iso:
         now = dt.datetime.fromisoformat(now_iso.replace("Z", "+00:00"))
     else:
@@ -181,6 +254,10 @@ def main() -> int:
             if res:
                 n, age, omsg = res
                 findings.append(f"{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — “{omsg[:60]}”")
+
+    # Persist the warmed ETag cache so the next run's unchanged compares are free 304s.
+    if cache_file:
+        save_etag_cache(cache_file)
 
     # Dangling staging-lock check — defense-in-depth for unlock liveness, independent of the
     # cron-throttled/displaceable sit-debounce workflow. A lock held past one SIT cycle is an incident.
