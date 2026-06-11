@@ -163,9 +163,12 @@ unchanged:
       in-file citing this plan); contract-call conservation verified (114 ≥ baseline 99); full QG green. Follow-up:
       decompose `process_instruments()` (next todo). Original: **instruments-service `orchestrator.py` (8,192 L / 89
       functions) — abstract by asset-group + core.**
-- [ ] [REFACTOR] P3. **instruments-service `engine/orchestrator/process.py` (1,963 L)** — decompose the legacy
-      `process_instruments()` (1,931-line function body, moved verbatim in the 2026-06-11 split) by stage/asset-group;
-      then remove the process.py + sports_reference.py FUNCTION_SIZE_EXTRA_EXCLUDES entries. Repo: instruments-service. The module mixes per-asset-group logic with venue/date core + sink. Suggested package
+- [x] ✅ [REFACTOR] P3. DONE 2026-06-11 — instruments-service@a576a29: `process_instruments()` 1,931 L decomposed by
+      stage into process_{preflight,fetch,enrichment,write,zero_records,completeness}.py (316–642 L each; process.py
+      now 322 L facade); sports_reference fetcher 882 L → sports_reference_{core,fixtures}.py (sports_reference.py 212);
+      both FUNCTION_SIZE_EXTRA_EXCLUDES entries REMOVED; 2 surfaced lazy imports hoisted; budget ratcheted 4→3
+      (remaining: os.getenv / pip-install-in-Dockerfile / broad-except); full QG green. Original: decompose
+      `process_instruments()` + remove the excludes. The module mixes per-asset-group logic with venue/date core + sink. Suggested package
       `engine/orchestrator/`: `defi.py`
       (`_build_defi_venues`/`clear_defi_universe_cache`/`_get_defi_manifest_high_watermarks`/
       `_enforce_defi_monotonicity`/`filter_defi_instruments_by_relevance`/`_normalize_wrapped_token`), `sports.py`
@@ -186,8 +189,11 @@ unchanged:
       25→24 (the transient 25th class was the manifest-alignment edge). drilldown/routes follow-up stays below.
       Original: **deployment-api `data_status_service.py` (6,663 L / 69-method god-class) — abstract the domain logic
       out (operator 2026-06-10).**
-- [ ] [REFACTOR] P2. **deployment-api `data_status_drilldown.py` (2,586 L) + `routes/data_status.py` (2,550 L)** —
-      same facade treatment as the service split (routers preserved byte-identical). Repo: deployment-api. Suggested package `services/data_status/`: `defi.py`
+- [x] ✅ [REFACTOR] P2. DONE 2026-06-11 — deployment-api@5127517: routes/data_status.py 2,550 → package (5 modules);
+      services/data_status_drilldown.py 2,586 → package (5 modules); routes/deployments.py 968 → package (crud/
+      lifecycle); services/shard_detail.py 1,777 → package; + Phase-2b facade flips (routes/config.py +
+      utils/path_combinatorics.py to one-level registry imports). **budget 24→3 (≤5 ACHIEVED)** — file-size, fn-size,
+      deep-imports and more cleared in one unit; full QG green. Original: drilldown + routes facade treatment. Suggested package `services/data_status/`: `defi.py`
       (`_is_legacy_defi_venue_row`/`_read_defi_merged_index`/`_allowed_defi_venue_chain_pairs`/
       `_filter_to_canonical_defi_venues`/`_filter_legacy_defi_rows`), `sports.py` (`_is_sports_reference_venue`/
       `_is_understat_venue`/`_is_transfer_window_venue`/`_is_sparse_sports_entity`/`_get_reference_expected_dates`),
