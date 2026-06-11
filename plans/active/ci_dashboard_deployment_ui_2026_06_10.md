@@ -241,6 +241,15 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       dead view + `useEpics` hook, no parallel paths) in the Epics landing tab: epic cards → expand → plan rows → GitHub
       links; LIVE/MOCK badge. mock-api fixture mirrors the deployment-api mock.
 
+- [x] ✅ [CODE] P1. DONE 2026-06-11 — deployment-api@6385d5b + PM (this commit). **Epics orphan-strip accuracy**
+      (operator-reported: 25 "review-blocking orphans" while every real plan HAD a parent). Four stacked causes, all
+      fixed: (1) stale uvicorn predating the `_normalize_epic_ref` path-form fix → restart (21 false orphans); (2) API
+      read `ref=main` → promotion-lag window false-orphaned freshly-parented plans → now reads `ref=live-defi-rollout`
+      (LDR is the plan SSOT; `_REF` constant, github*url blobs follow); (3) housekeeping files
+      (`INDEX.md`/`task_template.md`/`README.md`/`*\*`) listed as plans → `\_is_plan_md`filter +`TestIsPlanMd`unit     tests; (4) 2 plans (ci_status_firestore / fleet_git_health) had YAML-INVALID frontmatter (unquoted`key:
+      value`-     shaped source strings) → consumers' `yaml.safe_load`got`{}`→ blank parent_epic, while grep-based    `check_frontmatter.sh`stayed green (field-presence ≠ parseability) → quoted both + NEW hygiene gate    `check_frontmatter_yaml.py`(strict safe_load, wired into check_frontmatter.sh, verified both directions).     Post-fix:`/api/epics/plans`
+      orphan_count=0.
+
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 
 - [x] ✅ [TEST] P1. [UI] DONE 2026-06-10 — deployment-ui@3998a4d | pw:L2 ✓ (164/164 smoke) | regression:
