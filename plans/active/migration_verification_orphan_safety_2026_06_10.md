@@ -257,3 +257,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   clears — no intervention needed, no incident. PM docs ship via the docs(plans) direct-LDR carve-out (lock-independent;
   `pm@3d95dbb49`, `pm@f9ee262b3`). Code auto-ships on unlock. *(An earlier note here overstated this as a ~7.5h stuck
   incident — that was a local-vs-UTC timestamp misread; corrected: it is a normal ~73 min converging cascade.)\_
+- 2026-06-11 (slot-4, autonomous finish-to-DONE run) — **scaffolds CONFIRMED on `staging`** (the lock converged as
+  predicted: IS `scripts/migration_orphan_sweep.py` + UAC `registry/possible_manifest.py` both present on
+  `origin/staging`). **V2 manifest-diff tool BUILT**: `instruments-service/scripts/manifest_diff.py` — loads projected
+  (beta-writer) vs current/live `_index` parquet (local or `gs://`), grain-aware wildcard-covering key alignment via
+  `possible_manifest` (mirrors the orphan sweep's `build_covered_index` discipline so coarse-vs-fine keys don't read as
+  false adds/removes), reports added/removed/changed cells + `capture_status` transition matrix + per-(asset_group,
+  data_type, venue) row deltas, human + `--out` JSON; unit tests on synthetic parquets. IS `quality-gates.sh --no-fix`
+  green; **quickmerge held on a concurrent in-slot UTL WIP clearing the dep-audit — ships next** (the V2 checkbox flips
+  on the sha). `migrate_instruments_store_v9.py` setup_events (M-COORD-6 IS slice) rode the same batch. V1 (B6) per-AG
+  enumerator-reads-V0 verification evidence lands with the ship report.
