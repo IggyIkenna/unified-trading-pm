@@ -233,9 +233,14 @@ unchanged:
       1,012→781+281 + amm/betfair companions, all below 900 with facade modules preserved; budget ratcheted 24→21
       (census-honest); full QG green (292s). lxml advisory: not a direct execution-service dep (transitive) — tracked
       under the pip-audit class in Phase 4. ITEM COMPLETE — flipping checkbox:
-- [ ] [REFACTOR] P3. **ml-service** (`cloud_feature_provider` 1,202 / `training_orchestrator` 1,027) +
-      **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143) — split the >900
-      tail. Repos: ml-service / unified-trading-pm.
+- [ ] [REFACTOR] P3. **cloud_feature_provider DONE 2026-06-11** — ml-service@e011c82: 1,202→774 facade +
+      `feature_query_support.py` (298) + `sports_feature_loader.py` (219); the loader resolves `get_storage_client`
+      through the facade module so the existing test patch surface
+      (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests). REMAINING in this
+      item: ml-service `training_orchestrator` (1,027 — extract the defi/sports target-generation cluster to a
+      `training_targets.py` module, keep thin delegating methods + the `CloudFeatureProvider`/`ModelRegistry`
+      module-attr patch surface) + **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 /
+      `gcs_migration_bundle` 1,143). Repos: ml-service / unified-trading-pm.
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
