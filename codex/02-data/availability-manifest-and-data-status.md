@@ -833,8 +833,11 @@ identical whether the source was silent or the pipeline had never run. `write_wi
 #### Live-pipeline 4-state taxonomy examples (pipeline_mode=live_websocket)
 
 The same 4-state taxonomy applies to live-pipeline writes. The discriminator is the `pipeline_mode` column (v8 schema):
-batch writes use `pipeline_mode in {batch_databento, batch_tardis, ...}`; live writes use
-`pipeline_mode in {live_websocket, live_rest}`. Per-state semantics in live mode:
+batch writes use `pipeline_mode in {batch_databento, batch_tardis, ...}`; live writes use the **transitional
+`live_websocket` alias** (the `live_rest` member never shipped; under the ratified source-aware M1 standard live values
+are `live_<source>` and consumers PREFIX-MATCH `live_*` — never an exact alias literal; the alias migration is the gated
+`M1-BREAKING` tranche, SSOT [`pipeline-mode-partition.md`](pipeline-mode-partition.md) § "Ratified TARGET design").
+Per-state semantics in live mode:
 
 | State                | `pipeline_mode`  | `capture_status`   | Live-mode trigger                                                                                                                                                                                  |
 | -------------------- | ---------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -849,9 +852,10 @@ batch writes use `pipeline_mode in {batch_databento, batch_tardis, ...}`; live w
 separately to avoid masking a live gap with batch backfill (or vice versa). See
 [`pipeline-mode-partition.md`](pipeline-mode-partition.md) for the partition column SSOT.
 
-**Drilldown UI reads pipeline_mode**: `GET /api/data-status/live` pivots manifest rows where
-`pipeline_mode = 'live_websocket'` (or `'live_rest'`) and joins per-shard `StreamingHealthSnapshot` via the deployment-
-api Health-API HTTP join (see
+**Drilldown UI reads pipeline_mode**: `GET /api/data-status/live` pivots manifest rows on the live stratum (prefix-match
+`live_*` — the transitional `live_websocket` alias plus the source-aware `live_<source>` members; the top-level
+data-status view stays the mode-AGNOSTIC union per M5, shipped `deployment-api@4dd2575`) and joins per-shard
+`StreamingHealthSnapshot` via the deployment- api Health-API HTTP join (see
 [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) §
 "Health-API + alerting integration"). The deployment-ui `<LiveDataStatusTab/>` (since deployment-ui@`5738237`) renders
 the resulting rows with per-row `capture_status` badges + per-row staleness badges (WARN ≥ 30s, CRIT ≥ 60s).

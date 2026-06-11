@@ -124,8 +124,11 @@ The UTC-alignment rule (§10.1 of `batch-live-architecture.md`) applies: MTDS ne
 ## §7 Anti-patterns
 
 - Don't build a standalone CeFi-only backtest engine — route through execution-service MatchingEngine.
-- Don't add `pipeline_mode=cefi_live` or `pipeline_mode=cefi_batch` — `pipeline_mode` is `live_websocket` /
-  `live_trading` / `batch` only (see [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)).
+- Don't add `pipeline_mode=cefi_live` or `pipeline_mode=cefi_batch` — `pipeline_mode` is the SOURCE-AWARE
+  `{mode}_{source}[_{transport}]` closed set (cefi: `batch_tardis` / `batch_hyperliquid` / `live_<venue>` /
+  `replay_<venue>`; `live_websocket` is the transitional alias until the gated `M1-BREAKING` tranche) — never an
+  asset_group-glued or coarse value (see
+  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design").
 - Don't write `if asset_group == "cefi": use_l2_matcher` — matcher dispatch is on `BatchExecutionMode`, not on
   asset_group. CeFi + TradFi both use L2Matcher; DeFi uses AMMMatcher; Sports uses L0Matcher.
 - Don't emit `record_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)` for cefi at instrument-day grain — cefi is 24/7.

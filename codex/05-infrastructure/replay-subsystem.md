@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-20
+last_reviewed: 2026-06-11
 ---
 
 # Replay Subsystem
@@ -10,6 +10,15 @@ last_reviewed: 2026-05-20
 > 2026-05-23. Full work plan in
 > [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
 > Phase 7. If this doc disagrees with the active plan, the plan wins.
+>
+> **⚠️ PARTIALLY SUPERSEDED on `pipeline_mode` (M1, operator-ratified; annotated 2026-06-11 R6-codex)**: this doc's
+> "replay output writes `pipeline_mode=live_websocket`, never `replay_*`" rule was the PRE-M1 design. Under the ratified
+> source-aware standard, **`replay_<source>` is a REAL pipeline_mode** (the intraday gap-fill tier, always the middle of
+> mode-contextual precedence), and `live_websocket` is only the TRANSITIONAL alias until the gated `M1-BREAKING` tranche
+> migrates live/replay writers + objects + readers. The `live_websocket` stamping described below is the CURRENT
+> (transitional) implementation, not the target. SSOT:
+> [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design —
+> live/replay (M1–M8 settled contract)".
 
 ## TL;DR
 
@@ -172,8 +181,9 @@ Three reasons:
   semantic is "when MTDS would have actually had the row in live mode, given the source priority entry's emission
   delay." Replay must reproduce that — otherwise downstream `LookaheadBiasError` checks fail and reconciliation diverges
   from batch.
-- **`pipeline_mode=live_websocket`** on the parquet output (NOT a `replay_*` mode). The output is indistinguishable from
-  a true live capture, which is the point — replay is filling a gap that should have been live.
+- **`pipeline_mode=live_websocket`** on the parquet output — the CURRENT transitional behavior (see the SUPERSEDED
+  banner above): the M1 target stamps `replay_<source>` (a REAL mode, distinguishable for the audit trail while still
+  unioned by readers per M4 precedence); the writer flip rides the gated `M1-BREAKING` tranche.
 - **Same shard atomicity contract** — one parquet per shard, one `record_captured` per shard, cluster validation
   preserved for bundled shards.
 
@@ -235,7 +245,8 @@ the prod pipeline; a `ScenarioOverlay` is applied at the selected tap layer on t
 
 **Composition contract:**
 
-1. `ReplayPublisher` writes events with `pipeline_mode=live_websocket` and the original-time `available_at`.
+1. `ReplayPublisher` writes events with `pipeline_mode=live_websocket` (transitional — `replay_<source>` under the M1
+   target, see the banner above) and the original-time `available_at`.
 2. `ScenarioOverlayApplier` intercepts events at the configured `ScenarioOverlayLayer` (e.g., `ORDER` pre-cutover;
    `RAW_TICK` / `FEATURE` post-cutover) _after_ replay has emitted the canonical row — same hook location as in a live
    run.
@@ -268,8 +279,10 @@ unaffected. Full post-cutover scope tracked in
 
 ## Anti-patterns
 
-- Don't introduce `pipeline_mode=replay`. Output goes to `pipeline_mode=live_websocket`. Replay vs live is operational,
-  not data-shape.
+- Don't stamp a COARSE `pipeline_mode=replay` (no source). The M1 target is the source-aware `replay_<source>`; until
+  the gated `M1-BREAKING` tranche flips the writers, output rides the transitional `pipeline_mode=live_websocket` alias.
+  (SUPERSEDES the prior "don't introduce `pipeline_mode=replay_*` at all" rule — that contradicted M1; see the banner
+  above.)
 - Don't auto-recover from `REPLAY_BACKSTOP_REACHED` for May-23 cutover — manual gate. Auto-recovery is post-cutover.
 - Don't run replay at the same time as MTDS-live for the same shard without watermark KV — race condition produces
   double-publish. Always go through `ReplayPublisher` which checks the KV.
