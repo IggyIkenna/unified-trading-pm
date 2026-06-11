@@ -1130,7 +1130,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-trading-pm": {
       "type": "devops",
