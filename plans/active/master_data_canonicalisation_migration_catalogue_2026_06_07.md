@@ -200,6 +200,52 @@ parallel-safe.
   `plans/active/issues/qg_base_service_ratchet_exit_code_2026_06_11.md`; composes with the existing "LOCAL QG HARNESS
   hollow sentinel" P2 above (this is a different, additional mechanism).
 
+### Autonomous finish-to-DONE run — FINAL REPORT 2026-06-11 (slot-4)
+
+**SHIPPED (all QG-green via quickmerge, on LDR; Tier-C drain promotes):** utl@6f347d90 (CF-4 `source=`/`asset_group=` on
+`record_empty`/`record_failed`) · mtds@7455ffb (FULL CF-11 swallow batch Phase 1+2 + M-COORD-6 setup_events + Kalshi
+CF-11; 18 new tests) · mtds `_defi_manifest` CF-4 recorder pass-through (follow-up unit, landed after 7455ffb) ·
+is@d4190ba (G3.5 manifest_diff tool) · strategy@3561f137 (GAP-4 drift warn) · deployment-api@644e439 (cefi seed-aware
+4-state denominator) · mdps@4363bce (GAP-7 rename complete incl. the orchestration_service caller the first pass missed)
+· alerting@dec309b (CONSOLIDATOR_DOWN + MANIFEST_CONSOLIDATION_FAILED consumers — the consolidator can now page) ·
+deployment-service lifecycle_catalogue_scheduler.tf bucket-literal fix (legacy/nonexistent → canonical env-short; ship
+in flight).
+
+**VERIFIED (no work needed):** M-COORD-7 already shipped on HEAD; polymarket CF-11 already closed (slot-5 gate note was
+stale); G3.5 scaffolds + UAC possible_manifest on `staging`; IS migrate_instruments_store_v9 needs no setup_events (no
+manifest read).
+
+**G3.5 RUNS EXECUTED (real prod GCS):**
+
+- **V2 orphan sweeps**: defi **E=254,984** (canonical-shaped Solana-migration outputs never record_captured'd + unknown
+  prefixes = the solana_defi_legacy trees) · tradfi **E=47,102 / B=1.6M legacy twins / unknown=7,147** · prediction
+  **E=61,014 (stable)**. Report parquets in each bucket's `_index/audit/`. ALL RED → G4 stays blocked per ⑬; the per-AG
+  `record_captured` backfill is the tail. Sports: the generic sweep is N/A by design (candidate_parquet_paths) —
+  sports-specific sweep still needed (slot-2).
+- **V3 schema completeness**: defi 7 RED (SchemaSpec coverage gaps: rewards/risk_params/utilization etc.) · tradfi 1 RED
+  (**no SchemaSpec for tradfi/trades**) · **prediction RED: POLYMARKET trades silently DROPS 11 columns vs v9** (amount,
+  asset, conditionId, data_source, market_type, outcomeIndex, resolution_period, symbol, timestamp, transactionHash,
+  underlying) → extend the canonical schema BEFORE the prediction apply or operator-ack (⑮).
+- **C residuals**: DeFi B0-PRE v2 enumerate re-run = **57,074 candidates/2d** (expanded universe enumerates; seed stays
+  G1.run-gated). **CeFi Era-B v2 re-run = 2,804 candidates/2d — the ~563K false OPTION/COMBO candidates are GONE → the
+  cefi enumerate-re-validation gate is MET.**
+
+**DECISION (documented intent, T-OLD-2)**: the 14 Era-A `data_type=options_chain` tradfi objects are REAL data the
+migrator skips → class-E discipline applies: **PRESERVE + backfill, never delete** (they will surface in the tradfi
+orphan-sweep report parquet; the verified-delete tool already refuses class-E). Supersedes BLOCKED-OPERATOR-DECISION
+unless the operator overrides.
+
+**IN FLIGHT (background)**: A5 bar-edge batch agent (MDPS content-aware shift + UAC docstring + mtds ts_event→t_close
+with footer-marker discriminator) — census basis: 24/24 raw tradfi ohlcv parquets are `timestamp`-named open-edge.
+
+**REMAINING (exact next steps):** (1) E8 `terraform apply` of lifecycle_catalogue_scheduler — tf fixed; no
+terraform/tofu binary on this host: install tofu OR run from the infra pipeline, then T+10min
+`gcloud run jobs executions list --job lifecycle-catalogue-regen-<ag>`; (2) per-AG class-E `record_captured` backfills
+(defi=solana-migration tail / tradfi / prediction) + sports-specific sweep; (3) UAC SchemaSpec additions per V3 RED list
+(esp. prediction 11-column carry); (4) V5 dev renders + manifest_diff reports per AG → V6 ⑬–⑲ verdicts; (5) QG ratchet
+exit-code fix (issues/qg_base_service_ratchet_exit_code_2026_06_11.md — fleet-sweep first per rule 11); (6) E5
+catalogue-reader repoint gated on sports+pred roll-ups existing (only cefi/defi/tradfi have prod/catalog.parquet).
+
 ## Cross-cutting audit verdict (slot-7 / vm-cross-cutting) — 2026-06-08
 
 > **REGRESSION RISK: NONE** for the per-AG `--apply`. All slot-7 cross-cutting work is **gate-only / consumer-side /
@@ -1630,7 +1676,7 @@ speed-note (both deferred optimisations, non-blocking).
       reemit_honest_absence_rows) + rebuild_defi (defensive — unguarded log_event via ManifestWriter.add validation);
       cefi/sports pre-existing; the 5 migrate*_*v9 movers + IS migrate_instruments_store_v9 VERIFIED no-manifest-read →
       not needed) \*\*M-COORD-6 — every AG
-      `rebuild*__manifest\*`/`migrate__\_v9`script must`setup_events()`    before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship     gated on M-COORD-7).** ROOT CAUSE:`read_availability_index()`→`\_backfill()`emits    `READER_BACKFILLED_V8_COLUMNS_AS_NULL`via`log_event`whenever the per-VM fallback shards carry pre-v9 columns —     the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).     Without an events init,`log_event`raises`RuntimeError:
+      `rebuild***manifest\*`/`migrate**\_v9`script must`setup_events()`    before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship     gated on M-COORD-7).** ROOT CAUSE:`read_availability_index()`→`\_backfill()`emits    `READER_BACKFILLED_V8_COLUMNS_AS_NULL`via`log_event`whenever the per-VM fallback shards carry pre-v9 columns —     the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).     Without an events init,`log_event`raises`RuntimeError:
       Event logging not
       initialized`and **crashes the rebuild    `--no-dry-run`apply**. The v8-era migration scripts ALL call`setup_events(mode="local",
       sink=None)`in`main()`     (`migrate_sports_canonical`/`migrate_defi_canonical`/`migrate_tradfi_canonical`/    `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it**. Confirmed     MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest_`, `rebuild_tradfi_manifest\*`,     `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS     `migrate_instruments_store_v9.py`(the ones that call`read_availability_index`). **Fix per AG-slot**: add     `setup_events(service_name="...",
