@@ -158,10 +158,10 @@ on the PR (head=LDR commit) — noise, not a staging build.
   (`deployment-ui`/`unified-trading-system-ui`) have Dockerfiles but build via **GCP only** (no AWS CodeBuild) — keep as
   is.
 
-- [ ] [WORKFLOW] P2. quickmerge: add `--build` flag → `Build-LDR: true` commit trailer; v2 "Dispatch cloud-build
-  trigger" step reads it → conditional LDR build dispatch. **(quickmerge flag SHIPPED 2026-06-11 — see Progress Log;
-  v2-step path DROPPED as unworkable — v2 never runs on LDR. LDR opt-in is realized cloud-natively via the AWS
-  CodeBuild webhook `COMMIT_MESSAGE` filter, NOT a GHA dispatch.)**
+- [x] [WORKFLOW] P2. ✅ quickmerge: `--build` flag → `Build-LDR: true` commit trailer — **PM@f6a4dbecf** (PM QG green;
+  `bash -n` OK; trailer-logic unit-verified via `git interpret-trailers`). The v2-step dispatch path was DROPPED as
+  unworkable (v2 never runs on LDR); LDR opt-in is realized cloud-natively via the AWS CodeBuild webhook
+  `COMMIT_MESSAGE` filter (see P3 below + Progress Log "Test evidence").
 - [ ] [TERRAFORM] P2. AWS CodeBuild webhook: add `PUSH ^refs/heads/main$` filter group (keep LDR group). Confirm GCP
   `…-build` trigger targets `main`. `terraform/modules/cloud-build/aws/main.tf`. **(CORRECTED 2026-06-11: the live AWS
   webhooks + GCP triggers are IMPERATIVELY managed and DRIFTED from this terraform — a blind `terraform apply` would
@@ -179,15 +179,24 @@ on the PR (head=LDR commit) — noise, not a staging build.
   check) so an image-build failure blocks promotion pre-merge. Canary MTDS, prove green on a consumer repo + across
   branches (rule 11) before fleet-rolling into the v2 required-check template. Target: PM `quality-gates-v2.yml.tmpl`
   (or a new `image-build-gate.yml.tmpl`).
-- [ ] [WORKFLOW] P3. Stop the LDR build's CodeBuild check from posting on LDR→staging drain PRs (the red noise).
-  **(REALIZED 2026-06-11 via the `--build` opt-in: gating the AWS CodeBuild LDR webhook on `COMMIT_MESSAGE: Build-LDR:
-  true` means non-opted LDR commits don't build → no CodeBuild status → no drain-PR noise. See Progress Log.)**
+- [x] [WORKFLOW] P3. ✅ Stop the LDR build's CodeBuild check posting on drain PRs (the red noise) — REALIZED via the
+  `--build` opt-in: the live MTDS AWS CodeBuild webhook is gated on `COMMIT_MESSAGE: Build-LDR: true`, so non-opted LDR
+  commits don't build → no CodeBuild status → clean drain PRs. **Evidence (MTDS live test): commit A (with trailer)
+  `1b3e6c2c` → AWS CodeBuild fired; commit B (no trailer) `58b77a77` → 0 AWS statuses (gated off); GCP LDR build fired
+  on both (always-on by design).** TF module support: **deployment-service@c529afb** (additive, default-off). MTDS-only
+  imperative webhook change (reversible; original in `/tmp/mtds_webhook_orig.json`). Fleet rollout pending TF↔live
+  reconciliation (BUILD-FIX P3).
 - [ ] [BUILD-FIX] P3. **NEW (decision item surfaced 2026-06-11)**: the AWS CodeBuild fleet (`terraform/cloud-build/aws`)
   is DRIFTED from terraform (live webhooks fire on LDR, not `var.branch_pattern`/main) and builds are intermittently red
   in PR context — decide whether AWS ECR is still a live deploy target. If YES: reconcile TF↔live (the live imperative
   webhook config is the SSOT to capture) + stabilise the build before any AWS gate. If NO: retire the AWS CodeBuild
   projects + webhooks (GCP `…-build` is the prod image build). Until decided, AWS is NOT a `main` required gate. Repo:
   `deployment-service`.
+
+> **PARTIALLY SUPERSEDED 2026-06-11 — see "Gap 5 — Progress Log" below.** The surface map's facts hold, but the
+> implementation deviated: the v2-step dispatch (path 3) is unworkable (v2 never runs on LDR), LDR opt-in is realized via
+> the AWS webhook `COMMIT_MESSAGE` filter, and the `main` required-check gate (canary-order steps 4–5) was NOT flipped
+> (it would deadlock the fleet — no build runs on the PR head). Read the Progress Log for what actually shipped.
 
 **Build-trigger surface map (3 interlocked paths — fully traced 2026-06-11; the implementation MUST reconcile all 3,
 which is why this is canary-first, not a one-shot edit):**
@@ -253,6 +262,57 @@ Append-only. Durable state across context compaction (AUTONOMOUS_AGENT_RULES rul
 - `unified-trading-pm/scripts/quickmerge.sh` — `--build` flag → `Build-LDR: true` trailer (additive; inert until a
   cloud-native reader gates on it; `Quickmerge:` strict-guard unaffected — substring match). **SHIPPED PM@f6a4dbecf**
   (LDR; rides standing LDR→main PR, v2-gated; PM QG green; `bash -n` OK).
+- **MTDS AWS CodeBuild webhook** — gated the LDR filter group on `COMMIT_MESSAGE: Build-LDR: true` (imperative,
+  MTDS-only, reversible — original filterGroups saved to `/tmp/mtds_webhook_orig.json`; rollback =
+  `aws codebuild update-webhook --project-name market-tick-data-service --region ap-northeast-1 --filter-groups <orig>`).
+- `deployment-service/terraform/modules/cloud-build/aws/{main,variables}.tf` — new optional `github_commit_message_filter`
+  var + dynamic `COMMIT_MESSAGE` filter (additive, default `""` → no behavior change; documents the fleet path).
+  **SHIPPED deployment-service@c529afb** (LDR; `terraform fmt` clean; not QG-gated; rides the drain).
+
+### Test evidence (operator-requested MTDS canary, 2026-06-11)
+
+1. **Trailer construction (unit)** — `quickmerge --build` produces a trailer block `Quickmerge: agent\nBuild-LDR: true`;
+   without `--build` it is just `Quickmerge: agent`. Both parse cleanly via `git interpret-trailers --parse`.
+2. **Live webhook gate (end-to-end on MTDS LDR)** — two net-zero scratch commits (add + remove of `.ci-build-flag-test`):
+   - Commit **A** `1b3e6c2c` carrying `Build-LDR: true` → **AWS CodeBuild FIRED** (`AWS CodeBuild ap-northeast-1
+     (market-tick-data-service)` status present) + GCP `…-live-defi-rollout` build in-progress.
+   - Commit **B** `58b77a77` with NO trailer → **0 AWS CodeBuild statuses** (gated off) + GCP `…-live-defi-rollout`
+     build queued (always-on).
+   - Conclusion: `--build` ⇒ opt-in AWS LDR build; default ⇒ no AWS build ⇒ no drain-PR noise. Exactly the design.
+   - (Commit A's AWS build state was `failure` — that is the SEPARATE intermittent AWS-build-health item, BUILD-FIX P3;
+     it does not affect the gate, which is about whether the build TRIGGERS.)
+
+### Decision: GCP `…-live-defi-rollout` LDR build stays ALWAYS-ON (not gated by `--build`)
+
+The operator's "no flag → no LDR build" is realized for the **AWS CodeBuild** build (the cost + drain-PR-noise concern
+the Gap-5 text centers on). The GCP `…-live-defi-rollout` build is left always-on because (a) it is green and is the
+useful "fast feedback" signal the design also calls for, and (b) GCP 2nd-gen push triggers **cannot filter on commit
+message** — fully gating GCP would require disabling the native trigger + a heavy `cloud-build-router` dispatch path
+(the router has no LDR route and runs deploy/freeze logic). If the operator wants GCP LDR also fully opt-in, that is the
+follow-up below.
+
+- [ ] [INFRA] P3. **(optional, operator-decision)** Make the GCP `…-live-defi-rollout` build ALSO opt-in: disable the
+  native GCP LDR trigger + add a `--build`-driven dispatch path (router needs an LDR/dev route first). Today GCP LDR is
+  always-on fast feedback; only AWS LDR is gated. Repo: `deployment-service` + PM `cloud-build-router.yml`.
+
+### Final report — end-state (autonomous session 2026-06-11)
+
+**Done + verified:** (1) `quickmerge --build` flag + trailer (PM@f6a4dbecf); (2) AWS LDR build is now opt-in on MTDS +
+the red drain-PR noise is gone (live-tested A-fires/B-silent); (3) TF module supports the filter for the eventual clean
+fleet path (deployment-service@c529afb).
+
+**Deliberately NOT done (would have created the exact fleet-deadlock the dispatch's #1 rule forbids), with the corrected
+path documented as tracked todos above:** the `main` required-check image-build gate. Hard evidence: NO image build runs
+on the staging→main PR head (GCP `…-build` is post-merge `push:^main$`, green; AWS does not fire on main) — so adding
+either context to `main` `required_status_checks` permanently blocks every staging→main PR. The correct gate is a NEW
+PR-head build job (the new [WORKFLOW] P2 todo); the AWS-as-gate path is additionally blocked on the drifted/intermittent
+AWS build (BUILD-FIX P3). A `terraform apply` was deliberately NOT run — the live AWS webhooks + GCP triggers are
+imperatively managed and drifted from terraform; applying would revert live config fleet-wide.
+
+**Fleet rollout (the remaining scale-out) is intentionally NOT done from one session** — it is gated on the TF↔live
+reconciliation (BUILD-FIX P3) so the AWS-webhook gate can roll via clean IaC rather than per-repo imperative edits, and
+on the PR-head-build gate machinery landing + being proven green across a consumer repo and all branches (rule 11).
+Tracked above. The MTDS canary is green; the foundation (`quickmerge --build`) is fleet-live via the symlinked SSOT.
 
 ## Composes with
 
