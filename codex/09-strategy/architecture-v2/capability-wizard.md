@@ -79,3 +79,46 @@ The capability wizard is three artifacts over one data model:
 - Wallet/capital flow:
   [`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](../../04-architecture/wallet-hierarchy-and-capital-flow.md)
 - Generator suite: `unified-trading-pm/scripts/openapi/generate-unified-openapi.sh` and `docs/ui-alignment-ssot.md`
+
+## Current state (shipped 2026-06-11 — autonomous build session)
+
+| Piece                            | Where                                                    | Evidence                                                                                                                |
+| -------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Generator repair (Phase 0)       | `unified-trading-pm/scripts/openapi/`                    | PM@50bdbcd36 (PR #268) — service auto-discovery, fail-on-drift, architecture_v2 extraction                              |
+| Manifest schema + gap registries | `unified_api_contracts/internal/architecture_v2/`        | UAC@6f31f59 — capability_manifest + collateral/fees/sim/fund-structures/order-semantics/agent-capability (honest-empty) |
+| Capability manifest v1           | `unified-api-contracts/openapi/capability-manifest.json` | PM@78b2e893a (PR #270) + UAC@1bc2f07 — 409 nodes / 663 edges, all gaps typed; orphan report alongside                   |
+| Prospectus ×57 + two-sided audit | `unified-api-contracts/openapi/prospectus/`              | PM PR #272 + UAC@fe37eae — 1 contradiction + 2 orphan docs found                                                        |
+| Scenario stepper                 | `e2e-testing/scripts/strategy/`                          | UAC@6262c3f + strategy-service@e0ed11c + e2e-testing@3e41ecb — real engine, kill-trips proven                           |
+| Wizard UI (`/wizard`)            | `unified-trading-system-ui/app/(wizard)/`                | uts-ui@9f40331 — pw:L2 8/8                                                                                              |
+| Capability tab                   | `deployment-ui` (per-service tab next to Data Status)    | dep-ui@13ac831 — pw:L2 6/6                                                                                              |
+
+Open work (see plan): Phase 5 (annotation write-back + escalation emitter + backtest-on-demand), wizard stepper stage,
+registry backfills, Wave-2 enhancements (operator sign-off pending).
+
+## How to run / view
+
+- **Wizard UI**: `cd unified-trading-system-ui && pnpm install && NEXT_PUBLIC_MOCK_API=true pnpm dev` →
+  `http://localhost:3000/wizard` (engine warning on node < 22 is benign; manifest data is committed in
+  `lib/registry/capability-manifest.json`, no backend needed).
+- **Capability tab**: `cd deployment-ui && npm install && npm run dev` → `http://localhost:5183` → pick a service →
+  "Capability" tab (static manifest; Data Status needs deployment-api but Capability does not). Node ≥ 20.19 required
+  for the rolldown binding (finding F19 has the workaround).
+- **Scenario stepper**: from `e2e-testing/`, strategy-service venv, credential-free:
+  `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true python scripts/strategy/scenario_stepper.py --steps scripts/strategy/scenarios/apd_price_dispersion_btc.json`
+  (or `--interactive` REPL).
+- **Regenerate manifest/prospectus** (UAC venv suffices for these steps):
+  `python scripts/openapi/generate_capability_manifest.py` → `generate_strategy_prospectus.py` →
+  `audit_prospectus_vs_codex.py`; full-suite `generate-unified-openapi.sh` needs `.venv-workspace` — see finding F12
+  (config-registry regen is DESTRUCTIVE without it).
+- **Read the outputs**:
+  `unified-api-contracts/openapi/{capability-manifest.json, capability-orphan-report.txt, prospectus/<ARCHETYPE>.md, prospectus/prospectus-codex-audit.md}`.
+
+## Plan of record + trackers
+
+- Plan:
+  [`plans/active/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/active/capability_wizard_and_manifest_2026_06_11.md)
+  (append-only Progress Log = build history)
+- Capability gaps:
+  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
+- Bugs/conflicting truths (F1–F19):
+  [`plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md`](../../../plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md)
