@@ -8,10 +8,11 @@ priority: P0
 assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-21
-last_updated: 2026-05-21
+last_updated: 2026-06-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
+  - ../active/capability_wizard_and_manifest_2026_06_11.md
   - ../active/compute_optimization_mock_data_2026_05_13.md
   - ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md
   - ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
@@ -64,11 +65,6 @@ archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_
 - **Operator surfaces**: `dart_and_promote_master` (DART UI + promote workflow consumes strategy maturity phases)
 - **Cross-cutting**: `client_isolation_and_governance_master` (per-client isolation + share-class registry +
   jurisdiction restrictions affect strategy emit)
-
-## Assigned active plans
-
-_8 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## Assigned active plans
 
