@@ -139,12 +139,13 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 ### TIER 3 — guards + vocab + tests + docs (canonical safety-net)
 
-- [ ] [CODE] P2. **GAP-4 — v9-schema MIXED-version-drift warn** at `manifest_window_guard` (features) /
-      `manifest_allocation_guard` (strategy) / MDPS `dependency_checker`. Ship the loud-warn that fires ONLY on
-      mixed-version drift within one read (some rows v9, some not) OR `asset_group`-column-absent-on-a-migrated-bucket —
-      NOT a blanket "not v9" warn (corpus is 100% v8 today → that would be pure noise). Becomes a hard assert
-      post-each-AG-G3. Repos: **features-service / strategy-service / market-data-processing-service**. Home: this plan
-      GAP-4 (full design spec there).
+- [x] ✅ [CODE] P2. (ALL THREE repos now shipped — strategy portion strategy@3561f137 `_warn_on_v9_schema_drift` in
+      manifest_allocation_guard + 3 tests, 2026-06-11; features+MDPS were already done per note below) **GAP-4 —
+      v9-schema MIXED-version-drift warn** at `manifest_window_guard` (features) / `manifest_allocation_guard`
+      (strategy) / MDPS `dependency_checker`. Ship the loud-warn that fires ONLY on mixed-version drift within one read
+      (some rows v9, some not) OR `asset_group`-column-absent-on-a-migrated-bucket — NOT a blanket "not v9" warn (corpus
+      is 100% v8 today → that would be pure noise). Becomes a hard assert post-each-AG-G3. Repos: **features-service /
+      strategy-service / market-data-processing-service**. Home: this plan GAP-4 (full design spec there).
   - **features + MDPS portions DONE (slot-6 2026-06-03):** `_warn_on_v9_schema_drift` shipped in features
     `manifest_window_guard` (features@5a5246e6, after `read_availability_index`) and MDPS `dependency_checker`
     (mdps@266479c, after the manifest read) — fires ONLY on mixed `schema_version` in one read OR v9-rows-without-

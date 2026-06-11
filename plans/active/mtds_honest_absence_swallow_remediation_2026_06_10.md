@@ -40,36 +40,46 @@ source:
 
 ## Phase 1 — P0 swallow fixes (one QG-sweep batch; per-unit commits via quickmerge)
 
-- [ ] [CODE] P0. `lending_indices_handler.py:768` — narrow the blanket except: re-raise transport
-      (`ClientError/OSError/TimeoutError`) alongside `SubgraphSchemaError`; re-raise non-schema GraphQL body errors
-      (`:1182-1194`); move the GCS upload (`:741`) out of the swallowed try. — market-tick-data-service
-- [ ] [CODE] P0. `solana_defi_handler.py:932,973,1051,1120` — remove/re-raise the four collector swallows so failures
-      escape to `:457 record_failed`. — market-tick-data-service
-- [ ] [CODE] P0. `oracle_prices_handler.py:828-832,948-960` — Pyth helpers raise on transport + non-200 (keep historical
-      404 → `[]`), engaging the dead `:757 record_failed` branch. — market-tick-data-service
-- [ ] [CODE] P0. `liquidations_handler.py` — re-raise transport in `_fetch_morpho_*` (`:781-787`) AND remove
-      `aiohttp.ClientError/OSError/SchemaValidationError` from the `:510-517` catch (all protocols). —
+- [x] ✅ [CODE] P0. (mtds@7455ffb + tests test_cf11_swallow_remediation.py) `lending_indices_handler.py:768` — narrow
+      the blanket except: re-raise transport (`ClientError/OSError/TimeoutError`) alongside `SubgraphSchemaError`;
+      re-raise non-schema GraphQL body errors (`:1182-1194`); move the GCS upload (`:741`) out of the swallowed try. —
       market-tick-data-service
-- [ ] [CODE] P0. `perp_funding_handler.py:963-969,1017-1023` — `_query_gmx_*` re-raise transport (reserve `None` for
-      schema-unavailable); `record_failed` when both variants None instead of `:887 rows or []`. —
+- [x] ✅ [CODE] P0. (mtds@7455ffb) `solana_defi_handler.py:932,973,1051,1120` — remove/re-raise the four collector
+      swallows so failures escape to `:457 record_failed`. — market-tick-data-service
+- [x] ✅ [CODE] P0. (mtds@7455ffb) `oracle_prices_handler.py:828-832,948-960` — Pyth helpers raise on transport +
+      non-200 (keep historical 404 → `[]`), engaging the dead `:757 record_failed` branch. — market-tick-data-service
+- [x] ✅ [CODE] P0. (mtds@7455ffb) `liquidations_handler.py` — re-raise transport in `_fetch_morpho_*` (`:781-787`) AND
+      remove `aiohttp.ClientError/OSError/SchemaValidationError` from the `:510-517` catch (all protocols). —
       market-tick-data-service
-- [ ] [CODE] P0. `tardis_adapter.py` — 404-vs-error split: streaming `:833-835` + bulk `:2313-2327` + legacy `:906-908`
-      RAISE on non-404/non-401 `TardisHTTPError` so §6A runner-exception → `record_failed` (`:1784-1789`) fires;
-      optionally wire 429/5xx retry (config `retry_status_codes` currently dead on the path). — market-tick-data-service
-- [ ] [CODE] P0. `engine/orchestrator.py:3141` — pass `asset_group=ag` to the chain-bundle `record_captured_from_counts`
-      (mirror prediction `:3302`; do NOT pass `latency_source`). — market-tick-data-service
+- [x] ✅ [CODE] P0. (mtds@7455ffb) `perp_funding_handler.py:963-969,1017-1023` — `_query_gmx_*` re-raise transport
+      (reserve `None` for schema-unavailable); `record_failed` when both variants None instead of `:887 rows or []`. —
+      market-tick-data-service
+- [x] ✅ [CODE] P0. (mtds@7455ffb) `tardis_adapter.py` — 404-vs-error split: streaming `:833-835` + bulk `:2313-2327` +
+      legacy `:906-908` RAISE on non-404/non-401 `TardisHTTPError` so §6A runner-exception → `record_failed`
+      (`:1784-1789`) fires; optionally wire 429/5xx retry (config `retry_status_codes` currently dead on the path). —
+      market-tick-data-service
+- [x] ✅ [CODE] P0. (mtds@7455ffb, asset_group hoisted — CME-OPTIONS branch had it unbound)
+      `engine/orchestrator.py:3141` — pass `asset_group=ag` to the chain-bundle `record_captured_from_counts` (mirror
+      prediction `:3302`; do NOT pass `latency_source`). — market-tick-data-service
 
 ## Phase 2 — P1 follow-ons
 
-- [ ] [CODE] P1. Solend chart backfill error accounting: `_solana_defi_fetch.py:248-253` + duplicate
+- [x] ✅ [CODE] P1. (mtds@7455ffb) Solend chart backfill error accounting: `_solana_defi_fetch.py:248-253` + duplicate
       `solana_defi_handler.py:~1353-1364` + `fetch_phoenix:453` — errors>0 ∧ rows==0 → raise; partial → surface via
       warning/cluster validation. — market-tick-data-service
-- [ ] [CODE] P1. `umi_tick_provider.py:429-430` FX per-ticker Yahoo swallow → route to `failed_shards`/AFF; add AFF
-      emission to `yahoo_finance_adapter` error paths. — market-tick-data-service
-- [ ] [CODE] P1. Kalshi CF-11 plumbing before the venue is ever enabled (mirror Polymarket `failed_tickers_out` +
-      `failed_per_dt` + AFF). — market-tick-data-service
-- [ ] [UTL] P1. Source on NON-captured rows: add `source=` kwarg to `record_empty:2197`/`record_failed:2413` + stamp in
-      `_record_status:3447-3574`; then the MTDS `DefiManifestRecorder` pass-through one-liner. — unified-trading-library
+- [x] ✅ [CODE] P1. (mtds@7455ffb — PerLeafFailureRouter) `umi_tick_provider.py:429-430` FX per-ticker Yahoo swallow →
+      route to `failed_shards`/AFF; add AFF emission to `yahoo_finance_adapter` error paths. — market-tick-data-service
+- [x] ✅ [CODE] P1. (mtds@7455ffb + test_kalshi_cf11_fetch_failure.py ×5; umi dispatch TypeError latent bug also fixed)
+      Kalshi CF-11 plumbing before the venue is ever enabled (mirror Polymarket `failed_tickers_out` + `failed_per_dt` +
+      AFF). — market-tick-data-service
+- [x] ✅ [UTL] P1. (utl@6f347d90 — optional source=+asset_group= on record_empty/record_failed/\_record_status,
+      validated vs SOURCE_PRIORITY, blank allowed; tests test_manifest_writer_source_noncaptured.py. REMAINING fragment
+      → new todo below: the mtds DefiManifestRecorder pass-through) Source on NON-captured rows: add `source=` kwarg to
+      `record_empty:2197`/`record_failed:2413` + stamp in `_record_status:3447-3574`; then the MTDS
+      `DefiManifestRecorder` pass-through one-liner. — unified-trading-library
+- [ ] [CODE] P1. **DefiManifestRecorder pass-through (the UTL-item residual)**: `_defi_manifest.py` record_empty (:359)
+      / record_failed (:485) now CAN forward `source=` + `asset_group="defi"` to the shipped UTL kwargs — add the
+      params + forward (auto-stamps single-source DeFi cells on non-captured rows). — market-tick-data-service
 - [ ] [CODE] P1. **GraphQL body-error swallows (same CF-11 class, surfaced 2026-06-11 while fixing transport)**:
       `liquidations_handler.py` subgraph `errors→return None` (~:589) and Morpho `errors→empty df` (~:778) — the
       transport split is fixed; the body-error path still degrades to honest-empty. — market-tick-data-service

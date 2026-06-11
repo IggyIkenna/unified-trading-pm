@@ -1626,22 +1626,18 @@ speed-note (both deferred optimisations, non-blocking).
       `writer.add(...)` now passes `asset_group=defi` + the source-aware `pipeline_mode` + `source` + `transport` (no
       more blank `pipeline_mode`/`source` — standardisation finding #1 resolved); migrator likewise stamps source-aware
       in path+column. Tests green 25/25. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [CROSS-CUTTING] P1. **M-COORD-6 — every AG `rebuild_*_manifest*` / `migrate_*_v9` script must `setup_events()`
-      before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship
-      gated on M-COORD-7).** ROOT CAUSE: `read_availability_index()` → `_backfill()` emits
-      `READER_BACKFILLED_V8_COLUMNS_AS_NULL` via `log_event` whenever the per-VM fallback shards carry pre-v9 columns —
-      the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).
-      Without an events init, `log_event` raises `RuntimeError: Event logging not initialized` and **crashes the rebuild
-      `--no-dry-run` apply**. The v8-era migration scripts ALL call `setup_events(mode="local", sink=None)` in `main()`
-      (`migrate_sports_canonical` / `migrate_defi_canonical` / `migrate_tradfi_canonical` /
-      `migrate_polymarket_canonical` / `migrate_sports_hive_key`); the **newer v9 scripts dropped it**. Confirmed
-      MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest*`, `rebuild_tradfi_manifest*`,
-      `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS
-      `migrate_instruments_store_v9.py` (the ones that call `read_availability_index`). **Fix per AG-slot**: add
-      `setup_events(service_name="...",     mode="local", sink=None)` at the top of `main()` (mirror the sports fix;
-      migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do NOT
-      need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service + instruments-service.
-      parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+- [x] ✅ [CROSS-CUTTING] P1. (mtds@7455ffb 2026-06-11: rebuild*tradfi (direct read :316) + rebuild_prediction (via
+      reemit_honest_absence_rows) + rebuild_defi (defensive — unguarded log_event via ManifestWriter.add validation);
+      cefi/sports pre-existing; the 5 migrate*_*v9 movers + IS migrate_instruments_store_v9 VERIFIED no-manifest-read →
+      not needed) \*\*M-COORD-6 — every AG
+      `rebuild*__manifest\*`/`migrate__\_v9`script must`setup_events()`    before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship     gated on M-COORD-7).** ROOT CAUSE:`read_availability_index()`→`\_backfill()`emits    `READER_BACKFILLED_V8_COLUMNS_AS_NULL`via`log_event`whenever the per-VM fallback shards carry pre-v9 columns —     the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).     Without an events init,`log_event`raises`RuntimeError:
+      Event logging not
+      initialized`and **crashes the rebuild    `--no-dry-run`apply**. The v8-era migration scripts ALL call`setup_events(mode="local",
+      sink=None)`in`main()`     (`migrate_sports_canonical`/`migrate_defi_canonical`/`migrate_tradfi_canonical`/    `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it**. Confirmed     MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest_`, `rebuild_tradfi_manifest\*`,     `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS     `migrate_instruments_store_v9.py`(the ones that call`read_availability_index`). **Fix per AG-slot**: add     `setup_events(service_name="...",
+      mode="local",
+      sink=None)`at the top of`main()`(mirror the sports fix;     migrators that do pure object-path moves and never read the manifest — e.g.`migrate_sports_canonical_v9`
+      — do NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
+      instruments-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
 - [ ] [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
       (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
