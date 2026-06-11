@@ -22,7 +22,7 @@ name: reconcile-release-tags
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # within ~15 min of a release reaching main → publish-package fires promptly
+    - cron: "*/30 * * * *" # within ~30 min of a release reaching main → publish-package fires (relaxed */15→*/30 to cut Actions spend 2026-06-11)
   workflow_dispatch:
     inputs:
       dry_run:

@@ -29,7 +29,7 @@ name: cloud-build-failure-watcher
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # every 15 minutes
+    - cron: "*/30 * * * *" # every 30 minutes (relaxed */15→*/30 to cut Actions spend 2026-06-11)
   workflow_dispatch:
 
 permissions:

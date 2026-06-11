@@ -27,7 +27,7 @@ name: ldr-ci-monitor
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # every 30 minutes
+    - cron: "0 * * * *" # hourly (relaxed */30→hourly to cut Actions spend 2026-06-11)
   workflow_dispatch:
 
 permissions:
