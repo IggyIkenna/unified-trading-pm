@@ -67,12 +67,32 @@ BLOCKED_RE = re.compile(r"BLOCKED-CREDENTIALS")
 # de-false-positive the ratchet). A genuine ask names exactly one blocked status for one cell.
 BLOCKED_STATUS_TOKEN_RE = re.compile(r"BLOCKED-[A-Z][A-Z-]+")
 
+# The ping rule binds "BLOCKED-CREDENTIALS plan ITEMS" (CLAUDE.md) — and a plan item is a
+# checkbox todo (`- [ ]` / `- [x]`, PLAN_FORMAT). A genuine credential ASK therefore declares
+# BLOCKED-CREDENTIALS as the STATUS of a checkbox item. Bare prose that merely MENTIONS the token
+# — narrative ("the two BLOCKED-CREDENTIALS items below"), results-line parentheticals
+# ("Kalshi 0 records (BLOCKED-CREDENTIALS — expected)"), findings, or backtick-quoted token
+# references (`BLOCKED-CREDENTIALS`) — is NOT a plan item, can never cite a ping, and must not
+# count (the prose-mention false-positive class, 2026-06-11). This is a PRECISION fix: every real
+# orphan ASK is still a checkbox item, so no real orphan is missed.
+CHECKBOX_ITEM_RE = re.compile(r"^\s*[-*]\s*\[[ xX]\]")
+BACKTICKED_BLOCKED_RE = re.compile(r"`[^`]*BLOCKED-CREDENTIALS[^`]*`")
+
 CONTEXT_LINES = 5
 
 
 def _is_status_taxonomy_line(line: str) -> bool:
     """True if the line enumerates ≥2 distinct BLOCKED-* status tokens (a rule/taxonomy doc line)."""
     return len(set(BLOCKED_STATUS_TOKEN_RE.findall(line))) >= 2
+
+
+def _is_credential_ask_item(line: str) -> bool:
+    """True iff the line is a checkbox plan ITEM declaring a (non-backtick-quoted) BLOCKED-CREDENTIALS
+    status — i.e. an actionable ask the ping rule governs, not a prose mention/finding/token ref."""
+    if not CHECKBOX_ITEM_RE.match(line):
+        return False  # prose / results note / finding — not a plan item, ping rule does not bind it
+    # the occurrence must be a STATUS, not a backtick-quoted reference to the concept
+    return "BLOCKED-CREDENTIALS" in BACKTICKED_BLOCKED_RE.sub("", line)
 
 
 def _has_ask_evidence(lines: list[str], lineno: int) -> bool:
@@ -94,6 +114,8 @@ def _scan_plan(path: Path) -> list[tuple[int, str]]:
     for i, line in enumerate(lines):
         if not BLOCKED_RE.search(line):
             continue
+        if not _is_credential_ask_item(line):
+            continue  # prose mention / results note / finding / backtick token ref — not a plan item
         if _is_status_taxonomy_line(line):
             continue  # rule/taxonomy doc line, not a credential ask
         if _has_ask_evidence(lines, i):

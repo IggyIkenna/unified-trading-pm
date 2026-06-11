@@ -51,6 +51,8 @@ REQUIRED_FIELDS = ("owner", "cadence", "verifier", "last_executed")
 # archived codex mirror) that are NOT a tracked repo; same stale-mirror class as context/codex/.
 EXCLUDED_DIRS = (
     "plans/archive/",
+    # workspace-level archived mirrors (e.g. archive/unified-trading-codex/) — same stale-mirror class as .extra/
+    "archive/",
     ".venv",
     ".venv-workspace",
     "build/",
