@@ -201,6 +201,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~14:50Z, autonomous run) — **R8 part 1: sports v1_archive ROW-coverage gate GREEN — fully superseded,
+  drop-safe**. Archive integrity first (operator asked "is it corrupt?"): 398 daily fixtures parquets (364×2018 +
+  2019/2020 COVID tail + 2024–2026 stragglers), 72,522 rows, **0 corrupt / 0 zero-row / 0 null keys**, 8 within-file
+  duplicate fixture_ids (~0.01%, postponed-replay listings), source=api_football, `league` is a nested struct, and
+  **home_xg/away_xg are NULL in ALL 72,522 rows** (schema-only — strengthens the 2026-06-01 column-supersession verdict:
+  no xG values to lose). ROW gate: first join on v1 `fixture_id` read 100% missing — namespace mismatch (v1 id is a
+  synthetic `LEAGUE:HOME_v_AWAY:date` string); the TRUE key is **v1 `source_fixture_id` ↔ v2 `af_fixture_id`**, and on
+  that key **398/398 days OK, 72,522/72,522 rows covered, 0 uncovered**. v1_archive is superseded column-wise
+  (2026-06-01 verdict) AND row-wise (today) → eligible for the G4.5 verified-delete list (operator-gated; nothing
+  dropped yet). Remaining R8: sports orphan sweep (candidate_parquet_paths-driven) + the prediction dry plan regen on
+  final HEAD.
+
 - 2026-06-11 (~14:35Z, autonomous run) — **R1 COMPLETE: orphan_class_E==0 + unknown_prefixes==0 on ALL FOUR hive AGs**.
   Closing loop after the 13:20Z entry: tradfi 995 residual root-caused twice — (1) pre-hive blank-venue paths
   (`data_type=ohlcv_15m/indices/CBOE/...`) could NEVER read covered (venue is identity, never wildcarded) → sweep now
