@@ -1,7 +1,6 @@
 ---
 title: "CI/CD pipeline self-healing gaps — semver-agent trigger starvation, LDR-rewind data loss, orchestrator stale-PR escalation"
 created: 2026-06-11
-author: slot-1 (CI firefight)
 locked_by: live-defi-rollout
 priority: P1
 status: active
