@@ -612,9 +612,16 @@ fi
 
 # ── [3.6] NO SERVICE-AS-PACKAGE DEPS (services only) ───────────────────────────
 # Importing another service as a package is a violation; interaction is via messaging only (topology DAG SSOT).
-NSD="${REPO_ROOT}/unified-trading-pm/scripts/check-no-service-deps.py"
+# Path lives under scripts/validation/ (the prior scripts/check-no-service-deps.py path never existed →
+# the gate silently no-op'd fleet-wide). stderr is surfaced (not /dev/null'd) so the offending dep prints.
+NSD="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-no-service-deps.py"
 if [ -f "$NSD" ]; then
-    $PYTHON_CMD "$NSD" 2>/dev/null && log_success "No service-as-package deps" || { log_fail "Service must not depend on another service repo (use messaging per topology)"; exit 1; }
+    if $PYTHON_CMD "$NSD"; then
+        log_success "No service-as-package deps"
+    else
+        log_fail "Service must not depend on another service repo (use messaging per topology)"
+        exit 1
+    fi
 fi
 fi  # _QG_RUN_CODEX (import-patterns + service-deps)
 

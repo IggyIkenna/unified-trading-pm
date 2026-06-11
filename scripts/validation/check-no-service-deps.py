@@ -39,11 +39,19 @@ def find_manifest() -> Path | None:
     return None
 
 
+# A deployable SERVICE is any repo whose manifest type marks it as a runtime
+# service. The gate must treat all of these as "services that may not depend on
+# another service": plain ``service`` PLUS the API/batch flavours (``api-service``
+# / ``batch-service`` / ``api``). Missing the flavours let real violations
+# (e.g. deployment-api -> strategy-service) slip past the gate silently.
+_SERVICE_REPO_TYPES: frozenset[str] = frozenset({"service", "api-service", "batch-service", "api"})
+
+
 def get_service_repos(manifest_path: Path) -> set[str]:
-    """Return set of repo names that have type == 'service'."""
+    """Return set of repo names whose manifest type is a deployable-service flavour."""
     data = cast(dict[str, object], json.loads(manifest_path.read_text()))
     repos = cast(dict[str, dict[str, str]], data.get("repositories") or {})
-    return {name for name, meta in repos.items() if meta.get("type") == "service"}
+    return {name for name, meta in repos.items() if meta.get("type") in _SERVICE_REPO_TYPES}
 
 
 def get_current_repo_name(project_root: Path) -> str | None:
@@ -71,25 +79,55 @@ def get_current_repo_name(project_root: Path) -> str | None:
 
 
 def get_path_deps(pyproject_path: Path) -> list[str]:
-    """Return list of path dependency names from [tool.uv.sources] (key = dep name when value has path = ../)."""
+    """Return path-dependency names declared in ``[tool.uv.sources]``.
+
+    Handles BOTH the FLAT inline form and the DOTTED table-header form, since
+    repos use either:
+
+        # FLAT (deployment-api style)
+        [tool.uv.sources]
+        strategy-service = { path = "../strategy-service", editable = true }
+
+        # DOTTED (market-data-processing-service style)
+        [tool.uv.sources.market-tick-data-service]
+        path = "../market-tick-data-service"
+        editable = true
+
+    Parsing only the flat header (the original bug) let every dotted-form path
+    dep slip past the gate silently.
+    """
     text = pyproject_path.read_text()
     deps: list[str] = []
-    in_uv_sources = False
-    for line in text.splitlines():
-        if line.strip() == "[tool.uv.sources]":
-            in_uv_sources = True
+    in_uv_sources_flat = False
+    dotted_dep: str | None = None  # current [tool.uv.sources.<dep>] table, if any
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        # DOTTED table header: [tool.uv.sources.<dep-name>]
+        if line.startswith("[tool.uv.sources.") and line.endswith("]"):
+            in_uv_sources_flat = False
+            dotted_dep = line[len("[tool.uv.sources.") : -1].strip().strip("\"'")
             continue
-        if in_uv_sources:
-            if line.strip().startswith("["):
-                break
-            # "market-tick-data-service" = { path = "../market-tick-data-service" } or name = "../repo"
-            if "=" in line and ("path" in line or line.strip().startswith("#") is False):
-                key_part = line.split("=")[0].strip().strip("\"'")
-                if key_part and not key_part.startswith("#"):
-                    # Value has path = "../..." -> this key is a path dep
-                    rest = line[line.find("=") + 1 :].strip()
-                    if ("path" in rest or "../" in rest or "..\\" in rest) and key_part not in deps:
-                        deps.append(key_part)
+        # FLAT table header: [tool.uv.sources]
+        if line == "[tool.uv.sources]":
+            in_uv_sources_flat = True
+            dotted_dep = None
+            continue
+        # Any other table header closes the current uv.sources context.
+        if line.startswith("[") and line.endswith("]"):
+            in_uv_sources_flat = False
+            dotted_dep = None
+            continue
+        # Inside a DOTTED table: a ``path = "../..."`` line confirms a path dep.
+        if dotted_dep is not None:
+            if ("path" in line or "../" in line or "..\\" in line) and dotted_dep not in deps:
+                deps.append(dotted_dep)
+            continue
+        # Inside the FLAT table: ``<dep> = { path = "../..." }``.
+        if in_uv_sources_flat and "=" in line and not line.startswith("#"):
+            key_part = line.split("=", 1)[0].strip().strip("\"'")
+            rest = line.split("=", 1)[1].strip()
+            if key_part and ("path" in rest or "../" in rest or "..\\" in rest) and key_part not in deps:
+                deps.append(key_part)
     return deps
 
 
