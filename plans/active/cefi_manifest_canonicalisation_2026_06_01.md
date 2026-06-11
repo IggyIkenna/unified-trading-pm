@@ -3,7 +3,7 @@ title: "CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 ow
 created: 2026-06-01
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-cefi
-umbrella: true  # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
+umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active
 priority: P0
 estimate_class: infra
@@ -479,18 +479,21 @@ dropped). **⑩ Era-B byte-probe** (DERIBIT day 2026-01-15): `instrument_type=fu
       or demote.** Gates honest coverage denominator (⑦/⑧), NOT the G4 data/manifest `--apply`. **Big finding — operator
       notified 2026-06-08.** Provenance: slot-3 pre-apply audit 2026-06-08 (real-prod catalogue vs manifest walk + IS
       adapter `_DEFAULT_EXCHANGES` root-cause).
-- [ ] [CODE] P1. **⑦(a) — deployment-api cefi coverage DENOMINATOR re-derives genesis/launch instead of READING
-      `expected_unattempted` (post-seed switch).** `deployment_api/.../data_status_service.py`
-      `_apply_mtds_honest_coverage` → `_mtds_honest_coverage_for_venue` (`~:1668`) computes
-      `expected_count = len(_mtds_expected_dates_for_venue_dt(...))` = a genesis/launch daily-grid re-derivation; the
-      materialised `expected_unattempted` 4-state is used only as a numerator filter, never the denominator — violates
-      the F4/CF-14 "consumers READ the 4-state, never re-derive genesis/launch". CORRECT today (0 `expected_unattempted`
-      rows exist pre-seed); becomes wrong AFTER the `enumerate_expected_universe --asset-group cefi --apply-write` seed
-      materialises them. **Fix (owner: deployment-api / downstream — vm-cross-cutting): post-seed, switch the cefi
-      coverage denominator to the G3 union 4-state READ (`captured/(captured+empty+failed+expected_unattempted)` over
-      the could-exist denominator), retire the `_apply_mtds_honest_coverage` genesis re-derivation for cefi.** Adjacent
-      to the tracked "per-date denominator (P3)" item but distinct (re-derive-vs-read, not granularity). Gates honest
-      coverage POST-seed, NOT the G4 migration. Provenance: slot-3 pre-apply audit 2026-06-08.
+- [x] ✅ [CODE] P1. (deployment-api@644e439 2026-06-11 — seed-aware guard: when materialised `expected_unattempted` rows
+      exist for the (venue,dt) scope the denominator READS the 4-state union; zero seeded rows → unchanged legacy
+      re-derivation; tests test_data_status_seeded_4state_denominator.py) **⑦(a) — deployment-api cefi coverage
+      DENOMINATOR re-derives genesis/launch instead of READING `expected_unattempted` (post-seed switch).**
+      `deployment_api/.../data_status_service.py` `_apply_mtds_honest_coverage` → `_mtds_honest_coverage_for_venue`
+      (`~:1668`) computes `expected_count = len(_mtds_expected_dates_for_venue_dt(...))` = a genesis/launch daily-grid
+      re-derivation; the materialised `expected_unattempted` 4-state is used only as a numerator filter, never the
+      denominator — violates the F4/CF-14 "consumers READ the 4-state, never re-derive genesis/launch". CORRECT today (0
+      `expected_unattempted` rows exist pre-seed); becomes wrong AFTER the
+      `enumerate_expected_universe --asset-group cefi --apply-write` seed materialises them. **Fix (owner:
+      deployment-api / downstream — vm-cross-cutting): post-seed, switch the cefi coverage denominator to the G3 union
+      4-state READ (`captured/(captured+empty+failed+expected_unattempted)` over the could-exist denominator), retire
+      the `_apply_mtds_honest_coverage` genesis re-derivation for cefi.** Adjacent to the tracked "per-date denominator
+      (P3)" item but distinct (re-derive-vs-read, not granularity). Gates honest coverage POST-seed, NOT the G4
+      migration. Provenance: slot-3 pre-apply audit 2026-06-08.
 
 ## ✅ G2 VERIFY PASS — re-run on the WAVE-1 shape-aware code (slot-3, 2026-06-07)
 

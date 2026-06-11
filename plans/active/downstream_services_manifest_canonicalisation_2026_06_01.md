@@ -151,8 +151,11 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
     (mdps@266479c, after the manifest read) — fires ONLY on mixed `schema_version` in one read OR v9-rows-without-
     `asset_group`-column; silent on the uniform-v8 corpus; 4+3 unit tests; both QG green. **Checkbox stays OPEN for the
     strategy `manifest_allocation_guard` portion** (strategy-service, other slot). Becomes a hard assert post-G3.
-- [ ] [CODE] P2. **GAP-7 — MDPS `dependency_checker` `category`→`asset_group` param rename** (+ docstrings) at next
-      substantive touch (functional-correct today). Repo: **market-data-processing-service**. Home: this plan GAP-7.
+- [x] ✅ [CODE] P2. (mdps@4363bce 2026-06-11 — granular layer + UPSTREAM_DEPS_BY_ASSET_GROUP map +
+      check_upstream_manifest_has_live_gap + orchestration_service/process_handler callers + 4 test files; rename
+      COMPLETE, zero remaining checker `category` params) **GAP-7 — MDPS `dependency_checker` `category`→`asset_group`
+      param rename** (+ docstrings) at next substantive touch (functional-correct today). Repo:
+      **market-data-processing-service**. Home: this plan GAP-7.
 - [ ] [CODE] P0. **QG-test alignment (read/status, cross-repo)** — extend the QG-fed tests so they assert the CANONICAL
       form (resolver bucket, `pipeline_mode=` path, v9 `_index` columns, `asset_group=`, on-disk data_type) on READ +
       STATUS paths (writer 18 assertions + item-3/4 tests done) → QG FAILS on reversion to a dead bucket / `category=` /

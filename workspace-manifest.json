@@ -274,11 +274,6 @@
           "name": "deployment-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "strategy-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "completion_path": "cefi",
@@ -695,11 +690,6 @@
       "dependencies": [
         {
           "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "market-tick-data-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },

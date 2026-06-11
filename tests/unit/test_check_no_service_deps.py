@@ -49,6 +49,37 @@ class TestGetServiceRepos:
         result = MOD.get_service_repos(manifest)
         assert result == set()
 
+    def test_includes_api_and_batch_service_flavours(self, tmp_path: Path) -> None:
+        # REGRESSION (utl_uac_reuse 2026-06-11): the gate previously matched only
+        # type=="service", so api-service / batch-service repos (deployment-api,
+        # batch-live-reconciliation-service) were never treated as services →
+        # deployment-api -> strategy-service slipped past silently.
+        manifest = tmp_path / "workspace-manifest.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "repositories": {
+                        "execution-service": {"type": "service"},
+                        "deployment-api": {"type": "api-service"},
+                        "batch-live-reconciliation-service": {"type": "batch-service"},
+                        "client-reporting-api": {"type": "api"},
+                        "unified-trading-library": {"type": "library"},
+                        "deployment-service": {"type": "infrastructure"},
+                    }
+                }
+            )
+        )
+        result = MOD.get_service_repos(manifest)
+        assert result == {
+            "execution-service",
+            "deployment-api",
+            "batch-live-reconciliation-service",
+            "client-reporting-api",
+        }
+        # infrastructure / library are NOT services
+        assert "unified-trading-library" not in result
+        assert "deployment-service" not in result
+
 
 # ── Tests: get_current_repo_name ─────────────────────────────────────────
 
@@ -113,6 +144,51 @@ class TestGetPathDeps:
         result = MOD.get_path_deps(pyproject)
         assert "dep-a" in result
         assert "dep-b" not in result
+
+    def test_extracts_dotted_table_form(self, tmp_path: Path) -> None:
+        # REGRESSION (utl_uac_reuse 2026-06-11): the gate parsed ONLY the flat
+        # [tool.uv.sources] header. mdps used the DOTTED [tool.uv.sources.<dep>]
+        # table form, so its market-tick-data-service path dep was never seen.
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            "[build-system]\nrequires = [\"hatchling\"]\n\n"
+            "[tool.uv.sources.unified-trading-library]\n"
+            'path = "../unified-trading-library"\n'
+            "editable = true\n\n"
+            "[tool.uv.sources.market-tick-data-service]\n"
+            'path = "../market-tick-data-service"\n'
+            "editable = true\n\n"
+            '[project]\nname = "market-data-processing-service"\n'
+        )
+        result = MOD.get_path_deps(pyproject)
+        assert "unified-trading-library" in result
+        assert "market-tick-data-service" in result
+
+    def test_extracts_flat_table_form_deployment_api_style(self, tmp_path: Path) -> None:
+        # REGRESSION: the real deployment-api shape — flat header with a
+        # strategy-service path dep that must be detected.
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            '[project]\nname = "deployment-api"\n\n'
+            "[tool.uv.sources]\n"
+            "unified-trading-library = { path = \"../unified-trading-library\", editable = true}\n"
+            "strategy-service = { path = \"../strategy-service\", editable = true}\n\n"
+            "[tool.ruff]\nline-length = 120\n"
+        )
+        result = MOD.get_path_deps(pyproject)
+        assert "strategy-service" in result
+        assert "unified-trading-library" in result
+
+    def test_dotted_table_closed_by_next_section(self, tmp_path: Path) -> None:
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            "[tool.uv.sources.dep-a]\n"
+            'path = "../dep-a"\n\n'
+            "[tool.ruff]\n"
+            'some-key = "../not-a-dep"\n'
+        )
+        result = MOD.get_path_deps(pyproject)
+        assert result == ["dep-a"]
 
 
 # ── Tests: find_manifest ─────────────────────────────────────────────────
