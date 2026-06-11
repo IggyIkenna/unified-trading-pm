@@ -202,6 +202,22 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~18:15Z, autonomous run) — **R7 part 1: IS store-migrator re-dry-runs GREEN ×5 on final HEAD** (exit 0
+  all): cefi 30,803 captured · defi 125,242 captured · tradfi 19,247 captured + 1,141 empty*confirmed · sports
+  2,674,759 + 6,869 BLANK-status rows (see todo below) · prediction 4,693 planned/0 moved — every projected row
+  v9-shaped (`schema_version=9`, `pipeline_mode=batch_instruments_service`, `source=instruments_service`,
+  `transport=rest`). Logs
+  `/tmp/r7_is*<ag>\_dry.log`. **TradFi market-tick R7 reference loop** (in flight): rebuild now projects via `--beta-manifest-out`
+  (mtds@fa375c7), CF-11 reads the CONSOLIDATED index + collector receives re-emits (37,477 empty + 6,042 failed
+  collected), row_key flattened for the differ; diff progressed 45,003→14,831 removed; remaining removals characterized
+  = the 183,943 PRE-HIVE/no-instrument_type legacy objects' cells (FX 1,967 spot_pair · CME chains · CBOE 15m ·
+  NYSE/NASDAQ equity 1m) — parser extended with legacy shapes C (hive-no-instrument_type) + D (pre-hive instrument-key,
+  ported from the R1 backfill grammar) + an unparseable shape histogram; re-projection running.
+- [ ] [DATA] P1. **sports instruments-store: 6,869 manifest rows with BLANK capture_status** (IS migrator dry-run
+      2026-06-11 — invalid v9; the closed 4-state set excludes blank). Characterize (which entity/date families) →
+      re-stamp with the honest status (or drop if phantom) BEFORE the sports G4 apply. Repo: instruments-service.
+      Provenance: /tmp/r7_is_sports_dry.log.
+
 - 2026-06-11 (~16:15Z, autonomous run) — **R8 part 2: SPORTS orphan sweep GREEN on BOTH buckets — `E==0` +
   `unknown_prefixes==0` (the last asset group; ALL 5 AGs now orphan-clean).** Tools:
   `instruments-service/scripts/migration_orphan_sweep_sports.py` (is@94ea099 + is@37793dd; 38 unit tests) —

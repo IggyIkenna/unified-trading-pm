@@ -284,6 +284,14 @@ unchanged:
       / perp_funding 1,363 / databento_adapter 1,360 / dex_pools 1,097 / oracle_prices 1,085 / polymarket_adapter 1,023
       / solana_lst_archival 988 / dex_swaps 980 / gas_fee 944 / websocket_runner 912 — split below 900 by venue/stage
       (drops the file-size class → 15→14). Repo: market-tick-data-service.
+- [x] ✅ [REFACTOR] P3. **alerting router + ml pipeline DONE 2026-06-12** — alerting-service@8b12fcb: router.py
+      1,022→821 + coalesce.py (119, predecessor WIP completed) + kill_switch_rules.py (145; `_publish_kill_switch_event`
+      patch target preserved — router stays the caller, moved body routes log_event via the router namespace); 793
+      unit tests green, full QG green at budget 0. ml-service@6004170: uniform_training_pipeline 963→698 +
+      IncrementalTrainingMixin (303; IncrementalResult re-exported, get_trainer routed via the facade for
+      patchability); 18/18 incremental tests green; MAX_FILE_LINES dropped 1000→900 per the in-file note; full QG
+      green at budget 0. Both shipped via the dirty-deps carve-out (orchestrator-gated per the amended
+      agents-edit/orchestrator-ships protocol, operator 2026-06-12).
 - [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
       polymarket 1,184 / \_solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922), strategy
       archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958, agent-orchestrator
