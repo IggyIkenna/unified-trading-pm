@@ -280,21 +280,26 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       (genesis field + canonical `-USD` resolver keys + `normalize_massive_index` `-USD` + QG gate) |
       `instruments-service@24297354` (canonical `-USD` record key + per-instrument genesis wiring) |
       `features-service@d3d04a1f` (forward-premium features).
-- [ ] [DATA] P1. **Yahoo index instruments (VIX/DXY/US-treasuries) into the data-status could-exist universe** — repo:
-      `instruments-service`. `scripts/enumerate_expected_universe.py` + `build_instrument_catalogue.py` have ZERO
-      references to `YAHOO_INDICES`, so these instruments are absent from the expected-universe denominator → their
-      data-status coverage is invisible. Add them (venue=CBOE/ICE, `ohlcv_24h`/`ohlcv_15m`, genesis from
-      `YahooIndexDef.first_available_date`) so `% captured` counts them. Provenance: operator review 2026-06-11 (slot-3).
-- [ ] [DATA] P2. **Holiday-aware data-status for Yahoo index instruments** — repo: `instruments-service` / `mtds`. The
-      venue→calendar map exists (`_XCAL_MAPPING`: CBOE/ICE→XNYS, `_is_trading_holiday` via `exchange_calendars`) but the
-      Yahoo index records only carry `tz`; ensure data-status resolves NYSE holidays for these venues so a
-      market-closed day is `expected_unattempted`/holiday, not `attempted_failed`. Provenance: operator review
-      2026-06-11 (slot-3).
-- [ ] [DATA] P3. **INDEX instrument_key canonicalisation audit** — repo: `unified-api-contracts`. `build_instrument_id(INDEX, "SPX")`
-      still returns no-suffix `CBOE:INDEX:SPX` while VIX/DXY/treasuries + `VIX_INSTRUMENT_KEY` + source resolvers use the
-      `-USD` form. Audit where SPX (and any other index) data physically lands and converge `build_instrument_id` /
-      symbology / adapters on ONE canonical INDEX key form fleet-wide. Provenance: surfaced during the treasury
-      canonical-key alignment 2026-06-11 (slot-3).
+- [x] [DATA] P1. **Yahoo index instruments (VIX/DXY/US-treasuries) into the data-status could-exist universe.**
+      **SHIPPED 2026-06-11** (slot-3): `instruments-service@bcfe3ea4` added `_enumerate_tradfi_indices` to
+      `scripts/enumerate_expected_universe.py` — per-instrument **pre-genesis** enumeration (each index's own genesis
+      from `YahooIndexDef.first_available_date`: VIX 1990 / DXY 2019 / treasuries 2000), emitting
+      `EXPECTED_INSTRUMENT_NOT_LISTED` at the canonical `-USD` instrument key for each data_type that has a registered
+      source resolver (derived via the new `uac@e2d5d399` `data_types_for_instrument()` helper — single SSOT, no
+      duplicated mapping). Wired into `_enumerate_tradfi`; 3 new tests (DXY pre-2019, treasuries pre-2000,
+      no-rows-post-genesis). `build_instrument_catalogue.py` needs no change — it reads the instruments-store parquets
+      path-partitioned, so it picks up the now-`-USD`-keyed index records automatically.
+- [x] [DATA] P2. **Holiday-aware data-status for Yahoo index instruments.** **VERIFIED + REGRESSION-GUARDED 2026-06-11**
+      (slot-3): the machinery already covers these venues — `is_non_trading_day("CBOE"/"ICE"/"YAHOO_FINANCE", date)`
+      returns True with reason `EXPECTED_HOLIDAY` on US market holidays + weekends (runtime-confirmed on 2025-01-01 NYD
+      and a Saturday), and `_enumerate_tradfi` already emits those venue-level rows. Locked in with a regression test
+      (`instruments-service@bcfe3ea4`: `test_tradfi_holiday_excludes_cboe_and_ice_on_new_year`). No code change needed.
+- [x] [DATA] P3. **INDEX instrument_key canonicalisation — converged on `-USD`.** **SHIPPED 2026-06-11** (slot-3):
+      `uac@e2d5d399` fixed `build_instrument_id(INDEX, …)` (`_build_tradfi_cash` INDEX branch) to emit the canonical
+      `CBOE:INDEX:SPX-USD` base-quote form (INDEX-only; equity/ETF/bond/CDS keep the plain `VENUE:TYPE:SYMBOL`). This
+      was the last no-suffix holdout — `build_instrument_id` now agrees with `VIX_INSTRUMENT_KEY`, the symbology GCS
+      key, the source resolvers and both reference adapters. Audit found **no production caller** of
+      `build_instrument_id(INDEX)` (test-only), so the change was safe; SPX test updated + explicit-quote test added.
 - [ ] [AGENT] P4. Smoke `ml-training-service` 1-month ES window; features land in feature store. [AUDIT 2026-05-07:
       FRESH — actionable]
 - [ ] [AGENT] P4. Full backtest 2020-01-01 → 2024-12-31 (train) / 2025-01-01 → 2026-05-05 (test). OOS Sharpe + max
