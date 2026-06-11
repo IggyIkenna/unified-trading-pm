@@ -206,24 +206,39 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
 
 ## Phase 3 — strategy prospectus generator (script first, UI later; PARALLEL with Phase 2)
 
-- [ ] [IMPLEMENT] P0. `generate_strategy_prospectus.py`: input = strategy config + capability manifest → markdown: what
+- [x] ✅ [IMPLEMENT] P0. `generate_strategy_prospectus.py`: input = strategy config + capability manifest → markdown: what
       the strategy does, decision logic (FULL alpha disclosure — debugging mode; curtailment flag later),
       position-by-scenario table ("in this scenario the strategy will be positioned…"), expected
       returns/Sharpe/max-drawdown (from `performance_metrics.py` over backtest output), written as if presenting to the
       internal allocation team / a potential investor.
-- [ ] [IMPLEMENT] P1. Exposure section: per-leg exposures and normalization — staked-ETH vs ETH equivalence,
+      PM@(see PR#272) + UAC@fe37eae — 57 archetype prospectus docs in `openapi/prospectus/`, 7 sections each,
+      deterministic (byte-identical on two runs). 57/57 archetypes have codex docs.
+- [x] ✅ [IMPLEMENT] P1. Exposure section: per-leg exposures and normalization — staked-ETH vs ETH equivalence,
       base-currency-neutral views; pull from greeks-service / ledger exposure models where available, else emit
       `not_registered` gap.
-- [ ] [IMPLEMENT] P1. **Fund-flow mermaid**: venues/wallets as boxes (treasury vs trading/hot per
+      Shipped: Section 3 "Exposures & Normalization" renders codex risk/PnL content + honest gap line for
+      staked-vs-spot equivalence (F-class finding, cites gap tracker). UAC@fe37eae.
+- [x] ✅ [IMPLEMENT] P1. **Fund-flow mermaid**: venues/wallets as boxes (treasury vs trading/hot per
       `wallet-hierarchy-and-capital-flow.md` + `capital_router.py` AllocationTargets), deposit→conversion→venue paths
       (e.g. deposit ETH → receive stETH → post to CeFi venue → short perp), cross-balance movement arrows.
-- [ ] [IMPLEMENT] P1. Risk section: applicable KillSwitchReason set + RiskGateLayer placement for the configured
+      Shipped: Section 4 "Fund Flow" — `build_fund_flow_mermaid()` in `_prospectus_manifest.py`; staked-basis archetypes
+      include deposit→STAKING→LST→CEFI_VENUE→PERP_SHORT legs; TREASURY_SPLIT_POLICIES seeded from UAC
+      collateral_registry.py (DeFi 20/80, CeFi 0/100, Sports 0/100). UAC@fe37eae.
+- [x] ✅ [IMPLEMENT] P1. Risk section: applicable KillSwitchReason set + RiskGateLayer placement for the configured
       archetype/venues, configurable circuit-breaker parameters, liquidation monitoring surface.
-- [ ] [AUDIT] P1. **Two-sided audit**: diff generated prospectus vs the hand-written codex archetype doc
-      (`codex/09-strategy/architecture-v2/archetypes/<archetype>.md`) for all 53 archetypes; discrepancy report feeds
+      Shipped: Section 5 "Risk & Circuit Breakers" — full KillSwitchReason enum + RiskGateLayer placement + codex
+      config-schema parameter extraction. UAC@fe37eae.
+- [x] ✅ [AUDIT] P1. **Two-sided audit**: diff generated prospectus vs the hand-written codex archetype doc
+      (`codex/09-strategy/architecture-v2/archetypes/<archetype>.md`) for all 57 archetypes; discrepancy report feeds
       the gap tracker (wizard-thinks vs codex-says vs code-does).
-- [ ] [VERIFY] P2. Pin a regression test per fixed discrepancy (operator rule: as issues are found, build tests around
+      Shipped: `audit_prospectus_vs_codex.py` → `openapi/prospectus/prospectus-codex-audit.md` (deterministic).
+      Results: (a) 0 enum-without-doc, (b) 2 orphan docs, (c) 1 venue-category contradiction (F15 filed).
+      PM@(see PR#272) + UAC@fe37eae.
+- [x] ✅ [VERIFY] P2. Pin a regression test per fixed discrepancy (operator rule: as issues are found, build tests around
       them).
+      Shipped: `tests/unit/test_prospectus_generators.py` — 19 tests (16 unit + 3 integration): determinism x2,
+      audit 57-archetype count, codex doc count, all 7 sections present, honesty labels, fund-flow mermaid structure.
+      PM@(see PR#272).
 
 ## Phase 3.5 — interactive scenario stepper (operator direction 2026-06-11, second session message)
 
@@ -405,6 +420,18 @@ for every agent on this plan:
   surface. **Unticked**: Phase-0 full-suite regen (config-registry.json + full openapi spec need `.venv-workspace`,
   absent on-host — F12; partial UAC-output regen done); uic-openapi-sync-shipping sub-claim (F14 — wrong workflow; manifest
   ships via the generator sync block).
+
+- 2026-06-11 — **Phase 3 strategy prospectus generator SHIPPED** (capability-wizard Phase 3, slot-5).
+  `generate_strategy_prospectus.py` + `_prospectus_{codex,manifest}.py` + `audit_prospectus_vs_codex.py` (PM PR #272)
+  → 57 archetype prospectus docs + `prospectus-codex-audit.md` (UAC@fe37eae, `openapi/prospectus/`). All 4 helper
+  modules under 900-line cap; quality gates exit 0. Determinism verified (byte-identical on two full runs).
+  **Per-section honesty stats**: 57/57 archetypes have codex docs (0 machine-only); all 57 render 7 sections including
+  [MACHINE-DERIVED] + [CODEX-DERIVED] labels, honest no-backtest performance block, fund-flow mermaid with
+  TREASURY_SPLIT_POLICIES (DeFi 20/80, CeFi 0/100, Sports 0/100), KillSwitchReason + RiskGateLayer risk section.
+  **Audit headline**: (a) 0 enum-without-doc, (b) 2 orphan codex docs (doc-without-enum), (c) 1 venue-category
+  contradiction filed as F15. Gap tracker: 2 orphan docs appended. 19 regression tests (determinism, 57-archetype
+  count, all 7 sections, honesty labels, fund-flow LST legs, mermaid fence). Wired into `generate-unified-openapi.sh`.
+  SHAs: PM PR #272 + UAC@fe37eae.
 
 ## Out of scope / named successors
 
