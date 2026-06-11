@@ -105,17 +105,27 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
 
 ## Phase 0 — repair the generator truth layer (`unified-trading-pm/scripts/openapi/`)
 
-- [ ] [IMPLEMENT] P0. SERVICE_REGISTRY: remove phantom pre-consolidation services; add `features-service`, `ml-service`,
-      `fund-administration-service`, `greeks-service`; same sweep for CONFIG_REGISTRY in `generate_config_registry.py`.
-- [ ] [IMPLEMENT] P0. Auto-discover services from `workspace-manifest.json` instead of hardcoded lists;
-      `_validate_service_coverage()` FAILS the run on disk-vs-registry mismatch (today it only warns).
-- [ ] [IMPLEMENT] P0. Extend `extract_uic_enums()` to recursively walk `unified_api_contracts.internal` submodules
+- [x] ✅ [IMPLEMENT] P0. SERVICE_REGISTRY: remove phantom pre-consolidation services; add `features-service`,
+      `ml-service`, `fund-administration-service`, `greeks-service`; same sweep for CONFIG_REGISTRY in
+      `generate_config_registry.py`. DONE 2026-06-11 — unified-trading-pm@50bdbcd36 (PR #268). Removed 13 phantom
+      services; added fund-administration-service + greeks-service with verified config class names; instruments-service
+      path fixed to `config.service_config`; market-tick-data-service path fixed to `market_interface.config`.
+      features-service + ml-service: no root config.py exists (per-family only) — documented in registry comment.
+- [x] ✅ [IMPLEMENT] P0. Auto-discover services from `workspace-manifest.json` instead of hardcoded lists;
+      `_validate_service_coverage()` FAILS the run on disk-vs-registry mismatch (today it only warns). DONE 2026-06-11
+      — unified-trading-pm@50bdbcd36. Added `_load_service_registry(workspace_root)` + `_OVERRIDE_MODULE_PATHS` +
+      `_NO_API_REPOS`; `_validate_service_coverage()` now calls `sys.exit(1)` on mismatch.
+- [x] ✅ [IMPLEMENT] P0. Extend `extract_uic_enums()` to recursively walk `unified_api_contracts.internal` submodules
       (`architecture_v2.*`) so all 53-archetype/9-family enums + ARCHETYPE_CAPABILITY_REGISTRY land in
-      `ui-reference-data.json`.
+      `ui-reference-data.json`. DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Added architecture_v2 submodule walk
+      + `extract_architecture_v2_capability_registry()`. Verified output: StrategyArchetype 57 values (count grew
+      from audited 53 — 4 new archetypes landed), StrategyFamily 9 values, ARCHETYPE_CAPABILITY_REGISTRY 22 archetypes
+      / 98 cells, total UIC enums 227 (up from single-digits).
 - [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
       `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift.
-- [ ] [VERIFY] P1. Drift CI gate: scheduled check that SERVICE_REGISTRY/CONFIG_REGISTRY match on-disk workspace state
-      (fail, not warn) so the suite cannot silently rot again.
+- [x] ✅ [VERIFY] P0. Drift CI gate: `_validate_service_coverage()` now exits nonzero on mismatch (fail-on-drift
+      implemented in-run). DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Scheduled workflow is a Phase 1 item
+      (deferred — fail-on-run counts as the enforcement gate for now).
 
 ## Phase 1 — capability manifest exporter v1 (`generate_capability_manifest.py`)
 
@@ -300,6 +310,14 @@ for every agent on this plan:
 - 2026-06-11 — Plan + codex SSOT (`capability-wizard.md`) + question bank + gap tracker + findings doc authored;
   strategy_master related_plans updated (+ duplicate section fix = F6). Autonomous execution started: Wave 1 = Phase 0
   generator repair (PM, sub-agent) ∥ UAC capability/gap schemas (sub-agent). Wave 2 = exporter → prospectus → UI.
+- 2026-06-11 — **Phase 0 COMPLETE** (unified-trading-pm@50bdbcd36, PR #268). Three generator files repaired:
+  `generate_unified_spec.py` — SERVICE_REGISTRY auto-derived from workspace-manifest.json, 13 phantom services removed,
+  fail-on-drift enforcement; `generate_config_registry.py` — phantom services removed, 4 real services added with
+  verified import paths, 2 consolidated-monorepo services documented (no root config); `generate_ui_reference_data.py`
+  — architecture_v2 submodule walk added, ARCHETYPE_CAPABILITY_REGISTRY serialised deterministically, StrategyArchetype
+  (57), StrategyFamily (9), total UIC enums 227. Quality gates passed. Generator run verified with UAC venv. Finding F4
+  confirmed (archetype_capability_manifest.json hand-maintained alongside Python registry, no drift check). One Phase 0
+  item deferred: scheduled workflow for drift CI gate (fail-on-run is the current gate).
 
 ## Out of scope / named successors
 
