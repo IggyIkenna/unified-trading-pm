@@ -890,6 +890,41 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
     return recovered
 
 
+def _write_firestore_ci_watcher(
+    transitions: list[dict],
+    stuck: list[dict],
+    now_iso: str,
+    project_id: str,
+) -> None:
+    try:
+        from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+        client = firestore.Client(project=project_id)
+        trans_by_repo: dict[str, list[dict]] = {}
+        stuck_by_repo: dict[str, list[dict]] = {}
+        for t in transitions:
+            repo = str(t.get("repo", ""))  # noqa: qg-empty-fallback
+            if repo:
+                trans_by_repo.setdefault(repo, []).append({k: v for k, v in t.items() if k != "repo"})
+        for s in stuck:
+            repo = str(s.get("repo", ""))  # noqa: qg-empty-fallback
+            if repo:
+                stuck_by_repo.setdefault(repo, []).append({k: v for k, v in s.items() if k != "repo"})
+        for repo in set(trans_by_repo) | set(stuck_by_repo):
+            doc_ref = client.collection("repo_state").document(repo)
+            doc_ref.set(
+                {
+                    "ci_watcher": {
+                        "transitions": trans_by_repo.get(repo, []),
+                        "stuck": stuck_by_repo.get(repo, []),
+                        "checked_at": now_iso,
+                    }
+                },
+                merge=True,
+            )
+    except Exception:  # Firestore unavailable → best-effort write
+        pass
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", help="Watch a single repo instead of the full fleet.")
@@ -957,6 +992,11 @@ def main() -> int:
     alert, severity, report = build_report(transitions, stuck, resolved, billing)
     print(report)
     write_github_output(alert, severity, report)
+
+    # Firestore write-through — best-effort; never blocks the watcher on SDK/credential absence.
+    gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if gcp_project:
+        _write_firestore_ci_watcher(transitions, stuck, now.isoformat(), gcp_project)
 
     # Close the loop: hand merge-conflict-stuck promotion PRs to the orchestrator
     # (resolve) rather than only paging. Idempotent per PR label so the */15m cron does

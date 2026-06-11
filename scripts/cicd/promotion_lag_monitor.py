@@ -31,7 +31,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
-import os.path
+import os
 import re
 import subprocess
 import sys
@@ -207,6 +207,21 @@ def _lock_dangle(now: dt.datetime, dangle_min: int = 30) -> str | None:
     )
 
 
+def _write_firestore_promotion_lag(
+    repo_lags: dict[str, dict[str, object]],
+    now_iso: str,
+    project_id: str,
+) -> None:
+    try:
+        from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+        client = firestore.Client(project=project_id)
+        for repo, lags in repo_lags.items():
+            doc_ref = client.collection("repo_state").document(repo)
+            doc_ref.set({"promotion_lag": {"lags": lags, "checked_at": now_iso}}, merge=True)
+    except Exception:  # Firestore unavailable → best-effort write
+        pass
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--threshold-min", type=int, default=60)
@@ -240,7 +255,9 @@ def main() -> int:
             return 0
 
     findings: list[str] = []
+    repo_lags: dict[str, dict[str, object]] = {}  # structured data for Firestore write-through
     for repo in _repos():
+        repo_lags[repo] = {}
         directions = [
             ("LDR→main", "main", "live-defi-rollout", False),
             ("LDR→staging", "staging", "live-defi-rollout", False),
@@ -253,7 +270,10 @@ def main() -> int:
             res = _lag(repo, base, head, now, thresh_s, skip_ci_counts)
             if res:
                 n, age, omsg = res
-                findings.append(f"{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — “{omsg[:60]}”")
+                findings.append(f'{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — "{omsg[:60]}"')
+                repo_lags[repo][label] = {"n_commits": n, "age_s": age, "oldest_msg": omsg, "lag": True}
+            else:
+                repo_lags[repo][label] = {"lag": False}
 
     # Persist the warmed ETag cache so the next run's unchanged compares are free 304s.
     if cache_file:
@@ -264,6 +284,11 @@ def main() -> int:
     dangle = _lock_dangle(now)
     if dangle:
         findings.append("🔒 " + dangle)
+
+    # Firestore write-through — best-effort; never blocks the monitor on SDK/credential absence.
+    gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if gcp_project:
+        _write_firestore_promotion_lag(repo_lags, now.isoformat(), gcp_project)
 
     if not findings:
         print(f"✅ promotion-lag: all branches in sync within {int(thresh_s // 60)}m")

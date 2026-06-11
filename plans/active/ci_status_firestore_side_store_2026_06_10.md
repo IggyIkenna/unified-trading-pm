@@ -170,13 +170,14 @@ manifest fallback — NOT raw `get_all()`, which would blank repos Firestore has
 - [x] ✅ [CI] P2. DONE 2026-06-11 (slot-1) — `.github/workflows/sit-gate.yml` (the `rank >= STAGING_GREEN` gate)
       migrated to `resolve_ci_status_map` with manifest fallback. unified-trading-pm@c6bd4791d (batch with scripts
       below).
-- [ ] [CI] P2. `.github/workflows/staging-to-main.yml` + `ldr-to-staging-promote.yml` (promotion gates). **DEFERRED** —
-      complex inline Python with both ci_status reads and writes; ldr-to-staging-promote delegates to
-      `tier_c_promotion_gate.py` which IS migrated (see SCRIPT below).
+- [x] ✅ [CI] P2. DONE 2026-06-11 (slot-1) — `.github/workflows/staging-to-main.yml` STAGE 1.8 block + Promote block
+      both migrated to `_fs_overlay(manifest)` helper. `ldr-to-staging-promote.yml` delegates to
+      `tier_c_promotion_gate.py` (already migrated). unified-trading-pm@ca095c7b0.
 - [x] ✅ [CI] P2. DONE 2026-06-11 (slot-1) — `.github/workflows/auto-merge-minor-fixes.yml` migrated to
       `resolve_ci_status_map`. unified-trading-pm@c6bd4791d (batch with scripts below).
-- [ ] [CI] P2. `.github/workflows/cascade-qg-ordering.yml` + `update-repo-version.yml`. **DEFERRED** — 509-line /
-      737-line workflows with complex ci_status reads AND writes; dedicated migration session needed.
+- [x] ✅ [CI] P2. DONE 2026-06-11 (slot-1) — `.github/workflows/cascade-qg-ordering.yml` migrated: `_fs_overlay` helper
+      added + called after polling-loop manifest load and pre-dispatch baseline load. `update-repo-version.yml`
+      **DEFERRED** to Phase 3 (read is pre-write logging only; Phase 3 scope). unified-trading-pm@ca095c7b0.
 - [ ] [CI] P2. `.github/workflows/staging-backmerge-to-ldr.yml` + `main-backmerge-to-ldr.yml` + `ldr-ci-monitor.yml`.
       **NOTE**: `ldr-ci-monitor.yml` reads `ldr_ci_status` (different field — not `ci_status`) so it is NOT in scope
       here.

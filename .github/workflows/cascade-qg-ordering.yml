@@ -75,6 +75,22 @@ jobs:
 
           python3 - <<'PYEOF'
           import json, os, subprocess, sys, time
+          sys.path.insert(0, "scripts/cicd")
+
+          # Phase 2: Firestore-authoritative ci_status overlay helper.
+          # Safe no-op when Firestore is unavailable — manifest values are the fallback.
+          def _fs_overlay(manifest):
+              try:
+                  from ci_status_store import resolve_ci_status_map  # noqa: imports-inside-functions
+                  ci_map = resolve_ci_status_map(manifest)
+                  repos_obj = manifest.get("repositories", {})
+                  if isinstance(repos_obj, dict):
+                      for r, s in ci_map.items():
+                          r_obj = repos_obj.get(r)
+                          if isinstance(r_obj, dict):
+                              r_obj["ci_status"] = s
+              except Exception:
+                  pass
 
           # ── Load inputs ──────────────────────────────────────────────────────
           # repository_dispatch payload takes priority, fall back to workflow_dispatch inputs
@@ -239,6 +255,7 @@ jobs:
 
                   with open("workspace-manifest.json") as f:
                       current_manifest = json.load(f)
+                  _fs_overlay(current_manifest)
 
                   current_repos = current_manifest.get("repositories", {})
 
@@ -322,6 +339,7 @@ jobs:
               subprocess.run(["git", "pull", "--ff-only", "origin", "main"], capture_output=True, text=True)
               with open("workspace-manifest.json") as f:
                   pre_manifest = json.load(f)
+              _fs_overlay(pre_manifest)
               pre_repos = pre_manifest.get("repositories", {})
               baseline = {r: pre_repos.get(r, {}).get("ci_status", "NOT_CONFIGURED") for r in repos}
               stale_red = [r for r, s in baseline.items() if s in FAILING_STATUSES]
