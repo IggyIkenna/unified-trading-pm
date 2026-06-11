@@ -120,3 +120,56 @@ TIF/order-type enums in execution-service are now dual implementations to remedi
 **Status**: OPEN — needs_code_scan. `MatchingModel.CANDLE_OHLC_INTERPOLATED → BenchmarkFillMode` mapping left None: the
 exact interpolation the strategy-service backtest runner uses could not be established by grep (empty results). Route
 through Phase 5 agent escalation; answer lands in SIM_ASSUMPTIONS_REGISTRY + manifest annotation.
+
+### F12 — config-registry.json cannot regenerate without `.venv-workspace`; on-host regen EMPTIES it (destructive)
+
+**Status**: OPEN — environmental constraint, NOT a code bug. 2026-06-11, capability-exporter agent (slot-4).
+`generate_config_registry.py` imports per-service `config.py`/`service_config.py` modules. On a host with only the UAC
+`.venv` + per-service `.venv`s (no aggregate `.venv-workspace`), it extracts **0/32** configs and writes an essentially
+empty `config-registry.json` (−9970 lines vs committed). Running it here and committing would silently WIPE the real
+registry.
+
+**Why it matters**: the autonomous full-suite regeneration of `generate-unified-openapi.sh` cannot be completed on a
+non-workspace-venv host without destroying `config-registry.json`. Mitigation taken: regenerated only the UAC-importable
+outputs (`ui-reference-data.json` — byte-identical to committed, already current post-Phase-0; `capability-manifest.json`
+- new), and `git checkout`-restored the emptied `config-registry.json`. The full `unified-trading-system.openapi.json`
+  regeneration is likewise blocked (needs every service importable in one interpreter). The `uic-openapi-sync` CI workflow
+  regenerates on its own runner regardless, so committed-output staleness self-heals there.
+
+**Remedy**: full-suite regen + `config-registry.json` refresh must run where `.venv-workspace` exists (the laptop /
+the CI runner), OR `generate_config_registry.py` should be hardened to per-service-venv subprocess extraction (same idiom
+the capability exporter uses for exec/features/ml) so it works on any host. Tracked as a Phase-0 leftover note.
+
+### F13 — `SOURCE_PRIORITY` has no clean (non-`canonical.`) facade; only `registry.possible_manifest` re-exports it
+
+**Status**: OPEN — minor import-surface gap. 2026-06-11, capability-exporter agent.
+`Transport` + `default_transport_for_source` ARE re-exported at the `unified_api_contracts` root facade, but
+`SOURCE_PRIORITY` (defined in `canonical/crosscutting/source_priority.py`) is only reachable via the deep
+`canonical.crosscutting.source_priority` path (blocked by the STEP 5.23 import-surface gate) or the secondary
+`registry.possible_manifest` re-export (a `registry.*` deep path, which the gate permits). The exporter imports from
+`registry.possible_manifest` to stay gate-clean.
+
+**Why it matters**: consumers wanting `SOURCE_PRIORITY` from the public facade can't (`from unified_api_contracts import
+SOURCE_PRIORITY` fails). Other source-mode capability constants are similarly scattered.
+
+**Remedy**: add `SOURCE_PRIORITY` to the UAC root (or `registry`) facade `__all__` so it joins `Transport` /
+`default_transport_for_source`. UAC-source change → not made in this unit (UAC-source edits out of scope for the
+exporter task; only `openapi/` outputs committed).
+
+### F14 — `uic-openapi-sync` workflow syncs TS types ONLY, not the registry JSONs (capability-manifest.json included)
+
+**Status**: OPEN — workflow-coverage gap. 2026-06-11, capability-exporter agent.
+The per-repo `uic-openapi-sync.yml` (e.g. `unified-trading-system-ui/.github/workflows/`) consumes only
+`*.openapi.json/yaml` to regenerate `lib/types/api-generated.ts` on a `repository_dispatch` from UAC. It does **NOT**
+copy `ui-reference-data.json` / `config-registry.json` / `system-topology.json` / `capability-manifest.json` into
+`lib/registry/`. Those registry JSONs reach the UI ONLY via `generate-unified-openapi.sh`'s own UI-sync block (which the
+exporter wired for `capability-manifest.json`).
+
+**Why it matters**: the plan's Phase-1 [VERIFY] todo "manifest ships to `unified-trading-system-ui/lib/registry/` via
+the existing uic-openapi-sync workflow" is INACCURATE — that workflow won't ship the manifest. The shipping path is the
+generator script's sync block, run on a workspace-venv host or the CI runner that runs `generate-unified-openapi.sh`.
+The Phase-1 uic-openapi-sync shipping todo is therefore left UNticked (see plan progress log).
+
+**Remedy**: either (a) extend `uic-openapi-sync.yml` to copy the registry JSONs (it would need UAC to publish them as a
+release artifact the workflow can fetch), or (b) re-word the plan todo to point at the `generate-unified-openapi.sh`
+sync block as the canonical delivery path. Decision deferred to the UI-phase owner.

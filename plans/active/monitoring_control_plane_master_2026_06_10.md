@@ -210,12 +210,13 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       cause was systemic: multiple service-detail tabs read `.length`/`.map` on partial/raced API payloads → root
       ErrorBoundary → whole-app white-screen → sibling tabs (Status) unreachable. Two-part durable fix: (1)
       `ServiceDetails.tsx` — `DependenciesPanel`/`DependencyDag` guard every array read (`?? []`), with a
-      `ServiceDetails.test.tsx` partial-payload regression (3 cases); (2) `App.tsx` — a per-tab `<ErrorBoundary
-      key={activeTab}>` around the TabsContent region so ANY tab's render crash is contained (tab strip survives +
-      recovers on switch) instead of nuking the app. Full smoke went 187/1 (flaky) → **188/188 green**. NOTE: this smoke
-      suite does NOT run in deployment-ui CI (neither `quality-gates-v2` nor `ui-quality-gates-v2` runs `tests/smoke/`) —
-      so it never blocked promotion; this fixes a real app-robustness bug + the flaky local test. **Leftover (slot 4):
-      `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip`) needs `rm` — sandbox-denied.** Repo: deployment-ui.
+      `ServiceDetails.test.tsx` partial-payload regression (3 cases); (2) `App.tsx` — a per-tab
+      `<ErrorBoundary     key={activeTab}>` around the TabsContent region so ANY tab's render crash is contained (tab
+      strip survives + recovers on switch) instead of nuking the app. Full smoke went 187/1 (flaky) → **188/188 green**.
+      NOTE: this smoke suite does NOT run in deployment-ui CI (neither `quality-gates-v2` nor `ui-quality-gates-v2` runs
+      `tests/smoke/`) — so it never blocked promotion; this fixes a real app-robustness bug + the flaky local test.
+      **Leftover (slot 4): `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip`) needs `rm` — sandbox-denied.** Repo:
+      deployment-ui.
 - [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@1ad86d5 | pw:L2 ✓ | regression:
       tests/e2e/repos-promotion-blocked.spec.ts (B2 header test). **(B2) Repo drill-down build header** — opening a repo
       now renders a build-details header at the top: build **status** + **source** (Cloud Build/CodeBuild, derived from
@@ -320,6 +321,82 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       watcher because it already owns the polling/ETag/in-memory-idempotency/dispatch — the watcher would have
       duplicated detection + needed a new state-file for idempotency. The dashboard ACT-half pairs with the
       `FAILING(main)` branch chip (alert-parity). Repos: agent-orchestrator + unified-trading-pm.
+
+### Orchestrator e2e control-plane validation + main-agent first-responder (2026-06-11, Harsh slot-5, local)
+
+Charter line exercised: "Orchestrator side — make the agents **stable** and **picking up** work." Full local e2e run of
+the orchestrator control plane from the slot-5 checkout (backend + dashboard on :8765/:5173, sandboxed state in
+`.orch-e2e-sandbox/` — fake `ORCHESTRATOR_VM_ID=vm-local-e2e` + `ORCHESTRATOR_PM_REPO_PATH` sandbox PM clone, zero fleet
+writes). **VALIDATED live end-to-end**: plan → PlanRegenLoop (assigned_vm-filtered) → backlog → manual spawn → /boot
+dispatch → worker executed a real MTDS function-length audit (196 violations / 3,211 functions scanned, report artifact)
+→ /done → same-second next-task dispatch → worker /blocked (A/B scoping question) → **main agent auto-answered it in 31
+s with plan-grounded reasoning** → worker resumed on the queued answer → applied option B → final /done. Both tasks
+`done` in state.db with sentinel SHAs.
+
+- [x] ✅ [CODE] P1. DONE 2026-06-11 — agent-orchestrator@05be1e0 (keeper + lifespan wiring + 7 unit tests; suite 499
+      passed) + agent-orchestrator@6b63a77 (main.md boot-template STEP 2.5 blocked-queue sweep: poll
+      `/api/state.blocked[]` every tick; answer when plan/SSOT/worker-recommendation suffices via
+      `POST /api/blocked/<id>/answer` from_role=main; defer ONLY genuinely operator-level calls — spend, creds,
+      destructive, scope — and surface once in chat). **MainAgentKeeper — the main agent (fleet supervisor + /blocked
+      FIRST responder per agents/main.md) is now auto-spawned at backend start + kept alive** (singleton tmux
+      `orch-agent-main`, 60 s tick, autospawn-shared headroom gate, 5-min cooldown, 3/h flap guard → 1 h backoff,
+      `ORCHESTRATOR_MAIN_AGENT_ENABLED` default ON). Previously NOTHING spawned it — the blocked-answer contract
+      silently depended on an operator hand-pasting main.md (repro: a worker /blocked sat unanswered on a fresh
+      backend). Live-verified: keeper spawn → register → `blocked_answered` (BLK-60790ca7) in 31 s. Repo:
+      agent-orchestrator.
+
+Unsolved findings from the run (each repro'd live or read in code; fix not yet shipped):
+
+- [ ] [CODE] P1. **Manual `POST /api/backlog/regen` bypasses the `assigned_vm` filter + prune** —
+      `routes/backlog.py:126` calls `regen()` with no args; `regen()` defaults `vm_id=None` = ingest-all (its docstring
+      claims an `ORCHESTRATOR_VM_ID` env fallback that is NOT implemented — only `PlanRegenLoop.__init__` reads the
+      env). Live repro: manual regen ingested 493 tasks from 53 fleet plans into a vm-local-e2e backend; the next 120 s
+      loop tick pruned all 491 foreign tasks (self-heal works, ≤30 min on fleet), but in that window AutoSpawn can
+      dispatch foreign-VM tasks. Fix: route (or `regen()` itself, honouring its docstring) passes
+      `vm_id=ORCHESTRATOR_VM_ID` + `ORCHESTRATOR_REGEN_PRUNE_STALE`. Repo: agent-orchestrator
+      (`server/routes/backlog.py` + `server/regen_backlog_from_plan.py`). Found 2026-06-11.
+- [ ] [INFRA] P1. **`bootstrap_vm.sh` installs pm-pull TWICE with DIFFERENT branches** — Step 5.9 runs PM's
+      `install_pm_pull.sh` (merges `origin/live-defi-rollout`); Step 7.5c installs AO's own `scripts/pm-pull.service`
+      (`git pull --ff-only origin main`) under the SAME systemd unit name. Whichever lands first wins (7.5c skips if 5.9
+      enabled the timer; if 5.9 WARN-fails — PM clone absent — the main-puller installs into an LDR checkout where
+      `--ff-only origin main` near-always fails → **plans silently freeze** with only a journald WARN). Which branch a
+      VM's plan source tracks is nondeterministic per bootstrap path. Collapse to ONE installer + ONE branch (LDR per
+      the regen/plan-freshness contract). Repo: agent-orchestrator (`scripts/bootstrap_vm.sh` +
+      `scripts/pm-pull.service`). Found 2026-06-11.
+- [ ] [CODE] P1. **AutoSpawn respawn path skips the FM2/FM3/FM8 dirty-state gate** — `autospawn.py:289-298` runs only
+      `check_slot_branch_state` (FM5/FM7); manual `/spawn` (slots_ops.py:204), account rotation (server.py:416), and the
+      kicker auto-respawn (worker_liveness.py:929) all call `resolve_dirty_state()`, but the dominant fleet path —
+      **watchdog kill → AutoSpawn respawn — boots the new worker into the dead predecessor's dirty tree**, and the \*/5
+      FF-cron then `[skip:dirty]`s the slot → stale clone. Also compose: a permanently-dead slot's dispatched task is
+      recovered only by same-slot /boot resume (`already_in_progress`); there is no requeue-to-pool on slot death. Wire
+      `resolve_dirty_state()` into the autospawn pre-spawn gate. Repo: agent-orchestrator (`server/autospawn.py`).
+- [ ] [CODE] P2. **`/done` verifies the SHA locally only — no origin-push guarantee** — `verify.py` runs `git show` in
+      the slot worktree (never `ls-remote`/merge-base vs `origin/live-defi-rollout`); sentinel SHAs (`audit-*`,
+      `no-code-change`…) skip verification entirely; dirty-tree/plan-flip/scope checks are warnings, not blocks. A
+      worker whose quickmerge silently failed (auth/network) still marks the task done with a local-only commit. Add an
+      origin-existence check (warn → block ratchet). Repo: agent-orchestrator (`server/verify.py` +
+      `server/routes/slots_worker.py`).
+- [ ] [CODE] P2. **Spawned workers get no `WORKSPACE_ROOT`** — boot prompts carry `${WORKSPACE_ROOT}/...` paths but
+      `tmux_spawn._start_session` sources only the account env file; the worker's shell expands it EMPTY (live repro:
+      worker `cd`'d to a wrong guessed path, self-recovered after 2 probe commands). Export `WORKSPACE_ROOT` (+ any
+      boot-prompt-referenced env) in the spawn `bash_cmd`. Repo: agent-orchestrator (`server/tmux_spawn.py`).
+- [ ] [CODE] P2. **Blocked-queue telemetry missing** — `slot_blocked`/`blocked_answered` land in `activity_log` but
+      nothing aggregates: no blocks-per-task counter, no repeated-block alert, no time-to-answer metric (now doubly
+      relevant as the MainAgentKeeper SLA measure: main-answered vs operator-answered vs unanswered-age). Small rollup
+      endpoint + dashboard chip. Repo: agent-orchestrator.
+- [ ] [CODE] P2. **Execution-vs-context-burn detector missing** — nothing correlates time-on-task + context_pct /
+      compactions with pushed output; a worker can heartbeat for hours with zero commits and no flag. Rule sketch:
+      `dispatched > 4 h AND no done_sha AND (context_pressure high OR compactions climbing) → flag + respawn`. All
+      inputs already in state.db (`slots.context_used_pct`, `compactions`, `tasks.dispatched_at`). Repo:
+      agent-orchestrator (`server/worker_liveness_watchdog.py` or sibling check).
+- [ ] [CODE] P3. **Orchestrator dashboard dev default still points at retired :8026** — `dashboard/src/App.tsx:73`
+      (`devPort ?? "8026"`; backend binds 8765 since the port migration) → fresh local run = login "Failed to fetch"
+      until `VITE_BACKEND_PORT=8765`. Flip the default. Repo: agent-orchestrator (`dashboard/src/App.tsx`).
+
+Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
+sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
+because no setup-token exists on this host — exactly the failure mode CLAUDE.md § "accounts auth via setup-tokens only"
+bans. Fleet VMs (setup-token env files) are unaffected.
 
 ## Failure-injection verification matrix (operator add 2026-06-10 — completion gate for this master)
 
@@ -448,6 +525,13 @@ manual session because firing breaking/red/billing states on the live fleet jams
 
 ## Progress log
 
+- **2026-06-11 (Harsh slot-5, local)** — orchestrator e2e control-plane VALIDATED live (sandboxed local backend+UI from
+  the slot-5 checkout): plan→regen→dispatch→execute→done→blocked→**main-agent auto-answer (31 s)**→resume→done. SHIPPED
+  agent-orchestrator@05be1e0+6b63a77+a658519: **MainAgentKeeper** (main agent auto-spawned at backend start — closes the
+  "nobody answers /blocked on a fresh VM" gap) + main.md STEP 2.5 blocked-sweep duty + lock refresh. 7 new findings
+  filed as todos in § "Orchestrator e2e control-plane validation" above (P1: manual-regen vm_id bypass · pm-pull
+  dual-installer branch conflict · autospawn missing dirty-gate; P2: /done no-origin-verify · WORKSPACE_ROOT missing in
+  spawns · blocked telemetry · context-burn detector; P3: dashboard :8026 default).
 - **2026-06-10 (slot-3)** — deployment-api aggregator BUILT + live-verified (25 repos, real SHAs, 10 real stuck
   conflict-wall PRs surfaced on first run; detail endpoint shows per-branch history with slot-attributed authors).
   deployment-ui Repos CI page built (route `/repos`, SIT panel + stuck panel + matrix + dropdown), vitest 8/8, pw

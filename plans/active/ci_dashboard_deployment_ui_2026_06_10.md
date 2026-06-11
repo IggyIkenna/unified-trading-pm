@@ -270,6 +270,19 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       stuck-PR panel renders all four stuck classes + stuck-in-SIT badge from fixture data (guards reverting the
       operator-add features).
 
+### Session note 2026-06-11 (Harsh slot-5, local) — orchestrator-side validation, no direct items advanced here
+
+The 2026-06-11 local session worked the MASTER plan's orchestrator charter ("agents stable + picking up work"), not this
+sub-plan's deployment-api/ui items: full e2e control-plane validation + **MainAgentKeeper shipped**
+(agent-orchestrator@05be1e0 — main agent auto-spawned at backend start, auto-answered a live worker /blocked in 31 s)
+
+- 7 unsolved findings filed as todos. SSOT for status + findings: `monitoring_control_plane_master_2026_06_10.md` §
+  "Orchestrator e2e control-plane validation + main-agent first-responder (2026-06-11)". Relevant to this sub-plan's
+  surfaces: (a) the new `main_agent_autospawned` / `main_agent_flap` activity events + the blocked
+  answered-by-main-vs-operator split are candidate chips for the Alerts/fleet tabs once the master's "blocked-queue
+  telemetry" todo lands; (b) the two BLOCKED-CREDENTIALS items below are unchanged (ORCHESTRATOR_API_TOKEN still absent
+  from SM per the master's 2026-06-11 re-probe).
+
 ## Phase 4 — verify + ship
 
 - [x] ✅ [VERIFY] P1. DONE 2026-06-10 — slot-3 :8014 live run: overview 25 repos (source=live), detail greeks-service,
