@@ -25,6 +25,8 @@ resolve_status = _mod.resolve_status
 rank = _mod.rank
 set_status = _mod.set_status
 get_all = _mod.get_all
+manifest_ci_status_map = _mod.manifest_ci_status_map
+resolve_ci_status_map = _mod.resolve_ci_status_map
 
 
 # ── resolve_status — the pure CAS decision (Layer 2) ─────────────────────────────────────────────
@@ -180,6 +182,47 @@ def test_get_all_aggregates(store: dict[str, dict[str, object]]):
     alls = get_all(firestore_module_factory=_factory(store))
     assert set(alls) == {"uac", "utl"}
     assert alls["uac"]["status"] == "MAIN_GREEN" and alls["utl"]["status"] == "STAGING_GREEN"
+
+
+# ── READ side (Phase 2): manifest_ci_status_map + resolve_ci_status_map ──────────────────────────
+
+
+def test_manifest_map_dict_shaped():
+    m = {"repositories": {"uac": {"ci_status": "MAIN_GREEN"}, "utl": {"ci_status": "STAGING_GREEN"}}}
+    assert manifest_ci_status_map(m) == {"uac": "MAIN_GREEN", "utl": "STAGING_GREEN"}
+
+
+def test_manifest_map_list_shaped():
+    m = {"repositories": [{"name": "uac", "ci_status": "FAILING"}, {"name": "utl", "ci_status": "MAIN_GREEN"}]}
+    assert manifest_ci_status_map(m) == {"uac": "FAILING", "utl": "MAIN_GREEN"}
+
+
+def test_manifest_map_omits_blank_and_missing():
+    m = {"repositories": {"uac": {"ci_status": ""}, "utl": {}, "mtds": {"ci_status": "MAIN_GREEN"}}}
+    assert manifest_ci_status_map(m) == {"mtds": "MAIN_GREEN"}  # blank + absent omitted, not None-valued
+
+
+def test_resolve_firestore_overlays_manifest_per_repo(store: dict[str, dict[str, object]]):
+    # manifest says uac=STAGING_GREEN, utl=MAIN_GREEN; Firestore has the newer uac=MAIN_GREEN + a fresh mtds
+    set_status("uac", "MAIN_GREEN", "main", "a", firestore_module_factory=_factory(store))
+    set_status("mtds", "FAILING", "staging", "b", firestore_module_factory=_factory(store))
+    manifest = {"repositories": {"uac": {"ci_status": "STAGING_GREEN"}, "utl": {"ci_status": "MAIN_GREEN"}}}
+    out = resolve_ci_status_map(manifest, firestore_module_factory=_factory(store))
+    assert out == {
+        "uac": "MAIN_GREEN",  # Firestore wins (authoritative per-repo)
+        "utl": "MAIN_GREEN",  # manifest-only repo retained (not yet in Firestore)
+        "mtds": "FAILING",  # Firestore-only repo added
+    }
+
+
+def test_resolve_falls_back_to_manifest_on_firestore_error():
+    class _RaisingModule:
+        def Client(self, project: str | None = None) -> object:  # noqa: N802 — mirrors SDK
+            raise RuntimeError("firestore unavailable (SDK absent / transient)")
+
+    manifest = {"repositories": {"uac": {"ci_status": "MAIN_GREEN"}}}
+    out = resolve_ci_status_map(manifest, firestore_module_factory=lambda: _RaisingModule())
+    assert out == {"uac": "MAIN_GREEN"}  # loud degrade to the manifest cache, never an exception
 
 
 if __name__ == "__main__":

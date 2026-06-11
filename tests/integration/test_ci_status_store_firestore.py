@@ -56,6 +56,7 @@ _spec.loader.exec_module(ci_status_store)
 set_status = ci_status_store.set_status
 get_all = ci_status_store.get_all
 rank = ci_status_store.rank
+resolve_ci_status_map = ci_status_store.resolve_ci_status_map
 
 _PROJECT = "demo-pm-ci-status"
 
@@ -301,6 +302,32 @@ def test_concurrent_multi_repo_all_land():
     docs = get_all(project_id=_PROJECT)
     assert set(repos).issubset(docs.keys())
     assert all(docs[r]["status"] == "STAGING_GREEN" and docs[r]["sha"] == r for r in repos)
+
+
+# ── Phase-2 read primitive: resolve_ci_status_map against REAL Firestore + a manifest ────────────
+
+
+@pytest.mark.usefixtures("clean_collection")
+def test_resolve_ci_status_map_overlays_real_firestore_on_manifest():
+    # Firestore (live SSOT) carries a newer uac + a Firestore-only mtds; manifest is the fallback cache.
+    _set("uac", "MAIN_GREEN", "main")
+    _set("mtds", "FAILING", "staging")
+    manifest = {
+        "repositories": {
+            "uac": {"ci_status": "STAGING_GREEN"},  # stale vs Firestore → Firestore wins
+            "utl": {"ci_status": "MAIN_GREEN"},  # not yet in Firestore → manifest retained
+        }
+    }
+    out = resolve_ci_status_map(manifest, project_id=_PROJECT)
+    assert out == {"uac": "MAIN_GREEN", "utl": "MAIN_GREEN", "mtds": "FAILING"}
+
+
+@pytest.mark.usefixtures("clean_collection")
+def test_resolve_ci_status_map_empty_firestore_is_pure_manifest():
+    # dual-write OFF (collection empty) ⇒ identical-to-today behaviour: the manifest map verbatim.
+    manifest = {"repositories": {"uac": {"ci_status": "MAIN_GREEN"}, "utl": {"ci_status": "STAGING_GREEN"}}}
+    out = resolve_ci_status_map(manifest, project_id=_PROJECT)
+    assert out == {"uac": "MAIN_GREEN", "utl": "STAGING_GREEN"}
 
 
 if __name__ == "__main__":

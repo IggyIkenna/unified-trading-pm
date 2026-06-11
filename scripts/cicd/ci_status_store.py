@@ -26,6 +26,8 @@ The cloud SDK is imported lazily inside the default factory (mirrors
 
 from __future__ import annotations
 
+import json
+import logging
 from collections.abc import Callable
 from typing import Protocol, cast
 
@@ -196,12 +198,107 @@ def get_all(
     return out
 
 
-if __name__ == "__main__":  # tiny CLI for the GHA dual-write: ci_status_store.py REPO STATUS BRANCH SHA
+# ── READ side (Phase 2) — Firestore-authoritative per-repo, manifest as the fallback cache ────────
+
+
+def manifest_ci_status_map(manifest: dict[str, object]) -> dict[str, str]:
+    """Map repo-name → ci_status from ``workspace-manifest.json`` (the fallback cache).
+
+    Tolerant of dict-keyed (`{repo: {...}}`) or list (`[{name, ci_status}, ...]`) ``repositories``.
+    Repos with no/blank ci_status are omitted (a missing entry means "unset", not a status).
+    """
+    repos = manifest.get("repositories")
+    items: list[tuple[str, object]] = []
+    if isinstance(repos, dict):
+        items = [(str(k), v) for k, v in cast("dict[str, object]", repos).items()]
+    elif isinstance(repos, list):
+        for r in cast("list[object]", repos):
+            if isinstance(r, dict):
+                r_d = cast("dict[str, object]", r)
+                name = r_d.get("name")
+                if isinstance(name, str) and name:
+                    items.append((name, r_d))
+    out: dict[str, str] = {}
+    for name, value in items:
+        if isinstance(value, dict):
+            status = cast("dict[str, object]", value).get("ci_status")
+            if isinstance(status, str) and status:
+                out[name] = status
+    return out
+
+
+def resolve_ci_status_map(
+    manifest: dict[str, object],
+    *,
+    project_id: str | None = None,
+    firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
+) -> dict[str, str]:
+    """Repo → ci_status: **Firestore-authoritative per-repo, manifest as fallback cache**.
+
+    The migration-safe read primitive (Phase 2). Firestore is the live SSOT, but during the
+    dual-write ramp (or if a repo simply hasn't transitioned yet) a repo may be absent from
+    Firestore — so we start from the manifest map and OVERLAY Firestore per-repo where present. This
+    means a reader behaves identically to today while the dual-write flag is still off (Firestore
+    empty → pure manifest), and shifts to Firestore-truth repo-by-repo as docs appear — never a
+    flag-day, never a repo blanked by a partial Firestore.
+
+    On any Firestore unavailability (SDK absent before cutover, transient API error) we **degrade
+    LOUDLY to the manifest cache** (a warning, not a silent swallow) — the manifest is the designed
+    offline fallback for exactly this, so a degrade is correct, not a failure to mask.
+    """
+    base = manifest_ci_status_map(manifest)
+    try:
+        fs = get_all(project_id=project_id, firestore_module_factory=firestore_module_factory)
+    except Exception as err:
+        logging.getLogger(__name__).warning(
+            "ci_status Firestore read unavailable (%s: %s) — using manifest fallback cache",
+            type(err).__name__,
+            err,
+        )
+        return base
+    for repo, doc in fs.items():
+        status = doc.get("status")
+        if isinstance(status, str) and status:
+            base[repo] = status
+    return base
+
+
+def _load_manifest(path: str) -> dict[str, object]:
+    with open(path, encoding="utf-8") as fh:
+        loaded = cast("object", json.load(fh))
+    return cast("dict[str, object]", loaded) if isinstance(loaded, dict) else {}
+
+
+if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 5:
-        print("usage: ci_status_store.py <repo> <status> <branch> <sha>", file=sys.stderr)
+    _args = sys.argv[1:]
+    # READ mode: `ci_status_store.py get-map [--manifest PATH] [--project-id ID]` → JSON {repo: status}
+    # for shell / GHA readers (Firestore-first, manifest fallback).
+    if _args and _args[0] == "get-map":
+        import argparse
+
+        _p = argparse.ArgumentParser(prog="ci_status_store.py get-map")
+        _p.add_argument("--manifest", default="workspace-manifest.json")
+        _p.add_argument("--project-id", default=None)
+        _ns = _p.parse_args(_args[1:])
+        _manifest_path = cast("str", _ns.manifest)
+        _proj = cast("str | None", _ns.project_id)
+        _map = resolve_ci_status_map(_load_manifest(_manifest_path), project_id=_proj)
+        print(json.dumps(_map, sort_keys=True))
+        raise SystemExit(0)
+
+    # WRITE mode (legacy 4-positional, the GHA dual-write): ci_status_store.py <repo> <status> <branch> <sha>
+    # (an explicit `set` verb is also accepted).
+    if _args and _args[0] == "set":
+        _args = _args[1:]
+    if len(_args) != 4:
+        print(
+            "usage: ci_status_store.py <repo> <status> <branch> <sha>\n"
+            "       ci_status_store.py get-map [--manifest PATH] [--project-id ID]",
+            file=sys.stderr,
+        )
         raise SystemExit(2)
-    _repo, _status, _branch, _sha = sys.argv[1:5]
+    _repo, _status, _branch, _sha = _args
     _prev, _written = set_status(_repo, _status, _branch, _sha)
     print(f"ci_status/{_repo}: {_prev} -> {_written}")

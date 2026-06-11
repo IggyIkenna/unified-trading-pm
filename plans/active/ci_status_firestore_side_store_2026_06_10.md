@@ -147,7 +147,25 @@ the git copy is a cache.
 > NOTE this side-store is also the structural fix for the manifest-update concurrency-group contention that the DEFECT-2
 > resolve-gate's ≤5-min group hold worsens (dependency_promotion plan, item 9 tension) — sequencing matters doubly.
 
-Cut each reader from "parse `workspace-manifest.json.ci_status`" to `ci_status_store.get_all()`:
+- [x] ✅ [CODE] P2. DONE 2026-06-11 (slot-2) — **the migration-safe read PRIMITIVE landed** (the foundation every reader
+      below cuts over to). `ci_status_store.py` now exposes `manifest_ci_status_map(manifest)` (the tolerant dict/list
+      `repositories.*.ci_status` parse, now the SSOT — `check_ci_status_bot_only.ci_status_map` can dedupe to it) and
+      **`resolve_ci_status_map(manifest, *, project_id=...)`** — **Firestore-authoritative PER-REPO with the manifest as
+      fallback cache**: starts from the manifest map and overlays Firestore where a doc exists. This is what makes the
+      cutover safe + flag-day-free: while `CI_STATUS_FIRESTORE_DUALWRITE` is still off (collection empty) a migrated
+      reader returns the manifest map **verbatim** (identical to today); as docs appear it shifts to Firestore-truth
+      repo-by-repo; a repo Firestore hasn't written yet is never blanked; and any Firestore unavailability (SDK absent
+      pre-cutover / transient API error) **degrades LOUDLY to the manifest cache** (a logged warning, the designed
+      offline fallback — not a silent swallow). Plus a
+      `ci_status_store.py get-map [--manifest     PATH] [--project-id ID]` JSON CLI so shell/GHA readers consume the
+      resolved map without re-implementing the merge. Evidence: `unified-trading-pm@<sha>` | 5 new unit tests (dict/list
+      parse, blank-omit, per-repo overlay, error-fallback) + 2 new emulator integration tests (real-Firestore overlay +
+      empty-collection==pure-manifest); 15 unit + 9 integration green; ruff + basedpyright clean (0 errors).
+      **Per-reader cutover (below) is best landed once the live dual-write populates Firestore** — until then each
+      migrated reader is a safe no-op-fallback to manifest.
+
+Cut each reader from "parse `workspace-manifest.json.ci_status`" to `resolve_ci_status_map(manifest)` (Firestore-first,
+manifest fallback — NOT raw `get_all()`, which would blank repos Firestore hasn't written yet during the ramp):
 
 - [ ] [CI] P2. `.github/workflows/sit-gate.yml` (the `rank >= STAGING_GREEN` gate — the cascade-convergence reader).
 - [ ] [CI] P2. `.github/workflows/staging-to-main.yml` + `ldr-to-staging-promote.yml` (promotion gates).
