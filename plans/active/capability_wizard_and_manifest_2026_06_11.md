@@ -122,7 +122,16 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       audited 53 — 4 new archetypes landed), StrategyFamily 9 values, ARCHETYPE_CAPABILITY_REGISTRY 22 archetypes / 98
       cells, total UIC enums 227 (up from single-digits).
 - [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
-      `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift.
+      `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift. **PARTIAL 2026-06-11
+      (capability-exporter, slot-4):** UAC-importable outputs regenerated + committed —
+      `ui-reference-data.json` (byte-identical to committed = already current post-Phase-0),
+      `capability-manifest.json` (new, unified-api-contracts@1bc2f07). **STILL BLOCKED ON-HOST:**
+      `config-registry.json` + `unified-trading-system.openapi.json` need every service importable in ONE interpreter
+      (`.venv-workspace`), which is ABSENT on this host — `generate_config_registry.py` extracts 0/32 and would EMPTY
+      the registry if committed (restored via `git checkout`; finding F12). The per-service `.venv`s exist (the
+      capability exporter uses them via subprocess), but the aggregate spec generator does not yet do per-service-venv
+      extraction. Full run must happen on the laptop / CI runner with `.venv-workspace`; the `uic-openapi-sync` CI
+      regenerates TS types on its runner regardless.
 - [x] ✅ [VERIFY] P0. Drift CI gate: `_validate_service_coverage()` now exits nonzero on mismatch (fail-on-drift
       implemented in-run). DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Scheduled workflow is a Phase 1 item
       (deferred — fail-on-run counts as the enforcement gate for now).
@@ -135,21 +144,38 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       `missing_registry | missing_extraction | needs_code_scan | logical_dead_end` + `agent_annotation` field for
       written-back agent answers. DONE 2026-06-11 — unified-api-contracts@6f31f59 (capability_manifest.py: 14 node
       kinds, deterministic to_canonical_dict(), 40 unit tests green, QG exit 0).
-- [ ] [IMPLEMENT] P0. Extract: STRATEGY_REGISTRY + ARCHETYPE_CAPABILITY_REGISTRY (archetype × venue_category ×
-      instrument_type), venue/instrument universe (instruments-service `InstrumentRecord` + ENDPOINT_REGISTRY incl.
-      per-venue access_mode/auth requirements), execution algos + instruction types + order-type/TIF enums
-      (FOK/IOC/post-only, make/take), feature registry (34 groups incl. per-group lookback), ML model registry (training
-      windows), KillSwitchReason + RiskGateLayer/Decision, MarginMode, deployments/cloud topology (lifecycle_class,
-      AWS/GCP), sports leagues + prediction question groups from the instruments snapshot.
-- [ ] [IMPLEMENT] P1. Source-mode matrix extraction: batch/live/replay × source × transport (WS vs REST) — codify the
-      manual `source-mode-capability-matrix_2026-06-07.md` audit into registry + extraction so batch/live symmetry is
-      queryable per data source.
-- [ ] [IMPLEMENT] P1. Derived edges: **min-data-to-run** per (archetype, venue, timeframe) = max feature-group lookback
-      × ML training window; emitted as a manifest edge the wizard checks against live shard counts via deployment-api.
-- [ ] [IMPLEMENT] P1. Orphan + dead-end report: registry entries nothing references; wizard paths that dead-end;
-      classify `logical_dead_end` vs unbuilt (use case 3). Extend the existing orphan-report pattern.
-- [ ] [VERIFY] P1. Determinism + drift gate for the manifest (same CI pattern as ui-reference-data.json); manifest ships
-      to `unified-trading-system-ui/lib/registry/` via the existing uic-openapi-sync workflow.
+- [x] ✅ [IMPLEMENT] P0. Extract: STRATEGY_REGISTRY + ARCHETYPE_CAPABILITY_REGISTRY (archetype × venue_category ×
+      instrument_type), venue/instrument universe (ENDPOINT_REGISTRY incl. per-venue access_mode/auth requirements +
+      VENUE_CATEGORY_MAP/INSTRUMENT_TYPES_BY_VENUE/DEFI_VENUE_TO_PROTOCOL/CHAIN_RPC_TEMPLATES), execution algos
+      (per-service venv), feature groups (34, per-group lookback), ML model registry, KillSwitchReason + RiskGateLayer,
+      data sources + transports, gap registries (collateral/fees/sim/fund/order/agent + treasury split). DONE 2026-06-11
+      — unified-trading-pm@78b2e893a (generate_capability_manifest.py + _capability_{extract,gaps,orphan}.py) →
+      unified-api-contracts@1bc2f07 (capability-manifest.json: 409 nodes, 663 edges). NOTE: instruments-service
+      `InstrumentRecord` / sports-leagues-from-snapshot / deployments-topology NOT yet wired (venue/instrument universe
+      comes from UAC registries, which is sufficient for v1); those are v2 enrichments. instruction-types/order-type/TIF
+      enums surface via the order_semantics gap-registry node (honest-empty until backfill).
+- [x] ✅ [IMPLEMENT] P1. Source-mode matrix extraction: batch is emitted `available` per source; live/replay per source
+      emit typed `missing_registry` gap edges (the matrix lives in the manual
+      `source-mode-capability-matrix_2026-06-07.md` audit, NOT a UAC registry — per task direction, gap rather than parse
+      the markdown). Transport edges use `default_transport_for_source`. DONE 2026-06-11 — unified-trading-pm@78b2e893a
+      (_capability_extract.py extract_data_sources). The matrix→UAC-registry codification is the gap-close follow-up
+      (tracked in gap-discovery doc 2026-06-11 entry).
+- [x] ✅ [IMPLEMENT] P1. Derived edges: **min-data-to-run** — feature-lookback component IS derived (max feature-group
+      bar `period`, from features-service); the ML training-window factor is a runtime config with NO static registry
+      constant, so the full `feature_lookback × training_window` edge is emitted `partial` + typed `missing_extraction`
+      (honest typed-gap state per task direction). DONE 2026-06-11 — unified-trading-pm@78b2e893a (_capability_gaps.py).
+- [x] ✅ [IMPLEMENT] P1. Orphan + dead-end report: orphan nodes (no edges) + unbuilt dead-ends (registry-available
+      archetype/instrument with no supporting venue) vs logical dead-ends (registry-blocked combos). Folded into the
+      manifest gaps summary AND a human-readable `capability-orphan-report.txt` beside the existing `orphan-report.txt`.
+      DONE 2026-06-11 — unified-trading-pm@78b2e893a (_capability_orphan.py) → unified-api-contracts@1bc2f07
+      (124 orphans, 25 unbuilt, 16 logical).
+- [x] ✅ [VERIFY] P1. Determinism: generator runs twice → byte-identical capability-manifest.json + orphan report
+      (verified). `generated_from_commit` = UAC HEAD sha via git (no timestamps). Wired into `generate-unified-openapi.sh`
+      after the audits + into the UI-sync block. DONE 2026-06-11 — unified-trading-pm@78b2e893a.
+      **NOTE (F14): the uic-openapi-sync workflow ships TS types ONLY, NOT registry JSONs** — capability-manifest.json
+      reaches `unified-trading-system-ui/lib/registry/` via the generate-unified-openapi.sh sync block, not that
+      workflow. The "ships via uic-openapi-sync" framing is inaccurate; UNticked sub-claim re-homed to the generator
+      sync block (see F14 + Progress Log).
 
 ## Phase 2 — gap registries in unified-api-contracts (schema first = forcing function; PARALLEL items)
 
@@ -360,6 +386,24 @@ for every agent on this plan:
   (57), StrategyFamily (9), total UIC enums 227. Quality gates passed. Generator run verified with UAC venv. Finding F4
   confirmed (archetype_capability_manifest.json hand-maintained alongside Python registry, no drift check). One Phase 0
   item deferred: scheduled workflow for drift CI gate (fail-on-run is the current gate).
+- 2026-06-11 — **Phase 1 capability-manifest exporter v1 SHIPPED** (capability-exporter, slot-4).
+  `generate_capability_manifest.py` + `_capability_{extract,gaps,orphan}.py` (PM@78b2e893a, PR #270) → consumes the UAC
+  `CapabilityManifest` schema (imported, never redefined). Output `capability-manifest.json` (UAC@1bc2f07): **409 nodes /
+  663 edges** (available 441, partial 140, not_registered 63, not_available 19; typed gaps: 60 missing_registry, 3
+  needs_code_scan, 1 missing_extraction, 19 logical_dead_end). Orphan report `capability-orphan-report.txt`: **124
+  orphans, 25 unbuilt dead-ends, 16 logical dead-ends**. Coverage: (a) archetypes/families + ARCHETYPE_CAPABILITY_REGISTRY,
+  (b) venues/chains/instrument-types + auth/access from ENDPOINT_REGISTRY, (c) data sources + transports + modes (live/
+  replay = typed gap, NOT markdown-parsed), (d) all 6 gap registries + treasury split → real wallet nodes, (e) risk
+  surface (KillSwitchReason × RiskGateLayer), (f) **service-resident registries imported via per-service `.venv`
+  subprocess — exec algos (7), feature groups (34 w/ lookback), ML model variant config ALL imported OK on this host**
+  (no gap'd source). Determinism verified (run twice = byte-identical); `generated_from_commit` = UAC HEAD via git, no
+  timestamps. Wired into `generate-unified-openapi.sh` + its UI-sync block. Min-data-to-run: feature-lookback derived,
+  ML-training-window factor is `missing_extraction` (runtime config, no static constant). Findings F12 (config-registry
+  un-regenerable on non-workspace-venv host — destructive empty), F13 (SOURCE_PRIORITY no clean facade), F14
+  (uic-openapi-sync ships TS types only, NOT registry JSONs) appended. Gap-discovery 2026-06-11 entry quantifies the
+  surface. **Unticked**: Phase-0 full-suite regen (config-registry.json + full openapi spec need `.venv-workspace`,
+  absent on-host — F12; partial UAC-output regen done); uic-openapi-sync-shipping sub-claim (F14 — wrong workflow; manifest
+  ships via the generator sync block).
 
 ## Out of scope / named successors
 

@@ -54,3 +54,31 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       instructions executed simultaneously.
 
 ## Discovered later (append below; date each entry; pin a test when fixed)
+
+### 2026-06-11 — capability-manifest v1 quantified the gap surface (exporter, slot-4)
+
+`generate_capability_manifest.py` v1 generated `capability-manifest.json` (UAC@434e5be): **409 nodes, 663 edges**.
+Edge-status breakdown: 441 available, 140 partial, 63 not_registered, 19 not_available. Typed-gap counts:
+**60 missing_registry, 3 needs_code_scan, 1 missing_extraction, 19 logical_dead_end**. Orphan/dead-end report:
+**124 orphan nodes, 25 unbuilt dead-ends, 16 logical dead-ends** (`openapi/capability-orphan-report.txt`, UAC@1bc2f07).
+
+Concrete gap drivers surfaced (each = a backfill candidate):
+
+- **Source-mode matrix is a registry gap** — `live`/`replay` per-source capability is NOT in any UAC registry (it lives
+  in the manual `source-mode-capability-matrix_2026-06-07.md` audit). The exporter emits a `missing_registry` gap edge
+  per (source × {live,replay}) rather than parsing the markdown → ~56 of the 60 missing_registry edges. Codifying that
+  matrix into a UAC registry is the single highest-leverage gap close.
+- **Honest-empty registries** still empty: collateral, fees, fund-structure, order-semantics, trading-agent → one
+  explicit `not_registered`/`needs_code_scan` edge each (never silently omitted). sim_assumptions = `needs_code_scan`
+  (F11). These are the Phase-2 backfills already tracked above.
+- **Min-data-to-run is only half-derivable** — feature-group lookback (max bar `period` per group) IS extracted from
+  features-service; the ML training-window factor is a RUNTIME config with no static registry constant, so the full
+  `min_data_to_run = feature_lookback × training_window` edge is emitted `partial` + `missing_extraction`. Closing it
+  needs an ML-training-window registry constant (or a model_registry static field).
+- **124 orphan nodes** — mostly venue / instrument_type / chain nodes present in venue registries but never referenced
+  by an archetype capability cell. Expected (registry breadth > MVP archetype coverage); the wizard greys them.
+- **25 unbuilt dead-ends** — (archetype, instrument_type) the capability registry marks `available` but where no venue
+  of that instrument-type's asset_group lists the instrument type (missing-adapter class). These are the use-case-3
+  "unbuilt" findings; each is a candidate adapter/registry build. Enumerated in `capability-orphan-report.txt`.
+
+All gaps are TYPED in the manifest (never silent) — the forcing-function state the plan intends.
