@@ -254,16 +254,18 @@ unchanged:
       1,012→781+281 + amm/betfair companions, all below 900 with facade modules preserved; budget ratcheted 24→21
       (census-honest); full QG green (292s). lxml advisory: not a direct execution-service dep (transitive) — tracked
       under the pip-audit class in Phase 4. ITEM COMPLETE — flipping checkbox:
-- [ ] [REFACTOR] P3. **cloud_feature_provider DONE 2026-06-11** — ml-service@e011c82: 1,202→774 facade +
+- [x] ✅ [REFACTOR] P3. COMPLETE 2026-06-11 — **cloud_feature_provider DONE** — ml-service@e011c82: 1,202→774 facade +
       `feature_query_support.py` (298) + `sports_feature_loader.py` (219); the loader resolves `get_storage_client`
       through the facade module so the existing test patch surface
       (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests).
       **training_orchestrator DONE 2026-06-11** — ml-service@b62c9fe: 1,027→879 + `training_targets.py` (243, pure
       functions, patch surface intact); `_add_ml_training_args` 243 L → 7-line dispatcher over 6 section helpers;
       both census Any-sites cleared; budget ratcheted 3→1 (only schema-provenance remains — Phase 3);
-      MAX_FILE_LINES 1300→1000 (one 963 L file left, drop-to-900 noted in-file). REMAINING in this item:
-      **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143).
-      Repo: unified-trading-pm.
+      MAX_FILE_LINES 1300→1000 (one 963 L file left, drop-to-900 noted in-file).
+      **PM scripts DONE 2026-06-11** — unified-trading-pm@075f64279: generate-ui-vision-pptx 1,717→21-line entry +
+      `scripts/ui_vision_pptx/` package (6 modules ≤607, python-pptx pyright carve-out extended to the package);
+      `gcs_migration_bundle_2026_05_08.py` (1,143) + its tests DELETED per script-homes (one-off whose migration
+      completed — Phase 9 ✅ 2026-05-20, plan archived). ITEM COMPLETE.
 
 ## Phase 1.5 — >900-line tail (post-sweep inventory 2026-06-11; the named worst offenders above are ALL split)
 
