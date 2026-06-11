@@ -178,17 +178,41 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 
 ### Operator enhancements (2026-06-11, Harsh + Ikenna)
 
-- [ ] [CODE] P1. **(B1) Image/build column — real status, not "unknown" (Cloud Build + CodeBuild)** — the Image column
-      currently shows "unknown" for all repos. Surface the LATEST build's **status** (passed / in-progress / failed) +
-      **time** + **commit sha** + a **deep-link to the build log** (GCP Cloud Build console for GCP; CodeBuild console
-      for AWS) — click the Image cell → the failing build's logs. Track BOTH **Cloud Build (GCP)** and **CodeBuild
-      (AWS)** per the deployment-ui cloud toggle (the AWS/GCP build-signal dispatch already exists —
-      deployment-api@15fc1e4; this enriches status/time/sha/log-link + fixes the unknowns). Motivating incident: a
-      deployment-api **CodeBuild** failure blocked a merge to main with no dashboard signal. **Compose with the existing
-      diagnosis todo** in `ci_dashboard_deployment_ui_2026_06_10.md` ("Image column unknown on the LOCAL dev stack —
-      Cloud Build API 400s from the laptop env") — root-cause the local 400 (ADC-user-vs-SA / quota-project) so it's not
-      just honest-unknown locally. Repos: deployment-api (`_cloud_builds_*`/`_code_builds_aws` enrich) + deployment-ui
-      (Image cell link + status/time).
+- [x] ✅ [CODE] [UI] P1. DONE 2026-06-11 — deployment-api@0676afc (signal) + deployment-api@3c29dac (ROOT-CAUSE region
+      fix) + deployment-ui@c984541 (Image cell render) | pw:L2 ✓ | regression:
+      tests/e2e/repos-promotion-blocked.spec.ts. **(B1) Image/build column — real status, not "unknown".** **ROOT CAUSE
+      of the "unknown": wrong region.** The backend queried Cloud Build triggers in `us-central1` (its `gcs_region`),
+      but ALL 57 triggers live in **asia-northeast1** (the workspace canonical region; `gcloud builds triggers list`:
+      global=0, us-central1=0, asia-northeast1=57, mapping 1:1 to repos) → 0 found → every repo honest-unknown. Fix:
+      pinned a dedicated `CLOUD_BUILD_REGION = "asia-northeast1"` constant (mirrors AWS `_code_builds_aws._AWS_REGION =
+      "ap-northeast-1"`, the operator matched-region 2026-05-11) used by the cloud-build queries — NOT `GCS_REGION`
+      (which leaks the us-central1 default). **AWS was already correct** (CodeBuild pinned ap-northeast-1). Backend
+      `BuildSignal` now carries `finish_time` + `log_url`; `ImageSignalDict` gains `last_build_time` +
+      `last_build_log_url`; the UI `ImageCell` renders status chip + build time + a click-through to the GCP Cloud Build
+      / AWS CodeBuild console log (honest-unknown stays "unknown" — no fabricated link). Repos: deployment-api
+      (`_cloud_builds_*`/`_code_builds_aws`/settings) + deployment-ui (`ImageCell` + `buildTimeLabel` + mock).
+- [ ] [CODE] P1. **(B1-followup) `gcs_region=us-central1` prod-config anomaly — BIG FINDING** — the running prod
+      deployment-api reports `gcs_region: us-central1` + `zones: us-central1-a/b/c` while ALL data + Cloud Build
+      triggers + the Artifact Registry are in `asia-northeast1` (workspace SSOT: "all GCS data is in asia-northeast1;
+      zone default asia-northeast1-c"). B1's Image-column fix is SCOPED (a dedicated `CLOUD_BUILD_REGION` constant, zero
+      blast radius) so it didn't touch this — but `gcs_region`/`effective_region` defaulting to `us-central1`
+      (`deployment_api_config.py:589` `self.gcs_region or "us-central1"`) is wrong for this workspace and could
+      mislocate VM-launch zones / GCS region / cross-region-egress checks. Operator decision needed: fix the
+      `effective_region` default + prod config to `asia-northeast1` (blast radius: VM zones, GCS) vs leave compute in
+      us-central1 deliberately. Repo: deployment-api. **Surfaced to operator 2026-06-11.**
+- [ ] [CODE] [UI] P2. **(test-robustness) `DependenciesPanel` intermittently white-screens the whole app** — in
+      `deployment-ui` `tests/smoke/stateful-flows.spec.ts` "Tab navigation sequence", navigating Deploy→…→Status
+      intermittently (~50% of isolated runs) trips the root ErrorBoundary with `Cannot read properties of undefined
+      (reading 'length')`; stack → `ServiceDetails.tsx` `DependenciesPanel`/`DependencyDag`. Fixed two contributing
+      stale mock-contract shapes (`mock-api.ts` `/dependencies` → real `DependenciesResponse` w/ `downstream_dependents`
+      + `outputs`; `/checklist` already correct) — that did NOT fully resolve it, so a deeper render-timing trigger
+      remains in `DependenciesPanel`/`DependencyDag` (a nested array transiently undefined during the rapid tab
+      transition). Durable fix = guard the nested-array `.length`/`.map` reads in `DependenciesPanel` + `DependencyDag`
+      so a partial/late payload renders empty instead of white-screening (a per-tab error boundary would also contain
+      blast radius). NOTE: this smoke suite does NOT run in any deployment-ui CI workflow (only `quality-gates-v2`/
+      `ui-quality-gates-v2`, neither runs `tests/smoke/`) — so it does not block promotion; it's a real app-robustness
+      bug + flaky local test. **Leftover: `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip` placeholder) needs `rm` —
+      sandbox-denied this session.** Repo: deployment-ui. Provenance: B1 investigation 2026-06-11.
 - [ ] [CODE] [UI] P2. **(B2) Repo drill-down build header** — when a repo is opened, populate a build-details header at
       the top: current build **status + source** (Cloud Build / CodeBuild), **last build time**, **commit sha** built,
       and a **link to the build log**. The Image-column click-through (B1) and this header share the same build signal.
