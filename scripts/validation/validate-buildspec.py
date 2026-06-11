@@ -13,9 +13,20 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import fnmatch
+import os
 import sys
 from pathlib import Path
 from typing import cast
+
+# Directory names EXCLUDED from the recursive walk (never descended into). Build/cache/
+# dependency trees hold no buildspec yaml — descending every repo's .venv across the
+# workspace is pure walk-waste. Excluded ≠ pruned/removed: dirs stay on disk, the walk
+# just doesn't enter them. (node_modules was already filtered post-hoc; now skipped at
+# the walk level alongside the rest.)
+EXCLUDE_DIR_NAMES: frozenset[str] = frozenset(
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+)
 
 try:
     import yaml
@@ -103,16 +114,24 @@ def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | No
 
 
 def find_buildspec_files(root: Path) -> list[Path]:
+    """Find buildspec yaml under root, skipping EXCLUDE_DIR_NAMES trees.
+
+    Single os.walk replaces two ``root.rglob`` passes (each of which descended every .venv
+    across the workspace). The per-file match conditions are unchanged, so the result set is
+    identical — only the dependency/build trees are no longer enumerated.
+    """
     found: list[Path] = []
-    for p in root.rglob("buildspec*.yaml"):
-        if "node_modules" in str(p):
-            continue
-        if "aws" in p.name.lower() or p.name == "buildspec.yaml":
-            found.append(p)
-    for p in root.rglob("buildspec*.yml"):
-        if "node_modules" in str(p):
-            continue
-        found.append(p)
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIR_NAMES]
+        for name in filenames:
+            p = Path(dirpath) / name
+            if "node_modules" in str(p):
+                continue
+            if fnmatch.fnmatch(name, "buildspec*.yaml"):
+                if "aws" in name.lower() or name == "buildspec.yaml":
+                    found.append(p)
+            elif fnmatch.fnmatch(name, "buildspec*.yml"):
+                found.append(p)
     return sorted(set(found))
 
 
