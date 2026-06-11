@@ -276,6 +276,14 @@ unchanged:
 
 ## Phase 4 — Residual violation classes
 
+- [ ] [CODE] P2. **lxml PYSEC-2026-87 fleet bump (coordinated unit)** — 2026-06-11 diagnosis: lxml is NOT a UAC dep;
+      the vulnerable 5.4.0 lock lives in execution-service (direct dep `lxml>=5.0,<6.0` pyproject:290) +
+      e2e-testing/system-integration-tests locks, and the fleet canonical range `lxml>=5.0,<6.0`
+      (PM `workspace-constraints.toml:58` + `canonical-dependency-manifest.json:204-205`) CONFLICTS with the ≥6.1.0
+      fix. One unit: widen the PM canonical range to `>=6.1.0,<7.0.0`, bump execution-service (+e2e/SIT) pyproject,
+      re-lock, full tests (lxml 6.x API check on the consuming code), ratchet execution-service's pip-audit class.
+      Repos: unified-trading-pm + execution-service + e2e-testing + system-integration-tests.
+
 - [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
       (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
       QG running). All three QG-green at the new budgets before commit.
