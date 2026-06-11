@@ -92,7 +92,7 @@ source:
       conversion; do not double-fix — converge there). Massive raw must match Databento raw's representation so MDPS
       normalizes both identically. ALSO fold in: batch rows pre-stamp `available_at=now(UTC)` (`:472/:484/:503`) which
       the writer persists (orchestrator stamps only when the column is absent) — must become `t_close`-anchored.
-- [ ] [CODE] P0. **Databento `ohlcv_1m` — MDPS's protective shift is column-NAME-keyed and the prod raw shape that
+- [x] ✅ [CODE] P0. **Databento `ohlcv_1m` — MDPS's protective shift is column-NAME-keyed and the prod raw shape that
       defeats it already exists (METASTABLE, one reprocess from corpus corruption — MTDS audit re-verification
       2026-06-10, reconciled against this plan's 06-08 data-state)**: the issue doc's own two data points, connected:
       (1) prod raw carries OPEN-edge values under the column name **`timestamp`** (AAPL 2026-05-15 sample — "`timestamp`
@@ -108,13 +108,19 @@ source:
       (`databento_adapter.py:918-919`) and keeps writing the laundered shape.** Also: MTDS stamps raw-surface
       `available_at ≈ bar_open+10ms` (`orchestrator.py:1283-1319`) — open-anchored on a closed bar (CF-8 spirit; the
       processed layer re-derives, raw consumers would inherit it). Fix: (a) MTDS ingest converts `ts_event→t_close`
-      interval-aware (`compute_bar_close_boundary`) scoped to `ohlcv_*` data_types (trades/tbbo `ts_event` is point
+      interval-aware (`compute_bar_close_boundary`) scoped to `ohlcv_*` data*types (trades/tbbo `ts_event` is point
       event time — alias stays) + anchor raw `available_at` to `t_close`; (b) make the MDPS shift content/source-aware,
       not column-name-keyed (it must not silently NOT-shift a `timestamp`-named open-edge input); (c) UAC
       `external/databento/schemas.py:13` calls `DatabentoOhlcvBar.ts_event` "Bar close timestamp" — WRONG (bar start);
       fix the docstring. (d) Data-state: census WHICH raw files carry `ts_event` vs `timestamp` naming before the next
       tradfi candle rebuild. Evidence: `plans/audit/results/mtds_mdps_master_audit_2026_06_09.md` § Re-verification B2.
-      — market-tick-data-service + market-data-processing-service + unified-api-contracts
+      — market-tick-data-service + market-data-processing-service + unified-api-contracts — **SHIPPED 2026-06-11
+      (slot-4, QG green ×3)**: (a) **market-tick-data-service@7123539**
+      `databento_adapter._convert_ohlcv_open_edge_to_close` (`compute_bar_close_boundary`, interval-aware via
+      `_OHLCV_DATA_TYPE_TIMEFRAME`, scoped
+      `ohlcv*\*` only —     trades/tbbo untouched; wired in BOTH the path-streaming + batch-download paths) + row-level **`bar_edge="close"`     marker COLUMN** (deliberately not parquet footer metadata — MDPS reads raw via polars→`to_pandas()`and footer     does not survive; a column does) +`validate_day_partition_alignment(close_edge=)`half-open`(day,
+      day+1]`     window (the day's last bar closes at next-day midnight; guard keyed on the marker in     `engine/orchestrator/partitioned_writer.py`) + raw `available_at`now t_close-anchored for free (writer stamps     from the post-alias`timestamp`); 10 tests `tests/unit/test_databento_bar_edge.py`; (b)     **market-data-processing-service@c3a4bfb** `ohlcv_passthrough.\_is_start_of_period_input`— shift trigger is     SOURCE/CONTENT-aware:`bar_edge`marker → row-level`source`provenance (databento/massive=open-edge;     yahoo/barchart=close-edge, never double-shift) → literal`ts_event` name → census-grounded unmarked-`ohlcv_1m`     default=shift (unmarked 15m/24h = yahoo/barchart close-edge corpus → no shift); 6 discriminator tests in     `tests/unit/test_tradfi_adapters.py::TestBarEdgeShiftDiscriminator`; (c) **unified-api-contracts@6c5fad2**     `ts_event`docstrings corrected to bar OPEN in`schemas.py`+ both`schemas_columns.py`sites + edge-convention     note on`DatabentoOhlcvBar`; (d) census already done 2026-06-10     (`mtds_honest_absence_swallow_remediation_2026_06_10.md`— 24/24`timestamp`-named, zero `ts_event`). Codex SSOT     updated: `codex/02-data/bar-boundary-candle-edge-convention.md`
+      § "Databento raw corpus boundary".
 - [x] ✅ [CODE] P2. Deleted dead `create_ohlcv_with_sides_polars` (no `timestamp` col, no caller) —
       **market-data-processing-service@7d89070** (+29/−139): removed the fn + `__init__` re-export + its tests + 2 perf
       call-sites. rg across all of `.tabs/7` confirmed zero non-test callers. QG exit 0.
