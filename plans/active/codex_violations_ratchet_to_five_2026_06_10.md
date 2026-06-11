@@ -90,7 +90,7 @@ unchanged:
 ## Per-repo current state (slot-3 audit 2026-06-10)
 
 > **2026-06-11 ratchet snapshot (this plan's session 1)** — budgets now: deployment-api **24** (25-bump reverted),
-> execution-service **21**, market-tick-data-service 16 (V=15 — ratchet to 15 rides the adapters-tail unit),
+> execution-service **21**, market-tick-data-service **0** (16→15→0 2026-06-11, mtds_coverage_75_and_codex_zero plan — MTDS@cddb122; MIN_COVERAGE also 60→75, measured 82.2%),
 > strategy-service **10**, market-data-processing-service **7**, deployment-service **1**, ibkr **1**, ml-service **3**,
 > instruments 4, unified-trading-api **0 (pinned)**, batch-live-recon 1, features/UTL/PM 0, UAC 7 (ratcheted 7→2
 > @128e065; lxml = execution-service+canonical-range todo). All six P1 monoliths + the P2 >1k tail are SPLIT and
