@@ -218,7 +218,13 @@ unchanged:
       module-attr patch surfaces (`server.state_store.utcnow/to_utc/log_activity`) + bare-name cross-calls — a
       zero-caller-edit split is impossible (mixins = banned shim). Proper unit: decompose by entity/concern AND migrate
       the test patch targets in the same commit (pre-audit the full patch manifest first). Repo: agent-orchestrator.
-- [ ] [REFACTOR] P1. **orchestrator HALF DONE 2026-06-11** — market-tick-data-service@1681f85: orchestrator.py
+- [x] ✅ [REFACTOR] P1. COMPLETE 2026-06-11 — orchestrator half @1681f85 (below) + **adapters half @eb33603**:
+      tardis_adapter 2,907→449 facade + 5 transport/concern modules (symbol_resolution/csv_transport/cefi_shards/
+      batch_download/bulk_download, all <900); solana_defi_handler 2,175→658 facade + 3 venue/stage modules
+      (drift/amm/yield); 255 patch-surface tests green, 94/94 defs conserved, zero cross-repo code refs; budget
+      ratcheted 16→15 (file-size class still fires on websocket_runner 912 / solana_lst_archival 988 /
+      rebuild_sports_manifest_v9 1137 / migrate_*_v9 1284+1056 — named next targets in-file). Original half:
+      market-tick-data-service@1681f85: orchestrator.py
       4,219 L → `engine/orchestrator/` package (7 modules ≤824 L: venue_fetch / partitioned_writer / sentinels /
       manifest_finalize / preflight / symbol_rules / _state + thin `__init__`); namespace-patch regression in the
       dt-start-date gate fixed (sentinels route UAC gates via `_orch.`); foreign asset_group-provenance fix
@@ -289,6 +295,15 @@ unchanged:
 - [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
       (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
       QG running). All three QG-green at the new budgets before commit.
+- [x] ✅ [CODE] P2d. **MDPS ≤5 ACHIEVED 2026-06-11** — market-data-processing-service@4b6c53a: budget 7→1 (only
+      schema-provenance remains — Phase 3). Cleared: deep-imports (registry sites flipped to one-level facade),
+      os.getenv, asyncio.run-in-loop, imports-in-fn, run_lifecycle pairing (live_mode_handler), preflight
+      emit_preflight_skip (process_handler + orchestration_service). 31 files, full QG green.
+- [ ] [TEST] P2. **MTDS `tests/market_interface/` (70 test files) is NOT collected by the QG** (2026-06-11 finding,
+      eb33603 unit) — the gate runs the default `PYTEST_UNIT_DIR` (`tests/unit/` [+integration]), so the adapter
+      canonical-output suites never run in QG/CI. Fix: set `PYTEST_UNIT_DIR="tests/"` before the base-service source
+      line per the documented per-family override (codex/06-coding-standards/quality-gates.md), absorb any newly
+      collected failures in the same unit. Repo: market-tick-data-service.
 - [x] ✅ [CODE] P2c. **none-budget repos pinned at 0 (census-honest) 2026-06-11** — alerting-service@c41baf1,
       client-reporting-api@c8a32ff, fund-administration-service@3d32a3e, greeks-service@9efb1e7,
       trading-agent-service@09d8dae (each double-QG-green at budget 0 before ship);

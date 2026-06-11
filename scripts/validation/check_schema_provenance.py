@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -17,6 +18,23 @@ WORKSPACE_ROOT = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos")
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 
 EXCLUDED_REPOS = {"unified-api-contracts"}
+
+# Build/dependency dirs that NEVER contain repo source schemas — EXCLUDED from the walk so the
+# scan never descends into them (these hold third-party / generated code, not repo source). A
+# plain repo_path.rglob("*.py") would still enumerate every .venv file — ~14k on a big repo —
+# before discarding them per-path. (Naming: these dirs are excluded, not "pruned"/removed.)
+EXCLUDE_DIR_NAMES = frozenset(
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+)
+
+
+def iter_source_py(repo_path: Path) -> list[Path]:
+    """All repo `.py` files, EXCLUDING EXCLUDE_DIR_NAMES dirs (os.walk never descends into them)."""
+    out: list[Path] = []
+    for root, dirs, files in os.walk(repo_path):
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIR_NAMES]
+        out.extend(Path(root) / fn for fn in files if fn.endswith(".py"))
+    return out
 
 # Patterns for schema definitions
 CLASS_BASEMODEL_RE = re.compile(r"class\s+(\w+)\s*\(\s*[^)]*BaseModel\s*[^)]*\)")
@@ -40,7 +58,7 @@ def should_exclude_file(rel_path: str) -> bool:
     Q1.2, 2026-05-11.)
     """
     parts = Path(rel_path).parts
-    if "tests" in parts or "scripts" in parts or ".venv" in parts or "build" in parts:
+    if "tests" in parts or "scripts" in parts or any(p in EXCLUDE_DIR_NAMES for p in parts):
         return True
     if rel_path.endswith("__init__.py"):
         return True
@@ -108,9 +126,15 @@ def find_schema_definitions(content: str) -> list[str]:
     return sorted(found)
 
 
-def schema_imported_from_uac_uic(repo_path: Path, schema_name: str) -> bool:
-    """Check if schema_name is imported from UAC or UAC.internal anywhere in repo."""
-    for py_file in repo_path.rglob("*.py"):
+def collect_uac_uic_imports(py_files: list[Path], repo_path: Path) -> set[str]:
+    """All names imported from UAC / UAC.internal across the repo — collected in ONE pass.
+
+    Replaces the former per-schema `schema_imported_from_uac_uic()` which re-walked + re-read the
+    ENTIRE repo for every schema name found (O(files * schemas) -> e.g. 157 s on execution-service).
+    Same semantics: a name in this set was imported from UAC/UIC by some non-excluded file.
+    """
+    names: set[str] = set()
+    for py_file in py_files:
         rel = py_file.relative_to(repo_path)
         if should_exclude_file(str(rel)):
             continue
@@ -119,13 +143,11 @@ def schema_imported_from_uac_uic(repo_path: Path, schema_name: str) -> bool:
         except OSError:
             continue
         for m in IMPORT_UAC_UIC_RE.finditer(text):
-            imports_str = m.group(2)
-            for part in imports_str.split(","):
-                part = part.strip()
-                name = part.split(" as ")[0].strip()
-                if name == schema_name:
-                    return True
-    return False
+            for part in m.group(2).split(","):
+                name = part.strip().split(" as ")[0].strip()
+                if name:
+                    names.add(name)
+    return names
 
 
 def scan_repo(repo_path: Path, repo_name: str) -> list[tuple[str, str]]:
@@ -134,7 +156,11 @@ def scan_repo(repo_path: Path, repo_name: str) -> list[tuple[str, str]]:
     if not repo_path.is_dir():
         return violations
 
-    for py_file in repo_path.rglob("*.py"):
+    py_files = iter_source_py(repo_path)  # walk ONCE, .venv/build/etc pruned at the dir level
+    # Collect every UAC/UIC-imported name ONCE up front (was an O(n²) full-repo re-walk per schema).
+    uac_uic_imported = collect_uac_uic_imports(py_files, repo_path)
+
+    for py_file in py_files:
         rel = py_file.relative_to(repo_path)
         rel_str = str(rel)
         if should_exclude_file(rel_str):
@@ -146,13 +172,11 @@ def scan_repo(repo_path: Path, repo_name: str) -> list[tuple[str, str]]:
         except OSError:
             continue
 
-        schemas = find_schema_definitions(content)
-        for schema_name in schemas:
+        for schema_name in find_schema_definitions(content):
             # Don't flag a locally-defined type that is ALSO imported from UAC/UIC somewhere in the
-            # repo (the local def then shadows the canonical one — that's a "remove the local def, use
-            # the import" cleanup, but it's not a "self-declared schema" violation). Wires up the
-            # previously-defined-but-never-called schema_imported_from_uac_uic() helper. (Harsh slot-1 Q6, 2026-05-11.)
-            if schema_imported_from_uac_uic(repo_path, schema_name):
+            # repo (the local def shadows the canonical — a "use the import" cleanup, not a
+            # self-declared-schema violation). O(1) membership vs the old per-schema full re-walk.
+            if schema_name in uac_uic_imported:
                 continue
             violations.append((rel_str, schema_name))
 

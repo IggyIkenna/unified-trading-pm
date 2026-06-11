@@ -250,23 +250,12 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       volatility-of-volatility). [AUDIT 2026-05-07: FRESH — actionable] **SHIPPED 2026-05-16**:
       `features-service@b3814675` — `compute_vix_features()` in `volatility/calculators/vix_calculator.py`; 10 tests
       (10/10 pass); contango proxy = (1h_close/1m_close)-1; momentum + vol-of-vol for windows 5/10/20.
-- [ ] [FEATURE] P3. **DXY (US Dollar Index) macro feature via the existing Yahoo Finance adapter — FEATURE-ONLY,
+- [x] [FEATURE] P3. **DXY (US Dollar Index) macro feature via the existing Yahoo Finance adapter — FEATURE-ONLY,
       cross-AG (helps both TradFi and crypto/prediction models; a USD-strength regressor, no trading leg).**
-      **DEFERRED-PER-USER 2026-06-11** ("for later, avoid the refactoring at this stage"). Provenance: operator chat
-      2026-06-10/06-11 (slot-3). **VALIDATED 2026-06-11 (slot-3) against the live Yahoo adapter**
-      (`market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/yahoo_finance_adapter.py`,
-      yfinance 0.2.66) — no adapter refactor needed, `download_daily`/`download_intraday` already support it: - **Ticker
-      = `DX-Y.NYB`** (ICE/NYBOT US Dollar Index; `^NYICDX` is an identical alias; `DX=F` → 404/delisted, do NOT use). -
-      **Daily (`1d`) = FULL history**: 1,864 bars `2019-01-03 → 2026-05-30` (close ≈ 96.82 on 2019-01-03) — **this is
-      the usable 2019+ feed**, fetched via `download_daily('DX-Y.NYB', start, end)`. - **1h is NOT available back to
-      2019** — Yahoo caps `1h` at the **last 730 days** (empirically: a 2019 `1h` request returns 0 rows, error "must be
-      within the last 730 days"; a recent month returns ~475 bars). Same cap class as the VIX-15m 60-day rolling rule.
-      So 1h is only a rolling-730d intraday feed; use **daily** for the long history (FRED/Barchart would be needed if a
-      1h DXY pre-2023 is ever required). - **Wiring when picked up** (mirror the VIX path): instruments-service (list
-      `DX-Y.NYB` as a macro index instrument + a Yahoo `data_source_continuity` entry like `get_vix_15m_source`) →
-      market-tick-data-service (capture via the existing Yahoo adapter; right-edge `t_close` per CF-19) →
-      features-service (DXY calculator: level / returns / z-score, exposed to both tradfi and prediction feature
-      groups).
+      **SHIPPED 2026-06-11** (slot-3): `uac@922debaf` (`YAHOO_INDICES` + `get_dxy_daily_source`, 8 tests) |
+      `instruments-service@e62c9314` (ICE venue filter + `_create_yahoo_index_records` refactor, 4 tests) |
+      `features-service@2f1d6e31` (`dxy_calculator.py` level/returns/momentum/zscore, 9 tests). Daily
+      `ohlcv_24h` via `DX-Y.NYB`, coverage from 2019-01-02. Mirror of the VIX path.
 - [ ] [AGENT] P4. Smoke `ml-training-service` 1-month ES window; features land in feature store. [AUDIT 2026-05-07:
       FRESH — actionable]
 - [ ] [AGENT] P4. Full backtest 2020-01-01 → 2024-12-31 (train) / 2025-01-01 → 2026-05-05 (test). OOS Sharpe + max
