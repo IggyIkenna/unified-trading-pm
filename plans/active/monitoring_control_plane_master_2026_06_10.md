@@ -105,11 +105,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 
 ### New todos from the charter
 
-- [ ] [CODE] P1. **(N1) ci-failures alert enrichment — reason, not ad-hoc.** `ci_failure_watcher.py` Slack bodies must
-      carry the actionable reason: the failing **check/job name**, a short **`gh run view --log-failed` excerpt** (last
-      error lines, truncated), and the **run/PR deep-link** — for both the FAIL and the fail→green RECOVER bookend.
-      Compose with the alert-ledger persist (already shipped) so the enriched body is queryable too. Repo:
-      unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py` + `notify-slack.yml` body).
+- [x] ✅ [CODE] P1. DONE 2026-06-11 — unified-trading-pm@5953252c4 (quickmerge PR #262 → main, auto-merging). **(N1)
+      ci-failures alert enrichment — reason, not ad-hoc.** `failure_reason()` + `_log_failed_excerpt()` +
+      `enrich_failure_reasons()` added to `ci_failure_watcher.py`; each FAILING transition now renders the failed **job
+      → step** name(s) + a truncated `gh run view --log-failed` excerpt (last 10 lines, prefix-stripped, ≤500 chars)
+      under the existing `<run>` deep-link. Best-effort (any gh error → alert still posts, just without the extra
+      reason). The enriched text flows through `notify-slack.yml` verbatim (no workflow change) + the alert ledger.
+      RECOVER bookend keeps its run deep-link (a green recovery needs no failure-reason). 8 new unit tests (65 total
+      green; ruff + basedpyright clean). Repo: unified-trading-pm.
 - [ ] [CODE] P2. **(N2) Last-green SHA + time column** on the `/repos` overview — per repo per branch, the most-recent
       SHA whose `quality-gates-v2` concluded success + its timestamp ("green as of <sha> · <age>"). Distinct from the
       current branch-head SHA (head may be red/pending). Needs the per-SHA v2 conclusion → **gated on GH_PAT
