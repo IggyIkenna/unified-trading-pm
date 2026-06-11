@@ -4,7 +4,7 @@ name: SIT Starvation Detector
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 concurrency:

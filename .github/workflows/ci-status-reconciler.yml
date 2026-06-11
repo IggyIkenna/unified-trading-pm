@@ -22,7 +22,7 @@ name: ci-status-reconciler
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # every 10 min — tightened from 30 min 2026-06-04 to collapse the dep-order tier-wait (FEATURE→STAGING advance + drift reconcile latency)
+    - cron: "*/15 * * * *" # every 15 min — was */10 (2026-06-04 tier-wait); relaxed */10→*/15 to cut Actions spend (billing 2026-06-11), keeps most of the tier-wait benefit
   workflow_dispatch:
     inputs:
       dry_run:

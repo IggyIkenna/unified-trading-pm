@@ -124,7 +124,10 @@ def _check_gcp_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
         from google.cloud import storage as gcs  # type: ignore[import-untyped]
 
         client = gcs.Client(project=_DEFAULT_GCP_PROJECT_ID)
-        existing = {b.name for b in client.list_buckets()}
+        existing: set[str] = {
+            str(b.name)  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+            for b in client.list_buckets()  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        }
         return {spec.name: spec.name in existing for spec in specs}
     except Exception:
         # Fall back to subprocess per-bucket if GCS client unavailable
@@ -151,9 +154,12 @@ def _check_aws_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
     try:
         import boto3  # type: ignore[import-untyped]
 
-        s3 = boto3.client("s3")
-        response = s3.list_buckets()
-        existing = {b["Name"] for b in response.get("Buckets", [])}  # noqa: qg-empty-fallback
+        s3 = boto3.client("s3")  # pyright: ignore[reportUnknownMemberType]
+        response = s3.list_buckets()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        existing: set[str] = {
+            str(b["Name"])  # noqa: qg-empty-fallback  # pyright: ignore[reportUnknownArgumentType, reportTypedDictNotRequiredAccess]
+            for b in response.get("Buckets", [])  # pyright: ignore[reportUnknownVariableType]
+        }
         return {spec.name: spec.name in existing for spec in specs}
     except Exception:
         # Fall back to subprocess per-bucket
