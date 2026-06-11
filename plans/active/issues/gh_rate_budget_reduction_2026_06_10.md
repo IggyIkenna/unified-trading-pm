@@ -55,13 +55,17 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       burner (~8 GitHub calls × ~25 repos per coverage refresh). `If-None-Match` added to the shared `gh_get_json` (304
       = free; TTL-cache extended to hold the ETag + last body) + the free `GET /api/repos/gh-rate-limit` route
       (mock-mode aware). deployment-api@061a1b5f | QG green (170s) | 5 ETag tests. This is the dominant REST reduction.
-- [ ] [INFRA] P1 (**BLOCKED-OPERATOR-DECISION**). **Create a GitHub App installation token for the read-only pollers** —
-      a GitHub App gets its OWN rate pool (separate from the user PAT), giving the fleet a second 5000+/hr REST budget
-      without touching the workers' push PAT. **Operator-gated**: the current PAT lacks app-management scope
-      (`admin:public_key, gist, read:org, repo`) + App registration needs the GitHub UI/manifest flow — an agent cannot
-      create it. Decision: register an App (recommended) vs. live with the shared PAT + the ETag wins. Once it exists,
-      point CIReconcile + the rate monitor + deployment-api reads at it. Target repos: `agent-orchestrator` +
-      `deployment-api` (+ `deployment-service` secret wiring).
+- [x] ✅ [INFRA] P1. **Create a GitHub App installation token for the read-only pollers** —
+      `uts-ci-poller` GitHub App (App ID 4025197, installation 139531741) registered + installed on IggyIkenna account.
+      Credentials stored in GCP SM (`gh-app-ci-poller-{app-id,private-key,installation-id}` in `central-element-323112`)
+      and in GitHub Actions secrets on `unified-trading-pm`, `agent-orchestrator`, `deployment-api`.
+      `promotion-lag-monitor.yml` switched to App pool via `actions/create-github-app-token@v1`
+      (unified-trading-pm@9f3510c06 — push pending rate-limit reset).
+      `agent-orchestrator` extended: `GhRateLimitMonitor(label="app")` second instance + `make_app_fetch_fn`
+      (RS256 JWT→installation token with 5-min-before-expiry cache) + `/api/gh-rate-limit` returns `app:{}` sub-object.
+      `pyjwt[cryptography]` declared explicitly.
+      agent-orchestrator@16924e2 — QG 487 passed | push pending rate-limit reset.
+      **Deployment**: vm-0 needs `GH_APP_CI_POLLER_{APP_ID,PRIVATE_KEY,INSTALLATION_ID}` from SM to activate App monitor.
 - [x] ✅ [PERF] P2. **ETag `promotion_lag_monitor.py` + persist via actions/cache** — the safe, high-value realization
       of the burn-reduction below: the lag monitor compares **25 repos × 4 directions = ~100 `gh api compare` calls/run
       × 3 runs/hr = ~300 PAT calls/hr** (a bigger burner than CIReconcile, and a pure read-only monitor = low blast
