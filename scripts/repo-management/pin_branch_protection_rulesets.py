@@ -17,8 +17,19 @@ The required QG context is DERIVED from the repo's live workflow file (no hardco
 check names), so re-running after a workflow migration auto-re-pins:
   - repo has ``.github/workflows/quality-gates-v2.yml`` →  ``<job name:> / quality-gates-v2``
   - else repo has ``.github/workflows/workspace-qg.yml``  →  ``<job name:> / quality-gates``
-Staging additionally always requires the context ``Staging Lock Check / check-staging-lock``
-(workflow name / job name as emitted by staging-lock-check.yml).
+Staging additionally always requires the context ``check-staging-lock`` — the BARE job name
+emitted by staging-lock-check.yml. (Unlike quality-gates-v2, which is a *reusable-workflow*
+call → GitHub prefixes its check with the caller job name "Quality Gates (<repo>) / …", the
+staging-lock job is a DIRECT job, so its check-run context is just the job name, no prefix.
+Requiring the prefixed "Staging Lock Check / check-staging-lock" leaves the required check
+permanently un-reported → PR stuck BLOCKED. Incident: deployment-api #56, 2026-06-11.)
+
+Cloud symmetry: a repo that builds a container image on AWS CodeBuild emits an
+``AWS CodeBuild <region> (<repo>)`` commit status on the LDR head; that build MUST gate the
+LDR→staging promotion exactly as quality-gates-v2 does. The context is DERIVED from the live
+status (no hardcoded region), and added to the STAGING ruleset only — the staging PR head is
+the LDR commit that carries the status, whereas a staging→main PR head can be a post-squash
+SHA the build never ran on (requiring it on `main` would dead-block promotions).
 
 Idempotent: only rulesets whose current contexts differ from the desired set are PUT.
 Default is DRY-RUN. Pass ``--apply`` to perform the writes.
@@ -42,7 +53,7 @@ import sys
 
 ORG = "IggyIkenna"
 WORKFLOW_REF_DEFAULT = "live-defi-rollout"
-STAGING_LOCK_CONTEXT = "Staging Lock Check / check-staging-lock"
+STAGING_LOCK_CONTEXT = "check-staging-lock"  # BARE job name (direct job, not a reusable-wf call — see docstring)
 
 # semver-agent stamps the post-QG `chore(release)` bump by DIRECT-PUSHing to `staging` (as the
 # admin GH_PAT, after quality-gates-v2 already passed pre-SIT). The staging required-checks would
@@ -194,6 +205,25 @@ def put_ruleset(
     return True, current_contexts(json.loads(p.stdout))
 
 
+def derive_codebuild_context(repo: str, ref: str) -> str | None:
+    """Return the ``AWS CodeBuild <region> (<repo>)`` status context this repo emits on ``ref``'s
+    HEAD, or None if the repo builds no AWS image (libraries / PM emit no such status). Cloud
+    symmetry: a repo that builds a container image on AWS must gate its LDR→staging promotion on
+    that build, exactly as it gates on quality-gates-v2. Derived from the live commit status (no
+    hardcoded region/name) so a region change auto-re-pins on the next run."""
+    r = gh(["api", f"repos/{ORG}/{repo}/commits/{ref}/statuses"])
+    if r.returncode != 0:
+        return None
+    try:
+        for s in json.loads(r.stdout):
+            ctx = s.get("context")
+            if isinstance(ctx, str) and ctx.startswith("AWS CodeBuild"):
+                return ctx
+    except Exception:
+        return None
+    return None
+
+
 def classic_enforce_admins(repo: str, branch: str = "staging") -> bool | None:
     """True/False if staging classic protection has enforce_admins on/off; None if no protection."""
     r = gh(["api", f"repos/{ORG}/{repo}/branches/{branch}/protection/enforce_admins"])
@@ -241,9 +271,14 @@ def main() -> int:
                 f"{repo}: workflow job name is not 'Quality Gates ({repo})' "
                 f"→ derived context '{qg}' (workflow-name bug? fix the workflow, not the ruleset)"
             )
+        # Cloud symmetry: gate LDR→staging on the AWS image build too (staging ruleset only —
+        # the staging PR head is the LDR commit that carries the CodeBuild status; a main PR head
+        # can be a post-squash SHA the build never ran on). None for non-AWS-image repos.
+        cb = derive_codebuild_context(repo, args.ref)
+        staging_ctx = [qg, STAGING_LOCK_CONTEXT, *([cb] if cb else [])]
         targets = [
             ("require-quality-gates", [qg]),
-            ("require-staging-lock-check", [qg, STAGING_LOCK_CONTEXT]),
+            ("require-staging-lock-check", staging_ctx),
         ]
         for rsname, desired in targets:
             rs = get_ruleset(repo, rsname)
