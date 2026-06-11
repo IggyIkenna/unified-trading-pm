@@ -148,8 +148,17 @@ unchanged:
       (public surface identical). - If round-tripping by hand is error-prone, ship a one-shot
       `scripts/dump_registry_to_yaml.py` that emits the data file from the current literals (the migration), then delete
       the literals. Remove the `FUNCTION_SIZE_EXTRA_EXCLUDES` glob. Repo: features-service.
-- [ ] [REFACTOR] P1. **instruments-service `orchestrator.py` (8,192 L / 89 functions) — abstract by asset-group +
-      core.** The module mixes per-asset-group logic with venue/date core + sink. Suggested package
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — instruments-service@cb51c98: orchestrator.py 8,192 L → `engine/orchestrator/`
+      package (16 cohesion modules + 863-line thin `__init__` re-exporting every symbol; defi/sports(×5)/prediction…
+      per the plan grouping extended by real cohesion); weather.py deep-import flipped to the new one-level facade
+      (cleared the surfaced deep-import class → V back to 4/4); FUNCTION_SIZE exclude narrowed from the whole monolith
+      to 2 carrying modules (process.py 1,963 L legacy `process_instruments` body + sports_reference.py — justified
+      in-file citing this plan); contract-call conservation verified (114 ≥ baseline 99); full QG green. Follow-up:
+      decompose `process_instruments()` (next todo). Original: **instruments-service `orchestrator.py` (8,192 L / 89
+      functions) — abstract by asset-group + core.**
+- [ ] [REFACTOR] P3. **instruments-service `engine/orchestrator/process.py` (1,963 L)** — decompose the legacy
+      `process_instruments()` (1,931-line function body, moved verbatim in the 2026-06-11 split) by stage/asset-group;
+      then remove the process.py + sports_reference.py FUNCTION_SIZE_EXTRA_EXCLUDES entries. Repo: instruments-service. The module mixes per-asset-group logic with venue/date core + sink. Suggested package
       `engine/orchestrator/`: `defi.py`
       (`_build_defi_venues`/`clear_defi_universe_cache`/`_get_defi_manifest_high_watermarks`/
       `_enforce_defi_monotonicity`/`filter_defi_instruments_by_relevance`/`_normalize_wrapped_token`), `sports.py`
@@ -192,8 +201,13 @@ unchanged:
       module-attr patch surfaces (`server.state_store.utcnow/to_utc/log_activity`) + bare-name cross-calls — a
       zero-caller-edit split is impossible (mixins = banned shim). Proper unit: decompose by entity/concern AND migrate
       the test patch targets in the same commit (pre-audit the full patch manifest first). Repo: agent-orchestrator.
-- [ ] [REFACTOR] P1. **market-tick-data-service `orchestrator.py` (4,219 L)** + `tardis_adapter.py` (2,880) +
-      `solana_defi_handler.py` (2,125) — decompose by venue/transport. Repo: market-tick-data-service.
+- [ ] [REFACTOR] P1. **orchestrator HALF DONE 2026-06-11** — market-tick-data-service@1681f85: orchestrator.py
+      4,219 L → `engine/orchestrator/` package (7 modules ≤824 L: venue_fetch / partitioned_writer / sentinels /
+      manifest_finalize / preflight / symbol_rules / _state + thin `__init__`); namespace-patch regression in the
+      dt-start-date gate fixed (sentinels route UAC gates via `_orch.`); foreign asset_group-provenance fix
+      (MTDS@5df7872-adjacent) grafted into manifest_finalize; contract-call conservation 79 ≥ baseline 67; full QG
+      green. REMAINING in this item: `tardis_adapter.py` (2,880) + `solana_defi_handler.py` (2,125) — decompose by
+      venue/transport. Repo: market-tick-data-service.
 - [ ] [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
       + 6 archetype-family modules; batch_handler.py 1,570→847 + 4 concern modules; TARGET_UNIVERSE content-hash
       identical pre/post; budget ratcheted 11→10 (census-honest). Cross-repo finding surfaced: execution-service
