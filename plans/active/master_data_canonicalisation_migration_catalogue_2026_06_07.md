@@ -341,10 +341,24 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
 - [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: re-dry-run migrator+rebuild on CURRENT HEAD (R7)
       writing projected `_index` → `manifest_diff` report vs live `_index` → dev `restart-deployment-stack.sh     --api`
       render → operator eyeballs goalposts → assemble ⑬–⑲ verdict in the AG plan. ALL 5 AGs. per-AG slots.
-- [ ] [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
+- [x] ✅ [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
       could-exist seed**; then re-run `build_instrument_catalogue` + `enumerate_expected_universe v2` per AG. (Note:
       collection is reference-data — independent of the drained market-data writers; resuming does NOT violate the
-      pre-migration drain.) slot-3. Repos: instruments-service + deployment-service.
+      pre-migration drain.) slot-3. Repos: instruments-service + deployment-service. — **✅ COMPLETE 2026-06-11
+      (slot-4).** Root cause = 3 layers (scheduled producers structurally DEAD for months — the
+      `instruments-service-daily` Workflow targets a nonexistent Cloud Run job `instruments-service`, FAILED daily since
+      ≥2026-03-13; capture was actually carried by manual `instr-backfill-*` VM launches that stopped ~05-22; the 06-08
+      drain then paused the already-dead schedulers; + defi-specific c7d9bb2 venue-tag regression silently dropping 21
+      venues, FIXED instruments-service@0ae4e481). Both IS schedulers re-ENABLED (ONLY those two —
+      consolidator/market-data stay drained). Backfills run locally (per-VM shards `r4-is-backfill-local*`): cefi
+      05-23→06-11 (15/16 venues; DERIBIT-COMBO upstream 400), defi 05-09→06-11 `--force` (52–53/57;
+      AAVE_V3-OPTIMISM/MORPHO×2/DRIFT vendor-side), tradfi 06-08→06-11 (4/5; CME = Massive futures-endpoint 404
+      BLOCKED-UPSTREAM). Catalogues re-promoted (monotonic ACCEPT): cefi 220,222 / defi 6,853 / tradfi 686,348 rows. v2
+      enumerate scan-only (NO --apply-write): cefi 35,894,676 / defi 167,458,116 / tradfi 109,235,280 candidates.
+      sports/prediction = report-only (pred by_date frozen at 2026-05-12 write; both lack prod/catalog.parquet pending
+      the granularity-aware producer). Full evidence + 3 new todos (producer rebuild P0; CME re-probe P1;
+      silent-thinning hardening P2): `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` § "Progress Log —
+      R4-IS-freeze execution".
 - [ ] [AUDIT] P0. **R5-service-smoke — per-(service × asset_group) credential + data-fetch smoke matrix**: prove
       instrument fetch + market tick fetch per AG with REAL credentials; audit every failure (assume nothing); **block
       failing shards at (asset_group × data_type × venue) grain ONLY** — emit the pending-post-migration- backfill shard
