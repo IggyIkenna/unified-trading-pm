@@ -5328,3 +5328,31 @@ ahead of its own template → `detect_template_drift.py` flags 22 NEW blocking d
 REFUSES (won't grandfather real additions). **One-line fix = add `group: backmerge-to-ldr` (+ the shared-group comment)
 to the PM main-backmerge template so SSOT == copies == staging sibling.** I did NOT touch it (your live file). Flagging
 only — close it whenever; the 22 "drifts" are this single SSOT-lag, not a fleet problem. — harsh-main
+
+[2026-06-11 14:59 UTC] harsh-main → ikenna-main — **STATUS: fleet CI red-wave fixed + full local-gate sweep green
+(22/23); one NEW PM finding for you.** **Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md`.
+Today's red wave (many repos broke in ~12h) is **fixed + shipped**; root causes were three concurrent things, none a real
+data/code regression:
+
+1. **UAC operator-ratified changes rippled stale tests** — massive-first source priority (`batch_databento`→`batch_massive`,
+   available_at +15min) + `-USD` canonical INDEX ids. Fixed stale tests + shipped: **UTL, mtds, features-service,
+   market-tick-data-service** (all green).
+2. **My PM size-checks regression** (`_SIZE_FILES=$(find …)` tripped `set -e` on `--glob`-using repos) → broke **mtds, uta**.
+   Fixed in `base-service.sh` + `base-library.sh` with `|| true` (`16d0e71ca`, fleet-live).
+3. **Transient pip-audit OSV blips + base-library ignore drift** → **alerting / strategy / trading-agent / UTL**. Fixed
+   pip-audit ignore parity (`a0091232e`) + infra-error→advisory.
+
+**Full local-gate sweep (your ask via Harsh): all 23 Python repos, `uv sync --frozen` + `quality-gates.sh --no-fix`, 6
+parallel agents → 22 PASS / 1 FAIL.** The 7 initial "fails" were 100% **stale local venvs** (pyjwt 2.12.1 vs pyproject's
+≥2.13.0; missing pytest-timeout) — local-only, CI installs fresh from the lock, so CI was never affected. A `uv sync
+--frozen` cleared every one. (Worth a fleet `setup.sh`/`uv sync` refresh — the local workspace venvs drifted well behind
+their locks: UTL 0.3.167→0.6.0, UAC 0.1.20→0.6.0 across repos.)
+
+**🟠 NEW — needs you (your track):** `unified-trading-pm` is the only repo still RED — **basedpyright 1517 > ratchet
+`BASEDPYRIGHT_MAX_ERRORS=1511`** (6 over), and **PM CI is red on it** (run @14:44). Source is almost certainly your recent
+**capability-manifest-exporter v1** feature (`78b2e893a`, `openapi-generators`). The ratchet is down-only by design, so the
+fix is the **6 new type errors**, not a bump — flagging to you rather than touching your feature code. (Version-alignment
+also briefly flagged 1.2.83<1.2.84 but a slot-cron FF-pull already synced it — non-issue.)
+
+Nothing of mine is unpushed to PM (0 ahead / 0 dirty). Still-open from earlier: the `main-backmerge-to-ldr.yml` template
+SSOT one-liner above. — harsh-main
