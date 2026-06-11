@@ -202,6 +202,19 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~20:50Z, autonomous run) — **TRADFI FINAL PROJECTION+DIFF ADJUDICATED (completes the R7 5-AG set)**. With
+  the coalesce fix live (rode mtds@77f1a61), the definitive run: projected 946,360 rows (unparseable 106 of 902,878 =
+  0.012%), diff collapsed 14,833→4,374 removed / 6,739→2,902 downgrades, **unchanged=57,841 + added=2 + 14
+  empty→captured UPGRADES** (objects found where the index claimed empty). Residual adjudication (sweep-inventory join,
+  sample-rate): **removed ≈79% garbage-venue rows (UNKNOWN/blank — correct v9 drops) + ~10% phantoms + ~11% legacy
+  instrument_type respelling supersession** (combo/future rows → canonical futures_chain vocabulary; data present under
+  the canonical key — same class as defi's venue-respelling verdict); **downgrades ≈91% phantom closed-market
+  over-claims honestly reclassified** (spot-verified class) **+ ~9% weekend-boundary cells** (CME Sunday-session dates —
+  calendar-aware CF-11 governs post-apply; NOTE for the verdict pack, not a blocker). With the agent's four verdicts
+  (sports GREEN 0/0 · defi 5,320 respelling-justified · cefi garbage+phantom-justified · prediction superseded-grain +
+  the cqg-classifier P1), **all FIVE AG projections now exist with adjudicated, justified diffs — the ⑬–⑲ analytic
+  inputs are complete**. Remaining R3: dev beta-render eyeball packs (operator).
+
 - 2026-06-11 (~20:30Z, autonomous run) — **R7 dispatch COMPLETE: CF-20 `--beta-manifest-out` wired into the FOUR
   remaining manifest rebuilds (defi/cefi/prediction/sports), projections run on prod, diffs adjudicated CITADEL-grade.**
   Ships: mtds@77f1a61 (wiring batch — shared `ProjectionCollector` imported into all four; the CF-11 staleness fix
