@@ -55,13 +55,17 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       burner (~8 GitHub calls × ~25 repos per coverage refresh). `If-None-Match` added to the shared `gh_get_json` (304
       = free; TTL-cache extended to hold the ETag + last body) + the free `GET /api/repos/gh-rate-limit` route
       (mock-mode aware). deployment-api@061a1b5f | QG green (170s) | 5 ETag tests. This is the dominant REST reduction.
-- [ ] [INFRA] P1 (**BLOCKED-OPERATOR-DECISION**). **Create a GitHub App installation token for the read-only pollers** —
-      a GitHub App gets its OWN rate pool (separate from the user PAT), giving the fleet a second 5000+/hr REST budget
-      without touching the workers' push PAT. **Operator-gated**: the current PAT lacks app-management scope
-      (`admin:public_key, gist, read:org, repo`) + App registration needs the GitHub UI/manifest flow — an agent cannot
-      create it. Decision: register an App (recommended) vs. live with the shared PAT + the ETag wins. Once it exists,
-      point CIReconcile + the rate monitor + deployment-api reads at it. Target repos: `agent-orchestrator` +
-      `deployment-api` (+ `deployment-service` secret wiring).
+- [x] ✅ [INFRA] P1. **Create a GitHub App installation token for the read-only pollers** —
+      `uts-ci-poller` GitHub App (App ID 4025197, installation 139531741) registered + installed on IggyIkenna account.
+      Credentials stored in GCP SM (`gh-app-ci-poller-{app-id,private-key,installation-id}` in `central-element-323112`)
+      and in GitHub Actions secrets on `unified-trading-pm`, `agent-orchestrator`, `deployment-api`.
+      `promotion-lag-monitor.yml` switched to App pool via `actions/create-github-app-token@v1`
+      (unified-trading-pm@9f3510c06 — push pending rate-limit reset).
+      `agent-orchestrator` extended: `GhRateLimitMonitor(label="app")` second instance + `make_app_fetch_fn`
+      (RS256 JWT→installation token with 5-min-before-expiry cache) + `/api/gh-rate-limit` returns `app:{}` sub-object.
+      `pyjwt[cryptography]` declared explicitly.
+      agent-orchestrator@16924e2 — QG 487 passed | push pending rate-limit reset.
+      **Deployment**: vm-0 needs `GH_APP_CI_POLLER_{APP_ID,PRIVATE_KEY,INSTALLATION_ID}` from SM to activate App monitor.
 - [x] ✅ [PERF] P2. **ETag `promotion_lag_monitor.py` + persist via actions/cache** — the safe, high-value realization
       of the burn-reduction below: the lag monitor compares **25 repos × 4 directions = ~100 `gh api compare` calls/run
       × 3 runs/hr = ~300 PAT calls/hr** (a bigger burner than CIReconcile, and a pure read-only monitor = low blast
@@ -90,8 +94,29 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       surface (verified 2026-06-10, 0 matches) → no natural home. The repos surface lives in deployment-ui (above) + the
       orchestrator dashboard (shipped). Re-open only if uts-ui gains a CI/repos view.
 
+## Firebase read-cache strategy (operator direction 2026-06-11)
+
+Write GitHub state to Firestore on every scheduled poll; all UI/dashboard reads hit Firestore instead of calling the
+GitHub API. Firebase is free-tier generous + a separate quota domain — zero PAT/App REST calls for reads. The pattern
+extends the existing `resolve_ci_status_map` Firestore-authoritative path (Phase-2 primitive landed in PM@6b1ece9e1).
+
+- [ ] [INFRA] P2. **Firestore write-through for `promotion-lag-monitor`** — after each scan, write the 25-repo ×
+      4-direction comparison result set to `repo_state/{repo}/promotion_lag` in Firestore. Deployment-api + orchestrator
+      dashboard read from Firestore instead of calling `gh api compare`. Eliminates ~300 PAT calls/hr after the Firebase
+      cache warms (first run per key still hits GitHub; subsequent reads are free). Target: `unified-trading-pm` +
+      `deployment-api`.
+- [ ] [INFRA] P2. **Firestore write-through for `ci-failure-watcher`** — on each scan, write per-repo CI status (last
+      run conclusion, PR state, blocking reason) to `repo_state/{repo}/ci_status`. Orchestrator + deployment-ui read
+      Firestore for display; only the watcher's write path calls GitHub. Target: `unified-trading-pm` + `agent-orchestrator`.
+- [ ] [INFRA] P3. **Firestore write-through for `reconcile-release-tags`** — persist latest tag per repo to Firestore;
+      downstream tag-readers query Firestore instead of GitHub API. Target: `unified-trading-pm`.
+
+**Architecture note**: Firestore write happens in the scheduled GHA runner (has PAT budget, writes once per cycle); all
+read consumers (orchestrator API, deployment-api, UIs) query Firestore (zero GitHub quota, fast, free). The App token
+pool covers the remaining read-only GHA runners. This is the durable structural fix beyond ETag caching.
+
 ## Recommended decision
 
 The ETag win + free rate monitor are the big easy wins (shipped). The durable structural fix is the GitHub App token (a
-genuinely separate budget) — recommend prioritising the INFRA P1 above; a same-account second PAT is a non-fix (shared
-per-user pool).
+genuinely separate budget, shipped 2026-06-11) + Firebase read-cache for polling consumers (direction set
+2026-06-11).

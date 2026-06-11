@@ -38,9 +38,19 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+      # GitHub App installation token — draws from the App's OWN 5000 req/hr pool
+      # (separate from the shared user PAT pool). Pure read-only poller; the App is
+      # installed with Contents:Read + Actions:Read + Metadata:Read on IggyIkenna.
+      # owner: scopes the token to ALL repos under IggyIkenna (fleet-wide cross-repo reads).
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
       # Persist the GitHub ETag cache across runs so unchanged branch-pair compares
-      # return free 304s (a 304 does NOT count against the shared PAT's 5000/hr
-      # REST budget). Unique key per run + prefix restore-keys = rolling cache.
+      # return free 304s (a 304 does NOT count against the App's 5000/hr REST budget).
+      # Unique key per run + prefix restore-keys = rolling cache.
       - name: Restore GitHub ETag cache
         uses: actions/cache@v4
         with:
@@ -51,7 +61,7 @@ jobs:
       - name: Scan promotion lag
         id: scan
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_ETAG_CACHE_FILE: .gh-etag-cache.json
           THRESH: ${{ github.event.inputs.threshold_min || '60' }}
         run: |

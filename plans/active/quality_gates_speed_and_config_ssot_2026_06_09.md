@@ -139,9 +139,17 @@ source:
       spans present incl. autofix/tests/typecheck — sentinel-disabled full run confirmed; peaks attributed: codex 259 MB
       / tests 140 MB / pip-audit 92 MB; combined.csv 73 rows). macOS numbers are UNPINNED/indicative; the 22-repo
       canonical sweep still runs pinned on Linux. — unified-trading-pm (unified-trading-pm@779dc3683)
-- [ ] [AUDIT] P0. Run the full sweep across all 22 repos; produce the per-phase wall+RAM table. Confirm/refute the
-      hypotheses: pytest + basedpyright dominate wall-time; pip-audit OSV network is a fixed tax; basedpyright/pytest
-      dominate RAM. Land `plans/audit/results/qg_step_profile_2026_06_09.md`.
+- [x] ✅ [AUDIT] P0. Full sweep DONE (2026-06-11, 25 repos / 19 complete, 24-core host). Per-phase wall+RAM table landed
+      in `plans/audit/results/qg_step_profile_2026_06_09.md`. **Findings: tests=59.5% wall (+ 5.5 GB peak RAM, both #1);
+      codex=21.7% (the real #2, NOT basedpyright); typecheck=10.5% (warm cache, tiny RAM); pip-audit 3.5% (cached).**
+      Hypothesis refined: pytest dominates wall+RAM as expected, but **codex > basedpyright** for #2 — and codex
+      OVERTAKES tests on large repos (execution-service codex 409>387; deployment-api 245>168) because the grep/AST
+      checks scan the whole tree.
+- [x] ✅ [AUDIT] P0. **Phase scopability classification DONE** (table in `qg_step_profile_2026_06_09.md`). SCOPABLE →
+      tests (impact-sel), codex (per-file grep/AST), typecheck (changed+rev-deps), size-checks, bandit = **91.7% of
+      wall, all change-scopable**; FIXED-COST-CACHEABLE → pip-audit (deps-hash); NON-OPTIONAL-FULL → removed-symbols
+      (cross-repo, cron) + lint (already negligible). Conclusion: scoping tests+codex+typecheck to the changed-file set
+      is the fast tier; merge boundary always runs full.
 - [ ] [AUDIT] P0. **Phase scopability classification** (drives Phase 2): tag each phase NON-OPTIONAL-FULL (must run over
       the whole tree even for a 2-file change — e.g. ruff*, basedpyright*) vs SCOPABLE-TO-CHANGED-FILES (codex 5.x
       grep/AST, coverage-bearing tests via impact selection) vs FIXED-COST-CACHEABLE (pip-audit/bandit/actionlint). (\*
