@@ -292,6 +292,11 @@ unchanged:
       patchability); 18/18 incremental tests green; MAX_FILE_LINES dropped 1000→900 per the in-file note; full QG
       green at budget 0. Both shipped via the dirty-deps carve-out (orchestrator-gated per the amended
       agents-edit/orchestrator-ships protocol, operator 2026-06-12).
+- [x] ✅ [REFACTOR] P3-partial. **features delta_one orchestrator DONE 2026-06-12** — features-service@966b985a:
+      922→798 + ManifestOutcomeMixin (orchestrator_manifest.py; ManifestWriter + validate_batch_completeness patch
+      surfaces preserved via facade-namespace routing; the moved 87L manifest method honestly split to satisfy the
+      50L method cap its old home was excluded from); 10,290 tests green, quickmerge proper. onchain orchestrator
+      (1,409) remains in the tail below.
 - [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
       polymarket 1,184 / \_solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922), strategy
       archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958, agent-orchestrator
