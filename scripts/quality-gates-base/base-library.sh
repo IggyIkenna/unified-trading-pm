@@ -130,12 +130,15 @@ _qg_slice_done() {
 }
 
 # ── QG_PROFILE forces a COMPLETE, no-skip run (mirror of base-service.sh) ─────
-# Profiling must measure EVERY path, so all bypass flags (--no-fix / --quick /
+# Profiling must measure EVERY path, so the skip/quick bypass flags (--quick /
 # --skip-tests / --skip-typecheck) are overridden and the green content-sentinel is
 # disabled. The <MAX_DURATION> meta-gate is the one thing relaxed (the wall-time IS
 # the measurement — a slow single-core profile run must not false-fail).
+# FIX_MODE STAYS at its safe default (false / --no-fix) — see base-service.sh for the full
+# rationale: AUTO-FIX's tree-wide reformat would dirty every profiled LIBRARY (UTL/UAC) just
+# like it did the services. (Codified 2026-06-11.)
 if [[ "${QG_PROFILE:-}" == "1" ]]; then
-    FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false
+    QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false
     _QG_RUN_CODEX=true
     export QG_SENTINEL_DISABLE=true
     IGNORE_TIMEOUT=true

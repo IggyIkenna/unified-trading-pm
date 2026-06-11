@@ -243,12 +243,19 @@ _qg_slice_done() {
 }
 
 # ── QG_PROFILE forces a COMPLETE, no-skip run ────────────────────────────────
-# Profiling must measure EVERY path, so all bypass flags (--no-fix / --quick /
+# Profiling must measure EVERY path, so the skip/quick bypass flags (--quick /
 # --skip-tests / --skip-lint / --skip-typecheck / --skip-codex) are overridden and the
 # green content-sentinel is disabled. The <MAX_DURATION> meta-gate is the one thing relaxed
 # (the wall-time IS the measurement — a slow single-core profile run must not false-fail).
+# FIX_MODE STAYS at its safe default (false / --no-fix): AUTO-FIX's tree-wide
+# `prettier --write "**/*"` + `ruff --fix` would REWRITE every profiled repo's worktree as
+# dirt (jamming the FF-pull — the exact reason FIX_MODE defaults false, L168) — and the
+# Phase-0 measurement methodology is explicit: "--no-fix — don't reformat/dirty trees during
+# measurement." The auto-fix SPAN cost (~prettier+ruff, a few s) is small + measurable
+# separately; never worth dirtying 20+ repos. (Codified 2026-06-11 after a profile sweep
+# auto-formatted the fleet.)
 if [[ "${QG_PROFILE:-}" == "1" ]]; then
-    FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false
+    QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false
     unset SKIP_CODEX_FLAG
     export QG_SENTINEL_DISABLE=true
     IGNORE_TIMEOUT=true
