@@ -139,6 +139,13 @@ jobs:
   qg-slices:
     name: QG slice
     needs: content-gate
+    # SPEND: on a content-sentinel HIT, SKIP the slice jobs entirely (no runners allocated) —
+    # this exact tree already passed v2, so re-running the gate work is wasted. Saves ~3
+    # runner-starts per redundant v2 (push+PR×main/staging fire v2 up to 4× per change, most
+    # byte-identical). The aggregate + ci-status steps below treat the resulting 'skipped' as
+    # GREEN when cache_hit=true. A MISS (real change) runs every slice as before. metadata_only
+    # is handled per-slice (step-level) on a miss, so it still runs the cheap fast-path.
+    if: needs.content-gate.outputs.cache_hit != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -569,11 +576,20 @@ jobs:
         shell: bash
         env:
           SLICES_RESULT: ${{ needs.qg-slices.result }}
+          CACHE_HIT: ${{ needs.content-gate.outputs.cache_hit }}
         run: |
           # needs.<matrix-job>.result is the ROLL-UP of all legs: 'success' only if EVERY
           # leg succeeded; 'failure'/'cancelled' if any leg failed/was cancelled (we set
           # fail-fast: false so legs run independently, but the roll-up still reds on any fail).
-          echo "qg-slices roll-up result: ${SLICES_RESULT}"
+          echo "qg-slices roll-up result: ${SLICES_RESULT} (content cache_hit=${CACHE_HIT})"
+          # CONTENT-SENTINEL HIT: the slice jobs are SKIPPED entirely (no runners spun) because
+          # this exact tree-content already passed a full v2 — so SLICES_RESULT='skipped' here is
+          # GREEN, certified by the cache marker (only ever written on a real full-gate pass).
+          # This is what lets the hit save 3 runner-starts/run instead of spin-and-skip.
+          if [ "${CACHE_HIT}" = "true" ]; then
+            echo "✅ content-sentinel HIT — slices skipped; this tree already passed v2. GREEN."
+            exit 0
+          fi
           if [ "${SLICES_RESULT}" = "success" ]; then
             echo "✅ All quality-gates-v2 slices passed."
             exit 0
@@ -611,6 +627,7 @@ jobs:
           TRIGGER_BRANCH: ${{ github.head_ref || github.ref_name }}
           BASE_REF: ${{ github.base_ref }}
           SLICES_RESULT: ${{ needs.qg-slices.result }}
+          CACHE_HIT: ${{ needs.content-gate.outputs.cache_hit }}
         run: |
           [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
           # Branch→status mapping mirrors the ci_status lifecycle in ci-status-update.yml:
@@ -622,7 +639,11 @@ jobs:
           # never prematurely mark a repo as on-main from an unmerged staging→main PR.
           EFFECTIVE_BRANCH="$TRIGGER_BRANCH"
           [ "$BASE_REF" = "staging" ] && EFFECTIVE_BRANCH="staging"
-          if [ "${SLICES_RESULT}" != "success" ]; then
+          # A content-sentinel HIT skips the slices (SLICES_RESULT='skipped') but the tree is
+          # GREEN (already passed v2). Treat success OR cache-hit as passing for ci_status.
+          PASSED=false
+          { [ "${SLICES_RESULT}" = "success" ] || [ "${CACHE_HIT}" = "true" ]; } && PASSED=true
+          if [ "${PASSED}" != "true" ]; then
             STATUS="FAILING"
           elif [ "$EFFECTIVE_BRANCH" = "main" ]; then
             STATUS="MAIN_GREEN"

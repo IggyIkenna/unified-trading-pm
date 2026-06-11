@@ -202,6 +202,27 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~19:10Z, autonomous run) — **FINAL SIGN-OFF SWEEP SNAPSHOT: ALL FIVE AGs GREEN on final HEAD** — defi E=0
+  (18:52Z) · cefi E=0 (19:00Z) · prediction E=0 (19:02Z) · tradfi E=0 (19:07Z) · sports odds E=0 + reference E=0
+  (19:09–19:10Z); unknown*prefixes=0 on every surface. Reports refreshed at
+  `\_index/audit/orphan_sweep*<ag>.parquet`(+ sports per-bucket). This is the ⑬-input snapshot for the verdict packs. ALSO:`DATA*STATUS_BETA_MANIFEST_BLOB`smoke-verified END-TO-END against real GCS (deployment-api seam loaded the 946,360-row tradfi projection with the env set; live index with it unset) — the operator's beta-render recipe is live:`DATA_STATUS_BETA_MANIFEST_BLOB='\_index/audit/projected_index*{asset_group}.parquet'`+`restart-deployment-stack.sh
+  --api`.
+
+- 2026-06-11 (~18:50Z, autonomous run) — **R7 tradfi adjudication: ROOT CAUSE of the all-red diff FOUND + fixed (pending
+  ship via the 4-rebuild batch)**. Chain of finds, each verified on real data: (1) rebuild legacy parser shipped
+  (mtds@c21bc91) — unparseable 183,943→106 (99.94%); (2) manifest_diff coarse-query union + symmetric effective-status
+  compare shipped (is@3a2d5a4 + follow-up) with regression tests; (3) **the remaining all-red diff (14,833 removed /
+  6,739 downgrades) reduces to ONE bug in `_rebuild_projection.write_projected_index`: captured rows carry
+  `processing_date`, re-emitted absence rows carry `date` — with BOTH columns present the rename-if-missing was skipped
+  → every captured row's `date`=NaN → the differ dropped the ENTIRE captured side and read the projection as
+  absence-only.** Coalesce fix written + unit-verified in
+  `.tabs/4/market-tick-data-service/market_tick_data_service/scripts/_rebuild_projection.py` (uncommitted — the
+  4-rebuild agent's QG-sweep batch owns the clone; the fix rides its batch or ships immediately after). ALSO genuinely
+  adjudicated from the pre-fix diff: current tradfi index holds **phantom captured rows on closed-market days**
+  (spot-verified ×3: 2020-01-01 BARCHART/CBOE/CME ohlcv_15m captured with 0 GCS objects) — the projection's
+  captured→empty/failed downgrades for those are the HONEST correction, to present in the verdict pack, not suppress.
+  Re-projection + final diff re-run follows the coalesce ship.
+
 - 2026-06-11 (~18:15Z, autonomous run) — **R7 part 1: IS store-migrator re-dry-runs GREEN ×5 on final HEAD** (exit 0
   all): cefi 30,803 captured · defi 125,242 captured · tradfi 19,247 captured + 1,141 empty*confirmed · sports
   2,674,759 + 6,869 BLANK-status rows (see todo below) · prediction 4,693 planned/0 moved — every projected row

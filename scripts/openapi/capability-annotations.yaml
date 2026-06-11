@@ -1,0 +1,64 @@
+# Capability manifest agent annotations sidecar
+#
+# Hand/agent-appendable registry of answers to ``needs_code_scan`` gap edges
+# that cannot be resolved by a static registry walk — only by reading code or
+# running the engine.
+#
+# Schema: entries keyed by (from_node, to_node, relation) with:
+#   answer        — substantive text answer derived from code/engine evidence
+#   answered_by   — "agent" | "human" | <slot-id>
+#   answered_on   — literal ISO date string
+#   source_evidence — "file:line" or "file (description)" citation
+#
+# Escalation rule (codex/09-strategy/architecture-v2/capability-wizard.md):
+#   Script → test → agent.  Agents fill needs_code_scan gaps; their answers
+#   are written back here so the question is never paid for twice.
+#   Unmatched entries (no edge in the manifest) → listed in orphan report.
+#
+# Append new entries below the existing ones.  Never remove seeded entries.
+# Agent auto-appends using emit_capability_gap_todos.py; hand edits also
+# permitted provided source_evidence is cited.
+#
+# SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md Phase 5
+# Plan: unified-trading-pm/plans/active/capability_wizard_and_manifest_2026_06_11.md
+
+annotations:
+  # F17 — kill/stop predicates are runtime-fired; backtest sim_assumptions
+  #        cannot be statically derived from BaseArchetypeEngineV2
+  - from_node: "gap_registry:sim_assumptions"
+    to_node: "gap_registry:sim_assumptions"
+    relation: "registry_gap"
+    answer: >
+      Kill-switch and stop-loss predicates in BaseArchetypeEngineV2 are evaluated at runtime inside the engine's
+      on_kill_switch / on_tick code paths (strategy_service/engine/strategies/v2/base.py).  The engine exposes only
+      post-fire state (self.killed, self.kill_reason) — it does NOT publish a static declaration of which predicates
+      will fire under which simulation conditions.  The backtest runner therefore cannot derive sim_assumptions
+      (matching-model / fill-mode / predicate evaluation rules) from a static registry constant; a
+      SIM_ASSUMPTIONS_REGISTRY backfill requires a deliberate code-scan of runner.py + base.py to extract and declare
+      those assumptions.  Until that backfill lands the registry remains honest-empty and this edge stays
+      needs_code_scan.
+    answered_by: "agent"
+    answered_on: "2026-06-11"
+    source_evidence: >
+      strategy-service/strategy_service/engine/strategies/v2/base.py (BaseArchetypeEngineV2.on_kill_switch, self.killed
+      / self.kill_reason fields; finding F17 — runtime-fired kill/stop predicates, engine exposes post-fire state only)
+
+  # Stepper run evidence — carry_staked_basis entry emission blocked by
+  #   empty perp collateral registry for all perp venues (finding in plan
+  #   Progress Log 2026-06-11, Phase 3.5 [VERIFY] item).
+  - from_node: "gap_registry:broker"
+    to_node: "gap_registry:broker"
+    relation: "registry_gap"
+    answer: >
+      Stepper smoke run (csb_staked_basis_eth.json) confirmed that carry_staked_basis entry emission is blocked on-host:
+      the engine requires an LST token to be listed in accepted_perp_collateral for each perp venue, but
+      COLLATERAL_REGISTRY and BROKER_REGISTRY are both honest-empty for all perp venues (Binance, OKX, Deribit, etc.).
+      No broker/collateral declarations exist in the registry; the capability manifest correctly emits not_registered
+      for this dimension. A code-scan backfill must read each perp venue adapter for its accepted collateral list and
+      populate the registries before the carry_staked_basis archetype can proceed to live entry.
+    answered_by: "agent"
+    answered_on: "2026-06-11"
+    source_evidence: >
+      e2e-testing/scripts/strategy/scenarios/csb_staked_basis_eth.json +
+      unified_api_contracts/internal/architecture_v2/collateral_registry.py (BROKER_REGISTRY and COLLATERAL_REGISTRY
+      honest-empty; stepper run evidence, Phase 3.5 [VERIFY] Progress Log entry 2026-06-11)

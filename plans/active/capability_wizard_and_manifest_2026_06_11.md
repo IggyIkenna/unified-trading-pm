@@ -261,8 +261,12 @@ post-config (combinatorial explosion is avoided because the wizard fixed the con
 - [x] ✅ [IMPLEMENT] P1. Trigger map + distance-to-trigger. DONE 2026-06-11 — e2e-testing@3e41ecb
       (build_trigger_evaluations: entry/exit/rebalance from config thresholds + emitted events; signed
       distance_to_trigger; kill_switch/stop_loss honest introspection_gap until post-unfreeze engine tracing).
-- [ ] [AGENT][UI] P2. Wizard "Step through it" stage after config: feed key numbers, render StepReports as a timeline
-      (trades/positions/PnL/triggers). pw:L2 gate. (v1 ships a stub panel in the wizard output stage — see Phase 4.)
+- [x] ✅ [AGENT][UI] P2. Wizard "Step through it" stage after config: feed key numbers, render StepReports as a timeline
+      (trades/positions/PnL/triggers). pw:L2 gate. — unified-trading-system-ui@9f087aa8 | pw:L2 ✓ (12/12 smoke) |
+      regression: tests/smoke/wizard-stepper.spec.ts + tests/smoke/wizard.spec.ts + tests/unit/wizard/stepper.test.ts.
+      SessionViewer: CLI handoff (copy-to-clipboard), paste/file-drop JSON, "Load example" fixture, timeline per step
+      (instructions collapsed JSON, fills, PnL delta/cumulative, trigger-eval bars, risk-gate decisions per layer,
+      kill-switch banner + post-kill suppression). Help-panel markdown fix: bold+lists render correctly.
 - [x] ✅ [VERIFY] P1. Stepper smoke per MVP archetype. DONE 2026-06-11 — e2e-testing@3e41ecb
       (test_scenario_stepper_smoke.py 3/3; apd_price_dispersion_btc.json 6-step: ATOMIC entries @50/70bps → +250/+350
       PnL, forced DAILY_LOSS_BREACH @step4 → killed+REJECTED, post-kill above-threshold emits NOTHING;
