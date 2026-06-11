@@ -200,19 +200,18 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       mislocate VM-launch zones / GCS region / cross-region-egress checks. Operator decision needed: fix the
       `effective_region` default + prod config to `asia-northeast1` (blast radius: VM zones, GCS) vs leave compute in
       us-central1 deliberately. Repo: deployment-api. **Surfaced to operator 2026-06-11.**
-- [ ] [CODE] [UI] P2. **(test-robustness) `DependenciesPanel` intermittently white-screens the whole app** — in
-      `deployment-ui` `tests/smoke/stateful-flows.spec.ts` "Tab navigation sequence", navigating Deploy→…→Status
-      intermittently (~50% of isolated runs) trips the root ErrorBoundary with `Cannot read properties of undefined
-      (reading 'length')`; stack → `ServiceDetails.tsx` `DependenciesPanel`/`DependencyDag`. Fixed two contributing
-      stale mock-contract shapes (`mock-api.ts` `/dependencies` → real `DependenciesResponse` w/ `downstream_dependents`
-      + `outputs`; `/checklist` already correct) — that did NOT fully resolve it, so a deeper render-timing trigger
-      remains in `DependenciesPanel`/`DependencyDag` (a nested array transiently undefined during the rapid tab
-      transition). Durable fix = guard the nested-array `.length`/`.map` reads in `DependenciesPanel` + `DependencyDag`
-      so a partial/late payload renders empty instead of white-screening (a per-tab error boundary would also contain
-      blast radius). NOTE: this smoke suite does NOT run in any deployment-ui CI workflow (only `quality-gates-v2`/
-      `ui-quality-gates-v2`, neither runs `tests/smoke/`) — so it does not block promotion; it's a real app-robustness
-      bug + flaky local test. **Leftover: `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip` placeholder) needs `rm` —
-      sandbox-denied this session.** Repo: deployment-ui. Provenance: B1 investigation 2026-06-11.
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@f4a6d45 (on branch `feat/monitoring-slot26`, pending combined
+      PR) | pw:L2 ✓ (full smoke 188/188 green) | regression: src/components/ServiceDetails.test.tsx +
+      tests/smoke/stateful-flows.spec.ts. **(test-robustness) `DependenciesPanel` white-screen crash — FIXED.** Root
+      cause was systemic: multiple service-detail tabs read `.length`/`.map` on partial/raced API payloads → root
+      ErrorBoundary → whole-app white-screen → sibling tabs (Status) unreachable. Two-part durable fix: (1)
+      `ServiceDetails.tsx` — `DependenciesPanel`/`DependencyDag` guard every array read (`?? []`), with a
+      `ServiceDetails.test.tsx` partial-payload regression (3 cases); (2) `App.tsx` — a per-tab `<ErrorBoundary
+      key={activeTab}>` around the TabsContent region so ANY tab's render crash is contained (tab strip survives +
+      recovers on switch) instead of nuking the app. Full smoke went 187/1 (flaky) → **188/188 green**. NOTE: this smoke
+      suite does NOT run in deployment-ui CI (neither `quality-gates-v2` nor `ui-quality-gates-v2` runs `tests/smoke/`) —
+      so it never blocked promotion; this fixes a real app-robustness bug + the flaky local test. **Leftover (slot 4):
+      `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip`) needs `rm` — sandbox-denied.** Repo: deployment-ui.
 - [ ] [CODE] [UI] P2. **(B2) Repo drill-down build header** — when a repo is opened, populate a build-details header at
       the top: current build **status + source** (Cloud Build / CodeBuild), **last build time**, **commit sha** built,
       and a **link to the build log**. The Image-column click-through (B1) and this header share the same build signal.
