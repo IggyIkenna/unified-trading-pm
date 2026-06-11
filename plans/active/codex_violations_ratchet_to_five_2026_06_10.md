@@ -90,11 +90,11 @@ unchanged:
 ## Per-repo current state (slot-3 audit 2026-06-10)
 
 > **2026-06-11 ratchet snapshot (this plan's session 1)** — budgets now: deployment-api **24** (25-bump reverted),
-> execution-service **21**, market-tick-data-service **0** (16→15→0 2026-06-11, mtds_coverage_75_and_codex_zero plan — MTDS@cddb122; MIN_COVERAGE also 60→75, measured 82.2%),
-> strategy-service **10**, market-data-processing-service **7**, deployment-service **1**, ibkr **1**, ml-service **3**,
-> instruments 4, unified-trading-api **0 (pinned)**, batch-live-recon 1, features/UTL/PM 0, UAC 7 (ratcheted 7→2
-> @128e065; lxml = execution-service+canonical-range todo). All six P1 monoliths + the P2 >1k tail are SPLIT and
-> shipped; the table below is the original baseline for reference.
+> execution-service **21**, market-tick-data-service **0** (16→15→0 2026-06-11, mtds_coverage_75_and_codex_zero plan —
+> MTDS@cddb122; MIN_COVERAGE also 60→75, measured 82.2%), strategy-service **10**, market-data-processing-service **7**,
+> deployment-service **1**, ibkr **1**, ml-service **3**, instruments 4, unified-trading-api **0 (pinned)**,
+> batch-live-recon 1, features/UTL/PM 0, UAC 7 (ratcheted 7→2 @128e065; lxml = execution-service+canonical-range todo).
+> All six P1 monoliths + the P2 >1k tail are SPLIT and shipped; the table below is the original baseline for reference.
 
 | Repo                           | Budget | Over 5? | Worst file (lines)                 | Notes                                                |
 | ------------------------------ | ------ | ------- | ---------------------------------- | ---------------------------------------------------- |
@@ -267,12 +267,19 @@ unchanged:
 
 ## Phase 1.5 — >900-line tail (post-sweep inventory 2026-06-11; the named worst offenders above are ALL split)
 
-- [ ] [REFACTOR] P1. **UTL `manifest_writer.py` is 5,716 lines** — NEW worst-offender discovery (2026-06-11 fleet sweep;
-      hidden behind UTL's size excludes at budget 0). Same treatment as the P1 monsters: decompose by concern
-      (record\_\* write paths / consolidation / validation / emission-policy) behind a re-exporting facade, namespace-
-      patch pre-audit first (manifest_writer is the most-patched module in the fleet). Also UTL
-      `manifest_consolidator.py` (1,360) + `__init__.py` 2,279 (facade — sanctioned, verify). Repo:
-      unified-trading-library.
+- [x] ✅ [REFACTOR] P1. **UTL `manifest_writer.py` 5,716L SPLIT 2026-06-11** — unified-trading-library@22f7030a: 13
+      concern modules behind a package facade (`manifest_writer/__init__.py` re-exports the full pre-split surface;
+      layout (a) — package shadows, monolith deleted). Pure code motion AST-verified (62/62 top-level defs + 37/37
+      ManifestWriter methods verbatim; mixin composition Ingest/Record/Validation/Captured/Io over a
+      `ManifestWriterCore` structural base — strict basedpyright 0 errors). Namespace-patch pre-audit honoured: all
+      fleet patch targets (`lookup_contract`, `read_availability_index`, `_emit_manifest_load_size`,
+      `_should_flush_to_gcs`, `_WRITE_FLUSH_INTERVAL`, `_time.sleep`, in-place `_WRITE_BUFFER`/`_INDEX_CACHE`/
+      `_CANONICAL_CACHE`/`_LIVE_WRITERS` mutations) resolve via the facade (`_mw.`) and verified intercepting. All
+      modules <900L (file-size class CLEARED); UTL size excludes retargeted from `*/manifest_writer.py` to the 7 modules
+      carrying verbatim >50L methods; CODEX_MAX_VIOLATIONS stays 0, full QG green (118s). Consumer smokes:
+      MDPS/deployment-api/features-service venv imports + MDPS test_canonical_writer_record_helpers 44 passed. Remaining
+      from this line (NOT done here): `manifest_consolidator.py` (1,360) audit + `__init__.py` 2,279 facade-verify —
+      tracked by the P3 tail item below. Repo: unified-trading-library.
 - [ ] [REFACTOR] P2. MTDS >900 tail (11 files): umi_tick_provider 2,093 / evm_defi_handler 1,430 / lending_indices 1,390
       / perp_funding 1,363 / databento_adapter 1,360 / dex_pools 1,097 / oracle_prices 1,085 / polymarket_adapter 1,023
       / solana_lst_archival 988 / dex_swaps 980 / gas_fee 944 / websocket_runner 912 — split below 900 by venue/stage
@@ -325,9 +332,12 @@ unchanged:
 - [x] ✅ [CODE] P2. **execution-service 11→7 (2026-06-12)** — empty-fallback + project-id classes cleared + the lxml
       pip-audit class (>=6.1.0 bump rode this unit); honest measured V=7. Remaining: schema-provenance (~183 types,
       Phase 3), fn-size, cloud-SDK (KMS facade gap), domain-client (stale check target), deep-imports.
-- [ ] [REFACTOR] P1. **UTL manifest_writer split — IN FLIGHT, WIP stashed** — wave-3 agent died at session limit with 12
-      staged concern-modules (UTL stash@{0} "manifest_writer split WIP"); facade wiring + namespace-patch preservation +
-      consumer smokes remain. Respawn pops the stash and finishes. Repo: unified-trading-library.
+- [x] ✅ [REFACTOR] P1. **UTL manifest_writer split FINISHED 2026-06-11** — unified-trading-library@22f7030a: stash
+      popped, predecessor's 12 staged modules verified against HEAD (def-name conservation exact), facade `__init__`
+      wired (+ new `_core.py` structural base), 2 patch-interception gaps the WIP missed fixed (`_should_flush_to_gcs`
+      call + `_WRITE_FLUSH_INTERVAL` read now resolve via `_mw.`), consumer smokes + MDPS record-helpers suite green,
+      full UTL QG exit 0. Shipped via the dirty-deps carve-out (UAC carried foreign prospectus-lane WIP at quickmerge
+      pre-flight; Pass-1 sentinel green). Repo: unified-trading-library.
 - [x] ✅ [CODE] P2. **execution-service imports-inside-functions class CLEARED 2026-06-11** —
       execution-service@2fdc348c: 116 sites across 57 files (51 hoisted: stdlib/UAC/UTL/light deps; 65 justified
       per-line `# noqa: imports-inside-functions`: lazy heavy SDKs nautilus/web3/driftpy/solana, per-provider KMS,
