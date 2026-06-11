@@ -704,9 +704,17 @@ strategy-specific constraints.
 
 ## Code Organization and Structure
 
-- **Maximum file size: 1500 lines (hard limit).** Ideal target is <500 lines for most modules. The 1500-line limit is
-  for centralized scripts and large adapters only. If a file exceeds this, split by responsibility. Large files are
-  harder to review, test, and reason about.
+- **Maximum file size: 900 lines (QG-BLOCKING; warn at 700).** Ideal target is <500 lines for most modules. The 900/700
+  limits are enforced per-repo by `quality-gates.sh` (`MAX_FILE_LINES=900; FILE_WARN_LINES=700` — see `quality-gates.md`
+  § "Canonical Code Limits") and are **first-class codex violation classes, never permanently glob-exempted**: an
+  oversized file hidden behind a `FUNCTION_SIZE_EXTRA_EXCLUDES`/`SIZE_EXTRA_EXCLUDES` entry is HIDDEN debt — an exclude
+  must be scoped to the specific carrying module and justified in-file with a named successor plan + date. The
+  2026-06-10/11 worst-offender sweep (registry.py 18,328 L → YAML+loader; instruments orchestrator 8,192 L → 16 modules;
+  DataStatusService 6,663 L → 16-module package; seed.py 5,169 L → JSON+loader; agent-orchestrator server.py 4,505 L → 9
+  routers; MTDS orchestrator 4,219 L → 7 modules; + the strategy/MDPS/execution >1k tail) is tracked in
+  `plans/active/codex_violations_ratchet_to_five_2026_06_10.md`. If a file exceeds the limit, split by
+  responsibility/cohesion with the original module path preserved as a re-exporting facade (zero caller churn). Large
+  files are harder to review, test, and reason about.
 - **Single Responsibility Principle:** each module should have one reason to change. A module that handles config
   parsing, data transformation, and API calls needs to be split.
 - **Separate transformation, validation, and business logic** into distinct modules. For example: `transforms.py` for
