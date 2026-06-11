@@ -693,18 +693,26 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       manifest **could-exist** rows but the canonical `_index` itself comes from the AG's G2 walk — so G1.run for
       raw-tick denominators rides AFTER that AG's G4 manifest is canonical (the catalogue-of-record vs the seed are
       sequenced in the per-AG plan; do not double-walk).
-- [ ] [INFRA] P1. **G1.schedule — daily catalogue-aggregation scheduler live per-AG** keyed to the IS update cadence.
-      **TF AUTHORED deployment@98bee4b** — `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf` (NEW):
-      per-AG `for_each` (cefi/defi/tradfi/sports/prediction) Cloud Run Job + Scheduler running
-      `build_instrument_catalogue.py` (sports carries `--by-date-prefix`), 01:00 UTC, terraform-fmt clean. **Finding
-      (vm-cross-cutting 2026-06-07)**: the two PRE-EXISTING schedulers (`catalogue_regen_scheduler.tf` +
-      `instrument_catalogue_scheduler.tf`) run DIFFERENT scripts (UAC envelope/availability +
-      `generate_instrument_catalogue.py`) — NEITHER ran the `build_instrument_catalogue.py` lifecycle roll-up, so this
-      is a NEW scheduler, not a per-AG extension of cefi. **REMAINING (apply-gated)**: `terraform apply` + T+10min
-      per-AG `gcloud run jobs executions` verify (infra apply pipeline) → then GREEN. Bucket-name `pred`-vs-`prediction`
-      discrepancy flagged in the .tf header. **VERIFIED on LDR 2026-06-07 (slot-7)**: `lifecycle_catalogue_scheduler.tf`
-      carries all 5 AGs (cefi/defi/tradfi/sports/prediction) — the G1 daily catalogue scheduler is AG-complete;
-      `terraform apply` is the only remaining (gated) step.
+- [x] ✅ [INFRA] P1. (**APPLIED 2026-06-11, autonomous run** — `tofu apply` vs `terraform/state/prod`: **16 added / 0
+      changed / 0 destroyed**; all 5 `lifecycle-catalogue-regen-<ag>` Cloud Run jobs + 5 ENABLED 01:00-UTC schedulers
+      verified via `gcloud run jobs list`/`scheduler jobs list`; cefi smoke execution triggered + watched. THREE
+      pre-existing tf bugs fixed to get there: (1) bucket literals were LEGACY/nonexistent → canonical env-short
+      `-prd-`/`pred` (deployment-service@9e2904a); (2) main.tf had 7 MERGE-DOUBLED `instruments_*` bucket resources —
+      the whole prod config was UN-PARSEABLE for everyone (second set proven strict-subset, deleted); (3)
+      `cf_manifest_audit` alert policy used `labels` (not in schema) → `user_labels` — both
+      @deployment-service@04e3d20.) **G1.schedule — daily catalogue-aggregation scheduler live per-AG** keyed to the IS
+      update cadence. **TF AUTHORED deployment@98bee4b** —
+      `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf` (NEW): per-AG `for_each`
+      (cefi/defi/tradfi/sports/prediction) Cloud Run Job + Scheduler running `build_instrument_catalogue.py` (sports
+      carries `--by-date-prefix`), 01:00 UTC, terraform-fmt clean. **Finding (vm-cross-cutting 2026-06-07)**: the two
+      PRE-EXISTING schedulers (`catalogue_regen_scheduler.tf` + `instrument_catalogue_scheduler.tf`) run DIFFERENT
+      scripts (UAC envelope/availability + `generate_instrument_catalogue.py`) — NEITHER ran the
+      `build_instrument_catalogue.py` lifecycle roll-up, so this is a NEW scheduler, not a per-AG extension of cefi.
+      **REMAINING (apply-gated)**: `terraform apply` + T+10min per-AG `gcloud run jobs executions` verify (infra apply
+      pipeline) → then GREEN. Bucket-name `pred`-vs-`prediction` discrepancy flagged in the .tf header. **VERIFIED on
+      LDR 2026-06-07 (slot-7)**: `lifecycle_catalogue_scheduler.tf` carries all 5 AGs
+      (cefi/defi/tradfi/sports/prediction) — the G1 daily catalogue scheduler is AG-complete; `terraform apply` is the
+      only remaining (gated) step.
 - [x] ✅ [INFRA] P2. **catalogue_regen_scheduler.tf MISSING tradfi — DONE (deployment-service@a27b05a, slot-7
       2026-06-08)**: added `instruments-store-tradfi-central-element-323112` to the `catalogue_regen_instruments_reader`
       `for_each` IAM grant (+ the doc comment) so the regen job's `strategy_instruments` join can read the tradfi
@@ -1674,12 +1682,18 @@ speed-note (both deferred optimisations, non-blocking).
       in path+column. Tests green 25/25. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
 - [x] ✅ [CROSS-CUTTING] P1. (mtds@7455ffb 2026-06-11: rebuild*tradfi (direct read :316) + rebuild_prediction (via
       reemit_honest_absence_rows) + rebuild_defi (defensive — unguarded log_event via ManifestWriter.add validation);
-      cefi/sports pre-existing; the 5 migrate*_*v9 movers + IS migrate_instruments_store_v9 VERIFIED no-manifest-read →
-      not needed) \*\*M-COORD-6 — every AG
-      `rebuild***manifest\*`/`migrate**\_v9`script must`setup_events()`    before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship     gated on M-COORD-7).** ROOT CAUSE:`read_availability_index()`→`\_backfill()`emits    `READER_BACKFILLED_V8_COLUMNS_AS_NULL`via`log_event`whenever the per-VM fallback shards carry pre-v9 columns —     the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).     Without an events init,`log_event`raises`RuntimeError:
-      Event logging not
-      initialized`and **crashes the rebuild    `--no-dry-run`apply**. The v8-era migration scripts ALL call`setup_events(mode="local",
-      sink=None)`in`main()`     (`migrate_sports_canonical`/`migrate_defi_canonical`/`migrate_tradfi_canonical`/    `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it**. Confirmed     MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest_`, `rebuild_tradfi_manifest\*`,     `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS     `migrate_instruments_store_v9.py`(the ones that call`read_availability_index`). **Fix per AG-slot**: add     `setup_events(service_name="...",
+      cefi/sports pre-existing; the 5 migrate*_\*v9 movers + IS migrate_instruments_store_v9 VERIFIED no-manifest-read →
+      not needed) \*\*M-COORD-6 — every AG `rebuild***manifest\*`/`migrate**\_v9`script must`setup_events()` before
+      reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship gated
+      on M-COORD-7).** ROOT CAUSE:`read_availability_index()`→`\_backfill()`emits
+      `READER_BACKFILLED_V8_COLUMNS_AS_NULL`via`log_event`whenever the per-VM fallback shards carry pre-v9 columns — the
+      **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards). Without
+      an events init,`log_event`raises`RuntimeError:     Event logging not     initialized`and **crashes the rebuild
+      `--no-dry-run`apply**. The v8-era migration scripts ALL call`setup_events(mode="local",     sink=None)`in`main()`
+      (`migrate_sports_canonical`/`migrate_defi_canonical`/`migrate_tradfi_canonical`/
+      `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it\*\*. Confirmed
+      MISSING in: `rebuild_defi_manifest.py`,
+      `rebuild_cefi_manifest_`, `rebuild_tradfi_manifest\*`,     `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS     `migrate_instruments_store_v9.py`(the ones that call`read_availability_index`). **Fix per AG-slot**: add     `setup_events(service_name="...",
       mode="local",
       sink=None)`at the top of`main()`(mirror the sports fix;     migrators that do pure object-path moves and never read the manifest — e.g.`migrate_sports_canonical_v9`
       — do NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
