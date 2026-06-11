@@ -93,7 +93,7 @@ unchanged:
 > execution-service **21**, market-tick-data-service 16 (V=15 — ratchet to 15 rides the adapters-tail unit),
 > strategy-service **10**, market-data-processing-service **7**, deployment-service **1**, ibkr **1**, ml-service
 > **3**, instruments 4, unified-trading-api **0 (pinned)**, batch-live-recon 1, features/UTL/PM 0, UAC 7
-> (Phase-4 target: lxml advisory + re-pin). All six P1 monoliths + the P2 >1k tail are SPLIT and shipped; the table
+> (ratcheted 7→2 @128e065; lxml = execution-service+canonical-range todo). All six P1 monoliths + the P2 >1k tail are SPLIT and shipped; the table
 > below is the original baseline for reference.
 
 | Repo                           | Budget | Over 5? | Worst file (lines)                 | Notes                                                |
@@ -243,11 +243,13 @@ unchanged:
 - [ ] [REFACTOR] P3. **cloud_feature_provider DONE 2026-06-11** — ml-service@e011c82: 1,202→774 facade +
       `feature_query_support.py` (298) + `sports_feature_loader.py` (219); the loader resolves `get_storage_client`
       through the facade module so the existing test patch surface
-      (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests). REMAINING in this
-      item: ml-service `training_orchestrator` (1,027 — extract the defi/sports target-generation cluster to a
-      `training_targets.py` module, keep thin delegating methods + the `CloudFeatureProvider`/`ModelRegistry`
-      module-attr patch surface) + **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 /
-      `gcs_migration_bundle` 1,143). Repos: ml-service / unified-trading-pm.
+      (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests).
+      **training_orchestrator DONE 2026-06-11** — ml-service@b62c9fe: 1,027→879 + `training_targets.py` (243, pure
+      functions, patch surface intact); `_add_ml_training_args` 243 L → 7-line dispatcher over 6 section helpers;
+      both census Any-sites cleared; budget ratcheted 3→1 (only schema-provenance remains — Phase 3);
+      MAX_FILE_LINES 1300→1000 (one 963 L file left, drop-to-900 noted in-file). REMAINING in this item:
+      **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143).
+      Repo: unified-trading-pm.
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
