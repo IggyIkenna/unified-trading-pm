@@ -130,6 +130,17 @@ page) — P2, after both v1s ship.
 - [ ] [CODE] P3. **Alert-parity audit** — walk every watcher/alert class (`ci-failure-watcher`, `promotion-lag-monitor`,
       git-health guard, billing block, consolidator watchdog) and verify each has a paired live state element on one of
       the two surfaces; file gaps as todos here. Repo: unified-trading-pm (audit) + the owning surface.
+- [ ] [CODE] P2. **No auto-escalation for a GENUINE main `quality-gates-v2` failure (gap found 2026-06-11, operator
+      Q).** `ci-failure-watcher --escalate` only hands **conflict-wall** promotion PRs (CONFLICTING/DIRTY) to
+      `escalate-to-orchestrator.yml`, and the v2-never-reported **deadlock** auto-recovers in-band (close+reopen). A
+      real red main v2 (code actually broken — e.g. the 4 repos with `main` red / LDR recovered on 2026-06-11:
+      batch-live-reconciliation / e2e-testing / greeks-service + the LDR-red mdps) → **Slack page only, NO backlog
+      dispatch to a vm-planning agent to FIX it**. Decide + implement the closed loop: classify a persistent main-v2
+      failure (red ≥N ticks, not a deadlock, not a conflict) → `repository_dispatch` to `escalate-to-orchestrator.yml`
+      with a `main-ci-red` reason → backlog task naming the repo + the failing check/log. Compose with the dashboard's
+      alert-parity (the red-main state is already shown by the new `branch_ci` chip — `FAILING(main)` — this closes the
+      ACT half). Repos: unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py` +
+      `escalate-to-orchestrator.yml`).
 
 ## Failure-injection verification matrix (operator add 2026-06-10 — completion gate for this master)
 
