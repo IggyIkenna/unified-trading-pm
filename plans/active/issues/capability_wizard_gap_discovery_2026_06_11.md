@@ -58,9 +58,9 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
 ### 2026-06-11 — capability-manifest v1 quantified the gap surface (exporter, slot-4)
 
 `generate_capability_manifest.py` v1 generated `capability-manifest.json` (UAC@434e5be): **409 nodes, 663 edges**.
-Edge-status breakdown: 441 available, 140 partial, 63 not_registered, 19 not_available. Typed-gap counts:
-**60 missing_registry, 3 needs_code_scan, 1 missing_extraction, 19 logical_dead_end**. Orphan/dead-end report:
-**124 orphan nodes, 25 unbuilt dead-ends, 16 logical dead-ends** (`openapi/capability-orphan-report.txt`, UAC@1bc2f07).
+Edge-status breakdown: 441 available, 140 partial, 63 not_registered, 19 not_available. Typed-gap counts: **60
+missing_registry, 3 needs_code_scan, 1 missing_extraction, 19 logical_dead_end**. Orphan/dead-end report: **124 orphan
+nodes, 25 unbuilt dead-ends, 16 logical dead-ends** (`openapi/capability-orphan-report.txt`, UAC@1bc2f07).
 
 Concrete gap drivers surfaced (each = a backfill candidate):
 
@@ -82,3 +82,14 @@ Concrete gap drivers surfaced (each = a backfill candidate):
   "unbuilt" findings; each is a candidate adapter/registry build. Enumerated in `capability-orphan-report.txt`.
 
 All gaps are TYPED in the manifest (never silent) — the forcing-function state the plan intends.
+
+<!-- GAP ENTRIES: two-sided audit (auto-appended by audit_prospectus_vs_codex.py) -->
+
+### Archetype Doc Coverage Gaps (from two-sided audit)
+
+#### Doc-without-enum (orphan codex docs)
+
+- `carry-recursive-borrow-perp-hedged.md` | taxonomy: `logical_dead_end` | would-map-to:
+  `CARRY_RECURSIVE_BORROW_PERP_HEDGED` | action: add enum value OR delete stale doc
+- `carry-recursive-staked-config-variants.md` | taxonomy: `logical_dead_end` | would-map-to:
+  `CARRY_RECURSIVE_STAKED_CONFIG_VARIANTS` | action: add enum value OR delete stale doc
