@@ -246,6 +246,21 @@ terraform/tofu binary on this host: install tofu OR run from the infra pipeline,
 exit-code fix (issues/qg_base_service_ratchet_exit_code_2026_06_11.md — fleet-sweep first per rule 11); (6) E5
 catalogue-reader repoint gated on sports+pred roll-ups existing (only cefi/defi/tradfi have prod/catalog.parquet).
 
+### G1.schedule smoke verdict — 2026-06-11 addendum (autonomous run)
+
+The cefi smoke execution FAILED (exit 1 ~90s in; Cloud Logging truncates the traceback mid-line). ROOT-CAUSED via docker
+repro of the exact image: **the `instruments-service:latest` image (built 2026-06-10T07:51Z) is STALE on two axes** —
+(a) its UTL predates the 2026-06-10 UAC `cloud-providers.yaml` importlib-resources relocation, so `resolve_bucket_name`
+probes for a `deployment-service/` dir absent in the container → `BucketNamingError` inside `run_rollup`; (b) the
+in-image `unified-trading-pm/configs/cloud-providers.yaml` fallback copy is the PRE-canonicalisation schema (kinds
+`instruments`/`market_data`, no `instruments-store`) so the env-var override can't rescue it either. **No tf change
+needed** — the job spec is correct; the fix is the image rebuild already in motion (tonight's instruments-service ships
+drain LDR→staging→main → Cloud Build refreshes `:latest` with the relocated UAC yaml). A persistent monitor watches for
+the new digest and auto-re-executes the cefi job to a terminal verdict; the 01:00 UTC dailies pick up the fixed image
+regardless. **Blast radius note**: ANY Cloud Run job on a 2026-06-10-or-older image that calls `resolve_bucket_name`
+without `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` has this same failure class — worth a sweep once the new images land
+(filed as a todo in the G3.5 plan owner's queue via this note).
+
 ## Cross-cutting audit verdict (slot-7 / vm-cross-cutting) — 2026-06-08
 
 > **REGRESSION RISK: NONE** for the per-AG `--apply`. All slot-7 cross-cutting work is **gate-only / consumer-side /

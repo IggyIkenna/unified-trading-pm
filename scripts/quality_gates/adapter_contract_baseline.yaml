@@ -20,18 +20,28 @@
 # Reference incident: plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md
 # (execution-service@774602ea8 + @6ba53d526 wiped 31 calls from kalshi.py + polymarket_clob.py).
 baseline:
-  deployment-api/deployment_api/services/data_status_service.py:
-    count: 7
-  execution-service/execution_service/defi_execution/protocols/aave.py:
+  deployment-api/deployment_api/services/data_status/coverage_metrics.py:
+    count: 1
+  deployment-api/deployment_api/services/data_status/mtds.py:
+    count: 5
+  deployment-api/deployment_api/services/data_status/sports_helpers.py:
+    count: 1
+  execution-service/execution_service/adapters/defi_adapter.py:
+    count: 3
+  execution-service/execution_service/defi_execution/protocols/aave_live.py:
     count: 1
   execution-service/execution_service/defi_execution/protocols/aster.py:
     count: 3
+  execution-service/execution_service/engine/modes/live/data_sink.py:
+    count: 1
   execution-service/execution_service/engine/multi_leg_orchestrator.py:
     count: 5
   execution-service/execution_service/engine/orchestrator.py:
     count: 5
   execution-service/execution_service/engine/routing/instruction_router.py:
     count: 4
+  execution-service/execution_service/results/save_operations.py:
+    count: 1
   execution-service/execution_service/sports_execution/adapters/aggregator/odds_api.py:
     count: 4
   execution-service/execution_service/sports_execution/adapters/bookmaker_api/api_football.py:
@@ -46,6 +56,10 @@ baseline:
     count: 4
   execution-service/execution_service/sports_execution/adapters/exchanges/polymarket_clob.py:
     count: 14
+  execution-service/execution_service/strategy_instructions/gcs.py:
+    count: 8
+  execution-service/execution_service/strategy_instructions/manifest.py:
+    count: 14
   execution-service/execution_service/trade_execution/__init__.py:
     count: 2
   execution-service/execution_service/trade_execution/adapters/_native_base.py:
@@ -58,7 +72,9 @@ baseline:
     count: 2
   execution-service/execution_service/trade_execution/adapters/bybit_native.py:
     count: 3
-  execution-service/execution_service/trade_execution/adapters/kraken_rest_adapter.py:
+  execution-service/execution_service/trade_execution/adapters/ccxt_common.py:
+    count: 5
+  execution-service/execution_service/trade_execution/adapters/kraken_rest_transport.py:
     count: 5
   execution-service/execution_service/trade_execution/adapters/okx_native.py:
     count: 2
@@ -69,7 +85,9 @@ baseline:
   features-service/features_service/cefi/calculators/perp_funding_rates.py:
     count: 2
   features-service/features_service/cefi/cli/handlers/perp_funding_handler.py:
-    count: 2
+    count: 5
+  features-service/features_service/commodity/cli/handlers/batch_handler.py:
+    count: 8
   features-service/features_service/common/manifest_leg_guard.py:
     count: 4
   features-service/features_service/common/manifest_window_guard.py:
@@ -78,22 +96,70 @@ baseline:
     count: 1
   features-service/features_service/cross_instrument/app/calculators/paired_spec_resolver.py:
     count: 1
+  features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:
+    count: 2
+  features-service/features_service/delta_one/cli/handlers/_failed_group_manifest.py:
+    count: 5
+  features-service/features_service/delta_one/cli/handlers/batch_handler.py:
+    count: 1
+  features-service/features_service/delta_one/config.py:
+    count: 2
+  features-service/features_service/delta_one/engine/orchestrator.py:
+    count: 1
+  features-service/features_service/multi_timeframe/engine/orchestrator.py:
+    count: 2
+  features-service/features_service/onchain/app/core/dependency_checker.py:
+    count: 1
   features-service/features_service/onchain/calculators/perp_funding_rates_defi.py:
     count: 2
+  features-service/features_service/onchain/cli/handlers/batch_handler.py:
+    count: 10
+  features-service/features_service/onchain/engine/orchestrator.py:
+    count: 1
+  features-service/features_service/performance_features/__init__.py:
+    count: 2
+  features-service/features_service/performance_features/cli_handler.py:
+    count: 5
+  features-service/features_service/performance_features/passthrough_compute.py:
+    count: 9
   features-service/features_service/sports/cli/handlers/batch_handler.py:
-    count: 4
+    count: 9
   features-service/features_service/sports/compute/__init__.py:
     count: 1
   features-service/features_service/sports/compute/coverage_gate.py:
     count: 2
+  features-service/features_service/sports/data/gcs_reader.py:
+    count: 1
   features-service/features_service/sports/exporters/derived_new_calculators.py:
     count: 1
-  instruments-service/instruments_service/engine/orchestrator.py:
-    count: 99
+  features-service/features_service/volatility/engine/feature_group_service.py:
+    count: 1
+  instruments-service/instruments_service/engine/orchestrator/__init__.py:
+    count: 3
+  instruments-service/instruments_service/engine/orchestrator/catalogue.py:
+    count: 1
+  instruments-service/instruments_service/engine/orchestrator/failure.py:
+    count: 3
+  instruments-service/instruments_service/engine/orchestrator/footystats.py:
+    count: 19
+  instruments-service/instruments_service/engine/orchestrator/process.py:
+    count: 22
+  instruments-service/instruments_service/engine/orchestrator/sfi.py:
+    count: 9
+  instruments-service/instruments_service/engine/orchestrator/sports_reference.py:
+    count: 22
+  instruments-service/instruments_service/engine/orchestrator/transfermarkt.py:
+    count: 6
+  instruments-service/instruments_service/engine/orchestrator/understat.py:
+    count: 16
+  instruments-service/instruments_service/engine/orchestrator/weather.py:
+    count: 10
+  instruments-service/instruments_service/engine/orchestrator/writers.py:
+    count: 3
   instruments-service/instruments_service/reference_data/adapters/cefi/aster.py:
     count: 7
   instruments-service/instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py:
-    count: 5
+    count: 6
   instruments-service/instruments_service/reference_data/adapters/cefi/hyperliquid.py:
     count: 7
   instruments-service/instruments_service/reference_data/adapters/cefi/tardis.py:
@@ -151,35 +217,47 @@ baseline:
   instruments-service/instruments_service/reference_data/adapters/defi/zeta.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/prediction/kalshi.py:
-    count: 6
+    count: 8
   instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:
-    count: 5
+    count: 8
   instruments-service/instruments_service/reference_data/adapters/sports/adapters/base.py:
     count: 5
   instruments-service/instruments_service/reference_data/adapters/sports/adapters/betfair.py:
     count: 3
   instruments-service/instruments_service/reference_data/adapters/tradfi/databento.py:
-    count: 3
+    count: 4
+  instruments-service/instruments_service/reference_data/adapters/tradfi/massive.py:
+    count: 4
   instruments-service/instruments_service/triggers/__init__.py:
     count: 1
   instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py:
     count: 7
   market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py:
-    count: 1
+    count: 2
   market-data-processing-service/market_data_processing_service/app/adapters/cefi/trades_adapter.py:
     count: 1
+  market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py:
+    count: 5
   market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py:
     count: 2
   market-data-processing-service/market_data_processing_service/app/core/batch_workers.py:
-    count: 8
+    count: 9
   market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:
-    count: 28
+    count: 16
+  market-data-processing-service/market_data_processing_service/app/core/canonical_writer_manifest.py:
+    count: 13
+  market-data-processing-service/market_data_processing_service/app/core/canonical_writer_stamping.py:
+    count: 2
+  market-data-processing-service/market_data_processing_service/app/core/canonical_writer_streaming.py:
+    count: 6
   market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py:
     count: 1
   market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py:
     count: 6
   market-data-processing-service/market_data_processing_service/app/core/live_workers.py:
-    count: 7
+    count: 4
+  market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py:
+    count: 6
   market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py:
     count: 5
   market-data-processing-service/market_data_processing_service/app/core/orchestration_writer.py:
@@ -187,85 +265,197 @@ baseline:
   market-data-processing-service/market_data_processing_service/schemas/output_schemas.py:
     count: 4
   market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py:
-    count: 2
+    count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:
-    count: 32
+    count: 45
+  market-tick-data-service/market_tick_data_service/cli/handlers/_solana_defi_fetch.py:
+    count: 1
+  market-tick-data-service/market_tick_data_service/cli/handlers/_solana_rpc_async.py:
+    count: 1
+  market-tick-data-service/market_tick_data_service/cli/handlers/aggregator_route_handler.py:
+    count: 12
   market-tick-data-service/market_tick_data_service/cli/handlers/bridge_events_handler.py:
-    count: 3
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py:
-    count: 3
+    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py:
-    count: 3
+    count: 7
+  market-tick-data-service/market_tick_data_service/cli/handlers/drift_v2_historical_handler.py:
+    count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/flash_loan_events_handler.py:
-    count: 3
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py:
     count: 10
   market-tick-data-service/market_tick_data_service/cli/handlers/governance_events_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/governance_proposals_handler.py:
     count: 3
+  market-tick-data-service/market_tick_data_service/cli/handlers/jupiter_quote_handler.py:
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py:
-    count: 15
+    count: 25
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidation_events_handler.py:
-    count: 3
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py:
-    count: 3
+    count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py:
-    count: 9
+    count: 12
   market-tick-data-service/market_tick_data_service/cli/handlers/mev_events_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/native_staking_handler.py:
-    count: 3
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py:
-    count: 7
+    count: 13
+  market-tick-data-service/market_tick_data_service/cli/handlers/orca_whirlpool_state_handler.py:
+    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py:
-    count: 6
+    count: 15
+  market-tick-data-service/market_tick_data_service/cli/handlers/phoenix_orderbook_handler.py:
+    count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/position_data_handler.py:
     count: 6
+  market-tick-data-service/market_tick_data_service/cli/handlers/protocol_outage_detector_handler.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/cli/handlers/raydium_classic_amm_handler.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py:
+    count: 23
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_lst_archival.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py:
     count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/token_transfers_handler.py:
-    count: 3
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py:
     count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py:
     count: 2
-  market-tick-data-service/market_tick_data_service/engine/orchestrator.py:
-    count: 67
+  market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py:
+    count: 4
+  market-tick-data-service/market_tick_data_service/engine/orchestrator/_state.py:
+    count: 9
+  market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py:
+    count: 23
+  market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py:
+    count: 17
+  market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py:
+    count: 21
+  market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py:
+    count: 6
   market-tick-data-service/market_tick_data_service/live/__init__.py:
     count: 2
   market-tick-data-service/market_tick_data_service/live/backfill_runner.py:
     count: 2
   market-tick-data-service/market_tick_data_service/live/manifest_recorder.py:
-    count: 14
+    count: 20
   market-tick-data-service/market_tick_data_service/live/websocket_runner.py:
-    count: 10
+    count: 15
   market-tick-data-service/market_tick_data_service/market_interface/__init__.py:
     count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/ccxt_adapter.py:
+    count: 15
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_lending.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_positions.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/balancer_adapter.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/curve_adapter.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/ethena_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/fluid_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/instadapp_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lst_coinbase_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lst_etherfi_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lst_kelpdao_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lst_lido_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lst_puffer_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lst_renzo_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lst_rocket_pool_adapter.py:
+    count: 3
   market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py:
-    count: 2
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/uniswap_v3_adapter.py:
-    count: 1
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/utils.py:
-    count: 4
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py:
-    count: 10
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/fred_adapter.py:
-    count: 2
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
     count: 7
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/uniswap_v3_adapter.py:
+    count: 6
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/uniswapv2_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/uniswapv4_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/utils.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/glassnode.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/helius_solana.py:
+    count: 10
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py:
+    count: 7
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/extended_adapter.py:
+    count: 14
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py:
+    count: 9
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:
+    count: 13
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py:
+    count: 7
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/footystats_adapter.py:
+    count: 17
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:
+    count: 12
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py:
+    count: 7
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sportradar_adapter.py:
+    count: 7
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/baker_hughes_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/cftc_cot_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py:
+    count: 15
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/eia_adapter.py:
+    count: 3
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/fear_greed_adapter.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/fred_adapter.py:
+    count: 5
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/ibkr_adapter.py:
+    count: 11
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py:
+    count: 7
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
+    count: 22
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py:
     count: 2
+  market-tick-data-service/market_tick_data_service/market_interface/clients/extended_base_client.py:
+    count: 1
   market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py:
     count: 1
   market-tick-data-service/market_tick_data_service/raw_tick_hive.py:
     count: 3
+  strategy-service/strategy_service/cli/handlers/batch_results.py:
+    count: 2
+  strategy-service/strategy_service/engine/core/gcs_storage_service.py:
+    count: 4
+  strategy-service/strategy_service/engine/core/instrument_existence_guard.py:
+    count: 3
+  strategy-service/strategy_service/engine/core/strategy_config_loader.py:
+    count: 7
+  strategy-service/strategy_service/engine/core/strategy_manifest.py:
+    count: 14
   strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/decision_context_writer.py:
     count: 3
   strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/hedge_ratio_writer.py:
@@ -284,6 +474,8 @@ baseline:
     count: 3
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py:
     count: 2
+  unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/altdata.py:
+    count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/defi.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py:
@@ -291,6 +483,8 @@ baseline:
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/manifest_schema.py:
     count: 4
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/scenario_overlay/_enums.py:
+    count: 1
+  unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/domain/predictions/canonical_groups.py:
     count: 1
@@ -304,8 +498,12 @@ baseline:
     count: 2
   unified-api-contracts/unified_api_contracts/registry/data_status_axis_matrix.py:
     count: 1
+  unified-api-contracts/unified_api_contracts/registry/expected_coverage.py:
+    count: 4
   unified-api-contracts/unified_api_contracts/registry/half_day_sessions.py:
     count: 1
+  unified-api-contracts/unified_api_contracts/registry/sports_per_source_rules.py:
+    count: 2
   unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py:
     count: 3
   unified-api-contracts/unified_api_contracts/signal_broadcast/delivery.py:
@@ -320,6 +518,8 @@ baseline:
     count: 1
   unified-trading-library/unified_trading_library/events_interface/schemas.py:
     count: 1
+  unified-trading-library/unified_trading_library/fixtures/status_verifier.py:
+    count: 2
   unified-trading-library/unified_trading_library/io/streaming_writer.py:
     count: 6
   unified-trading-library/unified_trading_library/manifest_completeness.py:
@@ -329,19 +529,21 @@ baseline:
   unified-trading-library/unified_trading_library/manifest_reader_fallback.py:
     count: 1
   unified-trading-library/unified_trading_library/manifest_writer.py:
-    count: 81
+    count: 102
   unified-trading-library/unified_trading_library/manifest_writer_normalising.py:
-    count: 14
+    count: 16
   unified-trading-library/unified_trading_library/options_cluster_lookup.py:
     count: 1
   unified-trading-library/unified_trading_library/per_leaf_failure.py:
-    count: 20
+    count: 21
+  unified-trading-library/unified_trading_library/pipeline_mode_resolver.py:
+    count: 3
   unified-trading-library/unified_trading_library/streaming/candle_writer.py:
     count: 26
   unified-trading-library/unified_trading_library/streaming/live_aggregator.py:
     count: 6
   unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py:
-    count: 12
+    count: 13
   unified-trading-library/unified_trading_library/streaming/utc_aligned_scheduler.py:
     count: 1
   unified-trading-library/unified_trading_library/synthetic/harness.py:
@@ -350,6 +552,10 @@ baseline:
     count: 1
   unified-trading-library/unified_trading_library/watermark/alignment_fanin.py:
     count: 1
+  unified-trading-pm/plans/audit/results/a1_scan_codified_shape_compliance.py:
+    count: 34
+  unified-trading-pm/plans/audit/results/a5_dependency_propagation.py:
+    count: 31
   unified-trading-system-ui/context/api-contracts/canonical-schemas/crosscutting/errors/__init__.py:
     count: 2
   unified-trading-system-ui/context/internal-contracts/schemas/events.py:

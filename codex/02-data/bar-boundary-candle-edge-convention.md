@@ -55,6 +55,31 @@ gates below.
 - **Era/migration**: the per-AG `①–⑫` pre-apply audit `⑪ batch=live` also asserts edge-consistency; the
   `batch_live_symmetry` cross-source equivalence item (k) carries the same fixture.
 
+## Databento raw corpus boundary — the `bar_edge="close"` row-level marker (2026-06-11)
+
+Databento (and Massive, by representation) stamp raw `ohlcv_*` aggregates on the bar OPEN edge, and the MTDS writer
+aliases `ts_event→timestamp` (`_COLUMN_ALIASES`, live since 2026-04-16) — so the PRE-conversion raw corpus carries
+open-edge values under the column name `timestamp` (2026-06-10 census: 24/24 sampled raw tradfi ohlcv parquets, zero
+`ts_event`). The bar_edge plan Phase 1 P0 fix (2026-06-11) closes the METASTABLE column-NAME-keyed MDPS shift:
+
+- **MTDS converts at ingestion (new writes are close-edge)**: `databento_adapter._convert_ohlcv_open_edge_to_close`
+  rewrites `ts_event` to `t_close` via `compute_bar_close_boundary` (interval-aware, `_OHLCV_DATA_TYPE_TIMEFRAME`;
+  scoped to `ohlcv_*` data_types ONLY — trades/tbbo `ts_event` is point event time and stays) and stamps a row-level
+  **`bar_edge="close"`** column. The marker is deliberately a COLUMN, not parquet footer metadata: MDPS reads raw
+  parquets via polars `read_parquet` → `to_pandas()` and footer metadata does not survive that path — a column does. The
+  writer's day-partition guard (`validate_day_partition_alignment(close_edge=True)`, keyed on the marker) validates the
+  half-open `(day, day+1]` window for close-edge frames (the day's last bar legitimately closes at next-day midnight).
+  Raw-surface `available_at` is now t_close-anchored for free (the writer stamps it from the post-alias `timestamp`
+  column).
+- **MDPS shifts only the PRE-conversion corpus, source/content-aware** (`ohlcv_passthrough._is_start_of_period_input`) —
+  never keyed on the column NAME alone. Decision order: `bar_edge` marker (`"close"` → never shift; `"open"` → shift) →
+  row-level `source` provenance (`databento`/`massive` = open-edge vendors → shift; yahoo/barchart already write the
+  close edge → never) → literal `ts_event` column name (legacy raw shape) → unmarked-`ohlcv_1m` default = shift
+  (census-grounded; unmarked 15m/24h is the yahoo/barchart close-edge corpus → no shift). Marked input is never
+  double-shifted.
+- **UAC** `external/databento/schemas.py` + `schemas_columns.py` document `ts_event` as the bar OPEN (start-of-period) —
+  the prior "Bar close timestamp" description was wrong.
+
 ## Known latent (baselined, not prod-corrupting)
 
 The consumed candle store is right-edge correct; the remaining open-edge sites are latent (not writing consumed candles

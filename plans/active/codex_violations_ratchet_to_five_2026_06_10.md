@@ -148,8 +148,17 @@ unchanged:
       (public surface identical). - If round-tripping by hand is error-prone, ship a one-shot
       `scripts/dump_registry_to_yaml.py` that emits the data file from the current literals (the migration), then delete
       the literals. Remove the `FUNCTION_SIZE_EXTRA_EXCLUDES` glob. Repo: features-service.
-- [ ] [REFACTOR] P1. **instruments-service `orchestrator.py` (8,192 L / 89 functions) — abstract by asset-group +
-      core.** The module mixes per-asset-group logic with venue/date core + sink. Suggested package
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — instruments-service@cb51c98: orchestrator.py 8,192 L → `engine/orchestrator/`
+      package (16 cohesion modules + 863-line thin `__init__` re-exporting every symbol; defi/sports(×5)/prediction…
+      per the plan grouping extended by real cohesion); weather.py deep-import flipped to the new one-level facade
+      (cleared the surfaced deep-import class → V back to 4/4); FUNCTION_SIZE exclude narrowed from the whole monolith
+      to 2 carrying modules (process.py 1,963 L legacy `process_instruments` body + sports_reference.py — justified
+      in-file citing this plan); contract-call conservation verified (114 ≥ baseline 99); full QG green. Follow-up:
+      decompose `process_instruments()` (next todo). Original: **instruments-service `orchestrator.py` (8,192 L / 89
+      functions) — abstract by asset-group + core.**
+- [ ] [REFACTOR] P3. **instruments-service `engine/orchestrator/process.py` (1,963 L)** — decompose the legacy
+      `process_instruments()` (1,931-line function body, moved verbatim in the 2026-06-11 split) by stage/asset-group;
+      then remove the process.py + sports_reference.py FUNCTION_SIZE_EXTRA_EXCLUDES entries. Repo: instruments-service. The module mixes per-asset-group logic with venue/date core + sink. Suggested package
       `engine/orchestrator/`: `defi.py`
       (`_build_defi_venues`/`clear_defi_universe_cache`/`_get_defi_manifest_high_watermarks`/
       `_enforce_defi_monotonicity`/`filter_defi_instruments_by_relevance`/`_normalize_wrapped_token`), `sports.py`
@@ -160,8 +169,18 @@ unchanged:
       `filter_instruments_by_date`), `sink.py` (`_gated_sink_write`/`_coerce_adapter_output`), `failure.py`
       (`_classify_adapter_failure`). `orchestrator.py` becomes the thin coordinator that imports + sequences these.
       Repo: instruments-service.
-- [ ] [REFACTOR] P1. **deployment-api `data_status_service.py` (6,663 L / 69-method `DataStatusService` god-class) —
-      abstract the domain logic out (operator 2026-06-10).** Suggested package `services/data_status/`: `defi.py`
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — deployment-api@6b7aa69: data_status_service.py 6,663 L → 638-line facade +
+      15-module `services/data_status/` package (defi/sports/coverage/manifest/missing_shards/venue_resolution/cli/
+      breakdowns/mtds/rollup_cache/... all ≤864 L); `DataStatusService` keeps all 80 public methods (delegation, zero
+      caller churn). Mid-flight foreign F4 seeded-4state-denominator fix (deployment-api@644e439) GRAFTED into the
+      split layout (helpers + seeded branch in data_status/mtds.py; its test adapted to load mtds.py — all 147
+      data-status tests green). Bonus: last strategy_service import (treasury NAV) flipped to UTL → strategy-service
+      path-dep REMOVED from pyproject + PM workspace-manifest (no-service↔service HARD RULE), budget ratcheted back
+      25→24 (the transient 25th class was the manifest-alignment edge). drilldown/routes follow-up stays below.
+      Original: **deployment-api `data_status_service.py` (6,663 L / 69-method god-class) — abstract the domain logic
+      out (operator 2026-06-10).**
+- [ ] [REFACTOR] P2. **deployment-api `data_status_drilldown.py` (2,586 L) + `routes/data_status.py` (2,550 L)** —
+      same facade treatment as the service split (routers preserved byte-identical). Repo: deployment-api. Suggested package `services/data_status/`: `defi.py`
       (`_is_legacy_defi_venue_row`/`_read_defi_merged_index`/`_allowed_defi_venue_chain_pairs`/
       `_filter_to_canonical_defi_venues`/`_filter_legacy_defi_rows`), `sports.py` (`_is_sports_reference_venue`/
       `_is_understat_venue`/`_is_transfer_window_venue`/`_is_sparse_sports_entity`/`_get_reference_expected_dates`),
@@ -192,20 +211,36 @@ unchanged:
       module-attr patch surfaces (`server.state_store.utcnow/to_utc/log_activity`) + bare-name cross-calls — a
       zero-caller-edit split is impossible (mixins = banned shim). Proper unit: decompose by entity/concern AND migrate
       the test patch targets in the same commit (pre-audit the full patch manifest first). Repo: agent-orchestrator.
-- [ ] [REFACTOR] P1. **market-tick-data-service `orchestrator.py` (4,219 L)** + `tardis_adapter.py` (2,880) +
-      `solana_defi_handler.py` (2,125) — decompose by venue/transport. Repo: market-tick-data-service.
-- [ ] [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
+- [ ] [REFACTOR] P1. **orchestrator HALF DONE 2026-06-11** — market-tick-data-service@1681f85: orchestrator.py
+      4,219 L → `engine/orchestrator/` package (7 modules ≤824 L: venue_fetch / partitioned_writer / sentinels /
+      manifest_finalize / preflight / symbol_rules / _state + thin `__init__`); namespace-patch regression in the
+      dt-start-date gate fixed (sentinels route UAC gates via `_orch.`); foreign asset_group-provenance fix
+      (MTDS@5df7872-adjacent) grafted into manifest_finalize; contract-call conservation 79 ≥ baseline 67; full QG
+      green. REMAINING in this item: `tardis_adapter.py` (2,880) + `solana_defi_handler.py` (2,125) — decompose by
+      venue/transport. Repo: market-tick-data-service.
+- [x] ✅ [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
       + 6 archetype-family modules; batch_handler.py 1,570→847 + 4 concern modules; TARGET_UNIVERSE content-hash
       identical pre/post; budget ratcheted 11→10 (census-honest). Cross-repo finding surfaced: execution-service
       `defi_target_universe_rebalance_recommender.py:310` imports `specs_for_archetype` from the strategy-service
       module path — KNOWN/sanctioned via UAC `service_contract_map.py:216` forbidden_exceptions + deprecation_ledger
-      (move to UAC registry long-term); facade preserves the path so the consumer is unaffected. REMAINING in this
-      item: **market-data-processing `canonical_writer.py` (2,412)** + **execution-service** adapters >1k
-      (`kraken_rest_adapter` 1,299 / `uniswap` 1,245 / `aave` 1,136) — split each below 900 (agents in flight).
-      Repos: market-data-processing-service / execution-service.
-- [ ] [REFACTOR] P3. **ml-service** (`cloud_feature_provider` 1,202 / `training_orchestrator` 1,027) +
-      **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143) — split the >900
-      tail. Repos: ml-service / unified-trading-pm.
+      (move to UAC registry long-term); facade preserves the path so the consumer is unaffected.
+      **MDPS DONE 2026-06-11** — market-data-processing-service@1cdf3ec: canonical_writer 2,412→536 facade + 4 modules
+      (manifest/shaping/stamping/streaming); live_workers 1,731→516 + 2 modules (chain/streaming); databento
+      classifier import flipped to its new UAC `external/databento` home + the banned MTDS path-dep REMOVED from
+      pyproject (no-service↔service); budget ratcheted 10→7 (census-honest); full QG green.
+      **execution-service DONE 2026-06-11** — execution-service@48eec983: kraken_rest_adapter 1,299→683+443+283 /
+      uniswap 1,245→565+478+342 / aave 1,136→629+578 / manual_instruction_api 1,085→815+368 / gcs_data_loading
+      1,012→781+281 + amm/betfair companions, all below 900 with facade modules preserved; budget ratcheted 24→21
+      (census-honest); full QG green (292s). lxml advisory: not a direct execution-service dep (transitive) — tracked
+      under the pip-audit class in Phase 4. ITEM COMPLETE — flipping checkbox:
+- [ ] [REFACTOR] P3. **cloud_feature_provider DONE 2026-06-11** — ml-service@e011c82: 1,202→774 facade +
+      `feature_query_support.py` (298) + `sports_feature_loader.py` (219); the loader resolves `get_storage_client`
+      through the facade module so the existing test patch surface
+      (`cloud_feature_provider.get_storage_client`) keeps intercepting; full QG green (2,181 tests). REMAINING in this
+      item: ml-service `training_orchestrator` (1,027 — extract the defi/sports target-generation cluster to a
+      `training_targets.py` module, keep thin delegating methods + the `CloudFeatureProvider`/`ModelRegistry`
+      module-attr patch surface) + **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 /
+      `gcs_migration_bundle` 1,143). Repos: ml-service / unified-trading-pm.
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
