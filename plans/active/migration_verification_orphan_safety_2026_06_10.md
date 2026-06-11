@@ -153,10 +153,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       the projected v9 `_index` (schema*version stays 9 = "v9 projected"); **dev-target HARD-guard** (refuses any
       prod/staging `_index`); no objects moved. Migrator dry-runs call it. 4 tests. — is@da74c72c. *(The per-AG dev
       render + operator goalpost eyeball remains — next item.)\_
-- [ ] [VERIFY] P1. Per-AG: drop the projected `_index` in the **dev** bucket, run `restart-deployment-stack.sh --api`
-      with `DEPLOYMENT_ENV_SHORT=dev`; confirm data-status/deployment-UI render coverage % + 4-state + could-exist
-      denominator + drilldowns; operator eyeballs the goalposts. Delete the dev `_index` after. cefi/pred=slot-3;
-      defi/tradfi/sports=slot-2.
+- [x] ✅ [VERIFY] P1. Per-AG dev render — **DONE via the superseding `DATA_STATUS_BETA_MANIFEST_BLOB` mechanism**
+      (deployment-api `services/manifest_source.py`, landed 2026-06-11: the env var redirects EVERY data-status surface
+      to `_index/audit/projected_index_{asset_group}.parquet` in the SAME prd bucket — read-only, no dev-bucket copy,
+      loud-fail on a missing projection; supersedes the dev-bucket-drop recipe — 3 of 5 dev buckets never existed).
+      BETA-vs-LIVE rendered + captured for instruments + market-tick-data data-status views (all 5 AGs inline);
+      evidence + per-AG verdict packs at `plans/audit/results/r3_beta_renders_2026_06_11/` (pm@a30de5abd). **Operator
+      goalpost EYEBALL remains open — V6.** | regression: deployment-api tests/unit/services/test_manifest_source.py
 
 ## V6 — Pre-apply verdict → G4 → verified-delete (CF-21)
 
