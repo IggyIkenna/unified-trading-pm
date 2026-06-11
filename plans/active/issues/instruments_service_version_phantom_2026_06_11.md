@@ -2,8 +2,10 @@
 title: "instruments-service version phantom — RESOLVED (de-inflated runaway semver to coherent 0.4.0)"
 created: 2026-06-11
 resolved: 2026-06-11
-author: slot-1 (CI firefight)
 status: resolved
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # instruments-service version phantom — RESOLVED
