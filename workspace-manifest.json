@@ -140,7 +140,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -310,7 +310,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -781,7 +781,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "ml-service": {
       "type": "service",
@@ -980,7 +980,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "trading-agent-service": {
       "type": "service",
@@ -1035,7 +1035,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-api-contracts": {
       "type": "library",
@@ -1075,7 +1075,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-trading-library": {
       "type": "library",
