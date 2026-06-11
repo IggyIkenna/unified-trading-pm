@@ -182,11 +182,12 @@ on the PR (head=LDR commit) — noise, not a staging build.
 - [ ] [WORKFLOW] P3. Stop the LDR build's CodeBuild check from posting on LDR→staging drain PRs (the red noise).
   **(REALIZED 2026-06-11 via the `--build` opt-in: gating the AWS CodeBuild LDR webhook on `COMMIT_MESSAGE: Build-LDR:
   true` means non-opted LDR commits don't build → no CodeBuild status → no drain-PR noise. See Progress Log.)**
-- [ ] [BUILD-FIX] P2. **NEW (separate pre-existing bug surfaced 2026-06-11)**: the AWS CodeBuild MTDS LDR build is
-  currently FAILING on every LDR commit (`AWS CodeBuild ap-northeast-1 (market-tick-data-service)` = failure) — diagnose
-  `buildspec.aws.yaml` / the project config and fix, OR confirm AWS ECR is not a live deploy target and retire the AWS
-  CodeBuild projects. This BLOCKS using AWS as a `main` required gate (can't require a red check). Repo:
-  `market-tick-data-service` + `deployment-service/terraform/cloud-build/aws`.
+- [ ] [BUILD-FIX] P3. **NEW (decision item surfaced 2026-06-11)**: the AWS CodeBuild fleet (`terraform/cloud-build/aws`)
+  is DRIFTED from terraform (live webhooks fire on LDR, not `var.branch_pattern`/main) and builds are intermittently red
+  in PR context — decide whether AWS ECR is still a live deploy target. If YES: reconcile TF↔live (the live imperative
+  webhook config is the SSOT to capture) + stabilise the build before any AWS gate. If NO: retire the AWS CodeBuild
+  projects + webhooks (GCP `…-build` is the prod image build). Until decided, AWS is NOT a `main` required gate. Repo:
+  `deployment-service`.
 
 **Build-trigger surface map (3 interlocked paths — fully traced 2026-06-11; the implementation MUST reconcile all 3,
 which is why this is canary-first, not a one-shot edit):**
@@ -221,9 +222,11 @@ Append-only. Durable state across context compaction (AUTONOMOUS_AGENT_RULES rul
   - `market-tick-data-service-feature-build` → feature branches.
 - **AWS CodeBuild (MTDS)** — project `market-tick-data-service`; LIVE webhook = single filter group `EVENT=PUSH,
   HEAD_REF=^refs/heads/live-defi-rollout$`, `pullRequestBuildPolicy.requiresCommentApproval=ALL_PULL_REQUESTS`. This is
-  **DRIFTED from `terraform/cloud-build/aws/main.tf`** (TF says it fires on `var.branch_pattern`/main). Status context
-  `AWS CodeBuild ap-northeast-1 (market-tick-data-service)` is **FAILING (red)** on every LDR commit → this IS the "red
-  noise on drain PRs" (the drain PR head = the LDR commit, so its failing CodeBuild status surfaces on the PR).
+  **DRIFTED from `terraform/cloud-build/aws/main.tf`** (TF says it fires on `var.branch_pattern`/main). It builds on
+  EVERY LDR push (cost). **Correction (verified 2026-06-11): the AWS build is NOT persistently failing — the last 3
+  builds SUCCEEDED.** The audit's "red noise on drain PRs" is the CodeBuild status surfacing on the drain PR (head = LDR
+  commit) — intermittent failures and/or the `requiresCommentApproval` PR-context status. Gating the LDR webhook on the
+  `Build-LDR` trailer removes the AWS status from non-opted LDR commits entirely → clean drain PRs + cost saved.
 - **v2 `dispatch-cloud-build` step** — `if: event_name=='push' && ref=='refs/heads/staging'`; the template's `on:` no
   longer has `push:[staging]` (A3, 2026-06-10) → the step is **DEAD/skipped** on every commit. Cannot be the LDR-build
   dispatcher (v2 never runs on LDR).
@@ -248,7 +251,8 @@ Append-only. Durable state across context compaction (AUTONOMOUS_AGENT_RULES rul
 ### Shipped
 
 - `unified-trading-pm/scripts/quickmerge.sh` — `--build` flag → `Build-LDR: true` trailer (additive; inert until a
-  cloud-native reader gates on it; `Quickmerge:` strict-guard unaffected — substring match). _<sha pending>_
+  cloud-native reader gates on it; `Quickmerge:` strict-guard unaffected — substring match). **SHIPPED PM@f6a4dbecf**
+  (LDR; rides standing LDR→main PR, v2-gated; PM QG green; `bash -n` OK).
 
 ## Composes with
 
