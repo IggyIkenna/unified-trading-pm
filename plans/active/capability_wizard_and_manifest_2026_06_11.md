@@ -242,10 +242,11 @@ variant; else straight basis within the archetype). Restrictions exhaustive — 
       RULES_DIRECTIONAL_EVENT_SETTLED, STAT_ARB_CROSS_SECTIONAL, VOL_TRADING_OPTIONS). Prospectus "Leg Structure" table
       per archetype (honest gap line where absent). Manifest 409→435 nodes / 663→902 edges. Deterministic (twice
       byte-identical).
-- [ ] [AGENT][UI] P1. Wizard Instruments/Venues stages become leg-aware: mandatory legs pre-selected and
+- [x] ✅ [AGENT][UI] P1. Wizard Instruments/Venues stages become leg-aware: mandatory legs pre-selected and
       non-deselectable, instrument types grouped by leg role with the conditional surfaced ("on venues where the LST is
       not accepted as perp collateral, this archetype runs straight basis"), cross-category legs break the
       single-category assumption from Stage A (show + auto-include the hedge leg's category). pw:L2 gate.
+      — ui@85f27c46 | pw:L2 ✓ (13/13 smoke tests green) | regression: tests/smoke/wizard.spec.ts
 
 ## Phase 3 — strategy prospectus generator (script first, UI later; PARALLEL with Phase 2)
 
