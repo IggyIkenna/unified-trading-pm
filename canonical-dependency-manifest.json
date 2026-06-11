@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-06-05T17:40:44.575024+00:00",
+  "generatedAt": "2026-06-11T11:45:07.239268+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -202,7 +202,7 @@
     },
     {
       "name": "lxml",
-      "versionRange": "lxml>=5.0,<6.0"
+      "versionRange": "lxml>=6.1.0,<7.0.0"
     },
     {
       "name": "lz4",

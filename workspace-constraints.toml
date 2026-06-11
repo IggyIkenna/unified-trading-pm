@@ -55,7 +55,10 @@ jinja2 = "jinja2>=3.0.0,<4.0.0"
 joblib = "joblib>=1.3.0,<2.0.0"
 jsonpickle = "jsonpickle>=3.0.0,<4.0.0"
 lightgbm = "lightgbm>=4.0.0,<5.0.0"
-lxml = "lxml>=5.0,<6.0"
+# widened 2026-06-11 for PYSEC-2026-87 (fix >=6.1.0; prior canonical >=5.0,<6.0 conflicted with the
+# fix) — coordinated fleet bump: execution-service direct dep + e2e-testing/SIT transitive locks.
+# SSOT: plans/active/codex_violations_ratchet_to_five_2026_06_10.md (Phase 4 lxml todo)
+lxml = "lxml>=6.1.0,<7.0.0"
 lz4 = "lz4>=4.3.0,<5.0.0"
 matplotlib = "matplotlib>=3.9.0,<4.0.0"
 mypy = "mypy>=1.13.0,<2.0.0"
