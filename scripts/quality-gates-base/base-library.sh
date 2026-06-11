@@ -797,41 +797,58 @@ qg_prof start size-checks
 SVIOL=""; SWARN=""
 _size_extra_args=()
 for _excl in "${SIZE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _size_extra_args+=("!" "-path" "$_excl"); done
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null); do
-    lines=$(wc -l < "$f" 2>/dev/null || echo 0)
-    if [[ "$f" == ./tests/* || "$f" == ./test/* ]]; then
-        # Test files: warn-only for file size (test suites naturally grow large)
-        [[ "$lines" -gt $MAX_FILE_LINES ]] && SWARN="${SWARN}\n  $f: $lines L"
-    else
-        [[ "$lines" -gt $MAX_FILE_LINES ]] && SVIOL="${SVIOL}\n  $f: $lines L"
-    fi
-done
-[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
-[[ -n "$SWARN" ]] && log_warn "Test files exceed limit:$SWARN"
+# Batched size-checks (mirror of base-service.sh): ONE python pass per check instead of
+# 1 wc/python PER source file — the per-file subprocess spawn was the size-check cost.
+# Same find exclusions + thresholds + AST visitor verbatim → byte-identical violations;
+# only the spawn count drops (O(files) → 3). Helps every QG context (local/CI/SIT).
+_SIZE_FILES_FILE=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null)
+# File-size: non-test files FAIL (SVIOL), test files WARN (SWARN); line count == `wc -l` (count of '\n').
+# The ./tests/ ./test/ split matches the original `[[ "$f" == ./tests/* ]]` root-anchored glob.
+SVIOL=$(printf '%s\n' "$_SIZE_FILES_FILE" | $PYTHON_CMD -c "
+import sys
+mx=$MAX_FILE_LINES; out=[]
+for p in (line.strip() for line in sys.stdin):
+  if not p or p.startswith('./tests/') or p.startswith('./test/'): continue
+  try:
+    with open(p,'rb') as fp: n=fp.read().count(b'\n')
+  except OSError: continue
+  if n>mx: out.append(f'  {p}: {n} L')
+print('\n'.join(out))
+" 2>/dev/null || :)
+SWARN=$(printf '%s\n' "$_SIZE_FILES_FILE" | $PYTHON_CMD -c "
+import sys
+mx=$MAX_FILE_LINES; out=[]
+for p in (line.strip() for line in sys.stdin):
+  if not p or not (p.startswith('./tests/') or p.startswith('./test/')): continue
+  try:
+    with open(p,'rb') as fp: n=fp.read().count(b'\n')
+  except OSError: continue
+  if n>mx: out.append(f'  {p}: {n} L')
+print('\n'.join(out))
+" 2>/dev/null || :)
+[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:\n$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
+[[ -n "$SWARN" ]] && log_warn "Test files exceed limit:\n$SWARN"
 
 # Function/class/method size (exclude build artifacts and test dirs — test methods can be long)
-FSIZES=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null); do
-    out=$($PYTHON_CMD -c "
+FSIZES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null | $PYTHON_CMD -c "
 import ast, sys
-p=sys.argv[1]
-try:
-  with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
-  def v(n,par=None):
-    if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
-      l=(n.end_lineno or n.lineno)-n.lineno+1
-      if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
-      elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
-    elif isinstance(n,ast.ClassDef):
-      l=(n.end_lineno or n.lineno)-n.lineno+1
-      l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
-    for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
-  v(tree)
-except: pass
-" "$f" 2>/dev/null || :)
-    [[ -n "$out" ]] && FSIZES="${FSIZES}\n${out}"
-done
-[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
+for p in (line.strip() for line in sys.stdin):
+  if not p: continue
+  try:
+    with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
+    def v(n,par=None):
+      if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
+        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
+      elif isinstance(n,ast.ClassDef):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
+      for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
+    v(tree)
+  except Exception: pass
+" 2>/dev/null || :)
+[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:\n$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
 qg_prof end size-checks
 
 # Security: pip-audit (prefer project venv to avoid workspace transitive vulns)

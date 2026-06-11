@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-19
+last_reviewed: 2026-06-11
 ---
 
 # `pipeline_mode` Hive Partition
@@ -131,13 +131,103 @@ The `pipeline_mode` axis is **source-aware for ALL three modes** — `batch_<sou
 `live_<source>` migration + the M4 reader are a separate GATED tranche; until then live still writes the transitional
 `live_websocket` alias.)
 
+## Ratified TARGET design — live/replay (M1–M8 settled contract)
+
+> **This section is the SETTLED codex contract** for the batch/live/replay final-target design (operator-ratified
+> 2026-06-05, all 6 decisions; R4 transport rule 2026-06-07; codified here per M-COORD-1/R6-codex 2026-06-11). Plans
+> REFERENCE this section — not vice versa. Design provenance:
+> [`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`](../../plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)
+> (M1–M9). Items marked **[GATED — `M1-BREAKING` tranche]** are the ratified target whose OBJECT/code migration has not
+> yet run; everything else is live contract today.
+
+### M1 — object layout: `live_<source>` / `replay_<source>` **[GATED — `M1-BREAKING` tranche]**
+
+Live and replay objects land on the SAME canonical hive path as batch, differing only in the `pipeline_mode=` value
+(LEFT of `asset_group=`, byte-identical otherwise — batch=live):
+
+```
+…/raw_tick_data/by_date/day=YYYY-MM-DD/pipeline_mode=batch_databento/asset_group=tradfi/venue=…   (T+1 floor)
+…/raw_tick_data/by_date/day=YYYY-MM-DD/pipeline_mode=live_databento/asset_group=tradfi/venue=…    (streamed live)
+…/raw_tick_data/by_date/day=YYYY-MM-DD/pipeline_mode=replay_databento/asset_group=tradfi/venue=…  (intraday gap-fill)
+```
+
+The source-aware live value fixes the live multi-source PATH COLLISION (two live sources for one cell both writing
+`pipeline_mode=live_websocket/…` → same path → silent overwrite). Until the gated tranche migrates live
+writers/objects/readers, live still writes the transitional `live_websocket` alias; `replay_<source>` writers land in
+the same tranche. The transitional alias is REMOVED once no object references it. Readers ALWAYS prefix-match `batch_*`
+/ `live_*` / `replay_*` (+ bare legacy) — never an exact coarse literal.
+
+### M2×M3 — capability + per-shard availability registries (UAC SSOT)
+
+- **M2 — `SOURCE_MODE_CAPABILITY`** (UAC `canonical/crosscutting/source_priority.py`): per `source`, the frozen set of
+  modes it CAN run `{BATCH, LIVE, REPLAY}`. **Replay (crisp definition)** = the source can retrieve a RECENT window ON
+  DEMAND — "today's data from start-of-day" — to fill an intraday / startup / live-downtime gap (format-agnostic). Chain
+  RPCs are always replay-capable (deterministic); an end-of-day-archive vendor is NOT (`tardis` = batch-only; CeFi
+  live/replay sources are the EXCHANGES themselves). The target lookup is per-`(source, data_type)` —
+  `modes_for(source, data_type)` derived from `SourceCapability.operations` — superseding the coarse per-source
+  placeholder (e.g. hyperliquid is live for `trades`/`l2_book` but batch-only for `funding_rates`).
+- **M3 — per-shard available-sources registry**: per shard atom, which sources serve it. **M2 × M3 →
+  `could_exist(shard, mode)`** — the guardrail that the could-exist denominator, the data-status views, and the startup
+  gate all read; never look for (or count against coverage) data that cannot exist for that shard in that mode. Extends
+  the instrument-existence guard + could-exist denominator to the mode axis.
+
+### M4 — mode-contextual read precedence (`select_for_mode`)
+
+Precedence is a CONSUMER config, not one global order: a **live-mode consumer** reads `live > replay > batch`; a
+**batch-mode consumer** (backtest / T+1 reconciliation) reads `batch > replay > live`. `replay` is ALWAYS the middle
+(gap-fill) tier. The data-status surface is mode-AGNOSTIC (M5 union: ≥1 mode `captured` ⇒ cell `captured`; M4 only picks
+the representative row — shipped `deployment-api@4dd2575`/`@46e3d57`). The live read-path resolver
+`select_for_mode(consumer_mode, available_modes)` lives in **batch-live-reconciliation-service** **[GATED — rides the
+`M1-BREAKING` tranche]**.
+
+### M6 — capability-driven startup gate (the `[batch-cutoff → now]` tail)
+
+Feature lookback (e.g. a 100-day MA) is satisfied by **batch**; the real continuity risk at a live flip is the
+`[batch-cutoff → now]` tail. The fill policy is a static per-shard fact read from M2×M3 — the code KNOWS which applies:
+
+1. shard has a **replay-capable** source → autostart `replay_<source>` over `[cutoff → now]` (autonomous);
+2. no replay but a **live** source → live must ALREADY be running (started ahead) — else the shard cannot operate;
+3. no replay AND no live (batch sole SSOT — e.g. sports fixtures) → wait for batch / refuse to start / a
+   configured-OK-gap (per-shard DR config).
+
+Homes: batch-live-reconciliation-service + strategy-service (live-flip readiness gate) + MTDS (startup). **[GATED]**
+
+### M7 — autonomous replay recovery
+
+Alerting + auto-recovery DETECT a gap (batch stopped + no live + replay-capable shard) and FIRE `replay_<source>`
+themselves — same-data where capable, autonomously. "Gaps are OK" is a per-shard DR config, never a default. Composes
+with [`../04-architecture/autonomous-recovery-matrix.md`](../04-architecture/autonomous-recovery-matrix.md). **[GATED]**
+
+### M8 — cadence is a COLUMN (an observability axis), NEVER a path key
+
+`pipeline_mode` (batch/live/replay × source) is the **reconciliation/provenance axis** the reader unions over.
+Operational cadence / deployment topology is a SEPARATE axis:
+`Cadence ∈ {one_off_backfill, t1_daily, scheduled_recurring, continuous_live, recovery_replay}` (UAC enum, shipped) —
+carried as a **manifest COLUMN + the deployment-registry `run_class`**, NOT a GCS path key, so it never fragments the
+data or the union. A T+1 daily Tardis pull and a one-off historical Tardis backfill are BOTH `batch_tardis` (ONE
+pipeline to union) differing only in cadence. Reference data (IS instruments/fixtures, api-football 7-days-ahead
+fixtures) is `batch_<source>` + cadence `scheduled_recurring` — sparse/forward-looking is a cadence property, not a new
+pipeline_mode. The `transport` column (shipped, § above) is the wiring model the cadence column follows. **[column
+wiring GATED — rides the v9 walk per M5b single-walk discipline]**
+
+### T+1 batch≈live reconciliation + live TTL **[GATED — after M4 + `M1-BREAKING` live writers]**
+
+Once batch lands for a window, the batch-live-reconciliation-service confirms **batch ≈ live within a tolerance**, then
+a TTL clears the now-redundant `live_<source>` cells (batch is the durable SSOT). Long-lived `replay_<source>` stays
+where batch never existed. Config knobs (sensible defaults): reconciliation tolerance + TTL horizon. Repo:
+batch-live-reconciliation-service (+ UTL TTL helper). Agreement-rule details:
+[`pipeline-mode-and-batch-live-reconciliation.md`](pipeline-mode-and-batch-live-reconciliation.md).
+
 ## Reader behaviour
 
 `UAC.SOURCE_PRIORITY` resolution at read time:
 
-1. Stratify rows by `pipeline_mode` group (live vs each batch source).
+1. Stratify rows by `pipeline_mode` group (live / replay / each batch source).
 2. Within each stratum, apply the existing `priority` ordering.
-3. **Live always wins for dates where live exists**; batch wins where it doesn't.
+3. Across strata, apply the **M4 mode-contextual precedence** (§ "Ratified TARGET design" above): a live consumer reads
+   `live > replay > batch`; a batch consumer reads `batch > replay > live`. (The legacy single-context "live always
+   wins" rule at `source_priority.py:628` is the live-consumer special case — the full `select_for_mode` resolver is the
+   gated M4 item.)
 
 This makes batch-vs-live reconciliation straightforward: pivot the same query by `pipeline_mode` and diff the per-shard
 output. See `live_pipeline` Phase 12 for the full reconciliation gate criteria.

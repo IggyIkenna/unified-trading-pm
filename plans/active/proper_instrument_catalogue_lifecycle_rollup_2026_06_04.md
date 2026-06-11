@@ -304,3 +304,131 @@ and it is correct + self-refreshing, with no separate artifact to drift.
 - Confirm the canonical catalogue object path matches `resolve_bucket_name` output for `kind="instruments-store"` (the
   launcher hardcodes `instruments-store-{ag_short}-{env_short}-{project}/{env}/catalog.parquet`; the producer must write
   exactly where the enumerator reads).
+
+## Progress Log — R4-IS-freeze execution (2026-06-11, slot-4 autonomous)
+
+> Master-plan ratified decision #4 (CITADEL): diagnose + resume IS definition collection, backfill the ~2026-05-21→now
+> gap BEFORE any could-exist seed, then re-run catalogue roll-ups + v2 enumerates per AG. Cross-noted in
+> `master_data_canonicalisation_migration_catalogue_2026_06_07.md` § R4.
+
+### Root cause — THREE layers, not two
+
+1. **The scheduled producers have been structurally DEAD for months (pre-drain layer A).**
+   - `instruments-service-daily-trigger` (Cloud Scheduler, 08:30 UTC) → Workflows `instruments-service-daily` → tries to
+     run Cloud Run **job `instruments-service` which does not exist** → HTTP 404 in step `run_instruments` — **FAILED
+     every single day since ≥2026-03-13** (executions-retention horizon; likely longer). Its container args are also the
+     pre-convention CLI shape (`--mode instruments --CEFI`), so it would be wrong even if the job existed.
+   - `instruments-daily-backfill` (Cloud Scheduler, 21:07 Europe/London) → Cloud Function `trigger-instruments-job` (env
+     `JOB_NAME=instruments-daily-backfill` — also names no existing Cloud Run job) — **zero invocation logs since its
+     2025-11-13 deploy**; scheduler `status.code: -1`.
+   - Definition capture was actually carried by **manually launched `instr-backfill-*` VMs**
+     (`deployment-service/scripts/vm/launch-instruments-backfill-vm.sh`). Last runs: cefi+tradfi written 2026-05-22
+     ~13:25–13:35Z; defi `day=2026-05-22` written 2026-05-27 ~13:28Z (to the LEGACY bucket — see layer C). When the
+     instruments canonicalisation freeze stopped manual launches, capture froze — the "freeze ~2026-05-21" IS the end of
+     manual runs, not a new break.
+2. **The 2026-06-08 pre-migration drain (layer B)** then paused the two (already-dead) schedulers.
+3. **Bucket-generation split (layer C, defi-specific).** The 2026-05-27 defi VM run wrote `day=2026-05-09…2026-05-22` to
+   the **legacy** bucket `instruments-store-defi-<pid>` while the catalogue roll-up reads the canonical env-short bucket
+   `instruments-store-defi-prd-<pid>` (stops 2026-05-08) — exactly the "defi frozen 2026-05-07" symptom in the FINDING
+   above. tradfi prd was already restored to 2026-06-07 by the slot-6 Massive run (2026-06-07).
+
+### NEW P0 BUG found+fixed during backfill — defi venue-tag underscore regression (c7d9bb2)
+
+The defi re-run dropped **the entire fetched universe of 21 venues** (UNISWAP*V3-\*, PANCAKESWAP_V3-\*, AAVE_V3-\* all
+chains, SUSHISWAP_V3-\*, AERODROME_V3-BASE, CAMELOT_V3-ARBITRUM, VELODROME_V2-OPTIMISM, …): `uniswap_v3.py` +
+`aave_v3.py` built `\_venue_prefix = protocol_slug.replace("*",
+"").upper()`→`PANCAKESWAPV3-BASE`, which the URDI venue filter (`urdi_reference_provider.\_fetch_one`) drops as unknown-venue. Commit c7d9bb2 (2026-05-23 — the day after the last good capture) renamed the canonical to the underscore form but **updated only the comments, not the code**. Worse, the completeness check then **excluded those venues from `expected`** ("fetched OK but 0 records after filtering") → days wrote "complete-looking" with 31/55 venues — the exact silent-thinning class the coverage-horizon check NICE-TO-HAVE above anticipates. **FIX shipped**: `\_venue_prefix
+=
+protocol_slug.upper()`in both adapters (instruments-service, slot-4; QG`--no-fix`exit 0 — sentinel 87f93ff; landed on LDR via`quickmerge
+--agent
+--files`as **instruments-service@0ae4e481**, Tier-C drain promotes). defi backfill re-run with the fix +`--force` over
+2026-05-09→2026-06-11.
+
+### Schedulers RESUMED (exactly these two — drain-exempt per ratified decision #4)
+
+- `instruments-daily-backfill` → ENABLED 2026-06-11 (was PAUSED 2026-06-08 by the drain)
+- `instruments-service-daily-trigger` → ENABLED 2026-06-11 (was PAUSED 2026-06-08 by the drain)
+- NOT resumed: all `uts-prod-manifest-consolidator-instruments-*` + every market-data/consolidator scheduler (stay
+  drained per the master plan).
+- NOTE: resuming restores the pre-drain state, but both paths are still dead downstream (layer A) — see the
+  producer-repair todo added below.
+
+### Backfill runs (local, instruments-service `.venv`, ADC; per-VM shard isolation respected:
+
+`VM_NAME=r4-is-backfill-local[-defi|-tradfi]` + `MANIFEST_PER_VM_SHARDS=true` → writes land in
+`_index/per_vm/<tag>.parquet`, never CAS on the main `_index`)
+
+| AG     | Window                | Command                                                         | Result (per-day counts in `/tmp/r4_is_backfill/*.log` on the operator host)                                                                                                                                                                                                                                                                  |
+| ------ | --------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cefi   | 2026-05-23→2026-06-11 | `--operation instruments --mode batch --asset-group CEFI`       | ✅ EXIT=0 — ~3.7–4.9K records/day across 15/16 venues; DERIBIT-COMBO upstream 400 (Deribit dropped `kind=combo` from `get_instruments`) every day → honest `attempted_failed` rows written                                                                                                                                                   |
+| defi   | 2026-05-09→2026-06-11 | same + `--asset-group DEFI --force` (re-run with venue-tag fix) | ✅ EXIT=0 — ~5.9K records/day across 52–53/57 venues (bugged 31-venue first-pass days verified overwritten); persistent vendor-side failures all days: AAVE_V3-OPTIMISM (subgraph schema: `Query` has no field `reserves`), MORPHO-ETHEREUM/BASE (graphql 400), DRIFT-SOLANA (`data.api.drift.trade/stats/markets` 404) → `attempted_failed` |
+| tradfi | 2026-06-08→2026-06-11 | same + `--asset-group TRADFI --source massive`                  | ✅ EXIT=0 — 31,683–31,685 records/day across 4/5 venues (NASDAQ/NYSE/CBOE/FX); **CME futures missing** — Massive `/futures/vX/{products,contracts}` now 404s (worked 2026-06-07; upstream/subscription regression) → recorded attempted_failed                                                                                               |
+
+**Coverage VERIFIED (successor session, 2026-06-11 ~09:10 UTC)** — per-AG `by_date/` day listings are contiguous across
+the entire freeze window: cefi 2026-05-01→2026-06-11 (42/42 days; backfilled days carry 15 venue dirs incl. the
+canonical flat `day=X/venue=Y/` shape — the legacy writer's nested `day=X/day=X/venue=Y/` shape stops at 05-22), defi
+2026-05-01→2026-06-11 (only hole = 2026-05-04, which PRE-dates the freeze window and the legacy-bucket era — out of R4
+scope, noted), tradfi 2026-05-01→2026-06-11 (contiguous; 06-08+ days lack `venue=CME` per the upstream 404 above). defi
+spot checks: day=2026-05-09 (52 venues), 05-10 + 05-15 (53) — the `--force` re-run did overwrite the bugged 31-venue
+first pass.
+
+**sports/prediction — REPORT ONLY (known producer gaps, per the master-plan R4 dispatch):** prediction
+`instrument_availability/by_date/` last WRITE is 2026-05-12 (POLYMARKET; partitions are event/expiry-keyed so day=
+values run to 2029) — the prediction IS backfill is already plan-homed as a **G5 post-`--apply`** step (prediction
+canonicalisation plan ⑦/⑧ row) and its catalogue needs the cqg-grain producer (this plan's P0 above); sports
+`sports_reference/by_date/` last footystats write 2026-06-01 (fixture/event-date-keyed), catalogue blocked on the
+fixture-grain producer (same P0). Neither AG has a `prod/catalog.parquet` → no roll-up/enumerate attempted (matches the
+enumerate dispatch scope cefi/defi/tradfi).
+
+### Catalogue roll-ups re-run (post-backfill, 2026-06-11 09:13–09:25 UTC — local MAIN-clone `.venv`; cloud Cloud-Run path NOT used: `instruments-service:latest` is still the stale 2026-06-10T07:51 image whose `resolve_bucket_name` BucketNamingError failed the 01:00 lifecycle-catalogue-regen executions — master plan § G1 addendum; the image-watch monitor re-executes the cefi job when the new digest lands)
+
+| AG     | by_date parquets walked | Catalogue rows (prev → new)    | Monotonic guard | Promoted to `prod/catalog.parquet` |
+| ------ | ----------------------- | ------------------------------ | --------------- | ---------------------------------- |
+| cefi   | 28,489                  | 213,990 → **220,222** (+6,232) | ACCEPT          | ✅ 09:16:35Z, exit 0               |
+| defi   | 66,525                  | 4,171 → **6,853** (+2,682)     | ACCEPT          | ✅ 09:18:32Z, exit 0               |
+| tradfi | 11,595                  | 684,372 → **686,348** (+1,976) | ACCEPT          | ✅ 09:24:35Z, exit 0               |
+
+(defi's +64% jump is the venue-tag fix + the 05-09→06-11 re-capture restoring the 21 dropped venues to the lifecycle
+universe; logs `/tmp/r4_is_backfill/catalogue_<ag>.log`.)
+
+### v2 enumerator scan-only re-runs (NO `--apply-write`; `--catalog-path gs://instruments-store-<ag>-prd-…/prod/catalog.parquet`, window 2018-01-01→2026-06-11)
+
+- The default `--max-writes-per-run 1_000_000` halt-safety trips in SCAN mode too (counts candidates) — both cefi+defi
+  first runs aborted `max_writes_exceeded` at 1,000,001; re-ran with the cap at 500M.
+- **cefi: 35,894,676 candidate rows** (per-instrument grain) against a present-set of 2,639,403 manifest rows. Reason
+  distribution: EXPECTED_INSTRUMENT_NOT_LISTED 30,413,209 · blank-reason 2,583,053 · EXPECTED_INSTRUMENT_DELISTED
+  1,701,209 · EXPECTED_PRE_VENUE_LAUNCH 1,197,205. (The CSV report write then OOM'd the 2GB tmpfs `/tmp` — counts above
+  are from the scan itself, which completed; report-dir needs a disk-backed `--report-dir` on this host. Partial CSV
+  purged.)
+- **defi: 167,458,116 candidate rows** vs present-set 1,569,805. Distribution: EXPECTED_INSTRUMENT_NOT_LISTED
+  142,200,664 · blank-reason 23,864,620 · EXPECTED_INSTRUMENT_DELISTED 1,392,832. (Same tmpfs CSV failure — counts from
+  the completed scan; partial CSV purged.)
+- **tradfi: 109,235,280 candidate rows** vs present-set from 686,348-instrument catalogue. Distribution:
+  EXPECTED_INSTRUMENT_NOT_LISTED 71,590,541 · EXPECTED_INSTRUMENT_DELISTED 27,266,491 · blank-reason 10,378,248. Also
+  emitted `G1-ENUM bundle-grain: no underlying for tradfi leaf 'ICE:COMBO:…'` warnings (ICE combo leaves dropped from
+  roll-up — consistent with the ICE BLOCKED-CREDENTIALS finding above).
+- **Scan-only verdict**: all three AGs enumerate cleanly off the fresh catalogues at per-instrument grain — the
+  could-exist seed sizes are cefi ~35.9M / defi ~167.5M / tradfi ~109.2M rows. NO `--apply-write` was passed anywhere
+  (the ratified G4 could-exist seed remains gated). Two scan-tooling notes for the seed owner: (a) the blank-reason
+  bucket (in-coverage-but-absent) is the actual `expected_unattempted` payload — cefi 2.58M / defi 23.9M / tradfi 10.4M;
+  (b) `--report-dir` must point at disk (not the 2GB tmpfs default) for full-universe CSV reports at this scale.
+
+### New todos from R4 (capture-discoveries rule)
+
+- [ ] [INFRA] P0. **Rebuild the IS daily definition producer** — the resumed schedulers point at dead infra: recreate
+      the Cloud Run job (or repoint the `instruments-service-daily` Workflow / the `trigger-instruments-job` function)
+      at a CURRENT image with the CURRENT CLI convention (`--operation instruments --mode batch --asset-group …`),
+      per-VM shard env, and the post-2026-06-10 UAC cloud-providers.yaml (stale-image `resolve_bucket_name` class from
+      the master plan G1 addendum). Until this lands the dailies only "succeed" at the scheduler layer. Repo:
+      deployment-service (terraform/launcher) + instruments-service (image). assigned_vm: vm-cross-cutting. parent_epic:
+      instruments_master. Provenance: R4-IS-freeze root-cause (Progress Log above).
+- [ ] [DATA] P1. **tradfi CME futures reference gap from 2026-06-08** — Massive `/futures/vX/products` +
+      `/futures/vX/contracts` 404 (worked on the 2026-06-07 slot-6 run; upstream endpoint/subscription regression).
+      `BLOCKED-UPSTREAM-OUTAGE`: re-probe, and when restored re-run `--asset-group TRADFI --source massive` for the
+      missing days so `venue=CME` refills; then regen the tradfi catalogue. Repo: instruments-service. assigned_vm:
+      slot-6/tradfi vertical. Provenance: R4 backfill log 2026-06-11.
+- [ ] [DATA] P2. **defi silent-thinning hardening** — the completeness check moves venues whose entire result was
+      filtered out into "excluded from expected", so a 100%-drop bug looks complete. Make "fetched>0 but 0 after venue
+      filtering" a SHARD COMPLETENESS FAILURE (attempted_failed), not an exclusion; pairs with the coverage-horizon
+      NICE-TO-HAVE above. Repo: instruments-service (`engine/urdi_reference_provider.py` + completeness). Provenance:
+      c7d9bb2 regression went undetected 19 days. assigned_vm: vm-cross-cutting.

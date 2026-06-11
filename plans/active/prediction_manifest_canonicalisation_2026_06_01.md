@@ -3,7 +3,7 @@ title: "Prediction manifest + data canonicalisation (legacy→canonical, single-
 created: 2026-06-01
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-prediction
-umbrella: true  # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
+umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active
 priority: P0
 estimate_class: infra
@@ -23,7 +23,7 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
 > data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
-> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard, reconcile per M-COORD-1/2) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
+> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/prediction-batch-live.md`; this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
 > BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until

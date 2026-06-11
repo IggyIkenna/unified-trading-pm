@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-06-07
+last_reviewed: 2026-06-11
 ---
 
 # `pipeline_mode` Column — Batch/Live Reconciliation
@@ -142,6 +142,34 @@ Agreement rules:
   one or both absent from manifest        → skip (fail-open)
   unknown combination                     → log warning, no flag
 ```
+
+## Ratified target — the full M1–M8 reconciliation contract
+
+> Settled contract (operator-ratified 2026-06-05/07; codified per M-COORD-1/R6-codex 2026-06-11). The full target-design
+> narrative lives in [`pipeline-mode-partition.md`](pipeline-mode-partition.md) § "Ratified TARGET design — live/replay
+> (M1–M8 settled contract)" — plans reference codex, not vice versa. The reconciliation-service-facing slice:
+
+- **M2×M3 guardrail**: whether a `(source, data_type)` can run live/replay is a FACT in UAC `SOURCE_MODE_CAPABILITY`
+  (target: per-`(source, data_type)` `modes_for()`); `could_exist(shard, mode)` bounds every reconciliation + coverage
+  denominator — never flag a shard for a mode no source can serve.
+- **M4 `select_for_mode`** (this service is the HOME): the live read-path resolver picks which mode's VALUE a consumer
+  reads — live consumer `live > replay > batch`, batch consumer `batch > replay > live`, replay always the middle tier.
+  The data-status union stays mode-agnostic (shipped consumer-side, `deployment-api@4dd2575`).
+- **M6 startup/continuity gate** (this service + strategy live-flip + MTDS startup): the `[batch-cutoff → now]` tail per
+  shard resolves to exactly one of — autostart `replay_<source>` (replay-capable) / assert live already running
+  (live-only) / wait-refuse-configured-gap (batch sole SSOT).
+- **M7 autonomous recovery**: alerting detects `(batch-stopped + no-live + replay-capable)` and FIRES the replay itself;
+  per-shard "gaps-OK" is DR config, never a default.
+- **T+1 batch≈live reconciliation + live TTL**: after batch lands, confirm batch ≈ live within a tolerance, then TTL the
+  now-redundant `live_<source>` cells (batch is the durable SSOT; long-lived `replay_<source>` stays where batch never
+  existed). Knobs: tolerance + TTL horizon.
+- **M8 cadence**: a manifest COLUMN + deployment-registry `run_class` (`one_off_backfill`/`t1_daily`/
+  `scheduled_recurring`/`continuous_live`/`recovery_replay`) — NEVER a path key, never a reconciliation stratum: the
+  reader unions over `pipeline_mode` only; ops/UI slice by cadence.
+
+**Gated tranche (`M1-BREAKING`)**: the `live_websocket` → `live_<source>` object/writer/reader migration, the
+`replay_<source>` write path, the `select_for_mode` resolver, the M6/M7 gates, and the T+1 TTL all land behind the M1/M2
+foundation — until then live writes the transitional alias and reconciliation treats `live_websocket` as live.
 
 ## NOT NULL constraint status
 

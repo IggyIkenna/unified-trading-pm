@@ -345,13 +345,38 @@ single-core pinned), output under gitignored `.qg_profile/`.
       and measure the per-line-instrumentation cost the profile (Phase 0) attributes to `--cov`.
 - [ ] [INFRA] P2. Re-profile after Phases 1–3 and re-baseline `qg_resource_baseline.json`; the 2× resource-drift guard
       keys off it.
-- [ ] [INFRA] P1. **NON-codex overhead is now the #2 non-test cost — investigate (finding 2026-06-11).** After the codex
-      perf fixes, an execution-service codex-only gate is ~167 s, of which the codex BLOCK is only ~45 s — the other
-      **~122 s is NON-codex**: gate STARTUP (the `uv pip install -e` of every editable dep, base-service.sh:298+) +
-      pip-audit (hit OSV network this run — the deps-hash cache was cold for the repo) + the version-alignment /
-      dep-content gates. The startup editable-dep install is the big fixed cost; it could be skipped when the repo's
-      `.venv` already has the deps at the right version (a venv-freshness check), and pip-audit should be warm-cached in
-      steady state. Provenance: codex-decomposition timing on execution-service, 2026-06-11.
+- [x] ✅ [PERF] P1. **size-checks batching — DONE (2026-06-11): the hidden #2 non-test cost on big repos.** The
+      size-checks phase spawned ONE `wc` + ONE `python -c` (AST parse) **PER source file** — O(files) process launches.
+      On a large repo that's the dominant non-test/non-codex cost (NOT the gate startup I first suspected — see
+      correction below). Fixed in BOTH bases: one `find` feeds a **single batched `python` pass per check** (file-size +
+      function/class/method-size), find exclusions + thresholds + the AST visitor copied **verbatim**. **VERIFIED
+      byte-identical** violation sets with order-independent diff on 5 repos + **huge speedups**: execution-service
+      84.1s→1.3s (65×, 23 viol), features-service 94.2s→1.5s (63×, 18 viol), instruments-service 23.6s→0.5s (47×, 85
+      viol), UAC/UTL via base-library (warn/fail test split preserved). Helps EVERY context (local/CI/SIT) since
+      size-checks always runs full. — base-service.sh + base-library.sh @<sha>
+- [x] ✅ [INFRA] P1. **"NON-codex overhead" finding CORRECTED (2026-06-11).** My first decomposition attributed ~122 s
+      of an execution-service run to "gate STARTUP (`uv pip install -e`) + pip-audit network". Re-measuring against the
+      Phase-0 profile + the size-checks decomposition above shows the real picture: (a) **size-checks was ~84 s** of
+      that (per-file spawn — now ~1.3 s, fixed above); (b) **pip-audit's network hit was a COLD-CACHE artifact** — it
+      has a 24 h deps-hash cache (`.qg_cache/pip_audit_deps_hash`), so steady-state local runs skip the OSV query; my
+      fresh session just missed it; (c) there is **no separate large "startup" phase** — the editable-dep install is
+      amortised by the venv being warm. **Remaining genuine non-test levers** (not artifacts): **typecheck
+      cold-vs-warm** (the profile's 10.5% is WARM `BASEDPYRIGHT_CACHE_DIR`; a cold CI/SIT run is materially higher →
+      cache persistence across CI runs is the lever, line ~the basedpyright item) and **pip-audit/basedpyright/bandit
+      cache persistence in CI** (each CI container is cold → the local content-hash caches don't carry over; an
+      `actions/cache` mount would close it — a CI-workflow change, separate surface). Provenance: 2026-06-11 size-checks
+      decomposition.
+- [ ] [INFRA] P2. **pip-audit CI robustness — a transient OSV/output failure reddens a promotion PR (finding
+      2026-06-11).** PM PR #258's `lint-codex` slice failed with `❌ pip-audit vulnerabilities found` whose real cause
+      (one line up) was
+      `could not parse pip-audit output: [Errno 2] No such file or directory:     '/tmp/pip-audit-output.json'` — i.e.
+      pip-audit never WROTE its JSON (OSV network blip / cold-cache miss in the fresh CI container), and the
+      missing-output path is counted as a vulnerability → 1 codex violation → PM's tolerance-0 slice FAILS → auto-merge
+      blocked until a manual re-run. Every actual STEP check was ✅; PR #256 passed the same slice minutes earlier,
+      confirming transience. Fix options: (a) on "could not parse output" treat as pip-audit INFRA-ERROR (retry once,
+      then warn — do NOT count as a vuln); (b) persist the deps-hash cache across CI runs (the `actions/cache` item
+      above) so cold containers don't re-hit OSV. This is a "commits don't reach main fast" tax (a green change blocked
+      on a network blip). Provenance: PM PR #258 CI run 27336748810.
 
 ---
 

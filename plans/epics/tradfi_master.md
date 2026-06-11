@@ -256,6 +256,18 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       `instruments-service@e62c9314` (ICE venue filter + `_create_yahoo_index_records` refactor, 4 tests) |
       `features-service@2f1d6e31` (`dxy_calculator.py` level/returns/momentum/zscore, 9 tests). Daily
       `ohlcv_24h` via `DX-Y.NYB`, coverage from 2019-01-02. Mirror of the VIX path.
+- [x] [FEATURE] P3. **US treasury-yield curve macro feature via the existing Yahoo Finance adapter — FEATURE-ONLY,
+      cross-AG (the level + shape of the US rate curve drives TradFi, crypto and prediction models; no trading leg).**
+      **SHIPPED 2026-06-11** (slot-3, operator-requested 2026-06-11). Tenors 3M (`^IRX`) / 5Y (`^FVX`) / 10Y (`^TNX`) /
+      30Y (`^TYX`) — CBOE interest-rate indices, daily `ohlcv_24h` par yields in percent, full history back to
+      2000-01-03 (6,642 bars empirically confirmed; Yahoo has **no live 2Y** — `2YY=F` is stale zero-volume futures, so
+      the curve is 3M/5Y/10Y/30Y). `uac@f19ac246` (4 `YAHOO_INDICES` entries + `get_us_treasury_yield_daily_source` +
+      `_SOURCE_RESOLVERS` keys `CBOE:INDEX:US{3M,5Y,10Y,30Y}`, 4 new tests) |
+      `instruments-service@04f3742b` (CBOE-filter yahoo-index records now emit VIX + the 4 treasuries; 2 tests updated) |
+      `features-service@5900ac89` (`treasury_yields_calculator.py` → 32 features: per-tenor level + bp-changes, term
+      spreads, scale-free ratios, butterflies, **no-arbitrage forward rates** incl. the 5y5y, and z-scores of the 10Y
+      level + 10Y-3M slope; 11 tests). Validated on the live Yahoo curve (`spread_us10y_us3m=89.3bp`, `fwd_5y5y=4.80%`
+      above the 10Y spot for the current upward curve). Mirror of the VIX/DXY path.
 - [ ] [AGENT] P4. Smoke `ml-training-service` 1-month ES window; features land in feature store. [AUDIT 2026-05-07:
       FRESH — actionable]
 - [ ] [AGENT] P4. Full backtest 2020-01-01 → 2024-12-31 (train) / 2025-01-01 → 2026-05-05 (test). OOS Sharpe + max

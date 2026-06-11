@@ -311,7 +311,9 @@ restart** (inherited-dirty-WIP rule: makers are dead, inherit):
 - **R6 (.tabs/4/unified-trading-pm, ~12 dirty)**: codex edits in flight — `pipeline-mode-partition.md`,
   `pipeline-mode-and-batch-live-reconciliation.md` (hyperliquid_rest purge), `batch-live-architecture.md`,
   `cefi-batch-live.md`, `tradfi-batch-live.md`, `replay-subsystem.md` (+ more). REMAINS: finish per-AG plan
-  de-coarsening + prediction/sports seam docs + M1–M8 target codification, prettier, docs commits, flip M-COORD-1.
+  de-coarsening + prediction/sports seam docs + M1–M8 target codification, prettier, docs commits, flip M-COORD-1. **→
+  RESUMED + COMPLETED 2026-06-11 (slot-4): pm@a28cbd4d7 (codex contract) + pm@51863c157 (seam docs) + the docs(plans)
+  de-coarsen/flip commit — R6-codex + M-COORD-1 ticked below.**
 - **R4 (no tree WIP found)**: investigation state unknown — restart the diagnosis from the task spec (decision #4);
   check `gcloud scheduler jobs describe` for the IS jobs + instruments-store `by_date/` last-written days first.
 - **R5 (no tree WIP found)**: smoke matrix probes were running (125 tool calls); no ledger written — restart from the
@@ -339,19 +341,40 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
 - [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: re-dry-run migrator+rebuild on CURRENT HEAD (R7)
       writing projected `_index` → `manifest_diff` report vs live `_index` → dev `restart-deployment-stack.sh     --api`
       render → operator eyeballs goalposts → assemble ⑬–⑲ verdict in the AG plan. ALL 5 AGs. per-AG slots.
-- [ ] [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
+- [x] ✅ [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
       could-exist seed**; then re-run `build_instrument_catalogue` + `enumerate_expected_universe v2` per AG. (Note:
       collection is reference-data — independent of the drained market-data writers; resuming does NOT violate the
-      pre-migration drain.) slot-3. Repos: instruments-service + deployment-service.
+      pre-migration drain.) slot-3. Repos: instruments-service + deployment-service. — **✅ COMPLETE 2026-06-11
+      (slot-4).** Root cause = 3 layers (scheduled producers structurally DEAD for months — the
+      `instruments-service-daily` Workflow targets a nonexistent Cloud Run job `instruments-service`, FAILED daily since
+      ≥2026-03-13; capture was actually carried by manual `instr-backfill-*` VM launches that stopped ~05-22; the 06-08
+      drain then paused the already-dead schedulers; + defi-specific c7d9bb2 venue-tag regression silently dropping 21
+      venues, FIXED instruments-service@0ae4e481). Both IS schedulers re-ENABLED (ONLY those two —
+      consolidator/market-data stay drained). Backfills run locally (per-VM shards `r4-is-backfill-local*`): cefi
+      05-23→06-11 (15/16 venues; DERIBIT-COMBO upstream 400), defi 05-09→06-11 `--force` (52–53/57;
+      AAVE_V3-OPTIMISM/MORPHO×2/DRIFT vendor-side), tradfi 06-08→06-11 (4/5; CME = Massive futures-endpoint 404
+      BLOCKED-UPSTREAM). Catalogues re-promoted (monotonic ACCEPT): cefi 220,222 / defi 6,853 / tradfi 686,348 rows. v2
+      enumerate scan-only (NO --apply-write): cefi 35,894,676 / defi 167,458,116 / tradfi 109,235,280 candidates.
+      sports/prediction = report-only (pred by_date frozen at 2026-05-12 write; both lack prod/catalog.parquet pending
+      the granularity-aware producer). Full evidence + 3 new todos (producer rebuild P0; CME re-probe P1;
+      silent-thinning hardening P2): `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` § "Progress Log —
+      R4-IS-freeze execution".
 - [ ] [AUDIT] P0. **R5-service-smoke — per-(service × asset_group) credential + data-fetch smoke matrix**: prove
       instrument fetch + market tick fetch per AG with REAL credentials; audit every failure (assume nothing); **block
       failing shards at (asset_group × data_type × venue) grain ONLY** — emit the pending-post-migration- backfill shard
       ledger into this plan; never block a whole AG. Run AFTER worktrees clean + all tonight's ships verified on `main`
       (image rebuilds ride that). slot-2+slot-3 split by AG ownership. Repos: mtds, instruments-service.
-- [ ] [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies**: 5 per-AG plans de-coarsened;
-      `pipeline-mode-and-batch-live-reconciliation.md` hyperliquid_rest purge; write
-      `sports/tradfi/prediction-batch-live.md` seam docs; codify M1–M8 live/replay TARGET design into
-      `codex/02-data/pipeline-mode-partition.md` (+`batch-live-architecture.md`) as settled contract. slot-7. Repo:
+- [x] ✅ [DOCS] P0. **R6-codex — full M-COORD-1 closure BEFORE applies — DONE (slot-4 resume 2026-06-11, pm@a28cbd4d7 +
+      pm@51863c157 + pm@05456c343)**: 5 per-AG plans de-coarsened (gate banners reconciled to M-COORD-1/R6-codex;
+      defi+cefi deep-annotated — every remaining coarse/`hyperliquid_rest` token is a marked legacy-state/historical
+      record, never spec; defi A12f-col CLOSED by ratification); `pipeline-mode-and-batch-live-reconciliation.md`
+      hyperliquid_rest purged (vendor-only + transport column; sole remaining mention = the documented retirement) +
+      reconciled to M1–M8 (replay stratum + reconciliation-facing M1–M8 slice); `sports-batch-live.md` (NEW) +
+      `prediction-batch-live.md` + `tradfi-batch-live.md` seam docs shipped at cefi depth (phantom empty-reasons
+      corrected against real UAC closed set); M1–M8 live/replay TARGET design codified as settled contract in
+      `codex/02-data/pipeline-mode-partition.md` § "Ratified TARGET design" (+`batch-live-architecture.md` §10.5/§13,
+      `cefi-batch-live.md` §7, `replay-subsystem.md` SUPERSEDED banner, `availability-manifest-and-data-status.md`
+      live-taxonomy reconcile) — ratified-with-gated-tranche named (`M1-BREAKING`). slot-7→slot-4. Repo:
       unified-trading-pm.
 - [ ] [DATA] P0. **R8-sports/pred gates**: sports-specific orphan sweep (candidate_parquet_paths-driven) built + run →
       characterize/backfill to E==0; sports v1_archive `(date,league,fixture_id)` ROW-coverage proven before any drop;
@@ -1765,16 +1788,19 @@ speed-note (both deferred optimisations, non-blocking).
       unified-api-contracts (validity matrix). parent_epic: manifest_master. Provenance: tradfi pre-apply audit, slot-6
       2026-06-08.
 
-- [ ] [DOCS] P0. **M-COORD-1 — drive the G0 doc-coherence reconcile (the standardisation plan's item 0.8) to GREEN**:
-      CLAUDE.md + the codex layer (`pipeline-mode-partition.md`, `availability-manifest-and-data-status.md`) +
-      `SUB_AGENT_MANDATORY_RULES.md` + **all 5 per-AG plans + downstream + instruments** acknowledge the source-aware
-      `{mode}_{source}[_{transport}]` model + the apply-gate. Today the per-AG plans (2026-06-01) PREDATE the standard
-      (2026-06-05) → stale. parent_epic: manifest_master. **SSOT layer DONE (vm-cross-cutting 2026-06-07)**: the codex
-      reconciliation doc, the workspace `CLAUDE.md`, and the sub-agent rules were rewritten to the source-aware
-      mode/source/transport model (replay tier + hyperliquid vendor, retiring the glued-transport antipattern).
-      **REMAINING**: the 5 per-AG plans carry stale tokens left to each AG owner (they intermix factual on-disk object
-      counts that must not be falsified), plus `availability-manifest-and-data-status.md` and the downstream/instruments
-      plans on next touch.
+- [x] ✅ [DOCS] P0. **M-COORD-1 — G0 doc-coherence reconcile GREEN (R6-codex closure, slot-4 2026-06-11 — pm@a28cbd4d7 +
+      pm@51863c157 + pm@05456c343)**: CLAUDE.md + the codex layer (`pipeline-mode-partition.md` now carries the M1–M8
+      settled-contract section, `availability-manifest-and-data-status.md` live-taxonomy reconciled) +
+      `SUB_AGENT_MANDATORY_RULES.md` + **all 5 per-AG plans** acknowledge the source-aware
+      `{mode}_{source}[_{transport}]` model + the apply-gate. parent_epic: manifest_master. **SSOT layer DONE
+      (vm-cross-cutting 2026-06-07)**: the codex reconciliation doc, the workspace `CLAUDE.md`, and the sub-agent rules
+      were rewritten to the source-aware mode/source/transport model (replay tier + hyperliquid vendor, retiring the
+      glued-transport antipattern). **Per-AG-plan layer DONE (2026-06-11)**: all 5 plans' gate banners point at the
+      codex settled contract; factual on-disk observations were NOT falsified — remaining coarse/ `hyperliquid_rest`
+      tokens are explicitly annotated legacy-state/historical records. Seam docs
+      (`tradfi/sports/prediction-batch-live.md`) shipped; `batch-live-architecture.md` §11 table GREEN for 4/5 AGs (defi
+      full narrative still pending — tracked there). **Residual (non-gating, next-touch)**: the downstream/instruments
+      plans' stale tokens + repointing those plans' `master:` frontmatter at this coordinator (M-COORD-2 residual).
 - [x] ✅ [DOCS] P0. **M-COORD-2 — DONE (2026-06-07): gate banners added** to the DeFi §MASTER (demoted) + all 6
       cross-AG/ downstream/instruments plans (cefi/sports/prediction/tradfi `--apply` apply-gate; instruments = G1-root;
       downstream = G2). Additive banners only (slot precedence respected). **Residual (folds into M-COORD-1)**: repoint

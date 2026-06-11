@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-18
+last_reviewed: 2026-06-11
 ---
 
 # Batch / Live Architecture — single SSOT
@@ -530,6 +530,25 @@ thresholds (per [`alerting-batch-live.md`](alerting-batch-live.md) § "Live-Pipe
 expires without all expected streams contributing — degraded propagation (per-stream STALE) propagates without blocking,
 clock-skew falls back to conservative latest-watermark (never emit beyond the slowest stream's watermark).
 
+### §10.5 Batch/live/replay continuity — the ratified M1–M8 target (pointer)
+
+The mode/source/transport model + the continuity contract are SETTLED codex contract (operator-ratified 2026-06-05/07;
+codified per M-COORD-1/R6-codex). The SSOT is
+[`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design — live/replay
+(M1–M8 settled contract)"; this doc only carries the seam-level summary:
+
+- `pipeline_mode = {mode}_{source}[_{transport}]` for all three modes; `replay_<source>` is a REAL mode;
+  `live_websocket` is the transitional alias removed by the gated `M1-BREAKING` tranche; `transport` + `cadence` are
+  manifest COLUMNS, never path keys.
+- The live-flip continuity question is the `[batch-cutoff → now]` tail (M6) — resolved per shard from the UAC capability
+  registries (`SOURCE_MODE_CAPABILITY` × per-shard availability): autostart replay / require live already running /
+  wait-for-batch (per-shard DR config).
+- Gap recovery is AUTONOMOUS (M7): alerting detects `(batch-stopped + no-live + replay-capable)` and fires
+  `replay_<source>` itself.
+- After batch lands, T+1 reconciliation confirms batch ≈ live within tolerance, then a TTL clears redundant
+  `live_<source>` cells — batch is the durable SSOT
+  ([`../02-data/pipeline-mode-and-batch-live-reconciliation.md`](../02-data/pipeline-mode-and-batch-live-reconciliation.md)).
+
 ---
 
 ## §11 Per-asset-group batch/live docs
@@ -537,19 +556,19 @@ clock-skew falls back to conservative latest-watermark (never emit beyond the sl
 Each asset group has its own narrative doc covering the group-specific matcher, shard atom, empty rules, and any domain
 quirks. All docs anchor on the invariants in §1-§4 above.
 
-| Asset group  | Doc                                                                                               | Status (2026-05-22)                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `cefi`       | [`cefi-batch-live.md`](cefi-batch-live.md)                                                        | ✅ SHIPPED (Tab 1)                                                                      |
-| `defi`       | DeFi-specific notes in §5 AMMMatcher + [`amm-slippage-simulation.md`](amm-slippage-simulation.md) | Partial — AMM matcher spec shipped; full narrative pending                              |
-| `tradfi`     | [`tradfi-batch-live.md`](tradfi-batch-live.md)                                                    | Stub shipped (2026-05-16); full narrative post-cutover — `plans/epics/tradfi_master.md` |
-| `sports`     | §7 above covers sports-specific notes                                                             | Inline (sufficient for May-23)                                                          |
-| `prediction` | [`prediction-batch-live.md`](prediction-batch-live.md)                                            | Stub shipped; full narrative post-cutover — `plans/epics/predictions_master.md`         |
+| Asset group  | Doc                                                                                               | Status (2026-06-11)                                                      |
+| ------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `cefi`       | [`cefi-batch-live.md`](cefi-batch-live.md)                                                        | ✅ SHIPPED (Tab 1)                                                       |
+| `defi`       | DeFi-specific notes in §5 AMMMatcher + [`amm-slippage-simulation.md`](amm-slippage-simulation.md) | Partial — AMM matcher spec shipped; full narrative pending               |
+| `tradfi`     | [`tradfi-batch-live.md`](tradfi-batch-live.md)                                                    | ✅ SHIPPED 2026-06-11 (R6-codex seam doc — replaced the 2026-05-16 stub) |
+| `sports`     | [`sports-batch-live.md`](sports-batch-live.md) (+ §7 above for the matcher notes)                 | ✅ SHIPPED 2026-06-11 (R6-codex seam doc)                                |
+| `prediction` | [`prediction-batch-live.md`](prediction-batch-live.md)                                            | ✅ SHIPPED 2026-06-11 (R6-codex seam doc — replaced the stub)            |
 
-> **[DELTA 2026-05-22]** **Current state:** TradFi and Prediction per-asset-group batch/live narrative docs exist as
-> stubs only. The cross-cutting invariants in §1-§4 apply to both; the per-domain matcher behaviour, shard atomicity,
-> and empty rules are not yet documented. **Planned delta:** `plans/epics/tradfi_master.md` and
-> `plans/epics/predictions_master.md` own full narrative completion post-cutover. **Target architecture:** Each
-> asset-group has a complete per-domain narrative doc on par with `cefi-batch-live.md`.
+> **[DELTA 2026-06-11 — supersedes the 2026-05-22 delta]** The tradfi / sports / prediction per-asset-group batch/live
+> seam docs are SHIPPED at cefi-batch-live.md depth (M-COORD-1/R6-codex): per-domain sources + venues, batch/live seams,
+> matcher, shard atomicity + empty rules, and the source-aware `pipeline_mode` shape per
+> [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md). Remaining: the full DeFi narrative
+> (AMM matcher spec shipped; narrative pending).
 
 ---
 
@@ -604,8 +623,12 @@ The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipelin
    determines source. SSOT: `pipeline-mode-partition.md`.
 2. **Distinct field sets in live + batch parquets** — identical schema required. Source doesn't change the shape.
 3. **Deriving `available_at` at read-time** — stamp at write-time only. Read-time derivation causes lookahead bias.
-4. **`pipeline_mode=replay`** — replay output writes to `pipeline_mode=live_websocket`. Replay is operational, not
-   data-shape. SSOT: `replay-subsystem.md` anti-patterns.
+4. **Coarse `pipeline_mode` values** — `pipeline_mode` is SOURCE-AWARE `{mode}_{source}[_{transport}]` for ALL three
+   modes (M1, operator-ratified 2026-06-05/07): `replay_<source>` is a REAL mode (intraday gap-fill, always the middle
+   precedence tier), and bare `replay` / bare `batch` / bare `live` are all forbidden. (SUPERSEDES the prior "replay
+   output writes to `pipeline_mode=live_websocket`" rule — that contradicted M1; `live_websocket` is only the
+   TRANSITIONAL alias for not-yet-migrated live shards, removed in the gated `M1-BREAKING` tranche.) SSOT:
+   [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design".
 5. **Building a standalone backtest engine per asset_group** — FORBIDDEN. All fills route through
    `execution-service/matching_engine/`.
 6. **Mode conditional inside business logic** — belongs only at the 4 seams in §2. See `mode-axis-discipline.md` AP-1.
@@ -618,9 +641,9 @@ The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipelin
 
 ## §14 References + cross-refs
 
-- **Per-asset-group batch/live docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · `tradfi-batch-live.md` (full
-  narrative post-cutover, `plans/epics/tradfi_master.md`) · `prediction-batch-live.md` (full narrative post-cutover,
-  `plans/epics/predictions_master.md`)
+- **Per-asset-group batch/live docs**: [`cefi-batch-live.md`](cefi-batch-live.md) ·
+  [`tradfi-batch-live.md`](tradfi-batch-live.md) · [`sports-batch-live.md`](sports-batch-live.md) ·
+  [`prediction-batch-live.md`](prediction-batch-live.md) (all shipped 2026-06-11, R6-codex)
 - **Mode-axis discipline**:
   [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) (cartesian
   product + anti-patterns)
