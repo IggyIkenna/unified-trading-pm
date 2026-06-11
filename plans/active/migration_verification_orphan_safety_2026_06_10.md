@@ -202,6 +202,17 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~21:35Z, autonomous run, END-OF-RUN) — **R3 RENDERS + VERDICT PACKS DONE — the full pre-apply harness is
+  assembled; everything except the operator eyeball/sign-off is COMPLETE.** Beta renders captured via the new
+  `DATA_STATUS_BETA_MANIFEST_BLOB` (BETA vs LIVE, instruments + market-tick-data data-status views, all AGs); five
+  verdict packs + evidence at `plans/audit/results/r3_beta_renders_2026_06_11/` (pm@a30de5abd), each ending "G4 --apply:
+  AWAITING OPERATOR". Dev stack stopped after capture. Self-audit: all .tabs/4 trees clean + every ship an ancestor of
+  origin LDR; 3 dirty MAIN clones are OTHER live workers' WIP (protected, untouched). OPERATOR QUEUE (the only remaining
+  work): ① read the 5 verdict packs → per-AG sign-off; ② decisions: prediction cqg-classifier coverage (P1, blocks
+  prediction apply) · sports blank-capture_status 6,869 + C3 coverage-window · cefi 943 phantom downgrades ack; ③ fire
+  the five G4 --applies (suggested order tradfi→cefi→defi→sports→prediction); ④ G4.5 verified-delete (incl. v1_archive
+  398 + legacy twins); ⑤ un-drain consolidators + fleet resume → G5.
+
 - 2026-06-11 (~20:50Z, autonomous run) — **TRADFI FINAL PROJECTION+DIFF ADJUDICATED (completes the R7 5-AG set)**. With
   the coalesce fix live (rode mtds@77f1a61), the definitive run: projected 946,360 rows (unparseable 106 of 902,878 =
   0.012%), diff collapsed 14,833→4,374 removed / 6,739→2,902 downgrades, **unchanged=57,841 + added=2 + 14
