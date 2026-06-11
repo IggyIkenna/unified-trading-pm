@@ -286,7 +286,18 @@ jobs:
                   _done BLOCKED; return 0
                 fi
               else
-                echo "  $REPO: existing PR #$PR_NUM mergeable_state=$MSTATE (auto-merge already pending)"
+                # Existing CLEAN (non-dirty/non-blocked) PR. Do NOT assume auto-merge is already
+                # armed (the 2026-06-10 stall: the first arm at PR creation can silently fail, then
+                # every later tick saw CLEAN and did nothing → CLEAN-but-unarmed forever). RE-ARM
+                # idempotently each tick: `gh pr merge --auto` is a no-op when already armed, and arms
+                # it when not. --rebase first (preserves commits), --squash fallback (always armable).
+                echo "  $REPO: existing PR #$PR_NUM mergeable_state=$MSTATE — (re)arming auto-merge idempotently"
+                gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                  || gh pr merge "$PR_NUM" --auto --squash \
+                       --subject "chore(promote): LDR → staging (Tier C auto-drain)" \
+                       --body "Tier C automated drain — squash fallback." \
+                       --repo "$OWNER/$REPO" 2>/dev/null \
+                  || echo "    WARN: auto-merge arm failed for #$PR_NUM — merge manually"
                 _done PROMOTED; return 0
               fi
             else

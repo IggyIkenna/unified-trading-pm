@@ -380,10 +380,20 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       `cefi-batch-live.md` §7, `replay-subsystem.md` SUPERSEDED banner, `availability-manifest-and-data-status.md`
       live-taxonomy reconcile) — ratified-with-gated-tranche named (`M1-BREAKING`). slot-7→slot-4. Repo:
       unified-trading-pm.
-- [ ] [DATA] P0. **R8-sports/pred gates**: sports-specific orphan sweep (candidate_parquet_paths-driven) built + run →
-      characterize/backfill to E==0; sports v1_archive `(date,league,fixture_id)` ROW-coverage proven before any drop;
-      prediction dry plan REGENERATED on final HEAD, attached to its verdict for sign-off. sports=slot-2 (tool assist
-      slot-3), prediction=slot-3. Repos: instruments-service + mtds.
+- [ ] [DATA] P0. **R8-sports/pred gates** (sports portions ✅ DONE 2026-06-11; prediction regen remains):
+  - [x] ✅ sports-specific orphan sweep (candidate_parquet_paths-driven) built + run → characterize/backfill to **E==0 +
+        unknown_prefixes==0 on BOTH sports buckets (2026-06-11 ~16:12Z)** — `migration_orphan_sweep_sports.py` +
+        `backfill_orphan_class_e_sports.py`, instruments-service@94ea099 + @37793dd, 38 tests. odds: E 20→0 (smoke-probe
+        per-VM shard → one-shot consolidate; 0 recordings needed); reference: E 87,659→0 (~81.8k league-grain cells
+        recorded + 1 definitions-availability row + 3 consolidations, index 2,681,044→2,681,628 no-loss) + NEW
+        `C3_pre_launch_window` disposition (10,345 objects the manifest contractually refuses — UAC coverage-window
+        decision filed as a P1 todo in the G3.5 plan). Full verdicts + class tables in the G3.5 plan Progress Log ("R8
+        part 2"); reports `gs://<bucket>/_index/audit/orphan_sweep_sports.parquet`.
+  - [x] ✅ sports v1_archive ROW-coverage proven before any drop — 398/398 days, 72,522/72,522 rows covered via
+        `source_fixture_id`↔`af_fixture_id` (G3.5 plan Progress Log "R8 part 1", 2026-06-11 ~14:50Z); archive carried as
+        its own `B2_v1_archive_superseded` sweep disposition (G4.5 delete-list candidate, operator-gated).
+  - [ ] prediction dry plan REGENERATED on final HEAD, attached to its verdict for sign-off. prediction=slot-3. Repo:
+        mtds.
 
 ### R5 smoke ledger — pending-post-migration-backfill shards (2026-06-11)
 

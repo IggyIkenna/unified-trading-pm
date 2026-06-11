@@ -85,6 +85,15 @@ start_api() {
     echo "ERROR: deployment-api .venv missing — run 'cd deployment-api && uv venv && uv pip install -e .' first" >&2
     exit 1
   fi
+  # Sync deps before launch (fast no-op when current). A stale venv silently breaks
+  # cloud SDK calls — incident 2026-06-11: google-cloud-build 3.35 in the root venv
+  # lacked the regional-parent routing header newer gapics send, so ListBuildTriggers
+  # 400'd ("invalid argument") from the laptop while the same code worked on a synced
+  # venv + the deployed image. uv sync pins to uv.lock, so this can never drift again.
+  if command -v uv >/dev/null 2>&1; then
+    echo "==> uv sync (deployment-api deps — no-op when current)"
+    uv sync --quiet 2>/dev/null || echo "  WARN: uv sync failed — continuing with the existing venv"
+  fi
   echo "==> Starting deployment-api on :${API_PORT} (real mode, real cloud, 4 workers)"
   local logfile="${PIDS_DIR}/deployment-api.log"
   # 4 workers — the Data Status tab fires 5 concurrent requests on open

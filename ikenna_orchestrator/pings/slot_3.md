@@ -459,17 +459,32 @@ it, or rename the existing one).
 
 ## CREDENTIAL APPROVAL REQUEST — 2026-06-10 (slot-3)
 
+> **RESOLVED 2026-06-11 (no operator action needed — ask was UNSATISFIABLE)**: GitHub offers NO Checks permission for
+> fine-grained PATs at all (community#129512) — the toggle does not exist. deployment-api now reads per-SHA/branch v2
+> conclusions + PR rollups via the **Actions runs API** (Actions:read, already granted):
+> `v2_conclusion_for_sha`/`_for_branch` + `head_check_rollup` in `_repo_ci_github.py`. Live-verified 2026-06-11 (per-SHA
+> `v2_conclusion` populates on /detail).
+
 - **Vendor/tier+cost**: GitHub fine-grained PAT permission toggle — free.
-- **What's needed**: add **Checks: read** to the `GH_PAT` secret's fine-grained token (Secret Manager `GH_PAT`, GCP + AWS).
+- **What's needed**: add **Checks: read** to the `GH_PAT` secret's fine-grained token (Secret Manager `GH_PAT`, GCP +
+  AWS).
 - **Account**: IggyIkenna org PAT used by CI + deployment-api.
 - **What it unblocks**: per-SHA `quality-gates-v2` conclusions on the Repos CI dashboard
   (`plans/active/ci_dashboard_deployment_ui_2026_06_10.md` — live 403 on /check-runs today, degraded to unknown).
 
 ## CREDENTIAL APPROVAL REQUEST — 2026-06-10 (slot-3, fleet-git-health proxy)
 
-- **Vendor/tier+cost**: agent-orchestrator API token — free (a `claude setup-token`-style long-lived setup-token minted on the orchestrator).
+> **RESOLVED 2026-06-11 (done autonomously)**: orchestrator JWT (role-scoped, **exp 2026-07-01**) stored as
+> `ORCHESTRATOR_API_TOKEN` in GCP Secret Manager (central-element-323112, v1) + AWS Secrets Manager (ap-northeast-1).
+> Proxy live-verified: `/api/repo-ci/fleet-git-health` returns `available=true` with real fleet data (4 hosts / 10 slots
+> / 250 repos). **Renewal**: mint a fresh token before 2026-07-01 and `gcloud secrets versions add` /
+> `aws secretsmanager put-secret-value`.
+
+- **Vendor/tier+cost**: agent-orchestrator API token — free (a `claude setup-token`-style long-lived setup-token minted
+  on the orchestrator).
 - **What's needed**: store the orchestrator API token in Secret Manager as **`ORCHESTRATOR_API_TOKEN`** (GCP + AWS).
 - **Account**: agent-orchestrator (`api.agent-orchestrator.odum-research.com`), `AUTHED_DEPS`-gated endpoints.
-- **What it unblocks**: deployment-api `GET /api/repo-ci/fleet-git-health` calling the orchestrator's `/api/fleet/git-health`
-  so the deployment-ui Fleet Git tab shows LIVE fleet data (`plans/active/ci_dashboard_deployment_ui_2026_06_10.md` +
-  `fleet_git_health_orchestrator_2026_06_10.md`). Until then the proxy degrades honestly (available=False) + deep-links to the AO UI.
+- **What it unblocks**: deployment-api `GET /api/repo-ci/fleet-git-health` calling the orchestrator's
+  `/api/fleet/git-health` so the deployment-ui Fleet Git tab shows LIVE fleet data
+  (`plans/active/ci_dashboard_deployment_ui_2026_06_10.md` + `fleet_git_health_orchestrator_2026_06_10.md`). Until then
+  the proxy degrades honestly (available=False) + deep-links to the AO UI.

@@ -185,3 +185,30 @@ sync block as the canonical delivery path. Decision deferred to the UI-phase own
   BYBIT]
 - ARCHETYPE_CAPABILITY_REGISTRY says: ARCHETYPE_CAPABILITY_REGISTRY has no CEFI capability cells
 - Action: Update codex frontmatter OR add capability cells to registry. Severity: WARNING
+
+### F16 — Latent strategy-service bug: log_event(service_name=) TypeError
+
+**Status**: OPEN — strategy-service owner (LOGIC FREEZE prevented in-flight fix). 2026-06-11, stepper agent:
+`strategy_service/engine/core/strategy_config_loader.py:83` calls `log_event("ADAPTER_FETCH_FAILED", …, service_name=…)`
+but UTL `log_event()` has no `service_name` kwarg → TypeError. Only triggers on the GCS-config path
+(`load_initial_positions_from_gcs` with a `strategy_type` hint + missing `GCP_PROJECT_ID`). Stepper sidesteps via the
+direct-constructor path.
+
+### F17 — Kill-switch/stop-loss predicates are runtime-fired, not engine-exposed
+
+**Status**: OPEN — post-unfreeze enhancement. `BaseArchetypeEngineV2` has no internal daily-loss/drawdown/stop-loss
+predicate; the runtime risk layer fires `orchestrator.on_kill_switch(reason)` externally and the engine only exposes
+post-fire `killed`/`kill_reason`/`self_check()→REJECTED`. The scenario stepper therefore reports these as
+`introspection_gap=True` (threshold known from config, distance unknowable). Engine-side predicate tracing = named
+post-LOGIC-FREEZE todo.
+
+### F18 — deployment-ui jsdom unit suite pre-broken (ESM/CJS)
+
+**Status**: OPEN — pre-existing. Entire jsdom vitest suite fails `ERR_REQUIRE_ESM` on `@exodus/bytes` v1.15.0 (ESM-only)
+required CJS-style by `html-encoding-sniffer` (jsdom 29 dep). Partial mitigation committed (`server.deps.inline` in
+vitest.config.ts); capability-tab tests use `@vitest-environment node`. Full fix needs upstream bump.
+
+### F19 — deployment-ui rolldown native binding vs Node 20.18
+
+**Status**: OPEN — pre-existing CI concern. Fresh `npm ci` skips `@rolldown/binding-linux-x64-gnu` because Node 20.18 <
+the binding's 20.19 engine floor; built only after manual extraction. Node bump or pin needed.

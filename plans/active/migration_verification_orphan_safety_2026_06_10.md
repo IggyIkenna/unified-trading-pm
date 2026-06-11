@@ -114,10 +114,11 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       backfill shards → consolidated index; NO data loss — every index ≥ its pre_migration_2026_06_08 snapshot) + sweep
       fixes (pre-hive blank-venue derivation via shared backfill parser is@f73abe4; lazy footer read via UCI
       `download_bytes` — 7 weekend 0-row shells honestly split to class D). Final reports:
-      `\_index/audit/orphan_sweep*<ag>.parquet` (refreshed per AG). **Sports = R8** (candidate_parquet_paths-driven
-      sweep, separate item). NOTE for R7/R3 verdict packs: re-run all four sweeps once more on final HEAD for the
-      sign-off snapshot (defi/cefi/pred verdicts predate the last two sweep fixes — non-material to their corpora, but
-      Citadel re-verifies on final code).
+      `\_index/audit/orphan_sweep*<ag>.parquet` (refreshed per AG). **Sports = R8 — 🟢 GREEN 2026-06-11 ~16:12Z** (BOTH
+      sports buckets E=0 + unknown_prefixes=0 via the candidate_parquet_paths-driven sweep — see the R8-part-2 Progress
+      Log entry; all 5 AGs now orphan-clean). NOTE for R7/R3 verdict packs: re-run all four sweeps once more on final
+      HEAD for the sign-off snapshot (defi/cefi/pred verdicts predate the last two sweep fixes — non-material to their
+      corpora, but Citadel re-verifies on final code).
 - [x] ✅ [SCRIPT] P0. (is@d4190ba — scripts/manifest_diff.py + tests, grain-aware wildcard covering via
       possible_manifest, human + --out JSON) **Manifest-diff tool (projected-vs-current) — operator 2026-06-10.** Build
       `instruments-service/scripts/manifest_diff.py`: load TWO `_index` parquets (the `beta_manifest_writer` PROJECTED
@@ -200,6 +201,50 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 6. CF-15…CF-21 encoded in the checklist + owning per-service instruction files (re-runnable forever).
 
 ## Progress Log
+
+- 2026-06-11 (~16:15Z, autonomous run) — **R8 part 2: SPORTS orphan sweep GREEN on BOTH buckets — `E==0` +
+  `unknown_prefixes==0` (the last asset group; ALL 5 AGs now orphan-clean).** Tools:
+  `instruments-service/scripts/migration_orphan_sweep_sports.py` (is@94ea099 + is@37793dd; 38 unit tests) —
+  candidate_parquet_paths-driven, league-grain wildcard covering, ODDS aggregate-era data_type equivalence
+  (`trades`↔legacy `ODDS` rows), ODDS_API wire-league remap DERIVED from `LEAGUE_REGISTRY` ⋈
+  `DEFAULT_CLASSIFICATION_REGISTRY` (never hand-listed), parallel footer-read E/D zero-row split — and the sports
+  recorder `scripts/backfill_orphan_class_e_sports.py` (league-keyed cells; source+pipeline_mode resolved via UAC
+  `SOURCE_PRIORITY` with mode-follows-source). Verdicts (reports at
+  `gs://<bucket>/_index/audit/orphan_sweep_sports.parquet`):
+  - **odds bucket** (market-data-tick-sports, 361,710 objects, 6.73 GiB): A=361,650 · C=5 · C2=54 · D=0 · **E=0** ·
+    unknown=0. The 20 E were the R5 smoke-probe day (2026-06-09, NEW `pipeline_mode=batch_odds_api` canonical shape, 20
+    bookmaker venues × SEGUNDA*DIVISION) whose captured rows sat in the unconsolidated
+    `_index/per_vm/smoke-probe-sports.parquet` shard → ONE-SHOT `consolidate(force=True)` (success=True; 786,408 →
+    803,796 rows, ≥ pre — no loss) → E=0, NO recording needed. 3,816 first-pass D were legacy odds shapes the classifier
+    then learned (2022 `source=ODDS_API/league=<canonical>` + 2025 `venue=ODDS_API/league=soccer*\*` wire keys) — all
+    reclassified A (covered).
+  - **reference bucket** (instruments-store-sports, ~898k objects, 9.88 GiB data): A=727,061 · B=33,647
+    (`sports_reference_v2/` staging twins + legacy flat-by-day twins) · B2=398 (v1_archive — own disposition per the
+    part-1 row-coverage gate) · C=119,873 · C2=5,151 (incl. reference-aux mappings + retired entities + the labelled
+    `day=/venue=` instrument-DEFINITIONS tree) · **C3=10,345 (new disposition, below)** · D=1,490 (zero-row shells) ·
+    **E=0** · unknown=0. Backfill: E **87,659 → 0** — ~81.8k distinct (day, data_type, league) cells footer-verified
+    rows>0 and recorded over 3 passes (80,491 + 8,624 + 1) + 1 definitions-availability row (the 2 stray
+    `day=2026-03-21/venue=BETFAIR` instrument-definition parquets, 1,542 rows, appended to
+    `availability_index/instruments-service.parquet`) + 3 one-shot consolidations (success=True; index 2,681,044 →
+    2,681,628 — no loss). Real divergence found + encoded: the sports entity map says footystats for STANDINGS/TEAMS
+    while UAC `SOURCE_PRIORITY` (the writer-enforcement truth) allows only api_football (858 MissingSourceError cells
+    pass-1), and ODDS must stamp BATCH_FOOTYSTATS not BATCH_ODDS_API (PipelineModeSourceMismatch — mode follows source);
+    the recorder now resolves via SOURCE_PRIORITY.
+  - **C3_pre_launch_window — NEW sweep disposition (10,345 objects)**: real data whose (data_type, day) is BEFORE the
+    UAC sports coverage window (`SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START`) — the 2026-04/05 footystats
+    HISTORICAL fetches over 2018 days + api_football fixture sub-entities (FIXTURE_STATS/EVENTS/LINEUPS/PLAYER_STATS)
+    before their 2020-06-06 window. The manifest CONTRACTUALLY refuses such rows (`ManifestWriter` pre-launch guard,
+    born of the 2026-05-04 229,224-phantom-purge incident — it silently dropped the first-pass recordings, which is HOW
+    this surfaced), so class E is the wrong label and record_captured is structurally impossible without a UAC window
+    change → labelled disposition + the operator-gated todo below. Understood, never deleted.
+- [ ] [DATA] P1. **Sports pre-launch-window corpus decision (C3, 10,345 objects — operator-gated)**: either extend the
+      UAC windows (`SOURCE_COVERAGE_START["footystats"]` 2019-01-01 → 2018-01-01 — the footystats HISTORICAL season API
+      demonstrably serves 2018 rows now on disk; + the api_football `DATA_TYPE_COVERAGE_START` sub-entity windows) and
+      re-run `backfill_orphan_class_e_sports.py` to manifest the corpus, OR ratify the corpus as permanently
+      outside-window (it then becomes a CF-21-style cleanup candidate). Blast radius of a window change: backfill
+      orchestrators start fetching those windows (`clip_dates_to_source_coverage`), data-status denominators, the
+      phantom audit. Repos: unified-api-contracts + instruments-service. Provenance: R8 sweep 2026-06-11 (C3 rows in the
+      reference bucket's `orphan_sweep_sports.parquet`).
 
 - 2026-06-11 (~14:50Z, autonomous run) — **R8 part 1: sports v1_archive ROW-coverage gate GREEN — fully superseded,
   drop-safe**. Archive integrity first (operator asked "is it corrupt?"): 398 daily fixtures parquets (364×2018 +
