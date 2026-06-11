@@ -130,7 +130,13 @@ unchanged:
 > split, and REMOVE any `FUNCTION_SIZE_EXTRA_EXCLUDES` glob that was hiding the file. Ratchet the repo's file-size
 > violation away in the same commit.
 
-- [ ] [REFACTOR] P1. **features-service `registry.py` (18,328 L) — it's DATA, not code (operator 2026-06-10).** The file
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — features-service@82918a6d: registry.py 18,328 L → 411 L loader+validator;
+      1,382 specs moved to `features_service/delta_one/app/features/registry_specs.yaml` (human-editable SSOT);
+      one-shot `scripts/dump_registry_to_yaml.py` migration; YAML-load equality + closed-set validation test
+      (tests/delta_one/unit/test_registry_yaml_loader.py); pyyaml promoted to direct dep; registry.py removed from
+      FUNCTION_SIZE_EXTRA_EXCLUDES; budget stays 0; full QG green (16,980 tests; one unrelated calendar
+      ordering-flake verified pass-in-isolation + green on rerun). Original: **features-service `registry.py`
+      (18,328 L) — it's DATA, not code (operator 2026-06-10).** The file
       is **1,382 `FeatureSpec(...)` literals + only 11 functions** — a declarative data table living in a `.py`. Do NOT
       "split into per-group .py modules" (still code-shaped data). Instead **separate the data from the loader**: - Move
       the 1,382 specs into a **data file** — `registry/specs.yaml` (human-editable SSOT; one block per spec:
@@ -181,9 +187,15 @@ unchanged:
       agent-orchestrator.
 - [ ] [REFACTOR] P1. **market-tick-data-service `orchestrator.py` (4,219 L)** + `tardis_adapter.py` (2,880) +
       `solana_defi_handler.py` (2,125) — decompose by venue/transport. Repo: market-tick-data-service.
-- [ ] [REFACTOR] P2. **strategy-service `catalog.py` (2,371)** + **market-data-processing `canonical_writer.py`
-      (2,412)** + **execution-service** adapters >1k (`kraken_rest_adapter` 1,299 / `uniswap` 1,245 / `aave` 1,136) —
-      split each below 900. Repos: strategy-service / market-data-processing-service / execution-service.
+- [ ] [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
+      + 6 archetype-family modules; batch_handler.py 1,570→847 + 4 concern modules; TARGET_UNIVERSE content-hash
+      identical pre/post; budget ratcheted 11→10 (census-honest). Cross-repo finding surfaced: execution-service
+      `defi_target_universe_rebalance_recommender.py:310` imports `specs_for_archetype` from the strategy-service
+      module path — KNOWN/sanctioned via UAC `service_contract_map.py:216` forbidden_exceptions + deprecation_ledger
+      (move to UAC registry long-term); facade preserves the path so the consumer is unaffected. REMAINING in this
+      item: **market-data-processing `canonical_writer.py` (2,412)** + **execution-service** adapters >1k
+      (`kraken_rest_adapter` 1,299 / `uniswap` 1,245 / `aave` 1,136) — split each below 900 (agents in flight).
+      Repos: market-data-processing-service / execution-service.
 - [ ] [REFACTOR] P3. **ml-service** (`cloud_feature_provider` 1,202 / `training_orchestrator` 1,027) +
       **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143) — split the >900
       tail. Repos: ml-service / unified-trading-pm.
