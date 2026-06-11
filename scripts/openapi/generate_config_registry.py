@@ -35,6 +35,12 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 # (repo_name, module_path, class_name)
+# Phantom services removed 2026-06-11 (features-*-service split, ml-inference-service,
+# ml-training-service, pnl-attribution-service, position-balance-monitor-service,
+# risk-and-exposure-service all consolidated into strategy-service / features-service /
+# ml-service — see workspace-manifest.json notes + strategy_repo_consolidation plan).
+# Missing services added: features-service, ml-service, fund-administration-service,
+# greeks-service.
 CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     # === API Services ===
     ("deployment-api", "deployment_api.deployment_api_config", "DeploymentApiConfig"),
@@ -42,27 +48,26 @@ CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     # === Core Services ===
     ("alerting-service", "alerting_service.config", "AlertingSystemConfig"),
     ("execution-service", "execution_service.service_config", "ExecutionServicesConfig"),
-    ("risk-and-exposure-service", "risk_and_exposure_service.config", "RiskAndExposureServiceConfig"),
-    (
-        "position-balance-monitor-service",
-        "position_balance_monitor_service.config",
-        "PositionBalanceMonitorServiceConfig",
-    ),
     ("deployment-service", "deployment_service.deployment_config", "DeploymentConfig"),
-    ("pnl-attribution-service", "pnl_attribution_service.config", "PnlAttributionServiceConfig"),
     ("strategy-service", "strategy_service.config", "StrategyServiceConfig"),
-    # === Feature Services ===
-    ("features-sports-service", "features_sports_service.config", "FeaturesSportsServiceConfig"),
-    ("features-cross-instrument-service", "features_cross_instrument_service.config", "FeaturesCrossInstrumentConfig"),
-    ("features-delta-one-service", "features_delta_one_service.config", "FeaturesDeltaOneConfig"),
-    ("features-calendar-service", "features_calendar_service.config", "CalendarFeaturesConfig"),
-    ("features-commodity-service", "features_commodity_service.config", "CommodityFeaturesConfig"),
-    ("features-multi-timeframe-service", "features_multi_timeframe_service.config", "FeaturesMtfConfig"),
+    # instruments-service uses config/service_config.py (no top-level config.py)
+    ("instruments-service", "instruments_service.config.service_config", "InstrumentsServiceConfig"),
+    ("trading-agent-service", "trading_agent_service.config", "TradingAgentConfig"),
+    # features-service: consolidated monorepo; configs live per-family
+    #   (features_service.{calendar,delta_one,...}.config) — no root FeaturesServiceConfig exists.
+    #   Per-family configs are intentionally omitted here: they are internal sub-family settings
+    #   not surfaced as a top-level service config. Document as cap gap if needed.
+    # ml-service: consolidated monorepo; configs live per-workload
+    #   (ml_service.training.config, ml_service.inference.config) — no root MLServiceConfig exists.
+    #   Same rationale as features-service.
+    # === Fund Administration + Greeks ===
+    ("fund-administration-service", "fund_administration_service.config", "FundAdministrationServiceConfig"),
+    ("greeks-service", "greeks_service.config", "GreeksServiceConfig"),
     # === Batch Services ===
     ("market-data-processing-service", "market_data_processing_service.config", "MarketDataProcessingServiceConfig"),
     ("batch-live-reconciliation-service", "batch_live_reconciliation_service.config", "ReconConfig"),
-    ("ml-inference-service", "ml_inference_service.config", "InferenceConfig"),
-    ("trading-agent-service", "trading_agent_service.config", "TradingAgentConfig"),
+    # market-tick-data-service: config lives in market_interface/config.py, class MarketDataProviderConfig
+    ("market-tick-data-service", "market_tick_data_service.market_interface.config", "MarketDataProviderConfig"),
     # === Interfaces / Libraries ===
     (
         "unified-trading-library (config_interface/)",

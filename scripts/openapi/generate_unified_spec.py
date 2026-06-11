@@ -44,38 +44,118 @@ logger = logging.getLogger(__name__)
 SERVICE_TIMEOUT = 150
 
 # === Step 2: Service Registry ===
-# (service_name, module_path, app_attribute)
-SERVICE_REGISTRY: list[tuple[str, str, str]] = [
-    # === API Gateways ===
-    ("deployment-api", "deployment_api.main", "app"),
-    ("unified-trading-api", "unified_trading_api.main", "create_app"),
-    ("client-reporting-api", "client_reporting_api.api.main", "app"),
-    # === Core Services ===
-    ("alerting-service", "alerting_service.api.main", "app"),
-    ("execution-service", "execution_service.api.app", "app"),
-    ("risk-and-exposure-service", "risk_and_exposure_service.api.main", "app"),
-    ("position-balance-monitor-service", "position_balance_monitor_service.api.main", "app"),
-    ("deployment-service", "deployment_service.api.app", "app"),
-    ("market-tick-data-service", "market_tick_data_service.api.main", "app"),
-    ("pnl-attribution-service", "pnl_attribution_service.api.main", "app"),
-    ("strategy-service", "strategy_service.api.main", "app"),
-    ("instruments-service", "instruments_service.api.main", "app"),
-    ("trading-agent-service", "trading_agent_service.api.main", "app"),
-    # === Feature Services ===
-    ("features-calendar-service", "features_calendar_service.api.main", "app"),
-    ("features-delta-one-service", "features_delta_one_service.api.main", "app"),
-    ("features-onchain-service", "features_onchain_service.api.main", "app"),
-    ("features-volatility-service", "features_volatility_service.api.main", "app"),
-    ("features-sports-service", "features_sports_service.api.main", "app"),
-    ("features-cross-instrument-service", "features_cross_instrument_service.api.main", "app"),
-    ("features-multi-timeframe-service", "features_multi_timeframe_service.api.main", "app"),
-    ("features-commodity-service", "features_commodity_service.api.main", "app"),
-    # === Batch / ML Services ===
-    ("market-data-processing-service", "market_data_processing_service.api.main", "app"),
-    ("ml-inference-service", "ml_inference_service.api.main", "app"),
-    ("ml-training-service", "ml_training_service.api.main", "app"),
-    ("batch-live-reconciliation-service", "batch_live_reconciliation_service.api.main", "app"),
-]
+# Auto-derived from workspace-manifest.json (repositories section) + disk
+# presence check.  Only repos that (a) have type in SERVICE_REPO_TYPES, (b)
+# exist on disk, AND (c) have a resolvable FastAPI entrypoint are included.
+#
+# OVERRIDE_MODULE_PATHS: where the auto-derived import path
+# `{pkg}.api.main::app` is wrong, spell out the correct (module, attr) pair.
+# Keep this map small and documented.
+SERVICE_REPO_TYPES: frozenset[str] = frozenset(
+    {
+        "service",
+        "api-service",
+        "batch-service",
+        "api",
+    }
+)
+
+# Explicit (module_path, app_attribute) overrides for services whose entry
+# point doesn't follow the default `{pkg}.api.main::app` convention.
+# Documented inline with the reason for each deviation.
+_OVERRIDE_MODULE_PATHS: dict[str, tuple[str, str]] = {
+    # unified-trading-api — factory function, not a bare `app` instance
+    "unified-trading-api": ("unified_trading_api.main", "create_app"),
+    # deployment-api — main lives at package root (not under api/)
+    "deployment-api": ("deployment_api.main", "app"),
+    # client-reporting-api — extra api/ nesting: client_reporting_api.api.main
+    "client-reporting-api": ("client_reporting_api.api.main", "app"),
+    # execution-service — uses api/app.py (not api/main.py)
+    "execution-service": ("execution_service.api.app", "app"),
+    # deployment-service — uses api/app.py (not api/main.py)
+    "deployment-service": ("deployment_service.api.app", "app"),
+    # features-service — consolidated monorepo; app built by factory
+    "features-service": ("features_service.api.main", "app"),
+    # ml-service — consolidated monorepo; app built by factory
+    "ml-service": ("ml_service.api.main", "app"),
+}
+
+# Repos that genuinely have no FastAPI app (infra-only, library, UI, etc.) and
+# should be silently skipped by the coverage check.  Keep this list minimal.
+_NO_API_REPOS: frozenset[str] = frozenset(
+    {
+        # Not deployable services — no HTTP API surface
+        "deployment-service",  # has api/app.py but only exposes internal hooks
+        "ibkr-gateway-infra",
+        "e2e-testing",
+        "system-integration-tests",
+        "agent-orchestrator",
+        # Libraries / contracts (T0-T2) — not services
+        "unified-api-contracts",
+        "unified-trading-library",
+        "unified-market-interface",
+        # UI repos
+        "unified-trading-system-ui",
+        "deployment-ui",
+        # PM repo itself
+        "unified-trading-pm",
+    }
+)
+
+
+def _load_service_registry(workspace_root: Path) -> list[tuple[str, str, str]]:
+    """Build SERVICE_REGISTRY from workspace-manifest.json + disk presence.
+
+    Algorithm:
+    1. Read ``workspace-manifest.json`` — take every repo whose ``type`` is in
+       SERVICE_REPO_TYPES.
+    2. Discard repos absent from disk (silently — another agent may be
+       mid-consolidation; the coverage check below will flag genuine gaps).
+    3. For each remaining repo derive the default import path
+       ``{pkg_name}.api.main::app`` and override with ``_OVERRIDE_MODULE_PATHS``
+       where needed.
+    4. Return sorted by repo name for deterministic ordering.
+    """
+    manifest_path = workspace_root / "unified-trading-pm" / "workspace-manifest.json"
+    if not manifest_path.exists():
+        logger.warning("workspace-manifest.json not found at %s — falling back to empty registry", manifest_path)
+        return []
+
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+
+    entries: list[tuple[str, str, str]] = []
+    repositories = manifest.get("repositories", {})
+
+    for repo_name in sorted(repositories):
+        info = repositories[repo_name]
+        repo_type = info.get("type", "")
+        if repo_type not in SERVICE_REPO_TYPES:
+            continue
+        if repo_name in _NO_API_REPOS:
+            continue
+
+        repo_dir = workspace_root / repo_name
+        if not repo_dir.is_dir():
+            # Repo declared in manifest but absent on this machine — skip
+            continue
+
+        if repo_name in _OVERRIDE_MODULE_PATHS:
+            module_path, app_attr = _OVERRIDE_MODULE_PATHS[repo_name]
+        else:
+            # Default convention: {pkg_name}.api.main::app
+            pkg_name = repo_name.replace("-", "_")
+            module_path = f"{pkg_name}.api.main"
+            app_attr = "app"
+
+        entries.append((repo_name, module_path, app_attr))
+
+    return entries
+
+
+# Populated in main() after workspace_root is resolved; forward-declared here
+# so module-level code can reference it.  Overwritten in main().
+SERVICE_REGISTRY: list[tuple[str, str, str]] = []
 
 
 def _subprocess_extract_script(module_path: str, app_attr: str) -> str:
@@ -407,13 +487,16 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
 
 
 def _validate_service_coverage(workspace_root: Path, registered_services: set[str]) -> None:
-    """Warn about services on disk with API entrypoints not in SERVICE_REGISTRY.
+    """FAIL the run when disk-resident API repos are absent from SERVICE_REGISTRY.
 
     Scans sibling directories of ``workspace_root`` for repos that contain a
     FastAPI-style entrypoint (``{pkg}/api/main.py``, ``{pkg}/api/app.py``, or
     ``{pkg}/main.py``) but are absent from ``SERVICE_REGISTRY``.
 
-    This is purely informational — it never fails the pipeline.
+    Exits nonzero on any mismatch so the suite cannot silently rot again (was
+    warn-only prior to 2026-06-11 — the drift went undetected for ~3 weeks after
+    the features/ml consolidation).  Repos in ``_NO_API_REPOS`` are excluded from
+    the check.
     """
     discovered: list[str] = []
 
@@ -422,6 +505,8 @@ def _validate_service_coverage(workspace_root: Path, registered_services: set[st
             continue
         repo_name = candidate.name
         if repo_name in registered_services:
+            continue
+        if repo_name in _NO_API_REPOS:
             continue
         # Must have a pyproject.toml to be a Python repo
         if not (candidate / "pyproject.toml").is_file():
@@ -445,17 +530,21 @@ def _validate_service_coverage(workspace_root: Path, registered_services: set[st
                 break
 
     if discovered:
-        logger.warning("")
-        logger.warning(
-            "Service coverage: %d repo(s) have API entrypoints but are NOT in SERVICE_REGISTRY:",
+        logger.error("")
+        logger.error(
+            "FAIL — Service coverage: %d repo(s) have API entrypoints but are NOT in SERVICE_REGISTRY:",
             len(discovered),
         )
         for name in discovered:
-            logger.warning(
-                "  WARNING: Service '%s' has API entrypoint but is not in SERVICE_REGISTRY",
+            logger.error(
+                "  MISSING: Service '%s' has API entrypoint but is not in SERVICE_REGISTRY — "
+                "add it to _OVERRIDE_MODULE_PATHS or let auto-discovery handle it, "
+                "or add to _NO_API_REPOS if it genuinely has no HTTP API surface",
                 name,
             )
-        logger.warning("")
+        logger.error("")
+        logger.error("Fix: re-run after updating _OVERRIDE_MODULE_PATHS / _NO_API_REPOS in generate_unified_spec.py")
+        sys.exit(1)
     else:
         logger.info("Service coverage: all discovered API repos are in SERVICE_REGISTRY.")
 
@@ -484,6 +573,12 @@ def main() -> None:
         # Script is at unified-trading-pm/scripts/openapi/
         workspace_root = script_dir.parent.parent.parent
     workspace_root = workspace_root.resolve()
+
+    # === Build SERVICE_REGISTRY from workspace-manifest.json ===
+    # Must happen before PYTHONPATH construction below.
+    global SERVICE_REGISTRY  # intentional module-level update in main()
+    SERVICE_REGISTRY = _load_service_registry(workspace_root)
+    logger.info("SERVICE_REGISTRY: %d services loaded from workspace-manifest.json", len(SERVICE_REGISTRY))
 
     # Subprocess extractors only see PYTHONPATH — prepend every service repo root from
     # SERVICE_REGISTRY so `import auth_api` / `import deployment_api` resolve without a
