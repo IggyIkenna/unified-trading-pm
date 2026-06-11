@@ -202,6 +202,46 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-11 (~20:30Z, autonomous run) — **R7 dispatch COMPLETE: CF-20 `--beta-manifest-out` wired into the FOUR
+  remaining manifest rebuilds (defi/cefi/prediction/sports), projections run on prod, diffs adjudicated CITADEL-grade.**
+  Ships: mtds@77f1a61 (wiring batch — shared `ProjectionCollector` imported into all four; the CF-11 staleness fix
+  [direct CONSOLIDATED read PRIMARY, `read_availability_index` fallback-only] applied to cefi/prediction/sports; **defi
+  gained its FIRST CF-11 honest-absence re-emit** [pure object-scan rebuild was silently dropping the whole 1.23M-row
+  defi absence corpus]; sports gained `expected_unattempted` pass-through + read*consolidated_index; the tradfi loop's
+  `write_projected_index` date-coalesce fix rode this batch as hand-off) + mtds@03fbc9b (adjudication fixes — prediction
+  LEGACY `category=/data_source=` parser [578,162 pre-apply objects were 99.5% unparseable → 573,536 candidates parse];
+  processed-candle corpus pass-through for defi+cefi [`processed_candles/` tree is outside the raw scan; prior captured
+  processed rows were false-phantom-demoted]; cefi `spot`→`spot_pair` itype synonym [5,239 false phantom demotes —
+  objects verified at spot_pair]; cefi double-hive-key parse [`asset_group=cefi/category=cefi/`, 6 objects → unparseable
+  0]). ~25 unit tests added/extended across 7 test files (incl. the `_no_consolidated()` failing-storage seam retrofit
+  to all CF-11 suites + `test_rebuild_projection_dates.py` regression for the mixed `processing_date`/`date` coalesce).
+  Projections at
+  `gs://market-data-tick-<tag>-prd-…/\_index/audit/projected_index*<ag>.parquet`; diffs `/tmp/manifest*diff*<ag>.json`.
+  **Per-AG verdicts (projected rows | diff | justification):**
+  - **sports (mdps odds)**: 786,508 rows | **GREEN — removed=0, captured_regressions=0, changed=0, 55,412 cells
+    unchanged** | 17,288 blank-status rows (ODDS_API 2026-04-08 zero-count probe artifacts) honestly excluded — cell
+    coverage unaffected. ⚠️ FINDING for the sports-AG owner: the CF-5 oracle relabel fired ZERO relabels
+    (584,257/584,257 `keep_src_zero`) on the MDPS dry-run — the step 4–7 gates all fall through (suspect league_id
+    resolution); reason-level relabel currently INERT (status-level diff unaffected).
+  - **defi** (bucket market-data-tick-defi-prd, 2020-01-01→2026-06-11): 347,074 captured shards + 1,227,971 empty
+    - 2,740 failed re-emits + 2,252 processed-captured pass-through ≈ 1.58M rows | **captured_regressions=0, changed=0;
+      removed=5,320 — ALL justified**: 5,216 = legacy venue-RESPELLING duplicate cells (AAVEV3 2,528 / UNISWAPV2 1,264 /
+      UNISWAPV3 1,256 / UNISWAPV4 168 — twin coverage VERIFIED 0-missing under the canonical spellings, e.g. AAVE*V3
+      29,782/29,782 (date,dt) twins) + 104 = EIGENLAYER (rewards,staking) → (eigenlayer_rewards,staking) data_type/itype
+      respelling per the on-disk path truth (twins verified). added 7,740 = NEW coverage (e.g. VAULT vault_share_price
+      2020+) — additive. 5,332 unparseable = bare-venue `ticks_migrated*\*` leaves (by design unmanifestable; E7
+      deletes).
+  - **cefi** (2019-01-01→2026-06-11): 2,483,050 captured shards + 1,304,041 failed + 89,590 CF-11 reclassifies + 8,387
+    processed pass-through ≈ 3.89M rows | removed=733 — ALL the dispatch-named GARBAGE class (venue=UNKNOWN 27 +
+    Bitfinex F0 symbols-as-venue BTCF0/ETHF0/DOTF0/… — 0 GCS objects under any such venue path) → EXPECTED removals;
+    captured→attempted_failed=943 — GENUINE phantom captured rows (spot-verified: BINANCE-SPOT 2021-01-04 BTCUSDC has
+    trades objects but NO book_snapshot_5 object; 828+655 BINANCE-SPOT book/trades + DERIBIT chains) → the HONEST
+    correction, presented per the tradfi precedent, not suppressed; empty→attempted_failed=3,853 = the CF-11
+    GUARANTEED_WHEN_LISTED within-bounds reclassification (BY DESIGN).
+  - **prediction** (pred-prd, 2025-01-01→2026-06-11): re-run IN FLIGHT on the extended parser (573,536 candidates listed
+    vs 2,836 pre-fix; classifier spot-verified on a real legacy object → BTC_UP_DOWN_DAILY); verdict appended on
+    completion.
+
 - 2026-06-11 (~19:10Z, autonomous run) — **FINAL SIGN-OFF SWEEP SNAPSHOT: ALL FIVE AGs GREEN on final HEAD** — defi E=0
   (18:52Z) · cefi E=0 (19:00Z) · prediction E=0 (19:02Z) · tradfi E=0 (19:07Z) · sports odds E=0 + reference E=0
   (19:09–19:10Z); unknown*prefixes=0 on every surface. Reports refreshed at

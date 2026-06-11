@@ -133,6 +133,41 @@ tell "an agent has this" apart from "genuinely parked, needs attention."
   active-worker assignment for that repo's stuck PR) distinct from `stuck`. Composes with Gap 3 (the orchestrator must
   first own + assign the recovery). Playwright gate per CLAUDE.md (`pw:L2 ✓` + regression spec) before ticking.
 
+## Gap 5 — image-build trigger + gate redesign (operator-decided 2026-06-11)
+
+**Today (verified)**: image builds are **cloud-native** (GCP Cloud Build triggers + AWS CodeBuild webhook — NOT GitHub
+Actions, so cheap + no GHA minutes). They fire on **`live-defi-rollout` push** and are **NOT a required check anywhere**
+(every repo's `main` requires only `quality-gates-v2`). AWS CodeBuild webhook = single filter group `EVENT=PUSH,
+HEAD_REF=^refs/heads/live-defi-rollout$`. GCP has 3 triggers per service (`…-live-defi-rollout`, `…-feature-build`,
+`…-build`). The red "Build not triggered: PR approval required" on a staging drain PR is the LDR build's check surfacing
+on the PR (head=LDR commit) — noise, not a staging build.
+
+**Decided design**:
+- **Build contexts**: feature-branch (dev deploy off a feature branch) + **LDR (OPT-IN, fast feedback)** + **main
+  (ALWAYS, the deploy gate)**.
+- **`quickmerge --build` flag**: the user decides per-ship whether they want the LDR image. quickmerge stamps a commit
+  trailer (e.g. `Build-LDR: true`, alongside the existing `Quickmerge:` trailer). The v2 workflow's existing **"Dispatch
+  cloud-build trigger"** step reads that trailer and conditionally dispatches the LDR build. No flag → no LDR build (save
+  cost); the **main build always runs** regardless.
+- **Gate**: the **staging→main and staging gates FAIL if the image build fails** — add the GCP Cloud Build + AWS
+  CodeBuild check contexts to each deployed repo's `main` `required_status_checks` (and the build must run on the main
+  commit — add a `PUSH ^refs/heads/main$` filter group to the AWS webhook in
+  `terraform/modules/cloud-build/aws/main.tf`; confirm the GCP `…-build` trigger is on main).
+- **Exclusions (no image build at all)**: **unified-trading-pm** (no Dockerfile, no build project — confirmed; not
+  deployed), **e2e-testing** + **system-integration-tests** (test harnesses, no CodeBuild). UI repos
+  (`deployment-ui`/`unified-trading-system-ui`) have Dockerfiles but build via **GCP only** (no AWS CodeBuild) — keep as
+  is.
+
+- [ ] [WORKFLOW] P2. quickmerge: add `--build` flag → `Build-LDR: true` commit trailer; v2 "Dispatch cloud-build
+  trigger" step reads it → conditional LDR build dispatch.
+- [ ] [TERRAFORM] P2. AWS CodeBuild webhook: add `PUSH ^refs/heads/main$` filter group (keep LDR group). Confirm GCP
+  `…-build` trigger targets `main`. `terraform/modules/cloud-build/aws/main.tf`.
+- [ ] [PROTECTION] P2. Add the image-build check context(s) to each DEPLOYED repo's `main` required_status_checks (skip
+  PM / e2e / SIT). Canary on market-tick-data-service first (watch a real staging→main gate on a green image), then
+  fleet rollout.
+- [ ] [WORKFLOW] P3. Stop the LDR build's CodeBuild check from posting on LDR→staging drain PRs (the red noise) — once
+  main-build is the gate, the LDR build is opt-in feedback only.
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first dep-resolution
