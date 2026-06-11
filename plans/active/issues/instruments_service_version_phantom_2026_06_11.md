@@ -1,36 +1,46 @@
 ---
-title: "instruments-service version phantom — manifest/main 0.30.0 vs tag v0.2.1 (needs reconciliation)"
+title: "instruments-service version phantom — RESOLVED (de-inflated runaway semver to coherent 0.4.0)"
 created: 2026-06-11
-locked_by: live-defi-rollout
+resolved: 2026-06-11
+status: resolved
 priority: P2
-status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
-# instruments-service version phantom
+# instruments-service version phantom — RESOLVED
 
-## What I found
+> **RESOLVED 2026-06-11**: de-inflated the runaway semver and reconciled all version surfaces to a coherent **0.4.0**.
 
-`instruments-service` has inconsistent version data:
+## What it was
 
-- `workspace-manifest.json` `versions{}` = **0.30.0** (both LDR + main)
-- latest git **tag** = **v0.2.1**
-- the SIT QG version-alignment check reads `main=0.30.0`
+`instruments-service` versions were incoherent: `workspace-manifest.json versions{}` = **0.30.0**,
+`repositories{}.version` = 0.1.22, source `pyproject.version` = 0.31.0, staging = 0.32.0, latest git **tag** = **v0.2.1**.
 
-So `versions{}=0.30.0` is a **phantom** — well ahead of the real released tag (v0.2.1). Effects:
+## Root cause (diagnosed)
 
-1. A consumer floor `>=0.30.0` (system-integration-tests had this) is **unsatisfiable by tag** — the version-aware clone
-   fallback seeks a nonexistent `v0.30.0` tag.
-2. It shows as a VERSION_SPLIT / VESTIGIAL_SCALAR_DRIFT in `assert_version_coherence` (warn-only).
+A **runaway semver-agent loop on 2026-06-10 07:09–07:33 UTC** bumped the version `0.3.0 → 0.30.0` — **27 minor bumps in
+24 minutes**, one per minute, all empty `chore(release): bump version to X` commits with **no real feature commits**
+between them. The real released version was `v0.2.1` (the tag); everything ≥0.4.0 was inflation garbage, leaving
+instruments-service wildly out of line with the fleet (others 0.3–0.8). (The bump-rate circuit breaker — ≥3 bumps/hr —
+was added AFTER this incident; it would catch a recurrence.)
 
-## Why a one-liner doesn't work
+## Resolution (what shipped)
 
-Lowering `versions{}` 0.30.0→0.2.1 on LDR (attempted 2026-06-11, reverted) creates a **downgrade-drift**: LDR (0.2.1)
-reads as BEHIND main (0.30.0), which the SIT version-alignment gate blocks. Determining the TRUE version + aligning
-source `pyproject` / `versions{}` (main+LDR) / tags consistently is a version-reconciliation task.
+1. Lowered source `pyproject.version` 0.31.0 → 0.3.0 on `live-defi-rollout` (instruments-service@ea3495a9).
+2. Force-synced `staging` tree to LDR (discarded the divergent 0.32.0 inflation bump) → cleared conflict-wall PR #437.
+3. Promoted `staging → main` (#430, clean FF; main⊆LDR). During promotion semver-agent fired off the PR's v2 (head=staging)
+   and bumped to **0.4.0** — the legitimate promoted version, now coherent across **main = staging = LDR = 0.4.0**.
+4. Created release **tag `v0.4.0`** at main HEAD (deleted the mislabeled interim v0.3.0); `v0.2.1` retained in history.
+5. Reconciled PM `workspace-manifest.json`: `versions{}` = 0.4.0, `repositories{}.version` = 0.4.0, `staging_versions` =
+   0.4.0; cleared stale `breaking_pending` / `pending_repos` / `promotion_failures` / `staging_commits[instruments-service]`.
 
-## Recommended decision
+## Verification
 
-Reconcile via `run-version-alignment.sh --fix` (the sanctioned tool) OR have semver-agent re-stamp instruments-service
-to its true version, so source `pyproject.version`, `versions{}` (main+LDR), and the release tag all agree. Then the SIT
-floor `>=0.2.1` lands cleanly. NOT blocking today (the content-first clone + non-blocking dep-range mean SIT's
-`>=0.30.0` floor no longer hard-fails CI — it warns).
+- `git show origin/main:pyproject.toml` → `0.4.0`; `git ls-remote --tags origin v0.4.0` → present; main-v2 = success.
+- All three coherence surfaces agree at 0.4.0.
+
+## Follow-up (small)
+
+- [ ] [SCRIPT] P2. Lower `system-integration-tests/pyproject.toml` `instruments-service>=0.30.0,<1.0.0` → `>=0.4.0` (the
+  only remaining stale phantom-era floor; non-blocking today via content-first clone, but should match the true version).
