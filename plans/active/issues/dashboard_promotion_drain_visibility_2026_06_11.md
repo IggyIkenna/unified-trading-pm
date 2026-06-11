@@ -1,12 +1,13 @@
 ---
 title: "CI dashboard shows the breaking-cascade but NOT the routine LDR→staging/main promotion drain — operator can't see 'when did we last promote + did it pass'"
 created: 2026-06-11
-author: ikennaigboaka
 assignee: harsh
 source:
   - operator observation 2026-06-11 (deployment-ui Repos CI: "Last SIT / cascade run — success 22h ago" — is that 'we haven't promoted in a day' or only the major-version cascade? we'd want to see when LDR→staging via auto-merge + QG branch protection last ran + its result)
   - slot-3 verification 2026-06-11 (cascade-qg-ordering vs ldr-to-staging-promote are distinct workflows)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # CI dashboard: promotion-drain visibility gap
