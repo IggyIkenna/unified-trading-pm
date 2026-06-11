@@ -31,10 +31,19 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<PYEOF
-          import json, sys
+          import json, os, sys
+          sys.path.insert(0, "scripts/cicd")
 
           with open("workspace-manifest.json") as f:
               manifest = json.load(f)
+
+          # Phase 2: Firestore-authoritative ci_status (manifest fallback when Firestore unavailable).
+          try:
+              from ci_status_store import resolve_ci_status_map
+              _ci_map = resolve_ci_status_map(manifest, project_id=os.environ.get("GCP_PROJECT_ID"))
+          except Exception:
+              _repos_d = manifest.get("repositories", {})
+              _ci_map = {k: v.get("ci_status", "") for k, v in _repos_d.items() if isinstance(v, dict)}
 
           repos = manifest.get("repositories", {})
           staging_versions = manifest.get("staging_versions", {})
@@ -67,7 +76,7 @@ jobs:
           SIT_READY = {"STAGING_GREEN", "SIT_VALIDATED", "MAIN_GREEN"}
           not_green = []
           for repo in pending:
-              ci = repos.get(repo, {}).get("ci_status", "NOT_CONFIGURED")
+              ci = _ci_map.get(repo, "NOT_CONFIGURED")
               if ci not in SIT_READY:
                   not_green.append(f"  {repo}: ci_status={ci} (need >= STAGING_GREEN)")
 

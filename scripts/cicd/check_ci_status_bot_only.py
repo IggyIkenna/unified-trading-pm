@@ -28,34 +28,27 @@ import subprocess
 import sys
 from pathlib import Path
 
+# ci_status_store.py is in the same directory; add it to the path for direct-script invocation
+# (Python only adds the script's own dir to sys.path for file-based runs, not for stdin/module).
+sys.path.insert(0, str(Path(__file__).parent))
+from ci_status_store import manifest_ci_status_map as ci_status_map
+
 # Logins permitted to change ci_status (the automated writer + its actions identity).
 BOT_ACTORS: frozenset[str] = frozenset({"ci-status-update[bot]", "github-actions[bot]"})
 DEFAULT_MANIFEST = "workspace-manifest.json"
 DEFAULT_BASELINE_REF = "HEAD"
 
 
-def ci_status_map(manifest: dict[str, object]) -> dict[str, str | None]:
-    """Map repo-name → ci_status, tolerant of dict-keyed or list ``repositories``."""
-    repos = manifest.get("repositories", {})
-    if isinstance(repos, dict):
-        items = repos.items()
-    elif isinstance(repos, list):
-        items = [(str(r.get("name", "")), r) for r in repos if isinstance(r, dict)]
-    else:
-        items = []
-    out: dict[str, str | None] = {}
-    for name, value in items:
-        if isinstance(value, dict):
-            status = value.get("ci_status")
-            out[str(name)] = status if isinstance(status, str) else None
-    return out
-
-
 def diff_ci_status(
     current: dict[str, object],
     baseline: dict[str, object],
 ) -> dict[str, tuple[str | None, str | None]]:
-    """Return {repo: (baseline_status, current_status)} for repos whose ci_status changed."""
+    """Return {repo: (baseline_status, current_status)} for repos whose ci_status changed.
+
+    ``ci_status_map`` (aliased from ``manifest_ci_status_map``) omits repos with a blank or
+    absent ci_status, so ``cur.get(name)`` / ``base.get(name)`` return ``None`` for those —
+    identical semantics to the prior inline implementation.
+    """
     cur = ci_status_map(current)
     base = ci_status_map(baseline)
     changed: dict[str, tuple[str | None, str | None]] = {}
