@@ -289,6 +289,14 @@ unchanged:
 - [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
       (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
       QG running). All three QG-green at the new budgets before commit.
+- [x] ✅ [CODE] P2b. **strategy-service ≤5 ACHIEVED 2026-06-11** — strategy-service@6aff0c48: budget 10→4. Cleared 6
+      classes: deep-imports (both registry sites flipped to the one-level facade, zero deep sites remain), os.getenv
+      (recovery_event_helper → StrategyServiceConfig fields), imports-in-fn (8 sites hoisted), empty-dict/list (5
+      justified noqas), prod-project-id-in-tests, fn-size (close_all execute()s + PreflightRunner.run +
+      SportsFeatureSubscriber extracted). Remaining 4: empty-str (~85 sites), broad-except (17), BaseModel routers
+      (Phase 3), STEP 5.37 Reg-T. FINDING: UAC `LIQUIDATION_PARAMS_REGISTRY` has NO REG_T MarginModel row and
+      `LiquidationParams` lacks initial-margin fields — `risk/v2/greek_model.py`'s 0.5/1.5 Reg-T multipliers cannot be
+      wired to the registry until UAC adds them (UAC-side todo for the 5.37 class).
 - [ ] [CODE] P2. Per repo, clear the remaining check-classes the census surfaces — `os.getenv` → `UnifiedCloudConfig`,
       `Any` → specific types, empty-string/dict/list fallbacks → fail-fast, backward-compat shims → delete,
       function/method-size > limits → extract. Ratchet `CODEX_MAX_VIOLATIONS` down to ≤5 per repo as classes clear.
