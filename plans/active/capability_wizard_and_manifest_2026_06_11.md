@@ -211,17 +211,37 @@ Multi-leg archetypes (staked basis = stake + lend + perp hedge) must be modeled 
 types, asset groups, venue eligibility, and conditional constraints (LST accepted as perp collateral on venue V → staked
 variant; else straight basis within the archetype). Restrictions exhaustive — never prose in `notes`.
 
-- [ ] [SPEC] P0. `ArchetypeLegSpec` in UAC architecture_v2: leg_id, role StrEnum (stake, lend, hedge_short, spot_long,
-      perp_long, lp, …), required bool, instrument_types, asset_groups, venue eligibility, conditional_constraints
-      (typed: e.g. requires_collateral_acceptance(lst, perp_venue) with fallback_variant "straight_basis"), per-leg
-      signal variants. Extends/wraps ARCHETYPE_CAPABILITY_REGISTRY without breaking existing consumers.
-- [ ] [IMPLEMENT] P0. Seed leg specs for the carry family (CARRY*STAKED_BASIS + CARRY_BASIS_PERP/DATED variants +
+- [x] ✅ [SPEC] P0. `ArchetypeLegSpec` in UAC architecture_v2: leg_id, role StrEnum (stake, lend, hedge_short,
+      spot_long, perp_long, lp, …), required bool, instrument_types, asset_groups, venue eligibility,
+      conditional_constraints (typed: e.g. requires_collateral_acceptance(lst, perp_venue) with fallback_variant
+      "straight_basis"), per-leg signal variants. Extends/wraps ARCHETYPE_CAPABILITY_REGISTRY without breaking existing
+      consumers. **uac@c17a6be** — `archetype_leg_spec.py` (888L): `ArchetypeLegRole` (11 closed roles),
+      `LegConstraintKind` (3 kinds incl. `requires_collateral_acceptance`), `LegConstraint` (params +
+      `fallback_variant` + description), `ArchetypeLegSpec` (reuses `ArchetypeInstrumentType`/`VenueCategoryV2`),
+      `ArchetypeLegStructure` (reuses `AtomicExecutionMode`), `ARCHETYPE_LEG_STRUCTURES` registry. Decimal-not-float,
+      basedpyright-strict, additive exports via `architecture_v2/__init__.py` (matching the `capability_manifest`
+      sibling pattern; `internal/__init__` untouched). Dual-representation documented in the module docstring (leg-truth
+      SSOT alongside the flat cell registry; F4 cells NOT rewritten). 9 unit tests green.
+- [x] ✅ [IMPLEMENT] P0. Seed leg specs for the carry family (CARRY*STAKED_BASIS + CARRY_BASIS_PERP/DATED variants +
       CARRY_RECURSIVE*\*) and ARBITRAGE_PRICE_DISPERSION, sourced from engine code structure + codex archetype docs +
       existing cells' notes/venue lists (cite source per leg). All other archetypes emit honest `not_registered` leg
-      specs + one gap edge each (exhaustive backfill = tracked follow-up tranche).
-- [ ] [IMPLEMENT] P1. Exporter emits leg nodes/edges (archetype→leg→instrument_type/venue with role + conditional
+      specs + one gap edge each (exhaustive backfill = tracked follow-up tranche). **uac@c17a6be** — 11 archetypes
+      seeded (CARRY_STAKED_BASIS spot+stake+lend+hedge_short w/ `requires_collateral_acceptance(lst,hedge_venue)` →
+      `straight_basis` fallback + CeFi binance/bybit/deribit/okx + DeFi hyperliquid/gmx_v2/drift hedge venues;
+      CARRY_STAKED_BASIS_DATED; CARRY_BASIS_PERP/\_INV; CARRY_BASIS_DATED/\_INV; CARRY_RECURSIVE_STAKED;
+      CARRY_RECURSIVE_BORROW_LENDING_ONLY; YIELD_STAKING_SIMPLE; YIELD_ROTATION_LENDING; ARBITRAGE_PRICE_DISPERSION).
+      Every leg cites engine path + codex doc + manifest cell. 46 archetypes WITHOUT leg structures honestly enumerated
+      by `archetypes_without_leg_structures()` (test asserts the gap set is explicit, not silent).
+- [x] ✅ [IMPLEMENT] P1. Exporter emits leg nodes/edges (archetype→leg→instrument_type/venue with role + conditional
       metadata); two-sided audit extended: archetype cells whose notes mention legs ("ATOMIC", "hedge", "+") but have no
-      leg spec = flagged drift.
+      leg spec = flagged drift. **pm@8a0fdd1 + uac outputs (manifest generated_from_commit=c17a6be)** —
+      `CapabilityNodeKind.LEG` added; `extract_leg_structures()` emits 25 leg nodes + `has_leg` (role/required
+      metadata) + `trades_instrument` + `supports` (per-leg venue) + `leg_constraint:<kind>|<params>|fallback_variant=…`
+      edges; 46 archetypes w/o leg specs → one `not_registered` `has_leg:legs` gap edge each. Two-sided audit (d)
+      legs-in-prose drift heuristic flags 6 archetypes (EVENT_DRIVEN, LIQUIDATION_CAPTURE, MARKET_MAKING_CONTINUOUS,
+      RULES_DIRECTIONAL_EVENT_SETTLED, STAT_ARB_CROSS_SECTIONAL, VOL_TRADING_OPTIONS). Prospectus "Leg Structure" table
+      per archetype (honest gap line where absent). Manifest 409→435 nodes / 663→902 edges. Deterministic (twice
+      byte-identical).
 - [ ] [AGENT][UI] P1. Wizard Instruments/Venues stages become leg-aware: mandatory legs pre-selected and
       non-deselectable, instrument types grouped by leg role with the conditional surfaced ("on venues where the LST is
       not accepted as perp collateral, this archetype runs straight basis"), cross-category legs break the
@@ -505,3 +525,19 @@ for every agent on this plan:
   Wizard stepper stage SHIPPED (uts-ui@9f087aa8, pw:L2 12/12; help-text markdown fix). Operator walkthrough caught F22
   (multi-leg restrictions collapsed to single staking cell) → Phase 2.6 added (leg-level restriction model); dispatching
   UAC leg-spec schema + exporter + leg-aware wizard stages.
+- 2026-06-11 — **Phase 2.6 SCHEMA + SEED + EXPORTER SHIPPED (F22 leg-truth model).** Absorbed a dead predecessor's
+  PARTIAL uncommitted work: its `archetype_leg_spec.py` (888L) + test were sound and finished as-is; its
+  `internal/__init__` export was reversed in favour of `architecture_v2/__init__` (matching the `capability_manifest`
+  sibling); its PM "exporter edits" were actually pure `# noqa: qg-empty-fallback` QG-autofix churn (NOT leg logic) →
+  restored + the leg-aware exporter written fresh. **uac@c17a6be** = `ARCHETYPE_LEG_STRUCTURES` SSOT (11 archetypes,
+  `ArchetypeLegRole`×11 / `LegConstraintKind`×3 / `LegConstraint`+`fallback_variant`; staked-basis
+  `requires_collateral_acceptance(lst,hedge_venue)`→`straight_basis` conditional; CeFi+DeFi hedge venues per-leg) +
+  `CapabilityNodeKind.LEG`; basedpyright-strict, 9 tests. **pm@8a0fdd1** = `extract_leg_structures()` (25 leg nodes +
+  has_leg/trades_instrument/supports/leg_constraint edges; 46 archetypes→gap edges), audit (d) legs-in-prose drift
+  heuristic (6 flagged), prospectus "Leg Structure" table (honest gap line where absent). UAC outputs regenerated
+  deterministically (manifest 435 nodes/902 edges, generated_from_commit=c17a6be; twice byte-identical). Dual
+  representation (leg registry = leg-truth SSOT; flat cell registry/JSON unchanged per F4) documented in the module
+  docstring; follow-up "cells should derive from leg specs" appended to findings F22. **Remaining open: the [AGENT][UI]
+  P1 leg-aware wizard stages** (Instruments/Venues grouped by leg role, conditional surfaced, cross-category hedge leg
+  auto-included; pw:L2 gate) — dispatched, not done this turn. Churned foreign PM files restored as pure noqa-churn:
+  `tier_c_promotion_gate.py`, `validate-buildspec.py`, `workflow_template_drift_baseline.json` (verified cosmetic).

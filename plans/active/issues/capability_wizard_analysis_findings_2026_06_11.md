@@ -243,3 +243,32 @@ leg role. The engine DOES know legs (`CarryStakedBasisEngine._derive_structure` 
 `accepted_perp_collateral(perp_venue)` — the staked-vs-straight-basis conditional) — code-knows vs registry-says =
 conflicting truth. Operator requirement: per-archetype restrictions must be **exhaustive and structural** (legs, roles,
 instrument types per leg, conditional collateral constraints), not prose.
+
+**Update 2026-06-11 (Phase 2.6 SHIPPED — leg-spec registry landed):** `ARCHETYPE_LEG_STRUCTURES` is now the leg-truth
+SSOT in UAC (`unified_api_contracts/internal/architecture_v2/archetype_leg_spec.py`): `ArchetypeLegRole` (11 closed
+roles), `LegConstraintKind` (3 closed kinds incl. `requires_collateral_acceptance`), `LegConstraint` (params +
+`fallback_variant`), `ArchetypeLegSpec`, `ArchetypeLegStructure`. Seeded 11 archetypes (CARRY_STAKED_BASIS + \_DATED,
+CARRY_BASIS_PERP/\_INV, CARRY_BASIS_DATED/\_INV, CARRY_RECURSIVE_STAKED, CARRY_RECURSIVE_BORROW_LENDING_ONLY,
+YIELD_STAKING_SIMPLE, YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION), each leg citing engine/codex/cell source. The
+staked-basis `requires_collateral_acceptance(LST, hedge_venue)` conditional with `straight_basis` fallback is modelled
+structurally; CeFi (binance/bybit/deribit/okx) + DeFi (hyperliquid/gmx_v2/drift) hedge venues are now differentiated
+per-leg. The PM capability-manifest exporter emits `leg` nodes + `has_leg`/`trades_instrument`/`supports`/
+`leg_constraint` edges; archetypes without a leg spec get one `not_registered` gap edge each (46 today); the two-sided
+audit gained a (d) legs-in-prose drift heuristic; the prospectus has a "Leg Structure" table (honest gap line where
+absent).
+
+**FOLLOW-UP (P1, tranche, NOT yet done):** the flat `ARCHETYPE_CAPABILITY_REGISTRY` cells **should eventually be DERIVED
+FROM the leg specs** (flatten legs → `(asset_group, instrument_type)` cells) so there is a single authored source, plus
+a parity drift-check between the two representations. Today the cell model + `archetype_capability_manifest.json` remain
+the SSOT for the flat coverage matrix (F4: consumers depend on the JSON, no drift check) and the leg registry is the
+SSOT for leg truth — an intentional dual representation documented in the `archetype_leg_spec.py` module docstring. The
+6 archetypes the (d) drift heuristic flags (EVENT_DRIVEN, LIQUIDATION_CAPTURE, MARKET_MAKING_CONTINUOUS,
+RULES_DIRECTIONAL_EVENT_SETTLED, STAT_ARB_CROSS_SECTIONAL, VOL_TRADING_OPTIONS — cell notes imply legs but no leg spec)
+are the first backfill candidates for that tranche.
+
+### F25 — generated_from_commit self-reference keeps committed manifest one-commit stale
+
+**Status**: OPEN — minor design wart. `capability-manifest.json` embeds the UAC HEAD sha; committing the regenerated
+file advances HEAD, so an immediate regen differs by exactly that field (observed after UAC@b1a5419). Options: stamp the
+SOURCE commits of the registries instead of repo HEAD, or accept one-commit lag (current choice). Determinism within a
+fixed HEAD verified unaffected.
