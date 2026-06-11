@@ -52,7 +52,6 @@ EMPTY_STR_EXCLUDE_GLOBS=(
     "!**/detect_template_drift.py"
     "!**/test_detect_template_drift.py"
     "!**/check_coverage_targets.py"
-    "!**/gcs_migration_bundle_2026_05_08.py"
     # JSON/YAML parse-default tooling (.get("k","") on parsed dicts — not an os.getenv anti-pattern)
     "!**/generate-cicd-diagram.py"
     "!**/audit_model_tier.py"
@@ -112,7 +111,6 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/regenerate_active_plan_inventory.py"
     "!**/populate_epic_bodies_2026_05_21.py"
     "!**/check_architectural_ratchets.py"
-    "!**/gcs_migration_bundle_2026_05_08.py"
     "!**/check_workspace_code_workspace_drift.py"
     # STAGE 1.8 dep-order gate: .get("repositories",{}) / .get("dependencies",[])
     # are safe manifest-parse defaults — same pattern as the entries above.
@@ -186,7 +184,6 @@ BE_EXCLUDE_GLOBS=(
     "**/validate-import-deps.py"
     "**/audit_dead_code.py"
     "**/reap_stale_blockers.py"
-    "**/gcs_migration_bundle_2026_05_08.py"
     "**/verify_env_tiered_buckets_provisioned.py"
     "**/pin_branch_protection_rulesets.py"
     "**/check_emission_policy_paired_callsites.py"
@@ -199,7 +196,6 @@ DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/check_env_canon.py"
     "!**/generate_ui_reference_data.py"
     "!**/generate-strategy-instances-fixture.py"
-    "!**/gcs_migration_bundle_2026_05_08.py"
     "!**/test_check_removed_symbols.py"
     "!**/test_check_canonical_futures_construction.py"
 )
