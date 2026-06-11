@@ -291,6 +291,36 @@ without `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` has this same failure class — w
    v1_archive ROW-coverage proven before any drop; prediction dry plan REGENERATED on final HEAD and signed off only
    within its full ⑬–⑲ verdict.
 
+### ⏸️ R-wave RESUME BRIEF — 2026-06-11 ~02:45 UTC (account session-limit wall, resets 10:10 UTC)
+
+All five R-agents (R1/R2/R4/R5/R6) hit the Claude account session limit mid-task after 70–125 tool calls each. **Their
+WIP is REAL and PRESERVED, uncommitted, in the `.tabs/4/` slot trees — resuming workers MUST continue these trees, not
+restart** (inherited-dirty-WIP rule: makers are dead, inherit):
+
+- **R2 (.tabs/4/unified-api-contracts, 7 dirty)**: NEW `registry/_schema_spec_{defi,prediction,tradfi}.py` +
+  `registry/schema_spec.py` + `registry/__init__.py` wiring + `tests/unit/test_schema_spec_completeness.py` — the
+  citadel column-carry implementation looks structurally complete; REMAINS: review, QG `--no-fix`, quickmerge, then
+  re-run `migration_schema_completeness` per AG to 0 RED (run from instruments-service with the orphan_sweep report
+  parquets as --objects-parquet).
+- **R1 (.tabs/4/instruments-service, 5 dirty)**: `scripts/migration_orphan_sweep.py` +
+  `scripts/migration_schema_completeness.py` edits (likely the prefix-taxonomy labels + shared helpers) + defi adapter
+  touches (`aave_v3.py`, `uniswap_v3.py`) + completeness test. The `backfill_orphan_class_e.py` tool may be unstarted —
+  check tree first. REMAINS: finish/build the backfill tool per ratified decision #1
+  (characterize→canonicalise-to-v9→record_captured, sample-verify, never manifest non-canonical), ship, dry-run + apply
+  per AG, re-sweep to E==0 + unknown_prefixes==0, cefi re-run.
+- **R6 (.tabs/4/unified-trading-pm, ~12 dirty)**: codex edits in flight — `pipeline-mode-partition.md`,
+  `pipeline-mode-and-batch-live-reconciliation.md` (hyperliquid_rest purge), `batch-live-architecture.md`,
+  `cefi-batch-live.md`, `tradfi-batch-live.md`, `replay-subsystem.md` (+ more). REMAINS: finish per-AG plan
+  de-coarsening + prediction/sports seam docs + M1–M8 target codification, prettier, docs commits, flip M-COORD-1.
+- **R4 (no tree WIP found)**: investigation state unknown — restart the diagnosis from the task spec (decision #4);
+  check `gcloud scheduler jobs describe` for the IS jobs + instruments-store `by_date/` last-written days first.
+- **R5 (no tree WIP found)**: smoke matrix probes were running (125 tool calls); no ledger written — restart from the
+  task spec (decision #5); reuse any /tmp probe logs on the host if present.
+
+Standing context for resumers: HARD-STOP remains the per-AG migrator `--apply`; R7+R3 (re-dry-runs on final HEAD +
+projected `_index` + dev renders + ⑬–⑲ verdict packs) and R8 (sports sweep + v1_archive gate + prediction dry-plan
+regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host for the V5 drilldown evidence packs.
+
 ### Ratification todos (the dispatch — owners per slot map)
 
 - [ ] [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→record_captured backfill** (defi 254,984 /

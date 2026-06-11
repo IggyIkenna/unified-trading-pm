@@ -279,8 +279,18 @@ single-core pinned), output under gitignored `.qg_profile/`.
       tests that touch the changed files + their importers. Single-core; the win is fewer tests, not more cores.
 - [ ] [INFRA] P1. basedpyright fast path: type-check changed files + their reverse-dependents only (full `SOURCE_DIR/`
       stays on the merge tier). Warm `BASEDPYRIGHT_CACHE_DIR` (already set) so incremental runs are cheap.
-- [ ] [INFRA] P1. Codex STEP 5.x fast path: scope the grep/AST checks to the changed file set for the fast tier (several
-      are already git-aware via `STAGED`; generalise). Full-tree scan stays on the merge tier.
+- [x] ✅ [INFRA] P1. **Codex STEP 5.x fast path — DONE (2026-06-11, operator's #2: "codex on changed files only").**
+      `--fast` (env `QG_FAST=1`) restricts the ~60 codex grep checks to the source `.py` files CHANGED vs the
+      merge-base, passed to `rg` as **INCLUDE-globs** via a `codex_rg` wrapper (`rg ${CODEX_SCOPE_GLOBS[@]+…} "$@"`).
+      Include-globs PRESERVE each check's own exclude-globs (a changed `tests/` file is still dropped by its
+      `--glob '!tests/**'`), so the only effect is "scan changed, not the whole tree" — a 2-file edit's codex pass goes
+      O(tree)→O(changed). Mechanically: `CODEX_SCOPE_GLOBS` (empty in full mode) + 64 `rg`→`codex_rg` in
+      base-service.sh's codex block (45 in base-library.sh) + a `--fast` flag, in BOTH bases. **VERIFIED**: (a)
+      **full/merge tier BYTE-IDENTICAL** — old-vs-new codex STEP results identical on ibkr with `QG_FAST` unset (empty
+      array → `codex_rg`≡`rg`, proven at shell level too); (b) **fast tier scopes + catches** — `QG_FAST=1` on ibkr
+      scoped codex to its 1 changed file and caught that file's 2 real violations; (c) rg-glob mechanism proven
+      (720-file scan → 1 file). The fast tier NEVER writes `.qg_last_passed_sha` (base scripts already enforce), so any
+      fast miss is re-checked at the merge boundary. — unified-trading-pm@<sha>
 - [ ] [TEST] P0. Differential correctness harness: for a corpus of known-bad commits (each violating one specific
       check/coverage), assert the fast tier catches anything WITHIN the changed files AND the full/merge tier catches
       everything. This is the proof that scoping never lets a regression through.
@@ -328,6 +338,13 @@ single-core pinned), output under gitignored `.qg_profile/`.
       and measure the per-line-instrumentation cost the profile (Phase 0) attributes to `--cov`.
 - [ ] [INFRA] P2. Re-profile after Phases 1–3 and re-baseline `qg_resource_baseline.json`; the 2× resource-drift guard
       keys off it.
+- [ ] [INFRA] P1. **NON-codex overhead is now the #2 non-test cost — investigate (finding 2026-06-11).** After the codex
+      perf fixes, an execution-service codex-only gate is ~167 s, of which the codex BLOCK is only ~45 s — the other
+      **~122 s is NON-codex**: gate STARTUP (the `uv pip install -e` of every editable dep, base-service.sh:298+) +
+      pip-audit (hit OSV network this run — the deps-hash cache was cold for the repo) + the version-alignment /
+      dep-content gates. The startup editable-dep install is the big fixed cost; it could be skipped when the repo's
+      `.venv` already has the deps at the right version (a venv-freshness check), and pip-audit should be warm-cached in
+      steady state. Provenance: codex-decomposition timing on execution-service, 2026-06-11.
 
 ---
 

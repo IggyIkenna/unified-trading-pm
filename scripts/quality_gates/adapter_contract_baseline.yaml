@@ -51,11 +51,11 @@ baseline:
   execution-service/execution_service/sports_execution/adapters/exchanges/betfair.py:
     count: 8
   execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py:
-    count: 20
+    count: 21
   execution-service/execution_service/sports_execution/adapters/exchanges/matchbook.py:
     count: 4
   execution-service/execution_service/sports_execution/adapters/exchanges/polymarket_clob.py:
-    count: 14
+    count: 15
   execution-service/execution_service/strategy_instructions/gcs.py:
     count: 8
   execution-service/execution_service/strategy_instructions/manifest.py:
@@ -142,12 +142,24 @@ baseline:
     count: 3
   instruments-service/instruments_service/engine/orchestrator/footystats.py:
     count: 19
-  instruments-service/instruments_service/engine/orchestrator/process.py:
-    count: 22
+  instruments-service/instruments_service/engine/orchestrator/process_completeness.py:
+    count: 1
+  instruments-service/instruments_service/engine/orchestrator/process_enrichment.py:
+    count: 1
+  instruments-service/instruments_service/engine/orchestrator/process_fetch.py:
+    count: 2
+  instruments-service/instruments_service/engine/orchestrator/process_preflight.py:
+    count: 3
+  instruments-service/instruments_service/engine/orchestrator/process_write.py:
+    count: 6
+  instruments-service/instruments_service/engine/orchestrator/process_zero_records.py:
+    count: 9
   instruments-service/instruments_service/engine/orchestrator/sfi.py:
     count: 9
-  instruments-service/instruments_service/engine/orchestrator/sports_reference.py:
-    count: 22
+  instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py:
+    count: 13
+  instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures.py:
+    count: 9
   instruments-service/instruments_service/engine/orchestrator/transfermarkt.py:
     count: 6
   instruments-service/instruments_service/engine/orchestrator/understat.py:
@@ -322,8 +334,14 @@ baseline:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/raydium_classic_amm_handler.py:
     count: 3
+  market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_amm.py:
+    count: 2
+  market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_drift.py:
+    count: 10
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py:
-    count: 23
+    count: 4
+  market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_yield.py:
+    count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_lst_archival.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py:
@@ -437,7 +455,13 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
-    count: 22
+    count: 4
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py:
+    count: 9
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_bulk_download.py:
+    count: 1
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py:
+    count: 9
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py:
     count: 2
   market-tick-data-service/market_tick_data_service/market_interface/clients/extended_base_client.py:

@@ -163,9 +163,12 @@ unchanged:
       in-file citing this plan); contract-call conservation verified (114 ≥ baseline 99); full QG green. Follow-up:
       decompose `process_instruments()` (next todo). Original: **instruments-service `orchestrator.py` (8,192 L / 89
       functions) — abstract by asset-group + core.**
-- [ ] [REFACTOR] P3. **instruments-service `engine/orchestrator/process.py` (1,963 L)** — decompose the legacy
-      `process_instruments()` (1,931-line function body, moved verbatim in the 2026-06-11 split) by stage/asset-group;
-      then remove the process.py + sports_reference.py FUNCTION_SIZE_EXTRA_EXCLUDES entries. Repo: instruments-service. The module mixes per-asset-group logic with venue/date core + sink. Suggested package
+- [x] ✅ [REFACTOR] P3. DONE 2026-06-11 — instruments-service@a576a29: `process_instruments()` 1,931 L decomposed by
+      stage into process_{preflight,fetch,enrichment,write,zero_records,completeness}.py (316–642 L each; process.py
+      now 322 L facade); sports_reference fetcher 882 L → sports_reference_{core,fixtures}.py (sports_reference.py 212);
+      both FUNCTION_SIZE_EXTRA_EXCLUDES entries REMOVED; 2 surfaced lazy imports hoisted; budget ratcheted 4→3
+      (remaining: os.getenv / pip-install-in-Dockerfile / broad-except); full QG green. Original: decompose
+      `process_instruments()` + remove the excludes. The module mixes per-asset-group logic with venue/date core + sink. Suggested package
       `engine/orchestrator/`: `defi.py`
       (`_build_defi_venues`/`clear_defi_universe_cache`/`_get_defi_manifest_high_watermarks`/
       `_enforce_defi_monotonicity`/`filter_defi_instruments_by_relevance`/`_normalize_wrapped_token`), `sports.py`
@@ -186,8 +189,13 @@ unchanged:
       25→24 (the transient 25th class was the manifest-alignment edge). drilldown/routes follow-up stays below.
       Original: **deployment-api `data_status_service.py` (6,663 L / 69-method god-class) — abstract the domain logic
       out (operator 2026-06-10).**
-- [ ] [REFACTOR] P2. **deployment-api `data_status_drilldown.py` (2,586 L) + `routes/data_status.py` (2,550 L)** —
-      same facade treatment as the service split (routers preserved byte-identical). Repo: deployment-api. Suggested package `services/data_status/`: `defi.py`
+- [x] ✅ [REFACTOR] P2. DONE 2026-06-11 — deployment-api@5127517: routes/data_status.py 2,550 → package (5 modules);
+      services/data_status_drilldown.py 2,586 → package (5 modules); routes/deployments.py 968 → package (crud/
+      lifecycle); services/shard_detail.py 1,777 → package; + Phase-2b facade flips (routes/config.py +
+      utils/path_combinatorics.py to one-level registry imports). **budget 24→22** (file-size + deep-imports classes
+      CLEARED — all 8 two-level registry call sites flipped; supersedes the plan's "23→24 revert" item, landing below
+      23); honest measured 22; full QG green. Remaining classes to ≤5 per the in-file comment: fn-size, os.getenv,
+      Any-types, schema-provenance (Phase 3) et al. Original: drilldown + routes facade treatment. Suggested package `services/data_status/`: `defi.py`
       (`_is_legacy_defi_venue_row`/`_read_defi_merged_index`/`_allowed_defi_venue_chain_pairs`/
       `_filter_to_canonical_defi_venues`/`_filter_legacy_defi_rows`), `sports.py` (`_is_sports_reference_venue`/
       `_is_understat_venue`/`_is_transfer_window_venue`/`_is_sparse_sports_entity`/`_get_reference_expected_dates`),
@@ -257,22 +265,46 @@ unchanged:
       **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143).
       Repo: unified-trading-pm.
 
+## Phase 1.5 — >900-line tail (post-sweep inventory 2026-06-11; the named worst offenders above are ALL split)
+
+- [ ] [REFACTOR] P1. **UTL `manifest_writer.py` is 5,716 lines** — NEW worst-offender discovery (2026-06-11 fleet
+      sweep; hidden behind UTL's size excludes at budget 0). Same treatment as the P1 monsters: decompose by concern
+      (record_* write paths / consolidation / validation / emission-policy) behind a re-exporting facade, namespace-
+      patch pre-audit first (manifest_writer is the most-patched module in the fleet). Also UTL
+      `manifest_consolidator.py` (1,360) + `__init__.py` 2,279 (facade — sanctioned, verify). Repo:
+      unified-trading-library.
+- [ ] [REFACTOR] P2. MTDS >900 tail (11 files): umi_tick_provider 2,093 / evm_defi_handler 1,430 / lending_indices
+      1,390 / perp_funding 1,363 / databento_adapter 1,360 / dex_pools 1,097 / oracle_prices 1,085 / polymarket_adapter
+      1,023 / solana_lst_archival 988 / dex_swaps 980 / gas_fee 944 / websocket_runner 912 — split below 900 by
+      venue/stage (drops the file-size class → 15→14). Repo: market-tick-data-service.
+- [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
+      polymarket 1,184 / _solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922),
+      strategy archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958,
+      agent-orchestrator worker_liveness/state_store/worktree_clean_check/models (separate todo above),
+      alerting router 1,022, ml uniform_training_pipeline 963. UAC's >900 set is largely declarative data registries +
+      `__init__` facades (sanctioned re-export exception) — audit non-facade ones (honest_coverage 1,141,
+      contracts.py 1,349) case-by-case. Repos: per file.
+
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
-- [ ] [REFACTOR] P2. **FACADE HALF DONE 2026-06-11** — UAC@c8287d3: all 46 fleet-consumed two-level symbols now
-      re-exported at the one-level facade (20 modules; `schema_spec`/`client_share_classes`/`withdrawal_approval_rules`
-      via PEP 562 lazy `__getattr__` to avoid root-init circular imports). REMAINING: per-consumer call-site flips +
-      ratchets (next bullet half). Original: Re-export the two-level `from unified_api_contracts.registry.<X> import`
-      symbols at the UAC one-level facade (`unified_api_contracts/registry/__init__.py`) for every symbol consumed
-      two-level fleet-wide
+- [x] ✅ [REFACTOR] P2. COMPLETE 2026-06-11 — facade: UAC@c8287d3 (all 46 fleet-consumed two-level symbols at the
+      one-level facade; 3 modules via PEP 562 lazy `__getattr__` for root-init cycles). Consumer call-site flips
+      shipped per-repo: deployment-api@5127517 (all 8 sites, class CLEARED), execution-service@fb116d98 (class
+      CLEARED), strategy-service@6aff0c48 (class CLEARED, zero deep sites remain), MDPS@4b6c53a (class CLEARED),
+      instruments-service@cb51c98 (weather.py), SIT@a458443 (3 test files). MTDS's remaining deep imports are
+      `canonical.partition_paths` in migration scripts (NOT registry symbols — outside this item's scope, stays in
+      its V=15 accounting). Deep-path removal from UAC deferred until a fleet-wide pre-audit shows zero importers
+      (additive-first contract). Original: Re-export the two-level symbols at the UAC one-level facade
       ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
       tardis_free_coverage, …}), then switch the call sites to `from unified_api_contracts.registry import <X>` and drop
       each repo's deep-import violation. Affected services (per the 2026-06-10 audit): deployment-api,
       execution-service, instruments-service, market-data-processing-service, market-tick-data-service,
       strategy-service, system-integration-tests. Repo: unified-api-contracts (facade) + the 7 consumers (call sites +
       ratchet).
-- [ ] [CODE] P1. **deployment-api budget 23→24 revert** — the 24 was the parity-fix unblock (deployment-api@3a579f1b);
-      once Phase 2 clears its deep-import violation, ratchet 24→23 (then keep going under this plan toward ≤5). Repo:
+- [x] ✅ [CODE] P1. SUPERSEDED-SATISFIED 2026-06-11 — deployment-api@5127517 ratcheted 24→**22** (below the 23
+      target): Phase 2 cleared the deep-import class AND the route/service splits cleared file-size. (Interim
+      history: a transient 24→25 bump by slot-1 for manifest-alignment was reverted same-day @6b7aa69 once the PM
+      workspace-manifest dep edge was fixed.) Original: budget 23→24 revert once deep-imports clear. Repo:
       deployment-api.
 
 ## Phase 3 — Schema provenance (local types → UAC)

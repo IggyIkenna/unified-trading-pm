@@ -180,6 +180,10 @@ for arg in "$@"; do
         --act) ACT_MODE=true ;;       --ignore-timeout) IGNORE_TIMEOUT=true ;;
         --skip-version-alignment) SKIP_VERSION_ALIGNMENT=true ;;
         --skip-codex) SKIP_CODEX_FLAG=true ;;
+        # --fast: change-scoped ITERATION tier — codex greps only the changed source files (see the
+        # CODEX_SCOPE_GLOBS block). Never writes the merge sentinel, so the commit still runs the FULL
+        # gate at quickmerge Pass-1 / CI. For the local iterate loop only.
+        --fast) QG_FAST=1; export QG_FAST ;;
     esac
 done
 
@@ -325,6 +329,31 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep '\.
 _tests_lint_dir=""; [ -d "tests" ] && _tests_lint_dir="tests/"
 SOURCE_DIRS="${STAGED:-$SOURCE_DIR/ $_tests_lint_dir}"
 [ -n "$STAGED" ] && log_warn "Git-aware mode: $(echo "$STAGED" | wc -w | tr -d ' ') staged files"
+
+# ── Change-scoped codex (fast/iterative tier — quality_gates_speed Phase 2) ───────────────────
+# QG_FAST=1 restricts the codex grep checks to the source .py files CHANGED vs the merge-base,
+# passed to rg as INCLUDE-globs. Include-globs PRESERVE each check's own exclude-globs (verified:
+# a changed tests/ file is still dropped by a check's `--glob '!tests/**'`), so the only effect is
+# "scan changed files, not the whole tree" — a 2-file edit's codex pass becomes O(changed). The
+# MERGE tier (QG_FAST unset) leaves the array EMPTY → codex_rg is BYTE-IDENTICAL to plain rg. The
+# fast tier never writes .qg_last_passed_sha (enforced at the sentinel), so any fast-tier miss is
+# always re-checked at the merge boundary (quickmerge Pass-1 / CI v2 run the FULL gate).
+CODEX_SCOPE_GLOBS=()
+if [[ -n "${QG_FAST:-}" ]]; then
+    _qgf_base=$(git merge-base HEAD origin/live-defi-rollout 2>/dev/null || echo "")
+    while IFS= read -r _qgf_f; do
+        [ -n "$_qgf_f" ] && CODEX_SCOPE_GLOBS+=(--glob "$_qgf_f")
+    done < <( { [ -n "$_qgf_base" ] && git diff --name-only --diff-filter=ACMR "$_qgf_base" -- '*.py'; \
+                git diff --name-only --diff-filter=ACMR -- '*.py'; \
+                git ls-files --others --exclude-standard -- '*.py'; } 2>/dev/null | sort -u )
+    # No changed .py → an include-glob that matches nothing makes every codex grep a guaranteed no-op.
+    [ ${#CODEX_SCOPE_GLOBS[@]} -eq 0 ] && CODEX_SCOPE_GLOBS=(--glob '__qg_fast_no_changed_py__')
+    log_warn "QG_FAST: codex scoped to $(( ${#CODEX_SCOPE_GLOBS[@]} / 2 )) changed .py file(s)"
+fi
+# codex_rg: the codex grep checks call this instead of bare `rg`. Full mode → CODEX_SCOPE_GLOBS
+# empty → expands to nothing → identical to rg (byte-identical full tier). Fast mode → prepends the
+# changed-file --glob INCLUDES. bandit (-r <dir>, not rg) is untouched + stays content-cached.
+codex_rg() { rg ${CODEX_SCOPE_GLOBS[@]+"${CODEX_SCOPE_GLOBS[@]}"} "$@"; }
 
 export CLOUD_MOCK_MODE="true"; export GCP_PROJECT_ID="test-project"
 
@@ -762,7 +791,7 @@ V=0
 #           CLI entry-points (**/cli/main.py, **/cli/_shim.py, **/__main__.py) — argparse --version/--help/dispatcher
 #           output to stdout is correct CLI behaviour, not an event (per Harsh slot-2 Q1.1, 2026-05-11; CLI handlers
 #           under cli/handlers/ are NOT excluded — they must still use log_event()).
-_print_hits=$(rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/cli/main.py" --glob "!**/cli/_shim.py" --glob "!**/__main__.py" "${PRINT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+_print_hits=$(codex_rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/cli/main.py" --glob "!**/cli/_shim.py" --glob "!**/__main__.py" "${PRINT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v 'console\.print\|pprint\|python3 -c\|".*print.*"\|# noqa: qg-print' || :)
 [[ -n "$_print_hits" ]] && { echo "$_print_hits"; log_fail "print() — use log_event() from UEI"; V=$(( V + 1 )); } || log_success "No print()"
 
@@ -770,7 +799,7 @@ _print_hits=$(rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" --g
 # Lines annotated with "# config-bootstrap:" are the documented approved exception for pre-UCC init (LOG_LEVEL, PORT).
 # __main__.py is excluded because Cloud Run bootstrap reads PORT before UCC is available.
 # Exclude: config-bootstrap: annotated lines, comments (lines starting with #), docstrings
-_os_env_hits=$(rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" --glob "!**/__main__.py" "${OS_ENV_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+_os_env_hits=$(codex_rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" --glob "!**/__main__.py" "${OS_ENV_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v 'config-bootstrap:' | grep -v '^\s*#' | grep -v '# noqa: qg-os-env' || :)
 if [[ -n "$_os_env_hits" ]]; then
     echo "$_os_env_hits"
@@ -780,7 +809,7 @@ else
     log_success "No os.getenv()/os.environ"
 fi
 
-rg 'os\.getenv\s*\([^)]+,\s*""\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+codex_rg 'os\.getenv\s*\([^)]+,\s*""\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "os.getenv empty fallback — fail fast"; V=$(( V + 1 )); } || log_success "No os.getenv empty fallback"
 
 
@@ -804,17 +833,17 @@ else
     log_warn "Manifest import alignment: SKIPPED — no WORKSPACE_ROOT/PM checkout (CI without workspace); local runs DO check this"
 fi
 
-rg "datetime\.now\(\)|datetime\.utcnow\(\)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+codex_rg "datetime\.now\(\)|datetime\.utcnow\(\)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Naive datetime — use datetime.now(timezone.utc)"; V=$(( V + 1 )); } || log_success "No naive datetime"
 
-rg "except:" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+codex_rg "except:" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Bare except — use specific exception"; V=$(( V + 1 )); } || log_success "No bare except"
 
 
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
-for f in $(rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
+for f in $(codex_rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
     # Skip if the import line has a noqa comment for this check
-    rg "import requests.*# noqa:.*qg-requests-in-async" "$f" >/dev/null 2>&1 && continue
+    codex_rg "import requests.*# noqa:.*qg-requests-in-async" "$f" >/dev/null 2>&1 && continue
     grep -q "async def" "$f" && { log_fail "requests in async: $f — use aiohttp"; V=$(( V + 1 )); break; }
 done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null || :
 
@@ -827,9 +856,9 @@ for g in ${ASYNCIO_RUN_EXCLUDE_GLOBS[@]+"${ASYNCIO_RUN_EXCLUDE_GLOBS[@]}"}; do
     ASYNCIO_EXTRA_GLOBS+=(--glob "$g")
 done
 _asyncio_violation=""
-for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" ${ASYNCIO_EXTRA_GLOBS[@]+"${ASYNCIO_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" -l 2>/dev/null || :); do
+for f in $(codex_rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" ${ASYNCIO_EXTRA_GLOBS[@]+"${ASYNCIO_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" -l 2>/dev/null || :); do
     # Only flag asyncio.run() deeply nested inside a loop body (>=8 spaces indentation)
-    if rg "^\s{8,}asyncio\.run\(" "$f" 2>/dev/null | grep -q .; then
+    if codex_rg "^\s{8,}asyncio\.run\(" "$f" 2>/dev/null | grep -q .; then
         _asyncio_violation="$f"
         break
     fi
@@ -860,34 +889,34 @@ else
     V=$(( V + 1 ))
 fi
 
-ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
+ANY=$(codex_rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
 [[ -n "$ANY" ]] && { log_fail "Any types (including dict[str, Any]) — use Pydantic models or specific types"; echo "$ANY" | head -3; V=$(( V + 1 )); } || log_success "No Any types"
 
 # Untyped API responses — response.json() must go through model_validate(), not raw dict access.
 # Honour `# noqa: qg-raw-json` per-line opt-out (matches base-library.sh) for explicit
 # protocol-layer / dynamic-schema cases where Pydantic validation is intentionally deferred.
-RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+RAW_JSON=$(codex_rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v 'model_validate\|cast(dict' \
     | grep -v "# noqa:.*qg-raw-json\|# noqa: qg-raw-json" || :)
 [[ -n "$RAW_JSON" ]] && { log_fail "Raw response.json() — parse through Pydantic model_validate()"; echo "$RAW_JSON" | head -3; V=$(( V + 1 )); } || log_success "No raw response.json()"
 
 EMPTY_STR_EXTRA=()
 for g in ${EMPTY_STR_EXCLUDE_GLOBS[@]+"${EMPTY_STR_EXCLUDE_GLOBS[@]}"}; do EMPTY_STR_EXTRA+=(--glob "$g"); done
-EMPTY_STR=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
+EMPTY_STR=$(codex_rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
 [[ -n "$EMPTY_STR" ]] && { log_fail "Empty string fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
 
 ED_EL_EXTRA=()
 for g in ${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]+"${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}"}; do ED_EL_EXTRA+=(--glob "$g"); done
-ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
-EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
+ED=$(codex_rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
+EL=$(codex_rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
 
-rg "central-element-[0-9]+" tests/ 2>/dev/null \
+codex_rg "central-element-[0-9]+" tests/ 2>/dev/null \
     && { log_fail "Hardcoded prod project ID in tests — use 'test-project'"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in tests"
 
 HP_EXTRA=()
 for g in ${HARDCODED_PROJECT_EXCLUDE_GLOBS[@]+"${HARDCODED_PROJECT_EXCLUDE_GLOBS[@]}"}; do HP_EXTRA+=(--glob "$g"); done
-rg "central-element-[0-9]+" --type py --glob "!tests/**" "${HP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
+codex_rg "central-element-[0-9]+" --type py --glob "!tests/**" "${HP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Hardcoded project ID in production — use config.gcp_project_id"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in production"
 
 # GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
@@ -895,7 +924,7 @@ rg "central-element-[0-9]+" --type py --glob "!tests/**" "${HP_EXTRA[@]}" "$SOUR
 GCP_EXTRA=()
 for g in ${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]+"${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}"}; do GCP_EXTRA+=(--glob "$g"); done
 # Exclude: docstrings (triple-quoted), comments, and noqa-annotated lines
-_gcp_id_hits=$(rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
+_gcp_id_hits=$(codex_rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v '^\s*#\|^\s*"""\|# noqa: qg-gcp-project-id\|"""$' || :)
 [[ -n "$_gcp_id_hits" ]] && { echo "$_gcp_id_hits"; log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; V=$(( V + 1 )); } || log_success "No GCP_PROJECT_ID usage"
 
@@ -903,12 +932,12 @@ _gcp_id_hits=$(rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/conf
 # Acceptable: pytest.skip inside _skip_integration_without_creds autouse fixture (integration marker pattern)
 # Domain clients must come from unified_domain_client, not unified_trading_library
 # Services should import: InstrumentsDomainClient, ExecutionDomainClient, create_*_client from UDS
-UCS_DOMAIN=$(rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
+UCS_DOMAIN=$(codex_rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
     --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_domain_client, not unified_trading_library"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_domain_client"
 
 # No domain imports from UCS (use # noqa: domain-ucs if UDC migration is pending)
-DOMAIN_FROM_UCS=$(rg 'from unified_trading_library import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
+DOMAIN_FROM_UCS=$(codex_rg 'from unified_trading_library import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
     --type py "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa' || :)
 [[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from UCS — use unified_domain_client instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No domain imports from UCS"
 
@@ -929,25 +958,25 @@ fi
 
 # setup_events/setup_service uses sink= in production
 # Skip if this repo defines setup_events (e.g. unified-trading-library)
-if rg 'def setup_events|def setup_service' --type py "$SOURCE_DIR/" -q 2>/dev/null; then
+if codex_rg 'def setup_events|def setup_service' --type py "$SOURCE_DIR/" -q 2>/dev/null; then
     log_success "setup_service() check skipped (repo defines setup_events/setup_service)"
 else
     SETUP_EXTRA=()
     for g in ${SETUP_NO_SINK_EXCLUDE_GLOBS[@]+"${SETUP_NO_SINK_EXCLUDE_GLOBS[@]}"}; do SETUP_EXTRA+=(--glob "$g"); done
-    SETUP_NO_SINK=$(rg 'setup_(events|service)\s*\(' --type py \
+    SETUP_NO_SINK=$(codex_rg 'setup_(events|service)\s*\(' --type py \
         --glob "!tests/**" "$SOURCE_DIR/" "${SETUP_EXTRA[@]}" 2>/dev/null | grep -v 'sink=' \
         | grep -v "def setup_events\|def setup_service" || :)
     [[ -n "$SETUP_NO_SINK" ]] && { log_fail "setup_events()/setup_service() called without sink= in production code"; echo "$SETUP_NO_SINK" | head -5; V=$(( V + 1 )); } || log_success "setup_service() uses sink= in all production call sites"
 fi
 
-BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION_CREDENTIALS|if not.*gcp_credentials.*pytest\.skip\|if not.*cred_file.*pytest\.skip' \
+BAD_AUTH_SKIP=$(codex_rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION_CREDENTIALS|if not.*gcp_credentials.*pytest\.skip\|if not.*cred_file.*pytest\.skip' \
     --type py tests/ 2>/dev/null \
     | grep -v "_skip_integration_without_creds\|No GCP credentials.*skipping integration\|No GCP credentials.*skipping Secret Manager\|Could not create/access" \
     || :)
 [[ -n "$BAD_AUTH_SKIP" ]] && { log_fail "Tests skip due to missing credential file — use google.auth.default() + @pytest.mark.integration instead"; echo "$BAD_AUTH_SKIP" | head -5; V=$(( V + 1 )); } || log_success "No credential-file skip patterns in tests"
 
 # GOOGLE_APPLICATION_CREDENTIALS must not appear in .env.example (we use ADC / GH token / Cloud SA)
-[[ -f ".env.example" ]] && rg "GOOGLE_APPLICATION_CREDENTIALS" .env.example 2>/dev/null \
+[[ -f ".env.example" ]] && codex_rg "GOOGLE_APPLICATION_CREDENTIALS" .env.example 2>/dev/null \
     && { log_fail ".env.example contains GOOGLE_APPLICATION_CREDENTIALS — remove it (use ADC, not SA key files)"; V=$(( V + 1 )); } || log_success "No GOOGLE_APPLICATION_CREDENTIALS in .env.example"
 
 DI_EXTRA=()
@@ -967,23 +996,23 @@ for g in ${DEEP_IMPORT_EXCLUDE_GLOBS[@]+"${DEEP_IMPORT_EXCLUDE_GLOBS[@]}"}; do D
 # `[a-z_]+ import` clause only matches a single segment before ` import`). STEP 5.23 (uac-import-surface-enforcement)
 # is the precise enforcement for the internal namespaces. Q4 + Q4b fix per features_service_qg_cleanup_2026_05_11.md.
 # PORTABILITY (ci_local_qg_parity 2026-06-10): the negative-lookahead filter MUST run under
-# ripgrep's bundled PCRE2 (`rg --pcre2`), NOT `grep -P`. macOS `/usr/bin/grep` (BSD) does NOT
+# ripgrep's bundled PCRE2 (`codex_rg --pcre2`), NOT `grep -P`. macOS `/usr/bin/grep` (BSD) does NOT
 # support `-P` → `grep -vP` exits 2 + emits nothing → with `|| :` the whole DI collapses to ""
 # → this check FALSE-PASSES on every macOS slot ("No deep imports") while CI (Linux GNU grep)
 # correctly flags. That single +1 divergence is what made deployment-api local-green / CI-red
-# (V=23 vs 24). `rg --pcre2` is byte-identical local↔CI. NEVER reintroduce `grep -P` in the gate.
-DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
+# (V=23 vs 24). `codex_rg --pcre2` is byte-identical local↔CI. NEVER reintroduce `grep -P` in the gate.
+DI=$(codex_rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
     "${DI_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa" \
     | grep -v 'from unified_api_contracts\.internal' \
-    | rg --pcre2 -v 'from unified_api_contracts\.(?!canonical|normalize_utils|config|shared|schemas|external)[a-z_]+ import' || :)
+    | codex_rg --pcre2 -v 'from unified_api_contracts\.(?!canonical|normalize_utils|config|shared|schemas|external)[a-z_]+ import' || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
 # Old event logging pattern — flag obsolete cloud logging helpers only.
 # log_event/setup_events: from unified_trading_library import log_event is correct (UEI merged into UTL;
 #   check-import-patterns.py enforces top-level top-level import; from unified_trading_library.events also accepted).
 # setup_cloud_logging/observability: old non-standard helpers — flag these.
-EL_OLD=$(rg "from unified_trading_library[. ].*(setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+EL_OLD=$(codex_rg "from unified_trading_library[. ].*(setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_trading_library import log_event'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports OK"
 
 # ============================================================
@@ -991,7 +1020,7 @@ EL_OLD=$(rg "from unified_trading_library[. ].*(setup_cloud_logging|observabilit
 # ============================================================
 _csdk_extra=()
 for g in ${CLOUD_SDK_EXCLUDE_GLOBS[@]+"${CLOUD_SDK_EXCLUDE_GLOBS[@]}"}; do _csdk_extra+=(--glob "$g"); done
-DIRECT_CLOUD=$(rg 'from google\.cloud import|^import boto3\b|^from boto3 import|^from botocore import' \
+DIRECT_CLOUD=$(codex_rg 'from google\.cloud import|^import boto3\b|^from boto3 import|^from botocore import' \
     --type py "${_csdk_extra[@]}" "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ | grep -v '\.venv' | grep -v '# noqa: cloud-sdk-direct' || :)
 [[ -n "$DIRECT_CLOUD" ]] && {
     log_fail "Direct cloud SDK imports found (route through unified-cloud-interface instead):"
@@ -1004,7 +1033,7 @@ DIRECT_CLOUD=$(rg 'from google\.cloud import|^import boto3\b|^from boto3 import|
 # ============================================================
 REPO_ARCH_TIER="${REPO_ARCH_TIER:-service}"
 if [[ "$REPO_ARCH_TIER" == "0" ]]; then
-    TIER_VIOLATIONS=$(rg 'from unified_trading_library|from unified_domain_client|from unified_trading_library' \
+    TIER_VIOLATIONS=$(codex_rg 'from unified_trading_library|from unified_domain_client|from unified_trading_library' \
         --type py "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ || :)
     [[ -n "$TIER_VIOLATIONS" ]] && {
         log_fail "Tier 0 violation: imports from Tier 1+ library:"
@@ -1012,7 +1041,7 @@ if [[ "$REPO_ARCH_TIER" == "0" ]]; then
         V=$(( V + 1 ))
     } || log_success "Tier 0 compliance: no Tier 1+ imports"
 elif [[ "$REPO_ARCH_TIER" == "2" ]]; then
-    TIER_VIOLATIONS=$(rg 'from unified_trading_library|from unified_trading_library' \
+    TIER_VIOLATIONS=$(codex_rg 'from unified_trading_library|from unified_trading_library' \
         --type py "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ || :)
     [[ -n "$TIER_VIOLATIONS" ]] && {
         log_fail "Tier 2 violation: imports from Tier 1 (unified-trading-library/unified-trading-library):"
@@ -1024,7 +1053,7 @@ else
 fi
 
 # pip install anywhere other than bootstrap (must use uv pip install)
-PIP=$(rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --glob "**/*.sh" . 2>/dev/null \
+PIP=$(codex_rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --glob "**/*.sh" . 2>/dev/null \
     | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
 [[ -n "$PIP" ]] && { log_fail "Use 'uv pip install' not 'pip install'"; echo "$PIP" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install"
 
@@ -1032,12 +1061,12 @@ BE_EXTRA_GLOBS=()
 for g in ${BE_EXCLUDE_GLOBS[@]+"${BE_EXCLUDE_GLOBS[@]}"}; do
     BE_EXTRA_GLOBS+=(--glob "!$g")
 done
-BE=$(rg "except Exception:" --type py --glob "!tests/**" ${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" 2>/dev/null || :)
+BE=$(codex_rg "except Exception:" --type py --glob "!tests/**" ${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" 2>/dev/null || :)
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
 [[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
 
 # Swallowed errors — except that silently passes/returns None
-SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \
+SWALLOWED=$(codex_rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \
     | grep -E "^[[:space:]]+(pass|return None)$" || :)
 [[ -n "$SWALLOWED" ]] && { log_fail "Swallowed errors — use @handle_api_errors or re-raise"; V=$(( V + 1 )); } || log_success "No swallowed errors"
 
@@ -1183,14 +1212,14 @@ qg_prof end bandit
 
 
 # CI/CD hygiene: ||true bypasses in quality gate scripts
-BYPASS=$(rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/quality-gates.yml" . 2>/dev/null \
+BYPASS=$(codex_rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/quality-gates.yml" . 2>/dev/null \
     | grep -v "^#\|zombies\|pyright\|cleanup" || :)
 [[ -n "$BYPASS" ]] && { log_fail "||true bypass in quality gates — fix the root cause"; echo "$BYPASS" | head -3; V=$(( V + 1 )); } || log_success "No ||true quality gate bypasses"
 
 # ============================================================
 # STEP 5.7 — No real cloud API calls in unit tests
 # ============================================================
-UNIT_CLOUD_CALLS=$(rg 'get_storage_client\(\)|get_secret_client\(\)|get_queue_client\(\)' \
+UNIT_CLOUD_CALLS=$(codex_rg 'get_storage_client\(\)|get_secret_client\(\)|get_queue_client\(\)' \
     --type py tests/unit/ 2>/dev/null | grep -v '\.mock\.' | grep -v 'MagicMock' | grep -v 'patch' || :)
 [[ -n "$UNIT_CLOUD_CALLS" ]] && {
     log_fail "Unit tests call real cloud APIs — use MagicMock(spec=StorageClient) instead"
@@ -1204,7 +1233,7 @@ UNIT_CLOUD_CALLS=$(rg 'get_storage_client\(\)|get_secret_client\(\)|get_queue_cl
 # Never leave a shim that re-exports from the new location.
 # CODEX: cursor-rules/core/no-backward-compat-shims.mdc
 # ============================================================
-BACK_COMPAT=$(rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward|re-export.*compat" \
+BACK_COMPAT=$(codex_rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward|re-export.*compat" \
     --type py --glob "!tests/**" --glob "!.venv*" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$BACK_COMPAT" ]] && {
     log_fail "Backward-compat pattern found — eliminate re-export stubs, aliases, and compat shims"
@@ -1221,7 +1250,7 @@ BACK_COMPAT=$(rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward
 # ============================================================
 # Detect Pydantic BaseModel subclasses in service source outside of output_schemas.py
 # (output_schemas.py is allowed to contain SchemaDefinition/ColumnSchema infra objects only)
-DOMAIN_CONTRACTS_IN_SERVICE=$(rg 'class \w+\(BaseModel\)' --type py \
+DOMAIN_CONTRACTS_IN_SERVICE=$(codex_rg 'class \w+\(BaseModel\)' --type py \
     --glob "!tests/**" --glob "!**/output_schemas.py" --glob "!**/__init__.py" \
     "$SOURCE_DIR/" 2>/dev/null | grep -v '#.*CORRECT-LOCAL' || :)
 [[ -n "$DOMAIN_CONTRACTS_IN_SERVICE" ]] && {
@@ -1234,7 +1263,7 @@ DOMAIN_CONTRACTS_IN_SERVICE=$(rg 'class \w+\(BaseModel\)' --type py \
 # Detect TypedDict domain contracts in service source
 # Exempt: underscore-prefix classes (e.g. class _Foo(TypedDict)) — private implementation types
 # Exempt: lines with # CORRECT-LOCAL comment — explicitly marked as local-only, non-shared types
-TYPEDDICT_IN_SERVICE=$(rg 'class \w+\(TypedDict\)' --type py \
+TYPEDDICT_IN_SERVICE=$(codex_rg 'class \w+\(TypedDict\)' --type py \
     --glob "!tests/**" --glob "!**/output_schemas.py" \
     "$SOURCE_DIR/" 2>/dev/null \
     | grep -v '#.*CORRECT-LOCAL' \
@@ -1252,7 +1281,7 @@ TYPEDDICT_IN_SERVICE=$(rg 'class \w+\(TypedDict\)' --type py \
 # ============================================================
 _csdk_step_extra=()
 for g in ${CLOUD_SDK_EXCLUDE_GLOBS[@]+"${CLOUD_SDK_EXCLUDE_GLOBS[@]}"}; do _csdk_step_extra+=(--glob "$g"); done
-CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
+CLOUD_SDK_VIOLATIONS=$(codex_rg "^from google\.cloud|^import boto3|^import botocore" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' \
@@ -1277,7 +1306,7 @@ fi
 # Document exceptions in QUALITY_GATE_BYPASS_AUDIT.md.
 # Example (per-repo quality-gates.sh):
 #   HARDCODED_PROTO_EXCLUDE_GLOBS=("--glob=!**/adapters/catalogue_adapter.py")
-PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
+PROTOCOL_VIOLATIONS=$(codex_rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' --glob '!scripts/**' \
@@ -1294,7 +1323,7 @@ fi
 # ============================================================
 # STEP 5.12 — Services must not hardcode cloud protocol names
 # ============================================================
-HARDCODED_PROTO=$(rg \
+HARDCODED_PROTO=$(codex_rg \
   'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b|StandardizedDomainCloudService\b' \
   --type py \
   --glob '!.venv*' \
@@ -1314,7 +1343,7 @@ fi
 # ============================================================
 # STEP 5.12b — §12 No hardcoded gs:// or s3:// URIs outside unified-cloud-interface
 # ============================================================
-GCS_URI_VIOLATIONS=$(rg '"gs://|"s3://' \
+GCS_URI_VIOLATIONS=$(codex_rg '"gs://|"s3://' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
@@ -1334,7 +1363,7 @@ fi
 
 # STEP 5.13 — Schema placement advisory (cross-repo contract check)
 # =====================================================================
-SCHEMA_DUPES=$(rg \
+SCHEMA_DUPES=$(codex_rg \
   'class\s+Canonical[A-Z]\w+\s*\(.*BaseModel' \
   --type py \
   --glob '!.venv*' \
@@ -1400,19 +1429,19 @@ if [ -f "cloudbuild.yaml" ]; then
         run_timeout 30 "$PYTHON_CMD" "$VALIDATOR" cloudbuild.yaml 2>/dev/null || {
             log_fail "STEP 5.17: cloudbuild.yaml schema validation failed"; CB_FAIL=1; V=$(( V + 1 )); }
     fi
-    rg "id:\s*[\"']?(quality-gates|run-tests|test-in-image)" cloudbuild.yaml 2>/dev/null \
+    codex_rg "id:\s*[\"']?(quality-gates|run-tests|test-in-image)" cloudbuild.yaml 2>/dev/null \
         | grep -qE 'quality-gates|run-tests|test-in-image' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing test step (quality-gates / run-tests / test-in-image)"; CB_FAIL=1; V=$(( V + 1 )); }
-    rg "id:\s*[\"']?(vulnerability-scan|scan-check|trivy)" cloudbuild.yaml 2>/dev/null \
+    codex_rg "id:\s*[\"']?(vulnerability-scan|scan-check|trivy)" cloudbuild.yaml 2>/dev/null \
         | grep -qE 'vulnerability-scan|scan-check|trivy' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing vulnerability scan step (vulnerability-scan / scan-check / trivy)"; CB_FAIL=1; V=$(( V + 1 )); }
-    rg "id:\s*[\"']?push" cloudbuild.yaml 2>/dev/null \
+    codex_rg "id:\s*[\"']?push" cloudbuild.yaml 2>/dev/null \
         | grep -q 'push' || \
-        rg '"push"' cloudbuild.yaml 2>/dev/null | grep -q 'push' || {
+        codex_rg '"push"' cloudbuild.yaml 2>/dev/null | grep -q 'push' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing push step"; CB_FAIL=1; V=$(( V + 1 )); }
     # Skip deploy advisory if cloudbuild declares deploy-via-dispatch (e.g. central deployment-service)
     if ! grep -qE '# deploy-via-dispatch|# deploys-via-dispatch' cloudbuild.yaml 2>/dev/null; then
-        rg "id:\s*[\"']?(deploy|notify-deployment)|gcloud run deploy" cloudbuild.yaml 2>/dev/null \
+        codex_rg "id:\s*[\"']?(deploy|notify-deployment)|gcloud run deploy" cloudbuild.yaml 2>/dev/null \
             | grep -qE 'deploy|notify-deployment' || {
             log_warn "STEP 5.17: cloudbuild.yaml has no deploy/notify-deployment step (advisory — some services deploy via dispatch)"; }
     fi
@@ -1484,14 +1513,14 @@ _UAC_EXEMPT="${UAC_CANONICAL_EXEMPT:-false}"
 [[ "${SERVICE_NAME:-}" == "system-integration-tests" ]] && _UAC_EXEMPT=true
 if [[ "$_UAC_EXEMPT" != "true" ]]; then
   DEEP_UAC_IMPORTS=0
-  rg 'from unified_api_contracts\.canonical\.' "$SOURCE_DIR/" --glob '!**/test_*' --glob '!**/conftest*' --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
-  rg 'from unified_api_contracts\.normalize_utils\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
-  rg 'from unified_api_contracts\.config\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
-  rg 'from unified_api_contracts\.shared\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
-  rg 'from unified_api_contracts\.schemas\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  codex_rg 'from unified_api_contracts\.canonical\.' "$SOURCE_DIR/" --glob '!**/test_*' --glob '!**/conftest*' --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  codex_rg 'from unified_api_contracts\.normalize_utils\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  codex_rg 'from unified_api_contracts\.config\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  codex_rg 'from unified_api_contracts\.shared\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  codex_rg 'from unified_api_contracts\.schemas\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
   if [[ $DEEP_UAC_IMPORTS -eq 1 ]]; then
     log_fail "STEP 5.23: Deep UAC import detected. Use facade: from unified_api_contracts.{domain} import X"
-    rg 'from unified_api_contracts\.(canonical|normalize_utils|config|shared|schemas)\.' "$SOURCE_DIR/" --type py 2>/dev/null | head -10
+    codex_rg 'from unified_api_contracts\.(canonical|normalize_utils|config|shared|schemas)\.' "$SOURCE_DIR/" --type py 2>/dev/null | head -10
     V=$(( V + 1 ))
   else
     log_success "STEP 5.23: UAC import surface clean"
@@ -1505,7 +1534,7 @@ fi
 # Services must import MarketCategory from UIC or derive from UAC VENUE_CATEGORY_MAP.
 # Catches: CATEGORIES = ["CEFI", "TRADFI", "DEFI"] and similar hardcoded lists.
 # ============================================================
-HARDCODED_CATEGORIES=$(rg '\[.*"CEFI".*"TRADFI".*\]|\[.*"TRADFI".*"CEFI".*\]|categories\s*=\s*\[.*"CEFI"|CATEGORIES\s*=\s*\[' \
+HARDCODED_CATEGORIES=$(codex_rg '\[.*"CEFI".*"TRADFI".*\]|\[.*"TRADFI".*"CEFI".*\]|categories\s*=\s*\[.*"CEFI"|CATEGORIES\s*=\s*\[' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
@@ -1529,7 +1558,7 @@ fi
 # Bucket names must come from config fields, not inline f-strings.
 # Catches: f"features-*-{category}-{project}" and similar patterns.
 # ============================================================
-HARDCODED_BUCKETS=$(rg 'f"(features-|instruments-|ml-)[a-z-]+-\{' \
+HARDCODED_BUCKETS=$(codex_rg 'f"(features-|instruments-|ml-)[a-z-]+-\{' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
@@ -1552,7 +1581,7 @@ fi
 # Services must not redefine enums that exist in shared contracts.
 # Known enums: BetSide, MarketCategory, Timeframe, RuntimeMode, CloudProvider.
 # ============================================================
-DUPLICATE_ENUMS=$(rg 'class\s+(BetSide|MarketCategory|Timeframe|RuntimeMode|CloudProvider|DataMode|PhaseMode)\s*\(' \
+DUPLICATE_ENUMS=$(codex_rg 'class\s+(BetSide|MarketCategory|Timeframe|RuntimeMode|CloudProvider|DataMode|PhaseMode)\s*\(' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' \
@@ -1571,7 +1600,7 @@ fi
 # STEP 5.33 — No hardcoded TIMEFRAME_TO_SECONDS mappings (Pattern E)
 # Must import from unified_internal_contracts, not define locally.
 # ============================================================
-LOCAL_TIMEFRAME_MAP=$(rg 'TIMEFRAME.*(TO_SECONDS|SECONDS)\s*[:=]\s*\{' \
+LOCAL_TIMEFRAME_MAP=$(codex_rg 'TIMEFRAME.*(TO_SECONDS|SECONDS)\s*[:=]\s*\{' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
@@ -1592,7 +1621,7 @@ fi
 # Config access must use typed attributes, not getattr with fallback defaults.
 # All services remediated 2026-03-24 — this is now an ERROR.
 # ============================================================
-BRITTLE_GETATTR=$(rg 'getattr\s*\(\s*service_config\s*,' \
+BRITTLE_GETATTR=$(codex_rg 'getattr\s*\(\s*service_config\s*,' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' \
@@ -1611,7 +1640,7 @@ fi
 # STEP 5.35 — No duplicate API URL constants (Pattern: DeFi/macro URLs)
 # External API URLs must come from unified-features-interface, not local hardcoding.
 # ============================================================
-HARDCODED_URLS=$(rg '"https://api\.(llama\.fi|coingecko\.com|alternative\.me|stlouisfed\.org)' \
+HARDCODED_URLS=$(codex_rg '"https://api\.(llama\.fi|coingecko\.com|alternative\.me|stlouisfed\.org)' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
@@ -1632,7 +1661,7 @@ fi
 # STEP 5.36 — Config singleton: no bare Settings() outside get_settings()
 # Components must use get_settings() singleton, not construct fresh Settings().
 # ============================================================
-BARE_SETTINGS=$(rg 'Settings\(\)' \
+BARE_SETTINGS=$(codex_rg 'Settings\(\)' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
@@ -1658,7 +1687,7 @@ fi
 # Aave HF threshold drift incident -- three services disagreeing on the
 # same protocol's liquidation band. Allowed in tests + opt-out lines.
 # ============================================================
-INLINE_THRESHOLDS=$(rg 'Decimal\("(1\.05|1\.10?|1\.15|1\.20?|1\.30?|1\.50?)"\)|liquidation_threshold\s*=|maintenance_margin_pct\s*=|maintenance_margin\s*=\s*Decimal' \
+INLINE_THRESHOLDS=$(codex_rg 'Decimal\("(1\.05|1\.10?|1\.15|1\.20?|1\.30?|1\.50?)"\)|liquidation_threshold\s*=|maintenance_margin_pct\s*=|maintenance_margin\s*=\s*Decimal' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
@@ -1681,7 +1710,7 @@ fi
 # fragment the wire-format contract. Allowed only with # CORRECT-LOCAL on
 # the line above (extends the existing convention used elsewhere).
 # ============================================================
-LOCAL_EVENT_MODELS=$(rg '^class \w*(Event|Snapshot|Alert|Trigger|Fill)\(BaseModel\):' \
+LOCAL_EVENT_MODELS=$(codex_rg '^class \w*(Event|Snapshot|Alert|Trigger|Fill)\(BaseModel\):' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
