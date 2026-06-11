@@ -874,13 +874,41 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     if qg_cache_hit pip_audit_deps_hash "$_pa_key" "${QG_PIP_AUDIT_MAX_AGE_HOURS:-24}"; then
         log_success "pip-audit: cached (deps unchanged, age $(_qg_cache_age_hours pip_audit_deps_hash || echo '?')h)"
     else
-        _pa_out=$($PYTHON_CMD -m pip_audit $_pa_extra 2>&1) \
-            && qg_cache_store pip_audit_deps_hash "$_pa_key" \
-            || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
+        # Classify by WHAT pip-audit produced, not just the exit code (parity with base-service.sh):
+        # a non-zero exit with NO vuln report = INFRA error (OSV unreachable / crash) → advisory, NOT
+        # a gate fail. Previously any non-zero exit was reported as "vulnerabilities", so a network
+        # blip reddened a green PR. A genuine finding still writes the json and still fails.
+        _pa_rc=0
+        $PYTHON_CMD -m pip_audit --format json $_pa_extra -o /tmp/pip-audit-lib-output.json >/dev/null 2>&1 || _pa_rc=$?
+        if [[ $_pa_rc -eq 0 ]]; then
+            qg_cache_store pip_audit_deps_hash "$_pa_key"
+        elif [[ -s /tmp/pip-audit-lib-output.json ]] && $PYTHON_CMD -c "import json,sys; d=json.load(open('/tmp/pip-audit-lib-output.json')); sys.exit(0 if any(x.get('vulns') for x in d.get('dependencies',[])) else 1)" 2>/dev/null; then
+            log_fail "pip-audit vulnerabilities"
+            $PYTHON_CMD -c "
+import json
+try:
+    data = json.load(open('/tmp/pip-audit-lib-output.json'))
+    for d in data.get('dependencies', []):
+        for v in d.get('vulns', []):
+            print(f'  {d[\"name\"]} {d[\"version\"]}: {v[\"id\"]} — {v.get(\"description\",\"\")[:120]}')
+except Exception as e:
+    print(f'  (could not parse pip-audit output: {e})')
+" 2>/dev/null || :
+            V=$(( V + 1 ))
+        else
+            log_warn "pip-audit: infra error (rc=$_pa_rc, no vuln report — OSV unreachable?) — skipping vulnerability gate (advisory)"
+        fi
     fi
 elif command -v pip-audit &>/dev/null; then
     # Bare-PATH fallback (no venv pip_audit): rare path — uncached by design.
-    _pa_out=$(pip-audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
+    _pa_rc=0; _pa_out=$(pip-audit 2>&1) || _pa_rc=$?
+    if [[ $_pa_rc -eq 0 ]]; then
+        :
+    elif echo "$_pa_out" | grep -qiE 'known vulnerabilit'; then
+        echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 ))
+    else
+        log_warn "pip-audit: infra error (rc=$_pa_rc, no vuln report — OSV unreachable?) — advisory"
+    fi
 else
     log_fail "pip-audit required: uv pip install pip-audit"; V=$(( V + 1 ))
 fi
