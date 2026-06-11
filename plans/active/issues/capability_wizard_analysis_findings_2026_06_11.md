@@ -272,3 +272,11 @@ are the first backfill candidates for that tranche.
 file advances HEAD, so an immediate regen differs by exactly that field (observed after UAC@b1a5419). Options: stamp the
 SOURCE commits of the registries instead of repo HEAD, or accept one-commit lag (current choice). Determinism within a
 fixed HEAD verified unaffected.
+
+### F26 — Cell notes say "3-leg ATOMIC", leg-spec registry derives 4 legs
+
+**Status**: INFORMATIONAL — leg registry is the richer truth. CARRY_STAKED_BASIS leg structure seeded from engine +
+codex has FOUR legs (spot_long + stake + lend + hedge_short); the old capability cell's prose says "3-leg ATOMIC
+(stake + lending + perp)". The spot acquisition leg was implicit in prose. Another instance of why prose `notes` are not
+a restriction model. Also note: the requires_collateral_acceptance constraint sits on the STAKE leg (the leg dropped in
+the straight-basis fallback), not the hedge leg — wizard renders it on both venue groups correctly.
