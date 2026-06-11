@@ -70,6 +70,12 @@ source:
       `failed_per_dt` + AFF). — market-tick-data-service
 - [ ] [UTL] P1. Source on NON-captured rows: add `source=` kwarg to `record_empty:2197`/`record_failed:2413` + stamp in
       `_record_status:3447-3574`; then the MTDS `DefiManifestRecorder` pass-through one-liner. — unified-trading-library
+- [ ] [CODE] P1. **GraphQL body-error swallows (same CF-11 class, surfaced 2026-06-11 while fixing transport)**:
+      `liquidations_handler.py` subgraph `errors→return None` (~:589) and Morpho `errors→empty df` (~:778) — the
+      transport split is fixed; the body-error path still degrades to honest-empty. — market-tick-data-service
+- [ ] [CODE] P2. `polymarket_adapter._load_instruments_from_gcs` two inner `except Exception: pass` fallbacks
+      (parquet→json→{}) — an IS-store read failure degrades to "no instruments" instead of failing loud. —
+      market-tick-data-service
 
 ## Success criteria
 
@@ -100,3 +106,14 @@ source:
     (`bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1 P0).
   - Follow-up filed: after Phase-1 ships, the mislabeled `empty_confirmed` cells (JITO/SOLEND et al.) need a
     relabel/re-fetch pass; and the v9=0% finding needs routing to the canonicalisation programme owner.
+- 2026-06-11 (slot-4, autonomous run): **ALL Phase-1 P0 items + Phase-2 P1 riders (umi FX router, Solend/Phoenix
+  accounting, Kalshi CF-11 plumbing) IMPLEMENTED + QG-GREEN** (`quality-gates.sh --no-fix` exit 0, full suite 3324+
+  tests incl. 18 new: `test_cf11_swallow_remediation.py` ×13 + `test_kalshi_cf11_fetch_failure.py` ×5; 3 stale
+  old-behaviour pins updated). Implementation notes: lending_indices got a typed `SubgraphQueryError` (body errors now
+  raise too at `_execute_subgraph_query`; GCS upload moved out of the try); perp_funding both-variants-None now OMITS
+  the chain entry → `count is None` → `record_failed`; tardis legacy `download_csv` raises `TardisHTTPError(status)` on
+  non-200/404; orchestrator chain-bundle `asset_group=ag` hoisted above the branch (CME-OPTIONS branch had it unbound).
+  Also in-batch: 2 fallback-import shims removed (`rebuild_tradfi_manifest.py:309` was silently SKIPPING the CF-11
+  re-emit on UTL import error; `subgraph_health_probe.py:442`) → STEP 5.94 back at baseline 3. **Checkboxes flip on the
+  quickmerge sha** — ship is one command, held only on the in-slot UTL WIP (the Phase-2 UTL item, being implemented
+  concurrently) clearing the dep-audit. Paths staged-list preserved at `/tmp/mtds_quickmerge2.log`.

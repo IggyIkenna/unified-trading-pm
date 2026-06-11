@@ -29,9 +29,12 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       `If-None-Match`; a `304 Not Modified` (unchanged run, the common case between 15-min sweeps) is **free**
       (verified: 3× 304 cost 0 rate, 1× 200 cost 1). ~90%+ fewer _counted_ REST calls, identical freshness.
       agent-orchestrator@481232d | QG 465 passed.
-- [x] ✅ [CODE] P0. **GhRateLimitMonitor + Slack alert** — polls the free `rate_limit` endpoint every 120s, Slack-alerts
-      (state-transition deduped, hysteresis-cleared at 25%) when `core`/`graphql` drops below 10% remaining
-      (`notify_gh_rate_limit_low`). agent-orchestrator@bfe62fd | deployed vm-0 (running, interval=120s).
+- [x] ✅ [CODE] P0. **GhRateLimitMonitor + GRADUATED Slack alerts** — polls the free `rate_limit` endpoint every 120s
+      and fires escalating alerts as `core`/`graphql` crosses **50% (NOTICE) / 80% (WARNING) / 95% (HIGH) / 100%
+      (CRITICAL) used**, each **with the reset time**. Fires once per crossing; re-arms when usage drops below a level
+      (5-pt hysteresis); a budget reset re-arms all levels (`notify_gh_rate_limit_threshold`, `USED_THRESHOLDS`).
+      agent-orchestrator@60c2035 (graduated; was bfe62fd single-threshold) | deployed vm-0
+      (used-thresholds=[50,80,95,100]%).
 - [x] ✅ [CODE] P1. **`GET /api/gh-rate-limit`** snapshot endpoint + **FleetGit (Fleet Git-Health) tracker widget**
       (REST + GraphQL budget bars, red<10%/amber<25%). agent-orchestrator@bfe62fd | dashboard rebuilt on vm-0.
 
@@ -42,15 +45,16 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       `core` was already at 0 → 403 until the hourly reset (observed right after the first deploy). Disk-backed now via
       `load_etag_cache`/`save_etag_cache` (guarded to the real poll path — no disk I/O under an injected conclusion_fn).
       agent-orchestrator@6a78f1c | deployed vm-0.
-- [ ] [UI] P1. **GitHub rate-budget tracker in deployment-ui** (the v2 PRIMARY operator view) — IN FLIGHT 2026-06-10
-      (sub-agent). deployment-ui reaches deployment-api (not the orchestrator), so the data source is a NEW
-      deployment-api `GET /api/repos/gh-rate-limit` (free poll). Tracker mirrors `FleetGit.tsx`
-      `GhRateLimit`/`rateBudgetTone`. Target repos: `deployment-ui` + `deployment-api`. (pw:L2 + regression spec per the
-      UI playwright gate.)
-- [ ] [PERF] P1. **ETag `deployment-api/deployment_api/routes/_repo_ci_github.py`** — the **biggest** fleet REST burner
-      (~8 GitHub calls × ~25 repos per coverage refresh; TTL-cached but NO ETag). IN FLIGHT 2026-06-10 (sub-agent): add
-      `If-None-Match` to the shared `gh_get_json` (304 = free) + the free rate-limit route above. Target repo:
-      `deployment-api`.
+- [x] ✅ [UI] P1. **GitHub rate-budget tracker in deployment-ui** (the v2 PRIMARY operator view) — renders on the
+      **Repos-CI page** (`/repos`, `RepoCiContent` header — the dedicated repos+CI dashboard; relocated from the
+      Coverage tab where the first pass landed it): REST+GraphQL budget bars, `rateBudgetTone` red<10%/amber<25%, polls
+      the deployment-api `/api/repos/gh-rate-limit` every 60s. `src/api/ghRateLimit.ts` +
+      `src/components/GhRateBudget.tsx` (+ mock handler). deployment-ui@a4f61e8 (relocated; built on 1ef784c) | tsc
+      clean | vitest 8/8 | **pw:L2 ✓** regression: `tests/smoke/gh_rate_budget.spec.ts` (navigates to /repos).
+- [x] ✅ [PERF] P1. **ETag `deployment-api/deployment_api/routes/_repo_ci_github.py`** — the **biggest** fleet REST
+      burner (~8 GitHub calls × ~25 repos per coverage refresh). `If-None-Match` added to the shared `gh_get_json` (304
+      = free; TTL-cache extended to hold the ETag + last body) + the free `GET /api/repos/gh-rate-limit` route
+      (mock-mode aware). deployment-api@061a1b5f | QG green (170s) | 5 ETag tests. This is the dominant REST reduction.
 - [ ] [INFRA] P1 (**BLOCKED-OPERATOR-DECISION**). **Create a GitHub App installation token for the read-only pollers** —
       a GitHub App gets its OWN rate pool (separate from the user PAT), giving the fleet a second 5000+/hr REST budget
       without touching the workers' push PAT. **Operator-gated**: the current PAT lacks app-management scope
@@ -58,18 +62,30 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       create it. Decision: register an App (recommended) vs. live with the shared PAT + the ETag wins. Once it exists,
       point CIReconcile + the rate monitor + deployment-api reads at it. Target repos: `agent-orchestrator` +
       `deployment-api` (+ `deployment-service` secret wiring).
-- [ ] [INFRA] P2. **The promotion/monitor Actions burn the shared PAT, not the free per-repo `GITHUB_TOKEN`** (verified
-      2026-06-10): `ldr-to-main-promote.yml` / `ldr-to-staging-promote.yml` / `ci-failure-watcher` /
-      `promotion-lag-monitor.yml` all run `runs-on: ubuntu-latest` with `GH_TOKEN: ${{ secrets.GH_PAT }}` (+ checkout
-      `token: GH_PAT`). At `*/15`–`*/20` across the fleet this is a **major** continuous draw on the same 5000/hr pool
-      that CIReconcile competes for. **NOT a safe blind swap** (this is why it's P2, not a quick fix): the built-in
-      `GITHUB_TOKEN` (a) is **repo-scoped** — a PM-run workflow can't read OTHER repos' runs with it, so cross-repo
-      monitors/promoters genuinely need the PAT; and (b) **cannot trigger downstream workflows** — a promotion PR opened
-      with `GITHUB_TOKEN` won't fire `quality-gates-v2`, which is the whole point of the PAT here. Safe subset to pursue
-      in a dedicated, tested change: switch ONLY the same-repo READ-only `gh` calls (run lists / compares / rate checks)
-      to `GITHUB_TOKEN`, keep the PAT for the cross-repo reads + the PR-create/merge that must trigger v2. Target repos:
-      `unified-trading-pm` (workflow templates → `rollout-workflow-templates.sh`). High blast radius (promotion
-      pipeline) — own change + verification, not a drive-by edit.
+- [x] ✅ [PERF] P2. **ETag `promotion_lag_monitor.py` + persist via actions/cache** — the safe, high-value realization
+      of the burn-reduction below: the lag monitor compares **25 repos × 4 directions = ~100 `gh api compare` calls/run
+      × 3 runs/hr = ~300 PAT calls/hr** (a bigger burner than CIReconcile, and a pure read-only monitor = low blast
+      radius). Added `If-None-Match` to the single `_gh_json` chokepoint (304 = free) + `actions/cache` (rolling key) to
+      persist the ETag cache across the ephemeral runs → unchanged branch-pairs cost ~0. unified-trading-pm@3b249db (PR
+      #240→main) | 8 ETag tests | basedpyright clean. (`ci_failure_watcher` mixes `gh pr list` CLI calls that don't take
+      If-None-Match directly — left for a dedicated conversion-to-`gh api` change.)
+- [ ] [INFRA] P2 (residual). **Token-pool split for the promotion/monitor Actions** — `ldr-to-main-promote.yml` /
+      `ldr-to-staging-promote.yml` / `ci-failure-watcher` still run `GH_TOKEN: ${{ secrets.GH_PAT }}`. **NOT a safe
+      blind swap**: the built-in `GITHUB_TOKEN` is (a) **repo-scoped** (cross-repo monitors/promoters need the PAT) and
+      (b) **can't trigger downstream workflows** (a `GITHUB_TOKEN`-opened promotion PR won't fire `quality-gates-v2`).
+      Safe subset: switch ONLY same-repo READ-only `gh` calls to `GITHUB_TOKEN`; keep the PAT for cross-repo reads + the
+      PR-create/merge that must trigger v2. Target: `unified-trading-pm` (workflow templates). High blast radius —
+      dedicated, tested change, not a drive-by.
+- [ ] [DEPS] P2. **Ship the features-service `pyyaml>=6.0.0 → >=6.0.1` alignment** (surfaced 2026-06-11 while shipping
+      the above): features-service was the **lone fleet outlier** vs the canonical `>=6.0.1` (every other repo + both
+      `workspace-constraints.toml` + `canonical-dependency-manifest.json`), which **red-gates all PM scripts pushes**
+      via the alignment check. The 1-line fix (pyproject + uv.lock, no resolved-version change → no cascade) is
+      **staged + QG-green in slot-1** but its quickmerge is **BLOCKED**: a live concurrent session is mid-edit on UAC
+      `external/databento` (`__init__.py` + new `databento_classifier.py`) in slot-1's UAC clone, and features-service
+      quickmerge correctly refuses to ship a consumer with a dirty dep — I won't stomp the foreign WIP. Ship once UAC
+      commits:
+      `cd features-service && bash scripts/quality-gates.sh --no-fix && bash scripts/quickmerge.sh "fix(deps): align pyyaml floor to canonical >=6.0.1" --agent --files 'pyproject.toml uv.lock'`.
+      Target repo: `features-service`.
 - [x] N/A [UI] P2. ~~Same tracker in unified-trading-system-ui~~ — **dropped**: uts-ui has **no** repo/CI/git-health
       surface (verified 2026-06-10, 0 matches) → no natural home. The repos surface lives in deployment-ui (above) + the
       orchestrator dashboard (shipped). Re-open only if uts-ui gains a CI/repos view.

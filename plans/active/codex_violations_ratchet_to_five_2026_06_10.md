@@ -112,7 +112,12 @@ unchanged:
 
 ## Phase 0 — Per-repo violation census (do FIRST; cheap, unblocks everything)
 
-- [ ] [AUDIT] P1. For EVERY service+library repo, run `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` (now
+- [x] ✅ [AUDIT] P1. DONE 2026-06-10 (slot live-defi-rollout) — census written to
+      `plans/audit/results/codex_violation_census_2026_06_10.md`: 25 repos run, 5 over-ceiling (deployment-api 24,
+      execution-service 22, MTDS 15, strategy 10, MDPS 7), 3 immediate no-code ratchets (deployment-service 8→1,
+      ibkr 4→1, ml 5→3), `none`-budget repos all at 0 current violations (agent-orchestrator runs a custom gate with
+      no codex section — budget-pin todo stays in Phase 4). Original: For EVERY service+library repo, run
+      `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` (now
       honest post-parity-fix) and record the per-class breakdown (which of the ~24 check-classes fire, and the file/line
       offenders for each) into `plans/audit/results/codex_violation_census_2026_06_10.md`. This is the remediation
       matrix: it converts each repo's opaque budget number into a concrete fix-list. Capture the `none`-budget repos'
@@ -125,7 +130,13 @@ unchanged:
 > split, and REMOVE any `FUNCTION_SIZE_EXTRA_EXCLUDES` glob that was hiding the file. Ratchet the repo's file-size
 > violation away in the same commit.
 
-- [ ] [REFACTOR] P1. **features-service `registry.py` (18,328 L) — it's DATA, not code (operator 2026-06-10).** The file
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — features-service@82918a6d: registry.py 18,328 L → 411 L loader+validator;
+      1,382 specs moved to `features_service/delta_one/app/features/registry_specs.yaml` (human-editable SSOT);
+      one-shot `scripts/dump_registry_to_yaml.py` migration; YAML-load equality + closed-set validation test
+      (tests/delta_one/unit/test_registry_yaml_loader.py); pyyaml promoted to direct dep; registry.py removed from
+      FUNCTION_SIZE_EXTRA_EXCLUDES; budget stays 0; full QG green (16,980 tests; one unrelated calendar
+      ordering-flake verified pass-in-isolation + green on rerun). Original: **features-service `registry.py`
+      (18,328 L) — it's DATA, not code (operator 2026-06-10).** The file
       is **1,382 `FeatureSpec(...)` literals + only 11 functions** — a declarative data table living in a `.py`. Do NOT
       "split into per-group .py modules" (still code-shaped data). Instead **separate the data from the loader**: - Move
       the 1,382 specs into a **data file** — `registry/specs.yaml` (human-editable SSOT; one block per spec:
@@ -163,27 +174,47 @@ unchanged:
       `DataStatusService` becomes a thin **facade** that composes these (mixins or delegation) — same public methods, no
       caller churn. `data_status_drilldown.py` (2,586) + `data_status.py` (2,550) get the same treatment. Repo:
       deployment-api.
-- [ ] [REFACTOR] P1. **unified-trading-api `seed.py` (5,169 L)** — if it's seed DATA (fixtures/records), same pattern as
-      registry.py: move the data to a data file + a thin seeding loader; if it's seed LOGIC, split by domain. Census
-      (Phase 0) confirms which. Repo: unified-trading-api.
-- [ ] [REFACTOR] P1. **agent-orchestrator `server.py` (4,470 L)** — split the FastAPI route module by surface into
-      `server/routes/*.py` (slots / git-status+fleet / vms+proxy / accounts / backlog / agents), each an `APIRouter`
-      mounted on the app; the view-helpers (`_slot_to_view`/`_build_local_git_health`/`_summarise_git_health`) move with
-      their routes. `worker_liveness.py` (1,215) + `state_store.py` (1,118) reviewed for method-size too. Repo:
-      agent-orchestrator.
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — unified-trading-api@42f12ab: seed.py confirmed DATA → 5,169 L → 470 L thin
+      loader + 72 `mock_data/seed_data/*.json` domain files; seed.py excludes removed from FUNCTION_SIZE/EMPTY_*/
+      IMPORT_INSIDE globs; `CODEX_MAX_VIOLATIONS=0` pinned; equality + org-integrity tests extended
+      (tests/unit/test_seed_quality.py); full QG green. Original: **unified-trading-api `seed.py` (5,169 L)** — if it's
+      seed DATA (fixtures/records), same pattern as registry.py: move the data to a data file + a thin seeding loader;
+      if it's seed LOGIC, split by domain. Census (Phase 0) confirms which. Repo: unified-trading-api.
+- [x] ✅ [REFACTOR] P1. DONE 2026-06-11 — agent-orchestrator@951e3e6: server.py 4,505 L → 597 L (lifespan + app
+      assembly + account-rotation helpers kept for test patch-surface) + 9 `server/routes/*.py` APIRouter modules
+      (232–830 L each) + `_deps.py`; route table (76 APIRoutes: path/method/endpoint/response_model/deps/status)
+      byte-identical pre/post via worktree diff; runtime smoke on :8799 (live :8765 untouched, no restart); 480 tests
+      green; zero caller/test edits. worker_liveness/state_store reviewed: NOT split (next todo). Original:
+      **agent-orchestrator `server.py` (4,470 L)** — split by surface into routes/*.
+- [ ] [REFACTOR] P3. **agent-orchestrator `worker_liveness.py` (1,215 L) + `state_store.py` (1,118 L) decomposition
+      requires test edits** — 2026-06-11 review: worker_liveness is one ~1,050-line `WorkerLivenessKicker` class whose
+      tests fire ~30 namespace patches at `server.worker_liveness.*`, and state_store is a flat CRUD namespace with
+      module-attr patch surfaces (`server.state_store.utcnow/to_utc/log_activity`) + bare-name cross-calls — a
+      zero-caller-edit split is impossible (mixins = banned shim). Proper unit: decompose by entity/concern AND migrate
+      the test patch targets in the same commit (pre-audit the full patch manifest first). Repo: agent-orchestrator.
 - [ ] [REFACTOR] P1. **market-tick-data-service `orchestrator.py` (4,219 L)** + `tardis_adapter.py` (2,880) +
       `solana_defi_handler.py` (2,125) — decompose by venue/transport. Repo: market-tick-data-service.
-- [ ] [REFACTOR] P2. **strategy-service `catalog.py` (2,371)** + **market-data-processing `canonical_writer.py`
-      (2,412)** + **execution-service** adapters >1k (`kraken_rest_adapter` 1,299 / `uniswap` 1,245 / `aave` 1,136) —
-      split each below 900. Repos: strategy-service / market-data-processing-service / execution-service.
+- [ ] [REFACTOR] P2. **strategy-service DONE 2026-06-11** — strategy-service@590f65cf: catalog.py 2,371→140-line facade
+      + 6 archetype-family modules; batch_handler.py 1,570→847 + 4 concern modules; TARGET_UNIVERSE content-hash
+      identical pre/post; budget ratcheted 11→10 (census-honest). Cross-repo finding surfaced: execution-service
+      `defi_target_universe_rebalance_recommender.py:310` imports `specs_for_archetype` from the strategy-service
+      module path — KNOWN/sanctioned via UAC `service_contract_map.py:216` forbidden_exceptions + deprecation_ledger
+      (move to UAC registry long-term); facade preserves the path so the consumer is unaffected. REMAINING in this
+      item: **market-data-processing `canonical_writer.py` (2,412)** + **execution-service** adapters >1k
+      (`kraken_rest_adapter` 1,299 / `uniswap` 1,245 / `aave` 1,136) — split each below 900 (agents in flight).
+      Repos: market-data-processing-service / execution-service.
 - [ ] [REFACTOR] P3. **ml-service** (`cloud_feature_provider` 1,202 / `training_orchestrator` 1,027) +
       **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143) — split the >900
       tail. Repos: ml-service / unified-trading-pm.
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
-- [ ] [REFACTOR] P2. Re-export the two-level `from unified_api_contracts.registry.<X> import` symbols at the UAC
-      one-level facade (`unified_api_contracts/registry/__init__.py`) for every symbol consumed two-level fleet-wide
+- [ ] [REFACTOR] P2. **FACADE HALF DONE 2026-06-11** — UAC@c8287d3: all 46 fleet-consumed two-level symbols now
+      re-exported at the one-level facade (20 modules; `schema_spec`/`client_share_classes`/`withdrawal_approval_rules`
+      via PEP 562 lazy `__getattr__` to avoid root-init circular imports). REMAINING: per-consumer call-site flips +
+      ratchets (next bullet half). Original: Re-export the two-level `from unified_api_contracts.registry.<X> import`
+      symbols at the UAC one-level facade (`unified_api_contracts/registry/__init__.py`) for every symbol consumed
+      two-level fleet-wide
       ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
       tardis_free_coverage, …}), then switch the call sites to `from unified_api_contracts.registry import <X>` and drop
       each repo's deep-import violation. Affected services (per the 2026-06-10 audit): deployment-api,
@@ -203,6 +234,9 @@ unchanged:
 
 ## Phase 4 — Residual violation classes
 
+- [x] ✅ [CODE] P2a. No-code census-honest ratchets shipped 2026-06-11: deployment-service 8→1
+      (deployment-service@8d8cac5), ibkr-gateway-infra 4→1 (ibkr-gateway-infra@d76447e), ml-service 5→3 (in flight,
+      QG running). All three QG-green at the new budgets before commit.
 - [ ] [CODE] P2. Per repo, clear the remaining check-classes the census surfaces — `os.getenv` → `UnifiedCloudConfig`,
       `Any` → specific types, empty-string/dict/list fallbacks → fail-fast, backward-compat shims → delete,
       function/method-size > limits → extract. Ratchet `CODEX_MAX_VIOLATIONS` down to ≤5 per repo as classes clear.
