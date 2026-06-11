@@ -738,7 +738,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -1130,7 +1130,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-pm": {
       "type": "devops",
