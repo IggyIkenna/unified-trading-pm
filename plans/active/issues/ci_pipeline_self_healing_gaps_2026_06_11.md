@@ -99,6 +99,40 @@ runbook the orchestrator dispatches on a conflict-wall alert.
   (queue if headroom-less) + give the worker the deterministic staging/LDR/main reconciliation runbook (this firefight's
   recipe) + auto-close emptied drain PRs. Target repo: `agent-orchestrator` (server escalation path + a worker runbook).
 
+## Gap 3b — Tier-C drains are BORN in the v2-never-reported deadlock + auto-recover lags ~hourly (P1)
+
+**Symptom (recurring)**: a fresh wave of "Auto-merge stuck → staging" Tier-C drain PRs (e.g. 2026-06-11 ~19:24:
+alerting#81, BLRS#73, deployment-api#66, deployment-service#67, instruments#439, strategy#172) — all `MERGEABLE/BLOCKED`,
+`v2 absent`, no failed check (the exact v2-never-reported signature), all `staging⊆LDR` (clean FF). They pile up every
+time LDR gets new content.
+
+**Root cause**: (1) The `ldr-to-staging-promote` (Tier-C) bot creates the drain PR with a token whose
+`pull_request`/`push` event is **suppressed by GitHub's own-token loop-prevention**, so `quality-gates-v2` never fires on
+the new PR head → required check missing → BLOCKED-from-birth (auto-merge can never complete). (2) `ci-failure-watcher
+--auto-recover` is the designed self-heal (workflow_dispatch-re-fire v2, since close+reopen is equally token-suppressed),
+but its `schedule: */15` is **throttled by GitHub to an effective ~70–90 min cadence** (observed: runs at 18:59 / 17:52 /
+16:38 / 15:11 — not every 15 min), so a wave of stuck drains stays visibly parked for up to ~1.5h before recovery.
+
+**Fix (durable — stops the recurrence at the source)**:
+- [ ] [WORKFLOW] P1. `ldr-to-staging-promote` (Tier-C): after creating the drain PR, **explicitly
+  `gh workflow run quality-gates-v2.yml --ref <pr-head-sha>`** (or create the PR with `GH_PAT` so the `pull_request`
+  event fires) — so the drain PR is never born-deadlocked and auto-merge completes immediately. Verify a fresh drain
+  reports v2 within minutes + auto-merges with no manual touch.
+- [ ] [WORKFLOW] P2. ci-failure-watcher: don't rely on `schedule` cadence alone (GitHub throttles it) — add a
+  `pull_request`-event-driven path (or shorten the practical detection window) so the v2-absent deadlock is recovered in
+  minutes, not the next ~hourly tick.
+
+## Gap 4 — deployment-ui should show "agent working / pending" for a repo under active recovery (P2, operator-raised 2026-06-11)
+
+**Operator ask**: "the dashboard should show if an agent is working on it as pending — that's the repos in deployment-ui."
+When a stuck/conflicting promote PR is actively being recovered (by the orchestrator's escalated worker per Gap 3), the
+deployment-ui Repos-CI board should render that repo as **pending / being-worked**, not **stuck** — so the operator can
+tell "an agent has this" apart from "genuinely parked, needs attention."
+
+- [ ] [UI] P2. deployment-ui Repos-CI board: surface a `working`/`pending` state per repo (driven by the orchestrator's
+  active-worker assignment for that repo's stuck PR) distinct from `stuck`. Composes with Gap 3 (the orchestrator must
+  first own + assign the recovery). Playwright gate per CLAUDE.md (`pw:L2 ✓` + regression spec) before ticking.
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first dep-resolution

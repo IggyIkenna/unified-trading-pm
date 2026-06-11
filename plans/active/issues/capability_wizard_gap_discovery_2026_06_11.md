@@ -93,3 +93,12 @@ All gaps are TYPED in the manifest (never silent) — the forcing-function state
   `CARRY_RECURSIVE_BORROW_PERP_HEDGED` | action: add enum value OR delete stale doc
 - `carry-recursive-staked-config-variants.md` | taxonomy: `logical_dead_end` | would-map-to:
   `CARRY_RECURSIVE_STAKED_CONFIG_VARIANTS` | action: add enum value OR delete stale doc
+
+## Escalated needs_code_scan (auto-emitted)
+
+*Auto-emitted 2026-06-11 by `scripts/openapi/emit_capability_gap_todos.py`.*
+*Dedup-idempotent on re-run.  Only edges with `needs_code_scan` gap_type and no*
+*`agent_annotation` appear here.  Once annotated, edge drops off on next emit run.*
+
+- [ ] [AGENT] P2. **gap_registry:order_semantics** — Venue order semantics registry is honest-empty — per-adapter order-semantics honor matrix code-scan. Target repo: `execution-service`. Cold-start context: VENUE_ORDER_SEMANTICS backfill: scan each venue execution adapter for TIF (FOK/IOC/post-only), make/take, ref-pricing mode, multi-leg delta ownership; populate unified_api_contracts/internal/architecture_v2/order_semantics.py VENUE_ORDER_SEMANTICS. (auto-emitted by emit_capability_gap_todos.py)
+

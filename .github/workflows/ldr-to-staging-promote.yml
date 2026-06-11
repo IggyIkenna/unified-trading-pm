@@ -266,7 +266,18 @@ jobs:
                   echo "  WARN: statusCheckRollup query failed for PR #$PR_NUM — leaving it (no blind recovery)"
                 fi
                 if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ]; then
-                  echo "  STALE-CHECK on PR #$PR_NUM — quality-gates-v2 absent on current head ${HEAD_SHA:0:8} (GITHUB_TOKEN-push didn't fire synchronize); close+reopen to re-trigger"
+                  echo "  STALE-CHECK on PR #$PR_NUM — quality-gates-v2 absent on current head ${HEAD_SHA:0:8} (GITHUB_TOKEN-push didn't fire synchronize); re-triggering"
+                  # PRIMARY recovery (2026-06-11): force-dispatch v2 directly. workflow_dispatch is NOT
+                  # subject to the GITHUB_TOKEN trigger-suppression that orphaned the check, and produces a
+                  # v2 run on live-defi-rollout HEAD (== this PR's head) whose check the PR's required-check
+                  # rollup picks up BY SHA — same mechanism ci-failure-watcher --auto-recover uses. This is
+                  # lighter + more reliable than close+reopen (no PR-state churn, no reopen race). Keep
+                  # close+reopen below as the fallback if the dispatch can't be issued.
+                  if gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref live-defi-rollout 2>/dev/null; then
+                    echo "    force-dispatched quality-gates-v2 on live-defi-rollout HEAD (${HEAD_SHA:0:8}); auto-merge completes when it reports green"
+                    _done PROMOTED; return 0
+                  fi
+                  echo "    workflow_dispatch unavailable — falling back to close+reopen"
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
                     sleep 3
                     gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
