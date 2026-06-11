@@ -128,8 +128,8 @@ the git copy is a cache.
     exit 144). NOT wired into the PM gate (PM QG collects `tests/unit/` only) — it is an on-demand verify harness.
 - [x] ✅ [VERIFY] P2. DONE 2026-06-11 (slot-1) — **LIVE-fleet dual-write confirmed against real Firestore**.
       `CI_STATUS_FIRESTORE_DUALWRITE=true` + `GCP_PROJECT_ID=central-element-323112` repo variables set on PM;
-      `roles/datastore.user` granted to `github-actions-deploy@central-element-323112.iam.gserviceaccount.com`.
-      GHA run 27330694635 confirmed `Dual-write ci_status to Firestore → conclusion: success`; Firestore
+      `roles/datastore.user` granted to `github-actions-deploy@central-element-323112.iam.gserviceaccount.com`. GHA run
+      27330694635 confirmed `Dual-write ci_status to Firestore → conclusion: success`; Firestore
       `ci_status/client-reporting-api: NONE → FEATURE_GREEN` written. Phase-2 reader migration unblocked.
 - [ ] [CODE] P3. **(Finding 2, NICE-TO-HAVE)** give `ci_status_store.set_status` an explicit transaction `max_attempts`
       (or thin app-level retry on `Aborted`/`DeadlineExceeded`) so a future high-contention reuse of the store cannot
@@ -158,9 +158,9 @@ the git copy is a cache.
       pre-cutover / transient API error) **degrades LOUDLY to the manifest cache** (a logged warning, the designed
       offline fallback — not a silent swallow). Plus a
       `ci_status_store.py get-map [--manifest     PATH] [--project-id ID]` JSON CLI so shell/GHA readers consume the
-      resolved map without re-implementing the merge. Evidence: `unified-trading-pm@c6bd4791d` | 5 new unit tests (dict/list
-      parse, blank-omit, per-repo overlay, error-fallback) + 2 new emulator integration tests (real-Firestore overlay +
-      empty-collection==pure-manifest); 15 unit + 9 integration green; ruff + basedpyright clean (0 errors).
+      resolved map without re-implementing the merge. Evidence: `unified-trading-pm@c6bd4791d` | 5 new unit tests
+      (dict/list parse, blank-omit, per-repo overlay, error-fallback) + 2 new emulator integration tests (real-Firestore
+      overlay + empty-collection==pure-manifest); 15 unit + 9 integration green; ruff + basedpyright clean (0 errors).
       **Per-reader cutover (below) is best landed once the live dual-write populates Firestore** — until then each
       migrated reader is a safe no-op-fallback to manifest.
 
@@ -168,16 +168,25 @@ Cut each reader from "parse `workspace-manifest.json.ci_status`" to `resolve_ci_
 manifest fallback — NOT raw `get_all()`, which would blank repos Firestore hasn't written yet during the ramp):
 
 - [x] ✅ [CI] P2. DONE 2026-06-11 (slot-1) — `.github/workflows/sit-gate.yml` (the `rank >= STAGING_GREEN` gate)
-      migrated to `resolve_ci_status_map` with manifest fallback. unified-trading-pm@c6bd4791d (batch with scripts below).
-- [ ] [CI] P2. `.github/workflows/staging-to-main.yml` + `ldr-to-staging-promote.yml` (promotion gates). **DEFERRED** — complex inline Python with both ci_status reads and writes; ldr-to-staging-promote delegates to `tier_c_promotion_gate.py` which IS migrated (see SCRIPT below).
-- [x] ✅ [CI] P2. DONE 2026-06-11 (slot-1) — `.github/workflows/auto-merge-minor-fixes.yml` migrated to `resolve_ci_status_map`. unified-trading-pm@c6bd4791d (batch with scripts below).
-- [ ] [CI] P2. `.github/workflows/cascade-qg-ordering.yml` + `update-repo-version.yml`. **DEFERRED** — 509-line / 737-line workflows with complex ci_status reads AND writes; dedicated migration session needed.
-- [ ] [CI] P2. `.github/workflows/staging-backmerge-to-ldr.yml` + `main-backmerge-to-ldr.yml` + `ldr-ci-monitor.yml`. **NOTE**: `ldr-ci-monitor.yml` reads `ldr_ci_status` (different field — not `ci_status`) so it is NOT in scope here.
+      migrated to `resolve_ci_status_map` with manifest fallback. unified-trading-pm@c6bd4791d (batch with scripts
+      below).
+- [ ] [CI] P2. `.github/workflows/staging-to-main.yml` + `ldr-to-staging-promote.yml` (promotion gates). **DEFERRED** —
+      complex inline Python with both ci_status reads and writes; ldr-to-staging-promote delegates to
+      `tier_c_promotion_gate.py` which IS migrated (see SCRIPT below).
+- [x] ✅ [CI] P2. DONE 2026-06-11 (slot-1) — `.github/workflows/auto-merge-minor-fixes.yml` migrated to
+      `resolve_ci_status_map`. unified-trading-pm@c6bd4791d (batch with scripts below).
+- [ ] [CI] P2. `.github/workflows/cascade-qg-ordering.yml` + `update-repo-version.yml`. **DEFERRED** — 509-line /
+      737-line workflows with complex ci_status reads AND writes; dedicated migration session needed.
+- [ ] [CI] P2. `.github/workflows/staging-backmerge-to-ldr.yml` + `main-backmerge-to-ldr.yml` + `ldr-ci-monitor.yml`.
+      **NOTE**: `ldr-ci-monitor.yml` reads `ldr_ci_status` (different field — not `ci_status`) so it is NOT in scope
+      here.
 - [x] ✅ [SCRIPT] P2. DONE 2026-06-11 (slot-1) — `scripts/cicd/tier_c_promotion_gate.py` migrated to
       `resolve_ci_status_map` overlay in `main()` (covers `ldr-to-staging-promote.yml` gate + quickmerge STAGE 1.7
       automatically — both delegate here). `scripts/cicd/check_ci_status_bot_only.py` migrated to import
       `manifest_ci_status_map` from `ci_status_store` (deduplicates the manifest parse). unified-trading-pm@c6bd4791d.
-- [ ] [SCRIPT] P2. `scripts/quickmerge.sh` (STAGE lock/status read) — delegates to `tier_c_promotion_gate.py` for the dep-order gate (already migrated above); the `scripts/cascade/invalidate-ci-status.py` WRITES ci_status to the manifest (not a reader — Phase 3 scope).
+- [ ] [SCRIPT] P2. `scripts/quickmerge.sh` (STAGE lock/status read) — delegates to `tier_c_promotion_gate.py` for the
+      dep-order gate (already migrated above); the `scripts/cascade/invalidate-ci-status.py` WRITES ci_status to the
+      manifest (not a reader — Phase 3 scope).
 - [ ] [CODE] P2. The orchestrator dashboard / `server/` read path (the authoritative work-split surface) → collection
       query.
 - [ ] [SCRIPT] P3. `scripts/manifest/_align_workspace_manifest.py` + `generate_workspace_dag.py` → read the snapshot
