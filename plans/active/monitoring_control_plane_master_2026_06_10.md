@@ -88,6 +88,50 @@ paired dashboard state element (review gate for alerting changes).
 Cross-links: each surface deep-links the other (repo row → its fleet git-health filter; slot repo row → its CI repo
 page) — P2, after both v1s ship.
 
+## Work-split framing (Harsh ↔ Ikenna, 2026-06-11)
+
+Harsh owns all three monitoring surfaces this cycle; Ikenna owns the Firestore migration
+(`ci_status_firestore_side_store_2026_06_10.md` + `issues/gh_rate_budget_reduction_2026_06_10.md` — do NOT step on
+those). Harsh's three-surface charter (verbatim to Ikenna):
+
+- **Monitoring UI** — "see the whole fleet properly, all the aspects that we care about: all the branches, builds,
+  **last green sha and time**, current SIT run, and so on." (mostly shipped v1; remaining: G1 + the last-green-sha
+  refinement N2 below + the 2 creds.)
+- **ci-failures** — "failed alerts and fail-to-green alerts with **more proper info so we get the reason, not ad-hoc
+  messages**." → NEW requirement N1 below (alert-body enrichment).
+- **Orchestrator side** — "make the agents **stable** and **picking up the failed PR and their fixes**." → the
+  main-v2-red → orchestrator escalation closed-loop (the P2 below) + the existing self-heal
+  (watchdog/autospawn/failover, CLAUDE.md § orchestrator self-heal).
+
+### New todos from the charter
+
+- [x] ✅ [CODE] P1. DONE 2026-06-11 — unified-trading-pm@5953252c4 (quickmerge PR #262 → main, auto-merging). **(N1)
+      ci-failures alert enrichment — reason, not ad-hoc.** `failure_reason()` + `_log_failed_excerpt()` +
+      `enrich_failure_reasons()` added to `ci_failure_watcher.py`; each FAILING transition now renders the failed **job
+      → step** name(s) + a truncated `gh run view --log-failed` excerpt (last 10 lines, prefix-stripped, ≤500 chars)
+      under the existing `<run>` deep-link. Best-effort (any gh error → alert still posts, just without the extra
+      reason). The enriched text flows through `notify-slack.yml` verbatim (no workflow change) + the alert ledger.
+      RECOVER bookend keeps its run deep-link (a green recovery needs no failure-reason). 8 new unit tests (65 total
+      green; ruff + basedpyright clean). Repo: unified-trading-pm.
+- [ ] [CODE] P2. **(N2) Last-green SHA + time column** on the `/repos` overview — per repo per branch, the most-recent
+      SHA whose `quality-gates-v2` concluded success + its timestamp ("green as of <sha> · <age>"). Distinct from the
+      current branch-head SHA (head may be red/pending). Needs the per-SHA v2 conclusion → **gated on GH_PAT
+      `Checks: read`** (cred below); degrades to "unknown" until then. Repo: deployment-api + deployment-ui.
+
+### Credential status (re-probed 2026-06-11 — both still BLOCKED)
+
+- **GH_PAT** is in GCP Secret Manager (`central-element-323112`) but **still lacks `Checks: read`** — functional probe
+  2026-06-11: `GET /repos/.../commits/{sha}/check-runs` → `403 "Resource not accessible by personal access token"`.
+  Until the permission is added to the fine-grained PAT, per-SHA `quality-gates-v2` conclusions (and N2 last-green-sha)
+  stay "unknown" (graceful degrade). **Operator action: add `Checks: read` to the GH_PAT fine-grained token, re-store in
+  SM.**
+- **ORCHESTRATOR_API_TOKEN** — deployment-api resolves it ONLY from SM
+  (`get_secret_client().get_secret("ORCHESTRATOR_API_TOKEN")`, `_repo_ci_fleet.py:35`). Re-probe 2026-06-11: **not in
+  SM, not in `agent-orchestrator/.env.local`, not in the `ORCHESTRATOR_ENV_LOCAL` bundle, not in this shell** — so the
+  live fleet-git proxy still degrades to `available=False`
+  - AO deep-link. **Operator action: mint the orchestrator API token + store it in SM as `ORCHESTRATOR_API_TOKEN` (both
+    clouds).**
+
 ## Sub-plans (the execution units)
 
 - [x] ✅ [PLAN] P1. v1 SHIPPED 2026-06-10 — `ci_dashboard_deployment_ui_2026_06_10.md`: repo dropdown + 25-repo overview
@@ -127,9 +171,49 @@ page) — P2, after both v1s ship.
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
       repo dirty in anyone's worktree") lands with the live `ORCHESTRATOR_API_TOKEN` (BLOCKED-CREDS) — the deep-link is
       live now; the live fleet data is gated on the token.
-- [ ] [CODE] P3. **Alert-parity audit** — walk every watcher/alert class (`ci-failure-watcher`, `promotion-lag-monitor`,
-      git-health guard, billing block, consolidator watchdog) and verify each has a paired live state element on one of
-      the two surfaces; file gaps as todos here. Repo: unified-trading-pm (audit) + the owning surface.
+- [x] ✅ [CODE] P3. DONE 2026-06-11 — **Alert-parity audit COMPLETE.** Walked ~44 alert/page classes
+      (`unified-trading-pm` CI/CD watchers + `agent-orchestrator` fleet/worker) against ~14 standing dashboard state
+      elements (deployment-ui `/repos` + `/fleet`, orchestrator `/fleet-git` + main dashboard). **Strong parity
+      confirmed** for: GH rate-limit thresholds → rate-budget bars; all 5 stuck-PR classes → stuck panel; SIT
+      lock/unlock/starvation → SIT panel; cascade QG → SIT-run panel; Cloud-Build failure → image column; CI-status
+      change + RESOLVED bookends → CI-status chip + Alerts ledger; fleet git-staleness/unpushed-plans → fleet slot
+      badges; **account auth-failed/token-expiring/usage-high/all-accounts-unusable → orchestrator `AccountStatus` +
+      `ln_alert` (VERIFIED — `dashboard/src/types.ts`, NOT a gap)**. **7 gaps filed as todos below (G1–G7).**
+      Verification: grep+read of deployment-ui/src, deployment-api repo_ci routes, agent-orchestrator/dashboard/src —
+      each claimed gap confirmed absent in the UI (false-gap caught + dropped: account/token health is covered).
+- [ ] [CODE] P1. **(G1) Promotion quarantine/failures have NO paired standing state** — staging-to-main emits a CRITICAL
+      "genuine failures" page + a WARNING "newly-quarantined" page, but `promotion_failures`/`promotion_quarantine` are
+      **neither rendered in deployment-ui NOR read by the repo-ci aggregator** (grep 2026-06-11: 0 hits in
+      `deployment_api/routes/_repo_ci_*.py` + `deployment-ui/src/`). The manifest carries both fields. Wire
+      `ManifestView` to expose them + render a "Promotion quarantine (N)" panel on `/repos` (which repos are parked out
+      of promotion + why) — alert-parity for the most promotion-blocking page class. Repos: deployment-api +
+      deployment-ui.
+- [ ] [CODE] P2. **(G2) Semver-agent health has no standing state** — the bump-rate circuit-breaker (≥3 pending bumps/hr
+      or consecutive-at-tip) + version-bump dispatch-failure are CRITICAL pages with no UI element AND they bypass the
+      alert ledger (the inline-curl tail already filed in `ci_dashboard_deployment_ui` P3). Add a semver-agent health
+      chip/panel (last bump, pending-bump count, breaker armed?) sourced from the manifest version-surface + the GitHub
+      runs API for `semver-agent.yml`. Composes with the ledger-persist tail. Repos: deployment-api + deployment-ui.
+- [ ] [CODE] P2. **(G3) Manifest consolidator health (`CONSOLIDATOR_DOWN`) is homeless** — the consolidator watchdog
+      pages CRITICAL on a stale/missing `_index` while per-VM shards exist, but there is NO standing element on EITHER
+      monitoring surface. Decide the home (it is data-pipeline, not CI/CD or fleet-git — candidates: a small
+      consolidator-liveness chip on `/repos` header, or the data-status surface) + surface `assert_consolidator_healthy`
+      state (last `_index` write age, per-VM shard count). Operator surface-decision needed. Repos: deployment-api +
+      deployment-ui (or data-status owner).
+- [ ] [CODE] P3. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
+      WARNING on per-repo ruleset misalignment; no UI. Fold into the planned **Rollout-ratchet panels** smart-extra
+      (workflow-template drift + Dockerfile digest-pin) as a third ratchet column. Repos: deployment-api +
+      deployment-ui.
+- [ ] [CODE] P3. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
+      a freeze blocks a scheduled/autonomous run; add a freeze-window banner on `/repos` (active? window? reason?).
+      Repo: deployment-ui.
+- [ ] [CODE] P3. **(G6) Promotion-lag AGE not explicit** — the overview shows the LDR↔staging↔main content-delta but
+      not the **time-in-state** the lag monitor pages on (>60 min forward/backmerge lag). Add a lag-age chip (oldest
+      unpromoted green commit age) so the page state matches what `promotion-lag-monitor` alerts on. Repo:
+      deployment-api (compute age) + deployment-ui.
+- [ ] [CODE] P3. **(G7) Worker-liveness watchdog activity has no dedicated standing panel** — slot
+      working/paused/blocked states render, but the watchdog's kill / daily-cap-dormancy / autospawn-flap /
+      respawn-escalation events are transition-only. Add a watchdog-health panel (kills today vs cap, dormant?, recent
+      flap) to the orchestrator dashboard. Repo: agent-orchestrator.
 - [ ] [CODE] P2. **No auto-escalation for a GENUINE main `quality-gates-v2` failure (gap found 2026-06-11, operator
       Q).** `ci-failure-watcher --escalate` only hands **conflict-wall** promotion PRs (CONFLICTING/DIRTY) to
       `escalate-to-orchestrator.yml`, and the v2-never-reported **deadlock** auto-recovers in-band (close+reopen). A

@@ -111,6 +111,90 @@ class TestBuildReportTransitions:
         assert "No CI transitions" in report
 
 
+class TestFailureReasonEnrichment:
+    """N1 — failing alerts carry the reason (failed job/step + log excerpt), not ad-hoc."""
+
+    def test_build_report_renders_failed_jobs_and_excerpt(self) -> None:
+        fail_t = {
+            "kind": "failing",
+            "repo": "mtds",
+            "branch": "main",
+            "workflow": "quality-gates-v2",
+            "conclusion": "failure",
+            "url": "https://github.com/run/1",
+            "pusher_name": "bot",
+            "pusher_role": "automation",
+            "failed_jobs": ["typecheck → basedpyright", "unit → pytest"],
+            "log_excerpt": "error: 3 type errors in foo.py",
+        }
+        _, _, report = MOD.build_report([fail_t], [], [], None)
+        assert "↳ failed: typecheck → basedpyright, unit → pytest" in report
+        assert "error: 3 type errors in foo.py" in report
+
+    def test_build_report_failing_without_reason_still_renders(self) -> None:
+        # Reason fields absent (enrichment failed) → no extra lines, no crash.
+        fail_t = {
+            "kind": "failing",
+            "repo": "mtds",
+            "branch": "main",
+            "workflow": "quality-gates-v2",
+            "conclusion": "failure",
+            "url": "https://github.com/run/1",
+            "pusher_name": "bot",
+            "pusher_role": "automation",
+        }
+        _, _, report = MOD.build_report([fail_t], [], [], None)
+        assert "STARTED FAILING" in report
+        assert "↳ failed:" not in report
+
+    def test_failure_reason_parses_failed_jobs(self) -> None:
+        jobs = {
+            "jobs": [
+                {
+                    "name": "typecheck",
+                    "conclusion": "failure",
+                    "steps": [{"name": "basedpyright", "conclusion": "failure"}],
+                },
+                {"name": "unit", "conclusion": "success", "steps": []},
+            ]
+        }
+        with (
+            patch.object(MOD, "gh_json", return_value=jobs),
+            patch.object(MOD, "_log_failed_excerpt", return_value="boom"),
+        ):
+            reason = MOD.failure_reason("mtds", 99)
+        assert reason["failed_jobs"] == ["typecheck → basedpyright"]
+        assert reason["log_excerpt"] == "boom"
+
+    def test_failure_reason_no_run_id_is_empty(self) -> None:
+        reason = MOD.failure_reason("mtds", 0)
+        assert reason == {"failed_jobs": [], "log_excerpt": ""}
+
+    def test_enrich_only_touches_failing(self) -> None:
+        transitions = [
+            {"kind": "failing", "repo": "mtds", "run_id": 1},
+            {"kind": "recovered", "repo": "mtds", "run_id": 2},
+        ]
+        with patch.object(MOD, "failure_reason", return_value={"failed_jobs": ["j"], "log_excerpt": "x"}):
+            MOD.enrich_failure_reasons(transitions)
+        assert transitions[0]["failed_jobs"] == ["j"]
+        assert "failed_jobs" not in transitions[1]
+
+    def test_log_excerpt_strips_prefix_and_tails(self) -> None:
+        stdout = "\n".join(f"typecheck\tbasedpyright\t2026-06-10T00:00:0{i}Z line {i}" for i in range(15))
+        fake = types.SimpleNamespace(returncode=0, stdout=stdout)
+        with patch.object(MOD.subprocess, "run", return_value=fake):
+            excerpt = MOD._log_failed_excerpt("mtds", 99, max_lines=3)
+        assert "typecheck\tbasedpyright" not in excerpt  # prefix stripped
+        assert "line 14" in excerpt  # tail kept
+        assert "line 0" not in excerpt  # head dropped (only last 3 lines)
+
+    def test_log_excerpt_empty_on_error(self) -> None:
+        fake = types.SimpleNamespace(returncode=1, stdout="")
+        with patch.object(MOD.subprocess, "run", return_value=fake):
+            assert MOD._log_failed_excerpt("mtds", 99) == ""
+
+
 class TestBuildReportStuck:
     def _stuck(self, state: str = "BLOCKED", auto_merge: bool = True) -> dict:
         return {

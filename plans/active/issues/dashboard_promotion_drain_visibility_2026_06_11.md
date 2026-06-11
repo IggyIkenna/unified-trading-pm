@@ -1,0 +1,70 @@
+---
+title: "CI dashboard shows the breaking-cascade but NOT the routine LDR→staging/main promotion drain — operator can't see 'when did we last promote + did it pass'"
+created: 2026-06-11
+assignee: harsh
+source:
+  - operator observation 2026-06-11 (deployment-ui Repos CI: "Last SIT / cascade run — success 22h ago" — is that 'we haven't promoted in a day' or only the major-version cascade? we'd want to see when LDR→staging via auto-merge + QG branch protection last ran + its result)
+  - slot-3 verification 2026-06-11 (cascade-qg-ordering vs ldr-to-staging-promote are distinct workflows)
+locked_by: live-defi-rollout
+priority: P2
+status: active
+---
+
+# CI dashboard: promotion-drain visibility gap
+
+## What I found
+
+The Repos CI dashboard's **"Last SIT / cascade run"** panel sources **only** the breaking cascade
+(`cascade-qg-ordering.yml`, PM-central), which **fires only on a real breaking / major-version public-surface change**
+(`detect_breaking_change.py` verdict). So "cascade success 22h ago" means **no breaking change has occurred in 22h** —
+it is **NOT** an indicator of routine promotion activity. An operator reasonably reads it as "we haven't promoted
+anything in a day", which is wrong.
+
+The **routine** promotion path is a **different, unsurfaced mechanism** (verified 2026-06-11):
+
+- **`ldr-to-staging-promote`** (PM-central workflow, every **15 min**, fleet-wide) opens/reuses an auto-merging
+  **LDR→staging** PR per repo; that PR's **`quality-gates-v2`** (head=LDR, base=staging) is the server gate. This is
+  "are we pulling LDR→staging via auto-merge + QG branch protection".
+- **`ldr-to-main-promote`** (PM-central, every 15 min) — the staging→main / standing-PR drain.
+- These are **distinct** from `cascade-qg-ordering` (the panel's current source) and from SIT (which fires only on
+  `breaking_pending` repos).
+
+Today the dashboard surfaces none of: last LDR→staging promote run + result, last LDR→main promote run + result, or the
+per-repo standing-promotion-PR + its v2 conclusion. The `branch_ci` chip (shipped deployment-api@e1878d2 +
+deployment-ui@6632154) shows per-branch v2 _state_ but not the _promotion-drain run_ (when it last ran / passed / is
+blocked).
+
+## Why it matters
+
+- **Composes with the alert-parity principle** (`monitoring_control_plane_master_2026_06_10.md`): anything we rely on
+  (the promotion pipeline is flowing) must be a continuously observable state on the dashboard, not inferred from a
+  panel that means something else.
+- A stalled `ldr-to-staging-promote` (the bug #11 class — non-breaking content not draining staging→main) is **invisible
+  today**; the operator only sees the unrelated cascade panel reading "success", masking a stuck routine drain.
+- The operator explicitly asked for this signal: "when [are] we pulling repos from LDR to staging via auto-merge QG
+  branch-protection workflow, when that was last run and the result".
+
+## Recommended decision
+
+Add a **"Promotion drain"** surface to the Repos CI dashboard (deployment-ui) backed by deployment-api, **distinct
+from** the breaking-cascade panel and clearly labelled so the two are never conflated:
+
+- [ ] [CODE] P2. **deployment-api** — extend the repo-ci aggregator: for each repo expose the last
+      `ldr-to-staging-promote` + `ldr-to-main-promote` outcome (run conclusion + timestamp, via the Actions runs API —
+      PAT-compatible) AND the open standing LDR→staging / LDR→main PR + its `quality-gates-v2` conclusion. Reuse
+      `v2_conclusion_for_branch`/the Actions-runs pattern from `_repo_ci_github.py`; honest-degrade (null) on fetch
+      failure; respect the GH rate-budget guard (only fetch where needed). Repo: deployment-api (`routes/repo_ci.py` +
+      `_repo_ci_github.py`).
+- [ ] [CODE] [UI] P2. **deployment-ui** — render a "Promotion drain" panel/column: per repo, "last LDR→staging promote:
+      <result> <age>" + "last LDR→main: <result> <age>", with a deep-link to the promote workflow run (GitHub) and to
+      the standing PR. Rename/relabel the existing panel to **"Breaking cascade / SIT"** so it's unambiguous it only
+      fires on breaking changes. `pw:L2` + regression spec in `tests/smoke/`. Repo: deployment-ui (`pages/RepoCi.tsx` +
+      `lib/mock-api.ts`).
+- [ ] [CODE] P3. **Stall surfacing** — flag when a repo has LDR content ahead of staging/main (real file delta, not
+      squash skew) AND the last promote-drain run for it is >N ticks old or failing — i.e. the drain is stuck (bug #11
+      class). Repo: deployment-api + deployment-ui.
+
+**Parent epic**: `observability_master` (this is the monitoring control-plane surface). Wrapper into
+`monitoring_control_plane_master_2026_06_10.md` smart-extras if picked up as a sub-plan, or execute directly from this
+issue doc. Cold-start: worker reads `SUB_AGENT_MANDATORY_RULES.md`; the dashboard contract + click-through rules are in
+`monitoring_control_plane_master_2026_06_10.md`.

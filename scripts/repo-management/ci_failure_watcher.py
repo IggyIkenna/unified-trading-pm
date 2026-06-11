@@ -253,6 +253,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "workflow": workflow_name,
                     "conclusion": latest.get("conclusion"),
                     "url": latest.get("url") or "",
+                    "run_id": latest.get("databaseId"),
+                    "head_sha": sha,
                     "pusher_name": pusher_name,
                     "pusher_role": pusher_role,
                 }
@@ -268,6 +270,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "workflow": workflow_name,
                     "conclusion": "success",
                     "url": latest.get("url") or "",
+                    "run_id": latest.get("databaseId"),
+                    "head_sha": sha,
                     "pusher_name": pusher_name,
                     "pusher_role": pusher_role,
                 }
@@ -427,8 +431,20 @@ def detect_superseded_prs(repo: str) -> list[dict]:
     for base in PROMOTION_BASES:
         prs = gh_json(
             [
-                "pr", "list", "--repo", f"{ORG}/{repo}", "--base", base, "--head", "live-defi-rollout",
-                "--state", "open", "--limit", "30", "--json", "number,title,url,createdAt",
+                "pr",
+                "list",
+                "--repo",
+                f"{ORG}/{repo}",
+                "--base",
+                base,
+                "--head",
+                "live-defi-rollout",
+                "--state",
+                "open",
+                "--limit",
+                "30",
+                "--json",
+                "number,title,url,createdAt",
             ]
         )
         if not isinstance(prs, list):
@@ -569,6 +585,78 @@ def detect_billing_block(repos: list[str], now: _dt.datetime, fresh_hours: float
     return None
 
 
+def _log_failed_excerpt(repo: str, run_id: int, *, max_lines: int = 10, max_chars: int = 500) -> str:
+    """Best-effort tail of a run's failed-step logs — the actionable error lines.
+
+    `gh run view --log-failed` streams only the failed steps' logs; we keep the last
+    non-blank lines (where the actual error usually is), strip the leading
+    `<job>\\t<step>\\t<ts>` prefixes gh prepends, and truncate hard so a Slack body never
+    balloons. Returns "" on any error (never raises — enrichment is additive).
+    """
+    if not run_id:
+        return ""
+    proc = subprocess.run(
+        ["gh", "run", "view", str(run_id), "--repo", f"{ORG}/{repo}", "--log-failed"],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0 or not proc.stdout:
+        return ""
+    cleaned: list[str] = []
+    for raw_line in proc.stdout.splitlines():
+        line = raw_line.rstrip()
+        if not line.strip():
+            continue
+        # gh prefixes each line with "<job>\t<step>\t<iso-ts> ". Drop it for readability.
+        parts = line.split("\t")
+        cleaned.append(parts[-1].strip() if len(parts) >= 3 else line)
+    tail = "\n".join(cleaned[-max_lines:])
+    return tail[-max_chars:] if len(tail) > max_chars else tail
+
+
+def failure_reason(repo: str, run_id: int) -> dict:
+    """Resolve WHY a run failed: the failed job(s)/step(s) + a short log excerpt.
+
+    Turns an ad-hoc "<workflow> (failure)" line into an actionable one. Best-effort —
+    any gh/network failure yields empty fields and the alert still posts (just without
+    the extra reason). Network-doing; the pure rendering lives in build_report.
+    """
+    reason: dict = {"failed_jobs": [], "log_excerpt": ""}
+    if not run_id:
+        return reason
+    data = gh_json(["run", "view", str(run_id), "--repo", f"{ORG}/{repo}", "--json", "jobs"])
+    if isinstance(data, dict):
+        for job in data.get("jobs") or []:
+            if not isinstance(job, dict) or job.get("conclusion") not in _FAIL_CONCLUSIONS:
+                continue
+            name = job.get("name") or "?"
+            failed_step = next(
+                (
+                    s.get("name")
+                    for s in (job.get("steps") or [])
+                    if isinstance(s, dict) and s.get("conclusion") in _FAIL_CONCLUSIONS
+                ),
+                None,
+            )
+            reason["failed_jobs"].append(f"{name} → {failed_step}" if failed_step else str(name))
+    reason["log_excerpt"] = _log_failed_excerpt(repo, run_id)
+    return reason
+
+
+def enrich_failure_reasons(transitions: list[dict]) -> None:
+    """Attach `failed_jobs` + `log_excerpt` to each `failing` transition (in place).
+
+    Only failing transitions are enriched (recoveries need no reason); each is rare, so
+    the extra gh calls are bounded. Mutates the dicts so build_report can render them.
+    """
+    for t in transitions:
+        if t.get("kind") != "failing":
+            continue
+        reason = failure_reason(t["repo"], t.get("run_id") or 0)
+        t["failed_jobs"] = reason["failed_jobs"]
+        t["log_excerpt"] = reason["log_excerpt"]
+
+
 def build_report(
     transitions: list[dict],
     stuck: list[dict],
@@ -597,6 +685,13 @@ def build_report(
             lines.append(
                 f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} ({t['conclusion']}) <{t['url']}|run>  {pusher}"
             )
+            # Reason, not ad-hoc: which job/step failed + a short log excerpt (N1).
+            failed_jobs = t.get("failed_jobs") or []
+            if failed_jobs:
+                lines.append(f"      ↳ failed: {', '.join(failed_jobs[:4])}")
+            excerpt = t.get("log_excerpt") or ""
+            if excerpt:
+                lines.append(f"      ```{excerpt}```")
     if recovered:
         lines.append(f":white_check_mark: *{len(recovered)} workflow(s) RECOVERED:*")
         for t in recovered:
@@ -898,6 +993,7 @@ def _write_firestore_ci_watcher(
 ) -> None:
     try:
         from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+
         client = firestore.Client(project=project_id)
         trans_by_repo: dict[str, list[dict]] = {}
         stuck_by_repo: dict[str, list[dict]] = {}
@@ -989,6 +1085,7 @@ def main() -> int:
         if args.close_superseded:
             superseded.extend(detect_superseded_prs(repo))
 
+    enrich_failure_reasons(transitions)  # N1: failed job/step + log excerpt for each failing transition
     alert, severity, report = build_report(transitions, stuck, resolved, billing)
     print(report)
     write_github_output(alert, severity, report)

@@ -82,7 +82,14 @@ def main():
         # fleet-wide (workspace-qg retired 2026-05-29; verified against live rulesets 2026-06-07).
         expected_ctx = f"Quality Gates ({repo}) / quality-gates-v2"
         m_ok = (m is None) or (len(m) == 1 and m[0] == expected_ctx)
-        s_ok = (s is None) or (len(s) == 2 and "check-staging-lock" in s and expected_ctx in s)
+        # Staging requires qg + check-staging-lock, PLUS an optional `AWS CodeBuild <region> (<repo>)`
+        # cloud-symmetry gate for repos that build an AWS image (pin_branch_protection_rulesets.py
+        # derives it). Any extra context must be that CodeBuild status — nothing else.
+        s_ok = (s is None) or (
+            "check-staging-lock" in s
+            and expected_ctx in s
+            and all(c in ("check-staging-lock", expected_ctx) or c.startswith("AWS CodeBuild") for c in s)
+        )
         flag = "" if (m_ok and s_ok and db_ok) else "  <-- CHECK" + ("" if db_ok else f" [default_branch={db}!=main]")
         if flag:
             allok = False
