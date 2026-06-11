@@ -73,6 +73,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Install Python deps (PyYAML for check_frontmatter_yaml.py)
+        run: pip install PyYAML
       # ── Phase 2 (item I): deterministic auto-fix BEFORE the sweep ──────────
       # Run the fixable-hygiene auto-fixer and, if it changed plans, commit +
       # push to the PR head branch so FIXABLE findings auto-resolve at the gate.
@@ -163,6 +165,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Install Python deps (PyYAML for check_frontmatter_yaml.py)
+        run: pip install PyYAML
 
       - name: Claude API health precheck
         env:
