@@ -242,10 +242,11 @@ variant; else straight basis within the archetype). Restrictions exhaustive — 
       RULES_DIRECTIONAL_EVENT_SETTLED, STAT_ARB_CROSS_SECTIONAL, VOL_TRADING_OPTIONS). Prospectus "Leg Structure" table
       per archetype (honest gap line where absent). Manifest 409→435 nodes / 663→902 edges. Deterministic (twice
       byte-identical).
-- [ ] [AGENT][UI] P1. Wizard Instruments/Venues stages become leg-aware: mandatory legs pre-selected and
+- [x] ✅ [AGENT][UI] P1. Wizard Instruments/Venues stages become leg-aware: mandatory legs pre-selected and
       non-deselectable, instrument types grouped by leg role with the conditional surfaced ("on venues where the LST is
       not accepted as perp collateral, this archetype runs straight basis"), cross-category legs break the
-      single-category assumption from Stage A (show + auto-include the hedge leg's category). pw:L2 gate.
+      single-category assumption from Stage A (show + auto-include the hedge leg's category). pw:L2 gate. — ui@85f27c46
+      | pw:L2 ✓ (13/13 smoke tests green) | regression: tests/smoke/wizard.spec.ts
 
 ## Phase 3 — strategy prospectus generator (script first, UI later; PARALLEL with Phase 2)
 
@@ -541,3 +542,11 @@ for every agent on this plan:
   P1 leg-aware wizard stages** (Instruments/Venues grouped by leg role, conditional surfaced, cross-category hedge leg
   auto-included; pw:L2 gate) — dispatched, not done this turn. Churned foreign PM files restored as pure noqa-churn:
   `tier_c_promotion_gate.py`, `validate-buildspec.py`, `workflow_template_drift_baseline.json` (verified cosmetic).
+- 2026-06-11 — **Phase 2.6 COMPLETE — F22 closed end-to-end.** Leg-spec registry UAC@c17a6be (10 archetypes seeded with
+  citations; constraint kinds incl. requires_collateral_acceptance + fallback_variant straight_basis) → leg-aware
+  exporter PM@8a0fdd1c8 → regenerated manifest UAC@b1a5419 (435 nodes / 902 edges; +26 leg nodes; orphans 124→89;
+  unbuilt dead-ends 25→54 — leg edges exposed more unbuilt paths) → leg-aware wizard ui@85f27c46 (pw:L2 13/13;
+  carry/staked-basis now renders 4 leg groups incl. perp hedge, required-locked, straight-basis fallback text from
+  constraint metadata; cross-category legs auto-included; flat fallback + honest banner for archetypes without leg
+  specs). F25/F26 filed. Remaining open scope: registry backfills (Phase 2 tranche), needs_code_scan escalations
+  (auto-emitted in gap tracker), Wave-2 enhancements (operator sign-off), client-lite successor plan.

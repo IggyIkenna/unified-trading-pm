@@ -48,6 +48,11 @@
 #   --skip-codex       Skip codex compliance check (Stage 3 §5). Human-only escape hatch; never use with --agent.
 #   --skip-preflight   Skip pre-flight audit (Stage 2). Human-only escape hatch; never use with --agent.
 #   --skip-dep-tier-gate Skip dep-tier-readiness check (Stage 1.7). HUMAN-ONLY — agents must NOT use this.
+#   --build            OPT-IN LDR image build. Stamps a `Build-LDR: true` commit trailer; the cloud-native
+#                      LDR build trigger (AWS CodeBuild webhook COMMIT_MESSAGE filter) fires the LDR image
+#                      only when set. Default OFF (saves cost; removes red CodeBuild noise on drain PRs).
+#                      The always-on MAIN build (deploy gate) is unaffected. SSOT:
+#                      plans/active/issues/ci_pipeline_self_healing_gaps_2026_06_11.md § Gap 5.
 #                      Use only when manually force-promoting out-of-order (e.g. hotfix on L0 lib while L1 is
 #                      below staging). Prints a loud warning. Never combine with --agent.
 #   --user-approved    Deprecated — Stage 0.3 is advisory-only; no gate to bypass.
@@ -111,6 +116,7 @@ SKIP_PREFLIGHT=false
 SKIP_DEP_TIER_GATE=false
 USER_APPROVED=false
 AGENT_MODE=false
+BUILD_LDR=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -176,6 +182,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --agent)
       AGENT_MODE=true
+      shift
+      ;;
+    --build)
+      # OPT-IN LDR image build (Gap 5, ci_pipeline_self_healing_gaps_2026_06_11). Stamps a
+      # `Build-LDR: true` trailer on the LDR commit. Cloud-native build triggers gated on this
+      # trailer (the AWS CodeBuild webhook's COMMIT_MESSAGE filter) fire the LDR image build only
+      # when the operator opted in — default OFF saves cost + removes the red CodeBuild noise on
+      # LDR→staging drain PRs. The always-on MAIN build (the deploy gate) is unaffected.
+      BUILD_LDR=true
       shift
       ;;
     *)
@@ -1365,6 +1380,12 @@ fi
 # Kept out of COMMIT_MSG (the PR title) — only the git commit message carries it.
 _QM_TRAILER_KIND="human"; [ "$AGENT_MODE" = true ] && _QM_TRAILER_KIND="agent"
 _QM_COMMIT_MSG="$(printf '%s\n\nQuickmerge: %s' "$COMMIT_MSG" "$_QM_TRAILER_KIND")"
+# Opt-in LDR image build trailer (--build, Gap 5). The cloud-native LDR build triggers gate on this
+# exact literal (AWS CodeBuild webhook COMMIT_MESSAGE filter `Build-LDR: true`); keep the format stable.
+if [ "$BUILD_LDR" = true ]; then
+  _QM_COMMIT_MSG="$(printf '%s\nBuild-LDR: true' "$_QM_COMMIT_MSG")"
+  echo "[$REPO_NAME] 🏗️  --build: stamping 'Build-LDR: true' trailer → opt-in LDR image build"
+fi
 
 if [ -z "$(git diff --cached --name-only)" ] && [ -z "$(git status --porcelain)" ]; then
   # Nothing staged and working tree is clean — changes were already committed

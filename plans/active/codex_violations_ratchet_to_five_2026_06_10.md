@@ -337,6 +337,19 @@ unchanged:
 - [ ] [CODE] P3. **`execution_service/engine/delta_proxy_repricer.py` is unreferenced** (zero imports repo-wide,
       2026-06-12 sweep) — dead-code delete candidate per the delete-deprecated rule; needs a quick operator/architect
       confirm it isn't a planned consumer's WIP. Repo: execution-service.
+- [x] ✅ [CODE] P2. **deployment-api 16→6 (2026-06-12)** — deployment-api@94e4feb: wave-4b agent cleared 10
+      classes (schema-provenance CORRECT-LOCAL triage, os.getenv, Any-types, imports-in-fn, empty-fallbacks);
+      honest measured V=6; full QG green. One step from the ≤5 ceiling.
+- [x] ✅ [REFACTOR] P3-partial. **instruments refdata adapters DONE 2026-06-12** — instruments-service@354ab43:
+      tardis 1,348 / databento ~1,222 / polymarket 1,184 → packages behind unchanged paths (all modules <900,
+      _pkg_ref namespace proxies; the package-shadowed old polymarket.py removed — it was silently dead +
+      dragging coverage; exclude globs retargeted to package depth); 3,548 tests green, quickmerge proper.
+      REMAINING: `_solana_utils.py` (1,016) — deferred at agent limit.
+- [x] ✅ [REFACTOR] P3-partial. **agent-orchestrator server tail DONE 2026-06-12** — agent-orchestrator@209937f:
+      worker_liveness 1,215 / state_store 1,118 / worktree_clean_check 1,012 / models 932 → packages behind
+      unchanged import paths (patch surfaces module-bound; WorkerLivenessKicker dynamic attrs declared; intra-package
+      privacy pragmas); scripts/check.sh exit 0 (basedpyright 248→0 errors after orchestrator cleanup), 505 tests
+      green; shipped direct-to-LDR per the AO G6 transitional model.
 - [ ] [REFACTOR] P3. Remaining >900 tail: instruments reference_data adapters (tardis 1,348 / databento 1,215 /
       polymarket 1,184 / \_solana_utils 1,016), features onchain/delta_one engine orchestrators (1,409/922), strategy
       archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio archetypes 958, agent-orchestrator
