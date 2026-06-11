@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -33,6 +34,23 @@ from pathlib import Path
 # Incident: the parity gap blocked the FROM-digest pilot ship (ci_local_qg_parity P2).
 EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv", "venv", "__pycache__", "build"}
 EXCLUDE_FILENAMES = {"conftest.py"}
+
+# Build/dependency dirs EXCLUDED from the source walk — os.walk never descends into them, so
+# their contents are never scanned (third-party / generated code, not repo source). Without this
+# a plain rglob("*.py") still enumerates every .venv file before discarding it per-path.
+# (Naming: these dirs are excluded, not "pruned"/removed.)
+EXCLUDE_DIR_NAMES = frozenset(
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+)
+
+
+def _iter_source_py(root: Path) -> list[Path]:
+    """All `.py` under root, EXCLUDING EXCLUDE_DIR_NAMES dirs (os.walk never descends into them)."""
+    out: list[Path] = []
+    for dirpath, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIR_NAMES]
+        out.extend(Path(dirpath) / fn for fn in files if fn.endswith(".py"))
+    return out
 
 # Patterns for Python imports
 FROM_IMPORT_RE = re.compile(r"^\s*from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import")
@@ -76,7 +94,7 @@ def extract_imports_from_file(file_path: Path) -> set[str]:
 def scan_repo_imports(repo_path: Path) -> set[str]:
     """Scan all .py files in repo (excluding tests/, scripts/, .github/, conftest.py) for imports."""
     all_packages: set[str] = set()
-    for py_path in repo_path.rglob("*.py"):
+    for py_path in _iter_source_py(repo_path):
         try:
             rel = py_path.relative_to(repo_path)
         except ValueError:
@@ -128,7 +146,7 @@ def check_repo(
     if not repo_path.is_dir():
         return True, []  # Skip missing repos
 
-    py_files = list(repo_path.rglob("*.py"))
+    py_files = _iter_source_py(repo_path)
     if not py_files:
         return True, []  # No Python, skip
 

@@ -15,6 +15,7 @@ Exit: 0 if all valid, 1 if any non-canonical.
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -41,6 +42,23 @@ BOOTSTRAP_BASENAMES = {
 # Path segments to exclude from scanning
 EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv", "examples"}
 EXCLUDE_FILENAMES = {"conftest.py"}
+
+# Build/dependency dirs EXCLUDED from the source walk — os.walk never descends into them, so
+# their contents are never scanned (these hold third-party / generated code, not repo source).
+# Without this, a plain rglob("*.py") would still enumerate every .venv file (~14k on a big
+# repo) just to discard them per-path. (Naming: these are excluded, not "pruned"/removed.)
+EXCLUDE_DIR_NAMES = frozenset(
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+)
+
+
+def _iter_source_py(root: Path) -> list[Path]:
+    """All `.py` under root, EXCLUDING EXCLUDE_DIR_NAMES dirs (os.walk never descends into them)."""
+    out: list[Path] = []
+    for dirpath, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIR_NAMES]
+        out.extend(Path(dirpath) / fn for fn in files if fn.endswith(".py"))
+    return out
 
 # Patterns for os.getenv, os.environ[, os.environ.get(
 OS_GETENV_RE = re.compile(r"os\.getenv\s*\(\s*[\"']([^\"']+)[\"']")
@@ -128,7 +146,7 @@ def scan_source_dir(source_dir: Path, canonical: set[str]) -> list[tuple[Path, i
     if not source_dir.is_dir():
         return violations
 
-    for py_file in source_dir.rglob("*.py"):
+    for py_file in _iter_source_py(source_dir):
         try:
             rel = py_file.relative_to(source_dir)
         except ValueError:

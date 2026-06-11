@@ -301,6 +301,26 @@ single-core pinned), output under gitignored `.qg_profile/`.
       `.qg_cache/actionlint_content_hash`. Clean-run-only store; `QG_NO_CACHE=1` bypass; CI-safe (no `.qg_cache` in a
       fresh checkout → first run full). Measured (PM, isolation): bandit MISS 2.53s → HIT 0.13s; actionlint (55 wf) MISS
       3.99s → HIT 0.10s; content-bust verified for new/changed/removed files (mtime-independent, deterministic).
+- [x] ✅ [INFRA] P0. **Codex-check hot spots — O(n²) re-scan + `.venv` walk-waste FIXED (2026-06-11, operator-flagged
+      "the AST-walk issue").** Decomposing the codex span (the real #2 cost @ ~15% wall, and the #1 on big repos —
+      execution-service codex 409s > tests 387s) found two offenders SEPARATE from the already-fixed STEP-5.65
+      removed-symbols walk: (1) **`check_schema_provenance.py` was O(files × schemas)** — for every local schema it
+      found it re-walked + re-read the WHOLE repo to test "is it imported from UAC/UIC" → **157s on execution-service
+      alone**. Fixed: collect all UAC/UIC-imported names in ONE pass → O(1) membership. (2) **`.py` checks `rglob`'d the
+      repo WITHOUT excluding `.venv`** — a plain `repo.rglob("*.py")` still ENUMERATES ~14k `.venv` files before
+      discarding them per-path. Fixed in `check_schema_provenance` + `check_env_canon` +
+      `check_manifest_import_alignment`: an `os.walk` that EXCLUDES
+      `{.venv,.venv-workspace,venv,build,dist,node_modules,__pycache__,.git}` at the directory level (never descends
+      in). **VERIFIED behavior-preserving** — old-vs-new violation output byte-identical across 5 repos
+      (execution-service 178 / mtds 63 / deployment-api 92 / instruments 0 / uta 0). **Result: schema-provenance 157s →
+      0.4s (~390×)** on execution-service; env_canon 10s + manifest 1.5s also drop. Runs in every service-repo codex
+      block → fleet-wide. — unified-trading-pm@<sha>
+  - [ ] [INFRA] P2. **Sweep the remaining no-prune `.py` checks for the same `.venv`-enumeration waste** (audit found
+        ~12 more with `rglob`/`glob` + post-filter, mostly PM-only: `check_plan_discipline.py`,
+        `check-circular-imports`, `check_cost_leakage`, `audit-library-imports`, `validate-*`, `detect_template_drift`,
+        …). Lower priority (not on the service-repo codex hot path) but the operator wants the redundant dirs excluded
+        everywhere — apply the same `os.walk` + `EXCLUDE_DIR_NAMES` exclusion. Provenance: 2026-06-11 walk-pattern
+        audit.
 - [ ] [INFRA] P2. bandit fast-tier scoping: scope bandit to changed files on the `--fast` tier (residual from the cache
       item above — depends on the Phase-2 fast-tier mechanism landing; the content-hash cache already covers the
       unchanged-tree case).
