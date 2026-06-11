@@ -452,3 +452,9 @@ for every agent on this plan:
   Capability tab shipped (deployment-ui@13ac831, pw:L2 6/6, 22 unit tests; F18/F19). Remaining: Phase 3.5 UI stepper
   stage, Phase 5 (escalation write-back + backtest-on-demand), registry backfills, Wave-2 enhancements (operator
   sign-off pending).
+- 2026-06-11 — Phase 5 dispatch (annotation write-back sidecar + needs_code_scan escalation emitter +
+  backtest-from-wizard-config) was STOPPED by the operator mid-run before any commit landed; trees verified clean. The
+  two Phase 5 [IMPLEMENT] todos remain open and fully specified in the dispatch record. NOTE: fleet-wide GitHub Actions
+  billing outage filed @bf83fe7ec — this plan's in-flight promotion PRs (uts-ui@9f40331, dep-ui@13ac831, UAC drains)
+  self-merge once billing is restored. Dev servers for operator review: wizard http://localhost:3100/wizard, capability
+  tab http://localhost:5183.

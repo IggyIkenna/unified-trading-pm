@@ -340,6 +340,20 @@ jobs:
 
           clone_repo() {
             local name="$1"
+            # CONTENT-FIRST (operator decision 2026-06-11): clone the dep's CURRENT integration-branch
+            # (live-defi-rollout) HEAD — that is the SSOT content local QG resolves against (editable
+            # siblings live on LDR). A version-aware TAG is STALE during a promotion window (the dep's
+            # source/LDR is ahead of its latest tag), so CI's basedpyright/tests saw stale deps = the
+            # recurring "dep-resolution skew" (PM's count inflated past the ceiling even though local is
+            # 1454; UTL's tradfi source-priority test resolving an old UAC). Range/breaking is enforced
+            # content-based downstream (detect_breaking_change AST differ) + versions bump idempotently
+            # at staging, so current content is what CI should typecheck/test against — matching local.
+            # The version-aware tag + branch/base/manifest/main chain remain as fallbacks if LDR is absent.
+            if git clone -b live-defi-rollout --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null; then
+              echo "Cloning $name at live-defi-rollout HEAD (content-current — matches local editable siblings)"
+              return
+            fi
+            echo "WARN: live-defi-rollout clone failed for $name — falling back to version-aware tag/branch chain"
             local tag
             tag=$(get_version_tag "$name")
             if [ -n "$tag" ]; then
