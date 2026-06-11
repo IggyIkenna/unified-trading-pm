@@ -37,7 +37,7 @@ on:
         required: false
         default: ""
   repository_dispatch:
-    types: [ldr-to-staging, tier-ab-green]
+    types: [tier-ab-green]
 
 permissions:
   contents: write
