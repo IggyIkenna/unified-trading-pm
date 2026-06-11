@@ -212,3 +212,23 @@ vitest.config.ts); capability-tab tests use `@vitest-environment node`. Full fix
 
 **Status**: OPEN — pre-existing CI concern. Fresh `npm ci` skips `@rolldown/binding-linux-x64-gnu` because Node 20.18 <
 the binding's 20.19 engine floor; built only after manual extraction. Node bump or pin needed.
+
+
+### F20 — GroupBRunner API signature (Phase 5 wire-up findings)
+
+**Status**: RESOLVED — documented for future agents. Phase 5 backtest-on-demand agent (2026-06-11) discovered the
+following API signatures that differ from what a naive reading of UAC enums might suggest:
+
+1. `GroupBRunner.__init__` takes only `default_benchmark_mode: BenchmarkFillMode` (not `backtest_group` or `fill_mode`).
+2. `V2Subscription` is a NamedTuple with `(strategy_instance_id, venue, instrument)` — NOT `archetype_id`.
+3. `StrategyInstanceDefinition` requires 9 fields including business fields (`family`, `client_id`, `share_class`, etc.) —
+   `venues`/`instruments`/`params` are NOT direct fields on the model.
+4. `GroupBRunner.register_instance` takes `initial_equity` (not `target_equity`) as a separate Decimal arg.
+5. `ArbitragePriceDispersionEngine.REQUIRED_PARAMS = frozenset({"candidate_venues"})` — comma-separated venue list
+   must be in the params dict; derived from `config.venues`.
+6. `resolve_bucket_name()` in UTL takes keyword-only args `(cloud, kind, asset_group)` — no positional form.
+7. `BacktestGroup` enum values are `A_ML_TRAINING`, `B_STRATEGY`, `C_EXECUTION_ALPHA` (NOT bare `B`).
+8. `StrategyFamily.ARBITRAGE_STRUCTURAL` is the correct family for `ARBITRAGE_PRICE_DISPERSION` archetype.
+
+The precheck always fires `PRECHECK_UNAVAILABLE` in CLOUD_MOCK_MODE (expected). The wiring (GroupBRunner
+exercised over 30 synthetic ticks, result JSON + markdown written) is the deliverable.

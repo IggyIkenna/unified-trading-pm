@@ -294,12 +294,16 @@ post-config (combinatorial explosion is avoided because the wizard fixed the con
 
 ## Phase 5 — agent escalation + backtest-on-demand
 
-- [ ] [IMPLEMENT] P1. `needs_code_scan` gap → agent-orchestrator task (existing planning-VM workflow); agent answer
+- [x] ✅ [IMPLEMENT] P1. `needs_code_scan` gap → agent-orchestrator task (existing planning-VM workflow); agent answer
       written back as manifest `agent_annotation` so the question is never paid for twice. Strict gating: agents only
       when script/registry cannot answer (operator rule).
-- [ ] [IMPLEMENT] P2. Backtest-on-demand: wizard config → `strategy_service/engine/backtest/runner.py` over last N years
+      DONE 2026-06-11 — PM@f84a119 (capability-annotations.yaml sidecar + _capability_annotations.py + generate_capability_manifest.py
+      merge step; emit_capability_gap_todos.py escalation emitter; 2 gap edges annotated + 1 P2 todo emitted; 0 annotation orphans).
+- [x] ✅ [IMPLEMENT] P2. Backtest-on-demand: wizard config → `strategy_service/engine/backtest/runner.py` over last N years
       → metrics into the prospectus ("want to see a 5-year backtest of your configured preference?"). Depends on
       data-availability precheck via deployment-api.
+      DONE 2026-06-11 — e2e-testing@194d66b (backtest_from_wizard_config.py; GroupBRunner wired; honest data precheck;
+      PRECHECK_UNAVAILABLE{cloud data unavailable on this host} verdict confirmed on apd_price_dispersion_btc.json).
 - [ ] [DEFERRED] P3. Client-lite wizard mode (use case 4) — named successor plan once internal wizard is hardened.
 
 ## Wave 2 — proposed enhancements (Claude 2026-06-11; PENDING OPERATOR SIGN-OFF, do not dispatch)
@@ -462,3 +466,15 @@ for every agent on this plan:
   billing outage filed @bf83fe7ec — this plan's in-flight promotion PRs (uts-ui@9f40331, dep-ui@13ac831, UAC drains)
   self-merge once billing is restored. Dev servers for operator review: wizard http://localhost:3100/wizard, capability
   tab http://localhost:5183.
+
+- 2026-06-11 — **Phase 5 DONE.** Both [IMPLEMENT] todos shipped. (1) Annotation write-back: PM@f84a119 —
+  `capability-annotations.yaml` sidecar (2 session-evidenced entries for kill/stop predicates + carry_staked_basis);
+  `_capability_annotations.py` loader + merge helper; `generate_capability_manifest.py` step-7 sidecar integration;
+  `emit_capability_gap_todos.py` escalation emitter (reads manifest, finds unannotated needs_code_scan edges, appends
+  dedup-idempotent `[AGENT] P2.` todos). Regenerated UAC outputs: 2 annotated edges, 0 annotation orphans, 1 P2 todo
+  emitted for gap_registry:order_semantics → execution-service. UAC outputs re-committed via quickmerge. (2) Backtest-
+  on-demand: e2e-testing@194d66b — `backtest_from_wizard_config.py`; data-availability precheck via
+  `read_availability_index` + `resolve_bucket_name`; GroupBRunner wired (real code path, batch=live HARD RULE);
+  honest typed verdict `PRECHECK_UNAVAILABLE{...}` confirmed on `apd_price_dispersion_btc.json` (30 synthetic ticks,
+  0 fills, 0 pnl — expected in CLOUD_MOCK_MODE); results JSON + markdown written. QG passes: strategy-service
+  peripheral (basedpyright + ruff) green; e2e-testing QG green. See F20 for GroupBRunner API findings.
