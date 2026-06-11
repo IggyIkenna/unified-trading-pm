@@ -1,10 +1,11 @@
 ---
 title: "GitHub Actions BILLING wall — fleet-wide CI outage (every v2 job insta-fails)"
 created: 2026-06-11
-author: slot-3 (autonomous ci-dashboard completion run)
 source:
   - live diagnosis 2026-06-11 ~16:10Z — every quality-gates-v2 job (PM + deployment-api + fleet) fails in ~7s, 0 steps
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # GitHub Actions billing wall — fleet-wide CI outage
