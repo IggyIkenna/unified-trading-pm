@@ -366,6 +366,17 @@ single-core pinned), output under gitignored `.qg_profile/`.
       cache persistence in CI** (each CI container is cold → the local content-hash caches don't carry over; an
       `actions/cache` mount would close it — a CI-workflow change, separate surface). Provenance: 2026-06-11 size-checks
       decomposition.
+- [ ] [INFRA] P2. **pip-audit CI robustness — a transient OSV/output failure reddens a promotion PR (finding
+      2026-06-11).** PM PR #258's `lint-codex` slice failed with `❌ pip-audit vulnerabilities found` whose real cause
+      (one line up) was
+      `could not parse pip-audit output: [Errno 2] No such file or directory:     '/tmp/pip-audit-output.json'` — i.e.
+      pip-audit never WROTE its JSON (OSV network blip / cold-cache miss in the fresh CI container), and the
+      missing-output path is counted as a vulnerability → 1 codex violation → PM's tolerance-0 slice FAILS → auto-merge
+      blocked until a manual re-run. Every actual STEP check was ✅; PR #256 passed the same slice minutes earlier,
+      confirming transience. Fix options: (a) on "could not parse output" treat as pip-audit INFRA-ERROR (retry once,
+      then warn — do NOT count as a vuln); (b) persist the deps-hash cache across CI runs (the `actions/cache` item
+      above) so cold containers don't re-hit OSV. This is a "commits don't reach main fast" tax (a green change blocked
+      on a network blip). Provenance: PM PR #258 CI run 27336748810.
 
 ---
 
