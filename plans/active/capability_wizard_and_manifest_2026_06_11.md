@@ -205,6 +205,28 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
 - [ ] [IMPLEMENT] P1. Manifest exporter consumes each new registry as it lands; until then emits honest `not_registered`
       edges (never silently omits the dimension).
 
+## Phase 2.6 — leg-level restriction model (operator-caught F22, 2026-06-11 third message)
+
+Multi-leg archetypes (staked basis = stake + lend + perp hedge) must be modeled structurally: per-leg role, instrument
+types, asset groups, venue eligibility, and conditional constraints (LST accepted as perp collateral on venue V → staked
+variant; else straight basis within the archetype). Restrictions exhaustive — never prose in `notes`.
+
+- [ ] [SPEC] P0. `ArchetypeLegSpec` in UAC architecture_v2: leg_id, role StrEnum (stake, lend, hedge_short, spot_long,
+      perp_long, lp, …), required bool, instrument_types, asset_groups, venue eligibility, conditional_constraints
+      (typed: e.g. requires_collateral_acceptance(lst, perp_venue) with fallback_variant "straight_basis"), per-leg
+      signal variants. Extends/wraps ARCHETYPE_CAPABILITY_REGISTRY without breaking existing consumers.
+- [ ] [IMPLEMENT] P0. Seed leg specs for the carry family (CARRY*STAKED_BASIS + CARRY_BASIS_PERP/DATED variants +
+      CARRY_RECURSIVE*\*) and ARBITRAGE_PRICE_DISPERSION, sourced from engine code structure + codex archetype docs +
+      existing cells' notes/venue lists (cite source per leg). All other archetypes emit honest `not_registered` leg
+      specs + one gap edge each (exhaustive backfill = tracked follow-up tranche).
+- [ ] [IMPLEMENT] P1. Exporter emits leg nodes/edges (archetype→leg→instrument_type/venue with role + conditional
+      metadata); two-sided audit extended: archetype cells whose notes mention legs ("ATOMIC", "hedge", "+") but have no
+      leg spec = flagged drift.
+- [ ] [AGENT][UI] P1. Wizard Instruments/Venues stages become leg-aware: mandatory legs pre-selected and
+      non-deselectable, instrument types grouped by leg role with the conditional surfaced ("on venues where the LST is
+      not accepted as perp collateral, this archetype runs straight basis"), cross-category legs break the
+      single-category assumption from Stage A (show + auto-include the hedge leg's category). pw:L2 gate.
+
 ## Phase 3 — strategy prospectus generator (script first, UI later; PARALLEL with Phase 2)
 
 - [x] ✅ [IMPLEMENT] P0. `generate_strategy_prospectus.py`: input = strategy config + capability manifest → markdown:
