@@ -76,8 +76,8 @@ githubstatus.com all-operational → account spending limit, not platform. Opera
 **2026-06-12 ~05:08Z** — wall still active (deployment-ui monitoring work, slot 4):
 
 - 3 deployment-ui changes landed on LDR, all locally GREEN (full UI QG + pw:L2 198–199/199), all blocked from promotion
-  by the wall: flicker `ef08fd8` + ReadinessTab `074c349` (LDR→staging drains' v2 failed 0-step) + promotion-pipeline-viz
-  `6fe7d73` (PR #235 BLOCKED — rollup has only Vercel, no `quality-gates-v2`). PM watchers
+  by the wall: flicker `ef08fd8` + ReadinessTab `074c349` (LDR→staging drains' v2 failed 0-step) +
+  promotion-pipeline-viz `6fe7d73` (PR #235 BLOCKED — rollup has only Vercel, no `quality-gates-v2`). PM watchers
   (freeze-deferred-build-replay, cloud-build-failure-watcher) also failing 05:08Z. `unified-trading-system-ui` (public)
   unaffected — consistent with the private-repo-only pattern.
 - Re-trigger on restore: `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-ui --ref live-defi-rollout`.
@@ -118,7 +118,20 @@ eaten by the same four structural problems:
    min/run** (10×). At 3,501 runs on 06-11 ≈ 14,000 min ≈ $112 that day, for manifest bookkeeping.
 3. **quality-gates-v2 is ~48% of total spend** (~14,700 min/day): ~1,537 runs/day fleet-wide × ~10 billable min
    (features 14.8, UAC ~11, UTL 9.4; failures bill the same as green) — and a large share of those runs are
-   bot-RE-TRIGGERED (stale-check / close+reopen / monitor dispatch), not human pushes.
+   bot-RE-TRIGGERED (stale-check / close+reopen / monitor dispatch), not human pushes. **PINNED 2026-06-12 — the
+   EMPTY-PROMOTE LOOP (squash-accounting trap) is the #1 QGv2 driver**: post-decoupling QGv2 volume QUINTUPLED (505 →
+   918 → **2,857** runs/day, 06-09→06-11) because `ldr-to-staging-promote`'s "ahead?" gate read `compare ahead_by`,
+   which after a **squash**-merge NEVER returns to 0 (LDR's commits never literally land on staging; the merge-base
+   compare reports the same phantom changed-files forever). Verified on features-service 06-11: **375 drain PRs
+   opened+merged in one day, every ~70 s, each squash commit provably EMPTY** (`git show` = zero file changes;
+   consecutive staging trees identical; each PR still reporting "7 changed files" — phantom), each PR spawning a full
+   ~7-min QGv2 run (450 that day on features alone). The dispatch storm (problem 1) turned the 15-min tick into a ~70 s
+   tick, multiplying it 13×. Fleet snapshot 2026-06-12: **15 of 18 staging repos sit tree-IDENTICAL with ahead_by
+   1–189** — on billing restore the unfixed gate would resume empty-looping on all 15 simultaneously. FIX SHIPPED (see
+   mitigations): TREE-SHA equality gate (identical `commit.tree.sha` == nothing to promote, immune to squash history) in
+   BOTH promote bots (`ldr-to-main-promote`'s changed-files-count gate has the same merge-base flaw — it survived only
+   because PM's main-backmerge merge-commit advances the merge-base), plus a generic RUNAWAY BREAKER (≥30 drain merges
+   per repo per 6 h → refuse + CRITICAL page) that catches ANY future promote-loop shape, not just tree-equal ones.
 4. **Zombie/stale schedulers on `main`** (crons fire from the DEFAULT branch; LDR-only workflow edits are INERT —
    codified gotcha 2026-06-09): retired `tab-mirror-to-ldr` was still active-on-main long into the month (18 repos
    hand-disabled at some point; the 19th — agent-orchestrator — found ACTIVE and disabled 2026-06-12, see log below);
@@ -136,6 +149,19 @@ per-workflow REST `total_count` (the cap hid 93% of PM's volume from earlier rea
   instantly resume when the budget is raised (fleet is maximally drifted right now = reconciler's max firing state). NOT
   needed for backlog drain (promote bots + ci-failure-watcher do the unjamming). **Re-enable one at a time ONLY after
   the circuit-breaker todos below land on `main`.**
+- `ldr-to-staging-promote.yml` (PM) → **disabled_manually pre-restore** — with 15/18 repos tree-identical-but-ahead_by>0
+  it would resume the empty-promote loop on first post-restore tick. **Re-enable IMMEDIATELY after the tree-gate fix
+  below reaches PM `main`** (the PM LDR→main drain PR carries it; ldr-to-main-promote stays ENABLED for that).
+
+## Fixes SHIPPED 2026-06-12 (on PM LDR, take effect when promoted to `main`)
+
+- **TREE-SHA equality gate** in `ldr-to-staging-promote.yml` (replaces the bare `ahead_by` gate; also closes phantom
+  open drain PRs) and `ldr-to-main-promote.yml` (ahead of the merge-base-flawed changed-files count). Smoke-verified
+  against the live fleet: correctly SKIPs all 15 phantom repos (incl. mdps ahead_by=130, ibkr 189) and PROCEEDs on the 3
+  real-drift repos (agent-orchestrator/deployment-api/deployment-ui).
+- **RUNAWAY BREAKER** in `ldr-to-staging-promote.yml`: ≥30 drain merges per repo per 6 h → refuse + Slack CRITICAL.
+  Generic net — catches any future promote-loop regardless of mechanism (healthy max is 24/6h at full cron pace; a 70 s
+  loop trips it in ~35 min instead of running all day).
 
 ## Remediation plan — burn-down to a sane budget (ranked by $/effort)
 
@@ -185,12 +211,22 @@ workflows).
 - [ ] [CICD] P2. **Retire stale v1 emitter** — `unified-trading-system-ui/.github/workflows/ui-quality-gates.yml` (v1
       retired 2026-05-29) still live + dispatching ci-status-update; delete from main. Also fix uts-ui
       `Orphan Route Audit` (208/208 failures = pure red noise, public repo so $0 but alert-noise). (tiny)
+- [ ] [INFRA] P1. **Run-volume watchdog (backend-driven, agent-orchestrator)** — the generic catch-other-cases net
+      (operator ask 2026-06-12: "make sure that we are also going to catch other such cases"): new monitor loop in
+      `agent-orchestrator/server/` beside `GhRateLimitMonitor` polling per-workflow run counts (cheap REST `total_count`
+      with `created=` windows, ~30 calls/tick, 15-min tick) for the top-N workflows fleet-wide; alert Slack WARN at >3×
+      trailing-7-day baseline rate and CRITICAL at >10× or >50 runs/hr for any single workflow. Would have caught the
+      06-10 conflict-pair runaway and the 06-11 empty-promote loop ~2 days before the wall. (~1 day, Harsh repo)
 - [ ] [INFRA] P3. **Spend telemetry** — extend `GhRateLimitMonitor`/deployment-ui Repos-CI page with a billable-minutes
       tracker (runs×duration from the runs API) + Slack alert at 50/80/95% of monthly budget, so the NEXT runaway is
       caught in hours not at the wall. (~1 day)
 
 **Restore-day runbook (operator raises limit → do in this order):** (1) budget raised; (2) leave
-`ci-status-reconciler` + `ldr-ci-monitor` DISABLED; (3) let promote bots + ci-failure-watcher drain armed PRs; (4) land
-the P0 circuit-breaker todos via the normal path; (5) re-enable reconciler, watch
-`gh run list -w ci-status-update --limit 50` for an hour (expect <15/hr); (6) re-enable ldr-ci-monitor after its
-conditional-dispatch fix; (7) verify the stranded crons reached `main` (item above).
+`ci-status-reconciler` + `ldr-ci-monitor` + `ldr-to-staging-promote` DISABLED; (3) `ldr-to-main-promote` (enabled)
+merges PM's standing LDR→main PR → the tree-gate + breaker fixes reach `main`; (4) **re-enable
+`ldr-to-staging-promote`** (`gh workflow enable ldr-to-staging-promote.yml --repo IggyIkenna/unified-trading-pm`) —
+first sweep should log `SKIP … tree == LDR tree` for the ~15 phantom repos and open real PRs for the ~3 drifted ones;
+watch one tick to confirm; (5) ci-failure-watcher drains the remaining armed PRs; (6) land the remaining P0
+circuit-breaker todos via the normal path; (7) re-enable reconciler, watch `gh run list -w ci-status-update --limit 50`
+for an hour (expect <15/hr); (8) re-enable ldr-ci-monitor after its conditional-dispatch fix; (9) verify the stranded
+`ci(spend)` crons reached `main` (item above).
