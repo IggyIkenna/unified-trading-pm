@@ -287,13 +287,10 @@ fi
 
 # Claude Code skills: symlink each PM cursor-configs/skills/<name>/ into .claude/skills/<name>/ so
 # the harness discovers them as /<name> slash-commands on every slot/host (no manual wiring).
-if [ -d "$PM_DEST/cursor-configs/skills" ]; then
-    mkdir -p "$WORKSPACE_ROOT/.claude/skills"
-    for _skill_dir in "$PM_DEST/cursor-configs/skills"/*/; do
-        [ -d "$_skill_dir" ] || continue
-        _skill_name="$(basename "$_skill_dir")"
-        _symlink "$WORKSPACE_ROOT/.claude/skills/$_skill_name" "$PM_DEST/cursor-configs/skills/$_skill_name" "workspace .claude/skills/$_skill_name → PM/cursor-configs/skills/$_skill_name"
-    done
+# Canonical impl (RELATIVE symlinks, idempotent, CI no-op) is link-claude-skills.sh — the SAME
+# helper PM quality-gates.sh runs post-gates, so init and every QG keep .claude/skills/ fresh.
+if [ -x "$PM_DEST/scripts/workspace/link-claude-skills.sh" ]; then
+    bash "$PM_DEST/scripts/workspace/link-claude-skills.sh" "$WORKSPACE_ROOT"
 fi
 
 # Cursor rules: COPY as real files (ephemeral, not committed, not symlinks)
