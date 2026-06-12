@@ -113,7 +113,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       reason). The enriched text flows through `notify-slack.yml` verbatim (no workflow change) + the alert ledger.
       RECOVER bookend keeps its run deep-link (a green recovery needs no failure-reason). 8 new unit tests (65 total
       green; ruff + basedpyright clean). Repo: unified-trading-pm.
-- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
       deployment-api@0232b5a + deployment-ui@367b5b7 | full UI QG + deployment-api QG green | pw:L2 ✓ 200/200 |
       regression: tests/smoke/repos-tab.spec.ts (last-green column) + tests/unit/test_repo_ci_routes.py
       (test_last_green_main). **(N2) Last-green-MAIN sha + time column** on the `/repos` overview — "green as of `<sha>`
@@ -123,7 +123,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       green (no extra call); only a non-green repo needs the lookup (same profile as `branch_ci`). Repo: deployment-api
       (`_repo_ci_github`/`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi` OverviewTable +
       `client` + `mock-api`).
-- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
       deployment-api@a9276d1 + deployment-ui@d318fed | deployment-api QG green (160s) + deployment-ui QG green (36s) |
       pw:L2 ✓ 207/207 | regression: tests/smoke/repos-tab.spec.ts (per-branch last-green strip) +
       tests/unit/test_repo_ci_routes.py::test_detail_shape (last_green keyed by branch). **(N2-followup) Per-branch
@@ -132,7 +132,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       branch HEAD shown in the pipeline strip. Budget-gated: a branch whose HEAD v2 is success uses the head (no extra
       call), else one runs-API lookup — cheap because this is a single-repo drilldown, not the fleet overview. Repo:
       deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi.tsx`/`client`/`mock-api`).
-- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
       deployment-ui@ac447a2 | deployment-ui QG green (35s) | pw:L2 ✓ (204 pass; the 1 fail is the pre-existing flaky
       stateful-flows Flow-1, retry-green, unrelated to /repos) | regression: tests/smoke/repos-tab.spec.ts
       (SitLockDetail). **(under-surfaced-data audit) Staging-lock REASON + last-SIT-run age in the repo drilldown** —
@@ -228,7 +228,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `last_build_time`/`last_build_log_url`; the UI `ImageCell` renders status chip (→build log) + **built commit sha
       (→GitHub commit)** + build time. Repos: deployment-api (`_cloud_builds_history`/`repo_ci`/`_repo_ci_types`) +
       deployment-ui (`ImageCell`/`buildTimeLabel`/`shortSha`/mock).
-- [x] ✅ [CODE] P1. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) — deployment-api@a9276d1
+- [x] ✅ [CODE] P1. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) — deployment-api@a9276d1
       | QG green (160s) | regression:
       tests/integration/test_functional_deps.py::test_deployment_api_config_effective_region_default. **(B1-followup)
       `gcs_region=us-central1` prod-config anomaly — BIG FINDING — RESOLVED (operator decision 2026-06-12: FIX default →
@@ -297,7 +297,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       ReadinessTab guards `blocking_items`/`categories` with `?? []`; (2) `MOCK_CHECKLIST` rewritten to the
       `ChecklistResponse` contract (readiness_percent + counts + per-category display_name/percent +
       `blocking_items[]`). Repo: deployment-ui (ReadinessTab + mock-api).
-- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
       deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (12/12 route tests) + full UI QG | pw:L2
       ✓ 200/200 (+1 unrelated Dry-Run flake, retry-green) | regression: tests/smoke/repos-tab.spec.ts (drain panel +
       relabel) + tests/unit/test_repo_ci_routes.py (test_promotion_drain). **(Ikenna issue — ADOPTED) Promotion-drain
@@ -307,19 +307,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       per-repo PRs are already in `open_prs`). Relabelled the SIT panel "Last SIT / cascade run" → **"Breaking cascade /
       SIT"** so the two are never conflated (the operator's core gap). Repos: deployment-api
       (`repo_ci`/`_repo_ci_types`/ `_repo_ci_mocks`) + deployment-ui (`RepoCi` panel + `client` + `mock-api`).
-- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
-      deployment-api@be56fb8 + deployment-ui@788ad40 | deployment-api QG green (164s) + deployment-ui QG green (35s) |
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
+      deployment-api@be56fb8 + deployment-ui@788ad40, **logic corrected deployment-api@7bf31ec** | QG green |
       pw:L2 ✓ 206/206 | regression: tests/smoke/repos-tab.spec.ts (drain-stalled row chip + panel count) +
-      tests/unit/test_repo_ci_manifest.py::TestDrainLegHealthy (5 cases) +
       tests/unit/test_repo_ci_routes.py::test_drain_stalled. **(promotion-drain follow-up) Drain STALL-surfacing** — a
-      per-row `drain_stalled` flag = REAL file-content ahead of staging/main (files_changed, not squash skew) AND that
-      hop's global LDR→staging/→main drain leg failing/stale (`_drain_leg_healthy`: in-flight=healthy,
-      stale-success >45min / failure / never-ran = unhealthy). Surfaces the **bug-#11 class** (content piling on LDR
-      with a dead drain) that was invisible. UI: a red "drain stalled" chip on the row (beside the G6 lag chip) + a
+      per-row `drain_stalled` flag = REAL file-content ahead of staging/main (files_changed, not squash skew) AND **this
+      repo's OWN standing promotion PR is stuck on a BLOCKING class** (conflicting / failing_check / skip_ci_jammed;
+      auto-recoverable v2_never_reported / automerge_stuck EXCLUDED). Surfaces the **bug-#11 class** (content piling on
+      LDR with a stuck drain) that was invisible. UI: a red "drain stalled" chip on the row (beside the G6 lag chip) + a
       count/list in the PromotionDrainPanel. Pure derivation on data the overview already fetches — **no new GitHub
-      calls**. Repos: deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui
+      calls**. **v1 BUG (caught by live verification 2026-06-12, fixed @7bf31ec):** v1 gated per-repo on PM's *global*
+      drain-leg health, but PM's `ldr-to-main` is a PM-only Option-B hourly run → it false-flagged ALL 24 repos. The
+      per-repo stuck-PR signal yields exactly the genuinely-stuck repos; a fleet leg-outage shows in the
+      PromotionDrainPanel leg rows, not per-repo. Repos: deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui
       (`RepoCi`/`client`/`mock-api`).
-- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
       deployment-ui@41c1c11 | deployment-ui QG green (37s) | pw:L2 ✓ 206/206 | regression:
       src/lib/repoCi.test.ts::prV2State (4 cases) + tests/smoke/repos-tab.spec.ts (pr-v2 chip). **(promotion-drain
       follow-up, remainder) Per-repo standing-PR v2 conclusion explicit** — `prV2State()` maps each open promotion PR to
@@ -360,7 +362,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       greeks-service (quarantined) + execution-service (failing). 2 new unit tests + a dedicated e2e regression spec
       (chose `tests/e2e/repos-promotion-blocked.spec.ts` over folding into repos-tab — cleaner isolation). UI QG green
       (coverage 75.01% ≥ 70%). Repo: deployment-ui.
-- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
       deployment-api@a9276d1 + deployment-ui@d318fed | QG green both | pw:L2 ✓ 207/207 | regression:
       tests/smoke/repos-tab.spec.ts (semver-health panel) + tests/unit/test_repo_ci_routes.py::test_semver_health +
       tests/unit/test_repo_ci_manifest.py::TestPendingVersionBumps. **(G2) Semver-agent health standing state** —
@@ -394,7 +396,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       risks drift against the gate. Same class as version-coherence: surface the workflow's stored verdict, don't
       re-evaluate. **BLOCKED-ON: verdict-store (Firestore generalisation) OR operator OK on a faithful port of the bash
       evaluator.**
-- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **on LDR, draining to staging/main via the routine promote — billing restored (verified 2026-06-12: workflows executing + succeeding)**) —
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing restored, verified 2026-06-12**) —
       deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (14/14 route tests) + full UI QG | pw:L2
       ✓ 202/202 | regression: tests/smoke/repos-tab.spec.ts (lag chip) + tests/unit/test_repo_ci_routes.py
       (test_main_lag_age). **(G6) Promotion-lag AGE** — a lag chip in the `/repos` LDR→main delta cell shows the age of
