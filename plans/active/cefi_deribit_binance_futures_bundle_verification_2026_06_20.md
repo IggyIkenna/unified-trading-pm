@@ -71,6 +71,10 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (per launcher SSOT) — NOT a new launcher; verify
       STARTED + PROCESSING\_\* events + STOPPED at exit per the no-fire-and-forget rule. If zero genuine gaps, record
       that and skip.
+  > **GATED 2026-06-12 (slot-2, BLK-01710985)**: Re-queued with post-G4-apply prereq per operator ruling — same as
+  > manifest-completion gate (BLK-fb70523c). Pre-migration drain active; `Do NOT resume until migration verified-complete`
+  > constraint applies. G4 applies all 5 AGs still `[ ]` pending. Do not launch cefi backfill VMs until G4 applies
+  > complete and drain is lifted.
 - [ ] [SCRIPT] P2. Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs populated
       (not NaN-blanket).
 - [ ] [SCRIPT] P2. Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest populated.
