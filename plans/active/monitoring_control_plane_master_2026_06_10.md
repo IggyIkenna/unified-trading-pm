@@ -116,18 +116,18 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 - [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
       deployment-api@0232b5a + deployment-ui@367b5b7 | full UI QG + deployment-api QG green | pw:L2 ✓ 200/200 |
       regression: tests/smoke/repos-tab.spec.ts (last-green column) + tests/unit/test_repo_ci_routes.py
-      (test_last_green_main). **(N2) Last-green-MAIN sha + time column** on the `/repos` overview — "green as of
-      `<sha>` · `<age>`" per repo, the most-recent **main** sha whose `quality-gates-v2` concluded success, distinct
-      from the (possibly red/pending) main HEAD column. Backend `last_green_for_branch`
-      (`?branch=&status=success&per_page=1`, Actions:read) + `last_green_main` on the overview row, **budget-gated**: a
-      MAIN_GREEN repo's head IS the last green (no extra call); only a non-green repo needs the lookup (same profile as
-      `branch_ci`). Repo: deployment-api (`_repo_ci_github`/`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui
-      (`RepoCi` OverviewTable + `client` + `mock-api`).
+      (test_last_green_main). **(N2) Last-green-MAIN sha + time column** on the `/repos` overview — "green as of `<sha>`
+      · `<age>`" per repo, the most-recent **main** sha whose `quality-gates-v2` concluded success, distinct from the
+      (possibly red/pending) main HEAD column. Backend `last_green_for_branch` (`?branch=&status=success&per_page=1`,
+      Actions:read) + `last_green_main` on the overview row, **budget-gated**: a MAIN_GREEN repo's head IS the last
+      green (no extra call); only a non-green repo needs the lookup (same profile as `branch_ci`). Repo: deployment-api
+      (`_repo_ci_github`/`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi` OverviewTable +
+      `client` + `mock-api`).
 - [ ] [CODE] P3. **(N2-followup) Per-branch last-green (LDR / staging) in the repo drill-down** — N2 v1 surfaces the
       MAIN-axis last-green as the overview column (the deployed branch the operator asked about). Extend last-green to
       LDR + staging (same budget-gated pattern: green head → use head, else one runs-API lookup) and render them in the
-      `RepoDetailPanel` (the overview row is already 10 cols wide — per-branch belongs in the drilldown, not the matrix).
-      Repo: deployment-api + deployment-ui.
+      `RepoDetailPanel` (the overview row is already 10 cols wide — per-branch belongs in the drilldown, not the
+      matrix). Repo: deployment-api + deployment-ui.
 
 ### Credential status (re-probed 2026-06-11)
 
@@ -284,13 +284,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       run result + age + deep-link), backed by 2 GLOBAL `latest_workflow_run` queries on the PM-central
       `ldr-to-staging-promote.yml` / `ldr-to-main-promote.yml` (per-repo would blow the GitHub-API budget; the standing
       per-repo PRs are already in `open_prs`). Relabelled the SIT panel "Last SIT / cascade run" → **"Breaking cascade /
-      SIT"** so the two are never conflated (the operator's core gap). Repos: deployment-api (`repo_ci`/`_repo_ci_types`/
-      `_repo_ci_mocks`) + deployment-ui (`RepoCi` panel + `client` + `mock-api`).
+      SIT"** so the two are never conflated (the operator's core gap). Repos: deployment-api
+      (`repo_ci`/`_repo_ci_types`/ `_repo_ci_mocks`) + deployment-ui (`RepoCi` panel + `client` + `mock-api`).
 - [ ] [CODE] P3. **(promotion-drain follow-up) Drain stall-surfacing + per-repo standing-PR v2** — flag a repo whose LDR
       content is ahead of staging/main (real file delta, not squash skew) AND whose last drain run is stale/failing (the
-      bug #11 class — invisible today). Also surface the per-repo standing LDR→staging / LDR→main PR's `quality-gates-v2`
-      conclusion explicitly (today it's implicit via `open_prs` + `branch_ci`). Repos: deployment-api + deployment-ui.
-      SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3 sub-todo).
+      bug #11 class — invisible today). Also surface the per-repo standing LDR→staging / LDR→main PR's
+      `quality-gates-v2` conclusion explicitly (today it's implicit via `open_prs` + `branch_ci`). Repos:
+      deployment-api + deployment-ui. SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3
+      sub-todo).
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
@@ -513,18 +514,46 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       setup-token auth from the creds bucket — NOT the local-credentials hack), backlog EMPTY under strict scoping (the
       isolation proof), AutoSpawn/Watchdog/PlanRegen loops started, self-registration reported. Composes with the
       no-fire-and-forget T+10min rule. Repo: agent-orchestrator.
-- [ ] [TEST] P1. **Plan-pickup e2e on the VM** — drop a local test plan (`assigned_vm: vm-e2e-test`) into the VM's PM
-      checkout → PlanRegenLoop ingests ONLY it (strict scoping) → AutoSpawn spawns a real setup-token worker →
-      /boot→/progress→/done verified with `on_origin` + the blocked→main-agent-auto-answer loop re-verified on real
-      infra. Evidence: activity stream + blocked stats endpoint. Repo: agent-orchestrator.
-- [ ] [TEST] P1. **CI-failure → escalation → worker assignment e2e** — fire `POST /api/escalate`
-      (`wall_type=ldr_qg_failure`, internal-token auth) against the test VM exactly as the CI watcher does → verify the
-      orchestrator classifies the wall, picks a free slot, spawns the escalate worker, and the task reaches dispatched +
-      worked state. This is the operator's target loop ("pipeline breaks → orchestrator picks up the alert, identifies,
-      assigns to a worker"). Repo: agent-orchestrator.
-- [ ] [INFRA] P2. **Lifecycle + teardown** — `lifecycle=e2e-test` tag on the test instance + a stop/terminate helper in
-      the launcher (`--terminate <instance-id>`); production worker VMs stay long-running (no auto-teardown). Repo:
-      deployment-service.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — PASSED on i-086e8787dddda52d6, full loop in 68 s. Trail (activity stream, UTC):
+      08:53:18 regen scanned 31 plans → ingested ONLY the local `assigned_vm: vm-e2e-test` test plan (strict scoping
+      held, 1 task); 08:54:49 AutoSpawnLoop spawned slot-1 (`checked=1 spawned=1 skips={}`, account sub-b-iggy2london,
+      real setup-token); 08:55:13 worker /boot → task auto-assigned ("tier=1 priority=20"); 08:55:53 /progress; 08:55:57
+      /done with correct audit evidence (74 Python files under server/; top-3 by lines incl.
+      regen_backlog_from_plan.py@917). Cold-start note: a FRESH VM has zero SlotRows and AutoSpawn only iterates
+      existing rows — slot rows were configured once via `upsert_slot` (worktree/branch/operator), the documented
+      cold-start step; thereafter the loop is fully autonomous. Bugs found+fixed during the run: `.tabs/` slot clones
+      were ROOT-owned (bootstrap user-data runs as root, chowns main checkouts but not .tabs → git "dubious ownership"
+      kills every worker write; fixed live + bootstrap now chowns .tabs — agent-orchestrator@27b5212); /done origin-gate
+      bypass via non-revision sha — a NON-SENTINEL sha that fails `git show` slid past the DONE_REQUIRE_ORIGIN gate
+      (verified=False → on_origin never computed): fixed in the SAME unit @27b5212 (M9b: `sha_unverifiable` warning
+      always + 409 under strict env; `read-only*` added to the sentinel prefixes so honest no-commit vocabulary
+      short-circuits as applicable=False; +3 tests). @27b5212 deployed + healthy on the test VM. Test plan removed +
+      regen-pruned after (backlog back to 0). Was: **Plan-pickup e2e on the VM**. Repo: agent-orchestrator.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — PASSED on i-086e8787dddda52d6. Fired `POST /api/escalate`
+      (`wall_type=ldr_qg_failure`, `X-Orchestrator-Secret` auth) exactly as the CI watcher does, with a read-only DRILL
+      context. Trail: 08:58:34 `escalation_dispatch_initiated` (wall validated against WALL_TYPES, escalate template
+      selected) → free slot 2 picked + headroom account sub-b → 08:58:39 `escalation_dispatched` (orch-slot-2 spawned) →
+      08:59:02 worker /progress "Read RULES.md; starting drill" → 08:59:07 reported worktree HEAD 88c53e2 (current LDR
+      tip — worktree freshness proven) → 08:59:24 worker pinged the AUTHORING SLOT (slot-5) "DRILL COMPLETE"; watchdog
+      reaped the finished session 09:00:19. Semantics note: escalation workers are NOT backlog tasks — /done returns
+      task-not-found by design; the completion signal is the authoring-slot ping + escalation activity events. GAP FOUND
+      (filed below as P1): the VM's `.env.local` had NO `ORCHESTRATOR_INTERNAL_SECRET` (not in the
+      ORCHESTRATOR_ENV_LOCAL SM secret) → auth fell back to an ephemeral generated secret → real CI escalations to a
+      bootstrap-launched VM would 401; the drill used a VM-local test secret. Was: **CI-failure → escalation → worker
+      assignment e2e** — the operator's target loop, now proven minus the fleet-secret distribution. Repo:
+      agent-orchestrator.
+- [x] ✅ [INFRA] P2. DONE 2026-06-12 — deployment-service@1b56a37+5655576 (same unit as the launcher): instance carries
+      `lifecycle=e2e-test` tag; launcher has `--stop <id>` / `--terminate <id>` teardown helpers;
+      `LC_AWS_SHUTDOWN_BEHAVIOR=stop` keeps long-running workers' disks on OS shutdown. Was: **Lifecycle + teardown**.
+      Repo: deployment-service.
+- [ ] [CREDS] P1. **BLOCKED-CREDENTIALS — `ORCHESTRATOR_INTERNAL_SECRET` is not distributed to bootstrap-launched VMs**
+      — the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM keys
+      (verified 2026-06-12); `auth._load_internal_secret()` then falls back to an EPHEMERAL generated secret, so
+      `/api/escalate` + the central→worker proxy 401 every caller on a fresh VM (prod vm-0 works only because it is
+      hand-wired). Operator ask: append the fleet `ORCHESTRATOR_INTERNAL_SECRET=<value     from prod vm-0's .env.local>`
+      line to the `ORCHESTRATOR_ENV_LOCAL` secret in BOTH AWS SM + GCP SM — bootstrap already propagates the whole
+      secret to .env.local, so no code change is needed (bootstrap now loud-warns when the key is absent). Found
+      2026-06-12 escalation e2e. Repo: agent-orchestrator (+ operator SM update).
 
 **VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
 RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3
