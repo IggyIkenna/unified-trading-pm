@@ -233,9 +233,11 @@ relaunch.
 - [ ] [SCRIPT] P1. `unified-trading-library` `cloud_interface/constants.py` legacy `get_bucket_name` → delete or
       redirect to `resolve_bucket_name` (kill the latent flat-`market_data` foot-gun). Confirm zero top-level importers
       first.
-- [ ] [SCRIPT] P0. QG STEP guardrail (model on STEP 5.69 bucket-name SSOT): grep-gate that no `market-data-tick-` /
-      `instruments-store-` name is built by string-concat outside `resolve_bucket_name` in production source (exclude
-      migration/audit scripts + tests). Land in `unified-trading-pm/scripts/quality-gates-base/*.sh`.
+- [x] ✅ [SCRIPT] P0. QG STEP guardrail (model on STEP 5.69 bucket-name SSOT): AST-walk grep-gate that no
+      `market-data-tick-` / `instruments-store-` name is built by string-concat outside `resolve_bucket_name` in
+      production source (exclude migration/audit scripts + tests). Landed as STEP 5.96 in
+      `unified-trading-pm/scripts/quality-gates-base/base-service.sh` +
+      `scripts/quality_gates/check_no_legacy_bucket_string_concat.py`. — unified-trading-pm@75136fd0d 2026-06-12
 
 ## Phase 2 — Ship + rebuild tarball (P0)
 
