@@ -506,3 +506,15 @@ empty-promote loop (#3). Fixing #3 collapses ci-status-update, staging-lock-chec
 `/timing` API is deprecated, returns 0 — no ledger numbers available to a collab token); cancelled-run sender
 attribution is by arithmetic closure (0 jobs = no logs); Actions secret-masking hid the `status` values in sampled logs
 (repo + sha presence were readable).
+
+---
+
+**[Observation 2026-06-12 ~15:25Z — slot-4/Harsh, verification only, NOT a root-cause closure]**: the
+billing **WALL is not in effect right now** — Actions workflows are executing + succeeding (sampled live):
+PM `ldr-to-staging-promote` success 15:13Z, `ldr-to-main-promote` success 14:25Z; deployment-ui
+`quality-gates-v2` success 15:08Z/14:35Z/14:30Z (LDR→staging promote PRs); prior-session repo-ci work
+(`deployment-ui@367b5b7`) reached `main`. So promotion is flowing. This is a point-in-time data point for the
+investigation — it does **not** confirm the underlying spend root-cause (empty-promote loop #3) is fixed, and
+the wall could recur if the loop still burns minutes. Root-cause status remains Ikenna's to close. (Surfaced
+because a stale "billing wall" assumption had been propagating into unrelated plan flips — now corrected in
+`monitoring_control_plane_master_2026_06_10.md`.)
