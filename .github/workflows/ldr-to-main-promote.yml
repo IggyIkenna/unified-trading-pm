@@ -100,8 +100,19 @@ jobs:
             --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
-            # ── No open PR → only open one if there is REAL content drift (changed files), ──
-            # ── not squash-accounting noise (ahead_by>0 with 0 changed files).            ──
+            # ── No open PR → only open one if there is REAL content drift. TREE equality is the ──
+            # ── exact check (2026-06-12): compare/...files is computed from the MERGE-BASE, so   ──
+            # ── after a squash-merge it reports phantom changed-files forever even when the two  ──
+            # ── trees are byte-identical (the bug that empty-promote-looped ldr-to-staging 375×/ ──
+            # ── day). PM was shielded only because main-backmerge's merge-commit advances the    ──
+            # ── merge-base — make the gate exact, not incidentally-correct.                      ──
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
+            if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
+              echo "✅ main tree == LDR tree (content-identical; any ahead_by gap is squash-accounting noise) — nothing to drain"
+              { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
             FILES=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.files | length' 2>/dev/null || echo "0")
             if [ -z "$FILES" ] || [ "$FILES" = "0" ]; then
               echo "✅ main is content-current with LDR (0 changed files) — nothing to drain"

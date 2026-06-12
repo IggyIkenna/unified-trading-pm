@@ -113,12 +113,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       reason). The enriched text flows through `notify-slack.yml` verbatim (no workflow change) + the alert ledger.
       RECOVER bookend keeps its run deep-link (a green recovery needs no failure-reason). 8 new unit tests (65 total
       green; ruff + basedpyright clean). Repo: unified-trading-pm.
-- [ ] [CODE] P2. **(N2) Last-green SHA + time column** on the `/repos` overview — per repo per branch, the most-recent
-      SHA whose `quality-gates-v2` concluded success + its timestamp ("green as of <sha> · <age>"). Distinct from the
-      current branch-head SHA (head may be red/pending). **UNBLOCKED 2026-06-11** — Ikenna's Actions-API conversion
-      (below) removes the Checks:read dependency; the per-SHA v2 conclusion now comes from
-      `/actions/workflows/quality-gates-v2.yml/runs?head_sha=`. Build N2 on `v2_conclusion_for_sha` once Ikenna's
-      `_repo_ci_github.py` conversion lands on LDR. Repo: deployment-api + deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@0232b5a + deployment-ui@367b5b7 | full UI QG + deployment-api QG green | pw:L2 ✓ 200/200 |
+      regression: tests/smoke/repos-tab.spec.ts (last-green column) + tests/unit/test_repo_ci_routes.py
+      (test_last_green_main). **(N2) Last-green-MAIN sha + time column** on the `/repos` overview — "green as of `<sha>`
+      · `<age>`" per repo, the most-recent **main** sha whose `quality-gates-v2` concluded success, distinct from the
+      (possibly red/pending) main HEAD column. Backend `last_green_for_branch` (`?branch=&status=success&per_page=1`,
+      Actions:read) + `last_green_main` on the overview row, **budget-gated**: a MAIN_GREEN repo's head IS the last
+      green (no extra call); only a non-green repo needs the lookup (same profile as `branch_ci`). Repo: deployment-api
+      (`_repo_ci_github`/`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi` OverviewTable +
+      `client` + `mock-api`).
+- [ ] [CODE] P3. **(N2-followup) Per-branch last-green (LDR / staging) in the repo drill-down** — N2 v1 surfaces the
+      MAIN-axis last-green as the overview column (the deployed branch the operator asked about). Extend last-green to
+      LDR + staging (same budget-gated pattern: green head → use head, else one runs-API lookup) and render them in the
+      `RepoDetailPanel` (the overview row is already 10 cols wide — per-branch belongs in the drilldown, not the
+      matrix). Repo: deployment-api + deployment-ui.
 
 ### Credential status (re-probed 2026-06-11)
 
@@ -165,9 +174,13 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       (`ci-failure-watcher`, `promotion-lag-monitor`, git-health guard) also lands in a queryable store surfaced on the
       CI dashboard, so false-positive triage has a ledger and "did this alert before?" is answerable without Slack
       scrollback. Repo: unified-trading-pm (emit side) + deployment-api/deployment-ui (read side).
-- [ ] [CODE] P2. **Promotion-pipeline visualization** — per-repo horizontal pipeline (LDR → staging PR → SIT → main →
-      image) rendered from the overview payload; the v2-never-reported deadlock + `[skip ci]` jam states get explicit
-      badges (data already in the PR panel of sub-plan A). Repo: deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-12 — deployment-ui@6fe7d73 | pw:L2 ✓ 199/199 | regression:
+      tests/smoke/repos-tab.spec.ts (promotion-pipeline strip renders all 5 stages). **Promotion-pipeline
+      visualization** — per-repo horizontal strip in the RepoDetailPanel drill-down rendered from the detail payload:
+      LDR sha → staging PR (or `locked`) → SIT status → main sha + LDR→main delta → image build status; the
+      v2-never-reported deadlock + skip-ci-jam PR classes surface as explicit badges. Pure UI (data already on the
+      detail payload). Added `repo-detail-history` test-id + scoped the drill-down test's branch assertions to it (the
+      pipeline `main` stage label otherwise made the exact-text match ambiguous). Repo: deployment-ui (`RepoCi.tsx`).
 - [ ] [CODE] P3. **Version-coherence panel** — `assert_version_coherence.py` verdicts (VERSION_SPLIT /
       VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE) per repo on the dashboard. Repo: deployment-api (run/ingest) +
       deployment-ui.
@@ -243,11 +256,42 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `deltaLabel(files, aheadBy)` now renders "N files ahead · M commits" (and "in sync · M commits (squash skew)" when
       `files_changed==0 && ahead_by>0`), keeping `files_changed` as the content truth and `ahead_by` labelled as the
       squash-inflated commit count. Unit test updated (`repoCi.test.ts`). Repo: deployment-ui only.
-- [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
-      per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
-      relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
-      content is ahead of staging/main but the drain is stale/failing (bug #11 class). Full spec + 3 sub-todos:
-      `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md`. Repos: deployment-api + deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-12 — deployment-ui@ef08fd8 | pw:L2 ✓ 198/198 | regression:
+      tests/smoke/scrollbar-gutter-stable.spec.ts. **(operator bug) Home-shell nav flicker on every poll refresh —
+      FIXED.** The centered max-width home shell runs many independent pollers (health 30s, repo-CI/alerts 60s,
+      gh-rate-budget); the 6px space-taking `::-webkit-scrollbar` toggled whenever a poll nudged content height across
+      the viewport threshold, reflowing the full-width Header + the 12-col grid sideways each tick — operator-reported
+      "horizontal + vertical nav comes in and goes away while the reload icon spins". Fix:
+      `html { scrollbar-gutter: stable }` (index.css) permanently reserves the gutter so the scrollbar's presence never
+      reflows the layout. Regression asserts computed `scrollbar-gutter:stable` + content-width invariant when the
+      scrollbar appears. Repo: deployment-ui (index.css).
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-12 — deployment-ui@074c349 | pw:L2 ✓ 198/198 | regression:
+      src/components/ReadinessTab.test.tsx + src/lib/mock-api.ph3.test.ts + tests/smoke/stateful-flows.spec.ts
+      (Readiness renders "Blocking Issues", not the error fallback). **(item-203 follow-up) ReadinessTab crashed on a
+      partial/stale `/checklist` payload — FIXED.** The Readiness tab rendered the per-tab ErrorBoundary fallback (not
+      its content) in mock mode: the in-app `MOCK_CHECKLIST` still carried the stale
+      `{overallScore, isBlocked, score,     label, detail}` shape (omitting `blocking_items`), so
+      `checklist.blocking_items.length` read undefined and crashed — same class as item 203's DependenciesPanel fix (the
+      stateful-flows `page.route` fix is dead under `VITE_MOCK_API`, where the in-app mock wins). Two-part: (1)
+      ReadinessTab guards `blocking_items`/`categories` with `?? []`; (2) `MOCK_CHECKLIST` rewritten to the
+      `ChecklistResponse` contract (readiness_percent + counts + per-category display_name/percent +
+      `blocking_items[]`). Repo: deployment-ui (ReadinessTab + mock-api).
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (12/12 route tests) + full UI QG | pw:L2
+      ✓ 200/200 (+1 unrelated Dry-Run flake, retry-green) | regression: tests/smoke/repos-tab.spec.ts (drain panel +
+      relabel) + tests/unit/test_repo_ci_routes.py (test_promotion_drain). **(Ikenna issue — ADOPTED) Promotion-drain
+      surface** — a "Promotion drain" panel on `/repos` shows the ROUTINE LDR→staging / LDR→main auto-merge drain (last
+      run result + age + deep-link), backed by 2 GLOBAL `latest_workflow_run` queries on the PM-central
+      `ldr-to-staging-promote.yml` / `ldr-to-main-promote.yml` (per-repo would blow the GitHub-API budget; the standing
+      per-repo PRs are already in `open_prs`). Relabelled the SIT panel "Last SIT / cascade run" → **"Breaking cascade /
+      SIT"** so the two are never conflated (the operator's core gap). Repos: deployment-api
+      (`repo_ci`/`_repo_ci_types`/ `_repo_ci_mocks`) + deployment-ui (`RepoCi` panel + `client` + `mock-api`).
+- [ ] [CODE] P3. **(promotion-drain follow-up) Drain stall-surfacing + per-repo standing-PR v2** — flag a repo whose LDR
+      content is ahead of staging/main (real file delta, not squash skew) AND whose last drain run is stale/failing (the
+      bug #11 class — invisible today). Also surface the per-repo standing LDR→staging / LDR→main PR's
+      `quality-gates-v2` conclusion explicitly (today it's implicit via `open_prs` + `branch_ci`). Repos:
+      deployment-api + deployment-ui. SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3
+      sub-todo).
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
@@ -297,10 +341,16 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 - [ ] [CODE] P3. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
       a freeze blocks a scheduled/autonomous run; add a freeze-window banner on `/repos` (active? window? reason?).
       Repo: deployment-ui.
-- [ ] [CODE] P3. **(G6) Promotion-lag AGE not explicit** — the overview shows the LDR↔staging↔main content-delta but
-      not the **time-in-state** the lag monitor pages on (>60 min forward/backmerge lag). Add a lag-age chip (oldest
-      unpromoted green commit age) so the page state matches what `promotion-lag-monitor` alerts on. Repo:
-      deployment-api (compute age) + deployment-ui.
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (14/14 route tests) + full UI QG | pw:L2
+      ✓ 202/202 | regression: tests/smoke/repos-tab.spec.ts (lag chip) + tests/unit/test_repo_ci_routes.py
+      (test_main_lag_age). **(G6) Promotion-lag AGE** — a lag chip in the `/repos` LDR→main delta cell shows the age of
+      the OLDEST LDR commit not yet on main (the time-in-state `promotion-lag-monitor` pages on), red past the 60-min
+      threshold. Backend `oldest_unpromoted_commit_at` reads `commits[0]` of the compare API (oldest in the range),
+      **gated** to repos with a real LDR→main delta (in-sync repos cost no extra call); `main_lag_age_min` on the
+      overview row. **NB**: "oldest unpromoted commit" (not green-filtered) is the v1 signal — a green-only refinement
+      is folded into the promotion-drain P3 follow-up. Repos: deployment-api (`_repo_ci_github`/`repo_ci`/
+      `_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi` OverviewTable + `client` + `mock-api`).
 - [ ] [CODE] P3. **(G7) Worker-liveness watchdog activity has no dedicated standing panel** — slot
       working/paused/blocked states render, but the watchdog's kill / daily-cap-dormancy / autospawn-flap /
       respawn-escalation events are transition-only. Add a watchdog-health panel (kills today vs cap, dormant?, recent
@@ -347,15 +397,20 @@ s with plan-grounded reasoning** → worker resumed on the queued answer → app
 
 Unsolved findings from the run (each repro'd live or read in code; fix not yet shipped):
 
-- [ ] [CODE] P1. **Manual `POST /api/backlog/regen` bypasses the `assigned_vm` filter + prune** —
-      `routes/backlog.py:126` calls `regen()` with no args; `regen()` defaults `vm_id=None` = ingest-all (its docstring
-      claims an `ORCHESTRATOR_VM_ID` env fallback that is NOT implemented — only `PlanRegenLoop.__init__` reads the
-      env). Live repro: manual regen ingested 493 tasks from 53 fleet plans into a vm-local-e2e backend; the next 120 s
-      loop tick pruned all 491 foreign tasks (self-heal works, ≤30 min on fleet), but in that window AutoSpawn can
-      dispatch foreign-VM tasks. Fix: route (or `regen()` itself, honouring its docstring) passes
-      `vm_id=ORCHESTRATOR_VM_ID` + `ORCHESTRATOR_REGEN_PRUNE_STALE`. Repo: agent-orchestrator
-      (`server/routes/backlog.py` + `server/regen_backlog_from_plan.py`). Found 2026-06-11.
-- [ ] [INFRA] P1. **`bootstrap_vm.sh` installs pm-pull TWICE with DIFFERENT branches** — Step 5.9 runs PM's
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). Route now mirrors PlanRegenLoop env
+      resolution (ORCHESTRATOR_VM_ID + REGEN_PRUNE_STALE + REGEN_DB_PATH). Was: **Manual `POST /api/backlog/regen`
+      bypasses the `assigned_vm` filter + prune** — `routes/backlog.py:126` calls `regen()` with no args; `regen()`
+      defaults `vm_id=None` = ingest-all (its docstring claims an `ORCHESTRATOR_VM_ID` env fallback that is NOT
+      implemented — only `PlanRegenLoop.__init__` reads the env). Live repro: manual regen ingested 493 tasks from 53
+      fleet plans into a vm-local-e2e backend; the next 120 s loop tick pruned all 491 foreign tasks (self-heal works,
+      ≤30 min on fleet), but in that window AutoSpawn can dispatch foreign-VM tasks. Fix: route (or `regen()` itself,
+      honouring its docstring) passes `vm_id=ORCHESTRATOR_VM_ID` + `ORCHESTRATOR_REGEN_PRUNE_STALE`. Repo:
+      agent-orchestrator (`server/routes/backlog.py` + `server/regen_backlog_from_plan.py`). Found 2026-06-11.
+- [x] ✅ [INFRA] P1. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). STEP 5.9 (install_pm_pull.sh → LDR) is now
+      the ONLY installer; STEP 7.5c became a loud verifier; duplicate scripts/pm-pull.{service,timer} (origin-main
+      pullers) DELETED. Was: **`bootstrap_vm.sh` installs pm-pull TWICE with DIFFERENT branches** — Step 5.9 runs PM's
       `install_pm_pull.sh` (merges `origin/live-defi-rollout`); Step 7.5c installs AO's own `scripts/pm-pull.service`
       (`git pull --ff-only origin main`) under the SAME systemd unit name. Whichever lands first wins (7.5c skips if 5.9
       enabled the timer; if 5.9 WARN-fails — PM clone absent — the main-puller installs into an LDR checkout where
@@ -363,35 +418,214 @@ Unsolved findings from the run (each repro'd live or read in code; fix not yet s
       VM's plan source tracks is nondeterministic per bootstrap path. Collapse to ONE installer + ONE branch (LDR per
       the regen/plan-freshness contract). Repo: agent-orchestrator (`scripts/bootstrap_vm.sh` +
       `scripts/pm-pull.service`). Found 2026-06-11.
-- [ ] [CODE] P1. **AutoSpawn respawn path skips the FM2/FM3/FM8 dirty-state gate** — `autospawn.py:289-298` runs only
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). resolve_dirty_state() wired into the
+      autospawn pre-spawn gate (same liveness-gated semantics as the kicker; protected_live_peer/quarantined refuse the
+      spawn). Was: **AutoSpawn respawn path skips the FM2/FM3/FM8 dirty-state gate** — `autospawn.py:289-298` runs only
       `check_slot_branch_state` (FM5/FM7); manual `/spawn` (slots_ops.py:204), account rotation (server.py:416), and the
       kicker auto-respawn (worker_liveness.py:929) all call `resolve_dirty_state()`, but the dominant fleet path —
       **watchdog kill → AutoSpawn respawn — boots the new worker into the dead predecessor's dirty tree**, and the \*/5
       FF-cron then `[skip:dirty]`s the slot → stale clone. Also compose: a permanently-dead slot's dispatched task is
       recovered only by same-slot /boot resume (`already_in_progress`); there is no requeue-to-pool on slot death. Wire
       `resolve_dirty_state()` into the autospawn pre-spawn gate. Repo: agent-orchestrator (`server/autospawn.py`).
-- [ ] [CODE] P2. **`/done` verifies the SHA locally only — no origin-push guarantee** — `verify.py` runs `git show` in
-      the slot worktree (never `ls-remote`/merge-base vs `origin/live-defi-rollout`); sentinel SHAs (`audit-*`,
-      `no-code-change`…) skip verification entirely; dirty-tree/plan-flip/scope checks are warnings, not blocks. A
-      worker whose quickmerge silently failed (auth/network) still marks the task done with a local-only commit. Add an
-      origin-existence check (warn → block ratchet). Repo: agent-orchestrator (`server/verify.py` +
-      `server/routes/slots_worker.py`).
-- [ ] [CODE] P2. **Spawned workers get no `WORKSPACE_ROOT`** — boot prompts carry `${WORKSPACE_ROOT}/...` paths but
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). verify_done now sets on_origin (git branch
+      -r --contains, local remote-tracking refs — no network); /done emits sha_not_on_origin warning;
+      ORCHESTRATOR_DONE_REQUIRE_ORIGIN=true hard-409s (warn-first ratchet). Was: **`/done` verifies the SHA locally only
+      — no origin-push guarantee** — `verify.py` runs `git show` in the slot worktree (never `ls-remote`/merge-base vs
+      `origin/live-defi-rollout`); sentinel SHAs (`audit-*`, `no-code-change`…) skip verification entirely;
+      dirty-tree/plan-flip/scope checks are warnings, not blocks. A worker whose quickmerge silently failed
+      (auth/network) still marks the task done with a local-only commit. Add an origin-existence check (warn → block
+      ratchet). Repo: agent-orchestrator (`server/verify.py` + `server/routes/slots_worker.py`).
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). tmux_spawn forwards the backend's
+      WORKSPACE_ROOT into the spawn shell (exported before the account env file so it stays overridable). Was: **Spawned
+      workers get no `WORKSPACE_ROOT`** — boot prompts carry `${WORKSPACE_ROOT}/...` paths but
       `tmux_spawn._start_session` sources only the account env file; the worker's shell expands it EMPTY (live repro:
       worker `cd`'d to a wrong guessed path, self-recovered after 2 probe commands). Export `WORKSPACE_ROOT` (+ any
       boot-prompt-referenced env) in the spawn `bash_cmd`. Repo: agent-orchestrator (`server/tmux_spawn.py`).
-- [ ] [CODE] P2. **Blocked-queue telemetry missing** — `slot_blocked`/`blocked_answered` land in `activity_log` but
-      nothing aggregates: no blocks-per-task counter, no repeated-block alert, no time-to-answer metric (now doubly
-      relevant as the MainAgentKeeper SLA measure: main-answered vs operator-answered vs unanswered-age). Small rollup
-      endpoint + dashboard chip. Repo: agent-orchestrator.
-- [ ] [CODE] P2. **Execution-vs-context-burn detector missing** — nothing correlates time-on-task + context_pct /
-      compactions with pushed output; a worker can heartbeat for hours with zero commits and no flag. Rule sketch:
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). GET /api/blocked/stats (unanswered + oldest
+      age, answered_by split, median/p90 time-to-answer, repeat offenders) + BlockedPanel chip (N/M by main · median
+      TTA) computed client-side. Was: **Blocked-queue telemetry missing** — `slot_blocked`/`blocked_answered` land in
+      `activity_log` but nothing aggregates: no blocks-per-task counter, no repeated-block alert, no time-to-answer
+      metric (now doubly relevant as the MainAgentKeeper SLA measure: main-answered vs operator-answered vs
+      unanswered-age). Small rollup endpoint + dashboard chip. Repo: agent-orchestrator.
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). Watchdog Trigger-4: same task >4h + (ctx
+      ≥80% OR ≥3 compactions) → context_burn_suspected activity + Slack page, deduped per (slot,task); kill opt-in via
+      ORCHESTRATOR_CONTEXT_BURN_KILL (flag-first until fleet mileage). Was: **Execution-vs-context-burn detector
+      missing** — nothing correlates time-on-task + context_pct / compactions with pushed output; a worker can heartbeat
+      for hours with zero commits and no flag. Rule sketch:
       `dispatched > 4 h AND no done_sha AND (context_pressure high OR compactions climbing) → flag + respawn`. All
       inputs already in state.db (`slots.context_used_pct`, `compactions`, `tasks.dispatched_at`). Repo:
       agent-orchestrator (`server/worker_liveness_watchdog.py` or sibling check).
-- [ ] [CODE] P3. **Orchestrator dashboard dev default still points at retired :8026** — `dashboard/src/App.tsx:73`
-      (`devPort ?? "8026"`; backend binds 8765 since the port migration) → fresh local run = login "Failed to fetch"
-      until `VITE_BACKEND_PORT=8765`. Flip the default. Repo: agent-orchestrator (`dashboard/src/App.tsx`).
+- [x] ✅ [CODE] P3. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). Dev default flipped to :8765
+      (VITE_BACKEND_PORT still overrides). Was: **Orchestrator dashboard dev default still points at retired :8026** —
+      `dashboard/src/App.tsx:73` (`devPort ?? "8026"`; backend binds 8765 since the port migration) → fresh local run =
+      login "Failed to fetch" until `VITE_BACKEND_PORT=8765`. Flip the default. Repo: agent-orchestrator
+      (`dashboard/src/App.tsx`).
+
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@1c9b8c1 (4 tests; QG green; quickmerge --agent). **VM-test
+      isolation: `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` strict per-VM plan scoping** (operator ask 2026-06-12 — "the test
+      VM must not pick up any existing plan by default"). With the flag set, regen ingests ONLY plans whose
+      `assigned_vm` EXACTLY matches `ORCHESTRATOR_VM_ID` — the "no assigned_vm ⇒ global, every VM takes it" fallback is
+      disabled (a fresh vm-id alone still leaked the global plans, incl. `task_template.md`'s example todos), and with
+      no vm_id configured strict mode ingests NOTHING (fail-closed). Env-resolved inside `regen()` so the PlanRegenLoop,
+      the manual `POST /api/backlog/regen`, and the CLI all inherit it. The e2e test VM runs
+      `ORCHESTRATOR_VM_ID=vm-e2e-test`
+  - this flag → guaranteed-empty backlog until a plan explicitly targets it. Repo: agent-orchestrator.
+
+#### VM-from-scratch e2e (operator direction 2026-06-12 — fresh instance, zero pre-allocated resources, fully scripted + reusable)
+
+Current provisioning reality (surveyed 2026-06-12): the 2026-05-22 epic fleet was launched from BARE Ubuntu 24.04 via
+EC2 user-data (apt deps → AWS CLI → `GH_PAT` from Secrets Manager → clone agent-orchestrator on LDR →
+`bootstrap_vm.sh --role epic` does repos/creds/systemd/health/self-registration end-to-end) — but the user-data
+generator was never checked in (recovered from instance `i-003be935f72c13d51`'s userData). IAM
+(`uts-orchestrator-epic`), the creds bucket (`s3://uts-orchestrator-creds-427895769566` — accounts.json + setup-token
+env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOCAL), and a Packer warm-AMI
+(`deployment-service/packer/agent-orchestrator/`) all exist. Worker VMs are LONG-RUNNING instances.
+
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-12 — deployment-service@1b56a37 (QG green; quickmerge --agent).
+      `scripts/vm/launch-orchestrator-worker-vm.sh` + `LC_AWS_SHUTDOWN_BEHAVIOR=stop` lib override (long-running workers
+      must not terminate-and-wipe on in-VM shutdown). Was: **Reusable worker-VM launcher** —
+      `deployment-service/scripts/vm/launch-orchestrator-worker-vm.sh` (script-homes: provision/launch →
+      deployment-service; reuses `lib/aws_ec2_launch_lib.sh`): bare Ubuntu 24.04 (SSM-resolved AMI, `AMI_ID` override
+      for the Packer warm image) + the PROVEN 2026-05-22 user-data shape, parameterised
+      `--name/--vm-id/--role/--slots/--instance-type/--env KEY=VAL...` (env passthrough → the new bootstrap override
+      hook below, so isolation vars are live BEFORE the backend starts); reuses `uts-orchestrator-epic` instance
+      profile + sg-0080310387e84f613 + subnet-fc09eca6 (all env-overridable); tags Name/vm-id/role/operator/lifecycle;
+      prints instance-id + IP + log-tail hint. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-12 — agent-orchestrator@878274b (QG green; quickmerge --agent). `bootstrap_vm.sh`
+      5b-extra: `ORCHESTRATOR_EXTRA_ENV` newline KEY=VAL block upserted into `.env.local` LAST (overrides beat defaults)
+      before the service starts. Was: **Bootstrap env-override hook** — `bootstrap_vm.sh` consumes
+      `ORCHESTRATOR_EXTRA_ENV` (newline KEY=VAL block, user-data-injectable) into `.env.local` BEFORE the orchestrator
+      service starts, so a test VM boots directly with `ORCHESTRATOR_VM_ID=vm-e2e-test` +
+      `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` (+ `ORCHESTRATOR_DONE_REQUIRE_ORIGIN=true` to exercise the new ratchet)
+      — no SSH-and-restart step. Repo: agent-orchestrator.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — agent-orchestrator@878274b (QG green; quickmerge --agent).
+      `scripts/verify_vm_e2e.sh <instance-id>`: SSM-driven 7-check PASS/FAIL table (running+SSM, bootstrap marker
+      ≤15min, :8765 live health, pm-pull.timer, orch-agent-main ≤3min, strict-scoping empty backlog, accounts ≥1);
+      bounded waits + explicit verdict on every path. Live-run evidence lands with the launch todo below. Was:
+      **Post-launch verification harness** — `agent-orchestrator/scripts/verify_vm_e2e.sh <instance-id|ip>` (laptop-run;
+      SSM/ssh): waits ≤10 min for `:8765` health, then asserts with PASS/FAIL table — backend Ready (live mode),
+      `pm-pull.timer` enabled + last pull LDR (the STEP 7.5c verifier), MainAgentKeeper spawned `orch-agent-main` (real
+      setup-token auth from the creds bucket — NOT the local-credentials hack), backlog EMPTY under strict scoping (the
+      isolation proof), AutoSpawn/Watchdog/PlanRegen loops started, self-registration reported. Composes with the
+      no-fire-and-forget T+10min rule. Repo: agent-orchestrator.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — PASSED on i-086e8787dddda52d6, full loop in 68 s. Trail (activity stream, UTC):
+      08:53:18 regen scanned 31 plans → ingested ONLY the local `assigned_vm: vm-e2e-test` test plan (strict scoping
+      held, 1 task); 08:54:49 AutoSpawnLoop spawned slot-1 (`checked=1 spawned=1 skips={}`, account sub-b-iggy2london,
+      real setup-token); 08:55:13 worker /boot → task auto-assigned ("tier=1 priority=20"); 08:55:53 /progress; 08:55:57
+      /done with correct audit evidence (74 Python files under server/; top-3 by lines incl.
+      regen_backlog_from_plan.py@917). Cold-start note: a FRESH VM has zero SlotRows and AutoSpawn only iterates
+      existing rows — slot rows were configured once via `upsert_slot` (worktree/branch/operator), the documented
+      cold-start step; thereafter the loop is fully autonomous. Bugs found+fixed during the run: `.tabs/` slot clones
+      were ROOT-owned (bootstrap user-data runs as root, chowns main checkouts but not .tabs → git "dubious ownership"
+      kills every worker write; fixed live + bootstrap now chowns .tabs — agent-orchestrator@27b5212); /done origin-gate
+      bypass via non-revision sha — a NON-SENTINEL sha that fails `git show` slid past the DONE_REQUIRE_ORIGIN gate
+      (verified=False → on_origin never computed): fixed in the SAME unit @27b5212 (M9b: `sha_unverifiable` warning
+      always + 409 under strict env; `read-only*` added to the sentinel prefixes so honest no-commit vocabulary
+      short-circuits as applicable=False; +3 tests). @27b5212 deployed + healthy on the test VM. Test plan removed +
+      regen-pruned after (backlog back to 0). Was: **Plan-pickup e2e on the VM**. Repo: agent-orchestrator.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — PASSED on i-086e8787dddda52d6. Fired `POST /api/escalate`
+      (`wall_type=ldr_qg_failure`, `X-Orchestrator-Secret` auth) exactly as the CI watcher does, with a read-only DRILL
+      context. Trail: 08:58:34 `escalation_dispatch_initiated` (wall validated against WALL_TYPES, escalate template
+      selected) → free slot 2 picked + headroom account sub-b → 08:58:39 `escalation_dispatched` (orch-slot-2 spawned) →
+      08:59:02 worker /progress "Read RULES.md; starting drill" → 08:59:07 reported worktree HEAD 88c53e2 (current LDR
+      tip — worktree freshness proven) → 08:59:24 worker pinged the AUTHORING SLOT (slot-5) "DRILL COMPLETE"; watchdog
+      reaped the finished session 09:00:19. Semantics note: escalation workers are NOT backlog tasks — /done returns
+      task-not-found by design; the completion signal is the authoring-slot ping + escalation activity events. GAP FOUND
+      (filed below as P1): the VM's `.env.local` had NO `ORCHESTRATOR_INTERNAL_SECRET` (not in the
+      ORCHESTRATOR_ENV_LOCAL SM secret) → auth fell back to an ephemeral generated secret → real CI escalations to a
+      bootstrap-launched VM would 401; the drill used a VM-local test secret. Was: **CI-failure → escalation → worker
+      assignment e2e** — the operator's target loop, now proven minus the fleet-secret distribution. Repo:
+      agent-orchestrator.
+- [x] ✅ [INFRA] P2. DONE 2026-06-12 — deployment-service@1b56a37+5655576 (same unit as the launcher): instance carries
+      `lifecycle=e2e-test` tag; launcher has `--stop <id>` / `--terminate <id>` teardown helpers;
+      `LC_AWS_SHUTDOWN_BEHAVIOR=stop` keeps long-running workers' disks on OS shutdown. Was: **Lifecycle + teardown**.
+      Repo: deployment-service.
+- [ ] [CREDS] P1. **BLOCKED-CREDENTIALS — `ORCHESTRATOR_INTERNAL_SECRET` is not distributed to bootstrap-launched VMs** (CREDENTIAL APPROVAL REQUEST: `ikenna_orchestrator/pings/slot_1.md`)
+      — the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM keys
+      (verified 2026-06-12); `auth._load_internal_secret()` then falls back to an EPHEMERAL generated secret, so
+      `/api/escalate` + the central→worker proxy 401 every caller on a fresh VM (prod vm-0 works only because it is
+      hand-wired). Operator ask: append the fleet `ORCHESTRATOR_INTERNAL_SECRET=<value     from prod vm-0's .env.local>`
+      line to the `ORCHESTRATOR_ENV_LOCAL` secret in BOTH AWS SM + GCP SM — bootstrap already propagates the whole
+      secret to .env.local, so no code change is needed (bootstrap now loud-warns when the key is absent). Found
+      2026-06-12 escalation e2e. Repo: agent-orchestrator (+ operator SM update). **CREDENTIAL APPROVAL REQUEST** filed:
+      `ikenna_orchestrator/pings/slot_1.md` (operator: append `ORCHESTRATOR_INTERNAL_SECRET` to the `ORCHESTRATOR_ENV_LOCAL`
+      secret in AWS SM + GCP SM).
+
+**VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
+RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3
+isolation env overrides landed via the EXTRA_ENV hook; pm-pull.timer enabled+active (single-installer model proven on
+real systemd); **MainAgentKeeper spawned the main agent 3 s after backend start with the real `sub-a-ikenna`
+setup-token** and it polls /api/state every 60 s (STEP 2.5 sweep live); 3 fleet accounts synced from the creds bucket;
+strict scoping ingested 0 plan tasks; **backlog 0 after the prune + ghost-fix below**. Launch findings fixed in-flight:
+launcher guard fn name (deployment-service@5655576) + the on_regen ghost-backlog fix (agent-orchestrator@7b85fc5,
+deployed to the VM + verified). Remaining live-run findings:
+
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@7b85fc5 (regression test; QG green; deployed + verified on
+      vm-e2e-test). **on_regen refresh skipped prune-only ticks** — `server.py` guard was `new_tasks == 0` so a tick
+      that PRUNED (36 stale tasks, yaml+db both 0) never refreshed `_state["backlog"]` → /api/backlog served ghosts
+      until the next ADDITIVE tick. Dispatch was safe (db-status filtered) but the display lied. Guard now
+      `new_tasks == 0 and pruned_yaml == 0`.
+- [x] ✅ [INFRA] P1. DONE 2026-06-12 — agent-orchestrator@f871119 (QG green; quickmerge --agent) + sg swap
+      (sgr-0cecb1d4d0536099f adds 8765/172.31.0.0/16; 8026 rule revoked) + deployed/verified on vm-e2e-test (8765
+      serving, 8026 dead, main agent respawned). Canonical = 8765 per CLAUDE.md; fixed while ZERO live 8026 workers
+      existed (epic fleet stopped) so no migration window. Surfaces: orchestrator.service ExecStart (the template every
+      fresh worker inherits — the root cause), orchestrator-demo.service + Dockerfile comments, backends.json
+      url/private_url (15 entries). Was: **Worker-VM port is 8026 in REALITY, 8765 in the DOCS** —
+      `install-orchestrator-service.sh`'s systemd unit binds uvicorn :8026 on a fresh worker; sg-0080310387e84f613 (22
+      public + 8026 in-VPC only) and `backends.json` (:8026 URLs) are consistent with the TEMPLATE, while
+      CLAUDE.md/codex say "8026 retired, 8765 canonical" (true only on the planning VM). Decide the canonical worker
+      port, then move template + sg + backends.json + docs in ONE change. Repo: agent-orchestrator (+ codex). Found
+      2026-06-12 live run.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@0780554 (QG green 523 passed; quickmerge --agent). All 3 parts:
+      (1) Step 5c fetch loop now `accounts.json` only with a never-re-add comment (`load_backlog()` returns an empty
+      `Backlog()` on a missing file — verified — so the seed was always redundant-or-stale); (2) 5b-append upserts
+      `ORCHESTRATOR_REGEN_PRUNE_STALE=true` (code now matches the CLAUDE.md fleet-default claim); (3) stale
+      `config/backlog.yaml` (40KB, 2026-05-22 — the 36-ghost-task source) DELETED from
+      s3://uts-orchestrator-creds-427895769566/config/ (only accounts.json remains). Was: **Bootstrap S3 `backlog.yaml`
+      seed contradicts the regen-authoritative model** — Step 5c copies a stale fleet backlog into a fresh VM, bypassing
+      regen scoping entirely; AND bootstrap never upserts PRUNE_STALE so the seed persists. Repo: agent-orchestrator.
+      Found 2026-06-12 live run (vm-e2e-test booted with 36 foreign tasks).
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@0780554 (same unit). SSM probe now captures stderr:
+      `AccessDenied`/`UnauthorizedOperation` → SKIP "caller IAM denied — NOT a VM fault" (breaks the 5-min loop
+      immediately — the denial is deterministic); genuine not-registered stays FAIL; BOTH paths fall back to SSH
+      (`vm_run` transport dispatcher; `ssh_run` pipes commands to `sudo bash -s` so quoting/run-as-root semantics match
+      ssm_run; `--ssh-key` flag, default `~/.ssh/agent-orchestrator-key`) and complete all 7 checks instead of exiting
+      blind. LIVE-VERIFIED on i-086e8787dddda52d6 from this harsh-worker host (the exact previously-misreported
+      scenario): SSM online SKIP (caller IAM denied) → SSH fallback → all remaining checks PASS, VERDICT: PASS, exit 0.
+      Was: **verify_vm_e2e.sh: distinguish caller-side IAM denial from agent-not-registered** — the SSM probe swallowed
+      `AccessDeniedException` into "agent never registered" (misleading FAIL). Repo: agent-orchestrator. Found
+      2026-06-12 live run.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@88c53e2 (QG green; quickmerge --agent) + bucket ops +
+      LIVE-VERIFIED round-trip on vm-e2e-test. Discovery correction during impl: the bucket
+      `uts-orchestrator-state-427895769566` ALREADY EXISTS and the prod orchestrator VM (vm-0) is actively writing to it
+      (state.json every 30 min, sqlite 6h — hand-wired env), so the gap was bootstrap-launched VMs only, exactly as
+      filed. Shipped: (1) bootstrap 5b-append upserts `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` (AWS)
+      / `ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` (GCP); (2) all 4 writers in `gcs_sync.py` now key by
+      `_vm_key_segment()` (`snapshots/<vm_id>/<date>/state_<ts>.json` + `backups/sqlite/<vm_id>/<date>/<mode>_<ts>.db`;
+      no vm_id → `unattributed`) + 3 new moto tests pin the layout; (3) `restore_from_gcs.sh` gained S3 transport
+      (`--s3-bucket`/$ORCHESTRATOR_S3_BUCKET; transport-agnostic `latest_blob_under`/`fetch_blob`) + `--vm-id` scoping
+      (without it a multi-VM flat listing path-sorts by vm name, not recency — now warned); (4) PAB + 30d lifecycle
+      applied on snapshots/ + backups/ prefixes; test-VM instance-profile list+put probed OK. Live proof: restarted
+      vm-e2e-test backend with the env → `POST /api/snapshot` landed
+      `s3://…/snapshots/vm-e2e-test/2026-06-12/state_20260612T084615Z.json`, and
+      `restore_from_gcs.sh --json-only     --dry-run` on the VM picked exactly that object via S3 + vm_id scoping. NOTE:
+      prod vm-0 still writes flat keys until it picks up @88c53e2 on its normal update cadence (restore script reads
+      both layouts; no forced prod restart). Was: **State-DB DR backup is silently OFF on every fleet VM — bootstrap
+      never sets the snapshot bucket envs**; the deleted creds-bucket `config/backlog.yaml` seed was NOT part of the DR
+      path (backlog resumes via git/PlanRegenLoop, regen-authoritative). Found 2026-06-12 while answering the
+      backup-vs-seed design question.
+- [ ] [CREDS] P2. **BLOCKED-CREDENTIALS — `harsh-worker` IAM lacks SSM read/run** (`ssm:GetParameters` broke the
+      launcher's Ubuntu-AMI resolution — worked around via `AMI_ID=ami-0bf052f8a9dd8bf42`;
+      `ssm:DescribeInstanceInformation`/ `ssm:SendCommand` broke the verify harness — worked around via SSH). Operator
+      ask: attach `AmazonSSMReadOnlyAccess` + `ssm:SendCommand`/`ssm:GetCommandInvocation` (scoped to the orchestrator
+      fleet) to `harsh-worker`. Found 2026-06-12 live run. CREDENTIAL APPROVAL REQUEST filed →
+      `ikenna_orchestrator/pings/slot_5.md`
 
 Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)

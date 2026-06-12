@@ -127,8 +127,9 @@ source:
 
 ## Phase 2 — purge the left-edge `features-*` corpus (the realized-bug cleanup)
 
-- [ ] [DATA] P0. Promote **features-service@7a4fafd9** (the fix) staging→main once the staging lock clears (tracked in
+- [x] ✅ [DATA] P0. Promote **features-service@7a4fafd9** (the fix) staging→main once the staging lock clears (tracked in
       the issue doc § Shipping status; execution-service breaking-bump cascade is unrelated).
+      — features-service@7a4fafd9 verified on origin/main (slot-5 2026-06-12).
 - [ ] [DATA] P1. Recompute the pre-fix left-edge `features-*` corpus: scope = every coarser-than-base delta_one
       timeframe + cross_instrument `flow_interaction` outputs. Decide recompute-vs-roll-forward by horizon (a
       backtest/feature consumer reading pre-fix history gets one-interval-early features → leakage). Materialise the

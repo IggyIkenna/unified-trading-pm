@@ -443,3 +443,17 @@ capture counts on next run.
 All trees clean; every tab→LDR mirror healthy; staging promotion gated workspace-wide on the **UTL+UAC dep-tier drain**
 (not prediction-specific). Codex `prediction-schema-paths.md` reconciled (per-cid objects + manifest-only cqg bundle;
 the object-bundle "Target" was superseded). — slot-6 (Ikenna)
+
+---
+
+## CREDENTIAL APPROVAL REQUEST — 2026-06-12 (slot-5, escalation agt-996d3b)
+
+- **Vendor/service**: AWS IAM (internal fleet IAM policy — no external vendor)
+- **What's needed**: Attach managed policy `AmazonSSMReadOnlyAccess` + inline `ssm:SendCommand` /
+  `ssm:GetCommandInvocation` (scoped to the orchestrator fleet, e.g. `resource: arn:aws:ec2:*:*:instance/*`) to the
+  `harsh-worker` IAM role/user used in automated VM e2e verify scripts.
+- **Workarounds in place**: AMI resolution uses hardcoded `AMI_ID=ami-0bf052f8a9dd8bf42`; SSH fallback (`agent-orchestrator-key`)
+  replaces SSM `SendCommand` for verify harness connectivity. Both degrade the automation.
+- **What it unblocks**: `verify_vm_e2e.sh` SSM probe for Ubuntu-AMI lookup + `ssm:DescribeInstanceInformation` /
+  `ssm:SendCommand` for headless worker-verify — removes hardcoded AMI and SSH workarounds.
+- **Plan ref**: `plans/active/monitoring_control_plane_master_2026_06_10.md` [CREDS] P2 — found 2026-06-12 live run.

@@ -280,3 +280,71 @@ codex has FOUR legs (spot_long + stake + lend + hedge_short); the old capability
 (stake + lending + perp)". The spot acquisition leg was implicit in prose. Another instance of why prose `notes` are not
 a restriction model. Also note: the requires_collateral_acceptance constraint sits on the STAKE leg (the leg dropped in
 the straight-basis fallback), not the hedge leg — wizard renders it on both venue groups correctly.
+
+### F27 — Carry-staked-basis blocked by venue-id CASE MISMATCH, not an empty registry (strategy-service)
+
+**Status**: OPEN — strategy-service (READ-ONLY for the collateral backfill agent); a real correctness gate, NOT a
+test-only quirk. The Phase-3.5 `csb_staked_basis_eth.json` scenario emitted 0 instructions and the note attributed it to
+an "empty collateral registry". The actual root cause (2026-06-12): `CarryStakedBasisEngine._derive_structure`
+(`strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:225`) calls
+`accepted_perp_collateral(cfg.perp_venue)`, but `cfg.perp_venue` is **lowercase** (`'hyperliquid'`, `'deribit'` — the
+slot-config + catalog convention) while `VENUE_COLLATERAL_MATRIX` (`unified_api_contracts/registry/venue_collateral.py`)
+keys venues **UPPERCASE** (`'DERIBIT'`). So `accepted_perp_collateral('deribit')` returns `[]` even though
+`accepted_perp_collateral('DERIBIT')` returns `['BTC','ETH','USDC','stETH']` → `_derive_structure` always returns None →
+the staked carry leg never emits for ANY venue via the default lowercase config. Verified: with `perp_venue='DERIBIT'`
+(upper) + a valid non-banned combo, `_derive_structure` returns `LST_AS_MARGIN` (deribit stETH 7.5%, okx wstETH 10% —
+exactly the COLLATERAL_REGISTRY backfill values). The default `STAKED_BASIS` slot is `etherfi-hyperliquid` (weETH +
+USDC-only Hyperliquid) which is independently a genuine no-emit (weETH not accepted anywhere as perp margin) — masking
+the case bug. **Recommended fix (strategy-service)**: normalise `cfg.perp_venue` to the matrix's case at the
+`accepted_perp_collateral` call site (or make `venue_collateral.py` lookups case-insensitive). **Demonstrated in
+e2e-testing (mine, NOT strategy-service)**: the stepper's `_seed_staked_basis_collateral` seeds `perp_venue` UPPERCASE
+from the UAC registry → `csb_staked_basis_eth_lst_accepted.json` (lido stETH + deribit) now EMITS the staked carry leg
+(e2e-testing@7075bd1). This is a two-sided-audit hit: the wizard/registry SAYS deribit accepts stETH (true), but the
+engine code SILENTLY fails to honor it due to case — exactly "wizard-thinks-possible vs code-actually-does".
+
+### F28 — Two in-repo collateral SSOTs DISAGREE on LST haircuts (venue_collateral.py vs lst_collateral_resolver.py)
+
+**Status**: OPEN — conflicting truths; the collateral backfill followed `venue_collateral.py` (the Stream-A-audited,
+per-row-cited SSOT). Two in-repo registries carry per-venue LST collateral haircuts that DISAGREE:
+`unified_api_contracts/registry/venue_collateral.py` `VENUE_COLLATERAL_MATRIX` vs
+`execution-service/execution_service/services/lst_collateral_resolver.py` `_LST_REGISTRY`. Conflicts: (a) **Hyperliquid
+wstETH** — venue_collateral: NOT accepted (USDC-only, matches official Hyperliquid docs + codex playbook);
+lst_collateral_resolver: accepted @5% haircut (collateral_factor 0.95). (b) **Bybit stETH** — venue_collateral 10% /
+lst_collateral_resolver 15%. (c) **Deribit stETH** — venue_collateral 7.5% (matches official Deribit insights eff.
+2026-01-13) / lst_collateral_resolver 20% (stale). (d) **OKX stETH** — venue_collateral NOT-on-discount-list /
+lst_collateral_resolver accepted @15%. The COLLATERAL_REGISTRY backfill (uac@f997f3b) follows `venue_collateral.py` (the
+audited SSOT, agrees with official docs) and documents each conflict in the entry's `collateral_notes` (F27 tag).
+**Recommended decision**: pick `venue_collateral.py` as the single SSOT; either delete the `lst_collateral_resolver.py`
+`_LST_REGISTRY` hardcode and have the resolver read `VENUE_COLLATERAL_MATRIX`, or reconcile its numbers to match — the
+current divergence means strategy-service haircut sizing (via venue_collateral) and any execution-service consumer of
+lst_collateral_resolver would size differently for the same venue/asset.
+
+### F29 — deploy-ui.sh broken since 2026-05-08 script migration (REPO_ROOT drift)
+
+**Status**: FIXED deployment-service@dcb5fdb. Found 2026-06-12 deploying the wizard to UAT: the canonical
+`deployment-service/scripts/cloud-run/deploy-ui.sh` (migrated from unified-trading-system-ui/scripts/ on 2026-05-08)
+kept `REPO_ROOT="${SCRIPT_DIR}/.."` — correct pre-migration (= UI repo root), post-migration it resolves inside
+deployment-service: `--config` pointed at a nonexistent yaml and BOTH build contexts (--cloud submit + local docker)
+targeted the wrong repo. Every `--cloud` UI deploy since 2026-05-08 would have failed loudly (config missing) — so
+either nobody cloud-deployed the portal since, or they used a different path; worth checking how the current prod
+revision was built. Fix: REPO_ROOT now resolves the UI repo explicitly + fail-loud check.
+
+### F30 — Unpinned pnpm@latest in uts-ui Dockerfile broke all docker builds (same family as the setup-uv@v8 rule)
+
+**Status**: FIXED unified-trading-system-ui@0f8f00d6. `corepack prepare pnpm@latest` pulled a new pnpm major whose
+ignored-build-scripts handling (ERR_PNPM_IGNORED_BUILDS) fails `pnpm install --prod`, and which no longer reads
+package.json pnpm settings. Pinned to pnpm@9.15.9 (the lockfile generation + local dev version). Rule: bump pnpm
+deliberately WITH a lockfile migration, never via latest.
+
+### F31 — Dangling .gitleaks.toml symlink breaks next build inside docker context
+
+**Status**: FIXED unified-trading-system-ui@0f8f00d6. `.gitleaks.toml` is a symlink to ../unified-trading-pm (outside
+the docker context) → Turbopack's stat walk ENOENTs → build error. Excluded via .dockerignore. Any other cross-repo
+symlinks added to UI repos need the same treatment.
+
+### F32 — Cursor-server bundled node (20.18) shadows system node 22 in interactive shells on this host
+
+**Status**: DOCUMENTED — environmental. `~/.cursor-server/bin/.../node` precedes /usr/bin in PATH for Cursor-spawned
+shells → vitest/vite fail with ERR_REQUIRE_ESM (require-of-ESM needs node ≥22) and rolldown's native binding is skipped
+at install (engine floor 20.19). Remedy for agents on this host: `PATH="/usr/bin:$PATH"` for UI QG runs. System node is
+22.22.3 (nodesource); repo standard node22 (.nvmrc).

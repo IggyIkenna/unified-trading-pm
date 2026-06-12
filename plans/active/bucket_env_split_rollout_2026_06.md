@@ -59,10 +59,57 @@ the env-tiered shape.
 
 ### Phase 0 — Inventory + confirm
 
-- [ ] [INFRA] P0.1. Inventory on-disk Group B buckets per AG: which are flat (`…-{ag}-{pid}`) vs tiered
+- [x] ✅ [INFRA] P0.1. Inventory on-disk Group B buckets per AG: which are flat (`…-{ag}-{pid}`) vs tiered
       (`…-{ag}-{env}-{pid}`), and which hold data. Confirm `resolve_bucket_name` emits the tiered shape for each kind.
-- [ ] [INFRA] P0.2. Confirm Group A tiered shape is consistent across all consumers (no NO-ENV fallback survives — see
+      — unified-trading-pm@690376cd5 (slot-5 2026-06-12). GCS census + UTL resolver verified.
+
+      **Findings (GCP prod `central-element-323112`):**
+
+      All Group B flat buckets exist. `resolve_bucket_name` currently emits flat (rolled-back) names; with
+      `${DEPLOYMENT_ENV_SHORT}` re-added to the YAML it would emit canonical `…-{ag}-prd-{pid}` for prod.
+
+      **FLAT buckets WITH DATA (need migration in P1.2):**
+      | Bucket | Objects (est.) | Notes |
+      |--------|----------------|-------|
+      | `features-delta-one-cefi-{pid}` | ~1 (index only) | |
+      | `features-delta-one-defi-{pid}` | ~3 (index only) | |
+      | `features-onchain-defi-{pid}` | ~712 | ⚠️ tiered `features-onchain-defi-prd-{pid}` ALSO has ~76 objects — reconcile before migrate |
+      | `features-mtf-cefi-{pid}` | ~1 (index only) | |
+      | `strategy-store-{pid}` | ~23 | backtests/hedge_ratio/strategy_instructions/tracer_runs |
+      | `ml-training-artifacts-{pid}` | ~74 | experiments/ |
+      | `execution-store-cefi-{pid}` | ~6142 | largest; fills/configs/deployment_history/spreads |
+
+      **FLAT buckets EMPTY (provision-only; no migration data):**
+      `features-delta-one-{tradfi,pred,sports}`, all `features-volatility-*`, `features-onchain-cefi`,
+      all `features-xinstrument-*`, `features-mtf-{defi,tradfi,pred,sports}`,
+      `execution-store-{defi,tradfi,sports}`, `ml-artifacts`.
+
+      **Stale wrong-form tiered buckets (old long `prod`/`staging` env strings, all EMPTY — delete in P2.1):**
+      `execution-store-{cefi,defi,tradfi}-{prod,staging,dev}-{pid}`,
+      `strategy-store-{cefi,defi,tradfi}-{prod,staging,dev}-{pid}`.
+
+      **`resolve_bucket_name` tiered-form mapping (DEPLOYMENT_ENV=prod → `prd`):**
+      - `features-delta-one/{ag}` → `features-delta-one-{ag}-prd-{pid}` (cefi/defi/tradfi/sports/pred)
+      - `features-volatility/{ag}` → `features-volatility-{ag}-prd-{pid}`
+      - `features-onchain/{cefi,defi}` → `features-onchain-{ag}-prd-{pid}`
+      - `features-xinstrument/{ag}` → `features-xinstrument-{ag}-prd-{pid}`
+      - `features-mtf/{ag}` → `features-mtf-{ag}-prd-{pid}`
+      - `execution-store/{cefi,defi,tradfi,sports}` → `execution-store-{ag}-prd-{pid}`
+      - `strategy-store` → `strategy-store-prd-{pid}` (flat string kind needs env-split re-add)
+      - `ml-artifacts` → `ml-artifacts-prd-{pid}`
+      - `ml-training-artifacts` → `ml-training-artifacts-prd-{pid}`
+
+      `execution-store/prediction` is NOT in the YAML (no prediction entry); needs adding if required.
+      `features-onchain-defi-prd-{pid}` already provisioned with data → **no `terraform apply` needed for this one**;
+      other `-prd-` buckets exist but are empty (provisioned but unpopulated).
+- [x] ✅ [INFRA] P0.2. Confirm Group A tiered shape is consistent across all consumers (no NO-ENV fallback survives — see
       the defi cross-AG dead-bucket finding in `defi_manifest_canonicalisation_2026_06_01.md`).
+      — deployment-api@6ad269f (slot-5 2026-06-12). Fleet grep across all repos: 1 NO-ENV survivor found in
+      `deployment_api/routes/service_status_checkers.py` `SERVICE_OUTPUT_BUCKETS` (hardcoded f-string `{_pid}` names for
+      instruments-store + market-data-tick); all other Group A consumers (UAC gcs_paths, UTL instrument_lifecycle_loader,
+      deployment-service bucket_config, batch_config_utils) already routing through `resolve_bucket_name` or env-tiered
+      YAML. Fix: replaced hardcoded dict with `resolve_bucket_name(cloud="gcp", kind=..., asset_group=...)` calls; QG
+      green; quickmerge landed deployment-api@6ad269f on live-defi-rollout.
 
 ### Phase 1 — Provision + migrate Group B (after canonicalisation gate)
 
