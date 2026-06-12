@@ -131,7 +131,7 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       (restored via `git checkout`; finding F12). The per-service `.venv`s exist (the capability exporter uses them via
       subprocess), but the aggregate spec generator does not yet do per-service-venv extraction. Full run must happen on
       the laptop / CI runner with `.venv-workspace`; the `uic-openapi-sync` CI regenerates TS types on its runner
-      regardless.
+      regardless. **CI-REGEN UNIT 3 (2026-06-12):** No workflow runs `generate-unified-openapi.sh` on any CI runner. `uic-openapi-sync` (uts-ui + fund-admin-service) ships TS types ONLY from `*.openapi.json/yaml`. No new CI infrastructure built per mandate. Annotated as F14-confirmed: blocked until `.venv-workspace` is provisioned on a CI runner (operator action). See findings file for full F14 annotation.
 - [x] ✅ [VERIFY] P0. Drift CI gate: `_validate_service_coverage()` now exits nonzero on mismatch (fail-on-drift
       implemented in-run). DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Scheduled workflow is a Phase 1 item
       (deferred — fail-on-run counts as the enforcement gate for now).
@@ -460,13 +460,13 @@ actually exists (which data_types missing, over which timeframes) via the existi
 
 ### 6B — parity quality gates (regression-blocking)
 
-- [ ] [VERIFY] P0. UAC QG step: ARCHETYPE_CAPABILITY_REGISTRY ↔ archetype_capability_manifest.json parity pytest (F4
-      remedy) + leg-spec/verdict-matrix determinism tests.
+- [x] ✅ [VERIFY] P0. UAC QG step: ARCHETYPE_CAPABILITY_REGISTRY ↔ archetype_capability_manifest.json parity pytest (F4
+      remedy) + leg-spec/verdict-matrix determinism tests. — UAC@9a11664 | QG green | test_manifest_is_round_trip_stable (F4) PASS, no drift; leg-spec + algo-compat determinism PASS; verdict-matrix-inputs cross-registry sanity test added.
 - [ ] [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
       (drift = fail) + vitest property tests asserting the wizard filter functions reproduce the verdict matrix for
       every archetype (sampled venues/instruments at minimum, full where tractable).
-- [ ] [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail (existing
-      findings baselined).
+- [x] ✅ [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail (existing
+      findings baselined). — PM@d581ce0 | QG green | baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2 orphan docs + 0 legs-in-prose drift.
 
 ### 6C — data-availability wiring (deployment-api)
 
@@ -744,3 +744,11 @@ for every agent on this plan:
   coverage audited — 145 venues: 22 wired / 6 adapter-no-eligibility / 15 registered-no-adapter / 102 orphan; verdict
   matrix 24,752 cells / 16,913 available; APD 14→17 venues; F41–F44). Remaining: broker-rendering polish (P2), 6B parity
   gates, UAT redeploy.
+- 2026-06-12 — **Phase 6B parity gates landed.** UAC: `test_manifest_is_round_trip_stable` (F4) PASS — no drift between
+  ARCHETYPE_CAPABILITY_REGISTRY and committed manifest; leg-spec + algo-compat determinism tests PASS; new
+  `test_verdict_matrix_inputs_algo_compat_covers_all_leg_derived_instruction_types` cross-registry sanity test added
+  (UAC@9a11664, QG green). PM: `check_two_sided_audit.py` + `two_sided_audit_baseline.yaml` wired as blocking post-gate
+  (PM@d581ce0, QG green, PR#308); baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2 orphan docs + 0 legs-in-prose
+  drift. Unit 3 (CI full-suite regen): NO workflow runs generate-unified-openapi.sh on any CI runner — uic-openapi-sync
+  ships TS types only (F14 confirmed); Phase 0 todo annotated honestly; no new CI infrastructure built per mandate.
+  6B UAC + PM gates DONE. uts-ui gate deferred to parallel agent.
