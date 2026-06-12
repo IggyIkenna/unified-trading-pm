@@ -50,7 +50,8 @@ related_plans:
       — `cefi_ml_event_handler.py` implements 3-tier ML_SIGNAL_STALENESS ladder (warn→route_event, critical→route_event_with_explicit_channels pagerduty+telegram, kill-switch→KILL_SWITCH_ML_MODEL_FAILURE). Passthrough events (ML_PNL_DEVIATION, ORDER_REJECTION_SPIKE, POSITION_CRITICAL_DISCREPANCY etc.) route via generic route_event per LIVE_ALERT_RULES. AlertSubscriber.dispatch_event wired. alerting-service landed 2026-06-12.
 - [x] ✅ [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
       signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`. — unified-api-contracts@547cba3 | 4 breakers (POSITION_LIMIT_EXCEEDED/DRAWDOWN_DAILY_BPS/ML_SIGNAL_STALENESS_SECONDS/ML_MODEL_DRIFT_ACCURACY_DROP) + KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS + 7 new taxonomy tests; QG green.
-- [ ] [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
+- [x] ✅ [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
+      — strategy-service@7995e4e4 | ArchetypeModeStore extracted to engine/strategies/v2/mode_store.py; V2EngineOrchestrator._tick_one_engine wired with per-archetype MANUAL mode gate (suppress automated instructions when operator explicitly sets mode=MANUAL via POST /api/archetypes/{id}/operational-mode); override+replicate via existing execution-service /manual/submit + DART UI ManualTradingPanel. 5 new tests (manual suppress, live/paper forward, cross-archetype isolation, unregistered pass-through). QG green.
 - [x] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
       Group F item 18) — batch = live, same code path, no standalone backtest engine.
   > **Partial PASS — architecture verified; grid run pending operator scheduling (2026-06-12, slot-6)**:
