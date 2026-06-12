@@ -449,8 +449,8 @@ actually exists (which data_types missing, over which timeframes) via the existi
       data_types, and the min-data-to-run check against ACTUAL coverage. Env-gated base URL (local/ops: deployment-api
       :8004; UAT: honest "data-status backend not configured" banner). pw:L2 gate. — unified-trading-system-ui@9db31842
       | pw:L2 ✓ 15/15 | regression: tests/smoke/wizard-data-coverage.spec.ts
-- [ ] [AGENT][UI] P2. Capability tab: dead-end/orphan rows link through to the same coverage answer (already cross-links
-      routes; add the per-cell coverage fetch).
+- [x] ✅ [AGENT][UI] P2. Capability tab: dead-end/orphan rows link through to the same coverage answer (already cross-links
+      routes; add the per-cell coverage fetch). — deployment-ui@e02e4c4 | pw:L2 ✓ | regression: tests/smoke/capability_tab.spec.ts
 
 ## Wave 2 — proposed enhancements (Claude 2026-06-11; PENDING OPERATOR SIGN-OFF, do not dispatch)
 
