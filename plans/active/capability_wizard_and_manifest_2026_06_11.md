@@ -366,6 +366,46 @@ post-config (combinatorial explosion is avoided because the wizard fixed the con
       unavailable on this host} verdict confirmed on apd_price_dispersion_btc.json).
 - [ ] [DEFERRED] P3. Client-lite wizard mode (use case 4) — named successor plan once internal wizard is hardened.
 
+## Phase 6 — exhaustive combinatorics, parity gates, data-availability wiring (operator direction 2026-06-12)
+
+Operator: restrictions must exist for EVERY combination (archetype × venue × instrument × instruction × execution algo),
+impossible combinations must be BLOCKED with a reason, the UI must provably follow the same rules as the codebase, and
+the parity must be a QUALITY GATE so it cannot regress. Plus: the wizard must show whether the data the config needs
+actually exists (which data_types missing, over which timeframes) via the existing deployment-api data-status endpoints.
+
+### 6A — registry truth to full coverage
+
+- [ ] [IMPLEMENT] P0. Leg-spec backfill: ALL 57 archetypes get ArchetypeLegStructure entries (sourced per leg from
+      engine code + codex archetype docs; where genuinely underivable, an explicit not_registered leg structure with a
+      reason — enumerated, never absent). unified-api-contracts.
+- [ ] [SPEC] P0. **Archetype→execution-algo compatibility registry** in UAC architecture_v2: which algos
+      (SOR/sor_twap/swap_twap/atomic_bundle/selector) are valid per (instruction type × venue kind × leg coupling),
+      sourced from execution-service algorithms/selector code + codex; honest gaps typed. Today NOTHING declares this —
+      the wizard cannot block what no registry states (operator-caught).
+- [ ] [IMPLEMENT] P0. **Exhaustive verdict matrix generator** (PM exporter): full cross-join archetype × venue ×
+      instrument_type × instruction × algo → every cell gets an explicit verdict (available | blocked(reason) |
+      not_registered) — no absent cells; counts reported; ships as openapi/capability-verdict-matrix.json (+ summary in
+      the orphan report).
+
+### 6B — parity quality gates (regression-blocking)
+
+- [ ] [VERIFY] P0. UAC QG step: ARCHETYPE_CAPABILITY_REGISTRY ↔ archetype_capability_manifest.json parity pytest (F4
+      remedy) + leg-spec/verdict-matrix determinism tests.
+- [ ] [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
+      (drift = fail) + vitest property tests asserting the wizard filter functions reproduce the verdict matrix for
+      every archetype (sampled venues/instruments at minimum, full where tractable).
+- [ ] [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail (existing
+      findings baselined).
+
+### 6C — data-availability wiring (deployment-api)
+
+- [ ] [AGENT][UI] P1. Wizard Data stage queries deployment-api `/api/data-status/drilldown` + `/schema` for the config's
+      derived requirements (per selected venue × data_type × timeframe): render captured/missing windows, missing
+      data_types, and the min-data-to-run check against ACTUAL coverage. Env-gated base URL (local/ops: deployment-api
+      :8004; UAT: honest "data-status backend not configured" banner). pw:L2 gate.
+- [ ] [AGENT][UI] P2. Capability tab: dead-end/orphan rows link through to the same coverage answer (already cross-links
+      routes; add the per-cell coverage fetch).
+
 ## Wave 2 — proposed enhancements (Claude 2026-06-11; PENDING OPERATOR SIGN-OFF, do not dispatch)
 
 Question bank SSOT (every wizard question pinned to its code anchor):
@@ -605,3 +645,8 @@ for every agent on this plan:
   dangling .gitleaks.toml symlink breaking next build in docker context (same commit). F32 host gotcha documented
   (cursor-server node 20.18 shadows system node 22 → UI QG needs PATH=/usr/bin first). Full-suite openapi regen remains
   a CI-runner job (F12) — on-host UAC-importable outputs stay the local path.
+- 2026-06-12 — Operator review: stepper exists (CLI-interactive + UI viewer; live-driving UI = follow-up), but
+  combinatorics NOT exhaustive (leg specs 10/57; no archetype→algo compatibility registry → wizard cannot block algo
+  mismatches) and data-availability not yet wired into the UI. **Phase 6 added** (6A full-coverage registries + verdict
+  matrix, 6B parity quality gates so UI==registry==code cannot regress, 6C deployment-api data-status wiring).
+  Dispatching 6A (UAC+PM) ∥ 6C (uts-ui); 6B after 6A lands.

@@ -546,7 +546,11 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       `lifecycle=e2e-test` tag; launcher has `--stop <id>` / `--terminate <id>` teardown helpers;
       `LC_AWS_SHUTDOWN_BEHAVIOR=stop` keeps long-running workers' disks on OS shutdown. Was: **Lifecycle + teardown**.
       Repo: deployment-service.
-- [ ] [CREDS] P1. **BLOCKED-CREDENTIALS — `ORCHESTRATOR_INTERNAL_SECRET` is not distributed to bootstrap-launched VMs** (CREDENTIAL APPROVAL REQUEST: `ikenna_orchestrator/pings/slot_1.md`)
+- [x] ✅ [CREDS] P1. **DONE 2026-06-12** — `ORCHESTRATOR_INTERNAL_SECRET` (vm-0's exact value, sha12-verified identical)
+      upserted into the `ORCHESTRATOR_ENV_LOCAL` Secret Manager blob in **GCP (version 2) + AWS (`4c52ae7f`)**; bootstrap
+      already writes the blob → `.env.local`, so new VMs now carry it (`/api/escalate` + central→worker proxy authenticate
+      fleet-wide). prod vm-0 untouched (read-only via SSM; live auth preserved — SM change only affects future bootstraps).
+      Was: **BLOCKED-CREDENTIALS** (CREDENTIAL APPROVAL REQUEST: `ikenna_orchestrator/pings/slot_1.md`)
       — the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM keys
       (verified 2026-06-12); `auth._load_internal_secret()` then falls back to an EPHEMERAL generated secret, so
       `/api/escalate` + the central→worker proxy 401 every caller on a fresh VM (prod vm-0 works only because it is

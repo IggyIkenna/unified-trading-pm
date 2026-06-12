@@ -5317,3 +5317,6 @@ Plan-of-record: `plans/active/monitoring_control_plane_master_2026_06_10.md` (th
 - **Unblocks**: escalation e2e on a from-scratch VM (the Gap-3 orchestrator escalation path).
 
 — slot-1/ikenna (filed 2026-06-12 to de-orphan the credential-ask QG ratchet while landing the billing-wall fix)
+
+> **RESOLVED 2026-06-12** — `ORCHESTRATOR_INTERNAL_SECRET` upserted into `ORCHESTRATOR_ENV_LOCAL` in GCP (v2) + AWS
+> (`4c52ae7f`), byte-identical to prod vm-0 (sha12-verified). No operator action remaining; new bootstraps carry it.
