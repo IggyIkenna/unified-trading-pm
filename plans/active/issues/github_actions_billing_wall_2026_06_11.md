@@ -18,14 +18,27 @@ status: active
 Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace),
 then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hourly closure; n=301 billing re-sample) —
 the deepening CORRECTED two first-pass claims, marked ⚠️ inline. The wall is STILL UP (verified live 03:52Z; slots 1/4/5
-logged four more escalations through 05:46Z). Corrected burn: **pathological 06-11 ≈ 48,700 billable min ≈ $390; healthy
-06-09 baseline ≈ $62–81/day** — the broken machinery is a ~5× multiplier, and ~80% of pathological spend traces to ONE
-closed loop (the empty-promote loop, § Root cause #3 + Appendix E). Raising the limit without that fix re-burns it in
-hours.
+logged four more escalations through 05:46Z).
+
+**What is CONCRETE (exact API data)**: per-workflow run counts (REST `total_count`), conclusion mixes
+(success/cancelled/failure, all runs fetched + deduped), per-run job wall-times (jobs API), the loop forensics
+(PR/commit/tree evidence), the phantom snapshot. **What is ESTIMATE**: every **$ figure and "billable minutes" total** —
+GitHub's billing ledger is NOT readable by any token we hold (verified 06-12: 4 SM tokens × 2 billing endpoints, all
+403/401 — billing needs owner / `Plan: read`, and the per-run `/timing` API is deprecated, returns 0). The estimates
+apply per-job 1-min round-up + $0.008/min all-ubuntu assumptions to measured wall-times; treat them as
+order-of-magnitude, NOT ±10%. → **2-min ask: pull Settings → Billing → Usage report (June CSV) — that makes every $
+figure here ledger-true; or mint a fine-grained PAT with `Plan: read` and we automate it permanently.**
+
+Volume facts (concrete): pathological 06-11 ran ~15,962 runs across the audited workflows vs a 06-09 baseline ~3,200 — a
+~5× multiplier, and ~80% of the pathological VOLUME traces to ONE closed loop (the empty-promote loop, § Root cause #3 +
+Appendix E). Estimated cost translation: ≈$390 on 06-11 vs ≈$62–81 baseline (order-of-magnitude). Raising the limit
+without the loop fix re-burns whatever it is in hours.
 
 **Your decision queue, in order:**
 
-1. **Raise the spending limit** (only you can).
+1. **Raise the spending limit** (only you can) — and while in Billing, **download the June usage report CSV** (or mint a
+   fine-grained PAT with `Plan: read` for us): it converts every estimated $ figure in this doc to ledger truth and
+   shows exactly which earlier-June days hit the previous limit raises.
 2. **Review harsh's overnight changes** (§ "Changes implemented by harsh-main" below — full rationale + risk register +
    one-line reverts). Headline: a tree-SHA equality gate + runaway breaker in the two promote bots (PM LDR `932d42f4c`,
    NOT yet on main), and 4 workflows `gh workflow disable`d (reconciler, ldr-ci-monitor, ldr-to-staging-promote, ao
