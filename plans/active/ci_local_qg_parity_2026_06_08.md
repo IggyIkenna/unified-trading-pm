@@ -140,7 +140,7 @@ is the staging oracle"; `full_cicd_sit_target_state_2026_05_24.md` cross-link (S
       deployment-api `CODEX_MAX_VIOLATIONS` bumped 23→24 to unblock the staging promotion (the 9 offenders are
       PRE-EXISTING, not from the monitoring work). NEVER reintroduce `grep -P` in the gate. Repos: unified-trading-pm
       (base-service.sh + snapshot.sh) + deployment-api (budget). Verified: macOS slice `✅ ALL QG PASSED` at 24.
-- [ ] [SCRIPT] P2. **Ratchet deployment-api 24→23** — re-export the 9 two-level registry symbols
+- [x] ✅ **[DONE 2026-06-12 — went further than 24→23: the deep-import class was fully CLEARED. All 8 two-level `unified_api_contracts.registry.<X>` call sites switched to the one-level facade, UAC re-exports landed (`c8287d3`); deployment-api `CODEX_MAX_VIOLATIONS` now 6 (24→22→16→6, commits 5127517/0686968/94e4feb).]** [SCRIPT] P2. **Ratchet deployment-api 24→23** — re-export the 9 two-level registry symbols
       ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
       tardis_free_coverage}) at the UAC one-level facade (`unified_api_contracts/registry/__init__.py`) + switch the 9
       call sites (data_status_service / path_combinatorics / config / client_treasury / data_status_hierarchical) to

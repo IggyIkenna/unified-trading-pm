@@ -719,7 +719,7 @@ what the operator is seeing:
       deadlock-blocked from promoting (a concrete instance of the stale-staging/fix-stuck-on-LDR class). Landed just the
       workflow file onto main via targeted PR `deployment-service#32` (base main ← LDR content, auto-merge `--rebase`
       ON, `quality-gates-v2` running). Stops the recurring scheduled crash + restores LDR→tab FF-sync once green.
-- [ ] [DEVOPS] P2. **PM `cloud-build-router` fails on main — `google-github-actions/auth` empty WIF input** (CI-watcher
+- [x] ✅ **[DONE 2026-06-12 — dual-path WIF auth landed `a8d16504a`: `continue-on-error` WIF + SA-key fallback so empty WIF no longer hard-fails main]** [DEVOPS] P2. **PM `cloud-build-router` fails on main — `google-github-actions/auth` empty WIF input** (CI-watcher
       2026-06-08). `auth failed: must specify exactly one of workload_identity_provider or credentials_json` → the WIF
       provider var/secret is empty/unset on PM. Decide: (a) PM should not run cloud-build-router at all (it is not a
       deployed package — gate the trigger to repos that build), or (b) set the missing WIF var on PM. Lower urgency (no
@@ -1143,7 +1143,7 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       slots.** parent_epic candidate: infrastructure_master. repos: unified-api-contracts + unified-trading-library
       (import hot paths) + PM quality-gates-base.
 
-- [ ] [TEST] P2. **mtds coverage floor is a documented 28% exception (ISS-031) now ENFORCED by the base-service.sh
+- [x] ✅ **[DONE 2026-06-12 — mtds `MIN_COVERAGE=79` (line-cov 82.7%), raised 28→79 by 2026-06-11; ISS-031 restore complete, both follow-ups (a)+(b) done]** [TEST] P2. **mtds coverage floor is a documented 28% exception (ISS-031) now ENFORCED by the base-service.sh
       systemic fix.** `market-tick-data-service/scripts/quality-gates.sh:12` =
       `MIN_COVERAGE=28  # Post-reorganisation + type-fix refactoring dropped coverage. ISS-031: restore after test migration.`
       Previously the `_REPO_QG_SCRIPT` bug masked it (read PM's 0); now CI reads the real 28% floor. Two follow-ups: (a)
@@ -1681,7 +1681,7 @@ machinery):
       their branches. **Discriminator = PR base, not age**: base=staging/main → promotion (code on LDR, safe close);
       base=LDR → may carry un-integrated code (inspect). **LEFT (recent ≤3d / special):** features #8, UAC #67, UI #19
       (recent promotions), PM #116 (the dam), deployment #15 (Harsh's tab→staging), mtds #79 (semver bot). repos: fleet.
-- [ ] [SCRIPT] P2. **7 old feature/odd-base PRs carry UNIQUE commits (deserve attention — NOT auto-closed).** All have
+- [x] ✅ **[DONE 2026-06-12 — all 7 named PRs now CLOSED: mtks#94, uts-ui#10/#4/#2/#1, deployment-ui#4, uta#5]** [SCRIPT] P2. **7 old feature/odd-base PRs carry UNIQUE commits (deserve attention — NOT auto-closed).** All have
       `ahead-of-LDR>0` by patch-id (verified), so per the base-not-age rule they were NOT swept: **mtks #94**
       (data-io-production-readiness, **344 commits**, Jan 2026 — large old branch, likely superseded but unconfirmed);
       **UI #10** live-defi-rollout-copy (1: ui consolidation), **#4** tiny-pr-change (1: package.json version comment),
@@ -1782,7 +1782,7 @@ machinery):
 > `allow_auto_merge` enabled where off (features, ml, unified-trading-api, fund-admin, deployment-api/service, ui,
 > ibkr).
 
-- [ ] [CI] P1. **unified-trading-system-ui: migrate to canonical `ui-quality-gates-v2.yml` so LDR→main can promote.**
+- [x] ✅ **[DONE 2026-06-12 — `ui-quality-gates-v2.yml` present; `quality-gates-v2.yml` calls it + emits `…/quality-gates-v2` context (`c3a5437f`); SM IAM (github-deploy secretAccessor) fixed]** [CI] P1. **unified-trading-system-ui: migrate to canonical `ui-quality-gates-v2.yml` so LDR→main can promote.**
       Repo: `unified-trading-system-ui`. BLOCKED from the 2026-06-02 fleet promotion (only repo not landed). Two
       pre-existing UI-CI-workflow issues: (1) its `quality-gates-v2.yml` still calls the stale local
       `ui-quality-gates.yml` which emits check context `Quality Gates (unified-trading-system-ui) / quality-gates` while
@@ -3157,7 +3157,7 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
-- [ ] [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2: 3/7 CLEANLY DONE — unified-trading-api id17135955, ml-service
+- [ ] **[PROGRESS 2026-06-12 — 6/7 now have the `require-quality-gates` ruleset (unified-trading-api, ml-service, fund-administration, features, greeks, e2e); ONLY `unified-trading-system-ui` still has NO ruleset (`[]`). Do NOT flip until uts-ui is covered.]** [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2: 3/7 CLEANLY DONE — unified-trading-api id17135955, ml-service
       id17136124, **fund-administration-service id17169244 ADDED this session** (main green @1c2c94f8, ~DEFAULT_BRANCH,
       bypass_actors:[]). features-service has ruleset id17136160 but main gate RED. **greeks-service ALREADY has
       `require-quality-gates-main` gating `refs/heads/main`, BUT its DEFAULT branch is `live-defi-rollout` and v2 only
@@ -3298,7 +3298,7 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       operator active-host filter (`ACTIVE_PREFIX_BASES="ikennaigboaka hk planning"`). Confirmed live: my push
       agent-orchestrator@fd6ef28 was FF'd tab→LDR by run 27077881256 (LDR tip == fd6ef28). repo: agent-orchestrator.
       parent_epic: (cicd hardening).
-- [ ] [TEST] P2. **Observe ≥3 real diverged-tab cycles auto-heal** (rebased+landed on LDR + local `[adopt-rebase]`)
+- [x] ⊘ **[SUPERSEDED 2026-06-12 — Path-B retired the `tab/<op>/N` model entirely; no diverged-tab class exists, `tab-mirror-to-ldr.yml` deleted fleet-wide → observation goal moot]** [TEST] P2. **Observe ≥3 real diverged-tab cycles auto-heal** (rebased+landed on LDR + local `[adopt-rebase]`)
       before declaring the treadmill closed; watch the orchestrator `/api/mirror-events` for any `outcome=conflict` or
       `race-exhausted` and confirm they reflect genuine conflicts only. repo: unified-trading-pm.
 
@@ -3594,7 +3594,7 @@ behind the exact drift this whole audit is about.
       on it at :48, and NO workflow ever resets it to False (grep: only this file references it) → after the first alert
       every future dangling SIT lock is suppressed fleet-wide. Fix: reset `locked_alert_sent = False` when `sit-gate`
       sets `locked = True` (or on unlock). Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **H4 — `tab-mirror-to-ldr.yml` template drift + the recurring class** (edit-template-skip-rollout).
+- [x] ⊘ **[SUPERSEDED 2026-06-12 — `tab-mirror-to-ldr.yml` removed fleet-wide (template + all per-repo copies) under Path-B retirement → this specific drift surface no longer exists; the generic edit-template-skip-rollout class is tracked in cicd_workflow_sprawl_audit]** [SCRIPT] P2. **H4 — `tab-mirror-to-ldr.yml` template drift + the recurring class** (edit-template-skip-rollout).
       🔁 IN PROGRESS 2026-06-07: recurring-class root FIXED (rollout-workflow-templates.sh retired-workflow guard +
       stale `workspace-qg.yml.tmpl` deleted + M5 baseline-write ratchet-down-only); major-bump rolled out to 7 worktrees
       → `detect_template_drift --workflows` exits 0. Remaining = COMMIT the 7 sibling repos + the
@@ -4626,7 +4626,7 @@ Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment 
       Durable fix options: (a) the version-bump flow auto-fires v2 on the bump head, or (b)
       `staging-to-main`/`ldr-to-staging-promote` detect a `[skip ci]` head and `workflow_dispatch` v2 (mirror of the
       `ldr-to-main-promote` self-recover, but workflow_dispatch not close+reopen). Pick one, wire fleet-wide.
-- [ ] [INFRA] P2. **MTDS consumer re-lock**: after UAC main = 0.2.1, confirm MTDS (and other UAC consumers showing the
+- [x] ⊘ **[SUPERSEDED 2026-06-12 — UAC has since progressed to 0.6.0 and MTDS pins `>=0.6.0`; the 0.2.0-vs-0.2.1 split this item targeted no longer exists]** [INFRA] P2. **MTDS consumer re-lock**: after UAC main = 0.2.1, confirm MTDS (and other UAC consumers showing the
       `local 0.2.0 vs canonical 0.2.1` alignment red) re-resolve UAC to 0.2.1 (`run-version-alignment.sh --fix` /
       re-`uv pip install`); re-run MTDS QG to GREEN. Then the "full QG green" claim is actually true for the UAC chain.
 - [ ] [INFRA] P2. **Audit the rest of the fleet for the same split** — `gh api compare/main...staging --jq .ahead_by`
@@ -4673,7 +4673,7 @@ recurring friction the operator has hit repeatedly.
       `else`/PR_BASE=main Option-B branch → `--auto --merge`; the staging branch stays `--squash`),
       `ldr-to-main-promote.yml` (3 sites → `--merge`). main allows it (`required_linear_history=false`,
       `allow_merge_commit=true`).
-- [ ] [INFRA] P1. **backmerge PR-creation perms — FIX COMMITTED to `live-defi-rollout` (unified-trading-pm@e0e954bc9),
+- [x] ✅ **[DONE 2026-06-12 — `bm` step uses GitHub App token (`app-token.outputs.token`) in 25/25 repos (template + all per-repo copies); fleet rollout complete]** [INFRA] P1. **backmerge PR-creation perms — FIX COMMITTED to `live-defi-rollout` (unified-trading-pm@e0e954bc9),
       main-promotion QUEUED behind the staging lock; fleet rollout still deferred.** Committed direct to LDR (quickmerge
       was staging-locked by the UAC 0.5.0 breaking cascade 2026-06-09; the `ldr-to-staging-promote` auto-drain carries
       it to staging→main once the lock clears). The `bm` step's `GH_TOKEN` was the default `GITHUB_TOKEN`, which cannot
@@ -4921,7 +4921,7 @@ Both template fixes need `rollout-workflow-templates.sh` to the fleet (same chan
 - [x] ✅ [RESOLVED-STALE: greeks-service allow_auto_merge already true] [OPERATOR] P1. Enable `allow_auto_merge` on
       **greeks-service** (Settings → General → "Allow auto-merge") — both available tokens lack admin on that repo (404
       on PATCH). Until flipped, greeks promote PRs take the direct-merge fallback path. — provenance: probe 2026-06-10
-- [ ] [SCRIPT] P2. 4 repos lack `scripts/quickmerge.sh` (greeks-service ✅ fixed via probe commit, ml-service,
+- [x] ✅ **[DONE 2026-06-12 — ml-service, e2e-testing, features-service, greeks-service all now carry `scripts/quickmerge.sh` as symlinks → PM SSOT]** [SCRIPT] P2. 4 repos lack `scripts/quickmerge.sh` (greeks-service ✅ fixed via probe commit, ml-service,
       e2e-testing, features-service) — they cannot follow the mandated quickmerge path; propagate the canonical copy. —
       provenance: probe 2026-06-10
 
@@ -4993,7 +4993,7 @@ Open follow-ups:
 - [ ] [CODE] P2. Dashboard alert-parity: the Repos-CI overview should flag a staging head with ZERO check runs (the
       silent-suppression signature) — composes with the failure-injection matrix in
       `monitoring_control_plane_master_2026_06_10.md`.
-- [ ] [DOCS] P2. ci_local_qg_parity evidence: local QG green ×3 while CI lint-codex red on the same tree (deployment-api
+- [x] ✅ **[DONE 2026-06-12 — root cause (lint-codex `grep -vP` portability bug) found, fixed + documented in `ci_local_qg_parity_2026_06_08.md`; parity restored]** [DOCS] P2. ci_local_qg_parity evidence: local QG green ×3 while CI lint-codex red on the same tree (deployment-api
       2026-06-10, budget 24>23 counted differently local-vs-CI) — add reproducer to `ci_local_qg_parity_2026_06_08.md`
       scope.
 
@@ -5006,7 +5006,7 @@ Open follow-ups:
 - [ ] [CI] P2. Persist failures must be VISIBLE: persist-cicd-event + the notify-slack ledger step should emit a
       ::warning (and the failure-injection matrix must cover "ledger write failing") — best-effort must not mean
       silent-forever again.
-- [ ] [INFRA] P3. Confirm the GHA runner SA (GCP_SA_KEY) has objectAdmin on the new bucket — first real persist after
+- [x] ✅ **[DONE 2026-06-12 — bucket created 2026-06-10, persist read-path verified end-to-end (ledger → /api/repo-ci/alerts → Alerts tab), proving writes land]** [INFRA] P3. Confirm the GHA runner SA (GCP_SA_KEY) has objectAdmin on the new bucket — first real persist after
       bucket creation is the proof (check cicd/events/ fills on the next workflow completion).
 
 ### staging_commits only populated on SIT-locked cycles (bug #11, found 2026-06-10 slot-3)

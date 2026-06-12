@@ -1310,7 +1310,7 @@ checked out on `live-defi-rollout`**. 3 tiers: Operator (separate machines) → 
 **Why Path-B (the tab-branch `tab/<op>/N` model is RETIRED 2026-06-08):** the tab branch was never an architectural
 choice — only a workaround for git's "can't check out the same branch in two worktrees of one clone" constraint. The
 real isolation is worktree-level (separate index/working-tree). Separate clones drop the entire **sync tax**:
-`tab-mirror-to-ldr.yml` (DISABLED fleet-wide), the tab-branch rebase/upstream-self-heal paths in `slot-cron-ff-pull.sh`,
+`tab-mirror-to-ldr.yml` (DELETED fleet-wide — template + all per-repo copies removed), the tab-branch rebase/upstream-self-heal paths in `slot-cron-ff-pull.sh`,
 and the diverged-tab recovery recipes. Contention moves to **LDR push-time** (rebase-on-reject), already handled by
 quickmerge STAGE 0.4. Commit attribution is in the author NAME (`[slot-<N>·<host>]`), independent of branch.
 

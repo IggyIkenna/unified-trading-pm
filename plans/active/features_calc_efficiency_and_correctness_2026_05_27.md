@@ -342,10 +342,21 @@ primitive.
       StrEnum + `OHLCV_AGGREGATION` dict next to `CanonicalOhlcvBar` (open:first/high:max/low:min/close:last/volume:sum/
       quote_volume:sum/count:sum/vwap:volume_weighted + RECOMPUTE_FROM_RAW); exported from `unified_api_contracts`. New
       symbols only → non-breaking.
-- [ ] [LIBRARY] P1. **3.B (T1/UTL, BACKWARD-COMPAT)** Make `feature_calculator.resample_data`/`resample_features`
-      resolve the recipe from the UAC mapping (default = UAC recipe; current hardcoded default kept as fallback →
-      existing callers unchanged). Volume-weighted (`vwap`) done correctly (`Σ(price·vol)/Σvol` via groupby-apply, not
-      the broken `Resampler*Resampler`). Carry `RECOMPUTE_FROM_RAW` flagging.
+- [x] ✅ [LIBRARY] P1. **3.B (T1/UTL, BACKWARD-COMPAT)** — SHIPPED + symbol-verified on UTL LDR @92a8abbc.
+      `feature_calculator.resample_data`/`resample_features` now resolve the recipe from the UAC `OHLCV_AGGREGATION`
+      SSOT via a new dedicated module `feature_calculator/ohlcv_aggregation.py` (`build_ohlcv_agg_recipe` +
+      `recompute_from_raw_columns`); `resample_data` gained optional `use_uac_recipe=True` (default UAC recipe
+      restricted to columns present; explicit `agg_dict` still overrides fully; legacy `_DEFAULT_OHLCV_AGG` retained for
+      `use_uac_recipe=False`); `resample_features(agg_method=None)` defaults to the UAC recipe (OHLCV cols) + `"last"`
+      for non-OHLCV. VWAP fixed to volume-weighted `Σ(price·vol)/Σvol` (per-period groupby, NOT the crash-prone
+      `Resampler*Resampler`), volume-less frames treated as RECOMPUTE_FROM_RAW (skipped). basedpyright 0/0/0 (the 9
+      `reportAny` from reaching into untyped `resampler.obj` fixed by threading the typed source frame), ruff clean, new
+      `tests/unit/test_feature_calculator_resample_uac.py` (7 tests: recipe-from-SSOT, OHLC agg, VWAP correctness +
+      guard against the old naive formula, `resample_features` None/str/dict paths) green, full UTL QG green.
+      **Blast-radius (rule 11):** no UTL consumer (volatility/sports/onchain/cross_instrument) calls
+      `resample_data`/`resample_features` (verified via `rg`), so the additive change has zero consumer blast radius;
+      consumer `from unified_trading_library import FeatureCalculator` + the new recipe module import both resolve clean
+      against updated UTL.
 - [ ] [REFACTOR] P1. **3.C (T2/features) De-fork delta_one** — replace the forked `FeatureCalculator`/
       `_FeatureCalculatorStatsMixin` with `from unified_trading_library import FeatureCalculator` (as volatility/sports/
       onchain already do); route `candle_resampler`/`timeframe_resampler` through the UTL primitive. Validate: full
@@ -364,6 +375,25 @@ contract, used by delta_one (un-forked) + volatility + cross_instrument + MTDS; 
 
 #### Progress Log (append-only — rule 6, memory across compaction)
 
+- 2026-06-12 (autonomous dispatch) — **3.B SHIPPED + symbol-verified on UTL LDR @92a8abbc.** Fixed the 9 basedpyright
+  `reportAny` errors (root cause: reaching into the untyped `resampler.obj`/`.freq`/`.label`/`.closed`) by threading the
+  typed source frame + resample params into the VWAP helper (mirrors the clean `time_series._resample_with_recipe`
+  pattern). Extracted the UAC-recipe helpers (`build_ohlcv_agg_recipe`/`recompute_from_raw_columns`/the
+  `_UAC_AGG_TO_PANDAS_METHOD` map) into a new cohesive module `feature_calculator/ohlcv_aggregation.py` — this both
+  single-sources the recipe AND brought `base.py` back under the 900-line cap (927→887) that my additions had tripped.
+  Added 7-test suite verifying VWAP is `Σ(price·vol)/Σvol` (with an explicit guard asserting it differs from the old
+  broken `Σ(price)/Σvol`). Two QG trips fixed in-flight: base.py size (extraction) + the `no-backward-compat-shims` grep
+  flagging the literal "backward-compat" in two docstrings (reworded to "existing callers unchanged"). Ship raced no
+  churn this time; "✅ Landed" verified real via `git show origin/live-defi-rollout:<file>`. Blast-radius confirmed:
+  zero UTL consumers call the resampler entrypoints, so the change is purely additive fleet-wide. **NEXT — 3.C scope
+  clarified (key finding):** delta_one's hot-path candle resampler (`app/core/candle_resampler.py`) is a **polars** impl
+  with its own hardcoded `_OHLCV_AGGREGATIONS` dict — a genuinely different mechanical impl from UTL's pandas resampler,
+  used in the proven Phase-1.1 22× read-once win. Forcing it onto pandas-UTL would regress that win, so the unification
+  target is the **recipe SSOT** (derive its agg dict from UAC `OHLCV_AGGREGATION`, killing the second hardcoded
+  `open=first/high=max` recipe) while keeping the polars mechanics for perf. The fork `FeatureCalculator` (37
+  subclasses) also has ~11 methods not in UTL (several are UTL module-functions reorganized; a few are
+  delta_one-specific: `_enrich_features`/`_add_event_horizon_binaries`/`_select_lag_candidates`) → de-fork is a
+  thin-subclass-of-UTL reconciliation, not a blind swap.
 - 2026-06-11 (resume state) — **3.A SHIPPED + verified on UAC LDR** (`OhlcvAggregation`+`OHLCV_AGGREGATION`). Ship was
   hard: UAC LDR churns < the ~3-min gate (Tier-C drain + back-merge) → 4 sentinel races; then a quickmerge bug —
   autostash for STAGE-0.4 sync makes the tree look clean → "nothing to commit" early-exit that still prints "✅ Landed"

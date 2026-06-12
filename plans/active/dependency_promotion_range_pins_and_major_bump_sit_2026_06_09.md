@@ -360,6 +360,12 @@ version comparison no-ops → the guard never fires). Captured here:
       `packaging` BEFORE `uv sync` with an `except: pass/exit(0)` mask have the same latent silent-no-op.
       (`check-internal-advisories.sh` in PM imports `packaging` too but runs post-install — verify install-order before
       touching it.) Fix each to stdlib; deliberate per-repo (changes resolution behavior).
+- [ ] [SCRIPT] P2. **Lower SIT's phantom-era instruments-service floor** — `system-integration-tests/pyproject.toml`
+      still pins `instruments-service>=0.30.0,<1.0.0`; the runaway-semver phantom was de-inflated to a coherent **0.4.0**
+      (main=staging=LDR, tag `v0.4.0`), so this `>=0.30.0` floor is stale (true version 0.4.0). Non-blocking today
+      (content-first clone resolves the editable path source) but should match the real version → set `>=0.4.0,<1.0.0`.
+      **MIGRATED FROM:** `plans/archive/issues/instruments_service_version_phantom_2026_06_11.md` § Follow-up (archived
+      2026-06-12, the phantom itself RESOLVED 2026-06-11).
 
 ### Phase 6 — Reproducibility + dep-provenance: base-image digest pinning (5.79) + deployment BoM — P1 (PRIORITIZED)
 
@@ -435,7 +441,7 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL consumers
       (stateless — consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern from
       `update-repo-version.yml`.
-- [ ] [CODE] P1. **Deployment-registry bill-of-materials — record digest + commit + dep-versions** (deployment-service).
+- [x] ✅ **[DONE 2026-06-12 — `deployment-service/deployment_service/bom.py` exists, `DeploymentRegistryEntry` carries the BoM fields, and `VersionRegistry.register_version` is now WIRED on the live-deploy path (`live_deployment.py`); shipped `deployment-service@f9c0920`. Code present on LDR. (Follow-up: surface in GET /api/deployments — still open below.)]** [CODE] P1. **Deployment-registry bill-of-materials — record digest + commit + dep-versions** (deployment-service).
       TODAY the registry persists ONLY a mutable `image_tag` (`monitor.py:39` / `live_deployment.py:42,63` /
       `backends/base.py:135`); the `git_commit` field exists (`monitor.py:40`) but its writer
       `VersionRegistry.register_version` (`monitor.py:540`) has ZERO callers (dead/unwired), and NO image-digest /

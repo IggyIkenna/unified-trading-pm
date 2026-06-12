@@ -9,6 +9,20 @@ priority: P2
 status: active
 ---
 
+> **🟡 STATUS 2026-06-12 (verified against LDR) — STILL ACTIONABLE; partial machinery exists, the core fix does not.**
+>
+> - **Rec #2 (QG slicing): partially landed.** `QG_SLICE=tests|typecheck|lint-codex` machinery exists in
+>   `scripts/quality-gates-base/base-service.sh`, and an in-gate `.qg_content_sentinel` (conservative content-hash)
+>   short-circuits re-running tests/typecheck when the working tree is byte-identical (`779dc3683`). BUT slicing is
+>   wired to **CI matrix jobs**, NOT to the local `--files` change set as this proposal asks.
+> - **Rec #1 (content-hash sentinel — the highest-leverage ask): NOT done.** `quickmerge.sh` still keys its agent
+>   fast-path on the **SHA sentinel** (`.qg_last_passed_sha == HEAD`, hard-fail on mismatch); the unrelated-LDR-advance
+>   race this doc describes is unchanged.
+> - **Rec #3 (LDR merge queue): not done.**
+>
+> Keep OPEN. Note the LDR-trunk decoupling (`ldr_trunk_promotion_decoupling_2026_06_10.md`) reduces — but does not
+> eliminate — the pressure by letting quickmerge land on LDR directly.
+
 ## What I found
 
 The two-pass quickmerge gate keys on a **commit-SHA sentinel**: `quality-gates.sh` stamps

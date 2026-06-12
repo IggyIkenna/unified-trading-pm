@@ -114,7 +114,7 @@ but its `schedule: */15` is **throttled by GitHub to an effective ~70–90 min c
 16:38 / 15:11 — not every 15 min), so a wave of stuck drains stays visibly parked for up to ~1.5h before recovery.
 
 **Fix (durable — stops the recurrence at the source)**:
-- [ ] [WORKFLOW] P1. `ldr-to-staging-promote` (Tier-C): after creating the drain PR, **explicitly
+- [x] ✅ **[DONE 2026-06-12 — `ldr-to-staging-promote.yml` now creates the drain PR with a GitHub App token (`78151ca49`), so the `pull_request` event fires and v2 runs at birth; plus a STALE-CHECK v2 force-dispatch fallback (`270d02fec`). PR no longer born-deadlocked.]** [WORKFLOW] P1. `ldr-to-staging-promote` (Tier-C): after creating the drain PR, **explicitly
   `gh workflow run quality-gates-v2.yml --ref <pr-head-sha>`** (or create the PR with `GH_PAT` so the `pull_request`
   event fires) — so the drain PR is never born-deadlocked and auto-merge completes immediately. Verify a fresh drain
   reports v2 within minutes + auto-merges with no manual touch.
