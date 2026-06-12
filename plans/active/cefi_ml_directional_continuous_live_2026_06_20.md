@@ -39,6 +39,9 @@ related_plans:
       decision → live execution → live position + risk + P&L attribution, across OKX + Binance + Bybit.
 - [ ] [AGENT] P0. Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7 continuous
       days (the cutover gate).
+  > **GATED 2026-06-12 (slot-2, BLK-4badaa3c)**: Re-queued with explicit dependency on task -001 (end-to-end ML
+  > pipeline) completing first. Hard-stops per plan (wallet keys for OKX/Binance/Bybit, live-trading kill-switch
+  > arming) require operator action before this gate can be verified. Operator flagged: wallet keys needed.
 - [x] ✅ [AGENT] P0. Live model lifecycle: hot-reload of model artefacts without service restart; per-trade `model_version`
       traceability; model-drift alerting.
       — Hot-reload: ModelPromotionSubscriber already wired (ml-service@live). Per-trade model_version: PredictionEventDict.swing_{high,low}_model_version flows through InferenceRequest→PredictionEvent→publish. Model-drift alerting: PredictionOutcomeSubscriber wired (subscribes to ml_prediction_outcomes, feeds DriftMonitor.record_outcome + check_retune; models pre-registered from timeframe_specific_models on live start). InferenceConfig: drift_auto_retune_enabled/baseline_accuracy/drop_threshold/window_days. ml-service landed 2026-06-12.
