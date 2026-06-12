@@ -132,6 +132,15 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       branch HEAD shown in the pipeline strip. Budget-gated: a branch whose HEAD v2 is success uses the head (no extra
       call), else one runs-API lookup — cheap because this is a single-repo drilldown, not the fleet overview. Repo:
       deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi.tsx`/`client`/`mock-api`).
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-ui@ac447a2 | deployment-ui QG green (35s) | pw:L2 ✓ (204 pass; the 1 fail is the pre-existing flaky
+      stateful-flows Flow-1, retry-green, unrelated to /repos) | regression: tests/smoke/repos-tab.spec.ts
+      (SitLockDetail). **(under-surfaced-data audit) Staging-lock REASON + last-SIT-run age in the repo drilldown** —
+      `SitLockDetail` line below the pipeline strip surfaces `staging_locked_reason` (e.g. "breaking cascade in flight")
+      + `last_sit_run_age_min`, both already on the detail payload but never rendered (the pipeline strip showed only
+      the lock/stuck STATE, not the WHY/age). **Pure deployment-ui — no backend change, no drift risk** (data already
+      served). Renders nothing for a clean repo. Found by auditing RepoCi types vs what the UI renders (also confirmed
+      `branch_ci`/image/G6 fields ARE surfaced — no other gaps). Repo: deployment-ui (`RepoCi.tsx`).
 
 ### Credential status (re-probed 2026-06-11)
 
