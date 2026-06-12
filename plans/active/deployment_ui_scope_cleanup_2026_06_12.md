@@ -25,42 +25,54 @@ locked_since: 2026-06-12
 
 ## Scope
 
-deployment-ui is the **single devops pane** (deploy/CI/fleet/data-status/alerts). At some point trading-research
-surfaces were built into it — DUPLICATING surfaces that already exist in `unified-trading-system-ui`. **This is an
-INCORPORATION, not a port (operator 2026-06-12: "there are already things in Unified Trading System UI — it's not about
-reinventing the wheel; it's about incorporating it, given all the plans and ideologies around UTS-UI")**: gap-diff each
-misplaced deployment-ui page against its EXISTING UTS-UI counterpart, merge only the genuinely-missing capability into
-the existing surface (following that surface's plan-of-record), then DELETE the deployment-ui copy. Clean break, no
-parallel paths, no new duplicate pages. **Timing gate (operator)**: execute when the commit stream is relatively clean
-(check the Repos CI tab for a quiet fleet).
+> **REVISED 2026-06-12 (operator decision — DUAL-CUT, supersedes the incorporate-then-DELETE framing below).** The
+> original framing assumed the 3 research-launch pages were pure duplicates to move out of deployment-ui. They are NOT.
+> Operator clarification 2026-06-12: _"dual cut functionality when it comes to launching… launching is supposed to be
+> like launching a deployment… the deploy button service is all services, so that remains the same — give it a CLI
+> argument which points it to configs. That deployment UI should show that, as it already does, and machine learning and
+> everything should be incorporated in that as a service that you can deploy. You've got the deployment API which does
+> the backend for that — that should ALSO be facilitated to be available for the unified trading system UI so that we
+> can deploy through there, where we have more of the stuff around how we configure / view results / experiments, but
+> it's still hooking up to the same deployment-api backend."_ Net model:
+>
+> - **deployment-api** (`/api/{ml/experiment,strategy/backtest,execution/backtest}/launch` — real, tested routes in
+>   `deployment_api/routes/*_launch.py`) is the single deploy/launch backend. UNCHANGED. "Launch = deploy = watch a
+>   deployment"; a deploy points a CLI at configs.
+> - **deployment-ui** KEEPS the 3 launch consoles (ML / strategy / execution backtests) — they belong here as "deploy
+>   <service> as a deployment", alongside the existing generic deploy mechanism (`DeployTrigger`/`DeployLiveCluster`/
+>   lifecycle). They are NOT deleted. (Optional polish: align their framing under the deploy surface — not required for
+>   this plan.)
+> - **unified-trading-system-ui** gains the ability to ALSO trigger those same deployment-api launches, wrapped in the
+>   research context (config + results/experiment viewing), via the already-wired `apiUrls.deployment` base URL
+>   (`lib/config/api.ts`). This is the genuine NEW build — added as deploy actions ON the existing read-only
+>   `services/research/{ml,strategy,execution}` surfaces, gated to internal/admin persona.
+> - **`Dart.tsx`** in deployment-ui IS a pure duplicate of UTS-UI's far-richer `services/dart/terminal` (manual-trade,
+>   not deploy) → DELETE (the only deletion in this plan).
+> - **`ClientSubscriptions.tsx`** → MIGRATE to UTS-UI `manage` area (operator-confirmed); deployment-api route stays.
 
-## Pre-audit manifest (what got misbuilt where — audited 2026-06-12, slot-3)
+deployment-ui is the **devops + deploy pane** (deploy/launch any service / CI / fleet / data-status / alerts);
+unified-trading-system-ui is the **trading + research + client surface** that can ALSO deploy through the shared
+deployment-api. **Timing gate (operator)**: execute when the commit stream is relatively clean (check the Repos CI tab
+for a quiet fleet).
 
-INCORPORATE-then-DELETE (deployment-ui page → the EXISTING UTS-UI surface it duplicated; audited 2026-06-12):
+## Pre-audit manifest (disposition — audited 2026-06-12, slot-3; REVISED to dual-cut)
 
-| deployment-ui page              | EXISTING UTS-UI counterpart (the incorporation target)                                                                                      | Likely unique bit to merge                                                                                       |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `Dart.tsx` (288L, /dart)        | `app/(platform)/services/dart/terminal` + `dart/locked` + `components/dart/*` ln-flow (plan-of-record: `dart_ln_ux_refactor_2026_05_13.md`) | probably NOTHING — verify, likely pure duplicate                                                                 |
-| `MlExperiments.tsx` (389L)      | `app/(platform)/services/research/ml`                                                                                                       | the VM **launch console** (`POST /api/ml/experiment/launch` on deployment-api) if research/ml is read-only today |
-| `StrategyBacktests.tsx` (327L)  | `services/research/*` + strategy-review/evaluation/universe surfaces                                                                        | the `POST /api/strategy/backtest/launch` console, same test                                                      |
-| `ExecutionBacktests.tsx` (275L) | `services/research/*`                                                                                                                       | the `POST /api/execution/backtest/launch` console, same test                                                     |
+| deployment-ui page               | deployment-api backend (STAYS)        | UTS-UI counterpart                                                                       | Disposition (REVISED)                                                                                     |
+| -------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `Dart.tsx` (288L, /dart)         | promote/manual_pending                | `services/dart/terminal` (+`locked`,`components/dart/*`) — far richer                    | **DELETE** from deployment-ui (pure duplicate; gap-diff empty)                                            |
+| `MlExperiments.tsx` (389L)       | `POST /api/ml/experiment/launch`      | `services/research/ml` (read-only browse today)                                          | **KEEP in deployment-ui** + **ADD deploy action in UTS-UI** `research/ml`                                 |
+| `StrategyBacktests.tsx` (327L)   | `POST /api/strategy/backtest/launch`  | `services/research/strategy/backtests` (in-app `/api/execution/backtests`, different op) | **KEEP in deployment-ui** + **ADD deploy action in UTS-UI** `research/strategy`                           |
+| `ExecutionBacktests.tsx` (275L)  | `POST /api/execution/backtest/launch` | `services/execution/*` (read-only)                                                       | **KEEP in deployment-ui** + **ADD deploy action in UTS-UI** `research/execution` (or `research/strategy`) |
+| `ClientSubscriptions.tsx` (328L) | `/api/subscriptions` CRUD             | `services/manage/*` (clients/users folded in)                                            | **MIGRATE** to UTS-UI `manage`; DELETE from deployment-ui                                                 |
 
-The original (superseded) framing below is retained for the backend-stays facts only:
+Launch endpoint shapes (from `deployment-ui/src/api/deploymentApi.ts`, all → `LaunchResult`):
+`MlExperimentParams{asset_group, instruments[], target_types?, timeframes?, start_date?, end_date?, operation?, machine?, dry_run?}`
+· `StrategyBacktestParams{archetype, start_date, end_date, grid_density?, force?, dry_run?}` ·
+`ExecutionBacktestParams{archetype, tick_interval?, continuous?, force?, dry_run?}`.
 
-| deployment-ui page              | Route                           | What it is                                                          | Backend it calls (STAYS in deployment-api) |
-| ------------------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------------------ |
-| `Dart.tsx` (288L)               | `/dart`                         | "DART Terminal — DeFi archetype visualization + manual trade entry" | promote/manual_pending routes              |
-| `MlExperiments.tsx` (389L)      | `/research/ml-experiments`      | ML experiment VM launch console + run browser                       | `POST /api/ml/experiment/launch`           |
-| `StrategyBacktests.tsx` (327L)  | `/research/strategy-backtests`  | strategy backtest launch console + results                          | `POST /api/strategy/backtest/launch`       |
-| `ExecutionBacktests.tsx` (275L) | `/research/execution-backtests` | execution backtest launch console + results                         | `POST /api/execution/backtest/launch`      |
-
-STAYS in deployment-ui (genuinely devops): VmDeployments/VmDetail/LiveDeployments, DeployTrigger/History, DailyCosts,
-SafetyOps (kill-switch Layer-0), Chaos (FORBIDDEN-in-prod injection testing), RepoCi, EpicsPlans, Alerts, FleetGit,
-data-status surfaces.
-
-DECIDE-IN-PHASE-1 (one borderline): `ClientSubscriptions.tsx` (328L, `/client-subscriptions`, binds client_id → SLATier)
-— client admin lives in UTS-UI (user-management was folded there), but the SLA tier drives deployment behaviour.
-Recommendation: MIGRATE (client-facing admin), deployment-api route stays.
+STAYS in deployment-ui unchanged (genuinely devops): VmDeployments/VmDetail/LiveDeployments, DeployTrigger/History,
+DailyCosts, SafetyOps (kill-switch Layer-0), Chaos, RepoCi, EpicsPlans, Alerts, FleetGit, data-status surfaces — PLUS
+the 3 launch consoles above (now confirmed KEEP).
 
 ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via the epics tab, not separate pages" —
 `/repos` and `/epics` are URL-synced `LandingTabs` tabs in the home shell since 2026-06-10 (regression: deployment-ui
@@ -68,24 +80,41 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
 
 ## Phases
 
-- [ ] [AUDIT] P2. Phase 1 — confirm the migrate-set + the ClientSubscriptions call with a fresh grep (pages may have
-      moved since 2026-06-12); enumerate every nav/header/route/mock/test referencing the 4-5 pages in BOTH repos
-      (deployment-ui `App.tsx` routes 142-155 + nav; UTS-UI `app/(ops)`/`(platform)` groups for placement). Repo:
-      deployment-ui + unified-trading-system-ui.
-- [ ] [CODE] P2. [UI] Phase 2 — **INCORPORATE, don't port**: for each pair in the table, read the UTS-UI surface's
-      plan-of-record first (`dart_ln_ux_refactor_2026_05_13.md` for DART; the research/ml + strategy surface plans —
-      grep plans/active+archive for their slugs) and merge ONLY the gap (expected: the three deployment-api VM-launch
-      consoles, added as actions ON the existing `services/research/ml` / research surfaces in their established idiom —
-      server-side API routes per the firebase-admin rule, existing design system). NO new pages duplicating existing
-      ones; if the gap-diff for a page is empty (likely Dart.tsx), there is nothing to build — it just gets deleted in
-      Phase 3. Mock parity + component tests; pw:L2 on UTS-UI. Repo: unified-trading-system-ui.
-- [ ] [CODE] P2. [UI] Phase 3 — DELETE the migrated pages + routes + nav entries + mocks + tests from deployment-ui (no
-      shims, no redirects left behind beyond a one-line route → UTS-UI URL pointer if the operator wants one); keep
-      LandingTabs (Overview/Epics/Repos CI/Alerts/Fleet Git) + ops pages intact; pw:L2 must stay green (update specs
-      that referenced deleted pages). Repo: deployment-ui.
-- [ ] [VERIFY] P2. Phase 4 — both stacks up; every migrated surface reachable in UTS-UI and live against deployment-api;
-      deployment-ui nav contains ONLY devops surfaces; `/repos` + `/epics` tabs verified clickable + URL-synced.
-      Evidence: pw:L2 both repos + screenshots in the plan.
-- [ ] [DOCS] P2. Phase 5 — codex SSOT update: `codex/04-architecture/` UI-split note (deployment-ui = devops pane;
-      unified-trading-system-ui = trading/user surface incl. research consoles + DART) so the next agent doesn't
-      re-confuse the two; CLAUDE.md repo-map line already says it — extend with the research-console rule.
+- [x] ✅ [AUDIT] P2. Phase 1 — audited 2026-06-12 (slot-3). Confirmed all 5 pages present
+      (`deployment-ui/src/pages/{Dart,MlExperiments,StrategyBacktests,ExecutionBacktests,ClientSubscriptions}.tsx`),
+      their routes (`App.tsx` L144-155), nav (`Header.tsx` `NAV_LINKS` L59-70 + mobile menu), tests
+      (`src/pages/*.test.tsx`), mocks (`src/lib/mock-api.ts`). Confirmed deployment-api launch routes exist
+      (`deployment_api/routes/{ml_experiment,strategy_backtest,execution_backtest}_launch.py`, unit-tested). Confirmed
+      UTS-UI counterparts: `services/dart/terminal` (richer than Dart.tsx → delete), `services/research/ml` (read-only),
+      `services/research/strategy/backtests` (posts to a DIFFERENT in-app endpoint), no SLA-tier surface in `manage`.
+      Confirmed `apiUrls.deployment` already wired in UTS-UI `lib/config/api.ts`. Operator dual-cut decision recorded in
+      Scope above. Repo: deployment-ui + unified-trading-system-ui.
+- [ ] [CODE] P2. [UI] Phase 2a — **UTS-UI: deploy-through-deployment-api for ML research**. Add a "Launch experiment /
+      deploy" action on `app/(platform)/services/research/ml` (gated internal/admin) that POSTs `MlExperimentParams` →
+      `${apiUrls.deployment}/api/ml/experiment/launch` and shows the `LaunchResult` (vm_name / correlation_id /
+      events_uri). React-query mutation hook + mock-parity handler + component test. Reuse the existing research design
+      idiom (Dialog + form + Button); NO firebase-admin (this is a deployment-api proxy, not a Firestore write). Repo:
+      unified-trading-system-ui.
+- [ ] [CODE] P2. [UI] Phase 2b — **UTS-UI: strategy + execution backtest deploy actions**. Same pattern on
+      `services/research/strategy/backtests` (`StrategyBacktestParams` → `/api/strategy/backtest/launch`) and a
+      `services/research/execution` surface (`ExecutionBacktestParams` → `/api/execution/backtest/launch`). Distinct
+      from the existing in-app `/api/execution/backtests` dialog — this is the VM-launch/deploy path. Mock parity +
+      component tests. Repo: unified-trading-system-ui.
+- [ ] [CODE] P2. [UI] Phase 2c — **UTS-UI: migrate ClientSubscriptions → `manage`**. Build the client_id→SLA-tier CRUD
+      surface under `app/(platform)/services/manage/` (e.g. `manage/subscriptions`) wired to
+      `${apiUrls.deployment}/api/subscriptions` (GET/POST/PUT). Reuse UTS-UI design system + types from UAC where
+      available. Mock parity + component test. Repo: unified-trading-system-ui.
+- [ ] [VERIFY] P2. Phase 2-gate — `pw:L2` on UTS-UI (`npx playwright test --project=chromium tests/smoke/`) + a
+      regression spec covering the new deploy actions + subscriptions surface. Repo: unified-trading-system-ui.
+- [ ] [CODE] P2. [UI] Phase 3 — **deployment-ui: DELETE only `Dart.tsx` + `ClientSubscriptions.tsx`** (+ their routes in
+      `App.tsx`, nav entries in `Header.tsx`, `*.test.tsx`, mock handlers). **KEEP** MlExperiments / StrategyBacktests /
+      ExecutionBacktests (dual-cut: they remain the deploy surface here). Keep LandingTabs (Overview/Epics/Repos
+      CI/Alerts/Fleet Git) + all ops pages. `pw:L2` must stay green (update specs referencing the 2 deleted pages).
+      Repo: deployment-ui.
+- [ ] [VERIFY] P2. Phase 4 — both stacks up; UTS-UI research surfaces can deploy live against deployment-api; the 3
+      launch consoles still work in deployment-ui; Dart + ClientSubscriptions gone from deployment-ui; `/repos` +
+      `/epics` tabs still clickable + URL-synced. Evidence: pw:L2 both repos.
+- [ ] [DOCS] P2. Phase 5 — codex SSOT update: `codex/04-architecture/` UI-split note (deployment-ui = devops + deploy
+      pane incl. the 3 launch consoles; unified-trading-system-ui = trading/research/client surface that can ALSO deploy
+      through the shared deployment-api; DART lives only in UTS-UI). Extend CLAUDE.md repo-map line with the dual-cut
+      deploy rule.
