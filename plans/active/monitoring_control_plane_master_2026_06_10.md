@@ -243,6 +243,15 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `deltaLabel(files, aheadBy)` now renders "N files ahead · M commits" (and "in sync · M commits (squash skew)" when
       `files_changed==0 && ahead_by>0`), keeping `files_changed` as the content truth and `ahead_by` labelled as the
       squash-inflated commit count. Unit test updated (`repoCi.test.ts`). Repo: deployment-ui only.
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-12 — deployment-ui@ef08fd8 | pw:L2 ✓ 198/198 | regression:
+      tests/smoke/scrollbar-gutter-stable.spec.ts. **(operator bug) Home-shell nav flicker on every poll refresh —
+      FIXED.** The centered max-width home shell runs many independent pollers (health 30s, repo-CI/alerts 60s,
+      gh-rate-budget); the 6px space-taking `::-webkit-scrollbar` toggled whenever a poll nudged content height across
+      the viewport threshold, reflowing the full-width Header + the 12-col grid sideways each tick — operator-reported
+      "horizontal + vertical nav comes in and goes away while the reload icon spins". Fix:
+      `html { scrollbar-gutter: stable }` (index.css) permanently reserves the gutter so the scrollbar's presence never
+      reflows the layout. Regression asserts computed `scrollbar-gutter:stable` + content-width invariant when the
+      scrollbar appears. Repo: deployment-ui (index.css).
 - [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
       per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
       relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
