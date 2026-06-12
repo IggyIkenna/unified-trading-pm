@@ -53,8 +53,8 @@ without the loop fix re-burns whatever it is in hours.
 Key context you're missing from yesterday: the 06-10 LDR-trunk decoupling did NOT reduce QGv2 volume — it
 **quadrupled-to-quintupled** it (full fleet, 25 v2-running repos: 787 → 1,545 → 3,502 runs/day; § Appendix A), via the
 empty-promote loop (§ Root cause #3): **87% of all v2 runs in the audited window are drain-PR re-runs (`pull_request`,
-head=`live-defi-rollout`)**, not human pushes. 15 of 18 staging repos are phantom-ahead right now (§ Appendix B) —
-that's what the unfixed drain would chew on at restore.
+head=`live-defi-rollout`)**, not human pushes. 14 of 18 staging repos are phantom-ahead right now (refreshed ~07:50Z, §
+Appendix B; 12 carry stale open drain PRs) — that's what the unfixed drain would chew on at restore.
 
 ## What I found
 
