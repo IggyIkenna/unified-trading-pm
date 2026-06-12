@@ -63,6 +63,16 @@ webhook, direct curl — the notify-slack workflow itself cannot run) + desktop 
 steps** ("Job is about to start running on the hosted runner…" then nothing). 26/26 PM runs since 02:20Z failed;
 githubstatus.com all-operational → account spending limit, not platform. Operator (Ikenna) pinged.
 
+**2026-06-12 ~04:45Z** — wall still active (escalation agt-7060d4, slot 1):
+
+- `alerting-service` `quality-gates-v2` re-escalated as `ldr_qg_failure`; local QG exits 0 on commit 897cd93 (all gates
+  pass); code is correct
+- Re-trigger attempted: run 27395083894 failed in 6 s, zero steps — billing wall still blocking all private-repo CI
+- No code fix needed; blocked on operator billing restore
+- Re-trigger once billing restored:
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/alerting-service --ref live-defi-rollout`
+- agt-7060d4 escalation id
+
 ## Root cause — why the budget keeps blowing (audit 2026-06-12)
 
 This is NOT a payment-instrument problem. The fleet's burn rate is **~30,600 billable min/day ≈ $245/day ≈ $7,350/month
