@@ -87,21 +87,22 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
 
 ## Daily deep reconciler (operator direction 2026-06-12 — supersedes the daily-Haiku layer; see banner above)
 
-- [ ] [CODE] P1. **`plan-reconciler` agent profile** (`agents/plan-reconciler.md` + `server/plan_health.py`
-      `mode="reconcile"` on `POST /api/plan-health/dispatch`): one-shot, long-running (minutes→hour) opus/effort-max/
-      thinking-on worker on a Max-plan slot. Inputs: hygiene digest + full plan/epic/issue-doc corpus + CLAUDE.md +
-      codex SSOTs named by plans. Does: (1) runs the deterministic sweep itself (subsumes the Cloud Run job); (2)
-      cross-checks plans ↔ epics ↔ codex ↔ issue docs ↔ CODE STATE (verify cited shas via
-      `git merge-base --is-ancestor … origin/live-defi-rollout`, claimed files/flags via rg — grep-then-read); (3)
-      APPLIES safe fixes: flip todos ONLY with verifiable on-origin evidence, `fix_frontmatter.py`/todo-format,
-      mark-superseded banners; (4) files what it can't safely fix as issue docs + inbox pings; (5) one
-      `docs(plans): daily reconciliation` commit direct to LDR (sanctioned carve-out) + Slack summary. HARD LIMITS: 12h
-      grace (skip plans with newest git touch <12h — `git log -1 --format=%ct -- <plan>`); no deletions; no archival of
-      `locked_by` plans; no codex rewrites beyond confidence-flagged rows in v1. repo: agent-orchestrator.
-- [ ] [INFRA] P1. **Daily systemd timer on the central VM** (vm-0 `i-0c9b283b31d6b5ca7`): `plan-reconciler.timer` → curl
-      `POST localhost:8765/api/plan-health/dispatch {"mode":"reconcile"}` (internal-secret authed; central has it
-      hand-wired). Installer script in agent-orchestrator `scripts/` (idempotent, like install-orchestrator-service);
-      billing-proof (no GHA dependency). repo: agent-orchestrator.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@e668278 (QG green; 20 plan-health tests incl. 5 new; deployed
+      to vm-e2e-test). `agents/plan-reconciler.md` carries the full runbook (heartbeats for the long run; STEP 1
+      deterministic sweep/digest/skeleton — subsumes the Cloud Run job; STEP 2 grace-set; STEP 3 deep cross-check incl.
+      sha-on-origin + rg code-state verification with grep-then-read; STEP 4 file-don't-fix for judgment items + inbox
+      pings; STEP 5 single `docs(plans): daily reconciliation` commit + conditional FF-push + result POST — an all-empty
+      report is mandatory, silence is not). HARD LIMITS section verbatim: 12h grace / no deletions / no locked-plan
+      archival / no codex rewrites / flips only with verified evidence. `plan_health.dispatch(mode="reconcile")` routes
+      to it and FORCES opus/effort-max/thinking-on server-side (a lighter caller model is deliberately overridden);
+      unknown mode → 400. Was: **`plan-reconciler` agent profile**. repo: agent-orchestrator.
+- [x] ✅ [INFRA] P1. INSTALLER SHIPPED 2026-06-12 (same unit @e668278) — `scripts/install-plan-reconciler-timer.sh`:
+      idempotent systemd timer (default 04:30 UTC, Persistent=true, RandomizedDelaySec=300) + oneshot service →
+      `/usr/local/bin/plan-reconciler-dispatch.sh` (reads the internal secret at FIRE time from .env.local, POSTs
+      reconcile dispatch, explicit verdict line on EVERY path — DISPATCHED / NO-CAPACITY-retry-tomorrow / UNEXPECTED).
+      **Deliberately NOT yet installed on central** — the plan's own ordering gates the central install behind the
+      vm-e2e-test proof (next todo). Install command when proven:
+      `sudo bash scripts/install-plan-reconciler-timer.sh --operator ubuntu`. repo: agent-orchestrator.
 - [ ] [TEST] P1. **Prove on vm-e2e-test first**: seed a synthetic violation set (stale unflipped todo with an on-origin
       sha + a frontmatter violation + a >12h-old contradiction + a <12h-old plan that must be SKIPPED) → dispatch
       reconcile mode → verify the worker fixes exactly the eligible set, skips the fresh plan, commits one

@@ -77,13 +77,16 @@ source:
 
 ## Phase 2 — durable follow-ups (the DB-lock ROOT + deterministic startup) [P0/P1]
 
-- [ ] [CODE] P0. **Move the slow spawn OUT of the write transaction** (`escalation.escalate` + `autospawn._tick_once`):
-      read the needed slot fields (model/effort/thinking/account) into plain values inside a SHORT transaction, run
-      `tmux_spawn.spawn` OUTSIDE any `session_scope`, then a SHORT transaction to persist
-      `tmux_session`/`last_spawned_at`. Eliminates the multi-second write-lock hold → no more "database is locked"
-      crashing the watchdog/pruner, and lets the boot readiness wait be unbounded (raise the 20s cap from Phase 1).
-      Watch for `DetachedInstanceError` (the reason it was in-session originally — the fix is to extract scalars, not
-      pass the ORM row out).
+- [x] ✅ [CODE] P0. DONE 2026-06-12 — agent-orchestrator@440a572 (QG green; 92 affected tests pass; deployed to
+      vm-e2e-test). ALL THREE spawn callers restructured exactly per the spec: `autospawn.snapshot_slot()` extracts the
+      7 scalar fields `_do_spawn` reads (the DetachedInstanceError fix — scalars out, never the ORM row);
+      `autospawn._run_one_tick` collects (snapshot, account) candidates inside the short txn then spawns AFTER the
+      session closes (a spawn failure under-fills that tick's budget by design — next tick retries);
+      `escalation.escalate` + `plan_health.dispatch` snapshot → close session → spawn → short session for the
+      dispatched-ledger/activity writes. Boot-readiness ceiling raised 75s→120s in `_dismiss_bypass_warning` (now a pure
+      patience bound — holds NO lock). Validating evidence from today: the SAME bug class bit live on vm-e2e-test at
+      13:08 (nested `session_scope` in `_queue_escalation` → "database is locked", fixed @d6cff0f) — confirming the
+      txn-hold analysis. Was: **Move the slow spawn OUT of the write transaction**. Repo: agent-orchestrator.
 - [ ] [OPS] P1. **Deterministically disable claude auto-update OR pin the CLI.** `DISABLE_AUTOUPDATER=1` +
       `autoUpdates:false` did not stop it on 2.1.146. Find the honored mechanism for the deployed CLI, or pin/upgrade
       the fleet CLI so startup is fast + deterministic (removes the primary source of the boot-paste timing miss).
@@ -95,10 +98,10 @@ source:
       reclaimed) and the paste-retry (transient pane-miss → eventual success). Target: agent-orchestrator tests.
 - [x] ✅ [CODE] P0. **State-transition dedup for the slot-stale / "Worker heartbeat loop dead" Slack alerts** —
       `health.py:check_once` re-fired `notify_slot_failed`/`notify_slot_stale` every 60s tick because the flag had no
-      per-episode dedup and slot status thrashes idle↔stale↔killed as the watchdog kills + AutoSpawn respawns (incident
-      2026-06-10: operator saw "Slot 4/5 FAILED" spam every minute; slot 5 had cleanly `/done`-exited so its idle slot
-      sat in the alert window forever). Fix: `HealthMonitor._stale_alerted` / `_idle_failed_alerted` sets — alert ONCE
-      per episode, cleared by a recovery sweep (status=working + heartbeat < STALE_THRESHOLD) and pruned for
+      per-episode dedup and slot status thrashes idle↔stale↔killed as the watchdog kills + AutoSpawn respawns
+      (incident 2026-06-10: operator saw "Slot 4/5 FAILED" spam every minute; slot 5 had cleanly `/done`-exited so its
+      idle slot sat in the alert window forever). Fix: `HealthMonitor._stale_alerted` / `_idle_failed_alerted` sets —
+      alert ONCE per episode, cleared by a recovery sweep (status=working + heartbeat < STALE_THRESHOLD) and pruned for
       removed/re-themed slots. Regression: `tests/test_health_alert_dedup.py` (4 tests — fires-once / recovery-re-alerts
       / removed-slot-prune / working-stale-dedup). agent-orchestrator@93ca070 | QG 457 passed | deployed vm-0 (service
       restarted, dedup verified live).
@@ -107,9 +110,9 @@ source:
       the health idle-stale pass.** Today a worker that cleanly `/done`-exits leaves an idle slot with a frozen
       last_ping; after IDLE_STALE_THRESHOLD it trips the "Worker heartbeat loop dead — re-spawn" alert even though
       nothing is wrong (slot 5, 2026-06-10: last_msg `DONE: deployment-ui#43 ... merged`). The dedup caps it to one
-      alert, but the alert is still a false-positive. Fix: on a clean worker exit (last `/done`), either clear the slot's
-      stale-alert eligibility or only fire the "loop dead" alert when the slot has a `current_task` (was mid-work).
-      Target: agent-orchestrator `server/health.py` + `worker /done` handler.
+      alert, but the alert is still a false-positive. Fix: on a clean worker exit (last `/done`), either clear the
+      slot's stale-alert eligibility or only fire the "loop dead" alert when the slot has a `current_task` (was
+      mid-work). Target: agent-orchestrator `server/health.py` + `worker /done` handler.
 
 ## Success criteria
 
