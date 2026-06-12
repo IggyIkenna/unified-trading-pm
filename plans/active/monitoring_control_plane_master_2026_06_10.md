@@ -451,6 +451,47 @@ Unsolved findings from the run (each repro'd live or read in code; fix not yet s
       `ORCHESTRATOR_VM_ID=vm-e2e-test`
   - this flag → guaranteed-empty backlog until a plan explicitly targets it. Repo: agent-orchestrator.
 
+#### VM-from-scratch e2e (operator direction 2026-06-12 — fresh instance, zero pre-allocated resources, fully scripted + reusable)
+
+Current provisioning reality (surveyed 2026-06-12): the 2026-05-22 epic fleet was launched from BARE Ubuntu 24.04 via
+EC2 user-data (apt deps → AWS CLI → `GH_PAT` from Secrets Manager → clone agent-orchestrator on LDR →
+`bootstrap_vm.sh --role epic` does repos/creds/systemd/health/self-registration end-to-end) — but the user-data
+generator was never checked in (recovered from instance `i-003be935f72c13d51`'s userData). IAM
+(`uts-orchestrator-epic`), the creds bucket (`s3://uts-orchestrator-creds-427895769566` — accounts.json + setup-token
+env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOCAL), and a Packer warm-AMI
+(`deployment-service/packer/agent-orchestrator/`) all exist. Worker VMs are LONG-RUNNING instances.
+
+- [ ] [SCRIPT] P1. **Reusable worker-VM launcher** — `deployment-service/scripts/vm/launch-orchestrator-worker-vm.sh`
+      (script-homes: provision/launch → deployment-service; reuses `lib/aws_ec2_launch_lib.sh`): bare Ubuntu 24.04
+      (SSM-resolved AMI, `AMI_ID` override for the Packer warm image) + the PROVEN 2026-05-22 user-data shape,
+      parameterised `--name/--vm-id/--role/--slots/--instance-type/--env KEY=VAL...` (env passthrough → the new
+      bootstrap override hook below, so isolation vars are live BEFORE the backend starts); reuses
+      `uts-orchestrator-epic` instance profile + sg-0080310387e84f613 + subnet-fc09eca6 (all env-overridable); tags
+      Name/vm-id/role/operator/lifecycle; prints instance-id + IP + log-tail hint. Repo: deployment-service.
+- [ ] [SCRIPT] P1. **Bootstrap env-override hook** — `bootstrap_vm.sh` consumes `ORCHESTRATOR_EXTRA_ENV` (newline
+      KEY=VAL block, user-data-injectable) into `.env.local` BEFORE the orchestrator service starts, so a test VM boots
+      directly with `ORCHESTRATOR_VM_ID=vm-e2e-test` + `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` (+
+      `ORCHESTRATOR_DONE_REQUIRE_ORIGIN=true` to exercise the new ratchet) — no SSH-and-restart step. Repo:
+      agent-orchestrator.
+- [ ] [TEST] P1. **Post-launch verification harness** — `agent-orchestrator/scripts/verify_vm_e2e.sh <instance-id|ip>`
+      (laptop-run; SSM/ssh): waits ≤10 min for `:8765` health, then asserts with PASS/FAIL table — backend Ready (live
+      mode), `pm-pull.timer` enabled + last pull LDR (the STEP 7.5c verifier), MainAgentKeeper spawned `orch-agent-main`
+      (real setup-token auth from the creds bucket — NOT the local-credentials hack), backlog EMPTY under strict scoping
+      (the isolation proof), AutoSpawn/Watchdog/PlanRegen loops started, self-registration reported. Composes with the
+      no-fire-and-forget T+10min rule. Repo: agent-orchestrator.
+- [ ] [TEST] P1. **Plan-pickup e2e on the VM** — drop a local test plan (`assigned_vm: vm-e2e-test`) into the VM's PM
+      checkout → PlanRegenLoop ingests ONLY it (strict scoping) → AutoSpawn spawns a real setup-token worker →
+      /boot→/progress→/done verified with `on_origin` + the blocked→main-agent-auto-answer loop re-verified on real
+      infra. Evidence: activity stream + blocked stats endpoint. Repo: agent-orchestrator.
+- [ ] [TEST] P1. **CI-failure → escalation → worker assignment e2e** — fire `POST /api/escalate`
+      (`wall_type=ldr_qg_failure`, internal-token auth) against the test VM exactly as the CI watcher does → verify the
+      orchestrator classifies the wall, picks a free slot, spawns the escalate worker, and the task reaches dispatched +
+      worked state. This is the operator's target loop ("pipeline breaks → orchestrator picks up the alert, identifies,
+      assigns to a worker"). Repo: agent-orchestrator.
+- [ ] [INFRA] P2. **Lifecycle + teardown** — `lifecycle=e2e-test` tag on the test instance + a stop/terminate helper in
+      the launcher (`--terminate <instance-id>`); production worker VMs stay long-running (no auto-teardown). Repo:
+      deployment-service.
+
 Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
 because no setup-token exists on this host — exactly the failure mode CLAUDE.md § "accounts auth via setup-tokens only"
