@@ -205,6 +205,27 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-12 (~11:45Z, operator eyeball session) — **unique-instruments headline SHIPPED + LIVE** (operator: "the
+  headline should be unique... the catalogue should be deduplicating" — correct on all counts). The lifecycle catalogue
+  (`prod/catalog.parquet`, one row per instrument identity) IS the dedup source; the headline was summing per-shard
+  `instrument_count` over the latest day. Shipped: `read_unique_instrument_count` (catalogue-backed, cached,
+  null-honest) + per-AG/totals plumbing + the coverage-summary LIVE-rollup beta-bypass (same CF-20 rule as
+  get_manifest_status) — deployment-api@5938b3e + prediction-bucket-kind fix; deployment-ui headline now leads with
+  "unique instruments (catalogue-deduplicated)" (tsc clean · 837 vitest · 44 playwright smoke · regression
+  tests/unit/unique-instruments-headline.spec.tsx). Missing catalogues BUILT+PROMOTED via build_instrument_catalogue:
+  sports 789 rows, prediction 0 rows. **LIVE figures: totals 914,212 unique — CEFI 220,222 · TRADFI 686,348 · DEFI 6,853
+  · SPORTS 789 · PREDICTION 0.** Serving note: dev API runs from the .tabs/4 clone (the main clone's ff-pull is blocked
+  by a 60-file foreign WIP batch — protected, untouched).
+- [ ] [SCRIPT] P2. **Rollup worker: precompute `unique_instruments`** — the Cloud Run data-status rollup
+      (deployment_api/scripts/data_status_rollup_worker.py) predates the field; in LIVE (non-beta) mode the rollup
+      fast-path serves coverage summaries WITHOUT unique_instruments until it recomputes them. Add the catalogue read to
+      the worker + redeploy the Cloud Run job. Repo: deployment-api. Provenance: operator ask 2026-06-12.
+- [ ] [DATA] P2. **Prediction catalogue roll-up finds 0 rows** — `build_instrument_catalogue --asset-group prediction`
+      promoted a 0-row catalogue (the pred per-date defs under instruments-store-pred `instrument_availability/` aren't
+      picked up by the default by-date prefix/layout). Wire the prediction-specific layout (market-lifecycle grain per
+      build_prediction_catalogue_dataframe) so unique_instruments reads a real count (493 IS rows / ~thousands of
+      markets expected). Repo: instruments-service. Provenance: /tmp/catalogue_prediction.log.
+
 - 2026-06-12 (~10:35Z, operator beta-eyeball session) — **beta render made FULLY consistent**: the operator's "is it
   using the right manifest" check exposed (1) the live-rollup fast-path serving LIVE data in beta (fixed dapi@1f1ad77 —
   R3 agent's bypass, +2 regression tests) and (2) instruments-store beta reads silently falling back (no IS-store

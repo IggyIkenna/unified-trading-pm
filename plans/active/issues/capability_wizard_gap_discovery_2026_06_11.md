@@ -96,9 +96,29 @@ All gaps are TYPED in the manifest (never silent) — the forcing-function state
 
 ## Escalated needs_code_scan (auto-emitted)
 
-*Auto-emitted 2026-06-11 by `scripts/openapi/emit_capability_gap_todos.py`.*
-*Dedup-idempotent on re-run.  Only edges with `needs_code_scan` gap_type and no*
-*`agent_annotation` appear here.  Once annotated, edge drops off on next emit run.*
+_Auto-emitted 2026-06-11 by `scripts/openapi/emit_capability_gap_todos.py`._ _Dedup-idempotent on re-run. Only edges
+with `needs_code_scan` gap_type and no_ _`agent_annotation` appear here. Once annotated, edge drops off on next emit
+run._
 
-- [ ] [AGENT] P2. **gap_registry:order_semantics** — Venue order semantics registry is honest-empty — per-adapter order-semantics honor matrix code-scan. Target repo: `execution-service`. Cold-start context: VENUE_ORDER_SEMANTICS backfill: scan each venue execution adapter for TIF (FOK/IOC/post-only), make/take, ref-pricing mode, multi-leg delta ownership; populate unified_api_contracts/internal/architecture_v2/order_semantics.py VENUE_ORDER_SEMANTICS. (auto-emitted by emit_capability_gap_todos.py)
+- [ ] [AGENT] P2. **gap_registry:order_semantics** — Venue order semantics registry is honest-empty — per-adapter
+      order-semantics honor matrix code-scan. Target repo: `execution-service`. Cold-start context:
+      VENUE_ORDER_SEMANTICS backfill: scan each venue execution adapter for TIF (FOK/IOC/post-only), make/take,
+      ref-pricing mode, multi-leg delta ownership; populate
+      unified_api_contracts/internal/architecture_v2/order_semantics.py VENUE_ORDER_SEMANTICS. (auto-emitted by
+      emit_capability_gap_todos.py)
 
+### 2026-06-12 — Margin traceability audit (operator question: "can we trace where our margin sits?")
+
+DeFi collateral IS traced end-to-end (SUPPLY LedgerRow → aToken position → margin models → MarginEvent pub/sub →
+alerting/kill-switch/deleverage). CeFi perp margin is NOT — 7 gaps with file evidence (full report in plan Progress Log
+context; recommended owner strategy-service PBM):
+
+- [ ] [SPEC] P1. `TransferIntent`/`AllocationTarget` gain a `transfer_purpose` field (MARGIN_DEPOSIT etc.) + ledger
+      EventType gains COLLATERAL_POSTED/MARGIN_RELEASED — today a USDC margin transfer to hyperliquid is
+      indistinguishable from any other transfer. unified-api-contracts + execution-service + fund-administration.
+- [ ] [IMPLEMENT] P1. CeFi margin emission: margin_event_emitter.py is DeFi-only (hardcodes venue_type="defi"); UTL
+      margin models for HL/Bybit/OKX/Binance exist but nothing feeds them live balances. strategy-service PBM owns.
+- [ ] [IMPLEMENT] P2. margin_health API is a Phase-1 stub returning []; no CeFi per-venue margin balance tracker
+      (venue_balance_tracker.py is sports-only). strategy-service.
+- [ ] [IMPLEMENT] P2. Runtime consumer for the UAC collateral registry: haircut-adjusted posted-collateral value feeding
+      MarginHealthSnapshot.collateral_usd (also resolves the F28 dual-SSOT risk). UTL/strategy-service.

@@ -348,3 +348,33 @@ symlinks added to UI repos need the same treatment.
 shells → vitest/vite fail with ERR_REQUIRE_ESM (require-of-ESM needs node ≥22) and rolldown's native binding is skipped
 at install (engine floor 20.19). Remedy for agents on this host: `PATH="/usr/bin:$PATH"` for UI QG runs. System node is
 22.22.3 (nodesource); repo standard node22 (.nvmrc).
+
+### F33–F37 — Five selector contradictions: execution-algo truth disagrees across its own code paths
+
+**Status**: OPEN — transcribed declaratively in UAC `algo_compatibility.py::SELECTOR_CONTRADICTIONS` (UAC@180fb56, the
+detail SSOT; manifest carries them as edges). Slugs: **F33 iceberg_path_split** (ICEBERG valid via manual API + live
+selector + factory but excluded from canonical ALGORITHMS_BY_INSTRUCTION_TYPE), **F34 sor_naming_mismatch** (factory
+keys SOR differently from the canonical name), **F35 ghost_algorithms** (SEQUENTIAL_LEGS/SPREAD_ROLL/
+BEST_PRICE/KELLY_STAKE valid in enums but unimplemented), **F36 heuristic_selector_bypasses_instruction_type** (live
+selection path ignores the instruction-type map), **F37 missing_ssot_doc** (no codex SSOT for algo selection). Exactly
+the operator's "codebase isn't blocking impossible combinations" — now declared, blocked in the verdict matrix, and
+awaiting execution-service remediation.
+
+### F38 — IBKR modeled as a VENUE in ENDPOINT_REGISTRY (broker/venue conflation — operator-caught, system-design floor)
+
+**Status**: OPEN → fix dispatched (manifest layer first). `registry/_endpoint_registry_data.py:650: venue="ibkr"` and
+`capability_declarations/_tradfi.py: source="ibkr"`. Operator: IBKR is a BROKER routing to exchanges (CME/ICE/CBOE); the
+exchange is the venue; data pipeline/strategy is identical regardless of the final routing hop. CapabilityNodeKind
+already has `broker`; collateral registry has BrokerEntry. Fix: manifest classifies ibkr as broker node +
+venue⇠routed-via⇢broker edges; wizard renders brokers as the routing axis, not selectable venues. The deeper
+ENDPOINT_REGISTRY key migration (venue="ibkr" is load-bearing for the tradfi data pipeline as a SOURCE id) is a tracked
+follow-up under the venue-axis vocabulary plan — do NOT rename pipeline keys casually.
+
+### F39 — Wizard offers ~13 venues; manifest has 183 — eligibility lists are hand-named subsets (operator-caught)
+
+**Status**: OPEN → audit dispatched. Missing DeFi venues (Curve, Sushi, PancakeSwap, Orca, Raydium, Phoenix, …) are
+among the manifest's orphan venue nodes: present in venue registries but referenced by NO capability cell / leg-spec
+eligible_venue_ids (which were seeded from hand-named cell venue lists). Either the execution adapter exists and the
+eligibility list is too narrow (registry gap) or no adapter exists (unbuilt dead-end) — per-venue audit required:
+instruments universe × ENDPOINT_REGISTRY × execution-service adapter inventory × archetype eligibility → widen
+eligibility from ADAPTER INVENTORY (code truth), not hand-named lists.

@@ -375,17 +375,62 @@ actually exists (which data_types missing, over which timeframes) via the existi
 
 ### 6A — registry truth to full coverage
 
-- [ ] [IMPLEMENT] P0. Leg-spec backfill: ALL 57 archetypes get ArchetypeLegStructure entries (sourced per leg from
+- [x] ✅ [IMPLEMENT] P0. Leg-spec backfill: ALL 57 archetypes get ArchetypeLegStructure entries (sourced per leg from
       engine code + codex archetype docs; where genuinely underivable, an explicit not_registered leg structure with a
-      reason — enumerated, never absent). unified-api-contracts.
-- [ ] [SPEC] P0. **Archetype→execution-algo compatibility registry** in UAC architecture_v2: which algos
+      reason — enumerated, never absent). unified-api-contracts. DONE 2026-06-12 — **unified-api-contracts@180fb56**.
+      `ARCHETYPE_LEG_STRUCTURES` now enumerates all **57/57** archetypes: **51 real leg structures** (engined +
+      doc/cell-derived: carry/yield 10 + arbitrage/MEV/liquidation 6 + DeFi-LP 3 + directional/ML/rules 5 +
+      market-making 8 + stat-arb 2 + vol-trading 17) + **6 explicit `not_registered`** (ARBITRAGE_MEV_SANDWICH
+      theoretical-only tracer; 4 PORTFOLIO\_\* meta-allocation overlays with no instrument legs; VOL_0DTE_PIN_RISK
+      risk-management overlay) — each with `legs=()` + a cited `not_registered_reason` (validator enforces the
+      invariant; registry build asserts all 57 keys present). Seeds split into `archetype_leg_spec_seeds.py` (900-line
+      cap; allowlisted as a declarative seed registry); schema extended additively
+      (`not_registered`/`not_registered_reason` fields). Per leg cites engine path + codex doc + manifest cell. Tests:
+      57-key completeness, not_registered explicitness + partition, per-family role sanity,
+      validator-rejects-bad-invariant (12 tests). basedpyright clean, QG green.
+- [x] ✅ [SPEC] P0. **Archetype→execution-algo compatibility registry** in UAC architecture_v2: which algos
       (SOR/sor_twap/swap_twap/atomic_bundle/selector) are valid per (instruction type × venue kind × leg coupling),
       sourced from execution-service algorithms/selector code + codex; honest gaps typed. Today NOTHING declares this —
-      the wizard cannot block what no registry states (operator-caught).
-- [ ] [IMPLEMENT] P0. **Exhaustive verdict matrix generator** (PM exporter): full cross-join archetype × venue ×
+      the wizard cannot block what no registry states (operator-caught). DONE 2026-06-12 —
+      **unified-api-contracts@180fb56** (`algo_compatibility.py`). Transcribes the execution-service selector
+      DECLARATIVELY (file:line cited): `ALGORITHMS_BY_INSTRUCTION_TYPE` + `DEFAULT_ALGORITHM` + `select_algorithm`
+      4-step chain (selector.py:25-167) + venue→InstructionType classification (instruction_type.py:69-112) — NO service
+      import (reuses UAC `InstructionType` + `CLOB/DEX/ZERO_ALPHA_VENUES`). `ARCHETYPE_ALGO_COMPATIBILITY` maps each of
+      the 57 archetypes (via its legs' instrument-types × venue-kinds → induced InstructionTypes) to its valid/invalid
+      algo set with reasons. **Impossible combos BLOCKED** (verified: pure-staking/recursive → ONLY BENCHMARK_FILL; LP →
+      SWAP algos, no TWAP; event-settled → bet algos, no TWAP). Ghost algorithms
+      (SEQUENTIAL_LEGS/SPREAD_ROLL/BEST_PRICE/KELLY_STAKE + BENCHMARK_FILL/ MAX_SLIPPAGE) flagged `implemented=False`. 5
+      `SELECTOR_CONTRADICTIONS` carried (F33–F37 below). 11 tests; QG green.
+- [x] ✅ [IMPLEMENT] P0. **Exhaustive verdict matrix generator** (PM exporter): full cross-join archetype × venue ×
       instrument_type × instruction × algo → every cell gets an explicit verdict (available | blocked(reason) |
       not_registered) — no absent cells; counts reported; ships as openapi/capability-verdict-matrix.json (+ summary in
-      the orphan report).
+      the orphan report). DONE 2026-06-12 — **unified-trading-pm@9a9278a4a** (`generate_capability_verdict_matrix.py`) →
+      **unified-api-contracts@c9ab62e** (`openapi/capability-verdict-matrix.json`). Hierarchical per-archetype blocks;
+      grounded in `ARCHETYPE_LEG_STRUCTURES` × `ARCHETYPE_ALGO_COMPATIBILITY`. **Headline: 22,448 total cells — 15,093
+      available (67.2%) / 7,259 blocked (32.3%) / 96 not_registered (0.4%)**; every cell an explicit verdict, no absent
+      cells. Size 2.2 MB (< 20 MB budget — available cells rolled up per cell, blocked/not_registered in full). Count
+      summary appended (idempotently) to `capability-orphan-report.txt`. Deterministic (two runs byte-identical). Wired
+      into `generate-unified-openapi.sh` + UI-sync; algo-compat edges also folded into the capability manifest
+      (`_capability_gaps.extract_algo_compatibility`). 5 PM tests. **Manifest regenerated** (Item 4): 435→558 nodes /
+      902→2287 edges (+74 leg nodes from 11→51 real structures, +21 execution_algo nodes + per-archetype algo verdict
+      edges); orphans 89→87, deterministic.
+
+- [ ] [IMPLEMENT] P0. **Broker-vs-venue modeling (F38)**: manifest classifies ibkr (and any future broker) as a `broker`
+      node with venue⇠routed_via⇢broker edges (TradFi venues = CME/ICE/CBOE); wizard Venues stage renders brokers as a
+      routing choice under the venue, never as a peer venue option. ENDPOINT_REGISTRY pipeline-key migration = named
+      follow-up (venue-axis vocabulary plan), not this todo.
+- [ ] [AUDIT] P0. **Venue-coverage audit + eligibility widening (F39)**: per asset_group, cross-reference instruments
+      universe × ENDPOINT_REGISTRY × execution-service adapter inventory × archetype/leg eligibility; report per venue
+      (adapter exists? eligible anywhere? orphan?); widen eligible_venue_ids from adapter inventory with citations;
+      remaining orphans typed (unbuilt vs logical).
+
+- [ ] [AGENT][UI] P0. **Full-universe debug rendering (operator direction 2026-06-12 third message)**: EVERY wizard
+      stage renders the COMPLETE dimension universe from the registries — all 57 archetypes (including
+      blocked-for-this-category, with reason), all venues (including orphans/unbuilt dead-ends), all instrument types
+      (including impossible-for-this-archetype) — verdict chips sourced from the verdict matrix; nothing filtered out,
+      only greyed + reasoned ("could be a venue, but: no adapter"). Same for the deployment-ui capability tab. A
+      `client mode` flag (hide-junk, curated) is the named successor for client-facing use — debugging mode is the
+      default now. pw:L2 gate; property test: per stage, rendered option count == dimension universe count.
 
 ### 6B — parity quality gates (regression-blocking)
 
@@ -402,8 +447,8 @@ actually exists (which data_types missing, over which timeframes) via the existi
 - [x] [AGENT][UI] P1. Wizard Data stage queries deployment-api `/api/data-status/drilldown` + `/schema` for the config's
       derived requirements (per selected venue × data_type × timeframe): render captured/missing windows, missing
       data_types, and the min-data-to-run check against ACTUAL coverage. Env-gated base URL (local/ops: deployment-api
-      :8004; UAT: honest "data-status backend not configured" banner). pw:L2 gate.
-      — unified-trading-system-ui@9db31842 | pw:L2 ✓ 15/15 | regression: tests/smoke/wizard-data-coverage.spec.ts
+      :8004; UAT: honest "data-status backend not configured" banner). pw:L2 gate. — unified-trading-system-ui@9db31842
+      | pw:L2 ✓ 15/15 | regression: tests/smoke/wizard-data-coverage.spec.ts
 - [ ] [AGENT][UI] P2. Capability tab: dead-end/orphan rows link through to the same coverage answer (already cross-links
       routes; add the per-cell coverage fetch).
 

@@ -609,11 +609,19 @@ Live bugs found during this verification (both fixed):
       bootstrap upserts `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0`; the ONE designated responder VM (vm-0)
       re-enables in its .env.local; ORCHESTRATOR_EXTRA_ENV overrides at launch for a deliberate responder. The test VM's
       fixer was killed before it acted; CIReconcile disabled there.
-- [ ] [CODE] P2. **AutoSpawn over-spawns: N idle slots × 1 queued task → N workers** — tick 10:57:10 logged
-      `checked=2 spawned=2` for a single queued task; one worker took it, the other booted to an empty queue (now
-      warm-reaped after 15 min, but the boot itself is wasted account messages). Fix shape: cap spawns-per-tick at the
-      queued+undispatched count (decrement as the tick assigns). Repo: agent-orchestrator. Found 2026-06-12
-      concerns-verification run.
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@3586c89 (QG green; deployed to vm-e2e-test). `_run_one_tick`
+      now computes `spawn_budget = _queued_undispatched_count(session)` once per tick and skips further slots with
+      `queue_satisfied` once `slots_spawned` reaches it — one queued task warrants one spawn. 2 unit tests pin both
+      directions (2 slots/1 task → 1 spawn + queue_satisfied skip; 2 slots/2 tasks → 2 spawns). Live-spawn verification
+      DEFERRED-BY-HEADROOM (not a gap in the fix): at test time all 3 accounts were at/over the AutoSpawn ceilings
+      (sub-a 95% weekly, sub-b exactly 80% = ceiling, sub-c rate-limited to 19:00) so the loop correctly refused to
+      spawn at all — the headroom guard working as designed; the cap rides the identical tick path the morning's live
+      spawns used and will be observable on the next real dispatch (`skips={'queue_satisfied': N}` in the tick log).
+      BONUS live proof captured during this work: the @1a0bea0 warm-window idle-reap fired ORGANICALLY — journal
+      11:13:52 `idle-reap slot 1: session orch-slot-1 reaped; no respawn (empty queue)`, ~15 min after its task
+      finished, no respawn after — the burn loop is dead under production conditions. Was: **AutoSpawn over-spawns: N
+      idle slots × 1 queued task → N workers** (tick 10:57:10 `checked=2 spawned=2` for one task). Repo:
+      agent-orchestrator. Found 2026-06-12 concerns-verification run.
 
 **VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
 RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3
