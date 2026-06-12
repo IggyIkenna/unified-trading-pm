@@ -41,13 +41,32 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
 
 ## P0 — DERIBIT + BINANCE-FUTURES bundle verification
 
-- [ ] [VERIFY] P0. Query the CeFi manifest for DERIBIT `options_chain` + `futures_chain` bundle roots across the
+- [x] [VERIFY] P0. Query the CeFi manifest for DERIBIT `options_chain` + `futures_chain` bundle roots across the
       genesis→today window; record per-day `captured` vs `attempted_failed` vs `expected_unattempted` distribution.
       Confirm `expected_root_clusters` cluster-validation passed at `record_captured` (per CLAUDE.md "Cluster validation
       MANDATORY"). Flip the verified-captured rows' tracking here to ✅ with the manifest evidence; list any genuine gap
-      days.
-- [ ] [VERIFY] P0. Same for BINANCE-FUTURES `perpetual` / `derivative_ticker` — per-instrument-per-day coverage ≥99% on
-      live perps; manifest reconciliation has dropped phantom rows.
+      days. **VERIFIED 2026-06-12 — FINDING: ZERO genuine coverage. availability_index: 20,713 attempted_failed
+      (99.3%) / 138 claimed captured / 3 empty_confirmed, date range 2019-03-30→2026-05-01 (2,590 days). Cluster
+      validation FAILED: projected_index shows 136/138 "captured" rows are PHANTOM_CAPTURED_NO_OBJECT (manifest claims
+      capture but no GCS file exists); only 1 genuine captured row out of 2,590 days. Error breakdown:
+      LegacyBlankErrorReasonError=20,685 (MTDS per-instrument rows — market-tick-data-service wrote blank-error tracking
+      entries for BTC/ETH/BTC-PERPETUAL/ETH-PERPETUAL per day), VENUE_FETCH_FAILED=16, [Errno 28] disk-full=12.
+      Root cause: market-tick-data-service silently failed all bundle fetches; market-data-processing-service wrote 136
+      phantom "captured" entries with no corresponding GCS objects. DERIBIT options_chain + futures_chain have never been
+      successfully backfilled. Genuine gap: ALL 2,590 days (2019-03-30→2026-05-01). Backfill relaunch required (see
+      [SCRIPT] P0 below).**
+- [x] ✅ [VERIFY] P0. Same for BINANCE-FUTURES `perpetual` / `derivative_ticker` — per-instrument-per-day coverage ≥99% on
+      live perps; manifest reconciliation has dropped phantom rows. **VERIFIED 2026-06-12 — FINDING: Coverage 54.7%,
+      below ≥99% threshold. availability_index derivative_ticker: 38,390 captured / 17,935 attempted_failed / 13,895
+      empty_confirmed (54.7% of non-empty rows captured). Phantom check PASS: projected_index shows
+      PHANTOM_CAPTURED_NO_OBJECT=0 for BINANCE-FUTURES (all 58,090 captured rows have real GCS objects). Failed rows:
+      LegacyBlankErrorReasonError=16,594 / VENUE_FETCH_FAILED=1,294 / other=142. futures_chain for BINANCE-FUTURES:
+      0 captured, 13,334 attempted_failed (100% gap). Date range: 2019-12-30→2026-06-09 (all years affected). Additional
+      per-instrument detail (slot-6 GCS SDK 2026-06-12): PERPETUAL-tagged rows only = 38,362 captured (100%), per-instrument
+      tracking degraded to blank-instrument-id aggregate from 2026-04-29, complete gap 2026-05-23→2026-06-08 (20 days, 0 rows),
+      2026-06-09 VENUE_FETCH_FAILED on *-PERP IDs. Orphan sweep 4,867 BINANCE-FUTURES = all RECORD_ONLY (legacy twins, not phantoms).
+      Genuine gap: ~17,935 derivative_ticker day/instrument failures + 13,334 futures_chain gaps needing backfill.
+      No phantoms — all captured entries are real. Backfill relaunch required (see [SCRIPT] P0 below).**
 - [ ] [SCRIPT] P0. For any genuine gap days found above, relaunch the scoped backfill via the existing
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (per launcher SSOT) — NOT a new launcher; verify
       STARTED + PROCESSING\_\* events + STOPPED at exit per the no-fire-and-forget rule. If zero genuine gaps, record

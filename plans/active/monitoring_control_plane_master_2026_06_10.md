@@ -628,6 +628,20 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       dispatching doomed QG grinds — removes the load source). Found 2026-06-12 post-incident forensics (journalctl -b
       -1). Repo: agent-orchestrator (+ PM qg-host-governor).
 
+- [ ] [CREDS] P1. **Finish vm-0 SM wiring: align the blob's stale `ORCHESTRATOR_JWT_SECRET` (SM ← vm-0), operator
+      one-liner.** The wiring tooling is DONE — agent-orchestrator@4c558a8 `scripts/refresh_env_from_sm.sh` (UPSERT from
+      the `ORCHESTRATOR_ENV_LOCAL` blob for long-lived hosts: SM keys win on drift, the 15+ local-only keys are never
+      clobbered, backup-before-write, dry-run default, values never printed; component-verified + deployed to vm-0).
+      Live dry-run on vm-0 (2026-06-12 15:1x UTC): 6 keep + **1 REPLACE — the SM blob's `ORCHESTRATOR_JWT_SECRET`
+      differs from vm-0's LIVE value** (the blob's copy predates; vm-0's is the one operator logins use, so the fix
+      direction is SM ← vm-0, NOT apply-to-host). Agent-side secret writes are permission-blocked by design — operator
+      runs: stage blob-minus-JWT + vm-0's live JWT line to a 600-perm temp file,
+      `aws secretsmanager put-secret-value     --secret-id ORCHESTRATOR_ENV_LOCAL --secret-string "$(cat <file>)"` +
+      `gcloud secrets versions add     ORCHESTRATOR_ENV_LOCAL --project central-element-323112 --data-file=<file>`,
+      shred the temp file, then verify `bash scripts/refresh_env_from_sm.sh` on vm-0 prints 7× keep / "in sync" — at
+      that point SM is the single rotation point and vm-0 is no longer hand-wired. Repo: agent-orchestrator (+ operator
+      SM write).
+
 **Operator-concerns verification session (2026-06-12 PM, on the live vm-e2e-test):** three concerns checked +
 e2e-tested; two new live bugs found + fixed in the process (agent-orchestrator@094f691 + @1a0bea0, both deployed to the
 VM).
