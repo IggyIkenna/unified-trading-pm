@@ -112,22 +112,27 @@ clean fix is to relax it.
       (`source …/unified-trading-pm/scripts/quality-gates-base/base-service.sh`), they are not copied per-repo. Also
       note the gate is local-only (guarded by `if [ -z GITHUB_ACTIONS ]`), so CI was never affected. The real contract —
       the pyproject range — is enforced by `uv pip install -e .` (out-of-range MAJOR fails to resolve).
-- [ ] [DOCS] P2. (Forward-insurance) IF the fleet ever adopts `uv sync --frozen` (install FROM the lock for reproducible
-      builds), re-introduce a lock-freshness gate — but as an **external-only** check (internal editable deps stay
-      exempt), since the editable `version =` snapshot is always cosmetic. Until then, not needed.
-- [ ] [DOCS] P1. **🔴 CORRECTION (2026-06-09) — Phase-1's "nothing installs FROM `uv.lock`" claim is FALSE for CI.** The
-      claim was verified only against the LOCAL scripts (`base-service.sh` / `base-library.sh` use `uv pip install -e .`
-      → range-resolve, lock irrelevant). But the **CI reusable workflow
-      `unified-trading-pm/.github/workflows/python-quality-gates-v2.yml` runs `uv venv .venv` + `uv sync` (lines
-      360-361)** — and `uv sync` installs EXACTLY the `uv.lock` pins. So in CI the lock DOES pin (every transitive dep
-      too), while locally it doesn't → a CI-vs-local divergence that hid a real vuln: UTL's lock pinned the vulnerable
-      transitive `pip==26.0.1` (PYSEC-2026-196), which only CI's `uv sync` installed → CI pip-audit red, local clean.
-      This is why the "constraint not honored" symptom was CI-only. Implication: **the lock is NOT purely a record — for
-      CI it is the install manifest**, so a fix-version bump must reach the LOCK (a pyproject floor alone is
-      insufficient until `uv lock` is re-run; a plain `uv lock` won't upgrade an existing transitive pin — use
-      `uv lock --upgrade-package <name>` or an override floor). Decision for a future agent: either (a) align local + CI
-      to the SAME install path, or (b) keep the divergence but treat the lock as CI-authoritative for transitive
-      security pins. Repo: unified-trading-pm (docs/ci-cd-flow.md + this plan).
+- [x] 🟡 [DOCS] P1. RESOLVED 2026-06-12 (operator Harsh) — the fleet ADOPTS `uv sync --frozen` in CI (below), but the
+      lock-freshness gate is **deliberately NOT re-introduced**: `--locked` / `uv lock --check` hard-fails on the
+      semver-agent's CI-side `version =` bump (poison-pill — one bumped version with no lock regen reds every later PR),
+      and speed > security per operator. The author-time "floor bump → regen + commit `uv.lock` in the same commit"
+      discipline replaces it (a rule, not a CI gate).
+- [ ] 🟡 [CI] P1. **DECIDED 2026-06-12 (operator Harsh) — align CI to local via `uv sync --frozen`; speed > security.
+      DRAFTED for Ikenna (CI/CD-pipeline surface), REVIEW-REQUESTED.** The CORRECTION stands: CI's
+      `python-quality-gates-v2.yml` runs `uv venv` + plain `uv sync` (line 459) which RE-RESOLVES against the lock and can
+      pull surprise transitive deps (the CI-only `pip==26.0.1` PYSEC-2026-196 divergence — CI pip-audit red, local clean).
+      **Decision: keep `pyproject.toml` as the edit-surface/contract, but make CI install the COMMITTED lock
+      deterministically — `uv sync` → `uv sync --frozen`.** `--frozen` NOT `--locked`: `--frozen` installs the committed
+      lock as-is, no re-resolution (no surprise deps, fastest) AND tolerates the semver-agent's CI-side `version =` bump;
+      `--locked` asserts pyproject↔lock consistency and would HARD-FAIL on every version bump (poison-pill). Under
+      `--frozen` the version bump is a no-op (root pkg is editable-installed from source). **Replaces the freshness gate
+      with an author-time rule:** a dependency-FLOOR bump (NOT a version bump) regenerates + commits `uv.lock` in the SAME
+      commit (`uv lock` / `uv lock --upgrade-package <name>` → commit `pyproject.toml` + `uv.lock` together); a CVE fix =
+      bump the floor + regen (no transitive-CVE HARD block — pip-audit / internal-advisories on transitive pins WARN).
+      **Ready diff handed to Ikenna in `_agent_pings.md` 2026-06-12:** one-line `python-quality-gates-v2.yml:459
+      uv sync` → `uv sync --frozen` + relax transitive-CVE block to WARN; trivially revertible (drop `--frozen`). Docs
+      updated: `CLAUDE.md` Deps+builds + `ci-cd-flow.md` §Dependency promotion + `quality-gates.md`. Repo:
+      unified-trading-pm.
 - [x] [DOCS] P1. Docs already consistent — `CLAUDE.md` / `SUB_AGENT` / `ci-cd-flow.md` say "uv.lock is correct, no
       exact-pin fix needed," which this resolution confirms (the only delta is relaxing the gratuitous freshness gate).
 

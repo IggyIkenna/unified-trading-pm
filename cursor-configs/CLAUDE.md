@@ -106,6 +106,15 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   auto-promote, no human). Major-vs-minor = the breaking-change matrix (`detect_breaking_change.py`). SSOT:
   `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion" +
   `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
+- **Editing a dep FLOOR in `pyproject.toml` → regenerate + commit `uv.lock` in the SAME commit (codified 2026-06-12)**:
+  CI installs via `uv sync --frozen` — the committed lock as-is, no re-resolution (fast + deterministic, no surprise
+  transitive deps; `--frozen` NOT `--locked`, because `--locked` hard-fails on the semver-agent's CI-side `version =`
+  bump). So a dep-floor change (incl. a CVE-fix floor bump) only reaches CI if the lock is regenerated: `uv lock` (or
+  `uv lock --upgrade-package <name>` to move an existing transitive pin) → commit `pyproject.toml` + `uv.lock` TOGETHER.
+  A bare `version =` bump needs NO lock regen (`--frozen` tolerates it; root pkg is editable-installed). **Speed >
+  security (operator 2026-06-12)**: no transitive-CVE HARD block — pip-audit / internal-advisories on transitive pins
+  WARN; an agent bumps the floor + regens the lock when a CVE surfaces. SSOT: `codex/08-workflows/ci-cd-flow.md` §
+  "Dependency promotion" + `codex/06-coding-standards/quality-gates.md`.
 - **KNOWN EXCEPTION — `aiohttp` pinned `<3.14` fleet-wide (do NOT bump to 3.14 / "fix the CVE" — operator decision
   2026-06-05):** the canonical range is `aiohttp>=3.13.4,<3.14.0` in `workspace-constraints.toml` +
   `canonical-dependency-manifest.json` + all 18 repos that declare it (locked to 3.13.5). aiohttp 3.14.0 removed

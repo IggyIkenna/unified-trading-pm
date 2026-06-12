@@ -380,6 +380,19 @@ fleet-wide. The model (operator 2026-06-09):
   (the `version =` is a snapshot; the install resolves from the source PATH, not the recorded version), external deps
   lock exact (reproducibility). There is **no exact-pin bug** and no "range-aware lock gate" to build (a 2026-06-09
   false-start — tombstoned in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`).
+- **CI installs the COMMITTED lock via `uv sync --frozen`; `pyproject.toml` is the edit-surface, the lock is the
+  deterministic install snapshot (operator 2026-06-12, speed > security).** The reusable workflow installs with
+  `uv sync --frozen` — the committed `uv.lock` as-is, NO re-resolution (no surprise transitive deps; the CI-only
+  `pip==26.0.1` PYSEC-2026-196 divergence that plain `uv sync` re-resolution introduced is gone). `--frozen` NOT
+  `--locked`: `--locked` / `uv lock --check` asserts pyproject↔lock consistency and would HARD-FAIL on the semver-agent's
+  CI-side `version =` bump (a poison-pill — one bumped version with no lock regen reds every later PR's `--locked`);
+  `--frozen` tolerates it (the root pkg is editable-installed from source, so the bumped version is what installs
+  regardless of the lock). **Rule (replaces the freshness gate):** editing a dependency FLOOR in `pyproject.toml`
+  requires regenerating + committing `uv.lock` in the SAME commit (`uv lock`, or `uv lock --upgrade-package <name>` to
+  move an existing transitive pin) — otherwise `--frozen` silently installs the stale lock and the floor never takes
+  effect in CI. A bare `version =` bump needs no lock regen. No transitive-CVE HARD block — pip-audit /
+  internal-advisories on transitive pins WARN; a CVE fix = bump the floor + regen the lock. SSOT:
+  `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1.
 - **Dep resolution in CI is CONTENT-FIRST (LDR-HEAD clone) + the range check is NON-BLOCKING (2026-06-11; SUPERSEDES the
   version-aware-clone loud-fail).** `python-quality-gates-v2.yml::clone_repo` clones each internal dep at its
   **`live-defi-rollout` HEAD** — the SSOT content local editable siblings resolve against — so CI typechecks the dep's
