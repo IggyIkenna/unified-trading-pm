@@ -13,6 +13,7 @@ locked_by: live-defi-rollout
 source:
   - operator decision 2026-06-12 — "one VM for humans (Ikenna + Harsh), another for the VM playing agent orchestrator
     (CI escalation etc.)"
+priority: P2
 ---
 
 # Orchestrator human / central VM split (2026-06-12)
