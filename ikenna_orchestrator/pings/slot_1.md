@@ -5301,3 +5301,19 @@ two cicd items but did NOT flip that plan (slot-1 owns it). Please flip when you
   env) + operator `.bashrc`/`.profile`; idempotent; value never logged.
 
 — slot-1/ikenna (this interactive slot, agent-orchestrator campaign)
+
+---
+
+## 2026-06-12 — CREDENTIAL APPROVAL REQUEST: ORCHESTRATOR_INTERNAL_SECRET fleet distribution
+
+Plan-of-record: `plans/active/monitoring_control_plane_master_2026_06_10.md` (the `[CREDS] P1 BLOCKED-CREDENTIALS` item).
+
+- **What**: the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM —
+  NOT `ORCHESTRATOR_INTERNAL_SECRET`. On a fresh bootstrap-launched VM `auth._load_internal_secret()` falls back to an
+  ephemeral generated secret → `/api/escalate` + central→worker proxy 401 every caller (prod vm-0 works only by hand-wiring).
+- **Operator action**: append `ORCHESTRATOR_INTERNAL_SECRET=<value from prod vm-0's .env.local>` to the
+  `ORCHESTRATOR_ENV_LOCAL` secret in BOTH AWS SM + GCP SM. Bootstrap already propagates the whole secret to `.env.local`
+  (no code change; bootstrap loud-warns when the key is absent).
+- **Unblocks**: escalation e2e on a from-scratch VM (the Gap-3 orchestrator escalation path).
+
+— slot-1/ikenna (filed 2026-06-12 to de-orphan the credential-ask QG ratchet while landing the billing-wall fix)

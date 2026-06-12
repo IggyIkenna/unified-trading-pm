@@ -546,14 +546,16 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       `lifecycle=e2e-test` tag; launcher has `--stop <id>` / `--terminate <id>` teardown helpers;
       `LC_AWS_SHUTDOWN_BEHAVIOR=stop` keeps long-running workers' disks on OS shutdown. Was: **Lifecycle + teardown**.
       Repo: deployment-service.
-- [ ] [CREDS] P1. **BLOCKED-CREDENTIALS — `ORCHESTRATOR_INTERNAL_SECRET` is not distributed to bootstrap-launched VMs**
+- [ ] [CREDS] P1. **BLOCKED-CREDENTIALS — `ORCHESTRATOR_INTERNAL_SECRET` is not distributed to bootstrap-launched VMs** (CREDENTIAL APPROVAL REQUEST: `ikenna_orchestrator/pings/slot_1.md`)
       — the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM keys
       (verified 2026-06-12); `auth._load_internal_secret()` then falls back to an EPHEMERAL generated secret, so
       `/api/escalate` + the central→worker proxy 401 every caller on a fresh VM (prod vm-0 works only because it is
       hand-wired). Operator ask: append the fleet `ORCHESTRATOR_INTERNAL_SECRET=<value     from prod vm-0's .env.local>`
       line to the `ORCHESTRATOR_ENV_LOCAL` secret in BOTH AWS SM + GCP SM — bootstrap already propagates the whole
       secret to .env.local, so no code change is needed (bootstrap now loud-warns when the key is absent). Found
-      2026-06-12 escalation e2e. Repo: agent-orchestrator (+ operator SM update).
+      2026-06-12 escalation e2e. Repo: agent-orchestrator (+ operator SM update). **CREDENTIAL APPROVAL REQUEST** filed:
+      `ikenna_orchestrator/pings/slot_1.md` (operator: append `ORCHESTRATOR_INTERNAL_SECRET` to the `ORCHESTRATOR_ENV_LOCAL`
+      secret in AWS SM + GCP SM).
 
 **VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
 RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3
