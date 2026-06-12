@@ -41,3 +41,10 @@ webhook, direct curl — the notify-slack workflow itself cannot run) + desktop 
 - Local QG for `market-data-processing-service` = GREEN (1867 tests pass); code is correct
 - `ldr-to-staging` PR #281 blocked; re-trigger once billing restored: `gh workflow run quality-gates-v2.yml --repo IggyIkenna/market-data-processing-service --ref live-defi-rollout`
 - Pattern: payment-failed billing wall — operator action required
+
+**2026-06-12 ~03:00Z** — billing wall continuing (escalation agt-6b2b49, slot 5):
+- `alerting-service` `quality-gates-v2` flagged as `ldr_qg_failure`; local QG exits 0 on commit 897cd93 (56 gates pass)
+- CI run 27391644203 failed at 03:00Z (7s, 0 steps); re-triggered 27393052323 at 03:43Z still failed (7s, 0 steps)
+- Diagnosis: billing wall, NOT code — `alerting-service` code is correct
+- Re-trigger once billing restored: `gh workflow run quality-gates-v2.yml --repo IggyIkenna/alerting-service --ref live-defi-rollout`
+- agt-6b2b49 escalation id
