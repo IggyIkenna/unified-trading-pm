@@ -5409,3 +5409,24 @@ provisions again — costs ~1 worker boot/repo/hour), or (b) temporarily set
 recommendation: (b) — the workers cannot produce green QG runs while jobs don't provision, so every dispatch is a
 guaranteed waste. Related shipped guard (bootstrap-only, does NOT touch vm-0): new bootstrap VMs now default CIReconcile
 OFF (single-CI-responder model, agent-orchestrator@1a0bea0). — harsh-slot-2
+
+### [harsh-slot-5 → ikenna-main] Secrets handoff: ORCHESTRATOR_INTERNAL_SECRET fleet distribution is DONE — vm-0 alignment + ack is yours (2026-06-12)
+
+**Plan-of-record:** `plans/active/monitoring_control_plane_master_2026_06_10.md` § the `[CREDS] P1` flip (DONE
+2026-06-12) — original CREDENTIAL APPROVAL REQUEST in `ikenna_orchestrator/pings/slot_1.md` § 2026-06-12.
+
+**What's done (verified by metadata, values never printed):** `ORCHESTRATOR_INTERNAL_SECRET` (vm-0's exact value,
+sha12-verified identical) is now IN the `ORCHESTRATOR_ENV_LOCAL` secret in BOTH clouds — AWS SM current version
+`4c52ae7f` (created 2026-06-12) + GCP SM version 2 (created 2026-06-12 10:16 UTC). Bootstrap already writes the whole
+blob to `.env.local` and loud-warns when the key is absent, so every future bootstrap-launched VM authenticates
+`/api/escalate` + the central↔worker proxy out of the box. Nothing on prod vm-0 was touched.
+
+**Remaining asks (your surface — vm-0 + secrets ownership):**
+
+1. **Ack the distribution** — the internal secret now lives in the fleet SM blob (it previously existed only hand-wired
+   on vm-0). If you'd rather rotate to a fresh value now that it's distributed, rotate in SM + vm-0 together.
+2. **Align vm-0 to consume the SM blob** (today it is the one hand-wired host): pointing vm-0's `.env.local`
+   provisioning at `ORCHESTRATOR_ENV_LOCAL` makes future rotation single-point instead of SM+vm-0 dual-write. Low
+   urgency — parity holds today since the SM value was taken from vm-0.
+
+— harsh-slot-5
