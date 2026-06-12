@@ -8,13 +8,26 @@ priority: P1
 assigned_vm: vm-prediction
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-07
-last_updated: 2026-05-21
+last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
+  - ../active/predictions_lookahead_and_reader_migration_2026_06_20.md
+  - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
+  - ../active/prediction_manifest_canonicalisation_2026_06_01.md
+  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
   - ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
+
+> **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~30+ open `- [ ]` todos
+> INLINE in its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
+> (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never
+> dispatched — the epic read as "0 plans / 0%". The inline blocks have been **reconciled, not deleted**: net-new unowned
+> work extracted to child active plans (see § "Assigned active plans"); already-owned work pointed at its owning June
+> plan; cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence.
+> See § "Workstream routing (restructured 2026-06-20)" below for the full map.
 
 > **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
@@ -376,7 +389,32 @@ Operator picked option (δ) per `wave2_polymarket_record_captured_from_counts_20
 | arb_calculator in FSS                                                            | scoped                          | `sports_predictions_e2e`                                    |
 | Predictions MTDS slice to ≥99%                                                   | partial                         | `market_tick_data_to_100pct` (predictions slice)            |
 
-## Consolidated todos (P0 only)
+## Workstream routing (restructured 2026-06-20)
+
+The predictions work is dispatched through child active plans (regen scans `plans/active/`, not this epic). Every former
+inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
+
+| Former inline block                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Disposition                              | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Synthetic `OTHER` canonical-question-group bucket end-to-end (UAC `PREDICTION_GROUPS` seeding incl OTHER · classifier `OTHER_BUCKET_MEMBER_ADDED` event · writer-rebundle OTHER coverage); data-status predictions panel `(venue, canonical_question_group, day)`; deployment-ui 3-level `asset_group → canonical_question_group → cadence` drilldown + per-shard parquet download; the timeline/panel "out of scope" VERIFY gates; Phase-5 30+ canonical-groups backfill remainder; prediction sentinel fan-out for empty CQG rows | **EXTRACTED (net-new)**                  | [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)                                                                                                                                                                                                                                                                                        |
+| Reader callsite migration to `prediction_canonical_question_group`; per-market `LookaheadBiasError` feature-compute enforcement (stated twice in the body — written as ONE todo); strategy-service archetype configs reference `canonical_question_group`; E2E smoke 1 group × 1 day; predictions feature_groups → UAC `FEATURE_REQUIRED_INPUTS`                                                                                                                                                                                    | **EXTRACTED (net-new)**                  | [`predictions_lookahead_and_reader_migration_2026_06_20`](../active/predictions_lookahead_and_reader_migration_2026_06_20.md)                                                                                                                                                                                                                                                                                      |
+| Model 2A walk-forward; acceptance metrics (log-loss/calibration/AUC); training-config sanity; Group-F AUC≥0.55/calib≤5% gate; FSS `arb_calculator`; model-registry persistence; predictions MTDS completion-% slice — all the predictions ML half of `sports_predictions_e2e` (sports_master line 148 confirms these belong here, NOT sports). GATED ON `sports_master:Group E` (FSS ≥95% non-NULL).                                                                                                                                | **EXTRACTED (net-new)**                  | [`predictions_ml_walk_forward_and_arb_2026_06_20`](../active/predictions_ml_walk_forward_and_arb_2026_06_20.md)                                                                                                                                                                                                                                                                                                    |
+| Writer-rebundling (`Replace POLYMARKET writer`) + manifest/parquet canonicalisation + reflip + reconcilers + `category=→asset_group=` migration + `_index` v9 rebuild + CF-7 relabel                                                                                                                                                                                                                                                                                                                                                | **OWNED ELSEWHERE — do not duplicate**   | [`prediction_manifest_canonicalisation_2026_06_01`](../active/prediction_manifest_canonicalisation_2026_06_01.md) (slot-5 Prediction master orchestrator: single-walk legacy→canonical migration E1–E8 + writer rebundle by `canonical_question_group` + `record_captured_from_counts` atom). The epic's own resolved Open-Questions Q1/A1 + Q2/A2 (UTL@ef47c81b / MTDS@a2f8d80) are this plan's design decisions. |
+| Lifecycle-bounded `available_at` stamping for Polymarket + Kalshi adapters (`available_at = max(tick_ts, market_created_at)`, refuse rows past `market_settlement_time`)                                                                                                                                                                                                                                                                                                                                                            | **OWNED ELSEWHERE — do not duplicate**   | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) Phase 1 (distinct from the FEATURE-COMPUTE per-market gate, which is in the lookahead child plan above)                                                                                                                                                                             |
+| May-23 deliverable success criteria (Polymarket/Kalshi backtest, data pipeline clean, cross-asset features, cluster-validation, strategy+execution progressed)                                                                                                                                                                                                                                                                                                                                                                      | **ROUTED TO MASTER**                     | [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — predictions readiness ladder = "BACKTEST only / features-pipeline-running (no ML this cycle)"                                                                                                                                                                                                                                    |
+| Opinion Trade backtest + CME event-futures arb backtest                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | **ROUTED TO MASTER as OUT/post-cutover** | Both CONTRADICTED by this epic's own resolved Open-Questions ("OUT for May-23" — Opinion Trade has no integration this cycle; CME event-contracts need a separate adapter + catalog, deferred). Not active work.                                                                                                                                                                                                   |
+
+The blocks below are the **frozen May-07/08 source snapshot**, retained for archaeology only. They are SUPERSEDED by the
+routing table above — do NOT pick work from them directly.
+
+## Consolidated todos (P0 only) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
+
+> **SUPERSEDED 2026-06-20**: the open `- [ ]` items in this section are EXTRACTED to the child plans (taxonomy/OTHER/UI
+> → `predictions_other_bucket_and_ui_drilldown`; reader/feature/strategy migration →
+> `predictions_lookahead_and_reader_migration`; ML walk-forward + arb → `predictions_ml_walk_forward_and_arb`) or OWNED
+> ELSEWHERE (manifest/parquet migration + writer-rebundling → `prediction_manifest_canonicalisation_2026_06_01`;
+> `available_at` adapter stamping → the `available_at_lookahead_bias_completion` plan). Do NOT dispatch from here.
+> Retained below for context only.
 
 ### Canonical-question-group taxonomy + lifecycle ingestion
 
@@ -719,10 +757,15 @@ before CME arb can link.
       rows across 21 dates; 230 empty_confirmed for 23 dates (2026-05-13 + 2026-05-18 legitimately empty); zero
       attempted_failed. Consolidated into availability_index. — MTDS@e5e3ca36,2b7c7760
 
-## `available_at` adapter stamping (coordinated)
+## `available_at` adapter stamping (coordinated) — SUPERSEDED 2026-06-20 (owned by the coordinator plan; history only)
+
+> **OWNED ELSEWHERE**: the lifecycle-bounded adapter `available_at` stamping is tracked in
+> [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+> Phase 1 (+ the feature_groups → UAC `FEATURE_REQUIRED_INPUTS` slice is mirrored in the
+> `predictions_lookahead_and_reader_migration` child plan). Do NOT dispatch from here. Retained below for context only.
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+> [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
 > Phase 1. Predictions stamping is **lifecycle-bounded**: every prediction-market tick must have
 > `available_at = max(tick_ts, market_created_at)` and must NOT carry rows past `market_settlement_time`. Depends on
 > Phase 1 (canonical-question-group + lifecycle ingestion) of THIS plan AND on coordinator Phase 0 (MDPS bar boundary
@@ -737,7 +780,13 @@ before CME arb can link.
       per-binary-outcome features need registry entries. Source-of-truth: features-\* services that consume prediction
       tick data. Coordinator Phase 4.
 
-## May-23 deliverable (folded from `prediction_markets_may_23_2026.epic` 2026-05-08)
+## May-23 deliverable (folded from `prediction_markets_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (routed to master; history only)
+
+> **ROUTED TO MASTER**: the May-23 success criteria below are cutover gates owned by
+> [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) (predictions readiness ladder =
+> "BACKTEST only / features-pipeline-running, no ML this cycle"). The **Opinion Trade backtest** + **CME event-futures
+> arb backtest** criteria are CONTRADICTED by this section's own resolved Open-Questions (both **OUT for May-23 /
+> post-cutover**) — they are NOT active work. Do NOT dispatch from here. Retained below for context only.
 
 > **Folded epic** (operator direction 2026-05-08): consolidated from
 > `plans/epics/prediction_markets_may_23_2026.epic.md`. Archived:
@@ -812,26 +861,47 @@ features predict.
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_Active plans declaring `parent_epic: predictions_master`. Workers pick up in priority order (P0 first). Auto-populated
+by `scripts/plans/populate_epic_bodies_2026_05_21.py` — the list below was seeded by the 2026-06-20 restructure and the
+script keeps it in sync from frontmatter._
+
+**Delegated (predictions work tracked under service-epic plans, listed for visibility — NOT direct `parent_epic`
+children):**
+[`prediction_manifest_canonicalisation_2026_06_01`](../active/prediction_manifest_canonicalisation_2026_06_01.md)
+(manifest / parquet canonicalisation + writer-rebundling) ·
+[`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+(lifecycle-bounded adapter `available_at` stamping).
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: brand-new). Synthetic `OTHER` canonical-question-group bucket
+end-to-end (UAC seeding + classifier event + manifest coverage) + deployment-ui 3-level
+`asset_group → canonical_question_group → cadence` drilldown + per-shard parquet download + data-status predictions
+panel + the "out of scope" VERIFY gates + the P2 prediction sentinel fan-out for empty CQG rows.
+
+### [`predictions_lookahead_and_reader_migration_2026_06_20`](../active/predictions_lookahead_and_reader_migration_2026_06_20.md)
+
+**status**: active · **estimate**: 3 cal AI-days (class: brand-new). Reader callsite migration to
+`prediction_canonical_question_group`; per-market `LookaheadBiasError` feature-compute enforcement; strategy archetype
+configs reference `canonical_question_group`; 1-group × 1-day E2E smoke; predictions feature_groups → UAC
+`FEATURE_REQUIRED_INPUTS`.
+
+### [`predictions_ml_walk_forward_and_arb_2026_06_20`](../active/predictions_ml_walk_forward_and_arb_2026_06_20.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: research). Predictions ML half of `sports_predictions_e2e` —
+Model 2A walk-forward + acceptance metrics + Group-F AUC≥0.55/calib≤5% gate + FSS `arb_calculator` + model-registry
+persistence + MTDS completion-% slice. **GATED ON `sports_master:Group E`** (FSS ≥95% non-NULL).
 
 ## P1 — important; post-current-gate
 
+_(no plans currently assigned at this priority — P1 items live within the P0 child plans above.)_
+
 ## P2 — useful; opportunistic
 
-- [ ] [SCRIPT] P2. **Prediction sentinel fan-out for `prediction_canonical_question_group` empty rows** — DEFERRED from
-      2026-05-23 prediction backfill session. Currently, when a canonical question group has zero markets trading on a
-      given day, no `data_type=prediction_canonical_question_group` `empty_confirmed` row is emitted (the tier-2
-      sentinel only emits `data_type=trades, SOURCE_RETURNED_ZERO`). Fix: after the Phase 3 finalize loop in
-      `orchestrator.py`, fan out `record_empty(SOURCE_RETURNED_ZERO)` for each CQG in the UAC canonical group registry
-      that wasn't populated in `prediction_cluster_counts_by_venue` for that (venue, day). This ensures the manifest
-      denominator includes groups with zero trading days and the deployment-UI drilldown shows honest 0% coverage for
-      inactive CQGs rather than omitting them. No blocker — ships as a standalone improvement once the backfill gap is
-      filled.
+_(the prediction sentinel fan-out for empty CQG rows is tracked as a P2 todo inside
+[`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md).)_
 
 ## Archived plans
 

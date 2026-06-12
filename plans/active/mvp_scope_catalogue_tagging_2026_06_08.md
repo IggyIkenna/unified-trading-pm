@@ -3,7 +3,7 @@ title:
   "MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies +
   models), toggled in data-status so missing-data only counts what's in-scope"
 created: 2026-06-08
-parent_epic: epics/instruments_master.md
+parent_epic: instruments_master
 assigned_vm: vm-cross-cutting
 status: active
 priority: P1
@@ -95,12 +95,12 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
 
 - [x] ✅ [DESIGN] P1. **`mvp_scope` rule schema FINALISED in UAC** — **unified-api-contracts@d6e0775f**: typed frozen
       dataclasses per AG (CeFi/DeFi/TradFi/Sports/Prediction) + everything-or-nothing grain + `FeaturesModelsMvpStub`
-      for the per-registry sections. Concrete MVP membership has conservative defaults + `# TODO(mvp-scope): operator
-      sign-off` markers (config edit, no data touch — not a blocker).
+      for the per-registry sections. Concrete MVP membership has conservative defaults +
+      `# TODO(mvp-scope): operator     sign-off` markers (config edit, no data touch — not a blocker).
 - [x] ✅ [CODE] P1. **UAC `is_mvp(...)` predicate + `mvp_scope` config + tests** — **unified-api-contracts@d6e0775f**:
-      `is_mvp(asset_group, venue, instrument_type, data_type, *, base_ccy, league, market_group, source)` pure rule-only;
-      exported `from unified_api_contracts import is_mvp, MVP_SCOPE`; 56 tests (non-MVP venue excluded, all expiries of
-      an MVP future via grain, absent/impossible→False, config-edit-changes-membership). QG exit 0.
+      `is_mvp(asset_group, venue, instrument_type, data_type, *, base_ccy, league, market_group, source)` pure
+      rule-only; exported `from unified_api_contracts import is_mvp, MVP_SCOPE`; 56 tests (non-MVP venue excluded, all
+      expiries of an MVP future via grain, absent/impossible→False, config-edit-changes-membership). QG exit 0.
 - [ ] [CODE] P1. **IS MVP-tagged catalogue view** — apply `is_mvp` over the rolled-up catalogue; serve `mvp: bool` (or a
       filtered endpoint). On-the-fly; optional cached `mvp_view` refreshed with the catalogue scheduler.
 - [ ] [CODE] P1. **deployment-api `scope=mvp|could_exist|all`** on the data-status coverage endpoint (denominator =
@@ -134,19 +134,20 @@ which leagues, which market-groups — has no independent version.
 - **NO GCS partition key** — unlike `formula_version` (which IS a path axis), `config_version` is **metadata only**
   (manifest/response field), never a hive path segment. Changing the config does not re-bake a single object path.
 - **DECISION (operator recommend, audit §B3 + Open-decision 3): PER-CONFIG**, not a single global int — one
-  `config_version` each for `MVP_SCOPE`, leagues, and prediction-markets, because they change **independently** (a leagues
-  edit must not bump the MVP_SCOPE version and falsely flag an MVP coverage delta).
+  `config_version` each for `MVP_SCOPE`, leagues, and prediction-markets, because they change **independently** (a
+  leagues edit must not bump the MVP_SCOPE version and falsely flag an MVP coverage delta).
 
 - [ ] [CODE] P1. **Add `config_version: int` + `config_content_hash: str` to each config module** — per-config monotonic
       `config_version` (int, bumped on every content change) + a stable `config_content_hash` (content-addressed) on the
       `MVP_SCOPE` config and on the sports-leagues + prediction-markets configs (per-config, NOT a single global int).
       Metadata only — no GCS partition key.
 - [ ] [CODE] P1. **Surface `config_version` + `config_content_hash` in the deployment-api data-status response** — so a
-      coverage delta attributes to a scope-change (config_version bumped) vs a data-change (config_version stable). Carry
-      the per-config triple (config name, version, hash) alongside the `scope=mvp|could_exist|all` coverage payload.
+      coverage delta attributes to a scope-change (config_version bumped) vs a data-change (config_version stable).
+      Carry the per-config triple (config name, version, hash) alongside the `scope=mvp|could_exist|all` coverage
+      payload.
 - [ ] [CODE] P1. **Unit test: config_version is monotonic + the hash changes when the config changes** — assert
-      `config_version` only ever increases (never decreases/reused) and that `config_content_hash` changes iff the config
-      content changes (and is stable across unrelated edits) — one such test per config (MVP_SCOPE / leagues /
+      `config_version` only ever increases (never decreases/reused) and that `config_content_hash` changes iff the
+      config content changes (and is stable across unrelated edits) — one such test per config (MVP_SCOPE / leagues /
       prediction-markets).
 
 ## Open questions (operator)

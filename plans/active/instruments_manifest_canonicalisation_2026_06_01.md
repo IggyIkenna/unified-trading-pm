@@ -3,7 +3,7 @@ title:
   "Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O
   surface"
 created: 2026-06-01
-parent_epic: epics/instruments_master.md
+parent_epic: instruments_master
 assigned_vm: vm-cross-cutting
 status: active
 priority: P0
@@ -170,9 +170,9 @@ VM. Runs behind the pre-migration drain.
       `pipeline_mode=` partition + canonical names; relabel blank-`data_type` legacy cells (cefi/tradfi/pred). — **DONE
       2026-06-07, instruments-service@febb899e**: `scripts/migrate_instruments_store_v9.py` — AG-parametric
       (`--asset-group {cefi,defi,tradfi,sports,prediction}`), DRY-RUN default / `--apply` GATED (G4). ONE bundled walk
-      rewrites BOTH the `_index` rows AND object paths to v9: CF-1 schema_version=9 (reads ACTUAL dist, not the
+      rewrites BOTH the `_index` rows AND object paths to v9: CF-1 schema*version=9 (reads ACTUAL dist, not the
       constant) · CF-2 `asset_group` col + `asset_group=` path key (drops `category` col) · CF-3
-      `pipeline_mode=batch_instruments_service` col + path key (reference provenance — a venue _listing_ is reference,
+      `pipeline_mode=batch_instruments_service` col + path key (reference provenance — a venue \_listing* is reference,
       not a Tardis tick) · CF-4 `source=instruments_service` col · CF-TRANSPORT `transport=rest` col · CF-5 typed
       `EmptyConfirmedReason` (blank → `SOURCE_RETURNED_ZERO`; captured-but-`instrument_count==0` → empty) · CF-7 blank
       `data_type`→`instruments` (pred/sports typed values preserved) · CF-8 `available_at`=`written_at` · CF-9

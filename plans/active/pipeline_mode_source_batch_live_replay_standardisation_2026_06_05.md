@@ -3,7 +3,7 @@ title:
   "pipeline_mode standardisation — source-aware live, batch→live continuity, replay/recovery mode, reader precedence +
   live-readiness gates"
 created: 2026-06-05
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
 status: active
 priority: P0
@@ -285,8 +285,8 @@ fixtures first-class (a `mock` capability in the M2 registry). Env-tier is itsel
 
 **Phase 1 — DRY-RUN migrations, per asset_group (depends GATE 0).** Re-run each `migrate_*` + `rebuild_*_manifest`
 `--dry-run` so they emit the NEW columns (live\_<source>/source/cadence/transport) into the v9 form; verify the manifest
-drilldown dims are fully populated + the GCS path↔column mirror holds. Lanes: cefi · defi · tradfi · sports · prediction
-· instruments (each its own dry-run + per-AG nuance). **GATE 1**: dry-run clean per AG.
+drilldown dims are fully populated + the GCS path↔column mirror holds. Lanes: cefi · defi · tradfi · sports ·
+prediction · instruments (each its own dry-run + per-AG nuance). **GATE 1**: dry-run clean per AG.
 
 **Phase 2 — REAL `--apply`, per asset_group (depends GATE 1; operator-gated; single-walk).** Each AG's v9
 canonicalisation `--apply` now carries EVERYTHING in ONE walk. This is the existing per-AG `*_manifest_canonicalisation`

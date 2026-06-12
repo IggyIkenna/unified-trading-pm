@@ -3,7 +3,7 @@ title:
   "Proper instrument catalogue — lifecycle roll-up from per-date definitions + IS completeness gate (all asset groups,
   v9)"
 created: 2026-06-04
-parent_epic: epics/instruments_master.md
+parent_epic: instruments_master
 assigned_vm: vm-cross-cutting
 status: active
 priority: P0

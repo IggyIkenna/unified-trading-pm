@@ -1,7 +1,7 @@
 ---
 title:
   "unified-trading-library: strict-ify the ~108 pre-existing pyright/type suppressions + drive CODEX_MAX_VIOLATIONS 6→0"
-parent_epic: plans/epics/infrastructure_master.md
+parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 estimate_class: refactor
 estimate_baseline_ai_days: 8
