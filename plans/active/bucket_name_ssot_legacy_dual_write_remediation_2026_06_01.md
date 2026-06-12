@@ -297,6 +297,9 @@ relaunch.
       migration + `pipeline_mode_implementation` + `data_source_provenance` — they regenerate canonical-format rows from
       the (already dual-written) canonical DATA. This plan COORDINATES (single-walk ordering, banner in defi_manifest)
       but does not seed. Confirm canonical `_index` is `C-GREEN` per those plans before decommission.
+  > ⏸️ **GATED on G4 applies completing** — all 5 AG `--apply` single-walks still `[ ]` pending in
+  > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (operator-fired; not yet run 2026-06-12).
+  > Re-dispatch with G4-apply prereq per operator guidance (BLK-fb70523c, 2026-06-12 slot-2).
 - [x] ✅ [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
       legacy `(date,venue,data_type)` cell + the underlying objects (dual-write). tradfi confirmed (overlap
       12,944/12,948 + object micro-check). cefi/defi/prediction verified 2026-06-12 (slot-2):
