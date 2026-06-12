@@ -362,7 +362,7 @@ awaiting execution-service remediation.
 
 ### F38 — IBKR modeled as a VENUE in ENDPOINT_REGISTRY (broker/venue conflation — operator-caught, system-design floor)
 
-**Status**: OPEN → fix dispatched (manifest layer first). `registry/_endpoint_registry_data.py:650: venue="ibkr"` and
+**Status**: FIXED (manifest layer) uac@cdb59bb + pm@4948325c + pm@613ee27c. Registry pipeline-key migration follow-up OPEN (venue-axis vocabulary plan). `registry/_endpoint_registry_data.py:650: venue="ibkr"` and
 `capability_declarations/_tradfi.py: source="ibkr"`. Operator: IBKR is a BROKER routing to exchanges (CME/ICE/CBOE); the
 exchange is the venue; data pipeline/strategy is identical regardless of the final routing hop. CapabilityNodeKind
 already has `broker`; collateral registry has BrokerEntry. Fix: manifest classifies ibkr as broker node +
@@ -372,7 +372,7 @@ follow-up under the venue-axis vocabulary plan — do NOT rename pipeline keys c
 
 ### F39 — Wizard offers ~13 venues; manifest has 183 — eligibility lists are hand-named subsets (operator-caught)
 
-**Status**: OPEN → audit dispatched. Missing DeFi venues (Curve, Sushi, PancakeSwap, Orca, Raydium, Phoenix, …) are
+**Status**: PARTIALLY FIXED uac@def855c (kraken/bitget/coinbase added to _CEFI_CLOB_VENUES + key leg seeds) + pm@4074e49c (audit_venue_coverage.py). OPEN remainder: F42 (adapter-backed venues missing from VENUE_CATEGORY_MAP), F43 (NASDAQ/NYSE not in leg seeds). Missing DeFi venues (Curve, Sushi, PancakeSwap, Orca, Raydium, Phoenix, …) are
 among the manifest's orphan venue nodes: present in venue registries but referenced by NO capability cell / leg-spec
 eligible_venue_ids (which were seeded from hand-named cell venue lists). Either the execution adapter exists and the
 eligibility list is too narrow (registry gap) or no adapter exists (unbuilt dead-end) — per-venue audit required:
@@ -389,3 +389,48 @@ tick (jams ff-pull cron per the stale-clone rule), and a `git checkout` of the f
 re-persists from memory (verified via GET /api/accounts — live state intact). Remedy: split runtime usage state into an
 untracked data/state/ file (or gitignore a dedicated state sidecar); keep accounts.json operator-edited-only; preserve
 unicode on any rewrite. Same antipattern class as the generated-artifacts HARD RULE.
+
+## Phase 6A findings (2026-06-12 registry/exporter wave)
+
+### F41 — extract_archetypes_and_families + extract_leg_structures had no broker filter — ibkr leaked as a VENUE node
+
+**Status**: FIXED pm@613ee27c. The F38 broker filter was correctly added to `extract_venues()` (which builds venue nodes
+from VENUE_CATEGORY_MAP / DEFI_VENUE_TO_PROTOCOL), but TWO other functions also emit VENUE nodes and were missed:
+(a) `extract_archetypes_and_families` iterates `cell.venue_ids` from `ARCHETYPE_CAPABILITY_REGISTRY` (which includes
+`ibkr` in 8 archetype cells); (b) `extract_leg_structures` iterates `leg.eligible_venue_ids` from
+`ARCHETYPE_LEG_STRUCTURES` (which includes `ibkr` in 4 leg seeds). Both call their own local `add_node()` with no broker
+guard. Evidence: `capability-orphan-report.txt` showed `broker_classed_venues: 1  BROKER-AS-VENUE: venue:ibkr` after the
+initial manifest regeneration. Fix: added `is_broker()` guard to both `add_node()` functions. broker_classed_venues 1→0.
+Cite: `_capability_extract.py:88-97` (arch function), `_capability_extract.py:203-212` (legs function).
+
+### F42 — Adapter-backed venues absent from VENUE_CATEGORY_MAP + ENDPOINT_REGISTRY (phantom adapter coverage)
+
+**Status**: OPEN — logged for registry alignment follow-up. The venue coverage audit (F39, pm@4074e49c) found 6 venues
+with real execution adapters that do NOT appear in `VENUE_CATEGORY_MAP` (UAC registry of known venues with category):
+  - FX (fx_adapter.py:24) — TradFi FX via IBKR; no VENUE_CATEGORY_MAP entry
+  - BITFINEX-SPOT (bitfinex_native.py:167) — CeFi CLOB; no VENUE_CATEGORY_MAP or ENDPOINT_REGISTRY entry
+  - BITGET-FUTURES (bitget_native.py:125) — CeFi CLOB; ENDPOINT_REGISTRY has `bitget` (generic) but not the suffixed form
+  - BITGET-SPOT (bitget_native.py:125) — same
+  - KRAKEN-FUTURES (kraken_rest_adapter.py:159) — CeFi CLOB; no VENUE_CATEGORY_MAP entry
+  - KRAKEN-SPOT (kraken_rest_adapter.py:159) — same
+Impact: these adapters can execute but the wizard/manifest has no venue node for them (the manifest picks them up via the
+adapter inventory seed in audit_venue_coverage.py, but they are NOT in VENUE_CATEGORY_MAP or INSTRUMENT_TYPES_BY_VENUE,
+so no venue node is emitted by `extract_venues()`). Remedy: add entries to `VENUE_CATEGORY_MAP` +
+`INSTRUMENT_TYPES_BY_VENUE` (UAC registry files) for each. Deferred to registry alignment phase.
+
+### F43 — NASDAQ/NYSE adapters exist but venues not in any leg eligible_venue_ids (TradFi equities gap)
+
+**Status**: OPEN — logged for leg-seed follow-up. nasdaq_adapter.py:24 (venue_name="NASDAQ") and nyse_adapter.py:24
+(venue_name="NYSE") exist as ibkr-routed TradFi adapters, but NASDAQ and NYSE do not appear in any archetype leg's
+`eligible_venue_ids`. This means the wizard cannot select these venues for any leg in the current manifest, even though
+execution is possible. The leg seeds were sourced from strategy-engine structs which focus on crypto/perp archetypes;
+equities/equity-ETF archetypes (RULES_DIRECTIONAL_CONTINUOUS, ML_DIRECTIONAL_CONTINUOUS, EVENT_DRIVEN, STAT_ARB variants)
+reference ibkr but not the downstream exchange venues. Remedy: add nasdaq/nyse to the relevant equity-archetype leg seeds
+with citation to their adapter files. Deferred to next registry iteration.
+
+### F44 — _capability_extract.py extract_venues() had duplicate inline broker block after extract_brokers() was added
+
+**Status**: FIXED pm@300 (via fix PR). The upstream commit (pm@4948325c) added `extract_brokers()` as a standalone
+function AND retained an inline `_tradfi_brokers` dict inside `extract_venues()` (an intermediate implementation from a
+prior partial agent). Both emitted broker nodes + routed_via edges, causing duplicate nodes. The inline block was removed
+(pm@fix PR #300). broker:ibkr node count 2→1 in the regenerated manifest.
