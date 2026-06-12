@@ -87,10 +87,17 @@ source:
       patience bound — holds NO lock). Validating evidence from today: the SAME bug class bit live on vm-e2e-test at
       13:08 (nested `session_scope` in `_queue_escalation` → "database is locked", fixed @d6cff0f) — confirming the
       txn-hold analysis. Was: **Move the slow spawn OUT of the write transaction**. Repo: agent-orchestrator.
-- [ ] [OPS] P1. **Deterministically disable claude auto-update OR pin the CLI.** `DISABLE_AUTOUPDATER=1` +
-      `autoUpdates:false` did not stop it on 2.1.146. Find the honored mechanism for the deployed CLI, or pin/upgrade
-      the fleet CLI so startup is fast + deterministic (removes the primary source of the boot-paste timing miss).
-      Target: vm-0 spawn env / deployment.
+- [x] ✅ [OPS] P1. DONE 2026-06-12 — agent-orchestrator@57aa56e (QG green, 561 tests; deployed + dirs healed on
+      vm-e2e-test). ROOT CAUSE of "2.1.146 ignored it": the 2026-06-10 seed wrote `autoUpdates:false` into
+      `.claude.json`, but the key MIGRATED to `settings.json` (the CLI binary carries a
+      `migrate_autoupdates_to_settings` shim) — we wrote a file the CLI no longer reads. Fix is code, not hand-ops: (1)
+      `_ensure_claude_config_dir` upserts `autoUpdates:false` into `<config-dir>/settings.json` on EVERY call
+      (merge-not-clobber; heals pre-existing session dirs automatically at next spawn — verified live on vm-e2e-test,
+      all 4 dirs healed with `skipDangerousModePermissionPrompt` preserved); (2) spawn bash exports
+      `DISABLE_AUTOUPDATER=1` (env belt — the var IS honored by 2.1.175, confirmed in the binary); (3) `bootstrap_vm.sh`
+      STEP 2 pins `@anthropic-ai/claude-code@2.1.175` (`CLAUDE_CODE_VERSION` env override; bump deliberately). vm-0
+      inherits all three on its next AO deploy — no manual env edits needed there. Was: **Deterministically disable
+      claude auto-update OR pin the CLI.** Target: vm-0 spawn env / deployment.
 - [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@ab027bc (QG green, 558 tests; deployed vm-e2e-test).
       `_paste_prompt` now verifies post-submit that the boot-prompt marker (first non-empty line, 48 chars) is visible
       in the pane (`_boot_landed`, capture-pane 400-line history); on a miss it re-delivers the full paste+submit ONCE,
