@@ -432,4 +432,26 @@ for slot_dir in "${TABS_DIR}"/*/; do
     check_starvation_for_slot "${slot_id_str}" "${slot_dir}"
 done
 
+# Slot 0 = the un-slotted main workspace checkout (the base copy the per-slot
+# Path-B reference-clones share, at ${WORKSPACE_PATH}/<repo>/ — NOT under .tabs/).
+# Reported so its git hygiene shows alongside the worker slots; the orchestrator
+# auto-registers slot 0 as a PAUSED slot on first report (set_slot_git_status),
+# so it is tracked but never a spawn target. Only swept when 0 is in --slots.
+if slot_in_filter "0"; then
+    rows_tsv=""
+    for repo_dir in "${WORKSPACE_PATH}"/*/; do
+        [[ -d "${repo_dir}" ]] || continue
+        [[ "$(basename "${repo_dir}")" == ".tabs" ]] && continue
+        [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
+        rows_tsv+="$(classify_repo "${repo_dir}")"$'\n'
+    done
+    if [[ -n "${rows_tsv//[$'\n\t ']/}" ]]; then
+        post_snapshot "0" "${rows_tsv}"
+    else
+        log_quiet "[skip:empty] slot 0 (main workspace) — no git repos found"
+    fi
+else
+    log_quiet "[skip:not-in-filter] slot 0 (main workspace)"
+fi
+
 log_quiet "=== git-status sweep complete (host=${HOSTNAME_SHORT}, workspace=${WORKSPACE_PATH}) ==="
