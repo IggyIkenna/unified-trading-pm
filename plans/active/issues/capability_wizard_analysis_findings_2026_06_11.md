@@ -177,6 +177,13 @@ The Phase-1 uic-openapi-sync shipping todo is therefore left UNticked (see plan 
 release artifact the workflow can fetch), or (b) re-word the plan todo to point at the `generate-unified-openapi.sh`
 sync block as the canonical delivery path. Decision deferred to the UI-phase owner.
 
+**Unit 3 CI-regen audit (2026-06-12):** Confirmed — no CI workflow exists in any repo that runs
+`generate-unified-openapi.sh`. Available UAC workflows: quality-gates-v2, schema-health, semver-agent, agent-audit,
+canary-offline, backmerge workflows. The `uic-openapi-sync` lives in `unified-trading-system-ui` and
+`fund-administration-service` and ships TS types only (F14 confirmed). No new CI infrastructure was built per mandate.
+Phase 0 todo annotated with this finding. Unblocking requires operator provisioning `.venv-workspace` on a CI runner
+OR operator running `generate-unified-openapi.sh` locally with a full workspace venv.
+
 <!-- AUDIT CONTRADICTION FINDINGS (auto-appended by audit_prospectus_vs_codex.py) -->
 
 **F15:** Venue-category contradiction — `CARRY_BASIS_PERP_INV`
