@@ -39,6 +39,27 @@ def find_orphan_nodes(nodes: list[CapabilityNode], edges: list[CapabilityEdge]) 
     return sorted(n.node_id for n in nodes if n.node_id not in touched)
 
 
+def find_broker_classed_venues(nodes: list[CapabilityNode]) -> list[str]:
+    """Venue-classed nodes that are actually brokers (F38 heuristic).
+
+    A node kinded ``venue`` whose id appears in ``BROKER_ROUTES`` is a
+    broker/venue conflation — it should be a ``broker`` node + venue⇠routed_via⇢
+    broker edges, not a peer venue. ``extract_brokers`` already reclassifies the
+    declared brokers, so this normally returns ``[]`` (the F38 fix holding); a
+    non-empty result means a NEW venue registry re-introduced a broker as a venue.
+    """
+
+    from unified_api_contracts.internal.architecture_v2.broker_routes import (  # noqa: qg-deep-import
+        is_broker,
+    )
+
+    flagged: list[str] = []
+    for n in nodes:
+        if str(n.kind) == "venue" and is_broker(n.node_id.split(":", 1)[-1]):
+            flagged.append(n.node_id)
+    return sorted(flagged)
+
+
 def find_dead_ends(
     nodes: list[CapabilityNode],
     edges: list[CapabilityEdge],
@@ -138,8 +159,10 @@ def render_orphan_report(
     logical: list[dict[str, str]],
     manifest_version: str,
     generated_from_commit: str | None,
+    broker_classed_venues: list[str] | None = None,
 ) -> str:
     """Human-readable text report (deterministic — sorted inputs)."""
+    broker_classed_venues = broker_classed_venues or []
     lines: list[str] = [
         "# Capability Manifest — Orphan + Dead-End Report",
         f"# manifest_version: {manifest_version}",
@@ -148,10 +171,23 @@ def render_orphan_report(
         "# Orphan nodes have no edges. Unbuilt dead-ends are registry-available",
         "# archetype/instrument combos with no supporting venue (build gap).",
         "# Logical dead-ends are registry-blocked combos (correct, not a gap).",
+        "# Broker-classed venues (F38) are venue nodes that are actually brokers",
+        "# (in BROKER_ROUTES) — they should be broker nodes, not peer venues.",
         "",
-        f"## Orphan nodes ({len(orphans)})",
+        f"## Broker-classed venues (F38) ({len(broker_classed_venues)})",
         "",
     ]
+    if broker_classed_venues:
+        lines.extend(
+            f"BROKER-AS-VENUE: {v} — appears in BROKER_ROUTES; should be a broker node "
+            "(venue⇠routed_via⇢broker), not a selectable venue"
+            for v in broker_classed_venues
+        )
+    else:
+        lines.append("(none — all declared brokers correctly classified as broker nodes)")
+    lines.append("")
+    lines.append(f"## Orphan nodes ({len(orphans)})")
+    lines.append("")
     lines.extend(f"ORPHAN: {o}" for o in orphans)
     lines.append("")
     lines.append(f"## Unbuilt dead-ends ({len(unbuilt)})")
