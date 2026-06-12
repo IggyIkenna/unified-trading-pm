@@ -424,6 +424,14 @@ actually exists (which data_types missing, over which timeframes) via the existi
       (adapter exists? eligible anywhere? orphan?); widen eligible_venue_ids from adapter inventory with citations;
       remaining orphans typed (unbuilt vs logical).
 
+- [ ] [AGENT][UI] P0. **Full-universe debug rendering (operator direction 2026-06-12 third message)**: EVERY wizard
+      stage renders the COMPLETE dimension universe from the registries — all 57 archetypes (including
+      blocked-for-this-category, with reason), all venues (including orphans/unbuilt dead-ends), all instrument types
+      (including impossible-for-this-archetype) — verdict chips sourced from the verdict matrix; nothing filtered out,
+      only greyed + reasoned ("could be a venue, but: no adapter"). Same for the deployment-ui capability tab. A
+      `client mode` flag (hide-junk, curated) is the named successor for client-facing use — debugging mode is the
+      default now. pw:L2 gate; property test: per stage, rendered option count == dimension universe count.
+
 ### 6B — parity quality gates (regression-blocking)
 
 - [ ] [VERIFY] P0. UAC QG step: ARCHETYPE_CAPABILITY_REGISTRY ↔ archetype_capability_manifest.json parity pytest (F4
