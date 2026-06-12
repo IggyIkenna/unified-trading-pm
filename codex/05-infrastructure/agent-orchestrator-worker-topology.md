@@ -9,10 +9,13 @@ owner: ikenna
 
 # Agent Orchestrator Worker Topology
 
-Fleet model: **1 planning VM (GCP) + 10 epic VMs (AWS)** as of 2026-05-22. Each VM runs the orchestrator service on port
-8765 + a set of Claude Code worker slots. Planning VM holds 2 interactive slots; each epic VM holds 8 slots.
+Fleet model: **1 central/orchestrator VM + 1 human-planning VM + 10 epic VMs (AWS)** (human/central SPLIT 2026-06-12 —
+see `orchestrator_human_central_vm_split_2026_06_12.md`; supersedes the 2026-06-05 merged "Central API VM == Planning
+VM"). Each VM runs the orchestrator service on port 8765 + a set of Claude Code worker slots. The central VM (id
+`planning`) holds the orchestrator/AutoSpawn slots (NO humans); the separate human-planning VM (id `human-planning`)
+holds the 2 interactive Ikenna/Harsh slots; each epic VM holds 8 slots.
 
-Total capacity: **82 worker slots** across 11 VMs.
+Total capacity: **82 worker slots** across the VMs.
 
 Registry SSOT: `orchestrator_vm_registry.yaml` in `unified-trading-pm`. Every VM id + slot count + epic assignment is
 canonical there. Do not duplicate the list here — read the registry.
@@ -21,29 +24,38 @@ canonical there. Do not duplicate the list here — read the registry.
 
 ## VM roles
 
-| Role       | Count | Slots each | Purpose                                               |
-| ---------- | ----- | ---------- | ----------------------------------------------------- |
-| `planning` | 1     | 2          | Interactive Ikenna sessions; cross-cutting governance |
-| `epic`     | 10    | 8          | Dispatched worker agents; each VM owns a set of epics |
+(SPLIT 2026-06-12 — see `orchestrator_human_central_vm_split_2026_06_12.md`)
+
+| Role             | Count | Slots each | Purpose                                                                       |
+| ---------------- | ----- | ---------- | ----------------------------------------------------------------------------- |
+| `planning`       | 1     | n/a        | Central / orchestrator VM — review + CI-escalation + plan-health + AutoSpawn; NO human daily work |
+| `human-planning` | 1     | 2          | Interactive Ikenna (slot1) + Harsh (slot2) sessions; cross-cutting governance |
+| `epic`           | 10    | 8          | Dispatched worker agents; each VM owns a set of epics                          |
 
 ---
 
-## LIVE STATUS — what is actually supposed to be alive (SSOT, audited 2026-06-04)
+## LIVE STATUS — what is actually supposed to be alive (SSOT, audited 2026-06-04; SPLIT 2026-06-12)
 
-> **Only ONE orchestrator VM is live, and it is the only one that must be: the PLANNING / CENTRAL-API VM** — canonical
-> id **`planning`** (operator 2026-06-05; historically mis-branded `vm-0`, historically `planning-vm` in the registry,
-> renamed to `planning` 2026-06-05) = `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7` (m8i.4xlarge, ap-northeast-1,
-> **Elastic IP**). It is **THE single central API + CI-responder** —
-> `api.agent-orchestrator.odum-research.com → 13.113.200.22` — backend uvicorn `:8765` behind nginx :443. **This is the
-> only VM whose health/alerts matter.** **Slots = `tab/planning/N`** (renamed 2026-06-05 from the transitional
-> `tab/vm-0/N` — re-provisioned clean, 0 `vm-0` worktrees left; 5-slot composition: Ikenna / Harsh interactive · review
-> · CI-escalation · plan-health). **Behaviour (operator 2026-06-05): it auto-spawns the SLOTS (tmux) but does NOT
-> auto-assign backlog jobs to the human planning slots** — Ikenna/Harsh drive those like a laptop; CI-escalation +
-> plan-health are **ping-driven** (CI `POST /api/escalate`), not backlog auto-assignment. **Verified 2026-06-10:
+> **TWO orchestrator VMs are now live (human/central SPLIT 2026-06-12 — operator decision; see
+> `orchestrator_human_central_vm_split_2026_06_12.md`; supersedes the 2026-06-05 merged "Central API VM == Planning
+> VM"):**
+>
+> **(1) Central / Orchestrator VM** — canonical id **`planning`** (LEGACY id, kept for runtime continuity; historically
+> mis-branded `vm-0`, historically `planning-vm` in the registry, renamed to `planning` 2026-06-05) =
+> `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7` (m8i.4xlarge, ap-northeast-1, **Elastic IP**). It is **THE single
+> central API + CI-responder** — `api.agent-orchestrator.odum-research.com → 13.113.200.22` — backend uvicorn `:8765`
+> behind nginx :443. It owns CI-escalation (`/api/escalate`), plan-health (`/api/plan-health/dispatch`), review, and
+> **AutoSpawn for agent workers**. It does **NO human daily work**. **This is the only VM whose health/alerts matter.**
+> **Slots = `tab/planning/N`** (orchestrator/AutoSpawn slots — review · CI-escalation · plan-health; CI-escalation +
+> plan-health are **ping-driven** via CI `POST /api/escalate`, not backlog auto-assignment). **Verified 2026-06-10:
 > SSM-Online and running the CURRENT escalation code (`plan_health` + `ldr_qg_failure` wall types accepted by the live
-> process)** — any older "vm-planning to restore / not SSM-reachable" framing is stale. Rename + AutoSpawn-job scoping
-> shipped via `plans/archive/2026_06/planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05.md` (archived
-> 2026-06-10).
+> process)** — any older "vm-planning to restore / not SSM-reachable" framing is stale.
+>
+> **(2) Human Planning VM** — canonical id **`human-planning`** = `i-0dd9812a96cdda5dc` (`35.76.120.160`, m7i.2xlarge,
+> ap-northeast-1, `ssh human-planning-vm`). Ikenna (slot1) + Harsh (slot2) **interactive only**, slots =
+> `tab/human-planning/N`. It **self-registers with the central VM** and owns **NO EIP / DNS / central-API**;
+> `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` (it never auto-adopts fleet plans). Drive these slots like a laptop — they
+> are not backlog-assigned.
 >
 > **NOT live (do NOT treat their silence — or alerts about them — as an incident):**
 >
@@ -54,7 +66,8 @@ canonical there. Do not duplicate the list here — read the registry.
 >   the listed IPs are stale). They are **post-cutover / aspirational**, not a live fleet.
 >
 > **Alert-scoping rule (HARD):** `fleet-git-health-guard.sh` + slot-stale + worker-liveness alerts must scope to the
-> **live set above** (currently just the `planning` VM, a.k.a. `vm-0`). The guard is a per-VM cron, so a stopped VM
+> **live set above** (the central `planning` VM + the `human-planning` VM since the 2026-06-12 split — but **only the
+> central `planning` VM's health/alerts are incident-grade**). The guard is a per-VM cron, so a stopped VM
 > self-stops alerting — but the guard also has NO internal scoping (it fsck's every `.git` incl. ~478 worktrees →
 > 500+-line dumps) and does NOT self-heal (it should `git fetch` to recover missing-but-reachable objects, which is what
 > the 2026-06-04 recovery did by hand). When a VM is intentionally stopped, record it here so a stale alert isn't

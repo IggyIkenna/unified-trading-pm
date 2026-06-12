@@ -36,7 +36,7 @@ resource limits, root-cause history) → `codex/05-infrastructure/agent-orchestr
 | Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                                                                                                                                                                                                                                       |
 | Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                                                                                                                                                                                                                                                  |
 | Auth     | ES256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`). Internal proxy token: ES256 asymmetric, **HS256 retired 2026-06-01** (all 11 VMs sign ES256; private key distributed to every VM via the restricted creds bucket — central-only abandoned). Operator dashboard login JWT: HS256 (`ORCHESTRATOR_JWT_SECRET`, central-only — unaffected). |
-| Workers  | 11 EC2 VMs (10 epic + 1 api-host, AWS ap-northeast-1), 8 slots each on epic VMs = 80 worker slots; 1 central API/planning VM (`13.113.200.22`, 2 planning slots). Total: 82 slots.                                                                                                                                                                                |
+| Workers  | EC2 VMs (10 epic, AWS ap-northeast-1), 8 slots each on epic VMs = 80 worker slots; 1 central/orchestrator VM (id `planning`, `i-0c9b283b`, `13.113.200.22`) + 1 human planning VM (id `human-planning`, `i-0dd9812a`, `35.76.120.160`, 2 interactive slots) — human/central SPLIT 2026-06-12, see `orchestrator_human_central_vm_split_2026_06_12.md`. Total: 82 slots.                                                                                                                                                                                |
 | State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.                                                                                                                                                                                                                                                  |
 | Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                                                                                                                                                                                                                                     |
 | QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                                                                                                                                                                                                                                    |
@@ -322,11 +322,13 @@ Five mitigations added to close gaps in the multi-agent loop. All live on the Ik
 Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer" in
 the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
 
-## Fleet topology (refreshed 2026-06-01)
+## Fleet topology (refreshed 2026-06-01; SPLIT 2026-06-12)
 
-Current state: **1 central API/planning VM + 10 epic VMs + 1 api-host VM = 11 VMs total, all on AWS EC2
-`ap-northeast-1`**, all running orchestrator v0.6.0+. The GCP fleet that was commissioned 2026-05-21 was decommissioned
-during the 2026-05-22→23 AWS migration; no GCP VMs are running today.
+Current state: **1 central/orchestrator VM (id `planning`, `i-0c9b283b`) + 1 human planning VM (id `human-planning`,
+`i-0dd9812a`) + 10 epic VMs**, all on AWS EC2 `ap-northeast-1`, all running orchestrator v0.6.0+ (human/central SPLIT
+2026-06-12 — see `orchestrator_human_central_vm_split_2026_06_12.md`; supersedes the prior merged "central API/planning
+VM"). The GCP fleet that was commissioned 2026-05-21 was decommissioned during the 2026-05-22→23 AWS migration; no GCP
+VMs are running today.
 
 Current per-VM addresses + slot counts: see
 [`../05-infrastructure/agent-orchestrator-worker-topology.md`](../05-infrastructure/agent-orchestrator-worker-topology.md)
@@ -334,8 +336,9 @@ Current per-VM addresses + slot counts: see
 these numbers should live (avoid duplicating here so the two don't drift). Live runtime backends + account mapping live
 in `agent-orchestrator/data/config/backends.json`.
 
-Total worker capacity: 2 (central / planning slots) + 80 (10 epic VMs × 8) = **82 slots**. (The api-host VM serves the
-central API/routing role; its slots are the 2 planning slots counted above.) Registry SSOT:
+Total worker capacity: 2 (human-planning VM interactive slots) + 80 (10 epic VMs × 8) = **82 slots**. (Since the
+2026-06-12 split the central / orchestrator VM (id `planning`) serves the central API/routing + orchestrator roles with
+no human daily work; the 2 interactive slots counted above live on the separate `human-planning` VM.) Registry SSOT:
 `unified-trading-pm/orchestrator_vm_registry.yaml`.
 
 **Cloud-agnostic posture**: AWS is the current and only running cloud. The bootstrap (`bootstrap_vm.sh`), launchers
