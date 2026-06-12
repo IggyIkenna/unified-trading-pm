@@ -17,12 +17,26 @@
 #                    `[TAG] P<n>.` (e.g. `[TAG][P<n>]`, `[P<n>][TAG]`, or `🟠 [TAG] P<n>.`).
 #                    Soft hygiene warning.
 #
-# Usage: bash scripts/plan-hygiene/check_todo_format.sh [--quiet]
+# Usage: bash scripts/plan-hygiene/check_todo_format.sh [--quiet] [file ...]
 # Exit 0 = all canonical or only style warnings. Exit 1 = at least one NO_PRIORITY.
+#
+# Optional explicit file list (staged mode — mirrors check_frontmatter.sh): when
+# files are passed, check ONLY those (the prek hook's STAGED plans) so a commit
+# is never blocked by a pre-existing violation in a plan it does not touch.
+# Files outside the scan scope (plans/active/**) are silently ignored. No files
+# given -> full-corpus glob (cron / CI / interactive behaviour, unchanged).
 
 set -uo pipefail
-QUIET="${1:-}"
 PM_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+
+QUIET=""
+FILES=()
+for arg in "$@"; do
+  case "$arg" in
+    --quiet) QUIET="--quiet" ;;
+    *) FILES+=("$arg") ;;
+  esac
+done
 
 SCAN_GLOBS=(
   "$PM_DIR/plans/active/*.md"
@@ -54,9 +68,24 @@ NON_CANONICAL_COUNT=0
 NO_PRIORITY_REPORT=()
 NON_CANONICAL_REPORT=()
 
-for glob in "${SCAN_GLOBS[@]}"; do
-  for f in $glob; do
+# Resolve the scan set: explicit file list (staged mode) or the full-corpus globs.
+# Portable for macOS bash 3.2 (no mapfile; ${arr[@]+...} guards empty-array set -u).
+SCAN_FILES=()
+if [ "${#FILES[@]}" -gt 0 ]; then
+  for f in ${FILES[@]+"${FILES[@]}"}; do
+    case "$f" in /*) ;; *) f="$PM_DIR/$f" ;; esac
     [ -f "$f" ] || continue
+    case "$f" in "$PM_DIR"/plans/active/*.md) SCAN_FILES+=("$f") ;; esac
+  done
+else
+  for glob in "${SCAN_GLOBS[@]}"; do
+    for f in $glob; do
+      [ -f "$f" ] && SCAN_FILES+=("$f")
+    done
+  done
+fi
+
+for f in ${SCAN_FILES[@]+"${SCAN_FILES[@]}"}; do
     base="$(basename "$f")"
     is_allowlisted "$base" && continue
     name="${f#$PM_DIR/}"
@@ -77,7 +106,6 @@ for glob in "${SCAN_GLOBS[@]}"; do
         NO_PRIORITY_COUNT=$(( NO_PRIORITY_COUNT + 1 ))
       fi
     done < "$f"
-  done
 done
 
 TOTAL=$(( NO_PRIORITY_COUNT + NON_CANONICAL_COUNT ))
