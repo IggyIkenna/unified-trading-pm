@@ -113,12 +113,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       reason). The enriched text flows through `notify-slack.yml` verbatim (no workflow change) + the alert ledger.
       RECOVER bookend keeps its run deep-link (a green recovery needs no failure-reason). 8 new unit tests (65 total
       green; ruff + basedpyright clean). Repo: unified-trading-pm.
-- [ ] [CODE] P2. **(N2) Last-green SHA + time column** on the `/repos` overview — per repo per branch, the most-recent
-      SHA whose `quality-gates-v2` concluded success + its timestamp ("green as of <sha> · <age>"). Distinct from the
-      current branch-head SHA (head may be red/pending). **UNBLOCKED 2026-06-11** — Ikenna's Actions-API conversion
-      (below) removes the Checks:read dependency; the per-SHA v2 conclusion now comes from
-      `/actions/workflows/quality-gates-v2.yml/runs?head_sha=`. Build N2 on `v2_conclusion_for_sha` once Ikenna's
-      `_repo_ci_github.py` conversion lands on LDR. Repo: deployment-api + deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@0232b5a + deployment-ui@367b5b7 | full UI QG + deployment-api QG green | pw:L2 ✓ 200/200 |
+      regression: tests/smoke/repos-tab.spec.ts (last-green column) + tests/unit/test_repo_ci_routes.py
+      (test_last_green_main). **(N2) Last-green-MAIN sha + time column** on the `/repos` overview — "green as of
+      `<sha>` · `<age>`" per repo, the most-recent **main** sha whose `quality-gates-v2` concluded success, distinct
+      from the (possibly red/pending) main HEAD column. Backend `last_green_for_branch`
+      (`?branch=&status=success&per_page=1`, Actions:read) + `last_green_main` on the overview row, **budget-gated**: a
+      MAIN_GREEN repo's head IS the last green (no extra call); only a non-green repo needs the lookup (same profile as
+      `branch_ci`). Repo: deployment-api (`_repo_ci_github`/`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui
+      (`RepoCi` OverviewTable + `client` + `mock-api`).
+- [ ] [CODE] P3. **(N2-followup) Per-branch last-green (LDR / staging) in the repo drill-down** — N2 v1 surfaces the
+      MAIN-axis last-green as the overview column (the deployed branch the operator asked about). Extend last-green to
+      LDR + staging (same budget-gated pattern: green head → use head, else one runs-API lookup) and render them in the
+      `RepoDetailPanel` (the overview row is already 10 cols wide — per-branch belongs in the drilldown, not the matrix).
+      Repo: deployment-api + deployment-ui.
 
 ### Credential status (re-probed 2026-06-11)
 
@@ -267,11 +276,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       ReadinessTab guards `blocking_items`/`categories` with `?? []`; (2) `MOCK_CHECKLIST` rewritten to the
       `ChecklistResponse` contract (readiness_percent + counts + per-category display_name/percent +
       `blocking_items[]`). Repo: deployment-ui (ReadinessTab + mock-api).
-- [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
-      per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
-      relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
-      content is ahead of staging/main but the drain is stale/failing (bug #11 class). Full spec + 3 sub-todos:
-      `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md`. Repos: deployment-api + deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (12/12 route tests) + full UI QG | pw:L2
+      ✓ 200/200 (+1 unrelated Dry-Run flake, retry-green) | regression: tests/smoke/repos-tab.spec.ts (drain panel +
+      relabel) + tests/unit/test_repo_ci_routes.py (test_promotion_drain). **(Ikenna issue — ADOPTED) Promotion-drain
+      surface** — a "Promotion drain" panel on `/repos` shows the ROUTINE LDR→staging / LDR→main auto-merge drain (last
+      run result + age + deep-link), backed by 2 GLOBAL `latest_workflow_run` queries on the PM-central
+      `ldr-to-staging-promote.yml` / `ldr-to-main-promote.yml` (per-repo would blow the GitHub-API budget; the standing
+      per-repo PRs are already in `open_prs`). Relabelled the SIT panel "Last SIT / cascade run" → **"Breaking cascade /
+      SIT"** so the two are never conflated (the operator's core gap). Repos: deployment-api (`repo_ci`/`_repo_ci_types`/
+      `_repo_ci_mocks`) + deployment-ui (`RepoCi` panel + `client` + `mock-api`).
+- [ ] [CODE] P3. **(promotion-drain follow-up) Drain stall-surfacing + per-repo standing-PR v2** — flag a repo whose LDR
+      content is ahead of staging/main (real file delta, not squash skew) AND whose last drain run is stale/failing (the
+      bug #11 class — invisible today). Also surface the per-repo standing LDR→staging / LDR→main PR's `quality-gates-v2`
+      conclusion explicitly (today it's implicit via `open_prs` + `branch_ci`). Repos: deployment-api + deployment-ui.
+      SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3 sub-todo).
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
@@ -321,10 +340,16 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 - [ ] [CODE] P3. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
       a freeze blocks a scheduled/autonomous run; add a freeze-window banner on `/repos` (active? window? reason?).
       Repo: deployment-ui.
-- [ ] [CODE] P3. **(G6) Promotion-lag AGE not explicit** — the overview shows the LDR↔staging↔main content-delta but
-      not the **time-in-state** the lag monitor pages on (>60 min forward/backmerge lag). Add a lag-age chip (oldest
-      unpromoted green commit age) so the page state matches what `promotion-lag-monitor` alerts on. Repo:
-      deployment-api (compute age) + deployment-ui.
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (14/14 route tests) + full UI QG | pw:L2
+      ✓ 202/202 | regression: tests/smoke/repos-tab.spec.ts (lag chip) + tests/unit/test_repo_ci_routes.py
+      (test_main_lag_age). **(G6) Promotion-lag AGE** — a lag chip in the `/repos` LDR→main delta cell shows the age of
+      the OLDEST LDR commit not yet on main (the time-in-state `promotion-lag-monitor` pages on), red past the 60-min
+      threshold. Backend `oldest_unpromoted_commit_at` reads `commits[0]` of the compare API (oldest in the range),
+      **gated** to repos with a real LDR→main delta (in-sync repos cost no extra call); `main_lag_age_min` on the
+      overview row. **NB**: "oldest unpromoted commit" (not green-filtered) is the v1 signal — a green-only refinement
+      is folded into the promotion-drain P3 follow-up. Repos: deployment-api (`_repo_ci_github`/`repo_ci`/
+      `_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi` OverviewTable + `client` + `mock-api`).
 - [ ] [CODE] P3. **(G7) Worker-liveness watchdog activity has no dedicated standing panel** — slot
       working/paused/blocked states render, but the watchdog's kill / daily-cap-dormancy / autospawn-flap /
       respawn-escalation events are transition-only. Add a watchdog-health panel (kills today vs cap, dormant?, recent

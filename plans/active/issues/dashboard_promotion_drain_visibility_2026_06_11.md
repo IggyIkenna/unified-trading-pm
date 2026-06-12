@@ -49,20 +49,22 @@ blocked).
 Add a **"Promotion drain"** surface to the Repos CI dashboard (deployment-ui) backed by deployment-api, **distinct
 from** the breaking-cascade panel and clearly labelled so the two are never conflated:
 
-- [ ] [CODE] P2. **deployment-api** — extend the repo-ci aggregator: for each repo expose the last
-      `ldr-to-staging-promote` + `ldr-to-main-promote` outcome (run conclusion + timestamp, via the Actions runs API —
-      PAT-compatible) AND the open standing LDR→staging / LDR→main PR + its `quality-gates-v2` conclusion. Reuse
-      `v2_conclusion_for_branch`/the Actions-runs pattern from `_repo_ci_github.py`; honest-degrade (null) on fetch
-      failure; respect the GH rate-budget guard (only fetch where needed). Repo: deployment-api (`routes/repo_ci.py` +
-      `_repo_ci_github.py`).
-- [ ] [CODE] [UI] P2. **deployment-ui** — render a "Promotion drain" panel/column: per repo, "last LDR→staging promote:
-      <result> <age>" + "last LDR→main: <result> <age>", with a deep-link to the promote workflow run (GitHub) and to
-      the standing PR. Rename/relabel the existing panel to **"Breaking cascade / SIT"** so it's unambiguous it only
-      fires on breaking changes. `pw:L2` + regression spec in `tests/smoke/`. Repo: deployment-ui (`pages/RepoCi.tsx` +
-      `lib/mock-api.ts`).
-- [ ] [CODE] P3. **Stall surfacing** — flag when a repo has LDR content ahead of staging/main (real file delta, not
-      squash skew) AND the last promote-drain run for it is >N ticks old or failing — i.e. the drain is stuck (bug #11
-      class). Repo: deployment-api + deployment-ui.
+- [x] ✅ [CODE] P2. DONE-LOCAL 2026-06-12 (deployment-api@0232b5a, on LDR — billing-blocked from promotion). The
+      aggregator exposes `promotion_drain` = last `ldr-to-staging-promote` + `ldr-to-main-promote` outcome
+      (status/conclusion/age/url) via the Actions runs API. **Scoping note**: these are PM-CENTRAL workflows (not
+      per-repo), so the drain runs are 2 GLOBAL queries (budget-friendly), NOT per-repo. The open standing
+      per-repo LDR→staging / LDR→main PRs are already in `open_prs`; surfacing their per-PR v2 conclusion explicitly is
+      moved to the P3 follow-up below. Repo: deployment-api (`repo_ci.py` reusing `latest_workflow_run_with_jobs`).
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (deployment-ui@367b5b7, on LDR — billing-blocked) | pw:L2 ✓ 200/200 |
+      regression: tests/smoke/repos-tab.spec.ts. "Promotion drain" panel on `/repos` shows "LDR → staging: <result>
+      <age>" + "LDR → main: <result> <age>" with a deep-link to the PM promote-workflow run. The existing panel is
+      relabelled **"Breaking cascade / SIT"** so it's unambiguous it only fires on breaking changes. Repo: deployment-ui
+      (`pages/RepoCi.tsx` `PromotionDrainPanel` + `lib/mock-api.ts`).
+- [ ] [CODE] P3. **Stall surfacing + per-repo standing-PR v2** — flag when a repo has LDR content ahead of staging/main
+      (real file delta, not squash skew) AND the last promote-drain run is stale/failing — i.e. the drain is stuck (bug
+      #11 class), plus surface each standing LDR→staging/main PR's `quality-gates-v2` conclusion explicitly. Repo:
+      deployment-api + deployment-ui. **Tracked in `monitoring_control_plane_master_2026_06_10.md` (promotion-drain
+      follow-up).**
 
 **Parent epic**: `observability_master` (this is the monitoring control-plane surface). Wrapper into
 `monitoring_control_plane_master_2026_06_10.md` smart-extras if picked up as a sub-plan, or execute directly from this
