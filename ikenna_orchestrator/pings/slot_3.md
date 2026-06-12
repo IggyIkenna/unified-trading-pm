@@ -488,3 +488,18 @@ it, or rename the existing one).
   `/api/fleet/git-health` so the deployment-ui Fleet Git tab shows LIVE fleet data
   (`plans/active/ci_dashboard_deployment_ui_2026_06_10.md` + `fleet_git_health_orchestrator_2026_06_10.md`). Until then
   the proxy degrades honestly (available=False) + deep-links to the AO UI.
+
+## [Slot 3 → Operator] 2026-06-12 — DONE: cefi_ml_directional_continuous_live-004
+
+> **✅ 2026-06-12 — DONE**: `cefi_ml_directional_continuous_live-004` shipped.
+>
+> **Delivered**: `alerting_service/cefi_ml_event_handler.py` — 3-tier ML_SIGNAL_STALENESS ladder:
+> - age < 4h → no alert
+> - 4h–12h → WARN via `route_event(ML_SIGNAL_STALENESS)` (Telegram + Slack)
+> - 12h–24h → CRITICAL via `route_event_with_explicit_channels` (PagerDuty + Telegram, pd_severity="critical")
+> - ≥24h → KILL_SWITCH via `route_event(KILL_SWITCH_ML_MODEL_FAILURE)`
+>
+> Passthrough events (ML_PNL_DEVIATION, ORDER_REJECTION_SPIKE, POSITION_CRITICAL_DISCREPANCY, etc.) route via generic
+> `route_event` per their LIVE_ALERT_RULES entries. `AlertSubscriber.dispatch_event` wired.
+> Unit tests: `tests/unit/test_cefi_ml_event_handler.py` (19 tests, all green). QG clean. Landed live-defi-rollout.
+> Plan checkbox flipped: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` -004.
