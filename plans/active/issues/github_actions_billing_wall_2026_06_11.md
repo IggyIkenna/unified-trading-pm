@@ -85,6 +85,16 @@ githubstatus.com all-operational → account spending limit, not platform. Opera
   mis-routed quickmerge to a direct LDR→main PR #235) → its PR head will NOT auto-run v2 even after restore; the manual
   dispatch above is required for it specifically.
 
+**2026-06-12 ~05:46Z** — wall still active (escalation agt-72fb64, slot 5):
+
+- `alerting-service` `quality-gates-v2` re-escalated as `ldr_qg_failure` (4th escalation for this repo today)
+- Local QG exits 0 on commit `897cd93` (56 gates pass, 38s); code is correct, no fix needed
+- Last CI success: run 27388159503 at 01:18Z; all runs since 02:17Z fail 0-step (billing wall)
+- Latest CI failure: run 27396304355 (main-backmerge-to-ldr) at 05:20Z; PM latest: 05:46Z — wall ongoing
+- Re-trigger once billing restored:
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/alerting-service --ref live-defi-rollout`
+- agt-72fb64 escalation id — BLOCKED needs operator billing restore
+
 ## Root cause — why the budget keeps blowing (audit 2026-06-12)
 
 This is NOT a payment-instrument problem. The fleet's burn rate is **~30,600 billable min/day ≈ $245/day ≈ $7,350/month
