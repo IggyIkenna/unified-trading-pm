@@ -468,16 +468,22 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       bootstrap override hook below, so isolation vars are live BEFORE the backend starts); reuses
       `uts-orchestrator-epic` instance profile + sg-0080310387e84f613 + subnet-fc09eca6 (all env-overridable); tags
       Name/vm-id/role/operator/lifecycle; prints instance-id + IP + log-tail hint. Repo: deployment-service.
-- [ ] [SCRIPT] P1. **Bootstrap env-override hook** — `bootstrap_vm.sh` consumes `ORCHESTRATOR_EXTRA_ENV` (newline
-      KEY=VAL block, user-data-injectable) into `.env.local` BEFORE the orchestrator service starts, so a test VM boots
-      directly with `ORCHESTRATOR_VM_ID=vm-e2e-test` + `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` (+
-      `ORCHESTRATOR_DONE_REQUIRE_ORIGIN=true` to exercise the new ratchet) — no SSH-and-restart step. Repo:
-      agent-orchestrator.
-- [ ] [TEST] P1. **Post-launch verification harness** — `agent-orchestrator/scripts/verify_vm_e2e.sh <instance-id|ip>`
-      (laptop-run; SSM/ssh): waits ≤10 min for `:8765` health, then asserts with PASS/FAIL table — backend Ready (live
-      mode), `pm-pull.timer` enabled + last pull LDR (the STEP 7.5c verifier), MainAgentKeeper spawned `orch-agent-main`
-      (real setup-token auth from the creds bucket — NOT the local-credentials hack), backlog EMPTY under strict scoping
-      (the isolation proof), AutoSpawn/Watchdog/PlanRegen loops started, self-registration reported. Composes with the
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-12 — agent-orchestrator@878274b (QG green; quickmerge --agent). `bootstrap_vm.sh`
+      5b-extra: `ORCHESTRATOR_EXTRA_ENV` newline KEY=VAL block upserted into `.env.local` LAST (overrides beat defaults)
+      before the service starts. Was: **Bootstrap env-override hook** — `bootstrap_vm.sh` consumes
+      `ORCHESTRATOR_EXTRA_ENV` (newline KEY=VAL block, user-data-injectable) into `.env.local` BEFORE the orchestrator
+      service starts, so a test VM boots directly with `ORCHESTRATOR_VM_ID=vm-e2e-test` +
+      `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` (+ `ORCHESTRATOR_DONE_REQUIRE_ORIGIN=true` to exercise the new ratchet)
+      — no SSH-and-restart step. Repo: agent-orchestrator.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — agent-orchestrator@878274b (QG green; quickmerge --agent).
+      `scripts/verify_vm_e2e.sh <instance-id>`: SSM-driven 7-check PASS/FAIL table (running+SSM, bootstrap marker
+      ≤15min, :8765 live health, pm-pull.timer, orch-agent-main ≤3min, strict-scoping empty backlog, accounts ≥1);
+      bounded waits + explicit verdict on every path. Live-run evidence lands with the launch todo below. Was:
+      **Post-launch verification harness** — `agent-orchestrator/scripts/verify_vm_e2e.sh <instance-id|ip>` (laptop-run;
+      SSM/ssh): waits ≤10 min for `:8765` health, then asserts with PASS/FAIL table — backend Ready (live mode),
+      `pm-pull.timer` enabled + last pull LDR (the STEP 7.5c verifier), MainAgentKeeper spawned `orch-agent-main` (real
+      setup-token auth from the creds bucket — NOT the local-credentials hack), backlog EMPTY under strict scoping (the
+      isolation proof), AutoSpawn/Watchdog/PlanRegen loops started, self-registration reported. Composes with the
       no-fire-and-forget T+10min rule. Repo: agent-orchestrator.
 - [ ] [TEST] P1. **Plan-pickup e2e on the VM** — drop a local test plan (`assigned_vm: vm-e2e-test`) into the VM's PM
       checkout → PlanRegenLoop ingests ONLY it (strict scoping) → AutoSpawn spawns a real setup-token worker →
