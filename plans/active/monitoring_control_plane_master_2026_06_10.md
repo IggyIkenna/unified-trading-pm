@@ -501,6 +501,41 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       the launcher (`--terminate <instance-id>`); production worker VMs stay long-running (no auto-teardown). Repo:
       deployment-service.
 
+**VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
+RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3
+isolation env overrides landed via the EXTRA_ENV hook; pm-pull.timer enabled+active (single-installer model proven on
+real systemd); **MainAgentKeeper spawned the main agent 3 s after backend start with the real `sub-a-ikenna`
+setup-token** and it polls /api/state every 60 s (STEP 2.5 sweep live); 3 fleet accounts synced from the creds bucket;
+strict scoping ingested 0 plan tasks; **backlog 0 after the prune + ghost-fix below**. Launch findings fixed in-flight:
+launcher guard fn name (deployment-service@5655576) + the on_regen ghost-backlog fix (agent-orchestrator@7b85fc5,
+deployed to the VM + verified). Remaining live-run findings:
+
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@7b85fc5 (regression test; QG green; deployed + verified on
+      vm-e2e-test). **on_regen refresh skipped prune-only ticks** — `server.py` guard was `new_tasks == 0` so a tick
+      that PRUNED (36 stale tasks, yaml+db both 0) never refreshed `_state["backlog"]` → /api/backlog served ghosts
+      until the next ADDITIVE tick. Dispatch was safe (db-status filtered) but the display lied. Guard now
+      `new_tasks == 0 and pruned_yaml == 0`.
+- [ ] [INFRA] P1. **Worker-VM port is 8026 in REALITY, 8765 in the DOCS** — `install-orchestrator-service.sh`'s systemd
+      unit binds uvicorn :8026 on a fresh worker; sg-0080310387e84f613 (22 public + 8026 in-VPC only) and
+      `backends.json` (:8026 URLs) are consistent with the TEMPLATE, while CLAUDE.md/codex say "8026 retired, 8765
+      canonical" (true only on the planning VM). Decide the canonical worker port, then move template + sg +
+      backends.json + docs in ONE change. Repo: agent-orchestrator (+ codex). Found 2026-06-12 live run.
+- [ ] [CODE] P1. **Bootstrap S3 `backlog.yaml` seed contradicts the regen-authoritative model** — Step 5c copies a stale
+      fleet backlog (36 May-era phase tasks) from the creds bucket into a fresh VM, bypassing regen scoping entirely;
+      AND bootstrap never upserts `ORCHESTRATOR_REGEN_PRUNE_STALE=true` (CLAUDE.md claims fleet-default; code default is
+      false) so the seed persists. Fix: drop the backlog.yaml seed (regen rebuilds from plans) + upsert PRUNE_STALE=true
+      in 5b-append; delete the stale `config/backlog.yaml` from the creds bucket. Repo: agent-orchestrator. Found
+      2026-06-12 live run (vm-e2e-test booted with 36 foreign tasks).
+- [ ] [CODE] P2. **verify_vm_e2e.sh: distinguish caller-side IAM denial from agent-not-registered** — the SSM probe
+      swallowed `AccessDeniedException` into "agent never registered" (misleading FAIL); add an explicit
+      caller-permission preflight + an SSH fallback path (port 22 is open; `agent-orchestrator-key`). Repo:
+      agent-orchestrator. Found 2026-06-12 live run.
+- [ ] [CREDS] P2. **BLOCKED-CREDENTIALS — `harsh-worker` IAM lacks SSM read/run** (`ssm:GetParameters` broke the
+      launcher's Ubuntu-AMI resolution — worked around via `AMI_ID=ami-0bf052f8a9dd8bf42`;
+      `ssm:DescribeInstanceInformation`/ `ssm:SendCommand` broke the verify harness — worked around via SSH). Operator
+      ask: attach `AmazonSSMReadOnlyAccess` + `ssm:SendCommand`/`ssm:GetCommandInvocation` (scoped to the orchestrator
+      fleet) to `harsh-worker`. Found 2026-06-12 live run.
+
 Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
 because no setup-token exists on this host — exactly the failure mode CLAUDE.md § "accounts auth via setup-tokens only"
