@@ -3,16 +3,28 @@
 declared parent_epic.
 
 Scores each plan in plans/active/ against every epic's keyword surface in
-codex/12-agent-workflow/epic-keyword-surface.yaml. If the highest-scoring
-epic differs from the declared parent_epic, emits a WARN line with the
-top-3 scores.
+codex/12-agent-workflow/epic-keyword-surface.yaml.
+
+A plan is flagged as a suspect mismatch only when BOTH hold:
+  1. the declared parent_epic is NOT among the top-N keyword matches
+     (default N=3), AND
+  2. the best-scoring epic beats the declared epic by at least `--margin`
+     keyword hits (default 2).
+
+Rationale: keyword overlap is a weak signal on a data-pipeline-heavy corpus
+(most plans share mtds/defi/manifest vocabulary), so the old "declared must be
+the exact #1 match" rule flagged ~44% of plans — the cutover master, the
+deliberately-mtds-parented canonicalisation suite, every features plan, etc.
+A plausibly-homed plan sits at rank 2-3 or within a narrow margin of the top;
+only a plan whose declared epic is both out-of-top-N and decisively beaten is a
+genuine candidate for re-parenting.
 
 Exit 0  — all plans match their declared epic OR are orphans (no parent_epic,
           already caught by the orphan check).
 Exit 1  — at least one mismatch (for --strict mode only; default is warn-only).
 
 Usage:
-    python3 scripts/plan-hygiene/check_parent_epic_alignment.py [--quiet] [--strict]
+    python3 scripts/plan-hygiene/check_parent_epic_alignment.py [--quiet] [--strict] [--top-n N] [--margin M]
 """
 
 from __future__ import annotations
@@ -21,6 +33,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -132,7 +145,25 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--quiet", action="store_true", help="Suppress PASS output")
     parser.add_argument("--strict", action="store_true", help="Exit 1 on any mismatch")
+    parser.add_argument(
+        "--top-n",
+        type=int,
+        default=3,
+        help="Declared epic is treated as plausible if within the top-N keyword matches (default 3)",
+    )
+    parser.add_argument(
+        "--margin",
+        type=int,
+        default=2,
+        help="Confidence margin: only WARN if top epic beats declared by >= this many keyword hits (default 2)",
+    )
     args = parser.parse_args(argv)
+    # argparse Namespace attributes are typed Any; pin them to typed locals so the
+    # strict basedpyright ratchet (PM scripts/ baseline) stays clean.
+    quiet = cast(bool, args.quiet)
+    strict = cast(bool, args.strict)
+    top_n = cast(int, args.top_n)
+    margin = cast(int, args.margin)
 
     if not KEYWORD_SURFACE_PATH.exists():
         print(
@@ -181,24 +212,41 @@ def main(argv: list[str] | None = None) -> int:
             # No keywords matched at all — likely a tiny plan; skip rather than false-positive
             continue
 
-        if top_epic != declared:
+        # Rank (1-based) + score of the DECLARED epic within the full sorted list.
+        declared_rank = next((i for i, (e, _s) in enumerate(scores, start=1) if e == declared), None)
+        declared_score = next((s for e, s in scores if e == declared), 0)
+
+        # Flag a genuine mismatch only when the declared epic is BOTH outside the
+        # top-N AND beaten by the confidence margin. This silences the dominant
+        # false-positive class (a plausible epic at rank 2-3, or a near-tie) that
+        # made the old "#1-only" rule warn on ~44% of the corpus.
+        in_top_n = declared_rank is not None and declared_rank <= top_n
+        decisive_gap = (top_score - declared_score) >= margin
+
+        if not in_top_n and decisive_gap:
             mismatch_count += 1
             score_str = ", ".join(f"{e}={s}" for e, s in top3)
             print(
                 f"WARN  {plan_path.name}: declared parent_epic={declared!r} "
-                f"but top match is {top_epic!r} "
+                f"(rank {declared_rank}, score {declared_score}) "
+                f"but top match is {top_epic!r} by >= {margin} "
                 f"(top-3 scores: {score_str})"
             )
-        elif not args.quiet:
-            print(f"OK    {plan_path.name}: parent_epic={declared!r} (score={top_score})")
+        elif not quiet:
+            note = (
+                ""
+                if top_epic == declared
+                else f" [top={top_epic}; declared rank {declared_rank} within top-{top_n} or inside margin — plausible]"
+            )
+            print(f"OK    {plan_path.name}: parent_epic={declared!r} (score={declared_score}){note}")
 
-    if not args.quiet:
+    if not quiet:
         print(
             f"\n{'WARN' if mismatch_count else 'PASS'}  "
             f"Checked {checked_count} plans — {mismatch_count} suspect mismatch(es)."
         )
 
-    if args.strict and mismatch_count > 0:
+    if strict and mismatch_count > 0:
         return 1
     return 0
 

@@ -399,7 +399,7 @@ primitive.
       CONSOLIDATION** (the deferred 1.3b: 24h→yearly, 4h/1h→monthly objects) which cuts GET-count without losing the
       materialised coarse TFs — that is the named successor, NOT base-only. Decision recorded; no profiling script
       needed (the 1.0/1.1a numbers are decisive).
-- [ ] [CLEANUP] [NOT-A-BUG] P3. **3.G (DISCOVERY 2026-06-12, DIAGNOSED) MDPS `COLUMN_AGG_RULES["vwap"] = "mean"` is a
+- [x] ✅ [CLEANUP] [NOT-A-BUG] P3. **3.G (DISCOVERY 2026-06-12, DIAGNOSED → CLEANUP SHIPPED market-data-processing-service@bde44fd) MDPS `COLUMN_AGG_RULES["vwap"] = "mean"` is a
       dead intermediate — the OUTPUT vwap is already correct.** Diagnosis (read both sides): after the group-by roll-up,
       `app/calculators/fast_candle_aggregation.py:253-255` **recomputes** `vwap = pv_sum / volume` (volume-guarded),
       OVERWRITING whatever the `"mean"` rule produced. `pv_sum = Σ(tick_price·tick_size)` is accumulated at the TICK

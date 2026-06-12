@@ -445,10 +445,13 @@ actually exists (which data_types missing, over which timeframes) via the existi
       eliminate drift with the UAC committed copy. QG: bundled manifest HASH == UAC openapi/capability-manifest.json.
       NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this.
 
-- [ ] [AGENT][UI] P2. **deployment-ui capability tab bundle refresh (F38/F39 follow-up)**: refresh the bundled
+- [x] ✅ [AGENT][UI] P2. **deployment-ui capability tab bundle refresh (F38/F39 follow-up)**: refresh the bundled
       capability-manifest.json + capability-verdict-matrix.json in deployment-ui assets to reflect the new broker
       node classification and widened eligible_venue_ids (uac@238e58f). QG: bundled manifest HASH == UAC committed copy.
       NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this.
+      DONE 2026-06-12 — deployment-ui@060750a | pw:L2 ✓ (206/206 passed) | regression: tests/smoke/capability_tab.spec.ts
+      Nodes: 563 (added broker:ibkr), edges: 2325 (added 6 routed_via); verdict matrix: 24,752 cells / 16,913 available.
+      NodeKind added "broker"; EdgeRelation added "routed_via"; CapabilityGaps.broker_classed_venues optional field added.
 
 ### 6B — parity quality gates (regression-blocking)
 
