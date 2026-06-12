@@ -89,23 +89,31 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
       `services/research/strategy/backtests` (posts to a DIFFERENT in-app endpoint), no SLA-tier surface in `manage`.
       Confirmed `apiUrls.deployment` already wired in UTS-UI `lib/config/api.ts`. Operator dual-cut decision recorded in
       Scope above. Repo: deployment-ui + unified-trading-system-ui.
-- [ ] [CODE] P2. [UI] Phase 2a — **UTS-UI: deploy-through-deployment-api for ML research**. Add a "Launch experiment /
-      deploy" action on `app/(platform)/services/research/ml` (gated internal/admin) that POSTs `MlExperimentParams` →
-      `${apiUrls.deployment}/api/ml/experiment/launch` and shows the `LaunchResult` (vm_name / correlation_id /
-      events_uri). React-query mutation hook + mock-parity handler + component test. Reuse the existing research design
-      idiom (Dialog + form + Button); NO firebase-admin (this is a deployment-api proxy, not a Firestore write). Repo:
+- [x] ✅ [CODE] P2. [UI] Phase 2a — **UTS-UI: deploy-through-deployment-api for ML research**. DONE 2026-06-12 —
+      unified-trading-system-ui@08ff0742. **Placement deviation (better)**: instead of bolting an action onto the
+      data-dense `research/ml` page, built ONE `app/(platform)/services/research/deploy/page.tsx` "Deploy / Launch"
+      console (internal/admin-gated via `useAuth().isInternal()`) with 3 tabs — ML / Strategy / Execution — each a
+      config form → its launch hook → a `LaunchResult` panel (vm_name / correlation_id / dry-run badge / `events_uri`
+      watch link). Lower regression risk + matches the operator "deploy button = pick a service" framing. ML tab POSTs
+      `MlExperimentParams` → `/api/deploy/ml-experiment/launch` (collision-free rewrite, since `/api/ml/*` already
+      routes to unified-trading-api). Hook `hooks/api/use-deployment-launch.ts`; types
+      `lib/api/deployment-launch-client.ts`; mock-parity in `lib/api/mock-handler.ts`. NO firebase-admin (deployment-api
+      proxy via Next rewrite). Repo: unified-trading-system-ui.
+- [x] ✅ [CODE] P2. [UI] Phase 2b — **UTS-UI: strategy + execution backtest deploy actions**. DONE 2026-06-12 —
+      unified-trading-system-ui@08ff0742. Strategy + Execution tabs of the deploy console: `StrategyBacktestParams` →
+      `/api/deploy/strategy-backtest/launch`, `ExecutionBacktestParams` → `/api/deploy/execution-backtest/launch`
+      (collision-free prefixes; distinct from the existing in-app `/api/execution/backtests` dialog — this is the
+      VM-launch/deploy path). Mock parity + component test. Repo: unified-trading-system-ui.
+- [x] ✅ [CODE] P2. [UI] Phase 2c — **UTS-UI: migrate ClientSubscriptions → `manage`**. DONE 2026-06-12 —
+      unified-trading-system-ui@08ff0742. `app/(platform)/services/manage/subscriptions/page.tsx` (client_id→SLA-tier
+      CRUD: list + create + edit) wired to `/api/subscriptions` (GET/POST/PUT) via
+      `hooks/api/use-client-subscriptions.ts`; "Subscriptions" added to `MANAGE_TABS` in
+      `components/shell/service-tabs.tsx`. Mock parity + component test. Repo: unified-trading-system-ui.
+- [x] ✅ [VERIFY] P2. Phase 2-gate — DONE 2026-06-12 — unified-trading-system-ui@08ff0742 | pw:L2 ✓
+      (`npx playwright test --project=chromium tests/smoke/` 17/17 passed; flake only under 2-worker parallelism, green
+      serial) | regression: tests/smoke/deploy-and-subscriptions.smoke.spec.ts (+ component test
+      tests/services/deploy-console.test.tsx, 4/4). QG-green (base-ui: typecheck+lint+276 tests+50.2% cov+build). Repo:
       unified-trading-system-ui.
-- [ ] [CODE] P2. [UI] Phase 2b — **UTS-UI: strategy + execution backtest deploy actions**. Same pattern on
-      `services/research/strategy/backtests` (`StrategyBacktestParams` → `/api/strategy/backtest/launch`) and a
-      `services/research/execution` surface (`ExecutionBacktestParams` → `/api/execution/backtest/launch`). Distinct
-      from the existing in-app `/api/execution/backtests` dialog — this is the VM-launch/deploy path. Mock parity +
-      component tests. Repo: unified-trading-system-ui.
-- [ ] [CODE] P2. [UI] Phase 2c — **UTS-UI: migrate ClientSubscriptions → `manage`**. Build the client_id→SLA-tier CRUD
-      surface under `app/(platform)/services/manage/` (e.g. `manage/subscriptions`) wired to
-      `${apiUrls.deployment}/api/subscriptions` (GET/POST/PUT). Reuse UTS-UI design system + types from UAC where
-      available. Mock parity + component test. Repo: unified-trading-system-ui.
-- [ ] [VERIFY] P2. Phase 2-gate — `pw:L2` on UTS-UI (`npx playwright test --project=chromium tests/smoke/`) + a
-      regression spec covering the new deploy actions + subscriptions surface. Repo: unified-trading-system-ui.
 - [ ] [CODE] P2. [UI] Phase 3 — **deployment-ui: DELETE only `Dart.tsx` + `ClientSubscriptions.tsx`** (+ their routes in
       `App.tsx`, nav entries in `Header.tsx`, `*.test.tsx`, mock handlers). **KEEP** MlExperiments / StrategyBacktests /
       ExecutionBacktests (dual-cut: they remain the deploy surface here). Keep LandingTabs (Overview/Epics/Repos
@@ -118,3 +126,18 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
       pane incl. the 3 launch consoles; unified-trading-system-ui = trading/research/client surface that can ALSO deploy
       through the shared deployment-api; DART lives only in UTS-UI). Extend CLAUDE.md repo-map line with the dual-cut
       deploy rule.
+
+## Discovered findings (provenance: this plan, 2026-06-12 slot-3)
+
+- [ ] [SCRIPT] P2. **DEFERRED — INFRA BUG (not this plan's scope; surfaced shipping Phase 2)**: the canonical
+      `scripts/setup.sh` mis-detects `unified-trading-system-ui` as a Python repo. Detection is
+      `IS_UI_REPO = package.json     present AND pyproject.toml ABSENT` (setup.sh L165-167), but UTS-UI carries an
+      intentional **config-only** `pyproject.toml` (no `[build-system]`, Python tooling for `scripts/` only — per
+      `tooling_config_standardization_2026_05_26.md`). So setup.sh runs the Python path and `uv pip install -e .` fails
+      ("Multiple top-level packages discovered in a flat-layout: app/lib/hooks/components/node_modules…"), exit 1.
+      Because `quickmerge.sh` is `set -e` and runs `setup.sh --check || setup.sh`, a cold env (where `--check` fails) →
+      full `setup.sh` → abort → **UTS-UI quickmerge is blocked**. Today it only ships because a prior `.venv` makes
+      `--check` pass (fragile). Fix: in the canonical PM `scripts/setup.sh`, treat
+      `package.json present AND pyproject.toml has no     `[build-system]` table` as a UI repo (config-only pyproject) →
+      skip the Python path; roll out fleet-wide. Repo: unified-trading-pm (`scripts/setup.sh` + rollout). Affects any
+      frontend repo carrying a config-only pyproject.
