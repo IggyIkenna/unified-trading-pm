@@ -48,8 +48,8 @@ related_plans:
 - [x] ✅ [AGENT] P0. Live alerting active: signal-staleness (`ML_SIGNAL_STALENESS` warns 4h / critical 12h / kill-switch
       24h) + execution-quality + P&L deviation + position breaches.
       — `cefi_ml_event_handler.py` implements 3-tier ML_SIGNAL_STALENESS ladder (warn→route_event, critical→route_event_with_explicit_channels pagerduty+telegram, kill-switch→KILL_SWITCH_ML_MODEL_FAILURE). Passthrough events (ML_PNL_DEVIATION, ORDER_REJECTION_SPIKE, POSITION_CRITICAL_DISCREPANCY etc.) route via generic route_event per LIVE_ALERT_RULES. AlertSubscriber.dispatch_event wired. alerting-service landed 2026-06-12.
-- [ ] [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
-      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`.
+- [x] ✅ [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
+      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`. — unified-api-contracts@547cba3 | 4 breakers (POSITION_LIMIT_EXCEEDED/DRAWDOWN_DAILY_BPS/ML_SIGNAL_STALENESS_SECONDS/ML_MODEL_DRIFT_ACCURACY_DROP) + KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS + 7 new taxonomy tests; QG green.
 - [ ] [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
 - [x] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
       Group F item 18) — batch = live, same code path, no standalone backtest engine.
