@@ -6,12 +6,18 @@
 # (non-tabbed) workspace, this script:
 #
 #   1. PHASE 1 (sequential pre-fetch): from each MAIN-workspace full clone,
-#      fetches origin/<integration-branch>. Linked worktrees (tabs) share refs,
-#      so one fetch updates origin/<branch> for every slot that references that
-#      repo. Cuts a 13-slot × 22-repo sweep from ~286 fetches to ~22.
+#      fetches origin/<integration-branch>. This puts the latest objects in the
+#      shared store ONCE per repo (~22 network fetches, not 13×22≈286).
 #   2. PHASE 2 (parallel FF): fans out N workers (default 4). Each worker walks
-#      its assigned slots and does FF-only merges using the pre-fetched refs
-#      (no network). Per-worktree skips: dirty / ahead / diverged / detached.
+#      its assigned slots and FF-only merges. Per-worktree refs are refreshed
+#      cheaply: Path-B slot clones (own .git dir + --reference alternates) get a
+#      LOCAL ref-copy from the main clone (objects already shared → no network);
+#      legacy linked worktrees (.git FILE) share the main clone's refs directly.
+#      Skips: dirty / ahead / diverged / detached.
+#      NOTE (Path-B, 2026-06-08): slots are independent clones with their OWN
+#      refs — PHASE-1 alone does NOT advance them, so PHASE 2 MUST refresh each
+#      slot's origin/<branch> (the prior shared-ref assumption silently stranded
+#      slots behind; fixed 2026-06-12 via _refresh_independent_clone_ref).
 #   3. Otherwise (local strictly BEHIND remote): fast-forwards the local branch
 #      to match origin/<integration-branch>. This is the only case where the
 #      script mutates local state; FF-only never loses work.
@@ -134,6 +140,22 @@ _write_ff_result() {
     tmp="$(mktemp -t ffpullresult.XXXXXX 2>/dev/null || echo "${FF_RESULT_FILE}.tmp.$$")"
     printf '{"ff_pull_last_run":"%s","ff_pull_last_result":"%s"}\n' "${now}" "${worst}" > "${tmp}"
     mv -f "${tmp}" "${FF_RESULT_FILE}" 2>/dev/null || true
+}
+
+_refresh_independent_clone_ref() {
+    # Path-B fix (2026-06-12): advance an independent slot clone's
+    # refs/remotes/origin/<branch> from its --reference (main-workspace) clone, whose ref was
+    # freshly updated by PHASE-1 prefetch. The clone shares the reference's object store via
+    # objects/info/alternates, so this is a LOCAL ref copy — NO network. Must be called from
+    # inside the clone (cwd == clone root). Returns non-zero when no usable reference is found
+    # (caller then falls back to a direct network fetch).
+    local int_branch="$1" ref_objects ref_gitdir
+    ref_objects=$(head -n1 ".git/objects/info/alternates" 2>/dev/null)
+    [[ -n "${ref_objects}" && -d "${ref_objects}" ]] || return 1
+    ref_gitdir="$(dirname "${ref_objects}")"   # .../<repo>/.git/objects → .../<repo>/.git
+    [[ -d "${ref_gitdir}" ]] || return 1
+    git fetch --quiet --tags --force "${ref_gitdir}" \
+        "+refs/remotes/origin/${int_branch}:refs/remotes/origin/${int_branch}" 2>/dev/null
 }
 
 ff_one() {
@@ -266,6 +288,12 @@ ff_one() {
     # `git pull`. Remote is canonical for release tags; forcing local→remote is
     # safe and we never push tags the other way. SSOT:
     # codex/05-infrastructure/per-tab-worktrees.md § "Step 7 — troubleshooting".
+    # Independent Path-B clones (.git is a DIRECTORY) have their OWN refs. PHASE-1 prefetch only
+    # updated the MAIN-workspace clones' refs, so with do_fetch=0 such a slot would compare HEAD
+    # against a STALE local origin/<branch> and silently fall behind (the prefetch shared-ref
+    # assumption holds ONLY for legacy linked worktrees, whose .git is a FILE). Refresh the ref:
+    # local propagation from the --reference clone (objects already shared → no network), with a
+    # direct network fetch as fallback. SSOT: codex/05-infrastructure/per-tab-worktrees.md.
     if [[ "${do_fetch}" -eq 1 ]]; then
         if ! git fetch --quiet --tags --force origin "${int_branch}" 2>/dev/null; then
             log "[skip:fetch-fail] ${repo_name} (${branch}) — fetch failed (offline? missing branch?)"
@@ -273,6 +301,9 @@ ff_one() {
             popd >/dev/null
             return 0
         fi
+    elif [[ -d ".git" && -f ".git/objects/info/alternates" ]]; then
+        _refresh_independent_clone_ref "${int_branch}" \
+            || git fetch --quiet --tags --force origin "${int_branch}" 2>/dev/null || true
     fi
 
     local_sha=$(git rev-parse HEAD)
@@ -376,8 +407,12 @@ walk_slot() {
 
 prefetch_main_clones() {
     # Sequentially fetch origin/<branch> for every MAIN-workspace full clone.
-    # Linked tab worktrees share .git/refs, so this updates origin/<branch>
-    # for every slot at once. Skips dirs without .git/ (e.g. .tabs/, plans/, etc.).
+    # This populates the SHARED object store (each Path-B slot clone references it
+    # via objects/info/alternates) so PHASE-2's per-slot ref refresh is object-local
+    # (no network). NOTE: this does NOT advance the independent slot clones' refs —
+    # PHASE 2 does that per-slot (_refresh_independent_clone_ref). For legacy linked
+    # worktrees (.git FILE) the refs are genuinely shared, so this alone sufficed.
+    # Skips dirs without .git/ (e.g. .tabs/, plans/, etc.).
     local main_ws="$1"
     local fetched=0
     local failed=0
