@@ -515,11 +515,17 @@ deployed to the VM + verified). Remaining live-run findings:
       that PRUNED (36 stale tasks, yaml+db both 0) never refreshed `_state["backlog"]` → /api/backlog served ghosts
       until the next ADDITIVE tick. Dispatch was safe (db-status filtered) but the display lied. Guard now
       `new_tasks == 0 and pruned_yaml == 0`.
-- [ ] [INFRA] P1. **Worker-VM port is 8026 in REALITY, 8765 in the DOCS** — `install-orchestrator-service.sh`'s systemd
-      unit binds uvicorn :8026 on a fresh worker; sg-0080310387e84f613 (22 public + 8026 in-VPC only) and
-      `backends.json` (:8026 URLs) are consistent with the TEMPLATE, while CLAUDE.md/codex say "8026 retired, 8765
-      canonical" (true only on the planning VM). Decide the canonical worker port, then move template + sg +
-      backends.json + docs in ONE change. Repo: agent-orchestrator (+ codex). Found 2026-06-12 live run.
+- [x] ✅ [INFRA] P1. DONE 2026-06-12 — agent-orchestrator@f871119 (QG green; quickmerge --agent) + sg swap
+      (sgr-0cecb1d4d0536099f adds 8765/172.31.0.0/16; 8026 rule revoked) + deployed/verified on vm-e2e-test (8765
+      serving, 8026 dead, main agent respawned). Canonical = 8765 per CLAUDE.md; fixed while ZERO live 8026 workers
+      existed (epic fleet stopped) so no migration window. Surfaces: orchestrator.service ExecStart (the template every
+      fresh worker inherits — the root cause), orchestrator-demo.service + Dockerfile comments, backends.json
+      url/private_url (15 entries). Was: **Worker-VM port is 8026 in REALITY, 8765 in the DOCS** —
+      `install-orchestrator-service.sh`'s systemd unit binds uvicorn :8026 on a fresh worker; sg-0080310387e84f613 (22
+      public + 8026 in-VPC only) and `backends.json` (:8026 URLs) are consistent with the TEMPLATE, while
+      CLAUDE.md/codex say "8026 retired, 8765 canonical" (true only on the planning VM). Decide the canonical worker
+      port, then move template + sg + backends.json + docs in ONE change. Repo: agent-orchestrator (+ codex). Found
+      2026-06-12 live run.
 - [ ] [CODE] P1. **Bootstrap S3 `backlog.yaml` seed contradicts the regen-authoritative model** — Step 5c copies a stale
       fleet backlog (36 May-era phase tasks) from the creds bucket into a fresh VM, bypassing regen scoping entirely;
       AND bootstrap never upserts `ORCHESTRATOR_REGEN_PRUNE_STALE=true` (CLAUDE.md claims fleet-default; code default is
@@ -534,8 +540,8 @@ deployed to the VM + verified). Remaining live-run findings:
       launcher's Ubuntu-AMI resolution — worked around via `AMI_ID=ami-0bf052f8a9dd8bf42`;
       `ssm:DescribeInstanceInformation`/ `ssm:SendCommand` broke the verify harness — worked around via SSH). Operator
       ask: attach `AmazonSSMReadOnlyAccess` + `ssm:SendCommand`/`ssm:GetCommandInvocation` (scoped to the orchestrator
-      fleet) to `harsh-worker`. Found 2026-06-12 live run.
-      CREDENTIAL APPROVAL REQUEST filed → `ikenna_orchestrator/pings/slot_5.md`
+      fleet) to `harsh-worker`. Found 2026-06-12 live run. CREDENTIAL APPROVAL REQUEST filed →
+      `ikenna_orchestrator/pings/slot_5.md`
 
 Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
