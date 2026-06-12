@@ -45,8 +45,9 @@ related_plans:
 - [x] ✅ [AGENT] P0. Live model lifecycle: hot-reload of model artefacts without service restart; per-trade `model_version`
       traceability; model-drift alerting.
       — Hot-reload: ModelPromotionSubscriber already wired (ml-service@live). Per-trade model_version: PredictionEventDict.swing_{high,low}_model_version flows through InferenceRequest→PredictionEvent→publish. Model-drift alerting: PredictionOutcomeSubscriber wired (subscribes to ml_prediction_outcomes, feeds DriftMonitor.record_outcome + check_retune; models pre-registered from timeframe_specific_models on live start). InferenceConfig: drift_auto_retune_enabled/baseline_accuracy/drop_threshold/window_days. ml-service landed 2026-06-12.
-- [ ] [AGENT] P0. Live alerting active: signal-staleness (`ML_SIGNAL_STALENESS` warns 4h / critical 12h / kill-switch
+- [x] ✅ [AGENT] P0. Live alerting active: signal-staleness (`ML_SIGNAL_STALENESS` warns 4h / critical 12h / kill-switch
       24h) + execution-quality + P&L deviation + position breaches.
+      — `cefi_ml_event_handler.py` implements 3-tier ML_SIGNAL_STALENESS ladder (warn→route_event, critical→route_event_with_explicit_channels pagerduty+telegram, kill-switch→KILL_SWITCH_ML_MODEL_FAILURE). Passthrough events (ML_PNL_DEVIATION, ORDER_REJECTION_SPIKE, POSITION_CRITICAL_DISCREPANCY etc.) route via generic route_event per LIVE_ALERT_RULES. AlertSubscriber.dispatch_event wired. alerting-service landed 2026-06-12.
 - [ ] [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
       signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`.
 - [ ] [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
