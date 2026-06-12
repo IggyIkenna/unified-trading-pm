@@ -399,14 +399,19 @@ primitive.
       CONSOLIDATION** (the deferred 1.3b: 24h→yearly, 4h/1h→monthly objects) which cuts GET-count without losing the
       materialised coarse TFs — that is the named successor, NOT base-only. Decision recorded; no profiling script
       needed (the 1.0/1.1a numbers are decisive).
-- [ ] [BUG] P2. **3.G (DISCOVERY 2026-06-12) MDPS aggregates the `vwap` column as `"mean"` across the roll-up window**
-      (`market-data-processing-service/.../app/calculators/aggregation_rules.py` `COLUMN_AGG_RULES["vwap"] = "mean"`),
-      which is mathematically wrong for a volume-weighted price (correct roll-up = `Σ(pv_sum)/Σ(volume)`, and MDPS
-      already carries `pv_sum: sum` + `volume: sum` to compute it). **NOT fixed in 3.C** (value-changing; needs its own
-      validation + may be a dead/recomputed column) — captured per Capture-Discoveries while single-sourcing the OHLC
-      core (3.C). Verify whether `vwap` is recomputed downstream from `pv_sum/volume` (then `"mean"` is a harmless
-      placeholder) or actually emitted as the mean (then it is a real bar-value bug). Composes with
-      `bar_edge_left_vs_right_remediation`.
+- [ ] [CLEANUP] [NOT-A-BUG] P3. **3.G (DISCOVERY 2026-06-12, DIAGNOSED) MDPS `COLUMN_AGG_RULES["vwap"] = "mean"` is a
+      dead intermediate — the OUTPUT vwap is already correct.** Diagnosis (read both sides): after the group-by roll-up,
+      `app/calculators/fast_candle_aggregation.py:253-255` **recomputes** `vwap = pv_sum / volume` (volume-guarded),
+      OVERWRITING whatever the `"mean"` rule produced. `pv_sum = Σ(tick_price·tick_size)` is accumulated at the TICK
+      grain (`fast_candle_aggregation.py:113` + `trades_adapter.py:263`), so the rolled-up `vwap = Σ(pv_sum)/Σ(volume)`
+      uses real executed prices — exact, no "middle-vs-close" representative-price choice, and mathematically identical
+      to volume-weighting each sub-bar's vwap by its volume (`Σ(vwap_i·vol_i)/Σ(vol_i) = Σ(pv_sum_i)/Σ(vol_i)`).
+      `pv_sum` and `vwap` always co-occur (both from the trade aggregation; `pv_sum` is an intermediate, not a persisted
+      output col), so the recompute always fires → **the `"mean"` value never survives to output. NOT a data-correctness
+      bug.** Residual = cosmetic only: a clarifying comment on the rule (it is overwritten by the post-agg pv_sum/volume
+      recompute) would stop a future agent trusting `"mean"` or deleting the recompute. Low priority; the
+      schema-preservation test requires `vwap` to keep _a_ rule, so the line stays — only a comment would change.
+      Composes with `bar_edge_left_vs_right_remediation` (vwap-correctness family).
 
 **Success criterion (Phase 3) — MET.** The OHLCV candle-aggregation RECIPE is single-sourced from the UAC
 `OHLCV_AGGREGATION` contract across every PRODUCTION resampler/writer: UTL's pandas `feature_calculator` (3.B),
