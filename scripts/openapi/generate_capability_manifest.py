@@ -62,6 +62,7 @@ from _capability_annotations import (
 )
 from _capability_extract import (
     extract_archetypes_and_families,
+    extract_brokers,
     extract_data_sources,
     extract_leg_structures,
     extract_venues,
@@ -73,6 +74,7 @@ from _capability_gaps import (
     extract_service_registries,
 )
 from _capability_orphan import (
+    find_broker_classed_venues,
     find_dead_ends,
     find_orphan_nodes,
     render_orphan_report,
@@ -158,6 +160,11 @@ def build_manifest(
     all_nodes += n
     all_edges += e
 
+    logger.info("2b. Brokers (F38 — routing intermediaries, not peer venues)...")
+    n, e = extract_brokers()
+    all_nodes += n
+    all_edges += e
+
     logger.info("3. Data sources / modes / transports...")
     n, e = extract_data_sources()
     all_nodes += n
@@ -233,6 +240,7 @@ def main() -> None:
     # Orphan + dead-end analysis (folded into manifest gaps + a text report).
     orphans = find_orphan_nodes(manifest.nodes, manifest.edges)
     unbuilt, logical = find_dead_ends(manifest.nodes, manifest.edges)
+    broker_classed_venues = find_broker_classed_venues(manifest.nodes)
     # Fold the orphan/dead-end headline counts into the serialised gaps block.
     gaps_block = canonical.get("gaps", {})  # noqa: qg-empty-fallback
     if isinstance(gaps_block, dict):
@@ -240,6 +248,7 @@ def main() -> None:
         gaps_block["unbuilt_dead_ends"] = len(unbuilt)
         gaps_block["logical_dead_ends"] = len(logical)
         gaps_block["annotation_orphans"] = len(annotation_orphans)
+        gaps_block["broker_classed_venues"] = len(broker_classed_venues)
 
     output_path = output_dir / "capability-manifest.json"
     with open(output_path, "w") as f:
@@ -254,6 +263,7 @@ def main() -> None:
         logical,
         manifest.manifest_version,
         manifest.generated_from_commit,
+        broker_classed_venues=broker_classed_venues,
     )
     # Append the annotation-orphan section (loud listing — never silent)
     report += render_annotation_orphan_section(annotation_orphans)

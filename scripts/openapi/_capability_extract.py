@@ -47,7 +47,7 @@ REL_MIN_DATA_TO_RUN = "min_data_to_run"
 REL_OFFERS = "offers"
 REL_HAS_LEG = "has_leg"
 REL_LEG_CONSTRAINT = "leg_constraint"
-REL_ROUTED_VIA = "routed_via"
+REL_ROUTED_VIA = "routed_via"  # F38: venue ⇠routed_via⇢ broker
 
 
 def _node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> CapabilityNode:
@@ -299,6 +299,9 @@ def extract_venues() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
     """Venue registries: VENUE_CATEGORY_MAP, INSTRUMENT_TYPES_BY_VENUE,
     DEFI_VENUE_TO_PROTOCOL, CHAIN_RPC_TEMPLATES, ENDPOINT_REGISTRY (auth/access).
     """
+    from unified_api_contracts.internal.architecture_v2.broker_routes import (  # noqa: qg-deep-import
+        is_broker,
+    )
     from unified_api_contracts.registry import (  # noqa: qg-deep-import
         CHAIN_RPC_TEMPLATES,
         DEFI_VENUE_TO_PROTOCOL,
@@ -312,6 +315,12 @@ def extract_venues() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
     seen: set[tuple[str, str]] = set()
 
     def add(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> None:
+        # F38: a broker (e.g. ibkr) is NOT a venue — it is emitted as a BROKER
+        # node by extract_brokers(), with venue⇠routed_via⇢broker edges. Never
+        # let a broker id leak into the venue node set (it would render as a
+        # selectable peer venue in the wizard).
+        if kind == CapabilityNodeKind.VENUE and is_broker(node_id.split(":", 1)[-1]):
+            return
         key = (str(kind), node_id)
         if key not in seen:
             seen.add(key)
@@ -398,6 +407,78 @@ def extract_venues() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
                 )
 
     logger.info("  venues/chains: %d nodes, %d edges", len(nodes), len(edges))
+    return nodes, edges
+
+
+# ---------------------------------------------------------------------------
+# (b2) Brokers — routing intermediaries, NOT peer venues (F38)
+# ---------------------------------------------------------------------------
+
+
+def extract_brokers() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
+    """BROKER_ROUTES: a broker routes orders to exchange venues.
+
+    Emits one ``broker`` node per broker + a ``venue ⇠routed_via⇢ broker`` edge
+    per routed venue. The routed venues (CME/ICE/CBOE/…) remain ordinary VENUE
+    nodes; the broker (ibkr) is classified as a BROKER node — never a peer venue.
+    The wizard reads the ``routed_via`` edges to render brokers as a routing
+    sub-choice under their venues.
+
+    SSOT: ``unified_api_contracts.internal.architecture_v2.broker_routes`` (F38),
+    sourced from ``execution_service/.../ibkr_tradfi.py:38-46`` VENUE_TO_EXCHANGE.
+    """
+
+    from unified_api_contracts.internal.architecture_v2.broker_routes import (  # noqa: qg-deep-import
+        BROKER_ROUTES,
+    )
+
+    nodes: list[CapabilityNode] = []
+    edges: list[CapabilityEdge] = []
+
+    for broker_id in sorted(BROKER_ROUTES):
+        route = BROKER_ROUTES[broker_id]
+        broker_node_id = f"broker:{broker_id}"
+        nodes.append(
+            _node(
+                CapabilityNodeKind.BROKER,
+                broker_node_id,
+                route.label,
+                broker_kind=str(route.kind.value),
+                routed_venue_ids=",".join(sorted(route.routed_venue_ids)),
+                venue_categories=",".join(sorted(c.value for c in route.venue_categories)),
+                source_of_truth=route.source_of_truth,
+            )
+        )
+        for venue_id in sorted(route.routed_venue_ids):
+            # The routed venue is a real exchange (the price-discovery venue).
+            # Emit a minimal VENUE node so the routed_via edge never dangles —
+            # an archetype/registry-emitted richer venue node (cme/cboe/ice) wins
+            # the dedup (first-seen label + setdefault metadata); the broker-only
+            # exchanges (nasdaq/nyse/fx) get their sole node here.
+            nodes.append(
+                _node(
+                    CapabilityNodeKind.VENUE,
+                    f"venue:{venue_id}",
+                    _titleize(venue_id),
+                    venue_category=",".join(sorted(c.value for c in route.venue_categories)),
+                    broker_routed="true",
+                )
+            )
+            edges.append(
+                CapabilityEdge(
+                    from_node_id=f"venue:{venue_id}",
+                    to_node_id=broker_node_id,
+                    relation=REL_ROUTED_VIA,
+                    status=CapabilityEdgeStatus.AVAILABLE,
+                    reason=f"{route.label} ({route.kind.value}) routes orders to this venue.",
+                )
+            )
+
+    logger.info(
+        "  brokers (F38): %d broker + routed-venue nodes, %d routed_via edges",
+        len(nodes),
+        len(edges),
+    )
     return nodes, edges
 
 
