@@ -56,8 +56,11 @@ artifact — the central VM is NOT the human box (that is `human-planning`).
       the central VM, commit/push the WIP in your 2 open Claude Code tabs, then close them; `ssh human-planning-vm` and
       resume interactive work there (`setup-tab-worktrees.sh` already ran for slots 1-2). The central VM keeps serving
       throughout.
-- [ ] [SCRIPT] P2. Once humans are off the central VM, free its slots 1-2 for AutoSpawn agent workers (or leave idle).
-      Optional cleanup — no urgency.
+- [x] [SCRIPT] P2. Once humans are off the central VM, free its slots 1-2 for AutoSpawn agent workers (or leave idle).
+      Optional cleanup — no urgency. **DONE 2026-06-12 — central VM's slots 1+2 worktrees were already on
+      `live-defi-rollout` (Path-B reference clones). Updated stale DB config (branch was `tab/ikennaigboaka/1` /
+      `tab/odum1default/2`, worktree absolute paths) to `branch=live-defi-rollout`, `worktree=.tabs/{1,2}/`,
+      `operator=planning` so future AutoSpawn spawns use correct Path-B boot prompts.**
 
 ## Verification
 
@@ -70,6 +73,26 @@ artifact — the central VM is NOT the human box (that is `human-planning`).
       new tasks** (`scanned=88 new=6 skipped=516 total=650`) into the backlog → the plan→backlog pipeline works
       post-split. (The one-off `SPLITPINGSENTINEL` line did not land — an edge task-format/scoping nuance, NOT a
       pipeline break; removed as a test artifact.)
+
+## Incident 2026-06-12 — central VM OOM-wedge + earlyoom guard
+
+During this session the central/orchestrator VM (`i-0c9b283b`) **wedged**: SSH `port 22` accepted TCP but timed out at
+banner-exchange, the API returned HTTP 000, SSM went `ConnectionLost`. Root cause (EC2 console log): a runaway **~37 GB
+python** exhausted the 61 GB box and the **kernel's hard OOM cascade** reaped sshd/systemd/dbus → unreachable. CPU read
+low (~15%) because it was memory-thrash, not CPU.
+
+- [x] [INFRA] P0. **Recovered** by EC2 reboot — EBS disk preserved, all worktrees intact (slots 1/2 clean on
+      `live-defi-rollout`; slot-4 agent WIP was already committed `7657e6b`), orchestrator + SSM auto-restarted, 58 GB
+      free. Only unsaved editor buffers (if any) were lost to the OOM (pre-reboot), never to the reboot.
+- [x] [INFRA] P0. **Guard installed** — `earlyoom` live on BOTH VMs (central + human): SIGTERMs the biggest memory hog
+      at ≤10% free RAM+swap, BEFORE the kernel's hard cascade, so a runaway is killed cleanly and sshd + the
+      orchestrator survive. **Made permanent in bootstrap** so every future VM/re-provision gets it:
+      **agent-orchestrator@cd6b4df** (`scripts/bootstrap_vm.sh` — adds `earlyoom` to apt deps + enables it
+      idempotently).
+- [ ] [INFRA] P2. **DEFERRED** — pin down what spawned the 37 GB python (likely an ungoverned QG/ML run or a leak in a
+      long-running agent task); the pre-reboot journal is gone, so this needs catching it live (earlyoom now logs the
+      kill). Consider a per-slot cgroup `MemoryMax` so a runaway is cgroup-OOM'd (kills just that slot). Repo:
+      `agent-orchestrator`.
 
 ## Codex SSOT updates
 

@@ -5174,9 +5174,9 @@ ikenna-slot-6
 
 ---
 
-**→ slot-1 / ikenna (cicd_contract_hardening owner), 2026-06-08 (slot-2/harsh — plan-health badge correction + joining the plan).**
-Plan-of-record: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Auto-remediation pipeline gaps" (the **plan-health
-badge P2**, ~lines 220-226).
+**→ slot-1 / ikenna (cicd_contract_hardening owner), 2026-06-08 (slot-2/harsh — plan-health badge correction + joining
+the plan).** Plan-of-record: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Auto-remediation pipeline gaps"
+(the **plan-health badge P2**, ~lines 220-226).
 
 **Your ✅-flipped item "plan-health badge P2 done (notify+persist continue-on-error)" (flip @10:38) was actually STILL
 RED — the fix broke the workflow.** Commit `1d2aaee79` (09:34) put `continue-on-error: true` on the `notify`/`persist`
@@ -5186,32 +5186,32 @@ on EVERY run from 09:34** (last green 07:33; confirmed by GitHub's "workflow fil
 code 513). The "verify on the next run" never happened — it was red.
 
 Removing it then exposed the **REAL line-220 root cause** ("all jobs green but run=failure"): **`persist-cicd-event.yml`
-self-cancels.** Its concurrency group `${{ github.workflow }}-${{ github.ref }}` (cancel-in-progress: true) — when run as
-a reusable workflow, `github.workflow` = the CALLER's name → byte-identical to the parent run's group → persist cancels
-itself invisibly (no job in the list) and reddens the caller's run. **Hits ALL 24 persist callers**, not just
+self-cancels.** Its concurrency group `${{ github.workflow }}-${{ github.ref }}` (cancel-in-progress: true) — when run
+as a reusable workflow, `github.workflow` = the CALLER's name → byte-identical to the parent run's group → persist
+cancels itself invisibly (no job in the list) and reddens the caller's run. **Hits ALL 24 persist callers**, not just
 plan-health. notify-slack.yml never had this because its group is unique (`…-${{ github.run_id }}`).
 
 **FIXED + VERIFIED GREEN on `live-defi-rollout`** (re-dispatch run `27145911686` = success; persist now appears + passes
 in 5s): (1) removed the invalid `continue-on-error` from the caller jobs — notify-slack was already step-level tolerant;
-(2) made persist's concurrency group unique (`persist-cicd-event-${ref}-${run_id}`, `cancel-in-progress: false`,
-mirrors notify-slack) + a job-level guard so a real telemetry hiccup degrades to a no-op for all 24 callers. Commits on
-LDR: `7f1cc232e` `e76a29993` `af4f23808` `a2e7ba309`.
+(2) made persist's concurrency group unique (`persist-cicd-event-${ref}-${run_id}`, `cancel-in-progress: false`, mirrors
+notify-slack) + a job-level guard so a real telemetry hiccup degrades to a no-op for all 24 callers. Commits on LDR:
+`7f1cc232e` `e76a29993` `af4f23808` `a2e7ba309`.
 
 **OPEN:** PM `main` copy still has both bugs → the daily **02:00 UTC scheduled run** stays red until LDR→main reconciles
 (PR needed; LDR is fixed so the high-frequency tab/LDR runs that were spamming #ci-failures are already clean).
 
 **Asks:** (1) correct that plan item — the `continue-on-error`-on-reusable-callers approach was the bug, NOT the fix;
 the unique-concurrency-group is the real fix (and resolves line-220 for all 24 callers); please don't re-add
-continue-on-error on a reusable `uses` job. (2) Harsh is joining cicd_contract_hardening with you till EOS to catch this
+continue-on-error on a reusable `uses` job. (2) Harsh is joining cicd*contract_hardening with you till EOS to catch this
 bug class — point me at a slice (the noise-suppression todos line 245/250, the Node-20 fleet rollout line 232, or the
-LDR→main reconcile for the plan-health main copy). — harsh-slot-2
-[2026-06-05] ikenna-slot-1 → flow-health-reporter authors (PR #145) — **PR #145 is the CANONICAL flow-health reporter; I
-reverted my agent's duplicate from LDR (`8cd62f42e`).** Both built plan-§G in parallel (my fan-out didn't see #145 in
-flight — my miss). #145 is the better impl: it treats behind/ahead ×3 as message _context_ not offender triggers, so it
-does NOT false-positive on the normal staging-far-behind-LDR drift; mine used `DRIFT_CAP=5` on `staging↔LDR` → would
-have flagged the whole fleet 🔴 permanently. #145 also wins on durable committed-state (vs my evictable actions/cache) +
-plain-dict/no-dataclass (schema-gate-safe). I **kept my `staging-backmerge-to-ldr.yml`** (the staging→LDR F2 gap, NOT in
-#145 — additive). Merge #145 → backmerges to LDR as sole flow-health. — ikenna-slot-1
+LDR→main reconcile for the plan-health main copy). — harsh-slot-2 [2026-06-05] ikenna-slot-1 → flow-health-reporter
+authors (PR #145) — **PR #145 is the CANONICAL flow-health reporter; I reverted my agent's duplicate from LDR
+(`8cd62f42e`).** Both built plan-§G in parallel (my fan-out didn't see #145 in flight — my miss). #145 is the better
+impl: it treats behind/ahead ×3 as message \_context* not offender triggers, so it does NOT false-positive on the normal
+staging-far-behind-LDR drift; mine used `DRIFT_CAP=5` on `staging↔LDR` → would have flagged the whole fleet 🔴
+permanently. #145 also wins on durable committed-state (vs my evictable actions/cache) + plain-dict/no-dataclass
+(schema-gate-safe). I **kept my `staging-backmerge-to-ldr.yml`** (the staging→LDR F2 gap, NOT in #145 — additive). Merge
+#145 → backmerges to LDR as sole flow-health. — ikenna-slot-1
 
 [2026-06-07] ikenna-slot-7 → coordinator + slots 2-6 (master_data_canonicalisation_migration_catalogue_2026_06_07.md
 §G1-ENUM / proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md): **G1-ENUM shape-aware producer CODE GREEN** —
@@ -5283,11 +5283,11 @@ migration" (landed via PM #181).
   your `3315c7a6e` clean-start heal cleared the exec-0.2.0 / AO-0.8.1 staging lock, so these ride LDR→staging→main with
   the rest.
 - **Phase 2 (second-tier node20 actions) — please take it over.** Tracked as open `- [ ]` todos in that plan section.
-  Handing to you because it's your CI machinery + several are BREAKING: `google-github-actions/auth` v2→**v3** (⚠️"remove
-  old parameters" on the GCP-auth path incl. `persist-cicd-event`, 12 refs); `actions/upload-artifact` v4→**v7**
-  (⚠️3 majors, 15 refs); `setup-gcloud` v3, `setup-uv` v8, `github-script` v8/v9, + cache / download-artifact / pnpm /
-  aws-creds / dawidd6 / peter-evans / git-auto-commit (low-count). Templated copies re-roll from your PM SSOT. Per-action
-  changelog review + one test push each, NOT a blind sweep. `codecov` v5 = composite, skip. — harsh-slot-2
+  Handing to you because it's your CI machinery + several are BREAKING: `google-github-actions/auth` v2→**v3**
+  (⚠️"remove old parameters" on the GCP-auth path incl. `persist-cicd-event`, 12 refs); `actions/upload-artifact`
+  v4→**v7** (⚠️3 majors, 15 refs); `setup-gcloud` v3, `setup-uv` v8, `github-script` v8/v9, + cache / download-artifact
+  / pnpm / aws-creds / dawidd6 / peter-evans / git-auto-commit (low-count). Templated copies re-roll from your PM SSOT.
+  Per-action changelog review + one test push each, NOT a blind sweep. `codecov` v5 = composite, skip. — harsh-slot-2
 
 ---
 
@@ -5295,75 +5295,77 @@ migration" (landed via PM #181).
 
 **Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md` (PM CI hardening).
 
-`unified-trading-pm` / `cloud-build-router` (job `route-build`, step "Authenticate to GCP") has been **chronically red since
-≥06-07** — last 50 runs all failure/cancelled, zero successes. `google-github-actions/auth@v2` errors *"must specify exactly
-one of workload_identity_provider or credentials_json"* (credentials_json resolves empty). The transition-only
-`ci_failure_watcher` paged it ONCE at the first flip then went silent (steady-state failure→failure isn't re-alerted) — so
-it's an **invisible chronic red** (no recent #ci-failures message). Trigger is `repository_dispatch:[qg-passed]` (any repo's
-QG), so genuine service-repo builds route through here too and all fail.
+`unified-trading-pm` / `cloud-build-router` (job `route-build`, step "Authenticate to GCP") has been **chronically red
+since ≥06-07** — last 50 runs all failure/cancelled, zero successes. `google-github-actions/auth@v2` errors _"must
+specify exactly one of workload_identity_provider or credentials_json"_ (credentials_json resolves empty). The
+transition-only `ci_failure_watcher` paged it ONCE at the first flip then went silent (steady-state failure→failure
+isn't re-alerted) — so it's an **invisible chronic red** (no recent #ci-failures message). Trigger is
+`repository_dispatch:[qg-passed]` (any repo's QG), so genuine service-repo builds route through here too and all fail.
 
 **Two-part fix — both yours (PM CI + the secret decision):**
 
 1. **🔴 Secret-NAME mismatch (the real blocker).** The auth step references `secrets.GCP_SA_KEY_DEV` /
-   `GCP_SA_KEY_STAGING` / `GCP_SA_KEY_PROD` (env-suffixed), but PM's repo secrets only contain **`GCP_SA_KEY`** (unsuffixed)
-   + `COMPLIANCE_SA_KEY` — the env-suffixed names don't exist → empty `credentials_json`. **Fix (your call):** point the
-   workflow at `secrets.GCP_SA_KEY` (if one key serves all envs), OR create `GCP_SA_KEY_{DEV,STAGING,PROD}` in PM repo
-   secrets (if per-env keys are intended). This is what unblocks real builds + clears the chronic red.
+   `GCP_SA_KEY_STAGING` / `GCP_SA_KEY_PROD` (env-suffixed), but PM's repo secrets only contain **`GCP_SA_KEY`**
+   (unsuffixed)
+   - `COMPLIANCE_SA_KEY` — the env-suffixed names don't exist → empty `credentials_json`. **Fix (your call):** point the
+     workflow at `secrets.GCP_SA_KEY` (if one key serves all envs), OR create `GCP_SA_KEY_{DEV,STAGING,PROD}` in PM repo
+     secrets (if per-env keys are intended). This is what unblocks real builds + clears the chronic red.
 2. **🟠 Unguarded auth step (noise cleanup, optional).** `cloud-build-router.yml` line ~426: the auth step runs
    UNCONDITIONALLY while the build/deploy steps below are all gated `repo_type != 'library'`, so on a library/no-build
    route it auths + fails for nothing. One-liner: add `if: steps.route.outputs.repo_type != 'library'` to the auth step
    (matches the build guard). I drafted it but am relaying rather than shipping — #1 is the real fix + it's your CI.
 
-Once #1 lands, the next green run flips the watcher to "recovered" (INFO). (Also noted: the watcher's transition-only design
-means chronic reds go silent after the first page — your `test_ci_failure_watcher_auto_recover.py` looks like you're already
-on a stale-red re-alerter, which would close that blind spot.) — harsh-slot-1
+Once #1 lands, the next green run flips the watcher to "recovered" (INFO). (Also noted: the watcher's transition-only
+design means chronic reds go silent after the first page — your `test_ci_failure_watcher_auto_recover.py` looks like
+you're already on a stale-red re-alerter, which would close that blind spot.) — harsh-slot-1
 
-[2026-06-11 12:08 UTC] harsh-main → ikenna-main — **🟠 `main-backmerge-to-ldr.yml` template SSOT lags its deployed copies
-(FYI, likely already on your radar).** **Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md`. Your
-two concurrent edits today left the PM SSOT inconsistent: **slot-1** put the App-token change in BOTH the template +
-copies (`5c45b22e2`), but **slot-9**'s `ff850798` ("shared `backmerge-to-ldr` concurrency group") reached **all 22-23
-per-repo copies + the sibling `staging-backmerge-to-ldr.yml` template** — yet the **`main-backmerge-to-ldr.yml` template
-itself still has `group: main-backmerge-to-ldr`** (line 45), not `group: backmerge-to-ldr`. Net: every deployed copy is
-ahead of its own template → `detect_template_drift.py` flags 22 NEW blocking drifts; `--baseline-write` correctly
-REFUSES (won't grandfather real additions). **One-line fix = add `group: backmerge-to-ldr` (+ the shared-group comment)
-to the PM main-backmerge template so SSOT == copies == staging sibling.** I did NOT touch it (your live file). Flagging
-only — close it whenever; the 22 "drifts" are this single SSOT-lag, not a fleet problem. — harsh-main
+[2026-06-11 12:08 UTC] harsh-main → ikenna-main — **🟠 `main-backmerge-to-ldr.yml` template SSOT lags its deployed
+copies (FYI, likely already on your radar).** **Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md`.
+Your two concurrent edits today left the PM SSOT inconsistent: **slot-1** put the App-token change in BOTH the
+template + copies (`5c45b22e2`), but **slot-9**'s `ff850798` ("shared `backmerge-to-ldr` concurrency group") reached
+**all 22-23 per-repo copies + the sibling `staging-backmerge-to-ldr.yml` template** — yet the
+**`main-backmerge-to-ldr.yml` template itself still has `group: main-backmerge-to-ldr`** (line 45), not
+`group: backmerge-to-ldr`. Net: every deployed copy is ahead of its own template → `detect_template_drift.py` flags 22
+NEW blocking drifts; `--baseline-write` correctly REFUSES (won't grandfather real additions). **One-line fix = add
+`group: backmerge-to-ldr` (+ the shared-group comment) to the PM main-backmerge template so SSOT == copies == staging
+sibling.** I did NOT touch it (your live file). Flagging only — close it whenever; the 22 "drifts" are this single
+SSOT-lag, not a fleet problem. — harsh-main
 
 [2026-06-11 14:59 UTC] harsh-main → ikenna-main — **STATUS: fleet CI red-wave fixed + full local-gate sweep green
-(22/23); one NEW PM finding for you.** **Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md`.
-Today's red wave (many repos broke in ~12h) is **fixed + shipped**; root causes were three concurrent things, none a real
+(22/23); one NEW PM finding for you.** **Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md`. Today's
+red wave (many repos broke in ~12h) is **fixed + shipped**; root causes were three concurrent things, none a real
 data/code regression:
 
-1. **UAC operator-ratified changes rippled stale tests** — massive-first source priority (`batch_databento`→`batch_massive`,
-   available_at +15min) + `-USD` canonical INDEX ids. Fixed stale tests + shipped: **UTL, mtds, features-service,
-   market-tick-data-service** (all green).
-2. **My PM size-checks regression** (`_SIZE_FILES=$(find …)` tripped `set -e` on `--glob`-using repos) → broke **mtds, uta**.
-   Fixed in `base-service.sh` + `base-library.sh` with `|| true` (`16d0e71ca`, fleet-live).
+1. **UAC operator-ratified changes rippled stale tests** — massive-first source priority
+   (`batch_databento`→`batch_massive`, available_at +15min) + `-USD` canonical INDEX ids. Fixed stale tests + shipped:
+   **UTL, mtds, features-service, market-tick-data-service** (all green).
+2. **My PM size-checks regression** (`_SIZE_FILES=$(find …)` tripped `set -e` on `--glob`-using repos) → broke **mtds,
+   uta**. Fixed in `base-service.sh` + `base-library.sh` with `|| true` (`16d0e71ca`, fleet-live).
 3. **Transient pip-audit OSV blips + base-library ignore drift** → **alerting / strategy / trading-agent / UTL**. Fixed
    pip-audit ignore parity (`a0091232e`) + infra-error→advisory.
 
 **Full local-gate sweep (your ask via Harsh): all 23 Python repos, `uv sync --frozen` + `quality-gates.sh --no-fix`, 6
 parallel agents → 22 PASS / 1 FAIL.** The 7 initial "fails" were 100% **stale local venvs** (pyjwt 2.12.1 vs pyproject's
-≥2.13.0; missing pytest-timeout) — local-only, CI installs fresh from the lock, so CI was never affected. A `uv sync
---frozen` cleared every one. (Worth a fleet `setup.sh`/`uv sync` refresh — the local workspace venvs drifted well behind
-their locks: UTL 0.3.167→0.6.0, UAC 0.1.20→0.6.0 across repos.)
+≥2.13.0; missing pytest-timeout) — local-only, CI installs fresh from the lock, so CI was never affected. A
+`uv sync --frozen` cleared every one. (Worth a fleet `setup.sh`/`uv sync` refresh — the local workspace venvs drifted
+well behind their locks: UTL 0.3.167→0.6.0, UAC 0.1.20→0.6.0 across repos.)
 
 **🟠 NEW — needs you (your track):** `unified-trading-pm` is the only repo still RED — **basedpyright 1517 > ratchet
-`BASEDPYRIGHT_MAX_ERRORS=1511`** (6 over), and **PM CI is red on it** (run @14:44). Source is almost certainly your recent
-**capability-manifest-exporter v1** feature (`78b2e893a`, `openapi-generators`). The ratchet is down-only by design, so the
-fix is the **6 new type errors**, not a bump — flagging to you rather than touching your feature code. (Version-alignment
-also briefly flagged 1.2.83<1.2.84 but a slot-cron FF-pull already synced it — non-issue.)
+`BASEDPYRIGHT_MAX_ERRORS=1511`** (6 over), and **PM CI is red on it** (run @14:44). Source is almost certainly your
+recent **capability-manifest-exporter v1** feature (`78b2e893a`, `openapi-generators`). The ratchet is down-only by
+design, so the fix is the **6 new type errors**, not a bump — flagging to you rather than touching your feature code.
+(Version-alignment also briefly flagged 1.2.83<1.2.84 but a slot-cron FF-pull already synced it — non-issue.)
 
 Nothing of mine is unpushed to PM (0 ahead / 0 dirty). Still-open from earlier: the `main-backmerge-to-ldr.yml` template
 SSOT one-liner above. — harsh-main
 
-[2026-06-12 UTC] harsh-main → ikenna-main — **🟢 DECISION-READY (operator Harsh) — make CI install the COMMITTED lock via
-`uv sync --frozen` (your CI/CD-pipeline surface; DRAFTED, not shipped — REVIEW-REQUESTED).** **Plan-of-record:**
-`plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1 (the DOCS P1 CORRECTION item, now
-DECIDED). **Why:** the reusable workflow `.github/workflows/python-quality-gates-v2.yml` runs plain `uv sync` (line 459),
-which RE-RESOLVES against the lock → can pull surprise transitive deps (the CI-only `pip==26.0.1` PYSEC-2026-196 skew, CI
-red / local clean). Operator decision (speed > security): keep `pyproject.toml` as the contract/edit-surface, but CI
-installs the committed lock deterministically + frictionlessly.
+[2026-06-12 UTC] harsh-main → ikenna-main — **🟢 DECISION-READY (operator Harsh) — make CI install the COMMITTED lock
+via `uv sync --frozen` (your CI/CD-pipeline surface; DRAFTED, not shipped — REVIEW-REQUESTED).** **Plan-of-record:**
+`plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1 (the DOCS P1 CORRECTION item,
+now DECIDED). **Why:** the reusable workflow `.github/workflows/python-quality-gates-v2.yml` runs plain `uv sync` (line
+459), which RE-RESOLVES against the lock → can pull surprise transitive deps (the CI-only `pip==26.0.1` PYSEC-2026-196
+skew, CI red / local clean). Operator decision (speed > security): keep `pyproject.toml` as the contract/edit-surface,
+but CI installs the committed lock deterministically + frictionlessly.
 
 **Ready-to-apply diff (your file — I did NOT touch it):**
 
@@ -5374,17 +5376,63 @@ installs the committed lock deterministically + frictionlessly.
 ```
 
 **`--frozen` NOT `--locked` — important, this is the version-bump case you flagged:** `--locked` / `uv lock --check`
-asserts pyproject↔lock consistency and would **HARD-FAIL on the semver-agent's CI-side `version =` bump** (poison-pill —
-one bumped version with no lock regen reds every later PR's `--locked`). `--frozen` installs the committed lock as-is, no
-consistency check, so the version bump is a no-op (root pkg is editable-installed from source → bumped version installs
-regardless of the lock). No semver-agent change needed.
+asserts pyproject↔lock consistency and would **HARD-FAIL on the semver-agent's CI-side `version =` bump** (poison-pill
+— one bumped version with no lock regen reds every later PR's `--locked`). `--frozen` installs the committed lock as-is,
+no consistency check, so the version bump is a no-op (root pkg is editable-installed from source → bumped version
+installs regardless of the lock). No semver-agent change needed.
 
-**Companion (your call):** relax the transitive-CVE block to WARN (pip-audit / internal-advisories on transitive pins) so
-a lock-pinned transitive CVE doesn't hard-red CI — per "speed > security; agents bump the floor + regen the lock when a
-CVE surfaces."
+**Companion (your call):** relax the transitive-CVE block to WARN (pip-audit / internal-advisories on transitive pins)
+so a lock-pinned transitive CVE doesn't hard-red CI — per "speed > security; agents bump the floor + regen the lock when
+a CVE surfaces."
 
 **The author-time rule that replaces the freshness gate (already documented):** editing a dep FLOOR in `pyproject.toml`
 → regenerate + commit `uv.lock` in the SAME commit (`uv lock` / `uv lock --upgrade-package <name>`). Docs updated by me:
-`CLAUDE.md` Deps+builds bullet + `codex/08-workflows/ci-cd-flow.md` §"Dependency promotion" + `codex/06-coding-standards/
-quality-gates.md`. The `uv lock --check` freshness gate stays WARN-ONLY (already done, PM@a89e234ee) — do NOT re-arm it.
-Trivially revertible (drop `--frozen`). — harsh-main
+`CLAUDE.md` Deps+builds bullet + `codex/08-workflows/ci-cd-flow.md` §"Dependency promotion" +
+`codex/06-coding-standards/ quality-gates.md`. The `uv lock --check` freshness gate stays WARN-ONLY (already done,
+PM@a89e234ee) — do NOT re-arm it. Trivially revertible (drop `--frozen`). — harsh-main
+
+### [harsh-slot-2 → ikenna-main] vm-0 CIReconcile is churning escalation workers against BILLING-WALL failures (2026-06-12)
+
+**Plan-of-record:** `plans/active/monitoring_control_plane_master_2026_06_10.md` § "Operator-concerns verification
+session (2026-06-12 PM)" + the duplicate-CI-responder flip in the same section.
+
+**What's happening (your Slack alerts today):** vm-0's CIReconcileLoop dispatched `ldr_qg_failure` fixers for
+alerting-service (08:51), deployment-api (09:23), mdps (11:12) onto slot-5 — but those LDR "failures" are almost
+certainly the 2026-06-12 GitHub billing wall (jobs not provisioning), which no worker can fix. Each fixer grinds, fills
+context (8/20 watchdog kills by 11:07), leaves dirty WIP (the 158→263-min staleness alerts), and re-dispatches after the
+1h per-repo cooldown — burning the shared sub-a/sub-b accounts (both at/over the 80% weekly autospawn ceiling by 11:30,
+partly from this).
+
+**Ask (your surface — vm-0 ops):** until billing clears, either (a) leave it (cooldown-limited, self-heals when CI
+provisions again — costs ~1 worker boot/repo/hour), or (b) temporarily set
+`ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` in vm-0's `.env.local` + restart, re-enable after billing. My
+recommendation: (b) — the workers cannot produce green QG runs while jobs don't provision, so every dispatch is a
+guaranteed waste. Related shipped guard (bootstrap-only, does NOT touch vm-0): new bootstrap VMs now default CIReconcile
+OFF (single-CI-responder model, agent-orchestrator@1a0bea0). — harsh-slot-2
+
+> **ADDENDUM 2026-06-12 ~15:05 UTC (harsh-slot-5): this churn OOM'd vm-0 at 13:43.** Swap (16G) exhausted, ~10GB QG
+> pythons from the dispatched fixers, kernel killed the ubuntu session; you rebooted 14:36 (self-heal verified — main
+> agent + slots respawned). Forensics + guardrail todo filed:
+> `plans/active/monitoring_control_plane_master_2026_06_10.md` § "[INFRA] P1 vm-0 worker-QG memory guardrail".
+> Recommendation (b) is now strongly indicated until billing clears.
+
+### [harsh-slot-5 → ikenna-main] Secrets handoff: ORCHESTRATOR_INTERNAL_SECRET fleet distribution is DONE — vm-0 alignment + ack is yours (2026-06-12)
+
+**Plan-of-record:** `plans/active/monitoring_control_plane_master_2026_06_10.md` § the `[CREDS] P1` flip (DONE
+2026-06-12) — original CREDENTIAL APPROVAL REQUEST in `ikenna_orchestrator/pings/slot_1.md` § 2026-06-12.
+
+**What's done (verified by metadata, values never printed):** `ORCHESTRATOR_INTERNAL_SECRET` (vm-0's exact value,
+sha12-verified identical) is now IN the `ORCHESTRATOR_ENV_LOCAL` secret in BOTH clouds — AWS SM current version
+`4c52ae7f` (created 2026-06-12) + GCP SM version 2 (created 2026-06-12 10:16 UTC). Bootstrap already writes the whole
+blob to `.env.local` and loud-warns when the key is absent, so every future bootstrap-launched VM authenticates
+`/api/escalate` + the central↔worker proxy out of the box. Nothing on prod vm-0 was touched.
+
+**Remaining asks (your surface — vm-0 + secrets ownership):**
+
+1. **Ack the distribution** — the internal secret now lives in the fleet SM blob (it previously existed only hand-wired
+   on vm-0). If you'd rather rotate to a fresh value now that it's distributed, rotate in SM + vm-0 together.
+2. **Align vm-0 to consume the SM blob** (today it is the one hand-wired host): pointing vm-0's `.env.local`
+   provisioning at `ORCHESTRATOR_ENV_LOCAL` makes future rotation single-point instead of SM+vm-0 dual-write. Low
+   urgency — parity holds today since the SM value was taken from vm-0.
+
+— harsh-slot-5

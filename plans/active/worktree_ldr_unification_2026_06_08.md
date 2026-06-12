@@ -182,7 +182,7 @@ should be redeployed as part of this. Worker-topology SSOT: `codex/05-infrastruc
       `server.py:560`/`:1765` → `f"tab/{operator}/{slot_id}"`) to the Path-B LDR-direct model, so spawned workers aren't
       handed stale tab-branch git instructions. Non-blocking (under Path-B a worker's `git push origin HEAD` / quickmerge
       resolves to LDR) but a clarity + `SUB_AGENT_MANDATORY_RULES` parity gap.
-- [ ] [SCRIPT] P3. **Cosmetic bug in `scripts/dev/migrate-slots-to-pathb.sh` (found 2026-06-10)** — the run-header prints
+- [x] ✅ [SCRIPT] P3. **DONE 2026-06-12 (PM@e64a8c0b3) — `dry_label` gate applied (only prints DRY-RUN when `$DRY == 1`).** **Cosmetic bug in `scripts/dev/migrate-slots-to-pathb.sh` (found 2026-06-10)** — the run-header prints
       `| DRY-RUN` whenever `DRY` is set to ANYTHING incl. `0` (`${DRY:+ | DRY-RUN}` treats the string `"0"` as set); the
       actual logic correctly gates reclone on `[[ "$DRY" == 1 ]]`, so real runs DID reclone — only the header label lies
       (confirmed: a real `--slots 1-5` run printed `DRY-RUN` yet performed all 115 clones). Fix:

@@ -66,9 +66,16 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
 
 ## Remaining todos
 
-- [ ] [SCRIPT] P2. Add explicit-file-list support to `check_todo_format.sh` + `check_runbook_fields.py` (mirror the
-      `check_frontmatter.sh` staged pattern), then add both to the `--precommit` gate so all three HARD checks are
-      staged-scoped. repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-12 — PM@b735ba5 (QG green; PR #296 auto-merging to main). Both checks accept an
+      explicit file list (staged mode, out-of-scope files silently ignored; full-corpus default unchanged);
+      `run_hygiene_sweep.sh --precommit` now runs all THREE hard checks staged-scoped (frontmatter + todo-format on
+      staged `plans/**`, runbook-fields on staged `codex/15-runbooks/incidents/**`); the prek hook `files:` widened to
+      `^(plans/|codex/15-runbooks/incidents/)`. Component-verified live: bad staged todo → exit 1, runbook with `owner:`
+      stripped → exit 1, clean/no-staged → skip. BONUS fix found en route: `pyproject.toml` coverage omit
+      `scripts/ui_vision_pptx` (bare dir pattern matches nothing) → `/*` — the pptx package was unintentionally measured
+      at 0%, depressing PM coverage ~7pts (the 69%-floor era); floor restored to the original 70 (actual 76.4%). Was:
+      Add explicit-file-list support to `check_todo_format.sh` + `check_runbook_fields.py`, then add both to the
+      `--precommit` gate. repo: unified-trading-pm.
 - [ ] [CI] P2. Fold the same `--precommit` (or a `--staged`) sweep into PM `quality-gates-v2` as a
       content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone `plan-health-gate` GHA job —
       **RULE-11 prove-then-retire**: prove the prek + v2-step combo catches the same hard failures on PM before deleting
@@ -81,9 +88,9 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       reddens the badge); the conservative detector + the orchestrator's 503/no-headroom backpressure throttle volume.
       Verified: actionlint clean + YAML parses; a live contradiction (needed to see a real dispatch) is rare-by-design,
       so verification is logic+lint, not a forced finding. repo: unified-trading-pm (+ agent-orchestrator).
-- [ ] [DOC] P3. Pre-existing frontmatter violation: `plans/active/ci_status_firestore_side_store_2026_06_10.md` is
-      missing `locked_by` (another agent's new plan today). Staged-scoping means it only blocks a commit that touches
-      that file — but it should be fixed at source. Owner: whoever owns that plan. repo: unified-trading-pm.
+- [x] ✅ [DOC] P3. RESOLVED upstream (verified 2026-06-12): `ci_status_firestore_side_store_2026_06_10.md` now carries
+      `locked_by: live-defi-rollout` — the plan owner fixed it at source. Was: pre-existing frontmatter violation
+      (missing `locked_by`). repo: unified-trading-pm.
 
 ## Daily deep reconciler (operator direction 2026-06-12 — supersedes the daily-Haiku layer; see banner above)
 

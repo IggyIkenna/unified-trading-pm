@@ -16,26 +16,36 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # ── --precommit: lean STAGED-FILES-ONLY local gate (prek hook) — bypass the heavy sweep body ──
-# Validates ONLY the plan files THIS commit stages, so a pre-existing violation in an unrelated
+# Validates ONLY the files THIS commit stages, so a pre-existing violation in an unrelated
 # plan (e.g. another agent's WIP) never blocks your commit (RULE-11 blast-radius safety). Portable
-# for macOS bash 3.2 (no mapfile). Currently gates the staged-capable HARD check (frontmatter);
-# todo-format + runbook-fields join once they accept a file list (tracked follow-up).
+# for macOS bash 3.2 (no mapfile). Gates all three staged-capable HARD checks: frontmatter +
+# todo-format on staged plans/**, runbook-fields on staged codex/15-runbooks/incidents/**.
 if [ "$CI_MODE" = "--precommit" ]; then
-  STAGED=()
+  STAGED_PLANS=()
+  STAGED_RUNBOOKS=()
   while IFS= read -r line; do
-    case "$line" in *.md) STAGED+=("$PM_DIR/$line") ;; esac
-  done < <(git -C "$PM_DIR" diff --cached --name-only --diff-filter=ACM -- plans/ 2>/dev/null)
-  if [ "${#STAGED[@]}" -eq 0 ]; then
-    echo "plan-hygiene pre-commit: no staged plan files — skip."
+    case "$line" in
+      plans/*.md) STAGED_PLANS+=("$PM_DIR/$line") ;;
+      codex/15-runbooks/incidents/*.md) STAGED_RUNBOOKS+=("$PM_DIR/$line") ;;
+    esac
+  done < <(git -C "$PM_DIR" diff --cached --name-only --diff-filter=ACM -- plans/ codex/15-runbooks/incidents/ 2>/dev/null)
+  if [ "${#STAGED_PLANS[@]}" -eq 0 ] && [ "${#STAGED_RUNBOOKS[@]}" -eq 0 ]; then
+    echo "plan-hygiene pre-commit: no staged plan/runbook files — skip."
     exit 0
   fi
   PF=0
-  "$SCRIPT_DIR/check_frontmatter.sh" --quiet "${STAGED[@]}" && echo "  ✅ Frontmatter (staged plans)" || { echo "  ❌ Frontmatter validity (staged plans)"; PF=$(( PF + 1 )); }
+  if [ "${#STAGED_PLANS[@]}" -gt 0 ]; then
+    "$SCRIPT_DIR/check_frontmatter.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Frontmatter (staged plans)" || { echo "  ❌ Frontmatter validity (staged plans)"; PF=$(( PF + 1 )); }
+    "$SCRIPT_DIR/check_todo_format.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Todo format (staged plans)" || { echo "  ❌ Todo format (staged plans)"; PF=$(( PF + 1 )); }
+  fi
+  if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
+    python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
+  fi
   if [ "$PF" -gt 0 ]; then
-    echo "❌ plan-hygiene pre-commit: $PF hard failure(s) in STAGED plans — fix before commit (fixable frontmatter: python3 scripts/plan-hygiene/fix_frontmatter.py)."
+    echo "❌ plan-hygiene pre-commit: $PF hard failure(s) in STAGED files — fix before commit (fixable frontmatter: python3 scripts/plan-hygiene/fix_frontmatter.py; todo format: bash scripts/plan-hygiene/fix_todo_format.sh)."
     exit 1
   fi
-  echo "✅ plan-hygiene pre-commit: staged plans clean."
+  echo "✅ plan-hygiene pre-commit: staged files clean."
   exit 0
 fi
 

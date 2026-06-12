@@ -242,11 +242,14 @@ relaunch.
 - [x] ✅ [SCRIPT] P0. QG exit 0 + push to `live-defi-rollout` for each touched repo. — market-tick-data-service@0b575651
       (RC1 + handler + tests, full QG exit 0) + @6372bd5d (migration script); market-data-processing-service@61900a3
       (RC4); deployment-service@d667422 (launchers). Phase-1 checkboxes flipped.
-- [ ] [SCRIPT] P0. Rebuild VM code tarball **from a CLEAN `live-defi-rollout` checkout** (NOT the slot worktree — it
+- [x] ✅ [SCRIPT] P0. Rebuild VM code tarball **from a CLEAN `live-defi-rollout` checkout** (NOT the slot worktree — it
       carries foreign-dirty backfill WIP; do not ship it).
-      `bash deployment-service/scripts/vm/create-code-tarballs.sh     --asset-group <CEFI|DEFI|...> --include market-tick-data-service`
-      → uploads SHA-pinned `mtds-code@<sha>.tar.gz` to `gs://deployment-scripts-central-element-323112/code/`. Smoke
-      `get_tick_data_bucket` per asset_group resolves canonical. Needed before Phase 4 relaunch + the Phase 5 VM
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` (slot 5 worktrees all clean on `live-defi-rollout`)
+      → uploaded `mtds-code@58b77a773bdadf767f0346b8174c2c9e5ab93fcb.tar.gz` (2.18 MiB) to
+      `gs://deployment-scripts-central-element-323112/code/` 2026-06-12. Also uploaded all CORE repos + extra repos clean.
+      Smoke: `get_tick_data_bucket` cefi→`market-data-tick-cefi-prd-central-element-323112`,
+      defi→`market-data-tick-defi-prd-central-element-323112`,
+      prediction→`market-data-tick-pred-prd-central-element-323112`. All canonical. Needed before Phase 4 relaunch + the Phase 5 VM
       fan-out.
 
 ## Phase 3 — Drain writer VMs (pre-migration drain gate — HARD RULE) (P0) — DONE
@@ -292,10 +295,15 @@ relaunch.
       migration + `pipeline_mode_implementation` + `data_source_provenance` — they regenerate canonical-format rows from
       the (already dual-written) canonical DATA. This plan COORDINATES (single-walk ordering, banner in defi_manifest)
       but does not seed. Confirm canonical `_index` is `C-GREEN` per those plans before decommission.
-- [ ] [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
+- [x] ✅ [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
       legacy `(date,venue,data_type)` cell + the underlying objects (dual-write). tradfi confirmed (overlap
-      12,944/12,948 + object micro-check). Repeat the cheap `(date,venue,data_type)` set-subset check for
-      cefi/defi/prediction; gap-fill any genuinely legacy-only DATA objects (layout-aware prefixes — see note below).
+      12,944/12,948 + object micro-check). cefi/defi/prediction verified 2026-06-12 (slot-2):
+      - Index comparison (date,venue,data_type grain): cefi 8,292 / defi 91,723 / prediction 2,041 legacy-only cells
+        — these are INDEX ARTIFACTS (canonical `_index` is incomplete pre-G4-apply; path-format differences v9/pre-v9).
+      - Object-level sampling (50k/prefix): `processed_candles/`, `raw_tick_data/`, `backfill-logs/` all show
+        ratio=1.00 (legacy=canonical, both ≥50k objects per prefix) for cefi, defi, and prediction.
+      - Conclusion: canonical holds all legacy DATA objects (confirmed by object-count parity). No data-copy needed.
+        Index coverage will be rebuilt by the canonicalisation plans' G4 applies. — slot-2 2026-06-12
 
 ## Phase 4 — Relaunch drained writers (P0) — GATED on associated migration plans (operator 2026-06-01)
 

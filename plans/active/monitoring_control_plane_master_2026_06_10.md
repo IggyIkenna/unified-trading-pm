@@ -136,11 +136,11 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       deployment-ui@ac447a2 | deployment-ui QG green (35s) | pw:L2 ✓ (204 pass; the 1 fail is the pre-existing flaky
       stateful-flows Flow-1, retry-green, unrelated to /repos) | regression: tests/smoke/repos-tab.spec.ts
       (SitLockDetail). **(under-surfaced-data audit) Staging-lock REASON + last-SIT-run age in the repo drilldown** —
-      `SitLockDetail` line below the pipeline strip surfaces `staging_locked_reason` (e.g. "breaking cascade in flight")
-      + `last_sit_run_age_min`, both already on the detail payload but never rendered (the pipeline strip showed only
-      the lock/stuck STATE, not the WHY/age). **Pure deployment-ui — no backend change, no drift risk** (data already
-      served). Renders nothing for a clean repo. Found by auditing RepoCi types vs what the UI renders (also confirmed
-      `branch_ci`/image/G6 fields ARE surfaced — no other gaps). Repo: deployment-ui (`RepoCi.tsx`).
+      `SitLockDetail` line below the pipeline strip surfaces `staging_locked_reason` (e.g. "breaking cascade in
+      flight") + `last_sit_run_age_min`, both already on the detail payload but never rendered (the pipeline strip
+      showed only the lock/stuck STATE, not the WHY/age). **Pure deployment-ui — no backend change, no drift risk**
+      (data already served). Renders nothing for a clean repo. Found by auditing RepoCi types vs what the UI renders
+      (also confirmed `branch_ci`/image/G6 fields ARE surfaced — no other gaps). Repo: deployment-ui (`RepoCi.tsx`).
 
 ### Credential status (re-probed 2026-06-11)
 
@@ -229,10 +229,11 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       (→GitHub commit)** + build time. Repos: deployment-api (`_cloud_builds_history`/`repo_ci`/`_repo_ci_types`) +
       deployment-ui (`ImageCell`/`buildTimeLabel`/`shortSha`/mock).
 - [x] ✅ [CODE] P1. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) — deployment-api@a9276d1
-      | QG green (160s) | regression: tests/integration/test_functional_deps.py::test_deployment_api_config_effective_region_default.
-      **(B1-followup) `gcs_region=us-central1` prod-config anomaly — BIG FINDING — RESOLVED (operator decision
-      2026-06-12: FIX default → `asia-northeast1`).** `effective_region` default changed `us-central1` → `asia-northeast1`
-      in `deployment_api_config.py` (the workspace-SSOT region for all GCS data / Cloud Build triggers / Artifact
+      | QG green (160s) | regression:
+      tests/integration/test_functional_deps.py::test_deployment_api_config_effective_region_default. **(B1-followup)
+      `gcs_region=us-central1` prod-config anomaly — BIG FINDING — RESOLVED (operator decision 2026-06-12: FIX default →
+      `asia-northeast1`).** `effective_region` default changed `us-central1` → `asia-northeast1` in
+      `deployment_api_config.py` (the workspace-SSOT region for all GCS data / Cloud Build triggers / Artifact
       Registry), and the GCP failover list now leads with `asia-northeast1`. No explicit prod `GCS_REGION` env was set
       (verified — the anomaly was purely the default fallback), so the default fix is the complete fix; prod picks up
       `asia-northeast1` on next deploy. Regression test pins both the default + the home-region-first failover order.
@@ -312,15 +313,22 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       tests/unit/test_repo_ci_manifest.py::TestDrainLegHealthy (5 cases) +
       tests/unit/test_repo_ci_routes.py::test_drain_stalled. **(promotion-drain follow-up) Drain STALL-surfacing** — a
       per-row `drain_stalled` flag = REAL file-content ahead of staging/main (files_changed, not squash skew) AND that
-      hop's global LDR→staging/→main drain leg failing/stale (`_drain_leg_healthy`: in-flight=healthy, stale-success
-      >45min / failure / never-ran = unhealthy). Surfaces the **bug-#11 class** (content piling on LDR with a dead
-      drain) that was invisible. UI: a red "drain stalled" chip on the row (beside the G6 lag chip) + a count/list in
-      the PromotionDrainPanel. Pure derivation on data the overview already fetches — **no new GitHub calls**. Repos:
-      deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi`/`client`/`mock-api`).
-- [ ] [CODE] P3. **(promotion-drain follow-up, remainder) Per-repo standing-PR v2 conclusion explicit** — the
-      drain-stall half shipped above; this remaining sub-part surfaces each repo's standing LDR→staging / LDR→main PR's
-      `quality-gates-v2` conclusion EXPLICITLY (today it's implicit via `open_prs` + `branch_ci`). Repos: deployment-api
-      + deployment-ui. SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3 sub-todo).
+      hop's global LDR→staging/→main drain leg failing/stale (`_drain_leg_healthy`: in-flight=healthy,
+      stale-success >45min / failure / never-ran = unhealthy). Surfaces the **bug-#11 class** (content piling on LDR
+      with a dead drain) that was invisible. UI: a red "drain stalled" chip on the row (beside the G6 lag chip) + a
+      count/list in the PromotionDrainPanel. Pure derivation on data the overview already fetches — **no new GitHub
+      calls**. Repos: deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui
+      (`RepoCi`/`client`/`mock-api`).
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-ui@41c1c11 | deployment-ui QG green (37s) | pw:L2 ✓ 206/206 | regression:
+      src/lib/repoCi.test.ts::prV2State (4 cases) + tests/smoke/repos-tab.spec.ts (pr-v2 chip). **(promotion-drain
+      follow-up, remainder) Per-repo standing-PR v2 conclusion explicit** — `prV2State()` maps each open promotion PR to
+      an explicit chip: **v2 failed** (red) / **v2 not reported** (yellow — the auto-recoverable deadlock) / **v2
+      reported** (green), derived from the rollup the backend already serves (`failed_check`/`v2_present`). Renders on
+      every PR card in the drilldown — the v2 outcome was previously only implicit via `stuck_class`. **Pure
+      deployment-ui derivation — no backend change, no new GitHub calls** (kept the overview's API budget bounded; a
+      precise success/in-progress split would need a per-PR fetch, deliberately not done). Repo: deployment-ui
+      (`repoCi.ts`/`RepoCi.tsx`). SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md`.
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
@@ -357,11 +365,11 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       tests/smoke/repos-tab.spec.ts (semver-health panel) + tests/unit/test_repo_ci_routes.py::test_semver_health +
       tests/unit/test_repo_ci_manifest.py::TestPendingVersionBumps. **(G2) Semver-agent health standing state** —
       `/api/repo-ci/overview` gains `semver_health`: last `semver-agent.yml` run (one global runs-API query) +
-      pending-bump count (manifest `staging_versions` semver-ahead-of `versions`, the bump-rate signal) + `breaker_armed`
-      (pending ≥ 3, mirroring the circuit-breaker threshold). `SemverHealthPanel` on `/repos` shows last-bump chip +
-      pending-bump (N/threshold) + breaker-armed/clear + the stacked repos. **Sourced from the manifest version-surface +
-      runs API (the proven live-read pattern) — NOT the blocked Firestore generalisation.** Ledger-persist tail
-      (inline-curl alert) still rides `ci_dashboard_deployment_ui` P3. Repos: deployment-api
+      pending-bump count (manifest `staging_versions` semver-ahead-of `versions`, the bump-rate signal) +
+      `breaker_armed` (pending ≥ 3, mirroring the circuit-breaker threshold). `SemverHealthPanel` on `/repos` shows
+      last-bump chip + pending-bump (N/threshold) + breaker-armed/clear + the stacked repos. **Sourced from the manifest
+      version-surface + runs API (the proven live-read pattern) — NOT the blocked Firestore generalisation.**
+      Ledger-persist tail (inline-curl alert) still rides `ci_dashboard_deployment_ui` P3. Repos: deployment-api
       (`repo_ci`/`_repo_ci_manifest`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi`/`client`/`mock-api`).
 - [ ] [CODE] P2. **(G3) Manifest consolidator health (`CONSOLIDATOR_DOWN`) is homeless** — the consolidator watchdog
       pages CRITICAL on a stale/missing `_index` while per-VM shards exist, but there is NO standing element on EITHER
@@ -379,13 +387,13 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       deployment-ui.
 - [ ] [CODE] P3. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
       a freeze blocks a scheduled/autonomous run; add a freeze-window banner on `/repos` (active? window? reason?).
-      Repo: deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** The
-      "is a freeze active NOW" verdict spans 6 recurrence types (daily / every_8h / 1st_friday_monthly /
-      3rd_friday_monthly / 8x_yearly / quarterly) + DST notes in `plans/ops/change-freeze-calendar.csv`, and the SSOT
-      evaluator is **inline bash in `.github/workflows/change-freeze-check.yml`** — reimplementing that recurrence/DST
-      logic in deployment-ui risks drift against the gate. Same class as version-coherence: surface the workflow's
-      stored verdict, don't re-evaluate. **BLOCKED-ON: verdict-store (Firestore generalisation) OR operator OK on a
-      faithful port of the bash evaluator.**
+      Repo: deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** The "is a
+      freeze active NOW" verdict spans 6 recurrence types (daily / every_8h / 1st_friday_monthly / 3rd_friday_monthly /
+      8x_yearly / quarterly) + DST notes in `plans/ops/change-freeze-calendar.csv`, and the SSOT evaluator is **inline
+      bash in `.github/workflows/change-freeze-check.yml`** — reimplementing that recurrence/DST logic in deployment-ui
+      risks drift against the gate. Same class as version-coherence: surface the workflow's stored verdict, don't
+      re-evaluate. **BLOCKED-ON: verdict-store (Firestore generalisation) OR operator OK on a faithful port of the bash
+      evaluator.**
 - [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
       deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (14/14 route tests) + full UI QG | pw:L2
       ✓ 202/202 | regression: tests/smoke/repos-tab.spec.ts (lag chip) + tests/unit/test_repo_ci_routes.py
@@ -606,6 +614,20 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       operator SM update). **CREDENTIAL APPROVAL REQUEST** filed: `ikenna_orchestrator/pings/slot_1.md` (operator:
       append `ORCHESTRATOR_INTERNAL_SECRET` to the `ORCHESTRATOR_ENV_LOCAL` secret in AWS SM + GCP SM).
 
+- [ ] [INFRA] P1. **vm-0 worker-QG memory guardrail** — 2026-06-12 13:43 UTC the central VM (i-0c9b283b31d6b5ca7) OOM'd:
+      16G swap exhausted (156kB free), ≥2 pythons at ~10-11GB total-vm each (pytest/QG class) from
+      CIReconcile-dispatched fixer workers grinding billing-wall-doomed LDR QGs (13:33 tick: "2 failing
+      (trading-agent-service,e2e-testing) … no capacity" — slots already saturated); kernel killed the ubuntu session
+      (systemd/sd-pam UID 1000) + a 4.1GB python; operator rebooted 14:36; MainAgentKeeper re-created orch-agent-main at
+      14:36:33 and AutoSpawn respawned slots 1-2 at 14:43 (self-heal verified). Same class as the 2026-05-29
+      central-host OOM (the reason bootstrap provisions the 16G swapfile). Guardrails to ship: (a) enforce the
+      qg-host-governor token floor (≤2 concurrent full QGs) for ORCHESTRATOR-SPAWNED workers on VMs — it exists for
+      laptop slots but VM escalation workers bypass it; (b) systemd `MemoryHigh=`/`MemoryMax=` on the worker scope (or
+      per-spawn ulimit) so a runaway QG python is killed before it takes the user session; (c) composes with the
+      CIReconcile fleet-red breaker P0 already tracked in `issues/github_actions_billing_wall_2026_06_11.md` (stop
+      dispatching doomed QG grinds — removes the load source). Found 2026-06-12 post-incident forensics (journalctl -b
+      -1). Repo: agent-orchestrator (+ PM qg-host-governor).
+
 **Operator-concerns verification session (2026-06-12 PM, on the live vm-e2e-test):** three concerns checked +
 e2e-tested; two new live bugs found + fixed in the process (agent-orchestrator@094f691 + @1a0bea0, both deployed to the
 VM).
@@ -667,6 +689,27 @@ Live bugs found during this verification (both fixed):
       finished, no respawn after — the burn loop is dead under production conditions. Was: **AutoSpawn over-spawns: N
       idle slots × 1 queued task → N workers** (tick 10:57:10 `checked=2 spawned=2` for one task). Repo:
       agent-orchestrator. Found 2026-06-12 concerns-verification run.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@42223e5 (QG green 578 passed; quickmerge --agent from slot-2) +
+      LIVE-VERIFIED full lifecycle on vm-e2e-test: dropped an `[OPERATOR]` test todo → regen ingested it as
+      `status=blocked, dispatched_to=None` + synthetic `BLK-op-e2e_operator_gate_test-001` (slot 0) in the operator
+      queue, ZERO spawn; flipped the checkbox → regen prune GC'd BOTH (tasks=0, blocked entries=0, backlog 0).
+      Implementation (option B, operator-chosen): `regen` marks `[OPERATOR]`-tagged todos `operator_gated`;
+      `sync_backlog_to_db` inserts blocked (dispatch/autospawn only consider "queued" → structurally unspawnable) +
+      files the synthetic blocked-queue entry whose question text forbids main-agent auto-answer; prune GC predicate
+      extended queued→{queued,blocked} + deletes slot-0 synthetic entries alongside (real worker questions slot_id>0
+      untouched; legacy DBs without blocked_queue tolerated). 3 new tests pin ingest/sync/prune. Was:
+      **[OPERATOR]-tagged todos become dispatchable tasks** — vm-planning slot-5 (11:44 UTC) burned a real worker boot
+      to ask flip-or-leave. Repo: agent-orchestrator. Found 2026-06-12 Slack-alert triage.
+- [ ] [DESIGN] P1. **Dirty-worktree resolution policy (Ikenna, Slack 2026-06-12 — the next-phase "no dirty worktrees"
+      flow)**: orchestrator directs a worker on a dirty slot tree to (1) run `quality-gates.sh` — green → quickmerge the
+      WIP per the active plans; (2) red but easily fixable → fix, re-QG, quickmerge; (3) not easily fixable → hand to
+      the operator as a GENUINELY dirty tree (operator judges useful-or-not); (4) operator says not useful → worker
+      hard-resets the slot from remote LDR (operator-sanctioned reset — the only sanctioned discard path). Composes with
+      the existing liveness-gated machinery: `resolve_dirty_state` (FM2/FM3/FM8 orphan-WIP inherit) already auto-commits
+      DEAD predecessors' WIP; a LIVE operator session's WIP stays protected (FM8) — this policy covers the in-between
+      (committed-able but unverified WIP). Needs: worker prompt template + an orchestrator dispatch hook + plan todos
+      per repo surface. Repo: agent-orchestrator. Provenance: Ikenna Slack reply on BLK (central-VM migration),
+      2026-06-12.
 
 **VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
 RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3

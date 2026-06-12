@@ -350,7 +350,7 @@ All on `origin/live-defi-rollout`; full detail in
 
 ### Phase B — permanent executor self-pull (the core fix) — `unified-trading-pm/scripts/dev/`
 
-- [ ] [SCRIPT] P0. **Cron line self-pulls its own script from LDR before running** — so a stale/dirty PM clone never
+- [x] ✅ [SCRIPT] P0. **DONE — self-pull live in `install-slot-cron-ff-pull.sh` (syntax-gated H6 via `git show`+`bash -n`).** **Cron line self-pulls its own script from LDR before running** — so a stale/dirty PM clone never
       starves the cron of current code (kills the chicken-and-egg). Pattern (in the crontab line = immutable anchor, NOT
       inside the script):
       `cd <ROOT_PM> && git fetch -q origin live-defi-rollout 2>/dev/null; git checkout -q     origin/live-defi-rollout -- <script> <tracked-sibling-deps> 2>/dev/null; cd <CWD> && bash <ROOT_PM>/<script> <args>`.
@@ -358,7 +358,7 @@ All on `origin/live-defi-rollout`; full detail in
       work); NOT `git show | bash -s`. Offline-safe via `|| true` (falls back to last-good local copy, never skips a
       tick). For `slot-cron-ff-pull.sh` pull BOTH it + `scripts/dev/cron-branch-overrides.txt` (tracked sibling dep,
       line 47).
-- [ ] [SCRIPT] P1. Factor the self-pull into a shared helper sourced by every cron-installer so the pattern is DRY in
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-12 (PM@e64a8c0b3) — `scripts/dev/cron-self-pull-lib.sh` `emit_cron_self_pull`; installer sources it (FF/VERIFY byte-identical).** Factor the self-pull into a shared helper sourced by every cron-installer so the pattern is DRY in
       source even though each emitted crontab line is self-contained.
 
 ### Phase C — apply self-pull to EVERY machine-run PM cron (audit 2026-06-05)
@@ -366,13 +366,13 @@ All on `origin/live-defi-rollout`; full detail in
 These all run PM-repo scripts from the root clone (= identical staleness exposure). GHA workflows excluded (current by
 design).
 
-- [ ] [SCRIPT] P0. `slot-cron-ff-pull` (root clone, \*/5) — self-pull.
-- [ ] [SCRIPT] P0. `slot-host-symmetry-verify` (root clone) — self-pull **+ fix cadence drift** (installed `*/30`,
+- [x] ✅ [SCRIPT] P0. `slot-cron-ff-pull` (root clone, \*/5) — self-pull. **DONE (live; now helper-emitted, byte-identical).**
+- [x] ✅ [SCRIPT] P0. **DONE — */15 + self-pull live on this host (helper-emitted).** `slot-host-symmetry-verify` (root clone) — self-pull **+ fix cadence drift** (installed `*/30`,
       install script wants `*/15` per 2026-06-04 — proof the installer wasn't re-run since the clone went stale).
-- [ ] [SCRIPT] P1. `slot-git-status-report` (root clone, \*/5) — self-pull (`scripts/dev/slot-git-status-report.sh`).
-- [ ] [SCRIPT] P1. `orphan-ping-audit` (root clone, every 4h, `scripts/agents/audit_ping_orphans.sh`) — self-pull;
+- [x] ✅ [SCRIPT] P1. `slot-git-status-report` (root clone, \*/5) — self-pull (`scripts/dev/slot-git-status-report.sh`). **DONE 2026-06-12 (PM@e64a8c0b3) — added to installer + verified live (`crontab -l`).**
+- [ ] [SCRIPT] P1. **[2026-06-12 — Cloud Run Job is EXEMPT (clones PM fresh each run); only the local Ikenna-machine 4h crontab needs the one-line self-pull, now emittable via `emit_cron_self_pull`. Small machine-specific follow-up.]** `orphan-ping-audit` (root clone, every 4h, `scripts/agents/audit_ping_orphans.sh`) — self-pull;
       update its self-installer.
-- [ ] [SCRIPT] P2. `refresh-manifest-dag` (`scripts/manifest/refresh-manifest-dag.sh`, \*/30) — runs from the slot-1
+- [x] ✅ [SCRIPT] P2. **DONE — EXEMPT (retired 2026-06-03; SVGs gitignored, cron a no-op). Documented exempt in codex § "Cron self-pull".** `refresh-manifest-dag` (`scripts/manifest/refresh-manifest-dag.sh`, \*/30) — runs from the slot-1
       worktree (FF-managed, lower risk) — add self-pull for consistency OR document why exempt.
 
 ### Phase D — bootstrap enforcement so drift never re-plants
@@ -397,12 +397,12 @@ design).
 
 ### Phase F — fleet rollout + verification (Harsh + VM)
 
-- [ ] [OPS] P0. Re-run `install-slot-cron-ff-pull.sh` on THIS laptop after B–E land (installs self-pull lines + corrects
+- [x] ✅ [OPS] P0. **DONE 2026-06-12 — re-ran from root clone; status-report cron now self-pulls (FF/verify `[already-installed]`, status `[updating]`; verified `crontab -l`).** Re-run `install-slot-cron-ff-pull.sh` on THIS laptop after B–E land (installs self-pull lines + corrects
       the `*/30`→`*/15` verify cadence).
-- [ ] [OPS] P0. Verify `ROOT_PM`/`SLOT_DIR` correctness on **Harsh's laptop + the AWS VM** (`crontab -l` host-correct
+- [ ] [OPS] P0. **[2026-06-12 — HANDOFF: cannot reach Harsh's laptop / AWS VM from slot-3; run there (or orchestrator-dispatch) once PM@e64a8c0b3 is on each host's root clone.]** Verify `ROOT_PM`/`SLOT_DIR` correctness on **Harsh's laptop + the AWS VM** (`crontab -l` host-correct
       absolute paths) + re-run install there + one-time root-clone unstick if stranded
       (`git -C <host>/unified-trading-pm rev-list --count HEAD..origin/live-defi-rollout`). Dispatch via orchestrator.
-- [ ] [DOCS] P1. `codex/05-infrastructure/per-tab-worktrees.md` § "Cron-based FF puller" — document the
+- [x] ✅ [DOCS] P1. **DONE 2026-06-12 — added § "Cron self-pull + Path-B per-slot ref refresh" to per-tab-worktrees.md (self-pull principle + helper + H6 + Path-B ref-refresh).** `codex/05-infrastructure/per-tab-worktrees.md` § "Cron-based FF puller" — document the
       self-pull-executor principle + the rule "every machine-run PM cron self-pulls its script from LDR before running;
       GHA exempt (current by design)". + one-liner in canonical `CLAUDE.md`.
 
@@ -664,7 +664,7 @@ design).
       covered today by Harsh's tab-mirror active-host-filter (tab-divergence alerts only); this is the VM-liveness-alert
       side. Low urgency — VMs are off + nothing firing.
 
-- [ ] [SCRIPT] P3. **Drop the orphaned `pre_commit` pin from `workspace-constraints.toml`** (re-derive). **MIGRATED
+- [x] ✅ [SCRIPT] P3. **DONE 2026-06-12 (PM@e64a8c0b3) — removed from workspace-constraints.toml + canonical-dependency-manifest.json; no repo declares pre-commit (fleet on prek).** **Drop the orphaned `pre_commit` pin from `workspace-constraints.toml`** (re-derive). **MIGRATED
       FROM:** `plans/active/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md` (archived
       2026-06-07). The hook runner is now `prek` fleet-wide (AO + UAC pyprojects migrated
       `pre-commit`→`prek>=0.3.0,<1.0.0`; `check-precommit-versions.py` installs via prek), so the
@@ -751,7 +751,7 @@ design).
       conflict-resolution model" sections), CLAUDE.md (PM/codex→main directive + pointer), SUB_AGENT_MANDATORY_RULES
       (target-surface declaration + 3-layer model + check overlapping open claims). setup-workspace codex-clone removed
       in same commit.
-- [ ] [SCRIPT] P2. **Finish codex-not-a-separate-repo cleanup.** Live SSOT (`workflow-templates/`) + deployed fleet
+- [ ] [SCRIPT] P2. **[2026-06-12 — also cleaned `scripts/_workspace-lib.sh` `KNOWN_SIBLING_REPOS` (dropped archived `unified-trading-codex`, PM@e64a8c0b3). Remaining `major-bump-approval.yml` write-back is semver/promote machinery → Ikenna's surface.]** **Finish codex-not-a-separate-repo cleanup.** Live SSOT (`workflow-templates/`) + deployed fleet
       already correct. Fixed: `scripts/templates/semver-agent.yml` (c10463f69),
       `scripts/propagation/templates/semver-agent.yml` (0ca9dc657). Remaining:
       `propagation/templates/major-bump-approval.yml` (checkout + 3 consumers + a write-back

@@ -73,17 +73,14 @@ fi
 # tick by design, so changes ship via PR→QG→LDR, never local. GHA workflows are exempt (fresh checkout).
 PM_DIR="${WORKSPACE_ROOT}/unified-trading-pm"
 INTEGRATION_BRANCH="live-defi-rollout"
-# H6: SYNTAX-GATE the self-pull. A bare `git checkout origin/LDR -- <script>` adopts the new
-# script with NO validation → one bad commit to slot-cron-ff-pull.sh / verify-slot-host-symmetry.sh
-# propagates to every host in ≤5 min and stops FF-pull fleet-wide (and the verify cron self-updates
-# identically → disables its own watchdog). Instead: stream the candidate to a temp via `git show`,
-# `bash -n` it, and only `mv` it into place if it parses; on any failure keep the last-good local copy.
-# chmod 755 AFTER the mv: mktemp creates 0600, so `mv` would leave the script non-executable AND
-# mode-dirty (100755→100644) vs HEAD → the FF-pull/git-status crons then see the root clone as dirty
-# and SKIP it, so it silently falls behind (the exec-bit-drop drift). Restoring 755 keeps the managed
-# script clean + executable. (cron-branch-overrides.txt is data, not a script → checked out directly.)
-SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/dev/slot-cron-ff-pull.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/dev/slot-cron-ff-pull.sh && chmod 755 scripts/dev/slot-cron-ff-pull.sh; else rm -f \"\$t\"; fi; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/cron-branch-overrides.txt 2>/dev/null; } || true"
-SELF_PULL_VERIFY="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/verify-slot-host-symmetry.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/verify-slot-host-symmetry.sh && chmod 755 scripts/verify-slot-host-symmetry.sh; else rm -f \"\$t\"; fi; } || true"
+# The syntax-gate (H6), offline-safety, and chmod-755 rationale now live in the shared emitter
+# cron-self-pull-lib.sh — sourced here so the self-pull pattern is DRY across every cron-installer
+# (each EMITTED crontab line is still fully self-contained). One bad commit to a managed cron script
+# can never propagate fleet-wide (bash -n gate); a failed fetch falls back to the last-good local copy.
+source "$(dirname "${BASH_SOURCE[0]}")/cron-self-pull-lib.sh"
+SELF_PULL_FF="$(emit_cron_self_pull "${PM_DIR}" "${INTEGRATION_BRANCH}" "scripts/dev/slot-cron-ff-pull.sh" "scripts/dev/cron-branch-overrides.txt")"
+SELF_PULL_VERIFY="$(emit_cron_self_pull "${PM_DIR}" "${INTEGRATION_BRANCH}" "scripts/verify-slot-host-symmetry.sh")"
+SELF_PULL_STATUS="$(emit_cron_self_pull "${PM_DIR}" "${INTEGRATION_BRANCH}" "scripts/dev/slot-git-status-report.sh")"
 
 # Periodic symmetry verify + Slack-alert-on-drift — ENFORCES the symmetric-host
 # contract (CLAUDE.md § "Local slot host = VM slot host") rather than just documenting
@@ -95,6 +92,15 @@ VERIFY_INTERVAL=15  # operator 2026-06-04: */15 so drift/health surfaces within 
 
 CRON_LINE="*/${INTERVAL} * * * * ${SELF_PULL_FF}; cd \"${SLOT_DIR}\" && bash \"${PULL_SCRIPT}\" --all-slots --quiet >> \"${LOG_FILE}\" 2>&1 ${MARKER}"
 VERIFY_LINE="*/${VERIFY_INTERVAL} * * * * ${SELF_PULL_VERIFY}; cd \"${SLOT_DIR}\" && bash \"${VERIFY_SCRIPT}\" --quiet --alert >> \"${VERIFY_LOG}\" 2>&1 ${VERIFY_MARKER}"
+
+# slot-git-status-report — runs the per-slot status reporter; offset +2m from the FF-pull
+# (0,5,10…) so it observes the post-FF tree state. Self-pull added 2026-06-12 (was bare → a
+# stale clone ran stale reporter code; qg_commit plan Phase C).
+STATUS_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/dev/slot-git-status-report.sh"
+STATUS_LOG="/tmp/slot-git-status-report.log"
+STATUS_MARKER="# slot-git-status-report"
+STATUS_SCHEDULE="2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
+STATUS_LINE="${STATUS_SCHEDULE} ${SELF_PULL_STATUS}; cd \"${SLOT_DIR}\" && bash \"${STATUS_SCRIPT}\" --quiet >> \"${STATUS_LOG}\" 2>&1 ${STATUS_MARKER}"
 
 # Idempotent install/replace of one marked cron line. Re-reads crontab each call so
 # multiple ensure_cron calls compose safely.
@@ -129,6 +135,7 @@ remove_cron() {  # $1=marker $2=label
 if [ "${ACTION}" = "uninstall" ]; then
     remove_cron "${MARKER}" "slot-cron-ff-pull"
     remove_cron "${VERIFY_MARKER}" "slot-host-symmetry-verify"
+    remove_cron "${STATUS_MARKER}" "slot-git-status-report"
     exit 0
 fi
 
@@ -137,6 +144,11 @@ if [ -x "${VERIFY_SCRIPT}" ]; then
     ensure_cron "${VERIFY_MARKER}" "${VERIFY_LINE}" "slot-host-symmetry-verify (*/${VERIFY_INTERVAL}m, Slack-alerts on drift)"
 else
     echo "[skip] verify cron — ${VERIFY_SCRIPT} not found/executable"
+fi
+if [ -x "${STATUS_SCRIPT}" ]; then
+    ensure_cron "${STATUS_MARKER}" "${STATUS_LINE}" "slot-git-status-report (offset */5m, self-pull)"
+else
+    echo "[skip] status-report cron — ${STATUS_SCRIPT} not found/executable"
 fi
 
 echo "[done] cron entry registered:"

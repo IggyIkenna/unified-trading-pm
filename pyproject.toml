@@ -219,15 +219,16 @@ omit = [
     "scripts/check-cross-plan-gates.py",  # Plan-gate checker; requires live filesystem, not unit-tested
     "scripts/validate-manifest-dag.py",  # DAG validator; integration-only, not unit-tested
     "scripts/generate-ui-vision-pptx.py",  # Requires python-pptx which is not a project dependency
-    "scripts/ui_vision_pptx",  # pptx deck package (split from the script 2026-06-11) — same python-pptx carve-out
+    "scripts/ui_vision_pptx/*",  # pptx deck package (split from the script 2026-06-11) — same python-pptx carve-out; /* required: a bare dir pattern matches nothing (package sat at 0%, dragging total; found 2026-06-12)
 ]
 
 [tool.coverage.report]
 # PM scripts/ ARE prod (CI/CD gates, backlog regen, ci_failure_watcher, detect_breaking_change).
 # Baseline 2026-06-10: 74.5% across 24 measured scripts. Floor set at 70% as a regression guard.
-fail_under = 69
-# Baseline 2026-06-11 re-set: pre-existing 69% (branch 8 commits behind origin + concurrent
-# agent activity on plan files). Prior floor: 70% (2026-06-10). Re-baseline with each clean pass.
+fail_under = 70
+# Baseline 2026-06-12 re-set: 76.4% after fixing the ui_vision_pptx omit glob (the package was
+# unintentionally MEASURED at 0%, depressing the total ~7pts — the 69% floor era). Restored the
+# original 70% regression floor (2026-06-10). Re-baseline with each clean pass.
 skip_empty = true
 show_missing = true
 

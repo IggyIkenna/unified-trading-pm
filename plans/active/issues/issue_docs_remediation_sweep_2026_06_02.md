@@ -1,7 +1,7 @@
 ---
 title: Issue-docs remediation sweep — code-fixable items across the 2026-05/06 issue-doc backlog
 created: 2026-06-02
-parent_epic: master_to_live_defi_2026_05_23.md
+parent_epic: plan_hygiene_master
 priority: P1
 status: IN-FLIGHT — slot 7 executing; items flip + source issue docs archive as each is verified complete
 locked_by: live-defi-rollout
