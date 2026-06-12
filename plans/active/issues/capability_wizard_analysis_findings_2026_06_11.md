@@ -307,14 +307,24 @@ engine code SILENTLY fails to honor it due to case — exactly "wizard-thinks-po
 **Status**: OPEN — conflicting truths; the collateral backfill followed `venue_collateral.py` (the Stream-A-audited,
 per-row-cited SSOT). Two in-repo registries carry per-venue LST collateral haircuts that DISAGREE:
 `unified_api_contracts/registry/venue_collateral.py` `VENUE_COLLATERAL_MATRIX` vs
-`execution-service/execution_service/services/lst_collateral_resolver.py` `_LST_REGISTRY`. Conflicts:
-(a) **Hyperliquid wstETH** — venue_collateral: NOT accepted (USDC-only, matches official Hyperliquid docs + codex
-playbook); lst_collateral_resolver: accepted @5% haircut (collateral_factor 0.95). (b) **Bybit stETH** —
-venue_collateral 10% / lst_collateral_resolver 15%. (c) **Deribit stETH** — venue_collateral 7.5% (matches official
-Deribit insights eff. 2026-01-13) / lst_collateral_resolver 20% (stale). (d) **OKX stETH** — venue_collateral
-NOT-on-discount-list / lst_collateral_resolver accepted @15%. The COLLATERAL_REGISTRY backfill (uac@f997f3b) follows
-`venue_collateral.py` (the audited SSOT, agrees with official docs) and documents each conflict in the entry's
-`collateral_notes` (F27 tag). **Recommended decision**: pick `venue_collateral.py` as the single SSOT; either delete the
-`lst_collateral_resolver.py` `_LST_REGISTRY` hardcode and have the resolver read `VENUE_COLLATERAL_MATRIX`, or reconcile
-its numbers to match — the current divergence means strategy-service haircut sizing (via venue_collateral) and any
-execution-service consumer of lst_collateral_resolver would size differently for the same venue/asset.
+`execution-service/execution_service/services/lst_collateral_resolver.py` `_LST_REGISTRY`. Conflicts: (a) **Hyperliquid
+wstETH** — venue_collateral: NOT accepted (USDC-only, matches official Hyperliquid docs + codex playbook);
+lst_collateral_resolver: accepted @5% haircut (collateral_factor 0.95). (b) **Bybit stETH** — venue_collateral 10% /
+lst_collateral_resolver 15%. (c) **Deribit stETH** — venue_collateral 7.5% (matches official Deribit insights eff.
+2026-01-13) / lst_collateral_resolver 20% (stale). (d) **OKX stETH** — venue_collateral NOT-on-discount-list /
+lst_collateral_resolver accepted @15%. The COLLATERAL_REGISTRY backfill (uac@f997f3b) follows `venue_collateral.py` (the
+audited SSOT, agrees with official docs) and documents each conflict in the entry's `collateral_notes` (F27 tag).
+**Recommended decision**: pick `venue_collateral.py` as the single SSOT; either delete the `lst_collateral_resolver.py`
+`_LST_REGISTRY` hardcode and have the resolver read `VENUE_COLLATERAL_MATRIX`, or reconcile its numbers to match — the
+current divergence means strategy-service haircut sizing (via venue_collateral) and any execution-service consumer of
+lst_collateral_resolver would size differently for the same venue/asset.
+
+### F29 — deploy-ui.sh broken since 2026-05-08 script migration (REPO_ROOT drift)
+
+**Status**: FIXED deployment-service@dcb5fdb. Found 2026-06-12 deploying the wizard to UAT: the canonical
+`deployment-service/scripts/cloud-run/deploy-ui.sh` (migrated from unified-trading-system-ui/scripts/ on 2026-05-08)
+kept `REPO_ROOT="${SCRIPT_DIR}/.."` — correct pre-migration (= UI repo root), post-migration it resolves inside
+deployment-service: `--config` pointed at a nonexistent yaml and BOTH build contexts (--cloud submit + local docker)
+targeted the wrong repo. Every `--cloud` UI deploy since 2026-05-08 would have failed loudly (config missing) — so
+either nobody cloud-deployed the portal since, or they used a different path; worth checking how the current prod
+revision was built. Fix: REPO_ROOT now resolves the UI repo explicitly + fail-loud check.
