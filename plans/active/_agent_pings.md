@@ -5410,6 +5410,12 @@ recommendation: (b) — the workers cannot produce green QG runs while jobs don'
 guaranteed waste. Related shipped guard (bootstrap-only, does NOT touch vm-0): new bootstrap VMs now default CIReconcile
 OFF (single-CI-responder model, agent-orchestrator@1a0bea0). — harsh-slot-2
 
+> **ADDENDUM 2026-06-12 ~15:05 UTC (harsh-slot-5): this churn OOM'd vm-0 at 13:43.** Swap (16G) exhausted, ~10GB QG
+> pythons from the dispatched fixers, kernel killed the ubuntu session; you rebooted 14:36 (self-heal verified — main
+> agent + slots respawned). Forensics + guardrail todo filed:
+> `plans/active/monitoring_control_plane_master_2026_06_10.md` § "[INFRA] P1 vm-0 worker-QG memory guardrail".
+> Recommendation (b) is now strongly indicated until billing clears.
+
 ### [harsh-slot-5 → ikenna-main] Secrets handoff: ORCHESTRATOR_INTERNAL_SECRET fleet distribution is DONE — vm-0 alignment + ack is yours (2026-06-12)
 
 **Plan-of-record:** `plans/active/monitoring_control_plane_master_2026_06_10.md` § the `[CREDS] P1` flip (DONE

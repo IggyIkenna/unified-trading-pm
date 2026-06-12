@@ -614,6 +614,20 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       operator SM update). **CREDENTIAL APPROVAL REQUEST** filed: `ikenna_orchestrator/pings/slot_1.md` (operator:
       append `ORCHESTRATOR_INTERNAL_SECRET` to the `ORCHESTRATOR_ENV_LOCAL` secret in AWS SM + GCP SM).
 
+- [ ] [INFRA] P1. **vm-0 worker-QG memory guardrail** — 2026-06-12 13:43 UTC the central VM (i-0c9b283b31d6b5ca7) OOM'd:
+      16G swap exhausted (156kB free), ≥2 pythons at ~10-11GB total-vm each (pytest/QG class) from
+      CIReconcile-dispatched fixer workers grinding billing-wall-doomed LDR QGs (13:33 tick: "2 failing
+      (trading-agent-service,e2e-testing) … no capacity" — slots already saturated); kernel killed the ubuntu session
+      (systemd/sd-pam UID 1000) + a 4.1GB python; operator rebooted 14:36; MainAgentKeeper re-created orch-agent-main at
+      14:36:33 and AutoSpawn respawned slots 1-2 at 14:43 (self-heal verified). Same class as the 2026-05-29
+      central-host OOM (the reason bootstrap provisions the 16G swapfile). Guardrails to ship: (a) enforce the
+      qg-host-governor token floor (≤2 concurrent full QGs) for ORCHESTRATOR-SPAWNED workers on VMs — it exists for
+      laptop slots but VM escalation workers bypass it; (b) systemd `MemoryHigh=`/`MemoryMax=` on the worker scope (or
+      per-spawn ulimit) so a runaway QG python is killed before it takes the user session; (c) composes with the
+      CIReconcile fleet-red breaker P0 already tracked in `issues/github_actions_billing_wall_2026_06_11.md` (stop
+      dispatching doomed QG grinds — removes the load source). Found 2026-06-12 post-incident forensics (journalctl -b
+      -1). Repo: agent-orchestrator (+ PM qg-host-governor).
+
 **Operator-concerns verification session (2026-06-12 PM, on the live vm-e2e-test):** three concerns checked +
 e2e-tested; two new live bugs found + fixed in the process (agent-orchestrator@094f691 + @1a0bea0, both deployed to the
 VM).
