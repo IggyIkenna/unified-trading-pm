@@ -399,10 +399,11 @@ actually exists (which data_types missing, over which timeframes) via the existi
 
 ### 6C — data-availability wiring (deployment-api)
 
-- [ ] [AGENT][UI] P1. Wizard Data stage queries deployment-api `/api/data-status/drilldown` + `/schema` for the config's
+- [x] [AGENT][UI] P1. Wizard Data stage queries deployment-api `/api/data-status/drilldown` + `/schema` for the config's
       derived requirements (per selected venue × data_type × timeframe): render captured/missing windows, missing
       data_types, and the min-data-to-run check against ACTUAL coverage. Env-gated base URL (local/ops: deployment-api
       :8004; UAT: honest "data-status backend not configured" banner). pw:L2 gate.
+      — unified-trading-system-ui@9db31842 | pw:L2 ✓ 15/15 | regression: tests/smoke/wizard-data-coverage.spec.ts
 - [ ] [AGENT][UI] P2. Capability tab: dead-end/orphan rows link through to the same coverage answer (already cross-links
       routes; add the per-cell coverage fetch).
 
