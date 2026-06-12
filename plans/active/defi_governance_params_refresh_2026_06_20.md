@@ -59,9 +59,10 @@ Phase 3 (that phase replaces the inline LTV/liquidation constants with reads fro
       lookups via a `read_governance_params_asof(protocol, chain, asset, asof: datetime)` UTL helper —
       `asof <= timestamp` filter, latest row wins. NO future-dated rows ever returned (`LookaheadBiasError` if
       attempted).
-      — unified-trading-library@c14bd1eb: `read_governance_params_asof()` in `unified_trading_library/governance_params.py`;
-      exported from `__init__.py`; 9-test unit suite in `tests/unit/test_governance_params.py`. Raises `LookaheadBiasError`
-      on future-dated rows; returns `{}` on missing/unreadable parquet (graceful pre-Phase-1 fallback). QG green.
+      — UAC facade: unified-api-contracts@2ea2a77 | unified-trading-library@c14bd1eb: `read_governance_params_asof()` in
+      `unified_trading_library/governance_params.py`; exported from `__init__.py`; 9-test unit suite in
+      `tests/unit/test_governance_params.py`. Raises `LookaheadBiasError` on future-dated rows; returns `{}` on
+      missing/unreadable parquet (graceful pre-Phase-1 fallback). QG green both repos.
 - [x] ✅ [SCRIPT] P0. **Phase 3 — features-onchain APR calculator migration.** Replace inline LTV / IR constants with asof
       reads from the `governance_params` parquet (Phase 2). `LookaheadBiasError` check at every read. **This is the
       dependency that gates Cat-B fallback removal** in `defi_onchain_derivable_values_and_date_drift_2026_06_20`
