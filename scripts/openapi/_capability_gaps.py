@@ -491,3 +491,99 @@ def extract_service_registries(workspace_root: Path) -> tuple[list[CapabilityNod
 
     logger.info("  service registries: %d nodes, %d edges", len(nodes), len(edges))
     return nodes, edges
+
+
+def extract_algo_compatibility() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
+    """Archetype → execution-algorithm compatibility edges (Phase 6A).
+
+    From the UAC ``ARCHETYPE_ALGO_COMPATIBILITY`` registry (which transcribes the
+    execution-service selector). For every (archetype, algo) pair we emit a
+    ``uses_algo`` edge with an explicit status:
+
+      - ``available`` — the algo is VALID for the archetype's instruction action(s).
+      - ``not_available`` — the algo is BLOCKED (impossible combination): not valid
+        for any of the archetype's instruction types (reason carries the selector
+        basis). This is exactly the impossible-combo blocking the operator
+        required (e.g. TWAP on a pure-staking archetype → not_available).
+      - ``not_registered`` — the archetype has no leg structure (no algos derivable).
+
+    Each ``execution_algo`` node carries ``implemented`` (the ghost-algorithm
+    honesty flag). The ``SELECTOR_CONTRADICTIONS`` are emitted as
+    ``execution_algo`` finding nodes so the manifest carries the code-vs-docs
+    discrepancies the operator wants surfaced.
+    """
+    from unified_api_contracts.internal.architecture_v2.algo_compatibility import (  # noqa: qg-deep-import
+        ARCHETYPE_ALGO_COMPATIBILITY,
+        EXECUTION_ALGOS,
+        SELECTOR_CONTRADICTIONS,
+    )
+
+    nodes: list[CapabilityNode] = []
+    edges: list[CapabilityEdge] = []
+
+    # Execution-algo nodes (with implemented flag — the ghost-algorithm honesty).
+    for key in sorted(EXECUTION_ALGOS):
+        algo = EXECUTION_ALGOS[key]
+        nodes.append(
+            _node(
+                CapabilityNodeKind.EXECUTION_ALGO,
+                f"execution_algo:{key}",
+                _titleize(key),
+                implemented=str(algo.implemented).lower(),
+                note=algo.note,
+            )
+        )
+
+    # Per-archetype algo verdict edges.
+    for archetype in sorted(ARCHETYPE_ALGO_COMPATIBILITY, key=lambda a: a.value):
+        compat = ARCHETYPE_ALGO_COMPATIBILITY[archetype]
+        arch_node = f"archetype:{archetype.value}"
+        for key in sorted(EXECUTION_ALGOS):
+            algo_node = f"execution_algo:{key}"
+            if compat.not_registered:
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=arch_node,
+                        to_node_id=algo_node,
+                        relation=REL_USES_ALGO,
+                        status=CapabilityEdgeStatus.NOT_REGISTERED,
+                        gap_type=CapabilityGapType.MISSING_REGISTRY,
+                        reason=f"archetype has no leg structure: {compat.not_registered_reason}",
+                    )
+                )
+            elif key in compat.valid_algos:
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=arch_node,
+                        to_node_id=algo_node,
+                        relation=REL_USES_ALGO,
+                        status=CapabilityEdgeStatus.AVAILABLE,
+                        reason=compat.reason_for(key),
+                    )
+                )
+            else:
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=arch_node,
+                        to_node_id=algo_node,
+                        relation=REL_USES_ALGO,
+                        status=CapabilityEdgeStatus.NOT_AVAILABLE,
+                        gap_type=CapabilityGapType.LOGICAL_DEAD_END,
+                        reason=compat.reason_for(key),
+                    )
+                )
+
+    # Selector contradictions → finding nodes (code-vs-docs, operator wants caught).
+    for contradiction in SELECTOR_CONTRADICTIONS:
+        nodes.append(
+            _node(
+                CapabilityNodeKind.EXECUTION_ALGO,
+                f"selector_contradiction:{contradiction.slug}",
+                f"Selector contradiction: {contradiction.slug}",
+                summary=contradiction.summary,
+                citation=contradiction.citation,
+            )
+        )
+
+    logger.info("  algo compatibility: %d nodes, %d edges", len(nodes), len(edges))
+    return nodes, edges

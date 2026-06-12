@@ -127,6 +127,17 @@ python "$SCRIPT_DIR/generate_capability_manifest.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 
 # ---------------------------------------------------------------------------
+# Exhaustive verdict matrix (Phase 6A): archetype x venue x instrument_type x
+# (instruction_action x algo) -> available | blocked | not_registered.  Appends
+# its count summary to capability-orphan-report.txt (run AFTER the manifest so the
+# orphan report exists).  Deterministic (run twice = byte-identical).
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Generating Capability Verdict Matrix (exhaustive) ==="
+python "$SCRIPT_DIR/generate_capability_verdict_matrix.py" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
 # Strategy prospectus (per-archetype markdown docs: 7 sections, machine+codex)
 # Deterministic (run twice = byte-identical).  Output: UAC openapi/prospectus/
 # ---------------------------------------------------------------------------
@@ -168,6 +179,7 @@ for UI_REPO in unified-trading-system-ui unified-trading-system-ui\ copy; do
         [[ -f "$OUTPUT_DIR/config-registry.json" ]] && cp "$OUTPUT_DIR/config-registry.json" "$REGISTRY_DIR/config-registry.json"
         [[ -f "$OUTPUT_DIR/system-topology.json" ]] && cp "$OUTPUT_DIR/system-topology.json" "$REGISTRY_DIR/system-topology.json"
         [[ -f "$OUTPUT_DIR/capability-manifest.json" ]] && cp "$OUTPUT_DIR/capability-manifest.json" "$REGISTRY_DIR/capability-manifest.json"
+        [[ -f "$OUTPUT_DIR/capability-verdict-matrix.json" ]] && cp "$OUTPUT_DIR/capability-verdict-matrix.json" "$REGISTRY_DIR/capability-verdict-matrix.json"
         echo "  Synced spec → $UI_REPO/lib/registry/"
 
         # Deduplicate operationIds (multiple services share /health and /readiness)
