@@ -461,13 +461,16 @@ generator was never checked in (recovered from instance `i-003be935f72c13d51`'s 
 env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOCAL), and a Packer warm-AMI
 (`deployment-service/packer/agent-orchestrator/`) all exist. Worker VMs are LONG-RUNNING instances.
 
-- [ ] [SCRIPT] P1. **Reusable worker-VM launcher** — `deployment-service/scripts/vm/launch-orchestrator-worker-vm.sh`
-      (script-homes: provision/launch → deployment-service; reuses `lib/aws_ec2_launch_lib.sh`): bare Ubuntu 24.04
-      (SSM-resolved AMI, `AMI_ID` override for the Packer warm image) + the PROVEN 2026-05-22 user-data shape,
-      parameterised `--name/--vm-id/--role/--slots/--instance-type/--env KEY=VAL...` (env passthrough → the new
-      bootstrap override hook below, so isolation vars are live BEFORE the backend starts); reuses
-      `uts-orchestrator-epic` instance profile + sg-0080310387e84f613 + subnet-fc09eca6 (all env-overridable); tags
-      Name/vm-id/role/operator/lifecycle; prints instance-id + IP + log-tail hint. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-12 — deployment-service@1b56a37 (QG green; quickmerge --agent).
+      `scripts/vm/launch-orchestrator-worker-vm.sh` + `LC_AWS_SHUTDOWN_BEHAVIOR=stop` lib override (long-running workers
+      must not terminate-and-wipe on in-VM shutdown). Was: **Reusable worker-VM launcher** —
+      `deployment-service/scripts/vm/launch-orchestrator-worker-vm.sh` (script-homes: provision/launch →
+      deployment-service; reuses `lib/aws_ec2_launch_lib.sh`): bare Ubuntu 24.04 (SSM-resolved AMI, `AMI_ID` override
+      for the Packer warm image) + the PROVEN 2026-05-22 user-data shape, parameterised
+      `--name/--vm-id/--role/--slots/--instance-type/--env KEY=VAL...` (env passthrough → the new bootstrap override
+      hook below, so isolation vars are live BEFORE the backend starts); reuses `uts-orchestrator-epic` instance
+      profile + sg-0080310387e84f613 + subnet-fc09eca6 (all env-overridable); tags Name/vm-id/role/operator/lifecycle;
+      prints instance-id + IP + log-tail hint. Repo: deployment-service.
 - [x] ✅ [SCRIPT] P1. DONE 2026-06-12 — agent-orchestrator@878274b (QG green; quickmerge --agent). `bootstrap_vm.sh`
       5b-extra: `ORCHESTRATOR_EXTRA_ENV` newline KEY=VAL block upserted into `.env.local` LAST (overrides beat defaults)
       before the service starts. Was: **Bootstrap env-override hook** — `bootstrap_vm.sh` consumes
