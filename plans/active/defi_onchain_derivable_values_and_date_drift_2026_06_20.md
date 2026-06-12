@@ -49,10 +49,10 @@ that workstream.
       derive from on-chain (factory `created_at` block; Aave `InitializeReserve` event; etc.); compare against the
       current UAC declaration; print drift. Pre-commit gate: any change to `PROTOCOL_LAUNCH_DATES` must run this script
       and include its output as a citation comment per entry (`# DERIVED 2026-05-08 from <chain> block <N> tx <hash>`).
-- [ ] [SCRIPT] P0. **Phase 2 — Cat-A audit beyond AAVE_V3.** Token decimals (every entry in UAC `TOKEN_DECIMALS`), chain
+- [x] ✅ [SCRIPT] P0. **Phase 2 — Cat-A audit beyond AAVE_V3.** Token decimals (every entry in UAC `TOKEN_DECIMALS`), chain
       genesis (every chain in `CHAIN_GENESIS_DATES`), factory addresses (Uniswap, SushiSwap, PancakeSwap, Curve, Aave,
       Compound). Probe on-chain; compare; flag drift. Output: `defi_cat_a_audit_2026_05_08_report.md` under
-      `unified-api-contracts/audits/`.
+      `unified-api-contracts/audits/`. — unified-api-contracts@37926cb
 - [ ] [SCRIPT] P0. **Phase 3 — Cat-B fallback removal from `aave_risk_calculator`.** Replace inline LTV /
       liquidation-threshold constants with reads from the `governance_params` parquet
       (`defi_governance_params_refresh_2026_06_20` Phase 2). `LookaheadBiasError` raised loud if feature timestamp <
