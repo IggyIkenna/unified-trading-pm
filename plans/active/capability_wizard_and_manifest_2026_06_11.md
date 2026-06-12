@@ -201,9 +201,27 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
 - [ ] [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty): per-venue
       collateral/haircut/LTV/maintenance-margin entries, fee tiers, per-adapter order-semantics honor matrices, sim
       assumptions from backtest-runner scan, offerable fund structures — each backfill PR cites its source of truth;
-      `needs_code_scan` items route through Phase 5 agent escalation.
-- [ ] [IMPLEMENT] P1. Manifest exporter consumes each new registry as it lands; until then emits honest `not_registered`
-      edges (never silently omits the dimension).
+      `needs_code_scan` items route through Phase 5 agent escalation. **COLLATERAL DONE 2026-06-12 —
+      unified-api-contracts@f997f3b**: COLLATERAL_REGISTRY backfilled for the MVP venue universe (7 perp + 2 lending,
+      9 policies / 53 asset rows) sourced IN-REPO-FIRST from `venue_collateral.py` (haircuts + accept/reject) +
+      `defi_reserve_params.py` (Aave per-asset LTV/liq-threshold) + `cefi_margin_tiers.py` (tier-1 MMR) +
+      execution-service `lst_collateral_resolver.py` (Kamino LST haircut), cross-checked against official venue docs
+      (Hyperliquid USDC-only, Deribit stETH 7.5% eff. 2026-01-13, Aave dashboard, Kamino risk dashboard) — every numeric
+      cites its `source_of_truth`/`source_note`; Kamino per-asset LTV honestly None (live-dashboard-only). Schema
+      extended ADDITIVELY: `VenueCollateralKind`, per-asset `max_ltv`/`liquidation_threshold`/`liquidation_bonus` +
+      `accepted` flag on `AssetHaircut`, `venue_kind`/`collateral_notes` on `CollateralPolicy`,
+      `STAKING_VENUES_NO_COLLATERAL_POLICY` (staking venues take no margin/LTV policy — documented). 23 backfill tests +
+      stale `==[]` test corrected. Findings F27 (strategy-service lowercase `perp_venue` ≠ uppercase
+      `VENUE_COLLATERAL_MATRIX` keys → carry blocked) + F28 (in-repo collateral SSOTs disagree:
+      `venue_collateral.py` vs `lst_collateral_resolver.py` haircuts). **STILL OPEN: fees / order-semantics / sim /
+      fund-structure backfills.**
+- [x] ✅ [IMPLEMENT] P1. Manifest exporter consumes each new registry as it lands; until then emits honest
+      `not_registered` edges (never silently omits the dimension). DONE 2026-06-12 — exporter now emits per-venue
+      collateral nodes + per-asset `accepts_collateral` edges carrying the sourced haircut/LTV metadata
+      (unified-trading-pm@5b5f2fe80, `_capability_gaps.py`); regenerated manifest (unified-api-contracts@cc269c2):
+      `gap_registry:collateral` edge flipped `not_registered`→**`available`** ("9 entries registered"), 9 collateral
+      venue nodes + 53 accepts_collateral edges (39 accepted / 14 documented-rejected). Deterministic (byte-identical on
+      two runs). Other registries still emit `not_registered` until their backfills land.
 
 ## Phase 2.6 — leg-level restriction model (operator-caught F22, 2026-06-11 third message)
 
@@ -550,3 +568,25 @@ for every agent on this plan:
   constraint metadata; cross-category legs auto-included; flat fallback + honest banner for archetypes without leg
   specs). F25/F26 filed. Remaining open scope: registry backfills (Phase 2 tranche), needs_code_scan escalations
   (auto-emitted in gap tracker), Wave-2 enhancements (operator sign-off), client-lite successor plan.
+
+- 2026-06-12 — **Phase 2 COLLATERAL backfill COMPLETE (operator direction "empty collateral registry — fill it up").**
+  COLLATERAL_REGISTRY filled for the MVP venue universe from `archetype_leg_spec.py` eligible venues (perp:
+  hyperliquid/gmx_v2/drift/binance/bybit/deribit/okx; lending: aave_v3/kamino; staking: lido/rocketpool/jito/marinade →
+  NO policy by design). **IN-REPO-FIRST sourcing (the registries were NOT actually empty fleet-wide — only the new
+  `COLLATERAL_REGISTRY` was)**: transcribed haircuts/accept-reject from `unified_api_contracts/registry/venue_collateral.py`
+  (Stream A audit 2026-05-07/08), Aave per-asset LTV/liq-threshold/bonus from `defi_reserve_params.py` (on-chain
+  getConfiguration, 2026-05-15), tier-1 MMR from `cefi_margin_tiers.py`, Kamino LST haircut from execution-service
+  `lst_collateral_resolver.py`. Cross-checked official docs (Hyperliquid USDC-only + MM=½IM@maxlev; Deribit stETH 7.5%
+  reduced-from-15% eff. 2026-01-13 X:PM-only; Aave/Kamino dashboards) — as_of 2026-06-12, every numeric cited; Kamino
+  per-asset LTV honestly None. **SHAs**: UAC source `f997f3b` (schema additive-extend + 9 policies + 23 tests; QG green
+  205s), UAC outputs `cc269c2` (manifest collateral edge `not_registered`→`available`, 9 venue nodes + 53 per-asset
+  edges; orphan report regen), PM exporter `5b5f2fe80` (`_capability_gaps.py` per-venue/per-asset emission; PM QG green).
+  **Schema extensions (additive, no break)**: `VenueCollateralKind` enum; `AssetHaircut.{accepted,max_ltv,
+  liquidation_threshold,liquidation_bonus}`; `CollateralPolicy.{venue_kind,collateral_notes}` + `accepted_assets()`;
+  `STAKING_VENUES_NO_COLLATERAL_POLICY`. **STRETCH LANDED (e2e-testing `7075bd1`)**: `_stepper_engine.py`
+  `_config_overrides` now seeds accepted-perp-collateral from the UAC registry for CARRY_STAKED_BASIS — selects a hedge
+  venue that accepts the LST + passes it UPPERCASE (the F27 case-fix). New scenario `csb_staked_basis_eth_lst_accepted.json`
+  (lido stETH + DERIBIT @7.5%) EMITS the staked carry entry — step 0 `instruction_count: 1`, `structure: LST_AS_MARGIN`,
+  4 fills — closing the loop the Phase-3.5 csb scenario flagged. Original `etherfi-hyperliquid` (USDC-only) scenario
+  correctly still emits 0 (straight-basis). Smoke 4/4 green. **F27/F28 filed below.** STILL OPEN: fees / order-semantics
+  / sim / fund-structure backfills (separate tranches).
