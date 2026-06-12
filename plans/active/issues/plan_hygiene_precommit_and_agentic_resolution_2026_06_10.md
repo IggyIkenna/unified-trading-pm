@@ -88,9 +88,9 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       reddens the badge); the conservative detector + the orchestrator's 503/no-headroom backpressure throttle volume.
       Verified: actionlint clean + YAML parses; a live contradiction (needed to see a real dispatch) is rare-by-design,
       so verification is logic+lint, not a forced finding. repo: unified-trading-pm (+ agent-orchestrator).
-- [ ] [DOC] P3. Pre-existing frontmatter violation: `plans/active/ci_status_firestore_side_store_2026_06_10.md` is
-      missing `locked_by` (another agent's new plan today). Staged-scoping means it only blocks a commit that touches
-      that file — but it should be fixed at source. Owner: whoever owns that plan. repo: unified-trading-pm.
+- [x] ✅ [DOC] P3. RESOLVED upstream (verified 2026-06-12): `ci_status_firestore_side_store_2026_06_10.md` now carries
+      `locked_by: live-defi-rollout` — the plan owner fixed it at source. Was: pre-existing frontmatter violation
+      (missing `locked_by`). repo: unified-trading-pm.
 
 ## Daily deep reconciler (operator direction 2026-06-12 — supersedes the daily-Haiku layer; see banner above)
 
