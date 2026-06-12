@@ -188,7 +188,7 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
 - [x] ✅ [DONE 2026-06-11: downstream-fix-agent.yml DELETED (this unit) — contradicted the VM-worker pivot + 0 emitters;
       SIT test_cascade_flow.py repoint tracked as the companion SIT todo below] [SCRIPT] P1. Delete
       `downstream-fix-agent.yml`.
-- [ ] [TEST] P1. **Companion (system-integration-tests):** remove/repoint the `test_cascade_flow.py` assertions (lines
+- [x] ✅ **[DONE 2026-06-12 — `test_cascade_flow.py` (`2f900b2`) drops `downstream-fix-agent.yml` (and auto-merge-minor-fixes) from `WORKFLOW_NAMES`; assertions repointed]** [TEST] P1. **Companion (system-integration-tests):** remove/repoint the `test_cascade_flow.py` assertions (lines
       ~216/221/300) that expect `downstream-fix-agent.yml` wired + its Anthropic-API call. Repo:
       system-integration-tests.
 - [x] ✅ [DONE 2026-06-11: contract-replay.yml DELETED (PM@8d23d2047, 0 callers); contract-drift-record.yml DELETED
@@ -210,11 +210,11 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
       semver-agent path are handled by NEITHER (pre-existing latent gap, independent of this delete; the canonical
       `request-major-bump.yml` path applies `major-bump-pending` correctly). Fix tracked below.] [SCRIPT] P1. Resolve
       the duplicate `/approve` handler.
-- [ ] [SCRIPT] P1. **semver-agent label mismatch (found 2026-06-11):** change `--label "major-bump-approval"` →
+- [x] ✅ **[DONE 2026-06-12 — both `.github/workflows/semver-agent.yml` and `scripts/workflow-templates/semver-agent.yml.tmpl` now use `--label "major-bump-pending"`; no `major-bump-approval` remains]** [SCRIPT] P1. **semver-agent label mismatch (found 2026-06-11):** change `--label "major-bump-approval"` →
       `--label "major-bump-pending"` in `.github/workflows/semver-agent.yml` +
       `scripts/workflow-templates/     semver-agent.yml.tmpl` + rollout, so semver-created MAJOR-bump issues actually
       reach the `/approve` handler. Repo: unified-trading-pm (templated ×25).
-- [ ] [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s concurrency group to the documented `backmerge-to-ldr` (the value
+- [x] ✅ **[DONE 2026-06-12 — `main-backmerge-to-ldr.yml` + `staging-backmerge-to-ldr.yml` templates both now `group: backmerge-to-ldr` (aligned to the documented shared key)]** [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s concurrency group to the documented `backmerge-to-ldr` (the value
       staging-backmerge already uses and both headers claim is "shared") so the two serialize as designed. **Not a
       correctness fix** — both already push FF-only + 5× retry + never-force, so this only removes avoidable retry churn
       and makes the code match its own stated invariant. **Templated** — edit `scripts/workflow-templates/` SSOT +
@@ -236,7 +236,7 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
 
 - [ ] [SCRIPT] P2. Delete stale `tab/*` branches fleet-wide (13–21 per repo on origin) now that Path-B slots live on LDR
       — confirm none carry un-preserved WIP first (cross-check `origin/wip-preserve/slot-*`).
-- [ ] [SCRIPT] P2. Retire `tab-mirror-to-ldr.yml` (or gate its cron behind `if: false`) via the template SSOT + rollout;
+- [x] ✅ **[DONE 2026-06-12 — `tab-mirror-to-ldr.yml` deleted fleet-wide (template + all per-repo copies); CLAUDE.md §"Per-slot worktrees" corrected DISABLED→DELETED 2026-06-12]** [SCRIPT] P2. Retire `tab-mirror-to-ldr.yml` (or gate its cron behind `if: false`) via the template SSOT + rollout;
       **correct the CLAUDE.md "DISABLED fleet-wide" claim** which is currently false (the cron still runs).
 
 ### Tier 5 — band-aid consolidation (refactor)

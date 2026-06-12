@@ -161,7 +161,7 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
 - [x] ✅ [SCRIPT] P1. **quickmerge: harden `--hotfix` (marker) — DONE.** `--hotfix` now requires a `[hotfix]` marker in
       the commit message (else refuse), in the FLAG VALIDATION block. Keeps the staging-lock respect. —
       unified-trading-pm@305014936
-  - [ ] **`--hotfix-to-main` — DEFERRED (design finding).** The naive "PR_BASE=main on the existing flow" is WRONG: the
+  - [x] ✅ **[DONE 2026-06-12 — the correct design shipped in `scripts/quickmerge.sh` (`da0cd88c`): `--hotfix-to-main` flag, triple-guard (`[hotfix-main]` marker + `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` + service-repo-only), and dedicated single-commit cherry-pick→branch→main PR. No longer deferred.]** **`--hotfix-to-main` — DEFERRED (design finding).** The naive "PR_BASE=main on the existing flow" is WRONG: the
         PR head is `live-defi-rollout`, so a LDR→main PR would promote the **whole trunk**, not just the hotfix. A
         correct `--hotfix-to-main` needs a **dedicated single-commit branch off `main`** (cherry-pick the fix → PR that
         branch → main, v2-on-main the only gate) + `[hotfix-main]` marker + operator env
@@ -242,7 +242,7 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       Uses **content equivalence via the compare API** (`{base}...live-defi-rollout` → **0 changed files** ⇒ content
       already in base ⇒ superseded) — NOT SHA membership (the drain rebases/squashes so SHAs differ). Comments then
       closes; idempotent. — unified-trading-pm@8052dd540
-- [ ] [SCRIPT] P2. **Parallelize the drain + SIT within a tier.** `ldr-to-staging-promote.yml` reads
+- [x] ✅ **[DONE 2026-06-12 — bounded-parallel driver shipped in `ldr-to-staging-promote.yml` (`efdf978f3`): `MAXJOBS` background launch + `wait -n` barrier so same-tier repos fan out. The `full-workspace-sit` assembly half is a gate-read (nothing to parallelize).]** [SCRIPT] P2. **Parallelize the drain + SIT within a tier.** `ldr-to-staging-promote.yml` reads
       `topologicalOrder.levels[]` (correct order) but iterates **serially** in a bash for-loop — repos in the same tier
       with no inter-dep (e.g. instruments-service ∥ MTDS) run one-after-another. Fan them out (background jobs + a
       `wait` barrier between tiers) so promotion wall-clock = longest dependency chain, not the sum. Same for the
