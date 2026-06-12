@@ -306,12 +306,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       per-repo PRs are already in `open_prs`). Relabelled the SIT panel "Last SIT / cascade run" → **"Breaking cascade /
       SIT"** so the two are never conflated (the operator's core gap). Repos: deployment-api
       (`repo_ci`/`_repo_ci_types`/ `_repo_ci_mocks`) + deployment-ui (`RepoCi` panel + `client` + `mock-api`).
-- [ ] [CODE] P3. **(promotion-drain follow-up) Drain stall-surfacing + per-repo standing-PR v2** — flag a repo whose LDR
-      content is ahead of staging/main (real file delta, not squash skew) AND whose last drain run is stale/failing (the
-      bug #11 class — invisible today). Also surface the per-repo standing LDR→staging / LDR→main PR's
-      `quality-gates-v2` conclusion explicitly (today it's implicit via `open_prs` + `branch_ci`). Repos:
-      deployment-api + deployment-ui. SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3
-      sub-todo).
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@be56fb8 + deployment-ui@788ad40 | deployment-api QG green (164s) + deployment-ui QG green (35s) |
+      pw:L2 ✓ 206/206 | regression: tests/smoke/repos-tab.spec.ts (drain-stalled row chip + panel count) +
+      tests/unit/test_repo_ci_manifest.py::TestDrainLegHealthy (5 cases) +
+      tests/unit/test_repo_ci_routes.py::test_drain_stalled. **(promotion-drain follow-up) Drain STALL-surfacing** — a
+      per-row `drain_stalled` flag = REAL file-content ahead of staging/main (files_changed, not squash skew) AND that
+      hop's global LDR→staging/→main drain leg failing/stale (`_drain_leg_healthy`: in-flight=healthy, stale-success
+      >45min / failure / never-ran = unhealthy). Surfaces the **bug-#11 class** (content piling on LDR with a dead
+      drain) that was invisible. UI: a red "drain stalled" chip on the row (beside the G6 lag chip) + a count/list in
+      the PromotionDrainPanel. Pure derivation on data the overview already fetches — **no new GitHub calls**. Repos:
+      deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi`/`client`/`mock-api`).
+- [ ] [CODE] P3. **(promotion-drain follow-up, remainder) Per-repo standing-PR v2 conclusion explicit** — the
+      drain-stall half shipped above; this remaining sub-part surfaces each repo's standing LDR→staging / LDR→main PR's
+      `quality-gates-v2` conclusion EXPLICITLY (today it's implicit via `open_prs` + `branch_ci`). Repos: deployment-api
+      + deployment-ui. SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3 sub-todo).
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
