@@ -355,6 +355,45 @@ remaining P0 circuit-breaker todos via the normal path; (7) re-enable reconciler
 `gh run list -w ci-status-update --limit 50` for an hour (expect <15/hr); (8) re-enable ldr-ci-monitor after its
 conditional-dispatch fix; (9) verify the stranded `ci(spend)` crons reached `main` (item above).
 
+## Ikenna session 2026-06-12 ~09:40Z+ — landing the fix + restore (autonomous)
+
+**Billing wall is RESTORED** (verified 09:40Z: PM runs succeed again with real durations, not 0-step kills). So the
+empty-promote loop CAN re-burn now — but it is currently PARKED (`ldr-to-staging-promote` `disabled_manually`; 0 drain
+PRs since 09:00Z on features/mdps/client-reporting → nothing actively burning).
+
+**Critical path executed**: the loop fix `932d42f4c` (tree-SHA gate + runaway breaker) was on LDR but **NOT on main**
+(crons fire from the default branch → the fix was inert). `ldr-to-main-promote` had failed its last tick (08:51Z), and
+no standing LDR→main PR was open. Actions taken:
+
+1. Opened the standing **LDR→main PR #286** (carries `932d42f4c` + accumulated LDR to main) + armed auto-merge (v2-gated).
+2. Its v2 **failed** on the `lint-codex` slice — root cause was NOT the workflow YAML (actionlint = non-fatal warn) but a
+   pre-existing **credential-ask ratchet regression**: `check_credential_ask_orphans.py` saw 3 orphan `BLOCKED-CREDENTIALS`
+   lines vs baseline 2. The net-new orphan was `monitoring_control_plane_master_2026_06_10.md:549`
+   (`ORCHESTRATOR_INTERNAL_SECRET` not distributed to VMs). **Fixed** by filing the CREDENTIAL APPROVAL REQUEST in
+   `ikenna_orchestrator/pings/slot_1.md` + citing it inline on the plan line (within the ±5-line window) → checker back to
+   2 = baseline (PM@78f3e2960). This de-orphan also reaches main on #286 → unblocks the lint-codex slice fleet-wide.
+3. #286 v2 re-running on the new head; auto-merge armed → on green the tree-gate + runaway breaker reach main.
+
+**DONE + VERIFIED (post-#286-merge, ~10:02Z)**:
+
+- ✅ **#286 MERGED** → tree-SHA gate (6 refs) + runaway breaker live on PM `main` for BOTH `ldr-to-staging-promote` (6)
+  and `ldr-to-main-promote` (2). The loop fix now actually fires (crons run from `main`).
+- ✅ **Drain re-enabled** (`ldr-to-staging-promote` → `active`) — and **verified NOT looping**: a manually-triggered
+  sweep correctly **BLOCKED at the Tier-B gate** (latest SIT conclusion = the stale 0-step billing-kill `failure`) and
+  **created ZERO PRs** — it fails BEFORE the promote step. **0 new staging PRs fleet-wide since 10:01Z** (vs the old
+  ~70 s empty-PR cadence). The loop is dead.
+- ✅ **`full-workspace-sit` dispatched** (runs 27408789932 / 27408823487) — on green, the Tier-B gate clears and the next
+  `*/15` sweep promotes: the tree-gate SKIPs the ~14 phantom repos + opens real PRs only for the ~4 drifted ones. If SIT
+  lands red that is a separate SIT-health issue — the drain stays SAFELY blocked (no loop, no burn) until it's green.
+- Left `ci-status-reconciler` + `ldr-ci-monitor` DISABLED per runbook (precautionary; re-enable after their own fixes).
+
+**Money state**: the dominant ~80% spend driver (the empty-promote loop) is KILLED; nothing is actively burning; the
+generic runaway breaker catches any future loop shape. **Remaining P0/P1 remediations** (stale-check/auto-recover
+cooldowns, outage-aware v2 dispatch, ci-status 1-job collapse, promote stranded `ci(spend)` crons to main) stay as
+tracked todos — they are NEXT-outage hardening + incremental trims, deliberately NOT bundled into this session to avoid
+destabilising the just-stabilised CI machinery (rewriting live promotion workflows is the exact risk class that caused
+this incident). The `ci(spend)` cron promotion rides the drain automatically once SIT is green.
+
 ## Appendix — data backing the findings (collected 2026-06-12 03:30–06:00Z)
 
 ### A. quality-gates-v2 runs/day per repo (REST `total_count`, `created=` windows — `gh run list` caps at 1000)
