@@ -156,6 +156,47 @@ jobs:
               echo "SKIP $REPO: staging already current with LDR (ahead_by=0)"; return 0
             fi
 
+            # ── TREE-equality gate (2026-06-12 incident fix) ── ahead_by alone is the squash-accounting
+            # trap: a squash-merge never lands LDR's commits on staging, so ahead_by NEVER returns to 0
+            # and the merge-base compare reports the same phantom changed-files forever. Result on
+            # 2026-06-11: 375 EMPTY promote squashes + ~450 full quality-gates-v2 runs on features-service
+            # alone in ONE DAY (fleet QGv2 2,857 runs that day ≈ $230 — the #1 Actions spend driver and a
+            # proximate cause of the billing wall). Identical tree SHAs == byte-identical content
+            # regardless of squash history — the exact "content, not commit-count" signal. On tree-equal,
+            # also close any phantom open drain PR (an armed one would still squash an empty commit).
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            STG_TREE=$(gh api "repos/$OWNER/$REPO/commits/staging" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_STG")
+            if [ "$LDR_TREE" = "$STG_TREE" ]; then
+              echo "SKIP $REPO: staging tree == LDR tree (content-identical; ahead_by=$AHEAD is squash-accounting noise)"
+              PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              if [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ]; then
+                echo "  closing phantom drain PR #$PHANTOM_PR (zero content delta)"
+                gh pr close "$PHANTOM_PR" --repo "$OWNER/$REPO" \
+                  --comment "Closed by Tier-C drain: staging tree == LDR tree (content-identical; the ahead_by gap is squash-accounting noise, not promotable content)." 2>/dev/null || true
+              fi
+              return 0
+            fi
+
+            # ── RUNAWAY BREAKER (2026-06-12, generic) ── the tree gate above kills the known
+            # squash-accounting loop, but ANY future malfunction that re-promotes a repo in a tight
+            # loop (whatever the cause) shows up the same way: an absurd count of merged drain PRs.
+            # Healthy ceiling is 24 merges/6h (every */15 tick promoting — already implausible);
+            # ≥30/6h is always a malfunction, never throughput (a 70s loop hits 30 in ~35 min).
+            # 6h window (not 24h) so a past incident ages out and doesn't block a repo's REAL
+            # promotion the next morning. Refuse + page CRITICAL instead of burning QGv2 runs.
+            MERGED_6H=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
+              --state merged --limit 100 --json mergedAt,title \
+              --jq '[.[] | select(.title | startswith("chore(promote)")) | select(.mergedAt > (now - 21600 | strftime("%Y-%m-%dT%H:%M:%SZ")))] | length' 2>/dev/null || echo "0")
+            if [ "${MERGED_6H:-0}" -ge 30 ]; then
+              echo "⛔ RUNAWAY BREAKER $REPO: ${MERGED_6H} drain PRs merged in 6h (cap 30) — refusing to promote this repo; CRITICAL page"
+              if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
+                curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                  -d "{\"text\":\":rotating_light: *RUNAWAY PROMOTE BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→staging drain merges in 6h (healthy max 24). Tier-C drain is malfunctioning on this repo (promote loop). Repo promotion REFUSED until the count ages out or the cause is fixed. SSOT: ldr-to-staging-promote.yml runaway breaker.\"}" >/dev/null 2>&1 || true
+              fi
+              _done BLOCKED; return 0
+            fi
+
             # ── Per-repo gate (Tier A + dep-order) ──
             if GATE_OUT=$(python3 scripts/cicd/tier_c_promotion_gate.py "$REPO" --manifest "$MANIFEST"); then
               echo "GATE PASS  $REPO (+$AHEAD): $GATE_OUT"
