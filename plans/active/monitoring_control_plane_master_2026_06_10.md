@@ -570,22 +570,25 @@ deployed to the VM + verified). Remaining live-run findings:
       Was: **verify_vm_e2e.sh: distinguish caller-side IAM denial from agent-not-registered** — the SSM probe swallowed
       `AccessDeniedException` into "agent never registered" (misleading FAIL). Repo: agent-orchestrator. Found
       2026-06-12 live run.
-- [ ] [CODE] P1. **State-DB DR backup is silently OFF on every fleet VM — bootstrap never sets the snapshot bucket
-      envs** — the full mechanism EXISTS (`server/gcs_sync.py`: SnapshotLoop state.json every 30 min +
-      `backup_sqlite_to_gcs`/`_to_s3` hot-backup every 6h + on-shutdown snapshot + `scripts/restore_from_gcs.sh`
-      stop→restore→start), but it no-ops unless `ORCHESTRATOR_GCS_BUCKET`/`ORCHESTRATOR_S3_BUCKET` is set, and
-      `bootstrap_vm.sh` upserts NEITHER (verified on vm-e2e-test 2026-06-12: not in .env.local → zero backups taken).
-      NOTE: this is the REAL resume path for runtime state (activity log, blocked Q&A, hand-tuned task fields, slot
-      states); the deleted creds-bucket `config/backlog.yaml` seed was NOT part of it (one-shot hand upload 2026-05-22,
-      never refreshed by any mechanism — backlog itself resumes via git/PlanRegenLoop, regen-authoritative). Fix: (1)
-      create/choose the AWS state bucket (suggest `uts-orchestrator-state-427895769566`; GCP precedent
-      `agent-orchestrator-state-prod` per docs/OPERATIONS.md) + bootstrap 5b-append upserts `ORCHESTRATOR_S3_BUCKET`
-      (AWS) / `ORCHESTRATOR_GCS_BUCKET` (GCP); (2) key snapshots/backups by `vm_id`
-      (`snapshots/<vm_id>/<date>/state_<ts>.json` — current flat layout interleaves a multi-VM fleet, making per-VM
-      restore guesswork); (3) extend `restore_from_gcs.sh` with the symmetric S3 path (currently GCS-only) + document
-      restore-on-replacement in the VM runbook; (4) lifecycle rule (30d) on the snapshots/backups prefixes. Repo:
-      agent-orchestrator (+ deployment-service TF for the bucket). Found 2026-06-12 while answering the backup-vs-seed
-      design question.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@88c53e2 (QG green; quickmerge --agent) + bucket ops +
+      LIVE-VERIFIED round-trip on vm-e2e-test. Discovery correction during impl: the bucket
+      `uts-orchestrator-state-427895769566` ALREADY EXISTS and the prod orchestrator VM (vm-0) is actively writing to it
+      (state.json every 30 min, sqlite 6h — hand-wired env), so the gap was bootstrap-launched VMs only, exactly as
+      filed. Shipped: (1) bootstrap 5b-append upserts `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` (AWS)
+      / `ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` (GCP); (2) all 4 writers in `gcs_sync.py` now key by
+      `_vm_key_segment()` (`snapshots/<vm_id>/<date>/state_<ts>.json` + `backups/sqlite/<vm_id>/<date>/<mode>_<ts>.db`;
+      no vm_id → `unattributed`) + 3 new moto tests pin the layout; (3) `restore_from_gcs.sh` gained S3 transport
+      (`--s3-bucket`/$ORCHESTRATOR_S3_BUCKET; transport-agnostic `latest_blob_under`/`fetch_blob`) + `--vm-id` scoping
+      (without it a multi-VM flat listing path-sorts by vm name, not recency — now warned); (4) PAB + 30d lifecycle
+      applied on snapshots/ + backups/ prefixes; test-VM instance-profile list+put probed OK. Live proof: restarted
+      vm-e2e-test backend with the env → `POST /api/snapshot` landed
+      `s3://…/snapshots/vm-e2e-test/2026-06-12/state_20260612T084615Z.json`, and
+      `restore_from_gcs.sh --json-only     --dry-run` on the VM picked exactly that object via S3 + vm_id scoping. NOTE:
+      prod vm-0 still writes flat keys until it picks up @88c53e2 on its normal update cadence (restore script reads
+      both layouts; no forced prod restart). Was: **State-DB DR backup is silently OFF on every fleet VM — bootstrap
+      never sets the snapshot bucket envs**; the deleted creds-bucket `config/backlog.yaml` seed was NOT part of the DR
+      path (backlog resumes via git/PlanRegenLoop, regen-authoritative). Found 2026-06-12 while answering the
+      backup-vs-seed design question.
 - [ ] [CREDS] P2. **BLOCKED-CREDENTIALS — `harsh-worker` IAM lacks SSM read/run** (`ssm:GetParameters` broke the
       launcher's Ubuntu-AMI resolution — worked around via `AMI_ID=ami-0bf052f8a9dd8bf42`;
       `ssm:DescribeInstanceInformation`/ `ssm:SendCommand` broke the verify harness — worked around via SSH). Operator
