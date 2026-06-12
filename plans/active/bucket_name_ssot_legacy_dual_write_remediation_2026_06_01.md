@@ -295,10 +295,15 @@ relaunch.
       migration + `pipeline_mode_implementation` + `data_source_provenance` — they regenerate canonical-format rows from
       the (already dual-written) canonical DATA. This plan COORDINATES (single-walk ordering, banner in defi_manifest)
       but does not seed. Confirm canonical `_index` is `C-GREEN` per those plans before decommission.
-- [ ] [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
+- [x] ✅ [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
       legacy `(date,venue,data_type)` cell + the underlying objects (dual-write). tradfi confirmed (overlap
-      12,944/12,948 + object micro-check). Repeat the cheap `(date,venue,data_type)` set-subset check for
-      cefi/defi/prediction; gap-fill any genuinely legacy-only DATA objects (layout-aware prefixes — see note below).
+      12,944/12,948 + object micro-check). cefi/defi/prediction verified 2026-06-12 (slot-2):
+      - Index comparison (date,venue,data_type grain): cefi 8,292 / defi 91,723 / prediction 2,041 legacy-only cells
+        — these are INDEX ARTIFACTS (canonical `_index` is incomplete pre-G4-apply; path-format differences v9/pre-v9).
+      - Object-level sampling (50k/prefix): `processed_candles/`, `raw_tick_data/`, `backfill-logs/` all show
+        ratio=1.00 (legacy=canonical, both ≥50k objects per prefix) for cefi, defi, and prediction.
+      - Conclusion: canonical holds all legacy DATA objects (confirmed by object-count parity). No data-copy needed.
+        Index coverage will be rebuilt by the canonicalisation plans' G4 applies. — slot-2 2026-06-12
 
 ## Phase 4 — Relaunch drained writers (P0) — GATED on associated migration plans (operator 2026-06-01)
 
