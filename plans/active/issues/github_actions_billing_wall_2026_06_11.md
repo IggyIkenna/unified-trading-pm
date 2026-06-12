@@ -242,11 +242,22 @@ byte-identical to prior behaviour):
 smoke-tested from laptop against the live fleet (tree gate: SKIPs all 15 phantoms incl. mdps ahead_by=130 / ibkr 189,
 PROCEEDs the 3 real-drift repos; breaker jq returned real counts: features=100-capped, deployment-api=12).
 
-**NOT verified (honest risk register)**:
+**End-to-end DRY-RUN executed 2026-06-12 ~07:55Z (closes the top risk item)**: the full promote step (extracted verbatim
+from the YAML) ran on-host against the live fleet with `DRY_RUN=true` + an `act` harness validated the job wiring
+(App-token mint 139531741 + checkout + gates). Results: tree gate SKIPped all **14 phantom repos** and identified **12
+open phantom drain PRs** ("would close", correctly NOT closed in dry-run); PROCEED branch passed the **4 real-drift
+repos** (deployment-api +6, deployment-service +6, deployment-ui +145, agent-orchestrator +20) through tier gates to
+"would open PR"; breaker untripped (correct — last drain merges >6 h old); outputs + exit 0 clean; zero mutations. Two
+dry-run side-effect bugs were FOUND + FIXED during test prep (phantom-close and breaker Slack page ran even in dry-run —
+both now `DRY_RUN`-guarded, commit below). ⚠️ The act run also surfaced a NEW restore-day blocker: **Tier B blocks the
+entire drain because the latest full-workspace SIT conclusion is `failure`** — but that failure is a 0-step billing
+kill, not a real SIT verdict → at restore, dispatch `full-workspace-sit` and let it complete green (or the drain no-ops
+at Tier B even once re-enabled). Added to runbook.
 
-- The modified workflow has **never executed end-to-end** (it's disabled + billing wall) — no live run, no actionlint
-  (not installed locally).
-- `--jq 'now|strftime'` builtins behave on local gh; the **runner's gh version is assumed** same-family (unverified).
+**NOT verified (residual risk register)**:
+
+- No actionlint locally; the act harness validates wiring but uses host tooling — the **runner's gh version** for the
+  `--jq 'now|strftime'` builtins is assumed same-family (works on host gh; unverifiable until billing restores).
 - Phantom-PR close vs `ci_failure_watcher --auto-recover` interplay: watcher targets BLOCKED open PRs, a closed PR
   should be out of scope — **expected no interplay, unverified**.
 - +2 `gh api` calls/repo/tick (~36/tick) + 1 `gh pr list`/active repo against the App-token pool — trivial vs the 5k/hr
@@ -335,11 +346,14 @@ reconciler items are RESILIENCE, demoted from P0. Companion plans: `ci_status_fi
 `ci-status-reconciler` + `ldr-ci-monitor` + `ldr-to-staging-promote` DISABLED; (3) `ldr-to-main-promote` (enabled)
 merges PM's standing LDR→main PR → the tree-gate + breaker fixes reach `main`; (4) **re-enable
 `ldr-to-staging-promote`** (`gh workflow enable ldr-to-staging-promote.yml --repo IggyIkenna/unified-trading-pm`) —
-first sweep should log `SKIP … tree == LDR tree` for the ~15 phantom repos and open real PRs for the ~3 drifted ones;
-watch one tick to confirm; (5) ci-failure-watcher drains the remaining armed PRs; (6) land the remaining P0
-circuit-breaker todos via the normal path; (7) re-enable reconciler, watch `gh run list -w ci-status-update --limit 50`
-for an hour (expect <15/hr); (8) re-enable ldr-ci-monitor after its conditional-dispatch fix; (9) verify the stranded
-`ci(spend)` crons reached `main` (item above).
+first sweep should log `SKIP … tree == LDR tree` for the ~14 phantom repos (closing their 12 stale open drain PRs) and
+open real PRs for the ~4 drifted ones (dep-api/dep-service/dep-ui/ao) — dry-run-verified 06-12 ~07:55Z; (4b) **dispatch
+`full-workspace-sit`** (`gh workflow run full-workspace-sit.yml -R IggyIkenna/system-integration-tests`) — the drain's
+Tier-B gate reads the LATEST completed SIT conclusion, which is currently a 0-step billing-kill `failure` → the drain
+no-ops at Tier B until a real SIT run lands green; (5) ci-failure-watcher drains the remaining armed PRs; (6) land the
+remaining P0 circuit-breaker todos via the normal path; (7) re-enable reconciler, watch
+`gh run list -w ci-status-update --limit 50` for an hour (expect <15/hr); (8) re-enable ldr-ci-monitor after its
+conditional-dispatch fix; (9) verify the stranded `ci(spend)` crons reached `main` (item above).
 
 ## Appendix — data backing the findings (collected 2026-06-12 03:30–06:00Z)
 
@@ -383,6 +397,10 @@ deployment-service 4 PHANTOM · e2e-testing 2 PHANTOM · execution-service 3 PHA
 ibkr-gateway-infra 189 PHANTOM · instruments-service 2 PHANTOM · mdps 130 PHANTOM · mtds 2 PHANTOM · strategy-service 2
 PHANTOM · system-integration-tests 123 PHANTOM · trading-agent-service 184 PHANTOM · unified-api-contracts 130 PHANTOM ·
 unified-trading-library 1 PHANTOM · unified-trading-system-ui 2 PHANTOM → **15 PHANTOM / 3 REAL of 18**.
+
+Refreshed ~07:50Z (morning LDR pushes landed): deployment-service flipped PHANTOM→REAL (ahead_by 6) → **14 PHANTOM / 4
+REAL**; 12 of the 14 phantoms carry a stale OPEN drain PR (the fix closes them on its first real sweep). Verified again
+by the full dry-run sweep at ~07:55Z (§ Changes implemented, end-to-end dry-run).
 
 ### C. Top spenders — CORRECTED (n=301 stratified duration samples, conclusion-mix weighted; supersedes the first-pass 5-sample table)
 

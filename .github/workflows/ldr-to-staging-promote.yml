@@ -171,9 +171,13 @@ jobs:
               PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
                 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
               if [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ]; then
-                echo "  closing phantom drain PR #$PHANTOM_PR (zero content delta)"
-                gh pr close "$PHANTOM_PR" --repo "$OWNER/$REPO" \
-                  --comment "Closed by Tier-C drain: staging tree == LDR tree (content-identical; the ahead_by gap is squash-accounting noise, not promotable content)." 2>/dev/null || true
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "  DRY-RUN: would close phantom drain PR #$PHANTOM_PR (zero content delta)"
+                else
+                  echo "  closing phantom drain PR #$PHANTOM_PR (zero content delta)"
+                  gh pr close "$PHANTOM_PR" --repo "$OWNER/$REPO" \
+                    --comment "Closed by Tier-C drain: staging tree == LDR tree (content-identical; the ahead_by gap is squash-accounting noise, not promotable content)." 2>/dev/null || true
+                fi
               fi
               return 0
             fi
@@ -190,7 +194,7 @@ jobs:
               --jq '[.[] | select(.title | startswith("chore(promote)")) | select(.mergedAt > (now - 21600 | strftime("%Y-%m-%dT%H:%M:%SZ")))] | length' 2>/dev/null || echo "0")
             if [ "${MERGED_6H:-0}" -ge 30 ]; then
               echo "⛔ RUNAWAY BREAKER $REPO: ${MERGED_6H} drain PRs merged in 6h (cap 30) — refusing to promote this repo; CRITICAL page"
-              if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
+              if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ] && [ "$DRY_RUN" != "true" ]; then
                 curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
                   -d "{\"text\":\":rotating_light: *RUNAWAY PROMOTE BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→staging drain merges in 6h (healthy max 24). Tier-C drain is malfunctioning on this repo (promote loop). Repo promotion REFUSED until the count ages out or the cause is fixed. SSOT: ldr-to-staging-promote.yml runaway breaker.\"}" >/dev/null 2>&1 || true
               fi
