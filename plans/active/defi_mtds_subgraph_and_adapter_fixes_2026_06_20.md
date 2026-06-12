@@ -51,11 +51,14 @@ adapters that feed it.
       rename since the 2024 indexer upgrade); per-row `record_failed(SCHEMA_DRIFT)` for rows where the protocol
       responded but the canonical field set isn't extractable; cassette-parity test locks the new shape. ~1.8k
       blank-reason rows clear once the fix lands.
-- [ ] [SCRIPT] P0. **Bug 2 — Messari Compound V3 subgraph query rewrite.** Probe the current schema of the Compound V3
+- [x] [SCRIPT] P0. **Bug 2 — Messari Compound V3 subgraph query rewrite.** Probe the current schema of the Compound V3
       subgraph endpoint per chain (Ethereum, Base, others); identify the field renames since the indexer upgrade that
       the current MTDS query depends on. Rewrite the query; add per-row `record_failed(SCHEMA_DRIFT)` for any row where
       the response shape deviates from the canonical contract (so we never write garbage). Cassette-parity test locks
       the new shape. Smoke 1 day per chain post-rewrite.
+      — shipped mtds@1515372 2026-06-12: `_COMPOUND_V3_FLAT_QUERY` (promoted fields, post-2024 indexer),
+        null-accounting guard in `_parse_compound_v3_custom` (skip rows, not write zeros), 3-step cascade
+        custom→flat→messari, `_parse_compound_v3_flat` parser, 3 cassette-parity tests.
 
 ## P0 — adapter stubs + venue unblocking
 
