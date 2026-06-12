@@ -347,15 +347,20 @@ s with plan-grounded reasoning** → worker resumed on the queued answer → app
 
 Unsolved findings from the run (each repro'd live or read in code; fix not yet shipped):
 
-- [ ] [CODE] P1. **Manual `POST /api/backlog/regen` bypasses the `assigned_vm` filter + prune** —
-      `routes/backlog.py:126` calls `regen()` with no args; `regen()` defaults `vm_id=None` = ingest-all (its docstring
-      claims an `ORCHESTRATOR_VM_ID` env fallback that is NOT implemented — only `PlanRegenLoop.__init__` reads the
-      env). Live repro: manual regen ingested 493 tasks from 53 fleet plans into a vm-local-e2e backend; the next 120 s
-      loop tick pruned all 491 foreign tasks (self-heal works, ≤30 min on fleet), but in that window AutoSpawn can
-      dispatch foreign-VM tasks. Fix: route (or `regen()` itself, honouring its docstring) passes
-      `vm_id=ORCHESTRATOR_VM_ID` + `ORCHESTRATOR_REGEN_PRUNE_STALE`. Repo: agent-orchestrator
-      (`server/routes/backlog.py` + `server/regen_backlog_from_plan.py`). Found 2026-06-11.
-- [ ] [INFRA] P1. **`bootstrap_vm.sh` installs pm-pull TWICE with DIFFERENT branches** — Step 5.9 runs PM's
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). Route now mirrors PlanRegenLoop env
+      resolution (ORCHESTRATOR_VM_ID + REGEN_PRUNE_STALE + REGEN_DB_PATH). Was: **Manual `POST /api/backlog/regen`
+      bypasses the `assigned_vm` filter + prune** — `routes/backlog.py:126` calls `regen()` with no args; `regen()`
+      defaults `vm_id=None` = ingest-all (its docstring claims an `ORCHESTRATOR_VM_ID` env fallback that is NOT
+      implemented — only `PlanRegenLoop.__init__` reads the env). Live repro: manual regen ingested 493 tasks from 53
+      fleet plans into a vm-local-e2e backend; the next 120 s loop tick pruned all 491 foreign tasks (self-heal works,
+      ≤30 min on fleet), but in that window AutoSpawn can dispatch foreign-VM tasks. Fix: route (or `regen()` itself,
+      honouring its docstring) passes `vm_id=ORCHESTRATOR_VM_ID` + `ORCHESTRATOR_REGEN_PRUNE_STALE`. Repo:
+      agent-orchestrator (`server/routes/backlog.py` + `server/regen_backlog_from_plan.py`). Found 2026-06-11.
+- [x] ✅ [INFRA] P1. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). STEP 5.9 (install_pm_pull.sh → LDR) is now
+      the ONLY installer; STEP 7.5c became a loud verifier; duplicate scripts/pm-pull.{service,timer} (origin-main
+      pullers) DELETED. Was: **`bootstrap_vm.sh` installs pm-pull TWICE with DIFFERENT branches** — Step 5.9 runs PM's
       `install_pm_pull.sh` (merges `origin/live-defi-rollout`); Step 7.5c installs AO's own `scripts/pm-pull.service`
       (`git pull --ff-only origin main`) under the SAME systemd unit name. Whichever lands first wins (7.5c skips if 5.9
       enabled the timer; if 5.9 WARN-fails — PM clone absent — the main-puller installs into an LDR checkout where
@@ -363,35 +368,54 @@ Unsolved findings from the run (each repro'd live or read in code; fix not yet s
       VM's plan source tracks is nondeterministic per bootstrap path. Collapse to ONE installer + ONE branch (LDR per
       the regen/plan-freshness contract). Repo: agent-orchestrator (`scripts/bootstrap_vm.sh` +
       `scripts/pm-pull.service`). Found 2026-06-11.
-- [ ] [CODE] P1. **AutoSpawn respawn path skips the FM2/FM3/FM8 dirty-state gate** — `autospawn.py:289-298` runs only
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). resolve_dirty_state() wired into the
+      autospawn pre-spawn gate (same liveness-gated semantics as the kicker; protected_live_peer/quarantined refuse the
+      spawn). Was: **AutoSpawn respawn path skips the FM2/FM3/FM8 dirty-state gate** — `autospawn.py:289-298` runs only
       `check_slot_branch_state` (FM5/FM7); manual `/spawn` (slots_ops.py:204), account rotation (server.py:416), and the
       kicker auto-respawn (worker_liveness.py:929) all call `resolve_dirty_state()`, but the dominant fleet path —
       **watchdog kill → AutoSpawn respawn — boots the new worker into the dead predecessor's dirty tree**, and the \*/5
       FF-cron then `[skip:dirty]`s the slot → stale clone. Also compose: a permanently-dead slot's dispatched task is
       recovered only by same-slot /boot resume (`already_in_progress`); there is no requeue-to-pool on slot death. Wire
       `resolve_dirty_state()` into the autospawn pre-spawn gate. Repo: agent-orchestrator (`server/autospawn.py`).
-- [ ] [CODE] P2. **`/done` verifies the SHA locally only — no origin-push guarantee** — `verify.py` runs `git show` in
-      the slot worktree (never `ls-remote`/merge-base vs `origin/live-defi-rollout`); sentinel SHAs (`audit-*`,
-      `no-code-change`…) skip verification entirely; dirty-tree/plan-flip/scope checks are warnings, not blocks. A
-      worker whose quickmerge silently failed (auth/network) still marks the task done with a local-only commit. Add an
-      origin-existence check (warn → block ratchet). Repo: agent-orchestrator (`server/verify.py` +
-      `server/routes/slots_worker.py`).
-- [ ] [CODE] P2. **Spawned workers get no `WORKSPACE_ROOT`** — boot prompts carry `${WORKSPACE_ROOT}/...` paths but
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). verify_done now sets on_origin (git branch
+      -r --contains, local remote-tracking refs — no network); /done emits sha_not_on_origin warning;
+      ORCHESTRATOR_DONE_REQUIRE_ORIGIN=true hard-409s (warn-first ratchet). Was: **`/done` verifies the SHA locally only
+      — no origin-push guarantee** — `verify.py` runs `git show` in the slot worktree (never `ls-remote`/merge-base vs
+      `origin/live-defi-rollout`); sentinel SHAs (`audit-*`, `no-code-change`…) skip verification entirely;
+      dirty-tree/plan-flip/scope checks are warnings, not blocks. A worker whose quickmerge silently failed
+      (auth/network) still marks the task done with a local-only commit. Add an origin-existence check (warn → block
+      ratchet). Repo: agent-orchestrator (`server/verify.py` + `server/routes/slots_worker.py`).
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). tmux_spawn forwards the backend's
+      WORKSPACE_ROOT into the spawn shell (exported before the account env file so it stays overridable). Was: **Spawned
+      workers get no `WORKSPACE_ROOT`** — boot prompts carry `${WORKSPACE_ROOT}/...` paths but
       `tmux_spawn._start_session` sources only the account env file; the worker's shell expands it EMPTY (live repro:
       worker `cd`'d to a wrong guessed path, self-recovered after 2 probe commands). Export `WORKSPACE_ROOT` (+ any
       boot-prompt-referenced env) in the spawn `bash_cmd`. Repo: agent-orchestrator (`server/tmux_spawn.py`).
-- [ ] [CODE] P2. **Blocked-queue telemetry missing** — `slot_blocked`/`blocked_answered` land in `activity_log` but
-      nothing aggregates: no blocks-per-task counter, no repeated-block alert, no time-to-answer metric (now doubly
-      relevant as the MainAgentKeeper SLA measure: main-answered vs operator-answered vs unanswered-age). Small rollup
-      endpoint + dashboard chip. Repo: agent-orchestrator.
-- [ ] [CODE] P2. **Execution-vs-context-burn detector missing** — nothing correlates time-on-task + context_pct /
-      compactions with pushed output; a worker can heartbeat for hours with zero commits and no flag. Rule sketch:
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). GET /api/blocked/stats (unanswered + oldest
+      age, answered_by split, median/p90 time-to-answer, repeat offenders) + BlockedPanel chip (N/M by main · median
+      TTA) computed client-side. Was: **Blocked-queue telemetry missing** — `slot_blocked`/`blocked_answered` land in
+      `activity_log` but nothing aggregates: no blocks-per-task counter, no repeated-block alert, no time-to-answer
+      metric (now doubly relevant as the MainAgentKeeper SLA measure: main-answered vs operator-answered vs
+      unanswered-age). Small rollup endpoint + dashboard chip. Repo: agent-orchestrator.
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). Watchdog Trigger-4: same task >4h + (ctx
+      ≥80% OR ≥3 compactions) → context_burn_suspected activity + Slack page, deduped per (slot,task); kill opt-in via
+      ORCHESTRATOR_CONTEXT_BURN_KILL (flag-first until fleet mileage). Was: **Execution-vs-context-burn detector
+      missing** — nothing correlates time-on-task + context_pct / compactions with pushed output; a worker can heartbeat
+      for hours with zero commits and no flag. Rule sketch:
       `dispatched > 4 h AND no done_sha AND (context_pressure high OR compactions climbing) → flag + respawn`. All
       inputs already in state.db (`slots.context_used_pct`, `compactions`, `tasks.dispatched_at`). Repo:
       agent-orchestrator (`server/worker_liveness_watchdog.py` or sibling check).
-- [ ] [CODE] P3. **Orchestrator dashboard dev default still points at retired :8026** — `dashboard/src/App.tsx:73`
-      (`devPort ?? "8026"`; backend binds 8765 since the port migration) → fresh local run = login "Failed to fetch"
-      until `VITE_BACKEND_PORT=8765`. Flip the default. Repo: agent-orchestrator (`dashboard/src/App.tsx`).
+- [x] ✅ [CODE] P3. DONE 2026-06-12 — agent-orchestrator@c247b6b (one remediation unit: 13 new tests in
+      tests/test_e2e_findings_remediation.py; QG green; quickmerge --agent). Dev default flipped to :8765
+      (VITE_BACKEND_PORT still overrides). Was: **Orchestrator dashboard dev default still points at retired :8026** —
+      `dashboard/src/App.tsx:73` (`devPort ?? "8026"`; backend binds 8765 since the port migration) → fresh local run =
+      login "Failed to fetch" until `VITE_BACKEND_PORT=8765`. Flip the default. Repo: agent-orchestrator
+      (`dashboard/src/App.tsx`).
 
 Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
