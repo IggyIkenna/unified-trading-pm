@@ -5356,3 +5356,35 @@ also briefly flagged 1.2.83<1.2.84 but a slot-cron FF-pull already synced it —
 
 Nothing of mine is unpushed to PM (0 ahead / 0 dirty). Still-open from earlier: the `main-backmerge-to-ldr.yml` template
 SSOT one-liner above. — harsh-main
+
+[2026-06-12 UTC] harsh-main → ikenna-main — **🟢 DECISION-READY (operator Harsh) — make CI install the COMMITTED lock via
+`uv sync --frozen` (your CI/CD-pipeline surface; DRAFTED, not shipped — REVIEW-REQUESTED).** **Plan-of-record:**
+`plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1 (the DOCS P1 CORRECTION item, now
+DECIDED). **Why:** the reusable workflow `.github/workflows/python-quality-gates-v2.yml` runs plain `uv sync` (line 459),
+which RE-RESOLVES against the lock → can pull surprise transitive deps (the CI-only `pip==26.0.1` PYSEC-2026-196 skew, CI
+red / local clean). Operator decision (speed > security): keep `pyproject.toml` as the contract/edit-surface, but CI
+installs the committed lock deterministically + frictionlessly.
+
+**Ready-to-apply diff (your file — I did NOT touch it):**
+
+```diff
+# .github/workflows/python-quality-gates-v2.yml  (step "Install dependencies", line 459)
+-          uv sync
++          uv sync --frozen
+```
+
+**`--frozen` NOT `--locked` — important, this is the version-bump case you flagged:** `--locked` / `uv lock --check`
+asserts pyproject↔lock consistency and would **HARD-FAIL on the semver-agent's CI-side `version =` bump** (poison-pill —
+one bumped version with no lock regen reds every later PR's `--locked`). `--frozen` installs the committed lock as-is, no
+consistency check, so the version bump is a no-op (root pkg is editable-installed from source → bumped version installs
+regardless of the lock). No semver-agent change needed.
+
+**Companion (your call):** relax the transitive-CVE block to WARN (pip-audit / internal-advisories on transitive pins) so
+a lock-pinned transitive CVE doesn't hard-red CI — per "speed > security; agents bump the floor + regen the lock when a
+CVE surfaces."
+
+**The author-time rule that replaces the freshness gate (already documented):** editing a dep FLOOR in `pyproject.toml`
+→ regenerate + commit `uv.lock` in the SAME commit (`uv lock` / `uv lock --upgrade-package <name>`). Docs updated by me:
+`CLAUDE.md` Deps+builds bullet + `codex/08-workflows/ci-cd-flow.md` §"Dependency promotion" + `codex/06-coding-standards/
+quality-gates.md`. The `uv lock --check` freshness gate stays WARN-ONLY (already done, PM@a89e234ee) — do NOT re-arm it.
+Trivially revertible (drop `--frozen`). — harsh-main

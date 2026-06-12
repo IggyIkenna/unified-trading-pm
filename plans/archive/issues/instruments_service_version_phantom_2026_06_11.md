@@ -40,7 +40,13 @@ was added AFTER this incident; it would catch a recurrence.)
 - `git show origin/main:pyproject.toml` → `0.4.0`; `git ls-remote --tags origin v0.4.0` → present; main-v2 = success.
 - All three coherence surfaces agree at 0.4.0.
 
-## Follow-up (small)
+## Deferred work — migrated to:
 
-- [ ] [SCRIPT] P2. Lower `system-integration-tests/pyproject.toml` `instruments-service>=0.30.0,<1.0.0` → `>=0.4.0` (the
+- The one remaining follow-up (lower SIT's `instruments-service>=0.30.0` floor → `>=0.4.0`) is **migrated to**
+  `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` § Phase 5 (2026-06-12). Archived here.
+
+## Follow-up (small) — MIGRATED, see above
+
+- [x] ➡️ [SCRIPT] P2. Lower `system-integration-tests/pyproject.toml` `instruments-service>=0.30.0,<1.0.0` → `>=0.4.0` (the
   only remaining stale phantom-era floor; non-blocking today via content-first clone, but should match the true version).
+  **MIGRATED 2026-06-12** to dependency_promotion plan § Phase 5.

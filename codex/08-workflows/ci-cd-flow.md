@@ -316,6 +316,15 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   non-Enum class constant is NOT tracked), or removed HTTP route. **Not breaking** = additive (incl. a NEW Enum member),
   docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
   `tests/unit/test_detect_breaking_change.py` (incl. enum add/remove/value cases).
+- **Scope boundary — the differ is a CODE public-surface tool; non-code contract surfaces are OUT of scope BY DESIGN**
+  and governed by their OWN SSOTs, not semver / `is_breaking`: (1) **manifest `schema_version`** (a DATA-schema contract,
+  versioned + migrated by the manifest canonicalisation walk, not a Python export — SSOT
+  `codex/02-data/availability-manifest-and-data-status.md`); (2) **GCS path / partition keys** (`pipeline_mode=` /
+  `asset_group=` / `feature_group=` / `feature_group_version=` — the on-disk hive contract, governed by
+  `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/feature-formula-versioning.md`). Changing one of these is a
+  real contract change, but it does NOT trip the breaking differ and MUST be coordinated through its data-track SSOT +
+  single-walk migration — never expect SIT/the cascade-lock to catch it. (Residual cross-link, 2026-06-12 — Phase 4 of
+  `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.)
 - **Wiring**: each repo's `semver-agent.yml` (rolled out from `scripts/workflow-templates/semver-agent.yml.tmpl`) calls
   the differ — non-PM repos fetch it at runtime from `unified-trading-pm`. The differ verdict sets `is_breaking`
   (replacing the old `git diff __init__.py | grep '^-'` text heuristic that flagged ANY removed line). `feat!:` stays an
@@ -380,6 +389,19 @@ fleet-wide. The model (operator 2026-06-09):
   (the `version =` is a snapshot; the install resolves from the source PATH, not the recorded version), external deps
   lock exact (reproducibility). There is **no exact-pin bug** and no "range-aware lock gate" to build (a 2026-06-09
   false-start — tombstoned in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`).
+- **CI installs the COMMITTED lock via `uv sync --frozen`; `pyproject.toml` is the edit-surface, the lock is the
+  deterministic install snapshot (operator 2026-06-12, speed > security).** The reusable workflow installs with
+  `uv sync --frozen` — the committed `uv.lock` as-is, NO re-resolution (no surprise transitive deps; the CI-only
+  `pip==26.0.1` PYSEC-2026-196 divergence that plain `uv sync` re-resolution introduced is gone). `--frozen` NOT
+  `--locked`: `--locked` / `uv lock --check` asserts pyproject↔lock consistency and would HARD-FAIL on the semver-agent's
+  CI-side `version =` bump (a poison-pill — one bumped version with no lock regen reds every later PR's `--locked`);
+  `--frozen` tolerates it (the root pkg is editable-installed from source, so the bumped version is what installs
+  regardless of the lock). **Rule (replaces the freshness gate):** editing a dependency FLOOR in `pyproject.toml`
+  requires regenerating + committing `uv.lock` in the SAME commit (`uv lock`, or `uv lock --upgrade-package <name>` to
+  move an existing transitive pin) — otherwise `--frozen` silently installs the stale lock and the floor never takes
+  effect in CI. A bare `version =` bump needs no lock regen. No transitive-CVE HARD block — pip-audit /
+  internal-advisories on transitive pins WARN; a CVE fix = bump the floor + regen the lock. SSOT:
+  `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1.
 - **Dep resolution in CI is CONTENT-FIRST (LDR-HEAD clone) + the range check is NON-BLOCKING (2026-06-11; SUPERSEDES the
   version-aware-clone loud-fail).** `python-quality-gates-v2.yml::clone_repo` clones each internal dep at its
   **`live-defi-rollout` HEAD** — the SSOT content local editable siblings resolve against — so CI typechecks the dep's

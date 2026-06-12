@@ -77,39 +77,60 @@ source:
 
 ## Phase 2 — durable follow-ups (the DB-lock ROOT + deterministic startup) [P0/P1]
 
-- [ ] [CODE] P0. **Move the slow spawn OUT of the write transaction** (`escalation.escalate` + `autospawn._tick_once`):
-      read the needed slot fields (model/effort/thinking/account) into plain values inside a SHORT transaction, run
-      `tmux_spawn.spawn` OUTSIDE any `session_scope`, then a SHORT transaction to persist
-      `tmux_session`/`last_spawned_at`. Eliminates the multi-second write-lock hold → no more "database is locked"
-      crashing the watchdog/pruner, and lets the boot readiness wait be unbounded (raise the 20s cap from Phase 1).
-      Watch for `DetachedInstanceError` (the reason it was in-session originally — the fix is to extract scalars, not
-      pass the ORM row out).
-- [ ] [OPS] P1. **Deterministically disable claude auto-update OR pin the CLI.** `DISABLE_AUTOUPDATER=1` +
-      `autoUpdates:false` did not stop it on 2.1.146. Find the honored mechanism for the deployed CLI, or pin/upgrade
-      the fleet CLI so startup is fast + deterministic (removes the primary source of the boot-paste timing miss).
-      Target: vm-0 spawn env / deployment.
-- [ ] [CODE] P1. **Verify the boot actually landed** post-paste: capture-pane after submit and confirm the prompt left
-      the empty state; if still empty, re-deliver once. Closes the residual window where a paste "succeeds" (rc 0) but
-      the TUI dropped it.
-- [ ] [TEST] P1. Unit/integration test for the watchdog orphan-reclaim (killed + live session + stale spawn → session
-      reclaimed) and the paste-retry (transient pane-miss → eventual success). Target: agent-orchestrator tests.
+- [x] ✅ [CODE] P0. DONE 2026-06-12 — agent-orchestrator@440a572 (QG green; 92 affected tests pass; deployed to
+      vm-e2e-test). ALL THREE spawn callers restructured exactly per the spec: `autospawn.snapshot_slot()` extracts the
+      7 scalar fields `_do_spawn` reads (the DetachedInstanceError fix — scalars out, never the ORM row);
+      `autospawn._run_one_tick` collects (snapshot, account) candidates inside the short txn then spawns AFTER the
+      session closes (a spawn failure under-fills that tick's budget by design — next tick retries);
+      `escalation.escalate` + `plan_health.dispatch` snapshot → close session → spawn → short session for the
+      dispatched-ledger/activity writes. Boot-readiness ceiling raised 75s→120s in `_dismiss_bypass_warning` (now a pure
+      patience bound — holds NO lock). Validating evidence from today: the SAME bug class bit live on vm-e2e-test at
+      13:08 (nested `session_scope` in `_queue_escalation` → "database is locked", fixed @d6cff0f) — confirming the
+      txn-hold analysis. Was: **Move the slow spawn OUT of the write transaction**. Repo: agent-orchestrator.
+- [x] ✅ [OPS] P1. DONE 2026-06-12 — agent-orchestrator@57aa56e (QG green, 561 tests; deployed + dirs healed on
+      vm-e2e-test). ROOT CAUSE of "2.1.146 ignored it": the 2026-06-10 seed wrote `autoUpdates:false` into
+      `.claude.json`, but the key MIGRATED to `settings.json` (the CLI binary carries a
+      `migrate_autoupdates_to_settings` shim) — we wrote a file the CLI no longer reads. Fix is code, not hand-ops: (1)
+      `_ensure_claude_config_dir` upserts `autoUpdates:false` into `<config-dir>/settings.json` on EVERY call
+      (merge-not-clobber; heals pre-existing session dirs automatically at next spawn — verified live on vm-e2e-test,
+      all 4 dirs healed with `skipDangerousModePermissionPrompt` preserved); (2) spawn bash exports
+      `DISABLE_AUTOUPDATER=1` (env belt — the var IS honored by 2.1.175, confirmed in the binary); (3) `bootstrap_vm.sh`
+      STEP 2 pins `@anthropic-ai/claude-code@2.1.175` (`CLAUDE_CODE_VERSION` env override; bump deliberately). vm-0
+      inherits all three on its next AO deploy — no manual env edits needed there. Was: **Deterministically disable
+      claude auto-update OR pin the CLI.** Target: vm-0 spawn env / deployment.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@ab027bc (QG green, 558 tests; deployed vm-e2e-test).
+      `_paste_prompt` now verifies post-submit that the boot-prompt marker (first non-empty line, 48 chars) is visible
+      in the pane (`_boot_landed`, capture-pane 400-line history); on a miss it re-delivers the full paste+submit ONCE,
+      and raises on a second miss (spawn-failure path → watchdog orphan-reclaim → AutoSpawn retry — loud + self-healing,
+      never a silent empty-prompt worker). Was: **Verify the boot actually landed** post-paste: capture-pane after
+      submit and confirm the prompt left the empty state; if still empty, re-deliver once. Closes the residual window
+      where a paste "succeeds" (rc 0) but the TUI dropped it.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — agent-orchestrator@ab027bc. `tests/test_worker_liveness_watchdog.py` +4 orphan
+      pre-pass tests (killed+live+stale-spawn → reclaimed; within-grace → left alone; NULL spawn-time → immediate; dead
+      session → skipped) and `tests/test_tmux_spawn_boot_landed.py` (10 tests: paste-retry transient-miss recovery,
+      exhaustion raise, boot-landed happy/re-deliver/raise + marker helpers). Was: Unit/integration test for the
+      watchdog orphan-reclaim and the paste-retry. Target: agent-orchestrator tests.
 - [x] ✅ [CODE] P0. **State-transition dedup for the slot-stale / "Worker heartbeat loop dead" Slack alerts** —
       `health.py:check_once` re-fired `notify_slot_failed`/`notify_slot_stale` every 60s tick because the flag had no
-      per-episode dedup and slot status thrashes idle↔stale↔killed as the watchdog kills + AutoSpawn respawns (incident
-      2026-06-10: operator saw "Slot 4/5 FAILED" spam every minute; slot 5 had cleanly `/done`-exited so its idle slot
-      sat in the alert window forever). Fix: `HealthMonitor._stale_alerted` / `_idle_failed_alerted` sets — alert ONCE
-      per episode, cleared by a recovery sweep (status=working + heartbeat < STALE_THRESHOLD) and pruned for
+      per-episode dedup and slot status thrashes idle↔stale↔killed as the watchdog kills + AutoSpawn respawns
+      (incident 2026-06-10: operator saw "Slot 4/5 FAILED" spam every minute; slot 5 had cleanly `/done`-exited so its
+      idle slot sat in the alert window forever). Fix: `HealthMonitor._stale_alerted` / `_idle_failed_alerted` sets —
+      alert ONCE per episode, cleared by a recovery sweep (status=working + heartbeat < STALE_THRESHOLD) and pruned for
       removed/re-themed slots. Regression: `tests/test_health_alert_dedup.py` (4 tests — fires-once / recovery-re-alerts
       / removed-slot-prune / working-stale-dedup). agent-orchestrator@93ca070 | QG 457 passed | deployed vm-0 (service
       restarted, dedup verified live).
 
-- [ ] [CODE] P2. **Distinguish "idle-available (cleanly /done-exited, no queued work)" from "idle-worker-loop-dead" in
-      the health idle-stale pass.** Today a worker that cleanly `/done`-exits leaves an idle slot with a frozen
-      last_ping; after IDLE_STALE_THRESHOLD it trips the "Worker heartbeat loop dead — re-spawn" alert even though
-      nothing is wrong (slot 5, 2026-06-10: last_msg `DONE: deployment-ui#43 ... merged`). The dedup caps it to one
-      alert, but the alert is still a false-positive. Fix: on a clean worker exit (last `/done`), either clear the slot's
-      stale-alert eligibility or only fire the "loop dead" alert when the slot has a `current_task` (was mid-work).
-      Target: agent-orchestrator `server/health.py` + `worker /done` handler.
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@ab027bc. The idle-stale pass now requires a LIVE tmux session
+      before alerting/flipping: idle + frozen ping + NO session = cleanly-exited idle-available worker → skipped
+      entirely (no "loop dead" alert, no stale flip — the slot stays in AutoSpawn's idle pool); only a live session that
+      stopped heartbeating alerts. +2 regression tests in `tests/test_health_alert_dedup.py`. Was: **Distinguish
+      "idle-available (cleanly /done-exited, no queued work)" from "idle-worker-loop-dead" in the health idle-stale
+      pass.** Today a worker that cleanly `/done`-exits leaves an idle slot with a frozen last_ping; after
+      IDLE_STALE_THRESHOLD it trips the "Worker heartbeat loop dead — re-spawn" alert even though nothing is wrong (slot
+      5, 2026-06-10: last_msg `DONE: deployment-ui#43 ... merged`). The dedup caps it to one alert, but the alert is
+      still a false-positive. Fix: on a clean worker exit (last `/done`), either clear the slot's stale-alert
+      eligibility or only fire the "loop dead" alert when the slot has a `current_task` (was mid-work). Target:
+      agent-orchestrator `server/health.py` + `worker /done` handler.
 
 ## Success criteria
 
