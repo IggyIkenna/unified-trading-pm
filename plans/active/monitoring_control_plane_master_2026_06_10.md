@@ -351,10 +351,10 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       consolidator-liveness chip on `/repos` header, or the data-status surface) + surface `assert_consolidator_healthy`
       state (last `_index` write age, per-VM shard count). Operator surface-decision needed. Repos: deployment-api +
       deployment-ui (or data-status owner). **OPERATOR DECISION 2026-06-12: home = the DATA-STATUS surface** (its true
-      data-pipeline domain, not the CI/CD `/repos` pane). NEXT (Harsh): a `data-status` backend signal reading
-      `_index` freshness + per-VM shard count per asset-group manifest bucket (a direct GCS read via UTL
+      data-pipeline domain, not the CI/CD `/repos` pane). Approach: a `data-status` backend signal reading `_index`
+      freshness + per-VM shard count per asset-group manifest bucket (a direct GCS read via UTL
       `assert_consolidator_healthy` — NOT a workflow-verdict, so genuinely buildable now) + a data-status UI element.
-      Unblocked; queued as the next focused build.
+      **IN PROGRESS — slot 3 (operator 2026-06-12). NOT for other slots to pick up.**
 - [ ] [CODE] P3. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
       WARNING on per-repo ruleset misalignment; no UI. Fold into the planned **Rollout-ratchet panels** smart-extra
       (workflow-template drift + Dockerfile digest-pin) as a third ratchet column. Repos: deployment-api +
