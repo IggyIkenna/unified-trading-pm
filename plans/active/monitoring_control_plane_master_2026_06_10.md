@@ -319,11 +319,16 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       count/list in the PromotionDrainPanel. Pure derivation on data the overview already fetches — **no new GitHub
       calls**. Repos: deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui
       (`RepoCi`/`client`/`mock-api`).
-- [ ] [CODE] P3. **(promotion-drain follow-up, remainder) Per-repo standing-PR v2 conclusion explicit** — the
-      drain-stall half shipped above; this remaining sub-part surfaces each repo's standing LDR→staging / LDR→main PR's
-      `quality-gates-v2` conclusion EXPLICITLY (today it's implicit via `open_prs` + `branch_ci`). Repos:
-      deployment-api + deployment-ui. SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md` (P3
-      sub-todo).
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-ui@41c1c11 | deployment-ui QG green (37s) | pw:L2 ✓ 206/206 | regression:
+      src/lib/repoCi.test.ts::prV2State (4 cases) + tests/smoke/repos-tab.spec.ts (pr-v2 chip). **(promotion-drain
+      follow-up, remainder) Per-repo standing-PR v2 conclusion explicit** — `prV2State()` maps each open promotion PR to
+      an explicit chip: **v2 failed** (red) / **v2 not reported** (yellow — the auto-recoverable deadlock) / **v2
+      reported** (green), derived from the rollup the backend already serves (`failed_check`/`v2_present`). Renders on
+      every PR card in the drilldown — the v2 outcome was previously only implicit via `stuck_class`. **Pure
+      deployment-ui derivation — no backend change, no new GitHub calls** (kept the overview's API budget bounded; a
+      precise success/in-progress split would need a per-PR fetch, deliberately not done). Repo: deployment-ui
+      (`repoCi.ts`/`RepoCi.tsx`). SSOT: `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md`.
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
