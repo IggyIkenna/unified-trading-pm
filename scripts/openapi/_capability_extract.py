@@ -386,26 +386,6 @@ def extract_venues() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
                 )
             )
 
-    # Broker nodes: TradFi brokers that route orders to exchange venues.
-    # ibkr is a broker (not a direct exchange) — routed_via edges point venue→broker.
-    _tradfi_brokers: dict[str, tuple[str, list[str]]] = {
-        "ibkr": ("Interactive Brokers", ["CME", "ICE", "CBOE"]),
-    }
-    for broker_id, (broker_label, routed_venues) in sorted(_tradfi_brokers.items()):
-        bid = f"broker:{broker_id}"
-        add(CapabilityNodeKind.BROKER, bid, broker_label, broker_id=broker_id)
-        for exchange in routed_venues:
-            vid = f"venue:{exchange}"
-            if any(n.node_id == vid for n in nodes):
-                edges.append(
-                    CapabilityEdge(
-                        from_node_id=vid,
-                        to_node_id=bid,
-                        relation=REL_ROUTED_VIA,
-                        status=CapabilityEdgeStatus.AVAILABLE,
-                    )
-                )
-
     logger.info("  venues/chains: %d nodes, %d edges", len(nodes), len(edges))
     return nodes, edges
 
