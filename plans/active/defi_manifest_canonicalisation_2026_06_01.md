@@ -1,7 +1,7 @@
 ---
 title: "MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation"
 created: 2026-06-01
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-defi
 umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active
@@ -147,7 +147,7 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 | Issue                                                           | What it is                                                                      | How this master resolves it                                       |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `issues/defi_code_codex_drift_2026_05_27`                       | DeFi code↔codex drift audit (D1–D13: data-types, venues, banned providers)      | §A writer + §F docs/SSOT close the code/codex drift items         |
+| `issues/defi_code_codex_drift_2026_05_27`                       | DeFi code↔codex drift audit (D1–D13: data-types, venues, banned providers)     | §A writer + §F docs/SSOT close the code/codex drift items         |
 | `issues/features_service_defi_data_loading_blockers_2026_05_29` | features-service DeFi e2e blocked on data-layer (dex_swaps→dex_pool_swaps etc.) | §C0–C2 canonical-naming walk + §D features propagation resolve it |
 
 ### Layered order (gates top-down; asset_groups parallelise within a layer)

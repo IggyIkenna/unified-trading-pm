@@ -1,7 +1,7 @@
 ---
 title: "CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi"
 created: 2026-06-01
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-cefi
 umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active
@@ -799,8 +799,8 @@ _futures_ seed, not the migration). Shas: `uac@ae70338d` · `is@74df991d`/`687d1
 **Absorbed (cefi-primary — slot-3 owns outright):**
 
 - `issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md` — **ABSORBED 2026-06-03** (harsh out for the
-  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX with
-  no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
+  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX
+  with no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
   CF-11 "MTDS processed_candles phantom-`captured` reconcile" todo below. Issue doc archives when that todo is GREEN.
 
 **Cross-referenced cefi slices (primary owner keeps the plan; slot-3 drives the cefi portion):**

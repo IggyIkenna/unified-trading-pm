@@ -3,7 +3,7 @@ title:
   "Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first,
   low-data single-walk"
 created: 2026-06-01
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 status: active
 priority: P1

@@ -1423,8 +1423,20 @@ DEFERRED/BLOCKED-OPERATOR leftovers, full chicken-and-egg authority incl. force-
 journal-to-plan-across-context-compression, parallelize-with-sub-agents, end-with-a-report). `SUB_AGENT_MANDATORY_RULES`
 is the safety floor; `AUTONOMOUS_AGENT_RULES` is the finish-line. Prevents the half-done-then-re-dispatch loop.
 
+- **`/autonomous` is the explicit trigger + the loop is the mechanism (rule 12)**: ending a prompt with `/autonomous`
+  invokes `cursor-configs/skills/autonomous/SKILL.md` (symlinked into `.claude/skills/`) = apply
+  `AUTONOMOUS_AGENT_RULES.md` + `SUB_AGENT_MANDATORY_RULES.md` AND **drive the task to completion on a self-paced loop**
+  (the `/loop` mechanics — background sentinel + `notify_on_output`, or `ScheduleWakeup`). The loop is the timer that
+  makes you pick up your OWN next unfinished item instead of stopping at "done, what's next?". **`/autonomous` = run to
+  the end** — the loop is the default driver (keep going until success criteria met), not a conditional; the only
+  judgment is cadence (a genuinely short job may finish in one pass). The loop's **handoff doc IS the plan's Progress
+  Log** (never a `*_HANDOFF.md`/`*_SUMMARY.md` — no-summary-docs rule); every loop needs a **termination condition + a
+  climbing progress metric** (flat metric → STOP and diagnose, never spin); it **inherits every safety rule**
+  (hard-stops, protective-only kill-switch, ship discipline) — throttle, not bypass. SSOT:
+  `cursor-configs/AUTONOMOUS_AGENT_RULES.md` § rule 12.
+
 SSOTs: `unified-trading-pm/scripts/agents/inject-mandatory-rules.sh` + `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` +
-`cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
+`cursor-configs/AUTONOMOUS_AGENT_RULES.md` + `cursor-configs/skills/autonomous/SKILL.md`.
 
 ---
 

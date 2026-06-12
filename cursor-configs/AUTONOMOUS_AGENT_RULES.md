@@ -16,6 +16,11 @@ The operator has said some version of: _"finish this completely, I'm away for N 
 answer yourself or with common sense, I want to come back to a working <thing>, I don't care how long / how many agents
 / how much context it takes, just keep the plan updated and keep going."_ That dispatch grants the authority below.
 
+**The `/autonomous` skill is the explicit trigger.** Ending a prompt with `/autonomous` (or typing `/autonomous`) means
+exactly the dispatch above: _apply these rules + `SUB_AGENT_MANDATORY_RULES.md`, and drive the task to completion on a
+loop_ (rule 12). The skill (`cursor-configs/skills/autonomous/SKILL.md`, symlinked into `.claude/skills/`) is the
+canonical entry point — it reads this file, arms the loop, and runs to a verified done-state.
+
 ## The rules
 
 1. **Finish completely — no partial states.** Banned end-states: `DEFERRED` without doing it, `BLOCKED-OPERATOR`,
@@ -101,6 +106,49 @@ answer yourself or with common sense, I want to come back to a working <thing>, 
       verify it on a consumer + across branches, you didn't finish it — you just moved the failure to whoever pulls
       next.
 
+12. **Drive to completion on a loop — the loop is the _mechanism_ for "keep going", not a new authority.** Every rule
+    above answers _"finish without coming back"_; a **loop** is the timer that makes you come back to **your own**
+    unfinished work — tick after tick — instead of stopping at _"done, what's next?"_. This is what lets one dispatch
+    run for many hours / dozens of iterations and actually converge. Use the `/loop` skill mechanics (a background
+    sentinel + `notify_on_output`, or `ScheduleWakeup`) to re-feed yourself the task on each tick.
+    - **(a) `/autonomous` means run to the end — the loop is the default driver, not a conditional.** The dispatch is
+      "drive to completion"; arm a loop and keep going until the success criteria are met, never stopping at the first
+      natural break. The only judgment is _cadence_, not _whether_ — a queue of plans / a multi-hour migration /
+      iterate-until-converged work (backtest-tuning, market-watch) obviously loops; a genuinely short single-unit job
+      may finish in one pass before the first tick fires (fine — don't manufacture iterations), but the posture is
+      always "keep going to done," never "did one thing, stopped."
+    - **(b) Self-pace by default; fixed-interval only for a steady external cadence.** Prefer a **dynamic** loop: after
+      each iteration choose the next wake by _what you're actually waiting on_ — an **event** (a CI run / backtest / PR
+      reaching a terminal state → arm a watcher that wakes you when it fires) or a **time** (lean long for idle ticks to
+      avoid pure overhead). Use a **fixed interval** (e.g. `15m`) only when you're polling a steady external cadence.
+      Honor the poll-discipline already in `CLAUDE.md` (short ~30–45 s ticks first to confirm the mechanism moves, then
+      widen).
+    - **(c) The canonical multi-plan loop** (the "execute this list of plans to DONE" pattern), bound to workspace
+      ship-discipline: each tick → pick the next open plan item → implement → `quality-gates.sh`-green →
+      `quickmerge --agent --files` → **flip the checkbox in the same turn** (Commit+Push+Flip, rule 7); when a whole
+      plan's items are done → run a **thorough audit/analysis of what actually shipped** (rule 9 + Post-Plan-Phase Codex
+      Audit) before moving to the next plan.
+    - **(d) The loop's "handoff document" IS the plan's Progress Log (rule 6) — never a new
+      `*_HANDOFF.md`/`*_SUMMARY.md` / status file** (no-summary-docs rule). Journal progress into the plan-of-record
+      every tick (or the slot ping file for cross-plan multi-plan dispatches); assume context is auto-compressed
+      _between_ ticks, so a compressed future-you must resume losslessly from that log. Update it periodically, not just
+      at the end.
+    - **(e) Every loop MUST have a termination condition — finish, don't spin forever.** The loop ends when the success
+      criteria are met → kill the loop/sleeper PID, write the rule-9 final report. And **stall-safety**: a progress
+      metric must _climb_ across ticks (items flipped, plans done, rows backfilled, runs green); a **flat** metric =
+      **STOP and diagnose** the blocker (`gh run view --log-failed`) — never burn ticks blindly repeating a failing
+      action.
+    - **(f) Spec-change mid-loop — the loop does NOT license silently redefining the goal.** A small clarification
+      _within_ the documented intent (plan / source plans / `issues/` / codex) → make it, log it (rules 1–2), keep
+      going. A genuine **scope/spec change that contradicts the documented record of intent** is the rare case: take the
+      least-bad path and **document the decision** — or, if it's the kind of thing you could only have asked _before_
+      the operator left, that's exactly the question to have surfaced then; on a tick, decide-and-document, never
+      quietly pivot the whole dispatch.
+    - **(g) A loop inherits every rule here — it is throttle, not bypass.** Hard-stops still hard-stop (live wallet
+      keys, `1.0.0` graduation); kill-switch autonomy stays protective-only; ship discipline stays canonical. On
+      operator "stop", kill the loop/sleeper PID **immediately** and don't re-arm (continuous runtimes can be sticky —
+      honor stop the first time, not the fifth).
+
 ## The anti-pattern this prevents
 
 > Agent does 60% of a lifecycle, ships it, marks the rest `DEFERRED` / `BLOCKED-OPERATOR`, writes a summary. Next agent
@@ -113,3 +161,11 @@ answer yourself or with common sense, I want to come back to a working <thing>, 
 > it never checked, so the next agent's PR breaks on infra the first agent introduced. "Green where I looked" is not
 > "green where it runs." Tightening a gate or rolling fleet-wide is only done once proven across the fleet + all
 > promotion branches.
+>
+> **Third anti-pattern (rule 12) — the agent that stops at the first natural break:** dispatched to "execute these N
+> plans to done," it implements one, ships it, writes "ready for next agent," and stops — because nothing _re-asked_ it
+> to continue. The fix is a **loop**: re-feed yourself the task on a self-paced tick so you pick up the next item
+> yourself, journal each tick to the plan's Progress Log, and only stop the loop when the success criteria are met. The
+> loop's failure mode is the opposite — **spinning forever / repeating a failing action**: guard it with a termination
+> condition and a climbing progress metric (flat metric → STOP and diagnose). Persistence is the point; mindless
+> repetition is the regression.

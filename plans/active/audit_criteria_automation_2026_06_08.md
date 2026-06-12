@@ -3,7 +3,7 @@ title:
   "Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit
   (GCS), all asset groups"
 created: 2026-06-08
-parent_epic: epics/manifest_master.md
+parent_epic: manifest_master
 assigned_vm: vm-cross-cutting
 status: active
 priority: P1
@@ -69,10 +69,10 @@ source:
       (operator confirmed cefi has no 15m candles — removed from SOURCE_PRIORITY + AVAILABILITY_AT_SEMANTICS); (2) the
       Era-A name-collision was a checker bug — `data_type=options_chain` is a LEGIT Era-B SNAPSHOT data_type, so STEP
       5.93's `era-a-chain-write` pattern was REMOVED (pm@361e548e1) and `(cefi/tradfi, options_chain/futures_chain)` →
-      **`PENDING_SNAPSHOT_SLICE`** (the snapshot slice slot-3 widens), not legacy-retained; (3) **9 of 11 DeFi data_types
-      WIRED** into PROTOCOL_CAPABILITIES from `defi_venue_capabilities.py` producer evidence (+18 protocols, 37→55) —
-      `native_staking_rates`/`vault_share_price` honestly stay `BLOCKED_UPSTREAM_CAPABILITY` (no producer in venue_caps);
-      (4) 11 sports → `REFERENCE_NOT_INSTRUMENT_GRAIN`. Plus `COMPUTED_SERVICE_OUTPUT`/`CEFI_LEGACY_KEY`/
+      **`PENDING_SNAPSHOT_SLICE`** (the snapshot slice slot-3 widens), not legacy-retained; (3) **9 of 11 DeFi
+      data_types WIRED** into PROTOCOL_CAPABILITIES from `defi_venue_capabilities.py` producer evidence (+18 protocols,
+      37→55) — `native_staking_rates`/`vault_share_price` honestly stay `BLOCKED_UPSTREAM_CAPABILITY` (no producer in
+      venue_caps); (4) 11 sports → `REFERENCE_NOT_INSTRUMENT_GRAIN`. Plus `COMPUTED_SERVICE_OUTPUT`/`CEFI_LEGACY_KEY`/
       `REFERENCE_AG_NO_MATRIX`. Matrix complete-or-typed-excluded; 28 tests green. **→ slot-2 re-verify enumerate before
       G4** (the DeFi could-exist universe grew — B0-PRE todo in `defi_manifest_canonicalisation_2026_06_01.md`).
 - [x] ✅ [SCRIPT] P1. **QG step: no pre-aggregated open-edge bar ingestion** — **unified-trading-pm@b4245a7dd**
@@ -87,19 +87,20 @@ source:
 ## Phase 2 — Tier-3 data-state audit: extend + cross-AG + schedule (the continuous-verification cron)
 
 - [x] ✅ [CODE] P1. **`cf_manifest_audit` extended to CF-1…CF-14 + Era-B** — **unified-trading-pm@2fe982eb1**: `audit()`
-      now returns a structured per-CF results dict + JSON-able; added CF-13 (pipeline_mode SOURCE-AWARE prefix form
-      `batch_*`/`live_*`/`replay_*`, not just populated), Era-B (`data_type in {options_chain,futures_chain}` count == 0),
-      CF-6 (4-state/expected_unattempted vocabulary present + canonical), and CF-10 + CF-14 as honest SKIP-with-reason
-      (CF-10 → reconcile_phantom_manifest_rows_all.py; CF-14 → catalogue artifact when materialised, else SKIP since the
-      G1 build_instrument_catalogue roll-up is pending). per-CF GREEN/RED with evidence; ruff-clean.
+      now returns a structured per-CF results dict + JSON-able; added CF-13 (pipeline*mode SOURCE-AWARE prefix form
+      `batch*_`/`live\__`/`replay\_\*`, not just populated), Era-B (`data_type in {options_chain,futures_chain}` count
+      == 0), CF-6 (4-state/expected_unattempted vocabulary present + canonical), and CF-10 + CF-14 as honest
+      SKIP-with-reason (CF-10 → reconcile_phantom_manifest_rows_all.py; CF-14 → catalogue artifact when materialised,
+      else SKIP since the G1 build_instrument_catalogue roll-up is pending). per-CF GREEN/RED with evidence; ruff-clean.
 - [x] ✅ [CODE] P1. **Cross-AG wrapper** — **unified-trading-pm@2fe982eb1** `cf_manifest_audit_all.py`: one invocation
       runs all 5 AGs × {market-data-tick, instruments-store} = 10 buckets, per-AG GREEN/RED rollup + a machine-readable
       JSON summary, exits non-zero on any RED (the `cf-manifest-audit-all --all-ags --json-out` cron entrypoint).
 - [x] ✅ [INFRA] P1. **Scheduled** — **deployment-service@eaff3a7**: `terraform/gcp/cf_manifest_audit_scheduler.tf`
       (Cloud Run Job `uts-prod-cf-manifest-audit` + Scheduler `0 6 * * *` UTC, after the consolidator; GCS output bucket
       90-day lifecycle; `google_monitoring_alert_policy` log-based **alert-on-RED** = severity=ERROR for the job) +
-      `terraform/aws/cf_manifest_audit_scheduler.tf` (Batch-Fargate + EventBridge `cron(0 6 * * ? *)` + `FailedJobCount
-      >= 1` CloudWatch alarm). Emits the CF-status JSON artifact; alerts on any RED. **NOT applied** (operator applies).
+      `terraform/aws/cf_manifest_audit_scheduler.tf` (Batch-Fargate + EventBridge `cron(0 6 * * ? *)` +
+      `FailedJobCount     >= 1` CloudWatch alarm). Emits the CF-status JSON artifact; alerts on any RED. **NOT applied**
+      (operator applies).
 - [ ] [DATA] P2. **Wire into QG-smoke where feasible** — a fast subset (schema_version/source/pipeline_mode-form
       distribution on a sampled day) as a peripheral-script QG so a per-repo gate catches the grossest data-state drift
       too.

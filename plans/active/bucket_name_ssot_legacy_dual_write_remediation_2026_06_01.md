@@ -2,7 +2,7 @@
 title: "Legacy non-canonical tick-bucket dual-write remediation (drain → code-fix → migrate → decommission)"
 name: bucket_name_ssot_legacy_dual_write_remediation
 created: 2026-06-01
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
@@ -383,29 +383,32 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
 - [x] ✅ [SCRIPT] P1. **Package the canonical `cloud-providers.yaml` in UAC + UTL reads it from the installed package.**
       Shipped `unified_api_contracts/config/cloud-providers.yaml` (used the existing UAC `config/` dir — consistent with
       `credentials_per_archetype.yaml`; hatchling already packages `config/*.yaml`; verbatim copy of the 366-line
-      deployment-service canonical) — unified-api-contracts@ba92d0e3. UTL `bucket_naming._packaged_uac_yaml_path()` reads
-      it via `importlib.resources.files("unified_api_contracts")`, appended to `_candidate_yaml_paths()` AFTER the
+      deployment-service canonical) — unified-api-contracts@ba92d0e3. UTL `bucket_naming._packaged_uac_yaml_path()`
+      reads it via `importlib.resources.files("unified_api_contracts")`, appended to `_candidate_yaml_paths()` AFTER the
       sibling-walk (in-tree workspace copy still wins locally) — always-available in a standalone clone. Verified:
       standalone-simulated resolution (`_find_workspace_root→None`) resolves `dex-pools-prd-test-project`; UTL QG green
       (sentinel 5d2c8533) — unified-trading-library@75c001ec. Fixes the T0→T4 tier inversion + sibling-walk fragility.
 - [x] ✅ [SCRIPT] P2. **Flip the consumers: deployment-service + PM consume the UAC canonical, not own it.** UAC is now
-      named the canonical SSOT in `cursor-configs/CLAUDE.md` § Bucket-name SSOT + `codex/02-data/bucket-naming-and-config.md`
-      (deployment-service = authoring/env_substitutor read, PM = byte-identical mirror). Synced the **stale PM mirror**
-      `unified-trading-pm/configs/cloud-providers.yaml` (was 110 lines / wrong format) to byte-match the 366-line canonical.
-      deployment-service's copy already matched (the relocation copied from it). **Decided AGAINST symlinks** — a symlink
-      to a sibling breaks standalone CI clones (the original bug class); kept real byte-identical copies. — unified-trading-pm@da0cd88c.
+      named the canonical SSOT in `cursor-configs/CLAUDE.md` § Bucket-name SSOT +
+      `codex/02-data/bucket-naming-and-config.md` (deployment-service = authoring/env_substitutor read, PM =
+      byte-identical mirror). Synced the **stale PM mirror** `unified-trading-pm/configs/cloud-providers.yaml` (was 110
+      lines / wrong format) to byte-match the 366-line canonical. deployment-service's copy already matched (the
+      relocation copied from it). **Decided AGAINST symlinks** — a symlink to a sibling breaks standalone CI clones (the
+      original bug class); kept real byte-identical copies. — unified-trading-pm@da0cd88c.
 - [x] ✅ [SCRIPT] P1. **ROOT-CAUSE of the UTL CI red (found this run, not the sibling-walk): the CI test fixture
-      `scripts/quality-gates-base/ci-test-cloud-providers.yaml` was a STALE PRE-SUBSTITUTED snapshot** (templates baked to
-      literals `test-account` / `archetype-state-test-test-project` — no `${AWS_ACCOUNT_ID}` / `${DEPLOYMENT_ENV_SHORT}`),
-      so `test_bucket_naming_cell_sweep.py`'s AWS/env-tier assertions passed locally (repo fixture / sibling-walk = templated)
-      but FAILED in CI (CI points the env override at this stale PM file). Synced it byte-identical to the canonical
-      (templated). Verified CI-parity: `execution-store-cefi-123456789012`, `strategy-store-123456789012`, `archetype-state-stg-…`
-      all resolve correctly with the CI env. This — not the production sibling-walk — was the live UTL CI blocker. — unified-trading-pm@da0cd88c.
-- [x] ✅ [TEST] P2. **Reconcile the UTL "not-found" error-path tests** with always-available UAC packaging. `test_yaml_not_found_raises`
-      now also patches `_packaged_uac_yaml_path → None` (alongside `_find_workspace_root → None`) — the genuine
-      "no yaml anywhere" simulation. The malformed/invalid-syntax tests already point the env override at a present-but-bad
-      file (probed first), so they were unaffected. unified-trading-library@75c001ec. (Dropping the repo-local test
-      fixture + conftest env-override is harmless follow-up cleanup — left in as a defensive default; NICE-TO-HAVE below.)
+      `scripts/quality-gates-base/ci-test-cloud-providers.yaml` was a STALE PRE-SUBSTITUTED snapshot** (templates baked
+      to literals `test-account` / `archetype-state-test-test-project` — no `${AWS_ACCOUNT_ID}` /
+      `${DEPLOYMENT_ENV_SHORT}`), so `test_bucket_naming_cell_sweep.py`'s AWS/env-tier assertions passed locally (repo
+      fixture / sibling-walk = templated) but FAILED in CI (CI points the env override at this stale PM file). Synced it
+      byte-identical to the canonical (templated). Verified CI-parity: `execution-store-cefi-123456789012`,
+      `strategy-store-123456789012`, `archetype-state-stg-…` all resolve correctly with the CI env. This — not the
+      production sibling-walk — was the live UTL CI blocker. — unified-trading-pm@da0cd88c.
+- [x] ✅ [TEST] P2. **Reconcile the UTL "not-found" error-path tests** with always-available UAC packaging.
+      `test_yaml_not_found_raises` now also patches `_packaged_uac_yaml_path → None` (alongside
+      `_find_workspace_root → None`) — the genuine "no yaml anywhere" simulation. The malformed/invalid-syntax tests
+      already point the env override at a present-but-bad file (probed first), so they were unaffected.
+      unified-trading-library@75c001ec. (Dropping the repo-local test fixture + conftest env-override is harmless
+      follow-up cleanup — left in as a defensive default; NICE-TO-HAVE below.)
 
 ## Autonomous completion report — UTL CI keystone (2026-06-11, slot-1)
 
@@ -415,37 +418,41 @@ landed.
 
 **Root cause was TWO-layered — the operator-named architectural fix was necessary but NOT the live CI blocker:**
 
-1. **Architectural (the production path, operator-confirmed):** UTL (T0) resolved `cloud-providers.yaml` by walking up to
-   a sibling `deployment-service/` (T4) dir — absent in a standalone clone → `BucketNamingError`. Fixed by packaging the
-   canonical yaml in **UAC** (`unified_api_contracts/config/cloud-providers.yaml`, unified-api-contracts@ba92d0e3) and
-   reading it via `importlib.resources` (always-available, since UTL hard-deps UAC) — unified-trading-library@75c001ec.
-2. **The ACTUAL live CI blocker (found this run by reading the failed log, per STEP 3):** CI never hit the sibling-walk —
-   it points `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` at PM's **`scripts/quality-gates-base/ci-test-cloud-providers.yaml`**,
-   which was a **stale PRE-SUBSTITUTED snapshot** (templates baked to literals `test-account` / `archetype-state-test-…`).
-   So `test_bucket_naming_cell_sweep.py`'s AWS-account / env-tier assertions passed locally (repo fixture = templated) but
-   FAILED in CI. Synced that file byte-identical to the templated canonical; verified CI-parity resolution. — unified-trading-pm@da0cd88c (merged to PM main, PR #236, v2 green).
+1. **Architectural (the production path, operator-confirmed):** UTL (T0) resolved `cloud-providers.yaml` by walking up
+   to a sibling `deployment-service/` (T4) dir — absent in a standalone clone → `BucketNamingError`. Fixed by packaging
+   the canonical yaml in **UAC** (`unified_api_contracts/config/cloud-providers.yaml`, unified-api-contracts@ba92d0e3)
+   and reading it via `importlib.resources` (always-available, since UTL hard-deps UAC) —
+   unified-trading-library@75c001ec.
+2. **The ACTUAL live CI blocker (found this run by reading the failed log, per STEP 3):** CI never hit the sibling-walk
+   — it points `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` at PM's
+   **`scripts/quality-gates-base/ci-test-cloud-providers.yaml`**, which was a **stale PRE-SUBSTITUTED snapshot**
+   (templates baked to literals `test-account` / `archetype-state-test-…`). So `test_bucket_naming_cell_sweep.py`'s
+   AWS-account / env-tier assertions passed locally (repo fixture = templated) but FAILED in CI. Synced that file
+   byte-identical to the templated canonical; verified CI-parity resolution. — unified-trading-pm@da0cd88c (merged to PM
+   main, PR #236, v2 green).
 
 **Fleet `FAILING` triage (every flagged repo gh-verified):** most manifest `FAILING` flags are **STALE** — LDR is green.
 The only genuinely-live class is the **dep-floor cascade on `main`**: UTL source/manifest is `0.5.0` and all 8 consumers
 pin `>=0.5.0`, but the released tag was stuck at **v0.4.0** because UTL's promotion was blocked by exactly this CI red.
-Likewise UAC source `0.6.0` vs released `0.5.2` (e2e-testing pins `>=0.6.0`). **So the keystone fix is the single unblock
-for the whole `main` dep-floor cascade** (greeks / deployment-service / +6 via UTL 0.5.0; e2e-testing via UAC 0.6.0). No
-consumer floor needs touching — they are correct; the libs just need to RELEASE.
+Likewise UAC source `0.6.0` vs released `0.5.2` (e2e-testing pins `>=0.6.0`). **So the keystone fix is the single
+unblock for the whole `main` dep-floor cascade** (greeks / deployment-service / +6 via UTL 0.5.0; e2e-testing via UAC
+0.6.0). No consumer floor needs touching — they are correct; the libs just need to RELEASE.
 
 **Driven this run:** UTL `#271` (LDR→staging) re-fired (its blocking check was the pre-fix run) → v2 re-running green →
-auto-merges → staging→main → semver tags v0.5.0. UAC `#125` (DIRTY) dispatched to `deterministic-promotion-conflict-resolve`
-(the 4 unique staging commits are promote-squash artifacts → the conservative escalate case; a manual clean-start
-force-sync is **blocked — the token lacks `Administration: write`**, the same limit as cicd item L2815).
+auto-merges → staging→main → semver tags v0.5.0. UAC `#125` (DIRTY) dispatched to
+`deterministic-promotion-conflict-resolve` (the 4 unique staging commits are promote-squash artifacts → the conservative
+escalate case; a manual clean-start force-sync is **blocked — the token lacks `Administration: write`**, the same limit
+as cicd item L2815).
 
 **Also shipped:** consumer-flip (UAC named canonical in CLAUDE.md + codex; PM mirror + the CI-test fixture synced
 byte-identical); B-part-2 `--hotfix-to-main` in quickmerge.sh (guards smoke-verified); 6 RESOLVED-STALE cicd_hardening
 items flipped with evidence.
 
 **Forced-tradeoff / honest scope (rule 1 + rule 11):** the workspace carries **707 open `- [ ]`** across active plans —
-the bulk is standing per-asset-group manifest-canonicalisation / migration / audit **epic work** assigned across VMs, NOT
-this CI-unblock lifecycle. I did not implement those (they are multi-week, cross-repo, infra-ops, and out of the keystone's
-scope). The remaining cicd_hardening LIVE items are correctly statused, not falsely closed: **4982** (staging→main
-`staging_commits` logic — a fleet-workflow change; per rule 11 not a session-tail rush), **4644** (24-repo template
-rollout — fleet-wide), **1754** (UI staging PR — needs a UI-capable slot + `pw:L2`), **2815** + UAC `#125` force-sync
-(both need an `Administration:write` token — operator), **1121** (macOS-local). These are genuine non-completions with
-named reasons, not silent deferrals.
+the bulk is standing per-asset-group manifest-canonicalisation / migration / audit **epic work** assigned across VMs,
+NOT this CI-unblock lifecycle. I did not implement those (they are multi-week, cross-repo, infra-ops, and out of the
+keystone's scope). The remaining cicd_hardening LIVE items are correctly statused, not falsely closed: **4982**
+(staging→main `staging_commits` logic — a fleet-workflow change; per rule 11 not a session-tail rush), **4644** (24-repo
+template rollout — fleet-wide), **1754** (UI staging PR — needs a UI-capable slot + `pw:L2`), **2815** + UAC `#125`
+force-sync (both need an `Administration:write` token — operator), **1121** (macOS-local). These are genuine
+non-completions with named reasons, not silent deferrals.

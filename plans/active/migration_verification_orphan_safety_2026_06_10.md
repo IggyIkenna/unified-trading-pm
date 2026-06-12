@@ -4,7 +4,7 @@ title:
   registry + bidirectional orphan sweep + schema-attribute completeness + catalogue-seeded denominator + candle-edge +
   verified-delete + projected-manifest preview), folded into re-runnable CF-15…CF-21"
 created: 2026-06-10
-parent_epic: epics/manifest_master.md
+parent_epic: manifest_master
 assigned_vm: vm-cross-cutting
 status: active
 priority: P0

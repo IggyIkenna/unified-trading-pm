@@ -160,17 +160,30 @@ fi
 ISSUES=0
 
 # ── REPO TYPE DETECTION ─────────────────────────────────────────────────────
-# UI repos (React/TypeScript): have package.json, no pyproject.toml
-# Python repos: have pyproject.toml (may also have package.json for tooling)
+# UI repos (React/TypeScript): have package.json + EITHER no pyproject.toml, OR a
+#   CONFIG-ONLY pyproject (tooling sections only — no [build-system], no [project] →
+#   no installable package, no declared deps; e.g. unified-trading-system-ui per
+#   tooling_config_standardization_2026_05_26.md). For the config-only case the Python
+#   is stdlib-only codemods under scripts/ + ruff/basedpyright run from the workspace
+#   venv — there is nothing to `uv pip install -e .` (no build backend → setuptools
+#   flat-layout discovery chokes on app/lib/hooks/… → exit 1, and `set -e` quickmerge
+#   then aborts). So take the Node/UI path: npm install, no per-repo venv.
+# Python repos: have a pyproject.toml WITH a [build-system] or [project] (installable
+#   package / declared deps), and run the venv path below.
 IS_UI_REPO=false
-if [ -f "package.json" ] && [ ! -f "pyproject.toml" ]; then
-    IS_UI_REPO=true
+if [ -f "package.json" ]; then
+    if [ ! -f "pyproject.toml" ]; then
+        IS_UI_REPO=true
+    elif ! grep -qE '^\[build-system\]' pyproject.toml && ! grep -qE '^\[project\]' pyproject.toml; then
+        echo -e "  ${BLUE}Config-only pyproject (no [build-system]/[project]) — Node/tooling repo, taking UI path${NC}"
+        IS_UI_REPO=true
+    fi
 fi
 
 # ── UI REPO FLOW ─────────────────────────────────────────────────────────────
 # For UI repos, skip all Python steps and run npm install instead, then exit.
 if [ "$IS_UI_REPO" = true ]; then
-    echo -e "  ${BLUE}UI repo detected (package.json, no pyproject.toml)${NC}"
+    echo -e "  ${BLUE}UI repo detected (Node toolchain — package.json)${NC}"
 
     log_step "Node.js version"
     if command -v node &>/dev/null; then
@@ -555,6 +568,11 @@ elif [ "$CHECK_ONLY" = true ]; then
     log_skip "Check mode"
 elif [ ! -f "pyproject.toml" ]; then
     log_skip "No pyproject.toml"
+elif ! grep -qE '^\[build-system\]' pyproject.toml; then
+    # Config-only pyproject (no [build-system] → not an installable package; e.g. PM, or a
+    # frontend repo's tooling-only pyproject that reaches the Python path). `uv pip install -e .`
+    # has no build backend and would fail setuptools flat-layout discovery — nothing to install.
+    log_skip "Config-only pyproject (no [build-system]) — no installable package"
 else
     if ! uv pip install -e . --quiet 2>/dev/null; then
         log_fail "Project editable install failed — check pyproject.toml and uv.lock"

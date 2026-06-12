@@ -1,7 +1,7 @@
 ---
 title: "MTDS file-size refactor — split the 15 pre-existing >900-line source files (post-migration)"
 created: 2026-06-08
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
 status: active
 priority: P2

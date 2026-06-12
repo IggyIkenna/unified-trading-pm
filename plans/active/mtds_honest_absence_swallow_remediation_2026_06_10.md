@@ -1,7 +1,7 @@
 ---
 title: MTDS honest-absence swallow remediation — re-verified P0/P1 fix batch (audit 2026-06-09/10)
 created: 2026-06-10
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 status: active
 priority: P0

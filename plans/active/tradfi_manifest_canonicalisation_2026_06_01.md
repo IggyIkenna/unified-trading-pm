@@ -1,7 +1,7 @@
 ---
 title: "TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi"
 created: 2026-06-01
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-tradfi
 umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active

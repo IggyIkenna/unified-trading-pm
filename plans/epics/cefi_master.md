@@ -8,13 +8,25 @@ priority: P0
 assigned_vm: vm-cefi
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-07
-last_updated: 2026-05-21
+last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
+  - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
+  - ../active/cefi_manifest_canonicalisation_2026_06_01.md
+  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
   - ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
+
+> **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~28 open `- [ ]` todos
+> INLINE in its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
+> (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never
+> dispatched — the epic read as "0 plans". The inline blocks have been **reconciled, not deleted**: net-new unowned work
+> extracted to child active plans (see § "Assigned active plans"); already-owned work pointed at its owning June plan;
+> cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence. See §
+> "Workstream routing" below for the full map.
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
@@ -309,7 +321,23 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 | CeFi MTDS shards to 100%                                  | partial                           | `market_tick_data_to_100pct` (CeFi slice)                            | data-status drilldown shows ≥99% coverage % per (venue, data_type); residual gaps stamped with typed `EMPTY_CONFIRMED_REASONS`                                                                           |
 | Phantom-audit + manifest-rebuild for CeFi                 | partial — TradFi port pending     | `cefi_tradfi_tick_data_backfill` (CeFi half)                         | `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` reports <0.5% phantom rate (per 2026-05-04 99.7% reduction precedent); residual classified by drift axis                           |
 
-## Consolidated todos (lifted from folded children)
+## Workstream routing (restructured 2026-06-20)
+
+The CeFi work is dispatched through child active plans (regen scans `plans/active/`, not this epic). Every former inline
+todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
+
+| Former inline block                                                                                                                                                                    | Disposition                                                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DERIBIT options/futures + BINANCE-FUTURES bundle backfill verify + spot-checks + phantom-audit residual triage                                                                         | **EXTRACTED (net-new)**                                                                                                         | [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)                                                                                                                                          |
+| A1 / "End-state at May 23" ML success criteria (continuous ML signal live on OKX+Binance+Bybit)                                                                                        | **EXTRACTED (net-new)**                                                                                                         | [`cefi_ml_directional_continuous_live_2026_06_20`](../active/cefi_ml_directional_continuous_live_2026_06_20.md)                                                                                                                                                                    |
+| Tardis-venue drain verify, per-venue completion %, data-status rollup, stale-manifest cleanup, post-drain `completion_pct` / `capture_status` distribution, MTDS/IS slice verification | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`cefi_manifest_canonicalisation_2026_06_01`](../active/cefi_manifest_canonicalisation_2026_06_01.md) (slot-3 CeFi master orchestrator: deployment-api CeFi multi-source UNION coverage + per-source breakdown + pipeline_mode dedup/drilldown + expected_unattempted enumeration) |
+| Per-adapter `available_at` stamping + CeFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS` (the Q1 structural blocker)                                                                  | **✅ COMPLETE (shipped)** — owner plan archived `open=0/done=30`                                                                | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) Phase 1/4 (the Q1 structural mismatch was resolved as part of it; issue-doc `cefi_available_at_spawn_task_structural_mismatch_2026_05_08` closed)   |
+| QG forever-todo, zombie-VM reap                                                                                                                                                        | **DROPPED** — process/operational notes, not shippable units (covered by `vm_zombie_watchdog.py` cron + the per-commit QG rule) | —                                                                                                                                                                                                                                                                                  |
+
+The blocks below are the **frozen May-07/08 source snapshot**, retained for archaeology only. They are SUPERSEDED by the
+routing table above — do NOT pick work from them directly.
+
+## Consolidated todos — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
 ### From `cefi_venue_universe_expansion_2026_05_01` — Bitfinex / Bitget / Kraken Tardis venues
 
@@ -413,7 +441,11 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
       Extended pending per dex_perp_onboarding_handover_2026_05_07.HANDOVER.md Item C; this todo is the move-out
       announcement which IS DONE]
 
-## `available_at` adapter stamping (coordinated)
+## `available_at` adapter stamping (coordinated) — SUPERSEDED 2026-06-20 (owned by the coordinator plan; history only)
+
+> **OWNED ELSEWHERE**: this block is tracked in
+> [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+> Phase 1/4 (CeFi adapter stamping + feature-registry). Do NOT dispatch from here. Retained below for context only.
 
 > **Coordinator:**
 > [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
@@ -431,7 +463,14 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
       liquidity, microstructure, perp_basis, options_iv) need registry entries. Source-of-truth:
       `features-cefi-service/calculators/` metadata. Coordinator Phase 4.
 
-## Open questions
+## Open questions — SUPERSEDED 2026-06-20 (extracted / tracked-elsewhere; history only)
+
+> **ROUTED**: the A1 "End-state at May 23" ML success criteria + the locked design decisions (archetype / cadence /
+> capital) are extracted to
+> [`cefi_ml_directional_continuous_live_2026_06_20`](../active/cefi_ml_directional_continuous_live_2026_06_20.md). The
+> Q1 `available_at` structural blocker is tracked in the coordinator plan + issue-doc
+> `cefi_available_at_spawn_task_structural_mismatch_2026_05_08`. Retained below for context only — do NOT dispatch from
+> here.
 
 ### Q1 — [cefi-available-at-stamping-tab (Tab F2), 2026-05-08] — Spawn task structurally blocked: 3 facts contradict the spec
 
@@ -561,12 +600,29 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
-Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_Active plans declaring `parent_epic: cefi_master`. Workers pick up in priority order (P0 first). Auto-populated by
+`scripts/plans/populate_epic_bodies_2026_05_21.py` — the list below was seeded by the 2026-06-20 restructure and the
+script keeps it in sync from frontmatter._
+
+**Delegated (CeFi work tracked under service-epic plans, listed for visibility — NOT direct `parent_epic` children):**
+[`cefi_manifest_canonicalisation_2026_06_01`](../active/cefi_manifest_canonicalisation_2026_06_01.md) (manifest /
+coverage / source) ·
+[`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+(`available_at` stamping — ✅ complete/archived).
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra). Verify the DERIBIT options/futures + BINANCE-FUTURES
+perp bundle backfill completed (manifest captured %, cluster validation, greeks/IV/funding spot-checks); re-run only
+genuine gaps; per-cluster triage of the 2,223 phantom residual.
+
+### [`cefi_ml_directional_continuous_live_2026_06_20`](../active/cefi_ml_directional_continuous_live_2026_06_20.md)
+
+**status**: active · **estimate**: 12 cal AI-days (class: brand-new). Second live CeFi archetype —
+`ML_DIRECTIONAL_CONTINUOUS` continuous prediction signal on real capital across OKX + Binance + Bybit ≥7 days, full live
+loop + model lifecycle + alerting + kill-switches + DART override + backtest fidelity.
 
 ## P1 — important; post-current-gate
 

@@ -285,6 +285,17 @@ if [ -f "$PM_DEST/cursor-configs/CLAUDE.md" ]; then
     _symlink "$WORKSPACE_ROOT/.claude/CLAUDE.md" "$PM_DEST/cursor-configs/CLAUDE.md" "workspace .claude/CLAUDE.md → PM/cursor-configs/CLAUDE.md"
 fi
 
+# Claude Code skills: symlink each PM cursor-configs/skills/<name>/ into .claude/skills/<name>/ so
+# the harness discovers them as /<name> slash-commands on every slot/host (no manual wiring).
+if [ -d "$PM_DEST/cursor-configs/skills" ]; then
+    mkdir -p "$WORKSPACE_ROOT/.claude/skills"
+    for _skill_dir in "$PM_DEST/cursor-configs/skills"/*/; do
+        [ -d "$_skill_dir" ] || continue
+        _skill_name="$(basename "$_skill_dir")"
+        _symlink "$WORKSPACE_ROOT/.claude/skills/$_skill_name" "$PM_DEST/cursor-configs/skills/$_skill_name" "workspace .claude/skills/$_skill_name → PM/cursor-configs/skills/$_skill_name"
+    done
+fi
+
 # Cursor rules: COPY as real files (ephemeral, not committed, not symlinks)
 # Written to workspace root so agents and IDE can find them without per-repo noise.
 EPHEMERAL_CURSOR_RULES=""

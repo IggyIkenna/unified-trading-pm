@@ -3,7 +3,7 @@ title:
   "BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus — scale path alongside
   in-process polars/DuckDB"
 created: 2026-06-08
-parent_epic: epics/features_and_ml_master.md
+parent_epic: features_and_ml_master
 assigned_vm: vm-ml
 status: active
 priority: P2
@@ -43,16 +43,16 @@ source:
 ## Design — a third engine tier (toggle), not a fork
 
 - [x] ✅ [DESIGN] P1. **Engine-selection extension** — **unified-trading-pm@cae98d92d**: added the BigQuery third tier
-      to `codex/06-coding-standards/data-engine-selection.md` (in-process polars → DuckDB → BigQuery; selection by volume
-      + job type; same `formula_version`/canonical-v9 CONTRACT regardless of engine; external-tables-over-hive + GCS-SSOT
-      + cost-guardrail + cloud-agnostic boundaries; sequenced after the per-AG `--apply`).
+      to `codex/06-coding-standards/data-engine-selection.md` (in-process polars → DuckDB → BigQuery; selection by
+      volume + job type; same `formula_version`/canonical-v9 CONTRACT regardless of engine; external-tables-over-hive +
+      GCS-SSOT + cost-guardrail + cloud-agnostic boundaries; sequenced after the per-AG `--apply`).
 - [x] ✅ [INFRA] P1. **Hive-partitioned external tables** — **deployment-service@eaff3a7**:
       `terraform/gcp/bigquery_feature_external_tables.tf` — dataset `uts_feature_external` + a `for_each` BQ external
-      table per `(asset_group, data_type)` (6-entry seed: cefi/tradfi/defi trades/ohlcv_1m/dex_swaps + 3 feature groups),
-      `source_format=PARQUET` + `hive_partitioning_options` over the canonical `{pipeline_mode}/{asset_group}/{data_type}/
-      {timeframe}/{day}` prefix, `require_partition_filter=true` (cost guardrail). Read-only over GCS — no copy. Full
-      `(asset_group, data_type)` set rides the canonical v9 migration landing (stable schema). **NOT applied** (land-the-
-      code; operator applies post-migration).
+      table per `(asset_group, data_type)` (6-entry seed: cefi/tradfi/defi trades/ohlcv_1m/dex_swaps + 3 feature
+      groups), `source_format=PARQUET` + `hive_partitioning_options` over the canonical
+      `{pipeline_mode}/{asset_group}/{data_type}/     {timeframe}/{day}` prefix, `require_partition_filter=true` (cost
+      guardrail). Read-only over GCS — no copy. Full `(asset_group, data_type)` set rides the canonical v9 migration
+      landing (stable schema). **NOT applied** (land-the- code; operator applies post-migration).
 - [ ] [CODE] P2. **Feature compute on BQ** — a BQ-SQL expression path for the delta_one feature registry (start with the
       windowed/aggregation groups that translate cleanly; the registry's `formula_version` stays the SSOT — BQ is an
       alternate executor of the SAME formula, asserted equal to the polars path on a fixture). NOT all 1,382 specs day-1

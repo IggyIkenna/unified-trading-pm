@@ -1,7 +1,7 @@
 ---
 title: "Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction"
 created: 2026-06-01
-parent_epic: epics/mtds_mdps_master.md
+parent_epic: mtds_mdps_master
 assigned_vm: vm-prediction
 umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active
@@ -1116,8 +1116,8 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
       `derive_pipeline_mode_for_row` ← public `unified_trading_library.pipeline_mode_resolver` submodule (not the
       `__all__`-less facade) in rebuild + migrator. **File-level QG-green**: basedpyright 0 · ruff clean · 25 prediction
       tests pass. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. **NB — the repo-level MTDS `--no-fix`
-      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the MTDS
-      LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
+      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the
+      MTDS LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
       `uv lock --check` fails → QG aborts at gate 0; mechanical re-sync, precedent mtds@10930dbd) + (1) **17
       OTHER >900-line files** (orchestrator 4219, tardis 2880, solana/evm/perp/lending/dex/oracle handlers, sports
       rebuild/migrate, polymarket_adapter 929, …) — both belong to the coordinator's **slot-2 MTDS-QG P2**
@@ -1355,8 +1355,8 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
       `derive_pipeline_mode_for_row` ← public `unified_trading_library.pipeline_mode_resolver` submodule (not the
       `__all__`-less facade) in rebuild + migrator. **File-level QG-green**: basedpyright 0 · ruff clean · 25 prediction
       tests pass. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. **NB — the repo-level MTDS `--no-fix`
-      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the MTDS
-      LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
+      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the
+      MTDS LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
       `uv lock --check` fails → QG aborts at gate 0; mechanical re-sync, precedent mtds@10930dbd) + (1) **17
       OTHER >900-line files** (orchestrator 4219, tardis 2880, solana/evm/perp/lending/dex/oracle handlers, sports
       rebuild/migrate, polymarket_adapter 929, …) — both belong to the coordinator's **slot-2 MTDS-QG P2**

@@ -8,16 +8,30 @@ priority: P1
 assigned_vm: vm-tradfi
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-07
-last_updated: 2026-05-21
+last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/tradfi_cme_event_contract_backfill_2026_06_20.md
+  - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
+  - ../active/tradfi_massive_dual_source_2026_05_28.md
+  - ../active/tradfi_manifest_canonicalisation_2026_06_01.md
+  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
+  - ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md
   - ../archive/2026_05/cme_polymarket_arb_2026_05_08.md
   - ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
   - ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
-  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
-  - ../active/tradfi_massive_dual_source_2026_05_28.md
 ---
+
+> **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated open `- [ ]` todos INLINE in
+> its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
+> (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never
+> dispatched. The inline blocks have been **reconciled, not deleted**: net-new unowned work extracted to child active
+> plans (see § "Workstream routing" + "Assigned active plans"); already-owned work pointed at its owning plan; cutover
+> success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence. **NOTE**:
+> tradfi_master already had active children (`tradfi_massive_dual_source_2026_05_28` +
+> `tradfi_manifest_canonicalisation_2026_06_01`) — their work was NOT re-extracted. See § "Workstream routing" below for
+> the full map.
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
@@ -39,6 +53,26 @@ related_plans:
 > **🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping** (coordinated by
 > `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Re-verify per-adapter `available_at` stamping wiring
 > before adding new adapters to this plan.
+
+## Workstream routing (restructured 2026-06-20)
+
+The TradFi work is dispatched through child active plans (the backlog regen scans `plans/active/`, not this epic). Every
+former inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
+
+| Former inline block                                                                                                                                                                                                          | Disposition                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CME event-contract Phase 0 catalog backfill (9 EC\* roots, VM launcher + `VM_PREFIX_TO_BUCKET` register + catalog verify; L536-545)                                                                                          | **EXTRACTED (net-new)**                                                                         | [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md)                                                                                                                                                          |
+| TradFi 5,212 legacy-blank `--apply-flips` VM run (scan complete, 0 uncertain; L386, MIGRATED FROM gate_3_phantom_audit_runbook)                                                                                              | **EXTRACTED (net-new residual)**                                                                | [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md) (least-duplicative home for the bounded apply run)                                                                                                       |
+| ES/CBOE-VIX feature-calculator runs (features-delta-one + features-volatility for tradfi/ES; L245-248), ml-training ES smoke (L303), full S&P backtest 2020→2026 (L305-307); S&P swing ML + price-arb backtest readiness     | **EXTRACTED (net-new)**                                                                         | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)                                                                                                                                          |
+| TradFi data-source adapter work (Massive/Databento, source column)                                                                                                                                                           | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_massive_dual_source_2026_05_28`](../active/tradfi_massive_dual_source_2026_05_28.md) (pre-existing active child)                                                                                                                                              |
+| Instrument / MTDS / MDPS data-clean, per-venue completion %, manifest v9 + pipeline_mode canonicalisation, phantom-audit per-cluster residual triage (L344-367, L584-588)                                                    | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_manifest_canonicalisation_2026_06_01`](../active/tradfi_manifest_canonicalisation_2026_06_01.md) (pre-existing active child; L3 owner for tradfi)                                                                                                             |
+| Per-adapter `available_at` stamping (L556, tagged 🟡 TRACKED-ELSEWHERE)                                                                                                                                                      | **OWNED ELSEWHERE — do not duplicate**                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) (single-owner stamping plan; archived — runtime stamping shipped)                                                                       |
+| `InstrumentRecord.expiry` nullable→required type-flip (L452, DEFERRED P3, MIGRATED FROM hard_schema_enforcement)                                                                                                             | **OWNED ELSEWHERE — do not duplicate**                                                          | hard-schema-enforcement workstream; runtime enforcement already shipped (uac@80aef10) — only the residual Pydantic type-flip remains, blocked on the live GCS migration. Point only; do NOT re-dispatch.                                                               |
+| "End-state at May 23" success criteria for deliverable A (S&P prediction, L581-595) + deliverable B (price arbitrage, L632-640) + price-arb open questions (L652-654); backtest-harness item 17/18 fidelity + cutover gating | **ROUTED TO MASTER**                                                                            | [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F. The data-clean + ES-feature subset is referenced from `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; the cutover gating + backtest-harness fidelity live in master. |
+| Already-shipped market-hours / session-type / futures-expiry-schema / S&P ML readiness items (mostly `- [x]` with evidence)                                                                                                  | **DONE (in-place)** — flipped with repo@sha evidence in the inline blocks below; no re-dispatch | —                                                                                                                                                                                                                                                                      |
+
+The blocks below are the **frozen May-07/08 source snapshot**, retained for archaeology only. They are SUPERSEDED by the
+routing table above — do NOT pick work from them directly.
 
 ## Codex SSOTs
 
@@ -156,7 +190,12 @@ respective umbrellas.
 | L1-L3 tick data (trades / tbbo / mbp_10)            | **DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**           | successor plan `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` (TBD)                                    |
 | TradFi venue trading calendar consumption           | per CLAUDE.md "TradFi futures: bundled, non-trading days pre-skipped" | shard-granularity SSOT                                                                                         |
 
-## Consolidated todos (P0/P1 only)
+## Consolidated todos (P0/P1 only) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
+
+> **SUPERSEDED**: the open `- [ ]` items in this section are now dispatched via the child active plans named in §
+> "Workstream routing" (CME backfill, S&P/arb backtest readiness) or owned by the pre-existing active children
+> (`tradfi_massive_dual_source` / `tradfi_manifest_canonicalisation`). The `- [x]` items are shipped (evidence inline).
+> Do NOT pick work directly from the blocks below.
 
 ### Market-hours + holiday SSOT integration (`instrument_schema_cohesion_and_market_hours`)
 
@@ -251,35 +290,34 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       `features-service@b3814675` — `compute_vix_features()` in `volatility/calculators/vix_calculator.py`; 10 tests
       (10/10 pass); contango proxy = (1h_close/1m_close)-1; momentum + vol-of-vol for windows 5/10/20.
 - [x] [FEATURE] P3. **DXY (US Dollar Index) macro feature via the existing Yahoo Finance adapter — FEATURE-ONLY,
-      cross-AG (helps both TradFi and crypto/prediction models; a USD-strength regressor, no trading leg).**
-      **SHIPPED 2026-06-11** (slot-3): `uac@922debaf` (`YAHOO_INDICES` + `get_dxy_daily_source`, 8 tests) |
+      cross-AG (helps both TradFi and crypto/prediction models; a USD-strength regressor, no trading leg).** **SHIPPED
+      2026-06-11** (slot-3): `uac@922debaf` (`YAHOO_INDICES` + `get_dxy_daily_source`, 8 tests) |
       `instruments-service@e62c9314` (ICE venue filter + `_create_yahoo_index_records` refactor, 4 tests) |
-      `features-service@2f1d6e31` (`dxy_calculator.py` level/returns/momentum/zscore, 9 tests). Daily
-      `ohlcv_24h` via `DX-Y.NYB`, coverage from 2019-01-02. Mirror of the VIX path.
+      `features-service@2f1d6e31` (`dxy_calculator.py` level/returns/momentum/zscore, 9 tests). Daily `ohlcv_24h` via
+      `DX-Y.NYB`, coverage from 2019-01-02. Mirror of the VIX path.
 - [x] [FEATURE] P3. **US treasury-yield curve macro feature via the existing Yahoo Finance adapter — FEATURE-ONLY,
       cross-AG (the level + shape of the US rate curve drives TradFi, crypto and prediction models; no trading leg).**
       **SHIPPED 2026-06-11** (slot-3, operator-requested 2026-06-11). Tenors 3M (`^IRX`) / 5Y (`^FVX`) / 10Y (`^TNX`) /
       30Y (`^TYX`) — CBOE interest-rate indices, daily `ohlcv_24h` par yields in percent, full history back to
       2000-01-03 (6,642 bars empirically confirmed; Yahoo has **no live 2Y** — `2YY=F` is stale zero-volume futures, so
       the curve is 3M/5Y/10Y/30Y). `uac@f19ac246` (4 `YAHOO_INDICES` entries + `get_us_treasury_yield_daily_source` +
-      `_SOURCE_RESOLVERS` keys `CBOE:INDEX:US{3M,5Y,10Y,30Y}`, 4 new tests) |
-      `instruments-service@04f3742b` (CBOE-filter yahoo-index records now emit VIX + the 4 treasuries; 2 tests updated) |
-      `features-service@5900ac89` (`treasury_yields_calculator.py` → 32 features: per-tenor level + bp-changes, term
-      spreads, scale-free ratios, butterflies, **no-arbitrage forward rates** incl. the 5y5y, and z-scores of the 10Y
-      level + 10Y-3M slope; 11 tests). Validated on the live Yahoo curve (`spread_us10y_us3m=89.3bp`, `fwd_5y5y=4.80%`
-      above the 10Y spot for the current upward curve). Mirror of the VIX/DXY path. **Data-correctness hardening
-      (2026-06-11, follow-up to operator review):** UTC ✅ + no-lookahead ✅ (right-edge `t_close` via
-      `compute_bar_close_boundary`, CF-19; `available_at`=write-time). Genesis fixed — `YahooIndexDef` now carries a
-      **required** `first_available_date` (VIX 1990-01-02 / DXY 2019-01-02 / treasuries 2000-01-03), replacing a
-      hardcoded `2004-03-26` that was wrong for every Yahoo index; both reference adapters now emit the **canonical
-      `-USD` instrument_key** (`CBOE:INDEX:VIX-USD`) matching the data-write path (`VIX_INSTRUMENT_KEY`), the symbology
-      GCS key and the source resolvers (previously the no-suffix record key silently failed `get_source_for_instrument`).
-      QG-gate added (UAC): every `YAHOO_INDICES` entry must declare a plausible genesis AND have a `_SOURCE_RESOLVERS`
-      entry under its canonical key — a new index can't ship without a genesis or a source. Plus a `features-service`
-      forward-premium (term-premium) family → calculator now **35 features** (13 tests). Hardening shas: `uac@32d0d403`
-      (genesis field + canonical `-USD` resolver keys + `normalize_massive_index` `-USD` + QG gate) |
-      `instruments-service@24297354` (canonical `-USD` record key + per-instrument genesis wiring) |
-      `features-service@d3d04a1f` (forward-premium features).
+      `_SOURCE_RESOLVERS` keys `CBOE:INDEX:US{3M,5Y,10Y,30Y}`, 4 new tests) | `instruments-service@04f3742b`
+      (CBOE-filter yahoo-index records now emit VIX + the 4 treasuries; 2 tests updated) | `features-service@5900ac89`
+      (`treasury_yields_calculator.py` → 32 features: per-tenor level + bp-changes, term spreads, scale-free ratios,
+      butterflies, **no-arbitrage forward rates** incl. the 5y5y, and z-scores of the 10Y level + 10Y-3M slope; 11
+      tests). Validated on the live Yahoo curve (`spread_us10y_us3m=89.3bp`, `fwd_5y5y=4.80%` above the 10Y spot for the
+      current upward curve). Mirror of the VIX/DXY path. **Data-correctness hardening (2026-06-11, follow-up to operator
+      review):** UTC ✅ + no-lookahead ✅ (right-edge `t_close` via `compute_bar_close_boundary`, CF-19;
+      `available_at`=write-time). Genesis fixed — `YahooIndexDef` now carries a **required** `first_available_date` (VIX
+      1990-01-02 / DXY 2019-01-02 / treasuries 2000-01-03), replacing a hardcoded `2004-03-26` that was wrong for every
+      Yahoo index; both reference adapters now emit the **canonical `-USD` instrument_key** (`CBOE:INDEX:VIX-USD`)
+      matching the data-write path (`VIX_INSTRUMENT_KEY`), the symbology GCS key and the source resolvers (previously
+      the no-suffix record key silently failed `get_source_for_instrument`). QG-gate added (UAC): every `YAHOO_INDICES`
+      entry must declare a plausible genesis AND have a `_SOURCE_RESOLVERS` entry under its canonical key — a new index
+      can't ship without a genesis or a source. Plus a `features-service` forward-premium (term-premium) family →
+      calculator now **35 features** (13 tests). Hardening shas: `uac@32d0d403` (genesis field + canonical `-USD`
+      resolver keys + `normalize_massive_index` `-USD` + QG gate) | `instruments-service@24297354` (canonical `-USD`
+      record key + per-instrument genesis wiring) | `features-service@d3d04a1f` (forward-premium features).
 - [x] [DATA] P1. **Yahoo index instruments (VIX/DXY/US-treasuries) into the data-status could-exist universe.**
       **SHIPPED 2026-06-11** (slot-3): `instruments-service@bcfe3ea4` added `_enumerate_tradfi_indices` to
       `scripts/enumerate_expected_universe.py` — per-instrument **pre-genesis** enumeration (each index's own genesis
@@ -525,7 +563,11 @@ volume.
       reasons" (three-reason table, rolling-window session-adjusted-denominator code pattern, `is_session_closed` helper
       using `_SESSION_CLOSED_REASONS` frozenset).
 
-### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`)
+### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`) — EXTRACTED 2026-06-20
+
+> **EXTRACTED**: the 2 open `- [ ]` items below (Phase 0 backfill VM + post-backfill catalog verify) are now dispatched
+> via [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md). Do
+> NOT dispatch from here. Retained for context only.
 
 Source issue archived. 26KB design RFC — operator decision 2026-05-08: **Option (a) split**. Phase 0 (catalog backfill —
 the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural fixes spanning UAC + MTDS
@@ -544,7 +586,12 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 * [ ] [VERIFY] P0. Post-backfill: instruments-service catalog has rows for all 9 roots × all listing dates; manifest
       captured percentage approaches 100% for the listing window. Phases 1-5 in CME sub-plan unblocked.
 
-## `available_at` adapter stamping (coordinated)
+## `available_at` adapter stamping (coordinated) — SUPERSEDED 2026-06-20 (owned by the coordinator plan; history only)
+
+> **OWNED ELSEWHERE**: this block is tracked in
+> [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+> (single-owner stamping plan — now archived; runtime stamping shipped). Do NOT dispatch from here. Retained below for
+> context only.
 
 > **Coordinator:**
 > [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
@@ -567,7 +614,13 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
       at `features-service@b3814675`). Registry count 59 → 67; `validate_required_inputs()` returns 0 issues; UAC QG
       green.
 
-## May-23 deliverable A — S&P prediction (folded from `sp_prediction_may_23_2026.epic` 2026-05-08)
+## May-23 deliverable A — S&P prediction (folded from `sp_prediction_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (extracted + routed; history only)
+
+> **ROUTED**: the "End-state at May 23" success criteria are routed to
+> [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F (cutover gating + backtest
+> harness item 18); the TradFi-data + ES-feature execution slice is extracted to
+> [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
+> Open questions below are all RESOLVED. Do NOT dispatch from here. Retained for context only.
 
 > **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sp_prediction_may_23_2026.epic.md`.
 > Archived: [`plans/archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md).
@@ -618,7 +671,13 @@ of the data pipeline must work end-to-end in batch; bugs/backfills/schema fixes 
 
 ---
 
-## May-23 deliverable B — Price arbitrage (folded from `price_arbitrage_may_23_2026.epic` 2026-05-08)
+## May-23 deliverable B — Price arbitrage (folded from `price_arbitrage_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (extracted + routed; history only)
+
+> **ROUTED**: the "End-state at May 23" success criteria + the open questions (cross-venue ETF universe, backtest
+> window) are routed to [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F (item 17
+> backtest fidelity + cutover gating); the TradFi-data + ES-feature execution slice is extracted to
+> [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
+> Do NOT dispatch from here. Retained for context only.
 
 > **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/price_arbitrage_may_23_2026.epic.md`.
 > Archived: [`plans/archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md).
@@ -677,14 +736,35 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+_3 active plans declare `parent_epic: tradfi_master` in their frontmatter (the 2 children extracted in the 2026-06-20
+restructure + the pre-existing `tradfi_massive_dual_source`). Workers pick up in priority order (P0 first).
 Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+**Delegated (owned by another epic but in tradfi's data path)**:
+[`tradfi_manifest_canonicalisation_2026_06_01`](../active/tradfi_manifest_canonicalisation_2026_06_01.md) declares
+`parent_epic: mtds_mdps_master` (L3 manifest-canonicalisation owner for tradfi) — it owns the instrument/MTDS/MDPS
+data-clean + phantom-audit residual; do NOT duplicate that work into tradfi children.
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) · **title**: CME event-contract Phase 0 catalog
+backfill + manifest legacy-blank apply-flips. Extracted 2026-06-20 from the inline epic body (net-new + unowned);
+unblocks the archived CME↔Polymarket arb sub-plan's Phases 1-5.
+
+### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: brand-new) · **title**: S&P ML + price-arb backtest readiness
+(ES/VIX feature runs + data-clean slice). Extracted 2026-06-20 — the TradFi-data slice of the two folded May-23
+deliverables; the backtest-harness fidelity + cutover gating stay in master Group F.
 
 ## P1 — important; post-current-gate
+
+### [`tradfi_massive_dual_source_2026_05_28`](../active/tradfi_massive_dual_source_2026_05_28.md)
+
+**status**: active · **estimate**: 7 cal AI-days (class: infra) · **title**: TradFi dual-source — Massive alongside
+Databento with co-mingled source column. Pre-existing active child (not re-extracted in the 2026-06-20 restructure).
 
 ### [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
 
