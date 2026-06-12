@@ -139,15 +139,21 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
 
 ## Discovered findings (provenance: this plan, 2026-06-12 slot-3)
 
-- [ ] [SCRIPT] P2. **DEFERRED — INFRA BUG (not this plan's scope; surfaced shipping Phase 2)**: the canonical
-      `scripts/setup.sh` mis-detects `unified-trading-system-ui` as a Python repo. Detection is
-      `IS_UI_REPO = package.json     present AND pyproject.toml ABSENT` (setup.sh L165-167), but UTS-UI carries an
-      intentional **config-only** `pyproject.toml` (no `[build-system]`, Python tooling for `scripts/` only — per
-      `tooling_config_standardization_2026_05_26.md`). So setup.sh runs the Python path and `uv pip install -e .` fails
-      ("Multiple top-level packages discovered in a flat-layout: app/lib/hooks/components/node_modules…"), exit 1.
-      Because `quickmerge.sh` is `set -e` and runs `setup.sh --check || setup.sh`, a cold env (where `--check` fails) →
-      full `setup.sh` → abort → **UTS-UI quickmerge is blocked**. Today it only ships because a prior `.venv` makes
-      `--check` pass (fragile). Fix: in the canonical PM `scripts/setup.sh`, treat
-      `package.json present AND pyproject.toml has no     `[build-system]` table` as a UI repo (config-only pyproject) →
-      skip the Python path; roll out fleet-wide. Repo: unified-trading-pm (`scripts/setup.sh` + rollout). Affects any
-      frontend repo carrying a config-only pyproject.
+- [x] ✅ [SCRIPT] P2. **INFRA BUG FIXED 2026-06-12** (operator-requested follow-up). The canonical `scripts/setup.sh`
+      mis-detected `unified-trading-system-ui` as a Python repo: detection was
+      `IS_UI_REPO = package.json present AND     pyproject.toml ABSENT`, but UTS-UI carries an intentional
+      **config-only** `pyproject.toml` (no `[build-system]`, no `[project]` — tooling-only: ruff/basedpyright on
+      `scripts/`, stdlib-only codemods, ZERO declared deps; per `tooling_config_standardization_2026_05_26.md`). So
+      setup.sh ran the Python path and `uv pip install -e .` failed ("Multiple top-level packages discovered in a
+      flat-layout: app/lib/hooks/…"), exit 1; since `quickmerge.sh` is `set -e` and runs `setup.sh --check || setup.sh`,
+      a cold env (`--check` fails) → full `setup.sh` → abort → UTS-UI quickmerge blocked. **Fix** (PM `scripts/setup.sh`
+      landed with this flip + UTS-UI copy `unified-trading-system-ui@6c9680d9`): (1) detection broadened —
+      `package.json` present AND a config-only pyproject (no `[build-system]` AND no `[project]`) → Node/UI path (npm,
+      **no per-repo venv** — the Python tooling runs from the workspace venv, the scripts have no deps); (2) defensive
+      guard added to step-8 editable-install — skip `uv pip install -e .` when the pyproject has no `[build-system]`
+      (protects PM + any config-only repo that reaches the Python path). Verified: UTS-UI full `setup.sh` now exits 0
+      via the UI path; the setup.sh-only quickmerge succeeded with its own `setup.sh --check` passing (no Python abort).
+      UTS-UI is the only repo with this package.json+config-only-pyproject shape today, so blast radius is contained;
+      the new branches are inert for all other repos. Repo: unified-trading-pm (`scripts/setup.sh`, the SSOT) +
+      propagated to unified-trading-system-ui. A future `rollout-quality-gates-unified.py` re-propagates the canonical
+      fleet-wide.
