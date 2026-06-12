@@ -123,11 +123,15 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       green (no extra call); only a non-green repo needs the lookup (same profile as `branch_ci`). Repo: deployment-api
       (`_repo_ci_github`/`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi` OverviewTable +
       `client` + `mock-api`).
-- [ ] [CODE] P3. **(N2-followup) Per-branch last-green (LDR / staging) in the repo drill-down** — N2 v1 surfaces the
-      MAIN-axis last-green as the overview column (the deployed branch the operator asked about). Extend last-green to
-      LDR + staging (same budget-gated pattern: green head → use head, else one runs-API lookup) and render them in the
-      `RepoDetailPanel` (the overview row is already 10 cols wide — per-branch belongs in the drilldown, not the
-      matrix). Repo: deployment-api + deployment-ui.
+- [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@a9276d1 + deployment-ui@d318fed | deployment-api QG green (160s) + deployment-ui QG green (36s) |
+      pw:L2 ✓ 207/207 | regression: tests/smoke/repos-tab.spec.ts (per-branch last-green strip) +
+      tests/unit/test_repo_ci_routes.py::test_detail_shape (last_green keyed by branch). **(N2-followup) Per-branch
+      last-green (LDR / staging) in the repo drill-down** — the detail payload gains `last_green` keyed by branch
+      (LDR/staging/main); a `BranchLastGreenStrip` renders the three axes in `RepoDetailPanel`, distinct from each
+      branch HEAD shown in the pipeline strip. Budget-gated: a branch whose HEAD v2 is success uses the head (no extra
+      call), else one runs-API lookup — cheap because this is a single-repo drilldown, not the fleet overview. Repo:
+      deployment-api (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi.tsx`/`client`/`mock-api`).
 
 ### Credential status (re-probed 2026-06-11)
 
@@ -183,7 +187,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       pipeline `main` stage label otherwise made the exact-text match ambiguous). Repo: deployment-ui (`RepoCi.tsx`).
 - [ ] [CODE] P3. **Version-coherence panel** — `assert_version_coherence.py` verdicts (VERSION_SPLIT /
       VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE) per repo on the dashboard. Repo: deployment-api (run/ingest) +
-      deployment-ui.
+      deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** VERSION_SPLIT
+      needs per-repo source `pyproject.version` fetches (25 GitHub calls/load), and the two cheap manifest-internal
+      checks are exactly the ones CLAUDE.md flags as "VESTIGIAL_SCALAR_DRIFT harmless when stale" + "dep-floors are
+      INTENTIONAL — syncing defeats pull-not-push", so a deployment-api reimplementation risks the "do NOT fix apparent
+      inconsistency blindly" trap (CLAUDE.md § "Manifest version-surface semantics"). Correct design: the panel reads
+      `assert_version_coherence.py`'s VERDICT (the workflow-status→store generalisation the operator described
+      2026-06-11), not a second implementation. **BLOCKED-ON: verdict-store (Firestore generalisation, gated by the
+      CI/CD billing wall) OR operator OK on a faithful port.**
 - [ ] [CODE] P3. **Rollout-ratchet panels** — workflow-template drift (`detect_template_drift.py`) + Dockerfile
       digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
 - [ ] [CODE] P3. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
@@ -208,15 +219,15 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `last_build_time`/`last_build_log_url`; the UI `ImageCell` renders status chip (→build log) + **built commit sha
       (→GitHub commit)** + build time. Repos: deployment-api (`_cloud_builds_history`/`repo_ci`/`_repo_ci_types`) +
       deployment-ui (`ImageCell`/`buildTimeLabel`/`shortSha`/mock).
-- [ ] [CODE] P1. **(B1-followup) `gcs_region=us-central1` prod-config anomaly — BIG FINDING** — the running prod
-      deployment-api reports `gcs_region: us-central1` + `zones: us-central1-a/b/c` while ALL data + Cloud Build
-      triggers + the Artifact Registry are in `asia-northeast1` (workspace SSOT: "all GCS data is in asia-northeast1;
-      zone default asia-northeast1-c"). B1's Image-column fix is SCOPED (a dedicated `CLOUD_BUILD_REGION` constant, zero
-      blast radius) so it didn't touch this — but `gcs_region`/`effective_region` defaulting to `us-central1`
-      (`deployment_api_config.py:589` `self.gcs_region or "us-central1"`) is wrong for this workspace and could
-      mislocate VM-launch zones / GCS region / cross-region-egress checks. Operator decision needed: fix the
-      `effective_region` default + prod config to `asia-northeast1` (blast radius: VM zones, GCS) vs leave compute in
-      us-central1 deliberately. Repo: deployment-api. **Surfaced to operator 2026-06-11.**
+- [x] ✅ [CODE] P1. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) — deployment-api@a9276d1
+      | QG green (160s) | regression: tests/integration/test_functional_deps.py::test_deployment_api_config_effective_region_default.
+      **(B1-followup) `gcs_region=us-central1` prod-config anomaly — BIG FINDING — RESOLVED (operator decision
+      2026-06-12: FIX default → `asia-northeast1`).** `effective_region` default changed `us-central1` → `asia-northeast1`
+      in `deployment_api_config.py` (the workspace-SSOT region for all GCS data / Cloud Build triggers / Artifact
+      Registry), and the GCP failover list now leads with `asia-northeast1`. No explicit prod `GCS_REGION` env was set
+      (verified — the anomaly was purely the default fallback), so the default fix is the complete fix; prod picks up
+      `asia-northeast1` on next deploy. Regression test pins both the default + the home-region-first failover order.
+      Repo: deployment-api.
 - [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@f4a6d45 (on branch `feat/monitoring-slot26`, pending combined
       PR) | pw:L2 ✓ (full smoke 188/188 green) | regression: src/components/ServiceDetails.test.tsx +
       tests/smoke/stateful-flows.spec.ts. **(test-robustness) `DependenciesPanel` white-screen crash — FIXED.** Root
@@ -323,24 +334,40 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       greeks-service (quarantined) + execution-service (failing). 2 new unit tests + a dedicated e2e regression spec
       (chose `tests/e2e/repos-promotion-blocked.spec.ts` over folding into repos-tab — cleaner isolation). UI QG green
       (coverage 75.01% ≥ 70%). Repo: deployment-ui.
-- [ ] [CODE] P2. **(G2) Semver-agent health has no standing state** — the bump-rate circuit-breaker (≥3 pending bumps/hr
-      or consecutive-at-tip) + version-bump dispatch-failure are CRITICAL pages with no UI element AND they bypass the
-      alert ledger (the inline-curl tail already filed in `ci_dashboard_deployment_ui` P3). Add a semver-agent health
-      chip/panel (last bump, pending-bump count, breaker armed?) sourced from the manifest version-surface + the GitHub
-      runs API for `semver-agent.yml`. Composes with the ledger-persist tail. Repos: deployment-api + deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
+      deployment-api@a9276d1 + deployment-ui@d318fed | QG green both | pw:L2 ✓ 207/207 | regression:
+      tests/smoke/repos-tab.spec.ts (semver-health panel) + tests/unit/test_repo_ci_routes.py::test_semver_health +
+      tests/unit/test_repo_ci_manifest.py::TestPendingVersionBumps. **(G2) Semver-agent health standing state** —
+      `/api/repo-ci/overview` gains `semver_health`: last `semver-agent.yml` run (one global runs-API query) +
+      pending-bump count (manifest `staging_versions` semver-ahead-of `versions`, the bump-rate signal) + `breaker_armed`
+      (pending ≥ 3, mirroring the circuit-breaker threshold). `SemverHealthPanel` on `/repos` shows last-bump chip +
+      pending-bump (N/threshold) + breaker-armed/clear + the stacked repos. **Sourced from the manifest version-surface +
+      runs API (the proven live-read pattern) — NOT the blocked Firestore generalisation.** Ledger-persist tail
+      (inline-curl alert) still rides `ci_dashboard_deployment_ui` P3. Repos: deployment-api
+      (`repo_ci`/`_repo_ci_manifest`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi`/`client`/`mock-api`).
 - [ ] [CODE] P2. **(G3) Manifest consolidator health (`CONSOLIDATOR_DOWN`) is homeless** — the consolidator watchdog
       pages CRITICAL on a stale/missing `_index` while per-VM shards exist, but there is NO standing element on EITHER
       monitoring surface. Decide the home (it is data-pipeline, not CI/CD or fleet-git — candidates: a small
       consolidator-liveness chip on `/repos` header, or the data-status surface) + surface `assert_consolidator_healthy`
       state (last `_index` write age, per-VM shard count). Operator surface-decision needed. Repos: deployment-api +
-      deployment-ui (or data-status owner).
+      deployment-ui (or data-status owner). **OPERATOR DECISION 2026-06-12: home = the DATA-STATUS surface** (its true
+      data-pipeline domain, not the CI/CD `/repos` pane). Approach: a `data-status` backend signal reading `_index`
+      freshness + per-VM shard count per asset-group manifest bucket (a direct GCS read via UTL
+      `assert_consolidator_healthy` — NOT a workflow-verdict, so genuinely buildable now) + a data-status UI element.
+      **IN PROGRESS — slot 3 (operator 2026-06-12). NOT for other slots to pick up.**
 - [ ] [CODE] P3. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
       WARNING on per-repo ruleset misalignment; no UI. Fold into the planned **Rollout-ratchet panels** smart-extra
       (workflow-template drift + Dockerfile digest-pin) as a third ratchet column. Repos: deployment-api +
       deployment-ui.
 - [ ] [CODE] P3. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
       a freeze blocks a scheduled/autonomous run; add a freeze-window banner on `/repos` (active? window? reason?).
-      Repo: deployment-ui.
+      Repo: deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** The
+      "is a freeze active NOW" verdict spans 6 recurrence types (daily / every_8h / 1st_friday_monthly /
+      3rd_friday_monthly / 8x_yearly / quarterly) + DST notes in `plans/ops/change-freeze-calendar.csv`, and the SSOT
+      evaluator is **inline bash in `.github/workflows/change-freeze-check.yml`** — reimplementing that recurrence/DST
+      logic in deployment-ui risks drift against the gate. Same class as version-coherence: surface the workflow's
+      stored verdict, don't re-evaluate. **BLOCKED-ON: verdict-store (Firestore generalisation) OR operator OK on a
+      faithful port of the bash evaluator.**
 - [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (on LDR, **not yet promoted — Actions billing wall**) —
       deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (14/14 route tests) + full UI QG | pw:L2
       ✓ 202/202 | regression: tests/smoke/repos-tab.spec.ts (lag chip) + tests/unit/test_repo_ci_routes.py

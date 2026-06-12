@@ -355,12 +355,12 @@ version comparison no-ops → the guard never fires). Captured here:
       **stdlib-only PEP440- subset comparator** (no third-party import; no silent exit(0) on parse failure). Verified:
       in-range→0, MAJOR out-of-range→**1** (now detected at preflight), boundary→0, below→1, `any`→0, unparseable→**1**
       (was silently 0).
-- [ ] [SCRIPT] P3. **Fleet sweep for the same packaging-no-op pattern in OTHER repos** —
+- [x] ✅ **[DONE 2026-06-12 (swept, CLEAN — no fixes needed) — `rg 'from packaging|import packaging' -g '*.sh'` across all 25 repos: every per-repo `setup.sh` is clean (none import packaging); the only clone-time `.sh` importing packaging, `setup-workspace-from-manifest.sh`, is already the stdlib-only PEP440 comparator (the 2026-06-09 fix — the line-102 hit is a comment about the removed old code); `check-internal-advisories.sh` runs POST-install (operates on `get_installed_packages()`) so packaging is present and its `except ImportError→exit(0)` is a loud-warned guarded skip, not a pre-uv-sync silent no-op (verified install-order per this item's note → leave it). No latent silent-no-op instances remain.]** [SCRIPT] P3. **Fleet sweep for the same packaging-no-op pattern in OTHER repos** —
       `rg "from packaging" $(setup     scripts)` across all 25 repos' `setup.sh` / clone-time scripts; any that import
       `packaging` BEFORE `uv sync` with an `except: pass/exit(0)` mask have the same latent silent-no-op.
       (`check-internal-advisories.sh` in PM imports `packaging` too but runs post-install — verify install-order before
       touching it.) Fix each to stdlib; deliberate per-repo (changes resolution behavior).
-- [ ] [SCRIPT] P2. **Lower SIT's phantom-era instruments-service floor** — `system-integration-tests/pyproject.toml`
+- [x] ✅ **[DONE 2026-06-12 — system-integration-tests@341446c9: `instruments-service>=0.30.0` → `>=0.4.0` (matches the de-inflated true version); QG green 135s]** [SCRIPT] P2. **Lower SIT's phantom-era instruments-service floor** — `system-integration-tests/pyproject.toml`
       still pins `instruments-service>=0.30.0,<1.0.0`; the runaway-semver phantom was de-inflated to a coherent **0.4.0**
       (main=staging=LDR, tag `v0.4.0`), so this `>=0.30.0` floor is stale (true version 0.4.0). Non-blocking today
       (content-first clone resolves the editable path source) but should match the real version → set `>=0.4.0,<1.0.0`.
@@ -461,7 +461,7 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       `_register_deployed_version()` post-health-gate, best-effort). 33/33 new+touched tests, 239 adjacent green, 0 new
       basedpyright errors. Cloud Run live services: `run_v2` exposes no tag→digest resolve — provenance = FROM-digest
       ratchet + passthrough (documented in code).
-- [ ] [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** — deployment-api's
+- [x] ✅ **[DONE 2026-06-12 — deployment-api@33be49cba: added `image_digest`/`git_commit`/`dep_versions` to `VmDeploymentEntryModel` so the `asdict(entry)` keys stop being pydantic-dropped + reach the response; regression test `tests/unit/test_vm_deployment_bom.py` (3 cases: model declares, asdict-passthrough, honest-empty default); QG green 201s]** [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** — deployment-api's
       `VmDeploymentEntryModel` (`deployment_api/routes/vm_deployments.py:42`) builds from `asdict(entry)` and pydantic
       silently DROPS unknown keys, so BoM reaches the GCS rows but not the API response until the model adds
       `image_digest` / `git_commit` / `dep_versions` (3-line change). repo: deployment-api.
