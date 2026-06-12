@@ -17,6 +17,8 @@ estimate_calibration_note: |
   lookahead + dimension/label/config audit) across ~thousands of features.
 related_plans:
   - plans/active/features_service_e2e_pipeline_test_2026_05_26.md
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 > **HOLD released 2026-06-11 (operator Ikenna):** harsh-side Phase 1/2 work landed (items ✅); 2-week-stale banner
