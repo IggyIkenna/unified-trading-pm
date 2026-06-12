@@ -91,11 +91,18 @@ source:
       `autoUpdates:false` did not stop it on 2.1.146. Find the honored mechanism for the deployed CLI, or pin/upgrade
       the fleet CLI so startup is fast + deterministic (removes the primary source of the boot-paste timing miss).
       Target: vm-0 spawn env / deployment.
-- [ ] [CODE] P1. **Verify the boot actually landed** post-paste: capture-pane after submit and confirm the prompt left
-      the empty state; if still empty, re-deliver once. Closes the residual window where a paste "succeeds" (rc 0) but
-      the TUI dropped it.
-- [ ] [TEST] P1. Unit/integration test for the watchdog orphan-reclaim (killed + live session + stale spawn → session
-      reclaimed) and the paste-retry (transient pane-miss → eventual success). Target: agent-orchestrator tests.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@ab027bc (QG green, 558 tests; deployed vm-e2e-test).
+      `_paste_prompt` now verifies post-submit that the boot-prompt marker (first non-empty line, 48 chars) is visible
+      in the pane (`_boot_landed`, capture-pane 400-line history); on a miss it re-delivers the full paste+submit ONCE,
+      and raises on a second miss (spawn-failure path → watchdog orphan-reclaim → AutoSpawn retry — loud + self-healing,
+      never a silent empty-prompt worker). Was: **Verify the boot actually landed** post-paste: capture-pane after
+      submit and confirm the prompt left the empty state; if still empty, re-deliver once. Closes the residual window
+      where a paste "succeeds" (rc 0) but the TUI dropped it.
+- [x] ✅ [TEST] P1. DONE 2026-06-12 — agent-orchestrator@ab027bc. `tests/test_worker_liveness_watchdog.py` +4 orphan
+      pre-pass tests (killed+live+stale-spawn → reclaimed; within-grace → left alone; NULL spawn-time → immediate; dead
+      session → skipped) and `tests/test_tmux_spawn_boot_landed.py` (10 tests: paste-retry transient-miss recovery,
+      exhaustion raise, boot-landed happy/re-deliver/raise + marker helpers). Was: Unit/integration test for the
+      watchdog orphan-reclaim and the paste-retry. Target: agent-orchestrator tests.
 - [x] ✅ [CODE] P0. **State-transition dedup for the slot-stale / "Worker heartbeat loop dead" Slack alerts** —
       `health.py:check_once` re-fired `notify_slot_failed`/`notify_slot_stale` every 60s tick because the flag had no
       per-episode dedup and slot status thrashes idle↔stale↔killed as the watchdog kills + AutoSpawn respawns
@@ -106,13 +113,17 @@ source:
       / removed-slot-prune / working-stale-dedup). agent-orchestrator@93ca070 | QG 457 passed | deployed vm-0 (service
       restarted, dedup verified live).
 
-- [ ] [CODE] P2. **Distinguish "idle-available (cleanly /done-exited, no queued work)" from "idle-worker-loop-dead" in
-      the health idle-stale pass.** Today a worker that cleanly `/done`-exits leaves an idle slot with a frozen
-      last_ping; after IDLE_STALE_THRESHOLD it trips the "Worker heartbeat loop dead — re-spawn" alert even though
-      nothing is wrong (slot 5, 2026-06-10: last_msg `DONE: deployment-ui#43 ... merged`). The dedup caps it to one
-      alert, but the alert is still a false-positive. Fix: on a clean worker exit (last `/done`), either clear the
-      slot's stale-alert eligibility or only fire the "loop dead" alert when the slot has a `current_task` (was
-      mid-work). Target: agent-orchestrator `server/health.py` + `worker /done` handler.
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@ab027bc. The idle-stale pass now requires a LIVE tmux session
+      before alerting/flipping: idle + frozen ping + NO session = cleanly-exited idle-available worker → skipped
+      entirely (no "loop dead" alert, no stale flip — the slot stays in AutoSpawn's idle pool); only a live session that
+      stopped heartbeating alerts. +2 regression tests in `tests/test_health_alert_dedup.py`. Was: **Distinguish
+      "idle-available (cleanly /done-exited, no queued work)" from "idle-worker-loop-dead" in the health idle-stale
+      pass.** Today a worker that cleanly `/done`-exits leaves an idle slot with a frozen last_ping; after
+      IDLE_STALE_THRESHOLD it trips the "Worker heartbeat loop dead — re-spawn" alert even though nothing is wrong (slot
+      5, 2026-06-10: last_msg `DONE: deployment-ui#43 ... merged`). The dedup caps it to one alert, but the alert is
+      still a false-positive. Fix: on a clean worker exit (last `/done`), either clear the slot's stale-alert
+      eligibility or only fire the "loop dead" alert when the slot has a `current_task` (was mid-work). Target:
+      agent-orchestrator `server/health.py` + `worker /done` handler.
 
 ## Success criteria
 
