@@ -28,12 +28,12 @@ EXCLUDE_DIR_NAMES: frozenset[str] = frozenset(
     {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
 )
 
-try:
+try:  # noqa: fallback-import — optional; script raises ImportError at call site when missing
     import yaml
 except ImportError:
     yaml = None
 
-try:
+try:  # noqa: fallback-import — optional; script raises ImportError at call site when missing
     import jsonschema  # type: ignore[import-untyped]
 except ImportError:
     jsonschema = None

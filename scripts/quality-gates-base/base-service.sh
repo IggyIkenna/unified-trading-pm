@@ -2300,6 +2300,37 @@ else
     log_success "STEP 5.95: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.96 — Ban string-concat construction of legacy bucket names
+#
+# Guards the fix for RC1 (MTDS orchestrator.py f"market-data-tick-{ag}") +
+# RC4 (MDPS dependency_checker.py f"market-data-tick-{ag}-{pid}" and
+# instruments-store-{ag}-{pid}) that put live writers into the legacy flat
+# buckets alongside the canonical env-tiered ones.  The fix is already
+# shipped (MTDS@0b575651 / MDPS@61900a3); this gate is the regression guard.
+#
+# AST-walk (JoinedStr + BinOp with Add); zero-tolerance (no per-repo baseline —
+# the workspace is fully remediated).  Exclusions: tests/ scripts/ + files
+# named bucket_naming.py / cloud_constants.py / constants.py + paths containing
+# /migration /migrate /audit.  Inline allowlist marker:
+#   # QG-allow: legacy-bucket-name-migration
+# SSOT: bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md Phase 1.
+_LEGACY_BUCKET_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_legacy_bucket_string_concat.py"
+if [ -f "$_LEGACY_BUCKET_CHECKER" ]; then
+    _LB_REPO=$(basename "$PROJECT_ROOT")
+    _LB_WS="$REPO_ROOT"
+    if $PYTHON_CMD "$_LEGACY_BUCKET_CHECKER" \
+            --workspace-root "$_LB_WS" --scope "$_LB_REPO" >/tmp/no_legacy_bucket_concat_qg.log 2>&1; then
+        log_success "STEP 5.96: No legacy-bucket string-concat constructions (market-data-tick-/instruments-store- via resolve_bucket_name)"
+    else
+        log_fail "STEP 5.96: Legacy bucket name built by string-concat / f-string interpolation — use resolve_bucket_name(kind='market-data'|'instruments-store', asset_group=...) instead:"
+        cat /tmp/no_legacy_bucket_concat_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_legacy_bucket_string_concat.py --workspace-root $_LB_WS --scope $_LB_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.96: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # STEP 5.70 — Explicit pipeline_mode= kwarg at every ManifestWriter.record_* call
 #
 # (5.6x is exhausted — 5.65/5.67/5.69 in use, 5.66/5.68 reserved above — so this
