@@ -47,8 +47,8 @@ related_plans:
       — Hot-reload: ModelPromotionSubscriber already wired (ml-service@live). Per-trade model_version: PredictionEventDict.swing_{high,low}_model_version flows through InferenceRequest→PredictionEvent→publish. Model-drift alerting: PredictionOutcomeSubscriber wired (subscribes to ml_prediction_outcomes, feeds DriftMonitor.record_outcome + check_retune; models pre-registered from timeframe_specific_models on live start). InferenceConfig: drift_auto_retune_enabled/baseline_accuracy/drop_threshold/window_days. ml-service landed 2026-06-12.
 - [ ] [AGENT] P0. Live alerting active: signal-staleness (`ML_SIGNAL_STALENESS` warns 4h / critical 12h / kill-switch
       24h) + execution-quality + P&L deviation + position breaches.
-- [ ] [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
-      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`.
+- [x] ✅ [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
+      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`. — unified-api-contracts@547cba3 | 4 breakers (POSITION_LIMIT_EXCEEDED/DRAWDOWN_DAILY_BPS/ML_SIGNAL_STALENESS_SECONDS/ML_MODEL_DRIFT_ACCURACY_DROP) + KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS + 7 new taxonomy tests; QG green.
 - [ ] [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
 - [x] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
       Group F item 18) — batch = live, same code path, no standalone backtest engine.
