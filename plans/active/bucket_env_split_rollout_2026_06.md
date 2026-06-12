@@ -61,7 +61,7 @@ the env-tiered shape.
 
 - [x] ✅ [INFRA] P0.1. Inventory on-disk Group B buckets per AG: which are flat (`…-{ag}-{pid}`) vs tiered
       (`…-{ag}-{env}-{pid}`), and which hold data. Confirm `resolve_bucket_name` emits the tiered shape for each kind.
-      — unified-trading-pm@<flip-sha> (slot-5 2026-06-12). GCS census + UTL resolver verified.
+      — unified-trading-pm@690376cd5 (slot-5 2026-06-12). GCS census + UTL resolver verified.
 
       **Findings (GCP prod `central-element-323112`):**
 
