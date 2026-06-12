@@ -165,9 +165,13 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       (`ci-failure-watcher`, `promotion-lag-monitor`, git-health guard) also lands in a queryable store surfaced on the
       CI dashboard, so false-positive triage has a ledger and "did this alert before?" is answerable without Slack
       scrollback. Repo: unified-trading-pm (emit side) + deployment-api/deployment-ui (read side).
-- [ ] [CODE] P2. **Promotion-pipeline visualization** — per-repo horizontal pipeline (LDR → staging PR → SIT → main →
-      image) rendered from the overview payload; the v2-never-reported deadlock + `[skip ci]` jam states get explicit
-      badges (data already in the PR panel of sub-plan A). Repo: deployment-ui.
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-12 — deployment-ui@6fe7d73 | pw:L2 ✓ 199/199 | regression:
+      tests/smoke/repos-tab.spec.ts (promotion-pipeline strip renders all 5 stages). **Promotion-pipeline
+      visualization** — per-repo horizontal strip in the RepoDetailPanel drill-down rendered from the detail payload:
+      LDR sha → staging PR (or `locked`) → SIT status → main sha + LDR→main delta → image build status; the
+      v2-never-reported deadlock + skip-ci-jam PR classes surface as explicit badges. Pure UI (data already on the
+      detail payload). Added `repo-detail-history` test-id + scoped the drill-down test's branch assertions to it (the
+      pipeline `main` stage label otherwise made the exact-text match ambiguous). Repo: deployment-ui (`RepoCi.tsx`).
 - [ ] [CODE] P3. **Version-coherence panel** — `assert_version_coherence.py` verdicts (VERSION_SPLIT /
       VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE) per repo on the dashboard. Repo: deployment-api (run/ingest) +
       deployment-ui.
