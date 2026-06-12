@@ -67,15 +67,18 @@ BLOCKED_RE = re.compile(r"BLOCKED-CREDENTIALS")
 # de-false-positive the ratchet). A genuine ask names exactly one blocked status for one cell.
 BLOCKED_STATUS_TOKEN_RE = re.compile(r"BLOCKED-[A-Z][A-Z-]+")
 
-# The ping rule binds "BLOCKED-CREDENTIALS plan ITEMS" (CLAUDE.md) — and a plan item is a
-# checkbox todo (`- [ ]` / `- [x]`, PLAN_FORMAT). A genuine credential ASK therefore declares
-# BLOCKED-CREDENTIALS as the STATUS of a checkbox item. Bare prose that merely MENTIONS the token
-# — narrative ("the two BLOCKED-CREDENTIALS items below"), results-line parentheticals
-# ("Kalshi 0 records (BLOCKED-CREDENTIALS — expected)"), findings, or backtick-quoted token
-# references (`BLOCKED-CREDENTIALS`) — is NOT a plan item, can never cite a ping, and must not
+# The ping rule binds "BLOCKED-CREDENTIALS plan ITEMS" (CLAUDE.md) — and an ORPHAN is an OPEN ask
+# lacking a ping. A plan item is a checkbox todo (PLAN_FORMAT), but only an OPEN `- [ ]` item is a
+# live, actionable ask: a COMPLETED `- [x] ✅` credential item is resolved (the credential was
+# obtained / the ask was acked or descoped), so it can never be an orphan — its ping may legitimately
+# have aged out / been archived. Counting `[x]` items inflated the orphan count by 10 grandfathered
+# completed asks (residual, 2026-06-12 — dependency_promotion plan Phase 3). Bare prose that merely
+# MENTIONS the token — narrative ("the two BLOCKED-CREDENTIALS items below"), results-line
+# parentheticals ("Kalshi 0 records (BLOCKED-CREDENTIALS — expected)"), findings, or backtick-quoted
+# token references (`BLOCKED-CREDENTIALS`) — is NOT a plan item, can never cite a ping, and must not
 # count (the prose-mention false-positive class, 2026-06-11). This is a PRECISION fix: every real
-# orphan ASK is still a checkbox item, so no real orphan is missed.
-CHECKBOX_ITEM_RE = re.compile(r"^\s*[-*]\s*\[[ xX]\]")
+# orphan ASK is still an OPEN checkbox item, so no real orphan is missed.
+CHECKBOX_ITEM_RE = re.compile(r"^\s*[-*]\s*\[ \]")
 BACKTICKED_BLOCKED_RE = re.compile(r"`[^`]*BLOCKED-CREDENTIALS[^`]*`")
 
 CONTEXT_LINES = 5
@@ -87,10 +90,11 @@ def _is_status_taxonomy_line(line: str) -> bool:
 
 
 def _is_credential_ask_item(line: str) -> bool:
-    """True iff the line is a checkbox plan ITEM declaring a (non-backtick-quoted) BLOCKED-CREDENTIALS
-    status — i.e. an actionable ask the ping rule governs, not a prose mention/finding/token ref."""
+    """True iff the line is an OPEN (`- [ ]`) checkbox plan ITEM declaring a (non-backtick-quoted)
+    BLOCKED-CREDENTIALS status — i.e. a live, actionable ask the ping rule governs, not a prose
+    mention/finding/token ref and not a COMPLETED (`- [x]`) item (a resolved ask is never an orphan)."""
     if not CHECKBOX_ITEM_RE.match(line):
-        return False  # prose / results note / finding — not a plan item, ping rule does not bind it
+        return False  # prose / results note / finding / COMPLETED `[x]` item — not a live open ask
     # the occurrence must be a STATUS, not a backtick-quoted reference to the concept
     return "BLOCKED-CREDENTIALS" in BACKTICKED_BLOCKED_RE.sub("", line)
 

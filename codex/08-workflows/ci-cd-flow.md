@@ -316,6 +316,15 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   non-Enum class constant is NOT tracked), or removed HTTP route. **Not breaking** = additive (incl. a NEW Enum member),
   docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
   `tests/unit/test_detect_breaking_change.py` (incl. enum add/remove/value cases).
+- **Scope boundary — the differ is a CODE public-surface tool; non-code contract surfaces are OUT of scope BY DESIGN**
+  and governed by their OWN SSOTs, not semver / `is_breaking`: (1) **manifest `schema_version`** (a DATA-schema contract,
+  versioned + migrated by the manifest canonicalisation walk, not a Python export — SSOT
+  `codex/02-data/availability-manifest-and-data-status.md`); (2) **GCS path / partition keys** (`pipeline_mode=` /
+  `asset_group=` / `feature_group=` / `feature_group_version=` — the on-disk hive contract, governed by
+  `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/feature-formula-versioning.md`). Changing one of these is a
+  real contract change, but it does NOT trip the breaking differ and MUST be coordinated through its data-track SSOT +
+  single-walk migration — never expect SIT/the cascade-lock to catch it. (Residual cross-link, 2026-06-12 — Phase 4 of
+  `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.)
 - **Wiring**: each repo's `semver-agent.yml` (rolled out from `scripts/workflow-templates/semver-agent.yml.tmpl`) calls
   the differ — non-PM repos fetch it at runtime from `unified-trading-pm`. The differ verdict sets `is_breaking`
   (replacing the old `git diff __init__.py | grep '^-'` text heuristic that flagged ANY removed line). `feat!:` stays an
