@@ -125,11 +125,12 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
 - [x] ✅ [VERIFY] P2. Phase 4 — DONE 2026-06-12. UTS-UI@08ff0742 | pw:L2 ✓ 17/17 (deploy console + subscriptions
       reachable, live against deployment-api via `/api/deploy/*` + `/api/subscriptions` rewrites). deployment-ui@91c810c
       | pw:L2: nav-routing 4/4 + ML/Strategy/Exec/Chaos page-render smoke pass; the 3 launch consoles +
-      `/repos`+`/epics` tabs intact; Dart + ClientSubscriptions gone. **Known pre-existing flake (NOT this change)**:
-      `nav_and_header.spec.ts` "VM Deployments / Live deployments page renders" fail on
-      `waitForLoadState('networkidle')` (polling pages never idle) — PROVEN pre-existing by re-running on the clean
-      stashed tree (same 2 fail; both untouched routes). Evidence: tests/smoke/nav_and_header.spec.ts +
-      tests/smoke/deploy-and-subscriptions.smoke.spec.ts.
+      `/repos`+`/epics` tabs intact; Dart + ClientSubscriptions gone. **Pre-existing flake FIXED 2026-06-12**
+      (deployment-ui@ebaee4f): `nav_and_header.spec.ts` "VM Deployments / Live deployments page renders" were failing on
+      `waitForLoadState('networkidle')` (these pages stream/poll → networkidle never settles; proven pre-existing via a
+      clean-tree stash run) — rewrote both to wait on the page `<h1>` heading (deterministic render signal, also proves
+      no-crash). Full `nav_and_header.spec.ts` now 20/20 green (28.6s, serial). Evidence:
+      tests/smoke/nav_and_header.spec.ts + tests/smoke/deploy-and-subscriptions.smoke.spec.ts.
 - [x] ✅ [DOCS] P2. Phase 5 — DONE 2026-06-12. Added a "UI surface split — deployment-ui (devops + deploy pane) vs
       unified-trading-system-ui (trading/research/client)" subsection to
       `codex/04-architecture/runtime-deployment-topology.md` (dual-cut deploy model, `/api/deploy/*` rewrite rationale,
