@@ -626,6 +626,19 @@ if [ -f "$FLOW_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: ensure Claude `/<skill>` discovery symlinks (.claude/skills/*) ──
+# Best-effort, RELATIVE symlinks, NO-OP in CI. Regenerates the workspace-root .claude/skills/<name>
+# symlinks from cursor-configs/skills/ so every slot surfaces each /<skill> without a manual setup
+# step. The helper always exits 0 and self-skips under CI, so it can never disturb the gate or a
+# GHA runner. SSOT: scripts/workspace/link-claude-skills.sh.
+# NB: the helper ALWAYS exits 0 (CI self-skip + internal best-effort), so the caller needs no
+# error-swallowing suffix here — and such a bypass in quality-gates.sh is itself banned by the
+# codex-compliance ratchet (so do not add one).
+SKILL_LINKER="${REPO_ROOT}/scripts/workspace/link-claude-skills.sh"
+if [ -f "$SKILL_LINKER" ]; then
+    bash "$SKILL_LINKER" "$WORKSPACE_ROOT"
+fi
+
 # ── Post-gates: regenerate CI/CD pipeline diagram (SSOT: cicd-pipeline-definition.yaml) ──
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 DIAGRAM_YAML="${REPO_ROOT}/docs/repo-management/cicd-pipeline-definition.yaml"
