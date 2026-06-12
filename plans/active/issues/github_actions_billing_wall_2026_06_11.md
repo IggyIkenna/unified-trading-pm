@@ -15,10 +15,13 @@ status: active
 
 ## ⚡ Shift-start handoff (Ikenna, 2026-06-12 morning) — read this first
 
-Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace). The
-wall is STILL UP (verified live 03:52Z; slots 1/4/5 logged four more escalations through 05:46Z). The budget keeps
-blowing because of four structural burn drivers (§ Root cause below, each with data) — **fleet burn ≈ 30,600 billable
-min/day ≈ $245/day**; raising the limit without the fixes re-burns it in hours.
+Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace),
+then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hourly closure; n=301 billing re-sample) —
+the deepening CORRECTED two first-pass claims, marked ⚠️ inline. The wall is STILL UP (verified live 03:52Z; slots 1/4/5
+logged four more escalations through 05:46Z). Corrected burn: **pathological 06-11 ≈ 48,700 billable min ≈ $390; healthy
+06-09 baseline ≈ $62–81/day** — the broken machinery is a ~5× multiplier, and ~80% of pathological spend traces to ONE
+closed loop (the empty-promote loop, § Root cause #3 + Appendix E). Raising the limit without that fix re-burns it in
+hours.
 
 **Your decision queue, in order:**
 
@@ -30,12 +33,15 @@ min/day ≈ $245/day**; raising the limit without the fixes re-burns it in hours
    revert; nothing is irreversible and the drain stays parked until you re-enable it.
 3. **Walk the restore-day runbook** (bottom of doc) — ordering matters: the tree-gate fix must reach PM `main` (via
    ldr-to-main-promote, left ENABLED) before re-enabling ldr-to-staging-promote.
-4. **P0 remediation todos** (§ Remediation plan) — the reconciler circuit-breaker/batching + stale-check cooldowns are
-   preconditions for re-enabling the monitors you built.
+4. **P0 remediation todos** (§ Remediation plan) — re-ranked after the attribution audit: stale-check/auto-recover
+   cooldowns are the remaining P0; the reconciler breaker/batching items were DEMOTED to P2/P3 (the deep audit cleared
+   the reconciler as a spend driver — ~0.5–1% of dispatch volume).
 
-Key context you're missing from yesterday: the 06-10 LDR-trunk decoupling did NOT reduce QGv2 volume — it **quintupled**
-it (505 → 918 → 2,857 runs/day, § Appendix A), via the empty-promote loop (§ Root cause #3). 15 of 18 staging repos are
-phantom-ahead right now (§ Appendix B) — that's what the unfixed drain would chew on at restore.
+Key context you're missing from yesterday: the 06-10 LDR-trunk decoupling did NOT reduce QGv2 volume — it
+**quadrupled-to-quintupled** it (full fleet, 25 v2-running repos: 787 → 1,545 → 3,502 runs/day; § Appendix A), via the
+empty-promote loop (§ Root cause #3): **87% of all v2 runs in the audited window are drain-PR re-runs (`pull_request`,
+head=`live-defi-rollout`)**, not human pushes. 15 of 18 staging repos are phantom-ahead right now (§ Appendix B) —
+that's what the unfixed drain would chew on at restore.
 
 ## What I found
 
@@ -121,41 +127,56 @@ githubstatus.com all-operational → account spending limit, not platform. Opera
 
 ## Root cause — why the budget keeps blowing (audit 2026-06-12)
 
-This is NOT a payment-instrument problem. The fleet's burn rate is **~30,600 billable min/day ≈ $245/day ≈ $7,350/month
-pace** (72h audit 06-09→06-12, jobs-API durations, per-job ceil-to-minute). The 3,000 free min/month last ~2.4 h. 24/25
-repos are private (only uts-ui is free — why it stayed green through every wall). Every budget raise this month was
-eaten by the same four structural problems:
+This is NOT a payment-instrument problem. **Corrected numbers (deep audit 06-12, n=301 run-duration samples +
+conclusion-mix weighting; supersedes the first-pass ~$245/day estimate)**: the pathological 06-11 day burned **≈48,700
+billable min ≈ $390** across the audited workflow set; the healthy 06-09 baseline was **≈$62–81/day** — i.e. the broken
+machinery multiplied spend ~5×. The 3,000 free min/month last hours. 24/25 repos are private (only uts-ui is free — why
+it stayed green through every wall). The deep audit also showed the "four structural problems" below are really **one
+dominant closed loop (#3, ~80% of pathological spend directly + via fan-out) plus three secondary issues** — the
+attribution evidence is in Appendix E. Numbered findings kept for traceability:
 
-1. **Self-amplifying recovery loops with no fleet-red circuit breaker** (the 06-12 storm: `ci-status-update` 13/hr
-   baseline → 145–166/hr from 00:00Z). Mechanism (emitter trace): `ci-status-reconciler.yml` (`*/15`,
-   `cancel-in-progress: false`) emits one dispatch per drifted repo with `sleep 70` between → fleet-wide drift = a
-   continuous ~51 dispatch/hr stream, runs queue back-to-back; its dispatch is fire-and-forget (`curl … || echo WARN`) —
-   it never checks whether the spawned run succeeded, so while CI fails the SAME drift re-fires every tick, forever.
-   Compounded by `ldr-to-staging-promote` STALE-CHECK (re-fires v2 per stale-head repo ×4/hr, no per-sha memory),
-   `ci_failure_watcher.py --auto-recover` (close+reopen per blocked PR, no cooldown), and `ldr-ci-monitor` (hourly
-   unconditional v2 dispatch ×24 repos). Every FAILING v2 run STILL emits a `ci-status-update` dispatch
-   (`python-quality-gates-v2.yml:624` `if: always()`). **A fleet-red outage is precisely the state that maximises every
-   recovery bot's firing rate.** Volume grew exponentially: ci-status-update 815 → 1,492 → **3,501**/day (06-09→06-11);
-   ldr-to-staging-promote 90 → 298 → **1,241**/day (98% repository_dispatch `tier-ab-green`, NOT its `*/15` cron); the
-   conflict-resolve pair (`promotion-conflict` ← promote sweep per conflicted repo per tick) 0 → ~2,600/day combined.
-2. **The per-job 1-minute round-up tax**: `ci-status-update.yml` does ~23 s of real work but spans 4 jobs → bills **4
-   min/run** (10×). At 3,501 runs on 06-11 ≈ 14,000 min ≈ $112 that day, for manifest bookkeeping.
-3. **quality-gates-v2 is ~48% of total spend** (~14,700 min/day): ~1,537 runs/day fleet-wide × ~10 billable min
-   (features 14.8, UAC ~11, UTL 9.4; failures bill the same as green) — and a large share of those runs are
-   bot-RE-TRIGGERED (stale-check / close+reopen / monitor dispatch), not human pushes. **PINNED 2026-06-12 — the
-   EMPTY-PROMOTE LOOP (squash-accounting trap) is the #1 QGv2 driver**: post-decoupling QGv2 volume QUINTUPLED (505 →
-   918 → **2,857** runs/day, 06-09→06-11) because `ldr-to-staging-promote`'s "ahead?" gate read `compare ahead_by`,
-   which after a **squash**-merge NEVER returns to 0 (LDR's commits never literally land on staging; the merge-base
-   compare reports the same phantom changed-files forever). Verified on features-service 06-11: **375 drain PRs
-   opened+merged in one day, every ~70 s, each squash commit provably EMPTY** (`git show` = zero file changes;
-   consecutive staging trees identical; each PR still reporting "7 changed files" — phantom), each PR spawning a full
-   ~7-min QGv2 run (450 that day on features alone). The dispatch storm (problem 1) turned the 15-min tick into a ~70 s
-   tick, multiplying it 13×. Fleet snapshot 2026-06-12: **15 of 18 staging repos sit tree-IDENTICAL with ahead_by
-   1–189** — on billing restore the unfixed gate would resume empty-looping on all 15 simultaneously. FIX SHIPPED (see
-   mitigations): TREE-SHA equality gate (identical `commit.tree.sha` == nothing to promote, immune to squash history) in
-   BOTH promote bots (`ldr-to-main-promote`'s changed-files-count gate has the same merge-base flaw — it survived only
-   because PM's main-backmerge merge-commit advances the merge-base), plus a generic RUNAWAY BREAKER (≥30 drain merges
-   per repo per 6 h → refuse + CRITICAL page) that catches ANY future promote-loop shape, not just tree-equal ones.
+1. **Recovery bots lack circuit breakers — a real resilience gap, but NOT the storm source. ⚠️ CORRECTION 2026-06-12
+   (deep audit)**: the first-pass analysis attributed the `ci-status-update` storm (13/hr → 145–166/hr) primarily to
+   `ci-status-reconciler.yml`'s sleep-70 dispatch stream. **That attribution was WRONG.** Three independent measurements
+   (Appendix E): (a) hour-by-hour closure — ci-status-update creations ≈ fleet v2 completions to a residual of **5 runs
+   over 27 hours**; (b) log sampling — **27/27** sampled dispatch payloads carry a `sha` (the v2-emitter signature), 0
+   reconciler-shaped, across storm/loop/baseline windows alike; (c) the reconciler's own runs show it ticked only
+   ≤25×/day (~hourly effective, NOT `*/15`) emitting 0–7 dispatches/tick ≈ **10–40/day total (~0.5–1%)**. So ≥99% of
+   ci-status-update volume is the `if: always()` fan-out from v2 completions (`python-quality-gates-v2.yml:624`) — i.e.
+   **entirely downstream of the empty-promote loop (#3)**; even the 00:00–02:30Z "storm" was 100% v2 fan-out from LDR
+   drain-PR re-runs (mdps/e2e/tas/ibkr). What REMAINS true and needs fixing: the stale-check /
+   `ci_failure_watcher --auto-recover` / `ldr-ci-monitor` re-trigger paths have no per-sha memory, cooldown, or
+   fleet-red breaker — during an outage they re-fire full v2 runs (which DO cost full price, finding #3) against heads
+   that cannot newly pass. The conflict-resolve pair (0 → ~2,600 runs/day combined, `promotion-conflict` dispatched per
+   conflicted repo per sweep with no dedup) is the same breaker-less pattern.
+2. **The per-job 1-minute round-up tax — corrected smaller than first-pass**: `ci-status-update.yml` does ~25–40 s of
+   real work; a typical success run executes **2** jobs (update + persist; build-message/notify usually SKIPPED, and
+   skipped jobs bill 0) → ~2 min, with notify-worthy transitions at 4 jobs. Two samplers measured 2.17 (n=17) and 3.53
+   (n=31) min/success — treat as a 2.2–3.5 range (transition-heavy days skew high). Crucially **51–54% of its runs are
+   concurrency-cancelled at 0 jobs** (`manifest-update` group keeps ≤1 pending; superseded pendings cancel) and bill
+   **$0**. Corrected 06-11 burn: **≈3,500–5,600 min (~$28–45)**, not the naive 14,000 (~$112). Still pure bookkeeping
+   overhead, still worth the 1-job collapse + side-store cutover — but a second-order spender, not a primary one.
+3. **quality-gates-v2 is THE spender — ~63% of corrected 06-11 total** (≈30,559 of ≈48,700 min; deep-sampled n=217:
+   fleet volume-weighted **8.7 min/run**, per-repo spread 4× — UTL 14.6 / features 13.4 / UAC 10.5 … deployment-ui 3.7;
+   **failures bill the same as successes**, 9.1 vs 8.6 min, n=52 — no fail-fast discount). **PINNED — the EMPTY-PROMOTE
+   LOOP (squash-accounting trap) drives it**: full-fleet QGv2 volume (25 repos run v2, not 16 — full scan) went 787 →
+   1,545 → **3,502** runs/day post-decoupling, and **87% of all v2 runs in the 06-11→06-12 window were `pull_request`
+   runs with head=`live-defi-rollout`** — i.e. drain-PR re-runs, not human pushes. Cause: `ldr-to-staging-promote`'s
+   "ahead?" gate read `compare ahead_by`, which after a **squash**-merge NEVER returns to 0 (LDR's commits never
+   literally land on staging; the merge-base compare reports the same phantom changed-files forever). Verified on
+   features-service 06-11: **375 drain PRs opened+merged in one day, every ~70 s, each squash commit provably EMPTY**
+   (`git show` = zero file changes; consecutive staging trees identical; each PR still reporting "7 changed files" —
+   phantom), each PR spawning a full QGv2 run (450 that day on features alone). The loop is fully self-contained: sweep
+   → empty PR → green v2 → ci-status-update (fan-out, #1) → `tier-ab-green` dispatch → next sweep (~70 s, 13× its 15-min
+   design cadence). **Each phantom PR also fed the riders**: `staging-lock-check` (3,037 runs ≈ 4,500 min on 06-11 — a
+   hidden spender absent from the first-pass table) + `plan-alignment-agent` + the conflict pair. Fleet snapshot
+   2026-06-12: **15 of 18 staging repos sit tree-IDENTICAL with ahead_by 1–189** — on billing restore the unfixed gate
+   would resume empty-looping on all 15 simultaneously. FIX SHIPPED (see mitigations): TREE-SHA equality gate (identical
+   `commit.tree.sha` == nothing to promote, immune to squash history) in BOTH promote bots (`ldr-to-main-promote`'s
+   changed-files-count gate has the same merge-base flaw — it survived only because PM's main-backmerge merge-commit
+   advances the merge-base), plus a generic RUNAWAY BREAKER (≥30 drain merges per repo per 6 h → refuse + CRITICAL page)
+   that catches ANY future promote-loop shape, not just tree-equal ones. **Fixing #3 collapses #1's dispatch volume and
+   the riders 1:1.**
 4. **Zombie/stale schedulers on `main`** (crons fire from the DEFAULT branch; LDR-only workflow edits are INERT —
    codified gotcha 2026-06-09): retired `tab-mirror-to-ldr` was still active-on-main long into the month (18 repos
    hand-disabled at some point; the 19th — agent-orchestrator — found ACTIVE and disabled 2026-06-12, see log below);
@@ -174,12 +195,12 @@ per-workflow REST `total_count` (the cap hid 93% of PM's volume from earlier rea
 
 ### A. Four workflows disabled via API (state change only — no commits, instantly reversible)
 
-| Workflow                     | Repo               | Why                                                                                                             | Revert                                                                                                 |
-| ---------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `tab-mirror-to-ldr.yml`      | agent-orchestrator | Retired (Path-B); 18 peer repos already `disabled_manually`, this was the last ACTIVE one (96 runs/day zombie)  | `gh workflow enable tab-mirror-to-ldr.yml -R IggyIkenna/agent-orchestrator` (recommend: keep disabled) |
-| `ci-status-reconciler.yml`   | PM                 | Primary storm source (§ Root cause #1): fleet is maximally drifted → its max firing state at restore            | `gh workflow enable ci-status-reconciler.yml -R IggyIkenna/unified-trading-pm`                         |
-| `ldr-ci-monitor.yml`         | PM                 | Hourly unconditional v2 dispatch × ~24 repos into a red fleet                                                   | `gh workflow enable ldr-ci-monitor.yml -R IggyIkenna/unified-trading-pm`                               |
-| `ldr-to-staging-promote.yml` | PM                 | 15/18 repos phantom-ahead (Appendix B) → unfixed gate resumes the empty-promote loop on first post-restore tick | `gh workflow enable ldr-to-staging-promote.yml -R IggyIkenna/unified-trading-pm`                       |
+| Workflow                     | Repo               | Why                                                                                                                                                                                                              | Revert                                                                                                 |
+| ---------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `tab-mirror-to-ldr.yml`      | agent-orchestrator | Retired (Path-B); 18 peer repos already `disabled_manually`, this was the last ACTIVE one (96 runs/day zombie)                                                                                                   | `gh workflow enable tab-mirror-to-ldr.yml -R IggyIkenna/agent-orchestrator` (recommend: keep disabled) |
+| `ci-status-reconciler.yml`   | PM                 | Precautionary — was the SUSPECTED storm source; deep audit later CLEARED it (~0.5–1% of dispatch volume, Appendix E). Harmless to re-enable once the fleet is no longer drifted; kept disabled pending your call | `gh workflow enable ci-status-reconciler.yml -R IggyIkenna/unified-trading-pm`                         |
+| `ldr-ci-monitor.yml`         | PM                 | Hourly unconditional v2 dispatch × ~24 repos into a red fleet                                                                                                                                                    | `gh workflow enable ldr-ci-monitor.yml -R IggyIkenna/unified-trading-pm`                               |
+| `ldr-to-staging-promote.yml` | PM                 | 15/18 repos phantom-ahead (Appendix B) → unfixed gate resumes the empty-promote loop on first post-restore tick                                                                                                  | `gh workflow enable ldr-to-staging-promote.yml -R IggyIkenna/unified-trading-pm`                       |
 
 `ldr-to-main-promote` left ENABLED deliberately — it must carry the fix commit to PM `main` at restore.
 
@@ -236,18 +257,20 @@ typecheck-debt follow-up.
 
 ## Remediation plan — burn-down to a sane budget (ranked by $/effort)
 
-Savings estimates against the 06-11 burn (~30.6k min/day). Companion plans:
-`ci_status_firestore_side_store_2026_06_10.md` (Phase 2 = the structural ci-status fix),
-`gh_rate_budget_reduction_2026_06_10.md` (API-rate sibling), `cicd_workflow_sprawl_audit_2026_06_10.md` (dead
-workflows).
+Savings estimates against the corrected 06-11 burn (≈48.7k min ≈ $390; healthy 06-09 baseline ≈ $62–81/day — post-fix
+target). Priorities re-ranked after the attribution audit (Appendix E): the spend fixes are the #3-loop items;
+reconciler items are RESILIENCE, demoted from P0. Companion plans: `ci_status_firestore_side_store_2026_06_10.md` (Phase
+2 = the structural ci-status fix), `gh_rate_budget_reduction_2026_06_10.md` (API-rate sibling),
+`cicd_workflow_sprawl_audit_2026_06_10.md` (dead workflows).
 
-- [ ] [CICD] P0. **Reconciler fleet-red circuit breaker + per-tick cap** — `unified-trading-pm`
+- [ ] [CICD] P2 (was P0 — demoted: attribution cleared the reconciler as a spend driver, ~10–40 dispatches/day).
+      **Reconciler fleet-red circuit breaker + per-tick cap** — `unified-trading-pm`
       `.github/workflows/ci-status-reconciler.yml`: (a) cap dispatches/tick (≤5); (b) if >40% of repos drift in one tick
       → ONE Slack CRITICAL ("systemic CI outage"), dispatch NOTHING; (c) skip repo if last tick dispatched the same
-      target status and that run failed. Precondition for re-enabling the reconciler. (~0.5 day)
-- [ ] [CICD] P0. **Batch the reconciler's dispatches** — ONE `ci-status-update` dispatch with
-      `client_payload.updates[]`; teach `ci-status-update.yml` to apply N statuses in one run/one manifest commit.
-      Replaces ≤25 runs + 29 min of `sleep 70` with 1 run/tick. (~0.5 day)
+      target status and that run failed. Good hygiene before re-enabling, no longer a spend precondition. (~0.5 day)
+- [ ] [CICD] P3 (was P0 — same demotion; at ≤25 ticks/day the batching saves ~minutes). **Batch the reconciler's
+      dispatches** — ONE `ci-status-update` dispatch with `client_payload.updates[]`; teach `ci-status-update.yml` to
+      apply N statuses in one run/one manifest commit. (~0.5 day)
 - [ ] [CICD] P0. **Stale-check/auto-recover cooldowns + fleet-red breaker** — `unified-trading-pm`
       `ldr-to-staging-promote.yml` STALE-CHECK +
       `scripts/repo-management/ci_failure_watcher.py::auto_recover_stuck_prs` + the `promotion-conflict` dispatch site
@@ -258,13 +281,16 @@ workflows).
       (`if: always()`): skip the dispatch when the failure is infrastructure-shaped (0-step/cancelled/billing
       annotation) rather than a gate verdict; mirrors `detect_billing_block` in ci_failure_watcher. Stops outage-driven
       FAILING spam at the source. (~0.5 day)
-- [ ] [CICD] P1. **Collapse ci-status-update to 1 job + shallow clone** — 4 jobs → 1 (the round-up tax is per-JOB): fold
-      build-message/notify/persist into the update job as steps; drop `fetch-depth: 0` (1-file edit + retry-rebase needs
-      no history). 4 min → 1 min/run ≈ **~6,100 min/day saved at 06-11 volume** even before volume fixes. (~0.5 day)
+- [ ] [CICD] P1. **Collapse ci-status-update to 1 job + shallow clone** — typical success run is 2 executed jobs (the
+      round-up tax is per-JOB): fold persist (+notify when worthy) into the update job as steps; drop `fetch-depth: 0`
+      (1-file edit + retry-rebase needs no history). ~2 min → 1 min/run ≈ **~500–1,000 min/day saved at baseline
+      volumes** (corrected from the first-pass ~6,100 — that assumed 4 billed jobs on every run; in reality notify jobs
+      usually skip and 51–54% of runs are 0-job cancellations). (~0.5 day)
 - [ ] [CODE] P1. **ci_status Firestore side-store Phase 2 cutover** (existing plan
       `ci_status_firestore_side_store_2026_06_10.md`) — emitters write `scripts/cicd/ci_status_store.py` DIRECTLY (CAS
       no-downgrade already built); readers (`tier_c_promotion_gate.py` et al) read the store; the per-status Actions run
-      disappears entirely. Structural elimination of spender #2 (~8,200 min/day). (medium)
+      disappears entirely. Structural elimination of spender #2 (corrected: ~1–2k min/day at baseline, ~3.5–5.6k on a
+      pathological day). (medium)
 - [ ] [CICD] P1. **Promote the stranded `ci(spend)` crons to `main` fleet-wide** — the `*/20→hourly` backmerge
       relaxation is inert on 21/25 repos (LDR-only). Rides the normal LDR→staging→main drain post-restore; VERIFY with
       `for r in …; do git -C $r show origin/main:.github/workflows/main-backmerge-to-ldr.yml | grep cron; done` — worth
@@ -272,7 +298,7 @@ workflows).
       file deletion is already on LDR). (rides existing promotion)
 - [ ] [CICD] P2. **ldr-ci-monitor conditional dispatch** — only re-dispatch a repo's LDR v2 when its conclusion changed
       or >6 h since last; precondition for re-enabling. (~0.5 day)
-- [ ] [CICD] P2. **v2 spend trims on the 48% heavyweight** — concurrency `cancel-in-progress: true` on PR-synchronize
+- [ ] [CICD] P2. **v2 spend trims on the 63% heavyweight** — concurrency `cancel-in-progress: true` on PR-synchronize
       (stale-head runs are pure waste), audit the 6-job slice split for mergeable short jobs (per-job round-up), extend
       content-sentinel HIT skipping (CI-spend ② shipped a7be2d09b) to more paths. (~1 day, saves multiple thousand
       min/day)
@@ -306,7 +332,11 @@ for an hour (expect <15/hr); (8) re-enable ldr-ci-monitor after its conditional-
 
 ### A. quality-gates-v2 runs/day per repo (REST `total_count`, `created=` windows — `gh run list` caps at 1000)
 
-The 06-10 LDR-trunk decoupling was expected to REDUCE CI QG volume; it quintupled instead (the empty-promote loop):
+The 06-10 LDR-trunk decoupling was expected to REDUCE CI QG volume; it quintupled instead (the empty-promote loop). ⚠️
+This table covers the 16 repos first sampled; a later full scan found **25 repos run v2** — full-fleet totals are **787
+/ 1,545 / 3,502** for 06-09/10/11 (extra volume in the 06-11→06-12 window: unified-trading-api 237, strategy-service 88,
+execution-service 72, deployment-api 65, deployment-service 49, batch-live-reconciliation 47, fund-administration 44,
+alerting 34, ml-service 25). Subset table (still ~85% of volume):
 
 | repo (QGv2 runs)               |   06-09 |   06-10 |     06-11 | 06-12\* |
 | ------------------------------ | ------: | ------: | --------: | ------: |
@@ -341,22 +371,27 @@ ibkr-gateway-infra 189 PHANTOM · instruments-service 2 PHANTOM · mdps 130 PHAN
 PHANTOM · system-integration-tests 123 PHANTOM · trading-agent-service 184 PHANTOM · unified-api-contracts 130 PHANTOM ·
 unified-trading-library 1 PHANTOM · unified-trading-system-ui 2 PHANTOM → **15 PHANTOM / 3 REAL of 18**.
 
-### C. Top spenders (72h audit 06-09→06-12; durations from jobs API on successful pre-kill runs; billable = per-job ceil-to-minute)
+### C. Top spenders — CORRECTED (n=301 stratified duration samples, conclusion-mix weighted; supersedes the first-pass 5-sample table)
 
-| #   | Workflow                                 | Trigger                    | Runs/day |           Bill min/run | Est min/day |
-| --- | ---------------------------------------- | -------------------------- | -------: | ---------------------: | ----------: |
-| 1   | quality-gates-v2 (16 repos)              | pull_request ~80%          |    1,537 |            4–16 (~9.6) |  **14,723** |
-| 2   | ci-status-update (PM)                    | repository_dispatch 100%   |    2,039 | 4 (4 jobs × ~5 s each) |   **8,156** |
-| 3   | Staging Lock Check (fleet)               | pull_request               |    1,198 |                      2 |       2,396 |
-| 4   | ldr-to-staging-promote (PM)              | repo_dispatch ~98% (!)     |      612 |                      2 |       1,225 |
-| 5   | deterministic-promotion-conflict-resolve | repository_dispatch        |      593 |                      2 |       1,186 |
-| 6   | Conflict Resolution Agent (PM)           | repository_dispatch        |      588 |                      1 |         588 |
-| 7   | main-backmerge-to-ldr (fleet)            | cron \*/20 (stale on main) |      377 |                      1 |         377 |
+06-11 (pathological day), measured volumes × measured billable-min distributions:
 
-Growth curves (PM, runs/day): ci-status-update 815 → 1,492 → **3,501**; ldr-to-staging-promote 90 → 298 → **1,241**;
-conflict pair 0 → 946 → **2,597** (combined). Fleet ≈ 26,188 runs/72h, PM alone 53%. Cost: ~30,600 min/day ≈ $245/day ≈
-$7,350/month pace ($0.008/min ubuntu; 24/25 repos private — only uts-ui is free, which is why it stayed green through
-every wall).
+| Workflow                                  | Runs (06-11)      | Bill min/run (weighted)                          |       Billable min |
+| ----------------------------------------- | ----------------- | ------------------------------------------------ | -----------------: |
+| quality-gates-v2 (25-repo fleet)          | 3,502             | 8.7 mean (3.7 dep-ui … 14.6 UTL; fail ≈ success) |        **≈30,559** |
+| ci-status-update (PM)                     | 3,501 (54% canc.) | 2.2–3.5/success; cancelled = 0                   |       ≈3,500–5,600 |
+| staging-lock-check (fleet) — hidden in v1 | 3,037             | ~1.5                                             |             ≈4,462 |
+| deterministic-promotion-conflict-resolve  | 1,303             | exactly 2.0                                      |              2,587 |
+| ldr-to-staging-promote (PM)               | 1,241 (8% canc.)  | ~1.7                                             |              2,095 |
+| conflict-resolution-agent (PM)            | 1,294             | exactly 1.0                                      |              1,294 |
+| backmerges + plan-align + ldr-to-main     | ~2,084            | exactly 1.0                                      |              2,084 |
+| **TOTAL (audited set)**                   | ~15,962           |                                                  | **≈48,700 ≈ $390** |
+
+Baseline 06-09 (same method): ≈7,800–10,200 min ≈ **$62–81/day**. Steady-state cron floor ≈1,400 min/day (~$11).
+Unaudited tail (semver-agent, watchers, SIT, notify) adds somewhat to both. Growth curves (runs/day): ci-status-update
+815 → 1,492 → **3,501**; ldr-to-staging-promote 90 → 298 → **1,241**; conflict pair 0 → 946 → **2,597**. Notable: QGv2
+**failure runs bill the same as successes** (9.1 vs 8.6 min, n=52) — no fail-fast discount; per-repo QGv2 cost spread is
+4× (deployment-ui 3.7 vs UTL 14.6 min/run). $0.008/min ubuntu; 24/25 repos private (only uts-ui free — why it stayed
+green through every wall).
 
 ### D. The empty-promote loop, forensically (features-service, 06-11)
 
@@ -365,5 +400,39 @@ every wall).
 - Drain PRs #486–490 sampled: each created→merged in ~40 s; each reports "7 changed files / +991/−750" (the SAME diff —
   phantom, merge-base-relative); **375 drain PRs merged that day**; every merged squash on staging is EMPTY
   (`git show <sha> --stat` = no files; consecutive squash trees identical).
-- Loop closure: squash never lands LDR's commits on staging → `ahead_by` never hits 0 → next tick re-opens. The dispatch
-  storm (tier-ab-green per status green) ran the "15-min" sweep every ~70 s.
+- Loop closure: squash never lands LDR's commits on staging → `ahead_by` never hits 0 → next tick re-opens. The sweep
+  ran every ~70 s (13× its 15-min design) because each green v2 → ci-status-update → `tier-ab-green` dispatch → next
+  sweep — the loop accelerates itself; no external storm needed.
+
+### E. ci-status-update attribution audit (the deep pass that CORRECTED Root-cause #1; collected 06-12 07:00–09:30Z)
+
+Question: who sent the 3,501 ci-status-update dispatches on 06-11 (13/hr baseline → 145–166/hr)? Three independent
+methods, all converging:
+
+1. **Hourly closure** (27 hourly buckets, 06-11T00 → 06-12T03): ci-status-update runs CREATED = 3,888; full-fleet v2
+   runs COMPLETED (25 repos, success+failure) = 3,883 → **residual 5 runs over 27 hours** (per-hour ±jitter is
+   :00-boundary smearing). v2 fan-out (`if: always()` at `python-quality-gates-v2.yml:624`) explains effectively ALL
+   volume; there is no unexplained sender.
+2. **Direct log classification** (persist job echoes the payload; v2-emitted carries a 40-char `commit_sha`,
+   reconciler-emitted doesn't): 27 runs sampled across three windows — storm 06-12 00:00–02:30Z, promote-loop 06-11
+   21:00–23:30Z, baseline 06-11 12:00–16:00Z — **27/27 v2-emitted, 0 reconciler**. Storm samples were mdps×4,
+   e2e-testing×4, uac×1, matching the storm-window v2 leaders (369/390 of those v2 runs were `pull_request` on LDR).
+3. **Reconciler bounded from its own run logs**: it ticked 25/21/17×/day (effective ~hourly, not `*/15`) emitting 0–7
+   dispatches/tick → **~10–40 dispatches/day (~0.5–1%)** — invisible at storm scale. The first-pass "sleep-70 stream ≈
+   51/hr" model overestimated it ~5× (it assumed every tick walks a fully-drifted fleet; real ticks corrected 0–1).
+
+Conclusion mix (all 6,117 runs in window fetched + deduped; matches API total_count exactly): 06-09 = 487 success / 239
+cancelled / 11 failure; 06-10 = 825/665/2; 06-11 = 1,586/**1,907**/8; 06-12 partial = 227/147/13 (all 13 post-wall
+billing-kills). Cancelled runs verified 0-jobs (bill $0) — superseded pendings in the `manifest-update` concurrency
+group. Billable estimate per success run: 2 executed jobs typical (notify/build-message usually skipped) — two samplers
+measured 2.17 (n=17) and 3.53 (n=31) min/success; treat as 2.2–3.5 (transition-heavy days run more 4-job notify runs).
+Corrected ci-status-update billable: ≈1,080 / ≈1,790 / ≈3,460–5,600 min for 06-09/10/11 — roughly ¼ of the naive
+all-runs×4-min figure.
+
+**What this changes**: ≥99% of ci-status-update volume is v2-completion fan-out → entirely downstream of the
+empty-promote loop (#3). Fixing #3 collapses ci-status-update, staging-lock-check, plan-alignment and the conflict pair
+1:1. The reconciler/ldr-ci-monitor disables remain harmless-but-precautionary; the reconciler breaker work is hygiene
+(P2/P3), not a spend fix. Known caveats: billable minutes are jobs-API wall-time estimates with per-job round-up (the
+`/timing` API is deprecated, returns 0 — no ledger numbers available to a collab token); cancelled-run sender
+attribution is by arithmetic closure (0 jobs = no logs); Actions secret-masking hid the `status` values in sampled logs
+(repo + sha presence were readable).
