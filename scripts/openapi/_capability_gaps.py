@@ -37,6 +37,7 @@ REL_USES_FEATURE_GROUP = "uses_feature_group"
 REL_USES_MODEL = "uses_model"
 REL_MIN_DATA_TO_RUN = "min_data_to_run"
 REL_NOT_REGISTERED = "registry_gap"
+REL_ACCEPTS_COLLATERAL = "accepts_collateral"
 
 
 def _node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> CapabilityNode:
@@ -123,6 +124,45 @@ def extract_gap_registries() -> tuple[list[CapabilityNode], list[CapabilityEdge]
                 ),
             )
         )
+
+    # Collateral backfill (2026-06-12): when COLLATERAL_REGISTRY is populated,
+    # emit per-venue collateral nodes + per-asset accepts-collateral edges so the
+    # manifest/wizard carries the actual haircut/LTV metadata (not just a
+    # count). Each edge's metadata holds the sourced numerics + citation.
+    for policy in sorted(COLLATERAL_REGISTRY, key=lambda p: p.venue_id):
+        coll_node = f"collateral:{policy.venue_id}"
+        kind_meta = policy.venue_kind.value if policy.venue_kind is not None else ""
+        add(
+            CapabilityNodeKind.CUSTODY_PROVIDER,
+            coll_node,
+            f"Collateral: {_titleize(policy.venue_id)}",
+            venue_id=policy.venue_id,
+            venue_kind=kind_meta,
+            maintenance_margin=("" if policy.maintenance_margin is None else str(policy.maintenance_margin)),
+            max_ltv=("" if policy.max_ltv is None else str(policy.max_ltv)),
+            source_of_truth=policy.source_of_truth,
+        )
+        for ah in sorted(policy.accepted_collateral, key=lambda a: a.asset):
+            asset_node = f"collateral_asset:{ah.asset}"
+            add(CapabilityNodeKind.INSTRUMENT_TYPE, asset_node, f"Collateral Asset: {ah.asset}", asset=ah.asset)
+            status = CapabilityEdgeStatus.AVAILABLE if ah.accepted else CapabilityEdgeStatus.NOT_AVAILABLE
+            meta_bits = [f"haircut={ah.haircut_pct}%"]
+            if ah.max_ltv is not None:
+                meta_bits.append(f"max_ltv={ah.max_ltv}")
+            if ah.liquidation_threshold is not None:
+                meta_bits.append(f"liq_threshold={ah.liquidation_threshold}")
+            edges.append(
+                CapabilityEdge(
+                    from_node_id=coll_node,
+                    to_node_id=asset_node,
+                    relation=REL_ACCEPTS_COLLATERAL,
+                    status=status,
+                    reason=(
+                        f"{policy.venue_id} {'accepts' if ah.accepted else 'rejects'} {ah.asset} "
+                        f"({', '.join(meta_bits)}) — {ah.source_note}"
+                    ),
+                )
+            )
 
     # Honest-empty / partial registries: one explicit edge per dimension.
     gap_specs: list[tuple[str, int, str, str]] = [
@@ -437,8 +477,7 @@ def extract_service_registries(workspace_root: Path) -> tuple[list[CapabilityNod
                 status=CapabilityEdgeStatus.NOT_REGISTERED,
                 gap_type=CapabilityGapType.MISSING_EXTRACTION,
                 reason=(
-                    "feature-group lookbacks unavailable (features-service import gap) — "
-                    "min-data-to-run not derivable"
+                    "feature-group lookbacks unavailable (features-service import gap) — min-data-to-run not derivable"
                 ),
             )
         )
