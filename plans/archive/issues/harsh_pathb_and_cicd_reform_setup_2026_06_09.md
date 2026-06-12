@@ -6,8 +6,14 @@ source:
   - plans/active/worktree_ldr_unification_2026_06_08.md
 locked_by: live-defi-rollout
 priority: P1
-status: active
+status: resolved
+resolved: 2026-06-12
 ---
+
+> **🟢 RESOLVED 2026-06-12 (ACKED-INTO-CODE)** — Harsh's host (`hk`) is migrated to Path-B and aligned
+> with the 2026-06-08/09 CI/CD reform. All slot worktrees are reference-clones on `live-defi-rollout`
+> with per-slot identity reading `harshkantariya [slot-N·laptop]` (verified on slot-3). Setup task
+> complete; archived per `codex/11-project-management/issue-doc-lifecycle.md`.
 
 # Prompt for Harsh — finish setting up your host (Path-B worktrees + CI/CD reform)
 
@@ -89,4 +95,4 @@ git -C <repo> cherry-pick origin/wip-preserve/harshkantariya-slot-<N>     # or a
 
 ## Status
 
-- [ ] [INFRA] P1. Harsh runs steps 0–5 on his host; `slot_drift_check.py` exits 0 + identity reads `harshkantariya [slot-N·…]`. Archive this doc when done.
+- [x] ✅ [INFRA] P1. Harsh runs steps 0–5 on his host; `slot_drift_check.py` exits 0 + identity reads `harshkantariya [slot-N·…]`. Archive this doc when done. — done 2026-06-12; slot-3 identity = `harshkantariya [slot-3·laptop]`, all 25 repos reference-clones on `live-defi-rollout`.
