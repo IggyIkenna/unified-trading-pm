@@ -360,7 +360,7 @@ version comparison no-ops → the guard never fires). Captured here:
       `packaging` BEFORE `uv sync` with an `except: pass/exit(0)` mask have the same latent silent-no-op.
       (`check-internal-advisories.sh` in PM imports `packaging` too but runs post-install — verify install-order before
       touching it.) Fix each to stdlib; deliberate per-repo (changes resolution behavior).
-- [ ] [SCRIPT] P2. **Lower SIT's phantom-era instruments-service floor** — `system-integration-tests/pyproject.toml`
+- [x] ✅ **[DONE 2026-06-12 — system-integration-tests@341446c9: `instruments-service>=0.30.0` → `>=0.4.0` (matches the de-inflated true version); QG green 135s]** [SCRIPT] P2. **Lower SIT's phantom-era instruments-service floor** — `system-integration-tests/pyproject.toml`
       still pins `instruments-service>=0.30.0,<1.0.0`; the runaway-semver phantom was de-inflated to a coherent **0.4.0**
       (main=staging=LDR, tag `v0.4.0`), so this `>=0.30.0` floor is stale (true version 0.4.0). Non-blocking today
       (content-first clone resolves the editable path source) but should match the real version → set `>=0.4.0,<1.0.0`.
