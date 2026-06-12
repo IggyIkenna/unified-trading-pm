@@ -32,7 +32,7 @@ external_references:
 
 # Orchestrator Master (L5)
 
-**Owns**: agent-orchestrator multi-VM stack (planning-vm + 9 epic VMs); dashboard aggregation; auth failover (long-lived
+**Owns**: agent-orchestrator multi-VM stack (central/orchestrator VM `planning` + human planning VM `human-planning` + 9 epic VMs — human/central SPLIT 2026-06-12, see `plans/active/orchestrator_human_central_vm_split_2026_06_12.md`); dashboard aggregation; auth failover (long-lived
 setup-token pattern); per-spawn account isolation; cross-VM observability; Telegram alert framework; safety mechanisms
 (stuck-agent respawn, auth failover without respawn, fresh-spawn dirty-commit, git staleness alerts).
 
@@ -49,7 +49,10 @@ below.
 Today's orchestrator runs ONE VM, ONE main agent, ONE backlog. It scaled to ~11 slots but hits recurring failure modes:
 auth token expiry cascade (2026-05-21 incident), agent staleness without recovery, cross-plan blast radius, no cross-VM
 observability, operator cognitive load. The v0.7 fix splits into **per-epic VM fleets** (each isolated, full agent
-topology + own backend) + **one planning VM** for human work + a **dashboard landing page** that aggregates.
+topology + own backend) + a **planning/human role on its OWN VM** + a **dashboard landing page** that aggregates. The
+planning/human role is now its own dedicated VM (`human-planning`), separate from the central/orchestrator VM (id
+`planning`) that runs the central API + AutoSpawn + CI-escalation + plan-health (human/central SPLIT 2026-06-12 — see
+`plans/active/orchestrator_human_central_vm_split_2026_06_12.md`).
 
 ## Operator vision (verbatim 2026-05-21)
 

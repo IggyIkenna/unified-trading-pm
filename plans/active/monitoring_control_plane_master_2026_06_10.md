@@ -547,19 +547,73 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       `LC_AWS_SHUTDOWN_BEHAVIOR=stop` keeps long-running workers' disks on OS shutdown. Was: **Lifecycle + teardown**.
       Repo: deployment-service.
 - [x] ✅ [CREDS] P1. **DONE 2026-06-12** — `ORCHESTRATOR_INTERNAL_SECRET` (vm-0's exact value, sha12-verified identical)
-      upserted into the `ORCHESTRATOR_ENV_LOCAL` Secret Manager blob in **GCP (version 2) + AWS (`4c52ae7f`)**; bootstrap
-      already writes the blob → `.env.local`, so new VMs now carry it (`/api/escalate` + central→worker proxy authenticate
-      fleet-wide). prod vm-0 untouched (read-only via SSM; live auth preserved — SM change only affects future bootstraps).
-      Was: **BLOCKED-CREDENTIALS** (CREDENTIAL APPROVAL REQUEST: `ikenna_orchestrator/pings/slot_1.md`)
-      — the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM keys
-      (verified 2026-06-12); `auth._load_internal_secret()` then falls back to an EPHEMERAL generated secret, so
-      `/api/escalate` + the central→worker proxy 401 every caller on a fresh VM (prod vm-0 works only because it is
-      hand-wired). Operator ask: append the fleet `ORCHESTRATOR_INTERNAL_SECRET=<value     from prod vm-0's .env.local>`
-      line to the `ORCHESTRATOR_ENV_LOCAL` secret in BOTH AWS SM + GCP SM — bootstrap already propagates the whole
-      secret to .env.local, so no code change is needed (bootstrap now loud-warns when the key is absent). Found
-      2026-06-12 escalation e2e. Repo: agent-orchestrator (+ operator SM update). **CREDENTIAL APPROVAL REQUEST** filed:
-      `ikenna_orchestrator/pings/slot_1.md` (operator: append `ORCHESTRATOR_INTERNAL_SECRET` to the `ORCHESTRATOR_ENV_LOCAL`
-      secret in AWS SM + GCP SM).
+      upserted into the `ORCHESTRATOR_ENV_LOCAL` Secret Manager blob in **GCP (version 2) + AWS (`4c52ae7f`)**;
+      bootstrap already writes the blob → `.env.local`, so new VMs now carry it (`/api/escalate` + central→worker proxy
+      authenticate fleet-wide). prod vm-0 untouched (read-only via SSM; live auth preserved — SM change only affects
+      future bootstraps). Was: **BLOCKED-CREDENTIALS** (CREDENTIAL APPROVAL REQUEST:
+      `ikenna_orchestrator/pings/slot_1.md`) — the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only
+      JWT_SECRET/USERS_JSON/MODE/TELEGRAM keys (verified 2026-06-12); `auth._load_internal_secret()` then falls back to
+      an EPHEMERAL generated secret, so `/api/escalate` + the central→worker proxy 401 every caller on a fresh VM (prod
+      vm-0 works only because it is hand-wired). Operator ask: append the fleet
+      `ORCHESTRATOR_INTERNAL_SECRET=<value     from prod vm-0's .env.local>` line to the `ORCHESTRATOR_ENV_LOCAL` secret
+      in BOTH AWS SM + GCP SM — bootstrap already propagates the whole secret to .env.local, so no code change is needed
+      (bootstrap now loud-warns when the key is absent). Found 2026-06-12 escalation e2e. Repo: agent-orchestrator (+
+      operator SM update). **CREDENTIAL APPROVAL REQUEST** filed: `ikenna_orchestrator/pings/slot_1.md` (operator:
+      append `ORCHESTRATOR_INTERNAL_SECRET` to the `ORCHESTRATOR_ENV_LOCAL` secret in AWS SM + GCP SM).
+
+**Operator-concerns verification session (2026-06-12 PM, on the live vm-e2e-test):** three concerns checked +
+e2e-tested; two new live bugs found + fixed in the process (agent-orchestrator@094f691 + @1a0bea0, both deployed to the
+VM).
+
+1. **Task→agent matching (model / effort / thinking) — VERIFIED + e2e-PROVEN.** Chain: plan frontmatter
+   `model_tier: sonnet-doable|opus-required` + `thinking_tier: max|high|medium|mechanical` → regen stamps
+   model/effort/thinking on the backlog task → AutoSpawn `_top_queued_task_params` picks the top queued task's params →
+   claude CLI flags `--model/--effort/--max-thinking-tokens 31999`. Live proof: a `thinking_tier: high` plan produced a
+   task with `effort: high, thinking: on` (backlog.yaml) and a FRESH AutoSpawn spawn with
+   `--model sonnet --effort high --max-thinking-tokens 31999` (journal 10:57:10). **Policy change shipped @094f691
+   (operator 2026-06-12): thinking is the PREFERRED mode** — `high` now maps to thinking ON (was off), the spawn default
+   is ON when neither task nor slot opts out, and `thinking_tier: mechanical|off|none` is the explicit opt-out for truly
+   mechanical work. Context-burn monitoring is the per-task RUNTIME safety net (watchdog Trigger-4: >4h on one task +
+   ctx≥80% or ≥3 compactions → `context_burn_suspected` + Slack; kill opt-in via ORCHESTRATOR_CONTEXT_BURN_KILL) —
+   complexity ROUTING stays a plan-authoring concern, monitoring stays runtime; no per-task babysitting needed. Known
+   limitation observed live: tier params apply at SPAWN — an already-running parked worker that picks up a task keeps
+   its own flags (mixed-tier queue note in `_top_queued_task_params`; its /done honestly reported
+   `effort=medium thinking=off` for a high/on task).
+2. **Blocked-question → main agent — PROVEN on real infra.** Posted a worker /blocked drill (BLK-bbe34f72, "pip vs uv
+   pip install") → the keeper-spawned main agent answered it autonomously in **40.4 s**
+   (`/api/blocked/stats: answered_by {"main": 1}`, journal `POST /api/blocked/BLK-bbe34f72/answer 200`). Genuinely-
+   operator questions (spend/creds/destructive/scope) stay deferred per agents/main.md STEP 2.5.
+3. **tmux session longevity — PROVEN by design + empirically.** `orchestrator.service` has `KillMode=process`
+   (root-caused 2026-05-20: only uvicorn dies on restart; tmux + claude sessions survive despite living in the service
+   cgroup). Empirical: `orch-agent-main` created 06:48:33 survived FIVE backend restarts today (DR env, port migration,
+   @27b5212, @094f691, @1a0bea0 deploys).
+
+Live bugs found during this verification (both fixed):
+
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@094f691 (idle-reap guard) + @1a0bea0 (warm-window refinement),
+      QG green, deployed. **WorkerLivenessKicker idle respawn/burn loop**: a worker that FINISHED its task parks at the
+      claude prompt → pane classifies "frozen" → kicker killed + auto-respawned it into an EMPTY queue → fresh worker
+      idles → freezes → respawns… observed live ~19-min cycles on slots 1+2 (each a full claude boot on a real account).
+      Fix: `maybe_auto_respawn_stuck_slot` now reaps (kill session, slot→idle, `slot_idle_session_reaped` event) instead
+      of respawning when `current_task is None` AND zero queued+undispatched tasks — respawn is for MID-TASK stuck
+      workers; AutoSpawnLoop (queue>0-gated) is the only spawn authority for new work. Refinement @1a0bea0: the reap
+      respects the 15-min stuck threshold (warm window) — observed live that a parked worker's self-poll heartbeat picks
+      up the NEXT task boot-free (`trigger: heartbeat`), so freshly-done sessions are kept warm; only sessions parked
+      past the threshold with nothing to do are reaped. 4 unit tests pin reap/warm/in-flight/queued paths.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@1a0bea0 (bootstrap upsert). **Every bootstrap VM silently
+      became a second CI-responder**: CIReconcileLoop is ON by default in the backend, so within 2 min of the @094f691
+      restart the TEST VM autonomously dispatched an `ldr_qg_failure` fixer for market-data-processing-service — a repo
+      it has no clone of — duplicating vm-0's CI-responder mandate (per-VM cooldowns don't dedup across the fleet; the 6
+      "failing" LDR repos are likely the 2026-06-12 billing wall, unfixable by a worker). Positive side: this proved the
+      DETECTION→escalation→spawn loop fires fully autonomously (our earlier drill only proved the POST→spawn half). Fix:
+      bootstrap upserts `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0`; the ONE designated responder VM (vm-0)
+      re-enables in its .env.local; ORCHESTRATOR_EXTRA_ENV overrides at launch for a deliberate responder. The test VM's
+      fixer was killed before it acted; CIReconcile disabled there.
+- [ ] [CODE] P2. **AutoSpawn over-spawns: N idle slots × 1 queued task → N workers** — tick 10:57:10 logged
+      `checked=2 spawned=2` for a single queued task; one worker took it, the other booted to an empty queue (now
+      warm-reaped after 15 min, but the boot itself is wasted account messages). Fix shape: cap spawns-per-tick at the
+      queued+undispatched count (decrement as the tick assigns). Repo: agent-orchestrator. Found 2026-06-12
+      concerns-verification run.
 
 **VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
 RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3

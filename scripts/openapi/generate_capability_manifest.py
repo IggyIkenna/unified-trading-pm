@@ -67,6 +67,7 @@ from _capability_extract import (
     extract_venues,
 )
 from _capability_gaps import (
+    extract_algo_compatibility,
     extract_gap_registries,
     extract_risk_surface,
     extract_service_registries,
@@ -174,6 +175,11 @@ def build_manifest(
 
     logger.info("6. Service-resident registries (exec/features/ml, per-service venv)...")
     n, e = extract_service_registries(workspace_root)
+    all_nodes += n
+    all_edges += e
+
+    logger.info("6b. Archetype -> execution-algo compatibility (Phase 6A)...")
+    n, e = extract_algo_compatibility()
     all_nodes += n
     all_edges += e
 

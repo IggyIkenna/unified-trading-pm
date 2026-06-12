@@ -14,12 +14,15 @@ schema_notes: |
   v2 uses everlasting epic slugs + populated master_plans per VM.
 
 vms:
-  # ---------- Planning VM ----------
+  # ---------- Central / Orchestrator VM ----------
+  # SPLIT 2026-06-12 (operator): the human interactive planning role MOVED to the new `human-planning`
+  # VM (i-0dd9812a96cdda5dc, below). THIS VM is now orchestrator/central ONLY — no human daily work.
 
   - id: planning
-    # THIS IS THE CENTRAL API VM (reconciled 2026-06-05): the single always-on endpoint everything
-    # (CI escalations + dashboard + operator chat) pings. nginx :443 → orchestrator backend :8765.
-    # tab branches brand `planning` (ORCHESTRATOR_VM_ID=planning), NOT the operator name `ikenna`.
+    # Legacy id `planning` kept for RUNTIME continuity (ORCHESTRATOR_VM_ID=planning hand-wired with the
+    # EIP + secrets; renaming would orphan live sessions). This is THE central API + orchestrator host:
+    # the single always-on endpoint everything (CI escalations + dashboard + operator chat) pings.
+    # nginx :443 → orchestrator backend :8765. NOT the human box (see `human-planning`).
     cloud: aws
     aws_instance_id: i-0c9b283b31d6b5ca7
     public_ip: "13.113.200.22" # ELASTIC IP — stable across reboots; DNS api.agent-orchestrator points here
@@ -27,9 +30,43 @@ vms:
     fqdn: api.agent-orchestrator.odum-research.com
     region: ap-northeast-1
     instance_type: m8i.4xlarge
+    ssh_host: agent-orchestrator-vm
+    role: central
+    label: "Central API + Orchestrator VM (CI escalation · plan-health · AutoSpawn — NO human daily work)"
+    operators: [ikenna, harsh] # operators administer it; humans do NOT run interactive planning slots here
+    accounts:
+      primary: ikennaigboaka@gmail.com
+      failover:
+        - ikenna@odum-research.com
+        - iggy2london@gmail.com
+        - harshkantariyawork@gmail.com
+    master_plans: [] # central host doesn't execute epics — produces wrapper plans + central routing
+    notes: |
+      SPLIT 2026-06-12: human interactive planning moved to `human-planning` (i-0dd9812a96cdda5dc). This VM
+      is orchestrator/central ONLY. Its slots run ORCHESTRATOR roles (dispatched by THIS VM's API, since it
+      owns the EIP/DNS that the CI workflows + dashboard hit):
+        slot3 = review (review.md, Sonnet)
+        slot4 = CI-escalation (escalate.md — merge-conflict/SIT/label fixes on LDR; fired by /api/escalate)
+        slot5 = plan-health (plan-health.md — fired by the LDR→main promotion workflow → /api/plan-health/dispatch)
+        + AutoSpawn for agent workers; slots 1-2 freed (no human interactive sessions).
+      Keeps the EIP + DNS + hand-wired secrets (incl. ORCHESTRATOR_INTERNAL_SECRET). Only THIS VM's
+      health/alerts matter. SSOT: plans/active/orchestrator_human_central_vm_split_2026_06_12.md
+      (supersedes the archived planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05.md).
+
+  # ---------- Human Planning VM (NEW 2026-06-12) ----------
+
+  - id: human-planning
+    # Dedicated human interactive box (Ikenna + Harsh) — separated from the orchestrator/central VM above
+    # on 2026-06-12 so human planning work no longer shares a host with the CI-escalation / plan-health /
+    # AutoSpawn machinery. Self-registers with the central VM; does NOT own the EIP/DNS/central-API.
+    cloud: aws
+    aws_instance_id: i-0dd9812a96cdda5dc
+    public_ip: "35.76.120.160"
+    region: ap-northeast-1
+    instance_type: m7i.2xlarge
     ssh_host: human-planning-vm
     role: planning
-    label: "Central API + Planning VM (Ikenna + Harsh interactive)"
+    label: "Human Planning VM (Ikenna + Harsh interactive)"
     operators: [ikenna, harsh]
     accounts:
       primary: ikennaigboaka@gmail.com
@@ -37,16 +74,15 @@ vms:
         - ikenna@odum-research.com
         - iggy2london@gmail.com
         - harshkantariyawork@gmail.com
-    master_plans: [] # planning VM doesn't execute epics — produces wrapper plans + central routing
+    master_plans: []
     notes: |
-      Central API VM == Planning VM. Auto-spawns SLOTS, never auto-assigns JOBS — "workers" here are
-      humans (Ikenna/Harsh) in isolated worktrees, like a laptop. tab/planning/N (5 slots, 2026-06-05):
-        slot1 = Ikenna interactive (Opus)   slot2 = Harsh interactive (Opus)
-        slot3 = review (code review of this machine's slot_done output, review.md, Sonnet)
-        slot4 = CI-escalation (escalate.md — merge-conflict/SIT/label fixes on LDR)
-        slot5 = plan-health agent (pinged by the LDR→main promotion workflow; FF main→LDR + plan hygiene)
-      Both operators see each other's chats via /api/agents/by-role/main/history view.
-      SSOT: plans/active/planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05.md.
+      NEW 2026-06-12 (operator split): the human box — Ikenna + Harsh do plan curation, audit, architecture
+      here (slot1 = Ikenna, slot2 = Harsh; tab/human-planning/N). Runs a LOCAL orchestrator backend that
+      SELF-REGISTERS with the central VM (`planning` / 13.113.200.22) over the VPC, so the dashboard shows
+      its slots — but it does NOT hold the EIP/DNS/central-API, and CI escalation + plan-health stay on the
+      central VM. ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true → never auto-adopts fleet/global plans (humans
+      pick tasks manually). SSH: `ssh human-planning-vm` → 35.76.120.160 (key: ~/.ssh/agent-orchestrator-key).
+      SSOT: plans/active/orchestrator_human_central_vm_split_2026_06_12.md.
 
   # ---------- L0 Asset-group VMs (5) ----------
 

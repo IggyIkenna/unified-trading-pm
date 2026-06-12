@@ -42,7 +42,9 @@ last_reviewed: 2026-05-28
                                            │ api.agent-orchestrator.odum-research.com
                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│  Central API VM = Planning VM (EC2 13.113.200.22, AWS ap-northeast-1)            │
+│  Central / Orchestrator VM (id `planning`, EC2 13.113.200.22, AWS ap-northeast-1)│
+│  (SPLIT 2026-06-12 — see orchestrator_human_central_vm_split_2026_06_12.md;      │
+│   NO humans here — humans are on the human-planning VM, box below)               │
 │  nginx :443 (Let's Encrypt) → orchestrator backend :8765                          │
 │                                                                                  │
 │  Acts as:                                                                        │
@@ -53,10 +55,14 @@ last_reviewed: 2026-05-28
 │     the VPC, mints a fresh internal service token signed with                    │
 │     ORCHESTRATOR_INTERNAL_SECRET (fleet-shared key) for the upstream             │
 │     Authorization header — workers validate against the same internal key       │
-│   - Planning slots: Slot 1 Ikenna + Slot 2 Harsh interactive (Opus 4.7)          │
+│   - Orchestrator roles: review · CI-escalation · plan-health · AutoSpawn         │
 └──────────────────────────────────────────┬──────────────────────────────────────┘
                                            │ HTTP private VPC (vpc-6ee70e08)
                                            │ Bearer <internal-service-token>
+                                           │  (the human-planning VM, id `human-planning`,
+                                           │   EC2 35.76.120.160 m7i.2xlarge, slots 1-2 =
+                                           │   Ikenna + Harsh interactive, self-registers
+                                           │   with this central VM — owns no EIP/DNS/API)
                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  10 epic VMs (AWS EC2 ap-northeast-1, same VPC + subnet as central)              │
@@ -112,21 +118,29 @@ URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
 | **2**    | **review agent**      | Sonnet 4.6            | Reviews each worker commit against the master plan + ensures FF merge of slot branches into LDR. Knows which commits are from which agents (slot branch = `tab/<operator>/<N>`). Auto-pull cron every 5 min keeps worktrees in sync with LDR (except when locally dirty). |
 | **3-18** | **workers**           | Sonnet 4.6 (default)  | Pick up backlog tasks for the VM's master plan. Min 8 spawned, up to 16 based on rate-limit + CPU bound (1 CPU per agent minimum).                                                                                                                                        |
 
-## Central API / Planning VM shape (one VM serves both roles since 2026-05-22)
+## Central / Orchestrator VM + Human Planning VM (SPLIT 2026-06-12 — two VMs, was one merged VM 2026-05-22 → 2026-06-12)
 
-| Slot                 | Role               | Model    | Purpose                                                                                                       |
-| -------------------- | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
-| **1**                | Ikenna interactive | Opus 4.7 | Human session for plan curation, audit work, architectural decisions.                                         |
-| **2**                | Harsh interactive  | Opus 4.7 | Human session. Both Ikenna+Harsh can see each other's chats via shared /api/agents/by-role/main/history view. |
-| (no spawned workers) |                    |          | The planning VM doesn't execute backlog tasks; it produces master plans that get delegated to epic VMs.       |
+Human/central were split into **two distinct live VMs** by operator decision 2026-06-12
+(`orchestrator_human_central_vm_split_2026_06_12.md`; supersedes the 2026-06-05 merged "Central API VM == Planning VM").
 
-In addition to the two planning slots above, the same VM runs the **central API** that the dashboard talks to (nginx
-:443 → app :8765). That central API:
+**Central / Orchestrator VM (id `planning`, `i-0c9b283b31d6b5ca7`, `13.113.200.22` EIP):** runs the **central API** that
+the dashboard talks to (nginx :443 → app :8765) plus the orchestrator roles — **NO human daily work**. That central API:
 
 - Validates the operator JWT (auth perimeter)
 - Serves fleet-wide endpoints directly: `/api/fleet/summary`, `/api/auth/login`, `/api/backends`, `/api/accounts`, etc.
 - Proxies per-VM endpoints (`/api/vms/<id>/<path>`) over the private VPC, minting a fresh internal service token for the
   upstream Authorization header so the operator JWT never reaches an epic VM
+- Owns CI-escalation (`/api/escalate`), plan-health (`/api/plan-health/dispatch`), review, and **AutoSpawn for workers**
+
+**Human Planning VM (id `human-planning`, `i-0dd9812a96cdda5dc`, `35.76.120.160`, m7i.2xlarge, `ssh human-planning-vm`):**
+the two interactive slots, separate box, self-registers with the central VM (owns no EIP/DNS/central-API;
+`ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` — never auto-adopts fleet plans).
+
+| Slot                 | VM               | Role               | Model    | Purpose                                                                                                       |
+| -------------------- | ---------------- | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
+| **1**                | `human-planning` | Ikenna interactive | Opus 4.7 | Human session for plan curation, audit work, architectural decisions.                                         |
+| **2**                | `human-planning` | Harsh interactive  | Opus 4.7 | Human session. Both Ikenna+Harsh can see each other's chats via shared /api/agents/by-role/main/history view. |
+| (no spawned workers) | `human-planning` |                    |          | The human-planning VM doesn't execute backlog tasks; it produces master plans that get delegated to epic VMs. |
 
 ## Plan → VM assignment
 
@@ -138,7 +152,7 @@ Every epic in `plans/epics/<slug>.md` declares:
 ---
 name: <slug>
 type: epic
-assigned_vm: vm-<id> # planning = humans only; vm-defi / vm-cefi / vm-ml / ... = epic VMs
+assigned_vm: vm-<id> # planning = central/orchestrator (no humans); human-planning = Ikenna/Harsh interactive; vm-defi / vm-cefi / vm-ml / ... = epic VMs (SPLIT 2026-06-12)
 ---
 ```
 
@@ -367,7 +381,8 @@ No VM restart. No operator manual intervention beyond the plan edit.
 
 | VM                 | Owns epics                                                                                                                 | Primary account              |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `planning`         | (none — interactive)                                                                                                       | ikennaigboaka@gmail.com      |
+| `planning`         | (central / orchestrator — review · CI-escalation · plan-health · AutoSpawn; SPLIT 2026-06-12, NO humans)                   | ikennaigboaka@gmail.com      |
+| `human-planning`   | (none — Ikenna/Harsh interactive; SPLIT 2026-06-12)                                                                        | ikennaigboaka@gmail.com      |
 | `vm-defi`          | `defi_master` + `manifest_master`                                                                                          | ikenna@odum-research.com     |
 | `vm-cefi`          | `cefi_master` + `instruments_master`                                                                                       | iggy2london@gmail.com        |
 | `vm-tradfi`        | `tradfi_master`                                                                                                            | harshkantariyawork@gmail.com |
