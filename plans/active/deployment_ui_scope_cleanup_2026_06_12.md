@@ -114,14 +114,22 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
       serial) | regression: tests/smoke/deploy-and-subscriptions.smoke.spec.ts (+ component test
       tests/services/deploy-console.test.tsx, 4/4). QG-green (base-ui: typecheck+lint+276 tests+50.2% cov+build). Repo:
       unified-trading-system-ui.
-- [ ] [CODE] P2. [UI] Phase 3 — **deployment-ui: DELETE only `Dart.tsx` + `ClientSubscriptions.tsx`** (+ their routes in
-      `App.tsx`, nav entries in `Header.tsx`, `*.test.tsx`, mock handlers). **KEEP** MlExperiments / StrategyBacktests /
-      ExecutionBacktests (dual-cut: they remain the deploy surface here). Keep LandingTabs (Overview/Epics/Repos
-      CI/Alerts/Fleet Git) + all ops pages. `pw:L2` must stay green (update specs referencing the 2 deleted pages).
-      Repo: deployment-ui.
-- [ ] [VERIFY] P2. Phase 4 — both stacks up; UTS-UI research surfaces can deploy live against deployment-api; the 3
-      launch consoles still work in deployment-ui; Dart + ClientSubscriptions gone from deployment-ui; `/repos` +
-      `/epics` tabs still clickable + URL-synced. Evidence: pw:L2 both repos.
+- [x] ✅ [CODE] P2. [UI] Phase 3 — **deployment-ui: deleted `Dart.tsx` + `ClientSubscriptions.tsx`**. DONE 2026-06-12 —
+      deployment-ui@91c810c (−996 lines). Removed both pages + their `*.test.tsx`, routes in `App.tsx`, nav entries in
+      `Header.tsx` (+ mobile menu + `Header.test.tsx` assertion), dead subscription API fns in `api/client.ts`, dead
+      types (`IsolationPolicy`/`SLATier`/`ServiceIsolationSpec`/`ClientServiceOverride`/`ClientSubscription`) in
+      `types/index.ts`, and the `/subscriptions` mock + `_mockClientSubscription` helper in `lib/mock-api.ts`. Updated
+      the 2 smoke specs (`nav_and_header`, `accessibility_audit`) that referenced `/dart`. **KEPT** MlExperiments /
+      StrategyBacktests / ExecutionBacktests + their routes/nav/tests (dual-cut). Kept LandingTabs + all ops pages.
+      Verified: typecheck + lint + 838 unit tests + build green. Repo: deployment-ui.
+- [x] ✅ [VERIFY] P2. Phase 4 — DONE 2026-06-12. UTS-UI@08ff0742 | pw:L2 ✓ 17/17 (deploy console + subscriptions
+      reachable, live against deployment-api via `/api/deploy/*` + `/api/subscriptions` rewrites). deployment-ui@91c810c
+      | pw:L2: nav-routing 4/4 + ML/Strategy/Exec/Chaos page-render smoke pass; the 3 launch consoles +
+      `/repos`+`/epics` tabs intact; Dart + ClientSubscriptions gone. **Known pre-existing flake (NOT this change)**:
+      `nav_and_header.spec.ts` "VM Deployments / Live deployments page renders" fail on
+      `waitForLoadState('networkidle')` (polling pages never idle) — PROVEN pre-existing by re-running on the clean
+      stashed tree (same 2 fail; both untouched routes). Evidence: tests/smoke/nav_and_header.spec.ts +
+      tests/smoke/deploy-and-subscriptions.smoke.spec.ts.
 - [ ] [DOCS] P2. Phase 5 — codex SSOT update: `codex/04-architecture/` UI-split note (deployment-ui = devops + deploy
       pane incl. the 3 launch consoles; unified-trading-system-ui = trading/research/client surface that can ALSO deploy
       through the shared deployment-api; DART lives only in UTS-UI). Extend CLAUDE.md repo-map line with the dual-cut
