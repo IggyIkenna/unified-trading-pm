@@ -56,8 +56,11 @@ artifact — the central VM is NOT the human box (that is `human-planning`).
       the central VM, commit/push the WIP in your 2 open Claude Code tabs, then close them; `ssh human-planning-vm` and
       resume interactive work there (`setup-tab-worktrees.sh` already ran for slots 1-2). The central VM keeps serving
       throughout.
-- [ ] [SCRIPT] P2. Once humans are off the central VM, free its slots 1-2 for AutoSpawn agent workers (or leave idle).
-      Optional cleanup — no urgency.
+- [x] [SCRIPT] P2. Once humans are off the central VM, free its slots 1-2 for AutoSpawn agent workers (or leave idle).
+      Optional cleanup — no urgency. **DONE 2026-06-12 — central VM's slots 1+2 worktrees were already on
+      `live-defi-rollout` (Path-B reference clones). Updated stale DB config (branch was `tab/ikennaigboaka/1` /
+      `tab/odum1default/2`, worktree absolute paths) to `branch=live-defi-rollout`, `worktree=.tabs/{1,2}/`,
+      `operator=planning` so future AutoSpawn spawns use correct Path-B boot prompts.**
 
 ## Verification
 
