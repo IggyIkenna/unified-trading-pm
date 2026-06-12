@@ -328,3 +328,23 @@ deployment-service: `--config` pointed at a nonexistent yaml and BOTH build cont
 targeted the wrong repo. Every `--cloud` UI deploy since 2026-05-08 would have failed loudly (config missing) — so
 either nobody cloud-deployed the portal since, or they used a different path; worth checking how the current prod
 revision was built. Fix: REPO_ROOT now resolves the UI repo explicitly + fail-loud check.
+
+### F30 — Unpinned pnpm@latest in uts-ui Dockerfile broke all docker builds (same family as the setup-uv@v8 rule)
+
+**Status**: FIXED unified-trading-system-ui@0f8f00d6. `corepack prepare pnpm@latest` pulled a new pnpm major whose
+ignored-build-scripts handling (ERR_PNPM_IGNORED_BUILDS) fails `pnpm install --prod`, and which no longer reads
+package.json pnpm settings. Pinned to pnpm@9.15.9 (the lockfile generation + local dev version). Rule: bump pnpm
+deliberately WITH a lockfile migration, never via latest.
+
+### F31 — Dangling .gitleaks.toml symlink breaks next build inside docker context
+
+**Status**: FIXED unified-trading-system-ui@0f8f00d6. `.gitleaks.toml` is a symlink to ../unified-trading-pm (outside
+the docker context) → Turbopack's stat walk ENOENTs → build error. Excluded via .dockerignore. Any other cross-repo
+symlinks added to UI repos need the same treatment.
+
+### F32 — Cursor-server bundled node (20.18) shadows system node 22 in interactive shells on this host
+
+**Status**: DOCUMENTED — environmental. `~/.cursor-server/bin/.../node` precedes /usr/bin in PATH for Cursor-spawned
+shells → vitest/vite fail with ERR_REQUIRE_ESM (require-of-ESM needs node ≥22) and rolldown's native binding is skipped
+at install (engine floor 20.19). Remedy for agents on this host: `PATH="/usr/bin:$PATH"` for UI QG runs. System node is
+22.22.3 (nodesource); repo standard node22 (.nvmrc).

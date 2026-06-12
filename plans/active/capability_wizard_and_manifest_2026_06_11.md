@@ -599,3 +599,9 @@ for every agent on this plan:
   F28 — venue_collateral.py vs execution-service lst_collateral_resolver.py disagree on LST haircuts (dual SSOT).** UAT
   deploy of the wizard: exposed + fixed F29 (deploy-ui.sh REPO_ROOT drift, deployment-service@dcb5fdb); Cloud Build →
   odum-portal-staging in flight → uat.odum-research.com/wizard.
+- 2026-06-12 — **Wizard DEPLOYED: https://uat.odum-research.com/wizard (build 7, exit 0, HTTP 200).** Getting there
+  exposed + fixed three pre-existing deploy-path rots: F29 deploy-ui.sh REPO_ROOT migration drift
+  (deployment-service@f84ccd8), F30 unpinned pnpm@latest in the Dockerfile (uts-ui@0f8f00d6, pinned 9.15.9), F31
+  dangling .gitleaks.toml symlink breaking next build in docker context (same commit). F32 host gotcha documented
+  (cursor-server node 20.18 shadows system node 22 → UI QG needs PATH=/usr/bin first). Full-suite openapi regen remains
+  a CI-runner job (F12) — on-host UAC-importable outputs stay the local path.
