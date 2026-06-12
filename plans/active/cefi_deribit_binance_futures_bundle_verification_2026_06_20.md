@@ -55,13 +55,16 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
       phantom "captured" entries with no corresponding GCS objects. DERIBIT options_chain + futures_chain have never been
       successfully backfilled. Genuine gap: ALL 2,590 days (2019-03-30→2026-05-01). Backfill relaunch required (see
       [SCRIPT] P0 below).**
-- [x] [VERIFY] P0. Same for BINANCE-FUTURES `perpetual` / `derivative_ticker` — per-instrument-per-day coverage ≥99% on
+- [x] ✅ [VERIFY] P0. Same for BINANCE-FUTURES `perpetual` / `derivative_ticker` — per-instrument-per-day coverage ≥99% on
       live perps; manifest reconciliation has dropped phantom rows. **VERIFIED 2026-06-12 — FINDING: Coverage 54.7%,
       below ≥99% threshold. availability_index derivative_ticker: 38,390 captured / 17,935 attempted_failed / 13,895
       empty_confirmed (54.7% of non-empty rows captured). Phantom check PASS: projected_index shows
       PHANTOM_CAPTURED_NO_OBJECT=0 for BINANCE-FUTURES (all 58,090 captured rows have real GCS objects). Failed rows:
       LegacyBlankErrorReasonError=16,594 / VENUE_FETCH_FAILED=1,294 / other=142. futures_chain for BINANCE-FUTURES:
-      0 captured, 13,334 attempted_failed (100% gap). Date range: 2019-12-30→2026-06-09 (all years affected).
+      0 captured, 13,334 attempted_failed (100% gap). Date range: 2019-12-30→2026-06-09 (all years affected). Additional
+      per-instrument detail (slot-6 GCS SDK 2026-06-12): PERPETUAL-tagged rows only = 38,362 captured (100%), per-instrument
+      tracking degraded to blank-instrument-id aggregate from 2026-04-29, complete gap 2026-05-23→2026-06-08 (20 days, 0 rows),
+      2026-06-09 VENUE_FETCH_FAILED on *-PERP IDs. Orphan sweep 4,867 BINANCE-FUTURES = all RECORD_ONLY (legacy twins, not phantoms).
       Genuine gap: ~17,935 derivative_ticker day/instrument failures + 13,334 futures_chain gaps needing backfill.
       No phantoms — all captured entries are real. Backfill relaunch required (see [SCRIPT] P0 below).**
 - [ ] [SCRIPT] P0. For any genuine gap days found above, relaunch the scoped backfill via the existing
