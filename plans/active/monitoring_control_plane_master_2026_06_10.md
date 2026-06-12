@@ -526,16 +526,25 @@ deployed to the VM + verified). Remaining live-run findings:
       CLAUDE.md/codex say "8026 retired, 8765 canonical" (true only on the planning VM). Decide the canonical worker
       port, then move template + sg + backends.json + docs in ONE change. Repo: agent-orchestrator (+ codex). Found
       2026-06-12 live run.
-- [ ] [CODE] P1. **Bootstrap S3 `backlog.yaml` seed contradicts the regen-authoritative model** — Step 5c copies a stale
-      fleet backlog (36 May-era phase tasks) from the creds bucket into a fresh VM, bypassing regen scoping entirely;
-      AND bootstrap never upserts `ORCHESTRATOR_REGEN_PRUNE_STALE=true` (CLAUDE.md claims fleet-default; code default is
-      false) so the seed persists. Fix: drop the backlog.yaml seed (regen rebuilds from plans) + upsert PRUNE_STALE=true
-      in 5b-append; delete the stale `config/backlog.yaml` from the creds bucket. Repo: agent-orchestrator. Found
-      2026-06-12 live run (vm-e2e-test booted with 36 foreign tasks).
-- [ ] [CODE] P2. **verify_vm_e2e.sh: distinguish caller-side IAM denial from agent-not-registered** — the SSM probe
-      swallowed `AccessDeniedException` into "agent never registered" (misleading FAIL); add an explicit
-      caller-permission preflight + an SSH fallback path (port 22 is open; `agent-orchestrator-key`). Repo:
-      agent-orchestrator. Found 2026-06-12 live run.
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@0780554 (QG green 523 passed; quickmerge --agent). All 3 parts:
+      (1) Step 5c fetch loop now `accounts.json` only with a never-re-add comment (`load_backlog()` returns an empty
+      `Backlog()` on a missing file — verified — so the seed was always redundant-or-stale); (2) 5b-append upserts
+      `ORCHESTRATOR_REGEN_PRUNE_STALE=true` (code now matches the CLAUDE.md fleet-default claim); (3) stale
+      `config/backlog.yaml` (40KB, 2026-05-22 — the 36-ghost-task source) DELETED from
+      s3://uts-orchestrator-creds-427895769566/config/ (only accounts.json remains). Was: **Bootstrap S3 `backlog.yaml`
+      seed contradicts the regen-authoritative model** — Step 5c copies a stale fleet backlog into a fresh VM, bypassing
+      regen scoping entirely; AND bootstrap never upserts PRUNE_STALE so the seed persists. Repo: agent-orchestrator.
+      Found 2026-06-12 live run (vm-e2e-test booted with 36 foreign tasks).
+- [x] ✅ [CODE] P2. DONE 2026-06-12 — agent-orchestrator@0780554 (same unit). SSM probe now captures stderr:
+      `AccessDenied`/`UnauthorizedOperation` → SKIP "caller IAM denied — NOT a VM fault" (breaks the 5-min loop
+      immediately — the denial is deterministic); genuine not-registered stays FAIL; BOTH paths fall back to SSH
+      (`vm_run` transport dispatcher; `ssh_run` pipes commands to `sudo bash -s` so quoting/run-as-root semantics match
+      ssm_run; `--ssh-key` flag, default `~/.ssh/agent-orchestrator-key`) and complete all 7 checks instead of exiting
+      blind. LIVE-VERIFIED on i-086e8787dddda52d6 from this harsh-worker host (the exact previously-misreported
+      scenario): SSM online SKIP (caller IAM denied) → SSH fallback → all remaining checks PASS, VERDICT: PASS, exit 0.
+      Was: **verify_vm_e2e.sh: distinguish caller-side IAM denial from agent-not-registered** — the SSM probe swallowed
+      `AccessDeniedException` into "agent never registered" (misleading FAIL). Repo: agent-orchestrator. Found
+      2026-06-12 live run.
 - [ ] [CREDS] P2. **BLOCKED-CREDENTIALS — `harsh-worker` IAM lacks SSM read/run** (`ssm:GetParameters` broke the
       launcher's Ubuntu-AMI resolution — worked around via `AMI_ID=ami-0bf052f8a9dd8bf42`;
       `ssm:DescribeInstanceInformation`/ `ssm:SendCommand` broke the verify harness — worked around via SSH). Operator
