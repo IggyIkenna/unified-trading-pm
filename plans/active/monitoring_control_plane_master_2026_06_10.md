@@ -256,12 +256,13 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       src/components/ReadinessTab.test.tsx + src/lib/mock-api.ph3.test.ts + tests/smoke/stateful-flows.spec.ts
       (Readiness renders "Blocking Issues", not the error fallback). **(item-203 follow-up) ReadinessTab crashed on a
       partial/stale `/checklist` payload — FIXED.** The Readiness tab rendered the per-tab ErrorBoundary fallback (not
-      its content) in mock mode: the in-app `MOCK_CHECKLIST` still carried the stale `{overallScore, isBlocked, score,
-      label, detail}` shape (omitting `blocking_items`), so `checklist.blocking_items.length` read undefined and crashed
-      — same class as item 203's DependenciesPanel fix (the stateful-flows `page.route` fix is dead under
-      `VITE_MOCK_API`, where the in-app mock wins). Two-part: (1) ReadinessTab guards `blocking_items`/`categories` with
-      `?? []`; (2) `MOCK_CHECKLIST` rewritten to the `ChecklistResponse` contract (readiness_percent + counts +
-      per-category display_name/percent + `blocking_items[]`). Repo: deployment-ui (ReadinessTab + mock-api).
+      its content) in mock mode: the in-app `MOCK_CHECKLIST` still carried the stale
+      `{overallScore, isBlocked, score,     label, detail}` shape (omitting `blocking_items`), so
+      `checklist.blocking_items.length` read undefined and crashed — same class as item 203's DependenciesPanel fix (the
+      stateful-flows `page.route` fix is dead under `VITE_MOCK_API`, where the in-app mock wins). Two-part: (1)
+      ReadinessTab guards `blocking_items`/`categories` with `?? []`; (2) `MOCK_CHECKLIST` rewritten to the
+      `ChecklistResponse` contract (readiness_percent + counts + per-category display_name/percent +
+      `blocking_items[]`). Repo: deployment-ui (ReadinessTab + mock-api).
 - [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
       per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
       relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
@@ -435,6 +436,16 @@ Unsolved findings from the run (each repro'd live or read in code; fix not yet s
       `dashboard/src/App.tsx:73` (`devPort ?? "8026"`; backend binds 8765 since the port migration) → fresh local run =
       login "Failed to fetch" until `VITE_BACKEND_PORT=8765`. Flip the default. Repo: agent-orchestrator
       (`dashboard/src/App.tsx`).
+
+- [x] ✅ [CODE] P1. DONE 2026-06-12 — agent-orchestrator@1c9b8c1 (4 tests; QG green; quickmerge --agent). **VM-test
+      isolation: `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` strict per-VM plan scoping** (operator ask 2026-06-12 — "the test
+      VM must not pick up any existing plan by default"). With the flag set, regen ingests ONLY plans whose
+      `assigned_vm` EXACTLY matches `ORCHESTRATOR_VM_ID` — the "no assigned_vm ⇒ global, every VM takes it" fallback is
+      disabled (a fresh vm-id alone still leaked the global plans, incl. `task_template.md`'s example todos), and with
+      no vm_id configured strict mode ingests NOTHING (fail-closed). Env-resolved inside `regen()` so the PlanRegenLoop,
+      the manual `POST /api/backlog/regen`, and the CLI all inherit it. The e2e test VM runs
+      `ORCHESTRATOR_VM_ID=vm-e2e-test`
+  - this flag → guaranteed-empty backlog until a plan explicitly targets it. Repo: agent-orchestrator.
 
 Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
