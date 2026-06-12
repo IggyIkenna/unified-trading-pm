@@ -89,10 +89,13 @@ start_api() {
   # cloud SDK calls — incident 2026-06-11: google-cloud-build 3.35 in the root venv
   # lacked the regional-parent routing header newer gapics send, so ListBuildTriggers
   # 400'd ("invalid argument") from the laptop while the same code worked on a synced
-  # venv + the deployed image. uv sync pins to uv.lock, so this can never drift again.
+  # venv + the deployed image. --frozen installs EXACTLY the committed uv.lock and never
+  # rewrites it (incident 2026-06-12: plain `uv sync` re-stamped the editable UTL version
+  # in uv.lock → dirty tree → the */5 ff-pull cron [skip:dirty]'d the clone — the exact
+  # drift class this step exists to prevent).
   if command -v uv >/dev/null 2>&1; then
-    echo "==> uv sync (deployment-api deps — no-op when current)"
-    uv sync --quiet 2>/dev/null || echo "  WARN: uv sync failed — continuing with the existing venv"
+    echo "==> uv sync --frozen (deployment-api deps — no-op when current; never rewrites uv.lock)"
+    uv sync --frozen --quiet 2>/dev/null || echo "  WARN: uv sync --frozen failed — continuing with the existing venv"
   fi
   echo "==> Starting deployment-api on :${API_PORT} (real mode, real cloud, 4 workers)"
   local logfile="${PIDS_DIR}/deployment-api.log"
