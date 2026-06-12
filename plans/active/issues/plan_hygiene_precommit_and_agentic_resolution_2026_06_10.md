@@ -24,6 +24,25 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
    (`plan_health` wall_type in `server/escalation.py` + `agent-orchestrator/agents/plan-health.md`) is built but the
    daily detector never dispatches to it.
 
+## Design supersession (operator, 2026-06-12) — daily detector moves OFF Haiku/GHA onto a smart VM agent
+
+> Operators (Harsh + Ikenna, 2026-06-12): the daily LLM layer below ("expensive + LLM → daily CI batch", Haiku) is
+> SUPERSEDED for the daily path. Haiku-on-GHA is too shallow for the real job (cross-check codex ↔ plans ↔ epics ↔
+> issue docs ↔ CODE STATE — "it's way more than frontmatter"), billing-fragile (2026-06-12 daily run died on the GHA
+> billing wall — second outage this week), and paid, while the orchestrator infra runs Max-plan slots at $0 marginal.
+> New daily shape (todos in "Daily deep reconciler" below): a systemd timer on the CENTRAL VM (vm-0
+> `i-0c9b283b31d6b5ca7` — per `orchestrator_human_central_vm_split_2026_06_12.md` the machinery host; its legacy
+> `ORCHESTRATOR_VM_ID` is literally `planning`) dispatches ONE deep `plan-reconciler` worker (opus, effort max, thinking
+> on; long-running minutes→hour) that DETECTS **and** FIXES, with a **12h grace window** (never touches a plan whose
+> newest git change is <12h old — protects running status on fresh plans). The per-commit prek gate, the PM→main
+> `plan-health-gate`, and the escalation-based `plan_health` resolver for GATE failures all stay unchanged. The GHA
+> daily job + the (silently broken) Cloud Run sweep retire AFTER the reconciler proves out (RULE-11 prove-then-retire).
+>
+> Audit findings backing this (2026-06-12): Cloud Run `uts-prod-plan-hygiene-sweep` (05:00 UTC) ENABLED but failing
+> ~every other day with `Container called exit(1)` and ZERO stdout in Cloud Logging — it dies before its own inbox-ping
+> failure handling, so nobody noticed; GHA `plan-health-agent.yml` daily (03:07) killed by the billing wall today; 3
+> runtimes (GHA + Cloud Run + prek) doing overlapping sweeps.
+
 ## Design decision (operator, 2026-06-10)
 
 - **Cheap + deterministic + per-change → prek (staged-files-only).** Catches plan-flips that skip full QG; fail-fast;
@@ -65,6 +84,34 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
 - [ ] [DOC] P3. Pre-existing frontmatter violation: `plans/active/ci_status_firestore_side_store_2026_06_10.md` is
       missing `locked_by` (another agent's new plan today). Staged-scoping means it only blocks a commit that touches
       that file — but it should be fixed at source. Owner: whoever owns that plan. repo: unified-trading-pm.
+
+## Daily deep reconciler (operator direction 2026-06-12 — supersedes the daily-Haiku layer; see banner above)
+
+- [ ] [CODE] P1. **`plan-reconciler` agent profile** (`agents/plan-reconciler.md` + `server/plan_health.py`
+      `mode="reconcile"` on `POST /api/plan-health/dispatch`): one-shot, long-running (minutes→hour) opus/effort-max/
+      thinking-on worker on a Max-plan slot. Inputs: hygiene digest + full plan/epic/issue-doc corpus + CLAUDE.md +
+      codex SSOTs named by plans. Does: (1) runs the deterministic sweep itself (subsumes the Cloud Run job); (2)
+      cross-checks plans ↔ epics ↔ codex ↔ issue docs ↔ CODE STATE (verify cited shas via
+      `git merge-base --is-ancestor … origin/live-defi-rollout`, claimed files/flags via rg — grep-then-read); (3)
+      APPLIES safe fixes: flip todos ONLY with verifiable on-origin evidence, `fix_frontmatter.py`/todo-format,
+      mark-superseded banners; (4) files what it can't safely fix as issue docs + inbox pings; (5) one
+      `docs(plans): daily reconciliation` commit direct to LDR (sanctioned carve-out) + Slack summary. HARD LIMITS: 12h
+      grace (skip plans with newest git touch <12h — `git log -1 --format=%ct -- <plan>`); no deletions; no archival of
+      `locked_by` plans; no codex rewrites beyond confidence-flagged rows in v1. repo: agent-orchestrator.
+- [ ] [INFRA] P1. **Daily systemd timer on the central VM** (vm-0 `i-0c9b283b31d6b5ca7`): `plan-reconciler.timer` → curl
+      `POST localhost:8765/api/plan-health/dispatch {"mode":"reconcile"}` (internal-secret authed; central has it
+      hand-wired). Installer script in agent-orchestrator `scripts/` (idempotent, like install-orchestrator-service);
+      billing-proof (no GHA dependency). repo: agent-orchestrator.
+- [ ] [TEST] P1. **Prove on vm-e2e-test first**: seed a synthetic violation set (stale unflipped todo with an on-origin
+      sha + a frontmatter violation + a >12h-old contradiction + a <12h-old plan that must be SKIPPED) → dispatch
+      reconcile mode → verify the worker fixes exactly the eligible set, skips the fresh plan, commits one
+      `docs(plans):` unit, files the unfixable finding. Then install the timer on central. repo: agent-orchestrator.
+- [ ] [CI] P2. **RULE-11 prove-then-retire** (after ≥3 green reconciler runs on central): (a) drop the `schedule:`
+      trigger + Haiku steps from `plan-health-agent.yml` (KEEP the `pull_request` `plan-health-gate` job + the
+      escalate-on-gate-failure path); (b) delete the Cloud Run job `uts-prod-plan-hygiene-sweep` + its scheduler + TF
+      (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`) + `cron_hygiene_sweep_entrypoint.sh`; (c) update
+      CLAUDE.md § "Plan Hygiene" + `codex/11-project-management/plan-hygiene.md` to the timer-on-central model. repos:
+      unified-trading-pm + deployment-service.
 
 ## Why it matters
 
