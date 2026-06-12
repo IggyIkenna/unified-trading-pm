@@ -321,9 +321,10 @@ clean slate). End state:
       without raising the ceiling. Two trivial blockers also fixed to drain #187 (E501 in
       `check_runbook_execution_owner.py`, invalid `P4.1` priority in `bucket_env_split_rollout`). Composes with
       `cicd_contract_hardening_2026_06_01.md` § "stale-main-manifest dams the fleet".
-- [ ] [PLAN-HYGIENE] P3. **(Residual, NICE-TO-HAVE)** the credential-orphan checker still counts COMPLETED (`[x] ✅`)
-      credential items + plain prose mentions as orphans (10 remain, all grandfathered under baseline 11). A tighter
-      version would count only OPEN `- [ ]` credential-ask todos; deferred (not blocking — passes baseline). repo:
+- [x] ✅ [PLAN-HYGIENE] P3. DONE 2026-06-12 — `check_credential_ask_orphans.py` now counts ONLY OPEN `- [ ]`
+      credential-ask todos (`CHECKBOX_ITEM_RE` tightened `\[[ xX]\]` → `\[ \]`): a COMPLETED `[x] ✅` ask is resolved,
+      never an orphan. Orphan count dropped to 0 (the stale "baseline 11" was actually 2 with the `[x]`-inclusive regex);
+      baseline ratcheted DOWN to 0 (`credential_ask_orphans_baseline.yaml`) so the gate now enforces zero-orphans. repo:
       unified-trading-pm (`check_credential_ask_orphans.py`).
 
 ### Phase 4 — MAJOR/MINOR classification matrix refinement — P2
@@ -336,10 +337,12 @@ clean slate). End state:
       stays additive (non-breaking), and a non-Enum class constant is NOT tracked (no false trips). 4 regression tests
       added (`test_detect_breaking_change.py`, 12 pass). Matrix documented in `codex/08-workflows/ci-cd-flow.md` §
       "Breaking = public-surface change".
-- [ ] [DOCS] P3. (Residual) Non-code contract surfaces still out of the differ's scope by design — **manifest
-      `schema_version`** (data, handled by the manifest canonicalisation walk) and **GCS path/partition keys** — are
-      governed by their own SSOTs, not semver. Cross-link them in the matrix doc so the boundary is explicit; no differ
-      change (the differ is a CODE public-surface tool).
+- [x] ✅ [DOCS] P3. DONE 2026-06-12 — added a **Scope boundary** bullet to `codex/08-workflows/ci-cd-flow.md` §
+      "Breaking = public-surface change" cross-linking the two non-code contract surfaces to their own SSOTs: manifest
+      `schema_version` → `codex/02-data/availability-manifest-and-data-status.md`; GCS path/partition keys
+      (`pipeline_mode=`/`asset_group=`/`feature_group_version=`) → `pipeline-mode-partition.md` +
+      `feature-formula-versioning.md`. Boundary now explicit (these are real contract changes but do NOT trip the CODE
+      differ — coordinate via the data-track SSOT + single-walk migration). No differ change.
 
 ### Phase 5 — Version-resolution bug fixes (agent field reports, 2026-06-09)
 
