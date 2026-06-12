@@ -378,3 +378,14 @@ eligible_venue_ids (which were seeded from hand-named cell venue lists). Either 
 eligibility list is too narrow (registry gap) or no adapter exists (unbuilt dead-end) — per-venue audit required:
 instruments universe × ENDPOINT_REGISTRY × execution-service adapter inventory × archetype eligibility → widen
 eligibility from ADAPTER INVENTORY (code truth), not hand-named lists.
+
+### F40 — AO server persists runtime usage state into tracked accounts.json → perpetual dirty churn
+
+**Status**: OPEN — recommended owner agent-orchestrator (orchestrator_master). 2026-06-12, operator-directed dirty-repo
+cleanup: agent-orchestrator's only dirt was `data/config/accounts.json` rewritten by the SERVER itself — it persists
+live usage fields (weekly_msgs_used, five_hour_msgs_used, rate_limited_until, last_used_at) into the operator-edited
+tracked config, with ensure_ascii serialization (unicode → — escapes). Consequences: the repo re-dirties on every usage
+tick (jams ff-pull cron per the stale-clone rule), and a `git checkout` of the file is safe ONLY because the server
+re-persists from memory (verified via GET /api/accounts — live state intact). Remedy: split runtime usage state into an
+untracked data/state/ file (or gitignore a dedicated state sidecar); keep accounts.json operator-edited-only; preserve
+unicode on any rewrite. Same antipattern class as the generated-artifacts HARD RULE.
