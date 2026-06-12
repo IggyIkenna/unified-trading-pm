@@ -355,7 +355,7 @@ version comparison no-ops → the guard never fires). Captured here:
       **stdlib-only PEP440- subset comparator** (no third-party import; no silent exit(0) on parse failure). Verified:
       in-range→0, MAJOR out-of-range→**1** (now detected at preflight), boundary→0, below→1, `any`→0, unparseable→**1**
       (was silently 0).
-- [ ] [SCRIPT] P3. **Fleet sweep for the same packaging-no-op pattern in OTHER repos** —
+- [x] ✅ **[DONE 2026-06-12 (swept, CLEAN — no fixes needed) — `rg 'from packaging|import packaging' -g '*.sh'` across all 25 repos: every per-repo `setup.sh` is clean (none import packaging); the only clone-time `.sh` importing packaging, `setup-workspace-from-manifest.sh`, is already the stdlib-only PEP440 comparator (the 2026-06-09 fix — the line-102 hit is a comment about the removed old code); `check-internal-advisories.sh` runs POST-install (operates on `get_installed_packages()`) so packaging is present and its `except ImportError→exit(0)` is a loud-warned guarded skip, not a pre-uv-sync silent no-op (verified install-order per this item's note → leave it). No latent silent-no-op instances remain.]** [SCRIPT] P3. **Fleet sweep for the same packaging-no-op pattern in OTHER repos** —
       `rg "from packaging" $(setup     scripts)` across all 25 repos' `setup.sh` / clone-time scripts; any that import
       `packaging` BEFORE `uv sync` with an `except: pass/exit(0)` mask have the same latent silent-no-op.
       (`check-internal-advisories.sh` in PM imports `packaging` too but runs post-install — verify install-order before
