@@ -252,6 +252,16 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `html { scrollbar-gutter: stable }` (index.css) permanently reserves the gutter so the scrollbar's presence never
       reflows the layout. Regression asserts computed `scrollbar-gutter:stable` + content-width invariant when the
       scrollbar appears. Repo: deployment-ui (index.css).
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-12 — deployment-ui@074c349 | pw:L2 ✓ 198/198 | regression:
+      src/components/ReadinessTab.test.tsx + src/lib/mock-api.ph3.test.ts + tests/smoke/stateful-flows.spec.ts
+      (Readiness renders "Blocking Issues", not the error fallback). **(item-203 follow-up) ReadinessTab crashed on a
+      partial/stale `/checklist` payload — FIXED.** The Readiness tab rendered the per-tab ErrorBoundary fallback (not
+      its content) in mock mode: the in-app `MOCK_CHECKLIST` still carried the stale `{overallScore, isBlocked, score,
+      label, detail}` shape (omitting `blocking_items`), so `checklist.blocking_items.length` read undefined and crashed
+      — same class as item 203's DependenciesPanel fix (the stateful-flows `page.route` fix is dead under
+      `VITE_MOCK_API`, where the in-app mock wins). Two-part: (1) ReadinessTab guards `blocking_items`/`categories` with
+      `?? []`; (2) `MOCK_CHECKLIST` rewritten to the `ChecklistResponse` contract (readiness_percent + counts +
+      per-category display_name/percent + `blocking_items[]`). Repo: deployment-ui (ReadinessTab + mock-api).
 - [ ] [CODE] P2. **(Ikenna issue — ADOPTED) Promotion-drain surface** — distinct from the breaking-cascade/SIT panel:
       per repo, last `ldr-to-staging-promote` + `ldr-to-main-promote` run outcome + age + standing-PR v2 conclusion;
       relabel the cascade panel "Breaking cascade / SIT" so the two are never conflated; P3 stall-surfacing when LDR
