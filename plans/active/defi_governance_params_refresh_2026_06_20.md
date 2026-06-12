@@ -71,9 +71,10 @@ Phase 3 (that phase replaces the inline LTV/liquidation constants with reads fro
       (O(n_unique_bases) GCS reads); `_resolve_ltv` + `_resolve_liq_threshold` check gov_params before hardcoded defaults;
       `lending_features.py` reads `reserve_factor` for `DEFAULT` asset. All callers catch `LookaheadBiasError` and fall
       back to prior constants. Test: `test_calculate_features_uses_governance_params_when_available`. QG green.
-- [ ] [SCRIPT] P0. **Phase 4 — strategy-service sizing migration.** Historical-asof in batch (read params at the
+- [x] ✅ [SCRIPT] P0. **Phase 4 — strategy-service sizing migration.** Historical-asof in batch (read params at the
       historical compute timestamp); current-asof in live (read latest available). Strategy onboarding checklist gains a
       "governance dependency declaration" requirement.
+      — strategy-service@70504607 + unified-trading-library@14b11e24 (kill-switch scope-map fix unblocking QG)
 - [x] ✅ [SCRIPT] P0. **NEW UAC `LifecycleEventType` `GOVERNANCE_PARAMS_CHANGED`** emitted by the Phase 1 listener at every
       change. Payload: `{protocol, chain, asset, param_name, old_value, new_value, asof_block, governance_tx_hash}`.
       — unified-api-contracts@5a3961f: `LifecycleEventType.GOVERNANCE_PARAMS_CHANGED` added to enum;
