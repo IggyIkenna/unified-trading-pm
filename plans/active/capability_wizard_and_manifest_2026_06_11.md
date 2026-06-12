@@ -415,28 +415,33 @@ actually exists (which data_types missing, over which timeframes) via the existi
       902→2287 edges (+74 leg nodes from 11→51 real structures, +21 execution_algo nodes + per-archetype algo verdict
       edges); orphans 89→87, deterministic.
 
-- [x] ✅ [IMPLEMENT] P0. **Broker-vs-venue modeling (F38)**: manifest classifies ibkr (and any future broker) as a `broker`
-      node with venue⇠routed_via⇢broker edges (TradFi venues = CME/ICE/CBOE); wizard Venues stage renders brokers as a
-      routing choice under the venue, never as a peer venue option. ENDPOINT_REGISTRY pipeline-key migration = named
-      follow-up (venue-axis vocabulary plan), not this todo.
-      — Implemented: `REL_ROUTED_VIA` + `broker:ibkr` node in `_capability_extract.py`; `NodeKind.broker` + `EdgeRelation.routed_via` in `capability-manifest.ts`; `getBrokersForVenue()` in `graph.ts`. PRs: unified-trading-system-ui (feat(capability-manifest): classify ibkr as broker node with routed_via edges (F38)); unified-trading-pm PR #298. 2026-06-12.
+- [x] ✅ [IMPLEMENT] P0. **Broker-vs-venue modeling (F38)**: manifest classifies ibkr (and any future broker) as a
+      `broker` node with venue⇠routed_via⇢broker edges (TradFi venues = CME/ICE/CBOE); wizard Venues stage renders
+      brokers as a routing choice under the venue, never as a peer venue option. ENDPOINT_REGISTRY pipeline-key
+      migration = named follow-up (venue-axis vocabulary plan), not this todo. — Implemented: `REL_ROUTED_VIA` +
+      `broker:ibkr` node in `_capability_extract.py`; `NodeKind.broker` + `EdgeRelation.routed_via` in
+      `capability-manifest.ts`; `getBrokersForVenue()` in `graph.ts`. PRs: unified-trading-system-ui
+      (feat(capability-manifest): classify ibkr as broker node with routed_via edges (F38)); unified-trading-pm PR #298.
+      2026-06-12.
 - [x] ✅ [AUDIT] P0. **Venue-coverage audit + eligibility widening (F39)**: per asset_group, cross-reference instruments
       universe × ENDPOINT_REGISTRY × execution-service adapter inventory × archetype/leg eligibility; report per venue
       (adapter exists? eligible anywhere? orphan?); widen eligible_venue_ids from adapter inventory with citations;
-      remaining orphans typed (unbuilt vs logical).
-      — audit_venue_coverage.py (pm@613ee27c) + leg seed widening uac@def855c (kraken/bitget/coinbase added to
-      _CEFI_CLOB_VENUES + ARBITRAGE_PRICE_DISPERSION + CARRY_BASIS_PERP/DATED); venue-coverage-report.md generated:
-      22 wired, 6 adapter-no-eligibility, 15 registered-no-adapter, 102 orphan (145 total). Orphan delta: 0 (unchanged
-      from prior manifest run). ARBITRAGE_PRICE_DISPERSION eligible-venue-count delta: 14→17 (+bitget, +coinbase, +kraken).
-      Broker filter added to extract_archetypes_and_families + extract_leg_structures (broker_classed_venues 1→0). 2026-06-12.
+      remaining orphans typed (unbuilt vs logical). — audit_venue_coverage.py (pm@613ee27c) + leg seed widening
+      uac@def855c (kraken/bitget/coinbase added to \_CEFI_CLOB_VENUES + ARBITRAGE_PRICE_DISPERSION +
+      CARRY_BASIS_PERP/DATED); venue-coverage-report.md generated: 22 wired, 6 adapter-no-eligibility, 15
+      registered-no-adapter, 102 orphan (145 total). Orphan delta: 0 (unchanged from prior manifest run).
+      ARBITRAGE_PRICE_DISPERSION eligible-venue-count delta: 14→17 (+bitget, +coinbase, +kraken). Broker filter added to
+      extract_archetypes_and_families + extract_leg_structures (broker_classed_venues 1→0). 2026-06-12.
 
-- [ ] [AGENT][UI] P0. **Full-universe debug rendering (operator direction 2026-06-12 third message)**: EVERY wizard
-      stage renders the COMPLETE dimension universe from the registries — all 57 archetypes (including
-      blocked-for-this-category, with reason), all venues (including orphans/unbuilt dead-ends), all instrument types
-      (including impossible-for-this-archetype) — verdict chips sourced from the verdict matrix; nothing filtered out,
-      only greyed + reasoned ("could be a venue, but: no adapter"). Same for the deployment-ui capability tab. A
-      `client mode` flag (hide-junk, curated) is the named successor for client-facing use — debugging mode is the
-      default now. pw:L2 gate; property test: per stage, rendered option count == dimension universe count.
+- [x] ✅ [AGENT][UI] P0. **Full-universe debug rendering**: every wizard stage renders the complete dimension universe —
+      8 families / 57 archetypes / 42 instrument types / 195 venues / 21 algos — greyed+reasoned where blocked
+      (venue-coverage verdicts, matrix reasons), Debug Mode badge, 12 property tests asserting rendered count ==
+      universe count. — unified-trading-system-ui@9416a3cb (manifest+matrix refresh @72170a9d) | pw:L2 ✓ | regression:
+      tests/unit/wizard/graph.test.ts property tests + tests/smoke/wizard.spec.ts. Broker rendering partial: TradFi
+      venues annotated "routed via IBKR"; remaining polish (brokers never as peer cards + broker field in config
+      artifact) = open sub-item below.
+- [ ] [AGENT][UI] P2. Broker rendering polish (UNIT 3 of the full-universe wave, stopped by operator mid-run): brokers
+      never render as peer venue cards; StrategyConfigArtifact carries broker per TradFi venue. pw:L2 gate.
 
 - [ ] [AGENT][UI] P2. **uts-ui broker rendering + bundled manifest refresh (F38/F39 follow-up)**: wizard Venues stage
       renders brokers as a routing choice under their routed venues (not peer venues); reads `routed_via` edges from the
@@ -446,12 +451,12 @@ actually exists (which data_types missing, over which timeframes) via the existi
       NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this.
 
 - [x] ✅ [AGENT][UI] P2. **deployment-ui capability tab bundle refresh (F38/F39 follow-up)**: refresh the bundled
-      capability-manifest.json + capability-verdict-matrix.json in deployment-ui assets to reflect the new broker
-      node classification and widened eligible_venue_ids (uac@238e58f). QG: bundled manifest HASH == UAC committed copy.
-      NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this.
-      DONE 2026-06-12 — deployment-ui@060750a | pw:L2 ✓ (206/206 passed) | regression: tests/smoke/capability_tab.spec.ts
-      Nodes: 563 (added broker:ibkr), edges: 2325 (added 6 routed_via); verdict matrix: 24,752 cells / 16,913 available.
-      NodeKind added "broker"; EdgeRelation added "routed_via"; CapabilityGaps.broker_classed_venues optional field added.
+      capability-manifest.json + capability-verdict-matrix.json in deployment-ui assets to reflect the new broker node
+      classification and widened eligible_venue_ids (uac@238e58f). QG: bundled manifest HASH == UAC committed copy.
+      NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this. DONE 2026-06-12 —
+      deployment-ui@060750a | pw:L2 ✓ (206/206 passed) | regression: tests/smoke/capability_tab.spec.ts Nodes: 563
+      (added broker:ibkr), edges: 2325 (added 6 routed_via); verdict matrix: 24,752 cells / 16,913 available. NodeKind
+      added "broker"; EdgeRelation added "routed_via"; CapabilityGaps.broker_classed_venues optional field added.
 
 ### 6B — parity quality gates (regression-blocking)
 
@@ -470,8 +475,9 @@ actually exists (which data_types missing, over which timeframes) via the existi
       data_types, and the min-data-to-run check against ACTUAL coverage. Env-gated base URL (local/ops: deployment-api
       :8004; UAT: honest "data-status backend not configured" banner). pw:L2 gate. — unified-trading-system-ui@9db31842
       | pw:L2 ✓ 15/15 | regression: tests/smoke/wizard-data-coverage.spec.ts
-- [x] ✅ [AGENT][UI] P2. Capability tab: dead-end/orphan rows link through to the same coverage answer (already cross-links
-      routes; add the per-cell coverage fetch). — deployment-ui@e02e4c4 | pw:L2 ✓ | regression: tests/smoke/capability_tab.spec.ts
+- [x] ✅ [AGENT][UI] P2. Capability tab: dead-end/orphan rows link through to the same coverage answer (already
+      cross-links routes; add the per-cell coverage fetch). — deployment-ui@e02e4c4 | pw:L2 ✓ | regression:
+      tests/smoke/capability_tab.spec.ts
 
 ## Wave 2 — proposed enhancements (Claude 2026-06-11; PENDING OPERATOR SIGN-OFF, do not dispatch)
 
@@ -717,4 +723,24 @@ for every agent on this plan:
   mismatches) and data-availability not yet wired into the UI. **Phase 6 added** (6A full-coverage registries + verdict
   matrix, 6B parity quality gates so UI==registry==code cannot regress, 6C deployment-api data-status wiring).
   Dispatching 6A (UAC+PM) ∥ 6C (uts-ui); 6B after 6A lands.
-- 2026-06-12 — Phase 6A (registry/exporter wave) complete. UNIT 1: broker_routes.py (BrokerRoute/BROKER_ROUTES/broker_for_venue/is_broker/routed_via) + __init__.py exports + test_broker_routes.py + _endpoint_registry_data.py F38 comment — uac@cdb59bb. UNIT 2: PM exporter broker node kind + routed_via edges (_capability_extract.py extract_brokers + extract_venues broker filter + _capability_orphan.py find_broker_classed_venues + generate_capability_manifest.py) — pm@4948325c/613ee27c. UNIT 3: audit_venue_coverage.py (F39) — 22 wired, 6 adapter-no-eligibility, 15 registered-no-adapter, 102 orphan — pm@4074e49c. UNIT 4: eligible_venue_ids widening — kraken/bitget added to _CEFI_CLOB_VENUES + CARRY_BASIS_PERP/DATED; coinbase/kraken/bitget to ARBITRAGE_PRICE_DISPERSION spot; bybit/okx/bitget/kraken to CARRY_BASIS_DATED spot leg — uac@def855c. UNIT 5: regenerated capability-manifest.json (563 nodes / 2325 edges, broker_classed_venues 0) + capability-verdict-matrix.json (24752 cells, 16913 available) + venue-coverage-report.md + capability-orphan-report.txt — uac@238e58f. Adapter-vs-registry mismatches found: FX/BITFINEX-SPOT/KRAKEN-FUTURES/KRAKEN-SPOT/BITGET-FUTURES/BITGET-SPOT have adapters but were not in VENUE_CATEGORY_MAP or ENDPOINT_REGISTRY (adapter-no-eligibility); NASDAQ/NYSE have adapters (ibkr-routed) but not in any eligible_venue_ids. uts-ui + deployment-ui bundle refresh noted as [AGENT][UI] P2 follow-up todos.
+- 2026-06-12 — Phase 6A (registry/exporter wave) complete. UNIT 1: broker_routes.py
+  (BrokerRoute/BROKER_ROUTES/broker_for_venue/is_broker/routed_via) + **init**.py exports + test_broker_routes.py +
+  \_endpoint_registry_data.py F38 comment — uac@cdb59bb. UNIT 2: PM exporter broker node kind + routed_via edges
+  (\_capability_extract.py extract_brokers + extract_venues broker filter + \_capability_orphan.py
+  find_broker_classed_venues + generate_capability_manifest.py) — pm@4948325c/613ee27c. UNIT 3: audit_venue_coverage.py
+  (F39) — 22 wired, 6 adapter-no-eligibility, 15 registered-no-adapter, 102 orphan — pm@4074e49c. UNIT 4:
+  eligible_venue_ids widening — kraken/bitget added to \_CEFI_CLOB_VENUES + CARRY_BASIS_PERP/DATED;
+  coinbase/kraken/bitget to ARBITRAGE_PRICE_DISPERSION spot; bybit/okx/bitget/kraken to CARRY_BASIS_DATED spot leg —
+  uac@def855c. UNIT 5: regenerated capability-manifest.json (563 nodes / 2325 edges, broker_classed_venues 0) +
+  capability-verdict-matrix.json (24752 cells, 16913 available) + venue-coverage-report.md +
+  capability-orphan-report.txt — uac@238e58f. Adapter-vs-registry mismatches found:
+  FX/BITFINEX-SPOT/KRAKEN-FUTURES/KRAKEN-SPOT/BITGET-FUTURES/BITGET-SPOT have adapters but were not in
+  VENUE_CATEGORY_MAP or ENDPOINT_REGISTRY (adapter-no-eligibility); NASDAQ/NYSE have adapters (ibkr-routed) but not in
+  any eligible_venue_ids. uts-ui + deployment-ui bundle refresh noted as [AGENT][UI] P2 follow-up todos.
+- 2026-06-12 — **UI wave landed.** Full-universe debug rendering shipped (uts-ui@9416a3cb + manifest/matrix refresh
+  @72170a9d: all stages render complete universes 8/57/42/195/21 with greyed+reasoned blocking; Debug Mode badge;
+  property tests). deployment-ui bundle refreshed to UAC@238e58f (dep-ui@060750a, pw 206/206). Phase 6A registry side
+  fully shipped in increments (UAC@cdb59bb/def855c/238e58f + PM@4948325c/613ee27c/4074e49c: brokers modeled, venue
+  coverage audited — 145 venues: 22 wired / 6 adapter-no-eligibility / 15 registered-no-adapter / 102 orphan; verdict
+  matrix 24,752 cells / 16,913 available; APD 14→17 venues; F41–F44). Remaining: broker-rendering polish (P2), 6B parity
+  gates, UAT redeploy.
