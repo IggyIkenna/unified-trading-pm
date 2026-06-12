@@ -461,7 +461,7 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       `_register_deployed_version()` post-health-gate, best-effort). 33/33 new+touched tests, 239 adjacent green, 0 new
       basedpyright errors. Cloud Run live services: `run_v2` exposes no tag→digest resolve — provenance = FROM-digest
       ratchet + passthrough (documented in code).
-- [ ] [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** — deployment-api's
+- [x] ✅ **[DONE 2026-06-12 — deployment-api@33be49cba: added `image_digest`/`git_commit`/`dep_versions` to `VmDeploymentEntryModel` so the `asdict(entry)` keys stop being pydantic-dropped + reach the response; regression test `tests/unit/test_vm_deployment_bom.py` (3 cases: model declares, asdict-passthrough, honest-empty default); QG green 201s]** [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** — deployment-api's
       `VmDeploymentEntryModel` (`deployment_api/routes/vm_deployments.py:42`) builds from `asdict(entry)` and pydantic
       silently DROPS unknown keys, so BoM reaches the GCS rows but not the API response until the model adds
       `image_digest` / `git_commit` / `dep_versions` (3-line change). repo: deployment-api.
