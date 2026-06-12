@@ -535,6 +535,7 @@ deployed to the VM + verified). Remaining live-run findings:
       `ssm:DescribeInstanceInformation`/ `ssm:SendCommand` broke the verify harness — worked around via SSH). Operator
       ask: attach `AmazonSSMReadOnlyAccess` + `ssm:SendCommand`/`ssm:GetCommandInvocation` (scoped to the orchestrator
       fleet) to `harsh-worker`. Found 2026-06-12 live run.
+      CREDENTIAL APPROVAL REQUEST filed → `ikenna_orchestrator/pings/slot_5.md`
 
 Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session deaths during the local run were caused by
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
