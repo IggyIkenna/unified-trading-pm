@@ -3,9 +3,7 @@ title: "GitHub Actions BILLING wall — fleet-wide CI outage (every v2 job insta
 created: 2026-06-11
 source:
   - live diagnosis 2026-06-11 ~16:10Z — every quality-gates-v2 job (PM + deployment-api + fleet) fails in ~7s, 0 steps
-  - ? spend root-cause audit 2026-06-12 (harsh + 2 sub-agents) — 72h run-volume/duration audit + full dispatch-emitter
-      trace; operator
-    : "we have increased the github budget several times already this month and we are just 12 days in"
+  - "spend root-cause audit 2026-06-12 (harsh + 2 sub-agents) — 72h run-volume/duration audit + full dispatch-emitter trace; operator quote — we have increased the github budget several times already this month and we are just 12 days in"
 locked_by: live-defi-rollout
 priority: P1
 status: active
