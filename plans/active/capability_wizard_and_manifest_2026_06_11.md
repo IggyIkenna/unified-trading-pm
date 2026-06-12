@@ -131,7 +131,10 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       (restored via `git checkout`; finding F12). The per-service `.venv`s exist (the capability exporter uses them via
       subprocess), but the aggregate spec generator does not yet do per-service-venv extraction. Full run must happen on
       the laptop / CI runner with `.venv-workspace`; the `uic-openapi-sync` CI regenerates TS types on its runner
-      regardless. **CI-REGEN UNIT 3 (2026-06-12):** No workflow runs `generate-unified-openapi.sh` on any CI runner. `uic-openapi-sync` (uts-ui + fund-admin-service) ships TS types ONLY from `*.openapi.json/yaml`. No new CI infrastructure built per mandate. Annotated as F14-confirmed: blocked until `.venv-workspace` is provisioned on a CI runner (operator action). See findings file for full F14 annotation.
+      regardless. **CI-REGEN UNIT 3 (2026-06-12):** No workflow runs `generate-unified-openapi.sh` on any CI runner.
+      `uic-openapi-sync` (uts-ui + fund-admin-service) ships TS types ONLY from `*.openapi.json/yaml`. No new CI
+      infrastructure built per mandate. Annotated as F14-confirmed: blocked until `.venv-workspace` is provisioned on a
+      CI runner (operator action). See findings file for full F14 annotation.
 - [x] ✅ [VERIFY] P0. Drift CI gate: `_validate_service_coverage()` now exits nonzero on mismatch (fail-on-drift
       implemented in-run). DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Scheduled workflow is a Phase 1 item
       (deferred — fail-on-run counts as the enforcement gate for now).
@@ -461,12 +464,15 @@ actually exists (which data_types missing, over which timeframes) via the existi
 ### 6B — parity quality gates (regression-blocking)
 
 - [x] ✅ [VERIFY] P0. UAC QG step: ARCHETYPE_CAPABILITY_REGISTRY ↔ archetype_capability_manifest.json parity pytest (F4
-      remedy) + leg-spec/verdict-matrix determinism tests. — UAC@9a11664 | QG green | test_manifest_is_round_trip_stable (F4) PASS, no drift; leg-spec + algo-compat determinism PASS; verdict-matrix-inputs cross-registry sanity test added.
+      remedy) + leg-spec/verdict-matrix determinism tests. — UAC@9a11664 | QG green | test_manifest_is_round_trip_stable
+      (F4) PASS, no drift; leg-spec + algo-compat determinism PASS; verdict-matrix-inputs cross-registry sanity test
+      added.
 - [ ] [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
       (drift = fail) + vitest property tests asserting the wizard filter functions reproduce the verdict matrix for
       every archetype (sampled venues/instruments at minimum, full where tractable).
-- [x] ✅ [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail (existing
-      findings baselined). — PM@d581ce0 | QG green | baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2 orphan docs + 0 legs-in-prose drift.
+- [x] ✅ [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail
+      (existing findings baselined). — PM@d581ce0 | QG green | baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2
+      orphan docs + 0 legs-in-prose drift.
 
 ### 6C — data-availability wiring (deployment-api)
 
@@ -748,7 +754,20 @@ for every agent on this plan:
   ARCHETYPE_CAPABILITY_REGISTRY and committed manifest; leg-spec + algo-compat determinism tests PASS; new
   `test_verdict_matrix_inputs_algo_compat_covers_all_leg_derived_instruction_types` cross-registry sanity test added
   (UAC@9a11664, QG green). PM: `check_two_sided_audit.py` + `two_sided_audit_baseline.yaml` wired as blocking post-gate
-  (PM@d581ce0, QG green, PR#308); baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2 orphan docs + 0 legs-in-prose
-  drift. Unit 3 (CI full-suite regen): NO workflow runs generate-unified-openapi.sh on any CI runner — uic-openapi-sync
-  ships TS types only (F14 confirmed); Phase 0 todo annotated honestly; no new CI infrastructure built per mandate.
-  6B UAC + PM gates DONE. uts-ui gate deferred to parallel agent.
+  (PM@d581ce0, QG green, PR#308); baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2 orphan docs + 0
+  legs-in-prose drift. Unit 3 (CI full-suite regen): NO workflow runs generate-unified-openapi.sh on any CI runner —
+  uic-openapi-sync ships TS types only (F14 confirmed); Phase 0 todo annotated honestly; no new CI infrastructure built
+  per mandate. 6B UAC + PM gates DONE. uts-ui gate deferred to parallel agent.
+- 2026-06-12 (handoff) — **Session handoff to next agent.** All session work shipped to LDR across 7 repos; trees clean
+  except: (a) uts-ui — the INCOMING agent's live WIP (parity-gates.test.ts + verdict-matrix touch, mtime 21:52 —
+  protected, not ours); (b) PM harsh_orchestrator/backlog.yaml + AO accounts.json/.bak — generated/foreign (F40). OPEN
+  WORK for the next agent, in priority order: (1) Wave A1 broker-rendering polish [AGENT][UI] P2 (uts-ui; spec in Phase
+  2.6/6A todos); (2) the three 6B parity-gate todos (UAC F4 parity pytest + leg/verdict determinism; uts-ui bundle-hash
+  QG + filter property tests vs verdict matrix — NOTE incoming agent appears to have started this; PM
+  two-sided-audit-as-gate, baselined); (3) UAT redeploy (bash scripts/deploy-cloud-run.sh --env=uat --cloud from uts-ui;
+  deploy-path fixes F29/F30/F31 already shipped — last deploy was green build 7); (4) registry backfills/escalated
+  code-scans in the gap tracker (order-semantics, sim-assumptions, fees, fund-structures, trading-agent;
+  exposure-normalization + SOR + multi-leg + options-depth scans); (5) margin-traceability todos (gap tracker, PBM
+  owner). GATED on operator: Wave-2 enhancements (sign-off), client-lite successor, F27 strategy-service case fix (LOGIC
+  FREEZE). Read this plan top-to-bottom + the two issue docs + codex capability-wizard.md before acting. Dev-host
+  gotchas: F32 (PATH=/usr/bin first for node), F19 (rolldown binding), F12 (config-registry regen destructive on-host).
