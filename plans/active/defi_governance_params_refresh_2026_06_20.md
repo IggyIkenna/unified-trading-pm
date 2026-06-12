@@ -53,16 +53,23 @@ Phase 3 (that phase replaces the inline LTV/liquidation constants with reads fro
       intervals; per-event ABI decoding yields `GovernanceParamChange` dataclass;
       caller emits GOVERNANCE_PARAMS_CHANGED + writes parquet (Phase 2). QG green on MTDS
       (basedpyright + ruff + tests, 23s).
-- [ ] [SCRIPT] P0. **Phase 2 — Time-versioned `governance_params` parquet schema.** Path:
+- [x] ✅ [SCRIPT] P0. **Phase 2 — Time-versioned `governance_params` parquet schema.** Path:
       `gs://market-data-tick-defi-{pid}/governance_params/by_protocol/protocol={p}/chain={c}/by_date/day={d}/...parquet`.
       Schema: `{protocol, chain, asset, param_name, param_value, asof_block, asof_timestamp, governance_tx_hash}`. Asof
       lookups via a `read_governance_params_asof(protocol, chain, asset, asof: datetime)` UTL helper —
       `asof <= timestamp` filter, latest row wins. NO future-dated rows ever returned (`LookaheadBiasError` if
       attempted).
-- [ ] [SCRIPT] P0. **Phase 3 — features-onchain APR calculator migration.** Replace inline LTV / IR constants with asof
+      — unified-trading-library@c14bd1eb: `read_governance_params_asof()` in `unified_trading_library/governance_params.py`;
+      exported from `__init__.py`; 9-test unit suite in `tests/unit/test_governance_params.py`. Raises `LookaheadBiasError`
+      on future-dated rows; returns `{}` on missing/unreadable parquet (graceful pre-Phase-1 fallback). QG green.
+- [x] ✅ [SCRIPT] P0. **Phase 3 — features-onchain APR calculator migration.** Replace inline LTV / IR constants with asof
       reads from the `governance_params` parquet (Phase 2). `LookaheadBiasError` check at every read. **This is the
       dependency that gates Cat-B fallback removal** in `defi_onchain_derivable_values_and_date_drift_2026_06_20`
       Phase 3.
+      — features-service@live-defi-rollout: `aave_risk_calculator.py` pre-fetches `gov_params` per unique base asset
+      (O(n_unique_bases) GCS reads); `_resolve_ltv` + `_resolve_liq_threshold` check gov_params before hardcoded defaults;
+      `lending_features.py` reads `reserve_factor` for `DEFAULT` asset. All callers catch `LookaheadBiasError` and fall
+      back to prior constants. Test: `test_calculate_features_uses_governance_params_when_available`. QG green.
 - [ ] [SCRIPT] P0. **Phase 4 — strategy-service sizing migration.** Historical-asof in batch (read params at the
       historical compute timestamp); current-asof in live (read latest available). Strategy onboarding checklist gains a
       "governance dependency declaration" requirement.
