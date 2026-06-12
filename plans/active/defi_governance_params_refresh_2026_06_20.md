@@ -38,10 +38,21 @@ Phase 3 (that phase replaces the inline LTV/liquidation constants with reads fro
 
 ## P0 — governance-params refresh path
 
-- [ ] [SCRIPT] P0. **Phase 1 — Per-protocol event listener.** Aave V3: listen for `ReserveDataUpdated` +
+- [x] ✅ [SCRIPT] P0. **Phase 1 — Per-protocol event listener.** Aave V3: listen for `ReserveDataUpdated` +
       `BorrowCapChanged` + `SupplyCapChanged` events. Compound V3: listen for IRM-change events. Morpho: curator
       `MarketParamsUpdated` events. Per-event: write to the time-versioned parquet (Phase 2). Implementation: extend the
       MTDS DeFi adapters with an event-listener mode (separate from the current snapshot-poll mode).
+      — market-tick-data-service@fc3df1c: `GovernanceParamsEventPoller` in
+      `market_tick_data_service/market_interface/adapters/defi/live/governance_params_event_poller.py`.
+      Covers Aave V3 Pool + PoolConfigurator (BorrowCapChanged, SupplyCapChanged, LtvChanged,
+      LiquidationThresholdChanged, LiquidationBonusChanged; optional ReserveDataUpdated gated behind
+      `include_rate_updates=True`), Compound V3 Configurator (SetConfiguration — full IRM kink/slope
+      update detection; struct decode deferred to Phase 2 parquet writer), Morpho Blue
+      (CreateMarket with initial market params; MetaMorpho curator MarketParamsUpdated topic TBD
+      once per-vault contract addresses are confirmed). eth_getLogs polling at 12s / 1-block
+      intervals; per-event ABI decoding yields `GovernanceParamChange` dataclass;
+      caller emits GOVERNANCE_PARAMS_CHANGED + writes parquet (Phase 2). QG green on MTDS
+      (basedpyright + ruff + tests, 23s).
 - [ ] [SCRIPT] P0. **Phase 2 — Time-versioned `governance_params` parquet schema.** Path:
       `gs://market-data-tick-defi-{pid}/governance_params/by_protocol/protocol={p}/chain={c}/by_date/day={d}/...parquet`.
       Schema: `{protocol, chain, asset, param_name, param_value, asof_block, asof_timestamp, governance_tx_hash}`. Asof
@@ -55,8 +66,12 @@ Phase 3 (that phase replaces the inline LTV/liquidation constants with reads fro
 - [ ] [SCRIPT] P0. **Phase 4 — strategy-service sizing migration.** Historical-asof in batch (read params at the
       historical compute timestamp); current-asof in live (read latest available). Strategy onboarding checklist gains a
       "governance dependency declaration" requirement.
-- [ ] [SCRIPT] P0. **NEW UAC `LifecycleEventType` `GOVERNANCE_PARAMS_CHANGED`** emitted by the Phase 1 listener at every
+- [x] ✅ [SCRIPT] P0. **NEW UAC `LifecycleEventType` `GOVERNANCE_PARAMS_CHANGED`** emitted by the Phase 1 listener at every
       change. Payload: `{protocol, chain, asset, param_name, old_value, new_value, asof_block, governance_tx_hash}`.
+      — unified-api-contracts@5a3961f: `LifecycleEventType.GOVERNANCE_PARAMS_CHANGED` added to enum;
+      `GovernanceParamsChangedDetails(BaseModel)` (protocol/chain/asset/param_name/old_value/new_value/
+      asof_block/governance_tx_hash) + `GovernanceParamsChangedEvent` typed wrapper added to
+      `unified_api_contracts/internal/events.py`. QG green (263s, all gates pass).
 - [ ] [SCRIPT] P1. **Phase 5 — Snapshot space monitoring (proactive).** Cloud Scheduler job polls Snapshot.org
       governance spaces (aavedao, comp-vote, morpho) every 6h; emits a `GOVERNANCE_PROPOSAL_LIVE` event when a
       parameter-change proposal opens; alert routes to operator-on-call.
