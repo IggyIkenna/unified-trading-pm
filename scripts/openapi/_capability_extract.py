@@ -74,6 +74,9 @@ def extract_archetypes_and_families() -> tuple[list[CapabilityNode], list[Capabi
     from unified_api_contracts.internal.architecture_v2.archetype_capability import (  # noqa: qg-deep-import
         ARCHETYPE_CAPABILITY_REGISTRY,
     )
+    from unified_api_contracts.internal.architecture_v2.broker_routes import (  # noqa: qg-deep-import
+        is_broker as _is_broker_in_arch,
+    )
     from unified_api_contracts.strategy import STRATEGY_REGISTRY  # noqa: qg-deep-import
 
     nodes: list[CapabilityNode] = []
@@ -81,6 +84,11 @@ def extract_archetypes_and_families() -> tuple[list[CapabilityNode], list[Capabi
     seen_nodes: set[tuple[str, str]] = set()
 
     def add_node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> None:
+        # F38: ibkr is a BROKER routing intermediary. A "venue:ibkr" node from
+        # cell.venue_ids must NOT be created — ibkr routes to exchange venues
+        # (CME/ICE/CBOE) via the broker⇠routed_via relationship, not a peer venue.
+        if kind == CapabilityNodeKind.VENUE and _is_broker_in_arch(node_id.split(":", 1)[-1]):
+            return
         key = (str(kind), node_id)
         if key not in seen_nodes:
             seen_nodes.add(key)
@@ -187,12 +195,21 @@ def extract_leg_structures() -> tuple[list[CapabilityNode], list[CapabilityEdge]
         ARCHETYPE_LEG_STRUCTURES,
         archetypes_without_leg_structures,
     )
+    from unified_api_contracts.internal.architecture_v2.broker_routes import (  # noqa: qg-deep-import
+        is_broker as _is_broker_in_legs,
+    )
 
     nodes: list[CapabilityNode] = []
     edges: list[CapabilityEdge] = []
     seen_nodes: set[tuple[str, str]] = set()
 
     def add_node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> None:
+        # F38: ibkr is a BROKER (routing intermediary), not a selectable venue.
+        # Eligible-venue entries such as "ibkr" in leg seeds must never create
+        # a VENUE node — they exist only to gate execution paths that go through
+        # the ibkr broker.  Skip venue-node creation for any broker id here.
+        if kind == CapabilityNodeKind.VENUE and _is_broker_in_legs(node_id.split(":", 1)[-1]):
+            return
         key = (str(kind), node_id)
         if key not in seen_nodes:
             seen_nodes.add(key)

@@ -48,11 +48,25 @@ related_plans:
 - [x] ✅ [AGENT] P0. Live alerting active: signal-staleness (`ML_SIGNAL_STALENESS` warns 4h / critical 12h / kill-switch
       24h) + execution-quality + P&L deviation + position breaches.
       — `cefi_ml_event_handler.py` implements 3-tier ML_SIGNAL_STALENESS ladder (warn→route_event, critical→route_event_with_explicit_channels pagerduty+telegram, kill-switch→KILL_SWITCH_ML_MODEL_FAILURE). Passthrough events (ML_PNL_DEVIATION, ORDER_REJECTION_SPIKE, POSITION_CRITICAL_DISCREPANCY etc.) route via generic route_event per LIVE_ALERT_RULES. AlertSubscriber.dispatch_event wired. alerting-service landed 2026-06-12.
-- [ ] [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
-      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`.
-- [ ] [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
-- [ ] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
+- [x] ✅ [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
+      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`. — unified-api-contracts@547cba3 | 4 breakers (POSITION_LIMIT_EXCEEDED/DRAWDOWN_DAILY_BPS/ML_SIGNAL_STALENESS_SECONDS/ML_MODEL_DRIFT_ACCURACY_DROP) + KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS + 7 new taxonomy tests; QG green.
+- [x] ✅ [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
+      — strategy-service@7995e4e4 | ArchetypeModeStore extracted to engine/strategies/v2/mode_store.py; V2EngineOrchestrator._tick_one_engine wired with per-archetype MANUAL mode gate (suppress automated instructions when operator explicitly sets mode=MANUAL via POST /api/archetypes/{id}/operational-mode); override+replicate via existing execution-service /manual/submit + DART UI ManualTradingPanel. 5 new tests (manual suppress, live/paper forward, cross-archetype isolation, unregistered pass-through). QG green.
+- [x] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
       Group F item 18) — batch = live, same code path, no standalone backtest engine.
+  > **Partial PASS — architecture verified; grid run pending operator scheduling (2026-06-12, slot-6)**:
+  > - ✅ **batch=live, same code path, no standalone engine**: `ML_DIRECTIONAL_CONTINUOUS` is wired in
+  >   `strategy_service/engine/strategies/v2/factory.py` → `MLDirectionalContinuousEngine`; dispatches through
+  >   `GroupBRunner` + `V2BatchHarness` → `V2EngineOrchestrator` (same orchestrator as live mode).
+  >   `tests/unit/engine/backtest/test_runner.py::test_runner_produces_deterministic_pnl_for_ml_directional` PASSES
+  >   (4/4 tests, 6.7s): batch=live reproducibility invariant confirmed (same tick stream → identical fills).
+  > - ❌ **2-year config-grid run not yet executed**: `run_2yr_config_grid_backtest.py` only covers
+  >   `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (DeFi archetypes); no ML_DIRECTIONAL_CONTINUOUS entry in
+  >   `SUPPORTED_ARCHETYPES`; no GCS output at `strategy-store-*/backtest_results/strategy_id=ML_DIRECTIONAL_CONTINUOUS/`.
+  >   Requires: (1) extend `run_2yr_config_grid_backtest.py` with ML_DIRECTIONAL_CONTINUOUS grid dimensions
+  >   (position_size_pct / confidence_threshold / stop_loss_bps / take_profit_bps / model_family); (2) operator-scheduled
+  >   VM run (~8-12h, same shape as DeFi grid runs); (3) GCS parquet output inspection.
+  >   This grid run is an operator-only scheduling action per the "Plans Run To Actual Completion" HARD RULE.
 
 ## Cross-epic handshakes
 

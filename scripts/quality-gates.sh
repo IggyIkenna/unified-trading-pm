@@ -159,6 +159,9 @@ GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/generate_instrument_snapshot.py"
     "!**/generate_strategy_prospectus.py"
     "!**/audit_prospectus_vs_codex.py"
+    # F39 venue coverage audit: uses os.environ.setdefault("GCP_PROJECT_ID") for
+    # mock-mode context (same category as generate_capability_manifest.py).
+    "!**/audit_venue_coverage.py"
 )
 SETUP_NO_SINK_EXCLUDE_GLOBS=(
     "!**/smoke-test-dev.py"
@@ -192,6 +195,7 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/generate_instrument_snapshot.py"
     "!**/generate-strategy-instances-fixture.py"
     "!**/audit_dead_code.py"
+    "!**/audit_venue_coverage.py"
     "!**/prune_state_db_zombies.py"
     "!**/quality_gates/**"
     "!**/migration/**"
@@ -277,6 +281,9 @@ HARDCODED_PROJECT_EXCLUDE_GLOBS=(
     "!**/verify_flat_to_env_tiered_drift.py"
     "!**/generate_strategy_prospectus.py"
     "!**/audit_prospectus_vs_codex.py"
+    # F39 venue coverage audit: benign row-dict .get() defaults for per-venue data,
+    # not os.getenv empty-fallback anti-pattern.
+    "!**/audit_venue_coverage.py"
 )
 CLOUD_SDK_EXCLUDE_GLOBS=(
     "!**/migrate_sports_gcs_to_hive.py"
@@ -304,6 +311,8 @@ EMPTY_STR_EXCLUDE_GLOBS+=(
     "!**/audit_prospectus_vs_codex.py"
     "!**/_prospectus_codex.py"
     "!**/_prospectus_manifest.py"
+    # F39 venue coverage audit: benign row-dict .get("category", "") for per-venue data.
+    "!**/audit_venue_coverage.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     "!**/check_ci_status_bot_only.py"
@@ -320,6 +329,8 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     # Prospectus manifest helpers: benign JSON dict defaults for capability-manifest.json parsing
     "!**/_prospectus_manifest.py"
     "!**/generate_strategy_prospectus.py"
+    # F39 venue coverage audit: benign row-dict .get("adapters", []) for per-venue data.
+    "!**/audit_venue_coverage.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
