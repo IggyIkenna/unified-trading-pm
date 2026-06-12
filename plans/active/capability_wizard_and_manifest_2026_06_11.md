@@ -415,10 +415,11 @@ actually exists (which data_types missing, over which timeframes) via the existi
       902→2287 edges (+74 leg nodes from 11→51 real structures, +21 execution_algo nodes + per-archetype algo verdict
       edges); orphans 89→87, deterministic.
 
-- [ ] [IMPLEMENT] P0. **Broker-vs-venue modeling (F38)**: manifest classifies ibkr (and any future broker) as a `broker`
+- [x] ✅ [IMPLEMENT] P0. **Broker-vs-venue modeling (F38)**: manifest classifies ibkr (and any future broker) as a `broker`
       node with venue⇠routed_via⇢broker edges (TradFi venues = CME/ICE/CBOE); wizard Venues stage renders brokers as a
       routing choice under the venue, never as a peer venue option. ENDPOINT_REGISTRY pipeline-key migration = named
       follow-up (venue-axis vocabulary plan), not this todo.
+      — Implemented: `REL_ROUTED_VIA` + `broker:ibkr` node in `_capability_extract.py`; `NodeKind.broker` + `EdgeRelation.routed_via` in `capability-manifest.ts`; `getBrokersForVenue()` in `graph.ts`. PRs: unified-trading-system-ui (feat(capability-manifest): classify ibkr as broker node with routed_via edges (F38)); unified-trading-pm PR #298. 2026-06-12.
 - [ ] [AUDIT] P0. **Venue-coverage audit + eligibility widening (F39)**: per asset_group, cross-reference instruments
       universe × ENDPOINT_REGISTRY × execution-service adapter inventory × archetype/leg eligibility; report per venue
       (adapter exists? eligible anywhere? orphan?); widen eligible_venue_ids from adapter inventory with citations;
