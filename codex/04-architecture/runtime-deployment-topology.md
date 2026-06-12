@@ -35,6 +35,29 @@ last_reviewed: 2026-05-20
 **`unified-trading-system-ui`**, **`deployment-ui`**, **`unified-trading-api`**, and **`auth-api`**. Canonical wiring:
 **`unified-trading-pm/configs/runtime-topology.yaml`** (SSOT).
 
+### UI surface split — deployment-ui (devops + deploy pane) vs unified-trading-system-ui (trading/research/client) (codified 2026-06-12)
+
+Two front-ends, one shared backend, **dual-cut on launching**. Do NOT rebuild trading/DART/research surfaces inside
+deployment-ui (the confusion the `deployment_ui_scope_cleanup_2026_06_12.md` plan corrected):
+
+- **deployment-ui** = the **devops + deploy pane**: VM deployments / lifecycle, CI (Repos CI tab), epics (Epics tab),
+  fleet git, alerts, data-status, safety-ops (kill-switch), chaos — PLUS the **deploy/launch consoles** (ML experiment /
+  strategy backtest / execution backtest). "Launch = deploy = watch a deployment" — the deploy button targets any
+  service via a CLI pointed at configs. These launch consoles POST to **deployment-api**
+  (`/api/{ml/experiment,strategy/backtest,execution/backtest}/launch`, real tested routes in
+  `deployment-api/deployment_api/routes/*_launch.py`).
+- **unified-trading-system-ui** = the **trading + research + client surface** (DART terminal, research/ml + strategy +
+  execution, manage/clients+users+subscriptions, investor relations). It can **ALSO deploy through the same
+  deployment-api backend** via a research **Deploy console** (`app/(platform)/services/research/deploy`, internal/admin
+  gated) — wrapping launch with config + results/experiment viewing. It reaches deployment-api through collision-free
+  Next.js rewrites (`/api/deploy/*` and `/api/subscriptions` → deployment-api; NOTE `/api/ml/*` and `/api/execution/*`
+  already route to unified-trading-api, hence the dedicated `/api/deploy/*` prefix). Base URL: `apiUrls.deployment` in
+  `lib/config/api.ts`.
+- **DART lives ONLY in unified-trading-system-ui** (`services/dart/terminal`). Client SLA-tier subscriptions UI lives in
+  unified-trading-system-ui `services/manage/subscriptions`; the deployment-api `/subscriptions` backend is unchanged.
+- The **deployment-api backend is the single deploy/launch + subscriptions SSOT** — shared by both UIs, never
+  duplicated.
+
 **SSOT:** `unified-trading-pm/configs/runtime-topology.yaml` (moved from `unified-trading-deployment-v3/configs/` — now
 owned by PM). **Companion:** `RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` (deployment-service/configs/) ·
 `runtime-topology.yaml` (`unified-trading-pm/configs/`, machine-readable). **Readers:**

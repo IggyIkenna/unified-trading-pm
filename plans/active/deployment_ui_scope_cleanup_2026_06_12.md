@@ -130,10 +130,12 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
       `waitForLoadState('networkidle')` (polling pages never idle) — PROVEN pre-existing by re-running on the clean
       stashed tree (same 2 fail; both untouched routes). Evidence: tests/smoke/nav_and_header.spec.ts +
       tests/smoke/deploy-and-subscriptions.smoke.spec.ts.
-- [ ] [DOCS] P2. Phase 5 — codex SSOT update: `codex/04-architecture/` UI-split note (deployment-ui = devops + deploy
-      pane incl. the 3 launch consoles; unified-trading-system-ui = trading/research/client surface that can ALSO deploy
-      through the shared deployment-api; DART lives only in UTS-UI). Extend CLAUDE.md repo-map line with the dual-cut
-      deploy rule.
+- [x] ✅ [DOCS] P2. Phase 5 — DONE 2026-06-12. Added a "UI surface split — deployment-ui (devops + deploy pane) vs
+      unified-trading-system-ui (trading/research/client)" subsection to
+      `codex/04-architecture/runtime-deployment-topology.md` (dual-cut deploy model, `/api/deploy/*` rewrite rationale,
+      DART-only-in-UTS-UI, deployment-api = single shared deploy/subscriptions backend). Extended the CLAUDE.md repo-map
+      line (`cursor-configs/CLAUDE.md` § System-First Architecture) with the dual-cut deploy rule + SSOT pointer. Repo:
+      unified-trading-pm.
 
 ## Discovered findings (provenance: this plan, 2026-06-12 slot-3)
 

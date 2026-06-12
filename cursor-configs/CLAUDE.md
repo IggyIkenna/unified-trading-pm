@@ -784,25 +784,35 @@ distinguish live/batch strategies; never build asset-group-specific backtest eng
 
 Look at the existing system before implementing. Key repo map: events → UTL · schemas → UAC · cloud →
 unified-cloud-interface · market data → MTDS · execution → execution-service · reference data → instruments-service
-(`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated, includes user-management
-functionality) + `deployment-ui` (`user-management-ui` repo is ARCHIVED 2026-05 — folded into unified-trading-system-ui;
-do NOT reference) · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; backend uvicorn binds 8765
-(local + VM; nginx fronts :80/:443 public on VMs; legacy 8026 retired); `agent-orchestrator.odum-research.com` prod;
-dashboard is authoritative work-split surface. `ikenna_orchestrator/` LEDGER.md remains as offline fallback only; the
-`harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 → `plans/archive/orchestrator_legacy/` (only
-`harsh_orchestrator/_agent_pings.md` stays in place — still read by the live plan-hygiene + orphan-ping crons). SSOT:
-`codex/04-architecture/agent-orchestrator-overview.md`. **TWO LIVE VMs (human/central SPLIT 2026-06-12 — operator
-decision; supersedes the 2026-06-05 merged "Central API VM == Planning VM"):** (1) **Central / Orchestrator VM** =
-registry id `planning` (legacy id, runtime-stable) = `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7`
-(`api.agent-orchestrator.odum-research.com → 13.113.200.22`, the EIP) — the CI-responder + AutoSpawn + CI-escalation +
-plan-health; **NO human daily work**. **Only this VM's health/alerts matter.** (2) **Human Planning VM** = registry id
-`human-planning` = `i-0dd9812a96cdda5dc` (`35.76.120.160`, m7i.2xlarge, `ssh human-planning-vm`) — Ikenna + Harsh
-interactive only (`tab/human-planning/N`); self-registers with the central VM, owns no EIP/DNS/central-API. The per-epic
-fleet (`vm-defi`/`vm-cefi`/…) is post-cutover/NOT running; `i-007e8d99` (`vm-orchestrator`) was STOPPED 2026-06-04
-(vestigial). **Alerts (git-health guard / slot-stale / worker-liveness) scope to the LIVE set — a stale alert about a
-stopped VM is not a dead-VM incident.** SSOT: `plans/active/orchestrator_human_central_vm_split_2026_06_12.md`. Liveness
-SSOT = `codex/05-infrastructure/agent-orchestrator-worker-topology.md`
-§ "LIVE STATUS" (the `orchestrator_vm_registry.yaml` is auto-regenerated from epic frontmatter — NOT a liveness source).
+(`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated trading/research/client
+surface, includes user-management + DART terminal + research/manage; can ALSO deploy through deployment-api via the
+internal-gated research **Deploy console** `services/research/deploy`, reached by collision-free `/api/deploy/*` +
+`/api/subscriptions` Next rewrites — `/api/ml/*`+`/api/execution/*` already route to unified-trading-api) +
+`deployment-ui` (**devops + deploy pane**: VM/CI/fleet/alerts/data-status/safety-ops/chaos PLUS the
+ML/strategy/execution **launch consoles** — "launch = deploy a service via deployment-api"; `user-management-ui` repo is
+ARCHIVED 2026-05 — folded into unified-trading-system-ui; do NOT reference). **Dual-cut rule (2026-06-12)**:
+deployment-api is the single deploy/launch
+
+- subscriptions backend shared by BOTH UIs; DART lives only in unified-trading-system-ui; never rebuild
+  trading/DART/research surfaces inside deployment-ui. SSOT: `codex/04-architecture/runtime-deployment-topology.md` §
+  "UI surface split" · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; backend uvicorn binds 8765
+  (local + VM; nginx fronts :80/:443 public on VMs; legacy 8026 retired); `agent-orchestrator.odum-research.com` prod;
+  dashboard is authoritative work-split surface. `ikenna_orchestrator/` LEDGER.md remains as offline fallback only; the
+  `harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 → `plans/archive/orchestrator_legacy/` (only
+  `harsh_orchestrator/_agent_pings.md` stays in place — still read by the live plan-hygiene + orphan-ping crons). SSOT:
+  `codex/04-architecture/agent-orchestrator-overview.md`. **TWO LIVE VMs (human/central SPLIT 2026-06-12 — operator
+  decision; supersedes the 2026-06-05 merged "Central API VM == Planning VM"):** (1) **Central / Orchestrator VM** =
+  registry id `planning` (legacy id, runtime-stable) = `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7`
+  (`api.agent-orchestrator.odum-research.com → 13.113.200.22`, the EIP) — the CI-responder + AutoSpawn + CI-escalation +
+  plan-health; **NO human daily work**. **Only this VM's health/alerts matter.** (2) **Human Planning VM** = registry id
+  `human-planning` = `i-0dd9812a96cdda5dc` (`35.76.120.160`, m7i.2xlarge, `ssh human-planning-vm`) — Ikenna + Harsh
+  interactive only (`tab/human-planning/N`); self-registers with the central VM, owns no EIP/DNS/central-API. The
+  per-epic fleet (`vm-defi`/`vm-cefi`/…) is post-cutover/NOT running; `i-007e8d99` (`vm-orchestrator`) was STOPPED
+  2026-06-04 (vestigial). **Alerts (git-health guard / slot-stale / worker-liveness) scope to the LIVE set — a stale
+  alert about a stopped VM is not a dead-VM incident.** SSOT:
+  `plans/active/orchestrator_human_central_vm_split_2026_06_12.md`. Liveness SSOT =
+  `codex/05-infrastructure/agent-orchestrator-worker-topology.md` § "LIVE STATUS" (the `orchestrator_vm_registry.yaml`
+  is auto-regenerated from epic frontmatter — NOT a liveness source).
 
 **UAC import rule**: `from unified_api_contracts.{domain} import ...` only. Never `canonical.*` or `normalize_utils.*`.
 SSOT: `imports/uac-import-surface-enforcement.mdc`. Full decision tree: `SUB_AGENT_MANDATORY_RULES.md` §0.
@@ -1310,9 +1320,10 @@ checked out on `live-defi-rollout`**. 3 tiers: Operator (separate machines) → 
 **Why Path-B (the tab-branch `tab/<op>/N` model is RETIRED 2026-06-08):** the tab branch was never an architectural
 choice — only a workaround for git's "can't check out the same branch in two worktrees of one clone" constraint. The
 real isolation is worktree-level (separate index/working-tree). Separate clones drop the entire **sync tax**:
-`tab-mirror-to-ldr.yml` (DELETED fleet-wide — template + all per-repo copies removed), the tab-branch rebase/upstream-self-heal paths in `slot-cron-ff-pull.sh`,
-and the diverged-tab recovery recipes. Contention moves to **LDR push-time** (rebase-on-reject), already handled by
-quickmerge STAGE 0.4. Commit attribution is in the author NAME (`[slot-<N>·<host>]`), independent of branch.
+`tab-mirror-to-ldr.yml` (DELETED fleet-wide — template + all per-repo copies removed), the tab-branch
+rebase/upstream-self-heal paths in `slot-cron-ff-pull.sh`, and the diverged-tab recovery recipes. Contention moves to
+**LDR push-time** (rebase-on-reject), already handled by quickmerge STAGE 0.4. Commit attribution is in the author NAME
+(`[slot-<N>·<host>]`), independent of branch.
 
 - **Stay current**: `git -C .tabs/<N>/<repo> pull --ff-only origin live-defi-rollout` (thin FF; no tab rebase).
 - **Ship**: `quickmerge --agent --files '<paths>'` from the slot (on LDR) → commit + push LDR + open the staging PR.
