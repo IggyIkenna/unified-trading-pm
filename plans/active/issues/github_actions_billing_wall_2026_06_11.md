@@ -73,6 +73,18 @@ githubstatus.com all-operational → account spending limit, not platform. Opera
   `gh workflow run quality-gates-v2.yml --repo IggyIkenna/alerting-service --ref live-defi-rollout`
 - agt-7060d4 escalation id
 
+**2026-06-12 ~05:08Z** — wall still active (deployment-ui monitoring work, slot 4):
+
+- 3 deployment-ui changes landed on LDR, all locally GREEN (full UI QG + pw:L2 198–199/199), all blocked from promotion
+  by the wall: flicker `ef08fd8` + ReadinessTab `074c349` (LDR→staging drains' v2 failed 0-step) + promotion-pipeline-viz
+  `6fe7d73` (PR #235 BLOCKED — rollup has only Vercel, no `quality-gates-v2`). PM watchers
+  (freeze-deferred-build-replay, cloud-build-failure-watcher) also failing 05:08Z. `unified-trading-system-ui` (public)
+  unaffected — consistent with the private-repo-only pattern.
+- Re-trigger on restore: `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-ui --ref live-defi-rollout`.
+  NB: commit `6fe7d73` carries a literal skip-ci marker in its body (a substring in the feature description, which also
+  mis-routed quickmerge to a direct LDR→main PR #235) → its PR head will NOT auto-run v2 even after restore; the manual
+  dispatch above is required for it specifically.
+
 ## Root cause — why the budget keeps blowing (audit 2026-06-12)
 
 This is NOT a payment-instrument problem. The fleet's burn rate is **~30,600 billable min/day ≈ $245/day ≈ $7,350/month
