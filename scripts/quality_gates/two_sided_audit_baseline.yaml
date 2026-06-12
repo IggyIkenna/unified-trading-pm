@@ -1,0 +1,11 @@
+rule: two-sided-prospectus-codex-audit
+source: capability_wizard_and_manifest_2026_06_11.md section 6B
+# Baselined 2026-06-12 (Phase 6B parity gates):
+#   (c) 1 venue-category contradiction: CARRY_BASIS_PERP_INV claims CEFI in venue_universe
+#       but ARCHETYPE_CAPABILITY_REGISTRY has no CEFI cells for this archetype.
+#   (b) 2 orphan codex docs: carry-recursive-borrow-perp-hedged.md +
+#       carry-recursive-staked-config-variants.md (config-variant docs, not enum values).
+#   (d) 0 legs-in-prose drift: Phase 6A resolved all unstructured multi-leg prose.
+baseline_contradictions: 1
+baseline_orphan_docs: 2
+baseline_legs_in_prose: 0

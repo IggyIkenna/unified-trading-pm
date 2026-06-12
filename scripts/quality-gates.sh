@@ -162,6 +162,8 @@ GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     # F39 venue coverage audit: uses os.environ.setdefault("GCP_PROJECT_ID") for
     # mock-mode context (same category as generate_capability_manifest.py).
     "!**/audit_venue_coverage.py"
+    # Phase 6B gate: delegates os.environ.setdefault to audit_prospectus_vs_codex (same pattern).
+    "!**/check_two_sided_audit.py"
 )
 SETUP_NO_SINK_EXCLUDE_GLOBS=(
     "!**/smoke-test-dev.py"
@@ -539,6 +541,24 @@ if [ -f "$PM_SCRIPT_REF_CHECKER" ]; then
     else
         echo "❌ PM script path-reference ratchet FAILED — broken script reference(s) in workflows or operator scripts" >&2
         echo "   Fix: ensure the referenced script exists, or prefix documentation-only lines with '#'" >&2
+        exit 1
+    fi
+fi
+
+
+# -- Post-gates: Two-sided prospectus vs codex audit (Phase 6B) -- baselined ratchet --
+# SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md section 6B parity quality gates.
+# Baseline (2026-06-12): 1 venue-category contradiction + 2 orphan docs + 0 legs-in-prose drift.
+# NEW findings (above baseline) fail the gate. Re-baseline with --baseline-write only for
+# accepted debt. Checks: (c) venue-category contradictions, (b) orphan codex docs, (d) legs-in-prose.
+TWO_SIDED_AUDIT="${REPO_ROOT}/scripts/quality_gates/check_two_sided_audit.py"
+if [ -f "$TWO_SIDED_AUDIT" ]; then
+    echo "Running two-sided prospectus vs codex audit (Phase 6B baselined ratchet)..."
+    if python3 "$TWO_SIDED_AUDIT"; then
+        log_success "Two-sided prospectus vs codex audit passed (at-or-below baseline)"
+    else
+        echo "New findings in two-sided prospectus vs codex audit -- fix the contradictions/orphans above." >&2
+        echo "   Or re-baseline with: python3 ${TWO_SIDED_AUDIT} --baseline-write (accepted debt only)" >&2
         exit 1
     fi
 fi
