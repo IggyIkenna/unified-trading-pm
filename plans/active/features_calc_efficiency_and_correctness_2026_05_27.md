@@ -15,15 +15,12 @@ estimate_calibration_note: |
   feature-correctness harness exists. Bulk is net-new: the candle-read refactor +
   the verification framework (ta-lib-equality + invariants + edge fixtures +
   lookahead + dimension/label/config audit) across ~thousands of features.
-locked_by: live-defi-rollout
-locked_since: 2026-05-27
 related_plans:
   - plans/active/features_service_e2e_pipeline_test_2026_05_26.md
 ---
 
-> **🛑 ROLLOUT-AGENT HOLD (2026-05-27):** harsh-side (operator-directed) is actively working this plan. **Do NOT
-> auto-assign / auto-fix / push to LDR.** See `plans/active/_agent_pings.md`. Banner removed by harsh-side when
-> released.
+> **HOLD released 2026-06-11 (operator Ikenna):** harsh-side Phase 1/2 work landed (items ✅); 2-week-stale banner
+> cleared to ship Phase 3 (resampler unification). `[unlock-plan]`.
 
 ## Goal
 
@@ -317,6 +314,67 @@ hand-written goldens for custom families.
       ran first, then I corrected the synthetic, NOT the calculators): synthetic must be OHLC-valid by construction
       (else base class auto-repair surfaces as spurious passthrough mismatches at 4h); event-driven calculators with
       mostly-constant columns on smooth synthetic get an honest skip.
+
+### Phase 3 — Resampler unification: ONE UAC-schema-driven candle-resampler primitive `[P1]`
+
+**Finding (2026-06-11, operator-surfaced).** Phase 1.1 made delta_one read-base-once + resample — but that resampler is
+**delta_one-only** (`app/core/candle_resampler.py` + `timeframe_resampler.py`), and the same domain-pure operation is
+**duplicated in ≥3 places**: (a) delta_one's resampler; (b) **UTL already ships the canonical one**
+(`unified_trading_library/feature_calculator/{base.py::resample_data, time_series.py::resample_features}`) — which
+volatility/sports/onchain already consume via `from unified_trading_library import FeatureCalculator`; (c) **MTDS** runs
+its own tick→candle multi-TF cascade. Worse, **delta_one FORKED** UTL's `FeatureCalculator` into
+`delta_one/app/calculators/base.py` (37 subclasses) — a near-identical stale copy (it even carried the duplicate
+`resample_data` removed in features@1a249e23/6dca9274). And the OHLC agg recipe
+(`open=first/high=max/low=min/close=last/ volume=sum`, `vwap=volume-weighted`, `rsi/macd/vwap=recompute-from-raw`) is
+**hardcoded in every resampler** instead of being a declared property of the UAC candle contract (`CanonicalOhlcvBar`).
+
+**Target (operator architecture call 2026-06-11):** candle aggregation is a domain-pure, **schema-driven UTL primitive**
+used everywhere. Per-column agg-semantics declared once on the UAC candle contract → one UTL resampler derives the
+recipe from it → MTDS cascade + delta_one (un-forked) + volatility + cross_instrument all call it. "Read-base +
+resample" (the perf win, already proven for delta_one in 1.1) then becomes a policy choice ON TOP of the single
+primitive.
+
+**Phased DAG (T0→T1→T2; QG-green + blast-radius proof between waves — rules 8/11):**
+
+- [x] ✅ [SCHEMA] P1. **3.A (T0/UAC, ADDITIVE)** — SHIPPED 2026-06-11, symbol-verified on UAC LDR. `OhlcvAggregation`
+      StrEnum + `OHLCV_AGGREGATION` dict next to `CanonicalOhlcvBar` (open:first/high:max/low:min/close:last/volume:sum/
+      quote_volume:sum/count:sum/vwap:volume_weighted + RECOMPUTE_FROM_RAW); exported from `unified_api_contracts`. New
+      symbols only → non-breaking.
+- [ ] [LIBRARY] P1. **3.B (T1/UTL, BACKWARD-COMPAT)** Make `feature_calculator.resample_data`/`resample_features`
+      resolve the recipe from the UAC mapping (default = UAC recipe; current hardcoded default kept as fallback →
+      existing callers unchanged). Volume-weighted (`vwap`) done correctly (`Σ(price·vol)/Σvol` via groupby-apply, not
+      the broken `Resampler*Resampler`). Carry `RECOMPUTE_FROM_RAW` flagging.
+- [ ] [REFACTOR] P1. **3.C (T2/features) De-fork delta_one** — replace the forked `FeatureCalculator`/
+      `_FeatureCalculatorStatsMixin` with `from unified_trading_library import FeatureCalculator` (as volatility/sports/
+      onchain already do); route `candle_resampler`/`timeframe_resampler` through the UTL primitive. Validate: full
+      delta_one QG (1382 specs / 37 calculators) + registry + cross-TF + distribution suites green.
+- [ ] [REFACTOR] P2. **3.D (T2) Extend read-base+resample to volatility + cross_instrument** via the shared primitive
+      (they read all materialised TFs today — N GCS reads/shard; switch to read-finest + resample). Gate on measured
+      read-count reduction (`profile_compute_costs.py`).
+- [ ] [REFACTOR] P2. **3.E (T2/MTDS) Retire MTDS's bespoke cascade onto the UTL primitive** (one edge-correct impl;
+      composes with `bar_edge_left_vs_right_remediation`). Separate service + SIT; final wave.
+- [ ] [DECISION] P2. **3.F** Post 3.A–3.E: decide MDPS-materialise-all-7-TFs vs base-only+shared-resample (storage vs
+      read-I/O vs duplicated compute). Recommend base-only IF profiling confirms the read-count win.
+
+**Success criterion (Phase 3):** exactly ONE candle-resampler implementation (UTL), schema-driven from the UAC candle
+contract, used by delta_one (un-forked) + volatility + cross_instrument + MTDS; `rg` finds no second
+`open.*first.*high.*max` recipe outside UTL; bar-edge single-sourced.
+
+#### Progress Log (append-only — rule 6, memory across compaction)
+
+- 2026-06-11 (resume state) — **3.A SHIPPED + verified on UAC LDR** (`OhlcvAggregation`+`OHLCV_AGGREGATION`). Ship was
+  hard: UAC LDR churns < the ~3-min gate (Tier-C drain + back-merge) → 4 sentinel races; then a quickmerge bug —
+  autostash for STAGE-0.4 sync makes the tree look clean → "nothing to commit" early-exit that still prints "✅ Landed"
+  (it lied 1×). **MITIGATION for all Phase-3 ships: never trust "Landed" — verify**
+  `git show origin/live-defi-rollout: <file> | grep <symbol>`; ship when LDR is genuinely not-behind so quickmerge
+  doesn't autostash. **3.B (UTL): IMPLEMENTED but NOT shipped** — `feature_calculator/{base.py,time_series.py}` use
+  `OHLCV_AGGREGATION` (dirty in UTL slot tree), imports OK + ruff clean, BUT **9 basedpyright `reportAny` errors
+  remain** (would fail UTL QG) → must fix before gate+ship. **3.C (de-fork): NOT started** — delta_one still defines its
+  own `FeatureCalculator`. A background sub-agent doing 3.B/3.C was cut off by a session limit after ~41 tool-uses.
+  **RESUME: fix 3.B basedpyright → UTL QG → ship (verify-landing) → then 3.C de-fork (full 1382-spec delta_one QG).**
+- 2026-06-11 — Finding scoped (operator dialogue). delta_one fork ≈ UTL `FeatureCalculator` (same method surface; 37
+  subclasses). UAC `CanonicalOhlcvBar` declares columns NOT agg-semantics. UTL `feature_calculator` is already the
+  canonical resampler (vol/sports/onchain use it); MTDS cascade is separate. Executing T0→T1→T2.
 
 ## Success criteria
 
