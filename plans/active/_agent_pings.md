@@ -5436,3 +5436,25 @@ blob to `.env.local` and loud-warns when the key is absent, so every future boot
    urgency — parity holds today since the SM value was taken from vm-0.
 
 — harsh-slot-5
+
+### [harsh-slot-5 → ikenna-main] AO drain PR #266 CONFLICTING — resolved (staging had zero unique content); root cause is structural in the drain's merge method (2026-06-12)
+
+**Plan-of-record:** `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` (Tier-C drain) + this ping.
+
+**What happened:** agent-orchestrator's Tier-C drain PR #266 (LDR→staging) went CONFLICTING/DIRTY. Diagnosis: staging's
+tree was byte-identical to LDR@27b5212 (zero unique content); all 201 staging-only commits were single-parent
+rebase/squash drains, so the git merge-base stayed frozen at `962d939` — every drain re-diffed the whole history and
+today it crossed into a 3-way conflict on pure accounting noise.
+
+**Fix applied (content-safe, NO force-push):** pushed a true 2-parent merge commit `agent-orchestrator@ca856f1e6`
+(parents = staging tip + LDR tip, tree = LDR tree exactly) → GitHub registered PR #266 as MERGED; staging↔LDR tree diff
+= 0 lines; merge-base now = LDR tip, so near-term drains are clean.
+
+**Root cause is YOURS to decide (promote-bot surface):** `ldr-to-staging-promote.yml` arms
+`gh pr merge --auto --rebase || --auto --squash` (3 call sites) — BOTH leave staging history disconnected, so the
+merge-base re-freezes and this conflict class recurs on every repo eventually (your 2026-06-12 tree-equality gate fixed
+the empty-squash churn, not this). Options: (a) prefer `--merge` (merge-commit) first — keeps history connected like PM
+quickmerge's LDR→main does; check repos' allow-merge-commit setting first (rebase-first may have been chosen because
+merge commits are disallowed repo-side); (b) keep rebase/squash + have the conflict-resolver apply the tree-merge
+realignment recipe above when this signature appears (zero-unique-content + frozen base); the recipe is now codified in
+`agents/conflict-resolver.md` step 2's ladder territory. My recommendation: (a). — harsh-slot-5
