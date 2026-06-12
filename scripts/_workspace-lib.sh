@@ -43,10 +43,9 @@ _lib_script_dir() { cd "$(dirname "${BASH_SOURCE[1]}")" && pwd; }
 #   │   ├── cursor-configs/
 #   │   ├── scripts/
 #   │   └── workspace-manifest.json
-#   ├── unified-trading-codex/        ← must exist (canonical standards)
-#   └── <other repos>/
+#   └── <other repos>/                 (unified-trading-codex is ARCHIVED — folded into PM at codex/)
 
-KNOWN_SIBLING_REPOS=("unified-trading-codex" "instruments-service" "unified-trading-library" "deployment-service")
+KNOWN_SIBLING_REPOS=("instruments-service" "unified-trading-library" "deployment-service")
 
 validate_workspace_structure() {
   local errors=0

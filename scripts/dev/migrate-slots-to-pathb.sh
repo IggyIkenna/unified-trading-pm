@@ -46,7 +46,8 @@ while [[ $# -gt 0 ]]; do case "$1" in
 esac; done
 SLOT_LO="${SLOTS%-*}"; SLOT_HI="${SLOTS#*-}"
 
-echo "Path-B migration: slots ${SLOT_LO}..${SLOT_HI} | identity '${CANON_NAME} [slot-N·${HOST_ID}]' <${CANON_EMAIL}>${EXCLUDE:+ | exclude ${EXCLUDE}}${DRY:+ | DRY-RUN}"
+dry_label=""; [[ "$DRY" == 1 ]] && dry_label=" | DRY-RUN"
+echo "Path-B migration: slots ${SLOT_LO}..${SLOT_HI} | identity '${CANON_NAME} [slot-<N>·${HOST_ID}]' <${CANON_EMAIL}>${EXCLUDE:+ | exclude ${EXCLUDE}}${dry_label}"
 
 preserve_wip() {
   local dir="$1" slot="$2" repo="$3"
