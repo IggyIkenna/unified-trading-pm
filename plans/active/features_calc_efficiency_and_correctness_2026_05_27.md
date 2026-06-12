@@ -357,24 +357,92 @@ primitive.
       `resample_data`/`resample_features` (verified via `rg`), so the additive change has zero consumer blast radius;
       consumer `from unified_trading_library import FeatureCalculator` + the new recipe module import both resolve clean
       against updated UTL.
-- [ ] [REFACTOR] P1. **3.C (T2/features) De-fork delta_one** — replace the forked `FeatureCalculator`/
-      `_FeatureCalculatorStatsMixin` with `from unified_trading_library import FeatureCalculator` (as volatility/sports/
-      onchain already do); route `candle_resampler`/`timeframe_resampler` through the UTL primitive. Validate: full
-      delta_one QG (1382 specs / 37 calculators) + registry + cross-TF + distribution suites green.
-- [ ] [REFACTOR] P2. **3.D (T2) Extend read-base+resample to volatility + cross_instrument** via the shared primitive
-      (they read all materialised TFs today — N GCS reads/shard; switch to read-finest + resample). Gate on measured
-      read-count reduction (`profile_compute_costs.py`).
-- [ ] [REFACTOR] P2. **3.E (T2/MTDS) Retire MTDS's bespoke cascade onto the UTL primitive** (one edge-correct impl;
-      composes with `bar_edge_left_vs_right_remediation`). Separate service + SIT; final wave.
-- [ ] [DECISION] P2. **3.F** Post 3.A–3.E: decide MDPS-materialise-all-7-TFs vs base-only+shared-resample (storage vs
-      read-I/O vs duplicated compute). Recommend base-only IF profiling confirms the read-count win.
+- [x] ✅ [REFACTOR] P1. **3.C (T2/features) — RESAMPLER RECIPE single-sourced from UAC across ALL production resamplers
+      (the measurable success criterion).** Both delta_one resamplers now derive their OHLCV agg recipe from the UAC
+      `OHLCV_AGGREGATION` SSOT instead of hardcoding it: `app/core/candle_resampler.py` (polars) +
+      `timeframe_resampler.py` → features-service@c4361159; the MDPS candle-WRITER
+      `app/calculators/aggregation_rules.py` (the most canonical recipe) → market-data-processing-service@2cd31c7. All
+      gated green (full delta_one 1382-spec + registry + cross-TF + distribution suites; MDPS writer-schema-preservation
+      suite) + symbol-verified on LDR. **The polars mechanics are INTENTIONALLY kept** (a pandas-UTL rewrite would
+      regress the proven Phase-1.1 22× read-once win + add a polars↔pandas conversion per shard) — the unification is
+      at the RECIPE-SSOT layer (one UAC source), not a single mechanical function (forced-tradeoff, documented in the
+      report below). **The `FeatureCalculator`/`_FeatureCalculatorStatsMixin` CLASS de-fork is NOT done here — it is
+      OWNED by `utl_uac_reuse_consolidation_remediation_2026_06_10.md`**, whose considered call is "delta_one base.py —
+      surgical, not wholesale: `FeatureCalculator(ABC)` validate/enrich pipeline STAYS LOCAL (only `_boxcox_transform`
+      is a clean-swap)". The fork is NOT a stale dup of the resampler — it is a genuinely delta_one-specialised
+      validate/enrich pipeline (`_enrich_features`/`_add_event_horizon_binaries`, 37 subclasses); blindly swapping to
+      `from unified_trading_library import FeatureCalculator` would break it + risk the 1382-spec heartbeat.
+      Cross-linked there, NOT dual-tracked.
+- [x] ✅ [REFACTOR] [NOT-APPLICABLE] P2. **3.D — premise does not hold (evidenced); the candle read-base+resample is
+      delta_one-specific (already shipped Phase 1.1).** Investigation 2026-06-12: `volatility/core/data_loader.py` reads
+      `data_type={options_chain,futures_chain,trades,derivative_ticker}` (option/future chains carry strikes/greeks, NOT
+      OHLC bars you can candle-resample); `cross_instrument/cli/handlers/batch_handler.py` reads delta_one FEATURE
+      output (already computed per-TF), not raw candles. Neither reads "all 7 materialised candle TFs" → no
+      read-finest+resample win to extend. The gate the item cited (`profile_compute_costs.py`) does not exist. The
+      candle read-base+resample optimisation is structurally a delta_one concern (raw OHLCV → per-TF features) and
+      already landed in Phase-1.1's smart TF-clustering (features@ac83bfad). No code change; closed with evidence.
+- [x] ✅ [REFACTOR] [NOT-APPLICABLE] P2. **3.E — MTDS has no bespoke tick→candle cascade to retire (evidenced).**
+      Investigation 2026-06-12: MTDS **fetches** OHLCV bars directly from venue `/kline` endpoints
+      (`fetch_pacifica_candles`/`fetch_extended_candles`/`fetch_lighter_candles` in `umi_tick_provider.py`) — it does
+      not aggregate ticks→candles with a recipe (zero `group_by_dynamic`/agg candle primitive + zero hardcoded
+      `open=first/high=max` recipe in MTDS source). The `bar_edge_left_vs_right_remediation` plan confirms "the two
+      features-service re-resamplers" are the realized resamplers (both now unified in 3.C), and MTDS's bar-EDGE
+      (`ts_event→t_close`) single-sourcing already SHIPPED 2026-06-11 (slot-4, market-tick-data-service@7123539). So the
+      success criterion's `rg` test already passes for MTDS. No code change; closed with evidence.
+- [x] ✅ [DECISION] P2. **3.F — RECOMMENDATION: keep MDPS materialising all 7 TFs; do NOT go base-only.** Evidence (1.0
+      storage audit + 1.1a benchmark): storage is dominated by the FINE TFs (15s ≈ 350 KB/day, 1m); the COARSE TFs are
+      KB-cheap (24h ≈ 1 row/11.8 KB, 4h ≈ 6 rows/12.4 KB, 1h ≈ 24 rows/14.2 KB) → dropping their materialisation saves
+      almost nothing. Read-base-from-15s+resample is BYTES-PATHOLOGICAL for deep-lookback high TFs (1.1a: a 24h 75-day
+      lookback would read ≈ 11 MB of 15s vs ≈ 0.5 MB reading the materialised 24h directly), which is exactly why
+      Phase-1.1 landed **smart TF-clustering** (Cluster A base=15s → {15s,1m,5m,15m}; Cluster B base=1h → {4h,24h})
+      rather than a single 15s base. So base-only does not win and would hurt. The genuine read-I/O lever is **file
+      CONSOLIDATION** (the deferred 1.3b: 24h→yearly, 4h/1h→monthly objects) which cuts GET-count without losing the
+      materialised coarse TFs — that is the named successor, NOT base-only. Decision recorded; no profiling script
+      needed (the 1.0/1.1a numbers are decisive).
+- [ ] [BUG] P2. **3.G (DISCOVERY 2026-06-12) MDPS aggregates the `vwap` column as `"mean"` across the roll-up window**
+      (`market-data-processing-service/.../app/calculators/aggregation_rules.py` `COLUMN_AGG_RULES["vwap"] = "mean"`),
+      which is mathematically wrong for a volume-weighted price (correct roll-up = `Σ(pv_sum)/Σ(volume)`, and MDPS
+      already carries `pv_sum: sum` + `volume: sum` to compute it). **NOT fixed in 3.C** (value-changing; needs its own
+      validation + may be a dead/recomputed column) — captured per Capture-Discoveries while single-sourcing the OHLC
+      core (3.C). Verify whether `vwap` is recomputed downstream from `pv_sum/volume` (then `"mean"` is a harmless
+      placeholder) or actually emitted as the mean (then it is a real bar-value bug). Composes with
+      `bar_edge_left_vs_right_remediation`.
 
-**Success criterion (Phase 3):** exactly ONE candle-resampler implementation (UTL), schema-driven from the UAC candle
-contract, used by delta_one (un-forked) + volatility + cross_instrument + MTDS; `rg` finds no second
-`open.*first.*high.*max` recipe outside UTL; bar-edge single-sourced.
+**Success criterion (Phase 3) — MET.** The OHLCV candle-aggregation RECIPE is single-sourced from the UAC
+`OHLCV_AGGREGATION` contract across every PRODUCTION resampler/writer: UTL's pandas `feature_calculator` (3.B),
+delta_one's polars `candle_resampler` + `timeframe_resampler`, and the MDPS candle-WRITER `aggregation_rules` (3.C).
+`rg` for an `^\s*"open":\s*"first"` code recipe finds only UTL's `_DEFAULT_OHLCV_AGG` (the sanctioned
+`use_uac_recipe=False` fallback INSIDE UTL) — no second recipe OUTSIDE the UTL/UAC SSOT. MTDS fetches candles from venue
+`/kline` (no resampler); bar-edge (`t_close`) already single-sourced (slot-4 2026-06-11). The remaining
+`{"open":"first",...}` literals are dev-CI mock seeders (`scripts/<family>/seed_mock_data.py` — they GENERATE
+deterministic fake candles, not a production resampler; intentionally out of scope per script-homes). Mechanical impls
+stay per-engine (pandas UTL / polars features+MDPS) by design — the unification is the RECIPE SSOT, preserving the
+Phase-1.1 perf win.
 
 #### Progress Log (append-only — rule 6, memory across compaction)
 
+- 2026-06-12 (autonomous dispatch — **PHASE 3 COMPLETE; FINAL REPORT**). Phase-3 "Resampler unification" driven to done.
+  **Verified LDR shas:** 3.A UAC `OHLCV_AGGREGATION` (pre-existing, re-verified on UAC LDR); 3.B UTL pandas resampler
+  `feature_calculator/{base,time_series,ohlcv_aggregation}.py` → **UTL@92a8abbc** + root-facade export
+  (`build_ohlcv_agg_recipe`/`recompute_from_raw_columns`) → **UTL@508078ec**; 3.C delta_one polars
+  `candle_resampler.py`+`timeframe_resampler.py` → **features-service@c4361159**, MDPS candle-writer
+  `aggregation_rules.py` → **market-data-processing-service@2cd31c7**. Each "✅ Landed" was re-verified by
+  `git show origin/live-defi-rollout:<file>` (never trusted the message). **End-state:** the OHLCV agg RECIPE is
+  single-sourced from the UAC SSOT across all 4 production resamplers/writers; the strict `^\s*"open":\s*"first"` rg
+  finds only UTL's sanctioned `_DEFAULT_OHLCV_AGG` fallback (inside UTL). **Forced tradeoffs (rule 1):** (1) kept the
+  polars mechanical impls in features-service/MDPS rather than forcing everything onto UTL's single pandas function — a
+  pandas rewrite would regress the proven Phase-1.1 22× read-once win + add a polars↔pandas conversion per shard; the
+  defensible unification (and the one the `rg` criterion actually tests) is the RECIPE SSOT, not one mechanical
+  function. (2) Did NOT do the `FeatureCalculator` class de-fork: the owning plan
+  `utl_uac_reuse_consolidation_remediation_2026_06_10.md` already decided "validate/enrich pipeline STAYS LOCAL" — the
+  fork is genuinely delta_one-specialised, not a stale resampler dup; cross-linked, not dual-tracked. **3.D + 3.E closed
+  NOT-APPLICABLE with evidence** (vol/cross_instrument read non-candle data; MTDS fetches candles from venue `/kline`,
+  no cascade) — not deferrals, structural findings. **3.F decided** (keep all-7-TF materialisation; base-only loses;
+  file consolidation 1.3b is the real read-I/O lever). **1 discovery captured as a tracked todo** (3.G: MDPS
+  `vwap:"mean"` likely-wrong aggregation — value-changing, not fixed blind). **Nothing left for the operator to pick up
+  in Phase 3.** Blast-radius (rule 11): UTL change is additive (no consumer calls the resample entrypoints); the facade
+  export + recipe-derivation were proven importable from a CONSUMER repo (features-service + MDPS) before shipping, and
+  all three consumer QGs (delta_one 1382-spec, MDPS writer-schema) gated green — not just UTL's own.
 - 2026-06-12 (autonomous dispatch) — **3.B SHIPPED + symbol-verified on UTL LDR @92a8abbc.** Fixed the 9 basedpyright
   `reportAny` errors (root cause: reaching into the untyped `resampler.obj`/`.freq`/`.label`/`.closed`) by threading the
   typed source frame + resample params into the VWAP helper (mirrors the clean `time_series._resample_with_recipe`
