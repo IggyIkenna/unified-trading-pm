@@ -205,6 +205,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-12 (~10:35Z, operator beta-eyeball session) — **beta render made FULLY consistent**: the operator's "is it
+  using the right manifest" check exposed (1) the live-rollup fast-path serving LIVE data in beta (fixed dapi@1f1ad77 —
+  R3 agent's bypass, +2 regression tests) and (2) instruments-store beta reads silently falling back (no IS-store
+  projections existed; callers' catalog fallbacks masked the loud-fail). Fixed:
+  `migrate_instruments_store_v9 --projection-out` (is ship) materialized ALL FIVE IS-store projected indexes (tradfi
+  20,388 · cefi 30,803 · defi 125,242 · sports 2,681,628 · prediction 493 rows at
+  `gs://instruments-store-<ag>-prd/.../_index/audit/projected_index_<ag>.parquet`). VERIFIED in the running API:
+  data-status manifest calls log BETA reads on BOTH bucket families, zero rollup serves. UI labelling note for the
+  packs: the headline "25,873,530 instruments (latest day, sum across asset groups)" = Σ per-AG latest-day
+  instrument/row counts (a per-day volume gauge), NOT unique instruments; all-time analog is `total_instruments` (cefi
+  121.2B).
+
 - 2026-06-11 (~21:35Z, autonomous run, END-OF-RUN) — **R3 RENDERS + VERDICT PACKS DONE — the full pre-apply harness is
   assembled; everything except the operator eyeball/sign-off is COMPLETE.** Beta renders captured via the new
   `DATA_STATUS_BETA_MANIFEST_BLOB` (BETA vs LIVE, instruments + market-tick-data data-status views, all AGs); five
