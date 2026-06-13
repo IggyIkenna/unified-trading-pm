@@ -41,8 +41,9 @@ remaining lower-priority half.
 - [x] [VERIFY] P0. **DeFi pipeline E2E** — run the full batch; verify features-onchain reads correctly end-to-end ✅
       (features-onchain → strategy → execution). Gates master Group F.
       — features-service@9b580d41 | QG green (16992 passed, 0 failures) | fixed multi_timeframe conftest ADC/SA credential mismatch (587→0 errors) + 4 missing storage=MagicMock() in unit tests | onchain tests: 1328 passed
-- [ ] [VERIFY] P0. **DeFi full-coverage validation** — run each handler locally for 1 day; verify the GCS parquets land
-      at the canonical paths with real (non-NaN-placeholder) rows.
+- [x] [VERIFY] P0. **DeFi full-coverage validation** — run each handler locally for 1 day; verify the GCS parquets land
+      at the canonical paths with real (non-NaN-placeholder) rows. ✅
+      — features-service@9ce1f4ab | extended smoke_matrix with --all-handlers; COVERAGE_FEATURE_GROUPS covers all 11 registered DEFI handlers (macro_sentiment, lending_rates, lst_yields, onchain_perps, utilization, rewards, risk_params, flash_loan_availability, health_factor, liquidation_events, rate_impact); dry-run matrix: 11 PASS 0 FAIL; QG green
 - [ ] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
       archetypes (YIELD_STAKING_SIMPLE, CARRY_BASIS_PERP, CARRY_STAKED_BASIS, CARRY_BASIS_DATED, CARRY_RECURSIVE_STAKED,
       YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION). Sample 10 random days from the 4-year window; for each day
