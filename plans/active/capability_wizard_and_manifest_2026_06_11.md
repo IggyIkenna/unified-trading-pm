@@ -546,10 +546,18 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       structurally-impossible (excluded). `--emit-todos` idempotently appended 12 roadmap todos to the gap tracker
       (reuses emit_capability_gap_todos.py pattern). Deterministic; 6 tests; PM codex + Wave-2 #5 regression gates green.
       Wizard demand-count surface = uts-ui follow-on (documented placeholder demand=0).
-- [ ] [DESIGN] P2. **Readiness badges per edge** — stamp every capability edge with operational maturity derived from
+- [x] ✅ [DESIGN] P2. **Readiness badges per edge** — stamp every capability edge with operational maturity derived from
       the deployments registry + shadow ledger + archived plans:
       `backtest-only | shadow-observed | staging-proven |     live-proven`, mapped to the C/D/B gate model in
-      PLAN_FORMAT.md. "Available" without "ever ran" is a different answer.
+      PLAN_FORMAT.md. "Available" without "ever ran" is a different answer. — DONE 2026-06-13 (W4) — PM@0e744c841 →
+      UAC@6e00ac0 (`scripts/openapi/_capability_readiness.py` + manifest `readiness` field + `capability-readiness-report.{json,md}`,
+      wired). Per archetype resolves readiness from the committed `LIVE_CLUSTER_REGISTRY` (PROD-tier→live-proven,
+      STAGING→staging-proven; every non-backtest-only stamp cites `live_cluster_registry:<cluster>`), mapped to
+      PLAN_FORMAT 3-tier gates. **Honest absence**: no populated shadow-ledger/deployments-registry on-host → those tiers
+      only reachable via a committed override (none today); absent evidence → `backtest-only` (never over-claims).
+      Distribution (57 archetypes): live-proven 2 (CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION, the May-23 live
+      archetypes) / 55 backtest-only; 442 edges stamped. Deterministic; 9 tests; capability-regression gate PASS
+      (additive). uts-ui badge surface = follow-on [UI] todo (gap tracker).
 - [x] ✅ [DESIGN] P2. **Config-space fuzzer → generated smoke tests** — mechanically enumerate reachable wizard configs,
       sample, compile each to a system-integration-tests batch mock-fill scenario. Use-case-3 audit by _execution_, not
       inspection: every reachable config must at least smoke-run; failures are mechanical dead-end findings. — DONE
@@ -585,10 +593,17 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       funded-leg-count + availability); `screenByTargets` ranks by capability availability + honest "metrics not yet
       available" badge (NEVER fabricates Sharpe/DD/carry — manifest carries none). 22 vitest + pw:L2 3/3 |
       regression: tests/smoke/wizard-screener.spec.ts.
-- [ ] [DESIGN] P2. **Portfolio mode** — compose multiple configured strategies: aggregate/netted exposures
+- [x] ✅ [DESIGN] P2. **Portfolio mode** — compose multiple configured strategies: aggregate/netted exposures
       (internalization detection when one leg longs what another shorts), correlation from backtests, capital routing
       across pools/SMA via portfolio_allocator + capital_router. Directly models the two-pooled-investors-now /
-      SMA-next-year scenario.
+      SMA-next-year scenario. — DONE 2026-06-13 (W10) — unified-trading-system-ui@91c3e653 (`lib/wizard/portfolio.ts` +
+      `components/wizard/PortfolioMode.tsx`, 4th wizard mode; localStorage "Add to portfolio"). `composePortfolio`
+      aggregates per-instrument-kind GROSS long/short leg counts + `detectInternalizationCandidates` flags same-asset
+      opposing legs (one config longs what another shorts) + pooled-vs-SMA capital routing. **Honest gaps (no
+      fabrication)**: true netting carries an explicit `F45_NETTING_GAP` (exposure-normalization model not built — F45;
+      candidates FLAGGED, never given a net number); correlation carries `CORRELATION_GAP` (backtest series unavailable
+      on-host). 19 vitest + pw:L2 3/3 | regression: tests/smoke/wizard-portfolio.spec.ts. Also re-synced the bundled
+      manifest to UAC (uts-ui@7021df8d) — fixed a pre-existing 6B parity-drift from the readiness regen (F14/F25 class).
 - [x] ✅ [DESIGN] P2. **Cost & capacity model** — full fee stack (exchange/gas/broker/clearing + funding + slippage via
       execution cost prediction) + infra cost per lifecycle_class → **breakeven AUM** per configured strategy; capacity
       ceiling vs venue liquidity/min-ticket constraints. — DONE 2026-06-13 (W3) — unified-api-contracts@72fed0b
@@ -598,9 +613,15 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       None when edge≤0. Capacity ceiling = explicit `None` HONEST GAP (no per-venue liquidity data in any registry).
       Decimal-not-float, basedpyright 0 errors, 17 tests (fee-stack sums, breakeven monotonicity ↑cost→↑AUM, determinism).
       UI surface = follow-on uts-ui increment.
-- [ ] [DESIGN] P3. **Wizard sessions as reproducible artifacts** — session JSON (answers + manifest version + config +
+- [x] ✅ [DESIGN] P3. **Wizard sessions as reproducible artifacts** — session JSON (answers + manifest version + config +
       prospectus hash); nightly replay of saved sessions against the fresh manifest (batch-live-reconciliation pattern)
-      alerts when an old answer silently changes; doubles as the client-onboarding compliance record.
+      alerts when an old answer silently changes; doubles as the client-onboarding compliance record. — DONE 2026-06-13
+      (W7) — e2e-testing@44d4d7fb (`scripts/strategy/wizard_session.py` frozen `WizardSession` = {session_id, saved_at,
+      manifest_commit, manifest_edge_hash, answers, config, prospectus_hash, recorded_claims} + `replay_wizard_sessions.py`
+      reconciler). build() snapshots the archetype's edges as recorded availability claims + SHA-256 edge_hash; replay
+      recomputes vs the CURRENT manifest → per-session `unchanged | DRIFTED (edge old→new)`, an available↔blocked flip is
+      the ALERT (`--fail-on-drift` exits 2; reuses the Wave-2 #5 edge-status diff). Smoke: unchanged-when-matched +
+      DRIFTED-when-flipped, deterministic. uts-ui "save session" surface = follow-on. Under strategy-service + e2e QG (green).
 - [x] ✅ [DESIGN] P3. **Dual-register copy** — every question/config field carries engineer copy (config path, code anchor)
       AND allocator/investor copy (plain English), reusing the existing glossary Term components; prospectus renders in
       either register. — DONE 2026-06-13 (W6) — unified-trading-system-ui@21e6f95a (`lib/wizard/copy-registers.ts` —
@@ -929,3 +950,29 @@ for every agent on this plan:
   and the 3 margin-traceability IMPLEMENT todos (strategy-service-engine, LOGIC FREEZE). Phase-0 full-suite openapi regen
   remains a CI-runner job (F12/F14 — no `.venv-workspace`-importable aggregate generator on this host). Nothing else for
   the operator to "pick up" within the dispatched scope.
+- 2026-06-13 — **WAVE-2 COMPLETE — all 12 enhancements shipped (operator signed off 2026-06-13; built autonomously via
+  sub-agent fan-out + serialized plan-flips).** Closed (W-order): #5 versioned-manifest-changelog+regression-gate
+  (PM@791eb2a27) · #8 cost&capacity-model (UAC@72fed0b) · #11 stress-scenario-library (e2e@bfbfda79) · #3 config-space
+  fuzzer (e2e@1eaf190 — found F47 UNBUILDABLE_SLOT + F48 NO_V2_ENGINE by execution) · #4 manifest-MCP-server
+  (AO@41b13f7f) · #6 inverse-wizard/screener (uts-ui@8d91db61) · #1 counterfactual-unlock-engine (PM@6702d05e — 251
+  distance-1 roadmap edges + 12 emitted todos) · #10 dual-register-copy (uts-ui@21e6f95a) · #12 jurisdiction-overlay
+  registry (UAC@2c399a1 — conservative-block default) · #2 readiness-badges (PM@0e744c841 — LIVE_CLUSTER_REGISTRY-sourced)
+  · #7 portfolio-mode (uts-ui@91c3e653 — honest F45 netting gap) · #9 reproducible-session-artifacts (e2e@44d4d7fb).
+  **Discipline held throughout**: every numeric/claim cited or honestly-gapped (never fabricated — fees official tiers,
+  jurisdiction documented restrictions, readiness only from LIVE_CLUSTER_REGISTRY, netting deferred to F45, metrics
+  "unavailable on-host"); basedpyright-0/QG-green/pw:L2 per repo; the Wave-2 #5 capability-regression gate stayed green
+  (no edge regressed). **New findings filed**: F47/F48 (verdict-matrix over-claims cells that can't build/run —
+  strategy-service LOGIC FREEZE, successor matrix↔engine-alignment plan needed). **Cross-repo follow-ons noted in the gap
+  tracker** (thin uts-ui surfaces for cost-model / unlock-demand-count / readiness-badge / jurisdiction-Stage-A-filter —
+  the data/logic layers are all shipped; these are presentational). The recurring bundle-parity drift (UAC manifest
+  regen → stale uts-ui/dep-ui copies) was re-synced for uts-ui (@7021df8d); a manifest-bundle-sync automation is the
+  durable fix (F14/F25 class). Plan now: Phase 0–6 + Wave-2 all closed except the operator-gated/host-blocked residue
+  (Phase-0 full-suite regen = CI-runner job F12/F14; client-lite = DEFERRED successor; F27 + margin-IMPLEMENT todos =
+  strategy-service LOGIC FREEZE).
+- 2026-06-13 — **Bundle-parity reconciled (closed a drift I introduced).** The Wave-2 #1/#2 manifest regens advanced the
+  committed UAC manifest (additive `readiness` field + new `generated_from_commit`), drifting the uts-ui + dep-ui bundled
+  copies → uts-ui's 6B hash-parity gate went RED. Re-synced both bundles byte-to-byte to the current UAC manifest
+  (uts-ui@7d5ef178 + dep-ui@fb1a758c; all three sha256=3e51a46…): parity-gates.test.ts 27/27 green, dep-ui capability_tab
+  9/9 (counts unchanged 563/2325, gaps 158/1/1/446), pw:L2 green both. CONFIRMS the recurring drift class — the durable
+  fix is a manifest-bundle-sync automation (every generate-unified-openapi.sh run should also refresh the two UI bundles
+  + the parity gate guards it); tracked as the F14/F25 follow-on. Net: all UI bundles == UAC, all gates green.
