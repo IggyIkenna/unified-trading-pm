@@ -1,0 +1,10 @@
+# Capability-regression acks (Wave-2 #5).
+#
+# An edge that was `available` in capability-edge-status-baseline.json and is now
+# `not_available`/`not_registered` fails check_capability_regression.py UNLESS it
+# is acked here with a plan reference (intentional, reviewed capability removal).
+#
+# Format:
+#   acked_regressions:
+#     "<from_node>|<relation>|<to_node>": "plans/active/<plan>.md — why removed"
+acked_regressions: {}

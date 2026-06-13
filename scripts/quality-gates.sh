@@ -563,6 +563,23 @@ if [ -f "$TWO_SIDED_AUDIT" ]; then
     fi
 fi
 
+# ── Post-gates: Capability-regression gate (Wave-2 #5) — baselined ratchet ──
+# SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md Wave-2 #5.
+# FAILS when a capability edge regressed available -> not_available/not_registered
+# vs scripts/openapi/capability-edge-status-baseline.json, unless acked in
+# capability_regression_acks.yaml with a plan reference. Improvements never fail.
+# Accept a new state with: generate_capability_changelog.py --update-baseline.
+CAP_REGRESSION="${REPO_ROOT}/scripts/quality_gates/check_capability_regression.py"
+if [ -f "$CAP_REGRESSION" ]; then
+    echo "Running capability-regression gate (Wave-2 #5 baselined ratchet)..."
+    if python3 "$CAP_REGRESSION"; then
+        log_success "Capability-regression gate passed (no unacked lost capability)"
+    else
+        echo "❌ Capability regression — an edge lost capability without a plan ack (see above)." >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: Credential-ask orphan scanner — baselined ratchet ──
 # SSOT: CLAUDE.md § "External Data Is Always Available — Never Silently Defer Adapters" (HARD RULE).
 # Every BLOCKED-CREDENTIALS plan item MUST cite an operator credential-ask ping (filed in

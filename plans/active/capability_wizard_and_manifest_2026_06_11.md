@@ -549,9 +549,14 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       (deployment-api), `run_backtest`, `render_prospectus`; agent-orchestrator hosts it. Powers the "what I need from
       you is these API keys — want a 5-year backtest?" dialogue with answers grounded in registry paths, not model
       memory.
-- [ ] [DESIGN] P2. **Versioned manifest + capability changelog + regression CI** — manifest generated per commit; diffs
+- [x] ✅ [DESIGN] P2. **Versioned manifest + capability changelog + regression CI** — manifest generated per commit; diffs
       = "what the system learned to do this month" (investor-update material); CI FAILS when an edge regresses
-      `available → not_available` without a plan reference.
+      `available → not_available` without a plan reference. — DONE 2026-06-13 (W1). PM@791eb2a27: committed edge-status
+      BASELINE (`scripts/openapi/capability-edge-status-baseline.json`, 2238 edges) + `generate_capability_changelog.py`
+      (manifest-vs-baseline diff → `openapi/capability-changelog.md` "Newly available / Regressed / New / Removed",
+      wired into generate-unified-openapi.sh, deterministic) + `check_capability_regression.py` QG-wired (fails on
+      `available→not_available/not_registered` unless acked in `capability_regression_acks.yaml` with a plan ref;
+      synthetic-regression test PROVED it fires; 6 unit tests). Changelog artifact: unified-api-contracts (committed).
 - [ ] [DESIGN] P2. **Inverse wizard / screener** — start from holdings ("I have BTC today, USDT tomorrow") or targets
       (Sharpe ≥ 1.5, max DD ≤ 10%, carry ≥ 8%) and search the manifest + backtest metrics for qualifying archetypes,
       ranked.

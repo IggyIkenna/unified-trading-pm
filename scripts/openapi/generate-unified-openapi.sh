@@ -138,6 +138,20 @@ python "$SCRIPT_DIR/generate_capability_verdict_matrix.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 
 # ---------------------------------------------------------------------------
+# Capability changelog (Wave-2 #5): diff the manifest vs the committed
+# edge-status baseline -> openapi/capability-changelog.md ("what the system
+# learned to do" + regressions).  Does NOT --update-baseline (that is a
+# deliberate, reviewed action); the regression GATE
+# (scripts/quality_gates/check_capability_regression.py) reads the same baseline.
+# Deterministic (run twice = byte-identical).
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Generating Capability Changelog (vs baseline) ==="
+python "$SCRIPT_DIR/generate_capability_changelog.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
 # Strategy prospectus (per-archetype markdown docs: 7 sections, machine+codex)
 # Deterministic (run twice = byte-identical).  Output: UAC openapi/prospectus/
 # ---------------------------------------------------------------------------
