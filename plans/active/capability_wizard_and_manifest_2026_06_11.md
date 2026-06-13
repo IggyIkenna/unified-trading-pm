@@ -520,7 +520,16 @@ actually exists (which data_types missing, over which timeframes) via the existi
       cross-links routes; add the per-cell coverage fetch). — deployment-ui@e02e4c4 | pw:L2 ✓ | regression:
       tests/smoke/capability_tab.spec.ts
 
-## Wave 2 — proposed enhancements (Claude 2026-06-11; PENDING OPERATOR SIGN-OFF, do not dispatch)
+## Wave 2 — enhancements (Claude 2026-06-11; **OPERATOR SIGNED OFF 2026-06-13 — building all 12 autonomously**)
+
+> Sequencing (dependency/leverage order; ship+flip each as a committed increment, journal per item):
+> W1 #5 versioned-manifest+changelog+regression-CI (PM, foundational guard) → W2 #1 counterfactual-unlock-engine
+> (PM exporter + uts-ui) → W3 #8 cost&capacity (UAC schema + uts-ui; consumes the new fees/collateral registries) →
+> W4 #2 readiness-badges (PM manifest annotation + uts-ui) → W5 #6 inverse-wizard/screener (uts-ui) →
+> W6 #10 dual-register-copy (uts-ui + question-bank) → W7 #9 reproducible-session-artifacts (uts-ui + PM script) →
+> W8 #12 jurisdiction-overlay (UAC registry + uts-ui) → W9 #11 stress-scenario-library (e2e-testing) →
+> W10 #7 portfolio-mode (uts-ui + UAC; partial — netting depends on F45 exposure-norm gap, surface honestly) →
+> W11 #3 config-space-fuzzer→SIT (e2e-testing) → W12 #4 manifest-MCP-server (agent-orchestrator, heaviest).
 
 Question bank SSOT (every wizard question pinned to its code anchor):
 [`codex/09-strategy/architecture-v2/capability-wizard-question-bank.md`](../../codex/09-strategy/architecture-v2/capability-wizard-question-bank.md).
