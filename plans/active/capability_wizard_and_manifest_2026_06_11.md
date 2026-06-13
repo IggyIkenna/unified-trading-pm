@@ -201,7 +201,7 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       VENUE_ORDER_SEMANTICS honest-empty — per-adapter honor matrix is a code-scan backfill).
 - [x] ✅ [SPEC] P2. **Trading-agent/LLM capability declarations** schema. DONE 2026-06-11 —
       unified-api-contracts@6f31f59 (trading_agent_capability.py; TRADING_AGENT_CAPABILITIES honest-empty).
-- [ ] [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty): per-venue
+- [x] ✅ [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty): per-venue
       collateral/haircut/LTV/maintenance-margin entries, fee tiers, per-adapter order-semantics honor matrices, sim
       assumptions from backtest-runner scan, offerable fund structures — each backfill PR cites its source of truth;
       `needs_code_scan` items route through Phase 5 agent escalation. **COLLATERAL DONE 2026-06-12 —
@@ -216,7 +216,24 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       `STAKING_VENUES_NO_COLLATERAL_POLICY` (staking venues take no margin/LTV policy — documented). 23 backfill tests +
       stale `==[]` test corrected. Findings F27 (strategy-service lowercase `perp_venue` ≠ uppercase
       `VENUE_COLLATERAL_MATRIX` keys → carry blocked) + F28 (in-repo collateral SSOTs disagree: `venue_collateral.py` vs
-      `lst_collateral_resolver.py` haircuts). **STILL OPEN: fees / order-semantics / sim / fund-structure backfills.**
+      `lst_collateral_resolver.py` haircuts). **ALL REMAINING BACKFILLS DONE 2026-06-13 — unified-api-contracts@5e7d068**:
+      (1) **VENUE_ORDER_SEMANTICS** — 9 MVP venues from the execution-service adapter scan (hyperliquid/deribit/drift
+      WIRED with honored TIF + ref-pricing; binance/bybit/okx scaffolds → auth_wired=not_registered honestly; aave/kamino
+      lending; gmx_v2 no-adapter); every entry cites file:line. (2) **SIM_ASSUMPTIONS_REGISTRY** — 16 (venue,
+      instrument_type) surfaces from the backtest-runner scan (F11 answered: ONE category-agnostic GroupBRunner, fill
+      model dispatched by INSTRUCTION ACTION TYPE not archetype; CANDLE_CLOSE/POOL_MID_AT_BLOCK/FUNDING_SNAPSHOT per
+      surface; granularities 1m–24h from resolvers.py:32; batch↔live divergences cited from benchmark_fills.py +
+      batch_harness.py). (3) **FEES_REGISTRY** — DeFi swap/gas + Aave flash-loan code-cited from execution-service
+      sor.py/aave.py; CeFi maker/taker base tiers from each venue's OFFICIAL fee schedule (Hyperliquid 1.5/4.5bps,
+      Binance 2/5, Bybit 2/5.5, OKX 2/5, Deribit futures 0/5 + options 0.03%-cap-12.5%, all as_of 2026-06-13). (4)
+      **OFFERED_FUND_STRUCTURES** — POOLED + SMA from sma-vs-pooled.md codex (PROP honestly omitted; cadence is per-fund
+      config, left empty not invented). (5) **TRADING_AGENT_CAPABILITIES** — carry_staked_basis/arbitrage_price_dispersion/
+      VOL_TRADING_OPTIONS from the trading-agent-service stub (no-op allocation directives, claude-haiku-4-5,
+      enabled=False honestly). Exporter regenerated the manifest (UAC@5e7d068, deterministic): **5 gap edges flipped
+      not_registered→available** (fees/fund_structure/order_semantics/sim/trading_agent; collateral already available;
+      broker stays not_registered). Bundled into uts-ui@06258d20 + deployment-ui@2e0e719 (hash-parity preserved, pw:L2
+      green both; dep-ui gap-count regression updated 161→158/3→1). 21 backfill tests + 3 stale `==[]` tests corrected.
+      Findings F45 (exposure-normalization undeclared) + F46 (CeFi adapter scaffolds BLOCKED-CREDENTIALS).
 - [x] ✅ [IMPLEMENT] P1. Manifest exporter consumes each new registry as it lands; until then emits honest
       `not_registered` edges (never silently omits the dimension). DONE 2026-06-12 — exporter now emits per-venue
       collateral nodes + per-asset `accepts_collateral` edges carrying the sourced haircut/LTV metadata
@@ -800,3 +817,15 @@ for every agent on this plan:
   3 new getBrokersForVenue unit tests + a Stage E smoke assertion (uts-ui@69c8f0d1; tsc clean, 138/138 unit, pw:L2
   10/10, UI QG exit 0). Flipped checkboxes: broker-polish P2 + uts-ui-broker-rendering P2 + 6B uts-ui QG P0. Remaining
   this dispatch: (3) UAT redeploy, (4) registry backfills + code-scans, (5) margin-traceability.
+- 2026-06-13 — **Item 4 (registry backfills + code-scans) COMPLETE.** Fanned out 3 read-only scan sub-agents
+  (execution-service order-semantics/SOR/multi-leg/options · strategy-service backtest sim-assumptions · greeks/
+  features/UTL/UAC exposure-normalization), then backfilled all 5 remaining honest-empty registries in UAC@5e7d068
+  (order_semantics 9 venues, sim 16 surfaces, fees DeFi-code+CeFi-official, fund POOLED/SMA, trading_agent stub) —
+  every numeric/fact cites code file:line or an official fee page (as_of 2026-06-13), nothing invented. Regenerated the
+  manifest deterministically → 5 gap edges flipped not_registered→available; re-bundled into uts-ui@06258d20 +
+  deployment-ui@2e0e719 (sha256 hash-parity preserved, pw:L2 10/10 + 9/9). Answered the 4 `[AGENT]` code-scan gaps in
+  the gap tracker (options-depth = Deribit-only; SOR = DEX-only sor.py + selector.py, no CeFi-perp SOR; multi-leg delta
+  = unmanaged; exposure-norm = genuine gap, primitives exist but no owner). Filed F45 (exposure-norm) + F46 (3 CeFi perp
+  adapters are NotImplementedError scaffolds, BLOCKED-CREDENTIALS). UAT verified live earlier this session
+  (https://uat.odum-research.com/wizard HTTP 200, revision odum-portal-staging-00071). Remaining dispatch item:
+  (5) margin-traceability (4 gap-tracker todos, mostly strategy-service-engine-coupled under LOGIC FREEZE).
