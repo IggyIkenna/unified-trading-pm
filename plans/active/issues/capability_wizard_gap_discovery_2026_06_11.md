@@ -51,17 +51,17 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       placement NOT implemented** — Binance/Bybit/OKX are scaffolds (NotImplementedError on place_order), Hyperliquid
       adapter has no options-specific logic. Net: options execution depth = Deribit-only today; the VOL family's other
       venues are compute-only (greeks) with no order path.
-- [x] ✅ [AGENT] P1. Exposure normalization location: staked-ETH vs ETH equivalence / delta-adjusted exposure — not found
-      as a declared model (greeks-service? features-service? ledger?); prospectus needs it. — ANSWERED 2026-06-13
-      (code-scan) = **GENUINE GAP (F45)**. PRIMITIVES exist in UAC: `TOKEN_EQUIVALENCE_GROUPS` +
-      `is_token_equivalent()` (registry/capability_declarations/_defi.py:870-940/1019 — full 20+ LST universe) and
-      `LST_BASE_ASSET` + `lst_adjusted_value()` (registry/token_wrapping.py:43-47/159 — 3 wrapped forms, oracle-ratio
-      base-equivalent), plus the `RiskMetrics.delta_composite` schema (internal/risk.py:82) and per-instrument
-      Black-Scholes greeks (greeks-service kernels/black_scholes.py). But **NO service owns the end-to-end pipeline**
-      that maps each LST leg → underlying → per-leg delta → net `delta_composite`/USD-normalized view. greeks-service
-      computes per-instrument greeks only; no `compute_net_delta`/`portfolio_delta`/`exposure_normalizer` exists.
-      Prospectus correctly emits an honest gap line. Successor: a risk-service / strategy-service pre-trade layer
-      consuming `lst_adjusted_value` + per-leg greeks. Filed F45 in findings doc.
+- [x] ✅ [AGENT] P1. Exposure normalization location: staked-ETH vs ETH equivalence / delta-adjusted exposure — not
+      found as a declared model (greeks-service? features-service? ledger?); prospectus needs it. — ANSWERED 2026-06-13
+      (code-scan) = **GENUINE GAP (F45)**. PRIMITIVES exist in UAC: `TOKEN_EQUIVALENCE_GROUPS` + `is_token_equivalent()`
+      (registry/capability_declarations/\_defi.py:870-940/1019 — full 20+ LST universe) and `LST_BASE_ASSET` +
+      `lst_adjusted_value()` (registry/token_wrapping.py:43-47/159 — 3 wrapped forms, oracle-ratio base-equivalent),
+      plus the `RiskMetrics.delta_composite` schema (internal/risk.py:82) and per-instrument Black-Scholes greeks
+      (greeks-service kernels/black_scholes.py). But **NO service owns the end-to-end pipeline** that maps each LST leg
+      → underlying → per-leg delta → net `delta_composite`/USD-normalized view. greeks-service computes per-instrument
+      greeks only; no `compute_net_delta`/`portfolio_delta`/`exposure_normalizer` exists. Prospectus correctly emits an
+      honest gap line. Successor: a risk-service / strategy-service pre-trade layer consuming `lst_adjusted_value` +
+      per-leg greeks. Filed F45 in findings doc.
 - [x] ✅ [AGENT] P2. SOR decision trees: smart-order-routing logic scattered across algo files; no single manifest of
       routing decisions for the wizard to describe. — ANSWERED 2026-06-13 (code-scan): algo SELECTION lives in
       execution_service/algorithms/selector.py (`ALGORITHMS_BY_INSTRUCTION_TYPE` + `select_algorithm`: ZERO_ALPHA→
@@ -140,19 +140,20 @@ context; recommended owner strategy-service PBM):
 - [x] ✅ [SPEC] P1. `TransferIntent`/`AllocationTarget` gain a `transfer_purpose` field (MARGIN_DEPOSIT etc.) + ledger
       EventType gains COLLATERAL_POSTED/MARGIN_RELEASED — today a USDC margin transfer to hyperliquid is
       indistinguishable from any other transfer. unified-api-contracts + execution-service + fund-administration. —
-      **UAC SURFACE DONE 2026-06-13 — unified-api-contracts@dc67ae6 (additive/non-breaking)**: `TransferPurpose` StrEnum (GENERAL default +
+      **UAC SURFACE DONE 2026-06-13 — unified-api-contracts@dc67ae6 (additive/non-breaking)**: `TransferPurpose` StrEnum
+      (GENERAL default +
       MARGIN_DEPOSIT/MARGIN_WITHDRAWAL/COLLATERAL_POSTING/COLLATERAL_RELEASE/REBALANCE/TREASURY_SWEEP/FUNDING) +
       optional `TransferIntent.transfer_purpose` field (defaults GENERAL → existing emitters unaffected) +
       `EventType.COLLATERAL_POSTED`/`MARGIN_RELEASED` (instruction-driven, cross-referenced to the transfer purposes);
-      exported via the crosscutting + root facades. 4 tests. NOTE: `AllocationTarget` lives in fund-administration
-      (not UAC) — its `transfer_purpose` wiring + the execution-service/fund-admin consumers are the IMPLEMENT half
-      below (engine-coupled). The contract surface that makes margin transfers traceable is now in place.
+      exported via the crosscutting + root facades. 4 tests. NOTE: `AllocationTarget` lives in fund-administration (not
+      UAC) — its `transfer_purpose` wiring + the execution-service/fund-admin consumers are the IMPLEMENT half below
+      (engine-coupled). The contract surface that makes margin transfers traceable is now in place.
 - [ ] [IMPLEMENT] P1. CeFi margin emission: margin_event_emitter.py is DeFi-only (hardcodes venue_type="defi"); UTL
       margin models for HL/Bybit/OKX/Binance exist but nothing feeds them live balances. strategy-service PBM owns.
       **STRATEGY-SERVICE ENGINE under LOGIC FREEZE (2026-06-13)** — this feeds live per-venue balances into the UTL
       margin models + flips margin_event_emitter off its hardcoded `venue_type="defi"`; both are engine-runtime changes,
-      NOT surface-only, so they require the freeze to lift / a dedicated PBM dispatch. The UAC surface above (transfer_purpose
-      + COLLATERAL_POSTED/MARGIN_RELEASED) is the contract these will emit against once unfrozen.
+      NOT surface-only, so they require the freeze to lift / a dedicated PBM dispatch. The UAC surface above
+      (transfer_purpose + COLLATERAL_POSTED/MARGIN_RELEASED) is the contract these will emit against once unfrozen.
 - [ ] [IMPLEMENT] P2. margin_health API is a Phase-1 stub returning []; no CeFi per-venue margin balance tracker
       (venue_balance_tracker.py is sports-only). strategy-service. **LOGIC FREEZE — engine-runtime, deferred to PBM
       dispatch** (the API surface exists; the real CeFi balance tracker is engine work).
@@ -160,3 +161,44 @@ context; recommended owner strategy-service PBM):
       MarginHealthSnapshot.collateral_usd (also resolves the F28 dual-SSOT risk). UTL/strategy-service. **LOGIC FREEZE —
       engine-runtime consumer; the UAC COLLATERAL_REGISTRY it would read is now backfilled (2026-06-12), so this is
       unblocked on the data side and waits only on the strategy-service/UTL runtime change.**
+- [ ] [UI] P2. uts-ui Stage-A jurisdiction-filter surface is the follow-on consumer of the UAC jurisdiction overlay
+      registry (`unified_api_contracts.internal.architecture_v2.jurisdiction_overlay` — `Jurisdiction` /
+      `JURISDICTION_VENUE_POLICIES` / `allowed_venues_for_jurisdiction` / `is_venue_allowed`, backfilled 2026-06-13):
+      the wizard reads the investor entity's jurisdiction and filters the venue/instrument picklist so a config can
+      never include a venue the jurisdiction cannot legally touch (conservative default = blocked + needs_legal_review).
+      UI repo; registry layer is done — this is the thin Stage-A filter surface only.
+
+## Closest-to-unlock roadmap (auto-emitted)
+
+_Auto-emitted by `scripts/openapi/generate_capability_unlock_report.py --emit-todos`._ _The N blocked edges closest to
+available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. Dedup-idempotent on re-run._
+
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_MEV_SANDWICH --has_leg:legs--> ARBITRAGE_MEV_SANDWICH** (distance 1, status
+      not_registered) — missing: needs-leg-spec. Why blocked: ARBITRAGE_MEV_SANDWICH has no leg structure in
+      ARCHETYPE_LEG_STRUCTURES yet — structural per-leg restrictions not modelled (F22 leg-truth gap). (auto-emitted by
+      generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cboe** (distance 1, status partial) —
+      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme** (distance 1, status partial) — missing:
+      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:deribit** (distance 1, status partial) —
+      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ibkr** (distance 1, status partial) —
+      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ice** (distance 1, status partial) — missing:
+      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:dated_future** (distance
+      1, status partial) — missing: needs-config. Why blocked: Cross-product routing policy not declared in UAC (gap
+      #10).. (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:lp** (distance 1, status
+      partial) — missing: needs-registry-entry. Why blocked: Flash-loan receiver per-chain registry missing from UAC
+      (gap #3).. (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:option** (distance 1,
+      status partial) — missing: needs-leg-spec. Why blocked: vol_arb not a separate capability; multi-leg vol-arb algo
+      pending.. (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:cme** (distance 1, status partial) — missing:
+      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ibkr** (distance 1, status partial) — missing:
+      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ice** (distance 1, status partial) — missing:
+      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
