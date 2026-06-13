@@ -564,18 +564,29 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       (internalization detection when one leg longs what another shorts), correlation from backtests, capital routing
       across pools/SMA via portfolio_allocator + capital_router. Directly models the two-pooled-investors-now /
       SMA-next-year scenario.
-- [ ] [DESIGN] P2. **Cost & capacity model** — full fee stack (exchange/gas/broker/clearing + funding + slippage via
+- [x] ✅ [DESIGN] P2. **Cost & capacity model** — full fee stack (exchange/gas/broker/clearing + funding + slippage via
       execution cost prediction) + infra cost per lifecycle_class → **breakeven AUM** per configured strategy; capacity
-      ceiling vs venue liquidity/min-ticket constraints.
+      ceiling vs venue liquidity/min-ticket constraints. — DONE 2026-06-13 (W3) — unified-api-contracts@72fed0b
+      (`architecture_v2/cost_capacity.py`: `CostCapacityModel`/`VenueFeeBreakdown` + `compute_cost_capacity()`).
+      Fee stack summed from FEES_REGISTRY (taker bps + gas units, cited) + funding/slippage/gas-price/infra as typed
+      caller inputs (NOT invented — source/owner docstrings); breakeven_aum = annualised_total_cost ÷ (gross_edge_bps/1e4),
+      None when edge≤0. Capacity ceiling = explicit `None` HONEST GAP (no per-venue liquidity data in any registry).
+      Decimal-not-float, basedpyright 0 errors, 17 tests (fee-stack sums, breakeven monotonicity ↑cost→↑AUM, determinism).
+      UI surface = follow-on uts-ui increment.
 - [ ] [DESIGN] P3. **Wizard sessions as reproducible artifacts** — session JSON (answers + manifest version + config +
       prospectus hash); nightly replay of saved sessions against the fresh manifest (batch-live-reconciliation pattern)
       alerts when an old answer silently changes; doubles as the client-onboarding compliance record.
 - [ ] [DESIGN] P3. **Dual-register copy** — every question/config field carries engineer copy (config path, code anchor)
       AND allocator/investor copy (plain English), reusing the existing glossary Term components; prospectus renders in
       either register.
-- [ ] [DESIGN] P3. **Named stress-scenario library** — curated historical windows (May-2021 crash, FTX week, Shapella, a
+- [x] ✅ [DESIGN] P3. **Named stress-scenario library** — curated historical windows (May-2021 crash, FTX week, Shapella, a
       funding-flip regime) replayed through the backtest runner per configured strategy; positions/PnL/triggered
-      kill-switches become the prospectus risk slides.
+      kill-switches become the prospectus risk slides. — DONE 2026-06-13 (W9) — e2e-testing@bfbfda79
+      (`scripts/strategy/stress_scenarios.py` REGISTRY of 4 cited windows: MAY_2021_CRASH 05-08..05-28, FTX_COLLAPSE
+      2022-11-07..18, SHAPELLA 2023-04-10..28, FUNDING_FLIP_2022Q1 01-14..02-25 — each with real dates + sources) +
+      `stress_scenario_replay.py` driving the SAME GroupBRunner as Phase-5 backtest-on-demand (batch=live HARD RULE) with
+      the honest data-availability precheck (on-host verdict PRECHECK_UNAVAILABLE — expected, no cloud data) + 3 smoke
+      tests. Under strategy-service + e2e-testing QG (both green).
 - [ ] [DESIGN] P3. **Jurisdiction overlay** — investor entity/jurisdiction filters venues/instruments at Stage A
       (client_isolation_and_governance restrictions), so a config can never include a venue the investor cannot legally
       touch.
