@@ -79,6 +79,13 @@ from _capability_orphan import (
     find_orphan_nodes,
     render_orphan_report,
 )
+from _capability_readiness import (
+    ReadinessVerdict,
+    annotate_edges_with_readiness,
+    build_readiness_report,
+    render_readiness_markdown,
+    tier_distribution,
+)
 from unified_api_contracts.internal.architecture_v2.capability_manifest import (
     CapabilityEdge,
     CapabilityManifest,
@@ -135,12 +142,14 @@ def build_manifest(
     workspace_root: Path,
     uac_root: Path,
     sidecar_path: Path | None = None,
-) -> tuple[CapabilityManifest, list[tuple[str, str, str]]]:
+) -> tuple[CapabilityManifest, list[tuple[str, str, str]], dict[str, ReadinessVerdict]]:
     """Assemble the full manifest from every extractor.
 
-    Returns ``(manifest, annotation_orphans)`` where ``annotation_orphans`` is
-    a list of ``(from_node, to_node, relation)`` tuples from the sidecar that
-    had no matching edge (empty when no sidecar or all entries matched).
+    Returns ``(manifest, annotation_orphans, readiness_verdicts)`` where
+    ``annotation_orphans`` is a list of ``(from_node, to_node, relation)``
+    tuples from the sidecar that had no matching edge (empty when no sidecar or
+    all entries matched), and ``readiness_verdicts`` maps each archetype
+    node_id to its resolved operational-maturity tier (Wave-2 #2).
     """
     all_nodes: list[CapabilityNode] = []
     all_edges: list[CapabilityEdge] = []
@@ -202,13 +211,19 @@ def build_manifest(
     else:
         logger.info("7. No sidecar path provided — skipping annotation merge")
 
+    # 8. Readiness pass (Wave-2 #2): stamp every archetype-originating edge with
+    # its operational-maturity tier from the live-cluster registry (additive —
+    # never touches status/gap_type, so it cannot flip an edge available→not).
+    logger.info("8. Resolving per-edge operational maturity (readiness)...")
+    all_edges, readiness_verdicts = annotate_edges_with_readiness(nodes, all_edges)
+
     manifest = CapabilityManifest(
         manifest_version=MANIFEST_VERSION,
         generated_from_commit=_read_uac_head_sha(uac_root),
         nodes=nodes,
         edges=all_edges,
     )
-    return manifest, annotation_orphans
+    return manifest, annotation_orphans, readiness_verdicts
 
 
 def main() -> None:
@@ -233,7 +248,9 @@ def main() -> None:
     sidecar_path = args.sidecar or (_SCRIPT_DIR / "capability-annotations.yaml")
 
     logger.info("Generating capability manifest (workspace=%s)...", workspace_root)
-    manifest, annotation_orphans = build_manifest(workspace_root, uac_root, sidecar_path=sidecar_path)
+    manifest, annotation_orphans, readiness_verdicts = build_manifest(
+        workspace_root, uac_root, sidecar_path=sidecar_path
+    )
 
     canonical = manifest.to_canonical_dict()
 
@@ -272,6 +289,19 @@ def main() -> None:
         f.write(report)
     logger.info("Wrote %s", report_path)
 
+    # Sibling readiness report (Wave-2 #2): per-archetype maturity + cited evidence.
+    readiness_payload = build_readiness_report(manifest.generated_from_commit, readiness_verdicts)
+    readiness_json_path = output_dir / "capability-readiness-report.json"
+    with open(readiness_json_path, "w") as f:
+        json.dump(readiness_payload, f, indent=2, sort_keys=True, default=str)
+        f.write("\n")
+    logger.info("Wrote %s", readiness_json_path)
+
+    readiness_md_path = output_dir / "capability-readiness-report.md"
+    with open(readiness_md_path, "w") as f:
+        f.write(render_readiness_markdown(manifest.generated_from_commit, readiness_verdicts))
+    logger.info("Wrote %s", readiness_md_path)
+
     # Summary
     from collections import Counter
 
@@ -295,6 +325,12 @@ def main() -> None:
         print(f"  {k}: {gaps_block[k]}")
     print(f"orphans: {len(orphans)}  unbuilt dead-ends: {len(unbuilt)}  logical dead-ends: {len(logical)}")
     print(f"annotated edges: {annotated}  annotation orphans: {len(annotation_orphans)}")
+    readiness_dist = tier_distribution(readiness_verdicts)
+    readiness_edges = sum(1 for e in manifest.edges if e.readiness is not None)
+    print(f"readiness — archetypes: {len(readiness_verdicts)}  stamped edges: {readiness_edges}")
+    print("readiness tier distribution (archetypes):")
+    for tier in sorted(readiness_dist):
+        print(f"  {tier}: {readiness_dist[tier]}")
     print(f"\nOutput: {output_path}")
     print("=" * 60)
 

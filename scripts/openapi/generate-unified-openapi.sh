@@ -119,6 +119,10 @@ python "$SCRIPT_DIR/audit_api_ui_coverage.py" \
 # Deterministic (run twice = byte-identical). Service-resident registries are
 # imported in each service's own .venv subprocess; unimportable sources emit
 # typed gap edges so the manifest always generates.
+# Folds in the Wave-2 #2 readiness pass: every archetype-originating edge is
+# stamped with an operational-maturity tier (backtest-only | shadow-observed |
+# staging-proven | live-proven) from LIVE_CLUSTER_REGISTRY (additive metadata —
+# never flips an edge's availability), plus a sibling capability-readiness-report.
 # ---------------------------------------------------------------------------
 echo ""
 echo "=== Generating Capability Manifest ==="
@@ -209,6 +213,7 @@ for UI_REPO in unified-trading-system-ui unified-trading-system-ui\ copy; do
         [[ -f "$OUTPUT_DIR/system-topology.json" ]] && cp "$OUTPUT_DIR/system-topology.json" "$REGISTRY_DIR/system-topology.json"
         [[ -f "$OUTPUT_DIR/capability-manifest.json" ]] && cp "$OUTPUT_DIR/capability-manifest.json" "$REGISTRY_DIR/capability-manifest.json"
         [[ -f "$OUTPUT_DIR/capability-verdict-matrix.json" ]] && cp "$OUTPUT_DIR/capability-verdict-matrix.json" "$REGISTRY_DIR/capability-verdict-matrix.json"
+        [[ -f "$OUTPUT_DIR/capability-readiness-report.json" ]] && cp "$OUTPUT_DIR/capability-readiness-report.json" "$REGISTRY_DIR/capability-readiness-report.json"
         echo "  Synced spec → $UI_REPO/lib/registry/"
 
         # Deduplicate operationIds (multiple services share /health and /readiness)
