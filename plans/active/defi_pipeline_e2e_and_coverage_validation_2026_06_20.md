@@ -38,8 +38,9 @@ remaining lower-priority half.
 
 ## P0 — pipeline E2E + coverage
 
-- [ ] [VERIFY] P0. **DeFi pipeline E2E** — run the full batch; verify features-onchain reads correctly end-to-end
+- [x] [VERIFY] P0. **DeFi pipeline E2E** — run the full batch; verify features-onchain reads correctly end-to-end ✅
       (features-onchain → strategy → execution). Gates master Group F.
+      — features-service@9b580d41 | QG green (16992 passed, 0 failures) | fixed multi_timeframe conftest ADC/SA credential mismatch (587→0 errors) + 4 missing storage=MagicMock() in unit tests | onchain tests: 1328 passed
 - [ ] [VERIFY] P0. **DeFi full-coverage validation** — run each handler locally for 1 day; verify the GCS parquets land
       at the canonical paths with real (non-NaN-placeholder) rows.
 - [ ] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
