@@ -542,13 +542,25 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       the deployments registry + shadow ledger + archived plans:
       `backtest-only | shadow-observed | staging-proven |     live-proven`, mapped to the C/D/B gate model in
       PLAN_FORMAT.md. "Available" without "ever ran" is a different answer.
-- [ ] [DESIGN] P2. **Config-space fuzzer → generated smoke tests** — mechanically enumerate reachable wizard configs,
+- [x] ✅ [DESIGN] P2. **Config-space fuzzer → generated smoke tests** — mechanically enumerate reachable wizard configs,
       sample, compile each to a system-integration-tests batch mock-fill scenario. Use-case-3 audit by _execution_, not
-      inspection: every reachable config must at least smoke-run; failures are mechanical dead-end findings.
-- [ ] [DESIGN] P2. **Manifest as MCP server + conversational wizard agent** — tools: `query_manifest`, `data_status`
+      inspection: every reachable config must at least smoke-run; failures are mechanical dead-end findings. — DONE
+      2026-06-13 (W11) — e2e-testing@1eaf190 (`scripts/strategy/config_space_fuzzer.py`+smoke). 1541 reachable AVAILABLE
+      cells/51 archetypes → 3/archetype deterministic sample (150 configs, two-runs-identical) → compiled + smoke-run via
+      the EXISTING V2BatchHarness (batch=live). On-host: 60 PASS / 7 PARAMS_REQUIRED / 83 typed DEAD_END (no uncaught
+      crash). Surfaced real bugs by EXECUTION: **F47** UNBUILDABLE_SLOT (9 venues matrix-AVAILABLE but rejected by the v2
+      slot-token registry) + **F48** NO_V2_ENGINE (22 VOL_*/MARKET_MAKING_* matrix-reachable but no registered v2
+      engine) — filed (PM@6d3e6aa68 PR#314); fix = successor matrix↔engine-alignment plan (strategy-service LOGIC FREEZE).
+- [x] ✅ [DESIGN] P2. **Manifest as MCP server + conversational wizard agent** — tools: `query_manifest`, `data_status`
       (deployment-api), `run_backtest`, `render_prospectus`; agent-orchestrator hosts it. Powers the "what I need from
       you is these API keys — want a 5-year backtest?" dialogue with answers grounded in registry paths, not model
-      memory.
+      memory. — DONE 2026-06-13 (W12) — agent-orchestrator@41b13f7f (`server/mcp/`: `capability_mcp_server.py`
+      JSON-RPC-2.0-over-stdio dispatcher — initialize/tools/list/tools/call; NO new MCP-SDK dep). 4 typed tools:
+      `query_manifest` (reads committed capability-manifest.json + verdict-matrix — summary/gaps/archetype/
+      available-venues/edges-by-gap), `data_status` (env-gated deployment-api proxy, honest "not configured"),
+      `run_backtest` (shells the e2e backtest-from-wizard-config path, honest "unavailable on host"), `render_prospectus`
+      (returns committed prospectus md). basedpyright 0, ruff clean, QG green (592 passed), 25 tests (manifest queries
+      deterministic against committed artifacts; HTTP/subprocess mocked, credential-free).
 - [x] ✅ [DESIGN] P2. **Versioned manifest + capability changelog + regression CI** — manifest generated per commit; diffs
       = "what the system learned to do this month" (investor-update material); CI FAILS when an edge regresses
       `available → not_available` without a plan reference. — DONE 2026-06-13 (W1). PM@791eb2a27: committed edge-status
@@ -557,9 +569,14 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       wired into generate-unified-openapi.sh, deterministic) + `check_capability_regression.py` QG-wired (fails on
       `available→not_available/not_registered` unless acked in `capability_regression_acks.yaml` with a plan ref;
       synthetic-regression test PROVED it fires; 6 unit tests). Changelog artifact: unified-api-contracts (committed).
-- [ ] [DESIGN] P2. **Inverse wizard / screener** — start from holdings ("I have BTC today, USDT tomorrow") or targets
+- [x] ✅ [DESIGN] P2. **Inverse wizard / screener** — start from holdings ("I have BTC today, USDT tomorrow") or targets
       (Sharpe ≥ 1.5, max DD ≤ 10%, carry ≥ 8%) and search the manifest + backtest metrics for qualifying archetypes,
-      ranked.
+      ranked. — DONE 2026-06-13 (W5) — unified-trading-system-ui@8d91db61 (`lib/wizard/screener.ts` +
+      `components/wizard/ScreenerMode.tsx`, wired as a 3rd wizard mode alongside Wizard/Isolation). `screenByHoldings`
+      maps held assets → fundable instrument-types → archetypes (via manifest `trades_instrument` edges, ranked by
+      funded-leg-count + availability); `screenByTargets` ranks by capability availability + honest "metrics not yet
+      available" badge (NEVER fabricates Sharpe/DD/carry — manifest carries none). 22 vitest + pw:L2 3/3 |
+      regression: tests/smoke/wizard-screener.spec.ts.
 - [ ] [DESIGN] P2. **Portfolio mode** — compose multiple configured strategies: aggregate/netted exposures
       (internalization detection when one leg longs what another shorts), correlation from backtests, capital routing
       across pools/SMA via portfolio_allocator + capital_router. Directly models the two-pooled-investors-now /
