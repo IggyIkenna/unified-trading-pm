@@ -441,3 +441,32 @@ with citation to their adapter files. Deferred to next registry iteration.
 function AND retained an inline `_tradfi_brokers` dict inside `extract_venues()` (an intermediate implementation from a
 prior partial agent). Both emitted broker nodes + routed_via edges, causing duplicate nodes. The inline block was removed
 (pm@fix PR #300). broker:ibkr node count 2→1 in the regenerated manifest.
+
+### F45 — Exposure normalization is undeclared: primitives exist, no service owns the netting pipeline
+
+**Status**: OPEN — genuine capability gap (answers the `[AGENT] P1 exposure-normalization` gap-tracker item). 2026-06-13
+code-scan across greeks-service / features-service / UTL / UAC. The PRIMITIVES for LST→underlying exposure equivalence
+exist in UAC: `TOKEN_EQUIVALENCE_GROUPS` + `is_token_equivalent()`
+(`registry/capability_declarations/_defi.py:870-940,1019` — full 20+ LST universe: ETH group {ETH,WETH,STETH,WSTETH,
+CBETH,RETH,WEETH,…}, SOL group {SOL,WSOL,MSOL,STSOL,JITOSOL,…}) and `LST_BASE_ASSET` + `lst_adjusted_value()`
+(`registry/token_wrapping.py:43-47,159` — 3 wrapped forms, oracle-ratio base-equivalent quantity). The OUTPUT schema
+exists too: `RiskMetrics.delta_composite: dict[str,Decimal]` ("net delta per underlying", `internal/risk.py:82`) +
+`gross/net/long/short_exposure` (`internal/risk.py:169-172`). greeks-service computes per-INSTRUMENT Black-Scholes
+greeks (`kernels/black_scholes.py:75-183`). **But NO service owns the end-to-end pipeline** that (a) maps each LST leg to
+its ETH/SOL underlying via the equivalence group, (b) multiplies position size × per-leg delta for base-currency-
+denominated delta, (c) nets across legs into `delta_composite` / a USD-normalized exposure view. No `compute_net_delta`
+/ `aggregate_delta` / `portfolio_delta` / `exposure_normalizer` exists in any scanned repo. **Why it matters**: the
+prospectus Exposure section + the wizard's staked-ETH-vs-ETH-equivalence answer + any portfolio-mode netting all need
+this. **Recommended owner**: a risk-service or strategy-service pre-trade layer consuming `lst_adjusted_value` +
+per-leg greeks emitting `delta_composite`. Not built in this dispatch (no LOGIC-FREEZE-safe surface to add it); recorded
+for a successor plan. The prospectus already emits an honest gap line for staked-vs-spot equivalence.
+
+### F46 — Three CeFi perp adapters are NotImplementedError scaffolds (binance/bybit/okx) — BLOCKED-CREDENTIALS
+
+**Status**: OPEN (pre-existing; surfaced by the 2026-06-13 order-semantics scan). `trade_execution/adapters/
+binance_native.py:326`, `bybit_native.py:318`, `okx_native.py:329` all raise `NotImplementedError` on `place_order` —
+HMAC/v5 request SIGNING is implemented but the HTTP client is not injected, so no order reaches the venue. Only
+hyperliquid (CCXT), deribit (perp+options), and drift (Solana CLOB) place CeFi/DeFi-CLOB orders end-to-end today. This
+is the live-execution coverage truth now declared in `VENUE_ORDER_SEMANTICS` (`auth_wired=not_registered` for the three
+scaffolds). Wiring them is BLOCKED-CREDENTIALS (needs live API keys + the HTTP client injection). Not a wizard/manifest
+defect — the manifest now honestly reflects it.

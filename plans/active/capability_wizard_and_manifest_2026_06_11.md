@@ -201,7 +201,7 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       VENUE_ORDER_SEMANTICS honest-empty — per-adapter honor matrix is a code-scan backfill).
 - [x] ✅ [SPEC] P2. **Trading-agent/LLM capability declarations** schema. DONE 2026-06-11 —
       unified-api-contracts@6f31f59 (trading_agent_capability.py; TRADING_AGENT_CAPABILITIES honest-empty).
-- [ ] [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty): per-venue
+- [x] ✅ [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty): per-venue
       collateral/haircut/LTV/maintenance-margin entries, fee tiers, per-adapter order-semantics honor matrices, sim
       assumptions from backtest-runner scan, offerable fund structures — each backfill PR cites its source of truth;
       `needs_code_scan` items route through Phase 5 agent escalation. **COLLATERAL DONE 2026-06-12 —
@@ -216,7 +216,24 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       `STAKING_VENUES_NO_COLLATERAL_POLICY` (staking venues take no margin/LTV policy — documented). 23 backfill tests +
       stale `==[]` test corrected. Findings F27 (strategy-service lowercase `perp_venue` ≠ uppercase
       `VENUE_COLLATERAL_MATRIX` keys → carry blocked) + F28 (in-repo collateral SSOTs disagree: `venue_collateral.py` vs
-      `lst_collateral_resolver.py` haircuts). **STILL OPEN: fees / order-semantics / sim / fund-structure backfills.**
+      `lst_collateral_resolver.py` haircuts). **ALL REMAINING BACKFILLS DONE 2026-06-13 — unified-api-contracts@5e7d068**:
+      (1) **VENUE_ORDER_SEMANTICS** — 9 MVP venues from the execution-service adapter scan (hyperliquid/deribit/drift
+      WIRED with honored TIF + ref-pricing; binance/bybit/okx scaffolds → auth_wired=not_registered honestly; aave/kamino
+      lending; gmx_v2 no-adapter); every entry cites file:line. (2) **SIM_ASSUMPTIONS_REGISTRY** — 16 (venue,
+      instrument_type) surfaces from the backtest-runner scan (F11 answered: ONE category-agnostic GroupBRunner, fill
+      model dispatched by INSTRUCTION ACTION TYPE not archetype; CANDLE_CLOSE/POOL_MID_AT_BLOCK/FUNDING_SNAPSHOT per
+      surface; granularities 1m–24h from resolvers.py:32; batch↔live divergences cited from benchmark_fills.py +
+      batch_harness.py). (3) **FEES_REGISTRY** — DeFi swap/gas + Aave flash-loan code-cited from execution-service
+      sor.py/aave.py; CeFi maker/taker base tiers from each venue's OFFICIAL fee schedule (Hyperliquid 1.5/4.5bps,
+      Binance 2/5, Bybit 2/5.5, OKX 2/5, Deribit futures 0/5 + options 0.03%-cap-12.5%, all as_of 2026-06-13). (4)
+      **OFFERED_FUND_STRUCTURES** — POOLED + SMA from sma-vs-pooled.md codex (PROP honestly omitted; cadence is per-fund
+      config, left empty not invented). (5) **TRADING_AGENT_CAPABILITIES** — carry_staked_basis/arbitrage_price_dispersion/
+      VOL_TRADING_OPTIONS from the trading-agent-service stub (no-op allocation directives, claude-haiku-4-5,
+      enabled=False honestly). Exporter regenerated the manifest (UAC@5e7d068, deterministic): **5 gap edges flipped
+      not_registered→available** (fees/fund_structure/order_semantics/sim/trading_agent; collateral already available;
+      broker stays not_registered). Bundled into uts-ui@06258d20 + deployment-ui@2e0e719 (hash-parity preserved, pw:L2
+      green both; dep-ui gap-count regression updated 161→158/3→1). 21 backfill tests + 3 stale `==[]` tests corrected.
+      Findings F45 (exposure-normalization undeclared) + F46 (CeFi adapter scaffolds BLOCKED-CREDENTIALS).
 - [x] ✅ [IMPLEMENT] P1. Manifest exporter consumes each new registry as it lands; until then emits honest
       `not_registered` edges (never silently omits the dimension). DONE 2026-06-12 — exporter now emits per-venue
       collateral nodes + per-asset `accepts_collateral` edges carrying the sourced haircut/LTV metadata
@@ -443,15 +460,26 @@ actually exists (which data_types missing, over which timeframes) via the existi
       tests/unit/wizard/graph.test.ts property tests + tests/smoke/wizard.spec.ts. Broker rendering partial: TradFi
       venues annotated "routed via IBKR"; remaining polish (brokers never as peer cards + broker field in config
       artifact) = open sub-item below.
-- [ ] [AGENT][UI] P2. Broker rendering polish (UNIT 3 of the full-universe wave, stopped by operator mid-run): brokers
-      never render as peer venue cards; StrategyConfigArtifact carries broker per TradFi venue. pw:L2 gate.
+- [x] ✅ [AGENT][UI] P2. Broker rendering polish (UNIT 3 of the full-universe wave, stopped by operator mid-run): brokers
+      never render as peer venue cards; StrategyConfigArtifact carries broker per TradFi venue. pw:L2 gate. — DONE
+      2026-06-13. Broker-in-config-artifact + onboarding shipped uts-ui@a5bbc16a (prior session); Stage E
+      broker-routing badge (getBrokersForVenue wired under venue cards, never as peer cards) shipped
+      uts-ui@69c8f0d1. Verified: brokers excluded from ALL venue-card functions (kind==="venue" filter); 138 unit
+      tests incl. new getBrokersForVenue suite (venue:cme→broker:ibkr, every routed venue resolves, never a
+      venue-kind node). | pw:L2 ✓ (10/10 wizard smoke incl. F38 Stage J + Stage E badge assertion) | regression:
+      tests/smoke/wizard.spec.ts + tests/unit/wizard/graph.test.ts + tests/unit/wizard/output.test.ts
 
-- [ ] [AGENT][UI] P2. **uts-ui broker rendering + bundled manifest refresh (F38/F39 follow-up)**: wizard Venues stage
+- [x] ✅ [AGENT][UI] P2. **uts-ui broker rendering + bundled manifest refresh (F38/F39 follow-up)**: wizard Venues stage
       renders brokers as a routing choice under their routed venues (not peer venues); reads `routed_via` edges from the
       capability manifest to build broker-grouped venue choices. Bundle the regenerated capability-manifest.json
       (uac@238e58f, broker:ibkr node + routed_via edges, 563 nodes / 2325 edges) into the uts-ui static assets to
       eliminate drift with the UAC committed copy. QG: bundled manifest HASH == UAC openapi/capability-manifest.json.
-      NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this.
+      NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this. — DONE 2026-06-13. Bundle
+      refresh shipped uts-ui@72170a9d (563 nodes/2325 edges); hash-parity verified TODAY: bundled
+      lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to
+      UAC openapi/ copies (sha256 match). `getBrokersForVenue` now consumed by Stage E BrokerRoutingBadge
+      (uts-ui@69c8f0d1) — brokers render as routing choice under venue cards via routed_via edges, never peer cards.
+      | pw:L2 ✓ (10/10) | regression: tests/unit/wizard/parity-gates.test.ts + tests/smoke/wizard.spec.ts
 
 - [x] ✅ [AGENT][UI] P2. **deployment-ui capability tab bundle refresh (F38/F39 follow-up)**: refresh the bundled
       capability-manifest.json + capability-verdict-matrix.json in deployment-ui assets to reflect the new broker node
@@ -467,9 +495,16 @@ actually exists (which data_types missing, over which timeframes) via the existi
       remedy) + leg-spec/verdict-matrix determinism tests. — UAC@9a11664 | QG green | test_manifest_is_round_trip_stable
       (F4) PASS, no drift; leg-spec + algo-compat determinism PASS; verdict-matrix-inputs cross-registry sanity test
       added.
-- [ ] [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
+- [x] ✅ [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
       (drift = fail) + vitest property tests asserting the wizard filter functions reproduce the verdict matrix for
-      every archetype (sampled venues/instruments at minimum, full where tractable).
+      every archetype (sampled venues/instruments at minimum, full where tractable). — DONE 2026-06-13 —
+      uts-ui@285a5499/d8d76835 (`tests/unit/wizard/parity-gates.test.ts`, 356L). Part (a): sha256 byte-parity of
+      bundled manifest + verdict matrix vs UAC `openapi/` copies (drift=fail; loud-skip only when sibling repo absent in
+      standalone CI clone — enforced on LDR-drain builds where both repos checked out) + node/edge/cell count assertions
+      (563/2325/24752). Part (b): full sweep of all 18 STRATEGY_ARCHETYPES_V2 × every matrix venue with available_algos
+      → asserts wizard `getVenuesForArchetype` never marks a matrix-available venue `not_available`. Runs in CI via
+      `pnpm test:ci` (vitest include glob covers tests/unit/**). Verified TODAY: 53/53 (parity+output) → 138/138 with
+      graph suite; hashes byte-identical. | regression: tests/unit/wizard/parity-gates.test.ts
 - [x] ✅ [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail
       (existing findings baselined). — PM@d581ce0 | QG green | baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2
       orphan docs + 0 legs-in-prose drift.
@@ -771,3 +806,26 @@ for every agent on this plan:
   owner). GATED on operator: Wave-2 enhancements (sign-off), client-lite successor, F27 strategy-service case fix (LOGIC
   FREEZE). Read this plan top-to-bottom + the two issue docs + codex capability-wizard.md before acting. Dev-host
   gotchas: F32 (PATH=/usr/bin first for node), F19 (rolldown binding), F12 (config-registry regen destructive on-host).
+- 2026-06-13 — **Continuation tick: items 1+2 (broker polish + 6B uts-ui parity gate) VERIFIED + CLOSED.** ABSORBED the
+  inherited WIP per the inherited-dirty-WIP liveness rule: the prior session's uts-ui tree was clean + pushed — broker
+  config-artifact/onboarding (uts-ui@a5bbc16a) + 6B parity-gates.test.ts (uts-ui@285a5499) + matrix byte-align
+  (uts-ui@d8d76835) had all landed on LDR but the plan checkboxes were never flipped. Verified TODAY: bundled
+  lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to UAC
+  openapi/ copies (sha256 match); 53/53 parity+output vitest green; the parity gate runs in CI via `pnpm test:ci`.
+  Closed the one loose end — `getBrokersForVenue` was exported-but-unused (dead-code); wired it into a Stage E
+  `BrokerRoutingBadge` (brokers render as a routing choice UNDER venue cards via routed_via, never as peer cards) +
+  3 new getBrokersForVenue unit tests + a Stage E smoke assertion (uts-ui@69c8f0d1; tsc clean, 138/138 unit, pw:L2
+  10/10, UI QG exit 0). Flipped checkboxes: broker-polish P2 + uts-ui-broker-rendering P2 + 6B uts-ui QG P0. Remaining
+  this dispatch: (3) UAT redeploy, (4) registry backfills + code-scans, (5) margin-traceability.
+- 2026-06-13 — **Item 4 (registry backfills + code-scans) COMPLETE.** Fanned out 3 read-only scan sub-agents
+  (execution-service order-semantics/SOR/multi-leg/options · strategy-service backtest sim-assumptions · greeks/
+  features/UTL/UAC exposure-normalization), then backfilled all 5 remaining honest-empty registries in UAC@5e7d068
+  (order_semantics 9 venues, sim 16 surfaces, fees DeFi-code+CeFi-official, fund POOLED/SMA, trading_agent stub) —
+  every numeric/fact cites code file:line or an official fee page (as_of 2026-06-13), nothing invented. Regenerated the
+  manifest deterministically → 5 gap edges flipped not_registered→available; re-bundled into uts-ui@06258d20 +
+  deployment-ui@2e0e719 (sha256 hash-parity preserved, pw:L2 10/10 + 9/9). Answered the 4 `[AGENT]` code-scan gaps in
+  the gap tracker (options-depth = Deribit-only; SOR = DEX-only sor.py + selector.py, no CeFi-perp SOR; multi-leg delta
+  = unmanaged; exposure-norm = genuine gap, primitives exist but no owner). Filed F45 (exposure-norm) + F46 (3 CeFi perp
+  adapters are NotImplementedError scaffolds, BLOCKED-CREDENTIALS). UAT verified live earlier this session
+  (https://uat.odum-research.com/wizard HTTP 200, revision odum-portal-staging-00071). Remaining dispatch item:
+  (5) margin-traceability (4 gap-tracker todos, mostly strategy-service-engine-coupled under LOGIC FREEZE).

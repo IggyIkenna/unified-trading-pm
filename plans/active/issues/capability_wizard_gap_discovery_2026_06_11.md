@@ -44,14 +44,38 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
 
 ### Open questions — `needs_code_scan` candidates (agent-orchestrator once Phase 5 wiring exists)
 
-- [ ] [AGENT] P2. Options execution wiring depth: greeks-service computes; VOL family (18 archetypes) registered;
-      whether execution-service options algos are wired end-to-end per venue is unverified.
-- [ ] [AGENT] P1. Exposure normalization location: staked-ETH vs ETH equivalence / delta-adjusted exposure — not found
-      as a declared model (greeks-service? features-service? ledger?); prospectus needs it.
-- [ ] [AGENT] P2. SOR decision trees: smart-order-routing logic scattered across algo files; no single manifest of
-      routing decisions for the wizard to describe.
-- [ ] [AGENT] P1. Multi-leg execution: which algorithm manages inter-leg delta risk for basis/spread/option-combo
-      instructions executed simultaneously.
+- [x] ✅ [AGENT] P2. Options execution wiring depth: greeks-service computes; VOL family (18 archetypes) registered;
+      whether execution-service options algos are wired end-to-end per venue is unverified. — ANSWERED 2026-06-13
+      (code-scan): **Deribit options FULLY WIRED end-to-end** (venues/deribit_orders.py — instrument-type
+      classification, integer-contract amount conversion, TIF map, httpx REST placement). **All other venues: options
+      placement NOT implemented** — Binance/Bybit/OKX are scaffolds (NotImplementedError on place_order), Hyperliquid
+      adapter has no options-specific logic. Net: options execution depth = Deribit-only today; the VOL family's other
+      venues are compute-only (greeks) with no order path.
+- [x] ✅ [AGENT] P1. Exposure normalization location: staked-ETH vs ETH equivalence / delta-adjusted exposure — not found
+      as a declared model (greeks-service? features-service? ledger?); prospectus needs it. — ANSWERED 2026-06-13
+      (code-scan) = **GENUINE GAP (F45)**. PRIMITIVES exist in UAC: `TOKEN_EQUIVALENCE_GROUPS` +
+      `is_token_equivalent()` (registry/capability_declarations/_defi.py:870-940/1019 — full 20+ LST universe) and
+      `LST_BASE_ASSET` + `lst_adjusted_value()` (registry/token_wrapping.py:43-47/159 — 3 wrapped forms, oracle-ratio
+      base-equivalent), plus the `RiskMetrics.delta_composite` schema (internal/risk.py:82) and per-instrument
+      Black-Scholes greeks (greeks-service kernels/black_scholes.py). But **NO service owns the end-to-end pipeline**
+      that maps each LST leg → underlying → per-leg delta → net `delta_composite`/USD-normalized view. greeks-service
+      computes per-instrument greeks only; no `compute_net_delta`/`portfolio_delta`/`exposure_normalizer` exists.
+      Prospectus correctly emits an honest gap line. Successor: a risk-service / strategy-service pre-trade layer
+      consuming `lst_adjusted_value` + per-leg greeks. Filed F45 in findings doc.
+- [x] ✅ [AGENT] P2. SOR decision trees: smart-order-routing logic scattered across algo files; no single manifest of
+      routing decisions for the wizard to describe. — ANSWERED 2026-06-13 (code-scan): algo SELECTION lives in
+      execution_service/algorithms/selector.py (`ALGORITHMS_BY_INSTRUCTION_TYPE` + `select_algorithm`: ZERO_ALPHA→
+      BENCHMARK_FILL, then requested→config-default→type-default). Price-routing SOR proper is execution_service/
+      algorithms/sor.py and is **DEX-ONLY (SWAP instruction)**: gather quotes from UNISWAP_V3/CURVE/BALANCER → sort by
+      effective_price → single venue if impact ≤ max_slippage_bps else split inversely-weighted across top-N (impact is
+      SIMULATED, not live pool state). **No CeFi perp SOR exists**; TRADE instructions use TWAP/VWAP/ALMGREN_CHRISS, not
+      a price-routing SOR. This is captured declaratively in UAC `algo_compatibility.py` (already shipped Phase 6A).
+- [x] ✅ [AGENT] P1. Multi-leg execution: which algorithm manages inter-leg delta risk for basis/spread/option-combo
+      instructions executed simultaneously. — ANSWERED 2026-06-13 (code-scan) = **GAP (unmanaged)**. NO component
+      manages inter-leg delta risk today. `algorithms/atomic_bundle_executor.py` handles DeFi flash-loan bundle
+      atomicity (all-or-nothing revert) — pure execution coordination, no delta management. OPTIONS_COMBO routes to
+      SEQUENTIAL_LEGS (selector default) but no code implements delta hedging or inter-leg netting. Reflected in
+      VENUE_ORDER_SEMANTICS (`multi_leg_delta_owner=None` for every venue, backfilled 2026-06-13) — honest "no owner".
 
 ## Discovered later (append below; date each entry; pin a test when fixed)
 
