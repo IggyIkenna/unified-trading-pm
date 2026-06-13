@@ -542,13 +542,25 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       the deployments registry + shadow ledger + archived plans:
       `backtest-only | shadow-observed | staging-proven |     live-proven`, mapped to the C/D/B gate model in
       PLAN_FORMAT.md. "Available" without "ever ran" is a different answer.
-- [ ] [DESIGN] P2. **Config-space fuzzer → generated smoke tests** — mechanically enumerate reachable wizard configs,
+- [x] ✅ [DESIGN] P2. **Config-space fuzzer → generated smoke tests** — mechanically enumerate reachable wizard configs,
       sample, compile each to a system-integration-tests batch mock-fill scenario. Use-case-3 audit by _execution_, not
-      inspection: every reachable config must at least smoke-run; failures are mechanical dead-end findings.
-- [ ] [DESIGN] P2. **Manifest as MCP server + conversational wizard agent** — tools: `query_manifest`, `data_status`
+      inspection: every reachable config must at least smoke-run; failures are mechanical dead-end findings. — DONE
+      2026-06-13 (W11) — e2e-testing@1eaf190 (`scripts/strategy/config_space_fuzzer.py`+smoke). 1541 reachable AVAILABLE
+      cells/51 archetypes → 3/archetype deterministic sample (150 configs, two-runs-identical) → compiled + smoke-run via
+      the EXISTING V2BatchHarness (batch=live). On-host: 60 PASS / 7 PARAMS_REQUIRED / 83 typed DEAD_END (no uncaught
+      crash). Surfaced real bugs by EXECUTION: **F47** UNBUILDABLE_SLOT (9 venues matrix-AVAILABLE but rejected by the v2
+      slot-token registry) + **F48** NO_V2_ENGINE (22 VOL_*/MARKET_MAKING_* matrix-reachable but no registered v2
+      engine) — filed (PM@6d3e6aa68 PR#314); fix = successor matrix↔engine-alignment plan (strategy-service LOGIC FREEZE).
+- [x] ✅ [DESIGN] P2. **Manifest as MCP server + conversational wizard agent** — tools: `query_manifest`, `data_status`
       (deployment-api), `run_backtest`, `render_prospectus`; agent-orchestrator hosts it. Powers the "what I need from
       you is these API keys — want a 5-year backtest?" dialogue with answers grounded in registry paths, not model
-      memory.
+      memory. — DONE 2026-06-13 (W12) — agent-orchestrator@41b13f7f (`server/mcp/`: `capability_mcp_server.py`
+      JSON-RPC-2.0-over-stdio dispatcher — initialize/tools/list/tools/call; NO new MCP-SDK dep). 4 typed tools:
+      `query_manifest` (reads committed capability-manifest.json + verdict-matrix — summary/gaps/archetype/
+      available-venues/edges-by-gap), `data_status` (env-gated deployment-api proxy, honest "not configured"),
+      `run_backtest` (shells the e2e backtest-from-wizard-config path, honest "unavailable on host"), `render_prospectus`
+      (returns committed prospectus md). basedpyright 0, ruff clean, QG green (592 passed), 25 tests (manifest queries
+      deterministic against committed artifacts; HTTP/subprocess mocked, credential-free).
 - [x] ✅ [DESIGN] P2. **Versioned manifest + capability changelog + regression CI** — manifest generated per commit; diffs
       = "what the system learned to do this month" (investor-update material); CI FAILS when an edge regresses
       `available → not_available` without a plan reference. — DONE 2026-06-13 (W1). PM@791eb2a27: committed edge-status
@@ -557,25 +569,41 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       wired into generate-unified-openapi.sh, deterministic) + `check_capability_regression.py` QG-wired (fails on
       `available→not_available/not_registered` unless acked in `capability_regression_acks.yaml` with a plan ref;
       synthetic-regression test PROVED it fires; 6 unit tests). Changelog artifact: unified-api-contracts (committed).
-- [ ] [DESIGN] P2. **Inverse wizard / screener** — start from holdings ("I have BTC today, USDT tomorrow") or targets
+- [x] ✅ [DESIGN] P2. **Inverse wizard / screener** — start from holdings ("I have BTC today, USDT tomorrow") or targets
       (Sharpe ≥ 1.5, max DD ≤ 10%, carry ≥ 8%) and search the manifest + backtest metrics for qualifying archetypes,
-      ranked.
+      ranked. — DONE 2026-06-13 (W5) — unified-trading-system-ui@8d91db61 (`lib/wizard/screener.ts` +
+      `components/wizard/ScreenerMode.tsx`, wired as a 3rd wizard mode alongside Wizard/Isolation). `screenByHoldings`
+      maps held assets → fundable instrument-types → archetypes (via manifest `trades_instrument` edges, ranked by
+      funded-leg-count + availability); `screenByTargets` ranks by capability availability + honest "metrics not yet
+      available" badge (NEVER fabricates Sharpe/DD/carry — manifest carries none). 22 vitest + pw:L2 3/3 |
+      regression: tests/smoke/wizard-screener.spec.ts.
 - [ ] [DESIGN] P2. **Portfolio mode** — compose multiple configured strategies: aggregate/netted exposures
       (internalization detection when one leg longs what another shorts), correlation from backtests, capital routing
       across pools/SMA via portfolio_allocator + capital_router. Directly models the two-pooled-investors-now /
       SMA-next-year scenario.
-- [ ] [DESIGN] P2. **Cost & capacity model** — full fee stack (exchange/gas/broker/clearing + funding + slippage via
+- [x] ✅ [DESIGN] P2. **Cost & capacity model** — full fee stack (exchange/gas/broker/clearing + funding + slippage via
       execution cost prediction) + infra cost per lifecycle_class → **breakeven AUM** per configured strategy; capacity
-      ceiling vs venue liquidity/min-ticket constraints.
+      ceiling vs venue liquidity/min-ticket constraints. — DONE 2026-06-13 (W3) — unified-api-contracts@72fed0b
+      (`architecture_v2/cost_capacity.py`: `CostCapacityModel`/`VenueFeeBreakdown` + `compute_cost_capacity()`).
+      Fee stack summed from FEES_REGISTRY (taker bps + gas units, cited) + funding/slippage/gas-price/infra as typed
+      caller inputs (NOT invented — source/owner docstrings); breakeven_aum = annualised_total_cost ÷ (gross_edge_bps/1e4),
+      None when edge≤0. Capacity ceiling = explicit `None` HONEST GAP (no per-venue liquidity data in any registry).
+      Decimal-not-float, basedpyright 0 errors, 17 tests (fee-stack sums, breakeven monotonicity ↑cost→↑AUM, determinism).
+      UI surface = follow-on uts-ui increment.
 - [ ] [DESIGN] P3. **Wizard sessions as reproducible artifacts** — session JSON (answers + manifest version + config +
       prospectus hash); nightly replay of saved sessions against the fresh manifest (batch-live-reconciliation pattern)
       alerts when an old answer silently changes; doubles as the client-onboarding compliance record.
 - [ ] [DESIGN] P3. **Dual-register copy** — every question/config field carries engineer copy (config path, code anchor)
       AND allocator/investor copy (plain English), reusing the existing glossary Term components; prospectus renders in
       either register.
-- [ ] [DESIGN] P3. **Named stress-scenario library** — curated historical windows (May-2021 crash, FTX week, Shapella, a
+- [x] ✅ [DESIGN] P3. **Named stress-scenario library** — curated historical windows (May-2021 crash, FTX week, Shapella, a
       funding-flip regime) replayed through the backtest runner per configured strategy; positions/PnL/triggered
-      kill-switches become the prospectus risk slides.
+      kill-switches become the prospectus risk slides. — DONE 2026-06-13 (W9) — e2e-testing@bfbfda79
+      (`scripts/strategy/stress_scenarios.py` REGISTRY of 4 cited windows: MAY_2021_CRASH 05-08..05-28, FTX_COLLAPSE
+      2022-11-07..18, SHAPELLA 2023-04-10..28, FUNDING_FLIP_2022Q1 01-14..02-25 — each with real dates + sources) +
+      `stress_scenario_replay.py` driving the SAME GroupBRunner as Phase-5 backtest-on-demand (batch=live HARD RULE) with
+      the honest data-availability precheck (on-host verdict PRECHECK_UNAVAILABLE — expected, no cloud data) + 3 smoke
+      tests. Under strategy-service + e2e-testing QG (both green).
 - [ ] [DESIGN] P3. **Jurisdiction overlay** — investor entity/jurisdiction filters venues/instruments at Stage A
       (client_isolation_and_governance restrictions), so a config can never include a venue the investor cannot legally
       touch.

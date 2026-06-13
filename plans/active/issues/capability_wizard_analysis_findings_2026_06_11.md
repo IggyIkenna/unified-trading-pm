@@ -181,8 +181,8 @@ sync block as the canonical delivery path. Decision deferred to the UI-phase own
 `generate-unified-openapi.sh`. Available UAC workflows: quality-gates-v2, schema-health, semver-agent, agent-audit,
 canary-offline, backmerge workflows. The `uic-openapi-sync` lives in `unified-trading-system-ui` and
 `fund-administration-service` and ships TS types only (F14 confirmed). No new CI infrastructure was built per mandate.
-Phase 0 todo annotated with this finding. Unblocking requires operator provisioning `.venv-workspace` on a CI runner
-OR operator running `generate-unified-openapi.sh` locally with a full workspace venv.
+Phase 0 todo annotated with this finding. Unblocking requires operator provisioning `.venv-workspace` on a CI runner OR
+operator running `generate-unified-openapi.sh` locally with a full workspace venv.
 
 <!-- AUDIT CONTRADICTION FINDINGS (auto-appended by audit_prospectus_vs_codex.py) -->
 
@@ -369,7 +369,8 @@ awaiting execution-service remediation.
 
 ### F38 — IBKR modeled as a VENUE in ENDPOINT_REGISTRY (broker/venue conflation — operator-caught, system-design floor)
 
-**Status**: FIXED (manifest layer) uac@cdb59bb + pm@4948325c + pm@613ee27c. Registry pipeline-key migration follow-up OPEN (venue-axis vocabulary plan). `registry/_endpoint_registry_data.py:650: venue="ibkr"` and
+**Status**: FIXED (manifest layer) uac@cdb59bb + pm@4948325c + pm@613ee27c. Registry pipeline-key migration follow-up
+OPEN (venue-axis vocabulary plan). `registry/_endpoint_registry_data.py:650: venue="ibkr"` and
 `capability_declarations/_tradfi.py: source="ibkr"`. Operator: IBKR is a BROKER routing to exchanges (CME/ICE/CBOE); the
 exchange is the venue; data pipeline/strategy is identical regardless of the final routing hop. CapabilityNodeKind
 already has `broker`; collateral registry has BrokerEntry. Fix: manifest classifies ibkr as broker node +
@@ -379,8 +380,10 @@ follow-up under the venue-axis vocabulary plan — do NOT rename pipeline keys c
 
 ### F39 — Wizard offers ~13 venues; manifest has 183 — eligibility lists are hand-named subsets (operator-caught)
 
-**Status**: PARTIALLY FIXED uac@def855c (kraken/bitget/coinbase added to _CEFI_CLOB_VENUES + key leg seeds) + pm@4074e49c (audit_venue_coverage.py). OPEN remainder: F42 (adapter-backed venues missing from VENUE_CATEGORY_MAP), F43 (NASDAQ/NYSE not in leg seeds). Missing DeFi venues (Curve, Sushi, PancakeSwap, Orca, Raydium, Phoenix, …) are
-among the manifest's orphan venue nodes: present in venue registries but referenced by NO capability cell / leg-spec
+**Status**: PARTIALLY FIXED uac@def855c (kraken/bitget/coinbase added to \_CEFI_CLOB_VENUES + key leg seeds) +
+pm@4074e49c (audit_venue_coverage.py). OPEN remainder: F42 (adapter-backed venues missing from VENUE_CATEGORY_MAP), F43
+(NASDAQ/NYSE not in leg seeds). Missing DeFi venues (Curve, Sushi, PancakeSwap, Orca, Raydium, Phoenix, …) are among the
+manifest's orphan venue nodes: present in venue registries but referenced by NO capability cell / leg-spec
 eligible_venue_ids (which were seeded from hand-named cell venue lists). Either the execution adapter exists and the
 eligibility list is too narrow (registry gap) or no adapter exists (unbuilt dead-end) — per-venue audit required:
 instruments universe × ENDPOINT_REGISTRY × execution-service adapter inventory × archetype eligibility → widen
@@ -402,28 +405,29 @@ unicode on any rewrite. Same antipattern class as the generated-artifacts HARD R
 ### F41 — extract_archetypes_and_families + extract_leg_structures had no broker filter — ibkr leaked as a VENUE node
 
 **Status**: FIXED pm@613ee27c. The F38 broker filter was correctly added to `extract_venues()` (which builds venue nodes
-from VENUE_CATEGORY_MAP / DEFI_VENUE_TO_PROTOCOL), but TWO other functions also emit VENUE nodes and were missed:
-(a) `extract_archetypes_and_families` iterates `cell.venue_ids` from `ARCHETYPE_CAPABILITY_REGISTRY` (which includes
-`ibkr` in 8 archetype cells); (b) `extract_leg_structures` iterates `leg.eligible_venue_ids` from
-`ARCHETYPE_LEG_STRUCTURES` (which includes `ibkr` in 4 leg seeds). Both call their own local `add_node()` with no broker
-guard. Evidence: `capability-orphan-report.txt` showed `broker_classed_venues: 1  BROKER-AS-VENUE: venue:ibkr` after the
-initial manifest regeneration. Fix: added `is_broker()` guard to both `add_node()` functions. broker_classed_venues 1→0.
-Cite: `_capability_extract.py:88-97` (arch function), `_capability_extract.py:203-212` (legs function).
+from VENUE_CATEGORY_MAP / DEFI_VENUE_TO_PROTOCOL), but TWO other functions also emit VENUE nodes and were missed: (a)
+`extract_archetypes_and_families` iterates `cell.venue_ids` from `ARCHETYPE_CAPABILITY_REGISTRY` (which includes `ibkr`
+in 8 archetype cells); (b) `extract_leg_structures` iterates `leg.eligible_venue_ids` from `ARCHETYPE_LEG_STRUCTURES`
+(which includes `ibkr` in 4 leg seeds). Both call their own local `add_node()` with no broker guard. Evidence:
+`capability-orphan-report.txt` showed `broker_classed_venues: 1  BROKER-AS-VENUE: venue:ibkr` after the initial manifest
+regeneration. Fix: added `is_broker()` guard to both `add_node()` functions. broker_classed_venues 1→0. Cite:
+`_capability_extract.py:88-97` (arch function), `_capability_extract.py:203-212` (legs function).
 
 ### F42 — Adapter-backed venues absent from VENUE_CATEGORY_MAP + ENDPOINT_REGISTRY (phantom adapter coverage)
 
 **Status**: OPEN — logged for registry alignment follow-up. The venue coverage audit (F39, pm@4074e49c) found 6 venues
 with real execution adapters that do NOT appear in `VENUE_CATEGORY_MAP` (UAC registry of known venues with category):
-  - FX (fx_adapter.py:24) — TradFi FX via IBKR; no VENUE_CATEGORY_MAP entry
-  - BITFINEX-SPOT (bitfinex_native.py:167) — CeFi CLOB; no VENUE_CATEGORY_MAP or ENDPOINT_REGISTRY entry
-  - BITGET-FUTURES (bitget_native.py:125) — CeFi CLOB; ENDPOINT_REGISTRY has `bitget` (generic) but not the suffixed form
-  - BITGET-SPOT (bitget_native.py:125) — same
-  - KRAKEN-FUTURES (kraken_rest_adapter.py:159) — CeFi CLOB; no VENUE_CATEGORY_MAP entry
-  - KRAKEN-SPOT (kraken_rest_adapter.py:159) — same
-Impact: these adapters can execute but the wizard/manifest has no venue node for them (the manifest picks them up via the
-adapter inventory seed in audit_venue_coverage.py, but they are NOT in VENUE_CATEGORY_MAP or INSTRUMENT_TYPES_BY_VENUE,
-so no venue node is emitted by `extract_venues()`). Remedy: add entries to `VENUE_CATEGORY_MAP` +
-`INSTRUMENT_TYPES_BY_VENUE` (UAC registry files) for each. Deferred to registry alignment phase.
+
+- FX (fx_adapter.py:24) — TradFi FX via IBKR; no VENUE_CATEGORY_MAP entry
+- BITFINEX-SPOT (bitfinex_native.py:167) — CeFi CLOB; no VENUE_CATEGORY_MAP or ENDPOINT_REGISTRY entry
+- BITGET-FUTURES (bitget_native.py:125) — CeFi CLOB; ENDPOINT_REGISTRY has `bitget` (generic) but not the suffixed form
+- BITGET-SPOT (bitget_native.py:125) — same
+- KRAKEN-FUTURES (kraken_rest_adapter.py:159) — CeFi CLOB; no VENUE_CATEGORY_MAP entry
+- KRAKEN-SPOT (kraken_rest_adapter.py:159) — same Impact: these adapters can execute but the wizard/manifest has no
+  venue node for them (the manifest picks them up via the adapter inventory seed in audit_venue_coverage.py, but they
+  are NOT in VENUE_CATEGORY_MAP or INSTRUMENT_TYPES_BY_VENUE, so no venue node is emitted by `extract_venues()`).
+  Remedy: add entries to `VENUE_CATEGORY_MAP` + `INSTRUMENT_TYPES_BY_VENUE` (UAC registry files) for each. Deferred to
+  registry alignment phase.
 
 ### F43 — NASDAQ/NYSE adapters exist but venues not in any leg eligible_venue_ids (TradFi equities gap)
 
@@ -431,16 +435,16 @@ so no venue node is emitted by `extract_venues()`). Remedy: add entries to `VENU
 (venue_name="NYSE") exist as ibkr-routed TradFi adapters, but NASDAQ and NYSE do not appear in any archetype leg's
 `eligible_venue_ids`. This means the wizard cannot select these venues for any leg in the current manifest, even though
 execution is possible. The leg seeds were sourced from strategy-engine structs which focus on crypto/perp archetypes;
-equities/equity-ETF archetypes (RULES_DIRECTIONAL_CONTINUOUS, ML_DIRECTIONAL_CONTINUOUS, EVENT_DRIVEN, STAT_ARB variants)
-reference ibkr but not the downstream exchange venues. Remedy: add nasdaq/nyse to the relevant equity-archetype leg seeds
-with citation to their adapter files. Deferred to next registry iteration.
+equities/equity-ETF archetypes (RULES_DIRECTIONAL_CONTINUOUS, ML_DIRECTIONAL_CONTINUOUS, EVENT_DRIVEN, STAT_ARB
+variants) reference ibkr but not the downstream exchange venues. Remedy: add nasdaq/nyse to the relevant
+equity-archetype leg seeds with citation to their adapter files. Deferred to next registry iteration.
 
-### F44 — _capability_extract.py extract_venues() had duplicate inline broker block after extract_brokers() was added
+### F44 — \_capability_extract.py extract_venues() had duplicate inline broker block after extract_brokers() was added
 
 **Status**: FIXED pm@300 (via fix PR). The upstream commit (pm@4948325c) added `extract_brokers()` as a standalone
 function AND retained an inline `_tradfi_brokers` dict inside `extract_venues()` (an intermediate implementation from a
-prior partial agent). Both emitted broker nodes + routed_via edges, causing duplicate nodes. The inline block was removed
-(pm@fix PR #300). broker:ibkr node count 2→1 in the regenerated manifest.
+prior partial agent). Both emitted broker nodes + routed_via edges, causing duplicate nodes. The inline block was
+removed (pm@fix PR #300). broker:ibkr node count 2→1 in the regenerated manifest.
 
 ### F45 — Exposure normalization is undeclared: primitives exist, no service owns the netting pipeline
 
@@ -452,21 +456,62 @@ CBETH,RETH,WEETH,…}, SOL group {SOL,WSOL,MSOL,STSOL,JITOSOL,…}) and `LST_BAS
 (`registry/token_wrapping.py:43-47,159` — 3 wrapped forms, oracle-ratio base-equivalent quantity). The OUTPUT schema
 exists too: `RiskMetrics.delta_composite: dict[str,Decimal]` ("net delta per underlying", `internal/risk.py:82`) +
 `gross/net/long/short_exposure` (`internal/risk.py:169-172`). greeks-service computes per-INSTRUMENT Black-Scholes
-greeks (`kernels/black_scholes.py:75-183`). **But NO service owns the end-to-end pipeline** that (a) maps each LST leg to
-its ETH/SOL underlying via the equivalence group, (b) multiplies position size × per-leg delta for base-currency-
+greeks (`kernels/black_scholes.py:75-183`). **But NO service owns the end-to-end pipeline** that (a) maps each LST leg
+to its ETH/SOL underlying via the equivalence group, (b) multiplies position size × per-leg delta for base-currency-
 denominated delta, (c) nets across legs into `delta_composite` / a USD-normalized exposure view. No `compute_net_delta`
 / `aggregate_delta` / `portfolio_delta` / `exposure_normalizer` exists in any scanned repo. **Why it matters**: the
 prospectus Exposure section + the wizard's staked-ETH-vs-ETH-equivalence answer + any portfolio-mode netting all need
-this. **Recommended owner**: a risk-service or strategy-service pre-trade layer consuming `lst_adjusted_value` +
-per-leg greeks emitting `delta_composite`. Not built in this dispatch (no LOGIC-FREEZE-safe surface to add it); recorded
-for a successor plan. The prospectus already emits an honest gap line for staked-vs-spot equivalence.
+this. **Recommended owner**: a risk-service or strategy-service pre-trade layer consuming `lst_adjusted_value` + per-leg
+greeks emitting `delta_composite`. Not built in this dispatch (no LOGIC-FREEZE-safe surface to add it); recorded for a
+successor plan. The prospectus already emits an honest gap line for staked-vs-spot equivalence.
 
 ### F46 — Three CeFi perp adapters are NotImplementedError scaffolds (binance/bybit/okx) — BLOCKED-CREDENTIALS
 
-**Status**: OPEN (pre-existing; surfaced by the 2026-06-13 order-semantics scan). `trade_execution/adapters/
-binance_native.py:326`, `bybit_native.py:318`, `okx_native.py:329` all raise `NotImplementedError` on `place_order` —
-HMAC/v5 request SIGNING is implemented but the HTTP client is not injected, so no order reaches the venue. Only
-hyperliquid (CCXT), deribit (perp+options), and drift (Solana CLOB) place CeFi/DeFi-CLOB orders end-to-end today. This
-is the live-execution coverage truth now declared in `VENUE_ORDER_SEMANTICS` (`auth_wired=not_registered` for the three
-scaffolds). Wiring them is BLOCKED-CREDENTIALS (needs live API keys + the HTTP client injection). Not a wizard/manifest
-defect — the manifest now honestly reflects it.
+**Status**: OPEN (pre-existing; surfaced by the 2026-06-13 order-semantics scan).
+`trade_execution/adapters/ binance_native.py:326`, `bybit_native.py:318`, `okx_native.py:329` all raise
+`NotImplementedError` on `place_order` — HMAC/v5 request SIGNING is implemented but the HTTP client is not injected, so
+no order reaches the venue. Only hyperliquid (CCXT), deribit (perp+options), and drift (Solana CLOB) place
+CeFi/DeFi-CLOB orders end-to-end today. This is the live-execution coverage truth now declared in
+`VENUE_ORDER_SEMANTICS` (`auth_wired=not_registered` for the three scaffolds). Wiring them is BLOCKED-CREDENTIALS (needs
+live API keys + the HTTP client injection). Not a wizard/manifest defect — the manifest now honestly reflects it.
+
+### F47 — Verdict-matrix declares venue cells AVAILABLE that the v2 slot-label venue-token registry rejects
+
+**Status**: OPEN (surfaced by EXECUTION, 2026-06-13 — the Wave-2 #3 config-space fuzzer
+`e2e-testing/scripts/strategy/config_space_fuzzer.py`). The committed verdict matrix
+(`unified-api-contracts/openapi/capability-verdict-matrix.json`) declares AVAILABLE leg cells for **9 venue ids whose
+alnum-stripped form is NOT in `KNOWN_VENUE_TOKENS`** (`unified_api_contracts.internal.architecture_v2.venue_tokens`):
+`balancer_v2`, `balancer_v3`, `betfair_direct`, `gmx_v2`, `jupiter`, `pancakeswap_v3`, `smarkets_direct`, `sommelier`,
+`sushiswap_v3` (11 of 43 AVAILABLE venues fail the alnum-strip token test; the 9 above were the ones sampled). When the
+fuzzer compiles such a cell to a v2 slot label (`{archetype}@{venue}-{instr}-usdt-prod`) the strategy-service parser
+`split_scope_tokens` raises `ValueError: scope tokens (…) start with a non-venue token` — so **no v2 strategy slot can
+be constructed for those venues at all**, even though the wizard would offer them as reachable. **Why it matters**: the
+capability wizard can present a config (venue × archetype) the strategy engine literally cannot instantiate — a
+mechanical dead-end between the manifest/verdict surface and the slot-identity grammar. Reproduced as a typed
+`unbuildable_slot` dead-end across 20 sampled configs (3/archetype run; deterministic). **Recommended decision**: align
+the two SSOTs — either add the missing venue tokens (with their `_vN`/`_direct` suffix normalisation) to
+`KNOWN_VENUE_TOKENS` + `split_scope_tokens`, OR have the verdict-matrix generator + the wizard venue-eligibility list
+exclude venues that have no slot-label token (compose with F39 "wizard offers ~13 venues; manifest has 183" — eligible
+lists are already hand-named subsets). Not fixed in this dispatch (LOGIC-FREEZE on strategy-service + collision boundary
+on UAC); recorded for a successor alignment plan. Companion smoke test:
+`e2e-testing/scripts/strategy/test_config_space_fuzzer_smoke.py`.
+
+### F48 — Verdict-matrix declares 22 archetypes reachable that have NO v2 engine registered (all VOL\_\* + MARKET_MAKING\_\*)
+
+**Status**: OPEN (surfaced by EXECUTION, 2026-06-13 — the Wave-2 #3 config-space fuzzer). The verdict matrix enumerates
+AVAILABLE `(venue × instrument_type × algo)` cells for **22 archetypes for which `V2BatchHarness` / the v2 engine
+registry has NO engine** — every `VOL_*` family (`VOL_0DTE_GAMMA_SCALPING`, `VOL_ARB_RV_IV`, `VOL_CARRY`,
+`VOL_CROSS_ASSET_SPREAD`, `VOL_DISPERSION`, `VOL_LEAPS_CONVEXITY`, `VOL_MARKET_MAKING`, `VOL_ML_LEAN`,
+`VOL_OVERLAY_COVERED_CALLS`, `VOL_OVERLAY_PROTECTIVE_PUT`, `VOL_RATIO_SPREAD`, `VOL_SPREAD_STRUCTURES`, `VOL_STRADDLE`,
+`VOL_SYNTHETIC_DELTA`, `VOL_TERM_STRUCTURE_ARB`, `VOL_TERM_STRUCTURE_SLOPE`, `VOL_VARIANCE_SWAP`) plus every
+`MARKET_MAKING_*` family (`MARKET_MAKING_INVENTORY_SKEW`, `MARKET_MAKING_ML_LEAN`, `MARKET_MAKING_PASSIVE_SPREAD`,
+`MARKET_MAKING_PREDICTION`, `MARKET_MAKING_QUEUE_MICROSTRUCTURE`). Compiling + stepping a sampled config for any of them
+raises `KeyError: 'no v2 engine registered for archetype <X>'` at the first `on_tick`. **Why it matters**: the wizard's
+reachability surface (derived from leg-structure / selector capability declarations) is WIDER than the runnable v2
+engine set — a wizard user could configure + "promote" a VOL or market-making strategy that has no engine behind it, a
+silent mechanical dead-end. Reproduced as a typed `no_v2_engine` dead-end across 63 sampled configs (deterministic).
+**This is expected if VOL / market-making are intentionally out-of-scope for the v2 engine today** — but then the
+verdict matrix (and the wizard) should mark those archetypes `not_registered` / blocked, not AVAILABLE. **Recommended
+decision**: gate the verdict-matrix `available` verdict (and the wizard archetype list) on v2-engine-registration, OR
+register the missing engines. Not fixed in this dispatch (LOGIC-FREEZE + collision boundary on UAC); recorded for the
+successor alignment plan alongside F47.
