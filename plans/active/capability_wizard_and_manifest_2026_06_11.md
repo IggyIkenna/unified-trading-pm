@@ -534,10 +534,18 @@ actually exists (which data_types missing, over which timeframes) via the existi
 Question bank SSOT (every wizard question pinned to its code anchor):
 [`codex/09-strategy/architecture-v2/capability-wizard-question-bank.md`](../../codex/09-strategy/architecture-v2/capability-wizard-question-bank.md).
 
-- [ ] [DESIGN] P2. **Counterfactual "minimal unlock set" engine** — every unavailable edge computes the smallest set of
+- [x] ✅ [DESIGN] P2. **Counterfactual "minimal unlock set" engine** — every unavailable edge computes the smallest set of
       missing pieces that would make it available ("Hyperliquid perps: adapter ✓, auth ✗ — 1 edge away"); wizard counts
       demand per blocked edge; weekly demand-weighted gap report auto-emits canonical todos into the gap tracker (same
-      ingestion path as `regen_backlog_from_plan.py`). The wizard becomes a roadmap generator.
+      ingestion path as `regen_backlog_from_plan.py`). The wizard becomes a roadmap generator. — DONE 2026-06-13 (W2) —
+      PM@6702d05e (`scripts/openapi/_capability_unlock.py` + `generate_capability_unlock_report.py` --emit-todos, wired
+      into generate-unified-openapi.sh) → UAC@0ad157b4 (`openapi/capability-unlock-report.{json,md}`). Per blocked edge
+      (status∈{not_available,not_registered,partial}) derives the typed minimal missing-piece set from (status,gap_type,
+      relation,reason) → `unlock_distance`; ranks closest-first. Of 2325 edges: 697 blocked → **251 distance-1 roadmap
+      edges** (needs-leg-spec 105 / needs-config 72 / needs-registry-entry 60 / needs-data-feed 7 / …) + 446
+      structurally-impossible (excluded). `--emit-todos` idempotently appended 12 roadmap todos to the gap tracker
+      (reuses emit_capability_gap_todos.py pattern). Deterministic; 6 tests; PM codex + Wave-2 #5 regression gates green.
+      Wizard demand-count surface = uts-ui follow-on (documented placeholder demand=0).
 - [ ] [DESIGN] P2. **Readiness badges per edge** — stamp every capability edge with operational maturity derived from
       the deployments registry + shadow ledger + archived plans:
       `backtest-only | shadow-observed | staging-proven |     live-proven`, mapped to the C/D/B gate model in
@@ -593,9 +601,13 @@ Question bank SSOT (every wizard question pinned to its code anchor):
 - [ ] [DESIGN] P3. **Wizard sessions as reproducible artifacts** — session JSON (answers + manifest version + config +
       prospectus hash); nightly replay of saved sessions against the fresh manifest (batch-live-reconciliation pattern)
       alerts when an old answer silently changes; doubles as the client-onboarding compliance record.
-- [ ] [DESIGN] P3. **Dual-register copy** — every question/config field carries engineer copy (config path, code anchor)
+- [x] ✅ [DESIGN] P3. **Dual-register copy** — every question/config field carries engineer copy (config path, code anchor)
       AND allocator/investor copy (plain English), reusing the existing glossary Term components; prospectus renders in
-      either register.
+      either register. — DONE 2026-06-13 (W6) — unified-trading-system-ui@21e6f95a (`lib/wizard/copy-registers.ts` —
+      {engineer, investor} pair per wizard stage/question keyed by stage id; engineer copy + code-anchor transcribed from
+      the question-bank SSOT, investor copy plain-English with `{{term:}}` tokens reusing the glossary `<Term>` component)
+      + `RegisterToggle.tsx` (engineer⇄investor swap, default investor). Completeness test: all 10 stages have BOTH
+      registers + every term token resolves. 10/10 vitest + pw:L2 2/2 | regression: tests/smoke/wizard-dual-register.spec.ts.
 - [x] ✅ [DESIGN] P3. **Named stress-scenario library** — curated historical windows (May-2021 crash, FTX week, Shapella, a
       funding-flip regime) replayed through the backtest runner per configured strategy; positions/PnL/triggered
       kill-switches become the prospectus risk slides. — DONE 2026-06-13 (W9) — e2e-testing@bfbfda79
@@ -604,9 +616,16 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       `stress_scenario_replay.py` driving the SAME GroupBRunner as Phase-5 backtest-on-demand (batch=live HARD RULE) with
       the honest data-availability precheck (on-host verdict PRECHECK_UNAVAILABLE — expected, no cloud data) + 3 smoke
       tests. Under strategy-service + e2e-testing QG (both green).
-- [ ] [DESIGN] P3. **Jurisdiction overlay** — investor entity/jurisdiction filters venues/instruments at Stage A
+- [x] ✅ [DESIGN] P3. **Jurisdiction overlay** — investor entity/jurisdiction filters venues/instruments at Stage A
       (client_isolation_and_governance restrictions), so a config can never include a venue the investor cannot legally
-      touch.
+      touch. — DONE 2026-06-13 (W8, registry layer) — unified-api-contracts@2c399a1
+      (`architecture_v2/jurisdiction_overlay.py`: `Jurisdiction` StrEnum {UK_FCA,US_CFTC,CAYMAN,EU_MICA,
+      RETAIL_RESTRICTED,UNKNOWN} + `JurisdictionVenuePolicy` + `JURISDICTION_VENUE_POLICIES` + `allowed_venues_for_
+      jurisdiction()`/`is_venue_allowed()`). Seeded ONLY documented restrictions, each cited in source_note (US_CFTC
+      BLOCKED for binance/bybit/okx/deribit/hyperliquid; permissionless DEXes + uncertain MiCA pairings →
+      UNKNOWN+needs_legal_review — NO fabricated legal claims). **CONSERVATIVE-DEFAULT (compliance fail-safe): any
+      unmodelled/UNKNOWN (venue,jurisdiction) pair returns BLOCKED+needs_legal_review, never silently allowed.** 19
+      tests, basedpyright 0, QG green. uts-ui Stage-A jurisdiction-filter surface = follow-on consumer (noted in gap tracker).
 
 ## Success criteria
 

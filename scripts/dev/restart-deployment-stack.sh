@@ -110,9 +110,21 @@ start_api() {
   # get_secret_client() -> get_project_id(), which raises if the project id is
   # unset (every other tab reads GCS via ADC and doesn't need it). Honour an
   # already-exported value; default to the canonical prod project otherwise.
+  #
+  # macOS dev hosts: force the Data Status manifest build off its per-category fork
+  # ProcessPool — the pool forks after grpc/GCS init, which dies on macOS
+  # (BrokenProcessPool; diagnosed 2026-06-13) regardless of beta/live mode. With the
+  # knob set the build uses a thread pool (overlaps the I/O-bound index loads). Linux
+  # VMs leave it unset → the fork pool runs (correct + faster there). Honour an
+  # already-exported value so a beta-recipe prefix can still override.
+  local _ds_disable_pool="${DATA_STATUS_DISABLE_PROCESS_POOL:-}"
+  if [ -z "$_ds_disable_pool" ] && [ "$(uname -s)" = "Darwin" ]; then
+    _ds_disable_pool="true"
+  fi
   env CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false DISABLE_AUTH=true \
       ENVIRONMENT=development DEPLOYMENT_ENV=prod \
       GCP_PROJECT_ID="${GCP_PROJECT_ID:-central-element-323112}" \
+      DATA_STATUS_DISABLE_PROCESS_POOL="$_ds_disable_pool" \
     nohup .venv/bin/python -m uvicorn deployment_api.main:app \
       --host 0.0.0.0 --port "$API_PORT" --workers 4 \
     > "$logfile" 2>&1 &

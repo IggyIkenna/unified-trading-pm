@@ -107,6 +107,27 @@ Concrete gap drivers surfaced (each = a backfill candidate):
 
 All gaps are TYPED in the manifest (never silent) — the forcing-function state the plan intends.
 
+### 2026-06-13 — Wave-2 #2 readiness badges shipped (exporter); uts-ui badge surface is the follow-on
+
+`generate_capability_manifest.py` now folds a per-edge operational-maturity tier
+(`backtest-only | shadow-observed | staging-proven | live-proven`) onto every archetype-originating edge
+(`CapabilityEdge.readiness`), plus a sibling `openapi/capability-readiness-report.{json,md}`. Evidence is the only real
+on-host maturity signal: `LIVE_CLUSTER_REGISTRY` (UAC) — a PROD-tier row owning an archetype ⇒ `live-proven`, STAGING ⇒
+`staging-proven`; absent evidence ⇒ `backtest-only` (honest default, never over-claimed). Today's distribution (57
+archetypes): **2 live-proven** (`CARRY_STAKED_BASIS`, `ARBITRAGE_PRICE_DISPERSION` — the May-23 live archetypes, cited
+by their PROD strategy/MTDS clusters), **0 staging-proven**, **0 shadow-observed** (no committed shadow ledger on-host;
+the `shadow_mode` flag + GCS-backed `deployments_registry.py` carry no committed run records, so `shadow-observed` is
+reached only via a deliberate `READINESS_OVERRIDES` entry — none today), **55 backtest-only**. Logic + tests:
+`scripts/openapi/_capability_readiness.py` + `tests/unit/test_capability_readiness.py`. Additive metadata only — never
+flips an edge's `status`; capability-regression gate green.
+
+- [ ] [UI] P2. **Surface the per-edge `readiness` badge in the capability wizard** — `unified-trading-system-ui`. Read
+      `lib/registry/capability-manifest.json` `edges[].readiness` + the synced `capability-readiness-report.json`;
+      render a maturity chip per archetype/edge (backtest-only=grey, shadow-observed=amber, staging-proven=blue,
+      live-proven=green) next to the existing availability tick, with the cited evidence
+      (`live_cluster_registry:<name>`) in the tooltip. Thin follow-on to the exporter work above (Wave-2 #2). Needs
+      `[UI]` + `pw:L2 ✓` + a regression spec per the playwright gate before ticking.
+
 <!-- GAP ENTRIES: two-sided audit (auto-appended by audit_prospectus_vs_codex.py) -->
 
 ### Archetype Doc Coverage Gaps (from two-sided audit)
@@ -202,3 +223,16 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ice** (distance 1, status partial) — missing:
       needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+
+### 2026-06-13 — Wave-2 #9 follow-on (wizard sessions as reproducible artifacts)
+
+Wave-2 #9 shipped the session-artifact schema (`e2e-testing/scripts/strategy/wizard_session.py` — `WizardSession`) + the
+nightly-replay reconciler (`replay_wizard_sessions.py`, smoke `test_wizard_session_smoke.py`). The reconciler
+re-evaluates each saved session's archetype edge-availability claims against the FRESH committed manifest and ALERTS on
+a silent `available`↔`blocked` flip (reuses the Wave-2 #5 edge-status-hash diff). Remaining thin follow-on:
+
+- [ ] [UI] P2. **uts-ui "save session" surface** (target repo: `unified-trading-system-ui`) — wire the live wizard to
+      WRITE the `WizardSession` JSON (answers + manifest_commit + manifest_edge_hash + config + prospectus_hash) at
+      sign-off, into the sessions dir the nightly `replay_wizard_sessions.py --sessions-dir` reads. The Python schema +
+      deterministic serialisation (`WizardSession.to_json`) is the contract to mirror; the StrategyConfigArtifact
+      (`lib/wizard/output.ts`) is the config payload. Doubles as the client-onboarding compliance record.
