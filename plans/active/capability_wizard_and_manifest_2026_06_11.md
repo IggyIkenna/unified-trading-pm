@@ -443,15 +443,26 @@ actually exists (which data_types missing, over which timeframes) via the existi
       tests/unit/wizard/graph.test.ts property tests + tests/smoke/wizard.spec.ts. Broker rendering partial: TradFi
       venues annotated "routed via IBKR"; remaining polish (brokers never as peer cards + broker field in config
       artifact) = open sub-item below.
-- [ ] [AGENT][UI] P2. Broker rendering polish (UNIT 3 of the full-universe wave, stopped by operator mid-run): brokers
-      never render as peer venue cards; StrategyConfigArtifact carries broker per TradFi venue. pw:L2 gate.
+- [x] ✅ [AGENT][UI] P2. Broker rendering polish (UNIT 3 of the full-universe wave, stopped by operator mid-run): brokers
+      never render as peer venue cards; StrategyConfigArtifact carries broker per TradFi venue. pw:L2 gate. — DONE
+      2026-06-13. Broker-in-config-artifact + onboarding shipped uts-ui@a5bbc16a (prior session); Stage E
+      broker-routing badge (getBrokersForVenue wired under venue cards, never as peer cards) shipped
+      uts-ui@69c8f0d1. Verified: brokers excluded from ALL venue-card functions (kind==="venue" filter); 138 unit
+      tests incl. new getBrokersForVenue suite (venue:cme→broker:ibkr, every routed venue resolves, never a
+      venue-kind node). | pw:L2 ✓ (10/10 wizard smoke incl. F38 Stage J + Stage E badge assertion) | regression:
+      tests/smoke/wizard.spec.ts + tests/unit/wizard/graph.test.ts + tests/unit/wizard/output.test.ts
 
-- [ ] [AGENT][UI] P2. **uts-ui broker rendering + bundled manifest refresh (F38/F39 follow-up)**: wizard Venues stage
+- [x] ✅ [AGENT][UI] P2. **uts-ui broker rendering + bundled manifest refresh (F38/F39 follow-up)**: wizard Venues stage
       renders brokers as a routing choice under their routed venues (not peer venues); reads `routed_via` edges from the
       capability manifest to build broker-grouped venue choices. Bundle the regenerated capability-manifest.json
       (uac@238e58f, broker:ibkr node + routed_via edges, 563 nodes / 2325 edges) into the uts-ui static assets to
       eliminate drift with the UAC committed copy. QG: bundled manifest HASH == UAC openapi/capability-manifest.json.
-      NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this.
+      NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this. — DONE 2026-06-13. Bundle
+      refresh shipped uts-ui@72170a9d (563 nodes/2325 edges); hash-parity verified TODAY: bundled
+      lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to
+      UAC openapi/ copies (sha256 match). `getBrokersForVenue` now consumed by Stage E BrokerRoutingBadge
+      (uts-ui@69c8f0d1) — brokers render as routing choice under venue cards via routed_via edges, never peer cards.
+      | pw:L2 ✓ (10/10) | regression: tests/unit/wizard/parity-gates.test.ts + tests/smoke/wizard.spec.ts
 
 - [x] ✅ [AGENT][UI] P2. **deployment-ui capability tab bundle refresh (F38/F39 follow-up)**: refresh the bundled
       capability-manifest.json + capability-verdict-matrix.json in deployment-ui assets to reflect the new broker node
@@ -467,9 +478,16 @@ actually exists (which data_types missing, over which timeframes) via the existi
       remedy) + leg-spec/verdict-matrix determinism tests. — UAC@9a11664 | QG green | test_manifest_is_round_trip_stable
       (F4) PASS, no drift; leg-spec + algo-compat determinism PASS; verdict-matrix-inputs cross-registry sanity test
       added.
-- [ ] [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
+- [x] ✅ [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
       (drift = fail) + vitest property tests asserting the wizard filter functions reproduce the verdict matrix for
-      every archetype (sampled venues/instruments at minimum, full where tractable).
+      every archetype (sampled venues/instruments at minimum, full where tractable). — DONE 2026-06-13 —
+      uts-ui@285a5499/d8d76835 (`tests/unit/wizard/parity-gates.test.ts`, 356L). Part (a): sha256 byte-parity of
+      bundled manifest + verdict matrix vs UAC `openapi/` copies (drift=fail; loud-skip only when sibling repo absent in
+      standalone CI clone — enforced on LDR-drain builds where both repos checked out) + node/edge/cell count assertions
+      (563/2325/24752). Part (b): full sweep of all 18 STRATEGY_ARCHETYPES_V2 × every matrix venue with available_algos
+      → asserts wizard `getVenuesForArchetype` never marks a matrix-available venue `not_available`. Runs in CI via
+      `pnpm test:ci` (vitest include glob covers tests/unit/**). Verified TODAY: 53/53 (parity+output) → 138/138 with
+      graph suite; hashes byte-identical. | regression: tests/unit/wizard/parity-gates.test.ts
 - [x] ✅ [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail
       (existing findings baselined). — PM@d581ce0 | QG green | baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2
       orphan docs + 0 legs-in-prose drift.
@@ -771,3 +789,14 @@ for every agent on this plan:
   owner). GATED on operator: Wave-2 enhancements (sign-off), client-lite successor, F27 strategy-service case fix (LOGIC
   FREEZE). Read this plan top-to-bottom + the two issue docs + codex capability-wizard.md before acting. Dev-host
   gotchas: F32 (PATH=/usr/bin first for node), F19 (rolldown binding), F12 (config-registry regen destructive on-host).
+- 2026-06-13 — **Continuation tick: items 1+2 (broker polish + 6B uts-ui parity gate) VERIFIED + CLOSED.** ABSORBED the
+  inherited WIP per the inherited-dirty-WIP liveness rule: the prior session's uts-ui tree was clean + pushed — broker
+  config-artifact/onboarding (uts-ui@a5bbc16a) + 6B parity-gates.test.ts (uts-ui@285a5499) + matrix byte-align
+  (uts-ui@d8d76835) had all landed on LDR but the plan checkboxes were never flipped. Verified TODAY: bundled
+  lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to UAC
+  openapi/ copies (sha256 match); 53/53 parity+output vitest green; the parity gate runs in CI via `pnpm test:ci`.
+  Closed the one loose end — `getBrokersForVenue` was exported-but-unused (dead-code); wired it into a Stage E
+  `BrokerRoutingBadge` (brokers render as a routing choice UNDER venue cards via routed_via, never as peer cards) +
+  3 new getBrokersForVenue unit tests + a Stage E smoke assertion (uts-ui@69c8f0d1; tsc clean, 138/138 unit, pw:L2
+  10/10, UI QG exit 0). Flipped checkboxes: broker-polish P2 + uts-ui-broker-rendering P2 + 6B uts-ui QG P0. Remaining
+  this dispatch: (3) UAT redeploy, (4) registry backfills + code-scans, (5) margin-traceability.
