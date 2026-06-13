@@ -152,6 +152,21 @@ python "$SCRIPT_DIR/generate_capability_changelog.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 
 # ---------------------------------------------------------------------------
+# Capability unlock report (Wave-2 #1): for every BLOCKED edge, the minimal
+# unlock set (unlock_distance + typed missing pieces) -> the demand-weighted
+# gap report (closest-to-available first = highest-leverage roadmap items).
+# Reads the manifest JSON (decoupled from the registry walk) -> deterministic
+# (run twice = byte-identical).  --emit-todos appends the N closest-to-unlock
+# roadmap todos to the gap tracker (dedup-idempotent) — NOT run in the suite by
+# default (the plan-flip / tracker append is a deliberate action).
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Generating Capability Unlock Report (minimal unlock sets) ==="
+python "$SCRIPT_DIR/generate_capability_unlock_report.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
 # Strategy prospectus (per-archetype markdown docs: 7 sections, machine+codex)
 # Deterministic (run twice = byte-identical).  Output: UAC openapi/prospectus/
 # ---------------------------------------------------------------------------
