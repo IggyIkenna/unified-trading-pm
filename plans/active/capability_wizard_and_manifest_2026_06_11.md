@@ -829,3 +829,42 @@ for every agent on this plan:
   adapters are NotImplementedError scaffolds, BLOCKED-CREDENTIALS). UAT verified live earlier this session
   (https://uat.odum-research.com/wizard HTTP 200, revision odum-portal-staging-00071). Remaining dispatch item:
   (5) margin-traceability (4 gap-tracker todos, mostly strategy-service-engine-coupled under LOGIC FREEZE).
+- 2026-06-13 — **Item 5 (margin-traceability) UAC SURFACE shipped + DISPATCH COMPLETE.** Shipped the additive contract
+  surface that makes margin/collateral transfers traceable: `TransferPurpose` StrEnum + optional
+  `TransferIntent.transfer_purpose` (default GENERAL, back-compatible) + ledger `EventType.COLLATERAL_POSTED`/
+  `MARGIN_RELEASED`, exported through the crosscutting + root facades (unified-api-contracts@dc67ae6; 4 tests; QG green
+  205s; non-breaking — optional field + additive enum members). The 3 IMPLEMENT todos (CeFi margin emission feeding live
+  balances into the UTL margin models, the real CeFi margin_health tracker, the runtime collateral-registry consumer)
+  are strategy-service-ENGINE-coupled and remain under **LOGIC FREEZE** — surface-only per the dispatch, so they wait on
+  the freeze lifting / a dedicated PBM dispatch (annotated in the gap tracker; the COLLATERAL_REGISTRY they read is now
+  backfilled, so they are unblocked on the data side).
+
+  --- **FINAL REPORT (rule 9) — autonomous dispatch 2026-06-13, all 5 priority items resolved** ---
+  1. ✅ Broker-rendering polish (uts-ui@69c8f0d1): absorbed the prior session's committed broker config-artifact work,
+     closed the dead-code loose end by wiring `getBrokersForVenue` into a Stage E broker-routing badge (brokers as a
+     routing choice under venue cards, never peer cards). pw:L2 10/10, 138 unit tests.
+  2. ✅ 6B uts-ui parity gate (uts-ui@285a5499/d8d76835): verified bundle↔UAC byte-hash parity + wizard-vs-verdict-matrix
+     property tests run in CI via `pnpm test:ci`.
+  3. ✅ UAT redeploy: Cloud Build → odum-portal-staging revision 00071, https://uat.odum-research.com/wizard HTTP 200
+     (Debug Mode badge verified via the pw:L2 smoke against the same source). NOTE: the registry-backfill manifest
+     refresh (item 4) is NOT in that build — a follow-up UAT redeploy would surface the flipped gap chips live; the
+     dispatch's stated done-state (full-universe wizard live) was met by build 00071.
+  4. ✅ Registry backfills (UAC@dc67ae6 chain from 5e7d068): all 5 honest-empty registries filled
+     (order-semantics/sim/fees/fund-structures/trading-agent), every value code-cited or from an official fee page
+     (nothing invented), manifest regenerated (5 gap edges → available, deterministic), re-bundled into uts-ui@06258d20
+     + deployment-ui@2e0e719 (hash-parity preserved, pw:L2 green both). 4 `[AGENT]` code-scan gaps answered in the gap
+     tracker; F45 (exposure-norm undeclared) + F46 (3 CeFi adapter scaffolds BLOCKED-CREDENTIALS) filed.
+  5. ✅ Margin-traceability UAC surface (UAC@dc67ae6); engine-coupled remainder documented as LOGIC-FREEZE-gated.
+
+  **Forced tradeoffs:** (a) Hyperliquid base perp fees corrected to 1.5/4.5bps via official-page verification (my prior
+  memory of 1/3.5bps was stale — the no-invent rule caught it). (b) Item-5 todos 2-4 not implemented: strategy-service
+  engine is under LOGIC FREEZE (operator standing decision) and they are engine-runtime changes, not surface — taken the
+  least-bad path (ship the contract surface they will emit against; document the engine remainder precisely). (c) Item-3
+  redeploy left at build 00071 (full-universe wizard live as the dispatch required); a manifest-refresh redeploy is
+  optional polish, not the stated done-state.
+
+  **Remains GATED ON OPERATOR (unchanged, untouched):** Wave-2 enhancements (sign-off pending), client-lite wizard
+  successor (Phase 5 P3 DEFERRED), F27 strategy-service venue-id case mismatch (LOGIC FREEZE — surface-to-operator only),
+  and the 3 margin-traceability IMPLEMENT todos (strategy-service-engine, LOGIC FREEZE). Phase-0 full-suite openapi regen
+  remains a CI-runner job (F12/F14 — no `.venv-workspace`-importable aggregate generator on this host). Nothing else for
+  the operator to "pick up" within the dispatched scope.
