@@ -137,12 +137,26 @@ DeFi collateral IS traced end-to-end (SUPPLY LedgerRow → aToken position → m
 alerting/kill-switch/deleverage). CeFi perp margin is NOT — 7 gaps with file evidence (full report in plan Progress Log
 context; recommended owner strategy-service PBM):
 
-- [ ] [SPEC] P1. `TransferIntent`/`AllocationTarget` gain a `transfer_purpose` field (MARGIN_DEPOSIT etc.) + ledger
+- [x] ✅ [SPEC] P1. `TransferIntent`/`AllocationTarget` gain a `transfer_purpose` field (MARGIN_DEPOSIT etc.) + ledger
       EventType gains COLLATERAL_POSTED/MARGIN_RELEASED — today a USDC margin transfer to hyperliquid is
-      indistinguishable from any other transfer. unified-api-contracts + execution-service + fund-administration.
+      indistinguishable from any other transfer. unified-api-contracts + execution-service + fund-administration. —
+      **UAC SURFACE DONE 2026-06-13 — unified-api-contracts@dc67ae6 (additive/non-breaking)**: `TransferPurpose` StrEnum (GENERAL default +
+      MARGIN_DEPOSIT/MARGIN_WITHDRAWAL/COLLATERAL_POSTING/COLLATERAL_RELEASE/REBALANCE/TREASURY_SWEEP/FUNDING) +
+      optional `TransferIntent.transfer_purpose` field (defaults GENERAL → existing emitters unaffected) +
+      `EventType.COLLATERAL_POSTED`/`MARGIN_RELEASED` (instruction-driven, cross-referenced to the transfer purposes);
+      exported via the crosscutting + root facades. 4 tests. NOTE: `AllocationTarget` lives in fund-administration
+      (not UAC) — its `transfer_purpose` wiring + the execution-service/fund-admin consumers are the IMPLEMENT half
+      below (engine-coupled). The contract surface that makes margin transfers traceable is now in place.
 - [ ] [IMPLEMENT] P1. CeFi margin emission: margin_event_emitter.py is DeFi-only (hardcodes venue_type="defi"); UTL
       margin models for HL/Bybit/OKX/Binance exist but nothing feeds them live balances. strategy-service PBM owns.
+      **STRATEGY-SERVICE ENGINE under LOGIC FREEZE (2026-06-13)** — this feeds live per-venue balances into the UTL
+      margin models + flips margin_event_emitter off its hardcoded `venue_type="defi"`; both are engine-runtime changes,
+      NOT surface-only, so they require the freeze to lift / a dedicated PBM dispatch. The UAC surface above (transfer_purpose
+      + COLLATERAL_POSTED/MARGIN_RELEASED) is the contract these will emit against once unfrozen.
 - [ ] [IMPLEMENT] P2. margin_health API is a Phase-1 stub returning []; no CeFi per-venue margin balance tracker
-      (venue_balance_tracker.py is sports-only). strategy-service.
+      (venue_balance_tracker.py is sports-only). strategy-service. **LOGIC FREEZE — engine-runtime, deferred to PBM
+      dispatch** (the API surface exists; the real CeFi balance tracker is engine work).
 - [ ] [IMPLEMENT] P2. Runtime consumer for the UAC collateral registry: haircut-adjusted posted-collateral value feeding
-      MarginHealthSnapshot.collateral_usd (also resolves the F28 dual-SSOT risk). UTL/strategy-service.
+      MarginHealthSnapshot.collateral_usd (also resolves the F28 dual-SSOT risk). UTL/strategy-service. **LOGIC FREEZE —
+      engine-runtime consumer; the UAC COLLATERAL_REGISTRY it would read is now backfilled (2026-06-12), so this is
+      unblocked on the data side and waits only on the strategy-service/UTL runtime change.**
