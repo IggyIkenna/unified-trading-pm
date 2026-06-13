@@ -969,3 +969,10 @@ for every agent on this plan:
   durable fix (F14/F25 class). Plan now: Phase 0–6 + Wave-2 all closed except the operator-gated/host-blocked residue
   (Phase-0 full-suite regen = CI-runner job F12/F14; client-lite = DEFERRED successor; F27 + margin-IMPLEMENT todos =
   strategy-service LOGIC FREEZE).
+- 2026-06-13 — **Bundle-parity reconciled (closed a drift I introduced).** The Wave-2 #1/#2 manifest regens advanced the
+  committed UAC manifest (additive `readiness` field + new `generated_from_commit`), drifting the uts-ui + dep-ui bundled
+  copies → uts-ui's 6B hash-parity gate went RED. Re-synced both bundles byte-to-byte to the current UAC manifest
+  (uts-ui@7d5ef178 + dep-ui@fb1a758c; all three sha256=3e51a46…): parity-gates.test.ts 27/27 green, dep-ui capability_tab
+  9/9 (counts unchanged 563/2325, gaps 158/1/1/446), pw:L2 green both. CONFIRMS the recurring drift class — the durable
+  fix is a manifest-bundle-sync automation (every generate-unified-openapi.sh run should also refresh the two UI bundles
+  + the parity gate guards it); tracked as the F14/F25 follow-on. Net: all UI bundles == UAC, all gates green.
