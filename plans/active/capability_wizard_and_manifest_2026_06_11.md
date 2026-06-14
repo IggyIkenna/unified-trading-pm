@@ -780,6 +780,24 @@ for every agent on this plan:
   archetype-scoped; a finer archetype→signal→target map would require an operator-authored signal SSOT and was
   intentionally NOT invented. No open residuals remain on the under-registration / ML thread.
 
+- 2026-06-14 — **F53 signal-grounded refinement (operator "do this")** — the prior pass joined archetype→model purely
+  on asset_group (every DeFi archetype claimed every DeFi model). The operator authorized the finer map, so the join was
+  tightened to the archetype's actual SIGNALS. UAC@c1ac124 adds `architecture_v2/ml_signal_targets.py` —
+  `SIGNAL_VARIANT_ML_TARGETS`, an **operator-authored** map classifying every one of the 14 archetype `signal_variants`
+  as EITHER predictive (price/momentum_ranking/zscore_reversion→direction+swing; vol_metric/iv_dispersion→volatility;
+  spread_capture→cross_venue_spread; funding_rate→funding_rate; odds→the sports targets) OR deterministic
+  (basis/rate_spread/staking_yield/liquidation_bonus/delta_as_expression/event_surprise → no trained target, honest
+  absence) — with an exhaustiveness test forcing any new signal to be classified. ml-service@2c07a72 adds
+  `model_types_for_target` + `asset_groups_for_target` to the variant registry. PM@PR#328 exporter
+  `_archetype_model_edges` now joins each archetype's REAL per-cell `signal_variants` → ML targets → model types,
+  domain-gated to the cell's asset group. **Result: 167→103 uses_model edges (82 available / 21 partial, 14
+  archetypes)** — pure-carry archetypes (e.g. CARRY_RECURSIVE_STAKED: rate_spread+staking_yield) now correctly get ZERO
+  ML edges, while a funding-predicting carry (CARRY_BASIS_PERP: funding_rate signal) keeps only its funding_rate model
+  edges. Manifest 574/**2433** (deterministic; #5 regression gate PASS, no `--update-baseline`); re-bundled
+  byte-identical into uts-ui@c5dc251c (243 vitest, 30 pw) + dep-ui@99a5f51 (pw 9/9). Edge `reason` now cites the actual
+  signals (`signals funding_rate,price → targets direction,funding_rate (cefi,defi)`). This is the honest finer
+  granularity — grounded in each archetype's real signal expression, not invented.
+
 ## Out of scope / named successors
 
 - Client-facing lite wizard + alpha-curtailment tiers (use case 4) — successor plan.
