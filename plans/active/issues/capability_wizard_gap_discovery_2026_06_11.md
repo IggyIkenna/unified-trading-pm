@@ -303,10 +303,24 @@ fired.
 
 ### Residual (still open after Wave B)
 
-- [ ] [SPEC] P2. **ml-service per-archetype model-variant registry (F53 residual)** — ml-service exposes only flat
+- [x] ✅ [SPEC] P2. **ml-service per-archetype model-variant registry (F53 residual)** — ml-service exposes only flat
       `VALID_MODEL_TYPES`/`VALID_TARGET_TYPES` (no per-archetype model-variant enumeration); the manifest therefore
       emits `ml_model` nodes per model type but cannot yet emit archetype→model edges. Add a queryable per-archetype
-      model-variant registry to ml-service so the exporter can derive `uses_model` edges. Target: ml-service.
+      model-variant registry to ml-service so the exporter can derive `uses_model` edges. Target: ml-service. —
+      **DONE end-to-end 2026-06-14**: ml-service@7ee05d6 new `model_variant_registry.py` — a queryable
+      per-(asset_group, target_type) trainable-variant registry, **SSOT-derived, zero invented mapping**: sports from
+      `SportsMLPresets.model_families()` (target_names + family-pinned algorithms), defi from `DEFI_TARGET_BUILDERS`
+      keys, cefi/tradfi from the technical target subset of `VALID_TARGET_TYPES` (model_type = grid-eligible per
+      fixed-grid-config) — 37 variants, exhaustiveness-asserted vs `VALID_TARGET_TYPES`, 10 tests. PM@c86135ce (PR #326)
+      exporter probes the registry + emits **archetype→ml_model `uses_model` edges** by joining each archetype's real
+      asset groups (`ARCHETYPE_CAPABILITY_REGISTRY` non-blocked cells) to the asset-group's variants — **167 edges
+      (138 available / 29 partial) across the 22 ML-driven archetypes, 0 dangling**; reason carries the contributing
+      asset_groups + targets. Same fix reconnected the pre-existing **912 dangling `uses_algo` edges** (they referenced
+      an `archetype:` prefix the nodes never had). Manifest regenerated **574 nodes / 2497 edges** (deterministic
+      byte-identical; #5 capability-regression gate PASS, no `--update-baseline`); UAC@bccad6e. Re-bundled byte-identical
+      into uts-ui@3c414001 (parity 27/27, `.husky` >1MB allowlist) + dep-ui@c1ba2aa (pw 9/9). **Granularity note**: the
+      registry keys on asset_group×target (ml-service training is asset-group-scoped, not archetype-scoped); a finer
+      archetype→signal→target map would need an operator-authored signal SSOT — intentionally NOT invented.
 - [x] ✅ [UI] P1. **Custody/signing-surface wizard stage (F49 residual)** — manifest now carries `signing_surface` nodes;
       the wizard still needs a custody stage that constrains wallets/venues by signing surface. Target:
       unified-trading-system-ui (Wave C). — **DONE uts-ui@3c98036587 (Wave C)**: custody/signing-surface field added to

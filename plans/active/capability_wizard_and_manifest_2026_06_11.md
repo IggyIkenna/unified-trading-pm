@@ -761,6 +761,25 @@ for every agent on this plan:
   per-archetype model-VARIANT registry — `VALID_MODEL_TYPES` is a flat model-TYPE registry, so `ml_model` nodes emit but
   archetype→model `uses_model` edges still need an ml-service queryable variant registry (P2, gap-tracker residual).
 
+- 2026-06-14 — **F53 residual CLOSED (operator: "fix this too")** — the archetype→model `uses_model` edges are now
+  emitted. ml-service@7ee05d6 adds `model_variant_registry.py`: a queryable per-(asset_group, target_type) trainable
+  model-variant registry, **SSOT-derived with zero invented mapping** — sports variants from
+  `SportsMLPresets.model_families()` (real target_names + family-pinned algorithms), defi from the `DEFI_TARGET_BUILDERS`
+  keys, cefi/tradfi from the technical target subset of `VALID_TARGET_TYPES` (model_type is grid-eligible per
+  fixed-grid-config). 37 variants, exhaustiveness-asserted against `VALID_TARGET_TYPES`, 10 unit tests. PM@c86135ce
+  (PR #326) exporter probes it via the ml-service venv and derives **archetype→ml_model `uses_model` edges** by joining
+  each archetype's REAL asset groups (`ARCHETYPE_CAPABILITY_REGISTRY` non-blocked cells) to that asset-group's variants
+  — **167 edges (138 available / 29 partial) across the 22 ML-driven archetypes, 0 dangling** (the 35 non-ML/prediction
+  archetypes correctly get none). The same node-id fix reconnected a pre-existing **912-edge dangling `uses_algo` bug**
+  (edges referenced an `archetype:` prefix the archetype nodes never carried). Manifest regenerated to **574 nodes /
+  2497 edges** (deterministic byte-identical across two runs; #5 capability-regression gate PASS with no
+  `--update-baseline` — only additive edges + reconnections, no capability flipped available→not_available). Shipped
+  UAC@bccad6e (manifest + reports) + re-bundled byte-identical into uts-ui@3c414001 (parity 27/27; `.husky` >1 MB
+  allowlist extended to the manifest, mirroring its verdict-matrix sibling) + dep-ui@c1ba2aa (pw 9/9). **Honest
+  granularity**: the registry keys on asset_group×target because ml-service training genuinely is asset-group-scoped, not
+  archetype-scoped; a finer archetype→signal→target map would require an operator-authored signal SSOT and was
+  intentionally NOT invented. No open residuals remain on the under-registration / ML thread.
+
 ## Out of scope / named successors
 
 - Client-facing lite wizard + alpha-curtailment tiers (use case 4) — successor plan.
