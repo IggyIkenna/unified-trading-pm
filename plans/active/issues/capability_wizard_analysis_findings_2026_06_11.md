@@ -515,3 +515,45 @@ verdict matrix (and the wizard) should mark those archetypes `not_registered` / 
 decision**: gate the verdict-matrix `available` verdict (and the wizard archetype list) on v2-engine-registration, OR
 register the missing engines. Not fixed in this dispatch (LOGIC-FREEZE + collision boundary on UAC); recorded for the
 successor alignment plan alongside F47.
+
+### F49 — Custody/signing-surface dimension entirely unmodeled + `custody_provider` node-kind is a dumping ground
+
+**Status**: OPEN (big — missing config dimension + categorization bug). UAC `SigningSurface` enum is REAL and config-relevant
+(`registry/withdrawal_approval_rules.py` etc.: `CLOUD_KMS_ENCRYPTED` May-23, `COPPER_MPC`+`CEFFU` June-1, `FIREBLOCKS_MPC`
+out-of-scope; per-wallet `signing_surface` per codex/04-architecture/custody-providers.md). But the capability manifest has
+**0 nodes representing custody/signing surfaces**, and the wizard has **no custody stage**. Worse, the `custody_provider`
+NODE KIND is used by `scripts/openapi/_capability_gaps.py` (lines 194/250/254/355) as a FALLBACK kind for risk-gate-layers,
+kill-switches, gap-registries, and collateral venues — so its 28 nodes contain ZERO actual custody providers and the kind is
+semantically meaningless. **Fix**: (a) introduce a SigningSurface/custody registry + emit real `custody_provider` nodes from
+the UAC enum; (b) give risk_layer / kill_switch / gap_registry their OWN node kinds (or a generic `meta` kind) instead of
+overloading `custody_provider`; (c) add a custody/signing-surface wizard stage (it constrains which wallets/venues a config
+can use). Owners: UAC (registry) + PM exporter (node kinds) + uts-ui (stage).
+
+### F50 — `fund_structure` registry backfilled but exporter emits 0 fund_structure-kind nodes
+
+**Status**: OPEN (exporter bug). `OFFERED_FUND_STRUCTURES` (POOLED + SMA, backfilled 2026-06-13) produces only a single
+`gap_registry:fund_structure` node (mis-kinded `custody_provider`); the manifest has **0 `CapabilityNodeKind.FUND_STRUCTURE`
+nodes**. The exporter never walks OFFERED_FUND_STRUCTURES into per-structure nodes/edges. **Fix**: emit a fund_structure node
+per offering (POOLED/SMA) with its share-classes/cadence metadata, like collateral venues are emitted. Owner: PM exporter.
+
+### F51 — Chain nodes double-counted (numeric chain-id AND name for the same chain)
+
+**Status**: OPEN (exporter dedup bug). 41 chain nodes = 35 numeric chain-ids (`1`,`10`,`137`,`42161`,…) + 6 names
+(`ETHEREUM`,`ARBITRUM`,`BASE`,`BSC`,`OPTIMISM`,`AVALANCHE`) — the SAME chains represented twice (e.g. `chain:1` and
+`chain:ETHEREUM`). Inflates the count + the wizard's chain universe. **Fix**: normalize to one canonical node per chain
+(map numeric chain-id ↔ name; CHAIN_RPC_TEMPLATES is the SSOT). Owner: PM exporter (`_capability_extract.py`).
+
+### F52 — `data_source` nodes mix internal services with external vendors
+
+**Status**: OPEN (mislabel). `execution_service`, `instruments_service`, `features_onchain_service` are internal data
+PRODUCERS, not external data sources — they sit alongside real vendors (databento, massive, helius_rpc, chainlink,
+polymarket_clob/gamma, odds_api, api_football, footystats, eia, open_meteo). **Fix**: either a separate node kind for
+service-derived feeds, or exclude services from `data_source`. Owner: PM exporter.
+
+### F53 — ML models severely under-surfaced (1 node vs a real model registry)
+
+**Status**: OPEN (registry under-coverage). Only 1 `ml_model` node (`variant_config`) despite ml-service having a real
+model registry + ensemble trainers (`training/app/training/sports_ensemble_trainer.py`,
+`inference/app/inference/ensemble_inference.py`, `core/training_orchestrator.py`). The wizard's "which ML model" dimension
+is essentially empty. **Fix**: walk the ml-service model registry (per-archetype model variants) into `ml_model` nodes +
+archetype→model edges. Owner: PM exporter (per-service venv import, like exec-algos/feature-groups) + ml-service registry.
