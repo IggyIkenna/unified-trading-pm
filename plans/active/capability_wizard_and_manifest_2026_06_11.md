@@ -740,6 +740,27 @@ for every agent on this plan:
   sections, honesty labels, fund-flow LST legs, mermaid fence). Wired into `generate-unified-openapi.sh`. SHAs: PM PR
   #272 + UAC@fe37eae.
 
+- 2026-06-14 — **Under-registration audit (F49–F53) FIXED end-to-end** (operator: "what can the system do that the
+  registry doesn't capture" → "All 5 incl. custody + ML"). A common-sense census of the committed manifest node-kinds vs
+  code/codex reality found the manifest UNDER-claimed (custody dimension absent; fund_structure not emitted; chains
+  double-counted numeric-id + name; data_source mislabelled internal services as vendors; ml_model sparse). Fixed in
+  three waves: **Wave A** — UAC@7020b0c5 `custody_surfaces.OFFERED_SIGNING_SURFACES` registry +5 `CapabilityNodeKind`
+  members (signing_surface/risk_gate_layer/kill_switch_reason/gap_registry/collateral_policy). **Wave B** —
+  PM@3f4a1ee92 exporter re-kind/dedup: `custody_provider` catch-all → typed kinds (RISK_GATE_LAYER 4 / KILL_SWITCH_REASON
+  8 / GAP_REGISTRY 7 / COLLATERAL_POLICY 9), real `signing_surface` nodes (3) + `signs_for:<ag>` edges; `fund_structure`
+  nodes (2, pooled+sma) + `offers_share_class` edges; chain nodes 41→35 (MAINNET_CHAIN_IDS SSOT); `data_source` 28→24
+  (internal producers excluded); `ml_model` 1→8 from ml-service `VALID_MODEL_TYPES` via per-service venv probe.
+  Regenerated manifest **574 nodes / 2330 edges** (deterministic, byte-matches across runs); the Wave-2 #5
+  capability-regression gate PASSED with NO `--update-baseline` (re-kinding kept every genuine capability AVAILABLE).
+  **Wave C** — uts-ui@3c98036587 + dep-ui@0db05b7 re-bundled the manifest (byte-matches UAC; 6B parity gate GREEN),
+  added the 5 NodeKind values, updated parity/graph/capability-tab count assertions to 574/2330, and **built the
+  custody/signing-surface wizard stage** in Stage I (CLOUD_KMS_ENCRYPTED default / COPPER_MPC selectable / FIREBLOCKS_MPC
+  greyed → `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist; pw:L2 ✓
+  tests/smoke/wizard-custody.spec.ts 13 passed + custody-signing.test.ts; dep-ui pw 9/9). All 5 gap-tracker todos +
+  the F49 UI residual flipped (gap-discovery 2026-06-14). **One honest residual left OPEN** (filed, ml-service owner):
+  per-archetype model-VARIANT registry — `VALID_MODEL_TYPES` is a flat model-TYPE registry, so `ml_model` nodes emit but
+  archetype→model `uses_model` edges still need an ml-service queryable variant registry (P2, gap-tracker residual).
+
 ## Out of scope / named successors
 
 - Client-facing lite wizard + alpha-curtailment tiers (use case 4) — successor plan.
