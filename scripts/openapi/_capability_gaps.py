@@ -38,10 +38,25 @@ REL_USES_MODEL = "uses_model"
 REL_MIN_DATA_TO_RUN = "min_data_to_run"
 REL_NOT_REGISTERED = "registry_gap"
 REL_ACCEPTS_COLLATERAL = "accepts_collateral"
+REL_OFFERS_SHARE_CLASS = "offers_share_class"
+REL_SIGNS_FOR = "signs_for"
 
 
 def _node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> CapabilityNode:
     return CapabilityNode(kind=kind, node_id=node_id, label=label, metadata={k: str(v) for k, v in meta.items()})
+
+
+def _as_str_list(value: object) -> list[str]:
+    """Coerce a probe-dict value (typed ``object``) into a sorted ``list[str]``.
+
+    The service probe returns ``dict[str, object]``; a list value (model types,
+    target types, variant fields) is narrowed + stringified here so callers get
+    a concretely-typed ``list[str]`` with no ``Any`` leaking out.
+    """
+    if not isinstance(value, list):
+        return []
+    items: list[str] = [str(item) for item in value]
+    return sorted(items)
 
 
 def _titleize(value: str) -> str:
@@ -66,6 +81,9 @@ def extract_gap_registries() -> tuple[list[CapabilityNode], list[CapabilityEdge]
         BROKER_REGISTRY,
         COLLATERAL_REGISTRY,
         TREASURY_SPLIT_POLICIES,
+    )
+    from unified_api_contracts.internal.architecture_v2.custody_surfaces import (  # noqa: qg-deep-import
+        OFFERED_SIGNING_SURFACES,
     )
     from unified_api_contracts.internal.architecture_v2.fees_registry import FEES_REGISTRY  # noqa: qg-deep-import
     from unified_api_contracts.internal.architecture_v2.fund_structures import (  # noqa: qg-deep-import
@@ -133,7 +151,7 @@ def extract_gap_registries() -> tuple[list[CapabilityNode], list[CapabilityEdge]
         coll_node = f"collateral:{policy.venue_id}"
         kind_meta = policy.venue_kind.value if policy.venue_kind is not None else ""
         add(
-            CapabilityNodeKind.CUSTODY_PROVIDER,
+            CapabilityNodeKind.COLLATERAL_POLICY,
             coll_node,
             f"Collateral: {_titleize(policy.venue_id)}",
             venue_id=policy.venue_id,
@@ -191,7 +209,7 @@ def extract_gap_registries() -> tuple[list[CapabilityNode], list[CapabilityEdge]
     ]
     for dim, count, label, reason in gap_specs:
         node_id = f"gap_registry:{dim}"
-        add(CapabilityNodeKind.CUSTODY_PROVIDER, node_id, label, registry=dim, entry_count=str(count))
+        add(CapabilityNodeKind.GAP_REGISTRY, node_id, label, registry=dim, entry_count=str(count))
         if count == 0:
             gap = (
                 CapabilityGapType.NEEDS_CODE_SCAN
@@ -216,6 +234,70 @@ def extract_gap_registries() -> tuple[list[CapabilityNode], list[CapabilityEdge]
                     relation=REL_NOT_REGISTERED,
                     status=CapabilityEdgeStatus.AVAILABLE,
                     reason=f"{label}: {count} entries registered",
+                )
+            )
+
+    # F50: OFFERED_FUND_STRUCTURES -> one FUND_STRUCTURE node per offering, with
+    # share-class / cadence metadata + per-share-class offers_share_class edges.
+    # (Previously the registry produced only a single mis-kinded gap_registry
+    # node; the manifest had 0 fund_structure-kind nodes despite POOLED + SMA
+    # being populated.)
+    for offering in sorted(OFFERED_FUND_STRUCTURES, key=lambda o: o.kind.value):
+        fs_id = f"fund_structure:{offering.kind.value}"
+        add(
+            CapabilityNodeKind.FUND_STRUCTURE,
+            fs_id,
+            f"Fund Structure: {_titleize(offering.kind.value)}",
+            structure_kind=offering.kind.value,
+            share_classes=",".join(sorted(sc.value for sc in offering.share_classes)),
+            subscription_cadence=",".join(sorted(c.value for c in offering.subscription_cadence)),
+            redemption_cadence=",".join(sorted(c.value for c in offering.redemption_cadence)),
+            rebalance_cadence=",".join(sorted(c.value for c in offering.rebalance_cadence)),
+            supports_daily_withdraw_deposit=str(offering.supports_daily_withdraw_deposit).lower(),
+            notes=offering.notes,
+        )
+        for sc in sorted(offering.share_classes, key=lambda s: s.value):
+            edges.append(
+                CapabilityEdge(
+                    from_node_id=fs_id,
+                    to_node_id=f"share_class:{sc.value}",
+                    relation=REL_OFFERS_SHARE_CLASS,
+                    status=CapabilityEdgeStatus.AVAILABLE,
+                    reason=f"{offering.kind.value} offers share class {sc.value}",
+                )
+            )
+            add(
+                CapabilityNodeKind.INSTRUMENT_TYPE,
+                f"share_class:{sc.value}",
+                f"Share Class: {sc.value}",
+                share_class=sc.value,
+            )
+
+    # F49: OFFERED_SIGNING_SURFACES -> one SIGNING_SURFACE node per real signing
+    # surface (CLOUD_KMS_ENCRYPTED / COPPER_MPC / FIREBLOCKS_MPC), with status +
+    # asset-group scope. These are the genuine custody/signing nodes the manifest
+    # was missing entirely while `custody_provider` was abused as a catch-all.
+    # A signs_for edge per asset_group records the scope (out-of-scope surfaces
+    # have no asset_groups → no edges, only the node, which is honest).
+    for surface_policy in sorted(OFFERED_SIGNING_SURFACES, key=lambda p: p.surface.value):
+        surf_id = f"signing_surface:{surface_policy.surface.value}"
+        add(
+            CapabilityNodeKind.SIGNING_SURFACE,
+            surf_id,
+            f"Signing Surface: {_titleize(surface_policy.surface.value)}",
+            surface=surface_policy.surface.value,
+            status=surface_policy.status.value,
+            asset_groups=",".join(sorted(surface_policy.asset_groups)),
+            source=surface_policy.source_note,
+        )
+        for ag in sorted(surface_policy.asset_groups):
+            edges.append(
+                CapabilityEdge(
+                    from_node_id=surf_id,
+                    to_node_id=f"signing_surface:{surface_policy.surface.value}",
+                    relation=f"{REL_SIGNS_FOR}:{ag}",
+                    status=CapabilityEdgeStatus.AVAILABLE,
+                    reason=(f"{surface_policy.surface.value} signs for {ag} ({surface_policy.status.value})"),
                 )
             )
 
@@ -246,12 +328,10 @@ def extract_risk_surface() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
     reasons = sorted(reason.value for reason in KillSwitchReason)
 
     for layer in layers:
-        nodes.append(
-            _node(CapabilityNodeKind.CUSTODY_PROVIDER, f"risk_layer:{layer}", f"Risk Gate: {_titleize(layer)}")
-        )
+        nodes.append(_node(CapabilityNodeKind.RISK_GATE_LAYER, f"risk_layer:{layer}", f"Risk Gate: {_titleize(layer)}"))
     for reason in reasons:
         nodes.append(
-            _node(CapabilityNodeKind.CUSTODY_PROVIDER, f"kill_switch:{reason}", f"Kill Switch: {_titleize(reason)}")
+            _node(CapabilityNodeKind.KILL_SWITCH_REASON, f"kill_switch:{reason}", f"Kill Switch: {_titleize(reason)}")
         )
 
     # Generic availability: every kill-switch reason is guarded across all
@@ -352,7 +432,7 @@ def extract_service_registries(workspace_root: Path) -> tuple[list[CapabilityNod
 
     def gap_node_edge(dim: str, label: str, error: str) -> None:
         node_id = f"service_registry:{dim}"
-        nodes.append(_node(CapabilityNodeKind.CUSTODY_PROVIDER, node_id, label, registry=dim))
+        nodes.append(_node(CapabilityNodeKind.GAP_REGISTRY, node_id, label, registry=dim))
         edges.append(
             CapabilityEdge(
                 from_node_id=node_id,
@@ -414,25 +494,38 @@ def extract_service_registries(workspace_root: Path) -> tuple[list[CapabilityNod
         logger.warning("  feature groups GAP: %s", res.get("error"))
 
     # --- ML models ---
+    # F53: walk the ml-service model registry. VALID_MODEL_TYPES is the static,
+    # enumerable model-type registry (lightgbm/xgboost/catboost/random_forest/
+    # huber/poisson_glm/ridge/ensemble); VALID_TARGET_TYPES is the prediction-
+    # target registry. Both are real, importable constants — emit one ml_model
+    # node per model type (not just the single variant_config). ModelVariantConfig
+    # fields are also carried so the wizard's "which ML model" dimension is real.
     ml_body = (
+        "    from ml_service.training.ml.config_schema import VALID_MODEL_TYPES, VALID_TARGET_TYPES\n"
         "    from ml_service.training.ml.model_registry import ModelVariantConfig\n"
         "    fields = sorted(getattr(ModelVariantConfig, 'model_fields', {}).keys())\n"
-        "    out = {'ok': True, 'variant_fields': fields}\n"
+        "    out = {'ok': True, 'model_types': sorted(VALID_MODEL_TYPES),\n"
+        "           'target_types': sorted(VALID_TARGET_TYPES), 'variant_fields': fields}\n"
     )
     res = _run_service_probe(workspace_root, "ml-service", ml_body, "ml_models")
-    ml_ok = bool(res.get("ok"))
-    if ml_ok:
-        nodes.append(
-            _node(
-                CapabilityNodeKind.ML_MODEL,
-                "ml_model:variant_config",
-                "ML Model Variant Config",
-                variant_fields=",".join(
-                    str(f) for f in res.get("variant_fields", []) if isinstance(res.get("variant_fields"), list)
-                ),
+    ml_model_count = 0
+    if res.get("ok"):
+        model_types = _as_str_list(res.get("model_types", []))  # noqa: qg-empty-fallback (typed list narrow)
+        target_types = _as_str_list(res.get("target_types", []))  # noqa: qg-empty-fallback (typed list narrow)
+        variant_fields = ",".join(_as_str_list(res.get("variant_fields", [])))  # noqa: qg-empty-fallback
+        for model_type in model_types:
+            nodes.append(
+                _node(
+                    CapabilityNodeKind.ML_MODEL,
+                    f"ml_model:{model_type}",
+                    f"ML Model: {_titleize(model_type)}",
+                    model_type=model_type,
+                    target_types=",".join(target_types),
+                    variant_fields=variant_fields,
+                )
             )
-        )
-        logger.info("  ml models: variant config extracted")
+        ml_model_count = len(model_types)
+        logger.info("  ml models: %d model types extracted", ml_model_count)
     else:
         gap_node_edge("ml_models", "ML model registry", str(res.get("error", "unknown")))
         logger.warning("  ml models GAP: %s", res.get("error"))
