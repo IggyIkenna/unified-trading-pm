@@ -205,6 +205,11 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-14 (autonomous session, slot-4) — **OOW denominator exclusion SHIPPED end-to-end — DeFi coverage 22.11% → 97.55%.** Two-repo dispatch complete:
+  1. **deployment-api** (`coverage.py`, commit `149473c` + fix `90a8ad7`): `_build_coverage_for_cat` partitions `empty_confirmed` rows into OOW vs within-window using `is_out_of_coverage_window` (UAC function classifying 15 lifecycle reasons — EXPECTED_PRE_GENESIS_CHAIN, EXPECTED_INSTRUMENT_NOT_LISTED, EXPECTED_PAST_SOURCE_COVERAGE_END, etc.). Denominator = `captured + within_window_empty + attempted_failed + expected_unattempted` — excludes OOW. Fix `90a8ad7` adds resilience: accepts both `error_reason` (live consolidated index column) and `reason` (beta projected parquet column) so the OOW partition fires correctly in beta mode.
+  2. **deployment-ui** (`client.ts`, `mock-api.ts`, `HonestCoverageCard.tsx`, `tests/unit/oow-denominator.test.ts`, commit `ea1db02`): added `out_of_window?: number` to all three type shapes (`TurboSubDimension`, `TurboAssetGroupStatus`, `HonestCoverageStatusCounts`), all 8 mock blocks seeded with `out_of_window: 0`, `CoverageBar` renders a distinct slate-grey non-gap segment when `out_of_window > 0`, legend item "outside window — not a gap", 7 unit tests pass, 206/206 Playwright smoke tests pass.
+  - **Verified on real GCS data** (`projected_index_defi.parquet`, 1.58M rows, updated 2026-06-11): 349,326 captured · 1,221,955 OOW empty · 6,016 within-window empty · 2,740 failed → denominator 358,082 → **97.55%** (vs 22.11% naive including OOW in denominator; +75.44pp improvement).
+
 - 2026-06-12 (~11:45Z, operator eyeball session) — **unique-instruments headline SHIPPED + LIVE** (operator: "the
   headline should be unique... the catalogue should be deduplicating" — correct on all counts). The lifecycle catalogue
   (`prod/catalog.parquet`, one row per instrument identity) IS the dedup source; the headline was summing per-shard
