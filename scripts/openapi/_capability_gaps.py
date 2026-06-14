@@ -18,6 +18,7 @@ import json
 import logging
 import subprocess
 from pathlib import Path
+from typing import cast
 
 from unified_api_contracts.internal.architecture_v2.capability_manifest import (
     CapabilityEdge,
@@ -500,20 +501,55 @@ def extract_service_registries(workspace_root: Path) -> tuple[list[CapabilityNod
     # target registry. Both are real, importable constants — emit one ml_model
     # node per model type (not just the single variant_config). ModelVariantConfig
     # fields are also carried so the wizard's "which ML model" dimension is real.
+    # F53 residual: the ml-service ``model_variant_registry`` exposes the
+    # per-(asset_group, target_type) trainable variants (SSOT-derived from the
+    # SportsMLPresets families / DEFI_TARGET_BUILDERS / technical target subset).
+    # We pull it alongside VALID_MODEL_TYPES so the exporter can derive real
+    # archetype→model ``uses_model`` edges (below) instead of leaving them a gap.
     ml_body = (
         "    from ml_service.training.ml.config_schema import VALID_MODEL_TYPES, VALID_TARGET_TYPES\n"
         "    from ml_service.training.ml.model_registry import ModelVariantConfig\n"
+        "    from ml_service.training.ml.model_variant_registry import model_variants\n"
         "    fields = sorted(getattr(ModelVariantConfig, 'model_fields', {}).keys())\n"
+        "    variants = [\n"
+        "        {'asset_group': v.asset_group, 'target_type': v.target_type,\n"
+        "         'model_types': list(v.model_types), 'source': v.model_types_source}\n"
+        "        for v in model_variants()\n"
+        "    ]\n"
         "    out = {'ok': True, 'model_types': sorted(VALID_MODEL_TYPES),\n"
-        "           'target_types': sorted(VALID_TARGET_TYPES), 'variant_fields': fields}\n"
+        "           'target_types': sorted(VALID_TARGET_TYPES), 'variant_fields': fields,\n"
+        "           'model_variants': variants}\n"
     )
     res = _run_service_probe(workspace_root, "ml-service", ml_body, "ml_models")
     ml_model_count = 0
+    # asset_group → {model_types} and asset_group → {target_types}, from the registry.
+    ag_to_model_types: dict[str, set[str]] = {}
+    ag_to_target_types: dict[str, set[str]] = {}
     if res.get("ok"):
         model_types = _as_str_list(res.get("model_types", []))  # noqa: qg-empty-fallback (typed list narrow)
         target_types = _as_str_list(res.get("target_types", []))  # noqa: qg-empty-fallback (typed list narrow)
         variant_fields = ",".join(_as_str_list(res.get("variant_fields", [])))  # noqa: qg-empty-fallback
+        # model_type → {asset_groups it is trainable for} (registry-derived edge metadata).
+        model_to_ags: dict[str, set[str]] = {}
+        variants_raw = res.get("model_variants")
+        if isinstance(variants_raw, list):
+            for raw in variants_raw:
+                if not isinstance(raw, dict):
+                    continue
+                variant = cast("dict[str, object]", raw)
+                ag = str(variant.get("asset_group", "")).strip().lower()
+                tgt = str(variant.get("target_type", "")).strip()
+                mts = variant.get("model_types")
+                if not ag or not isinstance(mts, list):
+                    continue
+                typed_mts = {str(m) for m in cast("list[object]", mts)}
+                ag_to_model_types.setdefault(ag, set()).update(typed_mts)
+                if tgt:
+                    ag_to_target_types.setdefault(ag, set()).add(tgt)
+                for mt in typed_mts:
+                    model_to_ags.setdefault(mt, set()).add(ag)
         for model_type in model_types:
+            serving = sorted(model_to_ags.get(model_type, set()))
             nodes.append(
                 _node(
                     CapabilityNodeKind.ML_MODEL,
@@ -522,13 +558,71 @@ def extract_service_registries(workspace_root: Path) -> tuple[list[CapabilityNod
                     model_type=model_type,
                     target_types=",".join(target_types),
                     variant_fields=variant_fields,
+                    serves_asset_groups=",".join(serving),
                 )
             )
         ml_model_count = len(model_types)
-        logger.info("  ml models: %d model types extracted", ml_model_count)
+        logger.info(
+            "  ml models: %d model types, %d asset_groups with variants",
+            ml_model_count,
+            len(ag_to_model_types),
+        )
     else:
         gap_node_edge("ml_models", "ML model registry", str(res.get("error", "unknown")))
         logger.warning("  ml models GAP: %s", res.get("error"))
+
+    # --- archetype → ml_model uses_model edges (F53 residual) ---
+    # Join each archetype's real asset groups (ARCHETYPE_CAPABILITY_REGISTRY,
+    # non-blocked cells) to the model variants trainable for those asset groups.
+    # The capability manifest is availability-level: the edge means "models
+    # trainable for this archetype's asset-group(s) are available", grounded in
+    # the registry — no hand-authored archetype→model map.
+    if ag_to_model_types:
+        from unified_api_contracts.internal.architecture_v2.archetype_capability import (  # noqa: qg-deep-import
+            ARCHETYPE_CAPABILITY_REGISTRY,
+            CoverageStatus,
+        )
+
+        uses_model_edges = 0
+        for entry in ARCHETYPE_CAPABILITY_REGISTRY:
+            arch_node = entry.archetype_id.value
+            # Best non-blocked status per ML-capable asset group for this archetype.
+            ag_supported: dict[str, bool] = {}
+            for cell in entry.cells:
+                if cell.status == CoverageStatus.BLOCKED:
+                    continue
+                ag = cell.asset_group.value.lower()
+                if ag not in ag_to_model_types:
+                    continue
+                is_supported = cell.status == CoverageStatus.SUPPORTED
+                ag_supported[ag] = ag_supported.get(ag, False) or is_supported
+            # Union the model types across those asset groups (one edge per model type).
+            model_contrib: dict[str, set[str]] = {}
+            for ag in ag_supported:
+                for mt in ag_to_model_types.get(ag, set()):
+                    model_contrib.setdefault(mt, set()).add(ag)
+            for model_type in sorted(model_contrib):
+                contributing = sorted(model_contrib[model_type])
+                status = (
+                    CapabilityEdgeStatus.AVAILABLE
+                    if any(ag_supported[ag] for ag in contributing)
+                    else CapabilityEdgeStatus.PARTIAL
+                )
+                tgts = sorted({t for ag in contributing for t in ag_to_target_types.get(ag, set())})
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=arch_node,
+                        to_node_id=f"ml_model:{model_type}",
+                        relation=REL_USES_MODEL,
+                        status=status,
+                        reason=(
+                            f"trainable for asset_group(s) {','.join(contributing)}"
+                            + (f"; targets {','.join(tgts[:6])}" if tgts else "")
+                        ),
+                    )
+                )
+                uses_model_edges += 1
+        logger.info("  archetype→model uses_model edges: %d", uses_model_edges)
 
     # --- min-data-to-run derived edges ---
     # Feature lookback IS available; the ML training window is a runtime config
@@ -630,7 +724,10 @@ def extract_algo_compatibility() -> tuple[list[CapabilityNode], list[CapabilityE
     # Per-archetype algo verdict edges.
     for archetype in sorted(ARCHETYPE_ALGO_COMPATIBILITY, key=lambda a: a.value):
         compat = ARCHETYPE_ALGO_COMPATIBILITY[archetype]
-        arch_node = f"archetype:{archetype.value}"
+        # Archetype nodes are emitted with the RAW archetype value as node_id
+        # (_capability_extract.add_node) — NOT an "archetype:" prefix. The prefix
+        # form dangled every uses_algo edge (0 connected); use the raw id.
+        arch_node = archetype.value
         for key in sorted(EXECUTION_ALGOS):
             algo_node = f"execution_algo:{key}"
             if compat.not_registered:
