@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.6.0",
     "unified-trading-library": "0.6.0",
-    "unified-trading-pm": "1.2.86",
+    "unified-trading-pm": "1.2.87",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.9.0",
@@ -1779,7 +1779,8 @@
     "deployment-ui": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
-    "batch-live-reconciliation-service": "0.5.0"
+    "batch-live-reconciliation-service": "0.5.0",
+    "deployment-api": "0.7.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1793,7 +1794,12 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
+    "deployment-api": {
+      "version": "0.7.0",
+      "sha": "d70bfbc835fc82b161fea6fa714eae1472e16459",
+      "branch": "staging"
+    }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
