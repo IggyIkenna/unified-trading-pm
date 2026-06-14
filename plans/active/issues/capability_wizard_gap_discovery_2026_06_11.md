@@ -236,3 +236,23 @@ a silent `available`↔`blocked` flip (reuses the Wave-2 #5 edge-status-hash dif
       sign-off, into the sessions dir the nightly `replay_wizard_sessions.py --sessions-dir` reads. The Python schema +
       deterministic serialisation (`WizardSession.to_json`) is the contract to mirror; the StrategyConfigArtifact
       (`lib/wizard/output.ts`) is the config payload. Doubles as the client-onboarding compliance record.
+
+### 2026-06-13 — Under-registration audit ("what can the system do that the registry doesn't capture", common-sense pass)
+
+Census of the committed manifest node-kinds vs code/codex reality surfaced these (full detail = F49–F53 in the findings doc):
+
+- [ ] [SPEC] P1. **Custody/signing-surface dimension (F49)** — UAC `SigningSurface` enum (CLOUD_KMS_ENCRYPTED/COPPER_MPC/
+      CEFFU/FIREBLOCKS_MPC) is real + config-relevant but ZERO manifest custody nodes + no wizard custody stage. Add a
+      custody/signing-surface registry + emit real `custody_provider` nodes + a wizard stage. Targets: unified-api-contracts
+      (registry) + unified-trading-pm (exporter node-kinds) + unified-trading-system-ui (Stage). Also fix the
+      `custody_provider` node-kind dumping-ground (risk_layer/kill_switch/gap_registry get their own kinds).
+- [ ] [SCRIPT] P2. **fund_structure nodes (F50)** — exporter walks OFFERED_FUND_STRUCTURES (POOLED/SMA, already backfilled)
+      into per-structure `CapabilityNodeKind.FUND_STRUCTURE` nodes/edges (today 0 nodes). Target: unified-trading-pm
+      (`scripts/openapi/_capability_gaps.py`).
+- [ ] [SCRIPT] P2. **Chain node dedup (F51)** — normalize the 35 numeric chain-id + 6 named chain nodes to one canonical
+      node per chain (CHAIN_RPC_TEMPLATES is SSOT). Target: unified-trading-pm (`scripts/openapi/_capability_extract.py`).
+- [ ] [SCRIPT] P3. **data_source service-vs-vendor split (F52)** — exclude internal services (execution/instruments/
+      features_onchain) from `data_source` nodes or give them a distinct kind. Target: unified-trading-pm exporter.
+- [ ] [SCRIPT] P2. **ML model registry surfacing (F53)** — walk the ml-service model registry (per-archetype model variants)
+      into `ml_model` nodes + archetype→model edges (today only `variant_config`). Targets: unified-trading-pm exporter
+      (per-service venv import) + ml-service (a queryable model registry).
