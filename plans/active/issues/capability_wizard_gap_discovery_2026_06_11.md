@@ -239,20 +239,60 @@ a silent `available`↔`blocked` flip (reuses the Wave-2 #5 edge-status-hash dif
 
 ### 2026-06-13 — Under-registration audit ("what can the system do that the registry doesn't capture", common-sense pass)
 
-Census of the committed manifest node-kinds vs code/codex reality surfaced these (full detail = F49–F53 in the findings doc):
+Census of the committed manifest node-kinds vs code/codex reality surfaced these (full detail = F49–F53 in the findings
+doc):
 
-- [ ] [SPEC] P1. **Custody/signing-surface dimension (F49)** — UAC `SigningSurface` enum (CLOUD_KMS_ENCRYPTED/COPPER_MPC/
-      CEFFU/FIREBLOCKS_MPC) is real + config-relevant but ZERO manifest custody nodes + no wizard custody stage. Add a
-      custody/signing-surface registry + emit real `custody_provider` nodes + a wizard stage. Targets: unified-api-contracts
-      (registry) + unified-trading-pm (exporter node-kinds) + unified-trading-system-ui (Stage). Also fix the
-      `custody_provider` node-kind dumping-ground (risk_layer/kill_switch/gap_registry get their own kinds).
-- [ ] [SCRIPT] P2. **fund_structure nodes (F50)** — exporter walks OFFERED_FUND_STRUCTURES (POOLED/SMA, already backfilled)
-      into per-structure `CapabilityNodeKind.FUND_STRUCTURE` nodes/edges (today 0 nodes). Target: unified-trading-pm
-      (`scripts/openapi/_capability_gaps.py`).
+- [ ] [SPEC] P1. **Custody/signing-surface dimension (F49)** — UAC `SigningSurface` enum
+      (CLOUD_KMS_ENCRYPTED/COPPER_MPC/ CEFFU/FIREBLOCKS_MPC) is real + config-relevant but ZERO manifest custody nodes +
+      no wizard custody stage. Add a custody/signing-surface registry + emit real `custody_provider` nodes + a wizard
+      stage. Targets: unified-api-contracts (registry) + unified-trading-pm (exporter node-kinds) +
+      unified-trading-system-ui (Stage). Also fix the `custody_provider` node-kind dumping-ground
+      (risk_layer/kill_switch/gap_registry get their own kinds).
+- [ ] [SCRIPT] P2. **fund_structure nodes (F50)** — exporter walks OFFERED_FUND_STRUCTURES (POOLED/SMA, already
+      backfilled) into per-structure `CapabilityNodeKind.FUND_STRUCTURE` nodes/edges (today 0 nodes). Target:
+      unified-trading-pm (`scripts/openapi/_capability_gaps.py`).
 - [ ] [SCRIPT] P2. **Chain node dedup (F51)** — normalize the 35 numeric chain-id + 6 named chain nodes to one canonical
-      node per chain (CHAIN_RPC_TEMPLATES is SSOT). Target: unified-trading-pm (`scripts/openapi/_capability_extract.py`).
+      node per chain (CHAIN_RPC_TEMPLATES is SSOT). Target: unified-trading-pm
+      (`scripts/openapi/_capability_extract.py`).
 - [ ] [SCRIPT] P3. **data_source service-vs-vendor split (F52)** — exclude internal services (execution/instruments/
       features_onchain) from `data_source` nodes or give them a distinct kind. Target: unified-trading-pm exporter.
-- [ ] [SCRIPT] P2. **ML model registry surfacing (F53)** — walk the ml-service model registry (per-archetype model variants)
-      into `ml_model` nodes + archetype→model edges (today only `variant_config`). Targets: unified-trading-pm exporter
-      (per-service venv import) + ml-service (a queryable model registry).
+- [ ] [SCRIPT] P2. **ML model registry surfacing (F53)** — walk the ml-service model registry (per-archetype model
+      variants) into `ml_model` nodes + archetype→model edges (today only `variant_config`). Targets: unified-trading-pm
+      exporter (per-service venv import) + ml-service (a queryable model registry).
+
+## Wave B SHIPPED 2026-06-14 — exporter re-kind + dedup (F49–F53)
+
+The PM capability exporter side of F49–F53 is DONE (this Wave-B unit; collision-boundary = PM `scripts/**` + UAC
+`openapi/**` regenerated outputs). Manifest regenerated with the UAC venv (deterministic — two runs byte-identical):
+
+- **F49 (exporter) — FIXED.** `custody_provider` is no longer a catch-all (0 nodes): `risk_layer:*` → `RISK_GATE_LAYER`
+  (4), `kill_switch:*` → `KILL_SWITCH_REASON` (8), `gap_registry:*`/`service_registry:*` → `GAP_REGISTRY` (7),
+  `collateral:*` → `COLLATERAL_POLICY` (9). Real `signing_surface` nodes (3) now emitted from
+  `custody_surfaces.OFFERED_SIGNING_SURFACES` (Wave A) with status/asset-group/source metadata + `signs_for:<ag>` edges.
+  (`_capability_gaps.py`)
+- **F50 — FIXED.** `fund_structure` nodes (2: pooled + sma) emitted from `OFFERED_FUND_STRUCTURES` with
+  share-class/cadence metadata + `offers_share_class` edges. (`_capability_gaps.py`)
+- **F51 — FIXED.** Chain nodes deduped 41→35 (no numeric-id + name duplicate for the same chain; `MAINNET_CHAIN_IDS` is
+  the name↔id SSOT, human name is the canonical id, numeric chain_id in metadata; numeric-only nodes remain ONLY for
+  chains with no registered name, e.g. testnets). (`_capability_extract.py`)
+- **F52 — FIXED.** `data_source` nodes 28→24 — internal service producers (execution_service / instruments_service /
+  features_onchain_service / strategy_service) excluded; real vendors retained. (`_capability_extract.py`)
+- **F53 — FIXED (exporter).** `ml_model` nodes 1→8 — exporter now walks the ml-service `VALID_MODEL_TYPES` registry
+  (lightgbm/xgboost/catboost/random_forest/huber/poisson_glm/ridge/ensemble) via the per-service venv probe; each node
+  carries the `VALID_TARGET_TYPES` + `ModelVariantConfig` fields. NOTE: `VALID_MODEL_TYPES` is a flat model-TYPE
+  registry, not a per-archetype model-VARIANT registry — the per-archetype archetype→model edge derivation still needs
+  an ml-service queryable variant registry (residual P2 below). (`_capability_gaps.py`)
+
+Regression note: the Wave-2 #5 capability-regression gate PASSED with NO `--update-baseline` — the re-kinding/dedup
+renamed/removed nodes but kept every genuine capability AVAILABLE, so no `available→not_available` edge regression
+fired.
+
+### Residual (still open after Wave B)
+
+- [ ] [SPEC] P2. **ml-service per-archetype model-variant registry (F53 residual)** — ml-service exposes only flat
+      `VALID_MODEL_TYPES`/`VALID_TARGET_TYPES` (no per-archetype model-variant enumeration); the manifest therefore
+      emits `ml_model` nodes per model type but cannot yet emit archetype→model edges. Add a queryable per-archetype
+      model-variant registry to ml-service so the exporter can derive `uses_model` edges. Target: ml-service.
+- [ ] [UI] P1. **Custody/signing-surface wizard stage (F49 residual)** — manifest now carries `signing_surface` nodes;
+      the wizard still needs a custody stage that constrains wallets/venues by signing surface. Target:
+      unified-trading-system-ui (Wave C).

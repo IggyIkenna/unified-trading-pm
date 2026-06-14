@@ -49,6 +49,16 @@ REL_HAS_LEG = "has_leg"
 REL_LEG_CONSTRAINT = "leg_constraint"
 REL_ROUTED_VIA = "routed_via"  # F38: venue ⇠routed_via⇢ broker
 
+# F52: internal SERVICE producers excluded from `data_source` vendor nodes.
+INTERNAL_SERVICE_PRODUCERS: frozenset[str] = frozenset(
+    {
+        "execution_service",
+        "instruments_service",
+        "features_onchain_service",
+        "strategy_service",
+    }
+)
+
 
 def _node(kind: CapabilityNodeKind, node_id: str, label: str, **meta: str) -> CapabilityNode:
     return CapabilityNode(kind=kind, node_id=node_id, label=label, metadata={k: str(v) for k, v in meta.items()})
@@ -324,6 +334,7 @@ def extract_venues() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
         DEFI_VENUE_TO_PROTOCOL,
         ENDPOINT_REGISTRY,
         INSTRUMENT_TYPES_BY_VENUE,
+        MAINNET_CHAIN_IDS,
         VENUE_CATEGORY_MAP,
     )
 
@@ -343,9 +354,33 @@ def extract_venues() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
             seen.add(key)
             nodes.append(_node(kind, node_id, label, **meta))
 
-    # Chains
-    for chain_id in sorted(str(c) for c in CHAIN_RPC_TEMPLATES):
-        add(CapabilityNodeKind.CHAIN, f"chain:{chain_id}", f"Chain {chain_id}")
+    # F51: chain dedup. The numeric chain-ids (CHAIN_RPC_TEMPLATES, dict[int,str])
+    # and the human chain names (DEFI_VENUE_TO_PROTOCOL chain field: ETHEREUM,
+    # ARBITRUM, …) are the SAME chains expressed two ways. Normalize to ONE
+    # canonical node per chain keyed by the HUMAN NAME (MAINNET_CHAIN_IDS is the
+    # name↔id SSOT), carrying chain_id in metadata. ``canonical_chain_node``
+    # resolves either an int chain-id OR a name string to a single canonical
+    # ``chain:<NAME>`` node (falling back to ``chain:<id>`` only for a numeric id
+    # with no registered name — never a name+id duplicate).
+    id_to_name: dict[int, str] = {cid: name for name, cid in MAINNET_CHAIN_IDS.items() if cid != 0}
+
+    def canonical_chain_node(chain: int | str) -> tuple[str, str, dict[str, str]]:
+        """Return (node_id, label, metadata) for the canonical chain node."""
+        if isinstance(chain, int):
+            name = id_to_name.get(chain)
+            if name is not None:
+                return f"chain:{name}", _titleize(name), {"chain_id": str(chain)}
+            return f"chain:{chain}", f"Chain {chain}", {"chain_id": str(chain)}
+        # name string
+        upper = str(chain).upper()
+        cid = MAINNET_CHAIN_IDS.get(upper)
+        meta = {"chain_id": str(cid)} if cid not in (None, 0) else {}
+        return f"chain:{upper}", _titleize(upper), meta
+
+    # Chains (canonicalised — one node per chain, name-keyed where known).
+    for raw_chain_id in sorted(CHAIN_RPC_TEMPLATES):
+        node_id, label, cmeta = canonical_chain_node(raw_chain_id)
+        add(CapabilityNodeKind.CHAIN, node_id, label, **cmeta)
 
     # Endpoint metadata: venue -> {access_mode, requires_auth}
     endpoint_meta: dict[str, dict[str, str]] = {}
@@ -375,8 +410,8 @@ def extract_venues() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
         vid = f"venue:{venue}"
         add(CapabilityNodeKind.VENUE, vid, _titleize(str(venue)), category="defi", protocol=str(protocol))
         if chain is not None:
-            chain_node = f"chain:{chain}"
-            add(CapabilityNodeKind.CHAIN, chain_node, str(chain))
+            chain_node, chain_label, chain_meta = canonical_chain_node(chain)
+            add(CapabilityNodeKind.CHAIN, chain_node, chain_label, **chain_meta)
             edges.append(
                 CapabilityEdge(
                     from_node_id=vid,
@@ -513,10 +548,20 @@ def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
             nodes.append(_node(kind, node_id, label, **meta))
 
     # Collect all distinct sources from SOURCE_PRIORITY values.
+    # F52: internal SERVICE producers are not external data vendors. These ids
+    # (execution_service / instruments_service / features_onchain_service /
+    # strategy_service) are internal pipeline producers — they emit derived
+    # outputs, they are not a third-party feed a config would "select". Exclude
+    # them from `data_source` nodes (which should be real external vendors only:
+    # databento / massive / helius_rpc / chainlink / polymarket_* / odds_api /
+    # api_football / footystats / eia / open_meteo / …).
     sources: set[str] = set()
     for source_list in SOURCE_PRIORITY.values():
         for src in source_list:
-            sources.add(str(src))
+            src_str = str(src)
+            if src_str in INTERNAL_SERVICE_PRODUCERS:
+                continue
+            sources.add(src_str)
 
     transports = sorted(t.value for t in Transport)
     # Three pipeline modes are the canonical axis.
