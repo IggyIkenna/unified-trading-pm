@@ -318,9 +318,15 @@ fired.
       asset_groups + targets. Same fix reconnected the pre-existing **912 dangling `uses_algo` edges** (they referenced
       an `archetype:` prefix the nodes never had). Manifest regenerated **574 nodes / 2497 edges** (deterministic
       byte-identical; #5 capability-regression gate PASS, no `--update-baseline`); UAC@bccad6e. Re-bundled byte-identical
-      into uts-ui@3c414001 (parity 27/27, `.husky` >1MB allowlist) + dep-ui@c1ba2aa (pw 9/9). **Granularity note**: the
-      registry keys on asset_group×target (ml-service training is asset-group-scoped, not archetype-scoped); a finer
-      archetype→signal→target map would need an operator-authored signal SSOT — intentionally NOT invented.
+      into uts-ui@3c414001 (parity 27/27, `.husky` >1MB allowlist) + dep-ui@c1ba2aa (pw 9/9). **SUPERSEDED by the
+      signal-grounded refinement (operator "do this", 2026-06-14)** — the asset_group blanket join was tightened to a
+      per-signal join: UAC@c1ac124 `ml_signal_targets.SIGNAL_VARIANT_ML_TARGETS` (operator-authored signal→target map,
+      every archetype `signal_variant` classified predictive-or-deterministic, exhaustiveness test) + ml-service@2c07a72
+      `model_types_for_target`/`asset_groups_for_target` + PM@PR#328 exporter `_archetype_model_edges` now joins each
+      archetype's REAL per-cell `signal_variants` → ML targets → models (domain-gated). **167→103 edges (82 available /
+      21 partial, 14 archetypes)**: pure-carry archetypes (basis/staking_yield-only) now correctly get ZERO edges; a
+      funding-predicting carry keeps only its funding_rate model edges. Manifest 574/**2433**; re-bundled byte-identical
+      uts-ui@c5dc251c (243 vitest) + dep-ui@99a5f51 (pw 9/9); #5 regression gate PASS. No open residual remains.
 - [x] ✅ [UI] P1. **Custody/signing-surface wizard stage (F49 residual)** — manifest now carries `signing_surface` nodes;
       the wizard still needs a custody stage that constrains wallets/venues by signing surface. Target:
       unified-trading-system-ui (Wave C). — **DONE uts-ui@3c98036587 (Wave C)**: custody/signing-surface field added to
