@@ -3,11 +3,12 @@ title:
   "deployment-api Cloud Build broken since 2026-06-10 — template rollout dropped the fetch-ui step (cloud image frozen
   at 05-19)"
 created: 2026-06-14
-author: slot-3 (operator deploy request)
 source:
   - gcloud builds list deployment-api-build → FAILURE on 2026-06-10 (×2) + 2026-06-11; last SUCCESS image 2026-05-19
   - git show b80f05c~1:cloudbuild.yaml has fetch-ui (10 matches); b80f05c + current LDR have 0
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
