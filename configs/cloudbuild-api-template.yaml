@@ -96,18 +96,47 @@ steps:
           --enable-vulnerability-scanning 2>/dev/null || true
     waitFor: ["-"]
 
+  # ── Pull base image (digest-aware) — required for an authenticated FROM ────
+  # When the Dockerfile pins `ARG BASE_IMAGE_DIGEST=sha256:<64-hex>` and its base
+  # FROM is the UTL image (deployment-api does), pre-pull THAT digest with the
+  # authenticated CLI so the in-build FROM @${...} hits the local cache instead
+  # of an UNAUTHENTICATED daemon-side registry pull → "denied" (mtds incident
+  # 2026-06-10). Harmless for api repos that don't pin / don't use the UTL base:
+  # PIN is empty → only the best-effort `:latest || true` runs.
+  - name: "gcr.io/cloud-builders/docker"
+    id: "pull-base-image"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        BASE="asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library"
+        PIN=$$(sed -n 's/^ARG BASE_IMAGE_DIGEST=\(sha256:[0-9a-f]\{64\}\).*/\1/p' Dockerfile | head -1 || true)
+        if [ -n "$$PIN" ]; then
+          echo "pinned base digest: $$PIN — pre-pulling the PINNED manifest"
+          docker pull "$${BASE}@$${PIN}"
+        fi
+        docker pull "$${BASE}:latest" || true
+    waitFor: ["configure-docker"]
+
   - name: "gcr.io/cloud-builders/docker"
     id: "build"
     args:
       - "build"
       - "-f"
       - "Dockerfile"
+      # PROJECT_ID is required by the digest-pinned base FROM in api Dockerfiles
+      # (.../unified-trading-library@${BASE_IMAGE_DIGEST}); Cloud Build does NOT
+      # auto-pass substitutions as docker build-args, so it must be explicit or
+      # the base FROM expands to an invalid reference.
+      - "--build-arg"
+      - "PROJECT_ID=$PROJECT_ID"
       - "-t"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA"
       - "-t"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:latest"
       - "."
-    waitFor: ["configure-docker", "ensure-repo", "fetch-ui"]
+    waitFor: ["pull-base-image", "ensure-repo", "fetch-ui"]
 
   - name: "gcr.io/cloud-builders/docker"
     id: "quality-gates"
