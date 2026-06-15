@@ -93,9 +93,24 @@ register + matrix-flip; if no, honest `not_available` + a single shared blocker 
 - [ ] [SCRIPT] P3. **VOL_SPREAD_STRUCTURES** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P3. **VOL_SYNTHETIC_DELTA** — real or honest-absent. Repo: strategy-service.
 
-## Phase E0 — prerequisite data audit (BLOCKING gate for E1/E2)
+## Phase E0 — prerequisite data audit (BLOCKING gate for E1/E2) — ✅ DONE 2026-06-15
 
-- [ ] [SCRIPT] P1. **Audit whether the options vol-surface/greeks feed + the L2 orderbook microstructure feed exist** (instruments-service + MTDS + features). The OUTCOME decides how many of the 22 engines are buildable now vs honest-blocked. Build this FIRST — it converts "build 22 engines" into "build N now + file (22−N) honest blockers with named operator asks". Repo: instruments-service / mtds (read-only audit) → file findings here.
+- [x] [SCRIPT] P1. ✅ **Audited the options vol-surface/greeks + L2 microstructure feeds.** VERDICT: **zero of the 22 engines are real-buildable today — the upstream data does not exist.** (a) VOL_* (17): `CanonicalOptionsChain` schema exists (instruments-service `reference_data/schemas.py:19-27`) but NO captured options data, NO `greeks_snapshot`/`implied_vol_surface` data_type (UAC `registry/data_type_capability.py`), only TradFi CME `options_chain` registered `live_capable=False`. (b) MARKET_MAKING_* (5): `book_snapshot_5` IS live-capable for CeFi (Binance/OKX/Bybit/Deribit/Coinbase/Upbit) but `queue_position`/`order_flow_imbalance`/deeper-L2 absent + features-service exposes no book-microstructure features to the engine. (c) `GroupBRunner.on_tick` is feature-agnostic (`dict[str,float]`) but receives an empty dict for vol/microstructure → no real backtest possible.
+
+> **E0 VERDICT — the build-out is gated on a DATA-PIPELINE build, not strategy code.** Building any engine now
+> would violate the real-or-honest-absent HARD CONTRACT (hollow engine, lying matrix). The real unlock is
+> **Phase D below**. Until Phase D lands, all 22 engines stay honestly `not_available` with the blockers filed.
+
+## Phase D — upstream data feeds (the REAL prerequisite that unblocks E1/E2)
+
+Per the external-data-always-available rule, a missing feed is NOT a license to defer — it is a build (adapter
+scaffold + UAC contract + manifest emission + unit tests on mocks; integration tests `@requires_credentials`) plus
+a named operator credential ask. These are the engines' true predecessors.
+
+- [ ] [SCRIPT] P1. **Build the options vol-surface + greeks feed** — register `greeks_snapshot` + `implied_vol_surface` (or `vol_surface`) data_types in UAC `data_type_capability.py`; add a live Deribit (+ other options-venue) options-chain + greeks adapter in instruments-service/MTDS; wire greeks-service to compute delta/gamma/vega/theta + IV surface; emit to features. Operator ask: confirm options-data source/credentials (Deribit public is free for chains; greeks computed in-house). Unblocks all 17 VOL_*. Repos: instruments-service + market-tick-data-service + greeks-service + unified-api-contracts.
+- [ ] [SCRIPT] P2. **Extend the L2 microstructure feed** — register `queue_position` + `order_flow_imbalance` (+ `depth_of_book_10`) data_types; add MTDS WebSocket handlers; expose book-microstructure features (spread/imbalance/microprice) from `book_snapshot_5` in features-service. Unblocks MARKET_MAKING_PASSIVE_SPREAD + INVENTORY_SKEW first (L5-sufficient), then QUEUE_MICROSTRUCTURE (needs queue_position). Repos: market-tick-data-service + features-service + unified-api-contracts.
+
+> **E1/E2 below are BLOCKED-DATA pending Phase D** — do not build until the corresponding feed lands.
 
 ## Codex SSOT updates
 
