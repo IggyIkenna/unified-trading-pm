@@ -58,6 +58,15 @@ done
 PIDS_DIR="${TMPDIR:-/tmp}/deployment-stack-pids"
 mkdir -p "$PIDS_DIR"
 
+# True only when NOTHING holds the port: no owning process AND no LISTEN socket
+# (a killed process can leave the bind momentarily reserved → a race for the
+# next bind). Checks both lsof (owner) and ss (LISTEN state) for robustness.
+port_free() {
+  local port="$1"
+  [ -z "$(lsof -ti tcp:"$port" 2>/dev/null || true)" ] \
+    && ! ss -ltn 2>/dev/null | awk '{print $4}' | grep -qE "[:.]${port}\$"
+}
+
 stop_port() {
   local port="$1" name="$2"
   local pids
@@ -71,6 +80,18 @@ stop_port() {
       echo "  force-killing ${name} (still holding ${port})"
       kill -9 $pids 2>/dev/null || true
     fi
+  fi
+  # Deterministic free-wait — poll until the port is genuinely released before
+  # returning, so the subsequent start never races a not-yet-freed bind (the
+  # restart flakiness root cause). Up to ~10s; SO_REUSEADDR usually frees <1s.
+  local tries=0
+  while [ "$tries" -lt 40 ]; do
+    if port_free "$port"; then break; fi
+    sleep 0.25
+    tries=$((tries + 1))
+  done
+  if [ "$tries" -ge 40 ]; then
+    echo "  WARNING: ${name} port ${port} still bound after ~10s wait — start may fail" >&2
   fi
   rm -f "${PIDS_DIR}/${name}.pid"
 }
