@@ -20,7 +20,8 @@ status: active
 Wrapper plan dispatching the OPEN engine findings the capability-wizard initiative surfaced (F1–F53 + margin audit).
 Operator decisions (2026-06-15):
 
-1. **strategy-service LOGIC FREEZE — LIFTED** for the CeFi-margin engine work (+ F27 / F16). Real engine code authorised.
+1. **strategy-service LOGIC FREEZE — LIFTED** for the CeFi-margin engine work (+ F27 / F16). Real engine code
+   authorised.
 2. **F45 exposure-netting OWNER = strategy-service** (position/risk lives there; now unfrozen).
 3. **F28 collateral haircuts — research official venue haircuts, reconcile to the CONSERVATIVE value, operator approves
    the diff before ship.**
@@ -40,10 +41,10 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       execution-service@8a3c6ab** (2026-06-15, operator-approved values). UAC `venue_collateral.py` = CANONICAL; its 7
       clear-cut values were already correct (HL wstETH / OKX stETH / Binance stETH NOT-ACCEPTED; Deribit stETH 0.075;
       Deribit wstETH NOT-ACCEPTED; Bybit/OKX wstETH 0.10). execution-service `_LST_REGISTRY` (106-line duplicate) +
-      local lookup **DELETED** → `get_lst_acceptance()` now reads UAC `venue_accepts_collateral`/`get_collateral_haircut`
-      with an explicit fraction→percent boundary conversion (the 100× units-bug guard). Orphaned `margin_mode` field
-      removed. Bybit-stETH + Drift-mSOL flagged `# PLACEHOLDER` (operator-held). Kamino kept out (lending). QG green both
-      repos (UAC 2 tests, exec-svc 22 tests).
+      local lookup **DELETED** → `get_lst_acceptance()` now reads UAC
+      `venue_accepts_collateral`/`get_collateral_haircut` with an explicit fraction→percent boundary conversion (the
+      100× units-bug guard). Orphaned `margin_mode` field removed. Bybit-stETH + Drift-mSOL flagged `# PLACEHOLDER`
+      (operator-held). Kamino kept out (lending). QG green both repos (UAC 2 tests, exec-svc 22 tests).
 - [ ] [DEFI] P2. **F28 live-API probe** to finalize the two operator-HELD collateral haircuts in UAC
       `registry/venue_collateral.py` — Bybit stETH (0.10 placeholder) + Drift mSOL (0.10 placeholder); replace the
       `# PLACEHOLDER — pending live-API probe (F28, operator-held 2026-06-15)` comments with probed values + source
@@ -56,7 +57,7 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
 - [x] ✅ [SCRIPT] P2. **F47/F48 — surface-correct the verdict-matrix over-claims.** — DONE **PM@d0f66d732 (PR #339) +
       UAC@a1f8b38** (2026-06-15). F47: leg-eligible venues whose folded slot-token ∉ `KNOWN_VENUE_TOKENS` → `blocked`
       with `unbuildable_slot_venue` (186 cells / 11 venues, DERIVED not enumerated). F48: archetypes whose value ∉ the
-      v2 engine-backed set → `not_registered(no_v2_engine)` (22 VOL_*/MARKET_MAKING_*, retained the 3 engined ones).
+      v2 engine-backed set → `not_registered(no_v2_engine)` (22 VOL*\*/MARKET_MAKING*\*, retained the 3 engined ones).
       AVAILABLE 16913→12977 (−3936); total 24752→21600; deterministic. UI re-bundle dispatched (uts-ui + dep-ui →
       21600/12977). Engine builds = Phase C.
 - [ ] [SCRIPT] P3. **F48 follow-up — replace the engine-registry TRANSCRIPTION with a venv probe (single-canonical).**
@@ -79,73 +80,157 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
 
 ## Phase B — strategy-service engine (freeze LIFTED) — CeFi margin traceability + netting + F27/F16
 
-- [x] ✅ [SPEC] P0. **Margin cluster — make CeFi margin TRACEABLE end-to-end** (operator's original "can we trace where our
-      margin sits?"). Three coupled fixes in strategy-service `position/`:
-      (a) `core/margin_event_emitter.py` — drop the hardcoded `venue_type="defi"`; emit `MarginEvent` for CeFi perp
-      venues (HL/Bybit/OKX/Binance) off live per-venue balances, classified by real venue_type.
-      (b) `core/venue_balance_tracker.py` — add a CeFi per-venue balance tracker (currently sports/per-bookmaker only) so
-      the emitter has live balances to feed.
-      (c) `api/margin_health.py` — replace the Phase-1 stub (`return []`) with a real `MarginHealthSnapshot` per
+- [x] ✅ [SPEC] P0. **Margin cluster — make CeFi margin TRACEABLE end-to-end** (operator's original "can we trace where
+      our margin sits?"). Three coupled fixes in strategy-service `position/`: (a) `core/margin_event_emitter.py` — drop
+      the hardcoded `venue_type="defi"`; emit `MarginEvent` for CeFi perp venues (HL/Bybit/OKX/Binance) off live
+      per-venue balances, classified by real venue_type. (b) `core/venue_balance_tracker.py` — add a CeFi per-venue
+      balance tracker (currently sports/per-bookmaker only) so the emitter has live balances to feed. (c)
+      `api/margin_health.py` — replace the Phase-1 stub (`return []`) with a real `MarginHealthSnapshot` per
       client/venue, reading the haircut-adjusted posted-collateral from the F28-canonical collateral SSOT
-      (`collateral_usd`), resolving the F28 dual-SSOT risk on the consumer side too.
-      Emit against the existing UAC surface (`transfer_purpose` + `COLLATERAL_POSTED`/`MARGIN_RELEASED`, already shipped).
-      — DONE **UTL@1b215ea9 + strategy-service@b9b26433** (2026-06-15). (a) `emit_margin_event_for_cefi(*, client_id,
-      strategy_id, venue, margin_model, portfolio, position_type="PERP")` computes via the UTL CeFi model, maps
-      `severity_breach`→`MarginEventSeverity` (none→INFO skip / warning→WARNING / critical→CRITICAL /
-      severe+liquidation→LIQUIDATION), emits a `venue_type="cefi"` snapshot — usage% lands in the schema's
-      `margin_usage_pct` field (NOT `health_factor`, a DeFi-only concept), shared `_publish_margin_event` for both paths.
-      (b) `CefiVenueBalanceReader` builds `PortfolioInputs` from the LIVE in-service `AccountQueryClient` (UPI-backed — no
-      execution-service import; service-dep ban holds): open positions → collateral_positions (mark = entry +
-      upnl/qty), used margin → USD debt leg; + `CEFI_PERP_VENUES` / `cefi_margin_model_for_venue`. (c) `margin_health`
-      returns real per-venue `MarginHealthSnapshot[]` (model usage% + F28 `get_collateral_haircut` haircut-adjusted
-      wallet collateral_usd), summary aggregates avg_margin_usage_pct/max_ltv; GCS time-series is the documented Phase-2
-      next step. UTL prereq: `get_margin_model`/`PortfolioInputs`/`compute_health` re-exported at UTL top level (import
-      gate wants top-level UTL imports). Tests: 31 (severity map, cefi snapshot, publish-swallow, reader live path,
-      margin_health real return, no-position skip). QG green both repos (UTL 120s, strategy-service 135s).
-- [x] ✅ [SPEC] P1. **F45 — exposure-normalization / net-delta pipeline, single-canonical.** Consolidate the
-      scattered primitives (UAC `risk.py`, UTL `risk/`, execution-service leg controllers / `perp_hedge_sizer`) into ONE
-      canonical netting entry that nets LST→underlying delta + multi-leg inter-leg delta into a
-      single position-level exposure. **DELETE the scattered duplicate netting logic** once consumers point at the
-      canonical one (single-SSOT rule). Target: strategy-service (+ UTL/UAC for the shared contract types only).
-      — DONE **UTL@b819cd1c + execution-service@b7c63335 + strategy-service@bdac6595** (2026-06-15).
-      **Canonical home = UTL `unified_trading_library/risk/net_delta.py`** (top-level re-exported), NOT strategy-service —
-      **operator-absent architectural decision, documented per autonomous rule 1**: the literal "pipeline in
-      strategy-service that every consumer points at" is unbuildable because the workspace **no-service↔service-import**
-      HARD RULE forbids execution-service (`perp_hedge_sizer`/`leveraged_leg_controller`) importing a strategy-service
-      module. UTL is the only shared T0 lib BOTH services already depend on, so the single SSOT lives there; strategy-service
-      still OWNS the position/risk orchestration that calls it. Five pure-Decimal primitives (behavior-identical
-      extractions, no math changed): `net_underlying_delta` (collateral·er − debt, LST→underlying), `residual_hedge_size`
-      (max(0, e − target), the perp-hedge sizing), `net_signed_delta` / `net_signed_exposure` / `gross_exposure` (signed
-      rollups). Consumers repointed + inline DELETED: execution-service `PerpHedgeSizer.read_e_from_aave_data` +
+      (`collateral_usd`), resolving the F28 dual-SSOT risk on the consumer side too. Emit against the existing UAC
+      surface (`transfer_purpose` + `COLLATERAL_POSTED`/`MARGIN_RELEASED`, already shipped). — DONE **UTL@1b215ea9 +
+      strategy-service@b9b26433** (2026-06-15). (a)
+      `emit_margin_event_for_cefi(*, client_id,     strategy_id, venue, margin_model, portfolio, position_type="PERP")`
+      computes via the UTL CeFi model, maps `severity_breach`→`MarginEventSeverity` (none→INFO skip / warning→WARNING /
+      critical→CRITICAL / severe+liquidation→LIQUIDATION), emits a `venue_type="cefi"` snapshot — usage% lands in the
+      schema's `margin_usage_pct` field (NOT `health_factor`, a DeFi-only concept), shared `_publish_margin_event` for
+      both paths. (b) `CefiVenueBalanceReader` builds `PortfolioInputs` from the LIVE in-service `AccountQueryClient`
+      (UPI-backed — no execution-service import; service-dep ban holds): open positions → collateral_positions (mark =
+      entry + upnl/qty), used margin → USD debt leg; + `CEFI_PERP_VENUES` / `cefi_margin_model_for_venue`. (c)
+      `margin_health` returns real per-venue `MarginHealthSnapshot[]` (model usage% + F28 `get_collateral_haircut`
+      haircut-adjusted wallet collateral_usd), summary aggregates avg_margin_usage_pct/max_ltv; GCS time-series is the
+      documented Phase-2 next step. UTL prereq: `get_margin_model`/`PortfolioInputs`/`compute_health` re-exported at UTL
+      top level (import gate wants top-level UTL imports). Tests: 31 (severity map, cefi snapshot, publish-swallow,
+      reader live path, margin_health real return, no-position skip). QG green both repos (UTL 120s, strategy-service
+      135s).
+- [x] ✅ [SPEC] P1. **F45 — exposure-normalization / net-delta pipeline, single-canonical.** Consolidate the scattered
+      primitives (UAC `risk.py`, UTL `risk/`, execution-service leg controllers / `perp_hedge_sizer`) into ONE canonical
+      netting entry that nets LST→underlying delta + multi-leg inter-leg delta into a single position-level exposure.
+      **DELETE the scattered duplicate netting logic** once consumers point at the canonical one (single-SSOT rule).
+      Target: strategy-service (+ UTL/UAC for the shared contract types only). — DONE **UTL@b819cd1c +
+      execution-service@b7c63335 + strategy-service@bdac6595** (2026-06-15). **Canonical home = UTL
+      `unified_trading_library/risk/net_delta.py`** (top-level re-exported), NOT strategy-service — **operator-absent
+      architectural decision, documented per autonomous rule 1**: the literal "pipeline in strategy-service that every
+      consumer points at" is unbuildable because the workspace **no-service↔service-import** HARD RULE forbids
+      execution-service (`perp_hedge_sizer`/`leveraged_leg_controller`) importing a strategy-service module. UTL is the
+      only shared T0 lib BOTH services already depend on, so the single SSOT lives there; strategy-service still OWNS
+      the position/risk orchestration that calls it. Five pure-Decimal primitives (behavior-identical extractions, no
+      math changed): `net_underlying_delta` (collateral·er − debt, LST→underlying), `residual_hedge_size` (max(0, e −
+      target), the perp-hedge sizing), `net_signed_delta` / `net_signed_exposure` / `gross_exposure` (signed rollups).
+      Consumers repointed + inline DELETED: execution-service `PerpHedgeSizer.read_e_from_aave_data` +
       `compute_rebalance` + `leveraged_leg_controller.verify_net_delta`; strategy-service `risk_group_aggregator` +
-      `exposure_aggregator`. **Diagnosis (read-both-sides, distinct-concern → left alone, NOT dupes):** `margin_sim._netting_factor`
-      = margin-requirement netting (not position delta); `output_builders._aggregate_exposure_totals` = **float**-domain
-      output-schema rollup (routing through the Decimal primitives would alter live `risk_metrics` parquet precision —
-      deliberately kept local); options-greeks delta aggregation; pre-trade limit checks. Tests: UTL 16 net_delta +
-      exec-svc 16 perp_hedge_sizer + 25 leveraged_leg_controller + strategy 18 risk/exposure aggregator (all green,
-      behavior preserved). QG green all 3 repos.
-- [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit` vs `DERIBIT`) that no-emits. Normalise
-      venue-id casing at the engine boundary (one canonical case; cite the SSOT). Target: strategy-service. — DONE
-      **UAC@c0b2d0e** (2026-06-15): fixed at the SOURCE — `venue_collateral.py` accessors (`accepted_perp_collateral`/
-      `venue_accepts_collateral`/`get_collateral_haircut`/`get_accepted_collateral`) now normalise both sides to
-      `.upper()`, so lowercase slot-config venue ids resolve against the UPPERCASE matrix. `accepted_perp_collateral('deribit')`
-      now returns `['BTC','ETH','USDC','stETH']` (was `[]`). Protects ALL callers, not just staked_basis. +regression test.
+      `exposure_aggregator`. **Diagnosis (read-both-sides, distinct-concern → left alone, NOT dupes):**
+      `margin_sim._netting_factor` = margin-requirement netting (not position delta);
+      `output_builders._aggregate_exposure_totals` = **float**-domain output-schema rollup (routing through the Decimal
+      primitives would alter live `risk_metrics` parquet precision — deliberately kept local); options-greeks delta
+      aggregation; pre-trade limit checks. Tests: UTL 16 net_delta + exec-svc 16 perp_hedge_sizer + 25
+      leveraged_leg_controller + strategy 18 risk/exposure aggregator (all green, behavior preserved). QG green all 3
+      repos.
+- [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit` vs `DERIBIT`) that no-emits.
+      Normalise venue-id casing at the engine boundary (one canonical case; cite the SSOT). Target: strategy-service. —
+      DONE **UAC@c0b2d0e** (2026-06-15): fixed at the SOURCE — `venue_collateral.py` accessors
+      (`accepted_perp_collateral`/ `venue_accepts_collateral`/`get_collateral_haircut`/`get_accepted_collateral`) now
+      normalise both sides to `.upper()`, so lowercase slot-config venue ids resolve against the UPPERCASE matrix.
+      `accepted_perp_collateral('deribit')` now returns `['BTC','ETH','USDC','stETH']` (was `[]`). Protects ALL callers,
+      not just staked_basis. +regression test.
 - [x] ✅ [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** Fix the call signature.
       Target: strategy-service. — DONE **strategy-service@bce2f46d** (2026-06-15): moved the invalid
       `service_name=`/`operation=`/`error_code=` kwargs into `details={}` (log_event takes only event_name/severity/
       details/client_id/correlation_id); the GCS-config search error path no longer raises TypeError.
 
-## Phase C — engine builds for the catalogue over-claims (follow-on; larger)
+## Phase C — engine builds OR ratify for the catalogue over-claims (build-or-ratify, per-archetype + per-venue)
 
-- [ ] [LOGIC] P2. **F47/F48 engine — build the missing v2 engines** for the venues/archetypes the matrix had been
-      over-claiming (the v2 slot-label venue tokens + the 22 VOL_*/MARKET_MAKING_* archetypes), OR ratify (with operator)
-      that they stay honestly `not_available`. Target: strategy-service. **Scoped separately — bigger than Phase B.**
+> **Phase C is catalogue-honesty + selective post-MVP build-out, NOT a May-23 critical-path item.** The two LIVE DeFi
+> MVP archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) are ALREADY engine-backed and use only supported
+> venues — Phase B's F47/F48 SURFACE fix (PM@d0f66d732 + UAC@a1f8b38) already made the verdict matrix HONEST: it reports
+> `not_registered(no_v2_engine)` / `not_registered(missing_registry)` for engineless archetypes and
+> `blocked(unbuildable_slot_venue)` for venues whose folded slot-token ∉ the canonical `architecture_v2.venue_tokens`
+> (`KNOWN_VENUE_TOKENS`) registry. **That honesty is CORRECT, not a bug.** Phase C is the per-archetype / per-venue
+> decision: BUILD the engine (real design+implement+backtest) / ADD the venue token (only for a genuinely
+> end-to-end-supported venue), **or RATIFY it stays honestly `not_available`.**
+
+### Operator decision (recorded 2026-06-15 — autonomous dispatch, decision blanks left empty)
+
+The dispatch's three operator-decision sets (BUILD-SUBSET / VENUE-TOKEN-ADD / RATIFY-ack) were **left empty** by the
+operator. The dispatch's own decision rule governs the empty case verbatim: _"If the operator leaves the BUILD-SUBSET
+empty: Phase C = RATIFY-ONLY … Do NOT build engines the operator did not name (building 28 unwanted strategies is the
+wrong outcome)."_ The recommended default was explicitly **EMPTY** ("none are on the live path; the honest matrix
+already reflects reality"). Per AUTONOMOUS_AGENT_RULES rule 2 (decide from the documented record of intent, don't ask):
+
+- **BUILD-SUBSET = { } (empty)** — no v2 engine is built in this pass. None of the 28 engineless archetypes is on the
+  live DeFi path; each is a genuine options-vol / MM-microstructure / portfolio-optimisation design+implement+backtest
+  effort, and a registered-but-empty engine is WORSE than honest `not_available` (it re-creates the over-claim).
+- **VENUE-TOKEN-ADD = { } (empty)** — no venue token added. None of the 11 blocked venues is wired end-to-end (adapter +
+  collateral + capability); adding a token for an unsupported venue re-introduces the exact F47 over-claim Phase B
+  fixed.
+- **RATIFY-the-rest = ALL 28 engineless archetypes + ALL 11 unbuildable venues** stay honestly `not_available`. This is
+  the intended DONE state, not a gap. NO code change → the matrix is unchanged-and-honest.
+
+### Ground truth (re-verified 2026-06-15 via the live registries — registries drift, do not trust a paste)
+
+- **57** `StrategyArchetype` enum values; **29 engine-backed** (`ARCHETYPE_ENGINE_REGISTRY`, probed live via
+  `strategy-service/.venv`); **28 MISSING** an engine. (The Phase-A "22" was the `no_v2_engine` _subset_, not the total:
+  28 = **22** archetypes with leg structure but no engine [`no_v2_engine`] + **6** with no leg structure at all
+  [`missing_registry`].)
+- **11** venues / **186** cells `blocked(unbuildable_slot_venue)`: folded slot-token ∉ `KNOWN_VENUE_TOKENS` (74 tokens).
+- Verdict-matrix counts (committed `unified-api-contracts/openapi/capability-verdict-matrix.json`, deterministic):
+  **total 21600 / available 12977 / blocked 8175 / not_registered 448** (= 96 `missing_registry` [6 archetypes] + 352
+  `no_v2_engine` [22 archetypes]). Identical to the Phase-B post-fix counts → RATIFY introduces a **zero delta**.
+
+- [x] ✅ [LOGIC] P2. **F47/F48 engine — RATIFIED honestly `not_available` (build-subset + venue-add both empty).** —
+      DONE **PM (this plan + codex) 2026-06-15**. Operator left BUILD-SUBSET / VENUE-TOKEN-ADD empty → per the
+      dispatch's empty-case rule, RATIFY-ONLY: all 28 engineless archetypes + 11 unbuildable venues stay honestly
+      `not_available`, NO engine built, NO venue token added (either would re-introduce the over-claim). Matrix
+      re-verified unchanged (21600/12977/8175/448); deterministic unit test
+      `tests/unit/test_capability_verdict_matrix.py` green (7 tests); codex `archetype-paper-readiness.md` reconciled
+      (29 registered / 28 not) + ratification section added. Target: strategy-service (no change) / PM (doc) / codex.
+
+#### Ratified `not_available` — archetypes (28, post-MVP, no engine planned)
+
+`not_registered(no_v2_engine)` — has leg structure (`ARCHETYPE_LEG_STRUCTURES`) but no registered v2 engine (22):
+
+| Family               | Archetypes (ratified `not_available`)                                                                                                                                                                                                                                                                                                                                    | Reason (post-MVP, no engine planned)                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| VOL\_\* (17)         | `VOL_STRADDLE` `VOL_DISPERSION` `VOL_VARIANCE_SWAP` `VOL_TERM_STRUCTURE_ARB` `VOL_TERM_STRUCTURE_SLOPE` `VOL_RATIO_SPREAD` `VOL_SPREAD_STRUCTURES` `VOL_SYNTHETIC_DELTA` `VOL_CARRY` `VOL_CROSS_ASSET_SPREAD` `VOL_LEAPS_CONVEXITY` `VOL_OVERLAY_COVERED_CALLS` `VOL_OVERLAY_PROTECTIVE_PUT` `VOL_0DTE_GAMMA_SCALPING` `VOL_ARB_RV_IV` `VOL_MARKET_MAKING` `VOL_ML_LEAN` | Options-vol pricing book (Phase-9 catalogue expansion). Not on the live DeFi path; no options book trading at MVP. `VOL_TRADING_OPTIONS` (the legacy umbrella engine) IS backed and covers the family for back-compat. |
+| MARKET*MAKING*\* (5) | `MARKET_MAKING_INVENTORY_SKEW` `MARKET_MAKING_ML_LEAN` `MARKET_MAKING_PASSIVE_SPREAD` `MARKET_MAKING_PREDICTION` `MARKET_MAKING_QUEUE_MICROSTRUCTURE`                                                                                                                                                                                                                    | MM micro-variants. `MARKET_MAKING_CONTINUOUS` + `MARKET_MAKING_EVENT_SETTLED` ARE backed; the granular variants are post-MVP.                                                                                          |
+
+`not_registered(missing_registry)` — no leg structure at all (`ARCHETYPE_LEG_STRUCTURES.not_registered`) (6):
+
+| Family            | Archetypes (ratified `not_available`)                                                                         | Reason (post-MVP, no engine planned)                                                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PORTFOLIO\_\* (4) | `PORTFOLIO_FACTOR_ALLOCATION` `PORTFOLIO_MULTI_STRATEGY` `PORTFOLIO_RISK_PARITY` `PORTFOLIO_TACTICAL_OVERLAY` | Cross-category allocators (the 8 `PortfolioAllocator` engines are a distinct concept — not v2 archetype engines). Portfolio-level allocation is a post-MVP layer above the per-strategy engines.                    |
+| VOL\_\* (1)       | `VOL_0DTE_PIN_RISK`                                                                                           | 0DTE pin-risk; no leg structure declared. Post-MVP with the rest of the 0DTE/options book.                                                                                                                          |
+| ARBITRAGE_MEV (1) | `ARBITRAGE_MEV_SANDWICH`                                                                                      | Theoretical only (`mev/sandwich_theoretical.py`, not registered). Adversarial MEV — deliberately not productionised. The 3 productionised MEV archetypes (BACKRUN / JIT_LIQUIDITY / LIQUIDATION_BUNDLE) ARE backed. |
+
+#### Ratified `not_available` — venues (11, `unbuildable_slot_venue`; 186 cells)
+
+| Venue (eligible-but-unbuildable) | Folded token (∉ `KNOWN_VENUE_TOKENS`) | Cells | Reason (no end-to-end wiring → token NOT added)                                                              |
+| -------------------------------- | ------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------ |
+| `gmx_v2`                         | `gmxv2`                               | 66    | Alt perp DEX. No adapter+collateral+capability wiring; not on the live path (supported DEXes are tokenised). |
+| `betfair_direct`                 | `betfairdirect`                       | 48    | Sports betting exchange. Sports track is non-DeFi-MVP; direct-API venue not wired end-to-end.                |
+| `smarkets_direct`                | `smarketsdirect`                      | 36    | Sports betting exchange. As above.                                                                           |
+| `pancakeswap_v3`                 | `pancakeswapv3`                       | 10    | Alt DEX. Not wired end-to-end.                                                                               |
+| `sushiswap_v3`                   | `sushiswapv3`                         | 10    | Alt DEX. Not wired end-to-end.                                                                               |
+| `jupiter`                        | `jupiter`                             | 6     | Solana DEX aggregator. Not wired end-to-end (supported Solana DEXes are tokenised).                          |
+| `balancer_v2`                    | `balancerv2`                          | 2     | Alt DEX. Not wired end-to-end.                                                                               |
+| `balancer_v3`                    | `balancerv3`                          | 2     | Alt DEX. Not wired end-to-end.                                                                               |
+| `matchbook_direct`               | `matchbookdirect`                     | 2     | Sports betting exchange. Not wired end-to-end.                                                               |
+| `sommelier`                      | `sommelier`                           | 2     | Yield-vault protocol. Not wired end-to-end.                                                                  |
+| `trader_joe`                     | `traderjoe`                           | 2     | Alt DEX. Not wired end-to-end.                                                                               |
+
+Each is honestly `blocked(unbuildable_slot_venue)` today. Adding a token without the adapter/collateral/capability
+wiring would re-introduce the F47 over-claim — so the token is added ONLY when a venue is genuinely supported end-to-end
+(none qualify now). A later support effort is a new plan item, not a Phase-C gap.
 
 ## Codex SSOT updates
 
 - `codex/04-architecture/client-funds-isolation.md` / margin-traceability section (margin cluster end-to-end).
 - `codex/09-strategy/operational/pnl-attribution.md` (net-delta / exposure-normalization owner).
 - Collateral haircut SSOT note (which of venue_collateral.py / lst_collateral_resolver.py is canonical post-F28).
+- **Phase C (2026-06-15):** `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` — reconciled
+  the stale registered/stub counts (26→**29** registered / 31→**28** not-engine-backed; the 3 stub→registered since the
+  2026-05-22 audit = `CARRY_STAKED_BASIS_DATED` / `CARRY_BASIS_DATED_INV` / `ARBITRAGE_CROSS_DOMAIN_EVENT`) + added the
+  **Phase C ratification** section (28 archetypes + 11 venues operator-ratified honestly `not_available`).
 
 ## Success criteria
 
@@ -170,11 +255,12 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
   historical time-series is the only documented Phase-2 remainder. 31 tests, QG green both repos. **Decisions
   (autonomous, documented):** (1) CeFi usage → `margin_usage_pct` not `health_factor` (schema SSOT distinguishes them;
   the draft's `health_factor=usage` would mislead consumers); (2) `PortfolioInputs` fed in the canonical test-fixture
-  shape (positions = collateral_positions notional book carrying MMR; used-margin = USD debt leg) — model is owned/complete,
-  this is wiring; (3) venues with no open positions are skipped (the model's `equity<=0` branch would falsely grade an
-  empty book 100%). Next: F45 netting consolidation (P1) — pre-audit confirms net-delta logic is genuinely multi-site
-  (`risk_group_aggregator`, `aggregated` route, `output_builders` delta_btc/eth, `math_utilities` LST→underlying,
-  `risk/engine/orchestrator`), distinct from margin-requirement netting (`margin_sim._netting_factor` — left alone).
+  shape (positions = collateral_positions notional book carrying MMR; used-margin = USD debt leg) — model is
+  owned/complete, this is wiring; (3) venues with no open positions are skipped (the model's `equity<=0` branch would
+  falsely grade an empty book 100%). Next: F45 netting consolidation (P1) — pre-audit confirms net-delta logic is
+  genuinely multi-site (`risk_group_aggregator`, `aggregated` route, `output_builders` delta_btc/eth, `math_utilities`
+  LST→underlying, `risk/engine/orchestrator`), distinct from margin-requirement netting (`margin_sim._netting_factor` —
+  left alone).
 - 2026-06-15 — **F45 net-delta/exposure consolidation (P1) SHIPPED single-canonical across 3 repos.** UTL@b819cd1c
   (canonical `risk/net_delta.py` — 5 pure-Decimal primitives) → execution-service@b7c63335 (`perp_hedge_sizer` +
   `leveraged_leg_controller` repointed, inline deleted) → strategy-service@bdac6595 (`risk_group_aggregator` +
@@ -196,6 +282,26 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
   transcription is a CITED + parity-guarded self-containment choice, not careless dup; the right fix (inject
   `engine_backed_archetypes` param, default→probe, test passes a fixture) is annotated on the todo. **Codex SSOTs
   updated** (Post-Plan-Phase audit): `04-architecture/client-funds-isolation.md` (CeFi margin-traceability section) +
-  `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (net-delta/exposure-netting SSOT section). SHAs:
-  margin = UTL@1b215ea9 + strategy-service@b9b26433; F45 = UTL@b819cd1c + execution-service@b7c63335 +
+  `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (net-delta/exposure-netting SSOT section). SHAs: margin
+  = UTL@1b215ea9 + strategy-service@b9b26433; F45 = UTL@b819cd1c + execution-service@b7c63335 +
   strategy-service@bdac6595. Phase C (build missing v2 engines) remains separately-scoped (bigger than this pass).
+- 2026-06-15 — **Phase C CLOSED — RATIFY-ONLY (build-subset + venue-add both empty).** The dispatch's operator-decision
+  blanks (BUILD-SUBSET / VENUE-TOKEN-ADD / RATIFY-ack) were left empty; the dispatch's own empty-case rule + the
+  recommended-EMPTY default + AUTONOMOUS_AGENT_RULES rule 2 (decide from documented intent, don't ask) →
+  **RATIFY-ONLY**. Re-verified ground truth live (registries drift): 57 enum / **29 engine-backed** (probed via
+  `strategy-service/.venv`) / **28 missing** (= 22 `no_v2_engine` + 6 `missing_registry`); **11** unbuildable venues /
+  **186** `unbuildable_slot_venue` cells (folded token ∉ `KNOWN_VENUE_TOKENS`, 74 tokens). **Decision (autonomous,
+  documented per rule 1):** NO engine built (none on the live path; a registered-but-empty engine re-creates the
+  over-claim — worse than honest `not_available`), NO venue token added (no venue wired end-to-end; an unbacked token
+  re-introduces the F47 over-claim Phase B fixed). All 28 archetypes + 11 venues RATIFIED honestly `not_available`
+  (per-archetype + per-venue tables in the Phase C section above, grouped + reasoned). **Matrix unchanged-and-honest**
+  (RATIFY = doc-only, zero code): re-built deterministically → **21600 / available 12977 / blocked 8175 / not_registered
+  448** (96 `missing_registry` + 352 `no_v2_engine`) — **identical to the Phase-B counts, delta 0** (as expected: Phase
+  B already made it honest; Phase C ratifies that honesty). Committed `capability-verdict-matrix.json` already carries
+  these counts. Deterministic PM unit test `tests/unit/test_capability_verdict_matrix.py` **green (7 passed)** —
+  unchanged. **Codex** `archetype-paper-readiness.md` reconciled (the doc's 2026-05-22 26-registered/31-stub counts were
+  stale by the 3 since-registered archetypes → corrected to 29/28) + a Phase C ratification subsection added. **Entire
+  engine findings remediation plan (Phases A/B/C) is now resolved** — A: F28 consolidated (one operator-held follow-up,
+  operator-gated by design) + F47/F48 surface; B: margin cluster / F45 / F27 / F16 all shipped; C: ratified. The only
+  remaining open `- [ ]` items are the two explicitly operator-/contract-gated follow-ups (F28 live-API probe; F48
+  venv-probe), both with documented diagnoses, neither a Phase-C gap.

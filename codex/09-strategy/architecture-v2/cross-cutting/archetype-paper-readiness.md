@@ -8,7 +8,7 @@ overview:
 type: codex-ssot
 status: complete
 created: 2026-05-09
-last_verified: 2026-05-22
+last_verified: 2026-06-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
@@ -64,24 +64,26 @@ Archetypes that fail ANY gate stay in `paper-shippable` until the gap closes.
 ## Per-archetype matrix (populated 2026-05-17 by slot-5 per `pvl-p18b`)
 
 Source of truth for engine registration: `strategy_service/engine/strategies/v2/factory.py` `ARCHETYPE_ENGINE_REGISTRY`
-(26 archetypes registered; 27 stub/placeholder — not in factory).
+(**29 archetypes registered; 28 not-engine-backed** — verified live 2026-06-15 via `strategy-service/.venv` probe;
+supersedes the stale 2026-05-22 "26 registered / 31 stub", which predated `CARRY_STAKED_BASIS_DATED` /
+`CARRY_BASIS_DATED_INV` / `ARBITRAGE_CROSS_DOMAIN_EVENT` being registered).
 
 **Legend**: paper-runnable ✅ | paper-shippable ◐ | backtest-only ◯ | stub/placeholder ☐
 
 ### CARRY_AND_YIELD family
 
-| Archetype                             | State             | Evidence / owning plan                                                                                                             |
-| ------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `CARRY_STAKED_BASIS`                  | ◐ paper-shippable | Engine: `carry_and_yield/staked_basis.py`. Dynamic hedge wired (strategy-service@`6431955`). B-015 paper run pending — `pvl-p18a`. |
-| `CARRY_BASIS_DATED`                   | ◯ backtest-only   | Engine: `carry_and_yield/basis_dated.py`. No paper plumbing. Post-cutover.                                                         |
-| `CARRY_BASIS_PERP`                    | ◯ backtest-only   | Engine: `carry_and_yield/basis_perp.py`. No paper plumbing. Post-cutover.                                                          |
-| `CARRY_RECURSIVE_STAKED`              | ◯ backtest-only   | Engine: `carry_and_yield/recursive_staked.py`. No paper plumbing. Post-cutover.                                                    |
-| `CARRY_RECURSIVE_BORROW_LENDING_ONLY` | ◯ backtest-only   | Reuses `CarryRecursiveStakedEngine`. `defi_recursive_borrow_archetypes_2026_05_10.md`. No paper plumbing. Post-cutover.            |
-| `CARRY_BASIS_PERP_INV`                | ◯ backtest-only   | Reuses `CarryRecursiveStakedEngine` (renamed from `CARRY_RECURSIVE_BORROW_PERP_HEDGED` 2026-05-18). Post-cutover.                  |
-| `CARRY_STAKED_BASIS_DATED`            | ☐ stub            | Engine: `CarryStakedBasisEngine` (ALLOWED_ARCHETYPES extended, uac@0196842). No paper plumbing. Post-cutover.                      |
-| `CARRY_BASIS_DATED_INV`               | ☐ stub            | Engine: `CarryBasisDatedEngine` (ALLOWED_ARCHETYPES extended, uac@0196842). No paper plumbing. Post-cutover.                       |
-| `YIELD_ROTATION_LENDING`              | ◯ backtest-only   | Engine: `carry_and_yield/rotation_lending.py`. No paper plumbing. Post-cutover.                                                    |
-| `YIELD_STAKING_SIMPLE`                | ◯ backtest-only   | Engine: `carry_and_yield/staking_simple.py`. No paper plumbing. Post-cutover.                                                      |
+| Archetype                             | State             | Evidence / owning plan                                                                                                              |
+| ------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `CARRY_STAKED_BASIS`                  | ◐ paper-shippable | Engine: `carry_and_yield/staked_basis.py`. Dynamic hedge wired (strategy-service@`6431955`). B-015 paper run pending — `pvl-p18a`.  |
+| `CARRY_BASIS_DATED`                   | ◯ backtest-only   | Engine: `carry_and_yield/basis_dated.py`. No paper plumbing. Post-cutover.                                                          |
+| `CARRY_BASIS_PERP`                    | ◯ backtest-only   | Engine: `carry_and_yield/basis_perp.py`. No paper plumbing. Post-cutover.                                                           |
+| `CARRY_RECURSIVE_STAKED`              | ◯ backtest-only   | Engine: `carry_and_yield/recursive_staked.py`. No paper plumbing. Post-cutover.                                                     |
+| `CARRY_RECURSIVE_BORROW_LENDING_ONLY` | ◯ backtest-only   | Reuses `CarryRecursiveStakedEngine`. `defi_recursive_borrow_archetypes_2026_05_10.md`. No paper plumbing. Post-cutover.             |
+| `CARRY_BASIS_PERP_INV`                | ◯ backtest-only   | Reuses `CarryRecursiveStakedEngine` (renamed from `CARRY_RECURSIVE_BORROW_PERP_HEDGED` 2026-05-18). Post-cutover.                   |
+| `CARRY_STAKED_BASIS_DATED`            | ◯ backtest-only   | Engine: `CarryStakedBasisEngine` (registered in `ARCHETYPE_ENGINE_REGISTRY`, verified 2026-06-15). No paper plumbing. Post-cutover. |
+| `CARRY_BASIS_DATED_INV`               | ◯ backtest-only   | Engine: `CarryBasisDatedEngine` (registered in `ARCHETYPE_ENGINE_REGISTRY`, verified 2026-06-15). No paper plumbing. Post-cutover.  |
+| `YIELD_ROTATION_LENDING`              | ◯ backtest-only   | Engine: `carry_and_yield/rotation_lending.py`. No paper plumbing. Post-cutover.                                                     |
+| `YIELD_STAKING_SIMPLE`                | ◯ backtest-only   | Engine: `carry_and_yield/staking_simple.py`. No paper plumbing. Post-cutover.                                                       |
 
 ### ARBITRAGE_STRUCTURAL family
 
@@ -93,7 +95,7 @@ Source of truth for engine registration: `strategy_service/engine/strategies/v2/
 | `ARBITRAGE_MEV_JIT_LIQUIDITY`      | ◯ backtest-only   | Engine: `mev/jit_liquidity.py`. In factory. MEV simulation requires Tenderly. Post-cutover.                                                        |
 | `ARBITRAGE_MEV_BACKRUN`            | ◯ backtest-only   | Engine: `mev/backrun.py`. In factory. Post-cutover.                                                                                                |
 | `ARBITRAGE_MEV_LIQUIDATION_BUNDLE` | ◯ backtest-only   | Engine: `mev/liquidation_bundle.py`. In factory. Post-cutover.                                                                                     |
-| `ARBITRAGE_CROSS_DOMAIN_EVENT`     | ☐ stub            | No engine file. Not in factory. PREDICTION×SPORTS cross-domain. Post-cutover.                                                                      |
+| `ARBITRAGE_CROSS_DOMAIN_EVENT`     | ◯ backtest-only   | Registered in `ARCHETYPE_ENGINE_REGISTRY` (verified 2026-06-15). PREDICTION×SPORTS cross-domain. No paper plumbing. Post-cutover.                  |
 
 ### MARKET_MAKING family
 
@@ -175,15 +177,37 @@ Source of truth for engine registration: `strategy_service/engine/strategies/v2/
 | `PORTFOLIO_FACTOR_ALLOCATION` | ☐ stub | Not in factory. Post-cutover.                 |
 | `PORTFOLIO_TACTICAL_OVERLAY`  | ☐ stub | Not in factory. Post-cutover.                 |
 
-### Summary counts (2026-05-22)
+### Summary counts (2026-06-15)
 
-| State              | Count  | Notes                                                           |
-| ------------------ | ------ | --------------------------------------------------------------- |
-| ✅ paper-runnable  | 0      | No archetype has completed ≥3-day paper run yet                 |
-| ◐ paper-shippable  | 2      | CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION (B-015 pending) |
-| ◯ backtest-only    | 24     | In `ARCHETYPE_ENGINE_REGISTRY`; paper plumbing not yet wired    |
-| ☐ stub/placeholder | 31     | Not in factory; Phase 9 expansion names or theoretical          |
-| **Total**          | **57** | Updated 2026-05-22: 4 new stubs added since 2026-05-17 audit    |
+| State              | Count  | Notes                                                                                              |
+| ------------------ | ------ | -------------------------------------------------------------------------------------------------- |
+| ✅ paper-runnable  | 0      | No archetype has completed ≥3-day paper run yet                                                    |
+| ◐ paper-shippable  | 2      | CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION (B-015 pending)                                    |
+| ◯ backtest-only    | 27     | In `ARCHETYPE_ENGINE_REGISTRY`; paper plumbing not yet wired (+3 since 2026-05-22, now registered) |
+| ☐ stub/placeholder | 28     | Not in factory; Phase 9 expansion names or theoretical — the **ratified `not_available`** set      |
+| **Total**          | **57** | 2026-06-15 live-probe reconcile: 29 registered / 28 not-engine-backed (was 26/31 on 2026-05-22)    |
+
+### Phase C ratification — engineless archetypes + unbuildable venues stay honestly `not_available` (2026-06-15)
+
+Per `plans/active/engine_findings_remediation_2026_06_15.md` Phase C (operator BUILD-SUBSET / VENUE-TOKEN-ADD left empty
+→ RATIFY-ONLY): the **28 not-engine-backed archetypes** (the `☐ stub/placeholder` rows above) and the **11 unbuildable
+slot-venues** are ratified to remain honestly `not_available` in the capability verdict matrix — post-MVP, no engine /
+no venue-token planned. This is the intended DONE state, not a gap: building an empty engine or adding an unbacked venue
+token would re-create the over-claim Phase B's F47/F48 surface fix removed.
+
+- **Verdict-matrix verdicts (already honest, unchanged by ratification — RATIFY is documentation-only):**
+  `not_registered(no_v2_engine)` for the 22 archetypes with leg structure but no engine;
+  `not_registered(missing_registry)` for the 6 with no leg structure (the 4 `PORTFOLIO_*`, `VOL_0DTE_PIN_RISK`,
+  `ARBITRAGE_MEV_SANDWICH`); `blocked(unbuildable_slot_venue)` for the 11 venues whose alnum-folded slot-token ∉
+  `architecture_v2.venue_tokens` `KNOWN_VENUE_TOKENS`.
+- **Counts (deterministic, committed `unified-api-contracts/openapi/capability-verdict-matrix.json`):** total 21600 /
+  available 12977 / blocked 8175 / not_registered 448 (96 `missing_registry` + 352 `no_v2_engine`); 186 of the blocked
+  cells are `unbuildable_slot_venue`.
+- **Ratified venues (11):** `gmx_v2` (66 cells), `betfair_direct` (48), `smarkets_direct` (36), `pancakeswap_v3` (10),
+  `sushiswap_v3` (10), `jupiter` (6), `balancer_v2` (2), `balancer_v3` (2), `matchbook_direct` (2), `sommelier` (2),
+  `trader_joe` (2) — alt DEXes / sports betting exchanges / a yield-vault protocol, none wired end-to-end (adapter +
+  collateral + capability); the live MVP DeFi venues are tokenised + supported.
+- A future build/support effort for any of these is a **new plan item**, never a Phase-C gap.
 
 ## Solana-specific addendum
 
