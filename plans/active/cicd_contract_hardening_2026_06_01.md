@@ -4891,12 +4891,12 @@ no `full-workspace-sit` / `staging-to-main` run in-flight; ml-style repo strande
 - [ ] [SCRIPT] P3. Upgrade `sit-starvation-detector.yml` from alert-only → auto-redispatch `staging-to-main`
       (workflow_dispatch, reason="starvation auto-recovery") when locked>30min + pending non-empty + no promote/SIT
       in-flight — turns this whole class self-healing. — provenance: this finding
-- [ ] [SCRIPT] P2. Local-vs-CI basedpyright count drift on PM: local QG counted 1548 > ratchet 1511 while CI v2 (same
+- [x] ✅ [SCRIPT] P2. **DONE 2026-06-15 (slot-3) — resolved by `ci_local_qg_parity_2026_06_08.md` (both root causes fixed there).** Local-vs-CI basedpyright count drift on PM: local QG counted 1548 > ratchet 1511 while CI v2 (same
       script, same ratchet) passed green on near-identical LDR content (72ddfde4 08:23Z) — error files all last-touched
       ≤06-03, so the +37 is environment drift (venv resolution / stub coverage), not new code. Root-cause under
       `ci_local_qg_parity_2026_06_08.md`; until fixed it blocks local sentinels on PM for non-Python diffs (hit
       2026-06-10 shipping the staging-to-main concurrency fix → used the codified `.github/**` carve-out + the v2-gated
-      main PR instead). — provenance: this fix's Pass-1
+      main PR instead). — provenance: this fix's Pass-1. **Resolution**: the "+37 env-drift" IS the `LOCAL_DEPS` editable-install-silently-skipped cascade. (1) CI side: `_qg_slice_done` typecheck no-op fixed phase-aware (PM@71a2e103b). (2) Local side: `base-service.sh` LOCAL_DEPS loop now resolves `${WORKSPACE_ROOT}/$lib` (siblings) before the nested `${REPO_ROOT}/$lib` fallback (verified live this session: `base-service.sh:317-319`), so UTL/UAC editable-install no longer silently skips on a fresh `.venv` → the numpy/pyarrow/pandas/UTL `Unknown`-type cascade is gone (verified `1541 RED → 1452 GREEN`; ratchet since raised to `BASEDPYRIGHT_MAX_ERRORS=1517`, more headroom). base-service.sh is sourced from PM by every repo → fleet-live, no rollout. repo: unified-trading-pm.
 
 ### ADDENDUM 2026-06-10 (same session) — probe found 3 more promotion-latency defects; all fixed
 
