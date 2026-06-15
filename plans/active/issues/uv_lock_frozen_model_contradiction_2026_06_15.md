@@ -1,7 +1,6 @@
 ---
 title: uv.lock / --frozen model is half-applied + contradictory — collides with LDR↔staging tree convergence, makes the "regen lock" fix restart the Tier-C promote runaways
 created: 2026-06-15
-author: harshkantariya
 source:
   - e2e-testing Tier-C runaway promote breaker (Slack #ci-failures 2026-06-15 10:06)
   - features-service provenance-gate block + 28/6h promote runaway (Slack 2026-06-15 10:06)
