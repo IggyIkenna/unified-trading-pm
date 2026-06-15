@@ -87,3 +87,4 @@
 {"timestamp": "2026-06-14T09:46:50Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.7.0 (branch=staging, bump=minor)", "commit_sha": "f89c8a7473c4dfcea1756e0a88db88e197e62800"}
 {"timestamp": "2026-06-14T20:43:36Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-api-contracts=0.7.0 (branch=staging, bump=minor)", "commit_sha": "f48e798dbbf6dfa89b0b67824fdea8dce10c2ff3"}
 {"timestamp": "2026-06-15T08:21:54Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.5.0 (branch=staging, bump=minor)", "commit_sha": "595692ee292bdf7abfe6375de5e04efc0e1d3c31"}
+{"timestamp": "2026-06-15T08:42:16Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-api=0.2.2 (branch=staging, bump=minor)", "commit_sha": "f4cb35cb2865ecaae4636ca937e1e4ac7257e90b"}
