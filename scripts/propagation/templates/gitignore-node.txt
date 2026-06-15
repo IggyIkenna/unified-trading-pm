@@ -17,6 +17,7 @@ dist/
 build/
 .turbo/
 out/
+*.tsbuildinfo
 
 # Coverage
 .nyc_output/
