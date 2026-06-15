@@ -314,14 +314,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 - [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing
       restored, verified 2026-06-12**) — deployment-api@be56fb8 + deployment-ui@788ad40, **logic corrected
       deployment-api@7bf31ec** | QG green | pw:L2 ✓ 206/206 | regression: tests/smoke/repos-tab.spec.ts (drain-stalled
-      row chip + panel count) + tests/unit/test_repo_ci_routes.py::test_drain_stalled. **(promotion-drain follow-up)
+      row chip + panel count) + tests/unit/test*repo_ci_routes.py::test_drain_stalled. **(promotion-drain follow-up)
       Drain STALL-surfacing** — a per-row `drain_stalled` flag = REAL file-content ahead of staging/main (files_changed,
       not squash skew) AND **this repo's OWN standing promotion PR is stuck on a BLOCKING class** (conflicting /
       failing_check / skip_ci_jammed; auto-recoverable v2_never_reported / automerge_stuck EXCLUDED). Surfaces the
       **bug-#11 class** (content piling on LDR with a stuck drain) that was invisible. UI: a red "drain stalled" chip on
       the row (beside the G6 lag chip) + a count/list in the PromotionDrainPanel. Pure derivation on data the overview
       already fetches — **no new GitHub calls**. **v1 BUG (caught by live verification 2026-06-12, fixed @7bf31ec):** v1
-      gated per-repo on PM's _global_ drain-leg health, but PM's `ldr-to-main` is a PM-only Option-B hourly run → it
+      gated per-repo on PM's \_global* drain-leg health, but PM's `ldr-to-main` is a PM-only Option-B hourly run → it
       false-flagged ALL 24 repos. The per-repo stuck-PR signal yields exactly the genuinely-stuck repos; a fleet
       leg-outage shows in the PromotionDrainPanel leg rows, not per-repo. Repos: deployment-api
       (`repo_ci`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi`/`client`/`mock-api`).
@@ -630,8 +630,8 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       operator SM update). **CREDENTIAL APPROVAL REQUEST** filed: `ikenna_orchestrator/pings/slot_1.md` (operator:
       append `ORCHESTRATOR_INTERNAL_SECRET` to the `ORCHESTRATOR_ENV_LOCAL` secret in AWS SM + GCP SM).
 
-- [ ] [INFRA] P1. **vm-0 worker-QG memory guardrail** — 2026-06-12 13:43 UTC the central VM (i-0c9b283b31d6b5ca7) OOM'd:
-      16G swap exhausted (156kB free), ≥2 pythons at ~10-11GB total-vm each (pytest/QG class) from
+- [x] ✅ [INFRA] P1. **vm-0 worker-QG memory guardrail** — 2026-06-12 13:43 UTC the central VM (i-0c9b283b31d6b5ca7)
+      OOM'd: 16G swap exhausted (156kB free), ≥2 pythons at ~10-11GB total-vm each (pytest/QG class) from
       CIReconcile-dispatched fixer workers grinding billing-wall-doomed LDR QGs (13:33 tick: "2 failing
       (trading-agent-service,e2e-testing) … no capacity" — slots already saturated); kernel killed the ubuntu session
       (systemd/sd-pam UID 1000) + a 4.1GB python; operator rebooted 14:36; MainAgentKeeper re-created orch-agent-main at
@@ -642,7 +642,23 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       per-spawn ulimit) so a runaway QG python is killed before it takes the user session; (c) composes with the
       CIReconcile fleet-red breaker P0 already tracked in `issues/github_actions_billing_wall_2026_06_11.md` (stop
       dispatching doomed QG grinds — removes the load source). Found 2026-06-12 post-incident forensics (journalctl -b
-      -1). Repo: agent-orchestrator (+ PM qg-host-governor).
+      -1). Repo: agent-orchestrator (+ PM qg-host-governor). — DONE 2026-06-15. **(a)** qg-host-governor floor already
+      landed agent-orchestrator@0ef02b3 (`QG_HOST_CONCURRENCY=1` in bootstrap `.env.local` → inherited by the backend
+      via systemd `EnvironmentFile` + by spawned workers, since the `Popen` spawn passes no `env=`). **(b)** per-worker
+      cgroup cap shipped agent-orchestrator@8e8415e: `tmux_spawn._worker_mem_scope_prefix()` wraps each worker's
+      `claude` (+ its QG/pytest children) in a transient `systemd-run --user --scope -p MemoryMax -p MemorySwapMax` —
+      the spawn `Popen(start_new_session=True)` detaches workers from `orchestrator.service`'s MemoryMax cgroup, and the
+      governor only serialises the heavy TEST phase, NOT the ~5GB UTL import spike that precedes the token acquire (the
+      real OOM driver). Opt-in + graceful: no-op unless `ORCHESTRATOR_WORKER_MEMORY_MAX` is set AND a cached
+      `systemd-run --user` probe passes (laptop/no-linger hosts fall back to an uncapped spawn + a one-line warn — never
+      breaks spawning). bootstrap arms `10G`/`2G` on the dispatch host (`loginctl enable-linger` already runs → the
+      `--user` manager exists). Reactive belt **earlyoom** (SIGTERM biggest hog at ≤10% free) already landed
+      agent-orchestrator@cd6b4df. **(c)** CIReconcile fleet-red breaker stays tracked in
+      `issues/github_actions_billing_wall_2026_06_11.md` (the load SOURCE — separate P0). Verify: AO `quality-gates.sh`
+      green (basedpyright 0/0, 603 pass incl. 6 new memory-cap tests) + `bash -n` bootstrap. **Continuous
+      verification**: confirm on the next VM bootstrap that the worker pane runs under a `systemd-run --user --scope`
+      cgroup (`systemctl --user status` shows the transient scope) and a runaway QG is OOM-killed inside its scope, not
+      host-wide (probe-gating makes the code safe regardless).
 
 - [ ] [CREDS] P1. **Finish vm-0 SM wiring: align the blob's stale `ORCHESTRATOR_JWT_SECRET` (SM ← vm-0), operator
       one-liner.** The wiring tooling is DONE — agent-orchestrator@4c558a8 `scripts/refresh_env_from_sm.sh` (UPSERT from
