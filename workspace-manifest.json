@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.7.0",
     "unified-trading-library": "0.10.0",
-    "unified-trading-pm": "1.2.108",
+    "unified-trading-pm": "1.2.109",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.10.0",
@@ -1787,21 +1787,23 @@
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
     "e2e-testing": "0.6.0",
-    "strategy-service": "0.7.0"
+    "strategy-service": "0.7.0",
+    "system-integration-tests": "0.5.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-15T17:31:17.900296Z",
+    "locked_reason": "Breaking MINOR bump cascade: system-integration-tests=0.5.0 (pre-1.0.0)",
+    "lock_version": "0.5.0",
     "pending_repos": [],
     "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
       "e2e-testing",
       "execution-service",
-      "strategy-service"
+      "strategy-service",
+      "system-integration-tests"
     ]
   },
   "staging_commits": {
@@ -1819,6 +1821,11 @@
     "strategy-service": {
       "version": "0.7.0",
       "sha": "e2a66b9188f4adfe378892e9f8a394bf5195942f",
+      "branch": "staging"
+    },
+    "system-integration-tests": {
+      "version": "0.5.0",
+      "sha": "26722e169fd317f8a3c50edb7621a0e9ddecf54c",
       "branch": "staging"
     }
   },
