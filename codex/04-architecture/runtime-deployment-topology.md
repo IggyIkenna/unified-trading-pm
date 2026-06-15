@@ -495,6 +495,41 @@ see/experience differently.
   API handles: deployments, services, config, data-status, service-status, cloud-builds, checklists.
 - **Live-specific:** SSE endpoint for health monitoring events (consumed by unified-trading-system-ui).
 
+#### deployment-api + deployment-ui — GCP auto-deploy on `main` (codified 2026-06-15)
+
+The shared **`uts-shared-deployment-api`** Cloud Run service (deployment-api + the bundled deployment-ui SPA)
+auto-builds and auto-deploys on every push to `main`, via two Cloud Build triggers (region `asia-northeast1`, project
+`central-element-323112`, connection `iggyikenna-github`):
+
+- **`deployment-api-main-deploy`** — fires on `deployment-api` push `^main$`; builds `cloudbuild.yaml` with
+  substitutions `_DEPLOY=true _BRANCH=main _RUN_INIMAGE_QG=false`. The cloudbuild gained a **gated `deploy` step** (runs
+  only when `_DEPLOY=true`): `gcloud run deploy uts-shared-deployment-api --image …:$SHORT_SHA` + syncs/executes the
+  `uts-prod-data-status-rollup` Cloud Run Job to the same image (mirrors
+  `deployment-service/scripts/cloud-run/deploy-shared.sh`). The deploy step `waitFor: ["scan-check"]` so a CRITICAL-CVE
+  image can never roll.
+- **`deployment-ui-main-deploy`** — fires on `deployment-ui` push `^main$`; an inline config that re-runs
+  `deployment-api-main-deploy` (the UI is bundled INTO the api image via the `fetch-ui` clone of `deployment-ui@main`,
+  so a UI-only change rebuilds+redeploys the api image — single deploy path, no config duplication). deployment-ui is
+  registered as a 2nd-gen repository under the `iggyikenna-github` connection for this.
+
+**Trigger-vs-local build context (why the cloudbuild has extra steps):** a git-source TRIGGER build has no sibling
+repos, whereas `deploy-shared.sh` rsyncs them locally. So `cloudbuild.yaml` carries a **`vendor-deps`** step that clones
+`unified-api-contracts` / `deployment-service` / `strategy-service` at `live-defi-rollout` into the `_*`-prefixed dirs
+the Dockerfile COPYs, and stubs `codex-data`/`pm-plans`/`pm-configs` as empty dirs (mirrors `buildspec.aws.yaml`; the
+image needs no PM content baked in). The in-image `quality-gates` step is gated behind **`_RUN_INIMAGE_QG`** (default
+`true`; the deploy trigger sets `false`) because that QG can't run without the PM harness/git in the image and is
+already enforced at quickmerge + by `quality-gates-v2` at the LDR→staging→main promotion — same reason the legacy
+`cloudbuild-tier3.yaml` omits it.
+
+**`deployment-api/cloudbuild.yaml` is HAND-MAINTAINED, not template-regenerated** — the PM propagation template
+(`scripts/propagation/templates/cloudbuild.yaml`) has a different shape
+(`build-and-push`/`verify-image`/`update-manifest`), so routine propagation will NOT clobber the
+deploy/vendor-deps/QG-gate customizations. (The redundant build-only `deployment-api-build` `^main$` trigger was
+disabled — `deployment-api-main-deploy` is the sole main-push trigger.)
+
+SSOT for the deploy build context details: `deployment-api/cloudbuild.yaml` step comments. The Cloud Build SA
+(`<project-number>@cloudbuild.gserviceaccount.com`) has `roles/run.admin` + `serviceAccountUser` on the runtime SA.
+
 ---
 
 ## 6. The Strategy-Execution-Position Loop

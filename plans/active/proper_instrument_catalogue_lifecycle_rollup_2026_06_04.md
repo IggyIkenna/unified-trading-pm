@@ -432,3 +432,44 @@ universe; logs `/tmp/r4_is_backfill/catalogue_<ag>.log`.)
       filtering" a SHARD COMPLETENESS FAILURE (attempted_failed), not an exclusion; pairs with the coverage-horizon
       NICE-TO-HAVE above. Repo: instruments-service (`engine/urdi_reference_provider.py` + completeness). Provenance:
       c7d9bb2 regression went undetected 19 days. assigned_vm: vm-cross-cutting.
+
+### R5 (2026-06-15) — prod data-status shows 0 instruments: the MONITORING read goes blind on the stale consolidated index (operator-reported, deployment-ui screenshot)
+
+**Symptom**: prod `uts-shared-deployment-api` → `instruments-service/data-status` shows Instrument Coverage Summary 0
+rows / Data Coverage 0.0% / 14760 "missing shards" across all asset_groups — even though R4 (above) rebuilt the
+catalogues + `_index` on 2026-06-11 and they are present in GCS.
+
+**Diagnosis (this session)** — the DATA exists; the READ is blind:
+
+- `instruments-store-cefi-prd` `_index/availability_index.parquet` = 40,714 rows / 18,731 `captured` (written 2026-06-14
+  12:19); `prod/catalog.parquet` = 220,222 rows (06-11). defi-prd `_index` 196,535 / 69,255 captured. So the catalogue +
+  index are real.
+- UTL `read_availability_index` applies a ~120 s LIVE-trading staleness gate (`_resolve_consolidated_staleness_sec`).
+  Consolidated index >120 s old ⇒ it DROPS the consolidated index and falls back to the per-VM shard merge.
+  `_index/per_vm/` holds only 2 seed shards (`_legacy_seed.parquet`, `r4-is-backfill-local.parquet`) ⇒ ~0 rows.
+  Reproduced locally: `DataStatusService._get_coverage_summary_sync('instruments-service')` ⇒
+  `totals.shards=0, unique_instruments=0, asset_groups={}` while the parquet has 40,714 rows. The
+  `uts-prod-data-status-rollup` job writes the empty `full.json.gz`/`coverage.json.gz` the UI caches.
+- The consolidated index is stale because the `uts-prod-manifest-consolidator-instruments-*-cron` (`*/1`) are all PAUSED
+  — **intentionally, per this plan's "NOT resumed … stay drained per the master plan"** + the held
+  manifest-canonicalisation `--apply`. So the staleness is a CONSEQUENCE of the held-migration drain, not a pipeline
+  failure. **Resuming consolidators / applying the migration / rebuilding the dead producers (P0 above) is the
+  operator's `--apply`-gated call — left untouched (held-migration hard-stop).**
+- **v9 (operator asked)**: prod is NOT on the v9 beta. `DATA_STATUS_BETA_MANIFEST_BLOB` is unset on
+  `uts-shared-deployment-api` ⇒ reads the LIVE consolidated `_index` (mixed `schema_version` {4,8,9}; only ~320/40,714
+  cefi rows are v9 — v9 migration ~1% done, gated behind the held `--apply`). The v9 projected index
+  `_index/audit/projected_index_{ag}.parquet` exists but prod doesn't read it.
+
+**Fix constraint**: UTL is the deployment-api BASE image (`FROM unified-trading-library:latest`), so a UTL change does
+NOT reach prod without a UTL image rebuild + base-digest bump (slow). The migration-safe fix must be
+**deployment-api-local** (ships fast via the new `deployment-api-main-deploy` auto-deploy).
+
+- [ ] [DATA] P1. **Stale-tolerant data-status monitoring read** — in deployment-api
+      `services/manifest_source.read_manifest_index`, when `read_availability_index(bucket)` returns empty AND the
+      consolidated `_index/availability_index.parquet` exists (live staleness gate dropped a stale-but-valid index),
+      read that consolidated blob DIRECTLY (no live-freshness gate) so the monitoring view shows the stale catalogue +
+      its `written_at` age instead of 0. Monitoring read ≠ live-trading read: live readers keep the 120 s gate
+      (unchanged); only the data-status path opts into stale tolerance. Migration-safe (read-only; no consolidator
+      resume; no writes). Surface the staleness (the rows carry `written_at`; the UI freshness/`migration_in_progress`
+      fields already exist). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic: instruments_master.
+      Provenance: R5 (operator-reported 2026-06-15).
