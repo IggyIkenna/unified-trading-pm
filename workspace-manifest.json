@@ -76,7 +76,7 @@
     "fund-administration-service": "0.3.3",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.5.1",
-    "market-tick-data-service": "0.9.0",
+    "market-tick-data-service": "0.10.0",
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.9.0",
     "unified-trading-library": "0.10.0",
@@ -1789,8 +1789,7 @@
     "e2e-testing": "0.6.0",
     "strategy-service": "0.7.0",
     "system-integration-tests": "0.5.0",
-    "unified-api-contracts": "0.10.0",
-    "market-tick-data-service": "0.10.0"
+    "unified-api-contracts": "0.10.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1834,16 +1833,21 @@
       "version": "0.10.0",
       "sha": "dc377073d38141a5fc417256191a801bfa0ad093",
       "branch": "staging"
-    },
-    "market-tick-data-service": {
-      "version": "0.10.0",
-      "sha": "1a39bb79deb2c1ca69ced3d68fd87f74c0b9197d",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-15T23:22:24.117108Z",
+        "commits": {
+          "market-tick-data-service": {
+            "version": "0.10.0",
+            "sha": "1a39bb79deb2c1ca69ced3d68fd87f74c0b9197d",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-15T20:16:36.659580Z",
         "commits": {
@@ -1913,46 +1917,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-15T11:18:24.115710Z",
-        "commits": {
-          "unified-trading-api": {
-            "version": "0.2.2",
-            "sha": "bc0d9b7a528a05bd75a3bed59a8367c8a5e4fcd6",
-            "branch": "staging"
-          },
-          "greeks-service": {
-            "version": "0.4.0",
-            "sha": "7c3e4086c4651c570bbc9d5f481199006bbc75e3",
-            "branch": "staging"
-          },
-          "ml-service": {
-            "version": "0.5.1",
-            "sha": "ee2ae061da6962c9a3e668364da3b4b0d24471ec",
-            "branch": "staging"
-          },
-          "deployment-api": {
-            "version": "0.9.0",
-            "sha": "920bf1b8d72f7f006d22d00fc954aaef5272f296",
-            "branch": "staging"
-          },
-          "execution-service": {
-            "version": "0.9.1",
-            "sha": "f138a4943b3ec15f541cfc0637386e7738148818",
-            "branch": "staging"
-          },
-          "fund-administration-service": {
-            "version": "0.3.2",
-            "sha": "60823c48f1af5ecb90c940cd7a5179b99951c38c",
-            "branch": "staging"
-          },
-          "alerting-service": {
-            "version": "0.5.2",
-            "sha": "7fde6b96234d7d1e83bdc9073cf5a6fadd5d1e80",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1969,7 +1933,8 @@
   },
   "promotion_failures": {
     "execution-service": 3,
-    "strategy-service": 3
+    "strategy-service": 3,
+    "unified-api-contracts": 1
   },
   "promotion_quarantine": {
     "execution-service": {
