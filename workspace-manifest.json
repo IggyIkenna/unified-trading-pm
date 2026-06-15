@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.7.0",
     "unified-trading-library": "0.6.0",
-    "unified-trading-pm": "1.2.102",
+    "unified-trading-pm": "1.2.103",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.10.0",
@@ -1786,7 +1786,8 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
-    "e2e-testing": "0.5.0"
+    "e2e-testing": "0.5.0",
+    "instruments-service": "0.5.1"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1812,6 +1813,11 @@
     "e2e-testing": {
       "version": "0.5.0",
       "sha": "d8bb31e75b0d4573523c5daeef57b5f463111262",
+      "branch": "staging"
+    },
+    "instruments-service": {
+      "version": "0.5.1",
+      "sha": "7ba908e8cf2d879b178649bf6a76efa81a13e863",
       "branch": "staging"
     }
   },
