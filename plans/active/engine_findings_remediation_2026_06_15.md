@@ -78,10 +78,16 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       canonical netting pipeline in strategy-service that nets LST→underlying delta + multi-leg inter-leg delta into a
       single position-level exposure. **DELETE the scattered duplicate netting logic** once consumers point at the
       canonical one (single-SSOT rule). Target: strategy-service (+ UTL/UAC for the shared contract types only).
-- [ ] [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit` vs `DERIBIT`) that no-emits. Normalise
-      venue-id casing at the engine boundary (one canonical case; cite the SSOT). Target: strategy-service.
-- [ ] [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** Fix the call signature.
-      Target: strategy-service.
+- [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit` vs `DERIBIT`) that no-emits. Normalise
+      venue-id casing at the engine boundary (one canonical case; cite the SSOT). Target: strategy-service. — DONE
+      **UAC@c0b2d0e** (2026-06-15): fixed at the SOURCE — `venue_collateral.py` accessors (`accepted_perp_collateral`/
+      `venue_accepts_collateral`/`get_collateral_haircut`/`get_accepted_collateral`) now normalise both sides to
+      `.upper()`, so lowercase slot-config venue ids resolve against the UPPERCASE matrix. `accepted_perp_collateral('deribit')`
+      now returns `['BTC','ETH','USDC','stETH']` (was `[]`). Protects ALL callers, not just staked_basis. +regression test.
+- [x] ✅ [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** Fix the call signature.
+      Target: strategy-service. — DONE **strategy-service@bce2f46d** (2026-06-15): moved the invalid
+      `service_name=`/`operation=`/`error_code=` kwargs into `details={}` (log_event takes only event_name/severity/
+      details/client_id/correlation_id); the GCS-config search error path no longer raises TypeError.
 
 ## Phase C — engine builds for the catalogue over-claims (follow-on; larger)
 
