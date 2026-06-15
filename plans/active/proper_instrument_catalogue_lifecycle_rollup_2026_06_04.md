@@ -629,7 +629,41 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
 > **🟡 TEMPORARY STATE — rollup-job beta env (set 2026-06-15).** To populate the beta rollup, the Cloud Run job
 > `uts-prod-data-status-rollup` carries `DATA_STATUS_BETA_MANIFEST_BLOB=_index/audit/projected_index_{asset_group}.parquet`
 > — the SAME value as the `uts-shared-deployment-api` service. This pairs the job with the service: both are in
-> beta, so the job writes the `.beta` rollup the beta service reads. **Canonical follow-up:** when the v9 migration
-> `--apply` lands (this plan's held tranche) live == v9, beta is turned OFF on BOTH the service and the job (unset
-> the env on each), and the job reverts to writing the live `full.json.gz` rollup. Do not bake the beta env into
-> cloudbuild (it is intentionally a manual, removable pairing — a bare `--image` deploy preserves it).
+> beta, so the job writes the `.beta` rollup the beta service reads. **SUPERSEDED 2026-06-15 (see R7 follow-up #3 +
+> #4 below):** the rollup JOB is now kept in LIVE mode (its beta runs failed — R6-class, see below); the beta rollup
+> is written on demand (manually) from the STATIC projected-v9 index and the service serves it regardless of age.
+> **Canonical follow-up still holds:** when the v9 migration `--apply` lands, beta is turned OFF on the service and
+> the manual beta rollup blobs are deleted (live == v9, the normal live rollup covers it).
+
+### R7 follow-up #3 — slicer R7 parity + worker beta-eligible filter (2026-06-15, deployment-api@e5fbbf7)
+
+- [x] ✅ [INFRA] P1. **`slice_rollup_to_window` now emits `overall_capture_coverage_pct` + `overall_attempt_coverage_pct`.**
+      The rollup-served fast-path dropped the R7 split (headline showed only `overall_completion_pct`); now it carries
+      both (capture = shards-weighted; attempt = venue-expected-weighted mean of per-cat `attempt_coverage_pct`,
+      mirroring `_get_manifest_status_sync`). VERIFIED LIVE: all-AG `GET /manifest?service=instruments-service` →
+      `overall_capture_coverage_pct=95.9`, `overall_attempt_coverage_pct=96.01` (was `None`). Regression:
+      `test_slice_rollup_emits_r7_overall_capture_attempt`.
+- [x] ✅ [INFRA] P1. **Rollup worker restricts to beta-eligible services in beta mode** (`BETA_ELIGIBLE_SERVICES =
+      {instruments-service}` — the only service with a v9 projection). Beta read fails LOUD on a missing projection
+      (kept — `test_beta_mode_fails_loud_on_missing_projection`), so sweeping a non-projected service (mtds/features)
+      would crash the job; the filter prevents that. Regression: `test_beta_eligible_filters_to_projected_services`.
+
+### R7 follow-up #4 — beta rollup serves regardless of staleness + R6-class cloud beta-job failure (2026-06-15, @ce38aba)
+
+- [x] ✅ [INFRA] P1. **Beta rollup serves regardless of staleness.** The beta rollup derives from the STATIC
+      projected-v9 index (a migration preview, not a live feed), so the 30-min staleness gate forcing an all-AG
+      live-compute fall-through (HTTP 503) is wrong for beta. `_read_rollup_if_fresh` + `read_coverage_rollup_if_fresh`
+      skip the gate in beta mode (live mode unchanged). The all-AG beta view is now durable as long as the beta blob
+      exists. Regression: `test_beta_rollup_served_despite_staleness` + `test_live_rollup_respects_staleness`.
+- [ ] [INFRA] P2. **Diagnose why the data-status rollup CLOUD JOB fails in beta mode** (R6-class — logging
+      suppressed). With image `e5fbbf7`/`ce38aba` + the beta env + the beta-eligible filter, the cloud job
+      `uts-prod-data-status-rollup` crashes ~2s into `_get_manifest_status_sync` (exit 1) — yet the IDENTICAL code +
+      env succeeds LOCALLY (filter logs "restricting to ['instruments-service']", exit 0). 16Gi/4cpu/standard SA (same
+      as the healthy LIVE job), so not resources/perms. The exception type is suppressed (same root cause as the R6
+      `run_rollup` logging-suppression item above) — needs the `print(..., flush=True)` bisection in
+      `_build_one_service_rollup` / `_get_manifest_status_sync` to localize. **WORKAROUND IN PLACE:** the job runs in
+      LIVE mode; the beta rollup is written on demand by running the worker locally
+      (`DATA_STATUS_BETA_MANIFEST_BLOB=… python -m deployment_api.scripts.data_status_rollup_worker --project … --bucket …-data-status-rollups`),
+      and the service serves it regardless of age (follow-up #4 above). Only needed while beta preview is on (pre
+      `--apply`). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7
+      follow-up #4 (2026-06-15).
