@@ -1,7 +1,6 @@
 ---
 title: v2 Engine + Venue Build-Out — 22 engineless archetypes + 9 unwired venues
 created: 2026-06-15
-author: ikennaigboaka [slot-1·laptop]
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
 estimate_class: research
@@ -9,6 +8,8 @@ estimate_baseline_ai_days: 55.0
 estimate_calibrated_ai_days: 66.0
 locked_by: live-defi-rollout
 locked_since: 2026-06-15
+priority: P2
+status: active
 ---
 
 # v2 Engine + Venue Build-Out
