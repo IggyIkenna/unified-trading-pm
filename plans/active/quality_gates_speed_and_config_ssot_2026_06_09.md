@@ -503,3 +503,28 @@ Operator direction: if fundamental deps don't change, the build cache should be 
 - [ ] [SCRIPT] P2. `restart-deployment-stack.sh` must export `GCP_PROJECT_ID`/`PROJECT_ID` (env-inline launcher sets
       provider but no project → Secret-Manager paths malformed → live 500 on any secret-reading route; found shipping
       the Repos-CI dashboard 2026-06-10; interim: operator exports inline).
+
+---
+
+## Shipped — 2026-06-15 (config-SSOT finding #2 + strict ratchet + parity)
+
+Dated index of what landed today — detail lives in the cited sections/plans, not repeated here.
+
+- ✅ **Finding #1 audit refreshed** → § "Current-state config audit REFRESH" (6 live coverage drifts; supersedes the
+  stale 2026-06-10 matrix). Reproducer `scripts/quality_gates/qg_config_audit.py` authored.
+- ✅ **Finding #2 — all 4 standalone configs consolidated into toml** (→ § "Phase-1 todos from this refresh"):
+  instruments-service@f7934aa (`pytest.ini`→toml) · unified-trading-library@e469808 (dead `.bandit` deleted) ·
+  greeks-service@5b88041 + fund-administration-service@2ad889e (`pyrightconfig.json`→`[tool.basedpyright]`). Surfaced
+  that `pyrightconfig.json` also dodged STEP 5.21 → greeks consolidated to **clean strict** (not relocate-lax).
+- ✅ **P1 strict-typing ratchet — greeks + fund-admin now fully strict** (`BASEDPYRIGHT_MAX_ERRORS=0`):
+  fund-administration-service@9f3fc44 (14 errors fixed, both suppressions removed) · greeks-service@f41a12d (70→0; 58 of
+  those were greeks' own `venv=".venv-workspace"`→`".venv"` mis-pointer, a parity-class fix).
+- ✅ **greeks backfill NULL-coercion fix** — greeks-service@8047ceb: the ratchet's pyarrow→pandas read swap turned NULL
+  parquet cells into `Decimal('NaN')` (crashed the `mark_price <= 0` guard → aborted backfill; leaked `NaN` into
+  Black-Scholes). Restored pyarrow null semantics in `_read_parquet_rows` + `_dec` guard + 4 regression tests.
+- ✅ **Third local↔CI basedpyright parity root cause** — PM PR #330 (`base-service.sh` + `base-library.sh`): editable
+  `LOCAL_DEPS` installed into the global pyenv env, not the repo `.venv`, so workspace libs were unresolved → Unknown
+  cascade inflated local counts (PM 1627 vs CI ~1344). Detail in `ci_local_qg_parity_2026_06_08.md` § third root cause.
+
+Deferred (already tracked in their sections, not started): finding #3 ruff unification · finding #4 `[tool.quality-gates]`
+table · the rest of Phases 1–4.
