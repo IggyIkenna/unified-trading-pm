@@ -80,11 +80,11 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.7.0",
     "unified-trading-library": "0.10.0",
-    "unified-trading-pm": "1.2.110",
+    "unified-trading-pm": "1.2.113",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.10.0",
-    "greeks-service": "0.4.0",
+    "greeks-service": "0.5.0",
     "trading-agent-service": "0.2.3",
     "strategy-service": "0.6.0",
     "ml-service": "0.5.1",
@@ -1134,7 +1134,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1789,17 +1789,19 @@
     "e2e-testing": "0.6.0",
     "strategy-service": "0.7.0",
     "system-integration-tests": "0.5.0",
-    "greeks-service": "0.5.0"
+    "unified-api-contracts": "0.9.0",
+    "features-service": "0.3.0",
+    "market-tick-data-service": "0.9.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-15T17:31:17.900296Z",
-    "locked_reason": "Breaking MINOR bump cascade: system-integration-tests=0.5.0 (pre-1.0.0)",
-    "lock_version": "0.5.0",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
+    "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 3,
-    "locked_alert_sent": true,
+    "locked_alert_sent": false,
     "breaking_pending": [
       "e2e-testing",
       "execution-service",
@@ -1829,15 +1831,35 @@
       "sha": "26722e169fd317f8a3c50edb7621a0e9ddecf54c",
       "branch": "staging"
     },
-    "greeks-service": {
-      "version": "0.5.0",
-      "sha": "97e737578ede7482b634454c72535a864efae27d",
+    "unified-api-contracts": {
+      "version": "0.9.0",
+      "sha": "3a7221880aa38e95fb1761a5b21dba3985c74bd0",
+      "branch": "staging"
+    },
+    "features-service": {
+      "version": "0.3.0",
+      "sha": "3fed163d84469cb18bcb81b97441731a9cd0d2b0",
+      "branch": "staging"
+    },
+    "market-tick-data-service": {
+      "version": "0.9.0",
+      "sha": "10fb9bc49a0ddc0dd3fa3c6afcffd1506939af92",
       "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-15T18:58:22.554763Z",
+        "commits": {
+          "greeks-service": {
+            "version": "0.5.0",
+            "sha": "97e737578ede7482b634454c72535a864efae27d",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-15T15:42:33.419934Z",
         "commits": {
@@ -1937,16 +1959,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-11T19:02:02.847545Z",
-        "commits": {
-          "instruments-service": {
-            "version": "0.4.0",
-            "sha": "d5de34bae02b19ce845d2c54bca2b0aefd458079",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1963,7 +1975,7 @@
   },
   "promotion_failures": {
     "execution-service": 3,
-    "strategy-service": 1
+    "strategy-service": 2
   },
   "promotion_quarantine": {
     "execution-service": {
