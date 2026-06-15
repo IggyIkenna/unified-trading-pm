@@ -523,3 +523,147 @@ handler's `logger.exception` never fired → it's an uncatchable death OR loggin
       the R4 local-run path (works). Note: the cefi job currently carries diagnostic env `PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1`
       (harmless; aids the next attempt). Repo: instruments-service + deployment-service (job env/bootstrap). assigned_vm:
       vm-cross-cutting. parent_epic: instruments_master. Provenance: R6 follow-up (2026-06-15).
+
+---
+
+## R7 — Data-status coverage semantics: genesis-clip the date denominator + headline CAPTURED vs ATTEMPTED (2026-06-14)
+
+**Context.** Operator drill-down review surfaced two real defects in the Data Coverage card:
+(1) `dates_expected` counted calendar days from the global search horizon even for young asset groups whose
+data genesis is recent — penalising them for days that pre-date their existence ("dates_found/dates_expected
+= 70.23%" was depressed by impossible days); (2) the headline showed a single ambiguous `completion_pct`
+that conflated two distinct questions — *did we try everywhere we should* (attempt) vs *did we capture what
+we tried* (capture) — and the operator was right that `empty_confirmed` (declared no-data) must not count
+against capture.
+
+**FIX #1 — genesis-clip the date denominator (SHIPPED to LDR; DEPLOYING to prod).**
+`deployment_api/services/data_status/manifest.py` (~L491): after `effective_start = get_effective_start_date(...)`,
+clip it forward to the service's earliest *observed* date (`index[service==svc].date.min()`) when that genesis
+is later than the configured horizon. Young AGs (e.g. PREDICTION) are no longer charged for pre-genesis days.
+
+**FIX #2 — headline CAPTURED vs ATTEMPTED, both labelled.**
+- Backend (SHIPPED to LDR; DEPLOYING to prod): `manifest.py` now emits two new overall fields alongside the
+  legacy ones — `overall_capture_coverage_pct` (= shards-weighted capture = `shards_found/shards_expected`) and
+  `overall_attempt_coverage_pct` (venue-expected-weighted mean of per-category `attempt_coverage_pct`; falls
+  back to `completion_pct_dates` when no shards expected). `empty_confirmed` does NOT count against capture
+  (the 4-state honest_coverage SSOT + `attempt_coverage_pct` already exclude it — operator's point, confirmed).
+- UI (CODED, tsc-clean, regression-tested; **NOT shipped from this host** — see blocker): `DataStatusTab.tsx`
+  headline now leads with `overall_capture_coverage_pct` labelled **"captured"** + a conditional **"attempted"**
+  line for `overall_attempt_coverage_pct` (tooltips explain the split), falling back to `overall_completion_pct`
+  when the new fields are absent (older API). `api/client.ts` types the two optional fields. Regression test
+  `tests/unit/data-coverage-headline.test.tsx` (vitest, pure `coverageHeadline()` contract) asserts the
+  captured/attempted labels + fallback.
+
+**Deploy.** deployment-api `main` force-synced from LDR → fires the `deployment-api-main-deploy` auto-deploy
+trigger (genesis clip + new fields go live in prod; preserves beta env + 8Gi). The current (old) prod UI
+ignores the new fields and shows the genesis-clipped `completion_pct_dates` — so FIX #1 is visible in prod
+immediately; FIX #2's labelled split appears once the UI ships.
+
+- [x] ✅ [UI] P1. **Ship the R7 Data Coverage headline relabel.** SHIPPED — deployment-ui@65d4e45 | pw:L2 ✓
+      (210 smoke passed) | vitest 851 passed + regression: tests/unit/data-coverage-headline.test.tsx (pure
+      `coverageHeadline()` contract asserting captured/attempted labels + fallback) | tsc clean. The TURBO "Data
+      Coverage" headline now leads with `overall_capture_coverage_pct` labelled "captured" + a conditional
+      "attempted" line for `overall_attempt_coverage_pct`, falling back to `overall_completion_pct` when absent.
+      **Local env unblock (root cause was NOT npm#4828):** (1) npm's optional-deps bug never placed the rolldown
+      native binding — fetched `@rolldown/binding-linux-x64-gnu@1.0.3` via `npm pack` and dropped
+      `rolldown-binding.linux-x64-gnu.node` into `node_modules/rolldown/dist/`; (2) the real blocker was the **Node
+      version** — local was v20.18 where `require()` of an ESM module (`@exodus/bytes`→`html-encoding-sniffer`,
+      a jsdom dep) throws `ERR_REQUIRE_ESM`; CI uses Node 22 (quality-gates-v2.yml:41) where require(esm) is
+      unflagged. Installed Node 22.12 locally → full jsdom suite green. NOTE: a deep-render smoke guard for the
+      TURBO card was attempted but the card needs a multi-step interactive fetch the mock harness can't reliably
+      drive (the existing passing coverage-labels smoke asserts the always-rendered HonestCoverageCard) — the
+      vitest contract test is the logic-level regression guard; pw:L2 (210) confirms no UI regression. Reaches
+      prod with the deployment-api redeploy (dashboard is built into the deployment-api image). Provenance: R7
+      (2026-06-14 → shipped 2026-06-15).
+
+### R7 follow-up — prod `/api/data-status` full-CLI path 500s in-container (2026-06-15)
+
+**R7 VERIFIED LIVE on prod (image `71dd732`).** `GET /api/data-status/manifest?service=instruments-service&start_date=2018-01-01&end_date=2026-06-15&asset_group=prediction`
+returns `overall_capture_coverage_pct=94.77`, `overall_attempt_coverage_pct=100.0`, `dates_found/expected=435/459`.
+**The genesis clip works end-to-end**: the query horizon was 2018-01-01 (~3,087 days) but `dates_expected=459`
+— clipped to the prediction data genesis (2025-03-14), so the young AG reads its true **94.77%** instead of a
+horizon-penalised ~14%. The beta seam serves the projected-v9 index (493 rows, all `schema_version=9`,
+`asset_group=prediction`, `service_name=instruments-service`) and correctly bypasses the rollup cache (by
+design — manifest.py:153-158; serving the LIVE-derived rollup in beta would render live data).
+
+**CORRECTION of an earlier mis-diagnosis (do not propagate):** prediction is NOT missing its prod bucket or
+projected index. The bucket resolves via `resolve_bucket_name(kind="instruments-store-prediction")` →
+`instruments-store-pred-prd-{pid}` (note `pred`, not `prediction`); it exists and HAS
+`_index/audit/projected_index_prediction.parquet`. The transient "0/0 for prediction" reading was purely a
+wrong query param (`service=mtds`); prediction's `service_name` is `instruments-service`. cefi/defi/tradfi/sports
++ prediction all have their projected-v9 index. No bucket/projection gap for prediction.
+
+**Real finding (stands):** forcing the non-turbo card endpoint (`GET /api/data-status?...&force_refresh=true`)
+returns **HTTP 500**: the `run_data_status_cli` path shells out to the deployment-service CLI which dies with
+`Error: Could not find configs directory. Run from deployment-service or specify --config-dir` inside the Cloud
+Run image. So the full-CLI data-status path is non-viable in-container; only the turbo path serves prod.
+
+- [x] ✅ [INFRA] P2. **deployment-api in-container `run_data_status_cli` finds its config dir.** SHIPPED —
+      deployment-api@f77a856. `_build_cli_cmd` now passes `--config-dir <pm-configs>` (GROUP-level option, before
+      the `data-status` subcommand) via a new `_resolve_cli_config_dir()` that resolves `<app root>/pm-configs` —
+      the byte-identical mirror the image already `COPY`s (Dockerfile "COPY pm-configs/"). Root cause: `configs/`
+      lives at the deployment-service REPO ROOT (not package data) so `pip install --no-deps` drops it. No
+      `os.environ` (respects the no-os-environ gate). Regression: `tests/unit/test_data_status_beta_rollup_and_cli_config.py`
+      (`_resolve_cli_config_dir` finds pm-configs; `_build_cli_cmd` puts `--config-dir` before `data-status`).
+      Repo: deployment-api. Provenance: R7 follow-up (2026-06-15).
+
+### R7 follow-up #2 — beta all-asset-group `/manifest` 503 → beta-aware rollup (2026-06-15)
+
+**Found verifying the prod data-status page** (`/service/instruments-service/data-status`): per-asset-group beta
+views work (prediction 94.77%), but the DEFAULT all-AG load **HTTP 503s**. Cause: in beta mode the service
+bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serve in beta) and live-computed all
+5 asset groups per request — which exceeds the Cloud Run request timeout. This is exactly the operator's idea
+("can't the rollup with the env var do its work on the v9 beta manifest").
+
+- [x] ✅ [INFRA] P1. **Beta-aware rollup — beta serves a beta-namespaced rollup from cache.** SHIPPED —
+      deployment-api@f77a856. New `rollup_cache.rollup_blob_path(service, kind)` returns `{service}/{kind}.beta.json.gz`
+      when `manifest_source.is_beta_mode()` else `{service}/{kind}.json.gz`. The **worker** (run with the beta env)
+      writes the `.beta` blob from the projected-v9 index; the **service** reads the same beta blob in beta mode
+      (`_read_rollup_if_fresh` + `read_coverage_rollup_if_fresh` use the helper); `get_manifest_status` no longer
+      bypasses the fast-path in beta (the "never serve live-derived data in beta" invariant is now held by the blob
+      NAMESPACING, not by bypassing). So the all-AG beta view is served from cache, not live-computed per request.
+      Regression: `test_rollup_blob_path_live_vs_beta` + rewritten `test_beta_mode_uses_beta_namespaced_rollup`
+      (was `..._bypasses_rollup_fast_path`) + `test_live_mode_still_uses_rollup_fast_path` (unchanged). Repo:
+      deployment-api. Provenance: R7 follow-up #2 (2026-06-15).
+
+> **🟡 TEMPORARY STATE — rollup-job beta env (set 2026-06-15).** To populate the beta rollup, the Cloud Run job
+> `uts-prod-data-status-rollup` carries `DATA_STATUS_BETA_MANIFEST_BLOB=_index/audit/projected_index_{asset_group}.parquet`
+> — the SAME value as the `uts-shared-deployment-api` service. This pairs the job with the service: both are in
+> beta, so the job writes the `.beta` rollup the beta service reads. **SUPERSEDED 2026-06-15 (see R7 follow-up #3 +
+> #4 below):** the rollup JOB is now kept in LIVE mode (its beta runs failed — R6-class, see below); the beta rollup
+> is written on demand (manually) from the STATIC projected-v9 index and the service serves it regardless of age.
+> **Canonical follow-up still holds:** when the v9 migration `--apply` lands, beta is turned OFF on the service and
+> the manual beta rollup blobs are deleted (live == v9, the normal live rollup covers it).
+
+### R7 follow-up #3 — slicer R7 parity + worker beta-eligible filter (2026-06-15, deployment-api@e5fbbf7)
+
+- [x] ✅ [INFRA] P1. **`slice_rollup_to_window` now emits `overall_capture_coverage_pct` + `overall_attempt_coverage_pct`.**
+      The rollup-served fast-path dropped the R7 split (headline showed only `overall_completion_pct`); now it carries
+      both (capture = shards-weighted; attempt = venue-expected-weighted mean of per-cat `attempt_coverage_pct`,
+      mirroring `_get_manifest_status_sync`). VERIFIED LIVE: all-AG `GET /manifest?service=instruments-service` →
+      `overall_capture_coverage_pct=95.9`, `overall_attempt_coverage_pct=96.01` (was `None`). Regression:
+      `test_slice_rollup_emits_r7_overall_capture_attempt`.
+- [x] ✅ [INFRA] P1. **Rollup worker restricts to beta-eligible services in beta mode** (`BETA_ELIGIBLE_SERVICES =
+      {instruments-service}` — the only service with a v9 projection). Beta read fails LOUD on a missing projection
+      (kept — `test_beta_mode_fails_loud_on_missing_projection`), so sweeping a non-projected service (mtds/features)
+      would crash the job; the filter prevents that. Regression: `test_beta_eligible_filters_to_projected_services`.
+
+### R7 follow-up #4 — beta rollup serves regardless of staleness + R6-class cloud beta-job failure (2026-06-15, @ce38aba)
+
+- [x] ✅ [INFRA] P1. **Beta rollup serves regardless of staleness.** The beta rollup derives from the STATIC
+      projected-v9 index (a migration preview, not a live feed), so the 30-min staleness gate forcing an all-AG
+      live-compute fall-through (HTTP 503) is wrong for beta. `_read_rollup_if_fresh` + `read_coverage_rollup_if_fresh`
+      skip the gate in beta mode (live mode unchanged). The all-AG beta view is now durable as long as the beta blob
+      exists. Regression: `test_beta_rollup_served_despite_staleness` + `test_live_rollup_respects_staleness`.
+- [ ] [INFRA] P2. **Diagnose why the data-status rollup CLOUD JOB fails in beta mode** (R6-class — logging
+      suppressed). With image `e5fbbf7`/`ce38aba` + the beta env + the beta-eligible filter, the cloud job
+      `uts-prod-data-status-rollup` crashes ~2s into `_get_manifest_status_sync` (exit 1) — yet the IDENTICAL code +
+      env succeeds LOCALLY (filter logs "restricting to ['instruments-service']", exit 0). 16Gi/4cpu/standard SA (same
+      as the healthy LIVE job), so not resources/perms. The exception type is suppressed (same root cause as the R6
+      `run_rollup` logging-suppression item above) — needs the `print(..., flush=True)` bisection in
+      `_build_one_service_rollup` / `_get_manifest_status_sync` to localize. **WORKAROUND IN PLACE:** the job runs in
+      LIVE mode; the beta rollup is written on demand by running the worker locally
+      (`DATA_STATUS_BETA_MANIFEST_BLOB=… python -m deployment_api.scripts.data_status_rollup_worker --project … --bucket …-data-status-rollups`),
+      and the service serves it regardless of age (follow-up #4 above). Only needed while beta preview is on (pre
+      `--apply`). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7
+      follow-up #4 (2026-06-15).
