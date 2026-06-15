@@ -870,7 +870,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1786,10 +1786,7 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
-    "e2e-testing": "0.5.0",
-    "instruments-service": "0.5.1",
-    "unified-trading-library": "0.10.0",
-    "strategy-service": "0.6.0"
+    "e2e-testing": "0.5.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1816,26 +1813,31 @@
       "version": "0.5.0",
       "sha": "d8bb31e75b0d4573523c5daeef57b5f463111262",
       "branch": "staging"
-    },
-    "instruments-service": {
-      "version": "0.5.1",
-      "sha": "7ba908e8cf2d879b178649bf6a76efa81a13e863",
-      "branch": "staging"
-    },
-    "unified-trading-library": {
-      "version": "0.10.0",
-      "sha": "324dcbf86d5bbb925520cdb436b93d0ccf80d139",
-      "branch": "staging"
-    },
-    "strategy-service": {
-      "version": "0.6.0",
-      "sha": "2eb53773031053b1539532d692a73b8da977a1df",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-15T15:42:33.419934Z",
+        "commits": {
+          "instruments-service": {
+            "version": "0.5.1",
+            "sha": "7ba908e8cf2d879b178649bf6a76efa81a13e863",
+            "branch": "staging"
+          },
+          "unified-trading-library": {
+            "version": "0.10.0",
+            "sha": "324dcbf86d5bbb925520cdb436b93d0ccf80d139",
+            "branch": "staging"
+          },
+          "strategy-service": {
+            "version": "0.6.0",
+            "sha": "2eb53773031053b1539532d692a73b8da977a1df",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-15T13:33:01.438906Z",
         "commits": {
@@ -1925,41 +1927,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-11T15:13:10.033166Z",
-        "commits": {
-          "market-data-processing-service": {
-            "version": "0.6.0",
-            "sha": "631a43df86cb672d1eba336b9362181dcba78b48",
-            "branch": "staging"
-          },
-          "batch-live-reconciliation-service": {
-            "version": "0.4.0",
-            "sha": "8938802de8db63b0eee84b218566c39d619d6941",
-            "branch": "staging"
-          },
-          "execution-service": {
-            "version": "0.8.0",
-            "sha": "132e11d431754867818d0ad6d8d2a372eb1372e4",
-            "branch": "staging"
-          },
-          "fund-administration-service": {
-            "version": "0.3.0",
-            "sha": "037698bae66048f46c682cca849a06b1e45f513d",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.8.1",
-            "sha": "621dae79235efa0701d047b686d8cfc8f11560f1",
-            "branch": "staging"
-          },
-          "unified-trading-library": {
-            "version": "0.6.0",
-            "sha": "da45d50f26738da01bb2cff5f455cc6b3b387d08",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1975,7 +1942,7 @@
     ]
   },
   "promotion_failures": {
-    "execution-service": 1
+    "execution-service": 2
   },
   "promotion_quarantine": {}
 }
