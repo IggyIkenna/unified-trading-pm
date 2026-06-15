@@ -89,3 +89,4 @@
 {"timestamp": "2026-06-15T08:21:54Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.5.0 (branch=staging, bump=minor)", "commit_sha": "595692ee292bdf7abfe6375de5e04efc0e1d3c31"}
 {"timestamp": "2026-06-15T08:42:16Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-api=0.2.2 (branch=staging, bump=minor)", "commit_sha": "f4cb35cb2865ecaae4636ca937e1e4ac7257e90b"}
 {"timestamp": "2026-06-15T08:50:55Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "greeks-service=0.4.0 (branch=staging, bump=minor)", "commit_sha": "0185a354af510aeb33624a666c2d727ff9eca108"}
+{"timestamp": "2026-06-15T09:21:32Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ml-service=0.5.1 (branch=staging, bump=minor)", "commit_sha": "20ac49f0fc67aa772d7f816469366d99706d4a1a"}
