@@ -340,7 +340,16 @@ reconciler items are RESILIENCE, demoted from P0. Companion plans: `ci_status_fi
       06-10 conflict-pair runaway and the 06-11 empty-promote loop ~2 days before the wall. (~1 day, Harsh repo)
 - [ ] [INFRA] P3. **Spend telemetry** — extend `GhRateLimitMonitor`/deployment-ui Repos-CI page with a billable-minutes
       tracker (runs×duration from the runs API) + Slack alert at 50/80/95% of monthly budget, so the NEXT runaway is
-      caught in hours not at the wall. (~1 day)
+      caught in hours not at the wall. (~1 day) **BLOCKED-ON-DECISION (assessed 2026-06-15, slot-4):** the authoritative
+      GitHub billing API (`GET /users/IggyIkenna/settings/billing/actions`, exact
+      `total_minutes_used`/`included_minutes`) is **403 "Resource not accessible by personal access token"** with the
+      shared fleet PAT — billing needs the account owner's `user`/`Plan:read`-scoped token. So the only PAT-compatible
+      source is **estimating from runs-API wall-times × $0.008/min across 25 repos** — which is the same budget-heavy
+      runs iteration this very issue is trying to SHRINK (must be cached + daily-aggregated, never per-page-load).
+      DECISIONS NEEDED before build: (a) operator mints a billing-scoped token in SM (→ authoritative 1-call/tick)
+      **vs** the cached runs-API estimate; (b) the monthly minutes/$ budget anchoring the 50/80/95% thresholds (free
+      tier = 3,000 min; paid limit raised several times this month — operator-only knowledge). Deferred by operator
+      2026-06-15 pending (a)+(b).
 
 **Restore-day runbook (operator raises limit → do in this order):** (1) budget raised; (2) leave
 `ci-status-reconciler` + `ldr-ci-monitor` + `ldr-to-staging-promote` DISABLED; (3) `ldr-to-main-promote` (enabled)
@@ -365,13 +374,14 @@ PRs since 09:00Z on features/mdps/client-reporting → nothing actively burning)
 (crons fire from the default branch → the fix was inert). `ldr-to-main-promote` had failed its last tick (08:51Z), and
 no standing LDR→main PR was open. Actions taken:
 
-1. Opened the standing **LDR→main PR #286** (carries `932d42f4c` + accumulated LDR to main) + armed auto-merge (v2-gated).
-2. Its v2 **failed** on the `lint-codex` slice — root cause was NOT the workflow YAML (actionlint = non-fatal warn) but a
-   pre-existing **credential-ask ratchet regression**: `check_credential_ask_orphans.py` saw 3 orphan `BLOCKED-CREDENTIALS`
-   lines vs baseline 2. The net-new orphan was `monitoring_control_plane_master_2026_06_10.md:549`
+1. Opened the standing **LDR→main PR #286** (carries `932d42f4c` + accumulated LDR to main) + armed auto-merge
+   (v2-gated).
+2. Its v2 **failed** on the `lint-codex` slice — root cause was NOT the workflow YAML (actionlint = non-fatal warn) but
+   a pre-existing **credential-ask ratchet regression**: `check_credential_ask_orphans.py` saw 3 orphan
+   `BLOCKED-CREDENTIALS` lines vs baseline 2. The net-new orphan was `monitoring_control_plane_master_2026_06_10.md:549`
    (`ORCHESTRATOR_INTERNAL_SECRET` not distributed to VMs). **Fixed** by filing the CREDENTIAL APPROVAL REQUEST in
-   `ikenna_orchestrator/pings/slot_1.md` + citing it inline on the plan line (within the ±5-line window) → checker back to
-   2 = baseline (PM@78f3e2960). This de-orphan also reaches main on #286 → unblocks the lint-codex slice fleet-wide.
+   `ikenna_orchestrator/pings/slot_1.md` + citing it inline on the plan line (within the ±5-line window) → checker back
+   to 2 = baseline (PM@78f3e2960). This de-orphan also reaches main on #286 → unblocks the lint-codex slice fleet-wide.
 3. #286 v2 re-running on the new head; auto-merge armed → on green the tree-gate + runaway breaker reach main.
 
 **DONE + VERIFIED (post-#286-merge, ~10:02Z)**:
@@ -380,11 +390,12 @@ no standing LDR→main PR was open. Actions taken:
   and `ldr-to-main-promote` (2). The loop fix now actually fires (crons run from `main`).
 - ✅ **Drain re-enabled** (`ldr-to-staging-promote` → `active`) — and **verified NOT looping**: a manually-triggered
   sweep correctly **BLOCKED at the Tier-B gate** (latest SIT conclusion = the stale 0-step billing-kill `failure`) and
-  **created ZERO PRs** — it fails BEFORE the promote step. **0 new staging PRs fleet-wide since 10:01Z** (vs the old
-  ~70 s empty-PR cadence). The loop is dead.
-- ✅ **`full-workspace-sit` dispatched** (runs 27408789932 / 27408823487) — on green, the Tier-B gate clears and the next
-  `*/15` sweep promotes: the tree-gate SKIPs the ~14 phantom repos + opens real PRs only for the ~4 drifted ones. If SIT
-  lands red that is a separate SIT-health issue — the drain stays SAFELY blocked (no loop, no burn) until it's green.
+  **created ZERO PRs** — it fails BEFORE the promote step. **0 new staging PRs fleet-wide since 10:01Z** (vs the old ~70
+  s empty-PR cadence). The loop is dead.
+- ✅ **`full-workspace-sit` dispatched** (runs 27408789932 / 27408823487) — on green, the Tier-B gate clears and the
+  next `*/15` sweep promotes: the tree-gate SKIPs the ~14 phantom repos + opens real PRs only for the ~4 drifted ones.
+  If SIT lands red that is a separate SIT-health issue — the drain stays SAFELY blocked (no loop, no burn) until it's
+  green.
 - Left `ci-status-reconciler` + `ldr-ci-monitor` DISABLED per runbook (precautionary; re-enable after their own fixes).
 
 **Money state**: the dominant ~80% spend driver (the empty-promote loop) is KILLED; nothing is actively burning; the
@@ -509,12 +520,11 @@ attribution is by arithmetic closure (0 jobs = no logs); Actions secret-masking 
 
 ---
 
-**[Observation 2026-06-12 ~15:25Z — slot-4/Harsh, verification only, NOT a root-cause closure]**: the
-billing **WALL is not in effect right now** — Actions workflows are executing + succeeding (sampled live):
-PM `ldr-to-staging-promote` success 15:13Z, `ldr-to-main-promote` success 14:25Z; deployment-ui
-`quality-gates-v2` success 15:08Z/14:35Z/14:30Z (LDR→staging promote PRs); prior-session repo-ci work
-(`deployment-ui@367b5b7`) reached `main`. So promotion is flowing. This is a point-in-time data point for the
-investigation — it does **not** confirm the underlying spend root-cause (empty-promote loop #3) is fixed, and
-the wall could recur if the loop still burns minutes. Root-cause status remains Ikenna's to close. (Surfaced
-because a stale "billing wall" assumption had been propagating into unrelated plan flips — now corrected in
-`monitoring_control_plane_master_2026_06_10.md`.)
+**[Observation 2026-06-12 ~15:25Z — slot-4/Harsh, verification only, NOT a root-cause closure]**: the billing **WALL is
+not in effect right now** — Actions workflows are executing + succeeding (sampled live): PM `ldr-to-staging-promote`
+success 15:13Z, `ldr-to-main-promote` success 14:25Z; deployment-ui `quality-gates-v2` success 15:08Z/14:35Z/14:30Z
+(LDR→staging promote PRs); prior-session repo-ci work (`deployment-ui@367b5b7`) reached `main`. So promotion is flowing.
+This is a point-in-time data point for the investigation — it does **not** confirm the underlying spend root-cause
+(empty-promote loop #3) is fixed, and the wall could recur if the loop still burns minutes. Root-cause status remains
+Ikenna's to close. (Surfaced because a stale "billing wall" assumption had been propagating into unrelated plan flips —
+now corrected in `monitoring_control_plane_master_2026_06_10.md`.)
