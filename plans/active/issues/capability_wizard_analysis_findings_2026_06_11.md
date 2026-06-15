@@ -631,3 +631,16 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 > tracker · collateral runtime consumer) is already tracked as `- [ ]` todos in
 > [capability_wizard_gap_discovery_2026_06_11.md](capability_wizard_gap_discovery_2026_06_11.md) (margin audit) — not
 > duplicated here.
+
+## Follow-up todo — delete the dead version-bump landmine (2026-06-15)
+
+- [ ] [SCRIPT] P2. **Delete the dead `version-bump.yml` system** (superseded by `semver-agent.yml`; deployed to 0 repos
+      but still carries the `[skip ci]` bump-commit that reintroduces the staging→main promote-PR deadlock if anyone
+      re-runs the old rollout): remove `scripts/propagation/templates/version-bump.yml` +
+      `scripts/propagation/rollout-version-bump-workflow.py`, and add a SUPERSEDED banner to
+      `docs/repo-management/version-cascade-flow.md` (it still describes `version-bump.yml` as the live per-repo bumper —
+      the live one is `semver-agent.yml`). Target: unified-trading-pm. **BLOCKED (transient)**: PM `quality-gates.sh`
+      version-alignment gate is failing on promotion-lag drift (7 self + 12 remote version drifts) while the 5-day
+      backlog drains fleet-wide — ship via quickmerge once `run-version-alignment.sh` is green (do NOT use the human-only
+      `--skip-version-alignment`). Root cause already fixed + deployed: `semver-agent.yml.tmpl` apply step commits the
+      bump with NO `[skip ci]` (2026-06-09) and was rolled out to all 24 repos 2026-06-15.
