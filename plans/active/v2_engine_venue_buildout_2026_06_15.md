@@ -101,14 +101,61 @@ regenerate + commit the verdict matrix; (7) `split_scope_tokens` no longer raise
 Each: confirm the feed exists; if yes build real + backtest + tests + register + matrix-flip; if no, honest
 `not_available` + blocker todo.
 
-- [ ] [SCRIPT] P2. **MARKET_MAKING_PASSIVE_SPREAD** engine — real or honest-absent (needs L2 book). Repo:
+> **Phase D P2 microstructure feed landed** — features-service `extract_book_microstructure_feature_dict()` exposes
+> `spread`/`relative_spread`/`mid`/`microprice`/`microprice_tilt`/`book_imbalance` (L5-derivable, AVAILABLE NOW) +
+> `queue_position_*`/`book_depth_levels` (honest-absent on L5). 2 of 5 are L5-buildable NOW (PASSIVE_SPREAD +
+> INVENTORY_SKEW); 3 are BLOCKED on a deeper-than-L5 book (QUEUE_MICROSTRUCTURE) or an unbuilt model
+> (PREDICTION/ML_LEAN). **All 5 ship as code+unit-tests; NONE registered, matrix UNCHANGED** (no passing backtest — MM
+> backtests need historical L5 book replay; no backfill authorised → registering would make the matrix LIE).
+
+- [ ] [SCRIPT] P2. **MARKET_MAKING_PASSIVE_SPREAD** — real engine SHIPPED (L5-buildable now). Repo: strategy-service.
+  - code: strategy-service@257df34a, unit-tested; **BACKTEST-PENDING** (needs historical L5 book replay; no backfill
+    authorised). `MarketMakingPassiveSpreadEngine` (`engine/strategies/v2/market_making/passive_spread.py`): the
+    canonical two-sided passive MM baseline — quotes BID/ASK around the `microprice` (anchor; `mid` honest fallback) at
+    ±half-spread (`half = max(min_half_spread_bps of anchor, spread_capture_frac × observed book spread)`), fixed
+    `quote_size` per side. L5-sufficient on the shipped feed (microprice/spread/mid). Leg tests pin bid=anchor−half /
+    ask=anchor+half symmetry, the wide-spread capture, the mid fallback, and no-anchor no-quote. **NOT registered** +
+    matrix UNCHANGED.
+- [ ] [SCRIPT] P2. **MARKET_MAKING_INVENTORY_SKEW** — real engine SHIPPED (L5-buildable now). Repo: strategy-service.
+  - code: strategy-service@257df34a, unit-tested; **BACKTEST-PENDING** (needs historical L5 book replay).
+    `MarketMaking InventorySkewEngine` (`market_making/inventory_skew.py`): Avellaneda-Stoikov-style — quotes around a
+    RESERVATION price that leans AGAINST current inventory (net-long shades reservation DOWN → ask gets relatively
+    aggressive → mean-revert position toward `inventory_target`), additionally tilted by `book_imbalance`; inventory cap
+    pulls the bid at the long cap / the ask at the short cap. L5-sufficient (microprice + book_imbalance + spread). Leg
+    tests pin the down-shade on net-long, up-shade on net-short, the imbalance tilt, and both cap-pulls. **NOT
+    registered** + matrix UNCHANGED.
+- [ ] [SCRIPT] P2. **MARKET_MAKING_QUEUE_MICROSTRUCTURE** — engine SHIPPED + BLOCKED-DATA on `queue_position`. Repo:
       strategy-service.
-- [ ] [SCRIPT] P2. **MARKET_MAKING_INVENTORY_SKEW** engine — real or honest-absent. Repo: strategy-service.
-- [ ] [SCRIPT] P2. **MARKET_MAKING_QUEUE_MICROSTRUCTURE** engine — real or honest-absent (needs queue-position data).
-      Repo: strategy-service.
-- [ ] [SCRIPT] P3. **MARKET_MAKING_PREDICTION** engine — real or honest-absent. Repo: strategy-service.
-- [ ] [SCRIPT] P3. **MARKET_MAKING_ML_LEAN** engine — real or honest-absent (needs the MM ML model variant). Repo:
+  - code: strategy-service@257df34a, unit-tested; **BACKTEST-PENDING + BLOCKED-DATA on queue_position**.
+    `MarketMaking QueueMicrostructureEngine` (`market_making/queue_microstructure.py`): quote/cancel by queue position +
+    order-flow imbalance — pulls a side whose resting queue (`queue_position_bid`/`queue_position_ask`) exceeds
+    `max_queue_ahead` (joining a long queue = poor fill + toxic), and tilts the reservation toward the flow
+    (`book_imbalance`). **Consumes `queue_position_*` which are honest-absent on the shipped L5 feed** (need a
+    deeper-than-L5 / full-L2 book — `queue_position` registered live_capable=False, Phase D part (a)); the engine
+    DEGRADES HONESTLY → emits no quote when the queue features are absent (does NOT fall back to a queue-blind quote —
+    that is PASSIVE_SPREAD). Wired + unit-tested against constructed queue features (no-trade-when-absent,
+    both-sides-shallow, deep-queue-pull, flow-tilt). **NOT registered** + matrix UNCHANGED. **BLOCKED-DATA**: needs the
+    deeper-than-L5 book capture.
+- [ ] [SCRIPT] P3. **MARKET_MAKING_PREDICTION** — engine SHIPPED + BLOCKED on the MM direction model variant. Repo:
       strategy-service.
+  - code: strategy-service@257df34a, unit-tested; **BACKTEST-PENDING + BLOCKED-model-variant**.
+    `MarketMakingPrediction Engine` (`market_making/prediction.py`): two-sided passive quote whose RESERVATION price is
+    skewed by a short-horizon directional `MLPrediction` (class 1=up → skew up, 2=down → skew down), confidence-gated
+    (below floor → symmetric quote, a maker keeps quoting). CONSUMES a MM-direction prediction like VOL_ML_LEAN; the
+    model variant is **not yet trained/ registered in ml-service** → wired + unit-tested vs constructed predictions,
+    BLOCKED on the model for any live/backtest signal (does NOT fabricate a direction → honest symmetric quote on
+    absence). Leg tests pin up/down skew sign + the below-floor + no-prediction symmetric cases. **NOT registered** +
+    matrix UNCHANGED. See P3 ml-service gap below.
+- [ ] [SCRIPT] P3. **MARKET_MAKING_ML_LEAN** — engine SHIPPED + BLOCKED on the MM ML model variant. Repo:
+      strategy-service.
+  - code: strategy-service@257df34a, unit-tested; **BACKTEST-PENDING + BLOCKED-model-variant**.
+    `MarketMakingMlLeanEngine` (`market_making/ml_lean.py`): ML-driven quote skew AND asymmetric per-side SIZING — class
+    1=up skews reservation up + scales the BID size UP / ASK size DOWN (lean to get long), 2=down the mirror;
+    confidence-gated (below floor → symmetric, equal size). CONSUMES the MM ML model variant (same gap as PREDICTION) →
+    wired + unit-tested vs constructed predictions, BLOCKED on the model variant; honest symmetric+equal-size on
+    absence. Leg tests pin the up-leans-bid-bigger
+    - up-skew, down-leans-ask-bigger + down-skew, and below-floor/no-prediction symmetric-equal-size. **NOT
+      registered** + matrix UNCHANGED. See P3 ml-service gap below.
 
 ## Phase E2 — VOL\_\* engines (17) — gated on an options vol-surface / greeks feed
 
@@ -122,35 +169,38 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     call+put) when `iv_atm` cheap vs a realised-vol/term reference, short (SELL both) when rich; size = vega budget,
     scaled down by `max_position_vega`; legs = the two ATM option legs (delta-neutral at inception). Leg-derivation unit
     tests pin long-vs-short side + ATM selection + vega cap. **NOT registered** in `ARCHETYPE_ENGINE_REGISTRY` + verdict
-    matrix UNCHANGED (no passing backtest → registering would make the matrix lie). **DVOL-vs-Tardis**: surface-dependent
-    only at the per-strike level — straddle itself is ATM-only, but its backtest still needs the historical ATM-IV vs
-    realised series; Deribit DVOL gives the implied index (ATM-proxy) credential-free but NOT the exact per-strike ATM
-    option marks → Tardis preferred for a faithful backtest. No backfill run (operator constraint).
+    matrix UNCHANGED (no passing backtest → registering would make the matrix lie). **DVOL-vs-Tardis**:
+    surface-dependent only at the per-strike level — straddle itself is ATM-only, but its backtest still needs the
+    historical ATM-IV vs realised series; Deribit DVOL gives the implied index (ATM-proxy) credential-free but NOT the
+    exact per-strike ATM option marks → Tardis preferred for a faithful backtest. No backfill run (operator constraint).
 - [ ] [SCRIPT] P2. **VOL_VARIANCE_SWAP** — real engine SHIPPED (template wave).
   - code: strategy-service@64da164d, unit-tested; **BACKTEST-PENDING** (needs Tardis historical per-strike surface).
     `VolVarianceSwapEngine` (`engine/strategies/v2/vol_trading/variance_swap.py`): replicates variance exposure via a
-    **1/K²-weighted OTM strip** (ATM anchor + 25d call wing + 25d put wing; each wing sized `variance_notional/moneyness²`
-    so the deeper-relative-to-forward put wing carries MORE contracts — the canonical Demeterfi replication profile);
-    trades long/short variance vs a surface-implied **fair-variance estimate** (`iv_atm²` lifted by a configurable skew
-    convexity loading) compared to realised variance (`rv²`). Leg-derivation unit tests pin the 1/K² weights + side +
-    fair-var-vs-realised. **NOT registered** + matrix UNCHANGED. **DVOL-vs-Tardis**: surface-dependent — the strip needs
-    a historical **per-strike IV surface** (skew/wing IVs), which Deribit public history does NOT expose (mark-IV history
-    pruned to ~1d, expired instruments empty) → **needs Tardis** for any backtest. No backfill run. **Feed-key gap
-    flagged**: features-service exposes the surface as aggregated scalar buckets (`iv_atm`, `iv_25d_call/put`,
-    `iv_skew_25d`, term) — NOT a per-strike IV-by-moneyness grid; the strip is built from the 3 canonical buckets. A
-    denser strip needs a per-strike surface feature (not yet exposed).
+    **1/K²-weighted OTM strip** (ATM anchor + 25d call wing + 25d put wing; each wing sized
+    `variance_notional/moneyness²` so the deeper-relative-to-forward put wing carries MORE contracts — the canonical
+    Demeterfi replication profile); trades long/short variance vs a surface-implied **fair-variance estimate**
+    (`iv_atm²` lifted by a configurable skew convexity loading) compared to realised variance (`rv²`). Leg-derivation
+    unit tests pin the 1/K² weights + side + fair-var-vs-realised. **NOT registered** + matrix UNCHANGED.
+    **DVOL-vs-Tardis**: surface-dependent — the strip needs a historical **per-strike IV surface** (skew/wing IVs),
+    which Deribit public history does NOT expose (mark-IV history pruned to ~1d, expired instruments empty) → **needs
+    Tardis** for any backtest. No backfill run. **Feed-key gap flagged**: features-service exposes the surface as
+    aggregated scalar buckets (`iv_atm`, `iv_25d_call/put`, `iv_skew_25d`, term) — NOT a per-strike IV-by-moneyness
+    grid; the strip is built from the 3 canonical buckets. A denser strip needs a per-strike surface feature (not yet
+    exposed).
 - [ ] [SCRIPT] P2. **VOL_DISPERSION** — real engine SHIPPED (wave 2). Repo: strategy-service.
-  - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (multi-underlying per-strike surfaces need Tardis).
-    `VolDispersionEngine` (`vol_trading/dispersion.py`): long-component / short-index vol on the implied-correlation view
-    (`index_iv - avg_component_iv ≥ gap` → SELL index straddle / BUY component straddle; inverse when corr low).
-    Leg tests pin index-vs-component side + the degraded single-surface fallback. **NOT registered** + matrix UNCHANGED.
-    **Multi-underlying / DVOL-vs-Tardis**: needs the index + component surfaces — single-surface tick falls back to the
-    index-only view + attests `degraded_single_surface`; full vector needs a multi-underlying feature (P2 gap filed below).
+  - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (multi-underlying per-strike surfaces need
+    Tardis). `VolDispersionEngine` (`vol_trading/dispersion.py`): long-component / short-index vol on the
+    implied-correlation view (`index_iv - avg_component_iv ≥ gap` → SELL index straddle / BUY component straddle;
+    inverse when corr low). Leg tests pin index-vs-component side + the degraded single-surface fallback. **NOT
+    registered** + matrix UNCHANGED. **Multi-underlying / DVOL-vs-Tardis**: needs the index + component surfaces —
+    single-surface tick falls back to the index-only view + attests `degraded_single_surface`; full vector needs a
+    multi-underlying feature (P2 gap filed below).
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_ARB** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (per-tenor surface history needs Tardis).
     `VolTermStructureArbEngine` (`vol_trading/term_structure_arb.py`): vega-neutral calendar — front rich vs back
-    (`iv_near - iv_far ≥ gap`) → SELL near / BUY far; far leg scaled by `vega_near/vega_far` to vega-neutral. Leg tests pin
-    near/far side + the vega weighting. **NOT registered** + matrix UNCHANGED. Needs per-tenor surface (Tardis) to backtest.
+    (`iv_near - iv_far ≥ gap`) → SELL near / BUY far; far leg scaled by `vega_near/vega_far` to vega-neutral. Leg tests
+    pin near/far side + the vega weighting. **NOT registered** + matrix UNCHANGED. Needs per-tenor surface (Tardis) to
+    backtest.
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_SLOPE** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (per-tenor surface history needs Tardis).
     `VolTermStructureSlopeEngine` (`vol_trading/term_structure_slope.py`): directional calendar on `iv_slope_1m_3m` vs a
@@ -159,14 +209,17 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
 - [ ] [SCRIPT] P2. **VOL_ARB_RV_IV** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
     `VolArbRvIvEngine` (`vol_trading/arb_rv_iv.py`): symmetric delta-hedged gamma on the IV−RV gap — IV<RV → long gamma
-    (BUY straddle), IV>RV → short gamma (SELL), each hedged `-package_delta` (omitted on honest delta absence). Leg tests
-    pin long/short-gamma side + hedge sign + honest omission. **NOT registered** + matrix UNCHANGED. **DVOL-index-
-    backtestable** like VOL_CARRY (`iv_atm - rv` needs only the implied index + realised close series, no per-strike surface).
+    (BUY straddle), IV>RV → short gamma (SELL), each hedged `-package_delta` (omitted on honest delta absence). Leg
+    tests pin long/short-gamma side + hedge sign + honest omission. **NOT registered** + matrix UNCHANGED. **DVOL-index-
+    backtestable** like VOL_CARRY (`iv_atm - rv` needs only the implied index + realised close series, no per-strike
+    surface).
 - [ ] [SCRIPT] P3. **VOL_0DTE_GAMMA_SCALPING** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (intraday 0DTE marks need Tardis).
-    `Vol0dteGammaScalpingEngine` (`vol_trading/gamma_scalping_0dte.py`): near-expiry long-gamma scalp — open (BUY straddle
-    + hedge) when `rv_intraday - iv_term_1w ≥ entry`; emit a re-hedge leg (`-delta`) when delta drifts past `rehedge_delta`;
-    close (SELL back) when the edge collapses. Leg tests pin open/rehedge/no-rehedge/close. **NOT registered** + matrix UNCHANGED.
+    `Vol0dteGammaScalpingEngine` (`vol_trading/gamma_scalping_0dte.py`): near-expiry long-gamma scalp — open (BUY
+    straddle
+    - hedge) when `rv_intraday - iv_term_1w ≥ entry`; emit a re-hedge leg (`-delta`) when delta drifts past
+      `rehedge_delta`; close (SELL back) when the edge collapses. Leg tests pin open/rehedge/no-rehedge/close. **NOT
+      registered** + matrix UNCHANGED.
 - [ ] [SCRIPT] P3. **VOL_CARRY** — real engine SHIPPED (template wave).
   - code: strategy-service@697e0641, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
     `VolCarryEngine` (`engine/strategies/v2/vol_trading/carry.py`): harvests the volatility-risk-premium — when `iv_atm`
@@ -177,14 +230,15 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     open/hold/flatten + the delta-hedge sign + honest-absence hedge omission. **NOT registered** + matrix UNCHANGED.
     **DVOL-vs-Tardis**: this is the ONE template-wave engine **backtestable from FREE Deribit DVOL history** — DVOL is
     the implied-vol index (ATM-proxy) back to 2021 credential-free and realised vol comes from the underlying close
-    series, so `iv_atm - rv` carry needs NO per-strike surface. **Candidate for an early DVOL-index backtest greenlight**
-    ahead of the surface-dependent VOL_STRADDLE/VARIANCE_SWAP (which need Tardis). No backfill run.
+    series, so `iv_atm - rv` carry needs NO per-strike surface. **Candidate for an early DVOL-index backtest
+    greenlight** ahead of the surface-dependent VOL_STRADDLE/VARIANCE_SWAP (which need Tardis). No backfill run.
 - [ ] [SCRIPT] P3. **VOL_CROSS_ASSET_SPREAD** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (dual-asset per-strike surfaces need Tardis).
-    `VolCrossAssetSpreadEngine` (`vol_trading/cross_asset_spread.py`): relative vol of two assets — `iv_a - iv_b` beyond a
-    reference spread → SELL the rich asset's straddle / BUY the cheap asset's. Leg tests pin a-vs-b side + the
+    `VolCrossAssetSpreadEngine` (`vol_trading/cross_asset_spread.py`): relative vol of two assets — `iv_a - iv_b` beyond
+    a reference spread → SELL the rich asset's straddle / BUY the cheap asset's. Leg tests pin a-vs-b side + the
     both-surfaces-required honest absence. **NOT registered** + matrix UNCHANGED. **Multi-underlying**: needs both asset
-    surfaces injected; single-surface tick does NOT trade (a single-surface cross-asset spread is meaningless) — P2 gap filed.
+    surfaces injected; single-surface tick does NOT trade (a single-surface cross-asset spread is meaningless) — P2 gap
+    filed.
 - [ ] [SCRIPT] P3. **VOL_LEAPS_CONVEXITY** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (long-tenor IV history needs Tardis).
     `VolLeapsConvexityEngine` (`vol_trading/leaps_convexity.py`): BUYS the long-tenor ATM straddle (convexity) when
@@ -195,37 +249,41 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     `VolMarketMakingEngine` (`vol_trading/market_making.py`): two-sided ATM-vol quote around `iv_atm` ± `half_spread`,
     inventory-skewed (net-long shades both quotes down) + inventory-capped (pulls a side at the cap). Leg tests pin the
     symmetric quote, the inventory skew, and the cap-pull. **NOT registered** + matrix UNCHANGED.
-- [ ] [SCRIPT] P3. **VOL_ML_LEAN** — engine SHIPPED + BLOCKED on the vol ML model variant (wave 2). Repo: strategy-service.
+- [ ] [SCRIPT] P3. **VOL_ML_LEAN** — engine SHIPPED + BLOCKED on the vol ML model variant (wave 2). Repo:
+      strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING + BLOCKED-model-variant**. `VolMlLeanEngine`
-    (`vol_trading/ml_lean.py`): CONSUMES a vol-direction `MLPrediction` (class 1=vol-up → BUY straddle, 2=vol-down → SELL),
-    confidence-gated + confidence-scaled size. Leg tests pin class→side + the confidence floor + flat/no-prediction
-    no-trade. **NOT registered** + matrix UNCHANGED. **Model-variant gap**: the vol-direction ML classifier variant is not
-    yet trained/registered in ml-service — engine is wired + tested against constructed predictions but BLOCKED on the
-    model variant for any live/backtest signal; it does NOT fabricate a signal from the surface (honest absence). See P3 gap below.
+    (`vol_trading/ml_lean.py`): CONSUMES a vol-direction `MLPrediction` (class 1=vol-up → BUY straddle, 2=vol-down →
+    SELL), confidence-gated + confidence-scaled size. Leg tests pin class→side + the confidence floor +
+    flat/no-prediction no-trade. **NOT registered** + matrix UNCHANGED. **Model-variant gap**: the vol-direction ML
+    classifier variant is not yet trained/registered in ml-service — engine is wired + tested against constructed
+    predictions but BLOCKED on the model variant for any live/backtest signal; it does NOT fabricate a signal from the
+    surface (honest absence). See P3 gap below.
 - [ ] [SCRIPT] P3. **VOL_OVERLAY_COVERED_CALLS** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (per-strike call-IV history needs Tardis).
-    `VolOverlayCoveredCallsEngine` (`vol_trading/overlay_covered_calls.py`): writes the 25d OTM call (SELL) against a long
-    cover when `iv_25d_call ≥ min_call_iv` (premium rich enough to cap upside). Leg tests pin write+cover, thin-IV no-write,
-    and the assume-existing-cover skip. **NOT registered** + matrix UNCHANGED.
+    `VolOverlayCoveredCallsEngine` (`vol_trading/overlay_covered_calls.py`): writes the 25d OTM call (SELL) against a
+    long cover when `iv_25d_call ≥ min_call_iv` (premium rich enough to cap upside). Leg tests pin write+cover, thin-IV
+    no-write, and the assume-existing-cover skip. **NOT registered** + matrix UNCHANGED.
 - [ ] [SCRIPT] P3. **VOL_OVERLAY_PROTECTIVE_PUT** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (per-strike put-IV history needs Tardis).
-    `VolOverlayProtectivePutEngine` (`vol_trading/overlay_protective_put.py`): buys the 25d OTM put (BUY) hedge vs a long
-    when `iv_25d_put ≤ max_put_iv` (protection cheap enough). Leg tests pin buy+long, expensive-IV no-buy. **NOT registered**
-    + matrix UNCHANGED.
+    `VolOverlayProtectivePutEngine` (`vol_trading/overlay_protective_put.py`): buys the 25d OTM put (BUY) hedge vs a
+    long when `iv_25d_put ≤ max_put_iv` (protection cheap enough). Leg tests pin buy+long, expensive-IV no-buy. **NOT
+    registered**
+    - matrix UNCHANGED.
 - [ ] [SCRIPT] P3. **VOL_RATIO_SPREAD** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (per-strike skew history needs Tardis).
     `VolRatioSpreadEngine` (`vol_trading/ratio_spread.py`): asymmetric +1 ATM / −N OTM, side selected by `iv_skew_25d`
-    (put-skew rich → put ratio; call-skew rich → call ratio). Leg tests pin the side selection + the N:1 unit ratio + the
-    flat-skew no-trade. **NOT registered** + matrix UNCHANGED.
+    (put-skew rich → put ratio; call-skew rich → call ratio). Leg tests pin the side selection + the N:1 unit ratio +
+    the flat-skew no-trade. **NOT registered** + matrix UNCHANGED.
 - [ ] [SCRIPT] P3. **VOL_SPREAD_STRUCTURES** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (per-strike surface history needs Tardis).
-    `VolSpreadStructuresEngine` (`vol_trading/spread_structures.py`): selects vertical (directional skew) / butterfly (flat
-    skew + rich ATM vol) / condor (flat skew + normal vol) by the level+skew view; emits the structure's legs. Leg tests pin
-    each structure's leg set + sides. **NOT registered** + matrix UNCHANGED. Per-strike grid limitation noted (P2 gap below).
+    `VolSpreadStructuresEngine` (`vol_trading/spread_structures.py`): selects vertical (directional skew) / butterfly
+    (flat skew + rich ATM vol) / condor (flat skew + normal vol) by the level+skew view; emits the structure's legs. Leg
+    tests pin each structure's leg set + sides. **NOT registered** + matrix UNCHANGED. Per-strike grid limitation noted
+    (P2 gap below).
 - [ ] [SCRIPT] P3. **VOL_SYNTHETIC_DELTA** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (paired ATM option marks need Tardis).
-    `VolSyntheticDeltaEngine` (`vol_trading/synthetic_delta.py`): synthesises underlying delta — desired long → BUY call /
-    SELL put (synthetic long, +1 delta/pair); short → SELL call / BUY put; size scaled by |signal|. Leg tests pin the
+    `VolSyntheticDeltaEngine` (`vol_trading/synthetic_delta.py`): synthesises underlying delta — desired long → BUY call
+    / SELL put (synthetic long, +1 delta/pair); short → SELL call / BUY put; size scaled by |signal|. Leg tests pin the
     long/short synthetic legs + the no-signal no-trade. **NOT registered** + matrix UNCHANGED.
 
 ## Phase E0 — prerequisite data audit (BLOCKING gate for E1/E2) — ✅ DONE 2026-06-15
@@ -373,45 +431,45 @@ named operator credential ask. These are the engines' true predecessors.
     solved back), moneyness/tenor correctness, index grouping, honest-absence drop. QG `--no-fix` exit 0. No
     service↔service import (takes plain `OptionQuote` inputs, not the IS chain type). **Parts (a)+(c)+(e) now ALL landed
     (2026-06-15) — see sub-bullets above; the whole Phase D P1 todo is [x].**
-- [x] ✅ [SCRIPT] P2. **Build + connectivity-test the L2 microstructure feed (NO backfill).** ALL of (a)+(b)+(c)
-      shipped — see sub-bullets. batch==live holds: ONE canonical `CanonicalBookMicrostructure` shape both the live
-      venue-WS book and the Tardis batch book map to, derived from `book_snapshot_5`; an engine cannot tell live from
-      batch. NO backfill run (operator constraint). Repos: unified-api-contracts@9b0b62e + market-tick-data-service@0908bda
-      + features-service@93b39362. Unblocks (feed-level) **MARKET_MAKING_PASSIVE_SPREAD + MARKET_MAKING_INVENTORY_SKEW**
+- [x] ✅ [SCRIPT] P2. **Build + connectivity-test the L2 microstructure feed (NO backfill).** ALL of (a)+(b)+(c) shipped
+      — see sub-bullets. batch==live holds: ONE canonical `CanonicalBookMicrostructure` shape both the live venue-WS
+      book and the Tardis batch book map to, derived from `book_snapshot_5`; an engine cannot tell live from batch. NO
+      backfill run (operator constraint). Repos: unified-api-contracts@9b0b62e + market-tick-data-service@0908bda +
+      features-service@93b39362. Unblocks (feed-level) **MARKET_MAKING_PASSIVE_SPREAD + MARKET_MAKING_INVENTORY_SKEW**
       (L5-sufficient now); **MARKET_MAKING_QUEUE_MICROSTRUCTURE** stays BLOCKED-DATA on `queue_position` (honest gap —
       needs a deeper-than-L5 book capture). NO batch==live divergence was forced.
   - ✅ **part (a) — UAC data_types + canonical schema + SOURCE_PRIORITY** — unified-api-contracts@9b0b62e. NEW
     `canonical/domain/market/microstructure.py`: `CanonicalBookMicrostructure` (the ONE wire shape — L5-derivable
-    spread/relative_spread/mid/microprice/imbalance ALWAYS present; deeper-book `queue_position_*` + `depth_levels_*`
-    honest-absent on L5) + `CanonicalDepthLevel`; exported through market → domain → root facade. `data_type_capability.py`:
-    `order_flow_imbalance` registered **live_capable=True** (L5-derivable) for the 9 CeFi venues carrying `book_snapshot_5`
-    (Binance-FUT/SPOT, OKX-FUT/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT, Upbit); `queue_position` + `depth_of_book_10`
-    registered **live_capable=False + batch_capable=False** (honest gap — need an L10/full-L2 book deeper than L5).
-    `book_snapshot_5` reused (already live), not duplicated. SOURCE_PRIORITY: `(cefi, order_flow_imbalance|depth_of_book_10|
-    queue_position) → ["mtds_microstructure"]` (new COMPUTED_SOURCE, mirrors greeks_service — the upstream L5 book's own
-    source=tardis/venue stays on the book_snapshot_5 shard). Wired `mtds_microstructure` into COMPUTED_SOURCES +
-    SOURCE_MODE_CAPABILITY {B,L,R} + EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_MTDS_MICROSTRUCTURE +
-    AVAILABILITY_AT_SEMANTICS tick_timestamp + validity-matrix COMPUTED_SERVICE_OUTPUT exclusions. 8 unit tests; QG
-    `--no-fix` exit 0.
-  - ✅ **part (b) — MTDS derivation + handler scaffold + connectivity-test** — market-tick-data-service@0908bda. NEW pure
-    `derived/book_microstructure_compute.py` (`compute_book_microstructure(L5BookInput) → CanonicalBookMicrostructure`,
-    stateless, no I/O — mirrors the `derived/` rebase_rate pattern): `order_flow_imbalance` + microprice + spread
-    **L5-DERIVABLE NOW**; `queue_position`/`depth_of_book_10` honest-absent (need deeper book). Handler scaffold
+    spread/relative*spread/mid/microprice/imbalance ALWAYS present; deeper-book
+    `queue_position*_`+`depth*levels*_`honest-absent on L5) +`CanonicalDepthLevel`; exported through market → domain → root facade. `data_type_capability.py`: `order_flow_imbalance`registered **live_capable=True** (L5-derivable) for the 9 CeFi venues carrying`book_snapshot_5`(Binance-FUT/SPOT, OKX-FUT/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT, Upbit);`queue_position`+`depth_of_book_10`registered **live_capable=False + batch_capable=False** (honest gap — need an L10/full-L2 book deeper than L5).`book_snapshot_5`reused (already live), not duplicated. SOURCE_PRIORITY:`(cefi,
+    order_flow_imbalance|depth_of_book_10| queue_position) →
+    ["mtds_microstructure"]`(new COMPUTED_SOURCE, mirrors greeks_service — the upstream L5 book's own source=tardis/venue stays on the book_snapshot_5 shard). Wired`mtds_microstructure`into COMPUTED_SOURCES + SOURCE_MODE_CAPABILITY {B,L,R} + EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_MTDS_MICROSTRUCTURE + AVAILABILITY_AT_SEMANTICS tick_timestamp + validity-matrix COMPUTED_SERVICE_OUTPUT exclusions. 8 unit tests; QG`--no-fix`
+    exit 0.
+  - ✅ **part (b) — MTDS derivation + handler scaffold + connectivity-test** — market-tick-data-service@0908bda. NEW
+    pure `derived/book_microstructure_compute.py`
+    (`compute_book_microstructure(L5BookInput) → CanonicalBookMicrostructure`, stateless, no I/O — mirrors the
+    `derived/` rebase_rate pattern): `order_flow_imbalance` + microprice + spread **L5-DERIVABLE NOW**;
+    `queue_position`/`depth_of_book_10` honest-absent (need deeper book). Handler scaffold
     `cli/handlers/book_microstructure_handler.py` (UnifiedServiceHandler; shard-isolated `derive_microstructure_rows`
-    with `classify_venue_error` + `ADAPTER_FETCH_FAILED`; `source="mtds_microstructure"` provenance; `deeper_book_gap_reason`
-    honest-gap marker; `get_write_bucket_name` not hardcoded). 13 mocked unit tests under `--block-network`. **CONNECTIVITY
-    PROOF (real live Binance public depth REST, ran 2026-06-15, exit 0 via `scripts/book_microstructure_connectivity_check.py`):**
-    BINANCE-SPOT BTCUSDT, 5 levels/side, best_bid/ask 66269.58/66269.59, spread 0.01, imbalance 0.9939, microprice
-    66269.5900; queue/depth honestly absent. NOT a backfill. QG `--no-fix` exit 0.
+    with `classify_venue_error` + `ADAPTER_FETCH_FAILED`; `source="mtds_microstructure"` provenance;
+    `deeper_book_gap_reason` honest-gap marker; `get_write_bucket_name` not hardcoded). 13 mocked unit tests under
+    `--block-network`. **CONNECTIVITY PROOF (real live Binance public depth REST, ran 2026-06-15, exit 0 via
+    `scripts/book_microstructure_connectivity_check.py`):** BINANCE-SPOT BTCUSDT, 5 levels/side, best_bid/ask
+    66269.58/66269.59, spread 0.01, imbalance 0.9939, microprice 66269.5900; queue/depth honestly absent. NOT a
+    backfill. QG `--no-fix` exit 0.
   - ✅ **part (c) — features-service book-microstructure features** — features-service@93b39362.
     `cefi/book_microstructure_feature_extractor.py` `extract_book_microstructure_feature_dict(micro) → dict[str,float]`
-    for a MARKET_MAKING_* engine `on_tick`. Keys: spread, relative_spread, mid, microprice, microprice_tilt, book_imbalance
-    (L5-derivable); queue_position_bid/ask + book_depth_levels (present ONLY when a deeper capture filled them — honest
-    absence omits the key on L5; never synthesised). Pure transforms of the canonical feed (no invented numbers; UAC types
-    only, no service↔service import). `formula_version=1` on all NEW features (no math-change bump). 7 unit tests; QG
-    `--no-fix` exit 0.
+    for a MARKET*MAKING*\* engine `on_tick`. Keys: spread, relative_spread, mid, microprice, microprice_tilt,
+    book_imbalance (L5-derivable); queue_position_bid/ask + book_depth_levels (present ONLY when a deeper capture filled
+    them — honest absence omits the key on L5; never synthesised). Pure transforms of the canonical feed (no invented
+    numbers; UAC types only, no service↔service import). `formula_version=1` on all NEW features (no math-change bump).
+    7 unit tests; QG `--no-fix` exit 0.
 
-> **E1/E2 below are BLOCKED-DATA pending Phase D** — do not build until the corresponding feed lands.
+> **E1/E2 unblocking status (2026-06-15):** Phase D P1 (vol/greeks feed) + P2 (L5 microstructure feed) both landed → all
+> 17 VOL\_\* + 2 of 5 MARKET_MAKING\_\* (PASSIVE_SPREAD + INVENTORY_SKEW) are now BUILT (code + unit tests; NONE
+> registered, matrix UNCHANGED — all BACKTEST-PENDING, no backfill authorised). MARKET_MAKING_QUEUE_MICROSTRUCTURE stays
+> BLOCKED-DATA on `queue_position` (needs a deeper-than-L5 book); MARKET_MAKING_PREDICTION + \_ML_LEAN stay
+> BLOCKED-model-variant on the MM ML model. See the Phase E1 sub-bullets + the follow-up todos.
 
 ## Codex SSOT updates
 
@@ -472,10 +530,59 @@ to `rootm_orchestrator/pings/slot_1.md` and was migrated to the canonical `ikenn
 file deleted). The VOL*_/MARKET*MAKING*_ engine builds (Phase E1/E2) remain BLOCKED-DATA→now-unblocked-for-VOL\_\* — a
 separate later wave, NOT in this (a)+(c)+(e) scope.
 
+### 2026-06-15 — Phase E1 MARKET_MAKING\_\* (5) BUILT — strategy-service@257df34a
+
+All 5 MARKET*MAKING\_\* engines shipped as real signal→quote logic + leg-derivation unit tests (24 tests, QG `--no-fix`
+exit 0), in `engine/strategies/v2/market_making/` (passive_spread / inventory_skew / queue_microstructure / prediction /
+ml_lean), Base = `BaseArchetypeEngineV2`, mirroring the VOL\_\* template-wave structure + honest-registration
+discipline. Each emits a single `QUOTE` `AtomicInstruction` carrying bid/ask `AtomicLeg`s with the derived price in
+`params`. Consume the shipped Phase D P2 microstructure feed (`microprice`/`mid`/`spread`/`book_imbalance` L5-derivable;
+`queue_position*\*`honest-absent on L5). **2 L5-buildable NOW** (PASSIVE_SPREAD + INVENTORY_SKEW); **3 BLOCKED** — QUEUE_MICROSTRUCTURE (BLOCKED-DATA on`queue_position`, degrades honestly to no-quote), PREDICTION + ML_LEAN (BLOCKED-model-variant on the MM ML direction model, wired+tested vs constructed `MLPrediction`s, honest symmetric quote on absence). **NONE registered in `ARCHETYPE_ENGINE_REGISTRY`; verdict matrix UNCHANGED** — no passing backtest (MM backtests need historical L5 book replay; no backfill authorised → registering would make the matrix LIE; pinned by `test_market_making_engines_are_not_registered`). Did NOT run `generate_config_registry.py`or the full`generate-unified-openapi.sh`.
+2 follow-up todos filed below (MM ML model variant P3; deeper-than-L5 book capture P2).
+
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 
-- [ ] [SCRIPT] P2. **Bump cryptography fleet-wide off the GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the 2026-06-15 advisory flagged cryptography 46.0.7 (statically-linked OpenSSL). Unlike aiohttp it is NOT vcrpy-deadlocked, so the PROPER fix is a floor bump + per-repo `uv lock` regen, not a permanent ignore. The ignore (PM base-service.sh + base-library.sh, PM@e6c7b52c9) is the transient speed>security unblock. Repos: fleet-wide (all repos declaring cryptography transitively) + remove the GHSA ignore from both base-*.sh once bumped.
-- [ ] [SCRIPT] P3. **Ratchet DOWN the MTDS DTZ + fallback-import baselines** — after the DTZ noqa fix, MTDS is below both `ruff_rule_ratchet_baseline.yaml` (32) and `no_fallback_imports_baseline.yaml` (3); re-run `--update-baseline` for market-tick-data-service. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **Expose a per-strike IV-by-moneyness surface feature (vol-surface grid)** — the features-service vol feed exposes the surface as FLAT scalar buckets (`iv_atm`, `iv_25d_call/put`, `iv_skew_25d`, term points) — NOT a per-strike IV grid. VOL_VARIANCE_SWAP / VOL_RATIO_SPREAD / VOL_SPREAD_STRUCTURES build their strips/structures from the 3 canonical buckets + configured leg instruments; a denser strike ladder (a finer replication strip, arbitrary-strike condors) needs a per-strike surface feature. Provenance: VOL_* wave 2 (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service (consume).
-- [ ] [SCRIPT] P2. **Expose a multi-underlying vol-surface feature vector (index + components / two assets)** — the flat `dict[str,float]` on_tick feed exposes ONE surface per tick. VOL_DISPERSION runs a degraded single-surface index-only view when only `iv_atm` is present (full mode needs `index_iv_atm` + `component_iv_atm`/`avg_component_iv_atm`); VOL_CROSS_ASSET_SPREAD requires both `iv_atm_asset_a` + `iv_atm_asset_b` and honestly no-trades on a single surface. A multi-underlying surface feature (index + per-component, or asset-pair) unlocks the full dispersion/cross-asset trade. Provenance: VOL_* wave 2 (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service (consume).
-- [ ] [SCRIPT] P3. **Train + register the vol-direction ML model variant (for VOL_ML_LEAN)** — `VolMlLeanEngine` (strategy-service@1a058e88) consumes a vol-direction `MLPrediction` (classes: 1=vol-up, 2=vol-down, 0=flat) but that classifier variant is not yet trained/registered in ml-service, so the engine is wired + unit-tested against constructed predictions and **BLOCKED-model-variant** for any live/backtest signal. It does NOT fabricate a signal from the surface (honest absence). Repo: ml-service (model variant) → strategy-service (consume).
+- [ ] [SCRIPT] P2. **Bump cryptography fleet-wide off the GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the
+      2026-06-15 advisory flagged cryptography 46.0.7 (statically-linked OpenSSL). Unlike aiohttp it is NOT
+      vcrpy-deadlocked, so the PROPER fix is a floor bump + per-repo `uv lock` regen, not a permanent ignore. The ignore
+      (PM base-service.sh + base-library.sh, PM@e6c7b52c9) is the transient speed>security unblock. Repos: fleet-wide
+      (all repos declaring cryptography transitively) + remove the GHSA ignore from both base-\*.sh once bumped.
+- [ ] [SCRIPT] P3. **Ratchet DOWN the MTDS DTZ + fallback-import baselines** — after the DTZ noqa fix, MTDS is below
+      both `ruff_rule_ratchet_baseline.yaml` (32) and `no_fallback_imports_baseline.yaml` (3); re-run
+      `--update-baseline` for market-tick-data-service. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **Expose a per-strike IV-by-moneyness surface feature (vol-surface grid)** — the features-service vol
+      feed exposes the surface as FLAT scalar buckets (`iv_atm`, `iv_25d_call/put`, `iv_skew_25d`, term points) — NOT a
+      per-strike IV grid. VOL*VARIANCE_SWAP / VOL_RATIO_SPREAD / VOL_SPREAD_STRUCTURES build their strips/structures
+      from the 3 canonical buckets + configured leg instruments; a denser strike ladder (a finer replication strip,
+      arbitrary-strike condors) needs a per-strike surface feature. Provenance: VOL*\* wave 2
+      (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service (consume).
+- [ ] [SCRIPT] P2. **Expose a multi-underlying vol-surface feature vector (index + components / two assets)** — the flat
+      `dict[str,float]` on*tick feed exposes ONE surface per tick. VOL_DISPERSION runs a degraded single-surface
+      index-only view when only `iv_atm` is present (full mode needs `index_iv_atm` +
+      `component_iv_atm`/`avg_component_iv_atm`); VOL_CROSS_ASSET_SPREAD requires both `iv_atm_asset_a` +
+      `iv_atm_asset_b` and honestly no-trades on a single surface. A multi-underlying surface feature (index +
+      per-component, or asset-pair) unlocks the full dispersion/cross-asset trade. Provenance: VOL*\* wave 2
+      (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service (consume).
+- [ ] [SCRIPT] P3. **Train + register the vol-direction ML model variant (for VOL_ML_LEAN)** — `VolMlLeanEngine`
+      (strategy-service@1a058e88) consumes a vol-direction `MLPrediction` (classes: 1=vol-up, 2=vol-down, 0=flat) but
+      that classifier variant is not yet trained/registered in ml-service, so the engine is wired + unit-tested against
+      constructed predictions and **BLOCKED-model-variant** for any live/backtest signal. It does NOT fabricate a signal
+      from the surface (honest absence). Repo: ml-service (model variant) → strategy-service (consume).
+- [ ] [SCRIPT] P3. **Train + register the MM short-horizon direction ML model variant (for MARKET_MAKING_PREDICTION +
+      MARKET_MAKING_ML_LEAN)** — `MarketMakingPredictionEngine` + `MarketMakingMlLeanEngine` (strategy-service@257df34a)
+      consume a short-horizon MM-direction `MLPrediction` (classes: 1=up, 2=down, 0=flat) to skew the quote reservation
+      (PREDICTION) and additionally lean per-side sizing (ML_LEAN), but that classifier variant is not yet
+      trained/registered in ml-service, so both engines are wired + unit-tested against constructed predictions and
+      **BLOCKED-model-variant** for any live/backtest signal. Neither fabricates a direction from the book (honest
+      absence → symmetric quote). Provenance: MM wave (Phase E1, strategy-service@257df34a). Repo: ml-service (model
+      variant) → strategy-service (consume).
+- [ ] [SCRIPT] P2. **Capture a deeper-than-L5 / full-L2 order book to populate `queue_position_*` (for
+      MARKET_MAKING_QUEUE_MICROSTRUCTURE)** — `MarketMakingQueueMicrostructureEngine` (strategy-service@257df34a)
+      consumes `queue_position_bid`/`queue_position_ask` (resting size ahead at each touch) to quote/cancel by queue
+      depth, but those features are **honest-absent on the shipped L5 microstructure feed** (`queue_position` registered
+      live_capable=False + batch_capable=False in UAC `data_type_capability.py`, Phase D part (a) — they need a
+      deeper-than-L5 / full-L2 book capture). The engine degrades honestly (no quote when absent). Unblock = a deeper
+      book data_type (L10/full-L2) wired through MTDS `compute_book_microstructure` → features-service
+      `extract_book_microstructure_feature_dict()`. **BLOCKED-DATA**. Provenance: MM wave (Phase E1,
+      strategy-service@257df34a). Repos: market-tick-data-service (capture + derive) + features-service (expose) +
+      unified-api-contracts (data_type live_capable flip) → strategy-service (already consuming).
