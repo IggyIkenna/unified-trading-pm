@@ -175,10 +175,20 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
     [ ! -d ".venv" ] && uv venv .venv
     [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
+    # LOCAL_DEPS are SIBLING repos at the WORKSPACE ROOT (Path-B / flat layout), not nested under this
+    # repo — resolve workspace-root-first, and install into THIS .venv EXPLICITLY (--python). `source
+    # activate` alone does NOT reliably retarget `uv pip install` (uv can resolve to a pyenv/global env),
+    # which silently skipped the editable install → workspace libs unresolved → basedpyright Unknown
+    # cascade inflating the LOCAL typecheck count vs CI. SSOT: plans/active/ci_local_qg_parity_2026_06_08.md.
+    _venv_py=".venv/bin/python"; [ -x "$_venv_py" ] || _venv_py="python3"
+    _ws_root="${WORKSPACE_ROOT:-$(cd "${REPO_ROOT:-.}/.." && pwd)}"
     for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
-        [ -d "${REPO_ROOT}/$lib" ] && uv pip install -e "${REPO_ROOT}/$lib" --quiet 2>/dev/null || :
+        for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
+            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --python "$_venv_py" --quiet \
+                || log_warn "editable install failed for $lib — local typecheck may inflate via Unknown-type cascade"; break; }
+        done
     done
-    uv pip install -e . --quiet 2>/dev/null || :
+    uv pip install -e . --python "$_venv_py" --quiet 2>/dev/null || :
 fi
 if [ -f ".venv/bin/python" ]; then
     PYTHON_CMD=".venv/bin/python"
