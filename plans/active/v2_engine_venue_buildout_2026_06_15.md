@@ -378,3 +378,8 @@ forced. NOTE: a concurrent agent had also landed prior `slot_1.md` content; the 
 to `rootm_orchestrator/pings/slot_1.md` and was migrated to the canonical `ikenna_orchestrator/pings/slot_1.md` (rootm
 file deleted). The VOL*_/MARKET*MAKING*_ engine builds (Phase E1/E2) remain BLOCKED-DATA→now-unblocked-for-VOL\_\* — a
 separate later wave, NOT in this (a)+(c)+(e) scope.
+
+## Follow-ups discovered during Phase D / template wave (2026-06-15)
+
+- [ ] [SCRIPT] P2. **Bump cryptography fleet-wide off the GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the 2026-06-15 advisory flagged cryptography 46.0.7 (statically-linked OpenSSL). Unlike aiohttp it is NOT vcrpy-deadlocked, so the PROPER fix is a floor bump + per-repo `uv lock` regen, not a permanent ignore. The ignore (PM base-service.sh + base-library.sh, PM@e6c7b52c9) is the transient speed>security unblock. Repos: fleet-wide (all repos declaring cryptography transitively) + remove the GHSA ignore from both base-*.sh once bumped.
+- [ ] [SCRIPT] P3. **Ratchet DOWN the MTDS DTZ + fallback-import baselines** — after the DTZ noqa fix, MTDS is below both `ruff_rule_ratchet_baseline.yaml` (32) and `no_fallback_imports_baseline.yaml` (3); re-run `--update-baseline` for market-tick-data-service. Repo: unified-trading-pm.
