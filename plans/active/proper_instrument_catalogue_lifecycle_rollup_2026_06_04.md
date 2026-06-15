@@ -473,3 +473,28 @@ NOT reach prod without a UTL image rebuild + base-digest bump (slow). The migrat
       resume; no writes). Surface the staleness (the rows carry `written_at`; the UI freshness/`migration_in_progress`
       fields already exist). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic: instruments_master.
       Provenance: R5 (operator-reported 2026-06-15).
+
+### R6 (2026-06-15) — producer rebuild: P0 layer-1 (dead image) FIXED; cloud catalogue-rollup has a remaining run_rollup error (layer-2)
+
+The P0 "rebuild the dead IS producer" had **two layers**; layer 1 is now fixed:
+
+1. **FIXED — no fresh IS image since 06-10**: `instruments-service-build` fails at the in-image `quality-gates` step
+   (`log_section: command not found` / exit 127 — QG can't run without the PM harness/git in the image; **same
+   fleet-wide bug as deployment-api**). So `:latest` was stuck at stale 2026-06-10 `0.2.1` (BucketNamingError) and every
+   producer job ran it. Fix: added `_RUN_INIMAGE_QG` gate to `instruments-service/cloudbuild.yaml` (default true; build
+   trigger sub = false) + force-synced to main → fresh **`instruments-service:0.5.0` / `89e7c86` / `:latest`** built +
+   pushed 2026-06-15 12:13. `lifecycle-catalogue-regen-*` + daily jobs reference `:latest` → auto-use it (no repoint).
+   **Verified the image blocker is gone**: the cefi job now imports + starts + runs (no import-time BucketNamingError).
+
+2. **OPEN — cloud `lifecycle-catalogue-regen-cefi` still exits 1 in `run_rollup` (~75 s, NOT OOM)**: on the fresh image
+   it fails fast inside `build_instrument_catalogue.py::run_rollup` (call at line 1117). Truncated cloud traceback (cuts
+   at the `run_rollup(` frame, no exception line); a 16Gi/4cpu re-run failed identically in ~75 s → not memory. The SAME
+   rollup ran GREEN **locally** on 06-11 (R4) → **cloud-Cloud-Run-env-specific** (env/startup/grpc-fork class), not a code
+   regression. A local `--dry-run` won't reproduce (local works). Catalogue can still be refreshed via the R4 local path.
+
+- [ ] [INFRA] P1. **Diagnose the cloud lifecycle-catalogue-regen run_rollup fast-fail on the fresh image** — the truncated
+      cloud traceback hides the exception; add a top-level `traceback.print_exc()` flush (or `PYTHONFAULTHANDLER=1` + `-u`)
+      in `build_instrument_catalogue.py::main` so the Cloud Run job logs the real error, then fix it (likely a Cloud-Run-env
+      class — grpc/GCS fork-pool init, or a job env the local `.venv` has). Until fixed, the catalogue refreshes via the R4
+      local-run path. Repo: instruments-service (+ deployment-service job env). assigned_vm: vm-cross-cutting. parent_epic:
+      instruments_master. Provenance: R6 (2026-06-15).

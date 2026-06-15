@@ -36,17 +36,30 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
 
 ## Phase A — non-frozen quick wins (PARALLEL; no engine freeze involved)
 
-- [ ] [SPEC] P1. **F28 — single canonical collateral-haircut SSOT + delete the duplicate.** Research the official current
-      LST-collateral haircuts at each venue (Hyperliquid / Bybit / Deribit / OKX for stETH / wstETH / rETH etc.),
-      reconcile UAC `venue_collateral.py` vs execution-service `lst_collateral_resolver.py` to the CONSERVATIVE value
-      where they disagree (the 4 known: HL wstETH accept?; Bybit stETH 10%↔15%; Deribit 7.5%↔20%; OKX 15%↔absent),
-      **pick ONE canonical (cite which) + make the other repo consume it + DELETE the divergent duplicate values/file**.
-      Operator approves the value diff BEFORE ship. Targets: unified-api-contracts + execution-service.
-- [ ] [SCRIPT] P2. **F47/F48 — surface-correct the verdict-matrix over-claims.** PM
-      `generate_capability_verdict_matrix.py` must NOT emit `available` for (F47) venues the v2 slot-label token registry
-      rejects, nor (F48) for the 22 VOL_*/MARKET_MAKING_* archetypes with no registered v2 engine — emit
-      `not_available`/`not_registered` with the typed gap reason instead. Surface-only (engine builds are Phase C).
-      Target: unified-trading-pm. (Regenerate verdict-matrix; re-bundle UI; counts will shift.)
+- [x] ✅ [SPEC] P1. **F28 — single canonical collateral-haircut SSOT + delete the duplicate.** — DONE **UAC@f302c72 +
+      execution-service@8a3c6ab** (2026-06-15, operator-approved values). UAC `venue_collateral.py` = CANONICAL; its 7
+      clear-cut values were already correct (HL wstETH / OKX stETH / Binance stETH NOT-ACCEPTED; Deribit stETH 0.075;
+      Deribit wstETH NOT-ACCEPTED; Bybit/OKX wstETH 0.10). execution-service `_LST_REGISTRY` (106-line duplicate) +
+      local lookup **DELETED** → `get_lst_acceptance()` now reads UAC `venue_accepts_collateral`/`get_collateral_haircut`
+      with an explicit fraction→percent boundary conversion (the 100× units-bug guard). Orphaned `margin_mode` field
+      removed. Bybit-stETH + Drift-mSOL flagged `# PLACEHOLDER` (operator-held). Kamino kept out (lending). QG green both
+      repos (UAC 2 tests, exec-svc 22 tests).
+- [ ] [DEFI] P2. **F28 live-API probe** to finalize the two operator-HELD collateral haircuts in UAC
+      `registry/venue_collateral.py` — Bybit stETH (0.10 placeholder) + Drift mSOL (0.10 placeholder); replace the
+      `# PLACEHOLDER — pending live-API probe (F28, operator-held 2026-06-15)` comments with probed values + source
+      citation. Provenance: F28 consolidation (UAC@f302c72 / execution-service@8a3c6ab). Target: unified-api-contracts.
+- [x] ✅ [SCRIPT] P2. **F47/F48 — surface-correct the verdict-matrix over-claims.** — DONE **PM@d0f66d732 (PR #339) +
+      UAC@a1f8b38** (2026-06-15). F47: leg-eligible venues whose folded slot-token ∉ `KNOWN_VENUE_TOKENS` → `blocked`
+      with `unbuildable_slot_venue` (186 cells / 11 venues, DERIVED not enumerated). F48: archetypes whose value ∉ the
+      v2 engine-backed set → `not_registered(no_v2_engine)` (22 VOL_*/MARKET_MAKING_*, retained the 3 engined ones).
+      AVAILABLE 16913→12977 (−3936); total 24752→21600; deterministic. UI re-bundle dispatched (uts-ui + dep-ui →
+      21600/12977). Engine builds = Phase C.
+- [ ] [SCRIPT] P3. **F48 follow-up — replace the engine-registry TRANSCRIPTION with a venv probe (single-canonical).**
+      The F47/F48 fix transcribed strategy-service's `ARCHETYPE_ENGINE_REGISTRY` keys (engine/strategies/v2/factory.py)
+      into PM `generate_capability_verdict_matrix.py` as `_ENGINE_BACKED_ARCHETYPE_VALUES` (cited, because UAC/PM cannot
+      import strategy-service — service-dep ban). That's a duplicate SSOT. Make the generator PROBE strategy-service via
+      the per-service `.venv` subprocess (the same pattern the capability-MANIFEST exporter uses for exec-algos/
+      feature-groups/ml-models) so the engine-backed set is read live, not copied. Target: unified-trading-pm.
 
 ## Phase B — strategy-service engine (freeze LIFTED) — CeFi margin traceability + netting + F27/F16
 
@@ -65,10 +78,16 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       canonical netting pipeline in strategy-service that nets LST→underlying delta + multi-leg inter-leg delta into a
       single position-level exposure. **DELETE the scattered duplicate netting logic** once consumers point at the
       canonical one (single-SSOT rule). Target: strategy-service (+ UTL/UAC for the shared contract types only).
-- [ ] [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit` vs `DERIBIT`) that no-emits. Normalise
-      venue-id casing at the engine boundary (one canonical case; cite the SSOT). Target: strategy-service.
-- [ ] [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** Fix the call signature.
-      Target: strategy-service.
+- [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit` vs `DERIBIT`) that no-emits. Normalise
+      venue-id casing at the engine boundary (one canonical case; cite the SSOT). Target: strategy-service. — DONE
+      **UAC@c0b2d0e** (2026-06-15): fixed at the SOURCE — `venue_collateral.py` accessors (`accepted_perp_collateral`/
+      `venue_accepts_collateral`/`get_collateral_haircut`/`get_accepted_collateral`) now normalise both sides to
+      `.upper()`, so lowercase slot-config venue ids resolve against the UPPERCASE matrix. `accepted_perp_collateral('deribit')`
+      now returns `['BTC','ETH','USDC','stETH']` (was `[]`). Protects ALL callers, not just staked_basis. +regression test.
+- [x] ✅ [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** Fix the call signature.
+      Target: strategy-service. — DONE **strategy-service@bce2f46d** (2026-06-15): moved the invalid
+      `service_name=`/`operation=`/`error_code=` kwargs into `details={}` (log_event takes only event_name/severity/
+      details/client_id/correlation_id); the GCS-config search error path no longer raises TypeError.
 
 ## Phase C — engine builds for the catalogue over-claims (follow-on; larger)
 
