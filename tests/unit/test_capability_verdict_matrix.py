@@ -51,14 +51,60 @@ def test_counts_add_up_and_no_absent_cells() -> None:
 def test_not_registered_archetypes_are_explicit_blocks() -> None:
     matrix, _ = build_matrix()
     nr = {b["archetype"]: b for b in matrix["archetypes"] if b.get("not_registered")}  # type: ignore[union-attr]
-    # The 6 genuinely-underivable archetypes (Phase 6A).
+    # The genuinely-underivable archetypes (no leg structure) → missing_registry.
     assert "ARBITRAGE_MEV_SANDWICH" in nr
     assert "PORTFOLIO_RISK_PARITY" in nr
     assert "VOL_0DTE_PIN_RISK" in nr
+    # Two typed gap reasons after the F47/F48 surface-correction: a no-leg
+    # archetype is ``missing_registry``; a has-legs-but-no-v2-engine archetype is
+    # ``no_v2_engine`` (F48).
+    valid_gap_types = {"missing_registry", "no_v2_engine"}
     for block in nr.values():
-        assert block["gap_type"] == "missing_registry"
+        assert block["gap_type"] in valid_gap_types
         assert str(block["reason"]).strip()
         assert block["cell_count"] > 0
+
+
+def test_f48_engineless_archetypes_are_not_registered() -> None:
+    """F48 — VOL_*/MARKET_MAKING_* archetypes that HAVE legs but no registered v2
+    engine are demoted from AVAILABLE to not_registered(no_v2_engine), while the
+    three engined ones (VOL_TRADING_OPTIONS / MARKET_MAKING_CONTINUOUS /
+    MARKET_MAKING_EVENT_SETTLED) stay real (engined) blocks.
+    """
+
+    matrix, _ = build_matrix()
+    by_arch = {b["archetype"]: b for b in matrix["archetypes"]}  # type: ignore[union-attr]
+    engineless = {a for a, b in by_arch.items() if b.get("gap_type") == "no_v2_engine"}
+    # Every demoted block names VOL_* / MARKET_MAKING_* (the F48 family).
+    assert engineless, "no F48 no_v2_engine blocks emitted"
+    assert all(a.startswith(("VOL_", "MARKET_MAKING")) for a in engineless)
+    # Representative engineless archetypes are demoted.
+    assert "VOL_STRADDLE" in engineless
+    assert "MARKET_MAKING_INVENTORY_SKEW" in engineless
+    # The engined VOL_/MM_ archetypes are NOT demoted (still real blocks).
+    for engined in ("VOL_TRADING_OPTIONS", "MARKET_MAKING_CONTINUOUS", "MARKET_MAKING_EVENT_SETTLED"):
+        assert by_arch[engined]["not_registered"] is False
+        assert engined not in engineless
+
+
+def test_f47_unbuildable_venue_cells_are_not_available() -> None:
+    """F47 — a leg-eligible venue whose slot-label token is rejected by
+    KNOWN_VENUE_TOKENS carries venue_buildable=false + zero available_algos (every
+    algo blocked with the unbuildable-slot reason), so it never reads as AVAILABLE.
+    """
+
+    matrix, _ = build_matrix()
+    unbuildable_cells = [
+        c
+        for b in matrix["archetypes"]  # type: ignore[union-attr]
+        for c in b.get("cells", [])
+        if c.get("venue_buildable") is False
+    ]
+    assert unbuildable_cells, "no F47 unbuildable-venue cells found"
+    for c in unbuildable_cells:
+        assert c["available_algos"] == []
+        assert c["blocked_algos"], "unbuildable cell must block every algo"
+        assert all("KNOWN_VENUE_TOKENS" in str(ba["reason"]) for ba in c["blocked_algos"])
 
 
 def test_impossible_algo_combinations_are_blocked() -> None:
