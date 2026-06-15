@@ -598,9 +598,38 @@ returns **HTTP 500**: the `run_data_status_cli` path shells out to the deploymen
 `Error: Could not find configs directory. Run from deployment-service or specify --config-dir` inside the Cloud
 Run image. So the full-CLI data-status path is non-viable in-container; only the turbo path serves prod.
 
-- [ ] [INFRA] P2. **Make the deployment-api in-container `run_data_status_cli` find its config dir** (or drop the
-      CLI-subprocess path in favour of the in-process turbo compute). Either bundle `deployment-service/configs/`
-      into the deployment-api image + pass `--config-dir`, or replace the `subprocess` CLI shell-out in
-      `data_status_service.run_data_status_cli` with the in-process manifest compute the turbo path already uses
-      (the CLI subprocess is the only reason the `force_refresh`/card path 500s). Repo: deployment-api.
-      assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7 follow-up (2026-06-15).
+- [x] ✅ [INFRA] P2. **deployment-api in-container `run_data_status_cli` finds its config dir.** SHIPPED —
+      deployment-api@f77a856. `_build_cli_cmd` now passes `--config-dir <pm-configs>` (GROUP-level option, before
+      the `data-status` subcommand) via a new `_resolve_cli_config_dir()` that resolves `<app root>/pm-configs` —
+      the byte-identical mirror the image already `COPY`s (Dockerfile "COPY pm-configs/"). Root cause: `configs/`
+      lives at the deployment-service REPO ROOT (not package data) so `pip install --no-deps` drops it. No
+      `os.environ` (respects the no-os-environ gate). Regression: `tests/unit/test_data_status_beta_rollup_and_cli_config.py`
+      (`_resolve_cli_config_dir` finds pm-configs; `_build_cli_cmd` puts `--config-dir` before `data-status`).
+      Repo: deployment-api. Provenance: R7 follow-up (2026-06-15).
+
+### R7 follow-up #2 — beta all-asset-group `/manifest` 503 → beta-aware rollup (2026-06-15)
+
+**Found verifying the prod data-status page** (`/service/instruments-service/data-status`): per-asset-group beta
+views work (prediction 94.77%), but the DEFAULT all-AG load **HTTP 503s**. Cause: in beta mode the service
+bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serve in beta) and live-computed all
+5 asset groups per request — which exceeds the Cloud Run request timeout. This is exactly the operator's idea
+("can't the rollup with the env var do its work on the v9 beta manifest").
+
+- [x] ✅ [INFRA] P1. **Beta-aware rollup — beta serves a beta-namespaced rollup from cache.** SHIPPED —
+      deployment-api@f77a856. New `rollup_cache.rollup_blob_path(service, kind)` returns `{service}/{kind}.beta.json.gz`
+      when `manifest_source.is_beta_mode()` else `{service}/{kind}.json.gz`. The **worker** (run with the beta env)
+      writes the `.beta` blob from the projected-v9 index; the **service** reads the same beta blob in beta mode
+      (`_read_rollup_if_fresh` + `read_coverage_rollup_if_fresh` use the helper); `get_manifest_status` no longer
+      bypasses the fast-path in beta (the "never serve live-derived data in beta" invariant is now held by the blob
+      NAMESPACING, not by bypassing). So the all-AG beta view is served from cache, not live-computed per request.
+      Regression: `test_rollup_blob_path_live_vs_beta` + rewritten `test_beta_mode_uses_beta_namespaced_rollup`
+      (was `..._bypasses_rollup_fast_path`) + `test_live_mode_still_uses_rollup_fast_path` (unchanged). Repo:
+      deployment-api. Provenance: R7 follow-up #2 (2026-06-15).
+
+> **🟡 TEMPORARY STATE — rollup-job beta env (set 2026-06-15).** To populate the beta rollup, the Cloud Run job
+> `uts-prod-data-status-rollup` carries `DATA_STATUS_BETA_MANIFEST_BLOB=_index/audit/projected_index_{asset_group}.parquet`
+> — the SAME value as the `uts-shared-deployment-api` service. This pairs the job with the service: both are in
+> beta, so the job writes the `.beta` rollup the beta service reads. **Canonical follow-up:** when the v9 migration
+> `--apply` lands (this plan's held tranche) live == v9, beta is turned OFF on BOTH the service and the job (unset
+> the env on each), and the job reverts to writing the live `full.json.gz` rollup. Do not bake the beta env into
+> cloudbuild (it is intentionally a manual, removable pairing — a bare `--image` deploy preserves it).
