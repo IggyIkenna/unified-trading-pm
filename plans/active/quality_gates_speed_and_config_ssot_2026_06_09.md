@@ -232,6 +232,10 @@ single-core pinned), output under gitignored `.qg_profile/`.
 
 ### Finding #1 — COVERAGE drift refreshed: **6 live drifts** (the old matrix documented 5, and 2 of its numbers are now wrong)
 
+> **✅ RECONCILED 2026-06-15 (Option A, behavior-preserving)** — all 6 repos' toml `fail_under` settled to the enforced
+> stub value (SHAs in § "Shipped"). The drift table below is the as-found state; toml ↔ stub now agree, so the TIER-A
+> flag-drop (Phase 1 P0) no longer risks a silent loosen/red. `uv.lock` untouched; no ratchet-up taken.
+
 `--cov-fail-under=$MIN_COVERAGE` (stub) always SHADOWS `[tool.coverage.report] fail_under` (toml), so "stub" is the effective gate.
 
 | Repo                             | stub | toml | branch | Verdict                                                  |
@@ -288,7 +292,9 @@ Base runs each tool from the repo root with no explicit `-p`/`--config`, so each
       (`--cov-fail-under`, explicit pytest test dir vs `testpaths`, bandit without `-c`). For each, either drop the
       override (let the tool read toml) or pass the tool its own config explicitly. Reconcile each of the 7 drifting
       repos to ONE honest value FIRST (a flip with no reconciliation reds MTDS/MDPS/alerting and silently loosens
-      uta/SIT — see Phase 0 matrix).
+      uta/SIT — see Phase 0 matrix). **PRECONDITION DONE 2026-06-15**: all 6 coverage drifts reconciled (toml=stub) —
+      see Finding #1 ✅ banner + § "Shipped"; the `--cov-fail-under` flag-drop is now safe (no loosen/red). Remaining
+      TIER-A flags (pytest test-dir, bandit `-c`) still need the same audit before their drop.
 - [ ] [DESIGN] P0. Design `[tool.quality-gates]` table schema for TIER-B knobs (e.g. `min_coverage`, `run_integration`,
       `pytest_workers`, `max_duration`, `codex_max_violations`, `pytest_unit_dir`, exclude-package lists,
       pip-audit-ignores). base-service.sh reads it (single toml parse) instead of stub bash vars. Keep a back-compat
@@ -512,6 +518,13 @@ Dated index of what landed today — detail lives in the cited sections/plans, n
 
 - ✅ **Finding #1 audit refreshed** → § "Current-state config audit REFRESH" (6 live coverage drifts; supersedes the
   stale 2026-06-10 matrix). Reproducer `scripts/quality_gates/qg_config_audit.py` authored.
+- ✅ **Finding #1 — all 6 coverage drifts RECONCILED** (Option A, operator 2026-06-15 — behavior-preserving, `uv.lock`
+  untouched): settled each repo's `[tool.coverage.report] fail_under` to the currently-enforced stub `MIN_COVERAGE` so
+  toml ↔ stub agree (the prerequisite the Phase-1 TIER-A item calls for — a bare flag-drop would silently loosen uta/SIT
+  and red mdps/alerting). alerting-service@fc47adc (78→76) · unified-trading-api@0816399 (70→77, stub-stricter raise) ·
+  market-data-processing-service@5635686 (85→70) · market-tick-data-service@57740ac (79.7→79) ·
+  system-integration-tests@5214d65 (0→2, stub-stricter raise) · unified-trading-pm@283b98ec (70→69, PR #333→main). No
+  ratchet-up taken (operator chose not to surface strict-coverage gaps). **The flag-drop (TIER-A P0) is now unblocked.**
 - ✅ **Finding #2 — all 4 standalone configs consolidated into toml** (→ § "Phase-1 todos from this refresh"):
   instruments-service@f7934aa (`pytest.ini`→toml) · unified-trading-library@e469808 (dead `.bandit` deleted) ·
   greeks-service@5b88041 + fund-administration-service@2ad889e (`pyrightconfig.json`→`[tool.basedpyright]`). Surfaced
