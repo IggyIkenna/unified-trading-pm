@@ -144,7 +144,18 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_SLOPE** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_ARB_RV_IV** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P3. **VOL_0DTE_GAMMA_SCALPING** — real or honest-absent. Repo: strategy-service.
-- [ ] [SCRIPT] P3. **VOL_CARRY** — real or honest-absent. Repo: strategy-service.
+- [ ] [SCRIPT] P3. **VOL_CARRY** — real engine SHIPPED (template wave).
+  - code: strategy-service@697e0641, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
+    `VolCarryEngine` (`engine/strategies/v2/vol_trading/carry.py`): harvests the volatility-risk-premium — when `iv_atm`
+    exceeds realised vol (`rv`) by ≥ `entry_vrp` it **SELLS** the ATM straddle (short vol) + adds a **delta-hedge** leg
+    on the underlying (units = `-package_delta`, sign-flipping with the delta sign; omitted on honest delta absence);
+    **flattens** (buys the straddle back) when the carry inverts (`vrp ≤ exit_vrp`); holds while the premium persists.
+    One-sided premium-harvest (only ever shorts vol), unlike the symmetric VOL_STRADDLE. Leg-derivation unit tests pin
+    open/hold/flatten + the delta-hedge sign + honest-absence hedge omission. **NOT registered** + matrix UNCHANGED.
+    **DVOL-vs-Tardis**: this is the ONE template-wave engine **backtestable from FREE Deribit DVOL history** — DVOL is
+    the implied-vol index (ATM-proxy) back to 2021 credential-free and realised vol comes from the underlying close
+    series, so `iv_atm - rv` carry needs NO per-strike surface. **Candidate for an early DVOL-index backtest greenlight**
+    ahead of the surface-dependent VOL_STRADDLE/VARIANCE_SWAP (which need Tardis). No backfill run.
 - [ ] [SCRIPT] P3. **VOL_CROSS_ASSET_SPREAD** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P3. **VOL_LEAPS_CONVEXITY** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P3. **VOL_MARKET_MAKING** — real or honest-absent. Repo: strategy-service.
