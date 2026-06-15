@@ -354,8 +354,11 @@ Tracked above. The MTDS canary is green; the foundation (`quickmerge --build`) i
 merges/6h). `unified-trading-api` (28/6h) + `unified-trading-system-ui` were about to trip; `greeks-service` (15/6h) was
 an early-warning.
 
-**Root cause**: `staging-backmerge-to-ldr.yml` was missing on the `live-defi-rollout` of exactly 4 repos —
-`agent-orchestrator`, `e2e-testing`, `unified-trading-api`, `unified-trading-system-ui`. semver version bumps + UTL
+**Root cause**: Ikenna's 2026-06-08 fleet rollout of `staging-backmerge-to-ldr.yml` (PM template created 06-08
+`6a75ca7fb`; workflow first introduced 06-05 `613481d0b`) **silently skipped 8 of 24 repos** — `features-service`,
+`fund-administration-service`, `greeks-service`, `ml-service`, `e2e-testing`, `agent-orchestrator`,
+`unified-trading-api`, `unified-trading-system-ui`. All 8 were patched 2026-06-15 during this incident (5 by slot-4 at
+~19:02–19:04; 3 by the root session at ~19:32–19:35). semver version bumps + UTL
 dep-floor bumps + base-image digest refreshes land on `staging` (semver-agent / dependency fan-out), and
 `staging-backmerge-to-ldr.yml` is the ONLY mechanism that flows them back DOWN to LDR (`main-backmerge-to-ldr.yml` can't —
 the bump is on staging, not yet main). With it absent, LDR stayed behind staging on `version`/pin/digest → the Tier-C
@@ -365,9 +368,10 @@ gained a `staging` branch (no longer main-direct) but never received the templat
 `detect_template_drift.py` (`workflow-missing-<name>`) — but only as a **WARN** in a local-only post-gate (CI no-op), so
 nobody acted on it for weeks.
 
-**Fixed in real time 2026-06-15** (content-first convergence, LDR-is-SSOT remedy): backmerged `staging`→LDR on each
-diverged repo (conflict-free — LDR hadn't touched the diverging lines since the merge-base) + rolled out
-`staging-backmerge-to-ldr.yml` to all 4; then promoted the converged LDR→staging via a v2-gated PR (titled NOT
+**Fixed in real time 2026-06-15** (content-first convergence, LDR-is-SSOT remedy; two sessions in parallel — slot-4
+rolled the workflow to features/fund-admin/greeks/ml/e2e ~19:02–04, root session to ao/uta/ui ~19:32–35): backmerged
+`staging`→LDR on each diverged repo (conflict-free — LDR hadn't touched the diverging lines since the merge-base) +
+rolled out `staging-backmerge-to-ldr.yml`; then promoted the converged LDR→staging via a v2-gated PR (titled NOT
 `chore(promote)` to avoid re-inflating the breaker count) so staging gets the workflow + the 3 tripped repos go
 tree-equal → the drain skips them at the tree-equality gate BEFORE the runaway breaker → pages stop. `greeks-service`
 self-healed (it already had the workflow). Evidence: ao@dbcc2b0 + #303, e2e@760b546 + #286, ml #108, uta@23a20b3,
