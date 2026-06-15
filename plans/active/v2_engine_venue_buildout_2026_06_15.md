@@ -128,6 +128,7 @@ a named operator credential ask. These are the engines' true predecessors.
 
 - [ ] [SCRIPT] P1. **Build + connectivity-test the options vol-surface + greeks feed (NO backfill).** (a) UAC: register `greeks_snapshot` + `implied_vol_surface` + live-capable crypto `options_chain` data_types in `data_type_capability.py`. (b) instruments-service: Deribit public options-chain adapter (enumerate strikes/expiries → `CanonicalOptionsChain`) + a connectivity test proving a live pull. (c) MTDS: live options-chain + mark-IV handler (Deribit public); Tardis historical adapter SCAFFOLD = BLOCKED-CREDENTIALS; Massive for TradFi-options history. (d) greeks-service: in-house delta/gamma/vega/theta + IV-surface computation, wired + tested on a mock chain. (e) features-service: expose vol-surface/greeks features to the engine feature dict. Unblocks all 17 VOL_*. Repos: unified-api-contracts + instruments-service + market-tick-data-service + greeks-service + features-service.
   - ✅ **part (b) — instruments-service Deribit public options-chain adapter** — instruments-service@99a320d. `DeribitOptionsReferenceDataAdapter` (`reference_data/adapters/cefi/deribit_options_adapter.py`, <100 lines logic) enumerates option instruments (strikes/expiries) for BTC/ETH/SOL/BNB/XRP via Deribit public `/public/get_instruments?kind=option` → `CanonicalOptionsChain` (calls/puts/strikes), and attaches venue mark IV (fractional) + underlying index mark via `/public/ticker`. Errors classified via UAC `classify_venue_error()` + `ADAPTER_FETCH_FAILED` emit; shard-level isolation per currency/leg; registered singleton in factory (`deribit_options`, `DERIBIT-OPTIONS`); no engine→adapter import. `CanonicalOptionsChain` extended with `mark_iv_by_instrument` + `underlying_mark` (schema-additive, SCHEMA_PROVENANCE_EXEMPT). Unit tests on MOCKED Deribit JSON (7 tests, run in QG `--block-network`). QG `--no-fix` exit 0. **CONNECTIVITY PROOF (live Deribit, ran 2026-06-15 via `scripts/deribit_options_connectivity_check.py BTC`, exit 0):** BTC nearest expiry 2026-06-16T08:00Z, **23 strikes / 23 calls / 23 puts, 46 mark-IV legs, 11 distinct expiries**; underlying_mark 66849.03; sample mark_iv `BTC-16JUN26-56000-C → 0.9088` (90.88% annualised, fractional). NOT a backfill.
+  - ✅ **part (a) — UAC canonical schemas + data_types + SOURCE_PRIORITY** — unified-api-contracts@fcc01ac. NEW `canonical/domain/derivatives/greeks.py`: `CanonicalGreeksSnapshot` (per-leg delta/gamma/vega/theta/rho + iv_used + iv_source), `CanonicalIVSurfacePoint` (field-for-field mirror of greeks-service `iv_surface.SurfacePoint` — single-canonical convergence, ONE shape both produce), `CanonicalImpliedVolSurface` (mirror of `IVSurface`; honest-absence empty `points`). Exported through derivatives/__init__ → domain/__init__ → root facade + both `__all__`s. `CanonicalOptionsChain` LEFT local in IS (SCHEMA_PROVENANCE_EXEMPT — IS reference-data public interface, not a cross-service domain contract; greeks-service consumes plain `OptionQuote`, never the IS type → no coupling forces promotion). data_type_capability: live-capable crypto `options_chain`/`greeks_snapshot`/`implied_vol_surface` (DERIBIT, live_capable=True); TradFi CME options_chain row UNCHANGED (live_capable=False). SOURCE_PRIORITY: `(cefi|tradfi, greeks_snapshot|implied_vol_surface) → ["greeks_service"]` (new COMPUTED_SOURCE); crypto `(cefi, options_chain)` KEEPS `["tardis"]` (tardis=BATCH primary, deribit=LIVE/REPLAY via venue-override — batch==live, same pattern as cefi trades); tradfi `(tradfi, options_chain)=["massive","databento"]` already present. New `greeks_service` source wired into COMPUTED_SOURCES + SOURCE_MODE_CAPABILITY {B,L,R} + EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_GREEKS_SERVICE + AVAILABILITY_AT_SEMANTICS tick_timestamp + validity-matrix COMPUTED_SERVICE_OUTPUT exclusions. Unit test (7 tests) + all SOURCE_PRIORITY/pipeline_mode/availability/capability round-trips green. QG `--no-fix` exit 0. **batch==live holds: live (Deribit) + historical (Tardis) + TradFi (Massive) all emit the IDENTICAL canonical options_chain/greeks_snapshot/implied_vol_surface — no live-only data_type, no source-specific field set.**
   - ✅ **part (d) — greeks-service in-house greeks + IV-surface assembler** — greeks-service@0299b03. In-house BS delta/gamma/vega/theta/rho (+ vanna/volga) + IV solver ALREADY existed (`kernels/black_scholes.py`, reused — not duplicated) with analytic ATM tests. NEW IV-surface assembler `kernels/iv_surface.py` (`assemble_iv_surface` → `IVSurface` of `SurfacePoint`s: IV by strike/moneyness x expiry/tenor-years from an option chain + underlying mark + per-leg mark IV; UTC datetimes; Decimal; fits IV in-house via `implied_vol_from_price` when only a mark price is present; honest-absence drops legs with no usable IV — no synthetic node). UNIT tests on KNOWN analytic cases (6 tests): mark_iv passthrough, **fitted-IV round-trip recovers a known 20% vol to <1e-3** (priced via BS kernel then solved back), moneyness/tenor correctness, index grouping, honest-absence drop. QG `--no-fix` exit 0. No service↔service import (takes plain `OptionQuote` inputs, not the IS chain type). **Parts (a) UAC data_types / (c) MTDS handler+Tardis scaffold / (e) features-service remain — separate later wave (concurrent agent owns UAC).**
 - [ ] [SCRIPT] P2. **Build + connectivity-test the L2 microstructure feed (NO backfill).** Register `queue_position` + `order_flow_imbalance` (+ `depth_of_book_10`) data_types (UAC); MTDS WebSocket handler scaffolds (`book_snapshot_5` already live); expose book-microstructure features (spread/imbalance/microprice) from `book_snapshot_5` in features-service. Unblocks MARKET_MAKING_PASSIVE_SPREAD + INVENTORY_SKEW first (L5-sufficient), then QUEUE_MICROSTRUCTURE (needs queue_position). Repos: market-tick-data-service + features-service + unified-api-contracts.
 
@@ -140,3 +141,38 @@ a named operator credential ask. These are the engines' true predecessors.
 ## Progress Log
 
 (loop handoff lands here — never a separate *_HANDOFF.md / *_SUMMARY.md)
+
+### 2026-06-15 — Phase D P1 (a)+(c)+(e) [in progress]
+
+**Canonical schema settled (single-canonical, converges with greeks-service@0299b03):**
+- New UAC file `canonical/domain/derivatives/greeks.py`: `CanonicalGreeksSnapshot` (per-leg
+  greeks: delta/gamma/vega/theta/rho + iv_used + iv_source), `CanonicalIVSurfacePoint`
+  (mirrors greeks-service `iv_surface.SurfacePoint` field-for-field:
+  instrument_key/strike/expiry/right/moneyness/tenor_years/implied_vol/iv_source),
+  `CanonicalImpliedVolSurface` (mirrors `IVSurface`: underlying/venue/underlying_mark/as_of/points).
+  greeks-service's local dataclasses are SCHEMA_PROVENANCE_EXEMPT in-memory kernel I/O; the
+  UAC types are the wire/manifest shape the assembled surface serialises to — ONE shape, no divergence.
+  Exported through derivatives/__init__ → domain/__init__ → root facade + both __all__s.
+- `CanonicalOptionsChain` provenance decision: LEFT local in instruments-service with its
+  `SCHEMA_PROVENANCE_EXEMPT` note (it is the IS reference-data public interface, folded from
+  unified-reference-data-interface — service-specific, not a general domain contract crossing a
+  service boundary; greeks-service consumes plain OptionQuote inputs, never the IS chain type, so
+  no cross-service coupling forces promotion). The canonical CONVERGENCE point is the
+  greeks_snapshot/implied_vol_surface output, which IS now in UAC. Noted reason per schema-provenance rule.
+
+**(a) UAC data_types + SOURCE_PRIORITY registered:**
+- `data_type_capability.py`: live-capable crypto `options_chain` (DERIBIT, live_capable=True),
+  `greeks_snapshot` (DERIBIT), `implied_vol_surface` (DERIBIT) — all live+batch. TradFi CME
+  options_chain row UNCHANGED (live_capable=False).
+- SOURCE_PRIORITY: `(cefi, greeks_snapshot)`/`(cefi, implied_vol_surface)`/`(tradfi, greeks_snapshot)`/
+  `(tradfi, implied_vol_surface)` → `["greeks_service"]` (new COMPUTED_SOURCE). Crypto `options_chain`
+  KEEPS `(cefi, options_chain): ["tardis"]` — tardis=BATCH primary, deribit=LIVE/REPLAY via venue-override
+  (SAME pattern as cefi trades → batch==live preserved; deribit is NOT index-0 because it is live/replay-only).
+  TradFi `(tradfi, options_chain): ["massive","databento"]` already present (Massive route).
+  New `greeks_service` source: COMPUTED_SOURCES + SOURCE_MODE_CAPABILITY {BATCH,LIVE,REPLAY} +
+  EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_GREEKS_SERVICE + validity-matrix exclusion
+  (COMPUTED_SERVICE_OUTPUT x4). Unit test `test_greeks_snapshot_schema.py` (7 tests: exports, field
+  parity with SurfacePoint, honest-absence, iv provenance, batch==live identical dump, extra-forbid).
+
+**STILL TODO this session:** UAC QG green + quickmerge; (c) MTDS live handler + connectivity test +
+Tardis scaffold (BLOCKED-CREDENTIALS ping) + Massive route; (e) features-service vol/greeks features.
