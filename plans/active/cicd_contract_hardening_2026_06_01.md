@@ -4568,13 +4568,29 @@ in the AO e2e plan.)
 - [x] ✅ [SCRIPT] P3. `peter-evans/repository-dispatch` v3→**v4** — SIT `smoke-test-gate.yml` — **DONE on LDR 2026-06-15
       system-integration-tests@85a4713**. Inputs identical v3↔v4 (token/repository/event-type/client-payload).
 
-#### 3c — 🚫 BLOCKED upstream (no node24 release exists)
+#### 3c — `dawidd6/action-download-artifact` — RESOLVED by RETIRING the workflow
 
-- [ ] [SCRIPT] P3. **`dawidd6/action-download-artifact` — `BLOCKED-UPSTREAM` (no node24 release; v6–v12 all node20).**
-      1 live use: UAC `schema-health-update.yml`. Decision needed: (a) accept the warning + track until upstream ships
-      node24, OR (b) replace with official `actions/download-artifact@v7` IF that workflow only downloads **same-run**
-      artifacts (dawidd6 is used for cross-workflow/cross-run downloads the official action can't fully do — READ the
-      workflow before swapping). repo: unified-api-contracts.
+- [x] ✅ [SCRIPT] P3. **`dawidd6/action-download-artifact` (last node20 GHA ref, no node24 release — v6–v12 all node20) —
+      RESOLVED 2026-06-15 by RETIRING its only consumer, UAC `schema-health-update.yml`** (+ its orphaned helper
+      `scripts/read_schema_health_artifacts.py`). **DONE: unified-api-contracts@dcefe9c.** Not rewritten — retired,
+      because the workflow was **vestigial sprawl from the pre-consolidation design**:
+      - It was the **cross-repo aggregator** half of the schema-health system (added 2026-03-09), built when live API
+        recording + schema validation lived in the six **interface repos** (they held the API keys). It pulled each
+        repo's `{provider}_schema_health.json` verdict and merged it into `docs/schema_health.svg`.
+      - The architecture was later **consolidated into UAC**: the VCR cassettes now live in-repo
+        (`unified_api_contracts/external/<provider>/mocks/*.yaml`) and the **producer** workflow `schema-health.yml`
+        replays them locally + updates the SVG. The interface repos were **archived** (`.extra/`, 0 manifest hits).
+      - The aggregator was never updated → its two `dawidd6` steps reached into **archived** repos
+        (`unified-market-interface`, `unified-sports-execution-interface`) whose CI no longer produces artifacts; the
+        downloads returned nothing (`continue-on-error`/`if_no_artifact_found: warn` swallowed it). So it was a weekly
+        no-op duplicating what `schema-health.yml` already does locally.
+      - `read_schema_health_artifacts.py` was called **only** by this workflow (producer uses
+        `update_schema_health_svg.py` + `generate_schema_audit_matrix.py`) → deleted as orphaned code.
+      - Producer `schema-health.yml` is **untouched** (the live schema-health path). Composes with
+        `plans/active/issues/cicd_workflow_sprawl_audit_2026_06_10.md` (dead/duplicate workflow retirement).
+
+**Phase 3 = COMPLETE.** Every node20 GHA ref in the 25-repo live workspace is now node24 (3a + 3b) or retired (3c). Out
+of scope (flagged, not deprecation-impacting): `.extra/` archived repos + inert nested `features_service/*` workflows.
 
 #### Out of scope (flagged, NOT in this migration)
 
