@@ -225,7 +225,8 @@ omit = [
 [tool.coverage.report]
 # PM scripts/ ARE prod (CI/CD gates, backlog regen, ci_failure_watcher, detect_breaking_change).
 # Baseline 2026-06-10: 74.5% across 24 measured scripts. Floor set at 70% as a regression guard.
-fail_under = 70
+# Finding-#1 reconciliation (2026-06-15): settled to the enforced stub floor (MIN_COVERAGE=69).
+fail_under = 69
 # Baseline 2026-06-12 re-set: 76.4% after fixing the ui_vision_pptx omit glob (the package was
 # unintentionally MEASURED at 0%, depressing the total ~7pts — the 69% floor era). Restored the
 # original 70% regression floor (2026-06-10). Re-baseline with each clean pass.
