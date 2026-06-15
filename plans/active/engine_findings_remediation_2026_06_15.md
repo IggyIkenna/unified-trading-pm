@@ -222,9 +222,13 @@ Each is honestly `blocked(unbuildable_slot_venue)` today. Adding a token without
 wiring would re-introduce the F47 over-claim — so the token is added ONLY when a venue is genuinely supported end-to-end
 (none qualify now). A later support effort is a new plan item, not a Phase-C gap.
 
+## Discovered debt (2026-06-15)
+
+- [ ] [SCRIPT] P3. **e2e-testing/scripts/defi/test_collateral_validation.py has 22 ruff errors** (19 auto-fixable + 3 N806 lev_weETH/lev_WETH lowercase) surfaced as warn-only in strategy-service's peripheral-dir QG. Foreign file (not owned by the margin work). `ruff --fix` + rename the 3 vars. Repo: e2e-testing.
+
 ## Audit findings (2026-06-15 — adversarial verification of the Phase-B/C completion)
 
-- [ ] [BUG] P1. **AccountQueryClient silently falls back to MOCK data on a live-fetch failure** (audit discovery
+- [x] [BUG] P1. ✅ **AccountQueryClient silently falls back to MOCK data on a live-fetch failure** — FIXED strategy-service@bdf7b3e4: live-mode fetch failures now reraise (fail-loud) instead of returning mock; mock-mode short-circuits at top, unchanged; 6 tests (3 live-fail-loud + 3 mock-still-mocks). QG green. (audit discovery
       2026-06-15). `strategy-service/strategy_service/.../account_query_client.py:133-134/165-166/194` swallows live
       UPI-adapter exceptions and returns FABRICATED balances/positions instead of failing loud. Pre-existing (file
       dated 2026-06-05) but now LOAD-BEARING: the new CeFi `margin_health` / `emit_margin_event_for_cefi` read balances
