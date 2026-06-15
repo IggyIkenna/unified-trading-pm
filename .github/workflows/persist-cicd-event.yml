@@ -162,7 +162,7 @@ jobs:
         # Best-effort telemetry — missing AWS creds must NOT fail the calling workflow. Valid
         # here (step-level); the persist steps below are already `|| true`-tolerant.
         continue-on-error: true
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
