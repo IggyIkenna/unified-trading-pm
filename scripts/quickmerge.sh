@@ -117,6 +117,10 @@ SKIP_DEP_TIER_GATE=false
 USER_APPROVED=false
 AGENT_MODE=false
 BUILD_LDR=false
+# Tracks whether --build/--no-build was passed explicitly. When false, the
+# per-repo `auto_build_on_quickmerge` manifest default applies (set after
+# REPO_NAME is resolved). An explicit flag always wins over the manifest.
+BUILD_LDR_EXPLICIT=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -191,6 +195,15 @@ while [[ $# -gt 0 ]]; do
       # when the operator opted in — default OFF saves cost + removes the red CodeBuild noise on
       # LDR→staging drain PRs. The always-on MAIN build (the deploy gate) is unaffected.
       BUILD_LDR=true
+      BUILD_LDR_EXPLICIT=true
+      shift
+      ;;
+    --no-build)
+      # Explicit opt-OUT — overrides the per-repo `auto_build_on_quickmerge` manifest
+      # default (below). Use on an observability-surface repo when you do NOT want this
+      # particular landing to trigger an LDR image build.
+      BUILD_LDR=false
+      BUILD_LDR_EXPLICIT=true
       shift
       ;;
     *)
@@ -312,6 +325,25 @@ REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null || echo "$REPO_ROOT")"
 REPO_DIR="${REPO_DIR:-$REPO_ROOT}"
 REPO_NAME=$(basename "$REPO_DIR")
 cd "$REPO_DIR"
+
+# ── Per-repo auto-build default (observability surfaces) ──────────────────────
+# Operator decision 2026-06-15: the operator-facing observability surfaces
+# (deployment-api / deployment-ui / unified-trading-api / unified-trading-system-ui)
+# carry `"auto_build_on_quickmerge": true` in workspace-manifest.json, so a
+# quickmerge of those repos DEFAULTS --build ON — the LDR image rebuilds on every
+# landing and the running surface stays live without a manual deploy. Every other
+# repo defaults OFF (no prod-trading auto-build / no build-cost noise yet). An
+# explicit --build/--no-build always wins (BUILD_LDR_EXPLICIT guard).
+if [ "$BUILD_LDR_EXPLICIT" = false ]; then
+  _qm_manifest="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+  if [ -f "$_qm_manifest" ] && command -v python3 >/dev/null 2>&1; then
+    _auto_build="$(python3 -c "import json,sys; m=json.load(open('$_qm_manifest')); r=m.get('repositories',{}).get('$REPO_NAME',{}); print('true' if isinstance(r,dict) and r.get('auto_build_on_quickmerge') else 'false')" 2>/dev/null || echo false)"
+    if [ "$_auto_build" = true ]; then
+      BUILD_LDR=true
+      echo "[$REPO_NAME] 🏗️  auto_build_on_quickmerge (manifest) → defaulting --build ON (observability surface; pass --no-build to skip)"
+    fi
+  fi
+fi
 
 # ── CASCADE DEP BRANCH ────────────────────────────────────────────────────────
 # When --dep-branch is set, walk the full transitive ancestor chain (DAG upward
