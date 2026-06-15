@@ -72,13 +72,13 @@
     "deployment-service": "0.8.1",
     "deployment-ui": "0.1.0",
     "execution-service": "0.9.1",
-    "features-service": "0.1.2",
+    "features-service": "0.3.0",
     "fund-administration-service": "0.3.3",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.5.1",
-    "market-tick-data-service": "0.6.0",
+    "market-tick-data-service": "0.9.0",
     "system-integration-tests": "0.3.2",
-    "unified-api-contracts": "0.7.0",
+    "unified-api-contracts": "0.9.0",
     "unified-trading-library": "0.10.0",
     "unified-trading-pm": "1.2.113",
     "market-data-processing-service": "0.6.0",
@@ -281,7 +281,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL \u2014 no-service-to-service-deps HARD RULE).",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -437,7 +437,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -757,7 +757,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -870,7 +870,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1788,10 +1788,7 @@
     "execution-service": "0.10.0",
     "e2e-testing": "0.6.0",
     "strategy-service": "0.7.0",
-    "system-integration-tests": "0.5.0",
-    "unified-api-contracts": "0.9.0",
-    "features-service": "0.3.0",
-    "market-tick-data-service": "0.9.0"
+    "system-integration-tests": "0.5.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1830,26 +1827,31 @@
       "version": "0.5.0",
       "sha": "26722e169fd317f8a3c50edb7621a0e9ddecf54c",
       "branch": "staging"
-    },
-    "unified-api-contracts": {
-      "version": "0.9.0",
-      "sha": "3a7221880aa38e95fb1761a5b21dba3985c74bd0",
-      "branch": "staging"
-    },
-    "features-service": {
-      "version": "0.3.0",
-      "sha": "3fed163d84469cb18bcb81b97441731a9cd0d2b0",
-      "branch": "staging"
-    },
-    "market-tick-data-service": {
-      "version": "0.9.0",
-      "sha": "10fb9bc49a0ddc0dd3fa3c6afcffd1506939af92",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-15T20:16:36.659580Z",
+        "commits": {
+          "unified-api-contracts": {
+            "version": "0.9.0",
+            "sha": "3a7221880aa38e95fb1761a5b21dba3985c74bd0",
+            "branch": "staging"
+          },
+          "features-service": {
+            "version": "0.3.0",
+            "sha": "3fed163d84469cb18bcb81b97441731a9cd0d2b0",
+            "branch": "staging"
+          },
+          "market-tick-data-service": {
+            "version": "0.9.0",
+            "sha": "10fb9bc49a0ddc0dd3fa3c6afcffd1506939af92",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-15T18:58:22.554763Z",
         "commits": {
@@ -1939,26 +1941,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-15T08:25:41.078711Z",
-        "commits": {
-          "deployment-api": {
-            "version": "0.7.0",
-            "sha": "d70bfbc835fc82b161fea6fa714eae1472e16459",
-            "branch": "staging"
-          },
-          "unified-api-contracts": {
-            "version": "0.7.0",
-            "sha": "f28f294329d6b5eceb1a3fb7be34c0b44e358a36",
-            "branch": "staging"
-          },
-          "instruments-service": {
-            "version": "0.5.0",
-            "sha": "959b4043e1a05c03237294824e1dcad2d6bbe78c",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1975,11 +1957,16 @@
   },
   "promotion_failures": {
     "execution-service": 3,
-    "strategy-service": 2
+    "strategy-service": 3
   },
   "promotion_quarantine": {
     "execution-service": {
       "since": "2026-06-15T17:29:49.846182Z",
+      "attempts": 3,
+      "escalated": true
+    },
+    "strategy-service": {
+      "since": "2026-06-15T20:16:36.318585Z",
       "attempts": 3,
       "escalated": true
     }
