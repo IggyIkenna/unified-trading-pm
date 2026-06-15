@@ -8,6 +8,7 @@ across CI runs via actions/cache) collapses unchanged-branch-pair compares to fr
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 from pathlib import Path
 from typing import cast
@@ -100,3 +101,31 @@ def test_cache_round_trip(tmp_path: Path) -> None:
 def test_load_missing_is_noop(tmp_path: Path) -> None:
     plm.load_etag_cache(str(tmp_path / "nope.json"))
     assert plm._ETAG_CACHE == {}
+
+
+# ── squash-skew content gate ────────────────────────────────────────────────────
+
+
+def test_lag_suppressed_on_squash_skew() -> None:
+    # A squash-merged repo stays ahead-by-commit-count of main even when content is byte-identical
+    # (compare `files` is empty). The monitor MUST NOT page on the age of those phantom commits.
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    old = "2026-06-11T07:00:00Z"  # 4 days old → would breach a 60-min threshold if not gated
+    skew = {
+        "files": [],  # NET diff empty → content already promoted
+        "commits": [{"commit": {"message": "feat: shipped", "author": {"date": old}}}],
+    }
+    with patch.object(plm, "_gh_json", return_value=skew):
+        assert plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False) is None
+
+
+def test_lag_fires_on_real_content() -> None:
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    old = "2026-06-11T07:00:00Z"
+    real = {
+        "files": [{"filename": "a.py"}],  # genuine unpromoted content
+        "commits": [{"commit": {"message": "feat: shipped", "author": {"date": old}}}],
+    }
+    with patch.object(plm, "_gh_json", return_value=real):
+        res = plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
+    assert res is not None and res[0] == 1

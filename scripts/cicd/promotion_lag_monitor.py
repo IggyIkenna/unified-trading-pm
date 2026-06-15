@@ -140,6 +140,14 @@ def _lag(
     d = _gh_json(f"repos/{OWNER}/{repo}/compare/{base}...{head}")
     if not isinstance(d, dict):
         return None
+    # Squash-skew guard: a squash-merge keeps `head` ahead-by-commit-count of `base` even when the
+    # tree content is byte-identical (the squashed commit on `base` is a new SHA, so the original
+    # head commits stay "ahead"). The compare `files` array is the NET diff — empty means the
+    # content already promoted, so there is NOTHING to page on regardless of how old the oldest
+    # squashed commit is. Gate on real content here, mirroring the dashboard's files_changed gate.
+    files = cast("dict[str, object]", d).get("files")
+    if isinstance(files, list) and len(files) == 0:
+        return None
     commits = cast("list[object]", cast("dict[str, object]", d).get("commits") or [])
     relevant: list[tuple[dt.datetime, str]] = []
     for c in commits:
@@ -214,6 +222,7 @@ def _write_firestore_promotion_lag(
 ) -> None:
     try:
         from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+
         client = firestore.Client(project=project_id)
         for repo, lags in repo_lags.items():
             doc_ref = client.collection("repo_state").document(repo)

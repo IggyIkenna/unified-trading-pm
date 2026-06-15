@@ -631,3 +631,14 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 > tracker · collateral runtime consumer) is already tracked as `- [ ]` todos in
 > [capability_wizard_gap_discovery_2026_06_11.md](capability_wizard_gap_discovery_2026_06_11.md) (margin audit) — not
 > duplicated here.
+
+## Follow-up todo — delete the dead version-bump landmine (2026-06-15)
+
+- [x] ✅ [SCRIPT] P2. **Delete the dead `version-bump.yml` system** — DONE **PM@c8c4e0729** (2026-06-15). Removed
+      `scripts/propagation/templates/version-bump.yml` + `scripts/propagation/rollout-version-bump-workflow.py` (the dead
+      `[skip ci]` bump writer, superseded by `semver-agent.yml`, deployed to 0 repos but re-runnable → would have
+      reintroduced the staging→main promote-PR deadlock) + added a SUPERSEDED banner to
+      `docs/repo-management/version-cascade-flow.md` pointing to `semver-agent.yml`. Landing was held ~1h behind a
+      transient PM version-alignment flap (local trailing main while the 5-day backlog drained fleet-wide); a watcher
+      landed it the moment alignment held stably green. Root cause was already fixed + deployed: `semver-agent.yml.tmpl`
+      apply step commits the bump with NO `[skip ci]` (2026-06-09) and was rolled out to all 24 repos 2026-06-15.

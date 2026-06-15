@@ -1,5 +1,14 @@
 # Version Cascade Flow — SSOT
 
+> **⚠️ MECHANISM UPDATE (2026-06-15): the per-repo `version-bump.yml` described below is RETIRED — replaced by
+> `semver-agent.yml` (SSOT: `scripts/workflow-templates/semver-agent.yml.tmpl`).** The old per-repo `version-bump.yml`
+> template + its `scripts/propagation/rollout-version-bump-workflow.py` rollout were DELETED 2026-06-15 (deployed to 0
+> repos; they committed the `chore(release): bump version` with `[skip ci]`, which produces zero check runs → when that
+> commit becomes a staging→main promote-PR head the required `quality-gates-v2` is permanently MISSING → the PR
+> deadlocks). `semver-agent.yml` commits the bump with **NO `[skip ci]`** so v2's metadata-only fast-path reports GREEN.
+> The dispatch chain (→ PM `update-repo-version.yml` → manifest + cascade) and branch model below are unchanged;
+> mentally substitute `semver-agent.yml` wherever this doc says `version-bump.yml`. Full rewrite tracked as a follow-up.
+
 **SSOT:** This document. Single entry point for understanding the three-tier branch model, version bump dispatch chain,
 selective dependency cascade, hotfix path, breaking change path, and stability criteria.
 
