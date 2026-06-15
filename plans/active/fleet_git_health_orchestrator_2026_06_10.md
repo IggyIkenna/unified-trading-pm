@@ -94,12 +94,19 @@ vitest/tsc (dashboard).
       `/fleet-git` page + deployment-ui single-pane mirror) + `codex/03-observability/monitoring-control-plane.md` §
       "Fleet git-health (agent-orchestrator) — SHIPPED" + § "Click-through to the existing UIs" (operator click-through
       rule: GitHub + AO deep-links).
-- [ ] [TEST] P3. **NICE-TO-HAVE — add a vitest harness to the orchestrator dashboard** (provenance: slot-3 2026-06-10
+- [x] ✅ [TEST] P3. **NICE-TO-HAVE — add a vitest harness to the orchestrator dashboard** (provenance: slot-3 2026-06-10
       fleet-git-health ship). The `agent-orchestrator/dashboard` repo has NO vitest/eslint installed (only
       `tsc`+`vite     build`+prettier), so the FleetGit pure mappers (`repoStateColor`/`slotBadges`/`summaryChips`,
       written test-ready) have tsc+build coverage but no unit tests. Adding vitest (+ jsdom-free for pure fns) is its
       own infra unit; do it once and backfill specs for FleetGit + any future mapper. Repo: agent-orchestrator
-      (dashboard).
+      (dashboard). — DONE 2026-06-15, agent-orchestrator@70a121a. Added `vitest` (devDep) + `vitest.config.ts`
+      (jsdom-free `environment: "node"`, `pool: "forks"` per the workspace rule) + `test`/`test:watch` npm scripts + 17
+      specs in `dashboard/src/FleetGit.test.ts` covering all four FleetGit pure mappers (`rateBudgetTone` thresholds,
+      `repoStateColor` drift-override, `slotBadges` dead-reporter/ff-cron red badges + drift-rollup + dirty/behind
+      amber + worst-first ordering + clean fallback, `summaryChips` fixed-order + per-metric alert flags). Wired into
+      `scripts/quality-gates.sh` (a `dashboard tsc --noEmit` + `dashboard vitest` block, guarded on installed
+      `dashboard/node_modules` so a python-only checkout skips cleanly). Verify: AO `quality-gates.sh` green (server
+      basedpyright 0/0 + 603 pytest + dashboard tsc + 17 vitest). The harness now backfills any future mapper.
 
 ## Success criteria
 
