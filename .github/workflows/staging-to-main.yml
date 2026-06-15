@@ -15,6 +15,18 @@ name: staging-to-main
 on:
   repository_dispatch:
     types: [staging-validated]
+  # Drain-tick (added 2026-06-15): the ONLY promotion drain that previously lacked a
+  # schedule. `staging-validated` is dispatched only by sit-unlock.yml / conflict-resolution-merged.yml
+  # — i.e. AFTER SIT, which (per content-based breaking detection, 2026-06-08) fires ONLY for
+  # breaking_pending repos. So NON-breaking content (the 99% case — Tier-C `chore(promote)` drains
+  # whose underlying feat/fix semver bumps via the now-live `push:[staging]` trigger → fills
+  # staging_commits) had NO trigger to promote it, and main starved for days while staging
+  # accumulated hundreds of commits. This */15 tick fires the (idempotent, self-gated: readiness +
+  # SHA-pinning re-SIT + dep-order gates) promote so populated staging_commits drain to main on the
+  # same cadence as ldr-to-staging-promote (*/15) / ldr-to-main-promote (*/15) / main-backmerge (*/20).
+  # Empty staging_commits → idempotent skip (cheap). Concurrency group below prevents overlap.
+  schedule:
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       reason:
