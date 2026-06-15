@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Checkout PR source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Fetch repo type from workspace manifest
         id: repo-type
@@ -74,7 +74,7 @@ jobs:
         if:
           steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
           steps.repo-type.outputs.repo_type != 'infra'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: IggyIkenna/unified-trading-pm
           token: ${{ secrets.GH_PAT }}
@@ -116,7 +116,7 @@ jobs:
         if:
           steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
           steps.repo-type.outputs.repo_type != 'infra'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
