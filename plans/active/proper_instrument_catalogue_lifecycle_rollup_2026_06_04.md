@@ -567,3 +567,20 @@ immediately; FIX #2's labelled split appears once the UI ships.
       declined). pw:L2 is a HARD-RULE gate for UI changes → ship via a UI-capable slot whose `npm ci` is healthy:
       cherry-pick/quickmerge from the wip-preserve branch, run QG + pw:L2, promote. assigned_vm: a UI-capable slot.
       parent_epic: instruments_master. Provenance: R7 (2026-06-14).
+
+### R7 follow-up — prod `/api/data-status` full-CLI path 500s in-container (2026-06-15)
+
+Verifying R7 live, the **turbo `/manifest`** path works (emits the new `overall_capture_coverage_pct` /
+`overall_attempt_coverage_pct` fields — R7 confirmed deployed on image `71dd732`), but its rollup cache reads
+0/0 for `prediction` (same empty-rollup root cause as R6). Forcing the non-turbo card endpoint
+(`GET /api/data-status?...&force_refresh=true`) returns **HTTP 500**: the `run_data_status_cli` path shells out
+to the deployment-service CLI which dies with `Error: Could not find configs directory. Run from
+deployment-service or specify --config-dir` inside the Cloud Run image. So the full-CLI data-status path is
+non-viable in-container; only the turbo path serves prod.
+
+- [ ] [INFRA] P2. **Make the deployment-api in-container `run_data_status_cli` find its config dir** (or drop the
+      CLI-subprocess path in favour of the in-process turbo compute). Either bundle `deployment-service/configs/`
+      into the deployment-api image + pass `--config-dir`, or replace the `subprocess` CLI shell-out in
+      `data_status_service.run_data_status_cli` with the in-process manifest compute the turbo path already uses
+      (the CLI subprocess is the only reason the `force_refresh`/card path 500s). Repo: deployment-api.
+      assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7 follow-up (2026-06-15).
