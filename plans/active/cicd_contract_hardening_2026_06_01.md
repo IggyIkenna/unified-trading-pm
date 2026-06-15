@@ -1142,6 +1142,22 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       without per-repo timeout bumps. Until fixed, **CI is the authoritative verifier for UAC-heavy repos on macOS
       slots.** parent_epic candidate: infrastructure_master. repos: unified-api-contracts + unified-trading-library
       (import hot paths) + PM quality-gates-base.
+  > **PROGRESS 2026-06-15 (slot-3) — measured on Linux + shipped Part A.** Verified the named offenders against
+  > current code (the 2026-06-02 module paths had since moved): UAC has NO module-level `google.cloud` import (docstring/
+  > Protocol-only); the real eager hot-path imports are all in **UTL**. Measured `import unified_trading_library` cold =
+  > **~6.4s** on Linux (frozen-importlib on macOS is far worse). Two eager offenders found:
+  > **(A) sklearn — SHIPPED ✅** `feature_calculator/transformations.py` did a module-level `from sklearn.preprocessing
+  > import …` (direct violation of the CLAUDE.md lazy-ML-import rule) loaded on every UTL import via the
+  > `feature_calculator.__init__` chain. Fixed: `TYPE_CHECKING` guard + lazy import (first statement in
+  > `apply_normalization`, `# noqa: qg-inside-import`). Verified: sklearn no longer in `sys.modules` after import;
+  > runtime unchanged; QG green. — unified-trading-library@108bb79bf.
+  > **(B) google.cloud — OPEN (this item stays `[ ]` for it).** The google.cloud bundle (compute_v1/bigquery/storage/
+  > pubsub/secretmanager) is still **eagerly** imported on every UTL load via `cloud_interface/__init__ →
+  > providers/__init__ → gcp.py + gcp_compute.py`, costing **~1.8s (~28% of UTL import)** regardless of `CLOUD_PROVIDER`
+  > (1277 import-time lines). Clean fix = PEP 562 `__getattr__` lazy provider loading in `providers/__init__.py` +
+  > `cloud_interface/__init__.py` + lazy import in `factory.py` (same for `aws.py`/boto3) — non-breaking (public symbols
+  > resolve on access) but a T0 public-API-surface change needing `TYPE_CHECKING` guards + consumer-grep + full QG.
+  > Awaiting operator go-ahead before the T0 refactor.
 
 - [x] ✅ **[DONE 2026-06-12 — mtds `MIN_COVERAGE=79` (line-cov 82.7%), raised 28→79 by 2026-06-11; ISS-031 restore complete, both follow-ups (a)+(b) done]** [TEST] P2. **mtds coverage floor is a documented 28% exception (ISS-031) now ENFORCED by the base-service.sh
       systemic fix.** `market-tick-data-service/scripts/quality-gates.sh:12` =
