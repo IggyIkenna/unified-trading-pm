@@ -4519,9 +4519,17 @@ in the AO e2e plan.)
 
 #### 3a — drop-in node24 (target already runs in our fleet; no behaviour change) — `BLOCKED-NONE`
 
-- [ ] [SCRIPT] P2. `actions/create-github-app-token` v1→**v3** — 23 main-backmerge refs (templated → PM rollout) + PM's
-      `ldr-to-staging-promote` / `ldr-to-main-promote` / `ci-failure-watcher` / `promotion-lag-monitor` /
-      `main-backmerge-to-ldr` (hand-maintained PM copies). repo: template + PM. Verify reaches `main`.
+- [x] ✅ [SCRIPT] P2. `actions/create-github-app-token` v1→**v3** — **DONE on LDR fleet-wide 2026-06-15: 25/25 repos at
+      `@v3` on `origin/live-defi-rollout`** (PM template `scripts/workflow-templates/main-backmerge-to-ldr.yml`@v3 +
+      rollout to all main-backmerge copies + PM's 5 promote/watcher workflows PM@3877f9a70; per-repo reconciled against
+      live remote — 5 repos were already @v3 from parallel agents, skipped). ⚠️ **`main` still `@v1` in 22 repos —
+      BLOCKED by the breaking-cascade staging lock** (`staging_status.locked=True`, reason "Breaking MINOR bump cascade:
+      e2e-testing=0.4.0, execution-service"; `check-staging-lock` fails every repo's LDR→staging PR → all promotions
+      gated fleet-wide, not just this change). The bump **promotes to main automatically once the cascade lock clears**
+      (no per-repo action needed); main-lag is also self-healing-hazardous (a main→LDR backmerge re-introduced @v1 to
+      deployment-ui mid-run — re-fixed). Deprecation is SOFT 2026-06-16 (warnings only), HARD fall 2026, so the lock
+      clearance is the gating path, not a same-day push. **Do NOT direct-push @v3 to 22 mains while staging is locked**
+      (fights the cascade machinery). repo: template + all 25.
 - [ ] [SCRIPT] P2. **Composite actions (`.github/actions/*`) — the MISSED indirect scope** (called ~30× via `@main`):
       `setup-python-tools` (setup-python@v5, cache@v4), `run-quality-gates` (setup-python@v5), `setup-ui-tools`
       (setup-node@v4), `setup-agent-tools` (setup-node@v4) → bump to setup-python@v6 / setup-node@v5 / cache@v5. repo:

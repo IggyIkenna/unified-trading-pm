@@ -42,7 +42,7 @@ jobs:
       # (separate from the shared user PAT pool). Pure read-only poller; the App is
       # installed with Contents:Read + Actions:Read + Metadata:Read on IggyIkenna.
       # owner: scopes the token to ALL repos under IggyIkenna (fleet-wide cross-repo reads).
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}

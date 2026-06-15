@@ -225,10 +225,23 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           STATUS: ${{ github.event.client_payload.status }}
+          PREV: ${{ steps.update.outputs.prev_status }}
           REPO: ${{ github.event.client_payload.repo }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -uo pipefail
+          # LOOP-GUARD (2026-06-15): re-fire ONLY on a genuine ci_status transition (prev != status).
+          # The ldr-to-staging promoter re-runs staging v2 on a repo it JUST promoted, which re-enters
+          # here as STAGING_GREEN while prev is ALREADY STAGING_GREEN. An unconditional re-fire turned
+          # that into a self-sustaining promote loop (drain-merge → staging push → ci-status-update →
+          # tier-ab-green → drain-merge …) firing every ~40s, tripping the runaway breaker fleet-wide.
+          # Steady-state (prev==status) is the bot re-confirming its own merge, NOT new dev content, so
+          # it must not advance the cascade. Mirrors the notify transition-gate above; the */15
+          # ldr-to-staging-promote cron remains the backstop for genuine backlog.
+          if [ "${PREV:-}" = "$STATUS" ]; then
+            echo "Steady-state $REPO ($PREV==$STATUS) — promoter re-run, not a transition; no re-fire (loop-guard)."
+            exit 0
+          fi
           case "$STATUS" in
             STAGING_GREEN | SIT_VALIDATED | MAIN_GREEN)
               echo "→ $REPO reached $STATUS; re-firing tier-ab-green to ldr-to-staging-promote"
