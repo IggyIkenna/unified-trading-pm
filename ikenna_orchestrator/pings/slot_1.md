@@ -1,3 +1,21 @@
+## [slot-1-main] 2026-06-15 — CREDENTIAL APPROVAL REQUEST: Smarkets execution adapter
+
+**Plan refs**: `plans/active/v2_engine_venue_buildout_2026_06_15.md` (Phase V — Smarkets adapter BLOCKED-CREDENTIALS todo)
+
+```
+CREDENTIAL APPROVAL REQUEST — Smarkets sports-exchange execution adapter
+Vendor: Smarkets (betting exchange) — API key + funded account
+What I need: Smarkets account registration + API key/session credential (Secret Manager key `smarkets-api-key`)
+Account to use: existing operator sports-exchange account or new Smarkets account
+Unblocks: smarkets_direct LIVE order path (place_bet/cancel_bet/get_odds) for sports archetypes — the
+          execution leg behind the now-token-wired `smarkets_direct` venue.
+Without it: smarkets_direct is leg-eligible + matrix-buildable + parses in slot labels (Phase V token wiring
+            landed), but has NO live execution adapter — adapter scaffold + mocked unit tests will ship under the
+            BLOCKED-CREDENTIALS todo; live integration tests stay @pytest.mark.requires_credentials (skipped).
+```
+
+---
+
 ## [slot-1-main] 2026-05-28 — execution-service Cloud Build monitoring + merge
 
 **Plan refs**: `plans/active/staging_resync_post_cutover_2026_05_24.md` (execution-service L4 Cloud Build gate)
