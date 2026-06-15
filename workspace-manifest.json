@@ -1799,7 +1799,7 @@
     "lock_version": "0.5.0",
     "pending_repos": [],
     "sit_retry_count": 3,
-    "locked_alert_sent": false,
+    "locked_alert_sent": true,
     "breaking_pending": [
       "e2e-testing",
       "execution-service",
