@@ -4529,7 +4529,9 @@ in the AO e2e plan.)
       (no per-repo action needed); main-lag is also self-healing-hazardous (a main→LDR backmerge re-introduced @v1 to
       deployment-ui mid-run — re-fixed). Deprecation is SOFT 2026-06-16 (warnings only), HARD fall 2026, so the lock
       clearance is the gating path, not a same-day push. **Do NOT direct-push @v3 to 22 mains while staging is locked**
-      (fights the cascade machinery). repo: template + all 25.
+      (fights the cascade machinery). repo: template + all 25. **UPDATE 2026-06-15 ~13:35Z: staging lock SELF-CLEARED**
+      (`staging_status.locked=false`); `check-staging-lock` now passes; LDR→staging PRs draining (instruments-service
+      #453 merged → staging @v3) → `@v3` now promoting to main via normal pipeline, no intervention needed.
 - [x] ✅ [SCRIPT] P2. **Composite actions (`.github/actions/*`) — the MISSED indirect scope** (called ~30× via `@main`):
       `setup-python-tools` (setup-python@v6, cache@v5), `run-quality-gates` (setup-python@v6), `setup-ui-tools`
       (setup-node@v5), `setup-agent-tools` (setup-node@v5) — **DONE on LDR 2026-06-15 PM@e1684bd1e**. (Prior audit's
