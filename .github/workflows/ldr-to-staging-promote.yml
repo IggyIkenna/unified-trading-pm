@@ -62,7 +62,7 @@ jobs:
       # owner-scoped (cross-repo) + can create/merge PRs and trigger downstream workflows
       # (quality-gates-v2 on the promotion PR), which the repo-scoped GITHUB_TOKEN cannot.
       # App perms: Contents+PullRequests+Actions R/W.
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}

@@ -41,7 +41,7 @@ jobs:
       # (cross-repo run/PR reads + the close/reopen/supersede/close-superseded writes
       # + the escalate repository_dispatch, all of which an App token CAN trigger,
       # unlike the repo-scoped GITHUB_TOKEN). App perms: Contents+PullRequests+Actions R/W.
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
