@@ -48,6 +48,11 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       `registry/venue_collateral.py` — Bybit stETH (0.10 placeholder) + Drift mSOL (0.10 placeholder); replace the
       `# PLACEHOLDER — pending live-API probe (F28, operator-held 2026-06-15)` comments with probed values + source
       citation. Provenance: F28 consolidation (UAC@f302c72 / execution-service@8a3c6ab). Target: unified-api-contracts.
+      **Left as tracked todo (engine-remediation pass 2026-06-15): OPERATOR-GATED BY DESIGN** — operator decision #3 for
+      this plan requires "operator approves the diff before ship", and the two values are explicitly `operator-HELD`
+      placeholders. The conservative-value pick + ship is a `BLOCKED-OPERATOR-DECISION` the operator themselves set; not
+      an autonomous-resolvable item. The margin cluster already reads these via the F28 accessors, so a later value
+      update flows through with no consumer change.
 - [x] ✅ [SCRIPT] P2. **F47/F48 — surface-correct the verdict-matrix over-claims.** — DONE **PM@d0f66d732 (PR #339) +
       UAC@a1f8b38** (2026-06-15). F47: leg-eligible venues whose folded slot-token ∉ `KNOWN_VENUE_TOKENS` → `blocked`
       with `unbuildable_slot_venue` (186 cells / 11 venues, DERIVED not enumerated). F48: archetypes whose value ∉ the
@@ -60,6 +65,17 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       import strategy-service — service-dep ban). That's a duplicate SSOT. Make the generator PROBE strategy-service via
       the per-service `.venv` subprocess (the same pattern the capability-MANIFEST exporter uses for exec-algos/
       feature-groups/ml-models) so the engine-backed set is read live, not copied. Target: unified-trading-pm.
+      **DIAGNOSIS (2026-06-15, engine-remediation pass — left as tracked todo, NOT done):** the probe itself WORKS —
+      `from strategy_service.engine.strategies.v2.factory import ARCHETYPE_ENGINE_REGISTRY` via `strategy-service/.venv`
+      returns the exact 29 keys currently in `_ENGINE_BACKED_ARCHETYPE_VALUES` (transcription verified accurate). The
+      blocker to a clean swap: `build_matrix()` is exercised by the DETERMINISTIC PM unit test
+      `tests/unit/test_capability_verdict_matrix.py` (6 call sites, runs in PM QG) and is deliberately self-contained —
+      the transcription is a CITED + parity-guarded choice so the generator + its byte-stable test carry no runtime
+      cross-service dependency (the manifest exporter probes at heavy on-demand build time, not in a deterministic unit
+      test). Doing F48 right = give `build_matrix()` an injected `engine_backed_archetypes` param (default→probe in
+      `main()`; the unit test passes a fixture set), so the live probe runs at generation time while the test stays
+      hermetic. Mechanical but touches the test contract — deferred from this engine-pass per the dispatch's
+      "follow-ups: do if time, else leave as the tracked todos". Reuse `_run_service_probe` from `_capability_gaps.py`.
 
 ## Phase B — strategy-service engine (freeze LIFTED) — CeFi margin traceability + netting + F27/F16
 
@@ -172,3 +188,14 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
   This honors "diagnose before fixing / read both sides" — the F45 "scatter" was partly distinct concerns, not all
   duplication; only the genuine net-delta/LST/exposure dupes were consolidated + deleted. Remaining plan items: F28
   live-API probe (operator-held haircuts), F48 venv-probe follow-up — both smaller, attempting next.
+- 2026-06-15 — **Engine-remediation pass CLOSED.** Phase B fully shipped (margin cluster P0, F45 P1, F27, F16 all
+  `[x]`). Both follow-ups assessed + left as tracked todos with diagnosis (NOT silent defers): **F28** is OPERATOR-GATED
+  by design (operator decision #3 = operator approves the haircut diff before ship; values are `operator-HELD`); **F48**
+  probe VERIFIED working (returns the exact 29 engine keys) but a clean swap requires reworking `build_matrix()`'s
+  signature + its deterministic, hermetic PM unit test (`test_capability_verdict_matrix.py`, 6 call sites) — the
+  transcription is a CITED + parity-guarded self-containment choice, not careless dup; the right fix (inject
+  `engine_backed_archetypes` param, default→probe, test passes a fixture) is annotated on the todo. **Codex SSOTs
+  updated** (Post-Plan-Phase audit): `04-architecture/client-funds-isolation.md` (CeFi margin-traceability section) +
+  `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (net-delta/exposure-netting SSOT section). SHAs:
+  margin = UTL@1b215ea9 + strategy-service@b9b26433; F45 = UTL@b819cd1c + execution-service@b7c63335 +
+  strategy-service@bdac6595. Phase C (build missing v2 engines) remains separately-scoped (bigger than this pass).
