@@ -389,6 +389,17 @@ ui@f2223d47.
       repo's `staging` lacks `staging-backmerge-to-ldr.yml` and name that in the page (turns a generic "promote loop"
       alert into an actionable root cause).
 
+**Decision (2026-06-15, operator-confirmed) — do NOT add a `schedule`+`workflow_dispatch` drift-tick to
+`staging-backmerge-to-ldr.yml`.** It was tried (`49029aa44`) and reverted (`790e7fb51`) the same day. The reverted
+commit's premise ("`push:[staging]` NEVER fires — GITHUB_TOKEN suppression") is **empirically false**: the workflow
+fires constantly on `push` (unified-api-contracts 100 runs, instruments 52, execution 39 — all `push`), because the
+Tier-C drain merges to staging with a **GitHub App installation token**, and App-token pushes DO trigger workflows
+(only raw `GITHUB_TOKEN` pushes are suppressed). The ACTUAL incident cause was Layer A (8 repos missing the file), now
+fixed. A hourly cron × ~24 repos also adds Actions spend during the same billing-sensitive window that throttled
+`main-backmerge`'s tick. The P1/P2 presence-audit above is the correct guard (catches the real failure = a missing
+file), not the schedule tick. Re-introduce the tick ONLY on a concrete observed case of a raw-`GITHUB_TOKEN` staging
+push (e.g. a semver `chore(release)` bump) that failed to self-heal on the next drain cycle.
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first
