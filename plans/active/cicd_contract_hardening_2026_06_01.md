@@ -4530,19 +4530,20 @@ in the AO e2e plan.)
       deployment-ui mid-run — re-fixed). Deprecation is SOFT 2026-06-16 (warnings only), HARD fall 2026, so the lock
       clearance is the gating path, not a same-day push. **Do NOT direct-push @v3 to 22 mains while staging is locked**
       (fights the cascade machinery). repo: template + all 25.
-- [ ] [SCRIPT] P2. **Composite actions (`.github/actions/*`) — the MISSED indirect scope** (called ~30× via `@main`):
-      `setup-python-tools` (setup-python@v5, cache@v4), `run-quality-gates` (setup-python@v5), `setup-ui-tools`
-      (setup-node@v4), `setup-agent-tools` (setup-node@v4) → bump to setup-python@v6 / setup-node@v5 / cache@v5. repo:
-      unified-trading-pm. (Prior audit's "zero local custom actions using node20" was true for `using:` but these
-      composites CALL node20 sub-actions.)
-- [ ] [SCRIPT] P2. **PM templates (SSOT — stops new repos inheriting node20):** `scripts/propagation/templates/*.yml`
-      (checkout@v4, setup-python@v5), `scripts/workflow-templates-ui/{uac-registry-sync,uic-openapi-sync}.yml`
-      (checkout@v4, setup-python@v5, setup-node@v4), `scripts/templates/{feature-branch-to-staging,plan-alignment-agent}.yml`
-      (checkout@v4) → checkout@v5 / setup-python@v6 / setup-node@v5. repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **deployment-service templates:** `templates/{github-actions-aws.yaml,python-quality-gates-template.yml,typescript-quality-gates-template.yml}`
-      → checkout@v4→v5, setup-python@v5→v6, setup-node@v4→v5, aws-creds@v4→v6, **`upload-artifact@v3`→v7 (v3 is
-      ALREADY RETIRED by GitHub — uploads hard-fail; fix regardless of node24)**. repo: deployment-service.
-- [ ] [SCRIPT] P3. Stragglers in live workflows: `actions/cache@v4`→v5 (PM `promotion-lag-monitor.yml`). repo: PM.
+- [x] ✅ [SCRIPT] P2. **Composite actions (`.github/actions/*`) — the MISSED indirect scope** (called ~30× via `@main`):
+      `setup-python-tools` (setup-python@v6, cache@v5), `run-quality-gates` (setup-python@v6), `setup-ui-tools`
+      (setup-node@v5), `setup-agent-tools` (setup-node@v5) — **DONE on LDR 2026-06-15 PM@e1684bd1e**. (Prior audit's
+      "zero local custom actions using node20" was true for `using:` but these composites CALL node20 sub-actions.)
+- [x] ✅ [SCRIPT] P2. **PM templates (SSOT — stops new repos inheriting node20):** `scripts/propagation/templates/*.yml`,
+      `scripts/workflow-templates-ui/{uac-registry-sync,uic-openapi-sync}.yml`,
+      `scripts/templates/{feature-branch-to-staging,plan-alignment-agent}.yml` → checkout@v5 / setup-python@v6 /
+      setup-node@v5 — **DONE on LDR 2026-06-15 PM@e1684bd1e**.
+- [x] ✅ [SCRIPT] P2. **deployment-service templates:** `templates/{github-actions-aws.yaml,python-quality-gates-template.yml,typescript-quality-gates-template.yml}`
+      → checkout@v5, setup-python@v6, setup-node@v5, **`upload-artifact@v3`→v7 (v3 was ALREADY RETIRED by GitHub)** —
+      **DONE on LDR 2026-06-15 deployment-service@9b0f867**. ⚠️ `aws-creds@v4` (4 refs) **intentionally left for 3b**
+      (needs credential-resolution review).
+- [x] ✅ [SCRIPT] P3. Stragglers in live workflows: `actions/cache@v4`→v5 (PM `promotion-lag-monitor.yml`) — **DONE on
+      LDR 2026-06-15 PM@7356e1288**.
 
 #### 3b — version-bump + per-action changelog review + ONE test push (node24 target exists)
 
