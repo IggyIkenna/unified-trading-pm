@@ -271,11 +271,16 @@ def main() -> int:
                 f"{repo}: workflow job name is not 'Quality Gates ({repo})' "
                 f"→ derived context '{qg}' (workflow-name bug? fix the workflow, not the ruleset)"
             )
-        # Cloud symmetry: gate LDR→staging on the AWS image build too (staging ruleset only —
-        # the staging PR head is the LDR commit that carries the CodeBuild status; a main PR head
-        # can be a post-squash SHA the build never ran on). None for non-AWS-image repos.
-        cb = derive_codebuild_context(repo, args.ref)
-        staging_ctx = [qg, STAGING_LOCK_CONTEXT, *([cb] if cb else [])]
+        # AWS-image-build gating on staging is DISABLED (2026-06-15). The AWS CodeBuild LDR build is
+        # opt-in + unreliable on the LDR head (gated to opt-in via `quickmerge --build`, Gap 5), so a
+        # FAILING required `AWS CodeBuild …` context deadlocked EVERY LDR→staging drain on the 8 repos
+        # that emit it — main fell ~5 days behind LDR fleet-wide and the deploy-UI Image column went
+        # stale. quality-gates-v2 is the real promotion gate; the image build must NOT block the drain
+        # off a flaky LDR-head status. Re-introduce image-build gating only via a build that runs GREEN
+        # on the PR head pre-merge (the gap5 "PR-head image-build gate" todo), never the LDR-head status.
+        # `derive_codebuild_context` is retained for that future PR-head gate. SSOTs:
+        # ci_pipeline_self_healing_gaps_2026_06_11.md §Gap5 + github_actions_billing_wall_2026_06_11.md.
+        staging_ctx = [qg, STAGING_LOCK_CONTEXT]
         targets = [
             ("require-quality-gates", [qg]),
             ("require-staging-lock-check", staging_ctx),
