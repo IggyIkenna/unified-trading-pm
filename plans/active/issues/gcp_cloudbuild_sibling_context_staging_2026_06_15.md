@@ -8,6 +8,28 @@ priority: P2
 status: active
 ---
 
+## RESOLVED 2026-06-15 — Option (B) implemented + validated
+
+Operator chose **(B): make GCP also build these**. Done for all sibling-COPY GCP repos:
+
+- **`stage-siblings` step** added to each `cloudbuild.yaml` (clones the sibling repos
+  `@live-defi-rollout` via the `GH_PAT` secret as an http extraheader — mirrors the AWS
+  `buildspec.aws.yaml` pre_build), wired into the `build` step's `waitFor`. Repos:
+  execution-service (`f55bda1a`), alerting-service (`cad896c`), greeks-service (`b151e49e`),
+  strategy-service (`61f8bd40`). deployment-api already had the equivalent `vendor-deps` step.
+- **`_RUN_INIMAGE_QG` skip-guard** added (mirrors deployment-api): the in-image
+  `quality-gates.sh` is redundant (QG enforced at `quickmerge` Pass-1 + `quality-gates-v2`
+  at the promotion PR) AND impossible (no `unified-trading-pm` harness in the image →
+  `log_section: command not found` exit 127), so it's skipped (`_RUN_INIMAGE_QG: "false"`).
+  Repos: execution-service (`6ac30574`), alerting-service (`ef0a3a6`), greeks-service
+  (`6d73fb0`), strategy-service (`e3398957`).
+- **Validated end-to-end**: GCP build `ec826e1b` (execution-service, both fixes, on LDR) =
+  **SUCCESS** — `stage-siblings` ✅ → `build`(COPY) ✅ → `quality-gates`(skipped) ✅ → `push` ✅.
+
+All edits are on `live-defi-rollout`, draining to main via the (now-working) promotion
+pipeline, so the `<svc>-build` (push:^main^) triggers produce fresh GCP images going forward.
+This issue is closed — archive on next sweep.
+
 ## What I found
 
 After the fleet promotion pipeline was unstalled (main caught up to LDR 2026-06-15), the
