@@ -570,13 +570,25 @@ immediately; FIX #2's labelled split appears once the UI ships.
 
 ### R7 follow-up — prod `/api/data-status` full-CLI path 500s in-container (2026-06-15)
 
-Verifying R7 live, the **turbo `/manifest`** path works (emits the new `overall_capture_coverage_pct` /
-`overall_attempt_coverage_pct` fields — R7 confirmed deployed on image `71dd732`), but its rollup cache reads
-0/0 for `prediction` (same empty-rollup root cause as R6). Forcing the non-turbo card endpoint
-(`GET /api/data-status?...&force_refresh=true`) returns **HTTP 500**: the `run_data_status_cli` path shells out
-to the deployment-service CLI which dies with `Error: Could not find configs directory. Run from
-deployment-service or specify --config-dir` inside the Cloud Run image. So the full-CLI data-status path is
-non-viable in-container; only the turbo path serves prod.
+**R7 VERIFIED LIVE on prod (image `71dd732`).** `GET /api/data-status/manifest?service=instruments-service&start_date=2018-01-01&end_date=2026-06-15&asset_group=prediction`
+returns `overall_capture_coverage_pct=94.77`, `overall_attempt_coverage_pct=100.0`, `dates_found/expected=435/459`.
+**The genesis clip works end-to-end**: the query horizon was 2018-01-01 (~3,087 days) but `dates_expected=459`
+— clipped to the prediction data genesis (2025-03-14), so the young AG reads its true **94.77%** instead of a
+horizon-penalised ~14%. The beta seam serves the projected-v9 index (493 rows, all `schema_version=9`,
+`asset_group=prediction`, `service_name=instruments-service`) and correctly bypasses the rollup cache (by
+design — manifest.py:153-158; serving the LIVE-derived rollup in beta would render live data).
+
+**CORRECTION of an earlier mis-diagnosis (do not propagate):** prediction is NOT missing its prod bucket or
+projected index. The bucket resolves via `resolve_bucket_name(kind="instruments-store-prediction")` →
+`instruments-store-pred-prd-{pid}` (note `pred`, not `prediction`); it exists and HAS
+`_index/audit/projected_index_prediction.parquet`. The transient "0/0 for prediction" reading was purely a
+wrong query param (`service=mtds`); prediction's `service_name` is `instruments-service`. cefi/defi/tradfi/sports
++ prediction all have their projected-v9 index. No bucket/projection gap for prediction.
+
+**Real finding (stands):** forcing the non-turbo card endpoint (`GET /api/data-status?...&force_refresh=true`)
+returns **HTTP 500**: the `run_data_status_cli` path shells out to the deployment-service CLI which dies with
+`Error: Could not find configs directory. Run from deployment-service or specify --config-dir` inside the Cloud
+Run image. So the full-CLI data-status path is non-viable in-container; only the turbo path serves prod.
 
 - [ ] [INFRA] P2. **Make the deployment-api in-container `run_data_status_cli` find its config dir** (or drop the
       CLI-subprocess path in favour of the in-process turbo compute). Either bundle `deployment-service/configs/`
