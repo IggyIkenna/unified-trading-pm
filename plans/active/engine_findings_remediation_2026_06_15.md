@@ -1,7 +1,6 @@
 ---
 title: Engine findings remediation — collateral / margin / netting / catalogue over-claims
 created: 2026-06-15
-author: ikennaigboaka
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
 estimate_class: brand-new
@@ -12,6 +11,8 @@ locked_since: 2026-06-15
 source:
   - plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md
   - plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md
+priority: P2
+status: active
 ---
 
 # Engine findings remediation (2026-06-15)
