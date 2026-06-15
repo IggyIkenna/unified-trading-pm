@@ -52,7 +52,7 @@ jobs:
       # return free 304s (a 304 does NOT count against the App's 5000/hr REST budget).
       # Unique key per run + prefix restore-keys = rolling cache.
       - name: Restore GitHub ETag cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .gh-etag-cache.json
           key: gh-etag-lag-${{ github.run_id }}

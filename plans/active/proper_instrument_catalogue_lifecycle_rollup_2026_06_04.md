@@ -498,3 +498,28 @@ The P0 "rebuild the dead IS producer" had **two layers**; layer 1 is now fixed:
       class — grpc/GCS fork-pool init, or a job env the local `.venv` has). Until fixed, the catalogue refreshes via the R4
       local-run path. Repo: instruments-service (+ deployment-service job env). assigned_vm: vm-cross-cutting. parent_epic:
       instruments_master. Provenance: R6 (2026-06-15).
+
+**R6 follow-up (2026-06-15, same session) — the traceback-flush step is DONE; it narrowed the cause but revealed the real
+blocker is logging suppression**: shipped `logger.exception` in `build_instrument_catalogue.py::main` (instruments-service@LDR+main),
+rebuilt the image (`:latest` now the instrumented build), re-ran cefi with `PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1`.
+**Result: the cloud job emits ZERO log output** — no `run_rollup` INFO lines (run_id / "Found N by_date" / workers=), and
+the `logger.exception("…FAILED…")` record never appears in `textPayload` OR `jsonPayload`. The ONLY output is Python's
+C-level default-excepthook traceback (still truncated at the `return run_rollup(` frame) + "Container called exit(1)".
+**Diagnosis**: `logging.*` is suppressed in the bare `python build_instrument_catalogue.py` Cloud Run Job invocation (UTL/
+structured-logging handler not emitting in the job context — the service `ServiceBootstrap` that configures logging never
+runs for a plain-script job), so every `logger.*` (incl. the new `logger.exception`) vanishes; only the excepthook reaches
+stderr, and that single write is truncated. RULED OUT: BucketNamingError (image fixed), OOM (16Gi re-run failed identically
+at ~75 s), task timeout (`timeoutSeconds: 1800`, dies ~75 s), catchable Python exception (the `except BaseException`
+handler's `logger.exception` never fired → it's an uncatchable death OR logging-suppressed). The script runs GREEN locally
+(R4 06-11), so it is **cloud-Job-invocation-specific**.
+
+- [ ] [INFRA] P1 (supersedes the line above). **Make the cloud lifecycle-catalogue-regen log, then fix the real error.**
+      Two sub-steps: (a) since `logger.*` is suppressed in the bare-script job, add `print(..., flush=True)` BISECTION
+      markers before each `run_rollup` phase (storage-client init / bucket resolve / by_date listing / download-pool /
+      dedup / monotonic-guard / promote-write) — `print` reaches stdout regardless of the logging config — to localize the
+      death (PYTHONUNBUFFERED is already set on the job); OR call the service logging bootstrap / `logging.basicConfig(stream=sys.stdout)`
+      at the top of `main` so `logger.*` emits in the job. (b) With the failing phase identified, fix it (suspects: a
+      job-only env the local `.venv` provides, or a native grpc/pyarrow/GCS call). Until fixed, the catalogue refreshes via
+      the R4 local-run path (works). Note: the cefi job currently carries diagnostic env `PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1`
+      (harmless; aids the next attempt). Repo: instruments-service + deployment-service (job env/bootstrap). assigned_vm:
+      vm-cross-cutting. parent_epic: instruments_master. Provenance: R6 follow-up (2026-06-15).

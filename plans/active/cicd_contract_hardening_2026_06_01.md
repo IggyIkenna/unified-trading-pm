@@ -4529,41 +4529,68 @@ in the AO e2e plan.)
       (no per-repo action needed); main-lag is also self-healing-hazardous (a main→LDR backmerge re-introduced @v1 to
       deployment-ui mid-run — re-fixed). Deprecation is SOFT 2026-06-16 (warnings only), HARD fall 2026, so the lock
       clearance is the gating path, not a same-day push. **Do NOT direct-push @v3 to 22 mains while staging is locked**
-      (fights the cascade machinery). repo: template + all 25.
-- [ ] [SCRIPT] P2. **Composite actions (`.github/actions/*`) — the MISSED indirect scope** (called ~30× via `@main`):
-      `setup-python-tools` (setup-python@v5, cache@v4), `run-quality-gates` (setup-python@v5), `setup-ui-tools`
-      (setup-node@v4), `setup-agent-tools` (setup-node@v4) → bump to setup-python@v6 / setup-node@v5 / cache@v5. repo:
-      unified-trading-pm. (Prior audit's "zero local custom actions using node20" was true for `using:` but these
-      composites CALL node20 sub-actions.)
-- [ ] [SCRIPT] P2. **PM templates (SSOT — stops new repos inheriting node20):** `scripts/propagation/templates/*.yml`
-      (checkout@v4, setup-python@v5), `scripts/workflow-templates-ui/{uac-registry-sync,uic-openapi-sync}.yml`
-      (checkout@v4, setup-python@v5, setup-node@v4), `scripts/templates/{feature-branch-to-staging,plan-alignment-agent}.yml`
-      (checkout@v4) → checkout@v5 / setup-python@v6 / setup-node@v5. repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **deployment-service templates:** `templates/{github-actions-aws.yaml,python-quality-gates-template.yml,typescript-quality-gates-template.yml}`
-      → checkout@v4→v5, setup-python@v5→v6, setup-node@v4→v5, aws-creds@v4→v6, **`upload-artifact@v3`→v7 (v3 is
-      ALREADY RETIRED by GitHub — uploads hard-fail; fix regardless of node24)**. repo: deployment-service.
-- [ ] [SCRIPT] P3. Stragglers in live workflows: `actions/cache@v4`→v5 (PM `promotion-lag-monitor.yml`). repo: PM.
+      (fights the cascade machinery). repo: template + all 25. **UPDATE 2026-06-15 ~13:35Z: staging lock SELF-CLEARED**
+      (`staging_status.locked=false`); `check-staging-lock` now passes; LDR→staging PRs draining (instruments-service
+      #453 merged → staging @v3) → `@v3` now promoting to main via normal pipeline, no intervention needed.
+- [x] ✅ [SCRIPT] P2. **Composite actions (`.github/actions/*`) — the MISSED indirect scope** (called ~30× via `@main`):
+      `setup-python-tools` (setup-python@v6, cache@v5), `run-quality-gates` (setup-python@v6), `setup-ui-tools`
+      (setup-node@v5), `setup-agent-tools` (setup-node@v5) — **DONE on LDR 2026-06-15 PM@e1684bd1e**. (Prior audit's
+      "zero local custom actions using node20" was true for `using:` but these composites CALL node20 sub-actions.)
+- [x] ✅ [SCRIPT] P2. **PM templates (SSOT — stops new repos inheriting node20):** `scripts/propagation/templates/*.yml`,
+      `scripts/workflow-templates-ui/{uac-registry-sync,uic-openapi-sync}.yml`,
+      `scripts/templates/{feature-branch-to-staging,plan-alignment-agent}.yml` → checkout@v5 / setup-python@v6 /
+      setup-node@v5 — **DONE on LDR 2026-06-15 PM@e1684bd1e**.
+- [x] ✅ [SCRIPT] P2. **deployment-service templates:** `templates/{github-actions-aws.yaml,python-quality-gates-template.yml,typescript-quality-gates-template.yml}`
+      → checkout@v5, setup-python@v6, setup-node@v5, **`upload-artifact@v3`→v7 (v3 was ALREADY RETIRED by GitHub)** —
+      **DONE on LDR 2026-06-15 deployment-service@9b0f867**. ⚠️ `aws-creds@v4` (4 refs) **intentionally left for 3b**
+      (needs credential-resolution review).
+- [x] ✅ [SCRIPT] P3. Stragglers in live workflows: `actions/cache@v4`→v5 (PM `promotion-lag-monitor.yml`) — **DONE on
+      LDR 2026-06-15 PM@7356e1288**.
 
 #### 3b — version-bump + per-action changelog review + ONE test push (node24 target exists)
 
-- [ ] [SCRIPT] P2. `pnpm/action-setup` v2(node16)/v4→**v6** — UI: `ci.yml`, `orphan-audit.yml`, `ui-quality-gates.yml`,
-      `ui-quality-gates-v2.yml`. Review: pnpm version now resolves from `packageManager`/`version` input — verify it
-      resolves in CI. repo: unified-trading-system-ui. **UI → playwright/CI smoke required.**
-- [ ] [SCRIPT] P2. `aws-actions/configure-aws-credentials` v4→**v6** — PM `persist-cicd-event.yml` (+ deploy templates
-      in 3a). Review: v5/v6 changed credential-resolution defaults; our usage passes WIF/role → verify. repo: PM +
-      deployment-service.
-- [ ] [SCRIPT] P3. `stefanzweifel/git-auto-commit-action` v5→**v7** — UAC `schema-health.yml`, `schema-health-update.yml`
-      (it writes commits — confirm input compat). repo: unified-api-contracts.
-- [ ] [SCRIPT] P3. `peter-evans/repository-dispatch` v3→**v4** — SIT `smoke-test-gate.yml`. Low risk. repo:
-      system-integration-tests.
+> **RULE 11a result (all four, 2026-06-15):** diffed `action.yml` inputs across each version gap — **NONE removed an
+> input** (every new major is a superset), and our usage passes only retained inputs → cannot fail on a removed input.
 
-#### 3c — 🚫 BLOCKED upstream (no node24 release exists)
+- [x] ✅ [SCRIPT] P2. `pnpm/action-setup` v2(node16)/v4→**v6** — UI `ci.yml`, `orphan-audit.yml`, `ui-quality-gates.yml`,
+      `ui-quality-gates-v2.yml` — **DONE on LDR 2026-06-15 uts-ui@1a4b3f13**. The "version-now-optional/packageManager"
+      concern is MOOT — every usage passes `version:` explicitly (`"10"`/`9`), retained in v6. **SMOKED GREEN** on the
+      LDR→staging PR's `quality-gates-v2` (run 27550536538): ✓ Install pnpm (v6) ✓ Get pnpm store ✓ Cache pnpm store
+      ✓ Install dependencies. (CI-infra bump, not a UI behaviour change → pnpm-step green is the correct smoke, not a
+      playwright UI test.)
+- [x] ✅ [SCRIPT] P2. `aws-actions/configure-aws-credentials` v4→**v6** — PM `persist-cicd-event.yml` + deploy template
+      `github-actions-aws.yaml` (4 refs) — **DONE on LDR 2026-06-15 PM@c6e4fee5d + deployment-service@5ef7b39**. Our
+      usage passes static `aws-access-key-id`/`aws-secret-access-key`/`aws-region` (NOT WIF/OIDC) — unaffected by the
+      v5/v6 OIDC/proxy/profile additions; no inputs removed. Smokes at next `persist-cicd-event` run.
+- [x] ✅ [SCRIPT] P3. `stefanzweifel/git-auto-commit-action` v5→**v7** — UAC `schema-health.yml`,
+      `schema-health-update.yml` — **DONE on LDR 2026-06-15 unified-api-contracts@8d32915**. v7 only ADDS
+      `skip_push`/`tag_name`; standard usage unchanged. Smokes at next schema-health run.
+- [x] ✅ [SCRIPT] P3. `peter-evans/repository-dispatch` v3→**v4** — SIT `smoke-test-gate.yml` — **DONE on LDR 2026-06-15
+      system-integration-tests@85a4713**. Inputs identical v3↔v4 (token/repository/event-type/client-payload).
 
-- [ ] [SCRIPT] P3. **`dawidd6/action-download-artifact` — `BLOCKED-UPSTREAM` (no node24 release; v6–v12 all node20).**
-      1 live use: UAC `schema-health-update.yml`. Decision needed: (a) accept the warning + track until upstream ships
-      node24, OR (b) replace with official `actions/download-artifact@v7` IF that workflow only downloads **same-run**
-      artifacts (dawidd6 is used for cross-workflow/cross-run downloads the official action can't fully do — READ the
-      workflow before swapping). repo: unified-api-contracts.
+#### 3c — `dawidd6/action-download-artifact` — RESOLVED by RETIRING the workflow
+
+- [x] ✅ [SCRIPT] P3. **`dawidd6/action-download-artifact` (last node20 GHA ref, no node24 release — v6–v12 all node20) —
+      RESOLVED 2026-06-15 by RETIRING its only consumer, UAC `schema-health-update.yml`** (+ its orphaned helper
+      `scripts/read_schema_health_artifacts.py`). **DONE: unified-api-contracts@dcefe9c.** Not rewritten — retired,
+      because the workflow was **vestigial sprawl from the pre-consolidation design**:
+      - It was the **cross-repo aggregator** half of the schema-health system (added 2026-03-09), built when live API
+        recording + schema validation lived in the six **interface repos** (they held the API keys). It pulled each
+        repo's `{provider}_schema_health.json` verdict and merged it into `docs/schema_health.svg`.
+      - The architecture was later **consolidated into UAC**: the VCR cassettes now live in-repo
+        (`unified_api_contracts/external/<provider>/mocks/*.yaml`) and the **producer** workflow `schema-health.yml`
+        replays them locally + updates the SVG. The interface repos were **archived** (`.extra/`, 0 manifest hits).
+      - The aggregator was never updated → its two `dawidd6` steps reached into **archived** repos
+        (`unified-market-interface`, `unified-sports-execution-interface`) whose CI no longer produces artifacts; the
+        downloads returned nothing (`continue-on-error`/`if_no_artifact_found: warn` swallowed it). So it was a weekly
+        no-op duplicating what `schema-health.yml` already does locally.
+      - `read_schema_health_artifacts.py` was called **only** by this workflow (producer uses
+        `update_schema_health_svg.py` + `generate_schema_audit_matrix.py`) → deleted as orphaned code.
+      - Producer `schema-health.yml` is **untouched** (the live schema-health path). Composes with
+        `plans/active/issues/cicd_workflow_sprawl_audit_2026_06_10.md` (dead/duplicate workflow retirement).
+
+**Phase 3 = COMPLETE.** Every node20 GHA ref in the 25-repo live workspace is now node24 (3a + 3b) or retired (3c). Out
+of scope (flagged, not deprecation-impacting): `.extra/` archived repos + inert nested `features_service/*` workflows.
 
 #### Out of scope (flagged, NOT in this migration)
 

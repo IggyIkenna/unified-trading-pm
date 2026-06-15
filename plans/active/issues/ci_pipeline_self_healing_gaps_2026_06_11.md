@@ -348,6 +348,58 @@ reconciliation (BUILD-FIX P3) so the AWS-webhook gate can roll via clean IaC rat
 on the PR-head-build gate machinery landing + being proven green across a consumer repo and all branches (rule 11).
 Tracked above. The MTDS canary is green; the foundation (`quickmerge --build`) is fleet-live via the symlinked SSOT.
 
+## Gap 6 — `staging-backmerge-to-ldr.yml` silently absent on 4 repos → Tier-C runaway-promote loop (P1, incident 2026-06-15)
+
+**Symptom**: RUNAWAY PROMOTE BREAKER paged for `ml-service`, `agent-orchestrator`, `e2e-testing` (30 LDR→staging drain
+merges/6h). `unified-trading-api` (28/6h) + `unified-trading-system-ui` were about to trip; `greeks-service` (15/6h) was
+an early-warning.
+
+**Root cause**: Ikenna's 2026-06-08 fleet rollout of `staging-backmerge-to-ldr.yml` (PM template created 06-08
+`6a75ca7fb`; workflow first introduced 06-05 `613481d0b`) **silently skipped 8 of 24 repos** — `features-service`,
+`fund-administration-service`, `greeks-service`, `ml-service`, `e2e-testing`, `agent-orchestrator`,
+`unified-trading-api`, `unified-trading-system-ui`. All 8 were patched 2026-06-15 during this incident (5 by slot-4 at
+~19:02–19:04; 3 by the root session at ~19:32–19:35). semver version bumps + UTL
+dep-floor bumps + base-image digest refreshes land on `staging` (semver-agent / dependency fan-out), and
+`staging-backmerge-to-ldr.yml` is the ONLY mechanism that flows them back DOWN to LDR (`main-backmerge-to-ldr.yml` can't —
+the bump is on staging, not yet main). With it absent, LDR stayed behind staging on `version`/pin/digest → the Tier-C
+drain perpetually saw a real two-dot content delta → promoted LDR→staging → the promote tried to revert staging's newer
+version → semver re-bumped → **ping-pong, ~1 merge/tick** → runaway breaker. `agent-orchestrator` was the worst case: it
+gained a `staging` branch (no longer main-direct) but never received the template. The drift IS detected by
+`detect_template_drift.py` (`workflow-missing-<name>`) — but only as a **WARN** in a local-only post-gate (CI no-op), so
+nobody acted on it for weeks.
+
+**Fixed in real time 2026-06-15** (content-first convergence, LDR-is-SSOT remedy; two sessions in parallel — slot-4
+rolled the workflow to features/fund-admin/greeks/ml/e2e ~19:02–04, root session to ao/uta/ui ~19:32–35): backmerged
+`staging`→LDR on each diverged repo (conflict-free — LDR hadn't touched the diverging lines since the merge-base) +
+rolled out `staging-backmerge-to-ldr.yml`; then promoted the converged LDR→staging via a v2-gated PR (titled NOT
+`chore(promote)` to avoid re-inflating the breaker count) so staging gets the workflow + the 3 tripped repos go
+tree-equal → the drain skips them at the tree-equality gate BEFORE the runaway breaker → pages stop. `greeks-service`
+self-healed (it already had the workflow). Evidence: ao@dbcc2b0 + #303, e2e@760b546 + #286, ml #108, uta@23a20b3,
+ui@f2223d47.
+
+- [ ] [WORKFLOW] P1. Make a MISSING `staging-backmerge-to-ldr.yml` / `main-backmerge-to-ldr.yml` an **ERROR not a WARN**
+      in `scripts/quality_gates/detect_template_drift.py` for any repo that HAS a `staging` branch + is in the Tier-C
+      drain set (these two templates are promote-loop-critical; their absence is the documented runaway cause, not
+      cosmetic drift). Keep WARN for non-critical templates.
+- [ ] [WORKFLOW] P2. Add a fleet presence-audit to PM QG post-gates (or `ldr-to-staging-promote.yml` itself): for every
+      repo in `topologicalOrder` with a `staging` branch, assert `staging-backmerge-to-ldr.yml` exists on `staging` (not
+      just LDR — `on: push:[staging]` only fires from the pushed branch). Page if absent. This is the early-warning the
+      drift detector's local-only WARN failed to surface.
+- [ ] [WORKFLOW] P3. Consider teaching the Tier-C runaway breaker to self-diagnose: when it trips, check whether the
+      repo's `staging` lacks `staging-backmerge-to-ldr.yml` and name that in the page (turns a generic "promote loop"
+      alert into an actionable root cause).
+
+**Decision (2026-06-15, operator-confirmed) — do NOT add a `schedule`+`workflow_dispatch` drift-tick to
+`staging-backmerge-to-ldr.yml`.** It was tried (`49029aa44`) and reverted (`790e7fb51`) the same day. The reverted
+commit's premise ("`push:[staging]` NEVER fires — GITHUB_TOKEN suppression") is **empirically false**: the workflow
+fires constantly on `push` (unified-api-contracts 100 runs, instruments 52, execution 39 — all `push`), because the
+Tier-C drain merges to staging with a **GitHub App installation token**, and App-token pushes DO trigger workflows
+(only raw `GITHUB_TOKEN` pushes are suppressed). The ACTUAL incident cause was Layer A (8 repos missing the file), now
+fixed. A hourly cron × ~24 repos also adds Actions spend during the same billing-sensitive window that throttled
+`main-backmerge`'s tick. The P1/P2 presence-audit above is the correct guard (catches the real failure = a missing
+file), not the schedule tick. Re-introduce the tick ONLY on a concrete observed case of a raw-`GITHUB_TOKEN` staging
+push (e.g. a semver `chore(release)` bump) that failed to self-heal on the next drain cycle.
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first

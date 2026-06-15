@@ -810,3 +810,18 @@ PricingLedger (EventType.MARK_UPDATE, written by MTDS)
 - `fees` not deducted from realized P&L computation. _(still open)_
 - PassiveLedger synthesiser not yet implemented — carry factors computed ad-hoc per archetype. _(still open)_
 - Migration to join-from-ledger model tracked in `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md`.
+
+## Net-delta / exposure-netting SSOT (F45, 2026-06-15)
+
+Net-delta + exposure-netting is single-canonical in **UTL `unified_trading_library/risk/net_delta.py`**
+(top-level re-exported). Five pure-`Decimal` primitives: `net_underlying_delta` (LST collateral → underlying
+via exchange rate, minus debt), `residual_hedge_size` (hedge notional that drives net delta to a target;
+`floor_zero` for short-only), `net_signed_delta` / `net_signed_exposure` / `gross_exposure` (signed rollups).
+Both strategy-service (`position/core/risk_group_aggregator`, `risk/core/exposure_aggregator`) and
+execution-service (`defi_execution/helpers/perp_hedge_sizer`, `algo_library/leveraged_leg_controller`) import
+these — the canonical home is UTL, not strategy-service, because the no-service↔service-import HARD RULE forbids
+execution-service importing a strategy-service pipeline, and UTL is the only shared lib both depend on. **Distinct,
+deliberately NOT folded in** (read-both-sides diagnosis): margin-requirement netting (`risk/v2/margin_sim._netting_factor`),
+the float-domain output-schema rollup (`engine/core/output_builders._aggregate_exposure_totals` — Decimal routing
+would shift live `risk_metrics` parquet precision), options-greeks delta aggregation, and pre-trade limit checks.
+SSOT: `plans/active/engine_findings_remediation_2026_06_15.md` (F45).
