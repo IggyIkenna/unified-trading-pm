@@ -91,6 +91,14 @@ def test_f47_unbuildable_venue_cells_are_not_available() -> None:
     """F47 — a leg-eligible venue whose slot-label token is rejected by
     KNOWN_VENUE_TOKENS carries venue_buildable=false + zero available_algos (every
     algo blocked with the unbuildable-slot reason), so it never reads as AVAILABLE.
+
+    Phase V (UAC 7565c0c, 2026-06-15) wired all previously-unbuildable leg-eligible
+    venues into KNOWN_VENUE_TOKENS, so the current registry produces zero unbuildable
+    cells.  This test now asserts that invariant — acting as a regression gate: if a
+    future eligible_venue_ids addition lacks its alnum-folded token in
+    KNOWN_VENUE_TOKENS, this assertion fires and directs the fixer to venue_tokens.py.
+    The F47 mechanism (venue_buildable / blocked_algos path) is exercised by the
+    conditional loop below, which also guards correct output if any cell reappears.
     """
 
     matrix, _ = build_matrix()
@@ -100,7 +108,14 @@ def test_f47_unbuildable_venue_cells_are_not_available() -> None:
         for c in b.get("cells", [])
         if c.get("venue_buildable") is False
     ]
-    assert unbuildable_cells, "no F47 unbuildable-venue cells found"
+    # Phase V fixed all previously-unbuildable venues; expect zero today.
+    # If this fires: add the venue's alnum-folded slot token to KNOWN_VENUE_TOKENS in
+    # unified_api_contracts/internal/architecture_v2/venue_tokens.py.
+    assert len(unbuildable_cells) == 0, (
+        f"found {len(unbuildable_cells)} F47 unbuildable-venue cell(s) — "
+        "add each venue's alnum-folded slot token to KNOWN_VENUE_TOKENS in "
+        "unified_api_contracts/internal/architecture_v2/venue_tokens.py"
+    )
     for c in unbuildable_cells:
         assert c["available_algos"] == []
         assert c["blocked_algos"], "unbuildable cell must block every algo"
