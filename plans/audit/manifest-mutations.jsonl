@@ -102,3 +102,4 @@
 {"timestamp": "2026-06-15T13:02:52Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "fund-administration-service=0.3.3 (branch=staging, bump=patch)", "commit_sha": "449d1a4009e1ed1b17859e6823eca345be836771"}
 {"timestamp": "2026-06-15T13:34:26Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.5.1 (branch=staging, bump=patch)", "commit_sha": "416bc22df7938c960b462774a95dc4973a36fe50"}
 {"timestamp": "2026-06-15T13:37:05Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.9.0 (branch=staging, bump=minor)", "commit_sha": "de2b402dbb1cb1568c9e1fb9adf9bb9cfa0fae28"}
+{"timestamp": "2026-06-15T14:11:40Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "strategy-service=0.6.0 (branch=staging, bump=minor)", "commit_sha": "1bae0df7bf6d7e6c7c3d5665e244ac418dc29bc9"}
