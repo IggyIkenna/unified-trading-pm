@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.7.0",
     "unified-trading-library": "0.10.0",
-    "unified-trading-pm": "1.2.106",
+    "unified-trading-pm": "1.2.110",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.10.0",
@@ -870,7 +870,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1134,7 +1134,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1786,20 +1786,25 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
-    "e2e-testing": "0.5.0"
+    "e2e-testing": "0.6.0",
+    "strategy-service": "0.7.0",
+    "system-integration-tests": "0.5.0",
+    "greeks-service": "0.5.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-15T17:31:17.900296Z",
+    "locked_reason": "Breaking MINOR bump cascade: system-integration-tests=0.5.0 (pre-1.0.0)",
+    "lock_version": "0.5.0",
     "pending_repos": [],
     "sit_retry_count": 3,
-    "locked_alert_sent": false,
+    "locked_alert_sent": true,
     "breaking_pending": [
       "e2e-testing",
-      "execution-service"
+      "execution-service",
+      "strategy-service",
+      "system-integration-tests"
     ]
   },
   "staging_commits": {
@@ -1810,8 +1815,23 @@
       "branch": "staging"
     },
     "e2e-testing": {
+      "version": "0.6.0",
+      "sha": "aeb561fa9f5204fe5de89a4b949cbc18939c01a7",
+      "branch": "staging"
+    },
+    "strategy-service": {
+      "version": "0.7.0",
+      "sha": "e2a66b9188f4adfe378892e9f8a394bf5195942f",
+      "branch": "staging"
+    },
+    "system-integration-tests": {
       "version": "0.5.0",
-      "sha": "d8bb31e75b0d4573523c5daeef57b5f463111262",
+      "sha": "26722e169fd317f8a3c50edb7621a0e9ddecf54c",
+      "branch": "staging"
+    },
+    "greeks-service": {
+      "version": "0.5.0",
+      "sha": "97e737578ede7482b634454c72535a864efae27d",
       "branch": "staging"
     }
   },
@@ -1942,7 +1962,14 @@
     ]
   },
   "promotion_failures": {
-    "execution-service": 2
+    "execution-service": 3,
+    "strategy-service": 1
   },
-  "promotion_quarantine": {}
+  "promotion_quarantine": {
+    "execution-service": {
+      "since": "2026-06-15T17:29:49.846182Z",
+      "attempts": 3,
+      "escalated": true
+    }
+  }
 }
