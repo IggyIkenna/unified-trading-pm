@@ -3157,7 +3157,7 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
-- [ ] **[PROGRESS 2026-06-12 — 6/7 now have the `require-quality-gates` ruleset (unified-trading-api, ml-service, fund-administration, features, greeks, e2e); ONLY `unified-trading-system-ui` still has NO ruleset (`[]`). Do NOT flip until uts-ui is covered.]** [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2: 3/7 CLEANLY DONE — unified-trading-api id17135955, ml-service
+- [x] ✅ **[DONE 2026-06-15 (slot-3) — 7/7 COMPLETE. uts-ui (the last) now has ruleset `require-quality-gates` id17674927 (target `~DEFAULT_BRANCH`, context `Quality Gates (unified-trading-system-ui) / quality-gates-v2`, bypass_actors:[]); classic protection requires the SAME context → ruleset+classic agree; latest main run dc5152942 SUCCESS → no deadlock. Note: the workflow was already built+wired+green since 2026-06-02 (ui-quality-gates-v2.yml + caller); only the ruleset was missing.]** **[PROGRESS 2026-06-12 — 6/7 had the `require-quality-gates` ruleset (unified-trading-api, ml-service, fund-administration, features, greeks, e2e); ONLY `unified-trading-system-ui` still had NO ruleset (`[]`).]** [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2: 3/7 CLEANLY DONE — unified-trading-api id17135955, ml-service
       id17136124, **fund-administration-service id17169244 ADDED this session** (main green @1c2c94f8, ~DEFAULT_BRANCH,
       bypass_actors:[]). features-service has ruleset id17136160 but main gate RED. **greeks-service ALREADY has
       `require-quality-gates-main` gating `refs/heads/main`, BUT its DEFAULT branch is `live-defi-rollout` and v2 only
@@ -3205,15 +3205,15 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
       dep_repos=`execution-service market-tick-data-service strategy-service unified-api-contracts           unified-trading-library`).
       v2 now fails **Lint: 14 ruff errors** (~10×C901 complexity + SIM117/RUF100/etc — run 26782575912). Fix real (ruff
       --fix the safe ones; C901 on test/tooling funcs → targeted `# noqa: C901` / per-file-ignore per the QG-debt
-      standard — NOT blanket suppression). Green main → add ruleset. repo: e2e-testing. - [ ] [UI] P1.
-      **unified-trading-system-ui ruleset — BLOCKED on missing UI gate.** uts-ui has NO quality-gates workflow at all
-      (only `uic-openapi-sync.yml`); its main classic-protection already requires a bare `quality-gates-v2` context
-      nothing emits (admins bypass). It is TS/Vite → roll out the UI gate (`ui-quality-gates.yml` reusable + a caller
-      job `name: Quality Gates (unified-trading-system-ui)` emitting `…/quality-gates`), model EXACTLY on deployment-ui
-      (regenerate `package-lock.json` if `npm ci` EUSAGE, per deployment-ui PR #11); green on main → ruleset on the UI
-      context `Quality Gates (unified-trading-system-ui) / quality-gates` (NOT python-v2). `[UI]` + `pw:L2` gate
-      applies. repo: unified-trading-system-ui. Record the `agent-orchestrator` exemption + the ruleset additions in
-      `feature-branch-workflow.md` (done this pass). — repo: unified-trading-pm (rulesets) + per-repo workflow.
+      standard — NOT blanket suppression). Green main → add ruleset. repo: e2e-testing. - [x] ✅ [UI] P1.
+      **unified-trading-system-ui ruleset — DONE 2026-06-15 (slot-3).** The "no quality-gates workflow" premise went
+      stale: as of 2026-06-02 uts-ui already has `ui-quality-gates-v2.yml` (pnpm + GCP-SA→Secret-Manager→GH_PAT) +
+      caller `quality-gates-v2.yml` (job `name: Quality Gates (unified-trading-system-ui)`, inner id `quality-gates-v2`)
+      emitting `Quality Gates (unified-trading-system-ui) / quality-gates-v2` — modeled on deployment-ui PR #11, GREEN on
+      both main + LDR. Added the missing ruleset `require-quality-gates` id17674927 (target `~DEFAULT_BRANCH`,
+      bypass_actors:[], context = the v2 context above); classic protection already required the SAME context → both
+      agree; latest main run dc5152942 SUCCESS → no deadlock. Note context is `…/quality-gates-v2` (not the older
+      `…/quality-gates` this line predicted). repo: unified-trading-system-ui + unified-trading-pm (ruleset).
 
 **Do not duplicate**: the v1→v2 migration itself is owned by `ci_canonical_v2_migration_2026_05_29.md` (which has
 mark-drift — `batch-live` + `deployment-ui` marked ✅ but live-v1). This plan only adds the ruleset-mechanism framing +
