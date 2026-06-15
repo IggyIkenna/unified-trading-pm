@@ -116,7 +116,16 @@ Each: confirm the feed exists; if yes build real + backtest + tests + register +
 surface, greeks, option chains from Deribit/options venues) exists; if yes build real + backtest + tests + register +
 matrix-flip; if no, honest `not_available` + a single shared blocker todo for the missing options feed.
 
-- [ ] [SCRIPT] P2. **VOL_STRADDLE** — real or honest-absent. Repo: strategy-service.
+- [ ] [SCRIPT] P2. **VOL_STRADDLE** — real engine SHIPPED (template wave).
+  - code: strategy-service@62bc95af, unit-tested; **BACKTEST-PENDING** (needs Tardis historical per-strike surface).
+    `VolStraddleEngine` (`engine/strategies/v2/vol_trading/straddle.py`): trades ATM-vol level — long straddle (BUY ATM
+    call+put) when `iv_atm` cheap vs a realised-vol/term reference, short (SELL both) when rich; size = vega budget,
+    scaled down by `max_position_vega`; legs = the two ATM option legs (delta-neutral at inception). Leg-derivation unit
+    tests pin long-vs-short side + ATM selection + vega cap. **NOT registered** in `ARCHETYPE_ENGINE_REGISTRY` + verdict
+    matrix UNCHANGED (no passing backtest → registering would make the matrix lie). **DVOL-vs-Tardis**: surface-dependent
+    only at the per-strike level — straddle itself is ATM-only, but its backtest still needs the historical ATM-IV vs
+    realised series; Deribit DVOL gives the implied index (ATM-proxy) credential-free but NOT the exact per-strike ATM
+    option marks → Tardis preferred for a faithful backtest. No backfill run (operator constraint).
 - [ ] [SCRIPT] P2. **VOL_VARIANCE_SWAP** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_DISPERSION** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_ARB** — real or honest-absent. Repo: strategy-service.
