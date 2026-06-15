@@ -559,14 +559,22 @@ trigger (genesis clip + new fields go live in prod; preserves beta env + 8Gi). T
 ignores the new fields and shows the genesis-clipped `completion_pct_dates` — so FIX #1 is visible in prod
 immediately; FIX #2's labelled split appears once the UI ships.
 
-- [ ] [UI] P1. **Ship the R7 Data Coverage headline relabel from a clean env.** Change is preserved on
-      `deployment-ui` branch `wip-preserve/r7-coverage-labels-ui` (tsc-clean; 3 files: DataStatusTab.tsx,
-      api/client.ts, tests/unit/data-coverage-headline.test.tsx). **Blocked on THIS host only:** local vitest/
-      playwright cannot run — `npm ci` then vitest dies with `Cannot find native binding @rolldown/binding-linux-x64-gnu`
-      (npm optional-deps bug npm#4828; the suggested rm-lock+node_modules fix would rewrite the committed lock,
-      declined). pw:L2 is a HARD-RULE gate for UI changes → ship via a UI-capable slot whose `npm ci` is healthy:
-      cherry-pick/quickmerge from the wip-preserve branch, run QG + pw:L2, promote. assigned_vm: a UI-capable slot.
-      parent_epic: instruments_master. Provenance: R7 (2026-06-14).
+- [x] ✅ [UI] P1. **Ship the R7 Data Coverage headline relabel.** SHIPPED — deployment-ui@65d4e45 | pw:L2 ✓
+      (210 smoke passed) | vitest 851 passed + regression: tests/unit/data-coverage-headline.test.tsx (pure
+      `coverageHeadline()` contract asserting captured/attempted labels + fallback) | tsc clean. The TURBO "Data
+      Coverage" headline now leads with `overall_capture_coverage_pct` labelled "captured" + a conditional
+      "attempted" line for `overall_attempt_coverage_pct`, falling back to `overall_completion_pct` when absent.
+      **Local env unblock (root cause was NOT npm#4828):** (1) npm's optional-deps bug never placed the rolldown
+      native binding — fetched `@rolldown/binding-linux-x64-gnu@1.0.3` via `npm pack` and dropped
+      `rolldown-binding.linux-x64-gnu.node` into `node_modules/rolldown/dist/`; (2) the real blocker was the **Node
+      version** — local was v20.18 where `require()` of an ESM module (`@exodus/bytes`→`html-encoding-sniffer`,
+      a jsdom dep) throws `ERR_REQUIRE_ESM`; CI uses Node 22 (quality-gates-v2.yml:41) where require(esm) is
+      unflagged. Installed Node 22.12 locally → full jsdom suite green. NOTE: a deep-render smoke guard for the
+      TURBO card was attempted but the card needs a multi-step interactive fetch the mock harness can't reliably
+      drive (the existing passing coverage-labels smoke asserts the always-rendered HonestCoverageCard) — the
+      vitest contract test is the logic-level regression guard; pw:L2 (210) confirms no UI regression. Reaches
+      prod with the deployment-api redeploy (dashboard is built into the deployment-api image). Provenance: R7
+      (2026-06-14 → shipped 2026-06-15).
 
 ### R7 follow-up — prod `/api/data-status` full-CLI path 500s in-container (2026-06-15)
 
