@@ -313,13 +313,22 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # typecheck count inflated vs CI's in-image env (which has these installed). This is the PM
     # local↔CI parity gap: PM declares no UTL/UAC project dep, so this loop is its ONLY install path.
     # SSOT: plans/active/ci_local_qg_parity_2026_06_08.md.
+    # Install into THIS repo's .venv EXPLICITLY via `--python .venv/bin/python`. `source
+    # .venv/bin/activate` (above) does NOT reliably retarget `uv pip install`: on a host with a
+    # pyenv/global interpreter, uv resolved to the GLOBAL env (~/.pyenv/versions/<v>), so the editable
+    # LOCAL_DEPS landed there — NOT in .venv. basedpyright (venv=".venv") then saw the workspace libs
+    # UNRESOLVED → an Unknown-type CASCADE inflating the LOCAL typecheck count vs CI's in-image env
+    # (concrete: PM 1627 local vs ~1344 CI; resolving UTL in .venv drops it to 1513 ≤ ceiling → GREEN).
+    # The third local↔CI parity root cause; SSOT: plans/active/ci_local_qg_parity_2026_06_08.md.
+    _venv_py=".venv/bin/python"; [ -x "$_venv_py" ] || _venv_py="python3"
     _ws_root="${WORKSPACE_ROOT:-$(cd "${REPO_ROOT:-.}/.." && pwd)}"
     for lib in "${LOCAL_DEPS[@]}"; do
         for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
-            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --quiet 2>/dev/null || :; break; }
+            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --python "$_venv_py" --quiet \
+                || log_warn "editable install failed for $lib — local typecheck may inflate via Unknown-type cascade"; break; }
         done
     done
-    uv pip install -e . --quiet 2>/dev/null || :
+    uv pip install -e . --python "$_venv_py" --quiet 2>/dev/null || :
 fi
 PYTHON_CMD=".venv/bin/python"; [ ! -f "$PYTHON_CMD" ] && PYTHON_CMD="python3"
 

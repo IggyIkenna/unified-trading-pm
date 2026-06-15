@@ -222,6 +222,62 @@ single-core pinned), output under gitignored `.qg_profile/`.
 - [ ] [AUDIT] P1. Typecheck numbers are **warm-cache** (~11 s); report BOTH cold (clear `BASEDPYRIGHT_CACHE_DIR`) and
       warm in the sweep so basedpyright isn't under-counted.
 
+## Current-state config audit REFRESH (2026-06-15) — supersedes stale numbers in `qg_config_ssot_matrix_2026_06_09.md`
+
+> Re-swept ALL 25 repos with a deterministic extractor (tomllib parse of every `pyproject.toml` + stub var/array parse +
+> standalone-config-file detection). The 2026-06-10 matrix is **stale on coverage** (predates the mtds 28→79 +
+> instruments 77→88 ratchets) and **entirely missed four standalone config files** that silently shadow toml. Reproduce:
+> `scripts/quality_gates/qg_config_audit.py` (committed alongside this refresh). **Re-read live at execution time — these
+> values ratchet weekly.**
+
+### Finding #1 — COVERAGE drift refreshed: **6 live drifts** (the old matrix documented 5, and 2 of its numbers are now wrong)
+
+`--cov-fail-under=$MIN_COVERAGE` (stub) always SHADOWS `[tool.coverage.report] fail_under` (toml), so "stub" is the effective gate.
+
+| Repo                             | stub | toml | branch | Verdict                                                  |
+| -------------------------------- | ---- | ---- | ------ | -------------------------------------------------------- |
+| alerting-service                 | 76   | 78   | true   | **DRIFT** toml stricter (shadowed)                       |
+| market-data-processing-service   | 70   | 85   | true   | **DRIFT** toml stricter (shadowed) — **gap WIDENED** (was 70/77) |
+| market-tick-data-service         | 79   | 79.7 | true   | **DRIFT** (tiny) — was **28/71**, now essentially reconciled |
+| system-integration-tests         | 2    | 0    | true   | **DRIFT** stub stricter (flip→toml LOOSENS)              |
+| unified-trading-api              | 77   | 70   | true   | **DRIFT** stub stricter (flip→toml LOOSENS)              |
+| unified-trading-pm               | 69   | 70   | true   | **DRIFT** toml stricter (shadowed) — **NEW, old matrix missed** |
+| instruments-service              | 88   | 88   | true   | agree — was 77/77 (ratcheted)                            |
+| _all others_                     | =    | =    | —      | agree (floor 70 / repo-specific: batch 80, ibkr 51, strategy 74, UAC 94, UTL 80, e2e 0) |
+
+**Changes vs 2026-06-10 matrix**: mtds 28/71→79/79.7 (the template "28-vs-71" case is now reconciled to a 0.7 rounding gap); instruments 77/77→88/88; mdps drift widened 70/77→70/85; **unified-trading-pm 69/70 is a NEW drift**. Phase-1 reconciliation rule unchanged: settle each drift to ONE honest value BEFORE dropping the flag (flipping uta/SIT to toml as-is **silently loosens**).
+
+### Finding #2 — **FOUR standalone config files silently shadow toml** (NEW — not in old matrix; ACT NOW)
+
+Base runs each tool from the repo root with no explicit `-p`/`--config`, so each tool auto-discovers its standalone file IN PREFERENCE to the `[tool.*]` table in `pyproject.toml`:
+
+| Repo                          | File                 | Effect                                                                                                   |
+| ----------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------- |
+| greeks-service                | `pyrightconfig.json` | **WINS over `[tool.basedpyright]`** + sets ~25 `report*="none"` → escaped workspace strict typing (**26 errors** under strict) |
+| fund-administration-service   | `pyrightconfig.json` | same mechanism → escaped strict typing (**14 errors** under strict)                                       |
+| instruments-service           | `pytest.ini`         | WINS over `[tool.pytest.ini_options]`; carries `asyncio_mode=auto` + `-p no:network-block` + `python_classes/functions` |
+| unified-trading-library       | `.bandit`            | **DEAD** — B608 already suppressed by inline `# nosec B608` (bandit not passed `-c`/`--ini`); plus a 2nd dead `[tool.bandit]` |
+
+- **instruments `pytest.ini` + UTL `.bandit`** = safe behavior-preserving consolidations (merge into toml / delete dead file).
+- **greeks + fund-admin `pyrightconfig.json`** = NOT a free relocation: deleting the json re-enables the strict `[tool.basedpyright]` already present → 26 + 14 type errors surface. This is a workspace strict-typing **standards escape** (CLAUDE.md mandates `reportAny`/`reportUnknownMemberType`/`reportUnknownVariableType = error`). Resolution = flip-to-strict (fix ~40 errors) vs relocate-lax-into-toml + ratchet todo — decided below.
+
+### Finding #3 — `[tool.ruff]` is NOT uniform fleet-wide (DEFERRED — unify opportunistically, do not force)
+
+`select` diverges (`E,F,W,I,N,UP,B,C4,SIM` baseline, but mdps/ml/UTL/trading-agent/greeks drop `UP` & add `G,C90`; batch-live-recon drops `N,C4`; execution uses bespoke `N802,B008`); `per-file-ignores` ranges 1→67 (UAC); `ignore` 1→26 (strategy). Some divergence is legitimate per-repo need. Unifying is real work + would change lint behaviour fleet-wide (and trips the DTZ/TID251 conflict-guard) → **opportunistic, not forced** (operator 2026-06-15).
+
+### Finding #4 — TIER-B orchestration spread (DEFERRED to the `[tool.quality-gates]` design below)
+
+`MAX_DURATION` 300→4800 (execution); `CODEX_MAX_VIOLATIONS` 0→6 (active ratchets); `PYTEST_UNIT_DIR` per-family; per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quality-gates]` candidates. **Later** (operator 2026-06-15).
+
+### Phase-1 todos from this refresh (finding #2 — act now)
+
+- [x] ✅ [REFACTOR] P0. **instruments-service**: merged `pytest.ini` (`asyncio_mode=auto`, `addopts=-p no:network-block`, `python_classes`/`python_functions`, `asyncio` marker) into `[tool.pytest.ini_options]`; deleted `pytest.ini`. Behavior-preserving (3549 tests still collect). — instruments-service@f7934aa | QG ✅ (84s).
+- [x] ✅ [REFACTOR] P0. **unified-trading-library**: deleted the DEAD `.bandit` (B608 already handled by inline `# nosec` — bandit runs without `-c`/`--ini` so `.bandit` was never read); `[tool.bandit]` is the single home. — unified-trading-library@e469808 | QG ✅ (123s).
+- [x] ✅ [REFACTOR] P0. **greeks-service + fund-administration-service**: eliminated `pyrightconfig.json` → config in `[tool.basedpyright]`. **Discovery**: the json was dodging STEP 5.21 (`reportAny`/`reportUnknown*` must be `error`/omitted in toml), so relocate-lax is impossible for that family. **greeks** → clean strict config (suppressions dropped, NOT masked); 70 residual basedpyright errors now WARN-ONLY (no ceiling) — greeks-service@5b88041. **fund-admin** → `reportImplicitRelativeImport`/`reportMissingImports`=none relocated (allowed by 5.21), unknown-type rules stay strict, 14 warn-only — fund-administration-service@2ad889e. Both QG ✅. Operator decision: consolidate now, fix later.
+- [ ] [TYPE] P1. **greeks (70 warn-only) + fund-admin (14 warn-only) strict-typing ratchet**: close the residual basedpyright errors, remove the relocated `report*="none"` suppressions (fund-admin), then set `BASEDPYRIGHT_MAX_ERRORS=0` in each repo's `scripts/quality-gates.sh` to enforce the ceiling (currently unset → errors are warn-only). Brings both repos to the workspace strict standard. Provenance: 2026-06-15 audit. Repo: greeks-service, fund-administration-service. **PARTIAL** — fund-admin DONE: converted 14 `reportUnusedFunction` FastAPI decorator handlers to `app.add_api_route()` explicit registration (0 basedpyright errors), removed `reportImplicitRelativeImport`/`reportMissingImports`="none" suppressions, `BASEDPYRIGHT_MAX_ERRORS=0` set in QG — fund-administration-service@9f3fc44 | QG ✅. greeks-service (70 errors) still in progress (separate agent).
+
+---
+
 ## Phase 1 — CONFIG SSOT: one home (toml), no shadowing
 
 > Conclusion to validate with Phase 0 data: **toml is the single home for both tiers** — TIER-A via the tools' own
