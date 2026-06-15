@@ -683,12 +683,27 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
       **STILL crashes ~100s, exit 1**. So the native crash is **threading-INDEPENDENT** — it's in the per-asset-group
       compute itself (a pyarrow/pandas/grpc operation in `_build_manifest_category`), not the `ThreadPoolExecutor`.
       (Correct the diagnosis line above accordingly: not "multi-threaded C path" — the C crash reproduces serially.)
-      Remaining: (b) run the rollup on a **GCE VM** (real kernel, no gVisor) — NOTE this conflicts with the
-      "manifest/rollup runtime = Cloud Run Jobs, the GCE launcher was DELETED 2026-05-20" decision, so needs an
-      operator call; (c) capture a gVisor core dump / `runsc` debug to name the crashing `.so` + then pin/patch or
-      avoid that op; (d) finer in-cloud bisection — run the per-AG compute one asset_group at a time (the worker can
-      pass a single `asset_groups=[ag]`) to localize WHICH AG / data_type / read triggers the native fault, since the
-      crash is ~100s in (not the initial index load). Start with (d) — cheapest now that serial is ruled out.
+      (d) **per-AG bisection — DONE 2026-06-15 (feat image `bb56de4`, `--asset-groups` override):** ALL FIVE asset
+      groups crash individually (prediction/sports/tradfi/cefi/defi each → exit 1, ~80s in). So the crash is **NOT
+      AG-specific**. Crucially, prediction is a 493-row / <5s compute yet still ran ~80s before crashing — and the
+      **SERVICE computes the same prediction single-AG fine** (returned 94.77% live, pre-rollup), as does a **LOCAL**
+      run of the full instruments-service rollup. **→ The real variable is the Cloud Run JOB runtime vs the SERVICE
+      runtime** (both gVisor): identical `_get_manifest_status_sync` code natively crashes in the JOB but works in the
+      SERVICE and locally. Suspects for the JOB-vs-SERVICE delta: (i) the JOB runs the compute SYNC in the main thread
+      at module scope, the SERVICE runs it via `asyncio.to_thread` in an async handler; (ii) the JOB's
+      `setup_events`/`GcsEventSink`/`run_lifecycle` (grpc/pubsub init) before the compute; (iii) Cloud Run Job
+      execution-environment / generation differences. **NEXT (revised):**
+      - (e) **Compute the rollup in the SERVICE, not the JOB** — the service env demonstrably works. The all-AG live
+        compute exceeds the HTTP request timeout (the original 503), so add an INTERNAL background task / endpoint
+        (`POST /internal/rollup`, returns 202, runs `_build_one_service_rollup` off the request path with no timeout)
+        that the Cloud Scheduler hits instead of executing the Cloud Run Job. Sidesteps the job-runtime crash entirely
+        + stays on Cloud Run (no GCE-launcher conflict). **Most promising.**
+      - (f) Test the SYNC-vs-ASYNC hypothesis cheaply: have the worker call the compute via `asyncio.run(asyncio.to_thread(...))`
+        (mirror the service's threading) instead of a direct sync call, rebuild, re-test the job. If it survives, (e)
+        is confirmed as the mechanism + may even fix the job directly.
+      - (g) Test the `setup_events` hypothesis: skip `setup_events`/`run_lifecycle` in the job, re-test.
+      (b) GCE VM and (c) core dump remain as fallbacks. Start with (f)/(g) (cheap, one rebuild each) to confirm the
+      mechanism, then (e) for the durable fix.
       **WORKAROUND IN PLACE (operator's beta view works durably):** the job runs in LIVE mode; the beta rollup is
       written on demand by running the worker LOCALLY
       (`DATA_STATUS_BETA_MANIFEST_BLOB=… DEPLOYMENT_ENV=prod python -m deployment_api.scripts.data_status_rollup_worker --project central-element-323112 --bucket central-element-323112-data-status-rollups`),
