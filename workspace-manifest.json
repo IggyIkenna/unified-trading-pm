@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.9.0",
     "unified-trading-library": "0.10.0",
-    "unified-trading-pm": "1.2.116",
+    "unified-trading-pm": "1.2.117",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.10.0",
@@ -1790,7 +1790,8 @@
     "strategy-service": "0.7.0",
     "system-integration-tests": "0.5.0",
     "unified-api-contracts": "0.10.0",
-    "features-service": "0.4.0"
+    "features-service": "0.4.0",
+    "deployment-api": "0.11.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1838,6 +1839,11 @@
     "features-service": {
       "version": "0.4.0",
       "sha": "a64602e613f83dc886e6204a89ce99523dd7bcb2",
+      "branch": "staging"
+    },
+    "deployment-api": {
+      "version": "0.11.0",
+      "sha": "cb442ba4226a849f4f3c5da51a50cbffd1e42ae3",
       "branch": "staging"
     }
   },
