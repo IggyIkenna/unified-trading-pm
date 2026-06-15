@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.7.0",
     "unified-trading-library": "0.6.0",
-    "unified-trading-pm": "1.2.97",
+    "unified-trading-pm": "1.2.98",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.9.0",
@@ -1785,18 +1785,20 @@
     "deployment-ui": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
-    "execution-service": "0.10.0"
+    "execution-service": "0.10.0",
+    "e2e-testing": "0.4.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-15T11:48:02.363687Z",
-    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.10.0 (pre-1.0.0)",
-    "lock_version": "0.10.0",
+    "locked_since": "2026-06-15T11:49:13.644906Z",
+    "locked_reason": "Breaking MINOR bump cascade: e2e-testing=0.4.0 (pre-1.0.0)",
+    "lock_version": "0.4.0",
     "pending_repos": [],
     "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
+      "e2e-testing",
       "execution-service"
     ]
   },
@@ -1805,6 +1807,11 @@
     "execution-service": {
       "version": "0.10.0",
       "sha": "7bc2284bad05232787af049c762f42b8b5f6be40",
+      "branch": "staging"
+    },
+    "e2e-testing": {
+      "version": "0.4.0",
+      "sha": "8390f8310482e5e5563eeecec716d588bbb07498",
       "branch": "staging"
     }
   },
