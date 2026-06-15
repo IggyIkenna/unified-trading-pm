@@ -71,6 +71,20 @@ from** the breaking-cascade panel and clearly labelled so the two are never conf
       `Each PR card carries an EXPLICIT     quality-gates-v2 state chip`). Backend `repo_ci.py` `drain_stalled` keys the
       stall on the repo's own blocking standing PR (the bug-#11 stuck-drain signal); a finer "drain-RUN stale/failing"
       axis can refine it later if needed.
+- [x] ✅ [CODE][UI] P2. **Blocking required-check + reason on stuck PRs** (operator escalation 2026-06-15: two
+      LDR→staging drain PRs sat stuck for days on a failing AWS-CodeBuild required check, but the Stuck-triage queue
+      showed only a bare "Draining" chip with no reason — the operator had to escalate to find out it was the CodeBuild
+      PR-approval gate). The Stuck panel now renders the actual non-success required check(s) + GitHub's reason string
+      per PR (e.g. "✗ AWS CodeBuild ap-northeast-1 (deployment-service) — Pull request approval required for starting a
+      build"). Root cause of the blind spot: `head_check_rollup` only reads Actions WORKFLOW runs, so a required check
+      posted as a classic STATUS CONTEXT (AWS CodeBuild / any external CI) was invisible. — deployment-api@1a85dd71 (new
+      `head_blocking_status_contexts` reads `/commits/{sha}/status` — Statuses:read, granted to the GH_PAT — +
+      `blocking_checks: list[BlockingCheckDict]` on `RepoPrDict`, populated in `_repo_open_prs` + mock; route test
+      `test_blocking_checks_surface_the_codebuild_reason`) + deployment-ui (RepoCi `StuckPanel` renders
+      `stuck-pr-blocker-<repo>-<n>` lines; `RepoCiBlockingCheck` type + mock). | pw:L2 ✓ (207 smoke passed) |
+      regression: tests/smoke/repos-tab.spec.ts (`a stuck PR shows the BLOCKING required check + reason`). Drive-by:
+      fixed 2 pre-existing stale `GCSStorageClient` patch targets (factory → providers.gcp) broken by UTL's lazy-import
+      refactor. Repo: deployment-api + deployment-ui.
 
 **Parent epic**: `observability_master` (this is the monitoring control-plane surface). Wrapper into
 `monitoring_control_plane_master_2026_06_10.md` smart-extras if picked up as a sub-plan, or execute directly from this
