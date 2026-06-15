@@ -63,7 +63,7 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
 
 ## Phase B — strategy-service engine (freeze LIFTED) — CeFi margin traceability + netting + F27/F16
 
-- [ ] [SPEC] P0. **Margin cluster — make CeFi margin TRACEABLE end-to-end** (operator's original "can we trace where our
+- [x] ✅ [SPEC] P0. **Margin cluster — make CeFi margin TRACEABLE end-to-end** (operator's original "can we trace where our
       margin sits?"). Three coupled fixes in strategy-service `position/`:
       (a) `core/margin_event_emitter.py` — drop the hardcoded `venue_type="defi"`; emit `MarginEvent` for CeFi perp
       venues (HL/Bybit/OKX/Binance) off live per-venue balances, classified by real venue_type.
@@ -73,6 +73,19 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       client/venue, reading the haircut-adjusted posted-collateral from the F28-canonical collateral SSOT
       (`collateral_usd`), resolving the F28 dual-SSOT risk on the consumer side too.
       Emit against the existing UAC surface (`transfer_purpose` + `COLLATERAL_POSTED`/`MARGIN_RELEASED`, already shipped).
+      — DONE **UTL@1b215ea9 + strategy-service@b9b26433** (2026-06-15). (a) `emit_margin_event_for_cefi(*, client_id,
+      strategy_id, venue, margin_model, portfolio, position_type="PERP")` computes via the UTL CeFi model, maps
+      `severity_breach`→`MarginEventSeverity` (none→INFO skip / warning→WARNING / critical→CRITICAL /
+      severe+liquidation→LIQUIDATION), emits a `venue_type="cefi"` snapshot — usage% lands in the schema's
+      `margin_usage_pct` field (NOT `health_factor`, a DeFi-only concept), shared `_publish_margin_event` for both paths.
+      (b) `CefiVenueBalanceReader` builds `PortfolioInputs` from the LIVE in-service `AccountQueryClient` (UPI-backed — no
+      execution-service import; service-dep ban holds): open positions → collateral_positions (mark = entry +
+      upnl/qty), used margin → USD debt leg; + `CEFI_PERP_VENUES` / `cefi_margin_model_for_venue`. (c) `margin_health`
+      returns real per-venue `MarginHealthSnapshot[]` (model usage% + F28 `get_collateral_haircut` haircut-adjusted
+      wallet collateral_usd), summary aggregates avg_margin_usage_pct/max_ltv; GCS time-series is the documented Phase-2
+      next step. UTL prereq: `get_margin_model`/`PortfolioInputs`/`compute_health` re-exported at UTL top level (import
+      gate wants top-level UTL imports). Tests: 31 (severity map, cefi snapshot, publish-swallow, reader live path,
+      margin_health real return, no-position skip). QG green both repos (UTL 120s, strategy-service 135s).
 - [ ] [SPEC] P1. **F45 — exposure-normalization / net-delta pipeline, OWNED by strategy-service.** Consolidate the
       scattered primitives (UAC `risk.py`, UTL `risk/`, execution-service leg controllers / `perp_hedge_sizer`) into ONE
       canonical netting pipeline in strategy-service that nets LST→underlying delta + multi-leg inter-leg delta into a
@@ -114,3 +127,18 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
 - 2026-06-15 — Plan authored from the operator's remediation go-ahead (freeze lifted / netting→strategy-service / F28
   conservative-research-with-approval / single-canonical-delete-duplicate). Phase A dispatched (F28 research + F47/F48
   surface, parallel); Phase B (strategy-service margin core) pre-audit started.
+- 2026-06-15 — **Phase B margin cluster (P0) SHIPPED end-to-end.** UTL@1b215ea9 (top-level re-export of
+  `get_margin_model`/`PortfolioInputs`/`compute_health` — the import-gate prereq; UTL shipped first per dep order) →
+  strategy-service@b9b26433. CeFi perp margin is now traceable: a per-venue compute via the existing UTL CeFi models
+  (`_CefiMarginModelBase`, margin-usage %) off the LIVE in-service `AccountQueryClient` (UPI, NOT an execution-service
+  import) produces a `MarginEvent` with `venue_type="cefi"` + a `MarginHealthSnapshot` whose usage lands in
+  `margin_usage_pct` (corrected from the draft's `health_factor`, a DeFi-only field) and whose `collateral_usd` is F28
+  haircut-adjusted. `margin_health` API is no longer a `return []` stub — real per-client×venue snapshots live; GCS
+  historical time-series is the only documented Phase-2 remainder. 31 tests, QG green both repos. **Decisions
+  (autonomous, documented):** (1) CeFi usage → `margin_usage_pct` not `health_factor` (schema SSOT distinguishes them;
+  the draft's `health_factor=usage` would mislead consumers); (2) `PortfolioInputs` fed in the canonical test-fixture
+  shape (positions = collateral_positions notional book carrying MMR; used-margin = USD debt leg) — model is owned/complete,
+  this is wiring; (3) venues with no open positions are skipped (the model's `equity<=0` branch would falsely grade an
+  empty book 100%). Next: F45 netting consolidation (P1) — pre-audit confirms net-delta logic is genuinely multi-site
+  (`risk_group_aggregator`, `aggregated` route, `output_builders` delta_btc/eth, `math_utilities` LST→underlying,
+  `risk/engine/orchestrator`), distinct from margin-requirement netting (`margin_sim._netting_factor` — left alone).
