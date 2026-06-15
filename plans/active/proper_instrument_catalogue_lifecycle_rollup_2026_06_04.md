@@ -523,3 +523,47 @@ handler's `logger.exception` never fired → it's an uncatchable death OR loggin
       the R4 local-run path (works). Note: the cefi job currently carries diagnostic env `PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1`
       (harmless; aids the next attempt). Repo: instruments-service + deployment-service (job env/bootstrap). assigned_vm:
       vm-cross-cutting. parent_epic: instruments_master. Provenance: R6 follow-up (2026-06-15).
+
+---
+
+## R7 — Data-status coverage semantics: genesis-clip the date denominator + headline CAPTURED vs ATTEMPTED (2026-06-14)
+
+**Context.** Operator drill-down review surfaced two real defects in the Data Coverage card:
+(1) `dates_expected` counted calendar days from the global search horizon even for young asset groups whose
+data genesis is recent — penalising them for days that pre-date their existence ("dates_found/dates_expected
+= 70.23%" was depressed by impossible days); (2) the headline showed a single ambiguous `completion_pct`
+that conflated two distinct questions — *did we try everywhere we should* (attempt) vs *did we capture what
+we tried* (capture) — and the operator was right that `empty_confirmed` (declared no-data) must not count
+against capture.
+
+**FIX #1 — genesis-clip the date denominator (SHIPPED to LDR; DEPLOYING to prod).**
+`deployment_api/services/data_status/manifest.py` (~L491): after `effective_start = get_effective_start_date(...)`,
+clip it forward to the service's earliest *observed* date (`index[service==svc].date.min()`) when that genesis
+is later than the configured horizon. Young AGs (e.g. PREDICTION) are no longer charged for pre-genesis days.
+
+**FIX #2 — headline CAPTURED vs ATTEMPTED, both labelled.**
+- Backend (SHIPPED to LDR; DEPLOYING to prod): `manifest.py` now emits two new overall fields alongside the
+  legacy ones — `overall_capture_coverage_pct` (= shards-weighted capture = `shards_found/shards_expected`) and
+  `overall_attempt_coverage_pct` (venue-expected-weighted mean of per-category `attempt_coverage_pct`; falls
+  back to `completion_pct_dates` when no shards expected). `empty_confirmed` does NOT count against capture
+  (the 4-state honest_coverage SSOT + `attempt_coverage_pct` already exclude it — operator's point, confirmed).
+- UI (CODED, tsc-clean, regression-tested; **NOT shipped from this host** — see blocker): `DataStatusTab.tsx`
+  headline now leads with `overall_capture_coverage_pct` labelled **"captured"** + a conditional **"attempted"**
+  line for `overall_attempt_coverage_pct` (tooltips explain the split), falling back to `overall_completion_pct`
+  when the new fields are absent (older API). `api/client.ts` types the two optional fields. Regression test
+  `tests/unit/data-coverage-headline.test.tsx` (vitest, pure `coverageHeadline()` contract) asserts the
+  captured/attempted labels + fallback.
+
+**Deploy.** deployment-api `main` force-synced from LDR → fires the `deployment-api-main-deploy` auto-deploy
+trigger (genesis clip + new fields go live in prod; preserves beta env + 8Gi). The current (old) prod UI
+ignores the new fields and shows the genesis-clipped `completion_pct_dates` — so FIX #1 is visible in prod
+immediately; FIX #2's labelled split appears once the UI ships.
+
+- [ ] [UI] P1. **Ship the R7 Data Coverage headline relabel from a clean env.** Change is preserved on
+      `deployment-ui` branch `wip-preserve/r7-coverage-labels-ui` (tsc-clean; 3 files: DataStatusTab.tsx,
+      api/client.ts, tests/unit/data-coverage-headline.test.tsx). **Blocked on THIS host only:** local vitest/
+      playwright cannot run — `npm ci` then vitest dies with `Cannot find native binding @rolldown/binding-linux-x64-gnu`
+      (npm optional-deps bug npm#4828; the suggested rm-lock+node_modules fix would rewrite the committed lock,
+      declined). pw:L2 is a HARD-RULE gate for UI changes → ship via a UI-capable slot whose `npm ci` is healthy:
+      cherry-pick/quickmerge from the wip-preserve branch, run QG + pw:L2, promote. assigned_vm: a UI-capable slot.
+      parent_epic: instruments_master. Provenance: R7 (2026-06-14).
