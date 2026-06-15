@@ -86,11 +86,28 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       next step. UTL prereq: `get_margin_model`/`PortfolioInputs`/`compute_health` re-exported at UTL top level (import
       gate wants top-level UTL imports). Tests: 31 (severity map, cefi snapshot, publish-swallow, reader live path,
       margin_health real return, no-position skip). QG green both repos (UTL 120s, strategy-service 135s).
-- [ ] [SPEC] P1. **F45 — exposure-normalization / net-delta pipeline, OWNED by strategy-service.** Consolidate the
+- [x] ✅ [SPEC] P1. **F45 — exposure-normalization / net-delta pipeline, single-canonical.** Consolidate the
       scattered primitives (UAC `risk.py`, UTL `risk/`, execution-service leg controllers / `perp_hedge_sizer`) into ONE
-      canonical netting pipeline in strategy-service that nets LST→underlying delta + multi-leg inter-leg delta into a
+      canonical netting entry that nets LST→underlying delta + multi-leg inter-leg delta into a
       single position-level exposure. **DELETE the scattered duplicate netting logic** once consumers point at the
       canonical one (single-SSOT rule). Target: strategy-service (+ UTL/UAC for the shared contract types only).
+      — DONE **UTL@b819cd1c + execution-service@b7c63335 + strategy-service@bdac6595** (2026-06-15).
+      **Canonical home = UTL `unified_trading_library/risk/net_delta.py`** (top-level re-exported), NOT strategy-service —
+      **operator-absent architectural decision, documented per autonomous rule 1**: the literal "pipeline in
+      strategy-service that every consumer points at" is unbuildable because the workspace **no-service↔service-import**
+      HARD RULE forbids execution-service (`perp_hedge_sizer`/`leveraged_leg_controller`) importing a strategy-service
+      module. UTL is the only shared T0 lib BOTH services already depend on, so the single SSOT lives there; strategy-service
+      still OWNS the position/risk orchestration that calls it. Five pure-Decimal primitives (behavior-identical
+      extractions, no math changed): `net_underlying_delta` (collateral·er − debt, LST→underlying), `residual_hedge_size`
+      (max(0, e − target), the perp-hedge sizing), `net_signed_delta` / `net_signed_exposure` / `gross_exposure` (signed
+      rollups). Consumers repointed + inline DELETED: execution-service `PerpHedgeSizer.read_e_from_aave_data` +
+      `compute_rebalance` + `leveraged_leg_controller.verify_net_delta`; strategy-service `risk_group_aggregator` +
+      `exposure_aggregator`. **Diagnosis (read-both-sides, distinct-concern → left alone, NOT dupes):** `margin_sim._netting_factor`
+      = margin-requirement netting (not position delta); `output_builders._aggregate_exposure_totals` = **float**-domain
+      output-schema rollup (routing through the Decimal primitives would alter live `risk_metrics` parquet precision —
+      deliberately kept local); options-greeks delta aggregation; pre-trade limit checks. Tests: UTL 16 net_delta +
+      exec-svc 16 perp_hedge_sizer + 25 leveraged_leg_controller + strategy 18 risk/exposure aggregator (all green,
+      behavior preserved). QG green all 3 repos.
 - [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit` vs `DERIBIT`) that no-emits. Normalise
       venue-id casing at the engine boundary (one canonical case; cite the SSOT). Target: strategy-service. — DONE
       **UAC@c0b2d0e** (2026-06-15): fixed at the SOURCE — `venue_collateral.py` accessors (`accepted_perp_collateral`/
@@ -142,3 +159,16 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
   empty book 100%). Next: F45 netting consolidation (P1) — pre-audit confirms net-delta logic is genuinely multi-site
   (`risk_group_aggregator`, `aggregated` route, `output_builders` delta_btc/eth, `math_utilities` LST→underlying,
   `risk/engine/orchestrator`), distinct from margin-requirement netting (`margin_sim._netting_factor` — left alone).
+- 2026-06-15 — **F45 net-delta/exposure consolidation (P1) SHIPPED single-canonical across 3 repos.** UTL@b819cd1c
+  (canonical `risk/net_delta.py` — 5 pure-Decimal primitives) → execution-service@b7c63335 (`perp_hedge_sizer` +
+  `leveraged_leg_controller` repointed, inline deleted) → strategy-service@bdac6595 (`risk_group_aggregator` +
+  `exposure_aggregator` repointed, inline deleted). **Key decision (documented in the todo above):** canonical home is
+  UTL, NOT strategy-service — the service-dep ban makes a strategy-service "pipeline every consumer points at"
+  unbuildable for execution-service, and UTL is the only shared lib both import; strategy-service still owns the risk/
+  position orchestration. All extractions are behavior-identical (verified by each consumer's pre-existing tests: 16+25
+  exec-svc + 18 strategy + 16 new UTL). **Diagnosed-distinct, deliberately NOT merged (would be wrong / a behavior
+  change):** `margin_sim._netting_factor` (margin-requirement, not delta), `output_builders._aggregate_exposure_totals`
+  (float domain — Decimal routing would shift live parquet precision), options-greeks delta, pre-trade limit checks.
+  This honors "diagnose before fixing / read both sides" — the F45 "scatter" was partly distinct concerns, not all
+  duplication; only the genuine net-delta/LST/exposure dupes were consolidated + deleted. Remaining plan items: F28
+  live-API probe (operator-held haircuts), F48 venv-probe follow-up — both smaller, attempting next.
