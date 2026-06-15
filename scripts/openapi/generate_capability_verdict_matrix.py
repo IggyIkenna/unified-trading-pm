@@ -69,6 +69,78 @@ logger = logging.getLogger(__name__)
 MATRIX_VERSION = "1.0.0"
 _SIZE_BUDGET_BYTES = 20 * 1024 * 1024
 
+# ---------------------------------------------------------------------------
+# F48 — archetypes that HAVE structural legs (so ``not_registered`` is False in
+# ``ARCHETYPE_LEG_STRUCTURES``) but have NO registered v2 engine, so they cannot
+# actually be BUILT. The authoritative source is the strategy-service engine
+# factory ``ARCHETYPE_ENGINE_REGISTRY``
+# (``strategy-service/strategy_service/engine/strategies/v2/factory.py``) — but
+# that registry lives in a T4 SERVICE, and this generator is a T0/UAC-importable
+# tool that MUST NOT import a service (service-dep ban + UAC is a strictly-lower
+# tier than strategy-service). So we cannot query the registry at runtime here.
+#
+# Instead of hardcoding the ENGINELESS set (which would silently rot when a new
+# archetype lands), we cite the engine registry's KEYS — the set of archetypes
+# that DO have an engine — as a small, source-cited constant, and DERIVE the
+# engineless set as ``{archetypes with legs} minus ENGINE_BACKED_ARCHETYPES``. This
+# auto-tracks: a newly-seeded leg-bearing archetype is engineless until someone
+# adds it both to the factory registry and to this cited mirror. The config_space
+# fuzzer (e2e-testing/scripts/strategy/config_space_fuzzer.py) reproduces the same
+# dead-end at RUNTIME via ``DeadEndReason.NO_V2_ENGINE`` (the factory raises
+# "no v2 engine registered for archetype …").
+#
+# SOURCE (transcribe-only, do not invent): the keys of
+# ``ARCHETYPE_ENGINE_REGISTRY`` in
+# ``strategy-service/strategy_service/engine/strategies/v2/factory.py`` as of the
+# F47/F48 surface-correction. Keep in sync with that registry (a parity test in
+# strategy-service / the fuzzer's NO_V2_ENGINE verdict guards drift).
+_ENGINE_BACKED_ARCHETYPE_VALUES: frozenset[str] = frozenset(
+    {
+        "ML_DIRECTIONAL_CONTINUOUS",
+        "ML_DIRECTIONAL_EVENT_SETTLED",
+        "RULES_DIRECTIONAL_CONTINUOUS",
+        "RULES_DIRECTIONAL_EVENT_SETTLED",
+        "CARRY_BASIS_DATED",
+        "CARRY_BASIS_DATED_INV",
+        "CARRY_BASIS_PERP",
+        "CARRY_STAKED_BASIS",
+        "CARRY_STAKED_BASIS_DATED",
+        "CARRY_RECURSIVE_STAKED",
+        "CARRY_RECURSIVE_BORROW_LENDING_ONLY",
+        "CARRY_BASIS_PERP_INV",
+        "YIELD_ROTATION_LENDING",
+        "YIELD_STAKING_SIMPLE",
+        "ARBITRAGE_PRICE_DISPERSION",
+        "ARBITRAGE_CROSS_DOMAIN_EVENT",
+        "LIQUIDATION_CAPTURE",
+        "DEFI_LP_CONCENTRATED",
+        "DEFI_LP_POOL",
+        "DEFI_LP_VAULT",
+        "ARBITRAGE_MEV_LIQUIDATION_BUNDLE",
+        "ARBITRAGE_MEV_JIT_LIQUIDITY",
+        "ARBITRAGE_MEV_BACKRUN",
+        "MARKET_MAKING_CONTINUOUS",
+        "MARKET_MAKING_EVENT_SETTLED",
+        "EVENT_DRIVEN",
+        "VOL_TRADING_OPTIONS",
+        "STAT_ARB_PAIRS_FIXED",
+        "STAT_ARB_CROSS_SECTIONAL",
+    }
+)
+
+
+def _slot_venue_token(venue_id: str) -> str:
+    """Reproduce the slot-label parser's alnum-strip of a venue scope token.
+
+    The v2 slot-label grammar (``strategy_service.engine.strategies.v2.slot_label``)
+    rejects any token containing ``-``/``_`` inside a single scope token, so a
+    multi-part venue id is folded to its lowercase-alnum form before it is matched
+    against ``KNOWN_VENUE_TOKENS``. This MUST mirror that fold exactly (the same
+    transform the config_space_fuzzer applies in ``_slot_label_for``) so a cell we
+    declare AVAILABLE is one a slot can actually be built for.
+    """
+    return "".join(ch for ch in venue_id.lower() if ch.isalnum())
+
 
 def _read_uac_head_sha(uac_root: Path) -> str | None:
     try:
@@ -102,6 +174,9 @@ def build_matrix() -> tuple[dict[str, object], dict[str, int]]:
         ARCHETYPE_LEG_STRUCTURES,
     )
     from unified_api_contracts.internal.architecture_v2.enums import StrategyArchetype
+    from unified_api_contracts.internal.architecture_v2.venue_tokens import (
+        KNOWN_VENUE_TOKENS,
+    )
 
     all_algo_keys = sorted(EXECUTION_ALGOS)
     counts = {"total_cells": 0, "available": 0, "blocked": 0, "not_registered": 0}
@@ -129,12 +204,60 @@ def build_matrix() -> tuple[dict[str, object], dict[str, int]]:
             )
             continue
 
+        # F48 — the archetype HAS structural legs (``not_registered`` is False)
+        # but has NO registered v2 engine in the strategy-service engine factory
+        # ``ARCHETYPE_ENGINE_REGISTRY``, so a slot for it cannot actually be built
+        # (the factory raises "no v2 engine registered for archetype …" — the
+        # config_space_fuzzer's ``DeadEndReason.NO_V2_ENGINE``). Such an archetype
+        # was previously emitted with ``available`` cells (over-claiming). Demote
+        # the WHOLE block to ``not_registered`` with the typed ``no_v2_engine``
+        # gap reason. We derive engine-absence from the cited engine-registry KEYS
+        # (see ``_ENGINE_BACKED_ARCHETYPE_VALUES``), never from a hardcoded
+        # engineless list.
+        if archetype.value not in _ENGINE_BACKED_ARCHETYPE_VALUES:
+            n_cells = len(all_algo_keys)
+            counts["total_cells"] += n_cells
+            counts["not_registered"] += n_cells
+            archetype_blocks.append(
+                {
+                    "archetype": archetype.value,
+                    "not_registered": True,
+                    "gap_type": "no_v2_engine",
+                    "reason": (
+                        f"archetype {archetype.value} has structural legs "
+                        "(ARCHETYPE_LEG_STRUCTURES) but NO registered v2 engine in the "
+                        "strategy-service engine factory ARCHETYPE_ENGINE_REGISTRY "
+                        "(strategy_service/engine/strategies/v2/factory.py) — a slot for it "
+                        "cannot be built (factory raises 'no v2 engine registered'; "
+                        "config_space_fuzzer DeadEndReason.NO_V2_ENGINE). Demoted from "
+                        "AVAILABLE: design-status archetype, engine not yet shipped."
+                    ),
+                    "cell_count": n_cells,
+                    "not_registered_algos": all_algo_keys,
+                }
+            )
+            continue
+
         # Build the eligible cells: per leg, per (venue, instrument_type), the
         # induced instruction_action; then cross with every algo.
         cells: list[dict[str, object]] = []
         block_counts = {"available": 0, "blocked": 0}
         for leg in struct.legs:
             for venue in sorted(leg.eligible_venue_ids):
+                # F47 — the v2 slot-label venue-token registry actually REJECTS
+                # this venue id: the slot-label parser folds a venue scope token to
+                # its lowercase-alnum form and matches it against KNOWN_VENUE_TOKENS
+                # (split_scope_tokens / is_venue_token). A leg may list an eligible
+                # venue id (e.g. ``balancer_v2``, ``gmx_v2``, ``betfair_direct``)
+                # whose folded token (``balancerv2`` …) is NOT in KNOWN_VENUE_TOKENS,
+                # so no v2 slot can be constructed for it (config_space_fuzzer's
+                # ``DeadEndReason.UNBUILDABLE_SLOT``). Such cells were previously
+                # declared AVAILABLE (over-claiming). When the token is rejected we
+                # emit the cell with ZERO available algos + every algo blocked with
+                # the typed unbuildable-slot reason → the cell counts as ``blocked``,
+                # never ``available``. Derived from KNOWN_VENUE_TOKENS, never a
+                # hardcoded venue blocklist.
+                venue_buildable = _slot_venue_token(venue) in KNOWN_VENUE_TOKENS
                 # The venue-execution kinds this leg's asset-groups run on.
                 kinds = sorted(
                     {kind for group in leg.asset_groups for kind in venue_kinds_for_asset_group(group)},
@@ -144,18 +267,37 @@ def build_matrix() -> tuple[dict[str, object], dict[str, int]]:
                     for kind in kinds:
                         action = instruction_type_for(kind, instrument)
                         valid = set(compat.valid_algos)
-                        available_algos = sorted(a for a in all_algo_keys if a in valid)
-                        blocked_algos = [
-                            {
-                                "algo": a,
-                                "reason": (
-                                    f"{a} is not valid for instruction_action "
-                                    f"{action.value} (selector ALGORITHMS_BY_INSTRUCTION_TYPE)"
-                                ),
-                            }
-                            for a in all_algo_keys
-                            if a not in valid
-                        ]
+                        if venue_buildable:
+                            available_algos = sorted(a for a in all_algo_keys if a in valid)
+                            blocked_algos = [
+                                {
+                                    "algo": a,
+                                    "reason": (
+                                        f"{a} is not valid for instruction_action "
+                                        f"{action.value} (selector ALGORITHMS_BY_INSTRUCTION_TYPE)"
+                                    ),
+                                }
+                                for a in all_algo_keys
+                                if a not in valid
+                            ]
+                        else:
+                            # F47: venue token rejected by KNOWN_VENUE_TOKENS — NO
+                            # algo is available (the slot is unbuildable regardless
+                            # of algo). All algos blocked with the unbuildable reason.
+                            available_algos = []
+                            blocked_algos = [
+                                {
+                                    "algo": a,
+                                    "reason": (
+                                        f"venue {venue!r} is not a buildable v2 slot venue: its "
+                                        f"slot-label token {_slot_venue_token(venue)!r} is not in "
+                                        "KNOWN_VENUE_TOKENS (architecture_v2.venue_tokens) so the "
+                                        "slot-label parser rejects it (config_space_fuzzer "
+                                        "DeadEndReason.UNBUILDABLE_SLOT) — cell demoted from AVAILABLE."
+                                    ),
+                                }
+                                for a in all_algo_keys
+                            ]
                         block_counts["available"] += len(available_algos)
                         block_counts["blocked"] += len(blocked_algos)
                         cells.append(
@@ -166,6 +308,9 @@ def build_matrix() -> tuple[dict[str, object], dict[str, int]]:
                                 "venue_kind": kind.value,
                                 "instrument_type": instrument.value,
                                 "instruction_action": action.value,
+                                # F47: explicit per-cell buildability flag so readers
+                                # (e.g. the fuzzer) see the venue-token demotion.
+                                "venue_buildable": venue_buildable,
                                 # available cells rolled up (size guard); blocked in full.
                                 "available_algos": available_algos,
                                 "blocked_algos": blocked_algos,
@@ -218,6 +363,21 @@ def build_matrix() -> tuple[dict[str, object], dict[str, int]]:
             "algo": "every key in EXECUTION_ALGOS (selector ALGORITHMS_BY_INSTRUCTION_TYPE)",
         },
         "verdicts": ["available", "blocked", "not_registered"],
+        "not_registered_gap_types": {
+            "missing_registry": "archetype has no leg structure (ARCHETYPE_LEG_STRUCTURES.not_registered)",
+            "no_v2_engine": (
+                "F48 — archetype HAS legs but no registered v2 engine in the strategy-service "
+                "engine factory ARCHETYPE_ENGINE_REGISTRY (cannot be built; demoted from AVAILABLE)"
+            ),
+        },
+        "blocked_reasons": {
+            "algo_not_valid_for_instruction": "execution algo not valid for the cell's instruction_action",
+            "unbuildable_slot_venue": (
+                "F47 — the leg-eligible venue id is rejected by the v2 slot-label venue-token "
+                "registry (its alnum-folded token is not in KNOWN_VENUE_TOKENS); cell carries "
+                "venue_buildable=false and zero available_algos (demoted from AVAILABLE)"
+            ),
+        },
         "summary": counts,
         "archetypes": archetype_blocks,
     }
