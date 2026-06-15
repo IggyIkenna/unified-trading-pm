@@ -373,12 +373,43 @@ named operator credential ask. These are the engines' true predecessors.
     solved back), moneyness/tenor correctness, index grouping, honest-absence drop. QG `--no-fix` exit 0. No
     service↔service import (takes plain `OptionQuote` inputs, not the IS chain type). **Parts (a)+(c)+(e) now ALL landed
     (2026-06-15) — see sub-bullets above; the whole Phase D P1 todo is [x].**
-- [ ] [SCRIPT] P2. **Build + connectivity-test the L2 microstructure feed (NO backfill).** Register `queue_position` +
-      `order_flow_imbalance` (+ `depth_of_book_10`) data_types (UAC); MTDS WebSocket handler scaffolds
-      (`book_snapshot_5` already live); expose book-microstructure features (spread/imbalance/microprice) from
-      `book_snapshot_5` in features-service. Unblocks MARKET_MAKING_PASSIVE_SPREAD + INVENTORY_SKEW first
-      (L5-sufficient), then QUEUE_MICROSTRUCTURE (needs queue_position). Repos: market-tick-data-service +
-      features-service + unified-api-contracts.
+- [x] ✅ [SCRIPT] P2. **Build + connectivity-test the L2 microstructure feed (NO backfill).** ALL of (a)+(b)+(c)
+      shipped — see sub-bullets. batch==live holds: ONE canonical `CanonicalBookMicrostructure` shape both the live
+      venue-WS book and the Tardis batch book map to, derived from `book_snapshot_5`; an engine cannot tell live from
+      batch. NO backfill run (operator constraint). Repos: unified-api-contracts@9b0b62e + market-tick-data-service@0908bda
+      + features-service@93b39362. Unblocks (feed-level) **MARKET_MAKING_PASSIVE_SPREAD + MARKET_MAKING_INVENTORY_SKEW**
+      (L5-sufficient now); **MARKET_MAKING_QUEUE_MICROSTRUCTURE** stays BLOCKED-DATA on `queue_position` (honest gap —
+      needs a deeper-than-L5 book capture). NO batch==live divergence was forced.
+  - ✅ **part (a) — UAC data_types + canonical schema + SOURCE_PRIORITY** — unified-api-contracts@9b0b62e. NEW
+    `canonical/domain/market/microstructure.py`: `CanonicalBookMicrostructure` (the ONE wire shape — L5-derivable
+    spread/relative_spread/mid/microprice/imbalance ALWAYS present; deeper-book `queue_position_*` + `depth_levels_*`
+    honest-absent on L5) + `CanonicalDepthLevel`; exported through market → domain → root facade. `data_type_capability.py`:
+    `order_flow_imbalance` registered **live_capable=True** (L5-derivable) for the 9 CeFi venues carrying `book_snapshot_5`
+    (Binance-FUT/SPOT, OKX-FUT/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT, Upbit); `queue_position` + `depth_of_book_10`
+    registered **live_capable=False + batch_capable=False** (honest gap — need an L10/full-L2 book deeper than L5).
+    `book_snapshot_5` reused (already live), not duplicated. SOURCE_PRIORITY: `(cefi, order_flow_imbalance|depth_of_book_10|
+    queue_position) → ["mtds_microstructure"]` (new COMPUTED_SOURCE, mirrors greeks_service — the upstream L5 book's own
+    source=tardis/venue stays on the book_snapshot_5 shard). Wired `mtds_microstructure` into COMPUTED_SOURCES +
+    SOURCE_MODE_CAPABILITY {B,L,R} + EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_MTDS_MICROSTRUCTURE +
+    AVAILABILITY_AT_SEMANTICS tick_timestamp + validity-matrix COMPUTED_SERVICE_OUTPUT exclusions. 8 unit tests; QG
+    `--no-fix` exit 0.
+  - ✅ **part (b) — MTDS derivation + handler scaffold + connectivity-test** — market-tick-data-service@0908bda. NEW pure
+    `derived/book_microstructure_compute.py` (`compute_book_microstructure(L5BookInput) → CanonicalBookMicrostructure`,
+    stateless, no I/O — mirrors the `derived/` rebase_rate pattern): `order_flow_imbalance` + microprice + spread
+    **L5-DERIVABLE NOW**; `queue_position`/`depth_of_book_10` honest-absent (need deeper book). Handler scaffold
+    `cli/handlers/book_microstructure_handler.py` (UnifiedServiceHandler; shard-isolated `derive_microstructure_rows`
+    with `classify_venue_error` + `ADAPTER_FETCH_FAILED`; `source="mtds_microstructure"` provenance; `deeper_book_gap_reason`
+    honest-gap marker; `get_write_bucket_name` not hardcoded). 13 mocked unit tests under `--block-network`. **CONNECTIVITY
+    PROOF (real live Binance public depth REST, ran 2026-06-15, exit 0 via `scripts/book_microstructure_connectivity_check.py`):**
+    BINANCE-SPOT BTCUSDT, 5 levels/side, best_bid/ask 66269.58/66269.59, spread 0.01, imbalance 0.9939, microprice
+    66269.5900; queue/depth honestly absent. NOT a backfill. QG `--no-fix` exit 0.
+  - ✅ **part (c) — features-service book-microstructure features** — features-service@93b39362.
+    `cefi/book_microstructure_feature_extractor.py` `extract_book_microstructure_feature_dict(micro) → dict[str,float]`
+    for a MARKET_MAKING_* engine `on_tick`. Keys: spread, relative_spread, mid, microprice, microprice_tilt, book_imbalance
+    (L5-derivable); queue_position_bid/ask + book_depth_levels (present ONLY when a deeper capture filled them — honest
+    absence omits the key on L5; never synthesised). Pure transforms of the canonical feed (no invented numbers; UAC types
+    only, no service↔service import). `formula_version=1` on all NEW features (no math-change bump). 7 unit tests; QG
+    `--no-fix` exit 0.
 
 > **E1/E2 below are BLOCKED-DATA pending Phase D** — do not build until the corresponding feed lands.
 
