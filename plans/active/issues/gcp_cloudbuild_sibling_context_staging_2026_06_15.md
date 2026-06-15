@@ -1,10 +1,11 @@
 ---
 title: "GCP Cloud Build image builds fail for sibling-COPY service repos — build context doesn't stage sibling repos (AWS CodeBuild does)"
 created: 2026-06-15
-author: ikennaigboaka [slot-1·laptop]
 source:
   - "deploy-UI Image column showing red/stale images; fleet promotion unstall 2026-06-15"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
