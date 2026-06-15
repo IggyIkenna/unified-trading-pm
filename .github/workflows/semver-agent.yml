@@ -42,6 +42,12 @@ on:
     workflows: ["quality-gates-v2"]
     types: [completed]
     branches: [staging]
+  # Mirror the SSOT .tmpl fix: the LDR-trunk decoupling dropped push:[staging]
+  # quality-gates-v2, orphaning the workflow_run trigger fleet-wide. Also fire on
+  # a direct push to staging so promotion resumes. Vestigial for PM (Option-B, no
+  # staging branch) but kept matching the template for drift-cleanliness.
+  push:
+    branches: [staging]
 
 env:
   GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -66,8 +72,9 @@ jobs:
     name: Semver Agent — unified-trading-pm
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Only run when Quality Gates passed — never on failure
-    if: github.event.workflow_run.conclusion == 'success'
+    # Only run when Quality Gates passed (workflow_run path) — never on failure;
+    # the push:[staging] path is implicitly gated (staging only advances on a green promote).
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
 
     steps:
       - name: Claude API health precheck (RETIRED — no-op)
@@ -83,7 +90,7 @@ jobs:
       - name: Checkout repo at staging commit
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
@@ -156,7 +163,7 @@ jobs:
           set -euo pipefail
 
           echo "=== Semver Agent: unified-trading-pm ==="
-          echo "Triggered by Quality Gates passing on staging (SHA: ${{ github.event.workflow_run.head_sha }})"
+          echo "Triggered by Quality Gates passing on staging (SHA: ${{ github.event.workflow_run.head_sha || github.sha }})"
 
           # ── semver_policy check: read from PM manifest ──
           PM_MANIFEST_POLICY=$(gh api "repos/${GH_ORG}/unified-trading-pm/contents/workspace-manifest.json" \
@@ -192,7 +199,7 @@ jobs:
             echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
             echo "bump=patch" >> "$GITHUB_OUTPUT"
             echo "bump_reason=always_patch policy (no label check)" >> "$GITHUB_OUTPUT"
-            SHA="${{ github.event.workflow_run.head_sha }}"
+            SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
             OWNER="${{ github.repository_owner }}"
             gh api POST "/repos/${OWNER}/unified-trading-pm/statuses/${SHA}" \
               --field state=success \
@@ -367,7 +374,7 @@ jobs:
           echo "Resolved bump category: $BUMP"
 
           # ── Label vs API diff mismatch check ──
-          SHA="${{ github.event.workflow_run.head_sha }}"
+          SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
           OWNER="${{ github.repository_owner }}"
 
           # Determine what the commit message signals
@@ -481,7 +488,7 @@ jobs:
           **Current version:** \`$CURRENT\`
           **Proposed version:** \`$NEXT\`
           **Reason:** $BUMP_REASON
-          **Triggered by:** Quality Gates passing on \`staging\` (SHA: \`${{ github.event.workflow_run.head_sha }}\`)
+          **Triggered by:** Quality Gates passing on \`staging\` (SHA: \`${{ github.event.workflow_run.head_sha || github.sha }}\`)
 
           ---
 
@@ -534,7 +541,7 @@ jobs:
           REPO="unified-trading-pm"
           VERSION="${{ steps.compute.outputs.new_version }}"
           BRANCH="staging"
-          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
           OWNER="${{ github.repository_owner }}"
 
           IS_BREAKING="${{ steps.compute.outputs.is_breaking }}"
@@ -638,5 +645,5 @@ jobs:
       run_id: ${{ github.run_id }}
       conclusion: ${{ needs.semver.result }}
       branch: staging
-      commit_sha: ${{ github.event.workflow_run.head_sha }}
+      commit_sha: ${{ github.event.workflow_run.head_sha || github.sha }}
       details_json: '{"event": "semver-agent"}'
