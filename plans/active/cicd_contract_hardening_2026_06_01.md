@@ -4485,14 +4485,86 @@ rollout, never per-repo).
       cassette-drift `github-script` step ran, workflow SUCCESS).
 - [x] ✅ [SCRIPT] P2. `actions/cache`@v4→**v5**, `actions/download-artifact`@v4→**v8** — DONE (no inputs removed,
       node24).
-- [ ] [SCRIPT] P3. **Misc-tail actions — NOT blind-bumped (need per-action breaking review; deliberately scoped out of
-      the 2026-06-10 sweep per "confirm each one's node24-major target then bump, NOT a blind sweep").** Live refs +
-      latest majors identified 2026-06-10: `pnpm/action-setup`@v2/@v4→v6 (5 refs);
-      `aws-actions/configure-aws-credentials`@v4→v6 (1, deploy path); `dawidd6/action-download-artifact`@v6→**v21** (2 —
-      15-major jump, must read changelog); `peter-evans/repository-dispatch`@v3→v4 (1);
-      `stefanzweifel/git-auto-commit-action`@v5→v7 (2, modifies commits). Low-count P2/P3 tail — NOT on the node20-cliff
-      critical path (the big-3 + main second-tier cleared the bulk + smoked). Each needs a changelog read + single test
-      push before bumping. repo: per-repo workflows.
+### Phase 3 — full-tree re-audit (2026-06-15) — MISSED scopes + misc-tail corrections
+
+> **Trigger:** a live deprecation warning on `actions/create-github-app-token@v1` (PM run 27540892187,
+> `promote-ldr-to-staging`) surfaced that the 2026-06-10 sweep was **`.github/workflows/`-only** and MISSED three
+> whole scopes + had one wrong target. Full re-audit 2026-06-15 (2,356 files scanned across all 25 live repos +
+> PM templates + composite actions; runtime of EVERY old-major ref confirmed from its `action.yml` `runs.using`).
+> Method unchanged from Phase 2 (RULE 11a per-action input-diff + single test push; templated copies via PM rollout,
+> never per-repo edits).
+
+**⚠️ Corrections to the prior P3 misc-tail line (do NOT act on the old targets):**
+
+- **`create-github-app-token@v1` was NOT in the misc-tail list at all — it was MISSED entirely** (23 live refs across
+  every repo's `main-backmerge-to-ldr.yml` + 5 PM promote/watcher workflows). `v1`=node20, `v2`=node20, **`v3`=node24**
+  (v2 does NOT fix it). v1→v2 breaking = removed snake_case input aliases (`app_id`/`private_key`/`skip_token_revoke`);
+  our usage is kebab-case (`app-id`/`private-key`/`owner`) + reads `outputs.token` → **`v3` is drop-in for us**.
+- **`dawidd6/action-download-artifact` target `→v21` is WRONG — there is NO node24 release.** Verified 2026-06-15:
+  v6/v8/v11/v12 are **all still node20**; `v21` does not exist. This one is **BLOCKED upstream** (see 3c).
+- `aws-actions/configure-aws-credentials@v4→v6` confirmed (v5 still node20, **v6**=node24).
+- `pnpm/action-setup` confirmed: v2=**node16**, v4=node20, **v5/v6**=node24.
+- `git-auto-commit-action@v5→v7` confirmed (v6 still node20, **v7**=node24).
+- `peter-evans/repository-dispatch@v3→v4` confirmed (**v4**=node24).
+
+**HARD requirement — the fix must reach `main`, not just LDR (regression guard):** the affected workflows are
+**scheduled / `push`-triggered** (promote bots, `main-backmerge`, watchers), and a scheduled/`push` workflow fires
+**only from the default branch (`main`)** — so a node24 bump that lands on `live-defi-rollout` is **INERT until promoted
+to `main`**. Verified 2026-06-15: `origin/main` content == `origin/live-defi-rollout` for every affected workflow (both
+`@v1`) → the running version IS the deprecated one. After bumping, **verify content-parity on `main`** per repo
+(`git grep -hoE '<action>@v[0-9]+' origin/main -- <file>`), not the commit count (squash-merge keeps LDR perpetually
+`ahead_by=N`). Use the sanctioned **`.github/**` direct-to-main carve-out** if the promotion pipeline lags. (AO quirk:
+`main-backmerge-to-ldr.yml` is not yet on `agent-orchestrator`'s `main` — its LDR→main migration is incomplete; tracked
+in the AO e2e plan.)
+
+#### 3a — drop-in node24 (target already runs in our fleet; no behaviour change) — `BLOCKED-NONE`
+
+- [ ] [SCRIPT] P2. `actions/create-github-app-token` v1→**v3** — 23 main-backmerge refs (templated → PM rollout) + PM's
+      `ldr-to-staging-promote` / `ldr-to-main-promote` / `ci-failure-watcher` / `promotion-lag-monitor` /
+      `main-backmerge-to-ldr` (hand-maintained PM copies). repo: template + PM. Verify reaches `main`.
+- [ ] [SCRIPT] P2. **Composite actions (`.github/actions/*`) — the MISSED indirect scope** (called ~30× via `@main`):
+      `setup-python-tools` (setup-python@v5, cache@v4), `run-quality-gates` (setup-python@v5), `setup-ui-tools`
+      (setup-node@v4), `setup-agent-tools` (setup-node@v4) → bump to setup-python@v6 / setup-node@v5 / cache@v5. repo:
+      unified-trading-pm. (Prior audit's "zero local custom actions using node20" was true for `using:` but these
+      composites CALL node20 sub-actions.)
+- [ ] [SCRIPT] P2. **PM templates (SSOT — stops new repos inheriting node20):** `scripts/propagation/templates/*.yml`
+      (checkout@v4, setup-python@v5), `scripts/workflow-templates-ui/{uac-registry-sync,uic-openapi-sync}.yml`
+      (checkout@v4, setup-python@v5, setup-node@v4), `scripts/templates/{feature-branch-to-staging,plan-alignment-agent}.yml`
+      (checkout@v4) → checkout@v5 / setup-python@v6 / setup-node@v5. repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **deployment-service templates:** `templates/{github-actions-aws.yaml,python-quality-gates-template.yml,typescript-quality-gates-template.yml}`
+      → checkout@v4→v5, setup-python@v5→v6, setup-node@v4→v5, aws-creds@v4→v6, **`upload-artifact@v3`→v7 (v3 is
+      ALREADY RETIRED by GitHub — uploads hard-fail; fix regardless of node24)**. repo: deployment-service.
+- [ ] [SCRIPT] P3. Stragglers in live workflows: `actions/cache@v4`→v5 (PM `promotion-lag-monitor.yml`). repo: PM.
+
+#### 3b — version-bump + per-action changelog review + ONE test push (node24 target exists)
+
+- [ ] [SCRIPT] P2. `pnpm/action-setup` v2(node16)/v4→**v6** — UI: `ci.yml`, `orphan-audit.yml`, `ui-quality-gates.yml`,
+      `ui-quality-gates-v2.yml`. Review: pnpm version now resolves from `packageManager`/`version` input — verify it
+      resolves in CI. repo: unified-trading-system-ui. **UI → playwright/CI smoke required.**
+- [ ] [SCRIPT] P2. `aws-actions/configure-aws-credentials` v4→**v6** — PM `persist-cicd-event.yml` (+ deploy templates
+      in 3a). Review: v5/v6 changed credential-resolution defaults; our usage passes WIF/role → verify. repo: PM +
+      deployment-service.
+- [ ] [SCRIPT] P3. `stefanzweifel/git-auto-commit-action` v5→**v7** — UAC `schema-health.yml`, `schema-health-update.yml`
+      (it writes commits — confirm input compat). repo: unified-api-contracts.
+- [ ] [SCRIPT] P3. `peter-evans/repository-dispatch` v3→**v4** — SIT `smoke-test-gate.yml`. Low risk. repo:
+      system-integration-tests.
+
+#### 3c — 🚫 BLOCKED upstream (no node24 release exists)
+
+- [ ] [SCRIPT] P3. **`dawidd6/action-download-artifact` — `BLOCKED-UPSTREAM` (no node24 release; v6–v12 all node20).**
+      1 live use: UAC `schema-health-update.yml`. Decision needed: (a) accept the warning + track until upstream ships
+      node24, OR (b) replace with official `actions/download-artifact@v7` IF that workflow only downloads **same-run**
+      artifacts (dawidd6 is used for cross-workflow/cross-run downloads the official action can't fully do — READ the
+      workflow before swapping). repo: unified-api-contracts.
+
+#### Out of scope (flagged, NOT in this migration)
+
+- **`.extra/` — 55 parked/archived repos** (incl. archived `unified-trading-codex`, `user-management-ui`): NOT in the
+  active 25-repo workspace; carry node20 but do not gate the active fleet. Address only if any is reactivated.
+- **Inert nested workflows** `features-service/features_service/{calendar,commodity,multi_timeframe}/.github/workflows/*`
+  (git-tracked but NEVER execute — GitHub only runs root `.github/workflows/`): leftover from repo consolidation →
+  **sprawl cleanup**, cross-ref `plans/active/issues/cicd_workflow_sprawl_audit_2026_06_10.md`. No deprecation impact.
+
 - `codecov/codecov-action`@v5 = **composite**, UNAFFECTED (no `using: node20`).
 
 ### Steps 2-3 DONE + workflows RE-ENABLED — 2026-06-08 (slot-1)
