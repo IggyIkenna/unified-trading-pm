@@ -678,10 +678,17 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
       - **The R6 "logging suppression" is now understood**: the Cloud Run JOB captures **only stderr**, and even that
         is truncated at the crash — stdout (all `logger.info`) and even `os.write(2,...)` to the stderr fd never
         surface. That is why every prior attempt to read the error came up empty.
-      **REMAINING FIX OPTIONS (pick one):** (a) force fully-SERIAL single-threaded compute in the worker (no
-      `ThreadPoolExecutor`) and re-test in-cloud — if the native crash is the multi-threaded C path, serial survives
-      gVisor; (b) run the rollup on a **GCE VM** (real kernel, no gVisor) instead of a Cloud Run Job; (c) capture a
-      gVisor core dump (`GVISOR`/`runsc` debug) to name the crashing `.so`. Start with (a) — cheapest, most likely.
+      **FIX OPTIONS:** (a) ~~force fully-SERIAL compute~~ **RULED OUT (tested 2026-06-15)** — built a
+      `_THREAD_POOL_DISABLED` serial image (feat build `04cdaa9`), pointed the job at it + beta + instruments-service:
+      **STILL crashes ~100s, exit 1**. So the native crash is **threading-INDEPENDENT** — it's in the per-asset-group
+      compute itself (a pyarrow/pandas/grpc operation in `_build_manifest_category`), not the `ThreadPoolExecutor`.
+      (Correct the diagnosis line above accordingly: not "multi-threaded C path" — the C crash reproduces serially.)
+      Remaining: (b) run the rollup on a **GCE VM** (real kernel, no gVisor) — NOTE this conflicts with the
+      "manifest/rollup runtime = Cloud Run Jobs, the GCE launcher was DELETED 2026-05-20" decision, so needs an
+      operator call; (c) capture a gVisor core dump / `runsc` debug to name the crashing `.so` + then pin/patch or
+      avoid that op; (d) finer in-cloud bisection — run the per-AG compute one asset_group at a time (the worker can
+      pass a single `asset_groups=[ag]`) to localize WHICH AG / data_type / read triggers the native fault, since the
+      crash is ~100s in (not the initial index load). Start with (d) — cheapest now that serial is ruled out.
       **WORKAROUND IN PLACE (operator's beta view works durably):** the job runs in LIVE mode; the beta rollup is
       written on demand by running the worker LOCALLY
       (`DATA_STATUS_BETA_MANIFEST_BLOB=… DEPLOYMENT_ENV=prod python -m deployment_api.scripts.data_status_rollup_worker --project central-element-323112 --bucket central-element-323112-data-status-rollups`),

@@ -1169,7 +1169,17 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
     #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
+    # CVE-2026-54283 / -54282: starlette <=1.1.0 (transitive via fastapi) — 2026-06-15 advisory batch.
+    #   -54283: request.form() ignores max_fields/max_part_size for application/x-www-form-urlencoded → DoS (event-loop
+    #   block on a ~1M-field body / unbounded memory on a large field). -54282: request.url is rebuilt from an
+    #   unvalidated path, so a request-target without a leading "/" can move the authority boundary → request.url.hostname
+    #   becomes attacker-controlled (only reachable by code reading request.url before routing). fix_versions=[1.3.1/1.3.0].
+    #   TRANSITIVE pin (fastapi pins starlette); covered by the operator "speed > security: transitive CVEs WARN not
+    #   block" policy (2026-06-12). Fleet services sit behind auth + a body-size-limiting reverse proxy and do not make
+    #   host-based trust decisions from request.url → exploit surface low. SUCCESSOR (remove this ignore): bump the
+    #   fastapi/starlette floor to a >=1.3.1 line + fleet lock-regen. Tracked: v2_engine_venue_buildout_2026_06_15.md
+    #   follow-ups (alongside the cryptography bump).
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
     # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock
