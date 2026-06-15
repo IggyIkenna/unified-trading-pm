@@ -557,3 +557,77 @@ model registry + ensemble trainers (`training/app/training/sports_ensemble_train
 `inference/app/inference/ensemble_inference.py`, `core/training_orchestrator.py`). The wizard's "which ML model" dimension
 is essentially empty. **Fix**: walk the ml-service model registry (per-archetype model variants) into `ml_model` nodes +
 archetype→model edges. Owner: PM exporter (per-service venv import, like exec-algos/feature-groups) + ml-service registry.
+
+---
+
+## Risk-domain index (cross-cut roll-up — 2026-06-15)
+
+Operator-requested view: the findings above grouped by RISK DOMAIN with current status + code evidence. This index is
+the **current-truth roll-up** — individual `### F<n>` sections above may show a stale inline "Status: OPEN" (e.g.
+F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXED** · **OPEN** (actionable now) ·
+**LOGIC-FREEZE** (engine fix gated on the strategy-service freeze lifting; surface-ready) · **BLOCKED-CREDENTIALS** ·
+**BLOCKED-OPERATOR-DECISION**. Verified-in-code 2026-06-15 (grep-then-read).
+
+| Domain | Findings | Status | Evidence |
+| --- | --- | --- | --- |
+| Unfinished adapters | F46 (binance/bybit/okx perp `place_order`) | BLOCKED-CREDENTIALS | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError` |
+| Unfinished adapters | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP), F43 (NASDAQ/NYSE in no leg eligibility) | OPEN | UAC registry |
+| Catalogue ↔ engine | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL_*/MARKET_MAKING_* archetypes, no v2 engine) | LOGIC-FREEZE | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends |
+| Catalogue ↔ engine | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions) | LOGIC-FREEZE | strategy-service / execution-service |
+| Catalogue ↔ engine | F22 (multi-leg collapsed to one cell) | FIXED (leg-spec registry) | derive-from-legs follow-up open |
+| Collateral + movements | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)** | OPEN | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%) |
+| Collateral + movements | F7 (policy was derivation) | FIXED (registry backfilled) | — |
+| Trader ledger | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers |
+| PnL / attribution | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner | BLOCKED-OPERATOR-DECISION (owner) | — |
+| Balances | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE | strategy-service (3 files) |
+| Balances | F40 (AO writes runtime state into tracked `accounts.json`) | OPEN | agent-orchestrator |
+| Reconciliation | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible) | FIXED (Phase-0) | — |
+| Reconciliation | F12 (config-registry regen empties destructively on non-workspace-venv host) | OPEN (environmental) | — |
+| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path) | LOGIC-FREEZE | strategy-service |
+| Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch) | FIXED (Waves A/B/C) | — |
+| Redundancy / duplication | F6, F41, F44, F51, F52 | FIXED | — |
+| Registry under-coverage | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges) | FIXED (Wave B/C 2026-06-14) | manifest 574/2433 |
+
+## Open findings — tracked todos (2026-06-15, operator-requested capture)
+
+> Converting the prose findings above into actionable checkboxes (Capture-Discoveries HARD RULE). LOGIC-FREEZE items are
+> tracked but NOT actionable until the strategy-service freeze lifts — surface is ready. A full remediation wrapper plan
+> (`parent_epic:` + `assigned_vm:` → epic-VM dispatch) is the next step if these are to be worked, per Findings-Triage.
+
+**Actionable now (registry / config / infra — NOT engine-frozen):**
+
+- [ ] [SPEC] P1. **F28 — reconcile the two collateral-haircut SSOTs** (`venue_collateral.py` vs
+      `lst_collateral_resolver.py`): pick the correct per-venue LST haircut, delete the duplicate SSOT (4 known
+      conflicts: HL wstETH accept?; Bybit stETH 10% vs 15%; Deribit 7.5% vs 20%; OKX 15% vs absent). Data-correctness
+      risk. Target: confirm owner repo (UTL/strategy-service) + whether freeze-gated before flipping.
+- [ ] [SCRIPT] P2. **F42 — register the 6 adapter-backed venues** (FX + BITFINEX/BITGET/KRAKEN spot+futures) in
+      `VENUE_CATEGORY_MAP` + `ENDPOINT_REGISTRY`. Target: unified-api-contracts.
+- [ ] [SCRIPT] P2. **F43 — add NASDAQ/NYSE to a leg's `eligible_venue_ids`** (TradFi equities adapters exist, no leg
+      references them). Target: unified-api-contracts.
+- [ ] [SCRIPT] P3. **F40 — gitignore AO runtime `accounts.json`** (server persists usage state into a tracked file →
+      perpetual dirty churn). Target: agent-orchestrator.
+
+**Tracked, gated (engine — strategy-service LOGIC FREEZE / credentials / operator decision):**
+
+- [ ] [ADAPTER] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise NotImplementedError).
+      BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
+- [ ] [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net delta;
+      primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). BLOCKED-OPERATOR-DECISION (which
+      service owns netting). Target: strategy-service or UTL (operator pick).
+- [ ] [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit`≠`DERIBIT`) blocks emission.
+      LOGIC-FREEZE. Target: strategy-service.
+- [ ] [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
+      LOGIC-FREEZE. Target: strategy-service.
+- [ ] [LOGIC] P2. **F48 — 22 VOL_*/MARKET_MAKING_* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
+      strategy-service.
+- [ ] [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
+      heuristic-bypass/no-SSOT). LOGIC-FREEZE. Target: execution-service.
+- [ ] [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** LOGIC-FREEZE. Target:
+      strategy-service.
+- [ ] [SPEC] P3. **F17 — expose kill-switch/stop-loss predicates for engine introspection** (currently runtime-fired
+      only — invisible to the capability graph). Post-unfreeze enhancement. Target: strategy-service.
+
+> The **CeFi-margin-traceability cluster** (CeFi margin emitter DeFi-only · `margin_health` stub · no CeFi balance
+> tracker · collateral runtime consumer) is already tracked as `- [ ]` todos in
+> [capability_wizard_gap_discovery_2026_06_11.md](capability_wizard_gap_discovery_2026_06_11.md) (margin audit) — not
+> duplicated here.
