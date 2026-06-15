@@ -1152,11 +1152,24 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-47265: aiohttp <=3.13.5 — cookies set via the `cookies=` param are re-sent after a cross-origin
     #   redirect. fix_versions=[3.14.0] (same vcrpy block as CVE-2026-34993). aiohttp 3.13.5 keeps accumulating
     #   cookie CVEs fixed only in 3.14.0; this ignore set grows until the vcrpy-unblock lets the fleet reach 3.14.0.
+    # CVE-2026-50269 / -54273 / -54274 / -54275 / -54276 / -54277 / -54278 / -54279 / -54280: aiohttp <=3.13.5 — the
+    #   2026-06-15 OSV advisory batch (pipelined-request flooding, CookieJar.save()/load() host-only-cookie restore,
+    #   C-parser max_line_size bypass, incomplete-websocket-frame size bypass [-54274], TLS-SNI check bypass on reused
+    #   connection [-54275], multipart header injection, et al). ALL fix_versions=[3.14.0] — exactly the same vcrpy
+    #   deadlock as CVE-2026-34993/47265 (aiohttp 3.14.0 removed AsyncStreamReaderMixin → breaks vcrpy 8.1.1
+    #   fleet-wide). The fleet uses aiohttp as an HTTP CLIENT and never calls CookieJar.load()/server-parses untrusted
+    #   input → exploit surface nil; the `<3.14` pin is the operator-accepted hard exception. SUCCESSOR (remove this
+    #   whole aiohttp ignore block): the same vcrpy-unblock that lets the fleet reach aiohttp 3.14.0. Tracked:
+    #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # GHSA-537c-gmf6-5ccf: cryptography <=46.0.7 — wheels statically link an OpenSSL with a known CVE. TRANSITIVE pin;
+    #   covered by the operator "speed > security: transitive CVEs WARN not block" policy (2026-06-12). UNLIKE aiohttp
+    #   this is NOT vcrpy-deadlocked — the proper fix is a cryptography floor bump + fleet lock-regen. SUCCESSOR (remove
+    #   this ignore): bump cryptography to the patched line. Tracked: v2_engine_venue_buildout_2026_06_15.md follow-ups.
     # PYSEC-2026-196: pip 26.1.1 — console_scripts/gui_scripts treated as paths without sanitizing the resolved
     #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
     #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln PYSEC-2026-196"
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
     # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock

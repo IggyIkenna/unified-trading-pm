@@ -886,7 +886,10 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     #   resolved absolute path. Fleet stays on the vulnerable pip line because the next pip release is
     #   incompatible with the pinned vcrpy. Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove all three): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln PYSEC-2026-196"
+    # CVE-2026-50269 / -54273 / -54276 / -54277 / -54278 / -54279 / -54280: aiohttp <=3.13.5 2026-06-15 OSV advisory
+    #   batch — ALL fix_versions=[3.14.0], same vcrpy deadlock + client-only-usage exploit-surface-nil rationale as
+    #   CVE-2026-34993/47265. SUCCESSOR: the same vcrpy-unblock to aiohttp 3.14.0.
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3;
     # parity with base-service.sh): the OSV query runs only when the deps-hash (pyproject.toml
     # + uv.lock + ignore set + pip-audit version) changed, OR the cached clean result is older

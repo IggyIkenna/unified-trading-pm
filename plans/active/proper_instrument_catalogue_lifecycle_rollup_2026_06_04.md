@@ -655,15 +655,44 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
       live-compute fall-through (HTTP 503) is wrong for beta. `_read_rollup_if_fresh` + `read_coverage_rollup_if_fresh`
       skip the gate in beta mode (live mode unchanged). The all-AG beta view is now durable as long as the beta blob
       exists. Regression: `test_beta_rollup_served_despite_staleness` + `test_live_rollup_respects_staleness`.
-- [ ] [INFRA] P2. **Diagnose why the data-status rollup CLOUD JOB fails in beta mode** (R6-class — logging
-      suppressed). With image `e5fbbf7`/`ce38aba` + the beta env + the beta-eligible filter, the cloud job
-      `uts-prod-data-status-rollup` crashes ~2s into `_get_manifest_status_sync` (exit 1) — yet the IDENTICAL code +
-      env succeeds LOCALLY (filter logs "restricting to ['instruments-service']", exit 0). 16Gi/4cpu/standard SA (same
-      as the healthy LIVE job), so not resources/perms. The exception type is suppressed (same root cause as the R6
-      `run_rollup` logging-suppression item above) — needs the `print(..., flush=True)` bisection in
-      `_build_one_service_rollup` / `_get_manifest_status_sync` to localize. **WORKAROUND IN PLACE:** the job runs in
-      LIVE mode; the beta rollup is written on demand by running the worker locally
-      (`DATA_STATUS_BETA_MANIFEST_BLOB=… python -m deployment_api.scripts.data_status_rollup_worker --project … --bucket …-data-status-rollups`),
-      and the service serves it regardless of age (follow-up #4 above). Only needed while beta preview is on (pre
-      `--apply`). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7
-      follow-up #4 (2026-06-15).
+- [ ] [INFRA] P2. **`uts-prod-data-status-rollup` CLOUD JOB crashes computing `instruments-service` — DIAGNOSED to a
+      native gVisor-sandbox crash; fix is the remaining work.** Bisection complete (2026-06-15, print-bisection via
+      `_bisect` → `os.write(2,...)` → `PYTHONFAULTHANDLER`, 6 diagnostic deploys). **Conclusions, each empirically
+      ruled in/out:**
+      - **NOT beta-specific.** `instruments-service` crashes in **LIVE** mode too (single-`--services instruments-service`
+        run, no beta env → exit 1, ~100s). The scheduled full sweep "Completes" only because *other* services succeed
+        (`run_rollup` returns 0 if ≥1 succeeds) — instruments-service has been silently failing in the cloud rollup
+        all along. This is the original R6 `run_rollup` crash; the beta work merely exposed it (beta runs ONLY
+        instruments-service, so its failure isn't masked).
+      - **NOT grpc-after-fork** (`GRPC_ENABLE_FORK_SUPPORT=1` → still crashes).
+      - **NOT memory / OOM** (bumped to 32Gi/8cpu → still crashes ~100s; no "Memory limit exceeded"; the worker
+        already disables the fork process-pool via `_PROCESS_POOL_DISABLED`).
+      - **Succeeds LOCALLY** (61Gi dev box, identical image code + env, full-range `instruments-service` rollup →
+        `done`). So it is **Cloud-Run-runtime-specific**, not a code/data bug.
+      - **It is a NATIVE (C-level) crash**, below the Python layer: `PYTHONFAULTHANDLER=1` produced **no** `Fatal
+        Python error` header, **no** thread dump, **no** exception type — just the Python stack truncating at the
+        `_get_manifest_status_sync` call boundary, then "Container called exit(1)". A Python exception would be caught
+        by the `except BaseException` (it isn't) and have a type (it doesn't). Almost certainly a C extension
+        (pyarrow / pandas / grpc) hitting a gVisor-sandbox-incompatible syscall during the multi-threaded per-AG
+        compute (`ThreadPoolExecutor` over 5 asset_groups in `_build_manifest_category`).
+      - **The R6 "logging suppression" is now understood**: the Cloud Run JOB captures **only stderr**, and even that
+        is truncated at the crash — stdout (all `logger.info`) and even `os.write(2,...)` to the stderr fd never
+        surface. That is why every prior attempt to read the error came up empty.
+      **REMAINING FIX OPTIONS (pick one):** (a) force fully-SERIAL single-threaded compute in the worker (no
+      `ThreadPoolExecutor`) and re-test in-cloud — if the native crash is the multi-threaded C path, serial survives
+      gVisor; (b) run the rollup on a **GCE VM** (real kernel, no gVisor) instead of a Cloud Run Job; (c) capture a
+      gVisor core dump (`GVISOR`/`runsc` debug) to name the crashing `.so`. Start with (a) — cheapest, most likely.
+      **WORKAROUND IN PLACE (operator's beta view works durably):** the job runs in LIVE mode; the beta rollup is
+      written on demand by running the worker LOCALLY
+      (`DATA_STATUS_BETA_MANIFEST_BLOB=… DEPLOYMENT_ENV=prod python -m deployment_api.scripts.data_status_rollup_worker --project central-element-323112 --bucket central-element-323112-data-status-rollups`),
+      and the service serves the static beta blob regardless of age (follow-up #4 above). Only needed while the beta
+      preview is on (pre `--apply`). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic:
+      instruments_master. Provenance: R7 follow-up #4 (2026-06-15).
+- [ ] [CHORE] P3. **Land the R6 `_bisect` diagnostic removal.** The temp print-bisection (`_bisect` +
+      `_build_one_service_rollup` try/except) is harmless (swallowed-stderr writes in the rollup worker only) but is
+      still on `main` (deployment-api@2bf83e6) + the deployed image. The clean revert is preserved on the
+      **`deployment-api` branch `wip-preserve/r6-diagnostic-removal`** (cherry-pick + quickmerge).
+      Blocked landing now on **unrelated** codex-baseline drift (the repo full-QG counts **7** violations vs baseline
+      6 — a freshly-published **pip-audit CVE**, time-dependent, not from this change; the change-scoped fast QG is
+      clean at 3). Land when the CVE/baseline is reconciled, or via a clean-env slot. Repo: deployment-api.
+      assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7 follow-up #4 (2026-06-15).

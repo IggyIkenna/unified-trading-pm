@@ -116,14 +116,46 @@ Each: confirm the feed exists; if yes build real + backtest + tests + register +
 surface, greeks, option chains from Deribit/options venues) exists; if yes build real + backtest + tests + register +
 matrix-flip; if no, honest `not_available` + a single shared blocker todo for the missing options feed.
 
-- [ ] [SCRIPT] P2. **VOL_STRADDLE** — real or honest-absent. Repo: strategy-service.
-- [ ] [SCRIPT] P2. **VOL_VARIANCE_SWAP** — real or honest-absent. Repo: strategy-service.
+- [ ] [SCRIPT] P2. **VOL_STRADDLE** — real engine SHIPPED (template wave).
+  - code: strategy-service@62bc95af, unit-tested; **BACKTEST-PENDING** (needs Tardis historical per-strike surface).
+    `VolStraddleEngine` (`engine/strategies/v2/vol_trading/straddle.py`): trades ATM-vol level — long straddle (BUY ATM
+    call+put) when `iv_atm` cheap vs a realised-vol/term reference, short (SELL both) when rich; size = vega budget,
+    scaled down by `max_position_vega`; legs = the two ATM option legs (delta-neutral at inception). Leg-derivation unit
+    tests pin long-vs-short side + ATM selection + vega cap. **NOT registered** in `ARCHETYPE_ENGINE_REGISTRY` + verdict
+    matrix UNCHANGED (no passing backtest → registering would make the matrix lie). **DVOL-vs-Tardis**: surface-dependent
+    only at the per-strike level — straddle itself is ATM-only, but its backtest still needs the historical ATM-IV vs
+    realised series; Deribit DVOL gives the implied index (ATM-proxy) credential-free but NOT the exact per-strike ATM
+    option marks → Tardis preferred for a faithful backtest. No backfill run (operator constraint).
+- [ ] [SCRIPT] P2. **VOL_VARIANCE_SWAP** — real engine SHIPPED (template wave).
+  - code: strategy-service@64da164d, unit-tested; **BACKTEST-PENDING** (needs Tardis historical per-strike surface).
+    `VolVarianceSwapEngine` (`engine/strategies/v2/vol_trading/variance_swap.py`): replicates variance exposure via a
+    **1/K²-weighted OTM strip** (ATM anchor + 25d call wing + 25d put wing; each wing sized `variance_notional/moneyness²`
+    so the deeper-relative-to-forward put wing carries MORE contracts — the canonical Demeterfi replication profile);
+    trades long/short variance vs a surface-implied **fair-variance estimate** (`iv_atm²` lifted by a configurable skew
+    convexity loading) compared to realised variance (`rv²`). Leg-derivation unit tests pin the 1/K² weights + side +
+    fair-var-vs-realised. **NOT registered** + matrix UNCHANGED. **DVOL-vs-Tardis**: surface-dependent — the strip needs
+    a historical **per-strike IV surface** (skew/wing IVs), which Deribit public history does NOT expose (mark-IV history
+    pruned to ~1d, expired instruments empty) → **needs Tardis** for any backtest. No backfill run. **Feed-key gap
+    flagged**: features-service exposes the surface as aggregated scalar buckets (`iv_atm`, `iv_25d_call/put`,
+    `iv_skew_25d`, term) — NOT a per-strike IV-by-moneyness grid; the strip is built from the 3 canonical buckets. A
+    denser strip needs a per-strike surface feature (not yet exposed).
 - [ ] [SCRIPT] P2. **VOL_DISPERSION** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_ARB** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_SLOPE** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_ARB_RV_IV** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P3. **VOL_0DTE_GAMMA_SCALPING** — real or honest-absent. Repo: strategy-service.
-- [ ] [SCRIPT] P3. **VOL_CARRY** — real or honest-absent. Repo: strategy-service.
+- [ ] [SCRIPT] P3. **VOL_CARRY** — real engine SHIPPED (template wave).
+  - code: strategy-service@697e0641, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
+    `VolCarryEngine` (`engine/strategies/v2/vol_trading/carry.py`): harvests the volatility-risk-premium — when `iv_atm`
+    exceeds realised vol (`rv`) by ≥ `entry_vrp` it **SELLS** the ATM straddle (short vol) + adds a **delta-hedge** leg
+    on the underlying (units = `-package_delta`, sign-flipping with the delta sign; omitted on honest delta absence);
+    **flattens** (buys the straddle back) when the carry inverts (`vrp ≤ exit_vrp`); holds while the premium persists.
+    One-sided premium-harvest (only ever shorts vol), unlike the symmetric VOL_STRADDLE. Leg-derivation unit tests pin
+    open/hold/flatten + the delta-hedge sign + honest-absence hedge omission. **NOT registered** + matrix UNCHANGED.
+    **DVOL-vs-Tardis**: this is the ONE template-wave engine **backtestable from FREE Deribit DVOL history** — DVOL is
+    the implied-vol index (ATM-proxy) back to 2021 credential-free and realised vol comes from the underlying close
+    series, so `iv_atm - rv` carry needs NO per-strike surface. **Candidate for an early DVOL-index backtest greenlight**
+    ahead of the surface-dependent VOL_STRADDLE/VARIANCE_SWAP (which need Tardis). No backfill run.
 - [ ] [SCRIPT] P3. **VOL_CROSS_ASSET_SPREAD** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P3. **VOL_LEAPS_CONVEXITY** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P3. **VOL_MARKET_MAKING** — real or honest-absent. Repo: strategy-service.
@@ -346,3 +378,8 @@ forced. NOTE: a concurrent agent had also landed prior `slot_1.md` content; the 
 to `rootm_orchestrator/pings/slot_1.md` and was migrated to the canonical `ikenna_orchestrator/pings/slot_1.md` (rootm
 file deleted). The VOL*_/MARKET*MAKING*_ engine builds (Phase E1/E2) remain BLOCKED-DATA→now-unblocked-for-VOL\_\* — a
 separate later wave, NOT in this (a)+(c)+(e) scope.
+
+## Follow-ups discovered during Phase D / template wave (2026-06-15)
+
+- [ ] [SCRIPT] P2. **Bump cryptography fleet-wide off the GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the 2026-06-15 advisory flagged cryptography 46.0.7 (statically-linked OpenSSL). Unlike aiohttp it is NOT vcrpy-deadlocked, so the PROPER fix is a floor bump + per-repo `uv lock` regen, not a permanent ignore. The ignore (PM base-service.sh + base-library.sh, PM@e6c7b52c9) is the transient speed>security unblock. Repos: fleet-wide (all repos declaring cryptography transitively) + remove the GHSA ignore from both base-*.sh once bumped.
+- [ ] [SCRIPT] P3. **Ratchet DOWN the MTDS DTZ + fallback-import baselines** — after the DTZ noqa fix, MTDS is below both `ruff_rule_ratchet_baseline.yaml` (32) and `no_fallback_imports_baseline.yaml` (3); re-run `--update-baseline` for market-tick-data-service. Repo: unified-trading-pm.
