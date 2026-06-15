@@ -222,6 +222,16 @@ Each is honestly `blocked(unbuildable_slot_venue)` today. Adding a token without
 wiring would re-introduce the F47 over-claim — so the token is added ONLY when a venue is genuinely supported end-to-end
 (none qualify now). A later support effort is a new plan item, not a Phase-C gap.
 
+## Audit findings (2026-06-15 — adversarial verification of the Phase-B/C completion)
+
+- [ ] [BUG] P1. **AccountQueryClient silently falls back to MOCK data on a live-fetch failure** (audit discovery
+      2026-06-15). `strategy-service/strategy_service/.../account_query_client.py:133-134/165-166/194` swallows live
+      UPI-adapter exceptions and returns FABRICATED balances/positions instead of failing loud. Pre-existing (file
+      dated 2026-06-05) but now LOAD-BEARING: the new CeFi `margin_health` / `emit_margin_event_for_cefi` read balances
+      through it, so a credentialed live failure produces a margin snapshot with FAKE numbers that looks healthy. Make
+      the live path fail-loud (raise / `CLIENT_QUARANTINED` / loud alert) — mock-fallback is dev/CI-only. Target:
+      strategy-service.
+
 ## Codex SSOT updates
 
 - `codex/04-architecture/client-funds-isolation.md` / margin-traceability section (margin cluster end-to-end).
