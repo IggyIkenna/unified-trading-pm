@@ -4549,16 +4549,24 @@ in the AO e2e plan.)
 
 #### 3b — version-bump + per-action changelog review + ONE test push (node24 target exists)
 
-- [ ] [SCRIPT] P2. `pnpm/action-setup` v2(node16)/v4→**v6** — UI: `ci.yml`, `orphan-audit.yml`, `ui-quality-gates.yml`,
-      `ui-quality-gates-v2.yml`. Review: pnpm version now resolves from `packageManager`/`version` input — verify it
-      resolves in CI. repo: unified-trading-system-ui. **UI → playwright/CI smoke required.**
-- [ ] [SCRIPT] P2. `aws-actions/configure-aws-credentials` v4→**v6** — PM `persist-cicd-event.yml` (+ deploy templates
-      in 3a). Review: v5/v6 changed credential-resolution defaults; our usage passes WIF/role → verify. repo: PM +
-      deployment-service.
-- [ ] [SCRIPT] P3. `stefanzweifel/git-auto-commit-action` v5→**v7** — UAC `schema-health.yml`, `schema-health-update.yml`
-      (it writes commits — confirm input compat). repo: unified-api-contracts.
-- [ ] [SCRIPT] P3. `peter-evans/repository-dispatch` v3→**v4** — SIT `smoke-test-gate.yml`. Low risk. repo:
-      system-integration-tests.
+> **RULE 11a result (all four, 2026-06-15):** diffed `action.yml` inputs across each version gap — **NONE removed an
+> input** (every new major is a superset), and our usage passes only retained inputs → cannot fail on a removed input.
+
+- [x] ✅ [SCRIPT] P2. `pnpm/action-setup` v2(node16)/v4→**v6** — UI `ci.yml`, `orphan-audit.yml`, `ui-quality-gates.yml`,
+      `ui-quality-gates-v2.yml` — **DONE on LDR 2026-06-15 uts-ui@1a4b3f13**. The "version-now-optional/packageManager"
+      concern is MOOT — every usage passes `version:` explicitly (`"10"`/`9`), retained in v6. **SMOKED GREEN** on the
+      LDR→staging PR's `quality-gates-v2` (run 27550536538): ✓ Install pnpm (v6) ✓ Get pnpm store ✓ Cache pnpm store
+      ✓ Install dependencies. (CI-infra bump, not a UI behaviour change → pnpm-step green is the correct smoke, not a
+      playwright UI test.)
+- [x] ✅ [SCRIPT] P2. `aws-actions/configure-aws-credentials` v4→**v6** — PM `persist-cicd-event.yml` + deploy template
+      `github-actions-aws.yaml` (4 refs) — **DONE on LDR 2026-06-15 PM@c6e4fee5d + deployment-service@5ef7b39**. Our
+      usage passes static `aws-access-key-id`/`aws-secret-access-key`/`aws-region` (NOT WIF/OIDC) — unaffected by the
+      v5/v6 OIDC/proxy/profile additions; no inputs removed. Smokes at next `persist-cicd-event` run.
+- [x] ✅ [SCRIPT] P3. `stefanzweifel/git-auto-commit-action` v5→**v7** — UAC `schema-health.yml`,
+      `schema-health-update.yml` — **DONE on LDR 2026-06-15 unified-api-contracts@8d32915**. v7 only ADDS
+      `skip_push`/`tag_name`; standard usage unchanged. Smokes at next schema-health run.
+- [x] ✅ [SCRIPT] P3. `peter-evans/repository-dispatch` v3→**v4** — SIT `smoke-test-gate.yml` — **DONE on LDR 2026-06-15
+      system-integration-tests@85a4713**. Inputs identical v3↔v4 (token/repository/event-type/client-payload).
 
 #### 3c — 🚫 BLOCKED upstream (no node24 release exists)
 
