@@ -117,6 +117,14 @@ a named operator credential ask. These are the engines' true predecessors.
 > - **Historical crypto options** → **Tardis** = **BLOCKED-CREDENTIALS** (scaffold the adapter + file the named
 >   ask; do not backfill until [ack]). Use Deribit's own history only if it exposes it; otherwise wait for Tardis.
 > - **TradFi options (historical)** → **Massive** (the existing TradFi route — extend it, don't add a new vendor).
+>
+> **BATCH == LIVE canonical-schema mapping (HARD — CLAUDE.md "Live = batch"):** every source is just an input to
+> the SAME canonical pipeline. The live Deribit connector, the Tardis historical adapter, and the Massive TradFi
+> route ALL map to the **identical canonical schema + data_types** (`CanonicalOptionsChain` /`options_chain`,
+> `greeks_snapshot`, `implied_vol_surface`) — same fields, same units, `available_at` per-row at write-time. **NO
+> live-only data_type, NO source-specific field set, NO read-time derivation.** Greeks/IV-surface output is the
+> canonical `greeks_snapshot`/`implied_vol_surface` shape regardless of which source fed the chain. An engine reading
+> the feed MUST NOT be able to tell live from batch. This is verified before any engine (E2) consumes it.
 
 - [ ] [SCRIPT] P1. **Build + connectivity-test the options vol-surface + greeks feed (NO backfill).** (a) UAC: register `greeks_snapshot` + `implied_vol_surface` + live-capable crypto `options_chain` data_types in `data_type_capability.py`. (b) instruments-service: Deribit public options-chain adapter (enumerate strikes/expiries → `CanonicalOptionsChain`) + a connectivity test proving a live pull. (c) MTDS: live options-chain + mark-IV handler (Deribit public); Tardis historical adapter SCAFFOLD = BLOCKED-CREDENTIALS; Massive for TradFi-options history. (d) greeks-service: in-house delta/gamma/vega/theta + IV-surface computation, wired + tested on a mock chain. (e) features-service: expose vol-surface/greeks features to the engine feature dict. Unblocks all 17 VOL_*. Repos: unified-api-contracts + instruments-service + market-tick-data-service + greeks-service + features-service.
 - [ ] [SCRIPT] P2. **Build + connectivity-test the L2 microstructure feed (NO backfill).** Register `queue_position` + `order_flow_imbalance` (+ `depth_of_book_10`) data_types (UAC); MTDS WebSocket handler scaffolds (`book_snapshot_5` already live); expose book-microstructure features (spread/imbalance/microprice) from `book_snapshot_5` in features-service. Unblocks MARKET_MAKING_PASSIVE_SPREAD + INVENTORY_SKEW first (L5-sufficient), then QUEUE_MICROSTRUCTURE (needs queue_position). Repos: market-tick-data-service + features-service + unified-api-contracts.
