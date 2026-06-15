@@ -126,7 +126,19 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     only at the per-strike level — straddle itself is ATM-only, but its backtest still needs the historical ATM-IV vs
     realised series; Deribit DVOL gives the implied index (ATM-proxy) credential-free but NOT the exact per-strike ATM
     option marks → Tardis preferred for a faithful backtest. No backfill run (operator constraint).
-- [ ] [SCRIPT] P2. **VOL_VARIANCE_SWAP** — real or honest-absent. Repo: strategy-service.
+- [ ] [SCRIPT] P2. **VOL_VARIANCE_SWAP** — real engine SHIPPED (template wave).
+  - code: strategy-service@64da164d, unit-tested; **BACKTEST-PENDING** (needs Tardis historical per-strike surface).
+    `VolVarianceSwapEngine` (`engine/strategies/v2/vol_trading/variance_swap.py`): replicates variance exposure via a
+    **1/K²-weighted OTM strip** (ATM anchor + 25d call wing + 25d put wing; each wing sized `variance_notional/moneyness²`
+    so the deeper-relative-to-forward put wing carries MORE contracts — the canonical Demeterfi replication profile);
+    trades long/short variance vs a surface-implied **fair-variance estimate** (`iv_atm²` lifted by a configurable skew
+    convexity loading) compared to realised variance (`rv²`). Leg-derivation unit tests pin the 1/K² weights + side +
+    fair-var-vs-realised. **NOT registered** + matrix UNCHANGED. **DVOL-vs-Tardis**: surface-dependent — the strip needs
+    a historical **per-strike IV surface** (skew/wing IVs), which Deribit public history does NOT expose (mark-IV history
+    pruned to ~1d, expired instruments empty) → **needs Tardis** for any backtest. No backfill run. **Feed-key gap
+    flagged**: features-service exposes the surface as aggregated scalar buckets (`iv_atm`, `iv_25d_call/put`,
+    `iv_skew_25d`, term) — NOT a per-strike IV-by-moneyness grid; the strip is built from the 3 canonical buckets. A
+    denser strip needs a per-strike surface feature (not yet exposed).
 - [ ] [SCRIPT] P2. **VOL_DISPERSION** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_ARB** — real or honest-absent. Repo: strategy-service.
 - [ ] [SCRIPT] P2. **VOL_TERM_STRUCTURE_SLOPE** — real or honest-absent. Repo: strategy-service.
