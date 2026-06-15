@@ -73,23 +73,23 @@
     "deployment-ui": "0.1.0",
     "execution-service": "0.9.1",
     "features-service": "0.1.2",
-    "fund-administration-service": "0.3.2",
+    "fund-administration-service": "0.3.3",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.5.0",
     "market-tick-data-service": "0.6.0",
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.7.0",
     "unified-trading-library": "0.6.0",
-    "unified-trading-pm": "1.2.102",
+    "unified-trading-pm": "1.2.105",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.2.1",
-    "agent-orchestrator": "0.9.0",
+    "agent-orchestrator": "0.10.0",
     "greeks-service": "0.4.0",
     "trading-agent-service": "0.2.3",
     "strategy-service": "0.2.1",
     "ml-service": "0.5.1",
     "alerting-service": "0.5.2",
-    "unified-trading-api": "0.2.2"
+    "unified-trading-api": "0.2.3"
   },
   "repositories": {
     "alerting-service": {
@@ -1787,16 +1787,16 @@
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
     "e2e-testing": "0.5.0",
-    "agent-orchestrator": "0.10.0",
-    "unified-trading-api": "0.2.3",
-    "fund-administration-service": "0.3.3"
+    "instruments-service": "0.5.1",
+    "unified-trading-library": "0.9.0",
+    "strategy-service": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-15T11:49:13.644906Z",
-    "locked_reason": "Breaking MINOR bump cascade: e2e-testing=0.4.0 (pre-1.0.0)",
-    "lock_version": "0.4.0",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
+    "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 3,
     "locked_alert_sent": false,
@@ -1817,25 +1817,45 @@
       "sha": "d8bb31e75b0d4573523c5daeef57b5f463111262",
       "branch": "staging"
     },
-    "agent-orchestrator": {
-      "version": "0.10.0",
-      "sha": "d0df271889bd83d4994ec89f1bbb598dff864f99",
+    "instruments-service": {
+      "version": "0.5.1",
+      "sha": "7ba908e8cf2d879b178649bf6a76efa81a13e863",
       "branch": "staging"
     },
-    "unified-trading-api": {
-      "version": "0.2.3",
-      "sha": "c935b1dc2c43f061e1ce02f38110c056d4a0e0a4",
+    "unified-trading-library": {
+      "version": "0.9.0",
+      "sha": "2970a366537bfa68e95c769cc4c52be7c307c663",
       "branch": "staging"
     },
-    "fund-administration-service": {
-      "version": "0.3.3",
-      "sha": "2d572830a75d55caa305176e89298e6c25392ea7",
+    "strategy-service": {
+      "version": "0.6.0",
+      "sha": "2eb53773031053b1539532d692a73b8da977a1df",
       "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-15T13:33:01.438906Z",
+        "commits": {
+          "agent-orchestrator": {
+            "version": "0.10.0",
+            "sha": "d0df271889bd83d4994ec89f1bbb598dff864f99",
+            "branch": "staging"
+          },
+          "unified-trading-api": {
+            "version": "0.2.3",
+            "sha": "c935b1dc2c43f061e1ce02f38110c056d4a0e0a4",
+            "branch": "staging"
+          },
+          "fund-administration-service": {
+            "version": "0.3.3",
+            "sha": "2d572830a75d55caa305176e89298e6c25392ea7",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-15T11:18:24.115710Z",
         "commits": {
@@ -1940,26 +1960,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-10T13:08:30.912681Z",
-        "commits": {
-          "market-tick-data-service": {
-            "branch": "staging",
-            "sha": "3a113ab5bfa0a80ffcd83f0c01c00a0f42153ee2",
-            "version": "0.6.0"
-          },
-          "features-service": {
-            "branch": "staging",
-            "sha": "1a67c96862defe16ff6ebe4cb5fe8a19701b66d2",
-            "version": "0.1.2"
-          },
-          "deployment-api": {
-            "version": "0.4.0",
-            "sha": "8fc067fc1bfc450e666d7f08c9d3317578f3a834",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1974,6 +1974,8 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {},
+  "promotion_failures": {
+    "execution-service": 1
+  },
   "promotion_quarantine": {}
 }
