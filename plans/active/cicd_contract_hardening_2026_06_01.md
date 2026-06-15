@@ -1131,7 +1131,7 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       to CI; restore tight committed defaults + handle macOS-local slowness via env override, not a committed default.
       (c) **e2e-testing** 18 transitive-CVE `--ignore-vuln` — documented-no-fix, acceptable but centralize + revisit
       when upstreams patch. repos: features-service, e2e-testing, greeks-service, unified-trading-system-ui.
-- [ ] [INFRA] P1. **macOS ~430s cold protobuf/UAC import overhead per pytest process — workspace-level fix (operator:
+- [x] ✅ [INFRA] P1. **DONE 2026-06-15 (slot-3) — both eager-import offenders made lazy; `import unified_trading_library` 6.4s→3.4s, 0 eager google.cloud (was 1092 modules), pure-local/pytest mode loads 0 google.cloud. Part A sklearn utl@108bb79bf; Part B google.cloud/boto3 PEP 562 lazy re-exports utl@44aba6d8.** **macOS ~430s cold protobuf/UAC import overhead per pytest process — workspace-level fix (operator:
       worth a real fix).** Root cause (features agent 2026-06-02): each pytest/xdist process cold-imports
       `google.cloud.compute_v1…     transports.rest` (~22s) +
       `unified_api_contracts.canonical.crosscutting.incident.action` (~26s) + hundreds of protobuf-descriptor-heavy
@@ -1151,13 +1151,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
   > `feature_calculator.__init__` chain. Fixed: `TYPE_CHECKING` guard + lazy import (first statement in
   > `apply_normalization`, `# noqa: qg-inside-import`). Verified: sklearn no longer in `sys.modules` after import;
   > runtime unchanged; QG green. — unified-trading-library@108bb79bf.
-  > **(B) google.cloud — OPEN (this item stays `[ ]` for it).** The google.cloud bundle (compute_v1/bigquery/storage/
-  > pubsub/secretmanager) is still **eagerly** imported on every UTL load via `cloud_interface/__init__ →
-  > providers/__init__ → gcp.py + gcp_compute.py`, costing **~1.8s (~28% of UTL import)** regardless of `CLOUD_PROVIDER`
-  > (1277 import-time lines). Clean fix = PEP 562 `__getattr__` lazy provider loading in `providers/__init__.py` +
-  > `cloud_interface/__init__.py` + lazy import in `factory.py` (same for `aws.py`/boto3) — non-breaking (public symbols
-  > resolve on access) but a T0 public-API-surface change needing `TYPE_CHECKING` guards + consumer-grep + full QG.
-  > Awaiting operator go-ahead before the T0 refactor.
+  > **(B) google.cloud — SHIPPED ✅ utl@44aba6d8.** The eager load was a 4-level re-export cascade (`GCPAnalyticsClient`
+  > re-exported at providers/__init__ → cloud_interface/__init__ → **UTL's own __init__**, which re-triggered it). Fixed
+  > all four via PEP 562 `__getattr__` lazy re-exports + `TYPE_CHECKING` guards + per-branch lazy imports at factory's 16
+  > single-use provider sites (boto3 same). Tests updated to patch the source modules (`providers.gcp`/`providers.aws`)
+  > since the classes are no longer factory-module attributes. Removed dead `build_protocol_config_from_env` (0 refs
+  > fleet-wide) to keep factory.py ≤900 lines. **Measured: cold import 6.4s→3.4s (~47%), 0 eager google.cloud (was 1092
+  > modules / 1277 import-lines), pure-local/pytest mode loads 0 google.cloud; non-breaking (all public paths resolve);
+  > basedpyright 0 errors; UTL QG green (6115+ tests).**
 
 - [x] ✅ **[DONE 2026-06-12 — mtds `MIN_COVERAGE=79` (line-cov 82.7%), raised 28→79 by 2026-06-11; ISS-031 restore complete, both follow-ups (a)+(b) done]** [TEST] P2. **mtds coverage floor is a documented 28% exception (ISS-031) now ENFORCED by the base-service.sh
       systemic fix.** `market-tick-data-service/scripts/quality-gates.sh:12` =
