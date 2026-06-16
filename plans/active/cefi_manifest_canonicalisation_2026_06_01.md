@@ -799,8 +799,8 @@ _futures_ seed, not the migration). Shas: `uac@ae70338d` · `is@74df991d`/`687d1
 **Absorbed (cefi-primary — slot-3 owns outright):**
 
 - `issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md` — **ABSORBED 2026-06-03** (harsh out for the
-  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX
-  with no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
+  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX with
+  no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
   CF-11 "MTDS processed_candles phantom-`captured` reconcile" todo below. Issue doc archives when that todo is GREEN.
 
 **Cross-referenced cefi slices (primary owner keeps the plan; slot-3 drives the cefi portion):**
@@ -1285,8 +1285,8 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
 
 **⚪ P2 / needs-confirm (tracked):**
 
-- [ ] [CODE] P2. **MDPS GAP-7** — `category`→`asset_group` param rename in `dependency_checker` (vocabulary; cross-ref
-      downstream plan GAP-7).
+- [x] ✅ [CODE] P2. **MDPS GAP-7 — DONE mdps@4363bce** — `category`→`asset_group` param rename in `dependency_checker`
+      (vocabulary; cross-ref downstream plan GAP-7). Re-verified 2026-06-16: zero checker `category` params remain.
 - [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain).
       **PARTIALLY CONFIRMED (slot-3 read-only 2026-06-03):** the finalize path DOES run cluster validation
       (`record_captured_from_counts(expected_root_clusters, observed_clusters)`; CLAUDE.md 4-pillar "cluster coverage ≥

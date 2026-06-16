@@ -147,7 +147,7 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 | Issue                                                           | What it is                                                                      | How this master resolves it                                       |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `issues/defi_code_codex_drift_2026_05_27`                       | DeFi code↔codex drift audit (D1–D13: data-types, venues, banned providers)     | §A writer + §F docs/SSOT close the code/codex drift items         |
+| `issues/defi_code_codex_drift_2026_05_27`                       | DeFi code↔codex drift audit (D1–D13: data-types, venues, banned providers)      | §A writer + §F docs/SSOT close the code/codex drift items         |
 | `issues/features_service_defi_data_loading_blockers_2026_05_29` | features-service DeFi e2e blocked on data-layer (dex_swaps→dex_pool_swaps etc.) | §C0–C2 canonical-naming walk + §D features propagation resolve it |
 
 ### Layered order (gates top-down; asset_groups parallelise within a layer)
@@ -993,18 +993,25 @@ What to verify/wire (B0 corrected scope):
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
-- [ ] [DATA] P0. **B0-PRE (slot-7→slot-2 2026-06-09): re-verify enumerate after the PROTOCOL_CAPABILITIES expansion.**
-      `unified-api-contracts@f5e6b0c2` wired 9 DeFi data_types (bridge/eigenlayer/flash_loan/governance/liquidation/mev/
-      position/staking_yields/token_transfers) to genuine venue producers → +18 protocols (37→55), so the could-exist
-      universe + `expected_unattempted` seeding + coverage denominator GREW. Before B0 / G4 `--apply`: (1) re-run the
-      DeFi `enumerate_expected_universe` dry-run on `f5e6b0c2`+ and diff the candidate count vs the pre-expansion run;
-      (2) confirm the 18 new venues (across/stargate/eigenlayer/flashbots/alchemy_onchain/\*\_governance + the
-      restaking/ vault protocols) are intended DeFi capture targets (a venue declared in `defi_venue_capabilities.py`
-      but with no live capture path is still HONEST could-exist → its cells seed `expected_unattempted`, which is
-      correct — coverage % drops, not a regression); narrow PROTOCOL_CAPABILITIES only if a venue is genuinely
-      out-of-scope. `native_staking_rates` + `vault_share_price` remain `BLOCKED_UPSTREAM_CAPABILITY` (no producer).
-      Additive ⇒ NON-BLOCK per the Pre-Apply BLOCK RULE, but the seed must reflect the new universe. parent_epic:
-      manifest_master.
+- [x] ✅ [DATA] P0. **B0-PRE — RE-VERIFIED 2026-06-16 (/autonomous):** fresh DeFi `enumerate_expected_universe` v2
+      dry-run (catalog `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`, 1,578,922 manifest
+      rows, window 2026-06-07→06-08) = **52,862 candidate rows/2d** (per-instrument grain, scan-only, 0 written) — same
+      order of magnitude as the recorded 57,074/2d (Δ≈−4.2K = catalogue drift since that run; **NOT a regression**).
+      `PROTOCOL_CAPABILITIES` = **55** confirmed (37→55 expansion, uac@f5e6b0c2). The 18 new venues are HONEST
+      could-exist (coverage % drops, not a regression); `native_staking_rates` + `vault_share_price` stay
+      `BLOCKED_UPSTREAM_CAPABILITY` (no producer). Additive ⇒ NON-BLOCK per Pre-Apply BLOCK RULE; the `--apply-write`
+      seed stays G1.run-gated. **B0-PRE (slot-7→slot-2 2026-06-09): re-verify enumerate after the PROTOCOL_CAPABILITIES
+      expansion.** `unified-api-contracts@f5e6b0c2` wired 9 DeFi data_types
+      (bridge/eigenlayer/flash_loan/governance/liquidation/mev/ position/staking_yields/token_transfers) to genuine
+      venue producers → +18 protocols (37→55), so the could-exist universe + `expected_unattempted` seeding + coverage
+      denominator GREW. Before B0 / G4 `--apply`: (1) re-run the DeFi `enumerate_expected_universe` dry-run on
+      `f5e6b0c2`+ and diff the candidate count vs the pre-expansion run; (2) confirm the 18 new venues
+      (across/stargate/eigenlayer/flashbots/alchemy_onchain/\*\_governance + the restaking/ vault protocols) are
+      intended DeFi capture targets (a venue declared in `defi_venue_capabilities.py` but with no live capture path is
+      still HONEST could-exist → its cells seed `expected_unattempted`, which is correct — coverage % drops, not a
+      regression); narrow PROTOCOL_CAPABILITIES only if a venue is genuinely out-of-scope. `native_staking_rates` +
+      `vault_share_price` remain `BLOCKED_UPSTREAM_CAPABILITY` (no producer). Additive ⇒ NON-BLOCK per the Pre-Apply
+      BLOCK RULE, but the seed must reflect the new universe. parent_epic: manifest_master.
 - [ ] [DATA] P0. B0 (CORRECTED — do NOT build a consolidator step) RUN the existing expected_unattempted chain for DeFi:
       confirm the DeFi MTDS batch orchestrator goes through the instruments-service pre-flight that calls
       `record_expected_unattempted` (wire the DeFi handlers onto it if not), then run a prod DeFi MTDS batch so the owed

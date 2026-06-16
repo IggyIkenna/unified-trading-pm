@@ -515,12 +515,15 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
       flips its corpus to v9. P2 + warn-only → low value pre-migration; real value is the post-migration regression
       catch. (slot-3 2026-06-02: deferred under context budget with this design spec so the next agent ships the
       non-noisy form.)
-- [ ] [CODE] P2. **GAP-7 (MDPS, vocab): rename `dependency_checker` `category` params → `asset_group`** (+ docstrings)
-      at next substantive touch. Functional-correct today (resolves via `resolve_bucket_name(asset_group=…)`); naming
-      only. (slot-3 2026-06-02: deliberately NOT done this session — a pervasive cosmetic rename across
-      `check_upstream_data_granular`/ `_resolve_upstream_bucket`/`_get_upstream_deps_for_category` + all callers risks
-      collision with the parallel `category=`-ban work + adds churn for zero functional gain; do it when
-      `dependency_checker.py` is substantively touched.)
+- [x] ✅ [CODE] P2. **GAP-7 (MDPS, vocab) — DONE mdps@4363bce** (2026-06-11; re-verified 2026-06-16: zero checker
+      `category` params remain — every `dependency_checker` signature uses `asset_group`; the 3 residual `category`
+      string refs are framework template-var / manifest-column names, a separate `category=`-ban vocab concern, NOT this
+      rename). Rename `dependency_checker` `category` params → `asset_group` (+ docstrings) done. Functional-correct
+      today (resolves via `resolve_bucket_name(asset_group=…)`); naming only. (slot-3 2026-06-02: deliberately NOT done
+      this session — a pervasive cosmetic rename across `check_upstream_data_granular`/
+      `_resolve_upstream_bucket`/`_get_upstream_deps_for_category` + all callers risks collision with the parallel
+      `category=`-ban work + adds churn for zero functional gain; do it when `dependency_checker.py` is substantively
+      touched.)
 
 ## Deferred work after 2026-06-02 slot-3 session (code-only, pre-migration, NO migration run)
 
