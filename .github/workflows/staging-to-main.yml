@@ -508,6 +508,34 @@ jobs:
           sys.exit(0)
           PYEOF
 
+      # Gap 9a (ci_pipeline_self_healing §Gap 9a): dep-PUBLISH-ordering — WARN-ONLY for now.
+      # The dep-order gate above checks deps are on MAIN; this additionally checks each promoting
+      # consumer's internal-dep FLOORS (from its staging pyproject) are actually PUBLISHED to
+      # Artifact Registry — the window the original jam exploited (a floor reached main before the
+      # producer's wheel was in AR → consumer's standalone `uv sync` couldn't resolve it → red).
+      # Strictly fail-OPEN (the script never blocks on an unreadable/empty/ambiguous AR signal).
+      # SHIPPED WARN-ONLY (continue-on-error, does NOT modify READY_REPOS) to observe real runs
+      # before flipping to a hard skip (rule 11 canary). Flip to BLOCK = drop the unsatisfied repos
+      # from READY_REPOS here once a few runs confirm no false positives.
+      - name: STAGE 1.8b — dep-publish-to-AR check (Gap 9a, WARN-only canary)
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          READY_REPOS: ${{ env.READY_REPOS }}
+        run: |
+          set -uo pipefail
+          if ! command -v gcloud >/dev/null 2>&1; then
+            echo "STAGE 1.8b: gcloud unavailable — fail-open, skipping dep-publish check."; exit 0
+          fi
+          REPOS="${READY_REPOS:-}"
+          if [ -z "$REPOS" ]; then echo "STAGE 1.8b: no ready repos to check."; exit 0; fi
+          for repo in $REPOS; do
+            # --ref staging: the consumer's staging pyproject is the version being promoted to main.
+            python3 scripts/cicd/assert_deps_published_to_ar.py "$repo" --ref staging || \
+              echo "::warning::STAGE 1.8b (Gap 9a, WARN-only): $repo has an internal dep not yet published to AR at its floor — once this gate flips to BLOCK, $repo would wait. Investigate the producer's AR publish."
+          done
+
       - name: Merge staging → main for ready (dep-on-main) repos with staging changes
         if: steps.idempotency.outputs.idempotent_skip != 'true'
         id: promote
