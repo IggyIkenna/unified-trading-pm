@@ -66,11 +66,12 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
       instruments-service. — dry-run 2026-06-16: 321,566 rows in scope, 39,912 pre-launch excluded (footystats
       coverage_start=2019-01-01 clip working), 944 phantoms (ODDS:474 PREDICTIONS:469 MATCHES:1) = **0.294% rate < 0.5%
       bar**. Triage JSONL: gs://central-element-323112-phantom-triage/triage_sports_20260616_094613.jsonl.
-- [ ] [AGENT] P0. Wait for any in-flight `sfi-backfill-*` recon VMs to drain before the full re-run; verify STOPPED via
+- [x] ✅ [AGENT] P0. Wait for any in-flight `sfi-backfill-*` recon VMs to drain before the full re-run; verify STOPPED via
       `gcloud compute instances list` per the no-fire-and-forget rule. Then re-run
       `reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run` and `--apply`-flip ONLY the genuinely-real
       residual (never blanket-flip the current 115,524 — the 2026-04-29 false-positive class is the cautionary
-      precedent).
+      precedent). — dry-run: 1221 real phantoms (0.185% rate), 70663 pre-launch rows clipped; --apply flipped 1221
+      rows to attempted_failed; triage JSONL at gs://central-element-323112-phantom-triage/triage_sports_20260616_094813.jsonl
 
 ## Success criteria
 
