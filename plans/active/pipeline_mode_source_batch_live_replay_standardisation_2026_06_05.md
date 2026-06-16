@@ -502,8 +502,8 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
       batch-live-reconciliation-service@0e17d7ee
 - [x] ✅ M5b deployment-api cadence dim QG green — deployment-api@66e8562d
 - [ ] [UI] P2. M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
-- [ ] [INFRA] P1. M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs)
-- [x] ✅ GATE-0 SIT green (batch + gate legs; live leg skip-pending-M1) — system-integration-tests@db14463 → **GATE-0
+- [x] ✅ [INFRA] P1. M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs fleet-wide). Shipped: execution-service@04218fbc · batch-live-reconciliation-service@3bad2fe · deployment-api@aa18d8ae (reader exact-match→`startswith("live")` prefix bug FIX) · market-data-processing-service@30e7672 · market-tick-data-service@84a15cc · unified-trading-library@2afb22bd (resolver source-aware + `close_candle_writer` pipeline_mode required) · **unified-api-contracts@28bd50e (LIVE_WEBSOCKET member DELETED + `source_string_for`/`transport_of` special-cases removed + 4 streaming events `pipeline_mode: PipelineMode|None=None` metadata-only)** · system-integration-tests@ec46de8 (live leg un-skipped, green). `rg "live_websocket|LIVE_WEBSOCKET" --type py` = **0** fleet-wide.
+- [x] ✅ GATE-0 SIT green — ALL legs incl. the LIVE leg now un-skipped (system-integration-tests@ec46de8; M1-BREAKING landed) → **GATE-0 FULLY MET (batch + live path)** → Phase-1 dry-runs unblocked for BOTH batch + live corpora; the #5 `live_websocket` multi-source path collision is eliminated (a real `--apply` can now bake live rows safely). _Superseded line (historical):_ system-integration-tests@db14463 → **GATE-0
       FOUNDATION MET (batch path)** → Phase-1 BATCH dry-runs unblocked. (Live-path collision-free guarantee =
       M1-BREAKING, the gated tranche before a live-containing `--apply`.)
 
@@ -657,3 +657,19 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   fleet-wide (the 3 files were stubbed here; audit other `process_ticks`-calling sports unit tests in mtds for the same
   `_check_sports_v9_columns` seeded-emulator dependency). Provenance: GATE-0 tick-5 sports-hermeticity finding. Repo:
   market-tick-data-service. Parent: `sports_manifest_canonicalisation_2026_06_01`.
+- **2026-06-16 (tick 6) — M1-BREAKING COMPLETE → GATE-0 8/9 (only M5c/d UI left).** `rg "live_websocket|LIVE_WEBSOCKET"
+  --type py` = **0 fleet-wide**. Full ship set: execution@04218fbc · BLRS@3bad2fe · deployment-api@aa18d8ae · mdps@30e7672
+  · mtds@84a15cc · UTL@2afb22bd · **UAC@28bd50e (alias member DELETED + source_string_for/transport_of special-cases
+  removed; the closed-set round-trip now validates EVERY member with no exemption)** · SIT@ec46de8 (live leg un-skipped,
+  7/7 green). **Two design decisions made under the breaking step (documented for the record):** (1) The 4 UAC streaming
+  events (`CandleBoundaryCrossedEvent`/`CandleComputedEvent`/`InstrumentCacheRefreshTriggerEvent`/`FeaturesComputedEvent`)
+  defaulted `pipeline_mode = LIVE_WEBSOCKET`. VERIFIED that field is METADATA-ONLY — it is forwarded event→event but the
+  terminal manifest stamp is set source-aware by the recorder IMPLEMENTER (UTL `streaming/live_aggregator.py` record_empty
+  comment confirms; no consumer decisions on it) → changed the default to `PipelineMode | None = None` (no producer/consumer
+  cascade, no manifest mis-stamp). (2) `resolve_pipeline_mode(...,"live")` now FAILS LOUD (requires asset_group+venue+
+  data_type) rather than defaulting — operator R4. **CI note**: UAC@28bd50e is an intentional BREAKING public-surface
+  change (enum-member removal) → triggers the staging SIT cascade on its LDR→staging drain, as designed. Version-alignment
+  drift from the concurrent UAC/UTL semver bumps surfaced in the SIT QG → fixed via the sanctioned
+  `run-version-alignment.sh --fix` (regenerated canonical+workspace manifests, committed chore(deps)). REMAINING: M5c/d UI
+  cadence drilldown (deployment-ui + unified-trading-system-ui, Node22/pw:L2) — display-only, NOT part of the data gate;
+  must also fix the 2 pre-existing `prediction_v9_breakdown.spec.ts` failures (they gate pw:L2). Then GATE-0 = 9/9.
