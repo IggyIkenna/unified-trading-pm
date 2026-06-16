@@ -1,11 +1,12 @@
 ---
 type: audit-result
+title: Infrastructure Master — CI/CD Pipeline Contract Audit (2026-06-01)
 epic: infrastructure_master
-instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
-scope_subset: "CI/CD Pipeline Contract (checklist h–l only — VM/GCS items a–g not run this pass)"
 auditor: ikenna (slot 1 main, Opus 4.8 1M)
 date: 2026-06-01
 status: complete
+instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
+scope_subset: CI/CD Pipeline Contract (checklist h–l only — VM/GCS items a–g not run this pass)
 ---
 
 # Infrastructure Master — CI/CD Pipeline Contract Audit (2026-06-01)

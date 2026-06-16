@@ -1,10 +1,11 @@
 ---
 type: audit-result
+title: instruments-service audit — full chain (download → manifest versions) — 2026-06-08
 epic: instruments_master
-instructions_ref: plans/audit/instructions/instruments_master_audit_instructions.md (items a–h, CF-1…CF-14)
 auditor: harsh (interactive, hk laptop)
 date: 2026-06-08
 status: complete
+instructions_ref: plans/audit/instructions/instruments_master_audit_instructions.md (items a–h, CF-1…CF-14)
 method:
   code-state — 4 parallel read-only sub-agents (adapters/download · manifest+schema · catalogue/universe/contract ·
   standards/hygiene) + first-hand verification of the top findings + git-log reconciliation. Data-state reads deferred

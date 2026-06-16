@@ -1,10 +1,14 @@
 ---
-title: "CI dashboard shows the breaking-cascade but NOT the routine LDR→staging/main promotion drain — operator can't see 'when did we last promote + did it pass'"
+title:
+  "CI dashboard shows the breaking-cascade but NOT the routine LDR→staging/main promotion drain — operator can't see
+  'when did we last promote + did it pass'"
 created: 2026-06-11
 assignee: harsh
 source:
-  - operator observation 2026-06-11 (deployment-ui Repos CI: "Last SIT / cascade run — success 22h ago" — is that 'we haven't promoted in a day' or only the major-version cascade? we'd want to see when LDR→staging via auto-merge + QG branch protection last ran + its result)
-  - slot-3 verification 2026-06-11 (cascade-qg-ordering vs ldr-to-staging-promote are distinct workflows)
+  - 'operator observation 2026-06-11 (deployment-ui Repos CI: "Last SIT / cascade run — success 22h ago" — is that ''we
+    haven''t promoted in a day'' or only the major-version cascade? we''d want to see when LDR→staging via auto-merge +
+    QG branch protection last ran + its result)'
+  - "slot-3 verification 2026-06-11 (cascade-qg-ordering vs ldr-to-staging-promote are distinct workflows)"
 locked_by: live-defi-rollout
 priority: P2
 status: active
@@ -85,18 +89,18 @@ from** the breaking-cascade panel and clearly labelled so the two are never conf
       regression: tests/smoke/repos-tab.spec.ts (`a stuck PR shows the BLOCKING required check + reason`). Drive-by:
       fixed 2 pre-existing stale `GCSStorageClient` patch targets (factory → providers.gcp) broken by UTL's lazy-import
       refactor. Repo: deployment-api + deployment-ui.
-- [x] ✅ [CODE] P2. **Promotion-lag signal gated on real content (files_changed>0), not ahead_by — kill the phantom
-      "Nd lag"** (operator question 2026-06-15: "if the drain is working why is features-service `in sync · 21 commits
-      (squash skew) 4d 2h lag`?"). Root cause: squash-merge keeps LDR perpetually `ahead_by=N / behind_by=0` by COMMIT
-      count even when the tree is byte-identical to main (`files_changed=0`), so a lag age keyed on `ahead_by>0` ages the
-      oldest *already-promoted* squashed commit and reddens a fully-drained row — contradicting the `(squash skew)` label
-      + `drain_stalled` (both already gate on `files_changed>0`). Verified live: features-service 21/0, ibkr 188/0, uac
-      10/0 are all content-in-sync; only ml-service 1/1 is real. **TWO surfaces shared the bug** — the dashboard chip AND
-      the standalone pager. Fixed both: deployment-api@cf7b980 (`_has_unpromoted_content(ldr_main)` pure helper gates
-      `main_lag_age_min`; unit test `test_has_unpromoted_content_ignores_squash_skew`) + unified-trading-pm PR#337
-      (`promotion_lag_monitor._lag` short-circuits when the compare net-diff `files==[]`; tests
-      `test_lag_suppressed_on_squash_skew` + `test_lag_fires_on_real_content`). QG green both repos. Repo: deployment-api
-      + unified-trading-pm.
+- [x] ✅ [CODE] P2. **Promotion-lag signal gated on real content (files_changed>0), not ahead_by — kill the phantom "Nd
+      lag"** (operator question 2026-06-15: "if the drain is working why is features-service
+      `in sync · 21 commits     (squash skew) 4d 2h lag`?"). Root cause: squash-merge keeps LDR perpetually
+      `ahead_by=N / behind_by=0` by COMMIT count even when the tree is byte-identical to main (`files_changed=0`), so a
+      lag age keyed on `ahead_by>0` ages the oldest _already-promoted_ squashed commit and reddens a fully-drained row —
+      contradicting the `(squash skew)` label + `drain_stalled` (both already gate on `files_changed>0`). Verified live:
+      features-service 21/0, ibkr 188/0, uac 10/0 are all content-in-sync; only ml-service 1/1 is real. **TWO surfaces
+      shared the bug** — the dashboard chip AND the standalone pager. Fixed both: deployment-api@cf7b980
+      (`_has_unpromoted_content(ldr_main)` pure helper gates `main_lag_age_min`; unit test
+      `test_has_unpromoted_content_ignores_squash_skew`) + unified-trading-pm PR#337 (`promotion_lag_monitor._lag`
+      short-circuits when the compare net-diff `files==[]`; tests `test_lag_suppressed_on_squash_skew` +
+      `test_lag_fires_on_real_content`). QG green both repos. Repo: deployment-api + unified-trading-pm.
 
 **Parent epic**: `observability_master` (this is the monitoring control-plane surface). Wrapper into
 `monitoring_control_plane_master_2026_06_10.md` smart-extras if picked up as a sub-plan, or execute directly from this

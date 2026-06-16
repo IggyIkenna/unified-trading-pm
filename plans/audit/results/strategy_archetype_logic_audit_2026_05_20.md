@@ -1,16 +1,20 @@
 ---
+type: audit-result
 title: Strategy archetype logic audit — separate from data-sanity mega audit + strategy MAP
-created: 2026-05-20
-updated: 2026-05-21
-locked_by: live-defi-rollout
-locked_since: 2026-05-20
-priority: P0
+epic: strategy_master
+auditor: claude + operator
+date: "2026-05-20"
 status:
   ENRICHED 2026-05-21 — added §0 MAP (operator-requested full overview synthesised from 7 parallel research sub-agents)
   + §15-20 new dimensions + active plans inventory + master-strategy-plan deliverable. ACKED — operator authorised
   2026-05-20 round 5 to run TONIGHT in parallel with strategy/ml consolidation tail. Requires **Opus 4.7 (1M context)**
   — cross-archetype + cross-codebase scope demands the full graph in one session per
   `codex/06-coding-standards/model-tier-selection.md` opus-required tier.
+instructions_ref: plans/audit/instructions/strategy_master_audit_instructions.md
+updated: 2026-05-21
+locked_by: live-defi-rollout
+locked_since: 2026-05-20
+priority: P0
 parent_epic: strategy_master
 related_plans:
   - mega_audit_and_plan_beefup_progression_2026_05_20.md

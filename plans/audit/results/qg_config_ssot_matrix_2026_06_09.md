@@ -1,7 +1,10 @@
 ---
+type: analysis
 title: QG config dual-SSOT matrix — TIER-A vs TIER-B knob classification + bandit -c verdict
-created: 2026-06-10
-author: slot-1 (claude)
+epic: infrastructure_master
+auditor: slot-1 (claude)
+date: "2026-06-10"
+status: complete
 source:
   - plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md — Phase 0 audit items (dual-SSOT matrix, bandit-`-c`
     question, TIER-A/TIER-B classification)

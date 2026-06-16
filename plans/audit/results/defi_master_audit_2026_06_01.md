@@ -1,10 +1,11 @@
 ---
 type: audit-result
+title: DeFi Master — Strategy Data-Coverage Audit Result (2026-06-01)
 epic: defi_master
-instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
 auditor: ikenna (interactive slot 1)
 date: 2026-06-01
 status: AMBER
+instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
 correction_note:
   First pass reported "0% captured / data missing" — that was a methodology error (read only the market-data-tick-defi
   phantom grid). Corrected after reading the dedicated per-data_type buckets. Data EXISTS (79-96% captured); the real

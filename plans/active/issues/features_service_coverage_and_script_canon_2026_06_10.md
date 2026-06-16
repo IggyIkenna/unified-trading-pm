@@ -4,7 +4,7 @@ created: 2026-06-10
 source:
   - features-service test-coverage session 2026-06-10
   - codex/06-coding-standards/script-homes.md
-locked_by: ""
+locked_by: live-defi-rollout
 priority: P2
 status: active
 ---

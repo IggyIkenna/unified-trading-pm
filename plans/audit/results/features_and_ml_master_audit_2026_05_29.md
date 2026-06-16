@@ -1,11 +1,13 @@
 ---
-name: features_and_ml_master_audit_2026_05_29
 type: audit-result
+title: Features + ML Master — Audit Result 2026-05-29
 epic: features_and_ml_master
-audit_instructions: plans/audit/instructions/features_and_ml_master_audit_instructions.md
+auditor: harsh (claude opus 4.7)
 date: 2026-05-29
-author: harsh (claude opus 4.7)
 status: complete-with-blockers
+instructions_ref: plans/audit/instructions/features_and_ml_master_audit_instructions.md
+name: features_and_ml_master_audit_2026_05_29
+audit_instructions: plans/audit/instructions/features_and_ml_master_audit_instructions.md
 ---
 
 # Features + ML Master — Audit Result 2026-05-29

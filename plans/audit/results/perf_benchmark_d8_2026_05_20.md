@@ -1,7 +1,10 @@
 ---
+type: benchmark
 title: D8 performance benchmark results
-created: 2026-05-22
-author: slot-2
+epic: infrastructure_master
+auditor: slot-2
+date: "2026-05-22"
+status: complete
 source:
   - plans/active/d8_perf_upgrade_2026_05_20.md Phase 4
   - codified_shape_compliance_2026_05_20.csv (A1 hot-path data)

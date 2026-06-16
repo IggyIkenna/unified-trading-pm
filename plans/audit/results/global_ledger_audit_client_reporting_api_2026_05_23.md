@@ -1,7 +1,10 @@
 ---
-title: "Global Ledger Audit — client-reporting-api"
-created: 2026-05-23
-author: slot-7
+type: analysis
+title: Global Ledger Audit — client-reporting-api
+epic: global_ledger_pnl_attribution_master
+auditor: slot-7
+date: "2026-05-23"
+status: complete
 source:
   - global_ledger_pnl_attribution_discovery_2026_05_21.md Phase 1 audit task
 scope: client-reporting-api consumer-side audit

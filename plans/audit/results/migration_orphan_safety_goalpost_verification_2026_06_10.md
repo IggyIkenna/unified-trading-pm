@@ -1,9 +1,12 @@
 ---
+type: analysis
 title:
-  "AUDIT — migration orphan-safety, beta-manifest goalpost preview, verified-delete gate, data sizing & schema-attribute
-  completeness (the 'migrate once, never need a v10' verification harness) + MVP-tag / config-versioning reconciliation"
-created: 2026-06-10
-author: ikennaigboaka [slot-3·laptop]
+  AUDIT — migration orphan-safety, beta-manifest goalpost preview, verified-delete gate, data sizing & schema-attribute
+  completeness (the 'migrate once, never need a v10' verification harness) + MVP-tag / config-versioning reconciliation
+epic: manifest_master
+auditor: ikennaigboaka [slot-3·laptop]
+date: "2026-06-10"
+status: for-operator-review
 parent_plan: active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
 source:
   - operator 2026-06-10 ("worried about GCS orphans after migration; want to check everything moved; dry-run dumped to a
@@ -13,7 +16,6 @@ source:
   - operator 2026-06-10 ("MVP tag to the catalogues (instrument/strategy/features/models/execution config); data-status
     MVP tick; instrument config like the sports-leagues / prediction-markets filter, everything-or-nothing at the family
     grain; config versioning as distinct from code versioning")
-status: for-operator-review
 priority: P0
 ---
 
@@ -139,8 +141,8 @@ roll up **bytes + object-count per (asset_group, data_type, venue, pipeline_mode
 
 ### ⑰ Possible-manifest registry (consolidated shard-dynamics SSOT + generator) — _operator add 2026-06-10_
 
-> **Operator ask**: "a registry of all available shard dynamics per AG (venue, data_type, instrument_type, …) —
-> effectively a consolidation of the _possible_ manifest."
+> **Operator ask**: "a registry of all available shard dynamics per AG (venue, data*type, instrument_type, …) —
+> effectively a consolidation of the \_possible* manifest."
 
 This is **foundational — logically UPSTREAM of ⑬/⑮/⑦** even though numbered later. A manifest is only auditable against
 a _defined key-space_: ⑬ can only call a GCS object an "orphan" if its hive-key is outside the valid space; ⑮ needs the
@@ -190,8 +192,8 @@ already documents for itself) — it consolidates the _consumption surface_, it 
 exactly this: it enumerates the could-exist universe and writes `expected_unattempted` (via
 `record_expected_empty(reason=EXPECTED_*)`) for every `(shard_key, day)` with no manifest row — driven by the IS
 catalogue, **independent of whether MTDS fetched anything**. The 4-state denominator then reads as
-`captured + empty + failed + expected_unattempted`, so a venue/data_type we've never attempted shows as a
-fully-enumerated _honest_ denominator, not as silently absent.
+`captured + empty + failed + expected_unattempted`, so a venue/data*type we've never attempted shows as a
+fully-enumerated \_honest* denominator, not as silently absent.
 
 **The gap is coverage, and it lands squarely on slot-3 (CeFi):**
 
@@ -328,9 +330,9 @@ granularity honest; the execution pre-flight consumes it.)
 ### B2. "Code that understands we want ALL features" — already the design
 
 The operator's "we'd have to write code so it understands we want all features… everything or nothing for that
-data_type/venue/instrument_type" is **exactly** the family-grain `is_mvp()` + the catalogue enumerator: the config
-declares the _family_ (e.g. cefi×BINANCE×PERPETUAL×funding_rate is MVP), and `enumerate_expected_universe.py` populates
-the _leaves_ (every live expiry/strike for that family, from the per-date catalogue rollup — never hardcoded). Nothing
+data*type/venue/instrument_type" is **exactly** the family-grain `is_mvp()` + the catalogue enumerator: the config
+declares the \_family* (e.g. cefi×BINANCE×PERPETUAL×funding*rate is MVP), and `enumerate_expected_universe.py` populates
+the \_leaves* (every live expiry/strike for that family, from the per-date catalogue rollup — never hardcoded). Nothing
 new to invent; it's Phase-2 wiring.
 
 ### B3. Config versioning — the one genuinely net-new (and small) concept

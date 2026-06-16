@@ -1,7 +1,10 @@
 ---
-title: "QG per-phase wall+RAM profile — fleet sweep results + scopability classification"
-created: 2026-06-11
-author: slot (interactive)
+type: benchmark
+title: QG per-phase wall+RAM profile — fleet sweep results + scopability classification
+epic: infrastructure_master
+auditor: slot (interactive)
+date: "2026-06-11"
+status: complete
 parent_plan: plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
 source:
   - profile_qg_resources.py --all --parallel (host-adaptive pinned sweep, 2026-06-11)

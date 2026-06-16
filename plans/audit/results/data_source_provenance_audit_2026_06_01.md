@@ -1,14 +1,20 @@
 ---
 type: audit-result
+title: Data-source provenance audit — all asset groups (2026-06-01)
 epic:
-  crosscutting (tradfi_master, cefi_master, defi_master, sports_master, predictions_master, mtds_mdps_master,
-  manifest_master)
-instructions_ref:
-  plans/audit/instructions/{tradfi,cefi,sports,predictions,defi}_master_audit_instructions.md § "Dual-source
-  provenance"; mtds_mdps_master item (j); manifest_master item (i)
+  - tradfi_master
+  - cefi_master
+  - defi_master
+  - sports_master
+  - predictions_master
+  - mtds_mdps_master
+  - manifest_master
 auditor: slot-1 (ikenna, interactive)
 date: 2026-06-01
 status: complete
+instructions_ref:
+  plans/audit/instructions/{tradfi,cefi,sports,predictions,defi}_master_audit_instructions.md § "Dual-source
+  provenance"; mtds_mdps_master item (j); manifest_master item (i)
 parent_plan: plans/active/data_source_provenance_all_asset_groups_2026_06_01.md
 ---
 

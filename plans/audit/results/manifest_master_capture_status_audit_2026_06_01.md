@@ -1,11 +1,14 @@
 ---
-title: "manifest_master — per-service capture_status write-path audit — 2026-06-01"
 type: audit-result
+title: manifest_master — per-service capture_status write-path audit — 2026-06-01
 epic: manifest_master
+auditor: harsh-claude-opus (4 parallel sonnet sub-agents)
+date: "2026-06-01"
+status: in-progress
+instructions_ref:
+  plans/audit/instructions/manifest_master_audit_instructions.md § "Per-Service capture_status Write-Path Calibration"
 assigned_vm: vm-defi
 tier: L1
-created: 2026-06-01
-auditor: harsh-claude-opus (4 parallel sonnet sub-agents)
 instructions:
   plans/audit/instructions/manifest_master_audit_instructions.md § "Per-Service capture_status Write-Path Calibration"
 locked_by: live-defi-rollout

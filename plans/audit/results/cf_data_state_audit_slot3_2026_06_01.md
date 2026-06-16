@@ -1,9 +1,18 @@
 ---
+type: analysis
 title:
-  "Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments +
-  downstream)"
-created: 2026-06-01
-author: ikenna (slot-3)
+  Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments +
+  downstream)
+epic:
+  - cefi_master
+  - tradfi_master
+  - sports_master
+  - predictions_master
+  - instruments_master
+  - manifest_master
+auditor: ikenna (slot-3)
+date: "2026-06-01"
+status: complete
 source:
   - plans/audit/results/cf_manifest_audit_2026_06_01.py (the reusable tool that produced these)
   - canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 SSOT)
@@ -439,36 +448,49 @@ G8. **Fleet drain** (GCP+AWS, shared w/ slot-2; epic mtds_mdps_master coordinate
 ## Phase-0 cefi-specific layout verification (slot-10, 2026-06-03)
 
 Ran `cf_layout_audit_2026_06_01.py` + exhaustive per-layout enumeration (lesson 0 mandates `raw_tick_data/by_date/`
-breakdown by kind, not just shallow descend). Results confirm the THREE-layout cefi finding (lesson 0) with exact counts:
+breakdown by kind, not just shallow descend). Results confirm the THREE-layout cefi finding (lesson 0) with exact
+counts:
 
 ### Legacy bucket (`market-data-tick-cefi-central-element-323112`)
 
-| Layout | Path signature | Object count | Notes |
-|--------|---------------|--------------|-------|
-| L1 — FLAT orphans | `raw_tick_data/by_date/{SYMBOL}.parquet` | **9 files** | No path dims; day/venue/data_type in parquet cols only (`exchange, symbol, timestamp[epoch-µs], data_type`). Fan-out to canonical hive needed. |
-| L2 — CANONICAL (most complete) | `raw_tick_data/by_date/day=/pipeline_mode=batch_tardis/asset_group=cefi/venue=/instrument_type=/data_type=/` | **2,613 day-dirs** | Has BOTH `pipeline_mode=` AND `asset_group=` — the source-of-truth for the walk. |
-| L3 — processed_candles (partial hive) | `processed_candles/by_date/day=/timeframe=/data_type=/venue=` | **460 day-dirs** | Has `day=` but no `asset_group=`, no `pipeline_mode=`. |
+| Layout                                | Path signature                                                                                               | Object count       | Notes                                                                                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1 — FLAT orphans                     | `raw_tick_data/by_date/{SYMBOL}.parquet`                                                                     | **9 files**        | No path dims; day/venue/data_type in parquet cols only (`exchange, symbol, timestamp[epoch-µs], data_type`). Fan-out to canonical hive needed. |
+| L2 — CANONICAL (most complete)        | `raw_tick_data/by_date/day=/pipeline_mode=batch_tardis/asset_group=cefi/venue=/instrument_type=/data_type=/` | **2,613 day-dirs** | Has BOTH `pipeline_mode=` AND `asset_group=` — the source-of-truth for the walk.                                                               |
+| L3 — processed_candles (partial hive) | `processed_candles/by_date/day=/timeframe=/data_type=/venue=`                                                | **460 day-dirs**   | Has `day=` but no `asset_group=`, no `pipeline_mode=`.                                                                                         |
 
 ### Canonical bucket (`market-data-tick-cefi-prd-central-element-323112`)
 
-| Layout | Path signature | Object count | Notes |
-|--------|---------------|--------------|-------|
-| C1 — FLAT orphans | `raw_tick_data/by_date/{SYMBOL}.parquet` | **9 files** | Identical to L1 (same orphan files). |
-| C2 — NEAR-CANONICAL | `raw_tick_data/by_date/day=/asset_group=cefi/venue=/instrument_type=/data_type=/` | **2,594 day-dirs** | Has `asset_group=` but **NO `pipeline_mode=`**. 19 days present in L2 but absent here (the gap). LESS canonical than L2. |
-| C3 — processed_candles (partial hive) | `processed_candles/by_date/day=/timeframe=/data_type=/venue=` | **464 day-dirs** | 4 MORE days than legacy (canonical ahead on candles). |
+| Layout                                | Path signature                                                                    | Object count       | Notes                                                                                                                    |
+| ------------------------------------- | --------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| C1 — FLAT orphans                     | `raw_tick_data/by_date/{SYMBOL}.parquet`                                          | **9 files**        | Identical to L1 (same orphan files).                                                                                     |
+| C2 — NEAR-CANONICAL                   | `raw_tick_data/by_date/day=/asset_group=cefi/venue=/instrument_type=/data_type=/` | **2,594 day-dirs** | Has `asset_group=` but **NO `pipeline_mode=`**. 19 days present in L2 but absent here (the gap). LESS canonical than L2. |
+| C3 — processed_candles (partial hive) | `processed_candles/by_date/day=/timeframe=/data_type=/venue=`                     | **464 day-dirs**   | 4 MORE days than legacy (canonical ahead on candles).                                                                    |
 
 ### Key findings for the C0 walk
 
-1. **Legacy L2 is MORE canonical than canonical C2** — L2 has `pipeline_mode=batch_tardis` + `asset_group=cefi`; C2 has only `asset_group=cefi`. The C0 walk must promote C2 → canonical `day=/pipeline_mode=batch_tardis/asset_group=cefi/…` (path rename + manifest rebuild). The superseded C2 paths (`day=/asset_group=` without `pipeline_mode=`) are explicitly listed as DELETE targets at the bottom of this doc.
-2. **19-day raw gap**: 2,613 (L2) − 2,594 (C2) = 19 day-dirs in legacy that are missing from canonical. These cover the bulk of the 5,233 legacy-only manifest cells (each day × venues × data_types).
-3. **processed_candles gap inverted**: canonical (C3) is AHEAD by 4 days vs legacy (L3). No raw-level processed_candles gap-fill needed from legacy; manifest rebuild covers the path upgrade.
-4. **Flat orphan files (L1/C1 — 9 each)**: identical set in both buckets; fan-out to canonical hive (derive day from epoch-µs timestamp, venue from `exchange`, data_type from `data_type` column).
-5. **Classification**: all three legacy layouts are COMPLEMENTARY (raw tick vs candles are different data types; L1/L2 are overlapping shapes of the same raw tick data → L2 is the preferred canonical form, L1 gets migrated into L2's shape).
+1. **Legacy L2 is MORE canonical than canonical C2** — L2 has `pipeline_mode=batch_tardis` + `asset_group=cefi`; C2 has
+   only `asset_group=cefi`. The C0 walk must promote C2 → canonical `day=/pipeline_mode=batch_tardis/asset_group=cefi/…`
+   (path rename + manifest rebuild). The superseded C2 paths (`day=/asset_group=` without `pipeline_mode=`) are
+   explicitly listed as DELETE targets at the bottom of this doc.
+2. **19-day raw gap**: 2,613 (L2) − 2,594 (C2) = 19 day-dirs in legacy that are missing from canonical. These cover the
+   bulk of the 5,233 legacy-only manifest cells (each day × venues × data_types).
+3. **processed_candles gap inverted**: canonical (C3) is AHEAD by 4 days vs legacy (L3). No raw-level processed_candles
+   gap-fill needed from legacy; manifest rebuild covers the path upgrade.
+4. **Flat orphan files (L1/C1 — 9 each)**: identical set in both buckets; fan-out to canonical hive (derive day from
+   epoch-µs timestamp, venue from `exchange`, data_type from `data_type` column).
+5. **Classification**: all three legacy layouts are COMPLEMENTARY (raw tick vs candles are different data types; L1/L2
+   are overlapping shapes of the same raw tick data → L2 is the preferred canonical form, L1 gets migrated into L2's
+   shape).
 
 ### Walk implications (for the E4 migrator build)
 
 - Migrator must handle **3 source layouts**, not 1.
-- For L2→canonical: server-side path rename via `gcs_copy_object` (add `pipeline_mode=batch_tardis` segment) + `gcs_delete_object` the old `day=/asset_group=/` path after verify. **No content rewrite needed** (path-only move; columns already correct).
+- For L2→canonical: server-side path rename via `gcs_copy_object` (add `pipeline_mode=batch_tardis` segment) +
+  `gcs_delete_object` the old `day=/asset_group=/` path after verify. **No content rewrite needed** (path-only move;
+  columns already correct).
 - For L1→canonical: download + derive dims + fan-out + upload (content-aware, not path-only).
-- For L3→canonical: path rename (add `pipeline_mode=batch_tardis/asset_group=cefi/`) + manifest rebuild; for legacy-only days, `gcs_copy_object` from L3.
-- **Manifest rebuild (E5)**: re-run `rebuild_cefi_manifest.py` scanning canonical paths → `ManifestWriter.add(pipeline_mode="batch_tardis", asset_group="cefi", source="tardis")` → v9 schema.
+- For L3→canonical: path rename (add `pipeline_mode=batch_tardis/asset_group=cefi/`) + manifest rebuild; for legacy-only
+  days, `gcs_copy_object` from L3.
+- **Manifest rebuild (E5)**: re-run `rebuild_cefi_manifest.py` scanning canonical paths →
+  `ManifestWriter.add(pipeline_mode="batch_tardis", asset_group="cefi", source="tardis")` → v9 schema.

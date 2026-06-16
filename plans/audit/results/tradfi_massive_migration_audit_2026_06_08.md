@@ -1,12 +1,13 @@
 ---
 type: audit-result
+title: TradFi Databento → Massive migration — multi-axis audit (2026-06-08)
 epic: tradfi_master
-instructions_ref:
-  plans/audit/instructions/tradfi_master_audit_instructions.md (§ "Dual-source provenance" h–o + § "TradFi-specific
-  standing checks" tradfi-erab/tradfi-dual/tradfi-vix/tradfi-listing); CF-1…CF-14
 auditor: harsh (interactive, hk laptop)
 date: 2026-06-08
 status: complete
+instructions_ref:
+  plans/audit/instructions/tradfi_master_audit_instructions.md (§ "Dual-source provenance" h–o + § "TradFi-specific
+  standing checks" tradfi-erab/tradfi-dual/tradfi-vix/tradfi-listing); CF-1…CF-14
 parent_plan: plans/active/tradfi_massive_dual_source_2026_05_28.md
 related_plans:
   - plans/active/data_source_provenance_all_asset_groups_2026_06_01.md
