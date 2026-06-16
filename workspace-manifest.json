@@ -1796,8 +1796,13 @@
     "locked_since": "2026-06-16T06:55:06.534195Z",
     "locked_reason": "Breaking MINOR bump cascade: system-integration-tests=0.6.0 (pre-1.0.0)",
     "lock_version": "0.6.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "execution-service",
+      "strategy-service",
+      "unified-api-contracts",
+      "system-integration-tests"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "system-integration-tests"
