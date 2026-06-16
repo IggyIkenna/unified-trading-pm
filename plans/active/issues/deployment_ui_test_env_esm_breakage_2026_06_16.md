@@ -1,7 +1,6 @@
 ---
 title: deployment-ui vitest needs Node ≥22 (jsdom@29 ESM deps) — NOT a fleet breakage; RESOLVED via Node-22 pin
 created: 2026-06-16
-author: ikennaigboaka
 status: RESOLVED 2026-06-16
 priority: P1
 source:

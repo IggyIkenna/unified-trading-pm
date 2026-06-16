@@ -1,7 +1,6 @@
 ---
 title: DeFi address-citation baseline incompletely seeded — blocks ratchet-exit-code hardening rollout
 created: 2026-06-16
-author: qg-agent (slot, Ikenna fleet)
 locked_by: live-defi-rollout
 priority: P1
 status: active
