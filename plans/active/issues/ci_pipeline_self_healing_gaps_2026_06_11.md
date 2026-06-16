@@ -377,10 +377,11 @@ tree-equal → the drain skips them at the tree-equality gate BEFORE the runaway
 self-healed (it already had the workflow). Evidence: ao@dbcc2b0 + #303, e2e@760b546 + #286, ml #108, uta@23a20b3,
 ui@f2223d47.
 
-- [ ] [WORKFLOW] P1. Make a MISSING `staging-backmerge-to-ldr.yml` / `main-backmerge-to-ldr.yml` an **ERROR not a WARN**
-      in `scripts/quality_gates/detect_template_drift.py` for any repo that HAS a `staging` branch + is in the Tier-C
-      drain set (these two templates are promote-loop-critical; their absence is the documented runaway cause, not
-      cosmetic drift). Keep WARN for non-critical templates.
+- [x] ✅ [WORKFLOW] P1. DONE 2026-06-16 (unified-trading-pm PR #359) — `detect_template_drift.py --workflows` now
+      escalates a MISSING `staging-backmerge-to-ldr.yml` / `main-backmerge-to-ldr.yml` from WARN → **ERROR**
+      (`CRITICAL_PROMOTE_TEMPLATES`); `staging-backmerge` is gated on the repo actually having an `origin/staging` ref
+      (`_repo_has_staging`, so main-direct repos don't false-error), `main-backmerge` applies to all. Non-critical
+      templates stay WARN on missing. Logic unit-tested (severity matrix + staging detection).
 - [ ] [WORKFLOW] P2. Add a fleet presence-audit to PM QG post-gates (or `ldr-to-staging-promote.yml` itself): for every
       repo in `topologicalOrder` with a `staging` branch, assert `staging-backmerge-to-ldr.yml` exists on `staging` (not
       just LDR — `on: push:[staging]` only fires from the pushed branch). Page if absent. This is the early-warning the
