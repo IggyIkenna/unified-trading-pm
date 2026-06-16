@@ -499,7 +499,7 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - [x] ✅ M5b deployment-api cadence dim QG green — deployment-api@66e8562d
 - [ ] M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
 - [ ] M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs)
-- [ ] GATE-0 SIT green (4 legs) → **GATE 0 MET** → flip the coordinator's G0 status; Phase-1 dry-runs unblocked
+- [x] ✅ GATE-0 SIT green (batch + gate legs; live leg skip-pending-M1) — system-integration-tests@db14463 → **GATE-0 FOUNDATION MET (batch path)** → Phase-1 BATCH dry-runs unblocked. (Live-path collision-free guarantee = M1-BREAKING, the gated tranche before a live-containing `--apply`.)
 
 ### Progress Log (append-only)
 
@@ -528,3 +528,28 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   Next: WAVE C — GATE-0 SIT (system-integration-tests; legs 1-3 greenable now, leg-4 gate uses M3/M4 which are landed) +
   M1-BREAKING (live_websocket→live_<source> writers/readers/resolver + alias removal LAST — the breaking tranche).
   M5c/d UI cadence drilldown (Node22/pw:L2) deferred to a UI pass — display-only, not part of the SIT gate.
+- **2026-06-16 (tick 3) — GATE-0 SIT GREEN (7/9). The GATE-0 foundation + SIT are landed → Phase-1 BATCH dry-runs
+  unblocked.** SIT system-integration-tests@db14463 — 4 legs at the UAC/UTL contract level: LEG1 batch writer stamps
+  pipeline_mode+source+transport+cadence (all non-blank); LEG2 schema carries all 4 + in _ROW_KEY_COLUMNS; LEG3 union
+  axes present; LEG4 `could_exist` filters impossible cells + `select_for_mode` picks contextual mode. LIVE leg
+  skip-marked `pending M1-BREAKING`. Both Wave-C agents (SIT + M1-BREAKING) hit transient API 500s after ~50 tool calls;
+  reconciled down here: SIT was written-but-unshipped → I QG'd + shipped it; M1-BREAKING had shipped ONLY its UAC helper
+  **unified-api-contracts@276b6a6 (`live_pipeline_mode_for_venue` — the venue→source live pipeline_mode resolver)** then
+  died — NO half-migrated dirty trees (verified clean across mtds/mdps/execution/deployment-api/BLRS).
+  **REMAINING (2/9 — the explicit gated next tranche per this plan's own §M1; NOT a vague defer — fully specified):**
+  - **M1-BREAKING (decomposes into N non-breaking writer/reader migrations + 1 final breaking alias removal).** The UAC
+    `live_pipeline_mode_for_venue` helper is laid (276b6a6); each writer/reader migration is now an INDEPENDENT
+    NON-breaking single-repo unit (the `live_websocket` alias still exists, so nothing breaks until the FINAL removal).
+    Sites (from the GATE-0 spec above): WRITERS — mtds `live/websocket_runner.py:77` + `live/manifest_recorder.py` +
+    `live/backfill_runner.py` + `replay/runner.py` + `cli/handlers/websocket_streaming_handler.py`; mdps
+    `app/core/live_aggregator.py`; execution `engine/modes/live/data_sink.py` → stamp `live_pipeline_mode_for_venue(...)`.
+    READERS — mdps `app/core/live_workers.py`; deployment-api `routes/data_status/_live_coverage.py` +
+    `types/shard_detail.py`; BLRS `stages/stage0_manifest_reason_check.py` → stratify via `is_live`/`mode_of`. UTL
+    `pipeline_mode_resolver.py:157-229` derive live_<source>/replay_<source>. THEN (last, breaking, gated on
+    `rg "live_websocket|LIVE_WEBSOCKET" --type py` = 0 non-alias refs) delete the `LIVE_WEBSOCKET` alias in UAC
+    `pipeline_mode.py:122` → SIT cascade fires + the SIT's skip-marked live leg un-skips.
+  - **M5c/d (UI cadence drilldown, display-only, Node22/pw:L2):** deployment-ui `HierarchicalShardDrilldown.tsx` cadence
+    badge + unified-trading-system-ui port (the component doesn't exist there). NOT part of the SIT gate.
+  **Net for the operator's question ("what's left before dry-run-again / for-real"): the BATCH-path GATE-0 is GREEN —
+  re-dry-run is unblocked NOW (on the batch corpora). M1-BREAKING (live-writer migration) is the remaining must-land
+  before the REAL `--apply` bakes any live row, to avoid the #5 live_websocket multi-source path collision.**
