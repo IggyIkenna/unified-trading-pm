@@ -53,8 +53,15 @@ fires off the next LDR→staging drain PR's v2, writes `staging_commits[market-t
 Then fan out. **Interim manual unblock** (no code): `gh workflow run quality-gates-v2.yml --repo <r> --ref staging` per
 stuck repo fires the staging-head v2 → semver bumps → drains.
 
-- [ ] [WORKFLOW] P1. Fix `semver-agent.yml.tmpl` trigger per above; canary on market-tick-data-service; roll out
-      fleet-wide + promote to main. Verify a real LDR→staging drain fires semver + writes staging_commits.
+- [x] ✅ [WORKFLOW] P1. RESOLVED (verified 2026-06-16) — fixed via a **`push: branches: [staging]`** trigger added to
+      `semver-agent.yml.tmpl` (a simpler realization than the proposed `workflow_run branches:[…, live-defi-rollout]` +
+      head-guard): the LDR→staging Tier-C drain / reconcile update `staging` via push, so the push trigger fires
+      semver-agent on every staging update; the job gate OR's the push path and head_sha falls back to `github.sha`.
+      **Verified fleet-wide**: 24/24 repos carry `push:[staging]` on `live-defi-rollout`, and semver-agent is firing
+      (`ev=push head=staging`, multiple runs 2026-06-16 across execution/mtds/uac) → `staging_commits` populated →
+      staging→main promotes (this session promoted strategy + uac via the staging-to-main drain). The proposed
+      `workflow_run` approach above is the as-designed alternative; the shipped `push:[staging]` achieves the same and is
+      live — no further action.
 
 ## Gap 2 — LDR-rewind dropped committed feat work fleet-wide (P1, data integrity)
 
