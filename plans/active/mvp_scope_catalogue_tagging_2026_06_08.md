@@ -137,22 +137,29 @@ which leagues, which market-groups — has no independent version.
   `config_version` each for `MVP_SCOPE`, leagues, and prediction-markets, because they change **independently** (a
   leagues edit must not bump the MVP_SCOPE version and falsely flag an MVP coverage delta).
 
-- [~] [CODE] P1. **Add `config_version: int` + `config_content_hash: str` to each config module** — per-config monotonic
-      `config_version` (int, bumped on every content change) + a stable `config_content_hash` (content-addressed) on the
-      `MVP_SCOPE` config and on the sports-leagues + prediction-markets configs (per-config, NOT a single global int).
-      Metadata only — no GCS partition key. **MVP_SCOPE DONE — uac@47ed81a**: `MVP_SCOPE_CONFIG_VERSION` +
-      `MVP_SCOPE_CONFIG_HASH` (deterministic — sorted-frozenset serializer, PYTHONHASHSEED-independent) +
-      `ConfigDescriptor` + `mvp_scope_config_descriptor()`, exported at the package root. **Pending: leagues +
-      prediction-markets configs** (reuse the same `ConfigDescriptor` pattern — smaller follow-ons).
+- [x] ✅ [CODE] P1. **Add `config_version: int` + `config_content_hash: str` to each config module** — per-config
+      monotonic `config_version` (int) + a stable `config_content_hash` (content-addressed) on the `MVP_SCOPE` config
+      AND the sports-leagues + prediction-markets configs (per-config, NOT a single global int). Metadata only — no GCS
+      partition key. **MVP_SCOPE — uac@47ed81a**: `MVP_SCOPE_CONFIG_VERSION` + `MVP_SCOPE_CONFIG_HASH` (deterministic,
+      PYTHONHASHSEED-independent) + `ConfigDescriptor` + `mvp_scope_config_descriptor()`. **Leagues + prediction —
+      uac@176f227**: extracted the generic primitives into
+      `canonical/crosscutting/config_versioning.py` (`ConfigDescriptor` + `canonical_config_repr` (handles
+      dataclasses/Pydantic/sets/dicts, sorted) + `compute_config_content_hash`; MVP_SCOPE refactored onto it, hash
+      unchanged). `SPORTS_LEAGUES_CONFIG_VERSION/_HASH` + `sports_leagues_config_descriptor()` (hashes `LEAGUE_REGISTRY`)
+      in `league_data.py`; `PREDICTION_MARKETS_CONFIG_VERSION/_HASH` + `prediction_markets_config_descriptor()` (hashes
+      `PredictionMarketCategory` + `_DEFAULT_RULES`) in `prediction_mapping.py`. All exported at the package root; the 3
+      hashes are independently distinct.
 - [ ] [CODE] P1. **Surface `config_version` + `config_content_hash` in the deployment-api data-status response** — so a
       coverage delta attributes to a scope-change (config_version bumped) vs a data-change (config_version stable).
       Carry the per-config triple (config name, version, hash) alongside the `scope=mvp|could_exist|all` coverage
       payload.
-- [~] [CODE] P1. **Unit test: config_version is monotonic + the hash changes when the config changes** — assert
-      `config_version` only ever increases (never decreases/reused) and that `config_content_hash` changes iff the
-      config content changes (and is stable across unrelated edits) — one such test per config (MVP_SCOPE / leagues /
-      prediction-markets). **MVP_SCOPE DONE — uac@47ed81a**: `tests/unit/test_mvp_scope.py` (public surface + determinism
-      + hash-changes-iff-content-changes, 3 tests). Leagues/prediction tests ride their config additions.
+- [x] ✅ [CODE] P1. **Unit test: config_version is monotonic + the hash changes when the config changes** — version is a
+      positive int + descriptor matches; `config_content_hash` changes iff the config content changes (and is stable
+      across re-computation / set-reordering) — one test per config (MVP_SCOPE / leagues / prediction-markets).
+      **MVP_SCOPE — uac@47ed81a**: `tests/unit/test_mvp_scope.py` (3 tests). **Leagues + prediction — uac@176f227**:
+      `tests/unit/test_config_versioning.py` (shared-primitive determinism/order-independence + per-config public
+      surface + hash-deterministic + hash-changes-iff-content + the 3-hashes-independent invariant; 12 tests). Full UAC
+      QG green (217s); 155 config/schema unit tests pass.
 
 ## Open questions (operator)
 

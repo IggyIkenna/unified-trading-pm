@@ -254,6 +254,19 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (autonomous Half-B tail — UAC vertical, ticks 1-2) — driving the UAC + IS + deployment-api schema/
+  config_version/catalogue tail of A2 (separate agent owns mtds/mdps/PM-chores). **Item 1 (R2-schema) VERIFIED done +
+  flipped** — it was already shipped at **uac@715e2ed** (CF-18 citadel column-carry: all 11 polymarket cols via
+  `source_aliases` + defi rewards/risk_params/utilization + tradfi/trades + the full RED list); the
+  `test_schema_spec_completeness.py` suite (155 tests incl. it) is GREEN, so the contract-level CF-18 is 0-RED. **Item 2
+  (config_version for sports-leagues + prediction-markets) SHIPPED — uac@176f227** (Tier-C drain ≤30min → staging):
+  extracted the generic `config_versioning.py` (ConfigDescriptor + sorted/deterministic `canonical_config_repr` +
+  `compute_config_content_hash`), refactored MVP_SCOPE onto it (hash unchanged), added per-config version+hash+descriptor
+  to `league_data.py` (hashes `LEAGUE_REGISTRY`) and `prediction_mapping.py` (hashes `PredictionMarketCategory` +
+  `_DEFAULT_RULES`), all root-exported, with `test_config_versioning.py` (12 tests; 3 hashes independently distinct).
+  Full UAC QG green 217s. UAC is back CLEAN (T0 dirty window closed). NEXT: item 3 (UTL catalogue-reader repoint to
+  `{env}/catalog.parquet`), then deployment-api items 4-5 + IS item 6.
+
 - 2026-06-16 (decision 338 — cqg classifier COMPLETE; pass 2 shipped, uac@e0035fd + uac@8e3108d) — operator gave full
   granular direction; encoded all of it. **29 groups + OTHER → ~103 groups + OTHER + MISC_NOVELTY.** Three ships, all
   QG-green, all seeded in the 4 required places (enum + metadata + `PREDICTION_GROUPS` + classifier map); parity tests

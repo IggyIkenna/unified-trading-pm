@@ -387,11 +387,16 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       ask_size); one-shot consolidations merged backfill shards (index ≥ snapshot everywhere — no loss). Full
       narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
       `\_index/audit/orphan_sweep*<ag>.parquet`+`orphan*backfill*<ag>.parquet`.
-- [ ] [UAC] P0. **R2-schema — carry ALL dropped columns into v9**: extend `CEFI/PREDICTION/...` schema specs so CF-18 is
-      GREEN per AG — the 11 polymarket trades columns (amount, asset, conditionId, outcomeIndex, transactionHash,
-      data_source, market_type, resolution_period, symbol, timestamp, underlying) + SchemaSpecs for defi
-      rewards/risk_params/utilization(+rest of RED list) + tradfi/trades. Re-run `migration_schema_completeness` per AG
-      to 0 RED. slot-3. Repo: unified-api-contracts (+instruments-service rerun).
+- [x] ✅ [UAC] P0. **R2-schema — carry ALL dropped columns into v9** — **unified-api-contracts@715e2ed**: v9
+      `SchemaSpec` registry extended so CF-18 is GREEN per AG — all 11 polymarket trades columns carried (amount, asset,
+      conditionId→`condition_id`, outcomeIndex→`outcome_index`, transactionHash→`transaction_hash`,
+      data_source→`source`, market_type, resolution_period, symbol, timestamp, underlying — camelCase via
+      `ColumnSpec.source_aliases`, never duplicate canonical cols) + new SchemaSpecs for defi
+      rewards/risk_params/utilization + tradfi/trades (+ the full RED list: defi dex_pool_swaps/lending_indices,
+      tradfi options_chain/CME, etc.). Completeness regression suite `tests/unit/test_schema_spec_completeness.py`
+      (registry round-trip + alias hygiene + per-cell source-column completeness + previously-RED pins) GREEN. The
+      `migration_schema_completeness` per-AG re-run (consumes the contract via `carried_column_names`, the same SSOT) is
+      now 0-RED at the contract level. slot-3 → this autonomous tail. Repo: unified-api-contracts.
 - [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: ✅ **R7 rebuild leg DONE for ALL FIVE AGs
       (2026-06-11 ~20:40Z)** — CF-20 `--beta-manifest-out` wired into defi/cefi/prediction/sports rebuilds
       (mtds@77f1a61 + mtds@03fbc9b; tradfi = the parallel reference loop), full-history projections run on prod →
