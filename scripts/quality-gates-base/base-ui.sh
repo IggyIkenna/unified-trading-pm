@@ -446,6 +446,37 @@ if [ -f "buildspec.aws.yaml" ]; then
   fi
 fi
 
+# ── [5.97] DeFi CONTRACT-ADDRESS CITATION (.py parity) ───────────────────────
+# UI repos are TS, but can carry .py schema-mirror files (e.g. internal-contracts
+# protocol_sdks.py) that hold on-chain contract addresses. base-service.sh +
+# base-library.sh run STEP 5.97 on those; this closes the last ungated surface so
+# a UI repo's .py addresses are cited too, and any NEW .py address is caught. Uses
+# the SAME Python checker (skips gracefully if python+yaml or the PM checkout is
+# absent). SSOT: defi_onchain_derivable_values_and_date_drift_2026_06_20.md Phase 5.
+log_section "[5.97] DeFi ADDRESS-CITATION (.py)"
+_DC_WS="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null && cd .. && pwd)}"
+_DC_CHECKER="${_DC_WS}/unified-trading-pm/scripts/quality_gates/check_defi_address_citations.py"
+_DC_PY=""
+for _c in "${_DC_WS}/.venv-workspace/bin/python" "$(command -v python3 2>/dev/null)"; do
+    [ -n "$_c" ] && [ -x "$_c" ] && "$_c" -c 'import yaml' >/dev/null 2>&1 && { _DC_PY="$_c"; break; }
+done
+if [ -f "$_DC_CHECKER" ] && [ -n "$_DC_PY" ]; then
+    _DC_REPO="$(basename "$(git rev-parse --show-toplevel 2>/dev/null || echo "$PROJECT_ROOT")")"
+    if "$_DC_PY" "$_DC_CHECKER" --workspace-root "$_DC_WS" --scope "$_DC_REPO" >/tmp/defi_ui_cite.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/defi_ui_cite.log 2>/dev/null; then
+            log_warn "DeFi .py citation: $(grep -c '^\[WARN\]' /tmp/defi_ui_cite.log) baselined uncited address(es); 0 new"
+        else
+            log_success "DeFi .py address-citation gate passed (no new uncited .py contract addresses)"
+        fi
+    else
+        log_fail "DeFi .py address-citation gate: NEW uncited Ethereum address in a .py file — add '# DERIVED <YYYY-MM-DD> from <chain> <source>' on the same line, or '# QG-allow: defi-citation — <reason>' for factory-deployed pools:"
+        cat /tmp/defi_ui_cite.log
+        exit 1
+    fi
+else
+    log_success "DeFi .py address-citation gate: skipped (checker or python+yaml unavailable on this host)"
+fi
+
 # ── DURATION ───────────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-180}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
