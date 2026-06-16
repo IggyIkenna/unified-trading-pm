@@ -157,9 +157,14 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/sfi.py:
     count: 9
   instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py:
-    count: 13
+    # 2026-06-16: 13->7 — _AfManifestHooks.record_failed/record_empty renamed to
+    # note_failed/note_empty (QG STEP 5.70 pipeline_mode false-positive fix). The 6
+    # lost matches were the wrapper method names + call-sites, NOT real contract calls;
+    # the genuine self.manifest.record_*(... pipeline_mode=...) calls are intact.
+    count: 7
   instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures.py:
-    count: 9
+    # 2026-06-16: 9->7 — same note_failed/note_empty wrapper rename (see core above).
+    count: 7
   instruments-service/instruments_service/engine/orchestrator/transfermarkt.py:
     count: 6
   instruments-service/instruments_service/engine/orchestrator/understat.py:
