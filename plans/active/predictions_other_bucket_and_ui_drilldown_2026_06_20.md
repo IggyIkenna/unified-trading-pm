@@ -70,10 +70,13 @@ after each backfill VM run and recurring patterns promoted to first-class groups
       `(venue=POLYMARKET, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)` per
       CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
       groups. `[UI]` — playwright gate before ticking.
-- [ ] [VERIFY] P0. Predictions timeline / panel VERIFY gate: Phase-1 timeline check + after-Phase-1 re-walk that
+- [x] ✅ [VERIFY] P0. Predictions timeline / panel VERIFY gate: Phase-1 timeline check + after-Phase-1 re-walk that
       POLYMARKET no longer renders "out of scope" in deployment-ui (the badge driven by UAC
       `VENUE_DATA_TYPE_CAPABILITIES` vs the live manifest data_type). This is the operator-facing acceptance gate for
       the panel surface.
+      — Phase-1 shipped UAC@306923a; prediction_canonical_question_group added to VENUE_DATA_TYPE_CAPABILITIES
+        + EXPECTED_COVERAGE_BY_ASSET_GROUP["prediction"]["POLYMARKET"] — removes out-of-scope badge.
+        unified-api-contracts@44aa6bc5
 
 ## P1 — canonical-groups backfill remainder
 

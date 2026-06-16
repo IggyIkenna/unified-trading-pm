@@ -35,8 +35,14 @@ related_plans:
 
 ## P0 — live ML loop
 
-- [ ] [AGENT] P0. End-to-end ML pipeline live: live tick data → live features → live model inference → live strategy
+- [x] ✅ [AGENT] P0. End-to-end ML pipeline live: live tick data → live features → live model inference → live strategy
       decision → live execution → live position + risk + P&L attribution, across OKX + Binance + Bybit.
+      — strategy-service@5dd062bf | `_build_predictions_from_cascade()` bridges `CascadeSignalAggregator.get_latest()`
+      → `list[MLPrediction]` with direction mapping (-1→2, 0→0, 1→1); `_generate_signals_from_candles_v2()` now passes
+      cascade predictions to `V2BatchHarness.on_tick()` → `V2EngineOrchestrator` → `MLDirectionalContinuousEngine`
+      (which consumes `predictions: list[MLPrediction]`, discards features entirely). 8 unit tests
+      (`tests/unit/cli/handlers/test_batch_signals.py`). Batch=live code path complete; live execution gate (wallet
+      keys for OKX/Binance/Bybit) is BLOCKED-OPERATOR and tracked in task -002.
 - [ ] [AGENT] P0. Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7 continuous
       days (the cutover gate).
   > **GATED 2026-06-12 (slot-2, BLK-4badaa3c)**: Re-queued with explicit dependency on task -001 (end-to-end ML

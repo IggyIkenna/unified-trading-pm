@@ -171,3 +171,11 @@ logs/
 # Orchestrator plan-health agent generated digests (written into the PM executor clone; regenerated each run)
 plan_health_digest.md
 plan_skeleton.md
+
+# Orchestrator backlog regen output — auto-derived from plan checkboxes (regen-authoritative;
+# never hand-committed). The harsh-side path was retired + git-rm'd in f9ec6833b
+# (harsh_orchestrator retired 2026-05-25, only _agent_pings.md stays); current orchestrator
+# code writes ONLY config.backlog_path() = data/config/backlog.yaml (already gitignored in
+# agent-orchestrator), so nothing regenerates this path — but a stale untracked leftover can
+# linger in a clone and jam FF-pull. Gitignored defensively so it never reads as dirty.
+harsh_orchestrator/backlog.yaml

@@ -43,15 +43,15 @@ where `market_created_at ≤ T`.
 
 ## P0 — reader + feature + strategy migration
 
-- [ ] [SCRIPT] P0. **Reader migration**: every callsite with `data_type=BTC|ETH|...` →
+- [x] [SCRIPT] P0. **Reader migration**: every callsite with `data_type=BTC|ETH|...` →
       `data_type=prediction_canonical_question_group` + filter on `canonical_question_group`. (Gated on the Phase 1
-      lifecycle + adapter migration, which has shipped per the epic body.)
-- [ ] [SCRIPT] P0. **Per-market `LookaheadBiasError` enforcement in feature compute**: feature compute at time T can
+      lifecycle + adapter migration, which has shipped per the epic body.) ✅ — features-service@cf15b4eb
+- [x] [SCRIPT] P0. **Per-market `LookaheadBiasError` enforcement in feature compute**: feature compute at time T can
       only consume ticks where `tick.timestamp ≤ T` AND `tick.market_id`'s `market_created_at ≤ T`. Today
       features-cross-instrument does NOT enforce this per-market; flip to strict-mode check. (This is the SINGLE
       feature-compute lookahead gate — the epic body stated it twice, at the "Reader / feature / strategy migration"
       tier and again at the "completeness hierarchy" tier; written here as ONE todo. Distinct from the adapter-level
-      `available_at` write-stamp owned by the `available_at_lookahead_bias_completion` plan.)
+      `available_at` write-stamp owned by the `available_at_lookahead_bias_completion` plan.) ✅ — features-service@589a377b
 - [x] [SCRIPT] P0. **Strategy-service prediction archetypes**: archetype configs reference `canonical_question_group`
       directly (not `base_asset`). ✅ — strategy-service@5a41db69
 - [x] [TEST] P0. **End-to-end smoke**: 1 canonical_group (`BTC_UP_DOWN_HOURLY`) × 1 day; run feature compute + verify

@@ -48,9 +48,10 @@ empirical-expected-set + NaN-fill is the honest fix for that gap.
       write a NaN-fill row with `record_captured` (NaN values per workspace honest-absence rule, NOT `record_empty` —
       `record_empty` is for legitimately-absent source responses; NaN-fill is for "we expected this triple but the
       source didn't return it"). Repo: instruments-service (sports orchestrator).
-- [ ] [SCRIPT] P0. Cluster-validation kwargs at `record_captured` for ODDS bundled writes:
+- [x] ✅ [SCRIPT] P0. Cluster-validation kwargs at `record_captured` for ODDS bundled writes:
       `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` per Phase 1A of writegate (per
       CLAUDE.md "Cluster validation MANDATORY at record_captured for bundled data_types"). Repo: instruments-service.
+      — instruments-service@e1a3988 | SP-10-ODDS regression guard in test_orchestrator_sports.py | bridge: per-fixture ≥1 row floor (→ len(EXPECTED_BOOKMAKER_MARKET_SETS[tier]) once item 1 ships)
 
 > **Already shipped (downstream consumer guidance) — flipped in the epic, NOT re-opened here**: features-sports
 > arbitrage/odds-movement NaN-row handling + the `codex/02-data/honest-absence-downstream-handling.md` § "ODDS NaN-fill

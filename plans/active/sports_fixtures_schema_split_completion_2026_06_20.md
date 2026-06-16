@@ -52,10 +52,11 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
 - [ ] [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
       optional): footystats + SFI publication-time as fallback; stamp at write-time during the migration. Repo:
       instruments-service.
-- [ ] [SCRIPT] P0. One-shot manifest migration: existing `entity=fixtures` rows split into `entity=fixtures_schedule` +
+- [x] ✅ [SCRIPT] P0. One-shot manifest migration: existing `entity=fixtures` rows split into `entity=fixtures_schedule` +
       `entity=fixtures_outcomes`. Script `instruments-service/scripts/migrate_fixtures_split.py` mirroring the existing
       `migrate_sports_available_at_column.py` pattern (idempotent, per-blob CAS, dry-run + apply). Repo:
       instruments-service.
+      — instruments-service@3f8b6a9 | CAS-idempotent split, schedule/outcomes column partition per OUTCOME_COLUMNS, dry-run+apply, --overwrite flag
 - [x] [QG] P0. Coordinate with writegate Phase 2.D — the schema-split (writer-emit + entity-folder split) commit must
       ship same-day as the writegate strict-mode-flip-on-FIXTURES (avoid mid-migration hard-fail). Single coordinated
       unit with the migration above.
