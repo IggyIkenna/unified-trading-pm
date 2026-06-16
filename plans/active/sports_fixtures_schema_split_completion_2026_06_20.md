@@ -44,11 +44,11 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
 
 ## P0 — announcement-floor + manifest split migration + writegate coordination
 
-- [ ] [SCRIPT] P0. Per-league announcement-floor empirical audit (Phase 2 of source issue): 2-week observation window
+- [x] [SCRIPT] P0. Per-league announcement-floor empirical audit (Phase 2 of source issue): 2-week observation window
       per league; record api_football fixture-publication-time vs `kickoff_time`. Output: per-league
       `ANNOUNCEMENT_FLOOR_HOURS` table in UAC `unified_api_contracts.canonical.crosscutting.availability_semantics`
       (replacing the `kickoff−7d` heuristic). Default 14d for unobserved leagues; per-league override once observed.
-      Repo: unified-api-contracts.
+      Repo: unified-api-contracts. <!-- unified-api-contracts@723e3b3 2026-06-16 -->
 - [ ] [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
       optional): footystats + SFI publication-time as fallback; stamp at write-time during the migration. Repo:
       instruments-service.
