@@ -198,6 +198,54 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
     moves with utilisation: `base + slope1·U + slope2·max(0,U−U_opt)`; slopes + `utilisation_rate` are in
     lending_indices — the Aave backfill VM is filling the ETH utilisation gap now). So **use historical where data
     exists (DEX depth, utilisation), static only for the LST secondary premium.**
+- **2026-06-16** — Aave/lending backfill VM **completed rc=0** (self-deleted) but **PARTIAL** — hit GCS/subgraph **429
+  rate limits** (~1628 results; manifest-consolidator-stale at end). Aave V3 wrote for Arbitrum/Avalanche/Base; **ETH
+  coverage spotty** (absent on latest day). Landed in the **legacy un-suffixed `lending-indices-central-…`** with the
+  **old `category=defi`** path key (not `asset_group=`) — confirms BOTH the env-split debt AND a category-vocab debt.
+  Lending bucket now spans 1259 days (2022-11-01 → 2026-05-28). **Recursive-ETH + real Aave-USDT cash-floor still need a
+  COMPLETE Aave-Ethereum re-run** (narrower per-run scope or a paid subgraph key to dodge 429s) + a consolidator run.
+  Todos below.
+
+## Open data gaps (added 2026-06-16, part 2)
+
+- [ ] [DATA] P2. **Complete Aave-Ethereum lending backfill** — first run was 429-throttled (partial; ETH spotty). Re-run
+      scoped to `aave_v3 ETHEREUM` only (don't split the subgraph budget across all protocols/chains) or use a paid
+      TheGraph key; then run the lending-indices manifest consolidator (it was stale). **Repo:
+      market-tick-data-service + deployment-service.** Owner:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
+- [ ] [DATA] P3. lending-indices writer emits the **legacy `category=defi` path key** (not canonical `asset_group=`) +
+      the legacy un-suffixed bucket — fix both to canonical v9. **Repo: market-tick-data-service.**
+- **2026-06-16** — **Treasury/Trading rebalancing sim BUILT** (`--simulate-treasury`, prototypes the unshipped prod
+  rebalancer). Models: target 20% treasury (earns cash `cash_apy`) / 80% trading (earns ensemble carry); bands 10–30%; a
+  withdrawal shock funded from treasury FIRST, only unwinding trading if it exceeds the buffer; rebalance cost =
+  `2·cost_bps` rotation + `rebalance_slip_bps` slippage on moved notional + fixed `$rebalance_gas_usd` gas (anchored by
+  `--capital-usd`). **Linear** (operator). **Result (2022→2026, ensemble):** raw 100%-deployed **21.7% ann** →
+  treasury-managed **18.1% ann** — the 20% liquidity buffer costs **~3.6%/yr**, almost ALL of it buffer-idle drag (20%
+  parked in 4% cash vs 22% carry); rebalance/unwind cost ~0.04%. A **10% withdrawal is fully covered by the 20% buffer
+  (no unwind, ~0 cost)**; a **25% withdrawal** exceeds the buffer by 5% → forces a 5% unwind, still ~0.05%. Knobs:
+  `--treasury-pct --withdraw-pct --withdraw-interval-days --capital-usd --rebalance-gas-usd --rebalance-slip-bps`.
+- **2026-06-16** — **Capital-movement map** (from prod, for fidelity): USDC **DEPOSIT** → treasury (20%) / trading (80%
+  TRANSFER treasury→hot) → the 4-leg `AtomicInstruction`: **SWAP** usdc→eth → **STAKE** eth→LST → **TRANSFER** LST→perp
+  venue (collateral) → **TRADE** short perp; passive **FUNDING_ACCRUAL + STAKING_REWARD** accrue; on exit unwind (close
+  perp → unstake → swap→usdc) → **WITHDRAWAL_TO_BANK**. Each step is a UAC `ledger` EventType (37-value closed set);
+  every TRANSFER/CUSTODY_MOVE carries a single `client_id` (funds-isolation HARD RULE). The sim models this at the
+  portfolio level (start→deploy→accrue→withdraw); per-leg event ledger = next fidelity.
+- **2026-06-16** — Gas + slippage = **bundled into the calibrated rebalance cost (v1)** — rotation + static slippage +
+  fixed gas. Higher fidelity (next): per-action gas from prod `gas_cost_model.DEFAULT_GAS_ESTIMATES` × GCS gas-price
+  data (`gas_fees/`); **historical** DEX slippage from `dex_pools` depth via prod `slippage_cost_model`/`amm.py`; Aave
+  borrow-rate slippage from the IRM utilisation curve (needs the completed Aave-ETH backfill). Todos below.
+- **2026-06-16** — Harness **ruff + basedpyright clean, e2e QG exit 0**. Quickmerge pending foreign UAC WIP clear.
+
+## Open todos / next steps (added 2026-06-16, part 3)
+
+- [ ] [STRATEGY] P3. Per-action GAS layer: charge gas per on-chain leg (SWAP 200k / STAKE 150k / TRANSFER 65k / BORROW
+      300k from prod `gas_cost_model.DEFAULT_GAS_ESTIMATES`) × historical gas-price (`gas_fees/chain_id=…`) × native
+      price. **Repo: e2e-testing harness (reuse execution-service gas_cost_model constants).**
+- [ ] [STRATEGY] P3. HISTORICAL slippage: DEX swap from `dex_pools` depth (prod `slippage_cost_model` + `amm.py`),
+      borrow-rate from Aave IRM utilisation curve (`base + slope1·U + slope2·max(0,U−U_opt)`); keep LST secondary
+      premium static (~0–50 bps, no data). **Repo: e2e-testing harness.**
+- [ ] [STRATEGY] P3. Per-leg capital-movement event ledger (DEPOSIT→SWAP→STAKE→TRANSFER→TRADE→accrual→unwind→WITHDRAW)
+      using UAC `canonical.crosscutting.ledger` EventTypes, for a faithful capital-flow trace. **Repo: e2e-testing.**
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
