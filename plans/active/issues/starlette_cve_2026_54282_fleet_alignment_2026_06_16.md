@@ -1,11 +1,11 @@
 ---
 title: "starlette CVE-2026-54282/54283 — UTL floor bumped to >=1.3.1; fleet-wide canonical-constraint alignment pending"
 created: 2026-06-16
-author: hk [slot-3·vm-local-e2e]
 source:
   - 2026-06-16 UTL quality-gates failure (pip-audit: starlette 1.1.0 vulnerable) during the CICD recurring-jam firefight
 locked_by: live-defi-rollout
 status: active
+priority: P2
 ---
 
 # starlette CVE-2026-54282/54283 — UTL fixed, fleet alignment pending
