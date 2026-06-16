@@ -1813,13 +1813,18 @@
     "locked_reason": "Breaking MINOR bump cascade: alerting-service=0.9.0 (pre-1.0.0)",
     "lock_version": "0.9.0",
     "pending_repos": [
+      "execution-service",
+      "system-integration-tests",
       "ml-service",
       "deployment-api",
       "batch-live-reconciliation-service",
       "fund-administration-service",
-      "alerting-service"
+      "alerting-service",
+      "strategy-service",
+      "unified-trading-library",
+      "unified-api-contracts"
     ],
-    "sit_retry_count": 3,
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "agent-orchestrator",
