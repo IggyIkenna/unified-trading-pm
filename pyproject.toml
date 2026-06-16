@@ -142,6 +142,7 @@ ignore = [
     "scripts/quality_gates/check_canonical_futures_construction.py",
     "scripts/quality_gates/check_emission_policy_paired_callsites.py",
     "scripts/quality_gates/check_imports_inside_functions.py",
+    "scripts/quality_gates/check_defi_address_citations.py",
     "scripts/quality_gates/check_inline_bucket_uri.py",
     "scripts/quality_gates/check_mdps_bar_available_at_stamping.py",
     "scripts/quality_gates/check_mdps_bar_boundary_compliance.py",

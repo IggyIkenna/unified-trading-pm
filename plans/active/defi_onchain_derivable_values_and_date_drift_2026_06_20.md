@@ -58,7 +58,7 @@ that workstream.
       (`defi_governance_params_refresh_2026_06_20` Phase 2). `LookaheadBiasError` raised loud if feature timestamp <
       params asof. — features-service@82339e13: `_resolve_ltv` + `_resolve_liq_threshold` check gov_params before
       hardcoded defaults; `LookaheadBiasError` caught + logged; pre-fetches per unique base asset. QG green.
-- [ ] [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` lint rule for new hardcoded addresses/block-numbers.** A new STEP
+- [x] ✅ [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` lint rule for new hardcoded addresses/block-numbers.** — unified-trading-pm@cc973a79a A new STEP
       adds an AST-walk asserting that any new contract address or block number in
       `unified_api_contracts/canonical/domain/_defi.py` or related modules carries the `# DERIVED <date> from <source>`
       citation comment; fails CI otherwise. **COORDINATE WITH THE PM CI-GATE OWNER** — this touches PM CI
