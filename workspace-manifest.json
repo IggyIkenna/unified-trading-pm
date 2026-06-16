@@ -71,13 +71,13 @@
     "deployment-api": "0.12.0",
     "deployment-service": "0.8.1",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.9.1",
+    "execution-service": "0.10.0",
     "features-service": "0.4.0",
     "fund-administration-service": "0.3.3",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.5.1",
     "market-tick-data-service": "0.10.0",
-    "system-integration-tests": "0.5.0",
+    "system-integration-tests": "0.6.0",
     "unified-api-contracts": "0.9.0",
     "unified-trading-library": "0.10.0",
     "unified-trading-pm": "1.2.121",
@@ -1915,32 +1915,6 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {
-    "execution-service": 3,
-    "strategy-service": 3,
-    "unified-api-contracts": 3,
-    "system-integration-tests": 3
-  },
-  "promotion_quarantine": {
-    "execution-service": {
-      "since": "2026-06-15T17:29:49.846182Z",
-      "attempts": 3,
-      "escalated": true
-    },
-    "strategy-service": {
-      "since": "2026-06-15T20:16:36.318585Z",
-      "attempts": 3,
-      "escalated": true
-    },
-    "unified-api-contracts": {
-      "since": "2026-06-16T01:32:01.659207Z",
-      "attempts": 3,
-      "escalated": true
-    },
-    "system-integration-tests": {
-      "since": "2026-06-16T07:07:57.147302Z",
-      "attempts": 3,
-      "escalated": true
-    }
-  }
+  "promotion_failures": {},
+  "promotion_quarantine": {}
 }
