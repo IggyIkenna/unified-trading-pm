@@ -1795,9 +1795,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-16T06:49:36.051297Z",
-    "locked_reason": "Breaking MINOR bump cascade: strategy-service=0.9.0 (pre-1.0.0)",
-    "lock_version": "0.9.0",
+    "locked_since": "2026-06-16T06:50:50.310201Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "execution-service",
       "e2e-testing",
@@ -1815,34 +1815,34 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "execution-service": {
-      "version": "0.10.0",
+      "branch": "staging",
       "sha": "7bc2284bad05232787af049c762f42b8b5f6be40",
-      "branch": "staging"
+      "version": "0.10.0"
     },
     "e2e-testing": {
-      "version": "0.6.0",
+      "branch": "staging",
       "sha": "aeb561fa9f5204fe5de89a4b949cbc18939c01a7",
-      "branch": "staging"
+      "version": "0.6.0"
     },
     "strategy-service": {
-      "version": "0.9.0",
+      "branch": "staging",
       "sha": "fcb2da093b3d33e0ac9b9d48610ad8f0d48c07c9",
-      "branch": "staging"
+      "version": "0.9.0"
     },
     "system-integration-tests": {
-      "version": "0.5.0",
+      "branch": "staging",
       "sha": "26722e169fd317f8a3c50edb7621a0e9ddecf54c",
-      "branch": "staging"
+      "version": "0.5.0"
     },
     "unified-api-contracts": {
-      "version": "0.10.0",
+      "branch": "staging",
       "sha": "dc377073d38141a5fc417256191a801bfa0ad093",
-      "branch": "staging"
+      "version": "0.10.0"
     },
     "deployment-api": {
-      "version": "0.12.0",
+      "branch": "staging",
       "sha": "7ae897a370026127130233ae9240776f237a162e",
-      "branch": "staging"
+      "version": "0.12.0"
     }
   },
   "main_commits": {
