@@ -1794,7 +1794,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1919,7 +1919,7 @@
     "execution-service": 3,
     "strategy-service": 3,
     "unified-api-contracts": 3,
-    "system-integration-tests": 1
+    "system-integration-tests": 2
   },
   "promotion_quarantine": {
     "execution-service": {
