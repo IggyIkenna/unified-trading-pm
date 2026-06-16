@@ -483,6 +483,37 @@ is green, or vice-versa).
       now emits an explicit annotation each run, so the side-store's authoritativeness is monitored, not assumed. —
       unified-trading-pm PR #353 (2026-06-16).
 
+## Gap 9 — promotion robustness: event-driven v2-recovery + dep-publish-ordering gate (P1/P2, opened 2026-06-16)
+
+Two related promotion-robustness gaps surfaced while shipping Gaps 6/7/8. Tracked here; NOT yet implemented (each is a
+careful gate/workflow change — per rule 11, not shipped blind at the tail of a long session).
+
+**9a — dep-publish-ordering gate (P1, HIGH value — prevents the ORIGINAL jam).** The recurring jam's root was: a
+consumer's internal-dep FLOOR (e.g. UTL `unified-api-contracts>=0.10.0`) reached `main` and triggered the consumer's
+standalone build, but the producer's matching version (UAC `0.10.0`) was **not yet PUBLISHED to Artifact Registry** →
+`uv sync` in the consumer's CI clone could not resolve the floor → UTL (T0) red → fleet jam. The current dep-order gate
+(`tier_c_promotion_gate.py` / staging-to-main STAGE 1.8) checks a dep is **on main** (`ci_status ≥ MAIN_GREEN`), but
+"on main" ≠ "published to AR" — `publish-package.yml` lags the main-merge. The gate must additionally assert the
+producer's required version is **actually resolvable from AR** before promoting a consumer whose floor requires it.
+
+- [ ] [SCRIPT] P1. Add an AR-publish check to the staging→main dep-order gate: for each internal dep `D>=v` a promoting
+      consumer requires, query Artifact Registry (reuse the auth/region from `publish-package.yml` /
+      `validate-build-auth.py`) for a published `D` version satisfying `>=v`; BLOCK (skip, retry next run — not a hard
+      fail) the consumer's promotion until the producer is published. Mirror the existing "blocked → SKIPPED, drains next
+      run" pattern. Compose with the range-pin/editable-source model (CLAUDE.md § Dependencies): the check applies to the
+      standalone-CI-clone resolution path, not the in-workspace editable path.
+- [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric (per dep edge) in `promotion_lag_monitor.py` / the
+      dashboard so a stuck publish is visible before it jams a consumer.
+
+**9b — event-driven v2-never-reported recovery (P2 — robustness, the cron already works).** The v2-never-reported
+deadlock auto-recovers today via `ci-failure-watcher.py --auto-recover` on a ~throttled cron (close+reopen / empty-commit
+supersede). It works but lags up to the cron interval. An event-driven trigger (on the `workflow_run`/`check_suite`
+completion that leaves a PR `BLOCKED + v2-absent`) would recover in seconds instead of minutes.
+
+- [ ] [WORKFLOW] P2. Add an event-driven trigger for the v2-never-reported recovery (fire `ci_failure_watcher.py
+      --auto-recover` scoped to the just-completed PR on the relevant `workflow_run`/`pull_request` event), keeping the
+      cron as the backstop. Verify it does not double-fire with the cron (idempotent close+reopen already guards this).
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first
