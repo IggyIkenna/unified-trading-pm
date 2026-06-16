@@ -425,3 +425,84 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
 6. **M8**: confirm cadence (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) is
    a SEPARATE observability axis (column + deployment registry), NOT folded into `pipeline_mode` (so the same Tardis
    query for t+1 vs long-term stays ONE pipeline to union)?
+
+---
+
+## GATE-0 CONCRETE EXECUTION PLAN + PROGRESS LOG (2026-06-16, /autonomous — drive to GREEN here)
+
+> Operator 2026-06-16: scope GATE 0 concretely + implement all 6 items + the SIT to completion HERE (no epic-VM
+> dispatch). This section is the file-level spec + the append-only Progress Log (the loop's handoff doc; no summary
+> file). **Success = every touched repo QG-green + the write→manifest→union-read SIT passing → GATE 0 met → Phase-1
+> dry-runs unblocked.** Source spec: scouting pass 2026-06-16 (file:line verified).
+
+### The 6 items (file-level)
+
+- **I1 — fix #1 (defi rebuild stamp).** repo `market-tick-data-service`. Main object-scan `add()`
+  (`scripts/rebuild_defi_manifest.py:609-621`) ALREADY stamps pm+source+asset_group (mtds@f80c50f1) — the `:302`
+  blank-stamp is HISTORICAL. Remaining: (a) the CF-11 honest-absence re-emit `:412-416` omits `source`+`transport` (LOW
+  — branch "never reached on real rebuild" per its own comment); (b) add a regression test asserting the rebuild's main
+  `add()` stamps non-blank pm+source+asset_group (`tests/integration/test_manifest_schema_contracts.py` only checks the
+  signature, not the call site). INDEPENDENT. Non-breaking.
+- **I3 — fix #3 (features delta_one reader pipeline_mode-aware).** repo `features-service`. `data_loader.py`
+  `_build_blob_path:502-541` + `_resolve_blob_paths:316-343` build paths with NO `pipeline_mode=` segment; MDPS WRITES
+  it (`mdps config.py get_processed_path`). Thread `pipeline_mode: str|None` through load_candles→_resolve→_build;
+  delegate to UAC `candidate_parquet_paths(asset_group,data_type,day,pipeline_mode=pm)`; probe canonical(with-pm)→bare.
+  Tests: `tests/delta_one/unit/test_data_loader.py` (canonical carries pm; probe order; pm=None→bare). `PYTEST_UNIT_DIR="tests/"`.
+  INDEPENDENT. Non-breaking.
+- **I6a — UTL cadence column (the long pole; blocks M5+SIT).** repo `unified-trading-library`. Add `cadence: str = ""`
+  to `AvailabilityRecord` (`manifest_writer/_rows.py:~401`, mirror the `transport` field) + add `"cadence"` to
+  `_ROW_KEY_COLUMNS`; writer stamps via `default_cadence_for_source`/kwarg. Additive (rides v9 walk). Non-breaking.
+- **M3 — could_exist (UAC).** repo `unified-api-contracts`. NEW `canonical/crosscutting/shard_source_availability.py`:
+  `sources_for_shard(asset_group,shard_key)` (from SOURCE_PRIORITY + DataTypeCapability.sources) +
+  `could_exist(asset_group,shard_key,mode)=any(mode in modes_for_source(s) for s in sources_for_shard)`. Extends ⑥/⑦
+  denominator to the mode axis. Coarse `modes_for_source` OK now; per-(source,data_type) `modes_for()` is a follow-on.
+  Depends M1 enum (shipped). Pure ADD. Non-breaking.
+- **M4 — select_for_mode (UAC + BLRS).** repo `unified-api-contracts` NEW `canonical/crosscutting/mode_precedence.py`:
+  `select_for_mode(consumer_mode, available_modes)` live-ctx [LIVE,REPLAY,BATCH] / batch-ctx [BATCH,REPLAY,LIVE] (replay
+  always middle). Wire in `batch-live-reconciliation-service` (`engine/mode_resolver.py` or stage0). deployment-api
+  tiebreak (data_status_union.py) already shipped — do NOT redo. Depends M1. Pure ADD. Non-breaking.
+- **M5 — data-status UNION + pm/cadence drilldown.** Union/pm/source/transport drilldown SHIPPED (deployment-api@4dd2575,
+  deployment-ui@0dc40eb). Remaining: (b) deployment-api cadence dim (`services/data_status_union.py:207,226` add cadence
+  to group_cols + breakdown — `PROVENANCE_COLS` already lists it pending) [needs I6a]; (c) deployment-ui cadence badge
+  (`HierarchicalShardDrilldown.tsx`); (d) **unified-trading-system-ui PARITY GAP** — `HierarchicalShardDrilldown` does
+  NOT exist there; port it + wire into the data-status view (UI, needs Node≥22 + pw:L2). Non-breaking.
+- **M1-BREAKING — `live_websocket`→`live_<source>`/`replay_<source>` migration.** The enum FOUNDATION is shipped
+  (`pipeline_mode.py` has the source-aware members + Mode/mode_of/transport). Remaining BREAKING tranche: writers
+  (mtds `live/websocket_runner.py:77` `_LIVE_PIPELINE_MODE`, `live/manifest_recorder.py`, mdps `live_aggregator.py`,
+  execution `live/data_sink.py`) stamp `pipeline_mode_for_source(source,Mode.LIVE)` not the literal; readers (mdps
+  `live_workers.py`, deployment-api `_live_coverage.py`, BLRS `stage0`) stratify via `is_live`/`mode_of`; UTL
+  `pipeline_mode_resolver.py:157-229` derive live_<source>/replay_<source>; **delete the `LIVE_WEBSOCKET` alias LAST**
+  (0 refs). The writer blocker = "source not in writer scope" → derive venue→source from SOURCE_PRIORITY/IS-catalogue.
+  BREAKING (enum-value removal → SIT cascade) — alias removal is the final gated step.
+- **GATE-0 SIT.** repo `system-integration-tests`. NEW `tests/integration/test_gate0_write_manifest_union_read.py`
+  (pattern: `test_pipeline_manifest_wiring.py`; `@pytest.mark.code_test`, credential-free, NO real GCS). 4 legs:
+  (1) writer stamps pm+source+cadence+transport; (2) manifest carries all 4 as AvailabilityRecord cols; (3) union-read
+  groups by pm; (4) `select_for_mode`+`could_exist` gate. Legs 1-2 (pm/source/transport) greenable now; cadence/gate
+  legs skip→unskip as I6a/M3/M4/M1-BREAKING land. **This IS the gate.**
+
+### DAG + Waves (≤2 concurrent Python QG; never 2 agents on same repo/file)
+
+```
+WAVE A (parallel, disjoint repos): I1(mtds) · I3(features) · I6a(UTL) · M3(UAC)
+WAVE B (after A green): M4(UAC mode_precedence + BLRS wiring) · M5b deployment-api cadence dim [needs I6a]
+WAVE C: M5c deployment-ui cadence + M5d unified-trading-system-ui port (UI, Node22/pw:L2) · M1-BREAKING tranche (largest, cross-repo; alias removal LAST)
+WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; final green when all land = THE GATE
+```
+
+### Success criteria (GATE 0 met)
+
+- [ ] I1 mtds QG green + regression test
+- [ ] I3 features QG green + reader pm-aware tests
+- [ ] I6a UTL QG green (cadence column)
+- [ ] M3 UAC QG green (could_exist)
+- [ ] M4 UAC + batch-live-reconciliation-service QG green (select_for_mode)
+- [ ] M5b deployment-api cadence dim QG green
+- [ ] M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
+- [ ] M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs)
+- [ ] GATE-0 SIT green (4 legs) → **GATE 0 MET** → flip the coordinator's G0 status; Phase-1 dry-runs unblocked
+
+### Progress Log (append-only)
+
+- **2026-06-16 (tick 0)** — /autonomous armed. Scoped GATE 0 to 6 items + SIT (file-level spec above). Corrected the
+  coordinator G0 false-green earlier (master_data_canonicalisation@…). Dispatching WAVE A (I1·I3·I6a·M3) as parallel
+  sub-agents (disjoint repos). Next: collect Wave-A shas, flip the criteria boxes, dispatch Wave B.

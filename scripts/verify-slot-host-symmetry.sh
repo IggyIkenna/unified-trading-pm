@@ -222,6 +222,37 @@ else
     fi
 fi
 
+section "UI-repo Node ≥22 (UI quality-gates ESM stack)"
+# The UI stack (jsdom@29 / vite@8 / vitest@4) has ESM-only transitive deps (@exodus/bytes,
+# @csstools/css-calc) the vitest forks pool can only require() on Node ≥22; Node 20 crashes
+# with a cryptic ERR_REQUIRE_ESM. base-ui.sh [0/6] ENVIRONMENT hard-fails the UI gate when the
+# DEFAULT `node` is <22 (it does NOT auto-discover an alternate Node), so a UI-capable host
+# whose default node is <22 cannot run its UI gate / quickmerge --agent. Probe proactively so
+# a Node-20 host learns the cause HERE, not via a cryptic worker crash mid-gate.
+# SSOT: plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md.
+_has_ui=0
+for _uirepo in unified-trading-system-ui deployment-ui; do
+    [[ -f "${WORKSPACE_ROOT}/${_uirepo}/package.json" ]] && _has_ui=1
+done
+if [[ ${_has_ui} -eq 0 ]]; then
+    ok "no UI repo checked out on this host — UI Node-22 check N/A"
+else
+    _node_major=$(node --version 2>/dev/null | grep -oE '[0-9]+' | head -1 || echo 0)
+    _node22_path=""
+    if [[ -x "${HOME}/.local/node22/bin/node" ]]; then
+        _node22_path="${HOME}/.local/node22/bin/node"
+    else
+        for _nv in "${HOME}"/.nvm/versions/node/v22*/bin/node; do [[ -x "${_nv}" ]] && _node22_path="${_nv}" && break; done
+    fi
+    if [[ "${_node_major:-0}" -ge 22 ]]; then
+        ok "default Node $(node --version 2>/dev/null) ≥22 — UI gates run clean"
+    elif [[ -n "${_node22_path}" ]]; then
+        soft_bad "UI-capable host: default Node is $(node --version 2>/dev/null || echo none) (<22) but Node 22 exists at ${_node22_path} — UI gate/quickmerge ERR_REQUIRE_ESM unless that bin is ON PATH (run: PATH=\"$(dirname "${_node22_path}"):\$PATH\" bash scripts/quality-gates.sh) or make Node ≥22 the host default"
+    else
+        bad "UI-capable host but NO Node ≥22 reachable (default $(node --version 2>/dev/null || echo none); no ~/.local/node22, no nvm v22) — UI gates WILL fail ERR_REQUIRE_ESM; install Node 22 (each UI repo declares .nvmrc + engines:node>=22)"
+    fi
+fi
+
 # Snapshot the PAGE-WORTHY host-SYMMETRY failures BEFORE the per-worktree checks below. Two
 # categories are deliberately EXCLUDED from this snapshot so the */15 cron never pages on them:
 #   • soft_fail (backend reachability + GH workflow-capability) — external-service liveness and a

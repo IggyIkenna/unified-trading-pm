@@ -15,9 +15,13 @@
 # symlinks added in PM@cb52027c2 / @d64d64996 reach a running VM's git tree but don't become live
 # links until a quality-gates run (QG post-gate hook) or this rollout fires. This makes it immediate.
 #
-# WHERE TO RUN: the CENTRAL / orchestrator VM (i-0c9b283b31d6b5ca7), which carries the
-# uts-orchestrator-epic instance profile (ssm:SendCommand). A slot/worker host (IAM user
-# ikenna-worker) is intentionally denied SSM and CANNOT run this — verified 2026-06-16.
+# WHERE TO RUN: ANY identity that can call ssm:SendCommand in the fleet region. Two work today
+# (both verified 2026-06-16): (1) the CENTRAL / orchestrator VM (i-0c9b283b31d6b5ca7) via its
+# uts-orchestrator-epic instance profile; (2) an OPERATOR LAPTOP whose ~/.aws default is the admin
+# IAM user `admin_od` (arn:aws:iam::427895769566:user/admin_od) — full ssm:SendCommand to the live
+# fleet, so the rollout runs straight from the laptop, no need to hop to the central VM. The fenced
+# slot/worker role (IAM user `ikenna-worker`) is intentionally denied SSM and CANNOT run this. The
+# preflight identity check below fails fast with guidance if the current identity lacks SSM.
 #
 # TARGETS: derived from orchestrator_vm_registry.yaml (the SSOT) at runtime — no hardcoded list to
 # drift. Self (the VM running this) is skipped. Instances not registered/online in SSM are reported
