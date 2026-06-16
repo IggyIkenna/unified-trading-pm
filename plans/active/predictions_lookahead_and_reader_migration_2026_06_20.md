@@ -54,8 +54,8 @@ where `market_created_at ≤ T`.
       `available_at` write-stamp owned by the `available_at_lookahead_bias_completion` plan.)
 - [x] [SCRIPT] P0. **Strategy-service prediction archetypes**: archetype configs reference `canonical_question_group`
       directly (not `base_asset`). ✅ — strategy-service@5a41db69
-- [ ] [TEST] P0. **End-to-end smoke**: 1 canonical_group (`BTC_UP_DOWN_HOURLY`) × 1 day; run feature compute + verify
-      the migrated reader + per-market lookahead gate produce a correct feature matrix.
+- [x] [TEST] P0. **End-to-end smoke**: 1 canonical_group (`BTC_UP_DOWN_HOURLY`) × 1 day; run feature compute + verify
+      the migrated reader + per-market lookahead gate produce a correct feature matrix. ✅ — features-service@ea2f4cee
 
 ## P1 — feature registry
 
