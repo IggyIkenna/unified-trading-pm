@@ -1808,7 +1808,7 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-16T23:12:07.408063Z",
+    "locked_since": "2026-06-16T23:17:42.342639Z",
     "locked_reason": "Breaking MINOR bump cascade: system-integration-tests=0.9.0 (pre-1.0.0)",
     "lock_version": "0.9.0",
     "pending_repos": [
