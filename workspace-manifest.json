@@ -1803,10 +1803,10 @@
       "ml-service",
       "deployment-api",
       "batch-live-reconciliation-service",
-      "unified-api-contracts",
-      "fund-administration-service"
+      "fund-administration-service",
+      "alerting-service"
     ],
-    "sit_retry_count": 2,
+    "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
       "alerting-service",
