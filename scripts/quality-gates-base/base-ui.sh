@@ -23,7 +23,7 @@
 #   --no-fix     — no-op for UI; kept for interface compatibility with Python gate callers
 #
 # 6-stage gate (matches base-service.sh structure):
-#   [0/6] ENVIRONMENT   — Node ≥20, required scripts, eslint/vitest present
+#   [0/6] ENVIRONMENT   — Node ≥22, required scripts, eslint/vitest present
 #   [1/6] TYPECHECK     — tsc --noEmit, zero errors
 #   [2/6] LINT          — ESLint --max-warnings 0; optional --fix
 #   [3/6] UNIT TESTS    — vitest, coverage floor, zero-test guard
@@ -151,10 +151,14 @@ if [ ! -f "package.json" ]; then
   log_fail "No package.json found — run from repo root"; exit 1
 fi
 
-# Node version ≥ 20
+# Node version ≥ 22 — the UI stack (jsdom@29 / vite@8 / vitest@4) has ESM-only
+# transitive deps (@exodus/bytes, @csstools/css-calc) the vitest forks pool can only
+# require() on Node's stable require(esm) (Node ≥22; Node 20 crashes ERR_REQUIRE_ESM).
+# CI runs Node 22. Fail loud here so a Node<22 host gets a clear message instead of a
+# cryptic worker crash. SSOT: plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md.
 NODE_VER=$(node --version 2>/dev/null | grep -oE '[0-9]+' | head -1 || echo "0")
-if [ "${NODE_VER:-0}" -lt 20 ]; then
-  log_fail "Node ≥20 required, found $(node --version 2>/dev/null || echo 'none')"
+if [ "${NODE_VER:-0}" -lt 22 ]; then
+  log_fail "Node ≥22 required for the UI stack (jsdom@29 ESM deps), found $(node --version 2>/dev/null || echo 'none') — install Node 22 (see .nvmrc); CI uses 22"
   exit 1
 fi
 log_success "Node $(node --version)"
