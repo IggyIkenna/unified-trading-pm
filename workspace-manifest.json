@@ -1810,7 +1810,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1942,7 +1942,8 @@
     ]
   },
   "promotion_failures": {
-    "unified-trading-library": 3
+    "unified-trading-library": 3,
+    "unified-api-contracts": 1
   },
   "promotion_quarantine": {
     "unified-trading-library": {
