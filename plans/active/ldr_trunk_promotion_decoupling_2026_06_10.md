@@ -34,8 +34,8 @@ source:
 > draining to main (PM main was 7 ahead-behind LDR @20:57Z → dispatched `ldr-to-main-promote` to carry them).
 >
 > **Reconciliation (rule 11b):** A3 is on each repo's LDR (`push:[main]`); staging still `[main,staging]` → the
-> LDR→staging drain carries it (carve-out, passes the D1 provenance gate). Dispatched `ldr-to-staging-promote` @20:57Z to
-> drive it; the 15-min cron continues it. Not a conflict class (the change flows TO staging via the drain).
+> LDR→staging drain carries it (carve-out, passes the D1 provenance gate). Dispatched `ldr-to-staging-promote` @20:57Z
+> to drive it; the 15-min cron continues it. Not a conflict class (the change flows TO staging via the drain).
 >
 > **Remaining to build:** D4 (tier-parallel drain+SIT) · B-part-2 (`--hotfix-to-main` dedicated branch) · D5 (host
 > monitoring). **Remaining to verify:** @4228 dep-ref-determinism + first-use-watch (observe a live drain tick).
@@ -92,8 +92,13 @@ Two live symptoms on 2026-06-10 share one root cause — **per-commit promotion 
   priority order: (1) **promote-PR provenance gate (the enforcement)** — the LDR→staging promote PR runs
   `check_strict_quickmerge.py` over its commit range; any **non-carve-out CODE commit lacking the `Quickmerge:`
   trailer** → the PR is **not merged** (this, not the push, is what stops un-QG'd code reaching staging). Carve-outs
-  (`docs(plans):`, dirty-dep, `.github/**`) are legitimately trailer-less and pass. (2) **push tripwire (faster
-  detection, optional)** — a non-blocking `push: live-defi-rollout` GHA running the same checker; a violation fires a
+  (`docs(plans):`, dirty-dep, `.github/**`) are legitimately trailer-less and pass. **The "commit range" MUST be the
+  since-last-promote marker range, NOT raw `staging..LDR`/`main..LDR`** — squash-promotes give the target branch a new
+  SHA + a different combined patch-id, so the raw range re-flags an already-promoted trailer-less commit on every drain
+  forever (`14b11e2`/`06a83fb6` recurring block, 2026-06-17); track the last-promoted LDR SHA per repo, range
+  `<that>..LDR`; fail-safe (a stale marker over-flags, never under-flags). Fix tracked in
+  `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`. (2) **push tripwire (faster detection,
+  optional)** — a non-blocking `push: live-defi-rollout` GHA running the same checker; a violation fires a
   `#ci-failures` alert so a bypass is caught at push, not ≤30 min later at the drain. **LDR itself never runs QG.**
   **Head-of-line is accepted by design:** the promote PR is the whole LDR→staging diff, so one un-promotable commit
   (bypass or red) freezes that repo's promotion until reverted/retro-QG'd — fail-safe, nothing jumps a bad commit.
@@ -161,12 +166,14 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
 - [x] ✅ [SCRIPT] P1. **quickmerge: harden `--hotfix` (marker) — DONE.** `--hotfix` now requires a `[hotfix]` marker in
       the commit message (else refuse), in the FLAG VALIDATION block. Keeps the staging-lock respect. —
       unified-trading-pm@305014936
-  - [x] ✅ **[DONE 2026-06-12 — the correct design shipped in `scripts/quickmerge.sh` (`da0cd88c`): `--hotfix-to-main` flag, triple-guard (`[hotfix-main]` marker + `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` + service-repo-only), and dedicated single-commit cherry-pick→branch→main PR. No longer deferred.]** **`--hotfix-to-main` — DEFERRED (design finding).** The naive "PR_BASE=main on the existing flow" is WRONG: the
-        PR head is `live-defi-rollout`, so a LDR→main PR would promote the **whole trunk**, not just the hotfix. A
-        correct `--hotfix-to-main` needs a **dedicated single-commit branch off `main`** (cherry-pick the fix → PR that
-        branch → main, v2-on-main the only gate) + `[hotfix-main]` marker + operator env
-        `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize). Until built, the operator uses the manual
-        relax→push→re-enable path. **Does NOT script a protection bypass.**
+  - [x] ✅ **[DONE 2026-06-12 — the correct design shipped in `scripts/quickmerge.sh` (`da0cd88c`): `--hotfix-to-main`
+        flag, triple-guard (`[hotfix-main]` marker + `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` + service-repo-only), and
+        dedicated single-commit cherry-pick→branch→main PR. No longer deferred.]** **`--hotfix-to-main` — DEFERRED
+        (design finding).** The naive "PR_BASE=main on the existing flow" is WRONG: the PR head is `live-defi-rollout`,
+        so a LDR→main PR would promote the **whole trunk**, not just the hotfix. A correct `--hotfix-to-main` needs a
+        **dedicated single-commit branch off `main`** (cherry-pick the fix → PR that branch → main, v2-on-main the only
+        gate) + `[hotfix-main]` marker + operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize).
+        Until built, the operator uses the manual relax→push→re-enable path. **Does NOT script a protection bypass.**
 - [x] ✅ [DOCS] P1. **codex SSOT update — codex DONE, CLAUDE.md deferred.** Added a "LDR-trunk decoupling" subsection to
       `codex/08-workflows/ci-cd-flow.md` § Two-Pass (land-on-LDR, hotfix-scoped gates, 30min drain, A1 inheritance, D1
       provenance gate, `[hotfix]` marker, `--hotfix-to-main` not-yet-shipped). — unified-trading-pm@305014936
@@ -242,11 +249,13 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
       Uses **content equivalence via the compare API** (`{base}...live-defi-rollout` → **0 changed files** ⇒ content
       already in base ⇒ superseded) — NOT SHA membership (the drain rebases/squashes so SHAs differ). Comments then
       closes; idempotent. — unified-trading-pm@8052dd540
-- [x] ✅ **[DONE 2026-06-12 — bounded-parallel driver shipped in `ldr-to-staging-promote.yml` (`efdf978f3`): `MAXJOBS` background launch + `wait -n` barrier so same-tier repos fan out. The `full-workspace-sit` assembly half is a gate-read (nothing to parallelize).]** [SCRIPT] P2. **Parallelize the drain + SIT within a tier.** `ldr-to-staging-promote.yml` reads
-      `topologicalOrder.levels[]` (correct order) but iterates **serially** in a bash for-loop — repos in the same tier
-      with no inter-dep (e.g. instruments-service ∥ MTDS) run one-after-another. Fan them out (background jobs + a
-      `wait` barrier between tiers) so promotion wall-clock = longest dependency chain, not the sum. Same for the
-      `full-workspace-sit` assembly. Composes with @4933 (per-cone locks).
+- [x] ✅ **[DONE 2026-06-12 — bounded-parallel driver shipped in `ldr-to-staging-promote.yml` (`efdf978f3`): `MAXJOBS`
+      background launch + `wait -n` barrier so same-tier repos fan out. The `full-workspace-sit` assembly half is a
+      gate-read (nothing to parallelize).]** [SCRIPT] P2. **Parallelize the drain + SIT within a tier.**
+      `ldr-to-staging-promote.yml` reads `topologicalOrder.levels[]` (correct order) but iterates **serially** in a bash
+      for-loop — repos in the same tier with no inter-dep (e.g. instruments-service ∥ MTDS) run one-after-another. Fan
+      them out (background jobs + a `wait` barrier between tiers) so promotion wall-clock = longest dependency chain,
+      not the sum. Same for the `full-workspace-sit` assembly. Composes with @4933 (per-cone locks).
 - [ ] [SCRIPT] P3. **Stale-checkout / stale-PR host monitoring.** Extend the slot Slack monitoring to flag stale promote
       PRs + stale branch checkouts on any host (laptops ikenna/harsh · vm-0/vm-planning · epic VMs when up). Composes
       with `verify-slot-host-symmetry.sh`.
@@ -290,10 +299,11 @@ always available) — captured as P1/P2 todos in `bucket_name_ssot_legacy_dual_w
 - [x] ✅ [SCRIPT] P1. **B-part-2 `--hotfix-to-main`** — SHIPPED in `scripts/quickmerge.sh`. Lands the fix on LDR (trunk
       SSOT, never lost) AND fast-tracks JUST that commit to `main`: cherry-picks the landed LDR commit onto a dedicated
       single-commit branch off `origin/main` (in a throwaway worktree, peer-undisturbed) → PR → main → auto-merge, with
-      `quality-gates-v2` on main the only gate (no protection bypass, no whole-trunk promote). Triple-guarded: `[hotfix-main]`
-      marker + operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize the live path) + service-repo-only.
-      Both refusal guards smoke-verified; `bash -n` + shellcheck clean. The live main-mutation path is operator-gated (inert
-      by default) so it's safe-shipped without a risky live test. — unified-trading-pm@da0cd88c.
+      `quality-gates-v2` on main the only gate (no protection bypass, no whole-trunk promote). Triple-guarded:
+      `[hotfix-main]` marker + operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize the live
+      path) + service-repo-only. Both refusal guards smoke-verified; `bash -n` + shellcheck clean. The live
+      main-mutation path is operator-gated (inert by default) so it's safe-shipped without a risky live test. —
+      unified-trading-pm@da0cd88c.
 - [ ] [SCRIPT] P3. **D5 host stale-PR/checkout monitoring** — extend the slot Slack monitoring; composes with
       `verify-slot-host-symmetry.sh`. Spec in the Track-D todo above.
 - [x] ✅ [SCRIPT] P1. **UAC relocation of cloud-providers.yaml** — canonical yaml packaged in UAC
@@ -312,8 +322,9 @@ shipped + guards verified. Fleet promotion resumes via the drain once UTL clears
   default behind the in-tree sibling-walk. Standalone-clone CI green. The conftest env-override + repo fixture remain as
   a harmless defensive default.
 - **B-part-2 `--hotfix-to-main` shipped** (`scripts/quickmerge.sh`): triple-guarded break-glass (marker + operator env +
-  service-repo-only), throwaway-worktree cherry-pick → PR → main, v2-gated, no protection bypass. Refusal paths smoke-verified.
-- **Fleet `FAILING` triage (gh-verified per repo):** most manifest `FAILING` flags are STALE — LDR is green. The genuinely
-  live items are (a) deployment-service `main` red on the UTL `0.4.0 < 0.5.0` dep floor (resolves when UTL promotes past
-  the keystone fix), (b) deployment-api `data_status_service.py` 6663-line file-size debt, (c) a few conflicted promotion
-  PRs. Tracked in this run's todos + `cicd_contract_hardening_2026_06_01.md`.
+  service-repo-only), throwaway-worktree cherry-pick → PR → main, v2-gated, no protection bypass. Refusal paths
+  smoke-verified.
+- **Fleet `FAILING` triage (gh-verified per repo):** most manifest `FAILING` flags are STALE — LDR is green. The
+  genuinely live items are (a) deployment-service `main` red on the UTL `0.4.0 < 0.5.0` dep floor (resolves when UTL
+  promotes past the keystone fix), (b) deployment-api `data_status_service.py` 6663-line file-size debt, (c) a few
+  conflicted promotion PRs. Tracked in this run's todos + `cicd_contract_hardening_2026_06_01.md`.

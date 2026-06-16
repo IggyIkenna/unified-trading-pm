@@ -133,6 +133,20 @@ path to `main`** until the next quickmerge opens a new one.
   `ldr-to-main-promote.yml` run `check_strict_quickmerge.py` over the promote range before arming auto-merge; a
   non-carve-out CODE commit lacking the `Quickmerge:` trailer leaves the PR open (auto-merge not armed). Fail-open on a
   checker error.
+  - **The promote range MUST be the SINCE-LAST-PROMOTE range, NOT raw `staging..LDR` / `main..LDR` (HARD; bug found
+    2026-06-17, fix tracked in `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`).** Promotes
+    are SQUASH merges, so a promoted LDR commit's SHA never lands on the target branch and its individual patch-id ≠ the
+    squash's combined patch-id — meaning `git rev-list`/`git cherry`/`merge-base` over `staging..LDR` can NOT tell that
+    an already-drained commit was promoted. So the historical, hardcoded
+    `--range origin/staging..origin/live-defi-rollout` (resp. `origin/main..…`) **re-flags a one-time trailer-less
+    commit on EVERY subsequent drain, forever** (the `14b11e2` / `06a83fb6` recurring "Provenance gate BLOCKED" noise;
+    each drain needed a manual `gh pr merge --admin`). The contract: the bot tracks the **last successfully-promoted LDR
+    SHA per repo** (a moved tag `last-promoted-to-staging` / `last-promoted-to-main`, or a state field) and the
+    provenance check runs `<last-promoted>..origin/live-defi-rollout` — only commits since the last drain. This is
+    **fail-safe** (a stale/missing marker widens the range → over-flags, never under-flags, so a genuine new bypass is
+    still caught). **Do NOT "simplify" the range back to `staging..LDR`** — that re-introduces the perpetual-block
+    regression. (The pre-push hook range `origin/live-defi-rollout..HEAD` is already a since-base range and is
+    unaffected.)
 
 Every shippable unit goes through exactly two passes:
 
@@ -497,13 +511,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the

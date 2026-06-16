@@ -979,9 +979,12 @@ the SAME change. SSOTs: `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT";
 > landing, BLOCKs on `--hotfix`. `--hotfix` requires a `[hotfix]` marker (auditable break-glass; still hits the staging
 > lock). `STAGING_GREEN` **inherits** from the LDR→staging PR's v2 (A1; `push:[staging]` QG dropped). The promote bots
 > (`ldr-to-staging-promote` + `ldr-to-main-promote`) run `check_strict_quickmerge.py` over the promote range and **won't
-> arm auto-merge** on a non-carve-out commit lacking the `Quickmerge:` trailer (D1). SSOT:
-> `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
-> decoupling".
+> arm auto-merge** on a non-carve-out commit lacking the `Quickmerge:` trailer (D1). **The promote range MUST be the
+> since-last-promote marker range (`<last-promoted-LDR-sha>..LDR`), NOT raw `staging..LDR`/`main..LDR` — squash-merges
+> make the raw range re-flag an already-promoted trailer-less commit on EVERY drain forever (the `14b11e2` perpetual
+> "Provenance gate BLOCKED"); fail-safe (stale marker over-flags, never under-flags). Do NOT revert to `staging..LDR`.**
+> SSOT: `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
+> decoupling" + `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`.
 
 CODE reaches the integration branch **only** through `quickmerge --agent --files` (Pass-1 QG sentinel → Pass-2 commit +
 auto-merging staging PR). A direct `git push` of code to `live-defi-rollout`/`staging`/`main` is banned: it dodges the
