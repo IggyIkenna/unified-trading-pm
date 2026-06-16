@@ -1792,21 +1792,14 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-16T06:59:17.676037Z",
-    "locked_reason": "SIT running",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
-    "pending_repos": [
-      "execution-service",
-      "strategy-service",
-      "unified-api-contracts",
-      "system-integration-tests"
-    ],
-    "sit_retry_count": 1,
+    "pending_repos": [],
+    "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": [
-      "system-integration-tests"
-    ]
+    "breaking_pending": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
