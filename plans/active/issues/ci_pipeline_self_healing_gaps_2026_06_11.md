@@ -434,16 +434,21 @@ system claims to have does not exist for this path.
 4. `gh workflow run staging-to-main.yml` → promoted strategy + uac (clean merges). Final: quarantine + failures EMPTY;
    all 4 main==LDR (modulo the 1-file semver-brake drain). Monitoring-ui "Promotion blocked (4)" panel clears.
 
-- [ ] [WORKFLOW] P1. Make quarantine **auto-recoverable**. On each run, BEFORE the skip, re-test each quarantined repo's
-      actual promotability (staging→main merge-clean AND deps-on-main) — if it would now succeed, **un-quarantine and
-      let it through this run** (the skip is only justified while it would genuinely re-fail). A repo that merges clean
-      must never be permanently skipped. Pair with a bounded "probe every Nth run" if a full re-test per run is too
-      costly.
-- [ ] [WORKFLOW] P1. Fix the escalation text + handler: a quarantined repo with a REAL conflict (e.g. SIT's pyproject)
-      needs the divergence collapsed (force-sync main=LDR when `main ⊆ LDR`, or resolve on staging) — and then an
-      **explicit quarantine clear**, because a successful promotion of the SAME content won't fire while it's skipped.
-      The orchestrator's auto-recover (`ci_failure_watcher.py`) should clear `promotion_quarantine[repo]` once the
-      underlying PR is resolved, not assume the next drain clears it.
+- [x] ✅ [WORKFLOW] P1. Made quarantine **auto-recoverable** — DONE 2026-06-16 (unified-trading-pm PR #358).
+      `staging-to-main.yml` merge-builder no longer permanently skips a quarantined repo: it RE-PROBES (lets it through)
+      once the re-probe is DUE (`next_probe_after` elapsed / absent), and the existing `changed & ready_set` filter still
+      enforces deps-on-main + the merge loop tests real mergeability. A clean re-probe promotes → the counter step's
+      existing `for repo in promoted: quarantine.pop()` auto-clears it; a still-conflicting re-probe stays quarantined
+      with `next_probe_after` pushed out (bounded exponential backoff 60→120→240, cap 360 min) — no every-run noise, and
+      the alert partition already excludes quarantined repos so no re-alert. Logic unit-simulated (due/not-due,
+      backoff curve, re-probe-fail stays-quarantined-no-realert, re-probe-success clears). Dormant until a repo
+      re-quarantines (quarantine currently empty) → zero immediate behaviour change.
+- [x] ✅ [WORKFLOW] P1. Fixed the escalation text — DONE 2026-06-16 (PR #358). It now states the repo WILL be re-probed
+      (gives `next_probe_after`), that a now-clean repo self-promotes + auto-clears with no action, and that escalation
+      means it's a REAL conflict needing resolution (force-sync main=LDR when `main ⊆ LDR`, else resolve on staging) —
+      after which the next due re-probe auto-clears it, so do NOT hand-edit the manifest unless the re-probe is broken.
+      (The orchestrator-side `ci_failure_watcher.py` explicit-clear is now redundant for the common case since the
+      workflow self-clears; left as the remaining belt-and-suspenders option if ever needed — folded into the P2 below.)
 - [ ] [WORKFLOW] P2. Add a watchdog/alert for `promotion_quarantine` entries older than ~2h with `escalated:true` AND a
       currently-clean staging→main merge — that exact combination is the deadlock signature (stuck with nothing wrong).
 
