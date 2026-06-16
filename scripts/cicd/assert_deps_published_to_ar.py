@@ -47,7 +47,7 @@ AR_REGION = "asia-northeast1"
 # Project id is read from the GCP_PROJECT_ID env (the one canonical workspace var — the gate
 # workflow exports it) — never hard-coded (codex: no hard-coded prod project id). Empty when unset →
 # the AR query fails → the check fails-OPEN (allows), the safe default.
-AR_PROJECT = os.environ.get("GCP_PROJECT_ID") or ""
+AR_PROJECT = os.environ.get("GCP_PROJECT_ID") or ""  # noqa: qg-gcp-project-id (cicd gate: project for the gcloud AR query)
 AR_REPOSITORY = "unified-libraries"
 
 _VER_RE = re.compile(r"(\d+)(?:\.(\d+))?(?:\.(\d+))?")
