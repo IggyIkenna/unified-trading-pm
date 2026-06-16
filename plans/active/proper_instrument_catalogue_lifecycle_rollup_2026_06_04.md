@@ -427,11 +427,10 @@ universe; logs `/tmp/r4_is_backfill/catalogue_<ag>.log`.)
       `BLOCKED-UPSTREAM-OUTAGE`: re-probe, and when restored re-run `--asset-group TRADFI --source massive` for the
       missing days so `venue=CME` refills; then regen the tradfi catalogue. Repo: instruments-service. assigned_vm:
       slot-6/tradfi vertical. Provenance: R4 backfill log 2026-06-11.
-- [ ] [DATA] P2. **defi silent-thinning hardening** — the completeness check moves venues whose entire result was
-      filtered out into "excluded from expected", so a 100%-drop bug looks complete. Make "fetched>0 but 0 after venue
-      filtering" a SHARD COMPLETENESS FAILURE (attempted_failed), not an exclusion; pairs with the coverage-horizon
-      NICE-TO-HAVE above. Repo: instruments-service (`engine/urdi_reference_provider.py` + completeness). Provenance:
-      c7d9bb2 regression went undetected 19 days. assigned_vm: vm-cross-cutting.
+- [x] ✅ [DATA] P2. **defi silent-thinning hardening** — DONE is@4562dad. Empty-after-venue-filter (fetched>0 but 0
+      survive the venue-tag filter) now records `attempted_failed` (ADAPTER_ERROR, permanent) instead of a silent
+      exclusion; a genuine empty source response (records==[]) stays an honest empty. `engine/urdi_reference_provider.py`
+      + regression test. QG-green. Provenance: c7d9bb2 regression went undetected 19 days. assigned_vm: vm-cross-cutting.
 
 ### R5 (2026-06-15) — prod data-status shows 0 instruments: the MONITORING read goes blind on the stale consolidated index (operator-reported, deployment-ui screenshot)
 

@@ -499,16 +499,18 @@ current-code fetchability; the image-rebuild ride happens when the LDR→staging
       `Invalid comparison between dtype=datetime64[ns] and date` in the cefi tardis batch download path (instruments
       load OK; bug fires pre-HTTP). Repro in R5 ledger row 1. Then re-smoke BINANCE-FUTURES trades 1-day dry-run to
       GREEN (proves the actual tardis CSV download + creds end-to-end). Repo: market-tick-data-service.
-- [ ] [BUG] P1. **R5-fix-2 — tradfi FX yahoo writer missing `instrument_id`**: FX daily ohlcv_24h dataframe lacks the
-      required `instrument_id` column at StreamingParquetWriter pre-write validation. Add the column derivation (same
-      pattern as the CBOE/VIX path which passes). Repo: market-tick-data-service.
+- [x] ✅ [BUG] P1. **R5-fix-2 — tradfi FX yahoo writer missing `instrument_id`** — DONE mtds@ed23954. Added
+      `rec["instrument_id"] = f"{fx_pair.base}-{fx_pair.quote}"` in `umi_tick_provider._fetch_yahoo_fx` (mirrors the VIX
+      path) + 75-line regression test. (Yahoo FX path lives in `umi_tick_provider.py`, not a separate adapter.) QG-green.
 - [ ] [BUG] P1. **R5-fix-3 — footystats ODDS manifest source label**: `footystats_odds_fetch` stamps `source='odds_api'`
       but UAC `SOURCE_PRIORITY[(sports, ODDS)]` allows only `footystats` — fix the source param (or, if odds_api is
       genuinely the upstream, extend SOURCE_PRIORITY deliberately). Repo: instruments-service (+UAC if priority change).
-- [ ] [BUG] P1. **R5-fix-4 — kalshi instruments 400**: kalshi `GET /markets?limit=200&status=active` returns HTTP 400 —
-      fix the request shape against current Kalshi API docs (public endpoint, no creds), then run the prediction IS
-      backfill so KALSHI `instrument_availability` exists and the mtds kalshi trades path unblocks. Repo:
-      instruments-service (adapter), mtds re-smoke after.
+- [x] ✅ [BUG] P1. **R5-fix-4 — kalshi instruments 400** — DONE is@4562dad (code). Root-caused: Kalshi `status` is a
+      LIFECYCLE filter whose valid values are `unopened`/`open`/`closed`/`settled` — `status=active` is rejected 400
+      (the per-MARKET `status` field IS `"active"` for tradeable markets, but the REQUEST filter is `status=open`).
+      Changed `status=active`→`status=open` in `prediction/kalshi.py` + test. **Residual (still open):** the actual IS
+      kalshi prediction backfill RUN + mtds re-smoke (operational, gated on the capture-restart sequencing). Repo:
+      instruments-service.
 - [ ] [INFRA] P1. **R5-fix-5 — restore manifest consolidator** for `instruments-store-*` (+ the defi data buckets) as
       part of the post-apply restart sequencing — every IS CLI loud-fails on the stale index today
       (`MANIFEST_ALLOW_STALE_FALLBACK=true` is the interim recovery). Repo: deployment-service (Cloud Run Job +
