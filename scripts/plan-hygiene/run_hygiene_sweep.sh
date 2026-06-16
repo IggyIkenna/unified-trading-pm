@@ -35,7 +35,13 @@ if [ "$CI_MODE" = "--precommit" ]; then
   fi
   PF=0
   if [ "${#STAGED_PLANS[@]}" -gt 0 ]; then
-    "$SCRIPT_DIR/check_frontmatter.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Frontmatter (staged plans)" || { echo "  ❌ Frontmatter validity (staged plans)"; PF=$(( PF + 1 )); }
+    "$SCRIPT_DIR/check_frontmatter.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Frontmatter validity (staged plans)" || { echo "  ❌ Frontmatter validity (staged plans)"; PF=$(( PF + 1 )); }
+    # Value-level schema gate (required NON-EMPTY fields + epic resolution) on the SAME staged
+    # plans. check_frontmatter.sh above is presence-only ('---' + deprecated-field), so without this
+    # a docs(plans): commit (which takes prek only, NOT full QG) can land a plan/issue doc missing
+    # required status/priority on the integration branch — where it then blocks EVERY full QG run
+    # fleet-wide. Running the schema check here closes that bypass at commit time. SSOT: check_frontmatter_schema.py.
+    python3 "$SCRIPT_DIR/check_frontmatter_schema.py" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Frontmatter schema (staged plans)" || { echo "  ❌ Frontmatter schema — missing/empty required field (staged plans)"; PF=$(( PF + 1 )); }
     "$SCRIPT_DIR/check_todo_format.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Todo format (staged plans)" || { echo "  ❌ Todo format (staged plans)"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then

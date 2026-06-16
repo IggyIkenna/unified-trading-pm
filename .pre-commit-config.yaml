@@ -51,8 +51,8 @@ repos:
         name: Plan hygiene (staged plans + runbooks — frontmatter/todo-format/runbook-fields)
         entry:
           bash -c 'SWEEP="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." &&
-          pwd)}/unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh"; [ -f "$SWEEP" ] && bash "$SWEEP"
-          --precommit || exit 0'
+          pwd)}/unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh"; [ -f "$SWEEP" ] || exit 0; bash "$SWEEP"
+          --precommit'
         language: system
         files: ^(plans/|codex/15-runbooks/incidents/)
         pass_filenames: false
