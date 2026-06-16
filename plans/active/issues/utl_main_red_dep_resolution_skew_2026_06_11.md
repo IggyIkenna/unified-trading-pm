@@ -59,11 +59,13 @@ promotion-ordering problem: UTL's main needs the aligned UAC release first.
       `quality-gates-v2` GREEN. UTL side confirmed: latest UTL LDR build (`71eddf9`, the current tip) is **SUCCESS**
       (the alerted `a57dc44` cloud-build FAILURE @17:55 was a transient sibling-context resolve; builds @18:57/19:09
       recovered, and the force-sync now makes the index-resolution path coherent too).
-- [ ] [CICD] P1. **SYSTEMIC — the floor-outpaces-publish lag RECURS every UAC version bump (per-version whack-a-mole;
-      observed 0.13→0.14→0.15 on 2026-06-16).** Root cause precisely: the **UTL Cloud Build's `quality-gates` step (Step
-      #7, INSIDE the image) resolves `unified-api-contracts` from the published INDEX** (the Dockerfile installs the
-      editable sibling at line 88, but the in-image QG re-installs with `--no-sources` → index), so during the window
-      between `chore(deps): pin unified-api-contracts to X` landing on the consumer's LDR and UAC `X` reaching
+- [x] ✅ [CICD] P1. SHIPPED 2026-06-16 (unified-trading-library@b859a1532 cloudbuild.yaml — in-image QG installs UAC
+      editable from the cloned sibling, not the lagging index; external deps still index-resolved). **SYSTEMIC — the
+      floor-outpaces-publish lag RECURS every UAC version bump (per-version whack-a-mole; observed 0.13→0.14→0.15 on
+      2026-06-16).** Root cause precisely: the **UTL Cloud Build's `quality-gates` step (Step #7, INSIDE the image)
+      resolves `unified-api-contracts` from the published INDEX** (the Dockerfile installs the editable sibling at line
+      88, but the in-image QG re-installs with `--no-sources` → index), so during the window between
+      `chore(deps): pin unified-api-contracts to X` landing on the consumer's LDR and UAC `X` reaching
       `main`+publishing, the build fails `No matching distribution unified-api-contracts>=X`. The **GHA QG does NOT hit
       this** — it resolves from the editable sibling source (`file:///…`, verified on features-service:
       `OK 0.15.0 satisfies >=0.15.0`). So it is cloud-build-specific + TRANSIENT (self-heals in minutes once UAC
