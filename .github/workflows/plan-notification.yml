@@ -65,9 +65,15 @@ jobs:
 
             PLAN_NAME=$(basename "$PLAN_FILE" .md)
 
-            # Count pending todos
-            TODO_COUNT=$(grep -c "status: pending" "$PLAN_FILE" 2>/dev/null || echo "0")
-            DONE_COUNT=$(grep -c "status: done" "$PLAN_FILE" 2>/dev/null || echo "0")
+            # Count todos from the actual checkboxes (the per-todo `status:` lines this grepped
+            # never exist → always 0). `grep -c` PRINTS "0" on no match AND exits 1, so the old
+            # `|| echo "0"` appended a SECOND "0" → the value became "0\n0" (a real newline),
+            # which broke the `key=value` GITHUB_OUTPUT write ("Invalid format '0 done, 0'").
+            # `|| true` keeps grep's single "0" and stops `set -e` tripping.
+            DONE_COUNT=$(grep -cE '^- \[[xX]\]' "$PLAN_FILE" 2>/dev/null || true)
+            TODO_COUNT=$(grep -cE '^- \[ \]' "$PLAN_FILE" 2>/dev/null || true)
+            DONE_COUNT="${DONE_COUNT:-0}"
+            TODO_COUNT="${TODO_COUNT:-0}"
 
             # GitHub file link
             REPO_URL="https://github.com/${{ github.repository }}"
@@ -79,7 +85,14 @@ jobs:
 
           done <<< "$CHANGED_PLANS"
 
-          echo "plan_summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
+          # Multiline-safe GITHUB_OUTPUT write (heredoc delimiter). The `key=value` form cannot
+          # carry a value with newlines; the heredoc form is the GHA-correct way and is robust
+          # even if a future SUMMARY gains a real newline.
+          {
+            echo "plan_summary<<PLAN_SUMMARY_EOF"
+            printf '%s\n' "$SUMMARY"
+            echo "PLAN_SUMMARY_EOF"
+          } >> "$GITHUB_OUTPUT"
 
   # ── Handle /approve-plan comments ─────────────────────────────────────────
   handle-plan-approval:
