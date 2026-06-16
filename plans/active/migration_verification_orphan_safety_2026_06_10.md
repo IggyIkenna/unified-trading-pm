@@ -213,6 +213,22 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       CF-20) so re-running the per-service audit covers them — steady-state v9 form, concrete runnable commands. No CF
       item left without an owning audit. — pm@<flip>.
 
+## A2 — Full audit of all non-operator-gated data-pipeline code work (operator 2026-06-16)
+
+- [ ] [VERIFY] P0. **FULL AUDIT — after the prediction cqg work, verify what is actually shipped vs left across ALL the
+      non-operator-gated code work** for: data migration, manifest code changes across every service, the data pipeline,
+      `pipeline_mode` standardisation (GATE 0), instrument-catalogue services, and the data-status tab/downloads — then
+      **finish anything non-operator-gated that remains** (operator believes it is "pretty much all shipped"; confirm).
+      Source plans to sweep: `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`,
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`, `migration_verification_orphan_safety_2026_06_10.md`
+      (this plan), `data_status_tab_and_downloads_remediation_2026_06_16.md`, the per-AG `*_manifest_canonicalisation_*`
+      plans, and the instrument-catalogue lifecycle plan. **Operator-gated items stay parked** (V6 eyeball, G4 `--apply`,
+      decision 424; decision 338 cqg classifier is DONE — uac@d52217f+e0035fd+8e3108d). **Repo hygiene first**: several
+      agents are on OTHER machines, so clones may be stale/diverged — clean + `pull --rebase` / fetch FRESH remote state
+      per repo BEFORE auditing (incidents this session: UAC + PM version promotion-lag, PM regen churn, a staging
+      backmerge landing a foreign over-limit `databento_classifier.py`). Run as `/autonomous` to completion. Owner: this
+      slot (operator: "do it all here"). Provenance: operator message 2026-06-16.
+
 ## B — MVP, config-versioning, execution-config compatibility (lower priority; reference existing plans)
 
 - [ ] [SCRIPT] P1. MVP Phase 2-3 — already in `mvp_scope_catalogue_tagging_2026_06_08.md` (deployment-api
@@ -237,6 +253,31 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 6. CF-15…CF-21 encoded in the checklist + owning per-service instruction files (re-runnable forever).
 
 ## Progress Log
+
+- 2026-06-16 (decision 338 — cqg classifier COMPLETE; pass 2 shipped, uac@e0035fd + uac@8e3108d) — operator gave full
+  granular direction; encoded all of it. **29 groups + OTHER → ~103 groups + OTHER + MISC_NOVELTY.** Three ships, all
+  QG-green, all seeded in the 4 required places (enum + metadata + `PREDICTION_GROUPS` + classifier map); parity tests
+  green. Sub-type detection lives in the projection layer (`classifiers.py`), NOT the taxonomy — `CLASSIFIER_VERSION`
+  bumped `2026-05-23.3 → 2026-06-16.3` (lever for reclassifying existing OTHER rows).
+  - **Pass 2A (uac@e0035fd):** crypto **PRICE_RANGE** split out for 12 coins (BTC/ETH **retrofitted** — "between $X-$Y"/
+    multistrike no longer mislabeled UP_DOWN); political **TRUMP_APPROVAL_RATING / _STATEMENTS / _EXEC_ORDER** +
+    **ELON_TWEET_COUNT / _STATEMENTS / _NET_WORTH**; geo **GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE / GEO_OTHER_BY_DATE**
+    (conflict-token-gated, doesn't swallow intl elections); **BOX_OFFICE_OPENING_WEEKEND** (category-agnostic — movie
+    titles are MISC-tagged); **GOLD/SILVER/CRUDE_OIL_PRICE_LEVEL**; **MISC_NOVELTY** (genuinely-uncategorised → explicit
+    residual; OTHER stops being the silent ~80% bucket).
+  - **Pass 2B (uac@8e3108d):** sports **SPORTS_{LEAGUE}_{BETTYPE}** — 30 groups / 17 leagues. Bet-type
+    (WINNER→MATCH / SPREAD / TOTAL / NRFI / F1 GP_WINNER / CONSTRUCTOR) from the slug; **per-league MATCH fallback** →
+    every known-league market groups (never silent OTHER). Matches the operator's "league x fixture x market-type" model
+    (league + bet-type in the group; fixture = the recurring market_id instance).
+  - **Fleet unblock:** the staging-backmerge bringing UAC 0.15.0 also landed a foreign
+    `databento_classifier.py::classify_databento_symbol` at **331L** → codex-compliance ratchet (3 > 2) was failing
+    **every** UAC LDR ship. Refactored to extract `_classify_databento_combo` + `_classify_databento_option` (331L→154L),
+    behavior preserved (54 tests). "Fix CI in real time."
+  - **Known residual (honest):** football "will-{team}-win" WITHOUT a league marker in slug/event_slug tags MISC (no
+    team→league registry in the taxonomy) → MISC_NOVELTY; league-prefixed/event-slug'd football DOES route. A
+    team→league table is a follow-up if a consumer needs it.
+  - **249-b:** the cqg classifier is now richly populated → unblocked at the classifier level; reclassification (hash-diff)
+    can run; remaining is materialisation + the operator-gated G4 apply.
 
 - 2026-06-16 (autonomous run, FINAL — tail-cleanup complete) — **5 of 6 dispatch sub-items SHIPPED + flipped; 346
   verified-done in code + PRESERVED to a recoverable wip branch (lands on the next clean-dep window).** Final tally:
