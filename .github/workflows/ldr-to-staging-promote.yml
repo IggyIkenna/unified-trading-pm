@@ -50,6 +50,11 @@ concurrency:
 jobs:
   promote-ldr-to-staging:
     runs-on: ubuntu-latest
+    # Gap 8 (ci_pipeline_self_healing_gaps §"Gap 8", 2026-06-16): the dep-order gate
+    # (tier_c_promotion_gate._overlay_firestore_ci_status) needs this project env + the SDK
+    # installed below, else it silently decides on the STALE manifest ci_status cache.
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
     outputs:
       promoted: ${{ steps.promote.outputs.promoted }}
       blocked: ${{ steps.promote.outputs.blocked }}
@@ -73,6 +78,19 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
+
+      # Gap 8: auth + Firestore SDK so the dep-order gate reads LIVE ci_status, not the stale
+      # committed cache. Best-effort — falls back to the manifest exactly as before if unavailable.
+      - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
+        id: gcp_auth_drain
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_drain.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
 
       # ── Tier B gate: full-workspace SIT not in explicit failure ───────────
       - name: Tier B gate — full-workspace SIT not red
