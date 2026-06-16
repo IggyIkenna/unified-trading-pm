@@ -2,6 +2,8 @@
 title: deployment-ui jsdom test env broken — html-encoding-sniffer@6 require()s ESM @exodus/bytes (ERR_REQUIRE_ESM)
 created: 2026-06-16
 author: ikennaigboaka
+status: active
+priority: P1
 source:
   - data-status UI fix wave 2026-06-16 (venue re-fetch + de-dupe panels + pagination) — could not pass the UI gate
   - deployment-ui `bash scripts/quality-gates.sh --test` → 80 test files ERR_REQUIRE_ESM
