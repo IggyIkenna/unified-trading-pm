@@ -179,6 +179,90 @@ shard_status:
       latest_data_date: null
       assignee: ikenna
       notes: Complete
+  SPORTS:
+    # Sports instruments-service reference rows. The current writer stamps the
+    # provider into data_type and leaves venue="" (writers.py: manifest_venue =
+    # "" for sports refs) — the empty-string key is the dominant live shape.
+    # Legacy rows carry the provider token AS venue (uppercased by the classifier:
+    # API_FOOTBALL / API_FOOTBALL_FIXTURES / FOOTYSTATS / ODDS_API /
+    # MDPS_ODDS_HORIZON_BUCKET / OPEN_METEO / SOCCER_FOOTBALL_INFO /
+    # TRANSFERMARKT). Keys + genesis transcribed from the actual
+    # instruments-store-sports _index availability_index.parquet (service_name=
+    # instruments-service rows, uppercased venue). Asset-group genesis 2015-01-01.
+    "":
+      start_date: "2015-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Current writer shape (venue blank; provider in data_type).
+    API_FOOTBALL:
+      start_date: "2018-01-02"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+    API_FOOTBALL_FIXTURES:
+      start_date: "2019-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+    FOOTYSTATS:
+      start_date: "2018-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+    ODDS_API:
+      start_date: "2018-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+    MDPS_ODDS_HORIZON_BUCKET:
+      start_date: "2018-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+    OPEN_METEO:
+      start_date: "2018-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+    SOCCER_FOOTBALL_INFO:
+      start_date: "2018-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+    TRANSFERMARKT:
+      start_date: "2018-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
+  PREDICTION:
+    # Prediction instruments-service reference rows keep venue=POLYMARKET
+    # (prediction.py / writers.py manifest_venue). Key + genesis transcribed
+    # from the actual instruments-store-pred _index availability_index.parquet.
+    POLYMARKET:
+      start_date: "2025-03-14"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Complete
 epic_dependencies:
   - epic_task: market-data:1.1
     blocker_type: D1
