@@ -523,6 +523,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           READY_REPOS: ${{ env.READY_REPOS }}
+          # assert_deps_published_to_ar.py reads GCP_PROJECT_ID for the `gcloud artifacts` query.
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
           set -uo pipefail
           if ! command -v gcloud >/dev/null 2>&1; then
