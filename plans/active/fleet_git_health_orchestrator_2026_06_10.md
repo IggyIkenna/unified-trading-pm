@@ -87,25 +87,56 @@ vitest/tsc (dashboard).
       `reporter_stale` within 15 min, killing the FF-pull cron flips `ff_cron_stale`. (Needs the orchestrator running +
       a second host; do on the live orchestrator VM.)
 
-## Phase 3.5 — live incident (the exact silent gap this plan exists to surface)
+## Phase 3.5 — live incident (ROOT-CAUSED + VM remediated 2026-06-16; durable fleet fixes below)
 
-- [ ] [VERIFY] P1. **INCIDENT 2026-06-16 (provenance: slot-3 laptop, during the agent-symlink fleet rollout via SSM
-      `admin_od`)** — the **human-planning VM** (`i-0dd9812a96cdda5dc` / `agent-orch-human-planning-vm`) had a SILENTLY
-      broken FF-pull for ~4 days: its PM clone on `live-defi-rollout` was **`[ahead 10, behind 553]`** (FF-pull cron
-      `[skip]`ing on the divergence since ~2026-06-12), with a stuck idle orchestrator agent (`orch-agent-main`, PID 8520,
-      `--model sonnet`, launched Jun 12, load 0.00, no `.agent-claim`). The 10 unpushed commits were duplicate local
-      copies of work already on origin under other SHAs (verified: F38 broker-filter + F39 `audit_venue_coverage.py` BOTH
-      present on `origin/live-defi-rollout`), preserved to `origin/wip-preserve/human-planning-pm-2026-06-16` and the clone
-      hard-reset to current origin. **Two verification questions this incident raises**: (a) did the shipped fleet
-      git-health page actually flag this VM as `drift`+`ff_cron_stale` (if NOT, the detection has a gap → the human-planning
-      VM may not be reporting at all, since its reporter cron was also on a 553-behind clone); (b) the stuck Jun-12 agent
-      sat for 4 days — confirm the WorkerLivenessWatchdog covers the **human-planning** VM, not only the central VM (CLAUDE.md
-      scopes failover to vm-orchestrator only; a heartbeat-silent worker on human-planning may be uncovered). Repo:
-      agent-orchestrator (+ check `slot-cron-ff-pull.sh` divergence handling on a behind+ahead clone). Cross-ref:
-      `plans/active/orchestrator_human_central_vm_split_2026_06_12.md` (VM split) +
-      `plans/active/issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md` (the stuck-agent angle — that issue is
-      central-VM DB-record reaping; this is a live idle PROCESS on the human-planning VM, so the watchdog-coverage
-      question (b) is the complement to its reaper-coverage gap).
+- [x] ✅ [VERIFY] P1. **INCIDENT 2026-06-16 — ROOT-CAUSED + VM FIXED (slot-3 laptop via SSM `admin_od`).** The
+      **human-planning VM** (`i-0dd9812a96cdda5dc` / `agent-orch-human-planning-vm`) had a SILENTLY broken FF-pull for
+      ~4 days: PM clone `[ahead 10, behind 553]`, slot clones up to **+688 behind** (masked from a naive `b/a` read as
+      `0/0` because their remote-tracking refs were stale — never fetched), plus a stuck idle agent (`orch-agent-main` =
+      `agt-04a600`, role=main, registered `machine=harsh-laptop` **while running on human-planning** = the VM_ID drift).
+      **ROOT CAUSE: a DUPLICATE `*/5` `slot-cron-ff-pull` entry in ROOT's crontab** (alongside ubuntu's) — root's run
+      created `/tmp/slot-cron-ff-pull.lock` as `root:root` (so ubuntu's run died at the lock line, "Permission denied")
+      AND ran git as root on ubuntu-owned repos ("dubious ownership" → fail); between them neither cron ever
+      fast-forwarded. **REMEDIATION applied (VM now healthy)**: removed the duplicate root crontab entries (backup at
+      `/root/root_crontab_backup_20260616.txt`); cleared the root-owned `/tmp/slot-cron-ff-pull.lock` +
+      `/tmp/.slot-host-symmetry-fail-streak`; killed the zombie tmux `orch-agent-main`; re-ran FF-pull as ubuntu → all
+      clones current; installed the missing `slot-git-status-report` cron via the canonical `install-slot-cron-ff-pull.sh`
+      (as ubuntu). The 10 unpushed PM commits were dup work already on origin (F38/F39), preserved at
+      `origin/wip-preserve/human-planning-pm-2026-06-16`. **Answers to the two questions**: (a) the fleet-git-health page
+      did NOT flag it — the VM's `slot-git-status-report` reporter cron was **never installed** (and there is no
+      `~/.orch_token`), so the VM never reported at all → a coverage blind spot, not a detection bug; (b) confirmed — the
+      stuck agent sat 4 days unreaped, so reaper/WorkerLivenessWatchdog coverage does not reach this VM (complements
+      `issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md`).
+
+- [ ] [SCRIPT] P1. **Durable root-cause fix — bootstrap must NOT install the sync crons as root.** Provisioning
+      (`bootstrap_vm.sh` or equivalent) ran `install-slot-cron-ff-pull.sh` as ROOT → a duplicate root crontab that
+      fights ubuntu's (root-owned `/tmp` lock + git-as-root dubious-ownership). Fix: install the slot crons ONLY into
+      `ubuntu`'s crontab (`sudo -u ubuntu`), and add a guard at the top of `install-slot-cron-ff-pull.sh` that
+      refuses/warns when `EUID == 0`. Repo: agent-orchestrator (bootstrap) + unified-trading-pm
+      (`scripts/dev/install-slot-cron-ff-pull.sh`). **Fleet audit 2026-06-16 (confirms it's fleet-wide, not a one-off)**:
+      central `i-0c9b283b31d6b5ca7` = CLEAN (0 root sync-crons, ubuntu has all 3, FF-pull working); e2e-test
+      `i-086e8787dddda52d6` = HAS THE BUG (2 root sync-cron lines, root-owned `/tmp` lock + fail-streak, `[skip:detached]`
+      failures, missing reporter cron — a dated disposable test VM not in the registry, left as-is / candidate for
+      teardown); human-planning = FIXED (this incident). So bootstrap is the common origin; the central VM is the
+      exception, not the rule.
+
+- [ ] [SCRIPT] P2. **Make the cron lock + state files per-uid (kill the root↔ubuntu contention class).**
+      `slot-cron-ff-pull.sh` (`/tmp/slot-cron-ff-pull.lock`) + `verify-slot-host-symmetry.sh`
+      (`/tmp/.slot-host-symmetry-fail-streak`) use FIXED `/tmp` paths → a root run leaves root-owned files the ubuntu
+      cron can't touch. Use `${XDG_RUNTIME_DIR:-/tmp}/<name>.$(id -u).lock` so contexts never collide. Repo:
+      unified-trading-pm (`scripts/dev/`).
+
+- [ ] [VERIFY] P1. **Provision the reporter token so human-planning reports to `/fleet-git` (closes the (a) blind
+      spot).** `slot-git-status-report.sh` POSTs to `ORCH_URL=https://api.agent-orchestrator.odum-research.com/api/slots/<N>/git-status`
+      with `Authorization: Bearer <~/.orch_token>`; the token is absent on the VM. Operator-issued (or mint on the
+      central VM via `agent-orchestrator/server/auth.py`), drop at `/home/ubuntu/.orch_token` (ubuntu:ubuntu, 600), then
+      verify the VM appears on `/fleet-git` within 15 min. Needs operator token-issuance decision (type/audience/expiry).
+      Repo: agent-orchestrator.
+
+- [ ] [SCRIPT] P3. **`agent-orchestrator/data/config/accounts.json` is tracked but `bootstrap_vm.sh`-regenerated** →
+      perpetually dirty on every VM's ao main clone (strips operator comments + `—`-escapes em-dashes; account DATA
+      identical) → FF-pull `[skip:dirty]`s ao main forever. Either gitignore it (per the generated-artifacts rule) or
+      make bootstrap emit byte-identical content. Repo: agent-orchestrator.
 
 ## Phase 4 — ship + docs
 
