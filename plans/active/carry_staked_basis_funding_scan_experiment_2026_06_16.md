@@ -114,6 +114,23 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
    `deployment-api/models/recursive_borrow.py`, DeFi `RECURSIVE_LOOP` error codes; loop math + e-mode maxLTV to source
    from codex strategy docs.
 
+- **2026-06-16** — Replaced the rank-buffer with an **economic rotation gate** (operator): swap a held name only if the
+  candidate's carry beats it by > `swap_bps = 4·cost_bps·365/hold_days` (≈ 5.2% for 5 bps/leg + 14-day hold; scales with
+  cost). A 1% edge over 2 weeks ≈ 4 bps < 20 bps round-trip → don't trade; ~5%+ does. **Big win — cut churn, lifted net
+  everywhere.** Full-window ensemble net **19.8% → 21.7%**; **2026 dispersion 0.8% → 5.0%** (turnover 0.282 →
+  0.171/day), 2026 ensemble **9.3% → 10.7%**. Ensemble causal net by year: 2022 **16.3%** · 2023 **26.0%** · 2024
+  **33.9%** · 2025 **14.8%** · 2026 **10.7%**.
+- **2026-06-16** — Dispersion diagnosis (why 2026 was thin): (1) 2026 cross-venue spreads HALVED (median 0.0%, p95 18%
+  vs full-window 42%) — venues largely agree on funding in the bear; (2) only **41% of coin-days have ≥2 venues** (59%
+  single-venue → no dispersion); (3) **OKX-SWAP funding is suspiciously sparse — only 9 coins captured in 2026** (vs
+  Binance/Bybit 19, Aster 29) → likely an OKX perp-funding backfill gap (OKX lists 100s of perps). Filed below.
+
+## Open data gaps (file/verify)
+
+- [ ] [DATA] P2. OKX-SWAP perp funding sparse — only ~9 coins captured in 2026 (expected ~19+). Verify the OKX
+      derivative_ticker backfill universe in MTDS; likely a coverage gap limiting cross-venue dispersion. **Repo:
+      market-tick-data-service.**
+
 - _(append entries as work continues)_
 
 ## Findings filed
