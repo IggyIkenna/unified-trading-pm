@@ -111,16 +111,54 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       **Deliberately NOT yet installed on central** — the plan's own ordering gates the central install behind the
       vm-e2e-test proof (next todo). Install command when proven:
       `sudo bash scripts/install-plan-reconciler-timer.sh --operator ubuntu`. repo: agent-orchestrator.
-- [ ] [TEST] P1. **Prove on vm-e2e-test first**: seed a synthetic violation set (stale unflipped todo with an on-origin
-      sha + a frontmatter violation + a >12h-old contradiction + a <12h-old plan that must be SKIPPED) → dispatch
-      reconcile mode → verify the worker fixes exactly the eligible set, skips the fresh plan, commits one
-      `docs(plans):` unit, files the unfixable finding. Then install the timer on central. repo: agent-orchestrator.
+- [ ] [TEST] P1. **Prove via a LOCAL orchestrator dispatch** (vm-e2e-test is stopped post-cutover; a local backend is
+      fully faithful — real dispatch → slot/account select → `do_spawn` opus/max/thinking → a fresh worker with only the
+      rendered prompt). Harness built 2026-06-16 (`run-test-backend.sh` + `seed-slot.sh`; see "Boot-prompt hardening +
+      local proving harness" below); dispatch + watch scheduled **2026-06-17 AM**. Seed a synthetic violation set (stale
+      unflipped todo with an on-origin sha + a frontmatter violation + a >12h-old contradiction + a <12h-old plan that
+      must be SKIPPED) → dispatch reconcile → verify the worker FFs all repos, fixes exactly the eligible set, skips the
+      fresh plan, commits one `docs(plans):` unit to the **review branch** (proving-phase gate), files the unfixable
+      finding. THEN graduate STEP 5 review-branch→direct-LDR-push, ship the hardened prompt, install the timer on
+      central. repo: agent-orchestrator.
 - [ ] [CI] P2. **RULE-11 prove-then-retire** (after ≥3 green reconciler runs on central): (a) drop the `schedule:`
       trigger + Haiku steps from `plan-health-agent.yml` (KEEP the `pull_request` `plan-health-gate` job + the
       escalate-on-gate-failure path); (b) delete the Cloud Run job `uts-prod-plan-hygiene-sweep` + its scheduler + TF
       (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`) + `cron_hygiene_sweep_entrypoint.sh`; (c) update
       CLAUDE.md § "Plan Hygiene" + `codex/11-project-management/plan-hygiene.md` to the timer-on-central model. repos:
       unified-trading-pm + deployment-service.
+- [ ] [SCRIPT] P2. **`run_hygiene_sweep.sh --no-regen` (or a `--check` mode)** — STEP 1's `--ci` sweep regenerates the
+      active-plan inventory into `master_to_live_defi` as a SIDE-EFFECT, dirtying a grace-window plan during the
+      reconciler's READ-ONLY input gather (surfaced live 2026-06-16). The boot prompt currently discards it
+      (`git checkout -- …/master_to_live_defi_2026_05_23.md` right after the sweep); the clean fix is a sweep mode that
+      does full hard-fail detection WITHOUT the inventory regen. repo: unified-trading-pm.
+
+## Boot-prompt hardening + local proving harness (2026-06-16)
+
+Pre-proving review of `agents/plan-reconciler.md` found three correctness/safety gaps — all fixed in the working tree
+(held to ship after the 2026-06-17 test). The agent is not yet active (timer not installed on central), so these are
+safe pre-proving corrections:
+
+1. **STEP 1 — abort-on-dirty was WRONG → FF-all-repos.** The original gate ABORTED the run if the PM tree was dirty (a
+   dirty tree blocks `pull --ff-only` → reconciling STALE plans). Operator direction 2026-06-16: a dirty slot is the
+   **orchestrator's** job to clean PRE-SPAWN (the dirty-worktree resolution policy —
+   `monitoring_control_plane_master_2026_06_10.md` P1), not a reason to abort. STEP 1 now assumes a clean slot and
+   FF-pulls the PM repo **and every sibling service repo** (STEP 3 greps the sibling WORKING TREES for plan-vs-commit,
+   so a stale checkout gives a wrong verdict).
+2. **STEP 3a — file-don't-skip.** A sha it cannot verify (unfetchable repo) is FILED as a finding, never silently
+   skipped (a dropped flip is invisible).
+3. **STEP 5 — review-branch gate (proving phase).** While unproven the single commit pushes to a review branch
+   `plan-reconciler/<dispatch-id>`, NOT LDR — so a wrong run is discarded by deleting the branch (zero blast radius).
+   Graduates to the direct conditional-FF-push to LDR after ≥2 clean runs. Header trimmed (the renderer sends only the
+   fenced template; the Haiku/migration history never reached the agent's context — removed for clarity).
+
+**Local proving harness** (`agent-orchestrator/data/state/`, gitignored):
+- `run-test-backend.sh` — quiet faithful backend in tmux `orch-backend` on :8765 (MainAgentKeeper / AutoSpawn /
+  WorkerLivenessWatchdog OFF; usage-poll / plan-regen / ci-reconcile disabled; SnapshotLoop inert — no GCS/S3 bucket
+  env so it never touches the shared prod state bucket; fresh isolated `state.test.db`; `ORCHESTRATOR_INTERNAL_SECRET`
+  set).
+- `seed-slot.sh` — configures slot 1 (worktree=PM, branch=LDR, operator) so `_pick_free_slot` dispatches it.
+- Dispatch: `POST /api/plan-health/dispatch {"pm_repo_path":"…/unified-trading-pm","mode":"reconcile"}` with the
+  `X-Orchestrator-Secret` → a fresh opus worker lands on tmux `orch-slot-1` (attach to watch).
 
 ## Why it matters
 
