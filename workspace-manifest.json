@@ -1929,7 +1929,7 @@
   "promotion_failures": {
     "execution-service": 3,
     "strategy-service": 3,
-    "unified-api-contracts": 2
+    "unified-api-contracts": 3
   },
   "promotion_quarantine": {
     "execution-service": {
@@ -1939,6 +1939,11 @@
     },
     "strategy-service": {
       "since": "2026-06-15T20:16:36.318585Z",
+      "attempts": 3,
+      "escalated": true
+    },
+    "unified-api-contracts": {
+      "since": "2026-06-16T01:32:01.659207Z",
       "attempts": 3,
       "escalated": true
     }
