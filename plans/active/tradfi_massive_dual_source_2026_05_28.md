@@ -277,13 +277,18 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       regression guard for "consumers don't care about source". Repo: market-tick-data-service.
 - [ ] [MTDS] P1. Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` (429 is classified but never retried)
       — a multi-million-row paid-tier backfill will fail-fast on throttle without it. Repo: market-tick-data-service.
-- [ ] [MTDS] P0. **Fix the futures endpoint paths — ROOT CAUSE of the 404 is a WRONG PATH, not the API key**
-      (live-confirmed + docs-verified 2026-06-08). The connector uses Polygon's equities-style reference path
-      `/v3/reference/futures/{contracts,products}` which **does not exist** → plain-text `404 page not found` (NOT a
-      JSON `NOT_AUTHORIZED` — contrast `/v3/trades/AAPL` which returns JSON `403 NOT_AUTHORIZED`, the real entitlement
-      gate). The current `MASSIVE_API_KEY` **HAS full futures entitlement** — the dedicated Futures REST API (docs:
-      `massive.com/docs/rest/futures/*`) all return **200** on it. Re-map every futures cell to `/futures/v1/` (GA;
-      `/futures/vX/` is an accepted alias):
+- [x] ✅ [MTDS] P0. **Futures endpoint paths FIXED — mtds@657f615 (2026-06-16 /autonomous):**
+      `massive_tradfi_rest_connector.fetch_futures_chain()` now calls `/futures/v1/contracts` (universe) +
+      `/futures/v1/products` (metadata, merged into each contract's `name` via
+      `_normalise_futures_contract(product_map=…)`); module + method docstrings repointed `/v3/reference/futures/*` →
+      `/futures/v1/*`. **Live HTTP verify against the real Massive futures entitlement = BLOCKED-LIVE-VERIFY**
+      (operator-gated; code path corrected, not exercised here). Original finding ⤵ **Fix the futures endpoint paths —
+      ROOT CAUSE of the 404 is a WRONG PATH, not the API key** (live-confirmed + docs-verified 2026-06-08). The
+      connector uses Polygon's equities-style reference path `/v3/reference/futures/{contracts,products}` which **does
+      not exist** → plain-text `404 page not found` (NOT a JSON `NOT_AUTHORIZED` — contrast `/v3/trades/AAPL` which
+      returns JSON `403 NOT_AUTHORIZED`, the real entitlement gate). The current `MASSIVE_API_KEY` **HAS full futures
+      entitlement** — the dedicated Futures REST API (docs: `massive.com/docs/rest/futures/*`) all return **200** on it.
+      Re-map every futures cell to `/futures/v1/` (GA; `/futures/vX/` is an accepted alias):
   - `futures_chain` reference → `/futures/v1/contracts` (+ `/futures/v1/products`, `/futures/v1/schedules`) — NOT
     `/v3/reference/futures/*`. Fields:
     `ticker,product_code,group_code,name,active,first_trade_date,last_trade_date,trading_venue,date`.
@@ -306,8 +311,8 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       trades/quotes are accessible on the current key anyway, via `/futures/v1/*` + `us_options_opra/trades_v1` +
       `us_futures_*/{trades,quotes}_v1` — unaffected by this decision.) Re-open the equity-tick entitlement only if/when
       a tick-consuming archetype lands. Repo: market-tick-data-service.
-- [ ] [UAC] [UTL] P1. **EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push).** Massive returns fields Databento
-      does NOT, surfaced by the 2026-06-08 live probe. Decide per field: (A) DROP on normalize to hold strict
+- [ ] [UAC] [UTL] P1. **EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push).** Massive returns fields
+      Databento does NOT, surfaced by the 2026-06-08 live probe. Decide per field: (A) DROP on normalize to hold strict
       Databento-parity, (B) ADD as new canonical column(s) on BOTH sources (Databento backfills/computes them where
       possible), or (C) keep as Massive-only optional columns (consumers ignore unknown cols — breaks strict parity but
       is additive). Candidates:

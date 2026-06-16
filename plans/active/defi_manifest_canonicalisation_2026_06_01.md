@@ -459,9 +459,19 @@ What to verify/wire (B0 corrected scope):
       blank-chain no-write). Verified ruff + basedpyright clean + the 2 affected suites 46 passed/1 skip (full mtds QG
       red ONLY from 2 pre-existing FOREIGN prediction-script deep-imports — see the prediction-plan annotation; none
       from this DeFi change). parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A5 LIGHTER perp_funding adapter — **ROOT-CAUSE DIAGNOSED (slot-2 2026-06-08), fix needs a live Tardis
-      probe to validate.** `perp_funding_handler._collect_lighter` (mtds) hand-rolls the Tardis datasets URL
-      `…/lighter-zksync/market_stats/{date}/{SYMBOL}.csv.gz` with **`-USDC`-suffixed symbols**
+- [x] ✅ [CODE] P1. A5 LIGHTER perp_funding adapter — **FIX SHIPPED mtds@657f615 (2026-06-16 /autonomous).** Applied the
+      recommended SSOT-aligned fix: `_LIGHTER_TOP_SYMBOLS` switched to **bare base assets**
+      `("BTC","ETH","SOL","HYPE","TON")` (perp_funding_handler.py) and `_collect_lighter`
+      (`_perp_funding_pacifica_lighter.py`) now routes through
+      `TardisAdapter.download_csv(exchange="lighter-zksync", symbol=<bare>, data_type="market_stats", date=…)` — the
+      SSOT `umi_tick_provider` uses — deleting the hand-rolled aiohttp+gzip URL loop +
+      `_parse_lighter_market_stats_csv` + their tests, with thin market_stats→perp_funding column mapping preserving the
+      `write_defi_rows`/`record_zero_rows` output contract. Tests updated (`TestLighterTardisAdapterRouting` etc., 4
+      pass/1 skip; mtds QG green). **Validating it returns non-zero against live Tardis = BLOCKED-LIVE-VERIFY** (needs
+      Tardis key + network; `--block-network` here) — code + SSOT alignment + symbol-format are correct; honest
+      `record_zero_rows` on empty preserved. Original diagnosis ⤵ **ROOT-CAUSE DIAGNOSED (slot-2 2026-06-08), fix needs
+      a live Tardis probe to validate.** `perp_funding_handler._collect_lighter` (mtds) hand-rolls the Tardis datasets
+      URL `…/lighter-zksync/market_stats/{date}/{SYMBOL}.csv.gz` with **`-USDC`-suffixed symbols**
       (`_LIGHTER_TOP_SYMBOLS = ("BTC-USDC", "ETH-USDC", "SOL-USDC", "HYPE-USDC", "TON-USDC")`, perp_funding_handler.py
       ~L115), **bypassing the `TardisAdapter` SSOT** that the verified `umi_tick_provider` path uses — and that path
       keys Lighter by **bare base asset** (`umi_tick_provider._LIGHTER_TOP_SYMBOLS = ("BTC","ETH","SOL","HYPE",…)`,

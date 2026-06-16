@@ -392,9 +392,9 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       conditionId→`condition_id`, outcomeIndex→`outcome_index`, transactionHash→`transaction_hash`,
       data_source→`source`, market_type, resolution_period, symbol, timestamp, underlying — camelCase via
       `ColumnSpec.source_aliases`, never duplicate canonical cols) + new SchemaSpecs for defi
-      rewards/risk_params/utilization + tradfi/trades (+ the full RED list: defi dex_pool_swaps/lending_indices,
-      tradfi options_chain/CME, etc.). Completeness regression suite `tests/unit/test_schema_spec_completeness.py`
-      (registry round-trip + alias hygiene + per-cell source-column completeness + previously-RED pins) GREEN. The
+      rewards/risk_params/utilization + tradfi/trades (+ the full RED list: defi dex_pool_swaps/lending_indices, tradfi
+      options_chain/CME, etc.). Completeness regression suite `tests/unit/test_schema_spec_completeness.py` (registry
+      round-trip + alias hygiene + per-cell source-column completeness + previously-RED pins) GREEN. The
       `migration_schema_completeness` per-AG re-run (consumes the contract via `carried_column_names`, the same SSOT) is
       now 0-RED at the contract level. slot-3 → this autonomous tail. Repo: unified-api-contracts.
 - [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: ✅ **R7 rebuild leg DONE for ALL FIVE AGs
@@ -536,10 +536,16 @@ current-code fetchability; the image-rebuild ride happens when the LDR→staging
 
 #### R5 remediation todos (dispatch — surface per repo)
 
-- [ ] [BUG] P0. **R5-fix-1 — cefi tardis datetime64-vs-date comparison**: locate + fix the shard-isolated
-      `Invalid comparison between dtype=datetime64[ns] and date` in the cefi tardis batch download path (instruments
-      load OK; bug fires pre-HTTP). Repro in R5 ledger row 1. Then re-smoke BINANCE-FUTURES trades 1-day dry-run to
-      GREEN (proves the actual tardis CSV download + creds end-to-end). Repo: market-tick-data-service.
+- [x] ✅ [BUG] P0. **R5-fix-1 — cefi tardis datetime64-vs-date comparison — DONE mtds@657f615 (2026-06-16
+      /autonomous).** DIAGNOSIS: at LDR-tip the raw `datetime64[ns] vs date` comparison no longer exists — every date
+      compare in the cefi tardis path uses safe `.dt.date` (vectorized, `tardis_symbol_resolution._resolve_symbols` GCS
+      branch) or scalar `pd.Timestamp(x).date()` (`cefi_catalog_reader`); exhaustive scan = 0 unguarded compares; the
+      `eb33603` repro now exits 0. The durable guard SHIPPED: new
+      `tests/unit/test_tardis_resolve_symbols_date_boundary.py` — 9 tests feeding a **real datetime64[ns]** availability
+      parquet at the boundary (from==target / ±1d, to==target / ±1d, NaT), asserting NO `Invalid comparison` raises +
+      correct pre-listing/expired filtering (would re-catch a `.dt.date`→raw regression). **Live re-smoke of the actual
+      BINANCE-FUTURES Tardis CSV download = BLOCKED-LIVE-VERIFY** (needs real Tardis creds + network; `--block-network`
+      here) — the bug-class is closed + test-guarded regardless. Repo: market-tick-data-service.
 - [x] ✅ [BUG] P1. **R5-fix-2 — tradfi FX yahoo writer missing `instrument_id`** — DONE mtds@ed23954. Added
       `rec["instrument_id"] = f"{fx_pair.base}-{fx_pair.quote}"` in `umi_tick_provider._fetch_yahoo_fx` (mirrors the VIX
       path) + 75-line regression test. (Yahoo FX path lives in `umi_tick_provider.py`, not a separate adapter.)
@@ -1123,7 +1129,12 @@ tests across 6 repos. SAMPLED-via-prior-evidence — the real-prod GCS dry-run c
 **Finding F-X1 (P2, cross-cutting / bucket-SSOT) — STALE MTDS test asserts the pre-SSOT bucket shape (code is
 CORRECT).**
 
-- [ ] [TEST] P2.
+- [x] ✅ [TEST] P2. **F-X1 — DONE mtds@657f615 (2026-06-16 /autonomous).** Rewrote the stale tautological test (renamed
+      `test_adapter_resolves_test_bucket_when_is_test_run` → `test_adapter_resolves_canonical_bucket_shape`): old
+      assertion encoded the legacy env-as-prefix shape `market-data-tick-test-cefi-{project}`; new assertion asserts the
+      canonical `resolve_bucket_name` env-after-asset_group shape `market-data-tick-cefi-test-my-project`. Code was
+      already correct (`get_tick_data_bucket`→`get_market_data_bucket`→`resolve_bucket_name`). Test green; mtds QG
+      green. Original finding below ⤵
       **`market-tick-data-service/tests/market_interface/adapters/cefi/test_tardis_canonical_output.py::test_adapter_resolves_test_bucket_when_is_test_run`
       is STALE — it asserts the legacy `is_test_run`→`market-data-tick-test-cefi-{project}` f-string shape, but
       `engine.orchestrator.get_tick_data_bucket` was canonicalised to the bucket-name SSOT (`resolve_bucket_name`,
