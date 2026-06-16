@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Cloud-Agnostic Build Lineage
 status: stub-post-cutover
 created: 2026-05-07

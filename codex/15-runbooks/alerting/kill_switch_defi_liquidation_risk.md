@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: KILL_SWITCH_DEFI_LIQUIDATION_RISK Runbook
 status: active
 created: 2026-05-08

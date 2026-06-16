@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Estimation Retrospective Ledger
 
 > Companion to [estimation-calibration.md](estimation-calibration.md). Every plan archive adds a row. When 8+ rows land

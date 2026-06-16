@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Active Plan Inventory + Done-vs-Left Dashboard
 type: project-management
 status: living

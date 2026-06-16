@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: VM Launcher Security Audit
 type: infrastructure
 status: living

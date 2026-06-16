@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Alerting Playbook — Index
 status: planned
 created: 2026-05-07

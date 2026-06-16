@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: VM Launcher Runbook
 type: infrastructure
 status: living

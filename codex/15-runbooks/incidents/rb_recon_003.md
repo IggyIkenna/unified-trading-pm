@@ -1,6 +1,6 @@
 ---
 title: "RB-RECON-003 — Balance/Collateral Mismatch"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: Scenario 14_borrow_rate_spike

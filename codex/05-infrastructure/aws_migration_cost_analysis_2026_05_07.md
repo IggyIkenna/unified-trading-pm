@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: AWS Migration Cost Analysis — May 2026
 type: infrastructure
 status: stub

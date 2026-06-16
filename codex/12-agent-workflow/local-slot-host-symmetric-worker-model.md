@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Local Slot Host = VM Slot Host — Symmetric Worker Model (HARD RULE)
 
 > **CLAUDE.md anchor**: "Local slot host = VM slot host — symmetric worker model (HARD RULE codified 2026-05-20)".

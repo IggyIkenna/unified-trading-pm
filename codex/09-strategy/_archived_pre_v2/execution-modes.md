@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Execution Modes — SCE vs HUF vs EVT
 
 ## Mode Definitions

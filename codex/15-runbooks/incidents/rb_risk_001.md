@@ -1,6 +1,6 @@
 ---
 title: "RB-RISK-001 — Strategy Drawdown Investigation"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Per-incident
 verifier: Drawdown investigation report writer test

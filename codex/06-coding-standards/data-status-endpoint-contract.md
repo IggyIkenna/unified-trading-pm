@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data-Status Endpoint Contract
 
 ## Rule
@@ -39,14 +43,13 @@ Alternatively, higher-level consumers may call `compute_honest_coverage(counts)`
 
 ## Exemption — non-coverage `/data-status` endpoints
 
-The contract governs endpoints that report **manifest coverage** (a `captured / (captured + empty + failed + …)`
-ratio over a bucket). Some endpoints live under the `/api/data-status/*` namespace but return a different kind of
-payload — access **rules**, credential/key **status**, or static metadata — with no bucket and no manifest to read.
-The coverage helper does not apply to them, and calling it would fabricate a meaningless ratio (a banned pattern
-above).
+The contract governs endpoints that report **manifest coverage** (a `captured / (captured + empty + failed + …)` ratio
+over a bucket). Some endpoints live under the `/api/data-status/*` namespace but return a different kind of payload —
+access **rules**, credential/key **status**, or static metadata — with no bucket and no manifest to read. The coverage
+helper does not apply to them, and calling it would fabricate a meaningless ratio (a banned pattern above).
 
-Such an endpoint declares the inline marker `# QG-allow: data-status-no-coverage` with a one-line reason on (or
-directly above) its route decorator. STEP 5.90 then skips that file. Example:
+Such an endpoint declares the inline marker `# QG-allow: data-status-no-coverage` with a one-line reason on (or directly
+above) its route decorator. STEP 5.90 then skips that file. Example:
 
 ```python
 # QG-allow: data-status-no-coverage — returns Tardis free-tier access RULES + key status, not coverage.

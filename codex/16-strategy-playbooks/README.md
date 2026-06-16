@@ -3,7 +3,7 @@ title: "16-strategy-playbooks — domain strategy + infra playbooks"
 type: codex-section-readme
 status: active
 created: 2026-05-08
-scope: workspace
+scope: [engineer]
 related:
   - codex/14-customer-journeys/README.md
   - codex/15-runbooks/README.md

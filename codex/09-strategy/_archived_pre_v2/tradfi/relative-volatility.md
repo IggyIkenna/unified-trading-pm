@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Relative Volatility
 
 > **Asset class:** Cross-Asset (CeFi) **Strategy type:** Mean Reversion **Strategy ID pattern:** `QUANT_REL_VOL_BTC_ETH`

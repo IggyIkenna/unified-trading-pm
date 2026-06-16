@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Manifest Skip Semantics
 type: coding-standards
 status: stub

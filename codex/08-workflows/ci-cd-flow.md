@@ -317,12 +317,12 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
   `tests/unit/test_detect_breaking_change.py` (incl. enum add/remove/value cases).
 - **Scope boundary — the differ is a CODE public-surface tool; non-code contract surfaces are OUT of scope BY DESIGN**
-  and governed by their OWN SSOTs, not semver / `is_breaking`: (1) **manifest `schema_version`** (a DATA-schema contract,
-  versioned + migrated by the manifest canonicalisation walk, not a Python export — SSOT
+  and governed by their OWN SSOTs, not semver / `is_breaking`: (1) **manifest `schema_version`** (a DATA-schema
+  contract, versioned + migrated by the manifest canonicalisation walk, not a Python export — SSOT
   `codex/02-data/availability-manifest-and-data-status.md`); (2) **GCS path / partition keys** (`pipeline_mode=` /
   `asset_group=` / `feature_group=` / `feature_group_version=` — the on-disk hive contract, governed by
-  `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/feature-formula-versioning.md`). Changing one of these is a
-  real contract change, but it does NOT trip the breaking differ and MUST be coordinated through its data-track SSOT +
+  `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/feature-formula-versioning.md`). Changing one of these is
+  a real contract change, but it does NOT trip the breaking differ and MUST be coordinated through its data-track SSOT +
   single-walk migration — never expect SIT/the cascade-lock to catch it. (Residual cross-link, 2026-06-12 — Phase 4 of
   `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.)
 - **Wiring**: each repo's `semver-agent.yml` (rolled out from `scripts/workflow-templates/semver-agent.yml.tmpl`) calls
@@ -393,26 +393,26 @@ fleet-wide. The model (operator 2026-06-09):
   deterministic install snapshot (operator 2026-06-12, speed > security).** The reusable workflow installs with
   `uv sync --frozen` — the committed `uv.lock` as-is, NO re-resolution (no surprise transitive deps; the CI-only
   `pip==26.0.1` PYSEC-2026-196 divergence that plain `uv sync` re-resolution introduced is gone). `--frozen` NOT
-  `--locked`: `--locked` / `uv lock --check` asserts pyproject↔lock consistency and would HARD-FAIL on the semver-agent's
-  CI-side `version =` bump (a poison-pill — one bumped version with no lock regen reds every later PR's `--locked`);
-  `--frozen` tolerates it (the root pkg is editable-installed from source, so the bumped version is what installs
-  regardless of the lock). **Rule (replaces the freshness gate):** editing a dependency FLOOR in `pyproject.toml`
-  requires regenerating + committing `uv.lock` in the SAME commit (`uv lock`, or `uv lock --upgrade-package <name>` to
-  move an existing transitive pin) — otherwise `--frozen` silently installs the stale lock and the floor never takes
-  effect in CI. A bare `version =` bump needs no lock regen. No transitive-CVE HARD block — pip-audit /
-  internal-advisories on transitive pins WARN; a CVE fix = bump the floor + regen the lock. SSOT:
+  `--locked`: `--locked` / `uv lock --check` asserts pyproject↔lock consistency and would HARD-FAIL on the
+  semver-agent's CI-side `version =` bump (a poison-pill — one bumped version with no lock regen reds every later PR's
+  `--locked`); `--frozen` tolerates it (the root pkg is editable-installed from source, so the bumped version is what
+  installs regardless of the lock). **Rule (replaces the freshness gate):** editing a dependency FLOOR in
+  `pyproject.toml` requires regenerating + committing `uv.lock` in the SAME commit (`uv lock`, or
+  `uv lock --upgrade-package <name>` to move an existing transitive pin) — otherwise `--frozen` silently installs the
+  stale lock and the floor never takes effect in CI. A bare `version =` bump needs no lock regen. No transitive-CVE HARD
+  block — pip-audit / internal-advisories on transitive pins WARN; a CVE fix = bump the floor + regen the lock. SSOT:
   `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1.
 - **Dep resolution in CI is CONTENT-FIRST (LDR-HEAD clone) + the range check is NON-BLOCKING (2026-06-11; SUPERSEDES the
   version-aware-clone loud-fail).** `python-quality-gates-v2.yml::clone_repo` clones each internal dep at its
   **`live-defi-rollout` HEAD** — the SSOT content local editable siblings resolve against — so CI typechecks the dep's
   actual content, not a pinned-tag snapshot (the version-aware tag chain is now only a FALLBACK when the LDR clone
   fails). `assert_dep_in_range` then verifies the cloned version vs the consumer's pinned range but **WARNs
-  (`::warning::`), never `exit 1`**: a clone outside the pinned range uses the cloned HEAD content; the range is enforced
-  content-based downstream (`check_dep_content_sync.py`). **Why**: during a promotion window a dep's `versions{}`
-  legitimately leads its released tag — and a phantom (instruments-service's runaway `0.30.0` vs tag `v0.2.1` made a
-  consumer `>=0.30.0` floor unsatisfiable-by-tag) — so the old loud-fail false-failed PM/UTL/e2e on this skew. **A "CI
-  count over ceiling but local fine" symptom is therefore a RE-RUN, not a ceiling-bump.** SSOT: the reusable workflow's
-  `clone_repo`/`assert_dep_in_range` steps + `check_dep_content_sync.py`; archived
+  (`::warning::`), never `exit 1`**: a clone outside the pinned range uses the cloned HEAD content; the range is
+  enforced content-based downstream (`check_dep_content_sync.py`). **Why**: during a promotion window a dep's
+  `versions{}` legitimately leads its released tag — and a phantom (instruments-service's runaway `0.30.0` vs tag
+  `v0.2.1` made a consumer `>=0.30.0` floor unsatisfiable-by-tag) — so the old loud-fail false-failed PM/UTL/e2e on this
+  skew. **A "CI count over ceiling but local fine" symptom is therefore a RE-RUN, not a ceiling-bump.** SSOT: the
+  reusable workflow's `clone_repo`/`assert_dep_in_range` steps + `check_dep_content_sync.py`; archived
   `ci_local_qg_parity_2026_06_08.md`.
 - **A MAJOR bump (crosses `<1.0.0`) FORCES the consumer to re-pin** → it must **trigger a cascade of quality gates (full
   SIT in dependency order)** across dependents. **vm-planning is escalated ONLY IF that cascade FAILS** — a GREEN
@@ -422,8 +422,8 @@ fleet-wide. The model (operator 2026-06-09):
 - **What is major vs minor** is the breaking-change matrix above (`detect_breaking_change.py` + the schema/API-contract
   rules), refined deliberately — never a version-phase guess.
 
-Status: model + content-first LDR-HEAD clone (non-blocking range warn) are LIVE; the MAJOR→cascade→escalate-only-on-fail wiring is the open work.
-SSOT: `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
+Status: model + content-first LDR-HEAD clone (non-blocking range warn) are LIVE; the MAJOR→cascade→escalate-only-on-fail
+wiring is the open work. SSOT: `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
 
 ## LDR is the SSOT — clean-start force-sync + drift-tick (codified 2026-06-08)
 

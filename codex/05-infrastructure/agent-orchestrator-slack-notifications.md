@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Agent-Orchestrator Slack Notifications
 
 Slash-webhook push notifications from the agent-orchestrator Cloud Run service to `#agent-orchestrator-alerts` in the

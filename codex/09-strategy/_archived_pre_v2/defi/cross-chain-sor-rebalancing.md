@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Chain Smart Order Routing Rebalancing
 
 > **Asset class:** DeFi **Strategy type:** Meta-Strategy (Capital Allocation / Yield Optimisation across chains)

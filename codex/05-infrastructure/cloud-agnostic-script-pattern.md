@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Cloud-Agnostic Script Pattern
 status: active
 created: 2026-05-07

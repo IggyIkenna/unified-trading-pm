@@ -1,6 +1,6 @@
 ---
 title: "RB-CONN-002 — Exchange REST API Failure"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
 verifier: scenario 01_cefi_venue_circuit_breaker_trip

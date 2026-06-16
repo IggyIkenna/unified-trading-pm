@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Live Deployment Manifest — SSOT
 type: architecture
 status: living

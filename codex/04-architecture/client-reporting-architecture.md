@@ -1,5 +1,5 @@
 ---
-scope: [engineer, operator]
+scope: [engineer]
 created: 2026-05-12
 ssot_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md Phase 7.A
 last_reviewed: 2026-05-17

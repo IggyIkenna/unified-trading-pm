@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Canonical plan flow — audit → issue → plan → backlog → worker → ship
 
 > SSOT for how plans authored by operators get autonomously picked up and shipped by orchestrator-managed workers.

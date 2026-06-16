@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data-Status UI Surface — Honest Coverage
 
 > Codex SSOT for the per-asset-group honest-coverage % UI surface in the deployment-ui data-status tab. Created:

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # External Data Is Always Available — Never Silently Defer Adapters (HARD RULE)
 
 > **CLAUDE.md anchor**: "External Data Is Always Available — Never Silently Defer Adapters (HARD RULE codified

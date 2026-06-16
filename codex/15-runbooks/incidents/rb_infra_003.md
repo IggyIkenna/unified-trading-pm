@@ -1,6 +1,6 @@
 ---
 title: "RB-INFRA-003 — Secret/Config Failure"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Monthly + post-credential-rotation
 verifier: SM access smoke test

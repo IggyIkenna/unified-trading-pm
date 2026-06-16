@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Options ML (Strike Selection)
 
 > **Asset class:** TradFi **Strategy type:** Options **Strategy ID pattern:**

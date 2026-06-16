@@ -3,7 +3,7 @@ title: features-service VM launch + verification runbook
 status: active
 audience: operator / dev
 last_updated: 2026-05-08
-scope: [engineer, ml-engineer, admin]
+scope: [engineer, admin]
 execution:
   owner: operator (ad-hoc per backfill / per-asset_group cutover)
   cadence: per-deploy

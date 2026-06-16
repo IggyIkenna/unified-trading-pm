@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: PREFLIGHT_FAILED Runbook
 status: active
 created: 2026-05-08

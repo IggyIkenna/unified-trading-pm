@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # CeFi Statistical Arbitrage
 
 > **Asset class:** CeFi **Strategy type:** Statistical Arbitrage (cointegrated pairs) **Strategy ID pattern:**

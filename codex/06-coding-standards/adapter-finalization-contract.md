@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Adapter Finalization Contract — every MDPS candle adapter routes through `_finalize_session_grid`
 
 > **SSOT.** Codified 2026-06-02 from `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md` (operator

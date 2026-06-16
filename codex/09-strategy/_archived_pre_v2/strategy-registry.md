@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Strategy Registry — SSOT in UAC
 
 ## Location

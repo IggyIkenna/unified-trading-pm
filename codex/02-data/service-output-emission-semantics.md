@@ -1,5 +1,5 @@
 ---
-scope: workspace
+scope: [engineer]
 status: active
 last_updated: 2026-05-11
 owner: ikenna

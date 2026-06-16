@@ -1,5 +1,5 @@
 ---
-scope: [engineer, ml-engineer, admin]
+scope: [engineer, admin]
 status: stable
 last_reviewed: 2026-05-20
 ---

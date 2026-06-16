@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Read-time filter pushdown — list before load
 
 ## Rule

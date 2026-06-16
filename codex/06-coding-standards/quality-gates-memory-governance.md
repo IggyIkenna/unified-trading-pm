@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: QG Memory Governance — OOM Prevention for Parallel-Slot QGs
 type: codex-coding-standard
 status: active

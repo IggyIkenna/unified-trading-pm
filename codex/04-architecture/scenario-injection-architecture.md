@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Scenario injection architecture
 type: architecture
 status: living

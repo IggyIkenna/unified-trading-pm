@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Backtest Run Manifest
 type: strategy
 status: stub

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # CeFi Cross-Exchange Spread
 
 > **Asset class:** CeFi **Strategy type:** Arbitrage (spread reversion) **Strategy ID pattern:**

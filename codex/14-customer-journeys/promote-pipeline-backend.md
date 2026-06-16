@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Promote Pipeline Backend — `/promote` API SSOT
 
 > **Scope**: May-23 subset. Covers the `POST /promote/{strategy_id}/{manifest_id}` endpoint + minimal 5 pre-flight

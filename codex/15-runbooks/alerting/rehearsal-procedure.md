@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Alerting Rehearsal Procedure
 status: planned
 created: 2026-05-07

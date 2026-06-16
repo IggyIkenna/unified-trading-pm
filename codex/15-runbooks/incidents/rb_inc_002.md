@@ -1,6 +1,6 @@
 ---
 title: "RB-INC-002 — SEV1 Investigation Handling"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: PagerDuty escalation drill

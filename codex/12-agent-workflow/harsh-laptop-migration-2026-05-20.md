@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Harsh laptop migration — from epiphanytechnologies.com to shared agent-orchestrator
 created: 2026-05-20
 owner: ikenna

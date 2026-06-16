@@ -1,5 +1,5 @@
 ---
-scope: infrastructure
+scope: [engineer]
 status: stable
 last_reviewed: 2026-05-17
 last_reviewed_note: "Phase 9 audit 2026-05-15"

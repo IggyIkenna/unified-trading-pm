@@ -1,5 +1,5 @@
 ---
-scope: [engineer, operator, on-call]
+scope: [engineer]
 ---
 
 # T+1 audit discrepancy — runbook

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Deployment UI Drilldown Depth Audit
 status: planned
 created: 2026-05-07

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 name: paper-vs-live-execution-seam
 overview:
   Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position /

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Live Pipeline Architecture
 type: architecture
 status: stub

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # CeFi ML Directional
 
 > **Asset class:** CeFi **Strategy type:** ML Directional **Strategy ID pattern:**

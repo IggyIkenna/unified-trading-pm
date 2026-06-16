@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: VM Log Archival — Canonical Paths, Backup Contract, and Retention
 type: infrastructure
 status: living

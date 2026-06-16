@@ -1,5 +1,5 @@
 ---
-scope: codex/14-customer-journeys/defi
+scope: [engineer]
 title: "ETH-LST + stablecoin-LST collateral acceptance — 2026-05-07 reverification"
 created: 2026-05-08
 author: defi-fork1-completion-tab

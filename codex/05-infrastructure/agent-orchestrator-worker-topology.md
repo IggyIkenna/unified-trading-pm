@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Agent Orchestrator Worker Topology
 type: infrastructure
 status: active
@@ -26,11 +27,11 @@ canonical there. Do not duplicate the list here — read the registry.
 
 (SPLIT 2026-06-12 — see `orchestrator_human_central_vm_split_2026_06_12.md`)
 
-| Role             | Count | Slots each | Purpose                                                                       |
-| ---------------- | ----- | ---------- | ----------------------------------------------------------------------------- |
+| Role             | Count | Slots each | Purpose                                                                                           |
+| ---------------- | ----- | ---------- | ------------------------------------------------------------------------------------------------- |
 | `planning`       | 1     | n/a        | Central / orchestrator VM — review + CI-escalation + plan-health + AutoSpawn; NO human daily work |
-| `human-planning` | 1     | 2          | Interactive Ikenna (slot1) + Harsh (slot2) sessions; cross-cutting governance |
-| `epic`           | 10    | 8          | Dispatched worker agents; each VM owns a set of epics                          |
+| `human-planning` | 1     | 2          | Interactive Ikenna (slot1) + Harsh (slot2) sessions; cross-cutting governance                     |
+| `epic`           | 10    | 8          | Dispatched worker agents; each VM owns a set of epics                                             |
 
 ---
 
@@ -67,12 +68,12 @@ canonical there. Do not duplicate the list here — read the registry.
 >
 > **Alert-scoping rule (HARD):** `fleet-git-health-guard.sh` + slot-stale + worker-liveness alerts must scope to the
 > **live set above** (the central `planning` VM + the `human-planning` VM since the 2026-06-12 split — but **only the
-> central `planning` VM's health/alerts are incident-grade**). The guard is a per-VM cron, so a stopped VM
-> self-stops alerting — but the guard also has NO internal scoping (it fsck's every `.git` incl. ~478 worktrees →
-> 500+-line dumps) and does NOT self-heal (it should `git fetch` to recover missing-but-reachable objects, which is what
-> the 2026-06-04 recovery did by hand). When a VM is intentionally stopped, record it here so a stale alert isn't
-> mistaken for a dead-VM incident. SSOT for live-vs-planned = **this block**; the table below is the historical/planned
-> commissioning map, NOT a liveness statement.
+> central `planning` VM's health/alerts are incident-grade**). The guard is a per-VM cron, so a stopped VM self-stops
+> alerting — but the guard also has NO internal scoping (it fsck's every `.git` incl. ~478 worktrees → 500+-line dumps)
+> and does NOT self-heal (it should `git fetch` to recover missing-but-reachable objects, which is what the 2026-06-04
+> recovery did by hand). When a VM is intentionally stopped, record it here so a stale alert isn't mistaken for a
+> dead-VM incident. SSOT for live-vs-planned = **this block**; the table below is the historical/planned commissioning
+> map, NOT a liveness statement.
 
 ## Current fleet — AWS EC2 ap-northeast-1 (commissioned 2026-05-22; see LIVE STATUS above for what actually runs)
 

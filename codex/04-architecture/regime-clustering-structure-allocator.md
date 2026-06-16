@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Regime Clustering → Factor-Targeted Structure Allocator
 
 > SSOT for the end-to-end pipeline from market-state vectorisation to live options structure selection. **Plan of

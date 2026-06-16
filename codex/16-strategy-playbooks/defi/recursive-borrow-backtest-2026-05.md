@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Recursive Borrow Backtest — May 2026
 type: playbook
 status: stub

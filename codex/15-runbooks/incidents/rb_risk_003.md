@@ -1,6 +1,6 @@
 ---
 title: "RB-RISK-003 — Liquidation Risk / Margin Danger"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Per-incident
 verifier: Liquidation pre-detector unit tests

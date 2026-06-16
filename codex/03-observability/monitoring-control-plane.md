@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Monitoring control plane — CI dashboard + fleet git-health
 
 > SSOT for the monitoring read surfaces (codified 2026-06-10). Plans:

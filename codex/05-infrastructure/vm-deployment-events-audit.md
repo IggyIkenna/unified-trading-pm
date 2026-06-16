@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: VM Deployment Events — GCS / PubSub Forwarding Audit
 type: infrastructure
 status: living

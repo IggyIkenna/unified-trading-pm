@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Deployment + QG strategy SSOT
 type: infrastructure
 status: living

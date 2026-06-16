@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Trading-Agent Service — Directive Pipeline Architecture
 
 > **Created**: 2026-05-20 — Phase 8 of `trading_agent_service_architecture_unlock_2026_05_22.md` **Status**:

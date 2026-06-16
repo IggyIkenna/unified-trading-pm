@@ -1,5 +1,5 @@
 ---
-scope: [admin, operator]
+scope: [admin, engineer]
 ---
 
 # POD / Elysium DeFi-allocator client — onboarding model

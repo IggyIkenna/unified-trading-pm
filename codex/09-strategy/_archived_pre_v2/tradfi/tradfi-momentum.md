@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # TradFi Momentum
 
 > **Asset class:** TradFi **Strategy type:** Momentum **Strategy ID pattern:** `TRADFI_SPY_MOM_MACD_{SCE|HUF}_5M`

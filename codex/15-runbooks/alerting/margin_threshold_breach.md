@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: MARGIN_THRESHOLD_BREACH Runbook
 status: active
 created: 2026-05-08

@@ -1,6 +1,6 @@
 ---
 title: Method Size Rule
-scope: workspace
+scope: [engineer]
 owner: ikenna
 status: reference
 codified: 2026-05-19

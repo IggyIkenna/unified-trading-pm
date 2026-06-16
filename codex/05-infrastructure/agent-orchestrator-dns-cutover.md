@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: agent-orchestrator — DNS cutover recipe (Phase 11)
 created: 2026-05-28
 last_reviewed: 2026-05-28

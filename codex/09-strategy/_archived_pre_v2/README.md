@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Archived pre-v2 strategy docs
 
 Everything in this directory was the pre-v2 (category-organised) strategy documentation. It has been superseded by

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 name: per-venue-paper-policy
 overview:
   "SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal

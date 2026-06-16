@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Volatility Surface
 
 > **Asset class:** TradFi / CeFi **Strategy type:** Options (Volatility) **Strategy ID pattern:**

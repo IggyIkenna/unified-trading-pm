@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Lending Protocol Arbitrage
 
 > **Asset class:** DeFi **Strategy type:** Arbitrage (cross-protocol APY spread capture on same chain) **Strategy ID

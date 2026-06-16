@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Strategy Instruction Bus
 
 SSOT: `unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/instruction.py`

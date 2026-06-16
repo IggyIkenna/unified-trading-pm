@@ -376,19 +376,23 @@ if [ -n "$DELETED_PLANS" ]; then
 fi
 
 # ── Post-gates: codex scope-registry coverage (rule 11, G1.9) ─────────────
-# SSOT: codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md
-# Fails loud if any codex/**/*.md lacks `scope:` frontmatter or declares an
-# invalid scope value.
-SCOPE_CHECKER="${REPO_ROOT}/codex/14-playbooks/_tools/check-scope-coverage.sh"
-if [ -f "$SCOPE_CHECKER" ]; then
-    echo "Running codex scope-registry coverage (rule 11)..."
-    if bash "$SCOPE_CHECKER"; then
-        log_success "Codex scope coverage check passed"
-    else
-        echo "❌ codex scope coverage check failed — every codex/**/*.md must declare scope: [...] frontmatter" >&2
-        echo "   See codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md for the rule." >&2
-        exit 1
-    fi
+# SSOT: codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md
+# Fails loud if any codex/**/*.md lacks `scope:` frontmatter or declares an invalid
+# scope value. The checker MUST exist — a missing one is a HARD FAIL, not a silent
+# skip, so a directory rename can't quietly disable the gate again (it did, after
+# 14-playbooks→14-customer-journeys left this path stale; fixed 2026-06-16).
+SCOPE_CHECKER="${REPO_ROOT}/codex/14-customer-journeys/_tools/check-scope-coverage.sh"
+if [ ! -f "$SCOPE_CHECKER" ]; then
+    echo "❌ codex scope checker missing at $SCOPE_CHECKER — gate cannot run (path drift?)" >&2
+    exit 1
+fi
+echo "Running codex scope-registry coverage (rule 11)..."
+if bash "$SCOPE_CHECKER"; then
+    log_success "Codex scope coverage check passed"
+else
+    echo "❌ codex scope coverage check failed — every codex/**/*.md must declare a valid scope: [...] frontmatter" >&2
+    echo "   See codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md for the rule." >&2
+    exit 1
 fi
 
 # ── Post-gates: Runbook Execution-Owner SSOT (HARD RULE) — baselined ratchet ──

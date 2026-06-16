@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: agent-orchestrator — e2e operator runbook
 created: 2026-05-19
 author: ikenna-claude-subagent

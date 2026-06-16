@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Expected-Absence Backfill Runbook
 status: shipped
 created: 2026-05-07

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Client Funds Isolation — HARD RULE
 
 **Codified 2026-05-20** per operator direction during Group H per-client isolation plan filing.
@@ -134,19 +138,18 @@ Every plan that adds transfer / rebalancing / fund-movement code MUST include:
 ## CeFi margin traceability (margin cluster, 2026-06-15)
 
 CeFi perp margin is traceable end-to-end alongside the DeFi health path. strategy-service
-`position/core/margin_event_emitter.py::emit_margin_event_for_cefi` computes margin health via
-the canonical UTL CeFi models (`unified_trading_library.get_margin_model`, dispatched on the UAC
-`MarginModel` enum) off LIVE per-venue balances and emits a `MarginEvent` with `venue_type="cefi"`.
-The CeFi model value is a margin-USAGE % (higher = worse — the inverse of a DeFi health factor); it
-lands in `MarginHealthSnapshot.margin_usage_pct`, **never** `health_factor` (a DeFi-only field), and
-severity maps from the model's own `severity_breach` (MMR bands), not the DeFi HF bands.
+`position/core/margin_event_emitter.py::emit_margin_event_for_cefi` computes margin health via the canonical UTL CeFi
+models (`unified_trading_library.get_margin_model`, dispatched on the UAC `MarginModel` enum) off LIVE per-venue
+balances and emits a `MarginEvent` with `venue_type="cefi"`. The CeFi model value is a margin-USAGE % (higher = worse —
+the inverse of a DeFi health factor); it lands in `MarginHealthSnapshot.margin_usage_pct`, **never** `health_factor` (a
+DeFi-only field), and severity maps from the model's own `severity_breach` (MMR bands), not the DeFi HF bands.
 
-Live balances come from `position/core/venue_balance_tracker.py::CefiVenueBalanceReader` (wraps the
-UPI-backed `AccountQueryClient` — **not** an execution-service import; the service-dep ban holds) →
-`PortfolioInputs`. `position/api/margin_health.py` returns real per-client × venue
-`MarginHealthSnapshot[]` (model usage % + F28 `get_collateral_haircut` haircut-adjusted `collateral_usd`
-from the canonical UAC `venue_collateral` SSOT); the GCS historical time-series is a documented Phase-2
-layer on top. SSOT: `plans/active/engine_findings_remediation_2026_06_15.md` (margin cluster).
+Live balances come from `position/core/venue_balance_tracker.py::CefiVenueBalanceReader` (wraps the UPI-backed
+`AccountQueryClient` — **not** an execution-service import; the service-dep ban holds) → `PortfolioInputs`.
+`position/api/margin_health.py` returns real per-client × venue `MarginHealthSnapshot[]` (model usage % + F28
+`get_collateral_haircut` haircut-adjusted `collateral_usd` from the canonical UAC `venue_collateral` SSOT); the GCS
+historical time-series is a documented Phase-2 layer on top. SSOT:
+`plans/active/engine_findings_remediation_2026_06_15.md` (margin cluster).
 
 ## Plan-review checklist (use when filing transfer-related plans)
 

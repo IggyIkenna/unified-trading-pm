@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Issue-Doc Lifecycle Discipline
 
 > **SSOT** for when issue docs in `plans/active/issues/` archive. Referenced from CLAUDE.md § "Citadel-Grade Planning

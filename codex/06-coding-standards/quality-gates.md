@@ -1310,10 +1310,10 @@ Read [`quality-gates-memory-governance.md`](quality-gates-memory-governance.md) 
 
 `./scripts/quality-gates.sh` is self-contained. It automatically:
 
-- Runs `uv lock` when `pyproject.toml` changes (creates/updates `uv.lock`; cross-platform; fast when unchanged).
-  **When you bump a dependency FLOOR you MUST commit the regenerated `uv.lock` alongside `pyproject.toml` in the same
-  commit** — CI installs the committed lock via `uv sync --frozen` (no re-resolution), so a floor bump without the lock
-  regen silently installs the stale lock. A bare `version =` bump needs no lock regen (`--frozen` tolerates it). SSOT:
+- Runs `uv lock` when `pyproject.toml` changes (creates/updates `uv.lock`; cross-platform; fast when unchanged). **When
+  you bump a dependency FLOOR you MUST commit the regenerated `uv.lock` alongside `pyproject.toml` in the same commit**
+  — CI installs the committed lock via `uv sync --frozen` (no re-resolution), so a floor bump without the lock regen
+  silently installs the stale lock. A bare `version =` bump needs no lock regen (`--frozen` tolerates it). SSOT:
   `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion".
 - Creates `.venv` if missing (uv venv, respects `pyproject.toml` requires-python)
 - Activates venv

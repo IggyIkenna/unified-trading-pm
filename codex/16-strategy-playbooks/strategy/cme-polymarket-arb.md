@@ -1,5 +1,5 @@
 ---
-scope: [strategist, engineer]
+scope: [engineer]
 ---
 
 # CME × Polymarket Cross-Venue Event-Contract Arb — Playbook

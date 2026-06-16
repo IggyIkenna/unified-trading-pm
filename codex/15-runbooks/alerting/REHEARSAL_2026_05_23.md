@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: "Phase 8 Live Rehearsal Sign-off — 2026-05-23"
 status: pending-operator-execution
 created: 2026-05-23

@@ -1,6 +1,6 @@
 ---
 title: Firebase project split — compute on prod, Firebase on staging
-scope: workspace
+scope: [engineer]
 owner: ikenna
 status: reference
 codified: 2026-05-07

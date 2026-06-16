@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Carry Recursive-Staked Config Variants
 type: strategy
 status: stub

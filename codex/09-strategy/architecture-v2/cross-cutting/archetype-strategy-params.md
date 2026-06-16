@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Archetype Strategy Parameters
 type: strategy
 status: stub

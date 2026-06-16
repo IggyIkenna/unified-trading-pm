@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Omnichain Transfers Strategy
 
 > **Asset class:** DeFi **Strategy type:** Cross-chain infrastructure (bridge routing, not yield) **Phase:** 2E

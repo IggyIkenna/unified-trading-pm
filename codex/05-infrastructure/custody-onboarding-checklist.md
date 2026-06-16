@@ -1,5 +1,5 @@
 ---
-scope: [admin, operator]
+scope: [admin, engineer]
 execution:
   owner: operator (custody portal logins, KYC + approval flows are human-attended)
   cadence: one-shot (May-23 cutover) + per-onboarding (June-1 client-credential integration repeats per new client)

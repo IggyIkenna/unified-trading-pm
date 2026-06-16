@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DeFi Reward Lifecycle
 
 ## What It Is

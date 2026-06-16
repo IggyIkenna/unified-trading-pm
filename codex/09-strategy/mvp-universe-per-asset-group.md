@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # MVP universe per asset_group — May-23 cutover SSOT
 
 **Created**: 2026-05-13 per operator scope clarification **Status**: SSOT for **May-23 cutover scope only** — defines

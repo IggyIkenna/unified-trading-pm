@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DeFi Unhedged Recursive Strategy
 
 > **Asset class:** DeFi **Strategy type:** Leveraged Yield (flash loan amplified, directional coin exposure) **Strategy

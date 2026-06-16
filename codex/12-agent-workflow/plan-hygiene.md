@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Plan Hygiene — Silent Failure Modes, Tags, Crons, and Severity
 
 > SSOT for the plan-hygiene guard system: what can go silently wrong, which script catches it, how severe it is, and

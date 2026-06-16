@@ -1,6 +1,6 @@
 ---
 title: "RB-CONN-004 — Database/Storage Degradation"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
 verifier: Database failover smoke

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Match end-time resolution cascade
 type: data
 status: living

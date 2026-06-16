@@ -1,6 +1,6 @@
 ---
 title: "RB-ALERT-001 — Dedicated On-Call Phone Setup"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Quarterly device check
 verifier: Monthly test alert + device-ack proof

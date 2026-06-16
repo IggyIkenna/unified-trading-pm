@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Alert Code Taxonomy
 status: active
 created: 2026-05-07

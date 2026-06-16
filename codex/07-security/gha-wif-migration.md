@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # GHA Credential Hygiene: WIF + GitHub App Migration
 
 **Status**: Phase 6.C of `api_keys_wallets_accounts_readiness_2026_05_10.md` **Operator action required**: GCP WIF pool

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: DEFI_AAVE_UTILIZATION_SPIKE Runbook
 status: active
 created: 2026-05-08
