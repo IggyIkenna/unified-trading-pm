@@ -63,6 +63,12 @@ concurrency:
 jobs:
   promote-staging-to-main:
     runs-on: ubuntu-latest
+    # Gap 8 (ci_pipeline_self_healing_gaps §"Gap 8", 2026-06-16): the dep-order gate's Firestore
+    # ci_status overlay (_fs_overlay → ci_status_store.resolve_ci_status_map) needs this project env
+    # AND the SDK installed below; without them it silently fell back to the STALE manifest cache
+    # (observed live: "ModuleNotFoundError: No module named 'google' — using manifest fallback cache").
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
     outputs:
       promoted: ${{ steps.promote.outputs.promoted }}
       failed: ${{ steps.promote.outputs.failed }}
@@ -81,6 +87,20 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
+
+      # Gap 8: authenticate + install the Firestore SDK so the dep-order gate's overlay reads the
+      # LIVE (authoritative) ci_status, not the committed stale manifest cache. Best-effort: if auth
+      # or the SDK is unavailable the gate falls back to the manifest exactly as before (no regression).
+      - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
+        id: gcp_auth_promote
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_promote.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
 
       # codex/ is folded into PM at codex/ — no separate checkout needed; the
       # readiness gate below reads from PM's local codex/ directory.
@@ -345,7 +365,8 @@ jobs:
           # Statuses that mean dep IS on main (PASS)
           ON_MAIN_STATUSES = {"MAIN_GREEN", "SIT_VALIDATED"}
 
-          # Phase 2: Firestore-authoritative ci_status overlay — safe no-op if unavailable.
+          # Phase 2: Firestore-authoritative ci_status overlay. Gap 8 (2026-06-16): make a failed
+          # overlay LOUD — a silent fallback to the stale manifest cache is how mis-gating hid.
           def _fs_overlay(manifest):
               try:
                   from ci_status_store import resolve_ci_status_map  # noqa: imports-inside-functions
@@ -356,8 +377,15 @@ jobs:
                           r_obj = repos_obj.get(r)
                           if isinstance(r_obj, dict):
                               r_obj["ci_status"] = s
-              except Exception:
-                  pass
+                  print("STAGE 1.8: Firestore ci_status overlay applied (live, authoritative).")
+              except ModuleNotFoundError as exc:
+                  # The SDK is missing — a CI-config regression, NOT graceful degradation. The
+                  # gate is now deciding on the stale committed cache. Make it visible.
+                  print(f"::warning::STAGE 1.8: Firestore SDK unavailable ({exc}) — dep-order gate "
+                        "falling back to STALE manifest ci_status cache. Install google-cloud-firestore.")
+              except Exception as exc:  # noqa: BLE001 — Firestore genuinely degraded: warn + fall back.
+                  print(f"::warning::STAGE 1.8: Firestore ci_status read failed ({type(exc).__name__}: "
+                        f"{exc}) — falling back to manifest cache.")
 
           def export_ready(repos):
               """Write the READY set to GITHUB_ENV so downstream steps filter to it.
@@ -950,8 +978,12 @@ jobs:
                           r_obj = repos_obj.get(r)
                           if isinstance(r_obj, dict):
                               r_obj["ci_status"] = s
-              except Exception:
-                  pass
+              except ModuleNotFoundError as exc:
+                  print(f"::warning::Firestore SDK unavailable ({exc}) — using STALE manifest "
+                        "ci_status cache. Install google-cloud-firestore.")
+              except Exception as exc:  # noqa: BLE001
+                  print(f"::warning::Firestore ci_status read failed ({type(exc).__name__}: {exc}) "
+                        "— falling back to manifest cache.")
 
           with open("workspace-manifest.json") as f:
               manifest = json.load(f)
