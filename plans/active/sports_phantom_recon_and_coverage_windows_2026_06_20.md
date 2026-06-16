@@ -50,9 +50,11 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
 
 ## P0 — coverage-window reconciliation (d2 override-pattern shape)
 
-- [ ] [AGENT] P0. **api-football date-range starts 2015-01-01** but UAC declares `SOURCE_COVERAGE_START` 2018-01-01.
+- [x] ✅ [AGENT] P0. **api-football date-range starts 2015-01-01** but UAC declares `SOURCE_COVERAGE_START` 2018-01-01.
       Reconcile UAC vs reality using the `DATA_TYPE_COVERAGE_START` per-(source, data_type) override pattern (the
       canonical fix shape per CLAUDE.md + d2). Repo: unified-api-contracts.
+      — unified-api-contracts@bb7bf64 | `SOURCE_COVERAGE_START["api_football"]` updated 2018-01-01 → 2015-01-01 in
+      `canonical/domain/sports/league_data.py`; 3 tests updated (test_sports_source_coverage_propagation + test_feature_upstream); QG green (216s).
 - [ ] [AGENT] P0. **understat date-range starts 2014-01-01** but UAC declares `SOURCE_COVERAGE_START` 2015-01-16. Same
       per-(source, data_type) override reconciliation. Repo: unified-api-contracts.
 
