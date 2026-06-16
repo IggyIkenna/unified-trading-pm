@@ -403,11 +403,23 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       (deployment_api/scripts/data_status_rollup_worker.py) predates the field; in LIVE (non-beta) mode the rollup
       fast-path serves coverage summaries WITHOUT unique_instruments until it recomputes them. Add the catalogue read to
       the worker + redeploy the Cloud Run job. Repo: deployment-api. Provenance: operator ask 2026-06-12.
-- [ ] [DATA] P2. **Prediction catalogue roll-up finds 0 rows** — `build_instrument_catalogue --asset-group prediction`
-      promoted a 0-row catalogue (the pred per-date defs under instruments-store-pred `instrument_availability/` aren't
-      picked up by the default by-date prefix/layout). Wire the prediction-specific layout (market-lifecycle grain per
-      build_prediction_catalogue_dataframe) so unique_instruments reads a real count (493 IS rows / ~thousands of
-      markets expected). Repo: instruments-service. Provenance: /tmp/catalogue_prediction.log.
+- [ ] [DATA] P2. **Prediction catalogue roll-up finds 0 rows — ROOT CAUSE DIAGNOSED (2026-06-16), partly coupled to the
+      operator-gated cqg decision (338).** `prod/catalog.parquet` is confirmed 0 rows. **Root cause:**
+      `build_prediction_catalogue_dataframe` consumes `(day, venue, cqg, frame)` snapshots where `cqg` is parsed from a
+      **`canonical_question_group=` PATH partition**, but the ACTUAL prod writer layout under
+      `gs://instruments-store-pred-prd-…/instrument_availability/by_date/` is
+      `day=2025-03-13/venue=POLYMARKET/[market=BTC/]instruments.parquet` + a sibling
+      `prediction_market_metadata.parquet` — there is **NO `canonical_question_group=` partition**. So the loader passes
+      `cqg=""` → the rollup's `if frame.empty or not cqg_str: continue` skips EVERY row → 0-row catalogue (it loses BOTH
+      grains, not just cqg). **Two-part fix:** (a) the per-conditionId grain (`_PREDICTION_CID_DATA_TYPES` =
+      trades/market_lifecycle, `instrument_id`=conditionId) does NOT need a cqg and can roll up immediately from the
+      `venue=`/`market=` layout — drop the `not cqg_str` skip for that grain; (b) the
+      `prediction_canonical_question_group` cqg grain requires DERIVING the cqg per conditionId, which is **exactly the
+      operator-gated cqg-classifier coverage decision (item 338)** — 94.5% of objects route to `ClassifierConfidenceLow`
+      under the corrected contract, so the cqg grain can't be correctly materialised until 338 is resolved. Ship (a) now
+      (unique_instruments gets the conditionId count); gate (b) on 338. Repo: instruments-service
+      (`scripts/build_instrument_catalogue.py` snapshot loader + the `canonical_question_group=` path parser).
+      Provenance: 2026-06-16 prod-layout probe.
 
 - 2026-06-12 (~10:35Z, operator beta-eyeball session) — **beta render made FULLY consistent**: the operator's "is it
   using the right manifest" check exposed (1) the live-rollup fast-path serving LIVE data in beta (fixed dapi@1f1ad77 —
