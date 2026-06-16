@@ -673,3 +673,22 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   `run-version-alignment.sh --fix` (regenerated canonical+workspace manifests, committed chore(deps)). REMAINING: M5c/d UI
   cadence drilldown (deployment-ui + unified-trading-system-ui, Node22/pw:L2) — display-only, NOT part of the data gate;
   must also fix the 2 pre-existing `prediction_v9_breakdown.spec.ts` failures (they gate pw:L2). Then GATE-0 = 9/9.
+- **2026-06-16 (tick 7) — M5c SHIPPED + breaking-cascade verification.** **M5c**: deployment-ui@687d4ce | **pw:L2 ✓**
+  (216/216 smoke pass) | regression: `tests/smoke/cadence_badge_drilldown.spec.ts` — cadence badge added to
+  `HierarchicalShardDrilldown.tsx` (mirrors the transport badge, blank-safe, human-readable `Cadence` labels); the 2
+  pre-existing `prediction_v9_breakdown.spec.ts` failures root-caused (stale spec navigated to `/` not
+  `/service/{svc}/data-status`; its `page.route **/api/**→{}` stubs shadowed the mock-api → empty data; plus a latent
+  `topLevel.tree.length` crash on the broad data-status catch-all) and FIXED (rewrote the spec to the canonical route +
+  enriched `mock-api.ts` to serve the full prediction-v9 surface). **M5d** (port to unified-trading-system-ui) dispatched
+  (running). **Breaking-cascade CI verification (UAC@28bd50e → 0.15.0)**: the breaking alias removal correctly fired the
+  dep-update fan-out. **4/6 consumer rebuilds GREEN** (mtds/mdps/execution/deployment-api against UAC 0.15.0 — validates
+  the breaking change is compatible). **2 RED** (UTL dep-update PR#369, BLRS dep-update PR#81) are **provably stale-base
+  transients, NOT real incompatibilities**: the dep-update branches were cut BEFORE my migration landed
+  (`compare 2afb22bd...dep-update = behind_by=45`), so they carry OLD alias-referencing consumer code + the new alias-free
+  UAC → import-fail; UTL+BLRS are grep-clean on LDR and the 0.x-minor (0.14→0.15) is absorbed by the `>=0.x,<1.0.0`
+  range-pin (no consumer pin-bump even needed). RESOLUTION rides the documented automatic path: my migration commits
+  (UTL@2afb22bd via drain PR#368, BLRS@3bad2fe) promote LDR→staging→main → consumer base becomes alias-free → semver-agent
+  re-cuts the dep-updates green. Per the SSOT (`ci-cd-flow.md` "Dependency promotion": "escalate to vm-planning ONLY IF
+  the cascade fails") this stale-base cascade churn is the semver-agent's gated domain — NOT hand-touched here (would race
+  the automation). **Operator note**: confirm UTL PR#369 / BLRS PR#81 go green after the migration drains to main; if they
+  remain red after promotion, that is the vm-planning escalation path.
