@@ -995,7 +995,7 @@ wheels = [
 
 [[package]]
 name = "unified-trading-pm"
-version = "1.2.141"
+version = "1.2.142"
 source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
