@@ -89,7 +89,65 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - Data-correctness (cadence registry inconsistency / `funding_timestamp` offset / no historical cadence tracker / Aster
   backfill) → `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
 
+## Execution structures + capital efficiency (operator design 2026-06-16)
+
+The funding you _capture per unit of deployed capital_ depends on how the long (spot/LST) and short (perp) legs are
+collateralised. Rank on **effective carry = (funding + applied_staking) × capital_efficiency**, not raw funding.
+
+**Five structures** (assign each (coin, venue) opportunity to one):
+
+1. **Spot + perp, same venue, spot IS collateral** — venue liquid for spot AND accepts spot as margin (portfolio/
+   unified margin: Binance/Bybit/OKX). Start USDC/USDT → buy spot + short perp, one collateral pool. `efficiency ≈ 1`.
+2. **Staked-basis LST + perp, same venue, LST IS collateral** — venue accepts the LST (Bybit/OKX stETH/wstETH, Deribit
+   stETH). Earn staking + funding on one margin base. `efficiency ≈ 1 − lst_haircut` (Bybit/OKX 10%, Deribit 7.5%).
+3. **Spot on venue A → transfer → short on venue B (B accepts the moved spot/coin as collateral)** — illiquid spot at B,
+   so buy spot at A, move it, short at B. Costs: transfer fee + **timing gap** (price can move between buy and short).
+   Mitigations: (a) buy→send→short (gap risk); (b) borrow the coin against USDT, post borrowed coin at B, short,
+   simultaneously buy at A to repay — needs a margin/borrow account + LTV cap, usually a separate account so often
+   impractical; **(c) prime-broker / off-exchange settlement (see below) — the clean answer.**
+4. **Spot on venue A + STABLECOIN margin on perp venue B (B rejects spot/LST collateral: Hyperliquid, Aster)** — capital
+   splits: cash for spot AND cash for perp margin. `efficiency = notional/(notional+margin) = 1/(1+m)` where `m` = max
+   adverse (up) move budgeted before rebalance. Operator example: 100k → 60k spot + 40k margin → short 60k → capture
+   **0.6×** the funding. **Per-asset `m`** (max up-move buffer): BTC ~0.20, ETH ~0.25–0.30, mid alt ~0.50–0.60, small
+   alt ~0.80 → `f` ≈ 0.83 / 0.77 / 0.62 / 0.56. Parameterise `m` per asset and scale required margin → discount funding
+   by `f` in the ranking.
+5. **Perp–perp (no spot leg)** — when one venue's funding is ~zero and another's is high (or one negative + one positive
+   — observed **20.6%** of coin-days), go **long the low/negative-funding perp + short the high-funding perp**, split
+   collateral ~50/50; both legs stablecoin-margined, delta-neutral, full size. This is the
+   `arbitrage_price_dispersion`/funding-dispersion cousin — capture the cross-venue spread (p95 ≈ 32% APY).
+
+**Prime-broker / off-exchange-settlement bridge (TODO — find the venue).** The capital-efficiency drag of structures 3–4
+largely disappears if a prime broker / tri-party custodian posts _temporary_ collateral at the short venue so you can
+short immediately, then you replace it once the spot balance moves over (or just keep collateral in custody, mirrored to
+the exchange — never physically moving the coin). This is exactly what **off-exchange settlement networks** do: **Copper
+ClearLoop, Ceffu (Binance) MirrorX, FalconX / Hidden Road prime** — collateral stays in custody, the exchange recognises
+it for margin, no transfer-timing gap. The workspace already uses **Copper + Ceffu** for custody
+(`codex/04-architecture/custody-providers.md`) → ClearLoop/MirrorX are the natural rails for capital-efficient
+cross-venue basis. **Action: confirm which of our custody PBs support off-exchange margin on which short venues; if so,
+structures 3–4 collapse toward `efficiency ≈ 1`.**
+
+## Funding-regime findings (2025-01-01 → 2026-05-20, 37,128 coin·venue·day points)
+
+- **22.9% of funding observations are NEGATIVE**; median 6.5% APY; a heavy cluster sits at the ~11% cap (0.01%/8h).
+- **12% in [0,3%) "meh"** (hold/stake, don't short — `--min-carry-bps` floor); **65% ≥3%**; **~3% ≤ −20%** (flip to
+  long-the-perp).
+- **20.6% of coin-days have a cross-venue sign split** (neg on one venue, pos on another → structure-5 dispersion play);
+  cross-venue spread p95 ≈ 32% APY.
+- **Deribit funding is unreliable in the raw feed** (p95 130%, min −878%) — consistent with the 8h-vs-1h normalisation
+  bug filed in the cadence issue; winsorise outliers + treat Deribit funding as suspect until that's fixed.
+
 ## Open todos / next steps
+
+- [ ] [STRATEGY] P2. Add the capital-efficiency factor to the harness ranking: structure assignment per (coin, venue)
+      (spot-collateral set {Binance/Bybit/OKX/Deribit} vs cash-margin {Hyperliquid/Aster}), per-asset max-move `m` →
+      `f=1/(1+m)`, rank by `effective_carry = (funding+staking)×f`, winsorise funding outliers, `--min-carry-bps` floor
+      (default 300). **Repo: e2e-testing harness.**
+- [ ] [STRATEGY] P2. Add structure-5 (perp–perp funding dispersion: long low/neg-funding perp + short high-funding perp)
+      as a candidate alongside the spot/LST basis. **Repo: e2e-testing → strategy-service.**
+- [ ] [RESEARCH] P2. Prime-broker / off-exchange-settlement bridge — confirm whether Copper ClearLoop / Ceffu MirrorX /
+      FalconX / Hidden Road give off-exchange margin on our short venues (HL/Aster/Bybit/OKX); if yes, structures 3–4
+      collapse to `efficiency ≈ 1`. Cross-link `codex/04-architecture/custody-providers.md`. **Repo: PM research +
+      execution-service.**
 
 - [ ] [STRATEGY] P2. Use `predicted_funding_rate` (already a `derivative_ticker` column) to gauge ENTRY on venues that
       publish a forward rate — enter/size based on predicted next-cycle funding, not just trailing realised. Only where
