@@ -553,3 +553,24 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   **Net for the operator's question ("what's left before dry-run-again / for-real"): the BATCH-path GATE-0 is GREEN —
   re-dry-run is unblocked NOW (on the batch corpora). M1-BREAKING (live-writer migration) is the remaining must-land
   before the REAL `--apply` bakes any live row, to avoid the #5 live_websocket multi-source path collision.**
+- **2026-06-16 (tick 4) — /autonomous resumed to drive M1-BREAKING + M5c/d to 9/9 GREEN (this loop's handoff doc).**
+  Re-scouted the FULL blast radius of the grep-gate `rg "live_websocket|LIVE_WEBSOCKET" --type py = 0 non-alias refs`:
+  it is LARGER than the dispatch's writer/reader enumeration — it also pulls in (a) UTL `streaming/candle_writer.py`
+  `close_candle_writer` DEFAULT param `= PipelineMode.LIVE_WEBSOCKET` (public API; MDPS `canonical_writer*` /
+  `candle_write_mixin` / `live_aggregator` are the callers → must pass explicit), (b) UTL `pipeline_mode_resolver.py`
+  BOTH `resolve_pipeline_mode` (:125 live→LIVE_WEBSOCKET) and `derive_pipeline_mode_for_row` (:187-192 live→None), (c)
+  many docstrings/comments, and (d) ~dozens of TEST files across UTL/mdps/deployment-api/BLRS asserting the literal.
+  **Helper confirmed landed**: UAC `live_pipeline_mode_for_venue(asset_group, venue, data_type, mode=Mode.LIVE)` lives
+  in `canonical/crosscutting/source_priority.py`, exported from the `unified_api_contracts` root (NOT in pipeline_mode.py
+  as the dispatch implied). **CRITICAL reader-correctness invariant (codified here)**: readers consume `pipeline_mode`
+  as STRINGS from manifest parquets, and OLD data still carries the literal string `"live_websocket"` even after the
+  enum MEMBER is deleted → readers MUST string-prefix-match (`value.startswith("live")` / `"replay"` / `"batch"`), NEVER
+  reconstruct `PipelineMode("live_websocket")` (ValueError post-deletion). This is the forward+backward-compatible fix
+  the deployment-api/BLRS readers need. **Execution waves (all NON-breaking until Wave 3; alias coexists)**: W1 consumers
+  in parallel (mtds·mdps·execution·deployment-api·BLRS) migrate every in-repo ref → writers stamp source-aware via the
+  helper (GCS path segment + manifest row derive from the SAME value), readers string-prefix-match, tests → concrete
+  `live_<source>` member (cefi→LIVE_BINANCE/venue, tradfi→LIVE_DATABENTO, defi→LIVE_ONCHAIN_RPC/LIVE_SOLANA_RPC), each
+  QG-green + quickmerge. W2 UTL (resolver source-aware + `close_candle_writer` pipeline_mode REQUIRED + tests/docstrings)
+  — after W1 so MDPS already passes explicit. W3 UAC delete the `LIVE_WEBSOCKET` member + the internal
+  `if mode is PipelineMode.LIVE_WEBSOCKET` special-cases in `source_string_for`/`transport_of` + UAC tests (breaking →
+  SIT cascade). W4 un-skip the SIT live leg + verify green. THEN M5c/d UI cadence drilldown (Node22/pw:L2).
