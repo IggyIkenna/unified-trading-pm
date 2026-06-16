@@ -246,6 +246,9 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
       premium static (~0–50 bps, no data). **Repo: e2e-testing harness.**
 - [ ] [STRATEGY] P3. Per-leg capital-movement event ledger (DEPOSIT→SWAP→STAKE→TRANSFER→TRADE→accrual→unwind→WITHDRAW)
       using UAC `canonical.crosscutting.ledger` EventTypes, for a faithful capital-flow trace. **Repo: e2e-testing.**
+- **2026-06-16** — **Harness SHIPPED under QG**: baseline `e2e-testing@a2b6a44` (orphan-WIP inheritance, promoted) +
+  treasury-rebalancing-sim delta `e2e-testing@653da76` landed on live-defi-rollout (ruff + import-patterns +
+  basedpyright + full QG green; Tier-C drain → staging ≤30min). Autonomous run complete.
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
