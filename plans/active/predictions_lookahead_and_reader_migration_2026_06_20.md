@@ -43,9 +43,9 @@ where `market_created_at ≤ T`.
 
 ## P0 — reader + feature + strategy migration
 
-- [ ] [SCRIPT] P0. **Reader migration**: every callsite with `data_type=BTC|ETH|...` →
+- [x] [SCRIPT] P0. **Reader migration**: every callsite with `data_type=BTC|ETH|...` →
       `data_type=prediction_canonical_question_group` + filter on `canonical_question_group`. (Gated on the Phase 1
-      lifecycle + adapter migration, which has shipped per the epic body.)
+      lifecycle + adapter migration, which has shipped per the epic body.) ✅ — features-service@cf15b4eb
 - [x] [SCRIPT] P0. **Per-market `LookaheadBiasError` enforcement in feature compute**: feature compute at time T can
       only consume ticks where `tick.timestamp ≤ T` AND `tick.market_id`'s `market_created_at ≤ T`. Today
       features-cross-instrument does NOT enforce this per-market; flip to strict-mode check. (This is the SINGLE
