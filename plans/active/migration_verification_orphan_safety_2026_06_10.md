@@ -238,6 +238,35 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (operator decisions 338 + 424 RESOLVED) — both previously operator-reserved gates now decided; per-AG tail
+  unblocked (modulo one catalogue dependency, below).
+  - **338 (prediction cqg-classifier coverage) → operator chose (c) IMPROVE THE CLASSIFIER FIRST** (do NOT materialise a
+    cqg grain over a ~80% `OTHER` corpus). Unknowns extracted for hand-theming →
+    `plans/audit/results/prediction_cqg_unknowns_corpus_2026_06_16.md`. **Two breadcrumbs corrected by the extraction:**
+    the classifier lives in **UAC**, not instruments-service; and `ClassifierConfidenceLow` is legacy — the modern
+    "unknown" is the honest `OTHER` sentinel returned on a **closed-set lookup miss** (no probability threshold). Only
+    **29 real groups + OTHER** exist (≈BTC/ETH up/down + FED/CPI/2028-election/Oscars); **79.6% of market×day shards
+    route to OTHER** (per-shard; 94.5% per-distinct-market). Readable `question` text lives ONLY in the trades parquets
+    (`catalog.parquet` carries condition_ids only). **Leverage:** Polymarket slugs are templated factories → ~15
+    slug-template rules (alt-coin up/down, crypto range/multistrike, daily city-temp, sports-by-fixture, Trump-approval,
+    elon-tweet-count, geopolitics-by-date, macro prints, box-office, "{person} says {kw} N times", F1, fear&greed,
+    commodities, intl-politics long-tail, MISC residual) cover the bulk. NEXT: operator prunes/merges the menu → encode
+    slug-template rules into the UAC cqg map. 249-a (conditionId grain) stays shippable independently; 249-b (cqg grain)
+    unblocks once the map is extended. **NOT a destructive/apply step — no auto-fire.**
+  - **424 (sports pre-launch window) → RESOLVED to the cross-AG `could_exist` model, NOT a bespoke policy.** Operator's
+    framing: a sports **fixture** = the bettable "instrument" (catalogue of what we can bet on); **leagues** group
+    fixtures like data-type×venue groups DeFi. The capture_status question is the SAME `could_exist` predicate (M3
+    `shard_source_availability`) CeFi/DeFi already use, with **fixture/league as the catalogue unit**: could-exist + no
+    data = real gap; **cannot-exist (pre-launch, or fixture/league not in IS+UAC) = expected-absent, NEVER
+    `attempted_failed`.** "Pre-launch window" is simply the time-slice where `could_exist=false` because the fixture
+    hasn't entered the catalogue. Resolves the tail: **384** (blank capture_status) → run each through `could_exist`
+    (should-exist+empty → typed real-gap reason; shouldn't-exist → expected-absent); **346** (CF-5 relabel) → pre-launch
+    rows fall to expected-absent / `keep_src_zero`, never `attempted_failed`. **DEPENDENCY (load-bearing):** correctness
+    requires IS+UAC to actually enumerate the fixture/league catalogue **with launch/season dates** so `could_exist` can
+    return false for the pre-launch slice. If those dates are absent, that catalogue-completeness — not a policy call —
+    is the real prerequisite for 384/346. ACTION PENDING: verify the sports fixture/league catalogue + launch dates
+    exist in IS/UAC before encoding 346.
+
 - 2026-06-16 (autonomous run, tail-cleanup tick 3) — **Item 3 (12 zero-data live venues) RESOLVED — 7 re-phased, 5
   corrected as false-signal (real data in a separate bucket).** Diagnosed each of the 12 against MTDS plumbing + the
   actual buckets: **(a) 7 lending venues** (EULER_V2-ARB/ETH, FLUID-ARB, VENUS-BSC/ETH, RADIANT-ETH, BENQI-AVA) have NO

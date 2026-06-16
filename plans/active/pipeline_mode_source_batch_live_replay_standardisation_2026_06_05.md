@@ -630,3 +630,30 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   agent`trailer; landed on LDR, ancestor-verified; Tier-C drain promotes LDR→staging ≤30min, v2-gated. Shipped via a throwaway worktree off`origin/live-defi-rollout`
   because the slot PM clone carried a live coordinator session's uncommitted plan WIP (3 files) — never stomped/bundled
   it.
+- **2026-06-16 (tick 5) — WAVE 1 (M1-BREAKING consumers) shipping.** Fanned out parallel sub-agents (one per consumer
+  repo). **Shipped + grep-clean + QG-green**: execution-service@04218fbc (data_sink →
+  `live_pipeline_mode_for_venue(self.asset_group,venue,data_type)`), batch-live-reconciliation-service@3bad2fe (stage0
+  `_is_live_mode` STRING-prefix `startswith("live_")` + split-string legacy regression), deployment-api@aa18d8ae (readers
+  `pipeline_mode.strip().lower().startswith("live")` — FIXES the exact-match bug that DROPPED all `live_<source>` rows;
+  legacy + live_<source> regressions). **mtds + mdps**: the first spawn attempts hit transient server rate-limits mid-run;
+  I finished mtds DIRECTLY (the dead agent's writer edits were correct — GCS-path segment + all 3 manifest call sites +
+  backfill all derive from ONE `self._live_pipeline_mode = live_pipeline_mode_for_venue(asset_group,venue,data_type)`
+  resolved per-shard in `__init__`, fail-loud; Protocol/impl `record_*` defaults made REQUIRED; log event names
+  `MTDS_LIVE_WEBSOCKET_*`→`MTDS_LIVE_WS_*` to clear the uppercase grep token, verified 0 external consumers); fixed 2
+  recorder tests the dead agent left inconsistent with its own required-kwarg change. mdps migrated by a respawn
+  (live_aggregator path+manifest both from the helper; `live_workers.py:190`→`is_live(pm)`); it correctly did NOT stomp
+  concurrent foreign UAC/UTL WIP that drained (UAC@6c74eaf could-exist + UTL@d3324e90 v6-v9 serializer — both unrelated to
+  live_websocket, both beneficial) → re-QG'ing mdps against current UAC before shipping. mtds+mdps QGs re-running, then
+  quickmerge.
+  **FINDING (captured — sports-plan test-hermeticity, fixed to unblock GATE-0 mtds shipping)**: mtds QG surfaced 7
+  PRE-EXISTING failing sports unit tests (`test_sports_v9_canonical_path` / `test_orchestrator_per_data_type_sentinel` /
+  `test_sports_odds_available_at`) — `process_ticks()` runs the `_check_sports_v9_columns` preflight against a SEEDED GCS
+  emulator manifest that CI injects (`base-service.sh`: "CI injects emulators via env") but a hermetic local run lacks;
+  CI-GREEN, order-flaky, fail on clean LDR (NOT my change); the guard's OWN coverage lives in
+  `test_sports_v9_preflight_guard.py`. Fix: a scoped `autouse` fixture in each of the 3 files stubs the incidental guard
+  to a no-op → emulator-free + order-independent (test-only, no prod-code change; 132 tests green after). Belongs to
+  `sports_manifest_canonicalisation_2026_06_01`; done here to unblock the mtds QG gate.
+- [ ] [TEST] P2 **DEFERRED-followup** — make the broader sports `process_ticks` unit suite emulator-independent
+  fleet-wide (the 3 files were stubbed here; audit other `process_ticks`-calling sports unit tests in mtds for the same
+  `_check_sports_v9_columns` seeded-emulator dependency). Provenance: GATE-0 tick-5 sports-hermeticity finding. Repo:
+  market-tick-data-service. Parent: `sports_manifest_canonicalisation_2026_06_01`.
