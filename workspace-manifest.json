@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.5.0",
-    "deployment-api": "0.11.0",
+    "deployment-api": "0.12.0",
     "deployment-service": "0.8.1",
     "deployment-ui": "0.1.0",
     "execution-service": "0.9.1",
@@ -77,12 +77,12 @@
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.5.1",
     "market-tick-data-service": "0.10.0",
-    "system-integration-tests": "0.3.2",
+    "system-integration-tests": "0.5.0",
     "unified-api-contracts": "0.9.0",
     "unified-trading-library": "0.10.0",
     "unified-trading-pm": "1.2.120",
     "market-data-processing-service": "0.6.0",
-    "e2e-testing": "0.2.1",
+    "e2e-testing": "0.6.0",
     "agent-orchestrator": "0.10.0",
     "greeks-service": "0.5.0",
     "trading-agent-service": "0.2.3",
@@ -1786,17 +1786,14 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
-    "e2e-testing": "0.6.0",
     "strategy-service": "0.9.0",
-    "system-integration-tests": "0.5.0",
-    "unified-api-contracts": "0.10.0",
-    "deployment-api": "0.12.0"
+    "unified-api-contracts": "0.10.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1810,35 +1807,40 @@
       "sha": "7bc2284bad05232787af049c762f42b8b5f6be40",
       "version": "0.10.0"
     },
-    "e2e-testing": {
-      "branch": "staging",
-      "sha": "aeb561fa9f5204fe5de89a4b949cbc18939c01a7",
-      "version": "0.6.0"
-    },
     "strategy-service": {
       "branch": "staging",
       "sha": "fcb2da093b3d33e0ac9b9d48610ad8f0d48c07c9",
       "version": "0.9.0"
     },
-    "system-integration-tests": {
-      "branch": "staging",
-      "sha": "26722e169fd317f8a3c50edb7621a0e9ddecf54c",
-      "version": "0.5.0"
-    },
     "unified-api-contracts": {
       "branch": "staging",
       "sha": "dc377073d38141a5fc417256191a801bfa0ad093",
       "version": "0.10.0"
-    },
-    "deployment-api": {
-      "branch": "staging",
-      "sha": "7ae897a370026127130233ae9240776f237a162e",
-      "version": "0.12.0"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-16T06:54:11.680253Z",
+        "commits": {
+          "e2e-testing": {
+            "branch": "staging",
+            "sha": "aeb561fa9f5204fe5de89a4b949cbc18939c01a7",
+            "version": "0.6.0"
+          },
+          "system-integration-tests": {
+            "branch": "staging",
+            "sha": "26722e169fd317f8a3c50edb7621a0e9ddecf54c",
+            "version": "0.5.0"
+          },
+          "deployment-api": {
+            "branch": "staging",
+            "sha": "7ae897a370026127130233ae9240776f237a162e",
+            "version": "0.12.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-16T00:06:22.982549Z",
         "commits": {
@@ -1890,26 +1892,6 @@
           "greeks-service": {
             "version": "0.5.0",
             "sha": "97e737578ede7482b634454c72535a864efae27d",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-15T15:42:33.419934Z",
-        "commits": {
-          "instruments-service": {
-            "version": "0.5.1",
-            "sha": "7ba908e8cf2d879b178649bf6a76efa81a13e863",
-            "branch": "staging"
-          },
-          "unified-trading-library": {
-            "version": "0.10.0",
-            "sha": "324dcbf86d5bbb925520cdb436b93d0ccf80d139",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.6.0",
-            "sha": "2eb53773031053b1539532d692a73b8da977a1df",
             "branch": "staging"
           }
         }
