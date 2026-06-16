@@ -33,7 +33,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64
 import json
+import os
 import re
 import subprocess
 import sys
@@ -42,7 +44,10 @@ from pathlib import Path
 from typing import cast
 
 AR_REGION = "asia-northeast1"
-AR_PROJECT = "central-element-323112"
+# Project id is read from the environment (the gate workflow exports GCP_PROJECT_ID /
+# GOOGLE_CLOUD_PROJECT) — never hard-coded (codex: no hard-coded prod project id). Empty when
+# unset → the AR query fails → the check fails-OPEN (allows), which is the safe default.
+AR_PROJECT = os.environ.get("GCP_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT") or ""
 AR_REPOSITORY = "unified-libraries"
 
 _VER_RE = re.compile(r"(\d+)(?:\.(\d+))?(?:\.(\d+))?")
@@ -92,8 +97,6 @@ def _load_pyproject(repo: str, ref: str, pyproject_path: str | None) -> dict[str
     if proc.returncode != 0 or not proc.stdout.strip():
         return None
     try:
-        import base64
-
         raw = base64.b64decode(proc.stdout.strip())
         return tomllib.loads(raw.decode("utf-8"))
     except (ValueError, tomllib.TOMLDecodeError, UnicodeDecodeError):
@@ -105,7 +108,7 @@ def _internal_dep_floors(
 ) -> dict[str, tuple[tuple[int, int, int] | None, tuple[int, int, int] | None]]:
     """Map each internal dependency → (floor_tuple, ceiling_tuple) from [project.dependencies]."""
     project = pyproject.get("project")
-    deps = project.get("dependencies") if isinstance(project, dict) else None
+    deps = cast("dict[str, object]", project).get("dependencies") if isinstance(project, dict) else None
     out: dict[str, tuple[tuple[int, int, int] | None, tuple[int, int, int] | None]] = {}
     if not isinstance(deps, list):
         return out
@@ -193,24 +196,29 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--manifest", default=None, help="workspace-manifest.json path")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     args = ap.parse_args(argv)
+    repo = cast("str", args.repo)
+    ref = cast("str", args.ref)
+    pyproject_path = cast("str | None", args.pyproject)
+    manifest_arg = cast("str | None", args.manifest)
+    as_json = cast("bool", args.json)
 
     manifest_path = (
-        Path(cast("str", args.manifest))
-        if args.manifest
+        Path(manifest_arg)
+        if manifest_arg
         else Path(__file__).resolve().parent.parent.parent / "workspace-manifest.json"
     )
-    result = check(cast("str", args.repo), cast("str", args.ref), cast("str | None", args.pyproject), manifest_path)
+    result = check(repo, ref, pyproject_path, manifest_path)
 
-    if cast("bool", args.json):
+    if as_json:
         print(json.dumps(result))
     elif result["fail_open_reason"]:
-        print(f"✅ {args.repo}: dep-publish check fail-open ({result['fail_open_reason']}) — allowing")
+        print(f"✅ {repo}: dep-publish check fail-open ({result['fail_open_reason']}) — allowing")
     elif result["satisfied"]:
         n_ok = len(cast("list[object]", result["checked"]))
-        print(f"✅ {args.repo}: all {n_ok} internal dep(s) published to AR at floor")
+        print(f"✅ {repo}: all {n_ok} internal dep(s) published to AR at floor")
     else:
         n_bad = len(cast("list[object]", result["unpublished"]))
-        print(f"⛔ {args.repo}: {n_bad} internal dep(s) NOT yet in AR at floor:")
+        print(f"⛔ {repo}: {n_bad} internal dep(s) NOT yet in AR at floor:")
         for u in cast("list[dict[str, object]]", result["unpublished"]):
             print(f"   - {u['dep']} needs >={u['floor']}, latest in AR = {u['latest_in_ar']}")
         print("   → producer not published yet; promotion should wait (retry next run).")
