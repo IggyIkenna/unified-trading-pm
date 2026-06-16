@@ -152,10 +152,32 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## V4 — Candle edge-timestamp audit (CF-19) — per-AG owner of the external OHLCV source
 
-- [ ] [VERIFY] P0. Per external OHLCV/candle source × timeframe, confirm left-edge(open)/right-edge(close) label matches
-      `codex/02-data/bar-boundary-candle-edge-convention.md` + an independent reference bar; one normalization point;
-      batch==live agree. (Issue already filed/maybe-fixed — this makes it a standing check.) Owner = the AG's source
-      owner.
+- [x] ✅ [VERIFY] P0. Candle-edge standing check VERIFIED LIVE — the right-edge (`t_close`) convention is codified +
+      QG-enforced + per-source documented. — codex@live-defi-rollout (verify 2026-06-16).
+      `codex/02-data/bar-boundary-candle-edge-convention.md` is the SSOT (closed bar stamped on its RIGHT/close edge;
+      half-open `[t_open, t_close)`). **One normalization point**: the MDPS processed-candle store (data-state verified
+      right-edge correct 2026-06-08) + MTDS ingestion conversion (`databento_adapter._convert_ohlcv_open_edge_to_close`,
+      stamps the row-level `bar_edge="close"` marker). **Per external source × timeframe edge label documented + handled
+      source-aware** (MDPS `ohlcv_passthrough._is_start_of_period_input` decision order: `bar_edge` marker → row
+      `source` provenance → `ts_event` name → census default): Databento `ts_event`=open,
+      Massive=open-by-representation, Uniswap `periodStartUnix`=open → SHIFT; yahoo/barchart=close, Hyperliquid/Pacifica
+      candle `T`, Binance kline `[6]`=explicit close → never shift. **Standing check is QG-wired** (not a one-off): STEP
+      5.92 `check_bar_edge_open_ingestion.py` runs in BOTH `base-service.sh` (line ~3153) and `base-library.sh` (line
+      ~1154) — baseline-ratchet, a NEW open-edge site fails the commit; STEP 5.74
+      `check_mdps_bar_boundary_compliance.py` bans inline truncation bypasses; runtime
+      `unified_trading_library.availability_stamping.assert_close_edge` raises on a mismatched edge; the **independent
+      reference + batch==live** is the cross-source equivalence fixture (tick-aggregated vs pre-aggregated → SAME
+      `t_close`) shipped in `market-tick-data-service/tests/unit/test_databento_bar_edge.py`,
+      `market-data-processing-service/tests/unit/test_tradfi_adapters.py`,
+      `features-service/tests/delta_one/unit/test_cross_source_bar_edge_equivalence.py`. Known-latent open-edge sites
+      (Massive `_normalise_ohlcv`, MDPS `liquidity_adapter._convert_timestamps`) are baselined + owned by named plans +
+      do NOT write consumed candles to prod. Owner = the AG's source owner (standing check now enforces it fleet-wide).
+- [ ] [SCRIPT] P3. **NICE-TO-HAVE — `STEP 5.92` label collision in `base-service.sh`** (finding, V4 verify 2026-06-16):
+      the bar-edge open-ingestion checker (~line 3153) AND the legacy-`category=`-kwarg ban (~line 2214) are BOTH
+      labelled `STEP 5.92`. Purely cosmetic (both gates execute; only the human-readable log prefix collides) — renumber
+      one (e.g. the category-kwarg ban → an unused 5.9x) for clean triage. Touches the PM template → needs
+      `rollout-workflow-templates.sh`-style fleet rollout of `base-service.sh`, so capture-not-fix this session. Repo:
+      unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). Provenance: V4 candle-edge verify.
 
 ## V5 — Projected-manifest preview + data-status render (CF-20, ⑭) — slot-3 harness, both render
 
@@ -222,11 +244,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   `_enumerate_v2_*` FULL + dispatch-mapped, zero live stubs; defi/tradfi/sports resolve validity via the V0-composed UAC
   layer (`valid_data_types_for_instrument_type` matrix + `CHAIN_GENESIS_DATES` + per-instrument lifecycle bounds — the
   exact 3 layers `possible_manifest` composes, no divergent re-derivation), and alive+no-manifest cells yield
-  `expected_unattempted`; per-AG unit tests + the v1→v2 superset integration test cover it. Flipped V1. Scope note for
-  this run: the harness CODE (⑬–⑲ scaffolds) is fully shipped; remaining open `- [ ]` are VERIFY items (V1✅, V4
-  in-progress, V6) + operator-gated apply/eyeball/decision items (G4 `--apply` line 221, prediction cqg 338, sports
-  pre-launch-window 424) which are legitimate hard-stops by the plan's own design (operator wants to eyeball goalposts +
-  OK between each AG before the destructive prod migration) — journaled, not auto-fired.
+  `expected_unattempted`; per-AG unit tests + the v1→v2 superset integration test cover it. Flipped V1. **V4 (CF-19
+  candle-edge standing check) GREEN** — the right-edge (`t_close`) convention is codified
+  (`codex/02-data/bar-boundary-candle-edge-convention.md`) + QG-enforced as a STANDING check (not a one-off): STEP 5.92
+  `check_bar_edge_open_ingestion.py` wired in both `base-service.sh` (~3153) + `base-library.sh` (~1154), STEP 5.74
+  truncation ban, runtime `assert_close_edge`, and the independent-reference/batch==live cross-source equivalence
+  fixture in MTDS + MDPS + features-service; single normalization point = MDPS processed-candle store; per-source edge
+  labels documented + source-aware-handled. Filed a P3 finding (cosmetic `STEP 5.92` label collision in
+  `base-service.sh`). Scope note for this run: the harness CODE (⑬–⑲ scaffolds) is fully shipped; remaining open `- [ ]`
+  are VERIFY items (V1✅, V4✅, V6 — operator eyeball) + operator-gated apply/eyeball/decision items (G4 `--apply` line
+  221, prediction cqg 338, sports pre-launch-window 424) which are legitimate hard-stops by the plan's own design
+  (operator wants to eyeball goalposts + OK between each AG before the destructive prod migration) — journaled, not
+  auto-fired.
 
 - 2026-06-14 (late, slot-4) — **Canonicalisation DEPLOYED to the live service + fleet promotion pipeline unblocked.**
   After C1/C2/C3 shipped to LDR: (1) reconciled `main`+`staging` to LDR via clean-start force-sync
