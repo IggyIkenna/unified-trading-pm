@@ -60,7 +60,7 @@ repos:
   trading-agent-service:
     count: 0
   unified-api-contracts:
-    count: 138
+    count: 0
   unified-trading-api:
     count: 0
   unified-trading-library:

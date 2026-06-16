@@ -101,6 +101,19 @@ that workstream.
       `public/capability-verdict-matrix.json` was stale vs canonical UAC (re-synced) and `parity-gates.test.ts` hardcoded
       `available: 12977` (→ 14977, the 9-venue update). Shipped unified-trading-system-ui (citation + re-sync) + baseline
       `ui → 0` @58deed4a0. **Lesson: UI-repo gates MUST run under Node ≥22; the small-repo shipper used default Node 20.**
+- [x] ✅ [SCRIPT] P0. **Phase 5.5 — cite UAC registry/ (138) + HOOK THE GATE UP for libraries (it was never enforced for UAC).**
+      Root finding: STEP 5.97 lived ONLY in `base-service.sh`, but unified-api-contracts sources `base-library.sh` — so
+      the gate had **never run for UAC**, even though UAC `registry/` is the checker's PRIMARY documented target (the
+      138 seed was UAC's). The baseline was decorative. Fixed: (1) ported STEP 5.97 into `base-library.sh` so it runs for
+      UAC + UTL (UTL=0 no-op) — validated green by a real UAC `quality-gates.sh` run; (2) cited all **138** UAC addresses
+      across 7 registry files — canonical ERC-20s (`defi_major_assets`/`token_wrapping`/`reward_schedules`) → `# DERIVED
+      … etherscan`; per-chain wrapped tokens (`_defi_chain_data` WETH/WBTC/CBBTC/TBTC, chain=key) → `# DERIVED … (chain
+      per key)`; per-chain Uniswap router/factory/quoter (`dex_router_addresses`) → `# DERIVED <chain> uniswap`;
+      factory-deployed pools (`stablecoin_exit_routes`/`defi_prediction_instrument_seeds`) → `# QG-allow: defi-citation`;
+      extended the `chain_env.py` provenance-annotation E501 ignore to `token_wrapping.py`; (3) ratcheted UAC baseline
+      138→0. — unified-api-contracts (citations) + unified-trading-pm@25fda9323 (base-library.sh hook + baseline→0).
+      **DONE: all 606 DeFi addresses (468 service + 138 UAC) cited fleet-wide; every repo at baseline 0; gate enforced
+      via base-service.sh (services) AND base-library.sh (libraries) — no repo left ungated.**
 - [ ] [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
       `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
       routers, Multicall3 (`0xcA11…CA11`, same address all EVM chains), bridge/Aave/LST protocol addresses; **(2)
