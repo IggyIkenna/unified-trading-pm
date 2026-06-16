@@ -237,6 +237,34 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (autonomous run, END-OF-RUN report) — **harness open CODE items GREEN; ⑬–⑲ pre-apply harness is
+  code-complete — only operator-gated items remain (by the plan's own design).** Shipped this run (all QG-green,
+  drift-clean — every HEAD ancestor-or-equal of origin/LDR, no dirty trees):
+  - **V1 ✅ (CF-16 enumerator-reads-V0)** — pm@45a3ed16e. All 5 `_enumerate_v2_*` FULL + dispatch-mapped; defi/tradfi/
+    sports resolve validity via the V0-composed UAC layer; alive+no-manifest → `expected_unattempted`.
+  - **V4 ✅ (CF-19 candle-edge standing check)** — pm@b10dacadf. Right-edge (`t_close`) convention codified +
+    QG-enforced fleet-wide (STEP 5.92 in base-service.sh + base-library.sh, STEP 5.74, runtime `assert_close_edge`,
+    cross-source equivalence fixtures in MTDS/MDPS/features). Single normalization point = MDPS processed candles.
+  - **DATA-001 `VENUE_DATA_TYPE_CAPABILITIES` completeness ✅** — uac@f8fb613 (QG-green 212s, 69 tests). 5 captured-but-
+    uncredited defi venues declared (data-grounded floors from prod `projected_index_defi.parquet`); de-vacuumed the
+    DATA-001 test. pm@caf609aef.
+  - **Diagnosed (root-caused, not just symptom-noted):** item 249 (prediction catalogue 0 rows) → loader
+    `_iter_prediction_by_date_snapshots` skips every blob lacking a `canonical_question_group=` path partition the
+    writer never emits (actual layout `venue=/market=`); (a) conditionId grain shippable, (b) cqg grain gated on 338.
+    pm@16392c664.
+  - **Findings filed:** P3 `STEP 5.92` label collision in base-service.sh; P3 12 `live`-phased defi venues with zero
+    rows in the projected index (re-phase to `pipeline` or run backfill — declaring them would inflate the denominator).
+  - **Verified end-state:** the ⑬–⑲ scaffold CODE (possible_manifest, orphan sweep, manifest_diff, schema completeness,
+    beta writer, cleanup, reconcile) is all on LDR/staging; V1/V4 GREEN; the projected v9 indexes + adjudicated diffs +
+    beta renders are assembled (per the R3/R7 entries below). **The ONLY remaining gates are OPERATOR-RESERVED by the
+    plan's own design** (⑬–⑲ HARD-BLOCK G4 pending the operator goalpost eyeball; line 221 "operator OK between each
+    AG"): V6 operator eyeball/sign-off, G4 `--apply` (destructive prod migration), and the operator-decision items 338
+    (prediction cqg-classifier coverage) + 424 (sports pre-launch window). These are legitimate hard-stops (a
+    destructive prod migration the operator explicitly reserved to eyeball), NOT autonomous leftovers — not auto-fired.
+  - **Per-AG data-ops tail (owned by slot-2/slot-3 per the ownership table, now precisely scoped):** 249-a (prediction
+    conditionId-grain loader rewrite), 384 (sports 6,869 blank capture_status), 346 (sports CF-5 relabel), 222-followup
+    (12 zero-data venue re-phase). Each is a `- [ ]` todo with a named repo + (where I went deeper) a root cause.
+
 - 2026-06-16 (autonomous run, cont.) — **DATA-001 `VENUE_DATA_TYPE_CAPABILITIES` completeness SHIPPED (data-grounded) —
   uac@f8fb613.** Enumerated all 19 declared-but-uncapabilitied defi venues; grounded against the prod
   `projected_index_defi.parquet` (1.58M rows). **5 with actual captured shards declared** (MAKER/FRAX/MORPHOVAULTS
