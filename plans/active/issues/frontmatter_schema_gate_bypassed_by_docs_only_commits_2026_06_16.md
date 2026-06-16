@@ -6,7 +6,6 @@ status: active
 priority: P2
 locked_by: live-defi-rollout
 created: 2026-06-16
-author: ikennaigboaka
 source:
   - slot-3 setup-tab-worktrees ship 2026-06-16 — full QG blocked twice by a foreign issue doc missing status/priority
   - plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md (the doc that demonstrated the bypass)
