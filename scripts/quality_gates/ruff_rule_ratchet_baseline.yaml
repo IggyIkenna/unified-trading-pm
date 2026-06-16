@@ -41,7 +41,7 @@ repos:
     tid251: 10
   execution-service:
     dtz: 10
-    tid251: 10
+    tid251: 5
   features-service:
     dtz: 18
     tid251: 10
@@ -61,8 +61,8 @@ repos:
     dtz: 7
     tid251: 9
   market-tick-data-service:
-    dtz: 32
-    tid251: 59
+    dtz: 31
+    tid251: 37
   ml-service:
     dtz: 3
     tid251: 0
