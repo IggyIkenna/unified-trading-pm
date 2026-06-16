@@ -515,12 +515,22 @@ standalone build, but the producer's matching version (UAC `0.10.0`) was **not y
 "on main" ≠ "published to AR" — `publish-package.yml` lags the main-merge. The gate must additionally assert the
 producer's required version is **actually resolvable from AR** before promoting a consumer whose floor requires it.
 
-- [ ] [SCRIPT] P1. Add an AR-publish check to the staging→main dep-order gate: for each internal dep `D>=v` a promoting
-      consumer requires, query Artifact Registry (reuse the auth/region from `publish-package.yml` /
-      `validate-build-auth.py`) for a published `D` version satisfying `>=v`; BLOCK (skip, retry next run — not a hard
-      fail) the consumer's promotion until the producer is published. Mirror the existing "blocked → SKIPPED, drains next
-      run" pattern. Compose with the range-pin/editable-source model (CLAUDE.md § Dependencies): the check applies to the
-      standalone-CI-clone resolution path, not the in-workspace editable path.
+- [~] [SCRIPT] P1. MECHANISM BUILT + WARN-WIRED 2026-06-16 (unified-trading-pm PR #366); hard-BLOCK flip pending a
+      canary. **Correction to the original spec**: `published_packages` (the manifest field publish-package.yml writes)
+      is DEAD — `publish-package.yml` has NEVER run; wheels are published by the build pipeline, and **AR itself is the
+      source of truth** (verified UAC 0.10.0/0.11.0 present in AR). Also the **real** floor is the consumer's
+      **pyproject** (`uac>=0.10.0`), NOT the manifest dep-edge (a vestigial `>=0.1.0` range-pin per CLAUDE.md). Shipped
+      `scripts/cicd/assert_deps_published_to_ar.py`: reads internal-dep floors from the consumer's pyproject (at a ref),
+      queries AR via `gcloud artifacts versions list` (semver TUPLE compare — 0.10.0 > 0.9.0, the bug class), exit 1 iff
+      a dep has versions in AR but none satisfy the floor. **Strictly fail-OPEN** (gcloud absent / AR error / empty /
+      no pyproject / no floor → allow). Unit-tested (ver-tuple, floor parse) + E2E (UTL+strategy satisfied; impossible
+      floor blocks). Wired into `staging-to-main.yml` as **STAGE 1.8b WARN-only** (`continue-on-error`, does NOT yet
+      modify READY_REPOS) — uses the GCP auth added by Gap 8. **Remaining (canary follow-up):** after a few runs confirm
+      no false positives in the `::warning::` output, flip to BLOCK by dropping unsatisfied repos from `READY_REPOS`
+      (mirror the dep-order "blocked → SKIPPED, drains next run" pattern).
+- [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric (per dep edge) in `promotion_lag_monitor.py` / the
+      dashboard so a stuck publish is visible before it jams a consumer. (The `assert_deps_published_to_ar.py` check is
+      the reusable primitive — `--json` output gives `unpublished[]` per repo for the metric.)
 - [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric (per dep edge) in `promotion_lag_monitor.py` / the
       dashboard so a stuck publish is visible before it jams a consumer.
 
