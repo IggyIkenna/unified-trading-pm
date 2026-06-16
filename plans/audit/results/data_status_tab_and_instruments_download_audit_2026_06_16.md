@@ -157,17 +157,69 @@ exchange-code → UAC registry, set human root (`ES→SP500`) as canonical base 
 raw, add `canonical_instrument_id` + `product_root`/`canonical_base` schema fields (1:1 into
 `INSTRUMENTS_PARQUET_SCHEMA`); also parse the spaced-option root so the fallback stops fragmenting.
 
-## J. Deribit OPTIONS/SPOT in the batch catalogue — options under-covered, spot legitimately absent
+## J. Deribit OPTIONS/SPOT in the batch catalogue — spot WRONGLY dropped (operator correction); options BTC/ETH OK
 
 The dedicated live `DeribitOptionsReferenceDataAdapter` (`deribit_options_adapter.py`, fetches `kind=option` for
 BTC/ETH/SOL/BNB/XRP) is **NOT wired into the batch run** — `engine/orchestrator/venue_core.py:90-103` `_CEFI_VENUES` has
 `DERIBIT` + `DERIBIT-COMBO` but **not `DERIBIT-OPTIONS`**. So batch Deribit options come ONLY via the Tardis `DERIBIT`
-adapter (`factory.py:103` routes DERIBIT→tardis), which: (a) **drops spot** — `tardis/adapter.py:96-105,719-729`
-derivatives-only guard returns `None` for Deribit spot — _correct, Deribit has no spot, not date-dependent_; (b) emits
-options but **filtered to BTC/ETH only** — `tardis/parsing.py:354-355` + UAC `CEFI_OPTIONS_UNDERLYINGS={BTC,ETH}`
-(`cefi_instrument_universe.py:59-62`), so SOL/BNB/XRP options are excluded by design. **BTC/ETH options SHOULD appear**;
-if the sample truly had zero options it is an anomaly — most likely the Tardis free-tier endpoint fallback
-(`adapter.py:564-637`, `/v1/instruments`→401→`/v1/exchanges`) not carrying the per-instrument option metadata
-`_resolve_option_fields` (`parsing.py:358-381`) needs → option records fail to materialize. **Needs run-verification**
-(which Tardis endpoint served the sample + the BTC/ETH option count). For full coverage: add `DERIBIT-OPTIONS` to
-`_CEFI_VENUES` (runs the dedicated adapter) and/or widen `CEFI_OPTIONS_UNDERLYINGS`.
+adapter (`factory.py:103` routes DERIBIT→tardis), which:
+
+(a) **WRONGLY drops Deribit spot — BUG (operator correction 2026-06-16: Deribit DOES have spot now, launched ~2023;
+maybe not in 2019).** `tardis/adapter.py:95-97` hardcodes `"deribit"` in `_DERIVATIVES_ONLY_EXCHANGES`, and `:719-729`
+returns `None` for any `SPOT_PAIR` on that venue (comment `:721` "deribit has no spot" is stale). So Deribit spot is
+silently excluded fleet-wide. **Fix:** remove `deribit` from `_DERIVATIVES_ONLY_EXCHANGES` (or make it date-aware — spot
+only post-launch ~2023), confirm Tardis returns Deribit spot instruments, and validate they pass the universe filter
+(BTC/ETH etc. are in `CEFI_BASE_ASSET_UNIVERSE`). The user's "only futures+perps" sample is explained by this drop, not
+a date choice.
+
+(b) emits options **filtered to BTC/ETH only** — `tardis/parsing.py:354-355` + UAC `CEFI_OPTIONS_UNDERLYINGS={BTC,ETH}`
+(`cefi_instrument_universe.py:59-62`). **Operator 2026-06-16: BTC/ETH underlyings are FINE for now** — do NOT widen
+`CEFI_OPTIONS_UNDERLYINGS` or wire the dedicated options adapter yet. BTC/ETH options SHOULD appear via Tardis; if a
+sample shows zero, run-verify the Tardis endpoint tier (`adapter.py:564-637`, `/v1/instruments`→401→`/v1/exchanges`
+fallback may drop the option metadata `_resolve_option_fields` `parsing.py:358-381` needs).
+
+## Sequencing — migration / data-pipeline / data-status execution tiers (operator 2026-06-16)
+
+Operator ordering: **clean up everything else first → run the actual v9 manifest migration → downloads LAST.** Survey of
+the 18 core active plans (read-only, 2026-06-16). No `--apply` has executed anywhere — every vertical is DRY-RUN-only
+and operator-gated, double-gated on TIER-0 GATE 0 AND the instrument-catalogue lifecycle gate (both still OPEN).
+
+**TIER 0 — pipeline_mode Phase-0 code foundation (the cross-cutting blocker before ANY `--apply`).**
+`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` (3/13). OPEN: **M1** full source-aware enum (the
+breaking `live_websocket→live_<source>` object migration), **M3** per-shard available-sources registry +
+`could_exist(shard,mode)`, **M4** mode-contextual `select_for_mode` read-resolver, **fix #1** (defi rebuild blank
+`pipeline_mode`+`source` stamp), **fix #3** (features delta_one reader omits `pipeline_mode=`). DONE: fix #2 (utl), #4
+enumerator stamp, #6 write-time cross-check, M2 draft seed. **GATE 0 (every repo QG-green + cross-repo SIT
+write→manifest→union-read) NOT MET.** Rider: `pipeline_mode_partition_migration_2026_06_01.md` (promote pipeline_mode to
+on-disk hive key) rides each AG walk (0/2).
+
+**TIER 1 — cleanup / correctness to land before the migration (most independent of it; can proceed now).**
+
+- `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, ~12/25) — the OTHER hard foundation-gate: IS
+  catalogue must be GREEN per-AG before that AG's MTDS `--apply`. Ops tail open (dead daily producer; tradfi
+  BLOCKED-CREDENTIALS on Databento).
+- `instruments_manifest_canonicalisation_2026_06_01.md` (P0, G1 ROOT, 5/8) — the could-exist-universe SSOT; carries the
+  2026-06-16 UAC-denominator callout (this audit).
+- `data_source_provenance_all_asset_groups_2026_06_01.md` (P0, write-path DONE; backfills ride each AG's C-source
+  rider).
+- `mtds_honest_absence_swallow_remediation_2026_06_10.md` (P0, ~14/17 done).
+- **This plan's Phases A–D** (scope/venue/UI/universe/naming/Deribit-spot) are TIER-1 cleanup — independent of the
+  migration. Universe extension already shipped (UAC@f4f7f8e).
+
+**TIER 2 — the real v9 `--apply` migrations, per asset_group (ALL gated on GATE 0).** Coordinator
+`master_data_canonicalisation_migration_catalogue_2026_06_07.md` (G0–G5 gate sequencer, executes nothing). Per-AG
+owners, all DRY-RUN-ready / operator-gated: prediction (1.9M moves, closest) · tradfi (5.3M objects) · sports · defi
+(re-enumerate 18 new venues first) · cefi (BLOCKED on catalogue bundle-grain) · instruments (5 AGs) · downstream (P1,
+G2, dry-run NOT run). MASTER axis: `defi_manifest_canonicalisation_2026_06_01.md`.
+
+**TIER 3 — orphan-safety verification around apply.** `migration_verification_orphan_safety_2026_06_10.md` (P0, 19/37):
+G3.5 pre-apply checks HARD-BLOCK G4 `--apply`; G4.5 verified-delete (`cleanup_legacy_twins.py`) runs after, re-sweeping
+orphans (must stay 0).
+
+**TIER 4 — data-status tab + downloads (LAST).** This plan's **Phase E** — the download path-fix targets the FINAL
+canonical `pipeline_mode=…/venue=…` shape, so it lands after TIER 2. `capability_wizard_and_manifest_2026_06_11.md` is
+DECOUPLED (consumes the data-status API as a black box; ~done).
+
+**Watch-item:** the coordinator claims "G0–G3 GREEN / 5-of-5 apply-ready," but TIER-0 GATE 0 is demonstrably NOT met
+(M1-breaking / M3 / M4-resolver / fix #3 open) — the coordinator appears to credit only the landed Phase-0.1 subset, not
+the full Phase-0 DAG. Reconcile before any `--apply`.
