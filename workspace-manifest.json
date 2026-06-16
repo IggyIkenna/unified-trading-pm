@@ -171,7 +171,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_PENDING",
+      "ci_status": "FAILING",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
