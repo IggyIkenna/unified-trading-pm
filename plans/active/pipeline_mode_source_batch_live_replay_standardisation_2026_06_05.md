@@ -501,8 +501,8 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - [x] ✅ M4 UAC + batch-live-reconciliation-service QG green (select_for_mode) — unified-api-contracts@7441a692 +
       batch-live-reconciliation-service@0e17d7ee
 - [x] ✅ M5b deployment-api cadence dim QG green — deployment-api@66e8562d
-- [ ] M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
-- [ ] M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs)
+- [ ] [UI] P2. M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
+- [ ] [INFRA] P1. M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs)
 - [x] ✅ GATE-0 SIT green (batch + gate legs; live leg skip-pending-M1) — system-integration-tests@db14463 → **GATE-0
       FOUNDATION MET (batch path)** → Phase-1 BATCH dry-runs unblocked. (Live-path collision-free guarantee =
       M1-BREAKING, the gated tranche before a live-containing `--apply`.)
