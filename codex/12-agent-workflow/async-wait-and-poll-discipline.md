@@ -66,6 +66,35 @@ done
 # If progress was FLAT across ticks → do NOT relaunch a longer monitor → diagnose the blocker now.
 ```
 
+## Wake sources — `ScheduleWakeup` and `run_in_background` DO NOT COMPOSE (HARD RULE, codified 2026-06-16)
+
+There are two ways the harness re-invokes a dormant agent, and **they are mutually exclusive in practice — pick exactly
+ONE per wait. Never set a `ScheduleWakeup` as a "fallback" alongside an active `run_in_background`/tracked task.**
+
+- **`run_in_background` task completion = RELIABLE.** A `run_in_background` Bash, sub-agent, or workflow re-invokes you
+  **when it exits** — this is the dependable wake signal. The robust pattern for a long unattended wait is a **single
+  background _orchestrator_** that does the waiting **and** the work and exits only when fully done:
+  `( while ps -p $A >/dev/null; do sleep 60; done; launch B; while ps -p $B; do sleep 60; done; echo DONE ) &` via
+  `run_in_background`. The harness fires the moment it exits — no timer needed.
+- **`ScheduleWakeup` = BEST-EFFORT, in-session, NOT a guaranteed OS alarm.** It is the `/loop` self-pacing timer.
+  **Empirically (2026-06-16): a `ScheduleWakeup` set as a safety-net while a `run_in_background` task was active NEVER
+  FIRED — 34 min past its scheduled time the agent was still dormant** (only the operator's message woke it). The
+  tracked background task was correctly progressing and would have re-invoked on completion, but the timer was
+  **shadowed by it** — a pending tracked task is the harness's active wake source, and the standalone timer is not
+  independently honoured while it is pending (and won't fire at all if the session is idle/asleep, since it is
+  in-session not OS-level).
+- **THE RULE.** (a) If a tracked background task is driving the wait → **rely on its completion; do NOT also schedule a
+  wakeup** (it gives false "I'm covered" confidence and silently never fires). (b) Use `ScheduleWakeup` ONLY when **no
+  tracked task** is in flight — i.e. self-pacing your own `/loop` ticks or polling genuinely **external/untracked**
+  state (a remote CI run / VM job the harness can't see). (c) If something **MUST** resume regardless of session state,
+  make it a tracked background task that exits on the condition — never trust the timer alone. (d) Need a periodic
+  checkpoint during long tracked work? Build it **into** the orchestrator (exit at the checkpoint, or write a progress
+  marker), not as a separate `ScheduleWakeup`.
+
+Symptom that you hit this: you scheduled a wakeup "as a fallback," ended the turn, and the wakeup time passed with no
+re-invocation. Root cause is almost always a concurrent `run_in_background` task shadowing the timer. Fix: drop the
+redundant wakeup; let the task's completion drive you (or restructure as a single orchestrator task).
+
 ## Composes with
 
 - **Background-task honesty** (`CLAUDE.md` § Agent behavior) — the truthfulness half; this doc is the cadence half.

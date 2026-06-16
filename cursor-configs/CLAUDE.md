@@ -569,8 +569,16 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   chain: which workflow/dispatch/cron moves it?); if you cannot name it, that is a diagnosis task, not a wait (the drain
   gap was bug #11: `staging_commits` was never written for non-breaking merges, so no watcher duration would ever have
   succeeded); (3) ONE deadline = one expected-cadence interval of the mechanism, then STOP and diagnose — never re-arm
-  the same watcher after a silent expiry. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher
-  coverage".
+  the same watcher after a silent expiry. **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick ONE wake
+  source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
+  (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE
+  background _orchestrator_ that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an
+  active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator
+  messaged): the pending tracked task is the harness's active wake source and SHADOWS the standalone timer (which is
+  in-session best-effort, not an OS alarm — also won't fire if the session is idle/asleep). Use `ScheduleWakeup` ONLY
+  when no tracked task is in flight (self-pacing `/loop`, or polling external/untracked state); if something MUST
+  resume, make it a tracked task that exits on the condition, never the timer alone. SSOT:
+  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage" + § "Wake sources".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
