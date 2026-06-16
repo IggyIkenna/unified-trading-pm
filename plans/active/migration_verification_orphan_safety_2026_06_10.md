@@ -238,6 +238,22 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (autonomous run, FINAL — tail-cleanup complete) — **5 of 6 dispatch sub-items SHIPPED + flipped; 346
+  verified-done in code + PRESERVED to a recoverable wip branch (lands on the next clean-dep window).** Final tally:
+  **Item 4** STEP 5.92 collision → pm@3be7eb595 ✅ · **Item 5** V4 fleet-gate blast-radius VERIFIED green on 3 consumers
+  - 2 libraries ✅ · **Item 1 / 249-a** prediction catalogue conditionId grain → is@c100834 + prod catalogue promoted
+    0→668,384 rows ✅ · **Item 3 / 222-followup** 7 unsourceable lending re-phased (uac@6c74eaf) + 5 LST corrected as a
+    false-signal (real data in the `lst-rates` bucket) + filed the lst-rates-aggregation follow-up ✅ · **Item 2a /
+    384** sports 6,869 blank-capture_status phantom-drop → is@8b3c7ef ✅ · **Item 2b / 346** sports CF-5 `trades`
+    case-fix — CODE DONE + QG-green + tested + verified, **preserved on `origin/wip-preserve/mtds-346-cf5-trades`
+    (mtds@d0a15a3)** after 3 quickmerge retries blocked by a live sibling's continuous fleet manifest-regen (dirty
+    deps); lands via the one-line quickmerge in the 346 todo above the instant deps are clean. All shipped changes
+    QG-green + drift-clean. **Operator-reserved (untouched, per dispatch):** G4 `--apply`, V6 eyeball, decisions
+    338 + 424. The destructive `--apply` legs of 384/346 execute at the operator-gated sports G4 (code produces 0-blank
+    / correctly-relabeled output). Journaling this final entry via a throwaway worktree off origin/LDR — the shared PM
+    clone is mid fleet manifest-regen by a sibling (canonical-dependency-manifest/workspace-manifest/master-plan churn,
+    preserved in its `stash@{0}`), deliberately left untouched.
+
 - 2026-06-16 (decision 338 — cqg classifier IMPROVED + shipped, uac@d52217f) — operator chose "improve the classifier
   first"; this is the high-confidence tranche (faithful pattern extensions; judgment-heavy genres deferred to the
   operator, below). **Shipped (QG-green 213s, 32/32 prediction unit tests):**
@@ -705,11 +721,24 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       sports/politics/entertainment outside the MVP crypto set) or operator-ratify that out-of-registry markets stay
       failed-for-retry. Repos: unified-api-contracts (+ rebuild re-run). Provenance: /tmp/r7_proj/prediction2.log
       2026-06-11.
-- [ ] [DATA] P1. **Sports CF-5 oracle relabel fired ZERO relabels on the MDPS dry-run** (584,257/584,257
-      `keep_src_zero`; truth set 189,740 pairs loaded, league match-rate 61.8%) — the step 4–7 gates all fall through
-      (suspect league_id resolution / venue=bookmaker rows carrying no league mapping). Reason-level CF-5 relabel is
-      currently INERT on MDPS (status-level diff unaffected — GREEN). Diagnose before relying on the relabel for the
-      sports verdict pack. Repo: market-tick-data-service. Provenance: /tmp/r7_proj/sports.log 2026-06-11.
+- [ ] [DATA] P1. **Sports CF-5 oracle relabel = ZERO — ROOT-CAUSED + FIXED (code), preserved to a wip branch awaiting a
+      clean-dep window (2026-06-16).** The finding's "61.8% league match-rate / league-resolution" hypothesis was WRONG
+      for the bulk: on the real prod MDPS sports index (`market-data-tick-sports-prd`, 584,257 empty_confirmed),
+      **583,185 are data_type=`trades` whose league_id resolves 100%**. **Real root cause:**
+      `_PER_FIXTURE_DERIVED_DATA_TYPES` listed the MDPS odds tick as lowercase `"trades"`, but membership is tested as
+      `data_type.upper() in set` (step 6.5 truthset gate + `is_derived_captured`) → `"TRADES"` never matched → step 6.5
+      silently skipped EVERY `trades` empty → all kept SOURCE_RETURNED_ZERO instead of the truthset-derived
+      EXPECTED_NO_FIXTURE. **Fix:** `"trades"`→`"TRADES"` in `mtds/scripts/rebuild_sports_manifest_v9.py` (kept at the
+      900-line cap) + a regression test. MTDS QG-green; verified by direct `_step6_5_truthset_gate` call (not-in-truth →
+      EXPECTED_NO_FIXTURE; in-truth → stays SOURCE_RETURNED_ZERO, since `trades` is correctly excluded from the
+      guaranteed set). **NOT YET LANDED:** quickmerge's pre-flight dep-audit refused across 3 retries because a LIVE
+      sibling was continuously running fleet manifest-regen / version-alignment (UTL→UAC dirty, version bumps 0.14→0.15)
+      — must not stomp foreign WIP. **The verified fix is PRESERVED on `origin/wip-preserve/mtds-346-cf5-trades`
+      (mtds@d0a15a3)** — land it with
+      `quickmerge.sh --agent --files 'market_tick_data_service/scripts/rebuild_sports_manifest_v9.py     tests/unit/scripts/test_rebuild_sports_manifest_v9.py'`
+      (cherry-pick the wip commit onto a clean MTDS tree) the moment all MTDS deps are clean. Reason-level only
+      (status-diff GREEN — does NOT block the G4 apply). Repo: market-tick-data-service. Provenance: 2026-06-16 prod
+      MDPS index diagnosis.
 
 - 2026-06-11 (~19:10Z, autonomous run) — **FINAL SIGN-OFF SWEEP SNAPSHOT: ALL FIVE AGs GREEN on final HEAD** — defi E=0
   (18:52Z) · cefi E=0 (19:00Z) · prediction E=0 (19:02Z) · tradfi E=0 (19:07Z) · sports odds E=0 + reference E=0
