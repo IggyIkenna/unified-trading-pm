@@ -43,3 +43,22 @@ have let it ship red.
 3. Add a regression test/assertion in the QG harness (a planted failing ratchet step must produce exit 1 + no sentinel).
 
 Owner suggestion: vm-cross-cutting (PM quality-gates-base). Repos: unified-trading-pm (+ fleet verification).
+
+## Progress / status (2026-06-16, QG-agent)
+
+- **Step 1 (fix) — AUTHORED, HELD.** The aggregation fix is written + verified on
+  `origin/wip-preserve/qg-ratchet-hardening-2026-06-16` (base-service.sh: `_V_PRE_RATCHET=$V` snapshot after the
+  codex-compliance verdict + a post-ratchet `_RATCHET_FAILS=$((V-_V_PRE_RATCHET)); [[ >0 ]] && exit 1` before the
+  sentinel write; integers are scalar so the `[: integer expression expected` symptom can't recur). NOT shipped yet.
+- **Step 2 (fleet sweep) — DONE.** Swept all three ratchets fleet-wide:
+  - **5.94 fallback-imports:** ✅ clean.
+  - **5.95 DTZ/TID251:** found instruments-service `tid251 60>59` (1 new `from google.cloud import storage`) — **FIXED +
+    landed** (`validate_sports_fixtures_v2_parity.py` → UCI `get_storage_client`); now 59==baseline, fleet-clean.
+  - **5.97 DeFi citations:** ❌ **8 repos over baseline 0 (~468 uncited addresses)** — the 2026-06-16 seed only
+    grandfathered UAC=138, missing all service-repo source. **This is the rollout blocker.**
+- **Step 3 (regression test) — AUTHORED, HELD.** `tests/test-ratchet-exit-code-aggregation.sh` on the same preserve
+  branch (planted failing ratchet step → asserts exit 1 + no sentinel).
+- **🔴 BLOCKED on operator decision** (grandfather-seed vs cite-first the ~468) before the hardening can ship without
+  reddening the 8 repos' promote PRs. Full diagnosis + decision:
+  **`defi_address_citation_baseline_incomplete_seed_2026_06_16.md`**. Ship the hardening (Step 1+3) the moment the fleet
+  is citation-ratchet-clean.
