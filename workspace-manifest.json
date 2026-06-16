@@ -78,7 +78,7 @@
     "instruments-service": "0.5.1",
     "market-tick-data-service": "0.10.0",
     "system-integration-tests": "0.6.0",
-    "unified-api-contracts": "0.11.0",
+    "unified-api-contracts": "0.13.0",
     "unified-trading-library": "0.10.0",
     "unified-trading-pm": "1.2.128",
     "market-data-processing-service": "0.6.0",
@@ -1789,7 +1789,6 @@
     "system-integration-tests": "0.6.0",
     "ml-service": "0.7.0",
     "deployment-api": "0.13.0",
-    "unified-api-contracts": "0.13.0",
     "batch-live-reconciliation-service": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1825,11 +1824,6 @@
       "sha": "433280ba6f322b06c555ea5171eb74ca853e4a84",
       "branch": "staging"
     },
-    "unified-api-contracts": {
-      "version": "0.13.0",
-      "sha": "a74c0fd51ce1dab198bb036f00df761fb54ec3b9",
-      "branch": "staging"
-    },
     "batch-live-reconciliation-service": {
       "version": "0.6.0",
       "sha": "67326e6a4d364767b66b0ddcd69144bbc98ed59d",
@@ -1839,6 +1833,16 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-16T17:57:48.608101Z",
+        "commits": {
+          "unified-api-contracts": {
+            "version": "0.13.0",
+            "sha": "a74c0fd51ce1dab198bb036f00df761fb54ec3b9",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-16T08:23:14.525015Z",
         "commits": {
@@ -1895,16 +1899,6 @@
           "deployment-api": {
             "version": "0.11.0",
             "sha": "cb442ba4226a849f4f3c5da51a50cbffd1e42ae3",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-15T23:22:24.117108Z",
-        "commits": {
-          "market-tick-data-service": {
-            "version": "0.10.0",
-            "sha": "1a39bb79deb2c1ca69ced3d68fd87f74c0b9197d",
             "branch": "staging"
           }
         }
