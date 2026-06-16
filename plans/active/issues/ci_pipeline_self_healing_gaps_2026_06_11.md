@@ -434,7 +434,7 @@ system claims to have does not exist for this path.
 4. `gh workflow run staging-to-main.yml` → promoted strategy + uac (clean merges). Final: quarantine + failures EMPTY;
    all 4 main==LDR (modulo the 1-file semver-brake drain). Monitoring-ui "Promotion blocked (4)" panel clears.
 
-- [x] ✅ [WORKFLOW] P1. Made quarantine **auto-recoverable** — DONE 2026-06-16 (unified-trading-pm PR #355).
+- [x] ✅ [WORKFLOW] P1. Made quarantine **auto-recoverable** — DONE 2026-06-16 (unified-trading-pm PR #358).
       `staging-to-main.yml` merge-builder no longer permanently skips a quarantined repo: it RE-PROBES (lets it through)
       once the re-probe is DUE (`next_probe_after` elapsed / absent), and the existing `changed & ready_set` filter still
       enforces deps-on-main + the merge loop tests real mergeability. A clean re-probe promotes → the counter step's
@@ -443,7 +443,7 @@ system claims to have does not exist for this path.
       the alert partition already excludes quarantined repos so no re-alert. Logic unit-simulated (due/not-due,
       backoff curve, re-probe-fail stays-quarantined-no-realert, re-probe-success clears). Dormant until a repo
       re-quarantines (quarantine currently empty) → zero immediate behaviour change.
-- [x] ✅ [WORKFLOW] P1. Fixed the escalation text — DONE 2026-06-16 (PR #355). It now states the repo WILL be re-probed
+- [x] ✅ [WORKFLOW] P1. Fixed the escalation text — DONE 2026-06-16 (PR #358). It now states the repo WILL be re-probed
       (gives `next_probe_after`), that a now-clean repo self-promotes + auto-clears with no action, and that escalation
       means it's a REAL conflict needing resolution (force-sync main=LDR when `main ⊆ LDR`, else resolve on staging) —
       after which the next due re-probe auto-clears it, so do NOT hand-edit the manifest unless the re-probe is broken.
