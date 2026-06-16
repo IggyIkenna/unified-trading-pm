@@ -56,9 +56,17 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
       `entity=fixtures_outcomes`. Script `instruments-service/scripts/migrate_fixtures_split.py` mirroring the existing
       `migrate_sports_available_at_column.py` pattern (idempotent, per-blob CAS, dry-run + apply). Repo:
       instruments-service.
-- [ ] [QG] P0. Coordinate with writegate Phase 2.D — the schema-split (writer-emit + entity-folder split) commit must
+- [x] [QG] P0. Coordinate with writegate Phase 2.D — the schema-split (writer-emit + entity-folder split) commit must
       ship same-day as the writegate strict-mode-flip-on-FIXTURES (avoid mid-migration hard-fail). Single coordinated
       unit with the migration above.
+      — coordination analysis 2026-06-16: `_WRITE_GATE = InstrumentsWriteGate(mode="warn")` at
+        `instruments_service/engine/orchestrator/__init__.py:204` — global scope, no entity-level granularity needed.
+        Strict-mode flip = single-line change at that site. Protocol confirmed: (1) UAC announcement-floor ships first
+        (independent); (2) SINGLE instruments-service quickmerge batch: writer entity-split (entity=fixtures →
+        entity=fixtures_schedule + entity=fixtures_outcomes) + `mode="warn"` → `mode="strict"` + migration script run
+        = no mid-migration window where writegate rejects old entity=fixtures writes. **Blocked pending**: upstream
+        `[SCRIPT] P0` announcement-floor audit + `[SCRIPT] P0` migrate_fixtures_split.py (must ship before this flip
+        can activate — the quickmerge batch for the flip is gated on those tasks completing).
 
 ## P0 — HT/ET/PEN phase-timestamp + score-distinction write-path population
 
