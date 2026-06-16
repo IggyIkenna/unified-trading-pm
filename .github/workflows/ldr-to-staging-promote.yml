@@ -223,7 +223,28 @@ jobs:
             if GATE_OUT=$(python3 scripts/cicd/tier_c_promotion_gate.py "$REPO" --manifest "$MANIFEST"); then
               echo "GATE PASS  $REPO (+$AHEAD): $GATE_OUT"
             else
-              echo "GATE BLOCK $REPO (+$AHEAD): $GATE_OUT"; _done BLOCKED; return 0
+              echo "GATE BLOCK $REPO (+$AHEAD): $GATE_OUT"
+              # ── Stale-FAILING ci_status self-heal (2026-06-16) ── A Tier-A "LDR CI is FAILING"
+              # block whose ci_status is STALE relative to the CURRENT LDR HEAD (no quality-gates-v2
+              # run exists for HEAD's sha) is a DEADLOCK: ci_status only resets to green when a v2 run
+              # passes, and the drain PR is what triggers that v2 — but the drain is blocked by the very
+              # status. (Observed 2026-06-16: a fixed-on-LDR repo whose ci_status was set FAILING by a
+              # prior dep-update v2 failure could never promote — no v2 ever re-ran on the fixed HEAD.)
+              # Break it: when the block is Tier-A AND no v2 run exists for the current LDR HEAD,
+              # re-dispatch v2 on live-defi-rollout HEAD to refresh ci_status; the next drain tick
+              # re-evaluates with a fresh status. A genuinely-red CURRENT head keeps a real failing run
+              # (HAS_V2>=1) → no re-dispatch → stays blocked (correct). Mirrors the open-PR stale-check
+              # recovery below. Fail-quiet (best-effort; a missing signal must never jam the loop).
+              if printf '%s' "$GATE_OUT" | grep -q 'Tier A'; then
+                HEAD_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
+                HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+                  --json headSha -q "[.[] | select(.headSha == \"$HEAD_SHA\")] | length" 2>/dev/null || echo "0")
+                if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" -eq 0 ]; then
+                  echo "  ↻ Tier-A FAILING is STALE for $REPO (no quality-gates-v2 on current LDR HEAD ${HEAD_SHA:0:8}) — re-dispatching v2 to refresh ci_status; next drain tick re-evaluates"
+                  gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref live-defi-rollout 2>/dev/null || true
+                fi
+              fi
+              _done BLOCKED; return 0
             fi
 
             if [ "$DRY_RUN" = "true" ]; then
