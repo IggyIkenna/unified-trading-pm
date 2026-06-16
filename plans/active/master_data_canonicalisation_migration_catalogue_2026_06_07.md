@@ -143,22 +143,25 @@ parallel-safe.
 > prod data): agents prepare it dry-run-green and STOP; the operator fires `--apply`. No `DEFERRED`/`BLOCKED-OPERATOR`
 > end-states otherwise; journal to the per-AG plan across compaction; end with a report.
 
-- [ ] [MIGRATION] P0. **🟡 G0 FOUNDATION GREEN — BATCH dry-runs UNBLOCKED; M1-BREAKING (live) is the last gate before a
-      live-containing `--apply` (updated 2026-06-16 /autonomous).** The GATE-0 Phase-0 DAG
+- [x] ✅ [MIGRATION] P0. **G0 FULLY GREEN (9/9) — BATCH **and** LIVE `--apply` foundation-clear; the `live_websocket`
+      multi-source path-collision gate is REMOVED (updated 2026-06-16 /autonomous).** The GATE-0 Phase-0 DAG
       (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` § "GATE-0 EXECUTION PLAN") was driven to
-      **7/9** this session: ✅ **fix #1** (mtds@89807b4) · ✅ **fix #3** features reader pm-aware (features@795e4f4) ·
-      ✅ **cadence column** (utl@dfe3385f) · ✅ **M3 `could_exist`** (uac@d56b9cc2) · ✅ **M4 `select_for_mode`**
-      (uac@7441a692 + blrs@0e17d7e) · ✅ **M5b data-status cadence dim** (deployment-api@66e8562) · ✅ **GATE-0 SIT**
-      (system-integration-tests@db14463 — write→manifest(all 4 cols)→union→`could_exist`/`select_for_mode` gate; LIVE
-      leg skip-marked). Every touched repo is QG-green. **So the BATCH-path foundation is GREEN → the Phase-1 BATCH
-      dry-runs are unblocked NOW.** **REMAINING (2/9, the plan's explicit gated NEXT tranche — fully specified there):**
-      **M1-BREAKING** = the `live_websocket`→`live_<source>` WRITER/reader migration (UAC helper
-      `live_pipeline_mode_for_venue` LANDED uac@276b6a6; each writer/reader site is non-breaking single-repo; the
-      `LIVE_WEBSOCKET` alias removal is the one breaking step, LAST, gated on 0 fleet refs) + **M5c/d** UI cadence
-      drilldown (display-only). **HARD SEQUENCING HOLDS:** a REAL `--apply` over any corpus that contains **live** rows
-      must wait for M1-BREAKING (else it bakes the #5 `live_websocket` multi-source path collision). A `--apply` over a
-      purely-BATCH corpus is foundation-clear once G1/G2/G3/G3.5 are also green. (G1 also carries the 2026-06-16
-      UAC-denominator callout.) — driven 2026-06-16.
+      **9/9** this session. The earlier 7/9 foundation (fix#1 mtds@89807b4 · fix#3 features@795e4f4 · cadence column
+      utl@dfe3385f · M3 `could_exist` uac@d56b9cc2 · M4 `select_for_mode` uac@7441a692+blrs@0e17d7e · M5b deployment-api@66e8562
+      · GATE-0 SIT system-integration-tests@db14463) was then completed by the final 2 items:
+      ✅ **M1-BREAKING** — the `live_websocket`→source-aware `live_<source>` migration across **8 repos**
+      (execution@04218fbc · batch-live-reconciliation@3bad2fe · deployment-api@aa18d8ae **(reader exact-match→`startswith("live")` bug FIXED)**
+      · market-data-processing@30e7672 · market-tick-data@84a15cc · unified-trading-library@2afb22bd (resolver source-aware
+      + `close_candle_writer` pipeline_mode required) · **unified-api-contracts@28bd50e — `LIVE_WEBSOCKET` alias member
+      DELETED** + `source_string_for`/`transport_of` special-cases removed + closed-set round-trip validates every member
+      · system-integration-tests@ec46de8 — SIT LIVE leg un-skipped + green). `rg "live_websocket|LIVE_WEBSOCKET" --type py`
+      = **0 fleet-wide**. The breaking UAC bump (→0.15.0) fired the dep-update fan-out: **4/6 consumer rebuilds GREEN**
+      (validates compatibility); 2 stale-base transients (UTL PR#369 / BLRS PR#81, cut pre-migration → self-resolve on
+      promotion-to-main — see the G0 plan tick-7). ✅ **M5c/d** UI cadence drilldown (display-only, pw:L2):
+      deployment-ui@687d4ce (pw:L2 ✓ 216/216) + unified-trading-system-ui@41b1567c (pw:L2 ✓ 31/31, parity-gap port).
+      Every touched repo is QG-green / pw:L2-green. **So a REAL `--apply` over a corpus containing LIVE rows is now
+      foundation-clear on the G0 axis** (the #5 collision is eliminated); the remaining `--apply` gates are
+      G1/G2/G3/G3.5 + the pre-migration drain. (G1 also carries the 2026-06-16 UAC-denominator callout.) — driven 2026-06-16.
 - [ ] [DATA] P0. **slot 2 (DeFi) — G4 `--apply`**: instruments-store v9 walk → MTDS raw-tick v9 → catalogue seed → IS
       backfill (Era-B relabel rides the migrator's final step). Operator-fired; on real VM/tarball; rollback =
       `pre_migration_2026_06_08.parquet`. Repo: market-tick-data-service + instruments-service.
