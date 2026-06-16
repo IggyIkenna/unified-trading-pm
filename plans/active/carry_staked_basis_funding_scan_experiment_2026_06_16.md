@@ -68,6 +68,20 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   even +stETH (~3%) rarely beats the ~12% alt-funding cluster, so ETH is seldom selected. The "staked" leg only matters
   when ETH funding is competitive; in a high-alt-funding regime it's a tie-breaker, not a driver. `_FUNDING_TIE_BPS=50`
   drives basket size — tunable. Report: `e2e-testing/scripts/defi/_out/staked_basis_report.html` (gitignored, regen).
+- **2026-06-16** — Added oracle (hindsight) vs causal (EWMA, no-lookahead) strategies + a 5 bps/leg cost model (2 legs
+  spot+perp per |Δweight|; 1-for-1 rotation ≈ 20 bps) + a hysteresis no-trade buffer + per-year metrics + a local data
+  cache (instant param sweeps). **Key result (2025-01-01→2026-05-20, hl=10/buffer=5):** the perfect-foresight oracle is
+  a mirage net of costs — turnover 0.54/day → 31.8% cumulative drag → net **1.1%** (2026 net **−7.8%**). The causal
+  EWMA+buffer trades 0.05/day → net **18.3%** full window, **2026 net 9.8%** (target hit), **2025 net 21.8%** (2025
+  funding was very rich). Lesson: optimise carry-capture PER UNIT TURNOVER, not gross carry.
+- **2026-06-16** — Aster data availability (API-only; klines/funding backfill, OI/book live-only): funding 2023-07-22,
+  **OHLCV 2023-01-01**, mark/index via klines, trades partial, **OI + L2 quotes live-capture-only** (no historical
+  endpoint). Tardis CEX schema (trades/book_snapshot_5/derivative_ticker{mark,index,funding,OI}/liquidations) is the
+  canonical benchmark → non-Tardis venues canonize their native API INTO those data_types; genesis is per-(venue,
+  data_type), not per-venue. **Aster margining = USDC/USDT-only (CROSS); rejects spot-coin AND LST collateral**
+  (`venue_collateral.py`) — so Aster is a stablecoin-margined funding-short only; no same-venue cash-and-carry, no
+  staking leg. ETH staked-basis works on Bybit/OKX/Deribit (stETH/wstETH collateral). Filed to the Aster todo in
+  `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
 - _(append entries as work continues)_
 
 ## Findings filed

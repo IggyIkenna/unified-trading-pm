@@ -102,3 +102,15 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       (`fapi.asterdex.com/fapi/v1/fundingRate`, no auth, 8h); only the backfill VM was never run for Aster. **Repo:
       market-tick-data-service + deployment-service** (`launch-mtds-perp-funding-backfill-vm.sh` with `--perp-protocols`
       incl. aster, start 2024-09-25).
+- [ ] [DATA] P2. Genesis is PER-(venue, data_type), not per-venue — encode it. Aster API availability (verified
+      2026-06-16): funding **2023-07-22**, OHLCV/klines **2023-01-01** (both pre-date the `venue_launch_dates`
+      ASTER=2024-09-25 floor — Astherus pre-rebrand history; pick a trust floor), mark/index via klines/premiumIndex,
+      trades partial (id/time-paginated), **open_interest + L2 book = live-capture-only (no historical endpoint →
+      forward-only)**. Canonize the Aster native API INTO the Tardis CEX benchmark schemas (klines→OHLCV,
+      aggTrades→`trades`, premiumIndex+funding+OI→`derivative_ticker`, depth-WS→`book_snapshot_5`) so downstream can't
+      tell it's not Tardis; record genesis per data_type with `captured`/`expected_unattempted` honest-absence for the
+      forward-only ones. **Repo: market-tick-data-service + unified-api-contracts.**
+- [ ] [DATA] P3. Aster margining model (`venue_collateral.py`): USDC (0% haircut, CROSS) / USDT (1%) only — rejects
+      spot-coin AND LST collateral. So Aster supports a stablecoin-margined funding-short ONLY (no same-venue
+      cash-and-carry, no staking leg). Re-verify against live Aster docs before sizing; the ETH staked-basis needs
+      Bybit/OKX/Deribit (stETH/wstETH cross-margin). **Repo: unified-api-contracts (registry verification).**
