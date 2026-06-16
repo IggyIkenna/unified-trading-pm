@@ -238,6 +238,38 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (decision 338 — cqg classifier IMPROVED + shipped, uac@d52217f) — operator chose "improve the classifier
+  first"; this is the high-confidence tranche (faithful pattern extensions; judgment-heavy genres deferred to the
+  operator, below). **Shipped (QG-green 213s, 32/32 prediction unit tests):**
+  - **10 alt-coin `{COIN}_UP_DOWN_DAILY`** (SOL/XRP/DOGE/BNB/ADA/AVAX/LINK/LTC/SUI/HYPE) — exact mirror of BTC/ETH DAILY
+    (data-grounded: observed alt markets are range_bracket/monthly → DAILY-fallback; intraday/hourly NOT pre-built).
+    Closes the two biggest OTHER buckets (SOL ~4,056 + XRP ~3,574 shards).
+  - **FED dead-key bug FIX** — `(MACRO,"FED_RATE")` never matched (taxonomy emits underlying `FED_FUNDS`) → every FED
+    market fell to OTHER; corrected to `FED_FUNDS` → routes to `FED_RATE_DECISION_PER_FOMC`.
+  - **7 macro groups** — `UNEMPLOYMENT_RATE_PER_MONTH`, `NONFARM_PAYROLLS_PER_MONTH`, `GDP_PRINT_PER_QUARTER`,
+    `PPI_PRINT_PER_MONTH`, `PCE_PRINT_PER_MONTH`, `TREASURY_YIELD_PER_PRINT`, `CRYPTO_FEAR_GREED_INDEX`.
+  - **1 weather group** — `WEATHER_TEMP_DAILY` (London/NYC daily-temp factories, ~2,276 shards; both range_bracket +
+    binary variants).
+  - **`CLASSIFIER_VERSION` 2026-05-23.3 → 2026-06-16.1** → `CLASSIFIER_STABILITY_HASH` flips → existing OTHER rows get
+    flagged for reclassification into the new groups (the lever, since the cqg projection maps in `classifiers.py` are
+    not stability-hash inputs).
+  - Each group seeded in all 4 required places (enum `CanonicalQuestionGroup` + `CANONICAL_GROUP_METADATA` +
+    `honest_coverage.PREDICTION_GROUPS` cluster registry + `classifiers.py` map); parity tests confirm no omission.
+    Files: `canonical/domain/predictions/canonical_groups.py` + `classifiers.py`,
+    `canonical/crosscutting/honest_coverage.py`, `internal/schemas/_prediction_market_taxonomy.py`, +
+    `tests/unit/test_predictions_canonical_groups.py`.
+  - **249-b (cqg-grain catalogue) is now UNBLOCKED at the classifier level for these genres** — the reclassification
+    pass (hash-diff) + 249-b catalogue can proceed for the covered groups; the residual OTHER is the operator-deferred
+    list below.
+  - **DEFERRED to operator (genuine judgment calls, NOT mechanical — surfaced, not auto-decided):** (1) crypto
+    PRICE-RANGE/multistrike split (currently folds into `_UP_DOWN_DAILY` like BTC/ETH — needs a market-subtype
+    distinction + a retrofit-BTC/ETH decision); (2) sports per-fixture grain (per-league vs per-market-type
+    winner/spread/total/NRFI); (3) political-figure granularity (TRUMP_APPROVAL vs STATEMENTS vs EXEC_ORDER; same for
+    Elon/Powell; + the cross-figure "{person} says {kw} N times" pattern); (4) geopolitics by-date (one group vs
+    per-conflict); (5) culture/box-office/streaming families, F1 constructor-vs-GP-winner split, commodity price-LEVEL,
+    intl-politics country/leadership long tail, and whether to add an explicit small `MISC_NOVELTY` residual. Corpus to
+    theme from: `plans/audit/results/prediction_cqg_unknowns_corpus_2026_06_16.md`.
+
 - 2026-06-16 (autonomous run, tail-cleanup tick 5) — **Item 2b / 346 (sports CF-5 oracle relabel = ZERO) ROOT-CAUSED +
   FIXED (code), quickmerge BLOCKED on a live sibling's dirty UTL dep.** Reproduced on the real prod MDPS sports index
   (`market-data-tick-sports-prd`, 584,257 empty_confirmed): **583,185 are data_type=`trades` whose league_id resolves
