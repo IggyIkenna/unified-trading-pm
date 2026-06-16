@@ -387,13 +387,19 @@ ui@f2223d47.
       (`CRITICAL_PROMOTE_TEMPLATES`); `staging-backmerge` is gated on the repo actually having an `origin/staging` ref
       (`_repo_has_staging`, so main-direct repos don't false-error), `main-backmerge` applies to all. Non-critical
       templates stay WARN on missing. Logic unit-tested (severity matrix + staging detection).
-- [ ] [WORKFLOW] P2. Add a fleet presence-audit to PM QG post-gates (or `ldr-to-staging-promote.yml` itself): for every
-      repo in `topologicalOrder` with a `staging` branch, assert `staging-backmerge-to-ldr.yml` exists on `staging` (not
-      just LDR — `on: push:[staging]` only fires from the pushed branch). Page if absent. This is the early-warning the
-      drift detector's local-only WARN failed to surface.
-- [ ] [WORKFLOW] P3. Consider teaching the Tier-C runaway breaker to self-diagnose: when it trips, check whether the
-      repo's `staging` lacks `staging-backmerge-to-ldr.yml` and name that in the page (turns a generic "promote loop"
-      alert into an actionable root cause).
+- [x] ✅ [WORKFLOW] P2. DONE 2026-06-16 (unified-trading-pm PR #362) — fleet presence-audit added to
+      `scripts/cicd/promotion_lag_monitor.py` (the every-30-min scheduled monitor that already iterates
+      `topologicalOrder` + pages Slack + exits 1). For each repo with a `staging` branch (`_branch_exists`), it asserts
+      `staging-backmerge-to-ldr.yml` exists **on the `staging` branch** (`_workflow_present_on_ref(..., ref="staging")`
+      via the contents API — checks the branch the `push:[staging]` trigger actually fires from, not just LDR); a 404
+      adds a paging finding ("MISSING on the staging branch — staging→LDR back-merge will never fire"), a transient
+      non-200/404 returns None (never false-pages). Verified against live API (present→True, 404→False, PM→skipped).
+      This is the proactive early-warning the drift detector's local-only WARN missed.
+- [~] [WORKFLOW] P3. LARGELY SUPERSEDED by P2 (2026-06-16): the P2 presence-audit pages the missing
+      `staging-backmerge-to-ldr.yml` **proactively** (every 30 min, before a runaway strands a repo), which is strictly
+      better than the runaway breaker's reactive post-trip diagnosis. Remaining nice-to-have: also name the missing file
+      in the Tier-C runaway breaker's page itself (`ldr-to-staging-promote.yml`) for the case where it trips for a
+      different reason — low priority now that P2 surfaces the root cause ahead of time.
 
 **Decision (2026-06-15, operator-confirmed) — do NOT add a `schedule`+`workflow_dispatch` drift-tick to
 `staging-backmerge-to-ldr.yml`.** It was tried (`49029aa44`) and reverted (`790e7fb51`) the same day. The reverted
