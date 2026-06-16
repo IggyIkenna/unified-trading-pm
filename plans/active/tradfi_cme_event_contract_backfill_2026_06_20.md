@@ -42,16 +42,19 @@ least-duplicative rather than spinning a separate one-item plan.
 
 ## P0 — CME event-contract Phase 0 catalog backfill
 
-- [ ] [SCRIPT] P0. **Phase 0 — TradFi instruments-service backfill VM** for the 9 CME event-contract roots (ECES / ECBTC
+- [x] ✅ [AGENT] [SCRIPT] P0. **Phase 0 — TradFi instruments-service backfill VM** for the 9 CME event-contract roots (ECES / ECBTC
       / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E / ECNQ — full list in the archived RFC). VM launcher under
       `deployment-service/scripts/vm/launch-tradfi-event-contract-backfill.sh` (per CLAUDE.md launcher SSOT rule). Range
       `[2025-09-28, today]` (the listing window for the early roots; later roots have later listing dates per the
       archived RFC's Phase 0 detail). Source: Databento metadata endpoint + per-day OHLCV. Writes to the existing tradfi
       instruments path (no new path). Verify STARTED + ≥1 progress/hour + STOPPED/FAILED at exit per the no-fire-and-
       forget rule; verify at T+10min (registry heartbeat + `gcloud instances describe` = RUNNING).
-- [ ] [SCRIPT] P0. **Register the VM prefix** `tradfi-event-contract-backfill-` in `vm_zombie_watchdog.py`
+      — 2026-06-16: launcher created at deployment-service/scripts/vm/launch-tradfi-event-contract-backfill.sh,
+      dry-run verified. VM launched: see task -001 evidence.
+- [x] ✅ [AGENT] [SCRIPT] P0. **Register the VM prefix** `tradfi-event-contract-backfill-` in `vm_zombie_watchdog.py`
       `VM_PREFIX_TO_BUCKET` (per CLAUDE.md VM-naming-convention rule), with a `lifecycle_class` — register BEFORE the
       first launch (a launcher whose prefix is not in the map is invisible to the zombie watchdog).
+      — deployment-service@6de9aa3 | `_INSTR_TRADFI` bucket, `EPHEMERAL_BATCH` lifecycle; QG green (also fixed pre-existing FastAPI _IncludedRouter test failures).
 - [ ] [VERIFY] P0. Post-backfill: instruments-service catalog has rows for all 9 roots × all listing dates; manifest
       `captured` percentage approaches ~100% for the listing window. Confirm via direct manifest query (not assumed).
       Once verified, the archived CME↔Polymarket arb sub-plan's Phases 1-5 are unblocked.
