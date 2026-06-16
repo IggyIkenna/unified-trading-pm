@@ -19,5 +19,53 @@
 note: Seeded 2026-06-16 (slot 4) — defi_onchain_derivable_values Phase 5 (QG STEP
   5.97).
 repos:
+  agent-orchestrator:
+    count: 0
+  alerting-service:
+    count: 1
+  batch-live-reconciliation-service:
+    count: 0
+  client-reporting-api:
+    count: 0
+  deployment-api:
+    count: 0
+  deployment-service:
+    count: 3
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 1
+  execution-service:
+    count: 225
+  features-service:
+    count: 13
+  fund-administration-service:
+    count: 0
+  greeks-service:
+    count: 0
+  ibkr-gateway-infra:
+    count: 0
+  instruments-service:
+    count: 0
+  market-data-processing-service:
+    count: 0
+  market-tick-data-service:
+    count: 215
+  ml-service:
+    count: 0
+  strategy-service:
+    count: 9
+  system-integration-tests:
+    count: 0
+  trading-agent-service:
+    count: 0
   unified-api-contracts:
     count: 138
+  unified-trading-api:
+    count: 0
+  unified-trading-library:
+    count: 0
+  unified-trading-pm:
+    count: 0
+  unified-trading-system-ui:
+    count: 1
