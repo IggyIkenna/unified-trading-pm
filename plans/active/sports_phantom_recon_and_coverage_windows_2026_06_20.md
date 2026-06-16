@@ -42,9 +42,9 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
 
 ## P0 — silent-failure diagnosis
 
-- [ ] [AGENT] P0. **SFI_STANDINGS 100% failed** (42/42 rows phantom 2026-04-29; all have empty `error_reason`). Diagnose
+- [x] ✅ [AGENT] P0. **SFI_STANDINGS 100% failed** (42/42 rows phantom 2026-04-29; all have empty `error_reason`). Diagnose
       whether the adapter or the upstream data is the cause; fix the side that's wrong (read both). Repo:
-      instruments-service.
+      instruments-service. — instruments-service@f3c5a56
 - [ ] [AGENT] P0. **open-meteo silent ≥2 days** (last `written_at` 2026-04-29 13:22 UTC). Diagnose the forward-poll
       path. Repo: instruments-service.
 
