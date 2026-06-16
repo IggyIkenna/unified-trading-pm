@@ -74,9 +74,14 @@ a slightly-stale snapshot after ~10:13** dropped those recent commits from LDR w
 then their drain PRs cleared. **Residual risk**: repos that lost LDR commits which were NOT yet drained to staging are
 silently gone (recoverable only from `origin/wip-preserve/*` or reflog) — not detectable by the staging>LDR guard.
 
-- [ ] [SCRIPT] P1. Add a guard to the clean-start force-sync (`sync-all-to-main.sh` / the force-sync procedure):
-      **before force-rewinding LDR, assert the target snapshot is an ancestor-or-equal of every branch that drained FROM
-      it (staging)** — abort + alert if the rewind would drop commits that already reached staging. Composes with
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-16 (unified-trading-pm PR #361) — added a **LDR-rewind freshness guard** to
+      `admin-force-sync-all-to-main.sh`: before each per-repo force-push (any target), it fetches
+      `origin/live-defi-rollout` and asserts the local HEAD it is about to push **includes all of current LDR**
+      (`git merge-base --is-ancestor origin/live-defi-rollout HEAD`). If the local snapshot is BEHIND LDR the push is
+      blocked (`REWIND-BLOCKED`, repo recorded FAIL) with the dropped-commit count + the refresh recipe — a stale
+      snapshot can no longer silently drop LDR commits that may already be on staging. **Squash-proof** (compares HEAD
+      directly to LDR; no staging ancestry, which squash-merges break). `--allow-rewind` overrides for the rare
+      intentional rewind. Verified: fresh HEAD passes, stale HEAD~N blocks. Composes with
       `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT — back-merge DOWN first".
 - [ ] [SCRIPT] P2. One-off: diff `origin/wip-preserve/*` + reflog vs current LDR per repo to detect any silently-dropped
       commit NOT on staging; recover or confirm none.
