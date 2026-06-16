@@ -488,6 +488,12 @@ is green, or vice-versa).
       `pip install "google-cloud-firestore>=2,<3"` step after Checkout, plus a job-level `GOOGLE_CLOUD_PROJECT` env (the
       overlay needs both auth+SDK+project). Mirrors `ci-failure-watcher.yml`. — unified-trading-pm PR #353 (2026-06-16).
       _Verify on the next live run: the gate log shows "overlay applied (live)" not the ModuleNotFoundError fallback._
+      **COMPLETED 2026-06-16 (PR #367): the SAME fix was missing on the other two Firestore-ci_status readers —
+      `cascade-qg-ordering.yml` (`_fs_overlay`) + `sit-gate.yml` (`resolve_ci_status_map`) invoked the overlay but had
+      NO SDK install → silent stale-cache fallback. Added the auth + SDK install + `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT_ID`
+      env + made both overlays LOUD. All 4 ci_status-reading PM workflows + `ci-status-update` (writer) now install the
+      SDK; the only readers NOT yet Firestore-effective are the remaining Phase-2 migration targets (quickmerge +
+      dashboard), tracked in `ci_status_firestore_side_store_2026_06_10.md`.**
 - [x] ✅ [SCRIPT] P1. Made the overlay failure **LOUD** in all three sites (`_fs_overlay` ×2 in `staging-to-main.yml`
       heredocs + `_overlay_firestore_ci_status` in `tier_c_promotion_gate.py`): split `except Exception: pass` into a
       `ModuleNotFoundError` branch (CI-config bug → `::warning:: SDK unavailable, deciding on STALE cache`) vs a generic
