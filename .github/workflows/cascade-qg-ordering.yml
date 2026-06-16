@@ -45,6 +45,11 @@ jobs:
   cascade:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    # Gap 8 completion (2026-06-16): _fs_overlay needs the project env + the SDK installed below,
+    # else the Firestore ci_status overlay silently falls back to the STALE manifest cache.
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
     outputs:
       total_affected: ${{ steps.run.outputs.total_affected }}
       levels_processed: ${{ steps.run.outputs.levels_processed }}
@@ -56,6 +61,19 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
+
+      # Gap 8 completion: auth + Firestore SDK so the ci_status overlay reads LIVE state (best-effort
+      # — falls back to the manifest exactly as before if unavailable; no regression).
+      - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
+        id: gcp_auth_cascade
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_cascade.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
 
       # Without this the invalidation commit dies with `fatal: empty ident name` and the
       # push silently no-ops ("Everything up-to-date") — observed live run 27271453887
@@ -89,8 +107,12 @@ jobs:
                           r_obj = repos_obj.get(r)
                           if isinstance(r_obj, dict):
                               r_obj["ci_status"] = s
-              except Exception:
-                  pass
+              except ModuleNotFoundError as exc:
+                  print(f"::warning::cascade: Firestore SDK unavailable ({exc}) — using STALE manifest "
+                        "ci_status cache. Install google-cloud-firestore.")
+              except Exception as exc:  # Firestore degraded → warn + manifest fallback.
+                  print(f"::warning::cascade: Firestore ci_status read failed ({type(exc).__name__}: {exc}) "
+                        "— falling back to manifest cache.")
 
           # ── Load inputs ──────────────────────────────────────────────────────
           # repository_dispatch payload takes priority, fall back to workflow_dispatch inputs
