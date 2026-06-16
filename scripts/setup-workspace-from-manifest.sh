@@ -280,9 +280,15 @@ _symlink() {
     ok "  $label"
 }
 
-# Workspace-root level symlinks (for Claude Code traversal + IDE at workspace root)
+# Workspace-root level symlinks (for Claude Code traversal + IDE at workspace root).
+# TOP-LEVEL CLAUDE.md is the one Claude Code auto-loads as memory at startup (cwd + parents);
+# orchestrator-spawned agents run with CWD = the slot root, so this is their startup-load point.
+# The .claude/CLAUDE.md link is kept for IDE/Cursor compat but is NOT read by Claude Code as memory.
+# (link-claude-skills.sh below re-asserts the top-level link on every QG run; this keeps it explicit
+#  in the canonical setup path and independent of helper ordering.)
 if [ -f "$PM_DEST/cursor-configs/CLAUDE.md" ]; then
-    _symlink "$WORKSPACE_ROOT/.claude/CLAUDE.md" "$PM_DEST/cursor-configs/CLAUDE.md" "workspace .claude/CLAUDE.md → PM/cursor-configs/CLAUDE.md"
+    _symlink "$WORKSPACE_ROOT/CLAUDE.md"         "$PM_DEST/cursor-configs/CLAUDE.md" "workspace CLAUDE.md → PM/cursor-configs/CLAUDE.md (startup-loaded)"
+    _symlink "$WORKSPACE_ROOT/.claude/CLAUDE.md" "$PM_DEST/cursor-configs/CLAUDE.md" "workspace .claude/CLAUDE.md → PM/cursor-configs/CLAUDE.md (IDE/Cursor compat)"
 fi
 
 # Claude Code skills: symlink each PM cursor-configs/skills/<name>/ into .claude/skills/<name>/ so
