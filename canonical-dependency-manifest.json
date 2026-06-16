@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-06-16T20:35:40.346948+00:00",
+  "generatedAt": "2026-06-16T21:45:34.807571+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
