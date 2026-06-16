@@ -243,6 +243,27 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       (venue actions / fill-margin-settlement) + `data_type_capability` (L1/L2/trades/ohlcv granularity → matchability).
       **Post-G4** (consumes the post-migration honest granularity). File under the **execution epic**. slot-2.
 
+- [x] ✅ [UTL] P1. **E5 — catalogue-reader repoint to the canonical `{env}/catalog.parquet` lifecycle roll-up** —
+      **unified-trading-library@94775d05** (2026-06-16 /autonomous). `instruments_catalog_reader.py` now reads
+      `gs://instruments-store-{ag}-{env}-{pid}/{env}/catalog.parquet` (the `build_instrument_catalogue.py`
+      `InstrumentCatalogEntry` lifecycle roll-up, env via `get_config("DEPLOYMENT_ENV","prod")`) instead of the
+      decommissioned `reference_data/instruments/{ag}/all.parquet` (verified ABSENT in prod GCS for cefi+defi; the new
+      object EXISTS — cefi 220,222 rows / defi 6,853 rows, both carrying `available_from`/`available_to`). Alias-aware
+      column resolution (`instrument_id`↔`instrument_key`, `available_from`↔`available_from_datetime`) keeps every
+      legacy-schema fixture green while serving the new shape; 48 reader unit tests pass, UTL QG green 115s.
+      **`CatalogueBuilder` NOT deleted** — it remains the live per-AG current-catalogue builder wired into the IS
+      orchestrator (`engine/orchestrator/catalogue.py:229`); a DIFFERENT artifact from the lifecycle roll-up (documented
+      in the reader docstring). The E5 "gated on sports+pred roll-ups" note is moot for this reader (its only consumers
+      are the cefi/defi `legacy_reason_classifier`; both have prod `catalog.parquet`).
+- [ ] [UTL] P2. **DEFERRED (follow-up to E5) — catalogue-reader symbol-format normalisation for CeFi**: the new
+      `catalog.parquet` keys CeFi rows on the ccxt-unified `instrument_id` (e.g. `BTC/USDT:USDT`) while the legacy-reason
+      classifier passes the manifest row's `instrument_id` (often the bare exchange symbol, e.g. `BTCUSDT`) — these do
+      not string-match, so the CeFi cross-ref currently returns None (best-effort → safe `SOURCE_RETURNED_ZERO`
+      fallback, no incorrect classification). DeFi matches cleanly (both sides use the canonical `VENUE:TYPE:SYMBOL`).
+      Fix = a venue-aware symbol normaliser (resolve the manifest symbol → the catalogue's ccxt id, or add a `raw_symbol`
+      column to the CeFi roll-up). Provenance: E5 repoint inspection of real prod `catalog.parquet`, 2026-06-16. Repo:
+      unified-trading-library (+ possibly instruments-service catalogue writer). Owner: this autonomous run surfaced it.
+
 ## Success criteria
 
 1. V0 registry is the single could-exist SSOT; 0 bespoke cross-products remain (grep-verified).
@@ -264,8 +285,11 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   `compute_config_content_hash`), refactored MVP_SCOPE onto it (hash unchanged), added per-config version+hash+descriptor
   to `league_data.py` (hashes `LEAGUE_REGISTRY`) and `prediction_mapping.py` (hashes `PredictionMarketCategory` +
   `_DEFAULT_RULES`), all root-exported, with `test_config_versioning.py` (12 tests; 3 hashes independently distinct).
-  Full UAC QG green 217s. UAC is back CLEAN (T0 dirty window closed). NEXT: item 3 (UTL catalogue-reader repoint to
-  `{env}/catalog.parquet`), then deployment-api items 4-5 + IS item 6.
+  Full UAC QG green 217s. UAC is back CLEAN (T0 dirty window closed). **Item 3 (UTL E5 catalogue-reader repoint)
+  SHIPPED — utl@94775d05** (see the E5 ✅ todo above): repointed to the canonical `{env}/catalog.parquet` lifecycle
+  roll-up (old `all.parquet` confirmed gone from prod GCS), alias-aware so legacy fixtures stay green; 48 reader tests +
+  full UTL QG green 115s; CatalogueBuilder retained (live IS-orchestrator builder); surfaced a P2 CeFi symbol-format
+  follow-up. Both T0 repos (UAC+UTL) now CLEAN. NEXT: deployment-api items 4-5 + IS item 6 (no T0 dirty-dep concern).
 
 - 2026-06-16 (decision 338 — cqg classifier COMPLETE; pass 2 shipped, uac@e0035fd + uac@8e3108d) — operator gave full
   granular direction; encoded all of it. **29 groups + OTHER → ~103 groups + OTHER + MISC_NOVELTY.** Three ships, all
