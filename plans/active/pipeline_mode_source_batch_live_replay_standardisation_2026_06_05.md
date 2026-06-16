@@ -496,6 +496,8 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - [x] ✅ I3 features QG green + reader pm-aware tests — features-service@795e4f4
 - [x] ✅ I6a UTL QG green (cadence column) — unified-trading-library@dfe3385f
 - [x] ✅ M3 UAC QG green (could_exist) — unified-api-contracts@d56b9cc2
+- [x] ✅ M2/M3-REFINEMENT — `modes_for(source, data_type)` + per-data_type `could_exist` (fixes the M3 coarse
+      over-approximation; resolves tick-1 finding (b)) — unified-api-contracts@a56a7fc2
 - [x] ✅ M4 UAC + batch-live-reconciliation-service QG green (select_for_mode) — unified-api-contracts@7441a692 +
       batch-live-reconciliation-service@0e17d7ee
 - [x] ✅ M5b deployment-api cadence dim QG green — deployment-api@66e8562d
@@ -619,3 +621,12 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   promotes LDR→staging ≤30min, v2-gated). Both files present (`_writer_io.py` +253/-1, new serialized-DF test). The
   serializer now carries every v6–v9 column on the runtime/per-VM/legacy write paths → new captures no longer re-drop
   `source`/`pipeline_mode`/`transport` post-v9. The P2 dedup follow-on (above) remains the only open residue.
+- **2026-06-16 (tick 7) — M2/M3-REFINEMENT SHIPPED (resolves tick-1 finding (b)).** `modes_for(source, data_type)`
+  landed in **unified-api-contracts@a56a7fc2** (`canonical/crosscutting/source_priority.py`), DERIVED from the EXISTING
+  per-operation `SourceCapability.operations` (registry/capability*declarations) — NOT a parallel registry: a
+  `ws*<data_type>`op ⇒`LIVE`, a REST op ⇒ `BATCH`, and `REPLAY`is the live-gap-fill tier (M4) so it drops WITH live.`could_exist`now composes`modes_for(source,
+  data_type)`instead of the coarse`modes_for_source`, fixing the M3 over-approximation. **Surgically scoped (the key design decision):** the refinement ONLY narrows the LIVE/REPLAY axis for sources that are BOTH live-capable AND use the ws/REST op convention (the CeFi venues + hyperliquid — exactly where the bug lived); every other source (tardis/yahoo/sports = no LIVE; databento/massive vendor feeds + chain RPCs + internal services = LIVE-but-no-ws-convention) returns the coarse `modes_for_source`set UNCHANGED → **zero regression** (verified:`tardis`ohlcv_1m +`databento`trades-replay stay coarse; no ohlcv-style false-zeroing). Contract verified vs the live registry + locked by tests:`modes_for("hyperliquid","trades")⊇{LIVE}`, `modes_for("hyperliquid",
+  "funding_rates")=={BATCH}`(no ws funding op),`could_exist("cefi","funding_rates",Mode.LIVE)==False`(no CeFi venue declares a`ws_funding\*`op),`could_exist("cefi","trades",Mode.LIVE)==True`. Tests: `test_source_mode_capability.py`(+8`modes_for`cases incl. never-widens + batch-only-unchanged + non-ws-unchanged) +`test_shard_source_availability.py`(+3 per-data_type`could_exist`cases).`modes_for_source`KEPT for the coarse callers (the capability matrix, the replay-capable set). Cycle note:`modes_for`lazy-imports the static`CAPABILITY_DECLARATIONS`(registry↔crosscutting would cycle at module level). **No downstream consumer of`could_exist`yet** (it is brand-new M3) → no per-data_type-assumption breakage. Codex aligned (target→LANDED):`codex/02-data/pipeline-mode-partition.md`+`pipeline-mode-and-batch-live-reconciliation.md`. UAC QG green (`--no-fix`); `Quickmerge:
+  agent`trailer; landed on LDR, ancestor-verified; Tier-C drain promotes LDR→staging ≤30min, v2-gated. Shipped via a throwaway worktree off`origin/live-defi-rollout`
+  because the slot PM clone carried a live coordinator session's uncommitted plan WIP (3 files) — never stomped/bundled
+  it.

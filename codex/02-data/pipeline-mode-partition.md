@@ -34,7 +34,7 @@ last_reviewed: 2026-06-11
 | Axis-10 — Reconciler pipeline_mode= prefix fix              | ✅ shipped    | `instruments-service@8accb30` (2026-05-19) — see pre/post counts below          |
 | 3.6 — Post-migration phantom gate (re-audit w/ Axis-10 fix) | ✅ complete   | prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 / cefi ✅ 0             |
 | 6 — Residual phantom cleanup                                | 🚫 not needed | Axis-10 false positives; parquets exist at new paths. DO NOT run `--apply`.     |
-| 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred   | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
+| 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred    | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
 | 9 — Final workspace-wide QG sweep                           | ⏳ pending    | Sequential after Phase 3.6 operator sign-off.                                   |
 
 ### Phase 3 migration: pre/post phantom counts (2026-05-19)
@@ -163,9 +163,13 @@ the same tranche. The transitional alias is REMOVED once no object references it
   modes it CAN run `{BATCH, LIVE, REPLAY}`. **Replay (crisp definition)** = the source can retrieve a RECENT window ON
   DEMAND — "today's data from start-of-day" — to fill an intraday / startup / live-downtime gap (format-agnostic). Chain
   RPCs are always replay-capable (deterministic); an end-of-day-archive vendor is NOT (`tardis` = batch-only; CeFi
-  live/replay sources are the EXCHANGES themselves). The target lookup is per-`(source, data_type)` —
-  `modes_for(source, data_type)` derived from `SourceCapability.operations` — superseding the coarse per-source
-  placeholder (e.g. hyperliquid is live for `trades`/`l2_book` but batch-only for `funding_rates`).
+  live/replay sources are the EXCHANGES themselves). The data-type-aware lookup is per-`(source, data_type)` —
+  **`modes_for(source, data_type)` (LANDED — M2-REFINEMENT, unified-api-contracts@a56a7fc2)** derived from the
+  per-operation `SourceCapability.operations` split (a `ws_<data_type>` op ⇒ `LIVE`, REST op ⇒ `BATCH`; `REPLAY` is the
+  live-gap-fill tier, so it drops WITH live) — refining the coarse per-source `modes_for_source` ONLY for live sources
+  that use the ws/REST convention (the CeFi venues + hyperliquid); every other source returns the coarse set unchanged.
+  E.g. hyperliquid is `{BATCH, LIVE, REPLAY}` for `trades`/`l2_book` but `{BATCH}` for `funding_rates` (REST-only — no
+  ws op). Keep `modes_for_source` for source-level questions (the capability matrix, the replay-capable set).
 - **M3 — per-shard available-sources registry**: per shard atom, which sources serve it. **M2 × M3 →
   `could_exist(shard, mode)`** — the guardrail that the could-exist denominator, the data-status views, and the startup
   gate all read; never look for (or count against coverage) data that cannot exist for that shard in that mode. Extends

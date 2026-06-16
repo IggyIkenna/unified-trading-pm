@@ -149,9 +149,11 @@ Agreement rules:
 > narrative lives in [`pipeline-mode-partition.md`](pipeline-mode-partition.md) § "Ratified TARGET design — live/replay
 > (M1–M8 settled contract)" — plans reference codex, not vice versa. The reconciliation-service-facing slice:
 
-- **M2×M3 guardrail**: whether a `(source, data_type)` can run live/replay is a FACT in UAC `SOURCE_MODE_CAPABILITY`
-  (target: per-`(source, data_type)` `modes_for()`); `could_exist(shard, mode)` bounds every reconciliation + coverage
-  denominator — never flag a shard for a mode no source can serve.
+- **M2×M3 guardrail**: whether a `(source, data_type)` can run live/replay is a FACT in UAC — per-`(source, data_type)`
+  `modes_for()` (LANDED — M2-REFINEMENT, unified-api-contracts@a56a7fc2, derived from `SourceCapability.operations`;
+  refines the coarse `SOURCE_MODE_CAPABILITY`/`modes_for_source`); `could_exist(shard, mode)` now composes
+  `modes_for(source, data_type)` and bounds every reconciliation + coverage denominator — never flag a shard for a mode
+  no source can serve for that data_type.
 - **M4 `select_for_mode`** (this service is the HOME): the live read-path resolver picks which mode's VALUE a consumer
   reads — live consumer `live > replay > batch`, batch consumer `batch > replay > live`, replay always the middle tier.
   The data-status union stays mode-agnostic (shipped consumer-side, `deployment-api@4dd2575`).
