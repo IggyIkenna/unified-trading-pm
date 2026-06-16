@@ -172,12 +172,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       `features-service/tests/delta_one/unit/test_cross_source_bar_edge_equivalence.py`. Known-latent open-edge sites
       (Massive `_normalise_ohlcv`, MDPS `liquidity_adapter._convert_timestamps`) are baselined + owned by named plans +
       do NOT write consumed candles to prod. Owner = the AG's source owner (standing check now enforces it fleet-wide).
-- [ ] [SCRIPT] P3. **NICE-TO-HAVE — `STEP 5.92` label collision in `base-service.sh`** (finding, V4 verify 2026-06-16):
-      the bar-edge open-ingestion checker (~line 3153) AND the legacy-`category=`-kwarg ban (~line 2214) are BOTH
-      labelled `STEP 5.92`. Purely cosmetic (both gates execute; only the human-readable log prefix collides) — renumber
-      one (e.g. the category-kwarg ban → an unused 5.9x) for clean triage. Touches the PM template → needs
-      `rollout-workflow-templates.sh`-style fleet rollout of `base-service.sh`, so capture-not-fix this session. Repo:
-      unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). Provenance: V4 candle-edge verify.
+- [x] ✅ [SCRIPT] P3. **`STEP 5.92` label collision in `base-service.sh` FIXED** — pm@3be7eb595. The legacy-`category=`-
+      kwarg ban (4 log lines, ~line 2214) was renumbered `STEP 5.92`→`STEP 5.98` (a globally-free number, verified
+      absent across base-service.sh + base-library.sh); the bar-edge open-ingestion detector keeps the canonical
+      `STEP 5.92` (matches the codex `bar-boundary-candle-edge-convention.md` + base-library.sh). Cosmetic (log prefix
+      only, no gate logic; `bash -n` clean). `base-service.sh` is PM-sourced + fleet-live (sourced at runtime, NOT a
+      per-repo rollout template) → the fix is live fleet-wide on merge; no `rollout-workflow-templates.sh` needed (the
+      original capture-not-fix note assumed the template-rollout model — base-`*`.sh is the live-source model instead).
 
 ## V5 — Projected-manifest preview + data-status render (CF-20, ⑭) — slot-3 harness, both render
 
@@ -236,6 +237,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 6. CF-15…CF-21 encoded in the checklist + owning per-service instruction files (re-runnable forever).
 
 ## Progress Log
+
+- 2026-06-16 (autonomous run, tail-cleanup tick 1) — **Item 5 (V4 fleet-gate blast-radius) VERIFIED GREEN + Item 4 (STEP
+  5.92 label collision) FIXED.** **Item 5 (rule-11 blast-radius):** ran the STEP 5.92 candle-edge checker
+  (`check_bar_edge_open_ingestion.py --scope <repo>`) on 3 CONSUMER services (market-data-processing-service,
+  features-service, market-tick-data-service) + 2 LIBRARIES (unified-trading-library, unified-api-contracts) — **exit 0
+  on ALL five**; the only non-clean lines are 2 PRE-BASELINED latent WARNs (MDPS `_convert_timestamps`, MTDS
+  `_normalise_ohlcv`, both already in `bar_edge_open_ingestion_baseline.yaml` + owned by
+  `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1) → WARN not FAIL. The V4 fleet gate does NOT red any
+  consumer/library CI — no regression introduced by the prior run; rule 11 closed. **Item 4:** pm@3be7eb595 — renumbered
+  the `category=` ban `STEP 5.92`→`STEP 5.98` (bar-edge keeps the canonical 5.92); cosmetic, `bash -n` clean, PM
+  QG-green (53s full + content-sentinel hit), base-`*`.sh is live-sourced so fleet-live on merge (no rollout). Remaining
+  tail: Item 1 (249-a prediction loader), Item 2 (sports 384/346), Item 3 (222-followup 12-venue re-phase).
 
 - 2026-06-16 (autonomous run, END-OF-RUN report) — **harness open CODE items GREEN; ⑬–⑲ pre-apply harness is
   code-complete — only operator-gated items remain (by the plan's own design).** Shipped this run (all QG-green,
