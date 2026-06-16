@@ -154,6 +154,17 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - [ ] [DATA] P2. Backfill Aave (Ethereum) supply/borrow rates + maxLTV/e-mode into GCS — unblocks the recursive loop
       (strategy 5, both USD-cash-floor and ETH-borrow) and the real cash-floor rate. Only Solana (Kamino/Solend) exists
       today. **Repo: market-tick-data-service + deployment-service.**
+- **2026-06-16** — 🟢 **VM RUNNING — Aave + lending-indices backfill** `mtds-lending-indices-20260616-225256`
+  (e2-standard-4, asia-northeast1-c). Verdict from investigation: Aave V3 is a **config-run, not new code** — `aave_v3`
+  is first in the MTDS handler's `_DEFAULT_PROTOCOLS` (subgraph + RPC fallback + parser + maxLTV/e-mode all wired).
+  Launched `launch-mtds-lending-indices-backfill-vm.sh 2022-01-01 2026-06-16` (all protocols: aave_v3/spark/compound_v3/
+  kamino/solend/marginfi). Writes to the **canonical bucket `lending-indices-central-element-323112`** (NEW v9 path, not
+  the legacy `market-data-tick-defi/lending_indices/`). Auto-shuts-down on completion (~3–6h); monitor armed. Unblocks:
+  recursive loops (USD + ETH), the real Aave-USDT cash-floor rate, ETH-borrow-rate for the ETH-share-class recursive
+  strategy.
+- **2026-06-16** — OKX historical funding: public `funding-rate-history` API only serves **~3 months** (paginating to
+  2023 = empty), so it's NOT a deep-history backfill (unlike Aster). The real fix is the **Tardis OKX backfill
+  universe** (only 9 coins captured) — kept as the OKX data todo, not an API path.
 - _(append entries as work continues)_
 
 ## Findings filed
