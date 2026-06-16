@@ -2363,6 +2363,42 @@ else
     log_success "STEP 5.96: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.97 — DeFi contract-address citation ratchet (unified-api-contracts registry/)
+#
+# Enforces that any NEW Ethereum contract address (0x + 40 hex chars) added to
+# unified_api_contracts/registry/ carries a `# DERIVED <YYYY-MM-DD> from <chain>
+# <source>` citation comment on the same line — so the address is traceable to
+# an on-chain RPC or block-explorer query.  Per-repo SHRINKING count ratchet:
+# defi_address_citation_baseline.yaml grandfathers the existing uncited set
+# (seeded 2026-06-16: 138 uncited addresses in UAC registry/); a NEW uncited
+# address fails CI.
+#
+# Per-line exemption: `# QG-allow: defi-citation — <reason>` for pool/pair
+# addresses auto-deployed by a factory (not derivable from a single tx).
+#
+# SSOT: defi_onchain_derivable_values_and_date_drift_2026_06_20.md Phase 5.
+_DEFI_CITE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_defi_address_citations.py"
+if [ -f "$_DEFI_CITE_CHECKER" ]; then
+    _DC_REPO=$(basename "$PROJECT_ROOT")
+    _DC_WS="$REPO_ROOT"
+    if $PYTHON_CMD "$_DEFI_CITE_CHECKER" \
+            --workspace-root "$_DC_WS" --scope "$_DC_REPO" >/tmp/defi_address_citations_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/defi_address_citations_qg.log 2>/dev/null; then
+            log_warn "STEP 5.97: $(grep -c '^\[WARN\]' /tmp/defi_address_citations_qg.log) baselined uncited DeFi address(es); 0 new (ratchet down when citations are back-filled)"
+        else
+            log_success "STEP 5.97: No new uncited DeFi contract addresses in unified_api_contracts/registry/ (citation ratchet)"
+        fi
+    else
+        log_fail "STEP 5.97: NEW uncited Ethereum contract address in unified_api_contracts/registry/ (not in defi_address_citation_baseline.yaml). Add \`# DERIVED <YYYY-MM-DD> from <chain> <source>\` on the same line, or \`# QG-allow: defi-citation — <reason>\` for auto-deployed pool addresses:"
+        cat /tmp/defi_address_citations_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/defi_address_citation_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_defi_address_citations.py --workspace-root $_DC_WS --scope $_DC_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.97: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # STEP 5.70 — Explicit pipeline_mode= kwarg at every ManifestWriter.record_* call
 #
 # (5.6x is exhausted — 5.65/5.67/5.69 in use, 5.66/5.68 reserved above — so this

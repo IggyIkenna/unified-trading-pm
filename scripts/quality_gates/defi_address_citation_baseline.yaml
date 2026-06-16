@@ -1,0 +1,23 @@
+# Baseline for QG STEP 5.97 — DeFi contract-address citation ratchet.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of
+# Ethereum contract addresses (0x + 40 hex) in `unified_api_contracts/
+# registry/` WITHOUT a `# DERIVED <date> from <source>` citation comment
+# (and without a `# QG-allow: defi-citation` exemption) that CI tolerates.
+# A repo whose live count EXCEEDS its baseline fails CI — a NEW uncited
+# address landed; add `# DERIVED <YYYY-MM-DD> from <chain> <source>` on
+# the same line, or add `# QG-allow: defi-citation — <reason>` if it is
+# a deliberate, audited address that doesn't fit the derivation model
+# (e.g. a Uniswap pool address auto-deployed by the factory).
+#
+# LOWER a count (re-run `--update-baseline`) after back-filling citations.
+# NEVER raise a count.
+#
+# Repos not listed default to count=0 (zero tolerance).
+#
+# SSOT: defi_onchain_derivable_values_and_date_drift_2026_06_20.md Phase 5.
+note: Seeded 2026-06-16 (slot 4) — defi_onchain_derivable_values Phase 5 (QG STEP
+  5.97).
+repos:
+  unified-api-contracts:
+    count: 138
