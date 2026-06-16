@@ -1792,9 +1792,9 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
+    "locked": true,
+    "locked_since": "2026-06-16T06:59:17.676037Z",
+    "locked_reason": "SIT running",
     "lock_version": null,
     "pending_repos": [
       "execution-service",
@@ -1826,9 +1826,9 @@
       "version": "0.10.0"
     },
     "system-integration-tests": {
-      "version": "0.6.0",
+      "branch": "staging",
       "sha": "d02ac973b5db2dd2377fd0a3d19f67fee698731b",
-      "branch": "staging"
+      "version": "0.6.0"
     }
   },
   "main_commits": {
