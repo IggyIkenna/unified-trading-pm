@@ -25,6 +25,19 @@
 
 set -euo pipefail
 
+# Guard: NEVER install the slot crons into ROOT's crontab. They run git on operator-owned repos and
+# create a /tmp lock owned by the running user; a root crontab (e.g. a bootstrap that forgot to drop
+# to the operator) then collides with the operator's cron — the root-owned lock blocks the operator's
+# run ("Permission denied") AND git-as-root fails "dubious ownership", so the FF-pull silently stops
+# fast-forwarding (incident 2026-06-16: human-planning VM ran 4 days / 688 commits behind). Bootstrap
+# MUST invoke this via `sudo -u <operator>`. Override only if you genuinely intend a root crontab.
+if [ "${EUID:-$(id -u)}" -eq 0 ] && [ "${ALLOW_ROOT_CRON:-0}" != "1" ]; then
+    echo "Refusing to install slot crons as root (EUID=0) — they belong in the OPERATOR's per-user crontab." >&2
+    echo "Re-run as the operator:  sudo -u <operator> WORKSPACE_ROOT=<workspace-root> bash $0" >&2
+    echo "(set ALLOW_ROOT_CRON=1 to override — almost never correct.)" >&2
+    exit 1
+fi
+
 INTERVAL=5  # CLAUDE.md § "Local slot host = VM slot host" mandates 5-min ff-pull cadence (was 15 — drift)
 ACTION="install"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
