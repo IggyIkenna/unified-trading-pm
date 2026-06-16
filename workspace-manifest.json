@@ -78,7 +78,7 @@
     "instruments-service": "0.5.1",
     "market-tick-data-service": "0.10.0",
     "system-integration-tests": "0.6.0",
-    "unified-api-contracts": "0.10.0",
+    "unified-api-contracts": "0.11.0",
     "unified-trading-library": "0.10.0",
     "unified-trading-pm": "1.2.122",
     "market-data-processing-service": "0.6.0",
@@ -606,7 +606,7 @@
       "status": "active",
       "completion_path": "tradfi",
       "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1786,8 +1786,7 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
-    "system-integration-tests": "0.6.0",
-    "unified-api-contracts": "0.11.0"
+    "system-integration-tests": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1811,16 +1810,21 @@
       "branch": "staging",
       "sha": "d02ac973b5db2dd2377fd0a3d19f67fee698731b",
       "version": "0.6.0"
-    },
-    "unified-api-contracts": {
-      "version": "0.11.0",
-      "sha": "18fd51ab3e589a73029ec77cffb47952e356da3d",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-16T08:23:14.525015Z",
+        "commits": {
+          "unified-api-contracts": {
+            "version": "0.11.0",
+            "sha": "18fd51ab3e589a73029ec77cffb47952e356da3d",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-16T07:42:34.601863Z",
         "commits": {
@@ -1877,26 +1881,6 @@
           "market-tick-data-service": {
             "version": "0.10.0",
             "sha": "1a39bb79deb2c1ca69ced3d68fd87f74c0b9197d",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-15T20:16:36.659580Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.9.0",
-            "sha": "3a7221880aa38e95fb1761a5b21dba3985c74bd0",
-            "branch": "staging"
-          },
-          "features-service": {
-            "version": "0.3.0",
-            "sha": "3fed163d84469cb18bcb81b97441731a9cd0d2b0",
-            "branch": "staging"
-          },
-          "market-tick-data-service": {
-            "version": "0.9.0",
-            "sha": "10fb9bc49a0ddc0dd3fa3c6afcffd1506939af92",
             "branch": "staging"
           }
         }
