@@ -81,6 +81,11 @@ SKIP_CHECKOUT=true
 MAX_WORKERS=${MAX_WORKERS:-8}
 TARGET_BRANCH="main"
 SWITCH_ONLY=false
+# Gap 2 (ci_pipeline_self_healing §Gap 2): the LDR-rewind freshness guard refuses to force-push a
+# local snapshot that is BEHIND origin/live-defi-rollout (would drop LDR commits — possibly already
+# drained to staging — the exact 2026-06-11 silent-data-loss incident). --allow-rewind overrides
+# (rare intentional rewind; loud warning, requires explicit intent).
+ALLOW_REWIND=false
 _SO_CONFLICT=""
 
 # ---------------------------------------------------------------------------
@@ -104,6 +109,7 @@ while [[ $# -gt 0 ]]; do
     --feat-branch)     TARGET_BRANCH="__feat__"; shift ;;
     --stag-branch)     TARGET_BRANCH="staging"; shift ;;
     --force-version-override) FORCE_VERSION_OVERRIDE=true; shift ;;
+    --allow-rewind)    ALLOW_REWIND=true; shift ;;
     *) echo "Unknown flag: $1"; shift ;;
   esac
 done
@@ -553,6 +559,30 @@ sync_repo() {
       # Second pass: catch any auto-generated files the formatter may have produced
       if [[ -n "$(cd "$dir" && git status --porcelain 2>/dev/null)" ]]; then
         (cd "$dir" && git add -A && git commit --no-verify -m "$COMMIT_MSG (fixup)" 2>/dev/null) || true
+      fi
+    fi
+  fi
+
+  # ── Gap 2: LDR-rewind freshness guard ───────────────────────────────────────
+  # Before overwriting any integration branch, assert the local HEAD we are about to force-push
+  # includes ALL of current origin/live-defi-rollout. A local snapshot BEHIND LDR would drop the
+  # missing LDR commits — and since the LDR→staging drain may already have promoted them, those
+  # commits can be silently lost from LDR while surviving only on staging (the 2026-06-11 incident).
+  # Squash-proof: compares HEAD directly to origin/live-defi-rollout (no staging ancestry needed).
+  # Skipped for --allow-rewind (explicit intent) and when the repo has no LDR branch.
+  if [[ "$ALLOW_REWIND" != "true" ]]; then
+    (cd "$dir" && git fetch -q origin live-defi-rollout 2>/dev/null) || true
+    if (cd "$dir" && git rev-parse --verify -q origin/live-defi-rollout >/dev/null 2>&1); then
+      if ! (cd "$dir" && git merge-base --is-ancestor origin/live-defi-rollout HEAD 2>/dev/null); then
+        local _dropped
+        _dropped=$(cd "$dir" && git rev-list --count "HEAD..origin/live-defi-rollout" 2>/dev/null || echo "?")
+        echo "REWIND-BLOCKED"
+        echo "FAIL:$repo:ldr-rewind-guard" > "$rf"
+        echo "    ⛔ Gap 2 guard: local HEAD is BEHIND origin/live-defi-rollout by ${_dropped} commit(s)." >&2
+        echo "       Force-pushing it to '$TARGET_BRANCH' would drop those LDR commits (some may already" >&2
+        echo "       be on staging → silent data loss). Refresh: 'git -C $dir merge --ff-only origin/live-defi-rollout'" >&2
+        echo "       then re-run. Intentional rewind? pass --allow-rewind." >&2
+        return
       fi
     fi
   fi
