@@ -1795,17 +1795,12 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": null,
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
-    "sit_retry_count": 3,
+    "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": [
-      "e2e-testing",
-      "execution-service",
-      "strategy-service",
-      "system-integration-tests"
-    ]
+    "breaking_pending": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
