@@ -85,21 +85,22 @@ that workstream.
       not correctness — these addresses are already in production, so grandfathering is not a funds-safety regression;
       it just blocks NEW uncited addresses while the backfill (5.3) ratchets the existing set to 0. — unified-trading-pm@9f7409af7.
 - [x] ✅ [SCRIPT] P1. **Phase 5.3 — back-fill `# DERIVED` citations on all 468 grandfathered service-repo addresses, ratchet baseline → 0.**
-      **467/468 cited + shipped; baseline ratcheted → 0 for 7 repos (gate now ENFORCES 0 new uncited).** Shipped:
+      **468/468 cited + shipped; baseline ratcheted → 0 for ALL 8 service repos (gate now ENFORCES 0 new uncited).** Shipped:
       execution-service@f516f51c (225), market-tick-data-service (215), features-service@66f45ff4 (13),
-      strategy-service@1ede0ee0 (9), deployment-service@928a34e (3), alerting-service@4e284b8 (1), e2e-testing (1).
-      Baseline ratchet unified-trading-pm@a4296eabb (counts → 0). Citations derived from each file's per-block dict key /
-      chain_id / explicit chain comment + protocol-canonical source (etherscan/explorer for canonical ERC-20s,
-      docs.chain.link for Chainlink feeds, protocol docs for protocol contracts); `# QG-allow: defi-citation` used only
-      for factory-deployed Uniswap pool fixtures + demo wallets. **1 DEFERRED: unified-trading-system-ui (1, `protocol_sdks.py:267` QuoterV2)** —
-      blocked behind the pre-existing vitest `ERR_REQUIRE_ESM` breakage (`plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md`);
-      that repo is a TS service so STEP 5.97 does not run in its QG (the citation is ungated there), and baseline stays `ui: 1`.
-      Re-add the 1-line citation + ratchet `ui → 0` once the vitest ESM blocker is fixed (tracked in Phase 5.4 below).
-- [ ] [SCRIPT] P3. **Phase 5.4 — re-add the deferred ui DeFi citation + ratchet `ui → 0`.** BLOCKED-TESTENV behind
-      `plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md` (vitest `ERR_REQUIRE_ESM` → ui
-      `quality-gates.sh` cannot pass, so the 1-line citation cannot ship through the gate). When that issue resolves:
-      add `# DERIVED ethereum uniswap-docs (QuoterV2)` on `unified-trading-system-ui/context/internal-contracts/schemas/domain/defi/protocol_sdks.py:267`,
-      ship via ui quickmerge, then `check_defi_address_citations.py --update-baseline` to drop `ui: 1 → 0`. Repo: unified-trading-system-ui.
+      strategy-service@1ede0ee0 (9), deployment-service@928a34e (3), alerting-service@4e284b8 (1), e2e-testing (1),
+      unified-trading-system-ui (1). Baseline ratchets unified-trading-pm@a4296eabb (7 repos → 0) + @58deed4a0 (ui → 0).
+      Citations derived from each file's per-block dict key / chain_id / explicit chain comment + protocol-canonical
+      source (etherscan/explorer for canonical ERC-20s, docs.chain.link for Chainlink feeds, protocol docs for protocol
+      contracts); `# QG-allow: defi-citation` used only for factory-deployed Uniswap pool fixtures + demo wallets.
+      (UAC registry stays `138` — the separate original 2026-06-16 UAC-registry seed, not part of this service-repo backfill.)
+- [x] ✅ [SCRIPT] P3. **Phase 5.4 — re-add the deferred ui DeFi citation + ratchet `ui → 0`.** DONE — the "blocker" was a
+      **host Node-version mismatch**, not a real breakage: the UI stack (jsdom@29 / vite@8 / vitest@4) needs Node ≥22
+      (repo `engines: node>=22`) and the earlier shipper ran on this host's default Node 20.18 → cryptic `ERR_REQUIRE_ESM`.
+      Re-ran the UI gate with Node 22 (`~/.local/node22`) → vitest loads clean. Two further **pre-existing** drifts (a
+      `7565c0c`-after-effect, not caused by the citation) also surfaced + fixed as a `chore(capability)` re-sync:
+      `public/capability-verdict-matrix.json` was stale vs canonical UAC (re-synced) and `parity-gates.test.ts` hardcoded
+      `available: 12977` (→ 14977, the 9-venue update). Shipped unified-trading-system-ui (citation + re-sync) + baseline
+      `ui → 0` @58deed4a0. **Lesson: UI-repo gates MUST run under Node ≥22; the small-repo shipper used default Node 20.**
 - [ ] [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
       `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
       routers, Multicall3 (`0xcA11…CA11`, same address all EVM chains), bridge/Aave/LST protocol addresses; **(2)
