@@ -6,6 +6,7 @@ priority: P2
 locked_by: live-defi-rollout
 source:
   - 2026-06-16 review-agent reliability work (restore-on-ping / stale-extension / tmux_session / hung-respawn chain)
+parent_epic: orchestrator_master
 ---
 
 # Orchestrator agent-lifecycle gaps (2026-06-16)
