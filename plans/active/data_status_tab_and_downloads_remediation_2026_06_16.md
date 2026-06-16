@@ -41,26 +41,30 @@ source:
 > **🟢 UI test-env CORRECTION (2026-06-16) — it was NOT broken; a host Node-version mismatch.** My earlier "fleet-wide
 > breakage" call was WRONG: deployment-ui's vitest suite is GREEN in CI (`quality-gates-v2` success, Node 22). The local
 > `ERR_REQUIRE_ESM` was this host on **Node 20.18** — jsdom@29's ESM deps need **Node ≥22**. **FIXED**: pinned
-> `.nvmrc`/`engines` Node>=22 + shipped the UI fixes under Node 22 (deployment-ui@`80c547d`). The venue-refetch +
-> de-dupe-panels + pagination items below are **CODE-SHIPPED + vitest-green**; only `pw:L2` (playwright smoke) remains,
-> pending a browser-capable slot. Issue (now RESOLVED): `deployment_ui_test_env_esm_breakage_2026_06_16.md`.
+> `.nvmrc`/`engines` Node>=22 + shipped the UI fixes under Node 22 (deployment-ui@`80c547d`; PREDICTION de-dupe
+> exemption follow-up `f4adfd3f2`). **`pw:L2` RAN under Node 22: 211/213 smoke pass** — all data-status specs green, the
+> venue/de-dupe/pagination changes verified. The remaining **2 failures are PRE-EXISTING in
+> `prediction_v9_breakdown.spec.ts`** (confirmed identical on the pre-de-dupe baseline — NOT caused by this work; a
+> separate prediction-smoke bug). They keep the full-suite exit non-zero, so the UI items below stay formally unticked
+> until that spec is fixed. Enforcement: the shared UI gate (`base-ui.sh`) + `verify-slot-host-symmetry.sh` now require
+> Node ≥22. Issue (RESOLVED): `deployment_ui_test_env_esm_breakage_2026_06_16.md`.
 
 ## Phase A (TIER 1 cleanup) — Scope + venue-filter correctness
 
-- [ ] [CODE] P1. **instruments-service "out of scope" — PROPER fix** (audit §B): NOT the `scope_in=True` short-circuit
-      (makes everything in-scope, kills the missing-catalogue signal). Add a reference-data expectation registry
-      (`EXPECTED_REFERENCE_COVERAGE_BY_ASSET_GROUP` in UAC, or reuse the IS could-exist universe
-      `enumerate_expected_universe` + per-venue genesis
-      `data-catalogue.instruments-service.yaml`/`expected_start_dates.yaml`): in-scope ⟺
-      `(asset_group, venue[, instrument_type])` ∈ set AND `day ≥ genesis`. Branch `_PER_VENUE_DAY_BUNDLE_SERVICES` in
-      `breakdowns_core._classify_data_type_for_venue:673` onto it. Depends on the instrument_type-in-manifest item below
-      to scope per type. — deployment-api + unified-api-contracts
-- [ ] [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K): the writer
-      currently records `instrument_type=""` (`engine/orchestrator/writers.py:172`), bundling future/option/spot/
-      perpetual/combo into one blank row per venue/day — so derivative-rich venues (CME, Deribit, Binance) have no
-      per-type coverage signal (root of the §J "no options visible"). Keep one catalogue parquet per venue/day (storage
-      unit) but enrich the manifest row with `instrument_type` as a column with per-type counts. Unlocks per-type scope
-      (above) + per-type drilldown in the UI. — instruments-service (+ UAC manifest schema if needed)
+- [x] ✅ [CODE] P1. **instruments-service "out of scope" — PROPER fix** — DONE deployment-api@`8710152`: new
+      `services/data_status/reference_scope.py` reads the bundled `data-catalogue.instruments-service.yaml` genesis
+      (`shard_status[ag][venue].start_date`) via `get_config_dir()`; `breakdowns_core._classify_data_type_for_venue`
+      branches `_PER_VENUE_DAY_BUNDLE_SERVICES` onto it → in-scope ⟺ configured IS venue for the AG AND day ≥ genesis
+      (covered-but-missing stays actionable; unlisted/pre-genesis → out_of_scope). NOT the all-in-scope hack. +4 tests;
+      QG green. Grain = venue/day. **Nuance:** the catalogue carries only CEFI/TRADFI/DEFI genesis — SPORTS/PREDICTION
+      IS venues read out_of_scope until added to `data-catalogue.instruments-service.yaml` (follow-on). — deployment-api
+- [ ] [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) — **🔴
+      MIGRATION-COORDINATED, do NOT implement standalone**: this changes the IS manifest shard atom (writer stamps
+      `instrument_type=""` at `engine/orchestrator/writers.py:172`). Per single-walk discipline + shard-granularity
+      SSOT, a new manifest column/grain MUST ride the instruments v9 walk, not open a second whole-corpus walk. Bundle
+      it into `instruments_manifest_canonicalisation_2026_06_01.md` (a finding callout is added there). Unlocks
+      per-instrument_type scope (above) + per-type UI drilldown + the §J Deribit-options coverage signal. —
+      instruments-service (coordinate with the IS canonicalisation walk)
 - [x] ✅ [CODE] P1. **Venue filter — backend** — DONE deployment-api@3d9a0e032: added repeatable `venue: list[str]` to
       the `/manifest` route + `get_manifest_status` (threaded through
       `_get_manifest_status_sync`/`_dispatch_category_builds`/ `_build_manifest_category`), engaged it in the
@@ -112,20 +116,17 @@ the canon plan; track there, not as duplicate todos:
 
 ## Phase D (TIER 1 cleanup) — TradFi canonical naming + Deribit spot fix (instruments-service / UAC)
 
-- [ ] [DESIGN] P1. **TradFi human-canonical naming — NO Databento dependency** (audit §I; operator 2026-06-16: "convert
-      without using databento, we don't have billing perms; infer they're just exchange codes, we know the logic"). The
-      conversion needs NO Databento API call — derive purely from the EXISTING UAC exchange-code registry
-      (`tradfi_instrument_universe.py` `DatabentoInstrumentDef.base_asset` + `EXCHANGE_CODE_TO_NAME`) in the adapter
-      `_parse_row_to_record` (`adapters/tradfi/databento/adapter.py:637-709`): extract the exchange-code root from
-      `raw_symbol` (incl. spaced options like `E5AH0 …`) → map to the human product root (`ES→SP500`) for a canonical
-      base + canonical `underlying`. **Keep the raw exchange code as `raw_symbol`** (operator: "we do wanna keep
-      exchange codes in instrument definitions as raw symbol anyway, just having the canonicals too"). —
-      instruments-service
-- [ ] [SCHEMA] P1. **Add canonical instrument-id + base/root fields to `InstrumentRecord`** (audit §I/§2): additive
-      optional fields `canonical_instrument_id` + `product_root`/`canonical_base` in UAC
-      `internal/reference/instrument.py:90` (1:1 into `INSTRUMENTS_PARQUET_SCHEMA`; not in the CeFi-only
-      `model_validator` `:318`). `raw_symbol` stays the raw exchange code; canonicals are additive. Downstream (CSV
-      download, options↔future bundling) reads the canonical fields. — unified-api-contracts (+ IS writer/serializer)
+- [x] ✅ [DESIGN] P1. **TradFi human-canonical naming — NO Databento dependency** — DONE instruments-service@`2caa3128`
+      (operator 2026-06-16): adapter `_parse_row_to_record` now resolves the product root from `raw_symbol` via the
+      static UAC exchange-code registry (`EXCHANGE_CODE_TO_NAME` ∪ `DatabentoInstrumentDef.exchange_code→base_asset`,
+      `symbology._resolve_product_root`; NO Databento call), populating `product_root` (`ES`→`SP500`) +
+      `canonical_instrument_id` (`{venue}:{type}:{root}:{YYYY-MM}[:{strike}{C|P}]`) incl. spaced options
+      (`E5AH0 C2510`); `raw_symbol` KEPT as the raw exchange code. +tests. QG green. — instruments-service
+- [x] ✅ [SCHEMA] P1. **Add canonical instrument-id + base/root fields to `InstrumentRecord`** — DONE
+      unified-api-contracts@`50a93175`: optional additive `canonical_instrument_id` + `product_root` on
+      `InstrumentRecord` + 1:1 into `INSTRUMENTS_PARQUET_SCHEMA` (nullable; NOT in the CeFi-only `model_validator`).
+      Non-breaking (added-optional-field) — does NOT touch v9 `schema_version`; old parquets read null. +tests. QG
+      green. — unified-api-contracts
 - [x] ✅ [CODE] P1. **Fix Deribit spot being dropped** — DONE instruments-service@be4c7930a: removed `deribit` from
       `_DERIVATIVES_ONLY_EXCHANGES` (the set's only consumers are the two spot-drop guards in
       `_parse_tardis_instrument`; surgical), updated the stale "deribit has no spot" comments, added
