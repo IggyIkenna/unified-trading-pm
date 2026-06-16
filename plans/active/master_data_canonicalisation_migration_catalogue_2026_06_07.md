@@ -143,8 +143,21 @@ parallel-safe.
 > prod data): agents prepare it dry-run-green and STOP; the operator fires `--apply`. No `DEFERRED`/`BLOCKED-OPERATOR`
 > end-states otherwise; journal to the per-AG plan across compaction; end with a report.
 
-- [x] ✅ **G0 / G1 / G2 / G3 — GREEN, 5/5 apply-ready** (Era-B on-disk confirmed both probes; drain done + 10-bucket
-      snapshot). Per-AG audit verdicts recorded in each AG plan.
+- [ ] **🔴 G0 NOT GREEN — apply-gate HOLDS (status corrected 2026-06-16; supersedes the prior `✅ 5/5 apply-ready`).**
+      G1/G2/G3 per-AG dry-runs + Era-B on-disk probes + drain + 10-bucket snapshot ARE green — BUT **G0 = the
+      pipeline_mode Phase-0 DAG** (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`, explicitly
+      "registered as G0 here") is **INCOMPLETE**. Only the Phase-0.1 SUBSET landed (M2 seed UAC@a2eab633 + #4 enumerator
+      stamp is@03a93e10 + the M4 _tiebreak_ deployment-api@4dd2575). **STILL OPEN before GATE 0:** **M1-BREAKING**
+      (`live_websocket`→`live_<source>`/`replay_<source>` object+writer+reader migration), **M3** per-shard
+      available-sources registry + `could_exist(shard,mode)`, **M4** the `select_for_mode` read-path resolver, **fix
+      #1** (defi rebuild stamp `pipeline_mode`+`source`), **fix #3** (features delta_one reader pipeline_mode-aware),
+      and **GATE 0 itself** (every-repo QG-green + the cross-repo write→manifest→union-read SIT). The prior `✅`
+      credited only the Phase-0.1 subset, not the full G0 DAG. Per this plan's **single hardest invariant** (NO
+      `--apply` until G0+G1+G2+G3 GREEN), and because the migrators still stamp **coarse
+      `pipeline_mode="batch"`/blank**, **arming any G4 `--apply` now bakes the wrong model into the single walk**
+      (banned second-walk to fix). **Re-confirm against `pipeline_mode_source…2026_06_05.md` § GATE 0 before any G4.**
+      (G1 also carries the 2026-06-16 UAC-denominator callout from the data-status audit — see
+      `instruments_manifest_canonicalisation_2026_06_01.md`.) — corrected from the data-status audit 2026-06-16.
 - [ ] [DATA] P0. **slot 2 (DeFi) — G4 `--apply`**: instruments-store v9 walk → MTDS raw-tick v9 → catalogue seed → IS
       backfill (Era-B relabel rides the migrator's final step). Operator-fired; on real VM/tarball; rollback =
       `pre_migration_2026_06_08.parquet`. Repo: market-tick-data-service + instruments-service.
@@ -399,8 +412,8 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
         decision filed as a P1 todo in the G3.5 plan). Full verdicts + class tables in the G3.5 plan Progress Log ("R8
         part 2"); reports `gs://<bucket>/_index/audit/orphan_sweep_sports.parquet`.
   - [x] ✅ sports v1_archive ROW-coverage proven before any drop — 398/398 days, 72,522/72,522 rows covered via
-        `source_fixture_id`↔`af_fixture_id` (G3.5 plan Progress Log "R8 part 1", 2026-06-11 ~14:50Z); archive carried
-        as its own `B2_v1_archive_superseded` sweep disposition (G4.5 delete-list candidate, operator-gated).
+        `source_fixture_id`↔`af_fixture_id` (G3.5 plan Progress Log "R8 part 1", 2026-06-11 ~14:50Z); archive carried as
+        its own `B2_v1_archive_superseded` sweep disposition (G4.5 delete-list candidate, operator-gated).
   - [ ] prediction dry plan REGENERATED on final HEAD, attached to its verdict for sign-off. prediction=slot-3. Repo:
         mtds.
 
@@ -702,7 +715,7 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 | G2       | `downstream_services_manifest_canonicalisation_2026_06_01`                                                                                                                                                  | MDPS/features/strategy/execution `_index` canonical                                                                                                                                                                                                                                                                                                                                                                                                | vm-ml                                                                                               | G0 + G1 + the AG MTDS walks                         |
 | G2       | `solana_defi_legacy_migration_2026_05_27`                                                                                                                                                                   | DeFi Solana legacy→canonical (serialise with defi §C)                                                                                                                                                                                                                                                                                                                                                                                              | vm-defi                                                                                             | defi G2 single-walk                                 |
 | G2       | `features_input_manifest_migration_2026_05_25`                                                                                                                                                              | features input `_index` migration                                                                                                                                                                                                                                                                                                                                                                                                                  | vm-ml                                                                                               | G0 + downstream                                     |
-| G2       | issue `defi_code_codex_drift_2026_05_27`                                                                                                                                                                    | DeFi code↔codex drift (wrapped by defi plan §A/§F)                                                                                                                                                                                                                                                                                                                                                                                                | vm-defi                                                                                             | wrapped → defi G2                                   |
+| G2       | issue `defi_code_codex_drift_2026_05_27`                                                                                                                                                                    | DeFi code↔codex drift (wrapped by defi plan §A/§F)                                                                                                                                                                                                                                                                                                                                                                                                 | vm-defi                                                                                             | wrapped → defi G2                                   |
 | G2       | issue `features_service_defi_data_loading_blockers_2026_05_29`                                                                                                                                              | features DeFi e2e data-layer (wrapped by defi §C0/§D)                                                                                                                                                                                                                                                                                                                                                                                              | vm-defi/vm-ml                                                                                       | defi G2 + downstream                                |
 | G2       | issue `cefi_processed_candles_manifest_file_disconnect_2026_05_25`                                                                                                                                          | CeFi processed-candles manifest disconnect                                                                                                                                                                                                                                                                                                                                                                                                         | vm-cefi                                                                                             | cefi G2                                             |
 | **G3**   | (data-status §B in each per-AG plan) + **M5** in the G0 plan                                                                                                                                                | deployment-api/UI = ONE UNION view across pipeline modes + 4-state + pipeline_mode/source drilldowns                                                                                                                                                                                                                                                                                                                                               | vm-cross-cutting + per-AG                                                                           | G0 (M5) + G2 readers union-aware                    |
@@ -1480,33 +1493,33 @@ done) + the tracked P1/P2 live-track handler-derive remediation (post-migration,
 > disposition. Verdict: **8 MIGRATED · 3 DATA-BEARING-ORPHAN (fold) · 14 NO-DATA scaffolds (collection gaps)** — nothing
 > unaccounted. (Migrator specs went 6→8 this turn: gas-fees + liquidations added, mtds@01fda7ce.)
 
-| data_type               | migrator spec         | data on disk?                                               | disposition                                                              |
-| ----------------------- | --------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
-| dex_pool_state          | ✅ dex-pools          | yes                                                         | **MIGRATED**                                                             |
-| dex_pool_swaps          | ✅ dex-swaps          | yes                                                         | **MIGRATED** (source fixed: `n`→dex_pool_swaps→subgraph)                 |
-| lending_indices         | ✅ lending-indices    | yes                                                         | **MIGRATED**                                                             |
-| perp_funding            | ✅ perp-funding       | yes                                                         | **MIGRATED**                                                             |
-| lst_rates               | ✅ lst-rates          | yes                                                         | **MIGRATED**                                                             |
-| oracle_prices           | ✅ oracle-prices      | yes (incl LST/LRT: stETH/wstETH/weETH/cbETH/rETH)           | **MIGRATED** — LST/LRT prices ride this existing data_type               |
+| data_type               | migrator spec        | data on disk?                                               | disposition                                                              |
+| ----------------------- | -------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| dex_pool_state          | ✅ dex-pools         | yes                                                         | **MIGRATED**                                                             |
+| dex_pool_swaps          | ✅ dex-swaps         | yes                                                         | **MIGRATED** (source fixed: `n`→dex_pool_swaps→subgraph)                 |
+| lending_indices         | ✅ lending-indices   | yes                                                         | **MIGRATED**                                                             |
+| perp_funding            | ✅ perp-funding      | yes                                                         | **MIGRATED**                                                             |
+| lst_rates               | ✅ lst-rates         | yes                                                         | **MIGRATED**                                                             |
+| oracle_prices           | ✅ oracle-prices     | yes (incl LST/LRT: stETH/wstETH/weETH/cbETH/rETH)           | **MIGRATED** — LST/LRT prices ride this existing data_type               |
 | gas_fees                | ✅ gas-fees ⬅NEW     | yes (`gas-fees-central`)                                    | **MIGRATED** (this turn, mtds@01fda7ce)                                  |
 | liquidations            | ✅ liquidations ⬅NEW | yes (`liquidations-central`)                                | **MIGRATED** (this turn, mtds@01fda7ce)                                  |
-| vault_share_price       | ❌                    | YES — in `market-data-tick-defi` orphan (active 2026-05-01) | **ORPHAN-FOLD** (P1) — fold into a dedicated bucket + migrate            |
-| risk_params             | ❌                    | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
-| utilization             | ❌                    | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
-| eigenlayer_rewards      | ❌                    | NO (`eigenlayer-rewards{,-prd}` EMPTY)                      | **COLLECTION GAP** — adapter exists, not producing; spec when data lands |
-| staking_yields          | ❌                    | NO (`staking-yields` empty)                                 | **COLLECTION GAP**                                                       |
-| native_staking_rates    | ❌                    | NO                                                          | **COLLECTION GAP** (multi-source solana_rpc/helius)                      |
-| bridge_events           | ❌                    | NO                                                          | scaffold (no data; no dedicated/tick-data bucket exists)                 |
-| flash_loan_events       | ❌                    | NO                                                          | scaffold                                                                 |
-| flash_loan_availability | ❌                    | NO                                                          | scaffold                                                                 |
-| governance_events       | ❌                    | NO                                                          | scaffold                                                                 |
-| liquidation_events      | ❌                    | NO                                                          | scaffold (distinct from `liquidations`)                                  |
-| mev_events              | ❌                    | NO                                                          | scaffold                                                                 |
-| position_data           | ❌                    | NO                                                          | scaffold                                                                 |
-| token_transfers         | ❌                    | NO                                                          | scaffold                                                                 |
-| rewards                 | ❌                    | NO                                                          | scaffold / computed-downstream                                           |
-| vault_apy               | ❌                    | NO                                                          | scaffold / computed-downstream                                           |
-| vault_tvl               | ❌                    | NO                                                          | scaffold / computed-downstream                                           |
+| vault_share_price       | ❌                   | YES — in `market-data-tick-defi` orphan (active 2026-05-01) | **ORPHAN-FOLD** (P1) — fold into a dedicated bucket + migrate            |
+| risk_params             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
+| utilization             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
+| eigenlayer_rewards      | ❌                   | NO (`eigenlayer-rewards{,-prd}` EMPTY)                      | **COLLECTION GAP** — adapter exists, not producing; spec when data lands |
+| staking_yields          | ❌                   | NO (`staking-yields` empty)                                 | **COLLECTION GAP**                                                       |
+| native_staking_rates    | ❌                   | NO                                                          | **COLLECTION GAP** (multi-source solana_rpc/helius)                      |
+| bridge_events           | ❌                   | NO                                                          | scaffold (no data; no dedicated/tick-data bucket exists)                 |
+| flash_loan_events       | ❌                   | NO                                                          | scaffold                                                                 |
+| flash_loan_availability | ❌                   | NO                                                          | scaffold                                                                 |
+| governance_events       | ❌                   | NO                                                          | scaffold                                                                 |
+| liquidation_events      | ❌                   | NO                                                          | scaffold (distinct from `liquidations`)                                  |
+| mev_events              | ❌                   | NO                                                          | scaffold                                                                 |
+| position_data           | ❌                   | NO                                                          | scaffold                                                                 |
+| token_transfers         | ❌                   | NO                                                          | scaffold                                                                 |
+| rewards                 | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
+| vault_apy               | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
+| vault_tvl               | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
 
 **So no data_type is silently dropped:** the migrator now covers all 8 data-bearing DEDICATED-bucket data_types; the 3
 data-bearing-in-the-orphan-bucket ones (`vault_share_price`/`risk_params`/`utilization`) ride the market-data-tick-defi
@@ -1687,22 +1700,22 @@ are migration-in-flight residue the apply resolves — NOT a separate orphan. (F
 RD4 legacy-delete covers the UPPERCASE residue too.) parent_epic: mtds_mdps_master. > **FINDING (slot-5 prediction,
 2026-06-08) — two updates to this MTDS-QG-red item:** > (a) **`rebuild_prediction_manifest.py` is now SPLIT** (954→692
 L, mtds@c571445d) → REMOVE it from the >900 list; > the remaining >900 files are non-prediction. (b) **NEW gate-0
-blocker not previously listed: a committed > `uv.lock`↔`pyproject.toml` desync on the MTDS LDR HEAD.**
-`uv lock --check` FAILS — the committed `pyproject.toml` > declares `pyarrow-stubs` + `mypy-boto3-{logs,sns,sqs}` that
-are absent from the committed `uv.lock`, so the QG > aborts at its FIRST gate (`❌ uv.lock out of sync`) BEFORE
-file-size/basedpyright/tests even run. Mechanical > re-sync (`uv lock` adds the 4 stub pkgs, ~52 LOC; precedent
-mtds@10930dbd "re-sync uv.lock to pyproject"). Until > this lands, NO MTDS `quality-gates.sh` reaches green regardless
-of the file-length work — fix it FIRST in this > slot-2 sweep. (Slot-5 did not fix it: it completes another commit's
-incomplete dep edit — out of prediction AG + > FM1 foreign-work-bundling risk.) **✅ RESOLVED 2026-06-08 (slot-2,
-operator decision A):** (0) **gate-0 re-locked** (mtds@d544f15c — `uv lock` to current pyproject; `uv lock --check`
-green) BUT this is **recurring lock-drift** (the type-stubs flip-flop in pyproject between agents; `dbbbef8a` added
-them, a later commit removed them) → **handed to the dep/CI lane** (slot-1 `update-dependency-version.yml` prevention +
-settle the type-stub flip-flop); NOT a thing to keep manually re-locking. (1) **file-size = 15 pre-existing
-non-`scripts/` files** (orchestrator.py 4219 etc.) → **DEFERRED to the named successor
-`plans/active/mtds_file_size_refactor_2026_06_08.md`** (post-migration; splitting the migration's own `orchestrator.py`
-pre-apply is high-risk for zero migration benefit). **NOT migration-blocking**: file-size loop excludes `./scripts/*`
-(migration code clean); MTDS migration code ships via basedpyright-on-touched; `--apply` runs from VM/tarball not the
-sentinel. (The hollow-sentinel harness finding below is the related ship-hygiene item.)
+blocker not previously listed: a committed > `uv.lock`↔`pyproject.toml` desync on the MTDS LDR HEAD.** `uv lock --check`
+FAILS — the committed `pyproject.toml` > declares `pyarrow-stubs` + `mypy-boto3-{logs,sns,sqs}` that are absent from the
+committed `uv.lock`, so the QG > aborts at its FIRST gate (`❌ uv.lock out of sync`) BEFORE file-size/basedpyright/tests
+even run. Mechanical > re-sync (`uv lock` adds the 4 stub pkgs, ~52 LOC; precedent mtds@10930dbd "re-sync uv.lock to
+pyproject"). Until > this lands, NO MTDS `quality-gates.sh` reaches green regardless of the file-length work — fix it
+FIRST in this > slot-2 sweep. (Slot-5 did not fix it: it completes another commit's incomplete dep edit — out of
+prediction AG + > FM1 foreign-work-bundling risk.) **✅ RESOLVED 2026-06-08 (slot-2, operator decision A):** (0)
+**gate-0 re-locked** (mtds@d544f15c — `uv lock` to current pyproject; `uv lock --check` green) BUT this is **recurring
+lock-drift** (the type-stubs flip-flop in pyproject between agents; `dbbbef8a` added them, a later commit removed them)
+→ **handed to the dep/CI lane** (slot-1 `update-dependency-version.yml` prevention + settle the type-stub flip-flop);
+NOT a thing to keep manually re-locking. (1) **file-size = 15 pre-existing non-`scripts/` files** (orchestrator.py 4219
+etc.) → **DEFERRED to the named successor `plans/active/mtds_file_size_refactor_2026_06_08.md`** (post-migration;
+splitting the migration's own `orchestrator.py` pre-apply is high-risk for zero migration benefit). **NOT
+migration-blocking**: file-size loop excludes `./scripts/*` (migration code clean); MTDS migration code ships via
+basedpyright-on-touched; `--apply` runs from VM/tarball not the sentinel. (The hollow-sentinel harness finding below is
+the related ship-hygiene item.)
 
 - [ ] [INFRA] P2. **🔴 LOCAL QG HARNESS collects the WRONG test suite for some repos — the green sentinel is HOLLOW
       (surfaced slot-7 2026-06-08).** Running `bash scripts/quality-gates.sh --no-fix` for **instruments-service** AND

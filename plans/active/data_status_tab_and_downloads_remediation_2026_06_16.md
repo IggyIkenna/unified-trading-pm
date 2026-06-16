@@ -54,9 +54,11 @@ source:
       per-type coverage signal (root of the §J "no options visible"). Keep one catalogue parquet per venue/day (storage
       unit) but enrich the manifest row with `instrument_type` as a column with per-type counts. Unlocks per-type scope
       (above) + per-type drilldown in the UI. — instruments-service (+ UAC manifest schema if needed)
-- [ ] [CODE] P1. **Venue filter — backend**: add a `venue: list[str] | None` param to the manifest path
-      (`_status_core.py:139` + `services/data_status/manifest.py:114`), include it in `any_row_filter` (`:149-151`) and
-      mask `_build_venue_breakdown` (`:589`) so venue narrows server-side. — deployment-api
+- [x] ✅ [CODE] P1. **Venue filter — backend** — DONE deployment-api@3d9a0e032: added repeatable `venue: list[str]` to
+      the `/manifest` route + `get_manifest_status` (threaded through
+      `_get_manifest_status_sync`/`_dispatch_category_builds`/ `_build_manifest_category`), engaged it in the
+      `any_row_filter` gate, added `_apply_venue_filter` (case-insensitive OR) before the venue breakdown, and gated the
+      process-pool path off (it doesn't thread filters); +3 tests; QG green. — deployment-api
 - [ ] [UI] P1. **Venue filter — frontend**: add a `useEffect` that re-invokes `fetchData` when
       `selectedVenues`/`selectedFolders`/`selectedDataTypes` change, guarded to fire only after the first manual load
       and not while `loading` (mirror the manifest-mode effect at `DataStatusTab.tsx:807-814`). — deployment-ui `[UI]` +
@@ -119,10 +121,13 @@ the canon plan; track there, not as duplicate todos:
       `internal/reference/instrument.py:90` (1:1 into `INSTRUMENTS_PARQUET_SCHEMA`; not in the CeFi-only
       `model_validator` `:318`). `raw_symbol` stays the raw exchange code; canonicals are additive. Downstream (CSV
       download, options↔future bundling) reads the canonical fields. — unified-api-contracts (+ IS writer/serializer)
-- [ ] [CODE] P1. **Fix Deribit spot being dropped** (audit §J; operator correction 2026-06-16: Deribit DOES have spot
-      now). Remove `deribit` from `_DERIVATIVES_ONLY_EXCHANGES` (`tardis/adapter.py:95-97`) — or make it date-aware
-      (spot only post-launch ~2023); the `:719-729` spot-drop + stale `:721` "deribit has no spot" comment must go.
-      Validate Tardis returns Deribit spot + it passes `CEFI_BASE_ASSET_UNIVERSE`. — instruments-service
+- [x] ✅ [CODE] P1. **Fix Deribit spot being dropped** — DONE instruments-service@be4c7930a: removed `deribit` from
+      `_DERIVATIVES_ONLY_EXCHANGES` (the set's only consumers are the two spot-drop guards in
+      `_parse_tardis_instrument`; surgical), updated the stale "deribit has no spot" comments, added
+      `test_deribit_spot_not_dropped` (BTC_USDC spot enumerates as SPOT_PAIR; BTC-PERPETUAL still PERPETUAL), and
+      corrected 2 pre-existing tests that asserted the bug; QG green (88.53% cov). Deribit spot now enumerates + passes
+      `CEFI_BASE_ASSET_UNIVERSE` like any venue. **Run-verify that real Deribit spot appears in a re-captured day**
+      (data-ops, rides the IS re-capture). — instruments-service
 - [ ] [DATA] P2. **Verify Deribit BTC/ETH options present** (audit §J): run-verify a representative day has BTC/ETH
       options in the batch catalogue (Tardis DERIBIT path; check the endpoint tier didn't drop option metadata).
       **Operator 2026-06-16: BTC/ETH underlyings are FINE for now** — do NOT widen `CEFI_OPTIONS_UNDERLYINGS` or wire
