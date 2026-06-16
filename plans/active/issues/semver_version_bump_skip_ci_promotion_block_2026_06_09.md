@@ -415,10 +415,13 @@ the baseline writer is healthy. Option C needs a baseline-independent re-entry b
 
 ### Open items
 
-- [ ] [SCRIPT] P1. **HEAD-commit chore-skip guard in semver-agent** — skip immediately when the triggering
-      `workflow_run.head_commit` message starts `chore(release): bump version` (re-entry brake independent of baseline
-      state); keep the range-based classification for the genuine-bump path. Repo: `unified-trading-pm`
-      (`semver-agent.yml` template) + fleet rollout.
+- [x] ✅ [SCRIPT] P1. **HEAD-commit chore-skip guard in semver-agent** — DONE 2026-06-16. `compute` step now reads
+      `TRIGGER_COMMIT_MSG` (head_commit / workflow_run head_commit), and skips (`skip=true`, reusing the existing
+      downstream-gating output) when the first line starts `chore(release): bump version` — re-entry brake independent of
+      baseline state; range-based classification kept for the genuine-bump path. Canary-validated (release-bump incl.
+      multiline → SKIP; feat/fix/chore(deps)/empty → PROCEED). Shipped to `semver-agent.yml.tmpl` (PM SSOT) +
+      `rollout-workflow-templates.sh` fleet rollout to all 24 repos' LDR + PM template. Verified brake=1 on
+      origin/live-defi-rollout fleet-wide. Complements the bump-rate circuit breaker below.
 - [x] ✅ [SCRIPT] P1. **Bump-rate circuit breaker** — semver-agent refuses (+ pages CRITICAL) when the repo already has
       ≥3 `chore(release):` commits on staging in the last hour; a runaway must self-halt, not wait for a human to notice
       version 0.30.0. Repo: `unified-trading-pm` (template) + fleet. Shipped: ≥3 bumps-in-1h-or-consecutive on staging →
