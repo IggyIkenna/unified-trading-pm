@@ -506,6 +506,26 @@ if [ -f "$VM_REGISTRY_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: per-doc-type frontmatter schema (required-non-empty + epic resolution) ──
+# SSOT: plans/PLAN_FORMAT.md (plan/epic) + plans/audit/README.md (audit-result) + CLAUDE.md
+# Findings-Triage (issue). Enforces NON-EMPTY required fields per doc type so agents can't drift
+# the frontmatter — parent_epic (plans) + assigned_vm (epics) + epic (audit, str|list) must be
+# non-empty AND resolve to a real plans/epics/<slug>.md, and audit-results carry instructions_ref.
+# Covers plan/epic/issue/audit; codex `scope:` stays on its own post-gate above pending the codex
+# scope-cleanup (178 docs). Exit 0/1 from check_frontmatter_schema.py.
+FRONTMATTER_SCHEMA_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_frontmatter_schema.py"
+if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
+    echo "Running per-doc-type frontmatter schema check (plan/epic/issue/audit)..."
+    if python3 "$FRONTMATTER_SCHEMA_CHECKER" --quiet; then
+        log_success "Frontmatter schema check passed"
+    else
+        echo "❌ Frontmatter schema check failed — a plan/epic/issue/audit doc has a missing/empty" >&2
+        echo "   required field or an unresolvable epic. parent_epic (plans) + assigned_vm (epics) +" >&2
+        echo "   epic (audit) must be non-empty + resolve. See plans/PLAN_FORMAT.md + plans/audit/README.md" >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: Workflow-template parity — baselined ratchet (blocking on NEW drift) ──
 # SSOT: detect_template_drift.py § "workflow-template parity". Flat .github/workflows/*.yml are
 # cp'd verbatim from scripts/workflow-templates/ by rollout-workflow-templates.sh, so every per-repo

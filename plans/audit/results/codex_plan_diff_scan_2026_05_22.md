@@ -1,3 +1,12 @@
+---
+type: analysis
+title: Codex ↔ Plan Differential Scan — 2026-05-22
+epic: plan_hygiene_master
+auditor: slot-1 (ikenna interactive)
+date: "2026-05-22"
+status: complete
+---
+
 # Codex ↔ Plan Differential Scan — 2026-05-22
 
 **Auditor:** slot-1 (ikenna interactive) **Date:** 2026-05-22 **Scope:** All 717 codex docs × 44 active plans × 26 epics

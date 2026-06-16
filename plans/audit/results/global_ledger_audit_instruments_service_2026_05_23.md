@@ -1,7 +1,10 @@
 ---
-title: "Global Ledger Audit — instruments-service"
-created: 2026-05-23
-author: slot-7 (ikenna-side)
+type: analysis
+title: Global Ledger Audit — instruments-service
+epic: global_ledger_pnl_attribution_master
+auditor: slot-7 (ikenna-side)
+date: "2026-05-23"
+status: complete
 source:
   - instruments-service/instruments_service/engine/orchestrator.py
   - instruments-service/instruments_service/reference_data/

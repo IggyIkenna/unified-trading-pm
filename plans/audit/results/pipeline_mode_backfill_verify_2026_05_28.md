@@ -1,3 +1,12 @@
+---
+type: analysis
+title: pipeline_mode backfill verification — pre-backfill state (2026-05-28)
+epic: mtds_mdps_master
+auditor: claude + operator
+date: "2026-05-28"
+status: complete
+---
+
 # pipeline_mode backfill verification — pre-backfill state (2026-05-28)
 
 **Verification date**: 2026-05-28  

@@ -1,14 +1,17 @@
 ---
-name: observability_disaster_recovery_audit_2026_05_23
 type: audit-result
+title: Observability — Disaster-Recovery Target-Model Gap Audit (2026-05-23)
 epic: observability_master
+auditor: claude + operator
+date: "2026-05-23"
+status: RED
+instructions_ref: ../instructions/observability_master_audit_instructions.md
+name: observability_disaster_recovery_audit_2026_05_23
 audit_instructions: ../instructions/observability_master_audit_instructions.md
 target_model_source: ../../active/issues/disaster_recovery.md
 assigned_vm: vm-cross-cutting
 tier: L4
-created: 2026-05-23
 last_updated: 2026-05-23
-status: RED
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23

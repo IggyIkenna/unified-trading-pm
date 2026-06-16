@@ -1,10 +1,11 @@
 ---
 type: audit-result
+title: DeFi pipeline — Code ↔ Codex drift audit (2026-05-27)
 epic: defi_master
-instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
 auditor: harsh
 date: 2026-05-27
 status: complete
+instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
 scope: DeFi data pipeline (instruments-service → MTDS → MDPS → features-onchain) — code ↔ codex drift only
 ---
 

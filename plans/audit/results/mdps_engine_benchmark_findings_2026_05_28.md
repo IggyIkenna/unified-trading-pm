@@ -1,12 +1,15 @@
 ---
-name: mdps_engine_benchmark_findings_2026_05_28
 type: audit-findings
+title: MDPS engine benchmark — Polars vs Pandas+PyArrow on the real workload
+epic: mtds_mdps_master
+auditor: claude opus 4.7 (slot main)
+date: "2026-05-28"
+status: complete
+name: mdps_engine_benchmark_findings_2026_05_28
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 related_findings:
-  - mdps_long_running_engine_mixing_2026_05_28.md # the static-trace audit this benchmark validates
-created: 2026-05-28
-author: claude opus 4.7 (slot main)
+  - mdps_long_running_engine_mixing_2026_05_28.md
 benchmark_raw_data:
   - benchmarks/mdps_engine_comparison_2026_05_28/results.md
   - benchmarks/mdps_engine_comparison_2026_05_28/results.json

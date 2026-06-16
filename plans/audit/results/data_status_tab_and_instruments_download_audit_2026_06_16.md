@@ -1,7 +1,12 @@
 ---
+type: analysis
 title: Data-status tab + instruments download audit — deployment-api / deployment-ui / instruments universe
-created: 2026-06-16
-author: ikennaigboaka
+epic:
+  - instruments_master
+  - deployment_and_user_management_master
+auditor: ikennaigboaka
+date: 2026-06-16
+status: complete
 source:
   - operator 2026-06-16 (data-status tab walkthrough screenshots:
       CEFI / BINANCE-FUTURES drilldown, instruments-service "out of scope", aave_v3 download failure, missing CeFi

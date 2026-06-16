@@ -1,7 +1,10 @@
 ---
+type: analysis
 title: Global Ledger Architecture Audit — strategy-service
-created: 2026-05-23
-author: slot-7 (ikenna)
+epic: global_ledger_pnl_attribution_master
+auditor: slot-7 (ikenna)
+date: "2026-05-23"
+status: in-progress
 source:
   - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
   - strategy-service source (read-only)

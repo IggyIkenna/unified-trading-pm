@@ -1,11 +1,13 @@
 ---
-title: orchestrator_master audit — 2026-05-28
 type: audit-result
+title: orchestrator_master audit — 2026-05-28
 epic: orchestrator_master
+auditor: harsh-claude-opus
+date: "2026-05-28"
+status: complete
+instructions_ref: plans/audit/instructions/orchestrator_master_audit_instructions.md (v2 — refreshed 2026-05-28)
 assigned_vm: vm-orchestrator
 tier: L5
-created: 2026-05-28
-auditor: harsh-claude-opus
 instructions: plans/audit/instructions/orchestrator_master_audit_instructions.md (v2 — refreshed 2026-05-28)
 locked_by: live-defi-rollout
 ---

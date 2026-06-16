@@ -1,3 +1,11 @@
+---
+title: Capability wizard — gap discovery tracker
+created: 2026-06-11
+locked_by: live-defi-rollout
+priority: P2
+status: active
+---
+
 # Capability wizard — gap discovery tracker
 
 **Purpose**: running pool of gaps surfaced by the capability wizard/manifest work (operator rule 2026-06-11: as much as
@@ -251,15 +259,15 @@ doc):
       UAC@7020b0c5 `custody_surfaces.OFFERED_SIGNING_SURFACES` registry + 5 new `CapabilityNodeKind` members;
       PM@3f4a1ee92 exporter re-kind (`custody_provider` 0 catch-all; real `signing_surface` nodes 3 + `signs_for:<ag>`
       edges); uts-ui@3c98036587 custody/signing-surface wizard stage in Stage I (CLOUD_KMS default / COPPER selectable /
-      FIREBLOCKS greyed → `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist; pw:L2 ✓ |
-      regression: tests/smoke/wizard-custody.spec.ts); dep-ui@0db05b7 NodeKind types + count assertions.
+      FIREBLOCKS greyed → `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist; pw:L2 ✓ | regression:
+      tests/smoke/wizard-custody.spec.ts); dep-ui@0db05b7 NodeKind types + count assertions.
 - [x] ✅ [SCRIPT] P2. **fund_structure nodes (F50)** — exporter walks OFFERED_FUND_STRUCTURES (POOLED/SMA, already
       backfilled) into per-structure `CapabilityNodeKind.FUND_STRUCTURE` nodes/edges (today 0 nodes). Target:
       unified-trading-pm (`scripts/openapi/_capability_gaps.py`). — **DONE PM@3f4a1ee92 (Wave B)**: 2 `fund_structure`
       nodes (pooled + sma) emitted from `OFFERED_FUND_STRUCTURES` with share-class/cadence metadata +
       `offers_share_class` edges; UAC@e63a51156 / uts-ui@3c98036587 / dep-ui@0db05b7 NodeKind types.
-- [x] ✅ [SCRIPT] P2. **Chain node dedup (F51)** — normalize the 35 numeric chain-id + 6 named chain nodes to one canonical
-      node per chain (CHAIN_RPC_TEMPLATES is SSOT). Target: unified-trading-pm
+- [x] ✅ [SCRIPT] P2. **Chain node dedup (F51)** — normalize the 35 numeric chain-id + 6 named chain nodes to one
+      canonical node per chain (CHAIN_RPC_TEMPLATES is SSOT). Target: unified-trading-pm
       (`scripts/openapi/_capability_extract.py`). — **DONE PM@3f4a1ee92 (Wave B)**: chain nodes deduped 41→35
       (`MAINNET_CHAIN_IDS` name↔id SSOT; human name canonical, numeric chain_id in metadata; numeric-only nodes remain
       only for un-named chains/testnets).
@@ -270,9 +278,10 @@ doc):
 - [x] ✅ [SCRIPT] P2. **ML model registry surfacing (F53)** — walk the ml-service model registry (per-archetype model
       variants) into `ml_model` nodes + archetype→model edges (today only `variant_config`). Targets: unified-trading-pm
       exporter (per-service venv import) + ml-service (a queryable model registry). — **DONE (model-TYPE half)
-      PM@3f4a1ee92 (Wave B)**: `ml_model` nodes 1→8 from the ml-service `VALID_MODEL_TYPES` registry via per-service venv
-      probe (each carries `VALID_TARGET_TYPES` + `ModelVariantConfig`). **RESIDUAL** = per-archetype archetype→model
-      edges still need an ml-service queryable variant registry — tracked as the open P2 below (ml-service owner).
+      PM@3f4a1ee92 (Wave B)**: `ml_model` nodes 1→8 from the ml-service `VALID_MODEL_TYPES` registry via per-service
+      venv probe (each carries `VALID_TARGET_TYPES` + `ModelVariantConfig`). **RESIDUAL** = per-archetype
+      archetype→model edges still need an ml-service queryable variant registry — tracked as the open P2 below
+      (ml-service owner).
 
 ## Wave B SHIPPED 2026-06-14 — exporter re-kind + dedup (F49–F53)
 
@@ -306,31 +315,32 @@ fired.
 - [x] ✅ [SPEC] P2. **ml-service per-archetype model-variant registry (F53 residual)** — ml-service exposes only flat
       `VALID_MODEL_TYPES`/`VALID_TARGET_TYPES` (no per-archetype model-variant enumeration); the manifest therefore
       emits `ml_model` nodes per model type but cannot yet emit archetype→model edges. Add a queryable per-archetype
-      model-variant registry to ml-service so the exporter can derive `uses_model` edges. Target: ml-service. —
-      **DONE end-to-end 2026-06-14**: ml-service@7ee05d6 new `model_variant_registry.py` — a queryable
-      per-(asset_group, target_type) trainable-variant registry, **SSOT-derived, zero invented mapping**: sports from
+      model-variant registry to ml-service so the exporter can derive `uses_model` edges. Target: ml-service. — **DONE
+      end-to-end 2026-06-14**: ml-service@7ee05d6 new `model_variant_registry.py` — a queryable per-(asset_group,
+      target_type) trainable-variant registry, **SSOT-derived, zero invented mapping**: sports from
       `SportsMLPresets.model_families()` (target_names + family-pinned algorithms), defi from `DEFI_TARGET_BUILDERS`
       keys, cefi/tradfi from the technical target subset of `VALID_TARGET_TYPES` (model_type = grid-eligible per
       fixed-grid-config) — 37 variants, exhaustiveness-asserted vs `VALID_TARGET_TYPES`, 10 tests. PM@c86135ce (PR #326)
       exporter probes the registry + emits **archetype→ml_model `uses_model` edges** by joining each archetype's real
-      asset groups (`ARCHETYPE_CAPABILITY_REGISTRY` non-blocked cells) to the asset-group's variants — **167 edges
-      (138 available / 29 partial) across the 22 ML-driven archetypes, 0 dangling**; reason carries the contributing
+      asset groups (`ARCHETYPE_CAPABILITY_REGISTRY` non-blocked cells) to the asset-group's variants — **167 edges (138
+      available / 29 partial) across the 22 ML-driven archetypes, 0 dangling**; reason carries the contributing
       asset_groups + targets. Same fix reconnected the pre-existing **912 dangling `uses_algo` edges** (they referenced
       an `archetype:` prefix the nodes never had). Manifest regenerated **574 nodes / 2497 edges** (deterministic
-      byte-identical; #5 capability-regression gate PASS, no `--update-baseline`); UAC@bccad6e. Re-bundled byte-identical
-      into uts-ui@3c414001 (parity 27/27, `.husky` >1MB allowlist) + dep-ui@c1ba2aa (pw 9/9). **SUPERSEDED by the
-      signal-grounded refinement (operator "do this", 2026-06-14)** — the asset_group blanket join was tightened to a
-      per-signal join: UAC@c1ac124 `ml_signal_targets.SIGNAL_VARIANT_ML_TARGETS` (operator-authored signal→target map,
-      every archetype `signal_variant` classified predictive-or-deterministic, exhaustiveness test) + ml-service@2c07a72
-      `model_types_for_target`/`asset_groups_for_target` + PM@PR#328 exporter `_archetype_model_edges` now joins each
-      archetype's REAL per-cell `signal_variants` → ML targets → models (domain-gated). **167→103 edges (82 available /
-      21 partial, 14 archetypes)**: pure-carry archetypes (basis/staking_yield-only) now correctly get ZERO edges; a
-      funding-predicting carry keeps only its funding_rate model edges. Manifest 574/**2433**; re-bundled byte-identical
-      uts-ui@c5dc251c (243 vitest) + dep-ui@99a5f51 (pw 9/9); #5 regression gate PASS. No open residual remains.
-- [x] ✅ [UI] P1. **Custody/signing-surface wizard stage (F49 residual)** — manifest now carries `signing_surface` nodes;
-      the wizard still needs a custody stage that constrains wallets/venues by signing surface. Target:
+      byte-identical; #5 capability-regression gate PASS, no `--update-baseline`); UAC@bccad6e. Re-bundled
+      byte-identical into uts-ui@3c414001 (parity 27/27, `.husky` >1MB allowlist) + dep-ui@c1ba2aa (pw 9/9).
+      **SUPERSEDED by the signal-grounded refinement (operator "do this", 2026-06-14)** — the asset_group blanket join
+      was tightened to a per-signal join: UAC@c1ac124 `ml_signal_targets.SIGNAL_VARIANT_ML_TARGETS` (operator-authored
+      signal→target map, every archetype `signal_variant` classified predictive-or-deterministic, exhaustiveness test) +
+      ml-service@2c07a72 `model_types_for_target`/`asset_groups_for_target` + PM@PR#328 exporter
+      `_archetype_model_edges` now joins each archetype's REAL per-cell `signal_variants` → ML targets → models
+      (domain-gated). **167→103 edges (82 available / 21 partial, 14 archetypes)**: pure-carry archetypes
+      (basis/staking_yield-only) now correctly get ZERO edges; a funding-predicting carry keeps only its funding_rate
+      model edges. Manifest 574/**2433**; re-bundled byte-identical uts-ui@c5dc251c (243 vitest) + dep-ui@99a5f51 (pw
+      9/9); #5 regression gate PASS. No open residual remains.
+- [x] ✅ [UI] P1. **Custody/signing-surface wizard stage (F49 residual)** — manifest now carries `signing_surface`
+      nodes; the wizard still needs a custody stage that constrains wallets/venues by signing surface. Target:
       unified-trading-system-ui (Wave C). — **DONE uts-ui@3c98036587 (Wave C)**: custody/signing-surface field added to
       Stage I (Capital & Structure) reading manifest `signing_surface` nodes — CLOUD_KMS_ENCRYPTED (default,
       active_may23) / COPPER_MPC (active_june1, selectable) / FIREBLOCKS_MPC (out_of_scope, greyed); choice flows into
-      `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist. Tests: custody-signing.test.ts +
-      pw:L2 ✓ tests/smoke/wizard-custody.spec.ts (13 passed). dep-ui@0db05b7 capability-tab counts re-synced.
+      `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist. Tests: custody-signing.test.ts + pw:L2 ✓
+      tests/smoke/wizard-custody.spec.ts (13 passed). dep-ui@0db05b7 capability-tab counts re-synced.

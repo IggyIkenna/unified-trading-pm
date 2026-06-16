@@ -1,3 +1,11 @@
+---
+title: Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
+created: 2026-06-11
+locked_by: live-defi-rollout
+priority: P2
+status: active
+---
+
 # Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
 
 **Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability wizard/manifest —
@@ -518,23 +526,25 @@ successor alignment plan alongside F47.
 
 ### F49 — Custody/signing-surface dimension entirely unmodeled + `custody_provider` node-kind is a dumping ground
 
-**Status**: OPEN (big — missing config dimension + categorization bug). UAC `SigningSurface` enum is REAL and config-relevant
-(`registry/withdrawal_approval_rules.py` etc.: `CLOUD_KMS_ENCRYPTED` May-23, `COPPER_MPC`+`CEFFU` June-1, `FIREBLOCKS_MPC`
-out-of-scope; per-wallet `signing_surface` per codex/04-architecture/custody-providers.md). But the capability manifest has
-**0 nodes representing custody/signing surfaces**, and the wizard has **no custody stage**. Worse, the `custody_provider`
-NODE KIND is used by `scripts/openapi/_capability_gaps.py` (lines 194/250/254/355) as a FALLBACK kind for risk-gate-layers,
-kill-switches, gap-registries, and collateral venues — so its 28 nodes contain ZERO actual custody providers and the kind is
-semantically meaningless. **Fix**: (a) introduce a SigningSurface/custody registry + emit real `custody_provider` nodes from
-the UAC enum; (b) give risk_layer / kill_switch / gap_registry their OWN node kinds (or a generic `meta` kind) instead of
-overloading `custody_provider`; (c) add a custody/signing-surface wizard stage (it constrains which wallets/venues a config
-can use). Owners: UAC (registry) + PM exporter (node kinds) + uts-ui (stage).
+**Status**: OPEN (big — missing config dimension + categorization bug). UAC `SigningSurface` enum is REAL and
+config-relevant (`registry/withdrawal_approval_rules.py` etc.: `CLOUD_KMS_ENCRYPTED` May-23, `COPPER_MPC`+`CEFFU`
+June-1, `FIREBLOCKS_MPC` out-of-scope; per-wallet `signing_surface` per codex/04-architecture/custody-providers.md). But
+the capability manifest has **0 nodes representing custody/signing surfaces**, and the wizard has **no custody stage**.
+Worse, the `custody_provider` NODE KIND is used by `scripts/openapi/_capability_gaps.py` (lines 194/250/254/355) as a
+FALLBACK kind for risk-gate-layers, kill-switches, gap-registries, and collateral venues — so its 28 nodes contain ZERO
+actual custody providers and the kind is semantically meaningless. **Fix**: (a) introduce a SigningSurface/custody
+registry + emit real `custody_provider` nodes from the UAC enum; (b) give risk_layer / kill_switch / gap_registry their
+OWN node kinds (or a generic `meta` kind) instead of overloading `custody_provider`; (c) add a custody/signing-surface
+wizard stage (it constrains which wallets/venues a config can use). Owners: UAC (registry) + PM exporter (node kinds) +
+uts-ui (stage).
 
 ### F50 — `fund_structure` registry backfilled but exporter emits 0 fund_structure-kind nodes
 
 **Status**: OPEN (exporter bug). `OFFERED_FUND_STRUCTURES` (POOLED + SMA, backfilled 2026-06-13) produces only a single
-`gap_registry:fund_structure` node (mis-kinded `custody_provider`); the manifest has **0 `CapabilityNodeKind.FUND_STRUCTURE`
-nodes**. The exporter never walks OFFERED_FUND_STRUCTURES into per-structure nodes/edges. **Fix**: emit a fund_structure node
-per offering (POOLED/SMA) with its share-classes/cadence metadata, like collateral venues are emitted. Owner: PM exporter.
+`gap_registry:fund_structure` node (mis-kinded `custody_provider`); the manifest has **0
+`CapabilityNodeKind.FUND_STRUCTURE` nodes**. The exporter never walks OFFERED_FUND_STRUCTURES into per-structure
+nodes/edges. **Fix**: emit a fund_structure node per offering (POOLED/SMA) with its share-classes/cadence metadata, like
+collateral venues are emitted. Owner: PM exporter.
 
 ### F51 — Chain nodes double-counted (numeric chain-id AND name for the same chain)
 
@@ -554,9 +564,10 @@ service-derived feeds, or exclude services from `data_source`. Owner: PM exporte
 
 **Status**: OPEN (registry under-coverage). Only 1 `ml_model` node (`variant_config`) despite ml-service having a real
 model registry + ensemble trainers (`training/app/training/sports_ensemble_trainer.py`,
-`inference/app/inference/ensemble_inference.py`, `core/training_orchestrator.py`). The wizard's "which ML model" dimension
-is essentially empty. **Fix**: walk the ml-service model registry (per-archetype model variants) into `ml_model` nodes +
-archetype→model edges. Owner: PM exporter (per-service venv import, like exec-algos/feature-groups) + ml-service registry.
+`inference/app/inference/ensemble_inference.py`, `core/training_orchestrator.py`). The wizard's "which ML model"
+dimension is essentially empty. **Fix**: walk the ml-service model registry (per-archetype model variants) into
+`ml_model` nodes + archetype→model edges. Owner: PM exporter (per-service venv import, like exec-algos/feature-groups) +
+ml-service registry.
 
 ---
 
@@ -568,25 +579,25 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 **LOGIC-FREEZE** (engine fix gated on the strategy-service freeze lifting; surface-ready) · **BLOCKED-CREDENTIALS** ·
 **BLOCKED-OPERATOR-DECISION**. Verified-in-code 2026-06-15 (grep-then-read).
 
-| Domain | Findings | Status | Evidence |
-| --- | --- | --- | --- |
-| Unfinished adapters | F46 (binance/bybit/okx perp `place_order`) | BLOCKED-CREDENTIALS | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError` |
-| Unfinished adapters | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP), F43 (NASDAQ/NYSE in no leg eligibility) | OPEN | UAC registry |
-| Catalogue ↔ engine | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL_*/MARKET_MAKING_* archetypes, no v2 engine) | LOGIC-FREEZE | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends |
-| Catalogue ↔ engine | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions) | LOGIC-FREEZE | strategy-service / execution-service |
-| Catalogue ↔ engine | F22 (multi-leg collapsed to one cell) | FIXED (leg-spec registry) | derive-from-legs follow-up open |
-| Collateral + movements | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)** | OPEN | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%) |
-| Collateral + movements | F7 (policy was derivation) | FIXED (registry backfilled) | — |
-| Trader ledger | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers |
-| PnL / attribution | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner | BLOCKED-OPERATOR-DECISION (owner) | — |
-| Balances | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE | strategy-service (3 files) |
-| Balances | F40 (AO writes runtime state into tracked `accounts.json`) | OPEN | agent-orchestrator |
-| Reconciliation | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible) | FIXED (Phase-0) | — |
-| Reconciliation | F12 (config-registry regen empties destructively on non-workspace-venv host) | OPEN (environmental) | — |
-| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path) | LOGIC-FREEZE | strategy-service |
-| Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch) | FIXED (Waves A/B/C) | — |
-| Redundancy / duplication | F6, F41, F44, F51, F52 | FIXED | — |
-| Registry under-coverage | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges) | FIXED (Wave B/C 2026-06-14) | manifest 574/2433 |
+| Domain                         | Findings                                                                                                                                                      | Status                                           | Evidence                                                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                 |
+| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP), F43 (NASDAQ/NYSE in no leg eligibility)                                                         | OPEN                                             | UAC registry                                                                                                                  |
+| Catalogue ↔ engine            | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                         | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
+| Catalogue ↔ engine            | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                          |
+| Catalogue ↔ engine            | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                               |
+| Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                             | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%) |
+| Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                      | —                                                                                                                             |
+| Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                    |
+| PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | BLOCKED-OPERATOR-DECISION (owner)                | —                                                                                                                             |
+| Balances                       | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE                                     | strategy-service (3 files)                                                                                                    |
+| Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | OPEN                                             | agent-orchestrator                                                                                                            |
+| Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                  | —                                                                                                                             |
+| Reconciliation                 | F12 (config-registry regen empties destructively on non-workspace-venv host)                                                                                  | OPEN (environmental)                             | —                                                                                                                             |
+| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | LOGIC-FREEZE                                     | strategy-service                                                                                                              |
+| Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch)                                                                                     | FIXED (Waves A/B/C)                              | —                                                                                                                             |
+| Redundancy / duplication       | F6, F41, F44, F51, F52                                                                                                                                        | FIXED                                            | —                                                                                                                             |
+| Registry under-coverage        | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges)                                                                     | FIXED (Wave B/C 2026-06-14)                      | manifest 574/2433                                                                                                             |
 
 ## Open findings — tracked todos (2026-06-15, operator-requested capture)
 
@@ -618,7 +629,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       LOGIC-FREEZE. Target: strategy-service.
 - [ ] [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
       LOGIC-FREEZE. Target: strategy-service.
-- [ ] [LOGIC] P2. **F48 — 22 VOL_*/MARKET_MAKING_* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
+- [ ] [LOGIC] P2. **F48 — 22 VOL*\*/MARKET_MAKING*\* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
       strategy-service.
 - [ ] [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
       heuristic-bypass/no-SSOT). LOGIC-FREEZE. Target: execution-service.
@@ -635,8 +646,8 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 ## Follow-up todo — delete the dead version-bump landmine (2026-06-15)
 
 - [x] ✅ [SCRIPT] P2. **Delete the dead `version-bump.yml` system** — DONE **PM@c8c4e0729** (2026-06-15). Removed
-      `scripts/propagation/templates/version-bump.yml` + `scripts/propagation/rollout-version-bump-workflow.py` (the dead
-      `[skip ci]` bump writer, superseded by `semver-agent.yml`, deployed to 0 repos but re-runnable → would have
+      `scripts/propagation/templates/version-bump.yml` + `scripts/propagation/rollout-version-bump-workflow.py` (the
+      dead `[skip ci]` bump writer, superseded by `semver-agent.yml`, deployed to 0 repos but re-runnable → would have
       reintroduced the staging→main promote-PR deadlock) + added a SUPERSEDED banner to
       `docs/repo-management/version-cascade-flow.md` pointing to `semver-agent.yml`. Landing was held ~1h behind a
       transient PM version-alignment flap (local trailing main while the 5-day backlog drained fleet-wide); a watcher

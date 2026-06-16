@@ -1,7 +1,10 @@
 ---
-title: "DeFi C0 data-state audit — per-bucket layout + schema + grain truth (pre-migration)"
-created: 2026-06-01
-author: ikenna
+type: analysis
+title: DeFi C0 data-state audit — per-bucket layout + schema + grain truth (pre-migration)
+epic: defi_master
+auditor: ikenna
+date: "2026-06-01"
+status: complete
 source:
   - plans/active/defi_manifest_canonicalisation_2026_06_01.md (§C0-RD1…RD5)
   - market_tick_data_service/scripts/audit_canonical_form.py

@@ -109,8 +109,12 @@ What the audit result file must contain:
 
 Results land in `results/<slug>_YYYY_MM_DD.md`. Every result must include:
 
-1. **Frontmatter** — `type: audit-result`, `epic:`, `instructions_ref:`, `auditor:`, `date:`,
-   `status: complete|in-progress`
+1. **Frontmatter (canonical schema — QG-enforced by `scripts/plan-hygiene/check_frontmatter_schema.py`)** — every audit
+   doc carries these NON-EMPTY: `type:` (`audit-result` | `analysis` | `benchmark`), `title:`, `epic:`, `auditor:`,
+   `date:`, `status:` (`complete | in-progress`). **`epic:` is mandatory on EVERY audit doc** (operator 2026-06-16 —
+   everything belongs to a single epic, or a LIST of epics when cross-concern); each slug MUST resolve to a real
+   `plans/epics/<slug>.md`. **`instructions_ref:` is REQUIRED only for `type: audit-result`** (the epic-audit-lifecycle
+   link; ad-hoc `analysis`/`benchmark` reports omit it).
 2. **Checklist results** — each instruction checklist item marked GREEN / AMBER / RED with evidence (grep output, script
    run, SHA)
 3. **Gap items** — expressed as `- [ ] [TYPE] P#. Description` ready to paste into an active plan; each gap includes

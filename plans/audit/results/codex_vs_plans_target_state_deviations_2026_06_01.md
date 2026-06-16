@@ -1,7 +1,10 @@
 ---
-title: "Codex-vs-active-plans target-state deviation audit"
-created: 2026-06-01
-author: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)
+type: analysis
+title: Codex-vs-active-plans target-state deviation audit
+epic: plan_hygiene_master
+auditor: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)
+date: "2026-06-01"
+status: in-progress
 source:
   - plans/active/*.md (46 active plans; ~36 reference codex)
   - codex/ (801 docs)
@@ -9,9 +12,9 @@ scope:
   "Where an active plan's TARGET END-STATE conflicts with / is missing from the codex doc it claims as SSOT. Goal:
   update codex AHEAD of archival so archival is mechanical."
 method:
-  "6 read-only sonnet workers, one per codex-dir cluster (02-data; 04-architecture; 05-infrastructure;
+  6 read-only sonnet workers, one per codex-dir cluster (02-data; 04-architecture; 05-infrastructure;
   06-coding-standards+08-workflows; 12-agent-workflow+governance; 09-strategy+security+master). Each given the focused
-  plan set referencing its dir. Opus consolidation + contradiction verification."
+  plan set referencing its dir. Opus consolidation + contradiction verification.
 ---
 
 # Codex-vs-plans target-state deviation audit (2026-06-01)

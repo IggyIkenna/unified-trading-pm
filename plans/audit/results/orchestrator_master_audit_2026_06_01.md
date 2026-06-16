@@ -1,15 +1,20 @@
 ---
-name: orchestrator_master_audit_2026_06_01
 type: audit-result
+title: Orchestrator Master Audit — 2026-06-01
 epic: orchestrator_master
+auditor: claude + operator
+date: "2026-06-01"
+status: complete
+instructions_ref: ../instructions/orchestrator_master_audit_instructions.md
+name: orchestrator_master_audit_2026_06_01
 assigned_vm: vm-orchestrator
 tier: L5
 audited_by: slot-1-ikenna
 audit_date: 2026-06-01
 instructions: ../instructions/orchestrator_master_audit_instructions.md
 scope_note:
-  "First run after § M (closed-loop autonomy) extension. Code/static + plan-state checks run from a worktree host;
-  live-fleet checks (SSH/AWS/authed-fan-out) are operator-side and marked LIVE-DEFERRED."
+  First run after § M (closed-loop autonomy) extension. Code/static + plan-state checks run from a worktree host;
+  live-fleet checks (SSH/AWS/authed-fan-out) are operator-side and marked LIVE-DEFERRED.
 ---
 
 # Orchestrator Master Audit — 2026-06-01

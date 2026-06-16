@@ -1,15 +1,16 @@
 ---
 type: audit-result
+title: DeFi Master — Audit Result 2026-06-03 (acquisition-mechanics pass)
 epic: defi_master
+auditor: harsh + claude (opus-4-8, 1M)
+date: 2026-06-03
+status: complete
 instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
 also_covers:
   - plans/audit/instructions/instruments_master_audit_instructions.md
   - plans/audit/instructions/mtds_mdps_master_audit_instructions.md (item k — new)
   - plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md (item k — new)
   - plans/audit/instructions/strategy_master_audit_instructions.md
-auditor: harsh + claude (opus-4-8, 1M)
-date: 2026-06-03
-status: complete
 dimension: acquisition-mechanics + batch/live wiring + downstream propagation (CODE-VERIFIED)
 not_covered: data-state corpus coverage (defi items o–z, CF-1…12) — requires prod GCS/manifest reads; separate run
 ---

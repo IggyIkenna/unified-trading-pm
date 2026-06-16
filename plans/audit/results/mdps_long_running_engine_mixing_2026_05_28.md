@@ -1,10 +1,13 @@
 ---
-name: mdps_long_running_engine_mixing_2026_05_28
 type: audit-findings
+title: MDPS Long-Running Engine Mixing Audit — 2026-05-28
+epic: mtds_mdps_master
+auditor: claude opus 4.7 (slot main subagent)
+date: "2026-05-28"
+status: complete
+name: mdps_long_running_engine_mixing_2026_05_28
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
-created: 2026-05-28
-author: claude opus 4.7 (slot main subagent)
 ---
 
 # MDPS Long-Running Engine Mixing Audit — 2026-05-28

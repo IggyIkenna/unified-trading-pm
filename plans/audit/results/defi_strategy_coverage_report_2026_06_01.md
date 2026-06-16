@@ -1,3 +1,12 @@
+---
+type: analysis
+title: DeFi strategy data-coverage — honest breakdown per data_type × venue/chain
+epic: defi_master
+auditor: claude + operator
+date: "2026-06-01"
+status: complete
+---
+
 # DeFi strategy data-coverage — honest breakdown per data_type × venue/chain
 
 _prd indexes; total strategy-relevant rows: 2,870,693_
