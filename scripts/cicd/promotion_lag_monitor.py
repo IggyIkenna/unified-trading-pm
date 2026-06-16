@@ -133,6 +133,32 @@ def _repos() -> list[str]:
     return out
 
 
+def _branch_exists(repo: str, branch: str) -> bool:
+    """True if origin/<branch> exists for the repo (404/error → False)."""
+    return isinstance(_gh_json(f"repos/{OWNER}/{repo}/branches/{branch}"), dict)
+
+
+def _workflow_present_on_ref(repo: str, name: str, ref: str) -> bool | None:
+    """True/False if .github/workflows/<name> exists on <ref>; None on an unknown error.
+
+    Gap 6 P2 (ci_pipeline_self_healing §Gap 6): a missing staging-backmerge-to-ldr.yml on the
+    STAGING BRANCH is the documented Tier-C runaway cause — `push:[staging]` only fires from
+    staging's own copy, so a file present on LDR but absent on staging silently never back-merges.
+    Returns None (not False) on a non-200/404 status so a transient error never false-pages.
+    """
+    r = subprocess.run(
+        ["gh", "api", "-i", f"repos/{OWNER}/{repo}/contents/.github/workflows/{name}?ref={ref}"],
+        capture_output=True,
+        text=True,
+    )
+    status = _parse_gh_api_i(r.stdout)[0]
+    if status == 200:
+        return True
+    if status == 404:
+        return False
+    return None
+
+
 def _lag(
     repo: str, base: str, head: str, now: dt.datetime, thresh_s: float, skip_ci_counts: bool
 ) -> tuple[int, float, str] | None:
@@ -283,6 +309,19 @@ def main() -> int:
                 repo_lags[repo][label] = {"n_commits": n, "age_s": age, "oldest_msg": omsg, "lag": True}
             else:
                 repo_lags[repo][label] = {"lag": False}
+
+        # Gap 6 P2: staging-backmerge-to-ldr.yml MUST exist on the STAGING branch (push:[staging]
+        # only fires from staging's own copy). A missing copy = the documented Tier-C runaway cause
+        # → page proactively (before it strands a repo), not just react via the runaway breaker.
+        if repo != "unified-trading-pm" and _branch_exists(repo, "staging"):
+            present = _workflow_present_on_ref(repo, "staging-backmerge-to-ldr.yml", "staging")
+            repo_lags[repo]["staging_backmerge_present"] = {"present": present}
+            if present is False:
+                findings.append(
+                    f"{repo} staging-backmerge-to-ldr.yml MISSING on the staging branch — "
+                    f"staging→LDR back-merge will never fire (Tier-C runaway risk); roll out the "
+                    f"template + promote it to staging"
+                )
 
     # Persist the warmed ETag cache so the next run's unchanged compares are free 304s.
     if cache_file:
