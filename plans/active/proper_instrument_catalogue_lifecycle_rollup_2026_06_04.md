@@ -733,22 +733,26 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
       and the service serves the static beta blob regardless of age (follow-up #4 above). Only needed while the beta
       preview is on (pre `--apply`). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic:
       instruments_master. Provenance: R7 follow-up #4 (2026-06-15).
-- [ ] [INFRA] P2. **Dedicated rollup service refreshes ONLY the beta blob while beta mode is on — live `full.json.gz`
-      goes stale (coupling, surfaced 2026-06-16).** The dedicated `uts-prod-data-status-rollup-svc` inherited
-      `DATA_STATUS_BETA_MANIFEST_BLOB` from the deployment-api YAML, so `is_beta_mode()` is true on it and the
-      `/rollup-run` endpoint filters to `beta_eligible` + writes `.beta.json.gz` only. The live `full.json.gz` for every
-      service is therefore no longer refreshed by any scheduled compute (last write 2026-06-15T20:50, frozen since the
-      gen2 job was deleted). **Invisible today** — the main deployment-api service is ALSO in beta mode, so every
-      data-status read goes through the beta path; nobody consumes the stale live blob. **Risk** = if beta preview is
-      turned off on the MAIN service but the env is left on the DEDICATED service, the main service reads an 8h+-stale
-      live rollup → falls through to an all-AG live compute on the 8Gi main service → the original 503/OOM risk returns.
-      **Recommended fix (clean):** make `/rollup-run` ALWAYS compute the live rollup (all services → `full.json.gz`) and
-      ADDITIONALLY the beta rollup (`beta_eligible` → `.beta.json.gz`) when `DATA_STATUS_BETA_MANIFEST_BLOB` is set —
-      so live never goes stale regardless of the beta preview (parameterise the blob `kind` instead of the global
-      env-driven `is_beta_mode()` path). **Interim operational rule:** when turning beta off, remove
-      `DATA_STATUS_BETA_MANIFEST_BLOB` from BOTH the main service AND the dedicated rollup service in lockstep. Repo:
-      deployment-api (endpoint) + deployment-service (env wiring). assigned_vm: vm-cross-cutting. parent_epic:
-      instruments_master. Provenance: R7 follow-up #4 final verification (2026-06-16).
+- [x] ✅ [INFRA] P2. **Per-service beta + two-phase rollup — RESOLVED the market-tick-data-service 503 (2026-06-16).**
+      The dedicated `uts-prod-data-status-rollup-svc` inherited `DATA_STATUS_BETA_MANIFEST_BLOB`, so in beta mode the
+      rollup only refreshed `.beta.json.gz` for beta-eligible services (instruments-service) and the manifest/coverage
+      READ path namespaced EVERY service to `.beta.json.gz` — but a non-eligible service (mtds/features) has no beta
+      blob, so its read found nothing → fell through to a multi-minute all-AG live compute on the 8 GiB main service →
+      **HTTP 503** (manifest 18s, coverage-summary 55s). **Operator hit this on the market-tick-data-service data-status
+      page.** **SHIPPED (deployment-api):** (1) **beta is now PER-SERVICE** — `manifest_source.is_service_beta(svc)` =
+      `is_beta_mode() AND svc in BETA_ELIGIBLE_SERVICES`; `rollup_blob_path` + both staleness exemptions key off it, so
+      only instruments-service flips to `.beta.json.gz` and every other service keeps its live `{svc}/full.json.gz` (and
+      `coverage.json.gz`) even in beta mode (BETA_ELIGIBLE_SERVICES + beta_eligible SSOT moved to manifest_source). (2)
+      **`/rollup-run` is TWO-PHASE** — phase 1 ALWAYS computes the LIVE rollup for every service (beta forced off →
+      `full.json.gz`), phase 2 ADDITIONALLY computes the beta-eligible service(s) (beta forced on → `full.beta.json.gz`)
+      — so live blobs never go stale regardless of the beta preview. (3) **coverage-summary** dropped its
+      `if not is_beta_mode()` rollup-bypass (same per-service treatment). Regression: 6 new tests in
+      `test_data_status_beta_rollup_and_cli_config.py` (per-service blob path, is_service_beta, two-phase endpoint,
+      coverage beta-path, live-staleness). Shipped deployment-api@f95b931 (+9e85162); both main svc + dedicated rollup
+      svc redeployed (builds a7eb2365 + 8a97fb78). **Verified live 2026-06-16:** mtds manifest 503→**200 (0.96s)**, mtds
+      coverage-summary 55s→**200 (0.20s)**, instruments beta view intact (**200**, served_from rollup). This also
+      removes the "turn beta off in lockstep" foot-gun (live blobs are always fresh now). Repo: deployment-api.
+      assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7 follow-up #4 final verification.
 - [x] ✅ [CHORE] P3. **Landed the R6 `_bisect` diagnostic removal.** The temp print-bisection (`_bisect` +
       `_build_one_service_rollup` try/except) is GONE from the rollup worker on `live-defi-rollout` — it rode the fix-(e)
       worker-clean change (shipped alongside the in-service endpoint, main@a466acc). Verified: `_bisect` / `os.write(2`
