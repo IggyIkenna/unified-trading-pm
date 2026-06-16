@@ -165,7 +165,21 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - **2026-06-16** — OKX historical funding: public `funding-rate-history` API only serves **~3 months** (paginating to
   2023 = empty), so it's NOT a deep-history backfill (unlike Aster). The real fix is the **Tardis OKX backfill
   universe** (only 9 coins captured) — kept as the OKX data todo, not an API path.
+- **2026-06-16** — ⚠️ **lending-indices bucket env-split debt (operator-flagged)**: canonical = env-split
+  `lending-indices-${ENV_SHORT}-${PID}` (`resolve_bucket_name(kind="lending-indices")` → `lending-indices-prd-…`,
+  cloud-providers.yaml:187), BUT the WRITER still lands in the **legacy un-suffixed `lending-indices-central-…`** (data
+  back to 2022-11; `-prd` has only `_migration/`) — IDENTICAL to the `lst-rates` debt. So the Aave backfill VM is
+  writing to the legacy bucket too. Needs (a) writer-env fix so future writes resolve to `-prd`, (b) migrate existing
+  legacy data → `-prd`. Owned by `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (same class as
+  lst-rates). The harness reads the legacy bucket for now (as it does for lst-rates).
 - _(append entries as work continues)_
+
+## Open data gaps (file/verify) — added 2026-06-16
+
+- [ ] [DATA] P2. `lending-indices` (+ `lst-rates`) writer targets the LEGACY un-suffixed bucket; canonical is
+      `lending-indices-prd-…` / `lst-rates-prd-…` (empty `_migration/`). Fix the writer to `resolve_bucket_name`
+      env-split + migrate legacy data → `-prd`. **Repo: market-tick-data-service + a GCS migration.** Owner:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
 
 ## Findings filed
 
