@@ -422,6 +422,18 @@ quarantined repo, so resolving on LDR does nothing. The only working recovery is
 `staging-to-main` dispatch promoted strategy/uac). This is why every jam needs hands-on recovery — the auto-recovery the
 system claims to have does not exist for this path.
 
+**Recovery performed 2026-06-16 (the manual steps the auto-fix below must replace):**
+
+1. Diagnosed all 4 via trial `git merge staging→main` — execution = already merged (ahead_by=0); strategy + uac merged
+   CLEAN; SIT = real `pyproject.toml` conflict (main stuck 0.3.3 + old dep floors vs LDR/staging 0.6.0 authoritative).
+2. SIT: `admin-force-sync-all-to-main.sh --repo system-integration-tests --no-commit --preserve-local
+   --force-version-override` (main ⊆ LDR, behind_by=0 → content-lossless) → main=LDR (0.6.0), protection restored, the
+   open conflicting staging→main PR #231 auto-resolved to MERGED.
+3. Cleared `promotion_quarantine` + `promotion_failures` for all 4 and reconciled stale `versions` (exec 0.9.1→0.10.0,
+   SIT 0.5.0→0.6.0) in `workspace-manifest.json` — **PM PR #351 (merged)**.
+4. `gh workflow run staging-to-main.yml` → promoted strategy + uac (clean merges). Final: quarantine + failures EMPTY;
+   all 4 main==LDR (modulo the 1-file semver-brake drain). Monitoring-ui "Promotion blocked (4)" panel clears.
+
 - [ ] [WORKFLOW] P1. Make quarantine **auto-recoverable**. On each run, BEFORE the skip, re-test each quarantined repo's
       actual promotability (staging→main merge-clean AND deps-on-main) — if it would now succeed, **un-quarantine and
       let it through this run** (the skip is only justified while it would genuinely re-fail). A repo that merges clean
@@ -447,16 +459,18 @@ authoritative; in CI it is currently a **silent no-op** → promotion-readiness 
 the inputs that lets the recurring jam mis-gate (promote-blocked on a dep the manifest THINKS is red but Firestore knows
 is green, or vice-versa).
 
-- [ ] [WORKFLOW] P1. Install the Firestore client in the PM promote/gate workflows (`pip install google-cloud-firestore`
-      step, mirroring whatever `ldr-to-staging-promote.yml` / `ci-failure-watcher.yml` use) so `_fs_overlay` actually
-      runs. Verify the log line flips to a successful overlay, not the fallback.
-- [ ] [SCRIPT] P1. Make the overlay failure **LOUD, not silent**: the bare `except Exception: pass` must at minimum
-      `print` a WARNING with the exception type AND set an output/annotation so a missing-dep regression is visible in
-      the run summary (a silent fallback to stale cache is exactly how this hid). Distinguish "Firestore genuinely
-      unavailable (degraded, warn + fallback)" from "client not installed (a CI config bug — should be loud/failing)".
-- [ ] [SCRIPT] P2. Add a one-line self-check at gate start: if `google.cloud.firestore` import fails in a context where
-      Firestore is expected (PM CI), emit a single explicit `::warning::` so the side-store's authoritativeness can be
-      monitored rather than assumed.
+- [x] ✅ [WORKFLOW] P1. Installed the Firestore client in BOTH PM promote workflows — `staging-to-main.yml` +
+      `ldr-to-staging-promote.yml` now carry a best-effort `google-github-actions/auth@v3` (GCP_SA_KEY) +
+      `pip install "google-cloud-firestore>=2,<3"` step after Checkout, plus a job-level `GOOGLE_CLOUD_PROJECT` env (the
+      overlay needs both auth+SDK+project). Mirrors `ci-failure-watcher.yml`. — unified-trading-pm PR #353 (2026-06-16).
+      _Verify on the next live run: the gate log shows "overlay applied (live)" not the ModuleNotFoundError fallback._
+- [x] ✅ [SCRIPT] P1. Made the overlay failure **LOUD** in all three sites (`_fs_overlay` ×2 in `staging-to-main.yml`
+      heredocs + `_overlay_firestore_ci_status` in `tier_c_promotion_gate.py`): split `except Exception: pass` into a
+      `ModuleNotFoundError` branch (CI-config bug → `::warning:: SDK unavailable, deciding on STALE cache`) vs a generic
+      branch (Firestore degraded → warn + fallback). — unified-trading-pm PR #353 (2026-06-16).
+- [x] ✅ [SCRIPT] P2. Gate-start self-check covered by the LOUD `::warning::` above — a missing/failed Firestore client
+      now emits an explicit annotation each run, so the side-store's authoritativeness is monitored, not assumed. —
+      unified-trading-pm PR #353 (2026-06-16).
 
 ## Composes with
 
