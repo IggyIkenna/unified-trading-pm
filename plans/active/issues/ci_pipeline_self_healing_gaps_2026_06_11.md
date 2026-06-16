@@ -525,9 +525,24 @@ producer's required version is **actually resolvable from AR** before promoting 
       a dep has versions in AR but none satisfy the floor. **Strictly fail-OPEN** (gcloud absent / AR error / empty /
       no pyproject / no floor → allow). Unit-tested (ver-tuple, floor parse) + E2E (UTL+strategy satisfied; impossible
       floor blocks). Wired into `staging-to-main.yml` as **STAGE 1.8b WARN-only** (`continue-on-error`, does NOT yet
-      modify READY_REPOS) — uses the GCP auth added by Gap 8. **Remaining (canary follow-up):** after a few runs confirm
-      no false positives in the `::warning::` output, flip to BLOCK by dropping unsatisfied repos from `READY_REPOS`
-      (mirror the dep-order "blocked → SKIPPED, drains next run" pattern).
+      modify READY_REPOS) — uses the GCP auth added by Gap 8.
+      **⛔ CANARY VERDICT 2026-06-16 — DO NOT FLIP TO BLOCK; the premise is flawed for path-sourced deps.** Running the
+      exact check against all 24 repos (`--ref staging`) would BLOCK **system-integration-tests** (alerting/features/
+      strategy) + **e2e-testing** (strategy) — all **FALSE POSITIVES**: AR carries only stale wheels (strategy 0.2.1 vs
+      0.9.0 on main; alerting 0.1.0 vs 0.5.0; features 0.0.1 vs 0.4.0), BUT these consumers declare each dep with
+      `[tool.uv.sources] path=../<dep> editable=true`, so their CI build resolves the dep from the **sibling dep-clone at
+      the correct version, NOT from AR**. AR staleness is therefore irrelevant to whether their build resolves — the
+      AR-publish-ordering check does not reflect the actual resolution path for editable/path-sourced internal deps
+      (which is ~all of them). The canary correctly prevented a fleet-freezing bad flip.
+      **Open question for the operator (resolution model):** do internal deps EVER resolve from AR (e.g. in the Docker
+      image build that may not dep-clone siblings), or always from the editable path? If always-path, the original-jam
+      diagnosis ("UAC not in AR → UTL red") was actually a dep-clone/version-tag failure, not an AR-publish gap, and
+      Gap 9a should be **reverted** (it guards a non-existent resolution path). If the image build DOES use AR, Gap 9a
+      should be **refined to skip deps that carry a `[tool.uv.sources] path` entry** (check only genuinely-AR-resolved
+      deps) — which, given current pyprojects, makes it inert until a non-path AR dep appears.
+      **Status: stays WARN-only (harmless diagnostic — surfaces AR staleness) pending that decision. NOT flipped.**
+      Separately surfaced: AR wheels are massively behind main (strategy 0.2.1 vs 0.9.0) — consistent with
+      `publish-package.yml` never running; whether that matters depends on the same path-vs-AR resolution answer.
 - [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric (per dep edge) in `promotion_lag_monitor.py` / the
       dashboard so a stuck publish is visible before it jams a consumer. (The `assert_deps_published_to_ar.py` check is
       the reusable primitive — `--json` output gives `unpublished[]` per repo for the metric.)
