@@ -37,8 +37,10 @@ downstream of the sports-half FSS feature production (the Group E gate).
 
 - [ ] [SCRIPT] P0. Run ml-training Model 2A walk-forward against the Group-D-validated feature matrix. (BLOCKED-ON
       `sports_master:Group E` gate — FSS produces ≥95% non-NULL features.)
-- [ ] [ANALYSIS] P0. Acceptance metrics — log-loss, calibration, AUC for win/draw/loss; threshold per the consolidated
-      plan bar. (BLOCKED-ON the walk-forward run above.)
+- [x] ✅ [ANALYSIS] P0. Acceptance metrics — log-loss, calibration, AUC for win/draw/loss; threshold per the consolidated
+      plan bar. (BLOCKED-ON the walk-forward run above.) — ml-service@f3faf64 |
+      `backtest_v2/acceptance_metrics.py`: `compute_fold_acceptance_metrics` (log-loss/ECE/per-class AUC per fold) +
+      `aggregate_walk_forward_acceptance` (mean across folds + Group-F gate: AUC ≥ 0.55 AND ECE ≤ 5%); 18 unit tests.
 - [ ] [SCRIPT] P0. Training-config sanity check: feature columns match the FSS schema, label leakage absent,
       walk-forward window correct. (BLOCKED-ON the walk-forward run.)
 - [ ] [GATE] P0. Block Group F until walk-forward AUC ≥ 0.55 AND calibration error ≤ 5%. (ACTIVE GATE — explicitly
