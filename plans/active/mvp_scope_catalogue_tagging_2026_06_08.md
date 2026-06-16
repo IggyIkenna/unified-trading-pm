@@ -137,18 +137,22 @@ which leagues, which market-groups — has no independent version.
   `config_version` each for `MVP_SCOPE`, leagues, and prediction-markets, because they change **independently** (a
   leagues edit must not bump the MVP_SCOPE version and falsely flag an MVP coverage delta).
 
-- [ ] [CODE] P1. **Add `config_version: int` + `config_content_hash: str` to each config module** — per-config monotonic
+- [~] [CODE] P1. **Add `config_version: int` + `config_content_hash: str` to each config module** — per-config monotonic
       `config_version` (int, bumped on every content change) + a stable `config_content_hash` (content-addressed) on the
       `MVP_SCOPE` config and on the sports-leagues + prediction-markets configs (per-config, NOT a single global int).
-      Metadata only — no GCS partition key.
+      Metadata only — no GCS partition key. **MVP_SCOPE DONE — uac@47ed81a**: `MVP_SCOPE_CONFIG_VERSION` +
+      `MVP_SCOPE_CONFIG_HASH` (deterministic — sorted-frozenset serializer, PYTHONHASHSEED-independent) +
+      `ConfigDescriptor` + `mvp_scope_config_descriptor()`, exported at the package root. **Pending: leagues +
+      prediction-markets configs** (reuse the same `ConfigDescriptor` pattern — smaller follow-ons).
 - [ ] [CODE] P1. **Surface `config_version` + `config_content_hash` in the deployment-api data-status response** — so a
       coverage delta attributes to a scope-change (config_version bumped) vs a data-change (config_version stable).
       Carry the per-config triple (config name, version, hash) alongside the `scope=mvp|could_exist|all` coverage
       payload.
-- [ ] [CODE] P1. **Unit test: config_version is monotonic + the hash changes when the config changes** — assert
+- [~] [CODE] P1. **Unit test: config_version is monotonic + the hash changes when the config changes** — assert
       `config_version` only ever increases (never decreases/reused) and that `config_content_hash` changes iff the
       config content changes (and is stable across unrelated edits) — one such test per config (MVP_SCOPE / leagues /
-      prediction-markets).
+      prediction-markets). **MVP_SCOPE DONE — uac@47ed81a**: `tests/unit/test_mvp_scope.py` (public surface + determinism
+      + hash-changes-iff-content-changes, 3 tests). Leagues/prediction tests ride their config additions.
 
 ## Open questions (operator)
 
