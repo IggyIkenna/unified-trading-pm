@@ -57,4 +57,11 @@ own change is clean. The schema check existed but enforced nothing at the point 
   `check-branch-drift`, and `prettier-autostage` use the identical pattern. Decide per-hook whether it should be
   fail-closed (block on real failure) or stay fail-open (advisory). `check-branch-drift` in particular is commented
   "behind-origin → STOP" but currently cannot block. Do this as a deliberate, separately-reviewed pass — not blindly.
-  </content> </invoke>
+- **P2 — the prek hook validates frontmatter but NOT todo-FORMAT, so `check_todo_format` violations slip onto LDR the
+  same way (surfaced 2026-06-16).** `run_hygiene_sweep.sh --precommit` runs `check_frontmatter_schema.py` (the fix
+  above) but still does NOT run `check_todo_format` / `check_todo_regression` — those live only in the _advisory_
+  `plan-health-agent.yml` gate (red + dispatches the escalate fixer, never blocks merge). So a `docs(plans):` edit that
+  adds a `- [ ]` without `[TAG] P<n>.` commits cleanly, reaches LDR, then fails the advisory sweep on EVERY subsequent
+  LDR PR → dispatches escalate-to-orchestrator each time (the 2026-06-16 escalate storm; 3 such todos in 2 plans were
+  the live cause, fixed PM@e8cb2bbd8). Decide whether `--precommit` should ALSO run `check_todo_format` fail-closed on
+  staged plans (same fail-closed-vs-advisory call as the hooks above). </content> </invoke>
