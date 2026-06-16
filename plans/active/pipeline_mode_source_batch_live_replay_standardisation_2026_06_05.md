@@ -707,3 +707,5 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   drilldown ships in BOTH UIs with pw:L2. **The #5 `live_websocket` multi-source path collision is eliminated — a real
   `--apply` can now bake live rows safely.** The only OPEN downstream item is the documented stale-base dep-update
   cascade (UTL PR#369 / BLRS PR#81) which self-resolves on promotion (see tick-7).
+
+- **2026-06-16 (tick 8 addendum) — proactively nudged the 2 stale dep-update PRs.** Confirmed NO deadlock (UTL+BLRS migrations are on `staging` and promoting to `main` on normal lag; staging advancing). The 2 red dep-update PRs (UTL#369/BLRS#81) were stale only because their HEADS predated the migration while their base=staging now contains it → ran `gh api .../pulls/{n}/update-branch -X PUT` on both (merges staging`s alias-free code into the PR head → v2 re-runs on alias-free code + UAC 0.15.0 → expected green → auto-merge → cascade fully resolved). This is a CI re-run on the corrected base (control-surface unstick), not a content hand-edit. If either stays red post-merge, the documented vm-planning escalation path applies.
