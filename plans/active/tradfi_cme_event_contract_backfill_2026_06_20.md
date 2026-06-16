@@ -54,7 +54,7 @@ least-duplicative rather than spinning a separate one-item plan.
 - [x] ✅ [AGENT] [SCRIPT] P0. **Register the VM prefix** `tradfi-event-contract-backfill-` in `vm_zombie_watchdog.py`
       `VM_PREFIX_TO_BUCKET` (per CLAUDE.md VM-naming-convention rule), with a `lifecycle_class` — register BEFORE the
       first launch (a launcher whose prefix is not in the map is invisible to the zombie watchdog).
-      — 2026-06-16: registered in vm_zombie_watchdog.py with `_INSTR_TRADFI` bucket + `EPHEMERAL_BATCH` lifecycle; committed in deployment-service@6de9aa3.
+      — deployment-service@6de9aa3 | `_INSTR_TRADFI` bucket, `EPHEMERAL_BATCH` lifecycle; QG green (also fixed pre-existing FastAPI _IncludedRouter test failures).
 - [ ] [VERIFY] P0. Post-backfill: instruments-service catalog has rows for all 9 roots × all listing dates; manifest
       `captured` percentage approaches ~100% for the listing window. Confirm via direct manifest query (not assumed).
       Once verified, the archived CME↔Polymarket arb sub-plan's Phases 1-5 are unblocked.
