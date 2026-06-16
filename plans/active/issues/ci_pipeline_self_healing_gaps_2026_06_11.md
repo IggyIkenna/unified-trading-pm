@@ -400,6 +400,64 @@ fixed. A hourly cron × ~24 repos also adds Actions spend during the same billin
 file), not the schedule tick. Re-introduce the tick ONLY on a concrete observed case of a raw-`GITHUB_TOKEN` staging
 push (e.g. a semver `chore(release)` bump) that failed to self-heal on the next drain cycle.
 
+## Gap 7 — `promotion_quarantine` is a SELF-PERPETUATING DEADLOCK: skip → never `promoted` → never auto-clears (P1, incident 2026-06-16)
+
+**Found 2026-06-16** while freeing the monitoring-ui "Promotion blocked — staging→main (4)" panel
+(execution-service / strategy-service / unified-api-contracts / system-integration-tests, each `attempts:3,
+escalated:true`). The four had been quarantined during the recurring jam — but **3 of the 4 merged staging→main cleanly
+when trial-merged** (only SIT had a real `pyproject.toml` version conflict). They were NOT blocked by any current
+problem; they were stuck purely by the quarantine mechanism itself.
+
+**The deadlock (`staging-to-main.yml`):**
+
+1. The promote-loop builder (`~line 536`) **SKIPS** any repo in `promotion_quarantine`.
+2. The counter step (`~line 790`) only **clears** quarantine for repos in the `promoted` set
+   (`for repo in promoted: quarantine.pop(repo)`).
+3. A skipped repo can never enter `promoted` → its quarantine entry can never auto-clear → it is skipped **forever**.
+
+The escalation message even tells the worker the WRONG recovery: _"Resolve on live-defi-rollout, let quality-gates-v2
+re-gate, and the next successful promotion auto-clears the quarantine."_ — but the next promotion **skips** the
+quarantined repo, so resolving on LDR does nothing. The only working recovery is a **manual `promotion_quarantine` edit**
+(what I did: PM PR #351 cleared all 4 + reconciled stale `versions` for the two already-on-main; then a
+`staging-to-main` dispatch promoted strategy/uac). This is why every jam needs hands-on recovery — the auto-recovery the
+system claims to have does not exist for this path.
+
+- [ ] [WORKFLOW] P1. Make quarantine **auto-recoverable**. On each run, BEFORE the skip, re-test each quarantined repo's
+      actual promotability (staging→main merge-clean AND deps-on-main) — if it would now succeed, **un-quarantine and
+      let it through this run** (the skip is only justified while it would genuinely re-fail). A repo that merges clean
+      must never be permanently skipped. Pair with a bounded "probe every Nth run" if a full re-test per run is too
+      costly.
+- [ ] [WORKFLOW] P1. Fix the escalation text + handler: a quarantined repo with a REAL conflict (e.g. SIT's pyproject)
+      needs the divergence collapsed (force-sync main=LDR when `main ⊆ LDR`, or resolve on staging) — and then an
+      **explicit quarantine clear**, because a successful promotion of the SAME content won't fire while it's skipped.
+      The orchestrator's auto-recover (`ci_failure_watcher.py`) should clear `promotion_quarantine[repo]` once the
+      underlying PR is resolved, not assume the next drain clears it.
+- [ ] [WORKFLOW] P2. Add a watchdog/alert for `promotion_quarantine` entries older than ~2h with `escalated:true` AND a
+      currently-clean staging→main merge — that exact combination is the deadlock signature (stuck with nothing wrong).
+
+## Gap 8 — staging→main dep-order gate decides on STALE manifest cache: Firestore overlay dies on `ModuleNotFoundError: google` (P1, incident 2026-06-16)
+
+**Found 2026-06-16** in the live `staging-to-main.yml` STAGE 1.8 (dep-order gate) log:
+`ci_status Firestore read unavailable (ModuleNotFoundError: No module named 'google') — using manifest fallback cache`.
+The gate's `_fs_overlay()` (and `tier_c_promotion_gate.py::_overlay_firestore_ci_status`) is wrapped in a bare
+`except Exception: pass`, so when the PM Actions runner lacks `google-cloud-firestore`, the **live Firestore-authoritative
+`ci_status` overlay is silently skipped** and the gate falls back to the manifest's **committed (stale) `ci_status`
+cache**. Per `ci_status_firestore_side_store_2026_06_10.md` the whole point of Phase-2 was to make Firestore
+authoritative; in CI it is currently a **silent no-op** → promotion-readiness decisions ride stale state, which is one of
+the inputs that lets the recurring jam mis-gate (promote-blocked on a dep the manifest THINKS is red but Firestore knows
+is green, or vice-versa).
+
+- [ ] [WORKFLOW] P1. Install the Firestore client in the PM promote/gate workflows (`pip install google-cloud-firestore`
+      step, mirroring whatever `ldr-to-staging-promote.yml` / `ci-failure-watcher.yml` use) so `_fs_overlay` actually
+      runs. Verify the log line flips to a successful overlay, not the fallback.
+- [ ] [SCRIPT] P1. Make the overlay failure **LOUD, not silent**: the bare `except Exception: pass` must at minimum
+      `print` a WARNING with the exception type AND set an output/annotation so a missing-dep regression is visible in
+      the run summary (a silent fallback to stale cache is exactly how this hid). Distinguish "Firestore genuinely
+      unavailable (degraded, warn + fallback)" from "client not installed (a CI config bug — should be loud/failing)".
+- [ ] [SCRIPT] P2. Add a one-line self-check at gate start: if `google.cloud.firestore` import fails in a context where
+      Firestore is expected (PM CI), emit a single explicit `::warning::` so the side-store's authoritativeness can be
+      monitored rather than assumed.
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first
