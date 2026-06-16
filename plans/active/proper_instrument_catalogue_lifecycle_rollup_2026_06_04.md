@@ -733,6 +733,22 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
       and the service serves the static beta blob regardless of age (follow-up #4 above). Only needed while the beta
       preview is on (pre `--apply`). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic:
       instruments_master. Provenance: R7 follow-up #4 (2026-06-15).
+- [ ] [INFRA] P2. **Dedicated rollup service refreshes ONLY the beta blob while beta mode is on — live `full.json.gz`
+      goes stale (coupling, surfaced 2026-06-16).** The dedicated `uts-prod-data-status-rollup-svc` inherited
+      `DATA_STATUS_BETA_MANIFEST_BLOB` from the deployment-api YAML, so `is_beta_mode()` is true on it and the
+      `/rollup-run` endpoint filters to `beta_eligible` + writes `.beta.json.gz` only. The live `full.json.gz` for every
+      service is therefore no longer refreshed by any scheduled compute (last write 2026-06-15T20:50, frozen since the
+      gen2 job was deleted). **Invisible today** — the main deployment-api service is ALSO in beta mode, so every
+      data-status read goes through the beta path; nobody consumes the stale live blob. **Risk** = if beta preview is
+      turned off on the MAIN service but the env is left on the DEDICATED service, the main service reads an 8h+-stale
+      live rollup → falls through to an all-AG live compute on the 8Gi main service → the original 503/OOM risk returns.
+      **Recommended fix (clean):** make `/rollup-run` ALWAYS compute the live rollup (all services → `full.json.gz`) and
+      ADDITIONALLY the beta rollup (`beta_eligible` → `.beta.json.gz`) when `DATA_STATUS_BETA_MANIFEST_BLOB` is set —
+      so live never goes stale regardless of the beta preview (parameterise the blob `kind` instead of the global
+      env-driven `is_beta_mode()` path). **Interim operational rule:** when turning beta off, remove
+      `DATA_STATUS_BETA_MANIFEST_BLOB` from BOTH the main service AND the dedicated rollup service in lockstep. Repo:
+      deployment-api (endpoint) + deployment-service (env wiring). assigned_vm: vm-cross-cutting. parent_epic:
+      instruments_master. Provenance: R7 follow-up #4 final verification (2026-06-16).
 - [x] ✅ [CHORE] P3. **Landed the R6 `_bisect` diagnostic removal.** The temp print-bisection (`_bisect` +
       `_build_one_service_rollup` try/except) is GONE from the rollup worker on `live-defi-rollout` — it rode the fix-(e)
       worker-clean change (shipped alongside the in-service endpoint, main@a466acc). Verified: `_bisect` / `os.write(2`
