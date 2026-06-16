@@ -131,6 +131,29 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
       derivative_ticker backfill universe in MTDS; likely a coverage gap limiting cross-venue dispersion. **Repo:
       market-tick-data-service.**
 
+- **2026-06-16** — Confirmed returns are **LINEAR** (cumulative sum, mean×365 ann) not compounded (operator check):
+  ensemble-causal +21.7%/yr × 4.38yr → equity 1.95 (matches chart; compound would be 2.37). Exposed efficiency knobs:
+  `--spot-haircut` `--dispersion-eff` (1.0 = clean 2× perp-perp) `--max-move-scale` (cash-margin discount sensitivity).
+  Aster/HL cash-margin confirmed: 100% capital deployed but funding earned on only `S=C/(1+max_move)` of base (the
+  margin set-aside IS the haircut) → eff=1/(1+max_move); Aster can do pure-basis (discounted) + dispersion (full,
+  broadest 29-coin coverage), NOT staked basis.
+- **2026-06-16** — **SHARE-CLASS axis gap (operator):** the whole harness is **USD share class** (market-neutral, USDC
+  capital, USD % returns, every position shorts a perp). The **ETH-share-class** family is NOT modelled — start with
+  ETH, want more ETH, keep the ETH exposure (no perp hedge): (a) **staked ETH** = hold stETH/weETH, earn staking +
+  EigenLayer restaking + seasonal, measured IN ETH; (b) **recursive staked ETH** = borrow ETH against LST → stake →
+  loop, returns in ETH ≈ `(staking+restaking+eigen − ETH_borrow) × 1/(1−maxLTV)` (Aave e-mode). These ARE strategies 4/5
+  but **ETH-denominated + NOT market-neutral** — a distinct `share_class=ETH` track. Data: weETH/stETH rates EXIST;
+  eigen path unconfirmed; **ETH borrow rate = the same Aave gap** (no Aave/Ethereum lending in GCS). Also a SOL-share-
+  class analogue (JitoSOL/mSOL + Kamino/Solend, which DO exist in GCS).
+
+## Open todos / next steps (added 2026-06-16)
+
+- [ ] [STRATEGY] P2. Add a `share_class` axis (USD / ETH / SOL / BTC). ETH-share-class strategies: staked-ETH yield
+      (long LST, no hedge, returns in ETH) + recursive staked-ETH (leveraged loop). **Repo: e2e-testing harness →
+      strategy-service.** Blocked-for-recursive: Aave ETH borrow rate (see Aave gap).
+- [ ] [DATA] P2. Backfill Aave (Ethereum) supply/borrow rates + maxLTV/e-mode into GCS — unblocks the recursive loop
+      (strategy 5, both USD-cash-floor and ETH-borrow) and the real cash-floor rate. Only Solana (Kamino/Solend) exists
+      today. **Repo: market-tick-data-service + deployment-service.**
 - _(append entries as work continues)_
 
 ## Findings filed
