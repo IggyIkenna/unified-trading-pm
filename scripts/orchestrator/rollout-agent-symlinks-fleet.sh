@@ -53,10 +53,11 @@ if ! aws ssm describe-instance-information --region "$REGION" --max-results 5 >/
     exit 1
 fi
 
-# Self instance-id (IMDSv2) so we skip ourselves.
+# Self instance-id (IMDSv2) so we skip ourselves. --connect-timeout so this fails fast (not ~150s)
+# when run off-EC2 (e.g. the operator laptop, which has no metadata endpoint) — SELF_ID stays empty.
 SELF_ID=""
-_tok=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60" 2>/dev/null || true)
-[ -n "$_tok" ] && SELF_ID=$(curl -s -H "X-aws-ec2-metadata-token: $_tok" "http://169.254.169.254/latest/meta-data/instance-id" 2>/dev/null || true)
+_tok=$(curl -s --connect-timeout 1 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60" 2>/dev/null || true)
+[ -n "$_tok" ] && SELF_ID=$(curl -s --connect-timeout 1 -H "X-aws-ec2-metadata-token: $_tok" "http://169.254.169.254/latest/meta-data/instance-id" 2>/dev/null || true)
 
 # Targets: all aws_instance_id from the registry (dependency-free extract), minus self, minus ONLY filter.
 ALL_IDS=$(awk '/aws_instance_id:/ {print $2}' "$REGISTRY" | grep -oE 'i-[0-9a-f]{8,}' | sort -u)
@@ -86,6 +87,13 @@ REMOTE
 
 if [ "$PREFLIGHT" = "1" ]; then PAYLOAD="$PAYLOAD_PREFLIGHT"; MODE="PREFLIGHT (read-only)"; else PAYLOAD="$PAYLOAD_APPLY"; MODE="APPLY"; fi
 
+# Encode the multi-line payload as proper JSON. The `--parameters commands=<shorthand>` form's list
+# parser breaks on the payload's embedded newlines → every send-command failed silently (verified
+# 2026-06-16: describe works + send works with JSON, but shorthand+multiline does not). Build
+# {"commands":["<payload>"]} and pass it as a --parameters JSON string instead.
+command -v python3 >/dev/null || { err "python3 required to JSON-encode the SSM payload"; exit 1; }
+PARAMS_JSON="$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys; print(json.dumps({"commands":[sys.stdin.read()]}))')"
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  rollout-agent-symlinks-fleet — mode: $MODE  region: $REGION"
 echo "  self: ${SELF_ID:-unknown (not on EC2?)}  | targets from: $(basename "$REGISTRY")"
@@ -99,7 +107,7 @@ for iid in $ALL_IDS; do
     cid=$(aws ssm send-command --region "$REGION" --instance-ids "$iid" \
         --document-name "AWS-RunShellScript" \
         --comment "rollout agent root symlinks ($MODE)" \
-        --parameters commands="$PAYLOAD" \
+        --parameters "$PARAMS_JSON" \
         --query 'Command.CommandId' --output text 2>/tmp/ssm_send_err) || {
             warn "$iid: send failed — $(head -1 /tmp/ssm_send_err) (UNREACHABLE/not in SSM?)"; SKIP=$((SKIP+1)); continue; }
 

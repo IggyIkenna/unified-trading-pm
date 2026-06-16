@@ -87,6 +87,26 @@ vitest/tsc (dashboard).
       `reporter_stale` within 15 min, killing the FF-pull cron flips `ff_cron_stale`. (Needs the orchestrator running +
       a second host; do on the live orchestrator VM.)
 
+## Phase 3.5 — live incident (the exact silent gap this plan exists to surface)
+
+- [ ] [VERIFY] P1. **INCIDENT 2026-06-16 (provenance: slot-3 laptop, during the agent-symlink fleet rollout via SSM
+      `admin_od`)** — the **human-planning VM** (`i-0dd9812a96cdda5dc` / `agent-orch-human-planning-vm`) had a SILENTLY
+      broken FF-pull for ~4 days: its PM clone on `live-defi-rollout` was **`[ahead 10, behind 553]`** (FF-pull cron
+      `[skip]`ing on the divergence since ~2026-06-12), with a stuck idle orchestrator agent (`orch-agent-main`, PID 8520,
+      `--model sonnet`, launched Jun 12, load 0.00, no `.agent-claim`). The 10 unpushed commits were duplicate local
+      copies of work already on origin under other SHAs (verified: F38 broker-filter + F39 `audit_venue_coverage.py` BOTH
+      present on `origin/live-defi-rollout`), preserved to `origin/wip-preserve/human-planning-pm-2026-06-16` and the clone
+      hard-reset to current origin. **Two verification questions this incident raises**: (a) did the shipped fleet
+      git-health page actually flag this VM as `drift`+`ff_cron_stale` (if NOT, the detection has a gap → the human-planning
+      VM may not be reporting at all, since its reporter cron was also on a 553-behind clone); (b) the stuck Jun-12 agent
+      sat for 4 days — confirm the WorkerLivenessWatchdog covers the **human-planning** VM, not only the central VM (CLAUDE.md
+      scopes failover to vm-orchestrator only; a heartbeat-silent worker on human-planning may be uncovered). Repo:
+      agent-orchestrator (+ check `slot-cron-ff-pull.sh` divergence handling on a behind+ahead clone). Cross-ref:
+      `plans/active/orchestrator_human_central_vm_split_2026_06_12.md` (VM split) +
+      `plans/active/issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md` (the stuck-agent angle — that issue is
+      central-VM DB-record reaping; this is a live idle PROCESS on the human-planning VM, so the watchdog-coverage
+      question (b) is the complement to its reaper-coverage gap).
+
 ## Phase 4 — ship + docs
 
 - [x] ✅ [DOCS] P2. DONE 2026-06-10 — `codex/04-architecture/agent-orchestrator-overview.md` § "Fleet git-health page
