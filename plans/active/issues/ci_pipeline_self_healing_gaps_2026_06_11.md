@@ -141,6 +141,15 @@ runbook the orchestrator dispatches on a conflict-wall alert.
       basedpyright clean. Auto-deploys via `ao-self-pull.sh` (FF `origin/live-defi-rollout` +
       `systemctl restart     orchestrator`). Repo: agent-orchestrator@f20195a.
 
+- [ ] [ORCHESTRATOR] P3. **`ao-self-pull.sh` restarts only on an FF _transition_, not when the running process is older
+      than the checkout (observed 2026-06-16).** The central VM's orchestrator process (start 15:05) was found running
+      code OLDER than its on-disk checkout, which had already FF'd to `f20195a` — so the Issue-A fix was on disk but not
+      live until a manual `systemctl restart orchestrator` (20:12). The self-pull (root cron `*/15`) only restarts when
+      `BEFORE != AFTER` in that run; a FF applied off the restart path (a `--no-restart` invocation / an off-cycle pull)
+      leaves a stale PROCESS that no later "already current" tick self-corrects. Guard: also restart when the running
+      process's `ExecMainStartTimestamp` is older than the checkout `HEAD` commit time, so a stale process self-heals on
+      the next tick. Repo: agent-orchestrator (`scripts/ao-self-pull.sh`).
+
 ## Gap 3b — Tier-C drains are BORN in the v2-never-reported deadlock + auto-recover lags ~hourly (P1)
 
 **Symptom (recurring)**: a fresh wave of "Auto-merge stuck → staging" Tier-C drain PRs (e.g. 2026-06-11 ~19:24:
