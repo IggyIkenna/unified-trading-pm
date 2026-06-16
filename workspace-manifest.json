@@ -67,27 +67,27 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.5.0",
-    "deployment-api": "0.12.0",
-    "deployment-service": "0.8.1",
+    "batch-live-reconciliation-service": "0.6.0",
+    "deployment-api": "0.13.0",
+    "deployment-service": "0.9.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.10.0",
     "features-service": "0.4.0",
     "fund-administration-service": "0.3.3",
-    "ibkr-gateway-infra": "0.1.0",
-    "instruments-service": "0.5.1",
+    "ibkr-gateway-infra": "0.2.0",
+    "instruments-service": "0.7.0",
     "market-tick-data-service": "0.10.0",
     "system-integration-tests": "0.6.0",
-    "unified-api-contracts": "0.13.0",
+    "unified-api-contracts": "0.14.0",
     "unified-trading-library": "0.10.0",
     "unified-trading-pm": "1.2.128",
-    "market-data-processing-service": "0.6.0",
+    "market-data-processing-service": "0.7.0",
     "e2e-testing": "0.6.0",
     "agent-orchestrator": "0.10.0",
     "greeks-service": "0.5.0",
     "trading-agent-service": "0.2.3",
     "strategy-service": "0.9.0",
-    "ml-service": "0.5.1",
+    "ml-service": "0.7.0",
     "alerting-service": "0.5.2",
     "unified-trading-api": "0.2.3"
   },
@@ -152,7 +152,7 @@
         "04-architecture",
         "06-coding-standards"
       ],
-      "version": "0.1.0",
+      "version": "0.6.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "batch-services",
@@ -260,7 +260,7 @@
       "type": "api-service",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.1.1",
+      "version": "0.13.0",
       "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
       "dependencies": [
         {
@@ -319,7 +319,7 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.1.1",
+      "version": "0.9.0",
       "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         {
@@ -594,7 +594,7 @@
       "codex_sections": [
         "05-infrastructure"
       ],
-      "version": "0.1.0",
+      "version": "0.2.0",
       "version_source": "version-file",
       "dependencies": [
         {
@@ -635,7 +635,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.1.22",
+      "version": "0.7.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -688,7 +688,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.2.0",
+      "version": "0.7.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -795,7 +795,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.1.0",
+      "version": "0.7.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -1049,7 +1049,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.1.20",
+      "version": "0.14.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
       "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
