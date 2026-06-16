@@ -45,12 +45,18 @@ adapters that feed it.
 
 ## P0 — subgraph schema rewrites
 
-- [ ] [SCRIPT] P0. **DEX-swaps subgraph schema-mismatch fix.** Per-protocol: PancakeSwap V3 (BSC/Ethereum/Arbitrum),
+- [x] [SCRIPT] P0. **DEX-swaps subgraph schema-mismatch fix.** Per-protocol: PancakeSwap V3 (BSC/Ethereum/Arbitrum),
       SushiSwap V3 (Ethereum/Polygon/Arbitrum/Optimism), Aerodrome (Base), Camelot (Arbitrum). For each: probe the
       current Messari subgraph endpoint shape; rewrite the query if the schema drifted (most likely a pool-entity field
       rename since the 2024 indexer upgrade); per-row `record_failed(SCHEMA_DRIFT)` for rows where the protocol
       responded but the canonical field set isn't extractable; cassette-parity test locks the new shape. ~1.8k
       blank-reason rows clear once the fix lands.
+      — shipped mtds@90175f9 2026-06-16: `_SubgraphSchemaDriftError` + `_is_schema_drift_error()` detect
+        "has no field"/"Cannot query field" GraphQL fingerprints; `_execute_subgraph_query` raises on drift; `_run_cascade`
+        catches per-step (fall-through) then raises labeled `_SubgraphSchemaDriftError` if all fail → `record_failed(SCHEMA_DRIFT)`;
+        `_MESSARI_LP_SWAPS_QUERY` + `_MESSARI_LP_SWAPS_FROM_QUERY` handle post-2024 `liquidityPool` field rename; cascade
+        extended with `messari_lp`/`messari_lp_from` variants for all affected protocols; 10 cassette-parity tests added;
+        pre-existing Kalshi/Polymarket test assertions fixed (UAC `OTHER` update); semver-agent.yml comment escaped.
 - [x] [SCRIPT] P0. **Bug 2 — Messari Compound V3 subgraph query rewrite.** Probe the current schema of the Compound V3
       subgraph endpoint per chain (Ethereum, Base, others); identify the field renames since the indexer upgrade that
       the current MTDS query depends on. Rewrite the query; add per-row `record_failed(SCHEMA_DRIFT)` for any row where
