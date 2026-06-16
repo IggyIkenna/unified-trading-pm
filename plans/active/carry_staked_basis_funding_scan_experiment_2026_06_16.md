@@ -249,6 +249,24 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - **2026-06-16** — **Harness SHIPPED under QG**: baseline `e2e-testing@a2b6a44` (orphan-WIP inheritance, promoted) +
   treasury-rebalancing-sim delta `e2e-testing@653da76` landed on live-defi-rollout (ruff + import-patterns +
   basedpyright + full QG green; Tier-C drain → staging ≤30min). Autonomous run complete.
+- **2026-06-16** — Operator follow-ups answered (data-verified):
+  - **GAS data FOUND**: `gas-fees-central-element-323112` (legacy un-suffixed → same env-split debt; `-prd` exists),
+    path `gas_fees/chain_id=<id>/date=…/` schema base_fee_gwei + priority_fee_p25/50/75 + blob_base_fee. **Chains:
+    Ethereum(1), Solana, + Op/BSC/Poly/Arb/Avax/Base/Linea**, coverage ≥2024-05. → per-action gas layer can use REAL
+    historical ETH+SOL gas prices (no assumption needed).
+  - **429 root cause**: GCS **per-object mutation rate limit** on the hot per-VM manifest shard
+    (`_index/per_vm/mtds-…parquet` — written every batch; GCS caps ~1 mutation/sec/object) + the **consolidator ~17 days
+    stale** (Cloud Run job down for this bucket). Both throttled the Aave backfill → partial. Fix: debounce/ batch the
+    per-VM shard writes (or unique per-batch objects) + run the lending-indices manifest consolidator.
+  - **Recursive basis = ATOMIC bundle (confirmed)**: prod `AtomicInstruction` (multi-leg + compensation_policy) +
+    `FLASH_BORROW`/`FLASH_REPAY` + `ATOMIC_BUNDLE_BASE` gas + 7 `RECURSIVE_LOOP` DeFi error codes. The loop must be one
+    atomic tx (flash-loan the borrow→stake→re-borrow) or be liquidatable mid-loop. Recursive strategy models the
+    atomic-bundle gas.
+  - **Margin-call → treasury (dual-purpose buffer)**: for a DELTA-NEUTRAL basis the hedge absorbs asset moves, so margin
+    calls bite mainly on **cash-margin venues (Aster/HL)** where the off-venue spot can't auto-offset the perp loss →
+    treasury top-up extends the effective margin buffer beyond the budgeted `max_move` (→ tighter margin / higher eff,
+    treasury covers tail moves). Continuous monitor needs the price-MtM layer (next fidelity); a margin-shock coverage
+    stat is added to the sim now.
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
