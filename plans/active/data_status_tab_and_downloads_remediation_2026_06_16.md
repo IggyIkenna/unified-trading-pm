@@ -45,9 +45,20 @@ source:
 
 ## Phase 1 — Scope + venue-filter correctness
 
-- [ ] [CODE] P1. **instruments-service "out of scope" fix** (audit §B): in `breakdowns_core.py:673` short-circuit
-      `scope_in=True` (skip out_of_scope) when `service` ∈ `_PER_VENUE_DAY_BUNDLE_SERVICES` (reference data has no
-      market-data scope policy), OR add a reference-data scope registry in UAC `expected_coverage.py`. — deployment-api
+- [ ] [CODE] P1. **instruments-service "out of scope" — PROPER fix** (audit §B): NOT the `scope_in=True` short-circuit
+      (makes everything in-scope, kills the missing-catalogue signal). Add a reference-data expectation registry
+      (`EXPECTED_REFERENCE_COVERAGE_BY_ASSET_GROUP` in UAC, or reuse the IS could-exist universe
+      `enumerate_expected_universe` + per-venue genesis
+      `data-catalogue.instruments-service.yaml`/`expected_start_dates.yaml`): in-scope ⟺
+      `(asset_group, venue[, instrument_type])` ∈ set AND `day ≥ genesis`. Branch `_PER_VENUE_DAY_BUNDLE_SERVICES` in
+      `breakdowns_core._classify_data_type_for_venue:673` onto it. Depends on the instrument_type-in-manifest item below
+      to scope per type. — deployment-api + unified-api-contracts
+- [ ] [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K): the writer
+      currently records `instrument_type=""` (`engine/orchestrator/writers.py:172`), bundling future/option/spot/
+      perpetual/combo into one blank row per venue/day — so derivative-rich venues (CME, Deribit, Binance) have no
+      per-type coverage signal (root of the §J "no options visible"). Keep one catalogue parquet per venue/day (storage
+      unit) but enrich the manifest row with `instrument_type` as a column with per-type counts. Unlocks per-type scope
+      (above) + per-type drilldown in the UI. — instruments-service (+ UAC manifest schema if needed)
 - [ ] [CODE] P1. **Venue filter — backend**: add a `venue: list[str] | None` param to the manifest path
       (`_status_core.py:139` + `services/data_status/manifest.py:114`), include it in `any_row_filter` (`:149-151`) and
       mask `_build_venue_breakdown` (`:589`) so venue narrows server-side. — deployment-api

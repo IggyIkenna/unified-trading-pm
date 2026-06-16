@@ -47,6 +47,35 @@ candle** data_types only. instruments-service emits **reference data**, whose da
 in-scope. The code already knows reference ≠ market data (`breakdowns_core.py:540-543` docstring) but the per-row scope
 classification has no instruments-service exemption. Not a data bug — a scope-policy gap.
 
+**The actual "types":** for cefi/tradfi/defi the writer records each manifest row with `data_type=""` AND
+`instrument_type=""` — one bundled `instruments.parquet` per `(asset_group, venue, [chain], date)`
+(`instruments-service/.../engine/orchestrator/writers.py:158-181`); the instrument categories (FUTURE/OPTION/SPOT/
+PERPETUAL/COMBO) are a COLUMN inside the parquet, not a manifest data_type/axis. The UI surfaces the blank bundle as the
+single row "instruments" (sports writes real tokens like `fixtures`). So `is_expected(cat,venue,"")` and
+`is_processed_data_type("")` are both `False`. **PROPER FIX (not the `scope_in=True` short-circuit hack — that makes
+everything in-scope and kills the ability to flag a venue/day that SHOULD have a catalogue but doesn't):** add a
+reference-data expectation registry parallel to the market-data one (`EXPECTED_REFERENCE_COVERAGE_BY_ASSET_GROUP`, or
+reuse the IS could-exist universe from `enumerate_expected_universe` + per-venue genesis in
+`data-catalogue.instruments-service.yaml`/`expected_start_dates.yaml`); in-scope ⟺
+`(asset_group, venue[, instrument_type])` ∈ that set AND `day ≥ genesis`. Branch `_PER_VENUE_DAY_BUNDLE_SERVICES` in
+`breakdowns_core._classify_data_type_for_venue:673` onto it. This is the F4 contract (IS owns what-could-exist;
+consumers READ it), and depends on finding K (instrument_type in the manifest) to scope per type.
+
+## K. Sharding tailoring per asset class — MTDS is asset-class-aware; instruments-service is NOT instrument_type-aware
+
+§F is "by design" but **only partly tailored**. MTDS flexes per asset class — DeFi adds `chain`, sports
+`league_id`/`fixture_id`, prediction `canonical_question_group`/`job_id`, atop `instrument_type × data_type` (caveat:
+the generic 5-axis grid OVER-generates expected combos — e.g. Deribit `options_chain` under every instrument_type —
+needing the "phantom-expected clamp" `breakdowns_core.py:545+`; so tailored-with-cartesian-overcount).
+**instruments-service is NOT instrument_type-aware**: it bundles all instrument_types into one
+blank-`data_type`/blank-`instrument_type` row per venue/day, so for derivative-rich venues (CME future+option+combo;
+Deribit future+option+perpetual — the §J "only futures+perps, no options" blind spot; Binance spot+perp+future) coverage
+can only say "captured SOMETHING for the venue", never "captured CME OPTIONS on day X". **Proper tailoring:** keep the
+storage unit (one catalogue parquet per venue/day) but enrich the manifest row with `instrument_type` as a COLUMN
+carrying per-type counts (writer currently passes `instrument_type=""` at `writers.py:172`). That one change gives
+per-type coverage visibility, makes the §B reference-scope meaningful per type, and fixes the §J Deribit-options blind
+spot at the coverage layer.
+
 ## C. Venue filter button doesn't filter results — two independent causes
 
 1. **UI**: `selectedVenues` state + toggle is correct (`deployment-ui/src/components/DataStatusTab.tsx:327,2058-2072`)
