@@ -1,6 +1,6 @@
 ---
 title: Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
-scope: infrastructure
+scope: [engineer]
 owner: ikenna
 status: stable
 codified: 2026-05-08

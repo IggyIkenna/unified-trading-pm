@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Secrets Migration Tracking
 status: active
 created: 2026-05-07

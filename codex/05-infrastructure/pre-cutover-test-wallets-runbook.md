@@ -1,5 +1,5 @@
 ---
-scope: [admin, operator]
+scope: [admin, engineer]
 last_reviewed: 2026-05-17
 execution:
   owner: "operator (ikenna) — wallet generation + KMS encryption"

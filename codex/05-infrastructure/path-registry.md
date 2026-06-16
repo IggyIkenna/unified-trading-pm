@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Path Registry
 type: infrastructure
 status: stub

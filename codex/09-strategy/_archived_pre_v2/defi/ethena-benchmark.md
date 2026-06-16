@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DeFi Ethena sUSDe Benchmark
 
 > **Asset class:** DeFi **Strategy type:** Passive Benchmark (buy-and-hold yield tracker) **Strategy ID pattern:**

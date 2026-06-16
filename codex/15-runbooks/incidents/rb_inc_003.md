@@ -1,6 +1,6 @@
 ---
 title: "RB-INC-003 — Audit Acknowledgement Handling"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Weekly review
 verifier: Ack-queue audit

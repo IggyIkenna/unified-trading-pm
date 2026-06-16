@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # CARRY_RECURSIVE_BORROW_PERP_HEDGED — RENAMED to `CARRY_BASIS_PERP_INV` (2026-05-18)
 
 > **⚠️ RENAMED**: This archetype was renamed to `CARRY_BASIS_PERP_INV` on 2026-05-18 per

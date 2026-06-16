@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Kelly Criterion
 
 > **Asset class:** Sports **Strategy type:** Position Sizing (Value Betting) **Strategy ID pattern:**

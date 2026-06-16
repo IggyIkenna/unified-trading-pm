@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Multi-Leg Execution
 
 > **Scope:** All spread, basis, arb, and composite strategies that submit 2+ legs as a single trade. **SSOT:**

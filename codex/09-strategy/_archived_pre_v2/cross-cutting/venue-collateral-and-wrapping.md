@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Venue Collateral & Token Wrapping -- Cross-Cutting Concern
 
 ## Overview

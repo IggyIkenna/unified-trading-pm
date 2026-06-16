@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Live Deployment Monitoring
 status: stable
 created: 2026-05-07

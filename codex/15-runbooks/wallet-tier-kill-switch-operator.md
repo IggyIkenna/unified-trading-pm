@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Wallet-Tier Kill-Switch — Operator Runbook
 type: runbook
 status: active

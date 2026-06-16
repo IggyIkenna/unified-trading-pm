@@ -1,6 +1,6 @@
 ---
 title: "RB-RECON-001 — Position Reconciliation Lag"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: scenario 11_handshake_integration

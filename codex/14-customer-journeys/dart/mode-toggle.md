@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 name: dart-mode-toggle
 overview:
   SSOT for the DART operator surface — 3-way mode visualization (batch / paper / live), per-strategy event/fill/P&L

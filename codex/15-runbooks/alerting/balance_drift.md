@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: BALANCE_DRIFT Runbook
 status: active
 created: 2026-05-08

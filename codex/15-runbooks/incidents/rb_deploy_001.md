@@ -1,6 +1,6 @@
 ---
 title: "RB-DEPLOY-001 — Production Rollback"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
 verifier: redeploy_known_good --dry-run

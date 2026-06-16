@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: DeFi Bucket Sizes (point-in-time 2026-05-07)
 status: planned
 created: 2026-05-07

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Transaction Cost Modeling — Cross-Cutting Concern
 
 ## Hard Rules

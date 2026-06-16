@@ -150,579 +150,579 @@
       If that .md is updated, regenerate the block below.
     -->
     <script type="text/x-markdown-deck" id="deck-source">
-# Odum — Target experience post-refactor
-
-Sixteen slides. One registry. Four derivations.
-
-**Stage 3D deliverable** — infra-spec companion
-
-Source of truth: `codex/14-customer-journeys/presentations/target-experience-post-refactor.md`
-
-Use arrow keys / space to navigate · F for fullscreen · ? for shortcuts
-
----
-## Slide 1 — Cover + user directive
-
-**The Odum operating system, post-refactor.**
-
-Sixteen slides. Four thousand words of rules. Twenty-two blocker predicates. One registry. Four derivations.
-
-User directive (2026-04-19):
-
-> *"Compare vs audit of the current infra ... finalise with clear refactor doc and target experience doc with visuals via a presentation so i can see what the end product post-refactor looks like for the building blocks. On the low level details we need UAC registry info for all possible combinations and blockers so that we can formulaically derive the costing and the demo universe and the restrictions / access controls across the user journey possibilities."*
-
-This deck answers: what the end product looks like after Stage 3E G1 + G2 ships.
-
----
-## Slide 2 — The layered architecture
-
-From SSOT rules at the top to UI surfaces at the bottom. Each layer is a set of files; each arrow is a derivation.
-
-```mermaid
-graph TD
-    subgraph Rules["_ssot-rules/  (rules 01-10)"]
-        R01[01 grammar]
-        R03[03 same-system]
-        R04[04 DART axes]
-        R05[05 13 blocks]
-        R06[06 show/don't-show]
-        R07[07 data licensing]
-        R08[08 pricing tiers]
-        R10[10 instruction schema]
-    end
-
-    subgraph Experience["experience/  (9 playbooks)"]
-        E1[marketing-journey]
-        E2[briefings-hub]
-        E3[dart-briefing]
-        E4[im-decision-journey]
-        E5[reg-umbrella-briefing]
-        E6[dart-demo]
-        E7[im-demo]
-        E8[regulatory-demo]
-        E9[staging-demo-journey]
-    end
-
-    subgraph SharedCore["shared-core/  (8 concept docs)"]
-        SC1[strategy-origin-vs-stack-depth]
-        SC2[instruction-schema-fit]
-        SC3[venue-chain-instrument-scope]
-        SC4[shared-reporting-core]
-        SC5[data-licensing-boundaries]
-    end
-
-    subgraph Commercial["commercial-model/"]
-        CM1[pricing-building-blocks]
-        CM2[dart-entry-points]
-    end
-
-    subgraph DemoOps["demo-ops/"]
-        DO1[demo-restriction-profiles]
-        DO2[pre-demo-curation + discovery]
-        DO3[post-demo-followup]
-        DO4[account-intelligence-record]
-        DO5[dart-demo-modes + upsell]
-    end
-
-    subgraph InfraSpec["infra-spec/  (Stage 3)"]
-        IS1[3A audit]
-        IS2[3B UAC combo rules]
-        IS3[3B instruction-schema]
-        IS4[3B analytics matrix]
-        IS5[3C derivation engine]
-        IS6[3E refactor plan]
-    end
-
-    subgraph Runtime["Runtime - strategy-service/availability/ + UI"]
-        RT1[combo_registry loader]
-        RT2[4 derivation functions]
-        RT3[Phase-aware access_control]
-        RT4[LOCKED-VISIBLE nav]
-    end
-
-    Rules --> Experience
-    Rules --> SharedCore
-    Rules --> Commercial
-    Rules --> DemoOps
-    Rules --> InfraSpec
-    SharedCore --> Experience
-    SharedCore --> InfraSpec
-    Commercial --> InfraSpec
-    DemoOps --> InfraSpec
-    InfraSpec --> Runtime
-    Runtime --> Experience
-```
-
-Three axes to read: top-down (rules → docs → spec → runtime), left-right (experience on leaves, shared-core / commercial / demo-ops in middle, infra-spec feeds runtime), cycle-free (changes flow downstream only).
-
----
-## Slide 3 — The 4-catalogue parity model
-
-Strategy Catalogue is canonical (Phase 10 shipped). Data / ML / Execution Algo follow the same pattern post-refactor.
-
-```mermaid
-graph LR
-    subgraph Canonical["Strategy Catalogue - canonical (Phase 10 shipped)"]
-        S1[Master matrix]
-        S2[Filter facets]
-        S3[Detail per slot]
-        S4[Admin lock/maturity]
-        S5[Codex deep-link]
-    end
-
-    subgraph Data["Data Catalogue - G2.3 refactor"]
-        D1[Master matrix]
-        D2[Filter facets]
-        D3[Detail per instrument]
-        D4[Admin availability]
-        D5[Codex deep-link]
-    end
-
-    subgraph ML["ML Model Catalogue - G2.4 refactor"]
-        M1[Master matrix]
-        M2[Filter facets]
-        M3[Detail per family]
-        M4[Admin lock/maturity]
-        M5[Codex deep-link]
-    end
-
-    subgraph Exec["Execution Algo Catalogue - G2.5 refactor"]
-        EA1[Master matrix]
-        EA2[Filter facets]
-        EA3[Detail per algo]
-        EA4[Admin multi-leg/routing]
-        EA5[Codex deep-link]
-    end
-
-    S1 -.pattern.-> D1
-    S1 -.pattern.-> M1
-    S1 -.pattern.-> EA1
-```
-
-Same visual language across all four — status chips, lock-state chip, maturity chip, category chip, venue chip. Same admin surface pattern. Same audit event list. Same GitHub deep-link to codex SSOT.
-
----
-## Slide 4 — DART 2-axis commercial model
-
-Rule 04. Two axes, three practical cells.
-
-```mermaid
-graph TD
-    subgraph Matrix["DART 2 x 3 matrix"]
-        C1["Odum x reporting-only<br/>→ routes to IM"]
-        C3["Odum x full-pipeline<br/>Full DART + Odum IP<br/>Tier B preferred"]
-        C4["Client x reporting-only<br/>→ routes to Reg Umbrella"]
-        C5["Client x downstream<br/>signals-only DART<br/>rule 10 fit-check"]
-        C6["Client x full-pipeline<br/>Full DART build + run<br/>Tier A/B per block"]
-    end
-
-    subgraph Paths["Three practical paths"]
-        P1[Reporting-only → IM or Reg Umbrella]
-        P2[Signals-only DART]
-        P3[Full DART]
-    end
-
-    C1 -.-> P1
-    C4 -.-> P1
-    C5 -.-> P2
-    C3 -.-> P3
-    C6 -.-> P3
-```
-
-Matrix does real work: `(Odum, reporting-only)` re-routes out of DART, preventing pricing leakage. `(Client, downstream)` automatically picks up rule 10 instruction-schema fit-check.
-
----
-## Slide 5 — Building-block dimensions (13 blocks)
-
-Rule 05. Eleven standalone blocks plus two Tier-B-only premiums.
-
-```mermaid
-graph LR
-    subgraph Core["Always-on core"]
-        B1[1 Reporting core]
-    end
-
-    subgraph Reporting["Reporting variants"]
-        B2[2 Regulatory umbrella reporting]
-        B3[3 IM allocator reporting]
-    end
-
-    subgraph Strategy["Strategy + instructions"]
-        B4[4 Strategy-service entry]
-        B5["5 Instructions integration<br/>schema depth sub-dim"]
-        B6[6 Research / promote pipeline]
-    end
-
-    subgraph Execution["Execution surface"]
-        B7[7 Execution layer]
-        B8["8 Venue packs<br/>per venue/group"]
-        B9["9 Chain packs<br/>per DeFi chain"]
-        B10["10 Instrument-type packs<br/>per type"]
-    end
-
-    subgraph Analytics["Analytics"]
-        B11["11 Analytics packs<br/>per family"]
-    end
-
-    subgraph Premiums["Tier B-only premiums"]
-        B12[12 Exclusivity / non-compete]
-        B13[13 Custom solution]
-    end
-
-    B1 --> B4
-    B1 --> B8
-    B4 --> B5
-    B4 --> B6
-    B5 --> B7
-    B7 --> B8
-    B7 --> B9
-    B7 --> B10
-    B11 -.-> B1
-    B12 -.-> B8
-    B13 -.-> B8
-```
-
-Sub-scoping lives inside blocks (venue pack × Binance + venue pack × Uniswap_v3 are two instances of block 8, not two blocks). Demo restriction profiles and the entitlement registry both compose from this 13-element identifier list — "one list, four derivations" (slide 6).
-
----
-## Slide 6 — The 1-registry-4-derivations engine
-
-Stage 3C core. All four consumer artefacts read the same registry.
-
-```mermaid
-flowchart LR
-    subgraph Registry["Stage 3B UAC combo registry"]
-        D1[15 dimensions]
-        D2[22 blocker predicates]
-        D3[13 entitlement blocks]
-        D4[4 lock-states · 8 maturities · 3 phases]
-    end
-
-    subgraph Inputs["Runtime inputs"]
-        I1[JWT claims<br/>audience · org · client · fund]
-        I2[Client package<br/>signed contract]
-        I3[Persona + flavour<br/>for demos]
-        I4[Pricing numbers<br/>from Stage 2]
-        I5[Route + item + phase<br/>per-request]
-    end
-
-    subgraph Engine["Derivation engine (strategy-service/availability/)"]
-        F1[combo dimensions]
-        F2[cost combo tier depth]
-        F3[demo_universe persona flavour]
-        F4[prod_restrictions client pkg]
-        F5[access_control user route item phase]
-    end
-
-    subgraph Consumers["4 consumer surfaces"]
-        O1[Billing + pricing UI]
-        O2[Demo-provisioning]
-        O3[Prod entitlement gate]
-        O4[UI visibility / route gate]
-    end
-
-    Registry --> F1
-    Registry --> F2
-    Registry --> F3
-    Registry --> F4
-    Registry --> F5
-    I1 --> F4
-    I1 --> F5
-    I2 --> F2
-    I2 --> F4
-    I3 --> F3
-    I4 --> F2
-    I5 --> F5
-    F1 --> F2
-    F1 --> F3
-    F1 --> F4
-    F1 --> F5
-    F2 --> O1
-    F3 --> O2
-    F4 --> O3
-    F5 --> O4
-```
-
-Every function is `registry × input_context → result`. Pure. Cachable. Idempotent. `access_control(...)` is phase-aware — `LIVE_ALLOCATED` slot is visible in `research` phase only if entitlements include block 6 (research/promote), same component tree regardless.
-
----
-## Slide 7 — Cost composition worked example
-
-Hybrid (Client, downstream) quote. Tier A marginal + Tier B core + rule-10 `richer_execution_constraints` depth.
-
-```mermaid
-graph TD
-    subgraph Quote["Hybrid DeFi signals-only quote"]
-        T1[Block 1 reporting core · Tier B · fixed monthly]
-        T2[Block 4 strategy-service entry · Tier B · fixed monthly]
-        T3["Block 5 instructions integration<br/>Tier B · depth=richer 1.4x base"]
-        T4["Block 7 execution layer<br/>Tier B · depth=richer 1.4x base"]
-        T5[Block 8 venue pack uniswap_v3 · Tier B]
-        T6[Block 8 venue pack aave_v3 · Tier A usage-var]
-        T7[Block 8 venue pack hyperliquid_dex · Tier A usage-var]
-        T8[Block 9 chain pack ethereum · Tier B]
-        T9[Block 9 chain pack arbitrum · Tier A]
-        T10[Block 10 instrument pack perp · Tier B]
-        T11[Block 10 instrument pack spot · Tier B]
-        T12[Block 11 exec-quality analytics · Tier A]
-    end
-
-    subgraph Totals["Totals"]
-        U1[Upfront · Tier B only]
-        U2[Monthly fixed · Tier B sum]
-        U3[Monthly variable baseline · Tier A usage]
-    end
-
-    T1 --> U1
-    T2 --> U1
-    T3 --> U1
-    T4 --> U1
-    T5 --> U1
-    T8 --> U1
-    T10 --> U1
-    T11 --> U1
-    T1 --> U2
-    T2 --> U2
-    T3 --> U2
-    T4 --> U2
-    T5 --> U2
-    T8 --> U2
-    T10 --> U2
-    T11 --> U2
-    T6 --> U3
-    T7 --> U3
-    T9 --> U3
-    T12 --> U3
-```
-
-Per-block mixability shows clean: core on Tier B for institutional predictability; marginal venues on Tier A — no upfront commitment. Internal cost column lives in a separate derivation path, capability-gated by `pricing.read_internal`; never on a client-facing quote. Numbers populate in Stage 2 `commercial-model/pricing-building-blocks.md` when Odum finance ships them; formulas unchanged.
-
----
-## Slide 8 — Demo restriction profile per persona
-
-Stage 3C `demo_universe(persona, flavour)`. Four personas, four visibility slices.
-
-```mermaid
-graph TD
-    subgraph admin["admin - full universe"]
-        A1[All 13 blocks visible]
-        A2[All maturities incl. CODE_NOT_WRITTEN]
-        A3[CLIENT_EXCLUSIVE slots visible]
-        A4[All routes · all phases]
-    end
-
-    subgraph pim["prospect-im - turbo"]
-        P1[Blocks 1 + 3 + 11 visible]
-        P2[maturity = LIVE_ALLOCATED only]
-        P3[lock_state = PUBLIC only]
-        P4["/services/reports/*"]
-    end
-
-    subgraph pdart["prospect-dart - broader_platform · G1 new"]
-        ND1[Blocks 1/4/5/7/8/9/10/11 visible]
-        ND2[Block 6 LOCKED-VISIBLE]
-        ND3[maturity ≥ BACKTESTED]
-        ND4[lock_state = PUBLIC only]
-        ND5[Terminal + catalogue + observe]
-    end
-
-    subgraph preg["prospect-reg - turbo · G1 new"]
-        R1[Blocks 1/2/7/8/10 visible]
-        R2[maturity ≥ BACKTESTED]
-        R3[lock_state = PUBLIC only]
-        R4[Regulatory reporting surfaces]
-        R5[Block 6 HIDDEN-ENTIRELY]
-    end
-```
-
-Rule 06's LOCKED-VISIBLE vs HIDDEN-ENTIRELY distinction: DART prospect sees research/promote locked (obvious next step, upgrade path visible); Reg Umbrella prospect does not see research at all (not a plausible next step for them).
-
----
-## Slide 9 — Same-system partitioning (rule 03)
-
-One underlying system. Three commercial audiences. Research / paper / live all bind to it.
-
-```mermaid
-graph TD
-    subgraph System["One operating system"]
-        Sys[strategy-service · execution-service · reports-service · data-services]
-    end
-
-    subgraph Paths["Three commercial audiences"]
-        PD[DART clients]
-        PI[IM allocators]
-        PR[Reg Umbrella firms]
-    end
-
-    subgraph Phases["Three lifecycle phases - orthogonal to commercial path"]
-        PhR[research · historical binding]
-        PhP[paper · live data + simulated fills]
-        PhL[live · live fills]
-    end
-
-    subgraph Surfaces["One set of UI surfaces"]
-        SR["/services/strategy-catalogue"]
-        ST["/services/trading/terminal"]
-        SRep["/services/reports"]
-    end
-
-    System --> PD
-    System --> PI
-    System --> PR
-    System --> PhR
-    System --> PhP
-    System --> PhL
-    System --> SR
-    System --> ST
-    System --> SRep
-    PD -.entitlement.-> SR
-    PD -.entitlement.-> ST
-    PD -.entitlement.-> SRep
-    PI -.entitlement.-> SRep
-    PR -.entitlement.-> SRep
-    PR -.entitlement.-> SR
-    PhR -.data-bind.-> SR
-    PhR -.data-bind.-> ST
-    PhR -.data-bind.-> SRep
-```
-
-Implications for Stage 3E:
-
-- **No forked UI.** Terminal + catalogue + reports are one component tree each; `phase` prop rebinds the data source (G1 item 1.1).
-- **No forked catalogue.** Strategy Catalogue renders the same row for DART / IM / Reg Umbrella viewers; their filters differ.
-- **No forked reporting.** `/services/reports/overview` is one route; allocator / DART subscriber / Reg Umbrella see entitlement-filtered views.
-
----
-## Slide 10 — Before / after page-triage counts
-
-Page triage shipped 177 routes (158 unified-trading-system-ui + 19 user-management-ui). Post-Stage-3E, the distribution changes.
-
-```mermaid
-%%{init: {'theme': 'default', 'xyChart': {'width': 900, 'height': 500}}}%%
-xychart-beta
-    title "Routes before / after Stage 3E"
-    x-axis [Promote, Refactor, MergeInto, Defer, Archive, New]
-    y-axis "Route count" 0 --> 140
-    bar "Before 2026-04-19" [120, 12, 25, 14, 5, 0]
-    bar "After Stage 3E G1+G2" [132, 0, 0, 0, 5, 38]
-```
-
-Net: ~38 new canonical routes added (3 catalogue refactors × ~12 routes + LOCKED-VISIBLE admin routes + new `/services/data-catalogue/*`, `/services/ml-model-catalogue/*`, `/services/execution-algo-catalogue/*`). 12 old routes refactored into the new catalogues (out of the "refactor" bucket); 25 merge-into moves completed.
-
-G3 `visibility-slicing` e2e expansion asserts all 132 canonical routes + LOCKED-VISIBLE padlock states across 7 personas × 3 flavours.
-
----
-## Slide 11 — Screenshot: pb1 homepage (anonymous)
-
-Anonymous landing page for the marketing journey.
-
-![Anonymous homepage](screenshots/anon-home.png)
-
-Post-Stage-3E note: the homepage surface itself is not a G1/G2 refactor item; current implementation is canonical. Stage 3E items 1.4 (new personas) + 1.3 (LOCKED-VISIBLE) affect authenticated surfaces, not this anonymous landing.
-
----
-## Slide 12 — Screenshot: pb2 briefings hub (post-light-auth)
-
-Prospect-IM persona, briefings surface.
-
-![Briefings hub — prospect-im](screenshots/prospect-im-briefings.png)
-
-Corresponds to `experience/briefings-hub.md`. Post-Stage-3E G3.3 (briefings CMS migration), content in this view lives in a headless CMS; the route + layout stays stable.
-
----
-## Slide 13a — Screenshot: pb3 admin dashboard
-
-**Admin (Odum internal) — full universe:**
-
-![Admin dashboard](screenshots/admin-dashboard.png)
-
-Same route (`/dashboard`), different scope per persona. Rule 03 + rule 06 made mechanical: same underlying system, three entitlement-sliced views.
-
----
-## Slide 13b — Screenshot: pb3 client-full dashboard
-
-**Client-full (Alpha Capital) — full DART subscription:**
-
-![Client-full dashboard](screenshots/client-full-dashboard.png)
-
-Every block the client's package covers renders with full depth. Block 6 research/promote is the signal this persona carries.
-
----
-## Slide 13c — Screenshot: pb3 prospect-IM dashboard
-
-**Prospect-IM (demo) — IM-scoped reporting surface:**
-
-![Prospect-IM dashboard](screenshots/prospect-im-dashboard.png)
-
-Once Stage 3E G1 ships LOCKED-VISIBLE, prospect-im will show DART surfaces with a padlock chip rather than hiding them. Today those surfaces are hidden via the entitlement cascade.
-
----
-## Slide 14a — Screenshot: admin strategy catalogue
-
-**Admin view of Strategy Catalogue master matrix:**
-
-![Strategy catalogue — admin](screenshots/admin-strategy-catalogue.png)
-
-Strategy Catalogue is the reference pattern Stage 3E 2.3 / 2.4 / 2.5 replicate across Data / ML / Execution Algo.
-
----
-## Slide 14b — Screenshot: reports overview
-
-**Prospect-IM reports overview:**
-
-![Reports overview — prospect-im](screenshots/prospect-im-reports-overview.png)
-
-Reports overview embodies rule 03 sub-claim (a) "partitioned views not separate products" — allocators and DART subscribers share this route; entitlement slicing differentiates what each sees.
-
----
-## Slide 15 — The 3 internal one-liners + expansions
-
-Rule 09. Internal use verbatim; external docs expand using the three-sentence pattern (positioning / mechanism / proof).
-
-**DART** (internal one-liner):
-
-> An accelerator for strategy, research, execution, and control — the same system Odum uses internally.
-
-**DART** (external expansion):
-
-> DART is the set of services Odum uses to build, research, promote, execute, and monitor its own systematic strategies, packaged for client use. Clients who operate their own strategies can plug their signals into Odum's execution and reporting stack, or they can use the full research and promotion pipeline. The underlying components are the same as Odum's internal operation — one system, partitioned views.
-
-**IM** (internal one-liner):
-
-> Allocate capital to Odum-managed strategies; reporting is built in because it is the same reporting system Odum uses itself.
-
-**IM** (external expansion):
-
-> Investment Management allocates client capital to Odum-run systematic strategies operating under Odum's FCA permissions. Reporting — positions, exposures, P&L, reconciliation — comes from the same surface Odum uses to run its own operation, with allocator-side views filtered by entitlement. The minimum engagement is twelve months; the onboarding path sets up the fund structure (Pooled or SMA), capital allocation, and reporting at the same time.
-
-**Reg Umbrella** (internal one-liner):
-
-> Operate your regulated activity under Odum's FCA permissions; onboarding, compliance, MLRO, supervision, and reporting included.
-
-**Reg Umbrella** (external expansion):
-
-> Firms running regulated activity that want operational coverage without seeking direct FCA authorisation can operate under Odum's permissions. Onboarding handles regulatory scope, compliance setup, MLRO coverage, and supervisory reporting. Reporting surfaces use the same component tree as IM and DART reporting, filtered to the firm's regulated-activity view.
-
-Rule 02 voice throughout: present tense, specific over evocative, no adverbs, no forward-tense marketing hedges.
-
----
-## Slide 16 — Next steps: which Stage 3E item unlocks which playbook
-
-Every experience playbook depends on a subset of Stage 3E refactor items. Shipping the G1 nine unlocks operational truth for every pb1 / pb2 / pb3 playbook.
-
-| Playbook | Depends on Stage 3E items |
-| --- | --- |
-| pb1 `marketing-journey.md` | 1.9 (codex scope tagging), 3.4 (DART rebrand) |
-| pb2 `briefings-hub.md` | 1.9, 3.3 (briefings CMS — G3) |
-| pb2a `regulatory-umbrella-briefing.md` | 1.9, 2.8 (fund + business_unit registry) |
-| pb2b `dart-briefing.md` | 1.2 (instruction-schema validation), 1.9, 3.2 (pricing numbers) |
-| pb2c `im-decision-journey.md` | 1.9, 2.8, 2.10 (allocator split) |
-| pb3a `regulatory-demo.md` | 1.4 (prospect-reg persona), 1.7 (restriction-profile), 2.6 (staging Firebase), 2.7 (demo provisioning) |
-| pb3b `investment-management-demo.md` | 1.1 (phase-unification), 1.7, 2.6, 2.7, 2.10 |
-| pb3c `dart-demo.md` | 1.1, 1.2, 1.3 (LOCKED-VISIBLE), 1.4 (prospect-dart), 1.5 (broken-href cleanup), 1.7, 2.2 (per-client API keys), 2.6, 2.7 |
-| pb3d `staging-demo-journey.md` | 2.6, 2.7 |
-
-**Recommended next step.** Spawn the nine G1 follow-up plans simultaneously (per Stage 3E § 1 "Proposed follow-up plan" column); run in parallel where dependencies allow (Stage 3E § 5 dependency graph). Target: all G1 items shipped within 4–6 weeks, making every pb1–pb3 playbook operationally true.
+      # Odum — Target experience post-refactor
+
+      Sixteen slides. One registry. Four derivations.
+
+      **Stage 3D deliverable** — infra-spec companion
+
+      Source of truth: `codex/14-customer-journeys/presentations/target-experience-post-refactor.md`
+
+      Use arrow keys / space to navigate · F for fullscreen · ? for shortcuts
+
+      ---
+      ## Slide 1 — Cover + user directive
+
+      **The Odum operating system, post-refactor.**
+
+      Sixteen slides. Four thousand words of rules. Twenty-two blocker predicates. One registry. Four derivations.
+
+      User directive (2026-04-19):
+
+      > *"Compare vs audit of the current infra ... finalise with clear refactor doc and target experience doc with visuals via a presentation so i can see what the end product post-refactor looks like for the building blocks. On the low level details we need UAC registry info for all possible combinations and blockers so that we can formulaically derive the costing and the demo universe and the restrictions / access controls across the user journey possibilities."*
+
+      This deck answers: what the end product looks like after Stage 3E G1 + G2 ships.
+
+      ---
+      ## Slide 2 — The layered architecture
+
+      From SSOT rules at the top to UI surfaces at the bottom. Each layer is a set of files; each arrow is a derivation.
+
+      ```mermaid
+      graph TD
+          subgraph Rules["_ssot-rules/  (rules 01-10)"]
+              R01[01 grammar]
+              R03[03 same-system]
+              R04[04 DART axes]
+              R05[05 13 blocks]
+              R06[06 show/don't-show]
+              R07[07 data licensing]
+              R08[08 pricing tiers]
+              R10[10 instruction schema]
+          end
+
+          subgraph Experience["experience/  (9 playbooks)"]
+              E1[marketing-journey]
+              E2[briefings-hub]
+              E3[dart-briefing]
+              E4[im-decision-journey]
+              E5[reg-umbrella-briefing]
+              E6[dart-demo]
+              E7[im-demo]
+              E8[regulatory-demo]
+              E9[staging-demo-journey]
+          end
+
+          subgraph SharedCore["shared-core/  (8 concept docs)"]
+              SC1[strategy-origin-vs-stack-depth]
+              SC2[instruction-schema-fit]
+              SC3[venue-chain-instrument-scope]
+              SC4[shared-reporting-core]
+              SC5[data-licensing-boundaries]
+          end
+
+          subgraph Commercial["commercial-model/"]
+              CM1[pricing-building-blocks]
+              CM2[dart-entry-points]
+          end
+
+          subgraph DemoOps["demo-ops/"]
+              DO1[demo-restriction-profiles]
+              DO2[pre-demo-curation + discovery]
+              DO3[post-demo-followup]
+              DO4[account-intelligence-record]
+              DO5[dart-demo-modes + upsell]
+          end
+
+          subgraph InfraSpec["infra-spec/  (Stage 3)"]
+              IS1[3A audit]
+              IS2[3B UAC combo rules]
+              IS3[3B instruction-schema]
+              IS4[3B analytics matrix]
+              IS5[3C derivation engine]
+              IS6[3E refactor plan]
+          end
+
+          subgraph Runtime["Runtime - strategy-service/availability/ + UI"]
+              RT1[combo_registry loader]
+              RT2[4 derivation functions]
+              RT3[Phase-aware access_control]
+              RT4[LOCKED-VISIBLE nav]
+          end
+
+          Rules --> Experience
+          Rules --> SharedCore
+          Rules --> Commercial
+          Rules --> DemoOps
+          Rules --> InfraSpec
+          SharedCore --> Experience
+          SharedCore --> InfraSpec
+          Commercial --> InfraSpec
+          DemoOps --> InfraSpec
+          InfraSpec --> Runtime
+          Runtime --> Experience
+      ```
+
+      Three axes to read: top-down (rules → docs → spec → runtime), left-right (experience on leaves, shared-core / commercial / demo-ops in middle, infra-spec feeds runtime), cycle-free (changes flow downstream only).
+
+      ---
+      ## Slide 3 — The 4-catalogue parity model
+
+      Strategy Catalogue is canonical (Phase 10 shipped). Data / ML / Execution Algo follow the same pattern post-refactor.
+
+      ```mermaid
+      graph LR
+          subgraph Canonical["Strategy Catalogue - canonical (Phase 10 shipped)"]
+              S1[Master matrix]
+              S2[Filter facets]
+              S3[Detail per slot]
+              S4[Admin lock/maturity]
+              S5[Codex deep-link]
+          end
+
+          subgraph Data["Data Catalogue - G2.3 refactor"]
+              D1[Master matrix]
+              D2[Filter facets]
+              D3[Detail per instrument]
+              D4[Admin availability]
+              D5[Codex deep-link]
+          end
+
+          subgraph ML["ML Model Catalogue - G2.4 refactor"]
+              M1[Master matrix]
+              M2[Filter facets]
+              M3[Detail per family]
+              M4[Admin lock/maturity]
+              M5[Codex deep-link]
+          end
+
+          subgraph Exec["Execution Algo Catalogue - G2.5 refactor"]
+              EA1[Master matrix]
+              EA2[Filter facets]
+              EA3[Detail per algo]
+              EA4[Admin multi-leg/routing]
+              EA5[Codex deep-link]
+          end
+
+          S1 -.pattern.-> D1
+          S1 -.pattern.-> M1
+          S1 -.pattern.-> EA1
+      ```
+
+      Same visual language across all four — status chips, lock-state chip, maturity chip, category chip, venue chip. Same admin surface pattern. Same audit event list. Same GitHub deep-link to codex SSOT.
+
+      ---
+      ## Slide 4 — DART 2-axis commercial model
+
+      Rule 04. Two axes, three practical cells.
+
+      ```mermaid
+      graph TD
+          subgraph Matrix["DART 2 x 3 matrix"]
+              C1["Odum x reporting-only<br/>→ routes to IM"]
+              C3["Odum x full-pipeline<br/>Full DART + Odum IP<br/>Tier B preferred"]
+              C4["Client x reporting-only<br/>→ routes to Reg Umbrella"]
+              C5["Client x downstream<br/>signals-only DART<br/>rule 10 fit-check"]
+              C6["Client x full-pipeline<br/>Full DART build + run<br/>Tier A/B per block"]
+          end
+
+          subgraph Paths["Three practical paths"]
+              P1[Reporting-only → IM or Reg Umbrella]
+              P2[Signals-only DART]
+              P3[Full DART]
+          end
+
+          C1 -.-> P1
+          C4 -.-> P1
+          C5 -.-> P2
+          C3 -.-> P3
+          C6 -.-> P3
+      ```
+
+      Matrix does real work: `(Odum, reporting-only)` re-routes out of DART, preventing pricing leakage. `(Client, downstream)` automatically picks up rule 10 instruction-schema fit-check.
+
+      ---
+      ## Slide 5 — Building-block dimensions (13 blocks)
+
+      Rule 05. Eleven standalone blocks plus two Tier-B-only premiums.
+
+      ```mermaid
+      graph LR
+          subgraph Core["Always-on core"]
+              B1[1 Reporting core]
+          end
+
+          subgraph Reporting["Reporting variants"]
+              B2[2 Regulatory umbrella reporting]
+              B3[3 IM allocator reporting]
+          end
+
+          subgraph Strategy["Strategy + instructions"]
+              B4[4 Strategy-service entry]
+              B5["5 Instructions integration<br/>schema depth sub-dim"]
+              B6[6 Research / promote pipeline]
+          end
+
+          subgraph Execution["Execution surface"]
+              B7[7 Execution layer]
+              B8["8 Venue packs<br/>per venue/group"]
+              B9["9 Chain packs<br/>per DeFi chain"]
+              B10["10 Instrument-type packs<br/>per type"]
+          end
+
+          subgraph Analytics["Analytics"]
+              B11["11 Analytics packs<br/>per family"]
+          end
+
+          subgraph Premiums["Tier B-only premiums"]
+              B12[12 Exclusivity / non-compete]
+              B13[13 Custom solution]
+          end
+
+          B1 --> B4
+          B1 --> B8
+          B4 --> B5
+          B4 --> B6
+          B5 --> B7
+          B7 --> B8
+          B7 --> B9
+          B7 --> B10
+          B11 -.-> B1
+          B12 -.-> B8
+          B13 -.-> B8
+      ```
+
+      Sub-scoping lives inside blocks (venue pack × Binance + venue pack × Uniswap_v3 are two instances of block 8, not two blocks). Demo restriction profiles and the entitlement registry both compose from this 13-element identifier list — "one list, four derivations" (slide 6).
+
+      ---
+      ## Slide 6 — The 1-registry-4-derivations engine
+
+      Stage 3C core. All four consumer artefacts read the same registry.
+
+      ```mermaid
+      flowchart LR
+          subgraph Registry["Stage 3B UAC combo registry"]
+              D1[15 dimensions]
+              D2[22 blocker predicates]
+              D3[13 entitlement blocks]
+              D4[4 lock-states · 8 maturities · 3 phases]
+          end
+
+          subgraph Inputs["Runtime inputs"]
+              I1[JWT claims<br/>audience · org · client · fund]
+              I2[Client package<br/>signed contract]
+              I3[Persona + flavour<br/>for demos]
+              I4[Pricing numbers<br/>from Stage 2]
+              I5[Route + item + phase<br/>per-request]
+          end
+
+          subgraph Engine["Derivation engine (strategy-service/availability/)"]
+              F1[combo dimensions]
+              F2[cost combo tier depth]
+              F3[demo_universe persona flavour]
+              F4[prod_restrictions client pkg]
+              F5[access_control user route item phase]
+          end
+
+          subgraph Consumers["4 consumer surfaces"]
+              O1[Billing + pricing UI]
+              O2[Demo-provisioning]
+              O3[Prod entitlement gate]
+              O4[UI visibility / route gate]
+          end
+
+          Registry --> F1
+          Registry --> F2
+          Registry --> F3
+          Registry --> F4
+          Registry --> F5
+          I1 --> F4
+          I1 --> F5
+          I2 --> F2
+          I2 --> F4
+          I3 --> F3
+          I4 --> F2
+          I5 --> F5
+          F1 --> F2
+          F1 --> F3
+          F1 --> F4
+          F1 --> F5
+          F2 --> O1
+          F3 --> O2
+          F4 --> O3
+          F5 --> O4
+      ```
+
+      Every function is `registry × input_context → result`. Pure. Cachable. Idempotent. `access_control(...)` is phase-aware — `LIVE_ALLOCATED` slot is visible in `research` phase only if entitlements include block 6 (research/promote), same component tree regardless.
+
+      ---
+      ## Slide 7 — Cost composition worked example
+
+      Hybrid (Client, downstream) quote. Tier A marginal + Tier B core + rule-10 `richer_execution_constraints` depth.
+
+      ```mermaid
+      graph TD
+          subgraph Quote["Hybrid DeFi signals-only quote"]
+              T1[Block 1 reporting core · Tier B · fixed monthly]
+              T2[Block 4 strategy-service entry · Tier B · fixed monthly]
+              T3["Block 5 instructions integration<br/>Tier B · depth=richer 1.4x base"]
+              T4["Block 7 execution layer<br/>Tier B · depth=richer 1.4x base"]
+              T5[Block 8 venue pack uniswap_v3 · Tier B]
+              T6[Block 8 venue pack aave_v3 · Tier A usage-var]
+              T7[Block 8 venue pack hyperliquid_dex · Tier A usage-var]
+              T8[Block 9 chain pack ethereum · Tier B]
+              T9[Block 9 chain pack arbitrum · Tier A]
+              T10[Block 10 instrument pack perp · Tier B]
+              T11[Block 10 instrument pack spot · Tier B]
+              T12[Block 11 exec-quality analytics · Tier A]
+          end
+
+          subgraph Totals["Totals"]
+              U1[Upfront · Tier B only]
+              U2[Monthly fixed · Tier B sum]
+              U3[Monthly variable baseline · Tier A usage]
+          end
+
+          T1 --> U1
+          T2 --> U1
+          T3 --> U1
+          T4 --> U1
+          T5 --> U1
+          T8 --> U1
+          T10 --> U1
+          T11 --> U1
+          T1 --> U2
+          T2 --> U2
+          T3 --> U2
+          T4 --> U2
+          T5 --> U2
+          T8 --> U2
+          T10 --> U2
+          T11 --> U2
+          T6 --> U3
+          T7 --> U3
+          T9 --> U3
+          T12 --> U3
+      ```
+
+      Per-block mixability shows clean: core on Tier B for institutional predictability; marginal venues on Tier A — no upfront commitment. Internal cost column lives in a separate derivation path, capability-gated by `pricing.read_internal`; never on a client-facing quote. Numbers populate in Stage 2 `commercial-model/pricing-building-blocks.md` when Odum finance ships them; formulas unchanged.
+
+      ---
+      ## Slide 8 — Demo restriction profile per persona
+
+      Stage 3C `demo_universe(persona, flavour)`. Four personas, four visibility slices.
+
+      ```mermaid
+      graph TD
+          subgraph admin["admin - full universe"]
+              A1[All 13 blocks visible]
+              A2[All maturities incl. CODE_NOT_WRITTEN]
+              A3[CLIENT_EXCLUSIVE slots visible]
+              A4[All routes · all phases]
+          end
+
+          subgraph pim["prospect-im - turbo"]
+              P1[Blocks 1 + 3 + 11 visible]
+              P2[maturity = LIVE_ALLOCATED only]
+              P3[lock_state = PUBLIC only]
+              P4["/services/reports/*"]
+          end
+
+          subgraph pdart["prospect-dart - broader_platform · G1 new"]
+              ND1[Blocks 1/4/5/7/8/9/10/11 visible]
+              ND2[Block 6 LOCKED-VISIBLE]
+              ND3[maturity ≥ BACKTESTED]
+              ND4[lock_state = PUBLIC only]
+              ND5[Terminal + catalogue + observe]
+          end
+
+          subgraph preg["prospect-reg - turbo · G1 new"]
+              R1[Blocks 1/2/7/8/10 visible]
+              R2[maturity ≥ BACKTESTED]
+              R3[lock_state = PUBLIC only]
+              R4[Regulatory reporting surfaces]
+              R5[Block 6 HIDDEN-ENTIRELY]
+          end
+      ```
+
+      Rule 06's LOCKED-VISIBLE vs HIDDEN-ENTIRELY distinction: DART prospect sees research/promote locked (obvious next step, upgrade path visible); Reg Umbrella prospect does not see research at all (not a plausible next step for them).
+
+      ---
+      ## Slide 9 — Same-system partitioning (rule 03)
+
+      One underlying system. Three commercial audiences. Research / paper / live all bind to it.
+
+      ```mermaid
+      graph TD
+          subgraph System["One operating system"]
+              Sys[strategy-service · execution-service · reports-service · data-services]
+          end
+
+          subgraph Paths["Three commercial audiences"]
+              PD[DART clients]
+              PI[IM allocators]
+              PR[Reg Umbrella firms]
+          end
+
+          subgraph Phases["Three lifecycle phases - orthogonal to commercial path"]
+              PhR[research · historical binding]
+              PhP[paper · live data + simulated fills]
+              PhL[live · live fills]
+          end
+
+          subgraph Surfaces["One set of UI surfaces"]
+              SR["/services/strategy-catalogue"]
+              ST["/services/trading/terminal"]
+              SRep["/services/reports"]
+          end
+
+          System --> PD
+          System --> PI
+          System --> PR
+          System --> PhR
+          System --> PhP
+          System --> PhL
+          System --> SR
+          System --> ST
+          System --> SRep
+          PD -.entitlement.-> SR
+          PD -.entitlement.-> ST
+          PD -.entitlement.-> SRep
+          PI -.entitlement.-> SRep
+          PR -.entitlement.-> SRep
+          PR -.entitlement.-> SR
+          PhR -.data-bind.-> SR
+          PhR -.data-bind.-> ST
+          PhR -.data-bind.-> SRep
+      ```
+
+      Implications for Stage 3E:
+
+      - **No forked UI.** Terminal + catalogue + reports are one component tree each; `phase` prop rebinds the data source (G1 item 1.1).
+      - **No forked catalogue.** Strategy Catalogue renders the same row for DART / IM / Reg Umbrella viewers; their filters differ.
+      - **No forked reporting.** `/services/reports/overview` is one route; allocator / DART subscriber / Reg Umbrella see entitlement-filtered views.
+
+      ---
+      ## Slide 10 — Before / after page-triage counts
+
+      Page triage shipped 177 routes (158 unified-trading-system-ui + 19 user-management-ui). Post-Stage-3E, the distribution changes.
+
+      ```mermaid
+      %%{init: {'theme': 'default', 'xyChart': {'width': 900, 'height': 500}}}%%
+      xychart-beta
+          title "Routes before / after Stage 3E"
+          x-axis [Promote, Refactor, MergeInto, Defer, Archive, New]
+          y-axis "Route count" 0 --> 140
+          bar "Before 2026-04-19" [120, 12, 25, 14, 5, 0]
+          bar "After Stage 3E G1+G2" [132, 0, 0, 0, 5, 38]
+      ```
+
+      Net: ~38 new canonical routes added (3 catalogue refactors × ~12 routes + LOCKED-VISIBLE admin routes + new `/services/data-catalogue/*`, `/services/ml-model-catalogue/*`, `/services/execution-algo-catalogue/*`). 12 old routes refactored into the new catalogues (out of the "refactor" bucket); 25 merge-into moves completed.
+
+      G3 `visibility-slicing` e2e expansion asserts all 132 canonical routes + LOCKED-VISIBLE padlock states across 7 personas × 3 flavours.
+
+      ---
+      ## Slide 11 — Screenshot: pb1 homepage (anonymous)
+
+      Anonymous landing page for the marketing journey.
+
+      ![Anonymous homepage](screenshots/anon-home.png)
+
+      Post-Stage-3E note: the homepage surface itself is not a G1/G2 refactor item; current implementation is canonical. Stage 3E items 1.4 (new personas) + 1.3 (LOCKED-VISIBLE) affect authenticated surfaces, not this anonymous landing.
+
+      ---
+      ## Slide 12 — Screenshot: pb2 briefings hub (post-light-auth)
+
+      Prospect-IM persona, briefings surface.
+
+      ![Briefings hub — prospect-im](screenshots/prospect-im-briefings.png)
+
+      Corresponds to `experience/briefings-hub.md`. Post-Stage-3E G3.3 (briefings CMS migration), content in this view lives in a headless CMS; the route + layout stays stable.
+
+      ---
+      ## Slide 13a — Screenshot: pb3 admin dashboard
+
+      **Admin (Odum internal) — full universe:**
+
+      ![Admin dashboard](screenshots/admin-dashboard.png)
+
+      Same route (`/dashboard`), different scope per persona. Rule 03 + rule 06 made mechanical: same underlying system, three entitlement-sliced views.
+
+      ---
+      ## Slide 13b — Screenshot: pb3 client-full dashboard
+
+      **Client-full (Alpha Capital) — full DART subscription:**
+
+      ![Client-full dashboard](screenshots/client-full-dashboard.png)
+
+      Every block the client's package covers renders with full depth. Block 6 research/promote is the signal this persona carries.
+
+      ---
+      ## Slide 13c — Screenshot: pb3 prospect-IM dashboard
+
+      **Prospect-IM (demo) — IM-scoped reporting surface:**
+
+      ![Prospect-IM dashboard](screenshots/prospect-im-dashboard.png)
+
+      Once Stage 3E G1 ships LOCKED-VISIBLE, prospect-im will show DART surfaces with a padlock chip rather than hiding them. Today those surfaces are hidden via the entitlement cascade.
+
+      ---
+      ## Slide 14a — Screenshot: admin strategy catalogue
+
+      **Admin view of Strategy Catalogue master matrix:**
+
+      ![Strategy catalogue — admin](screenshots/admin-strategy-catalogue.png)
+
+      Strategy Catalogue is the reference pattern Stage 3E 2.3 / 2.4 / 2.5 replicate across Data / ML / Execution Algo.
+
+      ---
+      ## Slide 14b — Screenshot: reports overview
+
+      **Prospect-IM reports overview:**
+
+      ![Reports overview — prospect-im](screenshots/prospect-im-reports-overview.png)
+
+      Reports overview embodies rule 03 sub-claim (a) "partitioned views not separate products" — allocators and DART subscribers share this route; entitlement slicing differentiates what each sees.
+
+      ---
+      ## Slide 15 — The 3 internal one-liners + expansions
+
+      Rule 09. Internal use verbatim; external docs expand using the three-sentence pattern (positioning / mechanism / proof).
+
+      **DART** (internal one-liner):
+
+      > An accelerator for strategy, research, execution, and control — the same system Odum uses internally.
+
+      **DART** (external expansion):
+
+      > DART is the set of services Odum uses to build, research, promote, execute, and monitor its own systematic strategies, packaged for client use. Clients who operate their own strategies can plug their signals into Odum's execution and reporting stack, or they can use the full research and promotion pipeline. The underlying components are the same as Odum's internal operation — one system, partitioned views.
+
+      **IM** (internal one-liner):
+
+      > Allocate capital to Odum-managed strategies; reporting is built in because it is the same reporting system Odum uses itself.
+
+      **IM** (external expansion):
+
+      > Investment Management allocates client capital to Odum-run systematic strategies operating under Odum's FCA permissions. Reporting — positions, exposures, P&L, reconciliation — comes from the same surface Odum uses to run its own operation, with allocator-side views filtered by entitlement. The minimum engagement is twelve months; the onboarding path sets up the fund structure (Pooled or SMA), capital allocation, and reporting at the same time.
+
+      **Reg Umbrella** (internal one-liner):
+
+      > Operate your regulated activity under Odum's FCA permissions; onboarding, compliance, MLRO, supervision, and reporting included.
+
+      **Reg Umbrella** (external expansion):
+
+      > Firms running regulated activity that want operational coverage without seeking direct FCA authorisation can operate under Odum's permissions. Onboarding handles regulatory scope, compliance setup, MLRO coverage, and supervisory reporting. Reporting surfaces use the same component tree as IM and DART reporting, filtered to the firm's regulated-activity view.
+
+      Rule 02 voice throughout: present tense, specific over evocative, no adverbs, no forward-tense marketing hedges.
+
+      ---
+      ## Slide 16 — Next steps: which Stage 3E item unlocks which playbook
+
+      Every experience playbook depends on a subset of Stage 3E refactor items. Shipping the G1 nine unlocks operational truth for every pb1 / pb2 / pb3 playbook.
+
+      | Playbook | Depends on Stage 3E items |
+      | --- | --- |
+      | pb1 `marketing-journey.md` | 1.9 (codex scope tagging), 3.4 (DART rebrand) |
+      | pb2 `briefings-hub.md` | 1.9, 3.3 (briefings CMS — G3) |
+      | pb2a `regulatory-umbrella-briefing.md` | 1.9, 2.8 (fund + business_unit registry) |
+      | pb2b `dart-briefing.md` | 1.2 (instruction-schema validation), 1.9, 3.2 (pricing numbers) |
+      | pb2c `im-decision-journey.md` | 1.9, 2.8, 2.10 (allocator split) |
+      | pb3a `regulatory-demo.md` | 1.4 (prospect-reg persona), 1.7 (restriction-profile), 2.6 (staging Firebase), 2.7 (demo provisioning) |
+      | pb3b `investment-management-demo.md` | 1.1 (phase-unification), 1.7, 2.6, 2.7, 2.10 |
+      | pb3c `dart-demo.md` | 1.1, 1.2, 1.3 (LOCKED-VISIBLE), 1.4 (prospect-dart), 1.5 (broken-href cleanup), 1.7, 2.2 (per-client API keys), 2.6, 2.7 |
+      | pb3d `staging-demo-journey.md` | 2.6, 2.7 |
+
+      **Recommended next step.** Spawn the nine G1 follow-up plans simultaneously (per Stage 3E § 1 "Proposed follow-up plan" column); run in parallel where dependencies allow (Stage 3E § 5 dependency graph). Target: all G1 items shipped within 4–6 weeks, making every pb1–pb3 playbook operationally true.
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>

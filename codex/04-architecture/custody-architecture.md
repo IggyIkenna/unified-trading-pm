@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Custody Architecture
 type: architecture
 status: stub

@@ -38,6 +38,13 @@ source:
 > independently; only the download path-fix is gated on the migration landing. Full landscape map:
 > `plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md` § Sequencing.
 
+> **🟢 UI test-env CORRECTION (2026-06-16) — it was NOT broken; a host Node-version mismatch.** My earlier "fleet-wide
+> breakage" call was WRONG: deployment-ui's vitest suite is GREEN in CI (`quality-gates-v2` success, Node 22). The local
+> `ERR_REQUIRE_ESM` was this host on **Node 20.18** — jsdom@29's ESM deps need **Node ≥22**. **FIXED**: pinned
+> `.nvmrc`/`engines` Node>=22 + shipped the UI fixes under Node 22 (deployment-ui@`80c547d`). The venue-refetch +
+> de-dupe-panels + pagination items below are **CODE-SHIPPED + vitest-green**; only `pw:L2` (playwright smoke) remains,
+> pending a browser-capable slot. Issue (now RESOLVED): `deployment_ui_test_env_esm_breakage_2026_06_16.md`.
+
 ## Phase A (TIER 1 cleanup) — Scope + venue-filter correctness
 
 - [ ] [CODE] P1. **instruments-service "out of scope" — PROPER fix** (audit §B): NOT the `scope_in=True` short-circuit
@@ -54,25 +61,25 @@ source:
       per-type coverage signal (root of the §J "no options visible"). Keep one catalogue parquet per venue/day (storage
       unit) but enrich the manifest row with `instrument_type` as a column with per-type counts. Unlocks per-type scope
       (above) + per-type drilldown in the UI. — instruments-service (+ UAC manifest schema if needed)
-- [ ] [CODE] P1. **Venue filter — backend**: add a `venue: list[str] | None` param to the manifest path
-      (`_status_core.py:139` + `services/data_status/manifest.py:114`), include it in `any_row_filter` (`:149-151`) and
-      mask `_build_venue_breakdown` (`:589`) so venue narrows server-side. — deployment-api
-- [ ] [UI] P1. **Venue filter — frontend**: add a `useEffect` that re-invokes `fetchData` when
-      `selectedVenues`/`selectedFolders`/`selectedDataTypes` change, guarded to fire only after the first manual load
-      and not while `loading` (mirror the manifest-mode effect at `DataStatusTab.tsx:807-814`). — deployment-ui `[UI]` +
-      `pw:L2 ✓` + regression spec.
+- [x] ✅ [CODE] P1. **Venue filter — backend** — DONE deployment-api@3d9a0e032: added repeatable `venue: list[str]` to
+      the `/manifest` route + `get_manifest_status` (threaded through
+      `_get_manifest_status_sync`/`_dispatch_category_builds`/ `_build_manifest_category`), engaged it in the
+      `any_row_filter` gate, added `_apply_venue_filter` (case-insensitive OR) before the venue breakdown, and gated the
+      process-pool path off (it doesn't thread filters); +3 tests; QG green. — deployment-api
+- [ ] [UI] P1. **Venue filter — frontend** — CODE-SHIPPED deployment-ui@`80c547d` (re-fetch `useEffect` on
+      `selectedVenues`/folders/data-types change, post-first-load guarded; regression:
+      `tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`; vitest+tsc+build green under Node 22).
+      **NOT ticked ✅ — `pw:L2` smoke pending a browser-capable slot** (playwright HARD RULE). — deployment-ui `[UI]`
 
 ## Phase B (TIER 1 cleanup) — UI clarity (duplicate panels, pagination)
 
-- [ ] [UI] P2. **Collapse duplicate "available" vs "available dates"** (audit §D): gate the legacy "Data Types" block
-      (`DataStatusTab.tsx:4897-5045`) with `&& !hasHonestDataTypes` so it renders only when the honest panel is absent
-      (preserve the per-day drill chips; eliminate the MTDS double-render). — deployment-ui `[UI]` + `pw:L2 ✓` +
-      regression.
-- [ ] [UI] P2. **Pagination visible-count selector**: add a `<select>` (50/100/200/1000/2000/All) bound to `DateList`'s
-      `limit` state (`DataStatusTab.tsx:245-301,260,290-298`); one change covers all drill sites. Note the static
-      server-truncation `+{N} more` labels (`:3891,3911,5386`, `VenuePillList :230`) need a backend `limit` bump to be
-      client-pageable — file as a follow-on if the operator wants those expandable too. — deployment-ui `[UI]` +
-      `pw:L2 ✓`.
+- [ ] [UI] P2. **Collapse duplicate "available" vs "available dates"** — CODE-SHIPPED deployment-ui@`80c547d` (legacy
+      "Data Types" block gated so it no longer double-renders beside the honest panel; same regression spec; green under
+      Node 22). **`pw:L2` pending** a browser-capable slot. — deployment-ui `[UI]`
+- [ ] [UI] P2. **Pagination visible-count selector** — CODE-SHIPPED deployment-ui@`80c547d` (`DateList` size selector
+      50/100/200/1000/2000/All; same regression spec; green under Node 22). Static server-truncation `+{N} more` labels
+      (`:3891,3911,5386`, `VenuePillList :230`) still need a backend `limit` bump to be client-pageable — follow-on if
+      wanted. **`pw:L2` pending.** — deployment-ui `[UI]`
 - [ ] [UI] P3. **Rollup-difference clarity** (audit §F, by-design): optional small UI note/tooltip explaining IS is a
       per-venue/day reference bundle (no data_type axis) vs MTDS's 5-axis market-data shards — so the structurally
       different drilldown reads as intentional, not broken. — deployment-ui
@@ -119,10 +126,13 @@ the canon plan; track there, not as duplicate todos:
       `internal/reference/instrument.py:90` (1:1 into `INSTRUMENTS_PARQUET_SCHEMA`; not in the CeFi-only
       `model_validator` `:318`). `raw_symbol` stays the raw exchange code; canonicals are additive. Downstream (CSV
       download, options↔future bundling) reads the canonical fields. — unified-api-contracts (+ IS writer/serializer)
-- [ ] [CODE] P1. **Fix Deribit spot being dropped** (audit §J; operator correction 2026-06-16: Deribit DOES have spot
-      now). Remove `deribit` from `_DERIVATIVES_ONLY_EXCHANGES` (`tardis/adapter.py:95-97`) — or make it date-aware
-      (spot only post-launch ~2023); the `:719-729` spot-drop + stale `:721` "deribit has no spot" comment must go.
-      Validate Tardis returns Deribit spot + it passes `CEFI_BASE_ASSET_UNIVERSE`. — instruments-service
+- [x] ✅ [CODE] P1. **Fix Deribit spot being dropped** — DONE instruments-service@be4c7930a: removed `deribit` from
+      `_DERIVATIVES_ONLY_EXCHANGES` (the set's only consumers are the two spot-drop guards in
+      `_parse_tardis_instrument`; surgical), updated the stale "deribit has no spot" comments, added
+      `test_deribit_spot_not_dropped` (BTC_USDC spot enumerates as SPOT_PAIR; BTC-PERPETUAL still PERPETUAL), and
+      corrected 2 pre-existing tests that asserted the bug; QG green (88.53% cov). Deribit spot now enumerates + passes
+      `CEFI_BASE_ASSET_UNIVERSE` like any venue. **Run-verify that real Deribit spot appears in a re-captured day**
+      (data-ops, rides the IS re-capture). — instruments-service
 - [ ] [DATA] P2. **Verify Deribit BTC/ETH options present** (audit §J): run-verify a representative day has BTC/ETH
       options in the batch catalogue (Tardis DERIBIT path; check the endpoint tier didn't drop option metadata).
       **Operator 2026-06-16: BTC/ETH underlyings are FINE for now** — do NOT widen `CEFI_OPTIONS_UNDERLYINGS` or wire

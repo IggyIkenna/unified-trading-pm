@@ -1488,16 +1488,16 @@ collapses to the **zero-row honest-absence output** rather than fabricating NaN-
 **Out-of-coverage-window (OOW)** is a sub-partition of `empty_confirmed` rows that describe cells that were
 **structurally never collectable** — not actionable gaps. Examples (UAC `is_out_of_coverage_window` classifier):
 
-| UAC reason constant                | Meaning                                                          |
-| ---------------------------------- | ---------------------------------------------------------------- |
-| `EXPECTED_PRE_GENESIS_CHAIN`       | Chain didn't exist on that date (e.g. pre-Solana-mainnet)       |
-| `EXPECTED_PRE_LAUNCH_VENUE`        | Venue/exchange not yet live                                      |
-| `EXPECTED_INSTRUMENT_NOT_LISTED`   | Instrument delisted or not yet listed at that time               |
-| `EXPECTED_DEPRECATED_DATA_TYPE`    | Data type retired/sunset, never collectable for that period       |
-| `EXPECTED_PAST_SOURCE_COVERAGE_END`| Source's historical coverage ended before this date              |
-| `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` | Sports/prediction markets outside the active season |
-| `EXPECTED_OUTSIDE_SCOPE`           | Asset-group-level scope exclusion                                |
-| (+ 8 more)                         | See `unified_api_contracts.is_out_of_coverage_window`            |
+| UAC reason constant                            | Meaning                                                     |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| `EXPECTED_PRE_GENESIS_CHAIN`                   | Chain didn't exist on that date (e.g. pre-Solana-mainnet)   |
+| `EXPECTED_PRE_LAUNCH_VENUE`                    | Venue/exchange not yet live                                 |
+| `EXPECTED_INSTRUMENT_NOT_LISTED`               | Instrument delisted or not yet listed at that time          |
+| `EXPECTED_DEPRECATED_DATA_TYPE`                | Data type retired/sunset, never collectable for that period |
+| `EXPECTED_PAST_SOURCE_COVERAGE_END`            | Source's historical coverage ended before this date         |
+| `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` | Sports/prediction markets outside the active season         |
+| `EXPECTED_OUTSIDE_SCOPE`                       | Asset-group-level scope exclusion                           |
+| (+ 8 more)                                     | See `unified_api_contracts.is_out_of_coverage_window`       |
 
 ### Denominator formula
 
@@ -1506,14 +1506,14 @@ denominator = captured + within_window_empty + attempted_failed + expected_unatt
 coverage_%  = captured / denominator × 100
 ```
 
-**`out_of_window` is EXCLUDED from the denominator.** Including OOW cells (which were always empty by design)
-would make coverage% look artificially low — the DeFi effect was 22.11% → 97.55% (+75.44pp) once OOW was excluded.
+**`out_of_window` is EXCLUDED from the denominator.** Including OOW cells (which were always empty by design) would make
+coverage% look artificially low — the DeFi effect was 22.11% → 97.55% (+75.44pp) once OOW was excluded.
 
 ### Column name duality
 
-The live consolidated index (`_index/availability_index.parquet`) uses `error_reason` for the reason column.
-The CF-20 beta projected parquet (`_index/audit/projected_index_{asset_group}.parquet`) uses `reason`.
-Downstream consumers (deployment-api `coverage.py`) MUST accept BOTH:
+The live consolidated index (`_index/availability_index.parquet`) uses `error_reason` for the reason column. The CF-20
+beta projected parquet (`_index/audit/projected_index_{asset_group}.parquet`) uses `reason`. Downstream consumers
+(deployment-api `coverage.py`) MUST accept BOTH:
 
 ```python
 _reason_col = "error_reason" if "error_reason" in index.columns else (
@@ -1525,10 +1525,10 @@ _reason_col = "error_reason" if "error_reason" in index.columns else (
 
 1. **deployment-api** (`deployment_api/services/data_status/coverage.py`, `_build_coverage_for_cat`): partitions
    empty_confirmed rows → `capture_status_counts["out_of_window"]` separate key, denominator excludes it.
-2. **deployment-ui** (`src/api/client.ts`): `TurboSubDimension`, `TurboAssetGroupStatus`,
-   `HonestCoverageStatusCounts` all carry `out_of_window?: number` (optional; absent = 0).
-3. **deployment-ui** (`src/components/HonestCoverageCard.tsx`): `CoverageBar` renders OOW as a distinct
-   slate-grey segment with tooltip "outside window — not a gap: N"; legend entry "outside window — not a gap".
+2. **deployment-ui** (`src/api/client.ts`): `TurboSubDimension`, `TurboAssetGroupStatus`, `HonestCoverageStatusCounts`
+   all carry `out_of_window?: number` (optional; absent = 0).
+3. **deployment-ui** (`src/components/HonestCoverageCard.tsx`): `CoverageBar` renders OOW as a distinct slate-grey
+   segment with tooltip "outside window — not a gap: N"; legend entry "outside window — not a gap".
 4. **Tooltip** on the "reachable" badge notes OOW exclusion from the denominator.
 
 ### Ships
@@ -1541,13 +1541,13 @@ _reason_col = "error_reason" if "error_reason" in index.columns else (
 Real GCS data check on `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/projected_index_defi.parquet`
 (1.58M rows, updated 2026-06-11):
 
-| Bucket               | Count       |
-| -------------------- | ----------- |
-| captured             | 349,326     |
-| empty_confirmed OOW  | 1,221,955   |
-| empty_confirmed in-window | 6,016  |
-| attempted_failed     | 2,740       |
-| expected_unattempted | 0           |
-| **denominator**      | **358,082** |
-| **coverage %**       | **97.55%**  |
-| naive (OOW included) | 22.11%      |
+| Bucket                    | Count       |
+| ------------------------- | ----------- |
+| captured                  | 349,326     |
+| empty_confirmed OOW       | 1,221,955   |
+| empty_confirmed in-window | 6,016       |
+| attempted_failed          | 2,740       |
+| expected_unattempted      | 0           |
+| **denominator**           | **358,082** |
+| **coverage %**            | **97.55%**  |
+| naive (OOW included)      | 22.11%      |

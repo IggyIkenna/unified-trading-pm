@@ -1,5 +1,5 @@
 ---
-scope: [engineer, admin, operator]
+scope: [engineer, admin]
 last_reviewed: 2026-05-23
 authoritative_for: [audit-ack-sla, escalation-ladder, operational-vs-audit-ack]
 referenced_by:

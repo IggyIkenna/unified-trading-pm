@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: DEFI_HEALTH_FACTOR_CRITICAL Runbook
 status: active
 created: 2026-05-08

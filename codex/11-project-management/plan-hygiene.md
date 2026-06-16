@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Plan Hygiene — Scripts, Runbook, and Cron
 type: project-management
 status: living

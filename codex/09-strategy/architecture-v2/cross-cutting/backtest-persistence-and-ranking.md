@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Backtest Persistence and Ranking
 type: strategy
 status: stub

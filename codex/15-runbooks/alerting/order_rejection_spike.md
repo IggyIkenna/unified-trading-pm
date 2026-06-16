@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: ORDER_REJECTION_SPIKE Runbook
 status: active
 created: 2026-05-08

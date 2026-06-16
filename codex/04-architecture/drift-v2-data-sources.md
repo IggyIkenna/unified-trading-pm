@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Drift V2 Data Sources — Velocity Data API as Canonical Historical + Live Path
 type: architecture
 status: living

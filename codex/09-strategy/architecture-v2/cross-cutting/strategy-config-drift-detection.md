@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Strategy Config Drift Detection
 type: strategy
 status: stub

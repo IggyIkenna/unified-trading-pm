@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: agent-orchestrator — deploy + infra reference (central API VM; fleet VMs in worker-topology SSOT)
 created: 2026-05-19
 last_updated: 2026-05-28

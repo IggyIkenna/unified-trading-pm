@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # CLI Promote Paths — May-23 SSOT
 
 > **Scope**: May-23 subset only. Post-cutover Phase 2 extends with full pinned-shas CandidateManifest + cross-service

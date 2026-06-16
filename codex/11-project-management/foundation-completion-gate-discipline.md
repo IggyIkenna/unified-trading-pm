@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Foundation-Completion-Gate Discipline
 
 > **SSOT** for sequencing plans across architecture layers. Referenced from CLAUDE.md § "Citadel-Grade Planning

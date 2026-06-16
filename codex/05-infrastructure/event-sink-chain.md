@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Deployment-Service Event Sink Chain
 type: infrastructure
 status: living

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Manifest Migration Coordination
 status: active
 created: 2026-05-07

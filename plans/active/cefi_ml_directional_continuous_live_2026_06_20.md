@@ -51,8 +51,9 @@ related_plans:
       mode). OKX is per-client (`exec-<client>-okx-*`); Bybit is single unscoped key (`bybit_api_key`/`bybit_api_secret`);
       Binance is `binance-trade-api-key`/`binance-trade-api-key-secret`. Blocked on operator provisioning SM secrets first
       (see CREDENTIAL APPROVAL REQUEST in slot_6.md, BLK-e64b661a).
-      — **DEFERRED** pending operator SM secret provisioning (BLK-e64b661a). Can ship UAC yaml + service_config.py
-      gap once SM names are confirmed. Execution-service credential loader wiring is agent-doable post-confirm.
+      — **BLOCKED-CREDENTIALS** (slot-3 2026-06-16, BLK-e64b661a cross-ref slot_6.md; also slot_3.md CREDENTIAL APPROVAL
+      REQUEST 2026-06-16). Can ship UAC yaml + service_config.py gap + credential loader wiring once SM secret names +
+      client_id(s) confirmed by operator. OKX passphrase also needs SM load path confirmation in okx_ccxt.py.
 - [ ] [AGENT] P0. Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7 continuous
       days (the cutover gate).
   > **GATED 2026-06-12 (slot-2, BLK-4badaa3c)**: Re-queued with explicit dependency on task -001 (end-to-end ML

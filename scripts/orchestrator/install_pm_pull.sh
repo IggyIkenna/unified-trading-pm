@@ -47,6 +47,16 @@ cp "$PULL_SCRIPT_SRC" "$PULL_SCRIPT_DST"
 chmod +x "$PULL_SCRIPT_DST"
 echo "Installed: $PULL_SCRIPT_DST"
 
+# --- 2b. One-shot: regen per-root agent symlinks (top-level CLAUDE.md + skills) immediately ---
+# pm-pull-ff.sh only regenerates on a FF *advance*; if the VM is already at latest, the symlinks
+# would otherwise wait for the next PM change. Run the fan-out once here so a fresh rollout makes the
+# root CLAUDE.md + skills links live now. Best-effort (always exits 0); run as ubuntu for ownership.
+REGEN_SCRIPT="$PM_REPO/scripts/dev/regen-agent-symlinks.sh"
+if [ -f "$REGEN_SCRIPT" ]; then
+    sudo -u ubuntu bash "$REGEN_SCRIPT" 2>&1 | sed 's/^/  /' || true
+    echo "Regenerated per-root agent symlinks"
+fi
+
 # --- 3. Write pm-pull.service ---
 cat > "$SYSTEMD_DIR/pm-pull.service" <<'EOF'
 [Unit]

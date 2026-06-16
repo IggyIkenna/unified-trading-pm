@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 type: architecture
 status: living

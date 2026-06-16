@@ -1,5 +1,5 @@
 ---
-scope: data-status
+scope: [engineer]
 status: stable
 last_reviewed: 2026-05-07
 ---

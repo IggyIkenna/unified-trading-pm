@@ -1,6 +1,6 @@
 ---
 title: "RB-RISK-002 — Liquidation Event"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Per-incident
 verifier: scenario 15_liquidation_proximity_auto_deleverage

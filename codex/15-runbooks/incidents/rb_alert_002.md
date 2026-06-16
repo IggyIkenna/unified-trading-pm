@@ -1,6 +1,6 @@
 ---
 title: "RB-ALERT-002 — Physical Siren/GSM Alarm Setup"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Quarterly device check
 verifier: Monthly test trigger + audible-confirm

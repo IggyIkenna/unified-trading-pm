@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Promote Workflow Architecture — May-23 SSOT
 type: architecture
 status: living

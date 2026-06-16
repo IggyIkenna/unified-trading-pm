@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: VM Event Emission Compliance Audit
 type: infrastructure
 status: living

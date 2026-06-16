@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Cross-Service Promote Handlers
 type: architecture
 status: stub

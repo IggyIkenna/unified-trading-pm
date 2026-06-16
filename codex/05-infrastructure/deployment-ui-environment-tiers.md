@@ -1,6 +1,6 @@
 ---
 title: Deployment-UI environment tiers — dev / staging / prod
-scope: infrastructure
+scope: [engineer]
 owner: harsh
 status: stable
 codified: 2026-05-18

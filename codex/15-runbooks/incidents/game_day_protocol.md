@@ -1,6 +1,6 @@
 ---
 title: "Game-Day Protocol — 3+ Scratch Scenarios End-to-End Acceptance"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-cutover (single run) + quarterly post-cutover
 verifier: Operator + secondary on-call observe full Layer-0..5 stack fire

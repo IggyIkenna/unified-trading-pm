@@ -1,5 +1,5 @@
 ---
-scope: infrastructure
+scope: [engineer]
 status: stable
 last_reviewed: 2026-05-12
 related_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md

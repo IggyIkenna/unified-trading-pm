@@ -1,6 +1,6 @@
 ---
 title: "RB-RECON-002 — Open Order Uncertainty"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: scenario 01_cefi_venue_circuit_breaker_trip

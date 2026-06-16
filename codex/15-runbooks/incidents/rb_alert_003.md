@@ -1,6 +1,6 @@
 ---
 title: "RB-ALERT-003 — Satellite / No-Signal Fallback"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-travel
 verifier: Pre-travel test call

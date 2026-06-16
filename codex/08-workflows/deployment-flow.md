@@ -1,5 +1,5 @@
 ---
-scope: [operator, admin]
+scope: [engineer, admin]
 created: 2026-05-15
 ---
 

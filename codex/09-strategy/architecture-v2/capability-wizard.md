@@ -82,17 +82,17 @@ The capability wizard is three artifacts over one data model:
 
 ## Current state (shipped 2026-06-11 — autonomous build session)
 
-| Piece                            | Where                                                    | Evidence                                                                                                                |
-| -------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Generator repair (Phase 0)       | `unified-trading-pm/scripts/openapi/`                    | PM@50bdbcd36 (PR #268) — service auto-discovery, fail-on-drift, architecture_v2 extraction                              |
-| Manifest schema + gap registries | `unified_api_contracts/internal/architecture_v2/`        | UAC@6f31f59 — capability_manifest + collateral/fees/sim/fund-structures/order-semantics/agent-capability (honest-empty) |
-| Capability manifest v1           | `unified-api-contracts/openapi/capability-manifest.json` | PM@78b2e893a (PR #270) + UAC@1bc2f07 — 409 nodes / 663 edges, all gaps typed; orphan report alongside                   |
-| Prospectus ×57 + two-sided audit | `unified-api-contracts/openapi/prospectus/`              | PM PR #272 + UAC@fe37eae — 1 contradiction + 2 orphan docs found                                                        |
-| Scenario stepper                 | `e2e-testing/scripts/strategy/`                          | UAC@6262c3f + strategy-service@e0ed11c + e2e-testing@3e41ecb — real engine, kill-trips proven                           |
-| Annotation write-back            | `unified-trading-pm/scripts/openapi/`                    | PM@f84a119 — capability-annotations.yaml sidecar + _capability_annotations.py + emit_capability_gap_todos.py; 2 annotated edges, 1 P2 todo |
-| Backtest-on-demand               | `e2e-testing/scripts/strategy/`                          | e2e-testing@194d66b — backtest_from_wizard_config.py; GroupBRunner wired; honest PRECHECK_UNAVAILABLE verdict confirmed |
-| Wizard UI (`/wizard`)            | `unified-trading-system-ui/app/(wizard)/`                | uts-ui@9f40331 — pw:L2 8/8                                                                                              |
-| Capability tab                   | `deployment-ui` (per-service tab next to Data Status)    | dep-ui@13ac831 — pw:L2 6/6                                                                                              |
+| Piece                            | Where                                                    | Evidence                                                                                                                                    |
+| -------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Generator repair (Phase 0)       | `unified-trading-pm/scripts/openapi/`                    | PM@50bdbcd36 (PR #268) — service auto-discovery, fail-on-drift, architecture_v2 extraction                                                  |
+| Manifest schema + gap registries | `unified_api_contracts/internal/architecture_v2/`        | UAC@6f31f59 — capability_manifest + collateral/fees/sim/fund-structures/order-semantics/agent-capability (honest-empty)                     |
+| Capability manifest v1           | `unified-api-contracts/openapi/capability-manifest.json` | PM@78b2e893a (PR #270) + UAC@1bc2f07 — 409 nodes / 663 edges, all gaps typed; orphan report alongside                                       |
+| Prospectus ×57 + two-sided audit | `unified-api-contracts/openapi/prospectus/`              | PM PR #272 + UAC@fe37eae — 1 contradiction + 2 orphan docs found                                                                            |
+| Scenario stepper                 | `e2e-testing/scripts/strategy/`                          | UAC@6262c3f + strategy-service@e0ed11c + e2e-testing@3e41ecb — real engine, kill-trips proven                                               |
+| Annotation write-back            | `unified-trading-pm/scripts/openapi/`                    | PM@f84a119 — capability-annotations.yaml sidecar + \_capability_annotations.py + emit_capability_gap_todos.py; 2 annotated edges, 1 P2 todo |
+| Backtest-on-demand               | `e2e-testing/scripts/strategy/`                          | e2e-testing@194d66b — backtest_from_wizard_config.py; GroupBRunner wired; honest PRECHECK_UNAVAILABLE verdict confirmed                     |
+| Wizard UI (`/wizard`)            | `unified-trading-system-ui/app/(wizard)/`                | uts-ui@9f40331 — pw:L2 8/8                                                                                                                  |
+| Capability tab                   | `deployment-ui` (per-service tab next to Data Status)    | dep-ui@13ac831 — pw:L2 6/6                                                                                                                  |
 
 Open work: wizard stepper stage, registry backfills, Wave-2 enhancements (operator sign-off pending).
 
@@ -111,12 +111,12 @@ Open work: wizard stepper stage, registry backfills, Wave-2 enhancements (operat
   `python scripts/openapi/generate_capability_manifest.py` → `generate_strategy_prospectus.py` →
   `audit_prospectus_vs_codex.py`; full-suite `generate-unified-openapi.sh` needs `.venv-workspace` — see finding F12
   (config-registry regen is DESTRUCTIVE without it).
-- **Escalation emitter** (append `[AGENT] P2.` todos for unannotated needs_code_scan gaps — idempotent):
-  from `unified-trading-pm/scripts/openapi/`, UAC venv:
-  `python emit_capability_gap_todos.py` (reads `unified-api-contracts/openapi/capability-manifest.json`,
-  appends under `## Escalated needs_code_scan (auto-emitted)` in `plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`).
-- **Backtest-on-demand** (GroupBRunner over wizard config, honest data precheck — CLOUD_MOCK_MODE always returns PRECHECK_UNAVAILABLE):
-  from `e2e-testing/`, strategy-service venv, credential-free:
+- **Escalation emitter** (append `[AGENT] P2.` todos for unannotated needs_code_scan gaps — idempotent): from
+  `unified-trading-pm/scripts/openapi/`, UAC venv: `python emit_capability_gap_todos.py` (reads
+  `unified-api-contracts/openapi/capability-manifest.json`, appends under `## Escalated needs_code_scan (auto-emitted)`
+  in `plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`).
+- **Backtest-on-demand** (GroupBRunner over wizard config, honest data precheck — CLOUD_MOCK_MODE always returns
+  PRECHECK_UNAVAILABLE): from `e2e-testing/`, strategy-service venv, credential-free:
   `python scripts/strategy/backtest_from_wizard_config.py --steps scripts/strategy/scenarios/apd_price_dispersion_btc.json`
   (or `--config path/to/config.json`; `--days N`; `--out-dir /tmp/results`). Results JSON + markdown written to out-dir.
 - **Read the outputs**:

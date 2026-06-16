@@ -51,6 +51,11 @@ if sudo -u ubuntu git merge --ff-only --quiet origin/live-defi-rollout 2>&1; the
   AFTER=$(sudo -u ubuntu git rev-parse HEAD)
   if [ "$BEFORE" != "$AFTER" ]; then
     echo "$TS pm-pull: advanced $(echo $BEFORE | cut -c1-8) -> $(echo $AFTER | cut -c1-8)"
+    # Re-assert per-root agent symlinks (top-level CLAUDE.md + skills) after the FF, so the freshly
+    # pulled ruleset is the one Claude Code auto-loads. Repo helper (auto-updates via pull); run as
+    # ubuntu so symlinks are ubuntu-owned; best-effort (always exits 0) — never fails the pull.
+    REGEN="$PM/scripts/dev/regen-agent-symlinks.sh"
+    [ -f "$REGEN" ] && sudo -u ubuntu bash "$REGEN" 2>&1 | sed "s/^/$TS pm-pull: /" || true
   fi
 else
   echo "$TS pm-pull: non-FF — manual merge required"

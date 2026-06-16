@@ -1,3 +1,43 @@
+## [Slot 3 → Operator] 2026-06-16 — CREDENTIAL APPROVAL REQUEST: CeFi ML live trading (OKX + Binance + Bybit)
+
+### CREDENTIAL APPROVAL REQUEST — CeFi ML_DIRECTIONAL_CONTINUOUS live trading
+
+**Status**: `BLOCKED-CREDENTIALS`
+
+**Task**: `cefi_ml_directional_continuous_live-002` — ≥7-day live ML signal run on OKX + Binance + Bybit
+**Plan-of-record**: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` (P0 + P1 todos)
+**Cross-ref**: slot_6.md BLK-e64b661a (original infrastructure audit; same request)
+
+**What I need** (in order):
+
+**1. Secret Manager secrets for live CeFi-ML trading** (GCP project `central-element-323112`):
+
+| Venue | Secret name(s) | Content (JSON) | Notes |
+|-------|----------------|----------------|-------|
+| Bybit | `bybit_api_key` | `{"api_key": "...", "api_secret": "..."}` | Single unscoped key (no read/trade split) |
+| Binance | `binance-trade-api-key` + `binance-trade-api-key-secret` | Per canonical pattern | Already declared in credentials_per_archetype.yaml |
+| OKX | `exec-<client>-okx-api-key` | `{"api_key": "..."}` | Per-client pattern — confirm active client_id(s) |
+| OKX | `exec-<client>-okx-api-secret` | `{"api_secret": "..."}` | Per-client; passphrase also needed (see below) |
+| OKX | `exec-<client>-okx-passphrase` | `{"passphrase": "..."}` | OKX requires passphrase in addition to key+secret |
+
+**Note on OKX passphrase**: `okx_ccxt.py` currently loads `api_key` + `api_secret` but NOT `passphrase` — need to confirm
+the SM load path adds passphrase to the ccxt `options` dict before constructing the adapter.
+
+**2. Arm the ML_DIRECTIONAL_CONTINUOUS kill-switch** (manual operator gate per locked design):
+
+Kill-switch arming requires operator action: `POST /api/archetypes/ML_DIRECTIONAL_CONTINUOUS/circuit-breakers/arm`
+or equivalent dashboard action. Params: $10k/venue notional cap, 3 venues (OKX + Binance + Bybit = $30k total),
+`KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS` scope.
+
+**Unblocks**: once SM secrets provisioned + kill-switch armed, agent will ship:
+- `credentials_per_archetype.yaml` (UAC) — add ML_DIRECTIONAL_CONTINUOUS entry
+- `service_config.py` (execution-service) — add `bybit_secret_name = "bybit_api_key"`
+- `live_execution_handler._create_orchestrator_for_venue()` — wire SM credential loading before `get_order_adapter()`
+
+**Respond with**: `[ack] slot-3 cefi-ml credentials — SM secret names confirmed + client_id list, kill-switch armed`
+
+---
+
 ## [Slot 3 → Operator] 2026-06-09 — CREDENTIAL APPROVAL REQUEST: EIA API key (energy macro)
 
 ### CREDENTIAL APPROVAL REQUEST — EIA (U.S. Energy Information Administration) adapter

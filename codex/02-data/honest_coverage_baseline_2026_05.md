@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Honest-Coverage Baseline (2026-05)
 status: draft
 created: 2026-05-07

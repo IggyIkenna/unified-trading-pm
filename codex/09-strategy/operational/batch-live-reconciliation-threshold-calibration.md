@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Batch-Live Reconciliation — Threshold Calibration Analysis
 
 ## Purpose

@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: CIRCUIT_BREAKER_OPEN Runbook
 status: active
 created: 2026-05-08

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # instruments-service as SSOT for MTDS — Architecture Contract
 
 > **Codified**: 2026-05-20 (is_mtds_contract_audit_2026_05_20 Phase 8) **SSOT plan**:

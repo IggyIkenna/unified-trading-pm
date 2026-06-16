@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Estimation Calibration — Per-Class Multipliers + Retrospective Ledger
 
 > SSOT for time-estimate calibration in this workspace. Plan authors apply the multiplier from the class table; the

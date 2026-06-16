@@ -1,6 +1,6 @@
 ---
 title: "RB-CONN-005 — Alert Provider Failure"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Monthly
 verifier: Provider health probe smoke

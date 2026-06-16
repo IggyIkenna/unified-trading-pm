@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data Pipeline Correctness Is The Heartbeat — Hard Rule SSOT
 
 > **CLAUDE.md anchor**: "Data Pipeline Correctness Is The Heartbeat — No Exceptions, No Cutbacks (HARD RULE — codified

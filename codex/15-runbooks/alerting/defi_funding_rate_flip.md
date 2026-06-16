@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: DEFI_FUNDING_RATE_FLIP Runbook
 status: active
 created: 2026-05-08

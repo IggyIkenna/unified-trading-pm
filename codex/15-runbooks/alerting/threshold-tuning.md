@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Alerting Threshold Tuning
 status: active
 created: 2026-05-07

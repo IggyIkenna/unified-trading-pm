@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: POSITION_DRIFT Runbook
 status: active
 created: 2026-05-08

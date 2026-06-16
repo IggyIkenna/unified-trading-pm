@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Citadel-Grade Planning Standards
 
 > **CLAUDE.md anchor**: "Citadel-Grade Planning Standards".

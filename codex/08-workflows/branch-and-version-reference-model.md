@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Branch-and-Version Reference Model — two layers, two references (SSOT)
 
 > **The one-line rule:** `live-defi-rollout` (LDR) is the **code-integration** reference; **staging → main + semver** is

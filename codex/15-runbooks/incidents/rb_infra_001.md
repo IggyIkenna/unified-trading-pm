@@ -1,6 +1,6 @@
 ---
 title: "RB-INFRA-001 — OOM Recovery"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
 verifier: resize_machine_after_oom --dry-run

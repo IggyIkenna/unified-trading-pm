@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # GCS Object Operations — Canonical Pattern
 
 **SSOT for per-object copy / delete / describe in migration and batch scripts.**

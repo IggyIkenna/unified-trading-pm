@@ -1,6 +1,6 @@
 ---
 title: "RB-CONN-003 — Internal Messaging Lag"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
 verifier: Pub/Sub lag synthetic smoke

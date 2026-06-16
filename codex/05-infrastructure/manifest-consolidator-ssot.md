@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Manifest Consolidator — SSOT
 
 > **Anchor**: CLAUDE.md § "Manifest + Honest Absence". This doc is the canonical reference for the consolidator runtime,

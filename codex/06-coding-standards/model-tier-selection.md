@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Model Tier Selection — Sonnet 4.6 vs Opus 4.8
 
 **Rule**: Default to Sonnet 4.6. Opus 4.8 is a deliberate exception requiring justification. Every work-split MUST

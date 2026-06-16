@@ -2,7 +2,7 @@
 title: agent-orchestrator — central API host architecture
 created: 2026-05-30
 author: ikenna-claude-subagent
-scope: infrastructure
+scope: [engineer]
 status: active
 last_reviewed: 2026-05-30
 ---

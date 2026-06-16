@@ -1,6 +1,6 @@
 ---
 title: "RB-INFRA-002 — Machine/Node Failure"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
 verifier: Manual cordon+drain test

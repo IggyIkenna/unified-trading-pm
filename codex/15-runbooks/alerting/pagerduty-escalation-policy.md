@@ -1,5 +1,5 @@
 ---
-scope: [engineer, operator, on-call]
+scope: [engineer]
 ---
 
 # PagerDuty escalation policy

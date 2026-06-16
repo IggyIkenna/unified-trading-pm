@@ -1,6 +1,6 @@
 ---
 title: "RB-RISK-004 — Strategy Safe Mode"
-scope: [admin, operator]
+scope: [admin, engineer]
 owner: ikenna@odum-research.com
 cadence: Per-incident
 verifier: scenario 04_defi_oracle_deviation_30sigma

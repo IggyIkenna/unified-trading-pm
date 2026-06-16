@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: KILL_SWITCH_PORTFOLIO_DRAWDOWN Runbook
 status: active
 created: 2026-05-08

@@ -76,6 +76,26 @@ that workstream.
       (the real `self.manifest.record_*(… pipeline_mode=…)` calls already pass the kwarg); STEP 5.83 adapter-contract
       baseline lowered 13/9→7/7 for the 2 sports files to match the rename (behaviour-preserving). — instruments-service@e561ddf
       + unified-trading-pm@ccdbffcf. QG green (STEP 5.70 ✅ / 5.97 ✅ / 5.83 ✅).
+- [x] ✅ [SCRIPT] P0. **Phase 5.2 — grandfather-seed STEP 5.97 baseline for the 8 service repos the 2026-06-16 seed missed (UNBLOCK).**
+      The original seed baselined only UAC's `registry/` (138); every other repo defaulted to count=0, so the live gate
+      hard-failed 8 repos with real on-chain addresses — execution-service (225), market-tick-data-service (215),
+      features-service (13), strategy-service (9), deployment-service (3), alerting-service / e2e-testing /
+      unified-trading-system-ui (1 each) = **468**. Seeded each at its observed count via the checker's own
+      `--update-baseline` (clamps down, never raises; UAC stays 138). Gate green fleet-wide. A citation is traceability,
+      not correctness — these addresses are already in production, so grandfathering is not a funds-safety regression;
+      it just blocks NEW uncited addresses while the backfill (5.3) ratchets the existing set to 0. — unified-trading-pm@9f7409af7.
+- [ ] [SCRIPT] P1. **Phase 5.3 — back-fill `# DERIVED` citations on all 468 grandfathered service-repo addresses, ratchet baseline → 0.**
+      Safety-prioritized order (highest blast radius first): **(1) execution-service (225)** — funds-movement swap
+      routers, Multicall3 (`0xcA11…CA11`, same address all EVM chains), bridge/Aave/LST protocol addresses; **(2)
+      market-tick-data-service (215)** — Chainlink oracle feeds (`_oracle_prices_constants._CHAINLINK_FEEDS_BY_CHAIN`,
+      per-chain dict) + LST token contracts (per-protocol `lst_*_adapter.py`); then **(3) features-service (13),
+      strategy-service (9), deployment-service (3), alerting/e2e/ui (1 each)**. Recipe = the Phase-5.1 pattern: derive
+      `# DERIVED <date> from <chain> <source>` from each file's existing comments / per-chain dict key / protocol
+      docstring (Multicall3 + Chainlink feeds + LST tokens are immutable on-chain constants citable to etherscan /
+      docs.chain.link / protocol docs — mechanical, NOT research); `# QG-allow: defi-citation — <reason>` only for
+      factory-auto-deployed pool/pair addresses with no protocol-level SSOT. After each repo hits 0 uncited, re-run
+      `check_defi_address_citations.py --update-baseline` to ratchet that repo's baseline DOWN (never up). DONE = every
+      service repo at count 0 + the 8 baseline entries removed/zeroed. Target repos named; worker reads `SUB_AGENT_MANDATORY_RULES.md`.
 - [ ] [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
       `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
       via a cron VM that probes the recent finalized block per chain. The sports bankroll test fixture is similar.

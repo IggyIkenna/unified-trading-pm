@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 name: operational-modes
 overview:
   SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Active DeFi Market Making (ML-Driven Concentrated LP)
 
 > **Asset class:** DeFi **Strategy type:** Active Market Making via ML-Driven Concentrated LP Rebalancing **Strategy ID

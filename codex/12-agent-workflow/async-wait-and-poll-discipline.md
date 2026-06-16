@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Async-wait & poll discipline — how an agent waits for things to complete _well_
 
 > **owner**: cross-cutting (agent-behaviour) · **cadence**: every long async wait · **verifier**:

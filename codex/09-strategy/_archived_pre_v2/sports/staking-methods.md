@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Sports Staking Methods
 
 > Cross-cutting concern for all sports strategies. Staking methods determine **bet size**, not which bets to place.

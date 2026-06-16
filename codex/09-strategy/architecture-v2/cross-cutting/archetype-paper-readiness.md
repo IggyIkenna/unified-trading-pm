@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 name: archetype-paper-readiness
 overview:
   Per-archetype 4-state taxonomy (paper-runnable / paper-shippable / backtest-only / stub) for every entry in the

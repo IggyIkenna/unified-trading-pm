@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Ruff discipline — workspace-safe lint fix workflow
 last_reviewed: 2026-05-12
 status: canonical

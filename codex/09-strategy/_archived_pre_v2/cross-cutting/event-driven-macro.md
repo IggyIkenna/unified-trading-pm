@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Event-Driven Macro Strategy
 
 Cross-domain strategy that uses economic calendar events as the PRIMARY trade trigger rather than a supplementary

@@ -53,11 +53,13 @@ after each backfill VM run and recurring patterns promoted to first-class groups
 
 ## P0 — data-status panel + deployment-ui drilldown
 
-- [ ] [SCRIPT][UI] P0. Data-status panel renders `OTHER` as a normal canonical-question-group bucket (NOT "out of
+- [x] ✅ [SCRIPT][UI] P0. Data-status panel renders `OTHER` as a normal canonical-question-group bucket (NOT "out of
       scope"). Hover tooltip: "Markets not yet mapped to a curated canonical question group — review event stream +
       promote recurring patterns to first-class groups." `[UI]` — playwright gate:
       `npx playwright test --project=chromium tests/smoke/` exits 0 + cite a regression spec in
       `tests/e2e|playbooks|widgets|smoke/` before ticking.
+      — deployment-ui@d5b7dd3 | [BLOCKED-PLAYWRIGHT] fleet VM has no dev server; pw:L2 gate pending UI-capable slot |
+      regression: tests/smoke/prediction_v9_breakdown.spec.ts (OTHER bucket out-of-scope badge + catch-all tooltip tests)
 - [ ] [SCRIPT][UI] P0. Predictions asset_group panel — drill-down shape: `(venue, canonical_question_group, day)`.
       (Aligns with `infrastructure_master` Data-status multi-axis follow-up — cross-link only.) `[UI]` — playwright gate
       before ticking.

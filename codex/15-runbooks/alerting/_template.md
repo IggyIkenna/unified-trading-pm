@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: "<AlertCode> Runbook (Template)"
 status: template
 created: 2026-05-08

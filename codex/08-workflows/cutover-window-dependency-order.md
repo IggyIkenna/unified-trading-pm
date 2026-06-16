@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cutover-window critical-path checkpoint timeline (2026-05-13 → 2026-05-23)
 
 **Created**: 2026-05-13 per operator scope clarification **Status**: SSOT for cutover-window orchestration. Binds slot

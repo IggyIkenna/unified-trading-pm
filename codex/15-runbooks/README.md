@@ -3,7 +3,7 @@ title: "15-runbooks — live-trading on-call runbooks"
 type: codex-section-readme
 status: active
 created: 2026-05-08
-scope: workspace
+scope: [engineer]
 related:
   - codex/14-customer-journeys/README.md
   - codex/16-strategy-playbooks/README.md

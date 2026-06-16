@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DeFi Liquidation Cascade Capture
 
 > **Asset class:** DeFi **Strategy type:** Event-Driven Collateral Capture (post-liquidation discount) **Strategy ID

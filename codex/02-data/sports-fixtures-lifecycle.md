@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Sports fixtures lifecycle
 type: data
 status: living

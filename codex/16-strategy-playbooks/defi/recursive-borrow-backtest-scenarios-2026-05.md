@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Recursive-Borrow Backtest Scenario Taxonomy — 2026-05
 
 > **SSOT status**: ACTIVE — Phase 12 deliverable (2026-05-15). Gates Family 1 + Family 2 recursive-borrow cells from

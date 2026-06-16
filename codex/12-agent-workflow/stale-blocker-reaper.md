@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Stale-Blocker Reaper
 
 > Codified 2026-05-30 per `plan_hygiene_silent_failure_capture_2026_05_29.md` Phase 3.

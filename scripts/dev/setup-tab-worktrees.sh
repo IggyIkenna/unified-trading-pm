@@ -397,6 +397,23 @@ copy_workspace_file() {
     fi
 }
 
+# Seed a slot's Claude Code agent symlinks at provision time:
+#   • <slot>/CLAUDE.md             → the startup-load ruleset point for an orchestrator-spawned
+#                                    agent (CWD = the slot root, isolated CLAUDE_CONFIG_DIR).
+#   • <slot>/.claude/skills/<name> → each /<skill> slash-command.
+# Without this, those symlinks first appear only on the slot's FIRST quality-gates.sh run (whose
+# post-gate calls the SAME helper), leaving a freshly-provisioned slot bare until then. We reuse
+# the SSOT linker (no logic fork) so provision-time and QG-time seeding stay byte-identical.
+# Best-effort: link-claude-skills.sh ALWAYS exits 0 + self-skips under CI, so it can never fail
+# provisioning. SSOT: scripts/workspace/link-claude-skills.sh.
+seed_slot_claude_assets() {
+    local slot="$1" sd linker
+    sd="$(slot_dir "${slot}")"
+    linker="${PM_DIR}/scripts/workspace/link-claude-skills.sh"
+    [[ -f "${linker}" ]] || return 0
+    bash "${linker}" "${sd}" 2>&1 | sed 's/^/  /' || true
+}
+
 provision_slot() {
     local slot="$1"
     log "Provisioning slot ${slot} (branch $(slot_branch "${slot}")) ..."
@@ -405,6 +422,8 @@ provision_slot() {
     while IFS= read -r repo; do
         ensure_repo_worktree "${repo}" "${slot}"
     done < <(active_repos)
+    # Slot PM worktree now exists → seed agent symlinks (skills + startup CLAUDE.md).
+    seed_slot_claude_assets "${slot}"
 }
 
 verify_slot_clean() {
@@ -486,6 +505,8 @@ case "${MODE}" in
         while IFS= read -r repo; do
             set_worktree_identity "${SLOT_NUM}" "$(slot_dir "${SLOT_NUM}")/${repo}"
         done < <(active_repos)
+        # Re-seed agent symlinks (idempotent) so a re-themed slot keeps its skills + CLAUDE.md.
+        seed_slot_claude_assets "${SLOT_NUM}"
         truncate_slot_ping "${SLOT_NUM}"
         log "Slot ${SLOT_NUM} reset complete. Ready for new theme assignment."
         ;;

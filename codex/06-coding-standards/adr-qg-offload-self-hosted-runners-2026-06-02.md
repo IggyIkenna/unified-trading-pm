@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # ADR: Where the heavy QG runs — keep it local on governed 16 GB workers (Option A)
 
 - **Status:** Accepted — 2026-06-02 (operator decision: Option A + governor; **supersedes the initial Option-B lean**)

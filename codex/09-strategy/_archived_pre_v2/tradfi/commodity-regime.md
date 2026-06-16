@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Commodity Regime Strategy
 
 > **Asset class:** TradFi **Strategy type:** Regime-Conditional Multi-Factor **Strategy ID pattern:**

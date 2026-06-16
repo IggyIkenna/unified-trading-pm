@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: act-preflight workflow coverage
 type: infrastructure
 last_reviewed: 2026-05-17

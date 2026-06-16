@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Claude CLI Multi-Account Headless Authentication (SSOT)
 
 > **Permanent SSOT** for how the orchestrator authenticates claude CLI on VMs across multiple Max subscriptions.

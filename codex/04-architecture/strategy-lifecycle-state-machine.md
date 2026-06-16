@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 title: Strategy Lifecycle State Machine
 type: architecture
 status: stub

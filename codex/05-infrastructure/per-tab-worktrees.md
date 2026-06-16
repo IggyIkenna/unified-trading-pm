@@ -1,6 +1,6 @@
 ---
 title: "Per-tab worktrees — 3-tier isolation for parallel-agent flow"
-scope: workspace
+scope: [engineer]
 status: active
 last_updated: 2026-05-10
 last_reviewed: 2026-05-17
@@ -392,15 +392,15 @@ from `origin/live-defi-rollout` before running it, so a stale/dirty root PM clon
 source even though each emitted line is self-contained. It is **syntax-gated (H6)**: the candidate is streamed via
 `git show` to a temp, `bash -n`'d, and only `mv`+`chmod 755`'d into place if it parses — so one bad commit can never
 propagate fleet-wide and stop the cron; on any failure (offline / parse-fail) the last-good local copy runs. Three
-machine crons self-pull: `slot-cron-ff-pull` (+ its `cron-branch-overrides.txt` data sibling), `slot-host-symmetry-verify`,
-and `slot-git-status-report` (added 2026-06-12 — was bare). All installed/updated by `install-slot-cron-ff-pull.sh` (run
-once per host from the ROOT clone, never a slot — the Phase-D guard refuses a `.tabs/` cwd). `refresh-manifest-dag` is
-exempt (retired); the orphan-ping **Cloud Run Job** is exempt (it clones PM fresh each run — only the local Ikenna-machine
-crontab copy would need the self-pull).
+machine crons self-pull: `slot-cron-ff-pull` (+ its `cron-branch-overrides.txt` data sibling),
+`slot-host-symmetry-verify`, and `slot-git-status-report` (added 2026-06-12 — was bare). All installed/updated by
+`install-slot-cron-ff-pull.sh` (run once per host from the ROOT clone, never a slot — the Phase-D guard refuses a
+`.tabs/` cwd). `refresh-manifest-dag` is exempt (retired); the orphan-ping **Cloud Run Job** is exempt (it clones PM
+fresh each run — only the local Ikenna-machine crontab copy would need the self-pull).
 
 **Path-B per-slot ref refresh.** Under Path-B every slot is an independent `git clone --reference` with its OWN refs
-(objects shared via `objects/info/alternates`, refs NOT shared). `slot-cron-ff-pull.sh` PHASE-1 prefetch updates only the
-main-workspace clones' refs, so PHASE 2 MUST refresh each slot's `origin/<branch>` — a LOCAL ref-copy from the
+(objects shared via `objects/info/alternates`, refs NOT shared). `slot-cron-ff-pull.sh` PHASE-1 prefetch updates only
+the main-workspace clones' refs, so PHASE 2 MUST refresh each slot's `origin/<branch>` — a LOCAL ref-copy from the
 `--reference` clone (objects already shared → no network), network-fetch fallback (`_refresh_independent_clone_ref`).
 Without it a slot compares HEAD against a stale local ref and silently falls behind (observed up to +149 commits; fixed
 2026-06-12). The legacy "linked tab worktrees share the main clone's refs" assumption (still phrased in the tag-clobber

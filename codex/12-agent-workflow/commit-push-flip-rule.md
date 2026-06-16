@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Commit + Push + Flip Plan Checkboxes As You Ship Each Item — HARD RULE
 
 > **CLAUDE.md anchor**: "Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)".
