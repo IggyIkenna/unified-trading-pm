@@ -100,38 +100,45 @@ vitest/tsc (dashboard).
       fast-forwarded. **REMEDIATION applied (VM now healthy)**: removed the duplicate root crontab entries (backup at
       `/root/root_crontab_backup_20260616.txt`); cleared the root-owned `/tmp/slot-cron-ff-pull.lock` +
       `/tmp/.slot-host-symmetry-fail-streak`; killed the zombie tmux `orch-agent-main`; re-ran FF-pull as ubuntu → all
-      clones current; installed the missing `slot-git-status-report` cron via the canonical `install-slot-cron-ff-pull.sh`
-      (as ubuntu). The 10 unpushed PM commits were dup work already on origin (F38/F39), preserved at
-      `origin/wip-preserve/human-planning-pm-2026-06-16`. **Answers to the two questions**: (a) the fleet-git-health page
-      did NOT flag it — the VM's `slot-git-status-report` reporter cron was **never installed** (and there is no
-      `~/.orch_token`), so the VM never reported at all → a coverage blind spot, not a detection bug; (b) confirmed — the
-      stuck agent sat 4 days unreaped, so reaper/WorkerLivenessWatchdog coverage does not reach this VM (complements
-      `issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md`).
+      clones current; installed the missing `slot-git-status-report` cron via the canonical
+      `install-slot-cron-ff-pull.sh` (as ubuntu). The 10 unpushed PM commits were dup work already on origin (F38/F39),
+      preserved at `origin/wip-preserve/human-planning-pm-2026-06-16`. **Answers to the two questions**: (a) the
+      fleet-git-health page did NOT flag it — the VM's `slot-git-status-report` reporter cron was **never installed**
+      (and there is no `~/.orch_token`), so the VM never reported at all → a coverage blind spot, not a detection bug;
+      (b) confirmed — the stuck agent sat 4 days unreaped, so reaper/WorkerLivenessWatchdog coverage does not reach this
+      VM (complements `issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md`).
 
-- [ ] [SCRIPT] P1. **Durable root-cause fix — bootstrap must NOT install the sync crons as root.** Provisioning
-      (`bootstrap_vm.sh` or equivalent) ran `install-slot-cron-ff-pull.sh` as ROOT → a duplicate root crontab that
-      fights ubuntu's (root-owned `/tmp` lock + git-as-root dubious-ownership). Fix: install the slot crons ONLY into
-      `ubuntu`'s crontab (`sudo -u ubuntu`), and add a guard at the top of `install-slot-cron-ff-pull.sh` that
-      refuses/warns when `EUID == 0`. Repo: agent-orchestrator (bootstrap) + unified-trading-pm
-      (`scripts/dev/install-slot-cron-ff-pull.sh`). **Fleet audit 2026-06-16 (confirms it's fleet-wide, not a one-off)**:
-      central `i-0c9b283b31d6b5ca7` = CLEAN (0 root sync-crons, ubuntu has all 3, FF-pull working); e2e-test
-      `i-086e8787dddda52d6` = HAS THE BUG (2 root sync-cron lines, root-owned `/tmp` lock + fail-streak, `[skip:detached]`
-      failures, missing reporter cron — a dated disposable test VM not in the registry, left as-is / candidate for
-      teardown); human-planning = FIXED (this incident). So bootstrap is the common origin; the central VM is the
-      exception, not the rule.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-16 — durable root-cause fix shipped.** EUID==0 guard added to
+      `install-slot-cron-ff-pull.sh` (PM@d512e82e6, PR #379): it now refuses to install the slot crons as root
+      (`ALLOW_ROOT_CRON=1` to override) so the duplicate-root-cron can never be created again, regardless of caller.
+      Verified the CURRENT `bootstrap_vm.sh` ALREADY drops to the operator (`sudo -n -u "${OPERATOR}"`, line ~1208) —
+      the root crontab on the Jun-12 VMs came from an OLDER bootstrap, not current code, so new provisions are clean +
+      the guard is belt-and-suspenders. Repo: unified-trading-pm (`scripts/dev/install-slot-cron-ff-pull.sh`). **Fleet
+      audit 2026-06-16 (confirms it WAS fleet-wide, not a one-off)**: central `i-0c9b283b31d6b5ca7` = CLEAN (0 root
+      sync-crons, ubuntu has all 3, FF-pull working); e2e-test `i-086e8787dddda52d6` = HAS THE BUG (2 root sync-cron
+      lines, root-owned `/tmp` lock + fail-streak, `[skip:detached]` failures, missing reporter cron — a dated
+      disposable test VM not in the registry, left as-is / candidate for teardown); human-planning = FIXED (this
+      incident). So bootstrap is the common origin; the central VM is the exception, not the rule.
 
 - [ ] [SCRIPT] P2. **Make the cron lock + state files per-uid (kill the root↔ubuntu contention class).**
       `slot-cron-ff-pull.sh` (`/tmp/slot-cron-ff-pull.lock`) + `verify-slot-host-symmetry.sh`
       (`/tmp/.slot-host-symmetry-fail-streak`) use FIXED `/tmp` paths → a root run leaves root-owned files the ubuntu
       cron can't touch. Use `${XDG_RUNTIME_DIR:-/tmp}/<name>.$(id -u).lock` so contexts never collide. Repo:
-      unified-trading-pm (`scripts/dev/`).
+      unified-trading-pm (`scripts/dev/`). **STATUS 2026-06-16**: lower priority now the EUID guard (above) prevents the
+      root crontab entirely (the only remaining root-lock source is a manual root run of the puller). The puller-side
+      edit is awkward to land from a slot host — the `*/5` ff-pull cron does
+      `git checkout origin -- slot-cron-ff-pull.sh` and reverts local edits mid-flight — so land it from a
+      clean/non-slot checkout (or a direct PR), not a slot worktree.
 
-- [ ] [VERIFY] P1. **Provision the reporter token so human-planning reports to `/fleet-git` (closes the (a) blind
-      spot).** `slot-git-status-report.sh` POSTs to `ORCH_URL=https://api.agent-orchestrator.odum-research.com/api/slots/<N>/git-status`
-      with `Authorization: Bearer <~/.orch_token>`; the token is absent on the VM. Operator-issued (or mint on the
-      central VM via `agent-orchestrator/server/auth.py`), drop at `/home/ubuntu/.orch_token` (ubuntu:ubuntu, 600), then
-      verify the VM appears on `/fleet-git` within 15 min. Needs operator token-issuance decision (type/audience/expiry).
-      Repo: agent-orchestrator.
+- [x] ✅ [VERIFY] P1. **DONE 2026-06-16 — reporter token provisioned; human-planning now reports to `/fleet-git` (closes
+      the (a) blind spot).** `slot-git-status-report.sh` POSTs to
+      `ORCH_URL=https://api.agent-orchestrator.odum-research.com/api/slots/<N>/git-status` with
+      `Authorization: Bearer     <~/.orch_token>`. Minted a least-privilege `role=worker` HS256 token (1-yr, exp
+      2027-06-16, `machine=agent-orch-     human-planning-vm`) on the central VM via `server.auth.issue_token`,
+      transferred via the GCS creds bucket (never printed to any log / SSM output), placed at `/home/ubuntu/.orch_token`
+      (ubuntu:ubuntu, 600); manual reporter run returned `[ok] slot 1 — 4 repos reported` (HTTP 200, no skip:no-token),
+      so the cron now reports every 5 min. NOTE: the token expires 2027-06-16 — rotate before then (or shorten if a 1-yr
+      worker token is too long-lived for policy). Repo: agent-orchestrator.
 
 - [ ] [SCRIPT] P3. **`agent-orchestrator/data/config/accounts.json` is tracked but `bootstrap_vm.sh`-regenerated** →
       perpetually dirty on every VM's ao main clone (strips operator comments + `—`-escapes em-dashes; account DATA

@@ -84,3 +84,11 @@ e2e-testing:cc0e9a6
 
 # Intentional reset to origin/live-defi-rollout — branch alignment 2026-06-03
 batch-live-reconciliation-service:ab4b25a
+
+# Intentional reset to origin/live-defi-rollout — deployment-ui data-status UI fixes 2026-06-16
+# Both commits were preserved to origin/wip-preserve/data-status-ui-fixes-2026-06-16 +
+# origin/wip-preserve/r7-coverage-labels-ui FIRST, then the deployment-ui clone reset to LDR — both
+# SHAs ARE on origin/live-defi-rollout (verified 2026-06-16); no work discarded. (Central VM reflog
+# guard was re-alerting every ~11 min on these.)
+deployment-ui:758050c
+deployment-ui:6903b90
