@@ -2211,14 +2211,17 @@ else
     log_success "STEP 5.69: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
-# STEP 5.92 — Ban legacy `category=` kwarg at ManifestWriter writes (v9 canonical)
+# STEP 5.98 — Ban legacy `category=` kwarg at ManifestWriter writes (v9 canonical)
 #
 # The UTL ManifestWriter asset-group write param was renamed `category` →
 # `asset_group` (2026-06-02; sports_/defi_manifest_canonicalisation cross-AG
 # dead-bucket root). v9 post-migration canonical vocabulary is `asset_group`
 # everywhere — never `category`, not even as a fallback (operator 2026-06-02).
 # AST-walk, zero-tolerance (the workspace-wide rename removed every occurrence).
-# (5.71-5.91 are in use elsewhere in this file — these two ratchets take 5.92/5.93.)
+# (Renumbered 5.92→5.98 2026-06-16: STEP 5.92 is the canonical bar-edge
+# open-ingestion detector below + in base-library.sh — see
+# bar-boundary-candle-edge-convention.md; this ban took a free number to end the
+# label collision. The sibling no-fallback/ruff ratchets are 5.93-5.97.)
 _NOCAT_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py"
 if [ -f "$_NOCAT_CHECKER" ]; then
     _NC_REPO=$(basename "$PROJECT_ROOT")
@@ -2227,15 +2230,15 @@ if [ -f "$_NOCAT_CHECKER" ]; then
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _NC_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_NOCAT_CHECKER" \
             --workspace-root "$_NC_WS" --scope "$_NC_REPO" "${_NC_SRC_ARG[@]}" >/tmp/no_category_kwarg_qg.log 2>&1; then
-        log_success "STEP 5.92: No legacy category= kwarg at ManifestWriter writes (asset_group= is v9 canonical)"
+        log_success "STEP 5.98: No legacy category= kwarg at ManifestWriter writes (asset_group= is v9 canonical)"
     else
-        log_fail "STEP 5.92: Legacy category= kwarg(s) at ManifestWriter writes — rename to asset_group= (UTL contract, v9 canonical):"
+        log_fail "STEP 5.98: Legacy category= kwarg(s) at ManifestWriter writes — rename to asset_group= (UTL contract, v9 canonical):"
         cat /tmp/no_category_kwarg_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py --workspace-root $_NC_WS --scope $_NC_REPO"
         V=$(( V + 1 ))
     fi
 else
-    log_success "STEP 5.92: skipped (checker not yet provisioned in this repo's PM checkout)"
+    log_success "STEP 5.98: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
 # STEP 5.93 — Ban explicit project_id= on asset-group bucket builders (no-env bypass)
