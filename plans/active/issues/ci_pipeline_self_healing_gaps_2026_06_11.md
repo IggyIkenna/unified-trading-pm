@@ -524,25 +524,26 @@ producer's required version is **actually resolvable from AR** before promoting 
       queries AR via `gcloud artifacts versions list` (semver TUPLE compare — 0.10.0 > 0.9.0, the bug class), exit 1 iff
       a dep has versions in AR but none satisfy the floor. **Strictly fail-OPEN** (gcloud absent / AR error / empty /
       no pyproject / no floor → allow). Unit-tested (ver-tuple, floor parse) + E2E (UTL+strategy satisfied; impossible
-      floor blocks). Wired into `staging-to-main.yml` as **STAGE 1.8b WARN-only** (`continue-on-error`, does NOT yet
-      modify READY_REPOS) — uses the GCP auth added by Gap 8.
-      **⛔ CANARY VERDICT 2026-06-16 — DO NOT FLIP TO BLOCK; the premise is flawed for path-sourced deps.** Running the
-      exact check against all 24 repos (`--ref staging`) would BLOCK **system-integration-tests** (alerting/features/
-      strategy) + **e2e-testing** (strategy) — all **FALSE POSITIVES**: AR carries only stale wheels (strategy 0.2.1 vs
-      0.9.0 on main; alerting 0.1.0 vs 0.5.0; features 0.0.1 vs 0.4.0), BUT these consumers declare each dep with
-      `[tool.uv.sources] path=../<dep> editable=true`, so their CI build resolves the dep from the **sibling dep-clone at
-      the correct version, NOT from AR**. AR staleness is therefore irrelevant to whether their build resolves — the
-      AR-publish-ordering check does not reflect the actual resolution path for editable/path-sourced internal deps
-      (which is ~all of them). The canary correctly prevented a fleet-freezing bad flip.
-      **Open question for the operator (resolution model):** do internal deps EVER resolve from AR (e.g. in the Docker
-      image build that may not dep-clone siblings), or always from the editable path? If always-path, the original-jam
-      diagnosis ("UAC not in AR → UTL red") was actually a dep-clone/version-tag failure, not an AR-publish gap, and
-      Gap 9a should be **reverted** (it guards a non-existent resolution path). If the image build DOES use AR, Gap 9a
-      should be **refined to skip deps that carry a `[tool.uv.sources] path` entry** (check only genuinely-AR-resolved
-      deps) — which, given current pyprojects, makes it inert until a non-path AR dep appears.
-      **Status: stays WARN-only (harmless diagnostic — surfaces AR staleness) pending that decision. NOT flipped.**
-      Separately surfaced: AR wheels are massively behind main (strategy 0.2.1 vs 0.9.0) — consistent with
-      `publish-package.yml` never running; whether that matters depends on the same path-vs-AR resolution answer.
+      floor blocks).
+      **⛔ CANARY VERDICT 2026-06-16 — WARN-only wiring REMOVED from staging-to-main; the check is the WRONG GATE for
+      the dev promotion path.** Running the exact check against all 24 repos (`--ref staging`) would BLOCK
+      **system-integration-tests** (alerting/features/strategy) + **e2e-testing** (strategy) as **FALSE POSITIVES**: AR
+      carries only stale wheels (strategy 0.2.1 vs 0.9.0 on main; alerting 0.1.0 vs 0.5.0; features 0.0.1 vs 0.4.0), BUT
+      both **local and CI resolve internal deps from EDITABLE SIBLING CLONES, not AR** — operator-confirmed + verified in
+      `base-service.sh:299` ("every path is `uv pip install -e .`, no `uv sync`"; CI version-aware-clones the siblings).
+      So AR staleness is irrelevant to dev builds, and the AR-publish-ordering check has no place in `staging-to-main`.
+      **DEFERRED — re-home in the production image build (named successor condition): image builds have NOT started yet
+      (dev currently ships via TARBALLS, not images). When image builds DO start they WILL pull internal deps from AR
+      (operator 2026-06-16 — for fast/efficient builds), and THAT is where the dep-publish-ordering check belongs** (the
+      cloud-build / image-build step, gating that the producer's wheel is in AR before the consumer image builds). The
+      primitive `scripts/cicd/assert_deps_published_to_ar.py` is **RETAINED, tested, and ready** for that wiring (it's
+      also the `--json` primitive for P2). STAGE 1.8b was removed from `staging-to-main.yml` (PR removing it: 2026-06-16).
+      Also surfaced for the prod cutover: AR wheels are far behind main (strategy 0.2.1 vs 0.9.0) — consistent with
+      `publish-package.yml` never running; the image-build path will need a working wheel-publish before it can rely on AR.
+- [ ] [WORKFLOW] P1 (DEFERRED → image-build cutover). Wire `assert_deps_published_to_ar.py` into the production image /
+      cloud build (NOT staging-to-main): before building a consumer image, assert every internal-dep floor it will pull
+      from AR is published; block/retry that image build until the producer wheel lands. Trigger: production image-build
+      deployment begins (replaces the dev tarball path). Pair with a working `publish-package.yml` (currently never runs).
 - [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric (per dep edge) in `promotion_lag_monitor.py` / the
       dashboard so a stuck publish is visible before it jams a consumer. (The `assert_deps_published_to_ar.py` check is
       the reusable primitive — `--json` output gives `unpublished[]` per repo for the metric.)
