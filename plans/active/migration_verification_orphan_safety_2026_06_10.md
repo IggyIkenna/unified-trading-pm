@@ -238,6 +238,33 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (autonomous run, tail-cleanup tick 3) — **Item 3 (12 zero-data live venues) RESOLVED — 7 re-phased, 5
+  corrected as false-signal (real data in a separate bucket).** Diagnosed each of the 12 against MTDS plumbing + the
+  actual buckets: **(a) 7 lending venues** (EULER_V2-ARB/ETH, FLUID-ARB, VENUS-BSC/ETH, RADIANT-ETH, BENQI-AVA) have NO
+  UAC `get_subgraph_id` → the `evm_defi` collector physically skips them → genuinely zero → **re-phased live→pipeline,
+  uac@6c74eaf** (QG-green 214s; survived a STAGE-0.4 rebase onto a sibling's M2-REFINEMENT a56a7fc — no conflict, no
+  defi_venues.py overlap). **(b) 5 LST venues** (ANKR/STADER/STAKEWISE/SWELL/MANTLE) are a FALSE zero-signal:
+  `projected_index_defi.parquet` (market-data-tick-defi bucket) does NOT aggregate the LST corpus, which lives in the
+  dedicated `lst-rates-central-element-323112` bucket where they have **900–1,967 captured rows EACH** (verified by
+  reading its availability_index) → correctly `"live"`, NO backfill needed, left untouched. The residual is a
+  data-status AGGREGATION gap (lst-rates not folded into the defi could-exist view) → filed as a precise P3 todo.
+  Tooling notes: env var is `DEPLOYMENT_ENV=prod` (not `_SHORT`); the diagnostic `--dry-run` LST collect added a handful
+  of benign recent-date entries to the lst-rates manifest (real captured rates, honest). MTDS working tree carries a
+  SIBLING's WIP (live/replay/websocket) — left untouched (I only ran the CLI).
+
+- 2026-06-16 (autonomous run, tail-cleanup tick 2) — **Item 1 / 249-a SHIPPED + prod catalogue PROMOTED (0 → 668,384
+  rows).** is@c100834 + a real prod data-op. The prediction catalogue loader (`_iter_prediction_by_date_snapshots`)
+  required a `canonical_question_group=` path partition the writer never emits (actual
+  `day=/venue=POLYMARKET/[market=BTC/]instruments.parquet`) → 0 rows. Rewrote the loader to parse `day=`/`venue=`
+  - read only `instruments.parquet` (excl. metadata sibling), and the rollup to accumulate the conditionId grain from
+    every frame while gating the cqg grain behind a non-empty cqg. **RAN
+    `build_instrument_catalogue --asset-group prediction`** on real prod: 4,542 by_date parquets → **668,384 rows
+    promoted to `prod/catalog.parquet`** (`monotonic_ok`) = 334,192 unique conditionIds × {trades, market_lifecycle},
+    ZERO cqg-bundle rows (correctly gated on 338). Verified by reading the promoted parquet back.
+    `unique_instruments[prediction]` 0 → 334,192. Split the plan item: 249-a ✅, 249-b (cqg grain) stays `- [ ]` gated
+    on 338. IS QG-green; 36 catalogue tests pass (blank-cqg test de-vacuumed to assert the conditionId grain now
+    materialises).
+
 - 2026-06-16 (autonomous run, tail-cleanup tick 1) — **Item 5 (V4 fleet-gate blast-radius) VERIFIED GREEN + Item 4 (STEP
   5.92 label collision) FIXED.** **Item 5 (rule-11 blast-radius):** ran the STEP 5.92 candle-edge checker
   (`check_bar_edge_open_ingestion.py --scope <repo>`) on 3 CONSUMER services (market-data-processing-service,
@@ -377,16 +404,26 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       could-exist builder reads). **The other 14 (2 `pipeline`-phased = roadmap, legitimately uncapabilitied; 12
       `live`-phased have ZERO rows in the projected index) were NOT declared** — declaring a no-data venue would falsely
       inflate the could-exist denominator; the 12 are a phase-accuracy finding (next todo).
-- [ ] [DATA] P3. **12 `live`-phased defi venues have ZERO rows in `projected_index_defi.parquet`** (finding, DATA-001
-      enumeration 2026-06-16): `ANKR-ETHEREUM`, `BENQI-AVALANCHE`, `EULER_V2-ARBITRUM`, `EULER_V2-ETHEREUM`,
-      `FLUID-ARBITRUM`, `MANTLE-ETHEREUM`, `RADIANT-ETHEREUM`, `STADER-ETHEREUM`, `STAKEWISE-ETHEREUM`,
-      `SWELL-ETHEREUM`, `VENUS-BSC`, `VENUS-ETHEREUM` are declared `DEFI_VENUE_PHASE="live"` but have NO
-      captured/empty/failed rows in the defi projected index → either MTDS backfill never started for them (should be
-      `"pipeline"` until it does) or the projection predates their backfill. Diagnose per venue: if no MTDS writer is
-      plumbed → re-phase to `"pipeline"` (roadmap section, honest); if a writer exists but no data landed → it's a
-      backfill gap to run. Do NOT declare a `VENUE_DATA_TYPE_CAPABILITIES` entry until data exists (would inflate the
-      could-exist denominator with no-data cells). Repos: unified-api-contracts (`registry/defi_venues.py` phase) +
-      instruments-service/MTDS (backfill). Provenance: DATA-001 enumeration via projected_index_defi.parquet.
+- [x] ✅ [DATA] P3. **12 `live`-phased zero-in-projected-index defi venues — RESOLVED + corrected (2026-06-16).** The
+      original finding ("12 venues have ZERO rows") was PARTLY a FALSE SIGNAL — `projected_index_defi.parquet`
+      (market-data-tick-defi bucket) does NOT aggregate the LST corpus, which lives in a SEPARATE bucket
+      `lst-rates-central-element-323112`. Diagnosis split the 12: **(a) 7 lending venues**
+      (`EULER_V2-ARBITRUM/ETHEREUM`, `FLUID-ARBITRUM`, `VENUS-BSC/ETHEREUM`, `RADIANT-ETHEREUM`, `BENQI-AVALANCHE`) have
+      **no UAC `get_subgraph_id`** → the MTDS `evm_defi` collector logs "No subgraph ID … skipping" → genuinely zero
+      everywhere → **re-phased live→pipeline** (uac@6c74eaf). **(b) 5 LST venues**
+      (`ANKR/STADER/STAKEWISE/SWELL/MANTLE-ETHEREUM`, tokens ankrETH/ETHx/osETH/swETH/mETH in `_EVM_LST_ABI_METADATA`)
+      **DO have captured data** in the `lst-rates` bucket (verified: ANKR 1,967 · STADER 1,045 · STAKEWISE 904 · SWELL
+      1,129 · MANTLE 957 captured rows, venue stored bare) → correctly `"live"`, NO backfill needed, NOT re-phased.
+      Residual = a data-status AGGREGATION gap (next todo), not a data gap. Verified by reading both
+      `_index/availability_index.parquet` (lst-rates) + `projected_index_defi.parquet`.
+- [ ] [DATA] P3. **NICE-TO-HAVE — fold the `lst-rates` corpus into the DeFi could-exist / data-status view.** The 5 LST
+      venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE + LIDO/ROCKETPOOL/ETHENA/… already-live) have captured `lst_rates` data
+      in the dedicated `lst-rates-central-element-323112` bucket, but the defi projected index + the deployment-api
+      could-exist drilldown read only the `market-data-tick-defi` corpus → these venues' real rows are invisible in the
+      DeFi data-status (read as zero). Fold the `lst-rates` availability_index into the defi data-status aggregation
+      (the rollup/`manifest_source` read path) so their captured rows are credited. NOT a data gap (data exists) — a
+      data-status aggregation completeness item. Repos: deployment-api (data_status aggregation) + the defi projection
+      rebuild. Provenance: 2026-06-16 lst-rates bucket verification.
 - [ ] [DATA] P3. **Orphan / junk defi venues** — `VAULT` (generic, 1113 captured rows, not a protocol → exclude or map
       to the real protocol) + `SUSHISWAP` classic-vs-`SUSHISWAP_V3` ambiguity (data-semantics call: is bare `SUSHISWAP`
       the classic AMM = `SUSHISWAP-ARBITRUM`, or V3?). Reconcile `ALL_DEFI_VENUES` / `LEGACY_DEFI_VENUE_ALIASES` to
@@ -444,23 +481,26 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       (deployment_api/scripts/data_status_rollup_worker.py) predates the field; in LIVE (non-beta) mode the rollup
       fast-path serves coverage summaries WITHOUT unique_instruments until it recomputes them. Add the catalogue read to
       the worker + redeploy the Cloud Run job. Repo: deployment-api. Provenance: operator ask 2026-06-12.
-- [ ] [DATA] P2. **Prediction catalogue roll-up finds 0 rows — ROOT CAUSE DIAGNOSED (2026-06-16), partly coupled to the
-      operator-gated cqg decision (338).** `prod/catalog.parquet` is confirmed 0 rows. **Root cause:**
-      `build_prediction_catalogue_dataframe` consumes `(day, venue, cqg, frame)` snapshots where `cqg` is parsed from a
-      **`canonical_question_group=` PATH partition**, but the ACTUAL prod writer layout under
-      `gs://instruments-store-pred-prd-…/instrument_availability/by_date/` is
-      `day=2025-03-13/venue=POLYMARKET/[market=BTC/]instruments.parquet` + a sibling
-      `prediction_market_metadata.parquet` — there is **NO `canonical_question_group=` partition**. So the loader passes
-      `cqg=""` → the rollup's `if frame.empty or not cqg_str: continue` skips EVERY row → 0-row catalogue (it loses BOTH
-      grains, not just cqg). **Two-part fix:** (a) the per-conditionId grain (`_PREDICTION_CID_DATA_TYPES` =
-      trades/market_lifecycle, `instrument_id`=conditionId) does NOT need a cqg and can roll up immediately from the
-      `venue=`/`market=` layout — drop the `not cqg_str` skip for that grain; (b) the
-      `prediction_canonical_question_group` cqg grain requires DERIVING the cqg per conditionId, which is **exactly the
-      operator-gated cqg-classifier coverage decision (item 338)** — 94.5% of objects route to `ClassifierConfidenceLow`
-      under the corrected contract, so the cqg grain can't be correctly materialised until 338 is resolved. Ship (a) now
-      (unique_instruments gets the conditionId count); gate (b) on 338. Repo: instruments-service
-      (`scripts/build_instrument_catalogue.py` snapshot loader + the `canonical_question_group=` path parser).
-      Provenance: 2026-06-16 prod-layout probe.
+- [x] ✅ [DATA] P2. **249-a SHIPPED — prediction catalogue conditionId grain (0 → 668,384 rows promoted).** —
+      is@c100834. Root cause confirmed: the loader `_iter_prediction_by_date_snapshots` required a
+      `canonical_question_group=` PATH partition the writer NEVER emits (actual layout
+      `day=/venue=POLYMARKET/[market=BTC/]instruments.parquet` + a `prediction_market_metadata.parquet` sibling), so
+      every blob was skipped → 0-row catalogue. **Fix:** loader now parses `day=`/`venue=` (cqg optional), reads ONLY
+      `instruments.parquet` (excludes the metadata sibling), reads venue-level + market-level (deduped by
+      `(venue, conditionId)` in `_merge_lifecycle`); the rollup skips only EMPTY frames and accumulates the conditionId
+      grain (`instrument_key`) from every frame, gating the cqg grain behind a non-empty `cqg_str`. **RAN on real prod**
+      (`build_instrument_catalogue --asset-group prediction`): 4,542 by_date parquets → **668,384 rows promoted to
+      `prod/catalog.parquet`** (`guard_reason=monotonic_ok`) = **334,192 unique conditionIds × {trades,
+      market_lifecycle}**, ZERO `prediction_canonical_question_group` rows (cqg grain correctly absent).
+      `unique_instruments` for prediction goes 0 → 334,192. Test de-vacuumed
+      (`test_prediction_rollup_blank_cqg_emits_conditionid_grain_no_bundle`); IS QG-green; 36 catalogue tests pass.
+- [ ] [DATA] P2. **249-b — prediction cqg grain (`prediction_canonical_question_group`) — GATED on operator
+      decision 338.** The cqg grain needs deriving the canonical-question-group per conditionId, which is the
+      operator-gated cqg-classifier coverage decision (338: 94.5% of objects route to `ClassifierConfidenceLow`). The
+      rollup already materialises the cqg grain when `cqg_str` is non-empty (the loader yields `cqg=""` today) — once
+      338 resolves the cqg-classifier coverage, wire the cqg into the loader (from the classifier or a
+      `_canonical_group` write-back) and the cqg-grain rows emit automatically. Repo: instruments-service +
+      unified-api-contracts. Blocked-on: 338.
 
 - 2026-06-12 (~10:35Z, operator beta-eyeball session) — **beta render made FULLY consistent**: the operator's "is it
   using the right manifest" check exposed (1) the live-rollup fast-path serving LIVE data in beta (fixed dapi@1f1ad77 —
