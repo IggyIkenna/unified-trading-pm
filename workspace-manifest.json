@@ -78,7 +78,7 @@
     "instruments-service": "0.5.1",
     "market-tick-data-service": "0.10.0",
     "system-integration-tests": "0.6.0",
-    "unified-api-contracts": "0.9.0",
+    "unified-api-contracts": "0.10.0",
     "unified-trading-library": "0.10.0",
     "unified-trading-pm": "1.2.121",
     "market-data-processing-service": "0.6.0",
@@ -86,7 +86,7 @@
     "agent-orchestrator": "0.10.0",
     "greeks-service": "0.5.0",
     "trading-agent-service": "0.2.3",
-    "strategy-service": "0.6.0",
+    "strategy-service": "0.9.0",
     "ml-service": "0.5.1",
     "alerting-service": "0.5.2",
     "unified-trading-api": "0.2.3"
@@ -1786,8 +1786,6 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "execution-service": "0.10.0",
-    "strategy-service": "0.9.0",
-    "unified-api-contracts": "0.10.0",
     "system-integration-tests": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1808,16 +1806,6 @@
       "sha": "7bc2284bad05232787af049c762f42b8b5f6be40",
       "version": "0.10.0"
     },
-    "strategy-service": {
-      "branch": "staging",
-      "sha": "fcb2da093b3d33e0ac9b9d48610ad8f0d48c07c9",
-      "version": "0.9.0"
-    },
-    "unified-api-contracts": {
-      "branch": "staging",
-      "sha": "dc377073d38141a5fc417256191a801bfa0ad093",
-      "version": "0.10.0"
-    },
     "system-integration-tests": {
       "branch": "staging",
       "sha": "d02ac973b5db2dd2377fd0a3d19f67fee698731b",
@@ -1827,6 +1815,21 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-16T07:42:34.601863Z",
+        "commits": {
+          "strategy-service": {
+            "branch": "staging",
+            "sha": "fcb2da093b3d33e0ac9b9d48610ad8f0d48c07c9",
+            "version": "0.9.0"
+          },
+          "unified-api-contracts": {
+            "branch": "staging",
+            "sha": "dc377073d38141a5fc417256191a801bfa0ad093",
+            "version": "0.10.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-16T06:54:11.680253Z",
         "commits": {
@@ -1888,16 +1891,6 @@
           "market-tick-data-service": {
             "version": "0.9.0",
             "sha": "10fb9bc49a0ddc0dd3fa3c6afcffd1506939af92",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-15T18:58:22.554763Z",
-        "commits": {
-          "greeks-service": {
-            "version": "0.5.0",
-            "sha": "97e737578ede7482b634454c72535a864efae27d",
             "branch": "staging"
           }
         }
