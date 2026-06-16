@@ -1798,8 +1798,13 @@
     "locked_since": "2026-06-16T20:41:08.390813Z",
     "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.15.0 (pre-1.0.0)",
     "lock_version": "0.15.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "ml-service",
+      "deployment-api",
+      "batch-live-reconciliation-service",
+      "unified-api-contracts"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "unified-api-contracts"
