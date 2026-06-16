@@ -1304,6 +1304,35 @@ if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
     fi
 fi
 
+# ── STEP 5.97 — DeFi contract-address citation ratchet (library repos) ───────
+# Ported from base-service.sh so the gate ALSO runs for LIBRARY repos — critically
+# unified-api-contracts, whose registry/ is the checker's PRIMARY documented target
+# (the defi_address_citation_baseline.yaml seed of 138 was UAC's). base-library.sh
+# never ran it before, so UAC's baseline was UNENFORCED — a new uncited on-chain
+# address could land silently. Per-repo SHRINKING count ratchet; per-line citation
+# `# DERIVED <YYYY-MM-DD> from <chain> <source>` or exemption `# QG-allow: defi-citation`.
+# Non-UAC libraries have no registry/ → checker scans repo → 0 → no-op pass.
+# SSOT: defi_onchain_derivable_values_and_date_drift_2026_06_20.md Phase 5.
+_DC_WS="${WORKSPACE_ROOT:-$(cd "$PROJECT_ROOT/.." && pwd)}"
+_DEFI_CITE_CHECKER="${_DC_WS}/unified-trading-pm/scripts/quality_gates/check_defi_address_citations.py"
+if [ -f "$_DEFI_CITE_CHECKER" ]; then
+    _DC_REPO=$(basename "$PROJECT_ROOT")
+    if $PYTHON_CMD "$_DEFI_CITE_CHECKER" --workspace-root "$_DC_WS" --scope "$_DC_REPO" >/tmp/defi_address_citations_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/defi_address_citations_qg.log 2>/dev/null; then
+            log_warn "STEP 5.97: $(grep -c '^\[WARN\]' /tmp/defi_address_citations_qg.log) baselined uncited DeFi address(es); 0 new (ratchet down when citations are back-filled)"
+        else
+            log_success "STEP 5.97: No new uncited DeFi contract addresses (citation ratchet)"
+        fi
+    else
+        log_fail "STEP 5.97: NEW uncited Ethereum contract address (not in defi_address_citation_baseline.yaml). Add \`# DERIVED <YYYY-MM-DD> from <chain> <source>\` on the same line, or \`# QG-allow: defi-citation — <reason>\` for factory-deployed pool addresses:"
+        cat /tmp/defi_address_citations_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/defi_address_citation_baseline.yaml (NEVER raise a count)"
+        exit 1
+    fi
+else
+    log_success "STEP 5.97: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
 # IGNORE_TIMEOUT honoured (mirror of base-service.sh): QG_PROFILE=1 sets it so a slow
 # single-core profile run cannot false-fail the meta-gate; unset → unchanged behaviour.
