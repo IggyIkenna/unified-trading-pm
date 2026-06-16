@@ -55,6 +55,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > denominator the G1 gate depends on ("GATED on … accurate UAC"); coordinate before the catalogue `--apply-write` seed.
 > (3) The audit independently re-confirms this plan's DATA-STATE (v8 flat, ~40% null-`capture_status`-with-count>0,
 > capture freeze ~2026-05-21) as the **to-100% path** — no new work, just cross-evidence.
+>
+> **🔴 NEW WORK FOR THIS WALK (2026-06-16) — bundle `instrument_type` into the IS manifest (audit §K).** The IS writer
+> stamps `instrument_type=""` (`engine/orchestrator/writers.py:172`), bundling future/option/spot/perpetual/combo into
+> one blank row per venue/day — so derivative-rich venues (CME, Deribit, Binance) have NO per-instrument_type coverage
+> signal (root of the "no Deribit options visible" report, and why the deployment-api reference-scope fix is
+> venue/day-grain only). Per single-walk discipline + shard-granularity SSOT, **add `instrument_type` (per-type counts)
+> as a NEW manifest column on THIS v9 walk** (do NOT open a second whole-corpus walk; do NOT implement standalone in the
+> remediation plan). Keep one catalogue parquet per venue/day (storage unit unchanged); the manifest row gains the
+> per-type breakdown. Unlocks per-type scope + per-type UI drilldown.
 
 ## Why this exists — the per-AG plans cover MTDS, not the instruments surface
 

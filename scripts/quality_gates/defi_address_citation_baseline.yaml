@@ -22,7 +22,7 @@ repos:
   agent-orchestrator:
     count: 0
   alerting-service:
-    count: 1
+    count: 0
   batch-live-reconciliation-service:
     count: 0
   client-reporting-api:
@@ -30,15 +30,15 @@ repos:
   deployment-api:
     count: 0
   deployment-service:
-    count: 3
+    count: 0
   deployment-ui:
     count: 0
   e2e-testing:
-    count: 1
+    count: 0
   execution-service:
-    count: 225
+    count: 0
   features-service:
-    count: 13
+    count: 0
   fund-administration-service:
     count: 0
   greeks-service:
@@ -50,11 +50,11 @@ repos:
   market-data-processing-service:
     count: 0
   market-tick-data-service:
-    count: 215
+    count: 0
   ml-service:
     count: 0
   strategy-service:
-    count: 9
+    count: 0
   system-integration-tests:
     count: 0
   trading-agent-service:
