@@ -38,6 +38,13 @@ source:
 > independently; only the download path-fix is gated on the migration landing. Full landscape map:
 > `plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md` § Sequencing.
 
+> **🔴 ALL `[UI]` ITEMS BLOCKED-TESTENV (2026-06-16)** — the deployment-ui jsdom test suite is down fleet-wide
+> (`html-encoding-sniffer@6` `require()`s ESM-only `@exodus/bytes` → `ERR_REQUIRE_ESM`, 80 test files; pre-existing,
+> hits unmodified tests too). No UI change can pass `quickmerge`'s gate until fixed. Issue:
+> `plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md`. The venue-refetch + de-dupe + pagination fix
+> bundle is WRITTEN + tsc/eslint-clean, preserved at `origin/wip-preserve/data-status-ui-fixes-2026-06-16`
+> (deployment-ui@550302c) — recover + ship (with `pw:L2 ✓`) once the env is fixed.
+
 ## Phase A (TIER 1 cleanup) — Scope + venue-filter correctness
 
 - [ ] [CODE] P1. **instruments-service "out of scope" — PROPER fix** (audit §B): NOT the `scope_in=True` short-circuit
