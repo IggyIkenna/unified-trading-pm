@@ -555,14 +555,20 @@ jobs:
           # promotion_lag_monitor.py.)
           MAIN_DIRECT_REPOS = {"unified-trading-pm"}
 
-          # Quarantined repos (hit PROMOTION_MAX_ATTEMPTS consecutive failures) are SKIPPED this
-          # + every future run until they next promote successfully — they never re-enter the
-          # FAILED list, so a single permanently-stuck repo can no longer re-fire the CRITICAL
-          # partial-failure alert forever (it was escalated + downgraded to a one-shot WARNING by
-          # the counter step). Auto-cleared on the next success (counter step resets the entry).
+          # Gap 7 (2026-06-16): quarantine is NO LONGER a permanent skip. A quarantined repo is
+          # RE-PROBED — let through this run — once its re-probe is DUE (next_probe_after elapsed,
+          # or absent = due). The `changed & ready_set` filter below still enforces dep-order
+          # (deps-on-main), and the merge loop tests real mergeability: a clean re-probe promotes →
+          # the counter step auto-clears the quarantine; a still-conflicting re-probe stays
+          # quarantined and the counter step pushes next_probe_after out (bounded exponential
+          # backoff → no every-run noise; the alert partition already excludes quarantined repos so
+          # no re-alert). This breaks the old skip→never-promoted→never-cleared DEADLOCK that left
+          # cleanly-mergeable repos stuck forever (issue: ci_pipeline_self_healing §Gap 7).
+          import datetime as _dt
+          _now = _dt.datetime.utcnow().isoformat() + "Z"
           quarantine = {
-              r for r in m.get("promotion_quarantine", {})
-              if not r.startswith("_")
+              r: q for r, q in m.get("promotion_quarantine", {}).items()
+              if not r.startswith("_") and isinstance(q, dict)
           }
 
           # Collect repos where staging_versions differs from versions
@@ -573,8 +579,12 @@ jobs:
               if repo in MAIN_DIRECT_REPOS:
                   continue
               if repo in quarantine:
-                  print(f"# QUARANTINED (skipped, needs attention): {repo}", file=__import__("sys").stderr)
-                  continue
+                  npa = quarantine[repo].get("next_probe_after")
+                  if npa and str(npa) > _now:
+                      print(f"# QUARANTINED (skipped — next re-probe at {npa}): {repo}", file=__import__("sys").stderr)
+                      continue
+                  # Probe is due → fall through; dep-order is still enforced by `& ready_set`.
+                  print(f"# QUARANTINE RE-PROBE (Gap 7): {repo} — probe due, testing promotability", file=__import__("sys").stderr)
               if sv != stable_versions.get(repo):
                   changed.add(repo)
 
@@ -825,17 +835,32 @@ jobs:
                   quarantine.pop(repo, None)
 
           newly_quarantined: list[str] = []
+
+          def _next_probe(attempts: int) -> str:
+              # Gap 7: bounded exponential backoff from the quarantine threshold — 60m, 120m, 240m,
+              # capped at 360m. A cleanly-mergeable repo recovers within ≤1h (first re-probe); a
+              # genuinely-broken one re-probes ever-less-often instead of every 15-min run.
+              mins = min(60 * (2 ** max(0, attempts - MAX)), 360)
+              return (datetime.datetime.utcnow() + datetime.timedelta(minutes=mins)).isoformat() + "Z"
+
           # INCREMENT consecutive failures; cross-threshold → quarantine + escalate-once.
           for repo in failed:
-              # Already quarantined repos are SKIPPED by the promote-loop builder, so they should
-              # not normally re-appear in FAILED — but guard anyway: keep them quarantined, do not
-              # re-escalate, do not double-count.
               prev = int(failures.get(repo, 0))
               cur = prev + 1
               failures[repo] = cur
               print(f"  consecutive promotion failures: {repo} = {cur}/{MAX}")
-              if cur >= MAX and repo not in quarantine:
-                  quarantine[repo] = {"since": now, "attempts": cur, "escalated": False}
+              if repo in quarantine:
+                  # Gap 7: a DUE re-probe (let through by the builder) failed again → keep it
+                  # quarantined and push the next probe out (backoff). Do NOT re-escalate /
+                  # double-count / re-alert (the alert partition already excludes quarantined repos).
+                  quarantine[repo]["attempts"] = cur
+                  quarantine[repo]["next_probe_after"] = _next_probe(cur)
+                  print(f"  re-probe failed: {repo} stays quarantined; next probe at {quarantine[repo]['next_probe_after']}")
+              elif cur >= MAX:
+                  quarantine[repo] = {
+                      "since": now, "attempts": cur, "escalated": False,
+                      "next_probe_after": _next_probe(cur),
+                  }
                   newly_quarantined.append(repo)
                   print(f"  *** QUARANTINED {repo} after {cur} consecutive failed promotions ***")
 
@@ -849,12 +874,16 @@ jobs:
                   continue
               context = (
                   f"staging→main promotion for {repo} has FAILED "
-                  f"{q.get('attempts', MAX)} consecutive runs and is now QUARANTINED (skipped on "
-                  f"future runs to stop blocking the queue + re-firing the partial-failure alert). "
-                  f"Diagnose the staging→main PR for {repo}: most likely a content merge conflict "
-                  f"(staging diverged from main) or a stuck/failing required check. Resolve on "
-                  f"live-defi-rollout, let quality-gates-v2 re-gate, and the next successful "
-                  f"promotion auto-clears the quarantine."
+                  f"{q.get('attempts', MAX)} consecutive runs and is now QUARANTINED. Gap 7 "
+                  f"auto-recovery WILL re-probe it (next probe ~{q.get('next_probe_after', 'soon')}): "
+                  f"if staging→main now merges clean it self-promotes and the quarantine clears with "
+                  f"NO action. Escalating only because a re-probe means it is NOT yet clean — most "
+                  f"likely a real content merge conflict (staging diverged from main) or a "
+                  f"stuck/failing required check. Resolve it: if `main ⊆ live-defi-rollout` (main "
+                  f"behind_by=0), force-sync main=LDR (admin-force-sync-all-to-main.sh, content-"
+                  f"lossless) to collapse the divergence; otherwise resolve the conflict on staging. "
+                  f"The next due re-probe then auto-clears the quarantine — do NOT hand-edit the "
+                  f"manifest unless the re-probe is demonstrably broken."
               )
               payload = json.dumps({
                   "event_type": "escalate-to-orchestrator",
