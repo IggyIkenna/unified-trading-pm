@@ -4,11 +4,12 @@ title:
 parent_epic: deployment_and_user_management_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: active
+status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 1.6
 created: 2026-06-12
+archived: 2026-06-12
 source:
   - 'operator direction 2026-06-12: "deployment ui needs a cleanup — at some point confused the Unified Trading System
     UI with the Deployment UI and started building Dart stuff and ML stuff in there, which is totally pointless there.
@@ -17,11 +18,21 @@ source:
 related_plans:
   - plans/active/monitoring_control_plane_master_2026_06_10.md
   - plans/active/ci_dashboard_deployment_ui_2026_06_10.md
-locked_by: live-defi-rollout
-locked_since: 2026-06-12
 ---
 
 # deployment-ui scope cleanup — trading/research surfaces → unified-trading-system-ui
+
+> ✅ **ARCHIVED 2026-06-12 — COMPLETE.** All 9 checkboxes shipped; **zero deferred work**. Dual-cut delivered:
+> deployment-ui keeps the 3 launch consoles + lost Dart/ClientSubscriptions; UTS-UI gained the research **Deploy
+> console**
+>
+> - `manage/subscriptions`, both wired to the unchanged deployment-api. Shas: deploy console + subscriptions
+>   `unified-trading-system-ui@08ff0742`; deployment-ui deletions `deployment-ui@91c810c`; codex UI-split note +
+>   CLAUDE.md dual-cut rule `unified-trading-pm` (`runtime-deployment-topology.md` + `cursor-configs/CLAUDE.md`).
+>   Follow-ups (operator request): config-only-pyproject `setup.sh` fix `unified-trading-pm` SSOT +
+>   `unified-trading-system-ui@6c9680d9`; networkidle flake fix `deployment-ui@ebaee4f` (nav_and_header 20/20). pw:L2
+>   green both repos. **Codex alignment verified**: `codex/04-architecture/runtime-deployment-topology.md` § "UI surface
+>   split" reflects what shipped. No `locked_by` (unlocked at archival; `[unlock-plan]`).
 
 ## Scope
 
