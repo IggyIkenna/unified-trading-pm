@@ -37,19 +37,19 @@ after each backfill VM run and recurring patterns promoted to first-class groups
 
 ## P0 — synthetic OTHER bucket end-to-end
 
-- [ ] [SCRIPT] P0. **Synthetic `OTHER` canonical-question-group bucket** — the classifier maps every Polymarket
+- [x] [SCRIPT] P0. **Synthetic `OTHER` canonical-question-group bucket** — the classifier maps every Polymarket
       `conditionId` and Kalshi ticker that doesn't match the curated registry to `OTHER`. Rationale (operator
       2026-05-07): audit `OTHER` membership after each backfill VM run + promote frequently-seen patterns to first-class
-      groups; honest-absence catch-all, not "out of scope".
-- [ ] [SCRIPT] P0. UAC `PREDICTION_GROUPS` registry seeding MUST include `OTHER` as a special-case entry from day one.
-      Cluster validation for `OTHER` is per-day count > 0 (any markets fall through), NOT a target count.
-- [ ] [SCRIPT] P0. Classifier emits an `INFO`-level event `OTHER_BUCKET_MEMBER_ADDED` whenever it routes a `conditionId`
-      to `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion.
-- [ ] [SCRIPT] P0. Confirm the writer rebundles `OTHER`-routed rows into the
+      groups; honest-absence catch-all, not "out of scope". ✅ — unified-api-contracts@306923a
+- [x] [SCRIPT] P0. UAC `PREDICTION_GROUPS` registry seeding MUST include `OTHER` as a special-case entry from day one.
+      Cluster validation for `OTHER` is per-day count > 0 (any markets fall through), NOT a target count. ✅ — unified-api-contracts@306923a
+- [x] [SCRIPT] P0. Classifier emits an `INFO`-level event `OTHER_BUCKET_MEMBER_ADDED` whenever it routes a `conditionId`
+      to `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion. ✅ — unified-api-contracts@306923a
+- [x] [SCRIPT] P0. Confirm the writer rebundles `OTHER`-routed rows into the
       `data_type=prediction_canonical_question_group` bundle for `OTHER` coverage (so `OTHER` appears in the manifest
       denominator like any curated group). NOTE: the writer-rebundling code path itself is owned by
       `prediction_manifest_canonicalisation_2026_06_01` — this todo only verifies `OTHER` is included in that bundling,
-      not re-implementing the bundler.
+      not re-implementing the bundler. ✅ — unified-api-contracts@306923a
 
 ## P0 — data-status panel + deployment-ui drilldown
 
