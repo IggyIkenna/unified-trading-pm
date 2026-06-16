@@ -3,6 +3,7 @@ title: deployment-ui vitest needs Node ≥22 (jsdom@29 ESM deps) — NOT a fleet
 created: 2026-06-16
 author: ikennaigboaka
 status: RESOLVED 2026-06-16
+priority: P1
 source:
   - data-status UI fix wave 2026-06-16 — local UI gate failed ERR_REQUIRE_ESM on this host
   - root-caused to host Node 20.18.2 vs CI Node 22; verified CI quality-gates-v2 GREEN
