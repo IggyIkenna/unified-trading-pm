@@ -51,6 +51,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -116,6 +117,35 @@ PREK_SSOT_COMMENT: Final[str] = "# Template SSOT: unified-trading-pm/scripts/pre
 # `.yml.tmpl` templates are substituted per-repo and are NOT byte-comparable (excluded by the
 # `*.yml` glob).
 WORKFLOW_TEMPLATE_DIR: Final[Path] = PM_ROOT / "scripts" / "workflow-templates"
+
+# Gap 6 (ci_pipeline_self_healing §Gap 6): these workflow templates are PROMOTE-LOOP-CRITICAL —
+# their silent absence on a drain-set repo is the documented Tier-C runaway-promote cause, not
+# cosmetic drift. A MISSING copy of one of these is escalated from WARN → ERROR for any repo that
+# carries the relevant branch (staging for the staging-backmerge; all repos have main/LDR). Keep
+# WARN for non-critical templates (a missing CI smoke workflow is not promotion-critical).
+CRITICAL_PROMOTE_TEMPLATES: Final[frozenset[str]] = frozenset(
+    {"staging-backmerge-to-ldr.yml", "main-backmerge-to-ldr.yml"}
+)
+
+
+def _repo_has_staging(repo_dir: Path) -> bool:
+    """True if the repo has an origin/staging ref (i.e. it is in the staging drain set).
+
+    A repo with no staging branch (a main-direct repo like unified-trading-pm, or
+    agent-orchestrator pre-staging) legitimately lacks staging-backmerge-to-ldr.yml, so its
+    absence must NOT be escalated to an error there. Best-effort: any git failure → False
+    (degrade to the WARN path, never a false ERROR).
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_dir), "show-ref", "--verify", "--quiet", "refs/remotes/origin/staging"],
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+        return result.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 # Baselined ratchet (mirrors check_credential_ask_orphans.py): the workspace already carries
 # pre-existing workflow drift (templates that rotted before this guard existed). Block only NEW
@@ -394,18 +424,25 @@ def _check_workflows(
         )
         return report
 
+    repo_dir = workspace_root / repo_name
     for template in sorted(WORKFLOW_TEMPLATE_DIR.glob("*.yml")):
         name = template.name
         copy = gh_dir / name
         if not copy.exists():
-            report.items.append(
-                DriftItem(
-                    "warn",
-                    f"workflow-missing-{name}",
-                    f".github/workflows/{name} missing — run "
-                    f"rollout-workflow-templates.sh --repo {repo_name} --template {name}",
-                )
+            # Gap 6: a missing PROMOTE-LOOP-CRITICAL template on a drain-set repo is an ERROR, not
+            # a WARN — its silent absence is the documented Tier-C runaway cause. staging-backmerge
+            # is only relevant where a staging branch exists; main-backmerge applies to every repo.
+            is_critical = name in CRITICAL_PROMOTE_TEMPLATES
+            staging_scoped = name == "staging-backmerge-to-ldr.yml"
+            critical_here = is_critical and (not staging_scoped or _repo_has_staging(repo_dir))
+            severity = "error" if critical_here else "warn"
+            detail = (
+                f".github/workflows/{name} missing — run "
+                f"rollout-workflow-templates.sh --repo {repo_name} --template {name}"
             )
+            if critical_here:
+                detail += " (PROMOTE-LOOP-CRITICAL — its absence is the documented Tier-C runaway cause)"
+            report.items.append(DriftItem(severity, f"workflow-missing-{name}", detail))
             continue
         if copy.read_bytes() != template.read_bytes():
             report.items.append(
