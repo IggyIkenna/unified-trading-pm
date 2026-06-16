@@ -559,6 +559,50 @@ completion that leaves a PR `BLOCKED + v2-absent`) would recover in seconds inst
       --auto-recover` scoped to the just-completed PR on the relevant `workflow_run`/`pull_request` event), keeping the
       cron as the backstop. Verify it does not double-fire with the cron (idempotent close+reopen already guards this).
 
+## Gap 10 — staging→main FROZEN fleet-wide: promotion is version-bump-gated, non-bumping content never registers (P0, opened 2026-06-16)
+
+**Symptom (operator-reported via monitoring-ui):** every repo except e2e-testing shows real `main…LDR` content delta
+with multi-day lag (verified live against GitHub: counts + lag ages exact, `behind_by=0` everywhere → genuine net
+content, not squash-skew). `main` is frozen — e.g. alerting-service main last moved `2026-06-15 11:20`, ibkr/mdps since
+`2026-06-09/10`. Yet `ldr-to-staging-promote` drains every ~15 min (success), `Semver Agent` + `SIT` run + succeed, and
+`staging-to-main` runs hourly + reports **success**.
+
+**Root cause (traced through staging-to-main run `27620193630`, 2026-06-16 13:14):** `staging-to-main` promotes ONLY
+repos listed in `staging_commits`, and that set is written by **`update-repo-version.yml` when `branch=staging`** — i.e.
+**only on a semver version bump** (`feat:`/`fix:`/`feat!:`). The stranded content is overwhelmingly `ci(...)`/`chore(...)`
+(workflow-template rollouts, Dockerfile, pyproject, quality-gates.sh) which earns **no version bump → no `staging_commits`
+entry → never promoted**. The drain log shows it explicitly: `READY this run (0)`, `PROMOTED_JSON empty (nothing was
+promoted or no staging_versions existed). Skipping cascade.` `staging_commits` currently = `{execution-service, ml-service,
+system-integration-tests}` (3 repos) while ~20 repos have genuine staging-ahead-of-main content. This is **bug #11**
+(CLAUDE.md async-wait rule: "`staging_commits` was never written for non-breaking merges") still live — it contradicts
+the documented intent (`ci-cd-flow.md`: "non-breaking promotions drain LDR→staging→main on QG/MAIN_GREEN alone").
+
+**Secondary: bottom-up dep-order DEADLOCK.** Of the 3 registered repos, STAGE 1.8 evaluates `ml-service` and SKIPs it —
+its dep `unified-trading-library` is `STAGING_GREEN` (gate requires dep at `MAIN_GREEN`/`SIT_VALIDATED`). But UTL's only
+pending staging content is `chore:` (5 commits, 4 files) → no bump → UTL never enters `staging_commits` → UTL never
+reaches `MAIN_GREEN` → **every UTL consumer is permanently blocked**. UTL is the T0 bottom-of-tree, so this freezes the
+whole fleet even for repos that DID earn a legit bump. (Operational impact compounds with the CLAUDE.md HARD RULE that a
+workflow `.yml` is INERT until it reaches `main`: the stuck content IS the CI/workflow rollouts → fleet CI fixes silently
+never take effect.)
+
+**Tertiary (latent): the "Merge staging → main" step has a shell bug** — line 76 `& ready_set` syntax error +
+`gh pr create` invoked without `--title/--body` (usage dump in the log). Currently masked because `READY_REPOS=0`, but it
+would mis-fire the moment a repo IS ready. Fix alongside.
+
+- [ ] [WORKFLOW] P0. Make `staging-to-main` promote **non-bumping QG-green content**, not only `staging_commits`
+      (version-bumped) repos: discover staging-ahead-of-main repos directly (git `compare main...staging`, `files>0`) and
+      promote any whose `ci_status ∈ {STAGING_GREEN, SIT_VALIDATED, MAIN_GREEN}` and whose deps are on main — realizing
+      the documented "non-breaking drains on QG alone". Keep the version-bump path for SIT-gated breaking changes.
+- [ ] [WORKFLOW] P0. Break the bottom-up deadlock: a dep stuck `STAGING_GREEN` purely on non-bumping content must be
+      auto-promotable (so T0 libs reach `MAIN_GREEN`); once Gap-10-P0#1 lands this resolves itself (UTL promotes on its
+      QG-green chore content), but verify the dep-order gate then drains the fleet bottom-up over successive runs.
+- [ ] [WORKFLOW] P1. Fix the `Merge staging → main` step shell bug (line 76 `& ready_set` + the `gh pr create` missing
+      `--title/--body`) so a ready repo actually merges; add a smoke that fails the step (not silently succeeds) on a
+      non-empty READY set that produces zero merges.
+- [ ] [SCRIPT] P2. **Immediate unblock** (operator-gated — touches `main` fleet-wide): promote the stuck T0/T1 libs
+      (UTL first) staging→main so the dep-order cascade drains; then let successive `staging-to-main` runs drain the rest
+      once Gap-10-P0 lands. (Normal PR-based promotion, NOT force-push.)
+
 ## Composes with
 
 - `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first
