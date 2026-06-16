@@ -60,8 +60,8 @@ stuck repo fires the staging-head v2 → semver bumps → drains.
       **Verified fleet-wide**: 24/24 repos carry `push:[staging]` on `live-defi-rollout`, and semver-agent is firing
       (`ev=push head=staging`, multiple runs 2026-06-16 across execution/mtds/uac) → `staging_commits` populated →
       staging→main promotes (this session promoted strategy + uac via the staging-to-main drain). The proposed
-      `workflow_run` approach above is the as-designed alternative; the shipped `push:[staging]` achieves the same and is
-      live — no further action.
+      `workflow_run` approach above is the as-designed alternative; the shipped `push:[staging]` achieves the same and
+      is live — no further action.
 
 ## Gap 2 — LDR-rewind dropped committed feat work fleet-wide (P1, data integrity)
 
@@ -128,6 +128,18 @@ runbook the orchestrator dispatches on a conflict-wall alert.
       step 5c re-runs the compare after reconcile and closes a now-empty PR instead of merging noise. Was: make
       `--escalate` actually spawn a worker for conflict-wall promote PRs (queue if headroom-less) + runbook +
       auto-close. Repo: agent-orchestrator.
+
+- [x] ✅ [ORCHESTRATOR] P1. **Gap 3 follow-up — `POST /api/escalate` ALSO hung on the WITH-capacity path (Issue A,
+      escalate-to-orchestrator storm 2026-06-16).** Gap 3 above queued only on NO-capacity; when a slot WAS free the
+      endpoint still called `escalation.escalate()` SYNCHRONOUSLY, which boots a tmux worker (`do_spawn`, multi-second/
+      30s+) BEFORE returning → the GHA runner's 30s `curl` timed out → HTTP 000 / "no worker spawned; wall STILL OPEN"
+      re-fired on every LDR PR (the endpoint was reachable+fast from a browser GET, but the valid-payload POST hung).
+      Fix: the endpoint now `escalation.enqueue()`s UNCONDITIONALLY (fast DB write → `status="queued"` + escalation_id;
+      GHA + `EscalateResponse` treat queued == dispatched, the wall is OWNED) and `retry_queued_escalations`
+      (AutoSpawnLoop, escalations-first) boots the worker on the next tick. No 503 path remains. +2 regression tests
+      (`test_endpoint_enqueues_and_never_spawns_inline` asserts `escalate` is NOT called); 635 pytest + 17 vitest green,
+      basedpyright clean. Auto-deploys via `ao-self-pull.sh` (FF `origin/live-defi-rollout` +
+      `systemctl restart     orchestrator`). Repo: agent-orchestrator@f20195a.
 
 ## Gap 3b — Tier-C drains are BORN in the v2-never-reported deadlock + auto-recover lags ~hourly (P1)
 
@@ -370,15 +382,15 @@ an early-warning.
 `6a75ca7fb`; workflow first introduced 06-05 `613481d0b`) **silently skipped 8 of 24 repos** — `features-service`,
 `fund-administration-service`, `greeks-service`, `ml-service`, `e2e-testing`, `agent-orchestrator`,
 `unified-trading-api`, `unified-trading-system-ui`. All 8 were patched 2026-06-15 during this incident (5 by slot-4 at
-~19:02–19:04; 3 by the root session at ~19:32–19:35). semver version bumps + UTL
-dep-floor bumps + base-image digest refreshes land on `staging` (semver-agent / dependency fan-out), and
-`staging-backmerge-to-ldr.yml` is the ONLY mechanism that flows them back DOWN to LDR (`main-backmerge-to-ldr.yml` can't —
-the bump is on staging, not yet main). With it absent, LDR stayed behind staging on `version`/pin/digest → the Tier-C
-drain perpetually saw a real two-dot content delta → promoted LDR→staging → the promote tried to revert staging's newer
-version → semver re-bumped → **ping-pong, ~1 merge/tick** → runaway breaker. `agent-orchestrator` was the worst case: it
-gained a `staging` branch (no longer main-direct) but never received the template. The drift IS detected by
-`detect_template_drift.py` (`workflow-missing-<name>`) — but only as a **WARN** in a local-only post-gate (CI no-op), so
-nobody acted on it for weeks.
+~19:02–19:04; 3 by the root session at ~19:32–19:35). semver version bumps + UTL dep-floor bumps + base-image digest
+refreshes land on `staging` (semver-agent / dependency fan-out), and `staging-backmerge-to-ldr.yml` is the ONLY
+mechanism that flows them back DOWN to LDR (`main-backmerge-to-ldr.yml` can't — the bump is on staging, not yet main).
+With it absent, LDR stayed behind staging on `version`/pin/digest → the Tier-C drain perpetually saw a real two-dot
+content delta → promoted LDR→staging → the promote tried to revert staging's newer version → semver re-bumped →
+**ping-pong, ~1 merge/tick** → runaway breaker. `agent-orchestrator` was the worst case: it gained a `staging` branch
+(no longer main-direct) but never received the template. The drift IS detected by `detect_template_drift.py`
+(`workflow-missing-<name>`) — but only as a **WARN** in a local-only post-gate (CI no-op), so nobody acted on it for
+weeks.
 
 **Fixed in real time 2026-06-15** (content-first convergence, LDR-is-SSOT remedy; two sessions in parallel — slot-4
 rolled the workflow to features/fund-admin/greeks/ml/e2e ~19:02–04, root session to ao/uta/ui ~19:32–35): backmerged
@@ -403,29 +415,29 @@ ui@f2223d47.
       non-200/404 returns None (never false-pages). Verified against live API (present→True, 404→False, PM→skipped).
       This is the proactive early-warning the drift detector's local-only WARN missed.
 - [~] [WORKFLOW] P3. LARGELY SUPERSEDED by P2 (2026-06-16): the P2 presence-audit pages the missing
-      `staging-backmerge-to-ldr.yml` **proactively** (every 30 min, before a runaway strands a repo), which is strictly
-      better than the runaway breaker's reactive post-trip diagnosis. Remaining nice-to-have: also name the missing file
-      in the Tier-C runaway breaker's page itself (`ldr-to-staging-promote.yml`) for the case where it trips for a
-      different reason — low priority now that P2 surfaces the root cause ahead of time.
+  `staging-backmerge-to-ldr.yml` **proactively** (every 30 min, before a runaway strands a repo), which is strictly
+  better than the runaway breaker's reactive post-trip diagnosis. Remaining nice-to-have: also name the missing file in
+  the Tier-C runaway breaker's page itself (`ldr-to-staging-promote.yml`) for the case where it trips for a different
+  reason — low priority now that P2 surfaces the root cause ahead of time.
 
 **Decision (2026-06-15, operator-confirmed) — do NOT add a `schedule`+`workflow_dispatch` drift-tick to
 `staging-backmerge-to-ldr.yml`.** It was tried (`49029aa44`) and reverted (`790e7fb51`) the same day. The reverted
 commit's premise ("`push:[staging]` NEVER fires — GITHUB_TOKEN suppression") is **empirically false**: the workflow
 fires constantly on `push` (unified-api-contracts 100 runs, instruments 52, execution 39 — all `push`), because the
-Tier-C drain merges to staging with a **GitHub App installation token**, and App-token pushes DO trigger workflows
-(only raw `GITHUB_TOKEN` pushes are suppressed). The ACTUAL incident cause was Layer A (8 repos missing the file), now
-fixed. A hourly cron × ~24 repos also adds Actions spend during the same billing-sensitive window that throttled
+Tier-C drain merges to staging with a **GitHub App installation token**, and App-token pushes DO trigger workflows (only
+raw `GITHUB_TOKEN` pushes are suppressed). The ACTUAL incident cause was Layer A (8 repos missing the file), now fixed.
+A hourly cron × ~24 repos also adds Actions spend during the same billing-sensitive window that throttled
 `main-backmerge`'s tick. The P1/P2 presence-audit above is the correct guard (catches the real failure = a missing
 file), not the schedule tick. Re-introduce the tick ONLY on a concrete observed case of a raw-`GITHUB_TOKEN` staging
 push (e.g. a semver `chore(release)` bump) that failed to self-heal on the next drain cycle.
 
 ## Gap 7 — `promotion_quarantine` is a SELF-PERPETUATING DEADLOCK: skip → never `promoted` → never auto-clears (P1, incident 2026-06-16)
 
-**Found 2026-06-16** while freeing the monitoring-ui "Promotion blocked — staging→main (4)" panel
-(execution-service / strategy-service / unified-api-contracts / system-integration-tests, each `attempts:3,
-escalated:true`). The four had been quarantined during the recurring jam — but **3 of the 4 merged staging→main cleanly
-when trial-merged** (only SIT had a real `pyproject.toml` version conflict). They were NOT blocked by any current
-problem; they were stuck purely by the quarantine mechanism itself.
+**Found 2026-06-16** while freeing the monitoring-ui "Promotion blocked — staging→main (4)" panel (execution-service /
+strategy-service / unified-api-contracts / system-integration-tests, each `attempts:3, escalated:true`). The four had
+been quarantined during the recurring jam — but **3 of the 4 merged staging→main cleanly when trial-merged** (only SIT
+had a real `pyproject.toml` version conflict). They were NOT blocked by any current problem; they were stuck purely by
+the quarantine mechanism itself.
 
 **The deadlock (`staging-to-main.yml`):**
 
@@ -436,8 +448,8 @@ problem; they were stuck purely by the quarantine mechanism itself.
 
 The escalation message even tells the worker the WRONG recovery: _"Resolve on live-defi-rollout, let quality-gates-v2
 re-gate, and the next successful promotion auto-clears the quarantine."_ — but the next promotion **skips** the
-quarantined repo, so resolving on LDR does nothing. The only working recovery is a **manual `promotion_quarantine` edit**
-(what I did: PM PR #351 cleared all 4 + reconciled stale `versions` for the two already-on-main; then a
+quarantined repo, so resolving on LDR does nothing. The only working recovery is a **manual `promotion_quarantine`
+edit** (what I did: PM PR #351 cleared all 4 + reconciled stale `versions` for the two already-on-main; then a
 `staging-to-main` dispatch promoted strategy/uac). This is why every jam needs hands-on recovery — the auto-recovery the
 system claims to have does not exist for this path.
 
@@ -445,9 +457,10 @@ system claims to have does not exist for this path.
 
 1. Diagnosed all 4 via trial `git merge staging→main` — execution = already merged (ahead_by=0); strategy + uac merged
    CLEAN; SIT = real `pyproject.toml` conflict (main stuck 0.3.3 + old dep floors vs LDR/staging 0.6.0 authoritative).
-2. SIT: `admin-force-sync-all-to-main.sh --repo system-integration-tests --no-commit --preserve-local
-   --force-version-override` (main ⊆ LDR, behind_by=0 → content-lossless) → main=LDR (0.6.0), protection restored, the
-   open conflicting staging→main PR #231 auto-resolved to MERGED.
+2. SIT:
+   `admin-force-sync-all-to-main.sh --repo system-integration-tests --no-commit --preserve-local --force-version-override`
+   (main ⊆ LDR, behind_by=0 → content-lossless) → main=LDR (0.6.0), protection restored, the open conflicting
+   staging→main PR #231 auto-resolved to MERGED.
 3. Cleared `promotion_quarantine` + `promotion_failures` for all 4 and reconciled stale `versions` (exec 0.9.1→0.10.0,
    SIT 0.5.0→0.6.0) in `workspace-manifest.json` — **PM PR #351 (merged)**.
 4. `gh workflow run staging-to-main.yml` → promoted strategy + uac (clean merges). Final: quarantine + failures EMPTY;
@@ -455,13 +468,13 @@ system claims to have does not exist for this path.
 
 - [x] ✅ [WORKFLOW] P1. Made quarantine **auto-recoverable** — DONE 2026-06-16 (unified-trading-pm PR #358).
       `staging-to-main.yml` merge-builder no longer permanently skips a quarantined repo: it RE-PROBES (lets it through)
-      once the re-probe is DUE (`next_probe_after` elapsed / absent), and the existing `changed & ready_set` filter still
-      enforces deps-on-main + the merge loop tests real mergeability. A clean re-probe promotes → the counter step's
-      existing `for repo in promoted: quarantine.pop()` auto-clears it; a still-conflicting re-probe stays quarantined
-      with `next_probe_after` pushed out (bounded exponential backoff 60→120→240, cap 360 min) — no every-run noise, and
-      the alert partition already excludes quarantined repos so no re-alert. Logic unit-simulated (due/not-due,
-      backoff curve, re-probe-fail stays-quarantined-no-realert, re-probe-success clears). Dormant until a repo
-      re-quarantines (quarantine currently empty) → zero immediate behaviour change.
+      once the re-probe is DUE (`next_probe_after` elapsed / absent), and the existing `changed & ready_set` filter
+      still enforces deps-on-main + the merge loop tests real mergeability. A clean re-probe promotes → the counter
+      step's existing `for repo in promoted: quarantine.pop()` auto-clears it; a still-conflicting re-probe stays
+      quarantined with `next_probe_after` pushed out (bounded exponential backoff 60→120→240, cap 360 min) — no
+      every-run noise, and the alert partition already excludes quarantined repos so no re-alert. Logic unit-simulated
+      (due/not-due, backoff curve, re-probe-fail stays-quarantined-no-realert, re-probe-success clears). Dormant until a
+      repo re-quarantines (quarantine currently empty) → zero immediate behaviour change.
 - [x] ✅ [WORKFLOW] P1. Fixed the escalation text — DONE 2026-06-16 (PR #358). It now states the repo WILL be re-probed
       (gives `next_probe_after`), that a now-clean repo self-promotes + auto-clears with no action, and that escalation
       means it's a REAL conflict needing resolution (force-sync main=LDR when `main ⊆ LDR`, else resolve on staging) —
@@ -476,24 +489,24 @@ system claims to have does not exist for this path.
 **Found 2026-06-16** in the live `staging-to-main.yml` STAGE 1.8 (dep-order gate) log:
 `ci_status Firestore read unavailable (ModuleNotFoundError: No module named 'google') — using manifest fallback cache`.
 The gate's `_fs_overlay()` (and `tier_c_promotion_gate.py::_overlay_firestore_ci_status`) is wrapped in a bare
-`except Exception: pass`, so when the PM Actions runner lacks `google-cloud-firestore`, the **live Firestore-authoritative
-`ci_status` overlay is silently skipped** and the gate falls back to the manifest's **committed (stale) `ci_status`
-cache**. Per `ci_status_firestore_side_store_2026_06_10.md` the whole point of Phase-2 was to make Firestore
-authoritative; in CI it is currently a **silent no-op** → promotion-readiness decisions ride stale state, which is one of
-the inputs that lets the recurring jam mis-gate (promote-blocked on a dep the manifest THINKS is red but Firestore knows
-is green, or vice-versa).
+`except Exception: pass`, so when the PM Actions runner lacks `google-cloud-firestore`, the **live
+Firestore-authoritative `ci_status` overlay is silently skipped** and the gate falls back to the manifest's **committed
+(stale) `ci_status` cache**. Per `ci_status_firestore_side_store_2026_06_10.md` the whole point of Phase-2 was to make
+Firestore authoritative; in CI it is currently a **silent no-op** → promotion-readiness decisions ride stale state,
+which is one of the inputs that lets the recurring jam mis-gate (promote-blocked on a dep the manifest THINKS is red but
+Firestore knows is green, or vice-versa).
 
 - [x] ✅ [WORKFLOW] P1. Installed the Firestore client in BOTH PM promote workflows — `staging-to-main.yml` +
-      `ldr-to-staging-promote.yml` now carry a best-effort `google-github-actions/auth@v3` (GCP_SA_KEY) +
+      `ldr-to-staging-promote.yml` now carry a best-effort `google-github-actions/auth@v3` (GCP*SA_KEY) +
       `pip install "google-cloud-firestore>=2,<3"` step after Checkout, plus a job-level `GOOGLE_CLOUD_PROJECT` env (the
       overlay needs both auth+SDK+project). Mirrors `ci-failure-watcher.yml`. — unified-trading-pm PR #353 (2026-06-16).
-      _Verify on the next live run: the gate log shows "overlay applied (live)" not the ModuleNotFoundError fallback._
+      \_Verify on the next live run: the gate log shows "overlay applied (live)" not the ModuleNotFoundError fallback.*
       **COMPLETED 2026-06-16 (PR #367): the SAME fix was missing on the other two Firestore-ci_status readers —
       `cascade-qg-ordering.yml` (`_fs_overlay`) + `sit-gate.yml` (`resolve_ci_status_map`) invoked the overlay but had
-      NO SDK install → silent stale-cache fallback. Added the auth + SDK install + `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT_ID`
-      env + made both overlays LOUD. All 4 ci_status-reading PM workflows + `ci-status-update` (writer) now install the
-      SDK; the only readers NOT yet Firestore-effective are the remaining Phase-2 migration targets (quickmerge +
-      dashboard), tracked in `ci_status_firestore_side_store_2026_06_10.md`.**
+      NO SDK install → silent stale-cache fallback. Added the auth + SDK install +
+      `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT_ID` env + made both overlays LOUD. All 4 ci_status-reading PM workflows +
+      `ci-status-update` (writer) now install the SDK; the only readers NOT yet Firestore-effective are the remaining
+      Phase-2 migration targets (quickmerge + dashboard), tracked in `ci_status_firestore_side_store_2026_06_10.md`.**
 - [x] ✅ [SCRIPT] P1. Made the overlay failure **LOUD** in all three sites (`_fs_overlay` ×2 in `staging-to-main.yml`
       heredocs + `_overlay_firestore_ci_status` in `tier_c_promotion_gate.py`): split `except Exception: pass` into a
       `ModuleNotFoundError` branch (CI-config bug → `::warning:: SDK unavailable, deciding on STALE cache`) vs a generic
@@ -511,39 +524,39 @@ careful gate/workflow change — per rule 11, not shipped blind at the tail of a
 consumer's internal-dep FLOOR (e.g. UTL `unified-api-contracts>=0.10.0`) reached `main` and triggered the consumer's
 standalone build, but the producer's matching version (UAC `0.10.0`) was **not yet PUBLISHED to Artifact Registry** →
 `uv sync` in the consumer's CI clone could not resolve the floor → UTL (T0) red → fleet jam. The current dep-order gate
-(`tier_c_promotion_gate.py` / staging-to-main STAGE 1.8) checks a dep is **on main** (`ci_status ≥ MAIN_GREEN`), but
-"on main" ≠ "published to AR" — `publish-package.yml` lags the main-merge. The gate must additionally assert the
-producer's required version is **actually resolvable from AR** before promoting a consumer whose floor requires it.
+(`tier_c_promotion_gate.py` / staging-to-main STAGE 1.8) checks a dep is **on main** (`ci_status ≥ MAIN_GREEN`), but "on
+main" ≠ "published to AR" — `publish-package.yml` lags the main-merge. The gate must additionally assert the producer's
+required version is **actually resolvable from AR** before promoting a consumer whose floor requires it.
 
 - [~] [SCRIPT] P1. MECHANISM BUILT + WARN-WIRED 2026-06-16 (unified-trading-pm PR #366); hard-BLOCK flip pending a
-      canary. **Correction to the original spec**: `published_packages` (the manifest field publish-package.yml writes)
-      is DEAD — `publish-package.yml` has NEVER run; wheels are published by the build pipeline, and **AR itself is the
-      source of truth** (verified UAC 0.10.0/0.11.0 present in AR). Also the **real** floor is the consumer's
-      **pyproject** (`uac>=0.10.0`), NOT the manifest dep-edge (a vestigial `>=0.1.0` range-pin per CLAUDE.md). Shipped
-      `scripts/cicd/assert_deps_published_to_ar.py`: reads internal-dep floors from the consumer's pyproject (at a ref),
-      queries AR via `gcloud artifacts versions list` (semver TUPLE compare — 0.10.0 > 0.9.0, the bug class), exit 1 iff
-      a dep has versions in AR but none satisfy the floor. **Strictly fail-OPEN** (gcloud absent / AR error / empty /
-      no pyproject / no floor → allow). Unit-tested (ver-tuple, floor parse) + E2E (UTL+strategy satisfied; impossible
-      floor blocks).
-      **⛔ CANARY VERDICT 2026-06-16 — WARN-only wiring REMOVED from staging-to-main; the check is the WRONG GATE for
-      the dev promotion path.** Running the exact check against all 24 repos (`--ref staging`) would BLOCK
-      **system-integration-tests** (alerting/features/strategy) + **e2e-testing** (strategy) as **FALSE POSITIVES**: AR
-      carries only stale wheels (strategy 0.2.1 vs 0.9.0 on main; alerting 0.1.0 vs 0.5.0; features 0.0.1 vs 0.4.0), BUT
-      both **local and CI resolve internal deps from EDITABLE SIBLING CLONES, not AR** — operator-confirmed + verified in
-      `base-service.sh:299` ("every path is `uv pip install -e .`, no `uv sync`"; CI version-aware-clones the siblings).
-      So AR staleness is irrelevant to dev builds, and the AR-publish-ordering check has no place in `staging-to-main`.
-      **DEFERRED — re-home in the production image build (named successor condition): image builds have NOT started yet
-      (dev currently ships via TARBALLS, not images). When image builds DO start they WILL pull internal deps from AR
-      (operator 2026-06-16 — for fast/efficient builds), and THAT is where the dep-publish-ordering check belongs** (the
-      cloud-build / image-build step, gating that the producer's wheel is in AR before the consumer image builds). The
-      primitive `scripts/cicd/assert_deps_published_to_ar.py` is **RETAINED, tested, and ready** for that wiring (it's
-      also the `--json` primitive for P2). STAGE 1.8b was removed from `staging-to-main.yml` (PR removing it: 2026-06-16).
-      Also surfaced for the prod cutover: AR wheels are far behind main (strategy 0.2.1 vs 0.9.0) — consistent with
-      `publish-package.yml` never running; the image-build path will need a working wheel-publish before it can rely on AR.
+  canary. **Correction to the original spec**: `published_packages` (the manifest field publish-package.yml writes) is
+  DEAD — `publish-package.yml` has NEVER run; wheels are published by the build pipeline, and **AR itself is the source
+  of truth** (verified UAC 0.10.0/0.11.0 present in AR). Also the **real** floor is the consumer's **pyproject**
+  (`uac>=0.10.0`), NOT the manifest dep-edge (a vestigial `>=0.1.0` range-pin per CLAUDE.md). Shipped
+  `scripts/cicd/assert_deps_published_to_ar.py`: reads internal-dep floors from the consumer's pyproject (at a ref),
+  queries AR via `gcloud artifacts versions list` (semver TUPLE compare — 0.10.0 > 0.9.0, the bug class), exit 1 iff a
+  dep has versions in AR but none satisfy the floor. **Strictly fail-OPEN** (gcloud absent / AR error / empty / no
+  pyproject / no floor → allow). Unit-tested (ver-tuple, floor parse) + E2E (UTL+strategy satisfied; impossible floor
+  blocks). **⛔ CANARY VERDICT 2026-06-16 — WARN-only wiring REMOVED from staging-to-main; the check is the WRONG GATE
+  for the dev promotion path.** Running the exact check against all 24 repos (`--ref staging`) would BLOCK
+  **system-integration-tests** (alerting/features/strategy) + **e2e-testing** (strategy) as **FALSE POSITIVES**: AR
+  carries only stale wheels (strategy 0.2.1 vs 0.9.0 on main; alerting 0.1.0 vs 0.5.0; features 0.0.1 vs 0.4.0), BUT
+  both **local and CI resolve internal deps from EDITABLE SIBLING CLONES, not AR** — operator-confirmed + verified in
+  `base-service.sh:299` ("every path is `uv pip install -e .`, no `uv sync`"; CI version-aware-clones the siblings). So
+  AR staleness is irrelevant to dev builds, and the AR-publish-ordering check has no place in `staging-to-main`.
+  **DEFERRED — re-home in the production image build (named successor condition): image builds have NOT started yet (dev
+  currently ships via TARBALLS, not images). When image builds DO start they WILL pull internal deps from AR (operator
+  2026-06-16 — for fast/efficient builds), and THAT is where the dep-publish-ordering check belongs** (the cloud-build /
+  image-build step, gating that the producer's wheel is in AR before the consumer image builds). The primitive
+  `scripts/cicd/assert_deps_published_to_ar.py` is **RETAINED, tested, and ready** for that wiring (it's also the
+  `--json` primitive for P2). STAGE 1.8b was removed from `staging-to-main.yml` (PR removing it: 2026-06-16). Also
+  surfaced for the prod cutover: AR wheels are far behind main (strategy 0.2.1 vs 0.9.0) — consistent with
+  `publish-package.yml` never running; the image-build path will need a working wheel-publish before it can rely on AR.
 - [ ] [WORKFLOW] P1 (DEFERRED → image-build cutover). Wire `assert_deps_published_to_ar.py` into the production image /
       cloud build (NOT staging-to-main): before building a consumer image, assert every internal-dep floor it will pull
       from AR is published; block/retry that image build until the producer wheel lands. Trigger: production image-build
-      deployment begins (replaces the dev tarball path). Pair with a working `publish-package.yml` (currently never runs).
+      deployment begins (replaces the dev tarball path). Pair with a working `publish-package.yml` (currently never
+      runs).
 - [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric (per dep edge) in `promotion_lag_monitor.py` / the
       dashboard so a stuck publish is visible before it jams a consumer. (The `assert_deps_published_to_ar.py` check is
       the reusable primitive — `--json` output gives `unpublished[]` per repo for the metric.)
@@ -551,13 +564,15 @@ producer's required version is **actually resolvable from AR** before promoting 
       dashboard so a stuck publish is visible before it jams a consumer.
 
 **9b — event-driven v2-never-reported recovery (P2 — robustness, the cron already works).** The v2-never-reported
-deadlock auto-recovers today via `ci-failure-watcher.py --auto-recover` on a ~throttled cron (close+reopen / empty-commit
-supersede). It works but lags up to the cron interval. An event-driven trigger (on the `workflow_run`/`check_suite`
-completion that leaves a PR `BLOCKED + v2-absent`) would recover in seconds instead of minutes.
+deadlock auto-recovers today via `ci-failure-watcher.py --auto-recover` on a ~throttled cron (close+reopen /
+empty-commit supersede). It works but lags up to the cron interval. An event-driven trigger (on the
+`workflow_run`/`check_suite` completion that leaves a PR `BLOCKED + v2-absent`) would recover in seconds instead of
+minutes.
 
-- [ ] [WORKFLOW] P2. Add an event-driven trigger for the v2-never-reported recovery (fire `ci_failure_watcher.py
-      --auto-recover` scoped to the just-completed PR on the relevant `workflow_run`/`pull_request` event), keeping the
-      cron as the backstop. Verify it does not double-fire with the cron (idempotent close+reopen already guards this).
+- [ ] [WORKFLOW] P2. Add an event-driven trigger for the v2-never-reported recovery (fire
+      `ci_failure_watcher.py     --auto-recover` scoped to the just-completed PR on the relevant
+      `workflow_run`/`pull_request` event), keeping the cron as the backstop. Verify it does not double-fire with the
+      cron (idempotent close+reopen already guards this).
 
 ## Gap 10 — staging→main FROZEN fleet-wide: promotion is version-bump-gated, non-bumping content never registers (P0, opened 2026-06-16)
 
@@ -569,38 +584,40 @@ content, not squash-skew). `main` is frozen — e.g. alerting-service main last 
 
 **Root cause (traced through staging-to-main run `27620193630`, 2026-06-16 13:14):** `staging-to-main` promotes ONLY
 repos listed in `staging_commits`, and that set is written by **`update-repo-version.yml` when `branch=staging`** — i.e.
-**only on a semver version bump** (`feat:`/`fix:`/`feat!:`). The stranded content is overwhelmingly `ci(...)`/`chore(...)`
-(workflow-template rollouts, Dockerfile, pyproject, quality-gates.sh) which earns **no version bump → no `staging_commits`
-entry → never promoted**. The drain log shows it explicitly: `READY this run (0)`, `PROMOTED_JSON empty (nothing was
-promoted or no staging_versions existed). Skipping cascade.` `staging_commits` currently = `{execution-service, ml-service,
-system-integration-tests}` (3 repos) while ~20 repos have genuine staging-ahead-of-main content. This is **bug #11**
-(CLAUDE.md async-wait rule: "`staging_commits` was never written for non-breaking merges") still live — it contradicts
-the documented intent (`ci-cd-flow.md`: "non-breaking promotions drain LDR→staging→main on QG/MAIN_GREEN alone").
+**only on a semver version bump** (`feat:`/`fix:`/`feat!:`). The stranded content is overwhelmingly
+`ci(...)`/`chore(...)` (workflow-template rollouts, Dockerfile, pyproject, quality-gates.sh) which earns **no version
+bump → no `staging_commits` entry → never promoted**. The drain log shows it explicitly: `READY this run (0)`,
+`PROMOTED_JSON empty (nothing was promoted or no staging_versions existed). Skipping cascade.` `staging_commits`
+currently = `{execution-service, ml-service, system-integration-tests}` (3 repos) while ~20 repos have genuine
+staging-ahead-of-main content. This is **bug #11** (CLAUDE.md async-wait rule: "`staging_commits` was never written for
+non-breaking merges") still live — it contradicts the documented intent (`ci-cd-flow.md`: "non-breaking promotions drain
+LDR→staging→main on QG/MAIN_GREEN alone").
 
 **Secondary: bottom-up dep-order DEADLOCK.** Of the 3 registered repos, STAGE 1.8 evaluates `ml-service` and SKIPs it —
 its dep `unified-trading-library` is `STAGING_GREEN` (gate requires dep at `MAIN_GREEN`/`SIT_VALIDATED`). But UTL's only
 pending staging content is `chore:` (5 commits, 4 files) → no bump → UTL never enters `staging_commits` → UTL never
 reaches `MAIN_GREEN` → **every UTL consumer is permanently blocked**. UTL is the T0 bottom-of-tree, so this freezes the
 whole fleet even for repos that DID earn a legit bump. (Operational impact compounds with the CLAUDE.md HARD RULE that a
-workflow `.yml` is INERT until it reaches `main`: the stuck content IS the CI/workflow rollouts → fleet CI fixes silently
-never take effect.)
+workflow `.yml` is INERT until it reaches `main`: the stuck content IS the CI/workflow rollouts → fleet CI fixes
+silently never take effect.)
 
 **Tertiary (latent): the "Merge staging → main" step has a shell bug** — line 76 `& ready_set` syntax error +
-`gh pr create` invoked without `--title/--body` (usage dump in the log). Currently masked because `READY_REPOS=0`, but it
-would mis-fire the moment a repo IS ready. Fix alongside.
+`gh pr create` invoked without `--title/--body` (usage dump in the log). Currently masked because `READY_REPOS=0`, but
+it would mis-fire the moment a repo IS ready. Fix alongside.
 
 - [ ] [WORKFLOW] P0. Make `staging-to-main` promote **non-bumping QG-green content**, not only `staging_commits`
-      (version-bumped) repos: discover staging-ahead-of-main repos directly (git `compare main...staging`, `files>0`) and
-      promote any whose `ci_status ∈ {STAGING_GREEN, SIT_VALIDATED, MAIN_GREEN}` and whose deps are on main — realizing
-      the documented "non-breaking drains on QG alone". Keep the version-bump path for SIT-gated breaking changes.
+      (version-bumped) repos: discover staging-ahead-of-main repos directly (git `compare main...staging`, `files>0`)
+      and promote any whose `ci_status ∈ {STAGING_GREEN, SIT_VALIDATED, MAIN_GREEN}` and whose deps are on main —
+      realizing the documented "non-breaking drains on QG alone". Keep the version-bump path for SIT-gated breaking
+      changes.
 - [ ] [WORKFLOW] P0. Break the bottom-up deadlock: a dep stuck `STAGING_GREEN` purely on non-bumping content must be
       auto-promotable (so T0 libs reach `MAIN_GREEN`); once Gap-10-P0#1 lands this resolves itself (UTL promotes on its
       QG-green chore content), but verify the dep-order gate then drains the fleet bottom-up over successive runs.
 - [ ] [WORKFLOW] P1. Fix the `Merge staging → main` step shell bug (line 76 `& ready_set` + the `gh pr create` missing
       `--title/--body`) so a ready repo actually merges; add a smoke that fails the step (not silently succeeds) on a
       non-empty READY set that produces zero merges.
-- [ ] [SCRIPT] P2. **Immediate unblock** (operator-gated — touches `main` fleet-wide): promote the stuck T0/T1 libs
-      (UTL first) staging→main so the dep-order cascade drains; then let successive `staging-to-main` runs drain the rest
+- [ ] [SCRIPT] P2. **Immediate unblock** (operator-gated — touches `main` fleet-wide): promote the stuck T0/T1 libs (UTL
+      first) staging→main so the dep-order cascade drains; then let successive `staging-to-main` runs drain the rest
       once Gap-10-P0 lands. (Normal PR-based promotion, NOT force-push.)
 
 ## Composes with

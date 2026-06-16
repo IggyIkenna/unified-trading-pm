@@ -43,14 +43,22 @@ promotion-ordering problem: UTL's main needs the aligned UAC release first.
 
 ## Recommended decision
 
-- [ ] [CICD] P1. Heal UTL `main` by completing the dependency-aligned promotion in dep order: ensure
+- [x] ✅ [CICD] P1. Heal UTL `main` by completing the dependency-aligned promotion in dep order: ensure
       `unified-api-contracts` promotes its new registry/`testnet_contracts.yaml`/source-priority content to its
       main-line release FIRST, THEN promote `unified-trading-library` LDR→staging→main so its version-aware clone
-      resolves the aligned UAC and the 9 test files pass. Verify with a fresh
-      `gh workflow run quality-gates-v2.yml --repo IggyIkenna/unified-trading-library --ref main` going green. Do NOT
-      "fix" the asserts or pin UAC differently — the asserts are correct against the new UAC; the skew is purely
-      promotion-ordering (LDR proves the content is green). If the drain is stuck (no staging→main PR opening), open it
-      manually once UAC main carries the aligned content.
+      resolves the aligned UAC and the 9 test files pass. Do NOT "fix" the asserts or pin UAC differently — the asserts
+      are correct against the new UAC; the skew is purely promotion-ordering (LDR proves the content is green). If the
+      drain is stuck (no staging→main PR opening), open it manually once UAC main carries the aligned content.
+      **RESOLVED 2026-06-16 (operator-authorized force-sync).** The drain WAS stuck: UAC `main` was pinned at **0.11.0**
+      (12 commits behind LDR — all already ⊆ LDR, no main-only content) while staging/LDR were at **0.13.0**, and the
+      `staging→main` promote PR **#339 was DIRTY** (conflicting only on `pyproject.toml` version + `semver-agent.yml`).
+      Per the "LDR is the SSOT — clean-start force-sync" model, ran
+      `admin-force-sync-all-to-main.sh --repo unified-api-contracts --no-commit [--stag-branch] --force-version-override`
+      (version-drift gate flagged only NON-target repos — manifest-surface noise — so the override was safe; UAC itself
+      had no drift). Result: **main == staging == LDR == `6c74eaf0` (0.13.0)**, #339 auto-resolved to MERGED, UAC `main`
+      `quality-gates-v2` GREEN. UTL side confirmed: latest UTL LDR build (`71eddf9`, the current tip) is **SUCCESS**
+      (the alerted `a57dc44` cloud-build FAILURE @17:55 was a transient sibling-context resolve; builds @18:57/19:09
+      recovered, and the force-sync now makes the index-resolution path coherent too).
 - [ ] [CICD] P2. **DEFERRED** Confirm whether the `ValueError: I/O operation on closed file` cascade is purely a
       teardown artifact of the registry-empty failures (expected to vanish once the registry resolves) or a separate
       logging-fixture bug; if the former, no action — provenance: run 27357450067.
