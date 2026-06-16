@@ -7,6 +7,7 @@ source:
   - scripts/plan-hygiene/run_hygiene_sweep.sh
 locked_by: live-defi-rollout
 parent_epic: plan_hygiene_master
+execution_scope: local-only
 priority: P2
 status: active
 ---

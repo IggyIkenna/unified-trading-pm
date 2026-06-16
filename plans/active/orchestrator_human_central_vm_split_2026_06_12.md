@@ -5,6 +5,7 @@ title:
 created: 2026-06-12
 parent_epic: orchestrator_master
 assigned_vm: planning
+execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8

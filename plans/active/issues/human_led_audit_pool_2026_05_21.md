@@ -6,6 +6,7 @@ locked_since: 2026-05-21
 priority: P0
 status: SEEDED — initial 14-row catalogue. Rows graduate to ACKED + wrapper-plan as humans pick them up.
 parent_epic: plan_hygiene_master
+execution_scope: local-only
 related_plans:
   - master_to_live_defi_2026_05_23.md
   - mega_audit_and_plan_beefup_progression_2026_05_20.md
@@ -124,8 +125,8 @@ completeness.
 | Operator approval | n/a — already acked 2026-05-20                                                           |
 | Status            | `IN-FLIGHT` (Phase A GREEN; B/C/D pending)                                               |
 
-Owns: data-pipeline correctness (manifest divergence / v8 backfill / expected_coverage / IS↔MTDS contract). Included for
-inventory completeness; not for re-pickup.
+Owns: data-pipeline correctness (manifest divergence / v8 backfill / expected_coverage / IS↔MTDS contract). Included
+for inventory completeness; not for re-pickup.
 
 ### #3. DeFi May-23 archetypes — batch backtest e2e (mock-data feed)
 
