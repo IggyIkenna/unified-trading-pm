@@ -82,6 +82,38 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   (`venue_collateral.py`) — so Aster is a stablecoin-margined funding-short only; no same-venue cash-and-carry, no
   staking leg. ETH staked-basis works on Bybit/OKX/Deribit (stETH/wstETH collateral). Filed to the Aster todo in
   `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
+- **2026-06-16** — Deribit FIX: its stored `funding_rate` is the 8h figure (≈ API interest_8h), annualise at 8h not 1h
+  (was 8× over) + ±200% winsor. Switched returns to **LINEAR (non-compounded)** — daily interest summed, mean×365
+  annualisation (operator; matches UAC linear convention). Split into **3 strategies** (staked basis / funding
+  dispersion = long low/neg-funding perp + short high-funding perp / pure basis no-staking) each oracle+causal, +
+  **capital-efficiency** (spot-collateral venues ≈1, cash-margin HL/Aster = 1/(1+max_move), per-asset BTC .20/ETH
+  .25/alt .60/small .80) + **min-carry floor 3%** + **ensemble** (best structure per coin) + **cash floor** (lend USDT
+  @4% when nothing clears 3%). HTML: side legend + strategy-named end-labels.
+- **2026-06-16** — **Full 2022→2026 run** (108k coin·venue·day points, Deribit-fixed, linear, efficiency-adjusted).
+  **Causal NET ann by year (ensemble = best-of-all-structures):** 2022 **14.9%** · 2023 **23.5%** · 2024 **31.0%** ·
+  2025 **13.9%** · 2026 **9.3%**. Full-window ensemble net **19.8%**, beating every single strategy (dispersion 15.4,
+  pure 13.9, staked 12.0) — the structures are complementary and **ETH staked-basis earns its place in the meta-book**
+  (it's the ~zero-turnover backbone; dispersion adds spread alpha; pure adds breadth). **2022 bear ≈ 2026 bear
+  confirmed** — both far below the 2023-24 bull (funding compresses in bears; 2026 at 9.3% is even tighter than 2022).
+  **Cash floor never triggered (0/1600 days)** — across all structures the best opportunity always cleared 3%, so the
+  USDT-lending fallback is a dormant safety net for this period. Why ETH looked weak in the OLD combined book: it's a
+  relative-ranking + funding-cap + efficiency-blind artifact, not a weak carry — resolved by the ensemble.
+
+## Strategies 4 + 5 (EigenLayer restaking) — design + data status (operator design 2026-06-16)
+
+4. **Restaking yield (EtherFi weETH)** — base staking + EigenLayer rewards (+ seasonal), **LONG-ONLY** (no venue takes
+   weETH/eETH as collateral → not market-neutral; it's just the yield on weETH). **Data: weETH EXISTS** in
+   `lst-rates-central-…/venue=ETHERFI` (verified 2026-06-16); EigenLayer `eigen_apy_bps` flows via features-service
+   `onchain/engine/staking_apy_total.py` + `collectors/chain_event_scanners.py` but its GCS path/cadence is UNCONFIRMED
+   (likely `features-delta-one-defi-*`; weekly) → verify before building. Alt: Lido stETH (already wired).
+5. **Recursive/leveraged restaking** — loop weETH on a lending market: borrow against weETH → buy more weETH → repeat.
+   Yield ≈ `(staking + restaking − borrow_rate) × leverage`, `leverage = 1/(1 − maxLTV)` (high in Aave e-mode), with a
+   ~2% basis-move haircut. **Data: BLOCKED — no Aave (Ethereum) lending/borrow rates in GCS** (verified:
+   `lending_indices` holds only Solana Kamino/Solend). Need Aave rate backfill (or run the loop on a Solana LST via
+   Kamino/Solend). Code refs: `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py`,
+   `deployment-api/models/recursive_borrow.py`, DeFi `RECURSIVE_LOOP` error codes; loop math + e-mode maxLTV to source
+   from codex strategy docs.
+
 - _(append entries as work continues)_
 
 ## Findings filed
