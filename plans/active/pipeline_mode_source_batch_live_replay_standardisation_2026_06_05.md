@@ -491,10 +491,10 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 
 ### Success criteria (GATE 0 met)
 
-- [ ] I1 mtds QG green + regression test
-- [ ] I3 features QG green + reader pm-aware tests
-- [ ] I6a UTL QG green (cadence column)
-- [ ] M3 UAC QG green (could_exist)
+- [x] ✅ I1 mtds QG green + regression test — market-tick-data-service@89807b4
+- [x] ✅ I3 features QG green + reader pm-aware tests — features-service@795e4f4
+- [x] ✅ I6a UTL QG green (cadence column) — unified-trading-library@dfe3385f
+- [x] ✅ M3 UAC QG green (could_exist) — unified-api-contracts@d56b9cc2
 - [ ] M4 UAC + batch-live-reconciliation-service QG green (select_for_mode)
 - [ ] M5b deployment-api cadence dim QG green
 - [ ] M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
@@ -506,3 +506,17 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - **2026-06-16 (tick 0)** — /autonomous armed. Scoped GATE 0 to 6 items + SIT (file-level spec above). Corrected the
   coordinator G0 false-green earlier (master_data_canonicalisation@…). Dispatching WAVE A (I1·I3·I6a·M3) as parallel
   sub-agents (disjoint repos). Next: collect Wave-A shas, flip the criteria boxes, dispatch Wave B.
+- **2026-06-16 (tick 1) — WAVE A COMPLETE (4/9 criteria).** Shipped: I1 market-tick-data-service@89807b4 (defi rebuild
+  CF-11 source+transport stamp + call-site regression test) · I3 features-service@795e4f4 (delta_one reader
+  pipeline_mode-aware — mirrors MDPS processed-candle path, NOT raw `candidate_parquet_paths`; probe canonical-pm→bare) ·
+  I6a unified-trading-library@dfe3385f (cadence column on AvailabilityRecord — explicit `cadence=` kwarg, NOT
+  source-derived; UAC `Cadence` StrEnum is the closed set) · M3 unified-api-contracts@d56b9cc2 (`could_exist(ag,dt,mode)`
+  + `sources_for_shard` = SOURCE_PRIORITY ∪ CEFI_LIVE_VENUES overlay). **Contention note**: my 4 parallel agents are each
+  other's deps + a transient foreign UAC edit → only M3 self-shipped; I shipped UTL→features→mtds sequentially in dep
+  order (UAC clean → UTL → the two leaves). **Two findings captured** (NOT in scope, tracked for follow-on): (a) UTL
+  `_writer_io._records_to_dataframe:340` is an explicit column-map that OMITS all v6–v9 cols (`source`/`pipeline_mode`/
+  `transport`/`cadence`/…) from the SERIALIZED GCS parquet — the test corpus only asserts in-memory AvailabilityRecord,
+  masking it; if the written manifest must carry these, that serializer needs all v6–v9 cols (+`_V4_BACKFILL_COLUMNS`).
+  (b) M3 `could_exist` over-approximates (per-source not per-`(source,data_type)` `modes_for`; data_type not full IS shard
+  key) — the SAME tranche as the M2/M3 per-`(source,data_type)` refinement already noted in § M2-REFINEMENT. Next: WAVE B
+  — M4 (UAC mode_precedence + BLRS wiring) + M5b (deployment-api cadence dim, now unblocked by I6a).
