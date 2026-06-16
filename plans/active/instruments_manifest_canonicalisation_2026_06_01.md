@@ -44,6 +44,18 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > (CF-1…CF-12 in `canonical_form_cross_service_audit_checklist.md`). Do NOT open a second walk;
 > `pipeline_mode_partition_migration` + `data_source_provenance` ride THIS walk.
 
+> **🟡 FINDING CALLOUT (2026-06-16) — data-status tab audit surfaced download + universe blockers that touch THIS
+> migration.** Audit: `plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md`; remediation
+> todos (deployment-api/ui/UAC, NOT owned here): `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`.
+> Three items intersect this plan: (1) **DeFi instruments CSV download 502s** — the deployment-api downloader rebuilds
+> the GCS path with the SPLIT manifest venue (`venue=AAVE_V3`) + drops chain, while the writer stores the COMBINED token
+> (`venue=AAVE_V3-ETHEREUM`) — the same writer/manifest venue-split this canonicalisation owns; verify the v9 path shape
+> keeps writer-object ↔ manifest-row reconstructable. (2) **CeFi universe is a curated allowlist missing EIGEN + 16
+> coins** (`unified-api-contracts/.../registry/cefi_instrument_universe.py:19`) — extending it widens the could-exist
+> denominator the G1 gate depends on ("GATED on … accurate UAC"); coordinate before the catalogue `--apply-write` seed.
+> (3) The audit independently re-confirms this plan's DATA-STATE (v8 flat, ~40% null-`capture_status`-with-count>0,
+> capture freeze ~2026-05-21) as the **to-100% path** — no new work, just cross-evidence.
+
 ## Why this exists — the per-AG plans cover MTDS, not the instruments surface
 
 The per-AG manifest-canonicalisation plans (defi/cefi/tradfi/sports/prediction) canonicalise the **MTDS**
