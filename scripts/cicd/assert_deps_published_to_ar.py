@@ -3,6 +3,14 @@
 
 Ref: plans/active/issues/ci_pipeline_self_healing_gaps_2026_06_11.md § Gap 9a.
 
+STATUS (2026-06-16): NOT currently wired into any workflow — RESERVED for the production
+IMAGE-BUILD dep-publish gate. Dev (local + CI) resolves internal deps from EDITABLE SIBLING
+CLONES, not AR (base-service.sh: `uv pip install -e .`), so this AR check is the wrong gate for
+the dev promotion path (it would false-block path-sourced consumers). Image builds — which WILL
+pull internal deps from AR for speed — have not started yet (dev ships via tarballs). Wire this in
+at the image/cloud-build step when that cutover happens. The `--json` output is also the primitive
+for the Gap 9a-P2 AR-lag metric.
+
 The recurring-jam root cause: a consumer's internal-dep FLOOR (e.g. UTL's
 `unified-api-contracts>=0.10.0`) reached `main` and triggered the consumer's standalone build,
 but the producer's matching version was **not yet published to Artifact Registry** → `uv sync`
