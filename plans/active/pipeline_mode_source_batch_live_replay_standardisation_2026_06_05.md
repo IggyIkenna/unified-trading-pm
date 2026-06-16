@@ -613,3 +613,9 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
       caught by `test_manifest_writer_capture_status::test_failed_then_captured_last_write_wins`). Correct fix must
       treat "" as a wildcard that matches any value (only distinguish when BOTH rows carry distinct non-empty values),
       OR move the multi-source dedup to the consolidator. Provenance: pipeline_mode tick-5 serializer fix.
+- **2026-06-16 (tick 6) — FINDING (a) SHIPPED.** The transient foreign UAC dirty WIP (an `orch-slot-2` worker's
+  `defi_venue_capabilities.py`+test edit) committed itself within ~15 min → UAC clean → F1 quickmerged:
+  **unified-trading-library@d3324e90** (`Quickmerge: agent` trailer; landed on LDR, ancestor-verified; Tier-C drain
+  promotes LDR→staging ≤30min, v2-gated). Both files present (`_writer_io.py` +253/-1, new serialized-DF test). The
+  serializer now carries every v6–v9 column on the runtime/per-VM/legacy write paths → new captures no longer re-drop
+  `source`/`pipeline_mode`/`transport` post-v9. The P2 dedup follow-on (above) remains the only open residue.
