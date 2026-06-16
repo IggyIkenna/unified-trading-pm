@@ -107,16 +107,16 @@ the topology depends on:
 
 Failure mode if keys get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
 `/api/backends`, etc.) and the dashboard bounces back to the login screen. Diagnosis: SSH to a worker + check the
-journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the GCS
-URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
+journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the
+GCS URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
 
 ## Per-VM agent shape (epic VMs)
 
-| Slot     | Role                  | Model                 | Purpose                                                                                                                                                                                                                                                                   |
-| -------- | --------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1**    | **main orchestrator** | Opus 4.7 (1M context) | Delivers plan work to workers; auto-resolves /blocked questions via DO-IT-PROPERLY rubric (NOT time-constrained shortcuts); has explicit credentials to spawn VMs, run GitHub Actions, etc — same authority operator has, only blocker is plan-stated dependencies.       |
-| **2**    | **review agent**      | Sonnet 4.6            | Reviews each worker commit against the master plan + ensures FF merge of slot branches into LDR. Knows which commits are from which agents (slot branch = `tab/<operator>/<N>`). Auto-pull cron every 5 min keeps worktrees in sync with LDR (except when locally dirty). |
-| **3-18** | **workers**           | Sonnet 4.6 (default)  | Pick up backlog tasks for the VM's master plan. Min 8 spawned, up to 16 based on rate-limit + CPU bound (1 CPU per agent minimum).                                                                                                                                        |
+| Slot     | Role                  | Model                 | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------- | --------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1**    | **main orchestrator** | Opus 4.7 (1M context) | Delivers plan work to workers; auto-resolves /blocked questions via DO-IT-PROPERLY rubric (NOT time-constrained shortcuts); has explicit credentials to spawn VMs, run GitHub Actions, etc — same authority operator has, only blocker is plan-stated dependencies.                                                                                                                                                                                                                                     |
+| **2**    | **review agent**      | Sonnet 4.6            | Reviews each worker commit against the master plan + the task's `done_definition` (plan-vs-commit + QG-flow discipline; pings the worker back to fix). **Path-B (2026-06-08): does NOT FF-merge branches** — quickmerge pushes slots straight to LDR and the 5-min FF-pull cron keeps worktrees on latest LDR but SKIPS dirty ones, so the review agent also watches `/api/fleet/git-health` for long-dirty worktrees + diagnoses stuck-on-blocked vs stale/dead worker (`agents/review.md` § tick 3d). |
+| **3-18** | **workers**           | Sonnet 4.6 (default)  | Pick up backlog tasks for the VM's master plan. Min 8 spawned, up to 16 based on rate-limit + CPU bound (1 CPU per agent minimum).                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Central / Orchestrator VM + Human Planning VM (SPLIT 2026-06-12 — two VMs, was one merged VM 2026-05-22 → 2026-06-12)
 
@@ -132,9 +132,9 @@ the dashboard talks to (nginx :443 → app :8765) plus the orchestrator roles �
   upstream Authorization header so the operator JWT never reaches an epic VM
 - Owns CI-escalation (`/api/escalate`), plan-health (`/api/plan-health/dispatch`), review, and **AutoSpawn for workers**
 
-**Human Planning VM (id `human-planning`, `i-0dd9812a96cdda5dc`, `35.76.120.160`, m7i.2xlarge, `ssh human-planning-vm`):**
-the two interactive slots, separate box, self-registers with the central VM (owns no EIP/DNS/central-API;
-`ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` — never auto-adopts fleet plans).
+**Human Planning VM (id `human-planning`, `i-0dd9812a96cdda5dc`, `35.76.120.160`, m7i.2xlarge,
+`ssh human-planning-vm`):** the two interactive slots, separate box, self-registers with the central VM (owns no
+EIP/DNS/central-API; `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` — never auto-adopts fleet plans).
 
 | Slot                 | VM               | Role               | Model    | Purpose                                                                                                       |
 | -------------------- | ---------------- | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
