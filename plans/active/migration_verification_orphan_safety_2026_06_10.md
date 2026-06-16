@@ -237,6 +237,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (autonomous run, cont.) — **DATA-001 `VENUE_DATA_TYPE_CAPABILITIES` completeness SHIPPED (data-grounded) —
+  uac@f8fb613.** Enumerated all 19 declared-but-uncapabilitied defi venues; grounded against the prod
+  `projected_index_defi.parquet` (1.58M rows). **5 with actual captured shards declared** (MAKER/FRAX/MORPHOVAULTS
+  →vault_share_price, SOLEND/MARGINFI→lending_indices, earliest-captured floors) so the could-exist universe builder
+  (reads `VENUE_DATA_TYPE_CAPABILITIES` directly) now credits their shards; declared ONLY the captured dt so no
+  denominator inflation. **De-vacuumed the DATA-001 test** (was green via the unmapped→all-fallback; now asserts the
+  registry dict directly). The 12 `live`-phased zero-data venues were NOT declared (would inflate the denominator) →
+  filed as a P3 phase-accuracy finding (re-phase to `pipeline` or run the backfill). UAC QG-green (212s), 69 targeted
+  tests pass. Methodology note: the autonomous data-ops allowance (real prod GCS read) was the difference between a
+  guessed declaration and a correct one — the probe overturned my category assumptions (FRAX/MAKER are captured as
+  ERC-4626 vaults, NOT lending).
+
 - 2026-06-16 (autonomous run, slot ip-172-31-5-118) — **harness VERIFY pass: V1 (CF-16 enumerator-reads-V0) GREEN.**
   Both named repos clean at LDR (is 0/0, uac 0/0); all ⑬–⑲ scaffold scripts present + landed (`possible_manifest.py`,
   `migration_orphan_sweep.py`, `manifest_diff.py`, `migration_schema_completeness.py`, `beta_manifest_writer.py`,
@@ -310,11 +322,30 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       `canonicalize_defi_manifest_venue_2026_06_14.py --apply --confirm` (C2) alongside the v9 path/schema walk so the
       stored `_index` venue column becomes canonical (not just read-reconstructed). Fleet drained + `pre_migration`
       snapshot in place; AG-by-AG verified, operator OK between each.
-- [ ] [DATA] P2. **`VENUE_DATA_TYPE_CAPABILITIES` completeness** — `MAKER` / `FRAX` (+ `MORPHOVAULTS`) are in
-      `ALL_DEFI_VENUES` but NOT in `VENUE_DATA_TYPE_CAPABILITIES` → their captured shards (~2–5k rows) get
-      `expected_dts=[]` → uncredited in the could-exist drilldown. Declare the data_types each venue produces (UAC
-      `registry/market_data_categories.py`). Investigation: enumerate ALL declared-but-uncapabilitied defi venues, not
-      just these 3.
+- [x] ✅ [DATA] P2. **`VENUE_DATA_TYPE_CAPABILITIES` completeness — DONE (data-grounded).** — uac@f8fb613 (QG-green
+      212s, 69 tests). Enumerated ALL declared-but-uncapabilitied defi venues: 19 of 124 `ALL_DEFI_VENUES` lacked a
+      capability entry; cross-referenced `DEFI_VENUE_PHASE` + the prod `projected_index_defi.parquet` (1.58M rows) for
+      ground-truth. **5 had ACTUAL captured shards (the real uncredited bug)** → declared with the data_type ACTUALLY
+      observed + the earliest-captured date as the best-effort floor: `MAKER-ETHEREUM`→`vault_share_price` 2023-01-18,
+      `FRAX-ETHEREUM`→`vault_share_price` 2023-10-19, `MORPHOVAULTS-ETHEREUM`→`vault_share_price` 2024-01-04,
+      `SOLEND-SOLANA`→`lending_indices` 2022-11-01, `MARGINFI-SOLANA`→`lending_indices` 2025-01-01. Declared ONLY the
+      captured data_type (not the broad set) so the could-exist denominator isn't inflated with uncaptured types; this
+      also tightens `get_expected_data_types_for_venue` from the 25-item all-fallback → the single real dt.
+      **De-vacuumed the DATA-001 test** (`test_mtds_venue_coverage.py::TestNewlyCapabilitiedDefiVenues`): it was passing
+      via the unmapped→all-fallback; now asserts `VENUE_DATA_TYPE_CAPABILITIES[venue]` DIRECTLY (the registry the
+      could-exist builder reads). **The other 14 (2 `pipeline`-phased = roadmap, legitimately uncapabilitied; 12
+      `live`-phased have ZERO rows in the projected index) were NOT declared** — declaring a no-data venue would falsely
+      inflate the could-exist denominator; the 12 are a phase-accuracy finding (next todo).
+- [ ] [DATA] P3. **12 `live`-phased defi venues have ZERO rows in `projected_index_defi.parquet`** (finding, DATA-001
+      enumeration 2026-06-16): `ANKR-ETHEREUM`, `BENQI-AVALANCHE`, `EULER_V2-ARBITRUM`, `EULER_V2-ETHEREUM`,
+      `FLUID-ARBITRUM`, `MANTLE-ETHEREUM`, `RADIANT-ETHEREUM`, `STADER-ETHEREUM`, `STAKEWISE-ETHEREUM`,
+      `SWELL-ETHEREUM`, `VENUS-BSC`, `VENUS-ETHEREUM` are declared `DEFI_VENUE_PHASE="live"` but have NO
+      captured/empty/failed rows in the defi projected index → either MTDS backfill never started for them (should be
+      `"pipeline"` until it does) or the projection predates their backfill. Diagnose per venue: if no MTDS writer is
+      plumbed → re-phase to `"pipeline"` (roadmap section, honest); if a writer exists but no data landed → it's a
+      backfill gap to run. Do NOT declare a `VENUE_DATA_TYPE_CAPABILITIES` entry until data exists (would inflate the
+      could-exist denominator with no-data cells). Repos: unified-api-contracts (`registry/defi_venues.py` phase) +
+      instruments-service/MTDS (backfill). Provenance: DATA-001 enumeration via projected_index_defi.parquet.
 - [ ] [DATA] P3. **Orphan / junk defi venues** — `VAULT` (generic, 1113 captured rows, not a protocol → exclude or map
       to the real protocol) + `SUSHISWAP` classic-vs-`SUSHISWAP_V3` ambiguity (data-semantics call: is bare `SUSHISWAP`
       the classic AMM = `SUSHISWAP-ARBITRUM`, or V3?). Reconcile `ALL_DEFI_VENUES` / `LEGACY_DEFI_VENUE_ALIASES` to
