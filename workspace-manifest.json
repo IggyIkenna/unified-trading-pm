@@ -80,7 +80,7 @@
     "system-integration-tests": "0.6.0",
     "unified-api-contracts": "0.15.0",
     "unified-trading-library": "0.10.0",
-    "unified-trading-pm": "1.2.134",
+    "unified-trading-pm": "1.2.135",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.6.0",
     "agent-orchestrator": "0.10.0",
@@ -1792,13 +1792,14 @@
     "batch-live-reconciliation-service": "0.6.0",
     "fund-administration-service": "0.4.0",
     "alerting-service": "0.6.0",
-    "unified-trading-library": "0.11.0"
+    "unified-trading-library": "0.11.0",
+    "agent-orchestrator": "0.11.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-16T21:19:12.755095Z",
-    "locked_reason": "Breaking MINOR bump cascade: unified-trading-library=0.11.0 (pre-1.0.0)",
+    "locked_since": "2026-06-16T21:21:25.331686Z",
+    "locked_reason": "Breaking MINOR bump cascade: agent-orchestrator=0.11.0 (pre-1.0.0)",
     "lock_version": "0.11.0",
     "pending_repos": [
       "ml-service",
@@ -1810,6 +1811,7 @@
     "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
+      "agent-orchestrator",
       "alerting-service",
       "fund-administration-service",
       "system-integration-tests",
@@ -1857,6 +1859,11 @@
     "unified-trading-library": {
       "version": "0.11.0",
       "sha": "9cdd06bdf1aec65aef55aab610c3e3b03b158917",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.11.0",
+      "sha": "c80edadb23301a11d476d619675878e9ccf9beb5",
       "branch": "staging"
     }
   },
