@@ -150,6 +150,18 @@ runbook the orchestrator dispatches on a conflict-wall alert.
       process's `ExecMainStartTimestamp` is older than the checkout `HEAD` commit time, so a stale process self-heals on
       the next tick. Repo: agent-orchestrator (`scripts/ao-self-pull.sh`).
 
+- [ ] [ORCHESTRATOR] P1. **No worker-COMPLETION verification — the orchestrator dispatches an escalation worker but
+      never confirms the wall was actually RESOLVED (operator-raised 2026-06-16).** `escalate()` spawns a one-shot
+      worker and flips the ledger row to `dispatched`, but there is NO completion callback: nothing checks that the
+      worker pushed a fix / the wall's CI went green / the job was executed, and no Slack "RESOLVED by worker" signal
+      fires. Live example: the UAC v0.15.0 breaking cascade escalated `features-service` to `agt-a9a405` (✅ the
+      escalate-enqueue fix WORKS — it dispatched, no hang), but 30+ min later features-service LDR has no worker fix
+      (latest commit = the backmerge bot) and the operator has no way to know if the worker is working, stuck, or done.
+      Fix: track each escalation to a TERMINAL verdict — after dispatch, poll the wall's signal (the repo's
+      `quality-gates-v2` on the head, or the drain PR state) and (a) Slack a "wall RESOLVED by slot-N" on green, (b)
+      re-escalate / page on continued-red past a deadline. Closes the loop opened by the Gap-3 dispatch. Repo:
+      agent-orchestrator (escalation.py + a completion-watcher).
+
 ## Gap 3b — Tier-C drains are BORN in the v2-never-reported deadlock + auto-recover lags ~hourly (P1)
 
 **Symptom (recurring)**: a fresh wave of "Auto-merge stuck → staging" Tier-C drain PRs (e.g. 2026-06-11 ~19:24:
