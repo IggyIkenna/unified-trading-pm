@@ -114,6 +114,13 @@ that workstream.
       138→0. — unified-api-contracts (citations) + unified-trading-pm@25fda9323 (base-library.sh hook + baseline→0).
       **DONE: all 606 DeFi addresses (468 service + 138 UAC) cited fleet-wide; every repo at baseline 0; gate enforced
       via base-service.sh (services) AND base-library.sh (libraries) — no repo left ungated.**
+- [x] ✅ [SCRIPT] P2. **Phase 5.6 — close the last ungated surface: STEP 5.97 `.py` parity in `base-ui.sh`.**
+      UI repos (unified-trading-system-ui, deployment-ui) are TS → run `base-ui.sh`, which didn't run STEP 5.97, so any
+      `.py` schema-mirror file there (e.g. `internal-contracts/.../protocol_sdks.py`) carried ungated on-chain addresses.
+      Added a `[5.97] DeFi ADDRESS-CITATION (.py)` step to `base-ui.sh` that runs the SAME Python checker over the UI
+      repo's `.py` files (skips gracefully if python+yaml / PM checkout absent). Validated: UI@0 passes; a new uncited
+      `.py` address → exit 1. — unified-trading-pm@7b9018714. **Gate now enforced across ALL THREE base types
+      (base-service / base-library / base-ui) — zero ungated surface fleet-wide.**
 - [ ] [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
       `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
       routers, Multicall3 (`0xcA11…CA11`, same address all EVM chains), bridge/Aave/LST protocol addresses; **(2)
