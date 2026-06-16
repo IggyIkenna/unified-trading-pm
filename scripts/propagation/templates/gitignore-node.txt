@@ -9,7 +9,9 @@
 *.backup
 
 # Dependencies
-node_modules/
+# No trailing slash: per-slot worktrees symlink node_modules to a shared install, and
+# "node_modules/" matches directories only → the symlink stays un-ignored (slot reads dirty).
+node_modules
 
 # Build outputs
 .next/

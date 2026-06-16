@@ -65,7 +65,8 @@ ENV/
 env/
 
 # --- Node / React / TypeScript ---
-node_modules/
+# No trailing slash — matches a node_modules dir OR symlink (per-slot worktrees symlink it).
+node_modules
 .next/
 dist/
 build/
