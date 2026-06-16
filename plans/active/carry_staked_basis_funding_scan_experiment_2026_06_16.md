@@ -172,6 +172,32 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   writing to the legacy bucket too. Needs (a) writer-env fix so future writes resolve to `-prd`, (b) migrate existing
   legacy data → `-prd`. Owned by `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (same class as
   lst-rates). The harness reads the legacy bucket for now (as it does for lst-rates).
+- **2026-06-16** — Harness cleaned to **0 basedpyright / ruff-green** under the e2e QG config (deleted 2 dead EWMA fns,
+  annotated `client: StorageClient`, knob constants → `globals()`); **e2e quality-gates.sh exit 0**. Quickmerge
+  **BLOCKED on foreign UAC WIP** (`config_versioning.py` — another agent's uncommitted change; not mine, won't touch).
+  Harness stays in working tree (safe); ship once UAC clean (more additions pending anyway).
+- **2026-06-16** — **Prod-fidelity investigation (3 agents) — design + decisions for the backtest extension:**
+  - **GAS** (separate from execution fees): prod has `execution-service/.../services/gas_cost_model.py` —
+    `DEFAULT_GAS_ESTIMATES` (SWAP 200k, SWAP_MULTI_HOP 350k, STAKE 150k, UNSTAKE 200k, BORROW 300k, REPAY 200k, LEND
+    200k, WITHDRAW 250k, TRANSFER_ERC20 65k, TRANSFER_ETH 21k, FLASH_BORROW/REPAY 100k, WRAP 50k, ATOMIC_BUNDLE_BASE
+    50k; CLOB/CEX TRADE = 0) × L2 multiplier (Op/Base/Arb 0.6, Poly/BSC/Avax 0.8, Linea 0.5).
+    `gas_cost_usd = gas_units × gas_price × native_price`. **Gas-price DATA in GCS** (`gas_fees/chain_id=…/date=…/`,
+    schema base_fee_gwei + priority_fee_p25/50/75 + blob_base_fee; ETH 2020→, SOL 2021→, 14 EVM chains). → backtest
+    computes gas from EXISTING data + the prod gas-unit table.
+  - **WALLET / treasury-vs-trading** (`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`): keyed by
+    **share_class**, DeFi **20% treasury / 80% hot-per-strategy** (CeFi 0/100), `WalletMappingConfig` reserve_pct 20% +
+    min/max bands (10%/30%); rebalance automation **NOT yet shipped** (Phase E.3) → the rebalancing sim is a genuine
+    prototype of unshipped logic. Capital map = **4-leg AtomicInstruction** (SWAP usdc→eth → STAKE eth→LST → TRANSFER
+    LST→perp venue → TRADE short perp) + passive accrual (FUNDING_ACCRUAL + STAKING_REWARD). Ledger taxonomy = UAC
+    `canonical.crosscutting.ledger` (37 EventTypes incl DEPOSIT/WITHDRAWAL_TO_BANK/TRANSFER/CUSTODY_MOVE +
+    FUNDING_ACCRUAL/STAKING_REWARD/LENDING_INTEREST); client-funds-isolation HARD RULE (single client_id per transfer).
+  - **SLIPPAGE — historical vs static (prod intent):** (1) **DEX swap = HISTORICAL** — `slippage_cost_model.py` +
+    `amm.py` (Uniswap V2/V3 math) + historical pool depth (`dex_pools` bucket) → `price_impact_bps` from depth (same
+    snapshot as the prod batch replay). (2) **Staking LST premium = STATIC** (~0–50 bps; secondary-market premium NOT
+    captured — only the `exchange_rate`). (3) **Lending/borrow rate = HISTORICAL via the Aave IRM curve** (borrow rate
+    moves with utilisation: `base + slope1·U + slope2·max(0,U−U_opt)`; slopes + `utilisation_rate` are in
+    lending_indices — the Aave backfill VM is filling the ETH utilisation gap now). So **use historical where data
+    exists (DEX depth, utilisation), static only for the LST secondary premium.**
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
