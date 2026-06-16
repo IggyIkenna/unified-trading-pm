@@ -58,6 +58,18 @@ source:
       (covered-but-missing stays actionable; unlisted/pre-genesis → out_of_scope). NOT the all-in-scope hack. +4 tests;
       QG green. Grain = venue/day. **Nuance:** the catalogue carries only CEFI/TRADFI/DEFI genesis — SPORTS/PREDICTION
       IS venues read out_of_scope until added to `data-catalogue.instruments-service.yaml` (follow-on). — deployment-api
+- [x] ✅ [CONFIG] P1. **SPORTS/PREDICTION genesis follow-on (the Nuance above) — DONE** — unified-trading-pm@`7752e58`
+      added `shard_status.SPORTS` (9 venue keys: the dominant `""` blank-venue current-writer shape @2015-01-01 + legacy
+      provider tokens API_FOOTBALL/API_FOOTBALL_FIXTURES/FOOTYSTATS/ODDS_API/MDPS_ODDS_HORIZON_BUCKET/OPEN_METEO/
+      SOCCER_FOOTBALL_INFO/TRANSFERMARKT) + `shard_status.PREDICTION.POLYMARKET`@2025-03-14 to
+      `configs/data-catalogue.instruments-service.yaml`. Venue keys + genesis transcribed from the ACTUAL
+      `instruments-store-{sports,pred}` `_index/availability_index.parquet` (service_name=instruments-service rows,
+      uppercased venue) — NOT guessed: the live writer stamps `venue=""` for sports (provider → data_type per
+      `writers.py:115`), `venue=POLYMARKET` for prediction. The deployment-service + deployment-api copies are SYMLINKS
+      to this one PM file (no separate quickmerge needed). Verified
+      `reference_genesis(sports,"")`/`(prediction,     "POLYMARKET")` + every real venue now resolve non-None /
+      `is_reference_venue_day_in_scope == True` (negative control stays out_of_scope). PM PR #382 (v2-gated auto-merge).
+      No `kalshi` IS rows live yet → KALSHI added when it lands.
 - [ ] [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) — **🔴
       MIGRATION-COORDINATED, do NOT implement standalone**: this changes the IS manifest shard atom (writer stamps
       `instrument_type=""` at `engine/orchestrator/writers.py:172`). Per single-walk discipline + shard-granularity

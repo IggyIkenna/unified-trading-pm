@@ -285,8 +285,8 @@ fixtures first-class (a `mock` capability in the M2 registry). Env-tier is itsel
 
 **Phase 1 — DRY-RUN migrations, per asset_group (depends GATE 0).** Re-run each `migrate_*` + `rebuild_*_manifest`
 `--dry-run` so they emit the NEW columns (live\_<source>/source/cadence/transport) into the v9 form; verify the manifest
-drilldown dims are fully populated + the GCS path↔column mirror holds. Lanes: cefi · defi · tradfi · sports ·
-prediction · instruments (each its own dry-run + per-AG nuance). **GATE 1**: dry-run clean per AG.
+drilldown dims are fully populated + the GCS path↔column mirror holds. Lanes: cefi · defi · tradfi · sports · prediction
+· instruments (each its own dry-run + per-AG nuance). **GATE 1**: dry-run clean per AG.
 
 **Phase 2 — REAL `--apply`, per asset_group (depends GATE 1; operator-gated; single-walk).** Each AG's v9
 canonicalisation `--apply` now carries EVERYTHING in ONE walk. This is the existing per-AG `*_manifest_canonicalisation`
@@ -447,8 +447,8 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
   `_build_blob_path:502-541` + `_resolve_blob_paths:316-343` build paths with NO `pipeline_mode=` segment; MDPS WRITES
   it (`mdps config.py get_processed_path`). Thread `pipeline_mode: str|None` through load_candles→_resolve→_build;
   delegate to UAC `candidate_parquet_paths(asset_group,data_type,day,pipeline_mode=pm)`; probe canonical(with-pm)→bare.
-  Tests: `tests/delta_one/unit/test_data_loader.py` (canonical carries pm; probe order; pm=None→bare). `PYTEST_UNIT_DIR="tests/"`.
-  INDEPENDENT. Non-breaking.
+  Tests: `tests/delta_one/unit/test_data_loader.py` (canonical carries pm; probe order; pm=None→bare).
+  `PYTEST_UNIT_DIR="tests/"`. INDEPENDENT. Non-breaking.
 - **I6a — UTL cadence column (the long pole; blocks M5+SIT).** repo `unified-trading-library`. Add `cadence: str = ""`
   to `AvailabilityRecord` (`manifest_writer/_rows.py:~401`, mirror the `transport` field) + add `"cadence"` to
   `_ROW_KEY_COLUMNS`; writer stamps via `default_cadence_for_source`/kwarg. Additive (rides v9 walk). Non-breaking.
@@ -461,22 +461,23 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
   `select_for_mode(consumer_mode, available_modes)` live-ctx [LIVE,REPLAY,BATCH] / batch-ctx [BATCH,REPLAY,LIVE] (replay
   always middle). Wire in `batch-live-reconciliation-service` (`engine/mode_resolver.py` or stage0). deployment-api
   tiebreak (data_status_union.py) already shipped — do NOT redo. Depends M1. Pure ADD. Non-breaking.
-- **M5 — data-status UNION + pm/cadence drilldown.** Union/pm/source/transport drilldown SHIPPED (deployment-api@4dd2575,
-  deployment-ui@0dc40eb). Remaining: (b) deployment-api cadence dim (`services/data_status_union.py:207,226` add cadence
-  to group_cols + breakdown — `PROVENANCE_COLS` already lists it pending) [needs I6a]; (c) deployment-ui cadence badge
-  (`HierarchicalShardDrilldown.tsx`); (d) **unified-trading-system-ui PARITY GAP** — `HierarchicalShardDrilldown` does
-  NOT exist there; port it + wire into the data-status view (UI, needs Node≥22 + pw:L2). Non-breaking.
+- **M5 — data-status UNION + pm/cadence drilldown.** Union/pm/source/transport drilldown SHIPPED
+  (deployment-api@4dd2575, deployment-ui@0dc40eb). Remaining: (b) deployment-api cadence dim
+  (`services/data_status_union.py:207,226` add cadence to group_cols + breakdown — `PROVENANCE_COLS` already lists it
+  pending) [needs I6a]; (c) deployment-ui cadence badge (`HierarchicalShardDrilldown.tsx`); (d)
+  **unified-trading-system-ui PARITY GAP** — `HierarchicalShardDrilldown` does NOT exist there; port it + wire into the
+  data-status view (UI, needs Node≥22 + pw:L2). Non-breaking.
 - **M1-BREAKING — `live_websocket`→`live_<source>`/`replay_<source>` migration.** The enum FOUNDATION is shipped
-  (`pipeline_mode.py` has the source-aware members + Mode/mode_of/transport). Remaining BREAKING tranche: writers
-  (mtds `live/websocket_runner.py:77` `_LIVE_PIPELINE_MODE`, `live/manifest_recorder.py`, mdps `live_aggregator.py`,
-  execution `live/data_sink.py`) stamp `pipeline_mode_for_source(source,Mode.LIVE)` not the literal; readers (mdps
+  (`pipeline_mode.py` has the source-aware members + Mode/mode*of/transport). Remaining BREAKING tranche: writers (mtds
+  `live/websocket_runner.py:77` `_LIVE_PIPELINE_MODE`, `live/manifest_recorder.py`, mdps `live_aggregator.py`, execution
+  `live/data_sink.py`) stamp `pipeline_mode_for_source(source,Mode.LIVE)` not the literal; readers (mdps
   `live_workers.py`, deployment-api `_live_coverage.py`, BLRS `stage0`) stratify via `is_live`/`mode_of`; UTL
-  `pipeline_mode_resolver.py:157-229` derive live_<source>/replay_<source>; **delete the `LIVE_WEBSOCKET` alias LAST**
+  `pipeline_mode_resolver.py:157-229` derive live*<source>/replay\_<source>; **delete the `LIVE_WEBSOCKET` alias LAST**
   (0 refs). The writer blocker = "source not in writer scope" → derive venue→source from SOURCE_PRIORITY/IS-catalogue.
   BREAKING (enum-value removal → SIT cascade) — alias removal is the final gated step.
 - **GATE-0 SIT.** repo `system-integration-tests`. NEW `tests/integration/test_gate0_write_manifest_union_read.py`
-  (pattern: `test_pipeline_manifest_wiring.py`; `@pytest.mark.code_test`, credential-free, NO real GCS). 4 legs:
-  (1) writer stamps pm+source+cadence+transport; (2) manifest carries all 4 as AvailabilityRecord cols; (3) union-read
+  (pattern: `test_pipeline_manifest_wiring.py`; `@pytest.mark.code_test`, credential-free, NO real GCS). 4 legs: (1)
+  writer stamps pm+source+cadence+transport; (2) manifest carries all 4 as AvailabilityRecord cols; (3) union-read
   groups by pm; (4) `select_for_mode`+`could_exist` gate. Legs 1-2 (pm/source/transport) greenable now; cadence/gate
   legs skip→unskip as I6a/M3/M4/M1-BREAKING land. **This IS the gate.**
 
@@ -495,11 +496,14 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - [x] ✅ I3 features QG green + reader pm-aware tests — features-service@795e4f4
 - [x] ✅ I6a UTL QG green (cadence column) — unified-trading-library@dfe3385f
 - [x] ✅ M3 UAC QG green (could_exist) — unified-api-contracts@d56b9cc2
-- [x] ✅ M4 UAC + batch-live-reconciliation-service QG green (select_for_mode) — unified-api-contracts@7441a692 + batch-live-reconciliation-service@0e17d7ee
+- [x] ✅ M4 UAC + batch-live-reconciliation-service QG green (select_for_mode) — unified-api-contracts@7441a692 +
+      batch-live-reconciliation-service@0e17d7ee
 - [x] ✅ M5b deployment-api cadence dim QG green — deployment-api@66e8562d
 - [ ] M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
 - [ ] M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs)
-- [x] ✅ GATE-0 SIT green (batch + gate legs; live leg skip-pending-M1) — system-integration-tests@db14463 → **GATE-0 FOUNDATION MET (batch path)** → Phase-1 BATCH dry-runs unblocked. (Live-path collision-free guarantee = M1-BREAKING, the gated tranche before a live-containing `--apply`.)
+- [x] ✅ GATE-0 SIT green (batch + gate legs; live leg skip-pending-M1) — system-integration-tests@db14463 → **GATE-0
+      FOUNDATION MET (batch path)** → Phase-1 BATCH dry-runs unblocked. (Live-path collision-free guarantee =
+      M1-BREAKING, the gated tranche before a live-containing `--apply`.)
 
 ### Progress Log (append-only)
 
@@ -508,48 +512,110 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   sub-agents (disjoint repos). Next: collect Wave-A shas, flip the criteria boxes, dispatch Wave B.
 - **2026-06-16 (tick 1) — WAVE A COMPLETE (4/9 criteria).** Shipped: I1 market-tick-data-service@89807b4 (defi rebuild
   CF-11 source+transport stamp + call-site regression test) · I3 features-service@795e4f4 (delta_one reader
-  pipeline_mode-aware — mirrors MDPS processed-candle path, NOT raw `candidate_parquet_paths`; probe canonical-pm→bare) ·
-  I6a unified-trading-library@dfe3385f (cadence column on AvailabilityRecord — explicit `cadence=` kwarg, NOT
-  source-derived; UAC `Cadence` StrEnum is the closed set) · M3 unified-api-contracts@d56b9cc2 (`could_exist(ag,dt,mode)`
-  + `sources_for_shard` = SOURCE_PRIORITY ∪ CEFI_LIVE_VENUES overlay). **Contention note**: my 4 parallel agents are each
-  other's deps + a transient foreign UAC edit → only M3 self-shipped; I shipped UTL→features→mtds sequentially in dep
-  order (UAC clean → UTL → the two leaves). **Two findings captured** (NOT in scope, tracked for follow-on): (a) UTL
-  `_writer_io._records_to_dataframe:340` is an explicit column-map that OMITS all v6–v9 cols (`source`/`pipeline_mode`/
-  `transport`/`cadence`/…) from the SERIALIZED GCS parquet — the test corpus only asserts in-memory AvailabilityRecord,
-  masking it; if the written manifest must carry these, that serializer needs all v6–v9 cols (+`_V4_BACKFILL_COLUMNS`).
-  (b) M3 `could_exist` over-approximates (per-source not per-`(source,data_type)` `modes_for`; data_type not full IS shard
-  key) — the SAME tranche as the M2/M3 per-`(source,data_type)` refinement already noted in § M2-REFINEMENT. Next: WAVE B
-  — M4 (UAC mode_precedence + BLRS wiring) + M5b (deployment-api cadence dim, now unblocked by I6a).
+  pipeline_mode-aware — mirrors MDPS processed-candle path, NOT raw `candidate_parquet_paths`; probe canonical-pm→bare)
+  · I6a unified-trading-library@dfe3385f (cadence column on AvailabilityRecord — explicit `cadence=` kwarg, NOT
+  source-derived; UAC `Cadence` StrEnum is the closed set) · M3 unified-api-contracts@d56b9cc2
+  (`could_exist(ag,dt,mode)`
+  - `sources_for_shard` = SOURCE_PRIORITY ∪ CEFI_LIVE_VENUES overlay). **Contention note**: my 4 parallel agents are
+    each other's deps + a transient foreign UAC edit → only M3 self-shipped; I shipped UTL→features→mtds sequentially in
+    dep order (UAC clean → UTL → the two leaves). **Two findings captured** (NOT in scope, tracked for follow-on): (a)
+    UTL `_writer_io._records_to_dataframe:340` is an explicit column-map that OMITS all v6–v9 cols
+    (`source`/`pipeline_mode`/ `transport`/`cadence`/…) from the SERIALIZED GCS parquet — the test corpus only asserts
+    in-memory AvailabilityRecord, masking it; if the written manifest must carry these, that serializer needs all v6–v9
+    cols (+`_V4_BACKFILL_COLUMNS`). (b) M3 `could_exist` over-approximates (per-source not per-`(source,data_type)`
+    `modes_for`; data_type not full IS shard key) — the SAME tranche as the M2/M3 per-`(source,data_type)` refinement
+    already noted in § M2-REFINEMENT. Next: WAVE B — M4 (UAC mode_precedence + BLRS wiring) + M5b (deployment-api
+    cadence dim, now unblocked by I6a).
 - **2026-06-16 (tick 2) — WAVE B COMPLETE (6/9 criteria).** M4 unified-api-contracts@7441a692 (`select_for_mode` —
-  live-ctx [LIVE,REPLAY,BATCH], batch-ctx [BATCH,REPLAY,LIVE], replay-ctx reuses live order) + batch-live-reconciliation-service@0e17d7ee
-  (`engine/mode_resolver.py` delegates to UAC select_for_mode; stage0 untouched — resolver is the primitive, no read
-  consumer wired yet = follow-on). M5b deployment-api@66e8562d (cadence dim threaded through the union/drilldown like
-  transport; blank-safe). Contention: M5b blocked on M4's in-progress UAC edit → shipped after M4 landed UAC (dep-order).
-  Next: WAVE C — GATE-0 SIT (system-integration-tests; legs 1-3 greenable now, leg-4 gate uses M3/M4 which are landed) +
-  M1-BREAKING (live_websocket→live_<source> writers/readers/resolver + alias removal LAST — the breaking tranche).
-  M5c/d UI cadence drilldown (Node22/pw:L2) deferred to a UI pass — display-only, not part of the SIT gate.
+  live-ctx [LIVE,REPLAY,BATCH], batch-ctx [BATCH,REPLAY,LIVE], replay-ctx reuses live order) +
+  batch-live-reconciliation-service@0e17d7ee (`engine/mode_resolver.py` delegates to UAC select*for_mode; stage0
+  untouched — resolver is the primitive, no read consumer wired yet = follow-on). M5b deployment-api@66e8562d (cadence
+  dim threaded through the union/drilldown like transport; blank-safe). Contention: M5b blocked on M4's in-progress UAC
+  edit → shipped after M4 landed UAC (dep-order). Next: WAVE C — GATE-0 SIT (system-integration-tests; legs 1-3
+  greenable now, leg-4 gate uses M3/M4 which are landed) + M1-BREAKING (live_websocket→live*<source>
+  writers/readers/resolver + alias removal LAST — the breaking tranche). M5c/d UI cadence drilldown (Node22/pw:L2)
+  deferred to a UI pass — display-only, not part of the SIT gate.
 - **2026-06-16 (tick 3) — GATE-0 SIT GREEN (7/9). The GATE-0 foundation + SIT are landed → Phase-1 BATCH dry-runs
   unblocked.** SIT system-integration-tests@db14463 — 4 legs at the UAC/UTL contract level: LEG1 batch writer stamps
-  pipeline_mode+source+transport+cadence (all non-blank); LEG2 schema carries all 4 + in _ROW_KEY_COLUMNS; LEG3 union
+  pipeline_mode+source+transport+cadence (all non-blank); LEG2 schema carries all 4 + in \_ROW_KEY_COLUMNS; LEG3 union
   axes present; LEG4 `could_exist` filters impossible cells + `select_for_mode` picks contextual mode. LIVE leg
   skip-marked `pending M1-BREAKING`. Both Wave-C agents (SIT + M1-BREAKING) hit transient API 500s after ~50 tool calls;
   reconciled down here: SIT was written-but-unshipped → I QG'd + shipped it; M1-BREAKING had shipped ONLY its UAC helper
   **unified-api-contracts@276b6a6 (`live_pipeline_mode_for_venue` — the venue→source live pipeline_mode resolver)** then
-  died — NO half-migrated dirty trees (verified clean across mtds/mdps/execution/deployment-api/BLRS).
-  **REMAINING (2/9 — the explicit gated next tranche per this plan's own §M1; NOT a vague defer — fully specified):**
+  died — NO half-migrated dirty trees (verified clean across mtds/mdps/execution/deployment-api/BLRS). **REMAINING (2/9
+  — the explicit gated next tranche per this plan's own §M1; NOT a vague defer — fully specified):**
   - **M1-BREAKING (decomposes into N non-breaking writer/reader migrations + 1 final breaking alias removal).** The UAC
     `live_pipeline_mode_for_venue` helper is laid (276b6a6); each writer/reader migration is now an INDEPENDENT
     NON-breaking single-repo unit (the `live_websocket` alias still exists, so nothing breaks until the FINAL removal).
     Sites (from the GATE-0 spec above): WRITERS — mtds `live/websocket_runner.py:77` + `live/manifest_recorder.py` +
     `live/backfill_runner.py` + `replay/runner.py` + `cli/handlers/websocket_streaming_handler.py`; mdps
-    `app/core/live_aggregator.py`; execution `engine/modes/live/data_sink.py` → stamp `live_pipeline_mode_for_venue(...)`.
-    READERS — mdps `app/core/live_workers.py`; deployment-api `routes/data_status/_live_coverage.py` +
-    `types/shard_detail.py`; BLRS `stages/stage0_manifest_reason_check.py` → stratify via `is_live`/`mode_of`. UTL
-    `pipeline_mode_resolver.py:157-229` derive live_<source>/replay_<source>. THEN (last, breaking, gated on
-    `rg "live_websocket|LIVE_WEBSOCKET" --type py` = 0 non-alias refs) delete the `LIVE_WEBSOCKET` alias in UAC
-    `pipeline_mode.py:122` → SIT cascade fires + the SIT's skip-marked live leg un-skips.
+    `app/core/live_aggregator.py`; execution `engine/modes/live/data_sink.py` → stamp
+    `live_pipeline_mode_for_venue(...)`. READERS — mdps `app/core/live_workers.py`; deployment-api
+    `routes/data_status/_live_coverage.py` + `types/shard_detail.py`; BLRS `stages/stage0_manifest_reason_check.py` →
+    stratify via `is_live`/`mode_of`. UTL `pipeline_mode_resolver.py:157-229` derive live*<source>/replay*<source>. THEN
+    (last, breaking, gated on `rg "live_websocket|LIVE_WEBSOCKET" --type py` = 0 non-alias refs) delete the
+    `LIVE_WEBSOCKET` alias in UAC `pipeline_mode.py:122` → SIT cascade fires + the SIT's skip-marked live leg un-skips.
   - **M5c/d (UI cadence drilldown, display-only, Node22/pw:L2):** deployment-ui `HierarchicalShardDrilldown.tsx` cadence
-    badge + unified-trading-system-ui port (the component doesn't exist there). NOT part of the SIT gate.
-  **Net for the operator's question ("what's left before dry-run-again / for-real"): the BATCH-path GATE-0 is GREEN —
-  re-dry-run is unblocked NOW (on the batch corpora). M1-BREAKING (live-writer migration) is the remaining must-land
-  before the REAL `--apply` bakes any live row, to avoid the #5 live_websocket multi-source path collision.**
+    badge + unified-trading-system-ui port (the component doesn't exist there). NOT part of the SIT gate. **Net for the
+    operator's question ("what's left before dry-run-again / for-real"): the BATCH-path GATE-0 is GREEN — re-dry-run is
+    unblocked NOW (on the batch corpora). M1-BREAKING (live-writer migration) is the remaining must-land before the REAL
+    `--apply` bakes any live row, to avoid the #5 live_websocket multi-source path collision.**
+- **2026-06-16 (tick 4) — /autonomous resumed to drive M1-BREAKING + M5c/d to 9/9 GREEN (this loop's handoff doc).**
+  Re-scouted the FULL blast radius of the grep-gate `rg "live_websocket|LIVE_WEBSOCKET" --type py = 0 non-alias refs`:
+  it is LARGER than the dispatch's writer/reader enumeration — it also pulls in (a) UTL `streaming/candle_writer.py`
+  `close_candle_writer` DEFAULT param `= PipelineMode.LIVE_WEBSOCKET` (public API; MDPS `canonical_writer*` /
+  `candle_write_mixin` / `live_aggregator` are the callers → must pass explicit), (b) UTL `pipeline_mode_resolver.py`
+  BOTH `resolve_pipeline_mode` (:125 live→LIVE*WEBSOCKET) and `derive_pipeline_mode_for_row` (:187-192 live→None), (c)
+  many docstrings/comments, and (d) ~dozens of TEST files across UTL/mdps/deployment-api/BLRS asserting the literal.
+  **Helper confirmed landed**: UAC `live_pipeline_mode_for_venue(asset_group, venue, data_type, mode=Mode.LIVE)` lives
+  in `canonical/crosscutting/source_priority.py`, exported from the `unified_api_contracts` root (NOT in
+  pipeline_mode.py as the dispatch implied). **CRITICAL reader-correctness invariant (codified here)**: readers consume
+  `pipeline_mode` as STRINGS from manifest parquets, and OLD data still carries the literal string `"live_websocket"`
+  even after the enum MEMBER is deleted → readers MUST string-prefix-match (`value.startswith("live")` / `"replay"` /
+  `"batch"`), NEVER reconstruct `PipelineMode("live_websocket")` (ValueError post-deletion). This is the
+  forward+backward-compatible fix the deployment-api/BLRS readers need. **Execution waves (all NON-breaking until Wave
+  3; alias coexists)**: W1 consumers in parallel (mtds·mdps·execution·deployment-api·BLRS) migrate every in-repo ref →
+  writers stamp source-aware via the helper (GCS path segment + manifest row derive from the SAME value), readers
+  string-prefix-match, tests → concrete
+  `live*<source>`member (cefi→LIVE_BINANCE/venue, tradfi→LIVE_DATABENTO, defi→LIVE_ONCHAIN_RPC/LIVE_SOLANA_RPC), each QG-green + quickmerge. W2 UTL (resolver source-aware +`close_candle_writer`pipeline_mode REQUIRED + tests/docstrings) — after W1 so MDPS already passes explicit. W3 UAC delete the`LIVE_WEBSOCKET`member + the internal`if
+  mode is PipelineMode.LIVE_WEBSOCKET`special-cases in`source_string_for`/`transport_of` + UAC tests (breaking → SIT
+  cascade). W4 un-skip the SIT live leg + verify green. THEN M5c/d UI cadence drilldown (Node22/pw:L2).
+- **2026-06-16 (tick 5) — FINDING (a) FIXED (the tick-1 serializer drop).** Confirmed + fixed the
+  `_writer_io._records_to_dataframe:340` v6–v9 column drop. **Diagnosis (write-path trace):** the runtime live+batch
+  path (`record_*` → `write()`/`flush()` → `_write_to_gcs()` → `_records_to_dataframe()`), the per-VM shard write
+  (`_write_per_vm_shard`), and the legacy single-blob write ALL flow through this one serializer (verified — it is the
+  sole `pd.DataFrame([... for r in self._records])` build on the write path). The consolidator UNIONs shard columns by
+  name (DuckDB `SELECT * … UNION ALL BY NAME`) so it CANNOT recover a column absent from every input shard → post-v9
+  every NEW capture wrote a manifest row missing `source`/`pipeline_mode`/`transport`, silently undoing v9 for new data
+  (the v9 migrators write via direct pandas `to_parquet`, so they backfilled OLD rows correctly — the bug only bit NEW
+  rows). `asset_group` is NOT an AvailabilityRecord field (derived from the GCS hive key at consolidation/read time) so
+  there was nothing to serialize for it; the read schema (`_read_index._V8_COLUMNS`) + the `record_*` kwargs already
+  carried all the dropped columns — only the serializer dropped them. **Fix (unified-trading-library, QG-green
+  `--no-fix` 118s, 403 manifest tests + 3 new pass):** serialize all 13 dropped fields (`quote_asset`/`margin_type`/
+  `combo_type`/`leg_weights`/`fixture_id`/`job_id`/`pipeline_mode`/`source`/`transport`/`cadence` + the v8
+  `service_emission_state`/`last_emission_decision_at`/`expected_window_completeness_fraction`), extend
+  `_V4_BACKFILL_COLUMNS` (+ a `_V8_NONE_DEFAULT_COLUMNS` None-default subset mirroring `_read_index._backfill` so the
+  emission cols backfill to None not "", preserving the `is None` pre-v8 sentinel) and add
+  `tests/unit/test_manifest_writer_serialized_columns.py` asserting the SERIALIZED DataFrame (not just the in-memory
+  record — the masking gap) carries every v6–v9 column. **Ship status:** quickmerge BLOCKED at the pre-flight dep-clean
+  gate by a TRANSIENT FOREIGN dirty WIP in the `unified-api-contracts` dep (`defi_venue_capabilities.py` +
+  `test_mtds_venue_coverage.py`, not mine, mtime ~50s at first sight = live editor → protected, never stomped). UTL tree
+  is QG-green + sentinel written; ship retries on the loop once UAC is clean (NOT a defer — a transient).
+- [ ] [CODE] P2. **`_merge_dataframes` dedup must key on the v6–v9 shard-atom columns (multi-source/multi-pipeline_mode
+      preservation)** — `unified-trading-library` `manifest_writer/_writer_io.py` `_merge_dataframes`. Now that the
+      serializer persists `source`/`pipeline_mode`/`transport`/`quote_asset`/`margin_type`/`combo_type`/`fixture_id`/
+      `job_id`/`cadence`, the GCS-merge dedup (`optional_dedup_cols`, keep="last") still keys ONLY on the pre-v6 columns
+      → two genuinely-distinct rows for the same base cell differing only by a v9 provenance axis collapse to one
+      (silently dropping a real multi-source / batch-vs-live shard). **NOT a naive add** (tried + reverted 2026-06-16):
+      keying dedup on these BREAKS the failed→captured last-write-wins state machine — `record_failed` leaves
+      source/transport blank while the captured retry populates them, and the legacy `add()` leaves pipeline_mode blank,
+      so a populated-vs-blank delta would keep BOTH rows and the retry would never replace the failure (regression
+      caught by `test_manifest_writer_capture_status::test_failed_then_captured_last_write_wins`). Correct fix must
+      treat "" as a wildcard that matches any value (only distinguish when BOTH rows carry distinct non-empty values),
+      OR move the multi-source dedup to the consolidator. Provenance: pipeline_mode tick-5 serializer fix.
+- **2026-06-16 (tick 6) — FINDING (a) SHIPPED.** The transient foreign UAC dirty WIP (an `orch-slot-2` worker's
+  `defi_venue_capabilities.py`+test edit) committed itself within ~15 min → UAC clean → F1 quickmerged:
+  **unified-trading-library@d3324e90** (`Quickmerge: agent` trailer; landed on LDR, ancestor-verified; Tier-C drain
+  promotes LDR→staging ≤30min, v2-gated). Both files present (`_writer_io.py` +253/-1, new serialized-DF test). The
+  serializer now carries every v6–v9 column on the runtime/per-VM/legacy write paths → new captures no longer re-drop
+  `source`/`pipeline_mode`/`transport` post-v9. The P2 dedup follow-on (above) remains the only open residue.

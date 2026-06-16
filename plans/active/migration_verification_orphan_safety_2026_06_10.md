@@ -91,8 +91,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       Cross-checked master-plan G1-ENUM — no double-implementation.
 - [x] ✅ [SCRIPT] P0. **Prediction**: VERIFIED FULL — `_enumerate_v2_prediction` (G1-ENUM) drives per-market lifecycle +
       per-row data_type grain-binding from the prediction catalogue; STUB docstring corrected is@da74c72c.
-- [ ] [VERIFY] P0. **DeFi / TradFi / Sports**: verify the FULL enumerators now read V0's generator (no regression);
-      0-data cell → `expected_unattempted` denominator. slot-2. instruments-service.
+- [x] ✅ [VERIFY] P0. **DeFi / TradFi / Sports**: FULL enumerators VERIFIED reading V0's composed validity layer (no
+      regression); 0-data cell → `expected_unattempted` denominator. — is@live-defi-rollout (code-read verify
+      2026-06-16). All 5 `_enumerate_v2_*` are FULL + dispatch-mapped (`_V2_ENUMERATORS`, zero remaining stubs — the
+      `STUB` mentions are docstrings noting the stub is CLOSED). defi/tradfi/sports each resolve data-type validity via
+      `valid_data_types_for_instrument_type(asset_group, instrument_type)` (the UAC validity matrix V0's
+      `possible_manifest` COMPOSES, never re-declares) + `CHAIN_GENESIS_DATES` (chain genesis) + per-instrument
+      `available_from/available_to` lifecycle bounds — the exact 3 layers V0 composes (single SSOT, no divergent
+      re-derivation = the no-regression guarantee). Alive cells with `row_key not in present_set` →
+      `capture_status="expected_unattempted"` (the 0-data denominator). Per-AG unit tests assert it
+      (`tests/unit/scripts/test_enumerate_expected_universe_v2.py`: defi pre-genesis/genesis-beats-available_from/
+      delisted; tradfi pre-listing/delisted; sports pre-fixture/post-fixture/league_id-propagated) + the v1→v2 superset
+      property test (`tests/integration/test_enumerate_v2_superset_property.py`). slot-2. instruments-service.
 
 ## V2 — Orphan sweep + bucket prefix taxonomy + sizing (CF-17) — slot-3 tool, both run
 
@@ -142,10 +152,33 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## V4 — Candle edge-timestamp audit (CF-19) — per-AG owner of the external OHLCV source
 
-- [ ] [VERIFY] P0. Per external OHLCV/candle source × timeframe, confirm left-edge(open)/right-edge(close) label matches
-      `codex/02-data/bar-boundary-candle-edge-convention.md` + an independent reference bar; one normalization point;
-      batch==live agree. (Issue already filed/maybe-fixed — this makes it a standing check.) Owner = the AG's source
-      owner.
+- [x] ✅ [VERIFY] P0. Candle-edge standing check VERIFIED LIVE — the right-edge (`t_close`) convention is codified +
+      QG-enforced + per-source documented. — codex@live-defi-rollout (verify 2026-06-16).
+      `codex/02-data/bar-boundary-candle-edge-convention.md` is the SSOT (closed bar stamped on its RIGHT/close edge;
+      half-open `[t_open, t_close)`). **One normalization point**: the MDPS processed-candle store (data-state verified
+      right-edge correct 2026-06-08) + MTDS ingestion conversion (`databento_adapter._convert_ohlcv_open_edge_to_close`,
+      stamps the row-level `bar_edge="close"` marker). **Per external source × timeframe edge label documented + handled
+      source-aware** (MDPS `ohlcv_passthrough._is_start_of_period_input` decision order: `bar_edge` marker → row
+      `source` provenance → `ts_event` name → census default): Databento `ts_event`=open,
+      Massive=open-by-representation, Uniswap `periodStartUnix`=open → SHIFT; yahoo/barchart=close, Hyperliquid/Pacifica
+      candle `T`, Binance kline `[6]`=explicit close → never shift. **Standing check is QG-wired** (not a one-off): STEP
+      5.92 `check_bar_edge_open_ingestion.py` runs in BOTH `base-service.sh` (line ~3153) and `base-library.sh` (line
+      ~1154) — baseline-ratchet, a NEW open-edge site fails the commit; STEP 5.74
+      `check_mdps_bar_boundary_compliance.py` bans inline truncation bypasses; runtime
+      `unified_trading_library.availability_stamping.assert_close_edge` raises on a mismatched edge; the **independent
+      reference + batch==live** is the cross-source equivalence fixture (tick-aggregated vs pre-aggregated → SAME
+      `t_close`) shipped in `market-tick-data-service/tests/unit/test_databento_bar_edge.py`,
+      `market-data-processing-service/tests/unit/test_tradfi_adapters.py`,
+      `features-service/tests/delta_one/unit/test_cross_source_bar_edge_equivalence.py`. Known-latent open-edge sites
+      (Massive `_normalise_ohlcv`, MDPS `liquidity_adapter._convert_timestamps`) are baselined + owned by named plans +
+      do NOT write consumed candles to prod. Owner = the AG's source owner (standing check now enforces it fleet-wide).
+- [x] ✅ [SCRIPT] P3. **`STEP 5.92` label collision in `base-service.sh` FIXED** — pm@3be7eb595. The legacy-`category=`-
+      kwarg ban (4 log lines, ~line 2214) was renumbered `STEP 5.92`→`STEP 5.98` (a globally-free number, verified
+      absent across base-service.sh + base-library.sh); the bar-edge open-ingestion detector keeps the canonical
+      `STEP 5.92` (matches the codex `bar-boundary-candle-edge-convention.md` + base-library.sh). Cosmetic (log prefix
+      only, no gate logic; `bash -n` clean). `base-service.sh` is PM-sourced + fleet-live (sourced at runtime, NOT a
+      per-repo rollout template) → the fix is live fleet-wide on merge; no `rollout-workflow-templates.sh` needed (the
+      original capture-not-fix note assumed the template-rollout model — base-`*`.sh is the live-source model instead).
 
 ## V5 — Projected-manifest preview + data-status render (CF-20, ⑭) — slot-3 harness, both render
 
@@ -205,31 +238,196 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
-- 2026-06-14 (late, slot-4) — **Canonicalisation DEPLOYED to the live service + fleet promotion pipeline unblocked.** After C1/C2/C3 shipped to LDR: (1) reconciled `main`+`staging` to LDR via clean-start force-sync (`admin-force-sync-all-to-main.sh --no-commit --force-version-override --repos "deployment-api unified-api-contracts"`; version-drift guard was a stale-local-PM-manifest false positive — actual versions advanced 0.6→0.7, protection restored). (2) Diagnosed the **fleet-wide deploy stall**: the semver-agent (staging→main promotion + version-bump/deploy dispatch) was DEAD since the LDR-trunk decoupling dropped `push:[staging]` quality-gates-v2, orphaning its `workflow_run:[v2@staging]` trigger — shipped the additive `push:[staging]` fix to the PM template (per-repo rollout tracked above). (3) Deployed the service directly: `deploy-shared.sh` built deployment-api from LDR → `uts-shared-deployment-api` rev `00026-clc`. (4) Found the **rollup Cloud Run Job pinned to an old image** (separate from the API service) — updated `uts-prod-data-status-rollup` to the new image + executed; rollup recomputed 21:42Z. **Verified LIVE: canonical venues (`BALANCER-ARBITRUM`/`-AVALANCHE`/`-BASE`…), defi card 95.63%, `unique_venues` 22 (canonical-collapsed).** Full issue ledger captured as the labelled todos above.
+- 2026-06-16 (autonomous run, tail-cleanup tick 1) — **Item 5 (V4 fleet-gate blast-radius) VERIFIED GREEN + Item 4 (STEP
+  5.92 label collision) FIXED.** **Item 5 (rule-11 blast-radius):** ran the STEP 5.92 candle-edge checker
+  (`check_bar_edge_open_ingestion.py --scope <repo>`) on 3 CONSUMER services (market-data-processing-service,
+  features-service, market-tick-data-service) + 2 LIBRARIES (unified-trading-library, unified-api-contracts) — **exit 0
+  on ALL five**; the only non-clean lines are 2 PRE-BASELINED latent WARNs (MDPS `_convert_timestamps`, MTDS
+  `_normalise_ohlcv`, both already in `bar_edge_open_ingestion_baseline.yaml` + owned by
+  `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1) → WARN not FAIL. The V4 fleet gate does NOT red any
+  consumer/library CI — no regression introduced by the prior run; rule 11 closed. **Item 4:** pm@3be7eb595 — renumbered
+  the `category=` ban `STEP 5.92`→`STEP 5.98` (bar-edge keeps the canonical 5.92); cosmetic, `bash -n` clean, PM
+  QG-green (53s full + content-sentinel hit), base-`*`.sh is live-sourced so fleet-live on merge (no rollout). Remaining
+  tail: Item 1 (249-a prediction loader), Item 2 (sports 384/346), Item 3 (222-followup 12-venue re-phase).
 
-- 2026-06-14 (later, slot-4) — **DeFi data-status "weird" fully root-caused + denominator/perf/canonicalisation fixes SHIPPED; could-exist headline now 29% (honest, was 3.2% artifact).** Chain of findings on the beta projected index:
-  1. **Beta-render perf** (dapi `be6f0e4`): the beta preview bypasses the LIVE rollup and hit O(unique×rows) per-value `== v` loops — defi card >280s, drilldown >400s. Vectorised (`value_counts` in `coverage.py` breakdowns; `groupby`+cached `_build_underlying_grouping` in `breakdowns_domain.py`). **Card 280s→8s, drilldown >400s→39s.**
-  2. **Root cause of the card↔drilldown split** (97.6% card vs 3.2% drilldown shards-weighted): the honest-coverage drilldown matched the raw **bare** venue (`UNISWAP_V3`, 195k captured rows) against the UAC-canonical `PROTOCOL-CHAIN` expected universe (`UNISWAP_V3-ETHEREUM`) → `found_shards≈0`. NOT a lifecycle over-count. **Gap is DEFI-ONLY** (cefi/tradfi/sports/prediction = 0.0% name-change under canonicalisation; defi = 99.5%).
-  3. **Reader-side canonicalisation** (dapi `16fb6b8`): `_canonicalise_defi_venue_column` applies `normalize_defi_venue(venue, chain)` AFTER the bare-pair whitelist in `_read_defi_merged_index` (rewriting the stored column instead broke the card's whitelist → 0%; the data model is bare venue + chain reconstructed at read). **drilldown shards_found 26,747→245,607 (9×), could-exist 3.2%→29%**; card stable 98%, captured unchanged 346,542.
-  4. **completion_pct = shards-weighted** (dapi `40c61a4`, operator decision: canonical completion = captured/could-exist): drilldown `completion_pct` was the attempt/date-blended ~42%; now the shards-weighted 29% (matching the overall rollup + the field doc); old value kept as `completion_pct_attempt_blended`.
-  - **B (impossible combos) verified already-gated**: the could-exist denominator (846,840 shards) is capability-gated via `VENUE_DATA_TYPE_CAPABILITIES` (40/72 canonical venues registered → only declared dts; 32 fallback venues return empty dts → contribute 0). 29% is honest, not inflated by impossible combos.
-  - **Migration scope confirmed UNCHANGED** for venue (G4 is path/schema only) — BUT operator wants the manifest migrated to canonical names too (below).
-- [x] ✅ [DESIGN] P1. **C — DeFi venue-spelling canonicalisation DONE + DEPLOYED (2026-06-14).** `normalize_defi_venue` now collapses no-underscore ghosts (`AAVEV3→AAVE_V3`, `YEARNV3→YEARN_V3`, hyphenated `AAVEV3-ARBITRUM→AAVE_V3-ARBITRUM`) to the canonical underscore form BEFORE membership/alias resolution (UAC `660f272` + `test_no_underscore_ghost_spelling_collapses_to_underscore`). dapi reader whitelist + canon column rewritten to canonicalise-then-membership, **direct-`venue-chain`-concat preferred** when already canonical (fixes `SUSHISWAP+ARBITRUM→SUSHISWAP-ARBITRUM`, not the V3-forcing alias) — dapi `16fb6b8`+`40c61a4`+C3. One-shot stored-data migration tool `instruments-service/scripts/canonicalize_defi_manifest_venue_2026_06_14.py` written (dry-run 1.19M/1.58M rows, gated `--apply --confirm` / `--projection-out`, idempotent) for the G4 apply. **99.1% of captured defi rows now resolve into `ALL_DEFI_VENUES`; LIVE on `uts-shared-deployment-api` rev `00026-clc` + rollup recomputed — canonical venues (`BALANCER-ARBITRUM`…) confirmed serving.** Residuals carried to the todos below.
+- 2026-06-16 (autonomous run, END-OF-RUN report) — **harness open CODE items GREEN; ⑬–⑲ pre-apply harness is
+  code-complete — only operator-gated items remain (by the plan's own design).** Shipped this run (all QG-green,
+  drift-clean — every HEAD ancestor-or-equal of origin/LDR, no dirty trees):
+  - **V1 ✅ (CF-16 enumerator-reads-V0)** — pm@45a3ed16e. All 5 `_enumerate_v2_*` FULL + dispatch-mapped; defi/tradfi/
+    sports resolve validity via the V0-composed UAC layer; alive+no-manifest → `expected_unattempted`.
+  - **V4 ✅ (CF-19 candle-edge standing check)** — pm@b10dacadf. Right-edge (`t_close`) convention codified +
+    QG-enforced fleet-wide (STEP 5.92 in base-service.sh + base-library.sh, STEP 5.74, runtime `assert_close_edge`,
+    cross-source equivalence fixtures in MTDS/MDPS/features). Single normalization point = MDPS processed candles.
+  - **DATA-001 `VENUE_DATA_TYPE_CAPABILITIES` completeness ✅** — uac@f8fb613 (QG-green 212s, 69 tests). 5 captured-but-
+    uncredited defi venues declared (data-grounded floors from prod `projected_index_defi.parquet`); de-vacuumed the
+    DATA-001 test. pm@caf609aef.
+  - **Diagnosed (root-caused, not just symptom-noted):** item 249 (prediction catalogue 0 rows) → loader
+    `_iter_prediction_by_date_snapshots` skips every blob lacking a `canonical_question_group=` path partition the
+    writer never emits (actual layout `venue=/market=`); (a) conditionId grain shippable, (b) cqg grain gated on 338.
+    pm@16392c664.
+  - **Findings filed:** P3 `STEP 5.92` label collision in base-service.sh; P3 12 `live`-phased defi venues with zero
+    rows in the projected index (re-phase to `pipeline` or run backfill — declaring them would inflate the denominator).
+  - **Verified end-state:** the ⑬–⑲ scaffold CODE (possible_manifest, orphan sweep, manifest_diff, schema completeness,
+    beta writer, cleanup, reconcile) is all on LDR/staging; V1/V4 GREEN; the projected v9 indexes + adjudicated diffs +
+    beta renders are assembled (per the R3/R7 entries below). **The ONLY remaining gates are OPERATOR-RESERVED by the
+    plan's own design** (⑬–⑲ HARD-BLOCK G4 pending the operator goalpost eyeball; line 221 "operator OK between each
+    AG"): V6 operator eyeball/sign-off, G4 `--apply` (destructive prod migration), and the operator-decision items 338
+    (prediction cqg-classifier coverage) + 424 (sports pre-launch window). These are legitimate hard-stops (a
+    destructive prod migration the operator explicitly reserved to eyeball), NOT autonomous leftovers — not auto-fired.
+  - **Per-AG data-ops tail (owned by slot-2/slot-3 per the ownership table, now precisely scoped):** 249-a (prediction
+    conditionId-grain loader rewrite), 384 (sports 6,869 blank capture_status), 346 (sports CF-5 relabel), 222-followup
+    (12 zero-data venue re-phase). Each is a `- [ ]` todo with a named repo + (where I went deeper) a root cause.
+
+- 2026-06-16 (autonomous run, cont.) — **DATA-001 `VENUE_DATA_TYPE_CAPABILITIES` completeness SHIPPED (data-grounded) —
+  uac@f8fb613.** Enumerated all 19 declared-but-uncapabilitied defi venues; grounded against the prod
+  `projected_index_defi.parquet` (1.58M rows). **5 with actual captured shards declared** (MAKER/FRAX/MORPHOVAULTS
+  →vault_share_price, SOLEND/MARGINFI→lending_indices, earliest-captured floors) so the could-exist universe builder
+  (reads `VENUE_DATA_TYPE_CAPABILITIES` directly) now credits their shards; declared ONLY the captured dt so no
+  denominator inflation. **De-vacuumed the DATA-001 test** (was green via the unmapped→all-fallback; now asserts the
+  registry dict directly). The 12 `live`-phased zero-data venues were NOT declared (would inflate the denominator) →
+  filed as a P3 phase-accuracy finding (re-phase to `pipeline` or run the backfill). UAC QG-green (212s), 69 targeted
+  tests pass. Methodology note: the autonomous data-ops allowance (real prod GCS read) was the difference between a
+  guessed declaration and a correct one — the probe overturned my category assumptions (FRAX/MAKER are captured as
+  ERC-4626 vaults, NOT lending).
+
+- 2026-06-16 (autonomous run, slot ip-172-31-5-118) — **harness VERIFY pass: V1 (CF-16 enumerator-reads-V0) GREEN.**
+  Both named repos clean at LDR (is 0/0, uac 0/0); all ⑬–⑲ scaffold scripts present + landed (`possible_manifest.py`,
+  `migration_orphan_sweep.py`, `manifest_diff.py`, `migration_schema_completeness.py`, `beta_manifest_writer.py`,
+  `cleanup_legacy_twins.py`, `reconcile_phantom_manifest_rows_all.py`). **V1 verdict (code-read):** all 5
+  `_enumerate_v2_*` FULL + dispatch-mapped, zero live stubs; defi/tradfi/sports resolve validity via the V0-composed UAC
+  layer (`valid_data_types_for_instrument_type` matrix + `CHAIN_GENESIS_DATES` + per-instrument lifecycle bounds — the
+  exact 3 layers `possible_manifest` composes, no divergent re-derivation), and alive+no-manifest cells yield
+  `expected_unattempted`; per-AG unit tests + the v1→v2 superset integration test cover it. Flipped V1. **V4 (CF-19
+  candle-edge standing check) GREEN** — the right-edge (`t_close`) convention is codified
+  (`codex/02-data/bar-boundary-candle-edge-convention.md`) + QG-enforced as a STANDING check (not a one-off): STEP 5.92
+  `check_bar_edge_open_ingestion.py` wired in both `base-service.sh` (~3153) + `base-library.sh` (~1154), STEP 5.74
+  truncation ban, runtime `assert_close_edge`, and the independent-reference/batch==live cross-source equivalence
+  fixture in MTDS + MDPS + features-service; single normalization point = MDPS processed-candle store; per-source edge
+  labels documented + source-aware-handled. Filed a P3 finding (cosmetic `STEP 5.92` label collision in
+  `base-service.sh`). Scope note for this run: the harness CODE (⑬–⑲ scaffolds) is fully shipped; remaining open `- [ ]`
+  are VERIFY items (V1✅, V4✅, V6 — operator eyeball) + operator-gated apply/eyeball/decision items (G4 `--apply` line
+  221, prediction cqg 338, sports pre-launch-window 424) which are legitimate hard-stops by the plan's own design
+  (operator wants to eyeball goalposts + OK between each AG before the destructive prod migration) — journaled, not
+  auto-fired.
+
+- 2026-06-14 (late, slot-4) — **Canonicalisation DEPLOYED to the live service + fleet promotion pipeline unblocked.**
+  After C1/C2/C3 shipped to LDR: (1) reconciled `main`+`staging` to LDR via clean-start force-sync
+  (`admin-force-sync-all-to-main.sh --no-commit --force-version-override --repos "deployment-api unified-api-contracts"`;
+  version-drift guard was a stale-local-PM-manifest false positive — actual versions advanced 0.6→0.7, protection
+  restored). (2) Diagnosed the **fleet-wide deploy stall**: the semver-agent (staging→main promotion +
+  version-bump/deploy dispatch) was DEAD since the LDR-trunk decoupling dropped `push:[staging]` quality-gates-v2,
+  orphaning its `workflow_run:[v2@staging]` trigger — shipped the additive `push:[staging]` fix to the PM template
+  (per-repo rollout tracked above). (3) Deployed the service directly: `deploy-shared.sh` built deployment-api from LDR
+  → `uts-shared-deployment-api` rev `00026-clc`. (4) Found the **rollup Cloud Run Job pinned to an old image** (separate
+  from the API service) — updated `uts-prod-data-status-rollup` to the new image + executed; rollup recomputed 21:42Z.
+  **Verified LIVE: canonical venues (`BALANCER-ARBITRUM`/`-AVALANCHE`/`-BASE`…), defi card 95.63%, `unique_venues` 22
+  (canonical-collapsed).** Full issue ledger captured as the labelled todos above.
+
+- 2026-06-14 (later, slot-4) — **DeFi data-status "weird" fully root-caused + denominator/perf/canonicalisation fixes
+  SHIPPED; could-exist headline now 29% (honest, was 3.2% artifact).** Chain of findings on the beta projected index:
+  1. **Beta-render perf** (dapi `be6f0e4`): the beta preview bypasses the LIVE rollup and hit O(unique×rows) per-value
+     `== v` loops — defi card >280s, drilldown >400s. Vectorised (`value_counts` in `coverage.py` breakdowns;
+     `groupby`+cached `_build_underlying_grouping` in `breakdowns_domain.py`). **Card 280s→8s, drilldown >400s→39s.**
+  2. **Root cause of the card↔drilldown split** (97.6% card vs 3.2% drilldown shards-weighted): the honest-coverage
+     drilldown matched the raw **bare** venue (`UNISWAP_V3`, 195k captured rows) against the UAC-canonical
+     `PROTOCOL-CHAIN` expected universe (`UNISWAP_V3-ETHEREUM`) → `found_shards≈0`. NOT a lifecycle over-count. **Gap is
+     DEFI-ONLY** (cefi/tradfi/sports/prediction = 0.0% name-change under canonicalisation; defi = 99.5%).
+  3. **Reader-side canonicalisation** (dapi `16fb6b8`): `_canonicalise_defi_venue_column` applies
+     `normalize_defi_venue(venue, chain)` AFTER the bare-pair whitelist in `_read_defi_merged_index` (rewriting the
+     stored column instead broke the card's whitelist → 0%; the data model is bare venue + chain reconstructed at read).
+     **drilldown shards_found 26,747→245,607 (9×), could-exist 3.2%→29%**; card stable 98%, captured unchanged 346,542.
+  4. **completion_pct = shards-weighted** (dapi `40c61a4`, operator decision: canonical completion =
+     captured/could-exist): drilldown `completion_pct` was the attempt/date-blended ~42%; now the shards-weighted 29%
+     (matching the overall rollup + the field doc); old value kept as `completion_pct_attempt_blended`.
+  - **B (impossible combos) verified already-gated**: the could-exist denominator (846,840 shards) is capability-gated
+    via `VENUE_DATA_TYPE_CAPABILITIES` (40/72 canonical venues registered → only declared dts; 32 fallback venues return
+    empty dts → contribute 0). 29% is honest, not inflated by impossible combos.
+  - **Migration scope confirmed UNCHANGED** for venue (G4 is path/schema only) — BUT operator wants the manifest
+    migrated to canonical names too (below).
+- [x] ✅ [DESIGN] P1. **C — DeFi venue-spelling canonicalisation DONE + DEPLOYED (2026-06-14).** `normalize_defi_venue`
+      now collapses no-underscore ghosts (`AAVEV3→AAVE_V3`, `YEARNV3→YEARN_V3`, hyphenated
+      `AAVEV3-ARBITRUM→AAVE_V3-ARBITRUM`) to the canonical underscore form BEFORE membership/alias resolution (UAC
+      `660f272` + `test_no_underscore_ghost_spelling_collapses_to_underscore`). dapi reader whitelist + canon column
+      rewritten to canonicalise-then-membership, **direct-`venue-chain`-concat preferred** when already canonical (fixes
+      `SUSHISWAP+ARBITRUM→SUSHISWAP-ARBITRUM`, not the V3-forcing alias) — dapi `16fb6b8`+`40c61a4`+C3. One-shot
+      stored-data migration tool `instruments-service/scripts/canonicalize_defi_manifest_venue_2026_06_14.py` written
+      (dry-run 1.19M/1.58M rows, gated `--apply --confirm` / `--projection-out`, idempotent) for the G4 apply. **99.1%
+      of captured defi rows now resolve into `ALL_DEFI_VENUES`; LIVE on `uts-shared-deployment-api` rev `00026-clc` +
+      rollup recomputed — canonical venues (`BALANCER-ARBITRUM`…) confirmed serving.** Residuals carried to the todos
+      below.
 
 ### Remaining known issues + investigations — beta-manifest eyeball → deploy arc (slot-4, 2026-06-14)
 
-- [ ] [DATA] P1. **G4 migration still HELD — resume the per-AG applies** (tradfi→cefi→defi→sports; prediction parked on the cqg-classifier P1 decision). The **defi** apply MUST include `canonicalize_defi_manifest_venue_2026_06_14.py --apply --confirm` (C2) alongside the v9 path/schema walk so the stored `_index` venue column becomes canonical (not just read-reconstructed). Fleet drained + `pre_migration` snapshot in place; AG-by-AG verified, operator OK between each.
-- [ ] [DATA] P2. **`VENUE_DATA_TYPE_CAPABILITIES` completeness** — `MAKER` / `FRAX` (+ `MORPHOVAULTS`) are in `ALL_DEFI_VENUES` but NOT in `VENUE_DATA_TYPE_CAPABILITIES` → their captured shards (~2–5k rows) get `expected_dts=[]` → uncredited in the could-exist drilldown. Declare the data_types each venue produces (UAC `registry/market_data_categories.py`). Investigation: enumerate ALL declared-but-uncapabilitied defi venues, not just these 3.
-- [ ] [DATA] P3. **Orphan / junk defi venues** — `VAULT` (generic, 1113 captured rows, not a protocol → exclude or map to the real protocol) + `SUSHISWAP` classic-vs-`SUSHISWAP_V3` ambiguity (data-semantics call: is bare `SUSHISWAP` the classic AMM = `SUSHISWAP-ARBITRUM`, or V3?). Reconcile `ALL_DEFI_VENUES` / `LEGACY_DEFI_VENUE_ALIASES` to remove the residual orphans.
-- [ ] [SCRIPT] P1. **Per-repo `semver-agent.yml` rollout fleet-wide** — the PM template fix (additive `push:[staging]` trigger + `head_sha→github.sha` fallback) landed; the per-repo copies are still the OLD orphaned-trigger version. Regen via `rollout-workflow-templates.sh --template semver-agent` + commit per-repo + reach each repo's `main` (the trigger fires from the default branch). Restores staging→main promotion + version-bump/deploy dispatch that was DEAD fleet-wide since the LDR-trunk decoupling dropped `push:[staging]` quality-gates-v2. Verify it fires on a staging push. SSOT: `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk decoupling".
-- [ ] [INFRA] P2. **Rollup Cloud Run Job image lags the API deploy** — `uts-prod-data-status-rollup` (the data-status rollup `*/5` cron Job) is pinned to a fixed `deployment-api:<tag>`, INDEPENDENT of the `uts-shared-deployment-api` service `:latest`. A code deploy does NOT refresh the rollup (had to `gcloud run jobs update --image` + execute manually this time). Make `deployment-service/scripts/cloud-run/deploy-shared.sh` (or the cloud-build-router deploy dispatch) ALSO bump the rollup Job image (or pin both to the same digest) so live data-status auto-reflects new code.
-- [ ] [UI] P2. **deployment-ui — surface the could-exist vs manifest-capture distinction** — the headline operator-chosen metric is shards-weighted could-exist (`completion_pct` now = shards-weighted on the `/manifest` drilldown), but the coverage CARD shows the manifest-capture ratio (~95–98%). Surface both clearly + `out_of_window` as the non-counting bucket, so the two surfaces don't read as contradictory. (deployment-ui `DataStatusTab` + `HonestCoverageCard`; needs `[UI]` pw:L2 gate.)
-- [ ] [INFRA] P3. **Local-dev uvicorn restart flakiness** — repeated `:8004` bind/port races on `restart-deployment-stack`-style restarts (worked around with explicit `fuser -k` + harness background launch). Make the dev restart helper port-clear deterministically.
+- [ ] [DATA] P1. **G4 migration still HELD — resume the per-AG applies** (tradfi→cefi→defi→sports; prediction parked on
+      the cqg-classifier P1 decision). The **defi** apply MUST include
+      `canonicalize_defi_manifest_venue_2026_06_14.py --apply --confirm` (C2) alongside the v9 path/schema walk so the
+      stored `_index` venue column becomes canonical (not just read-reconstructed). Fleet drained + `pre_migration`
+      snapshot in place; AG-by-AG verified, operator OK between each.
+- [x] ✅ [DATA] P2. **`VENUE_DATA_TYPE_CAPABILITIES` completeness — DONE (data-grounded).** — uac@f8fb613 (QG-green
+      212s, 69 tests). Enumerated ALL declared-but-uncapabilitied defi venues: 19 of 124 `ALL_DEFI_VENUES` lacked a
+      capability entry; cross-referenced `DEFI_VENUE_PHASE` + the prod `projected_index_defi.parquet` (1.58M rows) for
+      ground-truth. **5 had ACTUAL captured shards (the real uncredited bug)** → declared with the data_type ACTUALLY
+      observed + the earliest-captured date as the best-effort floor: `MAKER-ETHEREUM`→`vault_share_price` 2023-01-18,
+      `FRAX-ETHEREUM`→`vault_share_price` 2023-10-19, `MORPHOVAULTS-ETHEREUM`→`vault_share_price` 2024-01-04,
+      `SOLEND-SOLANA`→`lending_indices` 2022-11-01, `MARGINFI-SOLANA`→`lending_indices` 2025-01-01. Declared ONLY the
+      captured data_type (not the broad set) so the could-exist denominator isn't inflated with uncaptured types; this
+      also tightens `get_expected_data_types_for_venue` from the 25-item all-fallback → the single real dt.
+      **De-vacuumed the DATA-001 test** (`test_mtds_venue_coverage.py::TestNewlyCapabilitiedDefiVenues`): it was passing
+      via the unmapped→all-fallback; now asserts `VENUE_DATA_TYPE_CAPABILITIES[venue]` DIRECTLY (the registry the
+      could-exist builder reads). **The other 14 (2 `pipeline`-phased = roadmap, legitimately uncapabilitied; 12
+      `live`-phased have ZERO rows in the projected index) were NOT declared** — declaring a no-data venue would falsely
+      inflate the could-exist denominator; the 12 are a phase-accuracy finding (next todo).
+- [ ] [DATA] P3. **12 `live`-phased defi venues have ZERO rows in `projected_index_defi.parquet`** (finding, DATA-001
+      enumeration 2026-06-16): `ANKR-ETHEREUM`, `BENQI-AVALANCHE`, `EULER_V2-ARBITRUM`, `EULER_V2-ETHEREUM`,
+      `FLUID-ARBITRUM`, `MANTLE-ETHEREUM`, `RADIANT-ETHEREUM`, `STADER-ETHEREUM`, `STAKEWISE-ETHEREUM`,
+      `SWELL-ETHEREUM`, `VENUS-BSC`, `VENUS-ETHEREUM` are declared `DEFI_VENUE_PHASE="live"` but have NO
+      captured/empty/failed rows in the defi projected index → either MTDS backfill never started for them (should be
+      `"pipeline"` until it does) or the projection predates their backfill. Diagnose per venue: if no MTDS writer is
+      plumbed → re-phase to `"pipeline"` (roadmap section, honest); if a writer exists but no data landed → it's a
+      backfill gap to run. Do NOT declare a `VENUE_DATA_TYPE_CAPABILITIES` entry until data exists (would inflate the
+      could-exist denominator with no-data cells). Repos: unified-api-contracts (`registry/defi_venues.py` phase) +
+      instruments-service/MTDS (backfill). Provenance: DATA-001 enumeration via projected_index_defi.parquet.
+- [ ] [DATA] P3. **Orphan / junk defi venues** — `VAULT` (generic, 1113 captured rows, not a protocol → exclude or map
+      to the real protocol) + `SUSHISWAP` classic-vs-`SUSHISWAP_V3` ambiguity (data-semantics call: is bare `SUSHISWAP`
+      the classic AMM = `SUSHISWAP-ARBITRUM`, or V3?). Reconcile `ALL_DEFI_VENUES` / `LEGACY_DEFI_VENUE_ALIASES` to
+      remove the residual orphans.
+- [ ] [SCRIPT] P1. **Per-repo `semver-agent.yml` rollout fleet-wide** — the PM template fix (additive `push:[staging]`
+      trigger + `head_sha→github.sha` fallback) landed; the per-repo copies are still the OLD orphaned-trigger version.
+      Regen via `rollout-workflow-templates.sh --template semver-agent` + commit per-repo + reach each repo's `main`
+      (the trigger fires from the default branch). Restores staging→main promotion + version-bump/deploy dispatch that
+      was DEAD fleet-wide since the LDR-trunk decoupling dropped `push:[staging]` quality-gates-v2. Verify it fires on a
+      staging push. SSOT: `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk decoupling".
+- [ ] [INFRA] P2. **Rollup Cloud Run Job image lags the API deploy** — `uts-prod-data-status-rollup` (the data-status
+      rollup `*/5` cron Job) is pinned to a fixed `deployment-api:<tag>`, INDEPENDENT of the `uts-shared-deployment-api`
+      service `:latest`. A code deploy does NOT refresh the rollup (had to `gcloud run jobs update --image` + execute
+      manually this time). Make `deployment-service/scripts/cloud-run/deploy-shared.sh` (or the cloud-build-router
+      deploy dispatch) ALSO bump the rollup Job image (or pin both to the same digest) so live data-status auto-reflects
+      new code.
+- [ ] [UI] P2. **deployment-ui — surface the could-exist vs manifest-capture distinction** — the headline
+      operator-chosen metric is shards-weighted could-exist (`completion_pct` now = shards-weighted on the `/manifest`
+      drilldown), but the coverage CARD shows the manifest-capture ratio (~95–98%). Surface both clearly +
+      `out_of_window` as the non-counting bucket, so the two surfaces don't read as contradictory. (deployment-ui
+      `DataStatusTab` + `HonestCoverageCard`; needs `[UI]` pw:L2 gate.)
+- [ ] [INFRA] P3. **Local-dev uvicorn restart flakiness** — repeated `:8004` bind/port races on
+      `restart-deployment-stack`-style restarts (worked around with explicit `fuser -k` + harness background launch).
+      Make the dev restart helper port-clear deterministically.
 
-- 2026-06-14 (autonomous session, slot-4) — **OOW denominator exclusion SHIPPED end-to-end — DeFi coverage 22.11% → 97.55%.** Two-repo dispatch complete:
-  1. **deployment-api** (`coverage.py`, commit `149473c` + fix `90a8ad7`): `_build_coverage_for_cat` partitions `empty_confirmed` rows into OOW vs within-window using `is_out_of_coverage_window` (UAC function classifying 15 lifecycle reasons — EXPECTED_PRE_GENESIS_CHAIN, EXPECTED_INSTRUMENT_NOT_LISTED, EXPECTED_PAST_SOURCE_COVERAGE_END, etc.). Denominator = `captured + within_window_empty + attempted_failed + expected_unattempted` — excludes OOW. Fix `90a8ad7` adds resilience: accepts both `error_reason` (live consolidated index column) and `reason` (beta projected parquet column) so the OOW partition fires correctly in beta mode.
-  2. **deployment-ui** (`client.ts`, `mock-api.ts`, `HonestCoverageCard.tsx`, `tests/unit/oow-denominator.test.ts`, commit `ea1db02`): added `out_of_window?: number` to all three type shapes (`TurboSubDimension`, `TurboAssetGroupStatus`, `HonestCoverageStatusCounts`), all 8 mock blocks seeded with `out_of_window: 0`, `CoverageBar` renders a distinct slate-grey non-gap segment when `out_of_window > 0`, legend item "outside window — not a gap", 7 unit tests pass, 206/206 Playwright smoke tests pass.
-  - **Verified on real GCS data** (`projected_index_defi.parquet`, 1.58M rows, updated 2026-06-11): 349,326 captured · 1,221,955 OOW empty · 6,016 within-window empty · 2,740 failed → denominator 358,082 → **97.55%** (vs 22.11% naive including OOW in denominator; +75.44pp improvement).
+- 2026-06-14 (autonomous session, slot-4) — **OOW denominator exclusion SHIPPED end-to-end — DeFi coverage 22.11% →
+  97.55%.** Two-repo dispatch complete:
+  1. **deployment-api** (`coverage.py`, commit `149473c` + fix `90a8ad7`): `_build_coverage_for_cat` partitions
+     `empty_confirmed` rows into OOW vs within-window using `is_out_of_coverage_window` (UAC function classifying 15
+     lifecycle reasons — EXPECTED_PRE_GENESIS_CHAIN, EXPECTED_INSTRUMENT_NOT_LISTED, EXPECTED_PAST_SOURCE_COVERAGE_END,
+     etc.). Denominator = `captured + within_window_empty + attempted_failed + expected_unattempted` — excludes OOW. Fix
+     `90a8ad7` adds resilience: accepts both `error_reason` (live consolidated index column) and `reason` (beta
+     projected parquet column) so the OOW partition fires correctly in beta mode.
+  2. **deployment-ui** (`client.ts`, `mock-api.ts`, `HonestCoverageCard.tsx`, `tests/unit/oow-denominator.test.ts`,
+     commit `ea1db02`): added `out_of_window?: number` to all three type shapes (`TurboSubDimension`,
+     `TurboAssetGroupStatus`, `HonestCoverageStatusCounts`), all 8 mock blocks seeded with `out_of_window: 0`,
+     `CoverageBar` renders a distinct slate-grey non-gap segment when `out_of_window > 0`, legend item "outside window —
+     not a gap", 7 unit tests pass, 206/206 Playwright smoke tests pass.
+  - **Verified on real GCS data** (`projected_index_defi.parquet`, 1.58M rows, updated 2026-06-11): 349,326 captured ·
+    1,221,955 OOW empty · 6,016 within-window empty · 2,740 failed → denominator 358,082 → **97.55%** (vs 22.11% naive
+    including OOW in denominator; +75.44pp improvement).
 
 - 2026-06-12 (~11:45Z, operator eyeball session) — **unique-instruments headline SHIPPED + LIVE** (operator: "the
   headline should be unique... the catalogue should be deduplicating" — correct on all counts). The lifecycle catalogue
@@ -246,11 +444,23 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       (deployment_api/scripts/data_status_rollup_worker.py) predates the field; in LIVE (non-beta) mode the rollup
       fast-path serves coverage summaries WITHOUT unique_instruments until it recomputes them. Add the catalogue read to
       the worker + redeploy the Cloud Run job. Repo: deployment-api. Provenance: operator ask 2026-06-12.
-- [ ] [DATA] P2. **Prediction catalogue roll-up finds 0 rows** — `build_instrument_catalogue --asset-group prediction`
-      promoted a 0-row catalogue (the pred per-date defs under instruments-store-pred `instrument_availability/` aren't
-      picked up by the default by-date prefix/layout). Wire the prediction-specific layout (market-lifecycle grain per
-      build_prediction_catalogue_dataframe) so unique_instruments reads a real count (493 IS rows / ~thousands of
-      markets expected). Repo: instruments-service. Provenance: /tmp/catalogue_prediction.log.
+- [ ] [DATA] P2. **Prediction catalogue roll-up finds 0 rows — ROOT CAUSE DIAGNOSED (2026-06-16), partly coupled to the
+      operator-gated cqg decision (338).** `prod/catalog.parquet` is confirmed 0 rows. **Root cause:**
+      `build_prediction_catalogue_dataframe` consumes `(day, venue, cqg, frame)` snapshots where `cqg` is parsed from a
+      **`canonical_question_group=` PATH partition**, but the ACTUAL prod writer layout under
+      `gs://instruments-store-pred-prd-…/instrument_availability/by_date/` is
+      `day=2025-03-13/venue=POLYMARKET/[market=BTC/]instruments.parquet` + a sibling
+      `prediction_market_metadata.parquet` — there is **NO `canonical_question_group=` partition**. So the loader passes
+      `cqg=""` → the rollup's `if frame.empty or not cqg_str: continue` skips EVERY row → 0-row catalogue (it loses BOTH
+      grains, not just cqg). **Two-part fix:** (a) the per-conditionId grain (`_PREDICTION_CID_DATA_TYPES` =
+      trades/market_lifecycle, `instrument_id`=conditionId) does NOT need a cqg and can roll up immediately from the
+      `venue=`/`market=` layout — drop the `not cqg_str` skip for that grain; (b) the
+      `prediction_canonical_question_group` cqg grain requires DERIVING the cqg per conditionId, which is **exactly the
+      operator-gated cqg-classifier coverage decision (item 338)** — 94.5% of objects route to `ClassifierConfidenceLow`
+      under the corrected contract, so the cqg grain can't be correctly materialised until 338 is resolved. Ship (a) now
+      (unique_instruments gets the conditionId count); gate (b) on 338. Repo: instruments-service
+      (`scripts/build_instrument_catalogue.py` snapshot loader + the `canonical_question_group=` path parser).
+      Provenance: 2026-06-16 prod-layout probe.
 
 - 2026-06-12 (~10:35Z, operator beta-eyeball session) — **beta render made FULLY consistent**: the operator's "is it
   using the right manifest" check exposed (1) the live-rollup fast-path serving LIVE data in beta (fixed dapi@1f1ad77 —
