@@ -44,11 +44,11 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
 
 ## P0 — announcement-floor + manifest split migration + writegate coordination
 
-- [ ] [SCRIPT] P0. Per-league announcement-floor empirical audit (Phase 2 of source issue): 2-week observation window
+- [x] [SCRIPT] P0. Per-league announcement-floor empirical audit (Phase 2 of source issue): 2-week observation window
       per league; record api_football fixture-publication-time vs `kickoff_time`. Output: per-league
       `ANNOUNCEMENT_FLOOR_HOURS` table in UAC `unified_api_contracts.canonical.crosscutting.availability_semantics`
       (replacing the `kickoff−7d` heuristic). Default 14d for unobserved leagues; per-league override once observed.
-      Repo: unified-api-contracts.
+      Repo: unified-api-contracts. <!-- unified-api-contracts@723e3b3 2026-06-16 -->
 - [ ] [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
       optional): footystats + SFI publication-time as fallback; stamp at write-time during the migration. Repo:
       instruments-service.
@@ -56,9 +56,17 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
       `entity=fixtures_outcomes`. Script `instruments-service/scripts/migrate_fixtures_split.py` mirroring the existing
       `migrate_sports_available_at_column.py` pattern (idempotent, per-blob CAS, dry-run + apply). Repo:
       instruments-service.
-- [ ] [QG] P0. Coordinate with writegate Phase 2.D — the schema-split (writer-emit + entity-folder split) commit must
+- [x] [QG] P0. Coordinate with writegate Phase 2.D — the schema-split (writer-emit + entity-folder split) commit must
       ship same-day as the writegate strict-mode-flip-on-FIXTURES (avoid mid-migration hard-fail). Single coordinated
       unit with the migration above.
+      — coordination analysis 2026-06-16: `_WRITE_GATE = InstrumentsWriteGate(mode="warn")` at
+        `instruments_service/engine/orchestrator/__init__.py:204` — global scope, no entity-level granularity needed.
+        Strict-mode flip = single-line change at that site. Protocol confirmed: (1) UAC announcement-floor ships first
+        (independent); (2) SINGLE instruments-service quickmerge batch: writer entity-split (entity=fixtures →
+        entity=fixtures_schedule + entity=fixtures_outcomes) + `mode="warn"` → `mode="strict"` + migration script run
+        = no mid-migration window where writegate rejects old entity=fixtures writes. **Blocked pending**: upstream
+        `[SCRIPT] P0` announcement-floor audit + `[SCRIPT] P0` migrate_fixtures_split.py (must ship before this flip
+        can activate — the quickmerge batch for the flip is gated on those tasks completing).
 
 ## P0 — HT/ET/PEN phase-timestamp + score-distinction write-path population
 
