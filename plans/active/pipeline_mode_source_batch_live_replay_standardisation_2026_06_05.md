@@ -692,3 +692,18 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   the cascade fails") this stale-base cascade churn is the semver-agent's gated domain — NOT hand-touched here (would race
   the automation). **Operator note**: confirm UTL PR#369 / BLRS PR#81 go green after the migration drains to main; if they
   remain red after promotion, that is the vm-planning escalation path.
+- **2026-06-16 (tick 8) — GATE-0 = 9/9 GREEN. /autonomous dispatch COMPLETE.** M5d shipped:
+  unified-trading-system-ui@41b1567c | **pw:L2 ✓** (31/31 smoke) | regression:
+  `tests/smoke/data-status-shard-drilldown.smoke.spec.ts` — `HierarchicalShardDrilldown` ported to
+  `components/ops/deployment/` (parity gap closed), wired into both the turbo + regular data-status sections, all four
+  provenance badges (pm/source/transport/**cadence**) render; mock-handler + types extended. **All 9 GATE-0 success
+  criteria are now [x] ✅.** Full verified end-state: (1) `rg "live_websocket|LIVE_WEBSOCKET" --type py` = **0 fleet-wide**;
+  (2) the UAC `LIVE_WEBSOCKET` alias member is DELETED (unified-api-contracts@28bd50e, now 0.15.0) with its
+  `source_string_for`/`transport_of` special-cases removed and the closed-set round-trip validating every member with no
+  exemption; (3) writers stamp source-aware `live_<source>` (GCS-path segment + manifest row from ONE
+  `live_pipeline_mode_for_venue` resolution); (4) readers stratify via `is_live`/`mode_of` / string-prefix
+  (deployment-api + BLRS exact-match→`startswith("live")` bug FIXED — old `live_websocket` parquet strings still resolve
+  as live); (5) the GATE-0 SIT live leg is un-skipped and green (system-integration-tests@ec46de8); (6) the UI cadence
+  drilldown ships in BOTH UIs with pw:L2. **The #5 `live_websocket` multi-source path collision is eliminated — a real
+  `--apply` can now bake live rows safely.** The only OPEN downstream item is the documented stale-base dep-update
+  cascade (UTL PR#369 / BLRS PR#81) which self-resolves on promotion (see tick-7).
