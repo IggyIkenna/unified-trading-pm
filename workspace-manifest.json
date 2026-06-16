@@ -1798,8 +1798,15 @@
     "locked_since": "2026-06-16T06:49:36.051297Z",
     "locked_reason": "Breaking MINOR bump cascade: strategy-service=0.9.0 (pre-1.0.0)",
     "lock_version": "0.9.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "execution-service",
+      "e2e-testing",
+      "strategy-service",
+      "system-integration-tests",
+      "unified-api-contracts",
+      "deployment-api"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "strategy-service"
