@@ -38,12 +38,12 @@ source:
 > independently; only the download path-fix is gated on the migration landing. Full landscape map:
 > `plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md` § Sequencing.
 
-> **🔴 ALL `[UI]` ITEMS BLOCKED-TESTENV (2026-06-16)** — the deployment-ui jsdom test suite is down fleet-wide
-> (`html-encoding-sniffer@6` `require()`s ESM-only `@exodus/bytes` → `ERR_REQUIRE_ESM`, 80 test files; pre-existing,
-> hits unmodified tests too). No UI change can pass `quickmerge`'s gate until fixed. Issue:
-> `plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md`. The venue-refetch + de-dupe + pagination fix
-> bundle is WRITTEN + tsc/eslint-clean, preserved at `origin/wip-preserve/data-status-ui-fixes-2026-06-16`
-> (deployment-ui@550302c) — recover + ship (with `pw:L2 ✓`) once the env is fixed.
+> **🟢 UI test-env CORRECTION (2026-06-16) — it was NOT broken; a host Node-version mismatch.** My earlier "fleet-wide
+> breakage" call was WRONG: deployment-ui's vitest suite is GREEN in CI (`quality-gates-v2` success, Node 22). The local
+> `ERR_REQUIRE_ESM` was this host on **Node 20.18** — jsdom@29's ESM deps need **Node ≥22**. **FIXED**: pinned
+> `.nvmrc`/`engines` Node>=22 + shipped the UI fixes under Node 22 (deployment-ui@`80c547d`). The venue-refetch +
+> de-dupe-panels + pagination items below are **CODE-SHIPPED + vitest-green**; only `pw:L2` (playwright smoke) remains,
+> pending a browser-capable slot. Issue (now RESOLVED): `deployment_ui_test_env_esm_breakage_2026_06_16.md`.
 
 ## Phase A (TIER 1 cleanup) — Scope + venue-filter correctness
 
@@ -66,22 +66,20 @@ source:
       `_get_manifest_status_sync`/`_dispatch_category_builds`/ `_build_manifest_category`), engaged it in the
       `any_row_filter` gate, added `_apply_venue_filter` (case-insensitive OR) before the venue breakdown, and gated the
       process-pool path off (it doesn't thread filters); +3 tests; QG green. — deployment-api
-- [ ] [UI] P1. **Venue filter — frontend**: add a `useEffect` that re-invokes `fetchData` when
-      `selectedVenues`/`selectedFolders`/`selectedDataTypes` change, guarded to fire only after the first manual load
-      and not while `loading` (mirror the manifest-mode effect at `DataStatusTab.tsx:807-814`). — deployment-ui `[UI]` +
-      `pw:L2 ✓` + regression spec.
+- [ ] [UI] P1. **Venue filter — frontend** — CODE-SHIPPED deployment-ui@`80c547d` (re-fetch `useEffect` on
+      `selectedVenues`/folders/data-types change, post-first-load guarded; regression:
+      `tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`; vitest+tsc+build green under Node 22).
+      **NOT ticked ✅ — `pw:L2` smoke pending a browser-capable slot** (playwright HARD RULE). — deployment-ui `[UI]`
 
 ## Phase B (TIER 1 cleanup) — UI clarity (duplicate panels, pagination)
 
-- [ ] [UI] P2. **Collapse duplicate "available" vs "available dates"** (audit §D): gate the legacy "Data Types" block
-      (`DataStatusTab.tsx:4897-5045`) with `&& !hasHonestDataTypes` so it renders only when the honest panel is absent
-      (preserve the per-day drill chips; eliminate the MTDS double-render). — deployment-ui `[UI]` + `pw:L2 ✓` +
-      regression.
-- [ ] [UI] P2. **Pagination visible-count selector**: add a `<select>` (50/100/200/1000/2000/All) bound to `DateList`'s
-      `limit` state (`DataStatusTab.tsx:245-301,260,290-298`); one change covers all drill sites. Note the static
-      server-truncation `+{N} more` labels (`:3891,3911,5386`, `VenuePillList :230`) need a backend `limit` bump to be
-      client-pageable — file as a follow-on if the operator wants those expandable too. — deployment-ui `[UI]` +
-      `pw:L2 ✓`.
+- [ ] [UI] P2. **Collapse duplicate "available" vs "available dates"** — CODE-SHIPPED deployment-ui@`80c547d` (legacy
+      "Data Types" block gated so it no longer double-renders beside the honest panel; same regression spec; green under
+      Node 22). **`pw:L2` pending** a browser-capable slot. — deployment-ui `[UI]`
+- [ ] [UI] P2. **Pagination visible-count selector** — CODE-SHIPPED deployment-ui@`80c547d` (`DateList` size selector
+      50/100/200/1000/2000/All; same regression spec; green under Node 22). Static server-truncation `+{N} more` labels
+      (`:3891,3911,5386`, `VenuePillList :230`) still need a backend `limit` bump to be client-pageable — follow-on if
+      wanted. **`pw:L2` pending.** — deployment-ui `[UI]`
 - [ ] [UI] P3. **Rollup-difference clarity** (audit §F, by-design): optional small UI note/tooltip explaining IS is a
       per-venue/day reference bundle (no data_type axis) vs MTDS's 5-axis market-data shards — so the structurally
       different drilldown reads as intentional, not broken. — deployment-ui
