@@ -276,6 +276,31 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
     return false for the pre-launch slice. If those dates are absent, that catalogue-completeness — not a policy call —
     is the real prerequisite for 384/346. ACTION PENDING: verify the sports fixture/league catalogue + launch dates
     exist in IS/UAC before encoding 346.
+    - **VERIFIED 2026-06-16 → catalogue + coverage dates EXIST; no data backfill prerequisite — 384/346 are encode-now
+      (wiring, not data).** SSOT `unified-api-contracts/.../sports/league_data.py`. (1) **Coverage starts** (global
+      per-source): `odds_api = 2020-06-06` (operator hypothesis confirmed); `api_football = 2015-01-01` source-wide BUT
+      detail types `FIXTURE_EVENTS/LINEUPS/STATS`+`PLAYER_STATS` floored to `2020-06-06` via `DATA_TYPE_COVERAGE_START`
+      (aligned to odds_api cutoff) — so "api_football effectively ~June-2020" holds for the detail/odds data; only
+      fixtures-schedule/standings/teams reach back to 2015. Mirror `canonical/coverage_starts.py` re-exports the same
+      SSOT (no drift). (2) **could_exist oracle already exists + wired**:
+      `is_expected_for_source(source, league_id, day, data_type)` (UAC `registry/sports_per_source_rules.py`) returns
+      typed `EXPECTED_PRE_SOURCE_COVERAGE_START` / `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` / `EXPECTED_PRE|POST_SEASON`;
+      `_classify_sports(row)` (UTL `legacy_reason_classifier.py`) is the relabel engine behind 346. (3) **GRAIN
+      CORRECTION to the 424 model**: the sports manifest atom is **league grain** `(league_id, data_type, date)`, NOT
+      fixture grain — `LEAGUE_REGISTRY` carries `data_sources`+`season_months`+tier per league but **no per-league
+      launch date** and there is **no independent per-fixture catalogue** (fixture existence is read back from captured
+      data → circular for the rows in question; slot-4 finding 2026-06-07 already fixed
+      `_SPORTS_PRESENT_COLS=[data_type,league_id,date]` to avoid denominator inflation). So **encode 384/346 at
+      `league × source/data_type × date`**, mapping data_type→source via `SPORTS_DATA_TYPE_TO_SOURCE`;
+      pre-coverage/off-season/source-doesn't-cover-league → expected-absent, never attempted_failed. (4) **v9 path
+      caveat**: the could_exist decision is path-INDEPENDENT (keys on source/league/date) so v9 can't break it; the ONLY
+      path-dependent piece is `is_fixture_scheduled` (`unified-trading-library/.../sports_fixtures.py`) which hardcodes
+      the legacy `sports_reference/by_date/...` path + does NOT pass `pipeline_mode=` → under v9-migrated paths it
+      silently returns False and over-classifies `EXPECTED_NO_FIXTURE`; pass `pipeline_mode=` (the arg already exists on
+      `candidate_parquet_paths`) if the backfill runs against migrated paths. (5) **Seeder gap (P3, not blocking)**: IS
+      `_enumerate_sports` (`scripts/enumerate_expected_universe.py`) still emits only the coarse pre-coverage slice +
+      says "per-league enumeration deferred (v2 — needs leagues catalog)" — but the catalog now exists in UAC, so the v2
+      per-league seeder is buildable today (wire `is_expected_for_source` into the seeder).
 
 - 2026-06-16 (autonomous run, tail-cleanup tick 3) — **Item 3 (12 zero-data live venues) RESOLVED — 7 re-phased, 5
   corrected as false-signal (real data in a separate bucket).** Diagnosed each of the 12 against MTDS plumbing + the
