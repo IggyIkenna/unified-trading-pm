@@ -157,8 +157,19 @@ def _overlay_firestore_ci_status(manifest: dict[str, object]) -> None:
                 r_obj = repos_obj.get(r)
                 if isinstance(r_obj, dict):
                     cast("dict[str, object]", r_obj)["ci_status"] = s
-    except Exception:  # Firestore unavailable → manifest fallback
-        pass
+    except ModuleNotFoundError as exc:
+        # Gap 8 (2026-06-16): the SDK being absent is a CI-config regression, not graceful
+        # degradation — the gate is now deciding on the STALE manifest cache. Make it LOUD
+        # (silent fallback is exactly how mis-gating hid). `::warning::` surfaces in the run UI.
+        print(
+            f"::warning::tier_c_promotion_gate: Firestore SDK unavailable ({exc}) — "
+            "deciding on STALE manifest ci_status cache. Install google-cloud-firestore."
+        )
+    except Exception as exc:  # Firestore genuinely degraded: warn + fall back to manifest cache.
+        print(
+            f"::warning::tier_c_promotion_gate: Firestore ci_status read failed "
+            f"({type(exc).__name__}: {exc}) — falling back to manifest cache."
+        )
 
 
 def load_manifest(path: str | Path) -> dict[str, object]:
