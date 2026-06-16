@@ -238,6 +238,22 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (autonomous run, tail-cleanup tick 5) — **Item 2b / 346 (sports CF-5 oracle relabel = ZERO) ROOT-CAUSED +
+  FIXED (code), quickmerge BLOCKED on a live sibling's dirty UTL dep.** Reproduced on the real prod MDPS sports index
+  (`market-data-tick-sports-prd`, 584,257 empty_confirmed): **583,185 are data_type=`trades` whose league_id resolves
+  100%** (the finding's "61.8% league-match / league-resolution" hypothesis was WRONG for the bulk). Real root cause:
+  `_PER_FIXTURE_DERIVED_DATA_TYPES` listed the MDPS odds tick as lowercase `"trades"`, but membership is tested as
+  `data_type.upper() in set` (step 6.5 truthset gate + `is_derived_captured`) → `"TRADES"` never matched → step 6.5
+  silently skipped EVERY `trades` empty → all kept SOURCE_RETURNED_ZERO instead of the truthset-derived
+  EXPECTED_NO_FIXTURE. **Fix: `"trades"`→`"TRADES"`** (mtds `rebuild_sports_manifest_v9.py`; file kept at the 900-line
+  cap). Verified by direct `_step6_5_truthset_gate` call + a regression test (`trades` not-in-truth →
+  EXPECTED_NO_FIXTURE; in-truth → stays SOURCE_RETURNED_ZERO, since trades is correctly excluded from the guaranteed
+  set). MTDS QG green (90s), 27 tests pass. **SHIP BLOCKED (not a code blocker):** quickmerge's pre-flight dep-audit
+  refuses because `unified-trading-library` is dirty with a LIVE sibling's WIP (17 files, mtime age 0–61s = actively
+  editing — the F1/ streaming/manifest_writer work; PROTECT, never stomp). This is the "ship in dep order, don't spin"
+  case — the 346 change is QG-green + verified in the MTDS working tree, ships the instant UTL goes clean. Reason-level
+  only (status-diff GREEN; does NOT block the G4 apply). Retry armed.
+
 - 2026-06-16 (autonomous run, tail-cleanup tick 4) — **Item 2a / 384 (sports 6,869 blank capture_status) FIXED —
   is@8b3c7ef.** Characterized on the real prod sports IS-store: all 6,869 are NaN→`""` capture_status + blank
   data_type + blank league_id (API_FOOTBALL\* skeleton rows) → invalid v9. The migrator skips `_honest_capture_status`
