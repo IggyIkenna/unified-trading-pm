@@ -274,7 +274,7 @@
     },
     {
       "name": "pyarrow",
-      "versionRange": "pyarrow>=23.0.0,<24.0.0"
+      "versionRange": "pyarrow>=23.0.1,<24.0.0"
     },
     {
       "name": "pydantic",
@@ -326,7 +326,7 @@
     },
     {
       "name": "python_multipart",
-      "versionRange": "python-multipart>=0.0.27,<1.0.0"
+      "versionRange": "python-multipart>=0.0.31,<1.0.0"
     },
     {
       "name": "pytz",
@@ -379,6 +379,10 @@
     {
       "name": "sse_starlette",
       "versionRange": "sse-starlette>=1.6.1,<2.0.0"
+    },
+    {
+      "name": "starlette",
+      "versionRange": "starlette>=1.3.1,<2.0.0"
     },
     {
       "name": "structlog",
