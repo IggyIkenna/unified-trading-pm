@@ -43,11 +43,24 @@ related_plans:
       (which consumes `predictions: list[MLPrediction]`, discards features entirely). 8 unit tests
       (`tests/unit/cli/handlers/test_batch_signals.py`). Batch=live code path complete; live execution gate (wallet
       keys for OKX/Binance/Bybit) is BLOCKED-OPERATOR and tracked in task -002.
+- [ ] [AGENT] P1. Infrastructure readiness: add `ML_DIRECTIONAL_CONTINUOUS` to `credentials_per_archetype.yaml` in UAC
+      (currently absent — only DeFi archetypes declared); add `bybit_secret_name` field to `execution-service/service_config.py`
+      (Deribit+Binance+Hyperliquid have named SM secret fields, Bybit does not); fix
+      `live_execution_handler._create_orchestrator_for_venue()` to load OKX/Binance/Bybit credentials from Secret
+      Manager before calling `get_order_adapter()` (currently called with `api_key=None` → raises ValueError in real
+      mode). OKX is per-client (`exec-<client>-okx-*`); Bybit is single unscoped key (`bybit_api_key`/`bybit_api_secret`);
+      Binance is `binance-trade-api-key`/`binance-trade-api-key-secret`. Blocked on operator provisioning SM secrets first
+      (see CREDENTIAL APPROVAL REQUEST in slot_6.md, BLK-e64b661a).
+      — **DEFERRED** pending operator SM secret provisioning (BLK-e64b661a). Can ship UAC yaml + service_config.py
+      gap once SM names are confirmed. Execution-service credential loader wiring is agent-doable post-confirm.
 - [ ] [AGENT] P0. Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7 continuous
       days (the cutover gate).
   > **GATED 2026-06-12 (slot-2, BLK-4badaa3c)**: Re-queued with explicit dependency on task -001 (end-to-end ML
   > pipeline) completing first. Hard-stops per plan (wallet keys for OKX/Binance/Bybit, live-trading kill-switch
   > arming) require operator action before this gate can be verified. Operator flagged: wallet keys needed.
+  > **GATED 2026-06-16 (slot-6, BLK-e64b661a)**: Infrastructure audit complete. Additional agent-doable gaps found
+  > (see P1 todo above). Operator hard-stops confirmed: SM secrets not yet provisioned for OKX/Bybit; kill-switch
+  > arming pending. See slot_6.md CREDENTIAL APPROVAL REQUEST for exact SM secret names needed.
 - [x] ✅ [AGENT] P0. Live model lifecycle: hot-reload of model artefacts without service restart; per-trade `model_version`
       traceability; model-drift alerting.
       — Hot-reload: ModelPromotionSubscriber already wired (ml-service@live). Per-trade model_version: PredictionEventDict.swing_{high,low}_model_version flows through InferenceRequest→PredictionEvent→publish. Model-drift alerting: PredictionOutcomeSubscriber wired (subscribes to ml_prediction_outcomes, feeds DriftMonitor.record_outcome + check_retune; models pre-registered from timeframe_specific_models on live start). InferenceConfig: drift_auto_retune_enabled/baseline_accuracy/drop_threshold/window_days. ml-service landed 2026-06-12.

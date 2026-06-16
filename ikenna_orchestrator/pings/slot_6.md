@@ -1,3 +1,47 @@
+## CREDENTIAL APPROVAL REQUEST — 2026-06-16 UTC — slot-6, BLK-e64b661a
+
+**Task**: `cefi_ml_directional_continuous_live-002` — ≥7-day live ML signal run on OKX + Binance + Bybit
+**Plan**: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md`
+**Status**: BLOCKED-OPERATOR (hard-stop: wallet keys + kill-switch arming)
+
+### Required operator actions (in order)
+
+**1. Provision Secret Manager secrets for live CeFi-ML trading**
+
+All 3 venues need trade-scope API keys in GCP Secret Manager (`central-element-323112`):
+
+| Venue | Secret name(s) | Content (JSON) | Notes |
+|-------|----------------|----------------|-------|
+| Bybit | `bybit_api_key` | `{"api_key": "...", "api_secret": "..."}` | Single unscoped key (no read/trade split) |
+| Binance | `binance-trade-api-key` + `binance-trade-api-key-secret` | Per canonical pattern | Already declared in credentials_per_archetype.yaml |
+| OKX | `exec-<client>-okx-api-key` | `{"api_key": "..."}` | Per-client pattern; expand per each active client_id |
+| OKX | `exec-<client>-okx-api-secret` | `{"api_secret": "..."}` | Per-client; passphrase also needed — see gap below |
+| OKX | `exec-<client>-okx-passphrase` | `{"passphrase": "..."}` | OKX requires passphrase in addition to key+secret |
+
+**2. Arm the ML_DIRECTIONAL_CONTINUOUS kill-switch** (manual operator gate per locked design)
+
+The 4 circuit breakers are already code-wired (UAC@547cba3):
+- `POSITION_LIMIT_EXCEEDED` (120% of $10k cap → CANCEL_OPEN)
+- `DRAWDOWN_DAILY_BPS` (500 BPS → KILL_ALL)
+- `ML_SIGNAL_STALENESS_SECONDS` (86400s → BLOCK_NEW, auto-cooldown 30min)
+- `ML_MODEL_DRIFT_ACCURACY_DROP` (5% drop → BLOCK_NEW, auto-cooldown 1h)
+
+Kill-switch arming for the archetype requires manual `POST /api/archetypes/ML_DIRECTIONAL_CONTINUOUS/circuit-breakers/arm` or equivalent operator dashboard action.
+
+### Agent-doable gaps found during infrastructure audit (for operator awareness)
+
+These do NOT require operator action but need to ship BEFORE live trading starts:
+
+1. **`credentials_per_archetype.yaml` (UAC)**: `ML_DIRECTIONAL_CONTINUOUS` not declared — only DeFi archetypes present. Agent will add after SM secret names confirmed.
+2. **`service_config.py` (execution-service)**: Missing `bybit_secret_name` field (Deribit/Binance/Hyperliquid have it). Agent will add `bybit_secret_name = "bybit_api_key"`.
+3. **`live_execution_handler._create_orchestrator_for_venue()`**: Calls `get_order_adapter(venue=..., testnet=...)` with no credentials → adapter raises `ValueError("api_key and api_secret required for real mode")` in live mode. Agent needs to wire SM credential loading before adapter construction.
+
+These 3 items will be shipped in a follow-up turn once operator confirms SM secret names above (especially OKX per-client naming).
+
+**Respond with**: `[ack] slot-6 cefi-ml credentials — SM secret names confirmed, proceed with infra fix + kill-switch armed` when provisioned.
+
+---
+
 **[2026-05-23 ~21:15 UTC] slot-6 MTDS DeFi backfill VM launched** — ref `mtds_mdps_master` MDPS-3.3.DeFi-V
 
 **`mtds-backfill-defi-20260523` RUNNING** (asia-northeast1-c, e2-standard-4). Range: 2024-01-01→2026-05-23, all DeFi
