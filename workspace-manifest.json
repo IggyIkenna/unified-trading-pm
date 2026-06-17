@@ -80,7 +80,7 @@
     "system-integration-tests": "0.7.0",
     "unified-api-contracts": "0.15.0",
     "unified-trading-library": "0.12.0",
-    "unified-trading-pm": "1.2.147",
+    "unified-trading-pm": "1.2.149",
     "market-data-processing-service": "0.7.0",
     "e2e-testing": "0.7.0",
     "agent-orchestrator": "0.11.0",
@@ -1797,15 +1797,16 @@
     "execution-service": "0.12.0",
     "system-integration-tests": "0.11.0",
     "ml-service": "0.7.0",
-    "deployment-api": "0.13.0",
+    "deployment-api": "0.16.0",
     "batch-live-reconciliation-service": "0.7.0",
     "fund-administration-service": "0.4.1",
     "alerting-service": "0.9.0",
     "agent-orchestrator": "0.11.0",
     "strategy-service": "0.12.0",
     "unified-trading-library": "0.12.0",
-    "unified-api-contracts": "0.16.0",
-    "instruments-service": "0.9.0"
+    "unified-api-contracts": "0.17.0",
+    "instruments-service": "0.9.0",
+    "market-tick-data-service": "0.13.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1836,9 +1837,9 @@
       "version": "0.7.0"
     },
     "deployment-api": {
-      "branch": "staging",
-      "sha": "433280ba6f322b06c555ea5171eb74ca853e4a84",
-      "version": "0.13.0"
+      "version": "0.16.0",
+      "sha": "aaad381c7debf8259a118c753fa2a4d920950167",
+      "branch": "staging"
     },
     "batch-live-reconciliation-service": {
       "branch": "staging",
@@ -1871,14 +1872,19 @@
       "version": "0.12.0"
     },
     "unified-api-contracts": {
-      "branch": "staging",
-      "sha": "fb34e4c2349daf520796e1ebfed517f41350d46c",
-      "version": "0.16.0"
+      "version": "0.17.0",
+      "sha": "9fd955bdb31b2d780ce11f7d4ee84c12c5cea7c8",
+      "branch": "staging"
     },
     "instruments-service": {
-      "version": "0.9.0",
+      "branch": "staging",
       "sha": "f6e0ec82d8037e842bf6848f231126bce2b33e62",
-      "branch": "staging"
+      "version": "0.9.0"
+    },
+    "market-tick-data-service": {
+      "branch": "staging",
+      "sha": "d9ac75b4fa4b286ce33d98bd97abee78f3e1c83a",
+      "version": "0.13.0"
     }
   },
   "main_commits": {
@@ -1948,15 +1954,15 @@
     ]
   },
   "promotion_failures": {
-    "unified-trading-library": 3,
+    "unified-trading-library": 4,
     "unified-api-contracts": 3
   },
   "promotion_quarantine": {
     "unified-trading-library": {
       "since": "2026-06-16T23:48:13.929770Z",
-      "attempts": 3,
+      "attempts": 4,
       "escalated": true,
-      "next_probe_after": "2026-06-17T00:48:13.929815Z"
+      "next_probe_after": "2026-06-17T03:12:58.748561Z"
     },
     "unified-api-contracts": {
       "since": "2026-06-17T00:15:48.396622Z",
