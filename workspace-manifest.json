@@ -80,7 +80,7 @@
     "system-integration-tests": "0.6.0",
     "unified-api-contracts": "0.15.0",
     "unified-trading-library": "0.11.0",
-    "unified-trading-pm": "1.2.150",
+    "unified-trading-pm": "1.2.151",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.6.0",
     "agent-orchestrator": "0.11.0",
@@ -1797,14 +1797,15 @@
     "system-integration-tests": "0.11.0",
     "deployment-api": "0.16.0",
     "unified-trading-library": "0.13.0",
-    "unified-api-contracts": "0.17.0"
+    "unified-api-contracts": "0.17.0",
+    "batch-live-reconciliation-service": "0.8.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-17T02:03:59.953874Z",
+    "locked_reason": "Breaking MINOR bump cascade: batch-live-reconciliation-service=0.8.0 (pre-1.0.0)",
+    "lock_version": "0.8.0",
     "pending_repos": [
       "execution-service",
       "system-integration-tests",
@@ -1822,6 +1823,7 @@
     "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
+      "batch-live-reconciliation-service",
       "unified-trading-library"
     ]
   },
@@ -1845,6 +1847,11 @@
     "unified-api-contracts": {
       "version": "0.17.0",
       "sha": "9fd955bdb31b2d780ce11f7d4ee84c12c5cea7c8",
+      "branch": "staging"
+    },
+    "batch-live-reconciliation-service": {
+      "version": "0.8.0",
+      "sha": "1fda60353a48ca0cc5ec7546b98e78bd1d42c304",
       "branch": "staging"
     }
   },
