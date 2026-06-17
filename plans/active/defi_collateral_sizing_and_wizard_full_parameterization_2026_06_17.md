@@ -74,7 +74,7 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       `*_param(...,<default>)` literal so the schema can't silently diverge from the engine) + PM
       `tests/unit/test_capability_param_schema.py` (5, CSB+APD+VOL_CARRY + manifest round-trip). Wizard-UI render + R1
       full-catalogue pickers + food-chain parameterization remain (next wave).
-- [ ] [SCRIPT] P1. **Wizard renders per-archetype param forms** from that schema (every numeric/enum param:
+- [x] ✅ [SCRIPT] P1. (unified-trading-system-ui@869c5930 [UI] | pw:L2 ✓ | regression: tests/smoke/wizard-params.spec.ts + tests/unit/wizard/params.test.ts; loader round-trip strategy-service@965c1393) **Wizard renders per-archetype param forms** from that schema (every numeric/enum param:
       entry/exit bps, stake_fraction, start_token, health-factor, collateral-posting-mode, hedge timing, exec-algo
       params, risk-threshold ladder…) + **(R1)** the venue/instrument pickers expose the FULL catalogue set, not the
       e2e subset. Wire the values through `strategy_config_loader`. Repo: unified-trading-system-ui (+ strategy-service loader).
