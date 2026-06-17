@@ -75,16 +75,22 @@ out_of_scope on the IS data-status view. Added `ROCKETPOOL-ETHEREUM: start_date 
 
 ## Todos
 
-- [x] [REGISTRY] P1. Fix `DEPRECATED_DEFI_GHOST_VENUE_NAMES` ghost-set entry `MORPHOVAULTS` → `MORPHO_VAULTS` (the
+- [ ] [REGISTRY] P1. Fix `DEPRECATED_DEFI_GHOST_VENUE_NAMES` ghost-set entry `MORPHOVAULTS` → `MORPHO_VAULTS` (the
       canonical glued prefix must not be in the drop-set; the legacy underscore prefix should) in UAC
-      `registry/capability_declarations/_defi_coverage.py`. — unified-api-contracts
+      `registry/capability_declarations/_defi_coverage.py`. — unified-api-contracts — **CODE DONE + QG-GREEN (verified in
+      isolated worktree, 152s, sentinel `4549d2c`); SHIP PENDING** — a concurrent live peer session (`orch-slot-2`) holds
+      uncommitted WIP in the SHARED UAC clone (`venue_launch_dates.py` / `market_data_categories.py` / `_cefi.py` /
+      `venue_mapping.py` / `mvp_scope.py` + tests). quickmerge in the shared clone stashes the WHOLE tree (would risk the
+      peer's WIP) and the worktree path can't double-check-out LDR — so the push waits for the peer's tree to settle
+      (watcher armed). My 2 files (`_defi_coverage.py` + the test) do NOT collide with any peer file.
 - [x] [CONFIG] P1. Canonicalise `data-catalogue.instruments-service.yaml` `shard_status.DEFI` keys to the canonical
       combined manifest form (`AAVE_V3-ETHEREUM`, `COMPOUND_V3-ETHEREUM`, `LIDO-ETHEREUM`, `ETHERFI-ETHEREUM`,
       `ETHENA-ETHEREUM`) — PM `configs/` (symlinked from deployment-service/configs). — unified-trading-pm
 - [x] [CONFIG] P1. Add `ROCKETPOOL-ETHEREUM` (rETH, genesis 2021-11-08) to the catalogue DEFI block. — unified-trading-pm
-- [x] [TEST] P1. Add a normalisation lock-test (`TestDefiVenueNameCanonicalReconciliation` in
+- [ ] [TEST] P1. Add a normalisation lock-test (`TestDefiVenueNameCanonicalReconciliation` in
       `tests/unit/test_vault_venue_canonical_names.py`) asserting the canonical decisions + the ghost-set invariant +
-      rETH presence. — unified-api-contracts
+      rETH presence. — unified-api-contracts — **CODE DONE + GREEN (15/15 pass incl. 7 new); SHIP PENDING** (same
+      shared-clone live-peer block as the `_defi_coverage.py` item — ships in the same quickmerge unit).
 - [ ] [REGISTRY] P2 **NICE-TO-HAVE**. Add cbETH as `COINBASE-ETHEREUM` to the DeFi LST universe — full new-venue add:
       `ALL_DEFI_VENUES` + `DEFI_VENUE_PHASE` + `defi_venue_capabilities.py` (lst_rates/oracle_prices genesis 2022-08-26)
       + `LEGACY_DEFI_VENUE_ALIASES` (`COINBASE` → ? — collides with CeFi COINBASE; needs a chain-qualified alias only) +
