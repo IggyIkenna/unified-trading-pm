@@ -18,8 +18,25 @@ divergence on a NON-CI field is left as an explicit conflict (exit 2) so the
 existing human-PR + orchestrator escalation still fires. It never silently drops
 an LDR-side manifest edit.
 
+**Version-surface fields (added 2026-06-17, provenance_gate_squash_perpetual_block
+follow-up).** The ``versions.<repo>`` released-version map and the per-repo
+``repositories.<name>.version`` display mirror are NOT CI-state — they are a
+*monotonic* cache of each repo's released ``pyproject.version`` (semver-agent only
+bumps UP; the version-alignment gate treats "AHEAD is fine, only BEHIND is bad").
+Both ``main`` and ``LDR`` can lead each other per-repo (main leads PM via the
+main-direct path; LDR leads service repos via the staging-backmerge bringing
+staging's leading versions). So a both-sides-bumped version scalar must NOT
+"take main" (that would REGRESS a repo whose LDR copy is ahead — the real
+2026-06-17 jam: main ``versions[utl]``=0.11.0 vs LDR=0.12.0) nor escalate to a
+human (the dam that blocked the back-merge AND the LDR→main drain). It resolves to
+the **semver-max** of the two sides — monotonic, never regresses, deterministic.
+An unparseable version on either side falls through to the normal genuine-conflict
+escalation (never guess). A version field that only one side changed already takes
+that side via the standard 3-way (no special-casing needed).
+
 Direction contract: ``--ours`` is the LDR side (HEAD during the back-merge),
-``--theirs`` is the main side (MERGE_HEAD). CI fields resolve to ``theirs``.
+``--theirs`` is the main side (MERGE_HEAD). CI fields resolve to ``theirs``;
+both-bumped version-surface fields resolve to the semver-max of both sides.
 
 Exit codes: 0 = clean reconcile written to ``--out``; 2 = genuine non-CI conflict
 (caller must abort the merge and escalate); 1 = usage / parse error.
@@ -61,6 +78,38 @@ def _load(path: str) -> object:
         return cast("object", json.load(handle))
 
 
+def _is_version_field(path: ConflictPath) -> bool:
+    """A monotonic released-version scalar: ``versions.<repo>`` or
+    ``repositories.<name>.version`` (the display mirror). Both-bumped → semver-max,
+    not escalate. NB: ``repositories.<name>.dependencies`` (dep-edge range-pin floors)
+    is deliberately NOT a version field — those are intentional and must 3-way/escalate."""
+    if len(path) == 2 and path[0] == "versions":
+        return True
+    return len(path) == 3 and path[0] == "repositories" and path[2] == "version"
+
+
+def _semver_tuple(value: object) -> tuple[int, ...] | None:
+    """Parse ``X.Y.Z`` to a comparable tuple (mirrors assert_version_coherence /
+    version-alignment-gate). Returns None for any non-numeric / unparseable version
+    so the caller falls back to the genuine-conflict escalation (never guess)."""
+    if not isinstance(value, str):
+        return None
+    try:
+        parts = [int(x) for x in value.split(".")[:3]]
+    except ValueError:
+        return None
+    return tuple(parts + [0] * (3 - len(parts)))
+
+
+def _semver_max(ours: object, theirs: object) -> object | None:
+    """The higher of two released-version scalars (original string preserved), or
+    None when either side is unparseable."""
+    to, tt = _semver_tuple(ours), _semver_tuple(theirs)
+    if to is None or tt is None:
+        return None
+    return ours if to >= tt else theirs
+
+
 def _merge_value(base: object, ours: object, theirs: object, path: ConflictPath) -> tuple[object, list[ConflictPath]]:
     """Standard 3-way merge of a single value. Returns (merged, conflicts)."""
     if ours == theirs:
@@ -75,6 +124,11 @@ def _merge_value(base: object, ours: object, theirs: object, path: ConflictPath)
     if isinstance(ours, Mapping) and isinstance(theirs, Mapping):
         base_map = cast("Mapping[str, object]", base) if isinstance(base, Mapping) else _EMPTY_MAP
         return _merge_dict(base_map, cast("Mapping[str, object]", ours), cast("Mapping[str, object]", theirs), path)
+    # both-bumped monotonic version scalar → semver-max (never regress, never block)
+    if _is_version_field(path) and isinstance(ours, str) and isinstance(theirs, str):
+        merged = _semver_max(ours, theirs)
+        if merged is not None:
+            return merged, []
     # scalar/list both-changed → genuine conflict
     return cast("object", ours), [path]
 
