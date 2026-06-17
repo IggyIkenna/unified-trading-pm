@@ -1190,18 +1190,37 @@ echo ""
 if [ -f "scripts/quality-gates.sh" ]; then
   if [ "$AGENT_MODE" = true ]; then
     # ── AGENT FAST-PATH: verify Pass 1 sentinel instead of re-running QG ──
+    # Rec #1 (qg_sentinel_content_hash_and_slicing): the sentinel records the COMMIT SHA
+    # at Pass-1 QG time. A bare SHA==HEAD check loses the race vs concurrent LDR writers —
+    # an UNRELATED fast-forward (CI machinery / peer agents) advances HEAD and stales a
+    # still-valid green QG, even though nothing in the files being shipped changed.
+    # Content-scoped fallback: if HEAD only FAST-FORWARDED past the sentinel commit and the
+    # --files being shipped are BYTE-IDENTICAL between the sentinel and HEAD, the Pass-1 QG
+    # still covers exactly those files → accept (re-verify by content, not by parent commit).
+    # Safety: requires sentinel to be an ANCESTOR of HEAD (forward-only; rejects divergence/
+    # rewind) AND zero diff on the --files set; ANY change to a shipped file → re-run QG.
     _SENTINEL=".qg_last_passed_sha"
     _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
     _SENTINEL_SHA=""
     [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(cat "$_SENTINEL" | tr -d '[:space:]')
-    if [ -z "$_SENTINEL_SHA" ] || [ "$_SENTINEL_SHA" != "$_CURRENT_SHA" ]; then
-      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh not run on current HEAD (SHA mismatch)."
-      echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}"
-      echo "  HEAD:     ${_CURRENT_SHA}"
+    if [ -z "$_SENTINEL_SHA" ]; then
+      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel missing — run: bash scripts/quality-gates.sh"
+      exit 1
+    fi
+    if [ "$_SENTINEL_SHA" = "$_CURRENT_SHA" ]; then
+      echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
+    elif [ -n "$FILES_ARG" ] \
+         && git cat-file -e "${_SENTINEL_SHA}^{commit}" 2>/dev/null \
+         && git merge-base --is-ancestor "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null \
+         && git diff --quiet "$_SENTINEL_SHA" "$_CURRENT_SHA" -- $FILES_ARG 2>/dev/null; then
+      echo "[$REPO_NAME] ✅ CONTENT sentinel verified — HEAD fast-forwarded ${_SENTINEL_SHA:0:9}→${_CURRENT_SHA:0:9} but the --files set is byte-identical between them, so Pass-1 QG still covers exactly these files (content-scoped per Rec #1). Skipping Pass 2 QG re-runs."
+    else
+      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel invalid for current state."
+      echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}  HEAD: ${_CURRENT_SHA}"
+      echo "  (HEAD moved AND a --files path changed since the sentinel — or sentinel is not an ancestor of HEAD.)"
       echo "  Run: bash scripts/quality-gates.sh"
       exit 1
     fi
-    echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
   else
     # Phase 1: lint auto-fix only (fast — ruff/eslint --fix, no tests/typecheck/build)
     echo "[$REPO_NAME] Phase 1: lint auto-fix..."
