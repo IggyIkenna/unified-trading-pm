@@ -312,10 +312,15 @@ wall" triage queue. Direct measurement (`git diff --name-only origin/staging ori
       `main-backmerge-to-staging` tick mirroring `main-backmerge-to-ldr`, OR (b) make `staging-to-main`/`ldr-to-main`
       promote bots use the **LDR→main reconcile path when staging→main conflicts** (LDR is the SSOT + carries both
       back-merges — this is the PM Option-B pattern generalised to service/lib repos). Provenance: UAC #344 / UTL #370.
-- [ ] [CICD] P2. **Stale "fails quarantined" flag never clears when content becomes identical.** deployment-api + blrs
-      showed "N fails quarantined / escalated" while staging==main==LDR (0 content-delta). The quarantine/breaking-pending
-      writer should clear the flag when the promote range's content-delta is 0. Target: the quarantine/`breaking_pending`
-      writer (PM `ci_status` / staging_status). Provenance: this session.
+- [x] ✅ [CICD] P2. **Stale "fails quarantined" flag now clears on content-identical staging==main — SHIPPED 2026-06-17**
+      (unified-trading-pm@f00b8644a, `.github/workflows/staging-to-main.yml`, LDR → drains to main). The
+      `promotion_quarantine` AUTO-CLEAR only fired for repos that actively PROMOTED; a repo whose staging→main
+      content-delta became 0 (staging TREE == main TREE) is SKIPPED by the promote-loop builder (nothing to promote), so
+      it never entered `promoted` and its quarantine / consecutive-fail counter NEVER cleared — the stale "N fails
+      quarantined / escalated" the operator saw while staging==main==LDR (deployment-api + blrs). Added a
+      content-identical clear in the quarantine-cap step: probe each quarantined/failed repo's `staging` vs `main` TREE
+      sha (the reliable fingerprint; `compare/...files` is inflated by a stale squash merge-base) and clear when equal —
+      runs every `*/15`, so a repo that becomes content-identical clears within one tick. YAML + `py_compile` validated.
 
 ## Manual drain of the residual triage queue + a NEW gate finding — 2026-06-17 (afternoon)
 
@@ -331,16 +336,23 @@ residual **manually** (operator-directed) and surfaced a new systemic gate:
   exactly the option (b) at line 299 / the UAC#353·UTL#376 Class-C pattern, done by hand).
 - **Shipped the monitor content-identity guard** — see § Class D P1 above, flipped (deployment-api@e35dd00c).
 
-- [ ] [CICD] P1. **NEW — promote PRs strand on a `quality-gates-v2` run that completes `conclusion=action_required`
-      (NOT `success`), so the required check is non-green → PR BLOCKED with auto-merge armed but unable to fire.** Hit
-      ≥4 PRs at once today (`features-service#573`, `ml-service#123`, `unified-trading-api#414`, `unified-trading-pm#392`).
-      Two facts pinned: (1) a `workflow_dispatch` v2 does NOT satisfy a PR's required context — only a `pull_request`-event
-      run counts (so `gh workflow run quality-gates-v2.yml --ref <branch>` is the WRONG recovery for a stuck PR; it greens
-      the SHA but not the PR check). (2) `action_required` here is NOT a fork-approval (`/approve` API → "not from a fork
-      pull request") and has **0 pending_deployments** — root still unknown (a conditional cloud-build/deploy job?).
-      Proven recovery = **close+reopen** (fires a fresh `pull_request` v2, which went `success` for all 5 today). But
-      `ci-failure-watcher --auto-recover` only handles the v2-**ABSENT** signature, NOT v2=`action_required` — so these
-      strand until a human nudges. **Fix:** (a) diagnose what makes a v2 run conclude `action_required` vs `success`
-      (intermittent — same head went `success` at 04:04 then `action_required` at 04:41); (b) extend
-      `ci_failure_watcher.py` auto-recover to include the `conclusion==action_required` signature (close+reopen recovers it
-      deterministically). Target: `scripts/repo-management/ci_failure_watcher.py`. Provenance: 2026-06-17 afternoon drain.
+- [x] ✅ [CICD] P1. **NEW — promote PRs strand on a `quality-gates-v2` run that completes `conclusion=action_required`
+      — auto-recover SHIPPED 2026-06-17** (unified-trading-pm@f00b8644a/e11d0844c, LDR → drains to main). The required
+      check is non-green (neither `success` nor a FAIL), the v2-absent recovery never triggers (v2 IS present), and the
+      PR strands BLOCKED with auto-merge armed but unable to fire — hit ≥4 PRs at once today (`features-service#573`,
+      `ml-service#123`, `unified-trading-api#414`, `unified-trading-pm#392`). **Part (b) DONE:** `detect_stuck_prs` now
+      flags `v2_action_required` (v2 check in the rollup with `conclusion==ACTION_REQUIRED`); `auto_recover_stuck_prs`
+      lets it past the `v2_present` guard and **close+reopens** it (a fresh `pull_request` v2 concludes `success` —
+      verified 5/5 today), **BOUNDED** by an `_ACTION_REQ_MARKER` comment within a 40-min window (unlike v2-absent, an
+      `action_required` head can RE-conclude `action_required` after reopen → without the bound it would thrash every
+      `*/15` tick). 4 new unit tests (16 total green), basedpyright clean, QG green. Two facts pinned in code comments:
+      (1) a `workflow_dispatch` v2 does NOT satisfy a PR's required context — only a `pull_request`-event run counts; (2)
+      `action_required` is NOT a fork-approval and has 0 pending_deployments. **Part (a) — the upstream ROOT (why a v2
+      run concludes `action_required` vs `success`, intermittently on the same head) remains a separate diagnosis**, but
+      the watcher now recovers it deterministically so PRs no longer strand on a human nudge. Target was
+      `scripts/repo-management/ci_failure_watcher.py`. Residual (a)-diagnosis tracked below.
+- [ ] [CICD] P3. **(a)-residual — diagnose the UPSTREAM cause of an intermittent v2 `conclusion=action_required`** (same
+      head went `success`@04:04 then `action_required`@04:41; not a fork-approval, 0 pending_deployments). Candidate: a
+      conditional job/environment-protection rule or a GitHub-side transient. Now NON-URGENT — L324's watcher recovery
+      makes it self-healing — but the root should be understood + removed so the recovery isn't needed. Target:
+      `quality-gates-v2.yml` job/environment conditions. Provenance: 2026-06-17.
