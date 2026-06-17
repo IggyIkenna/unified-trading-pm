@@ -1,7 +1,6 @@
 ---
 title: "Service Dockerfiles are inconsistent + fragile — normalize the 9 Pattern-B services to the clean base-image form (Pattern A)"
 created: 2026-06-17
-author: harshkantariya [slot-3·laptop]
 status: active
 priority: P2
 locked_by: live-defi-rollout
