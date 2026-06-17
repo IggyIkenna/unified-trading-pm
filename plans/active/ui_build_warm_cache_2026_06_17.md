@@ -11,7 +11,7 @@ estimate_calibrated_ai_days: 1.2
 created: 2026-06-17
 locked_by: live-defi-rollout
 related_plans:
-  - plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
+  - plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md
 source:
   - MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17)
   - slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms

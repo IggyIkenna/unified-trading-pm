@@ -671,6 +671,13 @@ line):
   raise it (with a `#` comment on what grew); never deselect/skip slow tests (masks runaway regressions).
   `IGNORE_TIMEOUT=true`/`PYRIGHT_TIMEOUT` stay sanctioned for META-gate-only trips. SSOT:
   `codex/06-coding-standards/quality-gates.md`.
+- **QG config-SSOT — toml is the single home; the base never shadows it on the CLI (codified 2026-06-17)**: the coverage
+  gate reads `[tool.coverage.report] fail_under` from `pyproject.toml` (the base does NOT pass `--cov-fail-under` — that
+  shadowed toml); `MIN_COVERAGE` in the stub is only `coverage-floor-guard.sh`'s system-floor (70) input. bandit reads
+  `[tool.bandit]` via `-c pyproject.toml`. So change a repo's coverage floor in **toml**, not the stub. There is **no
+  change-scoped fast tier** (it was scoped out — ~1.1% win; tests+basedpyright always run full); QG speed comes from
+  per-step optimization. SSOT: `codex/06-coding-standards/quality-gates.md` § "Config SSOT" + archived
+  `plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md`.
 - **UTL-on-a-VM crash-cascade checklist** — pip-installing UTL on a VM also needs: (1) `cloud-providers.yaml` on disk +
   its env var, (2) `GCP_PROJECT_ID`/`PROJECT_ID`/`DEPLOYMENT_ENV_SHORT` exported (prod→prd/staging→stg/dev→dev), (3)
   `deployment_service` importable, (4) NO backticks inside the `STARTUP="..."` heredoc (shell command-substitution at

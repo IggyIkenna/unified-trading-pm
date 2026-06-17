@@ -6,8 +6,8 @@ auditor: slot-1 (claude)
 date: "2026-06-10"
 status: complete
 source:
-  - plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md — Phase 0 audit items (dual-SSOT matrix, bandit-`-c`
-    question, TIER-A/TIER-B classification)
+  - plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md — Phase 0 audit items (dual-SSOT matrix,
+    bandit-`-c` question, TIER-A/TIER-B classification)
   - static analysis of scripts/quality-gates-base/base-service.sh + base-library.sh (PM @ working tree 2026-06-10)
   - per-repo sweep of <repo>/scripts/quality-gates.sh stubs vs <repo>/pyproject.toml across the .tabs/1 workspace
 ---
@@ -131,16 +131,16 @@ size limits, 7 QG\_\* env, 4 toggles, 4 identity + the 10 singles, minus the env
 > suppressed by any existing skip.
 
 **Method**: `tomllib`-parse every repo's `pyproject.toml` `[tool.bandit]`; for each repo with non-empty `skips`, run the
-repo's own `.venv/bin/bandit` `-t <codes>` over its `SOURCE_DIR` (the exact tree the base scans — `bandit -r "$SOURCE_DIR/" -ll`).
+repo's own `.venv/bin/bandit` `-t <codes>` over its `SOURCE_DIR` (the exact tree the base scans —
+`bandit -r "$SOURCE_DIR/" -ll`).
 
 **Findings**:
 
 - **20 of 22 repos** have `[tool.bandit] = {skips: []}` — empty → adding `-c pyproject.toml` is a **no-op** for them.
-- **2 repos carry real skips**, both **MOOT in the scanned tree** (0 findings for the skipped codes within `SOURCE_DIR`):
-  | Repo | skips | findings in `SOURCE_DIR` | findings in `scripts/` (NOT scanned) |
-  | --- | --- | --- | --- |
-  | market-tick-data-service | B608,B104,B108,B310 | **0** (all 4 moot) | 4×B310 + 1×B108 (one-off scripts) |
-  | strategy-service | B608 | **0** (moot) | — |
+- **2 repos carry real skips**, both **MOOT in the scanned tree** (0 findings for the skipped codes within
+  `SOURCE_DIR`): | Repo | skips | findings in `SOURCE_DIR` | findings in `scripts/` (NOT scanned) | | --- | --- | --- |
+  --- | | market-tick-data-service | B608,B104,B108,B310 | **0** (all 4 moot) | 4×B310 + 1×B108 (one-off scripts) | |
+  strategy-service | B608 | **0** (moot) | — |
 
 **Why moot today**: (a) the base runs bandit WITHOUT `-c`, so the toml skips are not honored at all; (b) the base scans
 only `SOURCE_DIR`, and neither repo has any of its skipped codes there (the mtds hits are all under `scripts/`, outside

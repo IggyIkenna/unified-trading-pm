@@ -5,7 +5,7 @@ epic: infrastructure_master
 auditor: slot (interactive)
 date: "2026-06-11"
 status: complete
-parent_plan: plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
+parent_plan: plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md
 source:
   - profile_qg_resources.py --all --parallel (host-adaptive pinned sweep, 2026-06-11)
   - raw per-repo JSON/txt/markers in the gitignored .qg_profile/ (not committed — large intermediates)

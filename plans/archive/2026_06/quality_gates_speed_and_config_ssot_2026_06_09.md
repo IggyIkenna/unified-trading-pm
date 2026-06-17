@@ -3,13 +3,13 @@ title: Quality-gates speed (change-scoped, single-core) + config SSOT centralisa
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
+status: archived
+archived: 2026-06-17
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
 created: 2026-06-09
-locked_by: live-defi-rollout
 related_plans:
   - plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md
   - plans/active/ci_local_qg_parity_2026_06_08.md
@@ -22,6 +22,28 @@ source:
 
 # Quality-gates: faster (change-scoped, single-core) + one config home (toml)
 
+> **✅ ARCHIVED 2026-06-17 — core complete (0 open / 40 done / 13 resolved-as-won't-do); operator verified surfaces.**
+>
+> **Outcome**: Axis-A speed wins came from **per-step optimization** (size-checks 178s→8.5s, schema-provenance ~390×,
+> pip-audit/bandit/actionlint content caches, codex `--fast`) + the always-full tests/basedpyright decision — the
+> change-scoped fast tier was **NOT built** (re-profile: remaining scopable slice ~1.1%, not worth the two-tier risk).
+> Axis-B config-SSOT **shadow elimination** done: `--cov-fail-under` dropped (toml `fail_under` is the single coverage
+> home), bandit `-c pyproject.toml` added; pytest test-dir kept (functional narrowing, not a shadow). Drift baseline
+> regenerated from full-run data + `measure-qg-baseline.sh` sentinel-skip bug fixed. Codex SSOT
+> `codex/06-coding-standards/quality-gates.md` updated.
+>
+> ## Deferred work — migrated to / out-of-scope:
+>
+> - **UI build warm-cache** (4 items) → **MIGRATED** to `plans/active/ui_build_warm_cache_2026_06_17.md` (needs a
+>   UI-capable slot + the playwright gate; not QG-core).
+> - **`[tool.quality-gates]` TIER-B table + per-repo stub slimming** → **WON'T-DO** (decision, not deferral): TIER-B
+>   knobs are single-home in the stub (no drift) → no correctness benefit to a 22-repo migration. See Phase-1 banner.
+> - **Fast tier (Phase 2) + differential harness** → **WON'T-DO** (decision): ~1.1% scopable; merge tier is
+>   authoritative. See Phase-2 banner.
+> - **`[tool.ruff]` fleet unification (finding #3)** → **ACKED-OUT-OF-SCOPE** (operator 2026-06-15: "opportunistic, not
+>   forced"). No tracked successor — unify only when a repo's ruff config is touched for another reason; the DTZ/TID251
+>   conflict-guard (Phase-1 REFACTOR item) must be honored if ever taken.
+>
 > Two axes, one effort. **Axis A — speed**: lower per-repo WALL-TIME on a SINGLE core by doing only the work a change
 > actually requires, NOT by adding parallelism (parallelism gives false wall-time, doesn't help the 20-repo case, and
 > OOMs the host — see archived `quality_gates_resource_contention_speedup_2026_06_02.md`). **Axis B — config SSOT**:
@@ -171,9 +193,10 @@ source:
       (optional). Full method + per-repo table: `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md` § "Per-repo
       `[tool.bandit] skips` audit (2026-06-17)". — unified-trading-pm
 - [x] ✅ [CODE] P3. Bandit-audit side-finding FIXED (2026-06-17): mtds `scripts/massive_flat_files_smoke.py` hardcoded
-      `/tmp` → `tempfile.gettempdir()` (B108; workspace no-hardcoded-`/tmp` HARD RULE) — market-tick-data-service@a2ec5ae5,
-      mtds QG green. The 4 `urllib.urlopen` (B310) in mtds `scripts/` are outside bandit's scan path + in one-off smoke
-      scripts (`scripts/` = temporary per script-homes); left as-is (not gating, low value) — not separately tracked.
+      `/tmp` → `tempfile.gettempdir()` (B108; workspace no-hardcoded-`/tmp` HARD RULE) —
+      market-tick-data-service@a2ec5ae5, mtds QG green. The 4 `urllib.urlopen` (B310) in mtds `scripts/` are outside
+      bandit's scan path + in one-off smoke scripts (`scripts/` = temporary per script-homes); left as-is (not gating,
+      low value) — not separately tracked.
 - [x] [AUDIT] P1. Classify every knob into TIER-A (tool-native — toml is the home) vs TIER-B (bash-orchestration —
       governor/mem-cap/MAX_DURATION/PYTEST_WORKERS/codex-exclude-globs/pip-audit-ignores/size-limits — toml has no
       native home). This classification decides Phase 1's mechanism. ✅ — **13 TIER-A / 27 TIER-B**, full tables with
