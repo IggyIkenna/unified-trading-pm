@@ -119,9 +119,8 @@ stretches. Ceilings are `weekly < 80%` AND `5h < 50%` (`autospawn.DEFAULT_WEEKLY
 | sub-b-iggy2london | **98** | 71 | 2026-06-21 | healthy | over weekly ceiling + RL 4 days → excluded |
 | sub-c-ikenna-odum | **87** | 1 | (elapsed) | healthy | over weekly ceiling → excluded |
 | sub-d-odum1default | **100** | 21 | none | healthy | over weekly ceiling → excluded |
-| harsh-primary | — | — | — | **auth_failed since 2026-06-10** | excluded |
 
-→ every account filtered out → `pick_headroom_account → None` → **escalations cannot dispatch**. Live queue: **39
+→ every eligible account filtered out → `pick_headroom_account → None` → **escalations cannot dispatch**. Live queue: **39
 queued, 19 abandoned, 7 resolved**; 20 queued carry `last_error="no headroom setup-token account"`. The FIFO-head row
 (`agt-3bd816`) shows **attempts=230** — the AutoSpawnLoop `retry_queued_escalations` IS running and hammering the head
 every tick, always failing headroom, then `break` (so newer rows stay `attempts=0`). Abandoned set includes **real,
@@ -141,21 +140,21 @@ which renders `:rotating_light: Auto-respawn FAILED slot 0 … SSH to VM, tmux l
 no slot 0, and respawning solves nothing; the real fix is account capacity. 19 abandonments → up to 19 misleading
 "manually respawn slot 0" pages, while the actual condition (pool exhausted) is never paged as such.
 
-**Immediate operator recovery (NOT a code fix)**:
+**Immediate state (NOT a code fix; account-pool capacity is an operator decision, not tracked here)**:
 
-- [ ] [HUMAN] P0. **Restore account headroom on the central VM.** Highest leverage: re-auth `harsh-primary` (idle
-      `auth_failed` since 2026-06-10 = a full fresh weekly budget) via `claude setup-token` → update its
-      `oauth_token_env_file`. `sub-a-ikenna` self-frees at 14:00 UTC. Until then the escalation loop + main agent stay
-      starved. Repo: operator/credentials (agent-orchestrator `accounts.json`).
-- [ ] [HUMAN] P1. **Unwedge the frozen main agent** (`orch-agent-main`): once a headroom account exists, dismiss the
-      "Stop and wait for limit to reset" modal (select 1 + Enter) or restart the main agent so `main_agent_keeper`
-      re-spawns it on the healthy account. Repo: operator (central VM tmux).
+- Once any account regains headroom (a window reset, or an operator capacity decision), the loop self-recovers:
+  `pick_headroom_account` returns it, escalations dispatch, and `main_agent_keeper` respawns the main agent. With the
+  95% ceiling shipped below, `sub-c-ikenna-odum` (87% weekly) became eligible immediately on deploy.
+- [ ] [HUMAN] P1. **Unwedge the frozen main agent** (`orch-agent-main`): dismiss the "Stop and wait for limit to reset"
+      modal (select 1 + Enter) or restart the main agent so `main_agent_keeper` re-spawns it. (Superseded by the
+      shipped modal-detection fix below, which now does this automatically — kept only as the manual fallback.) Repo:
+      operator (central VM tmux).
 
 **Durable fixes (agent-orchestrator)** — all SHIPPED `agent-orchestrator@38fde6cc` (LDR), QG-green (680 passed):
 
 - [x] ✅ [ORCHESTRATOR] P0. **Misleading "Auto-respawn FAILED slot 0" alert killed.** Added
       `notify_escalation_abandoned(escalation_id, repo, wall_type, age_hours, reason)` (slack + telegram) naming the
-      wall + real cause + "free account capacity" action; `retry_queued_escalations` calls it instead of
+      wall + the real cause (no account headroom); `retry_queued_escalations` calls it instead of
       `notify_agent_stuck_escalation(0, …)`. No fake slot id, no "manually respawn". — agent-orchestrator@38fde6cc
 - [x] ✅ [ORCHESTRATOR] P0/design (operator 2026-06-17). **Raise spawn-headroom ceilings 5h 50→95 / weekly 80→95** via
       shared env-tunable helpers `autospawn.five_hour_pct_ceiling()`/`weekly_pct_ceiling()` wired into the autospawn
