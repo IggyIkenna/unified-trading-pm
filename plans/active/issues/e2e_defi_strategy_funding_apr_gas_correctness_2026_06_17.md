@@ -1,11 +1,12 @@
 ---
 title: E2E defi-strategy run surfaced funding / APR / gas / rate correctness bugs — fix in the MAIN codebase before backfill + live
 created: 2026-06-17
-author: ikennaigboaka
 source:
   - operator 2026-06-17 (recent e2e-testing repo defi-strategy work — ran staked_basis + other light trades to test APRs)
   - e2e-testing/scripts/defi/staked_basis_funding_scan.py + colocated_engine.py
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

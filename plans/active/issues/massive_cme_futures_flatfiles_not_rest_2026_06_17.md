@@ -1,13 +1,14 @@
 ---
 title: Massive CME futures history is on the S3 FLAT-FILES, not the REST /futures/v1 endpoint
 created: 2026-06-17
-author: ikennaigboaka
 source:
   - operator ping 2026-06-17 (sibling agent pulled 5y ES from Massive S3 flat-files)
   - market-tick-data-service/scripts/massive_flat_files_smoke.py (in-repo S3 recipe seed)
   - plans/active/tradfi_massive_dual_source_2026_05_28.md (Phase 4 + the now-corrected futures-endpoint todo)
 locked_by: live-defi-rollout
 parent_epic: tradfi_master
+priority: P2
+status: active
 ---
 
 # Massive CME futures: use the S3 flat-files, not the REST `/futures/v1` HTTP endpoint
