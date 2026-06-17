@@ -2083,13 +2083,14 @@ speed-note (both deferred optimisations, non-blocking).
       `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
       the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
 
-- [ ] [DEFI] P2. **dex_pools_handler honest-absence `record_failed`/`record_*` calls hardcode mode** — they pass
+- [x] ✅ [DEFI] P2. **dex_pools_handler honest-absence `record_failed`/`record_*` calls hardcode mode** — they passed
       `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at `dex_pools_handler.py:410/467/
       475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence rows mislabel the mode (batch vs live).
-      NON-blocking (source-aware, doesn't violate STEP 5.85; failure-row mode-labels don't affect the DATA corpus the v9
-      walk migrates). Fix = pass `_pipeline_mode_for(run_tag)` (→ chokepoint upgrades) IF dex_pools is live-reachable, OR
-      confirm dex_pools is batch-only and leave it. Repo: market-tick-data-service. Provenance: M-COORD-7 resolution
-      2026-06-17.
+      **DONE 2026-06-17 (mtds@d5cf763) — operator confirmed "we have live for defi" so this IS live-reachable.** Added
+      `_record_pipeline_mode_for(venue, run_tag)` helper applying the SAME source-aware upgrade as the data chokepoint
+      (`canonical_write.py` mtds@c4c5f15): live → `resolve_pipeline_mode(..., "live")` = `live_onchain_subgraph`, batch →
+      `derive_pipeline_mode_for_row` = `batch_onchain_subgraph` (no batch regression). All 4 `record_*` calls now use it;
+      +regression test. Repo: market-tick-data-service.
 
 ## Demotion + linkage record
 
