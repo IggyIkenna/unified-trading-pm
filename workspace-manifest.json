@@ -1807,20 +1807,13 @@
     "locked_reason": "Breaking MINOR bump cascade: batch-live-reconciliation-service=0.8.0 (pre-1.0.0)",
     "lock_version": "0.8.0",
     "pending_repos": [
-      "execution-service",
       "system-integration-tests",
-      "ml-service",
       "deployment-api",
-      "batch-live-reconciliation-service",
-      "fund-administration-service",
-      "alerting-service",
-      "strategy-service",
       "unified-trading-library",
       "unified-api-contracts",
-      "instruments-service",
-      "market-tick-data-service"
+      "batch-live-reconciliation-service"
     ],
-    "sit_retry_count": 1,
+    "sit_retry_count": 2,
     "locked_alert_sent": false,
     "breaking_pending": [
       "batch-live-reconciliation-service",
