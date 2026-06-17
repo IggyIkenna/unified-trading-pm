@@ -75,8 +75,9 @@ are real — UTL genuinely built at 0.12.0 in CI), but it freezes the pipeline.
 **Short fix (drain) — per-repo, fan-out to the epic/CI VMs (NOT a single-agent bulk action — collision risk + each needs
 its own QG/v2 verification):**
 
-- [ ] [CICD] P2. Close the **superseded** older dep-update PRs: `batch-live-reconciliation-service#82` (UTL-0.11.0,
-      superseded by #83) and `market-tick-data-service#223` (UTL-0.11.0, superseded by #224).
+- [x] ✅ [CICD] P2. Close the **superseded** older dep-update PRs: `batch-live-reconciliation-service#82` (UTL-0.11.0,
+      superseded by #83) and `market-tick-data-service#223` (UTL-0.11.0, superseded by #224). **DONE 2026-06-17** — both
+      CLOSED + branches deleted (superseders #83/#224 confirmed open first).
 - [ ] [CICD] P1. Rebase each conflicting dep-update branch onto current `staging` (or re-run the fan-out so it
       regenerates from current staging) and let v2-gated auto-merge drain it: `ibkr-gateway-infra#225`,
       `market-data-processing-service#292`(UAC-0.15.0)+`#293`(UTL-0.11.0), `market-tick-data-service#224`,
@@ -92,20 +93,28 @@ its own QG/v2 verification):**
 
 **Long fix (why they stall — systemic):**
 
-- [ ] [CICD] P1. **Auto-rebase open `dep-update/*` PRs onto staging** when staging advances (the missing mechanism —
-      there is a SKIPPED `refresh-open-prs` check on these PRs; investigate why it never refreshes and make it
-      rebase/regenerate stale dep-update branches). Target repo: `unified-trading-pm` (`scripts/workflow-templates/` +
-      the `update-dependency-version.yml` template) — fleet rollout.
-- [ ] [CICD] P2. **Auto-close superseded dep-update PRs** when a newer-version dep-update PR for the same (repo, dep)
-      opens. Target: the fan-out workflow (`update-dependency-version.yml`).
-- [ ] [CICD] P2. **Stale-conflict-wall alert**: extend `ci-failure-watcher` / `promotion_lag_monitor.py` to page when a
-      promote/dep-update PR sits `dirty` (or BLOCKED) beyond an SLA (e.g. >2h) — closes the "lack alerts" gap. Target:
-      `unified-trading-pm`.
-- [ ] [CICD] P3. **Operator decision** — per the range-pin / pull-not-push model, a MINOR internal bump (UTL 0.10→0.12,
-      within `<1.0.0`) should NOT force a consumer **floor** bump (the range already absorbs it); only the Dockerfile
-      **digest** refresh needs to ride the fan-out. The floor bump is what creates the `pyproject.toml` conflict that
-      walls these PRs. Decide whether `update-dependency-version.yml` should stop bumping the floor on a minor internal
-      bump (digest-only), which would eliminate most Class-B conflicts at the source.
+- [~] [CICD] P1. **Auto-rebase open `dep-update/*` PRs onto staging** when staging advances. **PARTIALLY OBVIATED
+  2026-06-17**: the floor-churn root cause is removed by the digest-only fix below (staging no longer advances its
+  pyproject floor on every minor bump → the breaking dep-update PRs stop going stale). The EXISTING conflicting PRs
+  still need a per-repo rebase/conflict-resolve (their floor line conflicts with the already-churned staging) — that
+  remains the short-fix per-repo todos above (NOT a clean `update-branch`: it returns 422 on these). A generic
+  auto-rebase-with-conflict-resolution bot was NOT built (it would need real conflict resolution; the digest-only fix
+  prevents the recurrence instead). `refresh-open-prs` investigation deferred to that per-repo work.
+- [x] ✅ [CICD] P2. **Auto-close superseded dep-update PRs** when a newer-version dep-update PR for the same (repo, dep)
+      opens. **SHIPPED 2026-06-17** — new PM-central bot `.github/workflows/supersede-stale-dep-update-prs.yml`
+      (`*/2h` + dispatch + dry_run; groups open `dep-update/<dep>-<ver>` per repo, closes all but the highest version;
+      strictly bounded — only closes when a strictly-higher-version dep-update PR for the same repo+dep is open). Logic
+      unit-verified; immediate cleanup already closed #82/#223. unified-trading-pm@(LDR 11ec53a4c, drains to main).
+- [x] ✅ [CICD] P2. **Stale-conflict-wall alert**: **SHIPPED 2026-06-17** — `promotion_lag_monitor.py` `_stuck_prs()` +
+      `_classify_stuck_pr()` now page on any open promote/dep-update PR parked CONFLICTING (`mergeable_state==dirty`)
+      beyond `--stuck-pr-threshold-min` (default 120m). Alert on `dirty` (conflict wall), NOT `blocked`
+      (checks-in-progress). Pure classifier unit-tested (6 cases). unified-trading-pm@(LDR cc1376fc4, drains to main).
+- [x] ✅ [CICD] P3. **Operator decision: digest-only on minor internal bump — APPROVED + SHIPPED 2026-06-17.** Operator
+      confirmed; `update-dependency-version.yml` now skips the consumer floor rewrite (+ uv lock) for a NON-breaking
+      minor/patch internal bump (range absorbs it; pull-not-push) — digest-only. MAJOR/breaking keeps the floor re-pin +
+      PR. Verified safe: dep-alignment presence-checks internal deps (no floor match;
+      `scripts/manifest/check-dependency-alignment.py`). SSOT committed + rolled out to all 24 repo LDRs (drift checker:
+      0 new drift). unified-trading-pm@(LDR 3d41a6e9d, drains to main).
 
 ## Composes with
 
