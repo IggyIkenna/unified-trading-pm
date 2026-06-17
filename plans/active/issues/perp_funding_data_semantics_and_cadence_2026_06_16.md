@@ -207,3 +207,58 @@ landed (uac@61d5838 / utl@3b4bd6b8 / mtds@5978627). This session drives the rema
 3. **book → batch honest-absence is ALREADY correct (live-capture-only); live WS book connector is a tight todo.** No
    batch change needed (already `null` genesis + absent from batch `data_types`). The live depth-WS connector is a
    separate live-infra unit (a new `aster_book_ws` connector + live-manifest wiring) — tight todo below.
+
+## Progress Log — Aster backfill-to-canonical VERIFIED (2026-06-17, verification session)
+
+Operator asked to confirm the Aster e2e funding→canonical fetch works + that the production wiring produces REAL
+canonical Aster data at G5. **Verdict: VERIFIED — e2e + production share the same endpoint + the same UAC normalizer;
+production is ready to produce real canonical Aster data.** Three findings/gaps below.
+
+**e2e ↔ production parity (CONFIRMED):**
+
+- e2e harness `e2e-testing/scripts/defi/staked_basis_funding_scan.py::_fetch_aster_funding` pulls
+  `https://fapi.asterdex.com/fapi/v1/fundingRate?symbol=…` (paginated, no-auth, 8h cadence) → `{day: mean per-cycle
+  rate}`. It does NOT canonicalize — it builds an in-memory `FundingPoint` for the carry-rank snapshot only.
+- Production `_perp_funding_hl_aster._fetch_aster_funding` hits the **SAME** `{ASTER_API_URL}/fapi/v1/fundingRate`
+  endpoint, then `_write_aster_derivative_ticker` maps each settlement record `fundingRate`/`markPrice`/`fundingTime`
+  → `AsterMarkPrice`+`AsterFundingRate` → `normalize_aster_derivative_ticker` → `CanonicalDerivativeTicker` →
+  `data_type=derivative_ticker` at `asset_group=cefi`, `venue=ASTER`, `source=aster`, source-aware
+  `batch_aster`/`live_aster`. Same raw API, same fields, same UAC normalizer — production produces the canonical shape
+  the e2e harness's proven fetch reads.
+
+**Test result (credential-free, mtds `.venv`):** `pytest tests/unit/test_perp_funding_handler.py
+tests/unit/test_perp_funding_normalization.py -k aster` → **7 passed / 58s**. Covers `_collect_aster` →
+`_write_aster_derivative_ticker` + `_write_aster_trades` (mocked fetch), funding_rate column presence, and
+Hyperliquid/Aster same-sign convention.
+
+**Live API → canonical end-to-end (network, real fetch):** fetched 3 live `BTCUSDT` funding records + ran each through
+`normalize_aster_derivative_ticker` → valid `CanonicalDerivativeTicker` (`instrument_key=ASTER:PERPETUAL:BTCUSDT`,
+`venue=ASTER`, `funding_rate` preserved incl. negative sign, `funding_timestamp` set). Live `fundingTime` spacing
+16:00 → 00:00 → 08:00 UTC = **8h confirmed** → matches UAC `perp_funding_cadence["aster"] = 8*3600` and handler
+`_LIVE_VENUE_INTERVAL_S["ASTER"]=28800`. Annualisation will be correct.
+
+**GAP 1 — `mark_price` is NULL from this endpoint (P2, data-completeness).** The live `/fapi/v1/fundingRate` records
+return `"markPrice": null` (verified live 2026-06-17). So `_write_aster_derivative_ticker` writes
+`mark_price=None` — the derivative_ticker carries funding but NO mark. The carry strategy reads `funding_rate` (present)
+so this does not block the funding leg, but if any consumer needs Aster mark on the derivative_ticker shard it must be
+sourced from `/fapi/v1/premiumIndex` (Binance-Futures-compatible, carries `markPrice`). Handler docstring/comments
+assume `markPrice` "rides the fundingRate record" — TRUE on Binance, but Aster returns null. **Todo (P2):** source mark
+from `premiumIndex` in `_collect_aster` (or accept funding-only derivative_ticker for G5).
+
+**GAP 2 — genesis date disagrees across 3 sources (P1, ties to existing Finding 1/cadence-registry-drift).** Handler
+`_ASTER_FUNDING_START_DATE = "2024-09-25"`; UAC `market_data_categories.py` Aster `perp_funding: "2024-10-01"`;
+operator stated `2023-07-22`. The live API itself returns rows back to `2022-01-01T00:00:00Z` (oldest queryable), but
+those very-early rows are a flat `0.00010000` placeholder (synthetic pre-launch backfill, not real settlements). The
+handler's `2024-09-25` floor is the safe conservative gate (skips pre-launch). **The operator's `2023-07-22` is NOT
+matched by any code constant** — recommend operator confirm the true Aster mainnet perp launch date so the genesis
+constant + the UAC start-date are reconciled to ONE value (this composes with existing Finding 1's "two registries
+disagree" — add genesis to that reconciliation).
+
+**GAP 3 — Aster DATA absent in GCS by design (NOT a code gap).** The backfill VM is drain-gated at G5; no GCS data yet
+is expected. The code path is verified-ready; running it at G5 will produce real canonical `derivative_ticker` (+
+`trades`) shards. No code fix needed to start producing data — only the operator G5 drain-release + a backfill run.
+
+**Bottom line:** the Aster e2e→canonical path is REAL and works; production matches it field-for-field via the shared
+UAC normalizer; tests pass; live API→canonical proven end-to-end; cadence (8h) correct. Backfill is confirmed ready to
+produce real canonical Aster funding data at G5. Two non-blocking gaps to resolve before/at backfill: (P2) mark_price
+null → premiumIndex, (P1) reconcile the genesis date to a single operator-confirmed value.
