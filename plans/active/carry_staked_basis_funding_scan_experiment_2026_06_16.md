@@ -659,6 +659,17 @@ and reads the literal `fundingRate`/`funding` value otherwise (the `0` guards on
   persistent interest floor, premium/dispersion on top — real + durable, but not premium _alpha_. Decompose carry into
   floor vs premium when sizing.
 
+**6. Full 3-year backtest (2023-05-20→2026-06-09, 232-coin universe, 169,241 HL funding points) — CARRY COMPRESSION.**
+After backfilling HL funding to 100% over ~3 years, ran the full-history `--hl-full` backtest. Full-period causal NET:
+ensemble **27.8%** (turn 0.099/d, maxDD −0.36%, Sharpe 16.6) · pure-basis 25.9% · dispersion 17.7% · staked 13.0%. But
+the per-year trend is the real finding — **carry compressed ~4× as HL matured**: ensemble causal net **2023 47.4% → 2024
+34.3% → 2025 16.6% → 2026-YTD 10.7%** (pure-basis 39.3→34.3→15.8→10.7). The 27.8% blend is INFLATED by the 2023-2024
+HL-launch era (new exchange, few participants, huge directional premiums); **the realistic forward expectation is the
+2026 regime ~11%, not the 3-year blend** — the launch-era goldmine won't recur. Turnover stays tiny + drawdown near-zero
+throughout (real low-risk carry, just shrinking). Composes with finding #5: the ~11% floor is now most of the remaining
+carry, so as premium compresses the strategy converges toward harvesting HL's structural interest rate. Still GROSS
+carry-only (no hedge/basis MtM) — Sharpe inflated, per the standing P3 todo.
+
 ## Open todos / next steps
 
 - [ ] [STRATEGY] P2. Decompose HL pure-basis carry into the interest-rate FLOOR (~11% APY structural, ~45-58% of hours
