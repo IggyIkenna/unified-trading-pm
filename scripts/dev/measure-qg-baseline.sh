@@ -85,8 +85,13 @@ measure_one() {
     local tlog="${TMP}/time.${repo}"
     local start end wall rss_kb rss_mb usr_s sys_s cpu_s ec=0
     start="$(date +%s.%N)"
+    # QG_SENTINEL_DISABLE=true: a baseline must measure the FULL gate cost (tests +
+    # typecheck actually run), never a green-sentinel SKIP — else the recorded wall is a
+    # cache-hit time and the 2×-drift WARN (base-service.sh) false-fires on every real
+    # full run. (Fixed 2026-06-17: the tool previously honored the sentinel → mixed
+    # skip/full baselines.) The drift WARN reads wall only; cpu/rss are informational.
     ( cd "${WORKSPACE_ROOT}/${repo}" && \
-      IGNORE_TIMEOUT=true /usr/bin/time -v -o "$tlog" \
+      IGNORE_TIMEOUT=true QG_SENTINEL_DISABLE=true /usr/bin/time -v -o "$tlog" \
         bash scripts/quality-gates.sh --no-fix ${QUICK} > "${TMP}/qg.${repo}.log" 2>&1 ) || ec=$?
     end="$(date +%s.%N)"
     wall="$(awk "BEGIN{printf \"%.1f\", ${end}-${start}}")"

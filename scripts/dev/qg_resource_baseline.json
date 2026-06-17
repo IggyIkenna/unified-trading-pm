@@ -1,53 +1,62 @@
 {
   "alerting-service": {
     "local": {
-      "cpu_s": 276.9,
+      "cpu_s": 70.4,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T10:43:41Z",
-      "peak_rss_mb": 629,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1127,
       "quick": false,
-      "wall_s": 318.9
+      "wall_s": 70.4
     }
   },
   "batch-live-reconciliation-service": {
     "local": {
-      "cpu_s": 280.4,
+      "cpu_s": 66.1,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T10:43:41Z",
-      "peak_rss_mb": 601,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1070,
       "quick": false,
-      "wall_s": 266.2
+      "wall_s": 66.1
     }
   },
   "client-reporting-api": {
     "local": {
-      "cpu_s": 304.3,
+      "cpu_s": 68.5,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T10:43:41Z",
-      "peak_rss_mb": 724,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1061,
       "quick": false,
-      "wall_s": 280.6
+      "wall_s": 68.5
     }
   },
   "deployment-api": {
     "local": {
-      "cpu_s": 483.4,
+      "cpu_s": 116.9,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 1368,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1330,
       "quick": false,
-      "wall_s": 401.0
+      "wall_s": 116.9
     }
   },
   "deployment-service": {
     "local": {
-      "cpu_s": 306.9,
+      "cpu_s": 106.0,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T10:43:41Z",
-      "peak_rss_mb": 1047,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 969,
       "quick": false,
-      "wall_s": 287.6
+      "wall_s": 106.0
     }
   },
   "deployment-ui": {
@@ -63,178 +72,218 @@
   },
   "e2e-testing": {
     "local": {
-      "cpu_s": 243.4,
+      "cpu_s": 67.7,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 298,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 303,
       "quick": false,
-      "wall_s": 257.1
+      "wall_s": 67.7
     }
   },
   "execution-service": {
     "local": {
-      "cpu_s": 673.6,
+      "cpu_s": 410.6,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 1885,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 2470,
       "quick": false,
-      "wall_s": 603.5
+      "wall_s": 410.6
     }
   },
   "features-service": {
     "local": {
-      "cpu_s": 510.0,
+      "cpu_s": 448.3,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 1853,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1727,
       "quick": false,
-      "wall_s": 606.4
+      "wall_s": 448.3
+    }
+  },
+  "fund-administration-service": {
+    "local": {
+      "cpu_s": 65.1,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 902,
+      "quick": false,
+      "wall_s": 65.1
+    }
+  },
+  "greeks-service": {
+    "local": {
+      "cpu_s": 65.2,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 610,
+      "quick": false,
+      "wall_s": 65.2
     }
   },
   "ibkr-gateway-infra": {
     "local": {
-      "cpu_s": 239.0,
+      "cpu_s": 68.4,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 319,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 286,
       "quick": false,
-      "wall_s": 244.4
+      "wall_s": 68.4
     }
   },
   "instruments-service": {
     "local": {
-      "cpu_s": 77.6,
-      "exit_code": 1,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 719,
+      "cpu_s": 136.1,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1297,
       "quick": false,
-      "wall_s": 58.4
+      "wall_s": 136.1
     }
   },
   "market-data-processing-service": {
     "local": {
-      "cpu_s": 343.8,
+      "cpu_s": 106.4,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 794,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1164,
       "quick": false,
-      "wall_s": 314.2
+      "wall_s": 106.4
     }
   },
   "market-tick-data-service": {
     "local": {
-      "cpu_s": 349.1,
+      "cpu_s": 177.9,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 1045,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1204,
       "quick": false,
-      "wall_s": 334.4
+      "wall_s": 177.9
     }
   },
   "ml-service": {
     "local": {
-      "cpu_s": 10775.4,
+      "cpu_s": 151.7,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 1065,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1329,
       "quick": false,
-      "wall_s": 810.1
+      "wall_s": 151.7
     }
   },
   "strategy-service": {
     "local": {
-      "cpu_s": 463.6,
+      "cpu_s": 131.2,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 1306,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1169,
       "quick": false,
-      "wall_s": 514.2
+      "wall_s": 131.2
     }
   },
   "system-integration-tests": {
     "local": {
-      "cpu_s": 396.8,
+      "cpu_s": 52.2,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 887,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 680,
       "quick": false,
-      "wall_s": 499.8
+      "wall_s": 52.2
     }
   },
   "trading-agent-service": {
     "local": {
-      "cpu_s": 372.5,
+      "cpu_s": 38.4,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 621,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 622,
       "quick": false,
-      "wall_s": 447.2
+      "wall_s": 38.4
     }
   },
   "unified-api-contracts": {
     "local": {
-      "cpu_s": 228.2,
+      "cpu_s": 246.8,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 1176,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 1097,
       "quick": false,
-      "wall_s": 217.4
+      "wall_s": 246.8
     }
   },
   "unified-trading-api": {
     "local": {
-      "cpu_s": 366.7,
+      "cpu_s": 147.7,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 709,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 762,
       "quick": false,
-      "wall_s": 310.0
+      "wall_s": 147.7
     }
   },
   "unified-trading-library": {
     "local": {
-      "cpu_s": 169.7,
-      "exit_code": 1,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 5146,
+      "cpu_s": 215.7,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 5406,
       "quick": false,
-      "wall_s": 97.0
+      "wall_s": 215.7
     }
   },
   "unified-trading-pm": {
     "local": {
-      "cpu_s": 253.0,
-      "exit_code": 1,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 879,
+      "cpu_s": 80.2,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 694,
       "quick": false,
-      "wall_s": 253.8
+      "wall_s": 80.2
     }
   },
   "unified-trading-system-ui": {
     "local": {
-      "cpu_s": 1.6,
-      "exit_code": 1,
-      "measured_at_utc": "2026-06-02T11:11:47Z",
-      "measured_concurrency": 4,
-      "peak_rss_mb": 155,
+      "cpu_s": 413.3,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_concurrency": 1,
+      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "peak_rss_mb": 22,
       "quick": false,
-      "wall_s": 5.0
+      "wall_s": 413.3
     }
   }
 }
