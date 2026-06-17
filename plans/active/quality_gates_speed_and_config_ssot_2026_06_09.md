@@ -208,8 +208,8 @@ single-core pinned), output under gitignored `.qg_profile/`.
       `--scope` → scans every repo's `.py` consumers against the manifest = the cross-repo guarantee the per-repo STEP
       5.65 narrows away. Alerting-only (GH issue `removed-symbol-rot` + Slack INFO + persist-cicd-event), never
       CI-blocking. `.tabs` excluded by the checker's `EXCLUDE_DIR_NAMES`. **Dry-run-verified locally** against the live
-      workspace (exit 0; 0 `removed` errors so no day-one false fire; surfaced 2 known `pending_removal` cross-repo warns
-      — features-service still calls UTL's deprecated `ManifestWriter.add`, tracked under writegate Phase 1.2A).
+      workspace (exit 0; 0 `removed` errors so no day-one false fire; surfaced 2 known `pending_removal` cross-repo
+      warns — features-service still calls UTL's deprecated `ManifestWriter.add`, tracked under writegate Phase 1.2A).
       Scheduled-from-default-branch caveat: inert until promoted to PM `main`. SSOT: check_removed_symbols.py docstring
       "run separately via CI cron". — unified-trading-pm
 - [x] [INFRA] P0. ✅ **pip-audit = 38 s (8%) OSV network** (now visible after decomposing the codex blob). Cache OSV
@@ -239,8 +239,8 @@ single-core pinned), output under gitignored `.qg_profile/`.
 > Re-swept ALL 25 repos with a deterministic extractor (tomllib parse of every `pyproject.toml` + stub var/array parse +
 > standalone-config-file detection). The 2026-06-10 matrix is **stale on coverage** (predates the mtds 28→79 +
 > instruments 77→88 ratchets) and **entirely missed four standalone config files** that silently shadow toml. Reproduce:
-> `scripts/quality_gates/qg_config_audit.py` (committed alongside this refresh). **Re-read live at execution time — these
-> values ratchet weekly.**
+> `scripts/quality_gates/qg_config_audit.py` (committed alongside this refresh). **Re-read live at execution time —
+> these values ratchet weekly.**
 
 ### Finding #1 — COVERAGE drift refreshed: **6 live drifts** (the old matrix documented 5, and 2 of its numbers are now wrong)
 
@@ -248,49 +248,87 @@ single-core pinned), output under gitignored `.qg_profile/`.
 > stub value (SHAs in § "Shipped"). The drift table below is the as-found state; toml ↔ stub now agree, so the TIER-A
 > flag-drop (Phase 1 P0) no longer risks a silent loosen/red. `uv.lock` untouched; no ratchet-up taken.
 
-`--cov-fail-under=$MIN_COVERAGE` (stub) always SHADOWS `[tool.coverage.report] fail_under` (toml), so "stub" is the effective gate.
+`--cov-fail-under=$MIN_COVERAGE` (stub) always SHADOWS `[tool.coverage.report] fail_under` (toml), so "stub" is the
+effective gate.
 
-| Repo                             | stub | toml | branch | Verdict                                                  |
-| -------------------------------- | ---- | ---- | ------ | -------------------------------------------------------- |
-| alerting-service                 | 76   | 78   | true   | **DRIFT** toml stricter (shadowed)                       |
-| market-data-processing-service   | 70   | 85   | true   | **DRIFT** toml stricter (shadowed) — **gap WIDENED** (was 70/77) |
-| market-tick-data-service         | 79   | 79.7 | true   | **DRIFT** (tiny) — was **28/71**, now essentially reconciled |
-| system-integration-tests         | 2    | 0    | true   | **DRIFT** stub stricter (flip→toml LOOSENS)              |
-| unified-trading-api              | 77   | 70   | true   | **DRIFT** stub stricter (flip→toml LOOSENS)              |
-| unified-trading-pm               | 69   | 70   | true   | **DRIFT** toml stricter (shadowed) — **NEW, old matrix missed** |
-| instruments-service              | 88   | 88   | true   | agree — was 77/77 (ratcheted)                            |
-| _all others_                     | =    | =    | —      | agree (floor 70 / repo-specific: batch 80, ibkr 51, strategy 74, UAC 94, UTL 80, e2e 0) |
+| Repo                           | stub | toml | branch | Verdict                                                                                 |
+| ------------------------------ | ---- | ---- | ------ | --------------------------------------------------------------------------------------- |
+| alerting-service               | 76   | 78   | true   | **DRIFT** toml stricter (shadowed)                                                      |
+| market-data-processing-service | 70   | 85   | true   | **DRIFT** toml stricter (shadowed) — **gap WIDENED** (was 70/77)                        |
+| market-tick-data-service       | 79   | 79.7 | true   | **DRIFT** (tiny) — was **28/71**, now essentially reconciled                            |
+| system-integration-tests       | 2    | 0    | true   | **DRIFT** stub stricter (flip→toml LOOSENS)                                             |
+| unified-trading-api            | 77   | 70   | true   | **DRIFT** stub stricter (flip→toml LOOSENS)                                             |
+| unified-trading-pm             | 69   | 70   | true   | **DRIFT** toml stricter (shadowed) — **NEW, old matrix missed**                         |
+| instruments-service            | 88   | 88   | true   | agree — was 77/77 (ratcheted)                                                           |
+| _all others_                   | =    | =    | —      | agree (floor 70 / repo-specific: batch 80, ibkr 51, strategy 74, UAC 94, UTL 80, e2e 0) |
 
-**Changes vs 2026-06-10 matrix**: mtds 28/71→79/79.7 (the template "28-vs-71" case is now reconciled to a 0.7 rounding gap); instruments 77/77→88/88; mdps drift widened 70/77→70/85; **unified-trading-pm 69/70 is a NEW drift**. Phase-1 reconciliation rule unchanged: settle each drift to ONE honest value BEFORE dropping the flag (flipping uta/SIT to toml as-is **silently loosens**).
+**Changes vs 2026-06-10 matrix**: mtds 28/71→79/79.7 (the template "28-vs-71" case is now reconciled to a 0.7 rounding
+gap); instruments 77/77→88/88; mdps drift widened 70/77→70/85; **unified-trading-pm 69/70 is a NEW drift**. Phase-1
+reconciliation rule unchanged: settle each drift to ONE honest value BEFORE dropping the flag (flipping uta/SIT to toml
+as-is **silently loosens**).
 
 ### Finding #2 — **FOUR standalone config files silently shadow toml** (NEW — not in old matrix; ACT NOW)
 
-Base runs each tool from the repo root with no explicit `-p`/`--config`, so each tool auto-discovers its standalone file IN PREFERENCE to the `[tool.*]` table in `pyproject.toml`:
+Base runs each tool from the repo root with no explicit `-p`/`--config`, so each tool auto-discovers its standalone file
+IN PREFERENCE to the `[tool.*]` table in `pyproject.toml`:
 
-| Repo                          | File                 | Effect                                                                                                   |
-| ----------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------- |
-| greeks-service                | `pyrightconfig.json` | **WINS over `[tool.basedpyright]`** + sets ~25 `report*="none"` → escaped workspace strict typing (**26 errors** under strict) |
-| fund-administration-service   | `pyrightconfig.json` | same mechanism → escaped strict typing (**14 errors** under strict)                                       |
-| instruments-service           | `pytest.ini`         | WINS over `[tool.pytest.ini_options]`; carries `asyncio_mode=auto` + `-p no:network-block` + `python_classes/functions` |
-| unified-trading-library       | `.bandit`            | **DEAD** — B608 already suppressed by inline `# nosec B608` (bandit not passed `-c`/`--ini`); plus a 2nd dead `[tool.bandit]` |
+| Repo                        | File                 | Effect                                                                                                                         |
+| --------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| greeks-service              | `pyrightconfig.json` | **WINS over `[tool.basedpyright]`** + sets ~25 `report*="none"` → escaped workspace strict typing (**26 errors** under strict) |
+| fund-administration-service | `pyrightconfig.json` | same mechanism → escaped strict typing (**14 errors** under strict)                                                            |
+| instruments-service         | `pytest.ini`         | WINS over `[tool.pytest.ini_options]`; carries `asyncio_mode=auto` + `-p no:network-block` + `python_classes/functions`        |
+| unified-trading-library     | `.bandit`            | **DEAD** — B608 already suppressed by inline `# nosec B608` (bandit not passed `-c`/`--ini`); plus a 2nd dead `[tool.bandit]`  |
 
-- **instruments `pytest.ini` + UTL `.bandit`** = safe behavior-preserving consolidations (merge into toml / delete dead file).
-- **greeks + fund-admin `pyrightconfig.json`** = NOT a free relocation: deleting the json re-enables the strict `[tool.basedpyright]` already present → 26 + 14 type errors surface. This is a workspace strict-typing **standards escape** (CLAUDE.md mandates `reportAny`/`reportUnknownMemberType`/`reportUnknownVariableType = error`). Resolution = flip-to-strict (fix ~40 errors) vs relocate-lax-into-toml + ratchet todo — decided below.
+- **instruments `pytest.ini` + UTL `.bandit`** = safe behavior-preserving consolidations (merge into toml / delete dead
+  file).
+- **greeks + fund-admin `pyrightconfig.json`** = NOT a free relocation: deleting the json re-enables the strict
+  `[tool.basedpyright]` already present → 26 + 14 type errors surface. This is a workspace strict-typing **standards
+  escape** (CLAUDE.md mandates `reportAny`/`reportUnknownMemberType`/`reportUnknownVariableType = error`). Resolution =
+  flip-to-strict (fix ~40 errors) vs relocate-lax-into-toml + ratchet todo — decided below.
 
 ### Finding #3 — `[tool.ruff]` is NOT uniform fleet-wide (DEFERRED — unify opportunistically, do not force)
 
-`select` diverges (`E,F,W,I,N,UP,B,C4,SIM` baseline, but mdps/ml/UTL/trading-agent/greeks drop `UP` & add `G,C90`; batch-live-recon drops `N,C4`; execution uses bespoke `N802,B008`); `per-file-ignores` ranges 1→67 (UAC); `ignore` 1→26 (strategy). Some divergence is legitimate per-repo need. Unifying is real work + would change lint behaviour fleet-wide (and trips the DTZ/TID251 conflict-guard) → **opportunistic, not forced** (operator 2026-06-15).
+`select` diverges (`E,F,W,I,N,UP,B,C4,SIM` baseline, but mdps/ml/UTL/trading-agent/greeks drop `UP` & add `G,C90`;
+batch-live-recon drops `N,C4`; execution uses bespoke `N802,B008`); `per-file-ignores` ranges 1→67 (UAC); `ignore` 1→26
+(strategy). Some divergence is legitimate per-repo need. Unifying is real work + would change lint behaviour fleet-wide
+(and trips the DTZ/TID251 conflict-guard) → **opportunistic, not forced** (operator 2026-06-15).
 
 ### Finding #4 — TIER-B orchestration spread (DEFERRED to the `[tool.quality-gates]` design below)
 
-`MAX_DURATION` 300→4800 (execution); `CODEX_MAX_VIOLATIONS` 0→6 (active ratchets); `PYTEST_UNIT_DIR` per-family; per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quality-gates]` candidates. **Later** (operator 2026-06-15).
+`MAX_DURATION` 300→4800 (execution); `CODEX_MAX_VIOLATIONS` 0→6 (active ratchets); `PYTEST_UNIT_DIR` per-family;
+per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quality-gates]` candidates. **Later** (operator
+2026-06-15).
 
 ### Phase-1 todos from this refresh (finding #2 — act now)
 
-- [x] ✅ [REFACTOR] P0. **instruments-service**: merged `pytest.ini` (`asyncio_mode=auto`, `addopts=-p no:network-block`, `python_classes`/`python_functions`, `asyncio` marker) into `[tool.pytest.ini_options]`; deleted `pytest.ini`. Behavior-preserving (3549 tests still collect). — instruments-service@f7934aa | QG ✅ (84s).
-- [x] ✅ [REFACTOR] P0. **unified-trading-library**: deleted the DEAD `.bandit` (B608 already handled by inline `# nosec` — bandit runs without `-c`/`--ini` so `.bandit` was never read); `[tool.bandit]` is the single home. — unified-trading-library@e469808 | QG ✅ (123s).
-- [x] ✅ [REFACTOR] P0. **greeks-service + fund-administration-service**: eliminated `pyrightconfig.json` → config in `[tool.basedpyright]`. **Discovery**: the json was dodging STEP 5.21 (`reportAny`/`reportUnknown*` must be `error`/omitted in toml), so relocate-lax is impossible for that family. **greeks** → clean strict config (suppressions dropped, NOT masked); 70 residual basedpyright errors now WARN-ONLY (no ceiling) — greeks-service@5b88041. **fund-admin** → `reportImplicitRelativeImport`/`reportMissingImports`=none relocated (allowed by 5.21), unknown-type rules stay strict, 14 warn-only — fund-administration-service@2ad889e. Both QG ✅. Operator decision: consolidate now, fix later.
-- [x] ✅ [TYPE] P1. **greeks (70 warn-only) + fund-admin (14 warn-only) strict-typing ratchet**: close the residual basedpyright errors, remove the relocated `report*="none"` suppressions (fund-admin), then set `BASEDPYRIGHT_MAX_ERRORS=0` in each repo's `scripts/quality-gates.sh` to enforce the ceiling (currently unset → errors are warn-only). Brings both repos to the workspace strict standard. Provenance: 2026-06-15 audit. Repo: greeks-service, fund-administration-service. fund-admin DONE: converted 14 `reportUnusedFunction` FastAPI decorator handlers to `app.add_api_route()` explicit registration (0 basedpyright errors), removed `reportImplicitRelativeImport`/`reportMissingImports`="none" suppressions, `BASEDPYRIGHT_MAX_ERRORS=0` set in QG — fund-administration-service@9f3fc44 | QG ✅. greeks-service DONE: fixed venv path (`venvPath="."` + `venv=".venv"`), removed dead code (`_on_instruments_reload`, `_InstrumentCacheStats`), typed all `getattr`/`json.loads`/`model_dump()` boundaries with `cast`, changed `handle()→None` (matches `MessageCallback` type), rewrote pyarrow I/O through pandas (complete stubs, 0 errors), changed `process_date()→int`, fixed `ServiceBootstrap operations` to class dict, added `pyarrow-stubs` to `uv.lock`, set `BASEDPYRIGHT_MAX_ERRORS=0` in QG, updated tests to match new contracts — greeks-service@f41a12d | QG ✅ (0 basedpyright errors, 83% coverage, all checks green).
+- [x] ✅ [REFACTOR] P0. **instruments-service**: merged `pytest.ini` (`asyncio_mode=auto`,
+      `addopts=-p no:network-block`, `python_classes`/`python_functions`, `asyncio` marker) into
+      `[tool.pytest.ini_options]`; deleted `pytest.ini`. Behavior-preserving (3549 tests still collect). —
+      instruments-service@f7934aa | QG ✅ (84s).
+- [x] ✅ [REFACTOR] P0. **unified-trading-library**: deleted the DEAD `.bandit` (B608 already handled by inline
+      `# nosec` — bandit runs without `-c`/`--ini` so `.bandit` was never read); `[tool.bandit]` is the single home. —
+      unified-trading-library@e469808 | QG ✅ (123s).
+- [x] ✅ [REFACTOR] P0. **greeks-service + fund-administration-service**: eliminated `pyrightconfig.json` → config in
+      `[tool.basedpyright]`. **Discovery**: the json was dodging STEP 5.21 (`reportAny`/`reportUnknown*` must be
+      `error`/omitted in toml), so relocate-lax is impossible for that family. **greeks** → clean strict config
+      (suppressions dropped, NOT masked); 70 residual basedpyright errors now WARN-ONLY (no ceiling) —
+      greeks-service@5b88041. **fund-admin** → `reportImplicitRelativeImport`/`reportMissingImports`=none relocated
+      (allowed by 5.21), unknown-type rules stay strict, 14 warn-only — fund-administration-service@2ad889e. Both QG ✅.
+      Operator decision: consolidate now, fix later.
+- [x] ✅ [TYPE] P1. **greeks (70 warn-only) + fund-admin (14 warn-only) strict-typing ratchet**: close the residual
+      basedpyright errors, remove the relocated `report*="none"` suppressions (fund-admin), then set
+      `BASEDPYRIGHT_MAX_ERRORS=0` in each repo's `scripts/quality-gates.sh` to enforce the ceiling (currently unset →
+      errors are warn-only). Brings both repos to the workspace strict standard. Provenance: 2026-06-15 audit. Repo:
+      greeks-service, fund-administration-service. fund-admin DONE: converted 14 `reportUnusedFunction` FastAPI
+      decorator handlers to `app.add_api_route()` explicit registration (0 basedpyright errors), removed
+      `reportImplicitRelativeImport`/`reportMissingImports`="none" suppressions, `BASEDPYRIGHT_MAX_ERRORS=0` set in QG —
+      fund-administration-service@9f3fc44 | QG ✅. greeks-service DONE: fixed venv path (`venvPath="."` +
+      `venv=".venv"`), removed dead code (`_on_instruments_reload`, `_InstrumentCacheStats`), typed all
+      `getattr`/`json.loads`/`model_dump()` boundaries with `cast`, changed `handle()→None` (matches `MessageCallback`
+      type), rewrote pyarrow I/O through pandas (complete stubs, 0 errors), changed `process_date()→int`, fixed
+      `ServiceBootstrap operations` to class dict, added `pyarrow-stubs` to `uv.lock`, set `BASEDPYRIGHT_MAX_ERRORS=0`
+      in QG, updated tests to match new contracts — greeks-service@f41a12d | QG ✅ (0 basedpyright errors, 83% coverage,
+      all checks green).
 
 ---
 
@@ -301,16 +339,16 @@ Base runs each tool from the repo root with no explicit `-p`/`--config`, so each
 > toward a one-line `source base-service.sh`.
 
 - [~] [DESIGN] P0. TIER-A rule: base must STOP passing CLI flags that shadow toml (`--cov-fail-under`, explicit pytest
-      test dir vs `testpaths`, bandit without `-c`). For each, either drop the override (let the tool read toml) or pass
-      the tool its own config explicitly. Reconcile each drifting repo to ONE honest value FIRST. **PRECONDITION DONE
-      2026-06-15**: all 6 coverage drifts reconciled (toml=stub).
+  test dir vs `testpaths`, bandit without `-c`). For each, either drop the override (let the tool read toml) or pass the
+  tool its own config explicitly. Reconcile each drifting repo to ONE honest value FIRST. **PRECONDITION DONE
+  2026-06-15**: all 6 coverage drifts reconciled (toml=stub).
   - [x] ✅ **`--cov-fail-under` DROPPED (2026-06-17, unified-trading-pm@1a935e21e)** — both bases (`base-service.sh` +
         `base-library.sh`) no longer pass `--cov-fail-under` on the pytest CLI; pytest-cov reads
         `[tool.coverage.report] fail_under` from toml = the single home. **Verified**: (a) mechanically — synthetic repo
         with only toml `fail_under=99` + no CLI flag → pytest exits 1 "total of 50 < fail-under=99", so toml IS
         enforced; (b) behavior-preserving fleet-wide — pre-flip sweep of all 25 repos confirmed every repo sourcing the
-        base declares toml `fail_under` == its stub `MIN_COVERAGE` (zero drift, none absent), so the effective gate value
-        is unchanged. `coverage-floor-guard.sh` still enforces the system floor (70) + signed exceptions against
+        base declares toml `fail_under` == its stub `MIN_COVERAGE` (zero drift, none absent), so the effective gate
+        value is unchanged. `coverage-floor-guard.sh` still enforces the system floor (70) + signed exceptions against
         `MIN_COVERAGE` and already treats toml `fail_under` as "the real gate". PM QG re-verified green post-flip.
   - [x] ✅ **bandit `-c` AUDITED safe (2026-06-17)** — see § "Per-repo `[tool.bandit] skips` audit"; adding
         `-c pyproject.toml` suppresses 0 real findings (the actual flag-add is bundled into the residual flip below).
@@ -340,10 +378,27 @@ Base runs each tool from the repo root with no explicit `-p`/`--config`, so each
 
 ## Phase 2 — CHANGE-SCOPED FAST TIER (the single-core wall-time win)
 
-> Two-tier model. **Fast/iterative tier** = scoped to changed files + impacted tests; for the local dev loop; does NOT
-> write the sentinel and is NOT sufficient to merge. **Full/merge tier** = today's complete gate with full coverage;
-> writes the sentinel; runs at quickmerge Pass-1 / CI. The fast tier turns a 2-file edit from minutes into seconds
-> without touching the gate's strength.
+> Two-tier model. **Fast/iterative tier** = scoped to changed files for the FILE-SPECIFIC steps only; for the local dev
+> loop; does NOT write the sentinel and is NOT sufficient to merge. **Full/merge tier** = today's complete gate; writes
+> the sentinel; runs at quickmerge Pass-1 / CI.
+>
+> **⚖️ OPERATOR DECISION 2026-06-17 (Harsh) — TESTS + BASEDPYRIGHT ALWAYS FULL; fast tier scopes ONLY file-specific
+> steps.** Rationale: "we don't want to do the wrong thing just to save a few minutes and then catch it during merge."
+> The fast tier scopes **codex (done) + size-checks + bandit** (the per-file grep/AST/size steps) to the changed-file
+> set. It **NEVER** scopes the pytest suite or basedpyright — both always run over the whole repo, every tier.
+>
+> **This decision dissolves the entire coverage-preservation problem** (the former "THE hard part"): because the full
+> test suite always runs, coverage is always the real total and the floor is always genuinely enforced — no testmon
+> impact-selection (which under-selects on this codebase's dynamic dispatch / factory-registry wiring), no
+> combined-coverage approximation (the one mechanism that could silently drop the floor), no "floor-only-at-merge" gap.
+> The Q1 "which tests run" question is answered "all of them"; the Q2 "fast-tier coverage gate" question is moot.
+>
+> **Honest trade**: with tests (~59% of wall on the stale 2026-06-11 profile) + typecheck (~10%) staying full, the fast
+> tier's win is bounded to the codex+size-checks+bandit slice — largest on big repos where codex overtakes tests
+> (execution-service, deployment-api), smaller on test-heavy repos. A fresh `--profile` sweep (numbers are stale — they
+> predate the size-checks-batching + schema-provenance O(n²) + pip-audit-cache speedups) sizes the actual remaining win
+> and decides whether the reduced-scope fast tier is even worth completing. Sweep launched 2026-06-17 (see Phase-0
+> re-profile item).
 
 - [ ] [DESIGN] P0. Specify the two-tier contract + the trigger: a new `--fast` (or `--scoped`) mode that diffs
       HEAD/worktree, computes the changed file set, and runs only impacted work. Reuse the existing green-sentinel
@@ -354,15 +409,19 @@ Base runs each tool from the repo root with no explicit `-p`/`--config`, so each
       policy decision for what a fast-sentinel permits (likely: nothing on the promote path; fast = inner-loop only);
       (c) the base scripts ALREADY hard-exclude QG_FAST from the full-sentinel write (defense-in-depth shipped
       2026-06-10) — the tier must set QG_FAST=1.
-- [ ] [DESIGN] P0. Coverage-preservation design (THE hard part). Options to evaluate with Phase 0 data: (a)
-      `pytest-testmon` to select only tests impacted by changed code; (b) maintain a coverage cache/DB so the fast tier
-      reports combined (cached + delta) coverage; (c) fast tier runs impacted tests WITHOUT the coverage gate, and the
-      coverage floor is enforced ONLY at the merge tier. **Invariant: the merge tier always recomputes full coverage**,
-      so the floor can never silently drop regardless of which option we pick.
-- [ ] [INFRA] P1. Test impact selection: wire pytest-testmon (or coverage-map equivalent) so the fast tier runs only
-      tests that touch the changed files + their importers. Single-core; the win is fewer tests, not more cores.
-- [ ] [INFRA] P1. basedpyright fast path: type-check changed files + their reverse-dependents only (full `SOURCE_DIR/`
-      stays on the merge tier). Warm `BASEDPYRIGHT_CACHE_DIR` (already set) so incremental runs are cheap.
+- [x] ✅ [DESIGN] P0. Coverage-preservation design — **RESOLVED BY DECISION (2026-06-17), not by mechanism.** Tests
+      always run full → coverage is always the real total → the floor is always enforced on every tier. None of (a)
+      testmon / (b) combined-coverage / (c) floor-only-at-merge is needed; (b) is explicitly rejected (silent-floor-
+      drop risk). The "THE hard part" problem is dissolved by keeping the test suite un-scoped. See the Phase-2 decision
+      banner above.
+- [~] [DESIGN] P0. ~~Test impact selection (pytest-testmon)~~ — **SUPERSEDED by the 2026-06-17 decision: tests always
+  run full, never impact-selected.** testmon's executed-line model under-selects on this codebase's dynamic dispatch /
+  StrEnum / factory-registry wiring (a deselected-but-actually-impacted test = false-green); not worth the risk to scope
+  the test phase. Dropped.
+- [~] [DESIGN] P0. ~~basedpyright fast path (changed files + reverse-deps)~~ — **SUPERSEDED by the 2026-06-17 decision:
+  basedpyright always runs over the whole repo, every tier.** Reverse-dependency type-impact is exactly where
+  changed-file scoping is most likely to miss a real type break; kept full. (The warm `BASEDPYRIGHT_CACHE_DIR`
+  incremental speedup still applies to the full run — that is a per-step cost item, not a fast-tier scope.) Dropped.
 - [x] ✅ [INFRA] P1. **Codex STEP 5.x fast path — DONE (2026-06-11, operator's #2: "codex on changed files only").**
       `--fast` (env `QG_FAST=1`) restricts the ~60 codex grep checks to the source `.py` files CHANGED vs the
       merge-base, passed to `rg` as **INCLUDE-globs** via a `codex_rg` wrapper (`rg ${CODEX_SCOPE_GLOBS[@]+…} "$@"`).
@@ -542,9 +601,9 @@ Dated index of what landed today — detail lives in the cited sections/plans, n
   stale 2026-06-10 matrix). Reproducer `scripts/quality_gates/qg_config_audit.py` authored.
 - ✅ **Finding #1 — all 6 coverage drifts RECONCILED** (Option A, operator 2026-06-15 — behavior-preserving, `uv.lock`
   untouched): settled each repo's `[tool.coverage.report] fail_under` to the currently-enforced stub `MIN_COVERAGE` so
-  toml ↔ stub agree (the prerequisite the Phase-1 TIER-A item calls for — a bare flag-drop would silently loosen uta/SIT
-  and red mdps/alerting). alerting-service@fc47adc (78→76) · unified-trading-api@0816399 (70→77, stub-stricter raise) ·
-  market-data-processing-service@5635686 (85→70) · market-tick-data-service@57740ac (79.7→79) ·
+  toml ↔ stub agree (the prerequisite the Phase-1 TIER-A item calls for — a bare flag-drop would silently loosen
+  uta/SIT and red mdps/alerting). alerting-service@fc47adc (78→76) · unified-trading-api@0816399 (70→77, stub-stricter
+  raise) · market-data-processing-service@5635686 (85→70) · market-tick-data-service@57740ac (79.7→79) ·
   system-integration-tests@5214d65 (0→2, stub-stricter raise) · unified-trading-pm@283b98ec (70→69, PR #333→main). No
   ratchet-up taken (operator chose not to surface strict-coverage gaps). **The flag-drop (TIER-A P0) is now unblocked.**
 - ✅ **Finding #2 — all 4 standalone configs consolidated into toml** (→ § "Phase-1 todos from this refresh"):
@@ -561,5 +620,5 @@ Dated index of what landed today — detail lives in the cited sections/plans, n
   `LOCAL_DEPS` installed into the global pyenv env, not the repo `.venv`, so workspace libs were unresolved → Unknown
   cascade inflated local counts (PM 1627 vs CI ~1344). Detail in `ci_local_qg_parity_2026_06_08.md` § third root cause.
 
-Deferred (already tracked in their sections, not started): finding #3 ruff unification · finding #4 `[tool.quality-gates]`
-table · the rest of Phases 1–4.
+Deferred (already tracked in their sections, not started): finding #3 ruff unification · finding #4
+`[tool.quality-gates]` table · the rest of Phases 1–4.
