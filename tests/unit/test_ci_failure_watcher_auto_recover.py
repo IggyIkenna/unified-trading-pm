@@ -43,6 +43,7 @@ def _pr(
     state: str,
     failed_check: bool,
     v2_present: bool,
+    v2_action_required: bool = False,
     head: str = "live-defi-rollout",
     head_message: str = "ci: real change",
     head_oid: str = "cafebabe",
@@ -53,6 +54,7 @@ def _pr(
         "state": state,
         "failed_check": failed_check,
         "v2_present": v2_present,
+        "v2_action_required": v2_action_required,
         "head": head,
         "base": "staging",
         "age_min": 40,
@@ -95,6 +97,22 @@ class TestAutoRecoverStuckPrs:
             dry_run=True,
         )
         assert {s["number"] for s in out} == {6}
+
+    def test_action_required_qualifies(self) -> None:
+        # v2 PRESENT but concluded action_required (neither green nor red) → recoverable (2026-06-17).
+        out = _recover(
+            [_pr(12, state="BLOCKED", failed_check=False, v2_present=True, v2_action_required=True)],
+            dry_run=True,
+        )
+        assert {s["number"] for s in out} == {12}
+
+    def test_v2_present_without_action_required_still_left_alone(self) -> None:
+        # v2 present + NOT action_required (in-flight / green-pending) → recovering would loop; skip.
+        out = _recover(
+            [_pr(13, state="BLOCKED", failed_check=False, v2_present=True, v2_action_required=False)],
+            dry_run=True,
+        )
+        assert out == []
 
 
 class TestAutoRecoverMechanism:
@@ -197,3 +215,53 @@ class TestAutoRecoverMechanism:
         )
         assert [c[:3] for c in calls] == [["gh", "pr", "close"], ["gh", "pr", "reopen"]]
         assert not any("workflow" in c for c in calls)
+
+    def test_action_required_head_close_reopen_and_marker(self, monkeypatch) -> None:
+        # v2=action_required (present, not failed) → close+reopen to re-fire pull_request AND post the
+        # bounding marker comment. Never the empty-commit supersede (that's the v2-absent skip-ci path).
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [
+                _pr(
+                    14,
+                    state="BLOCKED",
+                    failed_check=False,
+                    v2_present=True,
+                    v2_action_required=True,
+                    head_message="feat: real change",
+                )
+            ],
+        )
+        triples = [c[:3] for c in calls]
+        assert ["gh", "pr", "close"] in triples
+        assert ["gh", "pr", "reopen"] in triples
+        assert ["gh", "pr", "comment"] in triples
+        # marker comment body carries the hidden marker so the next tick is bounded
+        assert any(MOD._ACTION_REQ_MARKER in " ".join(str(x) for x in c) for c in calls)
+        assert not any("git/refs/heads/" in " ".join(str(x) for x in c) for c in calls)
+
+    def test_action_required_bounded_when_recently_recovered(self, monkeypatch) -> None:
+        # If a recent marker comment exists (within the window), do NOT close+reopen again (bound).
+        calls: list[list[str]] = []
+
+        class _R:
+            returncode = 0
+            stderr = ""
+            stdout = ""
+
+        def _fake_run(cmd, *_args, **_kwargs):
+            calls.append(cmd)
+            r = _R()
+            if "--json" in cmd and "comments" in cmd and "view" in cmd:
+                # a fresh marker comment exists → bounded
+                r.stdout = '{"comments":[{"body":"' + MOD._ACTION_REQ_MARKER + '","createdAt":"2999-01-01T00:00:00Z"}]}'
+            return r
+
+        monkeypatch.setattr(MOD.subprocess, "run", _fake_run)
+        _recover(
+            [_pr(15, state="BLOCKED", failed_check=False, v2_present=True, v2_action_required=True)],
+            dry_run=False,
+        )
+        # only the `pr view` comments query ran; no close/reopen/comment.
+        assert not any(c[:3] == ["gh", "pr", "close"] for c in calls)
+        assert not any(c[:3] == ["gh", "pr", "comment"] for c in calls)
