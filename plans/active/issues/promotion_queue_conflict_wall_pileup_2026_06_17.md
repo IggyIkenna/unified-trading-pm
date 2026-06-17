@@ -188,7 +188,7 @@ failed typecheck with the SAME ~3000 errors. The errors are `reportAny`/ `report
 
 **Actual root (documented at `scripts/quality-gates-base/base-service.sh:312-319`):** a basedpyright **Unknown-type
 CASCADE** — when the workspace libs (UTL/UAC) are not resolved into the `.venv` that basedpyright reads (`venv=".venv"`;
-LOCAL_DEPS can land outside it), basedpyright degrades _all_ types to `Unknown` → thousands of spurious
+LOCAL*DEPS can land outside it), basedpyright degrades \_all* types to `Unknown` → thousands of spurious
 `reportUnknown*`/`reportAny`. It is **FLAKY per-run** (`0d51af1e` typecheck =success at 01:36; `cc1376fc`→`14ab1a12`
 =failure since) and **fleet-wide** (every repo's typecheck depends on its deps resolving into `.venv`). NOT introduced
 by this session (the failing files are foreign/pre-existing).
@@ -203,3 +203,34 @@ ride that convergence.
       type-check step, and fail-loud (not Unknown-cascade) if they are not. Fleet-wide. **Big finding — CI-infra.** This
       is the real keystone behind the whole promotion jam (it reds every repo's v2 typecheck on a bad-luck dep-install
       run). Separate, dedicated investigation — NOT 3000 hand-fixes.
+
+### .venv-install fix SHIPPED + VERIFIED (2026-06-17) — fleet cascade cured; PM-#387 residual isolated
+
+**Root (confirmed):** the reusable `python-quality-gates-v2.yml` typecheck slice installed cloned sibling deps with a
+bare `uv pip install -e ../$dep` (NO `--python .venv/bin/python`). On a runner with a pyenv/global interpreter, uv
+installed them OUTSIDE `.venv`; basedpyright (`venv=".venv"`) then saw the workspace lib unresolved → Unknown-type
+cascade → typecheck red. FLAKY (green only when uv picked `.venv`).
+
+**Fix:** `uv pip install -e "../$dep" --python "$_qg_venv_py"` (+ a loud unresolved-dep warning), mirroring the proven
+local fix `base-service.sh:316-327`. The reusable workflow is referenced by every repo at `@live-defi-rollout`, so it
+went **fleet-live on the PM LDR push (df6291b6d)** — no rollout, no main-drain.
+
+**VERIFIED:** re-ran v2 typecheck on a CONSUMER (`market-tick-data-service`) → **typecheck SUCCESS** (was red); deps
+resolve, no cascade. → the ~24 consumer repos' Class-B dep-update + Class-C staging→main PRs now pass typecheck and
+drain.
+
+**PM-#387 residual (separate issue, NOT the cascade):** PM's own v2 typecheck still fails — count 2992 vs
+`BASEDPYRIGHT_MAX_ERRORS=1517` (`0d51af1e` was exactly 1517=green). My fix WORKED for PM too (deps resolve: the
+unresolved-dep warning did NOT fire; only 1 UTL/UAC ref in 2992). The 2992 is PM's OWN basedpyright debt: ~592
+`reportAny` + `reportUnknown` on `json.loads`/`dict.get`/loop-vars across PM scripts (`generate-cicd-diagram.py` 145,
+`plan-hygiene/fix_frontmatter.py` 124, `_prospectus_manifest.py` 83, `reap_stale_blockers.py` 69, …), plus ~86 from one
+genuinely-unresolved import `unified_trading_services` (`audit-library-imports.py`; NOT in PM's `dep_repos`). The
+1517→2992 jump is unexplained (genuine debt growth vs a measurement change) and needs investigation BEFORE a decision.
+
+- [ ] [CICD] P1. **PM #387 typecheck-debt-vs-ceiling** — decide (do NOT blind-bump): (a) investigate the 1517→2992 jump
+      (which commits/scripts added the ~1475; is any a regression vs intentional-Any json debt); (b) add
+      `unified-trading-services` to PM's `dep_repos` (clears the ~86 `unified_trading_services` cascade — a correct,
+      understood fix); (c) for the genuine intentional-Any json/argparse scripts, extend the existing
+      `[tool.basedpyright] ignore` list (consistent with its stated rationale) OR recalibrate the ceiling once the jump
+      is understood. Only PM's v2 (and thus the PM-central bots reaching main: supersede, alert, ldr-to-main provenance,
+      conflict-agent context) is gated on this; the FLEET is already unblocked.
