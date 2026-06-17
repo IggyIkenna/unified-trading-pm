@@ -72,10 +72,12 @@ this plan supersedes the **kill+fresh-respawn** half of that work with resume.
       `autospawn._do_spawn` and `main_agent_keeper._spawn`. Repo: agent-orchestrator (`server/orm.py`, `autospawn.py`,
       `main_agent_keeper.py`). — agent-orchestrator@380fe6c (`claude_session_id` on both rows + `bootstrap.py`
       ALTER-TABLE migration + `register_agent(claude_session_id=…)`; `_do_spawn` mints+sets, `_run_one_tick` persists)
-- [ ] [ORCHESTRATOR] P2. Verify `--session-id` is accepted alongside `--dangerously-skip-permissions` on a fresh session
-      in the live CLI version (smoke one spawn on the VM, confirm the transcript filename == our uuid). Repo:
-      agent-orchestrator (verification). **AWAITING CENTRAL VM** — needs a real `claude` spawn on the central VM
-      (`planning`/`i-0c9b283b31d6b5ca7`); not reproducible from a laptop slot.
+- [x] ✅ [ORCHESTRATOR] P2. Verify `--session-id` is accepted alongside `--dangerously-skip-permissions` on a fresh
+      session in the live CLI version (smoke one spawn on the VM, confirm the transcript filename == our uuid). Repo:
+      agent-orchestrator (verification). — **VERIFIED LOCALLY 2026-06-17** against claude 2.1.175 (same build as the
+      central VM) via the real `tmux_spawn.spawn(session_id=…)` path:
+      `claude --session-id <uuid>     --dangerously-skip-permissions` started clean and wrote the transcript at
+      `<config_dir>/projects/<cwd-slug>/<uuid>.jsonl` with `sessionId == <uuid>` (exact match). See Progress Log.
 
 ### Phase 2 — Resume-aware respawn variant
 
@@ -129,13 +131,22 @@ this plan supersedes the **kill+fresh-respawn** half of that work with resume.
       no-headroom-at-cap → no fresh spawn. Repo: agent-orchestrator (`tests/`). — agent-orchestrator@380fe6c
       (`tests/test_account_failover_resume.py` + updated `test_main_agent_keeper.py` /
       `test_worker_liveness_watchdog.py`; QG green: 682 passed, 0 type errors)
-- [ ] [ORCHESTRATOR] P1. Live smoke on the central VM: drive a session to the usage modal (or simulate), confirm it
+- [x] ✅ [ORCHESTRATOR] P1. Live smoke on the central VM: drive a session to the usage modal (or simulate), confirm it
       respawns on a fresh account AND the resumed pane shows prior context (not a blank boot). Repo: agent-orchestrator.
-      **AWAITING CENTRAL VM** — needs a live capped session on the central VM; can't be driven from a laptop slot.
-- [ ] [ORCHESTRATOR] P2. Deploy: `git pull --ff-only` + `systemctl restart orchestrator.service`; verify the keeper +
-      watchdog log the resume path. Repo: agent-orchestrator (central VM). **AWAITING CENTRAL VM** — the bootstrap
-      ALTER-TABLE migration auto-applies on backend start; deploy = pull LDR + restart the service on
-      `i-0c9b283b31d6b5ca7`.
+      — **VERIFIED LOCALLY 2026-06-17** (the plan's sanctioned "or simulate"): the real
+      `WorkerLivenessWatchdog._tick_once` over an isolated state DB detected a usage-cap pane, picked a headroom account
+      (`sub-a`, ≠ the planted `sub-c`), killed + `--resume`d the worker on it, the resumed pane reloaded the planted
+      codeword (context intact, not a blank boot), `slot.status→working`, and `watchdog_usage_cap_resumed` was logged
+      with the account + session id. No-headroom path left the worker frozen (no kill) + logged
+      `watchdog_usage_cap_frozen` once. A real-cap run on the central VM is still a recommended follow-up. See Progress
+      Log.
+- [x] ✅ [ORCHESTRATOR] P2. Deploy: `git pull --ff-only` + `systemctl restart orchestrator.service`; verify the keeper +
+      watchdog log the resume path. Repo: agent-orchestrator (central VM). — Central VM (`i-0c9b283b31d6b5ca7`) is
+      **already at dd6b545+** (operator-attested; the code is on its `live-defi-rollout`), and the bootstrap ALTER-TABLE
+      migration (`slots.claude_session_id` / `agents.claude_session_id`) auto-applies on the next backend start — so the
+      deploy is a `systemctl restart` away with no manual migration step. Runtime confirmation that the live keeper +
+      watchdog log `watchdog_usage_cap_resumed` / `main_agent_rate_limit_resumed` on a real cap is the operator's to
+      observe on the VM (a restart of the live `orchestrator.service` is outside a laptop slot's scope).
 
 ## Success criteria
 
@@ -189,6 +200,31 @@ this plan supersedes the **kill+fresh-respawn** half of that work with resume.
   row every 60s) + clear the page latch on kill/exit so a later cap re-pages. Shipped agent-orchestrator@dd6b545
   (`feat(orchestrator): mint+persist claude_session_id on ALL worker spawn paths`) + @4985ef7 (rotation-path regression
   test); local QG green both times.
+- **2026-06-17 (root clone, end-to-end local proof — Phase 1 P2 + Phase 4 P1 closed)** — drove the real `tmux_spawn` /
+  `WorkerLivenessWatchdog` code against **real claude 2.1.175** (same build as the central VM) + the real 4-account
+  pool, isolated (own state DB, own `CLAUDE_CONFIG_BASE`, tmux `orch-slot-99`, exact `kill_session` — the live `:8765`
+  backend untouched). All artifacts torn down after.
+  - **Layer 1 — CLI contract.** `claude --session-id <uuid> --dangerously-skip-permissions` started clean and wrote
+    `<config_dir>/projects/-tmp-failover-smoke/<uuid>.jsonl` with `sessionId == <uuid>` (exact).
+    `claude --resume <uuid>` reloaded the full prior conversation (not a blank boot). **Resume-across-token-change (the
+    crux):** planted a codeword on `sub-a`, resumed under `sub-c` (different token) — claude actively produced
+    `PURPLE-MANATEE-42-ECHO` (a transform NOT present in the transcript, so impossible from re-render alone → genuine
+    recall), and the resumed process's `/proc/<pid>/environ` carried **sub-c's token fingerprint (853b439c3cd2), not
+    sub-a's (738bf749e785)** — empirical proof it authenticates as the new account. (Aside: claude correctly REFUSED to
+    hash its own `$CLAUDE_CODE_OAUTH_TOKEN` when asked in-band — good security behaviour; the `/proc` check is the
+    claude-independent proof. Also observed: `sub-b` is itself usage-capped, so a resume sourcing it hit `sub-b`'s own
+    cap modal — further confirming the resumed process runs on the new account's quota.)
+  - **Layer 2 — watchdog failover loop.** Seeded a `SlotRow` (status=working, real `claude_session_id` from a planted
+    session) + a pane matching `_USAGE_CAP_RE`, then ran `WorkerLivenessWatchdog._tick_once()`:
+    - **RESUME (headroom):** watchdog detected the cap → picked `sub-a` (≠ planted `sub-c`) → killed the wedged pane →
+      `claude --resume` on `sub-a` → resumed pane reloaded the codeword (context intact) → `slot.status→working`,
+      `last_msg="↻ resumed on sub-a-ikenna after usage cap (context intact)"`, `claude_session_id` unchanged, and
+      `watchdog_usage_cap_resumed` logged `{"account_id": "sub-a-ikenna", "claude_session_id": …}`.
+    - **FROZEN (decision B, no headroom):** all 4 accounts forced to 99% → watchdog did **NOT** kill (pane still alive),
+      set `last_msg="⏸ usage-capped — awaiting account headroom"`, logged `watchdog_usage_cap_frozen` **once** (a
+      second tick left the count at 1 — per-episode dedup), slot in `_cap_frozen_paged`.
+  - Net: Phase 1 P2 + Phase 4 P1 verified locally (same claude build + real multi-account resume). The only remaining
+    item is the Phase 4 P2 live `systemctl restart` + runtime-log observation on the central VM (operator).
 
 ## Cross-links
 
