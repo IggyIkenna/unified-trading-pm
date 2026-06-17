@@ -191,6 +191,22 @@ _(append each build failure + fix here as we go — this IS the plan's progress 
   (FF-pull `[skip:dirty]` risk). Per "generated artifacts are gitignored, never committed" it should be added to
   `unified-trading-library/.gitignore`. (Temp `.deps/` cleanup pending — sandbox blocks `rm -rf`/`git clean`; gitignoring
   is the durable fix.)
+- 2026-06-17: **PHASE-2 LOCAL SWEEP (14 cloned Python services) — 6 PASS / 9 FAIL, single root cause = TWO Dockerfile patterns.**
+  - **✅ Pattern A (base-image, self-contained: `FROM utl@digest` + `uv pip install --no-deps -e .`)** builds clean with a
+    single-repo `docker build` context: **instruments, client-reporting-api, deployment-service, features, market-tick-data,
+    agent-orchestrator** (+ UTL base + UAC wheel). 6 services.
+  - **❌ Pattern B (vendored-sibling: `COPY unified-api-contracts/ unified-trading-library/` into context + `uv sync --frozen`
+    against `file:///unified-api-contracts` path source)** FAILS a single-repo context — needs a **multi-repo build context**
+    with UAC+UTL sources staged in (cloudbuild does this; local single-repo `docker build` doesn't). 9 services:
+    - *B1 fails at the `COPY` step* ("`/unified-api-contracts`: not found"): **alerting, batch-live-reconciliation, execution,
+      greeks, strategy**.
+    - *B2 fails at `uv sync --frozen`* ("Distribution not found at `file:///unified-api-contracts`"): **fund-administration,
+      market-data-processing, ml, trading-agent**.
+  - **These are NOT broken code** — Pattern B builds fine on GCP (cloudbuild stages siblings). The failure is the local
+    single-repo context. **Follow-up:** (a) build Pattern-B locally with a staged multi-repo context to validate current
+    code; (b) **the A-vs-B inconsistency is itself a finding** → candidate fleet Dockerfile normalization (Pattern A is the
+    clean base-image-leveraging form; Pattern B redundantly re-vendors + re-syncs sibling sources despite FROM-ing the base).
+    File as a separate normalization item, do NOT fork mid-validation.
 
 ## Composes with / SSOTs
 - IAM/unknown-image (separate): `plans/active/issues/deployment_dashboard_image_status_and_multicloud_toggle_2026_06_17.md`
