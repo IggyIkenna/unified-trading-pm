@@ -364,23 +364,32 @@ residual **manually** (operator-directed) and surfaced a new systemic gate:
       run concludes `action_required` vs `success`, intermittently on the same head) remains a separate diagnosis**, but
       the watcher now recovers it deterministically so PRs no longer strand on a human nudge. Target was
       `scripts/repo-management/ci_failure_watcher.py`. Residual (a)-diagnosis tracked below.
-- [ ] [CICD] P3. **(a)-residual — diagnose the UPSTREAM cause of an intermittent v2 `conclusion=action_required`** (same
-      head went `success`@04:04 then `action_required`@04:41; not a fork-approval, 0 pending_deployments). Candidate: a
-      conditional job/environment-protection rule or a GitHub-side transient. Now NON-URGENT — L324's watcher recovery
-      makes it self-healing — but the root should be understood + removed so the recovery isn't needed. Target:
-      `quality-gates-v2.yml` job/environment conditions. Provenance: 2026-06-17.
-- [ ] [UI] P3. **deployment-ui unit suite has a FLAKY jsdom-teardown `ReferenceError: window is not defined`** in
-      `tests/unit/components/DataStatusDrilldown.test.tsx` (an async unhandled error AFTER jsdom teardown — vitest flags it
-      "might cause false positive"; the file already carries `// @vitest-environment jsdom` and `vite.config` sets jsdom, so
-      it is NOT a missing-env bug). Observed 2026-06-17: failed one QG run, PASSED the immediate re-run (non-deterministic).
-      `vitest.config.ts` already notes a related jsdom/html-encoding-sniffer ESM upstream issue. Fix: pin down the
-      async leak (a timer/promise resolving post-teardown that touches `window`) and either await/clear it in the test or
-      guard the module. Low-urgency (a re-run is green) but it intermittently reds the deployment-ui QG. Target:
-      `deployment-ui` `tests/unit/components/DataStatusDrilldown.test.tsx` + `vitest.config.ts`. Provenance: L294 QG run.
-- [ ] [CICD] P3. **playwright smoke `reuseExistingServer:true` reuses a STALE non-mock dev server on :5183**, so every
-      repo-detail-drilldown smoke (~17 specs) fails "element(s) not found" when a non-mock deployment-ui dev session is
-      already up on :5183 (the operator's local stack). The detail-fetch hits the live backend instead of the mock. Verified
-      2026-06-17: identical failures on UNTOUCHED detail specs; all 218 pass against a FRESH mock server on a spare port
-      (`PLAYWRIGHT_BASE_URL=http://localhost:5191`). Fix: make `webServer.url`/`reuseExistingServer` honor a mock-mode probe
-      (only reuse a server that reports mock mode) OR default the smoke run to a dedicated spare port. Target: `deployment-ui`
-      `playwright.config.ts`. Provenance: L294 pw:L2 run.
+- [ ] [OPERATOR] P3. **(a)-residual — intermittent v2 `conclusion=action_required` — DIAGNOSED to its boundary 2026-06-17;
+      recovery already shipped (L324); the upstream root is operator-gated, not a code defect.** Audit ruled out the
+      code-level causes: **(1) NO `environment:` / approval gate exists in `quality-gates-v2.yml` OR the reusable
+      `python-quality-gates-v2.yml` OR any PM workflow** (grepped all of `.github/workflows/` + `scripts/workflow-templates/`
+      → 0 hits); **(2) confirmed NOT fork-approval** (the `/approve` API returned "not from a fork pull request") and **0
+      pending_deployments** (not an environment deployment gate). No live `action_required` run survives in recent history to
+      inspect (all were recovered/merged), so the exact transient can't be re-inspected now. **Most-likely remaining root**:
+      GitHub's repo **Actions "Require approval for … workflow runs"** policy applied to the **GH-App-opened promote PRs** — a
+      `pull_request`-event v2 run from an actor GitHub treats as non-write needs approval → `action_required` until approved;
+      the intermittency fits a re-fired run (close+reopen) being re-classified. The repos read `default_workflow_permissions:
+      read` + `can_approve_pull_request_reviews: false`; the approval-requirement toggle itself is a Settings-UI control not
+      reliably exposed/settable via REST. **Fix is operator-gated** (Settings → Actions → "Approval for …" + ensure the
+      `ci-poller` App has write so its PR runs don't require approval) — and **L324's auto-recover already makes it
+      self-healing** (a fresh `pull_request` v2 concludes `success`), so this is non-blocking. Operator action item, not code.
+- [x] ✅ [UI] P3. **deployment-ui flaky jsdom-teardown `ReferenceError: window is not defined` — FIXED 2026-06-17**
+      (deployment-ui@0d8928b | pw:L2 ✓ 218 smoke | regression: tests/unit/components/DataStatusDrilldown.test.tsx). Root: in
+      `DataStatusDrilldown.tsx`, `BundleRow.togglePreview()` fired `fetchBundlePreview().then(setPreview)` from a **CLICK
+      handler with NO unmount guard** — unlike the schema/listing fetches which guard with a `cancelled` flag (useEffect
+      cleanup). A slow fetch resolving AFTER the row unmounts set state on a dead component → under jsdom test teardown React
+      rendered against a torn-down `window` → the flaky unhandled error. Fix: a `mountedRef` guard on the two preview
+      setStates (the standard pattern). Verified: the test ran **8/8 clean** (was 1-of-2 failing) + the full unit suite
+      **866 passed, 0 failed, 0 unhandled-window errors**.
+- [x] ✅ [CICD] [UI] P3. **playwright smoke reused a stale non-mock :5183 dev server — FIXED 2026-06-17**
+      (deployment-ui@0d8928b | pw:L2 ✓ 218 smoke). `reuseExistingServer:true` + `url=:5183` silently reused the operator's
+      **non-mock** live stack (`restart-deployment-stack.sh`), so every detail-drilldown smoke failed "element(s) not found"
+      (the detail fetch hit the real backend). Fix: default the webServer to a **dedicated playwright port** (`5199`,
+      `--strictPort`, override via `PLAYWRIGHT_PORT`/`PLAYWRIGHT_BASE_URL`) so the mock server always owns it and never
+      collides with :5183; CI (nothing on 5199) starts fresh there. Verified: full smoke **218 passed self-hosting on 5199
+      WHILE :5183 was still occupied** (the exact condition that broke it before).
