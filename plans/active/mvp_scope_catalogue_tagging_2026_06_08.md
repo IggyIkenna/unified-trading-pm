@@ -103,8 +103,12 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       expiries of an MVP future via grain, absent/impossible→False, config-edit-changes-membership). QG exit 0.
 - [ ] [CODE] P1. **IS MVP-tagged catalogue view** — apply `is_mvp` over the rolled-up catalogue; serve `mvp: bool` (or a
       filtered endpoint). On-the-fly; optional cached `mvp_view` refreshed with the catalogue scheduler.
-- [ ] [CODE] P1. **deployment-api `scope=mvp|could_exist|all`** on the data-status coverage endpoint (denominator =
-      `is_mvp` cells when mvp) — reuse the G3 union machinery.
+- [x] ✅ [CODE] P1. **deployment-api `scope=mvp|could_exist|all`** on the data-status coverage endpoint —
+      **deployment-api@3390c98**: new `scope` query param on `GET /api/data-status/venue-year-coverage` (default
+      `could_exist`; `all` = full universe; `mvp` = `is_mvp(asset_group, venue, instrument_type, data_type)` filter over
+      the SAME cell iteration — reuses the existing union machinery, no rebuild). Helpers extracted to
+      `routes/data_status/_coverage_scope.py` (host module crossed the 900-line cap). Parity test
+      `tests/unit/test_route_venue_year_coverage_scope.py` asserts denominator monotonicity `mvp ≤ could_exist ≤ all`.
 - [ ] [UI] P2. **deployment-ui MVP toggle** in data-status (default ON pre-launch) — `[UI]` + `pw:L2 ✓` + regression
       spec per the playwright gate.
 - [ ] [CODE] P2. **Features/strategy/model MVP sections** — extend `mvp_scope` + apply the same predicate to the feature
@@ -149,10 +153,12 @@ which leagues, which market-groups — has no independent version.
       in `league_data.py`; `PREDICTION_MARKETS_CONFIG_VERSION/_HASH` + `prediction_markets_config_descriptor()` (hashes
       `PredictionMarketCategory` + `_DEFAULT_RULES`) in `prediction_mapping.py`. All exported at the package root; the 3
       hashes are independently distinct.
-- [ ] [CODE] P1. **Surface `config_version` + `config_content_hash` in the deployment-api data-status response** — so a
-      coverage delta attributes to a scope-change (config_version bumped) vs a data-change (config_version stable).
-      Carry the per-config triple (config name, version, hash) alongside the `scope=mvp|could_exist|all` coverage
-      payload.
+- [x] ✅ [CODE] P1. **Surface `config_version` + `config_content_hash` in the deployment-api data-status response** —
+      **deployment-api@3390c98**: the venue-year-coverage response now carries a `config_versions` object
+      `{mvp_scope, sports_leagues, prediction_markets}` each `{version, content_hash}`, sourced from the UAC
+      `mvp_scope_config_descriptor()` / `sports_leagues_config_descriptor()` / `prediction_markets_config_descriptor()`
+      SSOTs (uac@176f227) — so a coverage delta attributes to a scope-change (version/hash moved) vs a data-change
+      (stable). Parity test asserts the surfaced triples match the UAC descriptors.
 - [x] ✅ [CODE] P1. **Unit test: config_version is monotonic + the hash changes when the config changes** — version is a
       positive int + descriptor matches; `config_content_hash` changes iff the config content changes (and is stable
       across re-computation / set-reordering) — one test per config (MVP_SCOPE / leagues / prediction-markets).

@@ -1254,9 +1254,14 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
 
 **🟡 P1 — data-status / drilldown reflects the migrated structure (DEFERRED to a tracked follow-up unless quick):**
 
-- [ ] [CODE] P1. **deployment-api FLAG-1** — CeFi multi-source UNION coverage + per-source breakdown (dedup via
-      `select_primary_available_source`; `groupby("source")` on the `_index` source column). CeFi single-source today,
-      but the column/dedup path must exist for swap-resilience. Cross-ref
+- [x] ✅ [CODE] P1. **deployment-api FLAG-1** — CeFi multi-source UNION coverage + per-source breakdown —
+      **deployment-api@3390c98**: when provenance columns are present the coverage rows are union-reduced to CELL grain
+      (≥1 source `captured` ⇒ cell captured, not row-grain) and a per-`(pipeline_mode, source)` `source_breakdown` is
+      surfaced (reuses the `services/data_status_union` machinery). Regression test: a CeFi cell with source A=captured /
+      B=failed → union cell captured + both sources in the breakdown. Column/dedup path now exists for swap-resilience.
+      **Bundled same ship: stale-tolerant read** — the endpoint moved off the freshness-gated UTL
+      `read_availability_index` to the stale-tolerant `read_manifest_index` (empty-live → consolidated `_index`
+      fallback, migration-safe; fallback + unit test already in `services/manifest_source.py`). Cross-ref
       `downstream_services_manifest_canonicalisation_2026_06_01.md` FLAG-1.
 - [ ] [CODE] P1. **deployment-api FLAG-3 — RE-SCOPED (slot-3 evaluation 2026-06-05): NOT a mechanical
       f-string→`resolve_bucket_name` swap; a blind swap would BREAK working code.** The `commentary/pipeline_uat.py`
