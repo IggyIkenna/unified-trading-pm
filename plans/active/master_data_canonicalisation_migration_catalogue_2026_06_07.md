@@ -2047,7 +2047,7 @@ speed-note (both deferred optimisations, non-blocking).
       sink=None)`at the top of`main()`(mirror the sports fix;     migrators that do pure object-path moves and never read the manifest — e.g.`migrate_sports_canonical_v9`
       — do NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
       instruments-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
-- [ ] [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
+- [x] ✅ [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
       (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
       rebuild** ✅ source-aware (mtds@f80c50f1) but the **41 inline `pipeline_mode="batch"` literals in the DeFi LIVE
@@ -2065,6 +2065,31 @@ speed-note (both deferred optimisations, non-blocking).
       market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08
       (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY verdict above, which covered
       migrator/rebuild but not the live handlers).
+
+      **✅ RESOLVED 2026-06-17 (mtds@c4c5f15) — verified, not the stale "already shipped" note (line 240, which over-claimed
+      the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
+      sibling item @1727 (mtds@57242af5, 41 batch literals swept → `rg "pipeline_mode=\"live\"|\"batch\"" --type py` = 0 in
+      mtds non-test source). The REMAINING live-path batch≠live split (#1) was the runtime coarse `"live"` from each
+      handler's `_pipeline_mode_for(run_tag)` passing through to `write_defi_rows` — `canonical_write.py:138` only upgraded
+      `None`/`"batch"` → `batch_<source>`, so a live `dex_swaps`/`_dex_pools_subgraph` run landed at `pipeline_mode=live/`
+      (coarse) vs the migrated batch corpus's `batch_<source>/`. **FIX**: extended the `canonical_write` chokepoint to
+      upgrade coarse `"live"`/`"replay"` → source-aware `live_<source>`/`replay_<source>` via the SAME UAC source map
+      (`live_pipeline_mode_for_venue`) the batch branch derives from. Verified symmetric: `batch_onchain_subgraph` ↔
+      `live_onchain_subgraph`; +regression test `test_live_run_tag_stamps_source_aware_live_mode`. Coverage confirmed: the
+      DeFi DATA writers (`dex_swaps`, `_dex_pools_subgraph`) all route coarse values through `write_defi_rows` (chokepoint
+      catches them); `websocket_streaming_handler` already used `live_pipeline_mode_for_venue` (source-aware); the engine
+      `*_catalog_reader.py` carry NO coarse literal on HEAD. **Residual (P2, NON-blocking — not coarse, so out of this
+      item's scope)**: `dex_pools_handler.py` honest-absence `recorder.record_failed(...)` calls hardcode the SOURCE-AWARE
+      `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
+      the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
+
+- [ ] [DEFI] P2. **dex_pools_handler honest-absence `record_failed`/`record_*` calls hardcode mode** — they pass
+      `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at `dex_pools_handler.py:410/467/
+      475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence rows mislabel the mode (batch vs live).
+      NON-blocking (source-aware, doesn't violate STEP 5.85; failure-row mode-labels don't affect the DATA corpus the v9
+      walk migrates). Fix = pass `_pipeline_mode_for(run_tag)` (→ chokepoint upgrades) IF dex_pools is live-reachable, OR
+      confirm dex_pools is batch-only and leave it. Repo: market-tick-data-service. Provenance: M-COORD-7 resolution
+      2026-06-17.
 
 ## Demotion + linkage record
 

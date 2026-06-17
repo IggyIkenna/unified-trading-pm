@@ -162,9 +162,15 @@ So the existing rewriter is insufficient for both patterns as-is.
       the root copy. Pre-check: if the canonical target already exists, compare row-parity before overwrite (rename to
       `_migrated_{ts}` on mismatch, per existing rewriter collision pattern). Multi-day files (if any span >1 day) must
       be split per `day=`.
-- [ ] [SCRIPT] P2. **Guard against recurrence.** Add a QG/CI check (or a `data_catalog` lint) that fails if any object
+- [x] ✅ [SCRIPT] P2. **Guard against recurrence.** Add a QG/CI check (or a `data_catalog` lint) that fails if any object
       under `raw_tick_data/by_date/` does not match `^raw_tick_data/by_date/day=\d{4}-\d{2}-\d{2}/`. Catches both hyphen
-      partitions and root-level files in future.
+      partitions and root-level files in future. — DONE: guard shipped PM@5d6d398e4
+      (`scripts/qg/no_malformed_by_date_paths.sh` — source-literal scanner catching `by_date/day-[0-9]` + f-string
+      `by_date/day-{` construction, the better CI-layer design vs a whole-corpus GCS walk the single-walk-discipline
+      HARD RULE forbids), wired into mtds QG STEP 5.86; **hardened warn-only → HARD-FAIL 2026-06-17 (mtds@ae2bc80)** so a
+      recurrence actually blocks the gate (cleared a docstring false-positive in `rebuild_tradfi_manifest.py` first;
+      guard verified exit 0 on current mtds source). The GCS-object-level "fail on any live malformed object" reading is
+      correctly handled by the per-AG v9 canonicalisation migrations (0-row guard + E7 delete), per the SUPERSEDED banner.
 
 ## Verification
 
