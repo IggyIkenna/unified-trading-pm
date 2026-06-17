@@ -70,5 +70,42 @@ assumption.
   annual-rate `/1e27`→APR OK) + the strategy net-of-gas consumer subtracts gas via `fees_apy_bps`. Marked
   **BLOCKED-LIVE-VERIFY** for the operational live-probe confirmations (public Aster endpoint / on-chain Aave RPC /
   end-to-end `fees_apy_bps` gas-leg). No mtds adapter code change required.
-- **[PENDING] features delta_one funding_oi quickmerge** — blocked on the foreign live UAC `venue_collateral.py` dirt
-  (a peer agent actively editing). Retry once UAC is clean (the change is QG-green + ready).
+- **[PENDING] features delta_one funding_oi + e2e harness cleanup quickmerge** — both QG-green + committed-ready, blocked
+  on a SUSTAINED foreign UAC refactor (the same peer's F28 collateral live-probe: `venue_collateral.py` +
+  `collateral_registry.py`, 9 files at peak). quickmerge correctly refuses a dirty dep; I must not stomp the live peer.
+  A background ship-orchestrator (`/tmp/ship_pending.sh`) polls for a clean-UAC instant and quickmerges both (the
+  features sentinel stays valid — the dirty features tree blocks the FF-cron, so HEAD won't move). Manual fallback if it
+  times out: `cd features-service && bash scripts/quickmerge.sh "fix(funding): delta_one funding_oi ..." --agent --files
+  'features_service/delta_one/app/calculators/funding_oi.py'` (re-QG only if features HEAD moved); same for the e2e file.
+
+## Final report (rule 9 — 2026-06-17, autonomous)
+
+**Done state.** All 6 tracked BUGs are fixed + flipped; the funding/APR-annualisation is now ONE canonical SSOT
+(UAC `perp_funding_cadence`) consumed everywhere, divergent copies deleted/repointed.
+
+| BUG | Verdict | Evidence |
+| --- | --- | --- |
+| Deribit P0 | FIXED | UAC `deribit 1h→8h` figure-period (8× over-statement killed) + figure-vs-charge doc + regression test. unified-api-contracts@7fade10 |
+| Per-venue interval P0 | FIXED | UAC venue-aware annualiser + `fundings_per_day` + venue-dir norm (BINANCE-FUTURES/OKX-SWAP). unified-api-contracts@7fade10/fd5bcfa |
+| APY-zeros P0 | FIXED | single SSOT; deleted UTL `FUNDING_PERIODS_PER_DAY`; repointed exec/strategy/features. UTL@b587b91b/ed622af8 · execution-service@38c7e06f · strategy-service@b91d3e1f · features-service (shipping) |
+| Aster P1 | DIAGNOSED-CORRECT + BLOCKED-LIVE-VERIFY | UAC aster=8h correct; mtds adapter raw 8h sign/units OK; UTL wrong-copy deleted; backfill = tracked P2 |
+| Gas P1 | DIAGNOSED-CORRECT + BLOCKED-LIVE-VERIFY | mtds gas → gwei correct; strategy `net_carry = f·(staking+funding) − fees` (fees bundles gas) correct |
+| Aave P1 | DIAGNOSED-CORRECT + BLOCKED-LIVE-VERIFY | Aave V3 RAY annual-rate `/1e27` → APR correct; no double-scale/sign bug |
+
+**Forced trade-offs (rule 1).** (1) Deribit = 8h-FIGURE period (not the operator's pre-confirmation 1h) — the e2e probe
+confirmed the stored field is the 8h figure; preserves the data-matches-API invariant; documented + supersedes the
+older todo. (2) delta_one `funding_oi` uses the UAC SSOT at an 8h default (no venue param in the calculator interface) +
+a P2 venue-aware follow-up todo — not the carry path.
+
+**Mtds coordination.** mtds was clean at start (Half-A had finished TradFi/Massive); the three mtds P1 items are
+adapter-code-CORRECT (no fix needed) + marked BLOCKED-LIVE-VERIFY for the operational live-probe confirmations.
+
+**Live-coordination blockers (genuine, documented).** A peer's sustained UAC F28-collateral refactor blocked the final 2
+cosmetic quickmerges (features funding_oi non-carry repoint + e2e workaround removal) — both QG-green + committed-ready,
+landing via the background shipper on the next clean-UAC window (not stranded; sentinel valid). The peer's own
+F28-haircut plan flip got coherently bundled under one of my `docs(plans)` commits (cosmetic attribution only; their
+content is intact on LDR — not rewriting shared history).
+
+**Footgun logged for future agents.** Never run `quickmerge --files` to *inspect* output — it ships. And hand-`git
+commit` in the PM clone races the hygiene crons (bundled a foreign plan edit); prefer scoped quickmerge or verify
+`git diff --cached --stat` (no path arg) immediately before commit.
