@@ -346,6 +346,7 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   all three + the **live/paper history carve-out** (no funding history → WARN + use current snapshot + available spot
   history, never block; backtest still needs history) to the spec doc + todos.
 - **2026-06-17** — **`--live` multi-venue paper path + Drift wired** (`e2e-testing@6e2ffb8`). `--live` ranks on the CURRENT funding snapshot (no history — operator carve-out) across **14 venues**: 11 CeFi/public-perp + dYdX + Vertex + Drift. Verified live: **13 venues / 446 funding points**, **SOL staked_basis short DRIFT** in the book (Drift's jitoSOL/mSOL collateral unlocks it — the goal). Vertex warn-skips (this VM's IP is TLS-reset by Vertex's edge — host issue, not code). Uses oracle-of-now weights on the single snapshot; conservative LST APR default (ETH 3% / SOL 7%) + warn (live LST source still a TODO). New venues default to cash-margin (conservative). Coins 30→40. **Drift dependency resolution (KEY)**: driftpy's metadata exact-pins ~25 common libs (urllib3==1.26.13 / websockets==13 / zstandard==0.18 / solders<0.27 / numpy<2 / psutil / aiosignal …) that **cannot be uv-resolved in any shared lock** with the fleet + execution-service — BUT it **RUNS fine on the fleet versions** (Drift funding read verified on solders 0.27.1 + numpy 2.2.6 + the trio). So it lives in an **ISOLATED venv** (`scripts/defi/install_driftpy_venv.sh` → ~/.drift-venv, driftpy's own pins) and the harness shells out to `drift_funding_reader.py` there via Helius RPC (ibkr-gateway-infra pattern) — NOT a flat dep. execution-service already anticipated this (lazy-loads driftpy in `defi_execution/protocols/drift.py`, deliberately undeclared). Production MTDS/execution adapters follow the same isolated pattern (filed below).
+- **2026-06-17** — **Liquidity layer (ADV + market width)** (operator; `e2e-testing@c973985`). `--live` now snapshots per-coin **24h USD volume (ADV) + half-spread** (deepest of Bybit/Gate, one call each) and: (1) **penalises carry by the annualised round-trip spread cost** (`2·half_spread·(365/hold)`) so a wide-spread coin must clear a higher funding bar — don't chase a thin coin's funding into the spread; (2) **ADV-caps position size** (`--adv-cap-pct`, default 0.5% of ADV) → liquidity-scaled sizing; (3) shows `[ADV $Xm · spread Ybps]` per position. Verified live: 39/40 coins; ETH staked-basis concentrates in the $2.36B/0.0bps book; STX ADV-capped $16k→$8.7k on its $2M ADV. Knobs `--no-liquidity --spread-cost-mult --adv-cap-pct`. **Single-snapshot for paper**; for the **BACKTEST we assume liquidity constant** (the snapshot, documented) — e2e-only. Production = a real MDPS ADV/market-width feature (filed).
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
@@ -451,6 +452,13 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
       ping ledger.**
 - [ ] [STRATEGY] P3. Sign/units cross-check on integration: one coin per venue vs the spec §3 reference values before
       trusting the live ranking. **Repo: e2e-testing harness.**
+
+## Liquidity (ADV + market width) follow-ups (operator 2026-06-17)
+
+- [ ] [DATA] P2. Production **ADV + market-width + tick-size** feature in **MDPS** (per coin × venue, from the tickers/book + instrument-info endpoints) so strategy/execution size by liquidity in prod (batch==live). The e2e harness snapshot is the prototype. **Repo: market-tick-data-service + unified-api-contracts (schema).**
+- [ ] [DATA] P2. **Tick size** per (coin, venue) — pull from each venue's instrument-info endpoint; feed the min-increment into spread/round-cost + order sizing. Not yet in the harness (only ADV + spread). **Repo: e2e-testing harness → MDPS.**
+- [ ] [STRATEGY] P2. Backfill the liquidity snapshot as a **constant** across the backtest window + document the assumption inline in the harness/report (e2e-only approximation until MDPS history exists). **Repo: e2e-testing.**
+- [ ] [STRATEGY] P2. **Dispersion single-snapshot noise**: `--live` perp-perp dispersion picks cross-venue funding EXTREMES (e.g. LDO 91% short KRAKEN/long BITGET) that mean-revert — tighten (per-venue winsor, min-ADV venue filter, require the spread to persist, or down-weight dispersion in --live). **Repo: e2e-testing harness.**
 
 ## Open todos / next steps
 
