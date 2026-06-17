@@ -74,6 +74,12 @@ The imperative `gcloud run jobs ... --args=^|^...` deploy uses `|` as the list d
       so `--all`/`--asset-group` silently skipped it → no `features-service-code.tar.gz` → upload-glob
       `exit 1` (the in-cloud run's lone failure). Replaced all the dead split names with the single
       `features-service`. **Landed deployment-service@f5de46b**; verified build EXIT 0.
+- [x] ✅ [SCRIPT] P1. **Result-tally `set -e` bug** — `ok=$(grep -l '^ok$' …)` /
+      `failed_repos=$(grep -l '^fail$' …)`: `grep` exits 1 on **no match** (the common all-success
+      case → zero fails), and under `set -euo pipefail` that 1 propagated out of `$(...)` and killed
+      the script BEFORE the status write — so a fully-successful run wrongly reported **failed** +
+      left a stale `_refresh_status.json`. Replaced with a plain set-e-safe loop. **Landed
+      deployment-service@661899f.**
 - [ ] [INFRA] P3. **Perf follow-up (NICE-TO-HAVE)** — if churn outpaces even parallel rebuilds,
       replace per-repo `git clone` with the GitHub codeload tree tarball (no `.git`, faster
       transfer) — needs `create-code-tarballs.sh` to accept an explicit SHA (no `git rev-parse`).
