@@ -108,10 +108,11 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
 - [ ] [DATA] P2. Backfill Aster perp funding into GCS — the handler + public endpoint work
       (`fapi.asterdex.com/fapi/v1/fundingRate`, no auth, 8h); only the backfill VM was never run for Aster. **Repo:
       market-tick-data-service + deployment-service** (`launch-mtds-perp-funding-backfill-vm.sh` with `--perp-protocols`
-      incl. aster, start 2024-09-25).
+      incl. aster, start 2023-07-22 — pre-2024 is Binance-proxied Astherus funding, label source honestly).
 - [ ] [DATA] P2. Genesis is PER-(venue, data*type), not per-venue — encode it. Aster API availability (verified
-      2026-06-16): funding **2023-07-22**, OHLCV/klines **2023-01-01** (both pre-date the `venue_launch_dates`
-      ASTER=2024-09-25 floor — Astherus pre-rebrand history; pick a trust floor), mark/index via klines/premiumIndex,
+      2026-06-16): funding **2023-07-22** (operator-confirmed genesis 2026-06-17 — pre-2024 is BINANCE-PROXIED Astherus
+      pre-rebrand funding, imported not native → label source honestly), OHLCV/klines **2023-01-01** (the
+      `venue_launch_dates` ASTER floor is now 2023-07-22 per GAP 2 — reconciled), mark/index via klines/premiumIndex,
       trades partial (id/time-paginated), **open_interest + L2 book = live-capture-only (no historical endpoint →
       forward-only)**. Canonize the Aster native API INTO the Tardis CEX benchmark schemas (klines→OHLCV,
       aggTrades→`trades`, premiumIndex+funding+OI→`derivative_ticker`, depth-WS→`book_snapshot_5`) so downstream can't
@@ -130,14 +131,14 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       `2021-08-30` already in `expected_start_dates.yaml`. NO UTL change (the `ASTER→BATCH_ASTER` override is
       data_type-independent). Unit test `test_writes_canonical_trades_shard_cefi` asserts the cefi shard path +
       `m`→buy/sell mapping. NB the trades write rides `_collect_aster` (funding-genesis-gated) → it covers the
-      **2024-09-25-forward** window; the pre-funding-genesis trades window (2021-08-30→2024-09-25) needs a standalone
+      **2023-07-22-forward** window; the pre-funding-genesis trades window (2021-08-30→2023-07-22) needs a standalone
       trades collect (todo below). `fetch_klines`+`fetch_depth` adapter scaffolds also landed (one-step-from-ready for
       the OHLCV+book write legs).** \*\*— OHLCV/klines leg: DESIGN DECISION 2026-06-17 —
       `ohlcv*_`is NOT canonized into the cefi tick-data write     (intentional, documented).**`ohlcv*1m`/`ohlcv_15m`/`ohlcv_24h` are registered in UAC (`market_data_categories.py`/     `schema_spec.py`) but are a **TradFi-only** data_type: NOT in the cefi `\_LEGAL_DATA_TYPES` (`tardis_shared.py:73`—     the cefi path builder hard-rejects it), NOT in ANY cefi venue's`venue_data_types.yaml`, NOT in cefi     `SOURCE_PRIORITY`, with NO cefi consumer (MDPS consumes `CanonicalOhlcvBar`for TradFi only; CeFi strategies derive     candles from`trades`). The two reference CeFi venues (BINANCE-FUTURES/BYBIT) deliberately omit ohlcv. Introducing     an orphaned cefi `ohlcv*_`would create dead surface + false expected-absent rows — the exact anti-pattern the Aster    `venue_data_types.yaml`comment warns against. The`fetch_klines`adapter fetch +`normalize_aster_kline` transform     ARE ready; see the tight remaining todo below for the exact one-step write if a cefi ohlcv consumer is ever wired.     **— book/`book_snapshot_5`leg: batch honest-absence ALREADY CORRECT (no change needed); live WS connector is the     tight remaining unit.** Aster book is`L2_MBP`→`book_snapshot_5`(NOT tbbo);`/fapi/v1/depth` is a live snapshot     only (Binance-compatible, no historical depth) → batch is forward-only honest-absent, already encoded     (`expected_start_dates.yaml`ASTER`book_snapshot_5:
       null`+ absent from Aster's batch`data_types` → no false     expected-absent). A live Aster **trades** WS connector exists (`live/connectors/aster_ws.py`); a live **book** WS     connector does not yet. `fetch_depth`
       scaffold landed. See the tight live-book todo below. **Repo: market-tick-data-service + unified-api-contracts.**
-- [ ] [DATA] P3. Aster **pre-funding-genesis trades window** (2021-08-30 → 2024-09-25): the canonical Aster `trades`
-      write rides `_collect_aster` which is funding-genesis-gated (2024-09-25), so it only covers the forward window. To
+- [ ] [DATA] P3. Aster **pre-funding-genesis trades window** (2021-08-30 → 2023-07-22): the canonical Aster `trades`
+      write rides `_collect_aster` which is funding-genesis-gated (2023-07-22), so it only covers the forward window. To
       capture the earlier trades history (genesis 2021-08-30, `expected_start_dates.yaml`), add a **standalone trades
       collect** (a `--cefi-operations trades` op or a dedicated handler) that runs aggTrades on the trades genesis floor
       independent of the funding floor — reusing `_write_aster_trades` (already trades-genesis-agnostic). **Repo:
@@ -245,14 +246,21 @@ sourced from `/fapi/v1/premiumIndex` (Binance-Futures-compatible, carries `markP
 assume `markPrice` "rides the fundingRate record" — TRUE on Binance, but Aster returns null. **Todo (P2):** source mark
 from `premiumIndex` in `_collect_aster` (or accept funding-only derivative_ticker for G5).
 
-**GAP 2 — genesis date disagrees across 3 sources (P1, ties to existing Finding 1/cadence-registry-drift).** Handler
-`_ASTER_FUNDING_START_DATE = "2024-09-25"`; UAC `market_data_categories.py` Aster `perp_funding: "2024-10-01"`;
-operator stated `2023-07-22`. The live API itself returns rows back to `2022-01-01T00:00:00Z` (oldest queryable), but
-those very-early rows are a flat `0.00010000` placeholder (synthetic pre-launch backfill, not real settlements). The
-handler's `2024-09-25` floor is the safe conservative gate (skips pre-launch). **The operator's `2023-07-22` is NOT
-matched by any code constant** — recommend operator confirm the true Aster mainnet perp launch date so the genesis
-constant + the UAC start-date are reconciled to ONE value (this composes with existing Finding 1's "two registries
-disagree" — add genesis to that reconciliation).
+**GAP 2 — genesis date disagrees across 3 sources (P1) — ✅ RESOLVED 2026-06-17 (operator-confirmed `2023-07-22`).**
+Was: handler `_ASTER_FUNDING_START_DATE = "2024-09-25"`; UAC `market_data_categories.py` Aster `perp_funding: "2024-10-01"`;
+operator stated `2023-07-22`. The live API returns rows back to `2022-01-01T00:00:00Z` (oldest queryable), but those
+very-early rows are a flat `0.00010000` placeholder (synthetic pre-launch backfill, not real settlements). **Operator
+confirmed 2026-06-17: genesis = `2023-07-22`** (the Astherus pre-rebrand venue). **IMPORTANT — pre-2024 Aster funding is
+BINANCE-PROXIED**: Astherus (pre-rebrand) mirrored Binance funding, so the 2023-07-22 → ~2024 window is _imported_
+Binance funding, NOT Aster-native settlements. Label `source` honestly (it is proxied, not native Aster) and treat the
+flat-`0.00010000` pre-2023-07-22 rows as pre-launch (`EXPECTED_PRE_VENUE_LAUNCH`). Reconciled to ONE value across every
+source: handler `_ASTER_FUNDING_START_DATE = "2023-07-22"`; UAC `market_data_categories.py` Aster trades/
+derivative_ticker/perp_funding `= "2023-07-22"`; UAC `venue_launch_dates.py` ASTER (CeFi + DeFi dicts) `= "2023-07-22"`;
+UAC `venue_mapping.py` `venue_start_dates["ASTER"] = "2023-07-22"`; UAC `_cefi.py` Aster `coverage_start` all data_types
+`= 2023-07-22`; MTDS + PM + deployment-service `expected_start_dates.yaml` ASTER `derivative_ticker = "2023-07-22"`; PM +
+deployment-service `data-catalogue.market-tick-data-service.yaml` ASTER `start_date = "2023-07-22"`; IS
+`adapters/cefi/aster.py` `_ASTER_LAUNCH_DATE` (reads `get_instrument_discovery_start` → now 2023-07-22). Shipped:
+mtds + unified-api-contracts + instruments-service + unified-trading-pm (this issue's commit set).
 
 **GAP 3 — Aster DATA absent in GCS by design (NOT a code gap).** The backfill VM is drain-gated at G5; no GCS data yet
 is expected. The code path is verified-ready; running it at G5 will produce real canonical `derivative_ticker` (+

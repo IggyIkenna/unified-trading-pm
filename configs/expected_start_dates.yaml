@@ -177,8 +177,12 @@ market-tick-data-service:
         liquidations: null # NOT AVAILABLE from any source
       ASTER:
         trades: "2021-08-30" # Earliest aggTrades observed (BTCUSDT)
-        derivative_ticker: null # Snapshot-only endpoint (no historical)
-        book_snapshot_5: null # Snapshot-only endpoint (no historical)
+        # Genesis 2023-07-22 (operator-confirmed 2026-06-17) via /fapi/v1/fundingRate;
+        # pre-2024 funding is BINANCE-PROXIED (Astherus pre-rebrand) — imported, NOT
+        # Aster-native → label source honestly. SSOT:
+        # perp_funding_data_semantics_and_cadence_2026_06_16.md §GAP 2.
+        derivative_ticker: "2023-07-22"
+        book_snapshot_5: null # Live-capture-only (no historical depth endpoint)
         liquidations: "2024-10-01" # Via /allForceOrders endpoint (untested)
 
   TRADFI:
@@ -257,7 +261,9 @@ market-tick-data-handler:
         liquidations: null
       ASTER:
         trades: "2021-08-30"
-        derivative_ticker: null
+        # Genesis 2023-07-22 (operator-confirmed 2026-06-17); pre-2024 funding is
+        # BINANCE-PROXIED (Astherus pre-rebrand) — imported, NOT Aster-native.
+        derivative_ticker: "2023-07-22"
         book_snapshot_5: null
         liquidations: "2024-10-01"
 
