@@ -12,9 +12,11 @@ parent_epic: deployment_and_user_management_master
 
 # Deployed dashboard Image column blank + multi-cloud build-status architecture
 
-> **For Ikenna** — the immediate blank-column fix is a one-line IAM grant I cannot run (needs Owner/IAM-admin; my
-> `harshkantariya` account + the deploy SA both lack `setIamPolicy`). The bigger decision is whether/how the GCP/AWS
-> toggle should actually show per-cloud build status in the deployed dashboard. Both written up below.
+> **STATUS 2026-06-17 — both permission halves DONE by operator; decision made; code handed to Harsh.** (1) GCP read
+> grant applied → GCP Image column lights up. (2) Decision = **Option B** (one backend reads both clouds, keyless WIF).
+> (3) The keyless AWS read role is created (`gcp-cloudrun-codebuild-reader`). **Remaining = the two CODE todos for Harsh
+> under "Code half — HARSH" below** (deployment-api AWS-CodeBuild reader + `?provider=` param; deployment-ui toggle
+> wiring). No more permissions to grant — the code just assumes the role ARN. Original diagnosis preserved below.
 
 ## What I found
 
@@ -130,16 +132,45 @@ the cleaner isolation if we expect the AWS deployment to grow beyond build-statu
   `unified-trading-sa@central-element-323112`. **DONE 2026-06-17** by `ikenna@odum-research.com` (Owner) — both bindings
   applied + verified present on the SA via `get-iam-policy`. Column repopulates within ~5 min (IAM propagation + the
   in-process 300s `_builds_cache` TTL). **Target:** infra/GCP IAM (no code). Reversible via `remove-iam-policy-binding`.
-- [x] ✅ [DESIGN] P2. **Option A chosen (operator Ikenna, 2026-06-17): GCP-only build status for now; do NOT deploy the
-  AWS backend yet.** The GCP IAM grant above already delivers the GCP view ("just see GCP builds for now"). **Option B
-  was considered but is NOT a drop-in**: it needs more than a permission grant — a brand-new AWS-CodeBuild read path in
-  `deployment-api` (`_latest_builds_by_repo` only does GCP Cloud Build today), a `?provider=` param threaded through the
-  endpoints + UI, and a boto3 GCP→AWS Workload-Identity-Federation client on the Cloud Run service. The cross-cloud
-  *permission* half is feasible with operator creds (AWS `admin_od` + GCP ADC), but the *code* half is real feature work
-  → deferred. **Option B (one backend + GCP→AWS WIF, keyless) remains the documented target** if/when AWS build-status
-  is actually wanted (revisit if the AWS deployment grows beyond build-status). Owner: Ikenna.
-- [ ] [BUG] P3. **Hide/disable the GCP/AWS toggle in the deployed bundle** (now the chosen direction under Option A — no
-  AWS backend deployed, so the toggle must not imply AWS status is shown). `CloudProviderContext.getApiBaseUrl` returns
-  relative `/api` for all non-localhost hosts → both buttons hit the same GCP backend. Hide the toggle when
-  `import.meta.env`/runtime host is the single-image deployed bundle (keep it only for the local two-backend dev mode).
-  **Target repo:** deployment-ui (needs `pw:L2 ✓` + regression spec per UI gate). Provenance: this doc, Option-A decision.
+- [x] ✅ [DESIGN] P2. **Option B chosen (operator Ikenna, 2026-06-17) — ONE backend reads BOTH clouds via keyless WIF;
+  no second AWS deployment.** Pivot from the earlier Option-A lean: since the cross-cloud *permission* half is cheap +
+  keyless, do Option B but **phase it** — operator (this session) grants the permissions; the *code* half is handed to
+  Harsh as the two todos below. **GCP build-status is live NOW** (the IAM grant above); **AWS build-status lights up when
+  Harsh ships the reader.** No static cross-cloud secret anywhere (short-lived ≤1h read-only STS).
+- [x] ✅ [INFRA] P2. **AWS WIF read role created (the cross-cloud permission half) — DONE 2026-06-17** by operator
+  (`admin_od`, AWS `427895769566`). Role **`arn:aws:iam::427895769566:role/gcp-cloudrun-codebuild-reader`**: trust =
+  `accounts.google.com` `AssumeRoleWithWebIdentity` conditioned on `accounts.google.com:sub == 104881302737822972808`
+  (the GCP SA `unified-trading-sa@central-element-323112`'s OIDC subject — locks the role to that one SA); inline policy
+  `codebuild-readonly` = `codebuild:BatchGetBuilds`/`ListBuildsForProject`/`ListBuilds`/`BatchGetProjects`/`ListProjects`
+  on `*`; `MaxSessionDuration=3600`. CodeBuild lives in **`ap-northeast-1`** (projects confirmed: deployment-api,
+  market-tick-data-service, strategy-service, …). Reversible: `aws iam delete-role-policy` + `delete-role`. **Nothing
+  more to grant — the boto3 code below just assumes this ARN.**
+
+### Code half — HARSH (Option B implementation; permissions above are DONE — these are the only remaining work)
+
+- [ ] [CODE] P1. **deployment-api — add an AWS-CodeBuild build-status reader + `?provider=` param.** Today
+      `_latest_builds_by_repo()` (`deployment-api/deployment_api/routes/repo_ci.py:360`) only calls GCP Cloud Build v1
+      `list_builds`, dispatching on the server-side `is_aws_provider()`/`CLOUD_PROVIDER` env (`repo_ci.py:375`) — there
+      is **no AWS path and no per-request provider**. Add: (1) thread `provider: Literal["gcp","aws"]="gcp"` through
+      `GET /api/repo-ci/overview` (`get_overview()`) **and peers** that surface the Image column; (2) in
+      `_latest_builds_by_repo(provider)`, branch `provider=="aws"` to a **boto3 CodeBuild** reader in `ap-northeast-1`
+      (`list_builds_for_project(projectName=<repo>)` → newest id → `batch_get_builds(ids=[...])` → map
+      `buildStatus`/`resolvedSourceVersion`/`endTime` to the same shape GCP returns); keep the best-effort
+      `{}`-on-failure contract (`repo_ci.py:366-368`) so a cloud miss stays honest-unknown, never 500s. (3) **Auth =
+      keyless WIF, no stored AWS key**: mint a Google OIDC ID token for the Cloud Run SA (metadata server /
+      `google.auth` `IDTokenCredentials`, `audience` = the role ARN is fine — trust only conditions on `sub`), then
+      `sts.assume_role_with_web_identity(RoleArn="arn:aws:iam::427895769566:role/gcp-cloudrun-codebuild-reader",
+      RoleSessionName="repo-ci-codebuild", WebIdentityToken=<id_token>)` and build the `codebuild` client from the
+      returned short-lived creds (cache ~50 min). Env on the Cloud Run service: `AWS_CODEBUILD_REGION=ap-northeast-1` +
+      the role ARN (config, not a secret). **Target repo:** deployment-api. Unit-test the AWS reader on a mocked boto3
+      (`@mock_aws`/moto) + the provider-param routing; cassette/contract per repo standards. Cold-start: read
+      `SUB_AGENT_MANDATORY_RULES.md`. Provenance: this doc, Option-B decision.
+- [ ] [BUG][UI] P2. **deployment-ui — make the GCP/AWS toggle pass `?provider=` (and stop the prod no-op).** Today
+      `CloudProviderContext.getApiBaseUrl()` (`deployment-ui/src/contexts/CloudProviderContext.tsx:34-57`) returns the
+      relative `/api` for any non-localhost host, so the deployed toggle (`Header.tsx:239-254`) re-queries the SAME GCP
+      backend regardless of selection. Under Option B (single backend, provider param) the fix is to **append
+      `?provider=gcp|aws`** to the repo-CI fetches from the selected cloud (NOT switch base URL) so the one backend
+      serves both. Until the deployment-api P1 above ships, the AWS selection returns honest-unknown (acceptable) — do
+      NOT leave it silently re-showing GCP data labelled AWS. **Target repo:** deployment-ui — **MUST** carry `[UI]`
+      tag + `pw:L2 ✓` (`npx playwright test --project=chromium tests/smoke/`) + a regression spec (per the UI playwright
+      gate, `plans/PLAN_FORMAT.md` §9). Cold-start: read `SUB_AGENT_MANDATORY_RULES.md`. Provenance: this doc.
