@@ -668,8 +668,10 @@ and reads the literal `fundingRate`/`funding` value otherwise (the `0` guards on
       on-chain `fundingHistory` to confirm the archive's floor values match realized on-chain funding. **Repo:
       e2e-testing.**
 
-- [ ] [DATA] P2. Backfill the 2023-2024 HL `perp_funding` gap (517 missing days) via `collect-perp-funding` to extend
-      the backtest to full history (2025-2026 already complete). **Repo: market-tick-data-service (prod CLI).**
+- [x] [DATA] ✅ P2. Backfilled HL `perp_funding` to **100% coverage 2023-05-20→2026-06-09 (1117/1117 days, 0 gaps)** via
+      the fast S3 `asset_ctxs` archive (`mtds@98d12be`, no REST rate-limit, ~4 min for 374 days/965k rows) + a 7-day
+      REST fill for the days HL's S3 archive lags (06-02→08). HL funding history now spans ~3 years for the full
+      ~230-coin universe. **Repo: market-tick-data-service.**
 - [ ] [STRATEGY] P2. Add the capital-efficiency factor to the harness ranking: structure assignment per (coin, venue)
       (spot-collateral set {Binance/Bybit/OKX/Deribit} vs cash-margin {Hyperliquid/Aster}), per-asset max-move `m` →
       `f=1/(1+m)`, rank by `effective_carry = (funding+staking)×f`, winsorise funding outliers, `--min-carry-bps` floor
