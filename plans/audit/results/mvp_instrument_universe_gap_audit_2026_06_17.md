@@ -193,9 +193,10 @@ ROCKETPOOL** so the catalogue matches the already-expanded universe constant.
       out to them, this same gap applies. Provenance: this audit, 2026-06-17.
       **RESOLVED unified-api-contracts@d7a27de + instruments-service@4b2c360** — `is_mvp` now treats `data_type=""`/`None`
       as "any MVP data_type" (UAC-side convention), and the IS tagger dropped its `_representative_mvp_data_type`
-      workaround → calls clean `is_mvp(...)`. mvp column rolled out beyond cefi: **defi** roll-up promoted 6,853 rows
-      (800 MVP-tagged), **tradfi** roll-up promoting (686k rows) this turn. **prediction** has no `prod/catalog.parquet`
-      (its IS reference rows are cqg-group-shaped, not catalogue-rolled) → no mvp column applies; noted, not a gap.
+      workaround → calls clean `is_mvp(...)`. mvp column rolled out beyond cefi: **defi** promoted 6,853 rows (800
+      MVP-tagged), **tradfi** promoted 686,348 rows (76 MVP-tagged — small footprint expected; TradFi is optional in the
+      MVP archetype matrix). **prediction** has no `prod/catalog.parquet` (its IS reference rows are cqg-group-shaped,
+      not catalogue-rolled) → no mvp column applies; noted, not a gap.
 - [x] ✅ **[OPS] P2.** Re-run the cefi catalogue enumeration + roll-up on the recurring IS scheduler cadence (this fix ran
       it once for 2026-06-17); confirm the scheduled job picks up `KRAKEN-SPOT` + the expanded universe automatically on
       its next tick. Provenance: this audit, 2026-06-17.
