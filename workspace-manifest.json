@@ -1802,9 +1802,9 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
+    "locked": true,
+    "locked_since": "2026-06-17T02:32:34.183753Z",
+    "locked_reason": "SIT running",
     "lock_version": null,
     "pending_repos": [
       "system-integration-tests",
@@ -1828,24 +1828,24 @@
       "version": "0.11.0"
     },
     "deployment-api": {
-      "version": "0.16.0",
+      "branch": "staging",
       "sha": "aaad381c7debf8259a118c753fa2a4d920950167",
-      "branch": "staging"
+      "version": "0.16.0"
     },
     "unified-trading-library": {
-      "version": "0.13.0",
+      "branch": "staging",
       "sha": "959f4f7b31f59ef7c65e0224c08286853137d6f9",
-      "branch": "staging"
+      "version": "0.13.0"
     },
     "unified-api-contracts": {
-      "version": "0.18.0",
+      "branch": "staging",
       "sha": "9629243510ebc5053507dc6dd0a6ac15f702ca72",
-      "branch": "staging"
+      "version": "0.18.0"
     },
     "batch-live-reconciliation-service": {
-      "version": "0.8.0",
+      "branch": "staging",
       "sha": "1fda60353a48ca0cc5ec7546b98e78bd1d42c304",
-      "branch": "staging"
+      "version": "0.8.0"
     }
   },
   "main_commits": {
