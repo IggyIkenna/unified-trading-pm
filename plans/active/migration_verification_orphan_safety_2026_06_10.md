@@ -256,15 +256,22 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       orchestrator (`engine/orchestrator/catalogue.py:229`); a DIFFERENT artifact from the lifecycle roll-up (documented
       in the reader docstring). The E5 "gated on sports+pred roll-ups" note is moot for this reader (its only consumers
       are the cefi/defi `legacy_reason_classifier`; both have prod `catalog.parquet`).
-- [ ] [UTL] P2. **DEFERRED (follow-up to E5) — catalogue-reader symbol-format normalisation for CeFi**: the new
-      `catalog.parquet` keys CeFi rows on the ccxt-unified `instrument_id` (e.g. `BTC/USDT:USDT`) while the
-      legacy-reason classifier passes the manifest row's `instrument_id` (often the bare exchange symbol, e.g.
-      `BTCUSDT`) — these do not string-match, so the CeFi cross-ref currently returns None (best-effort → safe
-      `SOURCE_RETURNED_ZERO` fallback, no incorrect classification). DeFi matches cleanly (both sides use the canonical
-      `VENUE:TYPE:SYMBOL`). Fix = a venue-aware symbol normaliser (resolve the manifest symbol → the catalogue's ccxt
-      id, or add a `raw_symbol` column to the CeFi roll-up). Provenance: E5 repoint inspection of real prod
-      `catalog.parquet`, 2026-06-16. Repo: unified-trading-library (+ possibly instruments-service catalogue writer).
-      Owner: this autonomous run surfaced it.
+- [ ] [IS] P2. **Follow-up to E5 — CeFi catalogue must carry `raw_symbol`/`base_asset` so the lifecycle cross-ref
+      matches (NOT a reader-side normaliser)**. Measured on real prod GCS (2026-06-16): the CeFi `availability_index`
+      DOES carry `instrument_id` (95.8% non-blank / 2.6M rows) but in **bare per-venue form** (`BTC-PERPETUAL`,
+      `ADA-PERP`, `SOL-PERP`, `ARB-USDT`), whereas the new `catalog.parquet` keys on canonical
+      `VENUE:TYPE:SYMBOL` (`BINANCE-FUTURES:PERPETUAL:ADA-USDT`; bare ccxt `0G/USDT:USDT` for OKX-SWAP 2,869 +
+      COINBASE-SPOT 757) → **manifest∩catalog instrument_id = 0 for every CeFi venue** (OKX-SWAP 103 vs 2,912 → 0;
+      BINANCE-FUTURES 51 vs 37 → 0). So the reader's per-instrument CeFi cross-ref (EXPECTED_INSTRUMENT_NOT_LISTED/
+      DELISTED) stays dark (safe `SOURCE_RETURNED_ZERO` fallback, never a wrong label). **tradfi + defi are CLEAN** —
+      both manifest and catalog use canonical `VENUE:TYPE:SYMBOL` so they match end-to-end (tradfi e.g.
+      `CBOE:OPTION:O:SPX...`). The OLD `all.parquet` carried `raw_symbol`/`base_asset` and the reader's strategy-2/3
+      matched the bare symbol against those; the new roll-up dropped them. **Correct fix (clean, no guessing):** add
+      `raw_symbol` + `base_asset` to `build_instrument_catalogue.py` `CATALOG_COLUMNS` (populated from the by_date
+      instruments-store source), so the reader's EXISTING `venue+raw_symbol` / `venue+base_asset` strategies match. A
+      reader-side normaliser is the WRONG fix (the catalogue's own ids are internally inconsistent — 98.4% canonical vs
+      3,626 bare — so there is no single target to normalise to). Repo: instruments-service (build_instrument_catalogue
+      + the by_date raw_symbol availability). Provenance: E5 repoint GCS inspection, 2026-06-16 — this run.
 
 ## Success criteria
 
