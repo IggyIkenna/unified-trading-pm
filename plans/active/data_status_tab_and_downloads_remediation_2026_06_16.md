@@ -128,22 +128,37 @@ source:
       palette walks distinct hues (emerald → cyan → blue → amber → red → slate, all 500-stop, no <40%-opacity fills);
       legend swatches kept in lockstep + enlarged (w-2.5) with higher-contrast text. — repo deployment-ui@`7007529` |
       pw:L2 ✓ (215/215 smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
-- [x] ✅ [DATA] P1. **Every CEFI venue read "out of scope" on the live board — STALE DEPLOY, not a code/data bug
-      (RE-DIAGNOSED 2026-06-17 against the REAL prod manifest; the sub-agent's "token-mismatch → migration agents"
-      verdict is REFUTED).** The earlier sub-agent could not reproduce (its local `:8004` had an empty CeFi manifest) so
-      it speculated a token mismatch. Reproduced properly against
-      `gs://market-data-tick-cefi-prd-…/_index/availability_index.parquet`: **every CeFi venue's tokens MATCH the scope
-      and resolve in-scope.** For ALL 15 venues (ASTER/BINANCE-FUTURES/BINANCE-SPOT/BITFINEX-*/BITGET-*/BYBIT/
-      COINBASE-SPOT/DERIBIT/HYPERLIQUID/OKX-*/UPBIT), `is_expected("cefi", venue, "trades")==True` and
-      `is_expected(..., "book_snapshot_5")==True`; the `ohlcv_*` types are caught by `is_processed_data_type(...)==True`
-      → `out_of_scope = not scope_in and not dt_is_processed == False`. So **NO CeFi venue resolves out_of_scope with the
-      current code** (each has ≥1 in-scope data_type, so the UI's `every(dt.out_of_scope)` is never all-true). Therefore
-      the screenshot showing all-out-of-scope was a **stale/cached render** (pre-`8710152` deploy or a cached SPA/API
-      response). FIX = redeploy (the niE fix `8710152` is correct + on LDR; rebuilt + redeployed 2026-06-17, build
-      `6655127f`) + a hard browser refresh — **no code or data change required**. Verified: the classifier is correct;
-      this was a deploy/cache artifact. (Note: `derivative_ticker`/`futures_chain` on a few SPOT venues are
-      legitimately out-of-scope at the data_type grain, but never make the VENUE out-of-scope since `trades` is in
-      scope.)
+- [x] ✅ [CODE] P1. **CeFi venues "out of scope" on the `/service/instruments-service/` board — REAL root cause was a
+      reference-catalogue venue-token vocabulary mismatch (the prior "STALE DEPLOY" verdict was WRONG; corrected
+      2026-06-17 after the operator confirmed it persisted post-redeploy + hard-refresh).** The IS view is a
+      `REFERENCE_BUNDLE_SERVICE`, so `breakdowns_core._classify_data_type_for_venue` scopes each venue via
+      `reference_scope.is_reference_venue_day_in_scope` against the **instruments-service catalogue**
+      (`data-catalogue.instruments-service.yaml`), NOT the market-data `is_expected` registry (which the prior
+      reproduction tested — wrong path). `reference_genesis` did an EXACT uppercased lookup, but the catalogue lists
+      **base exchanges** (`COINBASE`, `OKX`, `DERIBIT`) while the instruments-store manifest qualifies them by role
+      (`COINBASE-SPOT`, `OKX-FUTURES/SPOT/SWAP`, `DERIBIT-COMBO`) → those resolved to `None` = out_of_scope. Two further
+      cefi venues (`BITFINEX-*`, `BITGET-*`) were real instruments-store venues simply absent from the catalogue. **FIX**
+      (deployment-api `reference_scope.py`): `reference_genesis` now falls back to the base token after stripping a
+      market-role suffix (`-SPOT/-FUTURES/-SWAP/-PERP/-PERPETUAL/-COMBO`) → COINBASE-SPOT/OKX-*/DERIBIT-COMBO resolve;
+      **+** PM `configs/data-catalogue.instruments-service.yaml` adds `BITFINEX-SPOT/FUTURES` (2020-01-01) +
+      `BITGET-SPOT/FUTURES` (2024-11-08), genesis transcribed from `VenueMapping`/the live instruments-store manifest.
+      VERIFIED: all **18** `instruments-store-cefi` venues now resolve in-scope; `tradfi`/`prediction` IS instruments-
+      stores already held only catalogued venues (no IS-view out-of-scope there). +1 regression test
+      (`test_reference_genesis_tolerates_market_role_suffix`). NOTE: `KRAKEN-*` (cefi) / `YAHOO_FINANCE` (tradfi) /
+      `KALSHI` (prediction) are NOT in any instruments-store → they never appear on the IS view; any out-of-scope the
+      operator sees for them is the **market-tick** `is_expected` path at the data_type grain (e.g. raw `ohlcv_1m` from
+      Yahoo/Kalshi), which is informative-by-design, not the IS-view bug — tracked separately below.
+
+- [ ] [DATA] P2. **Verify the market-tick-view (`is_expected`) out-of-scope for YAHOO_FINANCE / KALSHI is
+      correct-by-design vs a registry gap** (deployment-api `breakdowns_core` market-data path; UAC
+      `registry/expected_coverage.py`). On the `market-tick-data-service` view (NOT the IS view), `YAHOO_FINANCE ohlcv_1m`
+      + `KALSHI ohlcv_1m` resolve `out_of_scope=True` because `is_expected(...)==False` for those RAW fine-grained
+      data_types AND `is_processed_data_type==False`. For Yahoo (daily/coarse provider, no historical 1m) + Kalshi this is
+      almost certainly **correct/informative** (the source genuinely doesn't supply that granularity). Confirm per-venue
+      which raw data_types each source ACTUALLY provides; if a data_type that IS provided is wrongly out-of-scope, add it
+      to `EXPECTED_COVERAGE_BY_ASSET_GROUP[ag][venue]`; otherwise leave out-of-scope (it correctly signals "this source
+      doesn't provide this data_type"). Provenance: operator "I still see out of scope … prediction and tradfi"
+      2026-06-17; the IS-view cefi out-of-scope is the separate ✅ item above.
 
 ## Phase C (TIER 1 cleanup) — CeFi universe extension (instruments completeness + EigenLayer dust)
 
