@@ -224,7 +224,7 @@ wiring would re-introduce the F47 over-claim — so the token is added ONLY when
 
 ## Discovered debt (2026-06-15)
 
-- [ ] [SCRIPT] P3. **e2e-testing/scripts/defi/test_collateral_validation.py has 22 ruff errors** (19 auto-fixable + 3 N806 lev_weETH/lev_WETH lowercase) surfaced as warn-only in strategy-service's peripheral-dir QG. Foreign file (not owned by the margin work). `ruff --fix` + rename the 3 vars. Repo: e2e-testing.
+- [x] ✅ [SCRIPT] P3. **e2e-testing/scripts/defi/test_collateral_validation.py ruff errors** surfaced as warn-only in strategy-service's peripheral-dir QG. — DONE **e2e-testing@8696934** (2026-06-17). Residual set at fix time was 7 (count had drifted from the originally-noted 22): 5 RUF100 unused-`noqa` (auto-fixed) + 2 N806 (`lev_weETH`→`lev_weeth`, `lev_WETH`→`lev_weth`). `ruff check` clean; QG green (27s). Repo: e2e-testing.
 
 ## Audit findings (2026-06-15 — adversarial verification of the Phase-B/C completion)
 
