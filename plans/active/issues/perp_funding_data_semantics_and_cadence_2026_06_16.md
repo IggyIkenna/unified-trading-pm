@@ -85,13 +85,19 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
 
 ## Recommended decision / todos
 
-- [ ] [DATA] P1. Audit every consumer of UTL `return_metrics.FUNDING_PERIODS_PER_DAY`; repoint to UAC
-      `perp_funding_cadence.annualise_funding_rate_bps`; delete `FUNDING_PERIODS_PER_DAY` (no parallel registry). Add a
-      UAC unit test asserting aster=8h, deribit=1h. **Repo: unified-trading-library + unified-api-contracts +
-      strategy-service.**
-- [ ] [DATA] P1. Confirm the MTDS Deribit `derivative_ticker.funding_rate` is the per-hour rate (not the 8h figure) so
-      `annualise(rate,"deribit")` at 24/day is correct; document in `codex/02-data/`. **Repo:
-      market-tick-data-service.**
+- [x] ✅ [DATA] P1. Audit every consumer of UTL `return_metrics.FUNDING_PERIODS_PER_DAY`; repoint to UAC; delete it
+      (no parallel registry); UAC unit test. **DONE 2026-06-17** via the e2e correctness dispatch
+      (`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`): UTL dict DELETED (unified-trading-library@b587b91b/
+      ed622af8), execution decision-trace repointed (execution-service@38c7e06f), strategy docstring repointed
+      (strategy-service@b91d3e1f), delta_one funding_oi repointed (features-service, pending peer-UAC-dirt), UAC
+      regression tests (aster=8h, deribit=8h-figure, venue-dir norm) (unified-api-contracts@7fade10/fd5bcfa).
+      **NB the test asserts deribit=8h-FIGURE, not 1h** — superseded by the next todo's confirmation.
+- [x] ✅ [DATA] P1. Confirm the MTDS Deribit `derivative_ticker.funding_rate` figure. **CONFIRMED 2026-06-17 (e2e
+      empirical probe): it is the 8h FIGURE** (≈ API `interest_8h` ~ -1e-6, not `interest_1h` ~ -1e-8), NOT the per-hour
+      rate. Resolution: UAC `FUNDING_CADENCE_SECONDS["deribit"]` corrected `1h → 8h` so `annualise(rate,"deribit")`
+      matches the stored 8h figure (preserves the data-matches-API invariant; the prior 1h over-stated Deribit APY 8×).
+      Documented in the `perp_funding_cadence.py` module docstring (figure-vs-charge distinction). The codex/02-data doc
+      update rides the codex-audit below.
 - [ ] [DATA] P1. Make exact discrete per-settlement funding readable: persist funding settlements time-stamped to the
       charge instant (matching venue `fundingTime`), or add a canonical per-settlement funding data_type. Document the
       canonical `funding_timestamp` meaning across adapters. **Repo: market-tick-data-service + unified-api-contracts.**
