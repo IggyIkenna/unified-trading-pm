@@ -150,11 +150,7 @@ source:
       wall, all change-scopable**; FIXED-COST-CACHEABLE → pip-audit (deps-hash); NON-OPTIONAL-FULL → removed-symbols
       (cross-repo, cron) + lint (already negligible). Conclusion: scoping tests+codex+typecheck to the changed-file set
       is the fast tier; merge boundary always runs full.
-- [ ] [AUDIT] P0. **Phase scopability classification** (drives Phase 2): tag each phase NON-OPTIONAL-FULL (must run over
-      the whole tree even for a 2-file change — e.g. ruff*, basedpyright*) vs SCOPABLE-TO-CHANGED-FILES (codex 5.x
-      grep/AST, coverage-bearing tests via impact selection) vs FIXED-COST-CACHEABLE (pip-audit/bandit/actionlint). (\*
-      the data may show even basedpyright can be changed-file-scoped on the fast tier with full at merge — let the
-      numbers decide.)
+      <!-- dedup 2026-06-17: removed the original unchecked duplicate of this item (it was superseded by the DONE entry above). -->
 - [x] [AUDIT] P0. Dual-SSOT matrix across all 22 repos: for every QG-relevant concept (coverage threshold, coverage
       source/omit/branch, pytest testpaths/addopts/markers, bandit skips, ruff/basedpyright/python version pins, exclude
       lists) record (a) toml location, (b) stub/base location, (c) does base pass a CLI flag that overrides toml?, (d)
@@ -170,10 +166,18 @@ source:
       py3.13: without `-c` a toml-skipped B602 is still reported (exit 1); with `-c pyproject.toml` the skip is honoured
       (exit 0); `-c pyproject.toml` is safe even when the file has NO `[tool.bandit]` section (normal scan, no error) →
       the bases can add it unconditionally. Full transcript in the matrix doc. (unified-trading-pm@779dc3683)
-- [ ] [AUDIT] P1. Per-repo `[tool.bandit] skips` audit BEFORE the bases add `-c pyproject.toml` — the ~20 repos' skips
-      have been DEAD config (never enforced); re-activating them un-audited may silently suppress real findings (e.g.
-      MTDS skips B608/B104/B108/B310). Review each list, prune, THEN flip the invocation. (discovered by the bandit
-      verdict above, 2026-06-10)
+- [x] ✅ [AUDIT] P1. Per-repo `[tool.bandit] skips` audit DONE (2026-06-17) — **`-c pyproject.toml` flip is SAFE**. Only
+      2 of 22 repos carry non-empty skips (mtds B608/B104/B108/B310, strategy B608); the other 20 are `skips: []`
+      (no-op). Both skip-sets are **MOOT in the scanned tree** — 0 findings for those codes within each repo's
+      `SOURCE_DIR` (the base scans `bandit -r "$SOURCE_DIR/"`, and mtds's hits are all under the un-scanned `scripts/`).
+      So adding `-c` suppresses zero real findings → no red, nothing hidden. Skips may be pruned for cleanliness
+      (optional). Full method + per-repo table: `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md` § "Per-repo
+      `[tool.bandit] skips` audit (2026-06-17)". — unified-trading-pm
+- [ ] [CODE] P3. **DEFERRED side-finding (bandit audit 2026-06-17)**: mtds `scripts/massive_flat_files_smoke.py:56` uses
+      a hardcoded `/tmp` (B108 — violates the workspace no-hardcoded-`/tmp` HARD RULE; use `tempfile.gettempdir()`), and
+      4 `urllib.urlopen` calls (B310) live in mtds `scripts/` (diagnose_kraken_spot_tardis, probe_drift_trades_window,
+      smoke_test_cbeth_history, verify_lst_collateral_support). Outside bandit's scan path (so not gating today) and in
+      one-off scripts (`scripts/` = temporary per script-homes) — low priority. Repo: market-tick-data-service.
 - [x] [AUDIT] P1. Classify every knob into TIER-A (tool-native — toml is the home) vs TIER-B (bash-orchestration —
       governor/mem-cap/MAX_DURATION/PYTEST_WORKERS/codex-exclude-globs/pip-audit-ignores/size-limits — toml has no
       native home). This classification decides Phase 1's mechanism. ✅ — **13 TIER-A / 27 TIER-B**, full tables with
