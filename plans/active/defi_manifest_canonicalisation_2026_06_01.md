@@ -1331,10 +1331,12 @@ What to verify/wire (B0 corrected scope):
       fixed the MISLEADING "no-underscore canonical" docstring in `migrate_mtds_defi_legacy_venue_underscore.py` (UAC
       keeps underscores; transform is flat→combined VENUE-CHAIN). — deployment-service@4484802 + mtds@6dd8d8a1.
       parent_epic: manifest_master.
-- [ ] [CHORE] P2. C13 **move misplaced migration scripts** out of `plans/audit/results/` (PM docs dir) into
-      `market-tick-data-service/scripts/` (the runnable ones: oracle_relabel / chain_genesis / venue_launch /
-      phantom_captured / captured_pre_existence / captured_vs_objects / index_venue_canonicalise / object_path); the
-      `.md` audit RESULTS + the coverage QUERY stay. parent_epic: manifest_master.
+- [x] ✅ [CHORE] P2. **C13 — DONE (2026-06-16 /autonomous):** relocated the 8 runnable defi migration scripts out of
+      `plans/audit/results/` (PM docs dir) → **`market-tick-data-service/scripts/`** (mtds@712aa01: oracle*relabel /
+      chain_genesis / venue_launch / phantom_captured / captured_pre_existence / captured_vs_objects /
+      index_venue_canonicalise / object_path; ruff-cleaned 16 trivial F541, mtds QG green) + removed from PM here. The
+      `.md` audit RESULTS + the coverage QUERY (`defi_strategy_coverage_query*_`) + the a1–a6/cf\__ audit harnesses STAY
+      in `plans/audit/results/`. parent_epic: manifest_master.
 - [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
       `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
       `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH
