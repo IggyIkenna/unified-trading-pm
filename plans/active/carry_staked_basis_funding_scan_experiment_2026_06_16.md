@@ -272,6 +272,19 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   no on-venue spot offset) and the rest hedge-protected delta-neutral, the treasury covers ~any tail move on that slice.
   Continuous margin monitor needs the price-MtM layer (next fidelity). **All harness work shipped + journaled;
   autonomous run closed.**
+- **2026-06-17** — **SEQUENCING (operator):** the remaining next-fidelity todos (per-action gas · historical DEX/IRM
+  slippage · per-leg capital-movement ledger · complete Aave-ETH backfill · OKX Tardis universe · ETH/SOL share-class
+  staked+recursive · weETH restaking) are **gated on the v9 data-migration / env-split / category= cleanup completing**
+  — resume them once that lands. In the meantime built the live/paper emitter (below).
+- **2026-06-17** — **Live/paper positioning-instruction emitter BUILT** (`--emit-instructions [--as-of DATE]`): runs the
+  SAME causal ensemble model on the latest data and emits the **ideal target book** as instructions — per position: coin
+  · structure · weight · notional (= weight × deployable, treasury reserved) · net/funding/staking carry · short(/long)
+  venue · and the **leg sequence** per structure (spot_same_venue: BUY_SPOT+SHORT_PERP; staked_basis:
+  BUY_SPOT→STAKE→TRANSFER→SHORT_PERP; cash_margin: BUY_SPOT off-venue+POST_MARGIN(USDC×eff)+SHORT_PERP; dispersion:
+  LONG_PERP+SHORT_PERP) → printed + `positioning_instructions.json`. **Batch==live by construction**: same GCS
+  data/schemas (CoinDay/panel) + same decision logic (`_ewma_threshold_weights`/efficiency/collateral) as the backtest;
+  only difference is it emits today's book vs accumulating PnL. Paper/live EXECUTION (fills/PnL) → strategy-service
+  `colocated_engine` (run-paper.sh); the emitter is the signal/target-book stage.
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
