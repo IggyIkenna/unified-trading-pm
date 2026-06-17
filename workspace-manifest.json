@@ -1810,7 +1810,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1943,7 +1943,7 @@
   },
   "promotion_failures": {
     "unified-trading-library": 3,
-    "unified-api-contracts": 2
+    "unified-api-contracts": 3
   },
   "promotion_quarantine": {
     "unified-trading-library": {
@@ -1951,6 +1951,12 @@
       "attempts": 3,
       "escalated": true,
       "next_probe_after": "2026-06-17T00:48:13.929815Z"
+    },
+    "unified-api-contracts": {
+      "since": "2026-06-17T00:15:48.396622Z",
+      "attempts": 3,
+      "escalated": true,
+      "next_probe_after": "2026-06-17T01:15:48.396666Z"
     }
   }
 }
