@@ -87,16 +87,26 @@ SSOT — consumed by **features (TA), ML (signal), strategy (roll translation), 
       `_umi_massive._route_massive` + source="massive" intercept in `fetch_tick_data_for_venue`
 - [x] [MTDS] P1. `us_futures_cme` bulk-backfill ingester as a production CLI (resolve_bucket_name / UCI /
       `record_captured(source="massive")`; interval-aware right-edge via `compute_bar_close_boundary`). Repo:
-      market-tick-data-service. — market-tick-data-service@0962bad | QG ✅ |
-      `MassiveFuturesBackfillHandler` (`--operation massive-futures-backfill`), `BATCH_MASSIVE` pipeline_mode
-- [ ] [MDPS] P1. Promote `build_continuous_es` → MDPS `--operation build-continuous` continuous-contract stage (Panama
-      core + active_contracts SSOT, UCI/resolve_bucket_name, batch=live, manifest+honest-absence). Repo:
-      market-data-processing-service.
-- [ ] [FEATURES] P1. `delta_one` `_maybe_roll_adjust` reads the persisted continuous series; retire the in-memory
+      market-tick-data-service. — market-tick-data-service@0962bad | QG ✅ | `MassiveFuturesBackfillHandler`
+      (`--operation massive-futures-backfill`), `BATCH_MASSIVE` pipeline_mode
+- [x] ✅ [MDPS] P1. Promote `build_continuous_es` → MDPS `--operation build-continuous` continuous-contract stage
+      (Panama core + active_contracts SSOT, UCI/resolve_bucket_name, batch=live, manifest+honest-absence). Repo:
+      market-data-processing-service. — market-data-processing-service@081859b | QG ✅ 14 panama_core tests |
+      `engine/panama_core.py` (ported pure fns) + `engine/build_continuous_engine.py` (UCI I/O, canonical
+      `instrument_type=continuous_future` + `_continuous/{ROOT}/_meta/active_contracts.parquet` paths) +
+      `cli/handlers/build_continuous_handler.py`
+- [x] ✅ [FEATURES] P1. `delta_one` `_maybe_roll_adjust` reads the persisted continuous series; retire the in-memory
       `FuturesRollAdjuster.adjust_continuous` duplication (keep lifecycle-phase helpers); preflight the
-      continuous-series dependency. Repo: features-service.
-- [ ] [MTDS] P2. Retire `build_continuous_es.py` once MDPS produces the output; repoint strategy `roll_emitter` + ml
-      docstrings to the MDPS stage. Repos: market-tick-data-service (+ strategy-service / ml-service doc repoints).
+      continuous-series dependency. Repo: features-service. — features-service@093104d4 | QG ✅ 33 tests | reads the
+      persisted `instrument_type=continuous_future` series via `blob_exists` preflight → on absent: `DEPENDENCY_MISS`
+      log + shard-skip (NO silent fallback to raw per-contract candles); `adjust_continuous` + roll-calendar machinery
+      DELETED, `_PHASE44_*`/`get_lifecycle_phase`/`annotate_lifecycle_phase` KEPT.
+- [x] ✅ [MTDS] P2. Retire `build_continuous_es.py` (MDPS is now the producer); repoint strategy `roll_emitter` + ml
+      docstrings to the MDPS stage. Repos: market-tick-data-service (+ strategy-service / ml-service doc repoints). —
+      DONE: market-tick-data-service@ed33272 (`scripts/build_continuous_es.py` + its test DELETED; no internal
+      importers; not wired into any cron/deployment) + strategy-service@0d80eed9 (`roll_emitter` 3 docstring refs → MDPS
+      build-continuous) + ml-service@5087720 (`training/cli/parser.py` ES_FRONT comment → MDPS stage). `roll_emitter`
+      reads the SSOT by PATH (no mtds import) so the producer relocation is transparent.
 
 ## Verification (full-execution criterion)
 
@@ -104,3 +114,38 @@ ONE adjusted continuous series + `active_contracts` SSOT produced by the MDPS st
 consume it (no in-features re-derivation); Massive per-contract futures OHLCV flows in; all touched repos QG-green; the
 mtds script retired with consumer refs repointed. Live S3 / continuous-build runs are `@requires_credentials` /
 operator-gated batch ops (proven algorithm; 5y ES already pulled).
+
+## Progress Log
+
+- 2026-06-17 (autonomous — FULL centralisation COMPLETE, all 4 phases shipped + flipped). Operator confirmed the
+  architecture (roll adjuster = data-processing layer, before features). Driven via 3 parallel per-repo sub-agents
+  (P1/P2/P3, different repos) + P4 by hand. **Final end-state:**
+  - **P1** market-tick-data-service@0962bad — `_umi_massive._route_massive` wires the Massive flat-files futures path
+    into the tradfi dispatch (CME+source=massive intercept in `fetch_tick_data_for_venue`) +
+    `MassiveFuturesBackfillHandler` (`--operation massive-futures-backfill`,
+    `resolve_bucket_name`/UCI/`record_captured(source=massive, BATCH_MASSIVE)`); 27 tests, QG✅. (Closes R5-fix-6 →
+    WIRE.)
+  - **P2** market-data-processing-service@081859b — the canonical producer: `--operation build-continuous` (Panama
+    back-adjust core in `engine/panama_core.py` + `engine/build_continuous_engine.py` UCI I/O) writes the continuous
+    `instrument_type=continuous_future` candles + the `_continuous/{ROOT}/_meta/active_contracts.parquet` roll-schedule
+    SSOT at the canonical paths; 14 tests, QG✅.
+  - **P3** features-service@093104d4 — `delta_one` now READS the persisted continuous series (`blob_exists` preflight →
+    `DEPENDENCY_MISS` shard-skip on absence, no silent raw fallback); the in-memory
+    `FuturesRollAdjuster.adjust_continuous`
+    - roll-calendar duplication is DELETED (lifecycle-phase helpers kept); 33 tests, QG✅. **The duplication you flagged
+      is gone — features TA now computes on the SAME adjusted series ML/strategy/execution use.**
+  - **P4** market-tick-data-service@ed33272 (deleted `scripts/build_continuous_es.py` + test — MDPS is the producer now;
+    not wired into any cron/deployment) + strategy-service@0d80eed9 (`roll_emitter` docstrings → MDPS) +
+    ml-service@5087720 (parser comment → MDPS). `roll_emitter` reads the SSOT by PATH (no cross-service import) so the
+    producer relocation was transparent to consumers.
+  - **Process notes:** the first delegated sub-agent (Massive S3 connector, earlier task) died on a transient 529
+    mid-run and was reconciled by hand; the 3 centralisation sub-agents shipped clean. All ships used normal quickmerge
+    (or the dirty-deps carve-out when the concurrent UAC-bump fan-out left UAC/UTL dirty). A transient PM-manifest race
+    (concurrent uac→0.18.0 regenerating `workspace-manifest.json` mid-QG) failed one ml QG with a
+    `generate_workspace_dag` JSONDecodeError — diagnosed as transient (manifest valid+clean after), re-ran green. A
+    redundant PM mid-merge was concluded (MERGE_HEAD already an ancestor of origin).
+  - **Operator-gated residual (NOT this code-scope, by design):** the MDPS `build-continuous` stage + the
+    `us_futures_cme` backfill are CODE-shipped but the actual batch RUNS (continuous-series production on real data,
+    roll back-adjustment over the full history) are `@requires_credentials` / operator-gated batch ops (like G4
+    `--apply`), to be fired on real infra; roll back-adjustment beyond front-month selection is in the MDPS Panama core,
+    run at that time.
