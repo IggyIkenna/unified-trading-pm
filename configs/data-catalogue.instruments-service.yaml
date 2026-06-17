@@ -23,6 +23,34 @@ shard_status:
       latest_data_date: null
       assignee: ikenna
       notes: Complete
+    BITFINEX-SPOT:
+      start_date: "2020-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Added 2026-06-17 — manifest-derived genesis (was unlisted → out-of-scope on IS data-status view)
+    BITFINEX-FUTURES:
+      start_date: "2020-01-01"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Added 2026-06-17 — manifest-derived genesis (was unlisted → out-of-scope on IS data-status view)
+    BITGET-SPOT:
+      start_date: "2024-11-08"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Added 2026-06-17 — manifest-derived genesis (was unlisted → out-of-scope on IS data-status view)
+    BITGET-FUTURES:
+      start_date: "2024-11-08"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes: Added 2026-06-17 — manifest-derived genesis (was unlisted → out-of-scope on IS data-status view)
     DERIBIT:
       start_date: "2019-03-30"
       stage_1_has_run: true
