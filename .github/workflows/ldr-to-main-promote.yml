@@ -80,7 +80,14 @@ jobs:
           # content is mostly carve-outs (docs(plans)/scripts/.github), so this rarely fires.
           git fetch -q --no-tags origin main live-defi-rollout 2>/dev/null || true
           PROV_BLOCKED=0
-          PROV_OUT="$(python3 scripts/cicd/check_strict_quickmerge.py --range "origin/main..origin/live-defi-rollout" --block 2>&1)" && PROV_RC=0 || PROV_RC=$?
+          # D1 squash-blind fix (provenance_gate_squash_perpetual_block_2026_06_17): SINCE-LAST-PROMOTE range —
+          # the head SHA of the last merged LDR→main drain PR, NOT raw main..LDR. A squash-promote never lands the
+          # promoted commit's SHA on main, so the raw range re-flags an already-drained trailer-less commit on EVERY
+          # drain forever (06a83fb6). Fail-safe: no merged drain yet / unreachable marker → origin/main..LDR fallback.
+          PROV_RANGE="$(python3 scripts/cicd/promote_provenance_range.py \
+            --repo "$REPO" --owner "$OWNER" --base-branch main --fetch-remote origin)" || PROV_RANGE=""
+          [ -n "$PROV_RANGE" ] || PROV_RANGE="origin/main..origin/live-defi-rollout"
+          PROV_OUT="$(python3 scripts/cicd/check_strict_quickmerge.py --range "$PROV_RANGE" --block 2>&1)" && PROV_RC=0 || PROV_RC=$?
           if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
             PROV_BLOCKED=1
             echo "⛔ provenance: PM LDR carries non-quickmerge CODE — LDR→main auto-merge will NOT be armed:"
