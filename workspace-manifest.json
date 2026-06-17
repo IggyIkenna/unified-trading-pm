@@ -114,7 +114,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 87,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -511,7 +511,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 84,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1802,10 +1802,10 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-17T02:03:59.953874Z",
-    "locked_reason": "Breaking MINOR bump cascade: batch-live-reconciliation-service=0.8.0 (pre-1.0.0)",
-    "lock_version": "0.8.0",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
+    "lock_version": null,
     "pending_repos": [
       "system-integration-tests",
       "deployment-api",
@@ -1957,7 +1957,8 @@
   "promotion_failures": {
     "unified-trading-library": 4,
     "unified-api-contracts": 4,
-    "deployment-api": 1
+    "deployment-api": 2,
+    "batch-live-reconciliation-service": 1
   },
   "promotion_quarantine": {
     "unified-trading-library": {
