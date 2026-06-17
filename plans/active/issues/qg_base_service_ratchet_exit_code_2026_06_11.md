@@ -7,7 +7,7 @@ source:
   - mtds CF-11 swallow batch QG runs 2026-06-11 (mtds_honest_absence_swallow_remediation_2026_06_10.md)
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
 ---
 
 ## What I found
@@ -59,8 +59,20 @@ Owner suggestion: vm-cross-cutting (PM quality-gates-base). Repos: unified-tradi
 - **Step 3 (regression test) — AUTHORED, HELD.** `tests/test-ratchet-exit-code-aggregation.sh` on the same preserve
   branch (planted failing ratchet step → asserts exit 1 + no sentinel).
 - **✅ UNBLOCKED 2026-06-17** — Ikenna chose **cite-first** and cited the ~468 fleet-wide (execution 225, UAC 138, e2e
-  demo-wallet, …); `defi_address_citation_baseline.yaml` ratcheted to 0 for every repo. Live fleet sweep is clean on all
-  three ratchets (5.94 / 5.95 / 5.97 = 0 over-baseline). **The hardening (Step 1 + Step 3) is now shippable** from
-  `wip-preserve/qg-ratchet-hardening-2026-06-16` — promote it to PM `main` (base-service.sh is PM-sourced, fleet-live on
-  merge; re-verify a fleet QG-green sample first). Blocker doc closed:
-  `defi_address_citation_baseline_incomplete_seed_2026_06_16.md` (status: resolved).
+  demo-wallet, …); `defi_address_citation_baseline.yaml` ratcheted to 0 for every repo. Blocker doc closed:
+  `defi_address_citation_baseline_incomplete_seed_2026_06_16.md` (resolved).
+
+## ✅ SHIPPED 2026-06-17 (QG-agent) — fleet-remediated + hardening landed
+
+- **Full-fleet enumeration under the hardened gate (option 1):** all **21 base-service.sh repos** swept. Only 2 red —
+  **execution-service STEP 5.96** (legacy bucket f-string; fixed by deleting dead code, `2378a1d9`) and **mdps STEP
+  5.71** (continuous-engine `record_captured` = derived output → justified `# QG-allow: emission-policy-not-applicable`,
+  peer-pattern, `bcc1313`); both fixed + landed via fix-agents. All 18 others green; libraries (uac/UTL) unaffected
+  (base-library.sh has no post-verdict `V++`, so no hollow-green bug).
+- **Latent bug also fixed in the same bundle:** deployment-api's `# QG-allow: legacy-bucket-name-migration` marker was
+  tripping STEP 5.31 (honoring never shipped) — the bundle adds 5.31 marker-honoring (parity with 5.96).
+- **PM-side blocker cleared:** an audit-result doc was missing required frontmatter (blocked PM full-QG for any script
+  ship) — fixed (`924dd844`).
+- **Hardening SHIPPED to PM LDR `a96992a33`** — base-service.sh `_V_PRE_RATCHET` snapshot + `_RATCHET_FAILS` hard-gate
+  verdict + STEP 5.31 marker-honoring + the regression test (`tests/test-ratchet-exit-code-aggregation.sh`, 3/3 PASS).
+  Draining LDR→main via the standing promote PR. **Step 1 + Step 2 + Step 3 all DONE.** Closing this issue.
