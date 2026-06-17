@@ -376,11 +376,21 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
 
 ---
 
-## Phase 2 — CHANGE-SCOPED FAST TIER (the single-core wall-time win)
+## Phase 2 — CHANGE-SCOPED FAST TIER — ✅ CLOSED 2026-06-17 (won't-build; data-backed)
 
-> Two-tier model. **Fast/iterative tier** = scoped to changed files for the FILE-SPECIFIC steps only; for the local dev
-> loop; does NOT write the sentinel and is NOT sufficient to merge. **Full/merge tier** = today's complete gate; writes
-> the sentinel; runs at quickmerge Pass-1 / CI.
+> **🔴 CLOSED — DO NOT BUILD THE FAST TIER (operator 2026-06-17, on the re-profile data).** "Everything we could do to
+> make the QG faster is done; going further is risky — let's not waste time on this." The 2026-06-17 re-profile
+> (`qg_step_profile_2026_06_09.md` § RE-PROFILE) shows the remaining fast-tier-scopable slice is **size-checks (0.3%) +
+> bandit (0.8%) = ~1.1% of gate wall** — tests (67.4%) + typecheck (8.6%) are always-full by decision, and codex (13.1%)
+> is already fast-scoped (shipped). 1.1% does not justify the two-tier machinery (`.qg_fast_sentinel`, quickmerge
+> fast-sentinel policy, differential harness) + its regression risk. **The wall-time wins were delivered by per-step
+> optimization (Phase 3), not a fast tier.** Kept: the shipped codex `--fast` path (free, already in). Dropped: the
+> two-tier contract, size-checks/bandit fast-scoping, the differential harness. Residual real lever = tests (67.4%),
+> bounded by the always-full decision → only CI-side cache persistence remains (separate CI surface, not local scoping).
+
+> Two-tier model (NOT BUILT). **Fast/iterative tier** = scoped to changed files for the FILE-SPECIFIC steps only; for
+> the local dev loop; does NOT write the sentinel and is NOT sufficient to merge. **Full/merge tier** = today's complete
+> gate; writes the sentinel; runs at quickmerge Pass-1 / CI.
 >
 > **⚖️ OPERATOR DECISION 2026-06-17 (Harsh) — TESTS + BASEDPYRIGHT ALWAYS FULL; fast tier scopes ONLY file-specific
 > steps.** Rationale: "we don't want to do the wrong thing just to save a few minutes and then catch it during merge."
@@ -400,7 +410,11 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
 > and decides whether the reduced-scope fast tier is even worth completing. Sweep launched 2026-06-17 (see Phase-0
 > re-profile item).
 
-- [ ] [DESIGN] P0. Specify the two-tier contract + the trigger: a new `--fast` (or `--scoped`) mode that diffs
+- [~] [DESIGN] P0. ~~Specify the two-tier contract + the `--fast` trigger~~ — **WON'T-DO (closed 2026-06-17, see Phase-2
+  banner)**: the scopable slice is ~1.1%; not worth a second sentinel + quickmerge policy. The original spec retained
+  below for the record only.
+  <!-- WON'T-DO — superseded text:
+      A new `--fast` (or `--scoped`) mode that diffs
       HEAD/worktree, computes the changed file set, and runs only impacted work. Reuse the existing green-sentinel
       (unchanged→skip) as the degenerate case; this adds the "small change → impacted subset" case between "unchanged"
       and "full." **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the fast tier must NEVER write
@@ -409,6 +423,7 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
       policy decision for what a fast-sentinel permits (likely: nothing on the promote path; fast = inner-loop only);
       (c) the base scripts ALREADY hard-exclude QG_FAST from the full-sentinel write (defense-in-depth shipped
       2026-06-10) — the tier must set QG_FAST=1.
+  -->
 - [x] ✅ [DESIGN] P0. Coverage-preservation design — **RESOLVED BY DECISION (2026-06-17), not by mechanism.** Tests
       always run full → coverage is always the real total → the floor is always enforced on every tier. None of (a)
       testmon / (b) combined-coverage / (c) floor-only-at-merge is needed; (b) is explicitly rejected (silent-floor-
@@ -434,9 +449,9 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
       scoped codex to its 1 changed file and caught that file's 2 real violations; (c) rg-glob mechanism proven
       (720-file scan → 1 file). The fast tier NEVER writes `.qg_last_passed_sha` (base scripts already enforce), so any
       fast miss is re-checked at the merge boundary. — unified-trading-pm@<sha>
-- [ ] [TEST] P0. Differential correctness harness: for a corpus of known-bad commits (each violating one specific
-      check/coverage), assert the fast tier catches anything WITHIN the changed files AND the full/merge tier catches
-      everything. This is the proof that scoping never lets a regression through.
+- [~] [TEST] P0. ~~Differential correctness harness (known-bad commits → fast tier catches in-scope, merge tier catches
+  all)~~ — **WON'T-DO (closed 2026-06-17)**: it existed to prove the fast tier never lets a regression through; with no
+  fast tier being built, there is nothing to prove. The merge tier already runs everything full.
 
 ---
 
@@ -481,9 +496,8 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
         `validate-buildspec.py` `find_buildspec_files` → converted to `os.walk` + `EXCLUDE_DIR_NAMES`. **VERIFIED
         byte-identical** found-file sets (cloudbuild 544 / buildspec 351, diff empty) with **cloudbuild 40.8s→8.0s
         (~5×)** + **buildspec 13.7s→4.9s (~2.8×)** — ~42 s off the PM gate. — unified-trading-pm@<sha>
-- [ ] [INFRA] P2. bandit fast-tier scoping: scope bandit to changed files on the `--fast` tier (residual from the cache
-      item above — depends on the Phase-2 fast-tier mechanism landing; the content-hash cache already covers the
-      unchanged-tree case).
+- [~] [INFRA] P2. ~~bandit fast-tier scoping~~ — **WON'T-DO (closed 2026-06-17, Phase-2 closed)**: depended on the fast
+  tier; bandit is 0.8% of wall and already content-hash cached on an unchanged tree. Not worth scoping.
 - [ ] [INFRA] P2. Coverage instrumentation is already off the `--quick` hot path; confirm the fast tier inherits that
       and measure the per-line-instrumentation cost the profile (Phase 0) attributes to `--cov`.
 - [ ] [INFRA] P2. Re-profile after Phases 1–3 and re-baseline `qg_resource_baseline.json`; the 2× resource-drift guard
@@ -528,13 +542,17 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
 
 ## Phase 4 — VALIDATION & BACKSTOP (no coverage drop, no missed violation)
 
-- [ ] [TEST] P0. Coverage-floor invariant test: prove the MERGE tier still enforces each repo's real floor after the
-      Phase-1 SSOT change (no repo silently dropped to pytest-cov default 0; no repo silently loosened).
-- [ ] [TEST] P1. Run the Phase-2 differential harness in CI as a recurring guard so a future change to the fast tier
-      can't regress its catch-rate.
-- [ ] [INFRA] P1. Periodic FULL sweep (cron) across all repos as the backstop: even if the fast tier ever under-scopes,
-      the sweep guarantees a full gate (incl. full coverage + full codex) runs within an SLA, so scoping can never let a
-      regression persist undetected.
+- [x] ✅ [TEST] P0. Coverage-floor invariant — **VERIFIED at the `--cov-fail-under` flip (2026-06-17)**: pre-flip sweep
+      confirmed every repo sourcing the base declares `[tool.coverage.report] fail_under` == its stub `MIN_COVERAGE`
+      (zero drift, none absent → no repo dropped to pytest-cov default 0, none loosened); pytest-cov enforcement of toml
+      `fail_under` proven mechanically (synthetic repo, exit 1 below threshold). The merge tier still enforces each
+      repo's real floor; `coverage-floor-guard.sh` still gates the system floor (70) + signed exceptions.
+- [~] [TEST] P1. ~~Phase-2 differential harness in CI~~ — **WON'T-DO (closed 2026-06-17)**: no fast tier → no catch-rate
+  to guard.
+- [~] [INFRA] P1. ~~Periodic FULL sweep (cron) as a fast-tier under-scoping backstop~~ — **SUPERSEDED (2026-06-17)**:
+  with no fast tier, nothing under-scopes — the per-repo merge tier always runs the full gate (full coverage + full
+  codex). The one genuinely cross-repo check (removed-symbols) IS now covered by the nightly
+  `removed-symbols-workspace-sweep.yml` shipped under Phase 0 Part 3. No general periodic full-QG cron needed.
 
 ---
 
