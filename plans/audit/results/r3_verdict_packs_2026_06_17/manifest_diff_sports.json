@@ -1,0 +1,407 @@
+{
+  "asset_group": "sports",
+  "cells": {
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 55412
+  },
+  "current": {
+    "rows": 803796,
+    "uri": "gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet"
+  },
+  "group_row_deltas": [
+    {
+      "asset_group": "sports",
+      "current_rows": 34564,
+      "data_type": "odds",
+      "delta": -17282,
+      "projected_rows": 17282,
+      "venue": "ODDS_API"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2,
+      "data_type": "arbitrage_opportunity",
+      "delta": -1,
+      "projected_rows": 1,
+      "venue": ""
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2,
+      "data_type": "arbitrage_opportunity",
+      "delta": -1,
+      "projected_rows": 1,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2,
+      "data_type": "odds_movement",
+      "delta": -1,
+      "projected_rows": 1,
+      "venue": ""
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2,
+      "data_type": "odds_movement",
+      "delta": -1,
+      "projected_rows": 1,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2,
+      "data_type": "odds_snapshot",
+      "delta": -1,
+      "projected_rows": 1,
+      "venue": ""
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2,
+      "data_type": "odds_snapshot",
+      "delta": -1,
+      "projected_rows": 1,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 111451,
+      "data_type": "odds_horizon_bucket",
+      "delta": 0,
+      "projected_rows": 111451,
+      "venue": "ODDS_API"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 243,
+      "data_type": "odds_horizon_bucket_15m",
+      "delta": 0,
+      "projected_rows": 243,
+      "venue": "FOOTBALL"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 211,
+      "data_type": "odds_horizon_bucket_1d",
+      "delta": 0,
+      "projected_rows": 211,
+      "venue": "FOOTBALL"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 230,
+      "data_type": "odds_horizon_bucket_1h",
+      "delta": 0,
+      "projected_rows": 230,
+      "venue": "FOOTBALL"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 226,
+      "data_type": "odds_horizon_bucket_4h",
+      "delta": 0,
+      "projected_rows": 226,
+      "venue": "FOOTBALL"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "BETFAIR"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2087,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 2087,
+      "venue": "BETFAIR_EX_EU"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2107,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 2107,
+      "venue": "BETFAIR_EX_UK"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 1972,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 1972,
+      "venue": "BETFAIR_SB_UK"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 20,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BETMGM"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3749,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3749,
+      "venue": "BETONLINEAG"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "BETOPENLY"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3472,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3472,
+      "venue": "BETRIVERS"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2277,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 2277,
+      "venue": "BETSSON"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3743,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3743,
+      "venue": "BETVICTOR"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 20,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BETWAY"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 20,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BOVADA"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2652,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 2652,
+      "venue": "CASUMO"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3253,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3253,
+      "venue": "CORAL"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 4058,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 4058,
+      "venue": "DRAFTKINGS"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3558,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3558,
+      "venue": "FANDUEL"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "KALSHI"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2053,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 2053,
+      "venue": "LADBROKES_UK"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3109,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3109,
+      "venue": "LIVESCOREBET"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 61243,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 61243,
+      "venue": "MATCHBOOK"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "NOVIG"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "ODDS_API"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "ONEXBET"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 4496,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 4496,
+      "venue": "PADDYPOWER"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 61283,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 61283,
+      "venue": "PINNACLE"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "POLYMARKET"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 58604,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 58604,
+      "venue": "PROPHETX"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 4270,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 4270,
+      "venue": "SKYBET"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 995,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 995,
+      "venue": "SMARKETS"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 4094,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 4094,
+      "venue": "SPORT888"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 4529,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 4529,
+      "venue": "UNIBET"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 11,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 11,
+      "venue": "UNIBET_EU"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 2125,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 2125,
+      "venue": "UNIBET_UK"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3168,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3168,
+      "venue": "VIRGINBET"
+    },
+    {
+      "asset_group": "sports",
+      "current_rows": 3663,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 3663,
+      "venue": "WILLIAMHILL"
+    }
+  ],
+  "projected": {
+    "rows": 786508,
+    "uri": "gs://market-data-tick-sports-prd-central-element-323112/_index/audit/projected_index_sports.parquet"
+  },
+  "regressions": {
+    "captured_regressions": 0,
+    "is_regression": false,
+    "removed_cells": 0
+  },
+  "sample_cap": 100,
+  "samples": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "status_transitions": {}
+}

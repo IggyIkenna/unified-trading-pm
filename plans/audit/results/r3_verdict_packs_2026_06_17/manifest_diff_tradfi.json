@@ -1,0 +1,2108 @@
+{
+  "asset_group": "tradfi",
+  "cells": {
+    "added": 2,
+    "changed": 2916,
+    "removed": 4374,
+    "unchanged": 57841
+  },
+  "current": {
+    "rows": 144314,
+    "uri": "gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet"
+  },
+  "group_row_deltas": [
+    {
+      "asset_group": "tradfi",
+      "current_rows": 19491,
+      "data_type": "trades",
+      "delta": 331789,
+      "projected_rows": 351280,
+      "venue": "CME"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 291,
+      "data_type": "options_chain",
+      "delta": 120655,
+      "projected_rows": 120946,
+      "venue": "CME"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 4123,
+      "data_type": "ohlcv_1m",
+      "delta": 102861,
+      "projected_rows": 106984,
+      "venue": "NYSE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 65470,
+      "data_type": "ohlcv_1m",
+      "delta": 67116,
+      "projected_rows": 132586,
+      "venue": "CME"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1273,
+      "data_type": "tbbo",
+      "delta": 64896,
+      "projected_rows": 66169,
+      "venue": "NYSE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1363,
+      "data_type": "trades",
+      "delta": 54467,
+      "projected_rows": 55830,
+      "venue": "NYSE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 2917,
+      "data_type": "ohlcv_1m",
+      "delta": 26090,
+      "projected_rows": 29007,
+      "venue": "NASDAQ"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1263,
+      "data_type": "tbbo",
+      "delta": 16036,
+      "projected_rows": 17299,
+      "venue": "NASDAQ"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1652,
+      "data_type": "trades",
+      "delta": 14198,
+      "projected_rows": 15850,
+      "venue": "NASDAQ"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1651,
+      "data_type": "tbbo",
+      "delta": 6106,
+      "projected_rows": 7757,
+      "venue": "CME"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 3182,
+      "data_type": "ohlcv_1m",
+      "delta": 3613,
+      "projected_rows": 6795,
+      "venue": "ICE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1607,
+      "data_type": "trades",
+      "delta": 2043,
+      "projected_rows": 3650,
+      "venue": "ICE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 3737,
+      "data_type": "ohlcv_24h",
+      "delta": -1798,
+      "projected_rows": 1939,
+      "venue": "FX"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 944,
+      "data_type": "tbbo",
+      "delta": -904,
+      "projected_rows": 40,
+      "venue": ""
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 944,
+      "data_type": "trades",
+      "delta": -904,
+      "projected_rows": 40,
+      "venue": ""
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 826,
+      "data_type": "ohlcv_1m",
+      "delta": -791,
+      "projected_rows": 35,
+      "venue": ""
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 656,
+      "data_type": "",
+      "delta": -656,
+      "projected_rows": 0,
+      "venue": "CBOE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 590,
+      "data_type": "ohlcv_15m",
+      "delta": -565,
+      "projected_rows": 25,
+      "venue": ""
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1409,
+      "data_type": "tbbo",
+      "delta": 404,
+      "projected_rows": 1813,
+      "venue": "ICE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 379,
+      "data_type": "",
+      "delta": -379,
+      "projected_rows": 0,
+      "venue": "ICE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 371,
+      "data_type": "",
+      "delta": -371,
+      "projected_rows": 0,
+      "venue": "CME"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 368,
+      "data_type": "",
+      "delta": -368,
+      "projected_rows": 0,
+      "venue": "NASDAQ"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 368,
+      "data_type": "",
+      "delta": -368,
+      "projected_rows": 0,
+      "venue": "NYSE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 330,
+      "data_type": "",
+      "delta": -330,
+      "projected_rows": 0,
+      "venue": "FX"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 236,
+      "data_type": "ohlcv_24h",
+      "delta": -226,
+      "projected_rows": 10,
+      "venue": ""
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 118,
+      "data_type": "ohlcv_15m",
+      "delta": -113,
+      "projected_rows": 5,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 118,
+      "data_type": "ohlcv_1m",
+      "delta": -113,
+      "projected_rows": 5,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 118,
+      "data_type": "ohlcv_24h",
+      "delta": -113,
+      "projected_rows": 5,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 118,
+      "data_type": "tbbo",
+      "delta": -113,
+      "projected_rows": 5,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 118,
+      "data_type": "trades",
+      "delta": -113,
+      "projected_rows": 5,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1783,
+      "data_type": "ohlcv_24h",
+      "delta": -21,
+      "projected_rows": 1762,
+      "venue": "YAHOO_FINANCE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 2557,
+      "data_type": "ohlcv_15m",
+      "delta": 19,
+      "projected_rows": 2576,
+      "venue": "CBOE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 932,
+      "data_type": "ohlcv_1m",
+      "delta": -1,
+      "projected_rows": 931,
+      "venue": "CBOE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "BARCHART"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "CME"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "FX"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "ICE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "NASDAQ"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "NYSE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 1598,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 1598,
+      "venue": "YAHOO_FINANCE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "BARCHART"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "FX"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "YAHOO_FINANCE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_24h",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "BARCHART"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_24h",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "CBOE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_24h",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "CME"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_24h",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "ICE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_24h",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "NASDAQ"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "ohlcv_24h",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "NYSE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "tbbo",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "BARCHART"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "tbbo",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "CBOE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "tbbo",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "FX"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "tbbo",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "YAHOO_FINANCE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "BARCHART"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "CBOE"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "FX"
+    },
+    {
+      "asset_group": "tradfi",
+      "current_rows": 931,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 931,
+      "venue": "YAHOO_FINANCE"
+    }
+  ],
+  "projected": {
+    "rows": 946360,
+    "uri": "gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/projected_index_tradfi.parquet"
+  },
+  "regressions": {
+    "captured_regressions": 2902,
+    "is_regression": true,
+    "removed_cells": 4374
+  },
+  "sample_cap": 100,
+  "samples": {
+    "added": [
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2026-04-27",
+        "instrument_type": "combo",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2026-04-27",
+        "instrument_type": "options_chain",
+        "venue": "CME"
+      }
+    ],
+    "changed": [
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "BARCHART"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CBOE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NASDAQ"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "NYSE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "YAHOO_FINANCE"
+      }
+    ],
+    "removed": [
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "spot_pair",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "future",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "future",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-07",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-07",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-07",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-07",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-07",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-07",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-08",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-08",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-08",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-08",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-08",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-08",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-09",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-09",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-09",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-09",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-09",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-09",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-10",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-10",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-10",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-10",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-10",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-10",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-12",
+        "instrument_type": "future",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-13",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-13",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-13",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-13",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-13",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-13",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-14",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-14",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-14",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-14",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-14",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-14",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-15",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-15",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-15",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-15",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-15",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-15",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-16",
+        "instrument_type": "future",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-16",
+        "instrument_type": "spot_pair",
+        "venue": "FX"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-16",
+        "instrument_type": "future",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-16",
+        "instrument_type": "future",
+        "venue": "CME"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-16",
+        "instrument_type": "future",
+        "venue": "ICE"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_15m",
+        "date": "2020-01-17",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_1m",
+        "date": "2020-01-17",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-17",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "ohlcv_24h",
+        "date": "2020-01-17",
+        "instrument_type": "",
+        "venue": "YAHOO_FINANCE"
+      },
+      {
+        "chain": "",
+        "data_type": "tbbo",
+        "date": "2020-01-17",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      }
+    ]
+  },
+  "status_transitions": {
+    "captured->attempted_failed": 273,
+    "captured->empty_confirmed": 2629,
+    "empty_confirmed->captured": 14
+  }
+}

@@ -236,4 +236,73 @@ genuinely-unresolved import `unified_trading_services` (`audit-library-imports.p
       existing
       `[tool.basedpyright] ignore` list (consistent with its stated rationale) OR recalibrate the ceiling once the jump
       is understood. Only PM's v2 (and thus the PM-central bots reaching main: supersede, alert, ldr-to-main provenance,
-      conflict-agent context) is gated on this; the FLEET is already unblocked.
+      conflict-agent context) is gated on this; the FLEET is already unblocked. **✅ RESOLVED 2026-06-17** — the
+      1517→2992 "debt" was NOT real debt: it was the `.venv` UTL/UAC Unknown-CASCADE in PM's CI typecheck slice. Proven
+      locally: `basedpyright scripts/` with UTL/UAC resolved in `.venv` = **1489 errors < 1523 ceiling** (PASSES); CI's
+      2992 = 1489 genuine + ~1503 cascade from unresolved deps. The `df6291b6d` `--python .venv/bin/python` fix made the
+      editable install deterministic → PM v2 typecheck went GREEN (run 2c82c780, 03:25Z) → **#387 MERGED** (head
+      aaa133c72). PM-central machinery is now live on main. No ceiling change needed.
+
+---
+
+## Class D — fleet-wide "drain stalled / N commits behind" is SQUASH-ACCOUNTING NOISE, not real backlog (2026-06-17)
+
+**The operator's "we're staging, doing nothing faster than we can clear it" is 90% illusory.** The deployment-UI Repos
+CI page showed 15 repos "drain stalled" with "199 commits behind / 37 files ahead / 6d lag" etc. and a 29-deep "Conflict
+wall" triage queue. Direct measurement (`git diff --name-only origin/staging origin/live-defi-rollout`) proves:
+
+- **deployment-api, ibkr-gateway-infra (UI: "208 behind"), trading-agent-service ("219"), system-integration-tests
+  ("189"), client-reporting-api, market-tick-data-service, … = 0 FILES content-delta.** staging AND main are already
+  CONTENT-IDENTICAL to LDR. The huge "commits behind" is pure squash-merge history divergence (`ahead_by>0`, `files:[]`)
+  — the exact "noise to collapse, not work to merge" case from CLAUDE.md § "LDR is the SSOT". The Tier-C drain bot
+  already knows this: it auto-closes such promote PRs with _"staging tree == LDR tree (content-identical; the ahead_by
+  gap is squash-accounting noise)"_.
+- The **deployment-UI / Repos-CI monitor measures COMMIT-count divergence (and a files-touched-across-commits count),
+  NOT net tree-delta** → it perpetually shows a fake backlog that can never "clear" (squash-merges keep `ahead_by`
+  climbing forever). This is the source of the "doing nothing faster than we clear it" perception.
+
+### What was GENUINELY stuck (now fixed this session)
+
+1. **~29 stale `dep-update/*` PRs** (the real "conflict wall") — redundant under the range-pin/pull model (internal dep
+   floors `>=0.x,<1.0.0` absorb every minor bump; the floors were already on LDR). **CLOSED all of them** (0 open
+   dep-update PRs fleet-wide now, verified). Composes with the digest-only-on-minor fix (24/24 LDRs) that stops new ones.
+2. **UAC + UTL real staging→main content** (UAC 37 files/+4823; UTL 31 files) blocked by **CONFLICTING staging→main
+   PRs** (UAC #344, UTL #370). Root cause = the staging→main merge-base is stale because **staging never receives a
+   `main` back-merge — only LDR does** (`main-backmerge-to-ldr` + `staging-backmerge-to-ldr` both converge on LDR; there
+   is no `main→staging`). LDR carries main's back-merge → the clean reconcile path is **LDR→main** (like PM Option-B).
+   Resolved: **UAC #353 (LDR→main) MERGED** ✅, **UTL #376 (LDR→main) armed** (v2-gated); stale #344/#370 closed as
+   superseded. No SIT bypass — auto-merge (non-admin) respects all required checks; v2 passed on the additive content.
+3. **e2e-testing** — the only repo with a genuine staging→LDR divergence (staging had 2 dep-pin commits LDR lacked).
+   Back-merged staging→LDR, resolved `pyproject.toml` (kept higher `strategy-service>=0.14.0` floor + LDR driftpy NOTE).
+4. **deployment-api + batch-live-reconciliation-service** "fails quarantined" = STALE (content-identical 0/0 → nothing
+   to promote; the quarantine flag never cleared).
+
+### Structural root-cause fixes (so this stops recurring)
+
+- [x] ✅ [CICD] P1. **Repos-CI triage queue measures CONTENT-delta, not commit-count — SHIPPED 2026-06-17**
+      (deployment-api@e35dd00c, LDR; Tier-C drains to staging). Root: `classify_stuck_pr` keyed only on
+      `mergeable_state`/`v2_present`, so a content-identical promote PR (staging==main==LDR by tree, but `ahead_by>0` and
+      CONFLICTING/BLOCKED off a stale squash merge-base) was flagged `v2_never_reported`/`conflicting` → phantom "Conflict
+      wall" in the triage queue (the operator "doing nothing faster than we clear it"). Fix: `branch_head` now returns the
+      head commit `tree_sha` (the reliable content fingerprint — the compare API's three-dot `files` is inflated by the
+      stale merge-base, e.g. 37 "files" for an identical tree); `classify_stuck_pr` short-circuits to `None` when
+      `base.tree_sha == head.tree_sha`. `drain_stalled` was already content-based (LDR-relative deltas, `behind_by=0` →
+      reliable `files_changed`). **Verified live** (slot-3 stack, real GitHub): deployment-api #101 → `content_identical=True`,
+      `stuck_class=None`, dropped from the queue; remaining stuck PRs all `content_identical=False` (genuinely
+      content-bearing). 21 unit tests (2 new guard cases incl. the CONFLICTING-but-identical #101 case); basedpyright clean;
+      QG green. `repo_ci.py` / `_repo_ci_{stuck,github,types,mocks}.py` + `test_repo_ci_stuck.py`. SSOT § Class D.
+  - [ ] [CICD] P2 (residual). **deployment-ui `RepoCi.tsx` per-row "N commits behind" TEXT** still renders `ahead_by`
+        prominently for the LDR↔staging↔main columns. The backend `deltas` carry the honest `files_changed`; the UI should
+        lead with the net file-delta (render "in sync (squash skew)" when `files_changed==0` despite `ahead_by>0`), like the
+        LDR→main delta column already does. Frontend-only display polish — the operationally-painful phantom-stuck queue is
+        already fixed above. Target: `deployment-ui` (Repos CI page). [UI] — needs `pw:L2` evidence.
+- [ ] [CICD] P1. **staging→main promote PRs perpetually CONFLICT (stale merge-base).** `staging` gets no `main`
+      back-merge (only LDR does via `main-backmerge-to-ldr`), so any `main`-only commit (semver version promotes,
+      ci_status) makes every `staging→main` PR CONFLICTING. Fix (pick one, target PM promote workflows): (a) add a
+      `main-backmerge-to-staging` tick mirroring `main-backmerge-to-ldr`, OR (b) make `staging-to-main`/`ldr-to-main`
+      promote bots use the **LDR→main reconcile path when staging→main conflicts** (LDR is the SSOT + carries both
+      back-merges — this is the PM Option-B pattern generalised to service/lib repos). Provenance: UAC #344 / UTL #370.
+- [ ] [CICD] P2. **Stale "fails quarantined" flag never clears when content becomes identical.** deployment-api + blrs
+      showed "N fails quarantined / escalated" while staging==main==LDR (0 content-delta). The quarantine/breaking-pending
+      writer should clear the flag when the promote range's content-delta is 0. Target: the quarantine/`breaking_pending`
+      writer (PM `ci_status` / staging_status). Provenance: this session.

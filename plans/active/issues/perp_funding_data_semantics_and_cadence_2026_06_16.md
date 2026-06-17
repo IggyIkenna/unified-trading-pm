@@ -116,6 +116,14 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       aggTrades→`trades`, premiumIndex+funding+OI→`derivative_ticker`, depth-WS→`book_snapshot_5`) so downstream can't
       tell it's not Tardis; record genesis per data_type with `captured`/`expected_unattempted` honest-absence for the
       forward-only ones. **Repo: market-tick-data-service + unified-api-contracts.**
+      **— derivative_ticker + genesis leg ✅ DONE 2026-06-17 (operator "fully hook up"): `uac@61d5838` (BATCH_ASTER/
+      LIVE_ASTER/REPLAY_ASTER members + aster capability + `(cefi,derivative_ticker)` source priority), `utl@3b4bd6b8`
+      (`ASTER→BATCH_ASTER` venue override = self-archive source `aster`, not Tardis), `mtds@5978627` (`venue_data_types`
+      += `derivative_ticker`; `_perp_funding_hl_aster._write_aster_derivative_ticker` emits `CanonicalDerivativeTicker`
+      at `asset_group=cefi`, source-aware `batch_aster`/`live_aster`, shard-isolated from the funding leg; genesis
+      per-(venue,data_type) in `expected_start_dates.yaml`). REMAINING (still `- [ ]`): the OHLCV/klines→`ohlcv_*`,
+      aggTrades→`trades`, depth-WS→`book_snapshot_5` canonicalization legs + the BACKFILL RUN (drain-gated G5, item
+      above). The derivative_ticker write path is wiring-ready; data flows when the fleet resumes post-`--apply`.**
 - [ ] [DATA] P3. Aster margining model (`venue_collateral.py`): USDC (0% haircut, CROSS) / USDT (1%) only — rejects
       spot-coin AND LST collateral. So Aster supports a stablecoin-margined funding-short ONLY (no same-venue
       cash-and-carry, no staking leg). Re-verify against live Aster docs before sizing; the ETH staked-basis needs
