@@ -229,18 +229,18 @@ the canon plan; track there, not as duplicate todos:
       its blob (no 503). QG green (87s); landed on LDR (Tier-C drain → staging ≤30 min). Inert in prod (beta is
       env-gated on `DATA_STATUS_BETA_MANIFEST_BLOB`). Downstream services (features/strategy) stay non-eligible until
       their projections land. — deployment-api
-- [ ] [INFRA] P0. **FIX the rollup-svc phase-2 (BETA) 500 — pre-existing, blocks beta-rollup auto-refresh** (found
-      2026-06-17 deploying a5b678e). `uts-prod-data-status-rollup-svc` `/api/data-status/rollup-run` returns HTTP 500 at
-      a consistent ~182s every `*/10` tick: phase-1 (LIVE, 14 svcs) completes + writes live blobs, then phase-2 (BETA)
-      throws before persisting → `instruments-service/full.beta.json.gz` was stale since **2026-06-16** (silent
-      day-long failure) and MTDS `.beta` was never written by the cron. Each service's beta rollup SUCCEEDS in
-      ISOLATION locally (`run_rollup --services <one>` in beta, ~1-2 min each) — so it's the COMBINED single-request
-      load (phase-1 all-svcs + phase-2 both-beta in one 16Gi process), not a per-service code bug. 500 (not 503) + no
-      captured Python exception/OOM line in Cloud Logging (only the top ASGI frame). Likely fix: split the cron into
-      per-service / per-phase invocations (the worker already takes `--services`), or bump rollup-svc memory; confirm
-      the real exception first (instrument the route to log the phase-2 traceback). INTERIM: both `.beta` blobs were
-      manually refreshed 2026-06-17 15:19–15:21 via a local `run_rollup` per service (projections are static during the
-      sign-off, so the eyeball isn't blocked). — deployment-api
+- [x] ✅ [INFRA] P0. **FIXED the rollup-svc phase-2 (BETA) 500 — root-caused + shipped + prod-verified green**
+      (deployment-api@`b014ae9`, build `eea66498`). ROOT CAUSE (not memory/deadline): the coverage build for the SHARED
+      pseudo-key (`features-calendar` / `ml-service`) called `resolve_bucket_name(asset_group='shared')` →
+      `BucketNamingError`, which subclasses bare `Exception` and so ESCAPED `run_rollup`'s narrow
+      `except (RuntimeError, ValueError, OSError)` → crashed the ENTIRE phase-1 sweep → phase-2 (BETA) never ran →
+      instruments `.beta` froze since 2026-06-16 + MTDS `.beta` never written. Reproduced faithfully via the exact
+      two-phase route path locally (events initialised). FIX (2 parts): (1) `defi.py::_read_defi_merged_index` returns
+      empty for the `'shared'` pseudo-key instead of raising; (2) `data_status_rollup_worker.run_rollup` broadened both
+      per-service catches to `except Exception` (shard-level failure isolation — one bad service must never abort the
+      sweep; also contains the separate per-service coverage errors tracked in the P2 follow-up below). VERIFIED in prod:
+      rollup-run flipped 500→**200** (335s), and the **prod cron auto-refreshed BOTH** beta blobs (instruments + MTDS) at
+      16:13 with zero manual intervention — self-healing every `*/10`. — deployment-api
 - [ ] [CODE] P2. **Per-service coverage `BucketNamingError`s surfaced by the rollup isolation fix (follow-up)** —
       after the isolation fix (deployment-api@b014ae9) the rollup sweep no longer crashes, but it now logs `SERVICE_FAILED`
       for cross-asset/edge services whose coverage build mis-resolves a bucket: (1) `features-calendar-service` /
