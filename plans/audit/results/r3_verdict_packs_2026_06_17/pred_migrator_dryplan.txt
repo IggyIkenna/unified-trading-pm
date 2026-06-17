@@ -1,0 +1,9 @@
+# R8 — prediction migrator dry-plan on HEAD (migrate_prediction_to_pred_prd_v9.py)
+# regenerated 2026-06-17 on LDR HEAD (mtds@df69ada); --dry-run, no GCS writes
+
+2026-06-17 03:55:39,682 INFO === migrate_prediction_to_pred_prd_v9 === legacy=market-data-tick-prediction-central-element-323112 canon=market-data-tick-pred-prd-central-element-323112 days=0..461 (461) apply=False drop_stale=False
+2026-06-17 03:55:59,434 INFO market-data-tick-prediction-central-element-323112/raw_tick_data/by_date: 751723 objects in scope (workers=32 dry_run=True)
+2026-06-17 03:57:15,137 INFO market-data-tick-prediction-central-element-323112/processed_candles/by_date: 582730 objects in scope (workers=32 dry_run=True)
+2026-06-17 03:57:49,840 INFO stale-source: 563238 pred-prd category= objects to canonicalise (dry_run=True)
+2026-06-17 03:58:12,889 INFO stale-source: planned=563238 copied=0 (CANON-only cells preserved)
+2026-06-17 03:58:13,146 INFO TOTAL planned=1897691 copied=0  (DRY-RUN)

@@ -1,0 +1,1528 @@
+{
+  "asset_group": "prediction",
+  "cells": {
+    "added": 352,
+    "changed": 4,
+    "removed": 3588,
+    "unchanged": 2281
+  },
+  "current": {
+    "rows": 19299,
+    "uri": "gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet"
+  },
+  "group_row_deltas": [
+    {
+      "asset_group": "prediction",
+      "current_rows": 12849,
+      "data_type": "trades",
+      "delta": -11825,
+      "projected_rows": 1024,
+      "venue": "POLYMARKET"
+    },
+    {
+      "asset_group": "prediction",
+      "current_rows": 0,
+      "data_type": "prediction_canonical_question_group",
+      "delta": 7116,
+      "projected_rows": 7116,
+      "venue": "POLYMARKET"
+    },
+    {
+      "asset_group": "prediction",
+      "current_rows": 4937,
+      "data_type": "prediction_trades",
+      "delta": -4937,
+      "projected_rows": 0,
+      "venue": "POLYMARKET"
+    },
+    {
+      "asset_group": "prediction",
+      "current_rows": 168,
+      "data_type": "trades",
+      "delta": -168,
+      "projected_rows": 0,
+      "venue": ""
+    },
+    {
+      "asset_group": "prediction",
+      "current_rows": 21,
+      "data_type": "trades",
+      "delta": -21,
+      "projected_rows": 0,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "prediction",
+      "current_rows": 18,
+      "data_type": "",
+      "delta": -17,
+      "projected_rows": 1,
+      "venue": "POLYMARKET"
+    },
+    {
+      "asset_group": "prediction",
+      "current_rows": 1306,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 1306,
+      "venue": "KALSHI"
+    }
+  ],
+  "projected": {
+    "rows": 9447,
+    "uri": "gs://market-data-tick-pred-prd-central-element-323112/_index/audit/projected_index_prediction_head20260617.parquet"
+  },
+  "regressions": {
+    "captured_regressions": 4,
+    "is_regression": true,
+    "removed_cells": 3588
+  },
+  "sample_cap": 100,
+  "samples": {
+    "added": [
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-14",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-15",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-16",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-17",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-18",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-19",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-20",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-21",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-22",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-23",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-24",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-25",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-26",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-27",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-28",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-29",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-30",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-03-31",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-01",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-02",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-03",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-04",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-05",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-06",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-07",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-08",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-09",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-10",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-11",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-12",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-13",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-14",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-15",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-16",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-17",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-04-18",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-06",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-07",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-08",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-09",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-10",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-11",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-12",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-14",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-15",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-16",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-17",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-18",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-19",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-20",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-21",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-22",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-23",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-24",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-25",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-26",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-27",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-28",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-29",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-06-30",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-01",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-02",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-03",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-04",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-05",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-06",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-07",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-08",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-09",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-10",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-11",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-12",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-13",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-14",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-15",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-16",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-17",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-18",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-19",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-20",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-21",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-22",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-23",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-24",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-25",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-26",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-27",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-28",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-29",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-30",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-07-31",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-01",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-02",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-03",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-04",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-05",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-06",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-07",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-08",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_canonical_question_group",
+        "date": "2025-08-09",
+        "instrument_type": "prediction",
+        "venue": "POLYMARKET"
+      }
+    ],
+    "changed": [
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2026-04-26",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2026-04-27",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2026-04-28",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2026-04-29",
+        "instrument_type": "",
+        "new": "empty_confirmed",
+        "old": "captured",
+        "venue": "POLYMARKET"
+      }
+    ],
+    "removed": [
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-13",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-14",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-14",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-14",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-14",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-14",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-14",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-14",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-15",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-15",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-15",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-15",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-15",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-15",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-15",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-16",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-16",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-16",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-16",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-16",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-16",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-16",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-17",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-17",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-17",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-17",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-17",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-17",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-17",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-18",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-18",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-18",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-18",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-18",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-18",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-18",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-19",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-19",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-19",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-19",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-19",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-19",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-19",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-19",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-20",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-20",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-20",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-20",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-20",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-20",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-20",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-20",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-21",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-21",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-21",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-21",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-21",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-21",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-21",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-21",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-22",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-22",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-22",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-22",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-22",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-22",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-22",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-22",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-23",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-23",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-23",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-23",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-23",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-23",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-23",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-23",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-24",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-24",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-24",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-24",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-24",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-24",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-24",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-24",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-25",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-25",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-25",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-25",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-25",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-25",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-25",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-25",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-26",
+        "instrument_type": "btc",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-26",
+        "instrument_type": "eth",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "prediction_trades",
+        "date": "2025-03-26",
+        "instrument_type": "other",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "prediction_trades",
+        "date": "2025-03-26",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-26",
+        "instrument_type": "",
+        "venue": ""
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-26",
+        "instrument_type": "",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "POLYGON",
+        "data_type": "trades",
+        "date": "2025-03-26",
+        "instrument_type": "prediction_market",
+        "venue": "POLYMARKET"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2025-03-26",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      }
+    ]
+  },
+  "status_transitions": {
+    "captured->empty_confirmed": 4
+  }
+}

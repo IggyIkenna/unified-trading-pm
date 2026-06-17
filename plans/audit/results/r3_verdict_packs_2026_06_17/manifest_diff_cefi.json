@@ -1,0 +1,4979 @@
+{
+  "asset_group": "cefi",
+  "cells": {
+    "added": 219,
+    "changed": 4566,
+    "removed": 733,
+    "unchanged": 209768
+  },
+  "current": {
+    "rows": 2728435,
+    "uri": "gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet"
+  },
+  "group_row_deltas": [
+    {
+      "asset_group": "cefi",
+      "current_rows": 174033,
+      "data_type": "trades",
+      "delta": 155913,
+      "projected_rows": 329946,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 155009,
+      "data_type": "trades",
+      "delta": 102092,
+      "projected_rows": 257101,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 133029,
+      "data_type": "trades",
+      "delta": 88804,
+      "projected_rows": 221833,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 104472,
+      "data_type": "trades",
+      "delta": 52613,
+      "projected_rows": 157085,
+      "venue": "BINANCE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 102228,
+      "data_type": "book_snapshot_5",
+      "delta": 47248,
+      "projected_rows": 149476,
+      "venue": "BINANCE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 99006,
+      "data_type": "trades",
+      "delta": 43772,
+      "projected_rows": 142778,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 73493,
+      "data_type": "trades",
+      "delta": 42610,
+      "projected_rows": 116103,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 89647,
+      "data_type": "book_snapshot_5",
+      "delta": 37881,
+      "projected_rows": 127528,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 99934,
+      "data_type": "trades",
+      "delta": 37336,
+      "projected_rows": 137270,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 56564,
+      "data_type": "trades",
+      "delta": 34224,
+      "projected_rows": 90788,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 52595,
+      "data_type": "book_snapshot_5",
+      "delta": 34222,
+      "projected_rows": 86817,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 35944,
+      "data_type": "derivative_ticker",
+      "delta": 33905,
+      "projected_rows": 69849,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 64493,
+      "data_type": "book_snapshot_5",
+      "delta": 32091,
+      "projected_rows": 96584,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 65778,
+      "data_type": "trades",
+      "delta": 27611,
+      "projected_rows": 93389,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 54062,
+      "data_type": "book_snapshot_5",
+      "delta": 25619,
+      "projected_rows": 79681,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 69811,
+      "data_type": "trades",
+      "delta": 24953,
+      "projected_rows": 94764,
+      "venue": "BINANCE-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 66839,
+      "data_type": "book_snapshot_5",
+      "delta": 23595,
+      "projected_rows": 90434,
+      "venue": "BINANCE-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 56239,
+      "data_type": "book_snapshot_5",
+      "delta": 21838,
+      "projected_rows": 78077,
+      "venue": "UPBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 47680,
+      "data_type": "book_snapshot_5",
+      "delta": 21235,
+      "projected_rows": 68915,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 57270,
+      "data_type": "trades",
+      "delta": 20615,
+      "projected_rows": 77885,
+      "venue": "UPBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 66565,
+      "data_type": "derivative_ticker",
+      "delta": 19802,
+      "projected_rows": 86367,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 70220,
+      "data_type": "derivative_ticker",
+      "delta": 19700,
+      "projected_rows": 89920,
+      "venue": "BINANCE-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 52179,
+      "data_type": "book_snapshot_5",
+      "delta": 19478,
+      "projected_rows": 71657,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 40573,
+      "data_type": "liquidations",
+      "delta": 19188,
+      "projected_rows": 59761,
+      "venue": "BINANCE-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 44680,
+      "data_type": "trades",
+      "delta": 15677,
+      "projected_rows": 60357,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 44501,
+      "data_type": "book_snapshot_5",
+      "delta": 15599,
+      "projected_rows": 60100,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 11715,
+      "data_type": "book_snapshot_5",
+      "delta": 14193,
+      "projected_rows": 25908,
+      "venue": "HYPERLIQUID"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 34952,
+      "data_type": "liquidations",
+      "delta": 13220,
+      "projected_rows": 48172,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 26601,
+      "data_type": "derivative_ticker",
+      "delta": 13076,
+      "projected_rows": 39677,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 13703,
+      "data_type": "liquidations",
+      "delta": 11924,
+      "projected_rows": 25627,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 20290,
+      "data_type": "derivative_ticker",
+      "delta": 10505,
+      "projected_rows": 30795,
+      "venue": "HYPERLIQUID"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22758,
+      "data_type": "derivative_ticker",
+      "delta": 9775,
+      "projected_rows": 32533,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19202,
+      "data_type": "book_snapshot_5",
+      "delta": 8896,
+      "projected_rows": 28098,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19241,
+      "data_type": "trades",
+      "delta": 8866,
+      "projected_rows": 28107,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 46439,
+      "data_type": "book_snapshot_5",
+      "delta": 8505,
+      "projected_rows": 54944,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 31158,
+      "data_type": "book_snapshot_5",
+      "delta": 8502,
+      "projected_rows": 39660,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 31412,
+      "data_type": "trades",
+      "delta": 8289,
+      "projected_rows": 39701,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 25338,
+      "data_type": "book_snapshot_5",
+      "delta": 6928,
+      "projected_rows": 32266,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 25353,
+      "data_type": "trades",
+      "delta": 6913,
+      "projected_rows": 32266,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 31849,
+      "data_type": "book_snapshot_5",
+      "delta": 5993,
+      "projected_rows": 37842,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 37230,
+      "data_type": "derivative_ticker",
+      "delta": 5761,
+      "projected_rows": 42991,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 8218,
+      "data_type": "liquidations",
+      "delta": 4720,
+      "projected_rows": 12938,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 365,
+      "data_type": "ohlcv_1m",
+      "delta": 3178,
+      "projected_rows": 3543,
+      "venue": "LIGHTER-ZKSYNC"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 418,
+      "data_type": "ohlcv_1m",
+      "delta": 2816,
+      "projected_rows": 3234,
+      "venue": "PACIFICA-SOLANA"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1772,
+      "data_type": "",
+      "delta": -1772,
+      "projected_rows": 0,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1763,
+      "data_type": "",
+      "delta": -1763,
+      "projected_rows": 0,
+      "venue": "BINANCE-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1740,
+      "data_type": "",
+      "delta": -1740,
+      "projected_rows": 0,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1352,
+      "data_type": "",
+      "delta": -1352,
+      "projected_rows": 0,
+      "venue": "UPBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 12230,
+      "data_type": "trades",
+      "delta": -940,
+      "projected_rows": 11290,
+      "venue": "HYPERLIQUID"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3827,
+      "data_type": "liquidations",
+      "delta": 725,
+      "projected_rows": 4552,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 687,
+      "data_type": "",
+      "delta": -687,
+      "projected_rows": 0,
+      "venue": "HYPERLIQUID"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 669,
+      "data_type": "",
+      "delta": -669,
+      "projected_rows": 0,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 726,
+      "data_type": "liquidations",
+      "delta": 657,
+      "projected_rows": 1383,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 627,
+      "data_type": "",
+      "delta": -627,
+      "projected_rows": 0,
+      "venue": "BINANCE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 17180,
+      "data_type": "futures_chain",
+      "delta": -444,
+      "projected_rows": 16736,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 381,
+      "data_type": "",
+      "delta": -381,
+      "projected_rows": 0,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 378,
+      "data_type": "",
+      "delta": -378,
+      "projected_rows": 0,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 374,
+      "data_type": "",
+      "delta": -374,
+      "projected_rows": 0,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 257,
+      "data_type": "book_snapshot_5",
+      "delta": -255,
+      "projected_rows": 2,
+      "venue": ""
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 257,
+      "data_type": "derivative_ticker",
+      "delta": -255,
+      "projected_rows": 2,
+      "venue": ""
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 257,
+      "data_type": "liquidations",
+      "delta": -255,
+      "projected_rows": 2,
+      "venue": ""
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 257,
+      "data_type": "trades",
+      "delta": -255,
+      "projected_rows": 2,
+      "venue": ""
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 243,
+      "data_type": "options_chain",
+      "delta": -241,
+      "projected_rows": 2,
+      "venue": ""
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 0,
+      "data_type": "options_chain",
+      "delta": 221,
+      "projected_rows": 221,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 222,
+      "data_type": "futures_chain",
+      "delta": -220,
+      "projected_rows": 2,
+      "venue": ""
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19064,
+      "data_type": "liquidations",
+      "delta": 195,
+      "projected_rows": 19259,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 47681,
+      "data_type": "derivative_ticker",
+      "delta": 147,
+      "projected_rows": 47828,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 33,
+      "data_type": "trades",
+      "delta": -31,
+      "projected_rows": 2,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22013,
+      "data_type": "derivative_ticker",
+      "delta": 29,
+      "projected_rows": 22042,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19,
+      "data_type": "book_snapshot_5",
+      "delta": -17,
+      "projected_rows": 2,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19,
+      "data_type": "derivative_ticker",
+      "delta": -17,
+      "projected_rows": 2,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 15,
+      "data_type": "liquidations",
+      "delta": -13,
+      "projected_rows": 2,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 24,
+      "data_type": "futures_chain",
+      "delta": -10,
+      "projected_rows": 14,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 7,
+      "data_type": "",
+      "delta": -7,
+      "projected_rows": 0,
+      "venue": "COINBASE"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 7,
+      "data_type": "",
+      "delta": -7,
+      "projected_rows": 0,
+      "venue": "OKX"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "book_snapshot_5",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "BTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "book_snapshot_5",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "ETHF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "derivative_ticker",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "BTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "derivative_ticker",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "ETHF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "futures_chain",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "BTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "futures_chain",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "ETHF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "options_chain",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "BTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "options_chain",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "ETHF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "trades",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "BTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 6,
+      "data_type": "trades",
+      "delta": -6,
+      "projected_rows": 0,
+      "venue": "ETHF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "book_snapshot_5",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "DOTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "book_snapshot_5",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LINKF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "book_snapshot_5",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "book_snapshot_5",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "UNIF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "book_snapshot_5",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "XAUTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "derivative_ticker",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "DOTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "derivative_ticker",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LINKF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "derivative_ticker",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "derivative_ticker",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "UNIF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "derivative_ticker",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "XAUTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "futures_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "DOTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "futures_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LINKF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "futures_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "futures_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "UNIF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "futures_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "XAUTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "options_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "DOTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "options_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LINKF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "options_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "options_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "UNIF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "options_chain",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "XAUTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "trades",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "DOTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "trades",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LINKF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "trades",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "LTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "trades",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "UNIF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5,
+      "data_type": "trades",
+      "delta": -5,
+      "projected_rows": 0,
+      "venue": "XAUTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AAVEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ADAF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AVAXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "COMPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "DOGEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SHIBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SOLF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "TRXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XLMF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XRPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "book_snapshot_5",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XTZF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AAVEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ADAF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ATOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AVAXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "COMPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "DOGEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "FILF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "NEOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SHIBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SOLF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "TRXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XLMF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XRPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XTZF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "derivative_ticker",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ZECF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AAVEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ADAF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ATOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AVAXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "COMPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "DOGEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "FILF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "NEOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SHIBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SOLF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "TRXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XLMF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XRPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XTZF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "futures_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ZECF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "liquidations",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "BTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AAVEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ADAF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ATOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AVAXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "COMPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "DOGEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "FILF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "NEOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SHIBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SOLF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "TRXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XLMF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XRPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XTZF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "options_chain",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ZECF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AAVEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ADAF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ATOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "AVAXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "COMPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "DOGEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "FILF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "NEOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SHIBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "SOLF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "TRXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XLMF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XRPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "XTZF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4,
+      "data_type": "trades",
+      "delta": -4,
+      "projected_rows": 0,
+      "venue": "ZECF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "book_snapshot_5",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "ATOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "book_snapshot_5",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "ETCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "book_snapshot_5",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "FILF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "book_snapshot_5",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "NEOF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "book_snapshot_5",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "ZECF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "derivative_ticker",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "ETCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "futures_chain",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "ETCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "options_chain",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "ETCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3,
+      "data_type": "trades",
+      "delta": -3,
+      "projected_rows": 0,
+      "venue": "ETCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "book_snapshot_5",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "BNBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "derivative_ticker",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "BNBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "futures_chain",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "BNBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "liquidations",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "AVAXF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "liquidations",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "DOTF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "liquidations",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "XRPF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1,
+      "data_type": "ohlcv_1m",
+      "delta": 2,
+      "projected_rows": 3,
+      "venue": "EXTENDED-STARKNET"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "options_chain",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "BNBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "trades",
+      "delta": -2,
+      "projected_rows": 0,
+      "venue": "BNBF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1,
+      "data_type": "liquidations",
+      "delta": -1,
+      "projected_rows": 0,
+      "venue": "ADAF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1,
+      "data_type": "liquidations",
+      "delta": -1,
+      "projected_rows": 0,
+      "venue": "DOGEF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1,
+      "data_type": "liquidations",
+      "delta": -1,
+      "projected_rows": 0,
+      "venue": "LINKF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1,
+      "data_type": "liquidations",
+      "delta": -1,
+      "projected_rows": 0,
+      "venue": "LTCF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1,
+      "data_type": "liquidations",
+      "delta": -1,
+      "projected_rows": 0,
+      "venue": "UNIF0"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 10438,
+      "data_type": "options_chain",
+      "delta": -1,
+      "projected_rows": 10437,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 21,
+      "data_type": "options_chain",
+      "delta": -1,
+      "projected_rows": 20,
+      "venue": "UNKNOWN"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5706,
+      "data_type": "book_snapshot_5",
+      "delta": 0,
+      "projected_rows": 5706,
+      "venue": "ASTER"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 444,
+      "data_type": "book_snapshot_5",
+      "delta": 0,
+      "projected_rows": 444,
+      "venue": "LIGHTER-ZKSYNC"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 3100,
+      "data_type": "book_snapshot_5",
+      "delta": 0,
+      "projected_rows": 3100,
+      "venue": "PACIFICA-SOLANA"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5706,
+      "data_type": "derivative_ticker",
+      "delta": 0,
+      "projected_rows": 5706,
+      "venue": "ASTER"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2224,
+      "data_type": "derivative_ticker",
+      "delta": 0,
+      "projected_rows": 2224,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4851,
+      "data_type": "derivative_ticker",
+      "delta": 0,
+      "projected_rows": 4851,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 10,
+      "data_type": "derivative_ticker",
+      "delta": 0,
+      "projected_rows": 10,
+      "venue": "EXTENDED-STARKNET"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 18496,
+      "data_type": "derivative_ticker",
+      "delta": 0,
+      "projected_rows": 18496,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 10,
+      "data_type": "derivative_ticker",
+      "delta": 0,
+      "projected_rows": 10,
+      "venue": "LIGHTER-ZKSYNC"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 10,
+      "data_type": "derivative_ticker",
+      "delta": 0,
+      "projected_rows": 10,
+      "venue": "PACIFICA-SOLANA"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 20256,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 20256,
+      "venue": "BINANCE-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 12184,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 12184,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2224,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 2224,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4860,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 4860,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4851,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 4851,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 10416,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 10416,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 2,
+      "venue": "EXTENDED-STARKNET"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 10608,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 10608,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 18496,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 18496,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1120,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 1120,
+      "venue": "LIGHTER-ZKSYNC"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 620,
+      "data_type": "futures_chain",
+      "delta": 0,
+      "projected_rows": 620,
+      "venue": "PACIFICA-SOLANA"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 563,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 563,
+      "venue": "ASTER"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 288,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 288,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 539,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 539,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 1,
+      "venue": "EXTENDED-STARKNET"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 916,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 916,
+      "venue": "HYPERLIQUID"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2312,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 2312,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 560,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 560,
+      "venue": "LIGHTER-ZKSYNC"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 310,
+      "data_type": "liquidations",
+      "delta": 0,
+      "projected_rows": 310,
+      "venue": "PACIFICA-SOLANA"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 20,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 45,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 45,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 19,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 19,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 18,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 18,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 231,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 231,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 14,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 14,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 22,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 148,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 148,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 196,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 196,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 348,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 348,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 67,
+      "data_type": "ohlcv_15m",
+      "delta": 0,
+      "projected_rows": 67,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 28,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 28,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 50,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 50,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 24,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 24,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 24,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 24,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 22,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 278,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 278,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 15,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 15,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 24,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 24,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 183,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 183,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 203,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 203,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 403,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 403,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 74,
+      "data_type": "ohlcv_15s",
+      "delta": 0,
+      "projected_rows": 74,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 21,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 21,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 47,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 47,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 21,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 21,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 20,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 17,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 17,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 238,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 238,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 15,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 15,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 22,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 151,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 151,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 182,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 182,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 337,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 337,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 65,
+      "data_type": "ohlcv_1d",
+      "delta": 0,
+      "projected_rows": 65,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 22,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 47,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 47,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 17,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 17,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 18,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 18,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 20,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 222,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 222,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 14,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 14,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 24,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 24,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 144,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 144,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 176,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 176,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 340,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 340,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 65,
+      "data_type": "ohlcv_1h",
+      "delta": 0,
+      "projected_rows": 65,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 22,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 41,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 41,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 23,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 23,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 20,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 15,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 15,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 214,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 214,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 14,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 14,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 22,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 160,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 160,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 186,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 186,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 314,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 314,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 60,
+      "data_type": "ohlcv_1m",
+      "delta": 0,
+      "projected_rows": 60,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 23,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 23,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 51,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 51,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 14,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 14,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 17,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 17,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 20,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 20,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 206,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 206,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 15,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 15,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 23,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 23,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 144,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 144,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 173,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 173,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 321,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 321,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 62,
+      "data_type": "ohlcv_4h",
+      "delta": 0,
+      "projected_rows": 62,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 19,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 38,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 38,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 21,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 21,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 19,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 19,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 15,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 15,
+      "venue": "BYBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 217,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 217,
+      "venue": "COINBASE-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 14,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 14,
+      "venue": "DERIBIT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 22,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 22,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 148,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 148,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 168,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 168,
+      "venue": "OKX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 308,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 308,
+      "venue": "OKX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 64,
+      "data_type": "ohlcv_5m",
+      "delta": 0,
+      "projected_rows": 64,
+      "venue": "OKX-SWAP"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 12184,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 12184,
+      "venue": "BITFINEX-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2224,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 2224,
+      "venue": "BITFINEX-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4860,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 4860,
+      "venue": "BITGET-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 4851,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 4851,
+      "venue": "BITGET-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 2,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 2,
+      "venue": "EXTENDED-STARKNET"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 10608,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 10608,
+      "venue": "KRAKEN-FUTURES"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 18496,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 18496,
+      "venue": "KRAKEN-SPOT"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 1120,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 1120,
+      "venue": "LIGHTER-ZKSYNC"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 620,
+      "data_type": "options_chain",
+      "delta": 0,
+      "projected_rows": 620,
+      "venue": "PACIFICA-SOLANA"
+    },
+    {
+      "asset_group": "cefi",
+      "current_rows": 5706,
+      "data_type": "trades",
+      "delta": 0,
+      "projected_rows": 5706,
+      "venue": "ASTER"
+    }
+  ],
+  "projected": {
+    "rows": 3886859,
+    "uri": "gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/projected_index_cefi.parquet"
+  },
+  "regressions": {
+    "captured_regressions": 375,
+    "is_regression": true,
+    "removed_cells": 733
+  },
+  "sample_cap": 100,
+  "samples": {
+    "added": [
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-05",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-06",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-07",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-08",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-09",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-10",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-11",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-12",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-13",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-14",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-15",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-16",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-17",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-18",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-19",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-20",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-21",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-22",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-23",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-24",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-25",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-26",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-27",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-28",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-29",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-04-30",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-01",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-02",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-03",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-04",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-05",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-06",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-07",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-08",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-09",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-10",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-11",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-12",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-13",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-14",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-15",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-16",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-17",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-18",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-19",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-20",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-21",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-22",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-23",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-24",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-25",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-26",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-27",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-28",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-29",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-30",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-05-31",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-03",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-04",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-05",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-06",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-07",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-08",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-09",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-10",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-11",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-12",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-13",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-14",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-15",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-16",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-17",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-18",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-19",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-20",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-21",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-22",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-23",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-24",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-25",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-26",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-27",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-28",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-29",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-06-30",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-01",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-02",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-03",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-04",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-05",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-06",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-07",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-08",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-09",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-10",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-11",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-12",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-13",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-14",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2024-07-15",
+        "instrument_type": "futures_chain",
+        "venue": "BYBIT"
+      }
+    ],
+    "changed": [
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "captured",
+        "old": "attempted_failed",
+        "venue": "OKX-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2020-01-01",
+        "instrument_type": "perpetual",
+        "new": "captured",
+        "old": "attempted_failed",
+        "venue": "OKX-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-02",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-03",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-04",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-05",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-06",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-07",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-08",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-09",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-10",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-11",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-12",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-13",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-14",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-15",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-16",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-17",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-18",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-19",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-24",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-25",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-26",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-27",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-28",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-31",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-01",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-04",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-05",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-07",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-11",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-12",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-14",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-18",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-19",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-02-24",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-02",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-04",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-09",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-13",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-17",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-18",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-19",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-21",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-22",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-23",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-24",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-25",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-28",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-29",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-30",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-03-31",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-01",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-02",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-03",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-04",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-05",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-07",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-09",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-11",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-12",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-13",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-14",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-16",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-19",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-20",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-24",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-25",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-26",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-27",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-29",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-04-30",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-02",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-03",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-04",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-05",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-06",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-09",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-10",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-14",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-15",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-16",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-18",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-22",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-23",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-24",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-26",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-27",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-28",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-29",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-05-30",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-01",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-03",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-04",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-07",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-08",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-09",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-10",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-06-11",
+        "instrument_type": "",
+        "new": "attempted_failed",
+        "old": "empty_confirmed",
+        "venue": "BINANCE-FUTURES"
+      }
+    ],
+    "removed": [
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2020-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "DOTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LINKF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNIF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "XAUTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "DOTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LINKF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNIF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "XAUTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "DOTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LINKF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNIF0"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "futures_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "XAUTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "DOTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNIF0"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "DOTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LINKF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNIF0"
+      },
+      {
+        "chain": "",
+        "data_type": "options_chain",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "XAUTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "DOTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LINKF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "LTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNIF0"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-01-01",
+        "instrument_type": "",
+        "venue": "XAUTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-04-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-04-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-04-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-04-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-05-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-05-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-05-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-05-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-08-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-08-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-08-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2021-10-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2021-10-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "liquidations",
+        "date": "2021-10-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "trades",
+        "date": "2021-10-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "AAVEF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "ADAF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "ATOF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "AVAXF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "BTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "COMPF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "DOGEF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "DOTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "ETHF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "FILF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "LINKF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "LTCF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "NEOF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "SHIBF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "SOLF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "TRXF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "UNIF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "UNKNOWN"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "XAUTF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "XLMF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "XRPF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "XTZF0"
+      },
+      {
+        "chain": "",
+        "data_type": "book_snapshot_5",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "ZECF0"
+      },
+      {
+        "chain": "",
+        "data_type": "derivative_ticker",
+        "date": "2022-01-01",
+        "instrument_type": "",
+        "venue": "AAVEF0"
+      }
+    ]
+  },
+  "status_transitions": {
+    "attempted_failed->captured": 140,
+    "captured->attempted_failed": 375,
+    "empty_confirmed->attempted_failed": 3981,
+    "empty_confirmed->captured": 70
+  }
+}

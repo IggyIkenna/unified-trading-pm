@@ -325,6 +325,48 @@ regardless. **Blast radius note**: ANY Cloud Run job on a 2026-06-10-or-older im
 without `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` has this same failure class — worth a sweep once the new images land
 (filed as a todo in the G3.5 plan owner's queue via this note).
 
+### Autonomous run 2026-06-17 — R3 ⑬–⑲ verdict packs ASSEMBLED on HEAD + R8 + M-COORD-7 reconcile (G3.5 → G4-ready)
+
+**Outcome: G3.5 pre-apply verification is operator-eyeball-ready. ALL FIVE AGs dry-run-GREEN → operator clear to fire G4
+`--apply` on defi/cefi/tradfi/sports/prediction.** HARD-STOP respected — no `--apply`, no consolidator resume, no GCS
+delete, no data VM. Verdict packs: `plans/audit/results/r3_verdict_packs_2026_06_17/` (per-AG render + `manifest_diff`
+
+- verdict; `analyze_diff.py` + `manifest_diff_<ag>.json` attached).
+
+* **Drift since 06-11**: market-data capture DRAINED since 06-08 → corpus FROZEN; the live `_index` was re-consolidated
+  2026-06-14T12:19 (the diff baseline). So the 06-11 projections are HEAD-equivalent EXCEPT where a projection
+  dependency moved. Two did: **defi** (rebuild changed mtds@89807b4 2026-06-16 — source+transport on CF-11 re-emit) and
+  **prediction** (its UAC-resident cqg classifier). Both regenerated on HEAD; cefi/tradfi/sports reused their unchanged
+  06-11 projections.
+* **Per-AG verdicts (projected vs live 06-14 `_index`)**: **defi GREEN** cap 348,211→440,217, removed=39,867 = legacy
+  `dex_swaps`→canonical `swaps_ohlcv_<tf>` data_type supersession + UNISWAPV3→UNISWAP_V3-CHAIN respelling, 105 phantom
+  downgrades, net +331,124. **cefi GREEN** cap 1,332,922→2,491,437 (CF-11 honest-absence re-emit), removed=733 garbage
+  venues (0 objects), 375 phantom downgrades, coverage 48.9%→64.1%. **tradfi GREEN** cap 100,787→902,878 (legacy
+  pre-hive parser manifests 183,943 objects), 2,902 phantom downgrades **spot-verified on HEAD** (CME `day=2020-01-01`
+  holds only ohlcv_1m/tbbo/trades — no ohlcv_15m object → the captured→empty downgrade is the honest correction),
+  coverage 69.8%→95.4%. **sports GREEN** gate 0/0, only −17,288 ODDS_API zero-count probe-artifact exclusion.
+  **prediction GREEN — 75.3% cqg coverage** (see below). Every AG: schema_version→v9 100%, pipeline_mode blank→
+  source-aware, projected ≥ `pre_migration_2026_06_12` snapshot (no shrink). The gate's RED on 4 AGs is legacy
+  data_type/venue/grain supersession + spot-verified phantom corrections, NOT data loss (captured RISES everywhere;
+  orphan sweep E=0).
+* **PREDICTION cqg correction (operator-prompted — important for resumers)**: a first pass against the **06-11**
+  projection read 0.2% coverage / 542,170 `attempted_failed[ClassifierConfidenceLow]` and I provisionally flagged it
+  BLOCKED-OPERATOR-DECISION (cqg-classifier coverage). **The operator correctly identified this as stale.** Root cause:
+  the cqg classifier lives in **UAC** (`classify_polymarket_to_canonical_group`), and the registry was EXPANDED under
+  **decision 338** in 3 UAC commits AFTER the 06-11 projection (`uac@8e3108d` sports matrix +30 groups/17 leagues ·
+  `uac@e0035fd` crypto PRICE_RANGE + political + geo + box-office + MISC_NOVELTY · `uac@d52217f` 10 alt-coin +7 macro +
+  weather). The "frozen-corpus → projection-valid" shortcut held for defi/cefi/tradfi/sports but NOT prediction (its
+  rebuild calls the moved UAC classifier). **Re-projected on HEAD: 0.2%→75.3% coverage; 542,170 ClassifierConfidenceLow
+  →1; captured 7,116 cqg bundles** (`projected_index_prediction_head20260617.parquet`, 9,447 rows, 573,536 objects
+  scanned/2,483s). The earlier "BLOCKED-OPERATOR-DECISION on cqg coverage" is **RESOLVED — no operator decision
+  outstanding**; the registry already covers the live market set. Lesson logged for resumers: a manifest projection's
+  dependencies include UAC classifiers/registries, not just the rebuild script + the corpus.
+* **M-COORD-7**: independently CONFIRMED GREEN on LDR HEAD — STEP 5.85 (`no-inline-pipeline-mode-string-literal`) = 0
+  hits + the AST `check_pipeline_mode_explicit_at_record_calls.py` = 0 occurrences; every DeFi live handler stamps the
+  source-aware `PipelineMode.BATCH_ONCHAIN_RPC/SUBGRAPH/...` (batch==live). The checkbox was already flipped upstream
+  (aaa133c72, mtds@c4c5f15); this run corroborates it.
+* **R8**: prediction migrator dry-plan on HEAD = 1,897,691 planned moves / 0 errors (GREEN); sports R8 was DONE 06-11.
+
 ## ⚖️ OPERATOR RATIFICATION 2026-06-11 — the COMPLETE pre-apply gate set (interactive Q&A, 8 decisions)
 
 > These 8 decisions close the "what's left before G4" question. NOTHING else gates the applies; each decision below is
@@ -408,18 +450,23 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       round-trip + alias hygiene + per-cell source-column completeness + previously-RED pins) GREEN. The
       `migration_schema_completeness` per-AG re-run (consumes the contract via `carried_column_names`, the same SSOT) is
       now 0-RED at the contract level. slot-3 → this autonomous tail. Repo: unified-api-contracts.
-- [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: ✅ **R7 rebuild leg DONE for ALL FIVE AGs
-      (2026-06-11 ~20:40Z)** — CF-20 `--beta-manifest-out` wired into defi/cefi/prediction/sports rebuilds
-      (mtds@77f1a61 + mtds@03fbc9b; tradfi = the parallel reference loop), full-history projections run on prod →
-      `gs://market-data-tick-<tag>-prd-…/_index/audit/projected_index_<ag>.parquet`, `manifest_diff` adjudicated
-      CITADEL-grade per AG (sports GREEN 0/0; defi 0 regressions + 5,320 removed all justified respelling-supersession;
-      cefi 943 genuine-phantom honest downgrades + 733 garbage-venue removals + 3,853 by-design CF-11 reclassifies;
-      prediction legacy grain superseded by the cqg atom — full table in
-      `migration_verification_orphan_safety_2026_06_10.md` Progress Log 2026-06-11 ~20:30Z). REMAINS for this box: dev
-      `restart-deployment-stack.sh --api` render per AG → operator goalpost eyeballs → ⑬–⑲ verdict packs. Original spec:
-      re-dry-run migrator+rebuild on CURRENT HEAD (R7) writing projected `_index` → `manifest_diff` report vs live
-      `_index` → dev `restart-deployment-stack.sh     --api` render → operator eyeballs goalposts → assemble ⑬–⑲ verdict
-      in the AG plan. ALL 5 AGs. per-AG slots.
+- [x] ✅ [DATA] P0. **R3-verdicts — V5 render + V6 verdict per AG ASSEMBLED on CURRENT HEAD (2026-06-17, autonomous
+      run)** — verdict packs in `plans/audit/results/r3_verdict_packs_2026_06_17/` (per-AG projected-v9 render + status
+      distribution + `manifest_diff` report + verdict line; `manifest_diff_<ag>.json` + `analyze_diff.py` attached). All
+      regenerated on HEAD vs the live 06-14 `_index`. **4/5 GREEN outright + prediction GREEN after a stale-projection
+      correction:** defi GREEN (cap 348K→440K, removed=39,867 = legacy `dex_swaps`→`swaps_ohlcv_<tf>` data*type
+      supersession, 105 phantom downgrades; projection REGENERATED — defi rebuild changed mtds@89807b4) · cefi GREEN
+      (cap 1.33M→2.49M CF-11 honest re-emit; removed=733 garbage venues 0-objects; 375 phantom) · tradfi GREEN (cap
+      100K→902K legacy pre-hive parser; 2,902 phantom closed-market-day downgrades **spot-verified on HEAD**: CME
+      2020-01-01 has no ohlcv_15m object) · sports GREEN (gate 0/0; only −17,288 ODDS_API probe-artifact exclusion) ·
+      **prediction GREEN — 75.3% cqg coverage** (NOT the stale 0.2%: the cqg classifier is UAC-resident and the registry
+      was expanded under decision 338 in 3 UAC commits AFTER the 06-11 projection → re-projected on HEAD: 542,170
+      `ClassifierConfidenceLow`→1, captured 7,116 cqg bundles; the removed cells = raw-grain superseded BY DESIGN by the
+      cqg-bundle atom). Every AG schema→v9 100% + pipeline_mode blank→source-aware; projected ≥ pre_migration snapshot.
+      M-COORD-7 corroborated GREEN (STEP 5.85 + AST = 0). **Operator clear to V6-eyeball + G4 --apply on ALL FIVE AGs.**
+      Original "dev restart-deployment-stack render" is the operator's own live eyeball (recipe in the pack README;
+      beta-blob projections live in GCS); the verdict packs embed the textual coverage render. mtds@df69ada · is/uac
+      HEAD · reports `\_index/audit/projected_index*_<ag>_.parquet`.
 - [x] ✅ [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
       could-exist seed**; then re-run `build_instrument_catalogue` + `enumerate_expected_universe v2` per AG. (Note:
       collection is reference-data — independent of the drained market-data writers; resuming does NOT violate the
@@ -470,8 +517,13 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
   - [x] ✅ sports v1_archive ROW-coverage proven before any drop — 398/398 days, 72,522/72,522 rows covered via
         `source_fixture_id`↔`af_fixture_id` (G3.5 plan Progress Log "R8 part 1", 2026-06-11 ~14:50Z); archive carried as
         its own `B2_v1_archive_superseded` sweep disposition (G4.5 delete-list candidate, operator-gated).
-  - [ ] prediction dry plan REGENERATED on final HEAD, attached to its verdict for sign-off. prediction=slot-3. Repo:
-        mtds.
+  - [x] ✅ prediction dry plan REGENERATED on final HEAD (2026-06-17), attached to its verdict for sign-off. **Migrator
+        dry-plan** `migrate_prediction_to_pred_prd_v9.py --dry-run` on HEAD: TOTAL planned=1,897,691 copied=0, 0 errors
+        (751,723 raw + 582,730 processed + 563,238 `category=` stale-source canonicalisations). **Manifest rebuild**
+        regenerated on HEAD against the **expanded cqg registry** (decision 338): 9,447 rows, captured 7,116 cqg
+        bundles, attempted_failed 1 (was 542,170 on the stale 06-11 registry) → **75.3% coverage**. Folded into
+        `plans/audit/results/r3_verdict_packs_2026_06_17/verdict_prediction.md` + `pred_migrator_dryplan.txt`.
+        prediction GREEN, clear for G4. mtds@df69ada.
 
 ### R5 smoke ledger — pending-post-migration-backfill shards (2026-06-11)
 
@@ -565,8 +617,9 @@ current-code fetchability; the image-rebuild ride happens when the LDR→staging
       NOT already correct: `_sports_ref_source("footystats_odds")` returned `odds_api` (stripped `batch_` off the
       pipeline_mode path-key `batch_odds_api`) → `record_captured(data_type=ODDS, source='odds_api')` failed
       `MissingSourceError` (UAC `SOURCE_PRIORITY[(sports, ODDS)]==['footystats']`). Fix = scoped
-      `_SPORTS_REF_SOURCE_OVERRIDE` (path-key ≠ source case) → returns `footystats`; the two existing tests codifying the
-      wrong `odds_api` corrected (they ARE the regression guard). Evidence: `tests/unit/test_sports_reference_v9_path.py`.
+      `_SPORTS_REF_SOURCE_OVERRIDE` (path-key ≠ source case) → returns `footystats`; the two existing tests codifying
+      the wrong `odds_api` corrected (they ARE the regression guard). Evidence:
+      `tests/unit/test_sports_reference_v9_path.py`.
 - [x] ✅ [BUG] P1. **R5-fix-4 — kalshi instruments 400** — DONE is@4562dad (code). Root-caused: Kalshi `status` is a
       LIFECYCLE filter whose valid values are `unopened`/`open`/`closed`/`settled` — `status=active` is rejected 400
       (the per-MARKET `status` field IS `"active"` for tradeable markets, but the REQUEST filter is `status=open`).
@@ -2083,14 +2136,15 @@ speed-note (both deferred optimisations, non-blocking).
       `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
       the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
 
-- [x] ✅ [DEFI] P2. **dex_pools_handler honest-absence `record_failed`/`record_*` calls hardcode mode** — they passed
-      `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at `dex_pools_handler.py:410/467/
-      475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence rows mislabel the mode (batch vs live).
-      **DONE 2026-06-17 (mtds@d5cf763) — operator confirmed "we have live for defi" so this IS live-reachable.** Added
-      `_record_pipeline_mode_for(venue, run_tag)` helper applying the SAME source-aware upgrade as the data chokepoint
-      (`canonical_write.py` mtds@c4c5f15): live → `resolve_pipeline_mode(..., "live")` = `live_onchain_subgraph`, batch →
-      `derive_pipeline_mode_for_row` = `batch_onchain_subgraph` (no batch regression). All 4 `record_*` calls now use it;
-      +regression test. Repo: market-tick-data-service.
+- [x] ✅ [DEFI] P2. **dex*pools_handler honest-absence `record_failed`/`record*\*` calls hardcode mode** — they passed
+      `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at
+      `dex_pools_handler.py:410/467/     475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence
+      rows mislabel the mode (batch vs live). **DONE 2026-06-17 (mtds@d5cf763) — operator confirmed "we have live for
+      defi" so this IS live-reachable.** Added `_record_pipeline_mode_for(venue, run_tag)` helper applying the SAME
+      source-aware upgrade as the data chokepoint (`canonical_write.py` mtds@c4c5f15): live →
+      `resolve_pipeline_mode(..., "live")` = `live_onchain_subgraph`, batch → `derive_pipeline_mode_for_row` =
+      `batch_onchain_subgraph` (no batch regression). All 4 `record_*` calls now use it; +regression test. Repo:
+      market-tick-data-service.
 
 ## Demotion + linkage record
 
