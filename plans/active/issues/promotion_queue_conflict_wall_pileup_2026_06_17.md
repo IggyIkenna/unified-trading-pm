@@ -86,13 +86,19 @@ its own QG/v2 verification):**
       `escalate-to-orchestrator`; a worker rebases the branch onto staging keeping the floor bump, per the new playbook
       `codex/08-workflows/dep-update-conflict-resolution.md` (and Slacks + asks the operator in the orchestrator UI if
       it genuinely can't). Goes live once the bot reaches main (PM drain).
-- [ ] [CICD] P1. **market-tick-data-service** — fix the real unit-test failure
-      `test_polymarket_adapter_lifecycle_gating.py::test_canonical_question_group_column_emitted` (diagnose whether UTL
-      0.12.0 changed `canonical_question_group` behaviour or the test/fixture is stale), then the dep-update PR can pass
-      v2.
-- [ ] [CICD] P1. Rebase the staging→main promotes once their bases settle: `unified-api-contracts#344`,
-      `unified-trading-library#370`, `deployment-api#101` (these are the staging→main analogue; staging may need its own
-      dep-update drains first).
+- [x] ✅ [CICD] P1. **market-tick-data-service** — the unit-test failure
+      `test_polymarket_adapter_lifecycle_gating.py::test_canonical_question_group_column_emitted` is **RESOLVED on LDR**
+      (verified 2026-06-17 afternoon): the test now asserts the decision-338 `MISC_NOVELTY` residual (commit `ed23954e`
+      "align polymarket cqg test to MISC_NOVELTY residual") and **PASSES** on current LDR (`1 passed in 0.32s`). The
+      dep-update #224 failure was its STALE base carrying the old `OTHER`-asserting test against new UTL behaviour; #224
+      is CLOSED and no dep-update PRs remain (digest-only fix). No code/test change needed — the bug never existed on
+      LDR. mtds@ed23954e (already on LDR).
+- [x] ✅ [CICD] P1. Staging→main promotes **drained** (verified 2026-06-17 afternoon): `unified-api-contracts#344` and
+      `unified-trading-library#370` were CLOSED as superseded by the LDR→main reconcile path (UAC #353 MERGED, UTL #376
+      armed — the Class-D option-(b) pattern: LDR is the SSOT + carries both back-merges, so LDR→main reconciles cleanly
+      where staging→main conflicts). `deployment-api#101` is OPEN + MERGEABLE + UNSTABLE (carrying the monitor
+      content-identity fix; v2 running, auto-merge armed → self-draining). The systemic "staging→main perpetually
+      CONFLICTS" root is tracked durably at § Class-D P1 below (line ~299).
 
 **Long fix (why they stall — systemic):**
 
@@ -134,15 +140,12 @@ Pushing the PM LDR→main standing drain (#387) so the new machinery goes live s
 (NOT the conflict-wall, which is fixed; NOT introduced by this session's commits — verified clean: the failing typecheck
 files are all foreign/pre-existing):
 
-- [ ] [CICD] P1. **PM (and fleet) `quality-gates-v2` is FLAKY on a stale-dep clone.** When a repo's LDR is AHEAD of its
-      latest release tag, the CI version-aware dep-clone falls back to a STALE tag for UTL/UAC → basedpyright resolves
-      their types as `Unknown` → broad `reportUnknown*` errors across many files (`check-repo-readiness.py`,
-      `generate-cicd-diagram.py`, `reap_stale_blockers.py`, …) that are green when deps resolve correctly. PM v2 went
-      green at `0d51af1e` (01:36Z) then RED across `cc1376fc`→`14ab1a12` (~40 min, multiple heads) on this — per-run
-      flaky by dep-resolution, not content. This persistently blocks the LDR→main drain (a red required check). Fix
-      candidates: cut fresh UTL/UAC release tags so LDR≤tag, OR make the CI dep-clone fall back to the dep's LDR/branch
-      (not a stale tag) when source is ahead of its tag. Target: `unified-trading-pm` quality-gates-base clone logic.
-      **Big finding — operator/CI.**
+- [x] ✅ [CICD] P1. **PM (and fleet) `quality-gates-v2` FLAKY on a stale-dep clone — RESOLVED** (this was a duplicate
+      symptom of the basedpyright Unknown-cascade below; the real root was NOT a stale tag but the editable dep install
+      landing outside `.venv`). The fix `uv pip install -e "../$dep" --python "$_qg_venv_py"` is **live** in the reusable
+      `python-quality-gates-v2.yml` (line ~479, referenced `@live-defi-rollout` fleet-wide → no rollout). Verified on a
+      consumer (market-tick-data-service typecheck SUCCESS) + PM itself (v2 GREEN run 2c82c780 → #387 MERGED). The
+      "cut fresh tags" hypothesis was tried + REVERTED (UTL→v0.10.0, UAC→v0.14.0) — see CORRECTION below. unified-trading-pm@df6291b6d.
 - [ ] [CICD] P1. **The PM LDR→main forward drain has no manifest-conflict resolver** (only the back-merge does, via
       reconcile_manifest_backmerge.py). main churns `workspace-manifest.json` `ci_status` every few minutes (every
       repo's v2 result writes a `[skip ci]` commit to main), so #387 perpetually re-`dirty`s on the manifest faster than
@@ -198,11 +201,15 @@ goes green, and `ldr-to-main-promote` (\*/15) + the v2 re-dispatch keep retrying
 green-typecheck run aligns with a mergeable (post-back-merge) #387 window. The conflict-wall fixes are all on LDR and
 ride that convergence.
 
-- [ ] [CICD] P1. **Durable fix for the basedpyright Unknown-cascade flake** (`base-service.sh` typecheck slice):
-      guarantee the workspace deps (UTL/UAC editable) are installed into the SAME `.venv` basedpyright reads before the
-      type-check step, and fail-loud (not Unknown-cascade) if they are not. Fleet-wide. **Big finding — CI-infra.** This
-      is the real keystone behind the whole promotion jam (it reds every repo's v2 typecheck on a bad-luck dep-install
-      run). Separate, dedicated investigation — NOT 3000 hand-fixes.
+- [x] ✅ [CICD] P1. **Durable fix for the basedpyright Unknown-cascade flake — SHIPPED + VERIFIED** (the keystone). The
+      reusable `python-quality-gates-v2.yml` typecheck slice installed cloned sibling deps with a bare `uv pip install -e
+      ../$dep` (no `--python`) → on a runner with a pyenv/global interpreter uv installed them OUTSIDE `.venv` →
+      basedpyright (`venv=".venv"`) saw the workspace lib unresolved → Unknown-type cascade → typecheck red (FLAKY: green
+      only when uv happened to pick `.venv`). Fix: `uv pip install -e "../$dep" --python "$_qg_venv_py"` + loud
+      unresolved-dep warning (line ~479), mirroring the proven local `base-service.sh:316-327`. Fleet-live on the PM LDR
+      push (referenced `@live-defi-rollout` by every repo — no rollout). VERIFIED on a consumer (market-tick-data-service
+      typecheck SUCCESS, was red) and PM (v2 green → #387 merged). unified-trading-pm@df6291b6d. **See § ".venv-install
+      fix SHIPPED + VERIFIED" for full detail.**
 
 ### .venv-install fix SHIPPED + VERIFIED (2026-06-17) — fleet cascade cured; PM-#387 residual isolated
 
@@ -227,7 +234,7 @@ unresolved-dep warning did NOT fire; only 1 UTL/UAC ref in 2992). The 2992 is PM
 genuinely-unresolved import `unified_trading_services` (`audit-library-imports.py`; NOT in PM's `dep_repos`). The
 1517→2992 jump is unexplained (genuine debt growth vs a measurement change) and needs investigation BEFORE a decision.
 
-- [ ] [CICD] P1. **PM #387 typecheck-debt-vs-ceiling** — decide (do NOT blind-bump): (a) investigate the 1517→2992 jump
+- [x] ✅ [CICD] P1. **PM #387 typecheck-debt-vs-ceiling** — decide (do NOT blind-bump): (a) investigate the 1517→2992 jump
       (which commits/scripts added the ~1475; is any a regression vs intentional-Any json debt); (b) ✅ DONE — the ~86
       `unified_trading_services` errors were from ONE dead one-off `scripts/migration/delete-gcs-data-for-dates.py`
       importing the REMOVED `unified_trading_services` package (`unified-trading-services` is NOT a real repo — the
