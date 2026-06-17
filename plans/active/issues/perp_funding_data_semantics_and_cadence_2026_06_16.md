@@ -142,13 +142,19 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       collect** (a `--cefi-operations trades` op or a dedicated handler) that runs aggTrades on the trades genesis floor
       independent of the funding floor — reusing `_write_aster_trades` (already trades-genesis-agnostic). **Repo:
       market-tick-data-service.**
-- [ ] [DATA] P3. Aster **OHLCV/klines→`ohlcv_*` cefi write** (ONLY if/when a cefi ohlcv consumer is wired — currently
-      orphaned, see the design decision above): the `AsterAdapter.fetch_klines` fetch + `normalize_aster_kline`
-      (`AsterKline`→`CanonicalOhlcvBar`) transform are ready. Remaining one-step: extend the cefi `_LEGAL_DATA_TYPES`
-      (`tardis_shared.py`) + add `ohlcv_*` to Aster's `venue_data_types.yaml` data_types + cefi `SOURCE_PRIORITY` +
-      genesis `2023-01-01` (klines) in `expected_start_dates.yaml`, then a `_write_aster_ohlcv` mirroring
-      `_write_aster_trades`. Do NOT wire until a cefi consumer exists (else dead surface + false expected-absent).
-      **Repo: market-tick-data-service + unified-api-contracts.**
+- [x] ✅ [DATA] P3. **Aster OHLCV→cefi write = N/A (resolved by operator principle 2026-06-17).** OPERATOR PRINCIPLE:
+      OHLCV (open/high/low/close/volume) is a first-class data_type for **TradFi**; on **CeFi** we store `ohlcv_*`
+      directly **ONLY for a TRADES-LESS venue** (where OHLCV is the only data the source provides). **When a venue has
+      `trades` — as Aster does — we DERIVE candles from `trades` and do NOT store cefi `ohlcv_*`.** So the Aster OHLCV
+      leg is correctly not wired: Aster's candles come from its (now-canonicalized) `trades`. The `fetch_klines` +
+      `normalize_aster_kline` scaffolds stay available (cross-check use), but no `_write_aster_ohlcv` is added for Aster.
+- [ ] [DATA] P3. **Latent capability: cefi `ohlcv_*` direct-write for a TRADES-LESS cefi venue** (NOT Aster). Today the
+      cefi path builder hard-rejects `ohlcv_*` (`tardis_shared.py:73`), so a future OHLCV-only cefi venue (no trades
+      endpoint) could not be wired. IF/WHEN such a venue is onboarded: relax the cefi `_LEGAL_DATA_TYPES` to admit
+      `ohlcv_*`, add it to that venue's `venue_data_types.yaml` + cefi `SOURCE_PRIORITY` + genesis, and write
+      `CanonicalOhlcvBar` directly (mirror `_write_aster_trades`). Until then it stays a latent capability — wiring it
+      now (with every current cefi venue having trades) would be dead surface. **Repo: market-tick-data-service +
+      unified-api-contracts.**
 - [ ] [DATA] P3. Aster **live `book_snapshot_5` WS connector** (forward-only; batch is correctly honest-absent already):
       add a live Aster depth-WS/poll book connector mirroring `live/connectors/aster_ws.py` (the existing live trades
       connector) → parse depth into the 5-level `bid_px_0X`/`bid_sz_0X`/`ask_px_0X`/`ask_sz_0X` shape
