@@ -289,6 +289,29 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   (UAC `venue_collateral.py` + execution-service dispersion trace — not mine). Ships on next clean-dep window /
   orphan-WIP inheritance (same path the baseline a2b6a44 took). All code verified (ruff+imports+basedpyright+QG); no
   force-merge through foreign dirty deps.
+- **2026-06-17** — **Per-variant emitter + withdrawal/deposit-triggered rebalancing** (operator: "can we simulate
+  withdrawals AND deposits to trigger the rebalance, for live and backtest?"). Three deltas:
+  1. **Per-variant books** — `--emit-instructions` now emits one IDEAL target book PER strategy variant (staked basis /
+     funding dispersion / pure basis / ensemble), not just the ensemble. Each writes
+     `positioning_instructions_<variant>.json` + a combined `positioning_instructions_all.json`. Verified on $100k
+     (as_of 2026-05-22, latest day with data mid-v9-migration): staked-basis = ETH 100% @ $80k (Lido stETH + OKX short,
+     8.3%); dispersion/pure/ensemble = 5×$16k. Each $100k → $20k treasury + $80k deployable.
+  2. **Deposit shock in the backtest treasury sim** — withdrawals already existed; added `--deposit-pct` /
+     `--deposit-interval-days`. A deposit lands in the treasury wallet (the on-chain entry point) → pushes the treasury
+     fraction above the 30% band → the existing rebalance deploys the surplus into the book. Sim line now reports
+     `Rebalances / withdrawals / deposits`. Verified: `--withdraw-pct 0.10 --deposit-pct 0.15` → 2 / 1 / 1.
+  3. **Flow-triggered rebalance INSTRUCTIONS in the live emitter** — `--flow-usd <signed>` (negative=withdrawal,
+     positive=deposit) emits the actual rebalance legs for the ensemble (live) book, same wallet logic as the backtest
+     sim: treasury-first on withdrawals (unwind pro-rata only if the buffer is exhausted), deploy-surplus on deposits,
+     then resize every position back to 20/80 on the new capital → `rebalance_instructions.json`. Verified on $100k:
+     `-$10k` covered by treasury (no unwind, positions trim to $14.4k on $90k); `+$30k` deploys $24k surplus (+$4.8k
+     each on $130k); `-$50k` exhausts the $20k buffer → $30k pro-rata unwind, positions $16k→$8k on $50k. Batch==live:
+     the live rebalance reuses the same 20/80 band + treasury-first rule the backtest runs each shock.
+  - **Code quality**: refactored the emitter's instruction structures to TypedDicts (`Position`/`Instructions`/
+    `Rebalance`/`ResizeRow`/`FlowAction`) — removed the `dict[str, object]` `reportUnknown` errors AND the 5 banned
+    `# type: ignore` comments. ruff clean; basedpyright on the emitter region clean (the residual 124 file-level errors
+    are the pre-existing pandas/requests/argparse-`Any` baseline in the committed scan body — QG type-checks
+    `tests/unit/`, not `scripts/`, so they are ungated and pre-date this work; not introduced here).
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
