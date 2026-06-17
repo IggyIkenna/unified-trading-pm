@@ -11,6 +11,7 @@ estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 source:
   - 2026-06-17 account-pool exhaustion follow-up (operator design session) — fragmented agent-type oversight
+priority: P2
 ---
 
 # Orchestrator agent-type oversight coverage
