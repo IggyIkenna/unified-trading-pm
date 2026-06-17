@@ -58,7 +58,9 @@ Owner suggestion: vm-cross-cutting (PM quality-gates-base). Repos: unified-tradi
     grandfathered UAC=138, missing all service-repo source. **This is the rollout blocker.**
 - **Step 3 (regression test) — AUTHORED, HELD.** `tests/test-ratchet-exit-code-aggregation.sh` on the same preserve
   branch (planted failing ratchet step → asserts exit 1 + no sentinel).
-- **🔴 BLOCKED on operator decision** (grandfather-seed vs cite-first the ~468) before the hardening can ship without
-  reddening the 8 repos' promote PRs. Full diagnosis + decision:
-  **`defi_address_citation_baseline_incomplete_seed_2026_06_16.md`**. Ship the hardening (Step 1+3) the moment the fleet
-  is citation-ratchet-clean.
+- **✅ UNBLOCKED 2026-06-17** — Ikenna chose **cite-first** and cited the ~468 fleet-wide (execution 225, UAC 138, e2e
+  demo-wallet, …); `defi_address_citation_baseline.yaml` ratcheted to 0 for every repo. Live fleet sweep is clean on all
+  three ratchets (5.94 / 5.95 / 5.97 = 0 over-baseline). **The hardening (Step 1 + Step 3) is now shippable** from
+  `wip-preserve/qg-ratchet-hardening-2026-06-16` — promote it to PM `main` (base-service.sh is PM-sourced, fleet-live on
+  merge; re-verify a fleet QG-green sample first). Blocker doc closed:
+  `defi_address_citation_baseline_incomplete_seed_2026_06_16.md` (status: resolved).
