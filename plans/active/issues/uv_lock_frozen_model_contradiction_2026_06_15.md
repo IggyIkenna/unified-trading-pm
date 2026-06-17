@@ -118,13 +118,24 @@ on LDR, do **not** touch the lock), as already done for e2e-testing@a0a3e01.
 
 ## Field evidence (2026-06-16, QG-agent)
 
-The fleet CVE + starlette propagation (`starlette_cve_2026_54282_fleet_alignment_2026_06_16.md`) followed the
-**pyproject-only floor-bump path** prescribed here: 8 service repos + UTL + UAC bumped (`pyarrow>=23.0.1`,
-`python-multipart>=0.0.31`, `starlette>=1.3.1,<2.0.0`) with **no regenerated `uv.lock`**. All ran `quality-gates.sh`
-GREEN and landed on LDR; the canonical `check-dependency-alignment.py` is GREEN — i.e. the floor bumps reached the gate
-without a lock regen, no Tier-C runaway restarted. This is a clean datapoint that the convergence-safe pyproject-only
-path works in practice; it does NOT resolve the underlying `--frozen`-vs-bare-`uv sync` contradiction (#1 above remains
-the open decision).
+The fleet CVE + starlette propagation (`starlette_cve_2026_54282_fleet_alignment_2026_06_16.md`) bumped 8 service repos
+
+- UTL + UAC (`pyarrow>=23.0.1`, `python-multipart>=0.0.31`, `starlette>=1.3.1,<2.0.0`) **pyproject-only** — and the
+  result is a SPLIT datapoint that sharpens (not resolves) the contradiction:
+
+* **9 of 10 repos:** pyproject-only worked — `quality-gates.sh` GREEN locally (bare `uv sync` re-resolves to the bumped
+  floor → pip-audit clean), landed on LDR, `check-dependency-alignment.py` GREEN, no Tier-C runaway restarted.
+* **fund-administration-service: pyproject-only was NOT enough.** My local QG went green (bare `uv sync`), but a later
+  pass hit a **pip-audit QG BLOCK** (`python-multipart 0.0.29` still installed from the stale lock) →
+  fund-admin@`ab51c0c` **regenerated `uv.lock`** (`python-multipart 0.0.29→0.0.32`, `starlette 1.1.0→1.3.1`) to actually
+  clear the CVE. This is exactly the §2 contradiction in the wild: an environment that resolves from the **lock** (not a
+  bare re-resolve) keeps the vulnerable pin despite the bumped floor, so the floor alone doesn't reach pip-audit there —
+  a lock regen was required.
+
+Takeaway: the convergence-safe pyproject-only path works **when the gate re-resolves from the range**, but **breaks
+where the lock is authoritative** — fund-admin needed the regen the §1 decision is meant to govern. Still does NOT
+resolve the underlying `--frozen`-vs-bare-`uv sync` contradiction (#1 remains the open decision); fund-admin is now a
+concrete data point for it.
 
 ## Composes with
 
