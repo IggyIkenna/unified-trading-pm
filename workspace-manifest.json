@@ -1813,7 +1813,7 @@
       "unified-api-contracts",
       "batch-live-reconciliation-service"
     ],
-    "sit_retry_count": 2,
+    "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
       "batch-live-reconciliation-service",
