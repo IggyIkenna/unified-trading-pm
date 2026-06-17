@@ -241,6 +241,15 @@ the canon plan; track there, not as duplicate todos:
       the real exception first (instrument the route to log the phase-2 traceback). INTERIM: both `.beta` blobs were
       manually refreshed 2026-06-17 15:19–15:21 via a local `run_rollup` per service (projections are static during the
       sign-off, so the eyeball isn't blocked). — deployment-api
+- [ ] [CODE] P2. **Per-service coverage `BucketNamingError`s surfaced by the rollup isolation fix (follow-up)** —
+      after the isolation fix (deployment-api@b014ae9) the rollup sweep no longer crashes, but it now logs `SERVICE_FAILED`
+      for cross-asset/edge services whose coverage build mis-resolves a bucket: (1) `features-calendar-service` /
+      `ml-service` (SHARED pseudo-key → now honest-skipped to empty by the defi.py guard — they show no coverage until a
+      `(service,'shared')` override or kind-only resolve is added); (2) `features-cross-instrument-service` →
+      `resolve_bucket_name` called with `asset_group=None` for a per-AG kind ("asset_group= is required"). These are
+      PRE-EXISTING (were masked because the sweep crashed on `'shared'` first) and are now CONTAINED (rollup stays green,
+      beta blobs write) — but those services' coverage is degraded. Root-fix each service's coverage bucket resolution
+      (override / kind-only / correct cat enumeration) so their data-status panels are accurate. — deployment-api
 - [ ] [DATA] P0. **APPLY GATE sign-off**: eyeball every service × asset_group projected index in the data-status tab
       under Manifest-beta mode (`DATA_STATUS_BETA_MANIFEST_BLOB` set); confirm the projected captured/attempted/empty/
       failed split makes sense (orphan recovery looks right, no phantom over-count) BEFORE any TIER 2 `--apply` runs for
