@@ -306,3 +306,31 @@ wall" triage queue. Direct measurement (`git diff --name-only origin/staging ori
       showed "N fails quarantined / escalated" while staging==main==LDR (0 content-delta). The quarantine/breaking-pending
       writer should clear the flag when the promote range's content-delta is 0. Target: the quarantine/`breaking_pending`
       writer (PM `ci_status` / staging_status). Provenance: this session.
+
+## Manual drain of the residual triage queue + a NEW gate finding — 2026-06-17 (afternoon)
+
+The structural fixes at § "Structural root-cause fixes" are NOT yet shipped, so the queue kept refilling. Drained the
+residual **manually** (operator-directed) and surfaced a new systemic gate:
+
+- **Closed 4 squash-NOISE staging→main PRs** (content-identical by TREE → nothing to promote): `alerting-service#97`,
+  `agent-orchestrator#322`, `execution-service#314`, `instruments-service#471`. (deployment-api#101 stayed open — it later
+  re-evaluated as REAL once the monitor fix landed on its LDR; draining via v2.)
+- **Merged the 5 GENUINELY-stuck promote PRs** via **close+reopen → fresh `pull_request` v2 + re-arm auto-merge**:
+  `ml-service#123`, `instruments-service#472`, `unified-trading-api#414`, `features-service#573`; and an **LDR→main
+  reconcile** for the conflict-walled `strategy-service#211` → **#213** (main ⊆ LDR → clean; #211 closed superseded —
+  exactly the option (b) at line 299 / the UAC#353·UTL#376 Class-C pattern, done by hand).
+- **Shipped the monitor content-identity guard** — see § Class D P1 above, flipped (deployment-api@e35dd00c).
+
+- [ ] [CICD] P1. **NEW — promote PRs strand on a `quality-gates-v2` run that completes `conclusion=action_required`
+      (NOT `success`), so the required check is non-green → PR BLOCKED with auto-merge armed but unable to fire.** Hit
+      ≥4 PRs at once today (`features-service#573`, `ml-service#123`, `unified-trading-api#414`, `unified-trading-pm#392`).
+      Two facts pinned: (1) a `workflow_dispatch` v2 does NOT satisfy a PR's required context — only a `pull_request`-event
+      run counts (so `gh workflow run quality-gates-v2.yml --ref <branch>` is the WRONG recovery for a stuck PR; it greens
+      the SHA but not the PR check). (2) `action_required` here is NOT a fork-approval (`/approve` API → "not from a fork
+      pull request") and has **0 pending_deployments** — root still unknown (a conditional cloud-build/deploy job?).
+      Proven recovery = **close+reopen** (fires a fresh `pull_request` v2, which went `success` for all 5 today). But
+      `ci-failure-watcher --auto-recover` only handles the v2-**ABSENT** signature, NOT v2=`action_required` — so these
+      strand until a human nudges. **Fix:** (a) diagnose what makes a v2 run conclude `action_required` vs `success`
+      (intermittent — same head went `success` at 04:04 then `action_required` at 04:41); (b) extend
+      `ci_failure_watcher.py` auto-recover to include the `conclusion==action_required` signature (close+reopen recovers it
+      deterministically). Target: `scripts/repo-management/ci_failure_watcher.py`. Provenance: 2026-06-17 afternoon drain.
