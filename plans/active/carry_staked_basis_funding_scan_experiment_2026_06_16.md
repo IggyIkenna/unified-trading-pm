@@ -267,6 +267,11 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
     treasury top-up extends the effective margin buffer beyond the budgeted `max_move` (→ tighter margin / higher eff,
     treasury covers tail moves). Continuous monitor needs the price-MtM layer (next fidelity); a margin-shock coverage
     stat is added to the sim now.
+- **2026-06-17** — **Margin-call backstop SHIPPED** (`e2e-testing@d395824`): the treasury is dual-purpose — the 20%
+  buffer also funds a margin top-up. Sim reports it: with only ~8% of the ensemble book on cash-margin venues (Aster/HL,
+  no on-venue spot offset) and the rest hedge-protected delta-neutral, the treasury covers ~any tail move on that slice.
+  Continuous margin monitor needs the price-MtM layer (next fidelity). **All harness work shipped + journaled;
+  autonomous run closed.**
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
