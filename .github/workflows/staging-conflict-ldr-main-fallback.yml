@@ -1,0 +1,157 @@
+name: staging-conflict-ldr-main-fallback
+
+# PM-CENTRAL fallback (L299, promotion_queue_conflict_wall_pileup_2026_06_17 § Class D):
+# when a service/lib repo's staging->main promote PR is parked CONFLICTING (the stale-merge-base
+# DAM: staging and main diverged BOTH ways — staging carries LDR-promoted features main lacks,
+# main carries semver-bump + ci_status + back-merge commits staging lacks — so git sees a textual
+# conflict that never self-heals), drain the content via an LDR->main PR INSTEAD. LDR is the SSOT
+# and carries BOTH the main->LDR and staging->LDR back-merges, so LDR contains main AND LDR contains
+# staging => LDR->main is a CLEAN merge that lands the same+newer content. v2-gated auto-merge
+# (--merge, NON-admin) respects every required check (no SIT bypass for the content that matters).
+# Manually proven 2026-06-17 (UAC#353 / UTL#376 MERGED, stale #344/#370 closed). Generalises the
+# PM Option-B LDR->main pattern to service/lib repos.
+#
+# SAFETY:
+#   - ONLY fires on a staging->main PR that is `dirty` (CONFLICTING) AND aged > STALE_MIN.
+#   - SKIPS a repo in staging_status.breaking_pending (active SIT — NEVER bypass the gate; that
+#     content waits for SIT on the staging path).
+#   - VERIFIES main is contained in LDR (compare main...LDR behind_by==0) before opening LDR->main,
+#     so the merge is genuinely clean. NEVER force-pushes / NEVER admin-merges / NEVER self-merges.
+#   - Arms auto-merge --merge (v2 on the LDR->main PR is the gate); closes the dammed staging->main
+#     PR as superseded. A content-identical (squash-noise) staging->main PR is just closed.
+#   - dry_run lists what it WOULD do.
+#
+# This bot is PM-ONLY (lives only in unified-trading-pm; it reaches every repo via the GH App token).
+# It is NOT a per-repo template — there is no fleet rollout and no chicken-and-egg (it takes effect
+# the moment it lands on PM main, which ldr-to-main-promote drains).
+#
+# SSOT: plans/active/issues/promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D / L299 +
+#       codex/08-workflows/ci-cd-flow.md § "LDR is the SSOT".
+
+on:
+  schedule:
+    - cron: "47 * * * *" # hourly, offset — staging->main dams are low-urgency (recurrence prevention)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List the LDR->main fallbacks that WOULD open, without opening them"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: staging-conflict-ldr-main-fallback
+  cancel-in-progress: false
+
+jobs:
+  fallback:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+      - name: Checkout PM (for the repo list + staging_status.breaking_pending)
+        uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Drain conflicting staging->main via a clean LDR->main PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          STALE_MIN: "30"
+        run: |
+          set -uo pipefail
+
+          # Repo list + repos under active SIT (skipped — never bypass the staging gate).
+          REPOS=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          print("\n".join(k for k in m.get("repositories", {}) if not k.startswith("_")))
+          PYEOF
+          )
+          BREAKING=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          ss = m.get("staging_status") or {}
+          print(" ".join(str(x) for x in (ss.get("breaking_pending") or [])))
+          PYEOF
+          )
+
+          OPENED=0
+          CLOSED=0
+          NOW=$(date -u +%s)
+          for REPO in $REPOS; do
+            if [ "$REPO" = "unified-trading-pm" ]; then continue; fi  # PM is Option-B; ldr-to-main-promote owns it
+            case " $BREAKING " in
+              *" $REPO "*) echo "  skip $REPO — in breaking_pending (active SIT)"; continue ;;
+            esac
+
+            # An open staging->main PR?
+            SM_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head staging --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -z "$SM_NUM" ] || [ "$SM_NUM" = "null" ]; then continue; fi
+
+            MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$SM_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+            if [ "$MSTATE" != "dirty" ]; then continue; fi
+
+            CREATED=$(gh api "repos/$OWNER/$REPO/pulls/$SM_NUM" --jq '.created_at' 2>/dev/null || echo "")
+            CTS=$(date -u -d "$CREATED" +%s 2>/dev/null || echo "$NOW")
+            AGE_MIN=$(( (NOW - CTS) / 60 ))
+            if [ "$AGE_MIN" -lt "$STALE_MIN" ]; then
+              echo "  $REPO #$SM_NUM dirty but young (${AGE_MIN}m < ${STALE_MIN}m) — wait"
+              continue
+            fi
+
+            # main contained in LDR? (compare main...LDR: behind_by = commits on main NOT in LDR; 0 = LDR->main clean)
+            BEHIND=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.behind_by' 2>/dev/null || echo "1")
+            if [ "$BEHIND" != "0" ]; then
+              echo "  $REPO: main NOT fully contained in LDR (behind_by=$BEHIND) — LDR->main not clean yet; main-backmerge-to-ldr must converge first"
+              continue
+            fi
+
+            # Content-identical (squash-accounting noise)? then the staging->main PR is nothing to promote — close it.
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "L")
+            MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" --jq '.commit.tree.sha' 2>/dev/null || echo "M")
+            if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "DRY-RUN: $REPO — staging->main #$SM_NUM is squash-noise (LDR tree == main tree) → would close"
+              else
+                gh pr close "$SM_NUM" --repo "$OWNER/$REPO" --comment "Closed: staging→main is squash-accounting noise — main tree == LDR tree (content-identical; nothing to promote). LDR is the SSOT. SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D." 2>/dev/null && CLOSED=$((CLOSED + 1)) || echo "  WARN: close failed $REPO #$SM_NUM"
+              fi
+              continue
+            fi
+
+            FILES=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.files | length' 2>/dev/null || echo "0")
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "DRY-RUN: $REPO — staging->main #$SM_NUM dirty (${AGE_MIN}m), main ⊆ LDR, $FILES file(s) ahead → would open LDR->main + close #$SM_NUM"
+              continue
+            fi
+
+            # Open (or reuse) the clean LDR->main fallback PR, arm v2-gated auto-merge, close the dammed staging->main PR.
+            LM_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -z "$LM_NUM" ] || [ "$LM_NUM" = "null" ]; then
+              gh pr create --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+                --title "chore(promote): LDR → main (staging→main conflict fallback)" \
+                --body "Automated L299 fallback: staging→main #$SM_NUM is conflict-walled (stale merge-base; staging & main diverged both ways). LDR carries both back-merges (contains main AND staging), so this LDR→main PR lands the same+newer content cleanly. v2-gated auto-merge respects all required checks. SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D / L299." >/dev/null 2>&1 || echo "  (LDR->main create returned nonzero — may already exist)"
+              LM_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            fi
+            if [ -n "$LM_NUM" ] && [ "$LM_NUM" != "null" ]; then
+              gh pr merge "$LM_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || echo "  WARN: auto-merge arm failed $REPO #$LM_NUM"
+              OPENED=$((OPENED + 1))
+              echo "  $REPO: opened/armed LDR->main #$LM_NUM (drains staging->main #$SM_NUM dam)"
+              gh pr close "$SM_NUM" --repo "$OWNER/$REPO" --comment "Superseded by LDR→main #$LM_NUM — staging→main was conflict-walled (stale merge-base; both diverged). LDR carries both back-merges (contains main AND staging) so LDR→main lands the same+newer content cleanly + v2-gated (no SIT bypass for content that matters). SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D / L299." 2>/dev/null && CLOSED=$((CLOSED + 1)) || echo "  WARN: close failed $REPO #$SM_NUM"
+            else
+              echo "  WARN: $REPO — could not open/find LDR->main PR; left staging->main #$SM_NUM open"
+            fi
+          done
+          echo "=== L299 staging→main fallback: opened/armed $OPENED LDR→main · closed $CLOSED dammed staging→main PR(s) ==="
