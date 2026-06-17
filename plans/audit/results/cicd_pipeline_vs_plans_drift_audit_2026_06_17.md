@@ -75,11 +75,14 @@ plans"). Two findings are genuine _unresolved contradictions_ that need an opera
 plan-hygiene (banner/migrate/archive/frontmatter); 4 are small code fixes; 2 are "note only / latent". **0 live pipeline
 regressions found.**
 
-> **Progress 2026-06-17 (autonomous):** D2–D9 — all 8 of the no-decision doc/SSOT-truth fixes — SHIPPED (PM@235c5fd3b +
-> PM@eeece9802); ci-cd-flow.md + CLAUDE.md now match the live pipeline. **Still open:** D1/D10 (the `--frozen` model
-> decision — operator), the cross-plan reconciles (D11–D14), the small code/comment fixes (D15–D19 — deferred to avoid a
-> PM-QG run contending with the active QG agent), and plan hygiene/archival (D20–D25). See the Findings checklist for
-> per-item status.
+> **Progress 2026-06-17 (autonomous):** **10 findings shipped** — D2–D9 (all 8 no-decision doc/SSOT-truth fixes,
+> PM@235c5fd3b + PM@eeece9802; ci-cd-flow.md + CLAUDE.md now match the live pipeline) + **D14** (unwired-AR-gate record)
+> and the **D11 callout**, both filed in `cloud_build_router_aws_parity` (PM@98bdf756c). **Still open:** D1/D10 (the
+> `--frozen` model decision — operator), D11/D12 (cross-plan reconciles — D11 surfaced, decision pending), D16
+> (carve-breadth decision), and the LOW-tier items D13/D15/D17–D25. The latter are **deferred for one of two reasons:**
+> a code fix would need a PM-QG run that contends with the active QG agent (D15/D18), or a markdown edit would force a
+> 100–170-line prettier-reflow of a hot, actively-edited foreign plan on commit (D13/D20/D24/D25). All captured per-item
+> below — apply at triage / in a quiet window.
 
 ---
 
@@ -305,10 +308,14 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [x] D3 ✅ — corrected CLAUDE.md aiohttp `--ignore-vuln` ("two" → "~20-entry block") — PM@235c5fd3b
 - [x] D4 ✅ — corrected ldr-to-staging (15m, ci-cd-flow.md) + main-backmerge (hourly, CLAUDE.md) cadences —
       PM@235c5fd3b. The sprawl-issue-doc cron number is tracked separately as D25 (still open).
-- [ ] D11 🟠 — reconcile in-image-QG blocking (router plan L67) vs the shipped `_RUN_INIMAGE_QG:false` skip
+- [ ] D11 🟠 — reconcile in-image-QG blocking (router plan Phase 1) vs the shipped `_RUN_INIMAGE_QG:false` skip —
+      **callout filed in `cloud_build_router_aws_parity` (PM@98bdf756c); the keep-vs-drop decision is still open**
 - [ ] D12 🟠 — consolidate content-hash-sentinel ownership (qg_sentinel_content_hash ⇄ quality_gates_speed)
-- [ ] D13 🟠 — add SUPERSEDED banner to qg_commit_quality_boundary L220 (tab-mirror torn out by Path-B)
-- [ ] D14 🟠 — record `assert_deps_published_to_ar.py` as reserved/unwired in `cloud_build_router_aws_parity`
+- [ ] D13 🟠 — add SUPERSEDED banner to qg_commit_quality_boundary L220 (tab-mirror torn out by Path-B). **DEFERRED: the
+      edit would force a ~170-line prettier reflow of that hot, actively-edited plan mid-session (prek reflows md on
+      commit) — apply in a quiet window.**
+- [x] D14 ✅ — recorded `assert_deps_published_to_ar.py` as reserved/unwired (callout in
+      `cloud_build_router_aws_parity`) — PM@98bdf756c
 - [ ] D22 🟠 — migrate residual todos out of semver_version_bump_skip_ci + cicd_workflow_sprawl_audit, then archive
 - [ ] D24 🟠 — delete dead `feature-branch-to-staging.yml` (2 dirs) + `staging-version-gate.yml`; fold into sprawl
       remediation
@@ -324,7 +331,9 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [ ] D17 🟡 — (note) STAGING_PENDING rank-equivalence vs ON_STAGING_STATUSES exclusion
 - [ ] D18 🟡 — quickmerge.sh:1481/1534 "30min" → 15min drain comment
 - [ ] D19 🟡 — sit-starvation-detector.yml header comment "15 minutes" → matches `*/30`
-- [ ] D20 🟡 — fix `locked_since` frontmatter (ci_status_firestore_side_store, ldr_tarball_auto_refresh)
+- [ ] D20 🟡 — fix `locked_since` frontmatter (ci_status_firestore_side_store, ldr_tarball_auto_refresh). **DEFERRED:
+      same prettier-reflow-on-commit churn on hot foreign plans for a 1-line frontmatter fix — batch at triage.**
 - [ ] D21 🟡 — reassign fleet_git_health_orchestrator `assigned_vm` off the stopped vm-orchestrator
 - [ ] D23 🟡 — archive the 4 resolved plans/issues (gate the UI one on `pw:L2 ✓`)
-- [ ] D25 🟡 — fix the ldr-to-staging cron number in the cicd_workflow_sprawl_audit issue doc
+- [ ] D25 🟡 — fix the ldr-to-staging cron number in the cicd_workflow_sprawl_audit issue doc. **DEFERRED: same
+      reflow-churn reason — batch with D13/D20/D24 at triage.**
