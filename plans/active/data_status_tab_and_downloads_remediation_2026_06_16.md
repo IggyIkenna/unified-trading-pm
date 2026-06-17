@@ -229,6 +229,18 @@ the canon plan; track there, not as duplicate todos:
       its blob (no 503). QG green (87s); landed on LDR (Tier-C drain → staging ≤30 min). Inert in prod (beta is
       env-gated on `DATA_STATUS_BETA_MANIFEST_BLOB`). Downstream services (features/strategy) stay non-eligible until
       their projections land. — deployment-api
+- [ ] [INFRA] P0. **FIX the rollup-svc phase-2 (BETA) 500 — pre-existing, blocks beta-rollup auto-refresh** (found
+      2026-06-17 deploying a5b678e). `uts-prod-data-status-rollup-svc` `/api/data-status/rollup-run` returns HTTP 500 at
+      a consistent ~182s every `*/10` tick: phase-1 (LIVE, 14 svcs) completes + writes live blobs, then phase-2 (BETA)
+      throws before persisting → `instruments-service/full.beta.json.gz` was stale since **2026-06-16** (silent
+      day-long failure) and MTDS `.beta` was never written by the cron. Each service's beta rollup SUCCEEDS in
+      ISOLATION locally (`run_rollup --services <one>` in beta, ~1-2 min each) — so it's the COMBINED single-request
+      load (phase-1 all-svcs + phase-2 both-beta in one 16Gi process), not a per-service code bug. 500 (not 503) + no
+      captured Python exception/OOM line in Cloud Logging (only the top ASGI frame). Likely fix: split the cron into
+      per-service / per-phase invocations (the worker already takes `--services`), or bump rollup-svc memory; confirm
+      the real exception first (instrument the route to log the phase-2 traceback). INTERIM: both `.beta` blobs were
+      manually refreshed 2026-06-17 15:19–15:21 via a local `run_rollup` per service (projections are static during the
+      sign-off, so the eyeball isn't blocked). — deployment-api
 - [ ] [DATA] P0. **APPLY GATE sign-off**: eyeball every service × asset_group projected index in the data-status tab
       under Manifest-beta mode (`DATA_STATUS_BETA_MANIFEST_BLOB` set); confirm the projected captured/attempted/empty/
       failed split makes sense (orphan recovery looks right, no phantom over-count) BEFORE any TIER 2 `--apply` runs for
