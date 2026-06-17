@@ -645,7 +645,28 @@ Fixed to read BOTH layouts (`e2e@71666cb`) — now **104,066 HL points across 52
 **Verification:** `mtds` migration verified 0 objects under `batch_hyperliquid_rest` fleet-wide (independent gcloud
 walk); fixed reader validated to load 198–227 HL coins/day on both layouts (2025-06-01 / 2026-01-15 / 2026-04-01).
 
+**5. HL funding is REAL (not a placeholder) — but is dominated by HL's interest-rate FLOOR (operator Q 2026-06-17).**
+Checked the code + data after a report that HL "defaults to 1bp/8h when no S3 data". Verdict: NOT a code default — the
+S3-miss path (`hyperliquid_s3._fetch_funding_via_rest`) returns `[]` (honest absence) on empty REST `fundingHistory`,
+and reads the literal `fundingRate`/`funding` value otherwise (the `0` guards only a malformed record). The data is real
+
+- varied (2053/1296 distinct values, −0.8%/hr to +0.03%/hr, 17–29% negative). BUT **44.8% (2026) / 58.3% (2025) of
+  hourly observations sit EXACTLY at 1.25e-5** = HL's interest-rate floor
+  (`funding = premium + clamp(interest − premium)`, interest = 0.01%/8h = 1.25e-5/hr); when premium ≈ 0 HL clamps
+  funding to exactly that constant. So it's HL's genuine clamped funding (the exact match to HL's formula constant + the
+  higher share in the calmer 2025 regime confirm it's sourced from HL, not fabricated). **Strategy implication:** the
+  interest floor ≈ **11% APY** that a short structurally earns, so a large part of the HL pure-basis carry is the
+  persistent interest floor, premium/dispersion on top — real + durable, but not premium _alpha_. Decompose carry into
+  floor vs premium when sizing.
+
 ## Open todos / next steps
+
+- [ ] [STRATEGY] P2. Decompose HL pure-basis carry into the interest-rate FLOOR (~11% APY structural, ~45-58% of hours
+      clamp to it) vs the premium/dispersion component — so sizing reflects how much is structural vs alpha. **Repo:
+      e2e-testing harness → strategy-service.**
+- [ ] [DATA] P3. (optional certainty) spot-check a sample of HL funding cells at the 1.25e-5 floor against HL's live
+      on-chain `fundingHistory` to confirm the archive's floor values match realized on-chain funding. **Repo:
+      e2e-testing.**
 
 - [ ] [DATA] P2. Backfill the 2023-2024 HL `perp_funding` gap (517 missing days) via `collect-perp-funding` to extend
       the backtest to full history (2025-2026 already complete). **Repo: market-tick-data-service (prod CLI).**
