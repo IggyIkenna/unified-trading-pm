@@ -152,7 +152,7 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   0.9 factor). Phase A reconciled them to 0.8 (the 0.20 haircut) — the SSOT is authoritative.
 
 ## UAT auto-deploy (operator directive 2026-06-17 — "make uat the default")
-- [ ] [CI] P2. **Auto-deploy uat.odum-research.com on every LDR update** — new workflow
+- [x] ✅ [CI] P2. (unified-trading-system-ui@422e99a0) **Auto-deploy uat.odum-research.com on every LDR update** — new workflow
       `unified-trading-system-ui/.github/workflows/deploy-uat-on-merge.yml`: on push to live-defi-rollout (+
       workflow_dispatch), checks out the UI repo + deployment-service, auths GCP, runs the CANONICAL
       `scripts/deploy-cloud-run.sh --env=uat --cloud` (→ `odum-portal-staging`, the sandbox). Concurrency-coalesced
