@@ -70,6 +70,7 @@ from _capability_extract import (
 from _capability_gaps import (
     extract_algo_compatibility,
     extract_gap_registries,
+    extract_param_schema,
     extract_risk_surface,
     extract_service_registries,
 )
@@ -199,6 +200,11 @@ def build_manifest(
     all_nodes += n
     all_edges += e
 
+    logger.info("6c. Per-archetype flat PARAM SCHEMA (strategy-service engine SSOT)...")
+    param_schema, n, e = extract_param_schema(workspace_root)
+    all_nodes += n
+    all_edges += e
+
     nodes = _dedup_nodes(all_nodes)
 
     # 7. Merge sidecar annotations into matching edges.
@@ -222,6 +228,7 @@ def build_manifest(
         generated_from_commit=_read_uac_head_sha(uac_root),
         nodes=nodes,
         edges=all_edges,
+        param_schema=param_schema,
     )
     return manifest, annotation_orphans, readiness_verdicts
 
@@ -259,13 +266,18 @@ def main() -> None:
     unbuilt, logical = find_dead_ends(manifest.nodes, manifest.edges)
     broker_classed_venues = find_broker_classed_venues(manifest.nodes)
     # Fold the orphan/dead-end headline counts into the serialised gaps block.
-    gaps_block = canonical.get("gaps", {})  # noqa: qg-empty-fallback
-    if isinstance(gaps_block, dict):
-        gaps_block["orphan_nodes"] = len(orphans)
-        gaps_block["unbuilt_dead_ends"] = len(unbuilt)
-        gaps_block["logical_dead_ends"] = len(logical)
-        gaps_block["annotation_orphans"] = len(annotation_orphans)
-        gaps_block["broker_classed_venues"] = len(broker_classed_venues)
+    _gaps_raw = canonical.get("gaps", {})  # noqa: qg-empty-fallback
+    gaps_block: dict[str, int] = (
+        {str(k): int(v) for k, v in _gaps_raw.items() if isinstance(v, int)}
+        if isinstance(_gaps_raw, dict)
+        else {}
+    )
+    gaps_block["orphan_nodes"] = len(orphans)
+    gaps_block["unbuilt_dead_ends"] = len(unbuilt)
+    gaps_block["logical_dead_ends"] = len(logical)
+    gaps_block["annotation_orphans"] = len(annotation_orphans)
+    gaps_block["broker_classed_venues"] = len(broker_classed_venues)
+    canonical["gaps"] = gaps_block
 
     output_path = output_dir / "capability-manifest.json"
     with open(output_path, "w") as f:
@@ -314,6 +326,9 @@ def main() -> None:
     print(f"manifest_version: {manifest.manifest_version}")
     print(f"generated_from_commit: {manifest.generated_from_commit}")
     print(f"nodes: {len(manifest.nodes)}  edges: {len(manifest.edges)}")
+    ps_archetypes = len(manifest.param_schema)
+    ps_params = sum(len(v) for v in manifest.param_schema.values())
+    print(f"param_schema: {ps_archetypes} archetypes  {ps_params} params")
     print("node kinds:")
     for k in sorted(node_kinds):
         print(f"  {k}: {node_kinds[k]}")

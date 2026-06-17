@@ -1,3 +1,10 @@
+---
+scope: [engineer, admin]
+title: Resolving a dep-update → staging conflict (worker playbook)
+type: workflow
+status: active
+---
+
 # Resolving a `dep-update/*` → staging conflict (worker playbook)
 
 > **Audience:** an agent-orchestrator worker escalated a CONFLICTING `dep-update/<dep>-<version>` → `staging` PR (event
