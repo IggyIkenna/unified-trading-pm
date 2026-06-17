@@ -459,13 +459,33 @@ jobs:
           uv sync
           # Install test-only sibling deps that were cloned (DEP_REPOS) but are NOT in
           # [project.dependencies], so `uv sync` skips them — e.g. deployment-api for
-          # deployment-service. The `uv pip show` guard makes this a strict NO-OP for every
-          # normal pyproject dep; it only installs a genuinely-missing cloned peer.
+          # deployment-service, or UTL/UAC for unified-trading-pm (declares no UTL/UAC project dep,
+          # so this loop is its ONLY install path). The `uv pip show` guard makes this a strict NO-OP
+          # for every normal pyproject dep; it only installs a genuinely-missing cloned peer.
+          #
+          # `--python .venv/bin/python` is MANDATORY (2026-06-17 fix for the flaky basedpyright
+          # Unknown-type CASCADE that reds the typecheck slice fleet-wide): a bare `uv pip install -e`
+          # does NOT reliably target `.venv` — on a runner with a pyenv/global interpreter, uv resolves
+          # to the GLOBAL env, so the editable sibling dep lands OUTSIDE `.venv`. basedpyright (which
+          # reads `venv=".venv"`) then sees the workspace lib UNRESOLVED → every type degrades to
+          # Unknown/Any → ~thousands of spurious reportUnknown*/reportAny errors → typecheck red.
+          # Flaky (green only when uv happened to pick `.venv`). Forcing the interpreter makes the
+          # install deterministic into `.venv`. Mirrors the LOCAL fix at base-service.sh:316-327.
+          # SSOT: plans/active/ci_local_qg_parity_2026_06_08.md + promotion_queue_conflict_wall_pileup_2026_06_17.md.
+          _qg_venv_py=".venv/bin/python"; [ -x "$_qg_venv_py" ] || _qg_venv_py="$(command -v python3)"
           for dep in $DEP_REPOS; do
             if [ -d "../$dep" ] && ! uv pip show "$dep" >/dev/null 2>&1; then
-              echo "Installing test-only sibling dep not in pyproject: ../$dep"
-              uv pip install -e "../$dep" || echo "WARN: editable install of ../$dep failed (non-fatal)"
+              echo "Installing test-only sibling dep not in pyproject: ../$dep (into $_qg_venv_py)"
+              uv pip install -e "../$dep" --python "$_qg_venv_py" || echo "WARN: editable install of ../$dep failed (non-fatal)"
             fi
+          done
+          # Visibility (no more SILENT Unknown-cascade): warn loudly if a cloned sibling dep still
+          # isn't resolved in .venv (the cascade root) — surfaces it above any downstream reportUnknown
+          # noise. WARN not error: the `--python` targeting above is the deterministic cure; a hard exit
+          # here would risk a fleet-wide false-fail on a repo/package name-normalisation edge.
+          for dep in $DEP_REPOS; do
+            [ -d "../$dep" ] || continue
+            uv pip show "$dep" >/dev/null 2>&1 || echo "::warning::workspace dep '$dep' not resolved in .venv after install — basedpyright may Unknown-cascade (check .venv targeting, base-service.sh:316-327)."
           done
 
       - name: Run quality gates (slice ${{ matrix.slice }})
