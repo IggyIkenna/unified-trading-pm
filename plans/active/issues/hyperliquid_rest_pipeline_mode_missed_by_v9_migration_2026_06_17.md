@@ -1,7 +1,6 @@
 ---
 title: "Hyperliquid cefi data stranded on retired pipeline_mode=batch_hyperliquid_rest — missed by the v9 migration"
 created: 2026-06-17
-author: ikennaigboaka [slot-1·laptop]
 status: active
 priority: P2
 locked_by: live-defi-rollout
