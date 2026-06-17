@@ -127,3 +127,31 @@ its own QG/v2 verification):**
 (the Tier-C drain) · `provenance_gate_squash_perpetual_block_2026_06_17.md` (same session's gate fix). The
 strict-quickmerge / promotion HARD RULES are correct; this is the **fan-out staleness + missing-rebase + missing-alert**
 machinery gap.
+
+## Drain-to-main blockers discovered while pushing PM LDR→main (#387) — 2026-06-17
+
+Pushing the PM LDR→main standing drain (#387) so the new machinery goes live surfaced TWO separate systemic blockers
+(NOT the conflict-wall, which is fixed; NOT introduced by this session's commits — verified clean: the failing typecheck
+files are all foreign/pre-existing):
+
+- [ ] [CICD] P1. **PM (and fleet) `quality-gates-v2` is FLAKY on a stale-dep clone.** When a repo's LDR is AHEAD of its
+      latest release tag, the CI version-aware dep-clone falls back to a STALE tag for UTL/UAC → basedpyright resolves
+      their types as `Unknown` → broad `reportUnknown*` errors across many files (`check-repo-readiness.py`,
+      `generate-cicd-diagram.py`, `reap_stale_blockers.py`, …) that are green when deps resolve correctly. PM v2 went
+      green at `0d51af1e` (01:36Z) then RED across `cc1376fc`→`14ab1a12` (~40 min, multiple heads) on this — per-run
+      flaky by dep-resolution, not content. This persistently blocks the LDR→main drain (a red required check). Fix
+      candidates: cut fresh UTL/UAC release tags so LDR≤tag, OR make the CI dep-clone fall back to the dep's LDR/branch
+      (not a stale tag) when source is ahead of its tag. Target: `unified-trading-pm` quality-gates-base clone logic.
+      **Big finding — operator/CI.**
+- [ ] [CICD] P1. **The PM LDR→main forward drain has no manifest-conflict resolver** (only the back-merge does, via
+      reconcile_manifest_backmerge.py). main churns `workspace-manifest.json` `ci_status` every few minutes (every
+      repo's v2 result writes a `[skip ci]` commit to main), so #387 perpetually re-`dirty`s on the manifest faster than
+      it can merge — even after a hand back-merge it re-diverges within ~1-3 min. Durable fix: give the forward drain
+      (ldr-to-main-promote bot, or a merge driver in the bot's clone) the same reconciler resolution for
+      `workspace-manifest.json` so LDR→main merges cleanly regardless of ci_status churn (take main's
+      ci_status/version-surface + LDR structure), then arm/merge in the same run.
+
+**Interim state:** the conflict-wall fixes (digest-only, supersede+escalate owner chain, alert, the reconciler
+semver-max) are all on `live-defi-rollout` and drain to main via the standing PR once v2 goes green (flaky → will pass
+on a clean-dep-resolve run; `ldr-to-main-promote` \*/15 keeps retrying). NOT force-merged over the red v2 (would land 91
+commits over a — flaky but real — failing required check).
