@@ -3,7 +3,6 @@ title:
   "Plan-reconciler doc-hygiene findings 2026-06-17 — stale codex pnl-attribution pointer (4 referrers) + abandoned
   plans/active/INDEX.md (99-entry drift)"
 created: 2026-06-17
-author: plan-reconciler
 source:
   - "daily plan-reconciliation pass agt-3591cc 2026-06-17"
   - "scripts/plan-hygiene/run_hygiene_sweep.sh — check_codex_refs: 1 broken ref"
