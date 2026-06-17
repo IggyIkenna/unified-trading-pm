@@ -58,7 +58,9 @@ plans"). Two findings are genuine _unresolved contradictions_ that need an opera
    bare `uv sync` (`python-quality-gates-v2.yml:459`) with a **warn-only** `uv lock --check` (`base-service.sh:305`,
    "lock is a record, not a pin"), and local QG uses `uv pip install -e .` with no `uv sync` at all
    (`base-service.sh:299`). A plan marks this "DECIDED 2026-06-12" (still an _open_ checkbox); the issue doc says it was
-   docs-only, never wired, and dangerous to action naively. **Needs a decision, not a patch.**
+   docs-only, never wired, and dangerous to action naively. **DECIDED 2026-06-17 (operator): adopt the frozen-lock model
+   end-to-end (`uv sync --frozen` in CI + local, lock-as-SSOT from LDR, external-only regen), sequenced behind the
+   LDR-landing prerequisite — implementation tracked in `dependency_promotion_…` § Phase 1.5; not yet wired.**
 2. **🔴 D5 — the engineer SSOT `ci-cd-flow.md` still teaches the OLD per-unit-staging-PR quickmerge model** in 4 places
    while the live quickmerge lands on LDR and stops (decoupling). An agent reading only the SSOT operates the wrong
    model.
@@ -78,11 +80,12 @@ regressions found.**
 > **Progress 2026-06-17 (autonomous):** **10 findings shipped** — D2–D9 (all 8 no-decision doc/SSOT-truth fixes,
 > PM@235c5fd3b + PM@eeece9802; ci-cd-flow.md + CLAUDE.md now match the live pipeline) + **D14** (unwired-AR-gate record)
 > and the **D11 callout**, both filed in `cloud_build_router_aws_parity` (PM@98bdf756c). **Still open:** D1/D10 (the
-> `--frozen` model decision — operator), D11/D12 (cross-plan reconciles — D11 surfaced, decision pending), D16
-> (carve-breadth decision), and the LOW-tier items D13/D15/D17–D25. The latter are **deferred for one of two reasons:**
-> a code fix would need a PM-QG run that contends with the active QG agent (D15/D18), or a markdown edit would force a
-> 100–170-line prettier-reflow of a hot, actively-edited foreign plan on commit (D13/D20/D24/D25). All captured per-item
-> below — apply at triage / in a quiet window.
+> `--frozen` model — **DECIDED 2026-06-17**: frozen-lock end-to-end, implementation tracked in `dependency_promotion` §
+> Phase 1.5), D11/D12 (cross-plan reconciles — D11 surfaced, decision pending), D16 (carve-breadth decision), and the
+> LOW-tier items D13/D15/D17–D25. The latter are **deferred for one of two reasons:** a code fix would need a PM-QG run
+> that contends with the active QG agent (D15/D18), or a markdown edit would force a 100–170-line prettier-reflow of a
+> hot, actively-edited foreign plan on commit (D13/D20/D24/D25). All captured per-item below — apply at triage / in a
+> quiet window.
 
 ---
 
@@ -299,8 +302,11 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 
 ## Findings checklist (triage handles)
 
-- [ ] D1/D10 🔴 DECISION — resolve the `uv.lock`/`--frozen` model; wire docs + CI to agree →
-      `uv_lock_frozen_model_contradiction_2026_06_15`
+- [ ] D1/D10 🔴 **DECISION RATIFIED 2026-06-17 (operator):** adopt the frozen-lock model end-to-end (`uv sync --frozen`
+      in CI + local, lock-as-SSOT flowing from LDR, external-only regen) — sequenced behind the LDR-landing
+      prerequisite. Decision recorded in `uv_lock_frozen_model_contradiction_2026_06_15` (status: decided);
+      implementation tracked as `- [ ]` todos in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09` §
+      "Phase 1.5". **Not yet implemented** (docs-only this pass).
 - [x] D5 ✅ — rewrote ci-cd-flow.md per-unit-staging-PR sections (Pass-2 block, Full-flow diagram, Agent-vs-Human
       Push-to-LDR + Promote rows) to the land-on-LDR / Tier-C-drain model — PM@235c5fd3b
 - [x] D2 ✅ — replaced the false "service-deps enforcement is DEAD" warning in CLAUDE.md with "LIVE (fixed 2026-06-11)"
