@@ -215,6 +215,7 @@ Result file at `plans/audit/results/infrastructure_master_audit_YYYY_MM_DD.md`. 
 
 ## Linked Results
 
-| Date       | Result file                                                                                       | Status                                                              |
-| ---------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 2026-06-01 | [infrastructure_master_audit_2026_06_01.md](../results/infrastructure_master_audit_2026_06_01.md) | First CI/CD-contract run — RED on branch-protection consistency (i) |
+| Date       | Result file                                                                                                     | Status                                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-01 | [infrastructure_master_audit_2026_06_01.md](../results/infrastructure_master_audit_2026_06_01.md)               | First CI/CD-contract run — RED on branch-protection consistency (i)                                                     |
+| 2026-06-17 | [cicd_pipeline_vs_plans_drift_audit_2026_06_17.md](../results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md) | Pipeline↔plans drift audit — 0 live regressions; 25 drift findings (3 need a decision, mostly doc/SSOT lag) for triage |
