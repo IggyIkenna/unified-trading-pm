@@ -312,6 +312,7 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
     `# type: ignore` comments. ruff clean; basedpyright on the emitter region clean (the residual 124 file-level errors
     are the pre-existing pandas/requests/argparse-`Any` baseline in the committed scan body — QG type-checks
     `tests/unit/`, not `scripts/`, so they are ungated and pre-date this work; not introduced here).
+- **2026-06-17** — Above three deltas **LANDED on LDR** at `e2e-testing@fc5cd0a` (rebased onto the LDR tip after a push-time race; file change intact). QG-green (sentinel d982ce0), ruff clean, no `# type: ignore`.
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
