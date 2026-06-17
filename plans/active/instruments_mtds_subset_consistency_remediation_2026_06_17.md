@@ -49,7 +49,44 @@ sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the a
 
 ## Phase C — file-level verification (Phase-2 sub-agents)
 
-- [ ] [AUDIT] P1. **Complete cross-year file sampling per AG** (operator's explicit ask): open sampled instruments +
-      MTDS parquets across venue×data_type×instrument_type×chain×league and ≥3 far-apart years; verify captured⇒rows,
-      empty⇒no-file, and instruments-file types match MTDS capture. Fold findings into the audit doc; add todos for new
-      gaps. — e2e-testing / data audit
+- [x] ✅ [AUDIT] P1. **Cross-year file sampling per AG — DONE** (5 per-AG sub-agents opened real GCS parquets across
+      2020/2023/2026). Reframes + new findings folded into the audit doc + Phase D below. Reframes: **F3** cefi
+      attempted_failed is ~1.3M legacy-recon NOISE + only ~88k genuine fetch-failure (not 1.4M); **F6** options ARE
+      captured (CME 8,602 opts/day, ES options_chain 20,956 rows) — the "thinness" is a typing artifact, REFUTED;
+      **F5** `date='all'` (2 rows) is by-design reference entities. Discarded one false sub-agent claim (cefi≠tradfi).
+
+## Phase D — file-level correctness findings (Phase-2 sub-agents, NEW)
+
+- [ ] [DATA] P1. **N1 — CEFI phantom `empty_confirmed` shadow rows** (~61,300, 57% of real-shard empties): two manifest
+      rows per cell (captured + bogus empty_confirmed w/ blank instrument_type) where the parquet exists with rows (e.g.
+      AVAXUSDT 2021-01-01 BINANCE-FUTURES = 943,196 rows but flagged empty). De-dup the empty shadow in the
+      canonicalisation walk; the captured row + GCS file are truth. — market-tick-data-service
+- [ ] [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty**: all 333 CME `SOURCE_RETURNED_ZERO`/empty dates are
+      Saturdays, but instruments writes a weekend carry-forward snapshot to GCS (11,526 rows incl 7,364 options) → ~1,079
+      dishonest-empty cells; INST index rows duplicated 2×/cell. Fix the weekend honest-absence classification +
+      de-dup. — instruments-service
+- [ ] [DATA] P0. **N3 — SPORTS league_id dropped by the consolidator (100% of captured)**: all 202,087 captured
+      MTDS-sports cells have NULL `league_id` though the GCS path (`league_id=BUNDESLIGA`) + row-level column ARE
+      populated. Propagate per-file league_id into the manifest row. ALSO stamp `source` on MTDS sports `trades` (73.7k
+      NULL — violates source= rule) + collapse venue case-dup API_FOOTBALL/`api_football`. — market-tick-data-service
+- [ ] [DATA] P2. **N4 — SPORTS instruments `instrument_count==0` on 194,356 captured rows** (per-league companion rows;
+      global count lands on one row). Confirm against shard grain; fix count attribution. — instruments-service
+- [ ] [DATA] P1. **N5 — DEFI temporally-impossible `vault_share_price` captured phantoms** (1,582 cells 2020–2023: MAKER
+      pre-2023, ETHENA pre-Feb-2024-launch; 2020-01-01 VAULT opened 0-row). These are captured-but-empty pre-launch
+      phantoms → reclassify to honest pre-launch absence (venue-launch-date-aware `record_zero_rows`). — market-tick-data-service
+- [ ] [CODE] P1. **N6 — DEFI dimension pollution / normalization**: `chain` column contains token-pair symbols
+      (`1INCH-ETH`/`ETH-USDC`/`WSTETH-ETH`); `instrument_type` case-dup `pool`(227,935)/`POOL`(158,431); `venue` dups
+      (CURVE vs CURVE-ETHEREUM, MORPHOVAULTS vs MORPHO_VAULTS vs MORPHO-ETHEREUM). Normalize at write + in the
+      canonicalisation walk so per-dimension grouping/denominators are correct. — market-tick-data-service
+- [ ] [DATA] P0. **F3 (reframed) — CEFI: re-classify ~1.3M legacy-recon `attempted_failed` rows**
+      (`LegacyBlankErrorReasonError` 763k + `LEGACY_THIRDKEY_DRIFT_RECON` 452k + `WITHIN_BOUNDS_EMPTY_RECLASSIFIED` 90k) in
+      the canonicalisation walk, AND backfill the ~88k GENUINE `VENUE_FETCH_FAILED`+`HTTP_429` cells. — market-tick-data-service
+- [ ] [CODE] P2. **F6 (reframed) — TRADFI option/instrument_type encoding**: unify the two options encodings
+      (`instrument_type=options_chain` vs `data_type=options_chain` w/ blank type) + stamp instrument_type on the 182k
+      blank-type cells (legacy path shapes). Not missing data — a typing fix. — market-tick-data-service
+- [ ] [INFRA] P3. **N7 — pipeline_mode migration tail** (dual `asset_group=`+`category=` keys; missing
+      `pipeline_mode=` partition; pred captured-max day only in bare shape). Cross-link to the pipeline_mode migration
+      plan — do NOT re-open here; track that the v9 `--apply` closes it. — (pipeline_mode migration plan)
+- [ ] [DATA] P3. **N8 — PRED index data_type label drift** (`prediction_canonical_question_group` vs GCS
+      `prediction_trades`/`trades`) + 1 blank-reason attempted_failed cell. Confirm intentional rollup label vs drift;
+      type the blank reason. — market-tick-data-service

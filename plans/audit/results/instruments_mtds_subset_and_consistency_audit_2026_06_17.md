@@ -69,12 +69,63 @@ captured.
 MTDS Ethereum captured 2020-01-01..19, before instruments-store-defi's first date (2020-01-20). Pre-genesis by ~19 days
 — confirm whether instruments genesis should be earlier or MTDS those days are spurious.
 
-## Phase 2 — file-level manifest-vs-reality (sub-agents, IN PROGRESS)
-Sampling spec: per AG, open instruments daily files + MTDS files across years (≥3 far-apart years), across
-venue/data_type/instrument_type/chain/league combos, esp. the F1/F4/F6 flagged combos + controls. Verify: captured cell ⇒
-file exists with rows; empty ⇒ no file/0 rows; instruments file lists the types/venues the manifest implies; MTDS
-data_types present match instrument_types listed (options listed ⇒ options_chain captured, etc.).
+## Phase 2 — file-level manifest-vs-reality (5 per-AG sub-agents, DONE — opened real GCS parquets across 2020/2023/2026)
+
+> **Cross-cutting caveat:** the v9 PROJECTED index drops `row_count` (0.0 for every captured cell), so `captured⇒rows>0`
+> was verified ONLY by opening parquets (sampled), not from the index field.
+> **Discarded false lead:** a sub-agent claimed the cefi-bucket projected index was "100% TradFi" — re-verified FALSE
+> (it is 3,886,859 cefi-venue rows incl KRAKEN-SPOT 329k). Not propagated.
+
+### Reframes / refutations of Phase 1
+- **F3 REFRAMED (cefi attempted_failed is mostly manifest-recon NOISE, not fetch failure).** Of 1.40M `attempted_failed`:
+  `LegacyBlankErrorReasonError` 762,805 + `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` 451,799 + `WITHIN_BOUNDS_EMPTY_RECLASSIFIED`
+  89,590 = ~1.30M legacy-recon artifacts; **genuine fetch failures are only `VENUE_FETCH_FAILED` 83,975 + `HTTP_429` 3,652 ≈ 88k (2.3%)**.
+  Action shifts from "backfill 1.4M" → "re-classify the ~1.3M legacy-blank/recon rows in the canonicalisation walk + backfill ~88k genuine."
+- **F6 REFUTED (we DO capture options).** CME instruments list options heavily (8,602/day 2023; 9,430/day 2025) AND MTDS
+  captures them — opened ES `instrument_type=options_chain` = 20,956 rows. CBOE lists only VIX index (no options to miss).
+  The "thin 3,287" was an `instrument_type`-count artifact; `data_type=options_chain` has **120,946** captured cells (with
+  blank instrument_type). Real issue = **typing inconsistency** (options split across two encodings) + the 182k blank
+  instrument_type, both from legacy GCS path shapes. NOT missing options.
+- **F5 PARTIALLY-REVISED.** The 6,869 blank-`capture_status` rows are real (malformed enumerator rows: blank data_type +
+  blank league_id, venues API_FOOTBALL/`api_football` case-dup). The `date='all'` is **2 rows = BY DESIGN** (TEAMS/VENUES
+  date-agnostic reference entities, captured) — NOT a defect.
+
+### NEW findings (file-level)
+- **N1 (P1, CEFI correctness) — phantom `empty_confirmed` SHADOW rows.** ~57% (61,300/106,869) of real-shard
+  `empty_confirmed` cells coincide with a `captured` row for the SAME date/venue/instrument/data_type — the manifest carries
+  TWO rows per cell (one captured w/ instrument_type, one bogus empty_confirmed w/ blank instrument_type). e.g. 2021-01-01
+  BINANCE-FUTURES book_snapshot_5 AVAXUSDT = `empty_confirmed` but the parquet has **943,196 rows**. The empty shadow is bogus.
+- **N2 (P1, TRADFI correctness) — CME weekend dishonest-empty.** ALL 333 CME `empty_confirmed`/`SOURCE_RETURNED_ZERO`
+  instrument-dates are **Saturdays**; instruments writes a weekend carry-forward snapshot to GCS (`venue=CME/instruments.parquet`
+  = 11,526 rows incl 7,364 OPTIONs on 2025-02-08) but the manifest records zero → ~1,079 dishonest-empty cells. INST index
+  rows duplicated 2×/cell.
+- **N3 (P0, SPORTS) — F4 is 100%, root = consolidator drops league_id.** ALL 202,087 captured MTDS-sports cells have NULL
+  `league_id` (not 2,107) — but the GCS hive path (`league_id=BUNDESLIGA`) AND the row-level `league_id` column ARE populated
+  in every file opened. The consolidator does not propagate per-file league into the manifest row. ALSO: MTDS `trades` (73.7k)
+  carry NULL `source` (violates the crosscutting `source=` provenance rule); venue case-dup API_FOOTBALL/`api_football`.
+- **N4 (P2, SPORTS) — 194,356 instruments captured rows with `instrument_count==0`** (per-league companion rows; the global
+  count lands on one row, per-league duplicates carry 0). Count-attribution smell to confirm against shard grain.
+- **N5 (P1, DEFI correctness) — temporally-impossible `vault_share_price` captured phantoms.** 1,582 captured cells 2020–2023
+  are ALL `vault_share_price` (VAULT 1,113 / MAKER 348 / FRAX 74 / ETHENA 47); MAKER pre-2023 + ETHENA pre-Feb-2024 (launch)
+  are impossible; the 2020-01-01 VAULT cell opened as a **0-row parquet** (captured⇒no-rows phantom). (F7 is the Ethereum subset of this.)
+- **N6 (P1, DEFI normalization) — dimension pollution.** `chain` column polluted with token-pair symbols (`1INCH-ETH`,
+  `ETH-USDC`, `WSTETH-ETH`); `instrument_type` case-dup `pool` (227,935) vs `POOL` (158,431); `venue` dups (CURVE vs
+  CURVE-ETHEREUM, MORPHOVAULTS vs MORPHO_VAULTS vs MORPHO-ETHEREUM). Breaks per-dimension grouping/denominators.
+- **N7 (P2, cross-AG) — pipeline_mode migration incomplete.** defi/pred/cefi paths still carry dual `asset_group=`+`category=`
+  keys and many lack the `pipeline_mode={mode}_{source}/` partition; pred's captured-max day exists ONLY in the bare/old shape
+  (readers must prefix-fallback or it reads missing). Tracked by the pipeline_mode migration plan — cross-link, don't re-open.
+- **N8 (P3, PRED) — index data_type label drift.** Index labels captured cells `prediction_canonical_question_group` but GCS
+  paths use `prediction_trades`/`trades`; 1 `attempted_failed` cell carries a blank (untyped) reason. Subset itself CLEAN.
+
+### Subset verdict (operator Q1), per AG
+- **cefi:** ❌ VIOLATION — Kraken (+Lighter/Pacifica/Extended) MTDS history with ~no instruments backing (F1).
+- **defi:** chain-subset OK, but ❌ temporally-impossible vault_share_price captured phantoms (N5/F7).
+- **tradfi:** ✅ subset OK (1 CME day); options ARE captured (F6 refuted).
+- **sports:** attribution moot — data IS league-attributed in files; manifest drops league_id (N3). No true data-subset violation.
+- **pred:** ✅ CLEAN (no captured-before-genesis).
 
 ## Progress Log
-- 2026-06-17: Phase 1 complete (full-index walk of all 10 projected indexes). Findings F1–F7 above. Phase 2 (file
-  verification) dispatched to per-AG sub-agents next.
+- 2026-06-17: Phase 1 complete (full-index walk, F1–F7). Phase 2 complete (5 per-AG sub-agents opened real GCS parquets
+  across 2020/2023/2026). Reframed F3 (recon-noise) + F6 (options ARE captured) + F5 (date='all' by design); escalated F4
+  to 100% w/ root cause; added N1–N8. Discarded one false sub-agent claim (cefi≠tradfi). Findings → wrapper plan
+  `instruments_mtds_subset_consistency_remediation_2026_06_17.md`.

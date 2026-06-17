@@ -241,7 +241,15 @@ the canon plan; track there, not as duplicate todos:
       sweep; also contains the separate per-service coverage errors tracked in the P2 follow-up below). VERIFIED in prod:
       rollup-run flipped 500→**200** (335s), and the **prod cron auto-refreshed BOTH** beta blobs (instruments + MTDS) at
       16:13 with zero manual intervention — self-healing every `*/10`. — deployment-api
-- [ ] [CODE] P2. **Per-service coverage `BucketNamingError`s surfaced by the rollup isolation fix (follow-up)** —
+- [x] ✅ [CODE] P2. **`features-cross-instrument` per-AG/prediction-kind bug FIXED + prod-verified** —
+      deployment-api@`c1aab6e` (build `61eb6e93`): the `ag=="prediction"` branch resolved kind-only
+      (`pred_kind if pred_kind else kind`), which for a per-AG kind with no `PREDICTION_KIND_MAP` entry raised
+      "asset_group= is required" → fixed in BOTH `defi.py` + `manifest.py` to resolve WITH `asset_group` when no
+      prediction-special kind. Verified in prod: cron rollup-run 200 (16:20/16:40), features-cross-instrument coverage
+      refreshes, ZERO `SERVICE_FAILED` for it in 40m. The SHARED services (features-calendar/ml-service) remain
+      honest-empty BY DESIGN (routing them through the DeFi reader = garbage; real cross-asset coverage = a dedicated
+      SHARED path, tracked in `instruments_mtds_subset_consistency_remediation_2026_06_17.md`). — deployment-api
+- [ ] [CODE] P3. **Per-service coverage `BucketNamingError`s surfaced by the rollup isolation fix (follow-up)** —
       after the isolation fix (deployment-api@b014ae9) the rollup sweep no longer crashes, but it now logs `SERVICE_FAILED`
       for cross-asset/edge services whose coverage build mis-resolves a bucket: (1) `features-calendar-service` /
       `ml-service` (SHARED pseudo-key → now honest-skipped to empty by the defi.py guard — they show no coverage until a
