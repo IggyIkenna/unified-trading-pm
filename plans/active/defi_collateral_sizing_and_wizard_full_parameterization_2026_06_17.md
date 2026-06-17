@@ -30,13 +30,13 @@ status: active
 The gap (issue doc): `staked_basis.py:219` rejects the slot when the perp venue won't take the LST; no
 deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_margin_buffer_pct`.
 
-- [ ] [SCRIPT] P1. **Build the USDC-collateral + margin-buffer down-size branch** in the staked-basis (and basis-perp)
+- [x] ✅ [SCRIPT] P1. (strategy-service@6e9164b1) **Build the USDC-collateral + margin-buffer down-size branch** in the staked-basis (and basis-perp)
       engine: when `venue_accepts_collateral(perp_venue, lst)` is False but the venue accepts a stable → deposit the
       stable + size the position down by a margin-call buffer (driven by `get_collateral_haircut` + the buffer), allow
       `stake_fraction < 1.0`, keep delta-neutral on the reduced notional. Replaces the hard reject. Wire (or delete +
       re-add) `per_venue_margin_buffer_pct`. Unit tests: Aster/Hyperliquid (USDC-only) → buffered down-sized position
       (not reject); Drift/Bybit (LST-accepting) → full LST-as-margin path unchanged. Repos: strategy-service + UTL margin.
-- [ ] [SCRIPT] P1. **(R2) Feed the down-size into the opportunity checker/ranker** — find the opportunity/oppty-scoring
+- [x] ✅ [SCRIPT] P1. (strategy-service@6e9164b1) **(R2) Feed the down-size into the opportunity checker/ranker** — find the opportunity/oppty-scoring
       surface (grep strategy-service/UTL for opportunity/scanner/ranker/edge-vs-cost); when a candidate basis requires
       stables-only collateral, the scored opportunity uses the REDUCED size + a cross-exchange-risk/dual-deposit capital
       cost, so it ranks below an equivalent full-collateral one. Tests assert the penalty. Repo: strategy-service (+ UTL).
