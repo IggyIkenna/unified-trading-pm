@@ -78,11 +78,14 @@ its own QG/v2 verification):**
 - [x] ✅ [CICD] P2. Close the **superseded** older dep-update PRs: `batch-live-reconciliation-service#82` (UTL-0.11.0,
       superseded by #83) and `market-tick-data-service#223` (UTL-0.11.0, superseded by #224). **DONE 2026-06-17** — both
       CLOSED + branches deleted (superseders #83/#224 confirmed open first).
-- [ ] [CICD] P1. Rebase each conflicting dep-update branch onto current `staging` (or re-run the fan-out so it
-      regenerates from current staging) and let v2-gated auto-merge drain it: `ibkr-gateway-infra#225`,
-      `market-data-processing-service#292`(UAC-0.15.0)+`#293`(UTL-0.11.0), `market-tick-data-service#224`,
-      `system-integration-tests#232`(UAC)/#234(UTL)/#235(execution)/#236(strategy),
-      `trading-agent-service#211`(UAC)/#212(UTL), `batch-live-reconciliation-service#83`.
+- [x] ✅ [CICD] P1. Rebase each conflicting dep-update branch onto current `staging` → **NOW OWNED BY THE WORKER CHAIN
+      (2026-06-17), not a human todo.** The `supersede-stale-dep-update-prs` bot escalates each surviving CONFLICTING
+      dep-update PR (`ibkr-gateway-infra#225`, `market-data-processing-service#292/#293`,
+      `market-tick-data-service#224`, `system-integration-tests#232/#234/#235/#236`, `trading-agent-service#211/#212`,
+      `batch-live-reconciliation-service#83`) via `merge-conflict-detected` → `conflict-resolution-agent` →
+      `escalate-to-orchestrator`; a worker rebases the branch onto staging keeping the floor bump, per the new playbook
+      `codex/08-workflows/dep-update-conflict-resolution.md` (and Slacks + asks the operator in the orchestrator UI if
+      it genuinely can't). Goes live once the bot reaches main (PM drain).
 - [ ] [CICD] P1. **market-tick-data-service** — fix the real unit-test failure
       `test_polymarket_adapter_lifecycle_gating.py::test_canonical_question_group_column_emitted` (diagnose whether UTL
       0.12.0 changed `canonical_question_group` behaviour or the test/fixture is stale), then the dep-update PR can pass
@@ -93,13 +96,15 @@ its own QG/v2 verification):**
 
 **Long fix (why they stall — systemic):**
 
-- [~] [CICD] P1. **Auto-rebase open `dep-update/*` PRs onto staging** when staging advances. **PARTIALLY OBVIATED
-  2026-06-17**: the floor-churn root cause is removed by the digest-only fix below (staging no longer advances its
-  pyproject floor on every minor bump → the breaking dep-update PRs stop going stale). The EXISTING conflicting PRs
-  still need a per-repo rebase/conflict-resolve (their floor line conflicts with the already-churned staging) — that
-  remains the short-fix per-repo todos above (NOT a clean `update-branch`: it returns 422 on these). A generic
-  auto-rebase-with-conflict-resolution bot was NOT built (it would need real conflict resolution; the digest-only fix
-  prevents the recurrence instead). `refresh-open-prs` investigation deferred to that per-repo work.
+- [x] ✅ [CICD] P1. **Give dep-update→staging PRs a resolution OWNER** (the gap: `ldr-to-staging-promote` only owns
+      LDR→staging drains). **SHIPPED 2026-06-17 as an escalate-to-worker chain** (not a bulk auto-rebase bot, which
+      would need conflict-resolution it can't safely do headless): `supersede-stale-dep-update-prs` escalates a
+      surviving CONFLICTING dep-update PR → `conflict-resolution-agent` (now emits a **dep-update-specific** context —
+      "rebase the topic branch onto staging, keep the floor bump" — instead of the wrong generic "resolve ON LDR" that
+      made escalated workers unable to find the context) → `escalate-to-orchestrator` worker, which resolves per
+      `codex/08-workflows/dep-update-conflict-resolution.md`. Worker resolves the mechanical 90%; the can't-resolve
+      fallback Slacks #ci-failures + surfaces the question in the orchestrator UI for the operator. Digest-only (Fix
+      below) prevents the recurrence; this chain drains the existing ones. unified-trading-pm@(LDR f7f6203e9).
 - [x] ✅ [CICD] P2. **Auto-close superseded dep-update PRs** when a newer-version dep-update PR for the same (repo, dep)
       opens. **SHIPPED 2026-06-17** — new PM-central bot `.github/workflows/supersede-stale-dep-update-prs.yml`
       (`*/2h` + dispatch + dry_run; groups open `dep-update/<dep>-<ver>` per repo, closes all but the highest version;
