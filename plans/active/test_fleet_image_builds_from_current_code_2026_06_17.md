@@ -131,10 +131,13 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 `alerting-service`. Then the rest: `strategy-service`, `market-tick-data-service`, `market-data-processing-service`,
 `features-*`, `ml-*`, `client-reporting-api`, `fund-administration-service`, `batch-live-reconciliation-service`,
 `greeks-service`, `trading-agent-service`, `deployment-service`.
-- [ ] [INFRA] P1. Local build each service against the fresh base digest; fix breakage; log findings. One at a time.
-- [ ] [INFRA] P2. GCP build each via `gcloud builds triggers run <repo>-build --branch main --region asia-northeast1`
-  (note: builds main HEAD — fine, we're testing the mechanism, not shipping). Watch to SUCCESS; confirm AR push. STOP +
-  diagnose on the first systemic failure class before continuing.
+- [x] [INFRA] P1. Local-build the services — **DONE: 9/15 build locally** (6 Pattern-A standalone +
+  alerting/execution/greeks with a 2-sibling context). The other 6 (strategy, batch-live-reconciliation, fund-administration,
+  market-data-processing, ml, trading-agent) are **Pattern-B-bespoke** → left GCP-authoritative; normalization filed in
+  `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md`. See findings log for the full matrix.
+- [ ] [INFRA] P2. **(GCP — deferred to 2026-06-18 AM, operator)** GCP build each via `gcloud builds triggers run
+  <repo>-build --branch main --region asia-northeast1`. Watch to SUCCESS; confirm AR push. STOP + diagnose on the first
+  systemic failure class. Start with the base libs (LDR triggers) + the non-cloned libs (cloud-interface, internal-contracts).
 - [ ] [BUG] P2. For every stale base-digest pin found, file the fix (refresh `BASE_IMAGE_DIGEST` ARG) in the owning
   repo — but only AFTER confirming the dependency-update fan-out isn't the intended owner; coordinate, don't fork it.
 
