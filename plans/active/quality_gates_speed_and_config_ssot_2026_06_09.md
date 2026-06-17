@@ -338,10 +338,10 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
 > tables, TIER-B via a new `[tool.quality-gates]` table that base-service.sh parses — so the per-repo stub collapses
 > toward a one-line `source base-service.sh`.
 
-- [~] [DESIGN] P0. TIER-A rule: base must STOP passing CLI flags that shadow toml (`--cov-fail-under`, explicit pytest
-  test dir vs `testpaths`, bandit without `-c`). For each, either drop the override (let the tool read toml) or pass the
-  tool its own config explicitly. Reconcile each drifting repo to ONE honest value FIRST. **PRECONDITION DONE
-  2026-06-15**: all 6 coverage drifts reconciled (toml=stub).
+- [x] ✅ [DESIGN] P0. TIER-A rule RESOLVED (2026-06-17): base must STOP passing CLI flags that shadow toml. All three
+  resolved — `--cov-fail-under` DROPPED (toml `fail_under` is the home), bandit `-c pyproject.toml` ADDED (toml
+  `[tool.bandit]` honored), pytest test-dir KEPT (audited — it's a deliberate unit-vs-full narrowing, not a shadow).
+  **PRECONDITION DONE 2026-06-15**: all 6 coverage drifts reconciled (toml=stub). Details in the sub-items below.
   - [x] ✅ **`--cov-fail-under` DROPPED (2026-06-17, unified-trading-pm@1a935e21e)** — both bases (`base-service.sh` +
         `base-library.sh`) no longer pass `--cov-fail-under` on the pytest CLI; pytest-cov reads
         `[tool.coverage.report] fail_under` from toml = the single home. **Verified**: (a) mechanically — synthetic repo
@@ -352,9 +352,15 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
         `MIN_COVERAGE` and already treats toml `fail_under` as "the real gate". PM QG re-verified green post-flip.
   - [x] ✅ **bandit `-c` AUDITED safe (2026-06-17)** — see § "Per-repo `[tool.bandit] skips` audit"; adding
         `-c pyproject.toml` suppresses 0 real findings (the actual flag-add is bundled into the residual flip below).
-  - [ ] **Residual TIER-A flips still to land**: (a) bandit invocation → add `-c pyproject.toml` (audit-confirmed safe);
-        (b) explicit pytest test-dir (`tests/unit/` arg) vs `testpaths` — needs the same per-repo `testpaths`-presence
-        audit `--cov-fail-under` got before dropping the CLI arg.
+  - [x] ✅ **Residual TIER-A flips RESOLVED (2026-06-17)**:
+        - **(a) bandit `-c pyproject.toml` ADDED** to both bases (`unified-trading-pm@cd480ef68`) — `[tool.bandit]` is
+          now honored from toml. Behavior-preserving (differential on PM: 1 issue with AND without `-c`, both excluded
+          by `BANDIT_EXTRA_ARGS`; the 2 skips-carrying repos are moot in `SOURCE_DIR`). PM QG green.
+        - **(b) pytest test-dir → WON'T-DO (audited, NOT a shadow).** Every repo declares `testpaths = ["tests"]` in
+          toml, but the base deliberately runs the NARROWER `tests/unit/` (`PYTEST_UNIT_DIR`, the credential-free unit
+          subset under `--block-network`). Dropping the explicit arg would let pytest collect the full `tests/` incl.
+          integration/network tests → break the local gate. The stub≠toml here is a deliberate functional narrowing
+          (unit vs all), not a CLI shadow of the same value — so there is nothing to reconcile. Kept the explicit arg.
 - [ ] [DESIGN] P0. Design `[tool.quality-gates]` table schema for TIER-B knobs (e.g. `min_coverage`, `run_integration`,
       `pytest_workers`, `max_duration`, `codex_max_violations`, `pytest_unit_dir`, exclude-package lists,
       pip-audit-ignores). base-service.sh reads it (single toml parse) instead of stub bash vars. Keep a back-compat
