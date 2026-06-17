@@ -75,6 +75,12 @@ plans"). Two findings are genuine _unresolved contradictions_ that need an opera
 plan-hygiene (banner/migrate/archive/frontmatter); 4 are small code fixes; 2 are "note only / latent". **0 live pipeline
 regressions found.**
 
+> **Progress 2026-06-17 (autonomous):** D2–D9 — all 8 of the no-decision doc/SSOT-truth fixes — SHIPPED (PM@235c5fd3b +
+> PM@eeece9802); ci-cd-flow.md + CLAUDE.md now match the live pipeline. **Still open:** D1/D10 (the `--frozen` model
+> decision — operator), the cross-plan reconciles (D11–D14), the small code/comment fixes (D15–D19 — deferred to avoid a
+> PM-QG run contending with the active QG agent), and plan hygiene/archival (D20–D25). See the Findings checklist for
+> per-item status.
+
 ---
 
 ## Drift register (severity-ranked)
@@ -306,10 +312,13 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [ ] D22 🟠 — migrate residual todos out of semver_version_bump_skip_ci + cicd_workflow_sprawl_audit, then archive
 - [ ] D24 🟠 — delete dead `feature-branch-to-staging.yml` (2 dirs) + `staging-version-gate.yml`; fold into sprawl
       remediation
-- [ ] D6 🟡 — ci-cd-flow.md branch-model table: replace `tab/hk/<N>` row with Path-B
-- [ ] D7 🟡 — ci-cd-flow.md: delete the wrong "post-cutover LDR retired" block (L918-929)
-- [ ] D8 🟡 — ci-cd-flow.md L620: kill-switch arming = protective-autonomous (align to CLAUDE.md)
-- [ ] D9 🟡 — ci-cd-flow.md L756-796: refresh/archive the 2026-06-01 "being repaired" snapshot
+- [x] D6 ✅ — branch-model table: `tab/hk/<N>` row → Path-B reference-clone; staging who-merges → Tier-C drain —
+      PM@eeece9802
+- [x] D7 ✅ — corrected the wrong "post-cutover — LDR retired" block (LDR is the trunk, runs no server QG; drain PR
+      does) — PM@eeece9802
+- [x] D8 ✅ — kill-switch arming row → protective arming autonomous, resume-within-matrix (manual_unkill human-only) —
+      PM@eeece9802
+- [x] D9 ✅ — bannered the 2026-06-01 "being repaired" operational snapshot as HISTORICAL/superseded — PM@eeece9802
 - [ ] D15 🟡 — `GOOGLE_CLOUD_PROJECT`→`GCP_PROJECT_ID` in promotion_lag_monitor.py + reconcile_release_tags.py
 - [ ] D16 🟡 — decide check_strict_quickmerge `scripts/` carve breadth (fix doc or scope code to PM)
 - [ ] D17 🟡 — (note) STAGING_PENDING rank-equivalence vs ON_STAGING_STATUSES exclusion
