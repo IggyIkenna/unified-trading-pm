@@ -1738,3 +1738,12 @@ Key for Harsh's agents:
 - `alerting_service_live_rules_2026_05_07.md` → ARCHIVED; Telegram token rotation + rehearsal now in
   `observability_master` P3
 - Daily hygiene cron now live (05:00 UTC). If it pings your inbox, fix violations and push to live-defi-rollout.
+
+---
+
+### [plan-reconciler · agt-3591cc] 2026-06-17 — daily reconciliation: 2 doc-hygiene findings filed
+
+Plan-of-record: `plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md`.
+(1) Stale codex pointer `09-strategy/operational/pnl-attribution.md` (missing) in 4 referrers incl. CLAUDE.md:654 + SUB_AGENT_MANDATORY_RULES.md:326 → correct path `architecture-v2/cross-cutting/pnl-attribution.md`.
+(2) Abandoned `plans/active/INDEX.md` — 99-entry drift, superseded by the master-plan auto-inventory.
+Corpus otherwise clean: 0 hard hygiene failures, no verified missed flips, no contradictions. 26 grace plans skipped.

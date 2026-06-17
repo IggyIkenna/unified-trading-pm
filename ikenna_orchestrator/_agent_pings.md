@@ -3526,3 +3526,12 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
 AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
 `plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+### [plan-reconciler · agt-3591cc] 2026-06-17 — daily reconciliation: 2 doc-hygiene findings filed
+
+Plan-of-record: `plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md`.
+(1) Stale codex pointer `09-strategy/operational/pnl-attribution.md` (missing) in 4 referrers incl. CLAUDE.md:654 + SUB_AGENT_MANDATORY_RULES.md:326 → correct path `architecture-v2/cross-cutting/pnl-attribution.md`.
+(2) Abandoned `plans/active/INDEX.md` — 99-entry drift, superseded by the master-plan auto-inventory.
+Corpus otherwise clean: 0 hard hygiene failures, no verified missed flips, no contradictions. 26 grace plans skipped.
