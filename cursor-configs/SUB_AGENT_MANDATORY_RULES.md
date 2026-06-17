@@ -399,7 +399,11 @@ pointer before acting on any of them.
 - **Watcher coverage (2026-06-10)**: a background watcher must reach a TERMINAL verdict on every path (watch
   `state != OPEN` not the success marker; PRINT a verdict line — silence must be impossible), and before any wait >5 min
   NAME the mechanism that fires the next hop (`rg` the trigger chain) — can't name it = diagnose, don't wait; one
-  deadline = one cadence interval, then stop + diagnose, never re-arm after a silent expiry. SSOT:
+  deadline = one cadence interval, then stop + diagnose, never re-arm after a silent expiry. **The verdict line must be
+  MEASURED, never a hardcoded conclusion stapled onto a proxy (2026-06-17)**: every clause after the colon must
+  correspond to a variable the loop actually queried this iteration — `echo "PR MERGED — lock released"` when you only
+  read the PR state (not the lock) is a FALSE conclusion ("PR merged" ≠ "chain complete"; staging-merge ≠ lock-release);
+  if the goal is "lock released" the check reads the lock flag, if "fix on main" it greps `main`. SSOT:
   `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § Watcher coverage.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **QG-sweep**: batch the GATE not the commits; shared-host ≤2 full QGs at once (governor floor raised 1→2, 2026-06-05);

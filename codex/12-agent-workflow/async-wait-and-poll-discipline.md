@@ -130,5 +130,24 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
    - When the mover turns out not to exist, that is a FINDING (file it per Findings Triage) — the wait converts into a
      fix or a sanctioned manual fallback, as bug #11 did (per-repo staging→main PRs).
 
+3. **False-conclusion sin — a verdict the watcher never MEASURED (codified 2026-06-17).** Incident: a watcher's terminal
+   line was `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released";;`. `PR#81 MERGED` was a genuinely-true
+   measurement, but `— lock released` was a **hardcoded string stapled onto the success echo** — the watcher never read
+   the lock. It conflated "the proxy I watched reached its state" with "the whole chain completed". They were different
+   events: the PR merged into **staging**, while the breaking-cascade `staging_status.locked` flag was a SEPARATE state
+   still `True` ("SIT running"), gated on a downstream SIT the PR-merge said nothing about. The session reported "lock
+   released"; the lock was still held. Rules:
+   - **The verdict line must be DERIVED from measuring the real terminal state, never a pre-decided interpretation of a
+     proxy signal.** If the goal is "lock released", the terminal check reads the lock flag
+     (`grep -q 'locked=False'`), not a different signal you *believe* implies it. If the goal is "fix on main", grep the
+     fix on `main` — don't infer it from a staging-PR merge.
+   - **Name the end-state, then measure THAT.** "PR merged", "staging green", "SIT passed", "lock released", "content on
+     `main`" are distinct checkpoints in one pipeline — a watcher proves only the checkpoint it literally queries. Echo
+     only what you measured: `RESULT: PR#81=MERGED (lock + main NOT yet verified)`, not `RESULT: … — lock released`.
+   - **No editorial adjectives in the echo.** Every clause after the colon must correspond to a variable the loop
+     actually read this iteration. If you didn't query it, you may not assert it — downstream (and the operator) read
+     the verdict line as ground truth.
+
 Composes with: Poll cadence + stall-intervention (above) — a flat metric and a silent watcher are the same smell;
-Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running" until a verdict line says which.
+Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running", and "proxy reached its state" ≠
+"chain completed", until a verdict line says which from a real measurement.
