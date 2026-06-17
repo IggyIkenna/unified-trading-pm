@@ -300,13 +300,23 @@ Base runs each tool from the repo root with no explicit `-p`/`--config`, so each
 > tables, TIER-B via a new `[tool.quality-gates]` table that base-service.sh parses — so the per-repo stub collapses
 > toward a one-line `source base-service.sh`.
 
-- [ ] [DESIGN] P0. Decide the TIER-A rule: base-service.sh must STOP passing CLI flags that shadow toml
-      (`--cov-fail-under`, explicit pytest test dir vs `testpaths`, bandit without `-c`). For each, either drop the
-      override (let the tool read toml) or pass the tool its own config explicitly. Reconcile each of the 7 drifting
-      repos to ONE honest value FIRST (a flip with no reconciliation reds MTDS/MDPS/alerting and silently loosens
-      uta/SIT — see Phase 0 matrix). **PRECONDITION DONE 2026-06-15**: all 6 coverage drifts reconciled (toml=stub) —
-      see Finding #1 ✅ banner + § "Shipped"; the `--cov-fail-under` flag-drop is now safe (no loosen/red). Remaining
-      TIER-A flags (pytest test-dir, bandit `-c`) still need the same audit before their drop.
+- [~] [DESIGN] P0. TIER-A rule: base must STOP passing CLI flags that shadow toml (`--cov-fail-under`, explicit pytest
+      test dir vs `testpaths`, bandit without `-c`). For each, either drop the override (let the tool read toml) or pass
+      the tool its own config explicitly. Reconcile each drifting repo to ONE honest value FIRST. **PRECONDITION DONE
+      2026-06-15**: all 6 coverage drifts reconciled (toml=stub).
+  - [x] ✅ **`--cov-fail-under` DROPPED (2026-06-17, unified-trading-pm@1a935e21e)** — both bases (`base-service.sh` +
+        `base-library.sh`) no longer pass `--cov-fail-under` on the pytest CLI; pytest-cov reads
+        `[tool.coverage.report] fail_under` from toml = the single home. **Verified**: (a) mechanically — synthetic repo
+        with only toml `fail_under=99` + no CLI flag → pytest exits 1 "total of 50 < fail-under=99", so toml IS
+        enforced; (b) behavior-preserving fleet-wide — pre-flip sweep of all 25 repos confirmed every repo sourcing the
+        base declares toml `fail_under` == its stub `MIN_COVERAGE` (zero drift, none absent), so the effective gate value
+        is unchanged. `coverage-floor-guard.sh` still enforces the system floor (70) + signed exceptions against
+        `MIN_COVERAGE` and already treats toml `fail_under` as "the real gate". PM QG re-verified green post-flip.
+  - [x] ✅ **bandit `-c` AUDITED safe (2026-06-17)** — see § "Per-repo `[tool.bandit] skips` audit"; adding
+        `-c pyproject.toml` suppresses 0 real findings (the actual flag-add is bundled into the residual flip below).
+  - [ ] **Residual TIER-A flips still to land**: (a) bandit invocation → add `-c pyproject.toml` (audit-confirmed safe);
+        (b) explicit pytest test-dir (`tests/unit/` arg) vs `testpaths` — needs the same per-repo `testpaths`-presence
+        audit `--cov-fail-under` got before dropping the CLI arg.
 - [ ] [DESIGN] P0. Design `[tool.quality-gates]` table schema for TIER-B knobs (e.g. `min_coverage`, `run_integration`,
       `pytest_workers`, `max_duration`, `codex_max_violations`, `pytest_unit_dir`, exclude-package lists,
       pip-audit-ignores). base-service.sh reads it (single toml parse) instead of stub bash vars. Keep a back-compat
