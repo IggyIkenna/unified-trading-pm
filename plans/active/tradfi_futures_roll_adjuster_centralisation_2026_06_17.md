@@ -81,12 +81,14 @@ SSOT — consumed by **features (TA), ML (signal), strategy (roll translation), 
 
 ## Phase todos
 
-- [ ] [MTDS] P1. Wire Massive futures flat-files into the tradfi dispatch (`umi_tick_provider` Massive route) so
+- [x] [MTDS] P1. Wire Massive futures flat-files into the tradfi dispatch (`umi_tick_provider` Massive route) so
       per-contract CME futures OHLCV reaches `processed_candles/…/venue=CME/`; unit-test the routing. Repo:
-      market-tick-data-service. (R5-fix-6 → WIRE.)
-- [ ] [MTDS] P1. `us_futures_cme` bulk-backfill ingester as a production CLI (resolve_bucket_name / UCI /
+      market-tick-data-service. (R5-fix-6 → WIRE.) — market-tick-data-service@0962bad | QG ✅ 27 tests pass |
+      `_umi_massive._route_massive` + source="massive" intercept in `fetch_tick_data_for_venue`
+- [x] [MTDS] P1. `us_futures_cme` bulk-backfill ingester as a production CLI (resolve_bucket_name / UCI /
       `record_captured(source="massive")`; interval-aware right-edge via `compute_bar_close_boundary`). Repo:
-      market-tick-data-service.
+      market-tick-data-service. — market-tick-data-service@0962bad | QG ✅ |
+      `MassiveFuturesBackfillHandler` (`--operation massive-futures-backfill`), `BATCH_MASSIVE` pipeline_mode
 - [ ] [MDPS] P1. Promote `build_continuous_es` → MDPS `--operation build-continuous` continuous-contract stage (Panama
       core + active_contracts SSOT, UCI/resolve_bucket_name, batch=live, manifest+honest-absence). Repo:
       market-data-processing-service.
