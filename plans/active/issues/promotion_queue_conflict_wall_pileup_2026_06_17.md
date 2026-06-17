@@ -301,11 +301,16 @@ wall" triage queue. Direct measurement (`git diff --name-only origin/staging ori
       `stuck_class=None`, dropped from the queue; remaining stuck PRs all `content_identical=False` (genuinely
       content-bearing). 21 unit tests (2 new guard cases incl. the CONFLICTING-but-identical #101 case); basedpyright clean;
       QG green. `repo_ci.py` / `_repo_ci_{stuck,github,types,mocks}.py` + `test_repo_ci_stuck.py`. SSOT § Class D.
-  - [ ] [CICD] P2 (residual). **deployment-ui `RepoCi.tsx` per-row "N commits behind" TEXT** still renders `ahead_by`
-        prominently for the LDR↔staging↔main columns. The backend `deltas` carry the honest `files_changed`; the UI should
-        lead with the net file-delta (render "in sync (squash skew)" when `files_changed==0` despite `ahead_by>0`), like the
-        LDR→main delta column already does. Frontend-only display polish — the operationally-painful phantom-stuck queue is
-        already fixed above. Target: `deployment-ui` (Repos CI page). [UI] — needs `pw:L2` evidence.
+  - [x] ✅ [CICD] [UI] P2 (residual). **deployment-ui RepoCi.tsx now surfaces per-hop content deltas — SHIPPED 2026-06-17**
+        — deployment-ui@b7e57b4 | pw:L2 ✓ (218 smoke passed; vitest repoCi 23/23) | regression:
+        tests/smoke/repos-tab.spec.ts. The detail PromotionPipeline strip showed only ONE delta via a bare
+        `find(d => d.base === "main")`, which ambiguously matched BOTH the staging→main and LDR→main legs (returning the
+        staging→main leg for the LDR→main slot — a latent mislabel bug). Now it surfaces all THREE promotion hops
+        (LDR→staging, staging→main, LDR→main) the backend already computes, each via `deltaLabel` so it **leads with the
+        honest `files_changed`** and renders "in sync (squash skew)" when `files_changed==0` despite `ahead_by>0` — making
+        the squash-accounting noise legible instead of a fake backlog (the operator's "199 commits behind" illusion). The
+        regression spec asserts all three legs render + that the LDR→main slot shows the 4-file main←LDR delta (not the
+        1-file staging→main), so reverting either the staging legs or the ambiguous finder fails the test.
 - [x] ✅ [CICD] P1. **staging→main perpetual-conflict — durable fix SHIPPED 2026-06-17** (unified-trading-pm@5a1a77642,
       new `.github/workflows/staging-conflict-ldr-main-fallback.yml`, LDR → drains to main). Chose **option (b)** (the
       manually-proven UAC#353/UTL#376 path) over option (a) — a per-repo `main-backmerge-to-staging` template would be a
@@ -364,3 +369,18 @@ residual **manually** (operator-directed) and surfaced a new systemic gate:
       conditional job/environment-protection rule or a GitHub-side transient. Now NON-URGENT — L324's watcher recovery
       makes it self-healing — but the root should be understood + removed so the recovery isn't needed. Target:
       `quality-gates-v2.yml` job/environment conditions. Provenance: 2026-06-17.
+- [ ] [UI] P3. **deployment-ui unit suite has a FLAKY jsdom-teardown `ReferenceError: window is not defined`** in
+      `tests/unit/components/DataStatusDrilldown.test.tsx` (an async unhandled error AFTER jsdom teardown — vitest flags it
+      "might cause false positive"; the file already carries `// @vitest-environment jsdom` and `vite.config` sets jsdom, so
+      it is NOT a missing-env bug). Observed 2026-06-17: failed one QG run, PASSED the immediate re-run (non-deterministic).
+      `vitest.config.ts` already notes a related jsdom/html-encoding-sniffer ESM upstream issue. Fix: pin down the
+      async leak (a timer/promise resolving post-teardown that touches `window`) and either await/clear it in the test or
+      guard the module. Low-urgency (a re-run is green) but it intermittently reds the deployment-ui QG. Target:
+      `deployment-ui` `tests/unit/components/DataStatusDrilldown.test.tsx` + `vitest.config.ts`. Provenance: L294 QG run.
+- [ ] [CICD] P3. **playwright smoke `reuseExistingServer:true` reuses a STALE non-mock dev server on :5183**, so every
+      repo-detail-drilldown smoke (~17 specs) fails "element(s) not found" when a non-mock deployment-ui dev session is
+      already up on :5183 (the operator's local stack). The detail-fetch hits the live backend instead of the mock. Verified
+      2026-06-17: identical failures on UNTOUCHED detail specs; all 218 pass against a FRESH mock server on a spare port
+      (`PLAYWRIGHT_BASE_URL=http://localhost:5191`). Fix: make `webServer.url`/`reuseExistingServer` honor a mock-mode probe
+      (only reuse a server that reports mock mode) OR default the smoke run to a dedicated spare port. Target: `deployment-ui`
+      `playwright.config.ts`. Provenance: L294 pw:L2 run.
