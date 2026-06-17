@@ -178,3 +178,28 @@ dep-update/staging→main PRs (Class B/C) + PM #387 drain on their armed auto-me
 
 **If the re-triggered v2 does NOT clear:** the tags are reversible (`git push origin :v0.13.0`); the clone falls back
 via a different path → escalate to the operator (this is the boundary). NOT force-syncing main blind at depth (rule 11).
+
+### CORRECTION (2026-06-17) — the PM-drain blocker is a FLAKY basedpyright Unknown-cascade, NOT a stale tag
+
+The "cut fresh tags" hypothesis was WRONG and is REVERTED (UTL→v0.10.0, UAC→v0.14.0). Evidence: a PM v2 run WITH fresh
+deps installed (`unified-trading-library==0.13.0` + `unified-api-contracts==0.18.0` built from the file:// clone) STILL
+failed typecheck with the SAME ~3000 errors. The errors are `reportAny`/ `reportUnknown` on PM's own
+`json.loads`/`dict.get` across many scripts — **dep-version-independent**.
+
+**Actual root (documented at `scripts/quality-gates-base/base-service.sh:312-319`):** a basedpyright **Unknown-type
+CASCADE** — when the workspace libs (UTL/UAC) are not resolved into the `.venv` that basedpyright reads (`venv=".venv"`;
+LOCAL_DEPS can land outside it), basedpyright degrades _all_ types to `Unknown` → thousands of spurious
+`reportUnknown*`/`reportAny`. It is **FLAKY per-run** (`0d51af1e` typecheck =success at 01:36; `cc1376fc`→`14ab1a12`
+=failure since) and **fleet-wide** (every repo's typecheck depends on its deps resolving into `.venv`). NOT introduced
+by this session (the failing files are foreign/pre-existing).
+
+**Implication — NOT "stuck forever":** because it is FLAKY (not deterministic), a re-run that lands the deps in `.venv`
+goes green, and `ldr-to-main-promote` (\*/15) + the v2 re-dispatch keep retrying → the drain CONVERGES when a
+green-typecheck run aligns with a mergeable (post-back-merge) #387 window. The conflict-wall fixes are all on LDR and
+ride that convergence.
+
+- [ ] [CICD] P1. **Durable fix for the basedpyright Unknown-cascade flake** (`base-service.sh` typecheck slice):
+      guarantee the workspace deps (UTL/UAC editable) are installed into the SAME `.venv` basedpyright reads before the
+      type-check step, and fail-loud (not Unknown-cascade) if they are not. Fleet-wide. **Big finding — CI-infra.** This
+      is the real keystone behind the whole promotion jam (it reds every repo's v2 typecheck on a bad-luck dep-install
+      run). Separate, dedicated investigation — NOT 3000 hand-fixes.
