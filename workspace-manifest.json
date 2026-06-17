@@ -80,7 +80,7 @@
     "system-integration-tests": "0.6.0",
     "unified-api-contracts": "0.15.0",
     "unified-trading-library": "0.11.0",
-    "unified-trading-pm": "1.2.148",
+    "unified-trading-pm": "1.2.149",
     "market-data-processing-service": "0.6.0",
     "e2e-testing": "0.6.0",
     "agent-orchestrator": "0.10.0",
@@ -1797,7 +1797,7 @@
     "execution-service": "0.12.0",
     "system-integration-tests": "0.11.0",
     "ml-service": "0.7.0",
-    "deployment-api": "0.13.0",
+    "deployment-api": "0.16.0",
     "batch-live-reconciliation-service": "0.7.0",
     "fund-administration-service": "0.4.1",
     "alerting-service": "0.9.0",
@@ -1837,9 +1837,9 @@
       "version": "0.7.0"
     },
     "deployment-api": {
-      "branch": "staging",
-      "sha": "433280ba6f322b06c555ea5171eb74ca853e4a84",
-      "version": "0.13.0"
+      "version": "0.16.0",
+      "sha": "aaad381c7debf8259a118c753fa2a4d920950167",
+      "branch": "staging"
     },
     "batch-live-reconciliation-service": {
       "branch": "staging",
