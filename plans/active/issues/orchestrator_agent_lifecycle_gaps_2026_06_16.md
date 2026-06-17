@@ -2,10 +2,11 @@
 title: "Orchestrator agent-lifecycle gaps — reaper skips stale records + central-VM VM_ID config drift"
 created: 2026-06-16
 status: active
-priority: P2
+priority: P1
 locked_by: live-defi-rollout
 source:
   - 2026-06-16 review-agent reliability work (restore-on-ping / stale-extension / tmux_session / hung-respawn chain)
+  - 2026-06-17 LIVE INCIDENT — account-pool headroom exhaustion starved all escalation spawns + froze the main agent (Gap 6)
 parent_epic: orchestrator_master
 ---
 
@@ -100,6 +101,78 @@ file, not the canonical `agent-orchestrator/data/config/backlog.yaml`.
 - [ ] [CONFIG] P2. Repoint `ORCHESTRATOR_BACKLOG` to the canonical `agent-orchestrator/data/config/backlog.yaml` (or
       drop the override so it defaults there) on the central VM; migrate any live runtime backlog; verify regen writes
       the canonical path. Repo: agent-orchestrator (config) + deployment-service (VM provisioning).
+
+### Gap 6 — account-pool headroom exhaustion starves ALL escalation spawns + freezes the main agent; abandon path emits a misleading "Auto-respawn FAILED slot 0" alert (LIVE INCIDENT 2026-06-17)
+
+**Trigger**: two Slack pages 2026-06-17 09:04 UTC — `escalation agt-753352 abandoned after 24h queued` (features-service
+`ldr_qg_failure`) + `escalation agt-705557 abandoned after 24h queued` (fund-administration-service `ldr_qg_failure`),
+both rendered under a `:rotating_light: Auto-respawn FAILED slot 0` header.
+
+**Root cause (verified on the central VM `agent-orchestrator-vm` / `i-0c9b283b…` state.db + tmux 2026-06-17 ~11:00
+UTC)**: the Claude **account pool is exhausted**, so `autospawn._pick_headroom_account()` returns `None` for long
+stretches. Ceilings are `weekly < 80%` AND `5h < 50%` (`autospawn.DEFAULT_WEEKLY_PCT_CEILING=80` /
+`DEFAULT_FIVE_HOUR_PCT_CEILING=50`); live `account_usage`:
+
+| account | weekly% | 5h% | rate_limited_until | status | verdict |
+| --- | --- | --- | --- | --- | --- |
+| sub-a-ikenna | 14 | 31 | **2026-06-17 14:00** | healthy | headroom, but RATE-LIMITED until 14:00 → excluded |
+| sub-b-iggy2london | **98** | 71 | 2026-06-21 | healthy | over weekly ceiling + RL 4 days → excluded |
+| sub-c-ikenna-odum | **87** | 1 | (elapsed) | healthy | over weekly ceiling → excluded |
+| sub-d-odum1default | **100** | 21 | none | healthy | over weekly ceiling → excluded |
+| harsh-primary | — | — | — | **auth_failed since 2026-06-10** | excluded |
+
+→ every account filtered out → `pick_headroom_account → None` → **escalations cannot dispatch**. Live queue: **39
+queued, 19 abandoned, 7 resolved**; 20 queued carry `last_error="no headroom setup-token account"`. The FIFO-head row
+(`agt-3bd816`) shows **attempts=230** — the AutoSpawnLoop `retry_queued_escalations` IS running and hammering the head
+every tick, always failing headroom, then `break` (so newer rows stay `attempts=0`). Abandoned set includes **real,
+silently-dropped walls**: `main_ci_red` (SIT / fund-admin), `merge_conflict` (PM ×2), `ldr_qg_failure` (e2e ×6,
+fund-admin ×5, features ×2, strategy ×2, …).
+
+**Consequence — the "agent stuck for 24h"**: the main orchestrator agent (`orch-agent-main`, tmux session up since
+2026-06-16 12:01) hit its account's usage cap and is **frozen at the interactive Claude CLI modal** "What do you want to
+do? → 1. Stop and wait for limit to reset / 2. Upgrade your plan" (last useful output 03:16 UTC). `main_agent_keeper`
+rotates the main agent onto a headroom account — but there is none, so it cannot recover and the agent wedges on a modal
+that won't auto-dismiss even after the limit resets.
+
+**Why it matters**: the orchestrator's entire CI self-healing loop (escalation dispatch + main-agent plan-health) is
+down whenever the account pool has no headroom — and the operator is paged with a **misleading** signal that points at
+the wrong fix. `escalation.retry_queued_escalations` calls `slack.notify_agent_stuck_escalation(0, …)` on abandonment,
+which renders `:rotating_light: Auto-respawn FAILED slot 0 … SSH to VM, tmux ls, inspect, manually respawn` — there is
+no slot 0, and respawning solves nothing; the real fix is account capacity. 19 abandonments → up to 19 misleading
+"manually respawn slot 0" pages, while the actual condition (pool exhausted) is never paged as such.
+
+**Immediate operator recovery (NOT a code fix)**:
+
+- [ ] [HUMAN] P0. **Restore account headroom on the central VM.** Highest leverage: re-auth `harsh-primary` (idle
+      `auth_failed` since 2026-06-10 = a full fresh weekly budget) via `claude setup-token` → update its
+      `oauth_token_env_file`. `sub-a-ikenna` self-frees at 14:00 UTC. Until then the escalation loop + main agent stay
+      starved. Repo: operator/credentials (agent-orchestrator `accounts.json`).
+- [ ] [HUMAN] P1. **Unwedge the frozen main agent** (`orch-agent-main`): once a headroom account exists, dismiss the
+      "Stop and wait for limit to reset" modal (select 1 + Enter) or restart the main agent so `main_agent_keeper`
+      re-spawns it on the healthy account. Repo: operator (central VM tmux).
+
+**Durable fixes (agent-orchestrator)**:
+
+- [ ] [ORCHESTRATOR] P0. **Stop the misleading "Auto-respawn FAILED slot 0" alert.** In
+      `escalation.retry_queued_escalations`, replace the `notify_agent_stuck_escalation(0, …)` abandonment call with a
+      distinct notifier (e.g. `notify_escalation_abandoned(escalation_id, repo, wall_type, age_hours, reason)`) whose
+      text names the wall + the real cause ("no account headroom for {age}h") and the real action ("free account
+      capacity / fix harsh-primary auth"), with NO fake slot id and NO "manually respawn" instruction. Repo:
+      agent-orchestrator (`server/escalation.py` + `server/notifications/slack.py` + `telegram.py`).
+- [ ] [ORCHESTRATOR] P1. **Page the actual condition — sustained account-pool exhaustion.** Wire
+      `state_store.all_accounts_unusable()` / a "no headroom account for ≥N minutes" check (AutoSpawnLoop tick) to a
+      single deduped CRITICAL page ("ACCOUNT POOL EXHAUSTED — M queued escalations cannot dispatch; free capacity / fix
+      auth"), replacing the per-escalation abandonment spam as the primary signal. Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR] P1. **Don't silently abandon an UNRESOLVED wall under pure headroom-starvation.** Before the 24h
+      TTL abandon in `retry_queued_escalations`, re-probe with the existing `_poll_wall_resolution(repo, pr_number,
+      wall_type)`: if the wall is actually CLEARED → abandon (correct — "resolved another way"); if still RED AND the
+      block was headroom (not a stale wall) → keep queued + page instead of dropping a live CI wall. The 19 abandoned
+      rows here were real `main_ci_red`/`merge_conflict`/`ldr_qg_failure` walls dropped while nobody had fixed them.
+      Repo: agent-orchestrator (`server/escalation.py`).
+- [ ] [ORCHESTRATOR] P1. **Detect + auto-handle the main agent's rate-limit modal.** `main_agent_keeper` should
+      recognise the "Stop and wait for limit to reset / Upgrade your plan" tmux prompt: auto-select "1" so the agent is
+      not wedged on a modal, and page that the main agent is rate-limit-frozen (so it is not invisibly idle for hours).
+      Composes with the headroom-rotation it already does. Repo: agent-orchestrator (`server/main_agent_keeper.py`).
 
 ## Related (NOT owned here — likely the live VM-state issue under separate investigation)
 
