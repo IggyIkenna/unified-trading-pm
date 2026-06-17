@@ -179,7 +179,7 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `(venue/protocol, instrument_type)` (the enumerator already has `instr.venue`). Provenance: G1-ENUM impl
       2026-06-07. Repo: unified-api-contracts + instruments-service. assigned_vm: vm-cross-cutting. parent_epic:
       instruments_master.
-- [ ] [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
+- [x] ✅ [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
       standalone v2 enumerator (`enumerate_expected_universe.py --catalog-path`) + the launcher
       (`launch-expected-universe-v2-vm.sh` L165-174) read **`{env}/catalog.parquet`** (the path this plan's roll-up
       producer now writes). But the UTL runtime reader `unified_trading_library/instruments_catalog_reader.py`
@@ -191,6 +191,16 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `instruments_catalog_reader._CATALOG_BLOB` at `{env}/catalog.parquet` (the roll-up output) AND decide
       CatalogueBuilder's fate (retire its all.parquet write, or keep it as a distinct current-snapshot artifact with a
       clearly-different consumer). Repo: unified-trading-library + instruments-service. assigned_vm: vm-cross-cutting.
+      **DONE (2026-06-17 /autonomous reconcile) — unified-trading-library@94775d05**: `instruments_catalog_reader` E5
+      repoint to the canonical `{env}/catalog.parquet` lifecycle roll-up via `get_write_bucket_name("instruments", ag)`
+      (no hardcoded bucket/project) — alias-aware `instrument_id`↔`instrument_key` +
+      `available_from`↔`available_from_datetime` / `available_to`↔`available_to_datetime` so it is resilient across the
+      transition. Legacy `reference_data/instruments/{ag}/all.parquet` decommissioned in prod (absent for cefi+defi as
+      of 2026-06-16). **CatalogueBuilder FATE = KEPT** as the distinct per-asset-group current-catalogue builder wired
+      into the IS orchestrator (`engine/orchestrator/catalogue.py`) — a DIFFERENT artifact from the lifecycle roll-up
+      (documented in the reader module docstring). Reader test updated (`TestNewLifecycleCatalogSchema`, new + legacy
+      schema both pass). IS consumer green (the catalogue producer `build_instrument_catalogue.py` writes the roll-up
+      the reader now reads).
 - [ ] [DATA] P1. **FINDING (slot-7, 2026-06-05) — IS `by_date` instrument-definition capture is FROZEN ~2026-05-21
       fleet-wide, and tradfi DEGRADED before the freeze.** Surfaced by the real apply (the catalogue is a faithful
       roll-up → it exposes the input's coverage horizon). cefi: latest captured day **2026-05-21** (16 days stale as of
@@ -429,8 +439,9 @@ universe; logs `/tmp/r4_is_backfill/catalogue_<ag>.log`.)
       slot-6/tradfi vertical. Provenance: R4 backfill log 2026-06-11.
 - [x] ✅ [DATA] P2. **defi silent-thinning hardening** — DONE is@4562dad. Empty-after-venue-filter (fetched>0 but 0
       survive the venue-tag filter) now records `attempted_failed` (ADAPTER_ERROR, permanent) instead of a silent
-      exclusion; a genuine empty source response (records==[]) stays an honest empty. `engine/urdi_reference_provider.py`
-      + regression test. QG-green. Provenance: c7d9bb2 regression went undetected 19 days. assigned_vm: vm-cross-cutting.
+      exclusion; a genuine empty source response (records==[]) stays an honest empty.
+      `engine/urdi_reference_provider.py` + regression test. QG-green. Provenance: c7d9bb2 regression went undetected 19
+      days. assigned_vm: vm-cross-cutting.
 
 ### R5 (2026-06-15) — prod data-status shows 0 instruments: the MONITORING read goes blind on the stale consolidated index (operator-reported, deployment-ui screenshot)
 
@@ -463,7 +474,7 @@ catalogues + `_index` on 2026-06-11 and they are present in GCS.
 NOT reach prod without a UTL image rebuild + base-digest bump (slow). The migration-safe fix must be
 **deployment-api-local** (ships fast via the new `deployment-api-main-deploy` auto-deploy).
 
-- [ ] [DATA] P1. **Stale-tolerant data-status monitoring read** — in deployment-api
+- [x] ✅ [DATA] P1. **Stale-tolerant data-status monitoring read** — in deployment-api
       `services/manifest_source.read_manifest_index`, when `read_availability_index(bucket)` returns empty AND the
       consolidated `_index/availability_index.parquet` exists (live staleness gate dropped a stale-but-valid index),
       read that consolidated blob DIRECTLY (no live-freshness gate) so the monitoring view shows the stale catalogue +
@@ -471,7 +482,15 @@ NOT reach prod without a UTL image rebuild + base-digest bump (slow). The migrat
       (unchanged); only the data-status path opts into stale tolerance. Migration-safe (read-only; no consolidator
       resume; no writes). Surface the staleness (the rows carry `written_at`; the UI freshness/`migration_in_progress`
       fields already exist). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic: instruments_master.
-      Provenance: R5 (operator-reported 2026-06-15).
+      Provenance: R5 (operator-reported 2026-06-15). **DONE (2026-06-17 /autonomous reconcile) —
+      deployment-api@9e85162**: `services/manifest_source.read_manifest_index` falls back to a DIRECT read of the
+      consolidated `_index/availability_index.parquet` (`get_storage_client().download_bytes`, no 120 s live-freshness
+      gate) when `read_availability_index` returns empty-but-present; live-trading readers keep the gate
+      (monitoring-read ≠ live-read). Read-only / migration-safe. Regression test
+      `tests/unit/test_route_venue_year_coverage_scope.py::TestStaleTolerantReadDelegation` pins the route uses the
+      stale-tolerant path. (The companion FLAG-1 CeFi multi-source UNION + per-source breakdown ships in
+      `deployment-api@4dd2575`/`data_status_union.union_reduce_to_cells` — tracked as G3/H in
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`, ✅ verified green.)
 
 ### R6 (2026-06-15) — producer rebuild: P0 layer-1 (dead image) FIXED; cloud catalogue-rollup has a remaining run_rollup error (layer-2)
 
@@ -488,131 +507,135 @@ The P0 "rebuild the dead IS producer" had **two layers**; layer 1 is now fixed:
 2. **OPEN — cloud `lifecycle-catalogue-regen-cefi` still exits 1 in `run_rollup` (~75 s, NOT OOM)**: on the fresh image
    it fails fast inside `build_instrument_catalogue.py::run_rollup` (call at line 1117). Truncated cloud traceback (cuts
    at the `run_rollup(` frame, no exception line); a 16Gi/4cpu re-run failed identically in ~75 s → not memory. The SAME
-   rollup ran GREEN **locally** on 06-11 (R4) → **cloud-Cloud-Run-env-specific** (env/startup/grpc-fork class), not a code
-   regression. A local `--dry-run` won't reproduce (local works). Catalogue can still be refreshed via the R4 local path.
+   rollup ran GREEN **locally** on 06-11 (R4) → **cloud-Cloud-Run-env-specific** (env/startup/grpc-fork class), not a
+   code regression. A local `--dry-run` won't reproduce (local works). Catalogue can still be refreshed via the R4 local
+   path.
 
-- [ ] [INFRA] P1. **Diagnose the cloud lifecycle-catalogue-regen run_rollup fast-fail on the fresh image** — the truncated
-      cloud traceback hides the exception; add a top-level `traceback.print_exc()` flush (or `PYTHONFAULTHANDLER=1` + `-u`)
-      in `build_instrument_catalogue.py::main` so the Cloud Run job logs the real error, then fix it (likely a Cloud-Run-env
-      class — grpc/GCS fork-pool init, or a job env the local `.venv` has). Until fixed, the catalogue refreshes via the R4
-      local-run path. Repo: instruments-service (+ deployment-service job env). assigned_vm: vm-cross-cutting. parent_epic:
-      instruments_master. Provenance: R6 (2026-06-15).
+- [ ] [INFRA] P1. **Diagnose the cloud lifecycle-catalogue-regen run_rollup fast-fail on the fresh image** — the
+      truncated cloud traceback hides the exception; add a top-level `traceback.print_exc()` flush (or
+      `PYTHONFAULTHANDLER=1` + `-u`) in `build_instrument_catalogue.py::main` so the Cloud Run job logs the real error,
+      then fix it (likely a Cloud-Run-env class — grpc/GCS fork-pool init, or a job env the local `.venv` has). Until
+      fixed, the catalogue refreshes via the R4 local-run path. Repo: instruments-service (+ deployment-service job
+      env). assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R6 (2026-06-15).
 
-**R6 follow-up (2026-06-15, same session) — the traceback-flush step is DONE; it narrowed the cause but revealed the real
-blocker is logging suppression**: shipped `logger.exception` in `build_instrument_catalogue.py::main` (instruments-service@LDR+main),
-rebuilt the image (`:latest` now the instrumented build), re-ran cefi with `PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1`.
-**Result: the cloud job emits ZERO log output** — no `run_rollup` INFO lines (run_id / "Found N by_date" / workers=), and
-the `logger.exception("…FAILED…")` record never appears in `textPayload` OR `jsonPayload`. The ONLY output is Python's
-C-level default-excepthook traceback (still truncated at the `return run_rollup(` frame) + "Container called exit(1)".
-**Diagnosis**: `logging.*` is suppressed in the bare `python build_instrument_catalogue.py` Cloud Run Job invocation (UTL/
-structured-logging handler not emitting in the job context — the service `ServiceBootstrap` that configures logging never
-runs for a plain-script job), so every `logger.*` (incl. the new `logger.exception`) vanishes; only the excepthook reaches
-stderr, and that single write is truncated. RULED OUT: BucketNamingError (image fixed), OOM (16Gi re-run failed identically
-at ~75 s), task timeout (`timeoutSeconds: 1800`, dies ~75 s), catchable Python exception (the `except BaseException`
-handler's `logger.exception` never fired → it's an uncatchable death OR logging-suppressed). The script runs GREEN locally
-(R4 06-11), so it is **cloud-Job-invocation-specific**.
+**R6 follow-up (2026-06-15, same session) — the traceback-flush step is DONE; it narrowed the cause but revealed the
+real blocker is logging suppression**: shipped `logger.exception` in `build_instrument_catalogue.py::main`
+(instruments-service@LDR+main), rebuilt the image (`:latest` now the instrumented build), re-ran cefi with
+`PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1`. **Result: the cloud job emits ZERO log output** — no `run_rollup` INFO
+lines (run_id / "Found N by_date" / workers=), and the `logger.exception("…FAILED…")` record never appears in
+`textPayload` OR `jsonPayload`. The ONLY output is Python's C-level default-excepthook traceback (still truncated at the
+`return run_rollup(` frame) + "Container called exit(1)". **Diagnosis**: `logging.*` is suppressed in the bare
+`python build_instrument_catalogue.py` Cloud Run Job invocation (UTL/ structured-logging handler not emitting in the job
+context — the service `ServiceBootstrap` that configures logging never runs for a plain-script job), so every `logger.*`
+(incl. the new `logger.exception`) vanishes; only the excepthook reaches stderr, and that single write is truncated.
+RULED OUT: BucketNamingError (image fixed), OOM (16Gi re-run failed identically at ~75 s), task timeout
+(`timeoutSeconds: 1800`, dies ~75 s), catchable Python exception (the `except BaseException` handler's
+`logger.exception` never fired → it's an uncatchable death OR logging-suppressed). The script runs GREEN locally (R4
+06-11), so it is **cloud-Job-invocation-specific**.
 
 - [ ] [INFRA] P1 (supersedes the line above). **Make the cloud lifecycle-catalogue-regen log, then fix the real error.**
       Two sub-steps: (a) since `logger.*` is suppressed in the bare-script job, add `print(..., flush=True)` BISECTION
       markers before each `run_rollup` phase (storage-client init / bucket resolve / by_date listing / download-pool /
-      dedup / monotonic-guard / promote-write) — `print` reaches stdout regardless of the logging config — to localize the
-      death (PYTHONUNBUFFERED is already set on the job); OR call the service logging bootstrap / `logging.basicConfig(stream=sys.stdout)`
-      at the top of `main` so `logger.*` emits in the job. (b) With the failing phase identified, fix it (suspects: a
-      job-only env the local `.venv` provides, or a native grpc/pyarrow/GCS call). Until fixed, the catalogue refreshes via
-      the R4 local-run path (works). Note: the cefi job currently carries diagnostic env `PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1`
-      (harmless; aids the next attempt). Repo: instruments-service + deployment-service (job env/bootstrap). assigned_vm:
-      vm-cross-cutting. parent_epic: instruments_master. Provenance: R6 follow-up (2026-06-15).
+      dedup / monotonic-guard / promote-write) — `print` reaches stdout regardless of the logging config — to localize
+      the death (PYTHONUNBUFFERED is already set on the job); OR call the service logging bootstrap /
+      `logging.basicConfig(stream=sys.stdout)` at the top of `main` so `logger.*` emits in the job. (b) With the failing
+      phase identified, fix it (suspects: a job-only env the local `.venv` provides, or a native grpc/pyarrow/GCS call).
+      Until fixed, the catalogue refreshes via the R4 local-run path (works). Note: the cefi job currently carries
+      diagnostic env `PYTHONFAULTHANDLER=1`+`PYTHONUNBUFFERED=1` (harmless; aids the next attempt). Repo:
+      instruments-service + deployment-service (job env/bootstrap). assigned_vm: vm-cross-cutting. parent_epic:
+      instruments_master. Provenance: R6 follow-up (2026-06-15).
 
 ---
 
 ## R7 — Data-status coverage semantics: genesis-clip the date denominator + headline CAPTURED vs ATTEMPTED (2026-06-14)
 
-**Context.** Operator drill-down review surfaced two real defects in the Data Coverage card:
-(1) `dates_expected` counted calendar days from the global search horizon even for young asset groups whose
-data genesis is recent — penalising them for days that pre-date their existence ("dates_found/dates_expected
-= 70.23%" was depressed by impossible days); (2) the headline showed a single ambiguous `completion_pct`
-that conflated two distinct questions — *did we try everywhere we should* (attempt) vs *did we capture what
-we tried* (capture) — and the operator was right that `empty_confirmed` (declared no-data) must not count
-against capture.
+**Context.** Operator drill-down review surfaced two real defects in the Data Coverage card: (1) `dates_expected`
+counted calendar days from the global search horizon even for young asset groups whose data genesis is recent —
+penalising them for days that pre-date their existence ("dates_found/dates_expected = 70.23%" was depressed by
+impossible days); (2) the headline showed a single ambiguous `completion_pct` that conflated two distinct questions —
+_did we try everywhere we should_ (attempt) vs _did we capture what we tried_ (capture) — and the operator was right
+that `empty_confirmed` (declared no-data) must not count against capture.
 
 **FIX #1 — genesis-clip the date denominator (SHIPPED to LDR; DEPLOYING to prod).**
-`deployment_api/services/data_status/manifest.py` (~L491): after `effective_start = get_effective_start_date(...)`,
-clip it forward to the service's earliest *observed* date (`index[service==svc].date.min()`) when that genesis
-is later than the configured horizon. Young AGs (e.g. PREDICTION) are no longer charged for pre-genesis days.
+`deployment_api/services/data_status/manifest.py` (~L491): after `effective_start = get_effective_start_date(...)`, clip
+it forward to the service's earliest _observed_ date (`index[service==svc].date.min()`) when that genesis is later than
+the configured horizon. Young AGs (e.g. PREDICTION) are no longer charged for pre-genesis days.
 
 **FIX #2 — headline CAPTURED vs ATTEMPTED, both labelled.**
-- Backend (SHIPPED to LDR; DEPLOYING to prod): `manifest.py` now emits two new overall fields alongside the
-  legacy ones — `overall_capture_coverage_pct` (= shards-weighted capture = `shards_found/shards_expected`) and
-  `overall_attempt_coverage_pct` (venue-expected-weighted mean of per-category `attempt_coverage_pct`; falls
-  back to `completion_pct_dates` when no shards expected). `empty_confirmed` does NOT count against capture
-  (the 4-state honest_coverage SSOT + `attempt_coverage_pct` already exclude it — operator's point, confirmed).
-- UI (CODED, tsc-clean, regression-tested; **NOT shipped from this host** — see blocker): `DataStatusTab.tsx`
-  headline now leads with `overall_capture_coverage_pct` labelled **"captured"** + a conditional **"attempted"**
-  line for `overall_attempt_coverage_pct` (tooltips explain the split), falling back to `overall_completion_pct`
-  when the new fields are absent (older API). `api/client.ts` types the two optional fields. Regression test
+
+- Backend (SHIPPED to LDR; DEPLOYING to prod): `manifest.py` now emits two new overall fields alongside the legacy ones
+  — `overall_capture_coverage_pct` (= shards-weighted capture = `shards_found/shards_expected`) and
+  `overall_attempt_coverage_pct` (venue-expected-weighted mean of per-category `attempt_coverage_pct`; falls back to
+  `completion_pct_dates` when no shards expected). `empty_confirmed` does NOT count against capture (the 4-state
+  honest_coverage SSOT + `attempt_coverage_pct` already exclude it — operator's point, confirmed).
+- UI (CODED, tsc-clean, regression-tested; **NOT shipped from this host** — see blocker): `DataStatusTab.tsx` headline
+  now leads with `overall_capture_coverage_pct` labelled **"captured"** + a conditional **"attempted"** line for
+  `overall_attempt_coverage_pct` (tooltips explain the split), falling back to `overall_completion_pct` when the new
+  fields are absent (older API). `api/client.ts` types the two optional fields. Regression test
   `tests/unit/data-coverage-headline.test.tsx` (vitest, pure `coverageHeadline()` contract) asserts the
   captured/attempted labels + fallback.
 
-**Deploy.** deployment-api `main` force-synced from LDR → fires the `deployment-api-main-deploy` auto-deploy
-trigger (genesis clip + new fields go live in prod; preserves beta env + 8Gi). The current (old) prod UI
-ignores the new fields and shows the genesis-clipped `completion_pct_dates` — so FIX #1 is visible in prod
-immediately; FIX #2's labelled split appears once the UI ships.
+**Deploy.** deployment-api `main` force-synced from LDR → fires the `deployment-api-main-deploy` auto-deploy trigger
+(genesis clip + new fields go live in prod; preserves beta env + 8Gi). The current (old) prod UI ignores the new fields
+and shows the genesis-clipped `completion_pct_dates` — so FIX #1 is visible in prod immediately; FIX #2's labelled split
+appears once the UI ships.
 
-- [x] ✅ [UI] P1. **Ship the R7 Data Coverage headline relabel.** SHIPPED — deployment-ui@65d4e45 | pw:L2 ✓
-      (210 smoke passed) | vitest 851 passed + regression: tests/unit/data-coverage-headline.test.tsx (pure
-      `coverageHeadline()` contract asserting captured/attempted labels + fallback) | tsc clean. The TURBO "Data
-      Coverage" headline now leads with `overall_capture_coverage_pct` labelled "captured" + a conditional
-      "attempted" line for `overall_attempt_coverage_pct`, falling back to `overall_completion_pct` when absent.
-      **Local env unblock (root cause was NOT npm#4828):** (1) npm's optional-deps bug never placed the rolldown
-      native binding — fetched `@rolldown/binding-linux-x64-gnu@1.0.3` via `npm pack` and dropped
-      `rolldown-binding.linux-x64-gnu.node` into `node_modules/rolldown/dist/`; (2) the real blocker was the **Node
-      version** — local was v20.18 where `require()` of an ESM module (`@exodus/bytes`→`html-encoding-sniffer`,
-      a jsdom dep) throws `ERR_REQUIRE_ESM`; CI uses Node 22 (quality-gates-v2.yml:41) where require(esm) is
-      unflagged. Installed Node 22.12 locally → full jsdom suite green. NOTE: a deep-render smoke guard for the
-      TURBO card was attempted but the card needs a multi-step interactive fetch the mock harness can't reliably
-      drive (the existing passing coverage-labels smoke asserts the always-rendered HonestCoverageCard) — the
-      vitest contract test is the logic-level regression guard; pw:L2 (210) confirms no UI regression. Reaches
-      prod with the deployment-api redeploy (dashboard is built into the deployment-api image). Provenance: R7
-      (2026-06-14 → shipped 2026-06-15).
+- [x] ✅ [UI] P1. **Ship the R7 Data Coverage headline relabel.** SHIPPED — deployment-ui@65d4e45 | pw:L2 ✓ (210 smoke
+      passed) | vitest 851 passed + regression: tests/unit/data-coverage-headline.test.tsx (pure `coverageHeadline()`
+      contract asserting captured/attempted labels + fallback) | tsc clean. The TURBO "Data Coverage" headline now leads
+      with `overall_capture_coverage_pct` labelled "captured" + a conditional "attempted" line for
+      `overall_attempt_coverage_pct`, falling back to `overall_completion_pct` when absent. **Local env unblock (root
+      cause was NOT npm#4828):** (1) npm's optional-deps bug never placed the rolldown native binding — fetched
+      `@rolldown/binding-linux-x64-gnu@1.0.3` via `npm pack` and dropped `rolldown-binding.linux-x64-gnu.node` into
+      `node_modules/rolldown/dist/`; (2) the real blocker was the **Node version** — local was v20.18 where `require()`
+      of an ESM module (`@exodus/bytes`→`html-encoding-sniffer`, a jsdom dep) throws `ERR_REQUIRE_ESM`; CI uses Node 22
+      (quality-gates-v2.yml:41) where require(esm) is unflagged. Installed Node 22.12 locally → full jsdom suite green.
+      NOTE: a deep-render smoke guard for the TURBO card was attempted but the card needs a multi-step interactive fetch
+      the mock harness can't reliably drive (the existing passing coverage-labels smoke asserts the always-rendered
+      HonestCoverageCard) — the vitest contract test is the logic-level regression guard; pw:L2 (210) confirms no UI
+      regression. Reaches prod with the deployment-api redeploy (dashboard is built into the deployment-api image).
+      Provenance: R7 (2026-06-14 → shipped 2026-06-15).
 
 ### R7 follow-up — prod `/api/data-status` full-CLI path 500s in-container (2026-06-15)
 
-**R7 VERIFIED LIVE on prod (image `71dd732`).** `GET /api/data-status/manifest?service=instruments-service&start_date=2018-01-01&end_date=2026-06-15&asset_group=prediction`
+**R7 VERIFIED LIVE on prod (image `71dd732`).**
+`GET /api/data-status/manifest?service=instruments-service&start_date=2018-01-01&end_date=2026-06-15&asset_group=prediction`
 returns `overall_capture_coverage_pct=94.77`, `overall_attempt_coverage_pct=100.0`, `dates_found/expected=435/459`.
-**The genesis clip works end-to-end**: the query horizon was 2018-01-01 (~3,087 days) but `dates_expected=459`
-— clipped to the prediction data genesis (2025-03-14), so the young AG reads its true **94.77%** instead of a
-horizon-penalised ~14%. The beta seam serves the projected-v9 index (493 rows, all `schema_version=9`,
-`asset_group=prediction`, `service_name=instruments-service`) and correctly bypasses the rollup cache (by
-design — manifest.py:153-158; serving the LIVE-derived rollup in beta would render live data).
+**The genesis clip works end-to-end**: the query horizon was 2018-01-01 (~3,087 days) but `dates_expected=459` — clipped
+to the prediction data genesis (2025-03-14), so the young AG reads its true **94.77%** instead of a horizon-penalised
+~14%. The beta seam serves the projected-v9 index (493 rows, all `schema_version=9`, `asset_group=prediction`,
+`service_name=instruments-service`) and correctly bypasses the rollup cache (by design — manifest.py:153-158; serving
+the LIVE-derived rollup in beta would render live data).
 
-**CORRECTION of an earlier mis-diagnosis (do not propagate):** prediction is NOT missing its prod bucket or
-projected index. The bucket resolves via `resolve_bucket_name(kind="instruments-store-prediction")` →
+**CORRECTION of an earlier mis-diagnosis (do not propagate):** prediction is NOT missing its prod bucket or projected
+index. The bucket resolves via `resolve_bucket_name(kind="instruments-store-prediction")` →
 `instruments-store-pred-prd-{pid}` (note `pred`, not `prediction`); it exists and HAS
-`_index/audit/projected_index_prediction.parquet`. The transient "0/0 for prediction" reading was purely a
-wrong query param (`service=mtds`); prediction's `service_name` is `instruments-service`. cefi/defi/tradfi/sports
-+ prediction all have their projected-v9 index. No bucket/projection gap for prediction.
+`_index/audit/projected_index_prediction.parquet`. The transient "0/0 for prediction" reading was purely a wrong query
+param (`service=mtds`); prediction's `service_name` is `instruments-service`. cefi/defi/tradfi/sports
 
-**Real finding (stands):** forcing the non-turbo card endpoint (`GET /api/data-status?...&force_refresh=true`)
-returns **HTTP 500**: the `run_data_status_cli` path shells out to the deployment-service CLI which dies with
-`Error: Could not find configs directory. Run from deployment-service or specify --config-dir` inside the Cloud
-Run image. So the full-CLI data-status path is non-viable in-container; only the turbo path serves prod.
+- prediction all have their projected-v9 index. No bucket/projection gap for prediction.
+
+**Real finding (stands):** forcing the non-turbo card endpoint (`GET /api/data-status?...&force_refresh=true`) returns
+**HTTP 500**: the `run_data_status_cli` path shells out to the deployment-service CLI which dies with
+`Error: Could not find configs directory. Run from deployment-service or specify --config-dir` inside the Cloud Run
+image. So the full-CLI data-status path is non-viable in-container; only the turbo path serves prod.
 
 - [x] ✅ [INFRA] P2. **deployment-api in-container `run_data_status_cli` finds its config dir.** SHIPPED —
-      deployment-api@f77a856. `_build_cli_cmd` now passes `--config-dir <pm-configs>` (GROUP-level option, before
-      the `data-status` subcommand) via a new `_resolve_cli_config_dir()` that resolves `<app root>/pm-configs` —
-      the byte-identical mirror the image already `COPY`s (Dockerfile "COPY pm-configs/"). Root cause: `configs/`
-      lives at the deployment-service REPO ROOT (not package data) so `pip install --no-deps` drops it. No
-      `os.environ` (respects the no-os-environ gate). Regression: `tests/unit/test_data_status_beta_rollup_and_cli_config.py`
-      (`_resolve_cli_config_dir` finds pm-configs; `_build_cli_cmd` puts `--config-dir` before `data-status`).
-      Repo: deployment-api. Provenance: R7 follow-up (2026-06-15).
+      deployment-api@f77a856. `_build_cli_cmd` now passes `--config-dir <pm-configs>` (GROUP-level option, before the
+      `data-status` subcommand) via a new `_resolve_cli_config_dir()` that resolves `<app root>/pm-configs` — the
+      byte-identical mirror the image already `COPY`s (Dockerfile "COPY pm-configs/"). Root cause: `configs/` lives at
+      the deployment-service REPO ROOT (not package data) so `pip install --no-deps` drops it. No `os.environ` (respects
+      the no-os-environ gate). Regression: `tests/unit/test_data_status_beta_rollup_and_cli_config.py`
+      (`_resolve_cli_config_dir` finds pm-configs; `_build_cli_cmd` puts `--config-dir` before `data-status`). Repo:
+      deployment-api. Provenance: R7 follow-up (2026-06-15).
 
 ### R7 follow-up #2 — beta all-asset-group `/manifest` 503 → beta-aware rollup (2026-06-15)
 
-**Found verifying the prod data-status page** (`/service/instruments-service/data-status`): per-asset-group beta
-views work (prediction 94.77%), but the DEFAULT all-AG load **HTTP 503s**. Cause: in beta mode the service
-bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serve in beta) and live-computed all
-5 asset groups per request — which exceeds the Cloud Run request timeout. This is exactly the operator's idea
-("can't the rollup with the env var do its work on the v9 beta manifest").
+**Found verifying the prod data-status page** (`/service/instruments-service/data-status`): per-asset-group beta views
+work (prediction 94.77%), but the DEFAULT all-AG load **HTTP 503s**. Cause: in beta mode the service bypassed the rollup
+cache by design (the rollup was LIVE-derived, unsafe to serve in beta) and live-computed all 5 asset groups per request
+— which exceeds the Cloud Run request timeout. This is exactly the operator's idea ("can't the rollup with the env var
+do its work on the v9 beta manifest").
 
 - [x] ✅ [INFRA] P1. **Beta-aware rollup — beta serves a beta-namespaced rollup from cache.** SHIPPED —
       deployment-api@f77a856. New `rollup_cache.rollup_blob_path(service, kind)` returns `{service}/{kind}.beta.json.gz`
@@ -621,31 +644,34 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
       (`_read_rollup_if_fresh` + `read_coverage_rollup_if_fresh` use the helper); `get_manifest_status` no longer
       bypasses the fast-path in beta (the "never serve live-derived data in beta" invariant is now held by the blob
       NAMESPACING, not by bypassing). So the all-AG beta view is served from cache, not live-computed per request.
-      Regression: `test_rollup_blob_path_live_vs_beta` + rewritten `test_beta_mode_uses_beta_namespaced_rollup`
-      (was `..._bypasses_rollup_fast_path`) + `test_live_mode_still_uses_rollup_fast_path` (unchanged). Repo:
-      deployment-api. Provenance: R7 follow-up #2 (2026-06-15).
+      Regression: `test_rollup_blob_path_live_vs_beta` + rewritten `test_beta_mode_uses_beta_namespaced_rollup` (was
+      `..._bypasses_rollup_fast_path`) + `test_live_mode_still_uses_rollup_fast_path` (unchanged). Repo: deployment-api.
+      Provenance: R7 follow-up #2 (2026-06-15).
 
 > **🟡 TEMPORARY STATE — rollup-job beta env (set 2026-06-15).** To populate the beta rollup, the Cloud Run job
-> `uts-prod-data-status-rollup` carries `DATA_STATUS_BETA_MANIFEST_BLOB=_index/audit/projected_index_{asset_group}.parquet`
-> — the SAME value as the `uts-shared-deployment-api` service. This pairs the job with the service: both are in
-> beta, so the job writes the `.beta` rollup the beta service reads. **SUPERSEDED 2026-06-15 (see R7 follow-up #3 +
-> #4 below):** the rollup JOB is now kept in LIVE mode (its beta runs failed — R6-class, see below); the beta rollup
-> is written on demand (manually) from the STATIC projected-v9 index and the service serves it regardless of age.
-> **Canonical follow-up still holds:** when the v9 migration `--apply` lands, beta is turned OFF on the service and
-> the manual beta rollup blobs are deleted (live == v9, the normal live rollup covers it).
+> `uts-prod-data-status-rollup` carries
+> `DATA_STATUS_BETA_MANIFEST_BLOB=_index/audit/projected_index_{asset_group}.parquet` — the SAME value as the
+> `uts-shared-deployment-api` service. This pairs the job with the service: both are in beta, so the job writes the
+> `.beta` rollup the beta service reads. **SUPERSEDED 2026-06-15 (see R7 follow-up #3 + #4 below):** the rollup JOB is
+> now kept in LIVE mode (its beta runs failed — R6-class, see below); the beta rollup is written on demand (manually)
+> from the STATIC projected-v9 index and the service serves it regardless of age. **Canonical follow-up still holds:**
+> when the v9 migration `--apply` lands, beta is turned OFF on the service and the manual beta rollup blobs are deleted
+> (live == v9, the normal live rollup covers it).
 
 ### R7 follow-up #3 — slicer R7 parity + worker beta-eligible filter (2026-06-15, deployment-api@e5fbbf7)
 
-- [x] ✅ [INFRA] P1. **`slice_rollup_to_window` now emits `overall_capture_coverage_pct` + `overall_attempt_coverage_pct`.**
-      The rollup-served fast-path dropped the R7 split (headline showed only `overall_completion_pct`); now it carries
-      both (capture = shards-weighted; attempt = venue-expected-weighted mean of per-cat `attempt_coverage_pct`,
-      mirroring `_get_manifest_status_sync`). VERIFIED LIVE: all-AG `GET /manifest?service=instruments-service` →
-      `overall_capture_coverage_pct=95.9`, `overall_attempt_coverage_pct=96.01` (was `None`). Regression:
+- [x] ✅ [INFRA] P1. **`slice_rollup_to_window` now emits `overall_capture_coverage_pct` +
+      `overall_attempt_coverage_pct`.** The rollup-served fast-path dropped the R7 split (headline showed only
+      `overall_completion_pct`); now it carries both (capture = shards-weighted; attempt = venue-expected-weighted mean
+      of per-cat `attempt_coverage_pct`, mirroring `_get_manifest_status_sync`). VERIFIED LIVE: all-AG
+      `GET /manifest?service=instruments-service` → `overall_capture_coverage_pct=95.9`,
+      `overall_attempt_coverage_pct=96.01` (was `None`). Regression:
       `test_slice_rollup_emits_r7_overall_capture_attempt`.
-- [x] ✅ [INFRA] P1. **Rollup worker restricts to beta-eligible services in beta mode** (`BETA_ELIGIBLE_SERVICES =
-      {instruments-service}` — the only service with a v9 projection). Beta read fails LOUD on a missing projection
-      (kept — `test_beta_mode_fails_loud_on_missing_projection`), so sweeping a non-projected service (mtds/features)
-      would crash the job; the filter prevents that. Regression: `test_beta_eligible_filters_to_projected_services`.
+- [x] ✅ [INFRA] P1. **Rollup worker restricts to beta-eligible services in beta mode**
+      (`BETA_ELIGIBLE_SERVICES =     {instruments-service}` — the only service with a v9 projection). Beta read fails
+      LOUD on a missing projection (kept — `test_beta_mode_fails_loud_on_missing_projection`), so sweeping a
+      non-projected service (mtds/features) would crash the job; the filter prevents that. Regression:
+      `test_beta_eligible_filters_to_projected_services`.
 
 ### R7 follow-up #4 — beta rollup serves regardless of staleness + R6-class cloud beta-job failure (2026-06-15, @ce38aba)
 
@@ -657,77 +683,72 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
 - [x] ✅ [INFRA] P2. **`uts-prod-data-status-rollup` CLOUD JOB crashed computing `instruments-service` — RESOLVED via
       fix (e): rollup now runs in a dedicated gen1 Cloud Run SERVICE.** Root cause = the Cloud Run Job gen2 execution
       environment (Jobs are gen2-only; the native pyarrow/pandas cell-grid compute crashes natively on gen2, runs clean
-      on gen1). Shipped: (1) in-service `POST /api/data-status/rollup-run` endpoint
-      (deployment-api `routes/data_status/_rollup.py`, on main@a466acc — runs the worker off the request path via
-      `asyncio.to_thread`, serial per-AG, beta-filtered); (2) a dedicated gen1 16Gi scale-to-zero Cloud Run service
+      on gen1). Shipped: (1) in-service `POST /api/data-status/rollup-run` endpoint (deployment-api
+      `routes/data_status/_rollup.py`, on main@a466acc — runs the worker off the request path via `asyncio.to_thread`,
+      serial per-AG, beta-filtered); (2) a dedicated gen1 16Gi scale-to-zero Cloud Run service
       `uts-prod-data-status-rollup-svc` (IAM-private, OIDC invoker); (3) Cloud Scheduler repointed job:run/oauth →
       service-URL/oidc, `*/10`, `attempt_deadline=600s` — TF made source-of-truth at
       `deployment-service/terraform/gcp/data_status_rollup_scheduler.tf` (deployment-service@7949b4b), gen2 job module
       retired; (4) cloudbuild syncs the dedicated service image on every deployment-api deploy (deployment-api@5f29dca);
       (5) orphaned gen2 job `uts-prod-data-status-rollup` deleted. Validated end-to-end: scheduler force-run → OIDC →
-      service → beta blob refreshed (HTTP 200). Original diagnosis trail retained below for provenance.
-      Bisection complete (2026-06-15, print-bisection via
-      `_bisect` → `os.write(2,...)` → `PYTHONFAULTHANDLER`, 6 diagnostic deploys). **Conclusions, each empirically
-      ruled in/out:**
-      - **NOT beta-specific.** `instruments-service` crashes in **LIVE** mode too (single-`--services instruments-service`
-        run, no beta env → exit 1, ~100s). The scheduled full sweep "Completes" only because *other* services succeed
-        (`run_rollup` returns 0 if ≥1 succeeds) — instruments-service has been silently failing in the cloud rollup
-        all along. This is the original R6 `run_rollup` crash; the beta work merely exposed it (beta runs ONLY
-        instruments-service, so its failure isn't masked).
-      - **NOT grpc-after-fork** (`GRPC_ENABLE_FORK_SUPPORT=1` → still crashes).
-      - **NOT memory / OOM** (bumped to 32Gi/8cpu → still crashes ~100s; no "Memory limit exceeded"; the worker
-        already disables the fork process-pool via `_PROCESS_POOL_DISABLED`).
-      - **Succeeds LOCALLY** (61Gi dev box, identical image code + env, full-range `instruments-service` rollup →
-        `done`). So it is **Cloud-Run-runtime-specific**, not a code/data bug.
-      - **It is a NATIVE (C-level) crash**, below the Python layer: `PYTHONFAULTHANDLER=1` produced **no** `Fatal
-        Python error` header, **no** thread dump, **no** exception type — just the Python stack truncating at the
-        `_get_manifest_status_sync` call boundary, then "Container called exit(1)". A Python exception would be caught
-        by the `except BaseException` (it isn't) and have a type (it doesn't). Almost certainly a C extension
-        (pyarrow / pandas / grpc) hitting a gVisor-sandbox-incompatible syscall during the multi-threaded per-AG
-        compute (`ThreadPoolExecutor` over 5 asset_groups in `_build_manifest_category`).
-      - **The R6 "logging suppression" is now understood**: the Cloud Run JOB captures **only stderr**, and even that
-        is truncated at the crash — stdout (all `logger.info`) and even `os.write(2,...)` to the stderr fd never
-        surface. That is why every prior attempt to read the error came up empty.
-      **FIX OPTIONS:** (a) ~~force fully-SERIAL compute~~ **RULED OUT (tested 2026-06-15)** — built a
-      `_THREAD_POOL_DISABLED` serial image (feat build `04cdaa9`), pointed the job at it + beta + instruments-service:
-      **STILL crashes ~100s, exit 1**. So the native crash is **threading-INDEPENDENT** — it's in the per-asset-group
-      compute itself (a pyarrow/pandas/grpc operation in `_build_manifest_category`), not the `ThreadPoolExecutor`.
-      (Correct the diagnosis line above accordingly: not "multi-threaded C path" — the C crash reproduces serially.)
-      (d) **per-AG bisection — DONE 2026-06-15 (feat image `bb56de4`, `--asset-groups` override):** ALL FIVE asset
-      groups crash individually (prediction/sports/tradfi/cefi/defi each → exit 1, ~80s in). So the crash is **NOT
-      AG-specific**. Crucially, prediction is a 493-row / <5s compute yet still ran ~80s before crashing — and the
-      **SERVICE computes the same prediction single-AG fine** (returned 94.77% live, pre-rollup), as does a **LOCAL**
-      run of the full instruments-service rollup. **→ The real variable is the Cloud Run JOB runtime vs the SERVICE
-      runtime** (both gVisor): identical `_get_manifest_status_sync` code natively crashes in the JOB but works in the
-      SERVICE and locally. Suspects for the JOB-vs-SERVICE delta: (i) the JOB runs the compute SYNC in the main thread
-      at module scope, the SERVICE runs it via `asyncio.to_thread` in an async handler; (ii) the JOB's
+      service → beta blob refreshed (HTTP 200). Original diagnosis trail retained below for provenance. Bisection
+      complete (2026-06-15, print-bisection via `_bisect` → `os.write(2,...)` → `PYTHONFAULTHANDLER`, 6 diagnostic
+      deploys). **Conclusions, each empirically ruled in/out:** - **NOT beta-specific.** `instruments-service` crashes
+      in **LIVE** mode too (single-`--services instruments-service` run, no beta env → exit 1, ~100s). The scheduled
+      full sweep "Completes" only because _other_ services succeed (`run_rollup` returns 0 if ≥1 succeeds) —
+      instruments-service has been silently failing in the cloud rollup all along. This is the original R6 `run_rollup`
+      crash; the beta work merely exposed it (beta runs ONLY instruments-service, so its failure isn't masked). - **NOT
+      grpc-after-fork** (`GRPC_ENABLE_FORK_SUPPORT=1` → still crashes). - **NOT memory / OOM** (bumped to 32Gi/8cpu →
+      still crashes ~100s; no "Memory limit exceeded"; the worker already disables the fork process-pool via
+      `_PROCESS_POOL_DISABLED`). - **Succeeds LOCALLY** (61Gi dev box, identical image code + env, full-range
+      `instruments-service` rollup → `done`). So it is **Cloud-Run-runtime-specific**, not a code/data bug. - **It is a
+      NATIVE (C-level) crash**, below the Python layer: `PYTHONFAULTHANDLER=1` produced **no**
+      `Fatal       Python error` header, **no** thread dump, **no** exception type — just the Python stack truncating at
+      the `_get_manifest_status_sync` call boundary, then "Container called exit(1)". A Python exception would be caught
+      by the `except BaseException` (it isn't) and have a type (it doesn't). Almost certainly a C extension (pyarrow /
+      pandas / grpc) hitting a gVisor-sandbox-incompatible syscall during the multi-threaded per-AG compute
+      (`ThreadPoolExecutor` over 5 asset_groups in `_build_manifest_category`). - **The R6 "logging suppression" is now
+      understood**: the Cloud Run JOB captures **only stderr**, and even that is truncated at the crash — stdout (all
+      `logger.info`) and even `os.write(2,...)` to the stderr fd never surface. That is why every prior attempt to read
+      the error came up empty. **FIX OPTIONS:** (a) ~~force fully-SERIAL compute~~ **RULED OUT (tested 2026-06-15)** —
+      built a `_THREAD_POOL_DISABLED` serial image (feat build `04cdaa9`), pointed the job at it + beta +
+      instruments-service: **STILL crashes ~100s, exit 1**. So the native crash is **threading-INDEPENDENT** — it's in
+      the per-asset-group compute itself (a pyarrow/pandas/grpc operation in `_build_manifest_category`), not the
+      `ThreadPoolExecutor`. (Correct the diagnosis line above accordingly: not "multi-threaded C path" — the C crash
+      reproduces serially.) (d) **per-AG bisection — DONE 2026-06-15 (feat image `bb56de4`, `--asset-groups`
+      override):** ALL FIVE asset groups crash individually (prediction/sports/tradfi/cefi/defi each → exit 1, ~80s in).
+      So the crash is **NOT AG-specific**. Crucially, prediction is a 493-row / <5s compute yet still ran ~80s before
+      crashing — and the **SERVICE computes the same prediction single-AG fine** (returned 94.77% live, pre-rollup), as
+      does a **LOCAL** run of the full instruments-service rollup. **→ The real variable is the Cloud Run JOB runtime vs
+      the SERVICE runtime** (both gVisor): identical `_get_manifest_status_sync` code natively crashes in the JOB but
+      works in the SERVICE and locally. Suspects for the JOB-vs-SERVICE delta: (i) the JOB runs the compute SYNC in the
+      main thread at module scope, the SERVICE runs it via `asyncio.to_thread` in an async handler; (ii) the JOB's
       `setup_events`/`GcsEventSink`/`run_lifecycle` (grpc/pubsub init) before the compute; (iii) Cloud Run Job
-      execution-environment / generation differences. **NEXT (revised):**
-      - (e) **Compute the rollup in the SERVICE, not the JOB** — the service env demonstrably works. The all-AG live
-        compute exceeds the HTTP request timeout (the original 503), so add an INTERNAL background task / endpoint
-        (`POST /internal/rollup`, returns 202, runs `_build_one_service_rollup` off the request path with no timeout)
-        that the Cloud Scheduler hits instead of executing the Cloud Run Job. Sidesteps the job-runtime crash entirely
-        + stays on Cloud Run (no GCE-launcher conflict). **Most promising.**
-      - (f) ~~SYNC-vs-ASYNC~~ **RULED OUT** (toggle image `6927e8f`, `ROLLUP_ASYNC_COMPUTE=1` → still crashes).
-      - (g) ~~`setup_events`/`run_lifecycle`~~ **RULED OUT** (`ROLLUP_SKIP_EVENTS=1`, and f+g together → still crash).
-      **★ ROOT CAUSE CONFIRMED 2026-06-15: the Cloud Run JOB EXECUTION ENVIRONMENT (gen2).** Cloud Run **Jobs are
-      gen2-ONLY** (`gcloud run jobs update --execution-environment gen1` → "value 'gen1' is not supported on resources
-      of kind Execution"). The native pyarrow/pandas compute in `_get_manifest_status_sync` crashes on **gen2** but
-      runs fine on **gen1** — and the `uts-shared-deployment-api` SERVICE has NO execution-environment annotation, i.e.
-      it runs the Cloud Run service **default = gen1**. Proof: the gen1 service live-computes both `prediction`
-      (94.77%, pre-rollup) AND `defi` (HTTP 200, `served_from:null` = live, chain-filtered to bypass the cache) — the
-      exact AGs the gen2 job crashes on — with identical image code. So the rollup **fundamentally cannot run as a
-      Cloud Run Job** (forced gen2); it must run in a gen1 environment. (b) GCE VM and (c) core dump are now moot.
-      **THE FIX = (e): run the rollup compute in the gen1 SERVICE.** Implementation: add an internal-gated
-      `POST /internal/data-status/rollup` route to deployment-api that kicks a FastAPI BackgroundTask running
-      `_build_one_service_rollup` + `_write_rollup_to_gcs` for each tracked service (off the request path → no HTTP
-      timeout, gen1 → no crash), returns 202; repoint the Cloud Scheduler
-      (`deployment-service/terraform/gcp/data_status_rollup_scheduler.tf`) from `gcloud run jobs execute` to an
-      OIDC-authed HTTP hit of that route; then disable/delete the `uts-prod-data-status-rollup` Job. NOTE this is the
-      ONE sanctioned exception to "manifest/rollup runtime = Cloud Run Jobs" — Jobs are unusable here (gen2-forced
-      native crash), and the gen1 service is the working runtime ON Cloud Run (no GCE conflict).
-      **WORKAROUND IN PLACE (operator's beta view works durably):** the job runs in LIVE mode; the beta rollup is
-      written on demand by running the worker LOCALLY
+      execution-environment / generation differences. **NEXT (revised):** - (e) **Compute the rollup in the SERVICE, not
+      the JOB** — the service env demonstrably works. The all-AG live compute exceeds the HTTP request timeout (the
+      original 503), so add an INTERNAL background task / endpoint (`POST /internal/rollup`, returns 202, runs
+      `_build_one_service_rollup` off the request path with no timeout) that the Cloud Scheduler hits instead of
+      executing the Cloud Run Job. Sidesteps the job-runtime crash entirely + stays on Cloud Run (no GCE-launcher
+      conflict). **Most promising.** - (f) ~~SYNC-vs-ASYNC~~ **RULED OUT** (toggle image `6927e8f`,
+      `ROLLUP_ASYNC_COMPUTE=1` → still crashes). - (g) ~~`setup_events`/`run_lifecycle`~~ **RULED OUT**
+      (`ROLLUP_SKIP_EVENTS=1`, and f+g together → still crash). **★ ROOT CAUSE CONFIRMED 2026-06-15: the Cloud Run JOB
+      EXECUTION ENVIRONMENT (gen2).** Cloud Run **Jobs are gen2-ONLY**
+      (`gcloud run jobs update --execution-environment gen1` → "value 'gen1' is not supported on resources of kind
+      Execution"). The native pyarrow/pandas compute in `_get_manifest_status_sync` crashes on **gen2** but runs fine on
+      **gen1** — and the `uts-shared-deployment-api` SERVICE has NO execution-environment annotation, i.e. it runs the
+      Cloud Run service **default = gen1**. Proof: the gen1 service live-computes both `prediction` (94.77%, pre-rollup)
+      AND `defi` (HTTP 200, `served_from:null` = live, chain-filtered to bypass the cache) — the exact AGs the gen2 job
+      crashes on — with identical image code. So the rollup **fundamentally cannot run as a Cloud Run Job** (forced
+      gen2); it must run in a gen1 environment. (b) GCE VM and (c) core dump are now moot. **THE FIX = (e): run the
+      rollup compute in the gen1 SERVICE.** Implementation: add an internal-gated `POST /internal/data-status/rollup`
+      route to deployment-api that kicks a FastAPI BackgroundTask running `_build_one_service_rollup` +
+      `_write_rollup_to_gcs` for each tracked service (off the request path → no HTTP timeout, gen1 → no crash), returns
+      202; repoint the Cloud Scheduler (`deployment-service/terraform/gcp/data_status_rollup_scheduler.tf`) from
+      `gcloud run jobs execute` to an OIDC-authed HTTP hit of that route; then disable/delete the
+      `uts-prod-data-status-rollup` Job. NOTE this is the ONE sanctioned exception to "manifest/rollup runtime = Cloud
+      Run Jobs" — Jobs are unusable here (gen2-forced native crash), and the gen1 service is the working runtime ON
+      Cloud Run (no GCE conflict). **WORKAROUND IN PLACE (operator's beta view works durably):** the job runs in LIVE
+      mode; the beta rollup is written on demand by running the worker LOCALLY
       (`DATA_STATUS_BETA_MANIFEST_BLOB=… DEPLOYMENT_ENV=prod python -m deployment_api.scripts.data_status_rollup_worker --project central-element-323112 --bucket central-element-323112-data-status-rollups`),
       and the service serves the static beta blob regardless of age (follow-up #4 above). Only needed while the beta
       preview is on (pre `--apply`). Repo: deployment-api. assigned_vm: vm-cross-cutting. parent_epic:
@@ -753,9 +774,9 @@ bypassed the rollup cache by design (the rollup was LIVE-derived, unsafe to serv
       removes the "turn beta off in lockstep" foot-gun (live blobs are always fresh now). Repo: deployment-api.
       assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7 follow-up #4 final verification.
 - [x] ✅ [CHORE] P3. **Landed the R6 `_bisect` diagnostic removal.** The temp print-bisection (`_bisect` +
-      `_build_one_service_rollup` try/except) is GONE from the rollup worker on `live-defi-rollout` — it rode the fix-(e)
-      worker-clean change (shipped alongside the in-service endpoint, main@a466acc). Verified: `_bisect` / `os.write(2`
-      no longer appear in `deployment_api/scripts/data_status_rollup_worker.py` on LDR; only the clean
+      `_build_one_service_rollup` try/except) is GONE from the rollup worker on `live-defi-rollout` — it rode the
+      fix-(e) worker-clean change (shipped alongside the in-service endpoint, main@a466acc). Verified: `_bisect` /
+      `os.write(2` no longer appear in `deployment_api/scripts/data_status_rollup_worker.py` on LDR; only the clean
       `_build_one_service_rollup` remains. The codex-baseline CVE drift that blocked the earlier attempt was reconciled
-      via the starlette `--ignore-vuln` add (PM PR #346). Repo: deployment-api.
-      assigned_vm: vm-cross-cutting. parent_epic: instruments_master. Provenance: R7 follow-up #4 (2026-06-15).
+      via the starlette `--ignore-vuln` add (PM PR #346). Repo: deployment-api. assigned_vm: vm-cross-cutting.
+      parent_epic: instruments_master. Provenance: R7 follow-up #4 (2026-06-15).
