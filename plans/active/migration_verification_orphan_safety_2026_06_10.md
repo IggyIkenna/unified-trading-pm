@@ -267,22 +267,22 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       it stays the lossy last-resort fallback (existing best-effort contract). 40 catalogue tests pass (+2 new: carries
       the symbols; blank-not-NaN when source absent); IS QG green. Shipped via a dep-clean waiter (UAC was held dirty by
       a live peer's `perp_funding` WIP — never stomped; landed the instant deps went clean). The DETAILED measurement /
-      original framing ⤵ (retained for provenance):
-      • **Measured on real prod GCS (2026-06-16):** the CeFi `availability_index`
-      DOES carry `instrument_id` (95.8% non-blank / 2.6M rows) but in **bare per-venue form** (`BTC-PERPETUAL`,
-      `ADA-PERP`, `SOL-PERP`, `ARB-USDT`), whereas the new `catalog.parquet` keys on canonical `VENUE:TYPE:SYMBOL`
-      (`BINANCE-FUTURES:PERPETUAL:ADA-USDT`; bare ccxt `0G/USDT:USDT` for OKX-SWAP 2,869 + COINBASE-SPOT 757) →
-      **manifest∩catalog instrument_id = 0 for every CeFi venue** (OKX-SWAP 103 vs 2,912 → 0; BINANCE-FUTURES 51 vs 37 →
-      0). So the reader's per-instrument CeFi cross-ref (EXPECTED_INSTRUMENT_NOT_LISTED/ DELISTED) stays dark (safe
-      `SOURCE_RETURNED_ZERO` fallback, never a wrong label). **tradfi + defi are CLEAN** — both manifest and catalog use
-      canonical `VENUE:TYPE:SYMBOL` so they match end-to-end (tradfi e.g. `CBOE:OPTION:O:SPX...`). The OLD `all.parquet`
-      carried `raw_symbol`/`base_asset` and the reader's strategy-2/3 matched the bare symbol against those; the new
-      roll-up dropped them. **Correct fix (clean, no guessing):** add `raw_symbol` + `base_asset` to
-      `build_instrument_catalogue.py` `CATALOG_COLUMNS` (populated from the by_date instruments-store source), so the
-      reader's EXISTING `venue+raw_symbol` / `venue+base_asset` strategies match. A reader-side normaliser is the WRONG
-      fix (the catalogue's own ids are internally inconsistent — 98.4% canonical vs 3,626 bare — so there is no single
-      target to normalise to). Repo: instruments-service (build_instrument_catalogue + the by_date raw_symbol
-      availability). Provenance: E5 repoint GCS inspection, 2026-06-16 — this run.
+      original framing ⤵ (retained for provenance): • **Measured on real prod GCS (2026-06-16):** the CeFi
+      `availability_index` DOES carry `instrument_id` (95.8% non-blank / 2.6M rows) but in **bare per-venue form**
+      (`BTC-PERPETUAL`, `ADA-PERP`, `SOL-PERP`, `ARB-USDT`), whereas the new `catalog.parquet` keys on canonical
+      `VENUE:TYPE:SYMBOL` (`BINANCE-FUTURES:PERPETUAL:ADA-USDT`; bare ccxt `0G/USDT:USDT` for OKX-SWAP 2,869 +
+      COINBASE-SPOT 757) → **manifest∩catalog instrument_id = 0 for every CeFi venue** (OKX-SWAP 103 vs 2,912 → 0;
+      BINANCE-FUTURES 51 vs 37 → 0). So the reader's per-instrument CeFi cross-ref (EXPECTED_INSTRUMENT_NOT_LISTED/
+      DELISTED) stays dark (safe `SOURCE_RETURNED_ZERO` fallback, never a wrong label). **tradfi + defi are CLEAN** —
+      both manifest and catalog use canonical `VENUE:TYPE:SYMBOL` so they match end-to-end (tradfi e.g.
+      `CBOE:OPTION:O:SPX...`). The OLD `all.parquet` carried `raw_symbol`/`base_asset` and the reader's strategy-2/3
+      matched the bare symbol against those; the new roll-up dropped them. **Correct fix (clean, no guessing):** add
+      `raw_symbol` + `base_asset` to `build_instrument_catalogue.py` `CATALOG_COLUMNS` (populated from the by_date
+      instruments-store source), so the reader's EXISTING `venue+raw_symbol` / `venue+base_asset` strategies match. A
+      reader-side normaliser is the WRONG fix (the catalogue's own ids are internally inconsistent — 98.4% canonical vs
+      3,626 bare — so there is no single target to normalise to). Repo: instruments-service
+      (build_instrument_catalogue + the by_date raw_symbol availability). Provenance: E5 repoint GCS inspection,
+      2026-06-16 — this run.
 
 ## Success criteria
 
@@ -1193,3 +1193,23 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
     agent), G4 `--apply` (operator HARD-STOP), and R5-fix-6 (the separate "wire-or-retire `MassiveTradfiRestConnector`"
     follow-on — now code-unblocked by the endpoint fix, but still needs a live probe + a wire/retire decision; left as
     its own open todo, not claimed here).
+
+- 2026-06-17 (autonomous — Massive CME-futures transport correction, operator ping) — **The 2026-06-16 `/futures/v1`
+  REST "fix" was a MIS-DIAGNOSIS** (corrected by the operator + a sibling agent's proven 5y ES pull): our Stocks-Starter
+  REST tier is **equities-only — CME futures are NOT on the REST API**; the proven transport is Massive's **S3
+  flat-files** (`flatfiles/us_futures_cme/minute_aggs_v1/…` over `files.massive.com`, **path-style addressing
+  mandatory**, distinct `MASSIVE_S3_*` keys). Filed issue doc `massive_cme_futures_flatfiles_not_rest_2026_06_17.md`
+  (pm@1c8004221) + corrected `tradfi_massive_dual_source` (re-opened futures todo → flat-files; gate UNLOCKED).
+  **SHIPPED mtds@a311561**: new `massive_flatfiles.py` (path-style boto3 S3 + outright filter + ns LEFT→right-edge +
+  1m→15m resample) + `massive_tradfi_rest_connector` futures path (`fetch_futures_minute_aggs`/`fetch_futures_chain`/
+  `_s3_get_object_bytes`, dispatch routes futures→S3); **dead `/futures/v1` REST futures code +
+  `_normalise_futures_contract` DELETED** (equities/options REST untouched); +11 mocked-S3 unit tests (40 pass/2 skip);
+  mtds QG-green (codex 0, STEP 5.12b clean). **A sub-agent died on a transient 529 mid-implementation** (left
+  `massive_flatfiles.py` + connector edits uncommitted + a 116-line duplicate-defs bloat that tripped the codex
+  file>900 + method>50L gates); I reconciled it down here (deleted the duplicates → 736L, refactored the two methods to
+  thin wrappers, added the missing tests + the `timedelta` top-import fix). Shipped via the **dirty-deps direct-LDR
+  carve-out** (UAC+UTL were a concurrent agent's WIP). **Residual (named, NOT done):** connector has 0 production
+  consumers → wiring into the live tradfi dispatch + the `us_futures_cme` bulk-backfill + roll back-adjustment + live
+  `@requires_credentials` S3 verify are Phase-4b follow-ons tracked in the plan. Decisions (rule 1): corrected my own
+  prior wrong flip; took the SSOT-aligned flat-files transport; finished the dead sub-agent's work in-slot rather than
+  re-dispatch.

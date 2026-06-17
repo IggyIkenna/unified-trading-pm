@@ -75,5 +75,14 @@ the mandatory path-style addressing — see the gotcha below).
 
 ## Status
 
-- **IN PROGRESS (2026-06-17 /autonomous)** — connector implementation + plan correction shipping this run. This issue
-  doc archives once the flat-files path is merged + the plan reflects it.
+- **RESOLVED (2026-06-17 /autonomous) — mtds@a311561.** The flat-files transport is shipped: `massive_flatfiles.py`
+  (path-style boto3 S3 + outright filter + ns LEFT→right-edge + 1m→15m resample + `parse_*`) +
+  `massive_tradfi_rest_connector` (`fetch_futures_minute_aggs`/`fetch_futures_chain`/`_s3_get_object_bytes`, dispatch
+  routes futures→S3); the dead `/futures/v1` REST futures code + `_normalise_futures_contract` are DELETED;
+  equities/options REST untouched; +11 mocked-S3 unit tests; mtds QG-green (codex/5.12b clean). Plan corrected
+  (`tradfi_massive_dual_source_2026_05_28.md` futures todo flipped + coverage row → flat-files). Shipped via the
+  dirty-deps direct-LDR carve-out (UAC+UTL were a concurrent agent's WIP at quickmerge time). **Residual (NOT this issue
+  — separate Phase-4b / backfill work, already tracked in the plan):** the connector still has 0 production consumers —
+  wiring the futures path into the live tradfi dispatch + the `us_futures_cme` bulk-backfill ingester + roll
+  back-adjustment are the named follow-ons; live S3 verify is `@requires_credentials` (proven by the sibling's 5y ES
+  pull). This issue doc may now archive.
