@@ -23,13 +23,13 @@ staging ────────────► PR CI + SIT
 main ───────────────► always stable; triggers version bump + image build
 ```
 
-| Branch                    | Purpose                                                 | CI runs               | Who merges                |
-| ------------------------- | ------------------------------------------------------- | --------------------- | ------------------------- |
-| `feat/*`                  | Feature isolation; dep-branch for cross-repo work       | None (local QG only)  | quickmerge `--agent`      |
-| `staging`                 | Convergence point for breaking changes + SIT            | Full CI               | quickmerge `--to-staging` |
-| `main`                    | Always stable; semver bump + image build triggered here | Full CI + image build | quickmerge (standard)     |
-| `live-defi-rollout` (LDR) | Active rollout branch (workspace-specific May-23)       | None (local QG only)  | slot quickmerge `--agent` |
-| `tab/hk/<N>`              | Per-slot worktree branch                                | None                  | local work                |
+| Branch                    | Purpose                                                 | CI runs                      | Who merges                            |
+| ------------------------- | ------------------------------------------------------- | ---------------------------- | ------------------------------------- |
+| `feat/*`                  | Feature isolation; dep-branch for cross-repo work       | None (local QG only)         | quickmerge `--agent`                  |
+| `staging`                 | Convergence point for breaking changes + SIT            | Full CI (`quality-gates-v2`) | Tier-C drain `ldr-to-staging-promote` |
+| `main`                    | Always stable; semver bump + image build triggered here | Full CI + image build        | quickmerge (standard)                 |
+| `live-defi-rollout` (LDR) | Active rollout branch (workspace-specific May-23)       | None (local QG only)         | slot quickmerge `--agent`             |
+| `.tabs/<N>/<repo>` Path-B | Per-slot reference-clone checked out on LDR             | None (local QG only)         | slot quickmerge `--agent`             |
 
 **Never** push directly to `main` — always via quickmerge. The quickmerge script is the **only** sanctioned merge path
 (it runs QG, handles dep-branch resolution, and respects the two-pass model).
@@ -623,7 +623,7 @@ Both are escape hatches for iteration speed; the canonical production path stays
 | Promote LDR → main | ✅ Autonomous, green-gated: quickmerge lands on LDR → Tier-C drain LDR→staging (auto-merge on green `quality-gates-v2`) → automated staging→main (semver/SIT). **No human merge** — the green gate is the approval (`required_approving_review_count=0`, codified 2026-06-02). | Same; admin-merge only a genuinely-stuck promotion       |
 | Dep-branch work    | ❌ NOT ALLOWED (`--dep-branch` human-only)                                                                                                                                                                                                                                     | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
 | Version graduation | ❌ NOT ALLOWED                                                                                                                                                                                                                                                                 | `gh workflow run request-major-bump.yml ...`             |
-| Kill-switch arming | ❌ NOT ALLOWED                                                                                                                                                                                                                                                                 | Manual via deployment-service API                        |
+| Kill-switch arming | ✅ Protective arming autonomous (kill-switch / `STOP_NEW_ONLY` / firm-wide halt); resume only within the auto-recovery matrix — destructive `manual_unkill` (`KILL_ALL`/`CANCEL_OPEN`) is human-only                                                                           | Manual via deployment-service API                        |
 | Wallet key ops     | ❌ NOT ALLOWED                                                                                                                                                                                                                                                                 | Hardware wallet / KMS console                            |
 
 ---
@@ -759,7 +759,11 @@ use the normal flow. **Invariants:** never leave a ruleset `enforcement=disabled
 conflicts ON `live-defi-rollout` (never a throwaway branch — that re-drifts); blocked-on-actionable-red is the SAFE
 direction (protected > unprotected).
 
-## Operational status — promotion automation (snapshot 2026-06-01; being repaired)
+## Operational status — promotion automation (HISTORICAL snapshot 2026-06-01)
+
+> **⚠️ HISTORICAL — superseded by LDR-trunk decoupling (2026-06-10) + the SIT loop-closure fixes.** This section is the
+> 2026-06-01 repair snapshot, kept for provenance. For the CURRENT promotion model read the "LDR-trunk decoupling" and
+> "Breaking = public-surface change" sections above; do not treat the "being repaired" status below as current.
 
 The **PR→staging gate** (`quality-gates-v2`) is healthy + enforced workspace-wide. The **staging→main half is REVIVED +
 e2e-green (2026-06-01, #257)** — it was found DEAD (admin-force-merged as a stopgap) and is now fully wired: a real
@@ -921,14 +925,16 @@ on:
 - `[main, staging]` (2 repos)
 - `[main, develop]` (1 repo — stale `develop` retired)
 
-### Post-cutover trigger surface (after 2026-05-23 — LDR retired)
+### Post-cutover trigger surface — LDR is the trunk but runs no server QG (corrected 2026-06-17)
 
-Edit the template to:
+**LDR was NOT retired** — the earlier "LDR retired" framing here was wrong (superseded by the LDR-is-SSOT model,
+2026-06-08). `live-defi-rollout` is the integration trunk; it simply runs no server `quality-gates-v2` itself — the
+Tier-C drain's LDR→staging PR (head=LDR, base=staging) is where v2 runs. The live trigger surface is:
 
 ```yaml
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
   pull_request:
     branches: [main, staging]
   workflow_dispatch:
