@@ -118,3 +118,86 @@ def test_main_function_conflict_exit_2(tmp_path: Path) -> None:
     )
     assert rc == 2
     assert not out_p.exists()  # no write on conflict
+
+
+# ── Version-surface semver-max (2026-06-17 follow-up) ────────────────────────
+# `versions.<repo>` + `repositories.<name>.version` are a MONOTONIC released-version
+# cache (semver-agent only bumps up; "AHEAD is fine, only BEHIND is bad"). A
+# both-bumped version scalar resolves to semver-max — never "take main" (would
+# regress a repo whose LDR copy is ahead, the real 2026-06-17 jam), never escalate.
+
+
+def test_versions_both_bumped_resolve_to_semver_max_ldr_higher() -> None:
+    # The live jam: base 0.10.0, ours(LDR) 0.12.0, theirs(main) 0.11.0 → max 0.12.0.
+    base = {"versions": {"unified-trading-library": "0.10.0"}}
+    ours = {"versions": {"unified-trading-library": "0.12.0"}}
+    theirs = {"versions": {"unified-trading-library": "0.11.0"}}
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    assert merged["versions"]["unified-trading-library"] == "0.12.0"
+
+
+def test_versions_both_bumped_main_higher() -> None:
+    base = {"versions": {"x": "1.0.0"}}
+    ours = {"versions": {"x": "1.1.0"}}
+    theirs = {"versions": {"x": "1.3.0"}}
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    assert merged["versions"]["x"] == "1.3.0"
+
+
+def test_versions_only_theirs_changed_takes_main_pm_case() -> None:
+    # PM: base==ours → existing 3-way takes theirs (main higher) → fixes the version-align gate.
+    base = {"versions": {"unified-trading-pm": "1.2.128"}}
+    ours = {"versions": {"unified-trading-pm": "1.2.128"}}
+    theirs = {"versions": {"unified-trading-pm": "1.2.145"}}
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    assert merged["versions"]["unified-trading-pm"] == "1.2.145"
+
+
+def test_repo_display_version_both_bumped_semver_max() -> None:
+    base = {"repositories": {"x": {"version": "0.5.0"}}}
+    ours = {"repositories": {"x": {"version": "0.7.0"}}}
+    theirs = {"repositories": {"x": {"version": "0.6.0"}}}
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    assert merged["repositories"]["x"]["version"] == "0.7.0"
+
+
+def test_ldr_only_versions_key_preserved() -> None:
+    base = {"versions": {"a": "1.0.0"}}
+    ours = {"versions": {"a": "1.0.0", "newrepo": "0.1.0"}}
+    theirs = {"versions": {"a": "1.0.0"}}
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    assert merged["versions"]["newrepo"] == "0.1.0"
+
+
+def test_unparseable_version_both_changed_still_escalates() -> None:
+    # Never guess on a non-semver value — fall through to genuine conflict.
+    base = {"versions": {"x": "1.0.0"}}
+    ours = {"versions": {"x": "abc"}}
+    theirs = {"versions": {"x": "1.1.0"}}
+    _merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert ("versions", "x") in conflicts
+
+
+def test_dep_edge_floors_both_changed_still_escalate() -> None:
+    # Dep-edge range-pin floors are INTENTIONAL — must NOT auto-resolve (not a version field).
+    base = {"repositories": {"x": {"dependencies": [{"name": "uac", "version": ">=0.1,<1.0"}]}}}
+    ours = {"repositories": {"x": {"dependencies": [{"name": "uac", "version": ">=0.2,<1.0"}]}}}
+    theirs = {"repositories": {"x": {"dependencies": [{"name": "uac", "version": ">=0.3,<1.0"}]}}}
+    _merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert ("repositories", "x", "dependencies") in conflicts
+
+
+def test_version_helpers() -> None:
+    assert reconcile_mod._semver_tuple("1.2.145") == (1, 2, 145)
+    assert reconcile_mod._semver_tuple("0.12") == (0, 12, 0)
+    assert reconcile_mod._semver_tuple("abc") is None
+    assert reconcile_mod._semver_tuple(123) is None
+    assert reconcile_mod._is_version_field(("versions", "utl")) is True
+    assert reconcile_mod._is_version_field(("repositories", "utl", "version")) is True
+    assert reconcile_mod._is_version_field(("repositories", "utl", "dependencies")) is False
+    assert reconcile_mod._is_version_field(("versions",)) is False
