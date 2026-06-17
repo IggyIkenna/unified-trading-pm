@@ -128,22 +128,22 @@ source:
       palette walks distinct hues (emerald → cyan → blue → amber → red → slate, all 500-stop, no <40%-opacity fills);
       legend swatches kept in lockstep + enlarged (w-2.5) with higher-contrast text. — repo deployment-ui@`7007529` |
       pw:L2 ✓ (215/215 smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
-- [ ] [DATA] P1. **Every CEFI venue reads "out of scope" (niE) on the live board** — DIAGNOSED, root cause is
-      UAC/manifest data, NOT a deployment-api/deployment-ui code bug. **The prompt's `scope=mvp`-default hypothesis is
-      REFUTED:** `scope=mvp` (deployment-api@`3390c98`) touched ONLY `_coverage_scope.py` + the isolated
-      `venue-year-coverage` route (`_live_coverage.py`), which **defaults to `could_exist`** (never mvp) and is opt-in;
-      it does NOT touch `breakdowns_core.py` or the TURBO venue breakdown. The venue "out of scope" tag
-      (`DataStatusTab.tsx:4171` `dtEntries.every(dt.out_of_scope === true)`) comes from `breakdowns_core.py:641`
-      `out_of_scope = not scope_in and not dt_is_processed`, where `scope_in = is_expected(category, venue, data_type)`
-      reads UAC `EXPECTED_COVERAGE_BY_ASSET_GROUP["cefi"]` — which DOES list BINANCE-FUTURES (`trades`,
-      `book_snapshot_5`, `derivative_ticker`, `liquidations`, `futures_chain`) + every CeFi venue. `category` is the
-      lowercase asset_group (`"cefi"`, confirmed via `category.upper()=="CEFI"` at `venue_resolution.py:218`), so the
-      deployment-api path is correct. ⇒ all-CeFi-out-of-scope means the **manifest data_type/venue tokens flowing in do
-      not match the scope tokens** (a UAC/manifest mismatch, owned by the v9 manifest migration / migration agents — out
-      of this task's deployment-api+ui scope). **Recommended:** migration agents verify the live CeFi manifest
-      `(venue, data_type)` tokens against `EXPECTED_COVERAGE_BY_ASSET_GROUP["cefi"]` (token casing / `-FUTURES` suffix /
-      `derivative_ticker`-vs-`funding_rate` naming). Could not reproduce locally — the `:8004` instance returns empty
-      `venues` for CeFi (no manifest loaded). — instruments-service / unified-api-contracts (migration agents)
+- [x] ✅ [DATA] P1. **Every CEFI venue read "out of scope" on the live board — STALE DEPLOY, not a code/data bug
+      (RE-DIAGNOSED 2026-06-17 against the REAL prod manifest; the sub-agent's "token-mismatch → migration agents"
+      verdict is REFUTED).** The earlier sub-agent could not reproduce (its local `:8004` had an empty CeFi manifest) so
+      it speculated a token mismatch. Reproduced properly against
+      `gs://market-data-tick-cefi-prd-…/_index/availability_index.parquet`: **every CeFi venue's tokens MATCH the scope
+      and resolve in-scope.** For ALL 15 venues (ASTER/BINANCE-FUTURES/BINANCE-SPOT/BITFINEX-*/BITGET-*/BYBIT/
+      COINBASE-SPOT/DERIBIT/HYPERLIQUID/OKX-*/UPBIT), `is_expected("cefi", venue, "trades")==True` and
+      `is_expected(..., "book_snapshot_5")==True`; the `ohlcv_*` types are caught by `is_processed_data_type(...)==True`
+      → `out_of_scope = not scope_in and not dt_is_processed == False`. So **NO CeFi venue resolves out_of_scope with the
+      current code** (each has ≥1 in-scope data_type, so the UI's `every(dt.out_of_scope)` is never all-true). Therefore
+      the screenshot showing all-out-of-scope was a **stale/cached render** (pre-`8710152` deploy or a cached SPA/API
+      response). FIX = redeploy (the niE fix `8710152` is correct + on LDR; rebuilt + redeployed 2026-06-17, build
+      `6655127f`) + a hard browser refresh — **no code or data change required**. Verified: the classifier is correct;
+      this was a deploy/cache artifact. (Note: `derivative_ticker`/`futures_chain` on a few SPOT venues are
+      legitimately out-of-scope at the data_type grain, but never make the VENUE out-of-scope since `trades` is in
+      scope.)
 
 ## Phase C (TIER 1 cleanup) — CeFi universe extension (instruments completeness + EigenLayer dust)
 
