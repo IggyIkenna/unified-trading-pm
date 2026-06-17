@@ -146,13 +146,16 @@ files are all foreign/pre-existing):
       `python-quality-gates-v2.yml` (line ~479, referenced `@live-defi-rollout` fleet-wide → no rollout). Verified on a
       consumer (market-tick-data-service typecheck SUCCESS) + PM itself (v2 GREEN run 2c82c780 → #387 MERGED). The
       "cut fresh tags" hypothesis was tried + REVERTED (UTL→v0.10.0, UAC→v0.14.0) — see CORRECTION below. unified-trading-pm@df6291b6d.
-- [ ] [CICD] P1. **The PM LDR→main forward drain has no manifest-conflict resolver** (only the back-merge does, via
-      reconcile_manifest_backmerge.py). main churns `workspace-manifest.json` `ci_status` every few minutes (every
-      repo's v2 result writes a `[skip ci]` commit to main), so #387 perpetually re-`dirty`s on the manifest faster than
-      it can merge — even after a hand back-merge it re-diverges within ~1-3 min. Durable fix: give the forward drain
-      (ldr-to-main-promote bot, or a merge driver in the bot's clone) the same reconciler resolution for
-      `workspace-manifest.json` so LDR→main merges cleanly regardless of ci_status churn (take main's
-      ci_status/version-surface + LDR structure), then arm/merge in the same run.
+- [x] ✅ [CICD] P1. **PM LDR→main forward drain now has an inline manifest-conflict resolver — SHIPPED 2026-06-17**
+      (unified-trading-pm@b5d2c54fe, LDR → drains to main via the standing PR). `ldr-to-main-promote.yml` gained a
+      `dirty`-state branch that runs the SAME `reconcile_manifest_backmerge.py` Guard-2 driver INLINE on every `*/15`
+      drain tick (was: the `else` branch just reported `pending` and waited up to 20 min for the separate
+      `main-backmerge-to-ldr` `*/20` tick → the PR re-diverged within ~1-3 min and never landed). Now: merge
+      `origin/main` into LDR, resolve `workspace-manifest.json` (CI fields → main, both-bumped version-surface →
+      semver-max), push to LDR → PR goes clean → arm auto-merge same run — collapsing the race window to one tick.
+      Manifest-only conflicts auto-resolve here; non-manifest / genuine conflicts are LEFT to the `main-backmerge-to-ldr`
+      visible-PR + orchestrator escalation (no duplication). Mirrors the proven `main-backmerge-to-ldr.yml` driver; YAML
+      + `bash -n` validated.
 
 **Interim state:** the conflict-wall fixes (digest-only, supersede+escalate owner chain, alert, the reconciler
 semver-max) are all on `live-defi-rollout` and drain to main via the standing PR once v2 goes green (flaky → will pass
