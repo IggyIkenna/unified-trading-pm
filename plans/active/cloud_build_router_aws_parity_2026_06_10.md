@@ -52,6 +52,21 @@ not actually kept on either cloud.
       cloudbuild.yaml step 4); POST_BUILD `uv pip install` → `python -m pip` gated under `CODEARTIFACT_DOMAIN` (uv not
       in CodeBuild env). — deployment-service@2077ecb | webhook re-triggered CodeBuild on the fixed sha.
 
+> **🔎 Audit callout (CI/CD drift audit 2026-06-17 — D11 + D14, not yet actioned):**
+>
+> - **D11 — reconcile Phase 1 against a since-shipped decision.** `gcp_cloudbuild_sibling_context_staging_2026_06_15`
+>   (RESOLVED 2026-06-15) shipped `_RUN_INIMAGE_QG: false` to the sibling-COPY repos, deciding in-image QG is
+>   **redundant** (the LDR→staging `quality-gates-v2` already gates before the build) **and impossible** (no
+>   `unified-trading-pm` harness in the image → `exit 127`). That contradicts Phase 1's goal of making in-image QG
+>   _run + gate_ on both clouds. **Decide before actioning Phase 1:** keep in-image QG (then Phase 1 must also solve the
+>   harness-in-image problem the issue declared unsolvable) **or** treat the pre-build CI gate as sufficient (then
+>   re-scope Phase 1 to drop in-image QG and assert the pre-build gate covers both clouds).
+> - **D14 — the AR-publish gate already exists but is UNWIRED.** `scripts/cicd/assert_deps_published_to_ar.py` is
+>   written (asserts internal deps are published to Artifact Registry at their declared floor) but its own STATUS
+>   comment (2026-06-16) says it is **NOT wired into any workflow** — reserved for a production image-build dep-publish
+>   gate that has not launched. If this plan's registry-push-gating work needs an AR-publish precondition, **wire this
+>   script** rather than writing a new one.
+
 ## Phase 1 — make in-image QG ACTUALLY run on both clouds (the shared latent gap) [P1]
 
 > This is the real parity win: today QG is advisory-only on GCP **and** AWS because the script can't find
