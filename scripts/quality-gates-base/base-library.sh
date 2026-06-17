@@ -295,7 +295,11 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     qg_prof start tests
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
-    COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    # TIER-A config-SSOT (2026-06-17): no --cov-fail-under — pytest-cov reads fail_under
+    # from [tool.coverage.report] in pyproject.toml when the CLI flag is absent, so toml is
+    # the single home for the coverage gate. Verified pre-flip: UTL/UAC toml fail_under ==
+    # stub MIN_COVERAGE (80/80, 94/94). SSOT: quality_gates_speed_and_config_ssot_2026_06_09.md Phase 1.
+    COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml"
     # 25% of logical CPUs, minimum 1. Works on Linux, macOS (Intel + Apple Silicon), ARM.
     # PYTEST_WORKERS env var overrides when set (e.g. CI throttling or debugging).
     _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)

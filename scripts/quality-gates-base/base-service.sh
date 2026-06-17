@@ -498,7 +498,16 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     if [ "$QUICK_MODE" = true ]; then
         COV=""
     else
-        COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+        # TIER-A config-SSOT (2026-06-17): do NOT pass --cov-fail-under here — it would
+        # SHADOW [tool.coverage.report] fail_under in pyproject.toml. pytest-cov reads
+        # fail_under from toml when the CLI flag is absent, so toml is the single home for
+        # the coverage gate. Verified pre-flip: every repo sourcing this base declares
+        # [tool.coverage.report] fail_under == its stub MIN_COVERAGE (zero drift, none absent),
+        # so dropping the flag is behavior-preserving. coverage-floor-guard.sh (run above)
+        # still enforces the system floor (70) + signed exceptions against MIN_COVERAGE and
+        # already treats toml fail_under as "the real gate" — this flip just removes the shadow.
+        # SSOT: quality_gates_speed_and_config_ssot_2026_06_09.md Phase 1 (TIER-A).
+        COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml"
     fi
     # ╔══ [OOM MITIGATION — added 2026-05-15] ═════════════════════════════════╗
     # OLD (pre-2026-05-15): xdist used 25% of logical CPUs by default. With 8
