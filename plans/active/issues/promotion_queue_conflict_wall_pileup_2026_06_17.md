@@ -306,12 +306,20 @@ wall" triage queue. Direct measurement (`git diff --name-only origin/staging ori
         lead with the net file-delta (render "in sync (squash skew)" when `files_changed==0` despite `ahead_by>0`), like the
         LDR→main delta column already does. Frontend-only display polish — the operationally-painful phantom-stuck queue is
         already fixed above. Target: `deployment-ui` (Repos CI page). [UI] — needs `pw:L2` evidence.
-- [ ] [CICD] P1. **staging→main promote PRs perpetually CONFLICT (stale merge-base).** `staging` gets no `main`
-      back-merge (only LDR does via `main-backmerge-to-ldr`), so any `main`-only commit (semver version promotes,
-      ci_status) makes every `staging→main` PR CONFLICTING. Fix (pick one, target PM promote workflows): (a) add a
-      `main-backmerge-to-staging` tick mirroring `main-backmerge-to-ldr`, OR (b) make `staging-to-main`/`ldr-to-main`
-      promote bots use the **LDR→main reconcile path when staging→main conflicts** (LDR is the SSOT + carries both
-      back-merges — this is the PM Option-B pattern generalised to service/lib repos). Provenance: UAC #344 / UTL #370.
+- [x] ✅ [CICD] P1. **staging→main perpetual-conflict — durable fix SHIPPED 2026-06-17** (unified-trading-pm@5a1a77642,
+      new `.github/workflows/staging-conflict-ldr-main-fallback.yml`, LDR → drains to main). Chose **option (b)** (the
+      manually-proven UAC#353/UTL#376 path) over option (a) — a per-repo `main-backmerge-to-staging` template would be a
+      24-repo fleet rollout with a chicken-and-egg (the workflow must reach each repo's `main` to fire, but the
+      staging→main dam is what's blocking that very drain). Instead a **PM-CENTRAL bot** (single file, no rollout, no
+      chicken-and-egg — takes effect the moment it lands on PM main, which `ldr-to-main-promote` drains): when a repo's
+      `staging→main` PR is `dirty` + aged >30m, and `main` is fully contained in LDR (`compare main...LDR behind_by==0`)
+      and the repo is NOT in `staging_status.breaking_pending` (active SIT — never bypassed), it opens a **clean
+      LDR→main PR** (LDR carries both back-merges ⇒ ⊇ main AND ⊇ staging → lands the same+newer content), arms v2-gated
+      auto-merge (`--merge`, NON-admin → respects all required checks, no SIT bypass for content that matters), and
+      closes the dammed staging→main PR. A content-identical squash-noise staging→main PR is just closed.
+      **Rule-11 blast-radius check:** simulated the bot's decision across all 25 repos live — **0 false positives** (the
+      5 open staging→main PRs today are `clean`/`unstable`/`blocked`, none `dirty`, so the bot correctly no-ops). YAML +
+      `bash -n` + `py_compile` validated. Generalises PM Option-B to service/lib repos. Provenance: UAC #344 / UTL #370.
 - [x] ✅ [CICD] P2. **Stale "fails quarantined" flag now clears on content-identical staging==main — SHIPPED 2026-06-17**
       (unified-trading-pm@f00b8644a, `.github/workflows/staging-to-main.yml`, LDR → drains to main). The
       `promotion_quarantine` AUTO-CLEAR only fired for repos that actively PROMOTED; a repo whose staging→main
