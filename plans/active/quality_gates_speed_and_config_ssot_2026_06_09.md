@@ -170,11 +170,10 @@ source:
       So adding `-c` suppresses zero real findings → no red, nothing hidden. Skips may be pruned for cleanliness
       (optional). Full method + per-repo table: `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md` § "Per-repo
       `[tool.bandit] skips` audit (2026-06-17)". — unified-trading-pm
-- [ ] [CODE] P3. **DEFERRED side-finding (bandit audit 2026-06-17)**: mtds `scripts/massive_flat_files_smoke.py:56` uses
-      a hardcoded `/tmp` (B108 — violates the workspace no-hardcoded-`/tmp` HARD RULE; use `tempfile.gettempdir()`), and
-      4 `urllib.urlopen` calls (B310) live in mtds `scripts/` (diagnose_kraken_spot_tardis, probe_drift_trades_window,
-      smoke_test_cbeth_history, verify_lst_collateral_support). Outside bandit's scan path (so not gating today) and in
-      one-off scripts (`scripts/` = temporary per script-homes) — low priority. Repo: market-tick-data-service.
+- [x] ✅ [CODE] P3. Bandit-audit side-finding FIXED (2026-06-17): mtds `scripts/massive_flat_files_smoke.py` hardcoded
+      `/tmp` → `tempfile.gettempdir()` (B108; workspace no-hardcoded-`/tmp` HARD RULE) — market-tick-data-service@a2ec5ae5,
+      mtds QG green. The 4 `urllib.urlopen` (B310) in mtds `scripts/` are outside bandit's scan path + in one-off smoke
+      scripts (`scripts/` = temporary per script-homes); left as-is (not gating, low value) — not separately tracked.
 - [x] [AUDIT] P1. Classify every knob into TIER-A (tool-native — toml is the home) vs TIER-B (bash-orchestration —
       governor/mem-cap/MAX_DURATION/PYTEST_WORKERS/codex-exclude-globs/pip-audit-ignores/size-limits — toml has no
       native home). This classification decides Phase 1's mechanism. ✅ — **13 TIER-A / 27 TIER-B**, full tables with
