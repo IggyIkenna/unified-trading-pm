@@ -228,9 +228,12 @@ genuinely-unresolved import `unified_trading_services` (`audit-library-imports.p
 1517→2992 jump is unexplained (genuine debt growth vs a measurement change) and needs investigation BEFORE a decision.
 
 - [ ] [CICD] P1. **PM #387 typecheck-debt-vs-ceiling** — decide (do NOT blind-bump): (a) investigate the 1517→2992 jump
-      (which commits/scripts added the ~1475; is any a regression vs intentional-Any json debt); (b) add
-      `unified-trading-services` to PM's `dep_repos` (clears the ~86 `unified_trading_services` cascade — a correct,
-      understood fix); (c) for the genuine intentional-Any json/argparse scripts, extend the existing
+      (which commits/scripts added the ~1475; is any a regression vs intentional-Any json debt); (b) ✅ DONE — the ~86
+      `unified_trading_services` errors were from ONE dead one-off `scripts/migration/delete-gcs-data-for-dates.py`
+      importing the REMOVED `unified_trading_services` package (`unified-trading-services` is NOT a real repo — the
+      earlier "add to dep_repos" idea was WRONG); DELETED it (PM@6915debdb; its fns now live in
+      `unified_trading_library.cloud_interface`); (c) for the genuine intentional-Any json/argparse scripts, extend the
+      existing
       `[tool.basedpyright] ignore` list (consistent with its stated rationale) OR recalibrate the ceiling once the jump
       is understood. Only PM's v2 (and thus the PM-central bots reaching main: supersede, alert, ldr-to-main provenance,
       conflict-agent context) is gated on this; the FLEET is already unblocked.
