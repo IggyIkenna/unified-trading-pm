@@ -11,6 +11,7 @@ estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 source:
   - 2026-06-17 account-pool exhaustion incident (orchestrator_agent_lifecycle_gaps Gap 6) — operator design session
+priority: P2
 ---
 
 # Orchestrator account failover — context-preserving resume-respawn
