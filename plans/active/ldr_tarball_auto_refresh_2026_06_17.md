@@ -68,6 +68,12 @@ The imperative `gcloud run jobs ... --args=^|^...` deploy uses `|` as the list d
 - [x] ✅ [INFRA] P2. TF SSOT `deployment-service/terraform/gcp/code_tarball_refresh_scheduler.tf`
       (job + scheduler) — **landed deployment-service@bba8096**, so a `terraform apply` won't drop
       the imperatively-created resources (documents the no-`||`-in-bootstrap pitfall).
+- [x] ✅ [SCRIPT] P1. **Builder repo-list fix** — `create-code-tarballs.sh`'s category arrays
+      (CEFI/TRADFI/DEFI/SPORTS/PREDICTION/ML/ALL) listed the **consolidated-away** per-domain
+      `features-*` split repos (delta-one/onchain/sports/…) but **omitted the live `features-service`**,
+      so `--all`/`--asset-group` silently skipped it → no `features-service-code.tar.gz` → upload-glob
+      `exit 1` (the in-cloud run's lone failure). Replaced all the dead split names with the single
+      `features-service`. **Landed deployment-service@f5de46b**; verified build EXIT 0.
 - [ ] [INFRA] P3. **Perf follow-up (NICE-TO-HAVE)** — if churn outpaces even parallel rebuilds,
       replace per-repo `git clone` with the GitHub codeload tree tarball (no `.git`, faster
       transfer) — needs `create-code-tarballs.sh` to accept an explicit SHA (no `git rev-parse`).
