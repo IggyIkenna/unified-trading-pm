@@ -279,11 +279,23 @@ wall" triage queue. Direct measurement (`git diff --name-only origin/staging ori
 
 ### Structural root-cause fixes (so this stops recurring)
 
-- [ ] [CICD] P1. **deployment-ui + Repos-CI monitor must measure CONTENT-delta, not commit-count.** The "N commits
-      behind / drain stalled / N files ahead" panel should use the GitHub `compare` API `files` array (net tree-delta) —
-      `ahead_by>0 with files:[]` = collapse as noise, render GREEN/"in sync (squash skew)", never "drain stalled".
-      Target repos: `deployment-ui` (Repos CI page) + whatever monitor/poller writes the `ci_status` LDR↔staging↔main
-      lag fields. Without this, the fleet will ALWAYS look jammed even when fully drained. Provenance: this session.
+- [x] ✅ [CICD] P1. **Repos-CI triage queue measures CONTENT-delta, not commit-count — SHIPPED 2026-06-17**
+      (deployment-api@e35dd00c, LDR; Tier-C drains to staging). Root: `classify_stuck_pr` keyed only on
+      `mergeable_state`/`v2_present`, so a content-identical promote PR (staging==main==LDR by tree, but `ahead_by>0` and
+      CONFLICTING/BLOCKED off a stale squash merge-base) was flagged `v2_never_reported`/`conflicting` → phantom "Conflict
+      wall" in the triage queue (the operator "doing nothing faster than we clear it"). Fix: `branch_head` now returns the
+      head commit `tree_sha` (the reliable content fingerprint — the compare API's three-dot `files` is inflated by the
+      stale merge-base, e.g. 37 "files" for an identical tree); `classify_stuck_pr` short-circuits to `None` when
+      `base.tree_sha == head.tree_sha`. `drain_stalled` was already content-based (LDR-relative deltas, `behind_by=0` →
+      reliable `files_changed`). **Verified live** (slot-3 stack, real GitHub): deployment-api #101 → `content_identical=True`,
+      `stuck_class=None`, dropped from the queue; remaining stuck PRs all `content_identical=False` (genuinely
+      content-bearing). 21 unit tests (2 new guard cases incl. the CONFLICTING-but-identical #101 case); basedpyright clean;
+      QG green. `repo_ci.py` / `_repo_ci_{stuck,github,types,mocks}.py` + `test_repo_ci_stuck.py`. SSOT § Class D.
+  - [ ] [CICD] P2 (residual). **deployment-ui `RepoCi.tsx` per-row "N commits behind" TEXT** still renders `ahead_by`
+        prominently for the LDR↔staging↔main columns. The backend `deltas` carry the honest `files_changed`; the UI should
+        lead with the net file-delta (render "in sync (squash skew)" when `files_changed==0` despite `ahead_by>0`), like the
+        LDR→main delta column already does. Frontend-only display polish — the operationally-painful phantom-stuck queue is
+        already fixed above. Target: `deployment-ui` (Repos CI page). [UI] — needs `pw:L2` evidence.
 - [ ] [CICD] P1. **staging→main promote PRs perpetually CONFLICT (stale merge-base).** `staging` gets no `main`
       back-merge (only LDR does via `main-backmerge-to-ldr`), so any `main`-only commit (semver version promotes,
       ci_status) makes every `staging→main` PR CONFLICTING. Fix (pick one, target PM promote workflows): (a) add a
