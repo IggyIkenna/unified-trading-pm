@@ -277,18 +277,27 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       regression guard for "consumers don't care about source". Repo: market-tick-data-service.
 - [ ] [MTDS] P1. Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` (429 is classified but never retried)
       — a multi-million-row paid-tier backfill will fail-fast on throttle without it. Repo: market-tick-data-service.
-- [x] ✅ [MTDS] P0. **Futures endpoint paths FIXED — mtds@657f615 (2026-06-16 /autonomous):**
-      `massive_tradfi_rest_connector.fetch_futures_chain()` now calls `/futures/v1/contracts` (universe) +
-      `/futures/v1/products` (metadata, merged into each contract's `name` via
-      `_normalise_futures_contract(product_map=…)`); module + method docstrings repointed `/v3/reference/futures/*` →
-      `/futures/v1/*`. **Live HTTP verify against the real Massive futures entitlement = BLOCKED-LIVE-VERIFY**
-      (operator-gated; code path corrected, not exercised here). Original finding ⤵ **Fix the futures endpoint paths —
-      ROOT CAUSE of the 404 is a WRONG PATH, not the API key** (live-confirmed + docs-verified 2026-06-08). The
-      connector uses Polygon's equities-style reference path `/v3/reference/futures/{contracts,products}` which **does
-      not exist** → plain-text `404 page not found` (NOT a JSON `NOT_AUTHORIZED` — contrast `/v3/trades/AAPL` which
-      returns JSON `403 NOT_AUTHORIZED`, the real entitlement gate). The current `MASSIVE_API_KEY` **HAS full futures
-      entitlement** — the dedicated Futures REST API (docs: `massive.com/docs/rest/futures/*`) all return **200** on it.
-      Re-map every futures cell to `/futures/v1/` (GA; `/futures/vX/` is an accepted alias):
+- [ ] [MTDS] P0. **CME futures = S3 FLAT-FILES, not the REST API — gate UNLOCKED (operator correction 2026-06-17,
+      supersedes the 2026-06-08 + 2026-06-16 REST framing).** The operator confirmed (with a sibling agent's proven 5y
+      ES pull: 1,232 daily files) that **our Stocks-Starter REST tier is equities-only — CME futures are NOT served on
+      the REST API at all**; the `/futures/v1` calls fail in prod (HTTP/SSL). So the prior "200 on the key /
+      `/futures/v1` GA" finding below AND the 2026-06-16 `/futures/v1` "fix" (mtds@657f615) were a **mis-diagnosis** —
+      the correct, proven transport is Massive's **S3 flat-files**
+      `flatfiles/us_futures_cme/minute_aggs_v1/YYYY/MM/DD.csv.gz` over `https://files.massive.com` with **path-style
+      addressing (mandatory — virtual-host SSL-fails)** + the distinct S3 keys
+      `MASSIVE_S3_ACCESS_KEY_ID`/`_SECRET_ACCESS_KEY` (NOT the REST `MASSIVE_API_KEY`). **DOING NOW (2026-06-17
+      /autonomous):** re-point the connector's futures path to the flat-files (drop the dead `/futures/v1` REST futures
+      code; equities/options REST unchanged), interval-aware right-edge `t_close` (window_start ns LEFT→RIGHT). Full
+      recipe + decision: `plans/active/issues/massive_cme_futures_flatfiles_not_rest_2026_06_17.md`. This is the SAME
+      transport as the `us_stocks_sip` flat-files ingester todo below (line ~330) — futures uses `us_futures_cme`. Repo:
+      market-tick-data-service. **(SUPERSEDED 2026-06-08 REST finding retained below for history.)** ⤵ **Fix the futures
+      endpoint paths — ROOT CAUSE of the 404 is a WRONG PATH, not the API key** (live-confirmed + docs-verified
+      2026-06-08). The connector uses Polygon's equities-style reference path
+      `/v3/reference/futures/{contracts,products}` which **does not exist** → plain-text `404 page not found` (NOT a
+      JSON `NOT_AUTHORIZED` — contrast `/v3/trades/AAPL` which returns JSON `403 NOT_AUTHORIZED`, the real entitlement
+      gate). The current `MASSIVE_API_KEY` **HAS full futures entitlement** — the dedicated Futures REST API (docs:
+      `massive.com/docs/rest/futures/*`) all return **200** on it. Re-map every futures cell to `/futures/v1/` (GA;
+      `/futures/vX/` is an accepted alias):
   - `futures_chain` reference → `/futures/v1/contracts` (+ `/futures/v1/products`, `/futures/v1/schedules`) — NOT
     `/v3/reference/futures/*`. Fields:
     `ticker,product_code,group_code,name,active,first_trade_date,last_trade_date,trading_venue,date`.
