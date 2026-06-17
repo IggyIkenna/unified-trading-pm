@@ -261,7 +261,7 @@ parallel-safe.
 - **🔴 NEW BIG FINDING — PM QG exit-code bug**: `quality-gates-base/base-service.sh` (~:2295) integer-expression error
   lets a FAILED ratchet step (observed: STEP 5.94 over-baseline) fall through to overall exit 0 + sentinel write — the
   green sentinel can be HOLLOW for ratchet steps. Filed
-  `plans/active/issues/qg_base_service_ratchet_exit_code_2026_06_11.md`; composes with the existing "LOCAL QG HARNESS
+  `plans/archive/issues/qg_base_service_ratchet_exit_code_2026_06_11.md` (RESOLVED + archived 2026-06-17); composes with the existing "LOCAL QG HARNESS
   hollow sentinel" P2 above (this is a different, additional mechanism).
 
 ### Autonomous finish-to-DONE run — FINAL REPORT 2026-06-11 (slot-4)
@@ -307,7 +307,7 @@ terraform/tofu binary on this host: install tofu OR run from the infra pipeline,
 `gcloud run jobs executions list --job lifecycle-catalogue-regen-<ag>`; (2) per-AG class-E `record_captured` backfills
 (defi=solana-migration tail / tradfi / prediction) + sports-specific sweep; (3) UAC SchemaSpec additions per V3 RED list
 (esp. prediction 11-column carry); (4) V5 dev renders + manifest_diff reports per AG → V6 ⑬–⑲ verdicts; (5) QG ratchet
-exit-code fix (issues/qg_base_service_ratchet_exit_code_2026_06_11.md — fleet-sweep first per rule 11); (6) E5
+exit-code fix (archive/issues/qg_base_service_ratchet_exit_code_2026_06_11.md — RESOLVED 2026-06-17, hardening shipped PM@a96992a33); (6) E5
 catalogue-reader repoint gated on sports+pred roll-ups existing (only cefi/defi/tradfi have prod/catalog.parquet).
 
 ### G1.schedule smoke verdict — 2026-06-11 addendum (autonomous run)
