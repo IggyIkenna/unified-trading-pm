@@ -312,7 +312,21 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
     `# type: ignore` comments. ruff clean; basedpyright on the emitter region clean (the residual 124 file-level errors
     are the pre-existing pandas/requests/argparse-`Any` baseline in the committed scan body — QG type-checks
     `tests/unit/`, not `scripts/`, so they are ungated and pre-date this work; not introduced here).
-- **2026-06-17** — Above three deltas **LANDED on LDR** at `e2e-testing@fc5cd0a` (rebased onto the LDR tip after a push-time race; file change intact). QG-green (sentinel d982ce0), ruff clean, no `# type: ignore`.
+- **2026-06-17** — Above three deltas **LANDED on LDR** at `e2e-testing@fc5cd0a` (rebased onto the LDR tip after a
+  push-time race; file change intact). QG-green (sentinel d982ce0), ruff clean, no `# type: ignore`.
+- **2026-06-17** — **Daily positioning guide (manual-execution helper)** (operator: "guide me on what to do if I execute
+  manually"). `--target-diff` dumps the TRADES (delta between the persisted CURRENT book and the TARGET ensemble book) +
+  the EXPECTED FINAL position (== target) — first run from flat = the trades to put on RIGHT NOW (all OPENs). Trade
+  actions: OPEN / CLOSE / INCREASE / REDUCE / SWITCH (coin held but structure-or-venue changed → close old + open new).
+  `--apply` SIMULATES execution — persists the target as the new current book (`--state-file`, default
+  `<out>/current_book.json`), so day-over-day the delta is genuinely vs yesterday's fill ("target == final": after
+  apply, current = the final = the target). Verified: flat→5 OPENs; apply; re-run→NO TRADES (current==target); capital
+  100k→250k→5 INCREASEs. Writes `daily_trades.json`. **Cron**: `scripts/defi/daily_positioning_dump.sh` (runs
+  `--target-diff --apply` over a rolling 120d window, dumps to `~/.defi_positioning/daily_trades_<DATE>.log` + advances
+  state) installed on the human-planning VM crontab at `5 0 * * *` UTC. Batch==live: same ensemble model/data/decisions
+  as the backtest — the live guide IS the backtest allocator evaluated on the latest day. Strict-typed
+  (`Trade`/`BookState` TypedDicts, `cast` not `# type: ignore`); ruff clean. **Shipping** via watcher (1 foreign dirty
+  dep — UAC `venue_collateral.py`).
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
