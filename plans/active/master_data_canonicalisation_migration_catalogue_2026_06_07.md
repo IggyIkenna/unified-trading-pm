@@ -261,8 +261,8 @@ parallel-safe.
 - **🔴 NEW BIG FINDING — PM QG exit-code bug**: `quality-gates-base/base-service.sh` (~:2295) integer-expression error
   lets a FAILED ratchet step (observed: STEP 5.94 over-baseline) fall through to overall exit 0 + sentinel write — the
   green sentinel can be HOLLOW for ratchet steps. Filed
-  `plans/archive/issues/qg_base_service_ratchet_exit_code_2026_06_11.md` (RESOLVED + archived 2026-06-17); composes with the existing "LOCAL QG HARNESS
-  hollow sentinel" P2 above (this is a different, additional mechanism).
+  `plans/archive/issues/qg_base_service_ratchet_exit_code_2026_06_11.md` (RESOLVED + archived 2026-06-17); composes with
+  the existing "LOCAL QG HARNESS hollow sentinel" P2 above (this is a different, additional mechanism).
 
 ### Autonomous finish-to-DONE run — FINAL REPORT 2026-06-11 (slot-4)
 
@@ -307,8 +307,9 @@ terraform/tofu binary on this host: install tofu OR run from the infra pipeline,
 `gcloud run jobs executions list --job lifecycle-catalogue-regen-<ag>`; (2) per-AG class-E `record_captured` backfills
 (defi=solana-migration tail / tradfi / prediction) + sports-specific sweep; (3) UAC SchemaSpec additions per V3 RED list
 (esp. prediction 11-column carry); (4) V5 dev renders + manifest_diff reports per AG → V6 ⑬–⑲ verdicts; (5) QG ratchet
-exit-code fix (archive/issues/qg_base_service_ratchet_exit_code_2026_06_11.md — RESOLVED 2026-06-17, hardening shipped PM@a96992a33); (6) E5
-catalogue-reader repoint gated on sports+pred roll-ups existing (only cefi/defi/tradfi have prod/catalog.parquet).
+exit-code fix (archive/issues/qg_base_service_ratchet_exit_code_2026_06_11.md — RESOLVED 2026-06-17, hardening shipped
+PM@a96992a33); (6) E5 catalogue-reader repoint gated on sports+pred roll-ups existing (only cefi/defi/tradfi have
+prod/catalog.parquet).
 
 ### G1.schedule smoke verdict — 2026-06-11 addendum (autonomous run)
 
@@ -347,9 +348,22 @@ delete, no data VM. Verdict packs: `plans/audit/results/r3_verdict_packs_2026_06
   coverage 69.8%→95.4%. **sports GREEN** gate 0/0, only −17,288 ODDS_API zero-count probe-artifact exclusion.
   **prediction GREEN — 75.3% cqg coverage** (see below). Every AG: schema_version→v9 100%, pipeline_mode blank→
   source-aware, projected ≥ `pre_migration_2026_06_12` snapshot (no shrink). The gate's RED on 4 AGs is legacy
-  data_type/venue/grain supersession + spot-verified phantom corrections, NOT data loss (captured RISES everywhere;
-  orphan sweep E=0).
-* **PREDICTION cqg correction (operator-prompted — important for resumers)**: a first pass against the **06-11**
+
+> **🔴→✅ Solana fake-history was a HIDDEN defi-`--apply` blocker — RECONCILED PRE-`--apply` 2026-06-17 (autonomous,
+> opus).** The "defi GREEN" verdict above counted **fake Solana history as captured**: a single late-April-2026 live
+> REST snapshot (Orca/Raydium/Kamino pools + Kamino/Solend lending) was back-dated across ~1200 `date=` partitions per
+> tree in the legacy `dex_pools/`/`lending_indices/` side-trees, and **62 of those shards were `captured`** in the live
+> defi `_index` (KAMINO/SOLEND lending_indices, all dated < 2026-04-14 — i.e. zero genuine per-date history). Had G4
+> `--apply` run first, it would have locked in fake Solana history as real. **Fixed**: (1) MTDS forward-only-honest
+> write gate so a now-snapshot can never be back-dated onto a historical `date=` again
+> (`solana_defi_handler.py::_filter_rows_to_target_day` + `_write_solana_shard` guard); (2) **6000** fake back-dated GCS
+> objects deleted (8 genuine 2026-04-14 capture files kept) via UTL `gcs_delete_object`; (3) re-projected defi index
+> (`_index/audit/projected_index_defi_head20260617.parquet`) confirms the **62 fake `captured` Solana rows → 0 captured
+> / `empty_confirmed`**. **Defi is now genuinely safe to `--apply` w.r.t. Solana.** SSOT:
+> `plans/active/issues/solana_defi_fake_history_snapshot_2026_06_17.md` (RESOLVED). data_type/venue/grain supersession +
+> spot-verified phantom corrections, NOT data loss (captured RISES everywhere; orphan sweep E=0).
+
+- **PREDICTION cqg correction (operator-prompted — important for resumers)**: a first pass against the **06-11**
   projection read 0.2% coverage / 542,170 `attempted_failed[ClassifierConfidenceLow]` and I provisionally flagged it
   BLOCKED-OPERATOR-DECISION (cqg-classifier coverage). **The operator correctly identified this as stale.** Root cause:
   the cqg classifier lives in **UAC** (`classify_polymarket_to_canonical_group`), and the registry was EXPANDED under
@@ -361,11 +375,11 @@ delete, no data VM. Verdict packs: `plans/audit/results/r3_verdict_packs_2026_06
   scanned/2,483s). The earlier "BLOCKED-OPERATOR-DECISION on cqg coverage" is **RESOLVED — no operator decision
   outstanding**; the registry already covers the live market set. Lesson logged for resumers: a manifest projection's
   dependencies include UAC classifiers/registries, not just the rebuild script + the corpus.
-* **M-COORD-7**: independently CONFIRMED GREEN on LDR HEAD — STEP 5.85 (`no-inline-pipeline-mode-string-literal`) = 0
+- **M-COORD-7**: independently CONFIRMED GREEN on LDR HEAD — STEP 5.85 (`no-inline-pipeline-mode-string-literal`) = 0
   hits + the AST `check_pipeline_mode_explicit_at_record_calls.py` = 0 occurrences; every DeFi live handler stamps the
   source-aware `PipelineMode.BATCH_ONCHAIN_RPC/SUBGRAPH/...` (batch==live). The checkbox was already flipped upstream
   (aaa133c72, mtds@c4c5f15); this run corroborates it.
-* **R8**: prediction migrator dry-plan on HEAD = 1,897,691 planned moves / 0 errors (GREEN); sports R8 was DONE 06-11.
+- **R8**: prediction migrator dry-plan on HEAD = 1,897,691 planned moves / 0 errors (GREEN); sports R8 was DONE 06-11.
 
 ## ⚖️ OPERATOR RATIFICATION 2026-06-11 — the COMPLETE pre-apply gate set (interactive Q&A, 8 decisions)
 
