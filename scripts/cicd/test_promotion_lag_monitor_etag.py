@@ -129,3 +129,51 @@ def test_lag_fires_on_real_content() -> None:
     with patch.object(plm, "_gh_json", return_value=real):
         res = plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
     assert res is not None and res[0] == 1
+
+
+# ── Stuck conflict-wall PR detection (promotion_queue_conflict_wall_pileup_2026_06_17) ──
+
+_NOW = dt.datetime(2026, 6, 17, 12, 0, 0, tzinfo=dt.UTC)
+
+
+def _pr(base="staging", head="dep-update/unified-trading-library-0.12.0", state="dirty", hours_old=5, num=224):
+    when = (_NOW - dt.timedelta(hours=hours_old)).isoformat().replace("+00:00", "Z")
+    return {
+        "number": num,
+        "title": "chore(promote): LDR → staging",
+        "mergeable_state": state,
+        "base": {"ref": base},
+        "head": {"ref": head},
+        "updated_at": when,
+    }
+
+
+def test_is_promotion_pr():
+    assert plm._is_promotion_pr("staging", "dep-update/x") is True
+    assert plm._is_promotion_pr("main", "feature/x") is True
+    assert plm._is_promotion_pr("feature/y", "live-defi-rollout") is True
+    assert plm._is_promotion_pr("feature/y", "dep-update/utl-0.1.0") is True
+    assert plm._is_promotion_pr("feature/y", "feature/x") is False
+
+
+def test_stuck_dirty_old_is_flagged():
+    f = plm._classify_stuck_pr("market-tick-data-service", _pr(), _NOW, 120 * 60.0)
+    assert f is not None and "CONFLICT-WALL" in f and "#224" in f
+
+
+def test_stuck_dirty_but_recent_not_flagged():
+    f = plm._classify_stuck_pr("r", _pr(hours_old=1), _NOW, 120 * 60.0)  # 60m < 120m SLA
+    assert f is None
+
+
+def test_blocked_not_flagged():
+    # We alert on CONFLICTING (dirty), NOT blocked (normally checks-in-progress).
+    assert plm._classify_stuck_pr("r", _pr(state="blocked"), _NOW, 120 * 60.0) is None
+
+
+def test_clean_not_flagged():
+    assert plm._classify_stuck_pr("r", _pr(state="clean"), _NOW, 120 * 60.0) is None
+
+
+def test_dirty_but_non_promotion_pr_not_flagged():
+    assert plm._classify_stuck_pr("r", _pr(base="feature/z", head="feature/x"), _NOW, 120 * 60.0) is None

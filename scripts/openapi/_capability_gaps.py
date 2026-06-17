@@ -26,6 +26,7 @@ from unified_api_contracts.internal.architecture_v2.capability_manifest import (
     CapabilityGapType,
     CapabilityNode,
     CapabilityNodeKind,
+    ParamSchemaSpec,
 )
 
 logger = logging.getLogger(__name__)
@@ -808,3 +809,98 @@ def extract_algo_compatibility() -> tuple[list[CapabilityNode], list[CapabilityE
 
     logger.info("  algo compatibility: %d nodes, %d edges", len(nodes), len(edges))
     return nodes, edges
+
+
+# ---------------------------------------------------------------------------
+# (g) Per-archetype flat PARAM SCHEMA — sourced from the strategy-service engine
+#     SSOT (Phase C). The wizard renders numeric/enum param forms from this.
+# ---------------------------------------------------------------------------
+
+# Relation marker for the gap edge emitted when the strategy-service probe fails.
+REL_PARAM_SCHEMA_GAP = "param_schema_gap"
+
+_PARAM_SCHEMA_ALLOWED_TYPES: frozenset[str] = frozenset({"int", "float", "decimal", "str", "enum", "bool"})
+
+
+def extract_param_schema(
+    workspace_root: Path,
+) -> tuple[dict[str, list[ParamSchemaSpec]], list[CapabilityNode], list[CapabilityEdge]]:
+    """Per-archetype flat config PARAM SCHEMA, sourced from the engine SSOT.
+
+    Probes ``strategy_service.engine.strategies.v2.param_schema``
+    ``build_param_schema_registry()`` in strategy-service's OWN ``.venv`` (the same
+    subprocess idiom as :func:`extract_service_registries`) — so the schema comes
+    from each engine's actual ``*_param(params, "<name>", <default>)`` default
+    surface (Phase B inventory), never re-typed by hand in the exporter. Returns
+    ``(param_schema, nodes, edges)``: ``param_schema`` keyed by archetype node_id
+    (``StrategyArchetype`` value), plus an honest ``not_registered`` gap node/edge
+    when the probe is unavailable (the manifest still generates without it).
+    """
+    body = (
+        "    from strategy_service.engine.strategies.v2.param_schema import build_param_schema_registry\n"
+        "    out = {'ok': True, 'param_schema': build_param_schema_registry()}\n"
+    )
+    res = _run_service_probe(workspace_root, "strategy-service", body, "param_schema")
+
+    if not res.get("ok"):
+        node_id = "service_registry:param_schema"
+        gap_node = _node(
+            CapabilityNodeKind.GAP_REGISTRY,
+            node_id,
+            "Archetype param schema",
+            registry="param_schema",
+        )
+        gap_edge = CapabilityEdge(
+            from_node_id=node_id,
+            to_node_id=node_id,
+            relation=REL_PARAM_SCHEMA_GAP,
+            status=CapabilityEdgeStatus.NOT_REGISTERED,
+            gap_type=CapabilityGapType.MISSING_EXTRACTION,
+            reason=str(res.get("error", "param_schema probe unavailable")),
+        )
+        logger.warning("  param schema GAP: %s", res.get("error"))
+        return {}, [gap_node], [gap_edge]
+
+    raw = res.get("param_schema", {})
+    param_schema: dict[str, list[ParamSchemaSpec]] = {}
+    total_params = 0
+    if isinstance(raw, dict):
+        for archetype, rows in cast("dict[str, object]", raw).items():
+            if not isinstance(rows, list):
+                continue
+            specs: list[ParamSchemaSpec] = []
+            for row in cast("list[object]", rows):
+                if not isinstance(row, dict):
+                    continue
+                rd = cast("dict[str, object]", row)
+                ptype = str(rd.get("type", "str"))
+                if ptype not in _PARAM_SCHEMA_ALLOWED_TYPES:
+                    logger.warning("  param schema: %s.%s bad type %s", archetype, rd.get("name"), ptype)
+                    continue
+                default_raw = rd.get("default")
+                units_raw = rd.get("units")
+                min_raw = rd.get("min")
+                max_raw = rd.get("max")
+                source_raw = rd.get("source")
+                enum_raw = rd.get("enum_values", [])
+                specs.append(
+                    ParamSchemaSpec(
+                        name=str(rd.get("name", "")),
+                        type=ptype,
+                        default=None if default_raw is None else str(default_raw),
+                        required=bool(rd.get("required", False)),
+                        units=None if units_raw is None else str(units_raw),
+                        enum_values=[str(v) for v in cast("list[object]", enum_raw)]
+                        if isinstance(enum_raw, list)
+                        else [],
+                        min=None if min_raw is None else str(min_raw),
+                        max=None if max_raw is None else str(max_raw),
+                        source=None if source_raw is None else str(source_raw),
+                    )
+                )
+            if specs:
+                param_schema[str(archetype)] = specs
+                total_params += len(specs)
+
+    logger.info("  param schema: %d archetypes, %d params", len(param_schema), total_params)
+    return param_schema, [], []

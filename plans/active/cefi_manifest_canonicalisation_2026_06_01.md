@@ -799,8 +799,8 @@ _futures_ seed, not the migration). Shas: `uac@ae70338d` · `is@74df991d`/`687d1
 **Absorbed (cefi-primary — slot-3 owns outright):**
 
 - `issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md` — **ABSORBED 2026-06-03** (harsh out for the
-  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX
-  with no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
+  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX with
+  no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
   CF-11 "MTDS processed_candles phantom-`captured` reconcile" todo below. Issue doc archives when that todo is GREEN.
 
 **Cross-referenced cefi slices (primary owner keeps the plan; slot-3 drives the cefi portion):**
@@ -1254,9 +1254,14 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
 
 **🟡 P1 — data-status / drilldown reflects the migrated structure (DEFERRED to a tracked follow-up unless quick):**
 
-- [ ] [CODE] P1. **deployment-api FLAG-1** — CeFi multi-source UNION coverage + per-source breakdown (dedup via
-      `select_primary_available_source`; `groupby("source")` on the `_index` source column). CeFi single-source today,
-      but the column/dedup path must exist for swap-resilience. Cross-ref
+- [x] ✅ [CODE] P1. **deployment-api FLAG-1** — CeFi multi-source UNION coverage + per-source breakdown —
+      **deployment-api@3390c98**: when provenance columns are present the coverage rows are union-reduced to CELL grain
+      (≥1 source `captured` ⇒ cell captured, not row-grain) and a per-`(pipeline_mode, source)` `source_breakdown` is
+      surfaced (reuses the `services/data_status_union` machinery). Regression test: a CeFi cell with source A=captured /
+      B=failed → union cell captured + both sources in the breakdown. Column/dedup path now exists for swap-resilience.
+      **Bundled same ship: stale-tolerant read** — the endpoint moved off the freshness-gated UTL
+      `read_availability_index` to the stale-tolerant `read_manifest_index` (empty-live → consolidated `_index`
+      fallback, migration-safe; fallback + unit test already in `services/manifest_source.py`). Cross-ref
       `downstream_services_manifest_canonicalisation_2026_06_01.md` FLAG-1.
 - [ ] [CODE] P1. **deployment-api FLAG-3 — RE-SCOPED (slot-3 evaluation 2026-06-05): NOT a mechanical
       f-string→`resolve_bucket_name` swap; a blind swap would BREAK working code.** The `commentary/pipeline_uat.py`
@@ -1285,8 +1290,8 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
 
 **⚪ P2 / needs-confirm (tracked):**
 
-- [ ] [CODE] P2. **MDPS GAP-7** — `category`→`asset_group` param rename in `dependency_checker` (vocabulary; cross-ref
-      downstream plan GAP-7).
+- [x] ✅ [CODE] P2. **MDPS GAP-7 — DONE mdps@4363bce** — `category`→`asset_group` param rename in `dependency_checker`
+      (vocabulary; cross-ref downstream plan GAP-7). Re-verified 2026-06-16: zero checker `category` params remain.
 - [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain).
       **PARTIALLY CONFIRMED (slot-3 read-only 2026-06-03):** the finalize path DOES run cluster validation
       (`record_captured_from_counts(expected_root_clusters, observed_clusters)`; CLAUDE.md 4-pillar "cluster coverage ≥

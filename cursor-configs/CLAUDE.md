@@ -569,8 +569,24 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   chain: which workflow/dispatch/cron moves it?); if you cannot name it, that is a diagnosis task, not a wait (the drain
   gap was bug #11: `staging_commits` was never written for non-breaking merges, so no watcher duration would ever have
   succeeded); (3) ONE deadline = one expected-cadence interval of the mechanism, then STOP and diagnose — never re-arm
-  the same watcher after a silent expiry. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher
-  coverage".
+  the same watcher after a silent expiry; (4) **the verdict line must be MEASURED, never a hardcoded conclusion stapled
+  onto a proxy signal (codified 2026-06-17)** — incident: a terminal check
+  `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released"` reported a TRUE measurement (`PR#81 MERGED`)
+  but a FALSE conclusion (`lock released`) it never read; the PR merged into _staging_ while the breaking-cascade
+  `staging_status.locked` flag was a SEPARATE state still `True` ("SIT running"). Every clause after the colon must
+  correspond to a variable the loop actually queried THIS iteration — if the goal is "lock released" the check reads the
+  lock flag (`grep -q 'locked=False'`), if "fix on main" it greps `main`; "PR merged" / "staging green" / "SIT passed" /
+  "lock released" / "content on main" are DISTINCT pipeline checkpoints and a watcher proves only the one it literally
+  queries (no editorial adjectives in the echo). **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick ONE wake
+  source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
+  (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE
+  background _orchestrator_ that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an
+  active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator
+  messaged): the pending tracked task is the harness's active wake source and SHADOWS the standalone timer (which is
+  in-session best-effort, not an OS alarm — also won't fire if the session is idle/asleep). Use `ScheduleWakeup` ONLY
+  when no tracked task is in flight (self-pacing `/loop`, or polling external/untracked state); if something MUST
+  resume, make it a tracked task that exits on the condition, never the timer alone. SSOT:
+  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage" + § "Wake sources".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
@@ -971,9 +987,12 @@ the SAME change. SSOTs: `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT";
 > landing, BLOCKs on `--hotfix`. `--hotfix` requires a `[hotfix]` marker (auditable break-glass; still hits the staging
 > lock). `STAGING_GREEN` **inherits** from the LDR→staging PR's v2 (A1; `push:[staging]` QG dropped). The promote bots
 > (`ldr-to-staging-promote` + `ldr-to-main-promote`) run `check_strict_quickmerge.py` over the promote range and **won't
-> arm auto-merge** on a non-carve-out commit lacking the `Quickmerge:` trailer (D1). SSOT:
-> `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
-> decoupling".
+> arm auto-merge** on a non-carve-out commit lacking the `Quickmerge:` trailer (D1). **The promote range MUST be the
+> since-last-promote marker range (`<last-promoted-LDR-sha>..LDR`), NOT raw `staging..LDR`/`main..LDR` — squash-merges
+> make the raw range re-flag an already-promoted trailer-less commit on EVERY drain forever (the `14b11e2` perpetual
+> "Provenance gate BLOCKED"); fail-safe (stale marker over-flags, never under-flags). Do NOT revert to `staging..LDR`.**
+> SSOT: `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
+> decoupling" + `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`.
 
 CODE reaches the integration branch **only** through `quickmerge --agent --files` (Pass-1 QG sentinel → Pass-2 commit +
 auto-merging staging PR). A direct `git push` of code to `live-defi-rollout`/`staging`/`main` is banned: it dodges the

@@ -59,6 +59,17 @@ apply.
 > **Both fleets quiesced before any `--apply`; rollback snapshots in place. The per-AG `--apply` pre-flight gate (1) is
 > SATISFIED.** Resume ONLY after all per-AG `--apply` complete + verified — the exact reverse-commands are below so
 > nothing is left paused.
+>
+> **⚠️ DRAIN SCOPE (clarified 2026-06-17 — operator question): the drain stops ONLY DATA-CAPTURE / data-pipeline VMs —
+> the bucket-writing prefixes in `VM_PREFIX_TO_BUCKET` (`vm-defi`/`vm-cefi`/`vm-tradfi`/… capture + `EPHEMERAL_BATCH` /
+> `EPHEMERAL_EXPERIMENT` / `SCHEDULED_RECURRING` runners that write manifest shards). It does NOT — and MUST NOT — stop
+> the agent infrastructure: the Central / Orchestrator VM (`agent-orchestrator-vm-1`, registry id `planning`), the Human
+> Planning VM (registry id `human-planning` — the interactive VM the operator works on), or the `agent-orch-vm-*` epic
+> worker fleet (`bucket=None`, `LONG_LIVED_LIVE`) / any `tier=daemon`-tagged VM. Those run agents, not data capture, so
+> quiescing them would kill the very session driving the migration. The drain recipe targets capture prefixes by
+> `lifecycle_class` + non-null `bucket`; it never SIGTERMs the orchestrator/planning VMs.** (Today the per-epic capture
+> fleet is post-cutover / not-running anyway — only the 2 agent VMs are live — so the resume-drain is a no-op-or-small
+> set; this clarification keeps it correct when capture VMs are relaunched for the real `--apply`.)
 
 **What was done (central-element-323112 + AWS 427895769566):**
 
@@ -105,6 +116,41 @@ done
 > `aws events list-rules --region ap-northeast-1 --query "Rules[?State=='DISABLED' && starts_with(Name,'uts-prod-consolidator')]"`
 > (→ empty). Do NOT resume until the migration is verified-complete + the new manifests are consolidated.
 
+## 🟦 Gate-State Board (G0–G5 × asset_group) — M-COORD-4
+
+> **Critical-path snapshot for the orchestrator.** 🟢 = promoted/green · 🟡 = prepared but gated (dry-run-green,
+> awaiting an operator-fired `--apply` or a real-data/credentialed run) · 🔴 = not started / blocked-downstream.
+> **Recomputed from the registered plans' checkboxes + the cross-cutting A–H verdict + the per-AG `--apply` (G4) ticks —
+> NOT hand-maintained divergent state.** Refresh at each gate promotion (re-read the WAVE checkboxes §below, the A–H
+> verdict table, and the per-AG `G4 --apply` checkboxes; or run `regenerate_active_plan_inventory.py`). **As of
+> 2026-06-16.**
+
+| asset_group       | G0 C-PATH + pmode | G1 catalogue+enum | G2 per-AG ①–⑫ audit | G3 UNION UI | G4 `--apply` | G5 backfill→100% |
+| ----------------- | :---------------: | :---------------: | :-----------------: | :---------: | :----------: | :--------------: |
+| **defi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
+| **cefi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
+| **tradfi**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
+| **sports**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
+| **prediction**    |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
+| **cross-cutting** |        🟢         |        🟢         |      🟢 (A–H)       |     🟢      |     n/a      |       n/a        |
+
+**Cell basis (the registered evidence each column reads):**
+
+- **G0** 🟢 all — "G0 FULLY GREEN (9/9)" tick (the `live_websocket`→`live_<source>` M1 migration + C-PATH read/write +
+  doc-reconcile; driven 2026-06-16). BATCH+LIVE `--apply` foundation-clear on the G0 axis.
+- **G1** 🟢 (dry) — cross-cutting C+D rows 🟢 (`enumerate_expected_universe` v2 shape-aware +
+  `build_instrument_catalogue` ⊇ present-set + `migrate_instruments_store_v9` projection); migrator documented
+  **dry-run-GREEN all 5 AGs** (cefi 30,803 · defi 125,242 · sports 2.68M · tradfi · pred 493 → 100%). The real-data
+  candidate-count + `--apply-write` catalogue seed rides each AG's gated G1.run (IS backfill) → it promotes with G4,
+  hence 🟡-on-real-data but 🟢 on code+dry-run.
+- **G2** 🟡 per-AG / 🟢 cross-cutting — the cross-cutting **A–H pre-apply audit verdict is 🟢 (REGRESSION RISK: NONE)**;
+  the per-AG ①–⑫ dry-run audits are owned by each per-AG plan (in progress / gated on that AG's IS backfill).
+- **G3** 🟢 — `deployment-api` UNION view (`union_reduce_to_cells`, F/H rows; 21 tests green); could-exist denominator
+  over the 4-state union. Serves all AGs.
+- **G4** 🟡 (gated) — every per-AG `G4 --apply` checkbox is open `[ ]`; the irreversible single-walk is the operator
+  HARD-STOP (agents prepare dry-run-green + STOP). Rollback snapshots `pre_migration_2026_06_08.parquet` staged.
+- **G5** 🔴 — backfills→100% + cost-swap (WAVE 5) start only after G4 `--apply`.
+
 ## 🟢 Dispatch waves (live — who owns what NOW)
 
 Slot map: **2=DeFi · 3=CeFi · 4=Sports · 5=Prediction · 6=TradFi · 7=cross-cutting**.
@@ -143,22 +189,26 @@ parallel-safe.
 > prod data): agents prepare it dry-run-green and STOP; the operator fires `--apply`. No `DEFERRED`/`BLOCKED-OPERATOR`
 > end-states otherwise; journal to the per-AG plan across compaction; end with a report.
 
-- [ ] [MIGRATION] P0. **🟡 G0 FOUNDATION GREEN — BATCH dry-runs UNBLOCKED; M1-BREAKING (live) is the last gate before a
-      live-containing `--apply` (updated 2026-06-16 /autonomous).** The GATE-0 Phase-0 DAG
+- [x] ✅ [MIGRATION] P0. **G0 FULLY GREEN (9/9) — BATCH **and** LIVE `--apply` foundation-clear; the `live_websocket`
+      multi-source path-collision gate is REMOVED (updated 2026-06-16 /autonomous).** The GATE-0 Phase-0 DAG
       (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` § "GATE-0 EXECUTION PLAN") was driven to
-      **7/9** this session: ✅ **fix #1** (mtds@89807b4) · ✅ **fix #3** features reader pm-aware (features@795e4f4) ·
-      ✅ **cadence column** (utl@dfe3385f) · ✅ **M3 `could_exist`** (uac@d56b9cc2) · ✅ **M4 `select_for_mode`**
-      (uac@7441a692 + blrs@0e17d7e) · ✅ **M5b data-status cadence dim** (deployment-api@66e8562) · ✅ **GATE-0 SIT**
-      (system-integration-tests@db14463 — write→manifest(all 4 cols)→union→`could_exist`/`select_for_mode` gate; LIVE
-      leg skip-marked). Every touched repo is QG-green. **So the BATCH-path foundation is GREEN → the Phase-1 BATCH
-      dry-runs are unblocked NOW.** **REMAINING (2/9, the plan's explicit gated NEXT tranche — fully specified there):**
-      **M1-BREAKING** = the `live_websocket`→`live_<source>` WRITER/reader migration (UAC helper
-      `live_pipeline_mode_for_venue` LANDED uac@276b6a6; each writer/reader site is non-breaking single-repo; the
-      `LIVE_WEBSOCKET` alias removal is the one breaking step, LAST, gated on 0 fleet refs) + **M5c/d** UI cadence
-      drilldown (display-only). **HARD SEQUENCING HOLDS:** a REAL `--apply` over any corpus that contains **live** rows
-      must wait for M1-BREAKING (else it bakes the #5 `live_websocket` multi-source path collision). A `--apply` over a
-      purely-BATCH corpus is foundation-clear once G1/G2/G3/G3.5 are also green. (G1 also carries the 2026-06-16
-      UAC-denominator callout.) — driven 2026-06-16.
+      **9/9** this session. The earlier 7/9 foundation (fix#1 mtds@89807b4 · fix#3 features@795e4f4 · cadence column
+      utl@dfe3385f · M3 `could_exist` uac@d56b9cc2 · M4 `select_for_mode` uac@7441a692+blrs@0e17d7e · M5b
+      deployment-api@66e8562 · GATE-0 SIT system-integration-tests@db14463) was then completed by the final 2 items: ✅
+      **M1-BREAKING** — the `live_websocket`→source-aware `live_<source>` migration across **8 repos**
+      (execution@04218fbc · batch-live-reconciliation@3bad2fe · deployment-api@aa18d8ae **(reader
+      exact-match→`startswith("live")` bug FIXED)** · market-data-processing@30e7672 · market-tick-data@84a15cc ·
+      unified-trading-library@2afb22bd (resolver source-aware + `close_candle_writer` pipeline_mode required) ·
+      **unified-api-contracts@28bd50e — `LIVE_WEBSOCKET` alias member DELETED** + `source_string_for`/`transport_of`
+      special-cases removed + closed-set round-trip validates every member · system-integration-tests@ec46de8 — SIT LIVE
+      leg un-skipped + green). `rg "live_websocket|LIVE_WEBSOCKET" --type py` = **0 fleet-wide**. The breaking UAC bump
+      (→0.15.0) fired the dep-update fan-out: **4/6 consumer rebuilds GREEN** (validates compatibility); 2 stale-base
+      transients (UTL PR#369 / BLRS PR#81, cut pre-migration → self-resolve on promotion-to-main — see the G0 plan
+      tick-7). ✅ **M5c/d** UI cadence drilldown (display-only, pw:L2): deployment-ui@687d4ce (pw:L2 ✓ 216/216) +
+      unified-trading-system-ui@41b1567c (pw:L2 ✓ 31/31, parity-gap port). Every touched repo is QG-green / pw:L2-green.
+      **So a REAL `--apply` over a corpus containing LIVE rows is now foundation-clear on the G0 axis** (the #5
+      collision is eliminated); the remaining `--apply` gates are G1/G2/G3/G3.5 + the pre-migration drain. (G1 also
+      carries the 2026-06-16 UAC-denominator callout.) — driven 2026-06-16.
 - [ ] [DATA] P0. **slot 2 (DeFi) — G4 `--apply`**: instruments-store v9 walk → MTDS raw-tick v9 → catalogue seed → IS
       backfill (Era-B relabel rides the migrator's final step). Operator-fired; on real VM/tarball; rollback =
       `pre_migration_2026_06_08.parquet`. Repo: market-tick-data-service + instruments-service.
@@ -348,11 +398,16 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       ask_size); one-shot consolidations merged backfill shards (index ≥ snapshot everywhere — no loss). Full
       narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
       `\_index/audit/orphan_sweep*<ag>.parquet`+`orphan*backfill*<ag>.parquet`.
-- [ ] [UAC] P0. **R2-schema — carry ALL dropped columns into v9**: extend `CEFI/PREDICTION/...` schema specs so CF-18 is
-      GREEN per AG — the 11 polymarket trades columns (amount, asset, conditionId, outcomeIndex, transactionHash,
-      data_source, market_type, resolution_period, symbol, timestamp, underlying) + SchemaSpecs for defi
-      rewards/risk_params/utilization(+rest of RED list) + tradfi/trades. Re-run `migration_schema_completeness` per AG
-      to 0 RED. slot-3. Repo: unified-api-contracts (+instruments-service rerun).
+- [x] ✅ [UAC] P0. **R2-schema — carry ALL dropped columns into v9** — **unified-api-contracts@715e2ed**: v9
+      `SchemaSpec` registry extended so CF-18 is GREEN per AG — all 11 polymarket trades columns carried (amount, asset,
+      conditionId→`condition_id`, outcomeIndex→`outcome_index`, transactionHash→`transaction_hash`,
+      data_source→`source`, market_type, resolution_period, symbol, timestamp, underlying — camelCase via
+      `ColumnSpec.source_aliases`, never duplicate canonical cols) + new SchemaSpecs for defi
+      rewards/risk_params/utilization + tradfi/trades (+ the full RED list: defi dex_pool_swaps/lending_indices, tradfi
+      options_chain/CME, etc.). Completeness regression suite `tests/unit/test_schema_spec_completeness.py` (registry
+      round-trip + alias hygiene + per-cell source-column completeness + previously-RED pins) GREEN. The
+      `migration_schema_completeness` per-AG re-run (consumes the contract via `carried_column_names`, the same SSOT) is
+      now 0-RED at the contract level. slot-3 → this autonomous tail. Repo: unified-api-contracts.
 - [ ] [DATA] P0. **R3-verdicts — full V5 render + V6 verdict per AG**: ✅ **R7 rebuild leg DONE for ALL FIVE AGs
       (2026-06-11 ~20:40Z)** — CF-20 `--beta-manifest-out` wired into defi/cefi/prediction/sports rebuilds
       (mtds@77f1a61 + mtds@03fbc9b; tradfi = the parallel reference loop), full-history projections run on prod →
@@ -492,20 +547,32 @@ current-code fetchability; the image-rebuild ride happens when the LDR→staging
 
 #### R5 remediation todos (dispatch — surface per repo)
 
-- [ ] [BUG] P0. **R5-fix-1 — cefi tardis datetime64-vs-date comparison**: locate + fix the shard-isolated
-      `Invalid comparison between dtype=datetime64[ns] and date` in the cefi tardis batch download path (instruments
-      load OK; bug fires pre-HTTP). Repro in R5 ledger row 1. Then re-smoke BINANCE-FUTURES trades 1-day dry-run to
-      GREEN (proves the actual tardis CSV download + creds end-to-end). Repo: market-tick-data-service.
-- [ ] [BUG] P1. **R5-fix-2 — tradfi FX yahoo writer missing `instrument_id`**: FX daily ohlcv_24h dataframe lacks the
-      required `instrument_id` column at StreamingParquetWriter pre-write validation. Add the column derivation (same
-      pattern as the CBOE/VIX path which passes). Repo: market-tick-data-service.
-- [ ] [BUG] P1. **R5-fix-3 — footystats ODDS manifest source label**: `footystats_odds_fetch` stamps `source='odds_api'`
-      but UAC `SOURCE_PRIORITY[(sports, ODDS)]` allows only `footystats` — fix the source param (or, if odds_api is
-      genuinely the upstream, extend SOURCE_PRIORITY deliberately). Repo: instruments-service (+UAC if priority change).
-- [ ] [BUG] P1. **R5-fix-4 — kalshi instruments 400**: kalshi `GET /markets?limit=200&status=active` returns HTTP 400 —
-      fix the request shape against current Kalshi API docs (public endpoint, no creds), then run the prediction IS
-      backfill so KALSHI `instrument_availability` exists and the mtds kalshi trades path unblocks. Repo:
-      instruments-service (adapter), mtds re-smoke after.
+- [x] ✅ [BUG] P0. **R5-fix-1 — cefi tardis datetime64-vs-date comparison — DONE mtds@657f615 (2026-06-16
+      /autonomous).** DIAGNOSIS: at LDR-tip the raw `datetime64[ns] vs date` comparison no longer exists — every date
+      compare in the cefi tardis path uses safe `.dt.date` (vectorized, `tardis_symbol_resolution._resolve_symbols` GCS
+      branch) or scalar `pd.Timestamp(x).date()` (`cefi_catalog_reader`); exhaustive scan = 0 unguarded compares; the
+      `eb33603` repro now exits 0. The durable guard SHIPPED: new
+      `tests/unit/test_tardis_resolve_symbols_date_boundary.py` — 9 tests feeding a **real datetime64[ns]** availability
+      parquet at the boundary (from==target / ±1d, to==target / ±1d, NaT), asserting NO `Invalid comparison` raises +
+      correct pre-listing/expired filtering (would re-catch a `.dt.date`→raw regression). **Live re-smoke of the actual
+      BINANCE-FUTURES Tardis CSV download = BLOCKED-LIVE-VERIFY** (needs real Tardis creds + network; `--block-network`
+      here) — the bug-class is closed + test-guarded regardless. Repo: market-tick-data-service.
+- [x] ✅ [BUG] P1. **R5-fix-2 — tradfi FX yahoo writer missing `instrument_id`** — DONE mtds@ed23954. Added
+      `rec["instrument_id"] = f"{fx_pair.base}-{fx_pair.quote}"` in `umi_tick_provider._fetch_yahoo_fx` (mirrors the VIX
+      path) + 75-line regression test. (Yahoo FX path lives in `umi_tick_provider.py`, not a separate adapter.)
+      QG-green.
+- [x] ✅ [BUG] P1. **R5-fix-3 — footystats ODDS manifest source label** — **instruments-service@b475ae8** (/autonomous).
+      NOT already correct: `_sports_ref_source("footystats_odds")` returned `odds_api` (stripped `batch_` off the
+      pipeline_mode path-key `batch_odds_api`) → `record_captured(data_type=ODDS, source='odds_api')` failed
+      `MissingSourceError` (UAC `SOURCE_PRIORITY[(sports, ODDS)]==['footystats']`). Fix = scoped
+      `_SPORTS_REF_SOURCE_OVERRIDE` (path-key ≠ source case) → returns `footystats`; the two existing tests codifying the
+      wrong `odds_api` corrected (they ARE the regression guard). Evidence: `tests/unit/test_sports_reference_v9_path.py`.
+- [x] ✅ [BUG] P1. **R5-fix-4 — kalshi instruments 400** — DONE is@4562dad (code). Root-caused: Kalshi `status` is a
+      LIFECYCLE filter whose valid values are `unopened`/`open`/`closed`/`settled` — `status=active` is rejected 400
+      (the per-MARKET `status` field IS `"active"` for tradeable markets, but the REQUEST filter is `status=open`).
+      Changed `status=active`→`status=open` in `prediction/kalshi.py` + test. **Residual (still open):** the actual IS
+      kalshi prediction backfill RUN + mtds re-smoke (operational, gated on the capture-restart sequencing). Repo:
+      instruments-service.
 - [ ] [INFRA] P1. **R5-fix-5 — restore manifest consolidator** for `instruments-store-*` (+ the defi data buckets) as
       part of the post-apply restart sequencing — every IS CLI loud-fails on the stale index today
       (`MANIFEST_ALLOW_STALE_FALLBACK=true` is the interim recovery). Repo: deployment-service (Cloud Run Job +
@@ -1076,7 +1143,12 @@ tests across 6 repos. SAMPLED-via-prior-evidence — the real-prod GCS dry-run c
 **Finding F-X1 (P2, cross-cutting / bucket-SSOT) — STALE MTDS test asserts the pre-SSOT bucket shape (code is
 CORRECT).**
 
-- [ ] [TEST] P2.
+- [x] ✅ [TEST] P2. **F-X1 — DONE mtds@657f615 (2026-06-16 /autonomous).** Rewrote the stale tautological test (renamed
+      `test_adapter_resolves_test_bucket_when_is_test_run` → `test_adapter_resolves_canonical_bucket_shape`): old
+      assertion encoded the legacy env-as-prefix shape `market-data-tick-test-cefi-{project}`; new assertion asserts the
+      canonical `resolve_bucket_name` env-after-asset_group shape `market-data-tick-cefi-test-my-project`. Code was
+      already correct (`get_tick_data_bucket`→`get_market_data_bucket`→`resolve_bucket_name`). Test green; mtds QG
+      green. Original finding below ⤵
       **`market-tick-data-service/tests/market_interface/adapters/cefi/test_tardis_canonical_output.py::test_adapter_resolves_test_bucket_when_is_test_run`
       is STALE — it asserts the legacy `is_test_run`→`market-data-tick-test-cefi-{project}` f-string shape, but
       `engine.orchestrator.get_tick_data_bucket` was canonicalised to the bucket-name SSOT (`resolve_bucket_name`,
@@ -1948,9 +2020,11 @@ speed-note (both deferred optimisations, non-blocking).
       the ⑨ + ⑧ readiness checks; an AG's audit now fails RED until they hold; cross-AG ownership stays in this
       coordinator's registry (not duplicated). Residual: cite CF-13/14 in each `*_master_audit_instructions.md`
       ownership matrix on next touch. parent_epic: manifest_master.
-- [ ] [CHORE] P1. **M-COORD-4 — wire the gate-state board**: a small status block here (G0…G5 = RED/AMBER/GREEN per AG)
-      refreshed at each gate promotion, so the orchestrator sees the critical path. Recompute from the registered plans'
-      checkboxes (never hand-maintain divergent state). parent_epic: manifest_master.
+- [x] ✅ [CHORE] P1. **M-COORD-4 — gate-state board WIRED** (pm@docs 2026-06-16): added the
+      `## 🟦 Gate-State Board     (G0–G5 × asset_group)` block at the top of this coordinator (above §Dispatch waves) —
+      🟢/🟡/🔴 per AG, sourced from the WAVE checkboxes + the A–H cross-cutting verdict + the per-AG `G4 --apply` ticks,
+      with a per-cell basis + a refresh note (re-read at each gate promotion, or `regenerate_active_plan_inventory.py`).
+      Current state: G0🟢 G1🟢(dry) G2🟡 G3🟢 G4🟡(operator-gated) G5🔴 across all 5 AGs. parent_epic: manifest_master.
 - [x] ✅ [DEFI] P1. **M-COORD-5 (DeFi slice, slot-2) — DONE mtds@f80c50f1**: `rebuild_defi_manifest.py`
       `writer.add(...)` now passes `asset_group=defi` + the source-aware `pipeline_mode` + `source` + `transport` (no
       more blank `pipeline_mode`/`source` — standardisation finding #1 resolved); migrator likewise stamps source-aware
@@ -1973,7 +2047,7 @@ speed-note (both deferred optimisations, non-blocking).
       sink=None)`at the top of`main()`(mirror the sports fix;     migrators that do pure object-path moves and never read the manifest — e.g.`migrate_sports_canonical_v9`
       — do NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
       instruments-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
-- [ ] [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
+- [x] ✅ [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
       (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
       rebuild** ✅ source-aware (mtds@f80c50f1) but the **41 inline `pipeline_mode="batch"` literals in the DeFi LIVE
@@ -1991,6 +2065,31 @@ speed-note (both deferred optimisations, non-blocking).
       market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08
       (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY verdict above, which covered
       migrator/rebuild but not the live handlers).
+
+      **✅ RESOLVED 2026-06-17 (mtds@c4c5f15) — verified, not the stale "already shipped" note (line 240, which over-claimed
+      the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
+      sibling item @1727 (mtds@57242af5, 41 batch literals swept → `rg "pipeline_mode=\"live\"|\"batch\"" --type py` = 0 in
+      mtds non-test source). The REMAINING live-path batch≠live split (#1) was the runtime coarse `"live"` from each
+      handler's `_pipeline_mode_for(run_tag)` passing through to `write_defi_rows` — `canonical_write.py:138` only upgraded
+      `None`/`"batch"` → `batch_<source>`, so a live `dex_swaps`/`_dex_pools_subgraph` run landed at `pipeline_mode=live/`
+      (coarse) vs the migrated batch corpus's `batch_<source>/`. **FIX**: extended the `canonical_write` chokepoint to
+      upgrade coarse `"live"`/`"replay"` → source-aware `live_<source>`/`replay_<source>` via the SAME UAC source map
+      (`live_pipeline_mode_for_venue`) the batch branch derives from. Verified symmetric: `batch_onchain_subgraph` ↔
+      `live_onchain_subgraph`; +regression test `test_live_run_tag_stamps_source_aware_live_mode`. Coverage confirmed: the
+      DeFi DATA writers (`dex_swaps`, `_dex_pools_subgraph`) all route coarse values through `write_defi_rows` (chokepoint
+      catches them); `websocket_streaming_handler` already used `live_pipeline_mode_for_venue` (source-aware); the engine
+      `*_catalog_reader.py` carry NO coarse literal on HEAD. **Residual (P2, NON-blocking — not coarse, so out of this
+      item's scope)**: `dex_pools_handler.py` honest-absence `recorder.record_failed(...)` calls hardcode the SOURCE-AWARE
+      `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
+      the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
+
+- [ ] [DEFI] P2. **dex_pools_handler honest-absence `record_failed`/`record_*` calls hardcode mode** — they pass
+      `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at `dex_pools_handler.py:410/467/
+      475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence rows mislabel the mode (batch vs live).
+      NON-blocking (source-aware, doesn't violate STEP 5.85; failure-row mode-labels don't affect the DATA corpus the v9
+      walk migrates). Fix = pass `_pipeline_mode_for(run_tag)` (→ chokepoint upgrades) IF dex_pools is live-reachable, OR
+      confirm dex_pools is batch-only and leave it. Repo: market-tick-data-service. Provenance: M-COORD-7 resolution
+      2026-06-17.
 
 ## Demotion + linkage record
 

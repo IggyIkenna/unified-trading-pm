@@ -45,7 +45,7 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       `venue_accepts_collateral`/`get_collateral_haircut` with an explicit fraction→percent boundary conversion (the
       100× units-bug guard). Orphaned `margin_mode` field removed. Bybit-stETH + Drift-mSOL flagged `# PLACEHOLDER`
       (operator-held). Kamino kept out (lending). QG green both repos (UAC 2 tests, exec-svc 22 tests).
-- [ ] [DEFI] P2. **F28 live-API probe** to finalize the two operator-HELD collateral haircuts in UAC
+- [x] ✅ [DEFI] P2. **F28 live-API probe** to finalize the two operator-HELD collateral haircuts in UAC
       `registry/venue_collateral.py` — Bybit stETH (0.10 placeholder) + Drift mSOL (0.10 placeholder); replace the
       `# PLACEHOLDER — pending live-API probe (F28, operator-held 2026-06-15)` comments with probed values + source
       citation. Provenance: F28 consolidation (UAC@f302c72 / execution-service@8a3c6ab). Target: unified-api-contracts.
@@ -54,13 +54,33 @@ F47/F48 surface = PM `scripts/openapi/generate_capability_verdict_matrix.py`, en
       placeholders. The conservative-value pick + ship is a `BLOCKED-OPERATOR-DECISION` the operator themselves set; not
       an autonomous-resolvable item. The margin cluster already reads these via the F28 accessors, so a later value
       update flows through with no consumer change.
+      **GO-LIVE MARKERS NOW LOUD — UAC@5fccaa7 (2026-06-17, operator-requested):** the two placeholders are flagged
+      unmissably in code so they can't ship to live un-updated: (1) a `⚠️ PRE-GO-LIVE TODO` banner at the top of
+      `registry/venue_collateral.py`; (2) `⚠️ PLACEHOLDER HAIRCUT — UPDATE … BEFORE GO-LIVE` inline comments + a
+      `PLACEHOLDER 0.10 — update before go-live` string in each entry's `notes` field; (3) a machine-checkable
+      `PLACEHOLDER_HAIRCUTS_PENDING_GO_LIVE = {("BYBIT","stETH"), ("DRIFT","mSOL")}` constant (exported from
+      `unified_api_contracts.registry`) so a go-live preflight can ASSERT the set was emptied/re-probed. Conservative
+      0.10 under-counts collateral (fails safe to RUN; not accurate for sizing).
+      — **DONE — LIVE-PROBED + operator-authorised UAC@bc45549 (2026-06-17).** Operator gave the go-ahead ("sure probe
+      live, you got the credentials"). Probed via the workspace creds (Helius RPC, `gcloud secrets:helius-api-key`):
+      **Bybit stETH = 0.10** — Bybit public UTA collateral API `GET /v5/spot-margin-trade/data` `collateralRatio=0.9`
+      (base/non-VIP tier) → `1-0.9=0.10` (placeholder was correct). **Drift mSOL = 0.20** — Drift mainnet on-chain
+      spot-market idx2 `initialAssetWeight=8000` (0.80) read via Helius, decode validated against USDC (idx0=10000/1.0);
+      conservative collateral haircut = the INITIAL weight (1-0.80=0.20) — the prior 0.10 placeholder was the
+      maintenance value, **2x too generous for posting**. **SCOPE EXTENSION (same on-chain finding, operator informed):**
+      the WHOLE Drift block was recorded below the on-chain initial weight → also corrected **SOL 0.05→0.15** (idx1
+      0.85) and **JitoSOL 0.10→0.20** (idx6 0.80) — all conservative (higher haircut = counts less collateral = fails
+      safe). The cited transcription `internal/architecture_v2/collateral_registry.py` (`source_of_truth=venue_collateral`,
+      percent units) was synced to match (SOL 15 / mSOL 20 / JitoSOL 20); 3 UAC tests updated;
+      `PLACEHOLDER_HAIRCUTS_PENDING_GO_LIVE` now empty. QG green. NOTE: re-probe on a Bybit-tier / Drift-governance
+      change; Drift weights can be moved by governance.
 - [x] ✅ [SCRIPT] P2. **F47/F48 — surface-correct the verdict-matrix over-claims.** — DONE **PM@d0f66d732 (PR #339) +
       UAC@a1f8b38** (2026-06-15). F47: leg-eligible venues whose folded slot-token ∉ `KNOWN_VENUE_TOKENS` → `blocked`
       with `unbuildable_slot_venue` (186 cells / 11 venues, DERIVED not enumerated). F48: archetypes whose value ∉ the
       v2 engine-backed set → `not_registered(no_v2_engine)` (22 VOL*\*/MARKET_MAKING*\*, retained the 3 engined ones).
       AVAILABLE 16913→12977 (−3936); total 24752→21600; deterministic. UI re-bundle dispatched (uts-ui + dep-ui →
       21600/12977). Engine builds = Phase C.
-- [ ] [SCRIPT] P3. **F48 follow-up — replace the engine-registry TRANSCRIPTION with a venv probe (single-canonical).**
+- [x] ✅ [SCRIPT] P3. **F48 follow-up — replace the engine-registry TRANSCRIPTION with a venv probe (single-canonical).** — DONE **PM@362f90404** (2026-06-17). `_ENGINE_BACKED_ARCHETYPE_VALUES` transcription DELETED from the generator; `_probe_engine_backed_archetypes(workspace_root)` reads `ARCHETYPE_ENGINE_REGISTRY` LIVE via strategy-service's `.venv` subprocess (reusing `_capability_gaps._run_service_probe`, the manifest-exporter idiom), fail-loud on probe failure. `build_matrix(engine_backed_archetypes)` now takes the set as an INJECTED param so `main()` supplies the live-probed set while the deterministic unit test stays hermetic (passes `_FIXTURE_ENGINE_BACKED`); a new `test_fixture_matches_live_engine_registry` guards the fixture against drift (skips when `.venv` absent, runs in the workspace). 8 tests green; ruff + basedpyright clean; PM QG green (required a back-merge of main→LDR for the routine 1.2.146→1.2.147 PM version-alignment churn). Target: unified-trading-pm.
       The F47/F48 fix transcribed strategy-service's `ARCHETYPE_ENGINE_REGISTRY` keys (engine/strategies/v2/factory.py)
       into PM `generate_capability_verdict_matrix.py` as `_ENGINE_BACKED_ARCHETYPE_VALUES` (cited, because UAC/PM cannot
       import strategy-service — service-dep ban). That's a duplicate SSOT. Make the generator PROBE strategy-service via
@@ -224,7 +244,7 @@ wiring would re-introduce the F47 over-claim — so the token is added ONLY when
 
 ## Discovered debt (2026-06-15)
 
-- [ ] [SCRIPT] P3. **e2e-testing/scripts/defi/test_collateral_validation.py has 22 ruff errors** (19 auto-fixable + 3 N806 lev_weETH/lev_WETH lowercase) surfaced as warn-only in strategy-service's peripheral-dir QG. Foreign file (not owned by the margin work). `ruff --fix` + rename the 3 vars. Repo: e2e-testing.
+- [x] ✅ [SCRIPT] P3. **e2e-testing/scripts/defi/test_collateral_validation.py ruff errors** surfaced as warn-only in strategy-service's peripheral-dir QG. — DONE **e2e-testing@8696934** (2026-06-17). Residual set at fix time was 7 (count had drifted from the originally-noted 22): 5 RUF100 unused-`noqa` (auto-fixed) + 2 N806 (`lev_weETH`→`lev_weeth`, `lev_WETH`→`lev_weth`). `ruff check` clean; QG green (27s). Repo: e2e-testing.
 
 ## Audit findings (2026-06-15 — adversarial verification of the Phase-B/C completion)
 
@@ -319,3 +339,23 @@ wiring would re-introduce the F47 over-claim — so the token is added ONLY when
   operator-gated by design) + F47/F48 surface; B: margin cluster / F45 / F27 / F16 all shipped; C: ratified. The only
   remaining open `- [ ]` items are the two explicitly operator-/contract-gated follow-ups (F28 live-API probe; F48
   venv-probe), both with documented diagnoses, neither a Phase-C gap.
+- 2026-06-17 — **F48 venv-probe SHIPPED + F28 go-live markers made loud (operator-requested).** **F48** (PM@362f90404):
+  deleted the `_ENGINE_BACKED_ARCHETYPE_VALUES` transcription; the verdict-matrix generator now probes
+  `ARCHETYPE_ENGINE_REGISTRY` LIVE via strategy-service's `.venv` (`_probe_engine_backed_archetypes`, fail-loud),
+  `build_matrix` takes the engine-backed set as an injected param (hermetic unit test passes a fixture + a new
+  live-parity drift guard). The deterministic-test self-containment tension is resolved, not bypassed. **F28**
+  (UAC@5fccaa7): the two operator-held placeholder haircuts (Bybit stETH / Drift mSOL, conservative 0.10) are now
+  unmissable before go-live — a `⚠️ PRE-GO-LIVE TODO` module banner, inline `UPDATE … BEFORE GO-LIVE` comments + `notes`,
+  and a machine-checkable `PLACEHOLDER_HAIRCUTS_PENDING_GO_LIVE` constant (exported) a go-live preflight can assert. F28
+  STAYS OPEN by design (operator approves the real probed diff — decision #3). Routine PM version-alignment churn
+  (LDR 1.2.146 behind main 1.2.147) was reconciled via a sanctioned main→LDR back-merge to land F48. **Net: every open
+  autonomously-closeable item in this plan is now done; the sole remaining `- [ ]` is the operator-gated F28 probe.**
+- 2026-06-17 — **F28 live-API probe SHIPPED (operator authorised "sure probe live, you got the credentials") — UAC@bc45549.
+  PLAN NOW FULLY CLOSED (zero open `- [ ]`).** Probed with workspace creds (Helius RPC via `gcloud secrets:helius-api-key`):
+  **Bybit stETH 0.10** (UTA public `collateralRatio=0.9`) — placeholder confirmed; **Drift mSOL 0.20** (on-chain
+  `initialAssetWeight=0.80`, decode validated vs USDC=1.0) — placeholder 0.10 was the maintenance value, 2x too
+  generous. The probe surfaced that the WHOLE Drift block was understated → also corrected **SOL 0.05→0.15** + **JitoSOL
+  0.10→0.20** (on-chain initial weights; all conservative/fail-safe). Synced the cited `collateral_registry.py`
+  transcription + 3 UAC tests; `PLACEHOLDER_HAIRCUTS_PENDING_GO_LIVE` emptied. The Drift haircut decoder is reusable
+  (program `dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH`, PDA `[b"spot_market", idx_u16_le]`, weight/1e4). Engine
+  findings remediation (Phases A/B/C + both follow-ups + F28 probe) is **DONE end-to-end**.

@@ -69,14 +69,14 @@ for any TradFi cell to legitimately list two sources.
 
 ## Coverage matrix (Massive vs Databento, MVP cells)
 
-| UAC data_type   | Databento endpoint | Massive endpoint                              | Both ✅? |
-| --------------- | ------------------ | --------------------------------------------- | -------- |
-| `trades`        | Trades             | Trades (Futures/Options/Stocks)               | ✅       |
-| `tbbo`          | TBBO               | Quotes / NBBO (OPRA-consolidated for options) | ✅       |
-| `ohlcv_1m`      | OHLCV-1m           | Custom Bars (mult=1, timespan=minute)         | ✅       |
-| `ohlcv_15m`     | OHLCV-15m          | Custom Bars (mult=15, timespan=minute)        | ✅       |
-| `options_chain` | Definition + chain | Option Chain Snapshot + All Contracts         | ✅       |
-| `futures_chain` | Definition         | Contracts + Products                          | ✅       |
+| UAC data_type   | Databento endpoint | Massive endpoint                                             | Both ✅? |
+| --------------- | ------------------ | ------------------------------------------------------------ | -------- |
+| `trades`        | Trades             | Trades (Futures/Options/Stocks)                              | ✅       |
+| `tbbo`          | TBBO               | Quotes / NBBO (OPRA-consolidated for options)                | ✅       |
+| `ohlcv_1m`      | OHLCV-1m           | Custom Bars (mult=1, timespan=minute)                        | ✅       |
+| `ohlcv_15m`     | OHLCV-15m          | Custom Bars (mult=15, timespan=minute)                       | ✅       |
+| `options_chain` | Definition + chain | Option Chain Snapshot + All Contracts                        | ✅       |
+| `futures_chain` | Definition         | **S3 flat-files** `us_futures_cme/minute_aggs_v1` (NOT REST) | ✅       |
 
 **Exchange exception**: Massive Futures covers CME/CBOT/NYMEX/COMEX. **CFE (CBOE Futures Exchange — VX/VIX futures) is
 NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per operator decision above.
@@ -277,8 +277,28 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       regression guard for "consumers don't care about source". Repo: market-tick-data-service.
 - [ ] [MTDS] P1. Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` (429 is classified but never retried)
       — a multi-million-row paid-tier backfill will fail-fast on throttle without it. Repo: market-tick-data-service.
-- [ ] [MTDS] P0. **Fix the futures endpoint paths — ROOT CAUSE of the 404 is a WRONG PATH, not the API key**
-      (live-confirmed + docs-verified 2026-06-08). The connector uses Polygon's equities-style reference path
+- [x] ✅ [MTDS] P0. **CME futures = S3 FLAT-FILES — DONE mtds@a311561 (gate UNLOCKED; operator correction 2026-06-17,
+      supersedes the 2026-06-08 + 2026-06-16 REST framing).** The operator confirmed (with a sibling agent's proven 5y
+      ES pull: 1,232 daily files) that **our Stocks-Starter REST tier is equities-only — CME futures are NOT served on
+      the REST API at all**; the `/futures/v1` calls fail in prod (HTTP/SSL). So the prior "200 on the key /
+      `/futures/v1` GA" finding below AND the 2026-06-16 `/futures/v1` "fix" (mtds@657f615) were a **mis-diagnosis** —
+      the correct, proven transport is Massive's **S3 flat-files**
+      `flatfiles/us_futures_cme/minute_aggs_v1/YYYY/MM/DD.csv.gz` over `https://files.massive.com` with **path-style
+      addressing (mandatory — virtual-host SSL-fails)** + the distinct S3 keys
+      `MASSIVE_S3_ACCESS_KEY_ID`/`_SECRET_ACCESS_KEY` (NOT the REST `MASSIVE_API_KEY`). **DONE (2026-06-17 /autonomous,
+      mtds@a311561):** the connector's futures path now reads the flat-files — new `massive_flatfiles.py` (path-style
+      boto3 S3 client + `is_cme_outright`/`normalise_flatfile_ohlcv`/`resample_1m_to_15m`/`parse_*`) +
+      `massive_tradfi_rest_connector.fetch_futures_minute_aggs`/`fetch_futures_chain` (S3 get via
+      `_s3_get_object_bytes`; NoSuchKey→honest-empty) + dispatch routing futures
+      `ohlcv_1m`/`ohlcv_15m`(resample)/`futures_chain` to S3; the dead `/futures/v1` REST futures code +
+      `_normalise_futures_contract` are DELETED; equities/options REST unchanged. Right-edge `t_close` (window_start ns
+      LEFT→RIGHT). +11 mocked-S3 unit tests; QG-green (codex/5.12b clean). Live S3 pull = `@requires_credentials`
+      (proven by the sibling's 5y ES pull). Full recipe + decision:
+      `plans/active/issues/massive_cme_futures_flatfiles_not_rest_2026_06_17.md`. This is the SAME transport as the
+      `us_stocks_sip` flat-files ingester todo below (line ~330) — futures uses `us_futures_cme`. Repo:
+      market-tick-data-service. **(SUPERSEDED 2026-06-08 REST finding retained below for history.)** ⤵ **Fix the futures
+      endpoint paths — ROOT CAUSE of the 404 is a WRONG PATH, not the API key** (live-confirmed + docs-verified
+      2026-06-08). The connector uses Polygon's equities-style reference path
       `/v3/reference/futures/{contracts,products}` which **does not exist** → plain-text `404 page not found` (NOT a
       JSON `NOT_AUTHORIZED` — contrast `/v3/trades/AAPL` which returns JSON `403 NOT_AUTHORIZED`, the real entitlement
       gate). The current `MASSIVE_API_KEY` **HAS full futures entitlement** — the dedicated Futures REST API (docs:
@@ -306,8 +326,8 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       trades/quotes are accessible on the current key anyway, via `/futures/v1/*` + `us_options_opra/trades_v1` +
       `us_futures_*/{trades,quotes}_v1` — unaffected by this decision.) Re-open the equity-tick entitlement only if/when
       a tick-consuming archetype lands. Repo: market-tick-data-service.
-- [ ] [UAC] [UTL] P1. **EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push).** Massive returns fields Databento
-      does NOT, surfaced by the 2026-06-08 live probe. Decide per field: (A) DROP on normalize to hold strict
+- [ ] [UAC] [UTL] P1. **EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push).** Massive returns fields
+      Databento does NOT, surfaced by the 2026-06-08 live probe. Decide per field: (A) DROP on normalize to hold strict
       Databento-parity, (B) ADD as new canonical column(s) on BOTH sources (Databento backfills/computes them where
       possible), or (C) keep as Massive-only optional columns (consumers ignore unknown cols — breaks strict parity but
       is additive). Candidates:

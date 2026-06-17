@@ -241,6 +241,81 @@ def _lock_dangle(now: dt.datetime, dangle_min: int = 30) -> str | None:
     )
 
 
+_PROMOTION_BASES = ("staging", "main")
+
+
+def _is_promotion_pr(base_ref: str, head_ref: str) -> bool:
+    """A promote / dep-update PR worth watching for a conflict wall: into staging/main, the
+    standing LDR→main drain, or a dependency-update fan-out branch."""
+    return base_ref in _PROMOTION_BASES or head_ref == "live-defi-rollout" or head_ref.startswith("dep-update/")
+
+
+def _classify_stuck_pr(repo: str, pr: dict[str, object], now: dt.datetime, thresh_s: float) -> str | None:
+    """Pure: a finding string if this PR is a CONFLICT WALL (mergeable_state=='dirty') parked
+    longer than thresh_s, else None.
+
+    Closes the "lack alerts" gap (promotion_queue_conflict_wall_pileup_2026_06_17.md): a promote /
+    dep-update PR that goes `dirty` (CONFLICTING) sits invisibly for hours — the promote bots treat
+    it as a conflict to (maybe) resolve, the orchestrator backlog is plan-driven (never ingests open
+    PRs), and the existing lag monitor only watches branch-pair propagation, not PR mergeability. We
+    alert on `dirty` (the conflict-wall signal), NOT `blocked` (which is normally checks-in-progress).
+    """
+    if str(pr.get("mergeable_state") or "") != "dirty":
+        return None
+    base = cast("dict[str, object]", pr.get("base") or {})
+    head = cast("dict[str, object]", pr.get("head") or {})
+    base_ref = str(base.get("ref") or "")
+    head_ref = str(head.get("ref") or "")
+    if not _is_promotion_pr(base_ref, head_ref):
+        return None
+    ds = str(pr.get("updated_at") or pr.get("created_at") or "")
+    if not ds:
+        return None
+    try:
+        when = dt.datetime.fromisoformat(ds.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    age = (now - when).total_seconds()
+    if age < thresh_s:
+        return None
+    num = pr.get("number")
+    title = str(pr.get("title") or "")[:50]
+    return f'{repo} #{num} {head_ref}→{base_ref} CONFLICT-WALL {int(age // 60)}m — "{title}"'
+
+
+def _stuck_prs(repo: str, now: dt.datetime, thresh_s: float) -> list[str]:
+    """Open promote/dep-update PRs for `repo` stuck on a conflict wall beyond thresh_s.
+
+    Bounds API cost: ONE list call per repo (ETag-cached), then a single-PR GET only for promotion
+    PRs already older than the threshold (the list endpoint's mergeable_state is unreliable, so we
+    fetch the authoritative value per candidate — usually 0-2 per repo)."""
+    listing = _gh_json(f"repos/{OWNER}/{repo}/pulls?state=open&per_page=50")
+    if not isinstance(listing, list):
+        return []
+    findings: list[str] = []
+    for raw in cast("list[object]", listing):
+        if not isinstance(raw, dict):
+            continue
+        pr = cast("dict[str, object]", raw)
+        base_ref = str(cast("dict[str, object]", pr.get("base") or {}).get("ref") or "")
+        head_ref = str(cast("dict[str, object]", pr.get("head") or {}).get("ref") or "")
+        if not _is_promotion_pr(base_ref, head_ref):
+            continue
+        ds = str(pr.get("updated_at") or pr.get("created_at") or "")
+        try:
+            when = dt.datetime.fromisoformat(ds.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if (now - when).total_seconds() < thresh_s:
+            continue  # not old enough — skip the per-PR GET
+        full = _gh_json(f"repos/{OWNER}/{repo}/pulls/{pr.get('number')}")
+        if isinstance(full, dict):
+            f = _classify_stuck_pr(repo, cast("dict[str, object]", full), now, thresh_s)
+            if f:
+                findings.append(f)
+    return findings
+
+
 def _write_firestore_promotion_lag(
     repo_lags: dict[str, dict[str, object]],
     now_iso: str,
@@ -260,10 +335,17 @@ def _write_firestore_promotion_lag(
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--threshold-min", type=int, default=60)
+    ap.add_argument(
+        "--stuck-pr-threshold-min",
+        type=int,
+        default=120,
+        help="alert on a promote/dep-update PR sitting CONFLICTING (dirty) longer than this (default 120m)",
+    )
     ap.add_argument("--now-iso", default="", help="UTC now (no wallclock in CI sandbox); else uses gh server time")
     ap.add_argument("--slack", action="store_true")
     args = ap.parse_args()
     thresh_s = cast(int, args.threshold_min) * 60.0
+    stuck_thresh_s = cast(int, args.stuck_pr_threshold_min) * 60.0
     now_iso = cast(str, args.now_iso)
     as_slack = cast(bool, args.slack)
 
@@ -322,6 +404,15 @@ def main() -> int:
                     f"staging→LDR back-merge will never fire (Tier-C runaway risk); roll out the "
                     f"template + promote it to staging"
                 )
+
+        # Stuck-conflict-wall check: a promote / dep-update PR parked CONFLICTING beyond the SLA is
+        # invisible today (the orchestrator backlog is plan-driven, never ingests open PRs; the
+        # promote bots only act on LDR→staging drains). Surface it here so it pages.
+        # SSOT: plans/active/issues/promotion_queue_conflict_wall_pileup_2026_06_17.md.
+        stuck = _stuck_prs(repo, now, stuck_thresh_s)
+        if stuck:
+            findings.extend(stuck)
+            repo_lags[repo]["conflict_wall_prs"] = {"count": len(stuck), "prs": stuck}
 
     # Persist the warmed ETag cache so the next run's unchanged compares are free 304s.
     if cache_file:

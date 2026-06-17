@@ -1,0 +1,167 @@
+name: supersede-stale-dep-update-prs
+
+# PM-CENTRAL OWNER of `dep-update/*` PR hygiene (promotion_queue_conflict_wall_pileup_2026_06_17).
+# Closes the gap that `ldr-to-staging-promote` (scoped to LDR→staging drains) never covered: nothing
+# owned the dep-update→staging PRs, so they conflict-walled invisibly for hours.
+#
+# WHY: the dependency-update fan-out opens a `dep-update/<dep>-<version>` PR per consumer on a
+# breaking/major bump. They (a) STACK — a newer version opens a new PR while the older stays open
+# (e.g. UTL-0.11.0 alongside UTL-0.12.0) — and (b) go STALE — cut from staging, they conflict with the
+# advancing staging (`mergeable_state==dirty`). Neither had an owner.
+#
+# WHAT (two roles, per repo):
+#   1. SUPERSEDE — group open PRs by `dep-update/<dep>` prefix; close all but the highest-semver version
+#      ("superseded by #N"). STRICTLY bounded: only closes when a strictly-higher-version dep-update PR
+#      for the SAME (repo, dep) is ALSO open.
+#   2. ESCALATE — for a SURVIVING (non-superseded) PR that is CONFLICTING (`dirty`), dispatch
+#      `merge-conflict-detected` → conflict-resolution-agent → escalate-to-orchestrator, so a worker
+#      RESOLVES it (rebase onto staging, keep the dep floor bump; per
+#      codex/08-workflows/dep-update-conflict-resolution.md) — and Slacks + asks the operator in the
+#      orchestrator UI if it genuinely can't. The agent dedupes via the escalation-dispatched label.
+#
+# NB (companion fixes): update-dependency-version.yml is now digest-only on a non-breaking minor
+# internal bump (no floor churn → fewer future stale conflicts); promotion_lag_monitor.py alerts on any
+# dep-update/promote PR parked CONFLICTING > SLA (visibility). This bot is the close+resolve OWNER.
+#
+# SAFETY: never force-pushes / never self-merges. Only `gh pr close` on a provably-superseded PR and a
+# repository_dispatch to the (idempotent) resolver. `dry_run` lists what it WOULD do. GH App token.
+#
+# SSOT: plans/active/issues/promotion_queue_conflict_wall_pileup_2026_06_17.md +
+#       codex/08-workflows/dep-update-conflict-resolution.md.
+
+on:
+  schedule:
+    - cron: "23 */2 * * *" # every 2h, offset; supersession is low-urgency cleanup
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List superseded PRs that WOULD close, without closing them"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: supersede-stale-dep-update-prs
+  cancel-in-progress: false
+
+jobs:
+  supersede:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+      - name: Checkout PM (for the repo list)
+        uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Close superseded dep-update PRs (highest version per dep wins)
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+
+          REPOS=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          print("\n".join(k for k in m.get("repositories", {}) if not k.startswith("_")))
+          PYEOF
+          )
+
+          CLOSED=0; ESCALATED=0
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            # Open dep-update PRs in this repo (head branch dep-update/<dep>-<version>).
+            PRS=$(gh pr list --repo "$OWNER/$REPO" --state open --limit 100 \
+              --json number,headRefName --jq '.[] | select(.headRefName | startswith("dep-update/")) | "\(.number) \(.headRefName)"' 2>/dev/null || true)
+            [ -z "$PRS" ] && continue
+
+            # Group by dep (everything before the trailing -<version>); emit "PR_TO_CLOSE SUPERSEDER" pairs.
+            # Pass the PR list via an env var (NOT a pipe): `python3 - <<EOF` already consumes stdin
+            # for the program text, so a piped stdin would be discarded.
+            TOCLOSE=$(PRS_DATA="$PRS" python3 - <<'PYEOF'
+          import os, re
+          groups = {}  # dep -> list of (version_tuple, version_str, pr_number)
+          for line in os.environ.get("PRS_DATA", "").splitlines():
+              line = line.strip()
+              if not line:
+                  continue
+              num, ref = line.split(" ", 1)
+              body = ref[len("dep-update/"):]
+              # version = trailing -X.Y.Z (semver has no hyphens); dep = the rest
+              m = re.match(r"^(.*)-(\d+\.\d+\.\d+)$", body)
+              if not m:
+                  continue
+              dep, ver = m.group(1), m.group(2)
+              try:
+                  vt = tuple(int(x) for x in ver.split("."))
+              except ValueError:
+                  continue
+              groups.setdefault(dep, []).append((vt, ver, int(num)))
+          for dep, items in groups.items():
+              if len(items) < 2:
+                  continue
+              items.sort()  # ascending by version tuple
+              winner = items[-1]  # highest version
+              for vt, ver, num in items[:-1]:
+                  print(f"{num} {winner[2]} {dep} {ver} {winner[1]}")
+          PYEOF
+          )
+            # (1) Close the superseded older-version PRs (if any).
+            if [ -n "$TOCLOSE" ]; then
+              while IFS= read -r row; do
+                [ -z "$row" ] && continue
+                set -- $row
+                CLOSE_NUM="$1"; KEEP_NUM="$2"; DEP="$3"; OLD_VER="$4"; NEW_VER="$5"
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "DRY-RUN: would close $REPO #$CLOSE_NUM (dep-update/$DEP-$OLD_VER) — superseded by #$KEEP_NUM ($DEP-$NEW_VER)"
+                else
+                  echo "Closing $REPO #$CLOSE_NUM (dep-update/$DEP-$OLD_VER) — superseded by #$KEEP_NUM ($DEP-$NEW_VER)"
+                  gh pr close "$CLOSE_NUM" --repo "$OWNER/$REPO" --delete-branch \
+                    --comment "Superseded by #$KEEP_NUM ($DEP $NEW_VER ≥ $OLD_VER — the higher floor encompasses this one). Auto-closed by supersede-stale-dep-update-prs to unwall the promotion queue. SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md." 2>/dev/null \
+                    && CLOSED=$((CLOSED + 1)) || echo "  WARN: close failed for $REPO #$CLOSE_NUM"
+                fi
+              done <<< "$TOCLOSE"
+            fi
+
+            # (2) OWNER role — escalate a surviving CONFLICTING dep-update PR to the conflict-resolution
+            # agent (→ orchestrator worker) so it gets RESOLVED, not just alerted/punted to a human todo.
+            # The worker rebases the branch onto staging (keep the dep floor bump) per the dep-update
+            # playbook; if it genuinely can't, it Slacks + asks the operator in the orchestrator UI. The
+            # conflict-resolution-agent dedupes via the escalation-dispatched label, so re-runs are
+            # idempotent (no Opus-worker storm). SSOT: codex/08-workflows/dep-update-conflict-resolution.md.
+            SURV=$(gh pr list --repo "$OWNER/$REPO" --state open --limit 100 \
+              --json number,headRefName --jq '.[] | select(.headRefName | startswith("dep-update/")) | "\(.number) \(.headRefName)"' 2>/dev/null || true)
+            while IFS= read -r srow; do
+              [ -z "$srow" ] && continue
+              SNUM="${srow%% *}"; SBR="${srow#* }"
+              MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$SNUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+              [ "$MSTATE" = "dirty" ] || continue
+              PRURL="https://github.com/$OWNER/$REPO/pull/$SNUM"
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "DRY-RUN: would escalate $REPO #$SNUM ($SBR, dirty) → conflict-resolution-agent"
+              else
+                echo "Escalating CONFLICTING $REPO #$SNUM ($SBR) → conflict-resolution-agent (worker resolves per dep-update playbook)"
+                gh api "repos/$OWNER/unified-trading-pm/dispatches" \
+                  -f event_type=merge-conflict-detected \
+                  -f "client_payload[repo_name]=$REPO" \
+                  -f "client_payload[source_branch]=$SBR" \
+                  -f "client_payload[target_branch]=staging" \
+                  -f "client_payload[original_pr_url]=$PRURL" 2>/dev/null \
+                  && ESCALATED=$((ESCALATED + 1)) || echo "  WARN: escalation dispatch failed for $REPO #$SNUM"
+              fi
+            done <<< "$SURV"
+          done <<< "$REPOS"
+
+          echo "=== Superseded dep-update PRs closed: $CLOSED | conflicting survivors escalated: $ESCALATED ==="

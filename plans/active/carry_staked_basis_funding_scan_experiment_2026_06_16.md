@@ -68,14 +68,411 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   even +stETH (~3%) rarely beats the ~12% alt-funding cluster, so ETH is seldom selected. The "staked" leg only matters
   when ETH funding is competitive; in a high-alt-funding regime it's a tie-breaker, not a driver. `_FUNDING_TIE_BPS=50`
   drives basket size — tunable. Report: `e2e-testing/scripts/defi/_out/staked_basis_report.html` (gitignored, regen).
+- **2026-06-16** — Added oracle (hindsight) vs causal (EWMA, no-lookahead) strategies + a 5 bps/leg cost model (2 legs
+  spot+perp per |Δweight|; 1-for-1 rotation ≈ 20 bps) + a hysteresis no-trade buffer + per-year metrics + a local data
+  cache (instant param sweeps). **Key result (2025-01-01→2026-05-20, hl=10/buffer=5):** the perfect-foresight oracle is
+  a mirage net of costs — turnover 0.54/day → 31.8% cumulative drag → net **1.1%** (2026 net **−7.8%**). The causal
+  EWMA+buffer trades 0.05/day → net **18.3%** full window, **2026 net 9.8%** (target hit), **2025 net 21.8%** (2025
+  funding was very rich). Lesson: optimise carry-capture PER UNIT TURNOVER, not gross carry.
+- **2026-06-16** — Aster data availability (API-only; klines/funding backfill, OI/book live-only): funding 2023-07-22,
+  **OHLCV 2023-01-01**, mark/index via klines, trades partial, **OI + L2 quotes live-capture-only** (no historical
+  endpoint). Tardis CEX schema (trades/book_snapshot_5/derivative_ticker{mark,index,funding,OI}/liquidations) is the
+  canonical benchmark → non-Tardis venues canonize their native API INTO those data_types; genesis is per-(venue,
+  data_type), not per-venue. **Aster margining = USDC/USDT-only (CROSS); rejects spot-coin AND LST collateral**
+  (`venue_collateral.py`) — so Aster is a stablecoin-margined funding-short only; no same-venue cash-and-carry, no
+  staking leg. ETH staked-basis works on Bybit/OKX/Deribit (stETH/wstETH collateral). Filed to the Aster todo in
+  `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
+- **2026-06-16** — Deribit FIX: its stored `funding_rate` is the 8h figure (≈ API interest_8h), annualise at 8h not 1h
+  (was 8× over) + ±200% winsor. Switched returns to **LINEAR (non-compounded)** — daily interest summed, mean×365
+  annualisation (operator; matches UAC linear convention). Split into **3 strategies** (staked basis / funding
+  dispersion = long low/neg-funding perp + short high-funding perp / pure basis no-staking) each oracle+causal, +
+  **capital-efficiency** (spot-collateral venues ≈1, cash-margin HL/Aster = 1/(1+max_move), per-asset BTC .20/ETH
+  .25/alt .60/small .80) + **min-carry floor 3%** + **ensemble** (best structure per coin) + **cash floor** (lend USDT
+  @4% when nothing clears 3%). HTML: side legend + strategy-named end-labels.
+- **2026-06-16** — **Full 2022→2026 run** (108k coin·venue·day points, Deribit-fixed, linear, efficiency-adjusted).
+  **Causal NET ann by year (ensemble = best-of-all-structures):** 2022 **14.9%** · 2023 **23.5%** · 2024 **31.0%** ·
+  2025 **13.9%** · 2026 **9.3%**. Full-window ensemble net **19.8%**, beating every single strategy (dispersion 15.4,
+  pure 13.9, staked 12.0) — the structures are complementary and **ETH staked-basis earns its place in the meta-book**
+  (it's the ~zero-turnover backbone; dispersion adds spread alpha; pure adds breadth). **2022 bear ≈ 2026 bear
+  confirmed** — both far below the 2023-24 bull (funding compresses in bears; 2026 at 9.3% is even tighter than 2022).
+  **Cash floor never triggered (0/1600 days)** — across all structures the best opportunity always cleared 3%, so the
+  USDT-lending fallback is a dormant safety net for this period. Why ETH looked weak in the OLD combined book: it's a
+  relative-ranking + funding-cap + efficiency-blind artifact, not a weak carry — resolved by the ensemble.
+
+## Strategies 4 + 5 (EigenLayer restaking) — design + data status (operator design 2026-06-16)
+
+4. **Restaking yield (EtherFi weETH)** — base staking + EigenLayer rewards (+ seasonal), **LONG-ONLY** (no venue takes
+   weETH/eETH as collateral → not market-neutral; it's just the yield on weETH). **Data: weETH EXISTS** in
+   `lst-rates-central-…/venue=ETHERFI` (verified 2026-06-16); EigenLayer `eigen_apy_bps` flows via features-service
+   `onchain/engine/staking_apy_total.py` + `collectors/chain_event_scanners.py` but its GCS path/cadence is UNCONFIRMED
+   (likely `features-delta-one-defi-*`; weekly) → verify before building. Alt: Lido stETH (already wired).
+5. **Recursive/leveraged restaking** — loop weETH on a lending market: borrow against weETH → buy more weETH → repeat.
+   Yield ≈ `(staking + restaking − borrow_rate) × leverage`, `leverage = 1/(1 − maxLTV)` (high in Aave e-mode), with a
+   ~2% basis-move haircut. **Data: BLOCKED — no Aave (Ethereum) lending/borrow rates in GCS** (verified:
+   `lending_indices` holds only Solana Kamino/Solend). Need Aave rate backfill (or run the loop on a Solana LST via
+   Kamino/Solend). Code refs: `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py`,
+   `deployment-api/models/recursive_borrow.py`, DeFi `RECURSIVE_LOOP` error codes; loop math + e-mode maxLTV to source
+   from codex strategy docs.
+
+- **2026-06-16** — Replaced the rank-buffer with an **economic rotation gate** (operator): swap a held name only if the
+  candidate's carry beats it by > `swap_bps = 4·cost_bps·365/hold_days` (≈ 5.2% for 5 bps/leg + 14-day hold; scales with
+  cost). A 1% edge over 2 weeks ≈ 4 bps < 20 bps round-trip → don't trade; ~5%+ does. **Big win — cut churn, lifted net
+  everywhere.** Full-window ensemble net **19.8% → 21.7%**; **2026 dispersion 0.8% → 5.0%** (turnover 0.282 →
+  0.171/day), 2026 ensemble **9.3% → 10.7%**. Ensemble causal net by year: 2022 **16.3%** · 2023 **26.0%** · 2024
+  **33.9%** · 2025 **14.8%** · 2026 **10.7%**.
+- **2026-06-16** — Dispersion diagnosis (why 2026 was thin): (1) 2026 cross-venue spreads HALVED (median 0.0%, p95 18%
+  vs full-window 42%) — venues largely agree on funding in the bear; (2) only **41% of coin-days have ≥2 venues** (59%
+  single-venue → no dispersion); (3) **OKX-SWAP funding is suspiciously sparse — only 9 coins captured in 2026** (vs
+  Binance/Bybit 19, Aster 29) → likely an OKX perp-funding backfill gap (OKX lists 100s of perps). Filed below.
+
+## Open data gaps (file/verify)
+
+- [ ] [DATA] P2. OKX-SWAP perp funding sparse — only ~9 coins captured in 2026 (expected ~19+). Verify the OKX
+      derivative_ticker backfill universe in MTDS; likely a coverage gap limiting cross-venue dispersion. **Repo:
+      market-tick-data-service.**
+
+- **2026-06-16** — Confirmed returns are **LINEAR** (cumulative sum, mean×365 ann) not compounded (operator check):
+  ensemble-causal +21.7%/yr × 4.38yr → equity 1.95 (matches chart; compound would be 2.37). Exposed efficiency knobs:
+  `--spot-haircut` `--dispersion-eff` (1.0 = clean 2× perp-perp) `--max-move-scale` (cash-margin discount sensitivity).
+  Aster/HL cash-margin confirmed: 100% capital deployed but funding earned on only `S=C/(1+max_move)` of base (the
+  margin set-aside IS the haircut) → eff=1/(1+max_move); Aster can do pure-basis (discounted) + dispersion (full,
+  broadest 29-coin coverage), NOT staked basis.
+- **2026-06-16** — **SHARE-CLASS axis gap (operator):** the whole harness is **USD share class** (market-neutral, USDC
+  capital, USD % returns, every position shorts a perp). The **ETH-share-class** family is NOT modelled — start with
+  ETH, want more ETH, keep the ETH exposure (no perp hedge): (a) **staked ETH** = hold stETH/weETH, earn staking +
+  EigenLayer restaking + seasonal, measured IN ETH; (b) **recursive staked ETH** = borrow ETH against LST → stake →
+  loop, returns in ETH ≈ `(staking+restaking+eigen − ETH_borrow) × 1/(1−maxLTV)` (Aave e-mode). These ARE strategies 4/5
+  but **ETH-denominated + NOT market-neutral** — a distinct `share_class=ETH` track. Data: weETH/stETH rates EXIST;
+  eigen path unconfirmed; **ETH borrow rate = the same Aave gap** (no Aave/Ethereum lending in GCS). Also a SOL-share-
+  class analogue (JitoSOL/mSOL + Kamino/Solend, which DO exist in GCS).
+
+## Open todos / next steps (added 2026-06-16)
+
+- [ ] [STRATEGY] P2. Add a `share_class` axis (USD / ETH / SOL / BTC). ETH-share-class strategies: staked-ETH yield
+      (long LST, no hedge, returns in ETH) + recursive staked-ETH (leveraged loop). **Repo: e2e-testing harness →
+      strategy-service.** Blocked-for-recursive: Aave ETH borrow rate (see Aave gap).
+- [ ] [DATA] P2. Backfill Aave (Ethereum) supply/borrow rates + maxLTV/e-mode into GCS — unblocks the recursive loop
+      (strategy 5, both USD-cash-floor and ETH-borrow) and the real cash-floor rate. Only Solana (Kamino/Solend) exists
+      today. **Repo: market-tick-data-service + deployment-service.**
+- **2026-06-16** — 🟢 **VM RUNNING — Aave + lending-indices backfill** `mtds-lending-indices-20260616-225256`
+  (e2-standard-4, asia-northeast1-c). Verdict from investigation: Aave V3 is a **config-run, not new code** — `aave_v3`
+  is first in the MTDS handler's `_DEFAULT_PROTOCOLS` (subgraph + RPC fallback + parser + maxLTV/e-mode all wired).
+  Launched `launch-mtds-lending-indices-backfill-vm.sh 2022-01-01 2026-06-16` (all protocols: aave_v3/spark/compound_v3/
+  kamino/solend/marginfi). Writes to the **canonical bucket `lending-indices-central-element-323112`** (NEW v9 path, not
+  the legacy `market-data-tick-defi/lending_indices/`). Auto-shuts-down on completion (~3–6h); monitor armed. Unblocks:
+  recursive loops (USD + ETH), the real Aave-USDT cash-floor rate, ETH-borrow-rate for the ETH-share-class recursive
+  strategy.
+- **2026-06-16** — OKX historical funding: public `funding-rate-history` API only serves **~3 months** (paginating to
+  2023 = empty), so it's NOT a deep-history backfill (unlike Aster). The real fix is the **Tardis OKX backfill
+  universe** (only 9 coins captured) — kept as the OKX data todo, not an API path.
+- **2026-06-16** — ⚠️ **lending-indices bucket env-split debt (operator-flagged)**: canonical = env-split
+  `lending-indices-${ENV_SHORT}-${PID}` (`resolve_bucket_name(kind="lending-indices")` → `lending-indices-prd-…`,
+  cloud-providers.yaml:187), BUT the WRITER still lands in the **legacy un-suffixed `lending-indices-central-…`** (data
+  back to 2022-11; `-prd` has only `_migration/`) — IDENTICAL to the `lst-rates` debt. So the Aave backfill VM is
+  writing to the legacy bucket too. Needs (a) writer-env fix so future writes resolve to `-prd`, (b) migrate existing
+  legacy data → `-prd`. Owned by `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (same class as
+  lst-rates). The harness reads the legacy bucket for now (as it does for lst-rates).
+- **2026-06-16** — Harness cleaned to **0 basedpyright / ruff-green** under the e2e QG config (deleted 2 dead EWMA fns,
+  annotated `client: StorageClient`, knob constants → `globals()`); **e2e quality-gates.sh exit 0**. Quickmerge
+  **BLOCKED on foreign UAC WIP** (`config_versioning.py` — another agent's uncommitted change; not mine, won't touch).
+  Harness stays in working tree (safe); ship once UAC clean (more additions pending anyway).
+- **2026-06-16** — **Prod-fidelity investigation (3 agents) — design + decisions for the backtest extension:**
+  - **GAS** (separate from execution fees): prod has `execution-service/.../services/gas_cost_model.py` —
+    `DEFAULT_GAS_ESTIMATES` (SWAP 200k, SWAP_MULTI_HOP 350k, STAKE 150k, UNSTAKE 200k, BORROW 300k, REPAY 200k, LEND
+    200k, WITHDRAW 250k, TRANSFER_ERC20 65k, TRANSFER_ETH 21k, FLASH_BORROW/REPAY 100k, WRAP 50k, ATOMIC_BUNDLE_BASE
+    50k; CLOB/CEX TRADE = 0) × L2 multiplier (Op/Base/Arb 0.6, Poly/BSC/Avax 0.8, Linea 0.5).
+    `gas_cost_usd = gas_units × gas_price × native_price`. **Gas-price DATA in GCS** (`gas_fees/chain_id=…/date=…/`,
+    schema base_fee_gwei + priority_fee_p25/50/75 + blob_base_fee; ETH 2020→, SOL 2021→, 14 EVM chains). → backtest
+    computes gas from EXISTING data + the prod gas-unit table.
+  - **WALLET / treasury-vs-trading** (`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`): keyed by
+    **share_class**, DeFi **20% treasury / 80% hot-per-strategy** (CeFi 0/100), `WalletMappingConfig` reserve_pct 20% +
+    min/max bands (10%/30%); rebalance automation **NOT yet shipped** (Phase E.3) → the rebalancing sim is a genuine
+    prototype of unshipped logic. Capital map = **4-leg AtomicInstruction** (SWAP usdc→eth → STAKE eth→LST → TRANSFER
+    LST→perp venue → TRADE short perp) + passive accrual (FUNDING_ACCRUAL + STAKING_REWARD). Ledger taxonomy = UAC
+    `canonical.crosscutting.ledger` (37 EventTypes incl DEPOSIT/WITHDRAWAL_TO_BANK/TRANSFER/CUSTODY_MOVE +
+    FUNDING_ACCRUAL/STAKING_REWARD/LENDING_INTEREST); client-funds-isolation HARD RULE (single client_id per transfer).
+  - **SLIPPAGE — historical vs static (prod intent):** (1) **DEX swap = HISTORICAL** — `slippage_cost_model.py` +
+    `amm.py` (Uniswap V2/V3 math) + historical pool depth (`dex_pools` bucket) → `price_impact_bps` from depth (same
+    snapshot as the prod batch replay). (2) **Staking LST premium = STATIC** (~0–50 bps; secondary-market premium NOT
+    captured — only the `exchange_rate`). (3) **Lending/borrow rate = HISTORICAL via the Aave IRM curve** (borrow rate
+    moves with utilisation: `base + slope1·U + slope2·max(0,U−U_opt)`; slopes + `utilisation_rate` are in
+    lending_indices — the Aave backfill VM is filling the ETH utilisation gap now). So **use historical where data
+    exists (DEX depth, utilisation), static only for the LST secondary premium.**
+- **2026-06-16** — Aave/lending backfill VM **completed rc=0** (self-deleted) but **PARTIAL** — hit GCS/subgraph **429
+  rate limits** (~1628 results; manifest-consolidator-stale at end). Aave V3 wrote for Arbitrum/Avalanche/Base; **ETH
+  coverage spotty** (absent on latest day). Landed in the **legacy un-suffixed `lending-indices-central-…`** with the
+  **old `category=defi`** path key (not `asset_group=`) — confirms BOTH the env-split debt AND a category-vocab debt.
+  Lending bucket now spans 1259 days (2022-11-01 → 2026-05-28). **Recursive-ETH + real Aave-USDT cash-floor still need a
+  COMPLETE Aave-Ethereum re-run** (narrower per-run scope or a paid subgraph key to dodge 429s) + a consolidator run.
+  Todos below.
+
+## Open data gaps (added 2026-06-16, part 2)
+
+- [ ] [DATA] P2. **Complete Aave-Ethereum lending backfill** — first run was 429-throttled (partial; ETH spotty). Re-run
+      scoped to `aave_v3 ETHEREUM` only (don't split the subgraph budget across all protocols/chains) or use a paid
+      TheGraph key; then run the lending-indices manifest consolidator (it was stale). **Repo:
+      market-tick-data-service + deployment-service.** Owner:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
+- [ ] [DATA] P3. lending-indices writer emits the **legacy `category=defi` path key** (not canonical `asset_group=`) +
+      the legacy un-suffixed bucket — fix both to canonical v9. **Repo: market-tick-data-service.**
+- **2026-06-16** — **Treasury/Trading rebalancing sim BUILT** (`--simulate-treasury`, prototypes the unshipped prod
+  rebalancer). Models: target 20% treasury (earns cash `cash_apy`) / 80% trading (earns ensemble carry); bands 10–30%; a
+  withdrawal shock funded from treasury FIRST, only unwinding trading if it exceeds the buffer; rebalance cost =
+  `2·cost_bps` rotation + `rebalance_slip_bps` slippage on moved notional + fixed `$rebalance_gas_usd` gas (anchored by
+  `--capital-usd`). **Linear** (operator). **Result (2022→2026, ensemble):** raw 100%-deployed **21.7% ann** →
+  treasury-managed **18.1% ann** — the 20% liquidity buffer costs **~3.6%/yr**, almost ALL of it buffer-idle drag (20%
+  parked in 4% cash vs 22% carry); rebalance/unwind cost ~0.04%. A **10% withdrawal is fully covered by the 20% buffer
+  (no unwind, ~0 cost)**; a **25% withdrawal** exceeds the buffer by 5% → forces a 5% unwind, still ~0.05%. Knobs:
+  `--treasury-pct --withdraw-pct --withdraw-interval-days --capital-usd --rebalance-gas-usd --rebalance-slip-bps`.
+- **2026-06-16** — **Capital-movement map** (from prod, for fidelity): USDC **DEPOSIT** → treasury (20%) / trading (80%
+  TRANSFER treasury→hot) → the 4-leg `AtomicInstruction`: **SWAP** usdc→eth → **STAKE** eth→LST → **TRANSFER** LST→perp
+  venue (collateral) → **TRADE** short perp; passive **FUNDING_ACCRUAL + STAKING_REWARD** accrue; on exit unwind (close
+  perp → unstake → swap→usdc) → **WITHDRAWAL_TO_BANK**. Each step is a UAC `ledger` EventType (37-value closed set);
+  every TRANSFER/CUSTODY_MOVE carries a single `client_id` (funds-isolation HARD RULE). The sim models this at the
+  portfolio level (start→deploy→accrue→withdraw); per-leg event ledger = next fidelity.
+- **2026-06-16** — Gas + slippage = **bundled into the calibrated rebalance cost (v1)** — rotation + static slippage +
+  fixed gas. Higher fidelity (next): per-action gas from prod `gas_cost_model.DEFAULT_GAS_ESTIMATES` × GCS gas-price
+  data (`gas_fees/`); **historical** DEX slippage from `dex_pools` depth via prod `slippage_cost_model`/`amm.py`; Aave
+  borrow-rate slippage from the IRM utilisation curve (needs the completed Aave-ETH backfill). Todos below.
+- **2026-06-16** — Harness **ruff + basedpyright clean, e2e QG exit 0**. Quickmerge pending foreign UAC WIP clear.
+
+## Open todos / next steps (added 2026-06-16, part 3)
+
+- [ ] [STRATEGY] P3. Per-action GAS layer: charge gas per on-chain leg (SWAP 200k / STAKE 150k / TRANSFER 65k / BORROW
+      300k from prod `gas_cost_model.DEFAULT_GAS_ESTIMATES`) × historical gas-price (`gas_fees/chain_id=…`) × native
+      price. **Repo: e2e-testing harness (reuse execution-service gas_cost_model constants).**
+- [ ] [STRATEGY] P3. HISTORICAL slippage: DEX swap from `dex_pools` depth (prod `slippage_cost_model` + `amm.py`),
+      borrow-rate from Aave IRM utilisation curve (`base + slope1·U + slope2·max(0,U−U_opt)`); keep LST secondary
+      premium static (~0–50 bps, no data). **Repo: e2e-testing harness.**
+- [ ] [STRATEGY] P3. Per-leg capital-movement event ledger (DEPOSIT→SWAP→STAKE→TRANSFER→TRADE→accrual→unwind→WITHDRAW)
+      using UAC `canonical.crosscutting.ledger` EventTypes, for a faithful capital-flow trace. **Repo: e2e-testing.**
+- **2026-06-16** — **Harness SHIPPED under QG**: baseline `e2e-testing@a2b6a44` (orphan-WIP inheritance, promoted) +
+  treasury-rebalancing-sim delta `e2e-testing@653da76` landed on live-defi-rollout (ruff + import-patterns +
+  basedpyright + full QG green; Tier-C drain → staging ≤30min). Autonomous run complete.
+- **2026-06-16** — Operator follow-ups answered (data-verified):
+  - **GAS data FOUND**: `gas-fees-central-element-323112` (legacy un-suffixed → same env-split debt; `-prd` exists),
+    path `gas_fees/chain_id=<id>/date=…/` schema base_fee_gwei + priority_fee_p25/50/75 + blob_base_fee. **Chains:
+    Ethereum(1), Solana, + Op/BSC/Poly/Arb/Avax/Base/Linea**, coverage ≥2024-05. → per-action gas layer can use REAL
+    historical ETH+SOL gas prices (no assumption needed).
+  - **429 root cause**: GCS **per-object mutation rate limit** on the hot per-VM manifest shard
+    (`_index/per_vm/mtds-…parquet` — written every batch; GCS caps ~1 mutation/sec/object) + the **consolidator ~17 days
+    stale** (Cloud Run job down for this bucket). Both throttled the Aave backfill → partial. Fix: debounce/ batch the
+    per-VM shard writes (or unique per-batch objects) + run the lending-indices manifest consolidator.
+  - **Recursive basis = ATOMIC bundle (confirmed)**: prod `AtomicInstruction` (multi-leg + compensation_policy) +
+    `FLASH_BORROW`/`FLASH_REPAY` + `ATOMIC_BUNDLE_BASE` gas + 7 `RECURSIVE_LOOP` DeFi error codes. The loop must be one
+    atomic tx (flash-loan the borrow→stake→re-borrow) or be liquidatable mid-loop. Recursive strategy models the
+    atomic-bundle gas.
+  - **Margin-call → treasury (dual-purpose buffer)**: for a DELTA-NEUTRAL basis the hedge absorbs asset moves, so margin
+    calls bite mainly on **cash-margin venues (Aster/HL)** where the off-venue spot can't auto-offset the perp loss →
+    treasury top-up extends the effective margin buffer beyond the budgeted `max_move` (→ tighter margin / higher eff,
+    treasury covers tail moves). Continuous monitor needs the price-MtM layer (next fidelity); a margin-shock coverage
+    stat is added to the sim now.
+- **2026-06-17** — **Margin-call backstop SHIPPED** (`e2e-testing@d395824`): the treasury is dual-purpose — the 20%
+  buffer also funds a margin top-up. Sim reports it: with only ~8% of the ensemble book on cash-margin venues (Aster/HL,
+  no on-venue spot offset) and the rest hedge-protected delta-neutral, the treasury covers ~any tail move on that slice.
+  Continuous margin monitor needs the price-MtM layer (next fidelity). **All harness work shipped + journaled;
+  autonomous run closed.**
+- **2026-06-17** — **SEQUENCING (operator):** the remaining next-fidelity todos (per-action gas · historical DEX/IRM
+  slippage · per-leg capital-movement ledger · complete Aave-ETH backfill · OKX Tardis universe · ETH/SOL share-class
+  staked+recursive · weETH restaking) are **gated on the v9 data-migration / env-split / category= cleanup completing**
+  — resume them once that lands. In the meantime built the live/paper emitter (below).
+- **2026-06-17** — **Live/paper positioning-instruction emitter BUILT** (`--emit-instructions [--as-of DATE]`): runs the
+  SAME causal ensemble model on the latest data and emits the **ideal target book** as instructions — per position: coin
+  · structure · weight · notional (= weight × deployable, treasury reserved) · net/funding/staking carry · short(/long)
+  venue · and the **leg sequence** per structure (spot_same_venue: BUY_SPOT+SHORT_PERP; staked_basis:
+  BUY_SPOT→STAKE→TRANSFER→SHORT_PERP; cash_margin: BUY_SPOT off-venue+POST_MARGIN(USDC×eff)+SHORT_PERP; dispersion:
+  LONG_PERP+SHORT_PERP) → printed + `positioning_instructions.json`. **Batch==live by construction**: same GCS
+  data/schemas (CoinDay/panel) + same decision logic (`_ewma_threshold_weights`/efficiency/collateral) as the backtest;
+  only difference is it emits today's book vs accumulating PnL. Paper/live EXECUTION (fills/PnL) → strategy-service
+  `colocated_engine` (run-paper.sh); the emitter is the signal/target-book stage.
+- **2026-06-17** — Emitter delta is **QG-green + working-tree-safe**, quickmerge transiently BLOCKED on foreign dep WIP
+  (UAC `venue_collateral.py` + execution-service dispersion trace — not mine). Ships on next clean-dep window /
+  orphan-WIP inheritance (same path the baseline a2b6a44 took). All code verified (ruff+imports+basedpyright+QG); no
+  force-merge through foreign dirty deps.
+- **2026-06-17** — **Per-variant emitter + withdrawal/deposit-triggered rebalancing** (operator: "can we simulate
+  withdrawals AND deposits to trigger the rebalance, for live and backtest?"). Three deltas:
+  1. **Per-variant books** — `--emit-instructions` now emits one IDEAL target book PER strategy variant (staked basis /
+     funding dispersion / pure basis / ensemble), not just the ensemble. Each writes
+     `positioning_instructions_<variant>.json` + a combined `positioning_instructions_all.json`. Verified on $100k
+     (as_of 2026-05-22, latest day with data mid-v9-migration): staked-basis = ETH 100% @ $80k (Lido stETH + OKX short,
+     8.3%); dispersion/pure/ensemble = 5×$16k. Each $100k → $20k treasury + $80k deployable.
+  2. **Deposit shock in the backtest treasury sim** — withdrawals already existed; added `--deposit-pct` /
+     `--deposit-interval-days`. A deposit lands in the treasury wallet (the on-chain entry point) → pushes the treasury
+     fraction above the 30% band → the existing rebalance deploys the surplus into the book. Sim line now reports
+     `Rebalances / withdrawals / deposits`. Verified: `--withdraw-pct 0.10 --deposit-pct 0.15` → 2 / 1 / 1.
+  3. **Flow-triggered rebalance INSTRUCTIONS in the live emitter** — `--flow-usd <signed>` (negative=withdrawal,
+     positive=deposit) emits the actual rebalance legs for the ensemble (live) book, same wallet logic as the backtest
+     sim: treasury-first on withdrawals (unwind pro-rata only if the buffer is exhausted), deploy-surplus on deposits,
+     then resize every position back to 20/80 on the new capital → `rebalance_instructions.json`. Verified on $100k:
+     `-$10k` covered by treasury (no unwind, positions trim to $14.4k on $90k); `+$30k` deploys $24k surplus (+$4.8k
+     each on $130k); `-$50k` exhausts the $20k buffer → $30k pro-rata unwind, positions $16k→$8k on $50k. Batch==live:
+     the live rebalance reuses the same 20/80 band + treasury-first rule the backtest runs each shock.
+  - **Code quality**: refactored the emitter's instruction structures to TypedDicts (`Position`/`Instructions`/
+    `Rebalance`/`ResizeRow`/`FlowAction`) — removed the `dict[str, object]` `reportUnknown` errors AND the 5 banned
+    `# type: ignore` comments. ruff clean; basedpyright on the emitter region clean (the residual 124 file-level errors
+    are the pre-existing pandas/requests/argparse-`Any` baseline in the committed scan body — QG type-checks
+    `tests/unit/`, not `scripts/`, so they are ungated and pre-date this work; not introduced here).
+- **2026-06-17** — Above three deltas **LANDED on LDR** at `e2e-testing@fc5cd0a` (rebased onto the LDR tip after a
+  push-time race; file change intact). QG-green (sentinel d982ce0), ruff clean, no `# type: ignore`.
+- **2026-06-17** — **Daily positioning guide (manual-execution helper)** (operator: "guide me on what to do if I execute
+  manually"). `--target-diff` dumps the TRADES (delta between the persisted CURRENT book and the TARGET ensemble book) +
+  the EXPECTED FINAL position (== target) — first run from flat = the trades to put on RIGHT NOW (all OPENs). Trade
+  actions: OPEN / CLOSE / INCREASE / REDUCE / SWITCH (coin held but structure-or-venue changed → close old + open new).
+  `--apply` SIMULATES execution — persists the target as the new current book (`--state-file`, default
+  `<out>/current_book.json`), so day-over-day the delta is genuinely vs yesterday's fill ("target == final": after
+  apply, current = the final = the target). Verified: flat→5 OPENs; apply; re-run→NO TRADES (current==target); capital
+  100k→250k→5 INCREASEs. Writes `daily_trades.json`. **Cron**: `scripts/defi/daily_positioning_dump.sh` (runs
+  `--target-diff --apply` over a rolling 120d window, dumps to `~/.defi_positioning/daily_trades_<DATE>.log` + advances
+  state) installed on the human-planning VM crontab at `5 0 * * *` UTC. Batch==live: same ensemble model/data/decisions
+  as the backtest — the live guide IS the backtest allocator evaluated on the latest day. Strict-typed
+  (`Trade`/`BookState` TypedDicts, `cast` not `# type: ignore`); ruff clean. **Shipping** via watcher (1 foreign dirty
+  dep — UAC `venue_collateral.py`).
+- **2026-06-17** — **Live/paper multi-venue expansion (operator) — researched + documented**. Probed public perp funding
+  endpoints: **11 venues reachable no-auth** (the 6 backtest venues + Gate/KuCoin/Bitget/Kraken-Futures/MEXC). Locked
+  each venue's funding field/interval/symbol/sign quirks (HL+Kraken **hourly**; Kraken `fundingRate÷markPrice`
+  absolute→relative; Deribit stored 8h-figure; Gate/MEXC expose interval; KuCoin/Kraken `XBT`=BTC; OKX/Deribit/MEXC
+  per-coin, rest all-symbols). Wrote the integration SSOT **`codex/02-data/carry-venue-live-integration-reference.md`**
+  covering funding venues + LST **staking** (Lido/Jito/RocketPool/Coinbase/ether.fi-weETH+EigenLayer/Marinade) +
+  **Aave** lending (cash floor + recursive borrow leg) + the conservative-cash-margin default + how-to-add-a-venue.
+  Filed the `--live` build + UAC-registry (cadence/collateral) + staking/lending-source + credentialed-venue TODOs under
+  '## Live/paper multi-venue expansion'. batch==live: live snapshot feeds the same FundingPoint→panel→emitter. Code
+  build (`--live` mode) is the next step, spec'd by the doc.
+- **2026-06-17** — **DEX-perp venues corrected (operator)**: dYdX v4 + Vertex are **PUBLIC** (not credentialed) — dYdX
+  `indexer.dydx.trade/v4/perpetualMarkets` (`nextFundingRate`, hourly) verified; Vertex
+  `gateway.prod`/`archive.prod.vertexprotocol.com` resolves (the `api.vertexprotocol.com` I'd have used is a stale
+  Vercel 404). **Drift**: we HOLD creds (`solana-paper-keypair-private-key`+`solana-wallet-address`); its public Data
+  API **403s this VM** (geo/Cloudflare) + authed 401s → wire the **Solana-RPC on-chain** path. Drift **takes
+  jitoSOL/mSOL as margin → unlocks SOL staked-basis** (only venue). Already in UAC (`venue_mapping`/`chain_env`). Added
+  all three + the **live/paper history carve-out** (no funding history → WARN + use current snapshot + available spot
+  history, never block; backtest still needs history) to the spec doc + todos.
+- **2026-06-17** — **`--live` multi-venue paper path + Drift wired** (`e2e-testing@6e2ffb8`). `--live` ranks on the CURRENT funding snapshot (no history — operator carve-out) across **14 venues**: 11 CeFi/public-perp + dYdX + Vertex + Drift. Verified live: **13 venues / 446 funding points**, **SOL staked_basis short DRIFT** in the book (Drift's jitoSOL/mSOL collateral unlocks it — the goal). Vertex warn-skips (this VM's IP is TLS-reset by Vertex's edge — host issue, not code). Uses oracle-of-now weights on the single snapshot; conservative LST APR default (ETH 3% / SOL 7%) + warn (live LST source still a TODO). New venues default to cash-margin (conservative). Coins 30→40. **Drift dependency resolution (KEY)**: driftpy's metadata exact-pins ~25 common libs (urllib3==1.26.13 / websockets==13 / zstandard==0.18 / solders<0.27 / numpy<2 / psutil / aiosignal …) that **cannot be uv-resolved in any shared lock** with the fleet + execution-service — BUT it **RUNS fine on the fleet versions** (Drift funding read verified on solders 0.27.1 + numpy 2.2.6 + the trio). So it lives in an **ISOLATED venv** (`scripts/defi/install_driftpy_venv.sh` → ~/.drift-venv, driftpy's own pins) and the harness shells out to `drift_funding_reader.py` there via Helius RPC (ibkr-gateway-infra pattern) — NOT a flat dep. execution-service already anticipated this (lazy-loads driftpy in `defi_execution/protocols/drift.py`, deliberately undeclared). Production MTDS/execution adapters follow the same isolated pattern (filed below).
+- **2026-06-17** — **Liquidity layer (ADV + market width)** (operator; `e2e-testing@c973985`). `--live` now snapshots per-coin **24h USD volume (ADV) + half-spread** (deepest of Bybit/Gate, one call each) and: (1) **penalises carry by the annualised round-trip spread cost** (`2·half_spread·(365/hold)`) so a wide-spread coin must clear a higher funding bar — don't chase a thin coin's funding into the spread; (2) **ADV-caps position size** (`--adv-cap-pct`, default 0.5% of ADV) → liquidity-scaled sizing; (3) shows `[ADV $Xm · spread Ybps]` per position. Verified live: 39/40 coins; ETH staked-basis concentrates in the $2.36B/0.0bps book; STX ADV-capped $16k→$8.7k on its $2M ADV. Knobs `--no-liquidity --spread-cost-mult --adv-cap-pct`. **Single-snapshot for paper**; for the **BACKTEST we assume liquidity constant** (the snapshot, documented) — e2e-only. Production = a real MDPS ADV/market-width feature (filed).
+- **2026-06-17** — **Two `--live` correctness fixes (operator caught the symptom — LDO showing 91%)**. (1) **Hourly-venue annualisation was noise**: Kraken/HL/dYdX/Drift settle HOURLY, and `--live` was annualising a SINGLE current hourly print x8760. Measured LDO on Kraken: latest hour **+70%/yr** vs trailing-24h mean **-4.8%/yr** vs 7d **-14.6%/yr** (the 8 last hourly prints swung -28%..+70%). So it was never a real rate — a single-hour artifact (NOT mean-reversion — it never moved; I wrongly asserted that before measuring). FIX: `_live_funding_hourly_trailing` pulls each hourly venue's **trailing-24h funding history** (Kraken `historicalfundingrates` last 24 · HL `fundingHistory` windowed · dYdX `historicalFunding?limit=24`) and averages — Drift already used `last24h_avg`. 8h venues keep their single settlement (already a smoothed period rate; 8h smoothing is a possible refinement). (2) **Single-snapshot perp-perp DISPERSION excluded from the LIVE ensemble by default** (`--include-dispersion-live` to keep): across 13 venues the max-min funding gap is dominated by the thinnest/most-extreme venue (TON 201% short DRIFT/long DYDX) and doesn't persist — staked/pure/cash are the trustworthy live signal; the backtest keeps dispersion (it has the time-series to verify persistence). Clean live ensemble now = cash-margin funding shorts on high-funding alts (14-23%, smoothed) + ETH staked-basis (9.4%) as a variant. **Integration note for the main system**: production funding features must carry a **trailing/realised window** per venue cadence (never a single instantaneous print annualised), and dispersion needs **per-(coin,venue) liquidity** before it's tradeable — both belong in the MDPS feature.
 - _(append entries as work continues)_
+
+## Open data gaps (file/verify) — added 2026-06-16
+
+- [ ] [DATA] P2. `lending-indices` (+ `lst-rates`) writer targets the LEGACY un-suffixed bucket; canonical is
+      `lending-indices-prd-…` / `lst-rates-prd-…` (empty `_migration/`). Fix the writer to `resolve_bucket_name`
+      env-split + migrate legacy data → `-prd`. **Repo: market-tick-data-service + a GCS migration.** Owner:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
 
 ## Findings filed
 
 - Data-correctness (cadence registry inconsistency / `funding_timestamp` offset / no historical cadence tracker / Aster
   backfill) → `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
 
+## Execution structures + capital efficiency (operator design 2026-06-16)
+
+The funding you _capture per unit of deployed capital_ depends on how the long (spot/LST) and short (perp) legs are
+collateralised. Rank on **effective carry = (funding + applied_staking) × capital_efficiency**, not raw funding.
+
+**Five structures** (assign each (coin, venue) opportunity to one):
+
+1. **Spot + perp, same venue, spot IS collateral** — venue liquid for spot AND accepts spot as margin (portfolio/
+   unified margin: Binance/Bybit/OKX). Start USDC/USDT → buy spot + short perp, one collateral pool. `efficiency ≈ 1`.
+2. **Staked-basis LST + perp, same venue, LST IS collateral** — venue accepts the LST (Bybit/OKX stETH/wstETH, Deribit
+   stETH). Earn staking + funding on one margin base. `efficiency ≈ 1 − lst_haircut` (Bybit/OKX 10%, Deribit 7.5%).
+3. **Spot on venue A → transfer → short on venue B (B accepts the moved spot/coin as collateral)** — illiquid spot at B,
+   so buy spot at A, move it, short at B. Costs: transfer fee + **timing gap** (price can move between buy and short).
+   Mitigations: (a) buy→send→short (gap risk); (b) borrow the coin against USDT, post borrowed coin at B, short,
+   simultaneously buy at A to repay — needs a margin/borrow account + LTV cap, usually a separate account so often
+   impractical; **(c) prime-broker / off-exchange settlement (see below) — the clean answer.**
+4. **Spot on venue A + STABLECOIN margin on perp venue B (B rejects spot/LST collateral: Hyperliquid, Aster)** — capital
+   splits: cash for spot AND cash for perp margin. `efficiency = notional/(notional+margin) = 1/(1+m)` where `m` = max
+   adverse (up) move budgeted before rebalance. Operator example: 100k → 60k spot + 40k margin → short 60k → capture
+   **0.6×** the funding. **Per-asset `m`** (max up-move buffer): BTC ~0.20, ETH ~0.25–0.30, mid alt ~0.50–0.60, small
+   alt ~0.80 → `f` ≈ 0.83 / 0.77 / 0.62 / 0.56. Parameterise `m` per asset and scale required margin → discount funding
+   by `f` in the ranking.
+5. **Perp–perp (no spot leg)** — when one venue's funding is ~zero and another's is high (or one negative + one positive
+   — observed **20.6%** of coin-days), go **long the low/negative-funding perp + short the high-funding perp**, split
+   collateral ~50/50; both legs stablecoin-margined, delta-neutral, full size. This is the
+   `arbitrage_price_dispersion`/funding-dispersion cousin — capture the cross-venue spread (p95 ≈ 32% APY).
+
+**Prime-broker / off-exchange-settlement bridge (TODO — find the venue).** The capital-efficiency drag of structures 3–4
+largely disappears if a prime broker / tri-party custodian posts _temporary_ collateral at the short venue so you can
+short immediately, then you replace it once the spot balance moves over (or just keep collateral in custody, mirrored to
+the exchange — never physically moving the coin). This is exactly what **off-exchange settlement networks** do: **Copper
+ClearLoop, Ceffu (Binance) MirrorX, FalconX / Hidden Road prime** — collateral stays in custody, the exchange recognises
+it for margin, no transfer-timing gap. The workspace already uses **Copper + Ceffu** for custody
+(`codex/04-architecture/custody-providers.md`) → ClearLoop/MirrorX are the natural rails for capital-efficient
+cross-venue basis. **Action: confirm which of our custody PBs support off-exchange margin on which short venues; if so,
+structures 3–4 collapse toward `efficiency ≈ 1`.**
+
+## Funding-regime findings (2025-01-01 → 2026-05-20, 37,128 coin·venue·day points)
+
+- **22.9% of funding observations are NEGATIVE**; median 6.5% APY; a heavy cluster sits at the ~11% cap (0.01%/8h).
+- **12% in [0,3%) "meh"** (hold/stake, don't short — `--min-carry-bps` floor); **65% ≥3%**; **~3% ≤ −20%** (flip to
+  long-the-perp).
+- **20.6% of coin-days have a cross-venue sign split** (neg on one venue, pos on another → structure-5 dispersion play);
+  cross-venue spread p95 ≈ 32% APY.
+- **Deribit funding is unreliable in the raw feed** (p95 130%, min −878%) — consistent with the 8h-vs-1h normalisation
+  bug filed in the cadence issue; winsorise outliers + treat Deribit funding as suspect until that's fixed.
+
+## Live/paper multi-venue expansion (operator 2026-06-17)
+
+**Spec / integration SSOT**: `codex/02-data/carry-venue-live-integration-reference.md` (per-venue funding quirks + LST
+staking + Aave lending + conservative-default discipline + how-to-add-a-venue). For paper the decision doesn't need deep
+history, so the live path uses **every venue we can reach by public API or hold credentials for** + conservative
+estimates (filed below) where a characteristic isn't yet verified. **Probed reachable 2026-06-17** (public, no auth):
+Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget, Kraken Futures, MEXC** (11 venues).
+
+- [ ] [STRATEGY] P2. Build the harness `--live` multi-venue snapshot mode per the spec doc §1–§3: fetch current funding
+      from all 11 venues (interval-aware annualise — HL+Kraken hourly, Kraken `fundingRate÷markPrice`, Deribit
+      8h-figure, Gate/MEXC interval from the API), `FundingPoint(day="LIVE")` → existing
+      `_build_panel`/ensemble/`_build_instructions`/ `_diff_to_target` (batch==live). New venues default to cash-margin
+      (conservative). Expand coins to ~40. **Repo: e2e-testing harness.**
+- [ ] [DATA] P2. UAC `perp_funding_cadence`: add Gate/KuCoin/Bitget/Kraken/MEXC cadences (+ per-pair non-8h exceptions);
+      prefer the interval the API returns. **Repo: unified-api-contracts.**
+- [ ] [DATA] P2. UAC `venue_collateral`: verify + add the 5 new venues' real collateral programs (several run
+      multi-asset/portfolio margin that would lift them off the conservative cash-margin default → better efficiency /
+      enables `spot_same_venue`/`staked_basis`). Until verified, cash-margin default holds. **Repo:
+      unified-api-contracts.**
+- [ ] [DATA] P2. Wire live LST staking APR sources per spec §4: RocketPool rETH, Coinbase cbETH, Marinade mSOL (Lido
+      stETH + ether.fi weETH/EigenLayer already mapped); derive from on-chain exchange-rate growth or protocol APR
+      endpoint; conservative trailing-realised default + TODO where missing. **Repo: e2e-testing → features-service.**
+- [ ] [DATA] P2. Live Aave reserve-data adapter (supply/borrow APY from `getReserveData`
+      liquidityRate/variableBorrowRate, RAY-scaled) for the cash floor + recursive borrow leg; Compound v3 source.
+      **Repo: e2e-testing → mtds.**
+- [ ] [STRATEGY] P2. Wire **dYdX v4 + Vertex** (both PUBLIC, verified 2026-06-17) into the live snapshot: dYdX
+      `indexer.dydx.trade/v4/perpetualMarkets` (`nextFundingRate`, hourly); Vertex `gateway.prod`/`archive.prod`
+      (public; `api.vertexprotocol.com` is a stale 404). **Repo: e2e-testing harness.**
+- [ ] [DATA] P2. Production Drift funding in **MTDS** via the isolated-venv reader pattern (a Drift handler that shells out to the driftpy venv / a Drift gateway subprocess; canonize into `derivative_ticker` like other venues). Same isolation — driftpy stays out of MTDS flat deps. **Repo: market-tick-data-service.**
+- [ ] [EXEC] P2. Finish the **execution-service** Drift trading adapter (`defi_execution/protocols/drift.py` already lazy-loads driftpy) — install via the isolated venv / gateway in the Drift-enabled deploy; place short-SOL-PERP orders with jitoSOL/mSOL collateral. **Repo: execution-service.**
+- [ ] [STRATEGY] P2. Wire **Drift** via the creds/RPC path — we HOLD `solana-paper-keypair-private-key` +
+      `solana-wallet-address`; the public Data API 403s this VM (geo) + authed 401s → read funding on-chain via Solana
+      RPC. Drift **takes jitoSOL/mSOL as margin → unlocks SOL staked-basis** (the only venue that does). Already in UAC
+      (`venue_mapping`/`chain_env`). Not BLOCKED-CREDENTIALS — a wiring task. **Repo: e2e-testing → mtds drift
+      handler.**
+- [ ] [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN + use
+      the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
+      degrades to a point estimate under < halflife days. Backtest still needs history; this is live/paper only. **Repo:
+      e2e-testing harness.**
+- [ ] [STRATEGY] P3. Genuinely credentialed venues (Paradex, Backpack, Edgewink): file each **BLOCKED-CREDENTIALS** with
+      the operator ask + build the adapter scaffold anyway (External-Data-Always-Available rule). **Repo: e2e-testing →
+      ping ledger.**
+- [ ] [STRATEGY] P3. Sign/units cross-check on integration: one coin per venue vs the spec §3 reference values before
+      trusting the live ranking. **Repo: e2e-testing harness.**
+
+## Liquidity (ADV + market width) follow-ups (operator 2026-06-17)
+
+- [ ] [DATA] P2. Production **ADV + market-width + tick-size** feature in **MDPS** (per coin × venue, from the tickers/book + instrument-info endpoints) so strategy/execution size by liquidity in prod (batch==live). The e2e harness snapshot is the prototype. **Repo: market-tick-data-service + unified-api-contracts (schema).**
+- [ ] [DATA] P2. **Tick size** per (coin, venue) — pull from each venue's instrument-info endpoint; feed the min-increment into spread/round-cost + order sizing. Not yet in the harness (only ADV + spread). **Repo: e2e-testing harness → MDPS.**
+- [ ] [STRATEGY] P2. Backfill the liquidity snapshot as a **constant** across the backtest window + document the assumption inline in the harness/report (e2e-only approximation until MDPS history exists). **Repo: e2e-testing.**
+- [ ] [STRATEGY] P2. **Dispersion per-venue-liquidity guard** (live-exclusion shipped 2026-06-17; deeper fix pending): `--live` perp-perp dispersion picks cross-venue funding EXTREMES (e.g. LDO 91% short KRAKEN/long BITGET) that mean-revert — tighten (per-venue winsor, min-ADV venue filter, require the spread to persist, or down-weight dispersion in --live). **Repo: e2e-testing harness.**
+
 ## Open todos / next steps
+
+- [ ] [STRATEGY] P2. Add the capital-efficiency factor to the harness ranking: structure assignment per (coin, venue)
+      (spot-collateral set {Binance/Bybit/OKX/Deribit} vs cash-margin {Hyperliquid/Aster}), per-asset max-move `m` →
+      `f=1/(1+m)`, rank by `effective_carry = (funding+staking)×f`, winsorise funding outliers, `--min-carry-bps` floor
+      (default 300). **Repo: e2e-testing harness.**
+- [ ] [STRATEGY] P2. Add structure-5 (perp–perp funding dispersion: long low/neg-funding perp + short high-funding perp)
+      as a candidate alongside the spot/LST basis. **Repo: e2e-testing → strategy-service.**
+- [ ] [RESEARCH] P2. Prime-broker / off-exchange-settlement bridge — confirm whether Copper ClearLoop / Ceffu MirrorX /
+      FalconX / Hidden Road give off-exchange margin on our short venues (HL/Aster/Bybit/OKX); if yes, structures 3–4
+      collapse to `efficiency ≈ 1`. Cross-link `codex/04-architecture/custody-providers.md`. **Repo: PM research +
+      execution-service.**
 
 - [ ] [STRATEGY] P2. Use `predicted_funding_rate` (already a `derivative_ticker` column) to gauge ENTRY on venues that
       publish a forward rate — enter/size based on predicted next-cycle funding, not just trailing realised. Only where

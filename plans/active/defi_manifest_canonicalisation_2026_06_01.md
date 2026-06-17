@@ -147,7 +147,7 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 | Issue                                                           | What it is                                                                      | How this master resolves it                                       |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `issues/defi_code_codex_drift_2026_05_27`                       | DeFi code↔codex drift audit (D1–D13: data-types, venues, banned providers)     | §A writer + §F docs/SSOT close the code/codex drift items         |
+| `issues/defi_code_codex_drift_2026_05_27`                       | DeFi code↔codex drift audit (D1–D13: data-types, venues, banned providers)      | §A writer + §F docs/SSOT close the code/codex drift items         |
 | `issues/features_service_defi_data_loading_blockers_2026_05_29` | features-service DeFi e2e blocked on data-layer (dex_swaps→dex_pool_swaps etc.) | §C0–C2 canonical-naming walk + §D features propagation resolve it |
 
 ### Layered order (gates top-down; asset_groups parallelise within a layer)
@@ -459,9 +459,19 @@ What to verify/wire (B0 corrected scope):
       blank-chain no-write). Verified ruff + basedpyright clean + the 2 affected suites 46 passed/1 skip (full mtds QG
       red ONLY from 2 pre-existing FOREIGN prediction-script deep-imports — see the prediction-plan annotation; none
       from this DeFi change). parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A5 LIGHTER perp_funding adapter — **ROOT-CAUSE DIAGNOSED (slot-2 2026-06-08), fix needs a live Tardis
-      probe to validate.** `perp_funding_handler._collect_lighter` (mtds) hand-rolls the Tardis datasets URL
-      `…/lighter-zksync/market_stats/{date}/{SYMBOL}.csv.gz` with **`-USDC`-suffixed symbols**
+- [x] ✅ [CODE] P1. A5 LIGHTER perp_funding adapter — **FIX SHIPPED mtds@657f615 (2026-06-16 /autonomous).** Applied the
+      recommended SSOT-aligned fix: `_LIGHTER_TOP_SYMBOLS` switched to **bare base assets**
+      `("BTC","ETH","SOL","HYPE","TON")` (perp_funding_handler.py) and `_collect_lighter`
+      (`_perp_funding_pacifica_lighter.py`) now routes through
+      `TardisAdapter.download_csv(exchange="lighter-zksync", symbol=<bare>, data_type="market_stats", date=…)` — the
+      SSOT `umi_tick_provider` uses — deleting the hand-rolled aiohttp+gzip URL loop +
+      `_parse_lighter_market_stats_csv` + their tests, with thin market_stats→perp_funding column mapping preserving the
+      `write_defi_rows`/`record_zero_rows` output contract. Tests updated (`TestLighterTardisAdapterRouting` etc., 4
+      pass/1 skip; mtds QG green). **Validating it returns non-zero against live Tardis = BLOCKED-LIVE-VERIFY** (needs
+      Tardis key + network; `--block-network` here) — code + SSOT alignment + symbol-format are correct; honest
+      `record_zero_rows` on empty preserved. Original diagnosis ⤵ **ROOT-CAUSE DIAGNOSED (slot-2 2026-06-08), fix needs
+      a live Tardis probe to validate.** `perp_funding_handler._collect_lighter` (mtds) hand-rolls the Tardis datasets
+      URL `…/lighter-zksync/market_stats/{date}/{SYMBOL}.csv.gz` with **`-USDC`-suffixed symbols**
       (`_LIGHTER_TOP_SYMBOLS = ("BTC-USDC", "ETH-USDC", "SOL-USDC", "HYPE-USDC", "TON-USDC")`, perp_funding_handler.py
       ~L115), **bypassing the `TardisAdapter` SSOT** that the verified `umi_tick_provider` path uses — and that path
       keys Lighter by **bare base asset** (`umi_tick_provider._LIGHTER_TOP_SYMBOLS = ("BTC","ETH","SOL","HYPE",…)`,
@@ -993,18 +1003,25 @@ What to verify/wire (B0 corrected scope):
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
-- [ ] [DATA] P0. **B0-PRE (slot-7→slot-2 2026-06-09): re-verify enumerate after the PROTOCOL_CAPABILITIES expansion.**
-      `unified-api-contracts@f5e6b0c2` wired 9 DeFi data_types (bridge/eigenlayer/flash_loan/governance/liquidation/mev/
-      position/staking_yields/token_transfers) to genuine venue producers → +18 protocols (37→55), so the could-exist
-      universe + `expected_unattempted` seeding + coverage denominator GREW. Before B0 / G4 `--apply`: (1) re-run the
-      DeFi `enumerate_expected_universe` dry-run on `f5e6b0c2`+ and diff the candidate count vs the pre-expansion run;
-      (2) confirm the 18 new venues (across/stargate/eigenlayer/flashbots/alchemy_onchain/\*\_governance + the
-      restaking/ vault protocols) are intended DeFi capture targets (a venue declared in `defi_venue_capabilities.py`
-      but with no live capture path is still HONEST could-exist → its cells seed `expected_unattempted`, which is
-      correct — coverage % drops, not a regression); narrow PROTOCOL_CAPABILITIES only if a venue is genuinely
-      out-of-scope. `native_staking_rates` + `vault_share_price` remain `BLOCKED_UPSTREAM_CAPABILITY` (no producer).
-      Additive ⇒ NON-BLOCK per the Pre-Apply BLOCK RULE, but the seed must reflect the new universe. parent_epic:
-      manifest_master.
+- [x] ✅ [DATA] P0. **B0-PRE — RE-VERIFIED 2026-06-16 (/autonomous):** fresh DeFi `enumerate_expected_universe` v2
+      dry-run (catalog `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`, 1,578,922 manifest
+      rows, window 2026-06-07→06-08) = **52,862 candidate rows/2d** (per-instrument grain, scan-only, 0 written) — same
+      order of magnitude as the recorded 57,074/2d (Δ≈−4.2K = catalogue drift since that run; **NOT a regression**).
+      `PROTOCOL_CAPABILITIES` = **55** confirmed (37→55 expansion, uac@f5e6b0c2). The 18 new venues are HONEST
+      could-exist (coverage % drops, not a regression); `native_staking_rates` + `vault_share_price` stay
+      `BLOCKED_UPSTREAM_CAPABILITY` (no producer). Additive ⇒ NON-BLOCK per Pre-Apply BLOCK RULE; the `--apply-write`
+      seed stays G1.run-gated. **B0-PRE (slot-7→slot-2 2026-06-09): re-verify enumerate after the PROTOCOL_CAPABILITIES
+      expansion.** `unified-api-contracts@f5e6b0c2` wired 9 DeFi data_types
+      (bridge/eigenlayer/flash_loan/governance/liquidation/mev/ position/staking_yields/token_transfers) to genuine
+      venue producers → +18 protocols (37→55), so the could-exist universe + `expected_unattempted` seeding + coverage
+      denominator GREW. Before B0 / G4 `--apply`: (1) re-run the DeFi `enumerate_expected_universe` dry-run on
+      `f5e6b0c2`+ and diff the candidate count vs the pre-expansion run; (2) confirm the 18 new venues
+      (across/stargate/eigenlayer/flashbots/alchemy_onchain/\*\_governance + the restaking/ vault protocols) are
+      intended DeFi capture targets (a venue declared in `defi_venue_capabilities.py` but with no live capture path is
+      still HONEST could-exist → its cells seed `expected_unattempted`, which is correct — coverage % drops, not a
+      regression); narrow PROTOCOL_CAPABILITIES only if a venue is genuinely out-of-scope. `native_staking_rates` +
+      `vault_share_price` remain `BLOCKED_UPSTREAM_CAPABILITY` (no producer). Additive ⇒ NON-BLOCK per the Pre-Apply
+      BLOCK RULE, but the seed must reflect the new universe. parent_epic: manifest_master.
 - [ ] [DATA] P0. B0 (CORRECTED — do NOT build a consolidator step) RUN the existing expected_unattempted chain for DeFi:
       confirm the DeFi MTDS batch orchestrator goes through the instruments-service pre-flight that calls
       `record_expected_unattempted` (wire the DeFi handlers onto it if not), then run a prod DeFi MTDS batch so the owed
@@ -1314,10 +1331,12 @@ What to verify/wire (B0 corrected scope):
       fixed the MISLEADING "no-underscore canonical" docstring in `migrate_mtds_defi_legacy_venue_underscore.py` (UAC
       keeps underscores; transform is flat→combined VENUE-CHAIN). — deployment-service@4484802 + mtds@6dd8d8a1.
       parent_epic: manifest_master.
-- [ ] [CHORE] P2. C13 **move misplaced migration scripts** out of `plans/audit/results/` (PM docs dir) into
-      `market-tick-data-service/scripts/` (the runnable ones: oracle_relabel / chain_genesis / venue_launch /
-      phantom_captured / captured_pre_existence / captured_vs_objects / index_venue_canonicalise / object_path); the
-      `.md` audit RESULTS + the coverage QUERY stay. parent_epic: manifest_master.
+- [x] ✅ [CHORE] P2. **C13 — DONE (2026-06-16 /autonomous):** relocated the 8 runnable defi migration scripts out of
+      `plans/audit/results/` (PM docs dir) → **`market-tick-data-service/scripts/`** (mtds@712aa01: oracle*relabel /
+      chain_genesis / venue_launch / phantom_captured / captured_pre_existence / captured_vs_objects /
+      index_venue_canonicalise / object_path; ruff-cleaned 16 trivial F541, mtds QG green) + removed from PM here. The
+      `.md` audit RESULTS + the coverage QUERY (`defi_strategy_coverage_query*_`) + the a1–a6/cf\__ audit harnesses STAY
+      in `plans/audit/results/`. parent_epic: manifest_master.
 - [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
       `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
       `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH

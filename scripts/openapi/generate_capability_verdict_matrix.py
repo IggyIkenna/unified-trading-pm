@@ -62,6 +62,7 @@ import json
 import logging
 import subprocess
 from pathlib import Path
+from typing import cast
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -70,63 +71,49 @@ MATRIX_VERSION = "1.0.0"
 _SIZE_BUDGET_BYTES = 20 * 1024 * 1024
 
 # ---------------------------------------------------------------------------
-# F48 — archetypes that HAVE structural legs (so ``not_registered`` is False in
-# ``ARCHETYPE_LEG_STRUCTURES``) but have NO registered v2 engine, so they cannot
-# actually be BUILT. The authoritative source is the strategy-service engine
-# factory ``ARCHETYPE_ENGINE_REGISTRY``
-# (``strategy-service/strategy_service/engine/strategies/v2/factory.py``) — but
-# that registry lives in a T4 SERVICE, and this generator is a T0/UAC-importable
-# tool that MUST NOT import a service (service-dep ban + UAC is a strictly-lower
-# tier than strategy-service). So we cannot query the registry at runtime here.
+# F48 — archetypes that HAVE structural legs (``not_registered`` is False in
+# ``ARCHETYPE_LEG_STRUCTURES``) but have NO registered v2 engine in the
+# strategy-service engine factory ``ARCHETYPE_ENGINE_REGISTRY`` cannot actually be
+# BUILT (the factory raises "no v2 engine registered for archetype …"; the
+# config_space_fuzzer's ``DeadEndReason.NO_V2_ENGINE``), so their cells are demoted
+# from AVAILABLE to ``not_registered(no_v2_engine)``.
 #
-# Instead of hardcoding the ENGINELESS set (which would silently rot when a new
-# archetype lands), we cite the engine registry's KEYS — the set of archetypes
-# that DO have an engine — as a small, source-cited constant, and DERIVE the
-# engineless set as ``{archetypes with legs} minus ENGINE_BACKED_ARCHETYPES``. This
-# auto-tracks: a newly-seeded leg-bearing archetype is engineless until someone
-# adds it both to the factory registry and to this cited mirror. The config_space
-# fuzzer (e2e-testing/scripts/strategy/config_space_fuzzer.py) reproduces the same
-# dead-end at RUNTIME via ``DeadEndReason.NO_V2_ENGINE`` (the factory raises
-# "no v2 engine registered for archetype …").
-#
-# SOURCE (transcribe-only, do not invent): the keys of
-# ``ARCHETYPE_ENGINE_REGISTRY`` in
-# ``strategy-service/strategy_service/engine/strategies/v2/factory.py`` as of the
-# F47/F48 surface-correction. Keep in sync with that registry (a parity test in
-# strategy-service / the fuzzer's NO_V2_ENGINE verdict guards drift).
-_ENGINE_BACKED_ARCHETYPE_VALUES: frozenset[str] = frozenset(
-    {
-        "ML_DIRECTIONAL_CONTINUOUS",
-        "ML_DIRECTIONAL_EVENT_SETTLED",
-        "RULES_DIRECTIONAL_CONTINUOUS",
-        "RULES_DIRECTIONAL_EVENT_SETTLED",
-        "CARRY_BASIS_DATED",
-        "CARRY_BASIS_DATED_INV",
-        "CARRY_BASIS_PERP",
-        "CARRY_STAKED_BASIS",
-        "CARRY_STAKED_BASIS_DATED",
-        "CARRY_RECURSIVE_STAKED",
-        "CARRY_RECURSIVE_BORROW_LENDING_ONLY",
-        "CARRY_BASIS_PERP_INV",
-        "YIELD_ROTATION_LENDING",
-        "YIELD_STAKING_SIMPLE",
-        "ARBITRAGE_PRICE_DISPERSION",
-        "ARBITRAGE_CROSS_DOMAIN_EVENT",
-        "LIQUIDATION_CAPTURE",
-        "DEFI_LP_CONCENTRATED",
-        "DEFI_LP_POOL",
-        "DEFI_LP_VAULT",
-        "ARBITRAGE_MEV_LIQUIDATION_BUNDLE",
-        "ARBITRAGE_MEV_JIT_LIQUIDITY",
-        "ARBITRAGE_MEV_BACKRUN",
-        "MARKET_MAKING_CONTINUOUS",
-        "MARKET_MAKING_EVENT_SETTLED",
-        "EVENT_DRIVEN",
-        "VOL_TRADING_OPTIONS",
-        "STAT_ARB_PAIRS_FIXED",
-        "STAT_ARB_CROSS_SECTIONAL",
-    }
-)
+# The engine-backed set is the SSOT in strategy-service's factory. This generator
+# is a PM/UAC-tier tool that MUST NOT import a T4 service (service-dep ban) — so it
+# reads the registry LIVE via the per-service-``.venv`` subprocess probe (the same
+# idiom the capability-MANIFEST exporter uses for exec-algos/feature-groups/
+# ml-models), never a transcribed copy. ``build_matrix`` takes the set as a
+# parameter so its deterministic unit test stays hermetic (passes a fixture);
+# ``main`` supplies the live-probed set.
+
+
+def _probe_engine_backed_archetypes(workspace_root: Path) -> frozenset[str]:
+    """Read the strategy-service v2 engine-backed archetype set LIVE (F48 single-SSOT).
+
+    Probes ``ARCHETYPE_ENGINE_REGISTRY`` keys in strategy-service's own ``.venv``
+    subprocess (``_capability_gaps._run_service_probe`` — the established per-service
+    probe idiom), returning the ``StrategyArchetype`` enum VALUES (matched against
+    ``archetype.value``). Fail-loud on probe failure: the matrix must reflect the
+    real factory, never a stale transcription, so a missing ``.venv`` / import error
+    raises rather than silently mis-claiming ``not_registered``.
+    """
+    from _capability_gaps import _run_service_probe  # lazy: avoids module-load UAC pull
+
+    body = (
+        "    from strategy_service.engine.strategies.v2.factory import ARCHETYPE_ENGINE_REGISTRY\n"
+        "    out = {'ok': True, 'keys': sorted(getattr(k, 'value', str(k)) for k in ARCHETYPE_ENGINE_REGISTRY)}\n"
+    )
+    res = _run_service_probe(workspace_root, "strategy-service", body, "engine_backed_archetypes")
+    if not res.get("ok"):
+        raise RuntimeError(
+            f"F48: live engine-registry probe failed ({res.get('error')}). The verdict matrix "
+            "requires strategy-service/.venv to read ARCHETYPE_ENGINE_REGISTRY; refusing to fall "
+            "back to a transcribed set (it would drift from the factory SSOT)."
+        )
+    keys = res.get("keys")
+    if not isinstance(keys, list) or not keys:
+        raise RuntimeError(f"F48: engine-registry probe returned no keys: {res!r}")
+    return frozenset(str(k) for k in cast("list[object]", keys))
 
 
 def _slot_venue_token(venue_id: str) -> str:
@@ -159,8 +146,13 @@ def _read_uac_head_sha(uac_root: Path) -> str | None:
     return proc.stdout.strip() or None
 
 
-def build_matrix() -> tuple[dict[str, object], dict[str, int]]:
+def build_matrix(engine_backed_archetypes: frozenset[str]) -> tuple[dict[str, object], dict[str, int]]:
     """Build the hierarchical verdict matrix + the count summary.
+
+    ``engine_backed_archetypes`` is the set of ``StrategyArchetype`` VALUES that have
+    a registered v2 engine (F48). It is INJECTED rather than read here so the
+    deterministic unit test stays hermetic (passes a fixture); ``main`` supplies the
+    live-probed set via :func:`_probe_engine_backed_archetypes`.
 
     Returns ``(matrix_dict, counts)``.
     """
@@ -211,10 +203,9 @@ def build_matrix() -> tuple[dict[str, object], dict[str, int]]:
         # config_space_fuzzer's ``DeadEndReason.NO_V2_ENGINE``). Such an archetype
         # was previously emitted with ``available`` cells (over-claiming). Demote
         # the WHOLE block to ``not_registered`` with the typed ``no_v2_engine``
-        # gap reason. We derive engine-absence from the cited engine-registry KEYS
-        # (see ``_ENGINE_BACKED_ARCHETYPE_VALUES``), never from a hardcoded
-        # engineless list.
-        if archetype.value not in _ENGINE_BACKED_ARCHETYPE_VALUES:
+        # gap reason. Engine-absence is derived from ``engine_backed_archetypes`` —
+        # the LIVE-probed factory registry keys (F48), never a transcribed list.
+        if archetype.value not in engine_backed_archetypes:
             n_cells = len(all_algo_keys)
             counts["total_cells"] += n_cells
             counts["not_registered"] += n_cells
@@ -436,7 +427,9 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Building exhaustive verdict matrix...")
-    matrix, counts = build_matrix()
+    engine_backed = _probe_engine_backed_archetypes(workspace_root)
+    logger.info("Engine-backed archetypes (live probe): %d", len(engine_backed))
+    matrix, counts = build_matrix(engine_backed)
     matrix["generated_from_commit"] = _read_uac_head_sha(uac_root)
 
     payload = json.dumps(matrix, indent=2, sort_keys=True, default=str)

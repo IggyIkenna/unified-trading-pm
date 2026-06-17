@@ -213,6 +213,23 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       CF-20) so re-running the per-service audit covers them — steady-state v9 form, concrete runnable commands. No CF
       item left without an owning audit. — pm@<flip>.
 
+## A2 — Full audit of all non-operator-gated data-pipeline code work (operator 2026-06-16)
+
+- [ ] [VERIFY] P0. **FULL AUDIT — after the prediction cqg work, verify what is actually shipped vs left across ALL the
+      non-operator-gated code work** for: data migration, manifest code changes across every service, the data pipeline,
+      `pipeline_mode` standardisation (GATE 0), instrument-catalogue services, and the data-status tab/downloads — then
+      **finish anything non-operator-gated that remains** (operator believes it is "pretty much all shipped"; confirm).
+      Source plans to sweep: `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`,
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
+      `migration_verification_orphan_safety_2026_06_10.md` (this plan),
+      `data_status_tab_and_downloads_remediation_2026_06_16.md`, the per-AG `*_manifest_canonicalisation_*` plans, and
+      the instrument-catalogue lifecycle plan. **Operator-gated items stay parked** (V6 eyeball, G4 `--apply`, decision
+      424; decision 338 cqg classifier is DONE — uac@d52217f+e0035fd+8e3108d). **Repo hygiene first**: several agents
+      are on OTHER machines, so clones may be stale/diverged — clean + `pull --rebase` / fetch FRESH remote state per
+      repo BEFORE auditing (incidents this session: UAC + PM version promotion-lag, PM regen churn, a staging backmerge
+      landing a foreign over-limit `databento_classifier.py`). Run as `/autonomous` to completion. Owner: this slot
+      (operator: "do it all here"). Provenance: operator message 2026-06-16.
+
 ## B — MVP, config-versioning, execution-config compatibility (lower priority; reference existing plans)
 
 - [ ] [SCRIPT] P1. MVP Phase 2-3 — already in `mvp_scope_catalogue_tagging_2026_06_08.md` (deployment-api
@@ -227,6 +244,46 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       (venue actions / fill-margin-settlement) + `data_type_capability` (L1/L2/trades/ohlcv granularity → matchability).
       **Post-G4** (consumes the post-migration honest granularity). File under the **execution epic**. slot-2.
 
+- [x] ✅ [UTL] P1. **E5 — catalogue-reader repoint to the canonical `{env}/catalog.parquet` lifecycle roll-up** —
+      **unified-trading-library@94775d05** (2026-06-16 /autonomous). `instruments_catalog_reader.py` now reads
+      `gs://instruments-store-{ag}-{env}-{pid}/{env}/catalog.parquet` (the `build_instrument_catalogue.py`
+      `InstrumentCatalogEntry` lifecycle roll-up, env via `get_config("DEPLOYMENT_ENV","prod")`) instead of the
+      decommissioned `reference_data/instruments/{ag}/all.parquet` (verified ABSENT in prod GCS for cefi+defi; the new
+      object EXISTS — cefi 220,222 rows / defi 6,853 rows, both carrying `available_from`/`available_to`). Alias-aware
+      column resolution (`instrument_id`↔`instrument_key`, `available_from`↔`available_from_datetime`) keeps every
+      legacy-schema fixture green while serving the new shape; 48 reader unit tests pass, UTL QG green 115s.
+      **`CatalogueBuilder` NOT deleted** — it remains the live per-AG current-catalogue builder wired into the IS
+      orchestrator (`engine/orchestrator/catalogue.py:229`); a DIFFERENT artifact from the lifecycle roll-up (documented
+      in the reader docstring). The E5 "gated on sports+pred roll-ups" note is moot for this reader (its only consumers
+      are the cefi/defi `legacy_reason_classifier`; both have prod `catalog.parquet`).
+- [x] ✅ [IS] P2. **Follow-up to E5 — CeFi catalogue carries `raw_symbol`/`base_asset` so the lifecycle cross-ref
+      matches** — **instruments-service@30e4bb4** (2026-06-16 /autonomous). Added `raw_symbol` + `base_asset` to
+      `build_instrument_catalogue.py` `CATALOG_COLUMNS` + `_extract_meta` + the generic roll-up row (populated from the
+      by_date instruments-store source, which carries both); blank for prediction/sports (no exchange-native symbol).
+      **NO reader change needed** — the UTL reader's existing `venue+raw_symbol` / `venue+base_asset` strategies now
+      match. **Uniqueness VERIFIED on real prod data before committing to the key**: `(venue, raw_symbol)` is UNIQUE — 0
+      collisions in a live snapshot (3,657 instruments) AND 0 across 14 days spanning 2019→2026 (13,905 groups), with
+      `instrument_type` never disambiguating; `(venue, base_asset)` is NOT unique (119/285 groups → many instruments) so
+      it stays the lossy last-resort fallback (existing best-effort contract). 40 catalogue tests pass (+2 new: carries
+      the symbols; blank-not-NaN when source absent); IS QG green. Shipped via a dep-clean waiter (UAC was held dirty by
+      a live peer's `perp_funding` WIP — never stomped; landed the instant deps went clean). The DETAILED measurement /
+      original framing ⤵ (retained for provenance): • **Measured on real prod GCS (2026-06-16):** the CeFi
+      `availability_index` DOES carry `instrument_id` (95.8% non-blank / 2.6M rows) but in **bare per-venue form**
+      (`BTC-PERPETUAL`, `ADA-PERP`, `SOL-PERP`, `ARB-USDT`), whereas the new `catalog.parquet` keys on canonical
+      `VENUE:TYPE:SYMBOL` (`BINANCE-FUTURES:PERPETUAL:ADA-USDT`; bare ccxt `0G/USDT:USDT` for OKX-SWAP 2,869 +
+      COINBASE-SPOT 757) → **manifest∩catalog instrument_id = 0 for every CeFi venue** (OKX-SWAP 103 vs 2,912 → 0;
+      BINANCE-FUTURES 51 vs 37 → 0). So the reader's per-instrument CeFi cross-ref (EXPECTED_INSTRUMENT_NOT_LISTED/
+      DELISTED) stays dark (safe `SOURCE_RETURNED_ZERO` fallback, never a wrong label). **tradfi + defi are CLEAN** —
+      both manifest and catalog use canonical `VENUE:TYPE:SYMBOL` so they match end-to-end (tradfi e.g.
+      `CBOE:OPTION:O:SPX...`). The OLD `all.parquet` carried `raw_symbol`/`base_asset` and the reader's strategy-2/3
+      matched the bare symbol against those; the new roll-up dropped them. **Correct fix (clean, no guessing):** add
+      `raw_symbol` + `base_asset` to `build_instrument_catalogue.py` `CATALOG_COLUMNS` (populated from the by_date
+      instruments-store source), so the reader's EXISTING `venue+raw_symbol` / `venue+base_asset` strategies match. A
+      reader-side normaliser is the WRONG fix (the catalogue's own ids are internally inconsistent — 98.4% canonical vs
+      3,626 bare — so there is no single target to normalise to). Repo: instruments-service
+      (build_instrument_catalogue + the by_date raw_symbol availability). Provenance: E5 repoint GCS inspection,
+      2026-06-16 — this run.
+
 ## Success criteria
 
 1. V0 registry is the single could-exist SSOT; 0 bespoke cross-products remain (grep-verified).
@@ -237,6 +294,117 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 6. CF-15…CF-21 encoded in the checklist + owning per-service instruction files (re-runnable forever).
 
 ## Progress Log
+
+- 2026-06-17 (autonomous re-verification dispatch — the TWO v9-migration code prerequisites, at current HEAD) — a fresh
+  dispatch to "complete the two code prereqs before the v9 `--apply`" found **both already shipped + merged + flipped**
+  (the R-wave + 2026-06-16 Half-B tail did them); re-verified at current `live-defi-rollout` HEAD rather than redoing
+  (would be a same-repo race + duplicate work). Rule-9 verdict, each item's sha:
+  1. **R2-schema / CF-18 (UAC P0)** — **unified-api-contracts@715e2ed** (ancestor-of-HEAD ✓).
+     `_schema_spec_{defi, prediction,tradfi}.py` + `schema_spec.py` + `test_schema_spec_completeness.py` all present;
+     completeness suite **84/84 GREEN** (registry round-trip + alias hygiene + per-cell source-column completeness +
+     previously-RED pins) → CF-18 is **0-RED at the contract level**. All 11 polymarket trades cols carried via
+     `ColumnSpec.source_aliases`; defi rewards/risk_params/utilization + tradfi/trades SchemaSpecs added. No code change
+     needed.
+  2. **instrument_type per-type v9 column / Audit §K (IS P1)** — **instruments-service@b475ae8** (ancestor-of-HEAD ✓).
+     Writer `engine/orchestrator/writers.py` `_derive_instrument_type()` stamps the REAL single type per venue×date
+     shard (blank-when-mixed/absent — honest absence, never fabricated) at the non-sports `record_captured` call;
+     `scripts/migrate_instruments_store_v9.py` carries `instrument_type` as a v9 manifest column with the venue-suffix
+     backfill (`_backfill_instrument_type`) on the EXISTING single migration walk (single-walk discipline respected). No
+     code change needed. **No forced tradeoffs, no impossibilities** — both prerequisites are GREEN at HEAD and the v9
+     `--apply` is unblocked on the schema-completeness + instrument_type-column axes. (PARKED out-of-scope as
+     dispatched: G4 `--apply`, VM runs, deletes.)
+
+- 2026-06-16 (autonomous Half-B tail — UAC/IS/deployment-api vertical, FINAL — all 6 items DONE) — the schema /
+  config_version / catalogue tail of A2 (the separate agent's mtds/mdps/PM-chore vertical ran concurrently and is
+  untouched here). **All six dispatched items shipped QG-green + flipped; nothing DEFERRED/BLOCKED.** Final tally (every
+  item's sha + verdict, rule-9):
+  1. **R2-schema (UAC P0)** — VERIFIED already shipped **uac@715e2ed** (all 11 polymarket cols via `source_aliases` +
+     defi rewards/risk_params/utilization + tradfi/trades; `test_schema_spec_completeness.py` GREEN → CF-18 0-RED at the
+     contract level). Flipped.
+  2. **config_version leagues+prediction (UAC P1)** — **uac@176f227**: shared `config_versioning.py` (ConfigDescriptor +
+     deterministic `canonical_config_repr` + `compute_config_content_hash`), MVP_SCOPE refactored onto it,
+     `sports_leagues_config_descriptor()` (hashes `LEAGUE_REGISTRY`) + `prediction_markets_config_descriptor()` (hashes
+     `PredictionMarketCategory`+`_DEFAULT_RULES`), root-exported, 12 tests, UAC QG green 217s.
+  3. **catalogue-reader E5 repoint (UTL P1)** — **utl@94775d05**: repointed to canonical `{env}/catalog.parquet`
+     lifecycle roll-up (old `all.parquet` confirmed GONE from prod GCS; new object verified present — cefi 220,222 /
+     defi 6,853 rows). Alias-aware → 48 reader tests stay green, UTL QG 115s. CatalogueBuilder retained (live IS
+     builder). P2 CeFi symbol-format follow-up captured (todo above).
+  4. **deployment-api scope + config_version triples (P1)** — **deployment-api@3390c98**: `scope=mvp|could_exist|all`
+     param + `config_versions` triples on venue-year-coverage, helpers in new `_coverage_scope.py`, parity test
+     (monotonicity + descriptor match). QG green.
+  5. **deployment-api stale-read + CeFi UNION FLAG-1 (P1)** — **deployment-api@3390c98** (same ship): moved to
+     stale-tolerant `read_manifest_index` (empty-live→`_index` fallback) + cell-grain source-UNION + `source_breakdown`.
+  6. **IS R5-fix-3 + MVP catalogue view + instrument_type v9 col (P1)** — **instruments-service@b475ae8**: R5-fix-3 was
+     NOT already correct (`_sports_ref_source("footystats_odds")` returned `odds_api` → `MissingSourceError`; fixed to
+     `footystats` via a scoped override + corrected the 2 wrong tests); `mvp` column on `catalog.parquet` via UAC
+     `is_mvp`; `instrument_type` populated v9 column riding the EXISTING v9 migrator (single-walk respected; writer
+     stamps real type, blank-when-mixed, never fabricated). QG green, 164 tests. **Forced-tradeoff decisions (rule 1):**
+     (a) CatalogueBuilder NOT deleted — it is live-wired in the IS orchestrator and is a different artifact from the
+     lifecycle roll-up (documented, not a leftover). (b) The CeFi catalogue symbol-format mismatch (ccxt id vs bare
+     manifest symbol) is genuinely separate normalisation work → captured as a P2 follow-up todo, not silently dropped
+     (the reader's best-effort None→SOURCE_RETURNED_ZERO keeps it safe meanwhile). (c) `instrument_type` is left "" for
+     venues without a derivable suffix (honest absence, not fabricated). **No genuine impossibilities.**
+     Concurrent-safety: protected the peer agent's uncommitted PM WIP throughout (committed only my own files; unstaged
+     foreign deletions before each flip commit). All 6 codeshas verified ancestor-of `origin/LDR`; Tier-C drain (≤30min)
+     promotes each LDR→staging (v2-gated). Parallelised items 4-6 to two sub-agents to protect context.
+
+- 2026-06-16 (autonomous Half-B tail — UAC vertical, ticks 1-2) — driving the UAC + IS + deployment-api schema/
+  config_version/catalogue tail of A2 (separate agent owns mtds/mdps/PM-chores). **Item 1 (R2-schema) VERIFIED done +
+  flipped** — it was already shipped at **uac@715e2ed** (CF-18 citadel column-carry: all 11 polymarket cols via
+  `source_aliases` + defi rewards/risk_params/utilization + tradfi/trades + the full RED list); the
+  `test_schema_spec_completeness.py` suite (155 tests incl. it) is GREEN, so the contract-level CF-18 is 0-RED. **Item 2
+  (config_version for sports-leagues + prediction-markets) SHIPPED — uac@176f227** (Tier-C drain ≤30min → staging):
+  extracted the generic `config_versioning.py` (ConfigDescriptor + sorted/deterministic `canonical_config_repr` +
+  `compute_config_content_hash`), refactored MVP_SCOPE onto it (hash unchanged), added per-config
+  version+hash+descriptor to `league_data.py` (hashes `LEAGUE_REGISTRY`) and `prediction_mapping.py` (hashes
+  `PredictionMarketCategory` + `_DEFAULT_RULES`), all root-exported, with `test_config_versioning.py` (12 tests; 3
+  hashes independently distinct). Full UAC QG green 217s. UAC is back CLEAN (T0 dirty window closed). **Item 3 (UTL E5
+  catalogue-reader repoint) SHIPPED — utl@94775d05** (see the E5 ✅ todo above): repointed to the canonical
+  `{env}/catalog.parquet` lifecycle roll-up (old `all.parquet` confirmed gone from prod GCS), alias-aware so legacy
+  fixtures stay green; 48 reader tests + full UTL QG green 115s; CatalogueBuilder retained (live IS-orchestrator
+  builder); surfaced a P2 CeFi symbol-format follow-up. Both T0 repos (UAC+UTL) now CLEAN. NEXT: deployment-api items
+  4-5 + IS item 6 (no T0 dirty-dep concern).
+
+- 2026-06-16 (decision 338 — cqg classifier COMPLETE; pass 2 shipped, uac@e0035fd + uac@8e3108d) — operator gave full
+  granular direction; encoded all of it. **29 groups + OTHER → ~103 groups + OTHER + MISC_NOVELTY.** Three ships, all
+  QG-green, all seeded in the 4 required places (enum + metadata + `PREDICTION_GROUPS` + classifier map); parity tests
+  green. Sub-type detection lives in the projection layer (`classifiers.py`), NOT the taxonomy — `CLASSIFIER_VERSION`
+  bumped `2026-05-23.3 → 2026-06-16.3` (lever for reclassifying existing OTHER rows).
+  - **Pass 2A (uac@e0035fd):** crypto **PRICE_RANGE** split out for 12 coins (BTC/ETH **retrofitted** — "between $X-$Y"/
+    multistrike no longer mislabeled UP_DOWN); political **TRUMP_APPROVAL_RATING / \_STATEMENTS / \_EXEC_ORDER** +
+    **ELON_TWEET_COUNT / \_STATEMENTS / \_NET_WORTH**; geo **GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE / GEO_OTHER_BY_DATE**
+    (conflict-token-gated, doesn't swallow intl elections); **BOX_OFFICE_OPENING_WEEKEND** (category-agnostic — movie
+    titles are MISC-tagged); **GOLD/SILVER/CRUDE_OIL_PRICE_LEVEL**; **MISC_NOVELTY** (genuinely-uncategorised → explicit
+    residual; OTHER stops being the silent ~80% bucket).
+  - **Pass 2B (uac@8e3108d):** sports **SPORTS*{LEAGUE}*{BETTYPE}** — 30 groups / 17 leagues. Bet-type (WINNER→MATCH /
+    SPREAD / TOTAL / NRFI / F1 GP_WINNER / CONSTRUCTOR) from the slug; **per-league MATCH fallback** → every
+    known-league market groups (never silent OTHER). Matches the operator's "league x fixture x market-type" model
+    (league + bet-type in the group; fixture = the recurring market_id instance).
+  - **Fleet unblock:** the staging-backmerge bringing UAC 0.15.0 also landed a foreign
+    `databento_classifier.py::classify_databento_symbol` at **331L** → codex-compliance ratchet (3 > 2) was failing
+    **every** UAC LDR ship. Refactored to extract `_classify_databento_combo` + `_classify_databento_option`
+    (331L→154L), behavior preserved (54 tests). "Fix CI in real time."
+  - **Known residual (honest):** football "will-{team}-win" WITHOUT a league marker in slug/event_slug tags MISC (no
+    team→league registry in the taxonomy) → MISC_NOVELTY; league-prefixed/event-slug'd football DOES route. A
+    team→league table is a follow-up if a consumer needs it.
+  - **249-b:** the cqg classifier is now richly populated → unblocked at the classifier level; reclassification
+    (hash-diff) can run; remaining is materialisation + the operator-gated G4 apply.
+
+- 2026-06-16 (autonomous run, FINAL — tail-cleanup complete) — **5 of 6 dispatch sub-items SHIPPED + flipped; 346
+  verified-done in code + PRESERVED to a recoverable wip branch (lands on the next clean-dep window).** Final tally:
+  **Item 4** STEP 5.92 collision → pm@3be7eb595 ✅ · **Item 5** V4 fleet-gate blast-radius VERIFIED green on 3 consumers
+  - 2 libraries ✅ · **Item 1 / 249-a** prediction catalogue conditionId grain → is@c100834 + prod catalogue promoted
+    0→668,384 rows ✅ · **Item 3 / 222-followup** 7 unsourceable lending re-phased (uac@6c74eaf) + 5 LST corrected as a
+    false-signal (real data in the `lst-rates` bucket) + filed the lst-rates-aggregation follow-up ✅ · **Item 2a /
+    384** sports 6,869 blank-capture_status phantom-drop → is@8b3c7ef ✅ · **Item 2b / 346** sports CF-5 `trades`
+    case-fix — CODE DONE + QG-green + tested + verified, **preserved on `origin/wip-preserve/mtds-346-cf5-trades`
+    (mtds@d0a15a3)** after 3 quickmerge retries blocked by a live sibling's continuous fleet manifest-regen (dirty
+    deps); lands via the one-line quickmerge in the 346 todo above the instant deps are clean. All shipped changes
+    QG-green + drift-clean. **Operator-reserved (untouched, per dispatch):** G4 `--apply`, V6 eyeball, decisions
+    338 + 424. The destructive `--apply` legs of 384/346 execute at the operator-gated sports G4 (code produces 0-blank
+    / correctly-relabeled output). Journaling this final entry via a throwaway worktree off origin/LDR — the shared PM
+    clone is mid fleet manifest-regen by a sibling (canonical-dependency-manifest/workspace-manifest/master-plan churn,
+    preserved in its `stash@{0}`), deliberately left untouched.
 
 - 2026-06-16 (decision 338 — cqg classifier IMPROVED + shipped, uac@d52217f) — operator chose "improve the classifier
   first"; this is the high-confidence tranche (faithful pattern extensions; judgment-heavy genres deferred to the
@@ -705,11 +873,24 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       sports/politics/entertainment outside the MVP crypto set) or operator-ratify that out-of-registry markets stay
       failed-for-retry. Repos: unified-api-contracts (+ rebuild re-run). Provenance: /tmp/r7_proj/prediction2.log
       2026-06-11.
-- [ ] [DATA] P1. **Sports CF-5 oracle relabel fired ZERO relabels on the MDPS dry-run** (584,257/584,257
-      `keep_src_zero`; truth set 189,740 pairs loaded, league match-rate 61.8%) — the step 4–7 gates all fall through
-      (suspect league_id resolution / venue=bookmaker rows carrying no league mapping). Reason-level CF-5 relabel is
-      currently INERT on MDPS (status-level diff unaffected — GREEN). Diagnose before relying on the relabel for the
-      sports verdict pack. Repo: market-tick-data-service. Provenance: /tmp/r7_proj/sports.log 2026-06-11.
+- [ ] [DATA] P1. **Sports CF-5 oracle relabel = ZERO — ROOT-CAUSED + FIXED (code), preserved to a wip branch awaiting a
+      clean-dep window (2026-06-16).** The finding's "61.8% league match-rate / league-resolution" hypothesis was WRONG
+      for the bulk: on the real prod MDPS sports index (`market-data-tick-sports-prd`, 584,257 empty_confirmed),
+      **583,185 are data_type=`trades` whose league_id resolves 100%**. **Real root cause:**
+      `_PER_FIXTURE_DERIVED_DATA_TYPES` listed the MDPS odds tick as lowercase `"trades"`, but membership is tested as
+      `data_type.upper() in set` (step 6.5 truthset gate + `is_derived_captured`) → `"TRADES"` never matched → step 6.5
+      silently skipped EVERY `trades` empty → all kept SOURCE_RETURNED_ZERO instead of the truthset-derived
+      EXPECTED_NO_FIXTURE. **Fix:** `"trades"`→`"TRADES"` in `mtds/scripts/rebuild_sports_manifest_v9.py` (kept at the
+      900-line cap) + a regression test. MTDS QG-green; verified by direct `_step6_5_truthset_gate` call (not-in-truth →
+      EXPECTED_NO_FIXTURE; in-truth → stays SOURCE_RETURNED_ZERO, since `trades` is correctly excluded from the
+      guaranteed set). **NOT YET LANDED:** quickmerge's pre-flight dep-audit refused across 3 retries because a LIVE
+      sibling was continuously running fleet manifest-regen / version-alignment (UTL→UAC dirty, version bumps 0.14→0.15)
+      — must not stomp foreign WIP. **The verified fix is PRESERVED on `origin/wip-preserve/mtds-346-cf5-trades`
+      (mtds@d0a15a3)** — land it with
+      `quickmerge.sh --agent --files 'market_tick_data_service/scripts/rebuild_sports_manifest_v9.py     tests/unit/scripts/test_rebuild_sports_manifest_v9.py'`
+      (cherry-pick the wip commit onto a clean MTDS tree) the moment all MTDS deps are clean. Reason-level only
+      (status-diff GREEN — does NOT block the G4 apply). Repo: market-tick-data-service. Provenance: 2026-06-16 prod
+      MDPS index diagnosis.
 
 - 2026-06-11 (~19:10Z, autonomous run) — **FINAL SIGN-OFF SWEEP SNAPSHOT: ALL FIVE AGs GREEN on final HEAD** — defi E=0
   (18:52Z) · cefi E=0 (19:00Z) · prediction E=0 (19:02Z) · tradfi E=0 (19:07Z) · sports odds E=0 + reference E=0
@@ -964,3 +1145,71 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   - **prediction: E=61,014 (UNCHANGED vs the corrected 2026-06-10 count — stable) · B=512,437 · unknown=0.**
   - Per ⑬ the G4 `--apply` stays HARD-BLOCKED until E==0 per AG: the per-AG `record_captured` backfill (class E, never
     delete) is the operational tail. cefi corrected re-run queued next (walk slot freed).
+
+- 2026-06-16→17 (autonomous run — A2 mtds/mdps/PM-chores tail, the slice the UAC-vertical agent named "separate agent
+  owns mtds/mdps/PM-chores"; this is the rule-9 FINAL report). **All 8 dispatch items resolved + flipped; 0
+  scope-defers.** Repos: market-tick-data-service + market-data-processing-service + unified-trading-pm (the concurrent
+  agent's unified-api-contracts / instruments-service / deployment-api were NOT touched). Final tally:
+  - **R5-fix-1** (P0, mtds@657f615) — DIAGNOSED already-correct at LDR-tip: the
+    `Invalid comparison datetime64[ns] vs date` raw compare no longer exists (every cefi-tardis date compare uses
+    `.dt.date`/scalar `.date()`; exhaustive scan = 0 unguarded; `eb33603` repro now exits 0). Shipped the durable guard
+    the dispatch asked for: new `test_tardis_resolve_symbols_date_boundary.py` (9 tests, real datetime64[ns] parquet at
+    the boundary, re-catches a regression). **DECISION (rule 1):** shipped the boundary regression test rather than a
+    no-op "fix" of already-correct code. Live BINANCE-FUTURES Tardis CSV re-smoke = BLOCKED-LIVE-VERIFY (real
+    creds/network; `--block-network` here) — bug-class closed + test-guarded regardless.
+  - **Massive futures endpoint** (mtds@657f615) — `fetch_futures_chain()` repointed `/v3/reference/futures/*` →
+    `/futures/v1/{contracts,products}` (GA), products `name` merged via `_normalise_futures_contract(product_map=…)`;
+    docstrings updated. Live HTTP verify = BLOCKED-LIVE-VERIFY (operator-gated entitlement).
+  - **F-X1** (mtds@657f615) — rewrote the stale tautological bucket test → asserts the canonical `resolve_bucket_name`
+    env-after-asset_group shape `market-data-tick-cefi-test-{pid}` (was encoding the legacy env-prefix shape). Green.
+  - **A5 LIGHTER perp_funding** (mtds@657f615) — `_collect_lighter` rewired off the hand-rolled aiohttp+gzip loop onto
+    the `TardisAdapter.download_csv` SSOT (mirrors `umi_tick_provider`) with **bare base-asset symbols** (`BTC`,…,
+    dropped `-USDC`); deleted `_parse_lighter_market_stats_csv` + its tests; output contract
+    (`write_defi_rows`/`record_zero_rows`) preserved; tests updated green. **DECISION (rule 1):** took the recommended
+    SSOT-aligned fix (download_csv) over the symbol-only stop-gap. Live Tardis non-zero verify = BLOCKED-LIVE-VERIFY.
+  - **B0-PRE** (read-only, pm@3214a18fd) — re-ran the DeFi `enumerate_expected_universe` v2 dry-run on the prod
+    catalogue (`gs://instruments-store-defi-prd-…/prod/catalog.parquet`, 1,578,922 manifest rows, 2-day window):
+    **52,862 candidates/2d** vs recorded 57,074/2d — same order, Δ≈−4.2K = catalogue drift, NOT a regression.
+    `PROTOCOL_CAPABILITIES`=55 confirmed (37→55); 18 new venues honest could-exist; `native_staking_rates`/
+    `vault_share_price` stay BLOCKED_UPSTREAM_CAPABILITY. Additive ⇒ NON-BLOCK; `--apply-write` seed stays G1.run-gated.
+  - **GAP-7** (mdps) — VERIFIED already-shipped at **mdps@4363bce** (zero `dependency_checker` `category` params remain;
+    every sig uses `asset_group`). The 3 residual `category` string refs are framework template-var / manifest-column
+    names — a separate `category=`-ban vocab concern, NOT this rename. Flipped 2 stale-open checkboxes (downstream +
+    cefi plans, pm@3214a18fd). **DECISION (rule 1):** verified + flipped rather than re-implement done work.
+  - **M-COORD-4** (pm@d096d0220) — wired the `## 🟦 Gate-State Board (G0–G5 × asset_group)` into the master_data
+    coordinator (🟢/🟡/🔴 per AG, sourced from the WAVE checkboxes + A–H verdict + per-AG G4 ticks + a per-cell basis +
+    refresh note). Current: G0🟢 G1🟢(dry) G2🟡 G3🟢 G4🟡(operator-gated) G5🔴 all 5 AGs.
+  - **C13** (mtds@712aa01 + pm@dd19f00dd) — relocated the 8 runnable defi migration scripts (oracle*relabel /
+    chain_genesis / venue_launch / phantom_captured / captured_pre_existence / captured_vs_objects /
+    index_venue_canonicalise / object_path) from PM `plans/audit/results/` → `mtds/scripts/` (script-homes SSOT);
+    ruff-cleaned 16 trivial F541 so they're lint-clean in mtds; `.md` results + coverage query + a1–a6/cf*\* harnesses
+    stay. **DECISION (rule 1):** auto-fixed the cosmetic ruff issues during relocation (a script must be lint-clean to
+    live in mtds); MOVED (operator's documented intent) rather than deleted as spent one-offs (C0 walk C2–C7 still
+    pending).
+  - **VERIFIED END-STATE:** mtds LDR-tip QG-green (sentinel==HEAD); PM LDR drains to main via the standing `*/15`
+    LDR→main PR. **Genuine non-completions (all credential/network-gated live probes the dispatch pre-authorised as
+    BLOCKED-LIVE-VERIFY, code+tests shipped + QG-green):** R5-fix-1 Tardis re-smoke, Massive `/futures/v1` HTTP, A5
+    Tardis non-zero. **Out of scope (untouched, by dispatch / operator-gate):** UAC/IS/deployment-api (concurrent
+    agent), G4 `--apply` (operator HARD-STOP), and R5-fix-6 (the separate "wire-or-retire `MassiveTradfiRestConnector`"
+    follow-on — now code-unblocked by the endpoint fix, but still needs a live probe + a wire/retire decision; left as
+    its own open todo, not claimed here).
+
+- 2026-06-17 (autonomous — Massive CME-futures transport correction, operator ping) — **The 2026-06-16 `/futures/v1`
+  REST "fix" was a MIS-DIAGNOSIS** (corrected by the operator + a sibling agent's proven 5y ES pull): our Stocks-Starter
+  REST tier is **equities-only — CME futures are NOT on the REST API**; the proven transport is Massive's **S3
+  flat-files** (`flatfiles/us_futures_cme/minute_aggs_v1/…` over `files.massive.com`, **path-style addressing
+  mandatory**, distinct `MASSIVE_S3_*` keys). Filed issue doc `massive_cme_futures_flatfiles_not_rest_2026_06_17.md`
+  (pm@1c8004221) + corrected `tradfi_massive_dual_source` (re-opened futures todo → flat-files; gate UNLOCKED).
+  **SHIPPED mtds@a311561**: new `massive_flatfiles.py` (path-style boto3 S3 + outright filter + ns LEFT→right-edge +
+  1m→15m resample) + `massive_tradfi_rest_connector` futures path (`fetch_futures_minute_aggs`/`fetch_futures_chain`/
+  `_s3_get_object_bytes`, dispatch routes futures→S3); **dead `/futures/v1` REST futures code +
+  `_normalise_futures_contract` DELETED** (equities/options REST untouched); +11 mocked-S3 unit tests (40 pass/2 skip);
+  mtds QG-green (codex 0, STEP 5.12b clean). **A sub-agent died on a transient 529 mid-implementation** (left
+  `massive_flatfiles.py` + connector edits uncommitted + a 116-line duplicate-defs bloat that tripped the codex
+  file>900 + method>50L gates); I reconciled it down here (deleted the duplicates → 736L, refactored the two methods to
+  thin wrappers, added the missing tests + the `timedelta` top-import fix). Shipped via the **dirty-deps direct-LDR
+  carve-out** (UAC+UTL were a concurrent agent's WIP). **Residual (named, NOT done):** connector has 0 production
+  consumers → wiring into the live tradfi dispatch + the `us_futures_cme` bulk-backfill + roll back-adjustment + live
+  `@requires_credentials` S3 verify are Phase-4b follow-ons tracked in the plan. Decisions (rule 1): corrected my own
+  prior wrong flip; took the SSOT-aligned flat-files transport; finished the dead sub-agent's work in-slot rather than
+  re-dispatch.

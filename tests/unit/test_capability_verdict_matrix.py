@@ -6,7 +6,7 @@ Pins:
   - All 57 archetypes appear as blocks.
   - not_registered archetypes (no leg structure) are explicit blocks.
   - Impossible algo combinations are BLOCKED (operator requirement).
-  - Determinism: build_matrix() is byte-stable across two runs.
+  - Determinism: build_matrix(_FIXTURE_ENGINE_BACKED) is byte-stable across two runs.
 
 Plan: plans/active/capability_wizard_and_manifest_2026_06_11.md Phase 6A.
 """
@@ -29,11 +29,53 @@ os.environ.setdefault("DISABLE_AUTH", "true")
 os.environ.setdefault("GCP_PROJECT_ID", "mock-project")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "mock-project")
 
-from generate_capability_verdict_matrix import build_matrix
+from generate_capability_verdict_matrix import (
+    _probe_engine_backed_archetypes,
+    build_matrix,
+)
+
+# F48: the engine-backed set is INJECTED into build_matrix (the generator probes it
+# live from strategy-service's factory in main(); UAC/PM cannot import a T4 service).
+# These tests pass a FIXTURE so they stay hermetic + byte-deterministic — it is test
+# data pinning the expected verdict counts, NOT a source SSOT. ``test_fixture_matches
+# _live_engine_registry`` guards it against drift from the real ARCHETYPE_ENGINE_REGISTRY.
+_FIXTURE_ENGINE_BACKED: frozenset[str] = frozenset(
+    {
+        "ML_DIRECTIONAL_CONTINUOUS",
+        "ML_DIRECTIONAL_EVENT_SETTLED",
+        "RULES_DIRECTIONAL_CONTINUOUS",
+        "RULES_DIRECTIONAL_EVENT_SETTLED",
+        "CARRY_BASIS_DATED",
+        "CARRY_BASIS_DATED_INV",
+        "CARRY_BASIS_PERP",
+        "CARRY_STAKED_BASIS",
+        "CARRY_STAKED_BASIS_DATED",
+        "CARRY_RECURSIVE_STAKED",
+        "CARRY_RECURSIVE_BORROW_LENDING_ONLY",
+        "CARRY_BASIS_PERP_INV",
+        "YIELD_ROTATION_LENDING",
+        "YIELD_STAKING_SIMPLE",
+        "ARBITRAGE_PRICE_DISPERSION",
+        "ARBITRAGE_CROSS_DOMAIN_EVENT",
+        "LIQUIDATION_CAPTURE",
+        "DEFI_LP_CONCENTRATED",
+        "DEFI_LP_POOL",
+        "DEFI_LP_VAULT",
+        "ARBITRAGE_MEV_LIQUIDATION_BUNDLE",
+        "ARBITRAGE_MEV_JIT_LIQUIDITY",
+        "ARBITRAGE_MEV_BACKRUN",
+        "MARKET_MAKING_CONTINUOUS",
+        "MARKET_MAKING_EVENT_SETTLED",
+        "EVENT_DRIVEN",
+        "VOL_TRADING_OPTIONS",
+        "STAT_ARB_PAIRS_FIXED",
+        "STAT_ARB_CROSS_SECTIONAL",
+    }
+)
 
 
 def test_all_57_archetypes_are_blocks() -> None:
-    matrix, _ = build_matrix()
+    matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     blocks = matrix["archetypes"]
     assert isinstance(blocks, list)
     archetypes = {b["archetype"] for b in blocks}  # type: ignore[index]
@@ -41,7 +83,7 @@ def test_all_57_archetypes_are_blocks() -> None:
 
 
 def test_counts_add_up_and_no_absent_cells() -> None:
-    matrix, counts = build_matrix()
+    matrix, counts = build_matrix(_FIXTURE_ENGINE_BACKED)
     assert counts["total_cells"] == counts["available"] + counts["blocked"] + counts["not_registered"]
     assert counts["total_cells"] > 0
     # The matrix summary mirrors the returned counts.
@@ -49,7 +91,7 @@ def test_counts_add_up_and_no_absent_cells() -> None:
 
 
 def test_not_registered_archetypes_are_explicit_blocks() -> None:
-    matrix, _ = build_matrix()
+    matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     nr = {b["archetype"]: b for b in matrix["archetypes"] if b.get("not_registered")}  # type: ignore[union-attr]
     # The genuinely-underivable archetypes (no leg structure) → missing_registry.
     assert "ARBITRAGE_MEV_SANDWICH" in nr
@@ -72,7 +114,7 @@ def test_f48_engineless_archetypes_are_not_registered() -> None:
     MARKET_MAKING_EVENT_SETTLED) stay real (engined) blocks.
     """
 
-    matrix, _ = build_matrix()
+    matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     by_arch = {b["archetype"]: b for b in matrix["archetypes"]}  # type: ignore[union-attr]
     engineless = {a for a, b in by_arch.items() if b.get("gap_type") == "no_v2_engine"}
     # Every demoted block names VOL_* / MARKET_MAKING_* (the F48 family).
@@ -101,7 +143,7 @@ def test_f47_unbuildable_venue_cells_are_not_available() -> None:
     conditional loop below, which also guards correct output if any cell reappears.
     """
 
-    matrix, _ = build_matrix()
+    matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     unbuildable_cells = [
         c
         for b in matrix["archetypes"]  # type: ignore[union-attr]
@@ -125,7 +167,7 @@ def test_f47_unbuildable_venue_cells_are_not_available() -> None:
 def test_impossible_algo_combinations_are_blocked() -> None:
     """A pure-staking archetype must BLOCK TWAP etc. (only BENCHMARK_FILL valid)."""
 
-    matrix, _ = build_matrix()
+    matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     by_arch = {b["archetype"]: b for b in matrix["archetypes"]}  # type: ignore[union-attr]
     yss = by_arch["YIELD_STAKING_SIMPLE"]
     assert yss["not_registered"] is False
@@ -141,6 +183,25 @@ def test_impossible_algo_combinations_are_blocked() -> None:
 
 
 def test_determinism() -> None:
-    m1, _ = build_matrix()
-    m2, _ = build_matrix()
+    m1, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
+    m2, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     assert json.dumps(m1, sort_keys=True, default=str) == json.dumps(m2, sort_keys=True, default=str)
+
+
+def test_fixture_matches_live_engine_registry() -> None:
+    """F48 drift guard: the hermetic fixture must equal the LIVE strategy-service
+    engine registry (the set ``main()`` probes). Skipped when strategy-service/.venv
+    is absent (e.g. a CI image without the service venv); runs in the full workspace.
+    """
+    import pytest
+
+    workspace_root = Path(__file__).resolve().parents[3]
+    venv_python = workspace_root / "strategy-service" / ".venv" / "bin" / "python"
+    if not venv_python.exists():
+        pytest.skip("strategy-service/.venv absent — live engine-registry parity not checkable here")
+    live = _probe_engine_backed_archetypes(workspace_root)
+    assert live == _FIXTURE_ENGINE_BACKED, (
+        "engine registry drifted from the test fixture — update _FIXTURE_ENGINE_BACKED to match "
+        f"ARCHETYPE_ENGINE_REGISTRY. only-in-live={sorted(live - _FIXTURE_ENGINE_BACKED)}, "
+        f"only-in-fixture={sorted(_FIXTURE_ENGINE_BACKED - live)}"
+    )

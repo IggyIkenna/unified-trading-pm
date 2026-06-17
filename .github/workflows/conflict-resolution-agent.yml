@@ -98,14 +98,28 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           REPO_NAME: ${{ steps.in.outputs.repo_name }}
           PR_NUMBER: ${{ steps.in.outputs.pr_number }}
+        env:
+          SOURCE_BRANCH: ${{ steps.in.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.in.outputs.target_branch }}
         run: |
           set -uo pipefail
+          # Source-aware context: a dep-update/* → staging conflict resolves on the dep-update TOPIC
+          # branch (rebase onto staging, keep the dep floor bump), NOT on live-defi-rollout. Handing the
+          # worker the generic "resolve ON live-defi-rollout" context here is exactly why an escalated
+          # worker "couldn't find the context" and struggled — point it at the dep-update playbook instead.
+          # SSOT: codex/08-workflows/dep-update-conflict-resolution.md.
+          case "$SOURCE_BRANCH" in
+            dep-update/*)
+              CONTEXT="Dep-update conflict: branch ${SOURCE_BRANCH} → ${TARGET_BRANCH} in ${{ steps.in.outputs.repo_name }} (PR ${{ steps.in.outputs.pr_number }}) is CONFLICTING (stale vs advanced staging). Resolve ON THE DEP-UPDATE TOPIC BRANCH: rebase onto origin/staging, KEEP this branch's dependency floor bump (take-incoming for that dep spec) + take staging for everything else, run \`uv lock\`, then \`git push --force-with-lease\` the dep-update branch (force-with-lease the TOPIC branch is correct; NEVER force-push staging/main/LDR). v2-gated auto-merge drains it. If it is NOT a clean floor/lock conflict (genuine code conflict / a test that fails against the new dep / a judgment call): do NOT force-merge — Slack #ci-failures + surface the question in your orchestrator slot for the operator. PLAYBOOK: codex/08-workflows/dep-update-conflict-resolution.md." ;;
+            *)
+              CONTEXT="Merge conflict ${SOURCE_BRANCH} -> ${TARGET_BRANCH} in ${{ steps.in.outputs.repo_name }} (PR ${{ steps.in.outputs.pr_number }}). Resolve ON live-defi-rollout preserving both sides + active-plan intent; never force-push; quality-gates-v2 re-gates." ;;
+          esac
           gh api "repos/${GITHUB_REPOSITORY}/dispatches" \
             -f event_type=escalate-to-orchestrator \
             -f "client_payload[repo]=${{ steps.in.outputs.repo_name }}" \
             -f "client_payload[pr_number]=${{ steps.in.outputs.pr_number }}" \
             -f 'client_payload[wall_type]=merge_conflict' \
-            -f "client_payload[context]=Merge conflict ${{ steps.in.outputs.source_branch }} -> ${{ steps.in.outputs.target_branch }} in ${{ steps.in.outputs.repo_name }} (PR ${{ steps.in.outputs.pr_number }}). Resolve ON live-defi-rollout preserving both sides + active-plan intent; never force-push; quality-gates-v2 re-gates." \
+            -f "client_payload[context]=${CONTEXT}" \
             -f 'client_payload[model]=opus'
           echo "Escalated merge conflict to orchestrator (opus Max-plan worker). escalate-to-orchestrator notifies Slack on dispatch."
           # Mark idempotent so neither this agent nor the watcher re-dispatches (shared marker).

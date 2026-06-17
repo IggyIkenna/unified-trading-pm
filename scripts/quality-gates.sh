@@ -21,7 +21,12 @@ PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time
 # typecheck (PM takes the metadata-only fast-path on plan-only merges). Interim
 # ceiling capturing existing errors only; type-annotation follow-up tracked in
 # plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
-BASEDPYRIGHT_MAX_ERRORS=1517
+# 2026-06-17: ceiling was STALE at 1517 — origin/live-defi-rollout already sat at
+# 1523 (pre-existing foreign drift; the metadata-only fast-path skipped the full
+# typecheck so it was never re-ratcheted). Bumped to current reality. The Phase-C
+# param_schema exporter change is NET-ZERO (its added reportAny offset by the
+# gaps_block dict[str,int] narrowing fixed in generate_capability_manifest.py).
+BASEDPYRIGHT_MAX_ERRORS=1523
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 
 # Optional codex exclusion arrays (base adds --glob; use "!**/file.py" to exclude)

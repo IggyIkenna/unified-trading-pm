@@ -70,13 +70,16 @@ source:
       `reference_genesis(sports,"")`/`(prediction,     "POLYMARKET")` + every real venue now resolve non-None /
       `is_reference_venue_day_in_scope == True` (negative control stays out_of_scope). PM PR #382 (v2-gated auto-merge).
       No `kalshi` IS rows live yet → KALSHI added when it lands.
-- [ ] [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) — **🔴
-      MIGRATION-COORDINATED, do NOT implement standalone**: this changes the IS manifest shard atom (writer stamps
-      `instrument_type=""` at `engine/orchestrator/writers.py:172`). Per single-walk discipline + shard-granularity
-      SSOT, a new manifest column/grain MUST ride the instruments v9 walk, not open a second whole-corpus walk. Bundle
-      it into `instruments_manifest_canonicalisation_2026_06_01.md` (a finding callout is added there). Unlocks
-      per-instrument_type scope (above) + per-type UI drilldown + the §J Deribit-options coverage signal. —
-      instruments-service (coordinate with the IS canonicalisation walk)
+- [x] ✅ [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) —
+      **instruments-service@b475ae8** (CODE; the destructive `--apply` rides the gated IS v9 walk, not run standalone).
+      Single-walk discipline RESPECTED: rode the EXISTING `scripts/migrate_instruments_store_v9.py` (added
+      `instrument_type` to `_V9_TEXT_COLUMNS` + backfill from the venue suffix `-SPOT`→spot / `-FUTURES`→perpetual,
+      mirroring UTL's recorded-column inference) — NO new whole-corpus walk. Going forward
+      `writers.py::_derive_instrument_type` stamps the REAL single instrument_type per venue×date shard (blank when
+      mixed/absent — never fabricated; the manifest row is venue-grain). Venues without a derivable suffix (e.g.
+      DERIBIT) stay "" by design (documented in code) → unlocks per-instrument_type scope + per-type UI drilldown +
+      §J Deribit-options signal once the gated v9 apply runs. Guards: `test_orchestrator_helpers.py` (3 writer tests) +
+      `test_migrate_instruments_store_v9.py` (backfill + existing-value-preserved). — instruments-service.
 - [x] ✅ [CODE] P1. **Venue filter — backend** — DONE deployment-api@3d9a0e032: added repeatable `venue: list[str]` to
       the `/manifest` route + `get_manifest_status` (threaded through
       `_get_manifest_status_sync`/`_dispatch_category_builds`/ `_build_manifest_category`), engaged it in the
@@ -99,6 +102,63 @@ source:
 - [ ] [UI] P3. **Rollup-difference clarity** (audit §F, by-design): optional small UI note/tooltip explaining IS is a
       per-venue/day reference bundle (no data_type axis) vs MTDS's 5-axis market-data shards — so the structurally
       different drilldown reads as intentional, not broken. — deployment-ui
+
+## Phase F (TIER 1 cleanup) — Operator live-board data-status display bugs (2026-06-17)
+
+> Operator 2026-06-17: three data-status display bugs on the live board. Diagnosed against the ACTUAL code + the live
+> deployment-api (`:8004`) response. Scope = deployment-api + deployment-ui ONLY.
+
+- [x] ✅ [UI] P1. **"Honest Coverage" vs "Data Coverage" headline % disagree wildly (CeFi 11.7% vs 98.5%)** — FIXED
+      deployment-ui@`7007529`. **Root cause:** `/api/data-status/honest-coverage` returns a GCS `coverage.json` emitted
+      VERBATIM by the instruments-service cron `measure_honest_coverage.py`, whose `coverage_pct` is **captured-only** —
+      `captured / (captured + attempted_failed + expected_unattempted)` (EXCLUDES `empty_confirmed` from the numerator).
+      For CeFi the 29.7M legitimately-empty cells dominate (no liquidations/book-snapshot that minute) → `coverage_pct`
+      collapses to **11.68%** while TURBO "Data Coverage" shows ~98.5% (`attempt_coverage_pct`, where empty_confirmed
+      counts as covered). The cron also does NOT emit `completion_pct_shards_weighted` / the split known/pending fields
+      the card expected, so the card fell back to the mislabeled `coverage_pct` as the bold headline. **Fix
+      (`HonestCoverageCard.tsx` + `client.ts`):** `deriveCoverage()` recomputes the headline = manifest-capture ratio
+      (of attempted) = `(captured+empty+known_empty)/(that+attempted_failed)` from the raw counts the cron reliably
+      emits — the SAME metric the "Data Coverage" widget shows, so the two headlines agree; secondary = captured-only
+      ratio; the collapsed `expected_unattempted` is handled. The cron formula itself (instruments-service, migration
+      agents) is left untouched. Regression: `tests/smoke/data_status_coverage_labels.spec.ts` (real cron payload shape;
+      asserts headline ≠ 11.7%) + `HonestCoverageCard.test.tsx`. — repo deployment-ui@`7007529` | pw:L2 ✓ (215/215
+      smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
+- [x] ✅ [UI] P1. **Bar colours unreadable in HonestCoverageCard** — FIXED deployment-ui@`7007529`. The 6 segments used
+      three near-indistinguishable greens (emerald-500 / teal-400 / sky-300) + two low-contrast greys. New `SEGMENT_COLORS`
+      palette walks distinct hues (emerald → cyan → blue → amber → red → slate, all 500-stop, no <40%-opacity fills);
+      legend swatches kept in lockstep + enlarged (w-2.5) with higher-contrast text. — repo deployment-ui@`7007529` |
+      pw:L2 ✓ (215/215 smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
+- [x] ✅ [CODE] P1. **CeFi venues "out of scope" on the `/service/instruments-service/` board — REAL root cause was a
+      reference-catalogue venue-token vocabulary mismatch (the prior "STALE DEPLOY" verdict was WRONG; corrected
+      2026-06-17 after the operator confirmed it persisted post-redeploy + hard-refresh).** The IS view is a
+      `REFERENCE_BUNDLE_SERVICE`, so `breakdowns_core._classify_data_type_for_venue` scopes each venue via
+      `reference_scope.is_reference_venue_day_in_scope` against the **instruments-service catalogue**
+      (`data-catalogue.instruments-service.yaml`), NOT the market-data `is_expected` registry (which the prior
+      reproduction tested — wrong path). `reference_genesis` did an EXACT uppercased lookup, but the catalogue lists
+      **base exchanges** (`COINBASE`, `OKX`, `DERIBIT`) while the instruments-store manifest qualifies them by role
+      (`COINBASE-SPOT`, `OKX-FUTURES/SPOT/SWAP`, `DERIBIT-COMBO`) → those resolved to `None` = out_of_scope. Two further
+      cefi venues (`BITFINEX-*`, `BITGET-*`) were real instruments-store venues simply absent from the catalogue. **FIX**
+      (deployment-api `reference_scope.py`): `reference_genesis` now falls back to the base token after stripping a
+      market-role suffix (`-SPOT/-FUTURES/-SWAP/-PERP/-PERPETUAL/-COMBO`) → COINBASE-SPOT/OKX-*/DERIBIT-COMBO resolve;
+      **+** PM `configs/data-catalogue.instruments-service.yaml` adds `BITFINEX-SPOT/FUTURES` (2020-01-01) +
+      `BITGET-SPOT/FUTURES` (2024-11-08), genesis transcribed from `VenueMapping`/the live instruments-store manifest.
+      VERIFIED: all **18** `instruments-store-cefi` venues now resolve in-scope; `tradfi`/`prediction` IS instruments-
+      stores already held only catalogued venues (no IS-view out-of-scope there). +1 regression test
+      (`test_reference_genesis_tolerates_market_role_suffix`). NOTE: `KRAKEN-*` (cefi) / `YAHOO_FINANCE` (tradfi) /
+      `KALSHI` (prediction) are NOT in any instruments-store → they never appear on the IS view; any out-of-scope the
+      operator sees for them is the **market-tick** `is_expected` path at the data_type grain (e.g. raw `ohlcv_1m` from
+      Yahoo/Kalshi), which is informative-by-design, not the IS-view bug — tracked separately below.
+
+- [ ] [DATA] P2. **Verify the market-tick-view (`is_expected`) out-of-scope for YAHOO_FINANCE / KALSHI is
+      correct-by-design vs a registry gap** (deployment-api `breakdowns_core` market-data path; UAC
+      `registry/expected_coverage.py`). On the `market-tick-data-service` view (NOT the IS view), `YAHOO_FINANCE ohlcv_1m`
+      + `KALSHI ohlcv_1m` resolve `out_of_scope=True` because `is_expected(...)==False` for those RAW fine-grained
+      data_types AND `is_processed_data_type==False`. For Yahoo (daily/coarse provider, no historical 1m) + Kalshi this is
+      almost certainly **correct/informative** (the source genuinely doesn't supply that granularity). Confirm per-venue
+      which raw data_types each source ACTUALLY provides; if a data_type that IS provided is wrongly out-of-scope, add it
+      to `EXPECTED_COVERAGE_BY_ASSET_GROUP[ag][venue]`; otherwise leave out-of-scope (it correctly signals "this source
+      doesn't provide this data_type"). Provenance: operator "I still see out of scope … prediction and tradfi"
+      2026-06-17; the IS-view cefi out-of-scope is the separate ✅ item above.
 
 ## Phase C (TIER 1 cleanup) — CeFi universe extension (instruments completeness + EigenLayer dust)
 
