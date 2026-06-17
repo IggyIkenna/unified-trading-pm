@@ -41,11 +41,17 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       cost, so it ranks below an equivalent full-collateral one. Tests assert the penalty. Repo: strategy-service (+ UTL).
 
 ## Phase B — Production-param surface audit + flat PARAM SCHEMA inventory (read-only → schema doc)  [WAVE 1]
-- [ ] [SCRIPT] P2. **Enumerate the full production-param surface per archetype** (engine `__init__`/config-model/
+- [x] [SCRIPT] P2. **Enumerate the full production-param surface per archetype** (engine `__init__`/config-model/
       `strategy_config_loader` schema) — name/type/default/range/units for every param, ALL archetypes (start with the
       live DeFi + the new VOL_*/MM). Confirm the e2e/catalog params functionally match the engine defaults (the
       prod-vs-testing alignment ask). OUTPUT: a structured per-archetype param schema (the input Phase C emits into the
       manifest). Repo: strategy-service (read) → schema artifact.
+      — ✅ PM@0c6f5f0ab: `codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md` —
+      29 archetypes catalogued (10 live DeFi + 19 new VOL_*/MM), ~170 params, each name/type/default/range/units/required
+      cited to engine `file:line`. Prod-vs-testing: CSB + basis-perp **defaults align**; APD has ONE functional
+      divergence — engine+catalog default `dispersion_bps`/`cost_bps` = 30/10 but e2e smoke uses 20/5 → wizard pre-fill
+      must source the engine default (30/10), tracked as F4 in the doc. Side-findings F1–F3 (dead catalog params
+      `max_loops`/LP keys, 3 unregistered MM engines) captured in the doc's Findings section for Phase C to honour.
 
 ## Phase C — Wizard full-parameterization (UAC manifest exporter + strategy-service config + UI)  [WAVE 2, needs B]
 - [ ] [SCRIPT] P1. **Emit a per-archetype flat PARAM SCHEMA into the capability manifest** (the exporter; sourced from
