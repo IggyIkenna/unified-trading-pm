@@ -834,6 +834,33 @@ jobs:
                   print(f"  CLEARED quarantine (promoted): {repo}")
                   quarantine.pop(repo, None)
 
+          # AUTO-CLEAR (content-identical): a repo whose staging→main content-delta is now 0
+          # (staging TREE == main TREE) has NOTHING left to promote — the promote-loop builder SKIPS
+          # it (ahead_by may be >0 from squash-accounting, but no file delta), so it never enters
+          # `promoted` and its quarantine/counter would otherwise NEVER clear: the stale "N fails
+          # quarantined" the operator saw while staging==main==LDR (deployment-api + blrs). Tree-SHA is
+          # the reliable content fingerprint (compare/...files is inflated by a stale squash
+          # merge-base). L305, promotion_queue_conflict_wall_pileup_2026_06_17.
+          def _tree_sha(repo: str, ref: str) -> str | None:
+              probe = subprocess.run(
+                  ["gh", "api", f"repos/{owner}/{repo}/commits/{ref}", "--jq", ".commit.tree.sha"],
+                  capture_output=True, text=True,
+              )
+              out = probe.stdout.strip()
+              return out if probe.returncode == 0 and out else None
+
+          for repo in {*quarantine.keys(), *failures.keys()}:
+              if repo in promoted or repo in failed:
+                  continue  # the promoted/failed paths already own these
+              st_tree, mn_tree = _tree_sha(repo, "staging"), _tree_sha(repo, "main")
+              if st_tree is not None and mn_tree is not None and st_tree == mn_tree:
+                  if repo in failures:
+                      print(f"  reset counter (content-identical staging==main): {repo}")
+                      failures.pop(repo, None)
+                  if repo in quarantine:
+                      print(f"  CLEARED quarantine (content-identical staging==main, nothing to promote): {repo}")
+                      quarantine.pop(repo, None)
+
           newly_quarantined: list[str] = []
 
           def _next_probe(attempts: int) -> str:
