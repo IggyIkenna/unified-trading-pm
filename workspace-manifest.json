@@ -1140,7 +1140,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1968,7 +1968,7 @@
   },
   "promotion_failures": {
     "unified-trading-library": 4,
-    "unified-api-contracts": 4,
+    "unified-api-contracts": 5,
     "deployment-api": 2,
     "batch-live-reconciliation-service": 1
   },
@@ -1981,9 +1981,9 @@
     },
     "unified-api-contracts": {
       "since": "2026-06-17T00:15:48.396622Z",
-      "attempts": 4,
+      "attempts": 5,
       "escalated": true,
-      "next_probe_after": "2026-06-17T03:17:58.499032Z"
+      "next_probe_after": "2026-06-17T07:26:57.242122Z"
     }
   }
 }
