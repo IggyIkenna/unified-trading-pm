@@ -1,7 +1,6 @@
 ---
 title: "Deployed dashboard Image column blank + GCP/AWS toggle is a no-op in prod — IAM gap now, multi-cloud build-status architecture to decide"
 created: 2026-06-17
-author: harshkantariya [slot-3·laptop]
 status: active
 priority: P2
 locked_by: live-defi-rollout
