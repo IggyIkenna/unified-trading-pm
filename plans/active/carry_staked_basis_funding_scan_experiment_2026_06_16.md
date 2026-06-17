@@ -327,6 +327,16 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   as the backtest — the live guide IS the backtest allocator evaluated on the latest day. Strict-typed
   (`Trade`/`BookState` TypedDicts, `cast` not `# type: ignore`); ruff clean. **Shipping** via watcher (1 foreign dirty
   dep — UAC `venue_collateral.py`).
+- **2026-06-17** — **Live/paper multi-venue expansion (operator) — researched + documented**. Probed public perp funding
+  endpoints: **11 venues reachable no-auth** (the 6 backtest venues + Gate/KuCoin/Bitget/Kraken-Futures/MEXC). Locked
+  each venue's funding field/interval/symbol/sign quirks (HL+Kraken **hourly**; Kraken `fundingRate÷markPrice`
+  absolute→relative; Deribit stored 8h-figure; Gate/MEXC expose interval; KuCoin/Kraken `XBT`=BTC; OKX/Deribit/MEXC
+  per-coin, rest all-symbols). Wrote the integration SSOT **`codex/02-data/carry-venue-live-integration-reference.md`**
+  covering funding venues + LST **staking** (Lido/Jito/RocketPool/Coinbase/ether.fi-weETH+EigenLayer/Marinade) +
+  **Aave** lending (cash floor + recursive borrow leg) + the conservative-cash-margin default + how-to-add-a-venue.
+  Filed the `--live` build + UAC-registry (cadence/collateral) + staking/lending-source + credentialed-venue TODOs under
+  '## Live/paper multi-venue expansion'. batch==live: live snapshot feeds the same FundingPoint→panel→emitter. Code
+  build (`--live` mode) is the next step, spec'd by the doc.
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
@@ -387,6 +397,37 @@ structures 3–4 collapse toward `efficiency ≈ 1`.**
   cross-venue spread p95 ≈ 32% APY.
 - **Deribit funding is unreliable in the raw feed** (p95 130%, min −878%) — consistent with the 8h-vs-1h normalisation
   bug filed in the cadence issue; winsorise outliers + treat Deribit funding as suspect until that's fixed.
+
+## Live/paper multi-venue expansion (operator 2026-06-17)
+
+**Spec / integration SSOT**: `codex/02-data/carry-venue-live-integration-reference.md` (per-venue funding quirks + LST
+staking + Aave lending + conservative-default discipline + how-to-add-a-venue). For paper the decision doesn't need deep
+history, so the live path uses **every venue we can reach by public API or hold credentials for** + conservative
+estimates (filed below) where a characteristic isn't yet verified. **Probed reachable 2026-06-17** (public, no auth):
+Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget, Kraken Futures, MEXC** (11 venues).
+
+- [ ] [STRATEGY] P2. Build the harness `--live` multi-venue snapshot mode per the spec doc §1–§3: fetch current funding
+      from all 11 venues (interval-aware annualise — HL+Kraken hourly, Kraken `fundingRate÷markPrice`, Deribit
+      8h-figure, Gate/MEXC interval from the API), `FundingPoint(day="LIVE")` → existing
+      `_build_panel`/ensemble/`_build_instructions`/ `_diff_to_target` (batch==live). New venues default to cash-margin
+      (conservative). Expand coins to ~40. **Repo: e2e-testing harness.**
+- [ ] [DATA] P2. UAC `perp_funding_cadence`: add Gate/KuCoin/Bitget/Kraken/MEXC cadences (+ per-pair non-8h exceptions);
+      prefer the interval the API returns. **Repo: unified-api-contracts.**
+- [ ] [DATA] P2. UAC `venue_collateral`: verify + add the 5 new venues' real collateral programs (several run
+      multi-asset/portfolio margin that would lift them off the conservative cash-margin default → better efficiency /
+      enables `spot_same_venue`/`staked_basis`). Until verified, cash-margin default holds. **Repo:
+      unified-api-contracts.**
+- [ ] [DATA] P2. Wire live LST staking APR sources per spec §4: RocketPool rETH, Coinbase cbETH, Marinade mSOL (Lido
+      stETH + ether.fi weETH/EigenLayer already mapped); derive from on-chain exchange-rate growth or protocol APR
+      endpoint; conservative trailing-realised default + TODO where missing. **Repo: e2e-testing → features-service.**
+- [ ] [DATA] P2. Live Aave reserve-data adapter (supply/borrow APY from `getReserveData`
+      liquidityRate/variableBorrowRate, RAY-scaled) for the cash floor + recursive borrow leg; Compound v3 source.
+      **Repo: e2e-testing → mtds.**
+- [ ] [STRATEGY] P3. Credentialed venues (no public funding / richer with auth — dYdX v4, Vertex, Drift, Paradex,
+      Backpack): file each **BLOCKED-CREDENTIALS** with the operator ask (vendor/tier/cost) + build the adapter scaffold
+      anyway (External-Data-Always-Available rule). **Repo: e2e-testing → ping ledger.**
+- [ ] [STRATEGY] P3. Sign/units cross-check on integration: one coin per venue vs the spec §3 reference values before
+      trusting the live ranking. **Repo: e2e-testing harness.**
 
 ## Open todos / next steps
 
