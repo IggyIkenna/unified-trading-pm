@@ -130,8 +130,15 @@ the cleaner isolation if we expect the AWS deployment to grow beyond build-statu
 
 - [x] ✅ [INFRA] P2. Grant `roles/cloudbuild.builds.viewer` + `roles/artifactregistry.reader` to
   `unified-trading-sa@central-element-323112`. **DONE 2026-06-17** by `ikenna@odum-research.com` (Owner) — both bindings
-  applied + verified present on the SA via `get-iam-policy`. Column repopulates within ~5 min (IAM propagation + the
-  in-process 300s `_builds_cache` TTL). **Target:** infra/GCP IAM (no code). Reversible via `remove-iam-policy-binding`.
+  applied + verified present on the SA via `get-iam-policy`. **VERIFIED LIVE 2026-06-17 — Image column now populates
+  (10/25 repos show build status; the rest are honest-unknown = no recent GCP build / AWS-only).** **GOTCHA: the grant
+  alone did NOT populate it** — the running Cloud Run instance had cached the pre-grant 403 in its long-lived Cloud Build
+  client (the 300s `_builds_cache` TTL did not clear it). Required a **revision restart** to re-auth:
+  `gcloud run services update uts-shared-deployment-api --region asia-northeast1 --update-env-vars IAM_REFRESH_20260617=...`
+  → rev `00061-42g`. Confirm the perm is live FIRST with
+  `gcloud builds list --impersonate-service-account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com --region asia-northeast1`
+  before restarting. **Target:** infra/GCP IAM (no code). Reversible via `remove-iam-policy-binding`. (Note:
+  `deployed_version` still null — Artifact Registry resolution may need another cache cycle; the build-status core is live.)
 - [x] ✅ [DESIGN] P2. **Option B chosen (operator Ikenna, 2026-06-17) — ONE backend reads BOTH clouds via keyless WIF;
   no second AWS deployment.** Pivot from the earlier Option-A lean: since the cross-cloud *permission* half is cheap +
   keyless, do Option B but **phase it** — operator (this session) grants the permissions; the *code* half is handed to
