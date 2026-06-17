@@ -155,3 +155,26 @@ files are all foreign/pre-existing):
 semver-max) are all on `live-defi-rollout` and drain to main via the standing PR once v2 goes green (flaky → will pass
 on a clean-dep-resolve run; `ldr-to-main-promote` \*/15 keeps retrying). NOT force-merged over the red v2 (would land 91
 commits over a — flaky but real — failing required check).
+
+## Autonomous unjam — Progress Log (2026-06-17, operator: "go autonomous, unblock everything")
+
+**Root cause of the circular deadlock (confirmed):** jammed promotion → no fresh UTL/UAC release tags → CI dep-clone
+falls back to STALE tags (UTL v0.10.0 while LDR=0.13.0; UAC v0.14.0 while LDR=0.18.0) → basedpyright resolves dep types
+as `Unknown` → broad `reportUnknown*` typecheck failures fleet-wide → v2 red → promotion jammed. UTL/UAC
+main↔staging↔LDR are 3-way diverged (UTL staging+22/main+29) BUT **LDR is the verified lossless SUPERSET** (`main ⊆ LDR`
+AND `staging ⊆ LDR`, zero missing commits — incl. main's starlette-CVE fix `f1dbf572` + risk/margin features). So
+tagging the superset content is lossless.
+
+**Action taken (operator-chosen option a — cut fresh tags; additive + reversible):**
+
+- Cut **UTL `v0.13.0`** @ staging HEAD `ce02c219` (pyproject=0.13.0, ⊆ LDR) — was stuck at v0.10.0.
+- Cut **UAC `v0.18.0`** @ staging HEAD `ad81150b` (pyproject=0.18.0, ⊆ LDR) — was stuck at v0.14.0.
+- These become the LATEST tags ≥ every consumer floor → the CI dep-clone fallback now resolves the CURRENT public API →
+  basedpyright should stop seeing `Unknown`. Verifying via a re-triggered PM v2.
+
+**Expected cascade if verified:** fresh UTL/UAC tags → consumer v2 typecheck green fleet-wide → the conflict-walled
+dep-update/staging→main PRs (Class B/C) + PM #387 drain on their armed auto-merge → all this session's machinery
+(digest-only, supersede+escalate owner chain, alert, reconciler) lands on main.
+
+**If the re-triggered v2 does NOT clear:** the tags are reversible (`git push origin :v0.13.0`); the clone falls back
+via a different path → escalate to the operator (this is the boundary). NOT force-syncing main blind at depth (rule 11).
