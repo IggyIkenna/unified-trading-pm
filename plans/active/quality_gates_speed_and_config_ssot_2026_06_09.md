@@ -197,9 +197,17 @@ single-core pinned), output under gitignored `.qg_profile/`.
       clones) single-threaded on EVERY repo's gate → **~286 s = 64% of wall-time, fleet-wide**. Fixed to
       `basename "$PROJECT_ROOT"` + `REPO_ROOT` (matches the already-correct STEP 5.67). + added `.tabs` to the checker's
       `EXCLUDE_DIR_NAMES`. Expected: 286 s → sub-second per gate. — base-service.sh + check_removed_symbols.py
-- [ ] [INFRA] P0. **Part 3 — add the workspace-wide removed-symbols sweep** (cron/CI, `.tabs` excluded, run ONCE) to
-      preserve the cross-repo guarantee that the per-repo scope narrows away. NO such sweep exists today (the mis-scope
-      was accidentally serving as it). SSOT: check_removed_symbols.py docstring "run separately via CI cron".
+- [x] ✅ [INFRA] P0. **Part 3 — workspace-wide removed-symbols sweep DONE (2026-06-17).** New PM scheduled workflow
+      `.github/workflows/removed-symbols-workspace-sweep.yml` (nightly `0 3 * * *` + `workflow_dispatch`, modeled on
+      `cassette-drift-check.yml`): checks out PM + clones every sibling repo from `workspace-manifest.json` (branch pref
+      `live-defi-rollout`, fallback default) shallow, runs `check_removed_symbols.py --workspace-root $PWD` with NO
+      `--scope` → scans every repo's `.py` consumers against the manifest = the cross-repo guarantee the per-repo STEP
+      5.65 narrows away. Alerting-only (GH issue `removed-symbol-rot` + Slack INFO + persist-cicd-event), never
+      CI-blocking. `.tabs` excluded by the checker's `EXCLUDE_DIR_NAMES`. **Dry-run-verified locally** against the live
+      workspace (exit 0; 0 `removed` errors so no day-one false fire; surfaced 2 known `pending_removal` cross-repo warns
+      — features-service still calls UTL's deprecated `ManifestWriter.add`, tracked under writegate Phase 1.2A).
+      Scheduled-from-default-branch caveat: inert until promoted to PM `main`. SSOT: check_removed_symbols.py docstring
+      "run separately via CI cron". — unified-trading-pm
 - [x] [INFRA] P0. ✅ **pip-audit = 38 s (8%) OSV network** (now visible after decomposing the codex blob). Cache OSV
       results and/or move pip-audit to a deps-change/cron trigger instead of every gate run. Advisory gate → safe to
       move off the hot path. — unified-trading-pm base-service.sh + base-library.sh (unified-trading-pm@779dc3683): ONE
