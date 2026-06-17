@@ -4,8 +4,12 @@ name: cicd_pipeline_vs_plans_drift_audit_2026_06_17
 type: audit-result
 epic: infrastructure_master
 parent_audit: infrastructure_master_audit_instructions
+instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 created: 2026-06-17
+date: 2026-06-17
 author: ikenna [autonomous audit]
+auditor: ikennaigboaka
+status: active
 assigned_vm: vm-cross-cutting
 source:
   - codex/08-workflows/ci-cd-flow.md
