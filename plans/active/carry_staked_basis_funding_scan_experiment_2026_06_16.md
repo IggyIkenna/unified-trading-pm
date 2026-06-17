@@ -337,6 +337,14 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   Filed the `--live` build + UAC-registry (cadence/collateral) + staking/lending-source + credentialed-venue TODOs under
   '## Live/paper multi-venue expansion'. batch==live: live snapshot feeds the same FundingPoint→panel→emitter. Code
   build (`--live` mode) is the next step, spec'd by the doc.
+- **2026-06-17** — **DEX-perp venues corrected (operator)**: dYdX v4 + Vertex are **PUBLIC** (not credentialed) — dYdX
+  `indexer.dydx.trade/v4/perpetualMarkets` (`nextFundingRate`, hourly) verified; Vertex
+  `gateway.prod`/`archive.prod.vertexprotocol.com` resolves (the `api.vertexprotocol.com` I'd have used is a stale
+  Vercel 404). **Drift**: we HOLD creds (`solana-paper-keypair-private-key`+`solana-wallet-address`); its public Data
+  API **403s this VM** (geo/Cloudflare) + authed 401s → wire the **Solana-RPC on-chain** path. Drift **takes
+  jitoSOL/mSOL as margin → unlocks SOL staked-basis** (only venue). Already in UAC (`venue_mapping`/`chain_env`). Added
+  all three + the **live/paper history carve-out** (no funding history → WARN + use current snapshot + available spot
+  history, never block; backtest still needs history) to the spec doc + todos.
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
@@ -423,9 +431,21 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 - [ ] [DATA] P2. Live Aave reserve-data adapter (supply/borrow APY from `getReserveData`
       liquidityRate/variableBorrowRate, RAY-scaled) for the cash floor + recursive borrow leg; Compound v3 source.
       **Repo: e2e-testing → mtds.**
-- [ ] [STRATEGY] P3. Credentialed venues (no public funding / richer with auth — dYdX v4, Vertex, Drift, Paradex,
-      Backpack): file each **BLOCKED-CREDENTIALS** with the operator ask (vendor/tier/cost) + build the adapter scaffold
-      anyway (External-Data-Always-Available rule). **Repo: e2e-testing → ping ledger.**
+- [ ] [STRATEGY] P2. Wire **dYdX v4 + Vertex** (both PUBLIC, verified 2026-06-17) into the live snapshot: dYdX
+      `indexer.dydx.trade/v4/perpetualMarkets` (`nextFundingRate`, hourly); Vertex `gateway.prod`/`archive.prod`
+      (public; `api.vertexprotocol.com` is a stale 404). **Repo: e2e-testing harness.**
+- [ ] [STRATEGY] P2. Wire **Drift** via the creds/RPC path — we HOLD `solana-paper-keypair-private-key` +
+      `solana-wallet-address`; the public Data API 403s this VM (geo) + authed 401s → read funding on-chain via Solana
+      RPC. Drift **takes jitoSOL/mSOL as margin → unlocks SOL staked-basis** (the only venue that does). Already in UAC
+      (`venue_mapping`/`chain_env`). Not BLOCKED-CREDENTIALS — a wiring task. **Repo: e2e-testing → mtds drift
+      handler.**
+- [ ] [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN + use
+      the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
+      degrades to a point estimate under < halflife days. Backtest still needs history; this is live/paper only. **Repo:
+      e2e-testing harness.**
+- [ ] [STRATEGY] P3. Genuinely credentialed venues (Paradex, Backpack, Edgewink): file each **BLOCKED-CREDENTIALS** with
+      the operator ask + build the adapter scaffold anyway (External-Data-Always-Available rule). **Repo: e2e-testing →
+      ping ledger.**
 - [ ] [STRATEGY] P3. Sign/units cross-check on integration: one coin per venue vs the spec §3 reference values before
       trusting the live ranking. **Repo: e2e-testing harness.**
 
