@@ -76,3 +76,15 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 
 ## Progress Log
 (loop handoff lands here)
+
+## Phase A follow-ups (discovered during build)
+- [ ] [SCRIPT] P2. **Calibrate / parameterize the dual-deposit cross-exchange cost** — `archetypes_rank.py`
+      `_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS = 150` is a flagged PLACEHOLDER (operator-calibration pending; affects
+      opportunity RANKING only, never sizing/funds). Calibrate to a real cost + expose it as a config param in Phase C's
+      wizard parameterization. Repo: strategy-service.
+- [ ] [TEST] P3. **`test_batch_harness.py::test_position_state_survives_across_ticks` fails in ISOLATION** with
+      `Event logging not initialized` (pre-existing on HEAD, events-bus setup ordering — NOT Phase A); passes in the
+      full QG suite. Add a `setup_events()` fixture so it's isolation-safe. Repo: strategy-service.
+- NOTE: a F28 live-probe (UAC@bc45549, ~2026-06-17) updated Drift haircuts to real on-chain initialAssetWeight
+  (SOL/mSOL/JitoSOL = 0.15/0.20/0.20, were 0.10 placeholders) but left the dynamic-hedge tests stale (expected the old
+  0.9 factor). Phase A reconciled them to 0.8 (the 0.20 haircut) — the SSOT is authoritative.
