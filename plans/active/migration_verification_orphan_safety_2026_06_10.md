@@ -256,8 +256,19 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       orchestrator (`engine/orchestrator/catalogue.py:229`); a DIFFERENT artifact from the lifecycle roll-up (documented
       in the reader docstring). The E5 "gated on sports+pred roll-ups" note is moot for this reader (its only consumers
       are the cefi/defi `legacy_reason_classifier`; both have prod `catalog.parquet`).
-- [ ] [IS] P2. **Follow-up to E5 — CeFi catalogue must carry `raw_symbol`/`base_asset` so the lifecycle cross-ref
-      matches (NOT a reader-side normaliser)**. Measured on real prod GCS (2026-06-16): the CeFi `availability_index`
+- [x] ✅ [IS] P2. **Follow-up to E5 — CeFi catalogue carries `raw_symbol`/`base_asset` so the lifecycle cross-ref
+      matches** — **instruments-service@30e4bb4** (2026-06-16 /autonomous). Added `raw_symbol` + `base_asset` to
+      `build_instrument_catalogue.py` `CATALOG_COLUMNS` + `_extract_meta` + the generic roll-up row (populated from the
+      by_date instruments-store source, which carries both); blank for prediction/sports (no exchange-native symbol).
+      **NO reader change needed** — the UTL reader's existing `venue+raw_symbol` / `venue+base_asset` strategies now
+      match. **Uniqueness VERIFIED on real prod data before committing to the key**: `(venue, raw_symbol)` is UNIQUE — 0
+      collisions in a live snapshot (3,657 instruments) AND 0 across 14 days spanning 2019→2026 (13,905 groups), with
+      `instrument_type` never disambiguating; `(venue, base_asset)` is NOT unique (119/285 groups → many instruments) so
+      it stays the lossy last-resort fallback (existing best-effort contract). 40 catalogue tests pass (+2 new: carries
+      the symbols; blank-not-NaN when source absent); IS QG green. Shipped via a dep-clean waiter (UAC was held dirty by
+      a live peer's `perp_funding` WIP — never stomped; landed the instant deps went clean). The DETAILED measurement /
+      original framing ⤵ (retained for provenance):
+      • **Measured on real prod GCS (2026-06-16):** the CeFi `availability_index`
       DOES carry `instrument_id` (95.8% non-blank / 2.6M rows) but in **bare per-venue form** (`BTC-PERPETUAL`,
       `ADA-PERP`, `SOL-PERP`, `ARB-USDT`), whereas the new `catalog.parquet` keys on canonical `VENUE:TYPE:SYMBOL`
       (`BINANCE-FUTURES:PERPETUAL:ADA-USDT`; bare ccxt `0G/USDT:USDT` for OKX-SWAP 2,869 + COINBASE-SPOT 757) →
