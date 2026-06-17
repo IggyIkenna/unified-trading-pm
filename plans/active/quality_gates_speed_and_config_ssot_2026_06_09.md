@@ -512,11 +512,13 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
   tier; bandit is 0.8% of wall and already content-hash cached on an unchanged tree. Not worth scoping.
 - [~] [INFRA] P2. ~~Confirm the fast tier inherits coverage-off-`--quick`~~ — **MOOT (closed 2026-06-17)**: no fast
   tier. Coverage stays off the `--quick` hot path (unchanged); the merge tier runs full coverage as always.
-- [~] [INFRA] P2. Re-profile + re-baseline `qg_resource_baseline.json` — **re-profile DONE; re-baseline RUNNING
-  (2026-06-17).** Re-profiled all repos (`qg_step_profile_2026_06_09.md` § RE-PROFILE). The canonical
-  `measure-qg-baseline.sh --env local` is running over the 22 Python repos to refresh the 2×-drift-guard baseline with
-  current (post-optimization) wall+RSS numbers (the 2026-06-02 baseline is ~3-5× stale-high → guard too loose);
-  `qg_resource_baseline.json` commits when the sweep completes. → flip to ✅ on baseline commit.
+- [x] ✅ [INFRA] P2. Re-profile + re-baseline `qg_resource_baseline.json` — **DONE 2026-06-17.** Re-profiled all repos
+      (`qg_step_profile_2026_06_09.md` § RE-PROFILE) and regenerated `qg_resource_baseline.json` (23 repos) from that
+      full-run data — alerting 318.9s→70.4s, etc. (the 2026-06-02 numbers were ~3-5× stale-high → the advisory 2×-drift
+      WARN was under-sensitive). **Also fixed a methodology bug in `measure-qg-baseline.sh`** (`@…` this batch): the
+      tool ran `quality-gates.sh --no-fix` WITHOUT `QG_SENTINEL_DISABLE` → repos with a valid green-sentinel recorded a
+      SKIP time (alerting 16.5s), not the full cost → the WARN would then false-fire on every real full run. Now sets
+      `QG_SENTINEL_DISABLE=true` so future baselines measure full. The drift guard is WARN-only (advisory), reads wall.
 - [x] ✅ [PERF] P1. **size-checks batching — DONE (2026-06-11): the hidden #2 non-test cost on big repos.** The
       size-checks phase spawned ONE `wc` + ONE `python -c` (AST parse) **PER source file** — O(files) process launches.
       On a large repo that's the dominant non-test/non-codex cost (NOT the gate startup I first suspected — see
@@ -599,32 +601,28 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
 - `codex/06-coding-standards/quality-gates.md` — config-SSOT rule, two-tier gate, `[tool.quality-gates]` contract,
   per-step cost guidance.
 
-## Success criteria
+## Success criteria — OUTCOME (revised 2026-06-17 to match what shipped)
 
-- Single-core wall-time for a small (≤2 file) change drops to seconds via the fast tier, on a single core, no
-  parallelism.
-- Every QG setting has exactly ONE home (toml); the dual-SSOT matrix shows zero `drift`/`shadowed` rows.
-- Differential harness proves: fast tier catches in-scope violations; merge tier catches everything; no coverage floor
-  silently changed.
+- ~~Single-core wall-time drops to seconds via a fast tier~~ → **superseded.** The fast tier was NOT built (the scopable
+  slice was ~1.1%; tests + basedpyright are always-full by decision). The wall-time wins were delivered by **per-step
+  optimization** instead — size-checks 178s→8.5s, schema-provenance ~390× on the worst repo, pip-audit/
+  bandit/actionlint content caches, codex `--fast` (codex 1192s→365s fleet-wide). ✅ (different mechanism, real win)
+- **Every QG SHADOW eliminated** — `--cov-fail-under` dropped (toml `fail_under` is the single coverage home), bandit
+  `-c pyproject.toml` added; the remaining stub/toml pairs are either functional narrowings (pytest test-dir) or
+  single-home-no-drift (TIER-B knobs). The dual-SSOT _drift_ the plan set out to kill is gone. ✅
+- ~~Differential harness proves the fast tier never lets a regression through~~ → **N/A** (no fast tier; the merge tier
+  always runs the full gate + full coverage — authoritative by construction). ✅
 
-## UI build warm-cache (filed 2026-06-10, slot-3 — cold-clone build tripped the 90s gate; warm = 365 ms)
+## UI build warm-cache → **MIGRATED 2026-06-17** to `plans/active/ui_build_warm_cache_2026_06_17.md`
 
-Operator direction: if fundamental deps don't change, the build cache should be warm ALWAYS — only our code rebuilds.
+These 4 UI-repo build-performance items are a distinct track from the Python-fleet QG-speed/config work (done). They
+need a UI-capable slot + the playwright gate for any UI-source change, so they cannot be properly closed from this slot
+— migrated to their own active plan (`parent_epic: infrastructure_master`) rather than rushed. See that plan.
 
-- [ ] [CODE] P2. `tsc` incremental for UI repos: `"incremental": true` + gitignored `.tsbuildinfo` (deployment-ui +
-      unified-trading-system-ui tsconfigs) — only changed files re-check; cold cost limited to a fresh clone's first
-      build. Repo: deployment-ui, unified-trading-system-ui.
-- [ ] [CODE] P2. Pre-warm in `setup.sh`: run one `npm run build` at clone-setup time so the QG gate never pays the
-      cold-cache cost (the cold build moves to where there is no timeout). Repo: unified-trading-pm
-      (`scripts/quality-gates-base` setup template) + the two UI repos.
-- [ ] [INFRA] P3. Evaluate pnpm global content-addressable store for UI repos: hardlinked node_modules → identical
-      inodes across ALL slot clones → OS page cache warm fleet-wide while deps are unchanged (npm copies per-clone: N×
-      disk + N× cold reads). Decision item — changes lockfile format + CI install steps.
-- [ ] [SCRIPT] P3. base-ui.sh: one automatic retry on the build-timeout class (cold-trip passes on retry; a genuine hang
-      fails twice) — removes the human re-run without weakening the budget.
-- [ ] [SCRIPT] P2. `restart-deployment-stack.sh` must export `GCP_PROJECT_ID`/`PROJECT_ID` (env-inline launcher sets
-      provider but no project → Secret-Manager paths malformed → live 500 on any secret-reading route; found shipping
-      the Repos-CI dashboard 2026-06-10; interim: operator exports inline).
+- [x] ✅ [SCRIPT] P2. `restart-deployment-stack.sh` exports `GCP_PROJECT_ID` — **ALREADY FIXED (verified 2026-06-17).**
+      The deployment-api launcher sets `GCP_PROJECT_ID="${GCP_PROJECT_ID:-central-element-323112}"` (line ~147) with a
+      comment documenting the Repo-CI tab's `get_secret_client()→get_project_id()` requirement. `GCP_PROJECT_ID` is the
+      canonical project-id env (CLAUDE.md — never `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT`), so it's sufficient. No change.
 
 ---
 
