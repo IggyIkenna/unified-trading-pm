@@ -62,3 +62,57 @@ P0; together they're a "tests prove the engine, not the deployable config" fidel
 
 Ack + route to the strategy-engine / capability-wizard owners. D1+D3 are the substantive ones (test fidelity + a
 genuine missing cell); D2 is an operator product decision (expose tuning params in the wizard or not).
+
+## Operator clarifications + deeper audit (2026-06-17)
+
+**D1 is INTENTIONAL** (operator): the e2e tests build in isolation now; they'll be relocated to the proper canonical
+path later. NOT a fix — re-tag: `[TEST] DEFERRED-BY-DESIGN` (relocate e2e → canonical `load_strategy_config`/factory
+path when the isolation phase ends).
+
+**D2 reframed — the wizard must parameterize the ENTIRE config surface, not archetype+venues** (operator vision):
+"once you know the archetype + venues, you parameterize every single part of the food chain / services config." The
+wizard is materially incomplete against that bar, for ALL archetypes, not just these.
+
+### Drift collateral answer (operator's concrete question)
+- **YES — Drift accepts the spot/LST as collateral** (collateralized short IS possible on drift): USDC(0), SOL(0.05),
+  **mSOL(0.10 `# PLACEHOLDER`)**, JitoSOL(0.10) — `venue_collateral.py:112-125`. NOT stables-only. (mSOL haircut is the
+  held placeholder — must be re-probed before go-live, `PLACEHOLDER_HAIRCUTS_PENDING_GO_LIVE:268-273`.)
+- **Aster = stables-only** (USDC/USDT; all LSTs `accepted=False`) — confirms the operator's example. **Hyperliquid =
+  USDC-only** too. Bybit(stETH 0.10 PLACEHOLDER)/OKX(wstETH 0.10)/Deribit(stETH 0.075) accept some LSTs.
+
+### NEW findings (buildable gaps)
+- [ ] [SCRIPT] P1. **Collateral-aware down-sizing is NOT implemented — the operator's "deposit USDC + size down for
+      margin headroom on a stables-only venue (Aster pattern)" path does not exist.** `staked_basis.py:219-229`
+      `_derive_structure`: if the LST is not in `accepted_perp_collateral(perp_venue)` → returns `None` → slot
+      REJECTED. The archetype is `LST_AS_MARGIN` only (SPLIT_STAKE deleted); `stake_fraction` forced == 1.0
+      (:242-248) so it cannot even express a down-sized deposit-and-buffer position. So **Aster (+ any USDC-only perp
+      venue) is structurally unusable for staked-basis today** — rejected, not handled. The haircut is consulted only
+      for hedge-leg delta-matching (`dynamic_hedge_ratio.py:167`), not buffer sizing. FIX: add the USDC-collateral +
+      buffer-down-size branch (deposit stables, reduce hedge/trade size by a margin-call buffer) driven by
+      `venue_accepts_collateral`/`get_collateral_haircut`; allow `stake_fraction < 1.0`. Repo: strategy-service (+ UTL margin).
+- [ ] [SCRIPT] P3. **Dead `per_venue_margin_buffer_pct: 0.20`** in `strategy-service/.../configs/arbitrage_price_dispersion.yaml`
+      has ZERO Python wiring — wire it into the P1 buffer-sizing or delete it. Repo: strategy-service.
+- [ ] [REGISTRY] P2. **Spot-leg venue is hardcoded per-LST for staked-basis (ETH-LST→UNISWAP_V3, SOL-LST→JUPITER,
+      `catalog_staked_basis.py:30-35`) — no Binance-spot / orca / raydium alternative**, though the engine accepts a
+      `spot_venue` param. Operator wants spot venue selectable (Binance vs DEX, liquidity-driven). Make spot_venue a
+      first-class selectable axis for staked-basis (it already is for APD via `venue_universe`). Repos:
+      unified-api-contracts (leg-spec/manifest) + strategy-service (catalog).
+- [ ] [SCRIPT] P1. **Wizard parameterizes ~0 of the numeric production-param surface** — exposes only structural
+      picks (archetype/legs/venues/algo/model/capital/risk-%×2/treasury/wallet/custody). The 5 behavioural params
+      (`entry_bps`/`exit_bps`/`min_health_factor`/`hedge_deadline_ms`/`peg_drift_threshold_bps`) + `stake_fraction` +
+      `start_token` + collateral posting mode are NOT form fields; APD's ~25-key surface is 100% absent. ROOT CAUSE:
+      the capability-manifest is a node/edge GRAPH with **no flat parameter schema** — so there is nothing for the
+      wizard to render param forms from. FIX (the real initiative): (1) emit a per-archetype flat PARAM SCHEMA into the
+      capability manifest (name/type/default/range/units, sourced from each engine's config model), (2) wizard renders
+      per-archetype param forms from it, (3) wire the values through `strategy_config_loader`. Repos:
+      unified-api-contracts (manifest exporter) + strategy-service (engine config schema) + unified-trading-system-ui (wizard).
+- [ ] [SCRIPT] P2. **Audit production params vs e2e/testing params for functional alignment** (operator ask) — the e2e
+      catalog sets the 7 structural params but leaves the 5 behavioural ones to engine defaults; confirm the engine
+      defaults == the values the production/paper runs intend (functionally, not by name). Repo: e2e-testing + strategy-service.
+
+### Food-chain parameterization completeness (wizard touches ~8 of ~16 config layers)
+Wizard-set: archetype/family, leg instruments+venues, exec-algo (pick only), risk %×2, capital, treasury-split,
+custody/signing, wallet, ML model (pick only). NOT set (defaults/code/placeholder-YAML): engine numeric params,
+collateral token/posting mode, start_token, exec-algo PARAMS, the full risk-threshold ladder
+(WARNING→AUTO_REDUCE→AUTO_CLOSE_ALL), data-source routing, margin buffer. The collateral posting-mode + margin-buffer
+sizing — the operator's core question — is **not a parameter anywhere**; it is engine-derived accept/reject.
