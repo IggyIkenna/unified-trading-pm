@@ -229,6 +229,18 @@ _(append each build failure + fix here as we go — this IS the plan's progress 
   - **Local-validation status:** 9/15 Python services build locally (6 Pattern-A + alerting/execution/greeks). The other 6
     are GCP-authoritative (their cloudbuild stages correctly) — chasing bespoke local contexts per service has diminishing
     value vs the normalization fix.
+- 2026-06-17: **NODE/UI images (3) — 1 PASS / 2 multi-repo-context.**
+  - ✅ **unified-trading-system-ui** — clean standalone build (2.46GB).
+  - ❌ **deployment-ui** — `COPY unified-admin-ui/packages/core` (a monorepo sibling NOT cloned here) → same vendored-sibling
+    fragility in the UI layer → GCP-authoritative.
+  - ❌ **deployment-api** — Dockerfile **bundles the dashboard** (`COPY /ui` — the deployment-ui SPA, the shared-image pattern
+    behind the Cloud Run service we promoted earlier); needs the UI staged → GCP-authoritative (this one is **by-design**
+    bundling, not the same "normalize away" case). Also note its base is pinned to a DIFFERENT digest (`e939b4ee…`) than the
+    current `:latest` (`a1b0cf83…`) — another stale base-digest pin.
+- 2026-06-17: **EOD STOP (local phase complete).** Local image-build validation done: **10/18 image repos build standalone
+  locally** (UTL base + UAC wheel + 6 Pattern-A services + 3 Pattern-B-simple + unified-trading-system-ui); the **8 bespoke**
+  (6 Pattern-B + deployment-ui + deployment-api) are GCP-authoritative. **GCP pass deferred to 2026-06-18 AM (operator).**
+  Housekeeping done: temp `.deps`/orchestrator removed, UTL `.gitignore` shipped (`.deps/` ignored), normalization issue filed.
 
 ## Composes with / SSOTs
 - IAM/unknown-image (separate): `plans/active/issues/deployment_dashboard_image_status_and_multicloud_toggle_2026_06_17.md`
