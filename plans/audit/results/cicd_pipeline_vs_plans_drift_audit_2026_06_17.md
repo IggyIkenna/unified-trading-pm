@@ -314,8 +314,9 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [x] D3 ✅ — corrected CLAUDE.md aiohttp `--ignore-vuln` ("two" → "~20-entry block") — PM@235c5fd3b
 - [x] D4 ✅ — corrected ldr-to-staging (15m, ci-cd-flow.md) + main-backmerge (hourly, CLAUDE.md) cadences —
       PM@235c5fd3b. The sprawl-issue-doc cron number is tracked separately as D25 (still open).
-- [ ] D11 🟠 — reconcile in-image-QG blocking (router plan Phase 1) vs the shipped `_RUN_INIMAGE_QG:false` skip —
-      **callout filed in `cloud_build_router_aws_parity` (PM@98bdf756c); the keep-vs-drop decision is still open**
+- [x] D11 ✅ **DECIDED 2026-06-17 (operator): DROP in-image QG** — `_RUN_INIMAGE_QG:false` canonical; pre-build
+      `quality-gates-v2` PR gate is authoritative; deploy-safety via an image-boot smoke owned by the build-images
+      workstream (separate agent). Router plan Phase 1 re-scoped to RESOLVED/dropped.
 - [ ] D12 🟠 — consolidate content-hash-sentinel ownership (qg_sentinel_content_hash ⇄ quality_gates_speed)
 - [ ] D13 🟠 — add SUPERSEDED banner to qg_commit_quality_boundary L220 (tab-mirror torn out by Path-B). **DEFERRED: the
       edit would force a ~170-line prettier reflow of that hot, actively-edited plan mid-session (prek reflows md on
