@@ -59,6 +59,17 @@ apply.
 > **Both fleets quiesced before any `--apply`; rollback snapshots in place. The per-AG `--apply` pre-flight gate (1) is
 > SATISFIED.** Resume ONLY after all per-AG `--apply` complete + verified — the exact reverse-commands are below so
 > nothing is left paused.
+>
+> **⚠️ DRAIN SCOPE (clarified 2026-06-17 — operator question): the drain stops ONLY DATA-CAPTURE / data-pipeline VMs —
+> the bucket-writing prefixes in `VM_PREFIX_TO_BUCKET` (`vm-defi`/`vm-cefi`/`vm-tradfi`/… capture + `EPHEMERAL_BATCH` /
+> `EPHEMERAL_EXPERIMENT` / `SCHEDULED_RECURRING` runners that write manifest shards). It does NOT — and MUST NOT — stop
+> the agent infrastructure: the Central / Orchestrator VM (`agent-orchestrator-vm-1`, registry id `planning`), the Human
+> Planning VM (registry id `human-planning` — the interactive VM the operator works on), or the `agent-orch-vm-*` epic
+> worker fleet (`bucket=None`, `LONG_LIVED_LIVE`) / any `tier=daemon`-tagged VM. Those run agents, not data capture, so
+> quiescing them would kill the very session driving the migration. The drain recipe targets capture prefixes by
+> `lifecycle_class` + non-null `bucket`; it never SIGTERMs the orchestrator/planning VMs.** (Today the per-epic capture
+> fleet is post-cutover / not-running anyway — only the 2 agent VMs are live — so the resume-drain is a no-op-or-small
+> set; this clarification keeps it correct when capture VMs are relaunched for the real `--apply`.)
 
 **What was done (central-element-323112 + AWS 427895769566):**
 
