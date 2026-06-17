@@ -1814,8 +1814,21 @@
     "locked_since": "2026-06-17T01:50:46.549900Z",
     "locked_reason": "Breaking MINOR bump cascade: unified-trading-library=0.13.0 (pre-1.0.0)",
     "lock_version": "0.13.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "execution-service",
+      "system-integration-tests",
+      "ml-service",
+      "deployment-api",
+      "batch-live-reconciliation-service",
+      "fund-administration-service",
+      "alerting-service",
+      "strategy-service",
+      "unified-trading-library",
+      "unified-api-contracts",
+      "instruments-service",
+      "market-tick-data-service"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "unified-trading-library"
