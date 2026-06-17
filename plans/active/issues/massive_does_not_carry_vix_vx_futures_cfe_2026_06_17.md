@@ -1,7 +1,6 @@
 ---
 title: Massive does NOT carry VX/VIX futures (CFE not in Massive's flat-file product set) — VIX gap stays Barchart+Yahoo
 created: 2026-06-17
-author: ikennaigboaka [autonomous]
 source:
   - operator ping 2026-06-17 (re-check whether Massive carries VIX/VX futures after the flat-file adapter fix)
   - market-tick-data-service/.../tradfi/massive_flatfiles.py (CME-only flat-file adapter)
