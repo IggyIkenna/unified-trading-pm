@@ -288,11 +288,13 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 
 - [ ] D1/D10 🔴 DECISION — resolve the `uv.lock`/`--frozen` model; wire docs + CI to agree →
       `uv_lock_frozen_model_contradiction_2026_06_15`
-- [ ] D5 🔴 — rewrite ci-cd-flow.md per-unit-staging-PR sections to land-on-LDR model (L176/L571-576/L611/L618)
-- [ ] D2 🟠 — remove the stale "service-deps enforcement is DEAD" warning from CLAUDE.md
-- [ ] D3 🟠 — correct CLAUDE.md aiohttp `--ignore-vuln` count (two → the block of ~20)
-- [ ] D4 🟠 — correct ldr-to-staging (15m) + main-backmerge (hourly) cadences in ci-cd-flow.md + CLAUDE.md + sprawl
-      issue
+- [x] D5 ✅ — rewrote ci-cd-flow.md per-unit-staging-PR sections (Pass-2 block, Full-flow diagram, Agent-vs-Human
+      Push-to-LDR + Promote rows) to the land-on-LDR / Tier-C-drain model — PM@235c5fd3b
+- [x] D2 ✅ — replaced the false "service-deps enforcement is DEAD" warning in CLAUDE.md with "LIVE (fixed 2026-06-11)"
+      — PM@235c5fd3b
+- [x] D3 ✅ — corrected CLAUDE.md aiohttp `--ignore-vuln` ("two" → "~20-entry block") — PM@235c5fd3b
+- [x] D4 ✅ — corrected ldr-to-staging (15m, ci-cd-flow.md) + main-backmerge (hourly, CLAUDE.md) cadences —
+      PM@235c5fd3b. The sprawl-issue-doc cron number is tracked separately as D25 (still open).
 - [ ] D11 🟠 — reconcile in-image-QG blocking (router plan L67) vs the shipped `_RUN_INIMAGE_QG:false` skip
 - [ ] D12 🟠 — consolidate content-hash-sentinel ownership (qg_sentinel_content_hash ⇄ quality_gates_speed)
 - [ ] D13 🟠 — add SUPERSEDED banner to qg_commit_quality_boundary L220 (tab-mirror torn out by Path-B)
