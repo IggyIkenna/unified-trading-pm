@@ -626,15 +626,24 @@ it, bounded the curated-venue reads to `_DEFAULT_COINS` (else 200+ wasted None-r
 to union the discovered HL universe into `--coins`. HL funds hourly → annualised at
 `perp_funding_cadence["hyperliquid"]`.
 
-**3. Fuller backtest** (`--hl-full`, 2025-01-01→2026-04-01, **229-coin universe**, 456 days, 5bps/leg, 5% floor) —
-causal (realistic, no-trade-band) NET APY: **ensemble 8.1%** (turn 0.053/d, maxDD −0.24%, drag 2.56%) · staked-basis
-7.7% (turn 0.002/d) · pure-basis 5.1% · funding-dispersion 4.9%. Oracle/hindsight variants go negative net (they
-over-rotate; the causal band holds turnover near zero). Still GROSS carry-only (no hedge/basis MtM) — Sharpe inflated,
-per existing P3 todo. The universe expanded from ~40 → 229 coins with no new strategy logic — purely the funding-source
-change.
+**3. Reader bug found + fixed (important).** The first `--hl-full` runs reported ~8% ensemble — but that was on a
+NEAR-EMPTY HL load: historical perp_funding days (all 2025 / early-2026) were written BEFORE the `pipeline_mode=` path
+partition (`asset_group=defi` only); newer days carry `pipeline_mode=batch_hyperliquid`. The reader hardcoded the new
+layout → loaded only ~457 HL points (≈2 days) so the backtest effectively ran on the curated ~20-coin derivative_ticker.
+Fixed to read BOTH layouts (`e2e@71666cb`) — now **104,066 HL points across 525 days** (was 457).
+
+**4. Fuller backtest — REAL full-universe result** (`--hl-full`, 2025-01-01→2026-06-09, **232-coin universe**, 525 days,
+5bps/leg, 5% floor) — causal (realistic, no-trade-band) NET APY full-period: **ensemble 14.1%** (turn 0.072/d, maxDD
+−0.61%, drag 3.96%) · pure-basis 13.4% · funding-dispersion ~9% · staked-basis ~8%. Per year: 2025 ensemble causal
+**15.5%** net (gross 18.4%, turn 0.073/d) · 2026-YTD ensemble causal **10.4%** net (gross 13.2%). The full HL universe
+~DOUBLED the carry vs the bug-limited curated run — the long tail of HL perps carries far more funding, which pure-basis
+
+- the ensemble harvest at tiny turnover/drawdown. Oracle/hindsight variants go deeply negative net (over-rotation).
+  Still GROSS carry-only (no hedge/basis MtM) — Sharpe inflated, per existing P3 todo. Universe ~40 → 232 coins, no new
+  strategy logic — purely the funding-source change.
 
 **Verification:** `mtds` migration verified 0 objects under `batch_hyperliquid_rest` fleet-wide (independent gcloud
-walk); harness `--hl-full` smoke confirmed 229-coin expansion + 227 HL perp_funding points loaded.
+walk); fixed reader validated to load 198–227 HL coins/day on both layouts (2025-06-01 / 2026-01-15 / 2026-04-01).
 
 ## Open todos / next steps
 
