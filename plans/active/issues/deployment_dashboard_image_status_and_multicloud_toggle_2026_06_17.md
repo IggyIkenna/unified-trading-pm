@@ -126,10 +126,20 @@ the cleaner isolation if we expect the AWS deployment to grow beyond build-statu
 
 ## Follow-up todos
 
-- [ ] [INFRA] P2. Grant `roles/cloudbuild.builds.viewer` + `roles/artifactregistry.reader` to
-  `unified-trading-sa@central-element-323112` (Owner/IAM-admin — Ikenna). Verify the deployed `/api/repo-ci/overview`
-  returns non-null `last_build_status` and the dashboard Image column populates. **Target repo:** infra/GCP IAM (no code).
-- [ ] [DESIGN] P2. Decide Option A vs Option B for per-cloud build status in the deployed dashboard (this doc). Owner: Ikenna.
-- [ ] [BUG] P3. Deployed GCP/AWS toggle is a no-op (`CloudProviderContext.getApiBaseUrl` returns relative `/api` for all
-  non-localhost hosts) — either wire the chosen option's provider routing or hide/disable the toggle in the bundled
-  build so it doesn't imply AWS status is shown. **Target repo:** deployment-ui (needs `pw:L2 ✓` + regression spec per UI gate).
+- [x] ✅ [INFRA] P2. Grant `roles/cloudbuild.builds.viewer` + `roles/artifactregistry.reader` to
+  `unified-trading-sa@central-element-323112`. **DONE 2026-06-17** by `ikenna@odum-research.com` (Owner) — both bindings
+  applied + verified present on the SA via `get-iam-policy`. Column repopulates within ~5 min (IAM propagation + the
+  in-process 300s `_builds_cache` TTL). **Target:** infra/GCP IAM (no code). Reversible via `remove-iam-policy-binding`.
+- [x] ✅ [DESIGN] P2. **Option A chosen (operator Ikenna, 2026-06-17): GCP-only build status for now; do NOT deploy the
+  AWS backend yet.** The GCP IAM grant above already delivers the GCP view ("just see GCP builds for now"). **Option B
+  was considered but is NOT a drop-in**: it needs more than a permission grant — a brand-new AWS-CodeBuild read path in
+  `deployment-api` (`_latest_builds_by_repo` only does GCP Cloud Build today), a `?provider=` param threaded through the
+  endpoints + UI, and a boto3 GCP→AWS Workload-Identity-Federation client on the Cloud Run service. The cross-cloud
+  *permission* half is feasible with operator creds (AWS `admin_od` + GCP ADC), but the *code* half is real feature work
+  → deferred. **Option B (one backend + GCP→AWS WIF, keyless) remains the documented target** if/when AWS build-status
+  is actually wanted (revisit if the AWS deployment grows beyond build-status). Owner: Ikenna.
+- [ ] [BUG] P3. **Hide/disable the GCP/AWS toggle in the deployed bundle** (now the chosen direction under Option A — no
+  AWS backend deployed, so the toggle must not imply AWS status is shown). `CloudProviderContext.getApiBaseUrl` returns
+  relative `/api` for all non-localhost hosts → both buttons hit the same GCP backend. Hide the toggle when
+  `import.meta.env`/runtime host is the single-image deployed bundle (keep it only for the local two-backend dev mode).
+  **Target repo:** deployment-ui (needs `pw:L2 ✓` + regression spec per UI gate). Provenance: this doc, Option-A decision.
