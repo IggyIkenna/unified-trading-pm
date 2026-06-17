@@ -80,7 +80,7 @@
     "system-integration-tests": "0.7.0",
     "unified-api-contracts": "0.15.0",
     "unified-trading-library": "0.12.0",
-    "unified-trading-pm": "1.2.151",
+    "unified-trading-pm": "1.2.152",
     "market-data-processing-service": "0.7.0",
     "e2e-testing": "0.7.0",
     "agent-orchestrator": "0.11.0",
