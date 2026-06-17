@@ -1281,7 +1281,11 @@ if command -v bandit &>/dev/null; then
     if qg_cache_hit bandit_content_hash "$_bandit_key"; then
         log_success "bandit: cached (source content unchanged)"
     else
-        _bandit_out=$(run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
+        # -c pyproject.toml: honor [tool.bandit] (single config home). Audited safe 2026-06-17 —
+        # only mtds + strategy carry non-empty skips and both are MOOT within SOURCE_DIR (0 findings
+        # for the skipped codes); bandit tolerates -c even with no [tool.bandit] section. The cache key
+        # already hashes pyproject.toml, so a skips change busts it. SSOT: qg_config_ssot_matrix_2026_06_09.md.
+        _bandit_out=$(run_timeout 30 bandit -c pyproject.toml -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
             && qg_cache_store bandit_content_hash "$_bandit_key" \
             || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
     fi

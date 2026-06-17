@@ -955,7 +955,9 @@ if $PYTHON_CMD -c "import bandit" 2>/dev/null; then
     if qg_cache_hit bandit_content_hash "$_bandit_key"; then
         log_success "bandit: cached (source content unchanged)"
     else
-        _bandit_out=$(run_timeout 30 $PYTHON_CMD -m bandit -r "$SOURCE_DIR/" -ll 2>&1) \
+        # -c pyproject.toml: honor [tool.bandit] (single config home). Audited safe 2026-06-17
+        # (UTL/UAC carry no non-empty skips); bandit tolerates -c with no [tool.bandit] section.
+        _bandit_out=$(run_timeout 30 $PYTHON_CMD -m bandit -c pyproject.toml -r "$SOURCE_DIR/" -ll 2>&1) \
             && qg_cache_store bandit_content_hash "$_bandit_key" \
             || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
     fi
