@@ -44,7 +44,7 @@ gate just can't tell, because squash-merges destroy per-commit promotion trackin
 
 ## Recommended decision (needs focused, fresh-context work — critical fleet gate)
 
-- [ ] [CICD] P1. Make the promote-bot provenance range track the **last-promoted LDR point**, not raw `staging..LDR`.
+- [x] ✅ [CICD] P1. Make the promote-bot provenance range track the **last-promoted LDR point**, not raw `staging..LDR`.
       Options (pick one, verify it still catches a genuine new direct-push): 1. **Marker-based (preferred):** when
       `ldr-to-staging-promote` squashes LDR@`<sha>`→staging, record `<sha>` (a moved lightweight tag
       `last-promoted-to-staging` on LDR, or a field in the SIT/ci-status state). The provenance check then runs
@@ -56,8 +56,25 @@ gate just can't tell, because squash-merges destroy per-commit promotion trackin
       of the repo's `staging`(+`main`) to LDR collapses the divergence so the trailer-less commits become part of the
       staging base (no longer in `staging..LDR`). This is the canonical LDR-is-SSOT fix but is per-repo +
       operator-gated, not a durable systemic fix on its own.
-- [ ] [CICD] P3. INTERIM (no code): the recurring drains are unblocked by `gh pr merge <n> --admin --squash` once the
-      drain's `quality-gates-v2` is green (the content is valid). This is whack-a-mole — only the P1 above stops it.
+  - **RESOLVED 2026-06-17 (option 1, marker-based — no new state).** New `scripts/cicd/promote_provenance_range.py`
+    resolves the marker = `headRefOid` of the **last MERGED LDR→target drain PR** (`gh pr list --base <staging|main>
+    --head live-defi-rollout --state merged --limit 1 --json headRefOid`). For a merged PR the head SHA is frozen at
+    merge time = exactly the last-promoted LDR SHA, so this needs **no moved tag / no state file / no write race** —
+    strictly simpler than option 1's tag variant, same semantics. The bots emit `<marker>..origin/live-defi-rollout`.
+    **Fail-safe**: no merged drain yet / empty / unreachable-marker → raw `<base>..LDR` fallback (WIDEN, never narrow);
+    fail-OPEN on a checker error preserved. Both bots wired (`ldr-to-staging-promote.yml` temp-clone path with
+    `--fetch-remote`; `ldr-to-main-promote.yml` PM-checkout path). HARD RULE + carve-out set unchanged — only the range
+    computation. **Verified end-to-end**: UTL `14b11e2` (≤ marker `b859a153`) NO LONGER flagged under the new range, the
+    OLD raw `staging..LDR` still flagged it; a fresh trailer-less `.py` after the marker IS still flagged. **Verified in
+    prod**: dispatched `ldr-to-staging-promote` (only_repo=unified-trading-library) after closing the bug-blocked #373 →
+    `mode=marker marker=b859a153 reachable=True` → `✅ provenance: promote-range is quickmerge-clean` → recreated PR #374
+    with auto-merge ARMED + 0 provenance-block comments (was the perpetually-blocked repo across #367–#373). Unit tests:
+    `tests/unit/test_promote_provenance_range.py` + `tests/unit/test_check_strict_quickmerge.py`. Shipped:
+    unified-trading-pm@b54da7855 (LDR) + PR #389 → main. SSOT: `codex/08-workflows/ci-cd-flow.md` § D1 (already states
+    the contract).
+- [x] ✅ [CICD] P3. ~~INTERIM (no code): the recurring drains are unblocked by `gh pr merge <n> --admin --squash`~~ —
+      **MOOT, superseded by P1 (2026-06-17)**: the squash-blind perpetual block is fixed at the source, so no more
+      whack-a-mole admin merges are needed. (#373 was closed; the fixed bot recreated #374 with auto-merge armed.)
 
 ## Composes with
 
