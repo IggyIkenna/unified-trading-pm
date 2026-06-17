@@ -151,28 +151,30 @@ no slot 0, and respawning solves nothing; the real fix is account capacity. 19 a
       "Stop and wait for limit to reset" modal (select 1 + Enter) or restart the main agent so `main_agent_keeper`
       re-spawns it on the healthy account. Repo: operator (central VM tmux).
 
-**Durable fixes (agent-orchestrator)**:
+**Durable fixes (agent-orchestrator)** — all SHIPPED `agent-orchestrator@38fde6cc` (LDR), QG-green (680 passed):
 
-- [ ] [ORCHESTRATOR] P0. **Stop the misleading "Auto-respawn FAILED slot 0" alert.** In
-      `escalation.retry_queued_escalations`, replace the `notify_agent_stuck_escalation(0, …)` abandonment call with a
-      distinct notifier (e.g. `notify_escalation_abandoned(escalation_id, repo, wall_type, age_hours, reason)`) whose
-      text names the wall + the real cause ("no account headroom for {age}h") and the real action ("free account
-      capacity / fix harsh-primary auth"), with NO fake slot id and NO "manually respawn" instruction. Repo:
-      agent-orchestrator (`server/escalation.py` + `server/notifications/slack.py` + `telegram.py`).
-- [ ] [ORCHESTRATOR] P1. **Page the actual condition — sustained account-pool exhaustion.** Wire
-      `state_store.all_accounts_unusable()` / a "no headroom account for ≥N minutes" check (AutoSpawnLoop tick) to a
-      single deduped CRITICAL page ("ACCOUNT POOL EXHAUSTED — M queued escalations cannot dispatch; free capacity / fix
-      auth"), replacing the per-escalation abandonment spam as the primary signal. Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P1. **Don't silently abandon an UNRESOLVED wall under pure headroom-starvation.** Before the 24h
-      TTL abandon in `retry_queued_escalations`, re-probe with the existing `_poll_wall_resolution(repo, pr_number,
-      wall_type)`: if the wall is actually CLEARED → abandon (correct — "resolved another way"); if still RED AND the
-      block was headroom (not a stale wall) → keep queued + page instead of dropping a live CI wall. The 19 abandoned
-      rows here were real `main_ci_red`/`merge_conflict`/`ldr_qg_failure` walls dropped while nobody had fixed them.
-      Repo: agent-orchestrator (`server/escalation.py`).
-- [ ] [ORCHESTRATOR] P1. **Detect + auto-handle the main agent's rate-limit modal.** `main_agent_keeper` should
-      recognise the "Stop and wait for limit to reset / Upgrade your plan" tmux prompt: auto-select "1" so the agent is
-      not wedged on a modal, and page that the main agent is rate-limit-frozen (so it is not invisibly idle for hours).
-      Composes with the headroom-rotation it already does. Repo: agent-orchestrator (`server/main_agent_keeper.py`).
+- [x] ✅ [ORCHESTRATOR] P0. **Misleading "Auto-respawn FAILED slot 0" alert killed.** Added
+      `notify_escalation_abandoned(escalation_id, repo, wall_type, age_hours, reason)` (slack + telegram) naming the
+      wall + real cause + "free account capacity" action; `retry_queued_escalations` calls it instead of
+      `notify_agent_stuck_escalation(0, …)`. No fake slot id, no "manually respawn". — agent-orchestrator@38fde6cc
+- [x] ✅ [ORCHESTRATOR] P0/design (operator 2026-06-17). **Raise spawn-headroom ceilings 5h 50→95 / weekly 80→95** via
+      shared env-tunable helpers `autospawn.five_hour_pct_ceiling()`/`weekly_pct_ceiling()` wired into the autospawn
+      tick, escalation dispatch, `main_agent_keeper`, and `plan_health` (the latter three previously hardcoded the
+      DEFAULT consts, ignoring the env override). 80% needlessly excluded accounts with ~20% real budget left (sub-c at
+      87% — the incident). — agent-orchestrator@38fde6cc
+- [x] ✅ [ORCHESTRATOR] P1. **Sustained account-pool exhaustion paged** (deduped, re-armed on recovery):
+      `_maybe_alert_pool_exhaustion` fires `notify_account_pool_exhausted(queued, account_summary)` once per episode
+      when escalations wait with no headroom account — the real signal, not per-escalation spam. — agent-orchestrator@38fde6cc
+- [x] ✅ [ORCHESTRATOR] P1. **No silent drop of an UNRESOLVED wall.** `retry_queued_escalations` re-probes
+      `_poll_wall_resolution` at the 24h soft TTL: cleared → resolved; still-RED → HELD queued (dispatchable when
+      capacity returns); only past a 48h HARD ceiling is it abandoned (honest alert). — agent-orchestrator@38fde6cc
+- [x] ✅ [ORCHESTRATOR] P1. **Main-agent rate-limit modal detected + auto-handled.** `main_agent_keeper._handle_rate_limit_modal`
+      captures the live main-agent pane (session-alive ≠ healthy), matches the usage-cap modal, KILLS the wedged
+      session (→ next tick respawns on a headroom account), and pages once. — agent-orchestrator@38fde6cc
+
+> **Deploy note**: shipped to AO `live-defi-rollout`; takes effect on the central VM after `git pull --ff-only` +
+> `systemctl restart orchestrator.service`. With the 95% ceiling, `sub-c` (87% weekly) becomes immediately usable →
+> escalations drain + the keeper respawns the main agent.
 
 ## Related (NOT owned here — likely the live VM-state issue under separate investigation)
 
