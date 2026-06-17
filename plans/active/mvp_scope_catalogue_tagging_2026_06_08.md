@@ -112,13 +112,32 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       the SAME cell iteration — reuses the existing union machinery, no rebuild). Helpers extracted to
       `routes/data_status/_coverage_scope.py` (host module crossed the 900-line cap). Parity test
       `tests/unit/test_route_venue_year_coverage_scope.py` asserts denominator monotonicity `mvp ≤ could_exist ≤ all`.
-- [ ] [UI] P2. **deployment-ui MVP toggle** in data-status (default ON pre-launch) — `[UI]` + `pw:L2 ✓` + regression
-      spec per the playwright gate.
+- [x] ✅ [UI] P2. **deployment-ui MVP toggle** in data-status (default ON pre-launch) — `[UI]` + `pw:L2 ✓` + regression
+      spec per the playwright gate. **DONE (2026-06-17 /autonomous) — deployment-ui@2279e57 | pw:L2 ✓ (217/217 smoke
+      green, Node 22) | regression: tests/smoke/venue_year_coverage.spec.ts**: `VenueCoverageTable` gains a
+      `mvp|could_exist|all` scope pill toggle (default **MVP**, accent-green active) wired to
+      `getVenueYearCoverage(ags,     scope)` → `?scope=` on the venue-year-coverage endpoint (re-fetches on toggle via
+      the `load()` dep). Regression spec adds: scope pills render + MVP active by default; clicking a pill moves the
+      active state (drives the re-fetch). tsc + eslint + full `tests/smoke/` chromium = green.
 - [ ] [CODE] P2. **Features/strategy/model MVP sections** — extend `mvp_scope` + apply the same predicate to the feature
-      registry / archetype registry / model registry; scope their data-status the same way.
+      registry / archetype registry / model registry; scope their data-status the same way. **PHASE-2+ (2026-06-17
+      /autonomous assessment) — NOT shipped, prerequisite genuinely absent (not a deadline defer):** (1) the
+      `mvp_scope.py` `features`/`strategy`/`models` entries are `FeaturesModelsMvpStub` placeholders **by design**
+      ("Phase 2+; consumers MUST NOT read these stubs"); (2) **no consumer exists** — there is no
+      features/strategy/model data-status coverage endpoint to filter (the `scope=mvp` filter is instruments-only), so
+      populating typed rules now = dead config the Phase-2 consumer must reconcile; (3) **features membership is an
+      operator policy call** (which feature_groups go live) and (4) **models has no stable `model_id` MVP taxonomy →
+      BLOCKED-OPERATOR-DECISION**. Split for the Phase-2 owner: P2a `FeaturesMvpRule`+`StrategiesMvpRule`
+      (`features_service` registry / 2 archetypes) land WITH their data-status consumer; P2b models membership needs
+      operator sign-off on the identity axes.
 - [ ] [DATA] P2. **Verify**: with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP
       catalogued instruments as missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not
-      hidden).
+      hidden). **BLOCKED on the held migration (2026-06-17 /autonomous assessment):** unit-level parity is already
+      covered (`deployment-api@3390c98` `test_route_venue_year_coverage_scope.py` asserts denominator monotonicity
+      `mvp ≤ could_exist ≤ all` + the `is_mvp` filter). The full real-DATA verify needs a fresh consolidated `_index` —
+      currently stale because the manifest consolidators are intentionally PAUSED behind the held
+      manifest-canonicalisation `--apply` (R5 in `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`). Runs
+      once the migration `--apply` resumes the consolidators (operator-gated); not a code task.
 
 ## Config versioning (config_version) — per-config, metadata-not-path-axis
 
@@ -149,11 +168,11 @@ which leagues, which market-groups — has no independent version.
       AND the sports-leagues + prediction-markets configs (per-config, NOT a single global int). Metadata only — no GCS
       partition key. **MVP_SCOPE — uac@47ed81a**: `MVP_SCOPE_CONFIG_VERSION` + `MVP_SCOPE_CONFIG_HASH` (deterministic,
       PYTHONHASHSEED-independent) + `ConfigDescriptor` + `mvp_scope_config_descriptor()`. **Leagues + prediction —
-      uac@176f227**: extracted the generic primitives into
-      `canonical/crosscutting/config_versioning.py` (`ConfigDescriptor` + `canonical_config_repr` (handles
-      dataclasses/Pydantic/sets/dicts, sorted) + `compute_config_content_hash`; MVP_SCOPE refactored onto it, hash
-      unchanged). `SPORTS_LEAGUES_CONFIG_VERSION/_HASH` + `sports_leagues_config_descriptor()` (hashes `LEAGUE_REGISTRY`)
-      in `league_data.py`; `PREDICTION_MARKETS_CONFIG_VERSION/_HASH` + `prediction_markets_config_descriptor()` (hashes
+      uac@176f227**: extracted the generic primitives into `canonical/crosscutting/config_versioning.py`
+      (`ConfigDescriptor` + `canonical_config_repr` (handles dataclasses/Pydantic/sets/dicts, sorted) +
+      `compute_config_content_hash`; MVP_SCOPE refactored onto it, hash unchanged).
+      `SPORTS_LEAGUES_CONFIG_VERSION/_HASH` + `sports_leagues_config_descriptor()` (hashes `LEAGUE_REGISTRY`) in
+      `league_data.py`; `PREDICTION_MARKETS_CONFIG_VERSION/_HASH` + `prediction_markets_config_descriptor()` (hashes
       `PredictionMarketCategory` + `_DEFAULT_RULES`) in `prediction_mapping.py`. All exported at the package root; the 3
       hashes are independently distinct.
 - [x] ✅ [CODE] P1. **Surface `config_version` + `config_content_hash` in the deployment-api data-status response** —

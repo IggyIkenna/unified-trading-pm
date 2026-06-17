@@ -171,14 +171,23 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       matrix `uac@97c26dbe` (`valid_data_types_for_instrument_type`), preserving prediction grain-binding; cefi
       OPTION/COMBO leaves yield zero per-leaf rows and impossible combos are excluded. Per-AG slices (sports
       league-grain, prediction per-cqg) verify their matrix rows + re-run dry-runs before apply-write.
-- [ ] [CODE] P2. **NICE-TO-HAVE (slot-7, 2026-06-07) — DeFi G1-ENUM validity is instrument_type-grain, not
+- [x] ✅ [CODE] P2. **NICE-TO-HAVE (slot-7, 2026-06-07) — DeFi G1-ENUM validity is instrument_type-grain, not
       venue/protocol-grain.** The defi matrix is the UNION across `PROTOCOL_CAPABILITIES` per instrument_type, so a
       hybrid-protocol data_type leaks to every instrument of that type — e.g. GMX (`pool` + `perp_funding`) makes
       `pool`→`perp_funding` "valid" for ALL pools incl. Uniswap → some residual false `expected_unattempted` for non-GMX
       pools. Far smaller than the pre-G1-ENUM all-data_types fan-out, but a refinement: key DeFi validity per
       `(venue/protocol, instrument_type)` (the enumerator already has `instr.venue`). Provenance: G1-ENUM impl
       2026-06-07. Repo: unified-api-contracts + instruments-service. assigned_vm: vm-cross-cutting. parent_epic:
-      instruments_master.
+      instruments_master. **DONE (2026-06-17 /autonomous) — unified-api-contracts@2dd65cb +
+      instruments-service@c2a1fc9**: new UAC
+      `valid_data_types_for_venue_instrument_type(asset_group, venue, instrument_type)` narrows DeFi validity to the
+      SPECIFIC protocol named by the venue (`UNISWAP_V3-ETHEREUM` → only uniswap_v3's data_types, no `perp_funding`),
+      delegating to the instrument_type-grain union for every NON-DeFi asset_group, a missing venue, OR an unmapped/
+      not-declaring protocol (so it ONLY narrows in the clearly-safe case — never under-reports a real cell). IS
+      `enumerate_expected_universe._row_data_types` swapped to the venue-aware helper (one call site;
+      cefi/tradfi/sports/ prediction behaviour identical). 6 UAC tests (uniswap pool excludes perp_funding / gmx pool
+      includes it / union vs venue-grain / unmapped→union / non-defi delegates / missing-venue→union); UAC+IS
+      quality-gates green.
 - [x] ✅ [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
       standalone v2 enumerator (`enumerate_expected_universe.py --catalog-path`) + the launcher
       (`launch-expected-universe-v2-vm.sh` L165-174) read **`{env}/catalog.parquet`** (the path this plan's roll-up
@@ -551,9 +560,9 @@ RULED OUT: BucketNamingError (image fixed), OOM (16Gi re-run failed identically 
 
 **Context.** Operator drill-down review surfaced two real defects in the Data Coverage card: (1) `dates_expected`
 counted calendar days from the global search horizon even for young asset groups whose data genesis is recent —
-penalising them for days that pre-date their existence ("dates_found/dates_expected = 70.23%" was depressed by
+penalising them for days that pre-date their existence ("dates*found/dates_expected = 70.23%" was depressed by
 impossible days); (2) the headline showed a single ambiguous `completion_pct` that conflated two distinct questions —
-_did we try everywhere we should_ (attempt) vs _did we capture what we tried_ (capture) — and the operator was right
+\_did we try everywhere we should* (attempt) vs _did we capture what we tried_ (capture) — and the operator was right
 that `empty_confirmed` (declared no-data) must not count against capture.
 
 **FIX #1 — genesis-clip the date denominator (SHIPPED to LDR; DEPLOYING to prod).**
