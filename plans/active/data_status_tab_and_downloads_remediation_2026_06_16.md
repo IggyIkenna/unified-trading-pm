@@ -70,13 +70,16 @@ source:
       `reference_genesis(sports,"")`/`(prediction,     "POLYMARKET")` + every real venue now resolve non-None /
       `is_reference_venue_day_in_scope == True` (negative control stays out_of_scope). PM PR #382 (v2-gated auto-merge).
       No `kalshi` IS rows live yet → KALSHI added when it lands.
-- [ ] [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) — **🔴
-      MIGRATION-COORDINATED, do NOT implement standalone**: this changes the IS manifest shard atom (writer stamps
-      `instrument_type=""` at `engine/orchestrator/writers.py:172`). Per single-walk discipline + shard-granularity
-      SSOT, a new manifest column/grain MUST ride the instruments v9 walk, not open a second whole-corpus walk. Bundle
-      it into `instruments_manifest_canonicalisation_2026_06_01.md` (a finding callout is added there). Unlocks
-      per-instrument_type scope (above) + per-type UI drilldown + the §J Deribit-options coverage signal. —
-      instruments-service (coordinate with the IS canonicalisation walk)
+- [x] ✅ [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) —
+      **instruments-service@b475ae8** (CODE; the destructive `--apply` rides the gated IS v9 walk, not run standalone).
+      Single-walk discipline RESPECTED: rode the EXISTING `scripts/migrate_instruments_store_v9.py` (added
+      `instrument_type` to `_V9_TEXT_COLUMNS` + backfill from the venue suffix `-SPOT`→spot / `-FUTURES`→perpetual,
+      mirroring UTL's recorded-column inference) — NO new whole-corpus walk. Going forward
+      `writers.py::_derive_instrument_type` stamps the REAL single instrument_type per venue×date shard (blank when
+      mixed/absent — never fabricated; the manifest row is venue-grain). Venues without a derivable suffix (e.g.
+      DERIBIT) stay "" by design (documented in code) → unlocks per-instrument_type scope + per-type UI drilldown +
+      §J Deribit-options signal once the gated v9 apply runs. Guards: `test_orchestrator_helpers.py` (3 writer tests) +
+      `test_migrate_instruments_store_v9.py` (backfill + existing-value-preserved). — instruments-service.
 - [x] ✅ [CODE] P1. **Venue filter — backend** — DONE deployment-api@3d9a0e032: added repeatable `venue: list[str]` to
       the `/manifest` route + `get_manifest_status` (threaded through
       `_get_manifest_status_sync`/`_dispatch_category_builds`/ `_build_manifest_category`), engaged it in the

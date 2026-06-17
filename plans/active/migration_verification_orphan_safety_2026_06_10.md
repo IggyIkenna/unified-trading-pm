@@ -277,6 +277,40 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## Progress Log
 
+- 2026-06-16 (autonomous Half-B tail — UAC/IS/deployment-api vertical, FINAL — all 6 items DONE) — the schema /
+  config_version / catalogue tail of A2 (the separate agent's mtds/mdps/PM-chore vertical ran concurrently and is
+  untouched here). **All six dispatched items shipped QG-green + flipped; nothing DEFERRED/BLOCKED.** Final tally
+  (every item's sha + verdict, rule-9):
+  1. **R2-schema (UAC P0)** — VERIFIED already shipped **uac@715e2ed** (all 11 polymarket cols via `source_aliases` +
+     defi rewards/risk_params/utilization + tradfi/trades; `test_schema_spec_completeness.py` GREEN → CF-18 0-RED at the
+     contract level). Flipped.
+  2. **config_version leagues+prediction (UAC P1)** — **uac@176f227**: shared `config_versioning.py` (ConfigDescriptor +
+     deterministic `canonical_config_repr` + `compute_config_content_hash`), MVP_SCOPE refactored onto it,
+     `sports_leagues_config_descriptor()` (hashes `LEAGUE_REGISTRY`) + `prediction_markets_config_descriptor()` (hashes
+     `PredictionMarketCategory`+`_DEFAULT_RULES`), root-exported, 12 tests, UAC QG green 217s.
+  3. **catalogue-reader E5 repoint (UTL P1)** — **utl@94775d05**: repointed to canonical `{env}/catalog.parquet`
+     lifecycle roll-up (old `all.parquet` confirmed GONE from prod GCS; new object verified present — cefi 220,222 / defi
+     6,853 rows). Alias-aware → 48 reader tests stay green, UTL QG 115s. CatalogueBuilder retained (live IS builder). P2
+     CeFi symbol-format follow-up captured (todo above).
+  4. **deployment-api scope + config_version triples (P1)** — **deployment-api@3390c98**: `scope=mvp|could_exist|all`
+     param + `config_versions` triples on venue-year-coverage, helpers in new `_coverage_scope.py`, parity test
+     (monotonicity + descriptor match). QG green.
+  5. **deployment-api stale-read + CeFi UNION FLAG-1 (P1)** — **deployment-api@3390c98** (same ship): moved to
+     stale-tolerant `read_manifest_index` (empty-live→`_index` fallback) + cell-grain source-UNION + `source_breakdown`.
+  6. **IS R5-fix-3 + MVP catalogue view + instrument_type v9 col (P1)** — **instruments-service@b475ae8**: R5-fix-3 was
+     NOT already correct (`_sports_ref_source("footystats_odds")` returned `odds_api` → `MissingSourceError`; fixed to
+     `footystats` via a scoped override + corrected the 2 wrong tests); `mvp` column on `catalog.parquet` via UAC
+     `is_mvp`; `instrument_type` populated v9 column riding the EXISTING v9 migrator (single-walk respected; writer
+     stamps real type, blank-when-mixed, never fabricated). QG green, 164 tests.
+  **Forced-tradeoff decisions (rule 1):** (a) CatalogueBuilder NOT deleted — it is live-wired in the IS orchestrator and
+  is a different artifact from the lifecycle roll-up (documented, not a leftover). (b) The CeFi catalogue
+  symbol-format mismatch (ccxt id vs bare manifest symbol) is genuinely separate normalisation work → captured as a P2
+  follow-up todo, not silently dropped (the reader's best-effort None→SOURCE_RETURNED_ZERO keeps it safe meanwhile).
+  (c) `instrument_type` is left "" for venues without a derivable suffix (honest absence, not fabricated). **No genuine
+  impossibilities.** Concurrent-safety: protected the peer agent's uncommitted PM WIP throughout (committed only my own
+  files; unstaged foreign deletions before each flip commit). All 6 codeshas verified ancestor-of `origin/LDR`; Tier-C
+  drain (≤30min) promotes each LDR→staging (v2-gated). Parallelised items 4-6 to two sub-agents to protect context.
+
 - 2026-06-16 (autonomous Half-B tail — UAC vertical, ticks 1-2) — driving the UAC + IS + deployment-api schema/
   config_version/catalogue tail of A2 (separate agent owns mtds/mdps/PM-chores). **Item 1 (R2-schema) VERIFIED done +
   flipped** — it was already shipped at **uac@715e2ed** (CF-18 citadel column-carry: all 11 polymarket cols via

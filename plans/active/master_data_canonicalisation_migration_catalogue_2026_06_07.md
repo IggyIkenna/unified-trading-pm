@@ -550,9 +550,12 @@ current-code fetchability; the image-rebuild ride happens when the LDR→staging
       `rec["instrument_id"] = f"{fx_pair.base}-{fx_pair.quote}"` in `umi_tick_provider._fetch_yahoo_fx` (mirrors the VIX
       path) + 75-line regression test. (Yahoo FX path lives in `umi_tick_provider.py`, not a separate adapter.)
       QG-green.
-- [ ] [BUG] P1. **R5-fix-3 — footystats ODDS manifest source label**: `footystats_odds_fetch` stamps `source='odds_api'`
-      but UAC `SOURCE_PRIORITY[(sports, ODDS)]` allows only `footystats` — fix the source param (or, if odds_api is
-      genuinely the upstream, extend SOURCE_PRIORITY deliberately). Repo: instruments-service (+UAC if priority change).
+- [x] ✅ [BUG] P1. **R5-fix-3 — footystats ODDS manifest source label** — **instruments-service@b475ae8** (/autonomous).
+      NOT already correct: `_sports_ref_source("footystats_odds")` returned `odds_api` (stripped `batch_` off the
+      pipeline_mode path-key `batch_odds_api`) → `record_captured(data_type=ODDS, source='odds_api')` failed
+      `MissingSourceError` (UAC `SOURCE_PRIORITY[(sports, ODDS)]==['footystats']`). Fix = scoped
+      `_SPORTS_REF_SOURCE_OVERRIDE` (path-key ≠ source case) → returns `footystats`; the two existing tests codifying the
+      wrong `odds_api` corrected (they ARE the regression guard). Evidence: `tests/unit/test_sports_reference_v9_path.py`.
 - [x] ✅ [BUG] P1. **R5-fix-4 — kalshi instruments 400** — DONE is@4562dad (code). Root-caused: Kalshi `status` is a
       LIFECYCLE filter whose valid values are `unopened`/`open`/`closed`/`settled` — `status=active` is rejected 400
       (the per-MARKET `status` field IS `"active"` for tradeable markets, but the REQUEST filter is `status=open`).

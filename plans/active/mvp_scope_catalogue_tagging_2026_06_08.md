@@ -101,8 +101,11 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       `is_mvp(asset_group, venue, instrument_type, data_type, *, base_ccy, league, market_group, source)` pure
       rule-only; exported `from unified_api_contracts import is_mvp, MVP_SCOPE`; 56 tests (non-MVP venue excluded, all
       expiries of an MVP future via grain, absent/impossible→False, config-edit-changes-membership). QG exit 0.
-- [ ] [CODE] P1. **IS MVP-tagged catalogue view** — apply `is_mvp` over the rolled-up catalogue; serve `mvp: bool` (or a
-      filtered endpoint). On-the-fly; optional cached `mvp_view` refreshed with the catalogue scheduler.
+- [x] ✅ [CODE] P1. **IS MVP-tagged catalogue view** — **instruments-service@b475ae8**: added `mvp` to
+      `CATALOG_COLUMNS` + an `_add_mvp_column(df, asset_group)` helper applying UAC `is_mvp(...)` per catalogue row
+      (venue / instrument_type / data_type / league + `underlying`→`base_ccy`), wired into `run_rollup` for all asset
+      groups before promote (so `catalog.parquet` serves `mvp: bool`). Guard:
+      `tests/unit/scripts/test_build_instrument_catalogue.py` (MVP cell→True, non-MVP→False, empty-frame bool schema).
 - [x] ✅ [CODE] P1. **deployment-api `scope=mvp|could_exist|all`** on the data-status coverage endpoint —
       **deployment-api@3390c98**: new `scope` query param on `GET /api/data-status/venue-year-coverage` (default
       `could_exist`; `all` = full universe; `mvp` = `is_mvp(asset_group, venue, instrument_type, data_type)` filter over
