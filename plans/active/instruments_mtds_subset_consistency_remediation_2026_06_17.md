@@ -17,6 +17,16 @@ source:
 
 # Instruments ↔ MTDS subset + consistency remediation
 
+> **🔴 PRE-`--apply` BLOCKER GATE (2026-06-17).** The dry-run projections that `--apply` will materialise STILL carry
+> these defects, and a reconcile `--apply` over uncovered path shapes flips real `captured`→`attempted_failed`
+> (CLAUDE.md hard rule). **Do NOT `--apply` until these are fixed + the projection regenerated + re-eyeballed:**
+> (1) **prefix_tpls coverage** — prove `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` covers ALL coexisting shapes
+> (`category=`/`asset_group=`/bare/`pipeline_mode=`, see N7) per AG BEFORE apply; (2) **N6** normalize defi
+> chain/venue/instrument_type pollution (apply migrates BY these values); (3) **N1** confirm dedup keeps the captured
+> row, not the empty shadow; (4) **N3** recover sports league_id into the manifest first (else null-league is permanent);
+> (5) **N5** verify the phantom-reconcile targets only true 0-row pre-launch vault cells. NON-blocking (fix after/parallel):
+> F1, F3, N2, N4, F6, N8. **Apply order: pred → tradfi (clean) → cefi → sports → defi; never all-AG at once.**
+
 Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md`.
 Phase-1 (manifest-level, full v9-projected-index walk) is DONE; Phase-2 (file-level cross-year manifest-vs-reality
 sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the audit doc + new todos here.
