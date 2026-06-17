@@ -82,15 +82,42 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       collateral posting mode, source routing — track each layer to done per the issue-doc food-chain inventory.
 
 ## Phase D — Spot-venue choice for staked-basis (UAC leg-spec/manifest + strategy-service catalog)  [WAVE 2]
-- [ ] [REGISTRY] P2. Make `spot_venue` a first-class selectable axis for staked-basis (Binance vs DEX, liquidity-driven)
+- [x] ✅ [REGISTRY] P2. (unified-api-contracts@d0f8f96 + strategy-service@878ab7b8 + unified-trading-system-ui@1ad7fed2 [UI] | pw:L2 ✓ (33 passed) | regression: tests/unit/wizard/parity-gates.test.ts + tests/unit/wizard/graph.test.ts) Make `spot_venue` a first-class selectable axis for staked-basis (Binance vs DEX, liquidity-driven)
       like APD's `venue_universe` — instead of hardcoded per-LST (ETH→Uniswap, SOL→Jupiter). Repos: unified-api-contracts
       (leg-spec/manifest) + strategy-service (catalog).
+      **Spot venues now eligible (the SWAP leg trades USDC→native, NOT the LST, so eligibility = "trades USDC↔ETH/SOL spot"):**
+      ETH-LST family → `uniswap_v3` (deepest USDC/WETH pool), `curve` (tricrypto USDC↔ETH), `binance` (BINANCE-SPOT ETH/USDC);
+      SOL-LST family → `jupiter` (Solana DEX aggregator), `orca` (SOL/USDC whirlpool), `raydium` (SOL/USDC AMM), `binance`
+      (BINANCE-SPOT SOL/USDC). Every id is in KNOWN_VENUE_TOKENS + a registered venue (CARRY_BASIS_PERP spot leg already lists
+      binance/uniswap_v3). NOT included: Binance does NOT trade the LSTs themselves — but it DOES trade the native USDC pair,
+      which is what the SWAP leg needs. **Catalog change**: slot-per-(LST × spot_venue) — `catalog_staked_basis.py` emits one
+      `TargetInstanceSpec` per (LST, spot_venue) (4 → 14 staked-basis slots); slot label carries the spot-venue token. **Manifest
+      spot-leg venue count**: 2 (`{jupiter, uniswap_v3}`) → 6 (`{binance, curve, jupiter, orca, raydium, uniswap_v3}`). Engine
+      preflight verified for BINANCE-SPOT (SWAP leg emits on the chosen venue, structure driven by the PERP venue's collateral
+      acceptance — independent of spot venue). Tests: strategy-service `test_carry_staked_basis_spot_venue_axis.py` (Binance/
+      Uniswap/Jupiter/Orca SWAP-leg + slot-per-venue catalog) + UAC `test_archetype_leg_spec.py` (spot leg >2 venues incl binance)
+      + UI `parity-gates`/`graph` (edge-count + md5 parity). UI manifest + verdict-matrix copies re-synced byte-identical to UAC.
 
 ## Codex SSOT updates
 - [ ] [DOC] P2. If collateral down-sizing ships, document the collateral-posting-mode + buffer-sizing contract in
       `codex/04-architecture/` (margin/collateral) + the wizard param-schema in the capability-wizard codex.
 
 ## Progress Log
+- **2026-06-17 — Phase D spot-venue selectable axis SHIPPED** (unified-api-contracts@d0f8f96 + strategy-service@878ab7b8
+  + unified-trading-system-ui@1ad7fed2). `spot_venue` is now a first-class selectable leg axis for staked-basis (Binance
+  vs DEX), not hardcoded per-LST. Key insight: the SWAP leg trades **USDC→native (ETH/SOL)**, NOT the LST — so eligibility
+  is "trades the native USDC pair", which legitimately includes Binance-spot (most-liquid for ETH/USDC + SOL/USDC) alongside
+  the family DEXes. UAC `_SPOT_VENUES_STAKED` 2→6 (`{binance, curve, jupiter, orca, raydium, uniswap_v3}`); manifest spot-leg
+  venue edges 2→6; catalog emits slot-per-(LST × spot_venue) (4→14 staked-basis slots, all parse + unique). Engine preflight
+  verified for BINANCE-SPOT. Tests: SS `test_carry_staked_basis_spot_venue_axis.py` + updated `test_target_universe.py` slot
+  counts; UAC `test_archetype_leg_spec.py`; UI `parity-gates`/`graph` (edge 2441→2449, cells 21600→21984). UI manifest +
+  verdict-matrix copies md5-identical to UAC (`2835f939…` / `a3c26ef8…`). pw:L2 33 passed.
+  - **Foreign WIP encountered + preserved (NOT mine)**: a dead-session source-provenance refactor (`data_source_provenance`
+    plan) left UAC (`_source_priority_data.py`/`availability_semantics.py`/`pipeline_mode.py`/`test_source_mode_capability.py`)
+    + UTL (`pipeline_mode_resolver.py`) dirty + RED (mid-refactor split of `test_bybit_and_aster…`). I did NOT touch/commit it
+    — stashed-by-name to clear the dep tree for the SS quickmerge, then `stash pop` restored it exactly as found. FOLLOW-UP for
+    the `data_source_provenance_all_asset_groups_2026_06_01.md` owner: that WIP is incomplete (broke 2 tests in collection-order)
+    — finish or revert it.
 - **2026-06-17 — Phase C param-schema foundation SHIPPED** (strategy-service@f2d4bef5 + unified-api-contracts@f0b66b2 +
   unified-trading-pm@853ae5ea4). Per-archetype flat PARAM SCHEMA now emitted into `capability-manifest.json` (35
   archetypes × 270 params), single-canonical from the strategy-service engine SSOT (`param_schema.py`), exporter
