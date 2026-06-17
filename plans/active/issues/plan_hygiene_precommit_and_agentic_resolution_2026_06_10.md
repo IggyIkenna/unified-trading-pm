@@ -131,6 +131,18 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       reconciler's READ-ONLY input gather (surfaced live 2026-06-16). The boot prompt currently discards it
       (`git checkout -- …/master_to_live_defi_2026_05_23.md` right after the sweep); the clean fix is a sweep mode that
       does full hard-fail detection WITHOUT the inventory regen. repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **`check_todo_format.sh` flags 9 todos the `fix_todo_format.sh` auto-fixer rewrites 0 of —
+      checker/fixer coverage gap** (surfaced by plan-reconciler manual-20260617; dry-run `fix_todo_format.sh` = "0
+      line(s) would be rewritten" while the checker reports 9 non-canonical). The 9 are two classes the fixer's RULES do
+      not cover: (a) a **bare unbracketed priority missing the trailing dot** — `- [ ] [TAG] P<n> body` (e.g.
+      `[CICD] P1 **SYSTEMIC…`, `[INFRA] P2 (residual)…`) where canonical wants `[TAG] P<n>. body`; the fixer only
+      handles _bracketed_ priorities (`[TAG][P<n>]`, `[P<n>][TAG]`, …). (b) an **invalid char in the tag** —
+      `[HUMAN+AGENT]` (the `+` is outside the `[A-Z][A-Z0-9_-]*` tag regex). Because the sanctioned fixer can rewrite
+      neither class, the soft WARN re-trips every sweep and the daily reconciler can never clear it autonomously (it is
+      correctly conservative — hand-editing todo text is not sanctioned mechanical hygiene). Fix: extend
+      `fix_todo_format.sh` with a rule that inserts the missing dot after a bare `P<n>` and one that normalises `+` (and
+      any non-`[A-Z0-9_-]` char) in the tag, then re-run over the 9 offenders. repo: unified-trading-pm
+      (`scripts/plan-hygiene/fix_todo_format.sh`). Parent: this plan / plan-hygiene tooling.
 
 ## Boot-prompt hardening + local proving harness (2026-06-16)
 
@@ -152,10 +164,10 @@ safe pre-proving corrections:
    fenced template; the Haiku/migration history never reached the agent's context — removed for clarity).
 
 **Local proving harness** (`agent-orchestrator/data/state/`, gitignored):
+
 - `run-test-backend.sh` — quiet faithful backend in tmux `orch-backend` on :8765 (MainAgentKeeper / AutoSpawn /
-  WorkerLivenessWatchdog OFF; usage-poll / plan-regen / ci-reconcile disabled; SnapshotLoop inert — no GCS/S3 bucket
-  env so it never touches the shared prod state bucket; fresh isolated `state.test.db`; `ORCHESTRATOR_INTERNAL_SECRET`
-  set).
+  WorkerLivenessWatchdog OFF; usage-poll / plan-regen / ci-reconcile disabled; SnapshotLoop inert — no GCS/S3 bucket env
+  so it never touches the shared prod state bucket; fresh isolated `state.test.db`; `ORCHESTRATOR_INTERNAL_SECRET` set).
 - `seed-slot.sh` — configures slot 1 (worktree=PM, branch=LDR, operator) so `_pick_free_slot` dispatches it.
 - Dispatch: `POST /api/plan-health/dispatch {"pm_repo_path":"…/unified-trading-pm","mode":"reconcile"}` with the
   `X-Orchestrator-Secret` → a fresh opus worker lands on tmux `orch-slot-1` (attach to watch).
