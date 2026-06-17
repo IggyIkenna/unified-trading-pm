@@ -1,7 +1,6 @@
 ---
 title: Solana DeFi pool-state + lending history is FAKE — one live REST snapshot back-dated across every date partition
 created: 2026-06-17
-author: ikennaigboaka
 status: RESOLVED
 priority: P0
 resolved: 2026-06-17
