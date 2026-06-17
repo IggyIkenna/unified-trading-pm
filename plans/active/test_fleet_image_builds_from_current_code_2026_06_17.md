@@ -118,7 +118,9 @@ Docker-image path.
 
 ### Phase 1 — Base libraries (local → GCP), base-first
 Order: `unified-cloud-interface` → `unified-api-contracts` → `unified-internal-contracts` → `unified-trading-library`.
-- [ ] [INFRA] P1. Local build each base lib (where a Dockerfile/image exists); fix breakage; log findings. **Repos:** the 4 above.
+- [x] [INFRA] P1. Local-build the cloned base libs — **DONE**: `unified-api-contracts` wheel PASS (`0.19.0`);
+  `unified-trading-library` base image PASS (`.deps/UAC` recipe, `sha256:7b614fec…`, import OK). `unified-cloud-interface`
+  + `unified-internal-contracts` NOT cloned → GCP-direct (below).
 - [ ] [INFRA] P1. GCP build each via `gcloud builds triggers run <repo>-live-defi-rollout --branch live-defi-rollout
   --region asia-northeast1`; watch to SUCCESS; confirm image/digest lands in AR. One at a time.
 - [ ] [INFRA] P1. After UTL rebuilds: record the NEW base digest → it becomes the `--build-arg BASE_IMAGE_DIGEST` for
@@ -164,6 +166,31 @@ _(append each build failure + fix here as we go — this IS the plan's progress 
   `a1b0cf83…` → 3.07GB image, exit 0. Confirms: (a) local amd64 build harness works; (b) `--no-deps` service layer needs
   no extra in-image AR auth; (c) building against an overridden (current) base digest works. Dockerfile has 2 cosmetic
   lint warnings (empty default `BASE_IMAGE` arg resolution; `FROM --platform` constant) — candidate P3 cleanup, not blocking.
+- 2026-06-17: **Phase-1 structure clarified** — among the "base libs", **only `unified-trading-library` produces a Docker
+  image**; `unified-api-contracts` / `unified-cloud-interface` / `unified-internal-contracts` are **wheel-only** (baked
+  INTO the UTL base image as published wheels from the AR `unified-libraries` index). Phase-1 local = validate lib WHEELS
+  + build the UTL IMAGE.
+- 2026-06-17: **CLONE-SET ≠ BUILDABLE-SET** — this slot has **25** cloned repos; `unified-cloud-interface` +
+  `unified-internal-contracts` are **NOT cloned** (exist on GitHub, default=main, not archived; cloud-interface is also
+  vendored as a module inside UTL at `unified_trading_library/cloud_interface/`). Trigger-only libs are **GCP-direct** (or
+  clone first) — can't be local-built here; the `unified-*-interface` build-trigger repos are likely the same.
+- 2026-06-17: **`unified-api-contracts` wheel PASS** — `uv build --wheel` → `unified_api_contracts-0.19.0-py3-none-any.whl`, free/local.
+- 2026-06-17: **UTL base-image local build — attempt #1 FAILED, root-caused, #2 PASS.**
+  - **#1 (`EXTRA_PYTHON_INDEX_URL` token path) FAILED** at `Dockerfile:93` `uv pip install -e .`: *"unified-api-contracts
+    not found in the package registry"* — **even though UAC 0.19.0 IS published in AR** (08:42). Root cause: **`uv` does
+    NOT read the `pip.conf` the Dockerfile writes** (lines 78-82), so the AR index was never applied → UAC unresolved.
+    **⚠ Phase-3 flag:** AWS-CodeBuild uses this same env→pip.conf hook for *external* private deps (CodeArtifact) — verify
+    it actually feeds uv there (UAC itself is fine — AWS also `.deps`-clones it).
+  - **Real model:** cloudbuild's `clone-uac-source` (and AWS buildspec) put UAC into **`.deps/unified-api-contracts`**;
+    Dockerfile line 88 installs from there, so the base build never needs the index for UAC. UTL's **only** internal dep is
+    UAC (other 59 deps are public PyPI → no AR auth needed for the base image).
+  - **#2 (`.deps/UAC` source, no index) PASS** — UTL base image built clean (`sha256:7b614fec…`, 2.77GB); `import
+    unified_trading_library, unified_api_contracts` OK inside the image. **Canonical local UTL-build recipe.** (Image
+    entrypoint intercepts args → use `docker run --entrypoint python …` for in-image checks.)
+- 2026-06-17: **FINDING (P3 fix) — `.deps/` is NOT in UTL `.gitignore`** but builds generate it → leaves the slot dirty
+  (FF-pull `[skip:dirty]` risk). Per "generated artifacts are gitignored, never committed" it should be added to
+  `unified-trading-library/.gitignore`. (Temp `.deps/` cleanup pending — sandbox blocks `rm -rf`/`git clean`; gitignoring
+  is the durable fix.)
 
 ## Composes with / SSOTs
 - IAM/unknown-image (separate): `plans/active/issues/deployment_dashboard_image_status_and_multicloud_toggle_2026_06_17.md`
