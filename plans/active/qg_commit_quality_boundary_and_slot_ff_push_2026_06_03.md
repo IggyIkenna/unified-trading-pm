@@ -490,7 +490,9 @@ design).
       deployment-service all require `Quality Gates (<repo>) / quality-gates-v2` + `check-staging-lock`). **No
       protection or workflow change needed.** Lesson: wait for ALL required checks (incl. the slow v2 GHA) to settle
       before diagnosing a stuck promotion PR.
-- [ ] [QG] P1. **deployment-api #17 — `-prd` test fix SHIPPED ✅ but promotion now BLOCKED by a SECOND (pre-existing,
+- [x] ✅ [QG] P1. **RESOLVED-STALE (verified 2026-06-17): deployment-api promotes clean — 0 deep `registry.<module>`
+      imports remain (was 9) + v2 GREEN on LDR/staging/main.** The codex blocker below was fixed since 06-05. Original:
+      **deployment-api #17 — `-prd` test fix SHIPPED ✅ but promotion then BLOCKED by a SECOND (pre-existing,
       unmasked) codex blocker (2026-06-05, slot-7).** **(a) `-prd` sub-fix DONE + CI-validated:** both deps now MERGED
       to staging (`deployment-service` #21 @12:40Z + `strategy-service` #67) → both STAGING_GREEN on canonical
       `origin/main` manifest → dep-tier gate satisfied (NO `--skip-dep-tier-gate`; gate initially mis-blocked on a
@@ -511,7 +513,9 @@ design).
       re-export decision)** = `chain_env` (get_chain_genesis_date/get_protocol_launch_date), `withdrawal_approval_rules`
       (get_approver_pool/get_required_approvers), `defi_venues` (ALL_DEFI_VENUES/LEGACY_DEFI_VENUE_ALIASES). Check fails
       on ANY remaining deep import (all-or-nothing). Tracked as its own finding below.
-- [ ] [QG] P1. **FINDING (2026-06-05, slot-7): deployment-api 9 deep UAC `registry.<module>` imports block #17/#20 v2
+- [x] ✅ [QG] P1. **RESOLVED-STALE (verified 2026-06-17): all 9 deep imports gone (`rg` count = 0 in deployment_api),
+      deployment-api codex back at/below ratchet, v2 green.** Fixed cross-repo since 06-05 (UAC facade re-exports / noqa).
+      Original FINDING (2026-06-05, slot-7): **deployment-api 9 deep UAC `registry.<module>` imports block #17/#20 v2
       (codex 24 > ratchet 23).** Surfaced after the `-prd` test fix above unmasked the codex step. Sites:
       `services/data_status_service.py` (registry.data_status_axis_matrix, registry.chain_env, registry.defi_venues),
       `services/data_status_hierarchical.py` (registry.data_status_axis_matrix), `routes/config.py`
