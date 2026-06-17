@@ -38,6 +38,34 @@ source:
 > independently; only the download path-fix is gated on the migration landing. Full landscape map:
 > `plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md` § Sequencing.
 
+> **🔴 APPLY GATE (operator 2026-06-17) — DRY-RUN EVERYTHING VIA MANIFEST-BETA BEFORE ANY `--apply`.** No v9 `--apply`
+> (path migration / object movement / `reconcile_phantom_manifest_rows_all.py --apply`) for ANY asset_group OR service
+> may run until the v9 **dry-run projected index has been built for EVERY service × asset_group** —
+> **instruments-service AND market-tick-data-service** (defi/cefi/tradfi/sports/prediction) AND the downstream services —
+> and each has been **eyeballed in the data-status tab under Manifest-beta mode** (the "m variable":
+> `DATA_STATUS_BETA_MANIFEST_BLOB=_index/audit/projected_index_{asset_group}.parquet`, Mode = Manifest). The dry-run is
+> non-destructive (`--projection requires --dry-run`): it routes every `add`/`record_empty`/`record_failed` into a
+> projected v9 `_index` parquet we read back, so we verify the movements make sense BEFORE committing them. **This gate
+> precedes TIER 2** — TIER 2's per-AG `--apply` is the LAST step, only after every projection is reviewed + signed off.
+>
+> **MTDS gap to close first**: `BETA_ELIGIBLE_SERVICES` in `deployment-api/deployment_api/services/manifest_source.py`
+> is currently `{instruments-service}` ONLY — so the beta data-status read cannot preview MTDS even though the MTDS
+> projection writers already exist (`market-tick-data-service/scripts/rebuild_{defi,cefi,tradfi,prediction}_manifest.py`
+> + `rebuild_sports_manifest_v9.py`, all routing through `_rebuild_projection.write_projection`). Add MTDS (+ downstream
+> services) to `BETA_ELIGIBLE_SERVICES` once their projections are generated, so the all-AG beta view covers them. This
+> is why the operator's MTDS data-status currently shows the LIVE pre-migration index (DeFi ~36%), while
+> instruments-service (the one beta-eligible service) shows its projected/canonical numbers (DeFi ~93%).
+>
+> **What the projection LOCATES (it does not FETCH — corrects the "migration won't lift numbers" framing)**: the rebuild
+> **walks GCS** (`rebuild_defi_manifest.py:494` `_day_prefixes` probes BOTH `category=`/`asset_group=` hive vocabularies
+> AND bare + `pipeline_mode=` path shapes) and emits one manifest row per discovered parquet, re-canonicalising
+> **orphaned** objects the current live `_index` never indexed (the "100% phantom rate" orphan class). So a projected
+> captured% ABOVE the live `_index` captured% is legitimate **orphan recovery** — locating data that already exists in
+> non-canonical places, NOT adding data. The residual gap after discovery still splits into honest `empty_confirmed`
+> (e.g. Sports 71% empty = no-fixture days), `attempted_failed` (real fetch failures to backfill), and
+> `expected_unattempted` (never tried) — only the first is benign. The dry-run preview is exactly how we tell these
+> apart per service×AG before any movement.
+
 > **🟢 UI test-env CORRECTION (2026-06-16) — it was NOT broken; a host Node-version mismatch.** My earlier "fleet-wide
 > breakage" call was WRONG: deployment-ui's vitest suite is GREEN in CI (`quality-gates-v2` success, Node 22). The local
 > `ERR_REQUIRE_ESM` was this host on **Node 20.18** — jsdom@29's ESM deps need **Node ≥22**. **FIXED**: pinned
@@ -185,6 +213,26 @@ the canon plan; track there, not as duplicate todos:
 - Real capture-freeze ~2026-05-21 fleet-wide (defi 05-07; tradfi degraded 16K→2/day then stopped 05-22 — anomalous,
   needs root-cause) → un-freeze IS daily capture + backfill via the IS CLI
   (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md:194-212,418`).
+
+### APPLY-GATE todos (the dry-run-everything gate above — these BLOCK every TIER 2 `--apply`)
+
+- [x] ✅ [INFRA] P0. **Build the v9 dry-run projected index for market-tick-data-service, per asset_group** —
+      ALREADY DONE: verified all 5 MTDS projections exist in the prd buckets' `_index/audit/`
+      (`projected_index_{defi,cefi,tradfi,sports,prediction}.parquet`; defi + prediction re-run 2026-06-17). DeFi
+      projection diffed vs live: 100% v9, recovers +92k captured shards (orphan_sweep = 315,711 rows) and surfaces 15×
+      more `attempted_failed` than the stale v8 live index. Non-destructive (`--projection requires --dry-run`). —
+      market-tick-data-service
+- [x] ✅ [CODE] P0. **Add `market-tick-data-service` to `BETA_ELIGIBLE_SERVICES`** — DONE deployment-api@`a5b678e`:
+      `manifest_source.BETA_ELIGIBLE_SERVICES = {instruments-service, market-tick-data-service}` (premise satisfied — all
+      5 MTDS AGs now projected). Reworked 5 test sites to use a still-non-projected service (features-delta-one) as the
+      non-eligible exemplar; the two-phase rollup worker writes MTDS's `.beta` rollup in phase 2 so the beta read finds
+      its blob (no 503). QG green (87s); landed on LDR (Tier-C drain → staging ≤30 min). Inert in prod (beta is
+      env-gated on `DATA_STATUS_BETA_MANIFEST_BLOB`). Downstream services (features/strategy) stay non-eligible until
+      their projections land. — deployment-api
+- [ ] [DATA] P0. **APPLY GATE sign-off**: eyeball every service × asset_group projected index in the data-status tab
+      under Manifest-beta mode (`DATA_STATUS_BETA_MANIFEST_BLOB` set); confirm the projected captured/attempted/empty/
+      failed split makes sense (orphan recovery looks right, no phantom over-count) BEFORE any TIER 2 `--apply` runs for
+      that AG. No `--apply` without this. — deployment-api / market-tick-data-service / instruments-service
 
 ## Phase D (TIER 1 cleanup) — TradFi canonical naming + Deribit spot fix (instruments-service / UAC)
 
