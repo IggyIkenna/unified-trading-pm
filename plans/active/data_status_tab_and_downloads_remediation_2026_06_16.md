@@ -103,6 +103,48 @@ source:
       per-venue/day reference bundle (no data_type axis) vs MTDS's 5-axis market-data shards — so the structurally
       different drilldown reads as intentional, not broken. — deployment-ui
 
+## Phase F (TIER 1 cleanup) — Operator live-board data-status display bugs (2026-06-17)
+
+> Operator 2026-06-17: three data-status display bugs on the live board. Diagnosed against the ACTUAL code + the live
+> deployment-api (`:8004`) response. Scope = deployment-api + deployment-ui ONLY.
+
+- [x] ✅ [UI] P1. **"Honest Coverage" vs "Data Coverage" headline % disagree wildly (CeFi 11.7% vs 98.5%)** — FIXED
+      deployment-ui@`7007529`. **Root cause:** `/api/data-status/honest-coverage` returns a GCS `coverage.json` emitted
+      VERBATIM by the instruments-service cron `measure_honest_coverage.py`, whose `coverage_pct` is **captured-only** —
+      `captured / (captured + attempted_failed + expected_unattempted)` (EXCLUDES `empty_confirmed` from the numerator).
+      For CeFi the 29.7M legitimately-empty cells dominate (no liquidations/book-snapshot that minute) → `coverage_pct`
+      collapses to **11.68%** while TURBO "Data Coverage" shows ~98.5% (`attempt_coverage_pct`, where empty_confirmed
+      counts as covered). The cron also does NOT emit `completion_pct_shards_weighted` / the split known/pending fields
+      the card expected, so the card fell back to the mislabeled `coverage_pct` as the bold headline. **Fix
+      (`HonestCoverageCard.tsx` + `client.ts`):** `deriveCoverage()` recomputes the headline = manifest-capture ratio
+      (of attempted) = `(captured+empty+known_empty)/(that+attempted_failed)` from the raw counts the cron reliably
+      emits — the SAME metric the "Data Coverage" widget shows, so the two headlines agree; secondary = captured-only
+      ratio; the collapsed `expected_unattempted` is handled. The cron formula itself (instruments-service, migration
+      agents) is left untouched. Regression: `tests/smoke/data_status_coverage_labels.spec.ts` (real cron payload shape;
+      asserts headline ≠ 11.7%) + `HonestCoverageCard.test.tsx`. — repo deployment-ui@`7007529` | pw:L2 ✓ (215/215
+      smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
+- [x] ✅ [UI] P1. **Bar colours unreadable in HonestCoverageCard** — FIXED deployment-ui@`7007529`. The 6 segments used
+      three near-indistinguishable greens (emerald-500 / teal-400 / sky-300) + two low-contrast greys. New `SEGMENT_COLORS`
+      palette walks distinct hues (emerald → cyan → blue → amber → red → slate, all 500-stop, no <40%-opacity fills);
+      legend swatches kept in lockstep + enlarged (w-2.5) with higher-contrast text. — repo deployment-ui@`7007529` |
+      pw:L2 ✓ (215/215 smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
+- [ ] [DATA] P1. **Every CEFI venue reads "out of scope" (niE) on the live board** — DIAGNOSED, root cause is
+      UAC/manifest data, NOT a deployment-api/deployment-ui code bug. **The prompt's `scope=mvp`-default hypothesis is
+      REFUTED:** `scope=mvp` (deployment-api@`3390c98`) touched ONLY `_coverage_scope.py` + the isolated
+      `venue-year-coverage` route (`_live_coverage.py`), which **defaults to `could_exist`** (never mvp) and is opt-in;
+      it does NOT touch `breakdowns_core.py` or the TURBO venue breakdown. The venue "out of scope" tag
+      (`DataStatusTab.tsx:4171` `dtEntries.every(dt.out_of_scope === true)`) comes from `breakdowns_core.py:641`
+      `out_of_scope = not scope_in and not dt_is_processed`, where `scope_in = is_expected(category, venue, data_type)`
+      reads UAC `EXPECTED_COVERAGE_BY_ASSET_GROUP["cefi"]` — which DOES list BINANCE-FUTURES (`trades`,
+      `book_snapshot_5`, `derivative_ticker`, `liquidations`, `futures_chain`) + every CeFi venue. `category` is the
+      lowercase asset_group (`"cefi"`, confirmed via `category.upper()=="CEFI"` at `venue_resolution.py:218`), so the
+      deployment-api path is correct. ⇒ all-CeFi-out-of-scope means the **manifest data_type/venue tokens flowing in do
+      not match the scope tokens** (a UAC/manifest mismatch, owned by the v9 manifest migration / migration agents — out
+      of this task's deployment-api+ui scope). **Recommended:** migration agents verify the live CeFi manifest
+      `(venue, data_type)` tokens against `EXPECTED_COVERAGE_BY_ASSET_GROUP["cefi"]` (token casing / `-FUTURES` suffix /
+      `derivative_ticker`-vs-`funding_rate` naming). Could not reproduce locally — the `:8004` instance returns empty
+      `venues` for CeFi (no manifest loaded). — instruments-service / unified-api-contracts (migration agents)
+
 ## Phase C (TIER 1 cleanup) — CeFi universe extension (instruments completeness + EigenLayer dust)
 
 - [x] ✅ [CONFIG] P1. **Extend `CEFI_BASE_ASSET_UNIVERSE`** (audit §G) — DONE unified-api-contracts@f4f7f8e (operator
