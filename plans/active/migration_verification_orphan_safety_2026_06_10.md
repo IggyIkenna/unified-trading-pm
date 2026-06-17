@@ -220,14 +220,15 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       `pipeline_mode` standardisation (GATE 0), instrument-catalogue services, and the data-status tab/downloads — then
       **finish anything non-operator-gated that remains** (operator believes it is "pretty much all shipped"; confirm).
       Source plans to sweep: `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`,
-      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`, `migration_verification_orphan_safety_2026_06_10.md`
-      (this plan), `data_status_tab_and_downloads_remediation_2026_06_16.md`, the per-AG `*_manifest_canonicalisation_*`
-      plans, and the instrument-catalogue lifecycle plan. **Operator-gated items stay parked** (V6 eyeball, G4 `--apply`,
-      decision 424; decision 338 cqg classifier is DONE — uac@d52217f+e0035fd+8e3108d). **Repo hygiene first**: several
-      agents are on OTHER machines, so clones may be stale/diverged — clean + `pull --rebase` / fetch FRESH remote state
-      per repo BEFORE auditing (incidents this session: UAC + PM version promotion-lag, PM regen churn, a staging
-      backmerge landing a foreign over-limit `databento_classifier.py`). Run as `/autonomous` to completion. Owner: this
-      slot (operator: "do it all here"). Provenance: operator message 2026-06-16.
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
+      `migration_verification_orphan_safety_2026_06_10.md` (this plan),
+      `data_status_tab_and_downloads_remediation_2026_06_16.md`, the per-AG `*_manifest_canonicalisation_*` plans, and
+      the instrument-catalogue lifecycle plan. **Operator-gated items stay parked** (V6 eyeball, G4 `--apply`, decision
+      424; decision 338 cqg classifier is DONE — uac@d52217f+e0035fd+8e3108d). **Repo hygiene first**: several agents
+      are on OTHER machines, so clones may be stale/diverged — clean + `pull --rebase` / fetch FRESH remote state per
+      repo BEFORE auditing (incidents this session: UAC + PM version promotion-lag, PM regen churn, a staging backmerge
+      landing a foreign over-limit `databento_classifier.py`). Run as `/autonomous` to completion. Owner: this slot
+      (operator: "do it all here"). Provenance: operator message 2026-06-16.
 
 ## B — MVP, config-versioning, execution-config compatibility (lower priority; reference existing plans)
 
@@ -256,13 +257,14 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       in the reader docstring). The E5 "gated on sports+pred roll-ups" note is moot for this reader (its only consumers
       are the cefi/defi `legacy_reason_classifier`; both have prod `catalog.parquet`).
 - [ ] [UTL] P2. **DEFERRED (follow-up to E5) — catalogue-reader symbol-format normalisation for CeFi**: the new
-      `catalog.parquet` keys CeFi rows on the ccxt-unified `instrument_id` (e.g. `BTC/USDT:USDT`) while the legacy-reason
-      classifier passes the manifest row's `instrument_id` (often the bare exchange symbol, e.g. `BTCUSDT`) — these do
-      not string-match, so the CeFi cross-ref currently returns None (best-effort → safe `SOURCE_RETURNED_ZERO`
-      fallback, no incorrect classification). DeFi matches cleanly (both sides use the canonical `VENUE:TYPE:SYMBOL`).
-      Fix = a venue-aware symbol normaliser (resolve the manifest symbol → the catalogue's ccxt id, or add a `raw_symbol`
-      column to the CeFi roll-up). Provenance: E5 repoint inspection of real prod `catalog.parquet`, 2026-06-16. Repo:
-      unified-trading-library (+ possibly instruments-service catalogue writer). Owner: this autonomous run surfaced it.
+      `catalog.parquet` keys CeFi rows on the ccxt-unified `instrument_id` (e.g. `BTC/USDT:USDT`) while the
+      legacy-reason classifier passes the manifest row's `instrument_id` (often the bare exchange symbol, e.g.
+      `BTCUSDT`) — these do not string-match, so the CeFi cross-ref currently returns None (best-effort → safe
+      `SOURCE_RETURNED_ZERO` fallback, no incorrect classification). DeFi matches cleanly (both sides use the canonical
+      `VENUE:TYPE:SYMBOL`). Fix = a venue-aware symbol normaliser (resolve the manifest symbol → the catalogue's ccxt
+      id, or add a `raw_symbol` column to the CeFi roll-up). Provenance: E5 repoint inspection of real prod
+      `catalog.parquet`, 2026-06-16. Repo: unified-trading-library (+ possibly instruments-service catalogue writer).
+      Owner: this autonomous run surfaced it.
 
 ## Success criteria
 
@@ -282,14 +284,15 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   `test_schema_spec_completeness.py` suite (155 tests incl. it) is GREEN, so the contract-level CF-18 is 0-RED. **Item 2
   (config_version for sports-leagues + prediction-markets) SHIPPED — uac@176f227** (Tier-C drain ≤30min → staging):
   extracted the generic `config_versioning.py` (ConfigDescriptor + sorted/deterministic `canonical_config_repr` +
-  `compute_config_content_hash`), refactored MVP_SCOPE onto it (hash unchanged), added per-config version+hash+descriptor
-  to `league_data.py` (hashes `LEAGUE_REGISTRY`) and `prediction_mapping.py` (hashes `PredictionMarketCategory` +
-  `_DEFAULT_RULES`), all root-exported, with `test_config_versioning.py` (12 tests; 3 hashes independently distinct).
-  Full UAC QG green 217s. UAC is back CLEAN (T0 dirty window closed). **Item 3 (UTL E5 catalogue-reader repoint)
-  SHIPPED — utl@94775d05** (see the E5 ✅ todo above): repointed to the canonical `{env}/catalog.parquet` lifecycle
-  roll-up (old `all.parquet` confirmed gone from prod GCS), alias-aware so legacy fixtures stay green; 48 reader tests +
-  full UTL QG green 115s; CatalogueBuilder retained (live IS-orchestrator builder); surfaced a P2 CeFi symbol-format
-  follow-up. Both T0 repos (UAC+UTL) now CLEAN. NEXT: deployment-api items 4-5 + IS item 6 (no T0 dirty-dep concern).
+  `compute_config_content_hash`), refactored MVP_SCOPE onto it (hash unchanged), added per-config
+  version+hash+descriptor to `league_data.py` (hashes `LEAGUE_REGISTRY`) and `prediction_mapping.py` (hashes
+  `PredictionMarketCategory` + `_DEFAULT_RULES`), all root-exported, with `test_config_versioning.py` (12 tests; 3
+  hashes independently distinct). Full UAC QG green 217s. UAC is back CLEAN (T0 dirty window closed). **Item 3 (UTL E5
+  catalogue-reader repoint) SHIPPED — utl@94775d05** (see the E5 ✅ todo above): repointed to the canonical
+  `{env}/catalog.parquet` lifecycle roll-up (old `all.parquet` confirmed gone from prod GCS), alias-aware so legacy
+  fixtures stay green; 48 reader tests + full UTL QG green 115s; CatalogueBuilder retained (live IS-orchestrator
+  builder); surfaced a P2 CeFi symbol-format follow-up. Both T0 repos (UAC+UTL) now CLEAN. NEXT: deployment-api items
+  4-5 + IS item 6 (no T0 dirty-dep concern).
 
 - 2026-06-16 (decision 338 — cqg classifier COMPLETE; pass 2 shipped, uac@e0035fd + uac@8e3108d) — operator gave full
   granular direction; encoded all of it. **29 groups + OTHER → ~103 groups + OTHER + MISC_NOVELTY.** Three ships, all
@@ -297,24 +300,24 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   green. Sub-type detection lives in the projection layer (`classifiers.py`), NOT the taxonomy — `CLASSIFIER_VERSION`
   bumped `2026-05-23.3 → 2026-06-16.3` (lever for reclassifying existing OTHER rows).
   - **Pass 2A (uac@e0035fd):** crypto **PRICE_RANGE** split out for 12 coins (BTC/ETH **retrofitted** — "between $X-$Y"/
-    multistrike no longer mislabeled UP_DOWN); political **TRUMP_APPROVAL_RATING / _STATEMENTS / _EXEC_ORDER** +
-    **ELON_TWEET_COUNT / _STATEMENTS / _NET_WORTH**; geo **GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE / GEO_OTHER_BY_DATE**
+    multistrike no longer mislabeled UP_DOWN); political **TRUMP_APPROVAL_RATING / \_STATEMENTS / \_EXEC_ORDER** +
+    **ELON_TWEET_COUNT / \_STATEMENTS / \_NET_WORTH**; geo **GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE / GEO_OTHER_BY_DATE**
     (conflict-token-gated, doesn't swallow intl elections); **BOX_OFFICE_OPENING_WEEKEND** (category-agnostic — movie
     titles are MISC-tagged); **GOLD/SILVER/CRUDE_OIL_PRICE_LEVEL**; **MISC_NOVELTY** (genuinely-uncategorised → explicit
     residual; OTHER stops being the silent ~80% bucket).
-  - **Pass 2B (uac@8e3108d):** sports **SPORTS_{LEAGUE}_{BETTYPE}** — 30 groups / 17 leagues. Bet-type
-    (WINNER→MATCH / SPREAD / TOTAL / NRFI / F1 GP_WINNER / CONSTRUCTOR) from the slug; **per-league MATCH fallback** →
-    every known-league market groups (never silent OTHER). Matches the operator's "league x fixture x market-type" model
+  - **Pass 2B (uac@8e3108d):** sports **SPORTS*{LEAGUE}*{BETTYPE}** — 30 groups / 17 leagues. Bet-type (WINNER→MATCH /
+    SPREAD / TOTAL / NRFI / F1 GP_WINNER / CONSTRUCTOR) from the slug; **per-league MATCH fallback** → every
+    known-league market groups (never silent OTHER). Matches the operator's "league x fixture x market-type" model
     (league + bet-type in the group; fixture = the recurring market_id instance).
   - **Fleet unblock:** the staging-backmerge bringing UAC 0.15.0 also landed a foreign
     `databento_classifier.py::classify_databento_symbol` at **331L** → codex-compliance ratchet (3 > 2) was failing
-    **every** UAC LDR ship. Refactored to extract `_classify_databento_combo` + `_classify_databento_option` (331L→154L),
-    behavior preserved (54 tests). "Fix CI in real time."
+    **every** UAC LDR ship. Refactored to extract `_classify_databento_combo` + `_classify_databento_option`
+    (331L→154L), behavior preserved (54 tests). "Fix CI in real time."
   - **Known residual (honest):** football "will-{team}-win" WITHOUT a league marker in slug/event_slug tags MISC (no
     team→league registry in the taxonomy) → MISC_NOVELTY; league-prefixed/event-slug'd football DOES route. A
     team→league table is a follow-up if a consumer needs it.
-  - **249-b:** the cqg classifier is now richly populated → unblocked at the classifier level; reclassification (hash-diff)
-    can run; remaining is materialisation + the operator-gated G4 apply.
+  - **249-b:** the cqg classifier is now richly populated → unblocked at the classifier level; reclassification
+    (hash-diff) can run; remaining is materialisation + the operator-gated G4 apply.
 
 - 2026-06-16 (autonomous run, FINAL — tail-cleanup complete) — **5 of 6 dispatch sub-items SHIPPED + flipped; 346
   verified-done in code + PRESERVED to a recoverable wip branch (lands on the next clean-dep window).** Final tally:
@@ -1071,3 +1074,51 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   - **prediction: E=61,014 (UNCHANGED vs the corrected 2026-06-10 count — stable) · B=512,437 · unknown=0.**
   - Per ⑬ the G4 `--apply` stays HARD-BLOCKED until E==0 per AG: the per-AG `record_captured` backfill (class E, never
     delete) is the operational tail. cefi corrected re-run queued next (walk slot freed).
+
+- 2026-06-16→17 (autonomous run — A2 mtds/mdps/PM-chores tail, the slice the UAC-vertical agent named "separate agent
+  owns mtds/mdps/PM-chores"; this is the rule-9 FINAL report). **All 8 dispatch items resolved + flipped; 0
+  scope-defers.** Repos: market-tick-data-service + market-data-processing-service + unified-trading-pm (the concurrent
+  agent's unified-api-contracts / instruments-service / deployment-api were NOT touched). Final tally:
+  - **R5-fix-1** (P0, mtds@657f615) — DIAGNOSED already-correct at LDR-tip: the
+    `Invalid comparison datetime64[ns] vs date` raw compare no longer exists (every cefi-tardis date compare uses
+    `.dt.date`/scalar `.date()`; exhaustive scan = 0 unguarded; `eb33603` repro now exits 0). Shipped the durable guard
+    the dispatch asked for: new `test_tardis_resolve_symbols_date_boundary.py` (9 tests, real datetime64[ns] parquet at
+    the boundary, re-catches a regression). **DECISION (rule 1):** shipped the boundary regression test rather than a
+    no-op "fix" of already-correct code. Live BINANCE-FUTURES Tardis CSV re-smoke = BLOCKED-LIVE-VERIFY (real
+    creds/network; `--block-network` here) — bug-class closed + test-guarded regardless.
+  - **Massive futures endpoint** (mtds@657f615) — `fetch_futures_chain()` repointed `/v3/reference/futures/*` →
+    `/futures/v1/{contracts,products}` (GA), products `name` merged via `_normalise_futures_contract(product_map=…)`;
+    docstrings updated. Live HTTP verify = BLOCKED-LIVE-VERIFY (operator-gated entitlement).
+  - **F-X1** (mtds@657f615) — rewrote the stale tautological bucket test → asserts the canonical `resolve_bucket_name`
+    env-after-asset_group shape `market-data-tick-cefi-test-{pid}` (was encoding the legacy env-prefix shape). Green.
+  - **A5 LIGHTER perp_funding** (mtds@657f615) — `_collect_lighter` rewired off the hand-rolled aiohttp+gzip loop onto
+    the `TardisAdapter.download_csv` SSOT (mirrors `umi_tick_provider`) with **bare base-asset symbols** (`BTC`,…,
+    dropped `-USDC`); deleted `_parse_lighter_market_stats_csv` + its tests; output contract
+    (`write_defi_rows`/`record_zero_rows`) preserved; tests updated green. **DECISION (rule 1):** took the recommended
+    SSOT-aligned fix (download_csv) over the symbol-only stop-gap. Live Tardis non-zero verify = BLOCKED-LIVE-VERIFY.
+  - **B0-PRE** (read-only, pm@3214a18fd) — re-ran the DeFi `enumerate_expected_universe` v2 dry-run on the prod
+    catalogue (`gs://instruments-store-defi-prd-…/prod/catalog.parquet`, 1,578,922 manifest rows, 2-day window):
+    **52,862 candidates/2d** vs recorded 57,074/2d — same order, Δ≈−4.2K = catalogue drift, NOT a regression.
+    `PROTOCOL_CAPABILITIES`=55 confirmed (37→55); 18 new venues honest could-exist; `native_staking_rates`/
+    `vault_share_price` stay BLOCKED_UPSTREAM_CAPABILITY. Additive ⇒ NON-BLOCK; `--apply-write` seed stays G1.run-gated.
+  - **GAP-7** (mdps) — VERIFIED already-shipped at **mdps@4363bce** (zero `dependency_checker` `category` params remain;
+    every sig uses `asset_group`). The 3 residual `category` string refs are framework template-var / manifest-column
+    names — a separate `category=`-ban vocab concern, NOT this rename. Flipped 2 stale-open checkboxes (downstream +
+    cefi plans, pm@3214a18fd). **DECISION (rule 1):** verified + flipped rather than re-implement done work.
+  - **M-COORD-4** (pm@d096d0220) — wired the `## 🟦 Gate-State Board (G0–G5 × asset_group)` into the master_data
+    coordinator (🟢/🟡/🔴 per AG, sourced from the WAVE checkboxes + A–H verdict + per-AG G4 ticks + a per-cell basis +
+    refresh note). Current: G0🟢 G1🟢(dry) G2🟡 G3🟢 G4🟡(operator-gated) G5🔴 all 5 AGs.
+  - **C13** (mtds@712aa01 + pm@dd19f00dd) — relocated the 8 runnable defi migration scripts (oracle*relabel /
+    chain_genesis / venue_launch / phantom_captured / captured_pre_existence / captured_vs_objects /
+    index_venue_canonicalise / object_path) from PM `plans/audit/results/` → `mtds/scripts/` (script-homes SSOT);
+    ruff-cleaned 16 trivial F541 so they're lint-clean in mtds; `.md` results + coverage query + a1–a6/cf*\* harnesses
+    stay. **DECISION (rule 1):** auto-fixed the cosmetic ruff issues during relocation (a script must be lint-clean to
+    live in mtds); MOVED (operator's documented intent) rather than deleted as spent one-offs (C0 walk C2–C7 still
+    pending).
+  - **VERIFIED END-STATE:** mtds LDR-tip QG-green (sentinel==HEAD); PM LDR drains to main via the standing `*/15`
+    LDR→main PR. **Genuine non-completions (all credential/network-gated live probes the dispatch pre-authorised as
+    BLOCKED-LIVE-VERIFY, code+tests shipped + QG-green):** R5-fix-1 Tardis re-smoke, Massive `/futures/v1` HTTP, A5
+    Tardis non-zero. **Out of scope (untouched, by dispatch / operator-gate):** UAC/IS/deployment-api (concurrent
+    agent), G4 `--apply` (operator HARD-STOP), and R5-fix-6 (the separate "wire-or-retire `MassiveTradfiRestConnector`"
+    follow-on — now code-unblocked by the endpoint fix, but still needs a live probe + a wire/retire decision; left as
+    its own open todo, not claimed here).
