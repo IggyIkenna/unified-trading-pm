@@ -54,16 +54,17 @@ The imperative `gcloud run jobs ... --args=^|^...` deploy uses `|` as the list d
 
 - [x] ✅ [SCRIPT] P1. `refresh_code_tarballs.sh` — SHA-skip + clean-from-LDR + reuse-builder.
       deployment-service (shipped); initial full refresh of all 11 stale tarballs succeeded.
-- [ ] [SCRIPT] P1. Bounded-parallel + `_refresh_status.json` + per-repo retry — **written + locally
-      tested** (9/10 in 6m49s; status object correct). Pending land through the deployment-service
-      churn race; the job clones LDR's script at run-time so it auto-adopts once landed. Until then
-      the cron runs the serial script (functional, slower, may overlap on sustained churn).
+- [x] ✅ [SCRIPT] P1. Bounded-parallel + `_refresh_status.json` + per-repo retry — locally tested
+      (9/10 in 6m49s; status object correct), **landed deployment-service@bba8096** (through the
+      churn race via a stash→FF-pull→pop→QG→quickmerge loop). The job clones LDR's script at
+      run-time so the cron auto-adopts it.
 - [x] ✅ [INFRA] P1. Cloud Run Job `code-tarball-refresh` created + verified (rebuilds tarballs;
       mtimes advance). Bootstrap-fragmentation bug found + fixed.
 - [x] ✅ [INFRA] P1. Cloud Scheduler `uts-prod-code-tarball-refresh-cron` (`*/30`) created +
       verified (force-run triggered a job execution).
-- [ ] [INFRA] P2. Land the TF SSOT `deployment-service/terraform/gcp/code_tarball_refresh_scheduler.tf`
-      (job + scheduler), so a `terraform apply` doesn't drop the imperatively-created resources.
+- [x] ✅ [INFRA] P2. TF SSOT `deployment-service/terraform/gcp/code_tarball_refresh_scheduler.tf`
+      (job + scheduler) — **landed deployment-service@bba8096**, so a `terraform apply` won't drop
+      the imperatively-created resources (documents the no-`||`-in-bootstrap pitfall).
 - [ ] [INFRA] P3. **Perf follow-up (NICE-TO-HAVE)** — if churn outpaces even parallel rebuilds,
       replace per-repo `git clone` with the GitHub codeload tree tarball (no `.git`, faster
       transfer) — needs `create-code-tarballs.sh` to accept an explicit SHA (no `git rev-parse`).
