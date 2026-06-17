@@ -100,6 +100,30 @@ shard_status:
       latest_data_date: null
       assignee: ikenna
       notes: Complete
+    KRAKEN-SPOT:
+      start_date: "2020-01-01"
+      stage_1_has_run: false
+      stage_2_data_complete: false
+      latest_data_date: null
+      assignee: ikenna
+      notes: >-
+        Added 2026-06-17 (operator) — KRAKEN-SPOT has 76,013 captured
+        market-data-tick rows but NO instrument-catalogue definitions
+        (reference-vs-market split). Genesis 2020-01-01 per the
+        market-data-tick manifest. Re-enumerate IS catalogue so reference +
+        market reconcile.
+    KRAKEN-FUTURES:
+      start_date: "2020-01-01"
+      stage_1_has_run: false
+      stage_2_data_complete: false
+      latest_data_date: null
+      assignee: ikenna
+      notes: >-
+        Added 2026-06-17 (operator) — KRAKEN-FUTURES has 31,645 captured
+        market-data-tick rows but NO instrument-catalogue definitions
+        (reference-vs-market split). Genesis 2020-01-01 per the
+        market-data-tick manifest. Re-enumerate IS catalogue so reference +
+        market reconcile.
   TRADFI:
     CME:
       start_date: "2020-01-01"
@@ -165,20 +189,24 @@ shard_status:
       latest_data_date: null
       assignee: ikenna
       notes: Complete
-    AAVE_V3_ETHEREUM:
+    AAVE_V3-ETHEREUM:
       start_date: "2023-01-27"
       stage_1_has_run: true
       stage_2_data_complete: true
       latest_data_date: null
       assignee: ikenna
-      notes: Complete
-    COMPOUND_V3_ETH:
+      notes:
+        Canonicalised 2026-06-17 — was AAVE_V3_ETHEREUM (underscore separator). Key must equal the canonical combined
+        manifest venue AAVE_V3-ETHEREUM so reference_scope matches it in-scope.
+    COMPOUND_V3-ETHEREUM:
       start_date: "2022-08-24"
       stage_1_has_run: true
       stage_2_data_complete: true
       latest_data_date: null
       assignee: ikenna
-      notes: Complete
+      notes:
+        Canonicalised 2026-06-17 — was COMPOUND_V3_ETH. Key must equal the canonical combined manifest venue
+        COMPOUND_V3-ETHEREUM.
     MORPHO-ETHEREUM:
       start_date: "2024-01-08"
       stage_1_has_run: true
@@ -186,27 +214,43 @@ shard_status:
       latest_data_date: null
       assignee: ikenna
       notes: Complete
-    LIDO:
+    LIDO-ETHEREUM:
       start_date: "2020-12-18"
       stage_1_has_run: true
       stage_2_data_complete: true
       latest_data_date: null
       assignee: ikenna
-      notes: Complete
-    ETHERFI:
+      notes:
+        Canonicalised 2026-06-17 — was bare LIDO. Key must equal the canonical combined manifest venue LIDO-ETHEREUM
+        (stETH LST).
+    ETHERFI-ETHEREUM:
       start_date: "2024-02-01"
       stage_1_has_run: true
       stage_2_data_complete: true
       latest_data_date: null
       assignee: ikenna
-      notes: Complete
-    ETHENA:
+      notes:
+        Canonicalised 2026-06-17 — was bare ETHERFI. Key must equal the canonical combined manifest venue
+        ETHERFI-ETHEREUM.
+    ETHENA-ETHEREUM:
       start_date: "2024-02-16"
       stage_1_has_run: true
       stage_2_data_complete: true
       latest_data_date: null
       assignee: ikenna
-      notes: Complete
+      notes:
+        Canonicalised 2026-06-17 — was bare ETHENA. Key must equal the canonical combined manifest venue
+        ETHENA-ETHEREUM.
+    ROCKETPOOL-ETHEREUM:
+      start_date: "2021-11-08"
+      stage_1_has_run: true
+      stage_2_data_complete: true
+      latest_data_date: null
+      assignee: ikenna
+      notes:
+        Added 2026-06-17 — rETH LST (carry_staked_basis MVP venue; in mvp_scope["defi"] + ALL_DEFI_VENUES live). Genesis
+        = Rocket Pool atlas / rETH first deposit 2021-11-08 (per _defi_lst.py LST_GENESIS_DATES +
+        defi_venue_capabilities.py). Was missing from the DEFI block → rETH manifest rows read out_of_scope.
   SPORTS:
     # Sports instruments-service reference rows. The current writer stamps the
     # provider into data_type and leaves venue="" (writers.py: manifest_venue =
