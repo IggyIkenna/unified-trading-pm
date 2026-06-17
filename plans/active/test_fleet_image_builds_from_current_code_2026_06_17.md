@@ -1,7 +1,6 @@
 ---
 title: "Test fleet image builds from current code — local (amd64) → GCP → AWS, base-first, no-deploy"
 created: 2026-06-17
-author: harshkantariya [slot-3·laptop]
 status: active
 priority: P2
 locked_by: live-defi-rollout
