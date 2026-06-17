@@ -154,6 +154,11 @@ this plan supersedes the **kill+fresh-respawn** half of that work with resume.
   acceptable; flag if a worker ever resumes mid-task with lost critical state.
 - Main agent is mostly stateless ticks (fresh respawn is cheap there); the resume win is largest for workers mid-task —
   but apply uniformly for consistency.
+- **Re-resume durability (confirm in the Phase-4 live smoke):** we assume `claude --resume <id>` continues the SAME
+  session id (so a worker capped twice can resume twice off the persisted `claude_session_id`). If `--resume` instead
+  forks a new id, only the FIRST resume preserves context and a second cap degrades to a fresh respawn (graceful —
+  `_handle_usage_cap` / `_handle_rate_limit_modal` already fall back to fresh when no usable id). Verify by capping a
+  resumed session a second time and checking the transcript id is unchanged.
 
 ## Codex SSOT updates
 
@@ -176,6 +181,14 @@ this plan supersedes the **kill+fresh-respawn** half of that work with resume.
   live central-VM steps only** (Phase 1 P2 `--session-id` CLI smoke; Phase 4 P1 live cap→resume smoke; Phase 4 P2
   deploy + `systemctl restart orchestrator.service`) — not reproducible from a laptop slot; the bootstrap ALTER-TABLE
   migration auto-applies on backend start.
+- **2026-06-17 (slot-5, review pass)** — review found 3 worker/agent spawn paths that bypassed session-id minting (so a
+  cap there would fresh-respawn, not `--resume`): the manual `POST /api/slots/{id}/spawn` (`routes/slots_ops.py`), the
+  account-rotation respawn (`server.spawn_with_account_bg`), and `POST /api/agents/spawn` (`routes/agents.py`). All
+  three now mint `new_session_id()` + persist `claude_session_id` → **every** spawn path is resumable. Also hardened the
+  watchdog frozen-no-headroom branch to fire its warning/activity/page ONCE per frozen episode (was logging an activity
+  row every 60s) + clear the page latch on kill/exit so a later cap re-pages. Shipped agent-orchestrator@dd6b545
+  (`feat(orchestrator): mint+persist claude_session_id on ALL worker spawn paths`) + @4985ef7 (rotation-path regression
+  test); local QG green both times.
 
 ## Cross-links
 
