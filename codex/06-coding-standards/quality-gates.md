@@ -502,7 +502,45 @@ a corresponding entry in `MIN_COVERAGE_OVERRIDES` in `rollout-quality-gates-unif
 - `# pragma: no cover` on CLI `if __name__ == "__main__":` guards and `__main__.py` launch blocks only
 
 Size checks run via Python AST (function/class/method) and `wc -l` (file) in Step 5 of every quality-gates.sh. Coverage
-is enforced by `--cov-fail-under=$MIN_COVERAGE` in pytest (Step 3).
+is enforced by `[tool.coverage.report] fail_under` in each repo's `pyproject.toml` — pytest-cov reads it directly (the
+base no longer passes `--cov-fail-under` on the CLI; see § "Config SSOT" below).
+
+### Config SSOT — toml is the single home; the base must never shadow it on the CLI (HARD RULE, codified 2026-06-17)
+
+A QG tool's config lives in **exactly one place — `pyproject.toml`** — and the base scripts must NOT pass a CLI flag
+that overrides (shadows) that toml value. The shadow is the bug: when both the stub bash var and the toml table carry a
+copy of the same setting, they drift silently (the founding incident: MTDS `MIN_COVERAGE=28` in the stub shadowing
+`[tool.coverage.report] fail_under=71` in toml via `--cov-fail-under=$MIN_COVERAGE`).
+
+Resolved 2026-06-17 (plan `quality_gates_speed_and_config_ssot_2026_06_09.md`, Phase 1 TIER-A):
+
+- **Coverage** — base-service.sh + base-library.sh **no longer pass `--cov-fail-under`**. pytest-cov reads
+  `[tool.coverage.report] fail_under` from toml when the CLI flag is absent (verified: a toml `fail_under` enforces +
+  fails the run with no CLI flag). Pre-flip every repo's toml `fail_under` was reconciled to equal its stub
+  `MIN_COVERAGE` (zero drift), so the flip was behavior-preserving. `MIN_COVERAGE` survives in the stub ONLY as
+  `coverage-floor-guard.sh`'s input for the **system floor (70) + signed-exception** check; it is not the pytest gate.
+  The guard warns when the gate is looser than the declared floor (the dangerous drift direction).
+- **bandit** — base passes `-c pyproject.toml` so `[tool.bandit]` (skips/excludes) is honored from toml (audited safe:
+  no repo's `SOURCE_DIR` carries a finding the existing skips would suppress).
+- **pytest test-dir is NOT a shadow** — the base deliberately runs the narrower `tests/unit/` (`PYTEST_UNIT_DIR`, the
+  credential-free `--block-network` unit subset), even though toml `testpaths = ["tests"]` is broader. This is a
+  functional narrowing (unit vs all), kept on purpose — not a CLI override of the same value.
+- **TIER-B knobs stay in the stub (no `[tool.quality-gates]` table — won't-do).** `MAX_DURATION`,
+  `CODEX_MAX_VIOLATIONS`, `PYTEST_UNIT_DIR`, pip-audit-ignore lists, `RUN_INTEGRATION`, `PYTEST_WORKERS`, exclude lists
+  live in **one home already (the stub)** — there is no competing toml copy, hence no drift and no correctness issue.
+  Relocating them to a toml table is cosmetic and would cost a bash-toml parser in both bases + a 22-repo migration; the
+  hygiene does not justify the risk. The config-SSOT rule is about **eliminating shadows**, not relocating single-home
+  settings.
+
+### Fast tier — NOT BUILT (change-scoped local tier; won't-do, codified 2026-06-17)
+
+A change-scoped "fast tier" (scoping the gate to changed files for the local loop) was designed but **not built**. The
+2026-06-17 re-profile showed the only fast-tier-scopable slice left was ~1.1% of wall (size-checks + bandit) — tests
+(67%) + basedpyright/typecheck are **always-full by operator decision** (never impact-selected; correctness over a few
+minutes), and codex (the one big file-specific phase) is already fast-scoped via the shipped codex `--fast` path. The
+wall-time wins were delivered by **per-step optimization** (size-checks batching, the schema-provenance O(n²) fix, the
+pip-audit/bandit/actionlint content-hash caches), not by a fast tier. **The merge tier is always authoritative** — it
+runs the full gate with full coverage at quickmerge Pass-1 / CI `quality-gates-v2`; nothing local can weaken it.
 
 **Sports vertical (Phase 3):** Per-service Step A naming checks — run before D1. Zero hits required:
 `rg 'BaseSportsAdapter' .` (deleted in Phase 1); `rg 'from footballbets' .`;
