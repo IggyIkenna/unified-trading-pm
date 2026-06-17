@@ -1,3 +1,11 @@
+---
+scope: [engineer, admin]
+title: Carry-strategy venue integration reference
+type: data
+status: active
+last_reviewed: 2026-06-17
+---
+
 # Carry-strategy venue integration reference (funding · staking · lending)
 
 > **Purpose**: the integration SSOT for the `carry_staked_basis` **live/paper** path — how we source current per-venue
@@ -171,6 +179,24 @@ RAY-scaled). DeFi error handling: UAC `DefiErrorCode` RECURSIVE_LOOP / ORACLE / 
 
 ---
 
+## 6b. Liquidity — ADV + market width (operator 2026-06-17)
+
+Don't chase a slightly-better funding rate into a coin so illiquid the spread-crossing eats the edge. Per coin we
+snapshot **24h USD volume (ADV)** + **half-spread (bps)** from the deepest CeFi reference (Bybit `tickers`:
+`bid1Price`/`ask1Price` + `turnover24h` in one call; Gate `tickers` fallback: `highest_bid`/`lowest_ask` +
+`volume_24h_quote`). Three uses (live harness today; **MDPS in production** — filed TODO):
+
+1. **Spread-cost carry penalty** — subtract the annualised round-trip spread cost `2·half_spread·mult·(365/hold_days)`
+   from each coin's funding before ranking, so a wide-spread coin must clear a higher bar.
+2. **ADV-capped sizing** — cap each position at `adv_cap_pct`% of the coin's 24h volume (default 0.5%) →
+   liquidity-scaled size (a thin coin gets less capital regardless of carry).
+3. **Display** — `[ADV $Xm · spread Ybps]` per position so the operator sees the liquidity context.
+
+**Tick size** is the missing third leg (pull per-(coin,venue) from each venue's instrument-info endpoint) — filed.
+**Paper = single point-in-time snapshot**; the **backtest assumes it constant** (the snapshot, documented, e2e-only)
+until MDPS carries ADV/width history. Caveat: single-snapshot perp-perp **dispersion** picks cross-venue funding
+extremes that mean-revert — tighten before trusting (filed).
+
 ## 7. Mapping to existing code / registries
 
 - Funding fetch + annualise: `staked_basis_funding_scan.py` `_annualise` (UAC `annualise_funding_rate_bps`) + the new
@@ -196,11 +222,18 @@ RAY-scaled). DeFi error handling: UAC `DefiErrorCode` RECURSIVE_LOOP / ORACLE / 
 6. **DEX-perp venues — dYdX v4 + Vertex are PUBLIC (not credentialed)**: dYdX `indexer.dydx.trade/v4/perpetualMarkets`
    (`nextFundingRate`, hourly) verified reachable; Vertex `gateway.prod`/`archive.prod.vertexprotocol.com` public
    (resolve OK — `api.vertexprotocol.com` is a stale 404). Wire both into the live snapshot.
-7. **Drift — we HOLD creds, wire the creds/RPC path**: `solana-paper-keypair-private-key` + `solana-wallet-address` in
-   Secret Manager; the naive public Data API **403s this VM** (geo/Cloudflare) + authed endpoint 401s → read funding
-   **on-chain via Solana RPC** with the wallet (or the authed Data API). Drift **accepts jitoSOL/mSOL as margin → it is
-   the venue that unlocks SOL staked-basis**. Already in UAC (`venue_mapping` `DRIFT: drift_api`, `chain_env`
-   `(SOLANA,DRIFT)`). Not BLOCKED-CREDENTIALS — it's a wiring task.
+7. **Drift — WIRED via an ISOLATED venv (driftpy CANNOT be a flat dep)**: funding read **on-chain via Helius RPC** +
+   `driftpy` (perp-market `amm.last24h_avg_funding_rate / FUNDING_RATE_PRECISION / oracle_twap`, hourly). **driftpy's
+   metadata exact-pins ~25 common libs** (`urllib3==1.26.13` / `websockets==13.0` / `zstandard==0.18.0` / `solders<0.27`
+   / `numpy<2` / `psutil==5.9.4` / `aiosignal==1.3.1` …) that **cannot be uv-resolved in any shared lock** with the
+   fleet + execution-service — BUT it **RUNS fine on the fleet versions** (verified 2026-06-17 on solders 0.27.1 + numpy
+   2.2.6 + the trio). So it lives in its **own venv** (`scripts/defi/install_driftpy_venv.sh` → `~/.drift-venv`,
+   driftpy's own pins) and callers **shell out to a reader** (`drift_funding_reader.py`) — the **ibkr-gateway-infra
+   pattern**, NOT `[project.dependencies]`. execution-service already lazy-loads driftpy in
+   `defi_execution/protocols/drift.py` (deliberately undeclared) — same isolation for MTDS/execution prod adapters.
+   Helius RPC URL from Secret Manager (`helius-api-key`); creds `solana-paper-keypair-private-key` for trading. Drift
+   **accepts jitoSOL/mSOL as margin → unlocks SOL staked-basis**. In UAC (`venue_mapping` `DRIFT: drift_api`,
+   `chain_env (SOLANA,DRIFT)`). Not BLOCKED-CREDENTIALS — a wiring task (DONE for the e2e funding read).
 8. **Genuinely credentialed venues** (Paradex, Backpack, Edgewink, etc.): file each **BLOCKED-CREDENTIALS** with the
    operator ask (vendor/tier/cost) per the External-Data rule; build the adapter scaffold anyway.
 9. **Sign/units cross-check** on integration: one coin per venue vs the §3 reference values before trusting the ranking.
