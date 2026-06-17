@@ -85,13 +85,14 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
 
 ## Recommended decision / todos
 
-- [x] ✅ [DATA] P1. Audit every consumer of UTL `return_metrics.FUNDING_PERIODS_PER_DAY`; repoint to UAC; delete it
-      (no parallel registry); UAC unit test. **DONE 2026-06-17** via the e2e correctness dispatch
-      (`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`): UTL dict DELETED (unified-trading-library@b587b91b/
-      ed622af8), execution decision-trace repointed (execution-service@38c7e06f), strategy docstring repointed
-      (strategy-service@b91d3e1f), delta_one funding_oi repointed (features-service, pending peer-UAC-dirt), UAC
-      regression tests (aster=8h, deribit=8h-figure, venue-dir norm) (unified-api-contracts@7fade10/fd5bcfa).
-      **NB the test asserts deribit=8h-FIGURE, not 1h** — superseded by the next todo's confirmation.
+- [x] ✅ [DATA] P1. Audit every consumer of UTL `return_metrics.FUNDING_PERIODS_PER_DAY`; repoint to UAC; delete it (no
+      parallel registry); UAC unit test. **DONE 2026-06-17** via the e2e correctness dispatch
+      (`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`): UTL dict DELETED
+      (unified-trading-library@b587b91b/ ed622af8), execution decision-trace repointed (execution-service@38c7e06f),
+      strategy docstring repointed (strategy-service@b91d3e1f), delta_one funding_oi repointed (features-service,
+      pending peer-UAC-dirt), UAC regression tests (aster=8h, deribit=8h-figure, venue-dir norm)
+      (unified-api-contracts@7fade10/fd5bcfa). **NB the test asserts deribit=8h-FIGURE, not 1h** — superseded by the
+      next todo's confirmation.
 - [x] ✅ [DATA] P1. Confirm the MTDS Deribit `derivative_ticker.funding_rate` figure. **CONFIRMED 2026-06-17 (e2e
       empirical probe): it is the 8h FIGURE** (≈ API `interest_8h` ~ -1e-6, not `interest_1h` ~ -1e-8), NOT the per-hour
       rate. Resolution: UAC `FUNDING_CADENCE_SECONDS["deribit"]` corrected `1h → 8h` so `annualise(rate,"deribit")`
@@ -108,23 +109,95 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       (`fapi.asterdex.com/fapi/v1/fundingRate`, no auth, 8h); only the backfill VM was never run for Aster. **Repo:
       market-tick-data-service + deployment-service** (`launch-mtds-perp-funding-backfill-vm.sh` with `--perp-protocols`
       incl. aster, start 2024-09-25).
-- [ ] [DATA] P2. Genesis is PER-(venue, data_type), not per-venue — encode it. Aster API availability (verified
+- [ ] [DATA] P2. Genesis is PER-(venue, data*type), not per-venue — encode it. Aster API availability (verified
       2026-06-16): funding **2023-07-22**, OHLCV/klines **2023-01-01** (both pre-date the `venue_launch_dates`
       ASTER=2024-09-25 floor — Astherus pre-rebrand history; pick a trust floor), mark/index via klines/premiumIndex,
       trades partial (id/time-paginated), **open_interest + L2 book = live-capture-only (no historical endpoint →
       forward-only)**. Canonize the Aster native API INTO the Tardis CEX benchmark schemas (klines→OHLCV,
       aggTrades→`trades`, premiumIndex+funding+OI→`derivative_ticker`, depth-WS→`book_snapshot_5`) so downstream can't
       tell it's not Tardis; record genesis per data_type with `captured`/`expected_unattempted` honest-absence for the
-      forward-only ones. **Repo: market-tick-data-service + unified-api-contracts.**
-      **— derivative_ticker + genesis leg ✅ DONE 2026-06-17 (operator "fully hook up"): `uac@61d5838` (BATCH_ASTER/
-      LIVE_ASTER/REPLAY_ASTER members + aster capability + `(cefi,derivative_ticker)` source priority), `utl@3b4bd6b8`
-      (`ASTER→BATCH_ASTER` venue override = self-archive source `aster`, not Tardis), `mtds@5978627` (`venue_data_types`
-      += `derivative_ticker`; `_perp_funding_hl_aster._write_aster_derivative_ticker` emits `CanonicalDerivativeTicker`
-      at `asset_group=cefi`, source-aware `batch_aster`/`live_aster`, shard-isolated from the funding leg; genesis
-      per-(venue,data_type) in `expected_start_dates.yaml`). REMAINING (still `- [ ]`): the OHLCV/klines→`ohlcv_*`,
-      aggTrades→`trades`, depth-WS→`book_snapshot_5` canonicalization legs + the BACKFILL RUN (drain-gated G5, item
-      above). The derivative_ticker write path is wiring-ready; data flows when the fleet resumes post-`--apply`.**
+      forward-only ones. **Repo: market-tick-data-service + unified-api-contracts.** **— derivative_ticker + genesis leg
+      ✅ DONE 2026-06-17 (operator "fully hook up"): `uac@61d5838` (BATCH_ASTER/ LIVE_ASTER/REPLAY_ASTER members + aster
+      capability + `(cefi,derivative_ticker)` source priority), `utl@3b4bd6b8` (`ASTER→BATCH_ASTER` venue override =
+      self-archive source `aster`, not Tardis), `mtds@5978627` (`venue_data_types` += `derivative_ticker`;
+      `_perp_funding_hl_aster._write_aster_derivative_ticker` emits `CanonicalDerivativeTicker` at `asset_group=cefi`,
+      source-aware `batch_aster`/`live_aster`, shard-isolated from the funding leg; genesis per-(venue,data_type) in
+      `expected_start_dates.yaml`).** **— trades leg ✅ DONE 2026-06-17 (operator "yeah wire it"): `mtds@889b131` —
+      `_perp_funding_hl_aster._write_aster_trades` fetches `/fapi/v1/aggTrades` (paginated by `fromId`, day-windowed)
+      per symbol, maps onto `AsterTrade`→`normalize_aster_trade`→`CanonicalTrade`, writes `data_type=trades` at
+      `asset_group=cefi`, `source=aster`, source-aware `batch_aster`/`live_aster`, shard-isolated from the funding leg
+      (Live=Batch, one run). `trades` is in the cefi `_LEGAL_DATA_TYPES` + Aster `venue_data_types.yaml`; genesis
+      `2021-08-30` already in `expected_start_dates.yaml`. NO UTL change (the `ASTER→BATCH_ASTER` override is
+      data_type-independent). Unit test `test_writes_canonical_trades_shard_cefi` asserts the cefi shard path +
+      `m`→buy/sell mapping. NB the trades write rides `_collect_aster` (funding-genesis-gated) → it covers the
+      **2024-09-25-forward** window; the pre-funding-genesis trades window (2021-08-30→2024-09-25) needs a standalone
+      trades collect (todo below). `fetch_klines`+`fetch_depth` adapter scaffolds also landed (one-step-from-ready for
+      the OHLCV+book write legs).** \*\*— OHLCV/klines leg: DESIGN DECISION 2026-06-17 —
+      `ohlcv*_`is NOT canonized into the cefi tick-data write     (intentional, documented).**`ohlcv*1m`/`ohlcv_15m`/`ohlcv_24h` are registered in UAC (`market_data_categories.py`/     `schema_spec.py`) but are a **TradFi-only** data_type: NOT in the cefi `\_LEGAL_DATA_TYPES` (`tardis_shared.py:73`—     the cefi path builder hard-rejects it), NOT in ANY cefi venue's`venue_data_types.yaml`, NOT in cefi     `SOURCE_PRIORITY`, with NO cefi consumer (MDPS consumes `CanonicalOhlcvBar`for TradFi only; CeFi strategies derive     candles from`trades`). The two reference CeFi venues (BINANCE-FUTURES/BYBIT) deliberately omit ohlcv. Introducing     an orphaned cefi `ohlcv*_`would create dead surface + false expected-absent rows — the exact anti-pattern the Aster    `venue_data_types.yaml`comment warns against. The`fetch_klines`adapter fetch +`normalize_aster_kline` transform     ARE ready; see the tight remaining todo below for the exact one-step write if a cefi ohlcv consumer is ever wired.     **— book/`book_snapshot_5`leg: batch honest-absence ALREADY CORRECT (no change needed); live WS connector is the     tight remaining unit.** Aster book is`L2_MBP`→`book_snapshot_5`(NOT tbbo);`/fapi/v1/depth` is a live snapshot     only (Binance-compatible, no historical depth) → batch is forward-only honest-absent, already encoded     (`expected_start_dates.yaml`ASTER`book_snapshot_5:
+      null`+ absent from Aster's batch`data_types` → no false     expected-absent). A live Aster **trades** WS connector exists (`live/connectors/aster_ws.py`); a live **book** WS     connector does not yet. `fetch_depth`
+      scaffold landed. See the tight live-book todo below. **Repo: market-tick-data-service + unified-api-contracts.**
+- [ ] [DATA] P3. Aster **pre-funding-genesis trades window** (2021-08-30 → 2024-09-25): the canonical Aster `trades`
+      write rides `_collect_aster` which is funding-genesis-gated (2024-09-25), so it only covers the forward window. To
+      capture the earlier trades history (genesis 2021-08-30, `expected_start_dates.yaml`), add a **standalone trades
+      collect** (a `--cefi-operations trades` op or a dedicated handler) that runs aggTrades on the trades genesis floor
+      independent of the funding floor — reusing `_write_aster_trades` (already trades-genesis-agnostic). **Repo:
+      market-tick-data-service.**
+- [ ] [DATA] P3. Aster **OHLCV/klines→`ohlcv_*` cefi write** (ONLY if/when a cefi ohlcv consumer is wired — currently
+      orphaned, see the design decision above): the `AsterAdapter.fetch_klines` fetch + `normalize_aster_kline`
+      (`AsterKline`→`CanonicalOhlcvBar`) transform are ready. Remaining one-step: extend the cefi `_LEGAL_DATA_TYPES`
+      (`tardis_shared.py`) + add `ohlcv_*` to Aster's `venue_data_types.yaml` data_types + cefi `SOURCE_PRIORITY` +
+      genesis `2023-01-01` (klines) in `expected_start_dates.yaml`, then a `_write_aster_ohlcv` mirroring
+      `_write_aster_trades`. Do NOT wire until a cefi consumer exists (else dead surface + false expected-absent).
+      **Repo: market-tick-data-service + unified-api-contracts.**
+- [ ] [DATA] P3. Aster **live `book_snapshot_5` WS connector** (forward-only; batch is correctly honest-absent already):
+      add a live Aster depth-WS/poll book connector mirroring `live/connectors/aster_ws.py` (the existing live trades
+      connector) → parse depth into the 5-level `bid_px_0X`/`bid_sz_0X`/`ask_px_0X`/`ask_sz_0X` shape
+      (`normalize_aster_orderbook`), write via `MTDSShardManifestRecorder.record_captured` at
+      `data_type=book_snapshot_5`, `pipeline_mode=live_aster`, `source=aster`; register via
+      `register_ws_feed_connector(venue="ASTER", …)`. `AsterAdapter.fetch_depth` (`/fapi/v1/depth` snapshot) is the REST
+      fallback building block. **Repo: market-tick-data-service.**
 - [ ] [DATA] P3. Aster margining model (`venue_collateral.py`): USDC (0% haircut, CROSS) / USDT (1%) only — rejects
       spot-coin AND LST collateral. So Aster supports a stablecoin-margined funding-short ONLY (no same-venue
       cash-and-carry, no staking leg). Re-verify against live Aster docs before sizing; the ETH staked-basis needs
       Bybit/OKX/Deribit (stETH/wstETH cross-margin). **Repo: unified-api-contracts (registry verification).**
+
+## Progress Log — Aster canonicalization remaining legs (2026-06-17, autonomous)
+
+Continuing the line-111 "canonize Aster native API INTO the Tardis CEX schemas" todo. derivative_ticker leg already
+landed (uac@61d5838 / utl@3b4bd6b8 / mtds@5978627). This session drives the remaining trades / ohlcv / book legs.
+
+**Verified system reality (read, not assumed):**
+
+- `trades` IS in the cefi tick-data `_LEGAL_DATA_TYPES` (`tardis_shared.py:73`), IS in Aster's `venue_data_types.yaml`
+  list, genesis already set (`expected_start_dates.yaml` ASTER `trades: 2021-08-30`). UTL
+  `_VENUE_OVERRIDES["ASTER"] = BATCH_ASTER` is data_type-independent → trades resolves source-aware
+  `batch_aster`/`live_aster` with NO UTL change. **BUT** no canonical-cefi trades WRITE path exists today (neither Aster
+  NOR Hyperliquid — both declared, neither written; the perp_funding handler only writes
+  `perp_funding`+`derivative_ticker`). The transform `normalize_aster_trade(AsterTrade)` exists in UAC; aggTrades
+  returns the `AsterAggTrade` shape (p/q/T/m).
+- `ohlcv_*` (`ohlcv_1m`/`ohlcv_15m`/`ohlcv_24h`) is **NOT** in the cefi `_LEGAL_DATA_TYPES`, **NOT** in ANY cefi venue's
+  `venue_data_types.yaml`, **NOT** in cefi `SOURCE_PRIORITY`, and has **NO cefi consumer** — it is a **TradFi-only**
+  data_type (CME/CBOE via Databento/Barchart; MDPS consumes `CanonicalOhlcvBar` for TradFi only). The two reference CeFi
+  venues (BINANCE-FUTURES / BYBIT) do **NOT** wire ohlcv at all — CeFi strategies derive candles from `trades`. The UAC
+  transform `normalize_aster_kline(AsterKline)` exists.
+- Aster `book` is `book_type: L2_MBP` → canonical type is **`book_snapshot_5`** (NOT tbbo — tbbo is the TradFi L1 top of
+  book). `/fapi/v1/depth` is a **live snapshot only** (Binance-Futures-compatible, no historical depth endpoint).
+  `expected_start_dates.yaml` ASTER `book_snapshot_5: null` + the `venue_data_types.yaml` comment already encode the
+  forward-only / live-capture-only honest absence (NOT listed in Aster's batch `data_types` → no false expected-absent
+  rows). A live Aster **trades** WS connector exists (`live/connectors/aster_ws.py`); NO live book/depth connector yet.
+
+**Design decisions (AUTONOMOUS rule 1 — least-bad path consistent with the documented intent AND the system as wired):**
+
+1. **trades → WIRE FULLY** (in scope, legal, genesis-ready). Mirror `_write_aster_derivative_ticker`: a best-effort,
+   shard-isolated `_write_aster_trades` called from `_collect_aster` (Live=Batch single pass), fetching aggTrades per
+   symbol for the day, `normalize_aster_trade`→`CanonicalTrade`, written to `data_type=trades` at `asset_group=cefi`,
+   `source=aster`, source-aware `batch_aster`/`live_aster`. + per-(venue,data_type,source) manifest row.
+2. **ohlcv → DO NOT introduce an orphaned cefi `ohlcv_*` data_type; leave a tight todo.** Wiring a brand-new cefi
+   data_type that no cefi venue carries, that `_LEGAL_DATA_TYPES` rejects, that has zero consumer, and that the two
+   reference CeFi venues deliberately omit, is the exact anti-pattern (false expected-absent + dead surface). The
+   mission authorizes "if disproportionate, leave a tight todo." Adapter scaffold (`fetch_klines`) IS added so the data
+   path is one method from ready; the canonical write is the tight remaining step (below). Klines genesis 2023-01-01
+   captured in the todo.
+3. **book → batch honest-absence is ALREADY correct (live-capture-only); live WS book connector is a tight todo.** No
+   batch change needed (already `null` genesis + absent from batch `data_types`). The live depth-WS connector is a
+   separate live-infra unit (a new `aster_book_ws` connector + live-manifest wiring) — tight todo below.
