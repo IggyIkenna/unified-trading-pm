@@ -175,6 +175,33 @@ no slot 0, and respawning solves nothing; the real fix is account capacity. 19 a
 > **Deploy note**: shipped to AO `live-defi-rollout`; takes effect on the central VM after `git pull --ff-only` +
 > `systemctl restart orchestrator.service`. With the 95% ceiling, `sub-c` (87% weekly) becomes immediately usable →
 > escalations drain + the keeper respawns the main agent.
+>
+> **DEPLOYED + VERIFIED 2026-06-17 11:36 UTC** (central VM, `orchestrator.service` restarted on `38fde6cc`): log shows
+> `AutoSpawnLoop started … 5h_ceiling=95% wk_ceiling=95%`; `MainAgentKeeper: main agent wedged on usage-cap modal —
+> killing for account swap` → killed → **respawned on `sub-c-ikenna-odum`** (`spawned main agent agt-2743af`); AutoSpawn
+> also spawned `orch-slot-2` on sub-c. Account-pool starvation is broken. (`sub-a` also back in use.)
+
+**Gap 6 residual — escalation drain now head-of-line-blocked by a quarantined slot (surfaced 2026-06-17 once headroom was fixed)**:
+
+With headroom restored, the FIFO-head escalation `agt-3bd816` now fails with `spawn failed: branch-state quarantine
+(FM5/FM7)` on **slot 1** (its `unified-api-contracts` worktree is `diverged` — behind 78, ff-only blocked by
+uncommitted local edits to `unified_api_contracts/canonical/domain/sports/league_data.py`). Two distinct problems keep
+all 39 queued walls stuck behind it:
+
+- [ ] [HUMAN/INVESTIGATION] P1. **Clean the central-VM slot-1 `unified-api-contracts` quarantine** — the worktree holds
+      FOREIGN uncommitted WIP (`sports/league_data.py`); do NOT stomp it. Owner of that WIP must commit/inherit or
+      discard it, then `git pull --ff-only`, so slot 1 leaves FM5 quarantine. (Same worktree flagged in "Related" below
+      — now the active escalation-drain blocker.) Repo: central VM slot-1 worktree.
+- [ ] [ORCHESTRATOR] P1. **`_pick_free_slot` must skip branch-quarantined slots.** It returns the lowest free
+      configured slot without consulting branch-state, so it deterministically hands every escalation to the quarantined
+      slot 1 and never tries clean slots (3/6). Make it skip a slot whose worktree fails the `worktree_clean_check`
+      branch-state gate (the same FM5/FM7 check `do_spawn` applies), falling through to the next clean slot. Repo:
+      agent-orchestrator (`server/escalation.py`).
+- [ ] [ORCHESTRATOR] P1. **`retry_queued_escalations` must not head-of-line-block on a slot-specific spawn failure.**
+      The loop `break`s on every `EscalationError` (correct for genuine no-capacity, wrong for a `spawn failed:
+      branch-state quarantine` that is specific to one slot) → one un-spawnable head freezes the whole queue. Distinguish
+      "no capacity" (break) from "this slot/spawn failed" (skip the slot / try the next), composing with the
+      `_pick_free_slot` fix above. Repo: agent-orchestrator (`server/escalation.py`).
 
 ## Related (NOT owned here — likely the live VM-state issue under separate investigation)
 
