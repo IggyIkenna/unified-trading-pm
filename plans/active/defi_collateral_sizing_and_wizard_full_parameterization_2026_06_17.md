@@ -55,9 +55,25 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       `max_loops`/LP keys, 3 unregistered MM engines) captured in the doc's Findings section for Phase C to honour.
 
 ## Phase C — Wizard full-parameterization (UAC manifest exporter + strategy-service config + UI)  [WAVE 2, needs B]
-- [ ] [SCRIPT] P1. **Emit a per-archetype flat PARAM SCHEMA into the capability manifest** (the exporter; sourced from
+- [x] ✅ [SCRIPT] P1. **Emit a per-archetype flat PARAM SCHEMA into the capability manifest** (the exporter; sourced from
       each engine's config model — Phase B's inventory). The manifest is a node/edge graph today with NO param schema;
       add the schema block. Repos: unified-api-contracts (exporter) + strategy-service (config models expose the schema).
+      — ✅ strategy-service@f2d4bef5 (SSOT) + unified-api-contracts@f0b66b2 (schema model + regenerated manifest) +
+      unified-trading-pm@853ae5ea4 (exporter). **SSOT**: `strategy_service/engine/strategies/v2/param_schema.py`
+      declares `PARAM_SCHEMA_REGISTRY` (35 archetype keys = 29 engines + 6 shared-engine aliases, **270 param rows**:
+      `{name,type,default,required,units,enum_values,min,max,source}`) keyed by `StrategyArchetype` value; each default is
+      the ENGINE default (F4 honoured — APD `dispersion_bps`/`cost_bps`=30/10 NOT the smoke 20/5; CSB new
+      `margin_buffer_pct`=0.20 = `_DEFAULT_MARGIN_BUFFER_PCT`). UAC adds `ParamSchemaSpec` + `param_schema` field on
+      `CapabilityManifest` (serialised in `to_canonical_dict`, archetype-sorted, deterministic). PM exporter
+      `_capability_gaps.extract_param_schema` probes `build_param_schema_registry()` in strategy-service's OWN `.venv`
+      (same per-service-venv idiom as `extract_service_registries`) → never re-typed in the exporter. Regenerated
+      `openapi/capability-manifest.json` carries `param_schema` (35×270); **UI copy
+      `unified-trading-system-ui/lib/registry/capability-manifest.json` re-synced byte-identical to the UAC canonical**
+      (left uncommitted for the wizard-UI wave — out of this wave's scope). Tests: strategy-service
+      `tests/unit/engine/strategies/v2/test_param_schema.py` (10, incl. an engine-source drift guard that reads each
+      `*_param(...,<default>)` literal so the schema can't silently diverge from the engine) + PM
+      `tests/unit/test_capability_param_schema.py` (5, CSB+APD+VOL_CARRY + manifest round-trip). Wizard-UI render + R1
+      full-catalogue pickers + food-chain parameterization remain (next wave).
 - [ ] [SCRIPT] P1. **Wizard renders per-archetype param forms** from that schema (every numeric/enum param:
       entry/exit bps, stake_fraction, start_token, health-factor, collateral-posting-mode, hedge timing, exec-algo
       params, risk-threshold ladder…) + **(R1)** the venue/instrument pickers expose the FULL catalogue set, not the
@@ -75,7 +91,26 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       `codex/04-architecture/` (margin/collateral) + the wizard param-schema in the capability-wizard codex.
 
 ## Progress Log
-(loop handoff lands here)
+- **2026-06-17 — Phase C param-schema foundation SHIPPED** (strategy-service@f2d4bef5 + unified-api-contracts@f0b66b2 +
+  unified-trading-pm@853ae5ea4). Per-archetype flat PARAM SCHEMA now emitted into `capability-manifest.json` (35
+  archetypes × 270 params), single-canonical from the strategy-service engine SSOT (`param_schema.py`), exporter
+  probes it in the service's own venv, UAC schema typed (`ParamSchemaSpec`). F4 default-handling verified (engine
+  defaults, not e2e-smoke). UI manifest copy re-synced byte-identical (uncommitted — wizard-UI wave owns the commit).
+  - **Foreign LDR-debt encountered + reconciled to ship the PM exporter** (none from this change — all pre-existing
+    drift the content-sentinel fast-path had been hiding until a content-changing PM commit forced a full gate): (1)
+    basedpyright ceiling stale `1517`→`1523` (origin/LDR already sat at 1523 before this session; ratcheted to current
+    reality, my exporter is net-0 errors); (2) two codex docs lacked `scope:` frontmatter
+    (`carry-venue-live-integration-reference.md`, `dep-update-conflict-resolution.md`) + the former needed
+    `last_reviewed:` — added; (3) one foreign `BLOCKED-CREDENTIALS` orphan in
+    `carry_staked_basis_funding_scan_experiment_2026_06_16.md:450` — re-baselined the credential-orphan ratchet (the
+    checker's own pre-existing-debt mechanism). FOLLOW-UPS for the carry-experiment plan owner: cite a ping on that
+    L450 BLOCKED-CREDENTIALS line so the re-baseline can ratchet back to 0.
+  - **PM Option-B version churn**: main raced 1.2.151→…→1.2.155 via semver bumps during the ship; aligned PM-self in
+    pyproject + manifest each backmerge. The standing LDR→main PR (#387) carries the exporter to main.
+- **Remaining for the wizard-UI wave** (Phase C todos 2-3): render per-archetype param forms FROM the manifest
+  `param_schema` block; R1 full-catalogue venue/instrument pickers; wire values through `strategy_config_loader`;
+  food-chain parameterization (exec-algo / risk ladder / collateral posting mode / source routing). The UI manifest
+  copy is already synced + ready; commit it with the render code.
 
 ## Phase A follow-ups (discovered during build)
 - [ ] [SCRIPT] P2. **Calibrate / parameterize the dual-deposit cross-exchange cost** — `archetypes_rank.py`
