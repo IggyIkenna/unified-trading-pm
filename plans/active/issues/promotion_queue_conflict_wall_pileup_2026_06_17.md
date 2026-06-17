@@ -3,7 +3,6 @@ title:
   Promotion-queue "conflict wall" pile-up — 18 stuck promote/dep-update PRs (PM hub FIXED; dep-update fan-out +
   stale-mergeability + per-repo test failures remain), and they lack a stale-conflict alert
 created: 2026-06-17
-author: slot-3·laptop
 source:
   - "operator triage-queue screenshot 2026-06-17: 18 PRs 'Conflict wall', 3h–17h stuck, → staging / → main"
   - scripts/cicd/reconcile_manifest_backmerge.py

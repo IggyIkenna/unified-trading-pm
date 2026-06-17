@@ -1,12 +1,13 @@
 ---
 title: e2e DeFi strategy configs — taxonomy/wizard round-trip fidelity gaps
 created: 2026-06-17
-author: ikennaigboaka [slot-1·laptop]
 source:
   - e2e-testing/scripts/defi/*
   - unified-api-contracts/openapi/capability-verdict-matrix.json
   - unified-trading-system-ui/lib/registry/capability-manifest.json
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
