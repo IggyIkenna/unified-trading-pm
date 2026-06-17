@@ -67,28 +67,28 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.7.0",
-    "deployment-api": "0.13.0",
-    "deployment-service": "0.11.0",
+    "batch-live-reconciliation-service": "0.8.0",
+    "deployment-api": "0.16.0",
+    "deployment-service": "0.13.0",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.12.0",
-    "features-service": "0.4.0",
-    "fund-administration-service": "0.4.1",
-    "ibkr-gateway-infra": "0.2.0",
-    "instruments-service": "0.9.0",
-    "market-tick-data-service": "0.13.0",
-    "system-integration-tests": "0.7.0",
-    "unified-api-contracts": "0.15.0",
-    "unified-trading-library": "0.12.0",
+    "execution-service": "0.14.0",
+    "features-service": "0.5.0",
+    "fund-administration-service": "0.5.0",
+    "ibkr-gateway-infra": "0.4.0",
+    "instruments-service": "0.10.0",
+    "market-tick-data-service": "0.15.0",
+    "system-integration-tests": "0.12.0",
+    "unified-api-contracts": "0.19.0",
+    "unified-trading-library": "0.13.0",
     "unified-trading-pm": "1.2.155",
-    "market-data-processing-service": "0.7.0",
+    "market-data-processing-service": "0.9.0",
     "e2e-testing": "0.7.0",
     "agent-orchestrator": "0.11.0",
-    "greeks-service": "0.6.0",
-    "trading-agent-service": "0.2.3",
-    "strategy-service": "0.12.0",
+    "greeks-service": "0.7.0",
+    "trading-agent-service": "0.3.0",
+    "strategy-service": "0.15.0",
     "ml-service": "0.8.0",
-    "alerting-service": "0.9.0",
+    "alerting-service": "0.10.0",
     "unified-trading-api": "0.2.3"
   },
   "repositories": {
@@ -100,7 +100,7 @@
       "codex_sections": [
         "03-observability"
       ],
-      "version": "0.7.0",
+      "version": "0.10.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -152,7 +152,7 @@
         "04-architecture",
         "06-coding-standards"
       ],
-      "version": "0.6.0",
+      "version": "0.8.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "batch-services",
@@ -262,7 +262,7 @@
       "type": "api-service",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.13.0",
+      "version": "0.16.0",
       "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
       "dependencies": [
         {
@@ -322,7 +322,7 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.11.0",
+      "version": "0.13.0",
       "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         {
@@ -373,7 +373,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.12.0",
+      "version": "0.14.0",
       "version_source": "pyproject.toml",
       "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
@@ -427,7 +427,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.0.1",
+      "version": "0.5.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -496,7 +496,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.4.0",
+      "version": "0.5.0",
       "version_source": "pyproject.toml",
       "deployment_note": "IM Pooled subscription/redemption rail. Bridges Odum portal to fund administrator (POD) and qualified custodian (e.g. Copper). Does NOT serve SMA or DART clients.",
       "dependencies": [
@@ -546,7 +546,7 @@
       "codex_sections": [
         "04-architecture"
       ],
-      "version": "0.6.0",
+      "version": "0.7.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -598,7 +598,7 @@
       "codex_sections": [
         "05-infrastructure"
       ],
-      "version": "0.2.0",
+      "version": "0.4.0",
       "version_source": "version-file",
       "dependencies": [
         {
@@ -640,7 +640,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.8.0",
+      "version": "0.10.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -693,7 +693,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.7.0",
+      "version": "0.9.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -747,7 +747,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.12.0",
+      "version": "0.15.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
       "dependencies": [
@@ -860,7 +860,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.11.0",
+      "version": "0.15.0",
       "version_source": "pyproject.toml",
       "deployment_note": "One instance per client (separately managed accounts)",
       "dependencies": [
@@ -910,7 +910,7 @@
       "type": "test-harness",
       "arch_tier": "integration",
       "status": "scaffolded",
-      "version": "0.7.0",
+      "version": "0.12.0",
       "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports \u2014 HTTP/GCS/PubSub only.",
       "dependencies": [
         {
@@ -1001,7 +1001,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.1.0",
+      "version": "0.3.0",
       "version_source": "pyproject.toml",
       "completion_path": "tradfi",
       "notes": "Autonomous 7-loop micro-loop trading agent supervisor for TradFi commodity options/futures. Subscribes to CommoditySignal, ranks strategies via StrategySpec catalog in ConfigStore, routes through PreTradeCheckEngine to execution-service. Blockers: ibkr-config-in-ucc (L3 end-to-end), risk-circuit-breaker (PnLMonitor hook).",
@@ -1055,7 +1055,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.15.0",
+      "version": "0.19.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
       "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
@@ -1094,7 +1094,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.12.0",
+      "version": "0.13.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/unified-trading-library",
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
