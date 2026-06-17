@@ -207,6 +207,25 @@ _(append each build failure + fix here as we go — this IS the plan's progress 
     code; (b) **the A-vs-B inconsistency is itself a finding** → candidate fleet Dockerfile normalization (Pattern A is the
     clean base-image-leveraging form; Pattern B redundantly re-vendors + re-syncs sibling sources despite FROM-ing the base).
     File as a separate normalization item, do NOT fork mid-validation.
+- 2026-06-17: **Pattern-B with multi-repo context (UAC+UTL staged) → 3 more PASS, 6 still FAIL — Pattern B is PER-SERVICE BESPOKE.**
+  - **PASS with UAC+UTL siblings staged:** **alerting** (5.57GB), **execution** (6.92GB), **greeks** (5.78GB). So those 3
+    vendor exactly UAC+UTL → local-buildable with a 2-sibling context. (Note Pattern-B images run ~5.5–7GB vs Pattern-A ~3GB
+    — they re-vendor+re-sync, so fatter.)
+  - **Still FAIL — each needs MORE, and differently:**
+    - **strategy** vendors a THIRD sibling — `COPY market-tick-data-service/` → needs mtds staged too.
+    - **batch-live-reconciliation** — `COPY configs/cloud-providers.yaml` (a file NOT in its repo; cloudbuild stages it
+      from deployment-service/UAC).
+    - **fund-administration / market-data-processing / ml / trading-agent (B2)** — `uv.lock` pins UAC at the **absolute path
+      `file:///unified-api-contracts`** (filesystem ROOT), so `uv sync --frozen` fails unless the sibling sits at exactly
+      `/unified-api-contracts` (not `/app/...`). Fragile build-machine-absolute lock paths.
+  - **META-FINDING (the real deliverable):** the fleet's service Docker build contracts are **inconsistent + fragile** —
+    Pattern A (6 services) is the clean self-contained base-image form; Pattern B (9 services) re-vendors a *per-service-varying*
+    set of sibling sources/configs and `uv sync`s against absolute lock paths. Each Pattern-B service needs its own bespoke
+    cloudbuild staging, which is why local repro is hard and why they're fatter. **Recommendation: a fleet Dockerfile
+    NORMALIZATION to Pattern A** (FROM base + `uv pip install --no-deps -e .`) — separate task, file it; do NOT fork here.
+  - **Local-validation status:** 9/15 Python services build locally (6 Pattern-A + alerting/execution/greeks). The other 6
+    are GCP-authoritative (their cloudbuild stages correctly) — chasing bespoke local contexts per service has diminishing
+    value vs the normalization fix.
 
 ## Composes with / SSOTs
 - IAM/unknown-image (separate): `plans/active/issues/deployment_dashboard_image_status_and_multicloud_toggle_2026_06_17.md`
