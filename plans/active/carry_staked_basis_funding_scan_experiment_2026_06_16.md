@@ -285,6 +285,10 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   data/schemas (CoinDay/panel) + same decision logic (`_ewma_threshold_weights`/efficiency/collateral) as the backtest;
   only difference is it emits today's book vs accumulating PnL. Paper/live EXECUTION (fills/PnL) → strategy-service
   `colocated_engine` (run-paper.sh); the emitter is the signal/target-book stage.
+- **2026-06-17** — Emitter delta is **QG-green + working-tree-safe**, quickmerge transiently BLOCKED on foreign dep WIP
+  (UAC `venue_collateral.py` + execution-service dispersion trace — not mine). Ships on next clean-dep window /
+  orphan-WIP inheritance (same path the baseline a2b6a44 took). All code verified (ruff+imports+basedpyright+QG); no
+  force-merge through foreign dirty deps.
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
