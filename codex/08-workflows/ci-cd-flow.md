@@ -113,7 +113,7 @@ path to `main`** until the next quickmerge opens a new one.
 
 - **`quickmerge --agent --files` lands on LDR and stops** — for a service repo it no longer opens a per-unit LDR→staging
   PR (PM→main and `[skip ci]`→main paths are unchanged). The local `quality-gates.sh` sentinel is the LDR-landing gate.
-- **Promotion is the Tier-C batched drain** (`ldr-to-staging-promote.yml`, **every 30 min** `13,43 * * * *`),
+- **Promotion is the Tier-C batched drain** (`ldr-to-staging-promote.yml`, **every 15 min** `2,17,32,47 * * * *`),
   tier-ordered
   - dep-order-gated. Its LDR→staging PR's `quality-gates-v2` (deps resolved against **staging-tier**,
     `base_ref=staging`) is the authoritative server gate — that PR's head IS `live-defi-rollout`, so it _is_ "CI on LDR
@@ -173,8 +173,12 @@ Pass 2 — Quickmerge (--agent fast-path)
     absent path stages as a deletion (`[ -e "$f" ]` OR `git ls-files --error-unmatch`,
     then `git add -A -- "$f"`) in BOTH staging loops — previously the bare `[ -e ]`
     guard silently dropped deletions/rename-deletes, half-shipping removals
-  • commits, creates PR targeting staging, enables auto-merge
-  • --to-staging routes to staging instead of main (for breaking changes)
+  • commits + pushes to live-defi-rollout, then STOPS (LDR-trunk decoupling 2026-06-10):
+    a service repo lands on LDR; the Tier-C drain (ldr-to-staging-promote.yml, ~15 min)
+    opens the LDR→staging PR whose quality-gates-v2 IS the authoritative server gate —
+    quickmerge does NOT open a per-unit staging PR
+  • EXCEPTIONS that open a PR directly: PM (Option-B → main) and --hotfix (→ staging).
+    --to-staging is now a no-op (LDR-landing is unconditional for service repos)
 ```
 
 > **`--files` scope is re-asserted on the prek commit-retry, and the pre-stage prettier is `--files`-scoped (foot-gun
@@ -511,13 +515,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
@@ -569,7 +573,9 @@ Canonical flow is in `codex/08-workflows/deployment-flow.md`. Summary:
 
 ```
 LDR: quality-gates.sh (full) → sentinel written → quickmerge --agent (SHA check)
-  → staging PR (auto-merge on) → workspace-qg GHA (full, ubuntu-latest, fresh deps)
+  → lands on live-defi-rollout and STOPS (no per-unit staging PR for service repos)
+  → Tier-C drain `ldr-to-staging-promote` (~15 min) opens the LDR→staging PR
+  → quality-gates-v2 GHA (head=LDR, base=staging; full, ubuntu-latest, fresh deps)
   → on failure: #ci-failures Slack alert with PR link + source/target branch
   → staging merge → semver-agent bump → staging-to-main
   → main: Cloud Build (docker build + QG --quick inside image + CVE scan + push)
@@ -608,17 +614,17 @@ Both are escape hatches for iteration speed; the canonical production path stays
 
 ## Agent vs Human Paths
 
-| Operation          | Agent                                                                                                                                                                                                                                            | Human                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| Run quality gates  | `bash scripts/quality-gates.sh` (FULL — no skip flags)                                                                                                                                                                                           | Same                                                     |
-| Quickmerge         | `bash scripts/quickmerge.sh "..." --agent --files '...'`                                                                                                                                                                                         | `bash scripts/quickmerge.sh "..."`                       |
-| SHA sentinel check | Automatic in `--agent` — blocks on mismatch                                                                                                                                                                                                      | Not enforced (human responsibility)                      |
-| Push to LDR        | quickmerge pushes branch, creates staging PR                                                                                                                                                                                                     | Same via quickmerge                                      |
-| Promote LDR → main | ✅ Autonomous, green-gated: quickmerge → staging (auto-merge on green `quality-gates-v2`) → automated staging→main (semver/SIT). **No human merge** — the green gate is the approval (`required_approving_review_count=0`, codified 2026-06-02). | Same; admin-merge only a genuinely-stuck promotion       |
-| Dep-branch work    | ❌ NOT ALLOWED (`--dep-branch` human-only)                                                                                                                                                                                                       | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
-| Version graduation | ❌ NOT ALLOWED                                                                                                                                                                                                                                   | `gh workflow run request-major-bump.yml ...`             |
-| Kill-switch arming | ❌ NOT ALLOWED                                                                                                                                                                                                                                   | Manual via deployment-service API                        |
-| Wallet key ops     | ❌ NOT ALLOWED                                                                                                                                                                                                                                   | Hardware wallet / KMS console                            |
+| Operation          | Agent                                                                                                                                                                                                                                                                          | Human                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| Run quality gates  | `bash scripts/quality-gates.sh` (FULL — no skip flags)                                                                                                                                                                                                                         | Same                                                     |
+| Quickmerge         | `bash scripts/quickmerge.sh "..." --agent --files '...'`                                                                                                                                                                                                                       | `bash scripts/quickmerge.sh "..."`                       |
+| SHA sentinel check | Automatic in `--agent` — blocks on mismatch                                                                                                                                                                                                                                    | Not enforced (human responsibility)                      |
+| Push to LDR        | quickmerge commits + pushes to LDR and STOPS; the Tier-C drain opens the LDR→staging PR (no per-unit PR)                                                                                                                                                                       | Same via quickmerge                                      |
+| Promote LDR → main | ✅ Autonomous, green-gated: quickmerge lands on LDR → Tier-C drain LDR→staging (auto-merge on green `quality-gates-v2`) → automated staging→main (semver/SIT). **No human merge** — the green gate is the approval (`required_approving_review_count=0`, codified 2026-06-02). | Same; admin-merge only a genuinely-stuck promotion       |
+| Dep-branch work    | ❌ NOT ALLOWED (`--dep-branch` human-only)                                                                                                                                                                                                                                     | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
+| Version graduation | ❌ NOT ALLOWED                                                                                                                                                                                                                                                                 | `gh workflow run request-major-bump.yml ...`             |
+| Kill-switch arming | ❌ NOT ALLOWED                                                                                                                                                                                                                                                                 | Manual via deployment-service API                        |
+| Wallet key ops     | ❌ NOT ALLOWED                                                                                                                                                                                                                                                                 | Hardware wallet / KMS console                            |
 
 ---
 

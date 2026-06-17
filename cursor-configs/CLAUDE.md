@@ -120,11 +120,12 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `canonical-dependency-manifest.json` + all 18 repos that declare it (locked to 3.13.5). aiohttp 3.14.0 removed
   `aiohttp.streams.AsyncStreamReaderMixin`, which **vcrpy 8.1.1 (latest PyPI, no fix released —
   [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995)/PR#996 open)** still references → 3.14 breaks every VCR
-  cassette suite (UAC/UTL/execution-service/MTDS) and jams the LDR→staging promotion. CVE-2026-34993/47265 are covered
-  by the **sanctioned `--ignore-vuln` already in `base-service.sh` + `base-library.sh`** (non-exploitable: client-only
-  aiohttp usage, no `CookieJar.load()` on untrusted input). **Lift the cap ONLY when a vcrpy release supports aiohttp
-  3.14** — then bump the canonical range, re-lock fleet-wide, drop the two `--ignore-vuln` flags. SSOT:
-  `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
+  cassette suite (UAC/UTL/execution-service/MTDS) and jams the LDR→staging promotion. The related CVEs
+  (CVE-2026-34993/47265 plus the rest of the aiohttp-3.13.5 advisory set) are covered by the **sanctioned
+  `--ignore-vuln` block (~20 entries, grew through 2026-06-15 OSV advisories) already in `base-service.sh` +
+  `base-library.sh`** (non-exploitable: client-only aiohttp usage, no `CookieJar.load()` on untrusted input). **Lift the
+  cap ONLY when a vcrpy release supports aiohttp 3.14** — then bump the canonical range, re-lock fleet-wide, drop the
+  `--ignore-vuln` block. SSOT: `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
 - Dockerfiles: `ARG PROJECT_ID` +
   `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
   — **migrating to digest-pinned (FROM-digest ratchet, machinery live 2026-06-10)**: target shape adds a checked-in
@@ -577,8 +578,8 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   correspond to a variable the loop actually queried THIS iteration — if the goal is "lock released" the check reads the
   lock flag (`grep -q 'locked=False'`), if "fix on main" it greps `main`; "PR merged" / "staging green" / "SIT passed" /
   "lock released" / "content on main" are DISTINCT pipeline checkpoints and a watcher proves only the one it literally
-  queries (no editorial adjectives in the echo). **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick ONE wake
-  source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
+  queries (no editorial adjectives in the echo). **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick ONE
+  wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
   (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE
   background _orchestrator_ that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an
   active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator
@@ -615,10 +616,10 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   in UAC/UTL as the SSOT — so an integration test asserts against the UAC contract + mocks, it does **not** import the
   peer service (Layer-1.5; cross-service interaction is Layer-3 / SIT only, HTTP/PubSub/GCS, zero cross-service Python
   imports). No circular imports. SSOT: `codex/04-architecture/tier-and-import-architecture.md` (5-tier model + "No
-  service ↔ service imports") + `codex/06-coding-standards/integration-testing-layers.md` (Layers 0/1.5/3). **⚠️
-  Enforcement is currently DEAD** — `check-no-service-deps.py` is wired at a wrong path in `base-service.sh` (file lives
-  in `scripts/validation/`) so it never runs, and it only classifies `type=="service"` (misses `api-service` /
-  `batch-service`); known live violations + the gate fix are tracked in
+  service ↔ service imports") + `codex/06-coding-standards/integration-testing-layers.md` (Layers 0/1.5/3). **✅
+  Enforcement is LIVE (fixed 2026-06-11)** — `check-no-service-deps.py` is wired in `base-service.sh` at
+  `scripts/validation/check-no-service-deps.py` (exits 1 on violation) and classifies `service` / `api-service` /
+  `batch-service` / `api` repo types; any remaining live violations are tracked in
   `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § "Service-dependency violations".
 - **SIT ≠ local QG** — local `quality-gates.sh` / quickmerge runs **unit + contract + per-component (mocked) layers
   only** (credential-free, `--block-network`); **SIT** (real credentials / auth / cross-service API interaction /
@@ -972,11 +973,12 @@ work to merge. Only genuinely-newer main/staging-only content (a real feature, o
 **back-merged DOWN to LDR first**, then `main`+`staging` force-sync to LDR. **Clean-start force-sync** (operator-gated):
 version-align → per-repo relax protection (disable rulesets + classic `enforce_admins`/`allow_force_pushes`) → force
 `main`+`staging` to LDR → **restore protection + re-enable rulesets in the SAME per-repo step**. **Drift-tick**:
-`main-backmerge-to-ldr.yml` carries a `schedule: */20` (besides `on: push`) because `[skip ci]` main writes suppress the
-push trigger — the cron sweeps the drift so "`main` never ahead of LDR" holds in steady state. A template-only edit to a
-fleet workflow drifts every per-repo copy + reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in
-the SAME change. SSOTs: `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT"; plans
-`staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` + `ci_local_qg_parity_2026_06_08.md`.
+`main-backmerge-to-ldr.yml` carries a `schedule: 0 * * * *` (hourly — relaxed from `*/20` 2026-06-11 to cut Actions
+spend; besides `on: push`) because `[skip ci]` main writes suppress the push trigger — the cron sweeps the drift so
+"`main` never ahead of LDR" holds in steady state. A template-only edit to a fleet workflow drifts every per-repo copy +
+reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in the SAME change. SSOTs:
+`codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT"; plans `staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` +
+`ci_local_qg_parity_2026_06_08.md`.
 
 ## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
 
