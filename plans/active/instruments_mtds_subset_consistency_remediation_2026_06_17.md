@@ -247,6 +247,22 @@ to logs.
       `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
       `_get_instruments_bucket_for_asset_group` (the same resolver the write path uses) so prediction status renders.
       Display-only gap; the backfill WRITE path already works. — instruments-service
+- [ ] [DATA] P2. **Stale `attempted_failed` rows survive a failed→captured retry in the consolidated `_index` (manifest
+      dedup blank-column edge — KNOWN, already tracked)** (surfaced 2026-06-18 while backfilling the fixed venues). After
+      re-fetching a previously-`attempted_failed` shard to `captured`, the consolidated `_index/availability_index.parquet`
+      carries BOTH rows for the same (date, venue) — e.g. DERIBIT-COMBO 2026-05-23 has `attempted_failed` (instrument_type=''
+      pipeline_mode=None) AND `captured` (instrument_type='COMBO' pipeline_mode='batch_instruments_service'). ROOT CAUSE
+      (documented in UTL `manifest_writer/_writer_io.py` ~line 716): the dedup key adds the v6-v9 shard-atom cols
+      (instrument_type/pipeline_mode/source) only when non-empty, and `record_failed` leaves them blank while the captured
+      retry populates them → populated-vs-blank delta keeps BOTH rows; last-write-wins fails. The captured data IS present +
+      correct; the stale failed row inflates the coverage DENOMINATOR (slight under-count) until collapsed. **Already
+      tracked** as the wildcard-"" dedup follow-on `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`
+      (the fix: treat "" as a wildcard in the dedup key so a populated retry supersedes a blank failure). The scheduled
+      manifest-consolidator does NOT currently collapse these either (same dedup logic). **Until that lands**, a targeted
+      reconcile (drop the stale `attempted_failed` row where a same-(date,venue) `captured` row with a newer `written_at`
+      exists) would clean the IS instruments-store indices — but do NOT hand-edit the dedup machine here (deliberate design
+      tradeoff with a named owner). — unified-trading-library (dedup) — cross-link
+      `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`
 - [x] ✅ [DATA] P2. **Diagnosed all 172 defi attempted_failed cells (2026-05-09→06-18) — 4 of 6 venues fixed, 2 are
       deeper upstream changes (split below)**. Each was UNCLASSIFIED_ADAPTER_ERROR from a distinct upstream API change:
       - **MORPHO-ETHEREUM (41) + MORPHO-BASE (41) — ✅ FIXED + backfilling** (instruments-service@ec3fd3a): Morpho
