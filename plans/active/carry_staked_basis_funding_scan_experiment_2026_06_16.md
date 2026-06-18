@@ -1107,3 +1107,29 @@ weekly stablecoin sweeps, near-zero fee) but capital-efficient + constant exposu
 P3 TransferIntent todo should emit the FIXED-LEVERAGE weekly sweep/top-up (not the full-funding drift-rebalance).
 Scripts `/tmp/capital_flow{,2}.py`; plots `capital_flow.html` (full-funding) + `capital_flow_fixedlev.html`
 (fixed-leverage + treasury).
+
+## Capital/leverage module + paper-trading runner + return convention (2026-06-18, /autonomous)
+
+**Return convention (operator-confirmed):** the book's % returns are on the NET capital / posted margin (the weights sum
+to +1 long / -1 short = 1x net, 2x gross notional), NOT on the gross $ — so +27%/yr is on net (~half on gross). It is
+NON-COMPOUNDED: fixed notional sized to the INITIAL capital (vol-targeted to constant 10% vol on that fixed base), PnL
+not reinvested -> linear returns + profit accrues to treasury separately. **Vol-target DE-LEVERS the gross** from the
+raw 2.0x to ~0.9x avg (0.66x on 2026-06-18), so the book is UNDER-deployed at 10% vol -> only ~18% margin needed, ~82%
+free; raising `--vol-target` deploys toward the full 2x for proportionally more return + DD (the "fixed size" is a dial,
+fixed per chosen vol target).
+
+**SHIPPED `funding_reversion_multivenue_capital.py` (e2e@0751d27):** plots gross leverage (raw 2x -> vol-targeted ~0.9x,
+
+- 1x-net reference line), margin posted per venue, FREE capital, TREASURY of swept PnL ($1.15M on $1M), and both capital
+  regimes (full-funding $75k/yr transfers vs fixed-leverage $302k/yr ~ the PnL flow). CLI
+  `--capital --vol-target --max-leverage --dd-buffer`. Plot `funding_capital_book.html`.
+
+**SHIPPED `funding_reversion_paper_trade.py` (e2e@fd96c0b):** the live desired-state engine (the secondary/CLI PAPER
+path). Pulls live funding+price per venue (Binance fapi + HL GCS + Bybit/Aster live), computes today's desired positions
+(full causal stack, vol-targeted to actual ~0.66x gross), emits per coin/venue: side, weight, $ notional, the coin's
+funding yield; net funding carry (+13%/yr on deploy); margin/free per venue; persists `desired_positions.json`. NO real
+orders. Daily runs accrue the transfer + paper-PnL ledger. **This wires the book to paper trading** — the production
+path (fold into strategy-service `CarryStakedBasisRankAllocator` + promote paper->live VM) stays operator-gated.
+
+The full deployable stack is now 3 committed e2e scripts: `funding_reversion_crossvenue_book.py` (backtest, 8 causal
+overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.py` (live paper engine).
