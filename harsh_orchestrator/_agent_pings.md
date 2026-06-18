@@ -1738,3 +1738,33 @@ Key for Harsh's agents:
 - `alerting_service_live_rules_2026_05_07.md` → ARCHIVED; Telegram token rotation + rehearsal now in
   `observability_master` P3
 - Daily hygiene cron now live (05:00 UTC). If it pings your inbox, fix violations and push to live-defi-rollout.
+
+---
+
+### [plan-reconciler · agt-3591cc] 2026-06-17 — daily reconciliation: 2 doc-hygiene findings filed
+
+Plan-of-record: `plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md`.
+(1) Stale codex pointer `09-strategy/operational/pnl-attribution.md` (missing) in 4 referrers incl. CLAUDE.md:654 + SUB_AGENT_MANDATORY_RULES.md:326 → correct path `architecture-v2/cross-cutting/pnl-attribution.md`.
+(2) Abandoned `plans/active/INDEX.md` — 99-entry drift, superseded by the master-plan auto-inventory.
+Corpus otherwise clean: 0 hard hygiene failures, no verified missed flips, no contradictions. 26 grace plans skipped.
+
+---
+
+### [harsh-qg-agent] 2026-06-18 — CREDENTIAL APPROVAL REQUEST: GCP `cloudbuild.builds.editor` for fleet image-build validation
+
+**Plan-of-record**: `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` (Phase 2, P2) +
+`plans/active/issues/operator_iam_permission_parity_2026_06_18.md` (full cross-cloud grant table).
+
+**Ask (for Ikenna — GCP project owner)**: grant `roles/cloudbuild.builds.editor` on project `central-element-323112` to
+principal `harshkantariya@odum-research.com` (or make the `github-actions-deploy` SA impersonable to harshkantariya).
+Currently both `harshkantariya` and `github-actions-deploy` hold only `roles/cloudbuild.builds.viewer` (can WATCH
+builds, cannot RUN them); the only stored SA key (`github-actions-sa-key`) is viewer-only too, so GSM reuse can't avoid it.
+
+**What it unblocks**: manual `gcloud builds triggers run <repo>-build` / `<repo>-live-defi-rollout` for the Phase-2 fleet
+image-build validation (base libs + service images, one at a time, watched to SUCCESS). Until granted, the only no-perm
+path is the natural main-push/LDR-push auto-fire — which only fires for the ~4 repos with pending content (most are
+`main==LDR`, 0-file delta → no build), so the validation can't be driven on demand.
+
+**Cost/vendor**: none — IAM grant only (GCP-native Cloud Build, already provisioned). No new subscription.
+
+**Status**: BLOCKED-CREDENTIALS — awaiting Ikenna grant. Auto-resolves when the role lands (re-run the trigger + watch).

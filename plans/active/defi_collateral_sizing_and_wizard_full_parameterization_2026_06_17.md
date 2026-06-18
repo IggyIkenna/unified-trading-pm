@@ -150,3 +150,13 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 - NOTE: a F28 live-probe (UAC@bc45549, ~2026-06-17) updated Drift haircuts to real on-chain initialAssetWeight
   (SOL/mSOL/JitoSOL = 0.15/0.20/0.20, were 0.10 placeholders) but left the dynamic-hedge tests stale (expected the old
   0.9 factor). Phase A reconciled them to 0.8 (the 0.20 haircut) — the SSOT is authoritative.
+
+## UAT auto-deploy (operator directive 2026-06-17 — "make uat the default")
+- [x] ✅ [CI] P2. (unified-trading-system-ui@422e99a0) **Auto-deploy uat.odum-research.com on every LDR update** — new workflow
+      `unified-trading-system-ui/.github/workflows/deploy-uat-on-merge.yml`: on push to live-defi-rollout (+
+      workflow_dispatch), checks out the UI repo + deployment-service, auths GCP, runs the CANONICAL
+      `scripts/deploy-cloud-run.sh --env=uat --cloud` (→ `odum-portal-staging`, the sandbox). Concurrency-coalesced
+      (cancel-in-progress). PROD-SAFE BY CONSTRUCTION: only ever `--env=uat`; prod (`odum-portal`/www) advances solely
+      via an explicit `--env=prod`. Fixes the chronic stale-UAT (it had no auto-deploy → stuck on the Jun-14 build).
+      NOTE/INCIDENT: a prior manual deploy via `deploy-to-gcp.yml` (which has NO `--env` guard) hit the PROD backend
+      `odum-portal`; rolled back to rev124 same-session. Repo: unified-trading-system-ui.

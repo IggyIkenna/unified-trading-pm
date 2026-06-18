@@ -191,6 +191,69 @@ jobs:
               echo "  PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving it"
               ACTION="blocked"
             fi
+          elif [ "$MSTATE" = "dirty" ]; then
+            # ── L146 inline forward-drain reconcile (promotion_queue_conflict_wall_pileup_2026_06_17): ──
+            # main churns workspace-manifest.json `ci_status`/version-surface every few minutes (every
+            # repo's v2 result writes a [skip ci] commit to main), so the standing LDR→main PR perpetually
+            # re-`dirty`s on the manifest FASTER than it can merge. The main→LDR back-merge resolver
+            # (main-backmerge-to-ldr, Guard 2) fixes this — but it runs on a SEPARATE */20 tick, so the PR
+            # re-diverges within ~1-3 min of each back-merge → the drain never lands. Fix: run the SAME
+            # Guard-2 reconcile INLINE here on every */15 drain tick (collapse the race window to one run):
+            # merge origin/main into LDR, resolve the manifest conflict via reconcile_manifest_backmerge.py
+            # (CI fields → main; both-bumped version-surface → semver-max), push to LDR → the PR goes clean
+            # → arm auto-merge same run. Manifest-only conflicts are auto-resolved here; a non-manifest /
+            # genuine-conflict `dirty` is LEFT for the main-backmerge-to-ldr escalation (visible PR +
+            # orchestrator) — do not duplicate that path. Mirrors main-backmerge-to-ldr.yml lines ~114-156.
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: PR #$PR_NUM dirty — would inline-reconcile main→LDR (Guard 2)"
+              ACTION="would-reconcile"
+            else
+              git config user.name "ldr-to-main-promote[bot]"
+              git config user.email "ldr-to-main-promote[bot]@users.noreply.github.com"
+              git checkout -B _fwd_reconcile origin/live-defi-rollout --quiet
+              if git merge --no-ff --no-edit origin/main 2>/dev/null; then
+                # The `dirty` cleared between the API read and now (race) → clean merge → push + arm.
+                if git push origin "HEAD:live-defi-rollout" 2>/dev/null; then
+                  echo "  inline reconcile: clean merge of main→LDR pushed — PR will go clean"
+                  ACTION="reconciled"
+                else
+                  echo "  WARN: clean-merge push rejected (LDR moved) — next */15 tick retries"
+                  ACTION="reconcile_race"
+                fi
+              else
+                CONFLICTED="$(git diff --name-only --diff-filter=U | tr '\n' ' ' | sed 's/ *$//')"
+                if [ "$CONFLICTED" = "workspace-manifest.json" ] && [ -f scripts/cicd/reconcile_manifest_backmerge.py ]; then
+                  MB="$(git merge-base HEAD MERGE_HEAD)"
+                  git show "$MB:workspace-manifest.json" > /tmp/fwd_mb.json
+                  git show HEAD:workspace-manifest.json > /tmp/fwd_ours.json        # LDR side (--ours)
+                  git show MERGE_HEAD:workspace-manifest.json > /tmp/fwd_theirs.json # main side (--theirs)
+                  if python3 scripts/cicd/reconcile_manifest_backmerge.py \
+                       --base /tmp/fwd_mb.json --ours /tmp/fwd_ours.json --theirs /tmp/fwd_theirs.json \
+                       --out workspace-manifest.json; then
+                    git add workspace-manifest.json
+                    git commit --no-edit --quiet
+                    if git push origin "HEAD:live-defi-rollout" 2>/dev/null; then
+                      echo "  inline Guard-2 reconcile pushed to LDR → PR goes clean"
+                      ACTION="reconciled"
+                    else
+                      echo "  WARN: reconcile push rejected (LDR moved) — next */15 tick retries"
+                      git merge --abort 2>/dev/null || true
+                      ACTION="reconcile_race"
+                    fi
+                  else
+                    echo "  genuine non-CI manifest conflict — leaving to main-backmerge-to-ldr escalation"
+                    git merge --abort 2>/dev/null || true
+                    ACTION="conflict_escalated"
+                  fi
+                else
+                  echo "  PR #$PR_NUM dirty on non-manifest files ($CONFLICTED) — leaving to main-backmerge-to-ldr"
+                  git merge --abort 2>/dev/null || true
+                  ACTION="dirty_nonmanifest"
+                fi
+              fi
+              # Re-arm auto-merge (the PR head advanced if we pushed; harmless no-op otherwise).
+              gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+            fi
           else
             echo "  PR #$PR_NUM mergeable_state=${MSTATE:-unknown} (auto-merge pending)"
             ACTION="pending"

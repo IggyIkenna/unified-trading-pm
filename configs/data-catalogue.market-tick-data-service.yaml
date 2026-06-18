@@ -211,13 +211,16 @@ shard_status:
             - trades
             - book_snapshot_5
             - derivative_ticker
-          start_date: "2024-10-01"
+          start_date: "2023-07-22"
           stage_1_has_run: false
           stage_2_data_complete: false
           completion_pct: 0.0
           latest_data_date: null
           assignee: ""
-          notes: 0% -- not found in Jan 2025 venues response. No liquidations.
+          notes: >-
+            0% -- not found in Jan 2025 venues response. No liquidations. Genesis
+            2023-07-22 (operator-confirmed 2026-06-17); pre-2024 funding is
+            Binance-proxied (Astherus pre-rebrand) — imported, not Aster-native.
   TRADFI:
     _status: 29.0% -- significant gaps in NYSE, CME missing entirely, ICE missing
     _sample_period: 2025-01-01 to 2025-01-31

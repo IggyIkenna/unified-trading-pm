@@ -210,6 +210,31 @@ The orchestrator rotates the account used for NEW SPAWNS when any of these fires
 In-memory tokens of already-running workers are NOT swapped mid-session (claude CLI doesn't re-read env mid-session).
 Rotation only affects subsequent spawns. Live workers continue on their existing token until they /done.
 
+### Context-preserving resume across a token change (shipped 2026-06-17)
+
+A worker / main agent that hits a **usage cap** is the one exception that continues across an account change — not a
+mid-session swap (impossible; the CLI never re-reads env), but a **kill + `claude --resume <id>` relaunch** on the
+headroom account. Verified facts (Claude Code v2.1.175 + official docs, 2026-06-17), used by the watchdog usage-cap
+trigger + the MainAgentKeeper (`orchestrator_account_failover_resume_respawn_2026_06_17`):
+
+- **Session id is assignable at launch** — `claude --session-id <uuid>` sets a specific id, so the orchestrator
+  GENERATES the UUID at spawn (`tmux_spawn.new_session_id()`), owns it from t=0, and persists it on
+  `SlotRow`/`AgentRow.claude_session_id`. No transcript-filename scraping, no race for the id.
+- **`claude --resume <id>` reloads conversation context** when relaunched in the SAME `CLAUDE_CONFIG_DIR` (per-session,
+  keyed by tmux session name → stable across respawns) + SAME cwd (the slot worktree → unchanged). The transcript is
+  pure conversation history; it carries NO account identity.
+- **Resume works across a token change.** Sourcing a different account's `CLAUDE_CODE_OAUTH_TOKEN` (env file) and
+  resuming the same session authenticates as the new account while replaying the old conversation — because account
+  identity lives only in the token (`.credentials.json` is bypassed entirely under setup-token env auth). Reusing the
+  per-session config dir with a new token is clean; no clearing required.
+- **Gotchas:** `--resume` must run from the original cwd (satisfied — same slot worktree); permissions don't carry
+  across resume (covered — `--dangerously-skip-permissions`); resumed context is the _compacted_ history (acceptable);
+  kill via the exact `tmux_spawn.kill_session(<name>)`, NEVER `pkill -f claude…` (a wildcard reaps sibling slots).
+
+This is consistent with "live workers are not swapped mid-session" — the resume path kills the wedged process first,
+then relaunches it; the new token is read fresh at launch. Full headroom-gating (decision B: leave frozen when no
+headroom) is in `codex/04-architecture/agent-orchestrator-overview.md` § "Trigger 1.4 — usage-cap account failover".
+
 ### Spawn-heartbeat watchdog (180s threshold)
 
 Every `/api/slots/{id}/spawn` call starts a background 180-second watchdog:

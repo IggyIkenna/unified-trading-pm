@@ -5,7 +5,7 @@ epic: infrastructure_master
 auditor: slot (interactive)
 date: "2026-06-11"
 status: complete
-parent_plan: plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
+parent_plan: plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md
 source:
   - profile_qg_resources.py --all --parallel (host-adaptive pinned sweep, 2026-06-11)
   - raw per-repo JSON/txt/markers in the gitignored .qg_profile/ (not committed — large intermediates)
@@ -95,3 +95,46 @@ scoping never weakens the gate — it only shortens the iterate loop.
 **Hard part to design next (Phase 2):** coverage preservation under scoped tests — `pytest-testmon` vs a coverage-cache
 vs floor-only-at-merge (evaluate with this data). The differential-correctness harness (known-bad commits) is the proof
 that scoping never lets a regression through.
+
+---
+
+## RE-PROFILE 2026-06-17 — post-optimization numbers + the Phase-2 scope decision
+
+> Re-swept with `profile_qg_resources.py --all --parallel --ram-budget-gb 52` on the SAME 24-core host, using the
+> **current** bases (post the size-checks-batching, schema-provenance O(n²), pip-audit-cache, bandit-cache speedups +
+> the 2026-06-17 `--cov-fail-under` drop). **23 of 25 repos COMPLETE** (agent-orchestrator + deployment-ui `⚠PARTIAL`,
+> excluded). Raw in gitignored `.qg_profile/reprofile_2026_06_17/`.
+
+### Fleet-wide spans (summed across the 23 complete repos)
+
+| Span            | total_s | % of span wall | vs 2026-06-11                                    | status                                           |
+| --------------- | ------- | -------------- | ------------------------------------------------ | ------------------------------------------------ |
+| **tests**       | 1883.5  | **67.4%**      | 59.5%→                                           | always-FULL by operator decision (never scoped)  |
+| **codex**       | 364.8   | **13.1%**      | 21.7%→ (1192s→365s, ~3.3× faster)                | **already fast-scoped — codex `--fast` SHIPPED** |
+| pip-audit       | 245.8   | 8.8%           | 3.5%→ (cold here; deps-hash cached on real runs) | fixed-cost, off the hot path                     |
+| **typecheck**   | 240.7   | 8.6%           | 10.5%→                                           | always-FULL by operator decision (never scoped)  |
+| removed-symbols | 25.6    | 0.9%           | 0.4%→                                            | cross-repo → the new nightly sweep workflow      |
+| **bandit**      | 23.5    | 0.8%           | 0.5%→                                            | fast-scopable (remaining) — content-cached       |
+| **size-checks** | 8.5     | 0.3%           | 3.2%→ (batching fix: ~178s→8.5s)                 | fast-scopable (remaining)                        |
+| lint (ruff)     | 0.3     | 0.0%           | —                                                | negligible                                       |
+
+### The decision the numbers force
+
+The 2026-06-11 plan banked on scoping **tests + codex + typecheck (91.7%)**. Two things changed that:
+
+1. **Operator decision 2026-06-17**: tests + typecheck stay FULL on every tier (no impact-selection — correctness over a
+   few minutes). That removes 76% of the wall from the fast-tier's reach by design.
+2. **codex (the remaining big file-specific phase, 13.1%) is ALREADY fast-scoped** — the codex `--fast` path shipped
+   (and the schema-provenance + size-checks fixes cut codex's absolute cost ~3.3× since June 11).
+
+So the **only remaining fast-tier-scopable work is size-checks (0.3%) + bandit (0.8%) = ~1.1% of gate wall.** That is
+not worth the two-tier machinery it would require (a separate `.qg_fast_sentinel`, a quickmerge fast-sentinel policy,
+the differential-correctness harness). The wall-time wins this plan set out to get were delivered by **per-step
+optimization (Phase 3)** — size-checks batching, the schema-provenance O(n²) fix, the pip-audit/bandit/actionlint caches
+— not by a change-scoped fast tier.
+
+**Verdict: STOP building the fast tier. Phase 2 is "done as far as it is worth."** Keep the shipped codex `--fast` path
+(it's free and already in); do NOT build size-checks/bandit fast-scoping, the two-tier sentinel, or the differential
+harness. The residual real lever is **tests** (67.4%) — but that's bounded by the always-full decision; the only honest
+tests speedup left is CI-side cache persistence + the existing `-n auto` on dedicated CI runners, not local
+change-scoping.

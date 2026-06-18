@@ -498,7 +498,16 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     if [ "$QUICK_MODE" = true ]; then
         COV=""
     else
-        COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+        # TIER-A config-SSOT (2026-06-17): do NOT pass --cov-fail-under here — it would
+        # SHADOW [tool.coverage.report] fail_under in pyproject.toml. pytest-cov reads
+        # fail_under from toml when the CLI flag is absent, so toml is the single home for
+        # the coverage gate. Verified pre-flip: every repo sourcing this base declares
+        # [tool.coverage.report] fail_under == its stub MIN_COVERAGE (zero drift, none absent),
+        # so dropping the flag is behavior-preserving. coverage-floor-guard.sh (run above)
+        # still enforces the system floor (70) + signed exceptions against MIN_COVERAGE and
+        # already treats toml fail_under as "the real gate" — this flip just removes the shadow.
+        # SSOT: quality_gates_speed_and_config_ssot_2026_06_09.md Phase 1 (TIER-A).
+        COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml"
     fi
     # ╔══ [OOM MITIGATION — added 2026-05-15] ═════════════════════════════════╗
     # OLD (pre-2026-05-15): xdist used 25% of logical CPUs by default. With 8
@@ -1272,7 +1281,11 @@ if command -v bandit &>/dev/null; then
     if qg_cache_hit bandit_content_hash "$_bandit_key"; then
         log_success "bandit: cached (source content unchanged)"
     else
-        _bandit_out=$(run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
+        # -c pyproject.toml: honor [tool.bandit] (single config home). Audited safe 2026-06-17 —
+        # only mtds + strategy carry non-empty skips and both are MOOT within SOURCE_DIR (0 findings
+        # for the skipped codes); bandit tolerates -c even with no [tool.bandit] section. The cache key
+        # already hashes pyproject.toml, so a skips change busts it. SSOT: qg_config_ssot_matrix_2026_06_09.md.
+        _bandit_out=$(run_timeout 30 bandit -c pyproject.toml -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
             && qg_cache_store bandit_content_hash "$_bandit_key" \
             || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
     fi
@@ -1628,6 +1641,10 @@ fi
 # STEP 5.31 — No hardcoded bucket name f-string templates (Pattern B)
 # Bucket names must come from config fields, not inline f-strings.
 # Catches: f"features-*-{category}-{project}" and similar patterns.
+# Opt-out markers: `# CORRECT-LOCAL` (generic local-only) AND
+# `# QG-allow: legacy-bucket-name-migration` — the latter (also honored by STEP 5.96)
+# declares a sanctioned legacy flat bucket pending the bucket-name SSOT migration
+# (resolve_bucket_name emits env-tiered names, not behaviour-preserving for these yet).
 # ============================================================
 HARDCODED_BUCKETS=$(codex_rg 'f"(features-|instruments-|ml-)[a-z-]+-\{' \
     --type py \
@@ -1635,6 +1652,7 @@ HARDCODED_BUCKETS=$(codex_rg 'f"(features-|instruments-|ml-)[a-z-]+-\{' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
     "$SOURCE_DIR/" 2>/dev/null \
     | grep -v '# CORRECT-LOCAL' \
+    | grep -v '# QG-allow: legacy-bucket-name-migration' \
     | grep -v '_template' \
     | grep -v 'Field(' \
     | grep -v 'default=' \
@@ -1827,6 +1845,18 @@ elif [[ $V -gt 0 ]]; then
 else
     log_ok "Codex compliance PASSED"
 fi
+
+# ── HARD-GATE AGGREGATION SNAPSHOT (fix: post-codex ratchet/STEP failures were unguarded) ──
+# BUG (qg_base_service_ratchet_exit_code_2026_06_11.md): $V is the violation counter but it
+# is CHECKED ONLY at the codex-compliance verdict directly above. Every STEP below (5.5a +
+# the 5.7x/5.9x ratchets — fallback-imports 5.94, DTZ/TID251 5.95, citations 5.97, etc.) still
+# does `V=$(( V + 1 ))` on failure, but V is NEVER re-evaluated afterward → a red ratchet step
+# (observed: STEP 5.94 over baseline) fell through to "ALL QUALITY GATES PASSED" + wrote the
+# sentinel = a hollow green gate. Snapshot V here (post-codex-tolerance, so V<=_max_v at this
+# point because >_max_v already exit-1'd above); the final aggregation before the success
+# banner fails the run if ANY later step incremented V. Hard gates get ZERO codex tolerance —
+# they carry their own per-repo baselines inside the checkers.
+_V_PRE_RATCHET=$V
 
 # ── [5.5a] WORKFLOW EXPRESSION GUARD (always-on, version-proof) ───────────────
 # Incident 2026-06-04: an empty `${{ }}` expression inside a run-block COMMENT in
@@ -3213,6 +3243,21 @@ if [ -f "$_CANON_MODEL_CHECKER" ]; then
     fi
 else
     log_success "STEP 5.93: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# ── HARD-GATE AGGREGATION VERDICT (fix: qg_base_service_ratchet_exit_code_2026_06_11.md) ──
+# Every STEP/ratchet from [5.5a] down increments $V on failure but $V was never re-checked
+# after the codex-compliance verdict far above — so a red ratchet step (e.g. STEP 5.94
+# fallback-imports over baseline) silently fell through to "ALL QUALITY GATES PASSED" and
+# wrote the sentinel. Here we fail if ANY step since the snapshot incremented V. Placed
+# BEFORE the ci_status LOCAL_PASS write and the sentinel block so a failure suppresses both.
+# $V and $_V_PRE_RATCHET are plain integers (only ever `V=0` / `V=$(( V + 1 ))`), so the
+# `[[ ]]` arithmetic test cannot receive the multi-line value that produced the original
+# `[: integer expression expected` symptom.
+_RATCHET_FAILS=$(( V - _V_PRE_RATCHET ))
+if [[ $_RATCHET_FAILS -gt 0 ]]; then
+    log_fail "Quality gates FAILED: ${_RATCHET_FAILS} hard gate/ratchet step(s) failed (see the ❌ STEP lines above). Sentinel NOT written; fix the root cause and re-run."
+    exit 1
 fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────

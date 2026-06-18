@@ -552,13 +552,23 @@ else
       elif git pull --rebase --autostash "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
       else
-        git rebase --abort 2>/dev/null || true   # clean up any half-done rebase
-        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
-          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (rebase conflicts) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        # Structured error contract (265, 2026-06-17): emit a machine-parseable QUICKMERGE_BLOCKED
+        # line so an agent self-serves recovery without an operator paste. Capture the conflicting
+        # files BEFORE the abort, and distinguish the autostash-pop foot-gun from a plain rebase
+        # conflict. `git rebase --abort` is SAFE (never overwrites; the autostash + peer commits
+        # stay intact) and returns 0 IFF a rebase was actually in progress.
+        _QM_CONFLICTS="$(git diff --name-only --diff-filter=U 2>/dev/null | tr '\n' ' ' | sed 's/ *$//')"
+        if git rebase --abort 2>/dev/null; then
+          _QM_CODE="BEHIND_DIVERGED_CONFLICT"   # rebase was mid-flight (now aborted; your autostash is pending in `git stash list`)
         else
-          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF and auto-rebase hit conflicts."
-          echo "   Pull the latest first (resolving conflicts), then re-run:"
-          echo "     git pull --rebase $_QM_REMOTE_NAME $_QM_REMOTE_BRANCH"
+          _QM_CODE="AUTOSTASH_POP_CONFLICT"     # no rebase in progress → the autostash pop conflicted; YOUR work is in `git stash list` — do NOT drop it
+        fi
+        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (${_QM_CODE}) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        else
+          echo "QUICKMERGE_BLOCKED code=${_QM_CODE} repo=${REPO_NAME} branch=${_QM_REMOTE_BRANCH} behind=${_QM_BEHIND} ahead=${_QM_AHEAD} conflicts=\"${_QM_CONFLICTS}\""
+          echo "RECOVERY: SUB_AGENT_MANDATORY_RULES.md § \"Quickmerge behind-remote\" — preserve peer commits, stash YOUR files BY NAME, git pull --rebase, reconcile essence, re-QG, re-quickmerge. NEVER 'git checkout HEAD -- <foreign-file>' then 'git stash drop' (destroys a peer's only WIP copy)."
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF, auto-rebase hit conflicts (code=${_QM_CODE})."
           echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
           exit 1
         fi
@@ -844,7 +854,21 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
     elif [ -f ../.venv-workspace/bin/activate ]; then
       source ../.venv-workspace/bin/activate 2>/dev/null || true
     fi
-    python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>/dev/null || true
+    # Hard-require a successful generate (fix 303, 2026-06-17). The old `2>/dev/null || true`
+    # swallowed a generate FAILURE — and since derived-dependency-manifest.json is gitignored
+    # (item-H), an FF leaves a slot with no local copy, so check-dependency-alignment.py then
+    # errored with a MISLEADING "Run generate-derived-manifest.py first", masking the real
+    # (generate / venv-PATH) root cause. Now: if generate fails, diagnose THAT and stop —
+    # don't cascade into a confusing dep-alignment failure.
+    _GEN_OUT="$(python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>&1)"
+    if [ $? -ne 0 ]; then
+      echo "[$REPO_NAME] ❌ derived-dependency-manifest generation FAILED — fix THIS, not dep-alignment"
+      echo "$_GEN_OUT" | tail -20
+      echo "   (common cause after an FF: the gitignored derived-dependency-manifest.json is absent +"
+      echo "    the workspace .venv/PATH can't run the generator — re-run setup.sh / activate .venv-workspace)"
+      cd "$REPO_DIR"
+      exit 1
+    fi
     if python "$ALIGN_SCRIPT" --json 2>/dev/null | grep -q '"aligned": true'; then
       echo "[$REPO_NAME] ✅ Dependency alignment PASSED"
     else
@@ -1190,18 +1214,37 @@ echo ""
 if [ -f "scripts/quality-gates.sh" ]; then
   if [ "$AGENT_MODE" = true ]; then
     # ── AGENT FAST-PATH: verify Pass 1 sentinel instead of re-running QG ──
+    # Rec #1 (qg_sentinel_content_hash_and_slicing): the sentinel records the COMMIT SHA
+    # at Pass-1 QG time. A bare SHA==HEAD check loses the race vs concurrent LDR writers —
+    # an UNRELATED fast-forward (CI machinery / peer agents) advances HEAD and stales a
+    # still-valid green QG, even though nothing in the files being shipped changed.
+    # Content-scoped fallback: if HEAD only FAST-FORWARDED past the sentinel commit and the
+    # --files being shipped are BYTE-IDENTICAL between the sentinel and HEAD, the Pass-1 QG
+    # still covers exactly those files → accept (re-verify by content, not by parent commit).
+    # Safety: requires sentinel to be an ANCESTOR of HEAD (forward-only; rejects divergence/
+    # rewind) AND zero diff on the --files set; ANY change to a shipped file → re-run QG.
     _SENTINEL=".qg_last_passed_sha"
     _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
     _SENTINEL_SHA=""
     [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(cat "$_SENTINEL" | tr -d '[:space:]')
-    if [ -z "$_SENTINEL_SHA" ] || [ "$_SENTINEL_SHA" != "$_CURRENT_SHA" ]; then
-      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh not run on current HEAD (SHA mismatch)."
-      echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}"
-      echo "  HEAD:     ${_CURRENT_SHA}"
+    if [ -z "$_SENTINEL_SHA" ]; then
+      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel missing — run: bash scripts/quality-gates.sh"
+      exit 1
+    fi
+    if [ "$_SENTINEL_SHA" = "$_CURRENT_SHA" ]; then
+      echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
+    elif [ -n "$FILES_ARG" ] \
+         && git cat-file -e "${_SENTINEL_SHA}^{commit}" 2>/dev/null \
+         && git merge-base --is-ancestor "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null \
+         && git diff --quiet "$_SENTINEL_SHA" "$_CURRENT_SHA" -- $FILES_ARG 2>/dev/null; then
+      echo "[$REPO_NAME] ✅ CONTENT sentinel verified — HEAD fast-forwarded ${_SENTINEL_SHA:0:9}→${_CURRENT_SHA:0:9} but the --files set is byte-identical between them, so Pass-1 QG still covers exactly these files (content-scoped per Rec #1). Skipping Pass 2 QG re-runs."
+    else
+      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel invalid for current state."
+      echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}  HEAD: ${_CURRENT_SHA}"
+      echo "  (HEAD moved AND a --files path changed since the sentinel — or sentinel is not an ancestor of HEAD.)"
       echo "  Run: bash scripts/quality-gates.sh"
       exit 1
     fi
-    echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
   else
     # Phase 1: lint auto-fix only (fast — ruff/eslint --fix, no tests/typecheck/build)
     echo "[$REPO_NAME] Phase 1: lint auto-fix..."

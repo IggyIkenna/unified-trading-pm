@@ -5458,3 +5458,34 @@ quickmerge's LDR→main does; check repos' allow-merge-commit setting first (reb
 merge commits are disallowed repo-side); (b) keep rebase/squash + have the conflict-resolver apply the tree-merge
 realignment recipe above when this signature appears (zero-unique-content + frozen base); the recipe is now codified in
 `agents/conflict-resolver.md` step 2's ladder territory. My recommendation: (a). — harsh-slot-5
+
+### [harsh-slot-3 → ikenna-main] Deployed dashboard Image column blank + GCP/AWS toggle no-op — IAM grant needs your admin + a multi-cloud build-status design call (2026-06-17)
+
+**Plan-of-record:** `plans/active/issues/deployment_dashboard_image_status_and_multicloud_toggle_2026_06_17.md`
+
+**TL;DR — two asks:**
+
+1. **One-line IAM grant I can't run (need Owner/IAM-admin; `harshkantariya` + the deploy SA both lack `setIamPolicy`).**
+   The deployed dashboard's Repos-CI **Image** column is "unknown" for all 25 repos because the Cloud Run SA
+   `unified-trading-sa@central-element-323112` has **no Cloud Build read**. `repo_ci.py` calls GCP Cloud Build
+   `list_builds`, 403s, swallows it → honest-unknown. Local works only because your ADC has the perm. Fix:
+   ```bash
+   gcloud projects add-iam-policy-binding central-element-323112 \
+     --member="serviceAccount:unified-trading-sa@central-element-323112.iam.gserviceaccount.com" \
+     --role="roles/cloudbuild.builds.viewer" --condition=None
+   gcloud projects add-iam-policy-binding central-element-323112 \
+     --member="serviceAccount:unified-trading-sa@central-element-323112.iam.gserviceaccount.com" \
+     --role="roles/artifactregistry.reader" --condition=None
+   ```
+   Read-only, reversible; column populates ~5 min after (IAM + 300s build cache).
+
+2. **Design call — how should the GCP/AWS toggle show per-cloud build status in prod?** Found that the toggle is a
+   **no-op in the deployed bundle** (`CloudProviderContext.getApiBaseUrl` returns relative `/api` for all non-localhost
+   hosts → both buttons hit the same GCP backend; and the backend takes no provider param). Option A (two backends,
+   toggle switches URL) vs Option B (one backend + `?provider=` param + GCP→AWS **WIF** for keyless read-only AWS
+   access). Also confirmed UTL already decouples the secret store via `SECRETS_CLOUD_PROVIDER` (factory.py:103-110), so
+   "GSM as single SSOT read from AWS" is supported — with the one bootstrap-cred caveat (resolve via AWS→GCP WIF). Full
+   analysis + my recommendation (Option B + WIF) in the doc. Your call on A vs B since it depends on whether the AWS
+   deployment grows beyond build-status.
+
+Not blocking trading (P2, operator tooling). — harsh-slot-3

@@ -52,25 +52,41 @@ not actually kept on either cloud.
       cloudbuild.yaml step 4); POST_BUILD `uv pip install` → `python -m pip` gated under `CODEARTIFACT_DOMAIN` (uv not
       in CodeBuild env). — deployment-service@2077ecb | webhook re-triggered CodeBuild on the fixed sha.
 
-## Phase 1 — make in-image QG ACTUALLY run on both clouds (the shared latent gap) [P1]
+> **🔎 Audit callout (CI/CD drift audit 2026-06-17 — D11 RESOLVED 2026-06-17 (drop, see Phase 1 below); D14 recorded):**
+>
+> - **D11 — reconcile Phase 1 against a since-shipped decision.** `gcp_cloudbuild_sibling_context_staging_2026_06_15`
+>   (RESOLVED 2026-06-15) shipped `_RUN_INIMAGE_QG: false` to the sibling-COPY repos, deciding in-image QG is
+>   **redundant** (the LDR→staging `quality-gates-v2` already gates before the build) **and impossible** (no
+>   `unified-trading-pm` harness in the image → `exit 127`). That contradicts Phase 1's goal of making in-image QG
+>   _run + gate_ on both clouds. **Decide before actioning Phase 1:** keep in-image QG (then Phase 1 must also solve the
+>   harness-in-image problem the issue declared unsolvable) **or** treat the pre-build CI gate as sufficient (then
+>   re-scope Phase 1 to drop in-image QG and assert the pre-build gate covers both clouds).
+> - **D14 — the AR-publish gate already exists but is UNWIRED.** `scripts/cicd/assert_deps_published_to_ar.py` is
+>   written (asserts internal deps are published to Artifact Registry at their declared floor) but its own STATUS
+>   comment (2026-06-16) says it is **NOT wired into any workflow** — reserved for a production image-build dep-publish
+>   gate that has not launched. If this plan's registry-push-gating work needs an AR-publish precondition, **wire this
+>   script** rather than writing a new one.
 
-> This is the real parity win: today QG is advisory-only on GCP **and** AWS because the script can't find
-> `base-service.sh` in the image. The buildspec already mounts PM at `/workspace/unified-trading-pm` and passes
-> `-e WORKSPACE_ROOT=/workspace` — the script just ignores it.
+## Phase 1 — in-image QG: DROPPED (DECISION 2026-06-17, operator) [RESOLVED]
 
-- [ ] [SCRIPT] P1. In the `quality-gates.sh` **template** (`scripts/quality-gates-base/` header generator / the
-      templated per-repo header), honor a pre-set `WORKSPACE_ROOT`:
-      `WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." && pwd)}"`. Harmless locally (env
-      unset → git fallback unchanged); in-container the buildspec's `-e WORKSPACE_ROOT=/workspace` is honored →
-      `source /workspace/unified-trading-pm/...base-service.sh` resolves → QG RUNS. Target repo: **unified-trading-pm**
-      (template) + roll out fleet-wide via the standard template rollout.
-- [ ] [SCRIPT] P1. Once QG runs in-container, flip the in-image QG step from advisory (`|| echo`) to **blocking** on
-      BOTH `cloudbuild.yaml` (GCP) and `buildspec.aws.yaml` (AWS), and gate `docker push` on it — restoring the "test
-      the artifact you deploy, push only if green" contract the file headers claim. Target repos: deployment-service +
-      every repo with a build config.
-- [ ] [TEST] P1. Add a parity smoke that runs the same image's `quality-gates.sh --no-fix --quick` with
-      `WORKSPACE_ROOT=/workspace` + PM mounted, asserting exit 0 (catches the WORKSPACE_ROOT regression on either
-      cloud). Target repo: deployment-service (wired into its QG per the peripheral-script rule).
+> **DECISION 2026-06-17 (operator — D11 from the CI/CD drift audit
+> `plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md`): drop in-image QG entirely.** Rationale: it
+> re-runs gates the code already passed **twice** before the image is built (quickmerge Pass-1 locally + the LDR→staging
+> `quality-gates-v2` PR gate), so it is **redundant**; and the harness isn't in the image (no `unified-trading-pm` →
+> `exit 127`), so making it blocking would mean permanently mounting the PM harness + siblings into every build for
+> ~zero gain. **`_RUN_INIMAGE_QG: false`** (shipped fleet-wide by `gcp_cloudbuild_sibling_context_staging_2026_06_15`)
+> is now the **canonical** state. The **authoritative QG is the pre-build `quality-gates-v2` PR gate**; the image build
+> just builds + pushes. The genuinely-valuable part of "test the artifact you deploy" — an **image-boot smoke** (does
+> the container start + import / health-check, catching a bad `uv sync` / missing runtime dep / broken entrypoint that
+> lint/type/test never would) — is owned by the **build-images workstream (separate agent)**, so it is intentionally NOT
+> a todo here.
+
+- [x] ✅ **DROPPED — in-image QG `WORKSPACE_ROOT`-honoring** (was: make `quality-gates.sh` resolve its harness
+      in-container). Superseded by the drop decision; `_RUN_INIMAGE_QG: false` stands.
+- [x] ✅ **DROPPED — flip in-image QG to blocking + gate `docker push`.** Superseded; the pre-build `quality-gates-v2`
+      PR gate is the authoritative gate.
+- [x] ✅ **DROPPED — in-image-QG parity smoke** (re-running `quality-gates.sh` in-image). Replaced by the image-boot
+      smoke owned by the build-images workstream — a boot/import check, NOT a QG re-run.
 
 ## Phase 2 — AWS build router (mirror cloud-build-router) [P2]
 
@@ -107,12 +123,14 @@ not actually kept on either cloud.
 
 ## Success criteria
 
-- In-image QG **runs and gates** (not advisory) on both clouds; `docker push` blocked on a real QG failure.
+- In-image QG is **dropped** (`_RUN_INIMAGE_QG: false` canonical on both clouds, DECISION 2026-06-17); the pre-build
+  `quality-gates-v2` PR gate is the authoritative QG. Deploy-artifact safety is covered by the image-boot smoke (owned
+  by the build-images workstream), NOT by re-running QG in-image.
 - Every buildable repo has both a `cloudbuild.yaml` and a `buildspec.aws.yaml` (or is explicitly marked GCP-only).
 - A cross-cloud parity test is green and wired into deployment-service QG.
 - `codex/08-workflows/ci-cd-flow.md` documents the dual-cloud flow.
 
 ## Temporary states + their canonical follow-up plans
 
-- **In-image QG advisory on both clouds** — TEMPORARY; canonical fix = Phase 1 of THIS plan (honor `WORKSPACE_ROOT` →
-  blocking QG + push-gating).
+- ~~In-image QG advisory on both clouds~~ — **RESOLVED 2026-06-17: dropped** (`_RUN_INIMAGE_QG: false` canonical; the
+  pre-build `quality-gates-v2` PR gate is authoritative). No longer a temporary state. See Phase 1.

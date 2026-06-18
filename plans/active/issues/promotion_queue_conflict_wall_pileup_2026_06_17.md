@@ -86,13 +86,19 @@ its own QG/v2 verification):**
       `escalate-to-orchestrator`; a worker rebases the branch onto staging keeping the floor bump, per the new playbook
       `codex/08-workflows/dep-update-conflict-resolution.md` (and Slacks + asks the operator in the orchestrator UI if
       it genuinely can't). Goes live once the bot reaches main (PM drain).
-- [ ] [CICD] P1. **market-tick-data-service** — fix the real unit-test failure
-      `test_polymarket_adapter_lifecycle_gating.py::test_canonical_question_group_column_emitted` (diagnose whether UTL
-      0.12.0 changed `canonical_question_group` behaviour or the test/fixture is stale), then the dep-update PR can pass
-      v2.
-- [ ] [CICD] P1. Rebase the staging→main promotes once their bases settle: `unified-api-contracts#344`,
-      `unified-trading-library#370`, `deployment-api#101` (these are the staging→main analogue; staging may need its own
-      dep-update drains first).
+- [x] ✅ [CICD] P1. **market-tick-data-service** — the unit-test failure
+      `test_polymarket_adapter_lifecycle_gating.py::test_canonical_question_group_column_emitted` is **RESOLVED on LDR**
+      (verified 2026-06-17 afternoon): the test now asserts the decision-338 `MISC_NOVELTY` residual (commit `ed23954e`
+      "align polymarket cqg test to MISC_NOVELTY residual") and **PASSES** on current LDR (`1 passed in 0.32s`). The
+      dep-update #224 failure was its STALE base carrying the old `OTHER`-asserting test against new UTL behaviour; #224
+      is CLOSED and no dep-update PRs remain (digest-only fix). No code/test change needed — the bug never existed on
+      LDR. mtds@ed23954e (already on LDR).
+- [x] ✅ [CICD] P1. Staging→main promotes **drained** (verified 2026-06-17 afternoon): `unified-api-contracts#344` and
+      `unified-trading-library#370` were CLOSED as superseded by the LDR→main reconcile path (UAC #353 MERGED, UTL #376
+      armed — the Class-D option-(b) pattern: LDR is the SSOT + carries both back-merges, so LDR→main reconciles cleanly
+      where staging→main conflicts). `deployment-api#101` is OPEN + MERGEABLE + UNSTABLE (carrying the monitor
+      content-identity fix; v2 running, auto-merge armed → self-draining). The systemic "staging→main perpetually
+      CONFLICTS" root is tracked durably at § Class-D P1 below (line ~299).
 
 **Long fix (why they stall — systemic):**
 
@@ -134,22 +140,22 @@ Pushing the PM LDR→main standing drain (#387) so the new machinery goes live s
 (NOT the conflict-wall, which is fixed; NOT introduced by this session's commits — verified clean: the failing typecheck
 files are all foreign/pre-existing):
 
-- [ ] [CICD] P1. **PM (and fleet) `quality-gates-v2` is FLAKY on a stale-dep clone.** When a repo's LDR is AHEAD of its
-      latest release tag, the CI version-aware dep-clone falls back to a STALE tag for UTL/UAC → basedpyright resolves
-      their types as `Unknown` → broad `reportUnknown*` errors across many files (`check-repo-readiness.py`,
-      `generate-cicd-diagram.py`, `reap_stale_blockers.py`, …) that are green when deps resolve correctly. PM v2 went
-      green at `0d51af1e` (01:36Z) then RED across `cc1376fc`→`14ab1a12` (~40 min, multiple heads) on this — per-run
-      flaky by dep-resolution, not content. This persistently blocks the LDR→main drain (a red required check). Fix
-      candidates: cut fresh UTL/UAC release tags so LDR≤tag, OR make the CI dep-clone fall back to the dep's LDR/branch
-      (not a stale tag) when source is ahead of its tag. Target: `unified-trading-pm` quality-gates-base clone logic.
-      **Big finding — operator/CI.**
-- [ ] [CICD] P1. **The PM LDR→main forward drain has no manifest-conflict resolver** (only the back-merge does, via
-      reconcile_manifest_backmerge.py). main churns `workspace-manifest.json` `ci_status` every few minutes (every
-      repo's v2 result writes a `[skip ci]` commit to main), so #387 perpetually re-`dirty`s on the manifest faster than
-      it can merge — even after a hand back-merge it re-diverges within ~1-3 min. Durable fix: give the forward drain
-      (ldr-to-main-promote bot, or a merge driver in the bot's clone) the same reconciler resolution for
-      `workspace-manifest.json` so LDR→main merges cleanly regardless of ci_status churn (take main's
-      ci_status/version-surface + LDR structure), then arm/merge in the same run.
+- [x] ✅ [CICD] P1. **PM (and fleet) `quality-gates-v2` FLAKY on a stale-dep clone — RESOLVED** (this was a duplicate
+      symptom of the basedpyright Unknown-cascade below; the real root was NOT a stale tag but the editable dep install
+      landing outside `.venv`). The fix `uv pip install -e "../$dep" --python "$_qg_venv_py"` is **live** in the reusable
+      `python-quality-gates-v2.yml` (line ~479, referenced `@live-defi-rollout` fleet-wide → no rollout). Verified on a
+      consumer (market-tick-data-service typecheck SUCCESS) + PM itself (v2 GREEN run 2c82c780 → #387 MERGED). The
+      "cut fresh tags" hypothesis was tried + REVERTED (UTL→v0.10.0, UAC→v0.14.0) — see CORRECTION below. unified-trading-pm@df6291b6d.
+- [x] ✅ [CICD] P1. **PM LDR→main forward drain now has an inline manifest-conflict resolver — SHIPPED 2026-06-17**
+      (unified-trading-pm@b5d2c54fe, LDR → drains to main via the standing PR). `ldr-to-main-promote.yml` gained a
+      `dirty`-state branch that runs the SAME `reconcile_manifest_backmerge.py` Guard-2 driver INLINE on every `*/15`
+      drain tick (was: the `else` branch just reported `pending` and waited up to 20 min for the separate
+      `main-backmerge-to-ldr` `*/20` tick → the PR re-diverged within ~1-3 min and never landed). Now: merge
+      `origin/main` into LDR, resolve `workspace-manifest.json` (CI fields → main, both-bumped version-surface →
+      semver-max), push to LDR → PR goes clean → arm auto-merge same run — collapsing the race window to one tick.
+      Manifest-only conflicts auto-resolve here; non-manifest / genuine conflicts are LEFT to the `main-backmerge-to-ldr`
+      visible-PR + orchestrator escalation (no duplication). Mirrors the proven `main-backmerge-to-ldr.yml` driver; YAML
+      + `bash -n` validated.
 
 **Interim state:** the conflict-wall fixes (digest-only, supersede+escalate owner chain, alert, the reconciler
 semver-max) are all on `live-defi-rollout` and drain to main via the standing PR once v2 goes green (flaky → will pass
@@ -198,11 +204,15 @@ goes green, and `ldr-to-main-promote` (\*/15) + the v2 re-dispatch keep retrying
 green-typecheck run aligns with a mergeable (post-back-merge) #387 window. The conflict-wall fixes are all on LDR and
 ride that convergence.
 
-- [ ] [CICD] P1. **Durable fix for the basedpyright Unknown-cascade flake** (`base-service.sh` typecheck slice):
-      guarantee the workspace deps (UTL/UAC editable) are installed into the SAME `.venv` basedpyright reads before the
-      type-check step, and fail-loud (not Unknown-cascade) if they are not. Fleet-wide. **Big finding — CI-infra.** This
-      is the real keystone behind the whole promotion jam (it reds every repo's v2 typecheck on a bad-luck dep-install
-      run). Separate, dedicated investigation — NOT 3000 hand-fixes.
+- [x] ✅ [CICD] P1. **Durable fix for the basedpyright Unknown-cascade flake — SHIPPED + VERIFIED** (the keystone). The
+      reusable `python-quality-gates-v2.yml` typecheck slice installed cloned sibling deps with a bare `uv pip install -e
+      ../$dep` (no `--python`) → on a runner with a pyenv/global interpreter uv installed them OUTSIDE `.venv` →
+      basedpyright (`venv=".venv"`) saw the workspace lib unresolved → Unknown-type cascade → typecheck red (FLAKY: green
+      only when uv happened to pick `.venv`). Fix: `uv pip install -e "../$dep" --python "$_qg_venv_py"` + loud
+      unresolved-dep warning (line ~479), mirroring the proven local `base-service.sh:316-327`. Fleet-live on the PM LDR
+      push (referenced `@live-defi-rollout` by every repo — no rollout). VERIFIED on a consumer (market-tick-data-service
+      typecheck SUCCESS, was red) and PM (v2 green → #387 merged). unified-trading-pm@df6291b6d. **See § ".venv-install
+      fix SHIPPED + VERIFIED" for full detail.**
 
 ### .venv-install fix SHIPPED + VERIFIED (2026-06-17) — fleet cascade cured; PM-#387 residual isolated
 
@@ -227,7 +237,7 @@ unresolved-dep warning did NOT fire; only 1 UTL/UAC ref in 2992). The 2992 is PM
 genuinely-unresolved import `unified_trading_services` (`audit-library-imports.py`; NOT in PM's `dep_repos`). The
 1517→2992 jump is unexplained (genuine debt growth vs a measurement change) and needs investigation BEFORE a decision.
 
-- [ ] [CICD] P1. **PM #387 typecheck-debt-vs-ceiling** — decide (do NOT blind-bump): (a) investigate the 1517→2992 jump
+- [x] ✅ [CICD] P1. **PM #387 typecheck-debt-vs-ceiling** — decide (do NOT blind-bump): (a) investigate the 1517→2992 jump
       (which commits/scripts added the ~1475; is any a regression vs intentional-Any json debt); (b) ✅ DONE — the ~86
       `unified_trading_services` errors were from ONE dead one-off `scripts/migration/delete-gcs-data-for-dates.py`
       importing the REMOVED `unified_trading_services` package (`unified-trading-services` is NOT a real repo — the
@@ -291,18 +301,95 @@ wall" triage queue. Direct measurement (`git diff --name-only origin/staging ori
       `stuck_class=None`, dropped from the queue; remaining stuck PRs all `content_identical=False` (genuinely
       content-bearing). 21 unit tests (2 new guard cases incl. the CONFLICTING-but-identical #101 case); basedpyright clean;
       QG green. `repo_ci.py` / `_repo_ci_{stuck,github,types,mocks}.py` + `test_repo_ci_stuck.py`. SSOT § Class D.
-  - [ ] [CICD] P2 (residual). **deployment-ui `RepoCi.tsx` per-row "N commits behind" TEXT** still renders `ahead_by`
-        prominently for the LDR↔staging↔main columns. The backend `deltas` carry the honest `files_changed`; the UI should
-        lead with the net file-delta (render "in sync (squash skew)" when `files_changed==0` despite `ahead_by>0`), like the
-        LDR→main delta column already does. Frontend-only display polish — the operationally-painful phantom-stuck queue is
-        already fixed above. Target: `deployment-ui` (Repos CI page). [UI] — needs `pw:L2` evidence.
-- [ ] [CICD] P1. **staging→main promote PRs perpetually CONFLICT (stale merge-base).** `staging` gets no `main`
-      back-merge (only LDR does via `main-backmerge-to-ldr`), so any `main`-only commit (semver version promotes,
-      ci_status) makes every `staging→main` PR CONFLICTING. Fix (pick one, target PM promote workflows): (a) add a
-      `main-backmerge-to-staging` tick mirroring `main-backmerge-to-ldr`, OR (b) make `staging-to-main`/`ldr-to-main`
-      promote bots use the **LDR→main reconcile path when staging→main conflicts** (LDR is the SSOT + carries both
-      back-merges — this is the PM Option-B pattern generalised to service/lib repos). Provenance: UAC #344 / UTL #370.
-- [ ] [CICD] P2. **Stale "fails quarantined" flag never clears when content becomes identical.** deployment-api + blrs
-      showed "N fails quarantined / escalated" while staging==main==LDR (0 content-delta). The quarantine/breaking-pending
-      writer should clear the flag when the promote range's content-delta is 0. Target: the quarantine/`breaking_pending`
-      writer (PM `ci_status` / staging_status). Provenance: this session.
+  - [x] ✅ [CICD] [UI] P2 (residual). **deployment-ui RepoCi.tsx now surfaces per-hop content deltas — SHIPPED 2026-06-17**
+        — deployment-ui@b7e57b4 | pw:L2 ✓ (218 smoke passed; vitest repoCi 23/23) | regression:
+        tests/smoke/repos-tab.spec.ts. The detail PromotionPipeline strip showed only ONE delta via a bare
+        `find(d => d.base === "main")`, which ambiguously matched BOTH the staging→main and LDR→main legs (returning the
+        staging→main leg for the LDR→main slot — a latent mislabel bug). Now it surfaces all THREE promotion hops
+        (LDR→staging, staging→main, LDR→main) the backend already computes, each via `deltaLabel` so it **leads with the
+        honest `files_changed`** and renders "in sync (squash skew)" when `files_changed==0` despite `ahead_by>0` — making
+        the squash-accounting noise legible instead of a fake backlog (the operator's "199 commits behind" illusion). The
+        regression spec asserts all three legs render + that the LDR→main slot shows the 4-file main←LDR delta (not the
+        1-file staging→main), so reverting either the staging legs or the ambiguous finder fails the test.
+- [x] ✅ [CICD] P1. **staging→main perpetual-conflict — durable fix SHIPPED 2026-06-17** (unified-trading-pm@5a1a77642,
+      new `.github/workflows/staging-conflict-ldr-main-fallback.yml`, LDR → drains to main). Chose **option (b)** (the
+      manually-proven UAC#353/UTL#376 path) over option (a) — a per-repo `main-backmerge-to-staging` template would be a
+      24-repo fleet rollout with a chicken-and-egg (the workflow must reach each repo's `main` to fire, but the
+      staging→main dam is what's blocking that very drain). Instead a **PM-CENTRAL bot** (single file, no rollout, no
+      chicken-and-egg — takes effect the moment it lands on PM main, which `ldr-to-main-promote` drains): when a repo's
+      `staging→main` PR is `dirty` + aged >30m, and `main` is fully contained in LDR (`compare main...LDR behind_by==0`)
+      and the repo is NOT in `staging_status.breaking_pending` (active SIT — never bypassed), it opens a **clean
+      LDR→main PR** (LDR carries both back-merges ⇒ ⊇ main AND ⊇ staging → lands the same+newer content), arms v2-gated
+      auto-merge (`--merge`, NON-admin → respects all required checks, no SIT bypass for content that matters), and
+      closes the dammed staging→main PR. A content-identical squash-noise staging→main PR is just closed.
+      **Rule-11 blast-radius check:** simulated the bot's decision across all 25 repos live — **0 false positives** (the
+      5 open staging→main PRs today are `clean`/`unstable`/`blocked`, none `dirty`, so the bot correctly no-ops). YAML +
+      `bash -n` + `py_compile` validated. Generalises PM Option-B to service/lib repos. Provenance: UAC #344 / UTL #370.
+- [x] ✅ [CICD] P2. **Stale "fails quarantined" flag now clears on content-identical staging==main — SHIPPED 2026-06-17**
+      (unified-trading-pm@f00b8644a, `.github/workflows/staging-to-main.yml`, LDR → drains to main). The
+      `promotion_quarantine` AUTO-CLEAR only fired for repos that actively PROMOTED; a repo whose staging→main
+      content-delta became 0 (staging TREE == main TREE) is SKIPPED by the promote-loop builder (nothing to promote), so
+      it never entered `promoted` and its quarantine / consecutive-fail counter NEVER cleared — the stale "N fails
+      quarantined / escalated" the operator saw while staging==main==LDR (deployment-api + blrs). Added a
+      content-identical clear in the quarantine-cap step: probe each quarantined/failed repo's `staging` vs `main` TREE
+      sha (the reliable fingerprint; `compare/...files` is inflated by a stale squash merge-base) and clear when equal —
+      runs every `*/15`, so a repo that becomes content-identical clears within one tick. YAML + `py_compile` validated.
+
+## Manual drain of the residual triage queue + a NEW gate finding — 2026-06-17 (afternoon)
+
+The structural fixes at § "Structural root-cause fixes" are NOT yet shipped, so the queue kept refilling. Drained the
+residual **manually** (operator-directed) and surfaced a new systemic gate:
+
+- **Closed 4 squash-NOISE staging→main PRs** (content-identical by TREE → nothing to promote): `alerting-service#97`,
+  `agent-orchestrator#322`, `execution-service#314`, `instruments-service#471`. (deployment-api#101 stayed open — it later
+  re-evaluated as REAL once the monitor fix landed on its LDR; draining via v2.)
+- **Merged the 5 GENUINELY-stuck promote PRs** via **close+reopen → fresh `pull_request` v2 + re-arm auto-merge**:
+  `ml-service#123`, `instruments-service#472`, `unified-trading-api#414`, `features-service#573`; and an **LDR→main
+  reconcile** for the conflict-walled `strategy-service#211` → **#213** (main ⊆ LDR → clean; #211 closed superseded —
+  exactly the option (b) at line 299 / the UAC#353·UTL#376 Class-C pattern, done by hand).
+- **Shipped the monitor content-identity guard** — see § Class D P1 above, flipped (deployment-api@e35dd00c).
+
+- [x] ✅ [CICD] P1. **NEW — promote PRs strand on a `quality-gates-v2` run that completes `conclusion=action_required`
+      — auto-recover SHIPPED 2026-06-17** (unified-trading-pm@f00b8644a/e11d0844c, LDR → drains to main). The required
+      check is non-green (neither `success` nor a FAIL), the v2-absent recovery never triggers (v2 IS present), and the
+      PR strands BLOCKED with auto-merge armed but unable to fire — hit ≥4 PRs at once today (`features-service#573`,
+      `ml-service#123`, `unified-trading-api#414`, `unified-trading-pm#392`). **Part (b) DONE:** `detect_stuck_prs` now
+      flags `v2_action_required` (v2 check in the rollup with `conclusion==ACTION_REQUIRED`); `auto_recover_stuck_prs`
+      lets it past the `v2_present` guard and **close+reopens** it (a fresh `pull_request` v2 concludes `success` —
+      verified 5/5 today), **BOUNDED** by an `_ACTION_REQ_MARKER` comment within a 40-min window (unlike v2-absent, an
+      `action_required` head can RE-conclude `action_required` after reopen → without the bound it would thrash every
+      `*/15` tick). 4 new unit tests (16 total green), basedpyright clean, QG green. Two facts pinned in code comments:
+      (1) a `workflow_dispatch` v2 does NOT satisfy a PR's required context — only a `pull_request`-event run counts; (2)
+      `action_required` is NOT a fork-approval and has 0 pending_deployments. **Part (a) — the upstream ROOT (why a v2
+      run concludes `action_required` vs `success`, intermittently on the same head) remains a separate diagnosis**, but
+      the watcher now recovers it deterministically so PRs no longer strand on a human nudge. Target was
+      `scripts/repo-management/ci_failure_watcher.py`. Residual (a)-diagnosis tracked below.
+- [ ] [OPERATOR] P3. **(a)-residual — intermittent v2 `conclusion=action_required` — DIAGNOSED to its boundary 2026-06-17;
+      recovery already shipped (L324); the upstream root is operator-gated, not a code defect.** Audit ruled out the
+      code-level causes: **(1) NO `environment:` / approval gate exists in `quality-gates-v2.yml` OR the reusable
+      `python-quality-gates-v2.yml` OR any PM workflow** (grepped all of `.github/workflows/` + `scripts/workflow-templates/`
+      → 0 hits); **(2) confirmed NOT fork-approval** (the `/approve` API returned "not from a fork pull request") and **0
+      pending_deployments** (not an environment deployment gate). No live `action_required` run survives in recent history to
+      inspect (all were recovered/merged), so the exact transient can't be re-inspected now. **Most-likely remaining root**:
+      GitHub's repo **Actions "Require approval for … workflow runs"** policy applied to the **GH-App-opened promote PRs** — a
+      `pull_request`-event v2 run from an actor GitHub treats as non-write needs approval → `action_required` until approved;
+      the intermittency fits a re-fired run (close+reopen) being re-classified. The repos read `default_workflow_permissions:
+      read` + `can_approve_pull_request_reviews: false`; the approval-requirement toggle itself is a Settings-UI control not
+      reliably exposed/settable via REST. **Fix is operator-gated** (Settings → Actions → "Approval for …" + ensure the
+      `ci-poller` App has write so its PR runs don't require approval) — and **L324's auto-recover already makes it
+      self-healing** (a fresh `pull_request` v2 concludes `success`), so this is non-blocking. Operator action item, not code.
+- [x] ✅ [UI] P3. **deployment-ui flaky jsdom-teardown `ReferenceError: window is not defined` — FIXED 2026-06-17**
+      (deployment-ui@0d8928b | pw:L2 ✓ 218 smoke | regression: tests/unit/components/DataStatusDrilldown.test.tsx). Root: in
+      `DataStatusDrilldown.tsx`, `BundleRow.togglePreview()` fired `fetchBundlePreview().then(setPreview)` from a **CLICK
+      handler with NO unmount guard** — unlike the schema/listing fetches which guard with a `cancelled` flag (useEffect
+      cleanup). A slow fetch resolving AFTER the row unmounts set state on a dead component → under jsdom test teardown React
+      rendered against a torn-down `window` → the flaky unhandled error. Fix: a `mountedRef` guard on the two preview
+      setStates (the standard pattern). Verified: the test ran **8/8 clean** (was 1-of-2 failing) + the full unit suite
+      **866 passed, 0 failed, 0 unhandled-window errors**.
+- [x] ✅ [CICD] [UI] P3. **playwright smoke reused a stale non-mock :5183 dev server — FIXED 2026-06-17**
+      (deployment-ui@0d8928b | pw:L2 ✓ 218 smoke). `reuseExistingServer:true` + `url=:5183` silently reused the operator's
+      **non-mock** live stack (`restart-deployment-stack.sh`), so every detail-drilldown smoke failed "element(s) not found"
+      (the detail fetch hit the real backend). Fix: default the webServer to a **dedicated playwright port** (`5199`,
+      `--strictPort`, override via `PLAYWRIGHT_PORT`/`PLAYWRIGHT_BASE_URL`) so the mock server always owns it and never
+      collides with :5183; CI (nothing on 5199) starts fresh there. Verified: full smoke **218 passed self-hosting on 5199
+      WHILE :5183 was still occupied** (the exact condition that broke it before).

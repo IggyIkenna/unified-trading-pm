@@ -117,24 +117,78 @@ clean fix is to relax it.
       semver-agent's CI-side `version =` bump (poison-pill — one bumped version with no lock regen reds every later PR),
       and speed > security per operator. The author-time "floor bump → regen + commit `uv.lock` in the same commit"
       discipline replaces it (a rule, not a CI gate).
-- [ ] 🟡 [CI] P1. **DECIDED 2026-06-12 (operator Harsh) — align CI to local via `uv sync --frozen`; speed > security.
-      DRAFTED for Ikenna (CI/CD-pipeline surface), REVIEW-REQUESTED.** The CORRECTION stands: CI's
-      `python-quality-gates-v2.yml` runs `uv venv` + plain `uv sync` (line 459) which RE-RESOLVES against the lock and can
-      pull surprise transitive deps (the CI-only `pip==26.0.1` PYSEC-2026-196 divergence — CI pip-audit red, local clean).
-      **Decision: keep `pyproject.toml` as the edit-surface/contract, but make CI install the COMMITTED lock
-      deterministically — `uv sync` → `uv sync --frozen`.** `--frozen` NOT `--locked`: `--frozen` installs the committed
-      lock as-is, no re-resolution (no surprise deps, fastest) AND tolerates the semver-agent's CI-side `version =` bump;
-      `--locked` asserts pyproject↔lock consistency and would HARD-FAIL on every version bump (poison-pill). Under
-      `--frozen` the version bump is a no-op (root pkg is editable-installed from source). **Replaces the freshness gate
-      with an author-time rule:** a dependency-FLOOR bump (NOT a version bump) regenerates + commits `uv.lock` in the SAME
-      commit (`uv lock` / `uv lock --upgrade-package <name>` → commit `pyproject.toml` + `uv.lock` together); a CVE fix =
-      bump the floor + regen (no transitive-CVE HARD block — pip-audit / internal-advisories on transitive pins WARN).
-      **Ready diff handed to Ikenna in `_agent_pings.md` 2026-06-12:** one-line `python-quality-gates-v2.yml:459
-      uv sync` → `uv sync --frozen` + relax transitive-CVE block to WARN; trivially revertible (drop `--frozen`). Docs
-      updated: `CLAUDE.md` Deps+builds + `ci-cd-flow.md` §Dependency promotion + `quality-gates.md`. Repo:
-      unified-trading-pm.
+- 🟡 [CI] **SUPERSEDED 2026-06-17 → now tracked as Phase 1.5b below; the flip is gated on the Phase-1.5a LDR-landing
+  prerequisite (a bare flip re-arms the Tier-C runaways). Original 2026-06-12 draft kept for rationale.** DECIDED
+  2026-06-12 (operator Harsh) — align CI to local via `uv sync --frozen`; speed > security. DRAFTED for Ikenna
+  (CI/CD-pipeline surface), REVIEW-REQUESTED. The CORRECTION stands: CI's `python-quality-gates-v2.yml` runs `uv venv` +
+  plain `uv sync` (line 459) which RE-RESOLVES against the lock and can pull surprise transitive deps (the CI-only
+  `pip==26.0.1` PYSEC-2026-196 divergence — CI pip-audit red, local clean). **Decision: keep `pyproject.toml` as the
+  edit-surface/contract, but make CI install the COMMITTED lock deterministically — `uv sync` → `uv sync --frozen`.**
+  `--frozen` NOT `--locked`: `--frozen` installs the committed lock as-is, no re-resolution (no surprise deps, fastest)
+  AND tolerates the semver-agent's CI-side `version =` bump; `--locked` asserts pyproject↔lock consistency and would
+  HARD-FAIL on every version bump (poison-pill). Under `--frozen` the version bump is a no-op (root pkg is
+  editable-installed from source). **Replaces the freshness gate with an author-time rule:** a dependency-FLOOR bump
+  (NOT a version bump) regenerates + commits `uv.lock` in the SAME commit (`uv lock` /
+  `uv lock --upgrade-package <name>` → commit `pyproject.toml` + `uv.lock` together); a CVE fix = bump the floor + regen
+  (no transitive-CVE HARD block — pip-audit / internal-advisories on transitive pins WARN). **Ready diff handed to
+  Ikenna in `_agent_pings.md` 2026-06-12:** one-line `python-quality-gates-v2.yml:459     uv sync` →
+  `uv sync --frozen` + relax transitive-CVE block to WARN; trivially revertible (drop `--frozen`). Docs updated:
+  `CLAUDE.md` Deps+builds + `ci-cd-flow.md` §Dependency promotion + `quality-gates.md`. Repo: unified-trading-pm.
 - [x] [DOCS] P1. Docs already consistent — `CLAUDE.md` / `SUB_AGENT` / `ci-cd-flow.md` say "uv.lock is correct, no
       exact-pin fix needed," which this resolution confirms (the only delta is relaxing the gratuitous freshness gate).
+
+### Phase 1.5 — Frozen-lock end-to-end + local/CI parity (DECISION 2026-06-17, operator-ratified)
+
+> **Decision** (closes
+> [`issues/uv_lock_frozen_model_contradiction_2026_06_15.md`](issues/uv_lock_frozen_model_contradiction_2026_06_15.md);
+> finalizes + sequences the superseded line-120 item above): adopt the **frozen-lock model end-to-end** for genuine
+> local↔CI parity. `uv.lock` is the SSOT, regenerated on `live-defi-rollout` and flowing LDR→staging→main as
+> byte-identical projections (no cross-branch lockstep — staging/main never carry an independent lock). Internal
+> `unified-*` editable deps are **EXEMPT** from regen (the lock resolves the on-disk sibling, so a minor floor bump
+> needs none); the regen rule scopes to **EXTERNAL deps only**. **Sequencing is load-bearing:** the structural
+> LDR-landing fix (1.5a) MUST land before the `--frozen` flip (1.5b), or the flip re-arms the Tier-C runaways. Why
+> frozen and not the bare-`uv sync` status quo: bare `uv sync` cannot give true parity — local uses
+> `uv pip install -e .` (range resolve), CI uses `uv sync` (lock-mediated); they diverge exactly when it matters (the
+> fund-admin CVE case). Why the runaway is not a reason to reject frozen: the runaway is the dep-bump bot landing on
+> `staging` only — a branch-targeting bug independent of the lock model (1.5a fixes it). This also earns its keep
+> post-1.0 when internal deps become published packages and the floor re-pin + lock become load-bearing for the
+> major-bump cascade.
+
+**Phase 1.5a — remove the divergence source (PREREQUISITE, must land before the flip):**
+
+- [ ] [SCRIPT] P1. Make dependency-floor bumps land on **`live-defi-rollout`, not `staging`** — both the manual
+      author-time floor edit AND the automatic semver fan-out (`update-repo-version.yml` +
+      `update-dependency-version.yml`, which today checkout `ref: staging` + `git push origin staging`). Regen + commit
+      `uv.lock` in the SAME commit for **EXTERNAL** deps only (internal editable exempt). This is the actual Tier-C
+      runaway source. Repo: unified-trading-pm. ⚠️ Touches the actively-redesigned promote-bot surface — coordinate with
+      the promote-bot owner before pushing.
+- [ ] [SCRIPT] P2. Close the rollout gap: `mtds` is **missing** `staging-backmerge-to-ldr.yml` (execution-service / UAC
+      / instruments-service / alerting-service have it; found 2026-06-17). Roll it out via the template. NOTE: the
+      back-merge is FF-only by design, so it cannot auto-resolve a _divergent_ staging-direct floor edit — which is WHY
+      1.5a (land on LDR) is the real fix, not the back-merge.
+- [ ] [INFRA] P1. One-time clean-start reconcile: bring the current staging-only floor bumps (e2e-testing /
+      features-service / greeks-direct) DOWN to `live-defi-rollout` and regen all affected locks **on LDR**, so
+      LDR/staging/main locks are byte-identical before the flip (use the `staging_clean_start` force-sync pattern). Do
+      NOT regen per-branch independently — that is the runaway-restart trap the issue documents.
+
+**Phase 1.5b — flip to frozen + unify local with CI (the parity win — gated on 1.5a):**
+
+- [ ] [CI] P1. `python-quality-gates-v2.yml:459` `uv sync` → `uv sync --frozen` (the one-line diff drafted for Ikenna
+      2026-06-12, now unblocked by 1.5a). `--frozen` NOT `--locked` (tolerates the semver CI-side `version =` bump).
+      Repo: unified-trading-pm (template + roll out fleet-wide).
+- [ ] [SCRIPT] P1. **Local/CI parity:** `base-service.sh` install path `uv pip install -e .` (line 331) →
+      `uv sync     --frozen`, so LOCAL == CI byte-for-byte (internal editable deps still resolve to the working-tree
+      sibling under `--frozen`, so the dep-content gate is unaffected). This is the parity the operator required. Repo:
+      unified-trading-pm.
+- [ ] [CI] P1. Make `uv lock --check` BLOCKING in `base-*.sh` (warn-only today, PM@a89e234ee) — safe ONLY after 1.5a
+      guarantees the lock is regenerated on every external floor bump on LDR.
+- [ ] [DOCS] P1. Make the `CLAUDE.md` / codex `--frozen` rule TRUE + scoped once 1.5a/1.5b land: "lock is the SSOT;
+      regen on an EXTERNAL-dep floor change, on LDR, same commit; internal editable bumps exempt." Closes the D1
+      doc-vs-deployed gap in `plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md`.
+
+> **HOLD until 1.5a lands:** do NOT run a fleet-wide `uv sync` + commit-lock pass — it re-diverges LDR↔staging locks
+> and restarts the runaways. Stop any active runaway the convergence-safe way (match pyproject to staging on LDR; do not
+> touch the lock).
 
 ### Phase 2 — MAJOR bump triggers a CASCADE of quality gates (full SIT in dependency order) — P1
 
@@ -145,14 +199,15 @@ clean fix is to relax it.
       **Pending live verification**: a real MAJOR bump must exercise it end-to-end (can't tick fully ✅ on smoke alone).
 - [x] 🟡 [SCRIPT] P1. WIRED — the trigger's `if:` excludes minor/patch (`bump_type == major || is_breaking` only), so a
       non-breaking bump fires NO cascade/SIT fan-out (rides the consumer's range pin). Pending live verification.
-- [x] ✅ [RESOLVED-STALE: cascade-qg-ordering own concurrency group, fixed 2026-06-10] [SCRIPT] P1. **DEFECT (live-found 2026-06-10): cascade-qg-ordering runs are evicted from the queue by the shared
-      `manifest-update` concurrency group before any job starts** — UTL 0.5.0 dispatch fired (run 27264972415,
-      08:54:52Z) but was cancelled in 4 s with zero jobs; all 5 most-recent cascade runs are cancelled/failure, so the
-      cascade has never executed a level live. `cancel-in-progress: false` only protects a RUNNING run — GitHub keeps a
-      single PENDING slot per group, so any newer manifest writer (version-bump, ci_status) evicts a queued cascade.
-      Fix: give the cascade its own concurrency group (manifest mutation can be made atomic via retry-with-rebase as
-      staging-to-main already does) OR a queue-tolerant re-dispatch/retry so eviction is not silent loss. The H2
-      serialise-with-manifest-writers intent must not cost the cascade its execution. Repo: unified-trading-pm
+- [x] ✅ [RESOLVED-STALE: cascade-qg-ordering own concurrency group, fixed 2026-06-10] [SCRIPT] P1. **DEFECT (live-found
+      2026-06-10): cascade-qg-ordering runs are evicted from the queue by the shared `manifest-update` concurrency group
+      before any job starts** — UTL 0.5.0 dispatch fired (run 27264972415, 08:54:52Z) but was cancelled in 4 s with zero
+      jobs; all 5 most-recent cascade runs are cancelled/failure, so the cascade has never executed a level live.
+      `cancel-in-progress: false` only protects a RUNNING run — GitHub keeps a single PENDING slot per group, so any
+      newer manifest writer (version-bump, ci_status) evicts a queued cascade. Fix: give the cascade its own concurrency
+      group (manifest mutation can be made atomic via retry-with-rebase as staging-to-main already does) OR a
+      queue-tolerant re-dispatch/retry so eviction is not silent loss. The H2 serialise-with-manifest-writers intent
+      must not cost the cascade its execution. Repo: unified-trading-pm
       (`.github/workflows/cascade-qg-ordering.yml:32-36`).
 - [x] ✅ [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — DONE 2026-06-10 —
       unified-trading-pm@c4e9f3c9c. Mechanism: `update-repo-version.yml` gained a **bounded resolvability gate**
@@ -323,9 +378,9 @@ clean slate). End state:
       `cicd_contract_hardening_2026_06_01.md` § "stale-main-manifest dams the fleet".
 - [x] ✅ [PLAN-HYGIENE] P3. DONE 2026-06-12 — `check_credential_ask_orphans.py` now counts ONLY OPEN `- [ ]`
       credential-ask todos (`CHECKBOX_ITEM_RE` tightened `\[[ xX]\]` → `\[ \]`): a COMPLETED `[x] ✅` ask is resolved,
-      never an orphan. Orphan count dropped to 0 (the stale "baseline 11" was actually 2 with the `[x]`-inclusive regex);
-      baseline ratcheted DOWN to 0 (`credential_ask_orphans_baseline.yaml`) so the gate now enforces zero-orphans. repo:
-      unified-trading-pm (`check_credential_ask_orphans.py`).
+      never an orphan. Orphan count dropped to 0 (the stale "baseline 11" was actually 2 with the `[x]`-inclusive
+      regex); baseline ratcheted DOWN to 0 (`credential_ask_orphans_baseline.yaml`) so the gate now enforces
+      zero-orphans. repo: unified-trading-pm (`check_credential_ask_orphans.py`).
 
 ### Phase 4 — MAJOR/MINOR classification matrix refinement — P2
 
@@ -363,17 +418,25 @@ version comparison no-ops → the guard never fires). Captured here:
       **stdlib-only PEP440- subset comparator** (no third-party import; no silent exit(0) on parse failure). Verified:
       in-range→0, MAJOR out-of-range→**1** (now detected at preflight), boundary→0, below→1, `any`→0, unparseable→**1**
       (was silently 0).
-- [x] ✅ **[DONE 2026-06-12 (swept, CLEAN — no fixes needed) — `rg 'from packaging|import packaging' -g '*.sh'` across all 25 repos: every per-repo `setup.sh` is clean (none import packaging); the only clone-time `.sh` importing packaging, `setup-workspace-from-manifest.sh`, is already the stdlib-only PEP440 comparator (the 2026-06-09 fix — the line-102 hit is a comment about the removed old code); `check-internal-advisories.sh` runs POST-install (operates on `get_installed_packages()`) so packaging is present and its `except ImportError→exit(0)` is a loud-warned guarded skip, not a pre-uv-sync silent no-op (verified install-order per this item's note → leave it). No latent silent-no-op instances remain.]** [SCRIPT] P3. **Fleet sweep for the same packaging-no-op pattern in OTHER repos** —
-      `rg "from packaging" $(setup     scripts)` across all 25 repos' `setup.sh` / clone-time scripts; any that import
-      `packaging` BEFORE `uv sync` with an `except: pass/exit(0)` mask have the same latent silent-no-op.
-      (`check-internal-advisories.sh` in PM imports `packaging` too but runs post-install — verify install-order before
-      touching it.) Fix each to stdlib; deliberate per-repo (changes resolution behavior).
-- [x] ✅ **[DONE 2026-06-12 — system-integration-tests@341446c9: `instruments-service>=0.30.0` → `>=0.4.0` (matches the de-inflated true version); QG green 135s]** [SCRIPT] P2. **Lower SIT's phantom-era instruments-service floor** — `system-integration-tests/pyproject.toml`
-      still pins `instruments-service>=0.30.0,<1.0.0`; the runaway-semver phantom was de-inflated to a coherent **0.4.0**
-      (main=staging=LDR, tag `v0.4.0`), so this `>=0.30.0` floor is stale (true version 0.4.0). Non-blocking today
-      (content-first clone resolves the editable path source) but should match the real version → set `>=0.4.0,<1.0.0`.
-      **MIGRATED FROM:** `plans/archive/issues/instruments_service_version_phantom_2026_06_11.md` § Follow-up (archived
-      2026-06-12, the phantom itself RESOLVED 2026-06-11).
+- [x] ✅ **[DONE 2026-06-12 (swept, CLEAN — no fixes needed) — `rg 'from packaging|import packaging' -g '*.sh'` across
+      all 25 repos: every per-repo `setup.sh` is clean (none import packaging); the only clone-time `.sh` importing
+      packaging, `setup-workspace-from-manifest.sh`, is already the stdlib-only PEP440 comparator (the 2026-06-09 fix —
+      the line-102 hit is a comment about the removed old code); `check-internal-advisories.sh` runs POST-install
+      (operates on `get_installed_packages()`) so packaging is present and its `except ImportError→exit(0)` is a
+      loud-warned guarded skip, not a pre-uv-sync silent no-op (verified install-order per this item's note → leave it).
+      No latent silent-no-op instances remain.]** [SCRIPT] P3. **Fleet sweep for the same packaging-no-op pattern in
+      OTHER repos** — `rg "from packaging" $(setup     scripts)` across all 25 repos' `setup.sh` / clone-time scripts;
+      any that import `packaging` BEFORE `uv sync` with an `except: pass/exit(0)` mask have the same latent
+      silent-no-op. (`check-internal-advisories.sh` in PM imports `packaging` too but runs post-install — verify
+      install-order before touching it.) Fix each to stdlib; deliberate per-repo (changes resolution behavior).
+- [x] ✅ **[DONE 2026-06-12 — system-integration-tests@341446c9: `instruments-service>=0.30.0` → `>=0.4.0` (matches the
+      de-inflated true version); QG green 135s]** [SCRIPT] P2. **Lower SIT's phantom-era instruments-service floor** —
+      `system-integration-tests/pyproject.toml` still pins `instruments-service>=0.30.0,<1.0.0`; the runaway-semver
+      phantom was de-inflated to a coherent **0.4.0** (main=staging=LDR, tag `v0.4.0`), so this `>=0.30.0` floor is
+      stale (true version 0.4.0). Non-blocking today (content-first clone resolves the editable path source) but should
+      match the real version → set `>=0.4.0,<1.0.0`. **MIGRATED FROM:**
+      `plans/archive/issues/instruments_service_version_phantom_2026_06_11.md` § Follow-up (archived 2026-06-12, the
+      phantom itself RESOLVED 2026-06-11).
 
 ### Phase 6 — Reproducibility + dep-provenance: base-image digest pinning (5.79) + deployment BoM — P1 (PRIORITIZED)
 
@@ -398,17 +461,17 @@ its Dockerfile pins `unified-trading-library@sha256:…` → that digest = a spe
 commit baked in = a deterministic single-SHA provenance chain, with zero `uv.lock` dependency.
 
 - [x] ✅ [INFRA] P1. **COMPLETE 2026-06-10 — the full FROM-digest ratchet, end to end.** Final state: 16/16 consumer
-      Dockerfiles digest-pinned on LDR; cloudbuild fleet (18 repos) carries the digest-aware pre-pull (proof: mtds
-      build `fc2d4b07` SUCCESS through `FROM @${BASE_IMAGE_DIGEST}`); **STEP 5.79 flipped to HARD-FAIL**
+      Dockerfiles digest-pinned on LDR; cloudbuild fleet (18 repos) carries the digest-aware pre-pull (proof: mtds build
+      `fc2d4b07` SUCCESS through `FROM @${BASE_IMAGE_DIGEST}`); **STEP 5.79 flipped to HARD-FAIL**
       (unified-trading-pm@52f33275f — legacy `${`-warn branch closed; blast radius verified zero pre-flip, incl.
-      instruments' indirect `ARG BASE_IMAGE=` shape). Build-path incidents found+fixed en route: unauthenticated
-      daemon digest-pulls (digest-aware pre-pull in `configs/cloudbuild-service-template.yaml`), GCB substitution
-      grammar (×2 silent rejections → `check_cloudbuild_substitutions.py` QG STEP 5.19 + render gate +
-      `cloud-build-failure-watcher.yml`; see `issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md`).
-      Remaining related-but-separate items: the registry-poller edge (P2 below) + deployment-api BoM surface (P2) +
-      eviction-class fan-out reliability (KNOWN TENSION note). Original task text below:
-      ~~Complete the 5.79 FROM-digest ratchet~~ — drive every production Dockerfile's `FROM` from
-      `:latest`/`:tag` → `@sha256:<digest>` and flip STEP 5.79 from PENDING-RATCHET to BLOCKING
+      instruments' indirect `ARG BASE_IMAGE=` shape). Build-path incidents found+fixed en route: unauthenticated daemon
+      digest-pulls (digest-aware pre-pull in `configs/cloudbuild-service-template.yaml`), GCB substitution grammar (×2
+      silent rejections → `check_cloudbuild_substitutions.py` QG STEP 5.19 + render gate +
+      `cloud-build-failure-watcher.yml`; see
+      `issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md`). Remaining related-but-separate
+      items: the registry-poller edge (P2 below) + deployment-api BoM surface (P2) + eviction-class fan-out reliability
+      (KNOWN TENSION note). Original task text below: ~~Complete the 5.79 FROM-digest ratchet~~ — drive every production
+      Dockerfile's `FROM` from `:latest`/`:tag` → `@sha256:<digest>` and flip STEP 5.79 from PENDING-RATCHET to BLOCKING
       (`base-service.sh:2221-2264`). Resolve the digest at build time (cloudbuild reads the freshly-pushed base image's
       `RepoDigests` / Cloud Run revision digest, injects via `--build-arg BASE_IMAGE_DIGEST`). Done = rebuilding any
       service commit yields a byte-identical image (reproducibility) AND the Dockerfile records exactly which UTL/UAC
@@ -431,48 +494,54 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       skip + warn — no fleet redness); (e) PILOT converted: deployment-service/Dockerfile @ sha256:058d589f… (docker
       build --check green). Current digest resolved live via gcloud.
 - [x] ✅ [INFRA] P1. **FROM-digest ships — 16/16 LANDED on LDR (completed 2026-06-10 ~19:35Z; pins content-verified on
-      each repo's `origin/live-defi-rollout`).** alerting, blr, client-reporting, execution, features, fund-admin
-      (×2 FROMs), greeks, instruments, mtds, ml, trading-agent, strategy, mdps, agent-orchestrator (6343874 — incl.
-      the QG-stub venv-on-PATH fix it surfaced), **deployment-service** (BoM + pilot — re-landed from
+      each repo's `origin/live-defi-rollout`).** alerting, blr, client-reporting, execution, features, fund-admin (×2
+      FROMs), greeks, instruments, mtds, ml, trading-agent, strategy, mdps, agent-orchestrator (6343874 — incl. the
+      QG-stub venv-on-PATH fix it surfaced), **deployment-service** (BoM + pilot — re-landed from
       `origin/wip-preserve/bom-deployment-service-2026-06-10` after a live-peer reset; the re-land itself shipped
-      through and thereby PROVED the new quickmerge committed-ahead fall-through @331c7c183), and **deployment-api**
-      (×2 Dockerfiles — landed in the all-deps-clean window after the peer's UTL/strategy sweep finished; QG-green +
+      through and thereby PROVED the new quickmerge committed-ahead fall-through @331c7c183), and **deployment-api** (×2
+      Dockerfiles — landed in the all-deps-clean window after the peer's UTL/strategy sweep finished; QG-green +
       quickmerge). Collision handling per liveness rules throughout: peer WIP protected, discarded work recovered via
       wip-preserve, three latent tooling defects the arc exposed all fixed same-day (committed-ahead stranding
-      @331c7c183, checkout-blind dep-gate heal @1537b36dc, in-repo .qg_cache @4c6c5679d).
-      **NEXT (the final ratchet)**: flip STEP 5.79's legacy `${`-skip to hard-fail — see the conflict-guard below.
-      **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL
-      cloud build (Cloud Build / buildspec) proving the @${BASE_IMAGE_DIGEST} FROM path end-to-end — docker build
-      --check is NOT sufficient; flipping first could block the fleet on an unproven build shape.
+      @331c7c183, checkout-blind dep-gate heal @1537b36dc, in-repo .qg_cache @4c6c5679d). **NEXT (the final ratchet)**:
+      flip STEP 5.79's legacy `${`-skip to hard-fail — see the conflict-guard below. **[CONFLICT-GUARD 2026-06-10 —
+      operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL cloud build (Cloud Build / buildspec)
+      proving the @${BASE_IMAGE_DIGEST} FROM path end-to-end — docker build --check is NOT sufficient; flipping first
+      could block the fleet on an unproven build shape.
 - [ ] [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
       an image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM
       workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL consumers
       (stateless — consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern from
       `update-repo-version.yml`.
-- [x] ✅ **[DONE 2026-06-12 — `deployment-service/deployment_service/bom.py` exists, `DeploymentRegistryEntry` carries the BoM fields, and `VersionRegistry.register_version` is now WIRED on the live-deploy path (`live_deployment.py`); shipped `deployment-service@f9c0920`. Code present on LDR. (Follow-up: surface in GET /api/deployments — still open below.)]** [CODE] P1. **Deployment-registry bill-of-materials — record digest + commit + dep-versions** (deployment-service).
-      TODAY the registry persists ONLY a mutable `image_tag` (`monitor.py:39` / `live_deployment.py:42,63` /
-      `backends/base.py:135`); the `git_commit` field exists (`monitor.py:40`) but its writer
-      `VersionRegistry.register_version` (`monitor.py:540`) has ZERO callers (dead/unwired), and NO image-digest /
-      internal-dep-version is stored anywhere — so "what code is in prod right now" is NOT queryable. On the **live**
-      deploy path (`DeploymentRegistryEntry`/heartbeat extras, `deployments_registry.py:146-169`, OR wire up the dead
-      `VersionRegistry`): (a) resolve the deployed tag → immutable `@sha256:` digest (Cloud Run revision / Artifact
-      Registry `RepoDigests`) into a new `image_digest` field; (b) stamp `git_commit` from `$SHORT_SHA`; (c) stamp
-      `dep_versions: dict` (UTL/UAC + base-image digest). Store: GCS `gs://deployment-metadata-{pid}/versions/…` (the
-      existing VersionRegistry target) / `gs://deployment-scripts-{pid}/deployments/…`; expose via deployment-api
-      `GET /api/deployments`. Done = "what's deployed in prod + exactly what code is in it" is a single queryable BoM.
-      **[IMPLEMENTED 2026-06-10 — in deployment-service tree, ship parked on the UTL dep-order gate]**:
-      `DeploymentRegistryEntry` +3 typed fields (legacy-safe loads); new `deployment_service/bom.py` (resolution SSOT:
-      config passthrough `GIT_COMMIT`/`IMAGE_DIGEST`/`BASE_IMAGE_DIGEST` + importlib.metadata dep versions +
-      digest-from-pinned-ref only — omits-not-fabricates); BoM stamped at both registry writers
-      (`deployment_heartbeat.py cmd_register` + `heartbeat_cli.py` daemon, round-trips via HeartbeatEntry.metadata);
-      dead `VersionRegistry.register_version` WIRED on the live deploy path (`LiveDeployer.deploy` →
-      `_register_deployed_version()` post-health-gate, best-effort). 33/33 new+touched tests, 239 adjacent green, 0 new
-      basedpyright errors. Cloud Run live services: `run_v2` exposes no tag→digest resolve — provenance = FROM-digest
-      ratchet + passthrough (documented in code).
-- [x] ✅ **[DONE 2026-06-12 — deployment-api@33be49cba: added `image_digest`/`git_commit`/`dep_versions` to `VmDeploymentEntryModel` so the `asdict(entry)` keys stop being pydantic-dropped + reach the response; regression test `tests/unit/test_vm_deployment_bom.py` (3 cases: model declares, asdict-passthrough, honest-empty default); QG green 201s]** [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** — deployment-api's
-      `VmDeploymentEntryModel` (`deployment_api/routes/vm_deployments.py:42`) builds from `asdict(entry)` and pydantic
-      silently DROPS unknown keys, so BoM reaches the GCS rows but not the API response until the model adds
-      `image_digest` / `git_commit` / `dep_versions` (3-line change). repo: deployment-api.
+- [x] ✅ **[DONE 2026-06-12 — `deployment-service/deployment_service/bom.py` exists, `DeploymentRegistryEntry` carries
+      the BoM fields, and `VersionRegistry.register_version` is now WIRED on the live-deploy path
+      (`live_deployment.py`); shipped `deployment-service@f9c0920`. Code present on LDR. (Follow-up: surface in GET
+      /api/deployments — still open below.)]** [CODE] P1. **Deployment-registry bill-of-materials — record digest +
+      commit + dep-versions** (deployment-service). TODAY the registry persists ONLY a mutable `image_tag`
+      (`monitor.py:39` / `live_deployment.py:42,63` / `backends/base.py:135`); the `git_commit` field exists
+      (`monitor.py:40`) but its writer `VersionRegistry.register_version` (`monitor.py:540`) has ZERO callers
+      (dead/unwired), and NO image-digest / internal-dep-version is stored anywhere — so "what code is in prod right
+      now" is NOT queryable. On the **live** deploy path (`DeploymentRegistryEntry`/heartbeat extras,
+      `deployments_registry.py:146-169`, OR wire up the dead `VersionRegistry`): (a) resolve the deployed tag →
+      immutable `@sha256:` digest (Cloud Run revision / Artifact Registry `RepoDigests`) into a new `image_digest`
+      field; (b) stamp `git_commit` from `$SHORT_SHA`; (c) stamp `dep_versions: dict` (UTL/UAC + base-image digest).
+      Store: GCS `gs://deployment-metadata-{pid}/versions/…` (the existing VersionRegistry target) /
+      `gs://deployment-scripts-{pid}/deployments/…`; expose via deployment-api `GET /api/deployments`. Done = "what's
+      deployed in prod + exactly what code is in it" is a single queryable BoM. **[IMPLEMENTED 2026-06-10 — in
+      deployment-service tree, ship parked on the UTL dep-order gate]**: `DeploymentRegistryEntry` +3 typed fields
+      (legacy-safe loads); new `deployment_service/bom.py` (resolution SSOT: config passthrough
+      `GIT_COMMIT`/`IMAGE_DIGEST`/`BASE_IMAGE_DIGEST` + importlib.metadata dep versions + digest-from-pinned-ref only —
+      omits-not-fabricates); BoM stamped at both registry writers (`deployment_heartbeat.py cmd_register` +
+      `heartbeat_cli.py` daemon, round-trips via HeartbeatEntry.metadata); dead `VersionRegistry.register_version` WIRED
+      on the live deploy path (`LiveDeployer.deploy` → `_register_deployed_version()` post-health-gate, best-effort).
+      33/33 new+touched tests, 239 adjacent green, 0 new basedpyright errors. Cloud Run live services: `run_v2` exposes
+      no tag→digest resolve — provenance = FROM-digest ratchet + passthrough (documented in code).
+- [x] ✅ **[DONE 2026-06-12 — deployment-api@33be49cba: added `image_digest`/`git_commit`/`dep_versions` to
+      `VmDeploymentEntryModel` so the `asdict(entry)` keys stop being pydantic-dropped + reach the response; regression
+      test `tests/unit/test_vm_deployment_bom.py` (3 cases: model declares, asdict-passthrough, honest-empty default);
+      QG green 201s]** [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** —
+      deployment-api's `VmDeploymentEntryModel` (`deployment_api/routes/vm_deployments.py:42`) builds from
+      `asdict(entry)` and pydantic silently DROPS unknown keys, so BoM reaches the GCS rows but not the API response
+      until the model adds `image_digest` / `git_commit` / `dep_versions` (3-line change). repo: deployment-api.
 
 ## Success criteria
 

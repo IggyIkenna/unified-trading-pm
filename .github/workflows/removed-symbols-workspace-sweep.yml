@@ -1,0 +1,194 @@
+name: Removed-Symbols Workspace Sweep
+
+# Nightly CROSS-REPO removed/renamed-symbol detection — the workspace-wide
+# backstop for QG STEP 5.65.
+#
+# Why this exists
+# ---------------
+# STEP 5.65 (`check_removed_symbols.py`) runs in every repo's local gate but is
+# SCOPED to the calling repo (`--scope <repo>`), so it only catches consumers of
+# a removed symbol that live in the SAME repo. The cross-repo class — a refactor
+# in repo A that breaks a consumer (or a loose script) in repo B — is invisible
+# to the per-repo gate. The per-repo scope was narrowed deliberately (the old
+# unscoped walk cost ~286 s on every gate); the workspace-wide guarantee it used
+# to accidentally serve now needs this dedicated sweep.
+#
+# Reference incident (2026-05-01 → 2026-05-08): strategy-service removed
+# `get_strategy_factories`; e2e-testing/scripts/defi/colocated_engine.py kept
+# importing it and broke silently for 7 days because the script was outside any
+# service's QG. This sweep catches exactly that, workspace-wide, within ~1 day.
+#
+# Alerting-only — NOT CI-blocking (it cannot block: it runs cross-repo on a
+# schedule). A `removed` finding creates a GH issue + Slack alert.
+#
+# Plan: plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
+#       (Phase 0 "Part 3 — workspace-wide removed-symbols sweep").
+#
+# Secrets required:
+#   GH_PAT                 — checkout PM + clone every sibling repo + create issue
+#   SLACK_CI_WEBHOOK_URL   — alert notification (via notify-slack reusable wf)
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (detect rot but do not create an issue)"
+        type: boolean
+        default: false
+      branch:
+        description: "Sibling-repo branch to sweep (default: live-defi-rollout, fallback default branch)"
+        type: string
+        default: "live-defi-rollout"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sweep:
+    name: Sweep workspace for removed-symbol references
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          path: workspace/unified-trading-pm
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install checker dependency (PyYAML)
+        run: pip install pyyaml
+
+      - name: Clone all sibling repositories (shallow)
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          SWEEP_BRANCH: ${{ inputs.branch || 'live-defi-rollout' }}
+        run: |
+          set -euo pipefail
+          cd workspace
+          OWNER="${{ github.repository_owner }}"
+          # Repo list = workspace-manifest.json repositories, minus PM (already checked out).
+          mapfile -t REPOS < <(python3 -c "import json; m=json.load(open('unified-trading-pm/workspace-manifest.json')); print('\n'.join(sorted(k for k in m.get('repositories',{}) if k != 'unified-trading-pm')))")
+          echo "Cloning ${#REPOS[@]} sibling repos (branch pref: ${SWEEP_BRANCH}) ..."
+          for repo in "${REPOS[@]}"; do
+            url="https://x-access-token:${GH_PAT}@github.com/${OWNER}/${repo}.git"
+            if git clone --depth 1 --branch "${SWEEP_BRANCH}" "${url}" "${repo}" 2>/dev/null; then
+              echo "  ${repo} @ ${SWEEP_BRANCH}"
+            elif git clone --depth 1 "${url}" "${repo}" 2>/dev/null; then
+              echo "  ${repo} @ <default branch> (no ${SWEEP_BRANCH})"
+            else
+              echo "  WARN: failed to clone ${repo} — skipping (sweep continues)" >&2
+            fi
+          done
+
+      - name: Run workspace-wide removed-symbols sweep
+        id: sweep
+        run: |
+          set -uo pipefail
+          cd workspace
+          python unified-trading-pm/scripts/quality_gates/check_removed_symbols.py \
+            --workspace-root "$PWD" \
+            --workers 4 >sweep_report.txt 2>&1
+          rc=$?
+          echo "exit_code=${rc}" >> "$GITHUB_OUTPUT"
+          if [ "${rc}" -eq 0 ]; then
+            echo "rot_detected=false" >> "$GITHUB_OUTPUT"
+          elif [ "${rc}" -eq 1 ]; then
+            echo "rot_detected=true" >> "$GITHUB_OUTPUT"
+          else
+            # rc 2 = manifest invalid → infra error, surface as rot-channel alert too.
+            echo "rot_detected=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Show sweep report
+        if: always()
+        run: |
+          cd workspace
+          echo "=== Removed-Symbols Workspace Sweep (exit ${{ steps.sweep.outputs.exit_code }}) ==="
+          if [ -f sweep_report.txt ]; then cat sweep_report.txt; else echo "No report produced."; fi
+
+      - name: Create GitHub Issue on cross-repo rot
+        if: steps.sweep.outputs.rot_detected == 'true' && !inputs.dry_run
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GH_PAT }}
+          script: |
+            const fs = require('fs');
+            let report = '_No report file produced._';
+            try {
+              report = fs.readFileSync('workspace/sweep_report.txt', 'utf8');
+            } catch (e) {
+              console.log('Could not read sweep_report.txt:', e.message);
+            }
+            // Trim to keep the issue body within GitHub's size limits.
+            const MAX = 50000;
+            if (report.length > MAX) report = report.slice(0, MAX) + '\n…(truncated; see workflow log)…';
+
+            const date = new Date().toISOString().split('T')[0];
+            const body = [
+              '## Cross-repo removed-symbol references detected',
+              '',
+              `**Date:** ${date}`,
+              `**Sweep exit code:** ${{ steps.sweep.outputs.exit_code }} (1 = removed-symbol refs, 2 = manifest invalid)`,
+              '',
+              'A symbol marked `removed` in',
+              '`unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml`',
+              'is still referenced somewhere in the workspace. The per-repo QG (STEP 5.65)',
+              'cannot see this because it is scoped to a single repo — this is the',
+              'cross-repo class the workspace sweep exists to catch.',
+              '',
+              '### Action required',
+              '- Update each consumer to the documented `successor:` for the entry, OR',
+              '- If the symbol was added to the manifest in error, remove the entry and re-run.',
+              '',
+              '### Sweep output',
+              '```',
+              report.trim(),
+              '```',
+              '',
+              `[Workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: 'unified-trading-pm',
+              title: `[Removed-Symbol Rot] Cross-repo references detected ${date}`,
+              body,
+              labels: ['removed-symbol-rot', 'automated'],
+            });
+
+  notify:
+    name: Slack — Removed-Symbols Workspace Sweep
+    needs: [sweep]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: "[Removed-Symbol Sweep] Workspace cross-repo check complete"
+      severity: "INFO"
+      conclusion: ${{ needs.sweep.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Removed-Symbols Sweep Event
+    needs: [sweep, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.sweep.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "removed-symbols-workspace-sweep"}'

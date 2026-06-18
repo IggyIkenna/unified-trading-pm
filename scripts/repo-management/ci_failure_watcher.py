@@ -134,6 +134,12 @@ _FAIL_CONCLUSIONS_UPPER = {"FAILURE", "TIMED_OUT", "STARTUP_FAILURE"}
 _SKIP_CI_MARKERS = ("[skip ci]", "[ci skip]", "[no ci]", "[skip actions]", "[actions skip]")
 # Subject marker of our own recovery commits — never stack a second recovery on one.
 _RECOVERY_MARKER = "ci: re-fire quality-gates-v2"
+# Hidden marker posted on a PR when we close+reopen to recover a v2=`action_required` strand.
+# Unlike the v2-never-reported case (v2 becomes permanently PRESENT after reopen → no loop), an
+# `action_required` head can RE-conclude `action_required` on the re-fired run, so this marker
+# bounds the retries to ~1 per `_ACTION_REQ_RECOVER_WINDOW_MIN` (no every-tick thrash).
+_ACTION_REQ_MARKER = "<!-- ci-watcher:action-required-recovery -->"
+_ACTION_REQ_RECOVER_WINDOW_MIN = 40
 _STUCK_STATES = {"CONFLICTING", "DIRTY", "BLOCKED"}
 
 # Heads that are part of the promotion contract (LDR -> staging -> main). A stuck PR
@@ -326,6 +332,18 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                 isinstance(c, dict) and "quality-gates-v2" in str(c.get("name") or c.get("context") or "")
                 for c in rollup
             )
+            # v2 PRESENT but concluded `action_required` (NOT success, NOT a FAIL conclusion) — the
+            # 2026-06-17 finding (promotion_queue_conflict_wall_pileup): the required check is neither
+            # green nor red, so the PR is BLOCKED with auto-merge armed but unable to fire, and the
+            # v2-absent recovery never triggers (v2 IS present). A fresh `pull_request` run (close+reopen)
+            # concludes `success` (verified live: 5/5 PRs today). action_required is intermittent — the
+            # SAME head went success then action_required — so the auto-recover bounds its retries.
+            v2_action_required = any(
+                isinstance(c, dict)
+                and "quality-gates-v2" in str(c.get("name") or c.get("context") or "")
+                and str(c.get("conclusion") or "").upper() == "ACTION_REQUIRED"
+                for c in rollup
+            )
             # The head commit message decides the auto-recovery MECHANISM (see auto_recover_stuck_prs):
             # a `[skip ci]` head suppresses BOTH push and pull_request, so close+reopen cannot re-fire
             # v2 — and a workflow_dispatch run is NOT associated with the PR, so its green does NOT
@@ -352,6 +370,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "url": pr.get("url") or "",
                     "failed_check": failed_check,
                     "v2_present": v2_present,
+                    "v2_action_required": v2_action_required,
                     "head_message": head_message,
                     "head_oid": head_oid,
                 }
@@ -912,19 +931,68 @@ def _refire_v2_with_empty_commit(repo: str, branch: str, head_sha: str) -> bool:
     return isinstance(res, dict) and (res.get("object") or {}).get("sha") == new_sha
 
 
+def _close_reopen_pr(repo: str, number: int) -> bool:
+    """Close then reopen a PR to re-fire its ``pull_request`` event (the v2 re-trigger). Returns
+    True only if BOTH succeeded."""
+    closed = (
+        subprocess.run(
+            ["gh", "pr", "close", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
+        ).returncode
+        == 0
+    )
+    reopened = (
+        subprocess.run(
+            ["gh", "pr", "reopen", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
+        ).returncode
+        == 0
+    )
+    return closed and reopened
+
+
+def _recently_action_recovered(repo: str, number: int, *, now: _dt.datetime | None = None) -> bool:
+    """True if we posted an ``action_required``-recovery marker comment on this PR within the
+    bound window — so a deterministically-``action_required`` head is not close+reopened every
+    tick (the v2-never-reported case can't loop because v2 becomes permanently present after
+    reopen; ``action_required`` can re-conclude ``action_required``, so it needs this bound)."""
+    data = gh_json(["pr", "view", str(number), "--repo", f"{ORG}/{repo}", "--json", "comments"])
+    if not isinstance(data, dict):
+        return False
+    ref = now or _dt.datetime.now(_dt.UTC)
+    cutoff = ref - _dt.timedelta(minutes=_ACTION_REQ_RECOVER_WINDOW_MIN)
+    for comment in data.get("comments") or []:
+        if not isinstance(comment, dict) or _ACTION_REQ_MARKER not in str(comment.get("body") or ""):
+            continue
+        try:
+            if _parse_ts(str(comment.get("createdAt") or "")) >= cutoff:
+                return True
+        except ValueError:
+            continue
+    return False
+
+
 def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[dict]:
-    """Deterministically recover a v2-NEVER-REPORTED promotion-PR deadlock (no worker needed).
+    """Deterministically recover two non-failing promotion-PR deadlocks (no worker needed).
 
-    A promotion PR sits BLOCKED forever when the required quality-gates-v2 check never reported
-    on its head SHA. Gated to the EXACT deadlock signature — BLOCKED + no failed check + v2
-    ABSENT from the rollup — so it never touches a genuinely-failing PR (v2 ran red → escalate
-    instead) or one whose v2 is in-flight (v2 present). Better than escalating a deterministic
-    deadlock to a busy orchestrator.
+    A promotion PR sits BLOCKED with auto-merge armed but unable to fire when the required
+    quality-gates-v2 check is non-green for a reason that is NOT a content failure. TWO such
+    signatures (both gated to BLOCKED + no FAILED check, so a genuinely-failing PR is left for
+    the escalate path):
 
-    TWO mechanisms by head-commit kind (both within the same gate):
+      (1) v2 NEVER reported (``v2_present`` False) — the v2-never-fired deadlock (head pushed by
+          a token that suppresses the pull_request event). Deterministic → recover.
+      (2) v2 PRESENT but concluded ``action_required`` (``v2_action_required`` True) — the
+          2026-06-17 finding: the required check is neither green nor red, the v2-absent path
+          never triggers (v2 IS present), and the PR strands. A fresh ``pull_request`` run
+          concludes ``success`` (verified live 5/5). Intermittent (the same head went success
+          then action_required), so its retries are BOUNDED by a marker comment (see below).
+
+    Recovery MECHANISM by head-commit kind:
       - default (head pushed by a workflow-suppressing token, message clean) → close+reopen,
-        which re-fires the ``pull_request`` event. Once reopened, v2 appears in the rollup, so
-        the next tick won't re-fire (no loop).
+        which re-fires the ``pull_request`` event. For (1) v2 then appears in the rollup so the
+        next tick won't re-fire (no loop). For (2) the re-fired run can re-conclude
+        ``action_required`` (unlike (1) it does NOT become permanently present), so we post a
+        ``_ACTION_REQ_MARKER`` comment and skip if one is within
+        ``_ACTION_REQ_RECOVER_WINDOW_MIN`` — bounding it to ~1 retry/window (no every-tick thrash).
       - CI-suppression-token head (``[skip ci]``/``[ci skip]``/… anywhere in the message — the
         semver bump / dep pin / a manual recovery commit that merely MENTIONS the token) →
         close+reopen is INEFFECTIVE (the re-fired pull_request is equally suppressed) and a
@@ -934,11 +1002,17 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
         clean-message commit (same tree) via the git-data API → real push/pull_request runs
         fire and count. The new head changes the PR head SHA, so the next tick sees v2
         in-flight/green (no loop); a head already carrying our recovery marker is never
-        stacked with a second recovery commit.
+        stacked with a second recovery commit. (A ``v2_action_required`` head ran v2 → it is
+        never CI-suppressed, so it always takes the close+reopen path.)
     """
     recovered: list[dict] = []
     for s in stuck:
-        if s.get("state") != "BLOCKED" or s.get("failed_check") or s.get("v2_present"):
+        v2_action_required = bool(s.get("v2_action_required"))
+        if s.get("state") != "BLOCKED" or s.get("failed_check"):
+            continue
+        # v2 PRESENT + NOT action_required → in-flight / genuinely green-pending; recovering would
+        # loop. v2 ABSENT (never-reported) OR v2 present-but-action_required → recoverable.
+        if s.get("v2_present") and not v2_action_required:
             continue
         if s.get("head") not in _PROMOTION_HEADS:
             continue
@@ -951,6 +1025,38 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
         skip_ci_head = any(m in head_message for m in _SKIP_CI_MARKERS)
         if dry_run:
             recovered.append(s)
+            continue
+        if v2_action_required and not skip_ci_head:
+            # Signature (2): bound the retries (the re-fired run can re-conclude action_required).
+            if _recently_action_recovered(repo, number):
+                print(
+                    f"  action_required {repo}#{number}: close+reopened within "
+                    f"{_ACTION_REQ_RECOVER_WINDOW_MIN}m already — leaving the in-flight v2 (bounded)"
+                )
+                continue
+            if _close_reopen_pr(repo, number):
+                subprocess.run(
+                    [
+                        "gh",
+                        "pr",
+                        "comment",
+                        str(number),
+                        "--repo",
+                        f"{ORG}/{repo}",
+                        "--body",
+                        f"{_ACTION_REQ_MARKER}\n♻️ ci-failure-watcher: `quality-gates-v2` concluded "
+                        "`action_required` (not a content failure, not a fork-approval) → close+reopen to "
+                        "re-fire a `pull_request` v2 run (proven recovery 2026-06-17). Bounded to ~1 "
+                        f"retry / {_ACTION_REQ_RECOVER_WINDOW_MIN}m.",
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                print(
+                    f"  auto-recovered {repo}#{number}: close+reopen → fresh pull_request v2 "
+                    "(v2 concluded action_required; bounded)"
+                )
+                recovered.append(s)
             continue
         if skip_ci_head:
             head_oid = s.get("head_oid") or ""
@@ -967,19 +1073,7 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
                     file=sys.stderr,
                 )
             continue
-        closed = (
-            subprocess.run(
-                ["gh", "pr", "close", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
-            ).returncode
-            == 0
-        )
-        reopened = (
-            subprocess.run(
-                ["gh", "pr", "reopen", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
-            ).returncode
-            == 0
-        )
-        if closed and reopened:
+        if _close_reopen_pr(repo, number):
             print(f"  auto-recovered {repo}#{number}: close+reopen → quality-gates-v2 re-fired (v2-never-reported)")
             recovered.append(s)
     return recovered

@@ -345,12 +345,127 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   jitoSOL/mSOL as margin → unlocks SOL staked-basis** (only venue). Already in UAC (`venue_mapping`/`chain_env`). Added
   all three + the **live/paper history carve-out** (no funding history → WARN + use current snapshot + available spot
   history, never block; backtest still needs history) to the spec doc + todos.
-- **2026-06-17** — **`--live` multi-venue paper path + Drift wired** (`e2e-testing@6e2ffb8`). `--live` ranks on the CURRENT funding snapshot (no history — operator carve-out) across **14 venues**: 11 CeFi/public-perp + dYdX + Vertex + Drift. Verified live: **13 venues / 446 funding points**, **SOL staked_basis short DRIFT** in the book (Drift's jitoSOL/mSOL collateral unlocks it — the goal). Vertex warn-skips (this VM's IP is TLS-reset by Vertex's edge — host issue, not code). Uses oracle-of-now weights on the single snapshot; conservative LST APR default (ETH 3% / SOL 7%) + warn (live LST source still a TODO). New venues default to cash-margin (conservative). Coins 30→40. **Drift dependency resolution (KEY)**: driftpy's metadata exact-pins ~25 common libs (urllib3==1.26.13 / websockets==13 / zstandard==0.18 / solders<0.27 / numpy<2 / psutil / aiosignal …) that **cannot be uv-resolved in any shared lock** with the fleet + execution-service — BUT it **RUNS fine on the fleet versions** (Drift funding read verified on solders 0.27.1 + numpy 2.2.6 + the trio). So it lives in an **ISOLATED venv** (`scripts/defi/install_driftpy_venv.sh` → ~/.drift-venv, driftpy's own pins) and the harness shells out to `drift_funding_reader.py` there via Helius RPC (ibkr-gateway-infra pattern) — NOT a flat dep. execution-service already anticipated this (lazy-loads driftpy in `defi_execution/protocols/drift.py`, deliberately undeclared). Production MTDS/execution adapters follow the same isolated pattern (filed below).
-- **2026-06-17** — **Liquidity layer (ADV + market width)** (operator; `e2e-testing@c973985`). `--live` now snapshots per-coin **24h USD volume (ADV) + half-spread** (deepest of Bybit/Gate, one call each) and: (1) **penalises carry by the annualised round-trip spread cost** (`2·half_spread·(365/hold)`) so a wide-spread coin must clear a higher funding bar — don't chase a thin coin's funding into the spread; (2) **ADV-caps position size** (`--adv-cap-pct`, default 0.5% of ADV) → liquidity-scaled sizing; (3) shows `[ADV $Xm · spread Ybps]` per position. Verified live: 39/40 coins; ETH staked-basis concentrates in the $2.36B/0.0bps book; STX ADV-capped $16k→$8.7k on its $2M ADV. Knobs `--no-liquidity --spread-cost-mult --adv-cap-pct`. **Single-snapshot for paper**; for the **BACKTEST we assume liquidity constant** (the snapshot, documented) — e2e-only. Production = a real MDPS ADV/market-width feature (filed).
-- **2026-06-17** — **Two `--live` correctness fixes (operator caught the symptom — LDO showing 91%)**. (1) **Hourly-venue annualisation was noise**: Kraken/HL/dYdX/Drift settle HOURLY, and `--live` was annualising a SINGLE current hourly print x8760. Measured LDO on Kraken: latest hour **+70%/yr** vs trailing-24h mean **-4.8%/yr** vs 7d **-14.6%/yr** (the 8 last hourly prints swung -28%..+70%). So it was never a real rate — a single-hour artifact (NOT mean-reversion — it never moved; I wrongly asserted that before measuring). FIX: `_live_funding_hourly_trailing` pulls each hourly venue's **trailing-24h funding history** (Kraken `historicalfundingrates` last 24 · HL `fundingHistory` windowed · dYdX `historicalFunding?limit=24`) and averages — Drift already used `last24h_avg`. 8h venues keep their single settlement (already a smoothed period rate; 8h smoothing is a possible refinement). (2) **Single-snapshot perp-perp DISPERSION excluded from the LIVE ensemble by default** (`--include-dispersion-live` to keep): across 13 venues the max-min funding gap is dominated by the thinnest/most-extreme venue (TON 201% short DRIFT/long DYDX) and doesn't persist — staked/pure/cash are the trustworthy live signal; the backtest keeps dispersion (it has the time-series to verify persistence). Clean live ensemble now = cash-margin funding shorts on high-funding alts (14-23%, smoothed) + ETH staked-basis (9.4%) as a variant. **Integration note for the main system**: production funding features must carry a **trailing/realised window** per venue cadence (never a single instantaneous print annualised), and dispersion needs **per-(coin,venue) liquidity** before it's tradeable — both belong in the MDPS feature.
-- **2026-06-17** — **Unified execution-cost model + carry-tilt x liquidity allocation + dynamic universe** (operator; `e2e-testing@494add2`). THREE linked changes: (1) **Per-leg cost = fixed cost_bps (fee+base slippage, BTC/ETH-tight) + the coin's half-spread (market width)** — folded into BOTH the realised cost (`_run_strategy`) AND the rotation gate (`_ewma_threshold_weights`): a flip = exit weakest (2 legs) + enter candidate (2 legs), `swap(weak->cand) = [2*(cost+spread_weak) + 2*(cost+spread_cand)]*365/hold`, so a WIDE-SPREAD candidate needs MORE carry edge to rotate in (was a separate live-only carry haircut, absent from the backtest + the gate — now unified, and the live ADV/spread snapshot is backfilled as a CONSTANT for the backtest). (2) **Allocation = carry-tilt x liquidity blend** (`_blend_weights`, shared by oracle + causal): `weight ~ carry^tilt_power x min(1,ADV/$100M)^liq_damp_power` — tilt toward bigger funding (tilt=1 proportional), dampened toward liquid coins (damp=0.5 sqrt/gentle); the two count against each other so for similar-carry candidates ADV decides the split. Replaces flat equal-weight. Knobs `--carry-tilt-power --liq-damp-power`. (3) **Dynamic universe: top_n 5->20, min-carry 3%->5%, cash floor 4%->4.5%** — hold up to 20 coins clearing 5%; below 5% lend USDC (~4.5% RV, no fees/delta). Verified live: 20-position ensemble, WLD (23.7%/$290M)->w0.163 vs TIA (21.9%/$16M)->w0.061 (liquidity dampening visible). **ARCHITECTURE (operator confirmed)**: the carry-tilt x liquidity x cost logic runs INSIDE each archetype independently (staked basis / dispersion / pure basis each decide their own positioning via their own `_select_weights`); the **ensemble is a separate re-weight layer on top**. Both `--emit-instructions` (paper) AND the backtest emit EACH individual strategy + the ensemble. We roll out the archetypes as SEPARATE strategies; a portfolio-allocation layer (the ensemble/meta) is separate. **Integration note for main system**: this per-archetype-then-meta structure is the production shape — each archetype is its own strategy-service strategy with the shared cost/liquidity/allocation lib; the meta-allocator is a distinct portfolio layer.
-- **2026-06-17** — **Global transaction-cost-optimal rebalance (the 'PhD formula') — BIG win** (operator: the greedy rotation 'isn't very smart'). FIRST, measured the market widths: they are **tiny** (median half-spread 0.68bps, max 4.80bps FET; BTC 0.01 / ETH 0.03) — NOT huge. So the ~7% cost drag was almost entirely **fixed 5bps/leg x turnover**, and the **greedy pairwise gate + daily carry-tilt reweighting was OVER-TRADING** (paying the fixed cost too often). FIX: replaced the greedy gate with a **per-period global L1 transaction-cost LP** (`_lp_rebalance` via scipy.optimize.linprog): maximise `Σ reward_i·w_i - Σ cost_i·|w_i - w_old_i|` s.t. Σw=1, 0<=w<=cap, where `reward_i = carry_i x horizon`, `cost_i = 2(fixed+spread_i)` — so the L1 term is the TRUE no-trade band: move weight A->B only when `(r_B - r_A)·horizon` beats the round-trip cost `(cost_A+cost_B)`, solved GLOBALLY (the 'which flips into what' problem), preferring low-friction pairs; per-coin `cap` diversifies. **RESULT on the cached full backtest (2025-01-01 -> 2026-06-16, 40 coins)**: ensemble causal net **6.5% -> 10.8%**, turnover **0.123 -> 0.019/day (6x lower)**, drag **7.0% -> 1.0%**; staked basis 5.7->7.3%, dispersion 4.4->8.5%. The greedy gate stays available via `--greedy-rotation` for comparison. **Integration note for main system**: production rebalancing must be a global transaction-cost optimisation (LP/convex), NOT greedy pairwise + daily reweighting — the no-trade band is what keeps turnover (hence fixed-cost drag) low. **Shipping** via watcher (QG-blocked only by a TRANSIENT foreign strategy-service version drift from the capability-wizard bump 0.12->0.14->0.15, mid fleet-propagation — not this code; ruff+imports+substantive-QG green).
-- **2026-06-17** — **Two operator clarifications + a capital-aware liquidity fix** (`e2e@ce0e568`). (1) **The 5% floor is on NET CARRY, not raw funding** — confirmed correct: the filter is `net_bps >= min_carry_bps`, and `net_bps` per archetype is dispersion=`spread x eff` (the funding DIFFERENTIAL), staked=`(funding+staking) x eff` (so 2% funding + 3% staking clears 5%), pure=`funding x eff` (absolute — the only one where raw funding is the sole metric). No change needed. (2) **Liquidity dampening was capital-BLIND** (operator: at $100k liquidity shouldn't suppress opportunities): the ADV factor `min(1, ADV/$100M)^damp` dampened a $2M-ADV coin to 0.14x weight regardless of capital. FIX: the ADV reference is now **capital-aware** — `liq_ref = (deployable/top_n) / adv_impact_pct` (knob `--adv-impact-pct`, default 1%), so a coin earns full weight while a typical position stays under 1% of its ADV. At $100k liq_ref~$400k -> nearly every coin gets full weight (no dampening); at large capital low-ADV coins dampen. **NOTE**: this affects the ORACLE + LIVE paths; the new default **LP causal path does NOT use ADV dampening at all** (it uses carry - spread-in-cost), so liquidity was NOT suppressing the LP backtest. **Why the recent APY looks lower than the old chart's +22%**: the old chart is **2022-01-01 -> 2026-05-20** (4.4y, incl. the high-funding 2022-2024 era); the recent LP runs are the **18-month 2025-01-01 -> 2026-06-16** window, a much lower-funding regime — it's the WINDOW, not the venue/coin additions (a 2022-2026 new-model run is in flight to confirm apples-to-apples). **Staked basis is correctly restricted to ETH+SOL only** (`_BASE_TO_LST`).
+- **2026-06-17** — **`--live` multi-venue paper path + Drift wired** (`e2e-testing@6e2ffb8`). `--live` ranks on the
+  CURRENT funding snapshot (no history — operator carve-out) across **14 venues**: 11 CeFi/public-perp + dYdX + Vertex +
+  Drift. Verified live: **13 venues / 446 funding points**, **SOL staked_basis short DRIFT** in the book (Drift's
+  jitoSOL/mSOL collateral unlocks it — the goal). Vertex warn-skips (this VM's IP is TLS-reset by Vertex's edge — host
+  issue, not code). Uses oracle-of-now weights on the single snapshot; conservative LST APR default (ETH 3% / SOL 7%) +
+  warn (live LST source still a TODO). New venues default to cash-margin (conservative). Coins 30→40. **Drift dependency
+  resolution (KEY)**: driftpy's metadata exact-pins ~25 common libs (urllib3==1.26.13 / websockets==13 / zstandard==0.18
+  / solders<0.27 / numpy<2 / psutil / aiosignal …) that **cannot be uv-resolved in any shared lock** with the fleet +
+  execution-service — BUT it **RUNS fine on the fleet versions** (Drift funding read verified on solders 0.27.1 + numpy
+  2.2.6 + the trio). So it lives in an **ISOLATED venv** (`scripts/defi/install_driftpy_venv.sh` → ~/.drift-venv,
+  driftpy's own pins) and the harness shells out to `drift_funding_reader.py` there via Helius RPC (ibkr-gateway-infra
+  pattern) — NOT a flat dep. execution-service already anticipated this (lazy-loads driftpy in
+  `defi_execution/protocols/drift.py`, deliberately undeclared). Production MTDS/execution adapters follow the same
+  isolated pattern (filed below).
+- **2026-06-17** — **Liquidity layer (ADV + market width)** (operator; `e2e-testing@c973985`). `--live` now snapshots
+  per-coin **24h USD volume (ADV) + half-spread** (deepest of Bybit/Gate, one call each) and: (1) **penalises carry by
+  the annualised round-trip spread cost** (`2·half_spread·(365/hold)`) so a wide-spread coin must clear a higher funding
+  bar — don't chase a thin coin's funding into the spread; (2) **ADV-caps position size** (`--adv-cap-pct`, default 0.5%
+  of ADV) → liquidity-scaled sizing; (3) shows `[ADV $Xm · spread Ybps]` per position. Verified live: 39/40 coins; ETH
+  staked-basis concentrates in the $2.36B/0.0bps book; STX ADV-capped $16k→$8.7k on its $2M ADV. Knobs
+  `--no-liquidity --spread-cost-mult --adv-cap-pct`. **Single-snapshot for paper**; for the **BACKTEST we assume
+  liquidity constant** (the snapshot, documented) — e2e-only. Production = a real MDPS ADV/market-width feature (filed).
+- **2026-06-17** — **Two `--live` correctness fixes (operator caught the symptom — LDO showing 91%)**. (1)
+  **Hourly-venue annualisation was noise**: Kraken/HL/dYdX/Drift settle HOURLY, and `--live` was annualising a SINGLE
+  current hourly print x8760. Measured LDO on Kraken: latest hour **+70%/yr** vs trailing-24h mean **-4.8%/yr** vs 7d
+  **-14.6%/yr** (the 8 last hourly prints swung -28%..+70%). So it was never a real rate — a single-hour artifact (NOT
+  mean-reversion — it never moved; I wrongly asserted that before measuring). FIX: `_live_funding_hourly_trailing` pulls
+  each hourly venue's **trailing-24h funding history** (Kraken `historicalfundingrates` last 24 · HL `fundingHistory`
+  windowed · dYdX `historicalFunding?limit=24`) and averages — Drift already used `last24h_avg`. 8h venues keep their
+  single settlement (already a smoothed period rate; 8h smoothing is a possible refinement). (2) **Single-snapshot
+  perp-perp DISPERSION excluded from the LIVE ensemble by default** (`--include-dispersion-live` to keep): across 13
+  venues the max-min funding gap is dominated by the thinnest/most-extreme venue (TON 201% short DRIFT/long DYDX) and
+  doesn't persist — staked/pure/cash are the trustworthy live signal; the backtest keeps dispersion (it has the
+  time-series to verify persistence). Clean live ensemble now = cash-margin funding shorts on high-funding alts (14-23%,
+  smoothed) + ETH staked-basis (9.4%) as a variant. **Integration note for the main system**: production funding
+  features must carry a **trailing/realised window** per venue cadence (never a single instantaneous print annualised),
+  and dispersion needs **per-(coin,venue) liquidity** before it's tradeable — both belong in the MDPS feature.
+- **2026-06-17** — **Unified execution-cost model + carry-tilt x liquidity allocation + dynamic universe** (operator;
+  `e2e-testing@494add2`). THREE linked changes: (1) **Per-leg cost = fixed cost_bps (fee+base slippage, BTC/ETH-tight) +
+  the coin's half-spread (market width)** — folded into BOTH the realised cost (`_run_strategy`) AND the rotation gate
+  (`_ewma_threshold_weights`): a flip = exit weakest (2 legs) + enter candidate (2 legs),
+  `swap(weak->cand) = [2*(cost+spread_weak) + 2*(cost+spread_cand)]*365/hold`, so a WIDE-SPREAD candidate needs MORE
+  carry edge to rotate in (was a separate live-only carry haircut, absent from the backtest + the gate — now unified,
+  and the live ADV/spread snapshot is backfilled as a CONSTANT for the backtest). (2) **Allocation = carry-tilt x
+  liquidity blend** (`_blend_weights`, shared by oracle + causal):
+  `weight ~ carry^tilt_power x min(1,ADV/$100M)^liq_damp_power` — tilt toward bigger funding (tilt=1 proportional),
+  dampened toward liquid coins (damp=0.5 sqrt/gentle); the two count against each other so for similar-carry candidates
+  ADV decides the split. Replaces flat equal-weight. Knobs `--carry-tilt-power --liq-damp-power`. (3) **Dynamic
+  universe: top_n 5->20, min-carry 3%->5%, cash floor 4%->4.5%** — hold up to 20 coins clearing 5%; below 5% lend USDC
+  (~4.5% RV, no fees/delta). Verified live: 20-position ensemble, WLD (23.7%/$290M)->w0.163 vs TIA (21.9%/$16M)->w0.061
+  (liquidity dampening visible). **ARCHITECTURE (operator confirmed)**: the carry-tilt x liquidity x cost logic runs
+  INSIDE each archetype independently (staked basis / dispersion / pure basis each decide their own positioning via
+  their own `_select_weights`); the **ensemble is a separate re-weight layer on top**. Both `--emit-instructions`
+  (paper) AND the backtest emit EACH individual strategy + the ensemble. We roll out the archetypes as SEPARATE
+  strategies; a portfolio-allocation layer (the ensemble/meta) is separate. **Integration note for main system**: this
+  per-archetype-then-meta structure is the production shape — each archetype is its own strategy-service strategy with
+  the shared cost/liquidity/allocation lib; the meta-allocator is a distinct portfolio layer.
+- **2026-06-17** — **Global transaction-cost-optimal rebalance (the 'PhD formula') — BIG win** (operator: the greedy
+  rotation 'isn't very smart'). FIRST, measured the market widths: they are **tiny** (median half-spread 0.68bps, max
+  4.80bps FET; BTC 0.01 / ETH 0.03) — NOT huge. So the ~7% cost drag was almost entirely **fixed 5bps/leg x turnover**,
+  and the **greedy pairwise gate + daily carry-tilt reweighting was OVER-TRADING** (paying the fixed cost too often).
+  FIX: replaced the greedy gate with a **per-period global L1 transaction-cost LP** (`_lp_rebalance` via
+  scipy.optimize.linprog): maximise `Σ reward_i·w_i - Σ cost_i·|w_i - w_old_i|` s.t. Σw=1, 0<=w<=cap, where
+  `reward_i = carry_i x horizon`, `cost_i = 2(fixed+spread_i)` — so the L1 term is the TRUE no-trade band: move weight
+  A->B only when `(r_B - r_A)·horizon` beats the round-trip cost `(cost_A+cost_B)`, solved GLOBALLY (the 'which flips
+  into what' problem), preferring low-friction pairs; per-coin `cap` diversifies. **RESULT on the cached full backtest
+  (2025-01-01 -> 2026-06-16, 40 coins)**: ensemble causal net **6.5% -> 10.8%**, turnover **0.123 -> 0.019/day (6x
+  lower)**, drag **7.0% -> 1.0%**; staked basis 5.7->7.3%, dispersion 4.4->8.5%. The greedy gate stays available via
+  `--greedy-rotation` for comparison. **Integration note for main system**: production rebalancing must be a global
+  transaction-cost optimisation (LP/convex), NOT greedy pairwise + daily reweighting — the no-trade band is what keeps
+  turnover (hence fixed-cost drag) low. **Shipping** via watcher (QG-blocked only by a TRANSIENT foreign
+  strategy-service version drift from the capability-wizard bump 0.12->0.14->0.15, mid fleet-propagation — not this
+  code; ruff+imports+substantive-QG green).
+- **2026-06-17** — **Two operator clarifications + a capital-aware liquidity fix** (`e2e@ce0e568`). (1) **The 5% floor
+  is on NET CARRY, not raw funding** — confirmed correct: the filter is `net_bps >= min_carry_bps`, and `net_bps` per
+  archetype is dispersion=`spread x eff` (the funding DIFFERENTIAL), staked=`(funding+staking) x eff` (so 2% funding +
+  3% staking clears 5%), pure=`funding x eff` (absolute — the only one where raw funding is the sole metric). No change
+  needed. (2) **Liquidity dampening was capital-BLIND** (operator: at $100k liquidity shouldn't suppress opportunities):
+  the ADV factor `min(1, ADV/$100M)^damp` dampened a $2M-ADV coin to 0.14x weight regardless of capital. FIX: the ADV
+  reference is now **capital-aware** — `liq_ref = (deployable/top_n) / adv_impact_pct` (knob `--adv-impact-pct`, default
+  1%), so a coin earns full weight while a typical position stays under 1% of its ADV. At $100k liq_ref~$400k -> nearly
+  every coin gets full weight (no dampening); at large capital low-ADV coins dampen. **NOTE**: this affects the ORACLE +
+  LIVE paths; the new default **LP causal path does NOT use ADV dampening at all** (it uses carry - spread-in-cost), so
+  liquidity was NOT suppressing the LP backtest. **Why the recent APY looks lower than the old chart's +22%**: the old
+  chart is **2022-01-01 -> 2026-05-20** (4.4y, incl. the high-funding 2022-2024 era); the recent LP runs are the
+  **18-month 2025-01-01 -> 2026-06-16** window, a much lower-funding regime — it's the WINDOW, not the venue/coin
+  additions (a 2022-2026 new-model run is in flight to confirm apples-to-apples). **Staked basis is correctly restricted
+  to ETH+SOL only** (`_BASE_TO_LST`).
+- **2026-06-17** — **Funding-rate diagnostic + concentration knob** (operator: 'if HYPE/Bybit averages 23% how are we
+  not getting that action?'). Built **`plot_funding_history.py`** (faceted plot, one panel/coin, line/venue, annualised
+  funding over time — served on localhost:8910). Findings: (a) **only 20 of the 40 coins have GCS funding data** in
+  2025-2026 (the 10 newer names WIF/BONK/JUP/JTO/RENDER/FET/TAO/ORDI/STX/LDO have NO coverage) — '40 coins' is
+  really 20. (b) Funding **spikes high but means are modest**: HYPE/Bybit mean 23.8% / median 13.9% / max 192% over only
+  **128 of 507 days** (HYPE is a 2024-launch). (c) **We DID hold HYPE** — 106 days at avg weight 0.119, right at the
+  per-coin cap, so the carry-tilt wanted MORE but the **0.12 cap throttled concentration**. Exposed the cap as
+  **`--max-weight`**: sweep on the 18mo window ensemble causal net **0.12->10.8% / 0.25->10.8% / 0.40->11.0% / uncapped
+  1.0->13.6%** (avg net carry held 11.5%->14.6%, maxDD -0.01%->-0.34%). So we CAN capture more of the high-funders by
+  concentrating; the default 0.12 is the diversified/low-drawdown choice. **Integration note**: the
+  diversification-vs-concentration cap is a first-class portfolio knob; production should expose it per risk mandate.
+  **Why recent APY < the 2022-2026 +22% chart = the WINDOW** (2025-2026 compressed-funding regime + half the coins
+  dataless), NOT the venue/coin additions.
+- **2026-06-17** — **ADV-aware per-coin cap** (`e2e@37dcede`, operator: 'raise the cap to 0.33 if ADV allows'). The
+  per-coin weight cap is now `min(ceiling, adv_impact_pct x ADV_i / deployable)` — a liquid coin can take up to the
+  ceiling (default raised 0.12->**0.33** via `--max-weight`), a thin coin only what its volume absorbs. At $100k
+  ensemble ~10.7% (vs flat-0.12 10.8%): it barely rises because **the high-funders are mostly THIN coins** so ADV, not
+  the ceiling, binds — the old uncapped 13.6% ignored market impact (unrealistic); 10.7% is the impact-aware
+  concentrated result. **Diversification-vs-concentration is now a first-class knob** (ceiling + ADV-affordability).
+- **2026-06-17** — **Data-backfill diagnosis (operator: 'we have the prod backfill code, isn't HYPE S3 AWS data')**:
+  confirmed. (a) The 10 dataless coins (WIF/BONK/JUP/JTO/RENDER/FET/TAO/ORDI/STX/LDO) are a **cost-curated universe
+  gap** — `launch-cefi-sharded-backfill.sh` uses a hand-curated `--instrument-ids` filter (operator chose a subset to
+  cap Tardis cost), so these were never captured though Tardis lists them (all are in UAC `defi_major_assets`). (b)
+  **HYPE**: Hyperliquid S3 (`hyperliquid-archive`, asset_ctxs/funding from 2023-05) is wired via MTDS
+  `HyperliquidS3Downloader` — but HYPE the TOKEN only listed ~Nov-2024, so the 128/507-day gap is mostly genuine (a
+  small Nov-Dec 2024 slice could be pulled). **TODO below.**
+- **2026-06-17** — **pipeline_mode glued-transport (`hyperliquid_rest`) — provenance + state + harness consumer fix**
+  (`e2e@8623c1c`). Operator asked where `rest`-in-the-pipeline-mode came from. ANSWER: the original pipeline*mode hive
+  migration (Phase 1B, 2026-05-19) glued transport into the source (`batch_hyperliquid_rest`); **operator R4
+  (2026-06-07) RETIRED it** -> canonical
+  `pipeline_mode={mode}*{vendor}` (`batch_hyperliquid`) with `transport` (rest/websocket/flat_file) as a SEPARATE manifest column (`default_transport_for_source`); tardis already does this correctly (flat_file in the column). SSOT: `pipeline_mode-partition.md`L13-16/118-120 +`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`. **CODE IS ALREADY CANONICAL**: UAC `PipelineMode`enum has no`\*\_HYPERLIQUID_REST`members; fleet grep = ZERO active emitters of a glued literal; new writes go to`batch_hyperliquid`. **What remains is DATA not code**: the legacy on-disk `hyperliquid_rest`objects (~19.4K) — the standardisation plan defers this as 'the BREAKING object migration, separate GATED tranche' (L322); plus intentional transitional READ-tokens in UAC`possible_manifest.py`+ a few stale codex doc refs. FIXED my carry harness (the one consumer reading the exact`\_rest`literal) to read canonical`batch_hyperliquid`first, fall back to legacy`batch_hyperliquid_rest`
+  until the on-disk migration lands. **REMAINING is the gated on-disk object migration + doc cleanup — belongs in the
+  standardisation plan, NOT new code.**
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
@@ -440,8 +555,12 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 - [ ] [STRATEGY] P2. Wire **dYdX v4 + Vertex** (both PUBLIC, verified 2026-06-17) into the live snapshot: dYdX
       `indexer.dydx.trade/v4/perpetualMarkets` (`nextFundingRate`, hourly); Vertex `gateway.prod`/`archive.prod`
       (public; `api.vertexprotocol.com` is a stale 404). **Repo: e2e-testing harness.**
-- [ ] [DATA] P2. Production Drift funding in **MTDS** via the isolated-venv reader pattern (a Drift handler that shells out to the driftpy venv / a Drift gateway subprocess; canonize into `derivative_ticker` like other venues). Same isolation — driftpy stays out of MTDS flat deps. **Repo: market-tick-data-service.**
-- [ ] [EXEC] P2. Finish the **execution-service** Drift trading adapter (`defi_execution/protocols/drift.py` already lazy-loads driftpy) — install via the isolated venv / gateway in the Drift-enabled deploy; place short-SOL-PERP orders with jitoSOL/mSOL collateral. **Repo: execution-service.**
+- [ ] [DATA] P2. Production Drift funding in **MTDS** via the isolated-venv reader pattern (a Drift handler that shells
+      out to the driftpy venv / a Drift gateway subprocess; canonize into `derivative_ticker` like other venues). Same
+      isolation — driftpy stays out of MTDS flat deps. **Repo: market-tick-data-service.**
+- [ ] [EXEC] P2. Finish the **execution-service** Drift trading adapter (`defi_execution/protocols/drift.py` already
+      lazy-loads driftpy) — install via the isolated venv / gateway in the Drift-enabled deploy; place short-SOL-PERP
+      orders with jitoSOL/mSOL collateral. **Repo: execution-service.**
 - [ ] [STRATEGY] P2. Wire **Drift** via the creds/RPC path — we HOLD `solana-paper-keypair-private-key` +
       `solana-wallet-address`; the public Data API 403s this VM (geo) + authed 401s → read funding on-chain via Solana
       RPC. Drift **takes jitoSOL/mSOL as margin → unlocks SOL staked-basis** (the only venue that does). Already in UAC
@@ -459,13 +578,111 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 
 ## Liquidity (ADV + market width) follow-ups (operator 2026-06-17)
 
-- [ ] [DATA] P2. Production **ADV + market-width + tick-size** feature in **MDPS** (per coin × venue, from the tickers/book + instrument-info endpoints) so strategy/execution size by liquidity in prod (batch==live). The e2e harness snapshot is the prototype. **Repo: market-tick-data-service + unified-api-contracts (schema).**
-- [ ] [DATA] P2. **Tick size** per (coin, venue) — pull from each venue's instrument-info endpoint; feed the min-increment into spread/round-cost + order sizing. Not yet in the harness (only ADV + spread). **Repo: e2e-testing harness → MDPS.**
-- [ ] [STRATEGY] P2. Backfill the liquidity snapshot as a **constant** across the backtest window + document the assumption inline in the harness/report (e2e-only approximation until MDPS history exists). **Repo: e2e-testing.**
-- [ ] [STRATEGY] P2. **Dispersion per-venue-liquidity guard** (live-exclusion shipped 2026-06-17; deeper fix pending): `--live` perp-perp dispersion picks cross-venue funding EXTREMES (e.g. LDO 91% short KRAKEN/long BITGET) that mean-revert — tighten (per-venue winsor, min-ADV venue filter, require the spread to persist, or down-weight dispersion in --live). **Repo: e2e-testing harness.**
+- [ ] [DATA] P2. Production **ADV + market-width + tick-size** feature in **MDPS** (per coin × venue, from the
+      tickers/book + instrument-info endpoints) so strategy/execution size by liquidity in prod (batch==live). The e2e
+      harness snapshot is the prototype. **Repo: market-tick-data-service + unified-api-contracts (schema).**
+- [ ] [DATA] P2. **Tick size** per (coin, venue) — pull from each venue's instrument-info endpoint; feed the
+      min-increment into spread/round-cost + order sizing. Not yet in the harness (only ADV + spread). **Repo:
+      e2e-testing harness → MDPS.**
+- [ ] [STRATEGY] P2. Backfill the liquidity snapshot as a **constant** across the backtest window + document the
+      assumption inline in the harness/report (e2e-only approximation until MDPS history exists). **Repo: e2e-testing.**
+- [ ] [STRATEGY] P2. **Dispersion per-venue-liquidity guard** (live-exclusion shipped 2026-06-17; deeper fix pending):
+      `--live` perp-perp dispersion picks cross-venue funding EXTREMES (e.g. LDO 91% short KRAKEN/long BITGET) that
+      mean-revert — tighten (per-venue winsor, min-ADV venue filter, require the spread to persist, or down-weight
+      dispersion in --live). **Repo: e2e-testing harness.**
+
+## Funding-data backfill to a genuine 40-coin universe (operator 2026-06-17)
+
+- [ ] [DATA] P2. **Backfill the 10 dataless coins** (WIF, BONK, JUP, JTO, RENDER, FET, TAO, ORDI, STX, LDO) into GCS
+      perp funding: add their Tardis symbols to the `--instrument-ids` universe in
+      `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (+ the AWS variant) and re-run for 2022->present.
+      **COST NOTE**: the universe is deliberately curated to cap Tardis cost — adding 10 coins x ~5 venues x spot+perp
+      raises the Tardis bill; confirm scope/window with operator before launch. This is the ONE lever that adds REAL
+      opportunity to the carry backtest (vs reweighting 20 coins). **Repo: deployment-service +
+      market-tick-data-service.**
+- [ ] [DATA] P3. Pull HYPE's full HL-S3 funding history (asset_ctxs) from its listing (~Nov-2024) via
+      `HyperliquidS3Downloader` to close the small pre-2025 gap. **Repo: market-tick-data-service.**
+- [ ] [STRATEGY] P3. Gate this behind the v9 data-migration completion (per project sequencing); the harness auto-picks
+      up new coins once they're in GCS (it skips dataless coins via honest absence). **Repo: e2e-testing.**
+
+### 2026-06-17 — HL `batch_hyperliquid_rest` migration + full-universe funding → fuller backtest
+
+**1. Pipeline_mode migration (DATA, prod).** Verifying the HL funding read path surfaced that HL cefi data was stranded
+on the retired glued-transport `pipeline_mode=batch_hyperliquid_rest`. Traced to ground truth (the verdict-pack "19.4K +
+64K = 83K" were _projected_ index counts, not on-disk reality): **cefi = 19,361 REAL objects**
+(derivative_ticker/trades/book_snapshot_5/liquidations); **defi = 0 objects** (the "64K" is empty_confirmed/
+attempted_failed perp_funding cells across 40 non-HL venues, labeled only in the audit projection — no data). The live
+manifest stores pipeline_mode BLANK (derived from paths at projection time) → no manifest re-key needed. Migrated the
+19,361 cefi objects → `batch_hyperliquid` via `mtds/scripts/migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py`
+(segment rename, server-side copy→verify→delete, idempotent). **Verified 0 remaining fleet-wide, byte-parity, 0 loss.**
+Issue doc RESOLVED: `plans/active/issues/hyperliquid_rest_pipeline_mode_missed_by_v9_migration_2026_06_17.md`.
+
+**2. Harness — full HL universe funding (the operator's "rest of the HL coins").** The harness read HL funding from the
+Tardis `derivative_ticker` path (cefi bucket, ~20 curated coins). The FULL HL perp universe (~230 coins) lives in the
+dedicated `perp-funding-{project}` bucket as `data_type=perp_funding` (the production `collect-perp-funding` handler;
+already **659 days** present — 2025 fully covered, 2026 to 06-09, gap only 2023-2024). Added a per-day HL `perp_funding`
+reader (`_read_hl_funding_day` — one parquet/day serves every coin), wired HL off the `derivative_ticker` task loop into
+it, bounded the curated-venue reads to `_DEFAULT_COINS` (else 200+ wasted None-reads/venue/day), and added `--hl-full`
+to union the discovered HL universe into `--coins`. HL funds hourly → annualised at
+`perp_funding_cadence["hyperliquid"]`.
+
+**3. Reader bug found + fixed (important).** The first `--hl-full` runs reported ~8% ensemble — but that was on a
+NEAR-EMPTY HL load: historical perp_funding days (all 2025 / early-2026) were written BEFORE the `pipeline_mode=` path
+partition (`asset_group=defi` only); newer days carry `pipeline_mode=batch_hyperliquid`. The reader hardcoded the new
+layout → loaded only ~457 HL points (≈2 days) so the backtest effectively ran on the curated ~20-coin derivative_ticker.
+Fixed to read BOTH layouts (`e2e@71666cb`) — now **104,066 HL points across 525 days** (was 457).
+
+**4. Fuller backtest — REAL full-universe result** (`--hl-full`, 2025-01-01→2026-06-09, **232-coin universe**, 525 days,
+5bps/leg, 5% floor) — causal (realistic, no-trade-band) NET APY full-period: **ensemble 14.1%** (turn 0.072/d, maxDD
+−0.61%, drag 3.96%) · pure-basis 13.4% · funding-dispersion ~9% · staked-basis ~8%. Per year: 2025 ensemble causal
+**15.5%** net (gross 18.4%, turn 0.073/d) · 2026-YTD ensemble causal **10.4%** net (gross 13.2%). The full HL universe
+~DOUBLED the carry vs the bug-limited curated run — the long tail of HL perps carries far more funding, which pure-basis
+
+- the ensemble harvest at tiny turnover/drawdown. Oracle/hindsight variants go deeply negative net (over-rotation).
+  Still GROSS carry-only (no hedge/basis MtM) — Sharpe inflated, per existing P3 todo. Universe ~40 → 232 coins, no new
+  strategy logic — purely the funding-source change.
+
+**Verification:** `mtds` migration verified 0 objects under `batch_hyperliquid_rest` fleet-wide (independent gcloud
+walk); fixed reader validated to load 198–227 HL coins/day on both layouts (2025-06-01 / 2026-01-15 / 2026-04-01).
+
+**5. HL funding is REAL (not a placeholder) — but is dominated by HL's interest-rate FLOOR (operator Q 2026-06-17).**
+Checked the code + data after a report that HL "defaults to 1bp/8h when no S3 data". Verdict: NOT a code default — the
+S3-miss path (`hyperliquid_s3._fetch_funding_via_rest`) returns `[]` (honest absence) on empty REST `fundingHistory`,
+and reads the literal `fundingRate`/`funding` value otherwise (the `0` guards only a malformed record). The data is real
+
+- varied (2053/1296 distinct values, −0.8%/hr to +0.03%/hr, 17–29% negative). BUT **44.8% (2026) / 58.3% (2025) of
+  hourly observations sit EXACTLY at 1.25e-5** = HL's interest-rate floor
+  (`funding = premium + clamp(interest − premium)`, interest = 0.01%/8h = 1.25e-5/hr); when premium ≈ 0 HL clamps
+  funding to exactly that constant. So it's HL's genuine clamped funding (the exact match to HL's formula constant + the
+  higher share in the calmer 2025 regime confirm it's sourced from HL, not fabricated). **Strategy implication:** the
+  interest floor ≈ **11% APY** that a short structurally earns, so a large part of the HL pure-basis carry is the
+  persistent interest floor, premium/dispersion on top — real + durable, but not premium _alpha_. Decompose carry into
+  floor vs premium when sizing.
+
+**6. Full 3-year backtest (2023-05-20→2026-06-09, 232-coin universe, 169,241 HL funding points) — CARRY COMPRESSION.**
+After backfilling HL funding to 100% over ~3 years, ran the full-history `--hl-full` backtest. Full-period causal NET:
+ensemble **27.8%** (turn 0.099/d, maxDD −0.36%, Sharpe 16.6) · pure-basis 25.9% · dispersion 17.7% · staked 13.0%. But
+the per-year trend is the real finding — **carry compressed ~4× as HL matured**: ensemble causal net **2023 47.4% → 2024
+34.3% → 2025 16.6% → 2026-YTD 10.7%** (pure-basis 39.3→34.3→15.8→10.7). The 27.8% blend is INFLATED by the 2023-2024
+HL-launch era (new exchange, few participants, huge directional premiums); **the realistic forward expectation is the
+2026 regime ~11%, not the 3-year blend** — the launch-era goldmine won't recur. Turnover stays tiny + drawdown near-zero
+throughout (real low-risk carry, just shrinking). Composes with finding #5: the ~11% floor is now most of the remaining
+carry, so as premium compresses the strategy converges toward harvesting HL's structural interest rate. Still GROSS
+carry-only (no hedge/basis MtM) — Sharpe inflated, per the standing P3 todo.
 
 ## Open todos / next steps
 
+- [ ] [STRATEGY] P2. Decompose HL pure-basis carry into the interest-rate FLOOR (~11% APY structural, ~45-58% of hours
+      clamp to it) vs the premium/dispersion component — so sizing reflects how much is structural vs alpha. **Repo:
+      e2e-testing harness → strategy-service.**
+- [ ] [DATA] P3. (optional certainty) spot-check a sample of HL funding cells at the 1.25e-5 floor against HL's live
+      on-chain `fundingHistory` to confirm the archive's floor values match realized on-chain funding. **Repo:
+      e2e-testing.**
+
+- [x] [DATA] ✅ P2. Backfilled HL `perp_funding` to **100% coverage 2023-05-20→2026-06-09 (1117/1117 days, 0 gaps)** via
+      the fast S3 `asset_ctxs` archive (`mtds@98d12be`, no REST rate-limit, ~4 min for 374 days/965k rows) + a 7-day
+      REST fill for the days HL's S3 archive lags (06-02→08). HL funding history now spans ~3 years for the full
+      ~230-coin universe. **Repo: market-tick-data-service.**
 - [ ] [STRATEGY] P2. Add the capital-efficiency factor to the harness ranking: structure assignment per (coin, venue)
       (spot-collateral set {Binance/Bybit/OKX/Deribit} vs cash-margin {Hyperliquid/Aster}), per-asset max-move `m` →
       `f=1/(1+m)`, rank by `effective_carry = (funding+staking)×f`, winsorise funding outliers, `--min-carry-bps` floor

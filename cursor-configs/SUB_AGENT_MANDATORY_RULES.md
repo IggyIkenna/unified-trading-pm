@@ -148,9 +148,11 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
    the incoming, `rebase --abort`s (your work intact, never overwritten) and BLOCKS exit 1. On that block do NOT force
    or blind-overwrite — run the recovery recipe: preserve the peer's commits, stash YOUR files by name,
    `git pull --rebase`, reconcile the ESSENCE of both sides, re-run `quality-gates.sh`, re-run quickmerge
-   (`QUICKMERGE_ALLOW_BEHIND=1` is emergency-only). Same recipe as the autostash-conflict rule. (Forward: a structured
-   `QUICKMERGE_BLOCKED code=…` contract is landing per `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` so
-   you recognise it programmatically.)
+   (`QUICKMERGE_ALLOW_BEHIND=1` is emergency-only). Same recipe as the autostash-conflict rule. **The block is now a
+   structured one-liner you can parse**: `QUICKMERGE_BLOCKED code=<BEHIND_DIVERGED_CONFLICT|AUTOSTASH_POP_CONFLICT>
+   repo=… branch=… behind=… ahead=… conflicts="…"` + a `RECOVERY:` line. `AUTOSTASH_POP_CONFLICT` = your local edits are
+   in `git stash list` (recover by name; never `git stash drop` them); `BEHIND_DIVERGED_CONFLICT` = the rebase was
+   aborted, your autostash is pending. (2026-06-17, shipped via `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.)
 5. **Plan flip in same logical unit as code**: edit the plan checkbox `- [ ]` → `- [x] (commit-sha + brief evidence)`.
    Commit the plan flip with the **MANDATORY `docs(plans):` prefix** (`plan(...)` is hook-rejected) + push. A plan-flip
    on a PM `*.md`/`*.mdc` is docs fast-path (PR targets `main`); the PM staging→main bypass + main-backmerge keep PM

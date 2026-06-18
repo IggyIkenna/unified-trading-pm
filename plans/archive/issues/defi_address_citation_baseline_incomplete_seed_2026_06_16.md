@@ -3,7 +3,7 @@ title: DeFi address-citation baseline incompletely seeded — blocks ratchet-exi
 created: 2026-06-16
 locked_by: live-defi-rollout
 priority: P1
-status: active
+status: resolved
 source:
   - QG-agent fleet ratchet sweep 2026-06-16 (check_defi_address_citations.py --workspace-root)
   - qg_base_service_ratchet_exit_code_2026_06_11.md (the hardening this blocks)
@@ -115,11 +115,28 @@ hollow-green gates) is the urgent part, the addresses are pre-existing + mostly 
 standard ratchet-seeding move. But the call on whether the uncited DeFi surface is acceptable-to-grandfather is
 Ikenna's.
 
+## ✅ RESOLVED 2026-06-17 — decision was (b) cite-first, and it's DONE
+
+Ikenna chose **cite-first** and executed it fleet-wide (2026-06-16/17):
+
+- execution-service `f516f51c` — cited 225 DeFi addresses (DERIVED/QG-allow: routers / Multicall3 / bridge / LST /
+  Aave).
+- unified-api-contracts `2a8599da` — cited the 138 registry addresses (canonical tokens / per-chain wrapped / Uniswap
+  routers + pools).
+- e2e-testing `2c077b0` — demo wallet `QG-allow`'d. (features/strategy/mtks/etc. cited or QG-allow'd in the same pass.)
+- `defi_address_citation_baseline.yaml` ratcheted **DOWN to 0 for every repo** (incl. UAC 138→0).
+
+**Live verification 2026-06-17:** full fleet ratchet sweep is **clean** — `check_defi_address_citations` **0
+over-baseline**, and `check_no_fallback_imports` (5.94) + `check_ruff_rule_ratchet` (5.95) also **0**. The fleet is now
+fully ratchet-clean → **the ratchet-exit-code hardening is UNBLOCKED and shippable** (see
+`qg_base_service_ratchet_exit_code_2026_06_11.md`). This issue is closed; archive on next sweep.
+
 ## Status / what's already done
 
 - ✅ instruments-service `tid251` regression fixed + landed (5.95 ratchet fleet-clean).
-- ✅ Hardening diff verified + understood; held on `origin/wip-preserve/qg-ratchet-hardening-2026-06-16` (NOT shipped).
-- ⏸️ **AWAITING IKENNA DECISION** on (a) vs (b) for the ~468 citations before the hardening rollout.
+- ✅ Hardening diff verified + understood; held on `origin/wip-preserve/qg-ratchet-hardening-2026-06-16`.
+- ✅ **Citation decision RESOLVED (cite-first, executed by Ikenna)** — fleet citation-ratchet-clean; hardening
+  unblocked.
 
 ## Related
 

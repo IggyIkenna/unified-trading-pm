@@ -12,7 +12,37 @@ source:
   - e2e-testing `uv lock --check` exit 1 after floor bump (empirical 2026-06-15)
 locked_by: live-defi-rollout
 priority: P1
-status: active
+status: decided
+---
+
+## ✅ DECISION (operator-ratified 2026-06-17) — adopt the frozen-lock model end-to-end
+
+**Chosen model: `uv sync --frozen` everywhere, with `uv.lock` as the single SSOT.** This is the only model that gives
+genuine **local↔CI parity** (the operator's stated requirement): today local installs with `uv pip install -e .` (range
+resolve, ignores the lock) while CI does bare `uv sync` (lock-mediated) — two different installers that diverge exactly
+when the lock is stale vs the range (the fund-admin CVE case). Both sides install the same committed lock →
+byte-identical environments, deterministic + reproducible.
+
+**Why the runaway risk is NOT a reason to reject `--frozen`:** the Tier-C runaway is caused by the **dep-bump bot
+landing floor bumps on `staging` only** (`update-dependency-version.yml` checks out `ref: staging` +
+`git push origin staging`; the semver fan-out in `update-repo-version.yml` is the same) — never on `live-defi-rollout` —
+so LDR-tree ≠ staging-tree forever and the drain never converges. That is a **branch-targeting bug, independent of the
+lock model**. The cross-branch lockstep worry dissolves under **LDR-is-SSOT**: regenerate the lock on LDR, and it flows
+LDR→staging→main as byte-identical projections (staging/main never carry an independent lock).
+
+**Scope rule:** internal `unified-*` deps are `editable = "../sibling"` in the lock → `--frozen` resolves the on-disk
+sibling, version-agnostic, so an internal floor bump needs **no** regen. The regen rule applies to **EXTERNAL deps
+only**.
+
+**Sequencing is load-bearing** — the LDR-landing fix MUST land before the `--frozen` flip, or the flip re-arms the
+runaways. **HOLD stands:** do not run a fleet-wide `uv sync` + commit-lock pass until the LDR-landing prerequisite is
+in.
+
+**Implementation is tracked as `- [ ]` todos in
+[`dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`](../dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md)
+§ "Phase 1.5 — Frozen-lock end-to-end".** This issue is **decided + migrated**; archive it when Phase 1.5 lands. The
+analysis below is retained as the evidence record.
+
 ---
 
 ## What I found
@@ -96,7 +126,11 @@ cron"_).
 - **Contradicts a workspace SSOT:** CLAUDE.md / codex assert a `--frozen` model the deployed CI doesn't implement →
   cross-repo, affects every Python repo's dep handling.
 
-## Recommended decision (to resolve, not yet actioned)
+## Recommended decision → RESOLVED 2026-06-17 (see the DECISION section at the top)
+
+> The recommendations below were the pre-decision analysis. They are superseded by the ratified DECISION (frozen-lock
+> end-to-end) — kept for the reasoning trail. **One correction:** item 4 below was wrong — a staging→LDR back-merge
+> already exists.
 
 1. **Pick ONE lock model and make docs + CI agree.** Either:
    - (a) Truly adopt `--frozen`: wire `python-quality-gates-v2.yml` install to `uv sync --frozen`, make
@@ -109,8 +143,12 @@ cron"_).
    regen there causes churn + cross-branch divergence + runaway-restart risk and is unnecessary for correctness.
 3. **Fix `update-dependency-version.yml`** (the actual runaway source) to land floor bumps on `live-defi-rollout` (the
    SSOT integration axis), not staging-only, so they propagate without a manual back-merge.
-4. **Add staging→LDR convergence** for genuinely-newer staging-only content (today only `main-backmerge-to-ldr.yml`
-   exists; there is no staging→LDR drain, so any staging-only floor bump loops until reconciled by hand).
+4. ~~Add staging→LDR convergence~~ **CORRECTION 2026-06-17: it already exists** — `staging-backmerge-to-ldr.yml`
+   (`push:[staging]` + hourly drift-tick, deployed to service repos) is the staging-axis mirror of
+   `main-backmerge-to-ldr.yml`. **BUT it is FF-only** (`never-force`), so it cannot auto-resolve a _divergent_
+   staging-direct floor edit (staging isn't strictly ahead of LDR) → it escalates to a human PR and the floor sits
+   unconverged. That is precisely WHY the real fix is **landing dep bumps on LDR** (item 3 / Phase 1.5a), not the
+   back-merge. (Rollout gap: `mtds` is missing this workflow — tracked in Phase 1.5a.)
 
 **Hold:** do not run a fleet-wide `uv sync` + commit-lock pass until #1 is decided — it is the step that determines
 whether lock regeneration is safe. Until then, stop active runaways the convergence-safe way (match pyproject to staging
@@ -118,13 +156,24 @@ on LDR, do **not** touch the lock), as already done for e2e-testing@a0a3e01.
 
 ## Field evidence (2026-06-16, QG-agent)
 
-The fleet CVE + starlette propagation (`starlette_cve_2026_54282_fleet_alignment_2026_06_16.md`) followed the
-**pyproject-only floor-bump path** prescribed here: 8 service repos + UTL + UAC bumped (`pyarrow>=23.0.1`,
-`python-multipart>=0.0.31`, `starlette>=1.3.1,<2.0.0`) with **no regenerated `uv.lock`**. All ran `quality-gates.sh`
-GREEN and landed on LDR; the canonical `check-dependency-alignment.py` is GREEN — i.e. the floor bumps reached the gate
-without a lock regen, no Tier-C runaway restarted. This is a clean datapoint that the convergence-safe pyproject-only
-path works in practice; it does NOT resolve the underlying `--frozen`-vs-bare-`uv sync` contradiction (#1 above remains
-the open decision).
+The fleet CVE + starlette propagation (`starlette_cve_2026_54282_fleet_alignment_2026_06_16.md`) bumped 8 service repos
+
+- UTL + UAC (`pyarrow>=23.0.1`, `python-multipart>=0.0.31`, `starlette>=1.3.1,<2.0.0`) **pyproject-only** — and the
+  result is a SPLIT datapoint that sharpens (not resolves) the contradiction:
+
+* **9 of 10 repos:** pyproject-only worked — `quality-gates.sh` GREEN locally (bare `uv sync` re-resolves to the bumped
+  floor → pip-audit clean), landed on LDR, `check-dependency-alignment.py` GREEN, no Tier-C runaway restarted.
+* **fund-administration-service: pyproject-only was NOT enough.** My local QG went green (bare `uv sync`), but a later
+  pass hit a **pip-audit QG BLOCK** (`python-multipart 0.0.29` still installed from the stale lock) →
+  fund-admin@`ab51c0c` **regenerated `uv.lock`** (`python-multipart 0.0.29→0.0.32`, `starlette 1.1.0→1.3.1`) to actually
+  clear the CVE. This is exactly the §2 contradiction in the wild: an environment that resolves from the **lock** (not a
+  bare re-resolve) keeps the vulnerable pin despite the bumped floor, so the floor alone doesn't reach pip-audit there —
+  a lock regen was required.
+
+Takeaway: the convergence-safe pyproject-only path works **when the gate re-resolves from the range**, but **breaks
+where the lock is authoritative** — fund-admin needed the regen the §1 decision is meant to govern. Still does NOT
+resolve the underlying `--frozen`-vs-bare-`uv sync` contradiction (#1 remains the open decision); fund-admin is now a
+concrete data point for it.
 
 ## Composes with
 

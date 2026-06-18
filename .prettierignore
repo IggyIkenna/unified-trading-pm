@@ -3,3 +3,9 @@ configs/cloudbuild-service-template.yaml
 # YAML run: blocks, which breaks prettier's YAML parser. Templates must not be formatted.
 scripts/templates/*.yml
 scripts/propagation/templates/*.yml
+
+# Append-only agent-ping ledgers — operational logs, NOT prose. proseWrap:always would
+# reflow the whole 150KB+ file on every single ping append (huge churn) and races the
+# orphan-ping cron's writes. Left literal so appends stay a clean diff.
+*_orchestrator/_agent_pings.md
+plans/active/_agent_pings.md

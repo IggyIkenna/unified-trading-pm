@@ -476,10 +476,39 @@ The table above lists 5 failure modes. A 6th is handled by the watchdog layer (s
 | **Heartbeat-silent** | `slot.last_heartbeat_at` older than threshold AND tmux alive AND `slot.status != 'blocked'` | **>900s** (15 min)     |
 | **Context-full**     | Pane matches `/clear to save .{1,10}k tokens/i`                                             | **Immediate** (1 tick) |
 
+### Trigger 1.4 — usage-cap account failover (resume-respawn, shipped 2026-06-17)
+
+A real usage cap (CLI usage-limit modal — `_USAGE_CAP_RE`, distinct from a recoverable transient that the `continue`
+nudge resumes) cannot be unstuck on the same account; the only recovery is a fresh account. The watchdog's usage-cap
+trigger does a **context-preserving** failover (`_handle_usage_cap`) rather than a fresh kill+reboot:
+
+- **95% is a SPAWN GATE ONLY** — it decides which account a _new_ agent may start on; it NEVER preempts a running agent.
+  A working agent consumes its account to 100% (killing it at 95% would forfeit the last 5% of every account's quota
+  every cycle). Failover fires only on the actual stuck modal.
+- **Headroom + stored `claude_session_id`** → kill the wedged session and `claude --resume <id>` the slot on the
+  headroom account, so the worker continues with its conversation intact (only the wall-blocked turn is lost). The boot
+  prompt is NOT re-pasted; a `continue` nudge unblocks the resumed turn. The new account's `oauth_token_env_file` is
+  sourced, so the continued agent authenticates as the headroom account (the transcript carries no account identity —
+  account lives only in `CLAUDE_CODE_OAUTH_TOKEN`, which the per-session config dir + env file fully control).
+- **Headroom but NO stored session id** (worker predates the feature) → `_kill_slot` → AutoSpawn fresh-respawns it.
+- **NO headroom anywhere → WAIT, do NOT kill** (decision B). Leaving it frozen on the modal is harmless (inactive); the
+  pool-exhaustion page nags the operator to add an account / wait for the nearest reset. The slot shows a capped marker
+  (`slot.last_msg`) so it never reads as healthy, and the trigger re-checks every tick → it resumes the instant headroom
+  appears. A per-slot frozen-page dedup (`_cap_frozen_paged`) fires the page once per frozen episode.
+
+The deterministic session id is generated at spawn (`tmux_spawn.new_session_id()` → `claude --session-id <uuid>`) and
+persisted on `SlotRow.claude_session_id` (workers) / `AgentRow.claude_session_id` (main agent) — owned from t=0, no
+transcript-filename scraping. The MainAgentKeeper applies the identical headroom-gated resume logic to the singleton
+main agent (`_handle_rate_limit_modal` → `resumed` / `killed_fresh` / `frozen_no_headroom`), with a failover cooldown so
+a lingering modal in the pane scrollback doesn't re-failover every tick. SSOT:
+`plans/active/orchestrator_account_failover_resume_respawn_2026_06_17.md`.
+
 ### Anti-thrash gates
 
-- Per-slot 5-min kill cooldown.
-- Per-VM daily cap of 20 kills → Slack alert + watchdog dormancy until operator reset.
+- Per-slot 5-min kill cooldown (the usage-cap resume path stamps it too, so a stale modal line in scrollback can't
+  re-trigger).
+- Per-VM daily cap of 20 kills → Slack alert + watchdog dormancy until operator reset. The usage-cap RESUME path does
+  NOT count against this destructive cap (it is a 1:1 context-preserving recovery, not a kill).
 
 ### Debounce vs WorkerLivenessKicker
 

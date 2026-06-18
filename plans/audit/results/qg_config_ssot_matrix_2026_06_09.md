@@ -6,8 +6,8 @@ auditor: slot-1 (claude)
 date: "2026-06-10"
 status: complete
 source:
-  - plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md — Phase 0 audit items (dual-SSOT matrix, bandit-`-c`
-    question, TIER-A/TIER-B classification)
+  - plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md — Phase 0 audit items (dual-SSOT matrix,
+    bandit-`-c` question, TIER-A/TIER-B classification)
   - static analysis of scripts/quality-gates-base/base-service.sh + base-library.sh (PM @ working tree 2026-06-10)
   - per-repo sweep of <repo>/scripts/quality-gates.sh stubs vs <repo>/pyproject.toml across the .tabs/1 workspace
 ---
@@ -123,6 +123,37 @@ size limits, 7 QG\_\* env, 4 toggles, 4 identity + the 10 singles, minus the env
 - base-library lacked `IGNORE_TIMEOUT` honour on the duration meta-gate (fixed with the profiler instrumentation,
   2026-06-10) and lacks `BANDIT_EXTRA_ARGS` / `PYTEST_TIMEOUT` overrides.
 - base-library pip-audit runs bare `pip_audit` (no `--skip-editable`, no JSON parse) vs base-service's richer path.
+
+## Per-repo `[tool.bandit] skips` audit (2026-06-17) — `-c pyproject.toml` flip is SAFE
+
+> Closes the Phase-0 P1 precondition: "audit each repo's skips BEFORE the bases add `-c pyproject.toml`, else
+> re-activating dead skips may silently suppress a real finding." Verdict: **safe to flip** — no scanned-tree finding is
+> suppressed by any existing skip.
+
+**Method**: `tomllib`-parse every repo's `pyproject.toml` `[tool.bandit]`; for each repo with non-empty `skips`, run the
+repo's own `.venv/bin/bandit` `-t <codes>` over its `SOURCE_DIR` (the exact tree the base scans —
+`bandit -r "$SOURCE_DIR/" -ll`).
+
+**Findings**:
+
+- **20 of 22 repos** have `[tool.bandit] = {skips: []}` — empty → adding `-c pyproject.toml` is a **no-op** for them.
+- **2 repos carry real skips**, both **MOOT in the scanned tree** (0 findings for the skipped codes within
+  `SOURCE_DIR`): | Repo | skips | findings in `SOURCE_DIR` | findings in `scripts/` (NOT scanned) | | --- | --- | --- |
+  --- | | market-tick-data-service | B608,B104,B108,B310 | **0** (all 4 moot) | 4×B310 + 1×B108 (one-off scripts) | |
+  strategy-service | B608 | **0** (moot) | — |
+
+**Why moot today**: (a) the base runs bandit WITHOUT `-c`, so the toml skips are not honored at all; (b) the base scans
+only `SOURCE_DIR`, and neither repo has any of its skipped codes there (the mtds hits are all under `scripts/`, outside
+the scan root).
+
+**Verdict / decision**: **adding `-c pyproject.toml` is SAFE** — it changes nothing in any repo's scanned tree (the two
+skip-sets suppress zero real findings). The flip is de-risked; no repo reds, nothing real is hidden. The 2 skip-sets may
+be **pruned for cleanliness** (they suppress nothing) but pruning is optional, not a blocker. (Verified earlier in this
+doc that bandit tolerates `-c pyproject.toml` even with no `[tool.bandit]` section.)
+
+**Side-finding (captured as a todo, not part of this flip)**: mtds `scripts/massive_flat_files_smoke.py:56` uses a
+hardcoded `/tmp` (B108) — outside bandit's scan path but violates the workspace no-hardcoded-`/tmp` HARD RULE
+(`tempfile.gettempdir()`); plus 4 `urllib.urlopen` (B310) in mtds `scripts/`. Tracked in the speed/config plan.
 
 ## Phase-1 implications (decision input, not decisions)
 
