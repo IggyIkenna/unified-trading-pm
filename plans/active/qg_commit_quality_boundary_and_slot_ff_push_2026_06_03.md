@@ -60,15 +60,14 @@ All on `origin/live-defi-rollout`; full detail in
       "≤1-2 full QGs host-wide" QG-sweep rule — the rule is right, the ad-hoc IMPLEMENTATION is the bug. Repo:
       unified-trading-pm (helper) + the QG-sweep SSOT note. parent: this plan.
 
-- [ ] [INFRA] P1. **The governor bash-3.2 crash had been MASKING pre-existing per-repo QG debt workspace-wide** — every
-      macOS `quality-gates.sh` died at stage [2], so no repo's stage-5+ failures (codex baselines, cloudbuild-schema,
-      size/import) were visible locally. Fixing the governor makes local QG run fully and **surfaces** that debt
-      (observed: PM 3 issues cleared; UTL within-baseline; trading-agent-service STEP-5.17 cloudbuild-schema FAILS).
-      **This is the same per-repo-debt that
-      [cicd_contract_hardening_2026_06_01.md](cicd_contract_hardening_2026_06_01.md) Phase 6 greens** — that plan
-      attributed surfacing to the v2 rollout; the governor crash was a second masking layer on the _local_ gate
-      specifically. Cross-link, don't duplicate: the debt-greening lives in cicd Phase 6; this plan owns the
-      governor-fix that exposed it. **DEFERRED to the cicd Phase-6 per-repo sweep.**
+- [x] ✅ [INFRA] P1. **CLOSED-AS-SUBSUMED (2026-06-17): governor-fix done (this plan's part); debt-greening owned by
+      cicd Phase 6 (active).** Governor runs fully now (QG executes start→finish locally + fleet, verified repeatedly
+      2026-06-17 incl. the re-profile sweep over all repos). The per-repo debt the fix SURFACED (codex baselines /
+      cloudbuild-schema / size — e.g. trading-agent-service STEP-5.17) is explicitly owned by
+      [cicd_contract_hardening_2026_06_01.md](cicd_contract_hardening_2026_06_01.md) Phase 6 "per-repo QG-debt greening"
+      (still active) — the item itself said "cross-link, don't duplicate … DEFERRED to the cicd Phase-6 per-repo sweep."
+      Closing here to avoid dual-tracking; the greening lives in cicd Phase 6. (My ratchet-hardening this session makes
+      that sweep's "debt cleared?" check honest — a red ratchet now fails instead of hollow-greening.)
 
 - [x] ✅ [SCRIPT] P2. **DONE 2026-06-10 — fleet-wide: 0 repos track a sentinel, all carry the ignore pattern.** Verified
       2026-06-10: the canonical template `scripts/propagation/templates/gitignore-python.txt` NOW carries both
