@@ -111,16 +111,30 @@ a verdict). Heaviest:
 
 ## Phase 1 — audit each repo's scripts/ (characterize + STAMP the marker) [P2]
 
-- [ ] [AUDIT] P2. Walk each repo's `scripts/` (start with the heavy/stale concentrations: instruments-service,
-      market-tick-data-service, deployment-service, e2e-testing). **Stamp the Phase-0 lifecycle marker
-      (`Epic:`/`Lifecycle:`/`Delete-when:`) on each script in the same touch as you classify it.** Classify each: (a)
-      LIVE one-off still needed; (b) RAN-ONCE-DONE → delete (Script-Homes: delete after prod-run + a GCS orphan-sweep
-      shows 0 stale targets); (c) OUT-OF-SHAPE / divergent from current code (hardcoded buckets / pre-env-short paths /
-      direct `google.cloud`/`boto3` / dead imports / references to deleted modules) → mark deprecated or delete; (d)
-      RECURRING → should be a CLI subcommand (file the promotion). Land a results doc under `plans/audit/results/`.
-      Target: all service repos.
-- [ ] [AUDIT] P2. From the audit, produce the concrete delete / deprecate / CLI-promotion lists; execute the deletes
-      carefully (never delete a script that still has live GCS targets — verify first). Target: per-repo.
+- [x] ✅ [AUDIT] P2. **DONE 2026-06-18 — read-only characterization of all 21 service repos' `scripts/` (~820 scripts,
+      `.py`+`.sh`; PM excluded).** 6 Opus sub-agents, one per repo-cluster; every script classified
+      (KEEP-PERMANENT/KEEP-ONEOFF/DELETE/DEPRECATE/PROMOTE-TO-CLI) + lifecycle + git-date + red-flag grep. Results:
+      **`plans/audit/results/repo_scripts_characterization_2026_06_18.md`**. Tally: ~620 keep-permanent, ~65 keep-oneoff
+      (active campaign), ~127 DELETE-candidates (heavily campaign-gated), ~75 DEPRECATE (cloud-discipline rot), ~8
+      PROMOTE-TO-CLI. (Stamping the lifecycle marker on each script is deferred to the delete/Phase-0 pass — the
+      characterization already assigns each one, so stamping is mechanical, but it pairs with the delete touch to avoid
+      churning ~820 files read-only.)
+- [ ] [AUDIT] P2. **Delete EXECUTION — GATED + REVIEWED (do NOT mass-`git rm`).** Per the results doc Finding 1: the big
+      DELETE cohort (instruments-service 64 / MTDS 22) is **campaign-gated** — the 2026-06 manifest-canonicalisation
+      campaign is ACTIVE, so delete a repo's dated one-offs for an asset_group **only after that AG's
+      `*_manifest_canonicalisation_2026_06_01.md` plan archives** + GCS-orphan-sweep=0. **Start with the
+      immediately-safe ~40** (UI 2026-03 `.tsx.bak` splitters/codemods; done deployment-service bucket migrations; the 5
+      dead checkers — UAC `check_schema_organization`, UTL `check-ruff-versions`, SIT `check-sit-readiness`, MTDS QG
+      stale SSOT pointer, deployment-service `aggregate_instruments`). Target: per-repo.
+- [ ] [AUDIT] P2. **DEPRECATE remediation** — fix the ~10 KEEP/PROMOTE scripts carrying the cloud-discipline gap (UCI
+      `get_storage_client`/`gcs_*` + `resolve_bucket_name` + `GCP_PROJECT_ID` via `UnifiedCloudConfig`):
+      strategy-service DeFi tracers, `seed_demo_client`, `run_client_reporting_cutover`, `run_amm/lending_validation`,
+      `backfill_vix_yahoo`, `run_weekly_pipeline`. (DELETE-cohort scripts are moot — removal moots the flaw.) Target:
+      per-repo.
+- [ ] [AUDIT] P2. **PROMOTE-TO-CLI** — file the ~8 recurring-prod-logic scripts as their owning service's CLI subcommand
+      (`daily_update.py`→client-reporting-api; `collect_lst_seasonal_rewards_daily.py`/`check_pipeline_completeness.py`→
+      features-service; `measure_honest_coverage.py`/`verify_instrument_manifest_coverage.py`→instruments-service;
+      `run_weekly_pipeline.py`/`backfill_vix_yahoo.py`→e2e→service CLI). One small plan item per repo. Target: per-repo.
 
 ## Phase 2 — ruff-lint pass on scripts/ [P2]
 
@@ -129,6 +143,12 @@ a verdict). Heaviest:
       light up → likely a baselined ratchet that only goes DOWN, like the existing 5.94/5.95 ratchets). Repo:
       **unified-trading-pm** (`base-*.sh`) → fleet-live via the PM-sourced base scripts (no per-repo rollout).
       **Sequencing:** run AFTER Phase-1 deletes so the ratchet baseline isn't inflated by soon-to-be-deleted scripts.
+- [ ] [SCRIPT] P2. **(from Phase-1 Finding 2)** ruff alone won't catch the systemic `scripts/` rot (~75 scripts:
+      `from google.cloud import storage` vs UCI; hardcoded `central-element-323112` vs `GCP_PROJECT_ID`; inline `gs://`
+      vs `resolve_bucket_name`; `os.environ.setdefault("GOOGLE_CLOUD_PROJECT")`) — that's a TID251/import-surface
+      concern, not a style rule. **Extend the existing cloud-SDK-direct (TID251) + `os.getenv`/banned-env ratchets to
+      cover `scripts/`** (baselined, counts-only-down), so the rot can't silently grow. AFTER the DELETE pass (baseline
+      not inflated by soon-deleted scripts). Repo: unified-trading-pm.
 
 ## Phase 3 — D16 strict-quickmerge carve scope [P2]
 
@@ -156,3 +176,19 @@ a verdict). Heaviest:
 - `scripts/` is ruff-linted fleet-wide (ratcheted); basedpyright + coverage remain excluded by design.
 - The D16 carve scope is decided + implemented; CLAUDE.md matches `check_strict_quickmerge.py`.
 - `tests/` unchanged (confirmed intentional).
+
+## Progress Log
+
+- **2026-06-18 — Phase 1 characterization DONE (read-only).** Fanned out 6 Opus sub-agents (one per repo-cluster) over
+  all 21 service repos' `scripts/` (~820 `.py`+`.sh`; PM excluded). Results doc:
+  `plans/audit/results/repo_scripts_characterization_2026_06_18.md`. Three headline findings: **(1)** the big DELETE
+  cohort (instruments-service 64 / MTDS 22) is **campaign-gated** — the 2026-06 manifest-canonicalisation campaign is
+  ACTIVE, so the `*_2026_06_01.py` set is in-flight (KEEP) and dated 2026-05 reconcilers may be re-run; delete per-AG
+  only after that AG's canonicalisation plan archives → **no fleet `git rm`**. **(2)** systemic `scripts/`
+  cloud-discipline rot (~75: `google.cloud`-direct / hardcoded `central-element-323112` / inline `gs://`), invisible
+  because `scripts/` is outside the QG gate — validates the ruff decision AND motivates extending the TID251/banned-env
+  ratchets to `scripts/` (new Phase-2 todo). **(3)** ~8 PROMOTE-TO-CLI (recurring prod logic as scripts;
+  `daily_update.py` the clearest). Plus 5 dead-checker tooling scripts (pointed at deleted/archived paths). Phase 1
+  flipped; delete + deprecate + promote execution todos scoped with the gating rule. **Next:** Phase 0 marker
+  codification, then the immediately-safe ~40 deletes (UI splitters + done bucket migrations + dead checkers), then the
+  campaign-gated cohort as each plan archives.
