@@ -208,23 +208,31 @@ one):**
 
 **Phase 1.5a — remove the divergence source (PREREQUISITE, must land before the flip):**
 
-- [~] [SCRIPT] P1. **TEMPLATE DONE 2026-06-18, fleet rollout in progress.** Make dependency-floor bumps land on
-  **`live-defi-rollout`, not `staging`** — the automatic fan-out `update-dependency-version.yml`. Edited the SSOT
-  template `scripts/workflow-templates/update-dependency-version.yml`: (1) checkout `ref: live-defi-rollout` (was
-  `staging`); (2) non-breaking digest-refresh path pushes `HEAD:live-defi-rollout` (was `git push origin staging`),
-  rebase-retry on a concurrent-push reject; (3) MAJOR/breaking path **retired the dedicated `feat!` staging PR** — now
-  an atomic `chore(deps): re-pin …` commit (floor + regenerated `uv.lock`) pushed to LDR with rebase-retry (conflict →
-  `exit 1` → `notify-failure` Slack, never silently dropped). **3 regression vectors handled:** (i) **provenance gate**
-  — VERIFIED already-exempt (bot-author + no-source double carve-out; see the ✅ note above), no code; (ii)
-  **breaking-path reroute** — DONE, and SIT is NOT lost (the major-bump CASCADE
-  `update-repo-version.yml`→`cascade-qg-ordering.yml` is payload-triggered, independent of this workflow's PR; the drain
-  PR's `quality-gates-v2` gates the content); (iii) **deferred-firing** — accepted: an LDR push fires no immediate CI;
-  the `*/15` Tier-C drain carries it (≤15min), trees converge after one promote (`:187` gate). YAML validated
-  (`yaml.safe_load`), 0 residual `staging`-direct writes. **Manual external floor edit** needs no code —
-  `quickmerge --files 'pyproject.toml uv.lock'` already lands on LDR (the 1.5b DOCS todo makes the regen rule explicit).
-  **Remaining: fleet rollout** (`rollout-workflow-templates.sh --template update-dependency-version.yml` → commit+push
-  each repo's `.github/workflows/` copy to its LDR → `detect_template_drift.py --workflows` exit 0). Repo:
-  unified-trading-pm (template ✅) + 24 repo copies (rollout).
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-18 — template + 24-repo fleet rollout landed on LDR.** Make dependency-floor bumps
+      land on **`live-defi-rollout`, not `staging`** — the automatic fan-out `update-dependency-version.yml`. Edited the
+      SSOT template `scripts/workflow-templates/update-dependency-version.yml`: (1) checkout `ref: live-defi-rollout`
+      (was `staging`); (2) non-breaking digest-refresh path pushes `HEAD:live-defi-rollout` (was
+      `git push origin staging`), rebase-retry on a concurrent-push reject; (3) MAJOR/breaking path **retired the
+      dedicated `feat!` staging PR** — now an atomic `chore(deps): re-pin …` commit (floor + regenerated `uv.lock`)
+      pushed to LDR with rebase-retry (conflict → `exit 1` → `notify-failure` Slack, never silently dropped). **3
+      regression vectors handled:** (i) **provenance gate** — VERIFIED already-exempt (bot-author + no-source double
+      carve-out; see the ✅ note above), no code; (ii) **breaking-path reroute** — DONE, and SIT is NOT lost (the
+      major-bump CASCADE `update-repo-version.yml`→`cascade-qg-ordering.yml` is payload-triggered, independent of this
+      workflow's PR; the drain PR's `quality-gates-v2` gates the content); (iii) **deferred-firing** — accepted: an LDR
+      push fires no immediate CI; the `*/15` Tier-C drain carries it (≤15min), trees converge after one promote (`:187`
+      gate). YAML validated (`yaml.safe_load`), 0 residual `staging`-direct writes. **Manual external floor edit** needs
+      no code — `quickmerge --files 'pyproject.toml uv.lock'` already lands on LDR (the 1.5b DOCS todo makes the regen
+      rule explicit). **Rollout COMPLETE**: `rollout-workflow-templates.sh --template update-dependency-version.yml` →
+      all 24 consumer copies committed + pushed to their LDRs (PM has no consumer copy — it is the dispatcher);
+      `detect_template_drift.py --workflows` exits **0** (0 new drift; the rollout also CLEANED 46 previously-baselined
+      drift entries) and 0 repo's `.github/workflows/` is dirty. Also deleted the dead duplicate
+      `scripts/propagation/templates/update-dependency-version.yml` (no consumer; a stale staging-direct copy = a latent
+      regression vector). Evidence: PM@`5549412ec` + 24× `ci(workflow-templates): … lands dep bumps on LDR` on each
+      repo's `live-defi-rollout`. **Effective-on-main**: the workflow fires from each repo's DEFAULT branch
+      (`repository_dispatch`), so the new behaviour activates per-repo as the copy promotes LDR→staging→main via the
+      normal drain (fail-safe during transition — the old staging-direct copy on `main` keeps working until the new one
+      lands). First organic internal-dep bump post-promotion validates it lands on LDR not staging. Repo:
+      unified-trading-pm (template ✅) + 24 repo copies (rollout ✅).
 - [ ] [CI] P2. **Finding (2026-06-18 flow audit): `major-bump-issue-handler.yml:183` is a second staging-direct writer**
       — the 1.0.0-graduation handler (`/approve`-gated) clones the target at `--branch staging` (`:155`), bumps the
       repo's own `version =` field, and `git push origin staging` (`:183`). Same divergence CLASS as 1.5a but a
