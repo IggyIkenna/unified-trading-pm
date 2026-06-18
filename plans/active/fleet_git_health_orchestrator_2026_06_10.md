@@ -1,7 +1,7 @@
 ---
 title: "Fleet git-health surface — hosts×slots×repos dirty/drift matrix + cron liveness on the orchestrator dashboard"
 parent_epic: orchestrator_master
-assigned_vm: vm-orchestrator
+assigned_vm: planning # was vm-orchestrator (STOPPED 2026-06-04, vestigial); reassigned to the live central VM per the 2026-06-12 human/central split (D21, 2026-06-18)
 priority: P1
 status: active
 estimate_class: infra

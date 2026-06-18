@@ -325,14 +325,13 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [x] D12 ✅ — RESOLVED 2026-06-18: premise stale. Rec#1 (content-hash sentinel) SHIPPED 2026-06-17 (`977c5548f`); Rec#2
       (change-scoped slicing) WON'T-DO (Harsh, ~1.1%); Rec#3 superseded; `quality_gates_speed` archived → no
       double-tracking. Issue closed + archived to `plans/archive/issues/`.
-- [ ] D13 🟠 — add SUPERSEDED banner to qg_commit_quality_boundary L220 (tab-mirror torn out by Path-B). **DEFERRED: the
-      edit would force a ~170-line prettier reflow of that hot, actively-edited plan mid-session (prek reflows md on
-      commit) — apply in a quiet window.**
+- [x] D13 ✅ — added SUPERSEDED-2026-06-08 banner to qg_commit_quality_boundary (the flipped tab-mirror BIDIRECTIONAL
+      item — machinery deleted by Path-B) — 2026-06-18
 - [x] D14 ✅ — recorded `assert_deps_published_to_ar.py` as reserved/unwired (callout in
       `cloud_build_router_aws_parity`) — PM@98bdf756c
 - [ ] D22 🟠 — migrate residual todos out of semver_version_bump_skip_ci + cicd_workflow_sprawl_audit, then archive
-- [ ] D24 🟠 — delete dead `feature-branch-to-staging.yml` (2 dirs) + `staging-version-gate.yml`; fold into sprawl
-      remediation
+- [x] D24 ✅ — deleted 3 dead retired-v1 templates (`feature-branch-to-staging.yml` ×2 + `staging-version-gate.yml`;
+      verified deployed to 0/25 + unreferenced); recorded in the sprawl issue — 2026-06-18
 - [x] D6 ✅ — branch-model table: `tab/hk/<N>` row → Path-B reference-clone; staging who-merges → Tier-C drain —
       PM@eeece9802
 - [x] D7 ✅ — corrected the wrong "post-cutover — LDR retired" block (LDR is the trunk, runs no server QG; drain PR
@@ -349,9 +348,9 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [ ] D17 🟡 — (note) STAGING_PENDING rank-equivalence vs ON_STAGING_STATUSES exclusion
 - [ ] D18 🟡 — quickmerge.sh:1481/1534 "30min" → 15min drain comment
 - [ ] D19 🟡 — sit-starvation-detector.yml header comment "15 minutes" → matches `*/30`
-- [ ] D20 🟡 — fix `locked_since` frontmatter (ci_status_firestore_side_store, ldr_tarball_auto_refresh). **DEFERRED:
-      same prettier-reflow-on-commit churn on hot foreign plans for a 1-line frontmatter fix — batch at triage.**
-- [ ] D21 🟡 — reassign fleet_git_health_orchestrator `assigned_vm` off the stopped vm-orchestrator
+- [x] D20 ✅ — fixed `locked_since` frontmatter (ci_status_firestore_side_store→2026-06-10,
+      ldr_tarball_auto_refresh→2026-06-17) — 2026-06-18
+- [x] D21 ✅ — reassigned fleet_git_health_orchestrator `assigned_vm` vm-orchestrator (stopped 2026-06-04) → `planning`
+      (live central VM) — 2026-06-18
 - [ ] D23 🟡 — archive the 4 resolved plans/issues (gate the UI one on `pw:L2 ✓`)
-- [ ] D25 🟡 — fix the ldr-to-staging cron number in the cicd_workflow_sprawl_audit issue doc. **DEFERRED: same
-      reflow-churn reason — batch with D13/D20/D24 at triage.**
+- [x] D25 ✅ — fixed the ldr-to-staging cron number (`17 */6`→`2,17,32,47`) in the sprawl issue — 2026-06-18

@@ -20,6 +20,14 @@ priority: P1
 > 2026-06-11 (see flipped checkboxes below). This doc remains the evidence + verification-appendix record; new work
 > lands in the hardening plan.
 
+> **✅ UPDATE 2026-06-18 (D24 from the CI/CD drift audit) — 3 dead retired-v1 TEMPLATE files DELETED** (a new finding
+> the original sprawl table didn't enumerate): `scripts/templates/feature-branch-to-staging.yml`,
+> `scripts/propagation/templates/feature-branch-to-staging.yml`,
+> `scripts/propagation/templates/staging-version-gate.yml` — the old
+> `workflow_run:["Quality Gates"] → live-defi-rollout → staging` per-unit model, superseded by the
+> `ldr-to-staging-promote` Tier-C drain (LDR-trunk decoupling). Verified deployed to **0 of 25** repos + referenced by
+> no rollout/propagation script before deletion.
+
 > **Trigger:** the CI/CD pipeline grew organically — agents added new workflows to patch edge cases in existing ones,
 > which created their own edge cases. We now carry ~45 orchestrator workflows in PM (plus ~10 templated to all 25
 > repos). This doc catalogues what is genuinely **dead / duplicate / band-aid** and what only _looked_ dead under a
@@ -127,10 +135,10 @@ applies. Everything else stands as written.
 > These are **NOT dead workflows** (the narrow audit risked reading them that way). They are alive via cron + a live
 > dispatch; only one _unused_ `repository_dispatch` type should be pruned.
 
-| Workflow                     | Alive via                                                                | Prune unused type                                    |
-| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
-| `ldr-to-main-promote.yml`    | `schedule: */15` + `workflow_dispatch`                                   | `repository_dispatch: [ldr-to-main]` — 0 emitters    |
-| `ldr-to-staging-promote.yml` | `schedule: 17 */6` + `tier-ab-green` (emitted by `ci-status-update.yml`) | `repository_dispatch: [ldr-to-staging]` — 0 emitters |
+| Workflow                     | Alive via                                                                                                                                              | Prune unused type                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `ldr-to-main-promote.yml`    | `schedule: */15` + `workflow_dispatch`                                                                                                                 | `repository_dispatch: [ldr-to-main]` — 0 emitters    |
+| `ldr-to-staging-promote.yml` | `schedule: 2,17,32,47 * * * *` (every 15 min; corrected 2026-06-18 — was wrongly noted `17 */6`) + `tier-ab-green` (emitted by `ci-status-update.yml`) | `repository_dispatch: [ldr-to-staging]` — 0 emitters |
 
 ### E. Dormant / staged — DO NOT delete (false-positive corrections vs the narrow audit)
 
@@ -188,9 +196,10 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
 - [x] ✅ [DONE 2026-06-11: downstream-fix-agent.yml DELETED (this unit) — contradicted the VM-worker pivot + 0 emitters;
       SIT test_cascade_flow.py repoint tracked as the companion SIT todo below] [SCRIPT] P1. Delete
       `downstream-fix-agent.yml`.
-- [x] ✅ **[DONE 2026-06-12 — `test_cascade_flow.py` (`2f900b2`) drops `downstream-fix-agent.yml` (and auto-merge-minor-fixes) from `WORKFLOW_NAMES`; assertions repointed]** [TEST] P1. **Companion (system-integration-tests):** remove/repoint the `test_cascade_flow.py` assertions (lines
-      ~216/221/300) that expect `downstream-fix-agent.yml` wired + its Anthropic-API call. Repo:
-      system-integration-tests.
+- [x] ✅ **[DONE 2026-06-12 — `test_cascade_flow.py` (`2f900b2`) drops `downstream-fix-agent.yml` (and
+      auto-merge-minor-fixes) from `WORKFLOW_NAMES`; assertions repointed]** [TEST] P1. **Companion
+      (system-integration-tests):** remove/repoint the `test_cascade_flow.py` assertions (lines ~216/221/300) that
+      expect `downstream-fix-agent.yml` wired + its Anthropic-API call. Repo: system-integration-tests.
 - [x] ✅ [DONE 2026-06-11: contract-replay.yml DELETED (PM@8d23d2047, 0 callers); contract-drift-record.yml DELETED
       2026-06-11 (this unit) — operator-acked via the sprawl-audit action sweep; echo-stub on the same cron as the
       implemented cassette-drift-check.yml; lane-metrics.md Drift-Lane trigger ref corrected] [SCRIPT] P1. Delete
@@ -210,15 +219,18 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
       semver-agent path are handled by NEITHER (pre-existing latent gap, independent of this delete; the canonical
       `request-major-bump.yml` path applies `major-bump-pending` correctly). Fix tracked below.] [SCRIPT] P1. Resolve
       the duplicate `/approve` handler.
-- [x] ✅ **[DONE 2026-06-12 — both `.github/workflows/semver-agent.yml` and `scripts/workflow-templates/semver-agent.yml.tmpl` now use `--label "major-bump-pending"`; no `major-bump-approval` remains]** [SCRIPT] P1. **semver-agent label mismatch (found 2026-06-11):** change `--label "major-bump-approval"` →
-      `--label "major-bump-pending"` in `.github/workflows/semver-agent.yml` +
+- [x] ✅ **[DONE 2026-06-12 — both `.github/workflows/semver-agent.yml` and
+      `scripts/workflow-templates/semver-agent.yml.tmpl` now use `--label "major-bump-pending"`; no
+      `major-bump-approval` remains]** [SCRIPT] P1. **semver-agent label mismatch (found 2026-06-11):** change
+      `--label "major-bump-approval"` → `--label "major-bump-pending"` in `.github/workflows/semver-agent.yml` +
       `scripts/workflow-templates/     semver-agent.yml.tmpl` + rollout, so semver-created MAJOR-bump issues actually
       reach the `/approve` handler. Repo: unified-trading-pm (templated ×25).
-- [x] ✅ **[DONE 2026-06-12 — `main-backmerge-to-ldr.yml` + `staging-backmerge-to-ldr.yml` templates both now `group: backmerge-to-ldr` (aligned to the documented shared key)]** [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s concurrency group to the documented `backmerge-to-ldr` (the value
-      staging-backmerge already uses and both headers claim is "shared") so the two serialize as designed. **Not a
-      correctness fix** — both already push FF-only + 5× retry + never-force, so this only removes avoidable retry churn
-      and makes the code match its own stated invariant. **Templated** — edit `scripts/workflow-templates/` SSOT +
-      `rollout-workflow-templates.sh` + commit fleet-wide.
+- [x] ✅ **[DONE 2026-06-12 — `main-backmerge-to-ldr.yml` + `staging-backmerge-to-ldr.yml` templates both now `group:
+      backmerge-to-ldr` (aligned to the documented shared key)]** [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s
+      concurrency group to the documented `backmerge-to-ldr` (the value staging-backmerge already uses and both headers
+      claim is "shared") so the two serialize as designed. **Not a correctness fix** — both already push FF-only + 5×
+      retry + never-force, so this only removes avoidable retry churn and makes the code match its own stated invariant.
+      **Templated** — edit `scripts/workflow-templates/` SSOT + `rollout-workflow-templates.sh` + commit fleet-wide.
 
 ### Tier 3 — no-op + vestigial cleanup
 
@@ -236,8 +248,10 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
 
 - [ ] [SCRIPT] P2. Delete stale `tab/*` branches fleet-wide (13–21 per repo on origin) now that Path-B slots live on LDR
       — confirm none carry un-preserved WIP first (cross-check `origin/wip-preserve/slot-*`).
-- [x] ✅ **[DONE 2026-06-12 — `tab-mirror-to-ldr.yml` deleted fleet-wide (template + all per-repo copies); CLAUDE.md §"Per-slot worktrees" corrected DISABLED→DELETED 2026-06-12]** [SCRIPT] P2. Retire `tab-mirror-to-ldr.yml` (or gate its cron behind `if: false`) via the template SSOT + rollout;
-      **correct the CLAUDE.md "DISABLED fleet-wide" claim** which is currently false (the cron still runs).
+- [x] ✅ **[DONE 2026-06-12 — `tab-mirror-to-ldr.yml` deleted fleet-wide (template + all per-repo copies); CLAUDE.md
+      §"Per-slot worktrees" corrected DISABLED→DELETED 2026-06-12]** [SCRIPT] P2. Retire `tab-mirror-to-ldr.yml` (or
+      gate its cron behind `if: false`) via the template SSOT + rollout; **correct the CLAUDE.md "DISABLED fleet-wide"
+      claim** which is currently false (the cron still runs).
 
 ### Tier 5 — band-aid consolidation (refactor)
 
