@@ -753,6 +753,26 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
   liquidity/venue-conditioned. Reproducible: `_run_xsec_carry` (min_vol filter) + the cross-venue IC reader
   (derivative_ticker funding_rate+mark_price per venue).
 
+  **REGIME CLASSIFIER BUILT + the decomposition that CORRECTS the above (operator 2026-06-18 — "make a classifier; ml
+  can't do it alone without overfitting"). KEY RESULT: the dramatic liquidity/venue regime split was LARGELY A STATIC
+  SELECTION ARTIFACT, not a predictive signal.** Built `funding_regime_classifier.py` (sample=(coin,quarter),
+  target=sign of within-coin IC, features=log ADV/OI/rvol/|funding|/log px/maturity, LightGBM + grouped-by-coin CV +
+  logistic baseline). Before classifying, decomposed the funding→return IC: **BETWEEN-coin (static/selection) = +0.31**
+  (coins that MOONED over 2023-24 carried high AVERAGE funding — strong but NOT tradeable, you can't trade "the winners
+  had high funding" forward) vs **WITHIN-coin (dynamic/predictive, per-coin demeaned) = +0.02** (≈ZERO genuine
+  predictive signal). So the earlier headline ICs (+0.073 momentum / −0.13 reversal) were dominated by the +0.31
+  selection effect + small-sample/source differences — **exactly the "other stuff" a raw-funding ML overfits.** After
+  demeaning, the residual predictive tilt is WEAK and the OPPOSITE of the hypothesis: liquid → mild MOMENTUM (D5
+  +0.066), illiquid → mild REVERSAL (D1 −0.020). The classifier itself: AUC **0.644** (modest, grouped CV), no single
+  feature dominates (rvol 19% / log_adv 18% / log_px 18% / |funding| 17% / log_oi 16%), 1-feature log_ADV baseline AUC
+  0.522 (liquidity alone ≠ the driver), continuous-IC regressor R²≈0 (unpredictable). **Disciplines for the ML agent:
+  (1) DEMEAN funding per-coin before it enters any model — the raw cross-sectional level encodes the un-tradeable +0.31
+  selection effect; (2) treat the regime as a WEAK soft-conditioner (AUC ~0.64), never a strong standalone signal; (3)
+  the cross-venue |IC| ranking (HL>Bybit>Binance>OKX) and "liquid=reversal" framing are confounded — re-derive on
+  per-coin-demeaned funding before trusting them.** Reproducible:
+  `e2e-testing/scripts/defi/funding_regime_classifier.py` (prints the decomposition + decile tilt + CV AUC; saves
+  panel.parquet + the LGBM model).
+
 - [ ] [STRATEGY] P3. Cross-sectional carry is NOT tradeable standalone (funding≈adverse price) — only revisit with a
       genuine price-neutralising overlay (correlation-paired long/short of co-moving coins, or a momentum/beta hedge)
       AND only if it clears Sharpe; otherwise the archetype is shelved. The delta-neutral staked/pure-basis remain the
