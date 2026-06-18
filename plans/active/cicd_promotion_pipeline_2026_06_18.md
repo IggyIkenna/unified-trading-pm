@@ -4,8 +4,6 @@ name: cicd_promotion_pipeline_2026_06_18
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 created: 2026-06-18
-date: 2026-06-18
-author: ikenna [autonomous]
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-18
