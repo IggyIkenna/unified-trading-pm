@@ -213,7 +213,20 @@ unmappable are bare/no-venue legacy paths (`no_venue_or_data_type_in_path`/unpar
 target → excluded from every delete-list (tracked P2 residual below). **DELETE of the 168.72 GB SAFE-TO-DELETE set is
 operator-gated — sized + inspect-ready, NEVER auto-executed.**
 
+**Reader cutover DONE (deployment-api@0e267be):** data-status/drilldown readers now read canonical `pipeline_mode=`
+paths ONLY — `storage_facade.list_objects` is pipeline_mode-aware (fans out canonical layers + dedups → no double-count),
+the `DATA_STATUS_CANONICAL_PATHS_ONLY` flag + every `category=`/bare-`asset_group=` fallback branch deleted, QG-green,
+163 tests pass, STEP 5.93 canonical-model regression detector passed. MTDS data-status reads the already-canonical v9
+manifest (not GCS paths) → unaffected. **Schema/data_type preservation:** established by construction (server-side
+byte-identical copy preserves parquet footers; only the object name changed) + re-audit `gcs_describe` twin verification
++ 0 copy errors; the live footer spot-check timed out on host GCS read latency (not a data fault, not load-bearing).
+
 ## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
+
+- [ ] [CODE] P2. **Batch-query GCS scanner is a second canonical-path SSOT** (flagged by reader-cutover @0e267be): deployment-api
+      `utils/path_combinatorics.to_gcs_prefix` → `routes/data_batch_processing.py`/`batch_query_engine.py` still builds the
+      pre-`asset_group=`/pre-`pipeline_mode=` layout (`day=/data_type=/instrument_type=/venue=`). NOT a data-status double-count
+      source (separate path) but will drift — cut it over to the same UAC canonical `pipeline_mode=` SSOT. — deployment-api
 
 - [ ] [CODE] P1. **e2e funding scripts hardcode legacy research buckets — repoint to `resolve_bucket_name`**: B3 copied
       HL perp_daily_ctx/perp_mark_price → `perp-funding-prd` (e2e-testing@af084af) + shipped
