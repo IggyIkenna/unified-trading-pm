@@ -1001,7 +1001,7 @@ reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in th
 > make the raw range re-flag an already-promoted trailer-less commit on EVERY drain forever (the `14b11e2` perpetual
 > "Provenance gate BLOCKED"); fail-safe (stale marker over-flags, never under-flags). Do NOT revert to `staging..LDR`.**
 > SSOT: `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
-> decoupling" + `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`.
+> decoupling" + `plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` (RESOLVED 2026-06-18).
 
 CODE reaches the integration branch **only** through `quickmerge --agent --files` (Pass-1 QG sentinel → Pass-2 commit +
 auto-merging staging PR). A direct `git push` of code to `live-defi-rollout`/`staging`/`main` is banned: it dodges the

@@ -7,12 +7,17 @@ source:
   - "#ci-failures 2026-06-16/17: 'Provenance gate BLOCKED' on unified-trading-library #367/#368/#371/#372 — all the SAME
     commit 14b11e2; and features-service #567 (06a83fb6)"
   - scripts/cicd/check_strict_quickmerge.py
-locked_by: live-defi-rollout
 priority: P1
-status: active
+status: resolved
+resolved: 2026-06-18
 ---
 
 # Provenance gate perpetually re-flags a trailer-less LDR commit after a squash-promote
+
+> **✅ RESOLVED + ARCHIVED 2026-06-18** — marker-based promote-range fix shipped
+> (`scripts/cicd/promote_provenance_range.py`, PM@b54da7855 + PR #389→main); verified in prod (UTL #374 recreated with
+> auto-merge armed, `14b11e2` no longer flagged). Both items closed, no deferred work; codex
+> `08-workflows/ci-cd-flow.md` §D1 already states the contract.
 
 ## What I found
 
@@ -56,19 +61,20 @@ gate just can't tell, because squash-merges destroy per-commit promotion trackin
       staging base (no longer in `staging..LDR`). This is the canonical LDR-is-SSOT fix but is per-repo +
       operator-gated, not a durable systemic fix on its own.
   - **RESOLVED 2026-06-17 (option 1, marker-based — no new state).** New `scripts/cicd/promote_provenance_range.py`
-    resolves the marker = `headRefOid` of the **last MERGED LDR→target drain PR** (`gh pr list --base <staging|main>
-    --head live-defi-rollout --state merged --limit 1 --json headRefOid`). For a merged PR the head SHA is frozen at
-    merge time = exactly the last-promoted LDR SHA, so this needs **no moved tag / no state file / no write race** —
-    strictly simpler than option 1's tag variant, same semantics. The bots emit `<marker>..origin/live-defi-rollout`.
-    **Fail-safe**: no merged drain yet / empty / unreachable-marker → raw `<base>..LDR` fallback (WIDEN, never narrow);
-    fail-OPEN on a checker error preserved. Both bots wired (`ldr-to-staging-promote.yml` temp-clone path with
-    `--fetch-remote`; `ldr-to-main-promote.yml` PM-checkout path). HARD RULE + carve-out set unchanged — only the range
-    computation. **Verified end-to-end**: UTL `14b11e2` (≤ marker `b859a153`) NO LONGER flagged under the new range, the
-    OLD raw `staging..LDR` still flagged it; a fresh trailer-less `.py` after the marker IS still flagged. **Verified in
-    prod**: dispatched `ldr-to-staging-promote` (only_repo=unified-trading-library) after closing the bug-blocked #373 →
-    `mode=marker marker=b859a153 reachable=True` → `✅ provenance: promote-range is quickmerge-clean` → recreated PR #374
-    with auto-merge ARMED + 0 provenance-block comments (was the perpetually-blocked repo across #367–#373). Unit tests:
-    `tests/unit/test_promote_provenance_range.py` + `tests/unit/test_check_strict_quickmerge.py`. Shipped:
+    resolves the marker = `headRefOid` of the **last MERGED LDR→target drain PR**
+    (`gh pr list --base <staging|main> --head live-defi-rollout --state merged --limit 1 --json headRefOid`). For a
+    merged PR the head SHA is frozen at merge time = exactly the last-promoted LDR SHA, so this needs **no moved tag /
+    no state file / no write race** — strictly simpler than option 1's tag variant, same semantics. The bots emit
+    `<marker>..origin/live-defi-rollout`. **Fail-safe**: no merged drain yet / empty / unreachable-marker → raw
+    `<base>..LDR` fallback (WIDEN, never narrow); fail-OPEN on a checker error preserved. Both bots wired
+    (`ldr-to-staging-promote.yml` temp-clone path with `--fetch-remote`; `ldr-to-main-promote.yml` PM-checkout path).
+    HARD RULE + carve-out set unchanged — only the range computation. **Verified end-to-end**: UTL `14b11e2` (≤ marker
+    `b859a153`) NO LONGER flagged under the new range, the OLD raw `staging..LDR` still flagged it; a fresh trailer-less
+    `.py` after the marker IS still flagged. **Verified in prod**: dispatched `ldr-to-staging-promote`
+    (only_repo=unified-trading-library) after closing the bug-blocked #373 →
+    `mode=marker marker=b859a153 reachable=True` → `✅ provenance: promote-range is quickmerge-clean` → recreated PR
+    #374 with auto-merge ARMED + 0 provenance-block comments (was the perpetually-blocked repo across #367–#373). Unit
+    tests: `tests/unit/test_promote_provenance_range.py` + `tests/unit/test_check_strict_quickmerge.py`. Shipped:
     unified-trading-pm@b54da7855 (LDR) + PR #389 → main. SSOT: `codex/08-workflows/ci-cd-flow.md` § D1 (already states
     the contract).
 - [x] ✅ [CICD] P3. ~~INTERIM (no code): the recurring drains are unblocked by `gh pr merge <n> --admin --squash`~~ —
