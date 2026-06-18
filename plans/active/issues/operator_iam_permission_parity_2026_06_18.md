@@ -1,7 +1,6 @@
 ---
 title: "Operator IAM permission parity for Harsh — GCP + AWS audit + grants (manage infra without hitting walls)"
 created: 2026-06-18
-author: harshkantariya [slot-3·laptop]
 status: active
 priority: P2
 locked_by: live-defi-rollout
