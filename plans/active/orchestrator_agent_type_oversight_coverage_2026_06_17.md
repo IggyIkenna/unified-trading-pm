@@ -252,17 +252,20 @@ PM-repo conflict notes).
 > `escalation_queue.last_error` + `activity_log.details_json` but were **invisible in the dashboard UI** (only the bare
 > `escalation_dispatch_failed` event showed). The three robustness gaps this exposed:
 
-- [ ] [ORCHESTRATOR] P0. Immediate unblock (operational, done out-of-band): preserve slot-1's uac orphan WIP to
-      `origin/wip-preserve/slot1-uac-sports-league-data-2026-06-18` + push, reset the worktree clean, `pull --ff-only`
-      to clear the 88-behind → quarantine clears → escalation dispatches. Repo: agent-orchestrator (central VM op).
+- [x] ✅ [ORCHESTRATOR] P0. Immediate unblock (DONE 2026-06-18): preserved slot-1's uac orphan WIP to
+      `origin/wip-preserve/slot1-uac-sports-league-data-2026-06-18` (uac@9169c40) + reset clean + ff'd the 88-behind →
+      `check_slot_branch_state(1)` now `should_stop=False` → verified `escalation_dispatched` at 16:41:49 (the 316-retry
+      loop broke). Repo: agent-orchestrator (central VM op).
 - [ ] [ORCHESTRATOR] P1. Surface the quarantine REASON in the UI: the activity panel + escalations view must show
       `last_error` (the specific repo + why, e.g. "slot-1: unified-api-contracts 88-behind+dirty, ff-only failed"), not
       just the bare `escalation_dispatch_failed` event. The data is already in `last_error` /
       `activity_log.details_json` — it just isn't rendered. Repo: agent-orchestrator (`server/` + `dashboard/`).
-- [ ] [ORCHESTRATOR] P1. Fix the slot-starvation bug: `escalation._pick_free_slot` returns the lowest _sessionless_
-      slot, and a quarantined slot never gets a session → it is re-picked every tick forever (the 316-retry loop),
-      starving dispatch even when slot-2+ are healthy. Skip a just-quarantined slot (track recent quarantines) and fall
-      through to a healthy one. Repo: agent-orchestrator (`server/escalation.py`).
+- [x] ✅ [ORCHESTRATOR] P1. Fix the slot-starvation bug (DONE — agent-orchestrator@51bf0b6, QG-green):
+      `escalation._pick_free_slot` now skips a recently-branch-quarantined slot (`_recently_quarantined` + 10-min TTL)
+      so a sessionless quarantined slot is no longer re-picked every tick (the 316-retry loop) — dispatch falls through
+      to a healthy slot; the TTL lets it recover once the worktree clears. Tests:
+      `test_pick_free_slot_skips_quarantined_slot` + `test_dispatch_failure_on_quarantine_marks_the_slot` +
+      `test_quarantine_skip_marks_then_recovers_after_ttl`. Repo: agent-orchestrator (`server/escalation.py`).
 - [ ] [ORCHESTRATOR] P2. Self-heal a dead-session dirty dep: `_do_spawn` only auto-resolves dirty state AFTER the
       branch-state gate passes, but the gate STOPs first on the ff-fail. A dead-session dirty dep (no live editor)
       should be auto-preserved to `wip-preserve/` + FF'd rather than quarantining the slot indefinitely. Repo:
