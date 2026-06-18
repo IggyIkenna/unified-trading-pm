@@ -76,7 +76,10 @@ numbers. Order:
    re-audited clean → run the real path-schema migration → verify the live `_index` matches the projection (NO mass
    captured→failed flip) → next AG. **Never all-AG at once.** Mass-flip ⇒ STOP + diagnose prefix_tpls, do not continue.
 9. **Backfills** — F1 (Kraken+ instruments history), the ~88k genuine cefi `VENUE_FETCH_FAILED`, any real captured-absent
-   cells. Run to completion (manifest-verified rows).
+   cells. Run to completion (manifest-verified rows). **→ The FULL path to 100% (could-exist enumeration + per-AG
+   MTDS/IS backfill + cross-data_type completeness + credential asks + live=batch keep-green) is tracked separately in
+   `path_to_100pct_backfill_mtds_is_2026_06_17.md` (parent_epic mtds_mdps_master), gated to start once this migration's
+   `--apply` lands.**
 
 **Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
 gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
