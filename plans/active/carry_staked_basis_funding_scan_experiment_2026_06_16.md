@@ -979,3 +979,31 @@ if minimizing DD-per-return beats raw Sharpe.
 **Caveats across all:** survivorship-optimistic (currently-listed survivors, no dead coins → above the honest 1.44);
 HL/anomaly filters only reach coins listed on the other venues (small-cap tail thinner); Aster short/recent; 2025-26
 high-dispersion regime inflates recent years — underwrite ex-2026.
+
+## TURNOVER reduction SOLVED + deployable book committed (2026-06-18, /autonomous, all CAUSAL)
+
+Operator goal: harden the reversion book vs fees by cutting turnover ~2x WITHOUT losing >10% Sharpe, no look-ahead.
+**Corrected baseline:** the final book (EWMA-7 + HL-veto + beta-hedge + vol-target) runs **0.70 turnover/day** (not the
+~0.3 earlier mis-estimate — the HL-veto's daily flips + the 26-coin concentration drive it). Swept ~25 causal methods
+(longer EWMA, hold-N, no-trade band, position-smoothing, rank-buffer hysteresis, L1 flip-gate, combos), scored on
+turnover + Sharpe@5bp + **Sharpe@10bp** + DD. **WINNER — and it BEATS the constraint (Sharpe rises, not falls):**
+
+| config                                           | turnover        | Sharpe@5bp | Sharpe@10bp      | DD@10 |
+| ------------------------------------------------ | --------------- | ---------- | ---------------- | ----- |
+| base EWMA-7                                      | 0.70            | +2.22      | +1.78            | -7%   |
+| **EWMA-21 + rank-buffer+6 + no-trade-band 0.03** | **0.27 (-62%)** | **+2.34**  | **+2.16 (+21%)** | -7%   |
+
+Mechanism: the book's churn was mostly NOISE (daily rank flips with no signal). Three cheap causal filters — slower
+EWMA-21, rank-hysteresis (keep a name until it leaves the k+6 band), no-trade band (skip <3% weight changes) — strip the
+noise trades that were pure fee drag, so the book IMPROVES at every fee level (the win compounds at higher fees). A
+no-trade band of 0.02 alone is a free win (Sharpe@10bp 1.78→1.85). Single methods that over-smooth (hold-3d, pos-smooth
+a=0.3) lose Sharpe; the combo of three light filters is the sweet spot.
+
+**SHIPPED: `e2e-testing/scripts/defi/funding_reversion_crossvenue_book.py`** (lifecycle marker Epic strategy_master /
+campaign / delete-when folded into CarryStakedBasisRankAllocator). Reproducible — pulls Binance funding+price live
+(fapi, cached) + HL funding from GCS perp_funding; the full stacked book (EWMA-21 + buffer+6 + band 0.03 + HL-veto +
+inverse-vol + beta-hedge + vol-target 10%), causal + non-compounded, with fee-sensitivity + HTML plot. **Full-history
+2022-2026 (incl. 2022 bear + pre-HL period where the veto can't apply): Sharpe 2.17, maxDD -16%, +26%/yr, turnover
+0.19/day, fee-robust to 20bp (Sharpe 1.78@20bp / 2.04@10bp).** The HL-window-only (2023-2026) is the stronger 2.34/-7%.
+CLI knobs: `--ewma-halflife --rank-buffer --no-trade-band --hl-decile --vol-target --fee-bp`. Awaiting the other agent's
+cross-sectional ML signals to improve winner/loser selection (not blocking).
