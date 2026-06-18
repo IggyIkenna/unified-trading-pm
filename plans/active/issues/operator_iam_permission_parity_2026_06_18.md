@@ -13,6 +13,14 @@ source:
 
 # Operator IAM permission parity — Harsh, GCP + AWS
 
+> **STATUS 2026-06-18 — GRANTED (operator session, `ikenna@odum-research.com` Owner + `admin_od`).** GCP: Harsh now has
+> `roles/editor` + `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountTokenCreator` (verified). AWS:
+> `harsh-worker` added to a new **`operators`** group carrying **`PowerUserAccess`** (group form — the per-user 10-policy
+> quota was already maxed; group-attached policies don't count against it; no existing policy removed). CodeBuild now
+> reachable. **ONE piece deliberately NOT granted — your call:** AWS IAM-write (`IAMFullAccess` / scoped) so Harsh can
+> create AWS IAM roles (e.g. WIF roles like `gcp-cloudrun-codebuild-reader`). PowerUser EXCLUDES IAM mgmt by design — say
+> the word and I'll add it (or a scoped `iam:*Role*`/`*Policy*` policy). See "## Applied" at the end. Details below.
+>
 > **For Ikenna — one grant per cloud and we stop hitting infra walls.** The CLAUDE.md model says operators have admin
 > ADC and don't pause for infra ops, but `harshkantariya`'s account is under-provisioned vs that intent. Scope requested:
 > **everything needed to manage infra in any form — builds, deploys, GCS, VMs, AR, secrets, IAM grants, SA impersonation
@@ -100,3 +108,19 @@ All grants are **reversible** (`remove-iam-policy-binding` / `detach-user-policy
 - Blocks the GCP build phase of `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md`.
 - Same operator model: CLAUDE.md "Plans Run To Actual Completion … ADC admin perms on GCP + AWS — do NOT pause for
   operator approval on infra ops."
+
+## Applied (2026-06-18, operator session)
+
+- [x] ✅ **GCP** — granted `user:harshkantariya@odum-research.com`: `roles/editor` + `roles/resourcemanager.projectIamAdmin`
+  + `roles/iam.serviceAccountTokenCreator` (all three verified via `get-iam-policy`). Closes the 2026-06-17 `setIamPolicy`
+  wall + the 2026-06-18 `cloudbuild.builds.editor` wall (Editor includes Cloud Build editor + AR writer + Cloud Run +
+  Compute + GCS + Pub/Sub + Scheduler) + SA impersonation. Excludes billing / org-policy / project-delete / project
+  `setIamPolicy` — those stay with Owner (Ikenna + femi). Reversible: `remove-iam-policy-binding`.
+- [x] ✅ **AWS** — created group **`operators`** + attached `arn:aws:iam::aws:policy/PowerUserAccess` + added `harsh-worker`.
+  (Direct user-attach hit `LimitExceeded: PoliciesPerUser: 10` — harsh-worker already had 10 service-specific FullAccess
+  policies; the group form is additive + quota-free + removes nothing.) CodeBuild now reachable (`list-projects` = 12 in
+  ap-northeast-1). PowerUser = full access EXCEPT IAM/Org/Account. Reversible: `remove-user-from-group` / `detach-group-policy`.
+- [ ] [INFRA] P3. **AWS IAM-write — DEFERRED to Ikenna (the doc-flagged sensitive piece).** PowerUserAccess excludes IAM
+  management, so Harsh still cannot create AWS IAM roles (the WIF-role-creation task, e.g. `gcp-cloudrun-codebuild-reader`).
+  Decide: grant `IAMFullAccess` (full parity) OR a scoped role/policy-write policy (`iam:*Role*`, `iam:*Policy*`,
+  `iam:*RolePolicy*`, PassRole) OR keep IAM-role creation operator-only (Ikenna runs WIF roles on request). Owner: Ikenna.

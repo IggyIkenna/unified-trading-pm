@@ -103,9 +103,10 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       15,875)**. Phase-2 sub-agent opens tradfi instruments files to confirm whether options ARE listed but not captured
       (the "we list options but have no options data" case); fix the instrument_type stamping + close the options
       capture gap if real. — market-tick-data-service / instruments-service
-- [ ] [DATA] P2. **F5 — SPORTS INSTR index hygiene: 6,869 blank `capture_status` rows + a literal `date='all'`** in
-      instruments-store-sports `_index`. Clean in the canonicalisation walk (classify the blanks; drop/repair the
-      non-date row). — instruments-service
+- [x] ✅ [DATA] P2. **F5 — SPORTS INSTR index hygiene** — FIXED instruments-service@7b7d3a3 (new
+      `scripts/canonicalize_instruments_store_index.py`). sports v2 projection: blank `capture_status` **6,869→0** (6,869
+      malformed blank-data_type+blank-league rows dropped as no-shard-identity), `date='all'` **preserved (2, by-design
+      reference entities)**, grain intact (35 league_ids in captured TEAMS). Verified independently. — instruments-service
 
 ## Phase C — file-level verification (Phase-2 sub-agents)
 
@@ -122,25 +123,39 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       a real object this run (`reemit_skipped_shadow`). Regenerated `projected_index_cefi_v2.parquet`: **371,010 shadows
       suppressed**; re-audit shows **captured∩empty shadow cells = 0** (was ~63k) + **captured∩failed = 0**. 33 unit tests
       (6 new). — market-tick-data-service
-- [ ] [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty**: all 333 CME `SOURCE_RETURNED_ZERO`/empty dates are
-      Saturdays, but instruments writes a weekend carry-forward snapshot to GCS (11,526 rows incl 7,364 options) → ~1,079
-      dishonest-empty cells; INST index rows duplicated 2×/cell. Fix the weekend honest-absence classification +
-      de-dup. — instruments-service
+- [x] ✅ [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty + 2×-per-cell dup** — FIXED instruments-service@7b7d3a3.
+      ROOT CAUSE: the v8/v9 re-emit APPENDED a row per cell instead of replacing the stale `schema_version=4` legacy row →
+      every cell carried captured v8/v9 + a blank-status v4 shadow (`instrument_id=None` vs `""` hid the dup). New
+      `canonicalize_instruments_store_index.py` does grain-aware de-dup + classify (count>0→captured incl CME carry-forward;
+      count==0→empty via `non_trading_day_reason` EXPECTED_WEEKEND/HOLIDAY). tradfi v2: rows **20,404→11,630**, blank
+      capture_status **11,301→0**, 2-row cells **8,774→0**, CME weekends = EXPECTED_WEEKEND (183), **SOURCE_RETURNED_ZERO=0**.
+      Verified independently. — instruments-service
 - [x] ✅ [DATA] P0. **N3 — SPORTS league_id dropped** — FIXED mtds@aaeada9. REFRAME: the audit's "100% NULL-league"
       measured the PROJECTION; the live index had league_id on 169,380/202,087. Root cause: `_write_captured_rows` built
       the row_key but called `writer.add()` WITHOUT passing league_id. Fixed: carry league_id + shard dims into add();
       `_source_from_row` now resolves sports `trades`→`odds_api` + case-insensitive bridge. `projected_index_sports_v2`:
       null-league **202,087→32,707**, NULL source **73.7k+→6** (202,081 stamped odds_api). 28 tests (3 new). Residual
       tail (32,707 genuinely-null in LIVE + 6 null-source) → N3a/N3b below. — market-tick-data-service
-- [ ] [DATA] P2. **N4 — SPORTS instruments `instrument_count==0` on 194,356 captured rows** (per-league companion rows;
-      global count lands on one row). Confirm against shard grain; fix count attribution. — instruments-service
-- [ ] [DATA] P1. **N5 — DEFI temporally-impossible `vault_share_price` captured phantoms** (1,582 cells 2020–2023: MAKER
-      pre-2023, ETHENA pre-Feb-2024-launch; 2020-01-01 VAULT opened 0-row). These are captured-but-empty pre-launch
-      phantoms → reclassify to honest pre-launch absence (venue-launch-date-aware `record_zero_rows`). — market-tick-data-service
-- [ ] [CODE] P1. **N6 — DEFI dimension pollution / normalization**: `chain` column contains token-pair symbols
-      (`1INCH-ETH`/`ETH-USDC`/`WSTETH-ETH`); `instrument_type` case-dup `pool`(227,935)/`POOL`(158,431); `venue` dups
-      (CURVE vs CURVE-ETHEREUM, MORPHOVAULTS vs MORPHO_VAULTS vs MORPHO-ETHEREUM). Normalize at write + in the
-      canonicalisation walk so per-dimension grouping/denominators are correct. — market-tick-data-service
+- [x] ✅ [DATA] P2. **N4 — SPORTS instruments `instrument_count==0`** — CONFIRMED NOT-A-DEFECT (instruments-service@7b7d3a3
+      investigation). The per-league companion rows are correctly `captured`; the `instrument_count==0` is a count-DISPLAY
+      artifact (the global count lands on one row), not a capture-status error. Left untouched — no fabricated counts
+      (per-league grain + companion rows preserved in the v2 projection). — instruments-service
+- [x] ✅ [DATA] P1. **N5 — DEFI pre-launch `vault_share_price`** — FIXED (code mtds@3f5cc6e: rebuild routes pre-launch +
+      0-row vault cells via launch-date `EXPECTED_PRE_VENUE_LAUNCH` / `SOURCE_RETURNED_ZERO` honest-absence). Live cefi/defi
+      manifests canonicalized via `canonicalize_mtds_index.py` (mtds@d7b04b2) APPLIED to live 2026-06-18: defi 97 ETHENA
+      pre-launch (2023-11→2024-02) reclassified captured→empty. **Residual** (rebuild-for-real-replace, tracked N5r below):
+      the VAULT 2020-2022 0-row phantoms (~1,113) need the per-object rebuild applied to live (the index-walk can't open
+      files). — market-tick-data-service
+- [x] ✅ [CODE] P1. **N6 — DEFI dimension normalization** — itype case FIXED (live: `POOL`→`pool`, 2,450 collapsed via
+      canonicalize_mtds_index@d7b04b2 APPLIED). venue-spelling dedup CODE shipped (mtds@cf63cf6: `_canonical_defi_venue`
+      replicates the migrator so manifest venue==object-path venue — SAFE only in the per-object rebuild, NOT the
+      index-walk). **Residual N6r below.** — market-tick-data-service
+- [ ] [DATA] P2. **N5r/N6r — DEFI rebuild-for-real-replace to land venue-dedup + VAULT-0-row + 496 chain-pollution on
+      LIVE**: the per-object rebuild (mtds@3f5cc6e/cf63cf6) normalizes venue + detects 0-row vaults + would clean the 496
+      `chain`-pollution rows (token-pairs ETH-USDC/1INCH-ETH in `chain`, all attempted_failed UNISWAP_V4 swaps_ohlcv), but
+      reaching LIVE needs a WHOLESALE replace of the defi `_index` (the consolidator merge leaves stale un-normalized rows;
+      the index-walk can't normalize venue without desyncing from object paths). Run the rebuild to produce the full v9
+      index + write it as the live `_index` (replace, not merge). NOT a double-count/data-loss (P2 grouping hygiene). — market-tick-data-service
 - [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
       `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
       non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
@@ -150,9 +165,13 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
 - [ ] [CODE] P2. **F6 (reframed) — TRADFI option/instrument_type encoding**: unify the two options encodings
       (`instrument_type=options_chain` vs `data_type=options_chain` w/ blank type) + stamp instrument_type on the 182k
       blank-type cells (legacy path shapes). Not missing data — a typing fix. — market-tick-data-service
-- [ ] [INFRA] P3. **N7 — pipeline_mode migration tail** (dual `asset_group=`+`category=` keys; missing
-      `pipeline_mode=` partition; pred captured-max day only in bare shape). Cross-link to the pipeline_mode migration
-      plan — do NOT re-open here; track that the v9 `--apply` closes it. — (pipeline_mode migration plan)
+- [x] ✅ [INFRA] P3. **N7 / Step-5 prefix_tpls VERIFY — DONE (no code change needed)**: `reconcile_phantom_manifest_rows_all.py`
+      `prefix_tpls = canonical_path_templates(ag)` (CF-15/V0 UAC SSOT) for cefi/defi/tradfi/prediction — VERIFIED complete:
+      enumerates every coexisting shape (`pipeline_mode=batch_<source>/`, bare `asset_group=`, legacy `category=`,
+      top-level `day=`, defi `venue=PROTOCOL-CHAIN` overload + bare-venue). **Sports `[""]` is NOT a foot-gun** — sports
+      routes to the dedicated `_audit_sports` + UAC `candidate_parquet_paths` SSOT (bucket kind=instruments-store), and
+      ALL 17 captured instruments-store-sports data_types (STANDINGS/TEAMS/FIXTURES/ODDS/…) resolve ≥1 candidate path.
+      `--apply` will NOT mass-flip on any AG from a prefix-coverage gap. — instruments-service
 - [ ] [DATA] P3. **N8 — PRED index data_type label drift** (`prediction_canonical_question_group` vs GCS
       `prediction_trades`/`trades`) + 1 blank-reason attempted_failed cell. Confirm intentional rollup label vs drift;
       type the blank reason. — market-tick-data-service

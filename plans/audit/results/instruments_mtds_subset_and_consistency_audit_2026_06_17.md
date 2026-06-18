@@ -160,6 +160,67 @@ data_type bridge + sports `trades` → `odds_api` (GCS path `data_source=ODDS_AP
 (202,081 stamped `odds_api`). Tests: 28 pass (3 new). NEW todos: N3a (32,707 genuinely-null in LIVE → recover league from
 GCS path; writer-time gap) + N3b (6 null-source ARBITRAGE/ODDS_MOVEMENT/ODDS_SNAPSHOT cells).
 
+### 2026-06-18 — CHECKPOINT 3: Phase A (manifest v9) + Phase C (UI cutover) DONE on LIVE; B/D + backfills scoped
+
+**Phase A — manifest v9 migration APPLIED TO LIVE, all 5 AGs (verified):** cefi 2,728,435→2,167,688 (300,003 shadow +
+260,744 drift removed; shadow-remaining=0 verified; captured 1,332,922 unchanged) via `canonicalize_mtds_index.py`
+(mtds@d7b04b2); defi itype `POOL`→`pool` (2,450) + 97 ETHENA pre-launch reclassified; instruments-store tradfi
+20,404→11,630 (blank 11,301→0, 8,774 dups→0) + sports 2.68M→2.61M (blank 6,869→0, dups→0) via
+`canonicalize_instruments_store_index.py` (is@7b7d3a3); reconcile_phantom applied pred(50)/tradfi(3,976)/sports(0). All 7
+manifests snapshotted (`pre_migration_2026_06_18.parquet`). captured counts preserved everywhere → honest denominator.
+
+**Phase C — deployment-ui/api cutover DONE (deployment-api@6bcac01):** diagnosis — the HEADLINE data-status counts were
+ALREADY correct (manifest read + `union_reduce_to_cells` collapses per-(source,pipeline_mode) rows to one cell before
+counting → no manifest double-count). The actual double-count was the **drilldown GCS-listing fan-out** to BOTH
+`category=` + `asset_group=` prefixes. Fixed: `DATA_STATUS_CANONICAL_PATHS_ONLY` (default True=canonical-only, reversible;
+zero `category=` objects remain on live so the fan-out is pure double-count risk). QG green + regression test. **Operator
+action: none** (default canonical-only on restart). deployment-ui unchanged (thin renderer).
+
+**Phase B refined:** bare `asset_group=` objects are EXACT duplicates of canonical `pipeline_mode=` twins (migration
+copied). They do NOT cause UI double-count (counts come from the cell-reduced manifest; drilldown now canonical-only) →
+the bare copies are pure STORAGE-RECLAMATION delete candidates, **operator-gated (Phase D inspection)**, not a
+correctness fix.
+
+**Remaining (tracked):** cefi/defi reconcile_phantom apply (incremental hygiene, dry-runs backgrounded); Phase D
+delete-list build → operator inspect+confirm→delete; backfills F1/F2/88k-cefi/N3a; N5r/N6r defi rebuild-replace (P2).
+**Known:** sub-agent commits (7b7d3a3/6bcac01/d7b04b2) authored as `Ubuntu <ubuntu@…>` — this clone lacks the
+`[slot·host]` identity config (host setup gap; GitHub attribution keys off email — flag if it matters).
+
+### 2026-06-18 — CHECKPOINT 2 (EXPANDED PROGRAM, operator 2026-06-18): manifest+GCS migrations + UI cutover + delete
+
+**Operator directive (2026-06-18):** all SERVICE manifest v9 migrations done ~1-2h; GCS data migrations ~1-2h; then flip
+deployment-ui data-status env → NEW manifest + canonical GCS paths + **remove ALL fallbacks** (no double-count); operator
+inspects → **then delete old GCS data** (operator-gated). Use more VMs to parallelise.
+
+**DONE + SHIPPED (verified):** 4 manifest-BUILDER fixes — cefi N1/F3 + sports N3 (mtds@aaeada9), defi N5/N6 (mtds@3f5cc6e),
+instruments N2/F5/N4 (instruments-service@7b7d3a3). Step-5 prefix_tpls VERIFIED (canonical_path_templates complete all 5 AGs;
+sports `[""]` not a foot-gun). pred reconcile APPLIED (50 phantoms→failed, captured 16,951→16,918, no mass-flip — the apply
+canary). Snapshots of all 7 live manifests → `_index/snapshots/pre_migration_2026_06_18.parquet` (rollback net). Drain
+satisfied (only monitoring VMs live; footystats data-VM self-terminated).
+
+**KEY MECHANISM (diagnosed):** consolidator dedups by manifest KEY (last-write-wins) → a rebuild-merge does NOT remove the
+stale blank-itype SHADOW rows (different key) → the LIVE manifest migration MUST be a WHOLESALE index canonicalisation
+(read live → transform in-place preserving all cols → write back), NOT a rebuild-merge. The v2 projections are
+manifest_diff-shaped (missing 19 live cols) → NOT a drop-in. Template = `canonicalize_instruments_store_index.py`.
+
+**REMAINING (exact next actions):**
+- **A. Manifest migration (apply canonicalize to LIVE indexes):**
+  - MTDS cefi+defi → background sub-agent `ab61aa17083dba4e0` building+applying `canonicalize_mtds_index.py` (cefi N1/F3
+    shadow-drop ~300k + drift-drop; defi N5/N6). Reports back; parent verifies + flips.
+  - instruments-store tradfi+sports → run `instruments-service/scripts/canonicalize_instruments_store_index.py --apply`
+    (built @7b7d3a3, NOT yet applied to live — only v2 projection written). Parent to run.
+  - MTDS sports: live index already has league_id (N3 was projection-only) → reconcile only + N3a backfill.
+  - MTDS pred: DONE.
+- **A2. reconcile_phantom (omit `--dry-run` = apply) for tradfi, cefi, sports, defi** (pred done) — dry-run first, verify
+  phantom% small (pred was 0.3%), then apply. Bucket kinds: cefi/defi/tradfi=market-data, sports=instruments-store,
+  pred=market-data-tick-prediction.
+- **B. GCS object migration:** consolidate bare `asset_group=` objects → canonical `pipeline_mode=` shape (the dual-shape
+  copies = the physical double-count). Scripts: `migrate_{cefi_flat,defi_full,tradfi}_to_v9_canonical.py`. Launchers:
+  `deployment-service/scripts/vm/launch-{cefi,defi}-migration-vm.sh`, `launch-canonical-migration-vm.sh`. Run on in-region
+  asia-northeast1 VMs (gcs_copy_object REST workers=32). Long-pole.
+- **C. deployment-ui cutover:** data-status env → new manifest + canonical paths; REMOVE ALL fallbacks (no double-count).
+- **D. Delete old GCS data:** build delete-list of superseded legacy-shape objects → OPERATOR INSPECTS + confirms → delete.
+
 ### 2026-06-18 — CHECKPOINT (resume state): Steps 1–2 DONE; Steps 3–4 delegated; 5–9 pending
 
 - **Steps 1–2 SHIPPED** mtds@aaeada9 (cefi N1/F3 + sports N3); `projected_index_cefi_v2.parquet` +

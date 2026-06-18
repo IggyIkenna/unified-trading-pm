@@ -735,6 +735,24 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
   persistence/extension/ OI. Another agent should start the squeeze model from those faster signals, treating these four
   slow features as confirmed non-predictors of the reversal (use them for the continuation side instead).
 
+  **CROSS-VENUE / LIQUIDITY: the funding signal's SIGN INVERTS with coin liquidity, NOT venue (operator 2026-06-18 —
+  "does the game change on Binance? are some venues more predictionary?").** Measured `corr(funding, fwd_7d_return)` per
+  venue on the SAME curated majors (BTC/ETH/SOL/XRP/BNB/DOGE/AVAX/LINK, derivative_ticker, Jan-May 2025, n=1200/venue):
+  **HYPERLIQUID −0.129 · BYBIT −0.108 · BINANCE −0.079 · OKX −0.017** — ALL NEGATIVE (funding = CONTRARIAN/REVERSAL on
+  liquid majors: crowded → mean-reverts). But the HL FULL 230-coin universe (perp_funding) IC was **+0.073 (MOMENTUM)**
+  — so the earlier "funding=momentum" headline was driven by the ILLIQUID LONG-TAIL, not majors. **Synthesis: liquid
+  majors → funding contrarian (reversal); illiquid long-tail → funding momentum (trend).** The venue does NOT flip the
+  sign; it modulates STRENGTH — **HL carries the most information on majors (−0.13), then Bybit, Binance, OKX≈0**
+  (consistent with HL being the more retail/less-arbitraged book, so its funding extremes are the strongest crowding
+  signal). ML implication: the funding feature MUST be conditioned on (liquidity tier × venue) — a single universe-wide
+  funding factor has a sign that flips, so split majors-vs-tail and weight venues by their |IC| (HL > Bybit > Binance >
+  OKX). **Tested the actionable corollary** (does a MAJORS-ONLY carry win, since majors mean-revert?): no — min_vol
+  $50M-500M / n=5-12 nets −1 to −3%/yr (still slightly negative), BUT maxDD collapses to **−3% (vs −125%
+  full-universe)**. So the reversal edge on majors is real but too small to overcome the tiny major funding spread +
+  costs — confirms funding≈price efficiency even where the sign favours the carry; the value stays in the FEATURE, now
+  liquidity/venue-conditioned. Reproducible: `_run_xsec_carry` (min_vol filter) + the cross-venue IC reader
+  (derivative_ticker funding_rate+mark_price per venue).
+
 - [ ] [STRATEGY] P3. Cross-sectional carry is NOT tradeable standalone (funding≈adverse price) — only revisit with a
       genuine price-neutralising overlay (correlation-paired long/short of co-moving coins, or a momentum/beta hedge)
       AND only if it clears Sharpe; otherwise the archetype is shelved. The delta-neutral staked/pure-basis remain the

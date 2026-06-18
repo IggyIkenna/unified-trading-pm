@@ -282,22 +282,89 @@ one):**
 > 6. On green, commit + roll out; then the guardrail (floor-vs-pin, NOT `uv lock --check` — it treadmills on the semver
 >    `version =` bumps) + the DOCS rule.
 
-- [ ] [CI] P1. `python-quality-gates-v2.yml:459` `uv sync` → `uv sync --frozen` (the one-line diff drafted for Ikenna
-      2026-06-12, now unblocked by 1.5a). `--frozen` NOT `--locked` (tolerates the semver CI-side `version =` bump).
-      Repo: unified-trading-pm (template + roll out fleet-wide).
-- [ ] [SCRIPT] P1. **Local/CI parity:** `base-service.sh` install path `uv pip install -e .` (line 331) →
-      `uv sync     --frozen`, so LOCAL == CI byte-for-byte (internal editable deps still resolve to the working-tree
-      sibling under `--frozen`, so the dep-content gate is unaffected). This is the parity the operator required. Repo:
-      unified-trading-pm.
-- [ ] [CI] P1. Make `uv lock --check` BLOCKING in `base-*.sh` (warn-only today, PM@a89e234ee) — safe ONLY after 1.5a
-      guarantees the lock is regenerated on every external floor bump on LDR.
-- [ ] [DOCS] P1. Make the `CLAUDE.md` / codex `--frozen` rule TRUE + scoped once 1.5a/1.5b land: "lock is the SSOT;
-      regen on an EXTERNAL-dep floor change, on LDR, same commit; internal editable bumps exempt." Closes the D1
-      doc-vs-deployed gap in `plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md`.
+- [x] ✅ [CI] P1. **DONE — PM@PR#398 (merged main 2026-06-18).** CI `uv sync` → `uv sync --frozen`. **No 24-repo rollout
+      needed:** the per-repo `.tmpl` workflows `uses:` the SINGLE reusable
+      `unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout`, so the flip in that one
+      reusable workflow (line 461) covers the whole fleet's CI. `--frozen` NOT `--locked` (tolerates the semver `version =` bump).
+- [x] ✅ [SCRIPT] P1. **DONE — PM@PR#397 (merged main 2026-06-18).** `base-service.sh` + `base-library.sh`
+      `uv pip install -e .` → `uv sync --frozen`, placed BEFORE the editable-sibling loop (prune-immune; smoke-validated
+      on greeks: siblings → workspace-root editable, externals → locked working pin, tooling kept). LOCAL == CI byte-for-byte.
+- [x] ✅ [CI] P1. **REPLACED per operator Harsh 2026-06-18 — floor-vs-pin guardrail, NOT `uv lock --check`** (which
+      treadmills on the semver CI-side `version =` bump). PM@PR#397 ships
+      `scripts/quality_gates/check_lock_satisfies_pyproject.py` (BLOCKING in `base-*.sh`): every external lock pin must
+      satisfy its pyproject range; skips editable/internal sources; validated (synthetic catch + 22-repo no-false-positive
+      + exercised in-QG across Mode-B).
+- [x] ✅ [DOCS] P1. **DONE — PM@PR#397.** `cursor-configs/CLAUDE.md`: "CI **and local `quality-gates.sh`** install via
+      `uv sync --frozen` (1.5b local↔CI parity, the lock is the install SSOT)."
 - [ ] [DOCS] P3. **Stale codex value (found in the 2026-06-18 flow audit):** `codex/08-workflows/ci-cd-flow.md:460`
       states the back-merge drift-tick is `schedule: */20`, but the **deployed** `main-backmerge-to-ldr.yml:42` (+
       template) is `cron "0 * * * *"` (hourly, relaxed 2026-06-11 to cut Actions spend). Root CLAUDE.md already matches
       hourly; fix the codex doc body line.
+
+> **1.5b SHIPPED (2026-06-18, slot-3) — Mode-B green (16/22 pass, the rest pre-existing/remediated); PM-core PR#397 +
+> CI-v2 PR#398 MERGED to `main`; 14/15 repo caps + e2e/SIT stale-lock fixes on LDR. ONE open item: features-service
+> (below).** Option-A cap + frozen
+> flip executed. (a) Capped fastapi `>=0.115.0,<0.137.0` + starlette `>=1.1.0,<1.3.0` in the **15 declaring repos'**
+> `[project.dependencies]` (14 fastapi ∪ trading-agent-service for starlette — trading-agent was MISSING from the earlier
+> 14-list; enumerated from the real dep arrays, not assumed), in `workspace-constraints.toml`, and regenerated
+> `canonical-dependency-manifest.json` from the capped constraints (generator reads constraints). (b) `uv lock` (plain,
+> keep-pins) on all 15 → every pin lands <0.137 / <1.3.0 (rc=0; UTL starlette 1.3.1→1.1.0, fastapi pins 0.134–0.136.3
+> kept; incidental in-range type-stub/patch freshening on a few stale locks, benign + QG-gated). (c) Flipped
+> `uv pip install -e .` → `uv sync --frozen` in `base-service.sh` + `base-library.sh` (sync BEFORE the editable-sibling
+> loop — **prune-immune**: a typecheck-only sibling absent from the lock would otherwise be pruned right after install)
+> and `python-quality-gates-v2.yml:459`. (d) Smoke-validated on greeks: `uv sync --frozen` synced the venv to the locked
+> working pins (starlette 1.1.0 / fastapi 0.136.3 / pytest 9.0.3 — downgraded the upgraded leftovers), siblings stayed
+> editable-local (dep-content gate intact), QG green 66 s. (e) Full tier-ordered Mode-B QG running across the fleet.
+
+- [ ] [SCRIPT] P2. **FINDING (1.5b, 2026-06-18): `propagate-canonical-versions.py` silently SKIPS ceiling-first specs.**
+      `_replace_dep_spec` (`scripts/propagation/propagate-canonical-versions.py:93-107`) loops separators
+      `[">=","<=","!=","==",">","<","~="]` and **`return line` on the FIRST separator found with `idx>0`, even when the
+      parsed pkg_name is wrong**. For a ceiling-first spec `"fastapi<1.0.0,>=0.115.0"` it finds `>=` first → pkg_name
+      `fastapi<1.0.0,` → not in constraints → returns the line UNCHANGED, never trying `<` (which would correctly parse
+      `fastapi`). Impact: propagation would NOT cap fastapi in the ~11 fleet repos that write it ceiling-first (dry-run
+      flagged only 9 of 15 declarers). 1.5b used a scoped `sed` instead, so the cap is complete; this is a latent silent
+      gap for any FUTURE canonical rollout. Fix: parse the package name at the EARLIEST operator position across all
+      operators (`idx = min((i for s in seps if (i := spec.find(s)) > 0), default=-1)`), not iterate-and-return-on-first.
+      Repo: unified-trading-pm.
+- [ ] [INFRA] P2. **FINDING (1.5b, 2026-06-18): canonical-dependency alignment is ADVISORY + has pre-existing drift.**
+      TWO canonical sources — `workspace-constraints.toml` (read by `propagate-canonical-versions.py`) and
+      `canonical-dependency-manifest.json` (read by `check-dependency-alignment.py`, generated FROM constraints by
+      `generate_canonical_dependency_manifest.py`) — silently drift if one is edited without regenerating the other (1.5b
+      hit this: capped constraints, manifest stale until regenerated). `check-dependency-alignment.py` reports
+      `aligned: false` with misalignments NOT caused by 1.5b: **pyarrow** `>=23.0.1,<24.0.0` in 5 repos (unified-api-contracts,
+      execution-service, features-service, market-data-processing-service, ml-service), **python-multipart**
+      `>=0.0.31,<1.0.0` in fund-administration-service (the failure-mode-B CVE case this very plan describes), + starlette
+      floors (resolved by the 1.5b cap). The checker also reads TRANSITIVE starlette specifiers from `uv.lock` (`>=1.0.1`),
+      not just `[project.dependencies]`, so some reports are noisy. PM is actively pushed with alignment red → the "never
+      push PM unless aligned" rule is advisory, not hard-enforced today. A focused alignment-hygiene pass (cap-fix pyarrow
+      + python-multipart, fix the propagation bug above, reconcile the two sources, decide if alignment should hard-block)
+      is its own follow-up — OUT of 1.5b scope (scoped-change discipline: do not mass-sweep pyarrow under the uv banner).
+      Repo: unified-trading-pm + the 5 pyarrow repos + fund-administration-service.
+- [ ] [SCRIPT] P3. **FINDING (1.5b, 2026-06-18): the `--ignore-vuln` block is DUPLICATED across `base-service.sh` +
+      `base-library.sh` and had DRIFTED.** `base-service.sh:1198` already carried the two starlette CVEs
+      (CVE-2026-54283/-54282, added in the 2026-06-15 advisory batch) but `base-library.sh` did NOT — so when the 1.5b
+      cap lowered the starlette floor 1.3.1→1.1.0 (re-exposing them), every LIBRARY repo with starlette went red in QG
+      while service repos stayed green (incident: UTL Mode-B fail; UAC passed only because it declares no starlette).
+      FIXED 2026-06-18 by syncing base-library.sh to base-service.sh (+ a comment). Root hazard remains: two hand-kept
+      copies of a ~20-entry ignore list silently diverge. Extract the `--ignore-vuln` argument list to a SINGLE shared
+      shell constant (e.g. `qg-common.sh` `PIP_AUDIT_IGNORE_VULNS`) sourced by both bases, so a CVE add/lift edits ONE
+      place. Repo: unified-trading-pm (`scripts/quality-gates-base/`).
+- [ ] [TEST] **P1 OPEN — features-service cap can't ship → fleet PM-quickmerge alignment block (1.5b, 2026-06-18).**
+      14/15 caps are on LDR + the manifest cap is MERGED (PR#397). features-service's cap (pyproject `fastapi<0.137.0`)
+      is correct + ready in the slot tree but CANNOT quickmerge: its Pass-1 QG is red on a PRE-EXISTING bug —
+      `tests/calendar/unit/test_calendar_orchestrator_capture_status.py` (a *unit* test) makes `CalendarOrchestrationService`
+      init a real GCP client that authenticates to the GCP metadata server (`192.178.211.95`) under `--block-network`
+      (the test mocks storage but NOT the GCP auth → ~27 `SocketConnectBlockedError` + a gRPC `_InactiveRpcError`). The
+      cap FIXED features' starlette `_IncludedRouter` break; this GCP-auth debt is orthogonal (present in the
+      `--upgrade`-era log too) and features-service has NO `requires_credentials` skip hook (so marking won't skip it).
+      **CONSEQUENCE:** `check-dependency-alignment.py` (the PM-quickmerge `aligned:true` gate — no baseline) flags features
+      fastapi (committed-uncapped vs merged-capped manifest) → **BLOCKS PM script/manifest quickmerges fleet-wide** until
+      features' cap lands. **Resolution options:** (a) **proper** — mock the GCP client (or route it through the
+      cloud-agnostic `get_storage_client`/`UnifiedCloudConfig` wrapper) in the test → quickmerge features' cap
+      [features-service work]; (b) **interim** — direct-push features' cap (pyproject+lock) to LDR (provenance-exempt: no
+      `.py`/`.ts` source change), re-aligning the gate; features' own staging CI stays red on the pre-existing bug, but
+      features was already blocked; (c) operator/coordination call. The cap is re-derivable from the merged canonical
+      regardless. Repo: features-service (test) + unified-trading-pm (alignment).
 
 > **HOLD until 1.5a lands:** do NOT run a fleet-wide `uv sync` + commit-lock pass — it re-diverges LDR↔staging locks
 > and restarts the runaways. Stop any active runaway the convergence-safe way (match pyproject to staging on LDR; do not
