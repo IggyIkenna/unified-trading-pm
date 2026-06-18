@@ -1801,9 +1801,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-18T21:37:32.394337Z",
-    "locked_reason": "Breaking MINOR bump cascade: deployment-api=0.20.0 (pre-1.0.0)",
-    "lock_version": "0.20.0",
+    "locked_since": "2026-06-18T21:38:40.009392Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "system-integration-tests",
       "market-tick-data-service",
@@ -1833,9 +1833,9 @@
       "version": "0.16.0"
     },
     "deployment-api": {
-      "version": "0.20.0",
+      "branch": "staging",
       "sha": "bcf74c4b1fbf619d7aff654b7ee810685ed7207c",
-      "branch": "staging"
+      "version": "0.20.0"
     }
   },
   "main_commits": {
