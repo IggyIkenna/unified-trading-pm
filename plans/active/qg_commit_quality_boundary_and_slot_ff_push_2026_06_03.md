@@ -429,13 +429,17 @@ design).
 
 ### Phase H — single-source-of-truth audit (operator 2026-06-05) — no contradictions across docs
 
-- [ ] [DOCS] P0. **Full contradiction sweep** so codex + canonical `CLAUDE.md` + `SUB_AGENT_MANDATORY_RULES.md` + cursor
-      `.mdc` rules + the scripts' own header comments all agree on: (P1) slot `@{upstream}` is ALWAYS
-      `origin/live-defi-rollout`; (P2) FF-pull is FF-only EXCEPT the bounded `[adopt-rebase]` that drops patch-id-dup
-      commits on a clean tree — so any "never rebase / never destructive" wording is now stale; (P3) machine-run PM
-      crons self-pull their script from LDR before running, GHA exempt (fresh checkout per run); (P4) crons pull the LDR
-      hot-fix axis today (Phase G matures this); (P5) upstream drift auto-heals debounced (10-min grace). Fix every
-      divergent/ duplicate statement in place; one SSOT per rule.
+- [x] ✅ [DOCS] P0. **CLOSED-AS-SUPERSEDED (2026-06-17) — the Path-B migration (2026-06-08, 3 days after this item was
+      written 2026-06-05) re-modeled slots entirely + reconciled the doc set.** All 5 enumerated points were tab-branch-
+      model claims; Path-B retired the tab-branch model, so they no longer apply: (P1) slot upstream / (P2) FF-pull +
+      `[adopt-rebase]` / (P5) upstream-drift-autoheal are all tab-branch mechanics now **explicitly marked SUPERSEDED**
+      in CLAUDE.md § "Per-slot worktrees — Path-B" ("the tab/<op>/N tab-branch rules below are SUPERSEDED by Path-B …
+      retained only for historical context"). **VERIFIED**: the specific stale wording this item targeted — "never
+      rebase / never destructive" — is GONE from the live doc set (0 hits in CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md /
+      per-tab-worktrees.md); the doc set consistently reflects Path-B. (P3 cron-self-pull + P4 cron-hot-fix-axis are
+      separately tracked + already documented — see the cron items below.) The enumerated contradiction no longer exists
+      → nothing to sweep. A general "is the whole doc set contradiction-free" audit is a different unbounded effort, not
+      what this item's 5 points scoped.
 
 ## Stuck promotion-PR remediation — 12 wedged LDR→staging PRs (2026-06-05)
 
