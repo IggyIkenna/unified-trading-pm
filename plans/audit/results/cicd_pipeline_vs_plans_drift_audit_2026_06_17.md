@@ -84,8 +84,59 @@ regressions found.**
 > plan filed); the D14 unwired-AR-gate record + D11 callout (`cloud_build_router_aws_parity`, PM@98bdf756c); the hygiene
 > batch D13/D20/D21/D24/D25 (PM@8a05273b9); and **D15** (Firestore project-id env fix — 3 scripts + 3 workflows read
 > canonical `GCP_PROJECT_ID`, PM@409fd7661); plus **D17/D18/D19** (cadence + pending-vs-green rank-clarity comment
-> fixes, PM@665cdc965). **Still open:** D22 + D23 (issue-migration + plan-archival hygiene — the D23 UI plan gated on
-> `pw:L2`). **0 live-pipeline regressions.**
+> fixes, PM@665cdc965). **Still open:** D1/D10 (uv frozen-lock — slot-3, in flight) + D22/D23, all **absorbed into the
+> deferred docs+consolidation exercise** (see "🔜 Deferred exercise" § below — gated on D1/D10 landing; not done
+> piecemeal). **0 live-pipeline regressions.**
+
+---
+
+## 🔜 Deferred exercise — codex + diagram refresh, then plan consolidation (GATED, operator 2026-06-18)
+
+**Decision (operator 2026-06-18):** do the CI/CD documentation refresh **and** the plan/issue consolidation **once all
+in-flight CI/CD work lands**, so the docs capture the **final, stable pipeline shape** (not a moving target we'd re-do),
+and we can verify them against what's actually running. **Trigger:** D1/D10 (uv frozen-lock — slot-3,
+`dependency_promotion_range_pins` Phase 1.5/1.5b) reaches ✅ + no other cicd plan mid-flight. **This absorbs D22 + D23**
+— the residual-todo migration + plan/issue archival happen _as part of_ the consolidation, NOT piecemeal now (avoids
+double-archival churn). Do **not** start before the trigger; this section is the lossless spec to resume from.
+
+**Why docs FIRST, then plans:** the durable pipeline _shape_ belongs in codex (plans are work-trackers); harvest the
+design rationale out of the plans into codex **before** archiving them, so nothing is lost and the lean plans just POINT
+to the codex SSOT — which is what removes the 4,000-line cross-check tax.
+
+**Phase 1 — document current shape** (sourced from the 51 live workflows + quickmerge + gates = ground truth; rationale
+harvested from the to-be-archived plans):
+
+- Refresh `codex/08-workflows/ci-cd-flow.md` to the as-built final shape (completion pass — D5–D9 already partial).
+- **Top-level mermaid flow**: commit → LDR → staging-drain → SIT → main → image-build, each node tagged with its
+  workflow(s). Update the existing `cicd-pipeline-definition.yaml` → `CI-CD-PIPELINE.svg` generator (deterministic),
+  don't hand-draw.
+- **Auto-generated workflow catalog** (the drill-down): every workflow as
+  `name | trigger | concurrency-group | stage | reads/writes | fires-next`, generated from the `.yml` files so it can't
+  rot.
+
+**Phase 2 — consolidate into 4 lean themed plans** (`parent_epic: infrastructure_master`), each carrying ONLY open items
+
+- tight context, pointing at the Phase-1 codex SSOT:
+
+| New plan                  | Absorbs (≈ open items)                                                                                                                                                                                      |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cicd_promotion_pipeline` | cascade-batching (8) + concurrency-starvation (3) + breaking-cascade (2); ldr_trunk (4); ci_status_firestore (9); ldr_tarball (2); promotion_queue (1); staging_clean + dashboard_drain (archive) — **~29** |
+| `cicd_quality_gates`      | qg_commit_boundary (5); ci_local_parity (1); worktree_ldr (3); monster Overview/Phased (~5) — **~14**                                                                                                       |
+| `cicd_release_machinery`  | semver_skip_ci (5); sprawl (5, **dedup the dual-track**); gh_rate_budget (3); monster alert-triage (3) — **~16**                                                                                            |
+| `cicd_sit_and_fleet`      | sit_uac_orphan (1); monster fleet-re-audit (4) + correction (1) — **~6**                                                                                                                                    |
+
+**Scope:** EXCLUDE slot-3's `dependency_promotion_range_pins` + `uv_lock_frozen_model_contradiction` (live) and the 3
+false keyword-matches (`data_source_provenance`, `data_status_tab`, `features_registry`). The keyword pass **missed
+`cloud_build_router_aws_parity`** (D11/D14 home, image-build path) — do an exhaustive sweep at execution so nothing
+slips.
+
+**Phase 3 — archive + repoint:** the ~14 originals via the 5-step ritual (`[unlock-plan]` — all
+`locked_by: live-defi-rollout`; banners; repoint CLAUDE.md's "CI/CD master index" pointer + sibling refs). **Invariant:
+zero open `- [ ]` silently dropped** — each lands in a new plan or is closed with a reason; the orchestrator backlog
+auto-reconciles once the new plans land.
+
+**Execution:** Opus sub-agent fan-out (Sonnet rate-limited till Jun 20), one per source doc / workflow-cluster; file a
+`cicd_docs_and_consolidation_2026_06_18` tracking plan when the trigger fires.
 
 ---
 
