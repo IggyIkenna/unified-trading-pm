@@ -140,13 +140,22 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       investigation). The per-league companion rows are correctly `captured`; the `instrument_count==0` is a count-DISPLAY
       artifact (the global count lands on one row), not a capture-status error. Left untouched — no fabricated counts
       (per-league grain + companion rows preserved in the v2 projection). — instruments-service
-- [ ] [DATA] P1. **N5 — DEFI temporally-impossible `vault_share_price` captured phantoms** (1,582 cells 2020–2023: MAKER
-      pre-2023, ETHENA pre-Feb-2024-launch; 2020-01-01 VAULT opened 0-row). These are captured-but-empty pre-launch
-      phantoms → reclassify to honest pre-launch absence (venue-launch-date-aware `record_zero_rows`). — market-tick-data-service
-- [ ] [CODE] P1. **N6 — DEFI dimension pollution / normalization**: `chain` column contains token-pair symbols
-      (`1INCH-ETH`/`ETH-USDC`/`WSTETH-ETH`); `instrument_type` case-dup `pool`(227,935)/`POOL`(158,431); `venue` dups
-      (CURVE vs CURVE-ETHEREUM, MORPHOVAULTS vs MORPHO_VAULTS vs MORPHO-ETHEREUM). Normalize at write + in the
-      canonicalisation walk so per-dimension grouping/denominators are correct. — market-tick-data-service
+- [x] ✅ [DATA] P1. **N5 — DEFI pre-launch `vault_share_price`** — FIXED (code mtds@3f5cc6e: rebuild routes pre-launch +
+      0-row vault cells via launch-date `EXPECTED_PRE_VENUE_LAUNCH` / `SOURCE_RETURNED_ZERO` honest-absence). Live cefi/defi
+      manifests canonicalized via `canonicalize_mtds_index.py` (mtds@d7b04b2) APPLIED to live 2026-06-18: defi 97 ETHENA
+      pre-launch (2023-11→2024-02) reclassified captured→empty. **Residual** (rebuild-for-real-replace, tracked N5r below):
+      the VAULT 2020-2022 0-row phantoms (~1,113) need the per-object rebuild applied to live (the index-walk can't open
+      files). — market-tick-data-service
+- [x] ✅ [CODE] P1. **N6 — DEFI dimension normalization** — itype case FIXED (live: `POOL`→`pool`, 2,450 collapsed via
+      canonicalize_mtds_index@d7b04b2 APPLIED). venue-spelling dedup CODE shipped (mtds@cf63cf6: `_canonical_defi_venue`
+      replicates the migrator so manifest venue==object-path venue — SAFE only in the per-object rebuild, NOT the
+      index-walk). **Residual N6r below.** — market-tick-data-service
+- [ ] [DATA] P2. **N5r/N6r — DEFI rebuild-for-real-replace to land venue-dedup + VAULT-0-row + 496 chain-pollution on
+      LIVE**: the per-object rebuild (mtds@3f5cc6e/cf63cf6) normalizes venue + detects 0-row vaults + would clean the 496
+      `chain`-pollution rows (token-pairs ETH-USDC/1INCH-ETH in `chain`, all attempted_failed UNISWAP_V4 swaps_ohlcv), but
+      reaching LIVE needs a WHOLESALE replace of the defi `_index` (the consolidator merge leaves stale un-normalized rows;
+      the index-walk can't normalize venue without desyncing from object paths). Run the rebuild to produce the full v9
+      index + write it as the live `_index` (replace, not merge). NOT a double-count/data-loss (P2 grouping hygiene). — market-tick-data-service
 - [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
       `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
       non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
