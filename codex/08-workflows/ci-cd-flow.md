@@ -457,12 +457,13 @@ the branches force-sync to LDR.
   tip → **restore protection + re-enable rulesets in the same per-repo step** (crash exposure = 1 repo). Operator-gated
   authority (force-push main/staging, relax→do→re-enable rulesets). Real main/staging-only content is backmerged to LDR
   before the force.
-- **Drift-tick**: `main-backmerge-to-ldr.yml` runs `on: push: branches:[main]` **plus a `schedule: */20`** — because
-  `[skip ci]` commits to `main` (ci_status / staging_status / manifest-version writes) suppress ALL Actions triggers
-  including the push trigger, so `main` chronically drifts ahead. A scheduled run is not `[skip ci]`-suppressed and
-  sweeps the accumulated drift, so "`main` never ahead of LDR" holds in steady state (modulo the ≤20-min window), not
-  just eventually-converges. (Edit the SSOT template + `rollout-workflow-templates.sh` fleet-wide — a template-only edit
-  drifts every per-repo copy and reddens the PM drift gate.)
+- **Drift-tick**: `main-backmerge-to-ldr.yml` runs `on: push: branches:[main]` **plus a `schedule: 0 * * * *`** (hourly
+  — relaxed from `*/20` 2026-06-11 to cut Actions spend) — because `[skip ci]` commits to `main` (ci_status /
+  staging_status / manifest-version writes) suppress ALL Actions triggers including the push trigger, so `main`
+  chronically drifts ahead. A scheduled run is not `[skip ci]`-suppressed and sweeps the accumulated drift, so "`main`
+  never ahead of LDR" holds in steady state (modulo the ≤60-min hourly window), not just eventually-converges. (Edit the
+  SSOT template + `rollout-workflow-templates.sh` fleet-wide — a template-only edit drifts every per-repo copy and
+  reddens the PM drift gate.)
 
 ### Workflow-template rollout is a TWO-half operation — the second half (commit fleet-wide) is mandatory (HARD RULE, 2026-06-10)
 
