@@ -77,15 +77,15 @@ plans"). Two findings are genuine _unresolved contradictions_ that need an opera
 plan-hygiene (banner/migrate/archive/frontmatter); 4 are small code fixes; 2 are "note only / latent". **0 live pipeline
 regressions found.**
 
-> **Progress 2026-06-17 (autonomous):** **10 findings shipped** — D2–D9 (all 8 no-decision doc/SSOT-truth fixes,
-> PM@235c5fd3b + PM@eeece9802; ci-cd-flow.md + CLAUDE.md now match the live pipeline) + **D14** (unwired-AR-gate record)
-> and the **D11 callout**, both filed in `cloud_build_router_aws_parity` (PM@98bdf756c). **Still open:** D1/D10 (the
-> `--frozen` model — **DECIDED 2026-06-17**: frozen-lock end-to-end, implementation tracked in `dependency_promotion` §
-> Phase 1.5), D11 (DECIDED 2026-06-17 — drop in-image QG), D12 (RESOLVED 2026-06-18 — stale premise, issue
-> closed+archived), D16 (DECIDED 2026-06-18 — scripts governance plan), and the LOW-tier items D13/D15/D17–D25. The
-> latter are **deferred for one of two reasons:** a code fix would need a PM-QG run that contends with the active QG
-> agent (D15/D18), or a markdown edit would force a 100–170-line prettier-reflow of a hot, actively-edited foreign plan
-> on commit (D13/D20/D24/D25). All captured per-item below — apply at triage / in a quiet window.
+> **Progress (updated 2026-06-18):** **18 of 25 findings resolved.** The 8 no-decision doc/SSOT-truth fixes D2–D9
+> (PM@235c5fd3b + PM@eeece9802 — ci-cd-flow.md + CLAUDE.md now match the live pipeline); the 4 operator-decision
+> findings (D1/D10 frozen-lock — **DECIDED**, impl tracked in `dependency_promotion` § Phase 1.5, in flight; D11 drop
+> in-image QG — **DECIDED**; D12 stale-premise — **RESOLVED**, issue archived; D16 scripts governance — **DECIDED**,
+> plan filed); the D14 unwired-AR-gate record + D11 callout (`cloud_build_router_aws_parity`, PM@98bdf756c); the hygiene
+> batch D13/D20/D21/D24/D25 (PM@8a05273b9); and **D15** (Firestore project-id env fix — 3 scripts + 3 workflows read
+> canonical `GCP_PROJECT_ID`, PM@409fd7661). **Still open:** D17 (note-only — latent confusion, no live bug), D18 + D19
+> (one-line comment cadence fixes), D22 + D23 (issue-migration + plan-archival hygiene). **0 live-pipeline
+> regressions.**
 
 ---
 
