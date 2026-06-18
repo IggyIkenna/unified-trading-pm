@@ -135,9 +135,20 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
   alerting/execution/greeks with a 2-sibling context). The other 6 (strategy, batch-live-reconciliation, fund-administration,
   market-data-processing, ml, trading-agent) are **Pattern-B-bespoke** → left GCP-authoritative; normalization filed in
   `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md`. See findings log for the full matrix.
-- [ ] [INFRA] P2. **(GCP — deferred to 2026-06-18 AM, operator)** GCP build each via `gcloud builds triggers run
-  <repo>-build --branch main --region asia-northeast1`. Watch to SUCCESS; confirm AR push. STOP + diagnose on the first
-  systemic failure class. Start with the base libs (LDR triggers) + the non-cloned libs (cloud-interface, internal-contracts).
+- [ ] [INFRA] P2. **🔴 BLOCKED-CREDENTIALS (2026-06-18) — GCP build via `gcloud builds triggers run <repo>-build --branch
+  main` / `<repo>-live-defi-rollout --branch live-defi-rollout` (region asia-northeast1), watched to SUCCESS, one at a
+  time, STOP + diagnose on first systemic failure.** **Manual trigger-run is permission-blocked**: both `harshkantariya`
+  and the `github-actions-deploy` SA hold only `roles/cloudbuild.builds.viewer` (read — can WATCH builds, cannot RUN
+  them), and the deploy SA isn't impersonable. Needs `roles/cloudbuild.builds.editor`.
+  **➡️ FOR IKENNA — one grant unblocks the whole GCP phase (reversible):**
+  ```bash
+  gcloud projects add-iam-policy-binding central-element-323112 \
+    --member="user:harshkantariya@odum-research.com" \
+    --role="roles/cloudbuild.builds.editor" --condition=None
+  ```
+  Until granted, the only no-perm path is the natural **main-push auto-fire** (services build on main push, base libs on
+  LDR push) — i.e. promoting content drains+builds via the pipeline (slower, not isolated). `deployment-api`/`deployment-ui`
+  are already GCP-building this way from the P1/P2 promotions.
 - [ ] [BUG] P2. For every stale base-digest pin found, file the fix (refresh `BASE_IMAGE_DIGEST` ARG) in the owning
   repo — but only AFTER confirming the dependency-update fan-out isn't the intended owner; coordinate, don't fork it.
 
