@@ -288,6 +288,52 @@ construction (server-side byte-identical copy preserves parquet footers; only th
 
 - 0 copy errors; the live footer spot-check timed out on host GCS read latency (not a data fault, not load-bearing).
 
+## MARKET-DATA `_index` v9 COLUMN POPULATION — APPLIED to ALL 5 AGs (2026-06-18)
+
+> Operator-dispatched v9 `--apply`. Audit ground-truth (read-only, 2026-06-18): the live MTDS prd
+> `_index/availability_index.parquet` for ALL 5 AGs was cell-key-canonical (deduped) BUT still
+> **schema v8, `pipeline_mode` 100% blank, `source` column ABSENT, `asset_group` absent (cefi/sports)
+> or partial (defi/tradfi/pred)** — the v9 column population was never run on the live index.
+
+**DECISION — in-place populator, NOT the object-scan rebuild (root-cause diagnosis).** The
+`rebuild_{ag}_manifest.py` non-dry-run is the documented v9-column writer, but a fresh GCS scan
+**double-counts** every cell with both a legacy object AND its canonical twin (COPY-not-MOVE; the
+legacy delete is operator-gated/pending). PROOF: the pre-generated v2 projections carry massive true
+duplicates — `projected_index_cefi_v2` 1.08M dup rows, defi 0.67M, sports 0.73M — and
+`projected_index_prediction` REGRESSES captured 16,918→7,116. Applying any would CORRUPT the deduped
+live index (captured→failed mass-flip / dup inflation = the exact gate-fail the BLOCKER GATE forbids).
+Instead built `market-tick-data-service/scripts/populate_v9_index_columns_inplace.py` (mtds@6b9f4b5):
+reads the live deduped `_index`, fills `pipeline_mode` via UTL `derive_pipeline_mode_for_row` (100%
+derivable, verified all 5 AGs; source-aware — tradfi splits barchart/massive/databento), `source` via
+UAC `source_string_for(PipelineMode)`, `asset_group` constant, `schema_version=9` — ROW-PRESERVING, so
+captured is provably preserved. defi additionally picks up the **46,866 canonical `venue=UNISWAP_V4`
+batch_onchain_subgraph cells** (incl the 31,773 newly-migrated) whose `_index` rows were never written
+(the index held only the legacy `UNISWAPV4`/`UNISWAPV4-ETHEREUM` spellings).
+
+**Per-AG result (before→after, captured-preserved gate honored absolutely):**
+
+| AG     | rows before→after        | schema v9 | pipeline_mode | source | asset_group | captured (Δ)            | snapshot |
+| ------ | ------------------------ | --------- | ------------- | ------ | ----------- | ----------------------- | -------- |
+| pred   | 19,299 → 19,299          | 100%      | 100%          | 100%   | 100%        | 16,918 (+0)             | ✅       |
+| tradfi | 144,314 → 144,314        | 100%      | 100%          | 100%   | 100%        | 96,811 (+0)             | ✅       |
+| cefi   | 2,167,688 → 2,167,688    | 100%      | 100%          | 100%   | 100%        | 1,311,984 (+0)          | ✅       |
+| sports | 803,796 → 803,796        | 100%      | 100%          | 100%   | 100%        | 202,087 (+0)            | ✅       |
+| defi   | 1,578,922 → 1,625,788    | 100%      | 100%          | 100%   | 100%        | 344,564 → 391,430 (+46,866 V4) | ✅ |
+
+All applies snapshot the prior index to `_index/snapshots/pre_v9_apply_{ag}_2026_06_18.parquet`
+(rollback net, in addition to `pre_migration_2026_06_18`). Independently re-read post-apply: every AG
+schema_v9=100%, pipeline_mode/source/asset_group=100%, captured preserved (defi V4 = 46,866 captured,
+0 already present). Apply order: pred → tradfi → cefi → sports → defi (safest first). Tool is a
+`scripts/` oneoff (ruff-lint-clean + runtime-verified via 5 applies; lifecycle marker present).
+
+- [x] ✅ [SCRIPT] P1. **MARKET-DATA `_index` v9 column population `--apply` for ALL 5 AGs** — DONE
+      2026-06-18. `populate_v9_index_columns_inplace.py` (mtds@6b9f4b5) in-place populated
+      pipeline_mode/source/asset_group + schema_version=9 on all 5 live prd `_index` objects;
+      captured preserved on cefi/tradfi/sports/pred, defi +46,866 canonical UNISWAP_V4 cells picked up
+      (incl the 31,773 newly-migrated). schema_v9/pipeline_mode/source/asset_group all 100% per AG;
+      pre-apply snapshots written. In-place chosen over the rebuild (rebuild projections were
+      dup-inflated/captured-regressing → would corrupt the deduped index). — market-tick-data-service
+
 ## INSTRUMENTS-STORE buckets — legacy GCS audit + `_index` canonicalisation COMPLETE (2026-06-18)
 
 > Operator-granted: delete legacy twins once 100%-verified canonical twin (`gcs_describe`). This is the
