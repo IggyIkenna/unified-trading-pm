@@ -192,6 +192,27 @@ recipe + tradfi/sports/pred feasibility). Manifests (all 5) already canonicalize
       `path_to_100pct_backfill_mtds_is_2026_06_17.md`. Other services rely on instruments to know what's
       available/expected → this runs FIRST. — instruments-service
 
+## GCS object-migration COMPLETE + delete-list sizing (2026-06-18) — DELETE IS OPERATOR-GATED
+
+All legacy duplicate twins copied to canonical `pipeline_mode={mode}_{source}/asset_group={ag}/` shape via
+`e2e-testing/scripts/defi/migrate_legacy_twins_from_audit.py` (server-side `gcs_copy_object`, workers=64, 0 errors).
+Re-audit (`audit_legacy_gcs_dup_delete_list.py --ag defi,tradfi,sports,pred`) confirms **migrate-first → 0 on every
+mappable cell** — every SAFE-TO-DELETE legacy object has a `gcs_describe`-verified canonical twin. Delete-lists written
+to each AG `_index/audit/legacy_dup_delete_list_{ag}.parquet`.
+
+| AG | copied twins | SAFE-TO-DELETE | reclaimable | unmappable residue (NO twin → stays legacy, NOT delete-safe) |
+| --- | --- | --- | --- | --- |
+| defi | 346,730 | 346,902 | 26.29 GB | 5,332 (7.34 GB) |
+| tradfi | 1,705,230 | 1,705,230 | 113.30 GB | 1,102 (2.55 GB) |
+| sports | 248,502 | 248,502 | 4.78 GB | 3,816 (0.23 GB) |
+| pred | 573,451 | 573,451 | 24.35 GB | 0 |
+| **TOTAL** | **2,873,913** | **2,874,085** | **168.72 GB** | **10,250 (10.11 GB)** |
+
+Plus cefi (done earlier): fully migrated + 9.98 TB legacy deleted (operator-authorized, 7-day recoverable). The 10,250
+unmappable are bare/no-venue legacy paths (`no_venue_or_data_type_in_path`/unparseable) with no derivable canonical
+target → excluded from every delete-list (tracked P2 residual below). **DELETE of the 168.72 GB SAFE-TO-DELETE set is
+operator-gated — sized + inspect-ready, NEVER auto-executed.**
+
 ## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
 
 - [ ] [CODE] P1. **e2e funding scripts hardcode legacy research buckets — repoint to `resolve_bucket_name`**: B3 copied
