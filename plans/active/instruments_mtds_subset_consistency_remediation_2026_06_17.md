@@ -419,15 +419,16 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       twinned. The ONLY genuine residual = UNISWAP_V4 (next todo). NOTE: the full per-object verify run over all 633
       defi days is I/O-heavy (reads every canonical file's content); the verify parquet is operator-convenience for the
       delete-list, the migrate/delete DECISION is already determined by the verifier's logic + sampling. — e2e-testing
-- [ ] [DATA] P2. **UNISWAP_V4 content-aware fan-out (the genuine residual)** — migrator BUILT + shipped
-      `e2e-testing/scripts/defi/migrate_uniswap_v4_legacy_to_canonical.py` (e2e-testing@9bd18bf, ruff+QG-green); RUN it
-      `--apply` to fan out the ≤359 legacy `venue=UNISWAPV4-ETHEREUM` bundles' rows that have NO same-day canonical V4
-      twin → reshape (venue `UNISWAP_V4`/`chain=ETHEREUM`/`instrument_type=pool`, `data_type` `swaps`→`dex_pool_swaps`/
-      `liquidity`→`dex_pool_state`, add `instrument_id`, `pipeline_mode=batch_onchain_subgraph`) → write one canonical
-      parquet per `pool_id` stem (the legacy V4 schema is IDENTICAL to canonical V4 incl. `pool_id` — a faithful
-      reshape, not a re-download). The script SKIPS rows already in canonical V4 content (no dup writes). Dry-run first
-      (default), then `--apply`; then manifest-verify the migrated V4 cells via the consolidator. — e2e-testing /
-      market-tick-data-service
+- [x] ✅ [DATA] P2. **UNISWAP_V4 content-aware fan-out (the genuine residual) — MIGRATED + VERIFIED**
+      (`e2e-testing/scripts/defi/migrate_uniswap_v4_legacy_to_canonical.py` @9bd18bf, RAN `--apply` 2026-06-18). Of
+      4,919,235 legacy V4 rows across 359 bundles, **3,237,107 genuinely-uncovered rows → 31,773 canonical
+      `pool_id`-stem parquets written** (1,682,128 rows already in canonical → skipped no-dup; 84 objects fully-covered;
+      **0 errors**). Reshape column-parity vs an existing canonical V4 file = EXACT (37-col set identical). Verified:
+      previously-uncovered days (2025-06-30/03-08/10-18) now carry 107/83/163 canonical `venue=UNISWAP_V4` pool files;
+      idempotent re-dry-run shows **rows_migrated=0 / fully_covered_objects=359** (gap CLOSED, all 359 now twinned). The
+      objects are GCS-written; the defi `availability_index.parquet` records them on the next `rebuild_defi_manifest.py`
+      walk / consolidator run (folded into the N5r/N6r rebuild-for-real-replace below — do NOT run a competing partial
+      rebuild). — e2e-testing
 - [ ] [DATA] P3. **Verify-then-delete the ~122 genuinely-legacy-only tradfi stragglers** — REFRAMED 2026-06-18: the 107
       bare `venue={CME,ICE,NYSE,NASDAQ}/ticks.parquet` are recent (2026-02+) RAW `data_type=trades` ticks (Databento
       market-by-order), NOT pre-canonical OHLCV — and `data_type=trades` IS a canonical tradfi data_type
@@ -514,7 +515,10 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       swaps_ohlcv), but reaching LIVE needs a WHOLESALE replace of the defi `_index` (the consolidator merge leaves
       stale un-normalized rows; the index-walk can't normalize venue without desyncing from object paths). Run the
       rebuild to produce the full v9 index + write it as the live `_index` (replace, not merge). NOT a
-      double-count/data-loss (P2 grouping hygiene). — market-tick-data-service
+      double-count/data-loss (P2 grouping hygiene). **ALSO picks up the 31,773 newly-migrated canonical UNISWAP_V4
+      `pool_id` cells (3.24M rows) the content-aware fan-out wrote 2026-06-18** — the rebuild walks all canonical
+      objects, so these get their `availability_index` rows on this same wholesale-replace run (no separate V4 manifest
+      pass needed). — market-tick-data-service
 - [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
       `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
       non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
