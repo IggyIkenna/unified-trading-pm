@@ -530,9 +530,9 @@ jobs:
           # Get topological order (all tiers, T0 first), restricted to the dep-order-READY
           # subset (READY_REPOS from STAGE 1.8). Blocked repos are skipped this run and
           # drain on a subsequent run once their deps reach main.
-          REPOS=$(READY_REPOS="${READY_REPOS:-}" READY_REPOS_COMPUTED="${READY_REPOS_COMPUTED:-}" python3 - <<PYEOF
+          REPOS=$(READY_REPOS="${READY_REPOS:-}" READY_REPOS_COMPUTED="${READY_REPOS_COMPUTED:-}" MANIFEST="${MANIFEST}" python3 - <<'PYEOF'
           import json, os
-          with open("${MANIFEST}") as f:
+          with open(os.environ["MANIFEST"]) as f:
               m = json.load(f)
 
           staging_versions = m.get("staging_versions", {})
@@ -1020,7 +1020,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          python3 - <<PYEOF
+          python3 - <<'PYEOF'
           import json, datetime, os, sys
           sys.path.insert(0, "scripts/cicd")
 
