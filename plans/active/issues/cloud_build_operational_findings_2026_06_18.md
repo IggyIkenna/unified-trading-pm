@@ -30,8 +30,8 @@ parent_epic: infrastructure_master
   (continuous on LDR), `<repo>-feature-build`, `<repo>-build` (main), `<repo>-main-deploy`. Run one with
   `gcloud builds triggers run <name> --region=asia-northeast1 --branch=<branch>` (builds from GitHub source — no local
   tarball; auto-populates `$SHORT_SHA`).
-- Three builds triggered successfully and ran: `590050dc` (UTL base, `-live-defi-rollout`), `4a7de34e` (mtds,
-  `-live-defi-rollout`), `40c74eab` (mdps, `-build`@main).
+- Three builds triggered successfully and ran to terminal: `590050dc` (UTL base, `-live-defi-rollout`) → **SUCCESS**,
+  `4a7de34e` (mtds, `-live-defi-rollout`) → **SUCCESS**, `40c74eab` (mdps, `-build`@main) → **FAILURE** (Finding 1).
 
 ### Finding 1 — market-data-processing-service Docker build is broken on `main` (P1, build-blocking)
 
@@ -64,21 +64,26 @@ error: Failed to determine installation plan
 This is the endpoint deployment-ui calls to list build triggers; a 500 means the deployment-ui triggers list is broken.
 Route: `deployment-api/deployment_api/routes/cloud_builds.py:99 list_triggers` (merges GCP + AWS triggers).
 
-### Finding 3 — deployment-api build history misses `-live-defi-rollout` builds (P2)
+### Finding 3 — deployment-api build history returns EMPTY for all builds (P2, deeper than a mapping bug)
 
-`GET /api/cloud-builds/history/market-tick-data-service` →
-`{"trigger_name":"market-tick-data-service-build","builds":[],"total":0}` — but mtds is actively building (green) via
-the **`market-tick-data-service-live-defi-rollout`** trigger, not `-build`. The history endpoint hard-maps `service` →
-`<service>-build`, so for every repo whose live builds run on the `-live-defi-rollout` trigger (UTL, mtds, UAC, UCI,
-internal-contracts) the deployment-ui shows "no builds" despite continuous green builds. Route:
-`cloud_builds.py:313 get_build_history`.
+`GET /api/cloud-builds/history/market-tick-data-service` → `{"builds":[],"total":0}` AND
+`GET /api/cloud-builds/history/market-data-processing-service` → `{"builds":[],"total":0}` — **both empty**, even though
+mtds builds green continuously and mdps's `market-data-processing-service-build` trigger (the exact one the endpoint
+maps to) has builds today (incl. my failure `40c74eab` + `baf77da9`). So the empty result is NOT merely the trigger
+mapping. **Primary root cause** (`cloud_builds.py:386-391`): `get_build_history` queries
+`ListBuildsRequest(project_id=...)` — **GLOBAL scope** (a code comment notes the regional parent "fails with 400 on REST
+transport") — but every build runs **regionally in `asia-northeast1`** (the triggers are regional), and a global
+`list_builds` does not return regional builds → always empty. **Secondary**: even with the scope fixed, the
+`service → <service>-build` hard-map (`cloud_builds.py:346`) still misses repos whose live builds run on the
+`-live-defi-rollout` trigger (UTL, mtds, UAC, UCI, internal-contracts). Route: `cloud_builds.py:313 get_build_history`.
 
 ## Why it matters
 
 - **Finding 1** blocks every mdps image (the CeFi/TradFi candle-processing service — a data-pipeline component); `main`
   can't produce a deployable image. Data-pipeline correctness is the heartbeat.
-- **Findings 2 + 3** make the deployment-ui Cloud Build pane misleading: the triggers list 500s, and the most active
-  repos read as "no builds." Operators can't trust the build-status surface.
+- **Findings 2 + 3** make the deployment-ui Cloud Build pane non-functional: the triggers list 500s, and build history
+  returns empty for EVERY repo (regional builds are invisible to the global query). Operators can't see any build status
+  — confirmed empty for both an LDR-built repo (mtds) and a main-built repo (mdps).
 
 ## Recommended decision
 
@@ -90,8 +95,10 @@ internal-contracts) the deployment-ui shows "no builds" despite continuous green
   runtime break such as missing numba).
 - **F2**: diagnose the 500 in `list_triggers` (cloud_builds.py:99) — likely the GCP triggers API call or the
   AWS-triggers merge raising; the deployment-ui triggers pane depends on it.
-- **F3**: map each service to its ACTUAL live trigger (`-live-defi-rollout` where present, else `-build`), or query
-  builds by repo/branch rather than a fixed `<service>-build` trigger name (cloud_builds.py:313).
+- **F3**: query `list_builds` with the REGIONAL parent `projects/{p}/locations/asia-northeast1` (use the gRPC transport,
+  which doesn't hit the REST 400 the code comment cites) instead of global `project_id` scope — that is the primary fix
+  for the always-empty history. Secondarily, map each service to its ACTUAL live trigger (`-live-defi-rollout` where
+  present, else `-build`) so LDR-built repos appear too (cloud_builds.py:313/346/386).
 
 ## Todos
 
@@ -101,8 +108,10 @@ internal-contracts) the deployment-ui shows "no builds" despite continuous green
       `docker run` import check before promoting to main. Repo: market-data-processing-service.
 - [ ] [SCRIPT] P2. Fix deployment-api `GET /api/cloud-builds/triggers` 500 (cloud_builds.py:99 `list_triggers`). Repo:
       deployment-api.
-- [ ] [SCRIPT] P2. Fix deployment-api build-history trigger mapping so `-live-defi-rollout` builds appear
-      (cloud_builds.py:313 `get_build_history` hard-maps `<service>-build`). Repo: deployment-api.
+- [ ] [SCRIPT] P2. Fix deployment-api build-history always-empty — query `list_builds` with the regional parent
+      `projects/{p}/locations/asia-northeast1` (gRPC transport) not global `project_id` scope (cloud_builds.py:386), AND
+      map each service to its real live trigger so `-live-defi-rollout` repos appear (cloud_builds.py:346). Empirically
+      both mtds (`-live-defi-rollout`) and mdps (`-build`) return empty today. Repo: deployment-api.
 
 ## Composes with
 
