@@ -48,6 +48,17 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 - [x] [UAC/MTDS] P0. OHLCV scope = `ohlcv-1s` **AND** `ohlcv-1m` (operator 2026-06-18; revises the earlier 1s-only).
       Both are L0/free 16y. 1m kept to complete the large existing 1m corpus (exercises migration/manifest/data-status);
       1s is the finer add. `_BANNED_OHLCV_SCHEMAS` now = `{ohlcv-1h, ohlcv-1d}` only; schema_map fetches both 1s+1m.
+- [x] [MTDS] P0. SHIPPED the MTDS cutover (single-key config: `num_api_keys=1`, `use_multi_key_rotation=False` defaults;
+      `DEFAULT_NUM_API_KEYS=1`; schema-guard + `assert_databento_request_allowed` at the get_range chokepoint;
+      `batch.submit_job` ban via `assert_batch_api_allowed`; `ohlcv_1s`/`ohlcv_1m`/`mbp_10` in schema_map; tests updated
+      to assert num_keys-driven + `trades` not the banned bar). — market-tick-data-service@88d1c65e | QG green.
+- [x] [IS] P0. SHIPPED the IS Databento `definition`-schema entitlement guard with **DATASET-level shard isolation** —
+      an off-allowlist dataset (XNAS.ITCH / IFEU.IMPACT / IFUS.IMPACT) raises `DatabentoSubscriptionError`, caught
+      per-dataset in `get_instruments` so sibling allowed datasets (GLBX.MDP3 / DBEQ.BASIC / CFE) still return
+      (transient BentoError/parse still propagates → `_fetch_one_venue` failed[] → attempted_failed, CF-11 preserved). +
+      regression test `test_get_instruments_isolates_banned_dataset`. — instruments-service@86ecc67b | QG green.
+- [x] [SECRET] P0. Deleted transitional secret `databento-api-key-1` (post single-key cutover) —
+      `gcloud secrets list ~databento` now = only `databento-api-key`.
 
 ## Phase 1 — add the ohlcv-1s fetch + 1s aggregation (NON-breaking: 1m stays)
 
