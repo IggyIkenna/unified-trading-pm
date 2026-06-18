@@ -2,9 +2,9 @@
 title:
   Frontmatter SCHEMA gate bypassed by docs-only commits → non-compliant plan/issue docs land on LDR and block fleet-wide
   full QG
-status: active
+status: resolved
+resolved: 2026-06-18
 priority: P2
-locked_by: live-defi-rollout
 created: 2026-06-16
 source:
   - slot-3 setup-tab-worktrees ship 2026-06-16 — full QG blocked twice by a foreign issue doc missing status/priority
@@ -13,8 +13,9 @@ source:
 
 # Frontmatter schema gate bypassed by docs-only commits
 
-> **✅ Primary fix SHIPPED in this change** (see "Fix" below). This doc stays open only for the **residual follow-up**
-> (audit the same swallow pattern in the other local prek hooks). Archive once that is decided.
+> **✅ RESOLVED + ARCHIVED 2026-06-18** — primary fix (frontmatter-schema gate enforced at commit) + both follow-ups
+> done: all 3 prek hooks made fail-closed (PM@81d74c9a7 + rolled out to all 24 other repos), and `check_todo_format` was
+> already fail-closed in `--precommit`. Details in "Recommended decision / follow-up" below.
 
 ## What I found
 
@@ -53,15 +54,24 @@ own change is clean. The schema check existed but enforced nothing at the point 
 
 ## Recommended decision / follow-up
 
-- **P2 — audit the other local prek hooks for the same `&& … || exit 0` swallow**: `fix-commit-identity`,
-  `check-branch-drift`, and `prettier-autostage` use the identical pattern. Decide per-hook whether it should be
-  fail-closed (block on real failure) or stay fail-open (advisory). `check-branch-drift` in particular is commented
-  "behind-origin → STOP" but currently cannot block. Do this as a deliberate, separately-reviewed pass — not blindly.
-- **P2 — the prek hook validates frontmatter but NOT todo-FORMAT, so `check_todo_format` violations slip onto LDR the
-  same way (surfaced 2026-06-16).** `run_hygiene_sweep.sh --precommit` runs `check_frontmatter_schema.py` (the fix
-  above) but still does NOT run `check_todo_format` / `check_todo_regression` — those live only in the _advisory_
-  `plan-health-agent.yml` gate (red + dispatches the escalate fixer, never blocks merge). So a `docs(plans):` edit that
-  adds a `- [ ]` without `[TAG] P<n>.` commits cleanly, reaches LDR, then fails the advisory sweep on EVERY subsequent
-  LDR PR → dispatches escalate-to-orchestrator each time (the 2026-06-16 escalate storm; 3 such todos in 2 plans were
-  the live cause, fixed PM@e8cb2bbd8). Decide whether `--precommit` should ALSO run `check_todo_format` fail-closed on
-  staged plans (same fail-closed-vs-advisory call as the hooks above). </content> </invoke>
+Both follow-ups are now **RESOLVED** (2026-06-18):
+
+- **P2.a — audit the other 3 local prek hooks for the `&& … || exit 0` swallow: ✅ DONE → all three made fail-closed.**
+  `fix-commit-identity`, `check-branch-drift`, and `prettier-autostage` all wrapped their script as
+  `[ -f "$HOOK" ] && bash "$HOOK" … || exit 0`, where the `|| exit 0` runs when the script FAILS — so a real failure was
+  swallowed to exit 0. The audit confirmed each script is robustly fail-OPEN on environment errors (CI / no-network /
+  missing tool / detached HEAD) and exits non-zero ONLY on its genuine block condition, and each carries a documented
+  fail-closed intent the swallow defeated (identity header says "FAIL-CLOSED"; drift says "behind-origin → STOP";
+  prettier says "parse error → commit aborts"). **Operator decision (Harsh, 2026-06-18): fix all three.** Rationale for
+  `check-branch-drift` specifically (an initial draft proposed leaving it advisory): the `*/5` slot-cron-ff-pull +
+  dirty-work Slack alert cover the common case, so the gate is the **backstop** for when they don't — catching drift at
+  COMMIT time forces a local reconcile so conflicts never surface on staging. **Design evidence backs this**:
+  `prettier-autostage` already self-skips when behind origin _because_ `check-branch-drift` was built to abort the
+  commit (its own comment), so the swallow had silently broken an existing contract. Restructured to
+  `[ -f "$HOOK" ] || exit 0; bash "$HOOK"` (tolerate a missing script, propagate a real failure). Shipped to PM's live
+  config + all 4 templates (PM@81d74c9a7, dogfooded) and **rolled out + committed to all 24 other repos**
+  (`ci(prek): make 3 hooks fail-closed`). `fail_fast: true` on identity + drift preserved.
+- **P2.b — `--precommit` should also run `check_todo_format` fail-closed: ✅ ALREADY SHIPPED.** `run_hygiene_sweep.sh`
+  `--precommit` already runs `check_todo_format.sh --quiet` on staged plans (line 45), increments the hard-failure
+  counter, and `PF > 0 → exit 1` (lines 50–52) — fail-closed, with the (already-fixed) plan-hygiene wrapper propagating
+  it. So a malformed `- [ ]` is now blocked at commit time, closing the escalate-storm path. No change required.
