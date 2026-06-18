@@ -1064,3 +1064,32 @@ Turnover-reduction dispatch + the CeFi directional-signal handoff are both COMPL
 (honest forward ~1.6-1.9 per OOS), maxDD -13% (single) / -10% (multi-venue), Calmar ~2.0, fee-robust to 20bp, 2022-tail
 repaired by the squeeze overlay. Remaining winner/loser improvement is BLOCKED on the awaited cross-sectional ML signals
 (external dep) — loop terminates here, not idle-spinning.
+
+## Multi-venue CAPITAL flow + transfer instructions + reversal_z verdict + signal-status CORRECTION (2026-06-18)
+
+**CAPITAL accounting (operator: account for $ per venue + transfer instructions + plot the $ balance).** Sim: $1M total,
+equal-weight across Binance+Bybit, PnL accrues per venue, weekly rebalance to equal-weight of equity with a 5% no-move
+band. **Result: $1M -> $3.08M over 4.5yr (compounded); per-venue today Binance $1.62M / Bybit $1.46M; only 8 transfers
+in 4.5yr, ~$75k/yr moved (avg $42k/move) — multi-venue capital friction is NEGLIGIBLE** (the band + 0.63
+venue-correlation make rebalancing rare). Current instruction: move $78k Binance->Bybit to re-equalise to $1.538M each.
+Transfer log is concrete (date + direction + $) — ready to wire into a TransferIntent flow. Script
+`/tmp/capital_flow.py`; plot `/tmp/passB/capital_flow.html` (per-venue $ balance + transfer bars). Composes with
+client-funds-isolation (`TransferIntent.client_id`) — these are intra-client multi-venue moves.
+
+- [ ] [STRATEGY] P3. Productionise the multi-venue capital/transfer layer: emit weekly rebalance TransferIntents
+      (intra-client, single client_id) from the live per-venue balances vs target weights, 5% no-move band. **Repo:
+      e2e-testing -> execution-service TransferCoordinator.**
+
+**reversal_z overlay — TESTED on my book, does NOT help (confirms the CeFi agent).** The economically-sensible use
+(reduce a short when reversal_z says oversold/squeeze-prone) HURTS: Sharpe 2.21->1.99/2.17, 2022 +0.58->+0.34. The
+opposite sign nominally adds +0.07 (2.28) but is economically BACKWARDS (cuts positions when the reversal signal is
+FAVOURABLE to them) = overfit-from-trying-both-signs, not a real edge. NOT shipped (agent warned context-only).
+
+**SIGNAL-STATUS CORRECTION (supersedes the earlier "blocked on awaited ML signals").** The signals are in GCS
+(`…/overlay/`) and have been TESTED — there is no better winner/loser signal coming: (a) the CeFi agent's actual
+cross-sectional ML signal (15m ensemble, daily-aggregated) HURTS the reversion carry (cs-veto 0.55 / cs-halve 0.77 /
+standalone -1.08 on theirs) and does NOT cut the single-coin tail; (b) reversal alpha-blend HURTS (horizon mismatch, the
+carry already harvests reversion); (c) reversal_z HURTS on my book (above). STRUCTURAL reason: cs/reversal are REVERSION
+signals — the WRONG tool for squeeze/dump avoidance (they lean INTO a squeeze). The ONE transferable accretive overlay
+is the MOMENTUM/breakout `sigma_move_2d` squeeze veto — **already shipped** (e2e@198ee62). **The book is COMPLETE, not
+blocked.** The CeFi cs alpha is real but 15-min-only — genuinely no value at the daily funding-carry horizon.
