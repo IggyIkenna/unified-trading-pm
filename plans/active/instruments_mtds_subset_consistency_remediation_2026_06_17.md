@@ -154,7 +154,27 @@ recipe + tradfi/sports/pred feasibility). Manifests (all 5) already canonicalize
 
 **Hard-stop (operator):** the final DELETE of old data — prepare+size it, never execute.
 
-## Operator follow-ups 2026-06-18 — research-data canonical-copy + instrument catalogue + MVP/total universe
+## Progress Log — B0/B1/B2 autonomous run (2026-06-18, dispatch)
+
+> Operator `/autonomous` 2026-06-18: NEW Databento key live in SM `databento-api-key`, Tardis public, DeFi creds exist
+> → no credential blockers. Drive B0→B1→B2 to verified completion. This log is the loop's handoff memory (no summary doc).
+
+**Discovery (read-first, 2026-06-18):**
+- **Data state** (instrument_availability/by_date latest day): tradfi=2026-06-11, defi=2026-06-11, cefi=2026-06-17 →
+  ~7-day tradfi/defi gap, ~1-day cefi gap. earliest: tradfi 2020-01-01, cefi 2019-03-30, defi 2020-01-20.
+- **B1 schedulers**: `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` all PAUSED (asia-northeast1,
+  `0 1 * * *` UTC), last ran ~2026-06-11. Cloud Run Jobs exist (lifecycle_catalogue_scheduler.tf). `prod/catalog.parquet`
+  present per AG.
+- **B2 — MVP IS ALREADY CODIFIED**: `unified_api_contracts.canonical.crosscutting.mvp_scope.MVP_SCOPE` + `is_mvp()`
+  (config v3) — catalogue (`build_instrument_catalogue.py`) + enumerator already consume it. The "total reasonable
+  universe" = the full lifecycle catalogue (could-exist), consumed by `enumerate_expected_universe.py` v2, but is NOT a
+  NAMED/codified SSOT with explicit selection axes. **B2 gap = add a sibling `total_universe` SSOT** (the could-exist
+  selection axes: base_currency × venue × data_type × DeFi-pool-volume × fixtures × hardcoded-genesis-vs-download-derived)
+  next to MVP, + a predicate the enumerator reads, so both concepts are explicit + distinct.
+- No code tarball in `gs://deployment-scripts-…/code/instruments-code.tar.gz` (need `create-code-tarballs.sh` first).
+- No instr-backfill VM currently running.
+
+
 
 > **Dependency order (operator 2026-06-18):** (B0) backfill instruments to NO-MISSING first → (B1) regen the instrument
 > catalogue (it aggregates instruments) → (B2) codify MVP-universe vs total-reasonable-universe (so the backfill config
