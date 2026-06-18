@@ -264,13 +264,16 @@ to logs.
       a Drift API-key ask per external-data-always-available). Fix `drift.py` `_DATA_API_URL`/path (the URL resolves via
       UAC `get_solana_protocol_url("drift","api_url")` — update the registry value, not a hardcode), classify the breach
       properly, backfill 2026-05-09→06-18. — instruments-service / unified-api-contracts (registry URL)
-- [ ] [DATA] P2. **AAVE_V3-OPTIMISM subgraph ID is wrong/decommissioned — `Type Query has no field reserves`**
-      (diagnosed 2026-06-18). Only the OPTIMISM chain fails (ETHEREUM/ARBITRUM/POLYGON/BASE/AVALANCHE Aave-V3 capture
-      fine); the UAC `get_subgraph_id("aave_v3","OPTIMISM")` = `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` points to a
-      subgraph whose schema has no `reserves` field (wrong subgraph / decommissioned / non-Aave). Find the correct
-      current Aave-V3-Optimism subgraph ID on The Graph decentralized network, update UAC `SUBGRAPH_IDS`, verify a live
-      `reserves` query returns, backfill 2026-05-09→06-18. — unified-api-contracts (registry SUBGRAPH_IDS) /
-      instruments-service
+- [ ] [DATA] P2. **AAVE_V3-OPTIMISM IS instruments adapter must route to the RPC fallback (KNOWN abandoned subgraph —
+      NOT a subgraph-ID hunt)** (diagnosed 2026-06-18). The instruments adapter queries the subgraph
+      `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` which raises `Type Query has no field reserves` → attempted_failed.
+      **This is the DOCUMENTED operator policy (UAC `_defi.py` aave_v3 OPTIMISM comment, decision 2026-05-30): Aave
+      silently abandoned the Optimism subgraph (republished to an empty v0.0.5 entity store); the CANONICAL data source
+      for AAVE_V3-OPTIMISM is the RPC fallback (14-row daily), not the subgraph.** So do NOT chase a new subgraph ID
+      (none exists per the policy). The fix is in the IS `aave_v3.py` adapter: for OPTIMISM, route to the same RPC
+      fallback the MTDS rate handler uses (or `record_empty(reason=...)` honest-absence if the IS layer has no RPC path)
+      — never leave it attempted_failed (a known-policy state masquerading as a fetch failure). The sibling chains
+      (ETH/ARB/POLY/BASE/AVALANCHE) work fine. — instruments-service (NOT a UAC subgraph-ID change)
 
 **DERIBIT-COMBO — fixed a NEVER-WORKING venue (4 stacked breaks, found during cefi diagnosis) — ✅ SHIPPED:**
 cefi's 22 attempted_failed were ALL DERIBIT-COMBO (0 captured days since added 2026-05-23). Root cause = 4 stacked bugs,
