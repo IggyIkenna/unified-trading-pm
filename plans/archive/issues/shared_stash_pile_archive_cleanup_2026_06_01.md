@@ -7,7 +7,9 @@ parent_epic: infrastructure_master
 priority: P3
 status: resolved
 resolved: 2026-06-09
-resolution: GIT-CLEANUP-DONE — shared stash archived 3 ways + cleared (`git stash list` = 0); host-local refs/stash-archive refs + .stash-archive-20260601 dir not present in this worktree; confirmation/purge window (target 2026-06-08) elapsed
+resolution:
+  GIT-CLEANUP-DONE — shared stash archived 3 ways + cleared (`git stash list` = 0); host-local refs/stash-archive refs +
+  .stash-archive-20260601 dir not present in this worktree; confirmation/purge window (target 2026-06-08) elapsed
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 unlock_reason: 2026-06-09 — work complete (stash cleared); [unlock-plan]

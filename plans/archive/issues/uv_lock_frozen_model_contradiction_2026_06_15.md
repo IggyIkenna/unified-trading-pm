@@ -12,8 +12,12 @@ source:
   - e2e-testing `uv lock --check` exit 1 after floor bump (empirical 2026-06-15)
 locked_by: live-defi-rollout
 priority: P1
-status: decided
+status: archived
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 ## ✅ DECISION (operator-ratified 2026-06-17) — adopt the frozen-lock model end-to-end
 

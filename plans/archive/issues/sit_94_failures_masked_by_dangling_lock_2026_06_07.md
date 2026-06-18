@@ -8,7 +8,10 @@ locked_by: live-defi-rollout
 priority: P2
 status: resolved
 resolved: 2026-06-09
-resolution: ACKED-INTO-CODE — dangling-lock auto-clear in sit-debounce-trigger.yml @02b20d320 + SIT regression fixes system-integration-tests@f4a257e/@6cca121 + uac@48589278; guarded by content-based detect_breaking_change.py; SIT 4614/0 green
+resolution:
+  ACKED-INTO-CODE — dangling-lock auto-clear in sit-debounce-trigger.yml @02b20d320 + SIT regression fixes
+  system-integration-tests@f4a257e/@6cca121 + uac@48589278; guarded by content-based detect_breaking_change.py; SIT
+  4614/0 green
 ---
 
 ## What I found

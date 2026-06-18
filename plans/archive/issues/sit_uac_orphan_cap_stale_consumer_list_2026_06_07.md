@@ -7,8 +7,12 @@ source:
   - unified-api-contracts/scripts/check_uac_adoption.py
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: archived
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 ## What I found
 
@@ -83,19 +87,19 @@ stack of latent harness failures, fixed/relaxed in sequence to unblock the v0.2.
       re-exports / facade imports, which the by-class-name grep cannot see → they score "orphaned". So `ORPHAN_CAP` is
       held at **400** (measured 328 + ~22% headroom), NOT lowered to 20 — a cap of 20 (or exit-1-on-any) would FAIL the
       SIT gate on the 328 and **re-block the entire promotion cascade**. `EXEMPTION_CAP` left at 80 (union 65, ~23%
-      headroom — already correct). **(An earlier sub-agent draft mis-set cap=20 from a misread `exit 0`; caught + reverted
-      by independent re-measurement before any commit.)** Repo: system-integration-tests.
+      headroom — already correct). **(An earlier sub-agent draft mis-set cap=20 from a misread `exit 0`; caught +
+      reverted by independent re-measurement before any commit.)** Repo: system-integration-tests.
 - [ ] [SCRIPT] P2. **NICE-TO-HAVE / follow-up (surfaced 2026-06-10)**. Drive the 328 genuinely down: the
       terminal-consumer set excludes `unified-trading-library` (a T0 lib that re-exports many UAC schemas) and
-      `grep_service()` matches by class name only (misses `from unified_api_contracts import X` facade re-exports). Decide
-      whether (a) to add UTL to the scanned consumer set, and/or (b) follow facade/`__all__` re-exports so a schema
-      imported via a facade counts as adopted. Then the orphan count reflects genuinely-dead schemas and the cap can drop.
-      Repo: unified-api-contracts (`scripts/check_uac_adoption.py`).
-- [x] ✅ [INFRA] P0. **RESOLVED — no change needed (verified 2026-06-10; this issue doc predates the fix).** The obsolete
-      `market-data-service` was already REMOVED from `unified-trading-pm/docker/docker-compose.mock.yml` (commit
-      013c5203a / #176, 2026-06-07) — it now appears only in an explanatory comment; `docker-compose.single.yml` has no
-      ref either. **`--build` deliberately NOT added**: the `v1` profile that the SIT deployment-tests actually run is
-      **emulators-only** (no service image pulled), and the only `build:` context (`execution-service`) is under
+      `grep_service()` matches by class name only (misses `from unified_api_contracts import X` facade re-exports).
+      Decide whether (a) to add UTL to the scanned consumer set, and/or (b) follow facade/`__all__` re-exports so a
+      schema imported via a facade counts as adopted. Then the orphan count reflects genuinely-dead schemas and the cap
+      can drop. Repo: unified-api-contracts (`scripts/check_uac_adoption.py`).
+- [x] ✅ [INFRA] P0. **RESOLVED — no change needed (verified 2026-06-10; this issue doc predates the fix).** The
+      obsolete `market-data-service` was already REMOVED from `unified-trading-pm/docker/docker-compose.mock.yml`
+      (commit 013c5203a / #176, 2026-06-07) — it now appears only in an explanatory comment; `docker-compose.single.yml`
+      has no ref either. **`--build` deliberately NOT added**: the `v1` profile that the SIT deployment-tests actually
+      run is **emulators-only** (no service image pulled), and the only `build:` context (`execution-service`) is under
       `profiles:["services"]`, NOT `v1` — so `--build` would be a no-op for v1 AND would re-introduce the private
       Artifact-Registry pull failure the #176 fix removed. `docker compose -f docker-compose.mock.yml config` validates
       (docker 28.5.1). **Residual (needs a real CI run, not a code change):** the live `repository_dispatch` SIT

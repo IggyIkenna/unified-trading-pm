@@ -3,7 +3,7 @@ title: "CI-status side store — move ci_status from the git manifest to Firesto
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
@@ -15,6 +15,10 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # CI-status side store — Firestore doc-per-repo, CAS-on-rank
 

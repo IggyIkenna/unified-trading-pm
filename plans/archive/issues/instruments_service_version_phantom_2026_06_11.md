@@ -15,7 +15,8 @@ locked_since: 2026-05-21
 ## What it was
 
 `instruments-service` versions were incoherent: `workspace-manifest.json versions{}` = **0.30.0**,
-`repositories{}.version` = 0.1.22, source `pyproject.version` = 0.31.0, staging = 0.32.0, latest git **tag** = **v0.2.1**.
+`repositories{}.version` = 0.1.22, source `pyproject.version` = 0.31.0, staging = 0.32.0, latest git **tag** =
+**v0.2.1**.
 
 ## Root cause (diagnosed)
 
@@ -29,11 +30,13 @@ was added AFTER this incident; it would catch a recurrence.)
 
 1. Lowered source `pyproject.version` 0.31.0 → 0.3.0 on `live-defi-rollout` (instruments-service@ea3495a9).
 2. Force-synced `staging` tree to LDR (discarded the divergent 0.32.0 inflation bump) → cleared conflict-wall PR #437.
-3. Promoted `staging → main` (#430, clean FF; main⊆LDR). During promotion semver-agent fired off the PR's v2 (head=staging)
-   and bumped to **0.4.0** — the legitimate promoted version, now coherent across **main = staging = LDR = 0.4.0**.
+3. Promoted `staging → main` (#430, clean FF; main⊆LDR). During promotion semver-agent fired off the PR's v2
+   (head=staging) and bumped to **0.4.0** — the legitimate promoted version, now coherent across **main = staging = LDR
+   = 0.4.0**.
 4. Created release **tag `v0.4.0`** at main HEAD (deleted the mislabeled interim v0.3.0); `v0.2.1` retained in history.
 5. Reconciled PM `workspace-manifest.json`: `versions{}` = 0.4.0, `repositories{}.version` = 0.4.0, `staging_versions` =
-   0.4.0; cleared stale `breaking_pending` / `pending_repos` / `promotion_failures` / `staging_commits[instruments-service]`.
+   0.4.0; cleared stale `breaking_pending` / `pending_repos` / `promotion_failures` /
+   `staging_commits[instruments-service]`.
 
 ## Verification
 
@@ -47,6 +50,6 @@ was added AFTER this incident; it would catch a recurrence.)
 
 ## Follow-up (small) — MIGRATED, see above
 
-- [x] ➡️ [SCRIPT] P2. Lower `system-integration-tests/pyproject.toml` `instruments-service>=0.30.0,<1.0.0` → `>=0.4.0` (the
-  only remaining stale phantom-era floor; non-blocking today via content-first clone, but should match the true version).
-  **MIGRATED 2026-06-12** to dependency_promotion plan § Phase 5.
+- [x] ➡️ [SCRIPT] P2. Lower `system-integration-tests/pyproject.toml` `instruments-service>=0.30.0,<1.0.0` → `>=0.4.0`
+      (the only remaining stale phantom-era floor; non-blocking today via content-first clone, but should match the true
+      version). **MIGRATED 2026-06-12** to dependency_promotion plan § Phase 5.

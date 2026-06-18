@@ -20,18 +20,19 @@ estimate_class: infra
 > (ACKED-OUT-OF-SCOPE). The original banner said "do NOT archive until the Tardis-blocked items are resolved" — but the
 > operator has **decided NOT to activate Tardis (final, won't-do)**, so those CeFi-paid-history items are
 > `BLOCKED-CREDENTIALS` with a final operator decision, not pending work. The kill/keep decision matrix is **executed**
-> (per the harsh 2026-06-01 status banner — all "kill" VMs terminated, keep set confirmed). Every non-Tardis residual has
-> a live home, so nothing is dropped on archival:
+> (per the harsh 2026-06-01 status banner — all "kill" VMs terminated, keep set confirmed). Every non-Tardis residual
+> has a live home, so nothing is dropped on archival:
 >
 > - **Tardis decision (P3 OPERATOR)** → `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md`
 >   (explicitly tracks "Tardis paid key intentionally NOT activated" + cites this doc).
-> - **OKX-FUTURES symbol fix + backfill re-run** → done + tracked in `plans/epics/mtds_mdps_master.md` § "Fleet data-fetch
->   dispatch" (instruments-service@35a745ef; operational backfill follow-up noted there).
+> - **OKX-FUTURES symbol fix + backfill re-run** → done + tracked in `plans/epics/mtds_mdps_master.md` § "Fleet
+>   data-fetch dispatch" (instruments-service@35a745ef; operational backfill follow-up noted there).
 > - **SchemaContract registration for `odds_movement_15m`/`odds_snapshot_15m` (§F data-loss)** → tracked in
 >   `plans/active/mdps_backfill_phase3_2026_05_22.md` + `plans/epics/predictions_master.md`.
 > - **VM wheel-cache `gsutil -m cp` boot-hang (§C — GCS-helper-rule violation)** → MIGRATED to
 >   `plans/epics/infrastructure_master.md` § "P3 — backlog" (deployment-service).
-> - **Log-archive durability / 14-day-TTL crons** → `fleet_audit_triad_deferred_followups_2026_06_01.md` (operator-deferred).
+> - **Log-archive durability / 14-day-TTL crons** → `fleet_audit_triad_deferred_followups_2026_06_01.md`
+>   (operator-deferred).
 >
 > No codex `SSOTs:` section; no new durable contract.
 

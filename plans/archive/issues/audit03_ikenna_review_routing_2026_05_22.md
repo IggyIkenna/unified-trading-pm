@@ -39,7 +39,7 @@ drift-backlog) until the decision lands, so we don't ship a fix that contradicts
 > - **F-13 / F-15** — reconcile codex strategy-spec → implemented mechanism (code is truth). Record codex-update todo in
 >   `strategy_master` + route doc edit to `codex_vs_repo_docs`.
 > - **F-14** — VERIFY whether `vol_cap_clamp` provides an equivalent 1h price-move abort. If yes → reconcile codex. If
->   NO → it is a **P1 safety gap** → file todo in `strategy_master` / `execution_master`. [slot 7 investigates + > > >
+>   NO → it is a **P1 safety gap** → file todo in `strategy_master` / `execution_master`. [slot 7 investigates + > > > >
 >   reports]
 > - **F-32** — MEV mode is **directive-driven** for May-23 → close F-32. Size-based auto-escalation = post-cutover P2
 >   todo in `execution_master`.

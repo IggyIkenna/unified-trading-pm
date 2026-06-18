@@ -5,7 +5,7 @@ title:
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
@@ -19,6 +19,10 @@ source:
   - operator design discussion 2026-06-02/03 (slot tab/ikennaigboaka/4)
   - plans/active/uv_lockfile_determinism_2026_06_02.md (parent effort, shipped)
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # QG commit-quality-boundary + slot FF-push to LDR
 

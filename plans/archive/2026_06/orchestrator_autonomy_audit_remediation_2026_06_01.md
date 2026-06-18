@@ -297,13 +297,13 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       `codex/05-infrastructure/per-tab-worktrees.md` (FM2/FM3/FM8/ FM8b coordinator + FM1/5/6/7 gate + FM6 LDR-not-main
       correction + FM4/5 prompt inlining) and the canonical liveness-gated/role-aware inherited-dirty-WIP rule to
       `cursor-configs/CLAUDE.md` § Other key rules (edited while clean — the earlier foreign-dirty window had passed).
-      Cross-linked this plan + worktree*clean_check.py. Codex `codex/05-infrastructure/per-tab-worktrees.md` — document
+      Cross-linked this plan + worktree\*clean*check.py. Codex `codex/05-infrastructure/per-tab-worktrees.md` — document
       the pre-spawn branch-state gate + **liveness-gated** dirty resolution (slot-isolation invariant: dirty == a
       prior-you that's gone → inherit; only a provably-LIVE peer is protected; quarantine is never terminal) +
       slot-tagged-stash discipline + the 9-FM coverage table above. Add a `cursor-configs/CLAUDE.md` rule (canonical —
       do NOT edit per-repo copies) under `### Other key     rules`: \**an agent resolving inherited dirty WIP must first
       detect whether it is a background autonomous worker (tmux
-      `orch-slot-*`session /`ORCHESTRATOR*_`env / claim`role`) or an interactive operator     session — background: `notify\__`-ping the operator + inherit once the prior maker's claim TTL expires;     interactive: ASK the operator whether other agents are finished, then commit. Never stomp a provably-live peer;     never leave a dead maker's slot infinitely dirty.** Cross-link this plan. ⚠️ `cursor-configs/CLAUDE.md`
+      `orch-slot-*`session /`ORCHESTRATOR\**`env / claim`role`) or an interactive operator     session — background: `notify\_\_`-ping the operator + inherit once the prior maker's claim TTL expires;     interactive: ASK the operator whether other agents are finished, then commit. Never stomp a provably-live peer;     never leave a dead maker's slot infinitely dirty.** Cross-link this plan. ⚠️ `cursor-configs/CLAUDE.md`
       was actively foreign-dirty at 2026-06-01 19:40 (another agent mid-edit) — make this CLAUDE.md edit only when that
       worktree is clean, to avoid the very FM8 collision this plan fixes. Collision group: none. Estimate: 0.2 AI-day.
 

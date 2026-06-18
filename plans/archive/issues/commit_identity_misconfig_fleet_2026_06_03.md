@@ -22,11 +22,11 @@ status: RESOLVED
 > `fix-commit-identity` + a single canonical gitleaks block; (3) `setup-tab-worktrees.sh` standardises per-worktree
 > identity at init/add/reset (host-stable CANON resolution); (4) bot-email leak root-caused + closed
 > (`setup-workspace-from-manifest.sh` + `setup-github-auth.sh` writers now guarded; `verify-slot-host-symmetry.sh` is
-> the recurrence detector); (5) slot-1 worktrees verified attributing `ikennaigboaka [slot-1·laptop]
-> <ikennaigboaka@gmail.com>`; the deployed hook self-heals every other slot/VM on next commit. Codex updated in step:
-> `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution" reflects what shipped. The optional
-> `prepare-commit-msg` trailer remains a nice-to-have only (not blocking). No new durable contract beyond the already-in-
-> CLAUDE.md commit-attribution rule.
+> the recurrence detector); (5) slot-1 worktrees verified attributing
+> `ikennaigboaka [slot-1·laptop] <ikennaigboaka@gmail.com>`; the deployed hook self-heals every other slot/VM on next
+> commit. Codex updated in step: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution" reflects what
+> shipped. The optional `prepare-commit-msg` trailer remains a nice-to-have only (not blocking). No new durable contract
+> beyond the already-in- CLAUDE.md commit-attribution rule.
 
 ## What I found
 

@@ -17,11 +17,12 @@ status: RESOLVED
 > `failure`/`startup_failure` conclusion forces ≥CRITICAL `:x:`; `cancelled`/`timed_out`/etc force ≥WARNING; only
 > `success`/`neutral` render ✅) — fixing the whole hardcoded-success class in one place; plus the two concrete bugs
 > (`staging-to-main.yml` hardcoded "complete"+INFO on a failed promote; `update-repo-version.yml` clean body on failure)
-> + an audit confirming the rest already pass `conclusion` and inherit the override. The doc's "Still open" infra-noise
-> ROOT-CAUSE reductions (the `.claude/worktrees` submodule leak + the thin-dep-clone `ModuleNotFoundError`) are **MIGRATED
-> to** `plans/active/cicd_contract_hardening_2026_06_01.md` § "CI false-positive / infra-noise root causes" (P3). The UAC
-> `STAGING_GREEN`-despite-red lead is explained by H1 (also migrated there). No codex `SSOTs:` section; no new durable
-> contract.
+>
+> - an audit confirming the rest already pass `conclusion` and inherit the override. The doc's "Still open" infra-noise
+>   ROOT-CAUSE reductions (the `.claude/worktrees` submodule leak + the thin-dep-clone `ModuleNotFoundError`) are
+>   **MIGRATED to** `plans/active/cicd_contract_hardening_2026_06_01.md` § "CI false-positive / infra-noise root causes"
+>   (P3). The UAC `STAGING_GREEN`-despite-red lead is explained by H1 (also migrated there). No codex `SSOTs:` section;
+>   no new durable contract.
 
 > Seeded per Ikenna's 2026-06-05 ask ("help diagnose false positives and missed alerts … start verbose, cut when
 > working"). This records the FIRST **verified** false-positive class. Scope is deliberately limited to what I confirmed

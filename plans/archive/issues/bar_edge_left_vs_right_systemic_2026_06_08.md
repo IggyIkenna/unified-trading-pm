@@ -13,7 +13,10 @@ supersedes:
 priority: P2
 status: resolved
 resolved: 2026-06-09
-resolution: ACKED-INTO-PLAN — open work (left-edge corpus recompute + latent pre-agg fetchers) owned by plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md (parent_epic mtds_mdps_master) as real - [ ] checkboxes; realized bugs fixed+tested @7a4fafd9
+resolution:
+  ACKED-INTO-PLAN — open work (left-edge corpus recompute + latent pre-agg fetchers) owned by
+  plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md (parent_epic mtds_mdps_master) as real - [ ] checkboxes;
+  realized bugs fixed+tested @7a4fafd9
 ---
 
 # Systemic bar-edge (open vs close) violation across pre-aggregated OHLCV ingestion

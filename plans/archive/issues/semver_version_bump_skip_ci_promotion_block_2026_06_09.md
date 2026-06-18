@@ -7,9 +7,13 @@ source:
   - plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md
   - codex/08-workflows/ci-cd-flow.md (§ "[skip ci] and required checks")
 locked_by: live-defi-rollout
-status: active
+status: archived
 priority: P1
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # semver-agent `[skip ci]` version-bump blocks promotion — root cause + recommended fix
 
@@ -417,8 +421,8 @@ the baseline writer is healthy. Option C needs a baseline-independent re-entry b
 
 - [x] ✅ [SCRIPT] P1. **HEAD-commit chore-skip guard in semver-agent** — DONE 2026-06-16. `compute` step now reads
       `TRIGGER_COMMIT_MSG` (head_commit / workflow_run head_commit), and skips (`skip=true`, reusing the existing
-      downstream-gating output) when the first line starts `chore(release): bump version` — re-entry brake independent of
-      baseline state; range-based classification kept for the genuine-bump path. Canary-validated (release-bump incl.
+      downstream-gating output) when the first line starts `chore(release): bump version` — re-entry brake independent
+      of baseline state; range-based classification kept for the genuine-bump path. Canary-validated (release-bump incl.
       multiline → SKIP; feat/fix/chore(deps)/empty → PROCEED). Shipped to `semver-agent.yml.tmpl` (PM SSOT) +
       `rollout-workflow-templates.sh` fleet rollout to all 24 repos' LDR + PM template. Verified brake=1 on
       origin/live-defi-rollout fleet-wide. Complements the bump-rate circuit breaker below.

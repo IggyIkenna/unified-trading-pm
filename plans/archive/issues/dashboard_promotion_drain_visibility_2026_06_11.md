@@ -11,8 +11,12 @@ source:
   - "slot-3 verification 2026-06-11 (cascade-qg-ordering vs ldr-to-staging-promote are distinct workflows)"
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: archived
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # CI dashboard: promotion-drain visibility gap
 

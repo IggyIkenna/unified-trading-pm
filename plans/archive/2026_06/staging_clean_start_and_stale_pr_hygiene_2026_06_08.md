@@ -3,7 +3,7 @@ title: Staging/main clean-start from LDR-SSOT + stale-PR hygiene + LDR backlog d
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 3
@@ -19,6 +19,9 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — 0 open items; the model is live. Consolidation provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # Staging/main clean-start from LDR + stale-PR hygiene + drain
 
@@ -94,15 +97,16 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 > PRs, they're the convergence" assumed they would self-resolve; they cannot until the upstream publish/version state is
 > fixed. Root cause from the slot-1 investigation 2026-06-09 (interactive, with operator):
 
-- [x] ✅ [DONE 2026-06-11: get_version_tag ported to stdlib tuple-compare, PM@d293ddde — silent pre-uv-sync degradation removed; provably identical on X.Y.Z domain] [INFRA] P1. **ROOT CAUSE — phantom version + stale published artifact (unified-trading-library + PM
-      propagation).** The dep PRs bump consumer constraints to `unified-trading-library>=0.4.0,<1.0.0` and
-      `unified-api-contracts>=0.2.0,<1.0.0`, but **no 0.4.x / 0.2.x artifact was ever published.** UTL is NOT graduated
-      (operator 2026-06-09) — source is `0.3.167`; its only git tags `v1.0.0`/`v1.2.0` are spurious **2025-11 bootstrap
-      artifacts, NOT a graduation** (see FIX 1b); UTL `publish-package.yml` publishes ONLY on a `v*` tag push → the
-      0.3.x line was never tag-published. PM's version-aware clone in `.github/workflows/python-quality-gates-v2.yml`
-      finds no tag in `[0.4.0,1.0.0)` → falls back to the index, where the only resolvable UTL `0.3.167` is a STALE
-      build declaring `aiohttp>=3.14.0,<4.0.0` — violating the fleet pin `aiohttp>=3.13.4,<3.14.0` (CLAUDE.md known
-      exception). uv fails:
+- [x] ✅ [DONE 2026-06-11: get_version_tag ported to stdlib tuple-compare, PM@d293ddde — silent pre-uv-sync degradation
+      removed; provably identical on X.Y.Z domain] [INFRA] P1. **ROOT CAUSE — phantom version + stale published artifact
+      (unified-trading-library + PM propagation).** The dep PRs bump consumer constraints to
+      `unified-trading-library>=0.4.0,<1.0.0` and `unified-api-contracts>=0.2.0,<1.0.0`, but **no 0.4.x / 0.2.x artifact
+      was ever published.** UTL is NOT graduated (operator 2026-06-09) — source is `0.3.167`; its only git tags
+      `v1.0.0`/`v1.2.0` are spurious **2025-11 bootstrap artifacts, NOT a graduation** (see FIX 1b); UTL
+      `publish-package.yml` publishes ONLY on a `v*` tag push → the 0.3.x line was never tag-published. PM's
+      version-aware clone in `.github/workflows/python-quality-gates-v2.yml` finds no tag in `[0.4.0,1.0.0)` → falls
+      back to the index, where the only resolvable UTL `0.3.167` is a STALE build declaring `aiohttp>=3.14.0,<4.0.0` —
+      violating the fleet pin `aiohttp>=3.13.4,<3.14.0` (CLAUDE.md known exception). uv fails:
       `No solution found … only     unified-trading-library==0.3.167 is available … depends on aiohttp>=3.14.0`.
       Confirmed identical on alerting-service #31, instruments-service #400, deployment-service #26. Cross-ref:
       `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` + `cicd_contract_hardening_2026_06_01.md`.
@@ -211,11 +215,11 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       2026-06-10 — extended `assert_version_coherence.py` with VESTIGIAL_SCALAR_DRIFT (repositories{}.version must ==
       versions{} when present; remedy: run-version-alignment.sh --fix or delete the field) + DEP_FLOOR_UNSATISFIABLE
       (packaging SpecifierSet: floor ≤ versions{}[dep] < ceiling, explicitly NOT floor==latest) + wired `--warn-only`
-      into PM quality-gates.sh post-gates (non-blocking; blocking flip is a later ratchet) — unified-trading-pm@8605171b1 |
-      verified 2026-06-10. Findings TODAY: 17 VESTIGIAL_SCALAR_DRIFT (incl. UAC 0.1.20 vs 0.5.0, UTL 0.3.167 vs 0.4.0, PM
-      1.2.0 vs 1.2.69), 10 pre-existing VERSION_SPLITs (source ahead of versions{} — promotion lag class), 0
-      DEP_FLOOR_UNSATISFIABLE (all dep-edge floors satisfiable). Original task text below:** Workspace-manifest
-      version-surface reconciliation, scoped by what each field MEANS: **(a) dep-edge floors
+      into PM quality-gates.sh post-gates (non-blocking; blocking flip is a later ratchet) —
+      unified-trading-pm@8605171b1 | verified 2026-06-10. Findings TODAY: 17 VESTIGIAL_SCALAR_DRIFT (incl. UAC 0.1.20 vs
+      0.5.0, UTL 0.3.167 vs 0.4.0, PM 1.2.0 vs 1.2.69), 10 pre-existing VERSION_SPLITs (source ahead of versions{} —
+      promotion lag class), 0 DEP_FLOOR_UNSATISFIABLE (all dep-edge floors satisfiable). Original task text below:**
+      Workspace-manifest version-surface reconciliation, scoped by what each field MEANS: **(a) dep-edge floors
       (`repositories{}.dependencies[].version` `>=0.1.20,<1.0.0` style) are the INTENTIONAL range-pin floors — never
       "fix" them to latest** (that would defeat the pull-not-push promotion model and force consumer re-pins);
       `check-internal-version-constraints.py` already verifies satisfiability. **(b) `repositories{}.version` scalar is
@@ -228,16 +232,17 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       SATISFIABILITY (floor ≤ versions{}[dep] < ceiling — explicitly NOT floor==latest), and (3) wire it `--warn-only`
       into PM QG post-gates (today it only runs inside `admin-force-sync-all-to-main.sh:750`).
 
-- [x] ✅ [DONE 2026-06-11: get_version_tag stdlib port, PM@d293ddde — companion to L97] [INFRA] P2. **FINDING (2026-06-09) — `get_version_tag` in `python-quality-gates-v2.yml` is silently degraded: the
-      Clone step runs BEFORE `uv sync`, so `from packaging.version import Version` fails → it returns "" → the
-      "version-aware" clone ALWAYS falls back to a branch/main clone, never actually resolving to a published tag.**
-      This is WHY the phantom could happen silently (no tag resolution + no range check). Discovered while fixing
-      FIX-2's `assert_dep_in_range` (which now uses stdlib tuple-compare to avoid the same trap + loud-fails on
-      out-of-range — validated green on alerting-service run 27199812587:
-      `dep unified-trading-library: OK 0.3.167 satisfies     >=0.1.0,<1.0.0`). **Fix (deferred — behavior change, blast
-      radius):** port `get_version_tag` to the same stdlib tuple-compare so it actually resolves the latest IN-RANGE
-      published tag (floor AND upper), making the clone genuinely version-aware. Risk: repos would then test against the
-      published tag instead of branch HEAD — needs a deliberate rollout, not a drive-by.
+- [x] ✅ [DONE 2026-06-11: get_version_tag stdlib port, PM@d293ddde — companion to L97] [INFRA] P2. **FINDING
+      (2026-06-09) — `get_version_tag` in `python-quality-gates-v2.yml` is silently degraded: the Clone step runs BEFORE
+      `uv sync`, so `from packaging.version import Version` fails → it returns "" → the "version-aware" clone ALWAYS
+      falls back to a branch/main clone, never actually resolving to a published tag.** This is WHY the phantom could
+      happen silently (no tag resolution + no range check). Discovered while fixing FIX-2's `assert_dep_in_range` (which
+      now uses stdlib tuple-compare to avoid the same trap + loud-fails on out-of-range — validated green on
+      alerting-service run 27199812587: `dep unified-trading-library: OK 0.3.167 satisfies     >=0.1.0,<1.0.0`). **Fix
+      (deferred — behavior change, blast radius):** port `get_version_tag` to the same stdlib tuple-compare so it
+      actually resolves the latest IN-RANGE published tag (floor AND upper), making the clone genuinely version-aware.
+      Risk: repos would then test against the published tag instead of branch HEAD — needs a deliberate rollout, not a
+      drive-by.
 
 ## Success criteria
 
