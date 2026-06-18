@@ -456,7 +456,9 @@ jobs:
           DEP_REPOS: ${{ inputs.dep_repos }}
         run: |
           uv venv .venv
-          uv sync
+          # 1.5b frozen-lock: install the COMMITTED lock EXACTLY (no re-resolve) — local==CI parity.
+          # --frozen NOT --locked: --locked hard-fails on the semver-agent CI-side `version =` bump.
+          uv sync --frozen
           # Install test-only sibling deps that were cloned (DEP_REPOS) but are NOT in
           # [project.dependencies], so `uv sync` skips them — e.g. deployment-api for
           # deployment-service, or UTL/UAC for unified-trading-pm (declares no UTL/UAC project dep,
