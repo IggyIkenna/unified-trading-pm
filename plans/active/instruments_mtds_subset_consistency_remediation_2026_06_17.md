@@ -338,10 +338,13 @@ guard is now entitlement window + dataset, surfaced as 403/entitlement not 402/p
 schema = L0 (16y window) → the instrument backfill can pull the FULL universe within the 3 datasets, cost-free within
 credits. Tracked todos below.
 
-- [ ] [CODE] P1. **Databento subscription cutover (MTDS+UAC)**: single-key config (use_multi_key_rotation=False,
-      num_api_keys=1; fix the num_keys=20-asserting test; delete transitional secret `databento-api-key-1`) + codify the
-      schema→free-window + 3-dataset allowlist SSOT + enforce as pre-request guard in the adapter. —
-      market-tick-data-service / unified-api-contracts
+- [x] ✅ [CODE] P1. **Databento subscription cutover (MTDS+UAC+IS)** — DONE: single-key config
+      (`use_multi_key_rotation=False`, `num_api_keys=1`, `DEFAULT_NUM_API_KEYS=1`; num_keys-asserting test fixed to read
+      `get_num_api_keys()`; transitional secret `databento-api-key-1` DELETED — only `databento-api-key` remains) +
+      schema→free-window + 3-dataset allowlist SSOT (`databento_subscription_allowlist.py` @31db3b0) enforced as the
+      pre-request guard at the MTDS get_range chokepoint AND the IS `definition`-schema fetch (with dataset-level shard
+      isolation so an off-allowlist dataset doesn't hard-fail siblings). — market-tick-data-service@88d1c65e /
+      instruments-service@86ecc67b / unified-api-contracts@3b76c0bc | all QG green.
 - [ ] [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 +
       DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service
 - [ ] [CODE] P1. **`ohlcv-1s` has NO `BarTimeframe` member → OHLCV close-edge conversion raises** (surfaced 2026-06-18
