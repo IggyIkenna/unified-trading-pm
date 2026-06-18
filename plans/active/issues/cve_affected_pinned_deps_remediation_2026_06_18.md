@@ -19,6 +19,26 @@ source:
 > do a proper follow-up exercise to resolve **all** of these CVE-affected deps — **after** the uv frozen-lock work
 > (Phase 1.5b of `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`) lands.
 
+> **Scope broadened (Harsh 2026-06-18):** this is the **one-by-one external-dependency compatibility audit** — check
+> each external dep for the latest version that is compatible with our code, **no mass updates**, validating QG per dep.
+> The 1.5b fleet `uv lock --upgrade` validation proved why: most latest external versions passed QG, but some BREAK
+> (fastapi/starlette below), so we keep the working versions now and upgrade each dep deliberately + cleanly. Covers
+> both **CVE-affected pins** (table further down) AND **breaking-version caps** (non-CVE, e.g. fastapi/starlette).
+
+## Breaking-version caps (non-CVE) — capped in 1.5b, fix-and-adopt here
+
+| Dep           | Working (kept) | Capped out | What breaks                                                                                                                                                                           | Cap applied (1.5b)                                                                                          | Fix to adopt later                                                                                                                            |
+| ------------- | -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **starlette** | 1.1.0          | 1.3.1+     | wraps `include_router` as `_IncludedRouter` (no `.path`) → `[r.path for r in app.routes]` raises `AttributeError` (QG fail: strategy-service, client-reporting-api, features-service) | `starlette>=1.1.0,<1.3.0` (floor lowered from the 1.3.1 CVE-fix floor; CVE-2026-54283/-54282 stays ignored) | fix the `.path` route-introspection in UTL `service_framework/fastapi_factory.py` + the 3 repos' tests to handle `_IncludedRouter`, then lift |
+| **fastapi**   | 0.135.1        | 0.137.2+   | pulls starlette 1.3.1 (above)                                                                                                                                                         | `fastapi>=0.115.0,<0.137.0`                                                                                 | same fix; then lift                                                                                                                           |
+
+Both caps are in `workspace-constraints.toml` as of 1.5b; the per-repo pyproject + lock rollout rides the 1.5b fleet
+pass.
+
+**Provenance:** the 1.5b fleet `uv lock --upgrade` validation (2026-06-18) — 16/22 repos passed QG on latest deps, 3
+failed on this fastapi/starlette break, 2 on a pre-existing version-alignment drift (deployment-api,
+system-integration-tests), 1 (alerting-service) on a test still to investigate.
+
 ## What I found
 
 The fleet carries a **sanctioned `--ignore-vuln` block of 20 advisory IDs** in

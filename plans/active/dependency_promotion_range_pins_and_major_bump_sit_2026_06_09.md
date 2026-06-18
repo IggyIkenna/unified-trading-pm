@@ -259,6 +259,29 @@ one):**
 
 **Phase 1.5b — flip to frozen + unify local with CI (the parity win — gated on 1.5a):**
 
+> **DECISION + validation (2026-06-18, operator Harsh) — Option A: keep current WORKING external deps; do NOT
+> mass-upgrade.** The fleet `uv lock --upgrade` validation (regen→QG, tier-ordered, 22 repos) proved the latest external
+> set is NOT all safe: **16/22 passed QG on latest deps; 6 failed** — (a) **3 real dep breaks** (fastapi 0.137.2 /
+> starlette 1.3.1 wrap included routers as `_IncludedRouter` (no `.path`) → break `[r.path for r in app.routes]`
+> route-introspection in strategy-service / client-reporting-api / features-service); (b) **2 pre-existing
+> version-alignment blocks** (deployment-api, system-integration-tests — QG pre-flight, NOT dep-related); (c) **1 to
+> investigate** (alerting-service — `test_synthetic_false_does_not_log_suppressed_event`). So 1.5b ships the **current
+> working locks** under `--frozen` (they pin the deps the repos run today), **caps fastapi/starlette** so a future
+> `--upgrade` can't pull the breaking versions (DONE in `workspace-constraints.toml`: `fastapi<0.137` /
+> `starlette>=1.1.0,<1.3.0`), and defers the one-by-one external-dep upgrades (incl. the fastapi/starlette
+> `_IncludedRouter` fix) to `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`. **Remaining steps (ordered):**
+>
+> 1. Revert the 22 `--upgrade` regens → current working locks (we ship current, not latest).
+> 2. Roll the fastapi/starlette cap into the 14 declaring repos' pyproject + `canonical-dependency-manifest.json`; regen
+>    those locks (pins the working version within the cap).
+> 3. **Smoke `--frozen` install-semantics on ONE repo before templating** — `uv pip install -e .` → `uv sync --frozen`
+>    changes venv/prune behaviour (siblings are editable sources in the lock; confirm `uv sync --frozen` installs them +
+>    root + externals into the QG venv without pruning, else reorder). Get the exact working command FIRST.
+> 4. Flip `--frozen` in the 3 templates (CI `:459`, `base-service.sh:331`, `base-library.sh:191`) per the smoke result.
+> 5. **Mode-B validate** fleet-wide: current locks + caps + `--frozen` + QG (the actual end-state) — tier-ordered.
+> 6. On green, commit + roll out; then the guardrail (floor-vs-pin, NOT `uv lock --check` — it treadmills on the semver
+>    `version =` bumps) + the DOCS rule.
+
 - [ ] [CI] P1. `python-quality-gates-v2.yml:459` `uv sync` → `uv sync --frozen` (the one-line diff drafted for Ikenna
       2026-06-12, now unblocked by 1.5a). `--frozen` NOT `--locked` (tolerates the semver CI-side `version =` bump).
       Repo: unified-trading-pm (template + roll out fleet-wide).
