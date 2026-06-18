@@ -4,8 +4,12 @@ name: repo_scripts_characterization_2026_06_18
 type: audit-result
 epic: infrastructure_master
 parent_plan: plans/active/repo_scripts_governance_audit_2026_06_18.md
+instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 created: 2026-06-18
+date: 2026-06-18
 author: harshkantariya [autonomous scripts audit]
+auditor: harshkantariya [autonomous scripts audit]
+status: complete
 assigned_vm: vm-cross-cutting
 method:
   6 read-only Opus sub-agents, one per repo-cluster; per-script skim (docstring + key imports + filename) + git

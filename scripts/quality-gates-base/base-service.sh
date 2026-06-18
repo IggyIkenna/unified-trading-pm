@@ -937,14 +937,15 @@ for g in ${HARDCODED_PROJECT_EXCLUDE_GLOBS[@]+"${HARDCODED_PROJECT_EXCLUDE_GLOBS
 codex_rg "central-element-[0-9]+" --type py --glob "!tests/**" "${HP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Hardcoded project ID in production — use config.gcp_project_id"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in production"
 
-# GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
+# GOOGLE_CLOUD_PROJECT/GCP_PROJECT are legacy — only GCP_PROJECT_ID is canonical (CLAUDE.md project-id env rule)
 # GCP_PROJECT_ID_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/rollout-*.py")
 GCP_EXTRA=()
 for g in ${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]+"${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}"}; do GCP_EXTRA+=(--glob "$g"); done
-# Exclude: docstrings (triple-quoted), comments, and noqa-annotated lines
-_gcp_id_hits=$(codex_rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
+# --pcre2 REQUIRED: the GCP_PROJECT(?!_ID) negative-lookahead errors under the default rg engine,
+# which '|| :' would swallow into a silent no-op. Exclude docstrings/comments/noqa lines.
+_gcp_id_hits=$(codex_rg --pcre2 "GOOGLE_CLOUD_PROJECT|GCP_PROJECT(?!_ID)" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v '^\s*#\|^\s*"""\|# noqa: qg-gcp-project-id\|"""$' || :)
-[[ -n "$_gcp_id_hits" ]] && { echo "$_gcp_id_hits"; log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; V=$(( V + 1 )); } || log_success "No GCP_PROJECT_ID usage"
+[[ -n "$_gcp_id_hits" ]] && { echo "$_gcp_id_hits"; log_fail "Use GCP_PROJECT_ID; banned: GOOGLE_CLOUD_PROJECT, GCP_PROJECT (except config.py)"; V=$(( V + 1 )); } || log_success "Project ID uses GCP_PROJECT_ID"
 
 # GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
 # Acceptable: pytest.skip inside _skip_integration_without_creds autouse fixture (integration marker pattern)
