@@ -243,7 +243,32 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       post-delete. **Repoint the probe to the canonical `pipeline_mode=` shape** (list `day={D}/` + match
       `pipeline_mode=*/asset_group={ag}/`, or prepend the derived `pipeline_mode={mode}_{source}/`) BEFORE any legacy
       delete. Same check the deployment-api drilldown `_instruments.py` + any other GCS-listing reader. — deployment-api
-- [ ] [INFRA] P1. **Phase D — DELETE old legacy-shape GCS duplicates (OPERATOR-GATED inspection)**: the bare
+> **🟢 RESCAN COMPLETE + INDEPENDENTLY VERIFIED (2026-06-18).** Full twin-walk of all 5 market-data-tick buckets
+> (`e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py`@a294b2c; per-AG maps at
+> `_index/audit/legacy_dup_delete_list_{ag}.parquet`; findings PM PR #403). **CRITICAL: only cefi is actually migrated.**
+> cefi = 1,077,672 SAFE-TO-DELETE (~9.98 TB, byte-identical `pipeline_mode=` twins — I spot-verified 5/5 size-match) +
+> 15 migrate-first. **defi (352,062) / tradfi (1,706,332, incl VIX) / sports (252,318) / pred (573,451) = ALL MIGRATE-FIRST
+> (~179 GB, NO canonical twin — verified 3/3 tradfi have twin_exists=False)** — their canonicalisation never completed /
+> was a RESTRUCTURE (pred renamed keys+stems; tradfi bulk is dash-separated non-hive never canonicalised), so the legacy
+> objects are the LIVE copy → deleting them LOSES DATA. **Only cefi is delete-safe today.** e2e 48h research data: CLEAN —
+> HL perp_funding/perp_daily_ctx in standalone `perp-funding-*` bucket + LST in `lst-rates-*` (BOTH out of the 5 in-scope
+> buckets); cefi funding reads the canonical `pipeline_mode=batch_tardis` (the safe-delete list is their legacy twin →
+> delete preserves reads); Aster/Drift re-downloadable; no runaway/unaccounted data, no DANGER flag. **Corollary for the
+> reader-repoint (P0 above): canonical-only `pipeline_mode=` reads work ONLY for cefi today; defi/tradfi/sports/pred would
+> orphan EVERYTHING under canonical-only until their objects are migrated → the per-AG OBJECT migration is now a hard
+> prerequisite for BOTH their canonical-only reads AND their legacy delete.**
+
+- [ ] [INFRA] P0. **Migrate-first the 4 un-migrated AGs' OBJECTS to canonical `pipeline_mode=` shape (defi/tradfi/sports/
+      pred, ~2.88M objects / 179 GB)** — their canonical migration never completed (tradfi never hive-canonicalised; pred
+      restructured; defi/sports partial). Run/complete `migrate_{defi_full,tradfi}_to_v9_canonical.py` (+ sports/pred
+      equivalents) on in-region VMs (gcs_copy_object workers=32) to create the canonical twins, then re-run the twin-audit
+      → 0 migrate-first per AG. ONLY THEN are those AGs' canonical-only reads orphan-free + their legacy objects
+      delete-safe. cefi needs NONE of this (already twinned). — market-tick-data-service / deployment-service
+- [x] ✅ [INFRA] P1. **Phase D rescan + delete-list — DONE + verified.** cefi SAFE-TO-DELETE list ready for operator
+      inspection (`legacy_dup_delete_list_cefi.parquet`, 1,077,672 objs / ~9.98 TB, exclude the 15 migrate-first); the
+      other 4 AGs are migrate-first (above), NOT deletable yet. e2e research data accounted-for + safe. Deletion remains
+      OPERATOR-GATED (inspect→confirm→delete).
+- [ ] [INFRA] P1. **Phase D — DELETE legacy GCS dupes (OPERATOR-GATED, cefi-only today)**: the bare
       `raw_tick_data/by_date/day=*/asset_group={ag}/...` objects are EXACT duplicates of canonical
       `pipeline_mode={mode}_{source}/asset_group={ag}/...` twins (verified: same instrument exists at both). They no longer
       cause UI double-count (data-status reads the cell-reduced manifest + deployment-api@6bcac01 drilldown is
