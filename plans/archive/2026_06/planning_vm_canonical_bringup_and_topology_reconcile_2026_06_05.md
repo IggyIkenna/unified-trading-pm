@@ -81,9 +81,9 @@ related_plans:
       `$0`-API Max-plan-slot cross-plan-contradiction + governance-doc-drift detector). Its header said it was "BUILT
       but only runs once the planning-VM orchestrator is live" — which THIS plan's re-provision just made true (5 live
       planning slots). The only GAP was the on-merge trigger: wired `main-backmerge-to-ldr.yml` (PM-only step, gated on
-      `decision != noop`) to `POST /api/plan-health/dispatch` after each main↔LDR back-merge, so the agent runs on every
-      LDR→main reconciliation (not just the daily cron) and the plans stay clean as the branches sync. The FF main→LDR
-      itself is the deterministic back-merge job (already there). I dropped my initial escalation.py
+      `decision != noop`) to `POST /api/plan-health/dispatch` after each main↔LDR back-merge, so the agent runs on
+      every LDR→main reconciliation (not just the daily cron) and the plans stay clean as the branches sync. The FF
+      main→LDR itself is the deterministic back-merge job (already there). I dropped my initial escalation.py
       `wall_type=plan_health` duplicate in favour of the existing `/api/plan-health/dispatch`. Repos:
       `unified-trading-pm` (workflow template + copy). parent_epic: orchestrator_master.
 - [x] ✅ [INFRA] P1. **Make `ORCHESTRATOR_VM_ID=planning` durable in the central VM's provisioning.** SHIPPED 2026-06-05

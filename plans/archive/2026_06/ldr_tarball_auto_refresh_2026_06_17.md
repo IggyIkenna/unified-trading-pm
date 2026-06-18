@@ -2,7 +2,7 @@
 title: LDR → VM-deployment tarball auto-refresh (Cloud Run Job + cron)
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
@@ -10,6 +10,10 @@ priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # LDR → VM-deployment tarball auto-refresh
 

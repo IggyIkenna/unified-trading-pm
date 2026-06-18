@@ -22,8 +22,9 @@ status: RESOLVED
 > features-service on the Linux runner is GREEN (verified — main v2 SUCCESS on multiple recent runs; the suite runs to
 > completion under `fork`). The doc's remaining "iteration 2+ / add mock-GCS-store reset" was a CONTINGENCY gated on
 > Linux CI still being red after d39d154f — it is NOT, so no further isolation work is required. The macOS type-check
-> >300s timeout (a separate local-env lever) is tracked in `quality_gates_resource_contention_speedup_2026_06_02.md`. No
-> codex `SSOTs:` section; no new durable contract.
+>
+> > 300s timeout (a separate local-env lever) is tracked in `quality_gates_resource_contention_speedup_2026_06_02.md`.
+> > No codex `SSOTs:` section; no new durable contract.
 
 ## What I found
 

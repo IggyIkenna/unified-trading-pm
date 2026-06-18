@@ -3,7 +3,7 @@ title: CI/local-QG parity — local LDR-checkout QG (dep order) is the staging o
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 4
@@ -19,6 +19,10 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # CI/local-QG parity — local is the oracle
 
@@ -81,7 +85,22 @@ defect in the parity, and it gets audited and closed, not normalized.
       env-guarded out of the bootstrap). Verified: fresh-venv PM QG `1541 RED → 1452/1511 GREEN` (QG_EXIT=0). Evidence:
       `unified-trading-pm@<sha>` | `scripts/quality-gates-base/base-service.sh`. base-service is SOURCED from PM by
       every repo (no per-repo copy) → fleet-live for all local runs, no rollout needed.
-- [x] ✅ [SCRIPT] P1. **PM basedpyright skew — THIRD root cause: the editable install landed in the WRONG interpreter (`source activate` ≠ retargeting `uv pip install`), Harsh-laptop 2026-06-15.** The 2026-06-11 `WORKSPACE_ROOT` fix above made the dir-check find the sibling lib, but on a host with a pyenv/global interpreter `source .venv/bin/activate` did NOT make `uv pip install -e <lib>` target `.venv` — uv resolved to `~/.pyenv/versions/3.13.9` (confirmed: `uv pip install` printed "Using Python 3.13.9 environment at: …/.pyenv/…"). So UTL/UAC landed in the GLOBAL env, NOT `.venv`; basedpyright (which reads `venv=".venv"`) saw `unified_trading_library` UNRESOLVED → an Unknown-type cascade (PM local **1627** = 483 reportUnknownVariableType + 420 reportUnknownMemberType + 328 reportUnknownArgumentType + 295 reportAny + 69 reportUnknownParameterType, only **4** reportMissingImports — i.e. resolved-at-module-level-but-Unknown-typed). Installing UTL into `.venv` explicitly drops it **1627 → 1513 ≤ ceiling → local GREEN** (matches CI's in-image env which has UTL). **FIX**: both `base-service.sh` AND `base-library.sh` now pass `--python "$_venv_py"` (`.venv/bin/python`) on every editable install + `log_warn` (loud, no more `2>/dev/null` swallow) on failure; base-library ALSO gained the `WORKSPACE_ROOT` sibling resolution it never had (it was `${REPO_ROOT}/$lib`-only). Verified from a CLEAN state (UTL uninstalled → fixed bootstrap reinstalls into `.venv` → `1513/1517 GREEN`, "No swallowed errors"). — unified-trading-pm PR #330 (auto-merge) | base-service.sh + base-library.sh. **REVIEW-REQUESTED (Ikenna): fleet gate-bootstrap machinery.**
+- [x] ✅ [SCRIPT] P1. **PM basedpyright skew — THIRD root cause: the editable install landed in the WRONG interpreter
+      (`source activate` ≠ retargeting `uv pip install`), Harsh-laptop 2026-06-15.** The 2026-06-11 `WORKSPACE_ROOT` fix
+      above made the dir-check find the sibling lib, but on a host with a pyenv/global interpreter
+      `source .venv/bin/activate` did NOT make `uv pip install -e <lib>` target `.venv` — uv resolved to
+      `~/.pyenv/versions/3.13.9` (confirmed: `uv pip install` printed "Using Python 3.13.9 environment at: …/.pyenv/…").
+      So UTL/UAC landed in the GLOBAL env, NOT `.venv`; basedpyright (which reads `venv=".venv"`) saw
+      `unified_trading_library` UNRESOLVED → an Unknown-type cascade (PM local **1627** = 483
+      reportUnknownVariableType + 420 reportUnknownMemberType + 328 reportUnknownArgumentType + 295 reportAny + 69
+      reportUnknownParameterType, only **4** reportMissingImports — i.e. resolved-at-module-level-but-Unknown-typed).
+      Installing UTL into `.venv` explicitly drops it **1627 → 1513 ≤ ceiling → local GREEN** (matches CI's in-image env
+      which has UTL). **FIX**: both `base-service.sh` AND `base-library.sh` now pass `--python "$_venv_py"`
+      (`.venv/bin/python`) on every editable install + `log_warn` (loud, no more `2>/dev/null` swallow) on failure;
+      base-library ALSO gained the `WORKSPACE_ROOT` sibling resolution it never had (it was `${REPO_ROOT}/$lib`-only).
+      Verified from a CLEAN state (UTL uninstalled → fixed bootstrap reinstalls into `.venv` → `1513/1517 GREEN`, "No
+      swallowed errors"). — unified-trading-pm PR #330 (auto-merge) | base-service.sh + base-library.sh.
+      **REVIEW-REQUESTED (Ikenna): fleet gate-bootstrap machinery.**
 
 - [x] ✅ [SCRIPT] P2. **Manifest-import-alignment parity gap — FIXED 2026-06-10.** (1) Code reconciled to the docstring:
       `tests` added to `EXCLUDE_SEGMENTS` — the prior in-code "tests included" comment conflated EXTERNAL flat-deps with
@@ -141,7 +160,10 @@ is the staging oracle"; `full_cicd_sit_target_state_2026_05_24.md` cross-link (S
       deployment-api `CODEX_MAX_VIOLATIONS` bumped 23→24 to unblock the staging promotion (the 9 offenders are
       PRE-EXISTING, not from the monitoring work). NEVER reintroduce `grep -P` in the gate. Repos: unified-trading-pm
       (base-service.sh + snapshot.sh) + deployment-api (budget). Verified: macOS slice `✅ ALL QG PASSED` at 24.
-- [x] ✅ **[DONE 2026-06-12 — went further than 24→23: the deep-import class was fully CLEARED. All 8 two-level `unified_api_contracts.registry.<X>` call sites switched to the one-level facade, UAC re-exports landed (`c8287d3`); deployment-api `CODEX_MAX_VIOLATIONS` now 6 (24→22→16→6, commits 5127517/0686968/94e4feb).]** [SCRIPT] P2. **Ratchet deployment-api 24→23** — re-export the 9 two-level registry symbols
+- [x] ✅ **[DONE 2026-06-12 — went further than 24→23: the deep-import class was fully CLEARED. All 8 two-level
+      `unified_api_contracts.registry.<X>` call sites switched to the one-level facade, UAC re-exports landed
+      (`c8287d3`); deployment-api `CODEX_MAX_VIOLATIONS` now 6 (24→22→16→6, commits 5127517/0686968/94e4feb).]**
+      [SCRIPT] P2. **Ratchet deployment-api 24→23** — re-export the 9 two-level registry symbols
       ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
       tardis_free_coverage}) at the UAC one-level facade (`unified_api_contracts/registry/__init__.py`) + switch the 9
       call sites (data_status_service / path_combinatorics / config / client_treasury / data_status_hierarchical) to

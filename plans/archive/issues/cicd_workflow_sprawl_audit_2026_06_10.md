@@ -7,9 +7,13 @@ source:
   - scripts/workflow-templates/
   - "fleet-wide dispatch-graph verification, slot-4 @ LDR 2026-06-10 (PM a71add30a)"
 locked_by: live-defi-rollout
-status: active
+status: archived
 priority: P1
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # CI/CD workflow sprawl audit — what can be removed / merged
 

@@ -148,6 +148,26 @@ this plan supersedes the **kill+fresh-respawn** half of that work with resume.
       watchdog log `watchdog_usage_cap_resumed` / `main_agent_rate_limit_resumed` on a real cap is the operator's to
       observe on the VM (a restart of the live `orchestrator.service` is outside a laptop slot's scope).
 
+### Phase 5 — Follow-up (OPEN, found 2026-06-18): extend context-preserving resume to the DEAD / heartbeat-silent reap path
+
+This plan wired `--resume` ONLY to the usage-cap triggers (`_handle_usage_cap` worker + `_handle_rate_limit_modal`
+main). The OTHER watchdog kills do NOT resume: `autospawn._do_spawn` always mints a NEW `claude_session_id`
+(`new_session_id()`, `autospawn.py:396`) and spawns FRESH (`autospawn.py:446`), so a worker reaped for
+**heartbeat-silent** (the genuinely-dead / crashed case) comes back **without its prior context**. The plumbing already
+exists (persisted `SlotRow.claude_session_id`, `tmux_spawn.spawn(..., resume_session_id=) → --resume`) — the
+reap→respawn path just never USES it. This is the third arm of the operator's unified stuck-recovery model (2026-06-18:
+"account exhausted → switch account; otherwise if alive → nudge `continue`; if NOT alive → reap the tmux session +
+`--resume` so the new session starts with prior context") — arms 1 (usage-cap switch) + 2 (nudge) are shipped; this arm
+is the gap.
+
+- [ ] [ORCHESTRATOR] P2. Wire the watchdog reap → respawn to `--resume <SlotRow.claude_session_id>` when one is
+      persisted, **gated by kill REASON**: **heartbeat-silent / crashed → RESUME** (preserve in-flight context);
+      **context-full → FRESH** (resuming a maxed-out context just re-fills it — keep fresh); **stuck-at-prompt
+      nudge-exhausted fallback → design call** (resume risks re-wedging on the same stuck state; default FRESH unless
+      the wedge cause is detectable). Today every non-cap kill is a fresh respawn (context lost). Repo:
+      agent-orchestrator (`server/worker_liveness_watchdog.py` reap branches + `server/autospawn._do_spawn`). Composes
+      with this plan's usage-cap resume + the session-id persistence already shipped.
+
 ## Success criteria
 
 - A worker or the main agent that hits its account's usage cap is **continued on a fresh headroom account with its

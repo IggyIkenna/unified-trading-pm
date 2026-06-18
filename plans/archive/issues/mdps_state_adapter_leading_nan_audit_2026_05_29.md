@@ -9,7 +9,10 @@ estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
 status: resolved
 resolved: 2026-06-09
-resolution: ACKED-INTO-PLAN+CODE — code+tests shipped @5a5e989/4fd962d/23d7add/56202b0 (test_finalize_session_grid_seed.py + test_prior_day_seed.py + test_state_adapter_density.py); remaining operational densify-reprocess migrated to plans/epics/mtds_mdps_master.md Phase 11 as a dispatchable - [ ] [DATA] P1 checkbox
+resolution:
+  ACKED-INTO-PLAN+CODE — code+tests shipped @5a5e989/4fd962d/23d7add/56202b0 (test_finalize_session_grid_seed.py +
+  test_prior_day_seed.py + test_state_adapter_density.py); remaining operational densify-reprocess migrated to
+  plans/epics/mtds_mdps_master.md Phase 11 as a dispatchable - [ ] [DATA] P1 checkbox
 decisions_landed: 2026-06-01
 source:
   - market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py

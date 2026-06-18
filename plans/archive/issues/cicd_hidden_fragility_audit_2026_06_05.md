@@ -16,15 +16,15 @@ status: RESOLVED
 > This audit's diagnostic role is complete. All 15 findings are now **migrated as `- [ ]` todos** into
 > `plans/active/cicd_contract_hardening_2026_06_01.md` § "CI/CD hidden-fragility findings" (the prior "Zero-open folded"
 > WAVE-table entry was an overclaim — the findings had never been absorbed as actionable work). Several were
-> **re-verified STILL LIVE on 2026-06-07** during this archival: C1 (`escalate-to-orchestrator.yml:151` still defaults to
-> the SPA host), C2 (PM `semver-agent.yml:38` still `["Quality Gates"]`), C3 (`conflict-resolution-agent.yml` still 0
+> **re-verified STILL LIVE on 2026-06-07** during this archival: C1 (`escalate-to-orchestrator.yml:151` still defaults
+> to the SPA host), C2 (PM `semver-agent.yml:38` still `["Quality Gates"]`), C3 (`conflict-resolution-agent.yml` still 0
 > label gates), H2 (3 manifest writers still outside `manifest-update`), H3 (`locked_alert_sent` set/never-reset), M2
 > (stale branch-protection IaC), M5 (`--baseline-write` unrestricted), M6 (`idempotent_skip` dead code). Partially-
-> addressed by the 06-06/07 convergence session: C2-adjacent semver work (#149/#152) + H1-adjacent reconciler (#154/#155)
-> — the migrated todos flag what to re-verify. The full per-finding evidence (file:line, `gh` run history, the "plan/doc
-> corrections needed" list, the verification log) is preserved here + in `git` history. No DEFERRED item dropped; the
-> "plan/doc corrections needed" for `cicd_contract_hardening` (C2 un-flip ~L1362, C1 update ~L248, H3 residual ~L1625)
-> are captured by the migrated C1/C2/H3 todos. No new durable contract.
+> addressed by the 06-06/07 convergence session: C2-adjacent semver work (#149/#152) + H1-adjacent reconciler
+> (#154/#155) — the migrated todos flag what to re-verify. The full per-finding evidence (file:line, `gh` run history,
+> the "plan/doc corrections needed" list, the verification log) is preserved here + in `git` history. No DEFERRED item
+> dropped; the "plan/doc corrections needed" for `cicd_contract_hardening` (C2 un-flip ~L1362, C1 update ~L248, H3
+> residual ~L1625) are captured by the migrated C1/C2/H3 todos. No new durable contract.
 
 ## What I found
 

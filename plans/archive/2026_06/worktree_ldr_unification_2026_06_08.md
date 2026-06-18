@@ -3,7 +3,7 @@ title: Worktree LDR-unification — drop per-tab branches, slots on live-defi-ro
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 8
@@ -20,6 +20,10 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
+
+> **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
+> (promotion-pipeline / quality-gates / sit-and-fleet / release-machinery). Disposition + provenance:
+> `plans/active/cicd_docs_and_consolidation_2026_06_18.md`.**
 
 # Worktree LDR-unification
 
