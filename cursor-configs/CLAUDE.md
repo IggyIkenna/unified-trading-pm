@@ -1336,6 +1336,18 @@ Where every executable/one-off lives (decision tree, top-down, first match wins)
    every repo's `scripts/` against this canon — see the SSOT's "Per-repo cleanup sweep". Composes with
    `cli-convention.md` + Peripheral-Script QG + Delete-deprecated-code + Temporary-state-named-successor.
 
+**Lifecycle marker (frontmatter) on every `scripts/` file (codified 2026-06-18)**: a 3-line greppable comment header
+(works `.sh`+`.py`) — `# Epic:` (owning epic, validated vs the registry like a plan's `assigned_vm`; multi-plan so NOT a
+single plan) · `# Lifecycle: permanent|campaign|oneoff` · `# Delete-when:` (completion condition; required for
+campaign/oneoff, omitted for permanent). Mirrors VM `lifecycle_class`. Epics are everlasting → `Epic:` is OWNERSHIP,
+`Delete-when:` is the delete trigger. **Gating: ruff-lint YES; basedpyright + coverage NO (by design — throwaway code,
+no refactor tech-debt; recurring logic → CLI).** "Last USED" is tracked via a fail-open run-ledger (`log_script_run`),
+NOT git-last-modified — stamp markers → observe usage days/weeks → prune the unused (epic-owner-confirmed,
+orphan-sweep=0; never a blind fleet `git rm`). Rollout: PM first, then all repos. SSOT:
+`codex/06-coding-standards/script-homes.md` § "Lifecycle marker" +
+`plans/active/repo_scripts_governance_audit_2026_06_18.md` (+ fleet characterization
+`plans/audit/results/repo_scripts_characterization_2026_06_18.md`).
+
 ---
 
 ## Master Plan Continuous-Verification Column (HARD RULE)

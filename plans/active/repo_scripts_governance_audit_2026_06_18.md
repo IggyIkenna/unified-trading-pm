@@ -43,6 +43,15 @@ source:
      manual header field** (a hand-updated field would rot — nobody updates a comment after every run): staleness =
      `git log -1 --format=%cs -- <script>`; a campaign script needing true run-frequency appends to a central
      auto-ledger (a `log_script_run.sh "$0"` one-liner, like `log-manifest-mutation.sh`). Full convention in Phase 0.
+6. **Rollout sequence + deletes-DEFERRED (operator 2026-06-18).** Immediate priority is the **frontmatter ROLLOUT, NOT
+   deletion** — stamp the lifecycle marker on every script so we can SEE usage, then prune later. Sequence: \*\*(1) PM
+   docs
+   - frontmatter** (the convention in `script-homes.md`/CLAUDE.md ✅ + PM's own scripts), **(2) every other repo's
+     frontmatter**, **(3) the run-logger** (`log_script_run` → central ledger), **(4) observe last-use for a few
+     days–weeks** (interim signal = git-last-modified; durable = the ledger), **(5) prune the unused**
+     (epic-owner-confirmed, orphan-sweep = 0). **No deletions until after the observation window\*\* — Phase-1's
+     DELETE/DEPRECATE/PROMOTE execution todos stay PARKED until then. Collision is a non-issue: a top-of-file marker
+     doesn't conflict with body edits.
 
 ## Verified facts (`base-service.sh` — the same script CI + staging run)
 
@@ -80,8 +89,11 @@ a verdict). Heaviest:
 
 ## Phase 0 — define + roll out the lifecycle marker convention [P2] (precedes the audit)
 
-- [ ] [DESIGN] P2. Codify the 3-line script lifecycle marker (a comment header — works for `.sh` AND `.py`, so it's not
-      Python-docstring-only):
+- [x] ✅ [DESIGN] P2. **DONE 2026-06-18** — codified the 3-line lifecycle marker convention in
+      `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" + a CLAUDE.md § "Script Homes" one-liner (marker
+      format, the `permanent|campaign|oneoff` taxonomy, `Epic`-is-ownership / `Delete-when`-is-trigger, the run-ledger
+      track-then-prune model, ruff-yes/basedpyright-no gating). Codify the 3-line script lifecycle marker (a comment
+      header — works for `.sh` AND `.py`, so it's not Python-docstring-only):
 
   ```
   # Epic: <epic-slug>                       # owning epic — validated vs plans/epics/ registry (required, ALL scripts)

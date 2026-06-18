@@ -61,6 +61,54 @@ everything that is _not_ production runtime. This doc is the SSOT for which goes
   `import boto3`), UTC datetimes, UAC types. `scripts/` is **not typechecked or covered by the main gate**, so a bypass
   rots silently — the peripheral-script QG wiring is the only guard, and only where it is wired.
 
+## Lifecycle marker (frontmatter) — every `scripts/` file declares its lifecycle (codified 2026-06-18)
+
+Every script under a repo `scripts/` carries a **3-line greppable comment header** (works for `.sh` AND `.py` — a
+comment, not a Python-only docstring) so the audit + the cleanup sweep can tell a permanent tool from a spent one-off
+**mechanically**, instead of re-deriving it each time:
+
+```
+# Epic: <epic-slug>                            # owning epic — validated vs the orchestrator_vm_registry (required, ALL scripts)
+# Lifecycle: permanent | campaign | oneoff     # required, ALL
+# Delete-when: <concrete completion condition>  # required for campaign + oneoff; permanent omits it
+```
+
+- **`permanent`** ≈ VM `LONG_LIVED` — standing tooling that legitimately recurs: the per-family dev quintet
+  (`setup.sh`/`quality-gates.sh`/`setup-workspace.sh`/`seed_mock_data.py`/`smoke_matrix.py`), QG checkers,
+  codegen-from-SSOT, deployment-service VM launchers, e2e verification harnesses. No `Delete-when`.
+- **`campaign`** ≈ a temporary-state-with-named-successor — phase-scoped, lives days→weeks (e.g. a GCS-layout
+  migration). MUST name a `Delete-when` (the milestone that ends it).
+- **`oneoff`** ≈ VM `EPHEMERAL` — run-once. `Delete-when:` is usually "after prod-run + GCS orphan-sweep = 0".
+
+**`Epic:` is OWNERSHIP, not the delete trigger.** A script spans multiple plans (a GCS cutover touches MTDS /
+instruments / deployment plans at once), so it is keyed to the everlasting **epic** (validated against the registry like
+a plan's `assigned_vm`), not a single plan. Epics never archive → the **`Delete-when`** carries the completion signal.
+**Template-managed scripts are auto-`permanent`** (`setup.sh` / `quality-gates.sh` / `quickmerge.sh`, PM-sourced).
+
+### "When was this last USED" — track-then-prune (NOT last-EDITED)
+
+The marker exists to **prune the unused**. The signal is **last-RUN**, which is NOT `git log -1` (that is last-EDITED —
+a permanent script run weekly but unedited reads as months-stale). Phased rollout:
+
+1. **Stamp the markers** (classification) fleet-wide — the current rollout (PM first, then every repo).
+2. **Track usage for a few days–weeks** — interim signal is git-last-modified; the durable signal is a **central
+   run-ledger**: each script calls a **fail-open** `log_script_run "$0"` at start → appends `{script, repo, ts, host}`
+   to `gs://<ops>/script_runs/…jsonl`; a sweep yields last-run-per-script. The logger MUST fail open (never break the
+   script if the ledger is unreachable). `last_run` is **derived from the ledger, never a hand-edited header field** (it
+   would rot).
+3. **Prune** — a `campaign`/`oneoff` whose `Delete-when` is satisfied OR that has not run in the observation window →
+   flagged to the **epic owner** to confirm + delete (orphan-sweep = 0 first). **Never a blind fleet `git rm`.**
+
+### What gates a `scripts/` file (operator 2026-06-18)
+
+- **ruff-lint: YES** (cheap rot-catch — syntax / imports / obvious bugs).
+- **basedpyright + coverage: NO — by design.** Throwaway code must not manufacture refactor tech-debt (every refactor
+  keeping soon-deleted scripts type-clean). Recurring/important logic becomes a **CLI subcommand** (gated as part of
+  `$SOURCE_DIR`), never a permanent `scripts/` file. (The cloud-discipline rot — `google.cloud`-direct / hardcoded
+  `PROJECT_ID` / inline `gs://` — is caught by extending the TID251/banned-env ratchets to `scripts/`, not by ruff.)
+- SSOT for the rollout + the fleet characterization: `plans/active/repo_scripts_governance_audit_2026_06_18.md` +
+  `plans/audit/results/repo_scripts_characterization_2026_06_18.md`.
+
 ## Anti-patterns (banned)
 
 1. **Recurring operations as loose repo scripts.** A backfill/compute that runs on a schedule or VM belongs as a
