@@ -107,9 +107,10 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion" +
   `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
 - **Editing a dep FLOOR in `pyproject.toml` → regenerate + commit `uv.lock` in the SAME commit (codified 2026-06-12)**:
-  CI installs via `uv sync --frozen` — the committed lock as-is, no re-resolution (fast + deterministic, no surprise
-  transitive deps; `--frozen` NOT `--locked`, because `--locked` hard-fails on the semver-agent's CI-side `version =`
-  bump). So a dep-floor change (incl. a CVE-fix floor bump) only reaches CI if the lock is regenerated: `uv lock` (or
+  CI **and local `quality-gates.sh`** install via `uv sync --frozen` (1.5b — local↔CI parity, the lock is the install
+  SSOT) — the committed lock as-is, no re-resolution (fast + deterministic, no surprise transitive deps; `--frozen` NOT
+  `--locked`, because `--locked` hard-fails on the semver-agent's CI-side `version =` bump). So a dep-floor change
+  (incl. a CVE-fix floor bump) only reaches CI if the lock is regenerated: `uv lock` (or
   `uv lock --upgrade-package <name>` to move an existing transitive pin) → commit `pyproject.toml` + `uv.lock` TOGETHER.
   A bare `version =` bump needs NO lock regen (`--frozen` tolerates it; root pkg is editable-installed). **Speed >
   security (operator 2026-06-12)**: no transitive-CVE HARD block — pip-audit / internal-advisories on transitive pins

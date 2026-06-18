@@ -165,13 +165,13 @@ WORKSPACE_VENV="${REPO_ROOT}/.venv-workspace"
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     unset VIRTUAL_ENV   # never inherit an activated workspace venv from the parent shell
     command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
-    # uv.lock freshness — WARN-ONLY, never blocking (2026-06-09). Nothing installs FROM the lock
-    # (every path is `uv pip install -e .`, no `uv sync`/`--frozen`/`--locked`), so the lock is a
-    # RECORD, not an enforced pin: the real dependency contract is the pyproject RANGE, which `uv pip
-    # install` enforces at install (an out-of-range MAJOR fails to resolve = the signal). Blocking here
-    # only added churn on the cosmetic internal-editable `version =` snapshot. Do NOT mutate uv.lock
-    # here either (it dirtied trees + jammed the FF-pull cron). SSOT:
-    # plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.
+    # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
+    # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
+    # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a
+    # stale lock is a real (warned) gap: regen with `uv lock` on any EXTERNAL-dep floor change in the
+    # SAME commit (internal editable bumps exempt — the lock resolves the on-disk sibling). Do NOT mutate
+    # uv.lock here (it dirtied trees + jammed the FF-pull cron). SSOT:
+    # plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.5b.
     uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
     [ ! -d ".venv" ] && uv venv .venv
     [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
@@ -182,13 +182,20 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # cascade inflating the LOCAL typecheck count vs CI. SSOT: plans/active/ci_local_qg_parity_2026_06_08.md.
     _venv_py=".venv/bin/python"; [ -x "$_venv_py" ] || _venv_py="python3"
     _ws_root="${WORKSPACE_ROOT:-$(cd "${REPO_ROOT:-.}/.." && pwd)}"
+    # CI-parity (1.5b frozen-lock): install root + EXTERNAL deps from the FROZEN lock — byte-for-byte
+    # with CI's `uv sync --frozen`. --frozen NOT --locked (tolerates the semver CI-side `version =`
+    # bump; --locked hard-fails on it). uv sync PRUNES packages absent from the lock, so the
+    # editable-sibling loop runs AFTER it: a sibling used only for typecheck but NOT declared in
+    # pyproject (hence absent from the lock) would otherwise be pruned right after install.
+    # SSOT: plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.5b.
+    UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --quiet \
+        || log_warn "uv sync --frozen failed (lock stale/broken?) — QG runs against the existing .venv"
     for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
         for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
             [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --python "$_venv_py" --quiet \
                 || log_warn "editable install failed for $lib — local typecheck may inflate via Unknown-type cascade"; break; }
         done
     done
-    uv pip install -e . --python "$_venv_py" --quiet 2>/dev/null || :
 fi
 if [ -f ".venv/bin/python" ]; then
     PYTHON_CMD=".venv/bin/python"
@@ -196,6 +203,24 @@ elif [ -f "$WORKSPACE_VENV/bin/python" ]; then
     PYTHON_CMD="$WORKSPACE_VENV/bin/python"
 else
     PYTHON_CMD="python3"
+fi
+
+# ── Frozen-lock floor guardrail (1.5b) — every EXTERNAL dep's uv.lock pin must satisfy its pyproject
+# range. QG installs via `uv sync --frozen`, so a stale lock (a floor bumped without `uv lock`) ships a
+# below-floor pin verbatim (failure-mode-B). BLOCKS by default (fleet proven clean 2026-06-18);
+# FROZEN_FLOOR_GATE_WARN=1 downgrades to warn. Deliberately NOT `uv lock --check` (treadmills on the
+# cosmetic semver `version =` bump). Editable/internal sibling deps are skipped (resolved on-disk).
+# SSOT: plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § 1.5b.
+_FLOOR_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_lock_satisfies_pyproject.py"
+if [[ -f "$_FLOOR_GATE" && -f "$REPO_ROOT/uv.lock" && -x "$REPO_ROOT/.venv/bin/python" ]]; then
+    if "$REPO_ROOT/.venv/bin/python" "$_FLOOR_GATE" --repo "$REPO_ROOT"; then
+        echo "✅ Frozen-lock floor gate: external uv.lock pins satisfy pyproject ranges"
+    elif [ "${FROZEN_FLOOR_GATE_WARN:-0}" = "1" ]; then
+        log_warn "Frozen-lock floor gate WARN (FROZEN_FLOOR_GATE_WARN=1; regenerate uv.lock to clear)"
+    else
+        log_fail "Frozen-lock floor gate: a uv.lock pin violates its pyproject range — run 'uv lock' (see above)"
+        exit 1
+    fi
 fi
 
 # Prefer workspace venv ruff when available (align with PYTHON_CMD)
@@ -893,7 +918,13 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-50269 / -54273 / -54276 / -54277 / -54278 / -54279 / -54280: aiohttp <=3.13.5 2026-06-15 OSV advisory
     #   batch — ALL fix_versions=[3.14.0], same vcrpy deadlock + client-only-usage exploit-surface-nil rationale as
     #   CVE-2026-34993/47265. SUCCESSOR: the same vcrpy-unblock to aiohttp 3.14.0.
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
+    # CVE-2026-54283 / -54282: starlette <1.3.0 (transitive via fastapi). The 1.5b Option-A cap LOWERED the
+    # starlette floor 1.3.1->1.1.0 (to keep working route-introspection — 1.3.1's _IncludedRouter breaks it), which
+    # re-exposes these two (1.3.1 was the CVE-fix floor). Sanctioned ignore (transitive, "speed > security" operator
+    # 2026-06-12) — MUST mirror base-service.sh:1198 (the two drifted: service had them, library did not → UTL red).
+    # Lift when the one-by-one external-dep audit adopts starlette 1.3.1+ WITH the _IncludedRouter route fix.
+    # SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3;
     # parity with base-service.sh): the OSV query runs only when the deps-hash (pyproject.toml
     # + uv.lock + ignore set + pip-audit version) changed, OR the cached clean result is older
