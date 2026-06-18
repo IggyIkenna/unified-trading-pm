@@ -77,15 +77,15 @@ plans"). Two findings are genuine _unresolved contradictions_ that need an opera
 plan-hygiene (banner/migrate/archive/frontmatter); 4 are small code fixes; 2 are "note only / latent". **0 live pipeline
 regressions found.**
 
-> **Progress (updated 2026-06-18):** **18 of 25 findings resolved.** The 8 no-decision doc/SSOT-truth fixes D2–D9
+> **Progress (updated 2026-06-18):** **21 of 25 findings resolved.** The 8 no-decision doc/SSOT-truth fixes D2–D9
 > (PM@235c5fd3b + PM@eeece9802 — ci-cd-flow.md + CLAUDE.md now match the live pipeline); the 4 operator-decision
 > findings (D1/D10 frozen-lock — **DECIDED**, impl tracked in `dependency_promotion` § Phase 1.5, in flight; D11 drop
 > in-image QG — **DECIDED**; D12 stale-premise — **RESOLVED**, issue archived; D16 scripts governance — **DECIDED**,
 > plan filed); the D14 unwired-AR-gate record + D11 callout (`cloud_build_router_aws_parity`, PM@98bdf756c); the hygiene
 > batch D13/D20/D21/D24/D25 (PM@8a05273b9); and **D15** (Firestore project-id env fix — 3 scripts + 3 workflows read
-> canonical `GCP_PROJECT_ID`, PM@409fd7661). **Still open:** D17 (note-only — latent confusion, no live bug), D18 + D19
-> (one-line comment cadence fixes), D22 + D23 (issue-migration + plan-archival hygiene). **0 live-pipeline
-> regressions.**
+> canonical `GCP_PROJECT_ID`, PM@409fd7661); plus **D17/D18/D19** (cadence + pending-vs-green rank-clarity comment
+> fixes, PM@665cdc965). **Still open:** D22 + D23 (issue-migration + plan-archival hygiene — the D23 UI plan gated on
+> `pw:L2`). **0 live-pipeline regressions.**
 
 ---
 
@@ -114,9 +114,9 @@ finding's checkbox is the triage handle (migrate to the named destination plan w
 | D9  | 🟡 LOW  | S     | ci-cd-flow.md L756-796 "Operational status snapshot 2026-06-01; being repaired" — 6wk stale                                                          | Refresh/archive section → ci-cd-flow.md                                                                       |
 | D15 | ✅ DONE | P     | `promotion_lag_monitor.py` + `reconcile_release_tags.py` use `GOOGLE_CLOUD_PROJECT` (rule mandates `GCP_PROJECT_ID`) → silent Firestore no-op on VMs | ✅ DONE 2026-06-18 — renamed env both sides; +`ci_failure_watcher.py` (same bug) + 3 workflows — PM@409fd7661 |
 | D16 | 🟡 LOW  | P     | `check_strict_quickmerge.py` carves `scripts/` as a prefix in ANY repo; CLAUDE.md implies PM-only (code more permissive)                             | Align doc OR tighten code → decision (small)                                                                  |
-| D17 | 🟡 LOW  | note  | `ci_status_store` ranks STAGING_PENDING == STAGING_GREEN but `tier_c_promotion_gate` excludes PENDING from ON_STAGING                                | Note only (latent confusion, not a live bug)                                                                  |
-| D18 | 🟡 LOW  | P     | quickmerge.sh:1481/1534 messages say "Tier-C drain ≤30min" vs live 15min                                                                             | Comment fix → quickmerge.sh                                                                                   |
-| D19 | 🟡 LOW  | P     | `sit-starvation-detector.yml` header comment "every 15 minutes" vs cron `*/30`                                                                       | Comment fix → that workflow                                                                                   |
+| D17 | ✅ DONE | note  | `ci_status_store` ranks STAGING_PENDING == STAGING_GREEN but `tier_c_promotion_gate` excludes PENDING from ON_STAGING                                | ✅ DONE 2026-06-18 — confirmed latent (not a live bug); cross-ref comments added both sites — PM@665cdc965    |
+| D18 | ✅ DONE | P     | quickmerge.sh:1481/1534 messages say "Tier-C drain ≤30min" vs live 15min                                                                             | ✅ DONE 2026-06-18 — 30→15min (2 comments; live cron `2,17,32,47`) — PM@665cdc965                             |
+| D19 | ✅ DONE | P     | `sit-starvation-detector.yml` header comment "every 15 minutes" vs cron `*/30`                                                                       | ✅ DONE 2026-06-18 — header 15→30min — PM@665cdc965                                                           |
 | D20 | 🟡 LOW  | H     | `ci_status_firestore_side_store` + `ldr_tarball_auto_refresh` carry `locked_since:2026-05-21` predating `created`                                    | Frontmatter fix → those plans                                                                                 |
 | D21 | 🟡 LOW  | H     | `fleet_git_health_orchestrator` `assigned_vm: vm-orchestrator` — that VM STOPPED 2026-06-04 (vestigial)                                              | Reassign VM → that plan                                                                                       |
 | D23 | 🟡 LOW  | H     | 4 plans/issues likely-archivable (see §"Archivable")                                                                                                 | Archive per ritual                                                                                            |
@@ -351,9 +351,12 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
       staging (ruff+pytest). Operator 2026-06-18: scripts stay out of typecheck/coverage (by design); add ruff-lint
       only; tests unchanged. **Carve scope (PM-only vs all) PENDING a scripts audit** → migrated to
       `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 3).
-- [ ] D17 🟡 — (note) STAGING_PENDING rank-equivalence vs ON_STAGING_STATUSES exclusion
-- [ ] D18 🟡 — quickmerge.sh:1481/1534 "30min" → 15min drain comment
-- [ ] D19 🟡 — sit-starvation-detector.yml header comment "15 minutes" → matches `*/30`
+- [x] D17 ✅ — (note) confirmed **latent, not a live bug**: the `_GREEN_RANK` pending==green is no-downgrade-only,
+      independent of `ON_STAGING_STATUSES` excluding PENDING for promotion readiness. Added cross-reference comments at
+      both sites so a future reader can't conflate them — PM@665cdc965
+- [x] D18 ✅ — quickmerge.sh drain-cadence comments 30min→15min (live cron `2,17,32,47`) — PM@665cdc965
+- [x] D19 ✅ — sit-starvation-detector.yml header 15→30min to match cron `*/30` (line-3 ~15min SIT run-duration is
+      correct, left) — PM@665cdc965
 - [x] D20 ✅ — fixed `locked_since` frontmatter (ci_status_firestore_side_store→2026-06-10,
       ldr_tarball_auto_refresh→2026-06-17) — 2026-06-18
 - [x] D21 ✅ — reassigned fleet_git_health_orchestrator `assigned_vm` vm-orchestrator (stopped 2026-06-04) → `planning`
