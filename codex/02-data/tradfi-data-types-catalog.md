@@ -70,6 +70,32 @@ Pre-aggregated 1-minute OHLCV bars. One row per (symbol, minute) per trading day
 tick aggregation on our side. CME and ICE are backdated to 2019-01-01 per operator full-period ask; NASDAQ and NYSE
 floor at 2023-04-15 (Databento subscription start date).
 
+> **OHLCV fetch = 1m AND 1s (operator 2026-06-18 subscription cutover).** Both `ohlcv-1m` and `ohlcv-1s` are L0/free
+> (16-year included history). We fetch BOTH (1m completes the existing corpus; 1s is the finer-grained add) and
+> aggregate the coarser bars (`ohlcv_15m` / `ohlcv_24h`) downstream — so `ohlcv-1h` / `ohlcv-1d` are NOT fetched (they
+> raise via `assert_schema_allowed`). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` +
+> `registry/databento_subscription_allowlist.py`.
+
+---
+
+### 1b. ohlcv_1s
+
+| Field               | Value                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| **CLI operation**   | `collect-ohlcv-1s` (tradfi_ohlcv_handler)                                                              |
+| **Sources**         | Databento (market data provider)                                                                       |
+| **Shard key**       | venue × instrument_id × date                                                                           |
+| **Instrument type** | `equity`, `futures_chain`                                                                              |
+| **Status**          | Production (operator 2026-06-18 cutover — additive alongside `ohlcv_1m`; L0/free 16y included history) |
+| **Schema fields**   | symbol, ts_event, venue, open, high, low, close, volume                                                |
+| **Venues**          | NASDAQ, NYSE, CME, CFE (VX futures)                                                                    |
+| **Requires**        | `databento-api-key` (Secret Manager)                                                                   |
+
+Pre-aggregated 1-second OHLCV bars — the finer-grained OHLCV granularity added in the 2026-06-18 subscription cutover.
+Databento delivers bars directly (Schema `OHLCV_1S`). Both 1s and 1m are L0/free (16y); 15m/24h are aggregated
+downstream from the 1m base. Off-allowlist OHLCV schemas (`ohlcv-1h` / `ohlcv-1d`) raise via `assert_schema_allowed`
+(derived, never fetched).
+
 ---
 
 ### 2. ohlcv_15m
