@@ -1064,3 +1064,109 @@ Turnover-reduction dispatch + the CeFi directional-signal handoff are both COMPL
 (honest forward ~1.6-1.9 per OOS), maxDD -13% (single) / -10% (multi-venue), Calmar ~2.0, fee-robust to 20bp, 2022-tail
 repaired by the squeeze overlay. Remaining winner/loser improvement is BLOCKED on the awaited cross-sectional ML signals
 (external dep) — loop terminates here, not idle-spinning.
+
+## Multi-venue CAPITAL flow + transfer instructions + reversal_z verdict + signal-status CORRECTION (2026-06-18)
+
+**CAPITAL accounting (operator: account for $ per venue + transfer instructions + plot the $ balance).** Sim: $1M total,
+equal-weight across Binance+Bybit, PnL accrues per venue, weekly rebalance to equal-weight of equity with a 5% no-move
+band. **Result: $1M -> $3.08M over 4.5yr (compounded); per-venue today Binance $1.62M / Bybit $1.46M; only 8 transfers
+in 4.5yr, ~$75k/yr moved (avg $42k/move) — multi-venue capital friction is NEGLIGIBLE** (the band + 0.63
+venue-correlation make rebalancing rare). Current instruction: move $78k Binance->Bybit to re-equalise to $1.538M each.
+Transfer log is concrete (date + direction + $) — ready to wire into a TransferIntent flow. Script
+`/tmp/capital_flow.py`; plot `/tmp/passB/capital_flow.html` (per-venue $ balance + transfer bars). Composes with
+client-funds-isolation (`TransferIntent.client_id`) — these are intra-client multi-venue moves.
+
+- [ ] [STRATEGY] P3. Productionise the multi-venue capital/transfer layer: emit weekly rebalance TransferIntents
+      (intra-client, single client_id) from the live per-venue balances vs target weights, 5% no-move band. **Repo:
+      e2e-testing -> execution-service TransferCoordinator.**
+
+**reversal_z overlay — TESTED on my book, does NOT help (confirms the CeFi agent).** The economically-sensible use
+(reduce a short when reversal_z says oversold/squeeze-prone) HURTS: Sharpe 2.21->1.99/2.17, 2022 +0.58->+0.34. The
+opposite sign nominally adds +0.07 (2.28) but is economically BACKWARDS (cuts positions when the reversal signal is
+FAVOURABLE to them) = overfit-from-trying-both-signs, not a real edge. NOT shipped (agent warned context-only).
+
+**SIGNAL-STATUS CORRECTION (supersedes the earlier "blocked on awaited ML signals").** The signals are in GCS
+(`…/overlay/`) and have been TESTED — there is no better winner/loser signal coming: (a) the CeFi agent's actual
+cross-sectional ML signal (15m ensemble, daily-aggregated) HURTS the reversion carry (cs-veto 0.55 / cs-halve 0.77 /
+standalone -1.08 on theirs) and does NOT cut the single-coin tail; (b) reversal alpha-blend HURTS (horizon mismatch, the
+carry already harvests reversion); (c) reversal_z HURTS on my book (above). STRUCTURAL reason: cs/reversal are REVERSION
+signals — the WRONG tool for squeeze/dump avoidance (they lean INTO a squeeze). The ONE transferable accretive overlay
+is the MOMENTUM/breakout `sigma_move_2d` squeeze veto — **already shipped** (e2e@198ee62). **The book is COMPLETE, not
+blocked.** The CeFi cs alpha is real but 15-min-only — genuinely no value at the daily funding-carry horizon.
+
+## Capital-flow CORRECTION — fixed-leverage moves ~4x more (operator 2026-06-18)
+
+The earlier "$75k/yr moved" was the FULL-FUNDING regime (post full capital, let PnL compound in place, rebalance only on
+weight drift) — which minimises transfers but lets LEVERAGE FLOAT DOWN as you profit (under-deployed, idle capital).
+Re-modelled FIXED-LEVERAGE (hold each venue's deployed capital flat, sweep PnL gains to a central treasury / top up
+losses weekly, 5% band) per the operator's point that exposure + margin must be held: **$302k/yr moved (4.0x more,
+~30%/yr of capital ~= the book's PnL flow)** — gains swept out (margin would balloon + de-lever), losses topped up.
+Treasury accumulates ~$1.15M of swept PnL on a $1M base (redeploy / yield). **Tradeoff is leverage policy:**
+full-funding = fewer transfers but drifting-down leverage + idle capital; fixed-leverage = ~4x transfers (still cheap —
+weekly stablecoin sweeps, near-zero fee) but capital-efficient + constant exposure (the regime you'd actually run). The
+P3 TransferIntent todo should emit the FIXED-LEVERAGE weekly sweep/top-up (not the full-funding drift-rebalance).
+Scripts `/tmp/capital_flow{,2}.py`; plots `capital_flow.html` (full-funding) + `capital_flow_fixedlev.html`
+(fixed-leverage + treasury).
+
+## Capital/leverage module + paper-trading runner + return convention (2026-06-18, /autonomous)
+
+**Return convention (operator-confirmed):** the book's % returns are on the NET capital / posted margin (the weights sum
+to +1 long / -1 short = 1x net, 2x gross notional), NOT on the gross $ — so +27%/yr is on net (~half on gross). It is
+NON-COMPOUNDED: fixed notional sized to the INITIAL capital (vol-targeted to constant 10% vol on that fixed base), PnL
+not reinvested -> linear returns + profit accrues to treasury separately. **Vol-target DE-LEVERS the gross** from the
+raw 2.0x to ~0.9x avg (0.66x on 2026-06-18), so the book is UNDER-deployed at 10% vol -> only ~18% margin needed, ~82%
+free; raising `--vol-target` deploys toward the full 2x for proportionally more return + DD (the "fixed size" is a dial,
+fixed per chosen vol target).
+
+**SHIPPED `funding_reversion_multivenue_capital.py` (e2e@0751d27):** plots gross leverage (raw 2x -> vol-targeted ~0.9x,
+
+- 1x-net reference line), margin posted per venue, FREE capital, TREASURY of swept PnL ($1.15M on $1M), and both capital
+  regimes (full-funding $75k/yr transfers vs fixed-leverage $302k/yr ~ the PnL flow). CLI
+  `--capital --vol-target --max-leverage --dd-buffer`. Plot `funding_capital_book.html`.
+
+**SHIPPED `funding_reversion_paper_trade.py` (e2e@fd96c0b):** the live desired-state engine (the secondary/CLI PAPER
+path). Pulls live funding+price per venue (Binance fapi + HL GCS + Bybit/Aster live), computes today's desired positions
+(full causal stack, vol-targeted to actual ~0.66x gross), emits per coin/venue: side, weight, $ notional, the coin's
+funding yield; net funding carry (+13%/yr on deploy); margin/free per venue; persists `desired_positions.json`. NO real
+orders. Daily runs accrue the transfer + paper-PnL ledger. **This wires the book to paper trading** — the production
+path (fold into strategy-service `CarryStakedBasisRankAllocator` + promote paper->live VM) stays operator-gated.
+
+The full deployable stack is now 3 committed e2e scripts: `funding_reversion_crossvenue_book.py` (backtest, 8 causal
+overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.py` (live paper engine).
+
+## Ensemble orchestrator engine + productionization plan (2026-06-18, /autonomous)
+
+**SHIPPED `funding_ensemble_engine.py` (e2e@5859ec0):** the orchestrator across all 4 strategies + per-venue capital +
+liquidation. (1) funding-dispersion
+($-neutral perp), (2) funding-rate arb (delta-neutral short-perp/long-spot on top
++funding), (3) pure-basis (delta-neutral on perp-spot premium), (4) staked-basis FULLY WIRED — long LST + short perp on
+an LST-collateral venue, LIVE LST APRs (Lido stETH 2.4% @Bybit + ETH funding; jitoSOL 8% @Drift + SOL funding ->
++14.1%/yr net). Restricted to the 30-coin liquid survivor universe (avoids the live 754-perp micro-cap / garbage-basis
+pollution). Prints + plots per strategy + ensemble: target positions (coin/venue/side/notional/funding/staking),
+**$
+balance required PER VENUE** (spot cash + perp margin + on-chain LST — e.g. $1M -> Binance $650k / Bybit $167k / Drift
+$167k), and **LIQUIDATION proximity per perp leg with ALERTS\*\* (dist<25% OR margin<3x maint; OK at 3x, min dist 33%).
+`DATA_SOURCE=live|gcs_complete` env (gcs_complete reads the dumped canonical data to avoid live gaps). Plot
+`funding_ensemble.html`. Insight: the delta-neutral basis strategies are CASH-heavy (long-spot/LST leg ties up full
+notional) vs the margin-light perp-only dispersion — the per-venue balance shows it.
+
+**The full deployable RESEARCH->PAPER pipeline is now 5 committed e2e scripts:** `funding_reversion_crossvenue_book.py`
+(backtest, 8 overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.py` (live paper engine),
+`funding_ensemble_engine.py` (4-strategy orchestrator), `funding_regime_classifier.py` (ML regime decomposition).
+
+**PRODUCTIONIZATION PLAN (strategy-service fold — operator permission GRANTED 2026-06-18; the careful
+live-trading-system build, sequenced next):** integration points found —
+`strategy_service/engine/strategies/v2/carry_and_yield/` (`staked_basis.py`, `basis_perp.py`, `basis_dated.py`,
+`staking_simple.py` already exist; ADD `funding_dispersion.py` for the $-neutral reversion archetype + the 8 overlays),
+the portfolio_allocator/allocation_sizer (wire the ensemble SPLIT weights), and
+`StrategyServiceConfig(UnifiedCloudConfig)` for the **complete-data env mode** (a typed config field reading the dumped
+canonical GCS data — HL perp_funding/derivative_ticker/lst-rates — NOT live, to dodge the small-cap gaps; NO os.getenv).
+Requires the strict strategy-service QG + the manifest-allocation-guard tests + the paper->live promote workflow. This
+is a multi-file live-trading-system integration — done as a focused build, not rushed; the shipped paper/ensemble engine
+is the validated foundation + a runnable paper path TODAY.
+
+- [ ] [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 carry_and_yield + allocator with a
+      complete-data DATA_SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
+      granted)
+- [ ] [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
+      **Repo: deployment-service.** (perm granted)

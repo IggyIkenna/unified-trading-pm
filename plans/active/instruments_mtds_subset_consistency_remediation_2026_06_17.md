@@ -217,6 +217,115 @@ guard installed):** ran the IS `--operation status` + read each `instruments-sto
 freshness + diagnose defi/cefi attempted_failed. Monitored local CLI per venue (idempotent, skips fresh days), streamed
 to logs.
 
+**B0 EXECUTION — 2026-06-18 ~23:00 UTC (monitored local CLI, log dir `/tmp/is_backfill_logs/`):**
+
+- **tradfi B0 = COMPLETE** (already; no action). cov 1.0, 0 gaps, 2020-01-01→2026-06-18, 3-dataset contract.
+- **cefi F1 — Kraken 6yr backfill**: `instruments-service --asset-group cefi --venues KRAKEN-SPOT KRAKEN-FUTURES
+  --start-date 2020-01-01 --end-date 2026-06-18` — RUNNING in background (Tardis source, ~40 records/day across both
+  venues). The LONG leg (~2,360 days × 2 venues, ~10s/day) — ETA a few hours; left to run to completion + reports its
+  state. Idempotent (skips fresh days). Log: `kraken_f1.log`.
+- **cefi F1 — 3 absent venues backfilled DONE/near-done**: LIGHTER-ZKSYNC (2024-08-01→, 198 instr/day),
+  EXTENDED-STARKNET (2024-10-01→, 103/day), PACIFICA-SOLANA (2025-06-01→2026-06-18 ✅ **DONE**, 10/day). All via
+  Tardis/native adapters, creds present, 0 errors.
+- **cefi F2 — BITGET 5 missing days**: re-fetched 2024-11-08→2026-06-18 (`--venues BITGET-FUTURES BITGET-SPOT`),
+  near-done, fills the F2 gap.
+- **prediction freshness — ✅ DONE**: `--asset-group prediction --start-date 2026-06-09 --end-date 2026-06-18` wrote
+  **12,720 records across 30 venues** (POLYMARKET CLOB full scan ~1.4M markets + KALSHI 2000) to
+  `instruments-store-pred-prd` (flat kind). The 9-day stale tail (last was 2026-06-09) is now current. NOTE: the IS
+  `--operation status` CLI can't READ the flat-kind prediction bucket (`get_write_bucket_name` lacks a PREDICTION
+  asset_group entry) — a status-CLI display gap, NOT a backfill blocker (the WRITE path resolves via
+  `resolve_instruments_store_kind`).
+- **defi**: 95 venues, cov 0.998, 2020-01-20→2026-06-18 — already broadly complete; 172 attempted_failed
+  (MORPHO-ETH/BASE 41 each, DRIFT-SOLANA 41, AAVE_V3-OPTIMISM 41, TRADER_JOE_V2-AVALANCHE 6, SUSHISWAP_V3-BASE 2, all
+  UNCLASSIFIED_ADAPTER_ERROR, 2026-05-09→06-18).
+- **sports**: most entities high-cov; SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES cov 0.000 (all attempted_failed
+  — credentialed/blocked scraper sources, tracked in sports_master DEFERRED-INDEFINITELY scraper set). Not a B0 gap.
+
+- [ ] [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket** — `_run_coverage_status`
+      calls `get_write_bucket_name("instruments", "prediction")` which raises `BucketNamingError` (the per-asset_group
+      instruments-store dict has no PREDICTION entry; prediction resolves via the FLAT
+      `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
+      `_get_instruments_bucket_for_asset_group` (the same resolver the write path uses) so prediction status renders.
+      Display-only gap; the backfill WRITE path already works. — instruments-service
+- [ ] [DATA] P2. **Stale `attempted_failed` rows survive a failed→captured retry in the consolidated `_index` (manifest
+      dedup blank-column edge — KNOWN, already tracked)** (surfaced 2026-06-18 while backfilling the fixed venues). After
+      re-fetching a previously-`attempted_failed` shard to `captured`, the consolidated `_index/availability_index.parquet`
+      carries BOTH rows for the same (date, venue) — e.g. DERIBIT-COMBO 2026-05-23 has `attempted_failed` (instrument_type=''
+      pipeline_mode=None) AND `captured` (instrument_type='COMBO' pipeline_mode='batch_instruments_service'). ROOT CAUSE
+      (documented in UTL `manifest_writer/_writer_io.py` ~line 716): the dedup key adds the v6-v9 shard-atom cols
+      (instrument_type/pipeline_mode/source) only when non-empty, and `record_failed` leaves them blank while the captured
+      retry populates them → populated-vs-blank delta keeps BOTH rows; last-write-wins fails. The captured data IS present +
+      correct; the stale failed row inflates the coverage DENOMINATOR (slight under-count) until collapsed. **Already
+      tracked** as the wildcard-"" dedup follow-on `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`
+      (the fix: treat "" as a wildcard in the dedup key so a populated retry supersedes a blank failure). The scheduled
+      manifest-consolidator does NOT currently collapse these either (same dedup logic). **Until that lands**, a targeted
+      reconcile (drop the stale `attempted_failed` row where a same-(date,venue) `captured` row with a newer `written_at`
+      exists) would clean the IS instruments-store indices — but do NOT hand-edit the dedup machine here (deliberate design
+      tradeoff with a named owner). — unified-trading-library (dedup) — cross-link
+      `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`
+- [x] ✅ [DATA] P2. **Diagnosed all 172 defi attempted_failed cells (2026-05-09→06-18) — 4 of 6 venues fixed, 2 are
+      deeper upstream changes (split below)**. Each was UNCLASSIFIED_ADAPTER_ERROR from a distinct upstream API change:
+      - **MORPHO-ETHEREUM (41) + MORPHO-BASE (41) — ✅ ADAPTER FIXED + RE-FETCHED** (instruments-service@ec3fd3a): Morpho
+        renamed `Market.uniqueKey`→`marketId` (HTTP 400 "Cannot query field uniqueKey"). Live verify: 968 markets
+        fetched (was 0); re-fetched 2026-05-09→06-18 (164 captured rows written 2026-06-18 23:1x). **The captured rows
+        land under the CANONICAL bare venue `MORPHO`** (the writer keys the shard by the adapter's `venue` property
+        `"morpho"`→`MORPHO`, NOT the per-record chain-suffixed `venue_tag` `MORPHO-ETHEREUM`) — and `MORPHO` already has
+        **1,669 captured rows 2024-01-08→2026-06-18** (the historical canonical capture). So the 41+41 `MORPHO-ETHEREUM`/
+        `MORPHO-BASE` `attempted_failed` rows are an ANOMALOUS chain-suffixed venue-naming VARIANT, NOT a genuine data gap
+        — the morpho lending markets ARE captured + current under `MORPHO`. (Same multi-source venue-naming drift the
+        manifest-canonicalisation track owns — see the venue-naming P2 below.)
+      - **TRADER_JOE_V2-AVALANCHE (6) + SUSHISWAP_V3-BASE (2) — ✅ SELF-RECOVERED + canonical-tag captured**: both fetch
+        1000 pool instruments cleanly (transient subgraph rate-limits, not a code bug). Re-fetched; captured under the
+        canonical bare `TRADER_JOE_V2` (74 captured 2026-05-09→06-18) + `SUSHISWAP_V3` (2,606 captured
+        2023-04-05→06-18). The `-AVALANCHE`/`-BASE` chain-suffixed `attempted_failed` rows are the same anomalous
+        variant — data captured under the canonical bare venue.
+      - **DRIFT-SOLANA (41) + AAVE_V3-OPTIMISM (41)**: genuine deeper upstream changes — split to the two P2 todos below.
+      — instruments-service
+- [ ] [DATA] P2. **DeFi manifest venue-naming drift — chain-suffixed VARIANT venue tags shadow the canonical bare-protocol
+      venue** (surfaced 2026-06-18). The defi instruments-store `_index` carries BOTH the canonical bare-protocol venue
+      (`MORPHO` 1,669 captured / `SUSHISWAP_V3` 2,606 / `TRADER_JOE_V2` 74 — where the adapter actually writes, keyed by
+      its `venue` property) AND a smaller anomalous chain-suffixed variant (`MORPHO-ETHEREUM`/`MORPHO-BASE` 42 each,
+      `SUSHISWAP_V3-BASE` 2, `TRADER_JOE_V2-AVALANCHE` 6, `SUSHISWAPV3`/`SUSHISWAP-ARBITRUM`/etc.) that is almost entirely
+      `attempted_failed` + a stray captured. The DeFi venue identity is ambiguous: the adapter's `venue` property is the
+      bare protocol (`morpho`→`MORPHO`) while `InstrumentRecord.venue`=`MORPHO-{chain}` and the manifest writer keys the
+      shard by the PROPERTY not the record field → multi-chain protocols collapse to one bare venue + the chain-suffixed
+      rows are orphan variants. **Decide the canonical DeFi instrument venue grain** (bare-protocol vs protocol-chain) +
+      make the adapter `venue` property, the `InstrumentRecord.venue`, and the manifest shard key AGREE (shard-granularity
+      SSOT), then reconcile/collapse the variant rows (phantom-audit). Captured data is present under the bare venue — this
+      is a naming-canonicalisation correctness item, not a fetch gap. — instruments-service / unified-trading-library
+      (manifest shard key) — composes with the `*_manifest_canonicalisation_*` + `source=` provenance tracks
+- [ ] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
+      2026-06-18). The Drift Data API endpoint moved: `/stats/markets`→404, `/markets`→403, `/contracts`/`/perpMarkets`
+      →403 (auth-gated), `dlob.drift.trade`→502. Find Drift's current PUBLIC markets endpoint (docs at
+      `https://docs.drift.trade/`); if all current endpoints are auth-gated this becomes **BLOCKED-CREDENTIALS** (file
+      a Drift API-key ask per external-data-always-available). Fix `drift.py` `_DATA_API_URL`/path (the URL resolves via
+      UAC `get_solana_protocol_url("drift","api_url")` — update the registry value, not a hardcode), classify the breach
+      properly, backfill 2026-05-09→06-18. — instruments-service / unified-api-contracts (registry URL)
+- [ ] [DATA] P2. **AAVE_V3-OPTIMISM IS instruments adapter must route to the RPC fallback (KNOWN abandoned subgraph —
+      NOT a subgraph-ID hunt)** (diagnosed 2026-06-18). The instruments adapter queries the subgraph
+      `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` which raises `Type Query has no field reserves` → attempted_failed.
+      **This is the DOCUMENTED operator policy (UAC `_defi.py` aave_v3 OPTIMISM comment, decision 2026-05-30): Aave
+      silently abandoned the Optimism subgraph (republished to an empty v0.0.5 entity store); the CANONICAL data source
+      for AAVE_V3-OPTIMISM is the RPC fallback (14-row daily), not the subgraph.** So do NOT chase a new subgraph ID
+      (none exists per the policy). The fix is in the IS `aave_v3.py` adapter: for OPTIMISM, route to the same RPC
+      fallback the MTDS rate handler uses (or `record_empty(reason=...)` honest-absence if the IS layer has no RPC path)
+      — never leave it attempted_failed (a known-policy state masquerading as a fetch failure). The sibling chains
+      (ETH/ARB/POLY/BASE/AVALANCHE) work fine. — instruments-service (NOT a UAC subgraph-ID change)
+
+**DERIBIT-COMBO — fixed a NEVER-WORKING venue (4 stacked breaks, found during cefi diagnosis) — ✅ SHIPPED:**
+cefi's 22 attempted_failed were ALL DERIBIT-COMBO (0 captured days since added 2026-05-23). Root cause = 4 stacked bugs,
+all fixed: (1) Deribit retired `get_instruments?kind=combo` (HTTP 400) → switched to `public/get_combos`; (2) adapter
+tagged records `venue=DERIBIT` but batch canonical is `DERIBIT-COMBO` → URDI venue-tag filter dropped all rows → fixed
+the venue property; (3) legs were always empty (`_parse_combo_legs` always returned `[]`) and validation rejects
+leg-less COMBOs → build `InstrumentLeg` from `get_combos` structured legs; (4) `DERIBIT-COMBO` was absent from UAC
+`VENUES_BY_ASSET_GROUP["cefi"]` + `CEFI_VENUE_LAUNCH_DATES` → validation rejected "unknown venue" → registered it.
+Verified live: **117 combos written/day** (was 0). Removed dead `_parse_combo_legs`/`_extract_structure_code`. Tests
+updated (332 IS combo tests + 907 UAC venue/coverage tests green; IS QG `--no-fix` exit 0). Shipped:
+unified-api-contracts@dfe7e6f (venue registration) + instruments-service@dedae75 (adapter). Re-fetch of the 22 failed
+days running (`deribit_combo.log`) — combos active today land captured; expired-combo days the get_combos endpoint no
+longer returns stay honest (the API only returns currently-active combos — historical combo state is not retrievable,
+an upstream limitation, NOT a silent placeholder).
+
 > **Dependency order (operator 2026-06-18):** (B0) backfill instruments to NO-MISSING first → (B1) regen the instrument
 > catalogue (it aggregates instruments) → (B2) codify MVP-universe vs total-reasonable-universe (so the backfill config
 >
@@ -287,6 +396,52 @@ construction (server-side byte-identical copy preserves parquet footers; only th
 `gcs_describe` twin verification
 
 - 0 copy errors; the live footer spot-check timed out on host GCS read latency (not a data fault, not load-bearing).
+
+## MARKET-DATA `_index` v9 COLUMN POPULATION — APPLIED to ALL 5 AGs (2026-06-18)
+
+> Operator-dispatched v9 `--apply`. Audit ground-truth (read-only, 2026-06-18): the live MTDS prd
+> `_index/availability_index.parquet` for ALL 5 AGs was cell-key-canonical (deduped) BUT still
+> **schema v8, `pipeline_mode` 100% blank, `source` column ABSENT, `asset_group` absent (cefi/sports)
+> or partial (defi/tradfi/pred)** — the v9 column population was never run on the live index.
+
+**DECISION — in-place populator, NOT the object-scan rebuild (root-cause diagnosis).** The
+`rebuild_{ag}_manifest.py` non-dry-run is the documented v9-column writer, but a fresh GCS scan
+**double-counts** every cell with both a legacy object AND its canonical twin (COPY-not-MOVE; the
+legacy delete is operator-gated/pending). PROOF: the pre-generated v2 projections carry massive true
+duplicates — `projected_index_cefi_v2` 1.08M dup rows, defi 0.67M, sports 0.73M — and
+`projected_index_prediction` REGRESSES captured 16,918→7,116. Applying any would CORRUPT the deduped
+live index (captured→failed mass-flip / dup inflation = the exact gate-fail the BLOCKER GATE forbids).
+Instead built `market-tick-data-service/scripts/populate_v9_index_columns_inplace.py` (mtds@6b9f4b5):
+reads the live deduped `_index`, fills `pipeline_mode` via UTL `derive_pipeline_mode_for_row` (100%
+derivable, verified all 5 AGs; source-aware — tradfi splits barchart/massive/databento), `source` via
+UAC `source_string_for(PipelineMode)`, `asset_group` constant, `schema_version=9` — ROW-PRESERVING, so
+captured is provably preserved. defi additionally picks up the **46,866 canonical `venue=UNISWAP_V4`
+batch_onchain_subgraph cells** (incl the 31,773 newly-migrated) whose `_index` rows were never written
+(the index held only the legacy `UNISWAPV4`/`UNISWAPV4-ETHEREUM` spellings).
+
+**Per-AG result (before→after, captured-preserved gate honored absolutely):**
+
+| AG     | rows before→after        | schema v9 | pipeline_mode | source | asset_group | captured (Δ)            | snapshot |
+| ------ | ------------------------ | --------- | ------------- | ------ | ----------- | ----------------------- | -------- |
+| pred   | 19,299 → 19,299          | 100%      | 100%          | 100%   | 100%        | 16,918 (+0)             | ✅       |
+| tradfi | 144,314 → 144,314        | 100%      | 100%          | 100%   | 100%        | 96,811 (+0)             | ✅       |
+| cefi   | 2,167,688 → 2,167,688    | 100%      | 100%          | 100%   | 100%        | 1,311,984 (+0)          | ✅       |
+| sports | 803,796 → 803,796        | 100%      | 100%          | 100%   | 100%        | 202,087 (+0)            | ✅       |
+| defi   | 1,578,922 → 1,625,788    | 100%      | 100%          | 100%   | 100%        | 344,564 → 391,430 (+46,866 V4) | ✅ |
+
+All applies snapshot the prior index to `_index/snapshots/pre_v9_apply_{ag}_2026_06_18.parquet`
+(rollback net, in addition to `pre_migration_2026_06_18`). Independently re-read post-apply: every AG
+schema_v9=100%, pipeline_mode/source/asset_group=100%, captured preserved (defi V4 = 46,866 captured,
+0 already present). Apply order: pred → tradfi → cefi → sports → defi (safest first). Tool is a
+`scripts/` oneoff (ruff-lint-clean + runtime-verified via 5 applies; lifecycle marker present).
+
+- [x] ✅ [SCRIPT] P1. **MARKET-DATA `_index` v9 column population `--apply` for ALL 5 AGs** — DONE
+      2026-06-18. `populate_v9_index_columns_inplace.py` (mtds@6b9f4b5) in-place populated
+      pipeline_mode/source/asset_group + schema_version=9 on all 5 live prd `_index` objects;
+      captured preserved on cefi/tradfi/sports/pred, defi +46,866 canonical UNISWAP_V4 cells picked up
+      (incl the 31,773 newly-migrated). schema_v9/pipeline_mode/source/asset_group all 100% per AG;
+      pre-apply snapshots written. In-place chosen over the rebuild (rebuild projections were
+      dup-inflated/captured-regressing → would corrupt the deduped index). — market-tick-data-service
 
 ## INSTRUMENTS-STORE buckets — legacy GCS audit + `_index` canonicalisation COMPLETE (2026-06-18)
 
@@ -375,8 +530,14 @@ credits. Tracked todos below.
       pre-request guard at the MTDS get_range chokepoint AND the IS `definition`-schema fetch (with dataset-level shard
       isolation so an off-allowlist dataset doesn't hard-fail siblings). — market-tick-data-service@88d1c65e /
       instruments-service@86ecc67b / unified-api-contracts@3b76c0bc | all QG green.
-- [ ] [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 +
-      DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service
+- [x] ✅ [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 +
+      DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service — **ALREADY COMPLETE** (verified
+      2026-06-18, instruments-service@dedae75 run): `instruments-store-tradfi-prd` `_index` = 11,418 captured / 256
+      empty_confirmed, cov **1.0, 0 attempted_failed, 0 date gaps**. 6 venues continuous DAILY: CME/FX/ICE/CBOE
+      2020-01-01→2026-06-18, NASDAQ/NYSE 2023-04-15(subscription start)→2026-06-18 (distinct-days == calendar-span ⇒ no
+      missing day). The 3-dataset subscription guard (`assert_databento_request_allowed`, dataset-level shard-isolation)
+      is installed on the `definition` fetch — banned datasets isolate (not hard-fail), existing rows are already the
+      right 6-venue universe (no banned datasets present). Forward daily keep-green only. See Progress Log "B0 EXECUTION".
 - [ ] [CODE] P1. **`ohlcv-1s` has NO `BarTimeframe` member → OHLCV close-edge conversion raises** (surfaced 2026-06-18
       during the subscription cutover): the contract fetches ONLY `ohlcv-1s`, but `_OHLCV_DATA_TYPE_TIMEFRAME` (mtds
       `databento_adapter.py`) + the UAC `BarTimeframe` closed set (`bar_boundary.py` — smallest unit is `15s`) have no
@@ -535,9 +696,16 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
 - [ ] [DATA] P1. **F1 — backfill instruments-service for CEFI venues MTDS has but instruments lacks historically**:
       `KRAKEN-SPOT`/`KRAKEN-FUTURES` (added to instruments only at day=2026-06-17 — ~6yr gap), `LIGHTER-ZKSYNC`,
       `PACIFICA-SOLANA`, `EXTENDED-STARKNET`. Re-run the IS daily-listing CLI across the MTDS-covered date range per
-      venue (never copy between dates). Verify the cefi (venue,date) subset closes. — instruments-service
-- [ ] [DATA] P2. **F2 — backfill 5 missing BITGET-FUTURES + 5 BITGET-SPOT instrument-days** that MTDS captured but
-      instruments is absent for. — instruments-service
+      venue (never copy between dates). Verify the cefi (venue,date) subset closes. — instruments-service —
+      **🟢 IN PROGRESS / mostly DONE (2026-06-18 autonomous run):** LIGHTER-ZKSYNC (2024-08-01→06-18 ✅), PACIFICA-SOLANA
+      (2025-06-01→06-18 ✅), EXTENDED-STARKNET (2024-10-01→06-18 ✅) all backfilled via the IS daily CLI (Tardis/native,
+      0 errors). **KRAKEN-SPOT/FUTURES 6yr backfill RUNNING** to completion in background (2020-01-01→2026-06-18, Tardis,
+      ~40 records/day; at 2024-06 as of 23:20, ETA ~1h; `/tmp/is_backfill_logs/kraken_f1.log`, monitored). Flip fully ✅
+      once Kraken reaches 2026-06-18 (the monitor reports completion).
+- [x] ✅ [DATA] P2. **F2 — backfill 5 missing BITGET-FUTURES + 5 BITGET-SPOT instrument-days** that MTDS captured but
+      instruments is absent for. — instruments-service — DONE 2026-06-18: re-ran the IS daily CLI
+      `--venues BITGET-FUTURES BITGET-SPOT --start-date 2024-11-08 --end-date 2026-06-18` (idempotent, re-fetched the
+      stale/missing days), wrote ~120 records/day, reached 2026-06-18. `bitget_f2.log`.
 - [ ] [DATA] P1. **F4 — SPORTS: 2,107 captured MTDS cells with NULL `league_id`** (odds_horizon_bucket/trades/ODDS).
       Diagnose whether the league mapping drops on write or we capture non-canonised leagues; stamp league_id or route
       to honest-absence. No sports market data may be captured for a non-canonised league. — market-tick-data-service
