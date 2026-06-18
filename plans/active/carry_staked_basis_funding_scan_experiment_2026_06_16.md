@@ -570,7 +570,7 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
       the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
       degrades to a point estimate under < halflife days. Backtest still needs history; this is live/paper only. **Repo:
       e2e-testing harness.**
-- [ ] [STRATEGY] P3. Genuinely credentialed venues (Paradex, Backpack, Edgewink): file each **BLOCKED-CREDENTIALS** with
+- [ ] [STRATEGY] P3. Genuinely credentialed venues (Paradex, Backpack, Edgewink): file each `BLOCKED-CREDENTIALS` with
       the operator ask + build the adapter scaffold anyway (External-Data-Always-Available rule). **Repo: e2e-testing →
       ping ledger.**
 - [ ] [STRATEGY] P3. Sign/units cross-check on integration: one coin per venue vs the spec §3 reference values before

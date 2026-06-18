@@ -44,6 +44,47 @@ Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_co
 Phase-1 (manifest-level, full v9-projected-index walk) is DONE; Phase-2 (file-level cross-year manifest-vs-reality
 sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the audit doc + new todos here.
 
+> **🔴🔴 GCS DELETE SAFETY INVARIANT — READ BEFORE DELETING ANY OBJECT (codified 2026-06-18; HARD RULE).**
+> **The manifest migration RELABELLED nothing — it is a CELL-KEYED rewrite (`_index` rows keyed by
+> `(date,venue,data_type,instrument_type,instrument_id,underlying)`, NOT by GCS path); the v9 data was physically COPIED
+> to canonical paths by `migrate_*_v9_canonical` (COPY not MOVE → the legacy bare `asset_group=`/`category=`/top-level
+> `day=` shapes are DUPLICATES that still exist).** Therefore an agent must **NEVER assume a legacy object is safe to
+> delete.** A legacy object is delete-safe **ONLY IF a twin exists already in CANONICAL format** —
+> `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group={ag}/…` (defi: + normalized venue/itype) —
+> verified by `gcs_describe_object` (NOT a prefix-match, which would match the legacy copy itself). The reconcile only
+> proves "SOME object exists" (it prefix-matches BOTH shapes), so a captured cell backed ONLY by a legacy object passes
+> reconcile yet would be ORPHANED by a blind delete AND would read MISSING under the now-canonical-only data-status
+> reader (deployment-api@6bcac01). **Two-bucket rule for every legacy object: SAFE-TO-DELETE (canonical twin verified)
+> vs MIGRATE-FIRST (no canonical twin → COPY to canonical, THEN it becomes delete-safe).** Delete-list + migrate-first
+> list + the 48h e2e-research-data accounting are built by the read-only rescan →
+> `_index/audit/legacy_dup_delete_list_{ag}.parquet` + `plans/audit/results/gcs_delete_list_and_e2e_data_accounting_2026_06_18.md`.
+> **Deletion is OPERATOR-GATED (inspect→confirm→delete); migrate-first MUST complete first.**
+
+## GCS delete safety — path/schema migration prerequisite map (DONE-before-DELETE)
+
+For a legacy object to have a CANONICAL twin (the delete-safety precondition), its data must exist at the fully-canonical
+path shape. The migrations that must be COMPLETE (every captured cell twinned) before the legacy copies are deletable:
+
+1. **`pipeline_mode={mode}_{source}/` prepend** (primary) — every bare `…/day={D}/asset_group={ag}/…` object needs a
+   `…/day={D}/pipeline_mode={mode}_{source}/asset_group={ag}/…` twin (mode/source via UTL `derive_pipeline_mode_for_row`).
+   Tool: `migrate_{cefi_flat,defi_full,tradfi}_to_v9_canonical.py` (COPY). MIGRATE-FIRST = bare objects the rescan finds
+   with no `pipeline_mode=` twin → run the migrate to create the twin.
+2. **`category=`→`asset_group=`** — DONE (0 `category=` objects remain on cefi/defi/sports; verified).
+3. **DeFi venue/itype canonicalization in the PATH** (N5r/N6r) — the canonical defi twin must be at the NORMALIZED venue
+   (`UNISWAP_V3` not `UNISWAPV3`, `_canonical_venue` SSOT) + lowercase `instrument_type` (`pool` not `POOL`). An object at
+   an un-normalized venue/itype path is NOT a canonical twin → migrate it (copy to the normalized canonical path) before
+   deleting the legacy. This is the per-object rebuild-replace (N5r/N6r todo); the index-walk could not do it (would
+   desync manifest from object path).
+4. **per-AG verification** — after migrate-first, re-run the rescan's twin-verify per AG; require **100% canonical-twin
+   coverage** (0 MIGRATE-FIRST remaining) for that AG BEFORE its legacy delete-list is executed.
+
+**Manifest-V9 canonical-only read end-state** (the goal): the `_index` is cell-keyed (path-agnostic, already correct);
+the data-status READERS are now canonical-only (deployment-api@6bcac01 drilldown drops the legacy-shape fallback). For
+canonical-only reads to miss ZERO orphans, every captured cell must resolve to a canonical-format object — which is
+exactly what migrate-first guarantees. **Sequence: rescan → migrate-first the untwinned (→ 100% canonical-twin coverage,
+verified per AG) → canonical-only reads are orphan-free → THEN delete legacy (operator-gated).** Deleting before 100%
+coverage would orphan the un-migrated cells under canonical-only reads — the invariant above prevents exactly that.
+
 ## Execution sequence (end-to-end — the autonomous worker drives this in order)
 
 Each script-fix step = fix → `quality-gates.sh`-green → `quickmerge --agent --files` → **regenerate that AG's dry-run
@@ -76,10 +117,51 @@ numbers. Order:
    re-audited clean → run the real path-schema migration → verify the live `_index` matches the projection (NO mass
    captured→failed flip) → next AG. **Never all-AG at once.** Mass-flip ⇒ STOP + diagnose prefix_tpls, do not continue.
 9. **Backfills** — F1 (Kraken+ instruments history), the ~88k genuine cefi `VENUE_FETCH_FAILED`, any real captured-absent
-   cells. Run to completion (manifest-verified rows).
+   cells. Run to completion (manifest-verified rows). **→ The FULL path to 100% (could-exist enumeration + per-AG
+   MTDS/IS backfill + cross-data_type completeness + credential asks + live=batch keep-green) is tracked separately in
+   `path_to_100pct_backfill_mtds_is_2026_06_17.md` (parent_epic mtds_mdps_master), gated to start once this migration's
+   `--apply` lands.**
 
 **Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
 gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
+
+## Operator follow-ups 2026-06-18 — research-data canonical-copy + instrument catalogue + MVP/total universe
+
+> **Dependency order (operator 2026-06-18):** (B0) backfill instruments to NO-MISSING first → (B1) regen the instrument
+> catalogue (it aggregates instruments) → (B2) codify MVP-universe vs total-reasonable-universe (so the backfill config
+> + data-status "could-exist" are correct) — these gate/inform each other. Research-data canonical-copy (B3) is
+> independent. Cross-links: `path_to_100pct_backfill_mtds_is_2026_06_17.md` (the backfill-to-100% home).
+
+- [ ] [INFRA] P1. **B3 — copy e2e research data to CANONICAL placement + e2e doc**: HL `perp_funding`/`perp_daily_ctx`
+      currently ONLY in the no-env-suffix research bucket `gs://perp-funding-central-element-323112/day=*/`; LST rates ONLY
+      in `gs://lst-rates-central-element-323112/day=*/`. These are prod-needed data. (a) Determine the canonical home per
+      data_type — the dedicated `-prd-` bucket (`lst-rates-prd`, exists) vs the market-data-tick-{cefi|defi}-prd canonical
+      `pipeline_mode=` path (cefi already carries `pipeline_mode=batch_hyperliquid`; HL perp may be cefi-perp, LST is
+      defi). (b) `gcs_copy_object` (workers=32, in-region) the research objects → canonical placement (+ manifest
+      `record_captured` so the `_index` reflects them). (c) Write `e2e-testing/docs/` (or the e2e README) a note: research
+      reads MUST migrate to the canonical sources — list the old→canonical bucket/path mapping so the e2e funding scripts
+      (`staked_basis_funding_scan`/`colocated_engine`/etc.) update their fetch paths. Then the research buckets become
+      deletable (operator-gated). — instruments-service/deployment-service + e2e-testing(doc)
+- [ ] [INFRA] P1. **B1 — instrument catalogue regen + un-pause (aggregation/dedup; "has this instrument ever existed" +
+      available-from/to)**: `instruments-service/scripts/build_instrument_catalogue.py` +
+      `reference_data/catalogue/catalogue_builder.py` EXIST; Cloud Run jobs `lifecycle-catalogue-regen-{cefi,defi,tradfi,
+      sports,prediction}` exist but the `*-daily` SCHEDULERS are **PAUSED** + last ran ~2026-06-11/15 (STALE, pre-backfill).
+      AFTER B0 (instrument backfill no-missing): re-run the regen jobs per AG → verify the catalogue reflects the full
+      deduped instrument lifecycle (genesis/first-seen/last-seen per instrument) → decide cadence + un-pause the daily
+      schedulers (or keep manual). data-status "could-exist" + the expected_unattempted enumerator
+      (`enumerate_expected_universe.py`) read this — stale catalogue = wrong could-exist universe. — instruments-service/deployment-service
+- [ ] [DESIGN] P1. **B2 — codify MVP-universe vs TOTAL-REASONABLE-universe (NOT codified anywhere — confirmed gap)**: define
+      in UAC (registry) the two distinct expected-universes so we know what we SHOULD have (drives the backfill config +
+      data-status denominators): dimensions = base_currency × venue × data_type × (DeFi-pool by volume threshold) ×
+      fixtures (sports) × combinations; canonical sources = hardcoded (chain genesis dates, VIX-index) vs
+      download-derived (must have had the right fetch config to cover the full universe). **TOTAL-REASONABLE** = the full
+      could-exist universe; **MVP** = the subset the May-23 archetypes need. Scan `path_to_100pct_backfill_mtds_is_2026_06_17.md`
+      + the current `enumerate_expected_universe.py` + UAC registry for how far this exists + outliers; codify the gap as a
+      UAC SSOT both the enumerator + the backfill config + data-status read from. — unified-api-contracts/instruments-service
+- [ ] [DATA] P0. **B0 — backfill instruments to NO-MISSING (prereq for B1 catalogue + all expected-universe consumers)**:
+      the F1/F2 instrument backfills below + the broader could-exist instrument backfill tracked in
+      `path_to_100pct_backfill_mtds_is_2026_06_17.md`. Other services rely on instruments to know what's
+      available/expected → this runs FIRST. — instruments-service
 
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
@@ -190,7 +272,41 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       sports blanks F5 which ARE fixed). Classify via a sports-MTDS canonicalize pass (extend `canonicalize_mtds_index.py`
       to sports, mirroring the instruments-store classify: reference blank-data_type rows kept; real-data_type phantoms →
       honest status). NOT a double-count. captured (202,087, league_id present) + empty (584,257) already correct. — market-tick-data-service
-- [ ] [INFRA] P1. **Phase D — DELETE old legacy-shape GCS duplicates (OPERATOR-GATED inspection)**: the bare
+- [ ] [CODE] P0. **READER-SHAPE GAP — deployment-api drilldown reads the BARE (legacy) shape, NOT canonical
+      `pipeline_mode=` (DELETE-PREREQUISITE, found 2026-06-18)**: `deployment_api/services/shard_detail/_shard_core.py`
+      (the `DATA_STATUS_CANONICAL_PATHS_ONLY` cutover @6bcac01) builds the probe prefix
+      `raw_tick_data/by_date/day={D}/asset_group={ag}/…` — NO `pipeline_mode=` segment → it matches ONLY the legacy bare
+      objects we are about to DELETE, not the canonical `…/pipeline_mode={mode}_{source}/asset_group={ag}/…` twin. The
+      headline data-status COUNTS are unaffected (manifest cell-keyed), but the file-detail DRILLDOWN would orphan/blank
+      post-delete. **Repoint the probe to the canonical `pipeline_mode=` shape** (list `day={D}/` + match
+      `pipeline_mode=*/asset_group={ag}/`, or prepend the derived `pipeline_mode={mode}_{source}/`) BEFORE any legacy
+      delete. Same check the deployment-api drilldown `_instruments.py` + any other GCS-listing reader. — deployment-api
+> **🟢 RESCAN COMPLETE + INDEPENDENTLY VERIFIED (2026-06-18).** Full twin-walk of all 5 market-data-tick buckets
+> (`e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py`@a294b2c; per-AG maps at
+> `_index/audit/legacy_dup_delete_list_{ag}.parquet`; findings PM PR #403). **CRITICAL: only cefi is actually migrated.**
+> cefi = 1,077,672 SAFE-TO-DELETE (~9.98 TB, byte-identical `pipeline_mode=` twins — I spot-verified 5/5 size-match) +
+> 15 migrate-first. **defi (352,062) / tradfi (1,706,332, incl VIX) / sports (252,318) / pred (573,451) = ALL MIGRATE-FIRST
+> (~179 GB, NO canonical twin — verified 3/3 tradfi have twin_exists=False)** — their canonicalisation never completed /
+> was a RESTRUCTURE (pred renamed keys+stems; tradfi bulk is dash-separated non-hive never canonicalised), so the legacy
+> objects are the LIVE copy → deleting them LOSES DATA. **Only cefi is delete-safe today.** e2e 48h research data: CLEAN —
+> HL perp_funding/perp_daily_ctx in standalone `perp-funding-*` bucket + LST in `lst-rates-*` (BOTH out of the 5 in-scope
+> buckets); cefi funding reads the canonical `pipeline_mode=batch_tardis` (the safe-delete list is their legacy twin →
+> delete preserves reads); Aster/Drift re-downloadable; no runaway/unaccounted data, no DANGER flag. **Corollary for the
+> reader-repoint (P0 above): canonical-only `pipeline_mode=` reads work ONLY for cefi today; defi/tradfi/sports/pred would
+> orphan EVERYTHING under canonical-only until their objects are migrated → the per-AG OBJECT migration is now a hard
+> prerequisite for BOTH their canonical-only reads AND their legacy delete.**
+
+- [ ] [INFRA] P0. **Migrate-first the 4 un-migrated AGs' OBJECTS to canonical `pipeline_mode=` shape (defi/tradfi/sports/
+      pred, ~2.88M objects / 179 GB)** — their canonical migration never completed (tradfi never hive-canonicalised; pred
+      restructured; defi/sports partial). Run/complete `migrate_{defi_full,tradfi}_to_v9_canonical.py` (+ sports/pred
+      equivalents) on in-region VMs (gcs_copy_object workers=32) to create the canonical twins, then re-run the twin-audit
+      → 0 migrate-first per AG. ONLY THEN are those AGs' canonical-only reads orphan-free + their legacy objects
+      delete-safe. cefi needs NONE of this (already twinned). — market-tick-data-service / deployment-service
+- [x] ✅ [INFRA] P1. **Phase D rescan + delete-list — DONE + verified.** cefi SAFE-TO-DELETE list ready for operator
+      inspection (`legacy_dup_delete_list_cefi.parquet`, 1,077,672 objs / ~9.98 TB, exclude the 15 migrate-first); the
+      other 4 AGs are migrate-first (above), NOT deletable yet. e2e research data accounted-for + safe. Deletion remains
+      OPERATOR-GATED (inspect→confirm→delete).
+- [ ] [INFRA] P1. **Phase D — DELETE legacy GCS dupes (OPERATOR-GATED, cefi-only today)**: the bare
       `raw_tick_data/by_date/day=*/asset_group={ag}/...` objects are EXACT duplicates of canonical
       `pipeline_mode={mode}_{source}/asset_group={ag}/...` twins (verified: same instrument exists at both). They no longer
       cause UI double-count (data-status reads the cell-reduced manifest + deployment-api@6bcac01 drilldown is
