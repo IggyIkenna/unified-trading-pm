@@ -39,19 +39,20 @@ source:
    because a script spans multiple plans (the GCS cutover touches MTDS / instruments / deployment plans at once); epics
    are stable
    - multi-plan + validate-able vs the registry like `assigned_vm`. **Epics are EVERLASTING**, so `Epic:` is OWNERSHIP,
-     not the delete trigger — `Delete-when:` carries the actual completion signal. **`last_run` is DERIVED, never a
-     manual header field** (a hand-updated field would rot — nobody updates a comment after every run): staleness =
-     `git log -1 --format=%cs -- <script>`; a campaign script needing true run-frequency appends to a central
-     auto-ledger (a `log_script_run.sh "$0"` one-liner, like `log-manifest-mutation.sh`). Full convention in Phase 0.
+     not the delete trigger — `Delete-when:` carries the actual completion signal. **NO runtime last-run tracking
+     (operator 2026-06-18): no `log_script_run`, no run-ledger, no auto-updated header field** — an auto usage timestamp
+     is commit-noise (unnecessary commits/PRs just to _run_ a script) and redundant, since the delete decision is gated
+     on the **`Delete-when` condition**, never a run-count. Only manual staleness _hint_ if ever in doubt:
+     `git log -1 --format=%cs -- <script>` (last-EDITED). Full convention in Phase 0.
 6. **Rollout sequence + deletes-DEFERRED (operator 2026-06-18).** Immediate priority is the **frontmatter ROLLOUT, NOT
-   deletion** — stamp the lifecycle marker on every script so we can SEE usage, then prune later. Sequence: \*\*(1) PM
-   docs
+   deletion** — stamp the lifecycle marker on every script, then prune later by `Delete-when`. Sequence: \*\*(1) PM docs
    - frontmatter** (the convention in `script-homes.md`/CLAUDE.md ✅ + PM's own scripts), **(2) every other repo's
-     frontmatter**, **(3) the run-logger** (`log_script_run` → central ledger), **(4) observe last-use for a few
-     days–weeks** (interim signal = git-last-modified; durable = the ledger), **(5) prune the unused**
-     (epic-owner-confirmed, orphan-sweep = 0). **No deletions until after the observation window\*\* — Phase-1's
-     DELETE/DEPRECATE/PROMOTE execution todos stay PARKED until then. Collision is a non-issue: a top-of-file marker
-     doesn't conflict with body edits.
+     frontmatter** (orchestrator-dispatched per `scripts_lifecycle_marker_rollout_2026_06_18.md`), **(3) prune by
+     `Delete-when`** (epic-owner-confirmed, orphan-sweep = 0). **NO run-logger / NO runtime last-run tracking**
+     (operator 2026-06-18: dropped — an auto usage ledger is commit-noise for ~zero decision value; the `Delete-when`
+     condition is the trigger, not a run-count). **No deletions until each `Delete-when` is met\*\* — Phase-1's
+     DELETE/DEPRECATE/PROMOTE execution todos stay PARKED. Collision is a non-issue: a top-of-file marker doesn't
+     conflict with body edits.
 
 ## Verified facts (`base-service.sh` — the same script CI + staging run)
 
@@ -91,9 +92,9 @@ a verdict). Heaviest:
 
 - [x] ✅ [DESIGN] P2. **DONE 2026-06-18** — codified the 3-line lifecycle marker convention in
       `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" + a CLAUDE.md § "Script Homes" one-liner (marker
-      format, the `permanent|campaign|oneoff` taxonomy, `Epic`-is-ownership / `Delete-when`-is-trigger, the run-ledger
-      track-then-prune model, ruff-yes/basedpyright-no gating). Codify the 3-line script lifecycle marker (a comment
-      header — works for `.sh` AND `.py`, so it's not Python-docstring-only):
+      format, the `permanent|campaign|oneoff` taxonomy, `Epic`-is-ownership / `Delete-when`-is-trigger, the
+      `Delete-when`-driven pruning model (no runtime tracking), ruff-yes/basedpyright-no gating). Codify the 3-line
+      script lifecycle marker (a comment header — works for `.sh` AND `.py`, so it's not Python-docstring-only):
 
   ```
   # Epic: <epic-slug>                       # owning epic — validated vs plans/epics/ registry (required, ALL scripts)
@@ -116,10 +117,12 @@ a verdict). Heaviest:
       every `campaign`/`oneoff` whose `Delete-when` looks satisfied OR whose `git` last-modified is stale (>N months) →
       flagged for the **epic owner** to confirm + delete. Repo: unified-trading-pm.
 
-- [ ] [DESIGN] P2. `last_run` / run-frequency is **derived, never a manual header field**: default staleness =
-      `git log -1 --format=%cs -- <script>` (last-modified, zero maintenance); a campaign script that needs true
-      run-frequency appends to a central auto-ledger via a `log_script_run.sh "$0"` one-liner (mirrors
-      `log-manifest-mutation.sh`). No hand-updated field anywhere.
+- [x] ✅ [DESIGN] P2. **DECIDED 2026-06-18 — NO runtime last-run tracking.** Dropped the run-ledger / `log_script_run`
+      idea entirely (operator): an auto-updated usage timestamp is commit-noise (unnecessary commits/PRs just to _run_ a
+      script) and redundant — the delete decision is gated on the **`Delete-when` condition**, never a run-count, so a
+      `permanent` script's run-count is irrelevant and a `campaign`/`oneoff` deletes when its condition holds. Only
+      manual staleness _hint_ if ever in doubt: `git log -1 --format=%cs -- <script>` (last-EDITED). No ledger, no
+      header field, nothing to maintain.
 
 ## Phase 1 — audit each repo's scripts/ (characterize + STAMP the marker) [P2]
 
@@ -174,9 +177,9 @@ a verdict). Heaviest:
 ## Codex SSOT updates
 
 - `codex/06-coding-standards/script-homes.md` — add (a) the **lifecycle marker convention** (`Epic:`/`Lifecycle:`/
-  `Delete-when:`, the closed `permanent|campaign|oneoff` set, `last_run` is derived-not-manual) and (b) the "scripts/:
-  ruff-lint YES; basedpyright + coverage NO (by design, to avoid refactor tech-debt on throwaway code); recurring logic
-  → CLI" clarification — when Phase 0/2 land.
+  `Delete-when:`, the closed `permanent|campaign|oneoff` set, `Delete-when`-driven pruning with no runtime tracking) and
+  (b) the "scripts/: ruff-lint YES; basedpyright + coverage NO (by design, to avoid refactor tech-debt on throwaway
+  code); recurring logic → CLI" clarification — when Phase 0/2 land.
 - CLAUDE.md — one-liner pointing to the script lifecycle marker + the ruff-only rule (per the durable-facts-live-here
   rule), once shipped.
 

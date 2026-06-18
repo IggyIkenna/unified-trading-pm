@@ -106,5 +106,6 @@ source:
   new).
 - Each `campaign`/`oneoff` carries a `Delete-when`; each `Epic:` is a valid registry id.
 - No deletions / no body edits — frontmatter-only.
-- Then (separate, deferred): wire `log_script_run` (run-ledger), observe usage, prune per
-  `repo_scripts_governance_audit_2026_06_18.md`.
+- Then (separate, deferred): prune by `Delete-when` per `repo_scripts_governance_audit_2026_06_18.md` — **NO run-ledger
+  / no runtime last-run tracking** (operator 2026-06-18: the `Delete-when` condition is the trigger; an auto usage
+  timestamp is commit-noise for ~zero decision value).

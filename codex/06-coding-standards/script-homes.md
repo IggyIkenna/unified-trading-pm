@@ -92,19 +92,27 @@ instruments / deployment plans at once), so it is keyed to the everlasting **epi
 a plan's `assigned_vm`), not a single plan. Epics never archive → the **`Delete-when`** carries the completion signal.
 **Template-managed scripts are auto-`permanent`** (`setup.sh` / `quality-gates.sh` / `quickmerge.sh`, PM-sourced).
 
-### "When was this last USED" — track-then-prune (NOT last-EDITED)
+### Pruning is `Delete-when`-driven — NO runtime usage tracking (operator 2026-06-18)
 
-The marker exists to **prune the unused**. The signal is **last-RUN**, which is NOT `git log -1` (that is last-EDITED —
-a permanent script run weekly but unedited reads as months-stale). Phased rollout:
+The marker exists to **prune the unused**, and the marker **alone** is the complete pruning system — there is **no
+runtime usage tracking** (no `log_script_run`, no run-ledger, no auto-updated `last_run` field). That idea was
+**dropped** (operator 2026-06-18): a usage timestamp that updates on every invocation is either commit-noise (if it
+lives in the file → unnecessary commits/PRs just to _run_ a script) or a fail-open GCS write on every
+`setup.sh`/`quality-gates.sh`/checker invocation fleet-wide (if it lives in a ledger) — real cost for **~zero decision
+value**, because the deletion decision is **never gated on a run-count**:
+
+- A **`campaign`/`oneoff`** is pruned when its **`Delete-when` CONDITION holds** — campaign milestone reached / parent
+  plan archived / prod-run done + GCS orphan-sweep = 0. That is a _condition you evaluate_, not a staleness clock: you
+  never needed to know when the script last ran, only whether its **reason to exist** is gone.
+- A **`permanent`** script is **never a deletion target**, so its run-count is irrelevant by definition.
+
+So the signal is the `Delete-when` condition, full stop. The only (manual, zero-infra) staleness _hint_, for the rare
+"is this `permanent` one actually dead?" doubt, is `git log -1 --format=%cs -- <script>` (last-EDITED — yes, ≠ last-RUN,
+but a real deletion candidate isn't being edited anyway, so the gap doesn't bias the call). Rollout:
 
 1. **Stamp the markers** (classification) fleet-wide — the current rollout (PM first, then every repo).
-2. **Track usage for a few days–weeks** — interim signal is git-last-modified; the durable signal is a **central
-   run-ledger**: each script calls a **fail-open** `log_script_run "$0"` at start → appends `{script, repo, ts, host}`
-   to `gs://<ops>/script_runs/…jsonl`; a sweep yields last-run-per-script. The logger MUST fail open (never break the
-   script if the ledger is unreachable). `last_run` is **derived from the ledger, never a hand-edited header field** (it
-   would rot).
-3. **Prune** — a `campaign`/`oneoff` whose `Delete-when` is satisfied OR that has not run in the observation window →
-   flagged to the **epic owner** to confirm + delete (orphan-sweep = 0 first). **Never a blind fleet `git rm`.**
+2. **Prune by `Delete-when`** — when a `campaign`/`oneoff`'s condition is satisfied, flag it to the **epic owner** to
+   confirm + delete (orphan-sweep = 0 first). **Never a blind fleet `git rm`.**
 
 ### What gates a `scripts/` file (operator 2026-06-18)
 
