@@ -44,6 +44,43 @@ Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_co
 Phase-1 (manifest-level, full v9-projected-index walk) is DONE; Phase-2 (file-level cross-year manifest-vs-reality
 sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the audit doc + new todos here.
 
+## Execution sequence (end-to-end — the autonomous worker drives this in order)
+
+Each script-fix step = fix → `quality-gates.sh`-green → `quickmerge --agent --files` → **regenerate that AG's dry-run
+projection** (`rebuild_{ag}_manifest.py --dry-run --projection _index/audit/projected_index_{ag}.parquet`) → **re-audit
+the fixed dimension** (the `/tmp/audit_subset.py` pattern or a per-AG file re-check) → flip the todo + journal before/after
+numbers. Order:
+
+1. **CeFi script** `rebuild_cefi_manifest.py` — **N1** dedup key (captured suppresses its blank-type empty shadow) + **F3**
+   reclassify legacy `attempted_failed` recon-noise (~1.3M) vs keep genuine ~88k. Verify: no captured+empty double-rows;
+   attempted_failed → ~88k.
+2. **Sports script** `rebuild_sports_manifest_v9.py` — **N3** extract `league_id`/`league` from the MTDS object path +
+   row column into the row_key (BEFORE `_canonicalize_row_key_league_id`); stamp `source` on `trades`; collapse
+   API_FOOTBALL/`api_football`. Verify: captured cells carry league_id.
+3. **DeFi script** `rebuild_defi_manifest.py` — **N6** normalize instrument_type case (pool/POOL), keep pool-pairs OUT of
+   `chain` (only known chain tokens), collapse venue dups; **N5** route 0-row/pre-launch files through
+   `DefiManifestRecorder.record_zero_rows` (venue-launch-date-aware) instead of presence⇒captured. Verify: no token-pairs
+   in chain, single-case instrument_type, no pre-launch captured-0-row vault cells.
+4. **Instruments enumerator** (instruments-service) — **N2** CME/TradFi weekend carry-forward = honest carry-forward (not
+   `SOURCE_RETURNED_ZERO`); de-dup 2×-per-cell index rows.
+5. **prefix_tpls VERIFY** (`reconcile_phantom_manifest_rows_all.py` `ASSET_GROUP_CONFIG`) — prove
+   `canonical_path_templates(ag)` enumerates EVERY coexisting shape per AG (`category=`/`asset_group=`/bare/`pipeline_mode=`)
+   against real GCS prefixes; replace the sports `[""]` with real templates. **APPLY FOOT-GUN — uncovered shape ⇒ apply
+   flips real captured→attempted_failed.** Block apply for any AG whose coverage isn't proven.
+6. **Regenerate ALL projections → re-audit** = the IMPROVED beta. Confirm F1–F7 + N1–N8 resolved/honestly-classified;
+   record before/after in the audit-doc Progress Log.
+7. **PRE-MIGRATION DRAIN GATE (HARD, CLAUDE.md)** — before ANY `--apply`: gracefully stop ALL running VMs (GCP+AWS) + run
+   the manifest consolidator + snapshot `_index/snapshots/pre_migration_<date>.parquet`
+   (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.0 Stage 0).
+8. **`--apply` AG-by-AG, safest first: pred → tradfi → cefi → sports → defi.** Per AG: prefix_tpls green + projection
+   re-audited clean → run the real path-schema migration → verify the live `_index` matches the projection (NO mass
+   captured→failed flip) → next AG. **Never all-AG at once.** Mass-flip ⇒ STOP + diagnose prefix_tpls, do not continue.
+9. **Backfills** — F1 (Kraken+ instruments history), the ~88k genuine cefi `VENUE_FETCH_FAILED`, any real captured-absent
+   cells. Run to completion (manifest-verified rows).
+
+**Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
+gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
+
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
 - [ ] [DATA] P1. **F1 — backfill instruments-service for CEFI venues MTDS has but instruments lacks historically**:
