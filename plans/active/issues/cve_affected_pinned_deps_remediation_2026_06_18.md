@@ -1,7 +1,6 @@
 ---
 title: "CVE-affected pinned deps — lift caps + drop --ignore-vuln entries once blockers clear (follow-up after 1.5b)"
 created: 2026-06-18
-author: harshkantariya
 status: active
 priority: P2
 locked_by: live-defi-rollout
