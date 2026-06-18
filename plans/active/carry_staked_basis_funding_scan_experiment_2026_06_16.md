@@ -670,7 +670,39 @@ throughout (real low-risk carry, just shrinking). Composes with finding #5: the 
 carry, so as premium compresses the strategy converges toward harvesting HL's structural interest rate. Still GROSS
 carry-only (no hedge/basis MtM) — Sharpe inflated, per the standing P3 todo.
 
+**7. Cross-sectional funding carry (NEW archetype, operator 2026-06-18) — NOT TRADEABLE, but funding is a strong
+MOMENTUM FEATURE.** Built a cross-sectional long-short: long the lowest-funding / short the highest-funding HL coins
+(different coins, same venue, $-neutral, liquidity/risk-parity weighted, diversified cap, leverage knob, funding + price
+PnL). Needs the new `perp_daily_ctx` (mark_px+volume+OI) backfill. **Verdict: a LOSER.** 3yr naive NET −36%/yr, Sharpe
+−1.3, maxDD −125%, winning quarters 4/13 (2024 −87%). A funding band-pass (drop |funding|>60%/yr momentum extremes)
+lifts it to ~flat (−1.3%, Sharpe −0.25) but NO config is positive. Root cause (component split): the strategy harvests
+ENORMOUS funding but loses ~exactly as much on price — **funding ≈ the adverse price move (efficient market)**: a coin
+pays −245%/yr funding _because_ it is being violently shorted (crashing), so longing it loses on price what you gain on
+funding. The book is structurally **short-momentum**, which bleeds in crypto.
+
+**The valuable output is the predictive signal (for a SEPARATE ML exercise — NOT built here, operator 2026-06-18):**
+extreme funding predicts CONTINUATION, not reversal. **Information coefficient `corr(funding, fwd_return)` = +0.047 (1d)
+/ +0.055 (3d) / +0.073 (7d) / +0.057 (14d)** — all positive, peaking at 7d (a genuinely useful single-feature IC).
+16,881 liquid (vol≥$10M) coin-days, 2023-06→2026-06. **Tails:** extreme-NEG funding (crowded shorts, |fund|>100%/yr) →
+fwd-7d **−6.2%**, only **30% up** (shorts keep winning — NO squeeze on average); extreme-POS funding (crowded longs) →
+fwd-7d **+4.8%**, **47% up** (longs keep winning). So a naive "extreme funding = squeeze/reversal" read is WRONG on
+average — it's momentum; the **squeeze is the conditional ~30% tail**. ML implication: funding LEVEL is a momentum
+feature; isolating the squeeze/crowded-long REVERSAL from the continuation needs additional conditioning features
+(funding ACCELERATION / Δfunding, OI change, price extension, liquidation clusters). Analysis is reproducible from the
+GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/defi/staked_basis_funding_scan.py`
+`_run_xsec_carry`). HTML: `xsec_carry_report.html` (xsec line vs the delta-neutral strategies).
+
 ## Open todos / next steps
+
+- [ ] [RESEARCH→ML] P2. (separate ML agent/exercise — operator 2026-06-18) Funding as a predictive FEATURE: funding
+      level = momentum (IC +0.073 @ 7d); build a squeeze/crowded-long REVERSAL classifier conditioning on funding
+      acceleration (Δfunding) + OI change + price extension + liquidations to isolate the ~30% reversal tail from the
+      70% continuation. Inputs: GCS `perp_funding` + `perp_daily_ctx` (HL, 2023-2026, 100% coverage). **Repo:
+      features/ML.**
+- [ ] [STRATEGY] P3. Cross-sectional carry is NOT tradeable standalone (funding≈adverse price) — only revisit with a
+      genuine price-neutralising overlay (correlation-paired long/short of co-moving coins, or a momentum/beta hedge)
+      AND only if it clears Sharpe; otherwise the archetype is shelved. The delta-neutral staked/pure-basis remain the
+      proven winners. **Repo: e2e-testing.**
 
 - [ ] [STRATEGY] P2. Decompose HL pure-basis carry into the interest-rate FLOOR (~11% APY structural, ~45-58% of hours
       clamp to it) vs the premium/dispersion component — so sizing reflects how much is structural vs alpha. **Repo:
