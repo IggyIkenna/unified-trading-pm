@@ -280,10 +280,13 @@ All on `origin/live-defi-rollout`; full detail in
       pending; rc≠0 = no rebase → the autostash pop conflicted → `AUTOSTASH_POP_CONFLICT`, work in `git stash list`).
       Conflicts captured BEFORE the (safe) abort; `QUICKMERGE_ALLOW_BEHIND=1` override preserved. SUB_AGENT doc updated
       to the live contract. **Self-exercised** — the quickmerge.sh ship ran the new code on its own promotion.
-  - [ ] [TEST] P2. **Residual: behavioral regression harness** — a shell unit that synthesizes a behind+diverge-conflict
-        git fixture + an autostash-pop fixture and asserts each emits its code. Deferred (the inline STAGE-0.4 logic
-        isn't a sourceable function → needs a git-fixture harness); the contract itself is live + self-exercised. Repo:
-        unified-trading-pm (`scripts/quality-gates-base/tests/`). Provenance: 265 spec's regression clause.
+  - [x] ✅ [TEST] P2. **DONE 2026-06-17 — `scripts/quality-gates-base/tests/test-quickmerge-blocked-contract.sh`
+        (5/0 green).** EXTRACTS the real STAGE-0.4 discriminator+emit block from `quickmerge.sh` (via awk, not a replica
+        — same pattern as `test-ratchet-exit-code-aggregation.sh`) and runs it against two synthesized git fixtures: a
+        behind+diverged-conflict (rebase mid-flight → `git rebase --abort` rc 0 → `BEHIND_DIVERGED_CONFLICT`) and an
+        autostash-pop conflict (no rebase in progress → rc≠0 → `AUTOSTASH_POP_CONFLICT`), asserting each emits its code +
+        the repo/branch/behind/conflicts fields + the RECOVERY line. A structural anchor fails the test if the contract
+        is removed/renamed in the source. Standalone shell test (not pytest-collected; on-demand like the ratchet test).
 - [x] ✅ [INFRA] P1. **FIXED (PM `scripts/quickmerge.sh`, this batch — live fleet-wide via the per-repo symlinks).**
       STAGE 0.4 now resolves the comparison ref from `git rev-parse --abbrev-ref @{u}` (configured upstream) when set,
       falling back to `origin/<branch-name>` only if no upstream. Verified: `@{u}` → `origin/live-defi-rollout` on a
