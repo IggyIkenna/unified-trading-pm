@@ -334,7 +334,11 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
       PM@eeece9802
 - [x] D9 ✅ — bannered the 2026-06-01 "being repaired" operational snapshot as HISTORICAL/superseded — PM@eeece9802
 - [ ] D15 🟡 — `GOOGLE_CLOUD_PROJECT`→`GCP_PROJECT_ID` in promotion_lag_monitor.py + reconcile_release_tags.py
-- [ ] D16 🟡 — decide check_strict_quickmerge `scripts/` carve breadth (fix doc or scope code to PM)
+- [ ] D16 🟡 — check_strict_quickmerge `scripts/` carve breadth. **Verified 2026-06-18:** the carve affects only
+      PROVENANCE (trailer + dep-gate), NOT content — `scripts/` is QG-unchecked either way; `tests/` IS caught in
+      staging (ruff+pytest). Operator 2026-06-18: scripts stay out of typecheck/coverage (by design); add ruff-lint
+      only; tests unchanged. **Carve scope (PM-only vs all) PENDING a scripts audit** → migrated to
+      `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 3).
 - [ ] D17 🟡 — (note) STAGING_PENDING rank-equivalence vs ON_STAGING_STATUSES exclusion
 - [ ] D18 🟡 — quickmerge.sh:1481/1534 "30min" → 15min drain comment
 - [ ] D19 🟡 — sit-starvation-detector.yml header comment "15 minutes" → matches `*/30`
