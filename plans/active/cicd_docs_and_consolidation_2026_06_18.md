@@ -128,5 +128,41 @@ consolidate-then-archive.
 - **2026-06-18 (open):** Trigger fired. FF-pulled to current on LDR (0/0). Built the authoritative inventory above (119
   open / 18 in-scope docs / monster = `cicd_contract_hardening` 5224L). Confirmed `cloud_build_router` exists (keyword
   pass had missed it). Confirmed `vm-cross-cutting` valid (registry L265). uv issue is `decided/0-open` → archivable.
-  Filed this tracking plan. **Next: Phase 1 — fan out Opus sub-agents to extract structured facts from the 51 workflow
-  clusters, then synthesize the ci-cd-flow.md refresh + catalog generator.**
+  Filed this tracking plan.
+- **2026-06-18 — Phase 1a/1b SHIPPED.** Fanned out 5 Opus sub-agents → ground-truth facts for all 51 workflows. Authored
+  `scripts/generate-workflow-catalog.py` (parses the `.yml`, emits `docs/repo-management/CICD-WORKFLOW-CATALOG.md` — the
+  auto-generated drill-down: 51 workflows × stage/trigger/concurrency/mutates/fires-next; can't rot). Gate lessons (cost
+  2 fix cycles): the codex-compliance grep scans `scripts/` too → had to drop a `.get("cron", "")` empty-string fallback
+  AND a `try/except ImportError` shim (fallback-import ratchet). Shipped via quickmerge → **PR #401** (PM Option-B →
+  main, auto-merge). Content-sentinel correctly recognized the files survived a peer FF. **Next: Phase 1c (ci-cd-flow.md
+  refresh + mermaid) + Phase 1d (rewrite the stale `cicd-pipeline-definition.yaml`).** ci-cd-flow.md reviewer returned a
+  25-item refresh list (doc broadly as-built; 4 front sections wholesale-obsolete + retired vocab).
+
+## Phase 2 working data — `cicd_contract_hardening` (monster) open-item triage
+
+The 32 open checkboxes → 41 rows (lines 3204/3212/3219 pack 3 per-repo ruleset todos). **Flip-not-carry** (LIKELY-DONE):
+#5, #10 (the LDR drain — blockers resolved 2026-06-09), #19 (uac xdist flake — siblings root-fixed). **Propose-close**
+(STALE): #9 (Vercel-strip removes it), #14 (gate green, only operator ruleset-PATCH pends), #22 (self-declared
+out-of-scope, data/features track). Buckets: promotion #3,5,10,20,21,27,29,31,35; quality-gates #1,2,8,19,23; release
+#4,6,7,11,14,18,24,33,34,36,37,38,39,40,41; sit-fleet #9,12,13,15,16,17,22,25,26,28,30,32. Full table lives in the
+sub-agent return (this session); the bucket assignment above is the carry-forward map for the 4 new plans.
+
+## New drift findings from the Phase-1 workflow read (beyond audit D1–D25 — capture per Findings-Triage)
+
+Surfaced while reading the 51 workflows; **route into the themed plans at Phase 2** (do NOT fix piecemeal mid-docs):
+
+- **Cosmetic comment-vs-cron drift** (→ `cicd_release_machinery`, one "workflow doc-comment cadence cleanup" item):
+  `cloud-build-failure-watcher.yml` header "every 15 min" vs cron `*/30`; `ci-status-reconciler.yml` "every 10 min" vs
+  `*/15`; `ldr-ci-monitor.yml` "30-min tick" vs hourly; `publish-package.yml` self-labels "Reusable workflow" but has no
+  `workflow_call`.
+- **Telegram→Slack stale comments** (→ same cleanup item): `secret-health-check`, `cassette-drift-check`,
+  `plan-notification`, `agent-audit`, `overnight-dead-man-switch`, `fix-approval-timeout`, `cold-storage-cleanup` carry
+  "Telegram alert" comments / `send_telegram()` names though all post to Slack (Telegram retired 2026-06-02).
+- **3 POSSIBLE-REAL-BUGS — verify before fix** (→ themed plans):
+  1. `conflict-resolution-agent.yml` — a **duplicate `env:` key** in the dispatch step (the 2nd clobbers the 1st,
+     dropping GH_PAT/REPO_NAME/PR_NUMBER). If real, the escalation dispatch fires with empty creds. (→
+     promotion/release)
+  2. `hotfix-mode.yml` — bare `git push` (no rebase-retry) inside the shared `manifest-update` concurrency group; can
+     lose a non-fast-forward race that `update-repo-version.yml` (×5 retry) survives. (→ release)
+  3. `rollout-action-ref.yml` — pins/commits `quality-gates.yml` (the **v1 filename**) while the live required check is
+     `quality-gates-v2`; verify it isn't re-pinning a retired workflow file fleet-wide. (→ release)
