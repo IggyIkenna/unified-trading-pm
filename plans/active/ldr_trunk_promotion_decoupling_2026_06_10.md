@@ -97,11 +97,12 @@ Two live symptoms on 2026-06-10 share one root cause — **per-commit promotion 
   SHA + a different combined patch-id, so the raw range re-flags an already-promoted trailer-less commit on every drain
   forever (`14b11e2`/`06a83fb6` recurring block, 2026-06-17); track the last-promoted LDR SHA per repo, range
   `<that>..LDR`; fail-safe (a stale marker over-flags, never under-flags). Fix tracked in
-  `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`. (2) **push tripwire (faster detection,
-  optional)** — a non-blocking `push: live-defi-rollout` GHA running the same checker; a violation fires a
-  `#ci-failures` alert so a bypass is caught at push, not ≤30 min later at the drain. **LDR itself never runs QG.**
-  **Head-of-line is accepted by design:** the promote PR is the whole LDR→staging diff, so one un-promotable commit
-  (bypass or red) freezes that repo's promotion until reverted/retro-QG'd — fail-safe, nothing jumps a bad commit.
+  `plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` (RESOLVED 2026-06-18). (2) **push tripwire
+  (faster detection, optional)** — a non-blocking `push: live-defi-rollout` GHA running the same checker; a violation
+  fires a `#ci-failures` alert so a bypass is caught at push, not ≤30 min later at the drain. **LDR itself never runs
+  QG.** **Head-of-line is accepted by design:** the promote PR is the whole LDR→staging diff, so one un-promotable
+  commit (bypass or red) freezes that repo's promotion until reverted/retro-QG'd — fail-safe, nothing jumps a bad
+  commit.
 - **Stale/superseded promote PRs auto-close (no manual cleanup).** A GHA closes any LDR→staging PR whose commits are
   already in `staging` — by **patch-id/content equivalence, NOT SHA** (the drain rebases/squashes → staging SHAs differ;
   a SHA-membership check never matches → never closes). Bundle into the existing `ci_failure_watcher` hygiene.

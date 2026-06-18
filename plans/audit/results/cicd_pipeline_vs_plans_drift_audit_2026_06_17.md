@@ -283,7 +283,7 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
   is BLOCKED-PLAYWRIGHT).
 - `plans/active/issues/gcp_cloudbuild_sibling_context_staging_2026_06_15.md` — option B shipped + validated (self-marked
   "archive on next sweep").
-- `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` — resolved same-day, both items flipped,
+- `plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` — resolved same-day, both items flipped,
   prod-verified, already in CLAUDE.md.
 
 ---
