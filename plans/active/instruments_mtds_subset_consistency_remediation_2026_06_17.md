@@ -258,6 +258,32 @@ construction (server-side byte-identical copy preserves parquet footers; only th
 
 - 0 copy errors; the live footer spot-check timed out on host GCS read latency (not a data fault, not load-bearing).
 
+## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
+
+**No longer PAYG** — subscription + ~$150 credits (more than enough to stream all instruments). **ONE API key**
+(`databento-api-key`, single-key — operator chose collapse-to-single-key) across **exactly 3 datasets**: `GLBX.MDP3`
+(CME) + `DBEQ.BASIC` (Databento US Equities) + `CFE` (CBOE Futures). Any other dataset → reject.
+
+Schema → free-window entitlement (a request's `start` must be ≥ `today − window`; clip/reject otherwise):
+
+| Level | Schemas | Free window | Guard |
+| --- | --- | --- | --- |
+| L0 | `ohlcv-1s`, `definition`, `statistics`, `status` | 16 years | start ≥ today − 16y |
+| L1 | `trades`, `tbbo`, `mbp-1`, `bbo-*` | 1 year | start ≥ today − 365d |
+| L2 | `mbp-10` | 1 month | start ≥ today − ~30d |
+| L3 | `mbo` | 1 month | start ≥ today − ~30d |
+
+Codify this (schema→window table + 3-dataset allowlist) as the SSOT (UAC) + enforce as a pre-request guard in the
+Databento adapter(s) — replaces the PAYG-cost-blocker framing (cost emission stays as credit-burn telemetry; the hard
+guard is now entitlement window + dataset, surfaced as 403/entitlement not 402/payment). Instruments = `definition`
+schema = L0 (16y window) → the instrument backfill can pull the FULL universe within the 3 datasets, cost-free within
+credits. Tracked todos below.
+
+- [ ] [CODE] P1. **Databento subscription cutover (MTDS+UAC)**: single-key config (use_multi_key_rotation=False,
+      num_api_keys=1; fix the num_keys=20-asserting test; delete transitional secret `databento-api-key-1`) + codify the
+      schema→free-window + 3-dataset allowlist SSOT + enforce as pre-request guard in the adapter. — market-tick-data-service / unified-api-contracts
+- [ ] [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 + DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service
+
 ## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
 
 - [ ] [CODE] P2. **Batch-query GCS scanner is a second canonical-path SSOT** (flagged by reader-cutover @0e267be):
