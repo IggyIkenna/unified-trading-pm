@@ -1,5 +1,10 @@
 ---
+type: analysis
 title: MVP Instrument Universe Gap Audit — Expected vs Actual (manifest-based)
+epic: instruments_master
+auditor: audit-agent (deployment-api slot)
+date: 2026-06-17
+status: active
 created: 2026-06-17
 author: audit-agent (deployment-api slot, read-only)
 source:
