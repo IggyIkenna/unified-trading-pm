@@ -117,18 +117,21 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
 
 ## Phase D — file-level correctness findings (Phase-2 sub-agents, NEW)
 
-- [ ] [DATA] P1. **N1 — CEFI phantom `empty_confirmed` shadow rows** (~61,300, 57% of real-shard empties): two manifest
-      rows per cell (captured + bogus empty_confirmed w/ blank instrument_type) where the parquet exists with rows (e.g.
-      AVAXUSDT 2021-01-01 BINANCE-FUTURES = 943,196 rows but flagged empty). De-dup the empty shadow in the
-      canonicalisation walk; the captured row + GCS file are truth. — market-tick-data-service
+- [x] ✅ [DATA] P1. **N1 — CEFI phantom `empty_confirmed` shadow rows** — FIXED mtds@aaeada9. `_rebuild_cefi_cf11.py`
+      now suppresses any blank-itype prior row whose 5-tuple (date,venue,data_type,instrument_id,underlying) is covered by
+      a real object this run (`reemit_skipped_shadow`). Regenerated `projected_index_cefi_v2.parquet`: **371,010 shadows
+      suppressed**; re-audit shows **captured∩empty shadow cells = 0** (was ~63k) + **captured∩failed = 0**. 33 unit tests
+      (6 new). — market-tick-data-service
 - [ ] [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty**: all 333 CME `SOURCE_RETURNED_ZERO`/empty dates are
       Saturdays, but instruments writes a weekend carry-forward snapshot to GCS (11,526 rows incl 7,364 options) → ~1,079
       dishonest-empty cells; INST index rows duplicated 2×/cell. Fix the weekend honest-absence classification +
       de-dup. — instruments-service
-- [ ] [DATA] P0. **N3 — SPORTS league_id dropped by the consolidator (100% of captured)**: all 202,087 captured
-      MTDS-sports cells have NULL `league_id` though the GCS path (`league_id=BUNDESLIGA`) + row-level column ARE
-      populated. Propagate per-file league_id into the manifest row. ALSO stamp `source` on MTDS sports `trades` (73.7k
-      NULL — violates source= rule) + collapse venue case-dup API_FOOTBALL/`api_football`. — market-tick-data-service
+- [x] ✅ [DATA] P0. **N3 — SPORTS league_id dropped** — FIXED mtds@aaeada9. REFRAME: the audit's "100% NULL-league"
+      measured the PROJECTION; the live index had league_id on 169,380/202,087. Root cause: `_write_captured_rows` built
+      the row_key but called `writer.add()` WITHOUT passing league_id. Fixed: carry league_id + shard dims into add();
+      `_source_from_row` now resolves sports `trades`→`odds_api` + case-insensitive bridge. `projected_index_sports_v2`:
+      null-league **202,087→32,707**, NULL source **73.7k+→6** (202,081 stamped odds_api). 28 tests (3 new). Residual
+      tail (32,707 genuinely-null in LIVE + 6 null-source) → N3a/N3b below. — market-tick-data-service
 - [ ] [DATA] P2. **N4 — SPORTS instruments `instrument_count==0` on 194,356 captured rows** (per-league companion rows;
       global count lands on one row). Confirm against shard grain; fix count attribution. — instruments-service
 - [ ] [DATA] P1. **N5 — DEFI temporally-impossible `vault_share_price` captured phantoms** (1,582 cells 2020–2023: MAKER
@@ -138,9 +141,12 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       (`1INCH-ETH`/`ETH-USDC`/`WSTETH-ETH`); `instrument_type` case-dup `pool`(227,935)/`POOL`(158,431); `venue` dups
       (CURVE vs CURVE-ETHEREUM, MORPHOVAULTS vs MORPHO_VAULTS vs MORPHO-ETHEREUM). Normalize at write + in the
       canonicalisation walk so per-dimension grouping/denominators are correct. — market-tick-data-service
-- [ ] [DATA] P0. **F3 (reframed) — CEFI: re-classify ~1.3M legacy-recon `attempted_failed` rows**
-      (`LegacyBlankErrorReasonError` 763k + `LEGACY_THIRDKEY_DRIFT_RECON` 452k + `WITHIN_BOUNDS_EMPTY_RECLASSIFIED` 90k) in
-      the canonicalisation walk, AND backfill the ~88k GENUINE `VENUE_FETCH_FAILED`+`HTTP_429` cells. — market-tick-data-service
+- [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
+      `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
+      non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
+      `LegacyBlankErrorReasonError`→`UNCLASSIFIED_ADAPTER_ERROR` preserved (visible/backfill-worthy). attempted_failed
+      **1.40M→782,005** in `projected_index_cefi_v2`. Genuine `VENUE_FETCH_FAILED`(83,975)+`HTTP_429`(3,652) preserved →
+      backfill Step 9. The ~698k UNCLASSIFIED reconcile-to-expected_unattempted is N1b (depends Step 4). — market-tick-data-service
 - [ ] [CODE] P2. **F6 (reframed) — TRADFI option/instrument_type encoding**: unify the two options encodings
       (`instrument_type=options_chain` vs `data_type=options_chain` w/ blank type) + stamp instrument_type on the 182k
       blank-type cells (legacy path shapes). Not missing data — a typing fix. — market-tick-data-service
