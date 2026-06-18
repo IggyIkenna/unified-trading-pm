@@ -1,7 +1,6 @@
 ---
 title: TradFi Databento subscription-universe lockdown + billing-safety guards
 created: 2026-06-18
-author: ikennaigboaka
 parent_epic: tradfi_master
 assigned_vm: vm-tradfi
 priority: P1
