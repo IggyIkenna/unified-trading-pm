@@ -410,9 +410,15 @@ design).
 
 - [x] ✅ [OPS] P0. **DONE 2026-06-12 — re-ran from root clone; status-report cron now self-pulls (FF/verify `[already-installed]`, status `[updating]`; verified `crontab -l`).** Re-run `install-slot-cron-ff-pull.sh` on THIS laptop after B–E land (installs self-pull lines + corrects
       the `*/30`→`*/15` verify cadence).
-- [ ] [OPS] P0. **[2026-06-12 — HANDOFF: cannot reach Harsh's laptop / AWS VM from slot-3; run there (or orchestrator-dispatch) once PM@e64a8c0b3 is on each host's root clone.]** Verify `ROOT_PM`/`SLOT_DIR` correctness on **Harsh's laptop + the AWS VM** (`crontab -l` host-correct
-      absolute paths) + re-run install there + one-time root-clone unstick if stranded
-      (`git -C <host>/unified-trading-pm rev-list --count HEAD..origin/live-defi-rollout`). Dispatch via orchestrator.
+- [~] [OPS] P0. **Harsh's laptop HALF VERIFIED-DONE (2026-06-17, run on the Harsh laptop directly); AWS VM half
+      remains.** On Harsh's laptop: `verify-slot-host-symmetry.sh` = **13 passed / 0 failed** — the 3 slot crons
+      (FF-pull `*/5`, git-status-report, symmetry-verify `*/15`) are installed with **self-pull** + **host-correct
+      absolute paths** (`ROOT_PM=/active/unified-trading-system-repos/unified-trading-pm`, `SLOT_DIR=…/.tabs/1`, matching
+      `pwd`); logs fresh (1-2 min); 375 worktrees carry canonical identity + track `origin/live-defi-rollout`; root PM
+      clone **0 behind LDR (not stranded)**; GH_TOKEN workflow-capable; backend reachable. Nothing to install/unstick.
+  - [ ] [OPS] P0. **AWS VM half still pending** — verify `ROOT_PM`/`SLOT_DIR` + crons + root-clone-not-stranded on the
+        AWS VM (run there or orchestrator-dispatch; can't reach it from a laptop). `crontab -l` host-correct paths +
+        `git -C <vm>/unified-trading-pm rev-list --count HEAD..origin/live-defi-rollout` == 0.
 - [x] ✅ [DOCS] P1. **DONE 2026-06-12 — added § "Cron self-pull + Path-B per-slot ref refresh" to per-tab-worktrees.md (self-pull principle + helper + H6 + Path-B ref-refresh).** `codex/05-infrastructure/per-tab-worktrees.md` § "Cron-based FF puller" — document the
       self-pull-executor principle + the rule "every machine-run PM cron self-pulls its script from LDR before running;
       GHA exempt (current by design)". + one-liner in canonical `CLAUDE.md`.
