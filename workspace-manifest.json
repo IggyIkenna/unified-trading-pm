@@ -1804,8 +1804,12 @@
     "locked_since": "2026-06-18T20:48:23.911853Z",
     "locked_reason": "Breaking MINOR bump cascade: system-integration-tests=0.13.0 (pre-1.0.0)",
     "lock_version": "0.13.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "system-integration-tests",
+      "market-tick-data-service",
+      "deployment-api"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "system-integration-tests"
