@@ -81,11 +81,11 @@ regressions found.**
 > PM@235c5fd3b + PM@eeece9802; ci-cd-flow.md + CLAUDE.md now match the live pipeline) + **D14** (unwired-AR-gate record)
 > and the **D11 callout**, both filed in `cloud_build_router_aws_parity` (PM@98bdf756c). **Still open:** D1/D10 (the
 > `--frozen` model — **DECIDED 2026-06-17**: frozen-lock end-to-end, implementation tracked in `dependency_promotion` §
-> Phase 1.5), D11/D12 (cross-plan reconciles — D11 surfaced, decision pending), D16 (carve-breadth decision), and the
-> LOW-tier items D13/D15/D17–D25. The latter are **deferred for one of two reasons:** a code fix would need a PM-QG run
-> that contends with the active QG agent (D15/D18), or a markdown edit would force a 100–170-line prettier-reflow of a
-> hot, actively-edited foreign plan on commit (D13/D20/D24/D25). All captured per-item below — apply at triage / in a
-> quiet window.
+> Phase 1.5), D11 (DECIDED 2026-06-17 — drop in-image QG), D12 (RESOLVED 2026-06-18 — stale premise, issue
+> closed+archived), D16 (DECIDED 2026-06-18 — scripts governance plan), and the LOW-tier items D13/D15/D17–D25. The
+> latter are **deferred for one of two reasons:** a code fix would need a PM-QG run that contends with the active QG
+> agent (D15/D18), or a markdown edit would force a 100–170-line prettier-reflow of a hot, actively-edited foreign plan
+> on commit (D13/D20/D24/D25). All captured per-item below — apply at triage / in a quiet window.
 
 ---
 
@@ -103,7 +103,7 @@ finding's checkbox is the triage handle (migrate to the named destination plan w
 | D3  | 🟠 MED  | P     | CLAUDE.md "the two aiohttp `--ignore-vuln`" — actual is ~20 vulns                                                                                    | Edit CLAUDE.md count + the "drop the two flags" instruction                                      |
 | D4  | 🟠 MED  | P+X   | Cron drift: ldr-to-staging live `2,17,32,47`(15m) vs ci-cd-flow `13,43`(30m); main-backmerge live hourly vs CLAUDE `*/20`                            | Edit ci-cd-flow.md + CLAUDE.md to live values                                                    |
 | D11 | 🟠 MED  | X     | In-image QG: router plan wants advisory→blocking; sibling-context issue shipped `_RUN_INIMAGE_QG:false` skip                                         | Reconcile → `cloud_build_router_aws_parity` L67                                                  |
-| D12 | 🟠 MED  | X     | Content-hash sentinel owned by 2 plans, neither closes the quickmerge `--files` race                                                                 | Consolidate ownership → `qg_sentinel_content_hash` ⇄ `quality_gates_speed`                       |
+| D12 | ✅ DONE | X     | ~~Content-hash sentinel owned by 2 plans, neither closes the race~~ — premise STALE (Rec#1 shipped 977c5548f; plan archived)                         | RESOLVED 2026-06-18 — issue closed + archived; nothing to consolidate                            |
 | D13 | 🟠 MED  | S     | `qg_commit_quality_boundary` L220 flipped `[x] SHIPPED tab-mirror BIDIRECTIONAL` — machinery since DELETED by Path-B, no SUPERSEDED banner           | Add SUPERSEDED banner → that plan                                                                |
 | D14 | 🟠 MED  | S     | `assert_deps_published_to_ar.py` is UNWIRED (own STATUS comment 2026-06-16); reserved for unlaunched image-build path                                | Note as reserved/dead → `cloud_build_router_aws_parity` (AR-publish item)                        |
 | D22 | 🟠 MED  | H     | `semver_version_bump_skip_ci` + `cicd_workflow_sprawl_audit` migrated core but keep residual todos not in parent (dual-tracking)                     | Migrate residuals → `cicd_contract_hardening`, then archive                                      |
@@ -209,10 +209,14 @@ ref) but the structural sections were not updated in that pass.
   step from advisory to blocking." `gcp_cloudbuild_sibling_context_staging_2026_06_15` (resolved, shipped) added
   `_RUN_INIMAGE_QG:false` because the in-image `quality-gates.sh` is "redundant AND impossible (no PM harness in the
   image → exit 127)." The router's open item is partly counter to what already shipped. **Reconcile before actioning.**
-- **D12 — content-hash sentinel duplicate ownership.** `qg_sentinel_content_hash_and_slicing_2026_06_10` Rec#1
-  (content-hash sentinel) is NOT done; `quality_gates_speed_and_config_ssot_2026_06_09` ships `.qg_content_sentinel` but
-  only short-circuits CI-matrix slices, NOT the quickmerge `--files` race. Same target surface, two homes, neither
-  closes the race (a "declare your target surface" overlap). **Consolidate to one owner.**
+- **D12 — content-hash sentinel duplicate ownership. ✅ RESOLVED 2026-06-18 — the premise was a stale read.** By the
+  time of disposition: (1) Rec#1 (the content-hash sentinel — the dominant race fix) had **SHIPPED 2026-06-17**
+  (`977c5548f`: quickmerge accepts a green QG when HEAD only fast-forwarded + the `--files` are byte-identical to the
+  sentinel commit); (2) `quality_gates_speed_and_config_ssot` was **archived** (so no second owner / no
+  double-tracking); (3) Rec#2 (change-scoped slicing) is an explicit **WON'T-DO** (Harsh, 2026-06-17 —
+  tests+basedpyright always-full, only ~1.1% scopable); (4) Rec#3 (merge queue) superseded by Rec#1 + LDR-trunk
+  decoupling. The issue `qg_sentinel_content_hash_and_slicing` was **closed + archived** to `plans/archive/issues/`.
+  Nothing to consolidate.
 - (D1/D10 also belong here — see Class P.)
 
 ### Class S — Stale/obsolete items & dead machinery
@@ -290,7 +294,8 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
    follows the current CLAUDE.md rule. Everything else is documentation safety.
 2. **Refresh `ci-cd-flow.md` (D5–D9) in one pass** — it's the engineer SSOT; a stale SSOT mis-trains every agent.
 3. **Fix the CLAUDE.md stale facts (D2/D3/D4)** — quick, high-value (they actively mislead).
-4. **Reconcile the two X-contradictions (D11/D12)** and add the D13 SUPERSEDED banner.
+4. ~~Reconcile the two X-contradictions (D11/D12)~~ — both RESOLVED (D11 dropped, D12 stale-premise/closed); add the D13
+   SUPERSEDED banner.
 5. **Sprawl + lifecycle cleanup (D22/D24/D25)** and the small code/hygiene fixes (D15/D16/D18–D21/D23).
 
 > **Note on capture.** These 25 findings live here as a triage register (audit-result checkboxes are NOT auto-dispatched
@@ -317,7 +322,9 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [x] D11 ✅ **DECIDED 2026-06-17 (operator): DROP in-image QG** — `_RUN_INIMAGE_QG:false` canonical; pre-build
       `quality-gates-v2` PR gate is authoritative; deploy-safety via an image-boot smoke owned by the build-images
       workstream (separate agent). Router plan Phase 1 re-scoped to RESOLVED/dropped.
-- [ ] D12 🟠 — consolidate content-hash-sentinel ownership (qg_sentinel_content_hash ⇄ quality_gates_speed)
+- [x] D12 ✅ — RESOLVED 2026-06-18: premise stale. Rec#1 (content-hash sentinel) SHIPPED 2026-06-17 (`977c5548f`); Rec#2
+      (change-scoped slicing) WON'T-DO (Harsh, ~1.1%); Rec#3 superseded; `quality_gates_speed` archived → no
+      double-tracking. Issue closed + archived to `plans/archive/issues/`.
 - [ ] D13 🟠 — add SUPERSEDED banner to qg_commit_quality_boundary L220 (tab-mirror torn out by Path-B). **DEFERRED: the
       edit would force a ~170-line prettier reflow of that hot, actively-edited plan mid-session (prek reflows md on
       commit) — apply in a quiet window.**

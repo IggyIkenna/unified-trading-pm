@@ -5,12 +5,30 @@ created: 2026-06-10
 source:
   - slot-3 live experience 2026-06-10 shipping deployment-api data-status STEP 5.90 fix + flaky-test fix
   - deployment-api QG ran ~5× and lost the sentinel race each time to unrelated slot-2 commits
-locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
+resolved: 2026-06-18
 ---
 
-> **🟡 STATUS 2026-06-12 (verified against LDR) — STILL ACTIONABLE; partial machinery exists, the core fix does not.**
+> **✅ RESOLVED 2026-06-18 — CLOSED + archiving (all recs shipped or decided-against; the owning QG-speed plan is
+> archived). Surfaced as D12 in the CI/CD drift audit
+> (`plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md`); the audit's "double-tracked, unbuilt"
+> framing was a stale read — corrected here.**
+>
+> - **Rec #1 (content-hash sentinel — the dominant velocity tax):** ✅ **SHIPPED 2026-06-17 (`977c5548f`)** — quickmerge
+>   accepts a green QG when HEAD only fast-forwarded AND the `--files` are byte-identical to the sentinel commit (~80%
+>   of the race killed; fleet-live via the quickmerge symlinks).
+> - **Rec #2 (change-scoped QG slicing → local `--files`):** ❌ **WON'T-DO** (operator Harsh, 2026-06-17, data-backed) —
+>   tests (67.4%) + basedpyright (8.6%) are always-full for correctness, leaving only ~1.1% safely-scopable; not worth a
+>   2nd sentinel + quickmerge policy (CLAUDE.md L678 "no change-scoped fast tier"; archived
+>   `quality_gates_speed_and_config_ssot_2026_06_09` Phase 2 CLOSED). The trivial-change cases are already covered by
+>   the docs-fast-path/carve-out + `.qg_content_sentinel` (byte-identical skip) + parallel CI-matrix slicing (all
+>   shipped).
+> - **Rec #3 (LDR merge queue):** superseded — Rec#1 + LDR-trunk decoupling removed the contention it targeted.
+>
+> No live work remains. The 2026-06-12 note below is retained as the evidence trail.
+
+> **🟡 STATUS 2026-06-12 (verified against LDR) — historical, superseded by the RESOLVED banner above.**
 >
 > - **Rec #2 (QG slicing): partially landed.** `QG_SLICE=tests|typecheck|lint-codex` machinery exists in
 >   `scripts/quality-gates-base/base-service.sh`, and an in-gate `.qg_content_sentinel` (conservative content-hash)
