@@ -63,11 +63,11 @@ All on `origin/live-defi-rollout`; full detail in
         ad-hoc pgrep drain-gate is fully superseded.** `scripts/quality-gates-base/qg-host-governor.sh` (157 lines) is a
         flock(1) token-bucket: K=max(2, floor(physical_cores/4)) tokens as K lockfiles in a host-shared dir;
         `qg_governor_acquire` blocks until a token frees, holds an flock'd fd for the run's lifetime, OS-auto-freed on
-        any early exit. It is **sourced into base-service.sh** (line 65) and called automatically before the heavy phases
-        (TESTS+TYPECHECK), released after TYPECHECK. This IS the item's fix — gates on flock (excludes waiters; no
-        self-counting pgrep), is a shared helper, and is auto-invoked so slots no longer hand-roll the `until pgrep ≤1`
-        pattern. Better than the proposed `scripts/dev/qg-host-gate.sh` (no opt-in needed). `QG_GOVERNOR_DISABLE=true`
-        bypass + graceful no-op when flock(1) is absent.
+        any early exit. It is **sourced into base-service.sh** (line 65) and called automatically before the heavy
+        phases (TESTS+TYPECHECK), released after TYPECHECK. This IS the item's fix — gates on flock (excludes waiters;
+        no self-counting pgrep), is a shared helper, and is auto-invoked so slots no longer hand-roll the
+        `until pgrep ≤1` pattern. Better than the proposed `scripts/dev/qg-host-gate.sh` (no opt-in needed).
+        `QG_GOVERNOR_DISABLE=true` bypass + graceful no-op when flock(1) is absent.
 
 - [x] ✅ [INFRA] P1. **CLOSED-AS-SUBSUMED (2026-06-17): governor-fix done (this plan's part); debt-greening owned by
       cicd Phase 6 (active).** Governor runs fully now (QG executes start→finish locally + fleet, verified repeatedly
@@ -158,9 +158,9 @@ All on `origin/live-defi-rollout`; full detail in
       QG-green work they commit, else their commits strand on the worker's tab branch exactly like the uta re-lock did.
       A background worker that finishes + moves on (no interactive operator to quickmerge) is the canonical strander
       this closes.
-- [x] ❌ MOOT — closed with the rejection of decision 3 (operator 2026-06-10). The cron FF-push it would have
-      carved out was REJECTED at ratification (conflicts with the LIVE strict-quickmerge lineage guard + pre-Path-B
-      premises), so no HARD-RULE carve-out is needed; the carve-out set stays closed as-is.
+- [x] ❌ MOOT — closed with the rejection of decision 3 (operator 2026-06-10). The cron FF-push it would have carved out
+      was REJECTED at ratification (conflicts with the LIVE strict-quickmerge lineage guard + pre-Path-B premises), so
+      no HARD-RULE carve-out is needed; the carve-out set stays closed as-is.
 
 ### Remote tab branch stays current with LDR — server-side `LDR→tab` FF mirror (operator-chosen 2026-06-04, host-independent)
 
@@ -225,38 +225,41 @@ All on `origin/live-defi-rollout`; full detail in
       `VM_NAME`/`ORCHESTRATOR_VM_ID` → `HOST_ID` empty → `PREFIX_BASE=OPERATOR`). Repos: `unified-trading-pm`
       (`scripts/dev/setup-tab-worktrees.sh` + `scripts/hooks/fix-commit-identity.sh`). parent_epic: (per-tab-worktrees /
       cicd master).
-- [x] ✅ [INFRA] P2. **Server-side `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never
-      force).** SHIPPED 2026-06-04 (PM PR #132 + #134; rolled out to all 24 repos). Added a `ldr_to_tabs` job to
-      `tab-mirror-to-ldr.yml` that FFs every behind-only `tab/*` up to LDR. **Cadence (operator-chosen 2026-06-04):**
-      NOT push-triggered — runs on a `*/15 * * * *` schedule and FFs each tab only up to the latest LDR commit **older
-      than 15 min** (settle window, so a just-landed commit isn't propagated onto remote tabs until it stabilizes).
-      FF/alert-only; never force-pushes a tab; GITHUB*TOKEN push so no recursive leg-A trigger. Diverged tab → never
-      touched → escalates to the divergence monitor (cicd item below). DEPENDS on the global-uniqueness precondition
-      above (✅ shipped). Parity guarded by `detect_template_drift.py --workflows` (PM PR #133). **Original spec
-      (push-triggered):** Extend the `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`,
-      runs on push to LDR) so that, in addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does
-      \*\*`LDR→tab`: FF every
+- [x] ⛔ **SUPERSEDED 2026-06-08 (Path-B):** this shipped `tab-mirror-to-ldr.yml` / `ldr_to_tabs` machinery was
+      **deleted fleet-wide** when Path-B retired tab branches (`worktree_ldr_unification_2026_06_08.md`). Kept flipped
+      for provenance; the mechanism no longer exists — do not treat the body below as live. [INFRA] P2. **Server-side
+      `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never force).** SHIPPED 2026-06-04
+      (PM PR #132 + #134; rolled out to all 24 repos). Added a `ldr_to_tabs` job to `tab-mirror-to-ldr.yml` that FFs
+      every behind-only `tab/*` up to LDR. **Cadence (operator-chosen 2026-06-04):** NOT push-triggered — runs on a
+      `*/15 * * * *` schedule and FFs each tab only up to the latest LDR commit **older than 15 min** (settle window, so
+      a just-landed commit isn't propagated onto remote tabs until it stabilizes). FF/alert-only; never force-pushes a
+      tab; GITHUB*TOKEN push so no recursive leg-A trigger. Diverged tab → never touched → escalates to the divergence
+      monitor (cicd item below). DEPENDS on the global-uniqueness precondition above (✅ shipped). Parity guarded by
+      `detect_template_drift.py --workflows` (PM PR #133). **Original spec (push-triggered):** Extend the
+      `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`, runs on push to LDR) so that, in
+      addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does \*\*`LDR→tab`: FF every
       `tab/*` branch that is purely BEHIND LDR** (ancestor) up to LDR. **HARD invariants:**     FF-only, **never force-push**, never auto-merge. A tab that is BOTH ahead+behind (DIVERGED) → **do NOT touch it**     → emit the divergence alert (cicd item below); the one safe auto-resolution is the existing "rebase diverged tab     onto LDR" path (`e21ca439`— preserves the tab's own commits + pulls LDR in), reuse it, don't re-invent. **Why     server-side not the cron**: host-independent — refreshes a slot's remote tab branch whether the owning host     (laptop / AWS VM) is online or not (the headless-fleet gap the cron can't cover). **Operates over EVERY`tab/_`
       branch fleet-wide\*\* (all operators, all slots, every host) — DEPENDS on the global-uniqueness precondition above
       (without it the glob can FF one host's remote with another host's commits). Composes with — does NOT replace — the
       cron FF-push of QG-green \_committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the
       `behind`/keep-tabs- current-down leg). Repo: `unified-trading-pm` (workflow-templates →
       `rollout-workflow-templates.sh`). parent_epic: (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
-- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [INFRA] P2. **Pin every tab worktree's upstream to `origin/live-defi-rollout` + assert it in
-      `verify-slot-host-symmetry.sh`.** Root cause of the misleading `N↑` display: a `git push -u` (or
-      `branch --set-upstream-to=origin/tab/...`) re-points a worktree's upstream to its (stale) remote tab branch, so VS
-      Code's ahead/behind reads against the stale tab instead of LDR (phantom-ahead footgun, already documented in
-      CLAUDE.md § "Upstream tracking"). `setup-tab-worktrees.sh --track` sets it correctly; add a guard in
-      `verify-slot-host-symmetry.sh` that asserts `git rev-parse --abbrev-ref @{upstream} == origin/live-defi-rollout`
-      for every worktree (fix + warn on mismatch) so the only thing the arrows ever show fleet-wide is genuine LDR
-      drift. Repos: `unified-trading-pm` (`scripts/verify-slot-host-symmetry.sh` +
-      `scripts/dev/setup-tab-worktrees.sh`). parent_epic: (per-tab-worktrees / cicd master). **[SUPERSEDED-BY-PATH-B
-      2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [INFRA] P2. **Pin every tab worktree's upstream to
+      `origin/live-defi-rollout` + assert it in `verify-slot-host-symmetry.sh`.** Root cause of the misleading `N↑`
+      display: a `git push -u` (or `branch --set-upstream-to=origin/tab/...`) re-points a worktree's upstream to its
+      (stale) remote tab branch, so VS Code's ahead/behind reads against the stale tab instead of LDR (phantom-ahead
+      footgun, already documented in CLAUDE.md § "Upstream tracking"). `setup-tab-worktrees.sh --track` sets it
+      correctly; add a guard in `verify-slot-host-symmetry.sh` that asserts
+      `git rev-parse --abbrev-ref @{upstream} == origin/live-defi-rollout` for every worktree (fix + warn on mismatch)
+      so the only thing the arrows ever show fleet-wide is genuine LDR drift. Repos: `unified-trading-pm`
+      (`scripts/verify-slot-host-symmetry.sh` + `scripts/dev/setup-tab-worktrees.sh`). parent_epic: (per-tab-worktrees /
+      cicd master). **[SUPERSEDED-BY-PATH-B 2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not
+      implement.
 - [x] ✅ [SCRIPT] P2. **VERIFIED 2026-06-17 — all 3 Path-B drift-detection paths exist + are LDR-based + wired.** (a)
       dirty-worktree-vs-LDR: `slot-cron-ff-pull.sh` emits the `skip:dirty` token with worst-of precedence
-      (conflict>fail>skip:dirty>ok) (5-min cron); (b) committed-ahead-vs-LDR: `scripts/cicd/slot_drift_check.py` (ancestor
-      invariant) + `scripts/dev/slot-git-status-report.sh` (ahead/behind POST) both reference `live-defi-rollout` (the
-      Path-B base, not the retired `tab/`) + worker-liveness any_red; (c) promotion lag:
+      (conflict>fail>skip:dirty>ok) (5-min cron); (b) committed-ahead-vs-LDR: `scripts/cicd/slot_drift_check.py`
+      (ancestor invariant) + `scripts/dev/slot-git-status-report.sh` (ahead/behind POST) both reference
+      `live-defi-rollout` (the Path-B base, not the retired `tab/`) + worker-liveness any_red; (c) promotion lag:
       `scripts/cicd/promotion_lag_monitor.py` (63 lag/threshold refs) wired into `promotion-lag-monitor.yml`. All three
       are Path-B-aware (key off LDR) and cron/alert-wired → async-not-yet-promoted code is always visible with a
       duration. Detection class confirmed intact under Path-B.
@@ -271,22 +274,23 @@ All on `origin/live-defi-rollout`; full detail in
 > "Applying autostash resulted in conflicts" foot-gun) isn't trapped distinctly. PM-as-a-repo is COVERED by the same
 > gate (it keys off the current branch's upstream), so no PM-specific code — one template change rolled fleet-wide.
 
-- [x] ✅ [INFRA] P1. **quickmerge STAGE 0.4 structured error contract SHIPPED (2026-06-17, PM@ac6631340-range, fleet-live
-      via the per-repo symlinks — no rollout needed; the "rollout-workflow-templates" clause was stale).** STAGE 0.4's
-      behind/diverged block now emits the machine-parseable
+- [x] ✅ [INFRA] P1. **quickmerge STAGE 0.4 structured error contract SHIPPED (2026-06-17, PM@ac6631340-range,
+      fleet-live via the per-repo symlinks — no rollout needed; the "rollout-workflow-templates" clause was stale).**
+      STAGE 0.4's behind/diverged block now emits the machine-parseable
       `QUICKMERGE_BLOCKED code=<…> repo=… branch=… behind=… ahead=… conflicts="…"` line + a `RECOVERY:` line pointing at
       `SUB_AGENT_MANDATORY_RULES.md` § behind-remote. The DISTINCT `code=AUTOSTASH_POP_CONFLICT` trap is implemented via
       the `git rebase --abort` rc discriminator (rc 0 = a rebase was mid-flight → `BEHIND_DIVERGED_CONFLICT`, autostash
       pending; rc≠0 = no rebase → the autostash pop conflicted → `AUTOSTASH_POP_CONFLICT`, work in `git stash list`).
       Conflicts captured BEFORE the (safe) abort; `QUICKMERGE_ALLOW_BEHIND=1` override preserved. SUB_AGENT doc updated
       to the live contract. **Self-exercised** — the quickmerge.sh ship ran the new code on its own promotion.
-  - [x] ✅ [TEST] P2. **DONE 2026-06-17 — `scripts/quality-gates-base/tests/test-quickmerge-blocked-contract.sh`
-        (5/0 green).** EXTRACTS the real STAGE-0.4 discriminator+emit block from `quickmerge.sh` (via awk, not a replica
-        — same pattern as `test-ratchet-exit-code-aggregation.sh`) and runs it against two synthesized git fixtures: a
+  - [x] ✅ [TEST] P2. **DONE 2026-06-17 — `scripts/quality-gates-base/tests/test-quickmerge-blocked-contract.sh` (5/0
+        green).** EXTRACTS the real STAGE-0.4 discriminator+emit block from `quickmerge.sh` (via awk, not a replica —
+        same pattern as `test-ratchet-exit-code-aggregation.sh`) and runs it against two synthesized git fixtures: a
         behind+diverged-conflict (rebase mid-flight → `git rebase --abort` rc 0 → `BEHIND_DIVERGED_CONFLICT`) and an
-        autostash-pop conflict (no rebase in progress → rc≠0 → `AUTOSTASH_POP_CONFLICT`), asserting each emits its code +
-        the repo/branch/behind/conflicts fields + the RECOVERY line. A structural anchor fails the test if the contract
-        is removed/renamed in the source. Standalone shell test (not pytest-collected; on-demand like the ratchet test).
+        autostash-pop conflict (no rebase in progress → rc≠0 → `AUTOSTASH_POP_CONFLICT`), asserting each emits its
+        code + the repo/branch/behind/conflicts fields + the RECOVERY line. A structural anchor fails the test if the
+        contract is removed/renamed in the source. Standalone shell test (not pytest-collected; on-demand like the
+        ratchet test).
 - [x] ✅ [INFRA] P1. **FIXED (PM `scripts/quickmerge.sh`, this batch — live fleet-wide via the per-repo symlinks).**
       STAGE 0.4 now resolves the comparison ref from `git rev-parse --abbrev-ref @{u}` (configured upstream) when set,
       falling back to `origin/<branch-name>` only if no upstream. Verified: `@{u}` → `origin/live-defi-rollout` on a
@@ -318,14 +322,15 @@ All on `origin/live-defi-rollout`; full detail in
       rollout. (Workaround used 2026-06-03: `ln -s <top-level>/.venv-workspace .tabs/2/.venv-workspace`.)
 - [x] ✅ [INFRA] P2. **DONE (2026-06-17, PM quickmerge.sh, fleet-live via symlinks).** The dep-align stage now
       **hard-requires a successful generate** (option a): the old `2>/dev/null || true` is replaced with a captured-rc
-      generate — on failure it prints "derived-dependency-manifest generation FAILED — fix THIS, not dep-alignment" + the
-      generate output + the venv/PATH hint, and exits 1, so a generate failure (broken venv / gitignored-manifest-absent
-      after FF) reports ITS OWN root cause instead of cascading into the misleading "Run generate-derived-manifest.py
-      first" alignment error. (The OBSERVED CASCADE was already resolved by the STAGE 1.5 `source`-guard; this is the
-      defence-in-depth hardening that item left open.) **Self-exercised** — ran on quickmerge.sh's own ship (generate
-      succeeded → dep-align passed). Original bug context: item-H untracks `derived-dependency-manifest.json` (gitignored)
-      → after an FF a slot has no local copy → `check-dependency-alignment.py` errored "Run generate first" when the
-      `|| true`-swallowed generate had itself died on the venv/PATH bug.
+      generate — on failure it prints "derived-dependency-manifest generation FAILED — fix THIS, not dep-alignment" +
+      the generate output + the venv/PATH hint, and exits 1, so a generate failure (broken venv /
+      gitignored-manifest-absent after FF) reports ITS OWN root cause instead of cascading into the misleading "Run
+      generate-derived-manifest.py first" alignment error. (The OBSERVED CASCADE was already resolved by the STAGE 1.5
+      `source`-guard; this is the defence-in-depth hardening that item left open.) **Self-exercised** — ran on
+      quickmerge.sh's own ship (generate succeeded → dep-align passed). Original bug context: item-H untracks
+      `derived-dependency-manifest.json` (gitignored) → after an FF a slot has no local copy →
+      `check-dependency-alignment.py` errored "Run generate first" when the `|| true`-swallowed generate had itself died
+      on the venv/PATH bug.
 - [x] ✅ [DOC] P1. **SUB_AGENT_MANDATORY_RULES.md** — added the behind-remote recovery recipe keyed on the
       `QUICKMERGE_BLOCKED` block (operative today against the existing exit-1; structured codes land with the INFRA
       item). — PM@pending (this batch).
@@ -337,8 +342,9 @@ All on `origin/live-defi-rollout`; full detail in
 
 ### Residual
 
-- [x] ✅ [RESOLVED-STALE: re-lock commits on uta LDR] [DEPS] P3. **unified-trading-api** re-lock commit (1 trivial metadata-sync, 0 version moves) — race-blocked by the
-      ci_status bot on uta's LDR; lands via the FF-push cron (once shipped) or a quiet-window FF push.
+- [x] ✅ [RESOLVED-STALE: re-lock commits on uta LDR] [DEPS] P3. **unified-trading-api** re-lock commit (1 trivial
+      metadata-sync, 0 version moves) — race-blocked by the ci_status bot on uta's LDR; lands via the FF-push cron (once
+      shipped) or a quiet-window FF push.
 
 ## Cron-executor staleness → e2e self-pull rollout (operator design 2026-06-05)
 
@@ -357,74 +363,89 @@ All on `origin/live-defi-rollout`; full detail in
       `/tmp/rescue_slot2_defi_provenance_2026_06_05.patch`), FF'd root clone 195 commits → current code, ran one manual
       tick → `[adopt-rebase]` healed slot-1 IS (`51de1ce4`) + mtds (`76d650f0`) to LDR (0/0); `[upstream-fix]` reset all
       drifted upstreams (UTL/UAC/mtds/mdps, tabs 1·3·4·5·6·7) → `origin/live-defi-rollout`.
-- [x] ✅ [RESOLVED-STALE: A12c flipped in provenance plan] [PLAN] P1. **Land slot-2's rescued edit** (DeFi provenance `A12c ✅` flip + `A12a` remaining-handlers todo, in
+- [x] ✅ [RESOLVED-STALE: A12c flipped in provenance plan] [PLAN] P1. **Land slot-2's rescued edit** (DeFi provenance
+      `A12c ✅` flip + `A12a` remaining-handlers todo, in
       `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`) onto LDR via a slot quickmerge
       `docs(plans):` — it currently lives ONLY in `stash@{0}` + the `/tmp` patch on the laptop root clone (unique, not
       on LDR).
 
 ### Phase B — permanent executor self-pull (the core fix) — `unified-trading-pm/scripts/dev/`
 
-- [x] ✅ [SCRIPT] P0. **DONE — self-pull live in `install-slot-cron-ff-pull.sh` (syntax-gated H6 via `git show`+`bash -n`).** **Cron line self-pulls its own script from LDR before running** — so a stale/dirty PM clone never
-      starves the cron of current code (kills the chicken-and-egg). Pattern (in the crontab line = immutable anchor, NOT
-      inside the script):
+- [x] ✅ [SCRIPT] P0. **DONE — self-pull live in `install-slot-cron-ff-pull.sh` (syntax-gated H6 via
+      `git show`+`bash -n`).** **Cron line self-pulls its own script from LDR before running** — so a stale/dirty PM
+      clone never starves the cron of current code (kills the chicken-and-egg). Pattern (in the crontab line = immutable
+      anchor, NOT inside the script):
       `cd <ROOT_PM> && git fetch -q origin live-defi-rollout 2>/dev/null; git checkout -q     origin/live-defi-rollout -- <script> <tracked-sibling-deps> 2>/dev/null; cd <CWD> && bash <ROOT_PM>/<script> <args>`.
       Use `git checkout origin/LDR -- <file>` (lands at real path → `BASH_SOURCE`-relative sibling + `--help` still
       work); NOT `git show | bash -s`. Offline-safe via `|| true` (falls back to last-good local copy, never skips a
       tick). For `slot-cron-ff-pull.sh` pull BOTH it + `scripts/dev/cron-branch-overrides.txt` (tracked sibling dep,
       line 47).
-- [x] ✅ [SCRIPT] P1. **DONE 2026-06-12 (PM@e64a8c0b3) — `scripts/dev/cron-self-pull-lib.sh` `emit_cron_self_pull`; installer sources it (FF/VERIFY byte-identical).** Factor the self-pull into a shared helper sourced by every cron-installer so the pattern is DRY in
-      source even though each emitted crontab line is self-contained.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-12 (PM@e64a8c0b3) — `scripts/dev/cron-self-pull-lib.sh` `emit_cron_self_pull`;
+      installer sources it (FF/VERIFY byte-identical).** Factor the self-pull into a shared helper sourced by every
+      cron-installer so the pattern is DRY in source even though each emitted crontab line is self-contained.
 
 ### Phase C — apply self-pull to EVERY machine-run PM cron (audit 2026-06-05)
 
 These all run PM-repo scripts from the root clone (= identical staleness exposure). GHA workflows excluded (current by
 design).
 
-- [x] ✅ [SCRIPT] P0. `slot-cron-ff-pull` (root clone, \*/5) — self-pull. **DONE (live; now helper-emitted, byte-identical).**
-- [x] ✅ [SCRIPT] P0. **DONE — */15 + self-pull live on this host (helper-emitted).** `slot-host-symmetry-verify` (root clone) — self-pull **+ fix cadence drift** (installed `*/30`,
-      install script wants `*/15` per 2026-06-04 — proof the installer wasn't re-run since the clone went stale).
-- [x] ✅ [SCRIPT] P1. `slot-git-status-report` (root clone, \*/5) — self-pull (`scripts/dev/slot-git-status-report.sh`). **DONE 2026-06-12 (PM@e64a8c0b3) — added to installer + verified live (`crontab -l`).**
-- [ ] [SCRIPT] P1. **[2026-06-12 — Cloud Run Job is EXEMPT (clones PM fresh each run); only the local Ikenna-machine 4h crontab needs the one-line self-pull, now emittable via `emit_cron_self_pull`. Small machine-specific follow-up.]** `orphan-ping-audit` (root clone, every 4h, `scripts/agents/audit_ping_orphans.sh`) — self-pull;
+- [x] ✅ [SCRIPT] P0. `slot-cron-ff-pull` (root clone, \*/5) — self-pull. **DONE (live; now helper-emitted,
+      byte-identical).**
+- [x] ✅ [SCRIPT] P0. **DONE — \*/15 + self-pull live on this host (helper-emitted).** `slot-host-symmetry-verify` (root
+      clone) — self-pull **+ fix cadence drift** (installed `*/30`, install script wants `*/15` per 2026-06-04 — proof
+      the installer wasn't re-run since the clone went stale).
+- [x] ✅ [SCRIPT] P1. `slot-git-status-report` (root clone, \*/5) — self-pull (`scripts/dev/slot-git-status-report.sh`).
+      **DONE 2026-06-12 (PM@e64a8c0b3) — added to installer + verified live (`crontab -l`).**
+- [ ] [SCRIPT] P1. **[2026-06-12 — Cloud Run Job is EXEMPT (clones PM fresh each run); only the local Ikenna-machine 4h
+      crontab needs the one-line self-pull, now emittable via `emit_cron_self_pull`. Small machine-specific
+      follow-up.]** `orphan-ping-audit` (root clone, every 4h, `scripts/agents/audit_ping_orphans.sh`) — self-pull;
       update its self-installer.
-- [x] ✅ [SCRIPT] P2. **DONE — EXEMPT (retired 2026-06-03; SVGs gitignored, cron a no-op). Documented exempt in codex § "Cron self-pull".** `refresh-manifest-dag` (`scripts/manifest/refresh-manifest-dag.sh`, \*/30) — runs from the slot-1
-      worktree (FF-managed, lower risk) — add self-pull for consistency OR document why exempt.
+- [x] ✅ [SCRIPT] P2. **DONE — EXEMPT (retired 2026-06-03; SVGs gitignored, cron a no-op). Documented exempt in codex §
+      "Cron self-pull".** `refresh-manifest-dag` (`scripts/manifest/refresh-manifest-dag.sh`, \*/30) — runs from the
+      slot-1 worktree (FF-managed, lower risk) — add self-pull for consistency OR document why exempt.
 
 ### Phase D — bootstrap enforcement so drift never re-plants
 
-- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P0. `setup-tab-worktrees.sh:258-261` — after `worktree add --track … origin/${branch}`, force
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P0. `setup-tab-worktrees.sh:258-261` — after
+      `worktree add --track … origin/${branch}`, force
       `git -C <slot_dir> branch --set-upstream-to=origin/live-defi-rollout ${branch}` so upstream = LDR even when the
       worktree is created from an existing remote tab branch (closes the drift-at-source gap). **[SUPERSEDED-BY-PATH-B
       2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
-- [x] ✅ [RESOLVED-STALE: install-slot-cron .tabs guard present] [SCRIPT] P1. Install scripts (`install-slot-cron-ff-pull.sh` + siblings) — abort if `WORKSPACE_ROOT` resolves
-      inside `/.tabs/` (install MUST run from the root clone, else it bakes wrong `ROOT_PM`/`SLOT_DIR` absolute paths —
-      protects Harsh + VM installs).
+- [x] ✅ [RESOLVED-STALE: install-slot-cron .tabs guard present] [SCRIPT] P1. Install scripts
+      (`install-slot-cron-ff-pull.sh` + siblings) — abort if `WORKSPACE_ROOT` resolves inside `/.tabs/` (install MUST
+      run from the root clone, else it bakes wrong `ROOT_PM`/`SLOT_DIR` absolute paths — protects Harsh + VM installs).
 
 ### Phase E — debounced upstream auto-fix + escalation (operator refinement 2026-06-05)
 
-- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P1. `slot-cron-ff-pull.sh` Step 0 — replace the IMMEDIATE upstream reset with a **10-min grace**: marker
-      `$TMPDIR/slot-upstream-drift/<host>-<slot>-<repo>` records first-seen; `--set-upstream-to=LDR` only once the
-      marker is ≥10 min old (room for intentional temporary switches); clear marker when aligned.
-      **[SUPERSEDED-BY-PATH-B 2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
-- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P1. `verify-slot-host-symmetry.sh` — **Slack-alert if a drift marker is ≥15 min old** (auto-fix-failed
-      signal; expected no-op since the 10-min fix clears it). Reuses the same marker dir. **[SUPERSEDED-BY-PATH-B
-      2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P1. `slot-cron-ff-pull.sh` Step 0 — replace the
+      IMMEDIATE upstream reset with a **10-min grace**: marker `$TMPDIR/slot-upstream-drift/<host>-<slot>-<repo>`
+      records first-seen; `--set-upstream-to=LDR` only once the marker is ≥10 min old (room for intentional temporary
+      switches); clear marker when aligned. **[SUPERSEDED-BY-PATH-B 2026-06-10]**: tab branches are retired (Path-B
+      clones on LDR) — do not implement.
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P1. `verify-slot-host-symmetry.sh` — **Slack-alert if a
+      drift marker is ≥15 min old** (auto-fix-failed signal; expected no-op since the 10-min fix clears it). Reuses the
+      same marker dir. **[SUPERSEDED-BY-PATH-B 2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not
+      implement.
 
 ### Phase F — fleet rollout + verification (Harsh + VM)
 
-- [x] ✅ [OPS] P0. **DONE 2026-06-12 — re-ran from root clone; status-report cron now self-pulls (FF/verify `[already-installed]`, status `[updating]`; verified `crontab -l`).** Re-run `install-slot-cron-ff-pull.sh` on THIS laptop after B–E land (installs self-pull lines + corrects
-      the `*/30`→`*/15` verify cadence).
+- [x] ✅ [OPS] P0. **DONE 2026-06-12 — re-ran from root clone; status-report cron now self-pulls (FF/verify
+      `[already-installed]`, status `[updating]`; verified `crontab -l`).** Re-run `install-slot-cron-ff-pull.sh` on
+      THIS laptop after B–E land (installs self-pull lines + corrects the `*/30`→`*/15` verify cadence).
 - [~] [OPS] P0. **Harsh's laptop HALF VERIFIED-DONE (2026-06-17, run on the Harsh laptop directly); AWS VM half
-      remains.** On Harsh's laptop: `verify-slot-host-symmetry.sh` = **13 passed / 0 failed** — the 3 slot crons
-      (FF-pull `*/5`, git-status-report, symmetry-verify `*/15`) are installed with **self-pull** + **host-correct
-      absolute paths** (`ROOT_PM=/active/unified-trading-system-repos/unified-trading-pm`, `SLOT_DIR=…/.tabs/1`, matching
-      `pwd`); logs fresh (1-2 min); 375 worktrees carry canonical identity + track `origin/live-defi-rollout`; root PM
-      clone **0 behind LDR (not stranded)**; GH_TOKEN workflow-capable; backend reachable. Nothing to install/unstick.
+  remains.** On Harsh's laptop: `verify-slot-host-symmetry.sh` = **13 passed / 0 failed** — the 3 slot crons (FF-pull
+  `*/5`, git-status-report, symmetry-verify `*/15`) are installed with **self-pull** + **host-correct absolute paths**
+  (`ROOT_PM=/active/unified-trading-system-repos/unified-trading-pm`, `SLOT_DIR=…/.tabs/1`, matching `pwd`); logs fresh
+  (1-2 min); 375 worktrees carry canonical identity + track `origin/live-defi-rollout`; root PM clone **0 behind LDR
+  (not stranded)**; GH_TOKEN workflow-capable; backend reachable. Nothing to install/unstick.
   - [ ] [OPS] P0. **AWS VM half still pending** — verify `ROOT_PM`/`SLOT_DIR` + crons + root-clone-not-stranded on the
         AWS VM (run there or orchestrator-dispatch; can't reach it from a laptop). `crontab -l` host-correct paths +
         `git -C <vm>/unified-trading-pm rev-list --count HEAD..origin/live-defi-rollout` == 0.
-- [x] ✅ [DOCS] P1. **DONE 2026-06-12 — added § "Cron self-pull + Path-B per-slot ref refresh" to per-tab-worktrees.md (self-pull principle + helper + H6 + Path-B ref-refresh).** `codex/05-infrastructure/per-tab-worktrees.md` § "Cron-based FF puller" — document the
-      self-pull-executor principle + the rule "every machine-run PM cron self-pulls its script from LDR before running;
-      GHA exempt (current by design)". + one-liner in canonical `CLAUDE.md`.
+- [x] ✅ [DOCS] P1. **DONE 2026-06-12 — added § "Cron self-pull + Path-B per-slot ref refresh" to per-tab-worktrees.md
+      (self-pull principle + helper + H6 + Path-B ref-refresh).** `codex/05-infrastructure/per-tab-worktrees.md` §
+      "Cron-based FF puller" — document the self-pull-executor principle + the rule "every machine-run PM cron
+      self-pulls its script from LDR before running; GHA exempt (current by design)". + one-liner in canonical
+      `CLAUDE.md`.
 
 ### Phase G — LATER (June): crons on a gated hot-fix path
 
@@ -516,14 +537,14 @@ design).
       before diagnosing a stuck promotion PR.
 - [x] ✅ [QG] P1. **RESOLVED-STALE (verified 2026-06-17): deployment-api promotes clean — 0 deep `registry.<module>`
       imports remain (was 9) + v2 GREEN on LDR/staging/main.** The codex blocker below was fixed since 06-05. Original:
-      **deployment-api #17 — `-prd` test fix SHIPPED ✅ but promotion then BLOCKED by a SECOND (pre-existing,
-      unmasked) codex blocker (2026-06-05, slot-7).** **(a) `-prd` sub-fix DONE + CI-validated:** both deps now MERGED
-      to staging (`deployment-service` #21 @12:40Z + `strategy-service` #67) → both STAGING_GREEN on canonical
-      `origin/main` manifest → dep-tier gate satisfied (NO `--skip-dep-tier-gate`; gate initially mis-blocked on a
-      53-commit-stale LDR manifest — LDR lagged the main→LDR ci_status back-merge, LDR=FEATURE_GREEN vs
-      main=STAGING_GREEN — corrected to the verified `origin/main` truth, the proper sequence). Re-derived the brittle
-      test in `tests/unit/test_shard_detail_service.py::test_prediction_reads_mtds_bucket_not_instruments_store` →
-      asserts the env-invariant `market-data-tick-pred-` prefix (was `-pred-prd`, failing in CI env=test). Shipped
+      **deployment-api #17 — `-prd` test fix SHIPPED ✅ but promotion then BLOCKED by a SECOND (pre-existing, unmasked)
+      codex blocker (2026-06-05, slot-7).** **(a) `-prd` sub-fix DONE + CI-validated:** both deps now MERGED to staging
+      (`deployment-service` #21 @12:40Z + `strategy-service` #67) → both STAGING_GREEN on canonical `origin/main`
+      manifest → dep-tier gate satisfied (NO `--skip-dep-tier-gate`; gate initially mis-blocked on a 53-commit-stale LDR
+      manifest — LDR lagged the main→LDR ci_status back-merge, LDR=FEATURE_GREEN vs main=STAGING_GREEN — corrected to
+      the verified `origin/main` truth, the proper sequence). Re-derived the brittle test in
+      `tests/unit/test_shard_detail_service.py::test_prediction_reads_mtds_bucket_not_instruments_store` → asserts the
+      env-invariant `market-data-tick-pred-` prefix (was `-pred-prd`, failing in CI env=test). Shipped
       `deployment-api@2217f14` → LDR; promotion PRs #20 (tab/7→staging, quickmerge) + #17 (LDR→staging). The `-prd` test
       now PASSES in CI. **(b) NEW BLOCKER — v2 STILL RED on codex compliance (24 violations > ratchet 23):** the `-prd`
       pytest failure had been MASKING this (codex runs after tests). deployment-api has **9 pre-existing deep UAC
@@ -538,9 +559,9 @@ design).
       (get_approver_pool/get_required_approvers), `defi_venues` (ALL_DEFI_VENUES/LEGACY_DEFI_VENUE_ALIASES). Check fails
       on ANY remaining deep import (all-or-nothing). Tracked as its own finding below.
 - [x] ✅ [QG] P1. **RESOLVED-STALE (verified 2026-06-17): all 9 deep imports gone (`rg` count = 0 in deployment_api),
-      deployment-api codex back at/below ratchet, v2 green.** Fixed cross-repo since 06-05 (UAC facade re-exports / noqa).
-      Original FINDING (2026-06-05, slot-7): **deployment-api 9 deep UAC `registry.<module>` imports block #17/#20 v2
-      (codex 24 > ratchet 23).** Surfaced after the `-prd` test fix above unmasked the codex step. Sites:
+      deployment-api codex back at/below ratchet, v2 green.** Fixed cross-repo since 06-05 (UAC facade re-exports /
+      noqa). Original FINDING (2026-06-05, slot-7): **deployment-api 9 deep UAC `registry.<module>` imports block
+      #17/#20 v2 (codex 24 > ratchet 23).** Surfaced after the `-prd` test fix above unmasked the codex step. Sites:
       `services/data_status_service.py` (registry.data_status_axis_matrix, registry.chain_env, registry.defi_venues),
       `services/data_status_hierarchical.py` (registry.data_status_axis_matrix), `routes/config.py`
       (registry.data_status_axis_matrix), `utils/path_combinatorics.py` (registry.market_data_categories ×2),
@@ -591,8 +612,9 @@ design).
       earlier #21 runs too). Belongs to the CodeBuild-gate track (same surface as the strategy-service #67
       CodeBuild-vs-v2 branch-protection item). Repo: deployment-service (`buildspec.aws.yaml` + the ECR image pipeline /
       CodeBuild project env). Provenance: #21 promotion-PR check audit, slot-1.
-- [x] ✅ [RESOLVED-STALE: deployment-service #15 merged 2026-06-05] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
-      **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
+- [x] ✅ [RESOLVED-STALE: deployment-service #15 merged 2026-06-05] [QG] P2. **Stale tab→staging PRs** (likely close,
+      not resolve): deployment-service #15 (tab/hkm/3, ~65h — **Harsh's**, confirm before closing), mtds #94
+      (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
 
 ### CI-mechanism findings (permanent fixes worth landing)
 
@@ -631,18 +653,18 @@ design).
       89f4c0b50 / e8fa1c92e / 0496f96a5) — land ATOMICALLY inside that work (one edit + one re-rollout), never raced,
       else the 24 copies re-drift. Verify after: a fix landing on LDR auto-re-runs the promotion PR's v2 with NO
       close+reopen.
-- [x] ✅ [RESOLVED-STALE: base-library.sh sentinel block present] [SCRIPT] P2. **FINDING (2026-06-08, slot-1): `quickmerge --agent` STAGE-3 sha-sentinel fast-path is unusable for
-      LIBRARY repos (`unified-api-contracts`, `unified-trading-library`).** `base-library.sh` only writes
-      `.qg_content_sentinel` and NEVER `.qg_last_passed_sha` (that `git rev-parse HEAD > .qg_last_passed_sha` block
-      lives only in `base-service.sh:~2693`). But `quickmerge.sh:1039` agent-path reads `.qg_last_passed_sha` and
-      hard-refuses on `!= HEAD` ("Pass 1 quality-gates.sh not run on current HEAD (SHA mismatch)") → a library repo's
-      stale sentinel can never match, so the agent fast-path always blocks even after a full green QG. Surfaced shipping
-      the UAC `test_schema_version_matrix` time-bomb fix (had to `git rev-parse HEAD > .qg_last_passed_sha` by hand,
-      which is truthful — full QG passed on that exact content — then push the tab branch since quickmerge then
-      early-exits "nothing to commit" on the already-committed tree). EXACT FIX: add the same COMPLETE-green-run
-      sha-sentinel write block from `base-service.sh` to `base-library.sh` (guard on `_QG_SENTINEL_HIT != true`
-      identically), then re-rollout the QG bases. Composes with the QG-sentinel gitignore item. repos: PM
-      `scripts/quality-gates-base/`.
+- [x] ✅ [RESOLVED-STALE: base-library.sh sentinel block present] [SCRIPT] P2. **FINDING (2026-06-08, slot-1):
+      `quickmerge --agent` STAGE-3 sha-sentinel fast-path is unusable for LIBRARY repos (`unified-api-contracts`,
+      `unified-trading-library`).** `base-library.sh` only writes `.qg_content_sentinel` and NEVER `.qg_last_passed_sha`
+      (that `git rev-parse HEAD > .qg_last_passed_sha` block lives only in `base-service.sh:~2693`). But
+      `quickmerge.sh:1039` agent-path reads `.qg_last_passed_sha` and hard-refuses on `!= HEAD` ("Pass 1
+      quality-gates.sh not run on current HEAD (SHA mismatch)") → a library repo's stale sentinel can never match, so
+      the agent fast-path always blocks even after a full green QG. Surfaced shipping the UAC
+      `test_schema_version_matrix` time-bomb fix (had to `git rev-parse HEAD > .qg_last_passed_sha` by hand, which is
+      truthful — full QG passed on that exact content — then push the tab branch since quickmerge then early-exits
+      "nothing to commit" on the already-committed tree). EXACT FIX: add the same COMPLETE-green-run sha-sentinel write
+      block from `base-service.sh` to `base-library.sh` (guard on `_QG_SENTINEL_HIT != true` identically), then
+      re-rollout the QG bases. Composes with the QG-sentinel gitignore item. repos: PM `scripts/quality-gates-base/`.
 - [x] ✅ [DEPS] P0. **RESOLVED 2026-06-05 (Ikenna [slot-1]) — fleet aiohttp UNIFIED at `>=3.13.4,<3.14.0`, NOT bumped to
       3.14.** This todo originally prescribed "bump UP to 3.14 fleet-wide" — **reversed by operator override**: aiohttp
       3.14 breaks vcrpy 8.1.1 (removed `AsyncStreamReaderMixin`) → jams every VCR repo's promotion, and no compatible
@@ -694,14 +716,16 @@ design).
       surface → cross-link to the owning active plan, don't dual-track here. Original ask: per-VM alert-suppression flag
       so intentionally-stopped epic VMs don't fire zombie-watchdog / host-offline / dead-man-switch alerts.
 
-- [x] ✅ [SCRIPT] P3. **DONE 2026-06-12 (PM@e64a8c0b3) — removed from workspace-constraints.toml + canonical-dependency-manifest.json; no repo declares pre-commit (fleet on prek).** **Drop the orphaned `pre_commit` pin from `workspace-constraints.toml`** (re-derive). **MIGRATED
-      FROM:** `plans/active/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md` (archived
-      2026-06-07). The hook runner is now `prek` fleet-wide (AO + UAC pyprojects migrated
-      `pre-commit`→`prek>=0.3.0,<1.0.0`; `check-precommit-versions.py` installs via prek), so the
-      `pre_commit>=3.0,<4.0.0` pin in `workspace-constraints.toml` is orphaned. Re-deriving it via
-      `resolve-canonical-versions.py` produced a CORRUPT diff in a single-slot worktree (malformed duplicate keys; not
-      all repos aligned locally) → **must run from a clean full-checkout host**. Harmless while present (pre-commit is
-      no longer the invoked runner) → P3. Repo: `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-06-12 (PM@e64a8c0b3) — removed from workspace-constraints.toml +
+      canonical-dependency-manifest.json; no repo declares pre-commit (fleet on prek).** **Drop the orphaned
+      `pre_commit` pin from `workspace-constraints.toml`** (re-derive). **MIGRATED FROM:**
+      `plans/active/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md` (archived 2026-06-07). The
+      hook runner is now `prek` fleet-wide (AO + UAC pyprojects migrated `pre-commit`→`prek>=0.3.0,<1.0.0`;
+      `check-precommit-versions.py` installs via prek), so the `pre_commit>=3.0,<4.0.0` pin in
+      `workspace-constraints.toml` is orphaned. Re-deriving it via `resolve-canonical-versions.py` produced a CORRUPT
+      diff in a single-slot worktree (malformed duplicate keys; not all repos aligned locally) → **must run from a clean
+      full-checkout host**. Harmless while present (pre-commit is no longer the invoked runner) → P3. Repo:
+      `unified-trading-pm`.
 
 ### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
 
@@ -770,19 +794,21 @@ design).
       reach the orchestrator. (Raw non-PR workflow-run failures stay Slack-only by design — escalating those needs a
       non-PR idempotency mechanism; the actionable cases all surface as stuck PRs, which are now covered.)
 - [~] [SCRIPT] P2. **SUPERSEDED (2026-06-17) → `orchestrator_agent_type_oversight_coverage_2026_06_17.md` (active, work
-      underway, operator-confirmed).** The semantic cross-plan/cross-slot conflict-detection machinery — the
-      `conflict-resolver` / `plan-reconciler` / cross-plan-drift detector + plan-health feed + escalate-to-orchestrator
-      wiring — is owned there (that plan reconciles the `plan-health`↔`plan-reconciler` overlap + registers/clarifies the
-      `escalate`/`conflict-resolver` agent types). Cross-link, don't dual-track. Original ask: scripted overlap-detector
-      parsing active-plan todos for declared target surface (repo/file/symbol), flagging cross-slot overlaps → plan-health
-      → owning-VM orchestrator → auto-reconcile or operator-block.
+  underway, operator-confirmed).** The semantic cross-plan/cross-slot conflict-detection machinery — the
+  `conflict-resolver` / `plan-reconciler` / cross-plan-drift detector + plan-health feed + escalate-to-orchestrator
+  wiring — is owned there (that plan reconciles the `plan-health`↔`plan-reconciler` overlap + registers/clarifies the
+  `escalate`/`conflict-resolver` agent types). Cross-link, don't dual-track. Original ask: scripted overlap-detector
+  parsing active-plan todos for declared target surface (repo/file/symbol), flagging cross-slot overlaps → plan-health →
+  owning-VM orchestrator → auto-reconcile or operator-block.
 - [x] ✅ [DOC] P1. **Lock the convergence + 3-layer-conflict + Option-B model in canonical docs** —
       unified-trading-pm@706fe8170: ci-cd-flow.md (new "PM/codex main-direct (Option B)" + "Convergence +
       conflict-resolution model" sections), CLAUDE.md (PM/codex→main directive + pointer), SUB_AGENT_MANDATORY_RULES
       (target-surface declaration + 3-layer model + check overlapping open claims). setup-workspace codex-clone removed
       in same commit.
-- [ ] [SCRIPT] P2. **[2026-06-12 — also cleaned `scripts/_workspace-lib.sh` `KNOWN_SIBLING_REPOS` (dropped archived `unified-trading-codex`, PM@e64a8c0b3). Remaining `major-bump-approval.yml` write-back is semver/promote machinery → Ikenna's surface.]** **Finish codex-not-a-separate-repo cleanup.** Live SSOT (`workflow-templates/`) + deployed fleet
-      already correct. Fixed: `scripts/templates/semver-agent.yml` (c10463f69),
+- [ ] [SCRIPT] P2. **[2026-06-12 — also cleaned `scripts/_workspace-lib.sh` `KNOWN_SIBLING_REPOS` (dropped archived
+      `unified-trading-codex`, PM@e64a8c0b3). Remaining `major-bump-approval.yml` write-back is semver/promote machinery
+      → Ikenna's surface.]** **Finish codex-not-a-separate-repo cleanup.** Live SSOT (`workflow-templates/`) + deployed
+      fleet already correct. Fixed: `scripts/templates/semver-agent.yml` (c10463f69),
       `scripts/propagation/templates/semver-agent.yml` (0ca9dc657). Remaining:
       `propagation/templates/major-bump-approval.yml` (checkout + 3 consumers + a write-back
       `cd ../unified-trading-codex` that commits BR8 → redirect to PM/codex + commit-to-PM),

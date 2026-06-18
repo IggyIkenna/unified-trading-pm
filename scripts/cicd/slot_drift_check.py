@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
 """Path-B slot drift check — the one invariant left to police after the tab-branch retirement.
 
 Under Path-B (2026-06-08) each slot worktree `.tabs/<N>/<repo>` is a `git clone --reference`

@@ -425,7 +425,7 @@ def main() -> int:
         findings.append("🔒 " + dangle)
 
     # Firestore write-through — best-effort; never blocks the monitor on SDK/credential absence.
-    gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    gcp_project = os.environ.get("GCP_PROJECT_ID")
     if gcp_project:
         _write_firestore_promotion_lag(repo_lags, now.isoformat(), gcp_project)
 

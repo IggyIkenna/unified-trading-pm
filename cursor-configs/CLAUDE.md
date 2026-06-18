@@ -144,19 +144,18 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   behind main). Always `--agent` in Claude Code.
 - **Commit attribution = slot + host (so CI alerts + triage know WHO did what; codified 2026-06-03)**: every commit's
   author **NAME** carries the slot + host — `ikennaigboaka [slot-<N>·<host>]` (`<host>` = `laptop` / hostname on a
-  workstation, the `vm-<id>` on a fleet VM; `<N>` from the `tab/<op>/<N>` branch) AND **email =
+  workstation, the `vm-<id>` on a fleet VM; `<N>` = the slot number `.tabs/<N>/`) AND **email =
   `ikennaigboaka@gmail.com`** (the GitHub-attributed account). **⚠️ The per-repo email is currently WRONG fleet-wide**
   (slot-3 audit 2026-06-03: ~14 of 25 worktrees carry the `semver-rollout[bot]@users.noreply.github.com` email → **agent
   commits there masquerade as the semver bot**; ~7 carry `agent@ci.local` → unattributed) — so this is a STANDARDISE,
   not "leave unchanged". GitHub attribution + semver-agent bot/author checks key off the EMAIL (hence the bot-leak is
-  dangerous); fixing name+email per-worktree makes `git log --format=%an` / the GitHub author column / CI
-  `head_commit.author.name` correct + slot- aware (the gap that made cross-agent triage guess-work). **MECHANISM GOTCHA
-  (2026-06-03): `.tabs/<N>/<repo>` are git WORKTREES sharing the main clone's `.git/config` → plain
-  `git config user.name` is SHARED across all worktrees of a repo (last-writer-wins, useless for per-slot). Per-slot
-  identity REQUIRES `git config extensions.worktreeConfig true` (once per repo) +
-  `git config --worktree user.name/user.email` (per worktree).** Set per-worktree by `setup-tab-worktrees.sh` (do NOT
-  hand-edit `~/.gitconfig`); manual fallback in a slot worktree:
-  `git config extensions.worktreeConfig true && git config --worktree user.name "ikennaigboaka [slot-3·laptop]" && git config --worktree user.email "ikennaigboaka@gmail.com"`.
+  dangerous); fixing name+email per-clone makes `git log --format=%an` / the GitHub author column / CI
+  `head_commit.author.name` correct + slot- aware (the gap that made cross-agent triage guess-work). **MECHANISM
+  (Path-B, 2026-06-08): each slot `.tabs/<N>/<repo>` is its OWN `git clone --reference` with its OWN `.git/config` — so
+  plain `git config user.name`/`user.email` in the clone IS per-slot** (the shared-`.git/config` worktree hazard + the
+  `extensions.worktreeConfig`/`--worktree` workaround it required are RETIRED with the tab-branch model). Set at clone
+  time by `setup-tab-worktrees.sh` (do NOT hand-edit `~/.gitconfig`); manual fallback in a slot clone:
+  `git config user.name "ikennaigboaka [slot-3·laptop]" && git config user.email "ikennaigboaka@gmail.com"`.
   **Per-operator, NOT hardcoded (codified 2026-06-05)**: the email + name handle are the OPERATOR's own GitHub account —
   Ikenna `ikennaigboaka@gmail.com`, **Harsh `harshkantariya <harshkantariya@odum-research.com>`**. All three identity
   scripts (`fix-commit-identity.sh` hook · `setup-tab-worktrees.sh` · `verify-slot-host-symmetry.sh`) resolve it
@@ -233,16 +232,17 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
 - **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
-  exception)**: the target is for `agent-orchestrator` to follow the **same** `tab/<op>/<N>` → LDR → `staging` → SIT →
-  `main` flow as every other repo. **AO slot branches already track `origin/live-defi-rollout` like every repo** — the
-  former `agent-orchestrator`→`main` base override was REMOVED (it made every AO slot read as diverged; do NOT re-add it
-  in `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`). **Still
+  exception)**: the target is for `agent-orchestrator` to follow the **same** LDR → `staging` → SIT → `main` flow as
+  every other repo. **AO slot clones already check out `live-defi-rollout` like every repo** — the former
+  `agent-orchestrator`→`main` base override was REMOVED (it made every AO slot read as diverged; do NOT re-add it in
+  `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`). **Still
   mid-migration**: AO has no `staging` branch and no `quickmerge.sh` yet (tracked in
   `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6 — BLOCKED-OPERATOR, since
   creating `staging` fires a fleet backend restart). So `main` is the deploy/CICD target reached via the
   LDR→`staging`→SIT→`main` path; until `staging` lands, `main` legitimately lags LDR (do NOT treat `main`-behind-LDR as
-  drift; the `tab-mirror` GHA FF's tab→LDR). Once G6 lands `staging` + quickmerge, the path is fully standard. SSOT:
-  `codex/04-architecture/agent-orchestrator-overview.md` + the G6 plan above.
+  drift — each slot is a Path-B clone ON `live-defi-rollout`, so LDR is the live tip). Once G6 lands `staging` +
+  quickmerge, the path is fully standard. SSOT: `codex/04-architecture/agent-orchestrator-overview.md` + the G6 plan
+  above.
 
 ### Imports + types
 
@@ -369,14 +369,6 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   <120 s (live editor) → **PROTECT, never stomp**. Background worker → `notify_*` + inherit on TTL expiry; interactive →
   ASK first. Never `git add -A` a wiped/mass-delete index (FM2 guard). Slot base is `live-defi-rollout` for every repo.
   SSOT: `codex/05-infrastructure/per-tab-worktrees.md` + `agent-orchestrator/server/worktree_clean_check.py`.
-- **Tab worktree upstream STAYS `origin/live-defi-rollout` — never `git push -u` a tab branch (HARD RULE 2026-06-04)**:
-  push with the explicit refspec only (`git push origin HEAD:tab/<op>/N`, NO `-u`); a `git push -u` (or
-  `branch --set-upstream-to=origin/tab/...`) re-points the upstream to `origin/tab/<op>/N` → the IDE then shows a
-  **phantom "ahead N"** vs the STALE remote tab (NOT real drift — local is still `0/0` vs LDR). Detect:
-  `git rev-parse --abbrev-ref @{upstream}` ≠ `origin/live-defi-rollout`; fix:
-  `git branch --set-upstream-to=origin/live-defi-rollout tab/<op>/N`. Harmless functionally (FF-cron pulls LDR
-  explicitly + `push.default=simple` refuses a mismatched-name bare push → a tab branch can't accidentally push to LDR),
-  but the ahead/behind display lies. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Upstream tracking".
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
@@ -454,13 +446,13 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 
 ### Two teammates × multiple parallel agents (CRITICAL)
 
-**Per-tab worktrees now isolate every worker** (`.tabs/<N>/<repo>` on `tab/<op>/<N>`), and execution runs on the
-**orchestrator VMs** — Ikenna + Harsh author/audit plans locally, the orchestrator assigns them to VM workers, and all
-code / quality-gates / quickmerge happen there. That isolation has **largely solved** the old shared-tree collision
-class: you rarely share a tree with another live agent. The file-ownership discipline + the rare edge-case recoveries
-still apply — full step-by-step recipes live in `codex/05-infrastructure/per-tab-worktrees.md` (§ "Step 7 —
-troubleshooting", § "Isolated-worktree promotion under shared-worktree ref races", § "Foot-gun mitigations vs.
-shared-tree model"). The invariants that must stay in-head:
+**Per-slot reference-clones now isolate every worker** (`.tabs/<N>/<repo>` is its own `git clone --reference` on
+`live-defi-rollout`), and execution runs on the **orchestrator VMs** — Ikenna + Harsh author/audit plans locally, the
+orchestrator assigns them to VM workers, and all code / quality-gates / quickmerge happen there. Separate clones
+**eliminate** the old shared-`.git`/shared-index collision class outright (no two agents ever share a working tree);
+contention is now only at LDR push-time (rebase-on-reject, handled by quickmerge STAGE 0.4). The file-ownership
+discipline still applies — full recipes live in `codex/05-infrastructure/per-tab-worktrees.md`. The invariants that must
+stay in-head:
 
 - **Don't edit unfamiliar files.** Untracked / mid-edit-dirty / recently-pushed = someone else's in-flight work.
   **Untracked file in a dep repo = NOT YOURS.** QG fails on a file you don't own → tell the user.
@@ -468,28 +460,16 @@ shared-tree model"). The invariants that must stay in-head:
   `git checkout HEAD -- <file>` on a dirty file you don't own — UNRECOVERABLE.
 - **Verify your work against the stable remote ref, never `FETCH_HEAD`** (it lies under a concurrent session):
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>`.
-- **Slot tab branch diverged from LDR → quickmerge re-tangles + the tab→LDR mirror jams (recovery, codified
-  2026-06-03)**: if `origin/tab/<op>/N` is NOT an ancestor of `origin/live-defi-rollout`
-  (`git merge-base --is-ancestor origin/tab/<op>/N origin/live-defi-rollout` fails), quickmerge's mid-run sync
-  re-applies LDR's commits as **patch-id DUPLICATES** on top of yours on every run (symptom: "3 ahead / 2 behind",
-  brand-new SHAs each attempt, your changes bounced back to the working tree). Fix:
-  `git rebase origin/live-defi-rollout` (drops the duplicates — "skipped previously applied commit"), then
-  `git push --force-with-lease origin HEAD:tab/<op>/N` to realign the remote tab branch onto LDR. This is the
-  `slot-master-rebase.sh` operation by hand; safe (own slot branch + `--force-with-lease`). Verify with
-  `git merge-base --is-ancestor origin/live-defi-rollout HEAD` (true = mirror can FF again).
-  - **Align = the MERGED COMBINATION, never "take mine" / "take theirs" (codified 2026-06-03)**: the rebase replays YOUR
-    commits onto current LDR; on each conflict keep **BOTH sides' genuine work** (additive plan/doc/code), and where two
-    agents independently wrote the **same** rule/fix, MERGE into the single best version (don't keep redundant
-    duplicates). **Then VERIFY content survival** — grep your key additions AND the incoming ones in the rebased file
-    before pushing (an em-dash / wording mismatch can read as "lost" when it survived; a real drop must be caught here).
-  - **`--force-with-lease` is BRANCH-TIP safety, NOT content safety (HARD distinction)**: it only refuses the push if
-    the remote `tab/<op>/N` moved since your fetch (catches a concurrent push to YOUR branch) — it does **NOT** inspect
-    files or whether anyone had work on them. What actually protects OTHER agents' work is (a) rebasing **onto** current
-    LDR so their commits are your BASE (not overwritten), (b) the conflict-merge keeping both, (c) the post-rebase
-    verify. Safe here only because the tab branch is yours alone + you rebased onto (not discarded) LDR. **NEVER
-    force-push a shared branch (`live-defi-rollout` / `main`).** Caveat: all fleet commits share the `ikennaigboaka`
-    identity, so a foreign commit on your tab branch is invisible by author — read the messages (the [slot·host] author
-    tag above fixes this).
+- **LDR push rejected (a peer pushed first) → rebase onto LDR, keep the MERGED COMBINATION (codified 2026-06-03)**: a
+  slot clone pushes straight to `live-defi-rollout`; if the push is rejected as behind, `git pull --rebase --autostash`
+  (quickmerge STAGE 0.4 does this for you) replays YOUR commits onto current LDR. On each conflict keep **BOTH sides'
+  genuine work** (additive plan/doc/code), and where two agents independently wrote the **same** rule/fix, MERGE into
+  the single best version (don't keep redundant duplicates) — never a blind "take mine" / "take theirs". **Then VERIFY
+  content survival** — grep your key additions AND the incoming ones in the rebased file before pushing (an em-dash /
+  wording mismatch can read as "lost" when it survived; a real drop must be caught here). **NEVER force-push a shared
+  branch (`live-defi-rollout` / `main`)** — you rebase onto LDR and push normally; there is no force-push in the Path-B
+  ship path. Caveat: all fleet commits share the `ikennaigboaka` identity, so a foreign commit is invisible by author —
+  read the messages (the `[slot·host]` author tag above fixes this).
 - **Autostash conflict on rebase** (`Applying autostash resulted in conflicts`) → `git rebase --abort` (state safe,
   autostash intact), stash only YOUR files by name, redo — **NEVER** `git checkout HEAD -- <file>` then `git stash drop`
   (destroys the foreign agent's only WIP copy). § "Step 7" above.
@@ -896,15 +876,15 @@ Findings Triage). Full SSOT: `codex/11-project-management/active-plan-inventory-
 
 ## Local slot host = VM slot host — symmetric worker model (HARD RULE codified 2026-05-20)
 
-**Every host owning slot worktrees follows the SAME contract** — VM, operator laptop, Harsh laptop alike: per-slot
-worktree on `tab/<operator>/<N>`, `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min, and Commit + Push +
-Flip same-turn. **An interactive Claude Code session IS slot N** (same branch, same Commit+Push+Flip, same FF-pull +
-status-report); the orchestrator doesn't differentiate it from a spawned worker (only `paused` vs `working` differs). So
-a 9-hour uncommitted local WIP is the same anti-pattern as a stale worker — both block FF-pulls + create the "stale
-code" the worktree model prevents. **Verify every host**: `bash scripts/verify-slot-host-symmetry.sh` (exit 0 = both
-crons installed + ran <10 min + report posted). SSOTs: `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` ·
-`agent-orchestrator/agents/worker.md` · `scripts/dev/slot-cron-ff-pull.sh` · `slot-git-status-report.sh` ·
-`scripts/verify-slot-host-symmetry.sh`.
+**Every host owning slot clones follows the SAME contract** — VM, operator laptop, Harsh laptop alike: per-slot
+reference-clone on `live-defi-rollout`, `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min, and Commit +
+Push + Flip same-turn. **An interactive Claude Code session IS slot N** (same branch, same Commit+Push+Flip, same
+FF-pull + status-report); the orchestrator doesn't differentiate it from a spawned worker (only `paused` vs `working`
+differs). So a 9-hour uncommitted local WIP is the same anti-pattern as a stale worker — both block FF-pulls + create
+the "stale code" the per-slot-clone model prevents. **Verify every host**: `bash scripts/verify-slot-host-symmetry.sh`
+(exit 0 = both crons installed + ran <10 min + report posted). SSOTs:
+`codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` · `agent-orchestrator/agents/worker.md` ·
+`scripts/dev/slot-cron-ff-pull.sh` · `slot-git-status-report.sh` · `scripts/verify-slot-host-symmetry.sh`.
 
 ## Plan Hygiene — Frontmatter, Line Caps, Archive Candidates
 
@@ -1001,7 +981,7 @@ reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in th
 > make the raw range re-flag an already-promoted trailer-less commit on EVERY drain forever (the `14b11e2` perpetual
 > "Provenance gate BLOCKED"); fail-safe (stale marker over-flags, never under-flags). Do NOT revert to `staging..LDR`.**
 > SSOT: `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
-> decoupling" + `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`.
+> decoupling" + `plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` (RESOLVED 2026-06-18).
 
 CODE reaches the integration branch **only** through `quickmerge --agent --files` (Pass-1 QG sentinel → Pass-2 commit +
 auto-merging staging PR). A direct `git push` of code to `live-defi-rollout`/`staging`/`main` is banned: it dodges the
@@ -1336,6 +1316,18 @@ Where every executable/one-off lives (decision tree, top-down, first match wins)
    every repo's `scripts/` against this canon — see the SSOT's "Per-repo cleanup sweep". Composes with
    `cli-convention.md` + Peripheral-Script QG + Delete-deprecated-code + Temporary-state-named-successor.
 
+**Lifecycle marker (frontmatter) on every `scripts/` file (codified 2026-06-18)**: a 3-line greppable comment header
+(works `.sh`+`.py`) — `# Epic:` (owning epic, validated vs the registry like a plan's `assigned_vm`; multi-plan so NOT a
+single plan) · `# Lifecycle: permanent|campaign|oneoff` · `# Delete-when:` (completion condition; required for
+campaign/oneoff, omitted for permanent). Mirrors VM `lifecycle_class`. Epics are everlasting → `Epic:` is OWNERSHIP,
+`Delete-when:` is the delete trigger. **Gating: ruff-lint YES; basedpyright + coverage NO (by design — throwaway code,
+no refactor tech-debt; recurring logic → CLI).** \*\*Pruning is `Delete-when`-driven — NO runtime last-run tracking
+(operator 2026-06-18: an auto-updated usage ledger is commit-noise + redundant; the `Delete-when` CONDITION is the
+trigger, `git log -1 --format=%cs` last-EDITED the only manual staleness hint). Never a blind fleet `git rm`. Rollout:
+PM first, then all repos. SSOT: `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" +
+`plans/active/repo_scripts_governance_audit_2026_06_18.md` (+ fleet characterization
+`plans/audit/results/repo_scripts_characterization_2026_06_18.md`).
+
 ---
 
 ## Master Plan Continuous-Verification Column (HARD RULE)
@@ -1366,33 +1358,33 @@ rebase/upstream-self-heal paths in `slot-cron-ff-pull.sh`, and the diverged-tab 
 - **Ship**: `quickmerge --agent --files '<paths>'` from the slot (on LDR) → commit + push LDR + open the staging PR.
 - **Drift invariant** (the only one to police): a slot's `HEAD` is ancestor-or-equal of `origin/live-defi-rollout`
   (`scripts/cicd/slot_drift_check.py`); if not, `git pull --ff-only` or reconcile.
-- **Migration note (2026-06-08)**: slots 2-11 were reclined to Path-B; **all prior uncommitted slot WIP was preserved to
-  `origin/wip-preserve/slot-<N>` branches** (recover with `git show origin/wip-preserve/slot-<N>:<path>` / cherry-pick).
-  Slot-1 stays on its `tab/ikennaigboaka/1` branch only as the live operating slot during the migration — reclined to
-  Path-B on its next `setup-tab-worktrees.sh --reset-slot 1`.
+- **Migration COMPLETE (verified 2026-06-18)**: every slot — including slot-1 — is now a Path-B reference-clone on
+  `live-defi-rollout`; no slot remains on a `tab/<op>/N` branch. The one-time 2026-06-08 migration preserved **all prior
+  uncommitted slot WIP to `origin/wip-preserve/slot-<N>` branches** (recover with
+  `git show origin/wip-preserve/slot-<N>:<path>` / cherry-pick).
 
 Bootstrap: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8` (Path-B reference-clones; also
 `--add-slot N`, `--reset-slot N`, `--list`).
 
 SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/worktree_ldr_unification_2026_06_08.md`.
 
-> **The `tab/<op>/N` tab-branch rules below (upstream-tracking, diverged-tab recovery, tab-mirror, slot-master-rebase)
-> are SUPERSEDED by Path-B** and retained only for slot-1's transitional window + historical context. Under Path-B a
-> slot has no tab branch: it is a clone on `live-defi-rollout`, so there is no upstream to re-point, no tab→LDR mirror,
-> and no diverged-tab class — only the FF-pull + the drift invariant above.
+> **Path-B in one line: a slot has NO tab branch — it is a clone on `live-defi-rollout`**, so there is no upstream to
+> re-point, no tab→LDR mirror, no `slot-master-rebase`, and no diverged-tab class — only the FF-pull + the drift
+> invariant above. If you encounter `tab/<op>/N` / tab-mirror / `force-with-lease`-to-a-tab-branch instructions anywhere
+> (a doc, a script, or a boot prompt), they are STALE — report or fix them, do not act on them.
 
 ### Respawn working-tree hygiene (background agents) — liveness-gated, not identity-gated
 
 On spawn/respawn/restart an agent MUST come up on a good tree. The discriminator for inherited dirty WIP is **liveness,
-not identity**: the slot worktree `.tabs/<N>/<repo>` is exclusively that slot's, so dirty content left by a dead
+not identity**: the slot clone `.tabs/<N>/<repo>` is exclusively that slot's, so dirty content left by a dead
 predecessor (expired `.agent-claim` TTL / no tmux session / stale heartbeat) is _you-in-a-prior-session_ → **inherit +
 commit**. **Quarantine is NEVER terminal** — a dead maker must not leave the slot infinitely dirty. Only a provably-LIVE
 peer (realistically the operator's own interactive session on the slot, per the "operator session counts as a slot"
 rule) is protected: a **background** worker `notify_*`-pings the operator + inherits once the maker's claim TTL expires;
 an **interactive** session ASKS the operator whether other agents are finished, then commits. Forbidden: per-file
 foreign attribution (`in_flight_files` is a refinement, never a gate); pushing a wiped-index mass-delete
-(`git reset --mixed HEAD` first, quarantine if files truly gone); spawning without asserting `HEAD == tab/<op>/N` +
-upstream == the repo's correct base (per-repo: `main` for agent-orchestrator, `live-defi-rollout` else). SSOT:
+(`git reset --mixed HEAD` first, quarantine if files truly gone); spawning without asserting `HEAD == live-defi-rollout`
+(every repo, incl. agent-orchestrator — the former AO `main`-base override was removed). SSOT:
 `plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md` § Phase 4.
 
 ---

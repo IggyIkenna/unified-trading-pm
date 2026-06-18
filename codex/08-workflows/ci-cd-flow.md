@@ -134,10 +134,10 @@ path to `main`** until the next quickmerge opens a new one.
   non-carve-out CODE commit lacking the `Quickmerge:` trailer leaves the PR open (auto-merge not armed). Fail-open on a
   checker error.
   - **The promote range MUST be the SINCE-LAST-PROMOTE range, NOT raw `staging..LDR` / `main..LDR` (HARD; bug found
-    2026-06-17, fix tracked in `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`).** Promotes
-    are SQUASH merges, so a promoted LDR commit's SHA never lands on the target branch and its individual patch-id ≠ the
-    squash's combined patch-id — meaning `git rev-list`/`git cherry`/`merge-base` over `staging..LDR` can NOT tell that
-    an already-drained commit was promoted. So the historical, hardcoded
+    2026-06-17, fixed PM@b54da7855; `plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`).**
+    Promotes are SQUASH merges, so a promoted LDR commit's SHA never lands on the target branch and its individual
+    patch-id ≠ the squash's combined patch-id — meaning `git rev-list`/`git cherry`/`merge-base` over `staging..LDR` can
+    NOT tell that an already-drained commit was promoted. So the historical, hardcoded
     `--range origin/staging..origin/live-defi-rollout` (resp. `origin/main..…`) **re-flags a one-time trailer-less
     commit on EVERY subsequent drain, forever** (the `14b11e2` / `06a83fb6` recurring "Provenance gate BLOCKED" noise;
     each drain needed a manual `gh pr merge --admin`). The contract: the bot tracks the **last successfully-promoted LDR

@@ -93,6 +93,17 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 - [x] ✅ [DOCS] P2. Rewrite CLAUDE.md + `codex/05-infrastructure/per-tab-worktrees.md`: remove tab-branch/upstream/
       diverged-tab recovery sections; replace with the Path-B LDR-direct model. Update `SUB_AGENT_MANDATORY_RULES.md` §
       git-discipline.
+  - ⚠️ **Over-marked correction (2026-06-18)**: the 2026-06-08 pass only **SUPERSEDED-bannered** the docs (Progress note
+    below) — it did NOT remove the stale inline content, so the drift persisted: CLAUDE.md still taught the tab-branch
+    model in 8 places (commit-attribution `extensions.worktreeConfig` mechanism, "Tab worktree upstream STAYS", "Slot
+    tab branch diverged" recovery, "Per-tab worktrees now isolate", "Local slot host" worktree-on-`tab/<op>/N`, AO
+    branch model, respawn `HEAD == tab/<op>/N`, migration-note slot-1-still-on-tab); `SUB_AGENT_MANDATORY_RULES.md`
+    still taught `force-with-lease`-to-a-tab-branch + `push -u`/`set-upstream` recovery; the codex doc kept ~290 lines
+    of retired mechanics under the banner. **Actually completed 2026-06-18**: all three rewritten to clean Path-B —
+    CLAUDE.md tab refs now only the model section + a stale-instruction guard; SUB_AGENT commit-ship block is Path-B
+    (per-clone `.git/config`, LDR push-reject rebase); codex doc **858→566 lines**, retired sections removed,
+    frontmatter `last_updated 2026-06-18`. Verified: **0 non-LDR HEADs across every provisioned slot×repo**
+    (migration-complete). Prettier-clean. (Local commit; push pending operator say-so.)
 - [x] ✅ [DOCS] P2. Update `agent-orchestrator/server/worktree_clean_check.py` base-branch logic (LDR for all; the AO
       `main` override is already removed).
   - ⚠️ **Over-marked correction (2026-06-10)**: this item covered ONLY `base_branch_for_repo` (the ahead/behind base).
@@ -134,19 +145,20 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 ## Open — orchestrator/planning VM host migration to Path-B (2026-06-09, operator-directed)
 
 > Operator 2026-06-09: "the vm-planning vm needs to be redone to use the new cron with the remote remotes and agents
-> using their worktree tabs to offer their commits." The laptop hosts are on Path-B; the **LIVE orchestrator VM is
-> NOT** — it is still the symmetric-worker host that spawns VM workers, and those workers must offer commits the SAME
-> Path-B way (reference-clone slots on `live-defi-rollout`, ff-pull cron, `quickmerge --agent --files`), not the retired
+> using their worktree tabs to offer their commits." The laptop hosts are on Path-B; the **LIVE orchestrator VM is NOT**
+> — it is still the symmetric-worker host that spawns VM workers, and those workers must offer commits the SAME Path-B
+> way (reference-clone slots on `live-defi-rollout`, ff-pull cron, `quickmerge --agent --files`), not the retired
 > tab-branch model. **Why it matters now:** the `ci-failure-watcher --escalate` path repository-dispatches genuine
 > merge-conflict promotion PRs to this VM to spawn a worker that rebases on LDR — if its workers are on the stale
 > worktree model (or it is running behind), escalation degrades to "no worker spawned". The new `--auto-recover` path
 > (shipped 2026-06-09) removes the v2-never-reported deadlock from the escalate load, so escalations are now RARE and
 > genuinely need a healthy, Path-B-correct worker host.
 
-**Target host (LIVE, audited 2026-06-09):** AWS `i-0c9b283b31d6b5ca7` = `vm-0` / `agent-orchestrator-vm-1`, `m8i.4xlarge`,
-running, `api.agent-orchestrator.odum-research.com → 13.113.200.22`. `/health` reports **version 0.6.0** (CLAUDE.md
-references v0.7+ for `assigned_vm`) and `data_freshness.stale: true` → the deployed orchestrator is also BEHIND and
-should be redeployed as part of this. Worker-topology SSOT: `codex/05-infrastructure/agent-orchestrator-worker-topology.md`.
+**Target host (LIVE, audited 2026-06-09):** AWS `i-0c9b283b31d6b5ca7` = `vm-0` / `agent-orchestrator-vm-1`,
+`m8i.4xlarge`, running, `api.agent-orchestrator.odum-research.com → 13.113.200.22`. `/health` reports **version 0.6.0**
+(CLAUDE.md references v0.7+ for `assigned_vm`) and `data_freshness.stale: true` → the deployed orchestrator is also
+BEHIND and should be redeployed as part of this. Worker-topology SSOT:
+`codex/05-infrastructure/agent-orchestrator-worker-topology.md`.
 
 - [x] ✅ [INFRA] P1. On `i-0c9b283b31d6b5ca7`: pull the new PM tooling (`setup-tab-worktrees.sh` Path-B,
       `migrate-slots-to-pathb.sh`, `slot_drift_check.py`, the strict-quickmerge pre-push hook, updated CLAUDE.md +
@@ -159,10 +171,10 @@ should be redeployed as part of this. Worker-topology SSOT: `codex/05-infrastruc
       identity `ikennaigboaka [slot-N·planning]` (`VM_NAME=planning`).
 - [x] ✅ [INFRA] P1. Execute the Path-B reclone of every orchestrator worker slot on the VM
       (`migrate-slots-to-pathb.sh --slots 1-<N>`); verify `slot_drift_check.py --tabs-root <tabs>` exits 0 and each slot
-      is a clone on `live-defi-rollout` (HEAD ancestor-or-equal of `origin/LDR`), identity reads `<vm-id> [slot-N·<vm>]`.
-      — **DONE 2026-06-10**: `--slots 1-5` → 115/115 clones, 0 failures, 0 WIP-preserve needed (clean trees); all 5 slots
-      = clone on `live-defi-rollout`, 0 leftover worktrees, identity `ikennaigboaka [slot-N·planning]`; drift = 115/115
-      ancestor-or-equal of `origin/LDR`.
+      is a clone on `live-defi-rollout` (HEAD ancestor-or-equal of `origin/LDR`), identity reads
+      `<vm-id> [slot-N·<vm>]`. — **DONE 2026-06-10**: `--slots 1-5` → 115/115 clones, 0 failures, 0 WIP-preserve needed
+      (clean trees); all 5 slots = clone on `live-defi-rollout`, 0 leftover worktrees, identity
+      `ikennaigboaka [slot-N·planning]`; drift = 115/115 ancestor-or-equal of `origin/LDR`.
 - [x] ✅ [INFRA] P1. Install/refresh the symmetric-worker crons on the VM (`slot-cron-ff-pull.sh` +
       `slot-git-status-report.sh` every 5 min) so VM workers stay current on LDR and offer commits via
       `quickmerge --agent --files` from their own reference-clone worktree — confirm `verify-slot-host-symmetry.sh`
@@ -180,18 +192,30 @@ should be redeployed as part of this. Worker-topology SSOT: `codex/05-infrastruc
       rewrite `agent-orchestrator/agents/worker.md` (it still instructs "commit on / push to your tab branch
       `tab/<operator>/<SLOT_ID>`") and the `branch` boot-prompt render-var fallback (`autospawn.py:229`,
       `server.py:560`/`:1765` → `f"tab/{operator}/{slot_id}"`) to the Path-B LDR-direct model, so spawned workers aren't
-      handed stale tab-branch git instructions. Non-blocking (under Path-B a worker's `git push origin HEAD` / quickmerge
-      resolves to LDR) but a clarity + `SUB_AGENT_MANDATORY_RULES` parity gap.
-- [x] ✅ [SCRIPT] P3. **DONE 2026-06-12 (PM@e64a8c0b3) — `dry_label` gate applied (only prints DRY-RUN when `$DRY == 1`).** **Cosmetic bug in `scripts/dev/migrate-slots-to-pathb.sh` (found 2026-06-10)** — the run-header prints
-      `| DRY-RUN` whenever `DRY` is set to ANYTHING incl. `0` (`${DRY:+ | DRY-RUN}` treats the string `"0"` as set); the
-      actual logic correctly gates reclone on `[[ "$DRY" == 1 ]]`, so real runs DID reclone — only the header label lies
-      (confirmed: a real `--slots 1-5` run printed `DRY-RUN` yet performed all 115 clones). Fix:
+      handed stale tab-branch git instructions. Non-blocking (under Path-B a worker's `git push origin HEAD` /
+      quickmerge resolves to LDR) but a clarity + `SUB_AGENT_MANDATORY_RULES` parity gap.
+- [ ] [SCRIPT] P3. **Vestigial tab-branch code in the slot scripts (found 2026-06-18 during the doc-rewrite)** —
+      `scripts/dev/setup-tab-worktrees.sh` still computes `tab/${MAIN_PREFIX}/<N>` / `tab/${WORKER_PREFIX}/<N>` branch
+      names (`compute_branch`, ~L216-218) + the `--list`/log lines reference them, even though `--init` checks out
+      `live-defi-rollout`. **Careful surgery, NOT a blind delete**: `MAIN_PREFIX`/`WORKER_PREFIX` are partly
+      load-bearing — reused for the commit-identity host derivation (`PERSISTED_MAIN_PREFIX`/`WORKER_PREFIX` in
+      `.worktree-identity.conf`); remove only the branch-naming uses, keep the identity-prefix resolution.
+      `slot-cron-ff-pull.sh` still carries the tab-branch upstream-repoint (~L179/189 `set-upstream-to`) + tab-mirror
+      adopt-rebase (~L345-358) self-heal paths — **already documented as harmless no-ops** under Path-B in this plan's
+      Progress note (a clone's `@{upstream}` is `origin/LDR`, so the self-heal never fires), so prune for clarity only,
+      low priority. Non-blocking; cosmetic/dead-code hygiene.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-06-12 (PM@e64a8c0b3) — `dry_label` gate applied (only prints DRY-RUN when
+      `$DRY == 1`).** **Cosmetic bug in `scripts/dev/migrate-slots-to-pathb.sh` (found 2026-06-10)** — the run-header
+      prints `| DRY-RUN` whenever `DRY` is set to ANYTHING incl. `0` (`${DRY:+ | DRY-RUN}` treats the string `"0"` as
+      set); the actual logic correctly gates reclone on `[[ "$DRY" == 1 ]]`, so real runs DID reclone — only the header
+      label lies (confirmed: a real `--slots 1-5` run printed `DRY-RUN` yet performed all 115 clones). Fix:
       `dry_label=""; [[ "$DRY" == 1 ]] && dry_label=" | DRY-RUN"` and use `$dry_label`.
 - [ ] [INFRA] P2. **agent-orchestrator drift-tick is STAGED on LDR pending ao's LDR→main promotion** (ao@ad76dda synced
       `main-backmerge-to-ldr.yml` from the PM SSOT, 2026-06-09). Scheduled workflows fire only from the DEFAULT branch
-      (ao default = `main`), so the ao drift-tick is INERT until it reaches ao `main`. ao `main` is `ahead_by=22 /
-      behind_by=0` of LDR (strictly behind, clean FF) but draining it deploys in-flight ao work + is G6-gated — so it
-      activates when ao's LDR→main promotion is enabled (this section's P1 redeploy), NOT by a unilateral FF now.
+      (ao default = `main`), so the ao drift-tick is INERT until it reaches ao `main`. ao `main` is
+      `ahead_by=22 /     behind_by=0` of LDR (strictly behind, clean FF) but draining it deploys in-flight ao work + is
+      G6-gated — so it activates when ao's LDR→main promotion is enabled (this section's P1 redeploy), NOT by a
+      unilateral FF now.
 - [ ] [INFRA] P2. End-to-end smoke: force a genuine merge-conflict promotion PR (or wait for a real one), confirm
       `ci-failure-watcher --auto-recover --escalate` auto-recovers v2-never-reported PRs in-band AND escalates the true
       conflict → the VM spawns a Path-B worker that rebases on LDR + re-quickmerges. Archive this section when green.

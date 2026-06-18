@@ -28,8 +28,58 @@ source:
 > F1, F3, N2, N4, F6, N8. **Apply order: pred → tradfi (clean) → cefi → sports → defi; never all-AG at once.**
 
 Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md`.
+
+> **🟢 SCRIPT-COVERAGE MAP (2026-06-17) — every blocker is a GAP in the existing rebuild scripts, not unscripted.** The
+> rebuild scripts ARE the migration: fix the gap → regenerate the dry-run projection → improved beta → `--apply`
+> (path-schema) → backfills. Per finding: **prefix_tpls** ✅ `canonical_path_templates(ag)` covers all shapes (sports
+> `[""]` — verify only); **N3** ⚠️ `rebuild_sports_manifest_v9` never extracts `league_id`/`league` from the MTDS object
+> path into the row_key (canonicalizer `_canonicalize_row_key_league_id` then gets null); **N1** ⚠️ `rebuild_cefi`
+> CF-11 dedup key mismatches (empty re-emit has blank `instrument_type` vs captured populated → both survive); **N5** ❌
+> `rebuild_defi` emits `captured`/row_count=0 on file PRESENCE without opening (0-row/pre-launch → false captured) →
+> route via `record_zero_rows`; **N6** ⚠️ `rebuild_defi._split_legacy_venue_chain` lacks instrument_type case-norm +
+> lets pairs leak into `chain` + incomplete venue-dedup; **F3** ❌ `rebuild_cefi` passes legacy
+> `attempted_failed` reasons through un-reclassified; **N2** ❌ instruments enumerator marks CME weekend carry-forward
+> as `SOURCE_RETURNED_ZERO`. **Each Phase-A/B/D todo below = a scoped fix to the named script → regen that AG's
+> dry-run projection → re-audit the fixed dimension.**
 Phase-1 (manifest-level, full v9-projected-index walk) is DONE; Phase-2 (file-level cross-year manifest-vs-reality
 sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the audit doc + new todos here.
+
+## Execution sequence (end-to-end — the autonomous worker drives this in order)
+
+Each script-fix step = fix → `quality-gates.sh`-green → `quickmerge --agent --files` → **regenerate that AG's dry-run
+projection** (`rebuild_{ag}_manifest.py --dry-run --projection _index/audit/projected_index_{ag}.parquet`) → **re-audit
+the fixed dimension** (the `/tmp/audit_subset.py` pattern or a per-AG file re-check) → flip the todo + journal before/after
+numbers. Order:
+
+1. **CeFi script** `rebuild_cefi_manifest.py` — **N1** dedup key (captured suppresses its blank-type empty shadow) + **F3**
+   reclassify legacy `attempted_failed` recon-noise (~1.3M) vs keep genuine ~88k. Verify: no captured+empty double-rows;
+   attempted_failed → ~88k.
+2. **Sports script** `rebuild_sports_manifest_v9.py` — **N3** extract `league_id`/`league` from the MTDS object path +
+   row column into the row_key (BEFORE `_canonicalize_row_key_league_id`); stamp `source` on `trades`; collapse
+   API_FOOTBALL/`api_football`. Verify: captured cells carry league_id.
+3. **DeFi script** `rebuild_defi_manifest.py` — **N6** normalize instrument_type case (pool/POOL), keep pool-pairs OUT of
+   `chain` (only known chain tokens), collapse venue dups; **N5** route 0-row/pre-launch files through
+   `DefiManifestRecorder.record_zero_rows` (venue-launch-date-aware) instead of presence⇒captured. Verify: no token-pairs
+   in chain, single-case instrument_type, no pre-launch captured-0-row vault cells.
+4. **Instruments enumerator** (instruments-service) — **N2** CME/TradFi weekend carry-forward = honest carry-forward (not
+   `SOURCE_RETURNED_ZERO`); de-dup 2×-per-cell index rows.
+5. **prefix_tpls VERIFY** (`reconcile_phantom_manifest_rows_all.py` `ASSET_GROUP_CONFIG`) — prove
+   `canonical_path_templates(ag)` enumerates EVERY coexisting shape per AG (`category=`/`asset_group=`/bare/`pipeline_mode=`)
+   against real GCS prefixes; replace the sports `[""]` with real templates. **APPLY FOOT-GUN — uncovered shape ⇒ apply
+   flips real captured→attempted_failed.** Block apply for any AG whose coverage isn't proven.
+6. **Regenerate ALL projections → re-audit** = the IMPROVED beta. Confirm F1–F7 + N1–N8 resolved/honestly-classified;
+   record before/after in the audit-doc Progress Log.
+7. **PRE-MIGRATION DRAIN GATE (HARD, CLAUDE.md)** — before ANY `--apply`: gracefully stop ALL running VMs (GCP+AWS) + run
+   the manifest consolidator + snapshot `_index/snapshots/pre_migration_<date>.parquet`
+   (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.0 Stage 0).
+8. **`--apply` AG-by-AG, safest first: pred → tradfi → cefi → sports → defi.** Per AG: prefix_tpls green + projection
+   re-audited clean → run the real path-schema migration → verify the live `_index` matches the projection (NO mass
+   captured→failed flip) → next AG. **Never all-AG at once.** Mass-flip ⇒ STOP + diagnose prefix_tpls, do not continue.
+9. **Backfills** — F1 (Kraken+ instruments history), the ~88k genuine cefi `VENUE_FETCH_FAILED`, any real captured-absent
+   cells. Run to completion (manifest-verified rows).
+
+**Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
+gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
 
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
@@ -67,18 +117,21 @@ sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the a
 
 ## Phase D — file-level correctness findings (Phase-2 sub-agents, NEW)
 
-- [ ] [DATA] P1. **N1 — CEFI phantom `empty_confirmed` shadow rows** (~61,300, 57% of real-shard empties): two manifest
-      rows per cell (captured + bogus empty_confirmed w/ blank instrument_type) where the parquet exists with rows (e.g.
-      AVAXUSDT 2021-01-01 BINANCE-FUTURES = 943,196 rows but flagged empty). De-dup the empty shadow in the
-      canonicalisation walk; the captured row + GCS file are truth. — market-tick-data-service
+- [x] ✅ [DATA] P1. **N1 — CEFI phantom `empty_confirmed` shadow rows** — FIXED mtds@aaeada9. `_rebuild_cefi_cf11.py`
+      now suppresses any blank-itype prior row whose 5-tuple (date,venue,data_type,instrument_id,underlying) is covered by
+      a real object this run (`reemit_skipped_shadow`). Regenerated `projected_index_cefi_v2.parquet`: **371,010 shadows
+      suppressed**; re-audit shows **captured∩empty shadow cells = 0** (was ~63k) + **captured∩failed = 0**. 33 unit tests
+      (6 new). — market-tick-data-service
 - [ ] [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty**: all 333 CME `SOURCE_RETURNED_ZERO`/empty dates are
       Saturdays, but instruments writes a weekend carry-forward snapshot to GCS (11,526 rows incl 7,364 options) → ~1,079
       dishonest-empty cells; INST index rows duplicated 2×/cell. Fix the weekend honest-absence classification +
       de-dup. — instruments-service
-- [ ] [DATA] P0. **N3 — SPORTS league_id dropped by the consolidator (100% of captured)**: all 202,087 captured
-      MTDS-sports cells have NULL `league_id` though the GCS path (`league_id=BUNDESLIGA`) + row-level column ARE
-      populated. Propagate per-file league_id into the manifest row. ALSO stamp `source` on MTDS sports `trades` (73.7k
-      NULL — violates source= rule) + collapse venue case-dup API_FOOTBALL/`api_football`. — market-tick-data-service
+- [x] ✅ [DATA] P0. **N3 — SPORTS league_id dropped** — FIXED mtds@aaeada9. REFRAME: the audit's "100% NULL-league"
+      measured the PROJECTION; the live index had league_id on 169,380/202,087. Root cause: `_write_captured_rows` built
+      the row_key but called `writer.add()` WITHOUT passing league_id. Fixed: carry league_id + shard dims into add();
+      `_source_from_row` now resolves sports `trades`→`odds_api` + case-insensitive bridge. `projected_index_sports_v2`:
+      null-league **202,087→32,707**, NULL source **73.7k+→6** (202,081 stamped odds_api). 28 tests (3 new). Residual
+      tail (32,707 genuinely-null in LIVE + 6 null-source) → N3a/N3b below. — market-tick-data-service
 - [ ] [DATA] P2. **N4 — SPORTS instruments `instrument_count==0` on 194,356 captured rows** (per-league companion rows;
       global count lands on one row). Confirm against shard grain; fix count attribution. — instruments-service
 - [ ] [DATA] P1. **N5 — DEFI temporally-impossible `vault_share_price` captured phantoms** (1,582 cells 2020–2023: MAKER
@@ -88,9 +141,12 @@ sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the a
       (`1INCH-ETH`/`ETH-USDC`/`WSTETH-ETH`); `instrument_type` case-dup `pool`(227,935)/`POOL`(158,431); `venue` dups
       (CURVE vs CURVE-ETHEREUM, MORPHOVAULTS vs MORPHO_VAULTS vs MORPHO-ETHEREUM). Normalize at write + in the
       canonicalisation walk so per-dimension grouping/denominators are correct. — market-tick-data-service
-- [ ] [DATA] P0. **F3 (reframed) — CEFI: re-classify ~1.3M legacy-recon `attempted_failed` rows**
-      (`LegacyBlankErrorReasonError` 763k + `LEGACY_THIRDKEY_DRIFT_RECON` 452k + `WITHIN_BOUNDS_EMPTY_RECLASSIFIED` 90k) in
-      the canonicalisation walk, AND backfill the ~88k GENUINE `VENUE_FETCH_FAILED`+`HTTP_429` cells. — market-tick-data-service
+- [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
+      `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
+      non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
+      `LegacyBlankErrorReasonError`→`UNCLASSIFIED_ADAPTER_ERROR` preserved (visible/backfill-worthy). attempted_failed
+      **1.40M→782,005** in `projected_index_cefi_v2`. Genuine `VENUE_FETCH_FAILED`(83,975)+`HTTP_429`(3,652) preserved →
+      backfill Step 9. The ~698k UNCLASSIFIED reconcile-to-expected_unattempted is N1b (depends Step 4). — market-tick-data-service
 - [ ] [CODE] P2. **F6 (reframed) — TRADFI option/instrument_type encoding**: unify the two options encodings
       (`instrument_type=options_chain` vs `data_type=options_chain` w/ blank type) + stamp instrument_type on the 182k
       blank-type cells (legacy path shapes). Not missing data — a typing fix. — market-tick-data-service
@@ -100,3 +156,16 @@ sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the a
 - [ ] [DATA] P3. **N8 — PRED index data_type label drift** (`prediction_canonical_question_group` vs GCS
       `prediction_trades`/`trades`) + 1 blank-reason attempted_failed cell. Confirm intentional rollup label vs drift;
       type the blank reason. — market-tick-data-service
+- [ ] [DATA] P1. **N1b — CEFI: reconcile the ~698k `UNCLASSIFIED_ADAPTER_ERROR` (ex-`LegacyBlankErrorReasonError`,
+      blank-itype) attempted_failed cells against the IS expected-universe (Step 4 enumerator) + reconcile (Step 8)**:
+      cells the enumerator marks `expected_unattempted` (instrument not listed / pre-coverage) should drop the stale
+      failed row; genuine in-coverage listed-instrument gaps stay attempted_failed → backfill (Step 9). DEPENDS on Step 4.
+      (Provenance: Step-1 fix kept them visible rather than hide a gap; final fate is enumerator+reconcile-driven.) — market-tick-data-service
+- [ ] [DATA] P2. **N3a — SPORTS: 32,707 captured cells genuinely NULL-league in the LIVE index** (schema_version=8;
+      venue=bookmaker/ODDS_API, data_type=trades/ODDS/odds_horizon_bucket). The Step-2 fix recovered the 169,380 cells that
+      HAD league; these 32,707 lost it at WRITE time. Recover league_id by joining each null-league captured (date,venue,
+      data_type) to the GCS object paths (`league_id=<L>`) for that cell — needs a sports object scan (the rebuild is
+      index-driven). No sports market data may be captured for an unattributed league. — market-tick-data-service
+- [ ] [DATA] P3. **N3b — SPORTS: 6 captured cells still NULL source** (ARBITRAGE_OPPORTUNITY/ODDS_MOVEMENT/ODDS_SNAPSHOT,
+      2 each) after the Step-2 `trades→odds_api` + case-insensitive bridge. Add these MDPS-derived data_types to the
+      source bridge (or route to honest absence if not genuinely captured). — market-tick-data-service

@@ -1185,7 +1185,7 @@ def main() -> int:
     write_github_output(alert, severity, report)
 
     # Firestore write-through — best-effort; never blocks the watcher on SDK/credential absence.
-    gcp_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    gcp_project = os.environ.get("GCP_PROJECT_ID")
     if gcp_project:
         _write_firestore_ci_watcher(transitions, stuck, now.isoformat(), gcp_project)
 

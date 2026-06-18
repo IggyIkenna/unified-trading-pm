@@ -51,7 +51,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-# ci_status values that mean a dep has reached (or passed) the staging line.
+# ci_status values that mean a dep has reached (or passed) the staging line — i.e. is green enough
+# to promote dependents ON. STAGING_PENDING is deliberately EXCLUDED: it shares a RANK with
+# STAGING_GREEN in ci_status_store._GREEN_RANK (a no-downgrade store detail), but "pending" is not
+# "green" for promotion readiness. The rank-equivalence and this exclusion are independent + correct.
 ON_STAGING_STATUSES: frozenset[str] = frozenset({"STAGING_GREEN", "SIT_VALIDATED", "MAIN_GREEN"})
 
 # The only value that means the repo's own LDR CI is red (Tier A block).

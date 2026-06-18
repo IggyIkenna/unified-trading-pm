@@ -77,15 +77,15 @@ plans"). Two findings are genuine _unresolved contradictions_ that need an opera
 plan-hygiene (banner/migrate/archive/frontmatter); 4 are small code fixes; 2 are "note only / latent". **0 live pipeline
 regressions found.**
 
-> **Progress 2026-06-17 (autonomous):** **10 findings shipped** — D2–D9 (all 8 no-decision doc/SSOT-truth fixes,
-> PM@235c5fd3b + PM@eeece9802; ci-cd-flow.md + CLAUDE.md now match the live pipeline) + **D14** (unwired-AR-gate record)
-> and the **D11 callout**, both filed in `cloud_build_router_aws_parity` (PM@98bdf756c). **Still open:** D1/D10 (the
-> `--frozen` model — **DECIDED 2026-06-17**: frozen-lock end-to-end, implementation tracked in `dependency_promotion` §
-> Phase 1.5), D11 (DECIDED 2026-06-17 — drop in-image QG), D12 (RESOLVED 2026-06-18 — stale premise, issue
-> closed+archived), D16 (DECIDED 2026-06-18 — scripts governance plan), and the LOW-tier items D13/D15/D17–D25. The
-> latter are **deferred for one of two reasons:** a code fix would need a PM-QG run that contends with the active QG
-> agent (D15/D18), or a markdown edit would force a 100–170-line prettier-reflow of a hot, actively-edited foreign plan
-> on commit (D13/D20/D24/D25). All captured per-item below — apply at triage / in a quiet window.
+> **Progress (updated 2026-06-18):** **21 of 25 findings resolved.** The 8 no-decision doc/SSOT-truth fixes D2–D9
+> (PM@235c5fd3b + PM@eeece9802 — ci-cd-flow.md + CLAUDE.md now match the live pipeline); the 4 operator-decision
+> findings (D1/D10 frozen-lock — **DECIDED**, impl tracked in `dependency_promotion` § Phase 1.5, in flight; D11 drop
+> in-image QG — **DECIDED**; D12 stale-premise — **RESOLVED**, issue archived; D16 scripts governance — **DECIDED**,
+> plan filed); the D14 unwired-AR-gate record + D11 callout (`cloud_build_router_aws_parity`, PM@98bdf756c); the hygiene
+> batch D13/D20/D21/D24/D25 (PM@8a05273b9); and **D15** (Firestore project-id env fix — 3 scripts + 3 workflows read
+> canonical `GCP_PROJECT_ID`, PM@409fd7661); plus **D17/D18/D19** (cadence + pending-vs-green rank-clarity comment
+> fixes, PM@665cdc965). **Still open:** D22 + D23 (issue-migration + plan-archival hygiene — the D23 UI plan gated on
+> `pw:L2`). **0 live-pipeline regressions.**
 
 ---
 
@@ -94,33 +94,33 @@ regressions found.**
 Legend: **P** pipeline-vs-doc · **X** plan-vs-plan/cross-SSOT contradiction · **S** stale/obsolete · **H** hygiene. Each
 finding's checkbox is the triage handle (migrate to the named destination plan when accepted).
 
-| ID  | Sev     | Class | One-line                                                                                                                                             | Disposition / destination                                                                        |
-| --- | ------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| D1  | 🔴 HIGH | P+X   | `--frozen` asserted in docs; deployed CI does bare `uv sync` + warn-only lock; local uses `uv pip install -e .`                                      | **DECISION** → `uv_lock_frozen_model_contradiction` (pick one model, then wire docs+CI to agree) |
-| D5  | 🔴 HIGH | P     | ci-cd-flow.md teaches OLD per-unit staging-PR model (L176/L571-576/L611/L618) vs live land-on-LDR-and-stop                                           | Doc rewrite → ci-cd-flow.md (owner: cicd_contract_hardening codex-audit phase)                   |
-| D10 | 🔴 HIGH | X     | "DECIDED 2026-06-12 `--frozen`" is still an OPEN checkbox + contradicts the issue doc                                                                | Same as D1 (this is the intent side)                                                             |
-| D2  | 🟠 MED  | P     | CLAUDE.md "service-deps enforcement is DEAD (wrong path / type==service only)" — FALSE, gate is live                                                 | Edit CLAUDE.md (remove ⚠️ DEAD warning)                                                          |
-| D3  | 🟠 MED  | P     | CLAUDE.md "the two aiohttp `--ignore-vuln`" — actual is ~20 vulns                                                                                    | Edit CLAUDE.md count + the "drop the two flags" instruction                                      |
-| D4  | 🟠 MED  | P+X   | Cron drift: ldr-to-staging live `2,17,32,47`(15m) vs ci-cd-flow `13,43`(30m); main-backmerge live hourly vs CLAUDE `*/20`                            | Edit ci-cd-flow.md + CLAUDE.md to live values                                                    |
-| D11 | 🟠 MED  | X     | In-image QG: router plan wants advisory→blocking; sibling-context issue shipped `_RUN_INIMAGE_QG:false` skip                                         | Reconcile → `cloud_build_router_aws_parity` L67                                                  |
-| D12 | ✅ DONE | X     | ~~Content-hash sentinel owned by 2 plans, neither closes the race~~ — premise STALE (Rec#1 shipped 977c5548f; plan archived)                         | RESOLVED 2026-06-18 — issue closed + archived; nothing to consolidate                            |
-| D13 | 🟠 MED  | S     | `qg_commit_quality_boundary` L220 flipped `[x] SHIPPED tab-mirror BIDIRECTIONAL` — machinery since DELETED by Path-B, no SUPERSEDED banner           | Add SUPERSEDED banner → that plan                                                                |
-| D14 | 🟠 MED  | S     | `assert_deps_published_to_ar.py` is UNWIRED (own STATUS comment 2026-06-16); reserved for unlaunched image-build path                                | Note as reserved/dead → `cloud_build_router_aws_parity` (AR-publish item)                        |
-| D22 | 🟠 MED  | H     | `semver_version_bump_skip_ci` + `cicd_workflow_sprawl_audit` migrated core but keep residual todos not in parent (dual-tracking)                     | Migrate residuals → `cicd_contract_hardening`, then archive                                      |
-| D24 | 🟠 MED  | S     | 3 template dirs; `feature-branch-to-staging.yml` dup'd in 2 dead dirs (retired v1 model, deployed nowhere); `staging-version-gate.yml` orphan        | Delete dead templates → `cicd_workflow_sprawl_audit`                                             |
-| D6  | 🟡 LOW  | P     | ci-cd-flow.md L32 lists `tab/hk/<N>` tab-branch as live; Path-B retired it                                                                           | Doc edit → ci-cd-flow.md branch-model table                                                      |
-| D7  | 🟡 LOW  | P     | ci-cd-flow.md L918-929 "post-cutover LDR retired" block — wrong; LDR is the SSOT                                                                     | Delete/rewrite block → ci-cd-flow.md                                                             |
-| D8  | 🟡 LOW  | X     | ci-cd-flow.md L620 "kill-switch arming ❌ NOT ALLOWED" vs CLAUDE.md "protective arming always autonomous"                                            | Doc edit → ci-cd-flow.md table                                                                   |
-| D9  | 🟡 LOW  | S     | ci-cd-flow.md L756-796 "Operational status snapshot 2026-06-01; being repaired" — 6wk stale                                                          | Refresh/archive section → ci-cd-flow.md                                                          |
-| D15 | 🟡 LOW  | P     | `promotion_lag_monitor.py` + `reconcile_release_tags.py` use `GOOGLE_CLOUD_PROJECT` (rule mandates `GCP_PROJECT_ID`) → silent Firestore no-op on VMs | Small code fix → `gh_rate_budget_reduction` (has adjacent P3)                                    |
-| D16 | 🟡 LOW  | P     | `check_strict_quickmerge.py` carves `scripts/` as a prefix in ANY repo; CLAUDE.md implies PM-only (code more permissive)                             | Align doc OR tighten code → decision (small)                                                     |
-| D17 | 🟡 LOW  | note  | `ci_status_store` ranks STAGING_PENDING == STAGING_GREEN but `tier_c_promotion_gate` excludes PENDING from ON_STAGING                                | Note only (latent confusion, not a live bug)                                                     |
-| D18 | 🟡 LOW  | P     | quickmerge.sh:1481/1534 messages say "Tier-C drain ≤30min" vs live 15min                                                                             | Comment fix → quickmerge.sh                                                                      |
-| D19 | 🟡 LOW  | P     | `sit-starvation-detector.yml` header comment "every 15 minutes" vs cron `*/30`                                                                       | Comment fix → that workflow                                                                      |
-| D20 | 🟡 LOW  | H     | `ci_status_firestore_side_store` + `ldr_tarball_auto_refresh` carry `locked_since:2026-05-21` predating `created`                                    | Frontmatter fix → those plans                                                                    |
-| D21 | 🟡 LOW  | H     | `fleet_git_health_orchestrator` `assigned_vm: vm-orchestrator` — that VM STOPPED 2026-06-04 (vestigial)                                              | Reassign VM → that plan                                                                          |
-| D23 | 🟡 LOW  | H     | 4 plans/issues likely-archivable (see §"Archivable")                                                                                                 | Archive per ritual                                                                               |
-| D25 | 🟡 LOW  | S     | `cicd_workflow_sprawl_audit` issue itself states ldr-to-staging cron as `17 */6` — wrong vs live                                                     | Fix the issue doc number                                                                         |
+| ID  | Sev     | Class | One-line                                                                                                                                             | Disposition / destination                                                                                     |
+| --- | ------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| D1  | 🔴 HIGH | P+X   | `--frozen` asserted in docs; deployed CI does bare `uv sync` + warn-only lock; local uses `uv pip install -e .`                                      | **DECISION** → `uv_lock_frozen_model_contradiction` (pick one model, then wire docs+CI to agree)              |
+| D5  | 🔴 HIGH | P     | ci-cd-flow.md teaches OLD per-unit staging-PR model (L176/L571-576/L611/L618) vs live land-on-LDR-and-stop                                           | Doc rewrite → ci-cd-flow.md (owner: cicd_contract_hardening codex-audit phase)                                |
+| D10 | 🔴 HIGH | X     | "DECIDED 2026-06-12 `--frozen`" is still an OPEN checkbox + contradicts the issue doc                                                                | Same as D1 (this is the intent side)                                                                          |
+| D2  | 🟠 MED  | P     | CLAUDE.md "service-deps enforcement is DEAD (wrong path / type==service only)" — FALSE, gate is live                                                 | Edit CLAUDE.md (remove ⚠️ DEAD warning)                                                                       |
+| D3  | 🟠 MED  | P     | CLAUDE.md "the two aiohttp `--ignore-vuln`" — actual is ~20 vulns                                                                                    | Edit CLAUDE.md count + the "drop the two flags" instruction                                                   |
+| D4  | 🟠 MED  | P+X   | Cron drift: ldr-to-staging live `2,17,32,47`(15m) vs ci-cd-flow `13,43`(30m); main-backmerge live hourly vs CLAUDE `*/20`                            | Edit ci-cd-flow.md + CLAUDE.md to live values                                                                 |
+| D11 | 🟠 MED  | X     | In-image QG: router plan wants advisory→blocking; sibling-context issue shipped `_RUN_INIMAGE_QG:false` skip                                         | Reconcile → `cloud_build_router_aws_parity` L67                                                               |
+| D12 | ✅ DONE | X     | ~~Content-hash sentinel owned by 2 plans, neither closes the race~~ — premise STALE (Rec#1 shipped 977c5548f; plan archived)                         | RESOLVED 2026-06-18 — issue closed + archived; nothing to consolidate                                         |
+| D13 | 🟠 MED  | S     | `qg_commit_quality_boundary` L220 flipped `[x] SHIPPED tab-mirror BIDIRECTIONAL` — machinery since DELETED by Path-B, no SUPERSEDED banner           | Add SUPERSEDED banner → that plan                                                                             |
+| D14 | 🟠 MED  | S     | `assert_deps_published_to_ar.py` is UNWIRED (own STATUS comment 2026-06-16); reserved for unlaunched image-build path                                | Note as reserved/dead → `cloud_build_router_aws_parity` (AR-publish item)                                     |
+| D22 | 🟠 MED  | H     | `semver_version_bump_skip_ci` + `cicd_workflow_sprawl_audit` migrated core but keep residual todos not in parent (dual-tracking)                     | Migrate residuals → `cicd_contract_hardening`, then archive                                                   |
+| D24 | 🟠 MED  | S     | 3 template dirs; `feature-branch-to-staging.yml` dup'd in 2 dead dirs (retired v1 model, deployed nowhere); `staging-version-gate.yml` orphan        | Delete dead templates → `cicd_workflow_sprawl_audit`                                                          |
+| D6  | 🟡 LOW  | P     | ci-cd-flow.md L32 lists `tab/hk/<N>` tab-branch as live; Path-B retired it                                                                           | Doc edit → ci-cd-flow.md branch-model table                                                                   |
+| D7  | 🟡 LOW  | P     | ci-cd-flow.md L918-929 "post-cutover LDR retired" block — wrong; LDR is the SSOT                                                                     | Delete/rewrite block → ci-cd-flow.md                                                                          |
+| D8  | 🟡 LOW  | X     | ci-cd-flow.md L620 "kill-switch arming ❌ NOT ALLOWED" vs CLAUDE.md "protective arming always autonomous"                                            | Doc edit → ci-cd-flow.md table                                                                                |
+| D9  | 🟡 LOW  | S     | ci-cd-flow.md L756-796 "Operational status snapshot 2026-06-01; being repaired" — 6wk stale                                                          | Refresh/archive section → ci-cd-flow.md                                                                       |
+| D15 | ✅ DONE | P     | `promotion_lag_monitor.py` + `reconcile_release_tags.py` use `GOOGLE_CLOUD_PROJECT` (rule mandates `GCP_PROJECT_ID`) → silent Firestore no-op on VMs | ✅ DONE 2026-06-18 — renamed env both sides; +`ci_failure_watcher.py` (same bug) + 3 workflows — PM@409fd7661 |
+| D16 | 🟡 LOW  | P     | `check_strict_quickmerge.py` carves `scripts/` as a prefix in ANY repo; CLAUDE.md implies PM-only (code more permissive)                             | Align doc OR tighten code → decision (small)                                                                  |
+| D17 | ✅ DONE | note  | `ci_status_store` ranks STAGING_PENDING == STAGING_GREEN but `tier_c_promotion_gate` excludes PENDING from ON_STAGING                                | ✅ DONE 2026-06-18 — confirmed latent (not a live bug); cross-ref comments added both sites — PM@665cdc965    |
+| D18 | ✅ DONE | P     | quickmerge.sh:1481/1534 messages say "Tier-C drain ≤30min" vs live 15min                                                                             | ✅ DONE 2026-06-18 — 30→15min (2 comments; live cron `2,17,32,47`) — PM@665cdc965                             |
+| D19 | ✅ DONE | P     | `sit-starvation-detector.yml` header comment "every 15 minutes" vs cron `*/30`                                                                       | ✅ DONE 2026-06-18 — header 15→30min — PM@665cdc965                                                           |
+| D20 | 🟡 LOW  | H     | `ci_status_firestore_side_store` + `ldr_tarball_auto_refresh` carry `locked_since:2026-05-21` predating `created`                                    | Frontmatter fix → those plans                                                                                 |
+| D21 | 🟡 LOW  | H     | `fleet_git_health_orchestrator` `assigned_vm: vm-orchestrator` — that VM STOPPED 2026-06-04 (vestigial)                                              | Reassign VM → that plan                                                                                       |
+| D23 | 🟡 LOW  | H     | 4 plans/issues likely-archivable (see §"Archivable")                                                                                                 | Archive per ritual                                                                                            |
+| D25 | 🟡 LOW  | S     | `cicd_workflow_sprawl_audit` issue itself states ldr-to-staging cron as `17 */6` — wrong vs live                                                     | Fix the issue doc number                                                                                      |
 
 ---
 
@@ -171,8 +171,12 @@ set grew through 2026-06-15 OSV advisories). **Disposition:** edit CLAUDE.md to 
 **D15 — `GOOGLE_CLOUD_PROJECT` vs `GCP_PROJECT_ID`.** `promotion_lag_monitor.py` + `reconcile_release_tags.py` read
 `GOOGLE_CLOUD_PROJECT` for best-effort Firestore write-through; workspace rule mandates `GCP_PROJECT_ID` (never
 `GOOGLE_CLOUD_PROJECT`). Both are inside catch-all `except` → no breakage, but the Firestore write **silently never
-happens** on a VM that sets only `GCP_PROJECT_ID`. **Disposition:** small env-var fix (adjacent to the existing
-`gh_rate_budget_reduction` P3 Firestore-write-through item).
+happens** on a VM that sets only `GCP_PROJECT_ID`. **✅ RESOLVED 2026-06-18 (PM@409fd7661):** the audit under-scoped
+this — `ci_failure_watcher.py` has the **same** read (3rd script, not originally named), and all 3 are invoked by
+workflows that mapped `vars.GCP_PROJECT_ID` under the banned env name (so GHA worked, only the VM path no-op'd). Renamed
+both sides to canonical `GCP_PROJECT_ID` across the 3 scripts + 3 workflows in lockstep; `firestore.Client(project=...)`
+is explicit, so nothing relied on the SDK's implicit `GOOGLE_CLOUD_PROJECT` default. (The base-library gate only scans
+`$SOURCE_DIR/`, never `scripts/` — which is why these reads were never flagged.)
 
 **D16 — `check_strict_quickmerge.py` carve-out broader than the doc.** Code carves `scripts/` as a path prefix in
 **any** repo (`CARVE_PREFIX`); CLAUDE.md's carve-out 3 reads "PM `scripts/**`", implying PM-only. The code is _more
@@ -283,7 +287,7 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
   is BLOCKED-PLAYWRIGHT).
 - `plans/active/issues/gcp_cloudbuild_sibling_context_staging_2026_06_15.md` — option B shipped + validated (self-marked
   "archive on next sweep").
-- `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` — resolved same-day, both items flipped,
+- `plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` — resolved same-day, both items flipped,
   prod-verified, already in CLAUDE.md.
 
 ---
@@ -325,14 +329,13 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [x] D12 ✅ — RESOLVED 2026-06-18: premise stale. Rec#1 (content-hash sentinel) SHIPPED 2026-06-17 (`977c5548f`); Rec#2
       (change-scoped slicing) WON'T-DO (Harsh, ~1.1%); Rec#3 superseded; `quality_gates_speed` archived → no
       double-tracking. Issue closed + archived to `plans/archive/issues/`.
-- [ ] D13 🟠 — add SUPERSEDED banner to qg_commit_quality_boundary L220 (tab-mirror torn out by Path-B). **DEFERRED: the
-      edit would force a ~170-line prettier reflow of that hot, actively-edited plan mid-session (prek reflows md on
-      commit) — apply in a quiet window.**
+- [x] D13 ✅ — added SUPERSEDED-2026-06-08 banner to qg_commit_quality_boundary (the flipped tab-mirror BIDIRECTIONAL
+      item — machinery deleted by Path-B) — 2026-06-18
 - [x] D14 ✅ — recorded `assert_deps_published_to_ar.py` as reserved/unwired (callout in
       `cloud_build_router_aws_parity`) — PM@98bdf756c
 - [ ] D22 🟠 — migrate residual todos out of semver_version_bump_skip_ci + cicd_workflow_sprawl_audit, then archive
-- [ ] D24 🟠 — delete dead `feature-branch-to-staging.yml` (2 dirs) + `staging-version-gate.yml`; fold into sprawl
-      remediation
+- [x] D24 ✅ — deleted 3 dead retired-v1 templates (`feature-branch-to-staging.yml` ×2 + `staging-version-gate.yml`;
+      verified deployed to 0/25 + unreferenced); recorded in the sprawl issue — 2026-06-18
 - [x] D6 ✅ — branch-model table: `tab/hk/<N>` row → Path-B reference-clone; staging who-merges → Tier-C drain —
       PM@eeece9802
 - [x] D7 ✅ — corrected the wrong "post-cutover — LDR retired" block (LDR is the trunk, runs no server QG; drain PR
@@ -340,18 +343,23 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 - [x] D8 ✅ — kill-switch arming row → protective arming autonomous, resume-within-matrix (manual_unkill human-only) —
       PM@eeece9802
 - [x] D9 ✅ — bannered the 2026-06-01 "being repaired" operational snapshot as HISTORICAL/superseded — PM@eeece9802
-- [ ] D15 🟡 — `GOOGLE_CLOUD_PROJECT`→`GCP_PROJECT_ID` in promotion_lag_monitor.py + reconcile_release_tags.py
+- [x] D15 ✅ — `GOOGLE_CLOUD_PROJECT`→`GCP_PROJECT_ID` in promotion_lag_monitor.py + reconcile_release_tags.py +
+      **ci_failure_watcher.py** (same bug, not originally named) + their **3 invoking workflows** (env key renamed in
+      lockstep so GHA keeps working) — PM@409fd7661
 - [ ] D16 🟡 — check_strict_quickmerge `scripts/` carve breadth. **Verified 2026-06-18:** the carve affects only
       PROVENANCE (trailer + dep-gate), NOT content — `scripts/` is QG-unchecked either way; `tests/` IS caught in
       staging (ruff+pytest). Operator 2026-06-18: scripts stay out of typecheck/coverage (by design); add ruff-lint
       only; tests unchanged. **Carve scope (PM-only vs all) PENDING a scripts audit** → migrated to
       `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 3).
-- [ ] D17 🟡 — (note) STAGING_PENDING rank-equivalence vs ON_STAGING_STATUSES exclusion
-- [ ] D18 🟡 — quickmerge.sh:1481/1534 "30min" → 15min drain comment
-- [ ] D19 🟡 — sit-starvation-detector.yml header comment "15 minutes" → matches `*/30`
-- [ ] D20 🟡 — fix `locked_since` frontmatter (ci_status_firestore_side_store, ldr_tarball_auto_refresh). **DEFERRED:
-      same prettier-reflow-on-commit churn on hot foreign plans for a 1-line frontmatter fix — batch at triage.**
-- [ ] D21 🟡 — reassign fleet_git_health_orchestrator `assigned_vm` off the stopped vm-orchestrator
+- [x] D17 ✅ — (note) confirmed **latent, not a live bug**: the `_GREEN_RANK` pending==green is no-downgrade-only,
+      independent of `ON_STAGING_STATUSES` excluding PENDING for promotion readiness. Added cross-reference comments at
+      both sites so a future reader can't conflate them — PM@665cdc965
+- [x] D18 ✅ — quickmerge.sh drain-cadence comments 30min→15min (live cron `2,17,32,47`) — PM@665cdc965
+- [x] D19 ✅ — sit-starvation-detector.yml header 15→30min to match cron `*/30` (line-3 ~15min SIT run-duration is
+      correct, left) — PM@665cdc965
+- [x] D20 ✅ — fixed `locked_since` frontmatter (ci_status_firestore_side_store→2026-06-10,
+      ldr_tarball_auto_refresh→2026-06-17) — 2026-06-18
+- [x] D21 ✅ — reassigned fleet_git_health_orchestrator `assigned_vm` vm-orchestrator (stopped 2026-06-04) → `planning`
+      (live central VM) — 2026-06-18
 - [ ] D23 🟡 — archive the 4 resolved plans/issues (gate the UI one on `pw:L2 ✓`)
-- [ ] D25 🟡 — fix the ldr-to-staging cron number in the cicd_workflow_sprawl_audit issue doc. **DEFERRED: same
-      reflow-churn reason — batch with D13/D20/D24 at triage.**
+- [x] D25 ✅ — fixed the ldr-to-staging cron number (`17 */6`→`2,17,32,47`) in the sprawl issue — 2026-06-18

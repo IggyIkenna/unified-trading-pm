@@ -39,10 +39,20 @@ source:
    because a script spans multiple plans (the GCS cutover touches MTDS / instruments / deployment plans at once); epics
    are stable
    - multi-plan + validate-able vs the registry like `assigned_vm`. **Epics are EVERLASTING**, so `Epic:` is OWNERSHIP,
-     not the delete trigger — `Delete-when:` carries the actual completion signal. **`last_run` is DERIVED, never a
-     manual header field** (a hand-updated field would rot — nobody updates a comment after every run): staleness =
-     `git log -1 --format=%cs -- <script>`; a campaign script needing true run-frequency appends to a central
-     auto-ledger (a `log_script_run.sh "$0"` one-liner, like `log-manifest-mutation.sh`). Full convention in Phase 0.
+     not the delete trigger — `Delete-when:` carries the actual completion signal. **NO runtime last-run tracking
+     (operator 2026-06-18): no `log_script_run`, no run-ledger, no auto-updated header field** — an auto usage timestamp
+     is commit-noise (unnecessary commits/PRs just to _run_ a script) and redundant, since the delete decision is gated
+     on the **`Delete-when` condition**, never a run-count. Only manual staleness _hint_ if ever in doubt:
+     `git log -1 --format=%cs -- <script>` (last-EDITED). Full convention in Phase 0.
+6. **Rollout sequence + deletes-DEFERRED (operator 2026-06-18).** Immediate priority is the **frontmatter ROLLOUT, NOT
+   deletion** — stamp the lifecycle marker on every script, then prune later by `Delete-when`. Sequence: \*\*(1) PM docs
+   - frontmatter** (the convention in `script-homes.md`/CLAUDE.md ✅ + PM's own scripts), **(2) every other repo's
+     frontmatter** (orchestrator-dispatched per `scripts_lifecycle_marker_rollout_2026_06_18.md`), **(3) prune by
+     `Delete-when`** (epic-owner-confirmed, orphan-sweep = 0). **NO run-logger / NO runtime last-run tracking**
+     (operator 2026-06-18: dropped — an auto usage ledger is commit-noise for ~zero decision value; the `Delete-when`
+     condition is the trigger, not a run-count). **No deletions until each `Delete-when` is met\*\* — Phase-1's
+     DELETE/DEPRECATE/PROMOTE execution todos stay PARKED. Collision is a non-issue: a top-of-file marker doesn't
+     conflict with body edits.
 
 ## Verified facts (`base-service.sh` — the same script CI + staging run)
 
@@ -80,8 +90,11 @@ a verdict). Heaviest:
 
 ## Phase 0 — define + roll out the lifecycle marker convention [P2] (precedes the audit)
 
-- [ ] [DESIGN] P2. Codify the 3-line script lifecycle marker (a comment header — works for `.sh` AND `.py`, so it's not
-      Python-docstring-only):
+- [x] ✅ [DESIGN] P2. **DONE 2026-06-18** — codified the 3-line lifecycle marker convention in
+      `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" + a CLAUDE.md § "Script Homes" one-liner (marker
+      format, the `permanent|campaign|oneoff` taxonomy, `Epic`-is-ownership / `Delete-when`-is-trigger, the
+      `Delete-when`-driven pruning model (no runtime tracking), ruff-yes/basedpyright-no gating). Codify the 3-line
+      script lifecycle marker (a comment header — works for `.sh` AND `.py`, so it's not Python-docstring-only):
 
   ```
   # Epic: <epic-slug>                       # owning epic — validated vs plans/epics/ registry (required, ALL scripts)
@@ -104,23 +117,39 @@ a verdict). Heaviest:
       every `campaign`/`oneoff` whose `Delete-when` looks satisfied OR whose `git` last-modified is stale (>N months) →
       flagged for the **epic owner** to confirm + delete. Repo: unified-trading-pm.
 
-- [ ] [DESIGN] P2. `last_run` / run-frequency is **derived, never a manual header field**: default staleness =
-      `git log -1 --format=%cs -- <script>` (last-modified, zero maintenance); a campaign script that needs true
-      run-frequency appends to a central auto-ledger via a `log_script_run.sh "$0"` one-liner (mirrors
-      `log-manifest-mutation.sh`). No hand-updated field anywhere.
+- [x] ✅ [DESIGN] P2. **DECIDED 2026-06-18 — NO runtime last-run tracking.** Dropped the run-ledger / `log_script_run`
+      idea entirely (operator): an auto-updated usage timestamp is commit-noise (unnecessary commits/PRs just to _run_ a
+      script) and redundant — the delete decision is gated on the **`Delete-when` condition**, never a run-count, so a
+      `permanent` script's run-count is irrelevant and a `campaign`/`oneoff` deletes when its condition holds. Only
+      manual staleness _hint_ if ever in doubt: `git log -1 --format=%cs -- <script>` (last-EDITED). No ledger, no
+      header field, nothing to maintain.
 
 ## Phase 1 — audit each repo's scripts/ (characterize + STAMP the marker) [P2]
 
-- [ ] [AUDIT] P2. Walk each repo's `scripts/` (start with the heavy/stale concentrations: instruments-service,
-      market-tick-data-service, deployment-service, e2e-testing). **Stamp the Phase-0 lifecycle marker
-      (`Epic:`/`Lifecycle:`/`Delete-when:`) on each script in the same touch as you classify it.** Classify each: (a)
-      LIVE one-off still needed; (b) RAN-ONCE-DONE → delete (Script-Homes: delete after prod-run + a GCS orphan-sweep
-      shows 0 stale targets); (c) OUT-OF-SHAPE / divergent from current code (hardcoded buckets / pre-env-short paths /
-      direct `google.cloud`/`boto3` / dead imports / references to deleted modules) → mark deprecated or delete; (d)
-      RECURRING → should be a CLI subcommand (file the promotion). Land a results doc under `plans/audit/results/`.
-      Target: all service repos.
-- [ ] [AUDIT] P2. From the audit, produce the concrete delete / deprecate / CLI-promotion lists; execute the deletes
-      carefully (never delete a script that still has live GCS targets — verify first). Target: per-repo.
+- [x] ✅ [AUDIT] P2. **DONE 2026-06-18 — read-only characterization of all 21 service repos' `scripts/` (~820 scripts,
+      `.py`+`.sh`; PM excluded).** 6 Opus sub-agents, one per repo-cluster; every script classified
+      (KEEP-PERMANENT/KEEP-ONEOFF/DELETE/DEPRECATE/PROMOTE-TO-CLI) + lifecycle + git-date + red-flag grep. Results:
+      **`plans/audit/results/repo_scripts_characterization_2026_06_18.md`**. Tally: ~620 keep-permanent, ~65 keep-oneoff
+      (active campaign), ~127 DELETE-candidates (heavily campaign-gated), ~75 DEPRECATE (cloud-discipline rot), ~8
+      PROMOTE-TO-CLI. (Stamping the lifecycle marker on each script is deferred to the delete/Phase-0 pass — the
+      characterization already assigns each one, so stamping is mechanical, but it pairs with the delete touch to avoid
+      churning ~820 files read-only.)
+- [ ] [AUDIT] P2. **Delete EXECUTION — GATED + REVIEWED (do NOT mass-`git rm`).** Per the results doc Finding 1: the big
+      DELETE cohort (instruments-service 64 / MTDS 22) is **campaign-gated** — the 2026-06 manifest-canonicalisation
+      campaign is ACTIVE, so delete a repo's dated one-offs for an asset_group **only after that AG's
+      `*_manifest_canonicalisation_2026_06_01.md` plan archives** + GCS-orphan-sweep=0. **Start with the
+      immediately-safe ~40** (UI 2026-03 `.tsx.bak` splitters/codemods; done deployment-service bucket migrations; the 5
+      dead checkers — UAC `check_schema_organization`, UTL `check-ruff-versions`, SIT `check-sit-readiness`, MTDS QG
+      stale SSOT pointer, deployment-service `aggregate_instruments`). Target: per-repo.
+- [ ] [AUDIT] P2. **DEPRECATE remediation** — fix the ~10 KEEP/PROMOTE scripts carrying the cloud-discipline gap (UCI
+      `get_storage_client`/`gcs_*` + `resolve_bucket_name` + `GCP_PROJECT_ID` via `UnifiedCloudConfig`):
+      strategy-service DeFi tracers, `seed_demo_client`, `run_client_reporting_cutover`, `run_amm/lending_validation`,
+      `backfill_vix_yahoo`, `run_weekly_pipeline`. (DELETE-cohort scripts are moot — removal moots the flaw.) Target:
+      per-repo.
+- [ ] [AUDIT] P2. **PROMOTE-TO-CLI** — file the ~8 recurring-prod-logic scripts as their owning service's CLI subcommand
+      (`daily_update.py`→client-reporting-api; `collect_lst_seasonal_rewards_daily.py`/`check_pipeline_completeness.py`→
+      features-service; `measure_honest_coverage.py`/`verify_instrument_manifest_coverage.py`→instruments-service;
+      `run_weekly_pipeline.py`/`backfill_vix_yahoo.py`→e2e→service CLI). One small plan item per repo. Target: per-repo.
 
 ## Phase 2 — ruff-lint pass on scripts/ [P2]
 
@@ -129,6 +158,12 @@ a verdict). Heaviest:
       light up → likely a baselined ratchet that only goes DOWN, like the existing 5.94/5.95 ratchets). Repo:
       **unified-trading-pm** (`base-*.sh`) → fleet-live via the PM-sourced base scripts (no per-repo rollout).
       **Sequencing:** run AFTER Phase-1 deletes so the ratchet baseline isn't inflated by soon-to-be-deleted scripts.
+- [ ] [SCRIPT] P2. **(from Phase-1 Finding 2)** ruff alone won't catch the systemic `scripts/` rot (~75 scripts:
+      `from google.cloud import storage` vs UCI; hardcoded `central-element-323112` vs `GCP_PROJECT_ID`; inline `gs://`
+      vs `resolve_bucket_name`; `os.environ.setdefault("GOOGLE_CLOUD_PROJECT")`) — that's a TID251/import-surface
+      concern, not a style rule. **Extend the existing cloud-SDK-direct (TID251) + `os.getenv`/banned-env ratchets to
+      cover `scripts/`** (baselined, counts-only-down), so the rot can't silently grow. AFTER the DELETE pass (baseline
+      not inflated by soon-deleted scripts). Repo: unified-trading-pm.
 
 ## Phase 3 — D16 strict-quickmerge carve scope [P2]
 
@@ -142,9 +177,9 @@ a verdict). Heaviest:
 ## Codex SSOT updates
 
 - `codex/06-coding-standards/script-homes.md` — add (a) the **lifecycle marker convention** (`Epic:`/`Lifecycle:`/
-  `Delete-when:`, the closed `permanent|campaign|oneoff` set, `last_run` is derived-not-manual) and (b) the "scripts/:
-  ruff-lint YES; basedpyright + coverage NO (by design, to avoid refactor tech-debt on throwaway code); recurring logic
-  → CLI" clarification — when Phase 0/2 land.
+  `Delete-when:`, the closed `permanent|campaign|oneoff` set, `Delete-when`-driven pruning with no runtime tracking) and
+  (b) the "scripts/: ruff-lint YES; basedpyright + coverage NO (by design, to avoid refactor tech-debt on throwaway
+  code); recurring logic → CLI" clarification — when Phase 0/2 land.
 - CLAUDE.md — one-liner pointing to the script lifecycle marker + the ruff-only rule (per the durable-facts-live-here
   rule), once shipped.
 
@@ -156,3 +191,19 @@ a verdict). Heaviest:
 - `scripts/` is ruff-linted fleet-wide (ratcheted); basedpyright + coverage remain excluded by design.
 - The D16 carve scope is decided + implemented; CLAUDE.md matches `check_strict_quickmerge.py`.
 - `tests/` unchanged (confirmed intentional).
+
+## Progress Log
+
+- **2026-06-18 — Phase 1 characterization DONE (read-only).** Fanned out 6 Opus sub-agents (one per repo-cluster) over
+  all 21 service repos' `scripts/` (~820 `.py`+`.sh`; PM excluded). Results doc:
+  `plans/audit/results/repo_scripts_characterization_2026_06_18.md`. Three headline findings: **(1)** the big DELETE
+  cohort (instruments-service 64 / MTDS 22) is **campaign-gated** — the 2026-06 manifest-canonicalisation campaign is
+  ACTIVE, so the `*_2026_06_01.py` set is in-flight (KEEP) and dated 2026-05 reconcilers may be re-run; delete per-AG
+  only after that AG's canonicalisation plan archives → **no fleet `git rm`**. **(2)** systemic `scripts/`
+  cloud-discipline rot (~75: `google.cloud`-direct / hardcoded `central-element-323112` / inline `gs://`), invisible
+  because `scripts/` is outside the QG gate — validates the ruff decision AND motivates extending the TID251/banned-env
+  ratchets to `scripts/` (new Phase-2 todo). **(3)** ~8 PROMOTE-TO-CLI (recurring prod logic as scripts;
+  `daily_update.py` the clearest). Plus 5 dead-checker tooling scripts (pointed at deleted/archived paths). Phase 1
+  flipped; delete + deprecate + promote execution todos scoped with the gating rule. **Next:** Phase 0 marker
+  codification, then the immediately-safe ~40 deletes (UI splitters + done bucket migrations + dead checkers), then the
+  campaign-gated cohort as each plan archives.
