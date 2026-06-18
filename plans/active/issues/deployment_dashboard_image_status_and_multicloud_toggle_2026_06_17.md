@@ -155,7 +155,7 @@ the cleaner isolation if we expect the AWS deployment to grow beyond build-statu
 
 ### Code half — HARSH (Option B implementation; permissions above are DONE — these are the only remaining work)
 
-- [ ] [CODE] P1. **deployment-api — add an AWS-CodeBuild build-status reader + `?provider=` param.** Today
+- [x] ✅ [CODE] P1. **deployment-api — AWS-CodeBuild build-status reader + `?provider=` param — SHIPPED** `deployment-api@e84482d` | quality-gates green + 30 unit tests (provider routing, per-provider cache isolation, keyless WIF auth on mocked boto3/google.auth). Threads `provider=gcp|aws` through `/api/repo-ci/overview` + `/{repo}/detail`; the aws branch reads CodeBuild via `AssumeRoleWithWebIdentity` short-lived creds (no static key), region+role-ARN from config. (impl notes: plain unsigned STS client; `_import_boto3()` helper to keep the TID251 ratchet at baseline; `unittest.mock` not moto, matching the repo pattern.) Promotes to main via the drain → AWS column lights up. **Original spec below.** Today
       `_latest_builds_by_repo()` (`deployment-api/deployment_api/routes/repo_ci.py:360`) only calls GCP Cloud Build v1
       `list_builds`, dispatching on the server-side `is_aws_provider()`/`CLOUD_PROVIDER` env (`repo_ci.py:375`) — there
       is **no AWS path and no per-request provider**. Add: (1) thread `provider: Literal["gcp","aws"]="gcp"` through
@@ -172,7 +172,7 @@ the cleaner isolation if we expect the AWS deployment to grow beyond build-statu
       the role ARN (config, not a secret). **Target repo:** deployment-api. Unit-test the AWS reader on a mocked boto3
       (`@mock_aws`/moto) + the provider-param routing; cassette/contract per repo standards. Cold-start: read
       `SUB_AGENT_MANDATORY_RULES.md`. Provenance: this doc, Option-B decision.
-- [ ] [BUG][UI] P2. **deployment-ui — make the GCP/AWS toggle pass `?provider=` (and stop the prod no-op).** Today
+- [x] ✅ [BUG][UI] P2. **deployment-ui — GCP/AWS toggle passes `?provider=` (stops the prod no-op) — SHIPPED** `deployment-ui@935c111` | pw:L2 ✓ (219 smoke pass) | regression: `tests/smoke/repos-tab.spec.ts` ("GCP/AWS toggle drives the repo-CI fetch via ?provider="). `getRepoCiOverview/Detail` append `?provider=`; RepoCi threads the cloud target + refetches on toggle; Header toggle gets testids; mock records requests for the assertion. The `getApiBaseUrl` base-URL path was left untouched (already `/api` in the bundle — the param is the surgical fix). **Original spec below.** Today
       `CloudProviderContext.getApiBaseUrl()` (`deployment-ui/src/contexts/CloudProviderContext.tsx:34-57`) returns the
       relative `/api` for any non-localhost host, so the deployed toggle (`Header.tsx:239-254`) re-queries the SAME GCP
       backend regardless of selection. Under Option B (single backend, provider param) the fix is to **append
