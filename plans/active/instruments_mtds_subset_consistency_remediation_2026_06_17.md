@@ -125,6 +125,44 @@ numbers. Order:
 **Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
 gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
 
+## Operator follow-ups 2026-06-18 — research-data canonical-copy + instrument catalogue + MVP/total universe
+
+> **Dependency order (operator 2026-06-18):** (B0) backfill instruments to NO-MISSING first → (B1) regen the instrument
+> catalogue (it aggregates instruments) → (B2) codify MVP-universe vs total-reasonable-universe (so the backfill config
+> + data-status "could-exist" are correct) — these gate/inform each other. Research-data canonical-copy (B3) is
+> independent. Cross-links: `path_to_100pct_backfill_mtds_is_2026_06_17.md` (the backfill-to-100% home).
+
+- [ ] [INFRA] P1. **B3 — copy e2e research data to CANONICAL placement + e2e doc**: HL `perp_funding`/`perp_daily_ctx`
+      currently ONLY in the no-env-suffix research bucket `gs://perp-funding-central-element-323112/day=*/`; LST rates ONLY
+      in `gs://lst-rates-central-element-323112/day=*/`. These are prod-needed data. (a) Determine the canonical home per
+      data_type — the dedicated `-prd-` bucket (`lst-rates-prd`, exists) vs the market-data-tick-{cefi|defi}-prd canonical
+      `pipeline_mode=` path (cefi already carries `pipeline_mode=batch_hyperliquid`; HL perp may be cefi-perp, LST is
+      defi). (b) `gcs_copy_object` (workers=32, in-region) the research objects → canonical placement (+ manifest
+      `record_captured` so the `_index` reflects them). (c) Write `e2e-testing/docs/` (or the e2e README) a note: research
+      reads MUST migrate to the canonical sources — list the old→canonical bucket/path mapping so the e2e funding scripts
+      (`staked_basis_funding_scan`/`colocated_engine`/etc.) update their fetch paths. Then the research buckets become
+      deletable (operator-gated). — instruments-service/deployment-service + e2e-testing(doc)
+- [ ] [INFRA] P1. **B1 — instrument catalogue regen + un-pause (aggregation/dedup; "has this instrument ever existed" +
+      available-from/to)**: `instruments-service/scripts/build_instrument_catalogue.py` +
+      `reference_data/catalogue/catalogue_builder.py` EXIST; Cloud Run jobs `lifecycle-catalogue-regen-{cefi,defi,tradfi,
+      sports,prediction}` exist but the `*-daily` SCHEDULERS are **PAUSED** + last ran ~2026-06-11/15 (STALE, pre-backfill).
+      AFTER B0 (instrument backfill no-missing): re-run the regen jobs per AG → verify the catalogue reflects the full
+      deduped instrument lifecycle (genesis/first-seen/last-seen per instrument) → decide cadence + un-pause the daily
+      schedulers (or keep manual). data-status "could-exist" + the expected_unattempted enumerator
+      (`enumerate_expected_universe.py`) read this — stale catalogue = wrong could-exist universe. — instruments-service/deployment-service
+- [ ] [DESIGN] P1. **B2 — codify MVP-universe vs TOTAL-REASONABLE-universe (NOT codified anywhere — confirmed gap)**: define
+      in UAC (registry) the two distinct expected-universes so we know what we SHOULD have (drives the backfill config +
+      data-status denominators): dimensions = base_currency × venue × data_type × (DeFi-pool by volume threshold) ×
+      fixtures (sports) × combinations; canonical sources = hardcoded (chain genesis dates, VIX-index) vs
+      download-derived (must have had the right fetch config to cover the full universe). **TOTAL-REASONABLE** = the full
+      could-exist universe; **MVP** = the subset the May-23 archetypes need. Scan `path_to_100pct_backfill_mtds_is_2026_06_17.md`
+      + the current `enumerate_expected_universe.py` + UAC registry for how far this exists + outliers; codify the gap as a
+      UAC SSOT both the enumerator + the backfill config + data-status read from. — unified-api-contracts/instruments-service
+- [ ] [DATA] P0. **B0 — backfill instruments to NO-MISSING (prereq for B1 catalogue + all expected-universe consumers)**:
+      the F1/F2 instrument backfills below + the broader could-exist instrument backfill tracked in
+      `path_to_100pct_backfill_mtds_is_2026_06_17.md`. Other services rely on instruments to know what's
+      available/expected → this runs FIRST. — instruments-service
+
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
 - [ ] [DATA] P1. **F1 — backfill instruments-service for CEFI venues MTDS has but instruments lacks historically**:
