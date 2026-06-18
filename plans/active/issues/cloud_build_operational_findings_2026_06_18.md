@@ -3,7 +3,6 @@ title:
   "Cloud Build operational findings (2026-06-18 smoke test) — mdps Docker break + deployment-ui Cloud Build visibility
   gaps"
 created: 2026-06-18
-author: harshkantariya [slot-3·laptop]
 source:
   - "2026-06-18 operator-directed Cloud Build smoke test: verify permissions, run base + service builds, check
     deployment-ui visibility, retry a failing service (at most 4 builds)"
@@ -11,6 +10,8 @@ source:
     prior mdps failure baf77da9"
 locked_by: live-defi-rollout
 parent_epic: infrastructure_master
+priority: P2
+status: active
 ---
 
 # Cloud Build operational findings (2026-06-18 smoke test)
