@@ -673,11 +673,11 @@ carry-only (no hedge/basis MtM) — Sharpe inflated, per the standing P3 todo.
 **7. Cross-sectional funding carry (NEW archetype, operator 2026-06-18) — NOT TRADEABLE, but funding is a strong
 MOMENTUM FEATURE.** Built a cross-sectional long-short: long the lowest-funding / short the highest-funding HL coins
 (different coins, same venue, $-neutral, liquidity/risk-parity weighted, diversified cap, leverage knob, funding + price
-PnL). Needs the new `perp_daily_ctx` (mark_px+volume+OI) backfill. **Verdict: a LOSER.** 3yr naive NET −36%/yr, Sharpe
+PnL). Needs the new `perp_daily_ctx` (mark*px+volume+OI) backfill. **Verdict: a LOSER.** 3yr naive NET −36%/yr, Sharpe
 −1.3, maxDD −125%, winning quarters 4/13 (2024 −87%). A funding band-pass (drop |funding|>60%/yr momentum extremes)
 lifts it to ~flat (−1.3%, Sharpe −0.25) but NO config is positive. Root cause (component split): the strategy harvests
 ENORMOUS funding but loses ~exactly as much on price — **funding ≈ the adverse price move (efficient market)**: a coin
-pays −245%/yr funding _because_ it is being violently shorted (crashing), so longing it loses on price what you gain on
+pays −245%/yr funding \_because* it is being violently shorted (crashing), so longing it loses on price what you gain on
 funding. The book is structurally **short-momentum**, which bleeds in crypto.
 
 **The valuable output is the predictive signal (for a SEPARATE ML exercise — NOT built here, operator 2026-06-18):**
@@ -694,11 +694,47 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
 
 ## Open todos / next steps
 
-- [ ] [RESEARCH→ML] P2. (separate ML agent/exercise — operator 2026-06-18) Funding as a predictive FEATURE: funding
-      level = momentum (IC +0.073 @ 7d); build a squeeze/crowded-long REVERSAL classifier conditioning on funding
-      acceleration (Δfunding) + OI change + price extension + liquidations to isolate the ~30% reversal tail from the
-      70% continuation. Inputs: GCS `perp_funding` + `perp_daily_ctx` (HL, 2023-2026, 100% coverage). **Repo:
-      features/ML.**
+- [ ] [RESEARCH→ML] P2. (separate ML agent/exercise — operator 2026-06-18; NOT built by the harness agent — empirical
+      handoff) **Funding-dynamics GBM models for squeeze / crowded-long prediction** — full spec immediately below.
+
+  **Hypothesis (finding #7):** funding LEVEL = momentum (IC +0.073 @ 7d). The REVERSAL (short squeeze on crowded shorts
+  / unwind of crowded longs) is the conditional ~30% TAIL, predictable from the DYNAMICS of the extreme — how extreme,
+  **how long it has persisted at that level** (operator: fresh spike vs stale extreme differ), accel/decel, OI +
+  liquidation + extension context.
+
+  **Features (per coin-day):** funding LEVEL (`apy_bps`) + cross-sectional percentile rank; **crowded flags**
+  `|funding| > {50,100,200}%/yr` (operator's "abs funding>50%/yr = crowded short/long"); **persistence/recency**
+  (operator key feature) — days since `|funding|` first crossed each threshold (current extreme-regime duration), days
+  since funding last crossed zero, same-sign run-length; **acceleration** `Δfunding {1,3,7}d` + funding z-score vs
+  {20,60}d; **OI** level
+  - `ΔOI {1,3,7}d` (rising OI+extreme = build/continuation; collapsing OI+extreme = unwind/reversal); **volume**
+    `day_ntl_vlm` + z-score; **price extension/vol** return vs {7,30}d MA + realized vol; **liquidations** (HL S3
+    archive) = the squeeze trigger.
+
+  **Targets:** (a) CLASSIFICATION — forward-Nd return is REVERSAL (opposite to funding-momentum) vs CONTINUATION, binary
+  or 3-class, horizons {1,3,7,14}d; (b) REGRESSION — forward-Nd return / reversal magnitude. **Model:** GBM
+  (LightGBM/XGBoost) cls+reg, walk-forward CV (no lookahead), SHAP/gain importance → keep the predictive subset (expect
+  persistence + accel + ΔOI to beat raw level for the reversal tail). **Then blend the validated continuous signals
+  (predicted reversal-prob / funding-momentum score) into the EXISTING carry/dispersion models** as features/overlays so
+  the live book "does fewer shorts/longs" where a squeeze/unwind is likely. **Data:** GCS HL `perp_funding` (hourly) +
+  `perp_daily_ctx` (mark_px/vol/OI), 2023-2026 100% coverage, + HL liquidations from the S3 archive. ⚠ canonicalize
+  `perp_daily_ctx` → `derivative_ticker` first (canonical todo below). Reproducible from
+  `e2e-testing/scripts/defi/staked_basis_funding_scan.py`. **Repo: features-service / ML.**
+
+  **Squeeze-END predictability — first empirical cut (operator 2026-06-18; do these features predict WHEN the crowd
+  unwinds?): NO — the intuitive exhaustion features all predict CONTINUATION or are flat.** On 7,791 extreme-funding
+  episodes (|funding|>100%/yr, liquid, 2023-2026), correlating each feature with the 7d REVERSAL (reversal>0 = crowd
+  unwound, i.e. price moves against the funding direction): **persistence** (days the extreme has held) corr **−0.041**
+  — reversal −1.5% (fresh) → **−5.1% (>10d stale)**, so the longer it persists the HARDER it continues (accelerates, no
+  exhaustion); **price extension** (SDs from 20d mean) corr **−0.097** (strongest) — most-extended continues hardest
+  (−0.6% → −4.7%); **volume change** corr −0.033; **ΔOI 7d** corr **+0.015** (flat — ~−2% reversal whether OI is
+  collapsing or surging). So the slow daily exhaustion proxies do NOT flag the squeeze; the momentum is robust + speeds
+  up. **ML implication:** the tradeable, predictable edge is the CONTINUATION (funding-momentum, IC +0.073@7d); the
+  squeeze/unwind is a tail that needs FASTER / exogenous signals — funding INFLECTION (the moment funding turns down
+  from the extreme), liquidation cascades (HL archive), order-book imbalance, news — NOT the slow daily
+  persistence/extension/ OI. Another agent should start the squeeze model from those faster signals, treating these four
+  slow features as confirmed non-predictors of the reversal (use them for the continuation side instead).
+
 - [ ] [STRATEGY] P3. Cross-sectional carry is NOT tradeable standalone (funding≈adverse price) — only revisit with a
       genuine price-neutralising overlay (correlation-paired long/short of co-moving coins, or a momentum/beta hedge)
       AND only if it clears Sharpe; otherwise the archetype is shelved. The delta-neutral staked/pure-basis remain the
