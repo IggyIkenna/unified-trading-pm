@@ -497,6 +497,16 @@ Final invariants: `venue_noncanon_remaining=0`, `captured_venue_not_on_gcs_remai
       sample), schema_v9/pipeline_mode/source/asset_group all 100%. Code QG-green (ALL QUALITY GATES PASSED).
       pred/tradfi/cefi/sports verified CLEAN at the venue level (no defi-style spelling drift); tiny per-AG
       mislabeled-captured remnants tracked as the 3 todos below. — market-tick-data-service
+      **Ship-path note (2026-06-18):** the 2 scripts (`canonicalize_mtds_index.py` N6r + new
+      `audit_index_vs_gcs_spellings.py`) shipped to LDR via the **dirty-deps + foreign-WIP carve-out** (mtds@6db7713,
+      direct push) — quickmerge was structurally blocked because a CONCURRENTLY-LIVE agent had uncommitted UAC tradfi
+      WIP (`tradfi.py`/`tradfi_instrument_universe.py`/`market_data_categories.py`) AND a mid-edit
+      `market_tick_data_service/live/connectors/databento_tradfi_ws.py` (the databento subscription-lockdown track)
+      whose 7 `test_databento_tradfi_ws_connector.py` tests fail the shared-tree QG. Those 7 failures are 100% foreign
+      (0 from these scripts); the scripts are ruff-clean + basedpyright-clean + coverage-exempt + independently
+      validated (the `--apply` ran green + re-verified). Foreign `databento_tradfi_ws.py` left untouched (never staged).
+      The coverage `scripts/*` omit landed independently via the foreign mtds@7d0b3d0 (so the pyproject edit was dropped
+      as redundant). **The data deliverable is COMPLETE + verified regardless of the code-ship path.**
 - [ ] [DATA] P2. **pred `_index`: 21 captured `UNKNOWN`-venue `trades` cells (2025-03-14..)** — GCS has `venue=POLYMARKET`
       only; these legacy `UNKNOWN`-venue rows have blank instrument_id (aggregate/legacy) and no `venue=UNKNOWN` object.
       Recover the real POLYMARKET venue (join to the same-day `pipeline_mode=batch_polymarket_clob/venue=POLYMARKET`
