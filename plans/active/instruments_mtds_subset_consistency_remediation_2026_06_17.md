@@ -125,6 +125,35 @@ numbers. Order:
 **Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
 gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
 
+## 🟢 AUTONOMOUS COMPLETION PLAN (2026-06-18) — drive ALL to verified-working, EXCEPT the delete (operator-gated)
+
+> Operator `/autonomous` 2026-06-18: complete everything (~1-2h, parallelise) to a working+verified state; **the ONLY
+> thing NOT to do is DELETE the old data** — but size it all up so the delete is ready. Loop until done; journal each tick.
+
+**State now:** cefi legacy delete DONE (9.98 TB, recoverable). cefi fully migrated. defi/tradfi/sports/pred object-migration
+was a broken VM run (0 twins) → VMs STOPPED → focused defi diagnosis+fix sub-agent `acb89f8f6b5c9a943` IN FLIGHT (gets defi
+producing twins e2e via a copy-driver off the audit parquet's pre-computed `legacy_path→canonical_twin_path`, then reports
+recipe + tradfi/sports/pred feasibility). Manifests (all 5) already canonicalized + reconciled (cell-keyed, correct).
+
+**Ordered completion (drive in this order; parallelise within a step):**
+1. **defi migration working e2e** (sub-agent acb89f8f) → verify migrate-first→0 for defi (twin-audit). [GATE: proves the recipe]
+2. **Fan out the recipe** to tradfi/sports/pred (parallel per-AG copy-drivers off each `legacy_dup_delete_list_{ag}.parquet`).
+   tradfi dash-separated/pred-restructure shapes that are UN-mappable → re-download-or-bespoke (decide+document, don't fake).
+3. **B3 — research-data copy across**: HL `perp_funding`/`perp_daily_ctx` (`perp-funding-*`) + LST (`lst-rates-*`) → canonical
+   placement (+ manifest record_captured) + e2e doc (old→canonical mapping so e2e scripts repoint). Independent — can run ∥.
+4. **Manifests reflect canonical** — re-verify all 5 live `_index` are cell-correct post-migration (already canonicalized;
+   confirm no regression).
+5. **Orphan check** — per AG, every captured cell has a canonical object (twin-audit migrate-first→0). THE gate for delete-safe.
+6. **data_type + schema checking** — the migrated canonical objects carry the right data_type partition + parquet schema
+   (sample-open per AG×data_type; confirm canonical objects == legacy content/schema, not just present).
+7. **Reader cutover** — repoint deployment-api drilldown + MTDS readers to canonical `pipeline_mode=` ONLY, remove ALL
+   legacy fallbacks / multiple-SSOT (safe once 5/6 complete per AG). cefi can cut over now.
+8. **SIZE UP the final delete for ALL AGs** — re-run the twin-audit → per-AG SAFE-TO-DELETE delete-lists (legacy objs with
+   verified canonical twins) + reclaimable bytes, written + summarized for operator inspection. **DO NOT DELETE** (operator
+   holds this). Output: a ready-to-execute, operator-gated delete-list per AG (cefi already deleted).
+
+**Hard-stop (operator):** the final DELETE of old data — prepare+size it, never execute.
+
 ## Operator follow-ups 2026-06-18 — research-data canonical-copy + instrument catalogue + MVP/total universe
 
 > **Dependency order (operator 2026-06-18):** (B0) backfill instruments to NO-MISSING first → (B1) regen the instrument
@@ -162,6 +191,21 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       the F1/F2 instrument backfills below + the broader could-exist instrument backfill tracked in
       `path_to_100pct_backfill_mtds_is_2026_06_17.md`. Other services rely on instruments to know what's
       available/expected → this runs FIRST. — instruments-service
+
+## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
+
+- [ ] [CODE] P1. **e2e funding scripts hardcode legacy research buckets — repoint to `resolve_bucket_name`**: B3 copied
+      HL perp_daily_ctx/perp_mark_price → `perp-funding-prd` (e2e-testing@af084af) + shipped
+      `docs/defi/research_data_canonical_sources_2026_06_18.md`. Repoint: `staked_basis_funding_scan.py:164-165`
+      (`_HL_PF_BUCKET`/`_LST_BUCKET`), `funding_regime_classifier.py:46` (`PF_BUCKET`) → `resolve_bucket_name(...)`
+      (`colocated_engine.py` already correct). Touches the live funding-arb path → strategy-service QG. — e2e-testing
+- [ ] [INFRA] P2. **Research `-prd-` buckets carry NO `_index/`** — the live availability index still lives in the legacy
+      `perp-funding`/`lst-rates` buckets; point the consolidator/readers at the `-prd-` index before the legacy research
+      buckets are deleted (consolidator-runtime concern; B3 doc notes it). — deployment-service/instruments-service
+- [ ] [DATA] P2. **Migration unmappable residue (bare/no-venue legacy paths, no canonical twin computable)**: defi 5,332 /
+      tradfi 1,102 / sports 3,816 / pred 0 legacy objects have `no_venue_or_data_type_in_path` → the 1:1 copy-driver can't
+      derive a canonical target. Decide per-shape: re-derive venue/data_type from file contents, or re-download, or accept
+      as legacy-only (NOT delete-safe — exclude from every delete-list). — market-tick-data-service
 
 ## Phase A — subset violations (MTDS data with no instrument backing)
 

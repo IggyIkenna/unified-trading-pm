@@ -845,6 +845,32 @@ OHLCV) to confirm 1.44 (the cefi GCS bucket is only ~20 curated coins, not their
 fapi pipeline). (c) the 1.44 leans on the one-off 2026 dispersion spike (yearly 2022 +0.77 → 2026 +2.04) — underwrite
 ex-2026. Reproduce: their `_carry_deployable.py` (`CACHE=./cache`); our HL port is the inline harness in this session.
 
+**CROSS-VENUE SWEEP — reversion regime confirmed across ALL arbitraged perp venues; HL is the lone momentum outlier
+(2026-06-18).** Ran their exact method (EWMA-7 funding rank, inverse-vol legs, dollar-neutral, 5bp) on each venue. The
+robust read is the **price-only Sharpe SIGN** (reversion>0 / momentum<0):
+
+| Venue           | price-only Sharpe                  | net          | ann.ret | universe / source                           | regime                                           |
+| --------------- | ---------------------------------- | ------------ | ------- | ------------------------------------------- | ------------------------------------------------ |
+| **Bybit**       | **+1.81**                          | +1.48        | +40%/yr | 9 majors, cefi GCS, 1yr                     | reversion (strongest on majors)                  |
+| **Aster**       | **+1.10**                          | +1.30        | +51%/yr | 14 coins, LIVE fapi.asterdex.com, 1.7yr     | reversion                                        |
+| **Binance**     | +1.04 (50-coin) / +0.09 (9 majors) | 1.44 / −0.12 | +58%/yr | deployable small-caps vs majors             | reversion (edge in small caps; majors efficient) |
+| **OKX**         | +0.44                              | +0.20        | +6%/yr  | 9 majors, cefi GCS, 1yr                     | mild reversion                                   |
+| **Hyperliquid** | **−1.03**                          | +0.30        | —       | 230 coins, native perp, 3yr                 | **MOMENTUM (outlier)**                           |
+| Deribit         | —                                  | —            | —       | symbol mismatch + few perps (options venue) | inconclusive (no data)                           |
+
+**Conclusion: the cross-sectional funding-rank reversion edge is an ARBITRAGE-INTENSITY phenomenon, not DEX-vs-CEX.**
+Every well-arbitraged perp venue (Binance, Bybit, OKX, Aster — incl. the Aster DEX, which is Binance-API-compatible with
+heavy arb-bot flow) shows price REVERSION (short high-funding wins); only HL — thin arb, dominated by directional bets —
+shows MOMENTUM (short high-funding loses). This is exactly the operator's economics. Caveats: the GCS majors sweep is a
+short (1yr) 9-coin window so absolute numbers are noisy (Binance majors read weak +0.09 because its edge lives in the
+small caps the GCS bucket lacks; the SIGN is the robust part); Aster is short-window + live-pulled. **Strategy
+implication: deploy the reversion book across the arbitraged venue set (Binance/Bybit/OKX/Aster), size by each venue's
+small-cap funding dispersion, and EXCLUDE HL from this archetype (HL is for the delta-neutral basis/staked carry, not
+the reversion book). Aster needs a GCS backfill (today only live-API).** Yield note: the deployable runs ~+58%/yr
+(Binance) / +51%/yr (Aster) at ~40% vol — high-octane reversion, NOT smooth carry. Liquidity in the deployable = inverse
+price-VOLATILITY weighting (not volume); ADV (Binance-specific spot 15m) is only a universe filter. Per-coin PnL plot
+rendered (`/tmp/passB/binance_carry_per_coin_pnl.html` — TLM/CTK/TRX top, dead +116% / survivors +153%).
+
 ## ML-Agent Handoff — funding-rate prediction (data + code locations, 2026-06-18)
 
 Self-contained pointer set for the separate ML agent (who has its own features + better predictions) to combine
