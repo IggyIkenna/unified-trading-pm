@@ -9,3 +9,7 @@ scripts/propagation/templates/*.yml
 # orphan-ping cron's writes. Left literal so appends stay a clean diff.
 *_orchestrator/_agent_pings.md
 plans/active/_agent_pings.md
+
+# Auto-generated CI/CD workflow catalog — owned by scripts/generate-workflow-catalog.py (deterministic
+# emitter). prettier would re-pad the tables → false drift vs the generator output on every regen.
+docs/repo-management/CICD-WORKFLOW-CATALOG.md
