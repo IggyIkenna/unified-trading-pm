@@ -74,7 +74,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_ETAG_CACHE_FILE: .gh-etag-cache.json
           THRESH: ${{ github.event.inputs.threshold_min || '60' }}
-          GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
           set +e
           REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH")

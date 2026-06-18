@@ -65,7 +65,7 @@ jobs:
           # Cross-repo run/PR reads + recovery writes via the App token (separate 5000/hr
           # pool). owner-scoped, so fleet-wide — unlike the repo-scoped GITHUB_TOKEN.
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         # --auto-recover: deterministically fix the v2-NEVER-REPORTED deadlock in-band. Two
         #   mechanisms by head kind: clean-message token-suppressed head → close+reopen
         #   (re-fires pull_request → quality-gates-v2); CI-suppression-token head ([skip ci]

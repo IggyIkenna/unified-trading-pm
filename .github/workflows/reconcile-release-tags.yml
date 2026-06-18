@@ -61,7 +61,7 @@ jobs:
       - name: Reconcile release tags
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
           set -euo pipefail
           DRY=""
