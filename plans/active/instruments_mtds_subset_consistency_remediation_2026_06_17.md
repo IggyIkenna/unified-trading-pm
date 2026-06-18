@@ -44,6 +44,47 @@ Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_co
 Phase-1 (manifest-level, full v9-projected-index walk) is DONE; Phase-2 (file-level cross-year manifest-vs-reality
 sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the audit doc + new todos here.
 
+> **🔴🔴 GCS DELETE SAFETY INVARIANT — READ BEFORE DELETING ANY OBJECT (codified 2026-06-18; HARD RULE).**
+> **The manifest migration RELABELLED nothing — it is a CELL-KEYED rewrite (`_index` rows keyed by
+> `(date,venue,data_type,instrument_type,instrument_id,underlying)`, NOT by GCS path); the v9 data was physically COPIED
+> to canonical paths by `migrate_*_v9_canonical` (COPY not MOVE → the legacy bare `asset_group=`/`category=`/top-level
+> `day=` shapes are DUPLICATES that still exist).** Therefore an agent must **NEVER assume a legacy object is safe to
+> delete.** A legacy object is delete-safe **ONLY IF a twin exists already in CANONICAL format** —
+> `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group={ag}/…` (defi: + normalized venue/itype) —
+> verified by `gcs_describe_object` (NOT a prefix-match, which would match the legacy copy itself). The reconcile only
+> proves "SOME object exists" (it prefix-matches BOTH shapes), so a captured cell backed ONLY by a legacy object passes
+> reconcile yet would be ORPHANED by a blind delete AND would read MISSING under the now-canonical-only data-status
+> reader (deployment-api@6bcac01). **Two-bucket rule for every legacy object: SAFE-TO-DELETE (canonical twin verified)
+> vs MIGRATE-FIRST (no canonical twin → COPY to canonical, THEN it becomes delete-safe).** Delete-list + migrate-first
+> list + the 48h e2e-research-data accounting are built by the read-only rescan →
+> `_index/audit/legacy_dup_delete_list_{ag}.parquet` + `plans/audit/results/gcs_delete_list_and_e2e_data_accounting_2026_06_18.md`.
+> **Deletion is OPERATOR-GATED (inspect→confirm→delete); migrate-first MUST complete first.**
+
+## GCS delete safety — path/schema migration prerequisite map (DONE-before-DELETE)
+
+For a legacy object to have a CANONICAL twin (the delete-safety precondition), its data must exist at the fully-canonical
+path shape. The migrations that must be COMPLETE (every captured cell twinned) before the legacy copies are deletable:
+
+1. **`pipeline_mode={mode}_{source}/` prepend** (primary) — every bare `…/day={D}/asset_group={ag}/…` object needs a
+   `…/day={D}/pipeline_mode={mode}_{source}/asset_group={ag}/…` twin (mode/source via UTL `derive_pipeline_mode_for_row`).
+   Tool: `migrate_{cefi_flat,defi_full,tradfi}_to_v9_canonical.py` (COPY). MIGRATE-FIRST = bare objects the rescan finds
+   with no `pipeline_mode=` twin → run the migrate to create the twin.
+2. **`category=`→`asset_group=`** — DONE (0 `category=` objects remain on cefi/defi/sports; verified).
+3. **DeFi venue/itype canonicalization in the PATH** (N5r/N6r) — the canonical defi twin must be at the NORMALIZED venue
+   (`UNISWAP_V3` not `UNISWAPV3`, `_canonical_venue` SSOT) + lowercase `instrument_type` (`pool` not `POOL`). An object at
+   an un-normalized venue/itype path is NOT a canonical twin → migrate it (copy to the normalized canonical path) before
+   deleting the legacy. This is the per-object rebuild-replace (N5r/N6r todo); the index-walk could not do it (would
+   desync manifest from object path).
+4. **per-AG verification** — after migrate-first, re-run the rescan's twin-verify per AG; require **100% canonical-twin
+   coverage** (0 MIGRATE-FIRST remaining) for that AG BEFORE its legacy delete-list is executed.
+
+**Manifest-V9 canonical-only read end-state** (the goal): the `_index` is cell-keyed (path-agnostic, already correct);
+the data-status READERS are now canonical-only (deployment-api@6bcac01 drilldown drops the legacy-shape fallback). For
+canonical-only reads to miss ZERO orphans, every captured cell must resolve to a canonical-format object — which is
+exactly what migrate-first guarantees. **Sequence: rescan → migrate-first the untwinned (→ 100% canonical-twin coverage,
+verified per AG) → canonical-only reads are orphan-free → THEN delete legacy (operator-gated).** Deleting before 100%
+coverage would orphan the un-migrated cells under canonical-only reads — the invariant above prevents exactly that.
+
 ## Execution sequence (end-to-end — the autonomous worker drives this in order)
 
 Each script-fix step = fix → `quality-gates.sh`-green → `quickmerge --agent --files` → **regenerate that AG's dry-run

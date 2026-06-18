@@ -37,6 +37,19 @@ last_reviewed: 2026-06-11
 | 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred    | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
 | 9 — Final workspace-wide QG sweep                           | ⏳ pending    | Sequential after Phase 3.6 operator sign-off.                                   |
 
+> **🔴 GCS DELETE SAFETY INVARIANT (codified 2026-06-18; HARD RULE).** The v9 migration COPIED objects to canonical
+> `pipeline_mode={mode}_{source}/asset_group={ag}/…` paths (COPY not MOVE) → the legacy bare `asset_group=`/`category=`/
+> top-level `day=` shapes are DUPLICATES that still exist. The `_index` is CELL-KEYED (path-agnostic), so it does not by
+> itself tell you a cell's data is canonical. **NEVER delete a legacy object without `gcs_describe_object`-verifying a
+> twin already in CANONICAL format** (defi: + normalized venue/itype). A reconcile prefix-matches BOTH shapes, so it only
+> proves "some object exists" — a cell backed ONLY by a legacy copy passes reconcile yet would be ORPHANED by a blind
+> delete AND read MISSING under canonical-only data-status (deployment-api `DATA_STATUS_CANONICAL_PATHS_ONLY`). Two
+> buckets per legacy object: **SAFE-TO-DELETE** (canonical twin verified) vs **MIGRATE-FIRST** (no twin → COPY to
+> canonical first via `migrate_*_v9_canonical`, then delete-safe). Require **100% canonical-twin coverage per AG** before
+> executing that AG's delete-list; deletion is OPERATOR-GATED. SSOT:
+> `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` § "GCS delete safety — path/schema
+> migration prerequisite map" + `plans/audit/results/gcs_delete_list_and_e2e_data_accounting_2026_06_18.md`.
+
 ### Phase 3 migration: pre/post phantom counts (2026-05-19)
 
 | Asset group | Pre-migration (Gate 3, 2026-05-17) | Post-migration (initial audit)  | Root cause           | Post-Axis-10-fix re-audit |
