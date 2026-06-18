@@ -139,16 +139,13 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
   main` / `<repo>-live-defi-rollout --branch live-defi-rollout` (region asia-northeast1), watched to SUCCESS, one at a
   time, STOP + diagnose on first systemic failure.** **Manual trigger-run is permission-blocked**: both `harshkantariya`
   and the `github-actions-deploy` SA hold only `roles/cloudbuild.builds.viewer` (read — can WATCH builds, cannot RUN
-  them), and the deploy SA isn't impersonable. Needs `roles/cloudbuild.builds.editor`.
-  **➡️ FOR IKENNA — one grant unblocks the whole GCP phase (reversible):**
-  ```bash
-  gcloud projects add-iam-policy-binding central-element-323112 \
-    --member="user:harshkantariya@odum-research.com" \
-    --role="roles/cloudbuild.builds.editor" --condition=None
-  ```
-  Until granted, the only no-perm path is the natural **main-push auto-fire** (services build on main push, base libs on
-  LDR push) — i.e. promoting content drains+builds via the pipeline (slower, not isolated). `deployment-api`/`deployment-ui`
-  are already GCP-building this way from the P1/P2 promotions.
+  them), and the deploy SA isn't impersonable. GSM reuse can't avoid it (the only stored SA key —
+  `github-actions-sa-key`/`github-actions-deploy` — is `cloudbuild.builds.viewer`, not editor). **➡️ Full cross-cloud
+  permission audit + grant commands (operator parity): `plans/active/issues/operator_iam_permission_parity_2026_06_18.md`**
+  (GCP: `roles/editor` + `projectIamAdmin` + `serviceAccountTokenCreator`; AWS: `PowerUserAccess`). Until granted, the only
+  no-perm path is the natural **main-push auto-fire** (services build on main push, base libs on LDR push) — but most
+  service repos are already `main==LDR` (0-file delta → no build), so it only fires for the ~4 with pending content;
+  `deployment-api`/`deployment-ui` GCP-build this way from the P1/P2 promotions.
 - [ ] [BUG] P2. For every stale base-digest pin found, file the fix (refresh `BASE_IMAGE_DIGEST` ARG) in the owning
   repo — but only AFTER confirming the dependency-update fan-out isn't the intended owner; coordinate, don't fork it.
 
