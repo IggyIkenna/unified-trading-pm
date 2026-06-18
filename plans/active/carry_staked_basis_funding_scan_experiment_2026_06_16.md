@@ -812,6 +812,39 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
 - [ ] [DATA] P2. (blocked-by issue doc) once exact discrete per-settlement funding is readable, switch the harness off
       the day-mean workaround to true per-settlement realised funding.
 
+## RECONCILIATION with Pass-B (CeFi/Binance cross-coin reversion) — venue-dependence PROVEN (2026-06-18)
+
+The CeFi agent (Pass B, bundle `gs://backtest-results-central-element-323112/cross_coin_funding_handoff_2026_06_18/`)
+built a **dollar-neutral cross-sectional funding-RANK reversion** book on Binance perps (long lowest-funding / short
+highest-funding, inverse-vol within each leg, EWMA-7 signal, point-in-time incl. 20 dead coins, 5bp) → **Sharpe 1.44,
+maxDD −34%, positive every year**. It is 99% cross-sectional PRICE-reversion (funding is just the ranking signal), NOT a
+funding harvest. Apparent contradiction with our "carry not tradeable" — RESOLVED, both right:
+
+1. **Reproduced their 1.44 exactly** + audited the vol-scaling salvage (0.49→1.32): **causally CLEAN** —
+   `vol30.shift(1)`
+   - `sig.ewm().shift(1)`, no lookahead. Their headline survives scrutiny.
+2. **Their "+0.31 between-coin selection" ≡ our "+1.17 survivorship" — same finding, two framings.** Their "within-coin
+   +0.02 ≈ 0" ≡ "funding has no harvest timing power." Agreed on both.
+3. **KEY NEW RESULT — ran their EXACT method on HL (native perp marks, full 230-coin universe, no hand-picked
+   survivorship): Sharpe 0.30 (vs Binance 1.44).** Decomposition: **price-only Sharpe −1.03 on HL vs +1.04 on Binance —
+   the price component FLIPS SIGN BY VENUE.** Binance (crowded arb zone) → funding pulled to fair → residual is
+   REVERSION (short high-funding wins); HL (less-arbitraged, directional) → funding CHASES price → MOMENTUM (short
+   high-funding loses). So the cross-sectional reversion edge is **VENUE-DEPENDENT** — it is an arbitrage-intensity
+   phenomenon, not a universal funding effect. Our "HL carry not tradeable" + their "Binance reversion 1.44" are the
+   SAME truth at opposite ends of the arb spectrum, exactly the operator's economics (HL more directional bets / less
+   basis-arb than Binance).
+4. **Their methodology improvements are real + transferable**: inverse-vol-within-legs + EWMA-7 lifted HL from our naive
+   xsec (−1.3 Sharpe) to +0.30 — the weighting/smoothing genuinely help even where the alpha is absent.
+
+**IMPROVEMENTS for the strategy (journaled for the ML agent):** (a) **VENUE is a first-order gate** — run this reversion
+book ONLY on heavily-arbitraged CeFi venues (test Bybit/OKX/Deribit next — predict they also revert), NEVER on HL/DeFi
+or thin venues where funding is momentum; add a "venue arb-intensity" feature. (b) **Their #1 caveat
+(spot-as-perp-proxy) is perp-ROBUST at the venue level** — our HL test used NATIVE perp marks and reversion still fails
+on HL, so the venue-dependence isn't a price-proxy artifact; they should still re-run Binance on true perp marks (fapi
+OHLCV) to confirm 1.44 (the cefi GCS bucket is only ~20 curated coins, not their 50, so the full perp re-run needs their
+fapi pipeline). (c) the 1.44 leans on the one-off 2026 dispersion spike (yearly 2022 +0.77 → 2026 +2.04) — underwrite
+ex-2026. Reproduce: their `_carry_deployable.py` (`CACHE=./cache`); our HL port is the inline harness in this session.
+
 ## ML-Agent Handoff — funding-rate prediction (data + code locations, 2026-06-18)
 
 Self-contained pointer set for the separate ML agent (who has its own features + better predictions) to combine
