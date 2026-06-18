@@ -258,23 +258,81 @@ construction (server-side byte-identical copy preserves parquet footers; only th
 
 - 0 copy errors; the live footer spot-check timed out on host GCS read latency (not a data fault, not load-bearing).
 
+## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
+
+**No longer PAYG** — subscription + ~$150 credits (more than enough to stream all instruments). **ONE API key**
+(`databento-api-key`, single-key — operator chose collapse-to-single-key) across **exactly 3 datasets**: `GLBX.MDP3`
+(CME) + `DBEQ.BASIC` (Databento US Equities) + `CFE` (CBOE Futures). Any other dataset → reject.
+
+Schema → free-window entitlement (a request's `start` must be ≥ `today − window`; clip/reject otherwise):
+
+| Level | Schemas | Free window | Guard |
+| --- | --- | --- | --- |
+| L0 | `ohlcv-1s`, `definition`, `statistics`, `status` | 16 years | start ≥ today − 16y |
+| L1 | `trades`, `tbbo`, `mbp-1`, `bbo-*` | 1 year | start ≥ today − 365d |
+| L2 | `mbp-10` | 1 month | start ≥ today − ~30d |
+| L3 | `mbo` | 1 month | start ≥ today − ~30d |
+
+Codify this (schema→window table + 3-dataset allowlist) as the SSOT (UAC) + enforce as a pre-request guard in the
+Databento adapter(s) — replaces the PAYG-cost-blocker framing (cost emission stays as credit-burn telemetry; the hard
+guard is now entitlement window + dataset, surfaced as 403/entitlement not 402/payment). Instruments = `definition`
+schema = L0 (16y window) → the instrument backfill can pull the FULL universe within the 3 datasets, cost-free within
+credits. Tracked todos below.
+
+- [ ] [CODE] P1. **Databento subscription cutover (MTDS+UAC)**: single-key config (use_multi_key_rotation=False,
+      num_api_keys=1; fix the num_keys=20-asserting test; delete transitional secret `databento-api-key-1`) + codify the
+      schema→free-window + 3-dataset allowlist SSOT + enforce as pre-request guard in the adapter. — market-tick-data-service / unified-api-contracts
+- [ ] [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 + DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service
+
 ## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
 
-- [ ] [CODE] P2. **Batch-query GCS scanner is a second canonical-path SSOT** (flagged by reader-cutover @0e267be):
-      deployment-api `utils/path_combinatorics.to_gcs_prefix` →
-      `routes/data_batch_processing.py`/`batch_query_engine.py` still builds the pre-`asset_group=`/pre-`pipeline_mode=`
-      layout (`day=/data_type=/instrument_type=/venue=`). NOT a data-status double-count source (separate path) but will
-      drift — cut it over to the same UAC canonical `pipeline_mode=` SSOT. — deployment-api
+- [x] ✅ [CODE] P2. **Batch-query GCS scanner is a second canonical-path SSOT** — DONE deployment-api@c003271.
+      `path_combinatorics.to_gcs_prefix` → `to_gcs_prefixes` (list) now builds the canonical
+      `day=/pipeline_mode={mode}_{src}/asset_group=/venue=/instrument_type=/data_type=` shape via
+      `canonical_pipeline_mode_segments` (the same UAC SSOT the data-status drilldown readers cut over to @0e267be),
+      NOT the pre-`asset_group=`/pre-`pipeline_mode=` layout. The `batch_query_engine._build_prefixes_by_date` caller
+      fans out across the returned list; `data_batch_processing.py` consumes via `get_prefixes_for_date` (transitive);
+      `batch_config_utils` regex comment updated to the canonical hive order; both unit-test files updated. QG-green
+      (ac60e4a). Direct-LDR push (dirty-deps carve-out: UAC dep had live foreign Databento WIP). — deployment-api
 
-- [ ] [CODE] P1. **e2e funding scripts hardcode legacy research buckets — repoint to `resolve_bucket_name`**: B3 copied
-      HL perp_daily_ctx/perp_mark_price → `perp-funding-prd` (e2e-testing@af084af) + shipped
-      `docs/defi/research_data_canonical_sources_2026_06_18.md`. Repoint: `staked_basis_funding_scan.py:164-165`
-      (`_HL_PF_BUCKET`/`_LST_BUCKET`), `funding_regime_classifier.py:46` (`PF_BUCKET`) → `resolve_bucket_name(...)`
-      (`colocated_engine.py` already correct). Touches the live funding-arb path → strategy-service QG. — e2e-testing
-- [ ] [INFRA] P2. **Research `-prd-` buckets carry NO `_index/`** — the live availability index still lives in the
-      legacy `perp-funding`/`lst-rates` buckets; point the consolidator/readers at the `-prd-` index before the legacy
-      research buckets are deleted (consolidator-runtime concern; B3 doc notes it). —
-      deployment-service/instruments-service
+- [x] ✅ [CODE] P1. **e2e funding scripts hardcode legacy research buckets — repoint to `resolve_bucket_name`** — DONE
+      e2e-testing@6ed7d5b. `staked_basis_funding_scan.py` (`_hl_pf_bucket()`/`_lst_bucket()`) +
+      `funding_regime_classifier.py` (`_pf_bucket()`) now resolve `perp-funding`/`lst-rates` via
+      `resolve_bucket_name(cloud="gcp", kind=...)` (canonical `-prd-` homes) instead of the legacy flat stems;
+      `_bootstrap_env` exports `DEPLOYMENT_ENV_SHORT` for the lazy resolve; `colocated_engine.py` already correct.
+      Also corrected `copy_research_perp_ctx_to_canonical.py`'s deep import (HEAD 3c931a5 had introduced a broken
+      top-level `gcs_copy_object` import = runtime ImportError → restored to canonical `cloud_interface` form).
+      e2e QG green (foreign untracked `verify_unmappable_legacy_content_aware.py` set aside — its `qg-cloud-sdk` noqa
+      trips the TID251 ratchet, see N-residual below). Direct-LDR push (dirty-deps carve-out: live foreign UAC WIP). — e2e-testing
+- [ ] [INFRA] P2. **Research `-prd-` buckets carry NO `_index/` — move the availability index off the legacy
+      `perp-funding`/`lst-rates` buckets before they can be deleted** (DIAGNOSED 2026-06-18, larger than a config edit —
+      exact steps below). ROOT CAUSE: the dedicated DeFi research stores `perp-funding`/`lst-rates` are NOT in the
+      manifest-consolidator TF at all (`deployment-service/terraform/{gcp,aws}/manifest_consolidator_scheduler.tf`
+      `manifest_consolidator_buckets` covers only `instruments-store-*` + `market-data-tick-*`, env-tiered + legacy —
+      grep confirms 0 `perp`/`lst` entries). The B3 manifest writer `e2e-testing/scripts/defi/record_research_perp_ctx_manifest.py`
+      hardcodes `INDEX_BUCKET = "perp-funding-central-element-323112"` (LEGACY flat) → the live `_index` sits only in the
+      legacy bucket; there is no consolidator cron for these stores. **EXACT STEPS:** (1) add 4 entries to
+      `manifest_consolidator_buckets` (gcp) + the AWS Batch/EventBridge equivalent —
+      `perp-funding-prd-${env}-${project}`, `lst-rates-prd-${env}-${project}` (the canonical `-prd-` homes; resolve via
+      the `perp-funding`/`lst-rates` `cloud-providers.yaml` keys, NOT new hardcodes) — with a `*/1` cron + IAM
+      `storage.objectAdmin` on each; (2) repoint `record_research_perp_ctx_manifest.py`'s `INDEX_BUCKET` to
+      `resolve_bucket_name(cloud="gcp", kind="perp-funding")` (the `-prd-` home) so new index shards write there (LST
+      writer if/when one exists → `kind="lst-rates"`); (3) one-shot seed: copy the legacy
+      `perp-funding-central-element-323112/_index/` + `lst-rates-central-element-323112/_index/` →
+      their `-prd-` twins (`gcs_copy_object`), or run the consolidator `--force` once over the `-prd-` bucket after the
+      per-VM shards land there; (4) verify `_index/availability_index.parquet` freshness on each `-prd-` bucket
+      (consolidator heartbeat < `MANIFEST_CONSOLIDATED_STALENESS_SEC`); (5) ONLY THEN are the legacy research buckets
+      delete-safe (operator-gated, tracked with the other legacy deletes). SSOT:
+      `codex/05-infrastructure/manifest-consolidator-ssot.md` + `e2e-testing/docs/defi/research_data_canonical_sources_2026_06_18.md`.
+      — deployment-service/e2e-testing
+
+- [ ] [CODE] P3. **e2e `verify_unmappable_legacy_content_aware.py` uses a non-ruff `# noqa: qg-cloud-sdk` that trips
+      the TID251 ratchet** (found 2026-06-18 during the B3 funding-script ship): the file (the migrate/audit agent's
+      content-aware-fan-out WIP) carries 2 `from google.cloud import storage  # noqa: qg-cloud-sdk` sites — `qg-cloud-sdk`
+      is NOT a ruff code, so STEP 5.95 counts them (e2e `tid251` 12 > baseline 10 → e2e QG red). Change both noqa codes
+      to the ruff-recognized `# noqa: TID251 — <reason>` form (matches the `run_weekly_pipeline.py`/`sharpapi_live_feed.py`
+      sites), OR route the listing through `get_storage_client()`. Owned by the migrate/audit agent that authored the
+      file (do not stomp live WIP). — e2e-testing
 
 ### Migration unmappable residue — DIAGNOSED 2026-06-18 (the 10,250 `MIGRATE-FIRST` objects)
 

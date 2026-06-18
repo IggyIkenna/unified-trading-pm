@@ -927,3 +927,55 @@ FASTER signals (funding inflection, L2-book imbalance from the HL archive, OI dy
 confirmed non-predictors; then WIRE + TEST in the production spine — features in `features-service` (feature registry),
 signal in `strategy-service` (`CarryStakedBasisRankAllocator`), data via `market-tick-data-service` — to see how far we
 actually are toward production. Paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the top of any sub-agent spawn.
+
+## Cross-venue REVERSION book — deployable, DD-control, cross-venue filters (2026-06-18, all CAUSAL/no-lookahead)
+
+Extends Pass-B's Binance funding-rank reversion to a live-API multi-venue book + risk overlays + cross-venue signal
+filters. Every signal lagged (`.shift(1)`), trailing windows only, fixed thresholds (not fit). Non-compounded
+(`cumsum`). Scripts (throwaway, `/tmp`): `build_multivenue.py` (per-venue live-API pull + combine + plot),
+`dd_filters.py` (beta/corr/vol filters + vol-target + beta-hedge), `anomaly_filter.py` (cross-venue funding dispersion),
+`sizing_test.py` (sizing schemes). Plots served `/tmp/passB/*.html`.
+
+**1. Multi-venue deployable (Pass-B's 30-survivor universe, live-API per venue, 2022→2026, 5bp).** Per-venue Sharpe:
+**Binance +1.53 / Bybit +2.06 / Aster +0.71** (Aster short history; OKX dropped on a coverage filter). Reproduces
+Pass-B's survivor-only ~1.52 → sound. Combined (Binance+Bybit, mean pairwise corr **0.67**): equal +1.96, causal
+inverse-vol +1.98, **causal Sharpe-tilt +2.04** (≈ best-single Bybit 2.06). **Lookahead matters but is small here**:
+full-sample Sharpe-tilt was +2.00 vs causal +2.04 — Bybit was _consistently_ best, so trailing-Sharpe tilt converges to
+the same allocation. **Concentration:** causal tilt avg weight Bybit 58% / Binance 42%, **max single-venue 100%** (the
+`max(Sharpe,0)`-normalize goes all-in when a venue's trailing Sharpe turns negative) → production needs a **per-venue
+weight cap (~65%)**. Combined maxDD −18% (tilt) / −23% (equal) vs Binance-alone −34%. **Verdict: multi-venue buys
+CAPACITY + robustness + lower-DD-vs-worst-venue, NOT a Sharpe lift — combining 2 venues at corr 0.67 ≈ best-single. A
+real Sharpe lift needs 4+ comparable, less-correlated venues** (`S·√(N/(1+(N-1)ρ))`).
+
+**2. HL-momentum cross-venue FILTER (operator idea — works).** HL funding is momentum; use it to veto the reversion
+book's falling knives. Gentle veto (drop a long if its HL funding is in the bottom decile = HL says "keeps falling";
+drop a short if top decile): Sharpe **1.64→1.77**, maxDD **−34%→−30%**. Dosing is a scalpel — q=0.2/0.33 over-filter
+(remove good reversion candidates) and hurt Sharpe. **First real value from HL's (otherwise weak/losing) momentum signal
+— as a cross-venue filter, not a standalone book.** Only covers HL-listed coins (26/30 here).
+
+**3. DD CONTROL to ~10% — risk OVERLAYS win, coin-filters BACKFIRE (operator goal).** Diagnostic (per position-day, do
+beta/corr/vol predict PnL?): **high-corr-to-BTC coins do BETTER (+15bp) / low-corr WORSE (−7/−23bp); low realized-vol
+BEST (+18bp); beta weak.** So **beta/correlation FILTERS hurt** — beta≤1.2 → Sharpe 1.77→1.02/DD −52%; corr≤0.6 →
+catastrophic (−122% DD). The "idiosyncratic/low-corr is cleaner" intuition is BACKWARDS for this book. **What works: (a)
+BETA-HEDGE** (book is $-neutral but carries residual BTC-beta — long basket of crashed coins ≠ short basket's beta;
+hedge by trading BTC sized to `−book_beta`) → Sharpe **1.77→2.03**, DD unchanged (removes market _noise_). **(b)
+VOL-TARGET** (scale exposure to a trailing-vol budget) → the DD DIAL: 12% vol → DD −10%, Sharpe slightly up. **Combined
+(HL-filter + beta-hedge + vol-target 10%): Sharpe 2.22, maxDD −7%, +27%/yr, Calmar 3.88 — the chosen base.** Dial
+vol-target for the DD budget (18% → ~−15% DD/~+40%).
+
+**4. Cross-venue funding-ANOMALY (operator idea — counterintuitive).** Is extreme funding on ONE venue (idiosyncratic)
+vs ALL venues (broad consensus) different? Diagnostic (position PnL by Binance-funding outlier-ness vs Bybit/OKX/HL
+consensus): **broad CONSENSUS reverts BETTER (+10bp); idiosyncratic single-venue outlier WORSE (−9bp)** — opposite the
+first guess (when all venues agree on extreme funding it's genuine crowding that reliably unwinds; a Binance-only quirk
+reverts in funding but not price). Weak (19bp spread) + over-filters as a hard gate → a mild _soft overweight_ on
+consensus, not a lever.
+
+**5. SIZING — inverse-vol already optimal; don't size by beta (operator idea).** On the chosen base: inverse-vol +2.22 ≈
+corr-tilt +2.23 (correlation edge already absorbed by inverse-vol; explicit tilt = noise); **inverse-beta +1.83 /
+beta-proportional +1.91 both LOSE** (beta = corr×vol/vol_btc mixes the helpful corr with the harmful vol). The one
+refinement: **ivol×inverse-beta → Calmar 4.36, DD −6%, +28%/yr** (best DD-adjusted, slightly lower Sharpe 2.04) — use it
+if minimizing DD-per-return beats raw Sharpe.
+
+**Caveats across all:** survivorship-optimistic (currently-listed survivors, no dead coins → above the honest 1.44);
+HL/anomaly filters only reach coins listed on the other venues (small-cap tail thinner); Aster short/recent; 2025-26
+high-dispersion regime inflates recent years — underwrite ex-2026.
