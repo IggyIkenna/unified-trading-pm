@@ -154,18 +154,63 @@ clean fix is to relax it.
 > post-1.0 when internal deps become published packages and the floor re-pin + lock become load-bearing for the
 > major-bump cascade.
 
+### Current-flow map + REGRESSION CONTRACT (verified vs deployed workflows 2026-06-18 — do NOT regress)
+
+**Ownership:** Harsh owns the CI/CD surface (Ikenna is on the data pipeline) — no cross-owner gate, but the promote-bot
+machinery is jam-prone, so the safeguards below are MANDATORY before touching it.
+
+**TWO distinct failure modes this work must prevent (verified mechanisms, with file:line):**
+
+- **(A) tree-divergence runaway** — a floor edit landing on **`staging` only** (lock unchanged) makes `staging` tree-sha ≠
+  LDR tree-sha. The Tier-C drain's ONLY convergence signal is tree-sha equality (`ldr-to-staging-promote.yml:187`); a
+  staging-exclusive commit can never be reproduced by the LDR-sourced drain, and `ahead_by` never returns to 0
+  (squash-merges, `:172`) → the drain re-promotes every ~40s → runaway breaker (≥30 `chore(promote)` merges/6h, `:213`)
+  trips + pages. `ci-status-update.yml:223-258` amplifies it (each `STAGING_GREEN` re-fires `tier-ab-green` → another
+  promote; the `:233-244` loop-guard only stops the SAME-status self-loop). `staging-backmerge-to-ldr` can't rescue it —
+  the divergent floor line CONFLICTS on the `--no-ff` merge → `merge --abort` + escalate-to-human PR, never auto-FFs.
+- **(B) version mismatch** — pyproject floor ≠ `uv.lock` pin, and CI installs from the lock. Today CI does **bare
+  `uv sync`** (`python-quality-gates-v2.yml:459`) which re-resolves to the floor and MASKS it; flipping to **`--frozen`**
+  installs the committed (stale) lock EXACTLY → ships the wrong version (the fund-admin `python-multipart 0.0.29` CVE case).
+
+**PREVENTION — the safety contract (all required, in this order):**
+
+1. **Atomic regen** — floor bump + regenerated `uv.lock` in the SAME commit (kills B). **EXTERNAL deps ONLY** — internal
+   `unified-*` editable deps resolve the on-disk sibling regardless of the lock's cosmetic version, so regenerating them
+   just manufactures cross-branch lock churn → re-creates (A). Internal bumps: **NO regen**.
+2. **Land on `live-defi-rollout`, not `staging`** — flows LDR→staging→main as byte-identical projections; trees converge
+   after one drain promote (kills A). This is 1.5a.
+3. **`uv lock --check` BLOCKING** (1.5b) — the guardrail: a floor-without-lock-regen HARD-FAILS the gate, so B is
+   impossible to merge (not merely discouraged).
+4. **Sequencing** — 1.5b (`--frozen`) is GATED on 1.5a. `--frozen` makes the lock authoritative; safe ONLY once 1.5a
+   guarantees the lock is always fresh-on-LDR. Flip `--frozen` first → ship B on the next stale-lock repo.
+
+**NEW regression vectors the 1.5a "land on LDR" change ITSELF introduces (handle, or we trade the old jam for a new one):**
+
+- ⚠️ **Provenance gate** — the Tier-C drain refuses to arm auto-merge on an LDR commit lacking the `Quickmerge:` trailer
+  (D1, `ldr-to-staging-promote.yml`). A **bot** push to LDR has no trailer → the dep-bump gets STUCK on LDR (a NEW jam).
+  Make the bot push provenance-compatible: a carve-out (dirty-deps is carve-out #1) or stamp the `Quickmerge:` trailer.
+- **Breaking-dep path** — `update-dependency-version.yml:276-282` opens a `feat!` PR to **staging** today; must reroute to
+  the LDR path or breaking bumps still diverge. (Non-breaking is already digest-only / range-absorbed — `:100-108`.)
+- **Deferred firing** — a push to LDR fires ZERO immediate workflows (LDR has no `push:` triggers; LDR-named workflows are
+  schedule/dispatch pollers). The change waits for the next drain tick (≤15min) instead of re-firing semver-agent
+  instantly. Proper path, but a behavior change — verify the drain reliably carries it (it will: atomic floor+lock on LDR
+  → one promote → `LDR_TREE == STG_TREE` → the `:187` gate collapses subsequent ticks).
+- **`update-repo-version.yml` commits to `main`** (no `ref:` → default branch) — that's PM's OWN version self-bump (PM is
+  Option-B main-direct); it back-merges to LDR via `main-backmerge-to-ldr.yml`. So 1.5a's reroute is about
+  `update-dependency-version.yml` (the dependent-repo fan-out) + the manual author edit, NOT PM's self-bump.
+
 **Phase 1.5a — remove the divergence source (PREREQUISITE, must land before the flip):**
 
-- [ ] [SCRIPT] P1. Make dependency-floor bumps land on **`live-defi-rollout`, not `staging`** — both the manual
-      author-time floor edit AND the automatic semver fan-out (`update-repo-version.yml` +
-      `update-dependency-version.yml`, which today checkout `ref: staging` + `git push origin staging`). Regen + commit
-      `uv.lock` in the SAME commit for **EXTERNAL** deps only (internal editable exempt). This is the actual Tier-C
-      runaway source. Repo: unified-trading-pm. ⚠️ Touches the actively-redesigned promote-bot surface — coordinate with
-      the promote-bot owner before pushing.
-- [ ] [SCRIPT] P2. Close the rollout gap: `mtds` is **missing** `staging-backmerge-to-ldr.yml` (execution-service / UAC
-      / instruments-service / alerting-service have it; found 2026-06-17). Roll it out via the template. NOTE: the
-      back-merge is FF-only by design, so it cannot auto-resolve a _divergent_ staging-direct floor edit — which is WHY
-      1.5a (land on LDR) is the real fix, not the back-merge.
+- [ ] [SCRIPT] P1. Make dependency-floor bumps land on **`live-defi-rollout`, not `staging`** — the automatic fan-out
+      `update-dependency-version.yml` (today `ref: staging` `:53` + `git push origin staging` `:243`) AND the manual
+      author-time floor edit. Regen + commit `uv.lock` in the SAME commit for **EXTERNAL** deps only (internal editable
+      exempt). **Handle the 3 NEW regression vectors above** (provenance trailer/carve-out, breaking-path reroute,
+      deferred-firing). Harsh owns this surface — no external gate, but the regression contract above is mandatory.
+      Repo: unified-trading-pm (template + roll out).
+- [x] ✅ [SCRIPT] P2. ~~Close the mtds rollout gap (`staging-backmerge-to-ldr.yml`)~~ — **DONE / STALE: verified 2026-06-18
+      `market-tick-data-service/.github/workflows/staging-backmerge-to-ldr.yml` is PRESENT** (rolled out since the
+      2026-06-17 finding). The gap is closed; back-merge is still FF-only by design (it can't rescue a divergent
+      staging-direct floor edit — which is WHY 1.5a/land-on-LDR is the real fix, not the back-merge).
 - [ ] [INFRA] P1. One-time clean-start reconcile: bring the current staging-only floor bumps (e2e-testing /
       features-service / greeks-direct) DOWN to `live-defi-rollout` and regen all affected locks **on LDR**, so
       LDR/staging/main locks are byte-identical before the flip (use the `staging_clean_start` force-sync pattern). Do
@@ -185,6 +230,10 @@ clean fix is to relax it.
 - [ ] [DOCS] P1. Make the `CLAUDE.md` / codex `--frozen` rule TRUE + scoped once 1.5a/1.5b land: "lock is the SSOT;
       regen on an EXTERNAL-dep floor change, on LDR, same commit; internal editable bumps exempt." Closes the D1
       doc-vs-deployed gap in `plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md`.
+- [ ] [DOCS] P3. **Stale codex value (found in the 2026-06-18 flow audit):** `codex/08-workflows/ci-cd-flow.md:460`
+      states the back-merge drift-tick is `schedule: */20`, but the **deployed** `main-backmerge-to-ldr.yml:42` (+ template)
+      is `cron "0 * * * *"` (hourly, relaxed 2026-06-11 to cut Actions spend). Root CLAUDE.md already matches hourly; fix
+      the codex doc body line.
 
 > **HOLD until 1.5a lands:** do NOT run a fleet-wide `uv sync` + commit-lock pass — it re-diverges LDR↔staging locks
 > and restarts the runaways. Stop any active runaway the convergence-safe way (match pyproject to staging on LDR; do not
