@@ -192,6 +192,85 @@ PM-repo conflict notes).
 - [ ] [ORCHESTRATOR] P2. Live smoke on the central VM: trigger an escalation + the plan-reconciler, confirm both appear
       as agents in the dashboard while working and are reaped when their session dies. Repo: agent-orchestrator.
 
+### Phase 6 — Demand-driven review lifecycle (design-locked, operator 2026-06-18) — FOLLOW-UP, build AFTER Phases 1–5 ship+test
+
+> **Builds on** Phases 3–5 (AgentRow registration + lifecycle classification). Its own unit of work — do NOT fold into
+> the 1–5 branch. **Principle (operator 2026-06-18): the backend supplies the record; the AGENT owns the judgment of
+> what to review and how deeply — never gate/limit review's capacity.**
+>
+> **Model — review self-paces, is NEVER killed** (supersedes the always-on `_ensure_review_agents` keep-alive, which
+> keeps review running "independent of the queue"):
+>
+> - Each loop tick review reads a **workload signal** and self-adjusts cadence:
+>   - **Active** (≥1 slot `status=working` OR any unreviewed completion) → fast loop (~60s) + review. **No manual
+>     `/compact`** in active mode — rely on Anthropic's built-in auto-compaction when context fills naturally.
+>   - **Active→idle transition** (no working slots AND nothing left to review) → run `/compact` **once**, then drop to a
+>     **15-min** loop.
+>   - **Idle** → stay on the 15-min loop; re-check the signal each tick; work reappears → back to fast (no compact on
+>     idle→active).
+> - Dormancy (not kill/respawn) keeps review's context, drops idle token spend, and **dissolves the graceful-drain
+>   problem entirely** — cadence only changes at the top of a tick, which is already a clean breakpoint, so there is
+>   never a mid-work interruption to manage (no suggestive-stop messaging, no teardown, no expected-vs-anomalous-death
+>   attribution needed).
+>
+> **Reviewed-ledger (backend-persisted, ADVISORY not enforced):**
+>
+> - The backend persists what review has already reviewed (commit shas / task ids / completion-event ids) + verdict, per
+>   the `review` role — survives `/compact` AND a full respawn.
+> - Review **marks items reviewed** when done; reads the ledger to skip redundant **isolated** re-review.
+> - It is an **aid to review's judgment, never a gate**: review decides scope — when a change spans **multiple commits
+>   or plans** it reviews across them at its own discretion; the ledger must not lower its work capacity.
+> - The idle "unreviewed completions?" check (the cadence signal) reads this ledger.
+
+- [ ] [ORCHESTRATOR] P2. Backend workload signal: one endpoint review polls returning
+      `{working_slots, unreviewed_count,     should_be_active}` (unreviewed = completions whose sha/task is absent from
+      the review ledger). Repo: agent-orchestrator (`server/`).
+- [ ] [ORCHESTRATOR] P2. Reviewed-ledger: persist reviewed (sha/task/event_id + verdict + ts) per `review` role +
+      mark-reviewed endpoint review POSTs to. Advisory — never filters what review is allowed to inspect. Repo:
+      agent-orchestrator (`server/`).
+- [ ] [ORCHESTRATOR] P2. `agents/review.md`: teach the self-pacing rule (workload signal → 60s active / `/compact`-once
+      at active→idle → 15-min idle), the mark-reviewed call, and that the ledger is an aid not a limit (review owns
+      what/how-much, incl. cross-commit/cross-plan). Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR] P2. Replace the always-on `_ensure_review_agents` keep-alive with demand-aware presence (spawn when
+      work first appears if absent; otherwise let the live review self-pace). Keep the heartbeat-silent kill as the ONLY
+      hard stop (genuinely-hung review), never a busy one. Repo: agent-orchestrator (`server/autospawn.py`).
+- [ ] [ORCHESTRATOR] P3. (Design question, deferred) Should review get its own always-on keeper like `MainAgentKeeper`
+      so oversight is guaranteed-up independent of `ORCHESTRATOR_AUTOSPAWN_ENABLED`? Surfaced 2026-06-18: main has a
+      dedicated keeper, review only rides AutoSpawn. Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR] P2. Tests: cadence transition (active↔idle), compact-only-at-active→idle, ledger skips isolated
+      re-review but never blocks a cross-commit pass, never-killed-while-busy. Repo: agent-orchestrator (`tests/`).
+
+### Phase 7 — Escalation dispatch reliability (incident found on the central VM 2026-06-18)
+
+> **Live incident (central VM `i-0c9b283b...`, diagnosed 2026-06-18):** escalation dispatch was failing in a tight
+> `dispatch_initiated → dispatch_failed` loop (one wall, `agt-c9d2ff`, hit **316 attempts**); 19 walls abandoned at TTL.
+> **Root cause (full chain):** slot-1's `unified-api-contracts` worktree had **1 uncommitted source file**
+> (`canonical/domain/sports/league_data.py`, real orphan WIP) → the `*/5` FF-cron `[skip:dirty]`'d it → uac drifted **88
+> commits behind** → the pre-spawn branch-state gate ran `git merge --ff-only`, which **fails on a dirty tree** → status
+> `diverged` → **slot-1 quarantined** → every escalation dispatch onto slot-1 (the lowest sessionless slot) failed and
+> was re-picked next tick. NOT capacity, NOT stale code, NOT the gate logic. The reasons were fully captured in
+> `escalation_queue.last_error` + `activity_log.details_json` but were **invisible in the dashboard UI** (only the bare
+> `escalation_dispatch_failed` event showed). The three robustness gaps this exposed:
+
+- [ ] [ORCHESTRATOR] P0. Immediate unblock (operational, done out-of-band): preserve slot-1's uac orphan WIP to
+      `origin/wip-preserve/slot1-uac-sports-league-data-2026-06-18` + push, reset the worktree clean, `pull --ff-only`
+      to clear the 88-behind → quarantine clears → escalation dispatches. Repo: agent-orchestrator (central VM op).
+- [ ] [ORCHESTRATOR] P1. Surface the quarantine REASON in the UI: the activity panel + escalations view must show
+      `last_error` (the specific repo + why, e.g. "slot-1: unified-api-contracts 88-behind+dirty, ff-only failed"), not
+      just the bare `escalation_dispatch_failed` event. The data is already in `last_error` /
+      `activity_log.details_json` — it just isn't rendered. Repo: agent-orchestrator (`server/` + `dashboard/`).
+- [ ] [ORCHESTRATOR] P1. Fix the slot-starvation bug: `escalation._pick_free_slot` returns the lowest _sessionless_
+      slot, and a quarantined slot never gets a session → it is re-picked every tick forever (the 316-retry loop),
+      starving dispatch even when slot-2+ are healthy. Skip a just-quarantined slot (track recent quarantines) and fall
+      through to a healthy one. Repo: agent-orchestrator (`server/escalation.py`).
+- [ ] [ORCHESTRATOR] P2. Self-heal a dead-session dirty dep: `_do_spawn` only auto-resolves dirty state AFTER the
+      branch-state gate passes, but the gate STOPs first on the ff-fail. A dead-session dirty dep (no live editor)
+      should be auto-preserved to `wip-preserve/` + FF'd rather than quarantining the slot indefinitely. Repo:
+      agent-orchestrator (`server/autospawn.py` + `worktree_clean_check`).
+- [ ] [ORCHESTRATOR] P2. Quarantine alerting: a slot that stays quarantined > N min while walls queue must page with the
+      SPECIFIC repo + cause (not the generic deduped branch-quarantine warning that went unseen here). Repo:
+      agent-orchestrator (`server/`).
+
 ## Success criteria
 
 - A coverage matrix exists for all agent types (✅ Phase 1) with a recorded decision per type.
