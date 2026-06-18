@@ -17,9 +17,9 @@ source:
 > `roles/editor` + `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountTokenCreator` (verified). AWS:
 > `harsh-worker` added to a new **`operators`** group carrying **`PowerUserAccess`** (group form — the per-user 10-policy
 > quota was already maxed; group-attached policies don't count against it; no existing policy removed). CodeBuild now
-> reachable. **ONE piece deliberately NOT granted — your call:** AWS IAM-write (`IAMFullAccess` / scoped) so Harsh can
-> create AWS IAM roles (e.g. WIF roles like `gcp-cloudrun-codebuild-reader`). PowerUser EXCLUDES IAM mgmt by design — say
-> the word and I'll add it (or a scoped `iam:*Role*`/`*Policy*` policy). See "## Applied" at the end. Details below.
+> reachable. **AWS IAM-write: Ikenna chose SCOPED role/policy write — APPLIED** (`OperatorIamRolePolicyWrite` on the
+> `operators` group: role/policy/OIDC + PassRole; NO user/key mgmt). So Harsh can now create WIF/service roles without
+> full `IAMFullAccess`. **The gap is fully closed.** See "## Applied" at the end. Details below.
 >
 > **For Ikenna — one grant per cloud and we stop hitting infra walls.** The CLAUDE.md model says operators have admin
 > ADC and don't pause for infra ops, but `harshkantariya`'s account is under-provisioned vs that intent. Scope requested:
@@ -120,7 +120,10 @@ All grants are **reversible** (`remove-iam-policy-binding` / `detach-user-policy
   (Direct user-attach hit `LimitExceeded: PoliciesPerUser: 10` — harsh-worker already had 10 service-specific FullAccess
   policies; the group form is additive + quota-free + removes nothing.) CodeBuild now reachable (`list-projects` = 12 in
   ap-northeast-1). PowerUser = full access EXCEPT IAM/Org/Account. Reversible: `remove-user-from-group` / `detach-group-policy`.
-- [ ] [INFRA] P3. **AWS IAM-write — DEFERRED to Ikenna (the doc-flagged sensitive piece).** PowerUserAccess excludes IAM
-  management, so Harsh still cannot create AWS IAM roles (the WIF-role-creation task, e.g. `gcp-cloudrun-codebuild-reader`).
-  Decide: grant `IAMFullAccess` (full parity) OR a scoped role/policy-write policy (`iam:*Role*`, `iam:*Policy*`,
-  `iam:*RolePolicy*`, PassRole) OR keep IAM-role creation operator-only (Ikenna runs WIF roles on request). Owner: Ikenna.
+- [x] ✅ [INFRA] P3. **AWS IAM-write — Ikenna chose SCOPED role/policy write (2026-06-18); APPLIED.** Created customer-managed
+  policy `OperatorIamRolePolicyWrite` (`arn:aws:iam::427895769566:policy/OperatorIamRolePolicyWrite`) + attached to the
+  `operators` group. Allows: Role create/delete/update + assume-role-policy + put/attach/detach role policy, Policy
+  create/version/tag, **PassRole**, OIDC-provider create/update/delete (the WIF-role-creation use case). **Excludes** user
+  / access-key / login-profile / group management — so no self-escalation via new users/keys. Harsh can now create WIF +
+  service roles (e.g. `gcp-cloudrun-codebuild-reader`) without going to full `IAMFullAccess`. Reversible:
+  `detach-group-policy` + `delete-policy`.
