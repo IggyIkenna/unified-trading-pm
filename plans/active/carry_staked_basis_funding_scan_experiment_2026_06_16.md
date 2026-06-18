@@ -1093,3 +1093,17 @@ carry already harvests reversion); (c) reversal_z HURTS on my book (above). STRU
 signals — the WRONG tool for squeeze/dump avoidance (they lean INTO a squeeze). The ONE transferable accretive overlay
 is the MOMENTUM/breakout `sigma_move_2d` squeeze veto — **already shipped** (e2e@198ee62). **The book is COMPLETE, not
 blocked.** The CeFi cs alpha is real but 15-min-only — genuinely no value at the daily funding-carry horizon.
+
+## Capital-flow CORRECTION — fixed-leverage moves ~4x more (operator 2026-06-18)
+
+The earlier "$75k/yr moved" was the FULL-FUNDING regime (post full capital, let PnL compound in place, rebalance only on
+weight drift) — which minimises transfers but lets LEVERAGE FLOAT DOWN as you profit (under-deployed, idle capital).
+Re-modelled FIXED-LEVERAGE (hold each venue's deployed capital flat, sweep PnL gains to a central treasury / top up
+losses weekly, 5% band) per the operator's point that exposure + margin must be held: **$302k/yr moved (4.0x more,
+~30%/yr of capital ~= the book's PnL flow)** — gains swept out (margin would balloon + de-lever), losses topped up.
+Treasury accumulates ~$1.15M of swept PnL on a $1M base (redeploy / yield). **Tradeoff is leverage policy:**
+full-funding = fewer transfers but drifting-down leverage + idle capital; fixed-leverage = ~4x transfers (still cheap —
+weekly stablecoin sweeps, near-zero fee) but capital-efficient + constant exposure (the regime you'd actually run). The
+P3 TransferIntent todo should emit the FIXED-LEVERAGE weekly sweep/top-up (not the full-funding drift-rebalance).
+Scripts `/tmp/capital_flow{,2}.py`; plots `capital_flow.html` (full-funding) + `capital_flow_fixedlev.html`
+(fixed-leverage + treasury).
