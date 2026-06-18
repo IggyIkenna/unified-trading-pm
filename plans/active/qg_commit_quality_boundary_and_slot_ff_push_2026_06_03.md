@@ -766,13 +766,13 @@ design).
       don't spawn workers; reuses the per-PR label idempotency. So conflict, CI-RED, and backmerge-conflict alerts all
       reach the orchestrator. (Raw non-PR workflow-run failures stay Slack-only by design — escalating those needs a
       non-PR idempotency mechanism; the actionable cases all surface as stuck PRs, which are now covered.)
-- [ ] [SCRIPT] P2. **Semantic cross-plan/cross-slot conflict DETECTOR (scripted-first + epic-VM decides).** Catches "two
-      individually-valid plans whose WORK conflicts, no textual overlap" — which no existing layer does. (1) scripted
-      overlap-detector: parse active-plan todos for declared **target surface** (repo/file/symbol), flag cross-slot
-      overlaps, feed to plan-health-agent like the hygiene scripts. (2) on flag → ping the OWNING epic-VM orchestrator →
-      auto-reconcile (worker) or post proposed solution + operator-block (VM chat / laptop). Reuses
-      escalate-to-orchestrator + reviewer→worker→main — no new escalation path. repo: unified-trading-pm +
-      agent-orchestrator.
+- [~] [SCRIPT] P2. **SUPERSEDED (2026-06-17) → `orchestrator_agent_type_oversight_coverage_2026_06_17.md` (active, work
+      underway, operator-confirmed).** The semantic cross-plan/cross-slot conflict-detection machinery — the
+      `conflict-resolver` / `plan-reconciler` / cross-plan-drift detector + plan-health feed + escalate-to-orchestrator
+      wiring — is owned there (that plan reconciles the `plan-health`↔`plan-reconciler` overlap + registers/clarifies the
+      `escalate`/`conflict-resolver` agent types). Cross-link, don't dual-track. Original ask: scripted overlap-detector
+      parsing active-plan todos for declared target surface (repo/file/symbol), flagging cross-slot overlaps → plan-health
+      → owning-VM orchestrator → auto-reconcile or operator-block.
 - [x] ✅ [DOC] P1. **Lock the convergence + 3-layer-conflict + Option-B model in canonical docs** —
       unified-trading-pm@706fe8170: ci-cd-flow.md (new "PM/codex main-direct (Option B)" + "Convergence +
       conflict-resolution model" sections), CLAUDE.md (PM/codex→main directive + pointer), SUB_AGENT_MANDATORY_RULES
