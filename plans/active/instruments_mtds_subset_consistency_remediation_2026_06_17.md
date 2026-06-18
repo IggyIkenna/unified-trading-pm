@@ -156,9 +156,13 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
 - [ ] [CODE] P2. **F6 (reframed) — TRADFI option/instrument_type encoding**: unify the two options encodings
       (`instrument_type=options_chain` vs `data_type=options_chain` w/ blank type) + stamp instrument_type on the 182k
       blank-type cells (legacy path shapes). Not missing data — a typing fix. — market-tick-data-service
-- [ ] [INFRA] P3. **N7 — pipeline_mode migration tail** (dual `asset_group=`+`category=` keys; missing
-      `pipeline_mode=` partition; pred captured-max day only in bare shape). Cross-link to the pipeline_mode migration
-      plan — do NOT re-open here; track that the v9 `--apply` closes it. — (pipeline_mode migration plan)
+- [x] ✅ [INFRA] P3. **N7 / Step-5 prefix_tpls VERIFY — DONE (no code change needed)**: `reconcile_phantom_manifest_rows_all.py`
+      `prefix_tpls = canonical_path_templates(ag)` (CF-15/V0 UAC SSOT) for cefi/defi/tradfi/prediction — VERIFIED complete:
+      enumerates every coexisting shape (`pipeline_mode=batch_<source>/`, bare `asset_group=`, legacy `category=`,
+      top-level `day=`, defi `venue=PROTOCOL-CHAIN` overload + bare-venue). **Sports `[""]` is NOT a foot-gun** — sports
+      routes to the dedicated `_audit_sports` + UAC `candidate_parquet_paths` SSOT (bucket kind=instruments-store), and
+      ALL 17 captured instruments-store-sports data_types (STANDINGS/TEAMS/FIXTURES/ODDS/…) resolve ≥1 candidate path.
+      `--apply` will NOT mass-flip on any AG from a prefix-coverage gap. — instruments-service
 - [ ] [DATA] P3. **N8 — PRED index data_type label drift** (`prediction_canonical_question_group` vs GCS
       `prediction_trades`/`trades`) + 1 blank-reason attempted_failed cell. Confirm intentional rollup label vs drift;
       type the blank reason. — market-tick-data-service
