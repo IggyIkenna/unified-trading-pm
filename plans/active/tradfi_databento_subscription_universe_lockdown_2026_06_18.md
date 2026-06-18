@@ -61,9 +61,11 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
       market-data-processing-service.
 - [ ] [DATA] P1. Backfill: complete the `ohlcv_1m` corpus first (good test of migration/manifest/data-status), then run
       the longer `ohlcv_1s` backfill. Manifest-verified rows + sample-inspected parquets per Plans-Run-To-Completion.
-- [ ] [UAC] P1. SOURCE_PRIORITY: add `("tradfi","ohlcv_1s")` entry in `canonical/crosscutting/_source_priority_data.py`.
-      **Operator decision pending:** Databento is now a paid subscription — keep the ratified massive-first ordering or
-      flip to databento-first for tradfi? Default = mirror `ohlcv_1m` ordering until operator rules. Repo:
+- [x] [UAC] P1. SOURCE_PRIORITY: add `("tradfi","ohlcv_1s")` entry in `canonical/crosscutting/_source_priority_data.py`
+      (mirrors `ohlcv_1m` = `["massive","databento"]`) + matching `("tradfi","ohlcv_1s")` in `availability_semantics.py`
+      (`tick_timestamp`, required by the closed-set round-trip test). — unified-api-contracts@3b76c0bc | QG green.
+      **Operator decision still open:** Databento is now a paid subscription — keep the ratified massive-first ordering
+      or flip to databento-first for tradfi? Default = mirror `ohlcv_1m` ordering until operator rules. Repo:
       unified-api-contracts.
 
 ## Phase 2 — prune the instrument universe to the 3 datasets
@@ -90,8 +92,10 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 - [ ] [PM] P1. QG grep-ratchet: no raw `batch.submit_job` call outside the guarded `submit_batch_job`; no off-allowlist
       dataset string literal in tradfi fetch paths. Wire into market-tick-data-service `quality-gates.sh`. Repo: PM +
       market-tick-data-service.
-- [ ] [DOCS] P2. Update `codex/02-data/tradfi-data-types-catalog.md` + `codex/04-architecture/tradfi-batch-live.md` to
-      reflect 1s-only OHLCV + 3-dataset universe + CFE (VX futures ≠ VIX cash index). Repo: unified-trading-pm.
+- [x] [DOCS] P2. Update `codex/02-data/tradfi-data-types-catalog.md` to reflect **1m+1s** OHLCV (added `ohlcv_1s` row +
+      the "OHLCV fetch = 1m AND 1s" note; CFE/VX-futures venue). — unified-trading-pm (this commit). **Still open:**
+      `codex/04-architecture/tradfi-batch-live.md` (3-dataset universe + CFE) — pairs with the Phase-2 universe prune.
+      Repo: unified-trading-pm.
 
 ## Out of scope / explicit non-goals
 
@@ -102,5 +106,5 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 ## Codex SSOT updates
 
 - `codex/02-data/tradfi-databento-sourcing-ssot.md` (NEW — authoritative).
-- `codex/02-data/tradfi-data-types-catalog.md` (Phase 3 — reflect 1s-only).
+- `codex/02-data/tradfi-data-types-catalog.md` (Phase 3 — reflect **1m+1s** OHLCV — DONE: `ohlcv_1s` row + OHLCV note).
 - `codex/04-architecture/tradfi-batch-live.md` (Phase 3 — reflect 3-dataset + CFE).

@@ -258,6 +258,65 @@ construction (server-side byte-identical copy preserves parquet footers; only th
 
 - 0 copy errors; the live footer spot-check timed out on host GCS read latency (not a data fault, not load-bearing).
 
+## INSTRUMENTS-STORE buckets — legacy GCS audit + `_index` canonicalisation COMPLETE (2026-06-18)
+
+> Operator-granted: delete legacy twins once 100%-verified canonical twin (`gcs_describe`). This is the
+> **instruments-store** (reference-data) analogue of the market-data delete work above — a DISTINCT bucket set
+> (`instruments-store-{cefi,defi,tradfi,sports}-prd-…` + `instruments-store-pred-prd-…`), NOT the `market-data-tick-*`
+> buckets (those are mid-delete and were NOT touched here).
+
+**KEY FINDING — instruments-store has NO `pipeline_mode=`/`asset_group=` twin model.** It is reference data (one AG per
+bucket, no batch/live mode): canonical shapes are `prod/catalog.parquet` +
+`instrument_availability/by_date/day={D}/.../instruments.parquet` (cefi/defi/tradfi/pred partition by `venue=`; sports
+by `league=`/`venue=`). So the market-data "insert `pipeline_mode={mode}_{src}/asset_group={ag}/` twin" model **does not
+apply**. A "legacy" object here is a data parquet OUTSIDE those canonical prefixes. READ-ONLY audit:
+`instruments-service/scripts/audit_instruments_store_legacy_gcs_delete_list.py` (per-AG delete-list parquet →
+`gs://<bucket>/_index/audit/instruments_store_legacy_delete_list_{ag}.parquet`).
+
+| AG         | canonical | control | legacy[bare_day, dash] | SAFE-TO-DELETE | UNMAPPABLE residue (NOT deleted) | manifest `_index` |
+| ---------- | --------- | ------- | ---------------------- | -------------- | -------------------------------- | ----------------- |
+| cefi       | 28,524    | 7       | 0, 0                   | 0              | 0                                | canonical ✅      |
+| defi       | 66,894    | 6       | 0, 0                   | 0              | 0                                | canonical ✅      |
+| tradfi     | 11,648    | 8       | 0, 0                   | 0              | 0                                | canonical ✅      |
+| sports     | 110,138   | 778,010 | 2, 9,721               | 0              | 9,723 (0.146 GB)                 | canonical ✅      |
+| prediction | 4,932     | 50      | 0, 0                   | 0              | 0                                | canonical ✅      |
+
+**Migrate-first + delete: nothing to do (safe outcome).** cefi/defi/tradfi/pred are 100% canonical — zero legacy
+objects, nothing to migrate or delete. Sports' two non-canonical shapes are **superseded orphan data from older sports
+pipelines, NOT twins of the canonical reference data**, so they are honest-absence residue (excluded from the
+delete-list, reported only — never deleted):
+
+- bare top-level `day=2026-03-21/venue=BETFAIR/<hash>.parquet` (n=2): a BETFAIR odds-instrument write (different venue
+  than the canonical `venue=API_FOOTBALL_FIXTURES`, no `league=` key → no canonical-rename twin).
+- `instrument_availability/by-date/day-{D}/{soccer_slug}/instruments.parquet` (n=9,721, dates 2020-06-06..2025-12-15, 52
+  league-slugs): the legacy **dash-separator odds-api source** (`bookmaker_key`/`odds_api_market_id`/`market`/
+  `selection` schema; venues ONEXBET/PADDYPOWER/PINNACLE/BETFAIR/UNIBET — from `oddspapi_historical_backfill.py`). The
+  canonical `by_date/` (underscore) shape is api-football FIXTURES reference (different data source + schema + a
+  non-translatable `soccer_germany_bundesliga`→`BUNDESLIGA` league-slug map), and it COVERS the same date range + is
+  written more recently (tip 2026-05-13 > legacy tip 2025-12-15) → the dash shape is superseded, not a twin. Deleting it
+  needs an operator/explicit decision (it is orphan stale data, but has no canonical replacement to verify against).
+  **MIGRATE-FIRST=0 mappable** — the only "legacy" is unmappable by construction (no canonical-rename target exists).
+
+**`_index` (manifest) canonicalisation — now COMPLETE for ALL 5 AGs** (the N2 2x-per-cell + blank-status v4 shadow
+defect). `canonicalize_instruments_store_index.py` was already applied to tradfi+sports; I applied it to **cefi**
+(15,933 blanks classified, 12 dups dropped → 28,586→28,574 rows) and **defi** (127,140 blanks classified, 121,109 dups
+dropped → 196,987→75,878 rows), and re-ran tradfi idempotently (dropped 3 residual dups → 11,674). Re-verified: **every
+AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 rows, 0 blank, 0 dup).
+
+- [x] ✅ [SCRIPT] P1. **instruments-store legacy GCS audit + per-AG delete-list** — DONE
+      instruments-service@`audit_instruments_store_legacy_gcs_delete_list.py`. cefi/defi/tradfi/pred 100% canonical (0
+      legacy); sports 9,723 unmappable-superseded (excluded, reported); SAFE-TO-DELETE=0 fleet-wide → no delete needed.
+      Delete-list parquets written to each `_index/audit/`. — instruments-service
+- [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9-canonical for ALL 5 AGs** — DONE (cefi+defi+tradfi `--apply`'d;
+      sports/prediction already clean). Every AG blank_status=0 + dup_cells=0. — instruments-service
+- [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
+      calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
+      (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
+      is already canonical — 500 rows, 0 blank, 0 dup → nothing to canonicalize), but the `--asset-group prediction`
+      choice is a dead path. Fix `_bucket_for` to route prediction →
+      `kind="instruments-store-prediction",     asset_group=None` if prediction ever needs re-canonicalisation.
+      **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
+
 ## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
 
 **No longer PAYG** — subscription + ~$150 credits (more than enough to stream all instruments). **ONE API key**
@@ -419,15 +478,16 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       twinned. The ONLY genuine residual = UNISWAP_V4 (next todo). NOTE: the full per-object verify run over all 633
       defi days is I/O-heavy (reads every canonical file's content); the verify parquet is operator-convenience for the
       delete-list, the migrate/delete DECISION is already determined by the verifier's logic + sampling. — e2e-testing
-- [ ] [DATA] P2. **UNISWAP_V4 content-aware fan-out (the genuine residual)** — migrator BUILT + shipped
-      `e2e-testing/scripts/defi/migrate_uniswap_v4_legacy_to_canonical.py` (e2e-testing@9bd18bf, ruff+QG-green); RUN it
-      `--apply` to fan out the ≤359 legacy `venue=UNISWAPV4-ETHEREUM` bundles' rows that have NO same-day canonical V4
-      twin → reshape (venue `UNISWAP_V4`/`chain=ETHEREUM`/`instrument_type=pool`, `data_type` `swaps`→`dex_pool_swaps`/
-      `liquidity`→`dex_pool_state`, add `instrument_id`, `pipeline_mode=batch_onchain_subgraph`) → write one canonical
-      parquet per `pool_id` stem (the legacy V4 schema is IDENTICAL to canonical V4 incl. `pool_id` — a faithful
-      reshape, not a re-download). The script SKIPS rows already in canonical V4 content (no dup writes). Dry-run first
-      (default), then `--apply`; then manifest-verify the migrated V4 cells via the consolidator. — e2e-testing /
-      market-tick-data-service
+- [x] ✅ [DATA] P2. **UNISWAP_V4 content-aware fan-out (the genuine residual) — MIGRATED + VERIFIED**
+      (`e2e-testing/scripts/defi/migrate_uniswap_v4_legacy_to_canonical.py` @9bd18bf, RAN `--apply` 2026-06-18). Of
+      4,919,235 legacy V4 rows across 359 bundles, **3,237,107 genuinely-uncovered rows → 31,773 canonical
+      `pool_id`-stem parquets written** (1,682,128 rows already in canonical → skipped no-dup; 84 objects fully-covered;
+      **0 errors**). Reshape column-parity vs an existing canonical V4 file = EXACT (37-col set identical). Verified:
+      previously-uncovered days (2025-06-30/03-08/10-18) now carry 107/83/163 canonical `venue=UNISWAP_V4` pool files;
+      idempotent re-dry-run shows **rows_migrated=0 / fully_covered_objects=359** (gap CLOSED, all 359 now twinned). The
+      objects are GCS-written; the defi `availability_index.parquet` records them on the next `rebuild_defi_manifest.py`
+      walk / consolidator run (folded into the N5r/N6r rebuild-for-real-replace below — do NOT run a competing partial
+      rebuild). — e2e-testing
 - [ ] [DATA] P3. **Verify-then-delete the ~122 genuinely-legacy-only tradfi stragglers** — REFRAMED 2026-06-18: the 107
       bare `venue={CME,ICE,NYSE,NASDAQ}/ticks.parquet` are recent (2026-02+) RAW `data_type=trades` ticks (Databento
       market-by-order), NOT pre-canonical OHLCV — and `data_type=trades` IS a canonical tradfi data_type
@@ -514,7 +574,10 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       swaps_ohlcv), but reaching LIVE needs a WHOLESALE replace of the defi `_index` (the consolidator merge leaves
       stale un-normalized rows; the index-walk can't normalize venue without desyncing from object paths). Run the
       rebuild to produce the full v9 index + write it as the live `_index` (replace, not merge). NOT a
-      double-count/data-loss (P2 grouping hygiene). — market-tick-data-service
+      double-count/data-loss (P2 grouping hygiene). **ALSO picks up the 31,773 newly-migrated canonical UNISWAP_V4
+      `pool_id` cells (3.24M rows) the content-aware fan-out wrote 2026-06-18** — the rebuild walks all canonical
+      objects, so these get their `availability_index` rows on this same wholesale-replace run (no separate V4 manifest
+      pass needed). — market-tick-data-service
 - [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
       `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
       non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
@@ -554,15 +617,29 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       `canonicalize_mtds_index.py` to sports, mirroring the instruments-store classify: reference blank-data_type rows
       kept; real-data_type phantoms → honest status). NOT a double-count. captured (202,087, league_id present) + empty
       (584,257) already correct. — market-tick-data-service
-- [ ] [CODE] P0. **READER-SHAPE GAP — deployment-api drilldown reads the BARE (legacy) shape, NOT canonical
-      `pipeline_mode=` (DELETE-PREREQUISITE, found 2026-06-18)**: `deployment_api/services/shard_detail/_shard_core.py`
-      (the `DATA_STATUS_CANONICAL_PATHS_ONLY` cutover @6bcac01) builds the probe prefix
-      `raw_tick_data/by_date/day={D}/asset_group={ag}/…` — NO `pipeline_mode=` segment → it matches ONLY the legacy bare
-      objects we are about to DELETE, not the canonical `…/pipeline_mode={mode}_{source}/asset_group={ag}/…` twin. The
-      headline data-status COUNTS are unaffected (manifest cell-keyed), but the file-detail DRILLDOWN would orphan/blank
-      post-delete. **Repoint the probe to the canonical `pipeline_mode=` shape** (list `day={D}/` + match
-      `pipeline_mode=*/asset_group={ag}/`, or prepend the derived `pipeline_mode={mode}_{source}/`) BEFORE any legacy
-      delete. Same check the deployment-api drilldown `_instruments.py` + any other GCS-listing reader. — deployment-api
+- [x] ✅ [CODE] P1. **N9b — DISPLAY-side bug: legacy `"None"`/NaN/non-4-state `capture_status` SILENTLY DROPPED from the
+      coverage denominator (found + fixed in the 2026-06-18 data-status audit).** Three deployment-api 4-state counters
+      only matched the literal `"captured"` (`(cs == "captured").sum()` after a bare `.astype(str)`), so the 17,288
+      legacy v4 sports `"None"`-status rows (N9) — plus any blank/NaN — were dropped from BOTH numerator and
+      denominator, diverging from the `coverage_metrics.compute_capture_status_counts` SSOT + UTL
+      `ManifestWriter.lookup` (which coerce such rows to `captured`). The SAME manifest produced two different
+      `completion_pct` per endpoint (sports coverage panel 25.69% vs the per-venue breakdown's honest count). Fixed all
+      three to coerce any non-4-state token → `captured`: `data_status/coverage.py::_build_coverage_for_cat`
+      (deployment-api@720eab2), `data_status_hierarchical.py::_aggregate_counts` (the drilldown tree) +
+      `data_status_union.py` per-source builder (deployment-api@d956a6e). Sports coverage now 27.29% (denom = full row
+      count, no silent drop). Regression tests added
+      (`test_data_status_service.py::test_legacy_none_capture_status_counts_as_captured` +
+      `test_data_status_hierarchical.py::TestAggregateCountsLegacyCoercion`). QG green. NOTE: the underlying N9 rows
+      should still be re-classified to a real status by the sports-MTDS canonicalize pass — this is the display-side
+      defence so they read as captured (not vanished) in the meantime. — deployment-api
+- [x] ✅ [CODE] P0. **READER-SHAPE GAP — deployment-api drilldown now reads canonical `pipeline_mode=` (RESOLVED by the
+      @0e267be/@c003271 cutover; verified 2026-06-18 data-status audit)**: `_shard_core._mtds_shard_path` builds the
+      probe prefix `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group={ag}/…` (fans across
+      `canonical_pipeline_mode_segments(ag)`, UAC-derived), and `_instruments.py` builds a bare prefix that
+      `storage_facade.list_objects` redirects to the canonical `pipeline_mode=*/` layers + merge-dedups. END-TO-END
+      VERIFIED against prd GCS: `list_objects(bare cefi prefix)` returned 20/20 objects under
+      `pipeline_mode=batch_tardis/` with zero dupes; the legacy bare twin is NOT read → no double-count, no post-delete
+      orphan. — deployment-api@d956a6e (audit verify; the cutover itself @0e267be/@c003271)
 
   > **🟢 RESCAN COMPLETE + INDEPENDENTLY VERIFIED (2026-06-18).** Full twin-walk of all 5 market-data-tick buckets
   > (`e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py`@a294b2c; per-AG maps at
@@ -600,6 +677,16 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       **OPERATOR INSPECTS + confirms** → `gcs_delete_object` the confirmed bare twins (in-region VM, workers=32).
       Storage reclamation only; do NOT delete any bare object lacking a canonical twin (that would be unmigrated →
       migrate it first). — instruments-service/deployment-service
+- [ ] [DATA] P2. **N9c — MTDS `_index` is NOT yet v9 for any of the 5 AGs; `pipeline_mode` column 100% BLANK
+      (data-status pipeline_mode FILTER chip non-functional). Found 2026-06-18 data-status audit.** Despite the
+      instruments-store `_index` being v9 (todo above, line ~310), the **market-data-tick** (MTDS) prd `_index` for ALL
+      5 AGs is still ~96% `schema_version=8` (cefi 2.085M/2.168M v8, only 8,034 v9; defi/tradfi/sports/pred similar),
+      carries NO `asset_group` and NO `source` column, and `pipeline_mode` is **100% blank/None** (verified: 0 non-blank
+      rows of 2.17M cefi / 1.58M defi / 144k tradfi / 804k sports). CONSEQUENCE: the data-status
+      `_apply_pipeline_mode_filter` chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows
+      have no pipeline*mode to match — even though the GCS objects ARE canonically
+      `pipeline_mode={mode}*{source}/`-keyed. Coverage % + the drilldown are     UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode column).     FIX = the wholesale v9`\_index`rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the migrate-first +     rebuild for tradfi/sports/pred) must POPULATE`pipeline_mode`+`source`+`asset_group`from the canonical object     paths, not just classify capture_status. Re-verify`pipeline_mode`
+      non-blank > 0 post-rebuild per AG. — market-tick-data-service
 - [ ] [DATA] P3. **N3b — SPORTS: 6 captured cells still NULL source**
       (ARBITRAGE_OPPORTUNITY/ODDS_MOVEMENT/ODDS_SNAPSHOT, 2 each) after the Step-2 `trades→odds_api` + case-insensitive
       bridge. Add these MDPS-derived data_types to the source bridge (or route to honest absence if not genuinely
