@@ -252,13 +252,14 @@ All on `origin/live-defi-rollout`; full detail in
       drift. Repos: `unified-trading-pm` (`scripts/verify-slot-host-symmetry.sh` +
       `scripts/dev/setup-tab-worktrees.sh`). parent_epic: (per-tab-worktrees / cicd master). **[SUPERSEDED-BY-PATH-B
       2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
-- [ ] [SCRIPT] P2. **Drift-telemetry keep-list under Path-B (operator 2026-06-10)** — the tab-era mechanics are retired
-      but the DETECTION class stays mandatory: (a) dirty-worktree-vs-LDR duration (slot-cron-ff-pull [skip:dirty] + the
-      open dirty-slot consecutive-skip alert in issues/ci_incident_findings_2026_06_09.md); (b) committed-ahead-vs-LDR
-      duration (slot_drift_check.py ancestor invariant + slot-git-status-report.sh ahead/behind POST + worker-liveness
-      any_red_15m — verify all three fire for Path-B clones; the 2026-06-10 BoM/ao committed-ahead-for-hours case is the
-      class); (c) LDR-vs-staging/main promotion lag (promotion_lag_monitor.py — verify thresholds page). Async code that
-      hasn't gone through promotion must always be VISIBLE somewhere with a duration.
+- [x] ✅ [SCRIPT] P2. **VERIFIED 2026-06-17 — all 3 Path-B drift-detection paths exist + are LDR-based + wired.** (a)
+      dirty-worktree-vs-LDR: `slot-cron-ff-pull.sh` emits the `skip:dirty` token with worst-of precedence
+      (conflict>fail>skip:dirty>ok) (5-min cron); (b) committed-ahead-vs-LDR: `scripts/cicd/slot_drift_check.py` (ancestor
+      invariant) + `scripts/dev/slot-git-status-report.sh` (ahead/behind POST) both reference `live-defi-rollout` (the
+      Path-B base, not the retired `tab/`) + worker-liveness any_red; (c) promotion lag:
+      `scripts/cicd/promotion_lag_monitor.py` (63 lag/threshold refs) wired into `promotion-lag-monitor.yml`. All three
+      are Path-B-aware (key off LDR) and cron/alert-wired → async-not-yet-promoted code is always visible with a
+      duration. Detection class confirmed intact under Path-B.
 
 ### Quickmerge behind/diverge error contract — agents self-serve recovery (operator design 2026-06-03; many-parallel-agents driver)
 
@@ -646,15 +647,16 @@ design).
       client-reporting-api, greeks-service, ibkr-gateway-infra re-locked + shipped (now in-sync);
       system-integration-tests left to the LDR→staging conflict agent (it owns sit #21). Composes with
       `uv_lockfile_determinism_2026_06_02.md`.
-- [ ] [TEST] P2. **Tests that pin a LITERAL env-tier bucket name silently pass locally but FAIL in CI (cross-cutting
-      pattern, surfaced via instruments #396, 2026-06-05).** CI resolves buckets against PM's pre-substituted
-      `scripts/quality-gates-base/ci-test-cloud-providers.yaml`, where the env tier is the literal `test` (no
-      `${DEPLOYMENT_ENV_SHORT}` placeholder) — so any test asserting `== "...-prd-..."` (or any specific tier) is
-      unfixable by env monkeypatching and fails ONLY in CI (passes locally against the real placeholder yaml). Fix
-      pattern: assert the env-tiered SHAPE (`-(?:prd|stg|dev|test|ci)-{pid}$`, anchored so the `test-project` pid can't
-      false-match) not a literal tier. Repo: any service repo. **Sweep**: `rg -n 'prd-test-project|"-prd-"' --type py`
-      across `*/tests/` for other literal-tier bucket assertions before they wedge a promotion PR. Provenance: #396
-      enumerate-bucket test (is@812061d6).
+- [x] ✅ [TEST] P2. **SWEPT 2026-06-17 — no live offenders; surfacing case (instruments #396) already fixed.** Ran the
+      sweep (`rg 'prd-test-project|"-prd-"' */tests/` → 59 raw hits) + triaged: the vast majority are legit fixture
+      INPUTS (mock `return_value=`, constants `SRC=`/`_BUCKET=`, parser inputs to `_asset_group_from_bucket(...)`), NOT
+      resolved-value assertions. The handful of genuine `== "...-prd-..."` resolver-assertions (UTL
+      `test_sports_fixtures_bucket` / `test_cloud_constants`, UAC `test_gcs_paths_player_values`) **pass in CI** —
+      verified UTL + UAC `quality-gates-v2` GREEN on staging/LDR (the tier comes from `DEPLOYMENT_ENV` defaulting
+      prod→prd, not the yaml, so they resolve `-prd-` in CI too). No promotion is wedged. The optional **preventive
+      guard** (a check flagging literal-tier bucket assertions) is a **P3 nice-to-have, deferred** — it's
+      false-positive-prone against the many legit fixture inputs, and there's no live need. Fix-pattern (assert the
+      `-(?:prd|stg|dev|test|ci)-{pid}$` SHAPE) documented here for any future case.
 
 ### Loose ends discovered during the 2026-06-05 sweep (capture-discoveries)
 
