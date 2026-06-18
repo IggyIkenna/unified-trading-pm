@@ -234,6 +234,15 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       sports blanks F5 which ARE fixed). Classify via a sports-MTDS canonicalize pass (extend `canonicalize_mtds_index.py`
       to sports, mirroring the instruments-store classify: reference blank-data_type rows kept; real-data_type phantoms →
       honest status). NOT a double-count. captured (202,087, league_id present) + empty (584,257) already correct. — market-tick-data-service
+- [ ] [CODE] P0. **READER-SHAPE GAP — deployment-api drilldown reads the BARE (legacy) shape, NOT canonical
+      `pipeline_mode=` (DELETE-PREREQUISITE, found 2026-06-18)**: `deployment_api/services/shard_detail/_shard_core.py`
+      (the `DATA_STATUS_CANONICAL_PATHS_ONLY` cutover @6bcac01) builds the probe prefix
+      `raw_tick_data/by_date/day={D}/asset_group={ag}/…` — NO `pipeline_mode=` segment → it matches ONLY the legacy bare
+      objects we are about to DELETE, not the canonical `…/pipeline_mode={mode}_{source}/asset_group={ag}/…` twin. The
+      headline data-status COUNTS are unaffected (manifest cell-keyed), but the file-detail DRILLDOWN would orphan/blank
+      post-delete. **Repoint the probe to the canonical `pipeline_mode=` shape** (list `day={D}/` + match
+      `pipeline_mode=*/asset_group={ag}/`, or prepend the derived `pipeline_mode={mode}_{source}/`) BEFORE any legacy
+      delete. Same check the deployment-api drilldown `_instruments.py` + any other GCS-listing reader. — deployment-api
 - [ ] [INFRA] P1. **Phase D — DELETE old legacy-shape GCS duplicates (OPERATOR-GATED inspection)**: the bare
       `raw_tick_data/by_date/day=*/asset_group={ag}/...` objects are EXACT duplicates of canonical
       `pipeline_mode={mode}_{source}/asset_group={ag}/...` twins (verified: same instrument exists at both). They no longer
