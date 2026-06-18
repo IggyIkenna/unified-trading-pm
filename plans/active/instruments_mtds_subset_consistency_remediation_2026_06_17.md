@@ -192,6 +192,21 @@ recipe + tradfi/sports/pred feasibility). Manifests (all 5) already canonicalize
       `path_to_100pct_backfill_mtds_is_2026_06_17.md`. Other services rely on instruments to know what's
       available/expected → this runs FIRST. — instruments-service
 
+## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
+
+- [ ] [CODE] P1. **e2e funding scripts hardcode legacy research buckets — repoint to `resolve_bucket_name`**: B3 copied
+      HL perp_daily_ctx/perp_mark_price → `perp-funding-prd` (e2e-testing@af084af) + shipped
+      `docs/defi/research_data_canonical_sources_2026_06_18.md`. Repoint: `staked_basis_funding_scan.py:164-165`
+      (`_HL_PF_BUCKET`/`_LST_BUCKET`), `funding_regime_classifier.py:46` (`PF_BUCKET`) → `resolve_bucket_name(...)`
+      (`colocated_engine.py` already correct). Touches the live funding-arb path → strategy-service QG. — e2e-testing
+- [ ] [INFRA] P2. **Research `-prd-` buckets carry NO `_index/`** — the live availability index still lives in the legacy
+      `perp-funding`/`lst-rates` buckets; point the consolidator/readers at the `-prd-` index before the legacy research
+      buckets are deleted (consolidator-runtime concern; B3 doc notes it). — deployment-service/instruments-service
+- [ ] [DATA] P2. **Migration unmappable residue (bare/no-venue legacy paths, no canonical twin computable)**: defi 5,332 /
+      tradfi 1,102 / sports 3,816 / pred 0 legacy objects have `no_venue_or_data_type_in_path` → the 1:1 copy-driver can't
+      derive a canonical target. Decide per-shape: re-derive venue/data_type from file contents, or re-download, or accept
+      as legacy-only (NOT delete-safe — exclude from every delete-list). — market-tick-data-service
+
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
 - [ ] [DATA] P1. **F1 — backfill instruments-service for CEFI venues MTDS has but instruments lacks historically**:
