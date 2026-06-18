@@ -73,6 +73,13 @@ comment, not a Python-only docstring) so the audit + the cleanup sweep can tell 
 # Delete-when: <concrete completion condition>  # required for campaign + oneoff; permanent omits it
 ```
 
+**Placement (greppable + consistent):** insert the lines **immediately after the shebang** (`#!/…`) — for BOTH `.sh` and
+`.py`. In `.py` this sits _before_ the module docstring; that is fine — comments do not affect `__doc__` (the docstring
+is still the first statement). A stamper is **idempotent**: it SKIPS any file that already has a `# Lifecycle:` line.
+Grep the fleet with `grep -rl '^# Lifecycle:' */scripts/`. Pilot examples (PM):
+`scripts/cicd/promote_provenance_range.py`, `scripts/cicd/slot_drift_check.py`, `scripts/cicd/parity_watchdog.py`,
+`scripts/quality-gates-base/qg-host-governor.sh`.
+
 - **`permanent`** ≈ VM `LONG_LIVED` — standing tooling that legitimately recurs: the per-family dev quintet
   (`setup.sh`/`quality-gates.sh`/`setup-workspace.sh`/`seed_mock_data.py`/`smoke_matrix.py`), QG checkers,
   codegen-from-SSOT, deployment-service VM launchers, e2e verification harnesses. No `Delete-when`.

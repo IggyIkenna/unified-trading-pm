@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
 # qg-host-governor.sh — host-level concurrency governor for quality-gates.sh.
 #
 # Plan: plans/active/quality_gates_resource_contention_speedup_2026_06_02.md (todo: qg-governor)

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
 """CI/local-QG parity watchdog — turn a local-green/staging-red event into a tracked defect.
 
 Principle (ci_local_qg_parity_2026_06_08.md): a local `quality-gates.sh --no-fix` green on an

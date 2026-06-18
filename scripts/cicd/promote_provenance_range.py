@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
 """Compute the SINCE-LAST-PROMOTE range for the strict-quickmerge provenance gate.
 
 The promote bots (`ldr-to-staging-promote.yml` / `ldr-to-main-promote.yml`) must run
