@@ -217,6 +217,56 @@ guard installed):** ran the IS `--operation status` + read each `instruments-sto
 freshness + diagnose defi/cefi attempted_failed. Monitored local CLI per venue (idempotent, skips fresh days), streamed
 to logs.
 
+**B0 EXECUTION — 2026-06-18 ~23:00 UTC (monitored local CLI, log dir `/tmp/is_backfill_logs/`):**
+
+- **tradfi B0 = COMPLETE** (already; no action). cov 1.0, 0 gaps, 2020-01-01→2026-06-18, 3-dataset contract.
+- **cefi F1 — Kraken 6yr backfill**: `instruments-service --asset-group cefi --venues KRAKEN-SPOT KRAKEN-FUTURES
+  --start-date 2020-01-01 --end-date 2026-06-18` — RUNNING in background (Tardis source, ~40 records/day across both
+  venues). The LONG leg (~2,360 days × 2 venues, ~10s/day) — ETA a few hours; left to run to completion + reports its
+  state. Idempotent (skips fresh days). Log: `kraken_f1.log`.
+- **cefi F1 — 3 absent venues backfilled DONE/near-done**: LIGHTER-ZKSYNC (2024-08-01→, 198 instr/day),
+  EXTENDED-STARKNET (2024-10-01→, 103/day), PACIFICA-SOLANA (2025-06-01→2026-06-18 ✅ **DONE**, 10/day). All via
+  Tardis/native adapters, creds present, 0 errors.
+- **cefi F2 — BITGET 5 missing days**: re-fetched 2024-11-08→2026-06-18 (`--venues BITGET-FUTURES BITGET-SPOT`),
+  near-done, fills the F2 gap.
+- **prediction freshness — ✅ DONE**: `--asset-group prediction --start-date 2026-06-09 --end-date 2026-06-18` wrote
+  **12,720 records across 30 venues** (POLYMARKET CLOB full scan ~1.4M markets + KALSHI 2000) to
+  `instruments-store-pred-prd` (flat kind). The 9-day stale tail (last was 2026-06-09) is now current. NOTE: the IS
+  `--operation status` CLI can't READ the flat-kind prediction bucket (`get_write_bucket_name` lacks a PREDICTION
+  asset_group entry) — a status-CLI display gap, NOT a backfill blocker (the WRITE path resolves via
+  `resolve_instruments_store_kind`).
+- **defi**: 95 venues, cov 0.998, 2020-01-20→2026-06-18 — already broadly complete; 172 attempted_failed
+  (MORPHO-ETH/BASE 41 each, DRIFT-SOLANA 41, AAVE_V3-OPTIMISM 41, TRADER_JOE_V2-AVALANCHE 6, SUSHISWAP_V3-BASE 2, all
+  UNCLASSIFIED_ADAPTER_ERROR, 2026-05-09→06-18).
+- **sports**: most entities high-cov; SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES cov 0.000 (all attempted_failed
+  — credentialed/blocked scraper sources, tracked in sports_master DEFERRED-INDEFINITELY scraper set). Not a B0 gap.
+
+- [ ] [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket** — `_run_coverage_status`
+      calls `get_write_bucket_name("instruments", "prediction")` which raises `BucketNamingError` (the per-asset_group
+      instruments-store dict has no PREDICTION entry; prediction resolves via the FLAT
+      `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
+      `_get_instruments_bucket_for_asset_group` (the same resolver the write path uses) so prediction status renders.
+      Display-only gap; the backfill WRITE path already works. — instruments-service
+- [ ] [DATA] P2. **Diagnose the 172 defi + ~6 cefi UNCLASSIFIED_ADAPTER_ERROR instrument cells** (MORPHO-ETHEREUM/BASE,
+      DRIFT-SOLANA, AAVE_V3-OPTIMISM, TRADER_JOE_V2-AVALANCHE, SUSHISWAP_V3-BASE; 2026-05-09→06-18). Same root-cause
+      class as the DERIBIT-COMBO hunt (likely upstream subgraph/API shape changes since ~2026-05). Re-fetch one failed
+      day per venue with full error, classify the breach properly (not UNCLASSIFIED), fix the adapter, backfill. —
+      instruments-service / unified-api-contracts (defi error classification)
+
+**DERIBIT-COMBO — fixed a NEVER-WORKING venue (4 stacked breaks, found during cefi diagnosis) — ✅ SHIPPED:**
+cefi's 22 attempted_failed were ALL DERIBIT-COMBO (0 captured days since added 2026-05-23). Root cause = 4 stacked bugs,
+all fixed: (1) Deribit retired `get_instruments?kind=combo` (HTTP 400) → switched to `public/get_combos`; (2) adapter
+tagged records `venue=DERIBIT` but batch canonical is `DERIBIT-COMBO` → URDI venue-tag filter dropped all rows → fixed
+the venue property; (3) legs were always empty (`_parse_combo_legs` always returned `[]`) and validation rejects
+leg-less COMBOs → build `InstrumentLeg` from `get_combos` structured legs; (4) `DERIBIT-COMBO` was absent from UAC
+`VENUES_BY_ASSET_GROUP["cefi"]` + `CEFI_VENUE_LAUNCH_DATES` → validation rejected "unknown venue" → registered it.
+Verified live: **117 combos written/day** (was 0). Removed dead `_parse_combo_legs`/`_extract_structure_code`. Tests
+updated (332 IS combo tests + 907 UAC venue/coverage tests green; IS QG `--no-fix` exit 0). Shipped:
+unified-api-contracts@dfe7e6f (venue registration) + instruments-service@dedae75 (adapter). Re-fetch of the 22 failed
+days running (`deribit_combo.log`) — combos active today land captured; expired-combo days the get_combos endpoint no
+longer returns stay honest (the API only returns currently-active combos — historical combo state is not retrievable,
+an upstream limitation, NOT a silent placeholder).
+
 > **Dependency order (operator 2026-06-18):** (B0) backfill instruments to NO-MISSING first → (B1) regen the instrument
 > catalogue (it aggregates instruments) → (B2) codify MVP-universe vs total-reasonable-universe (so the backfill config
 >
@@ -421,8 +471,14 @@ credits. Tracked todos below.
       pre-request guard at the MTDS get_range chokepoint AND the IS `definition`-schema fetch (with dataset-level shard
       isolation so an off-allowlist dataset doesn't hard-fail siblings). — market-tick-data-service@88d1c65e /
       instruments-service@86ecc67b / unified-api-contracts@3b76c0bc | all QG green.
-- [ ] [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 +
-      DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service
+- [x] ✅ [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 +
+      DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service — **ALREADY COMPLETE** (verified
+      2026-06-18, instruments-service@dedae75 run): `instruments-store-tradfi-prd` `_index` = 11,418 captured / 256
+      empty_confirmed, cov **1.0, 0 attempted_failed, 0 date gaps**. 6 venues continuous DAILY: CME/FX/ICE/CBOE
+      2020-01-01→2026-06-18, NASDAQ/NYSE 2023-04-15(subscription start)→2026-06-18 (distinct-days == calendar-span ⇒ no
+      missing day). The 3-dataset subscription guard (`assert_databento_request_allowed`, dataset-level shard-isolation)
+      is installed on the `definition` fetch — banned datasets isolate (not hard-fail), existing rows are already the
+      right 6-venue universe (no banned datasets present). Forward daily keep-green only. See Progress Log "B0 EXECUTION".
 - [ ] [CODE] P1. **`ohlcv-1s` has NO `BarTimeframe` member → OHLCV close-edge conversion raises** (surfaced 2026-06-18
       during the subscription cutover): the contract fetches ONLY `ohlcv-1s`, but `_OHLCV_DATA_TYPE_TIMEFRAME` (mtds
       `databento_adapter.py`) + the UAC `BarTimeframe` closed set (`bar_boundary.py` — smallest unit is `15s`) have no
