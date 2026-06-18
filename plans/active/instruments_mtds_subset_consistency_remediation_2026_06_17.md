@@ -486,11 +486,17 @@ re-pointed; SUSHISWAP/YEARNV3 kept), 24,280 duplicate cell-keys collapsed (23,86
 cell-key survives** + 40/40 random remapped captured cells `gcs_describe`-verified to have their canonical object.
 Final invariants: `venue_noncanon_remaining=0`, `captured_venue_not_on_gcs_remaining=0`, `itype_noncanon_remaining=0`.
 
-- [ ] [SCRIPT] P1. **DeFi `_index` venue-spelling canon + dedup-merge (N6r) `--apply`** — code DONE
-      (`canonicalize_mtds_index.py` N6r, mtds@<sha>): GCS-verified venue remap (literal-gone→canon-exists; KEEP
-      SUSHISWAP/YEARNV3 still-live) + captured-first dedup-merge. Dry-run content-gate PASSED (above). PENDING: snapshot
-      live defi `_index` → `_index/snapshots/pre_canonical_rebuild_defi_2026_06_18.parquet` → `--apply` → re-verify with
-      `audit_index_vs_gcs_spellings.py` (0 captured stragglers). — market-tick-data-service
+- [x] ✅ [SCRIPT] P1. **DeFi `_index` venue-spelling canon + dedup-merge (N6r) `--apply`** — DONE 2026-06-18.
+      `canonicalize_mtds_index.py` N6r (GCS-verified venue remap: literal-gone→canon-exists; KEEP SUSHISWAP/YEARNV3
+      still-live; captured-first dedup-merge). Snapshot `_index/snapshots/pre_canonical_rebuild_defi_2026_06_18.parquet`
+      (1,625,788 rows) → `--apply` → live defi `_index` now **1,601,508 rows** (48 spellings remapped, 254,812 captured
+      rows re-pointed, 24,280 dup cell-keys collapsed). **Independently re-verified post-apply** (300-day GCS venue
+      walk): captured 391,430→**367,564** (= legitimate −23,866 legacy↔canonical captured-twin dedup; every distinct
+      captured cell-key preserved), **0 captured venue spellings absent from canonical GCS** (KAMINO/MARGINFI/etc. are
+      genuine canon venues whose objects exist — the audit-sample "stragglers" are false-positives of a narrow day
+      sample), schema_v9/pipeline_mode/source/asset_group all 100%. Code QG-green (ALL QUALITY GATES PASSED).
+      pred/tradfi/cefi/sports verified CLEAN at the venue level (no defi-style spelling drift); tiny per-AG
+      mislabeled-captured remnants tracked as the 3 todos below. — market-tick-data-service
 - [ ] [DATA] P2. **pred `_index`: 21 captured `UNKNOWN`-venue `trades` cells (2025-03-14..)** — GCS has `venue=POLYMARKET`
       only; these legacy `UNKNOWN`-venue rows have blank instrument_id (aggregate/legacy) and no `venue=UNKNOWN` object.
       Recover the real POLYMARKET venue (join to the same-day `pipeline_mode=batch_polymarket_clob/venue=POLYMARKET`
