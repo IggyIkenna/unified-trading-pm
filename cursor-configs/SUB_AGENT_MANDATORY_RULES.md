@@ -67,19 +67,17 @@ affects `ruff`. The semantic match still holds: locally autofix drift, in CI pro
 A "shippable unit" = the smallest meaningful slice that QGs cleanly. **Shipping CODE is a TWO-PASS model (staging-first,
 live model 2026-06-02) — NEVER a raw `git push` of code:**
 
-> **Commit attribution + branch alignment (2026-06-03).** Your commits auto-carry the **slot+host author tag** —
-> `ikennaigboaka [slot-<N>·<host>]` (set per-worktree; sub-agents SHARE the slot's identity, so your commits attribute
-> to the slot too). Author email is unchanged (`ikennaigboaka@gmail.com`) — only the NAME encodes who/where, so CI
-> alerts + cross-agent triage stop being guess-work. If the slot's tab branch has **diverged** from LDR (the tab→LDR
-> mirror jams), **ALIGN = the merged combination**: `git rebase origin/live-defi-rollout`, resolve each conflict keeping
-> **BOTH** sides' genuine work (merge two-similar into the best single version), **verify** your + the incoming
-> additions survived, then `git push --force-with-lease origin HEAD:tab/<op>/N`. `--force-with-lease` is **branch-tip
-> safety only, NOT content safety** (the rebase-onto-LDR + verify is what protects others' work); **NEVER force-push
-> `live-defi-rollout`/`main`**. **NEVER `git push -u` a tab branch** — push `git push origin HEAD:tab/<op>/N` (no `-u`);
-> `-u` re-points the upstream off `origin/live-defi-rollout` → the IDE shows a PHANTOM "ahead N" vs the stale remote tab
-> (not real drift). If `git rev-parse --abbrev-ref @{upstream}` ≠ `origin/live-defi-rollout`, fix:
-> `git branch --set-upstream-to=origin/live-defi-rollout tab/<op>/N`. SSOT:
-> `codex/05-infrastructure/per-tab-worktrees.md` §§ "Commit attribution" + "Reconciliation" + "Upstream tracking".
+> **Commit attribution + LDR alignment (Path-B, 2026-06-08).** Your commits auto-carry the **slot+host author tag** —
+> `ikennaigboaka [slot-<N>·<host>]` (each slot is its own `git clone --reference` with its OWN `.git/config`, so plain
+> `git config user.name` is already per-slot; sub-agents SHARE the slot's identity, so your commits attribute to the
+> slot too). Author email is unchanged (`ikennaigboaka@gmail.com`) — only the NAME encodes who/where, so CI alerts +
+> cross-agent triage stop being guess-work. You commit ON `live-defi-rollout` and push straight to it; if the push is
+> **rejected as behind** (a peer pushed first), `git pull --rebase --autostash` (quickmerge STAGE 0.4 does this for you)
+> replays YOUR commits onto current LDR — **ALIGN = the merged combination**: resolve each conflict keeping **BOTH**
+> sides' genuine work (merge two-similar into the best single version), **verify** your + the incoming additions
+> survived, push again. **NEVER force-push a shared branch (`live-defi-rollout` / `main`)** — there is no force-push and
+> no tab branch in the Path-B ship path (`tab/<op>/N`, tab-mirror, `force-with-lease`-to-a-tab-branch are all RETIRED;
+> if you see such instructions anywhere, they are STALE). SSOT: `codex/05-infrastructure/per-tab-worktrees.md`.
 
 1. **Pass 1 — full quality gate writes the sentinel.** `cd <repo> && bash scripts/quality-gates.sh` MUST exit 0 on your
    current HEAD. On exit 0 it writes `.qg_last_passed_sha` (== HEAD). Skipping Pass 1 means the change never ran tests,
@@ -149,10 +147,11 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
    or blind-overwrite — run the recovery recipe: preserve the peer's commits, stash YOUR files by name,
    `git pull --rebase`, reconcile the ESSENCE of both sides, re-run `quality-gates.sh`, re-run quickmerge
    (`QUICKMERGE_ALLOW_BEHIND=1` is emergency-only). Same recipe as the autostash-conflict rule. **The block is now a
-   structured one-liner you can parse**: `QUICKMERGE_BLOCKED code=<BEHIND_DIVERGED_CONFLICT|AUTOSTASH_POP_CONFLICT>
-   repo=… branch=… behind=… ahead=… conflicts="…"` + a `RECOVERY:` line. `AUTOSTASH_POP_CONFLICT` = your local edits are
-   in `git stash list` (recover by name; never `git stash drop` them); `BEHIND_DIVERGED_CONFLICT` = the rebase was
-   aborted, your autostash is pending. (2026-06-17, shipped via `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.)
+   structured one-liner you can parse**:
+   `QUICKMERGE_BLOCKED code=<BEHIND_DIVERGED_CONFLICT|AUTOSTASH_POP_CONFLICT> repo=… branch=… behind=… ahead=… conflicts="…"` +
+   a `RECOVERY:` line. `AUTOSTASH_POP_CONFLICT` = your local edits are in `git stash list` (recover by name; never
+   `git stash drop` them); `BEHIND_DIVERGED_CONFLICT` = the rebase was aborted, your autostash is pending. (2026-06-17,
+   shipped via `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.)
 5. **Plan flip in same logical unit as code**: edit the plan checkbox `- [ ]` → `- [x] (commit-sha + brief evidence)`.
    Commit the plan flip with the **MANDATORY `docs(plans):` prefix** (`plan(...)` is hook-rejected) + push. A plan-flip
    on a PM `*.md`/`*.mdc` is docs fast-path (PR targets `main`); the PM staging→main bypass + main-backmerge keep PM
