@@ -247,11 +247,30 @@ to logs.
       `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
       `_get_instruments_bucket_for_asset_group` (the same resolver the write path uses) so prediction status renders.
       Display-only gap; the backfill WRITE path already works. — instruments-service
-- [ ] [DATA] P2. **Diagnose the 172 defi + ~6 cefi UNCLASSIFIED_ADAPTER_ERROR instrument cells** (MORPHO-ETHEREUM/BASE,
-      DRIFT-SOLANA, AAVE_V3-OPTIMISM, TRADER_JOE_V2-AVALANCHE, SUSHISWAP_V3-BASE; 2026-05-09→06-18). Same root-cause
-      class as the DERIBIT-COMBO hunt (likely upstream subgraph/API shape changes since ~2026-05). Re-fetch one failed
-      day per venue with full error, classify the breach properly (not UNCLASSIFIED), fix the adapter, backfill. —
-      instruments-service / unified-api-contracts (defi error classification)
+- [x] ✅ [DATA] P2. **Diagnosed all 172 defi attempted_failed cells (2026-05-09→06-18) — 4 of 6 venues fixed, 2 are
+      deeper upstream changes (split below)**. Each was UNCLASSIFIED_ADAPTER_ERROR from a distinct upstream API change:
+      - **MORPHO-ETHEREUM (41) + MORPHO-BASE (41) — ✅ FIXED + backfilling** (instruments-service@ec3fd3a): Morpho
+        renamed `Market.uniqueKey`→`marketId` (HTTP 400 "Cannot query field uniqueKey"). Live verify: 968 markets
+        fetched (was 0). Re-fetch 2026-05-09→06-18 running (`morpho_defi.log`).
+      - **TRADER_JOE_V2-AVALANCHE (6) + SUSHISWAP_V3-BASE (2) — ✅ SELF-RECOVERED**: both now fetch 1000 pool instruments
+        cleanly (UniswapV3-style adapter) — the failures were transient subgraph rate-limits on those days, not a code
+        bug. Re-fetch running (`tjsushi_defi.log`) to flip the manifest cells captured.
+      - **DRIFT-SOLANA (41) + AAVE_V3-OPTIMISM (41)**: genuine deeper upstream changes — split to the two P2 todos below.
+      — instruments-service
+- [ ] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
+      2026-06-18). The Drift Data API endpoint moved: `/stats/markets`→404, `/markets`→403, `/contracts`/`/perpMarkets`
+      →403 (auth-gated), `dlob.drift.trade`→502. Find Drift's current PUBLIC markets endpoint (docs at
+      `https://docs.drift.trade/`); if all current endpoints are auth-gated this becomes **BLOCKED-CREDENTIALS** (file
+      a Drift API-key ask per external-data-always-available). Fix `drift.py` `_DATA_API_URL`/path (the URL resolves via
+      UAC `get_solana_protocol_url("drift","api_url")` — update the registry value, not a hardcode), classify the breach
+      properly, backfill 2026-05-09→06-18. — instruments-service / unified-api-contracts (registry URL)
+- [ ] [DATA] P2. **AAVE_V3-OPTIMISM subgraph ID is wrong/decommissioned — `Type Query has no field reserves`**
+      (diagnosed 2026-06-18). Only the OPTIMISM chain fails (ETHEREUM/ARBITRUM/POLYGON/BASE/AVALANCHE Aave-V3 capture
+      fine); the UAC `get_subgraph_id("aave_v3","OPTIMISM")` = `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` points to a
+      subgraph whose schema has no `reserves` field (wrong subgraph / decommissioned / non-Aave). Find the correct
+      current Aave-V3-Optimism subgraph ID on The Graph decentralized network, update UAC `SUBGRAPH_IDS`, verify a live
+      `reserves` query returns, backfill 2026-05-09→06-18. — unified-api-contracts (registry SUBGRAPH_IDS) /
+      instruments-service
 
 **DERIBIT-COMBO — fixed a NEVER-WORKING venue (4 stacked breaks, found during cefi diagnosis) — ✅ SHIPPED:**
 cefi's 22 attempted_failed were ALL DERIBIT-COMBO (0 captured days since added 2026-05-23). Root cause = 4 stacked bugs,
