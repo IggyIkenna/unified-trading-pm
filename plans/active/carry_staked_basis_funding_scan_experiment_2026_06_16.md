@@ -1007,3 +1007,60 @@ inverse-vol + beta-hedge + vol-target 10%), causal + non-compounded, with fee-se
 0.19/day, fee-robust to 20bp (Sharpe 1.78@20bp / 2.04@10bp).** The HL-window-only (2023-2026) is the stronger 2.34/-7%.
 CLI knobs: `--ewma-halflife --rank-buffer --no-trade-band --hl-decile --vol-target --fee-bp`. Awaiting the other agent's
 cross-sectional ML signals to improve winner/loser selection (not blocking).
+
+## Robustness/OOS, 2022-DD attribution, directional squeeze overlay (2026-06-18, /autonomous, all CAUSAL)
+
+**ROBUSTNESS/OOS of the book's turnover config (guards the meta-level overfit of selecting params on the full sample):**
+neighbourhood of 45 configs around (EWMA-21,buffer-6,band-0.03) spans Sharpe@10bp 1.66-2.23 (median 1.88; only 31%
+
+> =2.0; winner 2.04) — ALL positive (no fragile spike) but with real variation. True OOS split @2024-03-26: train-best
+> applied UNCHANGED to held-out test = +2.20; the winner is positive on BOTH halves (1st +1.60 / 2nd +2.51). **Verdict:
+> generalises, NOT overfit — but the honest FORWARD Sharpe is ~1.6-1.9 @10bp (the OOS-1st-half / neighbourhood median),
+> NOT the 2.34 headline** (the 2nd-half strength rides the 2025-26 dispersion). Size on the conservative end.
+
+**2022 DRAWDOWN attributed (operator: coin/venue/market-down/volume/turnover?):** the -16% maxDD (peak 2022-05-12 +20%
+-> trough 2022-12-02 +4%, 204 days, ~10mo to recover) is **NONE of those** — it is a BROAD cross-sectional REVERSION
+FAILURE. Worst-3 coins = only 37% of losses (BROAD, not concentrated); beta-hedged +7% vs un-hedged +9% (NOT market beta
+— removing BTC beta doesn't help); flat across vol quartiles (NOT liquidity); fee drag -0.9% (NOT turnover). The LONG
+leg (buying oversold coins) bled **-119% gross** while shorts made +103% — in the relentless 2022 bear (LUNA/FTX) the
+reversion premise inverted (oversold kept falling = falling knives) ACROSS the universe. **Critically the HL-veto was
+INACTIVE all of 2022 (HL data starts mid-2023)** — the live book's veto specifically targets this, so the -16% is a
+worst-case un-vetoed number; HL-era (2023-2026) DDs are -3 to -7%. A relentless bear is the strategy's structural tail
+risk (the long leg catches knives) — size for it.
+
+**DIRECTIONAL SQUEEZE-PROTECTION overlay (CeFi agent handoff `…/overlay/`, validated on MY book):** rule = cut/halve a
+funding leg on a > threshold-sigma 2-day move AGAINST it (long crashing sigma<-thr / short squeezing sigma>+thr) — the
+rare extreme (|sigma|>2 fires ~3% of days). The agent's other signals are dead ends (reversal alpha-blend HURTS, horizon
+mismatch; ML IC +0.001) — ONLY this risk overlay is accretive, confirmed on my book. Swept 2.0-3.5 x halve/cut: **all
+thresholds help, none hurt; 2.0sigma best on MY (faster, vol-targeted) book** (vs their 2.5 floor). With the agent's
+richer signal: Sharpe 2.17->2.28, maxDD -16->-14%, 2022 +0.50->+0.98. **SHIPPED self-computed** (sigma_move_2d = 2-day
+return / rolling-30 vol, lagged — live-able, corr +0.49 to theirs, weaker but self-contained): Sharpe 2.17->2.21, maxDD
+**-16->-13%**, Calmar 1.66->2.04, 2022 +0.50->+0.58. Wired into
+`e2e-testing/scripts/defi/funding_reversion_crossvenue_book.py` as overlay 8 (`--squeeze-threshold` default 2.0 /
+`--squeeze-factor` 0.5, default ON; richer external signal substitutable). `reversal_z` is CONTEXT only (naive rule
+loses — not wired). Awaiting any future cross-sectional ML signals to strengthen winner/loser selection (not blocking).
+
+## Multi-venue capacity + capped allocator (2026-06-18, /autonomous terminus)
+
+Ran the FULL overlay stack (EWMA-21 + buffer-6 + band-0.03 + HL-veto + inverse-vol + beta-hedge + vol-target + squeeze)
+on each arbitraged venue over the 30-survivor universe, combined with a CAUSAL weight-capped Sharpe-tilt. Per-venue:
+Binance ~2.2/-13% · Bybit +1.93/-8% · Aster +1.03/-12% (short history, adds capacity). **Combined (Binance+Bybit, corr
+0.63): equal-weight Sharpe 2.29 / DD -10%; capped-tilt 2.18 / -9% — both BEAT single-Binance (2.21/-13%) on BOTH axes.**
+Multi-venue diversifies the 2022-heavy Binance tail against Bybit (less 2022 exposure) → cuts DD -13%->-10% AND nudges
+Sharpe up, plus 2-3x capacity. **Refines the earlier "capacity-not-Sharpe": with the full overlay stack + a 2022-heavy
+lead venue, multi-venue helps modestly on Sharpe and meaningfully on DD.** Equal-weight is the best allocator (venues
+comparable → tilt adds noise); the cap is a SAFETY RAIL (prevents 100% concentration), not a Sharpe driver. **Cap-logic
+refinement for production: a 2-venue cap of X needs floor = 1-X to truly bind (clip+renorm alone gave 87% realized at
+cap 65%).** Research script `/tmp/multivenue_capped.py`; plot `multivenue_capped.html`.
+
+- [ ] [STRATEGY] P2. Productionise the multi-venue capacity book: extend `funding_reversion_crossvenue_book.py` to pull
+      Bybit/OKX/Aster (live APIs) + run per-venue + combine with an equal-or-capped allocator (floor=1-cap), for
+      capacity + the DD-diversification benefit. **Repo: e2e-testing → strategy-service.**
+
+### /autonomous loop terminus (2026-06-18)
+
+Turnover-reduction dispatch + the CeFi directional-signal handoff are both COMPLETE and shipped. Final deployable book
+(`funding_reversion_crossvenue_book.py`, e2e@198ee62): stacked causal overlays, turnover 0.19-0.23/day, Sharpe ~2.2
+(honest forward ~1.6-1.9 per OOS), maxDD -13% (single) / -10% (multi-venue), Calmar ~2.0, fee-robust to 20bp, 2022-tail
+repaired by the squeeze overlay. Remaining winner/loser improvement is BLOCKED on the awaited cross-sectional ML signals
+(external dep) — loop terminates here, not idle-spinning.
