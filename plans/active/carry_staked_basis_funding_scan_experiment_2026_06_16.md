@@ -1039,3 +1039,28 @@ return / rolling-30 vol, lagged — live-able, corr +0.49 to theirs, weaker but 
 `e2e-testing/scripts/defi/funding_reversion_crossvenue_book.py` as overlay 8 (`--squeeze-threshold` default 2.0 /
 `--squeeze-factor` 0.5, default ON; richer external signal substitutable). `reversal_z` is CONTEXT only (naive rule
 loses — not wired). Awaiting any future cross-sectional ML signals to strengthen winner/loser selection (not blocking).
+
+## Multi-venue capacity + capped allocator (2026-06-18, /autonomous terminus)
+
+Ran the FULL overlay stack (EWMA-21 + buffer-6 + band-0.03 + HL-veto + inverse-vol + beta-hedge + vol-target + squeeze)
+on each arbitraged venue over the 30-survivor universe, combined with a CAUSAL weight-capped Sharpe-tilt. Per-venue:
+Binance ~2.2/-13% · Bybit +1.93/-8% · Aster +1.03/-12% (short history, adds capacity). **Combined (Binance+Bybit, corr
+0.63): equal-weight Sharpe 2.29 / DD -10%; capped-tilt 2.18 / -9% — both BEAT single-Binance (2.21/-13%) on BOTH axes.**
+Multi-venue diversifies the 2022-heavy Binance tail against Bybit (less 2022 exposure) → cuts DD -13%->-10% AND nudges
+Sharpe up, plus 2-3x capacity. **Refines the earlier "capacity-not-Sharpe": with the full overlay stack + a 2022-heavy
+lead venue, multi-venue helps modestly on Sharpe and meaningfully on DD.** Equal-weight is the best allocator (venues
+comparable → tilt adds noise); the cap is a SAFETY RAIL (prevents 100% concentration), not a Sharpe driver. **Cap-logic
+refinement for production: a 2-venue cap of X needs floor = 1-X to truly bind (clip+renorm alone gave 87% realized at
+cap 65%).** Research script `/tmp/multivenue_capped.py`; plot `multivenue_capped.html`.
+
+- [ ] [STRATEGY] P2. Productionise the multi-venue capacity book: extend `funding_reversion_crossvenue_book.py` to pull
+      Bybit/OKX/Aster (live APIs) + run per-venue + combine with an equal-or-capped allocator (floor=1-cap), for
+      capacity + the DD-diversification benefit. **Repo: e2e-testing → strategy-service.**
+
+### /autonomous loop terminus (2026-06-18)
+
+Turnover-reduction dispatch + the CeFi directional-signal handoff are both COMPLETE and shipped. Final deployable book
+(`funding_reversion_crossvenue_book.py`, e2e@198ee62): stacked causal overlays, turnover 0.19-0.23/day, Sharpe ~2.2
+(honest forward ~1.6-1.9 per OOS), maxDD -13% (single) / -10% (multi-venue), Calmar ~2.0, fee-robust to 20bp, 2022-tail
+repaired by the squeeze overlay. Remaining winner/loser improvement is BLOCKED on the awaited cross-sectional ML signals
+(external dep) — loop terminates here, not idle-spinning.
