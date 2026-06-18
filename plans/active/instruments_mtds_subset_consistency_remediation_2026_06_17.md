@@ -187,6 +187,36 @@ canonicalized + reconciled (cell-keyed, correct).
 - No code tarball in `gs://deployment-scripts-…/code/instruments-code.tar.gz` (need `create-code-tarballs.sh` first).
 - No instr-backfill VM currently running.
 
+**Discovery — instrument-store state per AG (read-first, 2026-06-18 22:30 UTC; IS@02cb876 + UAC@aeae389 + subscription
+guard installed):** ran the IS `--operation status` + read each `instruments-store-{ag}-prd` `_index/availability_index.parquet`:
+
+- **tradfi — ALREADY FULLY BACKFILLED to date (B0 effectively done for tradfi):** 11,418 captured / 256 empty_confirmed,
+  cov 1.0, **0 attempted_failed, 0 date gaps.** 6 venues continuous DAILY: CME/FX/ICE/CBOE 2020-01-01→2026-06-18,
+  NASDAQ/NYSE 2023-04-15(subscription start)→2026-06-18 (distinct-days == calendar-span ⇒ no missing day). The new
+  3-dataset subscription guard (`assert_databento_request_allowed`, dataset-level shard-isolation) is installed on the IS
+  `definition` fetch but matters only for FUTURE/forced fetches — existing tradfi instrument rows are already the right
+  universe (CBOE/CME/ICE/NASDAQ/NYSE/FX), no banned datasets present. `--force` re-fetch would isolate any off-allowlist
+  dataset, not hard-fail. **Verdict: tradfi B0 = COMPLETE; no backfill action needed (only forward daily keep-green).**
+- **cefi — cov 0.999 (28,552 captured / 22 attempted_failed); real F1/F2 gaps confirmed:** KRAKEN-SPOT/KRAKEN-FUTURES
+  have only 2 days (2026-06-17/18) vs earliest_venue_date 2020-01-01 → **~6yr backfill needed**; LIGHTER-ZKSYNC
+  (2024-08-01), EXTENDED-STARKNET (2024-10-01), PACIFICA-SOLANA (2025-06-01) **ABSENT entirely**; BITGET-FUTURES/SPOT
+  578 days from 2024-11-08 (the F2 5-missing-days). 22 attempted_failed to diagnose.
+- **defi — cov 0.998 (75,706 captured / 172 attempted_failed):** 95 venues, 2020-01-20→2026-06-18. 172 failed to
+  diagnose.
+- **sports — high cov on most entities;** RED-by-design: SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES cov 0.000 (all
+  attempted_failed — credentialed/blocked sources, see F-track). INJURIES/ODDS ~0.96.
+- **prediction — NO per-AG instruments-store entry in the bucket SSOT** (`Available: CEFI/DEFI/SPORTS/TRADFI`); resolves
+  to the FLAT kind `instruments-store-pred-prd-central-element-323112`. 500 captured POLYMARKET, 2025-03-14→**2026-06-09**
+  (9-day stale; the `--operation status` path can't read the flat-kind bucket — status-CLI limitation, backfill path is
+  fine via `resolve_instruments_store_kind`).
+- **The IS CLI is idempotent + manifest-driven:** a re-run on a date already fresh in the manifest SKIPs ("all N
+  venues/entities already fresh — use --force"). So a backfill targets dates NOT in the manifest (the absent venues /
+  Kraken history) or uses `--force` to refresh.
+
+**B0 plan (this run):** tradfi DONE. Drive cefi F1 (Kraken 6yr + 3 absent venues) + F2 (BITGET 5d) + prediction
+freshness + diagnose defi/cefi attempted_failed. Monitored local CLI per venue (idempotent, skips fresh days), streamed
+to logs.
+
 > **Dependency order (operator 2026-06-18):** (B0) backfill instruments to NO-MISSING first → (B1) regen the instrument
 > catalogue (it aggregates instruments) → (B2) codify MVP-universe vs total-reasonable-universe (so the backfill config
 >
