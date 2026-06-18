@@ -811,3 +811,60 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
       and flatter the strategy. **Repo: e2e-testing → strategy-service backtest (GroupBRunner).**
 - [ ] [DATA] P2. (blocked-by issue doc) once exact discrete per-settlement funding is readable, switch the harness off
       the day-mean workaround to true per-settlement realised funding.
+
+## ML-Agent Handoff — funding-rate prediction (data + code locations, 2026-06-18)
+
+Self-contained pointer set for the separate ML agent (who has its own features + better predictions) to combine
+everything and push the within-coin predictive IC up. **All data is already in GCS production buckets; all code is in
+the repos. Test downstream in the production spine (MTDS → features-service → strategy-service), not just the e2e
+research harness.**
+
+**WHERE THE DATA IS (GCS, project `central-element-323112`):**
+
+- **Hyperliquid funding + price/OI (DeFi bucket, full ~230-coin universe, 2023-05-20→today, 100% coverage):**
+  `gs://perp-funding-central-element-323112/raw_tick_data/by_date/day={YYYY-MM-DD}/pipeline_mode=batch_hyperliquid/asset_group=defi/venue=HYPERLIQUID/chain=HYPERLIQUID/instrument_type=perpetual/data_type={DT}/`
+  with `{DT}` ∈ `perp_funding` (hourly `funding_rate`+`premium`) and `perp_daily_ctx` (daily-close `mark_price` +
+  `day_ntl_vlm` + `open_interest`). Symbol = bare coin (`BTC`). **Legacy-layout caveat:** historical days
+  (2025/early-2026) were written BEFORE the `pipeline_mode=` partition — readers must try BOTH the
+  `pipeline_mode=batch_hyperliquid/…` path AND the bare `…/day=D/asset_group=defi/…` path (the harness loaders already
+  do).
+- **CeFi derivative_ticker (Binance/Bybit/OKX/Deribit/Kraken/Bitget/… funding + mark_price, tick-level):**
+  `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day={D}/pipeline_mode={MODE}/asset_group=cefi/venue={VENUE}/instrument_type=perpetual/data_type=derivative_ticker/{SYM}.parquet`.
+  `{MODE}` = `batch_tardis` for the CeFi venues, `batch_hyperliquid` for HL's CeFi mirror. Columns: `funding_rate`,
+  `mark_price`, `index_price`, `last_price`, `funding_timestamp`. **Venue dirs:** `BINANCE-FUTURES`, `BYBIT`,
+  `OKX-SWAP`, `DERIBIT`, `KRAKEN-FUTURES`, `BITGET-FUTURES`, … (perp list is broad; majors-only for some). **Symbol
+  formats differ:** Binance/Bybit `BTCUSDT`, OKX `BTC-USDT-SWAP`, HL-CeFi-mirror `BTC-PERP`. Curated ~20-coin Tardis
+  coverage (not the full HL universe).
+- **HL raw S3 archive (requester-pays, Secret Manager `aws-hyperliquid-s3`, bucket `hyperliquid-archive`):**
+  `asset_ctxs/{YYYYMMDD}.csv.lz4` (minute-res funding/OI/premium/oracle_px/mark_px/mid_px/impact_bid/ask/day_ntl_vlm —
+  the source the GCS backfill downsamples) and `market_data/{YYYYMMDD}/{hour}/l2Book/` (hourly **L2 order-book
+  snapshots** → order-book imbalance, the faster squeeze signal; no standalone liquidations feed — infer from
+  book/fills).
+
+**THE CODE (repos, all on `live-defi-rollout`):**
+
+- `e2e-testing/scripts/defi/staked_basis_funding_scan.py` — funding research harness. Reusable loaders:
+  `_load_hl_funding(client, frozenset(_live_hl_universe()), days, workers)` → funding points (`.day/.base/.apy_bps`);
+  `_load_hl_ctx(client, days, workers)` → `{day:{coin:(mark_px,vol)}}`; `_date_range(start,end)`; `_run_xsec_carry`
+  (cross-sectional carry backtest). Cross-venue IC reader pattern is inline in the experiment journal.
+- `e2e-testing/scripts/defi/funding_regime_classifier.py` — the LightGBM regime classifier + the IC `decompose()`
+  (between-coin selection vs within-coin predictive). Run it: prints the decomposition + decile tilt + grouped-CV AUC,
+  saves `/tmp/funding_regime/funding_regime_panel.parquet` + `funding_regime_classifier.txt`.
+- `market-tick-data-service/scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` +
+  `backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py` — the S3→GCS backfillers (extend for new data_types).
+
+**WHAT WE FOUND (don't repeat; build on it):** funding≈adverse price (efficient); the apparent liquidity/venue regime
+split is a **+0.31 between-coin SELECTION artifact**, genuine within-coin predictive IC ≈ **+0.02** (≈0); regime
+classifier AUC **0.64** (modest); squeeze-end NOT predicted by slow daily features (persistence/extension/vol/ΔOI all →
+continuation or flat). **DISCIPLINES:** (1) DEMEAN funding per-coin before any model — raw level encodes the
+un-tradeable selection effect; (2) |IC|>0.15 is a red flag for a confound, not a win; (3) treat the regime as a weak
+soft-conditioner. **CANONICAL caveat:** `perp_daily_ctx` is a research-grade (non-UAC, manifest-invisible) data_type —
+canonicalize to `derivative_ticker` + register + manifest-track BEFORE any production features-service/strategy-service
+pipeline depends on it.
+
+**THE TASK (for the ML agent):** combine your own features + better predictions with the funding features above; raise
+the **within-coin (demeaned)** predictive IC (the only honest target); build the squeeze/reversal classifier from the
+FASTER signals (funding inflection, L2-book imbalance from the HL archive, OI dynamics) since the slow features are
+confirmed non-predictors; then WIRE + TEST in the production spine — features in `features-service` (feature registry),
+signal in `strategy-service` (`CarryStakedBasisRankAllocator`), data via `market-tick-data-service` — to see how far we
+actually are toward production. Paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the top of any sub-agent spawn.
