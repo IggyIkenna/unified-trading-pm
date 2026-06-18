@@ -352,7 +352,7 @@ an upstream limitation, NOT a silent placeholder).
       (genesis/first-seen/last-seen per instrument) → decide cadence + un-pause the daily schedulers (or keep manual).
       data-status "could-exist" + the expected_unattempted enumerator (`enumerate_expected_universe.py`) read this —
       stale catalogue = wrong could-exist universe. — instruments-service/deployment-service
-- [ ] [DESIGN] P1. **B2 — codify MVP-universe vs TOTAL-REASONABLE-universe (NOT codified anywhere — confirmed gap)**:
+- [x] ✅ [DESIGN] P1. **B2 — codify MVP-universe vs TOTAL-REASONABLE-universe (NOT codified anywhere — confirmed gap)**:
       define in UAC (registry) the two distinct expected-universes so we know what we SHOULD have (drives the backfill
       config + data-status denominators): dimensions = base_currency × venue × data_type × (DeFi-pool by volume
       threshold) × fixtures (sports) × combinations; canonical sources = hardcoded (chain genesis dates, VIX-index) vs
@@ -360,7 +360,13 @@ an upstream limitation, NOT a silent placeholder).
       full could-exist universe; **MVP** = the subset the May-23 archetypes need. Scan
       `path_to_100pct_backfill_mtds_is_2026_06_17.md` + the current `enumerate_expected_universe.py` + UAC registry for
       how far this exists + outliers; codify the gap as a UAC SSOT both the enumerator + the backfill config +
-      data-status read from. — unified-api-contracts/instruments-service
+      data-status read from. — unified-api-contracts/instruments-service —
+      **UAC SSOT SHIPPED: unified-api-contracts@b654eb6** — `canonical/crosscutting/total_universe.py`
+      (`TOTAL_UNIVERSE_AXES` per-AG selection-axis taxonomy with base_currency/venue/data_type/defi_pool_volume/
+      fixtures/combinations; `UniverseProvenance` HARDCODED_GENESIS-vs-DOWNLOAD_DERIVED taxonomy; `UniverseTier` +
+      `universe_membership()` classifier MVP⊆TOTAL; config-version descriptor) + 9 unit tests, all exported from the
+      UAC root facade. The instruments-service consumer wiring (`enumerate_expected_universe.py` reading these axes for
+      the could-exist denominator) is the downstream half, tracked under B0/B1 + path_to_100pct backfill.
 - [ ] [DATA] P0. **B0 — backfill instruments to NO-MISSING (prereq for B1 catalogue + all expected-universe
       consumers)**: the F1/F2 instrument backfills below + the broader could-exist instrument backfill tracked in
       `path_to_100pct_backfill_mtds_is_2026_06_17.md`. Other services rely on instruments to know what's
@@ -442,6 +448,64 @@ schema_v9=100%, pipeline_mode/source/asset_group=100%, captured preserved (defi 
       (incl the 31,773 newly-migrated). schema_v9/pipeline_mode/source/asset_group all 100% per AG;
       pre-apply snapshots written. In-place chosen over the rebuild (rebuild projections were
       dup-inflated/captured-regressing → would corrupt the deduped index). — market-tick-data-service
+
+## MARKET-DATA `_index` venue/instrument_type SPELLING canonicalisation (N6r) — DONE for defi; pred/tradfi/cefi/sports VERIFIED-CLEAN (2026-06-18)
+
+> Operator dispatch 2026-06-18: "everything needs to be canonical, fix it all" — now UNBLOCKED by the legacy-duplicate
+> delete (2,874,085 objects / 168.72 GB freed → GCS holds ONLY canonical-spelling objects). The live `_index` still
+> carried LEGACY venue/instrument_type SPELLINGS that no longer match canonical GCS (the v9-column populator above did
+> NOT touch spellings).
+
+**Method (read-only audit FIRST, per AG):** `audit_index_vs_gcs_spellings.py` (mtds, new) walks canonical GCS
+(`pipeline_mode=*/asset_group=*/venue=*/` delimiter-walk) → the ACTUAL venue/itype spelling SET on disk; diffs vs the
+live `_index` captured-cell spellings. Verdict per AG = (a) captured index venue spellings absent from canonical GCS
+(legacy stragglers), (b) canonical GCS venues with no captured index row (completeness gaps).
+
+| AG     | captured venues | GCS canonical venues | captured-spelling stragglers | completeness gaps | verdict |
+| ------ | --------------- | -------------------- | ---------------------------- | ----------------- | ------- |
+| pred   | 2               | 1 (POLYMARKET)       | `UNKNOWN`(21)                | 0                 | CLEAN + 1 straggler→todo |
+| tradfi | 6               | 6                    | 0                            | 0                 | **CLEAN — no action** |
+| cefi   | 21              | 18                   | `COINBASE`(7)/`OKX`(7)       | 0                 | CLEAN + tiny stragglers→todo |
+| sports | 29             | 27                   | `UNIBET_EU`(11)/`UNKNOWN`(3) | 0                 | CLEAN + tiny stragglers→todo |
+| defi   | 30             | 30                   | **50 venue spellings (256k captured rows)** | 0  | **REBUILT (N6r)** |
+
+**DeFi (the headline) — `canonicalize_mtds_index.py` extended with N6r venue-spelling-canon + dedup-merge
+(mtds, this run):** the prior "defi venue NOT normalised (STOP)" block (object-desync risk under COPY-not-MOVE) is now
+SATISFIED *by* the rewrite — a legacy-spelling index row (`UNISWAPV3`/`AAVEV3-ETHEREUM`) points at a DELETED object
+spelling and MUST be re-pointed to the canonical spelling (`UNISWAP_V3`/`AAVE_V3`) whose object is the only one left on
+disk. **GCS-VERIFIED remap rule** (NOT blind `_canonical_defi_venue`): remap `V`→canon(V) ONLY when canon(V)≠V AND the
+LITERAL `V` venue dir is ABSENT from canonical GCS; a venue still live on GCS is KEPT. This protected the two genuine
+coexisting-distinct-data exceptions — `SUSHISWAP` (captured rows resolve 12/12 to `venue=SUSHISWAP` objects, 0/12 to
+`SUSHISWAP_V3`) and `YEARNV3` — which a blind canon would have desynced/false-merged. Dedup-merge after the remap keeps
+the CAPTURED row over any non-captured twin.
+
+**Content gate (CRITICAL) — PASSED:** dry-run on the live defi `_index`: 48 spellings remapped (254,812 captured rows
+re-pointed; SUSHISWAP/YEARNV3 kept), 24,280 duplicate cell-keys collapsed (23,866 all-captured legacy↔canonical twins +
+414 all-non-captured; **0 keys mix captured+non-captured** → no captured cell ever shadowed). captured 391,430 →
+367,564 rows = exactly the legitimate legacy↔canonical captured-twin dedup (−23,866); **every distinct captured
+cell-key survives** + 40/40 random remapped captured cells `gcs_describe`-verified to have their canonical object.
+Final invariants: `venue_noncanon_remaining=0`, `captured_venue_not_on_gcs_remaining=0`, `itype_noncanon_remaining=0`.
+
+- [ ] [SCRIPT] P1. **DeFi `_index` venue-spelling canon + dedup-merge (N6r) `--apply`** — code DONE
+      (`canonicalize_mtds_index.py` N6r, mtds@<sha>): GCS-verified venue remap (literal-gone→canon-exists; KEEP
+      SUSHISWAP/YEARNV3 still-live) + captured-first dedup-merge. Dry-run content-gate PASSED (above). PENDING: snapshot
+      live defi `_index` → `_index/snapshots/pre_canonical_rebuild_defi_2026_06_18.parquet` → `--apply` → re-verify with
+      `audit_index_vs_gcs_spellings.py` (0 captured stragglers). — market-tick-data-service
+- [ ] [DATA] P2. **pred `_index`: 21 captured `UNKNOWN`-venue `trades` cells (2025-03-14..)** — GCS has `venue=POLYMARKET`
+      only; these legacy `UNKNOWN`-venue rows have blank instrument_id (aggregate/legacy) and no `venue=UNKNOWN` object.
+      Recover the real POLYMARKET venue (join to the same-day `pipeline_mode=batch_polymarket_clob/venue=POLYMARKET`
+      object) or route to honest-absence. Composes with N8 (pred label drift). — market-tick-data-service
+- [ ] [DATA] P2. **cefi `_index`: `COINBASE`(7)+`OKX`(7) captured rows with BLANK data_type/instrument_type** — GCS has
+      `venue=COINBASE-SPOT`/`OKX-SPOT`/`OKX-SWAP` (market-type-suffixed), NOT bare `COINBASE`/`OKX`. These are malformed
+      blank-shard-dim aggregate captured rows with no concrete object; the bare→suffixed map is AMBIGUOUS (SPOT vs
+      FUTURES vs SWAP) so NOT a mechanical spelling-canon. Diagnose the writer that emitted blank-dim bare-venue rows;
+      reclassify (the real per-market data is captured under the suffixed venues). EXTENDED-STARKNET(1) IS on GCS
+      (sample miss, no action). — market-tick-data-service
+- [ ] [DATA] P2. **sports `_index`: `UNIBET_EU`(11)+`UNKNOWN`(3) captured rows under wrong `pipeline_mode`** — the
+      bookmaker venues (BETMGM/BETWAY/BOVADA/UNIBET_EU) exist on GCS under `pipeline_mode=batch_odds_api/venue=<bk>/`
+      but these index rows carry `pipeline_mode=batch_api_football` → venue spelling is correct, the
+      pipeline_mode/source is mislabeled. Re-stamp pipeline_mode/source to the odds_api source (or honest-absence for
+      genuinely-absent cells). Composes with N3a (null-league) / N3b (null-source). — market-tick-data-service
 
 ## INSTRUMENTS-STORE buckets — legacy GCS audit + `_index` canonicalisation COMPLETE (2026-06-18)
 
