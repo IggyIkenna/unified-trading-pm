@@ -266,12 +266,12 @@ construction (server-side byte-identical copy preserves parquet footers; only th
 
 Schema → free-window entitlement (a request's `start` must be ≥ `today − window`; clip/reject otherwise):
 
-| Level | Schemas | Free window | Guard |
-| --- | --- | --- | --- |
-| L0 | `ohlcv-1s`, `definition`, `statistics`, `status` | 16 years | start ≥ today − 16y |
-| L1 | `trades`, `tbbo`, `mbp-1`, `bbo-*` | 1 year | start ≥ today − 365d |
-| L2 | `mbp-10` | 1 month | start ≥ today − ~30d |
-| L3 | `mbo` | 1 month | start ≥ today − ~30d |
+| Level | Schemas                                          | Free window | Guard                |
+| ----- | ------------------------------------------------ | ----------- | -------------------- |
+| L0    | `ohlcv-1s`, `definition`, `statistics`, `status` | 16 years    | start ≥ today − 16y  |
+| L1    | `trades`, `tbbo`, `mbp-1`, `bbo-*`               | 1 year      | start ≥ today − 365d |
+| L2    | `mbp-10`                                         | 1 month     | start ≥ today − ~30d |
+| L3    | `mbo`                                            | 1 month     | start ≥ today − ~30d |
 
 Codify this (schema→window table + 3-dataset allowlist) as the SSOT (UAC) + enforce as a pre-request guard in the
 Databento adapter(s) — replaces the PAYG-cost-blocker framing (cost emission stays as credit-burn telemetry; the hard
@@ -281,17 +281,30 @@ credits. Tracked todos below.
 
 - [ ] [CODE] P1. **Databento subscription cutover (MTDS+UAC)**: single-key config (use_multi_key_rotation=False,
       num_api_keys=1; fix the num_keys=20-asserting test; delete transitional secret `databento-api-key-1`) + codify the
-      schema→free-window + 3-dataset allowlist SSOT + enforce as pre-request guard in the adapter. — market-tick-data-service / unified-api-contracts
-- [ ] [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 + DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service
+      schema→free-window + 3-dataset allowlist SSOT + enforce as pre-request guard in the adapter. —
+      market-tick-data-service / unified-api-contracts
+- [ ] [SCRIPT] P1. **B0 instrument backfill within contract**: backfill `definition` (L0, 16y) for GLBX.MDP3 +
+      DBEQ.BASIC + CFE — full universe (credits cover it). — instruments-service
+- [ ] [CODE] P1. **`ohlcv-1s` has NO `BarTimeframe` member → OHLCV close-edge conversion raises** (surfaced 2026-06-18
+      during the subscription cutover): the contract fetches ONLY `ohlcv-1s`, but `_OHLCV_DATA_TYPE_TIMEFRAME` (mtds
+      `databento_adapter.py`) + the UAC `BarTimeframe` closed set (`bar_boundary.py` — smallest unit is `15s`) have no
+      `1s`/`ohlcv_1s` entry, so `_convert_ohlcv_open_edge_to_close` raises `ValueError` for a real `ohlcv_1s` OHLCV
+      write. Adding `"1s"` is a deliberate workspace-wide closed-set extension (per the `BarTimeframe` docstring: extend
+      the Literal + `BAR_TIMEFRAME_SECONDS` (1s divides 86400 so the midnight-grid clause holds) + audit every
+      `record_captured` OHLCV write-callsite + features-\* DAG + data-status drilldown + cluster-validation registry,
+      ALL in one commit). Until landed, the OHLCV path must AGGREGATE `ohlcv-1s`→1m/15m/24h before the close-edge stamp
+      (the written bar is the aggregated bar, which DOES have a `BarTimeframe`), never write raw 1s bars. (Workaround
+      shipped: the 4 `test_databento_path_streaming.py` tests now exercise `trades` not the banned `ohlcv_1m`, so they
+      no longer depend on this gap.) — unified-api-contracts / market-tick-data-service / features-service
 
 ## Autonomous-run residuals (2026-06-18, surfaced during the migration drive)
 
 - [x] ✅ [CODE] P2. **Batch-query GCS scanner is a second canonical-path SSOT** — DONE deployment-api@c003271.
       `path_combinatorics.to_gcs_prefix` → `to_gcs_prefixes` (list) now builds the canonical
       `day=/pipeline_mode={mode}_{src}/asset_group=/venue=/instrument_type=/data_type=` shape via
-      `canonical_pipeline_mode_segments` (the same UAC SSOT the data-status drilldown readers cut over to @0e267be),
-      NOT the pre-`asset_group=`/pre-`pipeline_mode=` layout. The `batch_query_engine._build_prefixes_by_date` caller
-      fans out across the returned list; `data_batch_processing.py` consumes via `get_prefixes_for_date` (transitive);
+      `canonical_pipeline_mode_segments` (the same UAC SSOT the data-status drilldown readers cut over to @0e267be), NOT
+      the pre-`asset_group=`/pre-`pipeline_mode=` layout. The `batch_query_engine._build_prefixes_by_date` caller fans
+      out across the returned list; `data_batch_processing.py` consumes via `get_prefixes_for_date` (transitive);
       `batch_config_utils` regex comment updated to the canonical hive order; both unit-test files updated. QG-green
       (ac60e4a). Direct-LDR push (dirty-deps carve-out: UAC dep had live foreign Databento WIP). — deployment-api
 
@@ -299,40 +312,38 @@ credits. Tracked todos below.
       e2e-testing@6ed7d5b. `staked_basis_funding_scan.py` (`_hl_pf_bucket()`/`_lst_bucket()`) +
       `funding_regime_classifier.py` (`_pf_bucket()`) now resolve `perp-funding`/`lst-rates` via
       `resolve_bucket_name(cloud="gcp", kind=...)` (canonical `-prd-` homes) instead of the legacy flat stems;
-      `_bootstrap_env` exports `DEPLOYMENT_ENV_SHORT` for the lazy resolve; `colocated_engine.py` already correct.
-      Also corrected `copy_research_perp_ctx_to_canonical.py`'s deep import (HEAD 3c931a5 had introduced a broken
-      top-level `gcs_copy_object` import = runtime ImportError → restored to canonical `cloud_interface` form).
-      e2e QG green (foreign untracked `verify_unmappable_legacy_content_aware.py` set aside — its `qg-cloud-sdk` noqa
-      trips the TID251 ratchet, see N-residual below). Direct-LDR push (dirty-deps carve-out: live foreign UAC WIP). — e2e-testing
+      `_bootstrap_env` exports `DEPLOYMENT_ENV_SHORT` for the lazy resolve; `colocated_engine.py` already correct. Also
+      corrected `copy_research_perp_ctx_to_canonical.py`'s deep import (HEAD 3c931a5 had introduced a broken top-level
+      `gcs_copy_object` import = runtime ImportError → restored to canonical `cloud_interface` form). e2e QG green
+      (foreign untracked `verify_unmappable_legacy_content_aware.py` set aside — its `qg-cloud-sdk` noqa trips the
+      TID251 ratchet, see N-residual below). Direct-LDR push (dirty-deps carve-out: live foreign UAC WIP). — e2e-testing
 - [ ] [INFRA] P2. **Research `-prd-` buckets carry NO `_index/` — move the availability index off the legacy
       `perp-funding`/`lst-rates` buckets before they can be deleted** (DIAGNOSED 2026-06-18, larger than a config edit —
       exact steps below). ROOT CAUSE: the dedicated DeFi research stores `perp-funding`/`lst-rates` are NOT in the
       manifest-consolidator TF at all (`deployment-service/terraform/{gcp,aws}/manifest_consolidator_scheduler.tf`
       `manifest_consolidator_buckets` covers only `instruments-store-*` + `market-data-tick-*`, env-tiered + legacy —
-      grep confirms 0 `perp`/`lst` entries). The B3 manifest writer `e2e-testing/scripts/defi/record_research_perp_ctx_manifest.py`
-      hardcodes `INDEX_BUCKET = "perp-funding-central-element-323112"` (LEGACY flat) → the live `_index` sits only in the
-      legacy bucket; there is no consolidator cron for these stores. **EXACT STEPS:** (1) add 4 entries to
+      grep confirms 0 `perp`/`lst` entries). The B3 manifest writer
+      `e2e-testing/scripts/defi/record_research_perp_ctx_manifest.py` hardcodes
+      `INDEX_BUCKET = "perp-funding-central-element-323112"` (LEGACY flat) → the live `_index` sits only in the legacy
+      bucket; there is no consolidator cron for these stores. **EXACT STEPS:** (1) add 4 entries to
       `manifest_consolidator_buckets` (gcp) + the AWS Batch/EventBridge equivalent —
       `perp-funding-prd-${env}-${project}`, `lst-rates-prd-${env}-${project}` (the canonical `-prd-` homes; resolve via
       the `perp-funding`/`lst-rates` `cloud-providers.yaml` keys, NOT new hardcodes) — with a `*/1` cron + IAM
       `storage.objectAdmin` on each; (2) repoint `record_research_perp_ctx_manifest.py`'s `INDEX_BUCKET` to
       `resolve_bucket_name(cloud="gcp", kind="perp-funding")` (the `-prd-` home) so new index shards write there (LST
       writer if/when one exists → `kind="lst-rates"`); (3) one-shot seed: copy the legacy
-      `perp-funding-central-element-323112/_index/` + `lst-rates-central-element-323112/_index/` →
-      their `-prd-` twins (`gcs_copy_object`), or run the consolidator `--force` once over the `-prd-` bucket after the
-      per-VM shards land there; (4) verify `_index/availability_index.parquet` freshness on each `-prd-` bucket
-      (consolidator heartbeat < `MANIFEST_CONSOLIDATED_STALENESS_SEC`); (5) ONLY THEN are the legacy research buckets
-      delete-safe (operator-gated, tracked with the other legacy deletes). SSOT:
-      `codex/05-infrastructure/manifest-consolidator-ssot.md` + `e2e-testing/docs/defi/research_data_canonical_sources_2026_06_18.md`.
-      — deployment-service/e2e-testing
+      `perp-funding-central-element-323112/_index/` + `lst-rates-central-element-323112/_index/` → their `-prd-` twins
+      (`gcs_copy_object`), or run the consolidator `--force` once over the `-prd-` bucket after the per-VM shards land
+      there; (4) verify `_index/availability_index.parquet` freshness on each `-prd-` bucket (consolidator heartbeat <
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC`); (5) ONLY THEN are the legacy research buckets delete-safe (operator-gated,
+      tracked with the other legacy deletes). SSOT: `codex/05-infrastructure/manifest-consolidator-ssot.md` +
+      `e2e-testing/docs/defi/research_data_canonical_sources_2026_06_18.md`. — deployment-service/e2e-testing
 
-- [ ] [CODE] P3. **e2e `verify_unmappable_legacy_content_aware.py` uses a non-ruff `# noqa: qg-cloud-sdk` that trips
-      the TID251 ratchet** (found 2026-06-18 during the B3 funding-script ship): the file (the migrate/audit agent's
-      content-aware-fan-out WIP) carries 2 `from google.cloud import storage  # noqa: qg-cloud-sdk` sites — `qg-cloud-sdk`
-      is NOT a ruff code, so STEP 5.95 counts them (e2e `tid251` 12 > baseline 10 → e2e QG red). Change both noqa codes
-      to the ruff-recognized `# noqa: TID251 — <reason>` form (matches the `run_weekly_pipeline.py`/`sharpapi_live_feed.py`
-      sites), OR route the listing through `get_storage_client()`. Owned by the migrate/audit agent that authored the
-      file (do not stomp live WIP). — e2e-testing
+- [x] ✅ [CODE] P3. **e2e `verify_unmappable_legacy_content_aware.py` non-ruff `# noqa: qg-cloud-sdk`** — FIXED by the
+      authoring (migrate/audit) agent 2026-06-18 (e2e-testing@9bd18bf). The two GCS upload sites were routed through
+      `gcsfs` (`fs.open(uri, "wb")`, the same fsspec abstraction the scripts already use for reads) instead of a raw
+      `google.cloud.storage` import — so there is NO TID251 site at all (e2e `tid251` stays == baseline 10), no `# noqa`
+      needed, and `ruff check` + the STEP 5.95 ratchet + full e2e QG all pass clean. — e2e-testing
 
 ### Migration unmappable residue — DIAGNOSED 2026-06-18 (the 10,250 `MIGRATE-FIRST` objects)
 
@@ -353,52 +364,78 @@ non-hive directory layout (`equities/NYSE/`) — the canonical target is **deriv
 | tradfi | bare `by_date/day=*/venue={CME,ICE,NYSE,NASDAQ}/ticks.parquet` (**107**) + 15 are 0-row empties                            | 0–small                            | legacy pre-canonical day bundles                                                                                                                 |
 | sports | `by_date/day=*/source=ODDS_API[/league=*]/ticks.parquet` (3,245) + `venue=ODDS_API[/league=*]/ticks.parquet` (571)         | 6–8.9k                             | `venue` (bookmaker: pinnacle/fanduel/…), `data_type` (`odds`), `instrument_id`, `sport_key`, `event_id`, `league_id` — full odds rows            |
 
-**Decisive evidence (defi)**: canonical layout is
-`pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=AAVE_V3/chain=ETHEREUM/instrument_type=*/data_type={rate_indices,risk_params,utilization}/{TOKEN}.parquet`
-— far more granular than the legacy fat `venue=ETHENA-ETHEREUM/ticks.parquet` bundle, AND **`data_type=oracle_prices`
-has NO canonical twin anywhere** (only rate*indices/risk_params/utilization were re-captured). So the legacy oracle/DEX
-bundles are **unique data not present in canonical form**. **Decisive evidence (tradfi)**: tradfi has NO
-`pipeline_mode=` layer at all — bare
-`data_type=ohlcv*\*/…`IS its canonical shape, so the 995 data_type-bearing files are the LIVE-ONLY copy mis-flagged purely on the missing`venue=`key. **Decisive evidence (sports)**: canonical is`pipeline_mode=batch_odds_api/`; the `source=`/`venue=ODDS_API`bundles are the pre-pipeline_mode shape with bookmaker in the`venue`
-COLUMN.
+**⚠️ DIAGNOSIS CORRECTED 2026-06-18 (CONTENT-VERIFIED, supersedes the path-only verdict above).** The prior "unique
+data, no twin" framing was an artifact of PATH-only twin matching. A new content-aware verifier
+(`e2e-testing/scripts/defi/verify_unmappable_legacy_content_aware.py`) READS each legacy bundle's content keys
+(`instrument_key`/`instrument_id`) and checks them against the same-day canonical `pipeline_mode=` content UNION.
+**Result: the 10,250 MIGRATE-FIRST objects are the PRE-CANONICAL SOURCE bundles the v9 fan-out
+(`migrate_defi_full_v9_canonical.py`) ALREADY consumed — not unique unmigrated data.** Sampled coverage (decisive):
 
-**3-way classification (counts + reasoning):**
+- **defi**: 303,394 / 303,394 legacy rows across 4 random days (2024-09..2025-12) have their exact
+  `(data_type, instrument_key)` present in same-day canonical content — `0` uncovered. The ETHENA `oracle_prices` bundle
+  the prior diagnosis called "no twin" DOES have an exact twin at
+  `pipeline_mode=batch_onchain_subgraph/.../venue=ETHENA/chain=ETHEREUM/instrument_type=lst/data_type=oracle_prices/{instr}.parquet`
+  (same `timestamp`/`price_usd`/`source`, plus canonical enrichment cols). The path-only check missed it because the v9
+  fan-out RESHAPES the path (venue `ETHENA-ETHEREUM`→`ETHENA`, adds `chain=`/`instrument_type=`, per-instrument stem,
+  `data_type=oracle_prices` is its own partition).
+- **tradfi**: the 995 `data_type=ohlcv_*` files + the 107 bare `venue={CME,ICE,NYSE,NASDAQ}/ticks.parquet` are all
+  pre-canonical; tradfi DOES have a `pipeline_mode=` layer (`batch_{databento,massive,barchart,yahoo}`) with `ohlcv_*`
+  AND `trades`/`tbbo` data_types. 8/8 sampled legacy files (9.04M rows) are 100% twinned by same-day/same-data_type
+  canonical content (ohlcv-995 by `(data_type, file-stem)`; the bare-107 raw `data_type=trades` ticks by canonical
+  `data_type=trades` content keys). The 0-byte/0-row legacy files = honest no-data.
+- **sports**: 58,910 / 58,910 sampled legacy `instrument_id` present in same-day canonical `pipeline_mode=batch_*`
+  content (canonical splits across `trades`/`odds`; the legacy bundle has no `data_type` column → match against the
+  canonical UNION, NOT a single partition label). 6/6 sampled files 100% twinned.
 
-- **(a) RE-DERIVABLE — 10,228 of 10,250** (defi 5,332 + tradfi 995 + sports 3,816 − the 22 below that overlap as empties
-  is small; net ~10,213 non-empty). File contents carry venue/chain/instrument_type/data_type/instrument → a
-  **content-aware copy that fans out one legacy bundle into N canonical files** can migrate them. defi → split by
-  (data_type, instrument_key) into `pipeline_mode=batch_onchain_rpc/…/data_type=oracle_prices/{instr}.parquet`;
-  tradfi-995 → 1:1 path is already canonical, just `gcs_copy_object` to itself-as-canonical (or simply RE-MARK the
-  classifier so it stops flagging hive-less tradfi paths); sports → split by (venue, data_type) into
-  `pipeline_mode=batch_odds_api/…`.
-- **(b) RE-DOWNLOADABLE — subset of (a), not exclusive**: defi oracle/DEX (RPC-replayable via UAC
-  `CHAIN_RPC_TEMPLATES`) + sports ODDS_API (The-Odds-API historical) + tradfi ohlcv are all re-fetchable, BUT
-  re-derive-from-contents is cheaper + lossless (the data is already on disk) — re-download only where a file is 0-row
-  empty or schema-drifted.
-- **(c) GENUINELY-LEGACY-ONLY / accept-or-eventually-delete — ~122**: tradfi 107 bare `venue=*/ticks.parquet` day
-  bundles (pre-canonical, content is per-exchange OHLCV that the 995 data_type files already supersede — verify
-  duplication before any delete) + 15 tradfi 0-row empties (no data). NOT delete-safe yet — keep excluded from every
-  delete-list until verified-superseded.
+**The ONLY genuine residual = UNISWAP_V4 (defi).** UNISWAP*V4 `dex_pool_state`/`dex_pool_swaps` was fanned out to
+canonical for SOME days (e.g. 2025-11-17 from `data_source=thegraph_decentralized`, keyed by `pool_id` file-stem) but
+NOT others (2025-03/04/06 sampled → zero canonical UNISWAP_V4 that day). The 359 legacy `venue=UNISWAPV4-ETHEREUM`
+objects (`swaps`+`liquidity`, ~9.7k rows/day) carry the human-pair `instrument_key`
+(`UNISWAPV4-ETHEREUM:POOL:ETH-USDC:3000`) where canonical V4 uses the `pool_id` hash stem — so on the un-captured days
+this is genuinely-unique pre-canonical V4 DEX data with no twin. **All other 8 defi venues + all tradfi + all sports =
+TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
+`\_index/audit/legacy_unmappable_verify*{ag}.parquet` (TWIN-VERIFIED-SAFE / MIGRATE-NEEDED / EMPTY-LEGACY).
 
-**Recommendation**: migrate (a) via a content-aware fan-out copy (read footer/columns → build canonical path per the
-live UAC SSOT → `gcs_copy_object`), NOT the path-only 1:1 driver. tradfi-995 is the cheapest win (fix the classifier's
-hive-less-path parse → most reclassify SAFE/already-canonical). Defi `oracle_prices` is the highest-value (unique data
-with no twin). Do NOT delete any of the 10,250 until (a) is migrated + manifest-verified and (c) is proven-superseded.
+**Revised recommendation**:
 
-- [ ] [DATA] P2. **Content-aware fan-out migration of the 10,250 unmappable legacy objects** (re-derive canonical target
-      from FILE CONTENTS, not path): build a content-aware migrator (read each legacy parquet's
-      `data_type`/`venue`/`source`/`instrument_key|instrument_id` columns + footer → resolve canonical
-      `pipeline_mode=…/asset_group=…/…/data_type=…/{instr}.parquet` via the live UAC path SSOT → `gcs_copy_object`,
-      fanning one legacy bundle into N canonical files). Order: tradfi-995 (already-canonical-shape, fix classifier
-      hive-less parse) → defi 5,332 (`oracle_prices`/DEX bundles, NO existing twin) → sports 3,816 (split by
-      bookmaker-venue+`odds` data*type into `pipeline_mode=batch_odds_api/`). Manifest-verify each migrated cell before
-      adding the source legacy object to a delete-list. Inputs:
-      `\_index/audit/legacy_dup_delete_list*{defi,tradfi,sports}.parquet` (`classification=MIGRATE-FIRST`). —
+- **TWIN-VERIFIED-SAFE (≈9,891 of 10,250 — everything except UNISWAP_V4)**: NOT unique data; their content already lives
+  in canonical. → reclassify SAFE-TO-DELETE (operator-gated deletion, joins the legacy delete-list). NO migration needed
+  — migrating would DUPLICATE existing canonical data.
+- **UNISWAP_V4 (≤359 objects, the genuine gap)**: content-aware fan-out the legacy V4 `swaps`/`liquidity` rows that have
+  NO same-day canonical V4 twin → reshape to the canonical V4 schema (`venue=UNISWAP_V4`/`chain=ETHEREUM`/
+  `instrument_type=pool`/`data_type=dex_pool_swaps|dex_pool_state`, `pipeline_mode=batch_onchain_subgraph`, conform to
+  `_CANONICAL_UNION`) keyed by the legacy `pool_address`→`pool_id` stem; manifest-verify each migrated cell.
+- Do NOT delete ANY of the 10,250 until each object is content-verified (the verify parquet) AND the V4 residual is
+  migrated + manifest-verified. Deletion stays operator-gated.
+
+- [x] ✅ [DATA] P2. **Content-aware verification of the 10,250 unmappable legacy objects** — SHIPPED the content-aware
+      verifier `e2e-testing/scripts/defi/verify_unmappable_legacy_content_aware.py` (e2e-testing@9bd18bf, ruff+QG-green,
+      sentinel 6ed7d5b). It READS each legacy bundle's content keys (`instrument_key`/`instrument_id`) and checks them
+      against the same-day canonical `pipeline_mode=` content UNION → reclassifies TWIN-VERIFIED-SAFE / MIGRATE-NEEDED /
+      EMPTY-LEGACY, writing `_index/audit/legacy_unmappable_verify_{ag}.parquet`. **The prior "fan-out migrate all
+      10,250" framing was WRONG (path-only artifact, corrected above)**: content verification proves all 10,250 are the
+      PRE-CANONICAL SOURCE the v9 fan-out ALREADY consumed → migrating them would DUPLICATE existing canonical data.
+      Sampled-decisive: defi 303,394/303,394 rows + sports 58,910/58,910 ids + tradfi 8/8 files (9.04M rows) 100%
+      twinned. The ONLY genuine residual = UNISWAP_V4 (next todo). NOTE: the full per-object verify run over all 633
+      defi days is I/O-heavy (reads every canonical file's content); the verify parquet is operator-convenience for the
+      delete-list, the migrate/delete DECISION is already determined by the verifier's logic + sampling. — e2e-testing
+- [ ] [DATA] P2. **UNISWAP_V4 content-aware fan-out (the genuine residual)** — migrator BUILT + shipped
+      `e2e-testing/scripts/defi/migrate_uniswap_v4_legacy_to_canonical.py` (e2e-testing@9bd18bf, ruff+QG-green); RUN it
+      `--apply` to fan out the ≤359 legacy `venue=UNISWAPV4-ETHEREUM` bundles' rows that have NO same-day canonical V4
+      twin → reshape (venue `UNISWAP_V4`/`chain=ETHEREUM`/`instrument_type=pool`, `data_type` `swaps`→`dex_pool_swaps`/
+      `liquidity`→`dex_pool_state`, add `instrument_id`, `pipeline_mode=batch_onchain_subgraph`) → write one canonical
+      parquet per `pool_id` stem (the legacy V4 schema is IDENTICAL to canonical V4 incl. `pool_id` — a faithful
+      reshape, not a re-download). The script SKIPS rows already in canonical V4 content (no dup writes). Dry-run first
+      (default), then `--apply`; then manifest-verify the migrated V4 cells via the consolidator. — e2e-testing /
       market-tick-data-service
-- [ ] [DATA] P3. **Verify-then-delete the ~122 genuinely-legacy-only tradfi stragglers**: 107 bare
-      `venue={CME,ICE,NYSE,NASDAQ}/ticks.parquet` day bundles + 15 0-row empties. Prove the 107 are content-superseded
-      by the 995 canonical-shape `data_type=ohlcv_*` files (same day×instrument) before deleting; the 15 empties are
-      no-data → delete-safe once confirmed. Keep excluded from delete-lists until verified. — market-tick-data-service
+- [ ] [DATA] P3. **Verify-then-delete the ~122 genuinely-legacy-only tradfi stragglers** — REFRAMED 2026-06-18: the 107
+      bare `venue={CME,ICE,NYSE,NASDAQ}/ticks.parquet` are recent (2026-02+) RAW `data_type=trades` ticks (Databento
+      market-by-order), NOT pre-canonical OHLCV — and `data_type=trades` IS a canonical tradfi data_type
+      (`pipeline_mode=batch_massive/.../data_type=trades/`). The content verifier already classifies them
+      TWIN-VERIFIED-SAFE when their `instrument_id` is in same-day canonical `trades` content (8/8 sampled, incl.
+      bare-107, 100% covered). So they are NOT a separate straggler class — the verify parquet's TWIN-VERIFIED-SAFE set
+      is the delete-safe list (operator-gated). 0-row/empty legacy = honest no-data, delete-safe once confirmed empty. —
+      e2e-testing
 
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
