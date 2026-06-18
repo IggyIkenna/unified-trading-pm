@@ -59,6 +59,15 @@ All on `origin/live-defi-rollout`; full detail in
       it a shared helper (`scripts/dev/qg-host-gate.sh`) so slots stop hand-rolling the broken pattern. Cross-cuts the
       "≤1-2 full QGs host-wide" QG-sweep rule — the rule is right, the ad-hoc IMPLEMENTATION is the bug. Repo:
       unified-trading-pm (helper) + the QG-sweep SSOT note. parent: this plan.
+  - [x] ✅ **CLOSED-AS-DONE (verified 2026-06-17): the shared flock helper EXISTS and is auto-invoked — the broken
+        ad-hoc pgrep drain-gate is fully superseded.** `scripts/quality-gates-base/qg-host-governor.sh` (157 lines) is a
+        flock(1) token-bucket: K=max(2, floor(physical_cores/4)) tokens as K lockfiles in a host-shared dir;
+        `qg_governor_acquire` blocks until a token frees, holds an flock'd fd for the run's lifetime, OS-auto-freed on
+        any early exit. It is **sourced into base-service.sh** (line 65) and called automatically before the heavy phases
+        (TESTS+TYPECHECK), released after TYPECHECK. This IS the item's fix — gates on flock (excludes waiters; no
+        self-counting pgrep), is a shared helper, and is auto-invoked so slots no longer hand-roll the `until pgrep ≤1`
+        pattern. Better than the proposed `scripts/dev/qg-host-gate.sh` (no opt-in needed). `QG_GOVERNOR_DISABLE=true`
+        bypass + graceful no-op when flock(1) is absent.
 
 - [x] ✅ [INFRA] P1. **CLOSED-AS-SUBSUMED (2026-06-17): governor-fix done (this plan's part); debt-greening owned by
       cicd Phase 6 (active).** Governor runs fully now (QG executes start→finish locally + fleet, verified repeatedly
@@ -661,13 +670,14 @@ design).
       (major-bump-issue-handler / request-major-bump / update-dependency-version / main-backmerge-to-ldr) rolled out +
       shipped across 24 repos (drift 0). PM QG GREEN. RESIDUAL fleet per-repo QG-debt remains tracked in
       `cicd_contract_hardening_2026_06_01.md` Phase 6.
-- [ ] [INFRA] P2. **VM registry `active:` flag for alert-suppression (hybrid topology, operator 2026-06-05).** Fleet is
-      hybrid (1 always-on `agent-orchestrator-vm-1` + epic VMs on-demand, currently stopped for local CI/CD work —
-      INTENTIONAL, `assigned_vm` stays on epic VMs, NOT re-pointed). To stop alerts firing for intentionally-stopped
-      VMs, add a per-VM `active: true|false` flag to `orchestrator_vm_registry.yaml` (+ `regen_vm_registry.py`) that the
-      VM-level alerters (zombie-watchdog / host-offline / dead-man-switch) read to suppress non-active hosts. Partly
-      covered today by Harsh's tab-mirror active-host-filter (tab-divergence alerts only); this is the VM-liveness-alert
-      side. Low urgency — VMs are off + nothing firing.
+- [x] ✅ [INFRA] P2. **CLOSED-AS-SUBSUMED (2026-06-17) → `orchestrator_human_central_vm_split_2026_06_12.md` (active).**
+      The VM-liveness-alert-scoping is now owned by the human/central VM-split work: CLAUDE.md codifies "alerts
+      (git-health / slot-stale / worker-liveness) scope to the LIVE set — a stale alert about a stopped VM is not a
+      dead-VM incident" with that plan as the SSOT, and `orchestrator_vm_registry.yaml` already carries a per-VM
+      `status:` field (e.g. `status: parked-stopped`) — the suppression input this item asked for (as `status`, not the
+      proposed `active:` bool). Low-urgency (VMs off, nothing firing) + the topology + alerters are operator-decided VM
+      surface → cross-link to the owning active plan, don't dual-track here. Original ask: per-VM alert-suppression flag
+      so intentionally-stopped epic VMs don't fire zombie-watchdog / host-offline / dead-man-switch alerts.
 
 - [x] ✅ [SCRIPT] P3. **DONE 2026-06-12 (PM@e64a8c0b3) — removed from workspace-constraints.toml + canonical-dependency-manifest.json; no repo declares pre-commit (fleet on prek).** **Drop the orphaned `pre_commit` pin from `workspace-constraints.toml`** (re-derive). **MIGRATED
       FROM:** `plans/active/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md` (archived
