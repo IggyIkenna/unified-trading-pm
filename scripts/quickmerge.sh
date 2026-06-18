@@ -552,13 +552,23 @@ else
       elif git pull --rebase --autostash "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
       else
-        git rebase --abort 2>/dev/null || true   # clean up any half-done rebase
-        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
-          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (rebase conflicts) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        # Structured error contract (265, 2026-06-17): emit a machine-parseable QUICKMERGE_BLOCKED
+        # line so an agent self-serves recovery without an operator paste. Capture the conflicting
+        # files BEFORE the abort, and distinguish the autostash-pop foot-gun from a plain rebase
+        # conflict. `git rebase --abort` is SAFE (never overwrites; the autostash + peer commits
+        # stay intact) and returns 0 IFF a rebase was actually in progress.
+        _QM_CONFLICTS="$(git diff --name-only --diff-filter=U 2>/dev/null | tr '\n' ' ' | sed 's/ *$//')"
+        if git rebase --abort 2>/dev/null; then
+          _QM_CODE="BEHIND_DIVERGED_CONFLICT"   # rebase was mid-flight (now aborted; your autostash is pending in `git stash list`)
         else
-          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF and auto-rebase hit conflicts."
-          echo "   Pull the latest first (resolving conflicts), then re-run:"
-          echo "     git pull --rebase $_QM_REMOTE_NAME $_QM_REMOTE_BRANCH"
+          _QM_CODE="AUTOSTASH_POP_CONFLICT"     # no rebase in progress → the autostash pop conflicted; YOUR work is in `git stash list` — do NOT drop it
+        fi
+        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (${_QM_CODE}) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        else
+          echo "QUICKMERGE_BLOCKED code=${_QM_CODE} repo=${REPO_NAME} branch=${_QM_REMOTE_BRANCH} behind=${_QM_BEHIND} ahead=${_QM_AHEAD} conflicts=\"${_QM_CONFLICTS}\""
+          echo "RECOVERY: SUB_AGENT_MANDATORY_RULES.md § \"Quickmerge behind-remote\" — preserve peer commits, stash YOUR files BY NAME, git pull --rebase, reconcile essence, re-QG, re-quickmerge. NEVER 'git checkout HEAD -- <foreign-file>' then 'git stash drop' (destroys a peer's only WIP copy)."
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF, auto-rebase hit conflicts (code=${_QM_CODE})."
           echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
           exit 1
         fi
@@ -844,7 +854,21 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
     elif [ -f ../.venv-workspace/bin/activate ]; then
       source ../.venv-workspace/bin/activate 2>/dev/null || true
     fi
-    python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>/dev/null || true
+    # Hard-require a successful generate (fix 303, 2026-06-17). The old `2>/dev/null || true`
+    # swallowed a generate FAILURE — and since derived-dependency-manifest.json is gitignored
+    # (item-H), an FF leaves a slot with no local copy, so check-dependency-alignment.py then
+    # errored with a MISLEADING "Run generate-derived-manifest.py first", masking the real
+    # (generate / venv-PATH) root cause. Now: if generate fails, diagnose THAT and stop —
+    # don't cascade into a confusing dep-alignment failure.
+    _GEN_OUT="$(python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>&1)"
+    if [ $? -ne 0 ]; then
+      echo "[$REPO_NAME] ❌ derived-dependency-manifest generation FAILED — fix THIS, not dep-alignment"
+      echo "$_GEN_OUT" | tail -20
+      echo "   (common cause after an FF: the gitignored derived-dependency-manifest.json is absent +"
+      echo "    the workspace .venv/PATH can't run the generator — re-run setup.sh / activate .venv-workspace)"
+      cd "$REPO_DIR"
+      exit 1
+    fi
     if python "$ALIGN_SCRIPT" --json 2>/dev/null | grep -q '"aligned": true'; then
       echo "[$REPO_NAME] ✅ Dependency alignment PASSED"
     else
