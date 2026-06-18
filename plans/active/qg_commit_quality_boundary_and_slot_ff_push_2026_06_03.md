@@ -261,15 +261,19 @@ All on `origin/live-defi-rollout`; full detail in
 > "Applying autostash resulted in conflicts" foot-gun) isn't trapped distinctly. PM-as-a-repo is COVERED by the same
 > gate (it keys off the current branch's upstream), so no PM-specific code — one template change rolled fleet-wide.
 
-- [ ] [INFRA] P1. **quickmerge STAGE 0.4 — structured error contract.** Replace the prose block with a machine-parseable
-      sentinel + recovery block:
-      `QUICKMERGE_BLOCKED code=BEHIND_DIVERGED_CONFLICT repo=<r> branch=<b> behind=<n>     ahead=<m> conflicts="<files>"`
-      followed by a `RECOVERY:` line pointing at the SUB_AGENT_MANDATORY_RULES recipe. Add a DISTINCT
-      `code=AUTOSTASH_POP_CONFLICT` trap: after `git pull --rebase --autostash` detect a leftover `git stash list` entry
-      / conflict markers and emit that code instead of silently continuing. Preserve exit 1 + the
-      `QUICKMERGE_ALLOW_BEHIND=1` override. Edit the **canonical PM template** `scripts/quickmerge.sh`, then
-      `rollout-workflow-templates.sh` to all repos (never per-repo). Regression: shell unit asserting both codes fire on
-      a synthesized behind+diverge + autostash-pop fixture.
+- [x] ✅ [INFRA] P1. **quickmerge STAGE 0.4 structured error contract SHIPPED (2026-06-17, PM@ac6631340-range, fleet-live
+      via the per-repo symlinks — no rollout needed; the "rollout-workflow-templates" clause was stale).** STAGE 0.4's
+      behind/diverged block now emits the machine-parseable
+      `QUICKMERGE_BLOCKED code=<…> repo=… branch=… behind=… ahead=… conflicts="…"` line + a `RECOVERY:` line pointing at
+      `SUB_AGENT_MANDATORY_RULES.md` § behind-remote. The DISTINCT `code=AUTOSTASH_POP_CONFLICT` trap is implemented via
+      the `git rebase --abort` rc discriminator (rc 0 = a rebase was mid-flight → `BEHIND_DIVERGED_CONFLICT`, autostash
+      pending; rc≠0 = no rebase → the autostash pop conflicted → `AUTOSTASH_POP_CONFLICT`, work in `git stash list`).
+      Conflicts captured BEFORE the (safe) abort; `QUICKMERGE_ALLOW_BEHIND=1` override preserved. SUB_AGENT doc updated
+      to the live contract. **Self-exercised** — the quickmerge.sh ship ran the new code on its own promotion.
+  - [ ] [TEST] P2. **Residual: behavioral regression harness** — a shell unit that synthesizes a behind+diverge-conflict
+        git fixture + an autostash-pop fixture and asserts each emits its code. Deferred (the inline STAGE-0.4 logic
+        isn't a sourceable function → needs a git-fixture harness); the contract itself is live + self-exercised. Repo:
+        unified-trading-pm (`scripts/quality-gates-base/tests/`). Provenance: 265 spec's regression clause.
 - [x] ✅ [INFRA] P1. **FIXED (PM `scripts/quickmerge.sh`, this batch — live fleet-wide via the per-repo symlinks).**
       STAGE 0.4 now resolves the comparison ref from `git rev-parse --abbrev-ref @{u}` (configured upstream) when set,
       falling back to `origin/<branch-name>` only if no upstream. Verified: `@{u}` → `origin/live-defi-rollout` on a
@@ -299,18 +303,16 @@ All on `origin/live-defi-rollout`; full detail in
       `[ -f .venv-workspace/bin/activate ] && source ...` (test before sourcing — a test failing under `set -e` inside
       `&&` is safe), and/or resolve the venv at the true workspace root not the slot `WORKSPACE_ROOT`. PM template →
       rollout. (Workaround used 2026-06-03: `ln -s <top-level>/.venv-workspace .tabs/2/.venv-workspace`.)
-- [ ] [INFRA] P2. **OBSERVED CASCADE RESOLVED by the STAGE 1.5 `source`-guard fix above; the standalone hardening below
-      remains open.** With the venv now activating, line ~703 `generate-derived-manifest.py` runs and re-creates the
-      manifest, so the absent-manifest checker error no longer fires in the normal path. STILL TODO (defence-in-depth):
-      make generate hard-required (not `|| true`-swallowed) OR have the checker auto-generate when absent. **quickmerge
-      STAGE 1.5 dep-align hard-errors when `derived-dependency-manifest.json` is ABSENT (BUG, slot-2 2026-06-03).** The
-      item-H generated-artifact untracking (LDR) deletes `derived-dependency-manifest.json`; after an FF a slot has no
-      local copy, and `check-dependency-alignment.py` exits with "Run generate-derived-manifest.py first" → quickmerge
-      dep-align fails. quickmerge line ~703 DOES call `generate-derived-manifest.py` first, but only
-      `2>/dev/null || true` — so if the generate step itself is the thing that died (it shares the same venv/PATH the
-      `source` bug above broke), the stale/missing manifest cascades. **Fix**: the dep-align stage should hard-require a
-      successful generate (not `|| true`-swallow it) OR the checker should auto-generate when absent. PM template →
-      rollout. (Workaround used 2026-06-03: ran `generate-derived-manifest.py` manually pre-quickmerge.)
+- [x] ✅ [INFRA] P2. **DONE (2026-06-17, PM quickmerge.sh, fleet-live via symlinks).** The dep-align stage now
+      **hard-requires a successful generate** (option a): the old `2>/dev/null || true` is replaced with a captured-rc
+      generate — on failure it prints "derived-dependency-manifest generation FAILED — fix THIS, not dep-alignment" + the
+      generate output + the venv/PATH hint, and exits 1, so a generate failure (broken venv / gitignored-manifest-absent
+      after FF) reports ITS OWN root cause instead of cascading into the misleading "Run generate-derived-manifest.py
+      first" alignment error. (The OBSERVED CASCADE was already resolved by the STAGE 1.5 `source`-guard; this is the
+      defence-in-depth hardening that item left open.) **Self-exercised** — ran on quickmerge.sh's own ship (generate
+      succeeded → dep-align passed). Original bug context: item-H untracks `derived-dependency-manifest.json` (gitignored)
+      → after an FF a slot has no local copy → `check-dependency-alignment.py` errored "Run generate first" when the
+      `|| true`-swallowed generate had itself died on the venv/PATH bug.
 - [x] ✅ [DOC] P1. **SUB_AGENT_MANDATORY_RULES.md** — added the behind-remote recovery recipe keyed on the
       `QUICKMERGE_BLOCKED` block (operative today against the existing exit-1; structured codes land with the INFRA
       item). — PM@pending (this batch).
