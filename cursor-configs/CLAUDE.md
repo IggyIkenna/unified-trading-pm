@@ -375,7 +375,15 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   `is_in_known_gap()`.
 - **VIX 15m**: Barchart preload + Yahoo rolling 60d + honest gap. Massive does NOT cover VIX/VX futures — gap remains
   Barchart+Yahoo post-dual-source (tradfi_massive_dual_source_2026_05_28.md verified 2026-05-30). UAC constants in
-  `registry/data_source_continuity.py`.
+  `registry/data_source_continuity.py`. **Databento `CFE` gives VX FUTURES, not the VIX cash index** — adding CFE does
+  NOT close the 15m index gap.
+- **Databento subscription universe = 3 datasets, billing-fail-closed (operator 2026-06-18)**: we pay for ONLY
+  `GLBX.MDP3` + `DBEQ.BASIC` (US Equities) + `CFE` (VX futures); fetch `ohlcv-1s` + `ohlcv-1m` for OHLCV (both L0/free;
+  aggregate 15m/1h/24h downstream — 1h/1d raise); per-level rolling-history floors (L0 16y / L1 1y / L2+L3 1mo);
+  `batch.submit_job` BANNED (streaming/live only). Every Databento call gates `(dataset, schema, start)` through
+  `assert_databento_request_allowed` / `assert_schema_allowed` / `assert_batch_api_allowed` (raise = never billed
+  silently). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` + `registry/databento_subscription_allowlist.py`;
+  rollout `plans/active/tradfi_databento_subscription_universe_lockdown_2026_06_18.md`.
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms. **After a GCS path migration, large phantom counts are usually false positives** — verify
