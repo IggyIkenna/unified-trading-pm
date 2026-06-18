@@ -10,7 +10,7 @@ source:
   - "base-service.sh / base-library.sh sanctioned `--ignore-vuln` block (20 advisory IDs as of 2026-06-15)"
 ---
 
-# CVE-affected pinned deps — remediation exercise (gated on 1.5b)
+# CVE-affected pinned deps — remediation exercise (✅ UNBLOCKED 2026-06-18 — 1.5b shipped; see Todos below)
 
 > **Operator (Harsh) 2026-06-18:** there are a bunch of CVE issues just like aiohttp where we're currently running the
 > affected version because the upstream dep that would let us fix it isn't solved yet (a transitive blocker). We should
@@ -76,10 +76,41 @@ cleanly re-lock + validate), run a remediation pass:
    silently.
 4. Update CLAUDE.md's aiohttp KNOWN-EXCEPTION block + the aiohttp issue doc to reflect whatever lifts.
 
-## Gate / sequencing
+## Gate / sequencing — ✅ UNBLOCKED 2026-06-18
 
-**Do NOT start before 1.5b is green** (operator decision). 1.5b makes CVE-floor bumps land+re-lock cleanly on LDR; doing
-this remediation before then would fight the very lock-drift problem 1.5b fixes.
+**1.5b is GREEN (2026-06-18) — this exercise is now UNBLOCKED + pick-up-ready.** PM-core PR#397 + CI-v2 PR#398 merged to
+`main` (the frozen-lock model + the floor-vs-pin guardrail are live), 15/15 fastapi/starlette caps shipped, and
+`check-dependency-alignment.py` is `aligned: true`. So a CVE / cap floor bump now lands + re-locks cleanly on LDR (the
+atomic floor+lock model 1.5b established) — exactly what this remediation needs. The original "do not start before 1.5b"
+gate is satisfied.
+
+## Todos — pick-up-ready (UNBLOCKED 2026-06-18)
+
+- [ ] [SCRIPT] P2. **fastapi/starlette adoption — lift the 1.5b caps.** Fix the `_IncludedRouter` route-introspection in
+      UTL `service_framework/fastapi_factory.py` (handle `_IncludedRouter` having no `.path` in
+      `[r.path for r in app.routes]`) + the route-introspection tests in strategy-service / client-reporting-api /
+      features-service. Then bump fastapi `≥0.137` + starlette `≥1.3.1` in `workspace-constraints.toml` +
+      `canonical-dependency-manifest.json` + the 15 declaring repos' pyproject, regen locks atomically, run QG
+      fleet-wide. On green, drop the starlette CVE-2026-54283/-54282 `--ignore-vuln` entries from `base-service.sh` +
+      `base-library.sh`. Repo: unified-trading-library + strategy-service + client-reporting-api + features-service +
+      unified-trading-pm.
+- [ ] [TEST] P3. **alerting-service upgrade-time investigation.** `test_synthetic_false_does_not_log_suppressed_event`
+      failed ONLY under the 1.5b `--upgrade` pass (it passes on current working deps + Mode-B). When alerting's external
+      deps are upgraded one-by-one, identify which upgraded dep changed the suppressed-event behaviour and fix the test
+      or the code. Repo: alerting-service.
+- [ ] [SCRIPT] P2. **aiohttp / vcrpy unblock — the biggest CVE cluster (~11 ignores).** vcrpy 8.2.1 is now released (the
+      1.5b `--upgrade` pulled it). CHECK whether 8.2.1 supports aiohttp 3.14.0 (the removed `AsyncStreamReaderMixin`). If
+      yes: bump aiohttp `≥3.14`, regen locks, run the VCR cassette suites (UAC / UTL / execution-service / MTDS); on
+      green drop the ~11 aiohttp `--ignore-vuln` entries + the `aiohttp>=3.13.4,<3.14.0` range in
+      `workspace-constraints.toml` + `canonical-dependency-manifest.json` + the 18 declaring repos + the CLAUDE.md
+      KNOWN-EXCEPTION block. Repo: unified-trading-pm + the 18 aiohttp repos. SSOT:
+      `issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
+- [ ] [SCRIPT] P3. **pip floor bump.** Bump the CI/base pip floor to a patched release (CVE-2026-3219 / -6357 /
+      PYSEC-2026-196), re-validate, drop those 3 ignores. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **cryptography / idna / CVE-2026-4539 re-check.** Re-check upstream for patched releases; lift where
+      resolvable, else add a `# re-check <date>` next to each ignore so it doesn't rot silently. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **(then) one-by-one for the rest.** Walk the remaining external deps for the latest version
+      compatible with our code — no mass updates, validating QG per dep (the broadened audit scope above). Repo: per-dep.
 
 ## Composes with
 

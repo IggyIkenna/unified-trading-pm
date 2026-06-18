@@ -185,6 +185,19 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       HAD league; these 32,707 lost it at WRITE time. Recover league_id by joining each null-league captured (date,venue,
       data_type) to the GCS object paths (`league_id=<L>`) for that cell — needs a sports object scan (the rebuild is
       index-driven). No sports market data may be captured for an unattributed league. — market-tick-data-service
+- [ ] [DATA] P2. **N9 — MTDS SPORTS (market-data-tick-sports) 17,288 blank-capture_status rows** (pre-existing CF-10
+      reference/phantom set; surfaced in the 2026-06-18 final live-manifest verify — distinct from the instruments-store
+      sports blanks F5 which ARE fixed). Classify via a sports-MTDS canonicalize pass (extend `canonicalize_mtds_index.py`
+      to sports, mirroring the instruments-store classify: reference blank-data_type rows kept; real-data_type phantoms →
+      honest status). NOT a double-count. captured (202,087, league_id present) + empty (584,257) already correct. — market-tick-data-service
+- [ ] [INFRA] P1. **Phase D — DELETE old legacy-shape GCS duplicates (OPERATOR-GATED inspection)**: the bare
+      `raw_tick_data/by_date/day=*/asset_group={ag}/...` objects are EXACT duplicates of canonical
+      `pipeline_mode={mode}_{source}/asset_group={ag}/...` twins (verified: same instrument exists at both). They no longer
+      cause UI double-count (data-status reads the cell-reduced manifest + deployment-api@6bcac01 drilldown is
+      canonical-only). Procedure: per AG, list bare `day=*/asset_group=` objects → verify each has a `pipeline_mode=` twin
+      (via `gcs_describe_object`) → write the delete-list to `_index/audit/legacy_dup_delete_list_{ag}.txt` → **OPERATOR
+      INSPECTS + confirms** → `gcs_delete_object` the confirmed bare twins (in-region VM, workers=32). Storage reclamation
+      only; do NOT delete any bare object lacking a canonical twin (that would be unmigrated → migrate it first). — instruments-service/deployment-service
 - [ ] [DATA] P3. **N3b — SPORTS: 6 captured cells still NULL source** (ARBITRAGE_OPPORTUNITY/ODDS_MOVEMENT/ODDS_SNAPSHOT,
       2 each) after the Step-2 `trades→odds_api` + case-insensitive bridge. Add these MDPS-derived data_types to the
       source bridge (or route to honest absence if not genuinely captured). — market-tick-data-service

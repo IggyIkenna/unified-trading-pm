@@ -302,8 +302,9 @@ one):**
       hourly; fix the codex doc body line.
 
 > **1.5b SHIPPED (2026-06-18, slot-3) — Mode-B green (16/22 pass, the rest pre-existing/remediated); PM-core PR#397 +
-> CI-v2 PR#398 MERGED to `main`; 14/15 repo caps + e2e/SIT stale-lock fixes on LDR. ONE open item: features-service
-> (below).** Option-A cap + frozen
+> CI-v2 PR#398 MERGED to `main`; **15/15 repo caps** + e2e/SIT stale-lock fixes on LDR. The features GCP unit-test bug
+> was FIXED (mock the loader) so its cap shipped too → `check-dependency-alignment.py` is `aligned: true` (0 issues).**
+> Option-A cap + frozen
 > flip executed. (a) Capped fastapi `>=0.115.0,<0.137.0` + starlette `>=1.1.0,<1.3.0` in the **15 declaring repos'**
 > `[project.dependencies]` (14 fastapi ∪ trading-agent-service for starlette — trading-agent was MISSING from the earlier
 > 14-list; enumerated from the real dep arrays, not assumed), in `workspace-constraints.toml`, and regenerated
@@ -349,7 +350,11 @@ one):**
       copies of a ~20-entry ignore list silently diverge. Extract the `--ignore-vuln` argument list to a SINGLE shared
       shell constant (e.g. `qg-common.sh` `PIP_AUDIT_IGNORE_VULNS`) sourced by both bases, so a CVE add/lift edits ONE
       place. Repo: unified-trading-pm (`scripts/quality-gates-base/`).
-- [ ] [TEST] **P1 OPEN — features-service cap can't ship → fleet PM-quickmerge alignment block (1.5b, 2026-06-18).**
+- [x] ✅ [TEST] **P1 DONE (2026-06-18) — FIXED + shipped → alignment GREEN (`aligned: true`, 0 issues, 15/15 capped).**
+      The proper fix: the `orchestrator` fixture in `test_calendar_orchestrator_capture_status.py` now mocks
+      `EconomicCalendarLoader` (`load_all_events()` → `{}`) so the unit test never builds a real GCP client — 5 tests pass
+      under `--block-network`, full features QG green (378 s); the test-fix + cap were quickmerged to features LDR.
+      **Original diagnosis retained:** features-service cap can't ship → fleet PM-quickmerge alignment block (1.5b, 2026-06-18).
       14/15 caps are on LDR + the manifest cap is MERGED (PR#397). features-service's cap (pyproject `fastapi<0.137.0`)
       is correct + ready in the slot tree but CANNOT quickmerge: its Pass-1 QG is red on a PRE-EXISTING bug —
       `tests/calendar/unit/test_calendar_orchestrator_capture_status.py` (a *unit* test) makes `CalendarOrchestrationService`
