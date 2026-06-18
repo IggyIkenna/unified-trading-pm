@@ -80,7 +80,7 @@
     "system-integration-tests": "0.12.0",
     "unified-api-contracts": "0.19.0",
     "unified-trading-library": "0.13.0",
-    "unified-trading-pm": "1.2.158",
+    "unified-trading-pm": "1.2.160",
     "market-data-processing-service": "0.9.0",
     "e2e-testing": "0.7.0",
     "agent-orchestrator": "0.11.0",
@@ -1279,7 +1279,7 @@
       ],
       "completion_path": "infrastructure",
       "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "e2e",
@@ -1793,10 +1793,10 @@
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
-    "system-integration-tests": "0.11.0",
+    "system-integration-tests": "0.13.0",
     "unified-api-contracts": "0.19.0",
     "market-tick-data-service": "0.16.0",
-    "deployment-api": "0.18.0"
+    "deployment-api": "0.19.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1804,32 +1804,38 @@
     "locked_since": null,
     "locked_reason": null,
     "lock_version": null,
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "system-integration-tests",
+      "market-tick-data-service",
+      "deployment-api"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
-    "breaking_pending": []
+    "breaking_pending": [
+      "system-integration-tests"
+    ]
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "system-integration-tests": {
-      "branch": "staging",
-      "sha": "2ad41b181b35faa8e936827f72e694af368e276f",
-      "version": "0.11.0"
+      "version": "0.13.0",
+      "sha": "ea0e765c1f8c534d2e7af627e43fa4cd4d32cb7b",
+      "branch": "staging"
     },
     "unified-api-contracts": {
-      "version": "0.19.0",
+      "branch": "staging",
       "sha": "d3053743538a8a1f5785da5061b2fd3c71fd6ea2",
-      "branch": "staging"
+      "version": "0.19.0"
     },
     "market-tick-data-service": {
-      "version": "0.16.0",
+      "branch": "staging",
       "sha": "5768d1ebbbded2450d74400c871fae13c07a73ff",
-      "branch": "staging"
+      "version": "0.16.0"
     },
     "deployment-api": {
-      "version": "0.18.0",
-      "sha": "b6176a0fb4d3425bdf9361d89f766b4c494f40aa",
-      "branch": "staging"
+      "branch": "staging",
+      "sha": "6385e50157c3e00d6c3b01d783087f70b718968a",
+      "version": "0.19.0"
     }
   },
   "main_commits": {
