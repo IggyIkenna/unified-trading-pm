@@ -265,14 +265,35 @@ to logs.
       `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`
 - [x] ✅ [DATA] P2. **Diagnosed all 172 defi attempted_failed cells (2026-05-09→06-18) — 4 of 6 venues fixed, 2 are
       deeper upstream changes (split below)**. Each was UNCLASSIFIED_ADAPTER_ERROR from a distinct upstream API change:
-      - **MORPHO-ETHEREUM (41) + MORPHO-BASE (41) — ✅ FIXED + backfilling** (instruments-service@ec3fd3a): Morpho
+      - **MORPHO-ETHEREUM (41) + MORPHO-BASE (41) — ✅ ADAPTER FIXED + RE-FETCHED** (instruments-service@ec3fd3a): Morpho
         renamed `Market.uniqueKey`→`marketId` (HTTP 400 "Cannot query field uniqueKey"). Live verify: 968 markets
-        fetched (was 0). Re-fetch 2026-05-09→06-18 running (`morpho_defi.log`).
-      - **TRADER_JOE_V2-AVALANCHE (6) + SUSHISWAP_V3-BASE (2) — ✅ SELF-RECOVERED**: both now fetch 1000 pool instruments
-        cleanly (UniswapV3-style adapter) — the failures were transient subgraph rate-limits on those days, not a code
-        bug. Re-fetch running (`tjsushi_defi.log`) to flip the manifest cells captured.
+        fetched (was 0); re-fetched 2026-05-09→06-18 (164 captured rows written 2026-06-18 23:1x). **The captured rows
+        land under the CANONICAL bare venue `MORPHO`** (the writer keys the shard by the adapter's `venue` property
+        `"morpho"`→`MORPHO`, NOT the per-record chain-suffixed `venue_tag` `MORPHO-ETHEREUM`) — and `MORPHO` already has
+        **1,669 captured rows 2024-01-08→2026-06-18** (the historical canonical capture). So the 41+41 `MORPHO-ETHEREUM`/
+        `MORPHO-BASE` `attempted_failed` rows are an ANOMALOUS chain-suffixed venue-naming VARIANT, NOT a genuine data gap
+        — the morpho lending markets ARE captured + current under `MORPHO`. (Same multi-source venue-naming drift the
+        manifest-canonicalisation track owns — see the venue-naming P2 below.)
+      - **TRADER_JOE_V2-AVALANCHE (6) + SUSHISWAP_V3-BASE (2) — ✅ SELF-RECOVERED + canonical-tag captured**: both fetch
+        1000 pool instruments cleanly (transient subgraph rate-limits, not a code bug). Re-fetched; captured under the
+        canonical bare `TRADER_JOE_V2` (74 captured 2026-05-09→06-18) + `SUSHISWAP_V3` (2,606 captured
+        2023-04-05→06-18). The `-AVALANCHE`/`-BASE` chain-suffixed `attempted_failed` rows are the same anomalous
+        variant — data captured under the canonical bare venue.
       - **DRIFT-SOLANA (41) + AAVE_V3-OPTIMISM (41)**: genuine deeper upstream changes — split to the two P2 todos below.
       — instruments-service
+- [ ] [DATA] P2. **DeFi manifest venue-naming drift — chain-suffixed VARIANT venue tags shadow the canonical bare-protocol
+      venue** (surfaced 2026-06-18). The defi instruments-store `_index` carries BOTH the canonical bare-protocol venue
+      (`MORPHO` 1,669 captured / `SUSHISWAP_V3` 2,606 / `TRADER_JOE_V2` 74 — where the adapter actually writes, keyed by
+      its `venue` property) AND a smaller anomalous chain-suffixed variant (`MORPHO-ETHEREUM`/`MORPHO-BASE` 42 each,
+      `SUSHISWAP_V3-BASE` 2, `TRADER_JOE_V2-AVALANCHE` 6, `SUSHISWAPV3`/`SUSHISWAP-ARBITRUM`/etc.) that is almost entirely
+      `attempted_failed` + a stray captured. The DeFi venue identity is ambiguous: the adapter's `venue` property is the
+      bare protocol (`morpho`→`MORPHO`) while `InstrumentRecord.venue`=`MORPHO-{chain}` and the manifest writer keys the
+      shard by the PROPERTY not the record field → multi-chain protocols collapse to one bare venue + the chain-suffixed
+      rows are orphan variants. **Decide the canonical DeFi instrument venue grain** (bare-protocol vs protocol-chain) +
+      make the adapter `venue` property, the `InstrumentRecord.venue`, and the manifest shard key AGREE (shard-granularity
+      SSOT), then reconcile/collapse the variant rows (phantom-audit). Captured data is present under the bare venue — this
+      is a naming-canonicalisation correctness item, not a fetch gap. — instruments-service / unified-trading-library
+      (manifest shard key) — composes with the `*_manifest_canonicalisation_*` + `source=` provenance tracks
 - [ ] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
       2026-06-18). The Drift Data API endpoint moved: `/stats/markets`→404, `/markets`→403, `/contracts`/`/perpMarkets`
       →403 (auth-gated), `dlob.drift.trade`→502. Find Drift's current PUBLIC markets endpoint (docs at
