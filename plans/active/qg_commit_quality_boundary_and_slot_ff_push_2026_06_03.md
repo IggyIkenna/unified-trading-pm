@@ -46,7 +46,7 @@ All on `origin/live-defi-rollout`; full detail in
 
 ## Key discovery (cross-cuts cicd_contract_hardening Phase 6)
 
-- [ ] [SCRIPT] P1. **Self-counting `until ≤1 pgrep 'bash scripts/quality-gates.sh'` drain-gate DEADLOCKS fleet-wide
+- [x] ✅ [SCRIPT] P1. **Self-counting `until ≤1 pgrep 'bash scripts/quality-gates.sh'` drain-gate DEADLOCKS fleet-wide
       (slot-6 discovery 2026-06-03).** The common ad-hoc shared-host QG drain-gate
       (`until [ "$(pgrep -f 'bash scripts/quality-gates.sh' | wc -l)" -le 1 ]; do sleep; done; bash scripts/quality-gates.sh ...`)
       is self-defeating: the WAITER's own command line contains the literal `bash scripts/quality-gates.sh`, so
