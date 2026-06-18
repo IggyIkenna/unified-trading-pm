@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.8.0",
-    "deployment-api": "0.16.0",
+    "deployment-api": "0.17.0",
     "deployment-service": "0.13.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.14.0",
@@ -80,7 +80,7 @@
     "system-integration-tests": "0.12.0",
     "unified-api-contracts": "0.19.0",
     "unified-trading-library": "0.13.0",
-    "unified-trading-pm": "1.2.155",
+    "unified-trading-pm": "1.2.156",
     "market-data-processing-service": "0.9.0",
     "e2e-testing": "0.7.0",
     "agent-orchestrator": "0.11.0",
@@ -610,7 +610,7 @@
       "status": "active",
       "completion_path": "tradfi",
       "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1140,7 +1140,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1794,7 +1794,6 @@
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.11.0",
-    "deployment-api": "0.16.0",
     "unified-api-contracts": "0.19.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1815,11 +1814,6 @@
       "sha": "2ad41b181b35faa8e936827f72e694af368e276f",
       "version": "0.11.0"
     },
-    "deployment-api": {
-      "branch": "staging",
-      "sha": "aaad381c7debf8259a118c753fa2a4d920950167",
-      "version": "0.16.0"
-    },
     "unified-api-contracts": {
       "version": "0.19.0",
       "sha": "d3053743538a8a1f5785da5061b2fd3c71fd6ea2",
@@ -1829,6 +1823,16 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-18T05:41:47.272220Z",
+        "commits": {
+          "deployment-api": {
+            "version": "0.17.0",
+            "sha": "556ec87895e100c11bec5275f639737a36d956e9",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-17T04:40:34.454648Z",
         "commits": {
@@ -1923,16 +1927,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-16T20:29:11.254991Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.14.0",
-            "sha": "65a0c3d80be9b4519270bf3c2d3580950f3f6d08",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1948,8 +1942,7 @@
     ]
   },
   "promotion_failures": {
-    "unified-api-contracts": 5,
-    "deployment-api": 3
+    "unified-api-contracts": 5
   },
   "promotion_quarantine": {
     "unified-api-contracts": {
@@ -1957,12 +1950,6 @@
       "attempts": 5,
       "escalated": true,
       "next_probe_after": "2026-06-17T07:26:57.242122Z"
-    },
-    "deployment-api": {
-      "since": "2026-06-17T04:40:33.618378Z",
-      "attempts": 3,
-      "escalated": true,
-      "next_probe_after": "2026-06-17T05:40:33.618657Z"
     }
   }
 }
