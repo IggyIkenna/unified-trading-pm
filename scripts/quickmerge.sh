@@ -1521,7 +1521,7 @@ fi
 
 # ============================================================================
 # LDR-TRUNK MODEL (ldr_trunk_promotion_decoupling_2026_06_10): a normal service-repo
-# commit LANDS ON LDR AND STOPS. The Tier-C drain (ldr-to-staging-promote, every 30min)
+# commit LANDS ON LDR AND STOPS. The Tier-C drain (ldr-to-staging-promote, every 15min)
 # promotes LDR→staging in tier order with the dep-order gate, and that drain PR's
 # quality-gates-v2 (deps resolved against staging-tier) is the authoritative server gate.
 # We do NOT open a per-unit staging PR here — that re-couples every commit to staging
@@ -1574,7 +1574,7 @@ if [ "$HOTFIX_TO_MAIN" = true ] && [ "$PR_BASE" = "staging" ]; then
 fi
 
 if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
-  echo "[$REPO_NAME] ✅ Landed on $BRANCH. Tier-C drain (≤30min) promotes LDR→staging (v2-gated, dep-order-checked)."
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH. Tier-C drain (≤15min) promotes LDR→staging (v2-gated, dep-order-checked)."
   echo "[$REPO_NAME]    Need it on staging now? re-run with --hotfix (opens a staging PR; respects the staging lock)."
   exit 0
 fi

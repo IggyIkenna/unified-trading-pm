@@ -38,6 +38,10 @@ _GREEN_RANK: dict[str, int] = {
     "FAILING": 0,
     "LOCAL_PASS": 1,
     "FEATURE_GREEN": 1,
+    # PENDING == GREEN here is deliberate: this rank governs ONLY the no-downgrade store logic
+    # (both mean "reached the staging tier", so a stale lower write can't flap the repo back).
+    # Promotion READINESS is a separate judgement — tier_c_promotion_gate.ON_STAGING_STATUSES
+    # EXCLUDES STAGING_PENDING (a dep must be actually green to promote dependents on). Keep distinct.
     "STAGING_PENDING": 2,
     "STAGING_GREEN": 2,
     "SIT_VALIDATED": 3,
