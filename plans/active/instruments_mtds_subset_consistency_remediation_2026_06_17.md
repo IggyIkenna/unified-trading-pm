@@ -28,6 +28,19 @@ source:
 > F1, F3, N2, N4, F6, N8. **Apply order: pred → tradfi (clean) → cefi → sports → defi; never all-AG at once.**
 
 Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md`.
+
+> **🟢 SCRIPT-COVERAGE MAP (2026-06-17) — every blocker is a GAP in the existing rebuild scripts, not unscripted.** The
+> rebuild scripts ARE the migration: fix the gap → regenerate the dry-run projection → improved beta → `--apply`
+> (path-schema) → backfills. Per finding: **prefix_tpls** ✅ `canonical_path_templates(ag)` covers all shapes (sports
+> `[""]` — verify only); **N3** ⚠️ `rebuild_sports_manifest_v9` never extracts `league_id`/`league` from the MTDS object
+> path into the row_key (canonicalizer `_canonicalize_row_key_league_id` then gets null); **N1** ⚠️ `rebuild_cefi`
+> CF-11 dedup key mismatches (empty re-emit has blank `instrument_type` vs captured populated → both survive); **N5** ❌
+> `rebuild_defi` emits `captured`/row_count=0 on file PRESENCE without opening (0-row/pre-launch → false captured) →
+> route via `record_zero_rows`; **N6** ⚠️ `rebuild_defi._split_legacy_venue_chain` lacks instrument_type case-norm +
+> lets pairs leak into `chain` + incomplete venue-dedup; **F3** ❌ `rebuild_cefi` passes legacy
+> `attempted_failed` reasons through un-reclassified; **N2** ❌ instruments enumerator marks CME weekend carry-forward
+> as `SOURCE_RETURNED_ZERO`. **Each Phase-A/B/D todo below = a scoped fix to the named script → regen that AG's
+> dry-run projection → re-audit the fixed dimension.**
 Phase-1 (manifest-level, full v9-projected-index walk) is DONE; Phase-2 (file-level cross-year manifest-vs-reality
 sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into the audit doc + new todos here.
 
