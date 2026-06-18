@@ -1133,3 +1133,40 @@ path (fold into strategy-service `CarryStakedBasisRankAllocator` + promote paper
 
 The full deployable stack is now 3 committed e2e scripts: `funding_reversion_crossvenue_book.py` (backtest, 8 causal
 overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.py` (live paper engine).
+
+## Ensemble orchestrator engine + productionization plan (2026-06-18, /autonomous)
+
+**SHIPPED `funding_ensemble_engine.py` (e2e@5859ec0):** the orchestrator across all 4 strategies + per-venue capital +
+liquidation. (1) funding-dispersion
+($-neutral perp), (2) funding-rate arb (delta-neutral short-perp/long-spot on top
++funding), (3) pure-basis (delta-neutral on perp-spot premium), (4) staked-basis FULLY WIRED — long LST + short perp on
+an LST-collateral venue, LIVE LST APRs (Lido stETH 2.4% @Bybit + ETH funding; jitoSOL 8% @Drift + SOL funding ->
++14.1%/yr net). Restricted to the 30-coin liquid survivor universe (avoids the live 754-perp micro-cap / garbage-basis
+pollution). Prints + plots per strategy + ensemble: target positions (coin/venue/side/notional/funding/staking),
+**$
+balance required PER VENUE** (spot cash + perp margin + on-chain LST — e.g. $1M -> Binance $650k / Bybit $167k / Drift
+$167k), and **LIQUIDATION proximity per perp leg with ALERTS\*\* (dist<25% OR margin<3x maint; OK at 3x, min dist 33%).
+`DATA_SOURCE=live|gcs_complete` env (gcs_complete reads the dumped canonical data to avoid live gaps). Plot
+`funding_ensemble.html`. Insight: the delta-neutral basis strategies are CASH-heavy (long-spot/LST leg ties up full
+notional) vs the margin-light perp-only dispersion — the per-venue balance shows it.
+
+**The full deployable RESEARCH->PAPER pipeline is now 5 committed e2e scripts:** `funding_reversion_crossvenue_book.py`
+(backtest, 8 overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.py` (live paper engine),
+`funding_ensemble_engine.py` (4-strategy orchestrator), `funding_regime_classifier.py` (ML regime decomposition).
+
+**PRODUCTIONIZATION PLAN (strategy-service fold — operator permission GRANTED 2026-06-18; the careful
+live-trading-system build, sequenced next):** integration points found —
+`strategy_service/engine/strategies/v2/carry_and_yield/` (`staked_basis.py`, `basis_perp.py`, `basis_dated.py`,
+`staking_simple.py` already exist; ADD `funding_dispersion.py` for the $-neutral reversion archetype + the 8 overlays),
+the portfolio_allocator/allocation_sizer (wire the ensemble SPLIT weights), and
+`StrategyServiceConfig(UnifiedCloudConfig)` for the **complete-data env mode** (a typed config field reading the dumped
+canonical GCS data — HL perp_funding/derivative_ticker/lst-rates — NOT live, to dodge the small-cap gaps; NO os.getenv).
+Requires the strict strategy-service QG + the manifest-allocation-guard tests + the paper->live promote workflow. This
+is a multi-file live-trading-system integration — done as a focused build, not rushed; the shipped paper/ensemble engine
+is the validated foundation + a runnable paper path TODAY.
+
+- [ ] [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 carry_and_yield + allocator with a
+      complete-data DATA_SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
+      granted)
+- [ ] [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
+      **Repo: deployment-service.** (perm granted)
