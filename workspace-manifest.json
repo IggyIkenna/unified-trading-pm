@@ -1804,8 +1804,12 @@
     "locked_since": null,
     "locked_reason": null,
     "lock_version": null,
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "system-integration-tests",
+      "market-tick-data-service",
+      "deployment-api"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "system-integration-tests"
