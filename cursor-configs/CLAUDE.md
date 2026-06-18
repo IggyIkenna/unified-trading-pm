@@ -229,7 +229,7 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   (preserve peer commits → stash YOUR files by name → `pull --rebase` → reconcile essence → re-QG → re-quickmerge) —
   never blind-overwrite a diverged same-file integration branch. PM-as-a-repo uses the same gate. SSOT:
   `codex/08-workflows/ci-cd-flow.md` § "STAGE 0.4 Not-Behind Gate"; structured `QUICKMERGE_BLOCKED` contract tracked in
-  `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.
+  `plans/active/cicd_quality_gates_2026_06_18.md`.
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
 - **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
@@ -965,8 +965,8 @@ version-align → per-repo relax protection (disable rulesets + classic `enforce
 spend; besides `on: push`) because `[skip ci]` main writes suppress the push trigger — the cron sweeps the drift so
 "`main` never ahead of LDR" holds in steady state. A template-only edit to a fleet workflow drifts every per-repo copy +
 reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in the SAME change. SSOTs:
-`codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT"; plans `staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` +
-`ci_local_qg_parity_2026_06_08.md`.
+`codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT"; plans `cicd_promotion_pipeline_2026_06_18.md` +
+`cicd_quality_gates_2026_06_18.md`.
 
 ## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
 
@@ -981,7 +981,7 @@ reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in th
 > since-last-promote marker range (`<last-promoted-LDR-sha>..LDR`), NOT raw `staging..LDR`/`main..LDR` — squash-merges
 > make the raw range re-flag an already-promoted trailer-less commit on EVERY drain forever (the `14b11e2` perpetual
 > "Provenance gate BLOCKED"); fail-safe (stale marker over-flags, never under-flags). Do NOT revert to `staging..LDR`.**
-> SSOT: `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
+> SSOT: `plans/active/cicd_promotion_pipeline_2026_06_18.md` + `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
 > decoupling" + `plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md` (RESOLVED 2026-06-18).
 
 CODE reaches the integration branch **only** through `quickmerge --agent --files` (Pass-1 QG sentinel → Pass-2 commit +
@@ -989,7 +989,7 @@ auto-merging staging PR). A direct `git push` of code to `live-defi-rollout`/`st
 dep-version gate (STAGE 1.6), the dep-tier-readiness gate (STAGE 1.7) and the dep-content gate, and (`quickmerge`
 early-exits "nothing to commit" on a clean tree) silently piles commits on LDR _behind_ main without ever opening a
 staging PR. **The ONLY sanctioned direct pushes** (the closed carve-out set, reconciled with
-`qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` — do not fork these):
+`cicd_quality_gates_2026_06_18.md` — do not fork these):
 
 1. **Dirty-deps** — when a dep repo is dirty mid-edit, commit+push the dep directly to LDR (never quickmerge with dirty
    deps).
@@ -1029,7 +1029,7 @@ commit a per-repo copy). SSOT: `codex/08-workflows/ci-cd-flow.md` § "Two-Pass W
   direct-pushed commits never open a staging PR and silently pile up on LDR behind main (slot-7 2026-06-02: PM was level
   but mtds +131 / deployment +92 / alerting +22 behind main from direct LDR pushes). Existing committed-LDR backlog
   drains via the staging→main automation or a per-repo staging PR — NOT a retroactive quickmerge. Residual hardening +
-  backlog-drain status: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF".
+  backlog-drain status: `plans/active/cicd_docs_and_consolidation_2026_06_18.md` § "Phase 6 — CONSOLIDATED HAND-OFF".
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.
@@ -1228,7 +1228,7 @@ chronic dirty-pull toil). Canonical ignore set (PM): `docs/repo-management/CI-CD
   of marker colours → byte-churned the SVG every run with no real change). **If you see a generated artifact dirty/`??`
   after a QG run, do NOT stage it** — it is regen churn; gitignore + `git rm --cached` it (and add the pattern to the
   canonical template `scripts/propagation/templates/gitignore-python.txt` for fleet rollout). SSOT:
-  `cicd_contract_hardening_2026_06_01.md` item H + `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.
+  `cicd_docs_and_consolidation_2026_06_18.md` item H + `cicd_quality_gates_2026_06_18.md`.
 
 **Every active ping references a plan item (HARD RULE)**: no orphan pings in the `_agent_pings.md` ledgers — every entry
 cites a plan-of-record (`plans/active|epics|audit|active/issues/<slug>.md`, incl date-suffixed). References nothing →
@@ -1367,7 +1367,7 @@ rebase/upstream-self-heal paths in `slot-cron-ff-pull.sh`, and the diverged-tab 
 Bootstrap: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8` (Path-B reference-clones; also
 `--add-slot N`, `--reset-slot N`, `--list`).
 
-SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/worktree_ldr_unification_2026_06_08.md`.
+SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/cicd_quality_gates_2026_06_18.md`.
 
 > **Path-B in one line: a slot has NO tab branch — it is a clone on `live-defi-rollout`**, so there is no upstream to
 > re-point, no tab→LDR mirror, no `slot-master-rebase`, and no diverged-tab class — only the FF-pull + the drift
