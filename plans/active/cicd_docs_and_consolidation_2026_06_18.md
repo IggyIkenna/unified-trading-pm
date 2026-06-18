@@ -18,9 +18,10 @@ source:
   - .github/workflows/*.yml (51 live workflows — ground truth)
 ---
 
-> **🟢 IN-FLIGHT (slot interactive, 2026-06-18) — do NOT dispatch to a worker.** The owner is driving this to completion
-> autonomously in one session (`/autonomous`). The coarse phase todos below are flipped as each phase ships; the 4 new
-> themed plans are born populated at Phase 2, so their granular todos are correct from creation.
+> **✅ COMPLETE (2026-06-18) — consolidation shipped; kept active as the provenance anchor the 19 archived banners point
+> to.** The owner is driving this to completion autonomously in one session (`/autonomous`). The coarse phase todos
+> below are flipped as each phase ships; the 4 new themed plans are born populated at Phase 2, so their granular todos
+> are correct from creation.
 
 # CI/CD docs + diagram refresh, then plan/issue consolidation — 2026-06-18
 
@@ -108,16 +109,16 @@ consolidate-then-archive.
 
 ## Phases
 
-- [ ] [DOCS] P1. **Phase 1 — document the current shape.** Refresh `codex/08-workflows/ci-cd-flow.md` to the as-built
+- [x] ✅ [DOCS] P1. **Phase 1 — document the current shape.** Refresh `codex/08-workflows/ci-cd-flow.md` to the as-built
       final pipeline (complete the D5–D9 partial pass); add a top-level mermaid (commit→LDR→staging→SIT→main→image, each
       node tagged with its workflow) via the existing `cicd-pipeline-definition.yaml`→`CI-CD-PIPELINE.svg` generator;
       add an **auto-generated workflow catalog**
       (`name | trigger | concurrency | stage | reads/writes |     fires-next`) emitted by a generator that parses the
       `.yml` files so it can't rot.
-- [ ] [DOCS] P1. **Phase 2 — consolidate into the 4 themed plans** above, each carrying ONLY open items (triaged:
+- [x] ✅ [DOCS] P1. **Phase 2 — consolidate into the 4 themed plans** above, each carrying ONLY open items (triaged:
       still-real / shipped-unflipped→close / obsolete→close-with-reason), tight context, pointing at the Phase-1 codex
       SSOT. Zero open `- [ ]` silently dropped.
-- [ ] [DOCS] P1. **Phase 3 — archive + repoint.** Archive the 16 consolidated originals + 5 zero-open/decided via the
+- [x] ✅ [DOCS] P1. **Phase 3 — archive + repoint.** Archive the 16 consolidated originals + 5 zero-open/decided via the
       5-step ritual (`[unlock-plan]`, deferred-scan, banner, codex-alignment, CLAUDE.md repoint). Fix the 3 standalone
       plans' frontmatter (D21). Verify the orchestrator backlog re-derives cleanly from the 4 new plans.
 
@@ -166,3 +167,47 @@ Surfaced while reading the 51 workflows; **route into the themed plans at Phase 
      lose a non-fast-forward race that `update-repo-version.yml` (×5 retry) survives. (→ release)
   3. `rollout-action-ref.yml` — pins/commits `quality-gates.yml` (the **v1 filename**) while the live required check is
      `quality-gates-v2`; verify it isn't re-pinning a retired workflow file fleet-wide. (→ release)
+
+---
+
+## Completion report (2026-06-18) — exercise DONE
+
+All three phases shipped autonomously in one session.
+
+**Phase 1 — docs + diagram (codex is now the as-built SSOT):**
+
+- `codex/08-workflows/ci-cd-flow.md` refreshed to the LDR-trunk model — added the canonical **mermaid** pipeline
+  diagram + the catalog pointer; replaced the retired three-tier headline; fixed `workspace-qg`→v2, codex-as-repo,
+  tab-mirror, the `--to-staging`/dep-branch worked example; collapsed the dead 2026-06-01 snapshot; added the 7-state
+  ci_status lifecycle. (33bad466c)
+- New **auto-generated drill-down** `docs/repo-management/CICD-WORKFLOW-CATALOG.md` (51 workflows ×
+  stage/trigger/concurrency/mutates/fires-next) via `scripts/generate-workflow-catalog.py` — regenerable, can't rot.
+  (PR#401 merged, v2-green on main)
+- `cicd-pipeline-definition.yaml` (the rendered-SVG companion) rewritten from the 50-node dead-pipeline monster to a
+  14-node as-built backbone. (6e7939cf0)
+
+**Phase 2 — 4 lean themed plans (zero open items dropped):** `cicd_promotion_pipeline` (30) · `cicd_quality_gates` (15)
+· `cicd_sit_and_fleet` (11) · `cicd_release_machinery` (42) = **98 active open items** consolidated from 16 sources,
+each carrying provenance. Disposition rule: REAL→Open · likely-done→Verify-and-flip · stale→Closed-with-reason ·
+AWS-parity→Deferred annex. Cross-source dups merged (monster #35 ≡ self_healing G10; monster #37–40 ≡ sprawl Tier-5; the
+AR-lag dup). (bb94a23c6)
+
+**Phase 3 — archive + repoint:** 19 originals archived (banner + status flip + `git mv`, `[unlock-plan]`); CLAUDE.md's 7
+cicd SSOT pointers repointed off the archived plans onto the 4 themed plans + this tracker. Working tree clean; backlog
+re-derives from the 4 new plans only. (67bc7deba / 8c506a127 / 70ccf39a5)
+
+**Decisions made under autonomy (documented):**
+
+- `fleet_audit_triad_deferred_followups` kept STANDALONE — cross-domain grab-bag (its `[DATA]` reprocess items are
+  data-pipeline, not cicd).
+- Cross-epic plans (`fleet_git_health` orchestrator · `test_fleet_image_builds` deployment · `dependency_promotion`
+  slot-3-fresh) left standalone — consolidating them under `infrastructure_master` would mis-assign their VM/epic.
+- `ci_dashboard_deployment_ui` NOT archived — 0 open but BLOCKED-PLAYWRIGHT (the UI `pw:L2` gate can't run in this
+  slot).
+- Custom-SVG path lean-rewritten, not retired — retiring would touch the shared `quality-gates.sh` gate template
+  (fleet-rollout risk); the mermaid is canonical, the SVG a rendered companion.
+
+**Residual (tracked, not dropped):** the 3 `[BUG?]` verify-then-fix items in `cicd_release_machinery`
+(conflict-resolution-agent dup-env-key · hotfix-mode bare-push race · rollout-action-ref v1-filename) are real findings
+from the workflow read, captured for a worker to verify. This tracker stays in `plans/active/` as the provenance anchor
+the 19 archived banners reference.

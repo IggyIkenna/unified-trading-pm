@@ -90,7 +90,15 @@ regressions found.**
 
 ---
 
-## 🔜 Deferred exercise — codex + diagram refresh, then plan consolidation (GATED, operator 2026-06-18)
+## ✅ Deferred exercise DONE 2026-06-18 — codex + diagram refresh + plan consolidation (shipped)
+
+> **COMPLETE.** The trigger fired (uv frozen-lock landed); the exercise ran to completion in one autonomous session.
+> Codex refreshed (ci-cd-flow.md + the canonical **mermaid** + the auto-generated `CICD-WORKFLOW-CATALOG.md`); 16 source
+> plans/issues consolidated into 4 lean themed plans (98 open items, zero dropped); 19 originals archived; CLAUDE.md
+> repointed. Full report: `plans/active/cicd_docs_and_consolidation_2026_06_18.md` § "Completion report". **D22 + D23
+> below are resolved by this exercise.** The original spec is retained below for provenance.
+
+### (original spec — GATED, operator 2026-06-18)
 
 **Decision (operator 2026-06-18):** do the CI/CD documentation refresh **and** the plan/issue consolidation **once all
 in-flight CI/CD work lands**, so the docs capture the **final, stable pipeline shape** (not a moving target we'd re-do),
@@ -384,7 +392,8 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
       item — machinery deleted by Path-B) — 2026-06-18
 - [x] D14 ✅ — recorded `assert_deps_published_to_ar.py` as reserved/unwired (callout in
       `cloud_build_router_aws_parity`) — PM@98bdf756c
-- [ ] D22 🟠 — migrate residual todos out of semver_version_bump_skip_ci + cicd_workflow_sprawl_audit, then archive
+- [x] D22 ✅ — DONE 2026-06-18: residual todos consolidated into the 4 themed plans; both issues archived (the
+      consolidation, `cicd_docs_and_consolidation_2026_06_18`)
 - [x] D24 ✅ — deleted 3 dead retired-v1 templates (`feature-branch-to-staging.yml` ×2 + `staging-version-gate.yml`;
       verified deployed to 0/25 + unreferenced); recorded in the sprawl issue — 2026-06-18
 - [x] D6 ✅ — branch-model table: `tab/hk/<N>` row → Path-B reference-clone; staging who-merges → Tier-C drain —
@@ -412,5 +421,7 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
       ldr_tarball_auto_refresh→2026-06-17) — 2026-06-18
 - [x] D21 ✅ — reassigned fleet_git_health_orchestrator `assigned_vm` vm-orchestrator (stopped 2026-06-04) → `planning`
       (live central VM) — 2026-06-18
-- [ ] D23 🟡 — archive the 4 resolved plans/issues (gate the UI one on `pw:L2 ✓`)
+- [x] D23 ✅ — DONE 2026-06-18: archived staging_clean_start + dashboard_promotion_drain + gcp_cloudbuild_sibling +
+      uv_lock_frozen (4 resolved); `ci_dashboard_deployment_ui` stays BLOCKED-PLAYWRIGHT (0 open but the `pw:L2` gate
+      can't run in this slot)
 - [x] D25 ✅ — fixed the ldr-to-staging cron number (`17 */6`→`2,17,32,47`) in the sprawl issue — 2026-06-18
