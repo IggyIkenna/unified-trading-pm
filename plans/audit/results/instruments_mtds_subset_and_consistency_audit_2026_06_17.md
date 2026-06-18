@@ -130,7 +130,37 @@ MTDS Ethereum captured 2020-01-01..19, before instruments-store-defi's first dat
 - **pred:** ✅ CLEAN (no captured-before-genesis).
 
 ## Progress Log
-- 2026-06-17: Phase 1 complete (full-index walk, F1–F7). Phase 2 complete (5 per-AG sub-agents opened real GCS parquets
+
+### 2026-06-18 — remediation execution (autonomous) — Steps 1–2 script fixes shipped + projections regenerated
+
+**Step 1 — CeFi `rebuild_cefi_manifest` (N1 + F3).** Grounded in the live cefi `_index` (2,728,435 rows; captured
+1,332,922 / attempted_failed 1,286,254 / empty_confirmed 109,259). KEY DATA: **every** empty_confirmed (109,259) AND
+**every** legacy-recon attempted_failed (1,195,085) carries a **BLANK instrument_type** — v8 artifacts; every captured object
+carries a non-blank itype (from the `instrument_type=` path segment), so a blank-itype absence row can never be the real
+cell. Fix in `_rebuild_cefi_cf11.py`: (a) **N1+F3-shadow** — blank-itype prior row whose
+`(date,venue,data_type,instrument_id,underlying)` is covered by a real object → **suppressed** (`reemit_skipped_shadow`);
+(b) **F3 drift** — `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` non-shadow blank-itype = un-keyable v9 drift duplicate →
+**dropped** (`dropped_legacy_drift_recon`); (c) `LegacyBlankErrorReasonError` → **preserved** as attempted_failed, reason
+normalised → `UNCLASSIFIED_ADAPTER_ERROR` (a recorded failure → kept visible + backfill-worthy, never hide a gap); (d)
+genuine typed (VENUE_FETCH_FAILED 83,975 + HTTP_429 3,652) preserved → backfill (Step 9). Full regen
+`projected_index_cefi_v2.parquet` (6.5 min): `reemit_skipped_shadow=371,010`, `dropped_legacy_drift_recon=243,828`,
+`reemit_skipped_covered=1,230,947`. **BEFORE/AFTER:** attempted_failed **1.40M → 782,005**; **captured∩failed shadow
+cells: 0**, **captured∩empty shadow cells: 0** (re-audited v2). Tests: 33 pass (6 new). **DECISION (rule-1 documented):**
+the ~698k `LegacyBlankErrorReasonError`→`UNCLASSIFIED_ADAPTER_ERROR` rows are kept attempted_failed (visible) not dropped —
+they were genuine recorded failures with a lost reason; their final fate is resolved by the IS enumerator (Step 4) +
+reconcile (Step 8), so the audit's "~88k genuine" is reached after those, not at the rebuild layer (tracked: N1b).
+
+**Step 2 — Sports `rebuild_sports_manifest_v9` (N3) — AUDIT REFRAME.** The audit's "ALL 202,087 captured cells NULL
+league_id" measured the PROJECTED index; the **live** index already carried league_id on **169,380**/202,087 (only 32,707
+genuinely null). Root cause: `_write_captured_rows` built `row_key_write` (with canonical league_id) then called
+`writer.add()` **without passing league_id** → every captured cell projected NULL-league. Fix (`_rebuild_sports_write.py`):
+carry league_id + instrument_type/instrument_id/underlying/chain into `add()`. Plus `_source_from_row`: case-insensitive
+data_type bridge + sports `trades` → `odds_api` (GCS path `data_source=ODDS_API`; bookmaker is the VENUE).
+`projected_index_sports_v2.parquet`: captured null-league **202,087 → 32,707**; captured source NULL **73.7k+ → 6**
+(202,081 stamped `odds_api`). Tests: 28 pass (3 new). NEW todos: N3a (32,707 genuinely-null in LIVE → recover league from
+GCS path; writer-time gap) + N3b (6 null-source ARBITRAGE/ODDS_MOVEMENT/ODDS_SNAPSHOT cells).
+
+### 2026-06-17: Phase 1 complete (full-index walk, F1–F7). Phase 2 complete (5 per-AG sub-agents opened real GCS parquets
   across 2020/2023/2026). Reframed F3 (recon-noise) + F6 (options ARE captured) + F5 (date='all' by design); escalated F4
   to 100% w/ root cause; added N1–N8. Discarded one false sub-agent claim (cefi≠tradfi). Findings → wrapper plan
   `instruments_mtds_subset_consistency_remediation_2026_06_17.md`.

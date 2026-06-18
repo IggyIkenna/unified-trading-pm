@@ -150,3 +150,16 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
 - [ ] [DATA] P3. **N8 — PRED index data_type label drift** (`prediction_canonical_question_group` vs GCS
       `prediction_trades`/`trades`) + 1 blank-reason attempted_failed cell. Confirm intentional rollup label vs drift;
       type the blank reason. — market-tick-data-service
+- [ ] [DATA] P1. **N1b — CEFI: reconcile the ~698k `UNCLASSIFIED_ADAPTER_ERROR` (ex-`LegacyBlankErrorReasonError`,
+      blank-itype) attempted_failed cells against the IS expected-universe (Step 4 enumerator) + reconcile (Step 8)**:
+      cells the enumerator marks `expected_unattempted` (instrument not listed / pre-coverage) should drop the stale
+      failed row; genuine in-coverage listed-instrument gaps stay attempted_failed → backfill (Step 9). DEPENDS on Step 4.
+      (Provenance: Step-1 fix kept them visible rather than hide a gap; final fate is enumerator+reconcile-driven.) — market-tick-data-service
+- [ ] [DATA] P2. **N3a — SPORTS: 32,707 captured cells genuinely NULL-league in the LIVE index** (schema_version=8;
+      venue=bookmaker/ODDS_API, data_type=trades/ODDS/odds_horizon_bucket). The Step-2 fix recovered the 169,380 cells that
+      HAD league; these 32,707 lost it at WRITE time. Recover league_id by joining each null-league captured (date,venue,
+      data_type) to the GCS object paths (`league_id=<L>`) for that cell — needs a sports object scan (the rebuild is
+      index-driven). No sports market data may be captured for an unattributed league. — market-tick-data-service
+- [ ] [DATA] P3. **N3b — SPORTS: 6 captured cells still NULL source** (ARBITRAGE_OPPORTUNITY/ODDS_MOVEMENT/ODDS_SNAPSHOT,
+      2 each) after the Step-2 `trades→odds_api` + case-insensitive bridge. Add these MDPS-derived data_types to the
+      source bridge (or route to honest absence if not genuinely captured). — market-tick-data-service
