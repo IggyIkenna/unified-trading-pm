@@ -103,9 +103,10 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       15,875)**. Phase-2 sub-agent opens tradfi instruments files to confirm whether options ARE listed but not captured
       (the "we list options but have no options data" case); fix the instrument_type stamping + close the options
       capture gap if real. — market-tick-data-service / instruments-service
-- [ ] [DATA] P2. **F5 — SPORTS INSTR index hygiene: 6,869 blank `capture_status` rows + a literal `date='all'`** in
-      instruments-store-sports `_index`. Clean in the canonicalisation walk (classify the blanks; drop/repair the
-      non-date row). — instruments-service
+- [x] ✅ [DATA] P2. **F5 — SPORTS INSTR index hygiene** — FIXED instruments-service@7b7d3a3 (new
+      `scripts/canonicalize_instruments_store_index.py`). sports v2 projection: blank `capture_status` **6,869→0** (6,869
+      malformed blank-data_type+blank-league rows dropped as no-shard-identity), `date='all'` **preserved (2, by-design
+      reference entities)**, grain intact (35 league_ids in captured TEAMS). Verified independently. — instruments-service
 
 ## Phase C — file-level verification (Phase-2 sub-agents)
 
@@ -122,18 +123,23 @@ gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged:
       a real object this run (`reemit_skipped_shadow`). Regenerated `projected_index_cefi_v2.parquet`: **371,010 shadows
       suppressed**; re-audit shows **captured∩empty shadow cells = 0** (was ~63k) + **captured∩failed = 0**. 33 unit tests
       (6 new). — market-tick-data-service
-- [ ] [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty**: all 333 CME `SOURCE_RETURNED_ZERO`/empty dates are
-      Saturdays, but instruments writes a weekend carry-forward snapshot to GCS (11,526 rows incl 7,364 options) → ~1,079
-      dishonest-empty cells; INST index rows duplicated 2×/cell. Fix the weekend honest-absence classification +
-      de-dup. — instruments-service
+- [x] ✅ [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty + 2×-per-cell dup** — FIXED instruments-service@7b7d3a3.
+      ROOT CAUSE: the v8/v9 re-emit APPENDED a row per cell instead of replacing the stale `schema_version=4` legacy row →
+      every cell carried captured v8/v9 + a blank-status v4 shadow (`instrument_id=None` vs `""` hid the dup). New
+      `canonicalize_instruments_store_index.py` does grain-aware de-dup + classify (count>0→captured incl CME carry-forward;
+      count==0→empty via `non_trading_day_reason` EXPECTED_WEEKEND/HOLIDAY). tradfi v2: rows **20,404→11,630**, blank
+      capture_status **11,301→0**, 2-row cells **8,774→0**, CME weekends = EXPECTED_WEEKEND (183), **SOURCE_RETURNED_ZERO=0**.
+      Verified independently. — instruments-service
 - [x] ✅ [DATA] P0. **N3 — SPORTS league_id dropped** — FIXED mtds@aaeada9. REFRAME: the audit's "100% NULL-league"
       measured the PROJECTION; the live index had league_id on 169,380/202,087. Root cause: `_write_captured_rows` built
       the row_key but called `writer.add()` WITHOUT passing league_id. Fixed: carry league_id + shard dims into add();
       `_source_from_row` now resolves sports `trades`→`odds_api` + case-insensitive bridge. `projected_index_sports_v2`:
       null-league **202,087→32,707**, NULL source **73.7k+→6** (202,081 stamped odds_api). 28 tests (3 new). Residual
       tail (32,707 genuinely-null in LIVE + 6 null-source) → N3a/N3b below. — market-tick-data-service
-- [ ] [DATA] P2. **N4 — SPORTS instruments `instrument_count==0` on 194,356 captured rows** (per-league companion rows;
-      global count lands on one row). Confirm against shard grain; fix count attribution. — instruments-service
+- [x] ✅ [DATA] P2. **N4 — SPORTS instruments `instrument_count==0`** — CONFIRMED NOT-A-DEFECT (instruments-service@7b7d3a3
+      investigation). The per-league companion rows are correctly `captured`; the `instrument_count==0` is a count-DISPLAY
+      artifact (the global count lands on one row), not a capture-status error. Left untouched — no fabricated counts
+      (per-league grain + companion rows preserved in the v2 projection). — instruments-service
 - [ ] [DATA] P1. **N5 — DEFI temporally-impossible `vault_share_price` captured phantoms** (1,582 cells 2020–2023: MAKER
       pre-2023, ETHENA pre-Feb-2024-launch; 2020-01-01 VAULT opened 0-row). These are captured-but-empty pre-launch
       phantoms → reclassify to honest pre-launch absence (venue-launch-date-aware `record_zero_rows`). — market-tick-data-service
