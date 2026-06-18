@@ -160,6 +160,23 @@ data_type bridge + sports `trades` → `odds_api` (GCS path `data_source=ODDS_AP
 (202,081 stamped `odds_api`). Tests: 28 pass (3 new). NEW todos: N3a (32,707 genuinely-null in LIVE → recover league from
 GCS path; writer-time gap) + N3b (6 null-source ARBITRAGE/ODDS_MOVEMENT/ODDS_SNAPSHOT cells).
 
+### 2026-06-18 — CHECKPOINT (resume state): Steps 1–2 DONE; Steps 3–4 delegated; 5–9 pending
+
+- **Steps 1–2 SHIPPED** mtds@aaeada9 (cefi N1/F3 + sports N3); `projected_index_cefi_v2.parquet` +
+  `projected_index_sports_v2.parquet` regenerated + re-audited; plan todos N1/N3/F3-reframed flipped.
+- **Step 3 (defi N5/N6)** → background sub-agent on mtds. Scope: itype `.lower()` + venue-dup normalization
+  (MUST match migrator `_canonical_venue` so manifest==object path) + N5 pre-launch vault → `record_zero_rows`. Output:
+  `projected_index_defi_v2.parquet`. (chain pollution already 0 — verify only.) Reports back numbers; parent flips todos.
+- **Step 4 (instruments N2)** → background sub-agent on instruments-service. Scope: de-dup 2×-per-cell (8,774 cells) +
+  classify 11,301 blank-capture_status rows (+F5 sports blanks / `date='all'` by-design / N4 instrument_count==0).
+  Output: instruments-store `..._v2.parquet`. Reports back; parent flips todos.
+- **Step 5 prep:** `reconcile_phantom_manifest_rows_all.py` `ASSET_GROUP_CONFIG[ag]["prefix_tpls"] =
+  canonical_path_templates(ag)` for ALL AGs EXCEPT **sports** (`[""]` sentinel) — sports is THE prefix_tpls gap to fix
+  before any sports `--apply` (apply foot-gun). cefi/defi/tradfi/pred already use the UAC SSOT (CF-15/V0). Parent owns this
+  file (sub-agents told not to touch it).
+- **Step 7 prep:** RUNNING GCP VMs = footystats-fwd-* (sports DATA → drain), alerting-quietness-* + vm-zombie-watchdog-*
+  (monitoring → keep per safety rule). Drain footystats before apply; consolidate; snapshot.
+
 ### 2026-06-17: Phase 1 complete (full-index walk, F1–F7). Phase 2 complete (5 per-AG sub-agents opened real GCS parquets
   across 2020/2023/2026). Reframed F3 (recon-noise) + F6 (options ARE captured) + F5 (date='all' by design); escalated F4
   to 100% w/ root cause; added N1–N8. Discarded one false sub-agent claim (cefi≠tradfi). Findings → wrapper plan
