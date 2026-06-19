@@ -1248,6 +1248,21 @@ sports todos are non-blocking + correctly homed (BLOCKED-CREDENTIALS SFI/Transfe
 codex contract changed (the league-recovery brought live data INTO compliance with the already-documented sports shard
 atom `(asset_group=sports, venue/source, data_type, league_id, day)` in `availability-manifest-and-data-status.md`).
 
+- [x] ✅ [DATA] P2. **Residual sports MTDS bookmaker-`trades` pipeline_mode/source mislabel — re-stamped 559 cells** —
+      DONE 2026-06-19 (mtds@41c990a `restamp_sports_bookmaker_trades_pipeline_mode_2026_06_19.py --apply`). Surfaced
+      during the re-certification: the league-recovery's `defective_mask = (captured & null_league) | blank_status`
+      never touched captured cells that ALREADY had a per-league `league_id` but a wrong `pipeline_mode`. Of 50,497
+      captured `data_type=trades` cells carrying `pipeline_mode=batch_api_football`, GCS-verified that **49,938 are
+      CORRECT** — their object genuinely lives under
+      `…/pipeline_mode=batch_api_football/…/data_source=ODDS_API/venue={V}/     league_id={L}/…/data_type=trades/`
+      (api_football's pipeline ingests odds-api-sourced bookmaker odds; the pipeline_mode label matches the object), and
+      only **559 were genuinely mislabeled** (object lives ONLY under `batch_odds_api`, verified ABSENT under
+      `batch_api_football`). Re-stamped only those 559 → `pipeline_mode=batch_odds_api` + `source=odds_api` (day-map
+      distinguishes the two via `batch_api_football in     modes`). ROW-PRESERVING — captured **346,498 → 346,498** (0
+      lost). Post-apply verify: trades captured pipeline_mode = 167,779 odds_api + 49,938 api_football, source perfectly
+      consistent with pipeline_mode, null-league 0, null-source 0, schema 100% v9. Snapshot
+      `pre_sports_bookmaker_restamp_20260619_130152`. — market-tick-data-service
+
 ## SPORTS legacy DELETE executed (operator-authorized 2026-06-19) + credentials live-tested
 
 > Operator 2026-06-19: "do these delete" + "check if [the keys] work". Both actioned.
