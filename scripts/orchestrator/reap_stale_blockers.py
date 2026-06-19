@@ -54,6 +54,7 @@ _DEFAULT_DB = _WORKSPACE / "agent-orchestrator" / "data" / "state" / "state.db"
 _DEFAULT_STALE_DAYS = 3
 
 _SLACK_WEBHOOK = os.environ.get("AGENT_ORCHESTRATOR_SLACK_WEBHOOK", "")  # noqa: qg-empty-fallback
+_DASHBOARD_URL = os.environ.get("ORCHESTRATOR_DASHBOARD_URL", "https://agent-orchestrator.odum-research.com")
 
 
 # ---------------------------------------------------------------------------
@@ -145,8 +146,10 @@ def _slack_post(text: str, blocks: list[dict] | None = None) -> None:
 
 def _alert_deadlock(task_id: str, blocker_id: str, stale_days: int) -> None:
     ts = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+    backlog_link = f"{_DASHBOARD_URL}/#backlog"
     _slack_post(
-        f":rotating_light: DEADLOCK in backlog: `{task_id}` ← `{blocker_id}` (both queued >{stale_days}d) [{ts}]",
+        f":rotating_light: DEADLOCK in backlog: `{task_id}` ← `{blocker_id}` "
+        f"(both queued >{stale_days}d) [{ts}] — <{backlog_link}|Open Backlog>",
         blocks=[
             {
                 "type": "header",
@@ -166,7 +169,10 @@ def _alert_deadlock(task_id: str, blocker_id: str, stale_days: int) -> None:
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": "Both tasks are queued with unmet prereqs — manual resolution required.",
+                        "text": (
+                            "Both tasks are queued with unmet prereqs — manual resolution required. "
+                            f"<{backlog_link}|Open orchestrator backlog>"
+                        ),
                     }
                 ],
             },
@@ -176,9 +182,10 @@ def _alert_deadlock(task_id: str, blocker_id: str, stale_days: int) -> None:
 
 def _alert_orphan(task_id: str, missing_blocker_id: str, stale_days: int) -> None:
     ts = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+    backlog_link = f"{_DASHBOARD_URL}/#backlog"
     _slack_post(
         f":warning: ORPHAN-BLOCKED: `{task_id}` waiting on `{missing_blocker_id}` "
-        f"which is not in backlog (>{stale_days}d) [{ts}]",
+        f"which is not in backlog (>{stale_days}d) [{ts}] — <{backlog_link}|Open Backlog>",
         blocks=[
             {
                 "type": "header",
@@ -200,7 +207,8 @@ def _alert_orphan(task_id: str, missing_blocker_id: str, stale_days: int) -> Non
                         "type": "mrkdwn",
                         "text": (
                             "Prereq task was removed from the backlog without being marked done. "
-                            "Remove it from prereqs.completed_tasks or re-add the task."
+                            "Remove it from prereqs.completed_tasks or re-add the task. "
+                            f"<{backlog_link}|Open orchestrator backlog>"
                         ),
                     }
                 ],

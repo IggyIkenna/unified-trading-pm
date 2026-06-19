@@ -21,14 +21,17 @@ jobs:
     timeout-minutes: 10
     outputs:
       has_alerts: ${{ steps.scan.outputs.has_alerts }}
+      alert_message: ${{ steps.scan.outputs.alert_message }}
     steps:
       - name: Scan for stale breaking-fix-pending issues
         id: scan
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          # Retired Telegram → Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
+          # Per-issue escalation alerts (CRITICAL/WARNING) still post inline via send_telegram()
+          # — each is gated by an issue comment so they fire at most once per threshold.
+          # The summary (TOTAL>0) now routes through the carrier notify job below for ledger parity.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
         run: |
           set -euo pipefail
 
@@ -241,12 +244,13 @@ jobs:
           echo ""
           echo "=== Summary: total=${TOTAL}, warned_4h=${WARNED_4H}, critical_24h=${CRITICAL_24H} ==="
 
-          # ── Summary Telegram (only if there are pending issues) ──
+          # ── Emit outputs for the carrier notify job (alert_quality_audit_2026_06_18 Phase 6) ──
           if [ "$TOTAL" -gt 0 ]; then
-            send_telegram "Fix approval check: ${TOTAL} pending, ${WARNED_4H} at 4h, ${CRITICAL_24H} at 24h" "INFO"
             echo "has_alerts=true" >> "$GITHUB_OUTPUT"
+            echo "alert_message=Fix Approval Timeout: ${TOTAL} pending, ${WARNED_4H} at 4h warning, ${CRITICAL_24H} at 24h critical" >> "$GITHUB_OUTPUT"
           else
             echo "has_alerts=false" >> "$GITHUB_OUTPUT"
+            echo "alert_message=" >> "$GITHUB_OUTPUT"
           fi
 
   persist:
@@ -263,3 +267,22 @@ jobs:
       branch: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       details_json: '{"event": "fix-approval-timeout-detected"}'
+
+  # ── NOTIFY summary via carrier (alert_quality_audit_2026_06_18 Phase 6) ──────────────────────
+  # Routes the standing-condition summary through notify-slack.yml so it gains ledger dedup.
+  # Per-issue CRITICAL/WARNING alerts still post inline (each gated by a GitHub issue comment).
+  notify:
+    needs: check-stale-fixes
+    if: always() && needs.check-stale-fixes.outputs.has_alerts == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >-
+        ⏰ *Fix Approval Timeout* — ${{ needs.check-stale-fixes.outputs.alert_message }} — <${{ github.server_url }}/${{
+        github.repository }}/actions/runs/${{ github.run_id }}|View run>
+      severity: WARNING
+      workflow_name: fix-approval-timeout
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Stable key for outstanding issues; re-nags every 2h (matches the cron cadence).
+      dedup_key: fix-approval-timeout:outstanding
+      cooldown_min: 120
+    secrets: inherit

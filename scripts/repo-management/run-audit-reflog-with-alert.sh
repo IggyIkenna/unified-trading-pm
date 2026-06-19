@@ -100,10 +100,12 @@ if [[ $exit_code -eq 1 ]]; then
   _slack_wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
   if [[ -n "${_slack_wh}" ]]; then
     _host="$(hostname -s 2>/dev/null || hostname || echo unknown)"
-    _slack_payload=$(SUMMARY="${SUMMARY}" HIGH_RISK="${HIGH_RISK}" HOST="${_host}" python3 -c '
+    _dashboard_url="${ORCHESTRATOR_DASHBOARD_URL:-https://agent-orchestrator.odum-research.com}"
+    _slack_payload=$(SUMMARY="${SUMMARY}" HIGH_RISK="${HIGH_RISK}" HOST="${_host}" DASHBOARD="${_dashboard_url}" python3 -c '
 import json, os
-txt = ":rotating_light: *Audit Reflog — High Risk* on `%s`\n\n%s\n\n```\n%s\n```\nSee /tmp/audit-reflog.log on the host for the full report." % (
-    os.environ.get("HOST", ""), os.environ.get("SUMMARY", ""), os.environ.get("HIGH_RISK", ""))
+dashboard = os.environ.get("DASHBOARD", "https://agent-orchestrator.odum-research.com")
+txt = ":rotating_light: *Audit Reflog — High Risk* on `%s`\n\n%s\n\n```\n%s\n```\nSee `/tmp/audit-reflog.log` on the host for the full report.\n<%s/fleet-git|Open fleet-git in orchestrator>" % (
+    os.environ.get("HOST", ""), os.environ.get("SUMMARY", ""), os.environ.get("HIGH_RISK", ""), dashboard)
 print(json.dumps({"text": txt}))' 2>/dev/null || true)
     [[ -n "${_slack_payload}" ]] && curl -s -X POST -H 'Content-Type: application/json' \
       --data "${_slack_payload}" "${_slack_wh}" > /dev/null 2>&1 || true

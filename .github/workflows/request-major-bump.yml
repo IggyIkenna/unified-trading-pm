@@ -43,6 +43,12 @@ concurrency:
 jobs:
   request-major-bump:
     runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.validate.outputs.repo }}
+      current: ${{ steps.validate.outputs.current }}
+      proposed: ${{ steps.validate.outputs.proposed }}
+      requester: ${{ steps.validate.outputs.requester }}
+      issue_url: ${{ steps.create-issue.outputs.issue_url }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
@@ -163,35 +169,16 @@ jobs:
           echo "Issue URL: $ISSUE_URL"
           echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Send Slack alert
+      - name: Validate issue URL
         env:
-          PROPOSED: ${{ steps.validate.outputs.proposed }}
-          CURRENT: ${{ steps.validate.outputs.current }}
-          REPO: ${{ steps.validate.outputs.repo }}
           ISSUE_URL: ${{ steps.create-issue.outputs.issue_url }}
-          REQUESTER: ${{ steps.validate.outputs.requester }}
-          # Retired Telegram → Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           # Validate issue URL is not empty (issue creation is the real work — keep this hard check)
           if [ -z "$ISSUE_URL" ] || [ "$ISSUE_URL" = "unknown" ]; then
             echo "::error::ISSUE_URL is empty or unknown — issue creation failed silently."
             exit 1
           fi
-
-          MSG="🔴 MAJOR BUMP REQUESTED — Repo: ${REPO} — Version: ${CURRENT} → ${PROPOSED} — Requested by: @${REQUESTER} — Approve: ${ISSUE_URL}"
-          # Slack notify is BEST-EFFORT — a missing/misconfigured webhook must NEVER fail the run
-          # (the GitHub Issue at $ISSUE_URL is the durable record). No more exit-1-on-missing-token.
-          case "${SLACK_WEBHOOK_URL:-}" in
-            https://*)
-              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$SLACK_WEBHOOK_URL" \
-                -H 'Content-Type: application/json' \
-                --data "$(jq -n --arg t "$MSG" '{text:$t}')")
-              if [ "$HTTP_CODE" = "200" ]; then echo "Slack alert sent"; \
-              else echo "::warning::Slack send failed (HTTP $HTTP_CODE) — issue at $ISSUE_URL"; fi ;;
-            *) echo "::warning::SLACK_CI_WEBHOOK_URL not set/https — skipping (issue created at $ISSUE_URL)" ;;
-          esac
+          echo "Issue created: $ISSUE_URL"
 
       - name: Summary
         run: |
@@ -206,3 +193,23 @@ jobs:
           echo "| Issue | ${{ steps.create-issue.outputs.issue_url }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Next step: Comment /approve on the issue to proceed with the version bump." >> $GITHUB_STEP_SUMMARY
+
+  # ── NOTIFY via carrier (gains dedup ledger — alert_quality_audit_2026_06_18 Phase 6) ───────────
+  notify:
+    needs: request-major-bump
+    if: success()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >-
+        🔴 *MAJOR BUMP REQUESTED* — `${{ needs.request-major-bump.outputs.repo }}` ${{
+        needs.request-major-bump.outputs.current }} → ${{ needs.request-major-bump.outputs.proposed }} — requested by
+        @${{ needs.request-major-bump.outputs.requester }} — <${{ needs.request-major-bump.outputs.issue_url }}|Approve
+        on GitHub>
+      severity: WARNING
+      workflow_name: request-major-bump
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Stable per-repo+version key: a second request for the same version won't re-page within 4h.
+      dedup_key:
+        major-bump-request:${{ needs.request-major-bump.outputs.repo }}:${{ needs.request-major-bump.outputs.proposed }}
+      cooldown_min: 240
+    secrets: inherit

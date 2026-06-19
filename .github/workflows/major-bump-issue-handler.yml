@@ -38,6 +38,11 @@ jobs:
     if: |
       github.event.issue.pull_request == null &&
       contains(github.event.issue.labels.*.name, 'major-bump-pending')
+    outputs:
+      action: ${{ steps.cmd.outputs.action }}
+      repo: ${{ steps.meta.outputs.repo }}
+      version: ${{ steps.meta.outputs.version }}
+      issue_url: ${{ github.event.issue.html_url }}
     steps:
       - name: Detect command
         id: cmd
@@ -210,29 +215,10 @@ jobs:
             exit 1
           fi
 
-      - name: Send Slack notification
+      - name: Log action taken
         if: steps.cmd.outputs.action != 'none'
-        env:
-          ACTION: ${{ steps.cmd.outputs.action }}
-          REPO: ${{ steps.meta.outputs.repo }}
-          VERSION: ${{ steps.meta.outputs.version }}
-          APPROVER: ${{ github.event.comment.user.login }}
-          ISSUE_URL: ${{ github.event.issue.html_url }}
-          # Retired Telegram -> Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
         run: |
-          if [ "$ACTION" = "approve" ]; then
-            MSG="Major bump APPROVED: ${REPO} -> v${VERSION} on staging (by @${APPROVER})\n${ISSUE_URL}"
-          else
-            MSG="Major bump REJECTED: ${REPO} -> v${VERSION} (by @${APPROVER})\n${ISSUE_URL}"
-          fi
-          # Best-effort -- never fail the run on a missing/misconfigured webhook.
-          case "${SLACK_WEBHOOK_URL:-}" in
-            https://*)
-              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                --data "$(jq -n --arg t "$MSG" '{text:$t}')" && echo "Slack notification sent" || true ;;
-            *) echo "SLACK_CI_WEBHOOK_URL not set/https -- skipping notification" ;;
-          esac
+          echo "Major bump action: ${{ steps.cmd.outputs.action }} — ${{ steps.meta.outputs.repo }} v${{ steps.meta.outputs.version }}"
 
       - name: Update issue and close
         if: steps.cmd.outputs.action != 'none'
@@ -288,22 +274,38 @@ jobs:
 
           echo "Issue #${ISSUE_NUMBER} closed as ${STATE_REASON}"
 
+  # ── NOTIFY via carrier (gains dedup ledger — alert_quality_audit_2026_06_18 Phase 6) ────────────
+  notify:
+    needs: handle-major-bump
+    if: always() && needs.handle-major-bump.outputs.action != 'none' && needs.handle-major-bump.result != 'failure'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >-
+        ${{ needs.handle-major-bump.outputs.action == 'approve' && '✅ Major bump *APPROVED*' || '❌ Major bump
+        *REJECTED*' }} — `${{ needs.handle-major-bump.outputs.repo }}` v${{ needs.handle-major-bump.outputs.version }} —
+        by @${{ github.event.comment.user.login }} — <${{ needs.handle-major-bump.outputs.issue_url }}|GitHub Issue>
+      severity: ${{ needs.handle-major-bump.outputs.action == 'approve' && 'INFO' || 'WARNING' }}
+      workflow_name: major-bump-issue-handler
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Distinct key from the request (different key clears the request dedup). Low blast-radius — no cooldown needed.
+      dedup_key:
+        major-bump-${{ needs.handle-major-bump.outputs.action }}:${{ needs.handle-major-bump.outputs.repo }}:${{
+        needs.handle-major-bump.outputs.version }}
+      cooldown_min: 60
+    secrets: inherit
+
   notify-failure:
     name: Slack — Major Bump Handler Failure
     needs: [handle-major-bump]
     if: always() && needs.handle-major-bump.result == 'failure'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Slack failure alert
-        env:
-          # Retired Telegram -> Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          MSG="❌ Major bump handler FAILED — ${{ github.event.repository.name }} (issue #${{ github.event.issue.number }}). View: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          # Best-effort -- never fail the run on a missing/misconfigured webhook.
-          case "${SLACK_WEBHOOK_URL:-}" in
-            https://*)
-              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                --data "$(jq -n --arg t "$MSG" '{text:$t}')" && echo "Slack failure alert sent" || true ;;
-            *) echo "SLACK_CI_WEBHOOK_URL not set/https -- skipping notification" ;;
-          esac
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >-
+        ❌ *Major bump handler FAILED* — `${{ github.event.repository.name }}` (issue #${{ github.event.issue.number }})
+        — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>
+      severity: CRITICAL
+      workflow_name: major-bump-issue-handler
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: major-bump-handler-failed:${{ github.event.repository.name }}:${{ github.event.issue.number }}
+      cooldown_min: 120
+    secrets: inherit
