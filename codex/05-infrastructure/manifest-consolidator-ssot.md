@@ -116,6 +116,37 @@ temp files and bounds working memory via `memory_limit`.
   default, 0 duplicate keys, exact key-set parity vs a full re-merge incl. the NULL-key path. **No Cloud Run memory bump
   needed.**
 
+### Incremental cutoff = LAST-CONTENT-WRITE marker, NOT freshness mtime (idle-bucket trap fix, 2026-06-19)
+
+The incremental cutoff reads a **dedicated content-write marker, separate from the freshness mtime** — the fix for the
+idle-bucket starvation trap. Two GCS object-metadata markers on the canonical `_index/availability_index.parquet`:
+
+| Marker                          | Set by                                                        | Read by                                                                |
+| ------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `consolidator_run_at`           | a real merge (`_write_consolidated`) **AND** the idle `_touch_canonical_mtime` | the READER freshness check (`_get_canonical_mtime`, 120 s threshold)   |
+| `consolidator_content_write_at` | **ONLY** a real merge (`_write_consolidated`)                 | the incremental **cutoff** + the post-merge **prune** (`_get_content_write_mtime`) |
+
+**Why two markers.** The `*/1` cron `_touch`es `consolidator_run_at` forward on every idle cycle (so the reader's
+freshness window stays valid on a bucket with no active writers). The OLD code used that same touch-advanced mtime as
+the incremental cutoff. On an **idle bucket** (no concurrent capture writes), an out-of-band per-VM shard — e.g. the
+expected-universe v2 enumerator's `expected_unattempted` seed (`enum-universe-v2-<ag>`), a rebuild, a finished backfill
+— could be written, then `_touch`-advanced PAST by the very next idle cycle's freshness bump and **pruned as "settled"
+before it ever merged** → its rows silently never reached the canonical. (Observed live 2026-06-19: `defi`/`sports`
+merged within 1 cycle because captures were flowing; `cefi`/`tradfi` were idle, never merged across ~10 cycles, and
+needed a manual `consolidate(bucket, force=True)`.)
+
+The fix tracks `consolidator_content_write_at` independently: it advances ONLY when a genuine merge writes new rows, so
+an idle `_touch` can no longer move the cutoff past an unmerged shard. The changed-shard predicate AND the prune cutoff
+both read it. **Legacy fallback** (a canonical written before this fix has no content-write marker):
+`consolidator_content_write_at` → `consolidator_run_at` → `blob.updated` — a one-shot, fail-toward-correctness chain (it
+can only make the cutoff OLDER, so it over-includes shards → re-merge, never under-includes → silent drop). The marker
+takes over on the next real merge. Code:
+[`manifest_consolidator.py`](../../../unified-trading-library/unified_trading_library/manifest_consolidator.py)
+`_get_content_write_mtime` + `_CONSOLIDATOR_CONTENT_WRITE_AT_KEY`; regression
+`tests/unit/test_manifest_consolidator.py::test_idle_bucket_shard_written_after_last_merge_is_NOT_skipped` +
+`::test_content_write_marker_stamped_on_real_merge_not_on_idle_touch`. Issue (RESOLVED):
+`plans/active/issues/consolidator_idle_bucket_incremental_trap_2026_06_19.md`.
+
 **schema_version preservation (ties to invariant #5)**: `union_by_name` keeps each source row's `schema_version` — the
 merge never downgrades. A NULL `schema_version` in the consolidated output means the SOURCE shard omitted the column
 (observed: the cefi instruments-service enumeration shards `slot4-cefi-c*-20260523`, a reduced 14-col schema also

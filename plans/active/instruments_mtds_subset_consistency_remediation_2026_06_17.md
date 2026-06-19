@@ -607,6 +607,19 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `kind="instruments-store-prediction",     asset_group=None` if prediction ever needs re-canonicalisation.
       **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
 
+## CME event contracts (binary-settlement EC* series) — FINISH the backfill (operator 2026-06-19)
+
+CONFIRMED in Databento: all 9 `EC*` event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/**ECBTC** — BTC binary, the killer leg vs Polymarket BTC binaries) are in `_CME_EVENT_CONTRACTS` (`unified_api_contracts/registry/tradfi_instrument_universe.py`) on **GLBX.MDP3**, covered by the existing 3-dataset subscription (no extra dataset), tagged `event_contract`, validity `{trades, ohlcv-1s, tbbo}`. Gather was STARTED, not finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
+
+- [ ] [DATA] P1. **Finish the CME EC* event-contract backfill** — all 9 series (`.OPT` parents on GLBX.MDP3), data_types `{trades, ohlcv_1s, tbbo}`, full timeframe, via the tradfi Databento path (`--source databento`). Ensure the running tradfi Databento fan-out enumerates the `event_contract`/`.OPT`-parent series (not just standard futures); if not, a focused finish run. Verify EC* cells captured in the v9 `_index` + that the FINAL CERTIFICATION explicitly checks EC* coverage (esp. ECBTC). — market-tick-data-service / instruments-service
+
+## Forthcoming credentials (operator 2026-06-19 — note now, unblock on arrival)
+
+Operator is acquiring these — record as pending-credential so the backfill runs the moment the keys land (NOT memory; tracked here per the durable-facts rule):
+
+- [ ] [DATA] P1. **Kalshi API keys — COMING SOON** (operator acquiring). Unblocks the **prediction** Kalshi venue (we have Polymarket; Kalshi is the second prediction venue for the Polymarket-vs-Kalshi dispersion archetype). On arrival: key → Secret Manager → run the Kalshi prediction instrument + market-data backfill (mirror the polymarket path); status `BLOCKED-CREDENTIALS` until then. — mtds / instruments-service (prediction)
+- [ ] [DATA] P1. **Extended (Extended Finance / EXTENDED-STARKNET) API — operator APPLYING.** A DeFi/perp venue (was an absent venue in the cefi/defi backfill). On approval: key → Secret Manager → run the Extended instrument + perp backfill; status `BLOCKED-CREDENTIALS` until then. — mtds / instruments-service (defi/cefi perp)
+
 ## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
 
 **No longer PAYG** — subscription + ~$150 credits (more than enough to stream all instruments). **ONE API key**
@@ -1116,17 +1129,25 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
 
 ### Sports credentialed sources (C) + MD twin-verify (2026-06-19, autonomous tick 4)
 
-- [ ] [DATA] P2. **BLOCKED-CREDENTIALS — SFI + Transfermarkt sports keys (validate/rotate)** — adapter scaffolds + unit
-      tests CONFIRMED present (no build needed): `SoccerFootballInfoAdapter` (35 tests `test_sfi_adapter_coverage.py`,
-      RapidAPI) + `TransfermarktAdapter` (33 tests `test_transfermarkt_adapter_coverage.py`, RapidAPI/Apify). Both
-      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000. **LIVE-TESTED
-      2026-06-19: both secrets hold the SAME valid RapidAPI key `22380b4a…`; both APIs return HTTP 403
-      `"You are not subscribed to this API."` → a RapidAPI SUBSCRIPTION GAP, NOT a bad/expired key.** Operator ask
-      (corrected): **SUBSCRIBE** the RapidAPI account to `soccer-football-info` + `transfermarkt-football-data-api` (or
-      swap the TM secret to an Apify `apify_api_*` token — adapter auto-detects) → ping
-      `ikenna_orchestrator/pings/slot_1.md` § "CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19)".
-      SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog — NOT a coverage
-      gap). — instruments-service [BLOCKED-CREDENTIALS]
+- [x] ✅ [DATA] P2. **SFI + Transfermarkt sports keys — UNBLOCKED + backfill launched** — DONE 2026-06-19. Operator
+      provisioned the RapidAPI subscription (new key `840373…` on BOTH `soccer-football-info-api-key` v2 +
+      `transfermarkt-api-key` v4, same key). **LIVE-SMOKED 2026-06-19 (slot-6, instruments-service .venv, real GCP)**:
+      (a) SFI `get_match_descriptors_for_date(2025-03-01)` → HTTP 200, 1525 completed matches; `_fetch_sfi_data` end-to-end
+      wrote **21,014 SFI_PROGRESSIVE_STATS rows** + manifest per-VM shard. (b) Transfermarkt RapidAPI
+      `competitions/standings` GB1/2024 → HTTP 200 (NOT apify path); `_fetch_transfermarkt_data(PLAYER_VALUES, GB1, 2024)`
+      → 20 player_values rows + master/snapshot tables + manifest shard. Prior 403 "not subscribed" is RESOLVED. Backfill
+      VMs launched (auto-shutdown-on-completion, per-VM shards): 4× `sfi-backfill-chunk-{1..4}of4-20260619-161036`
+      (2020-01-01→2026-06-19, SFI 4 req/s; backfills ~69.7k expected_unattempted SFI cells) + 1×
+      `tm-backfill-20260619-161123` (PLAYER_VALUES 2015-01-01→2026-06-19; per-league-trigger self-throttle keeps it inside
+      the 120k/mo budget; backfills ~71k expected_unattempted TM cells). Disjoint from the running `af-backfill`
+      (api-football) MTDS fan-out. SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES stay RETIRED (runtime-only UAC catalog).
+      — instruments-service + deployment-service VM launchers
+- [ ] [DATA] P2. **Verify SFI+TM backfill VMs ran to completion + manifest cells flipped** — the 5 backfill VMs
+      (run-id `20260619-161036` SFI ×4 + `tm-backfill-20260619-161123`) auto-shutdown on completion. After they drain:
+      (1) `gcloud compute instances list --filter='name~"^sfi-backfill" OR name~"^tm-backfill"'` = empty/STOPPED;
+      (2) run `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` to materialise empty_confirmed rows;
+      (3) re-read the sports availability index — `expected_unattempted` for `source∈{soccer_football_info,transfermarkt}`
+      should drop sharply as cells flip to `captured`/`empty_confirmed`. — instruments-service [VM RUNNING]
 
 ### Sports A2/A3/D read-only verification — ALL PASS (2026-06-19, autonomous tick 4)
 

@@ -5395,3 +5395,14 @@ to (a) **soccer-football-info** (Ultra plan: 4 req/s, 99,999 req/day per the ada
 **transfermarkt-football-data-api**. ALTERNATIVE for Transfermarkt: replace `transfermarkt-api-key` with an **Apify**
 token (`apify_api_*`) — the `TransfermarktAdapter` auto-detects + runs the `webdatalabs~transfermarkt-scraper` Apify
 actor. Once subscribed, SFI_PROGRESSIVE_STATS + PLAYER_VALUES backfill (af95b962 IS-coverage worker's domain).
+
+### RESOLVED 2026-06-19 (slot-6) — subscription provisioned, keys verified, backfill launched
+
+Operator provisioned the RapidAPI subscription. New key `840373…` now on BOTH `soccer-football-info-api-key` (v2) +
+`transfermarkt-api-key` (v4) — same key, RapidAPI path (NOT apify). **Live-smoked OK (real GCP, not mock):** SFI
+`/matches/day/basic/?d=20250301` → 200 / 1525 completed matches; `_fetch_sfi_data` wrote 21,014 SFI_PROGRESSIVE_STATS
+rows + manifest. Transfermarkt `competitions/standings` GB1/2024 → 200; `_fetch_transfermarkt_data` wrote 20
+player_values rows + master/snapshot tables + manifest. Prior 403 "not subscribed" is gone. Backfill VMs running
+(auto-shutdown): `sfi-backfill-chunk-{1..4}of4-20260619-161036` (2020→now) + `tm-backfill-20260619-161123` (2015→now,
+PLAYER_VALUES). Plan-flip: `instruments_mtds_subset_consistency_remediation_2026_06_17.md` § "Sports credentialed
+sources (C)". **This credential ask is CLOSED — no further operator action needed.**
