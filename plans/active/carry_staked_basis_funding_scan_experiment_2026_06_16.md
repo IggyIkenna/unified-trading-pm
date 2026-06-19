@@ -1193,7 +1193,20 @@ is the validated foundation + a runnable paper path TODAY.
       cross-sectional rank is computed upstream (feature/allocator layer); the engine is the per-instrument leg engine
       (batch==live, source-agnostic). **Repo: unified-api-contracts + strategy-service.**
 - [ ] [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
-      **Repo: deployment-service.** (perm granted)
+      **Repo: deployment-service.** (perm granted) — **LAUNCHER BUILT + VALIDATED `deployment-service@659f6bc`**
+      (2026-06-19): `scripts/vm/launch-funding-ensemble-paper-cron-vm.sh` (SCHEDULED_RECURRING daily-cron paper VM running
+      `funding_ensemble_engine.py` → GCS, modelled on `launch-defi-paper-trading-vm.sh`); registered prefix
+      `funding-ensemble-paper-` in `vm_zombie_watchdog` VM_PREFIX_TO_BUCKET (SCHEDULED_RECURRING, heartbeat-only).
+      `--dry-run` + `bash -n` + watchdog-parse validated. **The billed recurring-VM LAUNCH + per-run progress events are
+      the GATED operational step** — `funding_ensemble_engine.py` is a research script (no `ServiceBootstrap` lifecycle
+      events), so the no-fire-and-forget T+10min progress-event verification needs the engine folded into
+      strategy-service (the P1c engine follow-up); `DATA_SOURCE=gcs_complete` is a label until that loader lands. To
+      launch when ready: `create-code-tarballs.sh --include e2e-testing strategy-service utl uac` then run the launcher
+      (verify VM RUNNING <60s + the STARTED event + the daily GCS output object at T+10min).
+- [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Pre-existing ruff errors in
+      `deployment-service/scripts/vm/vm_zombie_watchdog.py` (lines 62/78/1143/1334 — NOT introduced by the P2 watchdog
+      registration; surfaced by the funding-ensemble dry-run lint) — clean them so the deployment-service QG is green.
+      **Repo: deployment-service.**
 
 ## Basis archetypes split + LIVE venue/coin coverage gap (operator 2026-06-18)
 
@@ -1245,7 +1258,38 @@ Operator dispatch (6h autonomous): the four P1/P2 todos below. Progress log (app
   follow-up todo (full integration manifest) needing a clean UAC + quickmerge to land atomically. **Least-bad path per
   the autonomous contract (genuine blocker: fleet-breaking-if-incomplete + active foreign-WIP clobber) — config shipped
   clean, engine documented for atomic landing, no broken state.**
-- **P2 — NEXT** (paper VM + cron).
+- **P2 LAUNCHER BUILT — `deployment-service@659f6bc`** (see the P2 flip below).
+
+### /autonomous run terminus (2026-06-19) — final report
+
+Operator dispatch: production breadth + live-system fold (P1a/P1b/P1c/P2), 6h autonomous. **All four shipped to the
+extent safely completable without leaving broken state; two cross-repo pieces filed as precise atomic follow-ups
+(blocked by live foreign databento WIP in UAC, not by design).**
+
+- **P1a ✅ `e2e-testing@5eef20f`** — multi-venue × broad-universe live ensemble (Binance+Bybit+Aster bulk snapshots,
+  per-venue dispersion + spot_perp_basis on top-volume universes, liquidity-weighted venue allocator [35/65 rail],
+  funding winsor; HL excluded). Verified live (754/585/562 perps, 4 strats/4 venues, 60 legs, liq OK). e2e QG green.
+- **P1b ✅ `e2e-testing@de3da7d`** — per-venue backtest sweep (Bybit/Aster/OKX cached fetchers + `--venues`/
+  `--universe-size`; full causal stack per venue). Binance +1.80 / Bybit +2.27 (majors), Aster +0.07 (majors-efficient;
+  edge in the tail), OKX coverage-gated (~3mo public funding). ruff clean, runtime-validated.
+- **P1c PARTIAL ✅ `strategy-service@c412f6af`** — config piece (typed `data_source`/`gcs_complete_data_path` +
+  `ensemble_weight_*` + `ensemble_split()` + 5 tests; strategy-service QG GREEN). **Forced trade-off (rule 1):** the
+  funding_dispersion ENGINE + UAC `CARRY_FUNDING_DISPERSION` archetype was written + validated, then REVERTED — a new
+  UAC archetype RAISES at UAC import if any exhaustive registry (`ARCHETYPE_LEG_STRUCTURES`) lacks a seed
+  (fleet-import-breaking), and live foreign databento WIP in UAC clobbered the enum edits mid-session. Filed as a precise
+  atomic follow-up (full integration manifest) needing a clean UAC + quickmerge.
+- **P2 LAUNCHER ✅ `deployment-service@659f6bc`** — funding-ensemble paper-cron VM launcher + watchdog registration,
+  dry-run + bash-syntax + watchdog-parse validated. **Gated operational step:** the billed recurring-VM launch + per-run
+  progress events need the engine fold (no-fire-and-forget verification requires lifecycle events the research script
+  doesn't emit). Documented as the launch step.
+
+**Ship discipline:** every unit Commit+Push+Flipped same-turn; all via the sanctioned dirty-deps direct-LDR push
+(`Quickmerge: agent` trailer) — the foreign databento WIP in UAC/MTDS blocked quickmerge fleet-wide, exactly as the
+dispatch anticipated. **Foreign WIP preserved throughout** (one index-hygiene slip committed 3 foreign databento docs to
+PM LDR — content preserved, not lost; reverting would have destroyed the foreign author's pushed copy, so left intact).
+**Follow-ups filed (all tracked `- [ ]` above):** funding_dispersion engine+UAC-enum (atomic, clean-UAC); broad-universe
+P1b numbers fold-in; asset-class filter for the broad universe; P2 billed launch + event wrapping; pre-existing
+vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 
 - [ ] [STRATEGY] P2. **NICE-TO-HAVE (provenance: P1a 2026-06-19)** Asset-class filter for the live broad universe — the
       top-volume perp universe now includes tokenized equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT)
