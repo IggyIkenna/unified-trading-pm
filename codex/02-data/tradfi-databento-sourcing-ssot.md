@@ -1,5 +1,5 @@
- status: canonical
-last_reviewed: 2026-06-18
+status: canonical last_reviewed: 2026-06-18
+
 ---
 
 # TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT
@@ -20,7 +20,7 @@ Databento gates its `(dataset, schema, start)` through the `assert_*` helpers in
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GLBX.MDP3`  | CME Globex — S&P futures (ES/MES), BTC/ETH futures (BTC/MBT, ETH/MET), gold (GC/COMEX), WTI crude (CL) + Henry Hub nat gas (NG) futures **and options-on-futures**, FX futures (6E/6B/6J…), E-mini sector index futures, **CME event contracts** (`EC*` series — ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) |
 | `DBEQ.BASIC` | Databento US Equities — single stocks (S&P constituents), ETFs (BTC/ETH spot ETFs, GLD, sector SPDRs)                                                                                                                                                                                                            |
-| `CFE`        | Cboe Futures Exchange — **VIX / VX futures**                                                                                                                                                                                                                                                                     |
+| `XCBF.PITCH` | Cboe Futures Exchange — **VIX / VX futures**. The operator calls this the "CFE" subscription, but Databento's dataset CODE is `XCBF.PITCH` (a bare `CFE` is rejected by the API with 400 validation_failed; verified live 2026-06-19). Coverage 2018-11-04→now; exposes `definition` / `ohlcv-1s` / `ohlcv-1m`.  |
 
 **Explicitly NOT subscribed** (querying them raises `DatabentoDatasetNotAllowedError`): all ICE feeds (`IFEU.IMPACT`
 Brent/Gasoil, `IFUS.IMPACT` ICE Dollar-Index + softs), `OPRA` (listed options), `EEX`, `Eurex`, and the per-venue equity
@@ -139,9 +139,10 @@ wrongly routed it through the Databento fetch path, which nothing does.)
 
 ## VIX — futures vs the cash index (do not conflate)
 
-`CFE` gives **VX futures** (the VIX futures curve). It does **NOT** provide the **VIX cash index** at 15m. The VIX 15m
-**index** gap remains Barchart-preload + Yahoo-rolling-60d + honest gap (see `registry/data_source_continuity.py` and
-the VIX 15m one-liner in CLAUDE.md). Adding CFE does **not** close that index gap; it adds the futures.
+The CFE feed (`XCBF.PITCH` dataset) gives **VX futures** (the VIX futures curve). It does **NOT** provide the **VIX cash
+index** at 15m. The VIX 15m **index** gap remains Barchart-preload + Yahoo-rolling-60d + honest gap (see
+`registry/data_source_continuity.py` and the VIX 15m one-liner in CLAUDE.md). Adding CFE does **not** close that index
+gap; it adds the futures.
 
 ## Related SSOTs
 
