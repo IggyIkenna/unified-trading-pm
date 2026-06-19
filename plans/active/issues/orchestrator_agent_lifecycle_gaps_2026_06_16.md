@@ -187,7 +187,7 @@ With headroom restored, the FIFO-head escalation `agt-3bd816` now fails with `sp
 uncommitted local edits to `unified_api_contracts/canonical/domain/sports/league_data.py`). Two distinct problems keep
 all 39 queued walls stuck behind it:
 
-- [ ] [HUMAN/INVESTIGATION] P1. **Clean the central-VM slot-1 `unified-api-contracts` quarantine** — the worktree holds
+- [ ] [HUMAN-INVESTIGATION] P1. **Clean the central-VM slot-1 `unified-api-contracts` quarantine** — the worktree holds
       FOREIGN uncommitted WIP (`sports/league_data.py`); do NOT stomp it. Owner of that WIP must commit/inherit or
       discard it, then `git pull --ff-only`, so slot 1 leaves FM5 quarantine. (Same worktree flagged in "Related" below
       — now the active escalation-drain blocker.) Repo: central VM slot-1 worktree.

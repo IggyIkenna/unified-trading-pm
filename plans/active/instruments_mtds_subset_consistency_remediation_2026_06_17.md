@@ -284,20 +284,22 @@ to logs.
       `SUSHISWAP_V3` (2,606 captured 2023-04-05→06-18). The `-AVALANCHE`/`-BASE` chain-suffixed `attempted_failed` rows
       are the same anomalous variant — data captured under the canonical bare venue. - **DRIFT-SOLANA (41) +
       AAVE_V3-OPTIMISM (41)**: genuine deeper upstream changes — split to the two P2 todos below. — instruments-service
-- [ ] [DATA] P2. **DeFi manifest venue-naming drift — chain-suffixed VARIANT venue tags shadow the canonical
-      bare-protocol venue** (surfaced 2026-06-18). The defi instruments-store `_index` carries BOTH the canonical
-      bare-protocol venue (`MORPHO` 1,669 captured / `SUSHISWAP_V3` 2,606 / `TRADER_JOE_V2` 74 — where the adapter
-      actually writes, keyed by its `venue` property) AND a smaller anomalous chain-suffixed variant
-      (`MORPHO-ETHEREUM`/`MORPHO-BASE` 42 each, `SUSHISWAP_V3-BASE` 2, `TRADER_JOE_V2-AVALANCHE` 6,
-      `SUSHISWAPV3`/`SUSHISWAP-ARBITRUM`/etc.) that is almost entirely `attempted_failed` + a stray captured. The DeFi
-      venue identity is ambiguous: the adapter's `venue` property is the bare protocol (`morpho`→`MORPHO`) while
-      `InstrumentRecord.venue`=`MORPHO-{chain}` and the manifest writer keys the shard by the PROPERTY not the record
-      field → multi-chain protocols collapse to one bare venue + the chain-suffixed rows are orphan variants. **Decide
-      the canonical DeFi instrument venue grain** (bare-protocol vs protocol-chain) + make the adapter `venue` property,
-      the `InstrumentRecord.venue`, and the manifest shard key AGREE (shard-granularity SSOT), then reconcile/collapse
-      the variant rows (phantom-audit). Captured data is present under the bare venue — this is a
-      naming-canonicalisation correctness item, not a fetch gap. — instruments-service / unified-trading-library
-      (manifest shard key) — composes with the `*_manifest_canonicalisation_*` + `source=` provenance tracks
+- [x] ✅ [DATA] P2. **DeFi manifest venue-naming drift — `_index` reconcile DONE (grain DECIDED = PROTOCOL-CHAIN)**
+      (surfaced 2026-06-18, resolved 2026-06-19). The defi instruments-store `_index` carried THREE drifted spellings of
+      one protocol-on-chain (bare `AAVEV3`/`MORPHO`, chain-suffixed-ghost `AAVEV3-ARBITRUM`/`MORPHO-ETHEREUM`,
+      already-canonical `AAVE_V3`+chain). **GRAIN DECISION: PROTOCOL-CHAIN** — the UAC SSOT `ALL_DEFI_VENUES` is 150/159
+      protocol-chain, so the canonical instrument venue grain is `PROTOCOL-CHAIN` (`AAVE_V3-ETHEREUM`), NOT bare. The
+      live `_index` venue column was canonicalised 91→58 venues (71,799 rows re-pointed via the reader-SSOT
+      `VenueMapping.normalize_defi_venue` resolver) + 861 captured legacy↔canonical spelling-dedup, folded into the v9
+      column-population walk (instruments-service@7a63be9 → APPLIED). Captured preserved 75,942→75,081 (−861
+      all-captured twins, 0 captured cell shadowed). — instruments-service
+- [ ] [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain** (the
+      `_index` reconcile above fixed the STORED data; the WRITER still keys multi-chain protocol shards by the adapter's
+      bare `venue` property rather than `InstrumentRecord.venue`=`PROTOCOL-CHAIN`, so a fresh capture can re-introduce a
+      bare-spelling row). Make the adapter `venue` property, `InstrumentRecord.venue`, and the manifest shard key all
+      emit the canonical PROTOCOL-CHAIN id (shard-granularity SSOT) so new writes match the canonicalised `_index` with
+      no re-reconcile needed. — instruments-service / unified-trading-library (manifest shard key) — composes with the
+      `*_manifest_canonicalisation_*` + `source=` provenance tracks
 - [x] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
       2026-06-18). The Drift Data API endpoint moved: `/stats/markets`→404, `/markets`→403, `/contracts`/`/perpMarkets`
       →403 (auth-gated), `dlob.drift.trade`→502. Find Drift's current PUBLIC markets endpoint (docs at
@@ -582,8 +584,21 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       instruments-service@`audit_instruments_store_legacy_gcs_delete_list.py`. cefi/defi/tradfi/pred 100% canonical (0
       legacy); sports 9,723 unmappable-superseded (excluded, reported); SAFE-TO-DELETE=0 fleet-wide → no delete needed.
       Delete-list parquets written to each `_index/audit/`. — instruments-service
-- [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9-canonical for ALL 5 AGs** — DONE (cefi+defi+tradfi `--apply`'d;
-      sports/prediction already clean). Every AG blank_status=0 + dup_cells=0. — instruments-service
+- [x] ✅ [SCRIPT] P1. **instruments-store `_index` blank-status/dedup canonical for ALL 5 AGs** — DONE (cefi+defi+tradfi
+      `--apply`'d; sports/prediction already clean). Every AG blank_status=0 + dup_cells=0. **⚠️ This was the DEDUP
+      pass, NOT the v9 COLUMN pass — see the new v9-column item below.** — instruments-service
+- [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9 COLUMN-population for cefi/defi/tradfi/prediction** (the dedup
+      pass above was NOT this — audited 2026-06-19, the live IS `_index` was a v4/v8/v9 MIX with `source` 0%,
+      `asset_group` column ABSENT, `pipeline_mode` mostly blank). `populate_is_index_v9_2026_06_19.py` row-preservingly
+      stamps schema*version=9 + asset_group + pipeline_mode (blank→`batch_instruments_service`) + source (DERIVED PER
+      CELL via `source_string_for(pipeline_mode)`, NOT a default). DeFi additionally venue-canonicalised 91→58
+      (PROTOCOL-CHAIN SSOT) + 861 captured spelling-dedup. **APPLIED cefi/defi/prediction** (verified live:
+      schema_v9=100%, source/asset_group/pipeline_mode=100%; captured preserved — cefi 36,062 / pred 791 / defi 75,081 =
+      −861 legitimate spelling-dedup). **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
+      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+      `\_index/snapshots/pre_is_v9*{ag}\_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:     UTL@f8ec9096 `\_stamp_producer_source`stamps`source_string_for(pipeline_mode)`
+      on blank batch producer rows (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 +
+      unified-trading-library@f8ec9096
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
       (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
@@ -1104,9 +1119,11 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
 - [ ] [DATA] P2. **BLOCKED-CREDENTIALS — SFI + Transfermarkt sports keys (validate/rotate)** — adapter scaffolds + unit
       tests CONFIRMED present (no build needed): `SoccerFootballInfoAdapter` (35 tests `test_sfi_adapter_coverage.py`,
       RapidAPI) + `TransfermarktAdapter` (33 tests `test_transfermarkt_adapter_coverage.py`, RapidAPI/Apify). Both
-      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000 on their ACTIVE
-      captured data_types (SFI_PROGRESSIVE_STATS / PLAYER_VALUES) → keys likely expired/suspended. **Operator ask:
-      validate/rotate `soccer-football-info-api-key` + `transfermarkt-api-key`** → ping
+      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000. **LIVE-TESTED
+      2026-06-19: both secrets hold the SAME valid RapidAPI key `22380b4a…`; both APIs return HTTP 403
+      `"You are not subscribed to this API."` → a RapidAPI SUBSCRIPTION GAP, NOT a bad/expired key.** Operator ask
+      (corrected): **SUBSCRIBE** the RapidAPI account to `soccer-football-info` + `transfermarkt-football-data-api` (or
+      swap the TM secret to an Apify `apify_api_*` token — adapter auto-detects) → ping
       `ikenna_orchestrator/pings/slot_1.md` § "CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19)".
       SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog — NOT a coverage
       gap). — instruments-service [BLOCKED-CREDENTIALS]
@@ -1133,3 +1150,136 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
       builder should map the provider league_id → canonical league_id (UAC `league_data`/`provider_league_ids`) before
       the `is_mvp()` check, so the MVP subset is tagged. Low-risk display/classification fix (MVP tag unused downstream
       today). Provenance: 2026-06-19 sports A2a catalogue verify. — instruments-service (build_instrument_catalogue.py)
+
+### Sports MD (market-data-tick-sports) twin-coverage — verify + fan-out (2026-06-19, autonomous tick 5)
+
+Operator "make twins for ALL sports data lacking one so the delete loses nothing" — the MD bucket half.
+
+- [x] ✅ [DATA] P1. **MD legacy MIGRATE-FIRST twin-verification** — DONE 2026-06-19 (e2e-testing@1b07bcb
+      `verify_sports_md_unmappable_twins_2026_06_19.py`, ran full). The 3,816 MIGRATE-FIRST odds-api bundles
+      content-verified per-object against same-day canonical (raw_tick_data `pipeline_mode=` + processed) UNION: **3,116
+      TWIN-VERIFIED-SAFE** (content already canonical → delete-safe) + **700 MIGRATE-NEEDED** (genuinely-unique odds-api
+      odds, days 2022-03..2023-04, where the day carries ONLY the legacy `source=ODDS_API` shape — the v9 fan-out never
+      covered those days; verified day=2022-09-10 has 0 canonical/0 pipeline_mode objects). Verdict parquet
+      `_index/audit/sports_md_unmappable_verify_2026_06_19.parquet`. **CORRECTS the prior "all 3,816 TWIN-VERIFIED-SAFE
+      (58,910/58,910 sampled)" — that was a 6-file sample; the FULL run found the 700 gap.** — e2e-testing
+- [x] ✅ [DATA] P1. **MD 700 MIGRATE-NEEDED content-aware fan-out to canonical** — DONE 2026-06-19 (e2e-testing@1b07bcb
+      `migrate_sports_md_unmappable_to_canonical_2026_06_19.py --apply`, RAN: 700/700 objects → 41,206 canonical cells /
+      10,111,734 rows written). **RE-VERIFIED: the full twin-verifier now reports 3,816 TWIN-VERIFIED-SAFE / 0
+      MIGRATE-NEEDED / 1,962,770 of 1,962,770 ids covered (100.0%)** → every MD legacy object is delete-safe. fans the
+      700 genuinely-unique odds objects → canonical
+      `raw_tick_data/by_date/day={D}/pipeline_mode=batch_odds_api/     asset_group=sports/venue={V}/league_id={L}/instrument_type=odds/data_type=trades/ticks.parquet`
+      (41,206 cells / 10.1M rows; legacy schema == canonical minus 4 derivable cols; union-dedup on instrument_id, never
+      overwrite-lose, never delete legacy). On completion re-run the verify → MIGRATE-NEEDED must reach 0 → all 3,816
+      delete-safe. Flip once re-verify == 0. — e2e-testing
+
+**MD twin-coverage end-state (operator-gated delete-readiness):** 248,502 SAFE-TO-DELETE (path-twin-verified) + 3,116
+TWIN-VERIFIED-SAFE (content-twin-verified) + 700 fanned-out-to-canonical = ALL 252,318 MD legacy objects delete-safe
+once the fan-out completes + re-verifies. **Delete stays OPERATOR-GATED — never executed by the agent.**
+
+## SPORTS E2E audit + remediation — FINAL REPORT (rule 9, autonomous run COMPLETE 2026-06-19)
+
+Operator `/autonomous` 2026-06-19: full e2e sports audit+remediation for IS+MTDS + "make twins for ALL sports data
+lacking one across both buckets so the operator-gated delete loses nothing". Delete stays operator-gated (never
+executed). Concurrent agent af95b962 (IS coverage backfill) never collided — all my IS work was index-canonicalise +
+object-copy, never a fetch; the IS `_index` stayed stale-stable (2026-06-11) throughout my writes.
+
+**ALL deliverables COMPLETE + verified:**
+
+| Area                              | Result                                                                                                                                                   | Evidence                                                                            |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Twin coverage IS (operator ask)   | 9,723 legacy odds-api instrument objects → ALL canonical-twinned, delete-safe                                                                            | UAC@2224818 + IS@308013f; `sports_legacy_oddsapi_twin_migration_2026_06_19.parquet` |
+| Twin coverage MD (operator ask)   | 252,318 legacy objects ALL delete-safe (248,502 path + 3,116 content + 700 fanned-out); re-verify **3,816 TWIN-VERIFIED-SAFE / 0 MIGRATE-NEEDED / 100%** | e2e@1b07bcb; `sports_md_unmappable_verify_2026_06_19.parquet`                       |
+| MTDS `_index` v9 + canonical      | 100% v9; null-league 32,707→0; blank 17,288→0; captured 202,087→346,498 (per-league grain recovered)                                                     | mtds@ba21ee5                                                                        |
+| MTDS UNIBET/UNKNOWN remnants      | re-stamped batch_odds_api + league recovered                                                                                                             | mtds@ba21ee5                                                                        |
+| MTDS GCS paths                    | canonical pipeline_mode= (raw) + processed (odds_horizon_bucket) verified                                                                                | recovery day-map                                                                    |
+| IS `_index` v9                    | schema 100% v9; asset_group 100%; source 93.4% (UAC SSOT)                                                                                                | IS@5d7f6f0                                                                          |
+| IS catalogue + MVP/total_universe | PASS — 789-league catalogue fresh; sports in TOTAL_UNIVERSE_AXES + MVP_SCOPE; universe_membership MVP⊆TOTAL                                              | sub-agent verify                                                                    |
+| IS GCS paths                      | PASS — all 6 data_types resolve via candidate_parquet_paths()                                                                                            | sub-agent verify                                                                    |
+| Shard-atom (D)                    | PASS — (data_type, league_id, date) identical IS/MTDS/data-status/UI                                                                                     | data_status_axis_matrix.py:70,105                                                   |
+| Credentialed (SFI/Transfermarkt)  | scaffolds+tests confirmed; BLOCKED-CREDENTIALS ask filed                                                                                                 | ping slot_1.md                                                                      |
+
+**Forced-tradeoff / non-obvious decisions made under autonomy (rule 1/9):**
+
+1. **Plan claim corrections** (both surfaced + fixed honestly): (a) "9,723 unmappable/superseded, MIGRATE-FIRST=0" was
+   WRONG — they were genuinely-unique odds-api instrument data (canon venue=odds_api was empty_confirmed-only to
+   2020-06-05) → migrated, not abandoned. (b) "instruments-store `_index` v9-canonical for ALL 5 AGs — DONE" OVERCLAIMED
+   — it ran only blank/dedup; the v9-COLUMN populate was never run for ANY AG → done for sports here, fleet-wide gap
+   filed under the source-provenance plan.
+2. **MD 700 genuine gap**: the prior "all 3,816 TWIN-VERIFIED-SAFE (58,910 sampled)" was a 6-file sample; the FULL
+   verifier found 700 genuinely-unique 2022-2023 odds objects on days with ZERO canonical content → fanned out (not
+   declared safe on a sample).
+3. **3 captured-preservation bugs** caught by adversarial pre-apply verification before the MTDS recovery `--apply`
+   (existing_keys captured-only + supersede; processed/ root; footystats `league=`/lowercase-`odds`) — would have
+   wrongly emptied ~21k real captured cells.
+4. **Source-column scope split**: sports IS source backfilled now (UAC SSOT); the live-writer auto-stamp + cefi/tradfi/
+   defi backfill homed under the named cross-cutting `data_source_provenance_all_asset_groups_2026_06_01.md` (the source
+   RED-gap owner) — not a sports deferral.
+
+**Remaining open (all properly homed — NO sports-data-correctness deferral):** (1) FLEET-WIDE IS v9 for the OTHER AGs
+(source-provenance plan); (2) BLOCKED-CREDENTIALS SFI/Transfermarkt validate-rotate (operator-gated, the only sanctioned
+deferral; scaffolds+tests shipped); (3) catalogue mvp numeric-league-id P3 cosmetic fix. **Operator action: (a) the
+operator-gated DELETE of the now-fully-twinned sports legacy objects across both buckets; (b) validate/rotate the 2
+sports API keys.** Nothing else to pick up.
+
+### SPORTS — independent LIVE re-certification (2026-06-19, verify-not-redo dispatch)
+
+A follow-up dispatch (verify the prior sports drive, finish any remainder, certify 100% twin-coverage). Read-only
+re-verified EVERY claim against the LIVE prd buckets (no redo — all prior work confirmed APPLIED + correct). **Material
+update vs the FINAL REPORT: the operator-gated DELETE has since been EXECUTED** (e2e-testing@0f1d761 + idempotent
+fixup), so the legacy objects are GONE and the only remaining "operator action" is the credential validate/rotate.
+
+| Check (live)                                  | Result                                                                                                                                                                                                        | How verified                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| MTDS sports `_index` league-recovery APPLIED  | ✅ captured **346,498** (== projection), captured-null-league **0**, blank-status **0**, NULL-source **0**, schema_version **100% v9**                                                                        | direct read `market-data-tick-sports-prd/_index/availability_index.parquet`                |
+| IS sports `_index` v9 column-populate APPLIED | ✅ schema **100% v9** (2,606,663 rows), asset_group **100% sports**, source **93.4%** (171,227 blank = SSOT-unmapped retired/catalog data_types — honest), blank-status **0**, captured **659,693** preserved | direct read `instruments-store-sports-prd/_index/availability_index.parquet`               |
+| IS 9,723 odds-api twin-migration              | ✅ 9,723/9,723 mapped (0 unmapped), 7,721 unique twins (5,719 MIGRATED + 4,004 MIGRATED-UNION, 2,368,129 rows, no row loss); twin sample 25/25 present on disk                                                | `sports_legacy_oddsapi_twin_migration_2026_06_19.parquet` + `gcs_describe` sample          |
+| MD sports twin coverage                       | ✅ 252,318 ALL delete-safe (248,502 path-twin `canonical_twin_verified` + 3,816 content-twin `TWIN-VERIFIED-SAFE`, the 700 MIGRATE-NEEDED fan-out re-verified 0)                                              | `legacy_dup_delete_list_sports.parquet` + `sports_md_unmappable_verify_2026_06_19.parquet` |
+| Legacy DELETE executed (BOTH buckets)         | ✅ IS legacy sample 0/25 still present (deleted, permanent), MD per-object `gcs_describe` twin re-verify before each delete                                                                                   | e2e-testing@0f1d761 `delete_sports_legacy_twinned_2026_06_19.py`                           |
+| captured-preserved throughout                 | ✅ MTDS 202,087→346,498 (per-league grain explode, never lost); IS 659,693 unchanged                                                                                                                          | both `_index` reads                                                                        |
+
+**Delete-ready manifest — SPORTS row (now HISTORICAL — already deleted):** IS 9,723 legacy odds-api instrument objects
+(0.146 GB) + MD 252,318 legacy objects (4.78 GB) — all twin-verified, operator-authorized, **DELETED 2026-06-19**. No
+agent delete performed in this dispatch (delete was already done by the operator-authorized run).
+
+**Sports is FOLDED INTO 100% twin-coverage on both buckets** — every captured cell is backed by a canonical-path object,
+every legacy object had a verified canonical twin before deletion, and both `_index` are 100% v9. The 2 remaining open
+sports todos are non-blocking + correctly homed (BLOCKED-CREDENTIALS SFI/Transfermarkt + P3 catalogue-mvp cosmetic). No
+codex contract changed (the league-recovery brought live data INTO compliance with the already-documented sports shard
+atom `(asset_group=sports, venue/source, data_type, league_id, day)` in `availability-manifest-and-data-status.md`).
+
+- [x] ✅ [DATA] P2. **Residual sports MTDS bookmaker-`trades` pipeline_mode/source mislabel — re-stamped 559 cells** —
+      DONE 2026-06-19 (mtds@41c990a `restamp_sports_bookmaker_trades_pipeline_mode_2026_06_19.py --apply`). Surfaced
+      during the re-certification: the league-recovery's `defective_mask = (captured & null_league) | blank_status`
+      never touched captured cells that ALREADY had a per-league `league_id` but a wrong `pipeline_mode`. Of 50,497
+      captured `data_type=trades` cells carrying `pipeline_mode=batch_api_football`, GCS-verified that **49,938 are
+      CORRECT** — their object genuinely lives under
+      `…/pipeline_mode=batch_api_football/…/data_source=ODDS_API/venue={V}/     league_id={L}/…/data_type=trades/`
+      (api_football's pipeline ingests odds-api-sourced bookmaker odds; the pipeline_mode label matches the object), and
+      only **559 were genuinely mislabeled** (object lives ONLY under `batch_odds_api`, verified ABSENT under
+      `batch_api_football`). Re-stamped only those 559 → `pipeline_mode=batch_odds_api` + `source=odds_api` (day-map
+      distinguishes the two via `batch_api_football in     modes`). ROW-PRESERVING — captured **346,498 → 346,498** (0
+      lost). Post-apply verify: trades captured pipeline_mode = 167,779 odds_api + 49,938 api_football, source perfectly
+      consistent with pipeline_mode, null-league 0, null-source 0, schema 100% v9. Snapshot
+      `pre_sports_bookmaker_restamp_20260619_130152`. — market-tick-data-service
+
+## SPORTS legacy DELETE executed (operator-authorized 2026-06-19) + credentials live-tested
+
+> Operator 2026-06-19: "do these delete" + "check if [the keys] work". Both actioned.
+
+- [x] ✅ [INFRA] P1. **Operator-authorized DELETE of the fully-twinned sports legacy objects (BOTH buckets)** — DONE
+      2026-06-19 (e2e-testing@a893f1c `delete_sports_legacy_twinned_2026_06_19.py --apply`). Per-object
+      `gcs_describe_object` twin re-verification before EACH delete (safety invariant, not prefix-match); 0
+      SKIP_TWIN_MISSING. **Authoritative post-delete verify: IS 0/9,723 + MD SAFE 0/248,502 + MD content 0/3,816
+      remaining** = all 262,041 legacy objects deleted. Reclaimed **~4.81 GB** (IS 0.142 + MD-SAFE 4.451 + MD-content
+      0.212 GB). Recoverability: MD bucket = **7-day soft-delete** (recoverable); IS bucket soft-delete DISABLED =
+      PERMANENT (every IS twin gcs_describe-verified present before its permanent delete). cefi MD legacy (9.98 TB) was
+      deleted earlier; sports completes the sports-bucket legacy cleanup. — e2e-testing
+- [x] ✅ [DATA] P2. **SFI + Transfermarkt keys LIVE-TESTED (operator "check if they work")** — DONE 2026-06-19. Both
+      secrets hold the SAME valid RapidAPI key (`22380b4a…`); both APIs return HTTP 403
+      `{"message":"You are not subscribed to this API."}`. **Root cause = RapidAPI SUBSCRIPTION GAP, not a bad/expired
+      key** (control: api-football `c820a404…` + footystats `b1d5bc90…` are distinct keys with working subscriptions).
+      NOT agent-fixable (subscribing to a paid RapidAPI plan = operator action). **Operator: SUBSCRIBE the account to
+      `soccer-football-info` + `transfermarkt-football-data-api`, or swap the TM secret to an Apify `apify_api_*` token
+      (adapter auto-detects).** Stays BLOCKED-CREDENTIALS (subscription, not rotation). — ping slot_1.md UPDATE. —
+      instruments-service [BLOCKED-CREDENTIALS]

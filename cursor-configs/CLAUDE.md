@@ -800,6 +800,19 @@ workspace root — always per-repo with timeout.
 Batch + live use SAME code path. Only difference: execution fills. Never build standalone backtest engines; never
 distinguish live/batch strategies; never build asset-group-specific backtest engines. 99% of code path identical.
 
+**Determinism spine — paper(W) MUST equal batch-rerun(W) trade-for-trade (design 2026-06-19)**: the same-code-path rule
+extends THROUGH the fill into the ledger. A week of paper trading, then a backtest of that same week, must produce
+**identical trades** — the paper↔batch reconciliation is a **determinism PROOF (ε=0), not a tolerance check**; any diff
+is a BUG ({non-determinism, input-capture gap, fill-model drift}). The ONLY intentional divergence is real venue fills
+at the LIVE boundary, so `live−batch = (paper−batch ≈ 0) + (live−paper = execution alpha)`. **Two fill realities only**:
+canonical-sim (`BenchmarkFillEngine`, used by BOTH batch + paper) + real-venue (`LiveMatchingEngine`, live only) — a
+third fill model on the batch/paper path is review-blocking (it re-creates the divergence). "Citadel-grade paper
+trading" = the complete as-if-filled state (money movements / balances per venue+instrument+share_class / P&L / PnL
+attribution / instruments breakdown) in four ledgers (`InstructionLedger` tape + `PositionLedger` as-if-filled state +
+`PassiveLedger` accruals + `PricingLedger` marks) + a daily/weekly Slack digest. SSOT:
+`codex/09-strategy/operational/paper-batch-live-reconciliation.md` + plan
+`plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent epic `batch_live_symmetry_master`).
+
 ---
 
 ## System-First Architecture

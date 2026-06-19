@@ -266,9 +266,10 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
       `terraform import 'module.cloud_build_triggers["greeks-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/e91c0898-18bd-4f4b-9b61-057cc663e3e4`
       `terraform import 'module.cloud_build_triggers["trading-agent-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/624a9df2-743d-43e1-b39a-1027574d73ca`
       Run `terraform plan` after import — expect 0 changes (all triggers already match desired state). Repo: deployment-service.
-- [ ] [DOCKER] P1. fund-administration-service has a **dead builder stage** (stage 1 builds but stage 2 never
+- [x] ✅ [DOCKER] P1. fund-administration-service has a **dead builder stage** (stage 1 builds but stage 2 never
       `COPY --from=builder` — it re-installs from scratch). Fixed both install lines to build-green for now; a follow-up
       should delete the redundant builder stage (faster build). Repo: fund-administration-service.
+      — fund-administration-service@5f08a8a | Stage 1 (builder) deleted; single-stage Dockerfile; QG green.
 
 ## Progress Log
 

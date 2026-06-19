@@ -287,12 +287,12 @@ reconciler items are RESILIENCE, demoted from P0. Companion plans: `ci_status_fi
 2 = the structural ci-status fix), `gh_rate_budget_reduction_2026_06_10.md` (API-rate sibling),
 `cicd_workflow_sprawl_audit_2026_06_10.md` (dead workflows).
 
-- [ ] [CICD] P2 (was P0 — demoted: attribution cleared the reconciler as a spend driver, ~10–40 dispatches/day).
+- [ ] [CICD] P2. (was P0 — demoted: attribution cleared the reconciler as a spend driver, ~10–40 dispatches/day)
       **Reconciler fleet-red circuit breaker + per-tick cap** — `unified-trading-pm`
       `.github/workflows/ci-status-reconciler.yml`: (a) cap dispatches/tick (≤5); (b) if >40% of repos drift in one tick
       → ONE Slack CRITICAL ("systemic CI outage"), dispatch NOTHING; (c) skip repo if last tick dispatched the same
       target status and that run failed. Good hygiene before re-enabling, no longer a spend precondition. (~0.5 day)
-- [ ] [CICD] P3 (was P0 — same demotion; at ≤25 ticks/day the batching saves ~minutes). **Batch the reconciler's
+- [ ] [CICD] P3. (was P0 — same demotion; at ≤25 ticks/day the batching saves ~minutes) **Batch the reconciler's
       dispatches** — ONE `ci-status-update` dispatch with `client_payload.updates[]`; teach `ci-status-update.yml` to
       apply N statuses in one run/one manifest commit. (~0.5 day)
 - [ ] [CICD] P0. **Stale-check/auto-recover cooldowns + fleet-red breaker** — `unified-trading-pm`

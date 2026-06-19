@@ -91,7 +91,7 @@ out_of_scope on the IS data-status view. Added `ROCKETPOOL-ETHEREUM: start_date 
       `tests/unit/test_vault_venue_canonical_names.py`) asserting the canonical decisions + the ghost-set invariant +
       rETH presence. — unified-api-contracts — **CODE DONE + GREEN (15/15 pass incl. 7 new); SHIP PENDING** (same
       shared-clone live-peer block as the `_defi_coverage.py` item — ships in the same quickmerge unit).
-- [ ] [REGISTRY] P2 **NICE-TO-HAVE**. Add cbETH as `COINBASE-ETHEREUM` to the DeFi LST universe — full new-venue add:
+- [ ] [REGISTRY] P2. **NICE-TO-HAVE** — Add cbETH as `COINBASE-ETHEREUM` to the DeFi LST universe — full new-venue add:
       `ALL_DEFI_VENUES` + `DEFI_VENUE_PHASE` + `defi_venue_capabilities.py` (lst_rates/oracle_prices genesis 2022-08-26)
       + `LEGACY_DEFI_VENUE_ALIASES` (`COINBASE` → ? — collides with CeFi COINBASE; needs a chain-qualified alias only) +
       catalogue DEFI genesis. Provenance: mvp_instrument_universe_gap_audit_2026_06_17 + this plan. Needs care re:

@@ -78,6 +78,12 @@ missing. Full evidence + per-ask current-state/gap/change-list:
       dashboard host/deploy path. Repo: agent-orchestrator.
 - [ ] [ORCHESTRATOR] P3. `server/orm.py` `AgentRow` docstring still reads "main, review, backup, etc." + "promote
       backup → main" — stale after the backup-role deprecation; update to main/review/custom. Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR] P2. Review agent's `AgentRow.last_ping` isn't refreshed while its slot churns — a LIVE working
+      review agent (owns a live `orch-slot-N` tmux, actively churning) shows `last_ping` hours stale and gets mislabeled
+      `stale` in the dashboard (live-validation 2026-06-19: agt-ac5d5e on orch-slot-2, tick-655 + "Churned 45s" yet
+      last_ping 11h old). The reaper correctly KEEPS it (live session), but the badge is wrong. Fix: refresh the review
+      AgentRow heartbeat on slot activity (or have the reaper re-activate a `stale` record whose session is live →
+      `active`). Repo: agent-orchestrator (`server/` heartbeat path + maybe `reap_orphan_agents`).
 
 ## Success criteria
 
@@ -133,3 +139,23 @@ dangles in `.claude/worktrees/`, so quickmerge couldn't run — the dispatch's s
 HEAD:live-defi-rollout` was used; the pre-push strict-quickmerge hook WARN-only allowed it). It carries NO `Quickmerge:`
 trailer → the LDR→staging promote bot won't auto-arm that range, so a **one-time manual LDR→staging promote** is needed
 (handled with the Wave 7 alerts commit, which has the same provenance). Code is green on LDR; staging-PR v2 is the gate.
+
+### Live validation + deploy (2026-06-19)
+
+Deployed the server to the central VM (in-place from LDR + `systemctl restart`, mode=live) and ran a local live
+dev-stack (`scripts/dev.sh`, port 8765/5173) for the operator UI review. The live test caught **two real bugs** + one
+finding:
+
+- **Bug #1 — main agent unclassified**: the keeper registered `main` without `agent_kind`, so `groupAgentsByKind` folded
+  the orchestrator into "custom". Fixed: keeper sets `agent_kind=orchestrator`/`lifecycle=persistent`
+  (agent-orchestrator@15180e79) + test; deployed; live main rows backfilled to `orchestrator`.
+- **Bug #2 — reaper skipped stale records**: `reap_orphan_agents` queried only `status=='active'`, so a dead-but-stale
+  agent (an old `main`) lingered in the dashboard forever. Fixed: reconcile **active+stale** + accurate
+  `dead-main-session` reason (agent-orchestrator@7b5e838) + 2 regression tests; deployed. **Verified on the VM journal**:
+  `AgentKeeper reaped 2 orphan agent record(s): superseded-main`.
+- **Finding #3 — review heartbeat mislabel** (P2 follow-up above): a LIVE working review agent shows `stale` because its
+  `AgentRow.last_ping` isn't refreshed while the slot churns; the reaper correctly KEEPS it (live session) — the badge is
+  wrong, not the reaper. Not fixed here (never kill a working agent over a stale badge).
+
+Also confirmed `ORCHESTRATOR_MODE=live` is the default in code + env files (`.env.example`@254f1ecc + local `.env.local`
+pin); only the demo/e2e paths use mock.
