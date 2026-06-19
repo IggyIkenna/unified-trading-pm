@@ -1801,9 +1801,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-19T16:12:58.706728Z",
-    "locked_reason": "Breaking MINOR bump cascade: batch-live-reconciliation-service=0.10.0 (pre-1.0.0)",
-    "lock_version": "0.10.0",
+    "locked_since": "2026-06-19T16:14:10.639759Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "system-integration-tests",
       "deployment-api",
@@ -1823,14 +1823,14 @@
       "version": "0.14.0"
     },
     "deployment-api": {
-      "version": "0.21.0",
+      "branch": "staging",
       "sha": "0f2633e79cb594287f263c50034530d00d3b720a",
-      "branch": "staging"
+      "version": "0.21.0"
     },
     "batch-live-reconciliation-service": {
-      "version": "0.10.0",
+      "branch": "staging",
       "sha": "f420c3d3eec26715cef23104b872d64f06ce3b95",
-      "branch": "staging"
+      "version": "0.10.0"
     }
   },
   "main_commits": {
