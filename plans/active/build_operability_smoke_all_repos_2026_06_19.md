@@ -300,3 +300,18 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   (the canonical list was incomplete). Trigger landscape is now 1:1 with live repos. NEXT (the actual "moving forward"):
   create features-service + ml-service triggers (consolidated live repos, currently trigger-less after the zombie
   purge) + fix strategy-service (cross-repo mtds COPY) + deployment-service (registry-auth ordering).
+- **2026-06-19 (DEFINITIVE image-build tally — verified, not assumed)** — of the live 25 repos:
+  - **13 build a Docker IMAGE green ✅**: market-data-processing-service, market-tick-data-service, deployment-api,
+    instruments-service, execution-service, deployment-ui (`f4f4968e`), + the 6 new (trading-agent, alerting,
+    client-reporting, greeks, fund-administration, batch-live-reconciliation) — PLUS the **unified-trading-library base
+    image** (`590050dc`).
+  - **4 image repos NEED WORK**: `features-service` + `ml-service` (no trigger — consolidated repos; create + build),
+    `strategy-service` (Dockerfile:47 cross-repo `COPY market-tick-data-service/` not staged), `deployment-service`
+    (cloudbuild registry-auth ordering + its QG is pre-existing-RED: coverage 69.72%/70% + 2 unrelated failing tests).
+  - **unified-api-contracts** is a **LIBRARY wheel-build (not an image)** whose publish-CI is RED — fails EARLY with an
+    empty build log (setup/config-level: source-fetch or cloudbuild config, NOT a Dockerfile issue). Separate library-CI
+    item; needs its own diagnosis. Repo: unified-api-contracts.
+  - **`unified-trading-system-ui`** has a Dockerfile but **NO build trigger** — possible GAP (the main UI; confirm it
+    deploys via another pipeline e.g. Vercel, or wire a trigger). Repo: deployment-service (trigger) + operator confirm.
+  - **7 don't build images by design**: agent-orchestrator (VM-deployed tarball), e2e-testing / system-integration-tests
+    / unified-trading-pm / ibkr-gateway-infra / unified-trading-api (no Dockerfile — test/plans/infra repos).
