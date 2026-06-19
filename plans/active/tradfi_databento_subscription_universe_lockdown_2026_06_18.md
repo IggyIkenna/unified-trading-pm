@@ -65,19 +65,30 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 > NOT a breaking cutover — `ohlcv_1m` remains an allowed fetch schema, so the existing 1m pipeline keeps running. 1s is
 > purely additive (a new, slower backfill alongside the 1m completion).
 
-- [ ] [MTDS] P0. Add an `ohlcv_1s` fetch request alongside the existing `ohlcv_1m` in the orchestrator/adapter request
-      path (`market_interface/adapters/tradfi/`, `engine/orchestrator/venue_fetch.py`). Repo: market-tick-data-service.
-- [ ] [MDPS] P1. Aggregate `ohlcv_15m` / `ohlcv_24h` from `ohlcv_1m` (already the base) and optionally re-derive 1m from
-      1s for cross-check. Verify NaN/session-grid finalization at both 1s and 1m base. Repo:
-      market-data-processing-service.
+- [x] ✅ [MTDS] P0. Add an `ohlcv_1s` fetch request alongside the existing `ohlcv_1m` — DONE. The orchestrator requests
+      data_types from `get_expected_data_types_for_venue` (UAC), so the real wiring gaps were: (1) **uac@d731396** — CME
+      `VENUE_DATA_TYPE_CAPABILITIES` + `EXPECTED_COVERAGE` + `_PER_INSTRUMENT_SHARD_DATA_TYPES` gain `ohlcv_1s`; (2)
+      **uac@1b6df4c** — `1s` added to the `BarTimeframe` closed-set (`BAR_TIMEFRAMES` + seconds map) so edge-conversion
+      doesn't raise; (3) **mtds@e814a5b** — `ohlcv_1s→1s` in `_OHLCV_DATA_TYPE_TIMEFRAME` (open→close edge); (4)
+      **mtds@521361a** — `ohlcv_1s` added to `_DATABENTO_SUPPORTED_DATA_TYPES` (the gate that actually routes the fetch —
+      was the silent 0-rows cause). Smoke (CME, 2026-06-16): 1.01M `ohlcv_1s` rows, `pipeline_mode=batch_databento`,
+      manifest `complete=True`. Repo: market-tick-data-service + unified-api-contracts.
+- [x] ✅ [MDPS] P1. 1s candle path accepted (non-breaking; 1m base stays) — **mdps@2cfba0b**: `TradfiOhlcv1sAdapter`
+      (`base_granularity="1s"`) registered for `ohlcv_1s` (same pre-aggregated passthrough + session-grid finalization as
+      1m); `base_adapter.get_interval_seconds["1s"]=1` + `granularity_detector` (`GRANULARITIES["1s"]`,
+      `_NATIVE_GRANULARITY["ohlcv_1s"]="1s"`). 15m/24h continue to aggregate from the 1m/1s base via the candle engine;
+      QG-green (NaN/session-grid covered by existing passthrough tests). Repo: market-data-processing-service.
 - [ ] [DATA] P1. Backfill: complete the `ohlcv_1m` corpus first (good test of migration/manifest/data-status), then run
       the longer `ohlcv_1s` backfill. Manifest-verified rows + sample-inspected parquets per Plans-Run-To-Completion.
-- [x] [UAC] P1. SOURCE_PRIORITY: add `("tradfi","ohlcv_1s")` entry in `canonical/crosscutting/_source_priority_data.py`
-      (mirrors `ohlcv_1m` = `["massive","databento"]`) + matching `("tradfi","ohlcv_1s")` in `availability_semantics.py`
-      (`tick_timestamp`, required by the closed-set round-trip test). — unified-api-contracts@3b76c0bc | QG green.
-      **Operator decision still open:** Databento is now a paid subscription — keep the ratified massive-first ordering
-      or flip to databento-first for tradfi? Default = mirror `ohlcv_1m` ordering until operator rules. Repo:
-      unified-api-contracts.
+- [x] ✅ [UAC] P1. SOURCE_PRIORITY: `("tradfi","ohlcv_1s")` entry in `canonical/crosscutting/_source_priority_data.py` +
+      matching `("tradfi","ohlcv_1s")` in `availability_semantics.py` (`tick_timestamp`). — unified-api-contracts@3b76c0bc.
+      **CORRECTED uac@2cfc756:** flipped from the `["massive","databento"]` mirror to **`["databento"]` (databento-only)**
+      — Massive's flat-file connector does NOT serve a 1s schema (`massive_tradfi_rest_connector.SUPPORTED_DATA_TYPES`
+      omits `ohlcv_1s`), so massive-first mis-stamped 1s rows `pipeline_mode=batch_massive` despite the data physically
+      coming from Databento. databento-primary → `derive_pipeline_mode_for_row` now stamps `batch_databento`
+      (provenance-correct; verified by smoke). The open massive-vs-databento ordering question is therefore MOOT for 1s
+      (1s is Databento-exclusive); it remains open only for `ohlcv_1m`/`trades`/`tbbo` (still massive-first — Massive DOES
+      serve those). Repo: unified-api-contracts.
 
 ## Phase 2 — prune the instrument universe to the 3 datasets
 
