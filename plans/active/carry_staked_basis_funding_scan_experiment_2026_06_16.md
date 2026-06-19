@@ -1186,10 +1186,38 @@ NO — we did not evaluate all venue x coin, and the LIVE ensemble is narrower t
 - Live ensemble (current): **Binance-only, 30 survivors** (+ Bybit/Drift for staked-basis). Doesn't span the arbitraged
   venues the reversion was confirmed on, nor the broad coin set.
 
-- [ ] [STRATEGY] P1. Expand the LIVE ensemble to MULTI-VENUE x BROAD universe: bulk live snapshots per venue (Binance
+- [x] ✅ [STRATEGY] P1. Expand the LIVE ensemble to MULTI-VENUE x BROAD universe: bulk live snapshots per venue (Binance
       premiumIndex, Bybit /v5/market/tickers, Aster fapi — all return funding+mark in one call; OKX funding is
       per-inst), run dispersion + spot_perp_basis per venue on each venue's top-volume liquid universe (not just 30
       survivors), keep dated_basis (Binance quarterly) + staked_basis (Bybit/Drift). Per-venue balances + liquidation
-      already generalise. **Repo: e2e-testing.** (the venues/coins gap)
+      already generalise. **Repo: e2e-testing.** (the venues/coins gap) — **e2e-testing@5eef20f** (2026-06-19): bulk
+      snapshots Binance/Aster premiumIndex+24hr + Bybit v5 tickers (funding+mark+turnover24h+fundingIntervalHour, 1
+      call); dispersion + spot_perp_basis run PER VENUE on top-N-by-24h-volume universe (HL excluded — momentum);
+      liquidity-weighted venue allocator clamped [floor,cap] 35%/65%; funding winsor ±200%/yr. Verified live: Binance
+      754 / Bybit 585 / Aster 562 perps, 4 strats across Binance/Bybit/Aster/Drift, 60 legs, liq OK; e2e QG green.
+### 2026-06-19 — /autonomous: production breadth + live-system fold (P1a/P1b/P1c/P2)
+
+Operator dispatch (6h autonomous): the four P1/P2 todos below. Progress log (append-only, the loop's handoff doc):
+
+- **P1a DONE — `e2e-testing@5eef20f`.** Multi-venue × broad-universe live ensemble (`funding_ensemble_engine.py`).
+  Was Binance-only/30-survivors → now Binance+Bybit+Aster bulk snapshots (Bybit v5 tickers gives
+  funding+mark+turnover24h+fundingIntervalHour in ONE call; Binance/Aster premiumIndex+24hr), per-venue dispersion +
+  spot_perp_basis on each venue's top-N-by-24h-volume universe (`--top-universe 40 --min-vol-musd 10`), HL excluded
+  (momentum). Kept dated_basis (Binance quarterly) + staked_basis (Bybit stETH / Drift jitoSOL). Added a
+  liquidity-weighted venue allocator with a [floor,cap] rail (`--venue-cap 0.65 --venue-floor 0.35`) + a funding winsor
+  (`--winsor-apy 200`) so a thin/new-coin print (ESPORTS +1306%/yr live) can't distort rank or reported carry. Verified
+  live (Binance 754 / Bybit 585 / Aster 562 perps; 4 strats across 4 venues incl. Drift; 60 legs; liq min-dist 33%);
+  e2e QG green (LINT all-✅, no-Any, size OK; SHA sentinel = HEAD). Shipped via dirty-deps direct-LDR push
+  (`Quickmerge: agent` trailer) — foreign databento WIP in UAC(3)/MTDS(1) blocks quickmerge pre-flight.
+  - **Finding (P2/NICE-TO-HAVE, in-file todo below):** the broad top-volume universe now surfaces tokenized
+    equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) that venues list — high-funding but not crypto.
+    The winsor tames the extreme funding; an explicit asset-class filter is a refinement (todo added below).
+- **P1b — IN PROGRESS** (per-venue backtest completion).
+
+- [ ] [STRATEGY] P2. **NICE-TO-HAVE (provenance: P1a 2026-06-19)** Asset-class filter for the live broad universe — the
+      top-volume perp universe now includes tokenized equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT)
+      the venues list; add an optional crypto-only gate (or a UAC asset-class tag) so the carry book can exclude
+      non-crypto underlyings when desired. The funding winsor already tames the extreme prints. **Repo: e2e-testing →
+      unified-api-contracts (asset-class registry).**
 - [ ] [STRATEGY] P1. Backtest-coverage completion: evaluate the full per-venue universe on Bybit/OKX/Aster (not just
       majors) so live coverage is backed by backtest evidence per venue x coin. **Repo: e2e-testing.**
