@@ -509,43 +509,6 @@ jobs:
           echo "── QG_SLICE=${QG_SLICE} ──"
           bash scripts/quality-gates.sh --no-fix 2>&1 | tee /tmp/qg_output.log
 
-      - name: Notify #ci-failures on failure or cancel (slice ${{ matrix.slice }})
-        if: failure() || cancelled()
-        env:
-          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
-          JOB_STATUS: ${{ job.status }}
-          REPO: ${{ github.repository }}
-          SLICE: ${{ matrix.slice }}
-          SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
-          TARGET_BRANCH: ${{ github.base_ref || github.ref_name }}
-          EVENT: ${{ github.event_name }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          SHA: ${{ github.sha }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          [ -z "${SLACK_CI_WEBHOOK_URL}" ] && echo "SLACK_CI_WEBHOOK_URL not set — skipping" && exit 0
-          SHORT_SHA="${SHA:0:7}"
-          REPO_NAME="${REPO#*/}"
-          if [ "${EVENT}" = "pull_request" ] && [ -n "${PR_NUMBER}" ]; then
-            CONTEXT="PR <${PR_URL}|#${PR_NUMBER}> \`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`"
-          else
-            CONTEXT="push to \`${TARGET_BRANCH}\`"
-          fi
-          if [ "${JOB_STATUS}" = "cancelled" ]; then
-            HEADER=":warning: *QG slice CANCELLED / TIMED-OUT* (timeout-minutes hit, OOM, or cancel)"
-            EXCERPT=""
-          else
-            HEADER=":x: *QG slice FAILED*"
-            EXCERPT=""
-            [ -f /tmp/qg_output.log ] && EXCERPT=$(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' /tmp/qg_output.log | grep -E "FAILED|ERROR|error|assert" | tail -5 | head -c 300)
-          fi
-          TEXT="${HEADER} | *${REPO_NAME}* [slice \`${SLICE}\`] | ${CONTEXT} | <${RUN_URL}|sha \`${SHORT_SHA}\`>"
-          [ -n "${EXCERPT}" ] && TEXT="${TEXT}"$'\n'"\`\`\`${EXCERPT}\`\`\`"
-          BODY=$(TEXT="${TEXT}" python3 -c 'import json,os; print(json.dumps({"text": os.environ["TEXT"]}))')
-          curl -s -X POST "${SLACK_CI_WEBHOOK_URL}" -H "Content-Type: application/json" -d "${BODY}"
-          echo "Slack notification sent to #ci-failures (slice=${SLICE} status=${JOB_STATUS})"
-
   # ── AGGREGATION JOB — the REQUIRED check context ────────────────────────────
   # Job key `quality-gates-v2` ⟹ context `Quality Gates (<repo>) / quality-gates-v2`
   # (branch-protection required check). Succeeds iff EVERY matrix leg passed; carries
@@ -680,3 +643,32 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
             -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${EFFECTIVE_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\"}}"
+
+  # ── SLACK NOTIFY — QG slice failure / cancellation ───────────────────────────
+  # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):
+  # gains content dedup (same repo+sha within cooldown_min = one page per failing
+  # commit, not per matrix leg re-run), alert ledger lifecycle, and re-nag eligibility.
+  # Replaces the per-leg inline curl that fired once per failing slice per run.
+  # dedup_key = qg-fail:{repo}:{sha} — a new commit re-arms; a re-run within
+  # cooldown_min of the SAME sha is suppressed.
+  notify-qg-fail:
+    name: Slack CRITICAL — QG Slice Failed
+    needs: [content-gate, qg-slices]
+    if: |
+      always() &&
+      needs.content-gate.outputs.cache_hit != 'true' &&
+      (needs.qg-slices.result == 'failure' || needs.qg-slices.result == 'cancelled')
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "${{ needs.qg-slices.result == 'cancelled' && ':warning: *QG slice CANCELLED / TIMED-OUT* (timeout-minutes hit,
+        OOM, or cancel)' || ':x: *QG slice(s) FAILED*' }} | *${{ github.event.repository.name }}* | ${{
+        github.event_name == 'pull_request' && format('PR #{0} `{1}` → `{2}`', github.event.pull_request.number,
+        github.head_ref, github.base_ref) || format('push to `{0}`', github.ref_name) }} | <${{ github.server_url }}/${{
+        github.repository }}/actions/runs/${{ github.run_id }}|sha `${{ github.sha }}`>"
+      severity: CRITICAL
+      workflow_name: python-quality-gates-v2
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "qg-fail:${{ github.event.repository.name }}:${{ github.sha }}"
+      cooldown_min: 45
+    secrets: inherit
