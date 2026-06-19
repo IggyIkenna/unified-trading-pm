@@ -498,7 +498,8 @@ trigger does a **context-preserving** failover (`_handle_usage_cap`) rather than
 
 The deterministic session id is generated at spawn (`tmux_spawn.new_session_id()` → `claude --session-id <uuid>`) and
 persisted on `SlotRow.claude_session_id` (workers) / `AgentRow.claude_session_id` (main agent) — owned from t=0, no
-transcript-filename scraping. The MainAgentKeeper applies the identical headroom-gated resume logic to the singleton
+transcript-filename scraping. The unified `AgentKeeper` (formerly `MainAgentKeeper`; now also keeps the review agent(s)
+— see § "Unified AgentKeeper" below) applies the identical headroom-gated resume logic to the singleton
 main agent (`_handle_rate_limit_modal` → `resumed` / `killed_fresh` / `frozen_no_headroom`), with a failover cooldown so
 a lingering modal in the pane scrollback doesn't re-failover every tick. SSOT:
 `plans/active/orchestrator_account_failover_resume_respawn_2026_06_17.md`.
@@ -527,6 +528,58 @@ drop-in enabled. Track: `plans/active/agent_orchestrator_worker_liveness_watchdo
 
 SSOT: `codex/04-architecture/agent-orchestrator-worker-liveness.md` (full trigger contracts, anti-thrash, kill
 execution, interaction with AutoSpawnLoop).
+
+## Unified AgentKeeper + agent-type oversight (Phase 6 + Plan B — shipped 2026-06-19)
+
+`server/main_agent_keeper.py` — class **`AgentKeeper`** (renamed from `MainAgentKeeper`) — the ONE keeper that
+guarantees the MANDATORY agents on EVERY VM: the singleton **main** (`orch-agent-main`) AND the slot-bound **review**
+agent(s) (`ORCHESTRATOR_REVIEW_SLOTS`). Review-ensure was merged out of `AutoSpawnLoop` into the public free function
+`autospawn.ensure_review_agents(...)` that the keeper calls each tick — so **review comes up even when AutoSpawn is OFF**
+(the dev-box gap where review rode AutoSpawn and never spawned). AutoSpawn now handles ONLY on-demand task workers + the
+escalation drains.
+
+- **Env-configurable /loop cadences**: `ORCHESTRATOR_MAIN_LOOP_SECONDS` (default 60) / `ORCHESTRATOR_REVIEW_LOOP_SECONDS`
+  (default 900 = 15 min) — `prompts.render` fills `<LOOP_SECONDS>` per role (safety-default so a missed call site never
+  ships a literal placeholder).
+- **Wake-on-message nudge**: `POST /api/agents/{id}/nudge` → `tmux_spawn.nudge()` (best-effort send-keys), AND auto-fired
+  on a by-role message — so a long idle loop is responsive to a UI message WITHOUT fast polling.
+- **Fleet-worker cap**: `config.fleet_worker_cap()` (10 default; **6 on the planning VM**) bounds CONCURRENT on-demand
+  workers; the mandatory main+review are NOT counted against it.
+- **`backup` role DEPRECATED**: removed from `AgentRole`/`AgentKind` (server + dashboard), `ROLES_ORDER`,
+  `AGENT_KIND_LABEL`, `_default_kind_lifecycle`, and the spawn modal; `promote_agent` demotes the displaced holder to
+  `custom` (was `backup`); `agents/backup.md` deleted. The keeper auto-respawns main/review, so a manual
+  promote-from-backup spare is redundant — keep the generic promote (role-swap).
+- **Reviewed-ledger** (advisory): `server/reviewed_ledger.py` + `POST/GET /api/agents/reviewed` — review records the
+  sha/task/event_id it reviewed (+ verdict) to skip redundant ISOLATED re-review; NOT a gate (the agent owns
+  what/how-much to review).
+
+### Agent-type oversight — every live type registers an AgentRow
+
+Two-axis classification (`AgentKind` × `AgentLifecycle`) on `AgentRow`, set at spawn: `role` stays the chat/promote lane
+(main/review/custom); `agent_kind` carries the real identity and `lifecycle` (persistent | one_shot | scheduled) tells
+the reaper/watchdog that a one_shot/scheduled session ending is EXPECTED, not a stale-agent incident.
+`escalate`/`conflict_resolver` (`escalation.py`) + `plan_health`/`plan_reconciler` (`plan_health.py`) now
+`register_agent` at dispatch (role=custom + their kind + lifecycle), persisting `claude_session_id`/`tmux_session` back
+to the live `SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). `recovery-audit` has a
+HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (usage stays on the httpx `UsagePoller`);
+`monitor` is the manual external-watch (custom-role) pattern. `health.py`'s reaper is lifecycle-aware. SSOT:
+`plans/active/orchestrator_agent_type_oversight_coverage_2026_06_17.md`.
+
+### Dashboard monitoring (Plan B)
+
+- **Agent retention**: a terminal agent is RETAINED (soft-delete to status `finished` + `finished_at`/`exit_reason`, or
+  archived by the reaper which stamps the same) so the dashboard shows past escalate/plan-health runs;
+  `DELETE /api/agents/{id}` soft-deletes; `prune_finished_agents` (keep last N per kind, 7d) runs each keeper tick.
+- **Filterable `GET /api/agents`**: `status`/`kind`/`lifecycle`/`include_finished`/`limit` (SQL `WHERE`/`LIMIT`); default
+  excludes terminal records so the live roster stays clean.
+- **Activity backend**: `list_activity` filters (slot/event_type/event_types) in SQL BEFORE the limit + a `before_id`
+  cursor; `activity_rollup` denoise (`GROUP BY event_type[,slot]` → counts). `/api/activity` gained
+  `types`/`before_id`/per-row `id`; new `/api/activity/rollup`. The `AgentTypesPanel` + activity-frontend (load-older,
+  denoise badges, failure-reason render), conditions-collapse, and message-delivery chip render this on the dashboard.
+  SSOT: `plans/active/agent_orchestrator_dashboard_monitoring_2026_06_19.md`.
+
+Alert quality (persisted server-side dedup so a central-VM restart stops re-firing still-true alerts; error-pointer
+messages + RESOLVED bookends): SSOT `plans/active/alert_quality_overhaul_2026_06_18.md`.
 
 ## Host-offline failover lifecycle (FailoverLoop — design 2026-05-30)
 
