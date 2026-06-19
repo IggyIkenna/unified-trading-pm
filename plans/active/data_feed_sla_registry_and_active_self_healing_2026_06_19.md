@@ -80,11 +80,16 @@ ladder, the 4-state honest-absence manifest).
       Literal of market-data domains. Account/positions/recon feeds are execution STATE, not a market domain.
       **Proceeded with option (a): add `"execution"` to the Literal** (additive, local to this one model, reversible —
       keeps the field one-dimensional). Rejected (b) "widen the field's semantics" as muddying. Operator may revisit.
-- [ ] [SCRIPT] P1. **(1a + 1c) Extend `DataFreshnessContract` + add the missing `critical` feeds** — add optional
+- [x] ✅ [SCRIPT] P1. **(1a + 1c) Extend `DataFreshnessContract` + add the missing `critical` feeds** — added optional
       `refetch_action: str | None = None` (Phase-2 binding) + `"execution"` to the `asset_group` Literal + a new
       `ACCOUNT_STATE_FRESHNESS` dict (`account_snapshot` 120s, `positions_snapshot` 120s — Blue-Flame critical values;
       `reconciliation_age` warn=1200s/max=2400s from the shipped recon-age SEV1/SEV0 bands) folded into
-      `ALL_FRESHNESS_CONTRACTS`. Additive, non-breaking. Repo: unified-api-contracts.
+      `ALL_FRESHNESS_CONTRACTS`. Additive, non-breaking. — unified-api-contracts@`27a80d2` | 47 freshness tests +
+      basedpyright 0-err + full UAC QG green (215s). **Deferred (foreign WIP):** the individual-dict facade re-export
+      (`ACCOUNT_STATE_FRESHNESS` via `unified_api_contracts.internal`) — the two `internal/__init__.py` files carry
+      another agent's uncommitted `ledger_asset_resolution` re-exports; not bundling foreign WIP. The new feeds are
+      already reachable via the facade-exported `ALL_FRESHNESS_CONTRACTS` and via the module; add the individual export
+      once the ledger WIP lands. (see QG-unblock follow-ups below)
 - [ ] [SCRIPT] P1. **(1b) Single freshness home** — make `ALERT_THRESHOLDS["tick_staleness_seconds"]` derive from (or a
       QG cross-validation assert against) `MARKET_TICK_FRESHNESS`, replacing the hand-written "300s matches" comment
       coupling. Repo: unified-api-contracts.
@@ -95,13 +100,29 @@ ladder, the 4-state honest-absence manifest).
       `critical` feed past `max_age_seconds` raises `DataStalenessError` in `freshness_gate`; `important`
       warns-not-blocks; `informational` logs only; the tick_staleness↔contract cross-validation holds.
 
+## QG-unblock follow-ups (from shipping Phase-1 1a/1c through the gate)
+
+Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636` via carve-out #3 — `qg-common.sh` +
+`base-service.sh` + `base-library.sh`). Residual proper-fix follow-ups:
+
+- [ ] [SCRIPT] P2. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its `--ignore-vuln GHSA-6v7p-g79w-8964`
+      from `base-service.sh` + `base-library.sh`. A clean fix exists (1.2.1); it's currently ignored (non-exploitable
+      transitive) only to avoid a fleet lock campaign inline. `uv lock --upgrade-package msgpack` per repo that locks
+      it.
+- [ ] [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** (`internal/reference/__init__.py` +
+      `internal/__init__.py`) for parity with `MARKET_TICK_FRESHNESS`/etc. Deferred at ship time because both
+      `__init__.py` carried another agent's uncommitted `ledger_asset_resolution` WIP — do it once that lands.
+- [ ] [DEFERRED] P3. **Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped (gated on the
+      aiohttp-3.14 unblock — `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`).
+
 ## Phase 2 — active self-healing (`refetch-feed` recovery action) — depends on Phase 1
 
 - [ ] [SCRIPT] P1. **Add `refetch-feed` to the Layer-0 deterministic recovery closed set** in
-      `deployment-service/scripts/recovery/` — given a stale `feed_id`, look up `DATA_FEED_SLA[feed_id].refetch_action`
-      and invoke the bound service-CLI re-fetch (the existing `<svc> --operation ... --shard-key ...` shard-targeted
-      fetch — reuse the MTDS/IS CLI shard-targeting flags from infrastructure_master B.2 Phase 5, do NOT build a new
-      fetch path). Emit a structured `AgentActionEvent` like every other Layer-0 script. Repo: deployment-service.
+      `deployment-service/scripts/recovery/` — given a stale `feed_id`, look up
+      `ALL_FRESHNESS_CONTRACTS[feed_id].refetch_action` and invoke the bound service-CLI re-fetch (the existing
+      `<svc> --operation ... --shard-key ...` shard-targeted fetch — reuse the MTDS/IS CLI shard-targeting flags from
+      infrastructure_master B.2 Phase 5, do NOT build a new fetch path). Emit a structured `AgentActionEvent` like every
+      other Layer-0 script. Repo: deployment-service.
 - [ ] [SCRIPT] P1. **Wire the refetch into the recovery decision tree** — stale `critical` feed → (a) freshness_gate
       already blocks orders, (b) fire `refetch-feed` (Blue Flame's SILENT_RETRY), (c) on repeated failure escalate
       through the existing AlertSeverity ladder (WARNING_ALERT → CRITICAL_ALERT) and the audit-ack SLA, (d) sustained
