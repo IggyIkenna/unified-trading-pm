@@ -70,88 +70,117 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
       `VENUE_DATA_TYPE_CAPABILITIES` + `EXPECTED_COVERAGE` + `_PER_INSTRUMENT_SHARD_DATA_TYPES` gain `ohlcv_1s`; (2)
       **uac@1b6df4c** — `1s` added to the `BarTimeframe` closed-set (`BAR_TIMEFRAMES` + seconds map) so edge-conversion
       doesn't raise; (3) **mtds@e814a5b** — `ohlcv_1s→1s` in `_OHLCV_DATA_TYPE_TIMEFRAME` (open→close edge); (4)
-      **mtds@521361a** — `ohlcv_1s` added to `_DATABENTO_SUPPORTED_DATA_TYPES` (the gate that actually routes the fetch —
-      was the silent 0-rows cause). Smoke (CME, 2026-06-16): 1.01M `ohlcv_1s` rows, `pipeline_mode=batch_databento`,
+      **mtds@521361a** — `ohlcv_1s` added to `_DATABENTO_SUPPORTED_DATA_TYPES` (the gate that actually routes the fetch
+      — was the silent 0-rows cause). Smoke (CME, 2026-06-16): 1.01M `ohlcv_1s` rows, `pipeline_mode=batch_databento`,
       manifest `complete=True`. Repo: market-tick-data-service + unified-api-contracts.
 - [x] ✅ [MDPS] P1. 1s candle path accepted (non-breaking; 1m base stays) — **mdps@2cfba0b**: `TradfiOhlcv1sAdapter`
-      (`base_granularity="1s"`) registered for `ohlcv_1s` (same pre-aggregated passthrough + session-grid finalization as
-      1m); `base_adapter.get_interval_seconds["1s"]=1` + `granularity_detector` (`GRANULARITIES["1s"]`,
+      (`base_granularity="1s"`) registered for `ohlcv_1s` (same pre-aggregated passthrough + session-grid finalization
+      as 1m); `base_adapter.get_interval_seconds["1s"]=1` + `granularity_detector` (`GRANULARITIES["1s"]`,
       `_NATIVE_GRANULARITY["ohlcv_1s"]="1s"`). 15m/24h continue to aggregate from the 1m/1s base via the candle engine;
       QG-green (NaN/session-grid covered by existing passthrough tests). Repo: market-data-processing-service.
 - [~] [DATA] P1. Backfill CME ohlcv_1m + ohlcv_1s 2019-01-01→2026-06-19 — **WIRING PROVEN, FULL-HORIZON BLOCKED ON IS
-      CATALOG**. The MTDS download CLI works end-to-end on every catalog-covered date: smoke wrote **CME ohlcv_1m 216K
-      rows** (2026-06-17), **CME ohlcv_1s 1.01M rows** (2026-06-16, `pipeline_mode=batch_databento`, v9 manifest
-      `complete=True`), all verified in the `_index` (`schema_version=9`, `capture_status=captured`). A detached nohup
-      backfill (`/tmp/cme_ohlcv_backfill.sh` → `/tmp/cme_ohlcv_backfill.log`, 1m then 1s) is running the full range.
-      **BLOCKER (P1, see new todo below):** the per-date instrument enumeration returns 0 instruments for most historical
-      dates (probed 2019-2025 + several 2026 weekdays = "0 skipped (no instruments)" / "No active venues") — only a sparse
-      recent window (e.g. 06-10/15/16/17 ok; 06-12/18 empty) has IS-catalog coverage. CME futures expire daily and the
-      instruments-service catalog has not been historically backfilled, so the OHLCV download has no universe to fetch for
-      uncovered dates. This is an **instruments-service catalog-coverage gap, NOT an MTDS/OHLCV wiring gap** (the download
-      path is correct on every covered date). The detached backfill writes every covered date + honestly skips the rest.
-      Repo: market-tick-data-service.
+  CATALOG**. The MTDS download CLI works end-to-end on every catalog-covered date: smoke wrote **CME ohlcv_1m 216K
+  rows** (2026-06-17), **CME ohlcv_1s 1.01M rows** (2026-06-16, `pipeline_mode=batch_databento`, v9 manifest
+  `complete=True`), all verified in the `_index` (`schema_version=9`, `capture_status=captured`). A detached nohup
+  backfill (`/tmp/cme_ohlcv_backfill.sh` → `/tmp/cme_ohlcv_backfill.log`, 1m then 1s) is running the full range.
+  **BLOCKER (P1, see new todo below):** the per-date instrument enumeration returns 0 instruments for most historical
+  dates (probed 2019-2025 + several 2026 weekdays = "0 skipped (no instruments)" / "No active venues") — only a sparse
+  recent window (e.g. 06-10/15/16/17 ok; 06-12/18 empty) has IS-catalog coverage. CME futures expire daily and the
+  instruments-service catalog has not been historically backfilled, so the OHLCV download has no universe to fetch for
+  uncovered dates. This is an **instruments-service catalog-coverage gap, NOT an MTDS/OHLCV wiring gap** (the download
+  path is correct on every covered date). The detached backfill writes every covered date + honestly skips the rest.
+  Repo: market-tick-data-service.
 - [x] ✅ [DATA] P1. Backfill **DBEQ.BASIC equities** (NASDAQ + NYSE → `DBEQ.BASIC`) — instrument DEFINITIONS + OHLCV
       1m+1s — now that the operator ACTIVATED the equities subscription (2026-06-19; was BLOCKED-OPERATOR). DBEQ.BASIC
-      equity fetch PROVEN end-to-end: IS `--operation instruments --venues NASDAQ` fetches 268 equity/ETF symbols + IBIT/
-      ETHA from `DBEQ.BASIC` (DBEQ.BASIC returned ~251–265 instruments; 41 NASDAQ active after date filter, written to
-      per-VM shard `dbeq-equities-defs-slot6.parquet`); MTDS `--operation download --venues NASDAQ --data-types ohlcv_1m`
-      wrote **28,110 rows across 43 NASDAQ equity instruments** (2026-06-17), canonical GCS
-      `pipeline_mode=batch_massive/asset_group=tradfi/venue=NASDAQ/instrument_type=equity/data_type=ohlcv_1m/` (41 parquet
-      files verified in GCS). **Source-provenance is CORRECT, not a bug**: `SOURCE_PRIORITY[("tradfi","ohlcv_1m")] =
-      ["massive","databento"]` → 1m stamps `batch_massive` (Massive is the 1m primary, Massive flat-files serve 1m);
-      `SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]` → 1s stamps `batch_databento`/`source=databento` (Databento
-      is 1s-exclusive). Detached full-horizon backfills running (`VM_NAME=dbeq-equities-{defs,ohlcv}-slot6`, per-VM shard
-      isolation, disjoint from gap-fill agent af95b962 + CFE agent acc0e591): IS defs `/tmp/dbeq_is_defs_backfill.sh`
-      (NASDAQ+NYSE, 2010→2026, clips to IS-catalog launch ≥2023-04-15); MTDS OHLCV `/tmp/dbeq_ohlcv_backfill.sh` (1m then
-      1s, both venues, 2023→2026). 1m equities largely pre-captured (Massive) → backfill verify-skips them; the genuinely
-      NEW data is the 1s (databento) leg. Same IS-catalog historical-coverage caveat as CME (detached backfill covers what
-      the catalog enumerates; deeper historical IS-catalog backfill is the `[ ] [IS] P1` item below). DBEQ.BASIC-only — no
-      CFE/CME re-fetch. Provenance: 2026-06-19 equities-activation dispatch. Repo: instruments-service +
-      market-tick-data-service.
-- [ ] [IS] P1. **Backfill the instruments-service CME (GLBX.MDP3) catalog for the full 2019-01-01→present horizon** so the
-      tradfi OHLCV download has a per-date instrument universe to fetch. Today the catalog only covers a sparse recent
-      window → the ohlcv_1m/1s backfill writes 0 rows / "no active venues" for ~all historical dates and several recent
-      weekdays. Re-run the IS Databento `definition`-schema enumeration per missing trading day (definition is L0/free 16y
-      — within subscription), then re-run the MTDS `download` backfill over the now-covered range. Provenance: discovered
-      2026-06-19 while running the Phase-1 DATA backfill — the OHLCV wiring is proven (smoke wrote 1m 216K + 1s 1.01M rows
-      on covered dates) but blocked on catalog coverage. Composes with "Never copy instrument definitions between dates"
-      (CME futures expire daily) + Data-Pipeline-Correctness. Repo: instruments-service.
+      equity fetch PROVEN end-to-end: IS `--operation instruments --venues NASDAQ` fetches 268 equity/ETF symbols +
+      IBIT/ ETHA from `DBEQ.BASIC` (DBEQ.BASIC returned ~251–265 instruments; 41 NASDAQ active after date filter,
+      written to per-VM shard `dbeq-equities-defs-slot6.parquet`); MTDS
+      `--operation download --venues NASDAQ --data-types ohlcv_1m` wrote **28,110 rows across 43 NASDAQ equity
+      instruments** (2026-06-17), canonical GCS
+      `pipeline_mode=batch_massive/asset_group=tradfi/venue=NASDAQ/instrument_type=equity/data_type=ohlcv_1m/` (41
+      parquet files verified in GCS). **Source-provenance is CORRECT, not a bug**:
+      `SOURCE_PRIORITY[("tradfi","ohlcv_1m")] =     ["massive","databento"]` → 1m stamps `batch_massive` (Massive is the
+      1m primary, Massive flat-files serve 1m); `SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]` → 1s stamps
+      `batch_databento`/`source=databento` (Databento is 1s-exclusive). Detached full-horizon backfills running
+      (`VM_NAME=dbeq-equities-{defs,ohlcv}-slot6`, per-VM shard isolation, disjoint from gap-fill agent af95b962 + CFE
+      agent acc0e591): IS defs `/tmp/dbeq_is_defs_backfill.sh` (NASDAQ+NYSE, 2010→2026, clips to IS-catalog launch
+      ≥2023-04-15); MTDS OHLCV `/tmp/dbeq_ohlcv_backfill.sh` (1m then 1s, both venues, 2023→2026). 1m equities largely
+      pre-captured (Massive) → backfill verify-skips them; the genuinely NEW data is the 1s (databento) leg. Same
+      IS-catalog historical-coverage caveat as CME (detached backfill covers what the catalog enumerates; deeper
+      historical IS-catalog backfill is the `[ ] [IS] P1` item below). DBEQ.BASIC-only — no CFE/CME re-fetch.
+      Provenance: 2026-06-19 equities-activation dispatch. Repo: instruments-service + market-tick-data-service.
+- [x] ✅ [DATA] P1. Backfill **CFE / VX (VIX futures)** — instrument DEFINITIONS + OHLCV 1m+1s — now that the operator
+      ACTIVATED the CFE subscription (2026-06-19; was BLOCKED-OPERATOR). **ROOT-CAUSE FIX (the Phase-2 wiring was
+      wrong):** the Databento dataset code for the Cboe Futures Exchange is **`XCBF.PITCH`**, NOT `CFE` — a bare `CFE`
+      is rejected by the API with `400 validation_failed` (verified live 2026-06-19 via `metadata.get_dataset_range`;
+      XCBF.PITCH covers 2018-11-04→now, exposes definition/ohlcv-1s/ohlcv-1m). The prior `uac@9fb2c33` deliberately set
+      `XCBF.* → CFE` on the false belief that "XCBF is out of the allowlist" — corrected here: XCBF.PITCH IS the real
+      dataset + IS now in the allowlist. Shipped: **uac@2494375** (`_CFE_FUTURES` + `tradfi_symbology` VX tuples +
+      `tradfi_roots.DATASET_CBOE_CFE` + `databento_subscription_allowlist` ALLOWED set: `CFE`→`XCBF.PITCH`);
+      **uac@cc5a0a9** (Cboe VX-future classifier `VX/Mn` in `databento_classifier.py` with the VIX-settlement expiry =
+      30d before next-month 3rd-Friday, + CBOE `ohlcv_1s`/`ohlcv_1m` capability in `market_data_categories.py` /
+      `expected_coverage.py` / `data_type_capability.py`, + unit tests); **mtds@d85d9d0** (live-ws `_VENUE_TO_DATASET` +
+      batch `_get_dataset_for_exchange` + `databento_fetch` guard comment: `CBOE`→`XCBF.PITCH`). PROVEN end-to-end: IS
+      `--operation instruments --venues CBOE` fetched **122 VX instruments from XCBF.PITCH** (per-VM shard
+      `cfe-vx-bf.parquet`); MTDS `--operation download --venues CBOE     --data-types ohlcv_1m` wrote **4,700 rows on
+      2026-06-17, manifest complete=True** (outright VX classify; calendar spreads `VX/Nn:1:S - VX/Qn:1:B` correctly
+      drop). Detached full-horizon backfills running (`VM_NAME=cfe-vx-bf`, per-VM shard isolation, disjoint from
+      gap-fill agent af95b962 which skipped CFE + the DBEQ agent): IS defs `/tmp/cfe_vx_is_definitions.sh` (CBOE,
+      2010→2026); MTDS OHLCV `/tmp/cfe_vx_ohlcv_backfill.sh` (1m then 1s, 2018-11-04→2026). CFE-only — no DBEQ.BASIC
+      fetched (CBOE does not trigger the NASDAQ/NYSE-gated DBEQ equity fetch); **VIX 15m cash INDEX untouched** (stays
+      Barchart+Yahoo per `data_source_continuity.py` — CFE = VX FUTURES, not the cash index). Same IS-catalog
+      historical-coverage caveat (un-enumerated old dates honest-skip "no active venues"; the deeper historical
+      IS-catalog backfill is the CME/DBEQ `[ ] [IS] P1` item below, which now also covers CBOE/XCBF.PITCH).
+      Source-provenance: `SOURCE_PRIORITY[("tradfi","ohlcv_1s")]=["databento"]` → `batch_databento`;
+      `("tradfi","ohlcv_1m")` is `["massive","databento"]` but Massive carries NO CFE (issue
+      `massive_does_not_carry_vix_vx_futures_cfe_2026_06_17.md`), so VX 1m resolves to databento. Provenance: 2026-06-19
+      CFE-activation dispatch. Repo: unified-api-contracts + market-tick-data-service + instruments-service.
+- [ ] [IS] P1. **Backfill the instruments-service CME (GLBX.MDP3) catalog for the full 2019-01-01→present horizon** so
+      the tradfi OHLCV download has a per-date instrument universe to fetch. Today the catalog only covers a sparse
+      recent window → the ohlcv_1m/1s backfill writes 0 rows / "no active venues" for ~all historical dates and several
+      recent weekdays. Re-run the IS Databento `definition`-schema enumeration per missing trading day (definition is
+      L0/free 16y — within subscription), then re-run the MTDS `download` backfill over the now-covered range.
+      Provenance: discovered 2026-06-19 while running the Phase-1 DATA backfill — the OHLCV wiring is proven (smoke
+      wrote 1m 216K + 1s 1.01M rows on covered dates) but blocked on catalog coverage. Composes with "Never copy
+      instrument definitions between dates" (CME futures expire daily) + Data-Pipeline-Correctness. Repo:
+      instruments-service.
 - [x] ✅ [UAC] P1. SOURCE_PRIORITY: `("tradfi","ohlcv_1s")` entry in `canonical/crosscutting/_source_priority_data.py` +
-      matching `("tradfi","ohlcv_1s")` in `availability_semantics.py` (`tick_timestamp`). — unified-api-contracts@3b76c0bc.
-      **CORRECTED uac@2cfc756:** flipped from the `["massive","databento"]` mirror to **`["databento"]` (databento-only)**
-      — Massive's flat-file connector does NOT serve a 1s schema (`massive_tradfi_rest_connector.SUPPORTED_DATA_TYPES`
-      omits `ohlcv_1s`), so massive-first mis-stamped 1s rows `pipeline_mode=batch_massive` despite the data physically
-      coming from Databento. databento-primary → `derive_pipeline_mode_for_row` now stamps `batch_databento`
-      (provenance-correct; verified by smoke). The open massive-vs-databento ordering question is therefore MOOT for 1s
-      (1s is Databento-exclusive); it remains open only for `ohlcv_1m`/`trades`/`tbbo` (still massive-first — Massive DOES
-      serve those). Repo: unified-api-contracts.
+      matching `("tradfi","ohlcv_1s")` in `availability_semantics.py` (`tick_timestamp`). —
+      unified-api-contracts@3b76c0bc. **CORRECTED uac@2cfc756:** flipped from the `["massive","databento"]` mirror to
+      **`["databento"]` (databento-only)** — Massive's flat-file connector does NOT serve a 1s schema
+      (`massive_tradfi_rest_connector.SUPPORTED_DATA_TYPES` omits `ohlcv_1s`), so massive-first mis-stamped 1s rows
+      `pipeline_mode=batch_massive` despite the data physically coming from Databento. databento-primary →
+      `derive_pipeline_mode_for_row` now stamps `batch_databento` (provenance-correct; verified by smoke). The open
+      massive-vs-databento ordering question is therefore MOOT for 1s (1s is Databento-exclusive); it remains open only
+      for `ohlcv_1m`/`trades`/`tbbo` (still massive-first — Massive DOES serve those). Repo: unified-api-contracts.
 
 ## Phase 2 — prune the instrument universe to the 3 datasets
 
 - [x] ✅ [UAC] P0. Drop ICE-only instruments from `registry/tradfi_instrument_universe.py`: Brent (`BRN`), Gasoil (`G`),
       ICE Dollar Index (`DX`), softs (`CT`/`CC`/`KC`/`SB`/`OJ`) — and remove `IFEU.IMPACT` / `IFUS.IMPACT` datasets.
       Repo: unified-api-contracts. — **uac@6790981**: `_ICE_FUTURES`/`_ICE_US_FUTURES` lists deleted + dropped codes
-      removed from `EXCHANGE_CODE_TO_NAME`; `get_required_datasets()` now returns exactly `{GLBX.MDP3, DBEQ.BASIC, CFE}`.
+      removed from `EXCHANGE_CODE_TO_NAME`; `get_required_datasets()` now returns exactly
+      `{GLBX.MDP3, DBEQ.BASIC, CFE}`.
 - [x] ✅ [UAC] P0. Consolidate equity ETFs/stocks onto `DBEQ.BASIC` (currently ETFs on `XNAS.ITCH`); drop the per-venue
       equity datasets. Repo: unified-api-contracts. — **uac@6790981**: `_BTC_SPOT_ETFS`/`_ETH_SPOT_ETFS` (IBIT/ETHA)
       moved `XNAS.ITCH` → `DBEQ.BASIC`; **mtds@d3590c2**: live-ws `_VENUE_TO_DATASET` NYSE+NASDAQ → `DBEQ.BASIC`
       (per-venue XNYS/XNAS/XCBO/ARCX/BATS feeds dropped).
-- [x] ✅ [UAC] P0. Wire `CFE` dataset + VX (VIX) futures instruments into `tradfi_instrument_universe.py` and the live-ws
-      venue→dataset map (`live/connectors/databento_tradfi_ws.py`, currently `IFEU.IMPACT`/per-venue equities). Repo:
-      market-tick-data-service + unified-api-contracts. — **uac@6790981** (`_CFE_FUTURES` VX.FUT on CFE/CBOE) +
+- [x] ✅ [UAC] P0. Wire `CFE` dataset + VX (VIX) futures instruments into `tradfi_instrument_universe.py` and the
+      live-ws venue→dataset map (`live/connectors/databento_tradfi_ws.py`, currently `IFEU.IMPACT`/per-venue equities).
+      Repo: market-tick-data-service + unified-api-contracts. — **uac@6790981** (`_CFE_FUTURES` VX.FUT on CFE/CBOE) +
       **uac@9fb2c33** (corrected `tradfi_symbology` `DATABENTO_VALID_PARENT_SYMBOLS` + `tradfi_roots.DATASET_CBOE_CFE`
       VX dataset `XCBF.*` → `CFE`, since XCBF is out of the allowlist) + **mtds@d3590c2** (live-ws `CBOE` → `CFE`).
 - [x] ✅ [UAC] P1. Remove `ICE` from `VENUES_BY_ASSET_GROUP["tradfi"]`; add a `CFE`/Cboe venue if VX futures need a
       distinct venue token. Repo: unified-api-contracts. — **DIAGNOSED: ICE KEPT (uac@6790981)**. The ICE Databento
-      *datasets* (IFEU/IFUS) are dropped, but `ICE` STAYS a tradfi venue because the ICE/NYBOT US Dollar Index (`DXY`)
+      _datasets_ (IFEU/IFUS) are dropped, but `ICE` STAYS a tradfi venue because the ICE/NYBOT US Dollar Index (`DXY`)
       is still Yahoo-sourced under venue `ICE` (non-Databento) and the market-session / data-status / source-resolution
       registries + tests key off it (removing it breaks `data_source_continuity` + DXY source-resolution, which the
       dispatch explicitly forbade touching). VX uses the existing `CBOE` venue token (no new venue needed; CFE is the
-      Databento *dataset*, CBOE the canonical venue). Plan-intent (remove ICE *Databento* exposure) is fully met.
+      Databento _dataset_, CBOE the canonical venue). Plan-intent (remove ICE _Databento_ exposure) is fully met.
 - [x] ✅ [UAC] P1. Verify the CME event contracts (`EC*` series: ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) in
       `tradfi_instrument_universe.py` survive the prune, stay on `GLBX.MDP3`, and are tagged `event_contract` (not bare
       `option`) so the validity matrix admits `{trades, ohlcv_1s, tbbo}`. Repo: unified-api-contracts. — **VERIFIED
-      (uac@6790981)**: all 9 EC* contracts in `_CME_EVENT_CONTRACTS` survive untouched on `GLBX.MDP3`; `event_contract`
+      (uac@6790981)**: all 9 EC\* contracts in `_CME_EVENT_CONTRACTS` survive untouched on `GLBX.MDP3`; `event_contract`
       classification is by-symbol at normalize time (`external/databento/normalize._is_cme_event_contract_symbol`), so
       the static `instrument_type="OPTION"` def is correct — the runtime classifier tags them event_contract.
 
