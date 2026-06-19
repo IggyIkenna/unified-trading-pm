@@ -5358,3 +5358,22 @@ shipped (market-tick-data-service@4d32528, Phase D P1c Item 3) but cannot run un
   under QG --block-network; integration tests marked @pytest.mark.requires_credentials skipped by default)
 - **status**: BLOCKED-CREDENTIALS — NOT deferred; adapter scaffold + unit tests already shipped.
 - **operator action needed**: Reply `[ack]` with Tardis API key location in Secret Manager once provisioned.
+
+## CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19, sports e2e audit)
+
+Plan-of-record: `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` (sports drive).
+Both adapters + unit tests already EXIST (no build needed); both secrets EXIST in Secret Manager — but coverage is
+0.000 on their ACTIVE captured data_types, consistent with expired/suspended keys (the footystats "valid key, account
+suspended" precedent).
+
+- **soccer-football-info (SFI)** — `SoccerFootballInfoAdapter` (RapidAPI `soccer-football-info.p.rapidapi.com`), secret
+  `soccer-football-info-api-key`. Unblocks **SFI_PROGRESSIVE_STATS** (per-fixture progressive stats). 35 unit tests
+  (`tests/unit/test_sfi_adapter_coverage.py`). SFI_LEAGUES/SFI_STANDINGS are RETIRED (runtime-only UAC catalog — NOT a
+  data gap). **ASK: validate/rotate `soccer-football-info-api-key` (RapidAPI sub).**
+- **Transfermarkt** — `TransfermarktAdapter` (RapidAPI `transfermarkt-football-data-api.p.rapidapi.com` OR Apify), secret
+  `transfermarkt-api-key`. Unblocks **PLAYER_VALUES** (per-season team/player market values). 33 unit tests
+  (`tests/unit/test_transfermarkt_adapter_coverage.py`). TRANSFERMARKT_LEAGUES RETIRED (runtime-only). **ASK:
+  validate/rotate `transfermarkt-api-key` (RapidAPI/Apify sub).**
+
+Status = BLOCKED-CREDENTIALS (operator validate/rotate). Once green, IS backfill re-runs SFI_PROGRESSIVE_STATS +
+PLAYER_VALUES (IS coverage backfill is the concurrent af95b962 worker's domain).
