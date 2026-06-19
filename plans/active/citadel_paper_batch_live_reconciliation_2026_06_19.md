@@ -365,3 +365,23 @@ on every fill; migrate the date-level float-metric aggregate recon stages onto t
 Then P3.1-wiring (engine calls `ledger_row_from_trade_fill` → GCS InstructionLedger + RunManifest capture), P1.4
 GroupCRunner (the linchpin), P4.2/P4.3 (recon stage + batch-rerun-from-manifest), P3.4 seam → real GCS, P6 Slack, P7 the
 short-window ε=0 e2e proof.
+
+### 2026-06-19 17:52 UTC — autonomous write-side push PAUSED on session limit (resets 18:30 UTC)
+
+The autonomous write-side dispatch ran, parallelised across repos, then hit the account session/usage limit (resets
+18:30 UTC). State:
+- **SHIPPED + flipped**: P1.1-strategy — `strategy-service@b136f70e` routes `BenchmarkFillEngine` through the UAC
+  `benchmark_fill_price` SSOT + the `PASSIVE_BBO` correction, validated by a `reconcile_day` ε=0 fixture (the hardest
+  behavioural fill-model fix is DONE).
+- **WRITTEN but orphaned-uncommitted on disk** (the limit killed the agents pre-commit — NOT lost, resume from these):
+  - UTL `unified_trading_library/ledger/run_writer.py` (P3.1-wiring: the RunManifest + ledger GCS writer, 274 lines) +
+    `tests/unit/ledger/test_run_writer.py` + the coverage-ratchet bump + `ledger/__init__` export.
+  - batch-live-reconciliation-service: the P4.2 daily-T+1 `reconcile_day` recon stage (reported QG-green; was waiting on
+    UTL to go clean before quickmerge — dirty-deps rule).
+  - strategy-service: 1 uncommitted file (part of P2/P3.1 engine wiring).
+- **NOT STARTED**: P1.4 GroupCRunner (the linchpin), P4.3 batch-rerun-from-manifest CLI, P6 Slack, P7 e2e proof.
+
+**RESUME (after 18:30 UTC reset)**: re-dispatch the autonomous write-side prompt. It reads this log + the on-disk WIP and
+continues: QG + ship the orphaned UTL `run_writer.py` (unblocks P4.2) → ship P4.2 → then P1.4 → P4.3 → P6 → P7. The
+on-disk WIP is the precise resume point; verify it QG-green before shipping (don't ship un-QG'd). Live leg stays
+BLOCKED-OPERATOR.
