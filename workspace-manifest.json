@@ -79,7 +79,7 @@
     "market-tick-data-service": "0.19.0",
     "system-integration-tests": "0.12.0",
     "unified-api-contracts": "0.22.0",
-    "unified-trading-library": "0.17.0",
+    "unified-trading-library": "0.18.0",
     "unified-trading-pm": "1.2.180",
     "market-data-processing-service": "0.10.0",
     "e2e-testing": "0.7.0",
@@ -90,7 +90,7 @@
     "ml-service": "0.8.0",
     "alerting-service": "0.10.0",
     "unified-trading-api": "0.2.3",
-    "client-reporting-api": "0.9.0"
+    "client-reporting-api": "0.10.0"
   },
   "repositories": {
     "alerting-service": {
@@ -876,7 +876,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1795,9 +1795,7 @@
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
-    "deployment-api": "0.21.0",
-    "client-reporting-api": "0.10.0",
-    "unified-trading-library": "0.18.0"
+    "deployment-api": "0.21.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1821,21 +1819,26 @@
       "branch": "staging",
       "sha": "0f2633e79cb594287f263c50034530d00d3b720a",
       "version": "0.21.0"
-    },
-    "client-reporting-api": {
-      "version": "0.10.0",
-      "sha": "f849ae28e5660bdc1ce5fb7144dcaaa7c8b6fd59",
-      "branch": "staging"
-    },
-    "unified-trading-library": {
-      "version": "0.18.0",
-      "sha": "61f2620cf73d39980b5af01083cd8161ef33dcc7",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-19T20:47:42.528008Z",
+        "commits": {
+          "client-reporting-api": {
+            "version": "0.10.0",
+            "sha": "f849ae28e5660bdc1ce5fb7144dcaaa7c8b6fd59",
+            "branch": "staging"
+          },
+          "unified-trading-library": {
+            "version": "0.18.0",
+            "sha": "61f2620cf73d39980b5af01083cd8161ef33dcc7",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-19T19:19:54.037130Z",
         "commits": {
@@ -1907,16 +1910,6 @@
           "batch-live-reconciliation-service": {
             "version": "0.9.0",
             "sha": "697197a8a9e5aec7e21510e98fb4377174cb4679",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-19T13:45:13.053392Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.22.0",
-            "sha": "eb1d90d4467ba8e1eaaf6c77732081f786fcb23f",
             "branch": "staging"
           }
         }
