@@ -52,6 +52,13 @@ canonical there. Do not duplicate the list here — read the registry.
 > SSM-Online and running the CURRENT escalation code (`plan_health` + `ldr_qg_failure` wall types accepted by the live
 > process)** — any older "vm-planning to restore / not SSM-reachable" framing is stale.
 >
+> **Agent-type roster on this VM**: the unified `AgentKeeper` keeps the mandatory {main, review} agents (review merged
+> out of AutoSpawn so it comes up even when AutoSpawn is OFF); every live type (escalate / conflict_resolver /
+> plan_health / plan_reconciler / monitor) registers an `AgentRow` with a `agent_kind` × `lifecycle`
+> (persistent/one_shot/scheduled) so health/reaper/UI cover it, and terminal agents are retained (not hard-deleted) for
+> the dashboard. The `backup` role is deprecated. Full contract: `codex/04-architecture/agent-orchestrator-overview.md`
+> § "Unified AgentKeeper + agent-type oversight".
+>
 > **(2) Human Planning VM** — canonical id **`human-planning`** = `i-0dd9812a96cdda5dc` (`35.76.120.160`, m7i.2xlarge,
 > ap-northeast-1, `ssh human-planning-vm`). Ikenna (slot1) + Harsh (slot2) **interactive only**, slots =
 > `tab/human-planning/N`. It **self-registers with the central VM** and owns **NO EIP / DNS / central-API**;

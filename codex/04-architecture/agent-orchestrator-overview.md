@@ -578,8 +578,17 @@ HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (u
   denoise badges, failure-reason render), conditions-collapse, and message-delivery chip render this on the dashboard.
   SSOT: `plans/active/agent_orchestrator_dashboard_monitoring_2026_06_19.md`.
 
-Alert quality (persisted server-side dedup so a central-VM restart stops re-firing still-true alerts; error-pointer
-messages + RESOLVED bookends): SSOT `plans/active/alert_quality_overhaul_2026_06_18.md`.
+### Alert message standard (error-pointer + persisted dedup, 2026-06-19)
+
+Every central-VM Slack alert is an **error pointer**, not an audit: header = WHAT broke + a number; body carries exactly
+ONE correct deep-link to the authoritative surface (AO dashboard `/fleet-git?slot=N`, a GitHub PR/run URL), any CLI hint
+demoted to secondary. A standing condition pages ONCE on the false→true transition and emits a matching **RESOLVED
+bookend** on true→false (`notify_slot_recovered` / `notify_git_staleness_resolved` / `notify_account_auth_recovered`) —
+never every tick. The dedup that makes "once" hold is **persisted to disk** (`server/dedup_state.py` under `STATE_DIR`:
+seen-key sets, bool sentinels, cooldown dicts), so a central-VM restart inherits "already alerted at T" instead of
+re-firing every still-true alert. The new slot-quarantine page (`notify_slot_quarantined`) names the specific repo +
+cause + queued-wall count when a quarantine starves dispatch. SSOT:
+`plans/active/alert_quality_overhaul_2026_06_18.md`.
 
 ## Host-offline failover lifecycle (FailoverLoop — design 2026-05-30)
 
