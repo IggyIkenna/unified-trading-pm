@@ -86,6 +86,38 @@ NOTE: "stale ≠ broken" — a stale digest only fails the build if the pinned b
 `c54f13d9` repos may still satisfy — verify per-repo, don't assume. Adding the QG `CLOUD_BUILD` guard is harmless even
 where in-image QG doesn't run (it only activates when the PM base script is absent), so batch-add it safely.
 
+## Build-trigger reality — the map is NOT 1:1 with repo dirs (discovered 2026-06-19)
+
+**BIG FINDING.** "Build all repos" is the wrong frame: the buildable units are the **~25 Cloud Build `-build` triggers**
+(`asia-northeast1`), and they do NOT correspond 1:1 to the 19 workspace dirs. Three mismatch classes:
+
+1. **A repo splits into MANY build triggers** (monorepo of buildable sub-services):
+   - `features-service` → 5 triggers: `features-{calendar,delta-one,multi-timeframe,onchain,volatility}-service-build`.
+   - `ml-service` → 3 triggers: `ml-inference-service-build`, `ml-training-service-build`, `ml-training-ui-build`.
+   - So the repo-root `Dockerfile` I swept may not be the one each sub-service builds — each likely has its own.
+2. **Triggers with no workspace dir** (sub-package / library builds): `execution-algo-library-build`,
+   `unified-{cloud-services,config-interface,domain-services,events-interface,market-interface,order-interface,reference-data-interface}-build`,
+   `api-contracts-build` (UAC). These build from sub-packages or separate library repos, not a top-level service dir.
+3. **Repo dirs with a Dockerfile but NO `-build` trigger at all** — cannot be built via the standard mechanism:
+   `agent-orchestrator` (VM-deployed, not a cloudbuild image), `alerting-service`, `batch-live-reconciliation-service`,
+   `client-reporting-api`, `fund-administration-service`, `greeks-service`, **`trading-agent-service`**,
+   `deployment-ui` (likely = `deployment-dashboard-build`), `unified-trading-system-ui` (separate UI pipeline),
+   `unified-trading-library` (the BASE image — its own base-image build, not a `-build` trigger).
+
+**Consequence for trading-agent canary:** the digest+install+guard fix was shipped (`trading-agent-service@388d5ac1`)
+but it has **NO build trigger**, so it can't be validated via Cloud Build. Either it's intentionally not-yet-imaged
+(WIP / deployed another way) or it's a pipeline gap. NEEDS OPERATOR TRIAGE (next todo).
+
+- [ ] [INFRA] P0. **Triage the trigger-less repos with the operator** — for each of {alerting-service,
+      batch-live-reconciliation-service, client-reporting-api, fund-administration-service, greeks-service,
+      trading-agent-service}: is it intentionally not built as a Cloud Build image (WIP / different deploy path), or is a
+      missing trigger a gap to fill? "Build all repos" can't include a repo with no trigger until this is answered.
+      Also confirm `deployment-ui`↔`deployment-dashboard-build` and the UTL base-image build path. Repo: PM/deployment-
+      service (trigger inventory) + operator decision.
+- [ ] [SCRIPT] P0. **Re-map the harness to the REAL trigger list** (not `<repo>-build`): drive `--all` off the 25
+      `-build` triggers, expand `features-service`→5 + `ml-service`→3, map `deployment-ui`→`deployment-dashboard`, and
+      SKIP trigger-less repos with an explicit "no trigger" row (never a silent omission). Repo: e2e-testing.
+
 ## Phase 0 — Probe design + proof (DONE)
 
 - [x] ✅ [INFRA] P0. DONE 2026-06-19 — design + validate the operability probe on a real image. mdps@8025264d: IMPORT
