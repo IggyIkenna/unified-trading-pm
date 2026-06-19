@@ -105,11 +105,29 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
      [`heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py), stall watchdog, and
      self-delete on `VM_SHUTDOWN_ON_COMPLETION=true`. Full lifecycle visibility without SSH (see § Observability &
      Lifecycle).
-   - **Pattern B (inline)**: launcher sources `lib/launcher_common.sh` and includes `lc_log_upload_trap_block` for
-     lightweight GCS log upload on EXIT. No heartbeat daemon, no deployment-registry rows. Pattern B VMs are either
-     `LONG_LIVED_LIVE` daemons (monitored by the zombie watchdog) or heartbeat-only validators with no manifest writes.
+   - **Pattern B (inline)**: a launcher that inlines its own startup/user-data script MUST source
+     `lib/launcher_common.sh` (GCP) or `lib/aws_ec2_launch_lib.sh` (AWS) and emit
+     `lc_log_upload_trap_block "$VM_NAME" "$PROJECT_ID" "$ASSET_GROUP" "$TASK"` (GCP, gsutil) /
+     `lc_aws_log_upload_trap_block "$VM_NAME" "$ACCOUNT_ID" "$ASSET_GROUP" "$TASK"` (AWS, `aws s3 cp`) as the **FIRST
+     line of the startup body** (before any `set -e` / workload). That snippet is the SSOT durable-observability
+     contract for inline launchers — it (a) tees stdout/stderr to `/var/log/run.log`, (b) runs a **continuous background
+     streamer** that uploads the growing log to `…/vm-logs/<vm>/run.log` AND writes a liveness/progress heartbeat blob
+     to `…/vm-heartbeat/<vm>.txt` **every `LC_LOG_STREAM_INTERVAL`s (default 30)** — so a hung/dead VM's log is
+     queryable WITHOUT SSH (≤30 s loss) and the zombie-watchdog reads that heartbeat, and (c) on ANY exit writes the
+     terminal `…/vm-logs/<vm>/EXIT_STATUS` marker (rc=0 completed / rc≠0 failed — the durable STOPPED/FAILED signal),
+     does a guaranteed final upload, then schedules `shutdown -h +1`. **Do not** put a bare `gsutil cp … run.log` only
+     at the END of the script (loses everything on a mid-run hang) and **do not** add an explicit `shutdown -h now`
+     after the workload (it races the trap's final upload — let the trap own teardown). No heartbeat daemon /
+     deployment-registry rows (that is Pattern A's `vm-exec-with-gcs-tee.sh` — reach for Pattern A whenever the VM
+     installs the tarball + venv). Incident this closes: 2026-06 SFI + gas-fees + AWS backfill VMs whose VM-local-only
+     logs froze + were lost on termination, forcing serial-port/SSH diagnosis.
 
    **Do not** assume SSH or manual instance delete for Pattern A runs.
+
+   **Lifecycle (both clouds)**: the `vm-logs/` (14 d) + `vm-heartbeat/` (15 d) + `log-archive/` (30 d) prefixes have
+   GCS/S3 delete lifecycle rules so logs never accumulate forever — GCP in `terraform/gcp/main.tf`
+   (`google_storage_bucket.deployment_scripts`) + the daily durable archival in
+   `terraform/gcp/vm_log_archival_scheduler.tf`; AWS in `terraform/aws/vm_logs_lifecycle.tf`.
 
 8. **Same region as GCS data**: `ZONE=asia-northeast1-c` (default) for all data-pipeline VMs. Cross-region transfer
    cost + latency makes this non-negotiable. **STOCKOUT fallback**: if `-c` reports STOCKOUT, retry in

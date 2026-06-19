@@ -138,16 +138,14 @@ A shared service account (`batch-processing-sa`) is used for all batch processin
 
 Secrets are stored in GCP Secret Manager:
 
-| Secret                | Purpose                                        |
-| --------------------- | ---------------------------------------------- |
-| `github-token`        | Clone private repos (unified-trading-services) |
-| `tardis-api-key`      | CeFi market data (Tardis API)                  |
-| `databento-api-key`   | TradFi market data (Databento API)             |
-| `alchemy-api-key`     | DeFi RPC (Alchemy)                             |
-| `graph-api-key`       | The Graph API (DeFi protocols)                 |
-| `openbb-fred-api-key` | FRED economic data                             |
-| `openbb-fmp-api-key`  | FMP fundamentals                               |
-| `betfair-api-key`     | Sports: Betfair exchange (Application Key)     |
+| Secret              | Purpose                                        |
+| ------------------- | ---------------------------------------------- |
+| `github-token`      | Clone private repos (unified-trading-services) |
+| `tardis-api-key`    | CeFi market data (Tardis API)                  |
+| `databento-api-key` | TradFi market data (Databento API)             |
+| `alchemy-api-key`   | DeFi RPC (Alchemy)                             |
+| `graph-api-key`     | The Graph API (DeFi protocols)                 |
+| `betfair-api-key`   | Sports: Betfair exchange (Application Key)     |
 
 Secrets are injected into containers via:
 
