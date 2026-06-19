@@ -28,7 +28,7 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
 
 ## Phase 1 — Kill the repeats (P0, biggest win)
 
-- [ ] [SCRIPT] P0. Add read-back dedup to the shared carrier `unified-trading-pm/.github/workflows/notify-slack.yml`
+- [x] ✅ [SCRIPT] P0. Add read-back dedup to the shared carrier `unified-trading-pm/.github/workflows/notify-slack.yml`
       (`dedup_key` + `cooldown_min` inputs; read the already-written ledger JSONL `:196-228` before posting; skip a key
       seen within cooldown). Roll out via `rollout-workflow-templates.sh` if templated. Repo: unified-trading-pm.
 - [ ] [ORCHESTRATOR] P0. Persist the server-side in-memory dedup state to disk (the `ci_reconcile.load_etag_cache`
@@ -39,15 +39,15 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
 
 ## Phase 2 — Collapse duplicate detectors (P1)
 
-- [ ] [SCRIPT] P1. Make `ci-failure-watcher` the SSOT for stuck/conflict promotion PRs; strip `_stuck_prs` +
+- [x] ✅ [SCRIPT] P1. Make `ci-failure-watcher` the SSOT for stuck/conflict promotion PRs; strip `_stuck_prs` +
       `_classify_stuck_pr` + `_lock_dangle` from `scripts/cicd/promotion_lag_monitor.py` (leave it a pure branch-pair
       lag monitor; `sit-starvation-detector.yml` owns dangling-lock). Repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. Gate `escalate-to-orchestrator.yml:267` `if: always()` notify so it does NOT re-page on every
+- [x] ✅ [SCRIPT] P1. Gate `escalate-to-orchestrator.yml:267` `if: always()` notify so it does NOT re-page on every
       re-dispatch tick (page once "handed off"; let the server S4 page "resolved/abandoned"). Repo: unified-trading-pm.
 
 ## Phase 3 — Error-pointer message standard (P1)
 
-- [ ] [SCRIPT] P1. Rewrite the cited low-info offenders to the standard (header=WHAT+number; exactly one correct
+- [x] ✅ [SCRIPT] P1. Rewrite the cited low-info offenders to the standard (header=WHAT+number; exactly one correct
       deep-link; CLI hint secondary; no audit detail in body): promotion-lag (`promotion_lag_monitor.py:335-444`, demote
       to transition-only — page on 60m-CROSSING not every tick); stuck-PR Slack line (`ci_failure_watcher.py:719-726`).
       Repo: unified-trading-pm.
@@ -74,7 +74,7 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
 - [ ] [ORCHESTRATOR] P2. Split the overloaded `notify_agent_stuck_respawned` (#7) into purpose-specific functions (real
       respawn vs plan-health dispatch vs escalation dispatch — kill the misleading "Auto-respawn" header). Repo:
       agent-orchestrator.
-- [ ] [SCRIPT] P2. Route `cloud-build-failure-watcher.yml:232-246` through `notify-slack.yml` (gain dedup + ledger +
+- [x] ✅ [SCRIPT] P2. Route `cloud-build-failure-watcher.yml:232-246` through `notify-slack.yml` (gain dedup + ledger +
       truthful severity); make it transition-based. Repo: unified-trading-pm.
 - [ ] [ORCHESTRATOR] P2. Drop the gh-rate 50% NOTICE tier; same-operator account-rotation → dashboard-only (alert only
       on cross-op). Repo: agent-orchestrator.
@@ -90,3 +90,23 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
 
 - `codex/08-workflows/ci-cd-flow.md` — record the carrier-dedup contract + the stuck-PR SSOT consolidation.
 - `codex/04-architecture/agent-orchestrator-overview.md` — record persisted-dedup + the error-pointer message standard.
+
+## Progress Log
+
+### Wave 7b — Plan C PM `[SCRIPT]` items (2026-06-19, slot-2 sub-agent)
+
+All 5 `[SCRIPT]` items shipped in **unified-trading-pm@ab8e83028** (draining to main via PR #418, v2-gated auto-merge):
+
+- notify-slack.yml read-back dedup (`dedup_key` + `cooldown_min`; reads the date-partitioned ledger JSONL, skips within
+  cooldown, **fail-open**). **PM-only carrier, NOT a fleet template** (verified: absent from `scripts/workflow-templates/`,
+  not tracked by `detect_template_drift.py`, no sibling repo has it; all 34 callers PM-internal) → NO rollout, NO blast
+  radius.
+- `promotion_lag_monitor.py` stripped to a pure branch-pair lag monitor (`_stuck_prs`/`_classify_stuck_pr`/`_lock_dangle`
+  removed) — `ci-failure-watcher` is the stuck-PR SSOT.
+- `escalate-to-orchestrator.yml` notify gated (page once on hand-off, not on every retry tick).
+- promotion-lag + stuck-PR Slack lines rewritten to the error-pointer standard (transition-only, one deep-link); stuck-PR
+  line also gated on the `escalation-dispatched` label.
+- `cloud-build-failure-watcher.yml` routed through `notify-slack.yml` (dedup + ledger; content-hash transition-based).
+
+QG green (`87s`); unit tests pass. The `[ORCHESTRATOR]` items (persist server dedup, server-alert UI deep-links + RESOLVED
+bookends, slot-quarantine alert, P2 deletes/consolidations) are the agent-orchestrator side — Wave 7, in progress.
