@@ -67,7 +67,7 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.10.0",
+    "batch-live-reconciliation-service": "0.11.0",
     "deployment-api": "0.20.0",
     "deployment-service": "0.13.0",
     "deployment-ui": "0.1.0",
@@ -79,14 +79,14 @@
     "market-tick-data-service": "0.19.0",
     "system-integration-tests": "0.12.0",
     "unified-api-contracts": "0.22.0",
-    "unified-trading-library": "0.15.0",
+    "unified-trading-library": "0.17.0",
     "unified-trading-pm": "1.2.178",
     "market-data-processing-service": "0.10.0",
     "e2e-testing": "0.7.0",
     "agent-orchestrator": "0.11.0",
     "greeks-service": "0.7.0",
     "trading-agent-service": "0.3.0",
-    "strategy-service": "0.16.0",
+    "strategy-service": "0.17.0",
     "ml-service": "0.8.0",
     "alerting-service": "0.10.0",
     "unified-trading-api": "0.2.3",
@@ -1795,10 +1795,7 @@
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
-    "deployment-api": "0.21.0",
-    "unified-trading-library": "0.17.0",
-    "batch-live-reconciliation-service": "0.11.0",
-    "strategy-service": "0.17.0"
+    "deployment-api": "0.21.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1822,26 +1819,31 @@
       "branch": "staging",
       "sha": "0f2633e79cb594287f263c50034530d00d3b720a",
       "version": "0.21.0"
-    },
-    "unified-trading-library": {
-      "version": "0.17.0",
-      "sha": "048696b69b02c59d9ec206ca0d8f7bdcc2269ee7",
-      "branch": "staging"
-    },
-    "batch-live-reconciliation-service": {
-      "version": "0.11.0",
-      "sha": "93499d619a45b0188e226ebb8134d4834b7ff7f9",
-      "branch": "staging"
-    },
-    "strategy-service": {
-      "version": "0.17.0",
-      "sha": "edc88c33ee1dd3cc8c557d4b94b23371ea55ed54",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-19T19:19:54.037130Z",
+        "commits": {
+          "unified-trading-library": {
+            "version": "0.17.0",
+            "sha": "048696b69b02c59d9ec206ca0d8f7bdcc2269ee7",
+            "branch": "staging"
+          },
+          "batch-live-reconciliation-service": {
+            "version": "0.11.0",
+            "sha": "93499d619a45b0188e226ebb8134d4834b7ff7f9",
+            "branch": "staging"
+          },
+          "strategy-service": {
+            "version": "0.17.0",
+            "sha": "edc88c33ee1dd3cc8c557d4b94b23371ea55ed54",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-19T16:17:06.357454Z",
         "commits": {
@@ -1904,21 +1906,6 @@
             "version": "0.22.0",
             "sha": "eb1d90d4467ba8e1eaaf6c77732081f786fcb23f",
             "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-19T02:12:33.116892Z",
-        "commits": {
-          "market-tick-data-service": {
-            "version": "0.17.0",
-            "sha": "ad61dc29eeb373ea2a70b4297f6fa4bdaf1e1f6e",
-            "branch": "staging"
-          },
-          "deployment-api": {
-            "branch": "staging",
-            "sha": "bcf74c4b1fbf619d7aff654b7ee810685ed7207c",
-            "version": "0.20.0"
           }
         }
       }
