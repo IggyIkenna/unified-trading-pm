@@ -73,11 +73,11 @@ missing. Full evidence + per-ask current-state/gap/change-list:
 
 ### Follow-ups surfaced during live validation (2026-06-19)
 
-- [ ] [ORCHESTRATOR] P3. `scripts/deploy-dashboard.sh` hardcodes `TARGET=/var/www/orch.epiphanytechnologies.com` (+
+- [x] ✅ [ORCHESTRATOR] P3. `scripts/deploy-dashboard.sh` hardcodes `TARGET=/var/www/orch.epiphanytechnologies.com` (+
       `chown hk:hk`) — a stale local-deploy target that fails on the central VM (which is **API-only**: nginx serves
       only `api.agent-orchestrator.odum-research.com → :8765`; the dashboard is a **separate origin**
       `agent-orchestrator.odum-research.com`, not served here). Parameterize the target via env/arg + document the real
-      dashboard host/deploy path. Repo: agent-orchestrator.
+      dashboard host/deploy path. Repo: agent-orchestrator. — agent-orchestrator@48089f7
 - [ ] [ORCHESTRATOR] P3. `server/orm.py` `AgentRow` docstring still reads "main, review, backup, etc." + "promote backup
       → main" — stale after the backup-role deprecation; update to main/review/custom. Repo: agent-orchestrator.
 - [x] ✅ [ORCHESTRATOR] P2. Review agent's `AgentRow.last_ping` isn't refreshed while its slot churns — a LIVE working
