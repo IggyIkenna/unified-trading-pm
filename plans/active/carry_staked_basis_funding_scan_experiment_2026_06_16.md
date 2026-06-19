@@ -1193,6 +1193,17 @@ is the validated foundation + a runnable paper path TODAY.
       `CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK` AllocatorArchetype so the rank is computed
       inside strategy-service (today it arrives as the `funding_rank_pct` feature from upstream). **Repo:
       unified-api-contracts + strategy-service.**
+- [ ] [UI] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19; operator-raised)** Surface `CARRY_FUNDING_DISPERSION`
+      in the strategy wizard/catalog. **NOT CI-breaking** — the UI's `lib/architecture-v2/enums.ts` is a hand-maintained
+      CURATED 18-archetype subset (the mirror test asserts `STRATEGY_ARCHETYPES_V2.toHaveLength(18)` + internal
+      consistency, NOT parity with UAC's 58), and `lib/registry/ui-reference-data.json` is a generated snapshot — so the
+      new archetype is simply absent from the wizard until deliberately surfaced. To surface: (1) add
+      `CARRY_FUNDING_DISPERSION` to `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY` (CARRY_AND_YIELD) in
+      `lib/architecture-v2/enums.ts` + bump `enums.test.ts` `toHaveLength(18)`→19; (2) regenerate
+      `lib/registry/ui-reference-data.json` via `unified-api-contracts/scripts/generate_ui_reference_data.py` (picks up
+      the catalog `build_funding_dispersion` slots) + any label/wizard-screener entry. **Playwright gate (HARD RULE):
+      ticking needs `[UI]` + `pw:L2 ✓` + a regression spec → a UI-capable slot. Repo: unified-trading-system-ui (+ UAC
+      generator).**
 - [ ] [HISTORICAL] P3. ~~funding_dispersion ENGINE + UAC archetype~~ (SUPERSEDED — DONE above; original blast-radius
       analysis retained for the record). A new `StrategyArchetype.CARRY_FUNDING_DISPERSION` is fleet-import-breaking if
       any exhaustive registry is missed:
