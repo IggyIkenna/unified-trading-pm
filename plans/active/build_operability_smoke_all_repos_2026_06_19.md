@@ -176,11 +176,13 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
 
 ## Phase 4 — Wire the probe into cloudbuild (durable, replaces the hollow Step #6)
 
-- [ ] [CI] P1. Replace/augment the hollow in-image QG Step #6 with a **real operability smoke step** in each cloudbuild:
+- [x] ✅ [CI] P1. Replace/augment the hollow in-image QG Step #6 with a **real operability smoke step** in each cloudbuild:
       run the validated import + entrypoint(`--help`/`/health`) probe inside the freshly-built image (credential-free
       env) BEFORE the push, so every future build is gated on "actually runs", not just "compiled". Roll out via the
       cloudbuild template if one exists, else per-repo. This is the durable successor that lets Phase 1's standalone
-      harness retire. Repos: all service repos (+ template SSOT).
+      harness retire. Repos: all service repos (+ template SSOT). — unified-trading-library@738c2258 (14 service repos
+      already had operability-probe; UTL was the last missing repo — import-only probe added, push-base-image waitFor
+      updated to ["operability-probe"])
 
 ## Phase 3.5 — Remaining-repos build sweep results (2026-06-19) — the existing pipeline is broadly RED
 
