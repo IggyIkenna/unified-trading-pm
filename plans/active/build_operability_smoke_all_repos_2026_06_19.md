@@ -180,12 +180,24 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
 
 ## Phase 5 — Root-cause the stale-digest fan-out (so this doesn't recur)
 
-- [ ] [INFRA] P1. **Why is every service repo's `BASE_IMAGE_DIGEST` stale?** The fan-out
-      (`update-dependency-version.yml` digest-refresh PR on base republish) evidently has not landed fleet-wide (mdps
-      was 2 generations behind; the fleet is 1 behind). Diagnose: does the workflow run? does it open PRs? do they
-      merge? Fix the mechanism — hand-refreshing digests (Phase 2) is whack-a-mole without this. Composes with the
-      stale-pin audit todo in `deployment_ui_monitoring_pane_2026_06_19.md`. Repos: PM (fan-out workflow) + per-repo
-      `update-dependency-version.yml`.
+- [ ] [INFRA] P1. **Why is every service repo's `BASE_IMAGE_DIGEST` stale? — RCA DONE 2026-06-19, fix pending.**
+      Mechanism (traced): a repo version-bump → `repository_dispatch[version-bump]` → PM `update-repo-version.yml`
+      resolves the UTL base `:latest` digest (step ~line 408: `docker manifest`/registry read of
+      `unified-trading-library:latest`) and attaches `base_image_digest` to the `dependency-update` consumer fan-out;
+      each consumer's `update-dependency-version.yml` (trigger `repository_dispatch[dependency-update]`) rewrites the
+      `ARG BASE_IMAGE_DIGEST` default. **Root cause (3 compounding gaps):** (1) the digest is attached **ONLY when
+      resolved** — "missing GCP secrets or a registry miss → empty digest → consumers skip the digest step" (workflow
+      comment ~line 375) — so any GHA run without GCP auth silently propagates NO digest; (2) it only rides a **UTL
+      version-bump** event, not every base-image republish (a UAC/other-base-layer change republishes the base but
+      doesn't re-resolve+dispatch the digest); (3) the consumer fan-out follows the **dependency graph**, so a repo not
+      in that graph at dispatch time (e.g. the 6 NEW repos) never receives a digest dispatch → stuck at whatever digest
+      it was created with (hence the fleet sits at `c54f13d9` = last successful resolve+dispatch, new repos at
+      `e939b4ee`/varied). **Fix direction**: (a) ensure GCP auth (Workload-Identity/SA) is available in the
+      digest-resolve step + fail-LOUD on empty digest instead of silently skipping; (b) re-resolve+dispatch the digest
+      on **base-image republish** (a UTL/UAC `:latest` push), not only a UTL version-bump; (c) include ALL image-building
+      repos in the fan-out target set (or add a periodic digest-drift sweep cron that opens refresh PRs for any repo
+      whose pin lags `:latest`). Composes with the stale-pin audit in `deployment_ui_monitoring_pane_2026_06_19.md`.
+      Repo: PM (`update-repo-version.yml`) + per-repo `update-dependency-version.yml`.
 
 ## Success criteria
 
