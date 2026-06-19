@@ -221,8 +221,10 @@ are identified (2) and the ledger exists (3).
       **Progress (2026-06-19)**: `write_paper_run()` ledger driver shipped at
       `strategy-service/strategy_service/engine/backtest/ledger_emit.py` (strategy-service@4f5d294d) — 4 unit tests
       assert canonical GCS paths (`{root}ledger_type=instruction/{run_id}.jsonl`, `{root}run_manifest.json`) + round-trip
-      via `load_instruction_ledger_fills`. Blocking remainder: deployment-service VM launcher (P7.1 cron) + real
-      wallet/strategy credentials to sustain a 7-day paper run.
+      via `load_instruction_ledger_fills`. **P7.1 cron infra SHIPPED** (`deployment-service@0fee514`,
+      `paper_week_determinism_scheduler.tf`). Blocking remainder: P7.1-A/B/C CLI entrypoints (strategy-service paper
+      CLI, BLRS daily_determinism_stage op, client-reporting-api daily_ledger_digest CLI) + real wallet/strategy
+      credentials to sustain a 7-day paper run + operator sets `paper_determinism_enabled = true` in TF.
 - [x] ✅ [INFRA] P2.7.2. **Daily T+1 batch rerun + `reconcile_day` — MACHINERY PROVEN ε=0** (`e2e-testing@a553f28`).
       The short-window e2e proof `scripts/defi/determinism_spine_e2e.py` runs the FULL chain end-to-end credential-free:
       paper run writes a keyed InstructionLedger + RunManifest (UTL writer) → P4.3 batch-rerun-from-manifest reproduces
@@ -472,3 +474,23 @@ views off PnLAttributionRow), P3.x engine-wiring (the live colocated_engine emit
 helper + ledger_emit gateway shipped; the per-tick CALL wiring is the runtime integration), P3.8.1 (codex EXISTS/MISSING
 sync), P7.1 (the operator paper-week VM — calendar-bound), P7.3 (live leg — **BLOCKED-OPERATOR**, wallet keys are
 human-only, the ONE allowed leftover). The determinism PROOF + the full machinery are shipped + green.
+
+### 2026-06-19 — Task D: MONITORING CHAIN PROVEN + Task P7.1: T+1 CRON INFRA WIRED
+
+- **Task D — Monitoring chain proof [4/4]** (`e2e-testing@804a388`): `scripts/defi/determinism_spine_e2e.py` extended
+  with step [4/4] — after the paper run writes its InstructionLedger JSONL, re-parse rows back to `LedgerRow` objects
+  via `_read_ledger_rows_mem` (in-memory, credential-free, no peer-service import) → fold through `materialize_position_ledger`
+  (UTL pure function) → assert non-empty positions. Verdict printed to stdout:
+  `"[4/4] ✅ MONITORING CHAIN PROVEN — paper run 3 trades → API positions=1 pnl=148.50"`.
+  Exit 0 confirmed. ε=0 determinism assertion intact. QG (e2e-testing) green. Shipped via quickmerge from e2e-testing
+  repo (UTL dirty-dep blocked strategy-service quickmerge path; e2e-testing has clean ancestors).
+
+- **Task P7.1 — Daily T+1 cron infra** (`deployment-service@0fee514`):
+  `terraform/gcp/paper_week_determinism_scheduler.tf` created — mirrors `manifest_consolidator_scheduler.tf` pattern.
+  Three Cloud Run Jobs + three Cloud Scheduler resources (Stage A 02:00 UTC / Stage B 02:30 UTC / Stage C 03:15 UTC)
+  gated behind `paper_determinism_enabled` variable (default `false`). Jobs declared for:
+  - Stage A: paper engine run (`strategy-service --operation run --mode paper --asset-group cefi`) — **P7.1-A TODO**: needs strategy-service paper CLI entrypoint
+  - Stage B: BLRS daily determinism stage (`--operation reconcile --mode batch`) — **P7.1-B TODO**: needs dedicated `daily_determinism_stage` operation
+  - Stage C: daily ledger digest (`client-reporting-api --operation daily_ledger_digest`) — **P7.1-C TODO**: needs daily_ledger_digest CLI subcommand
+  Shipped via dirty-deps direct LDR push (UTL had foreign uncommitted WIP from background agent). QG green.
+  Operator must set `paper_determinism_enabled = true` + add P7.1-A/B/C CLI entrypoints before the cron fires.
