@@ -542,7 +542,7 @@ RULED OUT: BucketNamingError (image fixed), OOM (16Gi re-run failed identically 
 `logger.exception` never fired → it's an uncatchable death OR logging-suppressed). The script runs GREEN locally (R4
 06-11), so it is **cloud-Job-invocation-specific**.
 
-- [ ] [INFRA] P1 (supersedes the line above). **Make the cloud lifecycle-catalogue-regen log, then fix the real error.**
+- [ ] [INFRA] P1. (supersedes the line above) **Make the cloud lifecycle-catalogue-regen log, then fix the real error.**
       Two sub-steps: (a) since `logger.*` is suppressed in the bare-script job, add `print(..., flush=True)` BISECTION
       markers before each `run_rollup` phase (storage-client init / bucket resolve / by_date listing / download-pool /
       dedup / monotonic-guard / promote-write) — `print` reaches stdout regardless of the logging config — to localize

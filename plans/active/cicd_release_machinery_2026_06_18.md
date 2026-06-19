@@ -114,13 +114,13 @@ surface, the workflow-template sprawl/consolidation, the watcher/auto-recovery f
 - [ ] [SCRIPT] P3. Drop stale "Telegram alert" comments / `send_telegram()` names (impl is Slack; Telegram retired
       2026-06-02) in: `secret-health-check`, `cassette-drift-check`, `plan-notification`, `agent-audit`,
       `overnight-dead-man-switch`, `fix-approval-timeout`, `cold-storage-cleanup`. (drift audit)
-- [ ] [BUG?] P2. **VERIFY then fix:** `conflict-resolution-agent.yml` has a **duplicate `env:` key** in the dispatch
+- [ ] [BUG] P2. **VERIFY then fix:** `conflict-resolution-agent.yml` has a **duplicate `env:` key** in the dispatch
       step (the 2nd clobbers the 1st → GH_PAT/REPO_NAME/PR_NUMBER dropped); if real, the escalation dispatch fires with
       empty creds. (drift audit)
-- [ ] [BUG?] P2. **VERIFY then fix:** `hotfix-mode.yml` does a bare `git push` (no rebase-retry) inside the shared
+- [ ] [BUG] P2. **VERIFY then fix:** `hotfix-mode.yml` does a bare `git push` (no rebase-retry) inside the shared
       `manifest-update` group — can lose a non-fast-forward race that `update-repo-version` (×5 retry) survives. (drift
       audit)
-- [ ] [BUG?] P2. **VERIFY then fix:** `rollout-action-ref.yml` pins/commits `quality-gates.yml` (the **v1** filename)
+- [ ] [BUG] P2. **VERIFY then fix:** `rollout-action-ref.yml` pins/commits `quality-gates.yml` (the **v1** filename)
       while the live check is `quality-gates-v2`; confirm it isn't re-pinning a retired workflow file fleet-wide. (drift
       audit)
 

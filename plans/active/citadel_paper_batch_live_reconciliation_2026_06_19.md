@@ -125,45 +125,45 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 4 — The trade-by-trade reconciliation harness (G5)
 
-- [ ] [CODE] P4.1. **`reconcile_week(paper, batch, live)`** — keyed match on `trade_key`; paper↔batch DETERMINISM
+- [ ] [CODE] P2.4.1. **`reconcile_week(paper, batch, live)`** — keyed match on `trade_key`; paper↔batch DETERMINISM
       verdict (ε=0, classify a diff as {NON_DETERMINISM | INPUT_CAPTURE_GAP | FILL_MODEL_DRIFT}); live↔paper EXECUTION
       verdict (per-trade fill_price_delta_bps / qty_delta / timing_delta_ms). Repo: batch-live-reconciliation-service.
-- [ ] [CODE] P4.2. **Populate `DeviationRecord.instrument_id` + a `trade_key`** + roll up per
+- [ ] [CODE] P2.4.2. **Populate `DeviationRecord.instrument_id` + a `trade_key`** + roll up per
       venue/instrument/strategy/`PnLFactor`; weekly aggregation (7 dates → one report). Repo:
       batch-live-reconciliation-service.
-- [ ] [CODE] P4.3. **The batch-rerun-from-manifest path** — take a paper `RunManifest`, assert code shas, replay
+- [ ] [CODE] P2.4.3. **The batch-rerun-from-manifest path** — take a paper `RunManifest`, assert code shas, replay
       `captured_tick_stream`, write a `mode=batch` ledger back-referencing the paper run. Repo: strategy-service (CLI
       subcommand) + e2e-testing harness.
 
 ## Phase 5 — Balances / PnL / attribution / instruments-breakdown views
 
-- [ ] [CODE] P5.1. **Per-venue + per-instrument balance + PnL + attribution views** off `PositionLedger` +
+- [ ] [CODE] P2.5.1. **Per-venue + per-instrument balance + PnL + attribution views** off `PositionLedger` +
       `PnLAttributionRow`; join `InstrumentRecord` on `instrument_key` for the instruments breakdown. Repo:
       client-reporting-api.
 
 ## Phase 6 — Slack log
 
-- [ ] [CODE] P6.1. **Daily ledger digest** (balances per venue/instrument, the day's `InstructionLedger` tape, PnL +
+- [ ] [CODE] P2.6.1. **Daily ledger digest** (balances per venue/instrument, the day's `InstructionLedger` tape, PnL +
       attribution, HWM) → `AlertEvent(INFO)` → alerting-service → `#uts-live-alerts`. Repo: strategy-service /
       client-reporting-api (POST to alerting-service; no cross-service import).
-- [ ] [CODE] P6.2. **Weekly recon verdict** → `AlertEvent` (INFO on ε=0 determinism + the execution-alpha summary;
+- [ ] [CODE] P2.6.2. **Weekly recon verdict** → `AlertEvent` (INFO on ε=0 determinism + the execution-alpha summary;
       CRITICAL on a determinism bug). Repo: batch-live-reconciliation-service.
 
 ## Phase 7 — The 19→26 operator dry-run (runs to completion)
 
-- [ ] [INFRA] P7.1. **Paper week** — run a promoted strategy (or the funding/basis ensemble) in `colocated_engine` paper
+- [ ] [INFRA] P2.7.1. **Paper week** — run a promoted strategy (or the funding/basis ensemble) in `colocated_engine` paper
       with the benchmark fill model over a real week, writing the 4 ledgers + the `RunManifest`. Daily Slack digest.
       Repo: deployment-service (VM) + strategy-service.
-- [ ] [INFRA] P7.2. **T+7 batch rerun + `reconcile_week`** — rerun batch over the SAME pinned snapshot; produce the
+- [ ] [INFRA] P2.7.2. **T+7 batch rerun + `reconcile_week`** — rerun batch over the SAME pinned snapshot; produce the
       determinism verdict. **Target: ε=0.** Any diff STOPS + is diagnosed (one of the three bug classes). Repo:
       batch-live-reconciliation-service.
-- [ ] [INFRA] P7.3. **Live → reconcile to paper → (∴ to batch)** — same machinery with real venue fills; report
+- [ ] [INFRA] P2.7.3. **Live → reconcile to paper → (∴ to batch)** — same machinery with real venue fills; report
       live↔paper execution alpha + confirm `live↔batch = determinism(≈0) + execution(measured)`. Repo: (gated on live
       custody readiness — `BLOCKED-OPERATOR-DECISION` until a live wallet is approved).
 
 ## Codex SSOT updates (Citadel §6 / Post-Plan-Phase Codex Audit)
 
-- [ ] [DOC] P8.1. Keep `codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync as each phase lands
+- [ ] [DOC] P3.8.1. Keep `codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync as each phase lands
       (EXISTS/MISSING table → EXISTS). Update `codex/04-architecture/global-ledger-architecture.md` when the
       `PositionLedger`/`PassiveLedger`/realised-PnL gaps close. Bump the `EventType` count in
       `codex/02-data/ledger-event-taxonomy.md` (39, not 37). Repo: unified-trading-pm.

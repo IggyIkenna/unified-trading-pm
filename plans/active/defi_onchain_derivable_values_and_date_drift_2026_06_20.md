@@ -139,7 +139,7 @@ that workstream.
 
 ## P1 — Fork-1 prep residuals (UAC date drift)
 
-- [ ] [HUMAN+AGENT] P1. **Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope.** A NEW UAC oracle-coverage
+- [ ] [HUMAN-AGENT] P1. **Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope.** A NEW UAC oracle-coverage
       module declares Pyth Hermes archive availability per feed: the jitoSOL feed has Hermes data starting 2023-10-XX,
       with Pythnet RPC data going further back but not archived consistently. Operator go/no-go: do we backtest jitoSOL
       pre-2023-10 (Pythnet replay, slow + expensive) or clip the backtest window to 2023-10+? Default: clip. (Named

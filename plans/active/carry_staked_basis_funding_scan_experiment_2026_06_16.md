@@ -694,7 +694,7 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
 
 ## Open todos / next steps
 
-- [ ] [RESEARCH→ML] P2. (separate ML agent/exercise — operator 2026-06-18; NOT built by the harness agent — empirical
+- [ ] [RESEARCH-ML] P2. (separate ML agent/exercise — operator 2026-06-18; NOT built by the harness agent — empirical
       handoff) **Funding-dynamics GBM models for squeeze / crowded-long prediction** — full spec immediately below.
 
   **Hypothesis (finding #7):** funding LEVEL = momentum (IC +0.073 @ 7d). The REVERSAL (short squeeze on crowded shorts
