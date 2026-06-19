@@ -3,6 +3,7 @@ title: Alert Quality Audit — Slack #ci-failures + agent-orchestrator alerts
 name: alert_quality_audit_2026_06_18
 type: audit-result
 epic: infrastructure_master
+instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 created: 2026-06-18
 date: 2026-06-18
