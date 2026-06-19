@@ -192,53 +192,56 @@ PM-repo conflict notes).
 - [ ] [ORCHESTRATOR] P2. Live smoke on the central VM: trigger an escalation + the plan-reconciler, confirm both appear
       as agents in the dashboard while working and are reaped when their session dies. Repo: agent-orchestrator.
 
-### Phase 6 — Demand-driven review lifecycle (design-locked, operator 2026-06-18) — FOLLOW-UP, build AFTER Phases 1–5 ship+test
+### Phase 6 — Unified AgentKeeper + agent-lifecycle architecture (operator-decided 2026-06-19) — FOLLOW-UP, build AFTER Phases 1–5 ship+test
 
-> **Builds on** Phases 3–5 (AgentRow registration + lifecycle classification). Its own unit of work — do NOT fold into
-> the 1–5 branch. **Principle (operator 2026-06-18): the backend supplies the record; the AGENT owns the judgment of
-> what to review and how deeply — never gate/limit review's capacity.**
+> **Supersedes** the 2026-06-18 "demand-driven adaptive-cadence" review design (workload-signal fast/idle polling is
+> dropped — replaced by **flat default loops + a wake-on-message nudge**, which is simpler and the operator's decision)
+> AND resolves the deferred "should review get its own keeper?" question: **YES — one unified keeper for ALL mandatory
+> agents.** Its own unit of work — do NOT fold into the 1–5 branch. Principle retained: the backend supplies the record;
+> the AGENT owns what/how-much to review — never gate its capacity.
 >
-> **Model — review self-paces, is NEVER killed** (supersedes the always-on `_ensure_review_agents` keep-alive, which
-> keeps review running "independent of the queue"):
+> **Architecture (operator 2026-06-19):**
 >
-> - Each loop tick review reads a **workload signal** and self-adjusts cadence:
->   - **Active** (≥1 slot `status=working` OR any unreviewed completion) → fast loop (~60s) + review. **No manual
->     `/compact`** in active mode — rely on Anthropic's built-in auto-compaction when context fills naturally.
->   - **Active→idle transition** (no working slots AND nothing left to review) → run `/compact` **once**, then drop to a
->     **15-min** loop.
->   - **Idle** → stay on the 15-min loop; re-check the signal each tick; work reappears → back to fast (no compact on
->     idle→active).
-> - Dormancy (not kill/respawn) keeps review's context, drops idle token spend, and **dissolves the graceful-drain
->   problem entirely** — cadence only changes at the top of a tick, which is already a clean breakpoint, so there is
->   never a mid-work interruption to manage (no suggestive-stop messaging, no teardown, no expected-vs-anomalous-death
->   attribution needed).
->
-> **Reviewed-ledger (backend-persisted, ADVISORY not enforced):**
->
-> - The backend persists what review has already reviewed (commit shas / task ids / completion-event ids) + verdict, per
->   the `review` role — survives `/compact` AND a full respawn.
-> - Review **marks items reviewed** when done; reads the ledger to skip redundant **isolated** re-review.
-> - It is an **aid to review's judgment, never a gate**: review decides scope — when a change spans **multiple commits
->   or plans** it reviews across them at its own discretion; the ledger must not lower its work capacity.
-> - The idle "unreviewed completions?" check (the cadence signal) reads this ledger.
+> - **ONE unified `AgentKeeper` runs on EVERY VM** (local / planning / each worker VM) — merges today's `MainAgentKeeper`
+>   + AutoSpawn's `_ensure_review_agents` into a single keeper that guarantees the MANDATORY set is present + respawns it
+>   if it dies. Fixes the dev-box gap (review didn't come up because it rode AutoSpawn).
+> - **Mandatory on ALL VMs: `main` AND `review`** (both, every VM — not central-only).
+>   - `main`: default **60s** loop; **env-configurable interval** (e.g. raise to 5 min when not needed; up to 60 min on
+>     slow-moving VMs).
+>   - `review`: default **15-min** loop; env-configurable. Keeps the `/compact`-discipline + the advisory reviewed-ledger
+>     (below). The long idle loop is made responsive by the wake-nudge, NOT by fast workload-signal polling.
+> - **Wake-on-message nudge (IN SCOPE — the enabler for long loops):** when a UI message arrives for an agent, the
+>   backend wakes it from its (possibly 15–60 min) loop via `tmux_spawn.send_command(session, …)` (the send-keys
+>   primitive already exists, `tmux_spawn.py:829`). So a long idle loop saves tokens WITHOUT adding message latency. This
+>   is NOT the dropped messaging-layer rewrite (no adaptive-cadence / long-poll / SSE) — just a one-shot tmux wake.
+> - **On-demand agents via AutoSpawn (unchanged split):** escalate / conflict-resolver / plan-health / plan-reconciler /
+>   fleet / workers — spawned as needed per VM-type policy.
+> - **Fleet-worker cap (on-demand pool, SEPARATE from the 2 mandatory): 10 default on all VMs; 6 on the planning VM**
+>   (planning also runs main+review+orchestration, so a lower fleet ceiling).
+> - Loop intervals are env-vars per agent type/VM; **live UI loop-control is a P3 nice-to-have (not mandatory).**
 
-- [ ] [ORCHESTRATOR] P2. Backend workload signal: one endpoint review polls returning
-      `{working_slots, unreviewed_count,     should_be_active}` (unreviewed = completions whose sha/task is absent from
-      the review ledger). Repo: agent-orchestrator (`server/`).
-- [ ] [ORCHESTRATOR] P2. Reviewed-ledger: persist reviewed (sha/task/event_id + verdict + ts) per `review` role +
-      mark-reviewed endpoint review POSTs to. Advisory — never filters what review is allowed to inspect. Repo:
+- [ ] [ORCHESTRATOR] P1. Unified `AgentKeeper` (every VM): merge `MainAgentKeeper` + `_ensure_review_agents` → one keeper
+      that guarantees mandatory {main, review} present + respawns on death; remove the AutoSpawn `_ensure_review_agents`
+      path. Repo: agent-orchestrator (`server/`).
+- [ ] [ORCHESTRATOR] P1. Env-configurable loop intervals: `main` default 60s, `review` default 900s (15 min), each
+      overridable per VM (e.g. `ORCHESTRATOR_MAIN_LOOP_SECONDS` / `ORCHESTRATOR_REVIEW_LOOP_SECONDS`); thread the value
+      into the boot-prompt `/loop <N>s` render. Repo: agent-orchestrator (`server/` + `agents/main.md`,`agents/review.md`).
+- [ ] [ORCHESTRATOR] P1. Wake-on-message nudge: `POST /api/agents/{id}/nudge` (and auto-fire on a UI message to an agent)
+      → `tmux_spawn.send_command(tmux_session, …)` to wake the agent from a long loop for an immediate poll/drain. Repo:
       agent-orchestrator (`server/`).
-- [ ] [ORCHESTRATOR] P2. `agents/review.md`: teach the self-pacing rule (workload signal → 60s active / `/compact`-once
-      at active→idle → 15-min idle), the mark-reviewed call, and that the ledger is an aid not a limit (review owns
-      what/how-much, incl. cross-commit/cross-plan). Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P2. Replace the always-on `_ensure_review_agents` keep-alive with demand-aware presence (spawn when
-      work first appears if absent; otherwise let the live review self-pace). Keep the heartbeat-silent kill as the ONLY
-      hard stop (genuinely-hung review), never a busy one. Repo: agent-orchestrator (`server/autospawn.py`).
-- [ ] [ORCHESTRATOR] P3. (Design question, deferred) Should review get its own always-on keeper like `MainAgentKeeper`
-      so oversight is guaranteed-up independent of `ORCHESTRATOR_AUTOSPAWN_ENABLED`? Surfaced 2026-06-18: main has a
-      dedicated keeper, review only rides AutoSpawn. Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P2. Tests: cadence transition (active↔idle), compact-only-at-active→idle, ledger skips isolated
-      re-review but never blocks a cross-commit pass, never-killed-while-busy. Repo: agent-orchestrator (`tests/`).
+- [ ] [ORCHESTRATOR] P1. AutoSpawn VM-type policy: on-demand fleet-worker cap = **10** default (all VMs), **6** on the
+      planning VM; mandatory main+review are not counted against it. Config-driven per VM. Repo:
+      agent-orchestrator (`server/autospawn.py` + config).
+- [ ] [ORCHESTRATOR] P2. Reviewed-ledger (advisory, NOT a gate): persist reviewed (sha/task/event_id + verdict + ts) per
+      `review` role + a mark-reviewed endpoint; review reads it to skip redundant **isolated** re-review but stays free to
+      review across multiple commits/plans at its own discretion. Repo: agent-orchestrator (`server/`).
+- [ ] [ORCHESTRATOR] P2. `agents/review.md`: 15-min default loop + `/compact` discipline + mark-reviewed call + ledger is
+      an aid not a limit + responds to the wake-nudge. Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR] P3. (nice-to-have) Live loop-interval control from the dashboard UI (re-issue an agent's `/loop`
+      cadence via the nudge/tmux path). Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR] P2. Tests: keeper brings up {main, review} on a VM with AutoSpawn OFF; env loop-interval override
+      lands in the rendered loop; nudge wakes an agent mid-long-loop; fleet cap enforced (10 / planning 6) excluding
+      mandatory. Repo: agent-orchestrator (`tests/`).
 
 ### Phase 7 — Escalation dispatch reliability (incident found on the central VM 2026-06-18)
 
