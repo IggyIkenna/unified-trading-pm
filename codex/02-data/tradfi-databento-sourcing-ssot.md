@@ -1,6 +1,4 @@
----
-scope: [engineer, admin]
-status: canonical
+ status: canonical
 last_reviewed: 2026-06-18
 ---
 

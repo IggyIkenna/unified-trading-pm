@@ -1167,7 +1167,31 @@ is the validated foundation + a runnable paper path TODAY.
 
 - [ ] [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 carry_and_yield + allocator with a
       complete-data DATA_SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
-      granted)
+      granted) — **PARTIAL: config piece DONE `strategy-service@c412f6af`** (2026-06-19): typed
+      `StrategyServiceConfig.data_source: Literal['live','gcs_complete']` + `gcs_complete_data_path` (the complete-data
+      env mode; NO os.getenv) + `ensemble_weight_{funding_dispersion,spot_perp_basis,dated_basis,staked_basis}` +
+      `ensemble_split()` accessor (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests. strategy-service
+      QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC archetype enum is
+      the follow-up below** (descoped this session — see why).
+- [ ] [STRATEGY] P1. **funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)** — needs a CLEAN UAC repo to
+      land ATOMICALLY (provenance: P1c 2026-06-19; engine written + reverted this session). A new
+      `StrategyArchetype.CARRY_FUNDING_DISPERSION` is **fleet-import-breaking if any exhaustive registry is missed**:
+      `ARCHETYPE_LEG_STRUCTURES._build_registry()` RAISES at UAC import on a missing leg-spec seed; `ARCHETYPE_TO_FAMILY`
+      (enums.py) consumed by `strategy_naming` + `test_family_assignment`; `algo_compatibility`/`venue_set_variants`
+      auto-derive (OK once leg-spec added); the capability manifest is a partial `<=` map (no entry needed). Live
+      **foreign databento WIP in UAC clobbered the enum edits mid-session** (enums.py reverted under me) — so it MUST be
+      done when UAC is clean + via quickmerge (additive enum member = non-breaking public-surface). **The integration
+      manifest (all written + validated this session, then reverted):** (1) UAC `enums.py`:
+      `CARRY_FUNDING_DISPERSION` in `StrategyArchetype` (carry block) + `ARCHETYPE_TO_FAMILY[...]=CARRY_AND_YIELD` + a
+      single-perp leg-spec seed in `archetype_leg_spec.build_all_structures` (model on CARRY_BASIS_PERP); (2)
+      strategy-service `engine/strategies/v2/carry_and_yield/funding_dispersion.py` =
+      `CarryFundingDispersionEngine(BaseArchetypeEngineV2)` reading `funding_rank_pct` + `funding_rate_annualised_bps`
+      (tercile LONG lowest / SHORT highest + the accretive `funding_squeeze_sigma` veto) → `TradeInstruction` +
+      `declare_leg_portfolio_state` (modelled on `basis_perp.py`); (3) `__init__.py` export + `factory.py`
+      `ARCHETYPE_ENGINE_REGISTRY` row; (4) unit test on the engine; the rank allocator
+      (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`) is a further increment. The
+      cross-sectional rank is computed upstream (feature/allocator layer); the engine is the per-instrument leg engine
+      (batch==live, source-agnostic). **Repo: unified-api-contracts + strategy-service.**
 - [ ] [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
       **Repo: deployment-service.** (perm granted)
 
@@ -1212,7 +1236,16 @@ Operator dispatch (6h autonomous): the four P1/P2 todos below. Progress log (app
   - **Finding (P2/NICE-TO-HAVE, in-file todo below):** the broad top-volume universe now surfaces tokenized
     equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) that venues list — high-funding but not crypto.
     The winsor tames the extreme funding; an explicit asset-class filter is a refinement (todo added below).
-- **P1b — IN PROGRESS** (per-venue backtest completion).
+- **P1b DONE — `e2e-testing@de3da7d`** (see the P1b flip + entry below).
+- **P1c PARTIAL — `strategy-service@c412f6af` (config piece done).** Typed `data_source`/`gcs_complete_data_path` +
+  `ensemble_weight_*` + `ensemble_split()` on `StrategyServiceConfig` + 5 tests; strategy-service QG GREEN. The
+  funding_dispersion ENGINE + UAC `CARRY_FUNDING_DISPERSION` archetype was written + validated, then **reverted** — a
+  new UAC archetype RAISES at UAC import if any exhaustive registry (leg-spec seed / `ARCHETYPE_TO_FAMILY`) is missed
+  (fleet-import-breaking), and live foreign databento WIP in UAC clobbered the enum edits under me. Filed as the precise
+  follow-up todo (full integration manifest) needing a clean UAC + quickmerge to land atomically. **Least-bad path per
+  the autonomous contract (genuine blocker: fleet-breaking-if-incomplete + active foreign-WIP clobber) — config shipped
+  clean, engine documented for atomic landing, no broken state.**
+- **P2 — NEXT** (paper VM + cron).
 
 - [ ] [STRATEGY] P2. **NICE-TO-HAVE (provenance: P1a 2026-06-19)** Asset-class filter for the live broad universe — the
       top-volume perp universe now includes tokenized equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT)
