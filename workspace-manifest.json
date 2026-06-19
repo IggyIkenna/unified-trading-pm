@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.8.0",
-    "deployment-api": "0.17.0",
+    "deployment-api": "0.20.0",
     "deployment-service": "0.13.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.14.0",
@@ -76,7 +76,7 @@
     "fund-administration-service": "0.5.0",
     "ibkr-gateway-infra": "0.4.0",
     "instruments-service": "0.10.0",
-    "market-tick-data-service": "0.15.0",
+    "market-tick-data-service": "0.17.0",
     "system-integration-tests": "0.12.0",
     "unified-api-contracts": "0.21.0",
     "unified-trading-library": "0.13.0",
@@ -762,7 +762,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1108,7 +1108,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1793,9 +1793,7 @@
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
-    "system-integration-tests": "0.14.0",
-    "market-tick-data-service": "0.17.0",
-    "deployment-api": "0.20.0"
+    "system-integration-tests": "0.14.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1814,21 +1812,26 @@
       "branch": "staging",
       "sha": "ec350a97ddac4e76eca1980432b9bf1da7799135",
       "version": "0.14.0"
-    },
-    "market-tick-data-service": {
-      "version": "0.17.0",
-      "sha": "ad61dc29eeb373ea2a70b4297f6fa4bdaf1e1f6e",
-      "branch": "staging"
-    },
-    "deployment-api": {
-      "branch": "staging",
-      "sha": "bcf74c4b1fbf619d7aff654b7ee810685ed7207c",
-      "version": "0.20.0"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-19T02:12:33.116892Z",
+        "commits": {
+          "market-tick-data-service": {
+            "version": "0.17.0",
+            "sha": "ad61dc29eeb373ea2a70b4297f6fa4bdaf1e1f6e",
+            "branch": "staging"
+          },
+          "deployment-api": {
+            "branch": "staging",
+            "sha": "bcf74c4b1fbf619d7aff654b7ee810685ed7207c",
+            "version": "0.20.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-19T01:08:31.919554Z",
         "commits": {
@@ -1881,56 +1884,6 @@
             "version": "0.14.0",
             "sha": "769a70208ae6f3af503641709b6bcd909cbea5ce",
             "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-17T02:03:05.134459Z",
-        "commits": {
-          "execution-service": {
-            "branch": "staging",
-            "sha": "96152233be3b2a116701c2e7b5ab6f60d978cc35",
-            "version": "0.12.0"
-          },
-          "ml-service": {
-            "branch": "staging",
-            "sha": "67f0e255fcc29a5f627ad722167493429bf097f8",
-            "version": "0.7.0"
-          },
-          "batch-live-reconciliation-service": {
-            "branch": "staging",
-            "sha": "646b638a5b034f0d2e1e8ecb97b7ba18b623d451",
-            "version": "0.7.0"
-          },
-          "fund-administration-service": {
-            "branch": "staging",
-            "sha": "ce96ce903e28f69b6112a20f99341d42d8cf54d5",
-            "version": "0.4.1"
-          },
-          "alerting-service": {
-            "branch": "staging",
-            "sha": "dfab462343215e64f2f83e8984d756d6f148bf69",
-            "version": "0.9.0"
-          },
-          "agent-orchestrator": {
-            "branch": "staging",
-            "sha": "c80edadb23301a11d476d619675878e9ccf9beb5",
-            "version": "0.11.0"
-          },
-          "strategy-service": {
-            "branch": "staging",
-            "sha": "9496778eacfae54f00918f524d5389b4e3200e6d",
-            "version": "0.12.0"
-          },
-          "instruments-service": {
-            "branch": "staging",
-            "sha": "f6e0ec82d8037e842bf6848f231126bce2b33e62",
-            "version": "0.9.0"
-          },
-          "market-tick-data-service": {
-            "branch": "staging",
-            "sha": "d9ac75b4fa4b286ce33d98bd97abee78f3e1c83a",
-            "version": "0.13.0"
           }
         }
       }
