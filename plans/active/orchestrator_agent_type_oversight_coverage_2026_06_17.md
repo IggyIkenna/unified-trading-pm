@@ -55,16 +55,16 @@ Known coverage so far:
 
 ### Phase 1 — Audit every agent type (the coverage matrix)
 
-- [ ] [ORCHESTRATOR] P1. For each template in `agents/`, document: PURPOSE, is it LIVE/used (which code path spawns it,
+- [x] ✅ [ORCHESTRATOR] P1. For each template in `agents/`, document: PURPOSE, is it LIVE/used (which code path spawns it,
       or is it dead), the spawn entrypoint, whether it calls `register_agent` (→ AgentRow), whether `health.py`
       staleness + `reap_orphan_agents` + a watchdog cover it, and whether it shows in the dashboard. Produce a coverage
       matrix in this plan's Progress Log. Repo: agent-orchestrator (audit; no code).
-- [ ] [ORCHESTRATOR] P1. Classify each type: KEEP (register + cover), CLARIFY (live but boot-prompt/role unclear →
+- [x] ✅ [ORCHESTRATOR] P1. Classify each type: KEEP (register + cover), CLARIFY (live but boot-prompt/role unclear →
       rewrite the boot prompt), or DELETE (dead/duplicate). Record the decision per type. Repo: agent-orchestrator.
 
 ### Phase 2 — Rationalize the set (per Phase-1 decisions)
 
-- [ ] [ORCHESTRATOR] P2. `plan-health` + `plan-reconciler`: KEEP BOTH (Q1), document them in the `agents/*.md` headers +
+- [x] ✅ [ORCHESTRATOR] P2. `plan-health` + `plan-reconciler`: KEEP BOTH (Q1), document them in the `agents/*.md` headers +
       codex as the two modes of `run_plan_health` (report vs reconcile). See the dedicated "plan-health +
       plan-reconciler — duties + finding routing" section below for the decided design (Option B + routing). Repo:
       agent-orchestrator (`agents/`, codex).
@@ -88,13 +88,13 @@ PM-repo conflict notes).
 
 **Reconciler lifecycle — async-ask → e2e → loop-and-wait → apply (operator 2026-06-17):**
 
-- [ ] [ORCHESTRATOR] P1. Change `agents/plan-reconciler.md` from strict one-shot to **persistent-until-resolved**: run
+- [x] ✅ [ORCHESTRATOR] P1. Change `agents/plan-reconciler.md` from strict one-shot to **persistent-until-resolved**: run
       the full e2e reconciliation pass first (auto-fix verifiable easy ones; on any issue/question **post an async
       alert + a filed todo/ping and CONTINUE — never block/wait**). After the pass, **re-check whether its questions
       were answered**: answered → apply; any still-open → **enter the heartbeat wait-loop like the persistent agents**,
       re-checking + applying each answer as it arrives, until resolved, THEN exit. Answers arrive via the dashboard-chat
       → message/poll path. Repo: agent-orchestrator (`agents/plan-reconciler.md`).
-- [ ] [ORCHESTRATOR] P1. While waiting, the reconciler sets **`status=blocked`** (the watchdog never reaps a `blocked`
+- [x] ✅ [ORCHESTRATOR] P1. While waiting, the reconciler sets **`status=blocked`** (the watchdog never reaps a `blocked`
       slot) and its `AgentRow` shows "blocked — waiting for operator answer" (honest, not fake-"working") — composing
       with the Phase-3 AgentRow registration so a waiting reconciler is visible in the dashboard. Each open question is
       ALSO filed (alert + todo/ping) so the loop is the fast path and the filed item the durable one. Repo:
@@ -113,14 +113,14 @@ PM-repo conflict notes).
       recent `plan_health_result` for the contradiction half) — verify against code, then flip/banner/file — rather than
       re-deriving from scratch. Repo: agent-orchestrator (`server/plan_health.py` reconcile path +
       `agents/plan-reconciler.md`).
-- [ ] [ORCHESTRATOR] P2. **Boot-prompt updates reflecting the routing:** `agents/plan-health.md` — note its findings now
+- [x] ✅ [ORCHESTRATOR] P2. **Boot-prompt updates reflecting the routing:** `agents/plan-health.md` — note its findings now
       have real consumers (doc_drift→operator, contradictions→reconciler), so the output matters; keep it cheap +
       report-only (skeleton-only, no repo FF, fast model). `agents/plan-reconciler.md` — add the STEP that consumes the
       latest plan-health contradictions as its candidate set. Repo: agent-orchestrator (`agents/`).
 - [ ] [ORCHESTRATOR] P3. Optional `plan-health` enrichment: surface a one-line hygiene/orphan pulse (it already builds
       the digest) in its report so the operator gets a daily snapshot. Repo: agent-orchestrator
       (`agents/plan-health.md`, `plan_health.py`).
-- [ ] [ORCHESTRATOR] P1. `recovery-audit`: KEEP but mark WIP / NOT-FINALISED (Q2). Banner `agents/recovery-audit.md` as
+- [x] ✅ [ORCHESTRATOR] P1. `recovery-audit`: KEEP but mark WIP / NOT-FINALISED (Q2). Banner `agents/recovery-audit.md` as
       WIP (boot prompt + duties owed) and add a HARD never-launch guard — the spawn/role surface must refuse to actually
       launch `recovery-audit` until finalised (e.g. exclude from the spawnable role set + an explicit `RuntimeError`/log
       if anything tries). Keep the supporting infra in place. Repo: agent-orchestrator (`agents/recovery-audit.md`,
@@ -129,10 +129,10 @@ PM-repo conflict notes).
     state for now — **do NOT wire or delete it.** It "comes into picture later"; the wire-vs-delete finalization + what
     Layer-1 signoff/actuation it performs is **pending Ikenna's design intent** (unknown to Harsh). Not an open decision
     to action now — leave guarded + aspirational until Ikenna defines it.
-- [ ] [ORCHESTRATOR] P1. `usage_reporter`: DELETE (Q3). Remove `agents/usage_reporter.md` + its role from
+- [x] ✅ [ORCHESTRATOR] P1. `usage_reporter`: DELETE (Q3). Remove `agents/usage_reporter.md` + its role from
       `spawn_agent_preview` / `/api/agents/spawn` role set + any other reference; usage stays on the httpx
       `UsagePoller`. Repo: agent-orchestrator (`agents/`, `routes/agents.py`, models).
-- [ ] [ORCHESTRATOR] P2. `monitor`: KEEP (Q4). Confirm/clarify the `agents/monitor.md` header documents it as the manual
+- [x] ✅ [ORCHESTRATOR] P2. `monitor`: KEEP (Q4). Confirm/clarify the `agents/monitor.md` header documents it as the manual
       external-watch (custom-role) pattern, manual-spawn only. Repo: agent-orchestrator (`agents/`).
 
 ### Phase 3 — Register every LIVE agent type + capture its identity/attach handles
@@ -151,26 +151,26 @@ PM-repo conflict notes).
 >   the COLUMN + MINTING infra is in place — Phase 3 only has to extend PERSISTENCE + REGISTRATION to the slot-based
 >   escalation/plan paths that the failover did not cover, and widen the role enum + UI.
 
-- [ ] [ORCHESTRATOR] P1. **Persist the minted identity on the escalation + plan-health paths** (the failover gap):
+- [x] ✅ [ORCHESTRATOR] P1. **Persist the minted identity on the escalation + plan-health paths** (the failover gap):
       `escalation.escalate` (`escalation.py:259-322`) and `plan_health.run_plan_health` (`plan_health.py:154`) call
       `autospawn.do_spawn(slot=slot_spec, …)` with a DETACHED snapshot — `_do_spawn` mints `spawn_session_id` onto the
       snapshot but the callers only persist their OWN row (`EscalationQueueRow`), never writing
       `claude_session_id`/`tmux_session` back to the live `SlotRow`. Write both back after `do_spawn` (the snapshot
       already carries the minted id — `snapshot.claude_session_id`). Repo: agent-orchestrator (`server/escalation.py`,
       `server/plan_health.py`).
-- [ ] [ORCHESTRATOR] P1. `escalate` / `conflict-resolver`: `register_agent` at dispatch (`escalation.py`) with
+- [x] ✅ [ORCHESTRATOR] P1. `escalate` / `conflict-resolver`: `register_agent` at dispatch (`escalation.py`) with
       role/label/`tmux_session`/`claude_session_id` + escalation_id linkage, so the agent appears as an `AgentRow` and
       is health/reaper-covered — WITHOUT breaking the escalation_queue/EscalationWatchdog tracking (reconcile the two:
       AgentRow = liveness/attach/oversight, escalation_queue = the wall's work-state). Use `review` (the slot-resident
       AgentRow + `/poll` heartbeat pattern, Phase-1 §⚠️2) as the reference. Repo: agent-orchestrator
       (`server/escalation.py`).
-- [ ] [ORCHESTRATOR] P1. `plan-health` + `plan-reconciler`: `register_agent` at spawn (`plan_health.py`) with
+- [x] ✅ [ORCHESTRATOR] P1. `plan-health` + `plan-reconciler`: `register_agent` at spawn (`plan_health.py`) with
       role/label/`tmux_session`/`claude_session_id`. Repo: agent-orchestrator (`server/plan_health.py`).
-- [ ] [ORCHESTRATOR] P1. Widen `AgentRole` (`models/_types.py:14` = `Literal["main","review","backup","custom"]`) — add
+- [x] ✅ [ORCHESTRATOR] P1. Widen `AgentRole` (`models/_types.py:14` = `Literal["main","review","backup","custom"]`) — add
       escalate/conflict-resolver/plan-health/plan-reconciler (or a parallel role field) so their registration is
       well-typed (reconcile with the `spawn_agent_preview` role set after the usage_reporter delete). Repo:
       agent-orchestrator (`server/models/_types.py`, `orm.py`).
-- [ ] [ORCHESTRATOR] P2. Backend can ATTACH/inspect any agent from its stored handles: a uniform "capture this agent's
+- [x] ✅ [ORCHESTRATOR] P2. Backend can ATTACH/inspect any agent from its stored handles: a uniform "capture this agent's
       pane" path keyed off `tmux_session` works for every registered type (the reaper's dead-session check + the
       liveness probes already key off `tmux_session`; confirm they now cover the newly-registered types). Repo:
       agent-orchestrator.
@@ -187,10 +187,10 @@ PM-repo conflict notes).
 
 ### Phase 5 — Uniform staleness/liveness verification + tests
 
-- [ ] [ORCHESTRATOR] P1. Confirm `health.py` staleness + `reap_orphan_agents` (incl. the Gap-1 stale-sessionless reap
+- [x] ✅ [ORCHESTRATOR] P1. Confirm `health.py` staleness + `reap_orphan_agents` (incl. the Gap-1 stale-sessionless reap
       from the lifecycle issue doc) + the worker-liveness watchdog (or an equivalent) now apply to every registered
       type; close any type-specific gap. Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P1. Unit tests: each newly-registered type creates an AgentRow with the right role/session; the
+- [x] ✅ [ORCHESTRATOR] P1. Unit tests: each newly-registered type creates an AgentRow with the right role/session; the
       reaper/health path treats it like any agent; no double-count vs the escalation watchdog. Repo: agent-orchestrator
       (`tests/`).
 - [ ] [ORCHESTRATOR] P2. Live smoke on the central VM: trigger an escalation + the plan-reconciler, confirm both appear
@@ -486,3 +486,35 @@ materially advances Phase 3:
   and never register an `AgentRow`. So escalate/conflict-resolver/plan-health/plan-reconciler currently can't be
   `--resume`d on a cap and stay invisible to the agents view. Phase 3 (persist-back + register) closes it; the column +
   minting infra it needs already exists.
+
+### Wave 1 — verification + Phase 1–5 backfill flips (2026-06-19, slot-2)
+
+`/autonomous` dispatch resumed: complete EVERYTHING agent-orchestrator-side across this plan +
+`agent_orchestrator_dashboard_monitoring_2026_06_19.md` + `alert_quality_overhaul_2026_06_18.md` (deployment-ui is owned
+by another agent — explicitly out of scope here). Verified the post-compaction state directly against the code (the
+summary was stale): **Phases 1–5 were implemented + pushed in prior commits but the checkboxes were never flipped.**
+Backfilling now per the Commit+Push+Flip backfill rule. Evidence (all on `origin/live-defi-rollout`):
+
+| Item                                              | Evidence                                                                                                       |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| P1 coverage matrix + classify                     | this Progress Log (matrix + Phase-1 decisions)                                                                 |
+| P2 plan-health+reconciler KEEP BOTH (doc)         | agent-orchestrator@183910f boot prompts + headers                                                              |
+| P1 plan-reconciler.md persistent-until-resolved   | agent-orchestrator@183910f                                                                                     |
+| P1 reconciler status=blocked while waiting        | boot prompt @183910f + watchdog skips `blocked` (`worker_liveness_watchdog.py:565`)                            |
+| P2 boot-prompt updates reflecting routing         | agent-orchestrator@183910f (plan-health.md + plan-reconciler.md)                                               |
+| P1 recovery-audit KEEP/WIP + never-launch guard   | banner @b3ec360 + guard `prompts.py:71` `NEVER_LAUNCH` frozenset + `RuntimeError` + excluded from spawnable    |
+| P1 usage_reporter DELETE                          | agent-orchestrator@51bf0b6 (`agents/usage_reporter.md` gone; `spawn_agent_preview` = main/review/backup/worker) |
+| P2 monitor KEEP/clarify                           | agent-orchestrator@b3ec360 (manual-spawn-only, role=custom AgentRow)                                           |
+| P1 persist identity on escalation+plan-health     | `escalation.py:356-361` + `plan_health.py:198-204` write claude_session_id/tmux_session back to live SlotRow   |
+| P1 escalate/conflict-resolver register_agent      | `escalation.py:369` (kind=escalate/conflict_resolver, lifecycle=one_shot); `test_escalate_registers_one_shot_agent` |
+| P1 plan-health/reconciler register_agent          | `plan_health.py:207` (kind=plan_health/plan_reconciler, lifecycle=scheduled); `test_dispatch_registers_scheduled_agent` |
+| P1 widen role → two-axis kind+lifecycle           | `_types.py:23-37` AgentKind(11)+AgentLifecycle; `models/agents.py:28-29,56-57`                                 |
+| P2 backend attach/inspect from tmux_session       | tmux_session persisted for all types; reaper/liveness probes key off it                                        |
+| P1 health.py staleness+reaper cover every type    | `health.py:248-255` reaper is lifecycle-aware (one_shot/scheduled ending = EXPECTED, not a stale incident)     |
+| P1 unit tests per newly-registered type           | test_escalation.py + test_plan_health.py registration tests assert kind+lifecycle                              |
+
+**Still OPEN (this plan), driving next in order:** Phase 2 `doc_drift`→operator routing + `contradictions`→reconciler
+ingestion (code in `plan_health.record_result` — today writes only the generic activity_log row, the "black hole");
+Phase 2 P3 plan-health hygiene-pulse (optional); Phase 4 full per-role render + regression spec (Wave 6, **AO dashboard
+gate is Vitest + tsc + build smoke — NO playwright, the dashboard has no pw harness**); Phase 5 live smoke (Wave 9);
+Phase 6 unified AgentKeeper (whole phase); Phase 7 dead-session dirty-dep self-heal.
