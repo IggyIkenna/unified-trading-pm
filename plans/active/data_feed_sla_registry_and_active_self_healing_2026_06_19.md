@@ -24,11 +24,24 @@ locked_since: 2026-06-19
 here (freshness monitors, freshness gates, the autonomous-recovery-matrix, the Incident Gateway, the alerting escalation
 ladder, the 4-state honest-absence manifest).
 
-1. **Phase 1 — single declarative feed-SLA SSOT.** Today every feed's freshness expectation lives in a different file.
-   There is no one place that answers "what feeds exist, what is each feed's `max_age_seconds`, and how critical is it
-   to trading?" Blue Flame has `data_feed_sla.yaml`; we will have a **typed `DATA_FEED_SLA` registry in UAC** (operator
-   decision 2026-06-19: typed code SSOT, not loose YAML — matches the workspace SSOT-in-UAC + no-loose-config
-   conventions, same shape as the existing `ALERT_THRESHOLDS`).
+1. **Phase 1 — single declarative feed-SLA SSOT.** A typed registry **already exists** and is the right SSOT to
+   CONSOLIDATE ONTO, not replace (verified by reading the code 2026-06-19 — building a new `DATA_FEED_SLA` would be a
+   double-SSOT): `unified_api_contracts/internal/reference/data_freshness.py` defines `DataFreshnessContract` (fields:
+   `source`, `asset_group`, `max_age_seconds`, `warn_age_seconds`, `expected_cadence_seconds`,
+   `criticality ∈ {critical, important, informational}`) + the dicts `MARKET_TICK_FRESHNESS` (~22 venues) /
+   `FEATURE_FRESHNESS` / `ML_FRESHNESS` aggregated into `ALL_FRESHNESS_CONTRACTS` (flat O(1) lookup).
+   `execution-service` + `strategy-service` `freshness_gate.py` and MDPS `feature_freshness.py` ALREADY read it (no
+   re-declared literals). So Phase 1 is three precise fixes, not a greenfield build:
+   - **(1a) Close the coverage gap — add the MOST trading-critical feeds, which are currently MISSING**:
+     `account_snapshot`, `positions_snapshot`, `reconciliation_age` (Blue Flame's `critical` tier — verified absent from
+     `data_freshness.py`). These are account/execution STATE, not a market-data domain, so the `asset_group` Literal
+     needs one new value — **operator design call flagged below** (`execution` vs broadening the field's meaning).
+   - **(1b) Collapse the two parallel UAC freshness SSOTs into one** — `ALL_FRESHNESS_CONTRACTS` (data_freshness.py) and
+     `ALERT_THRESHOLDS["tick_staleness_seconds"]` (`canonical/crosscutting/alerting/thresholds.py:340`) today agree only
+     by a hand-written comment ("300s matches tick_staleness_seconds"), not code. Make the alert threshold DERIVE from
+     the contract (or add a cross-validation check) so a feed's freshness number has exactly one home.
+   - **(1c) Add the Phase-2 binding field** — an optional `refetch_action: str | None` on `DataFreshnessContract` so a
+     stale feed can name its re-fetch action (nullable; `informational`/`nice` feeds leave it None).
 2. **Phase 2 — active self-healing.** Today recovery is passive (circuit-breaker backoff + HALF_OPEN probe + manifest
    consolidator stale-fallback). Blue Flame actively maps a stale feed → a specific re-fetch method → a repair run. We
    will add a **deterministic `refetch-feed` recovery action** to the autonomous-recovery-matrix Layer-0 closed set,
@@ -42,47 +55,45 @@ ladder, the 4-state honest-absence manifest).
 
 ## Codex SSOT updates (mandatory — enumerated per Citadel rule §6)
 
-| Doc                                                     | Change                                                                                                                          |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/03-observability/data-feed-sla-registry.md`      | **NEW** — the `DATA_FEED_SLA` schema, criticality tiers, how each consumer reads it, migration-from-scattered-thresholds map    |
-| `codex/04-architecture/autonomous-recovery-matrix.md`   | Add the `refetch-feed` Layer-0 action row + its decision-tree branch (stale critical feed → refetch attempt → escalate on fail) |
-| `codex/03-observability/alerting.md`                    | Note `tick_staleness` / per-feed thresholds now resolve from `DATA_FEED_SLA`, not per-rule literals                             |
-| `codex/05-infrastructure/manifest-consolidator-ssot.md` | Cross-ref: consolidator staleness is one feed in the registry; same criticality semantics                                       |
+| Doc                                                     | Change                                                                                                                                                                                          |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex/03-observability/data-feed-sla-registry.md`      | **NEW** — document the EXISTING `DataFreshnessContract` / `ALL_FRESHNESS_CONTRACTS` registry as the feed-SLA SSOT: schema, criticality tiers, who reads it, the account-state feeds added in 1a |
+| `codex/04-architecture/autonomous-recovery-matrix.md`   | Add the `refetch-feed` Layer-0 action row + its decision-tree branch (stale critical feed → refetch attempt → escalate on fail)                                                                 |
+| `codex/03-observability/alerting.md`                    | Note `tick_staleness_seconds` now derives from / is cross-validated against `MARKET_TICK_FRESHNESS` — one freshness home                                                                        |
+| `codex/05-infrastructure/manifest-consolidator-ssot.md` | Cross-ref: consolidator staleness is one feed in the registry; same criticality semantics                                                                                                       |
 
-## Phase 1 — `DATA_FEED_SLA` registry (the SSOT)
+## Phase 1 — consolidate onto the existing freshness registry
 
-### Pre-audit (DONE 2026-06-19 — scattered threshold sites to consolidate)
+### Pre-audit (DONE 2026-06-19 — read the code, not just grep)
 
-- UAC `MARKET_TICK_FRESHNESS` contracts (per-venue tick freshness)
-- UAC `ALERT_THRESHOLDS[*].tick_staleness` (per-venue alert thresholds — 8 still `NEEDS-LIVE` per observability_master
-  P3)
-- UTL `unified_trading_library/monitors/freshness_monitor.py` (`FreshnessMonitor.check_and_emit`)
-- UTL `core/health_router.py` `data_freshness` callback + `streaming/streaming_health.py` `StreamingHealthSnapshot`
-- execution-service + strategy-service `validation/freshness_gate.py` (the order-blocking gate)
-- MDPS `monitors/feature_freshness.py` (`FeatureFreshnessChecker`)
+- **SSOT today** = `unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py`
+  (`DataFreshnessContract` + `MARKET_TICK_FRESHNESS`/`FEATURE_FRESHNESS`/`ML_FRESHNESS` → `ALL_FRESHNESS_CONTRACTS`).
+- **Consumers already reading it** (no re-declared literals — confirmed): execution-service
+  `validation/freshness_gate.py` (`assert_market_data_fresh` reads `MARKET_TICK_FRESHNESS`), strategy-service
+  `validation/freshness_gate.py`, MDPS `monitors/feature_freshness.py`, UTL `monitors/freshness_monitor.py` (wraps a
+  `DataFreshnessContract`).
+- **The second SSOT to reconcile** = `ALERT_THRESHOLDS["tick_staleness_seconds"]` in
+  `canonical/crosscutting/alerting/thresholds.py:340` (coupled to the contract only by a comment).
+- **Missing critical feeds** (verified absent): `account_snapshot`, `positions_snapshot`, `reconciliation_age`.
 
-- [ ] [SCRIPT] P1. **Define the typed `DATA_FEED_SLA` registry in UAC** — one row per feed with: `feed_id` (stable key),
-      `data_path` / manifest row-key shape, `max_age_seconds`, `criticality` (closed StrEnum — map to existing
-      `AlertSeverity`: `critical`→blocks trading, `important`→degrade+warn, `nice`→DEBUG), `asset_group`, `source`, and
-      `refetch_action` (the Phase-2 re-fetch binding id, nullable). Place beside `ALERT_THRESHOLDS`; export via the
-      `unified_api_contracts` facade. Repo: unified-api-contracts.
-- [ ] [SCRIPT] P1. **Seed the registry** from the pre-audit sites above (enumerate the live feeds — start with the
-      `critical` tier: `live_*` market ticks, account/positions snapshots, recon-age — then `important`
-      curve/IV/options, then `nice` weather/Kpler/ENTSO-E equivalents). Each row's `max_age_seconds` migrates the
-      existing literal; no new numbers invented without a cited source row.
-- [ ] [SCRIPT] P1. **Point `FreshnessMonitor` + `freshness_gate` (execution + strategy) + `FeatureFreshnessChecker` at
-      the registry** — they read `DATA_FEED_SLA[feed_id].max_age_seconds` / `.criticality` instead of per-call literals.
-      No double SSOT: delete the inline thresholds they replace (Delete-deprecated-code rule). Repos: UTL,
-      execution-service, strategy-service, MDPS.
-- [ ] [SCRIPT] P1. **Resolve alerting `tick_staleness` thresholds from the registry** — `ALERT_THRESHOLDS` per-venue
-      `tick_staleness` reads `DATA_FEED_SLA` so a feed's freshness expectation has exactly one home. Repo:
-      unified-api-contracts + alerting-service.
-- [ ] [VERIFY] P1. **No-orphan-feed CI gate** — a PM/UAC quality-gate check asserts every feed a freshness monitor or
-      freshness gate watches has a `DATA_FEED_SLA` row (and vice-versa: every registry row is consumed). Fails loud on a
-      feed with no SLA. Repo: unified-api-contracts (or PM `quality_gates/`).
-- [ ] [VERIFY] P1. Unit tests: registry round-trips; criticality→AlertSeverity mapping; a `critical` feed past
-      `max_age_seconds` flips `freshness_gate.should_block`; an `important` feed degrades-not-blocks; a `nice` feed is
-      DEBUG-only.
+- [x] ✅ [DECIDED] P1. **`asset_group` label for account-state feeds** — `DataFreshnessContract.asset_group` is a closed
+      Literal of market-data domains. Account/positions/recon feeds are execution STATE, not a market domain.
+      **Proceeded with option (a): add `"execution"` to the Literal** (additive, local to this one model, reversible —
+      keeps the field one-dimensional). Rejected (b) "widen the field's semantics" as muddying. Operator may revisit.
+- [ ] [SCRIPT] P1. **(1a + 1c) Extend `DataFreshnessContract` + add the missing `critical` feeds** — add optional
+      `refetch_action: str | None = None` (Phase-2 binding) + `"execution"` to the `asset_group` Literal + a new
+      `ACCOUNT_STATE_FRESHNESS` dict (`account_snapshot` 120s, `positions_snapshot` 120s — Blue-Flame critical values;
+      `reconciliation_age` warn=1200s/max=2400s from the shipped recon-age SEV1/SEV0 bands) folded into
+      `ALL_FRESHNESS_CONTRACTS`. Additive, non-breaking. Repo: unified-api-contracts.
+- [ ] [SCRIPT] P1. **(1b) Single freshness home** — make `ALERT_THRESHOLDS["tick_staleness_seconds"]` derive from (or a
+      QG cross-validation assert against) `MARKET_TICK_FRESHNESS`, replacing the hand-written "300s matches" comment
+      coupling. Repo: unified-api-contracts.
+- [ ] [VERIFY] P1. **No-orphan-feed CI gate** — a UAC/PM quality-gate check asserts every venue/feed a freshness gate or
+      monitor looks up has an `ALL_FRESHNESS_CONTRACTS` entry, and the two UAC freshness SSOTs agree. Fails loud on a
+      feed with no contract. Repo: unified-api-contracts.
+- [ ] [VERIFY] P1. Unit tests: `refetch_action` round-trips + defaults None; the new account-state contracts resolve; a
+      `critical` feed past `max_age_seconds` raises `DataStalenessError` in `freshness_gate`; `important`
+      warns-not-blocks; `informational` logs only; the tick_staleness↔contract cross-validation holds.
 
 ## Phase 2 — active self-healing (`refetch-feed` recovery action) — depends on Phase 1
 
@@ -117,5 +128,5 @@ ladder, the 4-state honest-absence manifest).
 
 - Rebuilding the trading gate, the escalation ladder, or the silent-death watchdog (all exist — reuse).
 - A second/parallel fetch path — `refetch-feed` reuses the service CLIs.
-- Re-baselining the 8 `NEEDS-LIVE` alert thresholds (that is observability_master P3, auto-resumes when live feeds are
-  up); this plan only relocates where those thresholds are _declared_.
+- Re-baselining the 8 `NEEDS-LIVE` alert thresholds (that is observability*master P3, auto-resumes when live feeds are
+  up); this plan only relocates where those thresholds are \_declared*.
