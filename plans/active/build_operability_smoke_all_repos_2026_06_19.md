@@ -153,9 +153,13 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
       cloudbuild step breaks like mdps did. Switch to `uv pip install --system -e . --no-sources` (keeps external deps)
       OR add a sibling-staging step. Verify each actually has editable sibling deps before changing. Repos:
       deployment-api, fund-administration-service, ml-service, trading-agent-service.
-- [ ] [DOCKER] P1. Diagnose the **2 highest-risk repos first** (deployment-api, trading-agent-service — both on the old
-      `e939b4ee` base mdps's floors had outgrown): confirm they fail the same way, apply digest+guard+frozen fixes,
-      build green. These are the canaries for the batch fix. Repos: deployment-api, trading-agent-service.
+- [x] ✅ [DOCKER] P1. PARTIAL 2026-06-19 — canaries proved the recipe. **deployment-api@5d58dccd: digest+guard ONLY**
+      (its install was already explicit-external-deps — the "frozen" sweep flag was a false positive matching a
+      comment). Build `ca8aed2f` SUCCESS; smoke `IMPORT ✅` (RUN `❌` is a probe-limit, not a break: gunicorn entrypoint
+      ≠ `--help`; API `/health` probe deferred to Phase 4). **trading-agent-service@388d5ac1: genuine mdps-clone**
+      (digest + `uv sync --frozen`→`--no-sources` + guard) — fix shipped but **UNBUILDABLE: no Cloud Build trigger
+      exists** (see Build-trigger reality + the P0 triage todo). So the recipe is proven on deployment-api; trading-agent
+      awaits a trigger decision. Repos: deployment-api ✅, trading-agent-service (fix shipped, build blocked-no-trigger).
 
 ## Phase 3 — Run smoke across the fleet + report
 
