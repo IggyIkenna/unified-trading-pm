@@ -113,15 +113,28 @@ root-caused:
       not just triggers. Repo: deployment-api. **Shipped**: added `RedisError` to the
       `RedisCache.connect/get/set/delete/clear_pattern` except tuples (`utils/cache.py`) — a Redis outage now degrades
       to a cache-miss. Regression `tests/unit/test_unified_cache.py::test_rediscache_get_degrades_on_redis_error`.
-- [ ] [DOCKER] P1. **market-data-processing-service image build broken on `main` — sibling not staged.** `Dockerfile:57`
-      `uv sync --frozen --no-dev` needs the editable `../unified-api-contracts` at `/app/unified-api-contracts`, absent
-      from the GCP build context (`COPY . .` only; no `stage-siblings` step) →
-      `Distribution not found at:     file:///app/unified-api-contracts`. mtds is the green reference (`Dockerfile:62`
-      `uv pip install --system -e . --no-deps` against the base image). Fix mdps to mtds's pattern (+ any mdps-only
-      external deps, e.g. numba) or stage siblings into the context; validate via
-      `market-data-processing-service-feature-build` + a
-      `docker run … python -c "import market_data_processing_service"` check (a green build alone won't catch a
-      `--no-deps` runtime break). Repo: market-data-processing-service.
+- [x] ✅ [DOCKER] P1. DONE 2026-06-19 — market-data-processing-service@8025264d | Cloud Build 3c501b1f SUCCESS (full
+      green: image built + in-image QG passed + pushed). **mdps image build was broken — THREE stacked causes, peeled
+      back one Cloud Build at a time:** (1) `Dockerfile:57` `uv sync --frozen --no-dev` needed the editable
+      `../unified-api-contracts` absent from the GCP context → switched to `uv pip install --system -e . --no-sources`
+      (mdps@bffb9df3; mirrors features-service — `--no-sources` keeps external deps numba/polars, unlike mtds's
+      `--no-deps`). (2) That exposed a STALE `BASE_IMAGE_DIGEST` pin `e939b4ee` (base UTL 0.11.0 / UAC 0.15.0) vs mdps
+      floors UTL ≥0.12.0 / UAC ≥0.19.0 → uv re-resolved from the registry & failed → refreshed to current `:latest`
+      `2baa8551` (UTL 0.13.0 / UAC 0.19.0) (mdps@317ab425); build `6798472f` then proved Step #5 (image build) green.
+      (3) That exposed Step #6 (in-image QG): `scripts/quality-gates.sh` resolved `WORKSPACE_ROOT` via
+      `git rev-parse --show-toplevel` which is empty in-image → sourced `//unified-trading-pm/.../base-service.sh` (404)
+      → added the fleet-canonical mtds `CLOUD_BUILD=true` guard (skip in-image gate when the PM base script is absent)
+      (mdps@8025264d). Build `3c501b1f` green end-to-end. Repo: market-data-processing-service.
+- [ ] [INFRA] P1. **Audit the fleet for STALE `BASE_IMAGE_DIGEST` pins + add a warn-level QG/cron drift check.** mdps's
+      pin had drifted to `e939b4ee` (base UTL 0.11.0 / UAC 0.15.0) while its own floors require UTL ≥0.12.0 / UAC
+      ≥0.19.0 → the build re-resolved from the registry and failed; the digest-refresh fan-out
+      (`update-dependency-version.yml`) evidently never landed for mdps. A stale pin is **silent** until someone runs
+      the build (red build, never a warning). Sweep every repo's `Dockerfile` `ARG BASE_IMAGE_DIGEST`, compare against
+      the current `unified-trading-library:latest` digest, and flag any whose pinned base ships libs OLDER than that
+      repo's `pyproject.toml` floors (the actual break condition — a merely-not-`:latest` pin is fine if it still
+      satisfies). Add it as a warn-level signal (PM post-gate or the digest-pin ratchet panel already in "Out of scope")
+      so drift surfaces before it becomes a red build. Repos: all service Dockerfiles + PM (the check). Provenance:
+      2026-06-19 mdps build fix.
 
 ## Out of scope here (already filed/blocked — coordinate, do NOT reimplement)
 
