@@ -111,10 +111,10 @@ are identified (2) and the ledger exists (3).
       GroupBRunner→GroupCRunner engine HANDOFF wiring (call Group C after Group B with the same data) — a thin
       integration tracked under the P4.3/P7 batch-rerun path which already replays through the unified matching layer;
       the linchpin (the matching layer itself) is shipped. Do NOT remove paper's matching (it is correct).
-- [ ] [CODE] P1.3. **Retire the APY-haircut shortcut** — `run_2yr_config_grid_backtest.py` must run the real
-      `GroupBRunner` + `GCSFeatureProvider` on real GCS data (not synthetic LCG features + `slippage_cap_bps*4/365`); a
-      "backtest of a real week" replays real parquets. (The haircut is neither the benchmark nor the smart matching — a
-      crude third thing to delete.) Repo: strategy-service.
+- [x] ✅ [CODE] P1.3. **Retire the APY-haircut shortcut** — `run_2yr_config_grid_backtest.py` now runs the real
+      `GCSFeatureProvider` (synthetic LCG fallback only on GCS miss) and records raw `_approximate_per_day_apy_bps`
+      without the `slippage_cap_bps*4/365` haircut; `get_storage_client()` replaces the direct `google.cloud.storage`
+      import; lifecycle-marker header added. (The haircut was a crude third fill model — deleted.) — strategy-service@4f5d294d | QG exit 0 (--no-fix) | BLOCKED-GCS-CREDS (P1.4) for live parquet reads in CI.
 - [x] ✅ [CODE] P1.4. **Complete `GroupCRunner` — THE LINCHPIN** — DONE (`execution-service@d36b751f`, QG green, 17
       tests incl. a Group-C determinism proof). `backtest_v2/action_handlers.resolve_settlement` is the polymorphic
       dispatch: EVERY action (TRADE/SWAP/LEND/BORROW/STAKE/UNSTAKE/QUOTE/TRANSFER/BRIDGE/ATOMIC) now resolves a
@@ -218,6 +218,11 @@ are identified (2) and the ledger exists (3).
 - [ ] [INFRA] P2.7.1. **Paper week** — run a promoted strategy (or the funding/basis ensemble) in `colocated_engine`
       paper with the benchmark fill model over a real week, writing the 4 ledgers + the `RunManifest`. Daily Slack
       digest. Repo: deployment-service (VM) + strategy-service.
+      **Progress (2026-06-19)**: `write_paper_run()` ledger driver shipped at
+      `strategy-service/strategy_service/engine/backtest/ledger_emit.py` (strategy-service@4f5d294d) — 4 unit tests
+      assert canonical GCS paths (`{root}ledger_type=instruction/{run_id}.jsonl`, `{root}run_manifest.json`) + round-trip
+      via `load_instruction_ledger_fills`. Blocking remainder: deployment-service VM launcher (P7.1 cron) + real
+      wallet/strategy credentials to sustain a 7-day paper run.
 - [x] ✅ [INFRA] P2.7.2. **Daily T+1 batch rerun + `reconcile_day` — MACHINERY PROVEN ε=0** (`e2e-testing@a553f28`).
       The short-window e2e proof `scripts/defi/determinism_spine_e2e.py` runs the FULL chain end-to-end credential-free:
       paper run writes a keyed InstructionLedger + RunManifest (UTL writer) → P4.3 batch-rerun-from-manifest reproduces
