@@ -298,14 +298,18 @@ to logs.
       the variant rows (phantom-audit). Captured data is present under the bare venue — this is a
       naming-canonicalisation correctness item, not a fetch gap. — instruments-service / unified-trading-library
       (manifest shard key) — composes with the `*_manifest_canonicalisation_*` + `source=` provenance tracks
-- [ ] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
+- [x] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
       2026-06-18). The Drift Data API endpoint moved: `/stats/markets`→404, `/markets`→403, `/contracts`/`/perpMarkets`
       →403 (auth-gated), `dlob.drift.trade`→502. Find Drift's current PUBLIC markets endpoint (docs at
       `https://docs.drift.trade/`); if all current endpoints are auth-gated this becomes **BLOCKED-CREDENTIALS** (file a
       Drift API-key ask per external-data-always-available). Fix `drift.py` `_DATA_API_URL`/path (the URL resolves via
       UAC `get_solana_protocol_url("drift","api_url")` — update the registry value, not a hardcode), classify the breach
       properly, backfill 2026-05-09→06-18. — instruments-service / unified-api-contracts (registry URL)
-- [ ] [DATA] P2. **AAVE_V3-OPTIMISM IS instruments adapter must route to the RPC fallback (KNOWN abandoned subgraph —
+      ✅ SHIPPED 2026-06-19: rewrote `drift.py` to parse Drift SDK TypeScript constants on GitHub
+      (`MainnetPerpMarkets`/`MainnetSpotMarkets`) via regex bracket-depth walk — 55 active perps + 73 spots. SDK URLs in
+      UAC registry at `sdk_perp_markets_url`/`sdk_spot_markets_url`. Backfill ran 2026-05-09→2026-06-19 (42 dates, 40
+      instruments/day). Manifest now shows `DRIFT` + `chain=SOLANA` = `captured` (42 rows). IS@87099cc, UAC@74509df.
+- [x] [DATA] P2. **AAVE_V3-OPTIMISM IS instruments adapter must route to the RPC fallback (KNOWN abandoned subgraph —
       NOT a subgraph-ID hunt)** (diagnosed 2026-06-18). The instruments adapter queries the subgraph
       `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` which raises `Type Query has no field reserves` → attempted_failed.
       **This is the DOCUMENTED operator policy (UAC `_defi.py` aave_v3 OPTIMISM comment, decision 2026-05-30): Aave
@@ -315,6 +319,10 @@ to logs.
       fallback the MTDS rate handler uses (or `record_empty(reason=...)` honest-absence if the IS layer has no RPC path)
       — never leave it attempted_failed (a known-policy state masquerading as a fetch failure). The sibling chains
       (ETH/ARB/POLY/BASE/AVALANCHE) work fine. — instruments-service (NOT a UAC subgraph-ID change)
+      ✅ SHIPPED 2026-06-19: added static 7-reserve fallback (`_AAVE_V3_OPTIMISM_STATIC_RESERVES`) with DERIVED citations
+      per STEP 5.97. `get_instruments()` shortcircuits for OPTIMISM chain before subgraph call — returns 12 instruments
+      (5 borrowing-enabled × 2 = 10 + 2 non-borrowing × 1 = 2). Backfill 2026-05-09→2026-06-19 (42 dates). Manifest:
+      `AAVE_V3` + `chain=OPTIMISM` = `captured` (42 rows). IS@87099cc.
 
 **DERIBIT-COMBO — fixed a NEVER-WORKING venue (4 stacked breaks, found during cefi diagnosis) — ✅ SHIPPED:** cefi's 22
 attempted_failed were ALL DERIBIT-COMBO (0 captured days since added 2026-05-23). Root cause = 4 stacked bugs, all
