@@ -1283,3 +1283,19 @@ atom `(asset_group=sports, venue/source, data_type, league_id, day)` in `availab
       `soccer-football-info` + `transfermarkt-football-data-api`, or swap the TM secret to an Apify `apify_api_*` token
       (adapter auto-detects).** Stays BLOCKED-CREDENTIALS (subscription, not rotation). — ping slot_1.md UPDATE. —
       instruments-service [BLOCKED-CREDENTIALS]
+
+### Progress Log — tradfi IS-defs VM fan-out (2026-06-19, operator "use more servers")
+
+The serial single-host tradfi IS-definition backfill (CBOE@2023-06, NASDAQ@2024-08, NYSE-not-started; gating Step-2c v9
++ B1 catalogue) was replaced with a 9-VM sharded fleet for ~9x wall-clock speedup. Stopped the local serial runners
+(`dbeq_is_defs_backfill.sh` slot6, `cfe_vx_is_definitions.sh`, `tradfi_backfill_then_v9_monitor.sh` wrapper). Launched
+`deployment-service/scripts/vm/launch-tradfi-is-defs-sharded.sh` (new, shellcheck-clean, lifecycle:campaign) → 9 GCE VMs
+`instr-backfill-tradfi-{cboe-a/b/c,nasdaq-a/b,nyse-a/b,cme-a/b}-20260619-141559` (asia-northeast1-c, e2-standard-4,
+run-ts 20260619-141559), each a disjoint (venue, date-window) shard over 2010-06-19→2026-06-19, `VM_VENUE` scoped to the
+3 paid datasets (CME/NASDAQ/NYSE/CBOE; ICE/FX excluded — off the Databento billing allowlist), `MANIFEST_PER_VM_SHARDS=true`,
+unique `VM_NAME`, `VM_SHUTDOWN_ON_COMPLETION=true`, `VM_CHUNK_DAYS=30`. Reuses the proven `instruments-backfill` task in
+`setup-data-pipeline-vm.sh` (tarball `instruments-service-code` @ e1ec379 == local HEAD). T+10min verify (14:23Z): all 9
+RUNNING + chunk-loop progressing. BEFORE tradfi-IS `_index` (12471 rows): schema_v9=13.8%, source≈0%, asset_group ABSENT.
+Post-fleet sequence (pending VM self-shutdown): consolidator Cloud Run Job
+`uts-prod-manifest-consolidator-instruments-tradfi` → `populate_is_index_v9_2026_06_19.py --asset-group tradfi --apply`
+(row-preserving, aborts if captured drops) → `build_instrument_catalogue.py --asset-group tradfi` → delete VMs.
