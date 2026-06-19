@@ -279,7 +279,7 @@ PM-repo conflict notes).
       to a healthy slot; the TTL lets it recover once the worktree clears. Tests:
       `test_pick_free_slot_skips_quarantined_slot` + `test_dispatch_failure_on_quarantine_marks_the_slot` +
       `test_quarantine_skip_marks_then_recovers_after_ttl`. Repo: agent-orchestrator (`server/escalation.py`).
-- [ ] [ORCHESTRATOR] P2. Self-heal a dead-session dirty dep: `_do_spawn` only auto-resolves dirty state AFTER the
+- [x] ✅ [ORCHESTRATOR] P2. Self-heal a dead-session dirty dep: `_do_spawn` only auto-resolves dirty state AFTER the
       branch-state gate passes, but the gate STOPs first on the ff-fail. A dead-session dirty dep (no live editor)
       should be auto-preserved to `wip-preserve/` + FF'd rather than quarantining the slot indefinitely. Repo:
       agent-orchestrator (`server/autospawn.py` + `worktree_clean_check`).
@@ -580,3 +580,18 @@ All of Phase 6 shipped (6 sub-units, each QG-green + quickmerged to LDR):
 all roles + regression — rides the AO-dashboard plan's AgentTypesPanel); Phase 5 live smoke (the joint validation run);
 Phase 7 P2 dead-session dirty-dep self-heal (next). The AO dashboard gate is **Vitest + tsc + build smoke, NOT
 playwright** (the dashboard has no pw harness).
+
+### Wave 4 — Phase 7 dead-session dirty-dep self-heal (2026-06-19, slot-2)
+
+agent-orchestrator@c4c96fb: REORDERED the `_do_spawn` pre-spawn gate so `resolve_dirty_state` (liveness-gated — a dead
+predecessor's WIP → preserved to `wip-preserve/` + reset to origin/base = clean AND FF'd; a live peer → protected; a
+wiped index → quarantined) runs BEFORE `check_slot_branch_state`. Previously the branch-state gate's `git merge
+--ff-only` failed on the dirty tree → quarantine FOREVER (the 2026-06-18 incident: slot-1 uac 88-behind + 1 orphan dirty
+file → 316 escalation retries). Now a dead-session dirty dep self-heals; only a live-peer / genuine non-dirty divergence
+quarantines. Tests: `test_do_spawn_self_heals_dead_session_dirty_dep_before_gate` +
+`test_do_spawn_protected_live_peer_blocks_before_gate`.
+
+**The oversight plan (Phases 1–7) is now CODE-COMPLETE + shipped.** Remaining in-scope rides the sibling plans + the
+joint validation: Phase 4 UI agents-render + regression (→ `agent_orchestrator_dashboard_monitoring` AgentTypesPanel);
+Phase 5 live smoke (→ the joint validation run); Phase 6 P3 live UI loop-control (deferred nice-to-have); Phase 2 P3
+plan-health hygiene-pulse (optional). Next: the AO-dashboard plan (Plan B) + the alert-quality plan (Plan C).
