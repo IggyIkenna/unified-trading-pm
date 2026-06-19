@@ -215,14 +215,29 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       strategy-service); **kept `unified-trading-library` + `market-tick-data-service` on LDR** (mtds was first swept to
       main, then reverted to match GCP). `unified-api-contracts` has **no AWS project** (intentional — see UAC follow-up).
       AWS LDR-firing set = {unified-trading-library, market-tick-data-service}; all other services on main.
-- [ ] [DOCKER] P3. **deployment-ui needs a dedicated Node `buildspec.aws.yaml`** — it's the one non-Python repo: the
-      canonical buildspec reads `VERSION` from `pyproject.toml` (deployment-ui has none → empty image tag → BUILD fails)
-      AND its Dockerfile `COPY unified-admin-ui/packages/core` needs the monorepo sibling staged into the build context
-      (mirror its `cloudbuild.yaml`). Project + main webhook exist; only the build recipe is the gap. Repo: deployment-ui.
-      (deployment-ui also ships via Firebase/nginx on GCP, so AWS ECR for it is low priority.)
+- [x] ✅ [DOCKER] P3. DONE 2026-06-19 — **deployment-ui fixed as a DISPATCH (no standalone image), mirroring GCP.**
+      Root cause: deployment-ui has **no standalone image on either cloud** — its SPA is bundled INTO the deployment-api
+      image (deployment-api's buildspec clones deployment-ui → `./ui`; Dockerfile Stage 0 builds the SPA). GCP's
+      `deployment-ui-main-deploy` trigger is a single inline step `gcloud builds triggers run deployment-api-main-deploy`
+      (the repo's own nginx `Dockerfile`/`cloudbuild.yaml` are stale/vestigial; package.json no longer references
+      `@unified-admin/core`). So the canonical image-building buildspec was wrong for it (`VERSION` from absent
+      pyproject → empty tag → BUILD fail). **Fix**: replaced deployment-ui `buildspec.aws.yaml` with a dispatch
+      (`aws codebuild start-build --project-name deployment-api --source-version main`) + granted
+      `codebuild:StartBuild` on the deployment-api project to `unified-trading-codebuild-role` (**live**; the TF-SSOT
+      mirror of this grant + the deployment-ui dispatch annotation are folded into the `terraform import` follow-up
+      below — the deployment-service quickmerge is currently gated by an unrelated pre-existing UAC `0.21.0→0.22.0`
+      dep-floor drift). **Validated**: deployment-ui build SUCCEEDED → dispatched a deployment-api build (initiator
+      `unified-trading-codebuild-role/AWSCodeBuild-1b6408bf…`, sourceVersion main).
 - [ ] [INFRA] P3. **`terraform import` the imperatively-created AWS CodeBuild projects + webhooks** into the reconciled
       `terraform/cloud-build/aws` module (requires standing up the commented-out S3 state backend first), so the TF SSOT
-      becomes apply-clean. Repo: deployment-service.
+      becomes apply-clean. **Bundle in the two live-only TF deltas**: (a) the `codebuild:StartBuild` grant on the
+      deployment-api project (live on `unified-trading-codebuild-role`'s `codebuild-permissions` inline policy — note
+      the live policy name differs from the TF's `unified-trading-codebuild-policy`), and (b) a comment marking
+      `deployment-ui` as a dispatch-only entry (no standalone image). Repo: deployment-service.
+- [ ] [INFRA] P3. **Pre-existing blocker (not mine): deployment-service quickmerge is gated by a UAC dep-floor drift**
+      (`unified-api-contracts` local `0.21.0` < remote main `0.22.0`) — `quality-gates.sh` version-alignment BLOCKS until
+      `pyproject.toml` floor + `uv.lock` are bumped to `0.22.0` (run-version-alignment.sh --fix from the workspace root).
+      Surfaced while shipping the TF doc above. Repo: deployment-service.
 - [ ] [INFRA] P3. **DECISION: should `unified-api-contracts` build on AWS?** GCP builds the UAC wheel on LDR + publishes
       to the AR Python index (baked into the UTL base image). On AWS there is **no CodeArtifact domain**, so AWS service
       images get UAC from the GCP-AR base image (cross-cloud `FROM`) + an in-build source clone — no published AWS wheel

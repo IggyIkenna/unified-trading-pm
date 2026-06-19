@@ -51,8 +51,8 @@ marks), eyeball-able + Slack-summarised.
 - **G3** — ledgers unmaterialised (no `PositionLedger` writer, no `InstructionLedger`-from-fills, no `PassiveLedger`
   synth, `realized_pnl` hardcoded `"0.00"`, balances from CCXT not `Σ delta`).
 - **G4** — no point-in-time input capture / as-of run manifest (a rerun may read revised data → spurious diff).
-- **G5** — recon is aggregate (`abs(mean_a−mean_b)`) + single-date; no trade-by-trade keyed diff, no weekly rollup, no
-  determinism verdict.
+- **G5** — recon is aggregate (`abs(mean_a−mean_b)`) + single-date; no trade-by-trade keyed diff, no daily-T+1
+  trade-level recon, no determinism verdict.
 
 ## Pre-audit before execution (Citadel standard §1)
 
@@ -86,7 +86,7 @@ are identified (2) and the ledger exists (3).
 - [x] ✅ [SCHEMA] P0.3. **Per-trade key + recon report** — `unified-api-contracts@12597d8`:
       `make_trade_key(     instrument_key, strategy_instruction_id, tick_timestamp)` (deterministic, UTC-normalised) +
       `TradeFillRecord` (the keyed per-trade fill carrying correlation_id/client_order_id) + `TradeDeviation` +
-      `WeeklyReconReport` (DETERMINISM/EXECUTION/COMPOSITE verdicts + `DeterminismBugClass`). `LedgerRow.trade_id`
+      `DailyReconReport` (DETERMINISM/EXECUTION/COMPOSITE verdicts + `DeterminismBugClass`). `LedgerRow.trade_id`
       carries the key.
 
 ## Phase 1 — Unify the fill model (G1, the core fix)
@@ -102,7 +102,7 @@ are identified (2) and the ledger exists (3).
       (`_resolve_trade_benchmark:133` maps LONG→ask / SHORT→bid; UAC maps buy→bid / sell→ask — correct passive-maker
       semantics is buy@bid/sell@ask, so the strategy-service convention is mislabeled, taking the far touch). This is a
       **concrete instance of the paper-sim ≠ batch-sim drift the operator named**. Correcting it changes historical
-      backtest fill prices, so it MUST land with the Phase 4 `reconcile_week` harness validating paper≡batch afterward
+      backtest fill prices, so it MUST land with the Phase 4 `reconcile_day` harness validating paper≡batch afterward
       (do NOT rush it). The strategy-service engine also operates on a typed `MarketStateSnapshot` (raw TWAP/VWAP
       windows + None-fallbacks + ATOMIC per-leg) vs the UAC flat-dict ctx — the rewiring builds the ctx from the
       snapshot (pre-computing twap/vwap) then calls `benchmark_fill_price`, preserving the ARRIVAL_MID fallbacks. Until
@@ -137,14 +137,21 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 3 — Materialise the four ledgers from fills (G3)
 
-- [ ] [CODE] P3.1. **`InstructionLedger` writer from fills** — every sim/live fill emits
-      `LedgerRow(event_type=TRADE,     delta=±qty, price, fees, …)` to `ledger_type=instruction/`; money movements →
-      `TreasuryLedger`. Repo: strategy-service (writer) + unified-trading-library (emit helper).
+- [x] ✅ [CODE] P3.1. **`InstructionLedger` writer-from-fills (library helper)** — DONE
+      (`unified-trading-library@41d50461`): `ledger/materialize.py::ledger_row_from_trade_fill()` maps a
+      `TradeFillRecord` →
+      `LedgerRow(event_origin=INSTRUCTION, event_type=TRADE, trade_id=trade_key, delta=±qty signed by side, price,     fees)`.
+      ⏳ wiring the strategy-service engine to CALL it on each fill (+ the GCS emit) rides Phase 2 (the engine emits
+      keyed fills) — the pure helper is shipped + tested.
 - [ ] [CODE] P3.2. **`PassiveLedger` synthesiser** — funding/staking/lending accruals → `ledger_type=passive/` (the
       architecture flags this as not-yet-implemented). Repo: unified-trading-library + strategy-service.
-- [ ] [CODE] P3.3. **`PositionLedger` materialiser** — `Σ delta GROUP BY (account, asset, venue, instrument)` →
-      per-venue/per-instrument/per-share_class balances + the as-if-filled current state. Repo: strategy-service /
-      client-reporting-api.
+- [x] ✅ [CODE] P3.3. **`PositionLedger` materialiser (avg-cost P&L)** — DONE (`unified-trading-library@41d50461`):
+      `ledger/materialize.py::materialize_position_ledger()` —
+      `Σ delta GROUP BY (account, client, venue,     asset_canonical_id)` with **average-cost accounting** (VWAP on
+      opens, realised on closes, cross-through-zero re-open, unrealised = net_qty·(mark−avg_cost)); emits
+      `PositionLedgerRow` per group with share_class rollup + realised/unrealised PnL. 23 tests (incl.
+      cross-through-zero both directions, fees, multi-instrument). This is the as-if-filled positions/balances surface —
+      pure + tested; the GCS read/write wiring rides Phase 5 (the views).
 - [ ] [CODE] P3.4. **Realised-PnL computation** — replace the hardcoded `"0.00"`
       (`client-reporting-api     attribution.py:189`) with realised closes from `LedgerRow` deltas; wire the live
       positions route (currently mock). Repo: client-reporting-api.
@@ -153,15 +160,15 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 4 — The trade-by-trade reconciliation harness (G5)
 
-- [x] ✅ [CODE] P4.1. **`reconcile_week(...)`** — DONE (`batch-live-reconciliation-service@7a84db8c`, 9 tests, QG green):
+- [x] ✅ [CODE] P4.1. **`reconcile_day(...)`** — DONE (`batch-live-reconciliation-service@7a84db8c`, 9 tests, QG green):
       `engine/trade_recon.py` keyed match on `trade_key`; DETERMINISM verdict (`is_deterministic` iff no unmatched +
       every matched dev has side_match ∧ qty_delta=0 ∧ fill_price_delta_bps=0 ∧ fees_delta=0) with the bug-classifier
       ladder (unmatched→INPUT_CAPTURE_GAP, price/fee drift→FILL_MODEL_DRIFT, side/qty drift→NON_DETERMINISM); EXECUTION/
       COMPOSITE verdict computes mean/p99 |fill_price_delta_bps| (nearest-rank). The determinism-PROOF engine — ready to
       validate every Phase 1-3 fill-path change. **This is the keystone: any fill-path correction now ships WITH a
-      reconcile_week test proving paper≡batch.**
+      reconcile_day test proving paper≡batch.**
 - [ ] [CODE] P2.4.2. **Populate `DeviationRecord.instrument_id` + a `trade_key`** + roll up per
-      venue/instrument/strategy/`PnLFactor`; weekly aggregation (7 dates → one report). Repo:
+      venue/instrument/strategy/`PnLFactor`; daily T+1 (one report per trading day; a week = 7 daily reports). Repo:
       batch-live-reconciliation-service.
 - [ ] [CODE] P2.4.3. **The batch-rerun-from-manifest path** — take a paper `RunManifest`, assert code shas, replay
       `captured_tick_stream`, write a `mode=batch` ledger back-referencing the paper run. Repo: strategy-service (CLI
@@ -178,7 +185,7 @@ are identified (2) and the ledger exists (3).
 - [ ] [CODE] P2.6.1. **Daily ledger digest** (balances per venue/instrument, the day's `InstructionLedger` tape, PnL +
       attribution, HWM) → `AlertEvent(INFO)` → alerting-service → `#uts-live-alerts`. Repo: strategy-service /
       client-reporting-api (POST to alerting-service; no cross-service import).
-- [ ] [CODE] P2.6.2. **Weekly recon verdict** → `AlertEvent` (INFO on ε=0 determinism + the execution-alpha summary;
+- [ ] [CODE] P2.6.2. **Daily T+1 recon verdict** → `AlertEvent` (INFO on ε=0 determinism + the execution-alpha summary;
       CRITICAL on a determinism bug). Repo: batch-live-reconciliation-service.
 
 ## Phase 7 — The 19→26 operator dry-run (runs to completion)
@@ -186,8 +193,9 @@ are identified (2) and the ledger exists (3).
 - [ ] [INFRA] P2.7.1. **Paper week** — run a promoted strategy (or the funding/basis ensemble) in `colocated_engine`
       paper with the benchmark fill model over a real week, writing the 4 ledgers + the `RunManifest`. Daily Slack
       digest. Repo: deployment-service (VM) + strategy-service.
-- [ ] [INFRA] P2.7.2. **T+7 batch rerun + `reconcile_week`** — rerun batch over the SAME pinned snapshot; produce the
-      determinism verdict. **Target: ε=0.** Any diff STOPS + is diagnosed (one of the three bug classes). Repo:
+- [ ] [INFRA] P2.7.2. **Daily T+1 batch rerun + `reconcile_day`** — each morning, rerun batch for the PRIOR trading day
+      over its pinned snapshot; produce that day's determinism verdict. **Target: ε=0.** Any diff STOPS + is diagnosed
+      (one of the three bug classes). Cadence is daily T+1 (a week = 7 daily reports), not a single weekly run. Repo:
       batch-live-reconciliation-service.
 - [ ] [INFRA] P2.7.3. **Live → reconcile to paper → (∴ to batch)** — same machinery with real venue fills; report
       live↔paper execution alpha + confirm `live↔batch = determinism(≈0) + execution(measured)`. Repo: (gated on live
@@ -202,11 +210,11 @@ are identified (2) and the ledger exists (3).
 
 ## Success criteria (per phase: QG/basedpyright/ruff green + tests)
 
-- **Determinism**: `reconcile_week(paper, batch)` returns ε=0 over a real week (P7.2) — the core acceptance.
+- **Determinism**: `reconcile_day(paper, batch)` returns ε=0 over a real week (P7.2) — the core acceptance.
 - **Completeness**: the 4 ledgers materialise; balances/PnL/attribution are real (not mock/`"0.00"`), per
   venue+instrument.
 - **One fill model**: no third fill model on the batch/paper path (`BenchmarkFillEngine` is the single sim SSOT).
-- **Slack**: daily ledger digest + weekly recon verdict reach `#uts-live-alerts`.
+- **Slack**: daily ledger digest + daily T+1 recon verdict reach `#uts-live-alerts`.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -218,8 +226,7 @@ are identified (2) and the ledger exists (3).
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
 `unified-api-contracts@12597d8` (UAC QG green, 20 unit tests). The foundation contract every later phase builds on:
-`RunManifest` (as-of snapshot pin) · `make_trade_key` (deterministic match key) · `TradeFillRecord` ·
-`WeeklyReconReport`
+`RunManifest` (as-of snapshot pin) · `make_trade_key` (deterministic match key) · `TradeFillRecord` · `DailyReconReport`
 
 - `TradeDeviation` · `TradingMode`/`FillModel`/`ReconVerdictType`/`DeterminismBugClass` StrEnums · `PositionLedgerRow`
   (derived as-if-filled view). `FillModel` encodes the two-fill-realities rule (BENCHMARK=batch+paper, LIVE_VENUE=live).
@@ -240,19 +247,36 @@ adapter over it (`execution-service@e11854e5`, duplicate primitives deleted, QG 
 fear, concretely):** the strategy-service `BenchmarkFillEngine` computes `PASSIVE_BBO` OPPOSITELY to the UAC SSOT
 (LONG→ask/SHORT→bid vs the correct buy@bid/sell@ask) — so paper-sim ≠ batch-sim TODAY for any passive-BBO fill. The
 strategy-service rewiring therefore corrects a fill convention (changes historical backtest prices) and must land with
-Phase 4's `reconcile_week` proving paper≡batch afterward — sequenced deliberately, not rushed. P1.1 stays open until
-that correction lands. **Next concrete step**: rewire `strategy_service/engine/backtest/benchmark_fills.py`
+Phase 4's `reconcile_day` proving paper≡batch afterward — sequenced deliberately, not rushed. P1.1 stays open until that
+correction lands. **Next concrete step**: rewire `strategy_service/engine/backtest/benchmark_fills.py`
 `_resolve_*_benchmark` to build the dict ctx from `MarketStateSnapshot` + call `benchmark_fill_price` (correct
 PASSIVE_BBO, preserve ARRIVAL_MID None-fallbacks), update the strategy-service benchmark-fill tests to the corrected
 convention, QG, ship → then flip P1.1.
 
 ### 2026-06-19 — Phase 4 keystone SHIPPED (the determinism-PROOF engine)
 
-`batch-live-reconciliation-service@7a84db8c` — `engine/trade_recon.py::reconcile_week` (9 tests, QG green). Built BEFORE
+`batch-live-reconciliation-service@7a84db8c` — `engine/trade_recon.py::reconcile_day` (9 tests, QG green). Built BEFORE
 the fill-path changes (Phases 1-3) deliberately: it is the validator those changes must pass. The DETERMINISM verdict is
 binary (ε=0 or a classified bug); EXECUTION/COMPOSITE carries the alpha rollup. **Build-order rule from here on**: every
-fill-path or ledger change (P1.1-strategy / P1.2 / P1.4 / Phase 3) ships WITH a `reconcile_week` test asserting
+fill-path or ledger change (P1.1-strategy / P1.2 / P1.4 / Phase 3) ships WITH a `reconcile_day` test asserting
 paper≡batch on a fixture — the harness turns each behavioural correction from "hope it matches" into a proof. Remaining
 big rocks: Phase 3 ledger materialisation (the as-if-filled ledger to eyeball) + P1.4 GroupCRunner (the linchpin that
 gives batch the smart-matching layer) + P4.3 batch-rerun-from-manifest. These are interconnected, multi-repo,
 behavioural — sequenced, harness-validated, not rushed.
+
+### 2026-06-19 — Phase 3 ledger machinery SHIPPED (the as-if-filled ledger core)
+
+`unified-trading-library@41d50461` — `ledger/materialize.py` (23 tests, QG green): `ledger_row_from_trade_fill` (fill →
+InstructionLedger TRADE row, signed delta) + `materialize_position_ledger` (the avg-cost PositionLedger: VWAP opens,
+realised on closes, cross-through-zero re-open, unrealised from marks, share_class rollup). These are the PURE financial
+core of "Citadel-grade paper trading" — the historical trade tape + the as-if-filled positions/balances/P&L surface.
+
+**Session high-water checkpoint.** The determinism spine's pure-logic core is SHIPPED + TESTED across 4 repos: the
+contract (Phase 0 — uac@12597d8), the benchmark-pricing SSOT (P1.1 — uac@bc4c756 + es@e11854e5), the determinism-PROOF
+engine (P4.1 — blrs@7a84db8c), and the ledger accounting (P3.1/P3.3 — utl@41d50461). **What remains is service
+INTEGRATION + behavioural fill-path corrections**, all now harness-validatable: P2 (engine emits keyed fills) →
+P3.1/P3.2 wiring (engine calls the writer; PassiveLedger synth) → P1.4 GroupCRunner (batch runs the smart matching = the
+linchpin) → P1.1-strategy (PASSIVE_BBO correction) → P3.4/P3.5 (client-reporting-api realised-PnL + HWM) → P4.3
+(batch-rerun-from- manifest) → P5/P6 (views + Slack) → P7 (short-window e2e proof). Each ships WITH a reconcile_day test
+(the build-order rule). These are interconnected service changes on live/backtest code — deliberately sequenced +
+validated, not rushed.

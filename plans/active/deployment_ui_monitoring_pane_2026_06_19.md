@@ -129,12 +129,24 @@ status than what gates promotions.
       solid dot + tinted SHA via `data-tone`; the `CI status` column is removed; staleness stays in last-green /
       LDR→main-delta. Also shipped a click-to-open colour **legend** (operator add, same commit): `branch-legend-toggle`
       → green/red/gray meanings + the behind-but-green note. + 4 `branchTone` unit tests in `src/lib/repoCi.test.ts`.
-- [ ] [UI] P1. **Promotion-state surface — make the dep-order HOLD visible.** A repo can sit `STAGING_GREEN` with main
-      days behind and NOTHING in the triage queue / breaking cascade, because the staging→main STAGE 1.8 dep-order gate
-      is a silent designed HOLD (incident 2026-06-19: fleet blocked behind `unified-api-contracts` not yet
-      `MAIN_GREEN`). Add a per-repo surface: "main behind staging by N files · last promoted <when> · blocked-by:
-      <dep / lag>", sourced from the deltas already in the overview + the STAGE-1.8 block reason. Repos: deployment-ui +
-      deployment-api (expose the dep-order block reason). `pw:L2 ✓` + regression. Provenance: 2026-06-19 operator review.
+- [x] ✅ [UI] P1. **Promotion-state surface — make the dep-order HOLD visible.** A repo can sit `STAGING_GREEN` with
+      main days behind and NOTHING in the triage queue / breaking cascade, because the staging→main STAGE 1.8 dep-order
+      gate is a silent designed HOLD (incident 2026-06-19: fleet blocked behind `unified-api-contracts` not yet
+      `MAIN_GREEN`). **DONE 2026-06-19 — deployment-ui@564961e + deployment-api@af444bb | pw:L2 ✓ (smoke 224 ·
+      repos-tab 27) | regression: tests/smoke/repos-tab.spec.ts.** Backend (`deployment_api/routes/repo_ci.py`
+      `_compute_dep_order` mirroring STAGE 1.8) adds per-row `tier`/`blocked_by`/`blocking` + a `promotion_held`
+      aggregate (`held_repos` + `root_blockers`) to `/api/repo-ci/overview`; verified LIVE (real fleet showed
+      unified-api-contracts tier-0 blocking 4 repos). Frontend: a 6th **"Promotion held — dependency order"** card
+      (sibling to "Promotion blocked", which is failure-park); a top **"Promotion stalled" banner**; **root-blocker** +
+      **blocked-by** chips folded into the LDR→main-delta column; plus two operator adds — a click-to-open **`?` help
+      popover on every card** (the role/what-it-says explanation) and **severity/A–Z/tier sort controls**. Cleared a
+      pre-existing deployment-api deep-UAC-import en route (facade `from unified_api_contracts import Mode`; ratcheted
+      `CODEX_MAX_VIOLATIONS` 6→5). Provenance: 2026-06-19 operator review.
+- [x] ✅ [UI] P2. **Per-column `?` help on every Repo-CI table column** (operator request 2026-06-19). Every header
+      (Repo · LDR · staging · main · last green (main) · LDR→main delta · SIT · PRs · Image) carries a click-to-open
+      `?` popover explaining what the column represents — reuses the `HelpPopover` primitive; right-edge columns drop
+      the popover inward so it doesn't run off the table. **DONE — deployment-ui@62b4fed | pw:L2 ✓ (repos-tab 28) |
+      regression: tests/smoke/repos-tab.spec.ts** ("every table column carries a ? help popover").
 - [ ] [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the committed
       `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed manifest's
       `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}` Firestore

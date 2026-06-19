@@ -23,14 +23,10 @@ codex_ssots_to_check_drift_against:
 
 # MTDS / MDPS Master — Audit Instructions
 
-> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).**
-> The MTDS migrators, rebuilds, readers, and the MDPS scanner are now source-aware: the pipeline_mode is the
-> `{mode}_{source}[_{transport}]` form in both the path key and the column (not coarse batch), with populated source and
-> transport columns, Era-B chains (options_chain/futures_chain as instrument_type, with data_type=trades), and readers
-> that prefix-match the source-aware partition. The concrete recurring checks are in the "Source-aware pipeline_mode +
-> Era-B" section below. SSOT = `canonical_form_cross_service_audit_checklist.md` (CF-1 through CF-14) + the ①–⑫ pre-apply
-> readiness audit in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`. Any guidance below assuming coarse
-> batch, options_chain-as-data_type, or exact-coarse reader probes is STALE.
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).** The
+> MTDS migrators, rebuilds, readers, and the MDPS scanner are now source-aware: the pipeline*mode is the
+> `{mode}*{source}[_{transport}]`form in both the path key and the column (not coarse batch), with populated source and transport columns, Era-B chains (options_chain/futures_chain as instrument_type, with data_type=trades), and readers that prefix-match the source-aware partition. The concrete recurring checks are in the "Source-aware pipeline_mode + Era-B" section below. SSOT =`canonical_form_cross_service_audit_checklist.md`(CF-1 through CF-14) + the ①–⑫ pre-apply readiness audit in`master_data_canonicalisation_migration_catalogue_2026_06_07.md`.
+> Any guidance below assuming coarse batch, options_chain-as-data_type, or exact-coarse reader probes is STALE.
 
 The single canonical audit doc for everything in the MTDS + MDPS surface. Two audit modes share this doc:
 
@@ -109,10 +105,9 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
       `results/mtds_mdps_master_audit_2026_06_09.md` § Re-verification): `lst_rates` FIXED; `oracle_prices` outer
       write-path FIXED but inner Pyth helpers still swallow (`:828/:956` — the `:757` `record_failed` branch is dead
       code); `lending_indices` STILL OPEN (now `:768`, was L989; + GraphQL-body `:1182-1194` + GCS-upload-in-try
-      `:741`); NEW: `solana_defi:932,973,1051,1120`, `liquidations:781` + file-wide `:510-517`,
-      `perp_funding:963,1017` (`rows or []` collapse), `tardis_adapter:833-835` (streaming non-404 → Tier-3 false
-      `empty_confirmed`), Solend backfill `_solana_defi_fetch:251`. Full spec: `defi_master_audit_instructions.md` item
-      (aa).
+      `:741`); NEW: `solana_defi:932,973,1051,1120`, `liquidations:781` + file-wide `:510-517`, `perp_funding:963,1017`
+      (`rows or []` collapse), `tardis_adapter:833-835` (streaming non-404 → Tier-3 false `empty_confirmed`), Solend
+      backfill `_solana_defi_fetch:251`. Full spec: `defi_master_audit_instructions.md` item (aa).
 
 - [ ] (j) **Source provenance stamped at write time — UNIVERSAL (codified 2026-06-01, operator)**: **every** MTDS
       adapter/handler MUST pass a non-blank `source=` (a closed-set string from `SOURCE_PRIORITY`) to `record_captured`
@@ -121,12 +116,13 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
       **CORRECTED 2026-06-10 (the prior "DefiManifestRecorder → add() drops source entirely" claim was STALE)**:
       `record_captured` DOES propagate `source` through the v9 path (`_defi_manifest.py:304` → UTL `add():1921`
       `_resolve_and_validate_source` → row; verified all three hops). The REAL residuals: (1) NON-captured rows
-      (`record_empty`/`record_failed`/zero-rows) carry no source — a **UTL API gap** (no `source` kwarg; `_record_status`
-      drops it), fix lands in UTL first; (2) the cefi chain-bundle `record_captured_from_counts` callsite passes no
-      `asset_group=` → blank source (item (n)). Verify by reading ACTUAL prod rows — **RED on any blank `source` on a
-      captured cell**. Grep callsites: `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg
-      "source="`. SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home:
-      `manifest_master` item (i).
+      (`record_empty`/`record_failed`/zero-rows) carry no source — a **UTL API gap** (no `source` kwarg;
+      `_record_status` drops it), fix lands in UTL first; (2) the cefi chain-bundle `record_captured_from_counts`
+      callsite passes no `asset_group=` → blank source (item (n)). Verify by reading ACTUAL prod rows — **RED on any
+      blank `source` on a captured cell**. Grep callsites:
+      `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg     "source="`. SSOT:
+      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item
+      (i).
 
 - [ ] (k) **Per-venue acquisition-METHOD registry + verification (codified 2026-06-03)**: items (a)–(j) prove a cell is
       _recorded_ honestly; this item proves the _fetch itself_ is the right + complete method for every live venue ×
@@ -151,12 +147,12 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
 
 - [ ] (l) **Production-reachability classification BEFORE severity (codified 2026-06-10)**: every item (a)/(i)/(k)
       finding MUST be classified `production-reachable` vs `factory-only / dead-facade` before a RED is assigned — 9 of
-      the 06-09 findings reclassified LATENT because the only instantiation path
-      (`market_interface/factory.py` `VENUE_REGISTRY` via `get_adapter()`) has no production caller (the
-      `market_interface/api.py` facades have 0 callers; `umi_tick_provider.py:163-170` hard-blocks DeFi venues from the
-      `download` op). Trace: CLI operations map (`cli/main.py:433-470`) / engine orchestrator → handler → adapter. A
-      finding in dead code files as code-debt/disposition (delete-or-loud-fail per the delete-deprecated-code rule),
-      NOT a manifest-corruption RED. The dead-facade surface register lives in the 2026-06-09 result § P2.
+      the 06-09 findings reclassified LATENT because the only instantiation path (`market_interface/factory.py`
+      `VENUE_REGISTRY` via `get_adapter()`) has no production caller (the `market_interface/api.py` facades have 0
+      callers; `umi_tick_provider.py:163-170` hard-blocks DeFi venues from the `download` op). Trace: CLI operations map
+      (`cli/main.py:433-470`) / engine orchestrator → handler → adapter. A finding in dead code files as
+      code-debt/disposition (delete-or-loud-fail per the delete-deprecated-code rule), NOT a manifest-corruption RED.
+      The dead-facade surface register lives in the 2026-06-09 result § P2.
 
 - [ ] (m) **`failed_per_dt` side-channel parity (CF-11) on every download-path adapter**: every adapter wired into
       `umi_tick_provider.download_batch` must ACCEPT + POPULATE `failed_per_dt` so transient fetch failures reach the
@@ -169,8 +165,8 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
 - [ ] (n) **Bundled `record_captured_from_counts` passes `asset_group=`**: UTL resolves `source` on the bundled-shard
       path ONLY when `asset_group` is supplied ("`asset_group=None` preserves the legacy blank-source behaviour" — UTL
       `manifest_writer.py:3376-3387`). Grep every `record_captured_from_counts(` callsite in `engine/orchestrator.py`
-      and assert `asset_group=` is passed (prediction `:3302` ✓; cefi chain-bundle `:3141` OPEN as of 2026-06-10 —
-      blank source on every options_chain/futures_chain bundle row).
+      and assert `asset_group=` is passed (prediction `:3302` ✓; cefi chain-bundle `:3141` OPEN as of 2026-06-10 — blank
+      source on every options_chain/futures_chain bundle row).
 
 ### Batch vs Live Parity
 
@@ -324,12 +320,11 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
 - [ ] (edge-5) **No bar-start LAUNDERING via column alias (METASTABLE class, codified 2026-06-10)**: no blind rename may
       map a vendor bar-START column (databento `ts_event` on `ohlcv_*`) onto the canonical right-edge column name
       (`timestamp`) without interval-aware conversion — MDPS's protective start→end shift keys on the LITERAL column
-      name `ts_event` (`ohlcv_passthrough.py:280`, preference order prefers `timestamp`), so the MTDS
-      `_COLUMN_ALIASES` rename (`engine/orchestrator.py:613-616`) defeats it and the corruption fires on the next
-      reprocess, invisibly (a uniform shift stays on-grid). Check: (1) MTDS alias application converts (not renames)
-      for `ohlcv_*` data_types; (2) MDPS shift is content/source-aware, not name-keyed; (3) raw column-name census
-      (`ts_event` vs `timestamp`) before ANY tradfi candle rebuild. SSOT:
-      `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1 P0.
+      name `ts_event` (`ohlcv_passthrough.py:280`, preference order prefers `timestamp`), so the MTDS `_COLUMN_ALIASES`
+      rename (`engine/orchestrator.py:613-616`) defeats it and the corruption fires on the next reprocess, invisibly (a
+      uniform shift stays on-grid). Check: (1) MTDS alias application converts (not renames) for `ohlcv_*` data_types;
+      (2) MDPS shift is content/source-aware, not name-keyed; (3) raw column-name census (`ts_event` vs `timestamp`)
+      before ANY tradfi candle rebuild. SSOT: `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1 P0.
 
 ## Canonical-form coverage CF-18 + CF-19 — mtds_mdps owns schema-attribute completeness + candle-edge (added 2026-06-10)
 
@@ -353,6 +348,41 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
       leakage checks above — re-running it catches a NEW adapter reintroducing the open-edge ingestion bug (a uniform
       one-interval left-shift stays on-grid and is invisible to the MDPS alignment gate). Green: every external candle
       source is right-edge (`t_close`) per the SSOT, one normalization point, batch and live agree.
+
+## Canonical-form coverage CF-22…CF-23 + CF-26…CF-27 — cycle-gap hardening (added 2026-06-19; producer-side)
+
+> Four gaps the 2026-06 data-migration cycle's audits MISSED — each passed on a PROXY. MTDS+MDPS own the raw-tick +
+> processed-candle producer surface, so they own the producer-side proof. SSOT =
+> `canonical_form_cross_service_audit_checklist.md` CF-22/CF-23/CF-26/CF-27; manifest-data-state home =
+> `manifest_master`.
+
+- [ ] (CF-22) **v9 = COLUMN-POPULATION, not `schema_version` + dedup** — for EACH AG read the `market-data-tick-{ag}`
+      AND `processed_candles` `_index` and assert all FOUR: `schema_version==9` %, `pipeline_mode` non-blank % AND
+      source-aware (`{mode}_{source}`, never coarse `batch`/blank), `source` non-blank %, `asset_group` non-blank %,
+      each ≥99%. **Trap (the "sports already clean" miss): dedup/blank-status-clean ≠ v9.** Strengthens item (g) (which
+      checks `schema_version` only) — a green on (g) is NOT a green on CF-22.
+
+- [ ] (CF-23) **`expected_unattempted` PRESENT in the tick/candle `_index` — 0 rows = FAIL** — read the `capture_status`
+      value-set per AG; assert `expected_unattempted` count > 0 wherever the IS catalogue lists could-exist cells not
+      yet backfilled. **Trap: a 3-state `_index` is RED, not "clean".** Code companion: item (w-4) in `manifest_master`
+      (writer/pre-flight materialises it) — CF-23 here proves the rows actually landed in the producer's buckets.
+
+- [ ] (CF-26) **provenance stamped by the FETCHING ADAPTER, not `SOURCE_PRIORITY[0]`** — code check: trace every
+      MTDS/MDPS writer's `source=` / `pipeline_mode=` value and confirm it is the ADAPTER's own identity (the vendor
+      that ran the fetch), NEVER indexed out of `SOURCE_PRIORITY[(ag,dt)]` (`SOURCE_PRIORITY` is READ-time resolution
+      only). Grep for the antipattern:
+      `rg -n "SOURCE_PRIORITY\[.*\]\[0\]|SOURCE_PRIORITY.*\[0\]" market-tick-data-service/ market-data-processing-service/ --include="*.py"`
+      then read each writer callsite. Data-state: a cell whose true fetcher ≠ priority[0] (VX 15m = yahoo/barchart, not
+      massive) must stamp the real fetcher. **Trap: `source` present + in-closed-set passes item (j)/CF-4 while being
+      the WRONG vendor (the VX→`batch_massive` bug).** Composes with item (j); SSOT:
+      `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+
+- [ ] (CF-27) **backfill coverage vs TARGET UNIVERSE across the WHOLE timeframe** — per
+      `(asset_group, data_type, venue)` compute
+      `coverage = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` over the FULL
+      intended date range (could-exist universe from the IS catalogue, CF-14/CF-16) and produce a ranked low-coverage
+      table. **Trap: "rows exist for venue X" is not coverage — a 5%-covered cell passes a data-exists check.** Green:
+      ratio computed per AG over the whole timeframe; low-coverage cells (< agreed floor) flagged as backfill todos.
 
 # Mode 2 — Efficiency Audit (codified 2026-05-28)
 
@@ -638,7 +668,7 @@ Avoid:
 
 ## Linked Results
 
-| Date       | Result file                                                          | Status                                                                                                                                                                                         |
-| ---------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-28 | `mdps_long_running_efficiency_SUMMARY_2026_05_28.md` (+ 7 axis docs) | Mode 2 first run; checklist items E1–E9 unticked, waiting on implementation                                                                                                                    |
+| Date       | Result file                                                          | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-28 | `mdps_long_running_efficiency_SUMMARY_2026_05_28.md` (+ 7 axis docs) | Mode 2 first run; checklist items E1–E9 unticked, waiting on implementation                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 2026-06-09 | `mtds_mdps_master_audit_2026_06_09.md`                               | Mode 1 (MTDS adapters/manifest); **re-verified 2026-06-10** (adversarial caller-chain pass): 9 genuine active clusters (databento ohlcv bar-edge laundering UPGRADED to top P0 — live leakage into the MDPS candle grid; tardis streaming 5xx→empty_confirmed; 5 defi-handler swallows; chain-bundle blank source), 5 false-positives retracted, 9 latent/dead-code (one disposition todo), source-on-non-captured → UTL gap, +10 new adjacent findings. CF/prod-state items BLOCKED-DATA. Gap items unticked. |
