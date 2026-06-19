@@ -255,12 +255,17 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
       `greeks-service-build`, `trading-agent-service-build`. Created imperatively (NOT via the TF module) because the
       `modules/cloud-build/gcp` module defaults to connection `ln` which no longer exists (only `iggyikenna-github`) —
       same precedent as `deployment-service-jobs-image` (created imperatively, TF-imported later).
-- [ ] [INFRA] P1. **Reconcile TF SSOT**: add the 4 missing repos (batch-live-recon, fund-admin, greeks, trading-agent —
-      alerting + client-reporting are already in `locals.services`) to `deployment-service/terraform/cloud-build/gcp`
-      `locals.services`, `terraform import` all 6 imperative triggers into state, AND **fix the module connection drift**
-      (`ln` → `iggyikenna-github`) so a future apply doesn't try to recreate them against the dead connection. Do NOT
-      blind `apply` the module before the import + connection fix (would disrupt the 15 live triggers). Repo:
-      deployment-service.
+- [x] ✅ [INFRA] P1. **Reconcile TF SSOT DONE 2026-06-19 — deployment-service@1cdb60d.** Added 4 repos (batch-live-recon,
+      fund-admin, greeks, trading-agent) to `locals.services` in `terraform/cloud-build/gcp/main.tf`. Connection fix:
+      module variable already defaults to `iggyikenna-github` (the `ln` comment was stale — corrected). **`terraform
+      import` commands** (run from `deployment-service/terraform/cloud-build/gcp/` after `terraform init`):
+      `terraform import 'module.cloud_build_triggers["alerting-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/77da1f63-a43c-4eca-a732-2b2c82d4c68c`
+      `terraform import 'module.cloud_build_triggers["client-reporting-api"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/1cbc8a4a-d06f-482d-a336-8671134d5254`
+      `terraform import 'module.cloud_build_triggers["batch-live-reconciliation-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/41fac3b7-4e97-4174-abc8-35a655df8348`
+      `terraform import 'module.cloud_build_triggers["fund-administration-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/2f563d0a-4b5b-4d4c-8938-c7ccf7b69b71`
+      `terraform import 'module.cloud_build_triggers["greeks-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/e91c0898-18bd-4f4b-9b61-057cc663e3e4`
+      `terraform import 'module.cloud_build_triggers["trading-agent-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/624a9df2-743d-43e1-b39a-1027574d73ca`
+      Run `terraform plan` after import — expect 0 changes (all triggers already match desired state). Repo: deployment-service.
 - [ ] [DOCKER] P1. fund-administration-service has a **dead builder stage** (stage 1 builds but stage 2 never
       `COPY --from=builder` — it re-installs from scratch). Fixed both install lines to build-green for now; a follow-up
       should delete the redundant builder stage (faster build). Repo: fund-administration-service.
