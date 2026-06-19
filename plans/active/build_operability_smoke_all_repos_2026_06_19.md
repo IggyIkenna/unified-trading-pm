@@ -168,8 +168,10 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
       → triage (build-blocker vs genuine operability break vs probe-env gap) and fix. Definition of done: every Python
       service repo is `BUILD ✅ IMPORT ✅ RUN ✅`; UTL import-green; the 2 Node UIs build-green. Repo: e2e-testing
       (driver) + per-repo fixes.
-- [ ] [INFRA] P1. Capture per-repo build-minute cost + flag any repo whose image is unexpectedly large / slow (a
-      side-signal of a bad install). Repo: e2e-testing.
+- [x] ✅ [INFRA] P1. Capture per-repo build-minute cost + flag any repo whose image is unexpectedly large / slow (a
+      side-signal of a bad install). Repo: e2e-testing. — e2e-testing@d2206e3
+      (`scripts/build_smoke/build_cost_report.sh`: gcloud builds list → duration+cost per trigger; docker pull+inspect →
+      uncompressed GB; ⚠/❌ flags at 12m/20m build + 3GB/5GB image; summary with TOTAL_BUILD_MIN + TOTAL_COST)
 
 ## Phase 4 — Wire the probe into cloudbuild (durable, replaces the hollow Step #6)
 
