@@ -98,7 +98,7 @@ root-caused and FIXED 2026-06-19:
       `git rev-parse --show-toplevel` which is empty in-image → sourced `//unified-trading-pm/.../base-service.sh` (404)
       → added the fleet-canonical mtds `CLOUD_BUILD=true` guard (skip in-image gate when the PM base script is absent)
       (mdps@8025264d). Build `3c501b1f` green end-to-end. Repo: market-data-processing-service.
-- [ ] [INFRA] P1. **Audit the fleet for STALE `BASE_IMAGE_DIGEST` pins + add a warn-level QG/cron drift check.** mdps's
+- [x] ✅ [INFRA] P1. **Audit the fleet for STALE `BASE_IMAGE_DIGEST` pins + add a warn-level QG/cron drift check.** mdps's
       pin had drifted to `e939b4ee` (base UTL 0.11.0 / UAC 0.15.0) while its own floors require UTL ≥0.12.0 / UAC
       ≥0.19.0 → the build re-resolved from the registry and failed; the digest-refresh fan-out
       (`update-dependency-version.yml`) evidently never landed for mdps. A stale pin is **silent** until someone runs
@@ -107,7 +107,7 @@ root-caused and FIXED 2026-06-19:
       repo's `pyproject.toml` floors (the actual break condition — a merely-not-`:latest` pin is fine if it still
       satisfies). Add it as a warn-level signal (PM post-gate or the digest-pin ratchet panel already in "Out of scope")
       so drift surfaces before it becomes a red build. Repos: all service Dockerfiles + PM (the check). Provenance:
-      2026-06-19 mdps build fix.
+      2026-06-19 mdps build fix. — unified-trading-pm@be47dece8 | fleet consistent (16/16 pinned repos at sha256:6b27286abac3…) | new post-gate: scripts/quality_gates/check_base_image_digest_drift.py | PR #427
 
 ## Repo-CI table clarity + authoritative source (operator review 2026-06-19)
 
