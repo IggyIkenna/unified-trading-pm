@@ -232,18 +232,16 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `plans/active/cicd_quality_gates_2026_06_18.md`.
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
-- **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
-  exception)**: the target is for `agent-orchestrator` to follow the **same** LDR → `staging` → SIT → `main` flow as
-  every other repo. **AO slot clones already check out `live-defi-rollout` like every repo** — the former
-  `agent-orchestrator`→`main` base override was REMOVED (it made every AO slot read as diverged; do NOT re-add it in
-  `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`). **Still
-  mid-migration**: AO has no `staging` branch and no `quickmerge.sh` yet (tracked in
-  `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6 — BLOCKED-OPERATOR, since
-  creating `staging` fires a fleet backend restart). So `main` is the deploy/CICD target reached via the
-  LDR→`staging`→SIT→`main` path; until `staging` lands, `main` legitimately lags LDR (do NOT treat `main`-behind-LDR as
-  drift — each slot is a Path-B clone ON `live-defi-rollout`, so LDR is the live tip). Once G6 lands `staging` +
-  quickmerge, the path is fully standard. SSOT: `codex/04-architecture/agent-orchestrator-overview.md` + the G6 plan
-  above.
+- **agent-orchestrator branch model — STANDARD (migration COMPLETE, verified 2026-06-19; the 2026-06-02 "TRANSITIONAL /
+  mid-migration" state is RETIRED)**: `agent-orchestrator` now follows the **same** LDR → `staging` → SIT → `main` flow
+  as every other repo. **The former `agent-orchestrator`→`main` base override stays REMOVED** (do NOT re-add it in
+  `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo` — it made every AO
+  slot read as diverged). **`staging` branch + `scripts/quickmerge.sh` + `quality-gates-v2`/`semver-agent` +
+  staging-lock/backmerge promotion workflows are all LIVE and green** (the old G6 "creating staging fires a fleet
+  restart" blocker has been crossed; its `agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` plan is
+  retired). Ship via `quickmerge --agent --files` like any repo; slot clones are Path-B on `live-defi-rollout` (LDR is
+  the live tip), and `main`-behind-LDR is normal promotion lag, not drift. SSOT:
+  `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ### Imports + types
 
