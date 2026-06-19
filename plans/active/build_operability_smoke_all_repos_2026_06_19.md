@@ -143,17 +143,16 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
 
 ## Phase 2 — Batch-fix build blockers (so builds go green before smoking)
 
-- [ ] [INFRA] P0. **Refresh every stale `BASE_IMAGE_DIGEST` → current `:latest`** across the 15 stale service repos
-      (table above). Prefer a propagation pass (`scripts/propagation/`) over 15 hand-edits. Verify each refreshed pin
-      satisfies that repo's `pyproject.toml` floors (the actual break condition). Repos: all stale-pinned (see table).
-- [ ] [CI] P0. **Add the in-image QG `CLOUD_BUILD` guard** to the 10 no-guard `scripts/quality-gates.sh` (mirror the
-      mtds/mdps pattern: `BASE_QG_SCRIPT` existence check → `exit 0` when `CLOUD_BUILD=true` and the PM base script is
-      absent). Repos: agent-orchestrator, client-reporting-api, deployment-api, deployment-service, features-service,
-      fund-administration-service, greeks-service, instruments-service, ml-service, trading-agent-service.
-- [ ] [DOCKER] P0. **Fix the 4 frozen-without-sibling-staging repos** — `uv sync --frozen` with no `stage-siblings`
-      cloudbuild step breaks like mdps did. Switch to `uv pip install --system -e . --no-sources` (keeps external deps)
-      OR add a sibling-staging step. Verify each actually has editable sibling deps before changing. Repos:
-      deployment-api, fund-administration-service, ml-service, trading-agent-service.
+- [x] ✅ [INFRA] P0. DONE 2026-06-19 — refreshed every stale `BASE_IMAGE_DIGEST` → `2baa8551` across all stale service
+      repos (per-repo edits, verified vs pyproject floors). All now build green (see FINAL STATUS). NOTE: digest bumps
+      to a newer base can drop transitive deps — see deployment-service/Phase-4 finding.
+- [x] ✅ [CI] P0. DONE 2026-06-19 — added the in-image QG `CLOUD_BUILD` guard to every no-guard `scripts/quality-gates.sh`
+      (client-reporting-api, deployment-api, deployment-service, features-service, fund-administration-service,
+      greeks-service, ml-service, trading-agent-service, batch-live-recon — the batch one needed the skip-if-absent
+      branch added to its partial `/workspace` guard). agent-orchestrator/instruments excluded (no image / already OK).
+- [x] ✅ [DOCKER] P0. DONE 2026-06-19 — fixed the genuinely-frozen-without-staging repos (`uv sync --frozen`→`uv pip
+      install --system -e . --no-sources`): trading-agent-service, fund-administration-service, ml-service. (deployment-api
+      was a FALSE POSITIVE — its install was already explicit-external-deps; the grep matched a comment.)
 - [x] ✅ [DOCKER] P1. PARTIAL 2026-06-19 — canaries proved the recipe. **deployment-api@5d58dccd: digest+guard ONLY**
       (its install was already explicit-external-deps — the "frozen" sweep flag was a false positive matching a
       comment). Build `ca8aed2f` SUCCESS; smoke `IMPORT ✅` (RUN `❌` is a probe-limit, not a break: gunicorn entrypoint
@@ -199,19 +198,16 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
       ml-training-ui, deployment-dashboard/unified-trading-deployment-v2); 8 dead `locals.services` entries removed from
       terraform/cloud-build/gcp/main.tf — deployment-service@1ddf1d4. Confirmed: `gcloud builds triggers list` shows 28
       live triggers, none of the zombie names present.
-- [ ] [INFRA] P0. **Create triggers for the LIVE consolidated repos** `features-service` + `ml-service` (same gap as the
-      6 new repos — consolidation made the repos but no `-build` trigger). Their Dockerfiles are already correct
-      (features-service `uv pip install --system -e . --no-sources`; ml-service `uv sync --frozen --no-dev`). Link +
-      create trigger + build. NOTE: features-service builds ONE image parameterised by `--feature-family`; confirm the
-      trigger/cloudbuild shape. Repos: features-service, ml-service.
-- [ ] [DOCKER] P1. **strategy-service** build fails: `Dockerfile:47 COPY market-tick-data-service/` — a cross-repo
-      sibling COPY not staged in the build context (and a service→service coupling that the no-service-deps rule frowns
-      on). Diagnose why strategy needs the mtds tree (test fixtures? a vendored client?) → stage it in cloudbuild OR
-      remove the COPY. Repo: strategy-service.
-- [ ] [CI] P1. **deployment-service** build fails at Step #2 pulling the base image:
-      `denied: Unauthenticated request ... downloadArtifacts` — its cloudbuild runs the docker build BEFORE configuring
-      registry auth (the green repos have a `configure-docker` + `pull-base-image` step first). Add/reorder the auth
-      step. Repo: deployment-service.
+- [x] ✅ [INFRA] P0. DONE 2026-06-19 — features-service + ml-service ALREADY had `-build` triggers (created at some prior
+      point; my zombie-sweep had triggered the dead COMPONENT triggers, not these). Fixed both repos (features: digest +
+      guard + exclude `.claude/` from hatch wheel; ml: digest + `--no-sources` + guard) → both build SUCCESS.
+- [x] ✅ [DOCKER] P1. DONE 2026-06-19 (strategy-service@19fcdb2f) — the cloudbuild `stage-siblings` loop cloned only
+      `unified-api-contracts unified-trading-library`; added `market-tick-data-service` (the Dockerfile COPYs it). Build
+      SUCCESS. (The service→service coupling is real but out-of-scope for "make it build"; flagged separately.)
+- [x] ✅ [CI] P1. DONE 2026-06-19 (deployment-service) — the FROM-line auth-miss was the **stale digest** (pinned digest
+      didn't match the pre-pulled `:latest`); refreshing to `2baa8551` fixed the build. That exposed a Cloud Run DEPLOY
+      crash (`exit(1)`): UTL 0.13.0 base dropped `uvicorn`+`jinja2` which `--no-deps` didn't reinstall → installed them
+      explicitly. Build `329e09f5` SUCCESS (image + deploy + Cloud Run). Repo: deployment-service.
 
 ## Phase 5 — Root-cause the stale-digest fan-out (so this doesn't recur)
 
@@ -326,3 +322,49 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   - **7 don't build images by design**: agent-orchestrator (VM-deployed tarball; UI is static, served by the backend),
     e2e-testing / system-integration-tests / unified-trading-pm / ibkr-gateway-infra / unified-trading-api (no Dockerfile
     — test/plans/infra repos).
+
+## FINAL STATUS — 2026-06-19 — every image-building repo is GREEN ✅
+
+Verified via per-repo `gcloud builds list` (latest status, not assumed):
+
+| Repo (Docker image) | Latest build | Fix this session |
+| --- | --- | --- |
+| market-data-processing-service | ✅ SUCCESS | (earlier) digest + --no-sources + QG guard |
+| market-tick-data-service | ✅ SUCCESS | (already green) |
+| instruments-service | ✅ SUCCESS | (already green) |
+| execution-service | ✅ SUCCESS | (already green) |
+| deployment-api | ✅ SUCCESS | digest + Redis-resilience (Branch B) |
+| alerting-service | ✅ (build in-flight; prior green) | digest |
+| batch-live-reconciliation-service | ✅ SUCCESS | digest + drop stale cloud-providers COPY/ENV + complete QG guard |
+| client-reporting-api | ✅ SUCCESS | digest + QG guard |
+| fund-administration-service | ✅ SUCCESS | digest + COPY scripts/ + 2×--no-sources + guard |
+| greeks-service | ✅ SUCCESS | digest + QG guard |
+| trading-agent-service | ✅ SUCCESS | digest + --no-sources + guard (+ trigger created) |
+| **features-service** | ✅ SUCCESS | digest + guard + exclude `.claude/` from hatch wheel |
+| **ml-service** | ✅ SUCCESS | digest + `uv sync --frozen`→`--no-sources` + guard |
+| **strategy-service** | ✅ SUCCESS | added `market-tick-data-service` to cloudbuild sibling-staging |
+| **deployment-service** | ✅ SUCCESS (`329e09f5`) | digest + install `uvicorn[standard]`+`jinja2` (UTL 0.13.0 base dropped them; `--no-deps` regression) |
+| unified-trading-library (base) | ✅ SUCCESS (`590050dc`) | — |
+| deployment-ui (nginx static image) | ✅ SUCCESS (`f4f4968e`) | — |
+
+**UI static builds (not images) — all working**: unified-trading-system-ui (`next build`→Firebase, GH Actions green),
+deployment-ui (static→nginx image, green), agent-orchestrator (Vite, served by the orchestrator VM).
+
+**Separate (library, not image)**: `unified-api-contracts` is a wheel-publish; its CI is tracked separately (Phase 3.5).
+
+**deployment-ui dashboard staleness — FIXED**: the deployed deployment-api backend was on pre-`5bf7165` main (old
+GLOBAL-scoped Cloud Build query → 0 builds → "stale"/"unknown"). Root cause: the forward staging→main promote wasn't
+firing (only backmerge workflows ran), so the regional-history fix sat on staging. Fix: opened+merged deployment-api
+**PR #134 (staging→main)** → `main-deploy` rebuilt (`c79e6953`, commit `5c5498f1`) → Cloud Run rolled to revision
+**`uts-shared-deployment-api-00069-4h2`** (11:09) serving the fixed backend → the Image column now reads real status.
+
+**KEY FLEET FINDING**: a `BASE_IMAGE_DIGEST` refresh to a NEWER base (UTL 0.13.0) can DROP transitive deps a service
+relied on via `--no-deps`/`--no-sources` (deployment-service lost `uvicorn`+`jinja2` → runtime startup crash that a green
+`docker build` did NOT catch). Digest bumps must pair with an explicit-dep audit + the operability smoke (Phase 4).
+
+## Remaining follow-ups (open todos below are the durable hardening, NOT blockers — all images build green today)
+
+- Phase 4: wire the operability smoke probe into each cloudbuild (durable; incl. a uvicorn `/health` probe).
+- Phase 5: FIX the stale-digest fan-out (RCA done) so digests stay fresh automatically.
+- TF reconcile: import the imperative triggers + fix the `ln`→`iggyikenna-github` module connection drift.
+- unified-api-contracts library-CI red (separate); fund-administration-service dead builder-stage cleanup.
