@@ -1322,3 +1322,54 @@ RUNNING + chunk-loop progressing. BEFORE tradfi-IS `_index` (12471 rows): schema
 Post-fleet sequence (pending VM self-shutdown): consolidator Cloud Run Job
 `uts-prod-manifest-consolidator-instruments-tradfi` → `populate_is_index_v9_2026_06_19.py --asset-group tradfi --apply`
 (row-preserving, aborts if captured drops) → `build_instrument_catalogue.py --asset-group tradfi` → delete VMs.
+
+### Progress Log — close-out drive + LIVE certification (2026-06-19, autonomous)
+
+**VM diagnosis (4 running at 19:30Z; freshness = per-VM SHARD update, NOT the lagging GCS log-tee):**
+
+- `instr-backfill-tradfi-cme-b` — **WORKING**, climbing (date=2021-07-14 of its 2020-01-01→2026-06-19 window). The 8
+  sibling tradfi IS-def shards (cboe-a/b/c, nasdaq-a/b, nyse-a/b, cme-a) **already self-deleted** (`VM_SHUTDOWN_ON_COMPLETION`)
+  — only CME-b remains. Genuine multi-year CME GLBX.MDP3 daily-definitions backfill → many hours ETA.
+- `af-backfill` (sports MTDS api-football coverage) — **WORKING**, log fresh 19:33Z (multi-season league sweep; many
+  `Fetched 0 teams` = off-season/no-data, normal honest absence).
+- `mtds-gas-fees` (defi gas_fees 2021→2026 multi-chain RPC) — **WORKING** (initially misread as stalled: GCS log-tee
+  uploader lagged at 17:51Z, but the per-VM SHARD updated 19:37Z, local log live at date=2021-02-12, 247 shard entries
+  climbing). The `ManifestConsolidatorStaleError` for `gas-fees-central-element-323112` is a NON-FATAL warning ("keeping
+  previous membership set") — writes continue; root cause is that bucket has **no consolidator Cloud Run job** (only a
+  2026-05-20 `_index`), which does NOT block the backfill. Load ~0.05 = RPC-bound, not hung. Long backfill.
+- `sfi-backfill-chunk-2of4` — **DELETED** (no-op). sshd-dead (port 22 backend fail), log frozen 3h21m, wrote ZERO data
+  (no SFI per-VM shard, no SOCCER_FOOTBALL_INFO objects). Root cause = **BLOCKED-CREDENTIALS** (SFI RapidAPI 403 "not
+  subscribed", operator-only fix, already journaled). Siblings 1/3/4-of-4 already terminated. Stopped pure cost/zero
+  output.
+
+**LIVE CERTIFICATION MATRIX (read 19:40-19:50Z, CANONICAL `-prd` buckets via `resolve_bucket_name`; prediction canonical
+= `-pred-prd`, NOT the stale legacy-flat `-prediction-` buckets):**
+
+| AG×TYPE | rows | v9% | pmode% | src% | ag% | captured | empty(honest) | failed(fillable) | expU | honest-cov% |
+|---|---|---|---|---|---|---|---|---|---|---|
+| cefi IS | 36,084 | 100 | 100 | 100 | 100 | 36,062 | 0 | 22 | 0 | 99.9 |
+| defi IS | 75,081 | 100 | 100 | 100 | 100 | 75,081 | 0 | 0 | 0 | 100 |
+| tradfi IS | 13,727 | **37.6** | 36.3 | 24.4 | **0** | 13,385 | 342 | 0 | 0 | 100 |
+| sports IS | 4,069,112 | 100 | 97.8 | 91.2 | 97.6 | 659,697 | 2,269,970 | 112,049 | 1,027,396 | 36.7 |
+| prediction IS (`-pred-prd`) | 791 | 100 | 100 | 100 | 100 | 791 | 0 | 0 | 0 | 100 |
+| cefi MTDS | 3,872,296 | 96.6 | 85.5 | 85.5 | 96.6 | 1,311,984 | 1,276,223 | 801,975 | 482,114 | 50.5 |
+| defi MTDS | 6,165,919 | 100 | 100 | 100 | 99.8 | 368,605 | 3,483,771 | 6,185 | 2,307,358 | 13.7 |
+| tradfi MTDS | 1,938,910 | 99.7 | 75.1 | 74.9 | 99.1 | 102,936 | 1,007,650 | 10,013 | 818,311 | 11.1 |
+| sports MTDS | 920,230 | 100 | 100 | 100 | 100 | 346,498 | 573,568 | 164 | 0 | 100 |
+| prediction MTDS (`-pred-prd`) | 41,809 | 96.5 | 96.5 | 93.9 | 93.9 | 16,918 | 24,503 | 50 | 338 | 97.8 |
+
+**expected_unattempted present (4th state materialised):** defi MTDS 2.31M, cefi MTDS 482K, tradfi MTDS 818K, sports IS
+1.03M, prediction MTDS 338. IS-side defi/cefi/tradfi/prediction = 0 expU (IS is a finite listed-universe, not a
+could-exist grid — captured≈total is correct there).
+
+**NOT-100% honest reasons (no false 100% claims):**
+- **tradfi IS 37.6% v9 / 0% ag = the ONE open cell** — awaits CME-b finish → `populate_is_index_v9 --asset-group tradfi
+  --apply` → `build_instrument_catalogue --asset-group tradfi`. IN PROGRESS.
+- **Low honest-cov% on defi/tradfi/cefi MTDS (13.7/11.1/50.5) = expected_unattempted dominating, BY DESIGN** — the huge
+  could-exist universe (every IS-listed instrument × every post-genesis day) is honest absence, not failure. captured is
+  real; expU is the 4th-state working.
+- **cefi MTDS 801,975 attempted_failed = BILLING-BLOCKED** (operator: cefi tick backfill paused on vendor billing). The
+  fillable re-run is operator-gated.
+- **sports IS 112,049 failed + 36.7% honest-cov** = the honest sports universe (SFI/TM BLOCKED-CREDENTIALS 403 +
+  off-season fixtures); mostly honest absence. af-backfill running to raise captured.
+- **sports IS 91.2% src** = 171,227 blank-source rows = SSOT-unmapped retired/catalog data_types (journaled honest).
