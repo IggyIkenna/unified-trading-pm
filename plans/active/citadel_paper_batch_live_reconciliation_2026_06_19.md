@@ -72,16 +72,21 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 0 — Pin the determinism contract
 
-- [ ] [DESIGN] P0.0. **Pre-audit manifest** — grep + embed every consumer of the fill engines / event format / ledger
-      routes named above (Citadel §1). Repo: this plan.
-- [ ] [SCHEMA] P0.1. **`RunManifest` UAC type** — `run_id`, window, mode, client_id, strategy_ids, `code_shas{}`,
-      `input_snapshot{market_data_days[], feature_group_versions{}, captured_tick_stream}`, `fill_model`, `ledger_root`
-      (SSOT §4.4). Repo: unified-api-contracts.
-- [ ] [SCHEMA] P0.2. **`PositionLedger` schema + GCS path** — the `Σ delta GROUP BY (account, asset, venue, instrument)`
-      derived view (the architecture names it but no schema exists). Repo: unified-api-contracts.
-- [ ] [SCHEMA] P0.3. **Per-trade key on the execution-event + `LedgerRow` linkage** —
-      `trade_key =     (instrument_key, strategy_instruction_id, tick_timestamp)`; ensure `LedgerRow.trade_id` +
-      `correlation_id` + `client_order_id` carry it. Repo: unified-api-contracts.
+- [x] ✅ [DESIGN] P0.0. **Pre-audit manifest** — DONE: 4 read-only Explore agents mapped every consumer of the fill
+      engines / event format / ledger routes; the EXISTS/MISSING inventory is embedded in the codex SSOT §2+§7.
+- [x] ✅ [SCHEMA] P0.1. **`RunManifest` UAC type** — `unified-api-contracts@12597d8`: `RunManifest` (run_id, window,
+      mode, client_id, strategy_ids, `code_shas{}`, `market_data_days[]`, `feature_group_versions{}`,
+      `captured_tick_stream`, `fill_model`, `ledger_root`, `parent_run_id`) + `TradingMode`/`FillModel` StrEnums in
+      `internal/reconciliation.py`. The two-fill-realities rule is encoded in `FillModel` (BENCHMARK + LIVE_VENUE only).
+      20 tests, QG green.
+- [x] ✅ [SCHEMA] P0.2. **`PositionLedger` schema + GCS path** — `unified-api-contracts@12597d8`: `PositionLedgerRow`
+      (the `Σ delta GROUP BY (account, asset, venue, instrument)` derived view; per-venue/instrument/share_class
+      balance + realised/unrealised PnL) in `canonical/crosscutting/ledger/_position_ledger.py`, `ledger_type=position`
+      partition, exported root + crosscutting + ledger facades.
+- [x] ✅ [SCHEMA] P0.3. **Per-trade key + recon report** — `unified-api-contracts@12597d8`: `make_trade_key(
+      instrument_key, strategy_instruction_id, tick_timestamp)` (deterministic, UTC-normalised) + `TradeFillRecord`
+      (the keyed per-trade fill carrying correlation_id/client_order_id) + `TradeDeviation` + `WeeklyReconReport`
+      (DETERMINISM/EXECUTION/COMPOSITE verdicts + `DeterminismBugClass`). `LedgerRow.trade_id` carries the key.
 
 ## Phase 1 — Unify the fill model (G1, the core fix)
 
@@ -180,3 +185,21 @@ are identified (2) and the ledger exists (3).
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
+
+## Progress Log
+
+### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
+
+`unified-api-contracts@12597d8` (UAC QG green, 20 unit tests). The foundation contract every later phase builds on:
+`RunManifest` (as-of snapshot pin) · `make_trade_key` (deterministic match key) · `TradeFillRecord` · `WeeklyReconReport`
++ `TradeDeviation` · `TradingMode`/`FillModel`/`ReconVerdictType`/`DeterminismBugClass` StrEnums · `PositionLedgerRow`
+(derived as-if-filled view). `FillModel` encodes the two-fill-realities rule (BENCHMARK=batch+paper, LIVE_VENUE=live).
+Additive surface → no SIT cascade. Recon types live in `internal/reconciliation.py`; `PositionLedgerRow` in the ledger
+package (root-exposed).
+
+**Next — Phase 1 (the core fix): unify the fill model.** Both `BenchmarkFillEngine` (strategy-service) and the
+execution-service `BenchmarkFillRegistry` already share the UAC `BenchmarkFillMode` enum, but duplicate the per-mode
+pricing primitives (twap/vwap/arrival_mid/pool_mid_at_block/passive_bbo/funding_snapshot). Plan: lift the pricing
+primitives to a single UAC SSOT both engines call (no drift), route the colocated_engine paper provider through
+`BenchmarkFillEngine` (not `PaperMatchingEngine` real-AMM), and retire the `run_2yr_config_grid_backtest.py`
+APY-haircut shortcut in favour of the real `GroupBRunner` + `GCSFeatureProvider` path.
