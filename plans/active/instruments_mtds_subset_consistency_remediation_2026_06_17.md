@@ -1247,3 +1247,24 @@ every legacy object had a verified canonical twin before deletion, and both `_in
 sports todos are non-blocking + correctly homed (BLOCKED-CREDENTIALS SFI/Transfermarkt + P3 catalogue-mvp cosmetic). No
 codex contract changed (the league-recovery brought live data INTO compliance with the already-documented sports shard
 atom `(asset_group=sports, venue/source, data_type, league_id, day)` in `availability-manifest-and-data-status.md`).
+
+## SPORTS legacy DELETE executed (operator-authorized 2026-06-19) + credentials live-tested
+
+> Operator 2026-06-19: "do these delete" + "check if [the keys] work". Both actioned.
+
+- [x] ✅ [INFRA] P1. **Operator-authorized DELETE of the fully-twinned sports legacy objects (BOTH buckets)** — DONE
+      2026-06-19 (e2e-testing@a893f1c `delete_sports_legacy_twinned_2026_06_19.py --apply`). Per-object
+      `gcs_describe_object` twin re-verification before EACH delete (safety invariant, not prefix-match); 0
+      SKIP_TWIN_MISSING. **Authoritative post-delete verify: IS 0/9,723 + MD SAFE 0/248,502 + MD content 0/3,816
+      remaining** = all 262,041 legacy objects deleted. Reclaimed **~4.81 GB** (IS 0.142 + MD-SAFE 4.451 + MD-content
+      0.212 GB). Recoverability: MD bucket = **7-day soft-delete** (recoverable); IS bucket soft-delete DISABLED =
+      PERMANENT (every IS twin gcs_describe-verified present before its permanent delete). cefi MD legacy (9.98 TB) was
+      deleted earlier; sports completes the sports-bucket legacy cleanup. — e2e-testing
+- [x] ✅ [DATA] P2. **SFI + Transfermarkt keys LIVE-TESTED (operator "check if they work")** — DONE 2026-06-19. Both
+      secrets hold the SAME valid RapidAPI key (`22380b4a…`); both APIs return HTTP 403
+      `{"message":"You are not subscribed to this API."}`. **Root cause = RapidAPI SUBSCRIPTION GAP, not a bad/expired
+      key** (control: api-football `c820a404…` + footystats `b1d5bc90…` are distinct keys with working subscriptions).
+      NOT agent-fixable (subscribing to a paid RapidAPI plan = operator action). **Operator: SUBSCRIBE the account to
+      `soccer-football-info` + `transfermarkt-football-data-api`, or swap the TM secret to an Apify `apify_api_*` token
+      (adapter auto-detects).** Stays BLOCKED-CREDENTIALS (subscription, not rotation). — ping slot_1.md UPDATE. —
+      instruments-service [BLOCKED-CREDENTIALS]
