@@ -34,12 +34,12 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
 
 ## Deployment-UI monitoring pane (repos: deployment-ui + deployment-api)
 
-- [x] ✅ [INFRA] P0. **Mint `ORCHESTRATOR_API_TOKEN` into Secret Manager (both clouds)** — cheapest high-value fix: lights
-      up the already-built Fleet-Git page (currently degrades to unavailable, BLOCKED-CREDENTIALS). File as an operator
-      credential ask if mint requires operator. Repo: deployment-service/deployment-api.
-      **DONE 2026-06-19**: HS256 JWT minted (sub=deployment-api, role=operator, exp=2036-06-16); stored as version 2 in
-      GCP SM (`central-element-323112/ORCHESTRATOR_API_TOKEN`) + AWSCURRENT in AWS SM (`ap-northeast-1/427895769566`).
-      Token validates against `ORCHESTRATOR_JWT_SECRET` on this host. Fleet-Git page should now degrade→live on next
+- [x] ✅ [INFRA] P0. **Mint `ORCHESTRATOR_API_TOKEN` into Secret Manager (both clouds)** — cheapest high-value fix:
+      lights up the already-built Fleet-Git page (currently degrades to unavailable, BLOCKED-CREDENTIALS). File as an
+      operator credential ask if mint requires operator. Repo: deployment-service/deployment-api. **DONE 2026-06-19**:
+      HS256 JWT minted (sub=deployment-api, role=operator, exp=2036-06-16); stored as version 2 in GCP SM
+      (`central-element-323112/ORCHESTRATOR_API_TOKEN`) + AWSCURRENT in AWS SM (`ap-northeast-1/427895769566`). Token
+      validates against `ORCHESTRATOR_JWT_SECRET` on this host. Fleet-Git page should now degrade→live on next
       deployment-api cold-start / SM read.
 - [ ] [INFRA] P1. Central/infra-VM health: `GET /api/fleet/infra-vm-health` (proxy AO `/api/fleet/summary`) +
       `GET /api/fleet/vm-census` (render `vm_zombie_watchdog.py` running-vs-expected-vs-zombie). Repo: deployment-api.
@@ -112,23 +112,23 @@ root-caused and FIXED 2026-06-19:
 ## Repo-CI table clarity + authoritative source (operator review 2026-06-19)
 
 Operator walked the Repo-CI overview table live and surfaced three confusions, all traceable to the table design + a
-stale-cache data source (full diagnosis in the 2026-06-19 session): (1) the single `CI status` lifecycle token
-conflates promotion-PROGRESS with branch-FAILURE — e.g. `STAGING_GREEN` reads as "stuck" when it means "furthest-green
-= staging"; (2) the dep-order HOLD that lags main is INVISIBLE — empty triage queue + empty breaking cascade while
+stale-cache data source (full diagnosis in the 2026-06-19 session): (1) the single `CI status` lifecycle token conflates
+promotion-PROGRESS with branch-FAILURE — e.g. `STAGING_GREEN` reads as "stuck" when it means "furthest-green = staging";
+(2) the dep-order HOLD that lags main is INVISIBLE — empty triage queue + empty breaking cascade while
 `last green (main)` sits days stale; (3) the UI reads `ci_status` from the committed `workspace-manifest.json` cache,
 NOT the authoritative Firestore side-store the promoter gate actually reads, so the dashboard can show a different
 status than what gates promotions.
 
 - [x] ✅ [UI] P1. **Drop the `CI status` column; color-code the LDR/staging/main SHA cells per-branch** (green = that
       branch's last `quality-gates-v2` succeeded · red = failed · gray = unknown) from `branch_ci`. The 9-state
-      `ci_status` token is noise — per-branch green/red is the simpler at-a-glance model.
-      **DONE 2026-06-19 — deployment-ui@1e5b429 | pw:L2 ✓ (smoke 219 · repos-tab 23) | regression:
-      tests/smoke/repos-tab.spec.ts.** Frontend-DERIVE, no backend change needed: `branchTone` (in `src/lib/repoCi.ts`)
-      reads live `branch_ci` for FAILING repos (which the backend already fetches), greens non-FAILING repos (their
-      branches all last-passed), grays a missing branch — so the API-budget bound on `branch_ci` is moot. Colour =
-      solid dot + tinted SHA via `data-tone`; the `CI status` column is removed; staleness stays in last-green /
-      LDR→main-delta. Also shipped a click-to-open colour **legend** (operator add, same commit): `branch-legend-toggle`
-      → green/red/gray meanings + the behind-but-green note. + 4 `branchTone` unit tests in `src/lib/repoCi.test.ts`.
+      `ci_status` token is noise — per-branch green/red is the simpler at-a-glance model. **DONE 2026-06-19 —
+      deployment-ui@1e5b429 | pw:L2 ✓ (smoke 219 · repos-tab 23) | regression: tests/smoke/repos-tab.spec.ts.**
+      Frontend-DERIVE, no backend change needed: `branchTone` (in `src/lib/repoCi.ts`) reads live `branch_ci` for
+      FAILING repos (which the backend already fetches), greens non-FAILING repos (their branches all last-passed),
+      grays a missing branch — so the API-budget bound on `branch_ci` is moot. Colour = solid dot + tinted SHA via
+      `data-tone`; the `CI status` column is removed; staleness stays in last-green / LDR→main-delta. Also shipped a
+      click-to-open colour **legend** (operator add, same commit): `branch-legend-toggle` → green/red/gray meanings +
+      the behind-but-green note. + 4 `branchTone` unit tests in `src/lib/repoCi.test.ts`.
 - [x] ✅ [UI] P1. **Promotion-state surface — make the dep-order HOLD visible.** A repo can sit `STAGING_GREEN` with
       main days behind and NOTHING in the triage queue / breaking cascade, because the staging→main STAGE 1.8 dep-order
       gate is a silent designed HOLD (incident 2026-06-19: fleet blocked behind `unified-api-contracts` not yet
@@ -143,10 +143,21 @@ status than what gates promotions.
       pre-existing deployment-api deep-UAC-import en route (facade `from unified_api_contracts import Mode`; ratcheted
       `CODEX_MAX_VIOLATIONS` 6→5). Provenance: 2026-06-19 operator review.
 - [x] ✅ [UI] P2. **Per-column `?` help on every Repo-CI table column** (operator request 2026-06-19). Every header
-      (Repo · LDR · staging · main · last green (main) · LDR→main delta · SIT · PRs · Image) carries a click-to-open
-      `?` popover explaining what the column represents — reuses the `HelpPopover` primitive; right-edge columns drop
-      the popover inward so it doesn't run off the table. **DONE — deployment-ui@62b4fed | pw:L2 ✓ (repos-tab 28) |
+      (Repo · LDR · staging · main · last green (main) · LDR→main delta · SIT · PRs · Image) carries a click-to-open `?`
+      popover explaining what the column represents — reuses the `HelpPopover` primitive; right-edge columns drop the
+      popover inward so it doesn't run off the table. **DONE — deployment-ui@62b4fed | pw:L2 ✓ (repos-tab 28) |
       regression: tests/smoke/repos-tab.spec.ts** ("every table column carries a ? help popover").
+- [x] ✅ [UI] P1. **Split the promotion stall into per-hop + stall-reason columns** (operator request 2026-06-19 — "2
+      separate columns, can't read anything clearly"). The single `LDR→main delta` cell crammed lag + per-hop + reason
+      illegibly; now three columns tell the story: **LDR→main delta** (headline distance + lag-age chip), **Promotion
+      hops** (LDR→stg ✓ / stg→main Nf — WHICH hop holds the content), **Stall reason** (WHY: dep-order / staging→main
+      not promoting · status stale / LDR→staging drain behind / PR #N jammed / root blocker / drain stalled). New pure
+      `classifyStall(row)` (5 classes, unit-tested ×6) drives the reason chip from deltas + open_prs + ci_status the
+      overview already returns (NO backend change); each column carries its own `?` taxonomy popover. **This is the
+      surface that makes the staging→main promoter-not-firing class VISIBLE per-repo** — the agent-orchestrator case
+      where `ci_status=MAIN_GREEN` masked a real 8-day lag (LDR→staging drained, staging 144 files ahead of main, no
+      PR). **DONE — deployment-ui@82bcfe4 | pw:L2 ✓ (repos-tab 29) | regression: tests/smoke/repos-tab.spec.ts**
+      ("per-hop + stall-reason columns localize a staging→main promoter stall (the AO class)").
 - [ ] [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the committed
       `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed manifest's
       `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}` Firestore
@@ -155,10 +166,16 @@ status than what gates promotions.
       `google-cloud-firestore` to deployment-api. SSOT: `ci_status_firestore_side_store_2026_06_10.md`. Repo:
       deployment-api. Provenance: 2026-06-19 operator review.
 - [ ] [PROMOTION] P2. **(track-3 cross-ref — do NOT implement in the UI track)** Forward staging→main promotion lags
-      fleet-wide (services ~2 days behind main while libs promote): STAGE 1.8 dep-order tiered-drain + a possible
-      `staging_versions` registration gap for `unified-api-contracts`. Diagnosed 2026-06-19; owned by the
-      CI-escalation / promotion track (`cicd_promotion_pipeline_2026_06_18.md`) — surfaced here only because it is what
-      makes the UI read "stuck". Repo: unified-trading-pm (promotion machinery).
+      fleet-wide (services ~2 days behind main while libs promote): STAGE 1.8 dep-order tiered-drain + a
+      `staging_versions` registration gap. **Confirmed FLEET-WIDE 2026-06-19** via the new Stall-reason column: ~16
+      repos render "staging→main not promoting · status stale" (ci_status reads MAIN_GREEN while staging is N files
+      ahead of main with NO open PR). Root signal in the committed manifest: `agent-orchestrator` +
+      `unified-api-contracts` carry `staging_version: None` (no semver baseline → the staging→main promoter never opens
+      a PR; main last moved via a manual "fleet unjam" drain #324 on 06-17). The promoting repos (mtds 0.17→0.19,
+      strategy 0.15→0.16, UTL 0.13→0.14) all have a real `staging_version`. Owned by the CI-escalation / promotion track
+      (`cicd_promotion_pipeline_2026_06_18.md`) — surfaced here only because it is what makes the UI read "stuck"; the
+      UI side (this plan) is DONE (the column makes it visible per-repo). Repo: unified-trading-pm (promotion
+      machinery).
 
 ## Out of scope here (already filed/blocked — coordinate, do NOT reimplement)
 
