@@ -89,22 +89,27 @@ builds run via regional triggers — UTL base `590050dc` ✅ SUCCESS, mtds `4a7d
 FAILURE. Two build-VISIBILITY bugs (deployment-ui Cloud Build pane is non-functional today) + one BUILD break, all
 root-caused:
 
-- [ ] [INFRA] P1. **deployment-api build history shows nothing (current build + history) — regional-vs-global
-      `list_builds`.** `get_build_history` (`routes/cloud_builds.py:387`) queries `ListBuildsRequest(project_id=...)`
-      (GLOBAL scope; the inline "regional parent 400s on REST" comment is STALE) but every build runs regionally in
-      `asia-northeast1`, so it always returns `builds:[]` (confirmed empty for both mtds `-live-defi-rollout` and mdps
-      `-build`). Fix: use the regional parent `projects/{p}/locations/asia-northeast1`, mirroring the proven
-      `_find_recent_build_sync` / `_get_recent_builds_for_triggers` helpers (which already use it). Secondarily map
-      service → ACTUAL live trigger (`-live-defi-rollout` where present, else `-build`; `cloud_builds.py:346`) so
-      LDR-built repos appear. Repo: deployment-api.
-- [ ] [INFRA] P1. **deployment-api `/api/cloud-builds/triggers` 500s when Redis is down (the triggers pane + last_build
-      is dead).** `list_triggers` wraps its fetch in `cache.get_or_fetch` (Redis-backed); `RedisCache.get/set/...`
-      (`utils/cache.py`) catch only `(OSError, ValueError, RuntimeError)`, but redis-py raises
-      `redis.exceptions.RedisError` (subclasses `Exception`, NOT `OSError`) on a dropped/unreachable connection → it
-      propagates → 500. (History is unaffected because it skips the cache — which is why it's 200-empty, not 500.) Fix:
-      make the cache best-effort — add `RedisError` to the caught set so a Redis outage degrades to a cache-miss (falls
-      through to live fetch), never a 500. Fleet-wide resilience: this fixes EVERY cached endpoint, not just triggers.
-      Repo: deployment-api.
+- [x] ✅ [INFRA] P1. DONE 2026-06-19 — deployment-api@5bf7165c. **deployment-api build history shows nothing (current
+      build + history) — regional-vs-global `list_builds`.** `get_build_history` (`routes/cloud_builds.py:387`) queries
+      `ListBuildsRequest(project_id=...)` (GLOBAL scope; the inline "regional parent 400s on REST" comment is STALE) but
+      every build runs regionally in `asia-northeast1`, so it always returns `builds:[]` (confirmed empty for both mtds
+      `-live-defi-rollout` and mdps `-build`). Fix: use the regional parent `projects/{p}/locations/asia-northeast1`,
+      mirroring the proven `_find_recent_build_sync` / `_get_recent_builds_for_triggers` helpers (which already use it).
+      Secondarily map service → ACTUAL live trigger (`-live-defi-rollout` where present, else `-build`;
+      `cloud_builds.py:346`) so LDR-built repos appear. Repo: deployment-api. **Shipped**: extracted
+      `_build_history_for_repo` (regional parent + REPO_NAME substitution, trigger-agnostic) into
+      `_cloud_builds_history.py`; `get_build_history` delegates; dead single-trigger_id plumbing removed. QG green
+      (135s); regression `tests/unit/test_cloud_builds_helpers.py::TestBuildHistoryForRepo` (3 tests).
+- [x] ✅ [INFRA] P1. DONE 2026-06-19 — deployment-api@5bf7165c. **deployment-api `/api/cloud-builds/triggers` 500s when
+      Redis is down (the triggers pane + last_build is dead).** `list_triggers` wraps its fetch in `cache.get_or_fetch`
+      (Redis-backed); `RedisCache.get/set/...` (`utils/cache.py`) catch only `(OSError, ValueError, RuntimeError)`, but
+      redis-py raises `redis.exceptions.RedisError` (subclasses `Exception`, NOT `OSError`) on a dropped/unreachable
+      connection → it propagates → 500. (History is unaffected because it skips the cache — which is why it's 200-empty,
+      not 500.) Fix: make the cache best-effort — add `RedisError` to the caught set so a Redis outage degrades to a
+      cache-miss (falls through to live fetch), never a 500. Fleet-wide resilience: this fixes EVERY cached endpoint,
+      not just triggers. Repo: deployment-api. **Shipped**: added `RedisError` to the
+      `RedisCache.connect/get/set/delete/clear_pattern` except tuples (`utils/cache.py`) — a Redis outage now degrades
+      to a cache-miss. Regression `tests/unit/test_unified_cache.py::test_rediscache_get_degrades_on_redis_error`.
 - [ ] [DOCKER] P1. **market-data-processing-service image build broken on `main` — sibling not staged.** `Dockerfile:57`
       `uv sync --frozen --no-dev` needs the editable `../unified-api-contracts` at `/app/unified-api-contracts`, absent
       from the GCP build context (`COPY . .` only; no `stage-siblings` step) →
