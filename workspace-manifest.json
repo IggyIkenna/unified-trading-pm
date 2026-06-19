@@ -1935,7 +1935,7 @@
     ]
   },
   "promotion_failures": {
-    "unified-api-contracts": 1
+    "unified-api-contracts": 2
   },
   "promotion_quarantine": {}
 }
