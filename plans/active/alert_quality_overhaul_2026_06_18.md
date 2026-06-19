@@ -166,13 +166,13 @@ the always-on central VM → zero marginal cost.
 - [ ] [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py:686`)
       is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrate to the
       `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P2. **Slot deep-link sweep**: swap the root `/vm/{id}` footer for
+- [x] [ORCHESTRATOR] P2. **Slot deep-link sweep**: swap the root `/vm/{id}` footer for
       `_dashboard_deep_link("/fleet-git?slot=N", …)` (already used by quarantine + git-staleness) on
       `notify_slot_stale`/`_failed`/`_blocked`, `notify_unpushed_plans`, `notify_agent_stuck_escalation`,
       `notify_watchdog_kill`, `notify_context_burn`. Add a UI deep-link (accounts/fleet page) to the CLI-only
       account/auth criticals (`notify_account_auth_failed`, `notify_all_accounts_unusable`,
       `notify_setup_token_expiring`, `notify_account_usage_high`, `notify_account_pool_exhausted`) and move the account
-      id into the header. Repo: agent-orchestrator.
+      id into the header. Repo: agent-orchestrator. ✅ — agent-orchestrator@31a97bf
 
 ## Success criteria
 
