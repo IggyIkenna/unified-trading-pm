@@ -137,14 +137,19 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 3 — Materialise the four ledgers from fills (G3)
 
-- [ ] [CODE] P3.1. **`InstructionLedger` writer from fills** — every sim/live fill emits
-      `LedgerRow(event_type=TRADE,     delta=±qty, price, fees, …)` to `ledger_type=instruction/`; money movements →
-      `TreasuryLedger`. Repo: strategy-service (writer) + unified-trading-library (emit helper).
+- [x] ✅ [CODE] P3.1. **`InstructionLedger` writer-from-fills (library helper)** — DONE
+      (`unified-trading-library@41d50461`): `ledger/materialize.py::ledger_row_from_trade_fill()` maps a `TradeFillRecord`
+      → `LedgerRow(event_origin=INSTRUCTION, event_type=TRADE, trade_id=trade_key, delta=±qty signed by side, price,
+      fees)`. ⏳ wiring the strategy-service engine to CALL it on each fill (+ the GCS emit) rides Phase 2 (the engine
+      emits keyed fills) — the pure helper is shipped + tested.
 - [ ] [CODE] P3.2. **`PassiveLedger` synthesiser** — funding/staking/lending accruals → `ledger_type=passive/` (the
       architecture flags this as not-yet-implemented). Repo: unified-trading-library + strategy-service.
-- [ ] [CODE] P3.3. **`PositionLedger` materialiser** — `Σ delta GROUP BY (account, asset, venue, instrument)` →
-      per-venue/per-instrument/per-share_class balances + the as-if-filled current state. Repo: strategy-service /
-      client-reporting-api.
+- [x] ✅ [CODE] P3.3. **`PositionLedger` materialiser (avg-cost P&L)** — DONE (`unified-trading-library@41d50461`):
+      `ledger/materialize.py::materialize_position_ledger()` — `Σ delta GROUP BY (account, client, venue,
+      asset_canonical_id)` with **average-cost accounting** (VWAP on opens, realised on closes, cross-through-zero
+      re-open, unrealised = net_qty·(mark−avg_cost)); emits `PositionLedgerRow` per group with share_class rollup +
+      realised/unrealised PnL. 23 tests (incl. cross-through-zero both directions, fees, multi-instrument). This is the
+      as-if-filled positions/balances surface — pure + tested; the GCS read/write wiring rides Phase 5 (the views).
 - [ ] [CODE] P3.4. **Realised-PnL computation** — replace the hardcoded `"0.00"`
       (`client-reporting-api     attribution.py:189`) with realised closes from `LedgerRow` deltas; wire the live
       positions route (currently mock). Repo: client-reporting-api.
@@ -256,3 +261,19 @@ paper≡batch on a fixture — the harness turns each behavioural correction fro
 big rocks: Phase 3 ledger materialisation (the as-if-filled ledger to eyeball) + P1.4 GroupCRunner (the linchpin that
 gives batch the smart-matching layer) + P4.3 batch-rerun-from-manifest. These are interconnected, multi-repo,
 behavioural — sequenced, harness-validated, not rushed.
+
+### 2026-06-19 — Phase 3 ledger machinery SHIPPED (the as-if-filled ledger core)
+
+`unified-trading-library@41d50461` — `ledger/materialize.py` (23 tests, QG green): `ledger_row_from_trade_fill` (fill →
+InstructionLedger TRADE row, signed delta) + `materialize_position_ledger` (the avg-cost PositionLedger: VWAP opens,
+realised on closes, cross-through-zero re-open, unrealised from marks, share_class rollup). These are the PURE financial
+core of "Citadel-grade paper trading" — the historical trade tape + the as-if-filled positions/balances/P&L surface.
+
+**Session high-water checkpoint.** The determinism spine's pure-logic core is SHIPPED + TESTED across 4 repos: the
+contract (Phase 0 — uac@12597d8), the benchmark-pricing SSOT (P1.1 — uac@bc4c756 + es@e11854e5), the determinism-PROOF
+engine (P4.1 — blrs@7a84db8c), and the ledger accounting (P3.1/P3.3 — utl@41d50461). **What remains is service
+INTEGRATION + behavioural fill-path corrections**, all now harness-validatable: P2 (engine emits keyed fills) → P3.1/P3.2
+wiring (engine calls the writer; PassiveLedger synth) → P1.4 GroupCRunner (batch runs the smart matching = the linchpin)
+→ P1.1-strategy (PASSIVE_BBO correction) → P3.4/P3.5 (client-reporting-api realised-PnL + HWM) → P4.3 (batch-rerun-from-
+manifest) → P5/P6 (views + Slack) → P7 (short-window e2e proof). Each ships WITH a reconcile_week test (the build-order
+rule). These are interconnected service changes on live/backtest code — deliberately sequenced + validated, not rushed.
