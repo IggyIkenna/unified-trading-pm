@@ -199,3 +199,34 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
 - `codex/06-coding-standards/quality-gates.md` — in-image operability smoke step (the real "test the artifact you
   deploy") + the credential-free probe env.
 - `codex/08-workflows/ci-cd-flow.md` — build-operability gate in the cloudbuild pipeline; base-digest fan-out mechanism.
+
+## Phase 2.5 — wire the 6 new repos' build triggers (the GAP — operator-confirmed 2026-06-19)
+
+The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them). Filling the gap:
+
+- [x] ✅ [INFRA] DONE 2026-06-19 — **all 6 repos linked** to the `iggyikenna-github` Cloud Build connection
+      (`gcloud builds repositories create`, autonomous — the GitHub App covers them, no operator grant needed).
+- [x] ✅ [INFRA] DONE 2026-06-19 — **all 6 `-build` triggers created** imperatively against `iggyikenna-github`
+      (`push ^main$`, `cloudbuild.yaml`), mirroring the working mdps trigger: `alerting-service-build`,
+      `batch-live-reconciliation-service-build`, `client-reporting-api-build`, `fund-administration-service-build`,
+      `greeks-service-build`, `trading-agent-service-build`. Created imperatively (NOT via the TF module) because the
+      `modules/cloud-build/gcp` module defaults to connection `ln` which no longer exists (only `iggyikenna-github`) —
+      same precedent as `deployment-service-jobs-image` (created imperatively, TF-imported later).
+- [ ] [INFRA] P1. **Reconcile TF SSOT**: add the 4 missing repos (batch-live-recon, fund-admin, greeks, trading-agent —
+      alerting + client-reporting are already in `locals.services`) to `deployment-service/terraform/cloud-build/gcp`
+      `locals.services`, `terraform import` all 6 imperative triggers into state, AND **fix the module connection drift**
+      (`ln` → `iggyikenna-github`) so a future apply doesn't try to recreate them against the dead connection. Do NOT
+      blind `apply` the module before the import + connection fix (would disrupt the 15 live triggers). Repo:
+      deployment-service.
+- [ ] [DOCKER] P1. fund-administration-service has a **dead builder stage** (stage 1 builds but stage 2 never
+      `COPY --from=builder` — it re-installs from scratch). Fixed both install lines to build-green for now; a follow-up
+      should delete the redundant builder stage (faster build). Repo: fund-administration-service.
+
+## Progress Log
+
+- **2026-06-19** — Canaries proved the recipe (mdps operable; deployment-api `ca8aed2f` build+import green). Harness
+  shipped (`e2e-testing@d8a52254`). **6 new repos**: linked + triggered (above). Build-blocker fixes:
+  trading-agent@388d5ac1 (digest+install+guard); alerting/batch (digest), client-reporting/greeks (digest+guard),
+  fund-admin (digest+2×install+guard) landing via QG+quickmerge sweep. NEXT: build all 6 on `live-defi-rollout` +
+  smoke, then the remaining trigger units (re-map harness to the real ~25 triggers: features×5, ml×3, the interface
+  libs). Stale base digest = fleet-wide (Phase 5 fan-out RCA). Disk on this host runs ~95% — smoke prunes per image.
