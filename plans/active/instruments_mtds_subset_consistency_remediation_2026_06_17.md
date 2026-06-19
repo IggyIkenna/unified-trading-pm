@@ -1221,3 +1221,29 @@ object-copy, never a fetch; the IS `_index` stayed stale-stable (2026-06-11) thr
 deferral; scaffolds+tests shipped); (3) catalogue mvp numeric-league-id P3 cosmetic fix. **Operator action: (a) the
 operator-gated DELETE of the now-fully-twinned sports legacy objects across both buckets; (b) validate/rotate the 2
 sports API keys.** Nothing else to pick up.
+
+### SPORTS — independent LIVE re-certification (2026-06-19, verify-not-redo dispatch)
+
+A follow-up dispatch (verify the prior sports drive, finish any remainder, certify 100% twin-coverage). Read-only
+re-verified EVERY claim against the LIVE prd buckets (no redo — all prior work confirmed APPLIED + correct). **Material
+update vs the FINAL REPORT: the operator-gated DELETE has since been EXECUTED** (e2e-testing@0f1d761 + idempotent
+fixup), so the legacy objects are GONE and the only remaining "operator action" is the credential validate/rotate.
+
+| Check (live)                                  | Result                                                                                                                                                                                                        | How verified                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| MTDS sports `_index` league-recovery APPLIED  | ✅ captured **346,498** (== projection), captured-null-league **0**, blank-status **0**, NULL-source **0**, schema_version **100% v9**                                                                        | direct read `market-data-tick-sports-prd/_index/availability_index.parquet`                |
+| IS sports `_index` v9 column-populate APPLIED | ✅ schema **100% v9** (2,606,663 rows), asset_group **100% sports**, source **93.4%** (171,227 blank = SSOT-unmapped retired/catalog data_types — honest), blank-status **0**, captured **659,693** preserved | direct read `instruments-store-sports-prd/_index/availability_index.parquet`               |
+| IS 9,723 odds-api twin-migration              | ✅ 9,723/9,723 mapped (0 unmapped), 7,721 unique twins (5,719 MIGRATED + 4,004 MIGRATED-UNION, 2,368,129 rows, no row loss); twin sample 25/25 present on disk                                                | `sports_legacy_oddsapi_twin_migration_2026_06_19.parquet` + `gcs_describe` sample          |
+| MD sports twin coverage                       | ✅ 252,318 ALL delete-safe (248,502 path-twin `canonical_twin_verified` + 3,816 content-twin `TWIN-VERIFIED-SAFE`, the 700 MIGRATE-NEEDED fan-out re-verified 0)                                              | `legacy_dup_delete_list_sports.parquet` + `sports_md_unmappable_verify_2026_06_19.parquet` |
+| Legacy DELETE executed (BOTH buckets)         | ✅ IS legacy sample 0/25 still present (deleted, permanent), MD per-object `gcs_describe` twin re-verify before each delete                                                                                   | e2e-testing@0f1d761 `delete_sports_legacy_twinned_2026_06_19.py`                           |
+| captured-preserved throughout                 | ✅ MTDS 202,087→346,498 (per-league grain explode, never lost); IS 659,693 unchanged                                                                                                                          | both `_index` reads                                                                        |
+
+**Delete-ready manifest — SPORTS row (now HISTORICAL — already deleted):** IS 9,723 legacy odds-api instrument objects
+(0.146 GB) + MD 252,318 legacy objects (4.78 GB) — all twin-verified, operator-authorized, **DELETED 2026-06-19**. No
+agent delete performed in this dispatch (delete was already done by the operator-authorized run).
+
+**Sports is FOLDED INTO 100% twin-coverage on both buckets** — every captured cell is backed by a canonical-path object,
+every legacy object had a verified canonical twin before deletion, and both `_index` are 100% v9. The 2 remaining open
+sports todos are non-blocking + correctly homed (BLOCKED-CREDENTIALS SFI/Transfermarkt + P3 catalogue-mvp cosmetic). No
+codex contract changed (the league-recovery brought live data INTO compliance with the already-documented sports shard
+atom `(asset_group=sports, venue/source, data_type, league_id, day)` in `availability-manifest-and-data-status.md`).
