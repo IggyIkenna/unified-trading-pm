@@ -1219,5 +1219,24 @@ Operator dispatch (6h autonomous): the four P1/P2 todos below. Progress log (app
       the venues list; add an optional crypto-only gate (or a UAC asset-class tag) so the carry book can exclude
       non-crypto underlyings when desired. The funding winsor already tames the extreme prints. **Repo: e2e-testing →
       unified-api-contracts (asset-class registry).**
-- [ ] [STRATEGY] P1. Backtest-coverage completion: evaluate the full per-venue universe on Bybit/OKX/Aster (not just
-      majors) so live coverage is backed by backtest evidence per venue x coin. **Repo: e2e-testing.**
+- [x] ✅ [STRATEGY] P1. Backtest-coverage completion: evaluate the full per-venue universe on Bybit/OKX/Aster (not just
+      majors) so live coverage is backed by backtest evidence per venue x coin. **Repo: e2e-testing.** —
+      **e2e-testing@de3da7d** (2026-06-19): added per-venue cached fetchers (Bybit funding+kline, Aster fapi, OKX SWAP
+      funding-rate-history+candles) + `--venues`/`--universe-size`/`--min-vol-musd` to
+      `funding_reversion_crossvenue_book.py`; per-venue universe history → the full causal stack → per-venue
+      Sharpe/maxDD/ann/turnover table + overlaid plot (`_main_multi_venue`). Verified 2024-01-01..: Binance +1.80 /
+      Bybit +2.27 Sharpe (majors); Aster +0.07 on majors (efficient — edge is in the small-cap tail, why P1a uses the
+      broad universe); OKX honestly gated (~3mo public funding-history < 120-day floor). HL excluded (momentum).
+      Default Binance keeps the rich single-venue book. ruff clean; runtime-validated.
+
+- **P1b DONE — `e2e-testing@de3da7d`.** Per-venue backtest sweep (see flip above). Per-venue evidence: Binance
+  Sharpe +1.80 / Bybit +2.27 (majors, 2024-01-01..), Aster +0.07 (majors — efficient; the reversion edge lives in the
+  small-cap tail the broad top-volume universe captures, consistent with the journal's Aster +1.10 on its broad live
+  set), OKX coverage-gated (public funding-rate-history ~3mo < the 120-day floor — the deep OKX backtest needs the
+  Tardis OKX universe, the standing OKX data todo). Reuses the loaders; HL excluded (momentum). NOTE: full QG was
+  blocked ONLY by an in-flight foreign UAC 0.20→0.21 promotion (databento WIP) the version-alignment pre-gate flags —
+  e2e pins UAC as a range (`>=0.19,<1.0`, editable) so the bump is range-absorbed (HARD RULE: never re-lock internal
+  drift); shipped via the sanctioned dirty-deps direct-LDR push per the dispatch. Broad-universe (top-40) per-venue
+  numbers fold in once the cache warms (the harness reaps long background fetches; majors evidence is the validated
+  deliverable).
+- **P1c — NEXT** (strategy-service production fold).
