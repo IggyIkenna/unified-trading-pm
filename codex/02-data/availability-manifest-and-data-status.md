@@ -52,8 +52,26 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 > post-launch + in-coverage but no data yet) is **MATERIALISED by the WRITER**, not the consolidator: the MTDS
 > instruments-service pre-flight calls `record_expected_unattempted` at shard grain, and the IS
 > `enumerate_expected_universe.py` v2 enumerator seeds the could-exist universe from the `build_instrument_catalogue.py`
-> lifecycle roll-up. Every downstream consumer — the data-status coverage summary + drilldown, strategy/features
-> pre-flight — **READS** `capture_status` and the honest denominator
+> lifecycle roll-up.
+>
+> > **Materialisation WIRED + recurring (closed 2026-06-19).** AUDIT 2026-06-19: `expected_unattempted` was **0 rows in
+> > EVERY IS + MTDS `_index` fleet-wide** — the v2 enumerator + its `build_instrument_catalogue.py` catalogue both
+> > existed in code (catalogue cron-wired via `lifecycle_catalogue_scheduler.tf`), but the SECOND HOP — the v2
+> > enumerator `--apply-write` that consumes the catalogue and seeds the 4th state — was **NEVER cron-wired** (the
+> > `launch-expected-universe-v2-vm.sh` runbook was one-shot, `last_executed: NEVER`). Closed by
+> > `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf` — a per-AG Cloud Run Job + Scheduler (01:30
+> > UTC, after the 01:00 lifecycle-catalogue regen) that runs
+> > `enumerate_expected_universe.py --enumerator-version v2 --apply-write` over a **bounded recent window**
+> > (`EXPECTED_UNIVERSE_START_DATE`, ~120 days) so the LIVE coverage denominator is honest. It writes a per-VM shard
+> > `_index/per_vm/enum-universe-v2-<ag>.parquet` (consolidator-merge-safe, concurrent with capture-writing backfills).
+> > **The unbounded full-history (2018→today) per-instrument universe is ~190M rows fleet-wide** — NOT materialised by
+> > the recurring job (it would ~100× the index size + slow every reader); the full-history slice is a gated follow-up
+> > (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §G1). The bounded window seeds both the
+> > alive-no-data `expected_unattempted` cells (reason="") AND the lifecycle-boundary
+> > `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED` `empty_confirmed` cells the v1 venue-grain pass did not reach.
+>
+> Every downstream consumer — the data-status coverage summary + drilldown, strategy/features pre-flight — **READS**
+> `capture_status` and the honest denominator
 > (`% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`); **never re-derives** the
 > expected set or genesis/launch/IS rules per consumer. DeFi pre-launch zero-rows are demoted to
 > `EXPECTED_PRE_VENUE_LAUNCH` by `DefiManifestRecorder.record_zero_rows` (UAC `DEFI_VENUE_LAUNCH_DATES`), enforced by
@@ -329,8 +347,13 @@ unchanged.
 >    `populate_sports_is_index_v9_2026_06_19.py` for sports) row-preservingly stamps `schema_version=9`, `asset_group`
 >    (constant), `pipeline_mode` (existing value kept; blank → `batch_instruments_service`, the IS producer mode), and
 >    `source` DERIVED PER CELL from that cell's `pipeline_mode` via `source_string_for(...)` (NOT a SOURCE*PRIORITY
->    default; a `BATCH_INSTRUMENTS_SERVICE` producer row → `instruments_service`). DeFi additionally canonicalises the
->    `venue` column to the single `PROTOCOL-CHAIN` SSOT identity (`ALL_DEFI_VENUES`) via
+>    default; a `BATCH_INSTRUMENTS_SERVICE` producer row → `instruments_service`). **Sports `pipeline_mode` closure
+>    (2026-06-19):** the sports script originally SKIPPED `pipeline_mode` (it argued "instruments-store is reference
+>    data — no batch/live mode") so sports IS was left 100% blank while the other 4 AGs got `batch_instruments_service`;
+>    this deviation is now CLOSED — `populate_sports_is_index_v9_2026_06_19.py` stamps `batch_instruments_service` on
+>    blank rows like the other 4 (applied live: 2.6M rows → 100% `pipeline_mode`, 707 pre-existing `batch_api_football`
+>    rows preserved, snapshot `_index/snapshots/pre_sports_is_v9_20260619.parquet`, captured-preserved). DeFi
+>    additionally canonicalises the `venue` column to the single `PROTOCOL-CHAIN` SSOT identity (`ALL_DEFI_VENUES`) via
 >    `canonicalize_defi_manifest_venue_2026_06_14.canonicalise_venue_column` + captured-preferring spelling-dedup, in
 >    the SAME single `_index` walk (resolves the "DeFi venue-naming drift" — chain-suffixed `AAVEV3-ARBITRUM` and bare
 >    `AAVE_V3`+chain twins collapse to the canonical `AAVE_V3-ETHEREUM`). Snapshots →
