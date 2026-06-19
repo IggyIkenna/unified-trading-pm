@@ -146,8 +146,48 @@ index** at 15m. The VIX 15m **index** gap remains Barchart-preload + Yahoo-rolli
 `registry/data_source_continuity.py` and the VIX 15m one-liner in CLAUDE.md). Adding CFE does **not** close that index
 gap; it adds the futures.
 
+## Source provenance is WRITE-STAMPED by the FETCHING adapter — SOURCE_PRIORITY is READ-time only (operator 2026-06-19)
+
+**The bug this fixes.** The OHLCV write path used to stamp `source` + `pipeline_mode` from
+`SOURCE_PRIORITY[(asset_group, data_type)][0]` — the read-time PRIORITY source, NOT the adapter that actually fetched.
+For `("tradfi","ohlcv_1m")` priority is `["massive","databento"]`, so EVERY 1m row stamped `batch_massive` — including
+**CBOE VX futures, which only Databento (`XCBF.PITCH`) carries** (Massive has no CFE). Those rows read as
+`source=massive` on a venue Massive serves nothing on → silent mis-attribution.
+
+**The rule (HARD).**
+
+1. **`SOURCE_PRIORITY` is READ-time resolution ORDER only** (`select_primary_available_source` /
+   `read_with_source_priority`). It MUST NEVER be used to WRITE-stamp provenance. A backfill that fetched a shard with
+   vendor V stamps `source=V` + `pipeline_mode=batch_V`, full stop.
+2. **Provenance is write-stamped by the FETCHING ADAPTER's vendor.** The MTDS OHLCV backfill CLI
+   (`--operation download --asset-group tradfi`) requires an explicit **`--source databento|massive`** selector
+   (non-empty; no `SOURCE_PRIORITY[0]` default). `--source` picks the fetch adapter AND drives the stamp:
+   `derive_pipeline_mode_for_row(..., source=<vendor>)` (UTL `pipeline_mode_resolver`) builds `batch_<vendor>` directly
+   via `pipeline_mode_for_source`, bypassing `SOURCE_PRIORITY` whenever an explicit `source` is given.
+3. **Fail-closed capability validation** (before a single byte is fetched/stamped). UAC
+   `assert_source_capable_for_venue(asset_group, data_type, venue, source)` raises `SourceNotCapableForVenueError` when
+   the source is not in `SOURCE_PRIORITY[(ag, dt)]` OR is excluded for the venue via `_VENUE_SOURCE_EXCLUSIONS` (e.g.
+   `("CBOE","ohlcv_1m"): {massive}` — Massive carries no CFE). So `--source massive` for CBOE/VX **raises**.
+4. **Adapter-identity assertion** — the MTDS routing (`umi_tick_provider.fetch_tick_data_for_venue`) routes a `massive`
+   request to the Massive adapter (CME futures S3 flat-files; NYSE/NASDAQ equities REST aggs) and a `databento` request
+   to the Databento adapter; the Databento branch's `assert_databento_source_ok` raises if a non-databento `--source`
+   reaches it (mirrors `_VENUE_SOURCE_EXCLUSIONS` / `_MASSIVE_INCAPABLE_VENUES={CBOE}`). The fetcher's vendor can never
+   silently differ from the stamped source.
+5. **Free-switch.** The operator picks the vendor per backfill: CFE/VX → `databento`; CME/equities `ohlcv_1s` →
+   `databento` (1s is Databento-exclusive); CME/equities `ohlcv_1m` → `massive` (Massive flat-files/REST serve 1m).
+   `ohlcv_15m`/`ohlcv_24h` are NOT Databento (VIX index = Yahoo/Barchart; coarser bars aggregate downstream).
+
+**Code:** UTL `pipeline_mode_resolver.derive_pipeline_mode_for_row(source=...)` + `_VENUE_DT_OVERRIDES`
+(`("CBOE","ohlcv_1m"|"ohlcv_1s") → batch_databento`); UAC `source_priority.assert_source_capable_for_venue` /
+`is_source_capable_for_venue` / `_VENUE_SOURCE_EXCLUSIONS`; MTDS `cli/main.py --source`,
+`tick_data_handler._resolve_source` (required for tradfi OHLCV), `_umi_massive.assert_databento_source_ok` /
+`MASSIVE_INCAPABLE_VENUES` / `_route_massive` (venue-aware FUTURE/EQUITY). Re-stamp of historically-wrong CBOE cells:
+`plans/active/tradfi_databento_subscription_universe_lockdown_2026_06_18.md` § "Source-provenance write-stamp fix".
+
 ## Related SSOTs
 
 - `codex/02-data/tradfi-data-types-catalog.md` — TradFi data_type catalog.
 - `codex/04-architecture/tradfi-batch-live.md` — TradFi batch/live seam + Databento usage.
+- `codex/02-data/availability-manifest-and-data-status.md` — `source=` provenance (write-stamp by fetcher, all
+  asset_groups).
 - `registry/data_source_continuity.py` — VIX 15m index source windows.

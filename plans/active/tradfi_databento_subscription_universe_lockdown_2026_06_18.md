@@ -60,6 +60,49 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 - [x] [SECRET] P0. Deleted transitional secret `databento-api-key-1` (post single-key cutover) —
       `gcloud secrets list ~databento` now = only `databento-api-key`.
 
+## Source-provenance write-stamp fix (2026-06-19) — fixes VX/CFE `batch_massive` mis-stamp
+
+> **Bug:** the OHLCV write path stamped `source`/`pipeline_mode` from `SOURCE_PRIORITY[(ag,dt)][0]` (the READ-time
+> priority source) not the FETCHING adapter. `("tradfi","ohlcv_1m")` priority = `["massive","databento"]` → CBOE VX
+> futures (fetched by Databento `XCBF.PITCH`; Massive carries NO CFE) stamped `batch_massive`. SOURCE_PRIORITY is
+> read-time resolution, never the write stamp. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+
+- [x] ✅ [UTL] P0. `pipeline_mode_resolver.derive_pipeline_mode_for_row(source=...)` — explicit batch-source override
+      builds `batch_<source>` directly (bypasses SOURCE_PRIORITY when a source is given); `_VENUE_DT_OVERRIDES`
+      `("CBOE","ohlcv_1m"|"ohlcv_1s") → batch_databento` + `resolve_pipeline_mode` honors the per-(venue,dt) override.
+      Unit tests (CBOE VX 1m/1s → databento; VIX-index 15m NOT overridden). — unified-trading-library@d72e0dc2 | QG
+      green.
+- [x] ✅ [UAC] P0. `source_priority.assert_source_capable_for_venue` / `is_source_capable_for_venue` /
+      `SourceNotCapableForVenueError` + `_VENUE_SOURCE_EXCLUSIONS` (`("CBOE",ohlcv_1m/1s/trades/tbbo): {massive}`) —
+      write-time fail-closed capability gate; SOURCE_PRIORITY stays read-time. Unit tests
+      `test_source_capability_for_venue.py`. — unified-api-contracts@fcc76e1 | QG green.
+- [x] ✅ [MTDS] P0. Required `--source databento|massive` on `--operation download` (`cli/main.py`);
+      `tick_data_handler._resolve_source` makes it REQUIRED for a TradFi OHLCV run (no SOURCE_PRIORITY[0] default),
+      threads `source` → `process_ticks` → orchestrator → writer stamp + `assert_source_capable_for_venue` preflight;
+      `_umi_massive._route_massive` is now venue-aware (CME→FUTURE S3 flat-files, NYSE/NASDAQ→EQUITY REST aggs),
+      `assert_databento_source_ok` + `MASSIVE_INCAPABLE_VENUES={CBOE}` (CBOE/VX `--source massive` raises). Tests:
+      `test_massive_route_dispatch.py` (equity→massive routes; CBOE+massive raises). — market-tick-data-service@2202f9a
+      | QG green.
+- [x] ✅ [DATA] P0. Re-stamped the historically-wrong CBOE futures-class cells in the tradfi `_index` + per-VM shards:
+      `pipeline_mode=batch_massive`/`source=massive` → `batch_databento`/`source=databento` for {ohlcv_1m, ohlcv_1s,
+      trades, tbbo}. **3,377 rows** (2,794 consolidated index + 583 per-VM: cfe-vx-bf 187, dbeq-equities-ohlcv-slot6
+      396). MANIFEST-ONLY (no physical objects — the 1 captured cell is a stale NaN-row phantom; `ohlcv_15m` EXCLUDED =
+      VIX cash index, Yahoo/Barchart not Databento). `--verify` = 0 remaining; captured-preserved (verified in v9
+      `_index`). Script: `market-tick-data-service/scripts/restamp_cboe_vx_databento_provenance_2026_06_19.py` (oneoff,
+      lifecycle-marked).
+- [x] ✅ [DOCS] P0. Codex: `tradfi-databento-sourcing-ssot.md` §"Source provenance is WRITE-STAMPED by the FETCHING
+      adapter" + `availability-manifest-and-data-status.md` v9 source-stamp note (provenance ≠ SOURCE_PRIORITY[0]).
+- [x] ✅ [DATA] P1. **Re-launched** the CME + CFE + equities OHLCV backfills (detached, `setsid`) with the correct
+      `--source` per leg (CFE→databento 1m+1s; CME 1m→massive / 1s→databento; equities NYSE+NASDAQ 1m→massive /
+      1s→databento), `MANIFEST_ALLOW_STALE_FALLBACK=true` (no live consolidator on this host). Supersedes the pre-fix
+      in-flight backfills (they pre-dated the required `--source` → would now fail-fast). Logs:
+      `/tmp/{cfe_vx,cme,dbeq}_ohlcv_backfill_v2.log`; per-VM shards `cfe-vx-bf-src` / `cme-ohlcv-bf-src` /
+      `dbeq-ohlcv-bf-src`. **Write-stamp PROVEN end-to-end** (force-smoke 2026-06-17): DatabentoAdapter streamed
+      `XCBF.PITCH/ohlcv_1m` 4,700 VX rows →
+      `pipeline_mode=batch_databento/.../venue=CBOE/.../underlying=VX/ticks.parquet` (was `batch_massive`). ETA: full
+      2018→2026 horizon is hours; the IS-catalog-coverage caveat (the `[ ] [IS] P1` item below) bounds covered dates —
+      uncovered dates honestly write 0 rows. Provenance: 2026-06-19.
+
 ## Phase 1 — add the ohlcv-1s fetch + 1s aggregation (NON-breaking: 1m stays)
 
 > NOT a breaking cutover — `ohlcv_1m` remains an allowed fetch schema, so the existing 1m pipeline keeps running. 1s is
