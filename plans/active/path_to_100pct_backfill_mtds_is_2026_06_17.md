@@ -83,6 +83,13 @@ chains, pre-venue-launch, no-fixture days, weekends/holidays, instrument-not-lis
       — IN FLIGHT 2026-06-19: Polymarket = 3 VMs `mtds-prediction-20260619-{150326,150344,150357}`
       (`launch-mtds-prediction-backfill-vm.sh`, quarter-sharded). **Kalshi gap** — see new P1 item below (adapter exists,
       no VM launcher). — market-tick-data-service
+- [ ] [SCRIPT] P2. **`launch-mtds-sports-odds-backfill-vm.sh --tier` arg rejected by MTDS CLI (intermittent)** — one of
+      the three 2026-06-19 odds shards (`y2023-24`) failed with `market-tick-data-service: error: unrecognized arguments:
+      --tier 2` while two siblings with identical `--tier 2` progressed; relaunched the window without `--tier`
+      (`mtds-backfill-odds-y2023-24-fix-151253`, RUNNING). The launcher sets `VM_TIER` → the VM startup translates it to
+      a `--tier` CLI flag the MTDS CLI does not declare. Diagnose whether the startup should drop the flag (CLI never
+      accepts it) or the CLI should declare `--tier` (Odds-API tier selection), then fix the right side. **Provenance**:
+      T+10 verification of the 2026-06-19 sports backfill. — deployment-service / market-tick-data-service
 - [ ] [DATA] P1. **Prediction Kalshi launcher gap** — `KalshiAdapter` exists in MTDS
       (`market_interface/adapters/prediction/kalshi_adapter.py`, wired in the factory) but
       `launch-mtds-prediction-backfill-vm.sh` hardcodes `VM_VENUE=POLYMARKET` only, so the Kalshi prediction venue has NO
