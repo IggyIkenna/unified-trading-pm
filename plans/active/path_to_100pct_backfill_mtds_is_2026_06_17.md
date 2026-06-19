@@ -23,6 +23,23 @@ source:
 > `instruments_mtds_subset_consistency_remediation_2026_06_17.md` has shipped the rebuild-script fixes, regenerated the
 > projections, and run `--apply` per-AG. The migration backfills NOTHING — it makes the manifest HONEST + canonical and
 > gives a TRUE denominator + accurate gap list. THIS plan then drives the actual data backfill to 100%.
+>
+> **🟢 VM RUNNING — Step-1 credentialed backfill LAUNCHED 2026-06-19 15:00–15:04 UTC (operator "spin up VMs + download
+> everything we have credentials for", EXCLUDING cefi + SFI/Transfermarkt = BLOCKED-OPERATOR billing).** v9 `--apply` is
+> COMPLETE for all 5 AGs (per `instruments_mtds_subset_consistency_remediation` + `master_data_canonicalisation`), so the
+> migration-drain consolidator freeze is lifted: I RESUMED the 11 paused market-data + instruments consolidator/watchdog
+> crons (`gcloud scheduler jobs resume`, asia-northeast1) and manually ran the md consolidator jobs (the
+> tradfi/defi/pred/sports `_index` heartbeat was >1900s stale). **Launched (EPHEMERAL_BATCH, per-VM shard isolation
+> `MANIFEST_PER_VM_SHARDS=true`+unique `VM_NAME`, self-stop at completion, zone asia-northeast1-c):** **defi = 7
+> collect-\* handler VMs** `mtds-{dex-pools,dex-swaps,liquidations}-backfill` +
+> `mtds-{lst-rates,lending-indices,gas-fees,vault-share-price}-2026...` (CORRECTED — the initial 5 `--asset-group DEFI`
+> unified VMs SKIP all 124 defi venues; defi market-data needs the per-data_type `collect-*` ops → deleted + relaunched
+> as these 7); sports odds_api = 3 VMs `mtds-backfill-odds-{y2020-22,y2023-24-fix,y2025-26}` + api-football fixtures
+> `af-backfill-20260619-150255`; prediction Polymarket = 3 VMs `mtds-prediction-20260619-{150326,150344(self-done),
+> 150357}`. **tradfi NOT relaunched** — the
+> Databento OHLCV backfill (CFE `XCBF.PITCH` / CME `GLBX.MDP3` / DBEQ.BASIC equities) already ran to completion today
+> (`/tmp/{cfe_vx,cme,dbeq}_ohlcv_backfill_v2.log` rc=0); the running `instr-backfill-tradfi-*` IS-def fan-out extends the
+> catalog and a tradfi MTDS top-up runs after it lands. Banner-removed by launcher at completion.
 
 ## Definition of 100% (read this first)
 
@@ -50,16 +67,39 @@ chains, pre-venue-launch, no-fixture days, weekends/holidays, instrument-not-lis
 - [ ] [DATA] P0. **CeFi** — backfill every `expected_unattempted` (instrument × venue × data_type × date) + re-fetch the
       ~88k genuine `VENUE_FETCH_FAILED`/`HTTP_429`. Run to completion on real infra; manifest-verified rows. —
       market-tick-data-service
-- [ ] [DATA] P0. **DeFi** — backfill the post-launch could-exist (dex*pool_swaps/state, rate_indices, utilization,
+- [~] [DATA] P0. **DeFi** — backfill the post-launch could-exist (dex*pool_swaps/state, rate_indices, utilization,
       risk_params, swaps_ohlcv*\*) for every listed protocol × chain; re-fetch the genuine failed (~41k pre-de-noise).
-      (Most of the 75% "empty" is honest pre-launch/not-listed — backfill only the genuine could-exist.) —
-      market-tick-data-service
-- [ ] [DATA] P1. **TradFi** — backfill expected_unattempted trades/ohlcv/options_chain/tbbo across venues × instruments
-      × dates; re-fetch genuine failed (~6k post-de-noise). — market-tick-data-service
-- [ ] [DATA] P1. **Sports** — backfill odds/fixtures/stats for every canonised league × fixture × date in coverage. —
-      market-tick-data-service
-- [ ] [DATA] P1. **Prediction** — backfill prediction data for every canonised market × date post-genesis (2025-03-14+).
-      — market-tick-data-service
+      (Most of the 75% "empty" is honest pre-launch/not-listed — backfill only the genuine could-exist.) — IN FLIGHT
+      2026-06-19: 5 EPHEMERAL_BATCH VMs `mtds-backfill-defi-{y2021-22,y2023,y2024,y2025,y2026}-20260619-150025`
+      (`launch-mtds-backfill-vm.sh --asset-group DEFI`, year-sharded, per-VM shard isolation; honest-absence preserved by
+      `DefiManifestRecorder.record_zero_rows` launch-date-aware). — market-tick-data-service
+- [~] [DATA] P1. **TradFi** — backfill expected_unattempted trades/ohlcv/options_chain/tbbo across venues × instruments
+      × dates; re-fetch genuine failed (~6k post-de-noise). — DATABENTO OHLCV (3 datasets: CFE `XCBF.PITCH` / CME
+      `GLBX.MDP3` / DBEQ.BASIC equities) ran to completion 2026-06-19 (`/tmp/{cfe_vx,cme,dbeq}_ohlcv_backfill_v2.log`
+      rc=0, billing-fail-closed `--source databento`); IS-def fan-out `instr-backfill-tradfi-*` extends catalog → tradfi
+      MTDS top-up after it lands. — market-tick-data-service
+- [~] [DATA] P1. **Sports** — backfill odds/fixtures/stats for every canonised league × fixture × date in coverage. — IN
+      FLIGHT 2026-06-19: odds_api = 3 VMs `mtds-backfill-odds-{y2020-22,y2023-24,y2025-26}-20260619-150224`
+      (`launch-mtds-sports-odds-backfill-vm.sh`, tier-2) + api-football fixtures `af-backfill-20260619-150255`. SFI +
+      Transfermarkt EXCLUDED (BLOCKED-OPERATOR billing — NOT launched). — market-tick-data-service
+- [~] [DATA] P1. **Prediction** — backfill prediction data for every canonised market × date post-genesis (2025-03-14+).
+      — IN FLIGHT 2026-06-19: Polymarket = 3 VMs `mtds-prediction-20260619-{150326,150344,150357}`
+      (`launch-mtds-prediction-backfill-vm.sh`, quarter-sharded). **Kalshi gap** — see new P1 item below (adapter exists,
+      no VM launcher). — market-tick-data-service
+- [ ] [SCRIPT] P2. **`launch-mtds-sports-odds-backfill-vm.sh --tier` arg rejected by MTDS CLI (intermittent)** — one of
+      the three 2026-06-19 odds shards (`y2023-24`) failed with `market-tick-data-service: error: unrecognized arguments:
+      --tier 2` while two siblings with identical `--tier 2` progressed; relaunched the window without `--tier`
+      (`mtds-backfill-odds-y2023-24-fix-151253`, RUNNING). The launcher sets `VM_TIER` → the VM startup translates it to
+      a `--tier` CLI flag the MTDS CLI does not declare. Diagnose whether the startup should drop the flag (CLI never
+      accepts it) or the CLI should declare `--tier` (Odds-API tier selection), then fix the right side. **Provenance**:
+      T+10 verification of the 2026-06-19 sports backfill. — deployment-service / market-tick-data-service
+- [ ] [DATA] P1. **Prediction Kalshi launcher gap** — `KalshiAdapter` exists in MTDS
+      (`market_interface/adapters/prediction/kalshi_adapter.py`, wired in the factory) but
+      `launch-mtds-prediction-backfill-vm.sh` hardcodes `VM_VENUE=POLYMARKET` only, so the Kalshi prediction venue has NO
+      backfill launcher and was NOT backfilled in the 2026-06-19 run. Add a `--venues` pass-through (or a sibling
+      `launch-mtds-prediction-kalshi-backfill-vm.sh`) so Kalshi markets backfill alongside Polymarket; Kalshi trade-api
+      (`api.elections.kalshi.com/trade-api/v2`) is keyless-public for historical reads. **Provenance**: discovered
+      2026-06-19 during the credentialed-MTDS-backfill VM fan-out. — deployment-service / market-tick-data-service
 
 ## Step 2 — instruments-store backfill (IS = 100% of its could-exist; MTDS↔IS subset exactly equal)
 
