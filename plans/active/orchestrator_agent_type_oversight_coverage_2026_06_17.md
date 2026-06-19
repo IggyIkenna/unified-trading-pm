@@ -224,33 +224,33 @@ PM-repo conflict notes).
 >   (planning also runs main+review+orchestration, so a lower fleet ceiling).
 > - Loop intervals are env-vars per agent type/VM; **live UI loop-control is a P3 nice-to-have (not mandatory).**
 
-- [ ] [ORCHESTRATOR] P1. Unified `AgentKeeper` (every VM): merge `MainAgentKeeper` + `_ensure_review_agents` → one keeper
+- [x] ✅ [ORCHESTRATOR] P1. Unified `AgentKeeper` (every VM): merge `MainAgentKeeper` + `_ensure_review_agents` → one keeper
       that guarantees mandatory {main, review} present + respawns on death; remove the AutoSpawn `_ensure_review_agents`
       path. Repo: agent-orchestrator (`server/`).
-- [ ] [ORCHESTRATOR] P1. Env-configurable loop intervals: `main` default 60s, `review` default 900s (15 min), each
+- [x] ✅ [ORCHESTRATOR] P1. Env-configurable loop intervals: `main` default 60s, `review` default 900s (15 min), each
       overridable per VM (e.g. `ORCHESTRATOR_MAIN_LOOP_SECONDS` / `ORCHESTRATOR_REVIEW_LOOP_SECONDS`); thread the value
       into the boot-prompt `/loop <N>s` render. Repo: agent-orchestrator (`server/` + `agents/main.md`,`agents/review.md`).
-- [ ] [ORCHESTRATOR] P1. Wake-on-message nudge: `POST /api/agents/{id}/nudge` (and auto-fire on a UI message to an agent)
+- [x] ✅ [ORCHESTRATOR] P1. Wake-on-message nudge: `POST /api/agents/{id}/nudge` (and auto-fire on a UI message to an agent)
       → `tmux_spawn.send_command(tmux_session, …)` to wake the agent from a long loop for an immediate poll/drain. Repo:
       agent-orchestrator (`server/`).
-- [ ] [ORCHESTRATOR] P1. AutoSpawn VM-type policy: on-demand fleet-worker cap = **10** default (all VMs), **6** on the
+- [x] ✅ [ORCHESTRATOR] P1. AutoSpawn VM-type policy: on-demand fleet-worker cap = **10** default (all VMs), **6** on the
       planning VM; mandatory main+review are not counted against it. Config-driven per VM. Repo:
       agent-orchestrator (`server/autospawn.py` + config).
-- [ ] [ORCHESTRATOR] P1. **DEPRECATE the `backup` agent** (operator 2026-06-19 — supersedes the 2026-06-17 "KEEP backup"
+- [x] ✅ [ORCHESTRATOR] P1. **DEPRECATE the `backup` agent** (operator 2026-06-19 — supersedes the 2026-06-17 "KEEP backup"
       below): the AgentKeeper makes main+review mandatory + auto-respawns them, so the manual promote-from-backup failover
       is redundant; if the keeper ever fails, the operator spawns a fresh main/review from the UI. Remove `backup` from
       `AgentRole` + `AgentKind` (`models/_types.py`), `ROLES_ORDER`/`KINDS_ORDER` (`dashboard/`), `_default_kind_lifecycle`
       (`state_store/agents.py`), and **delete `agents/backup.md`**. Keep the generic `promote` (role-swap) mechanism. NOTE
       `ROLES_ORDER` is also touched by `agent_orchestrator_dashboard_monitoring_2026_06_19.md` (AgentTypesPanel) — same
       agent should own both to avoid a collision. Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P2. Reviewed-ledger (advisory, NOT a gate): persist reviewed (sha/task/event_id + verdict + ts) per
+- [x] ✅ [ORCHESTRATOR] P2. Reviewed-ledger (advisory, NOT a gate): persist reviewed (sha/task/event_id + verdict + ts) per
       `review` role + a mark-reviewed endpoint; review reads it to skip redundant **isolated** re-review but stays free to
       review across multiple commits/plans at its own discretion. Repo: agent-orchestrator (`server/`).
-- [ ] [ORCHESTRATOR] P2. `agents/review.md`: 15-min default loop + `/compact` discipline + mark-reviewed call + ledger is
+- [x] ✅ [ORCHESTRATOR] P2. `agents/review.md`: 15-min default loop + `/compact` discipline + mark-reviewed call + ledger is
       an aid not a limit + responds to the wake-nudge. Repo: agent-orchestrator.
 - [ ] [ORCHESTRATOR] P3. (nice-to-have) Live loop-interval control from the dashboard UI (re-issue an agent's `/loop`
       cadence via the nudge/tmux path). Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P2. Tests: keeper brings up {main, review} on a VM with AutoSpawn OFF; env loop-interval override
+- [x] ✅ [ORCHESTRATOR] P2. Tests: keeper brings up {main, review} on a VM with AutoSpawn OFF; env loop-interval override
       lands in the rendered loop; nudge wakes an agent mid-long-loop; fleet cap enforced (10 / planning 6) excluding
       mandatory. Repo: agent-orchestrator (`tests/`).
 
@@ -544,3 +544,39 @@ ingestion note. Shipped:
 QG green (717 passed, dashboard tsc+vitest); shipped via quickmerge (two units). **Still OPEN (this plan):** Phase 2 P3
 plan-health hygiene-pulse (optional → Wave 8); Phase 4 UI; Phase 5 live smoke; Phase 6 unified AgentKeeper; Phase 7
 self-heal.
+
+### Wave 3 — Phase 6 unified AgentKeeper + agent-lifecycle architecture (2026-06-19, slot-2)
+
+All of Phase 6 shipped (6 sub-units, each QG-green + quickmerged to LDR):
+
+- **3a — config + boot-prompt /loop templating** (agent-orchestrator@e60fbbe): `config.main_loop_seconds()` (60s) /
+  `review_loop_seconds()` (900s) / `fleet_worker_cap()` (10, or 6 on the planning VM) + `is_planning_vm()`;
+  `prompts.render` fills `<LOOP_SECONDS>` per role (safety-default so a missed call site never ships a literal
+  placeholder); `agents/main.md` /loop templated. Tests in test_prompts.py.
+- **3b — unified AgentKeeper** (agent-orchestrator@d8d15f7): `MainAgentKeeper` → **`AgentKeeper`** now ensures BOTH
+  mandatory {main, review} every tick; `_ensure_review_agents` extracted out of AutoSpawnLoop into a public
+  `autospawn.ensure_review_agents(...)` the keeper calls with its own per-slot flap/cooldown state — so **review comes up
+  even when AutoSpawn is OFF** (the dev-box gap). server.py wires `AgentKeeper()`. Tests: keeper invokes review-ensure;
+  the 4 review-ensure tests adapted to the free function.
+- **3c — wake-on-message nudge** (agent-orchestrator@6f8f5cf): `tmux_spawn.nudge()` (best-effort send-keys wake) +
+  `POST /api/agents/{id}/nudge` + auto-fire on a by-role message → the holder polls NOW, making the long default loops
+  responsive without fast polling. test_agent_nudge.py (7 cases).
+- **3d — fleet-worker cap** (agent-orchestrator@c3712c2): AutoSpawn caps CONCURRENT on-demand workers at
+  `fleet_worker_cap()` (10 / planning 6), counting active worker sessions, excluding mandatory main+review; logs
+  `fleet_cap_reached`. test_tick_respects_fleet_worker_cap.
+- **3e — backup DEPRECATED** (agent-orchestrator@cd7e7a8): removed from `AgentRole`/`AgentKind` (server + dashboard
+  types), `ROLES_ORDER`, `AGENT_KIND_LABEL`, `_default_kind_lifecycle`, the spawn-modal `<option>` + role-default branch;
+  promote now demotes the displaced holder to **`custom`** (was `backup`); `agents/backup.md` deleted. Kept the generic
+  promote mechanism — the AgentKeeper auto-respawns main/review, so the manual promote-from-backup spare is redundant.
+  test_promote_demotes_displaced_holder_to_custom.
+- **3f — reviewed-ledger + review.md** (agent-orchestrator@5c9379b): `server/reviewed_ledger.py` (advisory persisted
+  sha/task/event_id → verdict+ts under STATE_DIR, capped) + `POST/GET /api/agents/reviewed`; `agents/review.md` now the
+  15-min `<LOOP_SECONDS>` loop + `/compact` discipline + mark-reviewed STEP-3e + "ledger is an aid, not a limit" +
+  responds to the nudge. test_reviewed_ledger.py.
+
+`server/dedup_state.py` (Wave 2) is the reusable persisted-dedup helper Wave 7 (alert-quality) reuses.
+
+**Still OPEN (this plan):** Phase 6 P3 live UI loop-control (nice-to-have, deferred); Phase 4 UI (agents feed renders
+all roles + regression — rides the AO-dashboard plan's AgentTypesPanel); Phase 5 live smoke (the joint validation run);
+Phase 7 P2 dead-session dirty-dep self-heal (next). The AO dashboard gate is **Vitest + tsc + build smoke, NOT
+playwright** (the dashboard has no pw harness).
