@@ -230,3 +230,16 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   fund-admin (digest+2×install+guard) landing via QG+quickmerge sweep. NEXT: build all 6 on `live-defi-rollout` +
   smoke, then the remaining trigger units (re-map harness to the real ~25 triggers: features×5, ml×3, the interface
   libs). Stale base digest = fleet-wide (Phase 5 fan-out RCA). Disk on this host runs ~95% — smoke prunes per image.
+- **2026-06-19 (cont.)** — ✅ **6/6 new repos build GREEN.** First pass: trading-agent `3f8c8f19`, alerting
+  `3d01d550`, client-reporting `de41d7da`, greeks `827af2f7` SUCCESS. 2 surfaced **pre-existing bugs** (these repos had
+  never been built): **batch** — Dockerfile `COPY configs/cloud-providers.yaml` referenced a context-absent file (stale;
+  UAC-packaged since 2026-06-10) + its in-image QG guard was incomplete (only handled the `/workspace`-staged CI mode,
+  not the no-PM-in-image case → fell to `git rev-parse` → empty WORKSPACE_ROOT); fixed both (`1215e6be`, then the guard
+  `…`) → rebuild `e4287026` SUCCESS. **fund-admin** — Dockerfile didn't `COPY scripts/`, so the in-image QG ran the BASE
+  IMAGE's leftover library QG (`base-library.sh`, unguarded); added `COPY scripts/` (`e9344230`) → rebuild `7f039a2d`
+  SUCCESS. **Smoke**: all IMPORT ✅; RUN ✅ for CLI entrypoints (trading-agent, client-reporting); RUN n/a for the
+  **uvicorn API services** (alerting, greeks — `--help` is not a valid probe; the boot+`/health` probe is Phase 4).
+  **Lesson**: the install-pattern + guard greps had FALSE POSITIVES (matched comments / a different `CLOUD_BUILD`
+  reference) — always read the actual `RUN`/source line, never trust the grep classification. NEXT: remaining ~19
+  existing trigger units (build-first, fix-failures) + Phase 4 (uvicorn `/health` probe in the harness + cloudbuild) +
+  Phase 5 (fan-out RCA) + TF reconcile (import the 6 imperative triggers, fix the `ln` drift).
