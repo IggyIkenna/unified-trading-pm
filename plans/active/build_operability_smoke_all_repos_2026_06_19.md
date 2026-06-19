@@ -96,16 +96,17 @@ where in-image QG doesn't run (it only activates when the PM base script is abse
 
 ## Phase 1 — Standalone build+smoke harness
 
-- [ ] [SCRIPT] P0. Write `e2e-testing/scripts/build/build_smoke_all.sh` (+ a `repos.manifest` mapping repo → type
-      {batch-cli, api, library, ui} + package name + health route). Per repo: trigger the regional Cloud Build → on
-      success pull the image → run the type-appropriate probe (import + `--help` for batch-cli; import + uvicorn boot +
-      `/health` for api; import-only for library; `next build` for ui) → emit a `BUILD / IMPORT / RUN` report row. Idem-
-      potent, one repo or `--all`, `--skip-build` to smoke an already-pushed image. Lifecycle marker:
-      `# Lifecycle:     campaign` /
-      `# Delete-when: operability probe wired into every cloudbuild (Phase 4) + fleet green ≥1 cycle`. Wire into
-      e2e-testing QG per Peripheral-Script rule. Repo: e2e-testing.
-- [ ] [SCRIPT] P1. Smoke-test-before-scale: run the harness on the 2 known-good repos first (mdps ✅ + mtds, both
-      guard+green) to validate the harness end-to-end before fanning out. Repo: e2e-testing.
+- [x] ✅ [SCRIPT] P0. DONE 2026-06-19 — e2e-testing@d8a52254. Wrote `e2e-testing/scripts/build_smoke/build_smoke_all.sh`
+      (path is `build_smoke/` not `build/` — the repo `.gitignore` `build/` pattern swallowed `scripts/build/`). Per
+      repo: trigger the regional Cloud Build → pull → type-appropriate probe (python: import + `--help` under the
+      credential-free env; library: import-only; ui: SKIP→Phase 4) → `BUILD / IMPORT / RUN` report row. `--all` /
+      `--repo` / `--skip-build` (smoke an already-pushed image, no build spend) / `--tag`. **Disk-bounded**: `docker rmi`
+      after every probe + an 8G pre-flight guard (a 2-image run hit `No space left on device` at 95% disk — caught by
+      smoke-test-before-scale). Lifecycle marker present (campaign). The richer api `/health` + ui `next build` probes
+      are deferred into Phase 4. Repo: e2e-testing.
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-19 — validated the harness on the 2 known-good repos: mdps `IMPORT ✅ RUN ✅` + mtds
+      `IMPORT ✅ RUN ✅` (both `--skip-build`, exit 0, no images left behind). Harness end-to-end proven before fanning
+      out. Repo: e2e-testing.
 
 ## Phase 2 — Batch-fix build blockers (so builds go green before smoking)
 
