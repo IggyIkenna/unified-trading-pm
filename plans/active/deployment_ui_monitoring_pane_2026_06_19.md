@@ -34,9 +34,13 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
 
 ## Deployment-UI monitoring pane (repos: deployment-ui + deployment-api)
 
-- [ ] [INFRA] P0. **Mint `ORCHESTRATOR_API_TOKEN` into Secret Manager (both clouds)** — cheapest high-value fix: lights
+- [x] ✅ [INFRA] P0. **Mint `ORCHESTRATOR_API_TOKEN` into Secret Manager (both clouds)** — cheapest high-value fix: lights
       up the already-built Fleet-Git page (currently degrades to unavailable, BLOCKED-CREDENTIALS). File as an operator
       credential ask if mint requires operator. Repo: deployment-service/deployment-api.
+      **DONE 2026-06-19**: HS256 JWT minted (sub=deployment-api, role=operator, exp=2036-06-16); stored as version 2 in
+      GCP SM (`central-element-323112/ORCHESTRATOR_API_TOKEN`) + AWSCURRENT in AWS SM (`ap-northeast-1/427895769566`).
+      Token validates against `ORCHESTRATOR_JWT_SECRET` on this host. Fleet-Git page should now degrade→live on next
+      deployment-api cold-start / SM read.
 - [ ] [INFRA] P1. Central/infra-VM health: `GET /api/fleet/infra-vm-health` (proxy AO `/api/fleet/summary`) +
       `GET /api/fleet/vm-census` (render `vm_zombie_watchdog.py` running-vs-expected-vs-zombie). Repo: deployment-api.
 - [ ] [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
