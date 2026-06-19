@@ -133,10 +133,9 @@ the always-on central VM → zero marginal cost.
       `test_ci_failure_watcher_renag.py`); QG green; PR #423.
 - [x] ✅ [SCRIPT] P1. `promotion-lag-monitor`: drop the `cooldown_min` 360→60 (re-nag a still-open lag hourly instead of
       page-once-per-6h). Repo: unified-trading-pm. — unified-trading-pm@cf51f081 | PR #423.
-- [ ] [SCRIPT] P2. `promotion-lag-monitor`: add a **lag-cleared bookend** (RESOLVED INFO on the lagging→clear
-      transition). **DEFERRED** — the monitor is stateless for alerting (the cache is ETag-only), so a true
-      fire-once-on-clear needs transition state (read the carrier ledger for a recent `promotion-lag` post, or persist a
-      last-state flag). Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. `promotion-lag-monitor`: add a **lag-cleared bookend** (RESOLVED INFO on the lagging→clear
+      transition). Implemented via GHA `actions/cache` lag-state persistence (`lag-state.json`) + `notify-resolved` job
+      gated on `cleared == 'true'`. Repo: unified-trading-pm. — unified-trading-pm@249d0962f
 
 ## Phase 6 — Carrier-routing + deep-link follow-through from the 2026-06-19 LDR audit (P1/P2)
 
