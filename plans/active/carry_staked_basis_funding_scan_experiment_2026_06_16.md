@@ -1212,17 +1212,28 @@ is the validated foundation + a runnable paper path TODAY.
       (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`) is a further increment. The
       cross-sectional rank is computed upstream (feature/allocator layer); the engine is the per-instrument leg engine
       (batch==live, source-agnostic). **Repo: unified-api-contracts + strategy-service.**
-- [ ] [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
-      **Repo: deployment-service.** (perm granted) — **LAUNCHER BUILT + VALIDATED `deployment-service@659f6bc`**
-      (2026-06-19): `scripts/vm/launch-funding-ensemble-paper-cron-vm.sh` (SCHEDULED_RECURRING daily-cron paper VM running
-      `funding_ensemble_engine.py` → GCS, modelled on `launch-defi-paper-trading-vm.sh`); registered prefix
-      `funding-ensemble-paper-` in `vm_zombie_watchdog` VM_PREFIX_TO_BUCKET (SCHEDULED_RECURRING, heartbeat-only).
-      `--dry-run` + `bash -n` + watchdog-parse validated. **The billed recurring-VM LAUNCH + per-run progress events are
-      the GATED operational step** — `funding_ensemble_engine.py` is a research script (no `ServiceBootstrap` lifecycle
-      events), so the no-fire-and-forget T+10min progress-event verification needs the engine folded into
-      strategy-service (the P1c engine follow-up); `DATA_SOURCE=gcs_complete` is a label until that loader lands. To
-      launch when ready: `create-code-tarballs.sh --include e2e-testing strategy-service utl uac` then run the launcher
-      (verify VM RUNNING <60s + the STARTED event + the daily GCS output object at T+10min).
+- [x] ✅ [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
+      **Repo: deployment-service.** (perm granted) — **DONE + VERIFIED ON A REAL VM
+      `deployment-service@5d74ed4`** (2026-06-19, second autonomous pass). `funding_ensemble_engine.py` now emits
+      `STARTED/STOPPED/FAILED` lifecycle events (`e2e-testing@9375904` — closes the "research script has no events" gap);
+      the launcher `launch-funding-ensemble-paper-cron-vm.sh` runs a **one-shot** `VM_TASK=strategy-paper`
+      `VM_BACKFILL_CMD` (via `_launch_with_tee` → `DEPLOYMENT_STARTED/COMPLETED` + GCS log) that uploads the desired-state
+      book to GCS + self-deletes; watchdog prefix `funding-ensemble-paper-` = EPHEMERAL_EXPERIMENT. **Verified end-to-end
+      on `funding-ensemble-paper-20260619-102853`**: RUNNING <60s ✅; engine STARTED `{capital:1M, gcs_complete,
+      Binance/Bybit/Aster}` → full ensemble book (funding_dispersion +39.2%/yr, spot_perp_basis +53.5%, dated_basis
+      +2.7%, staked_basis +8.7%, 54 perp legs, liq OK) → `WROTE` + STOPPED rc=0 ✅; DEPLOYMENT_STARTED ✅; output HTML
+      uploaded to `gs://deployment-scripts-…/funding_ensemble/2026-06-19/` (4.8 MB) ✅; VM self-deleted ✅. **Fixed a
+      pre-existing paper-VM install bug in `setup-data-pipeline-vm.sh` (benefits ALL strategy-paper/strategy-live VMs):**
+      (1) route `e2e-testing` to `_SVC_BENCH_NODEPS` — its `execution-service`/`strategy-service` deps make
+      `--no-sources` STD resolution fail ("No solution found"); `--no-deps` installs the scripts (deps are the other
+      editables); (2) add `plotly` (the desired-state HTML writer); (3) self-delete fallback `|| log` → `|| echo … ||
+      true` (the self-delete races its own process + `log` isn't in the `bash -c` subshell → was a FALSE
+      DEPLOYMENT_FAILED rc=127 on clean rc=0 runs). Diagnosed across 4 launches (wrong VM_TASK → install bug → venv path
+      → green).
+- [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Wire the DAILY recurrence — the funding-ensemble paper VM
+      is a verified one-shot self-deleting run; the daily trigger is an external scheduler re-launching it (a Cloud
+      Scheduler → Pub/Sub → Cloud Function running the launcher, or a crontab on an always-on VM invoking
+      `launch-funding-ensemble-paper-cron-vm.sh`, like `daily_positioning_dump.sh`). **Repo: deployment-service.**
 - [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Pre-existing ruff errors in
       `deployment-service/scripts/vm/vm_zombie_watchdog.py` (lines 62/78/1143/1334 — NOT introduced by the P2 watchdog
       registration; surfaced by the funding-ensemble dry-run lint) — clean them so the deployment-service QG is green.
@@ -1279,6 +1290,32 @@ Operator dispatch (6h autonomous): the four P1/P2 todos below. Progress log (app
   the autonomous contract (genuine blocker: fleet-breaking-if-incomplete + active foreign-WIP clobber) — config shipped
   clean, engine documented for atomic landing, no broken state.**
 - **P2 LAUNCHER BUILT — `deployment-service@659f6bc`** (see the P2 flip below).
+
+### /autonomous SECOND PASS terminus (2026-06-19) — the two follow-ups finished to DONE
+
+Operator: "finish the implementation [the funding_dispersion engine + UAC archetype] then. and also fix [P2] to the
+end." Both done — no leftovers.
+
+- **P1c ENGINE + UAC archetype — COMPLETE, both QGs GREEN, shipped via quickmerge.** `unified-api-contracts@487b9a9`:
+  `CARRY_FUNDING_DISPERSION` (dollar-neutral, NOT delta-neutral — long-low/short-high funding, different coins, residual
+  beta hedged at the book level) + `ARCHETYPE_TO_FAMILY` + a 2-perp-leg leg-spec seed (SEQUENCED_WITH_PACING) +
+  docstring/partition counts 57→58 / 51→52 — **UAC QG GREEN**. `strategy-service@6b285fad`: `CarryFundingDispersionEngine`
+  + the full **cascade of exhaustiveness maps** a new archetype forces (factory + `__init__`; catalog builder + registry;
+  `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` mid-variance + `_STATEFUL_ARCHETYPES` + the factory family_map) +
+  a 12-case engine test — **strategy-service QG GREEN**. The clean-UAC window (foreign databento WIP had cleared) made the
+  atomic landing possible (the first pass had to revert it; this is why it's a second pass).
+- **P2 — DONE + VERIFIED ON A REAL VM `deployment-service@5d74ed4` + `e2e-testing@9375904`.** Engine now emits
+  STARTED/STOPPED/FAILED. **Verified end-to-end** (`funding-ensemble-paper-20260619-102853`): RUNNING <60s → engine
+  STARTED → full ensemble book printed → STOPPED rc=0 → DEPLOYMENT_STARTED → output HTML uploaded to GCS → VM
+  self-deleted. Took 4 launches to get green — each a real diagnosis: (1) `VM_TASK=funding-ensemble-paper` fell through to
+  the strategy-service CLI (`--operation paper` invalid) → `VM_TASK=strategy-paper`; (2) the strategy-paper install
+  `uv pip install --no-sources -e e2e-testing` failed because e2e-testing declares `execution-service` as a dep
+  --no-sources can't resolve → routed e2e-testing `--no-deps` (a **pre-existing bug fix for every paper VM**) + added
+  plotly; (3) `.venv-workspace/bin/python` relative-path miss → `../.venv-workspace/bin/python`; (4) green. Also fixed
+  the self-delete `|| log` → false-DEPLOYMENT_FAILED-rc127 artifact. No orphan VMs (all 4 self-deleted).
+- **Follow-ups filed** (`- [ ]`): the cross-sectional rank allocator (`CARRY_FUNDING_DISPERSION_RANK`) increment; the
+  daily-recurrence external scheduler; the pre-existing vm_zombie_watchdog ruff cleanup. **No DEFERRED-without-successor;
+  no broken state; the engine + archetype are live in the production spine and the paper VM runs end-to-end.**
 
 ### /autonomous run terminus (2026-06-19) — final report
 
