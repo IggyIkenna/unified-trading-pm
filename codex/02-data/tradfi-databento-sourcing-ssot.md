@@ -65,6 +65,19 @@ Therefore only `ohlcv-1h` / `ohlcv-1d` are **NOT** fetch schemas — requesting 
 `DatabentoSchemaNotAllowedError`. Both `ohlcv_1s` and `ohlcv_1m` are registered TradFi `data_type`s
 (`registry/market_data_categories.py`).
 
+**Source provenance differs between 1s and 1m (codified 2026-06-19).** `ohlcv_1s` is **Databento-EXCLUSIVE** — Massive's
+flat-file connector does NOT serve a 1s schema (`massive_tradfi_rest_connector.SUPPORTED_DATA_TYPES` omits it). So
+`SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]` (databento-only) → `derive_pipeline_mode_for_row` stamps
+`pipeline_mode=batch_databento` (provenance-correct). `ohlcv_1m` (and `trades`/`tbbo`) stay `["massive","databento"]`
+(massive-first → `batch_massive`) because Massive DOES serve those. The MTDS download gate
+(`umi_tick_provider._DATABENTO_SUPPORTED_DATA_TYPES`) and the IS/MTDS routing both carry `ohlcv_1s`; without it the
+fetch silently wrote 0 rows. Wiring: CME `VENUE_DATA_TYPE_CAPABILITIES` + `EXPECTED_COVERAGE_BY_ASSET_GROUP` +
+`_PER_INSTRUMENT_SHARD_DATA_TYPES` all carry `ohlcv_1s`; `"1s"` is in the `BarTimeframe` closed-set
+(`canonical/crosscutting/bar_boundary.py`); `_OHLCV_DATA_TYPE_TIMEFRAME["ohlcv_1s"]="1s"` (MTDS edge conversion);
+`TradfiOhlcv1sAdapter` (MDPS passthrough). **Backfill horizon is gated by instruments-service per-date catalog
+coverage** — the download enumerates the IS instrument universe per date, so dates the IS catalog hasn't built yield 0
+rows ("no active venues"), independent of the OHLCV wiring (which is proven on every covered date).
+
 ### Batch policy — `batch.submit_job` is BANNED
 
 `batch.submit_job` is the API most likely to silently rack up a large metered bill, so it is **hard-blocked**
