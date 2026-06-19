@@ -5377,3 +5377,21 @@ suspended" precedent).
 
 Status = BLOCKED-CREDENTIALS (operator validate/rotate). Once green, IS backfill re-runs SFI_PROGRESSIVE_STATS +
 PLAYER_VALUES (IS coverage backfill is the concurrent af95b962 worker's domain).
+
+### UPDATE 2026-06-19 — SFI + Transfermarkt keys LIVE-TESTED (precise diagnosis)
+
+Both keys live-tested (read-only GET). **Root cause = NOT a bad/expired key — it is a RapidAPI SUBSCRIPTION GAP:**
+- `soccer-football-info-api-key` AND `transfermarkt-api-key` hold the **SAME RapidAPI key** (`22380b4a…`, 50-char,
+  valid RapidAPI key format).
+- SFI `GET soccer-football-info.p.rapidapi.com/championships/list/` → **HTTP 403 `{"message":"You are not subscribed
+  to this API."}`**.
+- Transfermarkt `GET transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` → **HTTP 403
+  `{"message":"You are not subscribed to this API."}`**.
+- (Control: `api-football-api-key` `c820a404…` + `footystats-api-key` `b1d5bc90…` are DIFFERENT keys, separate working
+  subscriptions — so the RapidAPI mechanism + those sources are fine.)
+
+**OPERATOR ACTION (corrected — subscribe, do NOT rotate):** on the RapidAPI account holding key `22380b4a…`, subscribe
+to (a) **soccer-football-info** (Ultra plan: 4 req/s, 99,999 req/day per the adapter) + (b)
+**transfermarkt-football-data-api**. ALTERNATIVE for Transfermarkt: replace `transfermarkt-api-key` with an **Apify**
+token (`apify_api_*`) — the `TransfermarktAdapter` auto-detects + runs the `webdatalabs~transfermarkt-scraper` Apify
+actor. Once subscribed, SFI_PROGRESSIVE_STATS + PLAYER_VALUES backfill (af95b962 IS-coverage worker's domain).

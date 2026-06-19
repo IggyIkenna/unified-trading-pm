@@ -1104,9 +1104,10 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
 - [ ] [DATA] P2. **BLOCKED-CREDENTIALS — SFI + Transfermarkt sports keys (validate/rotate)** — adapter scaffolds + unit
       tests CONFIRMED present (no build needed): `SoccerFootballInfoAdapter` (35 tests `test_sfi_adapter_coverage.py`,
       RapidAPI) + `TransfermarktAdapter` (33 tests `test_transfermarkt_adapter_coverage.py`, RapidAPI/Apify). Both
-      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000 on their ACTIVE
-      captured data_types (SFI_PROGRESSIVE_STATS / PLAYER_VALUES) → keys likely expired/suspended. **Operator ask:
-      validate/rotate `soccer-football-info-api-key` + `transfermarkt-api-key`** → ping
+      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000. **LIVE-TESTED 2026-06-19: both secrets hold the SAME valid RapidAPI key `22380b4a…`; both APIs return
+      HTTP 403 `"You are not subscribed to this API."` → a RapidAPI SUBSCRIPTION GAP, NOT a bad/expired key.** Operator
+      ask (corrected): **SUBSCRIBE** the RapidAPI account to `soccer-football-info` + `transfermarkt-football-data-api`
+      (or swap the TM secret to an Apify `apify_api_*` token — adapter auto-detects) → ping
       `ikenna_orchestrator/pings/slot_1.md` § "CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19)".
       SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog — NOT a coverage
       gap). — instruments-service [BLOCKED-CREDENTIALS]
