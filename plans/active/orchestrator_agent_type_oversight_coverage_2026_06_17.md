@@ -256,10 +256,9 @@ PM-repo conflict notes).
       `origin/wip-preserve/slot1-uac-sports-league-data-2026-06-18` (uac@9169c40) + reset clean + ff'd the 88-behind →
       `check_slot_branch_state(1)` now `should_stop=False` → verified `escalation_dispatched` at 16:41:49 (the 316-retry
       loop broke). Repo: agent-orchestrator (central VM op).
-- [ ] [ORCHESTRATOR] P1. Surface the quarantine REASON in the UI: the activity panel + escalations view must show
-      `last_error` (the specific repo + why, e.g. "slot-1: unified-api-contracts 88-behind+dirty, ff-only failed"), not
-      just the bare `escalation_dispatch_failed` event. The data is already in `last_error` /
-      `activity_log.details_json` — it just isn't rendered. Repo: agent-orchestrator (`server/` + `dashboard/`).
+- **MOVED → `monitoring_surfaces_overhaul_2026_06_18.md` Track A** (no dual-tracking): "Render the per-event FAILURE
+  REASON in the activity feed + escalations surface" — surfacing `last_error` / `details_json.error` in the UI is a
+  monitoring-surface concern, tracked there with the activity-feed overhaul.
 - [x] ✅ [ORCHESTRATOR] P1. Fix the slot-starvation bug (DONE — agent-orchestrator@51bf0b6, QG-green):
       `escalation._pick_free_slot` now skips a recently-branch-quarantined slot (`_recently_quarantined` + 10-min TTL)
       so a sessionless quarantined slot is no longer re-picked every tick (the 316-retry loop) — dispatch falls through
@@ -270,9 +269,9 @@ PM-repo conflict notes).
       branch-state gate passes, but the gate STOPs first on the ff-fail. A dead-session dirty dep (no live editor)
       should be auto-preserved to `wip-preserve/` + FF'd rather than quarantining the slot indefinitely. Repo:
       agent-orchestrator (`server/autospawn.py` + `worktree_clean_check`).
-- [ ] [ORCHESTRATOR] P2. Quarantine alerting: a slot that stays quarantined > N min while walls queue must page with the
-      SPECIFIC repo + cause (not the generic deduped branch-quarantine warning that went unseen here). Repo:
-      agent-orchestrator (`server/`).
+- **MOVED → `alert_quality_overhaul_2026_06_18.md` Phase 3** (no dual-tracking): "ADD a missing alert: slot stuck in
+  branch-state quarantine" — a slot quarantined > N min while walls queue pages with the specific repo + cause. It's an
+  alert-quality concern, tracked there with the error-pointer standard.
 
 ## Success criteria
 

@@ -45,6 +45,13 @@ alert-unification. The `agent_kind`/`lifecycle` data is already served — it's 
 - [ ] [ORCHESTRATOR][UI] P1. Activity feed frontend — "Load older"/cursor append (decouple from the live poll),
       server-driven filter tabs, collapse duplicate rows with ×N badge + expand, smaller live poll (~25). Repo:
       agent-orchestrator (dashboard).
+- [ ] [ORCHESTRATOR][UI] P1. Render the per-event FAILURE REASON in the activity feed + escalations surface (moved from
+      `orchestrator_agent_type_oversight_coverage_2026_06_17.md` Phase 7). Today a `escalation_dispatch_failed` row
+      shows only the bare event name; the reason IS already persisted (`escalation_queue.last_error` +
+      `activity_log.details_json.error`) — it just isn't rendered, so the operator can't see WHY a dispatch failed
+      without DB access (incident 2026-06-18: a slot-1 branch-quarantine starved dispatch for hours, invisible in the
+      UI). Surface `details_json.error` inline (expandable) on failure-class activity rows, and `last_error` on the
+      escalations view. Repo: agent-orchestrator (`server/` read path already has it + `dashboard/`).
 - [ ] [ORCHESTRATOR][UI] P2. Conditions tab collapsible (frontend-only): `COLLAPSED_COUNT=5`, sort OFF+`gates_queued>0`
       first, "Show N more ▾"/"Collapse ▴", keep the count chip. Repo: agent-orchestrator (dashboard).
 - [ ] [ORCHESTRATOR] P2. Human↔agent messaging (the ~1-min latency = agent-side `/loop` poll) — **DESIGN FORK, discuss
