@@ -17,6 +17,21 @@ status: active
 
 # Consolidator idle-bucket incremental trap
 
+> **✅ RESOLVED 2026-06-19 (option 1 — fix at the UTL SSOT).** The consolidator's incremental cutoff + post-merge prune
+> now read a dedicated `consolidator_content_write_at` GCS metadata marker stamped ONLY by a real merge
+> (`_write_consolidated`), NEVER by the idle `_touch_canonical_mtime` freshness path — so an idle `_touch` can no longer
+> advance the cutoff past an unmerged shard. New helper `_get_content_write_mtime` + constant
+> `_CONSOLIDATOR_CONTENT_WRITE_AT_KEY` in
+> `unified-trading-library/unified_trading_library/manifest_consolidator.py` (shipped LDR@e6e56862). Legacy fallback
+> chain (`consolidator_content_write_at` → `consolidator_run_at` → `blob.updated`) is fail-toward-correctness
+> (over-includes → re-merge, never under-includes → silent drop). Regression tests:
+> `tests/unit/test_manifest_consolidator.py::test_idle_bucket_shard_written_after_last_merge_is_NOT_skipped` +
+> `::test_content_write_marker_stamped_on_real_merge_not_on_idle_touch`. Codex SSOT updated:
+> `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Incremental cutoff = LAST-CONTENT-WRITE marker". The
+> `expected_universe_v2_scheduler.tf` KNOWN-GAP banner is cleared (no companion force-consolidate job needed — the
+> scheduler is now self-sustaining on idle AGs). Option 2 (companion force-consolidate cron) NOT taken — option 1 fixes
+> the root cause for every out-of-band writer, not just the enumerator.
+
 ## What I found
 
 The manifest consolidator (`unified_trading_library/manifest_consolidator.py`) runs a `*/1` Cloud Run cron per bucket
