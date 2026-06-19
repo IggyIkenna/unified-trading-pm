@@ -1129,17 +1129,25 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
 
 ### Sports credentialed sources (C) + MD twin-verify (2026-06-19, autonomous tick 4)
 
-- [ ] [DATA] P2. **BLOCKED-CREDENTIALS — SFI + Transfermarkt sports keys (validate/rotate)** — adapter scaffolds + unit
-      tests CONFIRMED present (no build needed): `SoccerFootballInfoAdapter` (35 tests `test_sfi_adapter_coverage.py`,
-      RapidAPI) + `TransfermarktAdapter` (33 tests `test_transfermarkt_adapter_coverage.py`, RapidAPI/Apify). Both
-      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000. **LIVE-TESTED
-      2026-06-19: both secrets hold the SAME valid RapidAPI key `22380b4a…`; both APIs return HTTP 403
-      `"You are not subscribed to this API."` → a RapidAPI SUBSCRIPTION GAP, NOT a bad/expired key.** Operator ask
-      (corrected): **SUBSCRIBE** the RapidAPI account to `soccer-football-info` + `transfermarkt-football-data-api` (or
-      swap the TM secret to an Apify `apify_api_*` token — adapter auto-detects) → ping
-      `ikenna_orchestrator/pings/slot_1.md` § "CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19)".
-      SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog — NOT a coverage
-      gap). — instruments-service [BLOCKED-CREDENTIALS]
+- [x] ✅ [DATA] P2. **SFI + Transfermarkt sports keys — UNBLOCKED + backfill launched** — DONE 2026-06-19. Operator
+      provisioned the RapidAPI subscription (new key `840373…` on BOTH `soccer-football-info-api-key` v2 +
+      `transfermarkt-api-key` v4, same key). **LIVE-SMOKED 2026-06-19 (slot-6, instruments-service .venv, real GCP)**:
+      (a) SFI `get_match_descriptors_for_date(2025-03-01)` → HTTP 200, 1525 completed matches; `_fetch_sfi_data` end-to-end
+      wrote **21,014 SFI_PROGRESSIVE_STATS rows** + manifest per-VM shard. (b) Transfermarkt RapidAPI
+      `competitions/standings` GB1/2024 → HTTP 200 (NOT apify path); `_fetch_transfermarkt_data(PLAYER_VALUES, GB1, 2024)`
+      → 20 player_values rows + master/snapshot tables + manifest shard. Prior 403 "not subscribed" is RESOLVED. Backfill
+      VMs launched (auto-shutdown-on-completion, per-VM shards): 4× `sfi-backfill-chunk-{1..4}of4-20260619-161036`
+      (2020-01-01→2026-06-19, SFI 4 req/s; backfills ~69.7k expected_unattempted SFI cells) + 1×
+      `tm-backfill-20260619-161123` (PLAYER_VALUES 2015-01-01→2026-06-19; per-league-trigger self-throttle keeps it inside
+      the 120k/mo budget; backfills ~71k expected_unattempted TM cells). Disjoint from the running `af-backfill`
+      (api-football) MTDS fan-out. SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES stay RETIRED (runtime-only UAC catalog).
+      — instruments-service + deployment-service VM launchers
+- [ ] [DATA] P2. **Verify SFI+TM backfill VMs ran to completion + manifest cells flipped** — the 5 backfill VMs
+      (run-id `20260619-161036` SFI ×4 + `tm-backfill-20260619-161123`) auto-shutdown on completion. After they drain:
+      (1) `gcloud compute instances list --filter='name~"^sfi-backfill" OR name~"^tm-backfill"'` = empty/STOPPED;
+      (2) run `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` to materialise empty_confirmed rows;
+      (3) re-read the sports availability index — `expected_unattempted` for `source∈{soccer_football_info,transfermarkt}`
+      should drop sharply as cells flip to `captured`/`empty_confirmed`. — instruments-service [VM RUNNING]
 
 ### Sports A2/A3/D read-only verification — ALL PASS (2026-06-19, autonomous tick 4)
 
