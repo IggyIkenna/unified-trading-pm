@@ -156,9 +156,16 @@ are identified (2) and the ledger exists (3).
       `PositionLedgerRow` per group with share_class rollup + realised/unrealised PnL. 23 tests (incl.
       cross-through-zero both directions, fees, multi-instrument). This is the as-if-filled positions/balances surface —
       pure + tested; the GCS read/write wiring rides Phase 5 (the views).
-- [ ] [CODE] P3.4. **Realised-PnL computation** — replace the hardcoded `"0.00"`
-      (`client-reporting-api     attribution.py:189`) with realised closes from `LedgerRow` deltas; wire the live
-      positions route (currently mock). Repo: client-reporting-api.
+- [x] ✅ [CODE] P3.4 + [CODE] P5.1. **Real ledger-derived positions/PnL/balances views** — DONE
+      (`client-reporting-api@0d9b1bec`, 14 tests): `core/ledger_views.py::compute_ledger_views()` (positions via UTL
+      `materialize_position_ledger` + `by_venue`/`by_instrument`/`by_share_class` rollups + realized/unrealized/total
+      PnL); `/positions` + `/pnl` routes rewired to it — the hardcoded `realized_pnl="0.00"` + the mock positions are
+      DELETED; empty ledger → honest zero/empty (not mock); a pluggable `read_ledger_rows(client_id, date)` seam (returns
+      `[]` until the engine-wiring phase populates the GCS ledger). **This is the operator's eyeball surface (balances +
+      P&L per venue/instrument/share_class).** **Correctness finding (capture for the engine-wiring phase): PASSIVE
+      accrual rows carry a QUOTE cash-flow `delta`, NOT a base-asset qty — they must NOT be fed to
+      `materialize_position_ledger` (corrupts `net_qty`); fold TRADE rows into positions, add PASSIVE rows to realized
+      PnL as a separate stream.**
 - [ ] [CODE] P3.5. **HWM from the ledger** — drive TWR / Notional / PnL-recovery HWM off the materialised ledger (not
       `max(equities)`); assert `hwm_invariants`. Repo: unified-trading-library + client-reporting-api.
 
@@ -305,3 +312,18 @@ of the determinism spine is DONE.** What remains is service INTEGRATION + behavi
 P3.x engine-wiring, P1.4 GroupCRunner the linchpin, P1.1-strategy PASSIVE_BBO correction, P3.4/P3.5, P4.3, P5/P6, P7) —
 each now ships WITH a `reconcile_day` proof (the build-order rule). These are interconnected service changes on live/
 backtest code: sequenced + harness-validated, not rushed.
+
+### 2026-06-19 — Operator eyeball surface SHIPPED (P3.4 + P5.1)
+
+`client-reporting-api@0d9b1bec` (14 tests) — the `/positions` + `/pnl` routes now return REAL ledger-derived state
+(positions + balances per venue/instrument/share_class + realized/unrealized/total PnL) via the UTL
+`materialize_position_ledger` helper; the hardcoded `realized_pnl="0.00"` + the mock positions are deleted; empty ledger
+→ honest zero. The pluggable `read_ledger_rows` seam returns `[]` until the engine-wiring phase populates the GCS ledger.
+**Finding (for engine-wiring): PASSIVE accrual rows are a quote cash-flow, not a base-asset qty — fold TRADE→positions,
+PASSIVE→realized PnL separately (feeding passive rows to the position materializer corrupts net_qty).**
+
+**The READ side is now complete end-to-end** (contract → ledger accounting → views → recon proof). The remaining work is
+the WRITE/INTEGRATION side: the engine must emit keyed `TradeFillRecord`s (P2, the gateway), call the ledger writers
+(P3.1-wiring) + capture the RunManifest, run Group C smart matching in batch (P1.4 linchpin), then the daily-T+1 rerun
+(P4.3) feeds `reconcile_day`. These are interconnected behavioural changes on live/backtest service code — P2 unblocks
+the rest; each ships with a `reconcile_day` proof.
