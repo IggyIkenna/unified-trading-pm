@@ -3,7 +3,7 @@
 Pins:
   - Every cell gets an explicit verdict (available | blocked | not_registered) —
     no absent cells; counts add up.
-  - All 57 archetypes appear as blocks.
+  - All 58 archetypes appear as blocks.
   - not_registered archetypes (no leg structure) are explicit blocks.
   - Impossible algo combinations are BLOCKED (operator requirement).
   - Determinism: build_matrix(_FIXTURE_ENGINE_BACKED) is byte-stable across two runs.
@@ -70,6 +70,7 @@ _FIXTURE_ENGINE_BACKED: frozenset[str] = frozenset(
         "VOL_TRADING_OPTIONS",
         "STAT_ARB_PAIRS_FIXED",
         "STAT_ARB_CROSS_SECTIONAL",
+        "CARRY_FUNDING_DISPERSION",
     }
 )
 
@@ -79,7 +80,7 @@ def test_all_57_archetypes_are_blocks() -> None:
     blocks = matrix["archetypes"]
     assert isinstance(blocks, list)
     archetypes = {b["archetype"] for b in blocks}  # type: ignore[index]
-    assert len(archetypes) == 57
+    assert len(archetypes) == 58
 
 
 def test_counts_add_up_and_no_absent_cells() -> None:

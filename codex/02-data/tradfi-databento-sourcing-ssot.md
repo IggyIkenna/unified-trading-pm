@@ -1,5 +1,7 @@
-status: canonical last_reviewed: 2026-06-18
-
+---
+scope: [engineer, admin]
+status: canonical
+last_reviewed: 2026-06-18
 ---
 
 # TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT
