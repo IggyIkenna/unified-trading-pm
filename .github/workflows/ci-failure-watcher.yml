@@ -29,6 +29,11 @@ jobs:
       alert: ${{ steps.scan.outputs.alert }}
       severity: ${{ steps.scan.outputs.severity }}
       report: ${{ steps.scan.outputs.report }}
+      # Phase 5: per-condition alert items (JSON array). The notify job fans each through
+      # notify-slack.yml with its OWN dedup_key + severity-scaled cooldown_min, so a still-open
+      # condition RE-NAGS on its own MTTR clock (the carrier re-arms each key independently) and a
+      # recovered/resolved bookend fires once. SSOT: alert_quality_overhaul_2026_06_18 § Phase 5.
+      alerts: ${{ steps.scan.outputs.alerts }}
     steps:
       - uses: actions/checkout@v5
 
@@ -81,17 +86,26 @@ jobs:
         #   base...live-defi-rollout). Content-equivalence, not SHA. Idempotent.
         run: python3 scripts/repo-management/ci_failure_watcher.py --auto-recover --escalate --close-superseded
 
+  # Per-condition matrix notify (Phase 5). One Slack post per OPEN condition, each carrying its
+  # own dedup_key + severity-scaled cooldown_min — so the carrier re-nags a still-open condition
+  # on its MTTR clock instead of page-once. fail-fast:false so one bad item never drops the rest;
+  # the `!= '[]'` guard skips notify entirely when nothing is open.
   notify:
     needs: watch
-    if: needs.watch.outputs.alert == 'true'
+    if: needs.watch.outputs.alerts != '' && needs.watch.outputs.alerts != '[]'
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        alert: ${{ fromJSON(needs.watch.outputs.alerts) }}
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: |
-        CI watcher detected fleet activity (failures, recoveries, or stuck promotion PRs):
-        ${{ needs.watch.outputs.report }}
-      severity: ${{ needs.watch.outputs.severity }}
+      message: ${{ matrix.alert.message }}
+      severity: ${{ matrix.alert.severity }}
+      dedup_key: ${{ matrix.alert.key }}
+      cooldown_min: ${{ matrix.alert.cooldown_min }}
       workflow_name: ci-failure-watcher
-      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run_url: ${{ matrix.alert.url }}
     secrets:
       # Dedicated #ci-failures incoming webhook (falls back to general if unset).
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
