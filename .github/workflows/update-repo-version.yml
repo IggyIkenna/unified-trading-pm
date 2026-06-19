@@ -399,7 +399,6 @@ jobs:
       - name: Resolve base-image digest
         id: base-digest
         if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' && (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
-        continue-on-error: true
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
@@ -411,8 +410,11 @@ jobs:
             echo "Resolved base-image digest: $DIGEST"
             echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           else
-            echo "Could not resolve a valid digest (got: '$DIGEST') — fan-out proceeds without digest refresh."
-            echo "digest=" >> "$GITHUB_OUTPUT"
+            # GCP auth succeeded but registry read failed — fail loud so the build surfaces the gap
+            # instead of silently propagating an empty digest to consumers (fix-a: stale-digest RCA).
+            echo "ERROR: Could not resolve a valid digest (got: '$DIGEST'). GCP auth OK but registry read failed." >&2
+            echo "Check that the UTL image exists in ${IMAGE} and that the SA has Artifact Registry Reader." >&2
+            exit 1
           fi
 
       # ── DEFECT-2: dependency-FIRST ordering for the consumer fan-out ──
