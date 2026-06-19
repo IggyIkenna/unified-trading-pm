@@ -1146,8 +1146,11 @@ Operator "make twins for ALL sports data lacking one so the delete loses nothing
       covered those days; verified day=2022-09-10 has 0 canonical/0 pipeline_mode objects). Verdict parquet
       `_index/audit/sports_md_unmappable_verify_2026_06_19.parquet`. **CORRECTS the prior "all 3,816 TWIN-VERIFIED-SAFE
       (58,910/58,910 sampled)" — that was a 6-file sample; the FULL run found the 700 gap.** — e2e-testing
-- [ ] [DATA] P1. **MD 700 MIGRATE-NEEDED content-aware fan-out to canonical** — IN PROGRESS 2026-06-19
-      (e2e-testing@1b07bcb `migrate_sports_md_unmappable_to_canonical_2026_06_19.py --apply`, RUNNING): fans the 700
+- [x] ✅ [DATA] P1. **MD 700 MIGRATE-NEEDED content-aware fan-out to canonical** — DONE 2026-06-19
+      (e2e-testing@1b07bcb `migrate_sports_md_unmappable_to_canonical_2026_06_19.py --apply`, RAN: 700/700 objects →
+      41,206 canonical cells / 10,111,734 rows written). **RE-VERIFIED: the full twin-verifier now reports 3,816
+      TWIN-VERIFIED-SAFE / 0 MIGRATE-NEEDED / 1,962,770 of 1,962,770 ids covered (100.0%)** → every MD legacy object is
+      delete-safe. fans the 700
       genuinely-unique odds objects → canonical
       `raw_tick_data/by_date/day={D}/pipeline_mode=batch_odds_api/     asset_group=sports/venue={V}/league_id={L}/instrument_type=odds/data_type=trades/ticks.parquet`
       (41,206 cells / 10.1M rows; legacy schema == canonical minus 4 derivable cols; union-dedup on instrument_id, never
