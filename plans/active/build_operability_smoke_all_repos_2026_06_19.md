@@ -283,3 +283,19 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   reference) — always read the actual `RUN`/source line, never trust the grep classification. NEXT: remaining ~19
   existing trigger units (build-first, fix-failures) + Phase 4 (uvicorn `/health` probe in the harness + cloudbuild) +
   Phase 5 (fan-out RCA) + TF reconcile (import the 6 imperative triggers, fix the `ln` drift).
+- **2026-06-19 (STALE-REF CLEANUP — operator: "12→70→25 repos, find+remove all refs to archived/old repos")** — the
+  remaining-sweep failures were mostly **debris from the repo-count churn**. Audited every trigger/link/config against
+  the canonical live 25 (`workspace-manifest.json.repositories`) + the authoritative dead lists (`prune_removed_
+  repositories.py` REMOVED frozenset + manifest `removedEntries`). **Removed**: (1) **37 ZOMBIE Cloud Build triggers**
+  (of 65) targeting archived repos — features-{calendar,delta-one,multi-timeframe,onchain,volatility}-service +
+  ml-{inference,training}-service (consolidated into features-service/ml-service), the 7 `unified-*-interface/services`
+  removed libs, `execution-algo-library`, `ml-training-ui`, and `deployment-dashboard`→`unified-trading-deployment-v2`
+  (the OLD deployment-ui name); **28 live triggers remain**. (2) **32 stale connection links** (incl. old names
+  `market-tick-data-handler`, `live-health-monitor-ui`, `unified-trading-deployment-v2`); 19 live remain. (3) **8 dead
+  `locals.services` entries** in `deployment-service/terraform/cloud-build/gcp/main.tf` (would have RECREATED the
+  zombies on `terraform apply`). (4) **+9 orphans to the `REMOVED` frozenset** (`unified-{cloud,domain}-services`,
+  `unified-{events,order}-interface`, `ml-training-ui`, `market-tick-data-handler`, `live-health-monitor-ui`,
+  `execution-results-api`, `market-data-api`) — they were live triggers/links but in NEITHER authoritative dead list
+  (the canonical list was incomplete). Trigger landscape is now 1:1 with live repos. NEXT (the actual "moving forward"):
+  create features-service + ml-service triggers (consolidated live repos, currently trigger-less after the zombie
+  purge) + fix strategy-service (cross-repo mtds COPY) + deployment-service (registry-auth ordering).
