@@ -13,8 +13,8 @@ last_reviewed: 2026-06-19
 > (`codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`). This doc is the SSOT for the
 > **trade-by-trade** extension and the **as-if-filled ledger**.
 >
-> **owner**: vm-cross-cutting · **cadence**: per-paper-run (daily ledger) + T+7 (weekly recon) · **verifier**:
-> `reconcile_week` determinism verdict + the daily ledger digest · **last_executed**: not yet (design)
+> **owner**: vm-cross-cutting · **cadence**: per-paper-run (daily ledger) + T+1 (daily recon) · **verifier**:
+> `reconcile_day` determinism verdict + the daily ledger digest · **last_executed**: not yet (design)
 
 ---
 
@@ -65,7 +65,7 @@ target. The operator's list maps onto four ledgers + their derived views:
 | **Venues / instruments breakdown**                        | `InstrumentRecord` join on `instrument_key`; balances/PnL grouped by venue + instrument    |
 | **Historical trade ledger** ("eyeball the trades we did") | `InstructionLedger`, append-only                                                           |
 | **Positions ledger** ("update as if filled")              | `PositionLedger`, the current as-if-filled state                                           |
-| **Slack log**                                             | daily ledger digest + weekly recon verdict → alerting-service                              |
+| **Slack log**                                             | daily ledger digest + daily T+1 recon verdict → alerting-service                           |
 
 The two operator-facing ledgers are **`InstructionLedger`** (the historical trade tape) and **`PositionLedger`** (the
 live as-if-filled positions/balances). `PassiveLedger` (funding / staking / lending accruals) and `PricingLedger`
@@ -136,7 +136,7 @@ identical inputs.** The divergence is entirely downstream (fills + ledger).
 | **G2** | **No per-trade identity in execution events** — each event line is a float-metric dict (`realized_pnl`, `fill_rate`, `slippage_bps` AVERAGES); no `order_id`/`client_order_id`/`instrument_key`/`timestamp`.                                                               | Trade-by-trade matching is impossible; recon can only average. The operator wants to "eyeball every trade".                                                          |
 | **G3** | **Ledgers unmaterialised** — no `PositionLedger` schema/writer; no `InstructionLedger` writer from fills; no `PassiveLedger` synthesiser; `realized_pnl` hardcoded `"0.00"` (`client-reporting-api attribution.py:189`); balances come from CCXT snapshots, not `Σ delta`. | There is no complete as-if-filled ledger to eyeball or reconcile; "balances/PnL/attribution" are mock or absent.                                                     |
 | **G4** | **No point-in-time input capture / as-of snapshot** — no run manifest records which event files, feature versions, and code shas the paper run consumed.                                                                                                                   | A batch rerun might read revised data / a different feature version → a **spurious** paper↔batch diff that looks like a determinism bug but is an input-capture bug. |
-| **G5** | **Recon is aggregate + single-date** — `_compute_metrics()` is `abs(mean_a − mean_b)`; one `date: str` per call; no weekly rollup; no determinism verdict (ε=0 expectation for paper↔batch).                                                                               | The harness cannot express "every trade matches" nor isolate the determinism leg from the execution leg.                                                             |
+| **G5** | **Recon is aggregate + single-date** — `_compute_metrics()` is `abs(mean_a − mean_b)`; one `date: str` per call; no daily-T+1 trade-level recon; no determinism verdict (ε=0 expectation for paper↔batch).                                                                 | The harness cannot express "every trade matches" nor isolate the determinism leg from the execution leg.                                                             |
 
 ---
 
@@ -154,7 +154,7 @@ identical inputs.** The divergence is entirely downstream (fills + ledger).
 3. **Same fill model** — **one** canonical simulation fill engine, imported by BOTH batch and paper (§4.2).
 
 Given all three, the emitted instructions AND the simulated fills are deterministic functions of the snapshot ⇒
-trade-for-trade identical. This is the contract `reconcile_week` proves.
+trade-for-trade identical. This is the contract `reconcile_day` proves.
 
 ### 4.2 The fill model — three concepts, two simulated, one real (G1 — the core fix)
 
@@ -244,15 +244,15 @@ ledger under a new `run_id` with `mode=batch` + a back-reference to the paper `r
 
 ### 4.5 The reconciliation harness (G2 + G5)
 
-A new keyed, weekly stage (`stage3d` / a standalone harness in batch-live-reconciliation-service):
+A new keyed, daily-T+1 stage (`stage3d` / a standalone harness in batch-live-reconciliation-service):
 
 ```python
-def reconcile_week(paper: RunManifest, batch: RunManifest, live: RunManifest | None) -> WeeklyReconReport:
+def reconcile_day(paper: RunManifest, batch: RunManifest, live: RunManifest | None) -> DailyReconReport:
     # match on the deterministic key: (instrument_key, strategy_instruction_id, tick_timestamp)
     # paper↔batch  → DETERMINISM verdict: expect ε = 0 on (side, qty, fill_price, fees); ANY mismatch = a bug,
     #                classified {NON_DETERMINISM | INPUT_CAPTURE_GAP | FILL_MODEL_DRIFT}
     # live↔paper   → EXECUTION verdict: per-trade fill_price_delta_bps / qty_delta / timing_delta_ms = execution alpha
-    # roll up per (venue, instrument, strategy, factor); week-level totals
+    # roll up per (venue, instrument, strategy, factor); per-day totals (a week = 7 daily reports)
     # emit AlertEvent(severity=INFO|CRITICAL) → alerting-service → #uts-live-alerts
 ```
 
@@ -262,17 +262,22 @@ def reconcile_week(paper: RunManifest, batch: RunManifest, live: RunManifest | N
 
 ---
 
-## 5. The operator workflow (19→26 concretely)
+## 5. The operator workflow — DAILY T+1 (19→26 concretely)
 
-1. **Week of paper (19→26)** — launch `colocated_engine` paper (the funding/basis ensemble or any promoted strategy) on
+**Cadence: DAILY T+1** (matching the existing batch-live-reconciliation-service T+1 pipeline). A "week" is just 7 of
+these daily runs — there is no separate weekly reconciliation.
+
+1. **Paper (each day 19→26)** — launch `colocated_engine` paper (the funding/basis ensemble or any promoted strategy) on
    the live feed with the benchmark fill model. Each tick: emit instructions → benchmark fills → write the 4 ledgers +
    append the captured tick to the run snapshot. **Daily**: a Slack digest of `PositionLedger` (balances per
    venue/instrument), the day's `InstructionLedger` tape, PnL + attribution, HWM.
-2. **T+7 (the 26th) — rerun batch over the SAME pinned snapshot.** `reconcile_week(paper, batch)` → the **determinism
-   verdict**. Expected: ε=0 (every paper trade appears in the batch with identical side/qty/fill/fees). A non-zero diff
-   STOPS and is diagnosed as one of the three bug classes — never accepted as "within tolerance".
-3. **Live** — same machinery with real venue fills; `reconcile_week(paper, batch, live)` reports `live↔paper` as
-   execution alpha and confirms `live↔batch = determinism(≈0) + execution(measured)`.
+2. **T+1 (each next morning) — rerun batch for the PRIOR trading day over its pinned snapshot.**
+   `reconcile_day(paper, batch)` → the **determinism verdict** for that day. Expected: ε=0 (every paper trade appears in
+   the batch with identical side/qty/fill/fees). A non-zero diff STOPS and is diagnosed as one of the three bug classes
+   — never accepted as "within tolerance". (Over 19→26 this produces 7 daily determinism reports; drift is caught the
+   morning after, not a week later.)
+3. **Live** — same machinery with real venue fills; the daily T+1 `reconcile_day(paper, batch, live)` reports
+   `live↔paper` as execution alpha and confirms `live↔batch = determinism(≈0) + execution(measured)`.
 
 ---
 
@@ -309,7 +314,7 @@ Match key: `(instrument_key, strategy_instruction_id, tick_timestamp ± ε)`. Pe
 | **realised-PnL computation**                             | **MISSING (G3)** | hardcoded `"0.00"` `client-reporting-api attribution.py:189`       |
 | **per-venue/instrument balance from ledger**             | **MISSING (G3)** | balances from CCXT snapshots, not `Σ delta`                        |
 | **run manifest / as-of snapshot**                        | **MISSING (G4)** | no pinned input/code-sha record                                    |
-| **trade-by-trade keyed diff + weekly rollup**            | **MISSING (G5)** | recon is `abs(mean_a−mean_b)`, single-date                         |
+| **trade-by-trade keyed diff + daily T+1 recon**          | **MISSING (G5)** | recon is `abs(mean_a−mean_b)`, single-date                         |
 
 ---
 

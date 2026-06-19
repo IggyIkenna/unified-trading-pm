@@ -815,8 +815,8 @@ engine; the gap is batch's `GroupBRunner` stops at the benchmark (completing `Gr
 legs use **rate-matching** (Aave/Lido accrual, not order matching). A third _simulation_, or batch≠paper matching
 engines, is review-blocking. "Citadel-grade paper trading" = the complete as-if-filled state (money movements / balances
 per venue+instrument+share_class / P&L / PnL attribution / instruments breakdown) in four ledgers (`InstructionLedger`
-tape + `PositionLedger` as-if-filled state + `PassiveLedger` accruals + `PricingLedger` marks) + a daily/weekly Slack
-digest. SSOT: `codex/09-strategy/operational/paper-batch-live-reconciliation.md` + plan
+tape + `PositionLedger` as-if-filled state + `PassiveLedger` accruals + `PricingLedger` marks) + a daily ledger +
+daily-T+1 recon Slack digest. SSOT: `codex/09-strategy/operational/paper-batch-live-reconciliation.md` + plan
 `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent epic `batch_live_symmetry_master`).
 
 ---
