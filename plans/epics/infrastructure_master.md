@@ -8,7 +8,7 @@ priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-07
-last_updated: 2026-05-22
+last_updated: 2026-06-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
@@ -426,6 +426,15 @@ sub-plan; this section is a pointer.
   canonical writer collapse.
 - **Manifest migration NOT fallback** (CLAUDE.md): when manifest drifts from canonical shape, write a one-time migration
   script and **remove** the fallback reader.
+
+## Cross-epic coordination
+
+- **`data_feed_sla_registry_and_active_self_healing_2026_06_19`** (owned by `observability_master`, NOT this epic — one
+  parent only, no dual-tracking) has two touch-points here: (1) the `DATA_FEED_SLA` registry's `data_path` / manifest
+  row-key shape must reuse this epic's **shard-axis SSOT** (the per-asset_group shard-key matrix), not invent a parallel
+  key; (2) its Phase-2 `refetch-feed` recovery action reuses the **MTDS/IS CLI shard-targeting flags** (B.2 Phase 5
+  above — `--shard-key` / `--root` / `--day` / `--canonical-question-group`) for the mapped re-fetch, so completing
+  those flags unblocks the active-self-heal. Coordinate edits to the shard-key SSOT + the MTDS CLI with that plan.
 
 ## Assigned active plans
 

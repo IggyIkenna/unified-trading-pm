@@ -8,7 +8,7 @@ priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-21
-last_updated: 2026-05-23
+last_updated: 2026-06-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
@@ -26,6 +26,7 @@ related_plans:
   - ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md
   - ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md
   - ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md
+  - ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
 ---
 
 # Observability Master
@@ -157,7 +158,22 @@ typed-confirm pattern; manual actions also flow through the incident state machi
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority. Post-cutover audits will spawn P1 items here.)_
+### [`data_feed_sla_registry_and_active_self_healing_2026_06_19`](../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
+
+**status**: active — NEW 2026-06-19 from the "Operation Blue Flame" SLA-architecture comparison (operator). Two gaps
+where the external reference is tighter than this workspace, both reusing existing surfaces rather than rebuilding:
+
+- **Phase 1 — single declarative feed-SLA SSOT.** Today freshness thresholds are scattered across UAC
+  `MARKET_TICK_FRESHNESS` + `ALERT_THRESHOLDS[*].tick_staleness`, UTL `freshness_monitor.py`, execution/strategy
+  `freshness_gate.py`, MDPS `feature_freshness.py` (verified `rg "data_feed_sla|feed_sla"` → 0 hits). Introduce a typed
+  `DATA_FEED_SLA` registry in UAC (feed × `max_age_seconds` × criticality tier) that every freshness consumer reads — no
+  double SSOT. Composes with the P3 `NEEDS-LIVE` `tick_staleness` re-baseline (this plan only relocates where the
+  thresholds are _declared_).
+- **Phase 2 — active self-healing.** Add a deterministic `refetch-feed` action to the autonomous-recovery-matrix Layer-0
+  closed set: stale `critical` feed → mapped re-fetch via the existing service CLIs → escalate through the existing
+  AlertSeverity ladder on failure → order gate stays closed until recovery. Replaces today's purely-passive
+  (circuit-breaker/HALF_OPEN-probe) recovery with an active mapped re-fetch. · **estimate**: 3.0 cal AI-days (class:
+  design) · **assigned_vm**: vm-cross-cutting
 
 ## P2 — useful; opportunistic
 
