@@ -607,6 +607,13 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `kind="instruments-store-prediction",     asset_group=None` if prediction ever needs re-canonicalisation.
       **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
 
+## Forthcoming credentials (operator 2026-06-19 — note now, unblock on arrival)
+
+Operator is acquiring these — record as pending-credential so the backfill runs the moment the keys land (NOT memory; tracked here per the durable-facts rule):
+
+- [ ] [DATA] P1. **Kalshi API keys — COMING SOON** (operator acquiring). Unblocks the **prediction** Kalshi venue (we have Polymarket; Kalshi is the second prediction venue for the Polymarket-vs-Kalshi dispersion archetype). On arrival: key → Secret Manager → run the Kalshi prediction instrument + market-data backfill (mirror the polymarket path); status `BLOCKED-CREDENTIALS` until then. — mtds / instruments-service (prediction)
+- [ ] [DATA] P1. **Extended (Extended Finance / EXTENDED-STARKNET) API — operator APPLYING.** A DeFi/perp venue (was an absent venue in the cefi/defi backfill). On approval: key → Secret Manager → run the Extended instrument + perp backfill; status `BLOCKED-CREDENTIALS` until then. — mtds / instruments-service (defi/cefi perp)
+
 ## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
 
 **No longer PAYG** — subscription + ~$150 credits (more than enough to stream all instruments). **ONE API key**
