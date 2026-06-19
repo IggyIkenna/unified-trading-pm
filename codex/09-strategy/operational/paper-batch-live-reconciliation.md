@@ -102,6 +102,23 @@ identical inputs.** The divergence is entirely downstream (fills + ledger).
 - `InstrumentRecord` + per-venue enumeration (`instruments_service/engine/orchestrator/venue_core.py:227`); canonical
   `instrument_key = VENUE:INSTRUMENT_TYPE:SYMBOL`.
 
+**Canonical SSOT derivation — never hand-threaded metadata maps (HARD RULE, operator 2026-06-19).** The spine
+integrates via the canonical UAC/UTL SSOT, NOT a bolt-on. Every fill carries the canonical `instrument_key`
+(`VENUE:INSTRUMENT_TYPE:SYMBOL`, built by the engine via the UAC `instrument_type_for_action` SSOT — the instrument type
+is intrinsic to the action), and the ledger writers DERIVE the ledger asset identity from it:
+`derive_ledger_asset_fields(instrument_key)` → `(asset_symbol, asset_canonical_id, asset_class)` where
+`asset_class = asset_class_for_instrument_type(InstrumentType)` (the `InstrumentType → LedgerAssetClass` SSOT). All three
+live in UAC `internal/reference/ledger_asset_resolution.py` (`asset_class_for_instrument_type` /
+`instrument_type_for_action` / `derive_ledger_asset_fields`). **BANNED on the spine**: threading
+`instrument_type_of`/`asset_symbol_of`/`asset_canonical_id_of`/`asset_class_of` dicts through `write_run_ledger` /
+`write_paper_run` / `rerun_from_manifest` / `ledger_emit`, a hardcoded `_DEFAULT_INSTRUMENT_TYPE`, or any per-caller
+metadata map the canonical `InstrumentKey`/`InstrumentRecord`/registry can derive. `BenchmarkFillRecord.instrument_key`
+is REQUIRED (no empty-string default — a blank key is a determinism-spine bug). Shipped 2026-06-19:
+`unified-api-contracts@f8e87a8` (the SSOT) + `unified-trading-library@944ea341` (run_writer derives) +
+`strategy-service@c90dab73` (engine + ledger_emit/paper_run_emit/batch_rerun) + `client-reporting-api@669fd4d` +
+`e2e-testing@151d5a1` (the ε=0 proof still green on the canonical shape). Future strategies + agents build on the main
+infra, not on a re-invented local dict.
+
 **Execution + fill machinery — EXISTS (but divergent, see §3):**
 
 - `colocated_engine.py` paper/live shell: `SharedState.positions` (qty/avg_price/realized_pnl per instrument), realised

@@ -198,9 +198,14 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 5 — Balances / PnL / attribution / instruments-breakdown views
 
-- [ ] [CODE] P2.5.1. **Per-venue + per-instrument balance + PnL + attribution views** off `PositionLedger` +
-      `PnLAttributionRow`; join `InstrumentRecord` on `instrument_key` for the instruments breakdown. Repo:
-      client-reporting-api.
+- [x] ✅ [CODE] P2.5.1. **Per-venue + per-instrument balance + PnL + attribution views** — DONE
+      (`client-reporting-api@de2350e`, 13 tests). `core/ledger_views.py::attribution_breakdown()` folds the client's
+      `PnLAttributionRow` records into GROUP-BY sums by **venue / instrument / factor / layer** (+ grand total); new
+      route `GET /api/v1/clients/{client_id}/attribution/breakdown`. Composes with the P3.4 `by_venue`/`by_instrument`/
+      `by_share_class` PositionLedger balance rollups already shipped — together the per-venue + per-instrument balance +
+      PnL + attribution surface. (Instruments-breakdown `InstrumentRecord` join is a thin follow-up — the
+      `instrument_key` per-instrument rollup already groups the breakdown; symbol-enrichment via IS is NICE-TO-HAVE.)
+      Repo: client-reporting-api.
 
 ## Phase 6 — Slack log
 
@@ -494,3 +499,43 @@ human-only, the ONE allowed leftover). The determinism PROOF + the full machiner
   - Stage C: daily ledger digest (`client-reporting-api --operation daily_ledger_digest`) — **P7.1-C TODO**: needs daily_ledger_digest CLI subcommand
   Shipped via dirty-deps direct LDR push (UTL had foreign uncommitted WIP from background agent). QG green.
   Operator must set `paper_determinism_enabled = true` + add P7.1-A/B/C CLI entrypoints before the cron fires.
+
+### 2026-06-19 — PRIORITY 1: BOLT-ON METADATA MAPS RETIRED (canonical UAC SSOT integration)
+
+Operator caught the patch-alongside: `ledger_emit.py` threaded `instrument_type_of` / `asset_symbol_of` /
+`asset_canonical_id_of` / `asset_class_of` dicts (+ a hardcoded `_DEFAULT_INSTRUMENT_TYPE = "PERP"` in `paper_run_emit`)
+— a bolt-on the canonical UAC SSOT should derive. **Retired in the MAIN codebase via canonical derivation, not a
+patch-alongside.** Ships (each QG-green, tested):
+
+- **The canonical SSOT** (`unified-api-contracts@f8e87a8`, 12 tests):
+  `internal/reference/ledger_asset_resolution.py` — `asset_class_for_instrument_type(InstrumentType)→LedgerAssetClass`
+  (the consolidated `InstrumentType → LedgerAssetClass` map, all 29 InstrumentTypes resolve) +
+  `instrument_type_for_action(InstructionActionV2)→InstrumentType` (the action→type derivation that lets the engine
+  build a canonical key from what it already holds) + `derive_ledger_asset_fields(instrument_key)→(asset_symbol,
+  asset_canonical_id, asset_class)` (parses via `InstrumentKey.from_string`). Exported from `internal` + `internal.reference`.
+- **`BenchmarkFillRecord` carries the canonical `instrument_key`** (`strategy-service@c90dab73`): REQUIRED field (no
+  empty default), set by EVERY fill producer (trade/swap/yield/quote/atomic-leg) via `_canonical_instrument_key(venue,
+  action, instrument)` = `{venue}:{instrument_type_for_action(action).value}:{instrument}`. The instrument-type is now
+  intrinsic to the id, not a side map.
+- **UTL `write_run_ledger` derives canonically** (`unified-trading-library@944ea341`): dropped `asset_symbol_of` /
+  `asset_canonical_id_of` / `asset_class_of` params from `write_run_ledger` / `instruction_ledger_jsonl` /
+  `fill_to_ledger_jsonl_obj` — each row's asset identity is `derive_ledger_asset_fields(fill.instrument_key)`. A blank/
+  invalid key raises (no silent metadata gap). `ledger_row_from_trade_fill` (the pure low-level mapper) keeps its
+  explicit args — the SSOT derivation happens one layer up in run_writer.
+- **strategy-service callers** (`@c90dab73`): `ledger_emit` (trade_fill_records/write_run_to_ledger/write_paper_run),
+  `paper_run_emit` (deleted `_instrument_metadata_maps` + the `_DEFAULT_INSTRUMENT_TYPE`/`_DEFAULT_ASSET_CLASS` bolt-on —
+  the bridge now just forwards instructions+fills), `batch_rerun.rerun_from_manifest` (dropped the `*_of` params) — all
+  threaded dicts gone.
+- **client-reporting-api** (`@669fd4d`): the monitoring-chain round-trip test writes a canonical-key fill, no `*_of`.
+- **e2e ε=0 proof re-run on the canonical shape** (`e2e-testing@151d5a1`): dropped `_ASSET_*_OF` constants;
+  `scripts/defi/determinism_spine_e2e.py` returns **`[3/4] ✅ ε=0 PROVEN — paper≡batch trade-for-trade`** +
+  **`[4/4] ✅ MONITORING CHAIN PROVEN`**, exit 0. The retirement is functionally identical end-to-end.
+
+**Zero `*_of` instrument-metadata maps remain on the spine** (grep-verified; `share_class_of` keyed by
+`asset_canonical_id` is a DIFFERENT, legitimate treasury concern — kept). Codex SSOT +
+CLAUDE.md "Batch = Live" updated with the canonical-derivation HARD RULE (`unified-trading-pm@<pending>`).
+
+**QG-unblock (carve-out #3, `unified-trading-pm@b95e730fe`+`@7c9a86c78`):** two freshly-published 2026-06-19 OSV
+advisories (`pydantic-settings GHSA-4xgf-cpjx-pc3j`, `ujson CVE-2026-54911`) were failing every repo's pip-audit at
+max-0/max-4 — added both to the sanctioned `--ignore-vuln` block in `base-service.sh` + `base-library.sh` (transitive,
+exploit-surface-nil, mirrored). Also synced the PM `workspace-manifest.json` UTL 0.18→0.19 promotion-lag false-positive.
