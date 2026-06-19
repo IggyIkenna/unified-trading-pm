@@ -338,6 +338,19 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     "!**/generate_strategy_prospectus.py"
     # F39 venue coverage audit: benign row-dict .get("adapters", []) for per-venue data.
     "!**/audit_venue_coverage.py"
+    # check_base_image_digest_drift: benign JSON .get("repositories", {}) for manifest parsing.
+    "!**/check_base_image_digest_drift.py"
+)
+EMPTY_STR_EXCLUDE_GLOBS+=(
+    # check_base_image_digest_drift: benign JSON .get("name", "") / .get("version", "") for
+    # dep-edge parsing — same category as other checker scripts above.
+    "!**/check_base_image_digest_drift.py"
+)
+HARDCODED_PROJECT_EXCLUDE_GLOBS+=(
+    # check_base_image_digest_drift: DEFAULT_PROJECT_ID is the known GCR project for the UTL
+    # base image (the value IS the project — there is no config injection for the post-gate
+    # registry probe; the constant is intentional, not a secret).
+    "!**/check_base_image_digest_drift.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
@@ -712,4 +725,18 @@ DIAGRAM_SCRIPT="${REPO_ROOT}/scripts/generate-cicd-diagram.py"
 if [ -f "${DIAGRAM_YAML}" ] && [ -f "${DIAGRAM_SCRIPT}" ]; then
     echo "Regenerating CI/CD pipeline diagram..."
     python3 "${DIAGRAM_SCRIPT}" || { echo "⚠ Diagram regeneration failed (non-blocking)" >&2; }
+fi
+
+# ── Post-gates: base-image digest drift detector (warn-only — non-blocking) ──
+# Scans every service Dockerfile for ARG BASE_IMAGE_DIGEST and warns if the fleet is
+# inconsistent (a repo missed the update-dependency-version.yml fan-out) or if the
+# pinned digest has fallen behind :latest (best-effort gcloud probe).  The incident
+# that motivated this: mdps pin drifted to e939b4ee (UTL 0.11.0 / UAC 0.15.0) while
+# its floor required UTL >=0.12.0 → Cloud Build failed silently.
+# SSOT: plans/active/deployment_ui_monitoring_pane_2026_06_19.md
+DIGEST_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_base_image_digest_drift.py"
+if [ -f "$DIGEST_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running base-image digest drift detector (warn-only)..."
+    python3 "$DIGEST_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" \
+        || { echo "⚠ Digest drift checker errored (non-blocking)" >&2; }
 fi
