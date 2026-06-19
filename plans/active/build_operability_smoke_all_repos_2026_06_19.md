@@ -185,7 +185,7 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
 `b2a975e4`, execution-service `f84a216f` — both build clean on their existing config). **9 FAILED**, root-caused into
 4 classes:
 
-- [ ] [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.** `features-{calendar,delta-one,
+- [x] ✅ [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.** `features-{calendar,delta-one,
       multi-timeframe,onchain,volatility}-service-build` + `ml-inference-service-build` + `ml-training-service-build`
       point at the SEPARATE GitHub repos `features-*-service` / `ml-*-service`, which were **archived read-only
       2026-05-08** when consolidated into `features-service` (8→sub-packages, `--feature-family` flag) and `ml-service`
@@ -193,6 +193,10 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
       `uv sync --frozen --no-dev --system` (`--system` invalid on `uv sync`) — but the repos are DEAD; the fix is to
       **DELETE the 7 obsolete triggers** (consolidation cleanup that never happened), NOT fix their Dockerfiles. Repo:
       deployment-service (trigger inventory) — operator confirm before deleting.
+      **DONE (prior session)**: 37 zombie triggers deleted (all 7 named + 30 more: unified-*-interface libs, execution-algo,
+      ml-training-ui, deployment-dashboard/unified-trading-deployment-v2); 8 dead `locals.services` entries removed from
+      terraform/cloud-build/gcp/main.tf — deployment-service@1ddf1d4. Confirmed: `gcloud builds triggers list` shows 28
+      live triggers, none of the zombie names present.
 - [ ] [INFRA] P0. **Create triggers for the LIVE consolidated repos** `features-service` + `ml-service` (same gap as the
       6 new repos — consolidation made the repos but no `-build` trigger). Their Dockerfiles are already correct
       (features-service `uv pip install --system -e . --no-sources`; ml-service `uv sync --frozen --no-dev`). Link +
