@@ -39,6 +39,17 @@ REMOVED: frozenset[str] = frozenset(
         "unified-sports-reference-interface",
         "unified-trade-execution-interface",
         "unified-trading-codex",
+        # Added 2026-06-19: orphans found as live Cloud Build triggers/links but absent from BOTH the
+        # live 25-repo set AND this list (pre-25-era debris; their zombie triggers + links were deleted).
+        "unified-cloud-services",
+        "unified-domain-services",
+        "unified-events-interface",
+        "unified-order-interface",
+        "ml-training-ui",
+        "market-tick-data-handler",
+        "live-health-monitor-ui",
+        "execution-results-api",
+        "market-data-api",
     }
 )
 
@@ -151,7 +162,7 @@ def main() -> None:
         for key in REMOVED:
             versions.pop(key, None)
 
-    for _name, info in list(repos.items()):
+    for info in list(repos.values()):
         if not isinstance(info, dict):
             continue
         fd = _filter_dep_list(info.get("dependencies"))
