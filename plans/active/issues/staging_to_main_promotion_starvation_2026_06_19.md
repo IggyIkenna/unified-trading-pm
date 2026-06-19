@@ -3,7 +3,6 @@ title:
   staging→main promotion starves 20/23 repos — two upstream failure modes (manifest version-bump desync + Tier-C
   squash-fallback eating semver labels), not a missing promoter
 created: 2026-06-19
-author: harshkantariya [slot-4·laptop]
 source:
   - 2026-06-19 fleet audit (deployment-ui CI/CD Repos page; LDR→main delta column)
   - unified-trading-pm/.github/workflows/staging-to-main.yml (pending-set derivation)
