@@ -168,10 +168,40 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 
 ### Phase 3 — AWS CodeBuild path validation (after GCP green)
 
-- [ ] [INFRA] P3. Validate the AWS CodeBuild build path for ≥1 base lib + ≥1 service (the `Build-LDR: true` trailer
-      webhook, or the direct AWS CodeBuild project run). Confirm parity with GCP (same image builds). **Needs:** AWS
-      CodeBuild read/run perms — `harsh-worker` currently lacks `codebuild:ListProjects` (file a `BLOCKED-CREDENTIALS`
-      ask if it blocks).
+> **AWS CodeBuild parity AUDITED 2026-06-19 (slot-1, harsh-worker creds — read perms now AVAILABLE, the prior
+> `codebuild:ListProjects` block is LIFTED).** GCP is the clean SSOT (16 live service `-build` triggers + UTL base);
+> AWS CodeBuild has **drifted from both the GCP set and its own terraform**. Live state (`ap-northeast-1`):
+>
+> **AWS CodeBuild projects that EXIST (12):** alerting-service, deployment-api, deployment-service, execution-service,
+> features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library (all 9
+> have a `live-defi-rollout` PUSH webhook) **+ 3 ZOMBIES** not in `workspace-manifest.json`:
+> `position-balance-monitor-service`, `risk-and-exposure-service`, `unified-trading-system` (archived/old-monolith).
+>
+> **The 8 LIVE repos that GCP builds but AWS has NO CodeBuild project for:** `batch-live-reconciliation-service`,
+> `client-reporting-api`, `fund-administration-service`, `greeks-service`, `market-data-processing-service`,
+> `ml-service`, `trading-agent-service`, `deployment-ui` (nginx static image on GCP). All 8 are `LIVE` in the manifest
+> and image-green on GCP — this is the AWS analogue of the GCP Phase-2.5 new-repo trigger gap (those 6 + mdps + dep-ui).
+>
+> **Terraform is ALSO drifted (3rd source of truth disagrees):** `terraform/cloud-build/aws/main.tf` `locals.services`
+> lists 10 entries that match NEITHER cloud — it still names archived per-family repos
+> (`features-{calendar,delta-one,volatility,onchain}-service`) + the wrong-named `execution-services` + `mdps`/`ml`
+> that aren't live on AWS, and is missing every project that DOES exist. The live AWS projects were created
+> imperatively/out-of-band, not from this TF. **Same zombie+drift cleanup GCP already did (deployment-service@1ddf1d4 /
+> @1cdb60d) is owed on the AWS side.** AWS webhooks fire on push to `live-defi-rollout` (note: GCP service triggers fire
+> on `^main$`, base libs on LDR — a parity nuance to reconcile, not a blocker).
+
+- [ ] [INFRA] P3. **Create the 8 missing AWS CodeBuild projects + `live-defi-rollout` webhooks** (mirror the existing
+      9 live projects' shape; buildspec `buildspec.aws.yaml`): `batch-live-reconciliation-service`,
+      `client-reporting-api`, `fund-administration-service`, `greeks-service`, `market-data-processing-service`,
+      `ml-service`, `trading-agent-service`, `deployment-ui`. Build ≥1 to prove parity with GCP. Repo: deployment-service.
+- [ ] [INFRA] P3. **Delete the 3 AWS zombie projects** (`position-balance-monitor-service`, `risk-and-exposure-service`,
+      `unified-trading-system`) — archived/non-manifest, mirror of the GCP zombie purge. Repo: deployment-service.
+- [ ] [INFRA] P3. **Reconcile `terraform/cloud-build/aws/main.tf` `locals.services` to the live 1:1 set** (drop the
+      archived per-family + `execution-services` mis-name; add the real live projects) so TF stops being a 3rd
+      disagreeing SSOT, then `terraform import` the imperatively-created projects. Repo: deployment-service.
+- [x] ✅ [INFRA] P3. AUDIT DONE 2026-06-19 — AWS↔GCP trigger parity diffed (see banner above). `harsh-worker` read
+      perms confirmed working (`list-projects` / `batch-get-projects`); the prior `BLOCKED-CREDENTIALS` ListProjects
+      block is stale/lifted. Repo: deployment-service (audit only, no infra change yet).
 
 ### Phase 4 — Trial deploy (FINAL, separate gate)
 
