@@ -311,7 +311,12 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   - **unified-api-contracts** is a **LIBRARY wheel-build (not an image)** whose publish-CI is RED — fails EARLY with an
     empty build log (setup/config-level: source-fetch or cloudbuild config, NOT a Dockerfile issue). Separate library-CI
     item; needs its own diagnosis. Repo: unified-api-contracts.
-  - **`unified-trading-system-ui`** has a Dockerfile but **NO build trigger** — possible GAP (the main UI; confirm it
-    deploys via another pipeline e.g. Vercel, or wire a trigger). Repo: deployment-service (trigger) + operator confirm.
-  - **7 don't build images by design**: agent-orchestrator (VM-deployed tarball), e2e-testing / system-integration-tests
-    / unified-trading-pm / ibkr-gateway-infra / unified-trading-api (no Dockerfile — test/plans/infra repos).
+  - **UI STATIC builds (NOT Docker images — operator-confirmed 2026-06-19)**: the UIs ship STATIC builds (`next build` /
+    Vite), not container images. `unified-trading-system-ui` → `next build` → **Firebase Hosting** via GH Actions
+    `deploy-uat-on-merge.yml` (on every `live-defi-rollout` push; last 3 runs GREEN through 2026-06-18) — NOT a gap, has
+    its own pipeline, does NOT need a Cloud Build Docker trigger. `deployment-ui` packages its static build into an
+    `nginx:alpine` image via Cloud Build (`deployment-ui-main-deploy`, green `f4f4968e`). `agent-orchestrator`'s Vite
+    dashboard is built + served by the orchestrator on its VM. So all three UIs are HANDLED.
+  - **7 don't build images by design**: agent-orchestrator (VM-deployed tarball; UI is static, served by the backend),
+    e2e-testing / system-integration-tests / unified-trading-pm / ibkr-gateway-infra / unified-trading-api (no Dockerfile
+    — test/plans/infra repos).
