@@ -607,6 +607,12 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `kind="instruments-store-prediction",     asset_group=None` if prediction ever needs re-canonicalisation.
       **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
 
+## CME event contracts (binary-settlement EC* series) — FINISH the backfill (operator 2026-06-19)
+
+CONFIRMED in Databento: all 9 `EC*` event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/**ECBTC** — BTC binary, the killer leg vs Polymarket BTC binaries) are in `_CME_EVENT_CONTRACTS` (`unified_api_contracts/registry/tradfi_instrument_universe.py`) on **GLBX.MDP3**, covered by the existing 3-dataset subscription (no extra dataset), tagged `event_contract`, validity `{trades, ohlcv-1s, tbbo}`. Gather was STARTED, not finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
+
+- [ ] [DATA] P1. **Finish the CME EC* event-contract backfill** — all 9 series (`.OPT` parents on GLBX.MDP3), data_types `{trades, ohlcv_1s, tbbo}`, full timeframe, via the tradfi Databento path (`--source databento`). Ensure the running tradfi Databento fan-out enumerates the `event_contract`/`.OPT`-parent series (not just standard futures); if not, a focused finish run. Verify EC* cells captured in the v9 `_index` + that the FINAL CERTIFICATION explicitly checks EC* coverage (esp. ECBTC). — market-tick-data-service / instruments-service
+
 ## Forthcoming credentials (operator 2026-06-19 — note now, unblock on arrival)
 
 Operator is acquiring these — record as pending-credential so the backfill runs the moment the keys land (NOT memory; tracked here per the durable-facts rule):
