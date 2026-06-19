@@ -319,6 +319,42 @@ preserved in v8.
 the `source: str` column (see [TradFi `source` column](#tradfi-source-column--v9) below). All prior v8 semantics are
 unchanged.
 
+> **IS instruments-store `_index` v9 column-population (2026-06-19) — the dedup pass was NOT the v9 pass.** A prior
+> "instruments-store `_index` v9-canonical for ALL 5 AGs — DONE" claim referred ONLY to the blank-status/cell-dedup
+> canonicalisation; the **v9 COLUMN population never ran** on the live IS `_index` objects. Audited 2026-06-19, the live
+> `instruments-store-{ag}-prd/_index/availability_index.parquet` was a v4/v8/v9 schema MIX with `source` 0%-populated
+> (cefi/defi/tradfi), the `asset_group` column ABSENT, and `pipeline_mode` mostly blank. Closed by two changes:
+>
+> 1. **Historical backfill** — `instruments-service/scripts/populate_is_index_v9_2026_06_19.py` (+
+>    `populate_sports_is_index_v9_2026_06_19.py` for sports) row-preservingly stamps `schema_version=9`, `asset_group`
+>    (constant), `pipeline_mode` (existing value kept; blank → `batch_instruments_service`, the IS producer mode), and
+>    `source` DERIVED PER CELL from that cell's `pipeline_mode` via `source_string_for(...)` (NOT a SOURCE*PRIORITY
+>    default; a `BATCH_INSTRUMENTS_SERVICE` producer row → `instruments_service`). DeFi additionally canonicalises the
+>    `venue` column to the single `PROTOCOL-CHAIN` SSOT identity (`ALL_DEFI_VENUES`) via
+>    `canonicalize_defi_manifest_venue_2026_06_14.canonicalise_venue_column` + captured-preferring spelling-dedup, in
+>    the SAME single `_index` walk (resolves the "DeFi venue-naming drift" — chain-suffixed `AAVEV3-ARBITRUM` and bare
+>    `AAVE_V3`+chain twins collapse to the canonical `AAVE_V3-ETHEREUM`). Snapshots →
+>    `\_index/snapshots/pre_is_v9*{ag}\_\*`. Verified live: every applied AG `schema_v9=100%`, `source`/`asset_group`/`pipeline_mode`=100%, `captured`
+>    preserved (defi −861 = the legitimate legacy↔canonical spelling-dedup, all all-captured twins; 0 captured cell
+>    shadowed).
+> 2. **Writer root-fix (no regression)** — the IS writer left producer-row `source` BLANK by design (the C-#6
+>    auto-resolve-at-read pattern), so a fresh capture would re-introduce a blank `source`. Fixed at the UTL SSOT:
+>    `ManifestWriter._stamp_producer_source` stamps `source_string_for(pipeline_mode)` on a BATCH captured row whose
+>    registry source resolved blank — so every captured cell now carries explicit provenance at WRITE time
+>    (C-#6-identity-safe: stamped == `source_string_for(pipeline_mode)`; no-op for non-batch rows + source-exempt modes;
+>    never overrides a real vendor source). Wired into `record_captured` / `record_captured_from_counts` / `add()`.
+>    SSOT: `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md`.
+
+> 3. **Provenance is write-stamped by the FETCHING ADAPTER, never `SOURCE_PRIORITY[0]` (operator 2026-06-19)** —
+>    `SOURCE_PRIORITY` is READ-time resolution ORDER only; using its top entry to WRITE-stamp mis-attributes a cell
+>    fetched by a non-primary vendor. Incident: TradFi `("tradfi","ohlcv_1m")` priority `["massive","databento"]`
+>    stamped **CBOE VX-futures rows `batch_massive`** even though only Databento (`XCBF.PITCH`) carries CFE (Massive has
+>    none). Fix: the MTDS OHLCV backfill requires an explicit validated `--source databento|massive` that drives BOTH
+>    the fetch adapter AND the stamp (`derive_pipeline_mode_for_row(source=…)` → `batch_<vendor>`, bypassing
+>    `SOURCE_PRIORITY`); UAC `assert_source_capable_for_venue` fail-closes a venue-incapable source (CBOE+massive
+>    raises). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` § "Source provenance is WRITE-STAMPED by the
+>    FETCHING adapter".
+
 **Schema v8** (UTL@`547ff3c`, 2026-05-12): `MANIFEST_SCHEMA_VERSION = 8`. The `pipeline_mode=` default was removed
 (explicit-or-fail) from all 6 public `record_*` methods. The 3 v8 emission kwargs (`service_emission_state=` /
 `last_emission_decision_at=` / `expected_window_completeness_fraction=`) still accept `None` (defaults remain) pending

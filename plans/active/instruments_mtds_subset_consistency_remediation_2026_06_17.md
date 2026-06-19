@@ -284,20 +284,22 @@ to logs.
       `SUSHISWAP_V3` (2,606 captured 2023-04-05→06-18). The `-AVALANCHE`/`-BASE` chain-suffixed `attempted_failed` rows
       are the same anomalous variant — data captured under the canonical bare venue. - **DRIFT-SOLANA (41) +
       AAVE_V3-OPTIMISM (41)**: genuine deeper upstream changes — split to the two P2 todos below. — instruments-service
-- [ ] [DATA] P2. **DeFi manifest venue-naming drift — chain-suffixed VARIANT venue tags shadow the canonical
-      bare-protocol venue** (surfaced 2026-06-18). The defi instruments-store `_index` carries BOTH the canonical
-      bare-protocol venue (`MORPHO` 1,669 captured / `SUSHISWAP_V3` 2,606 / `TRADER_JOE_V2` 74 — where the adapter
-      actually writes, keyed by its `venue` property) AND a smaller anomalous chain-suffixed variant
-      (`MORPHO-ETHEREUM`/`MORPHO-BASE` 42 each, `SUSHISWAP_V3-BASE` 2, `TRADER_JOE_V2-AVALANCHE` 6,
-      `SUSHISWAPV3`/`SUSHISWAP-ARBITRUM`/etc.) that is almost entirely `attempted_failed` + a stray captured. The DeFi
-      venue identity is ambiguous: the adapter's `venue` property is the bare protocol (`morpho`→`MORPHO`) while
-      `InstrumentRecord.venue`=`MORPHO-{chain}` and the manifest writer keys the shard by the PROPERTY not the record
-      field → multi-chain protocols collapse to one bare venue + the chain-suffixed rows are orphan variants. **Decide
-      the canonical DeFi instrument venue grain** (bare-protocol vs protocol-chain) + make the adapter `venue` property,
-      the `InstrumentRecord.venue`, and the manifest shard key AGREE (shard-granularity SSOT), then reconcile/collapse
-      the variant rows (phantom-audit). Captured data is present under the bare venue — this is a
-      naming-canonicalisation correctness item, not a fetch gap. — instruments-service / unified-trading-library
-      (manifest shard key) — composes with the `*_manifest_canonicalisation_*` + `source=` provenance tracks
+- [x] ✅ [DATA] P2. **DeFi manifest venue-naming drift — `_index` reconcile DONE (grain DECIDED = PROTOCOL-CHAIN)**
+      (surfaced 2026-06-18, resolved 2026-06-19). The defi instruments-store `_index` carried THREE drifted spellings of
+      one protocol-on-chain (bare `AAVEV3`/`MORPHO`, chain-suffixed-ghost `AAVEV3-ARBITRUM`/`MORPHO-ETHEREUM`,
+      already-canonical `AAVE_V3`+chain). **GRAIN DECISION: PROTOCOL-CHAIN** — the UAC SSOT `ALL_DEFI_VENUES` is 150/159
+      protocol-chain, so the canonical instrument venue grain is `PROTOCOL-CHAIN` (`AAVE_V3-ETHEREUM`), NOT bare. The
+      live `_index` venue column was canonicalised 91→58 venues (71,799 rows re-pointed via the reader-SSOT
+      `VenueMapping.normalize_defi_venue` resolver) + 861 captured legacy↔canonical spelling-dedup, folded into the v9
+      column-population walk (instruments-service@7a63be9 → APPLIED). Captured preserved 75,942→75,081 (−861
+      all-captured twins, 0 captured cell shadowed). — instruments-service
+- [ ] [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain** (the
+      `_index` reconcile above fixed the STORED data; the WRITER still keys multi-chain protocol shards by the adapter's
+      bare `venue` property rather than `InstrumentRecord.venue`=`PROTOCOL-CHAIN`, so a fresh capture can re-introduce a
+      bare-spelling row). Make the adapter `venue` property, `InstrumentRecord.venue`, and the manifest shard key all
+      emit the canonical PROTOCOL-CHAIN id (shard-granularity SSOT) so new writes match the canonicalised `_index` with
+      no re-reconcile needed. — instruments-service / unified-trading-library (manifest shard key) — composes with the
+      `*_manifest_canonicalisation_*` + `source=` provenance tracks
 - [x] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
       2026-06-18). The Drift Data API endpoint moved: `/stats/markets`→404, `/markets`→403, `/contracts`/`/perpMarkets`
       →403 (auth-gated), `dlob.drift.trade`→502. Find Drift's current PUBLIC markets endpoint (docs at
@@ -582,8 +584,21 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       instruments-service@`audit_instruments_store_legacy_gcs_delete_list.py`. cefi/defi/tradfi/pred 100% canonical (0
       legacy); sports 9,723 unmappable-superseded (excluded, reported); SAFE-TO-DELETE=0 fleet-wide → no delete needed.
       Delete-list parquets written to each `_index/audit/`. — instruments-service
-- [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9-canonical for ALL 5 AGs** — DONE (cefi+defi+tradfi `--apply`'d;
-      sports/prediction already clean). Every AG blank_status=0 + dup_cells=0. — instruments-service
+- [x] ✅ [SCRIPT] P1. **instruments-store `_index` blank-status/dedup canonical for ALL 5 AGs** — DONE (cefi+defi+tradfi
+      `--apply`'d; sports/prediction already clean). Every AG blank_status=0 + dup_cells=0. **⚠️ This was the DEDUP
+      pass, NOT the v9 COLUMN pass — see the new v9-column item below.** — instruments-service
+- [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9 COLUMN-population for cefi/defi/tradfi/prediction** (the dedup
+      pass above was NOT this — audited 2026-06-19, the live IS `_index` was a v4/v8/v9 MIX with `source` 0%,
+      `asset_group` column ABSENT, `pipeline_mode` mostly blank). `populate_is_index_v9_2026_06_19.py` row-preservingly
+      stamps schema*version=9 + asset_group + pipeline_mode (blank→`batch_instruments_service`) + source (DERIVED PER
+      CELL via `source_string_for(pipeline_mode)`, NOT a default). DeFi additionally venue-canonicalised 91→58
+      (PROTOCOL-CHAIN SSOT) + 861 captured spelling-dedup. **APPLIED cefi/defi/prediction** (verified live:
+      schema_v9=100%, source/asset_group/pipeline_mode=100%; captured preserved — cefi 36,062 / pred 791 / defi 75,081 =
+      −861 legitimate spelling-dedup). **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
+      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+      `\_index/snapshots/pre_is_v9*{ag}\_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:     UTL@f8ec9096 `\_stamp_producer_source`stamps`source_string_for(pipeline_mode)`
+      on blank batch producer rows (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 +
+      unified-trading-library@f8ec9096
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
       (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
@@ -1104,10 +1119,11 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
 - [ ] [DATA] P2. **BLOCKED-CREDENTIALS — SFI + Transfermarkt sports keys (validate/rotate)** — adapter scaffolds + unit
       tests CONFIRMED present (no build needed): `SoccerFootballInfoAdapter` (35 tests `test_sfi_adapter_coverage.py`,
       RapidAPI) + `TransfermarktAdapter` (33 tests `test_transfermarkt_adapter_coverage.py`, RapidAPI/Apify). Both
-      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000. **LIVE-TESTED 2026-06-19: both secrets hold the SAME valid RapidAPI key `22380b4a…`; both APIs return
-      HTTP 403 `"You are not subscribed to this API."` → a RapidAPI SUBSCRIPTION GAP, NOT a bad/expired key.** Operator
-      ask (corrected): **SUBSCRIBE** the RapidAPI account to `soccer-football-info` + `transfermarkt-football-data-api`
-      (or swap the TM secret to an Apify `apify_api_*` token — adapter auto-detects) → ping
+      secrets EXIST in SM (`soccer-football-info-api-key`, `transfermarkt-api-key`) but cov 0.000. **LIVE-TESTED
+      2026-06-19: both secrets hold the SAME valid RapidAPI key `22380b4a…`; both APIs return HTTP 403
+      `"You are not subscribed to this API."` → a RapidAPI SUBSCRIPTION GAP, NOT a bad/expired key.** Operator ask
+      (corrected): **SUBSCRIBE** the RapidAPI account to `soccer-football-info` + `transfermarkt-football-data-api` (or
+      swap the TM secret to an Apify `apify_api_*` token — adapter auto-detects) → ping
       `ikenna_orchestrator/pings/slot_1.md` § "CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19)".
       SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog — NOT a coverage
       gap). — instruments-service [BLOCKED-CREDENTIALS]
