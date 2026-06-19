@@ -184,3 +184,4 @@
 {"timestamp": "2026-06-19T21:03:58Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.19.0 (branch=staging, bump=minor)", "commit_sha": "6c644015b470f57cc49739fc31243bf89820ce8c"}
 {"timestamp": "2026-06-19T22:09:20Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "client-reporting-api=0.11.0 (branch=staging, bump=minor)", "commit_sha": "288ea3fd6a071ba9f2c42dbf80c19e07089a044d"}
 {"timestamp": "2026-06-19T22:54:50Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-api-contracts=0.24.0 (branch=staging, bump=minor)", "commit_sha": "9abca80079fd8cd4ed014fdad7ff22b8b83a07f7"}
+{"timestamp": "2026-06-19T22:55:43Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "greeks-service=0.8.0 (branch=staging, bump=minor)", "commit_sha": "8ddba08284900213c34b3bc047002a633b9aa137"}
