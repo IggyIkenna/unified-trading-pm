@@ -1146,12 +1146,11 @@ Operator "make twins for ALL sports data lacking one so the delete loses nothing
       covered those days; verified day=2022-09-10 has 0 canonical/0 pipeline_mode objects). Verdict parquet
       `_index/audit/sports_md_unmappable_verify_2026_06_19.parquet`. **CORRECTS the prior "all 3,816 TWIN-VERIFIED-SAFE
       (58,910/58,910 sampled)" — that was a 6-file sample; the FULL run found the 700 gap.** — e2e-testing
-- [x] ✅ [DATA] P1. **MD 700 MIGRATE-NEEDED content-aware fan-out to canonical** — DONE 2026-06-19
-      (e2e-testing@1b07bcb `migrate_sports_md_unmappable_to_canonical_2026_06_19.py --apply`, RAN: 700/700 objects →
-      41,206 canonical cells / 10,111,734 rows written). **RE-VERIFIED: the full twin-verifier now reports 3,816
-      TWIN-VERIFIED-SAFE / 0 MIGRATE-NEEDED / 1,962,770 of 1,962,770 ids covered (100.0%)** → every MD legacy object is
-      delete-safe. fans the 700
-      genuinely-unique odds objects → canonical
+- [x] ✅ [DATA] P1. **MD 700 MIGRATE-NEEDED content-aware fan-out to canonical** — DONE 2026-06-19 (e2e-testing@1b07bcb
+      `migrate_sports_md_unmappable_to_canonical_2026_06_19.py --apply`, RAN: 700/700 objects → 41,206 canonical cells /
+      10,111,734 rows written). **RE-VERIFIED: the full twin-verifier now reports 3,816 TWIN-VERIFIED-SAFE / 0
+      MIGRATE-NEEDED / 1,962,770 of 1,962,770 ids covered (100.0%)** → every MD legacy object is delete-safe. fans the
+      700 genuinely-unique odds objects → canonical
       `raw_tick_data/by_date/day={D}/pipeline_mode=batch_odds_api/     asset_group=sports/venue={V}/league_id={L}/instrument_type=odds/data_type=trades/ticks.parquet`
       (41,206 cells / 10.1M rows; legacy schema == canonical minus 4 derivable cols; union-dedup on instrument_id, never
       overwrite-lose, never delete legacy). On completion re-run the verify → MIGRATE-NEEDED must reach 0 → all 3,816
@@ -1160,3 +1159,48 @@ Operator "make twins for ALL sports data lacking one so the delete loses nothing
 **MD twin-coverage end-state (operator-gated delete-readiness):** 248,502 SAFE-TO-DELETE (path-twin-verified) + 3,116
 TWIN-VERIFIED-SAFE (content-twin-verified) + 700 fanned-out-to-canonical = ALL 252,318 MD legacy objects delete-safe
 once the fan-out completes + re-verifies. **Delete stays OPERATOR-GATED — never executed by the agent.**
+
+## SPORTS E2E audit + remediation — FINAL REPORT (rule 9, autonomous run COMPLETE 2026-06-19)
+
+Operator `/autonomous` 2026-06-19: full e2e sports audit+remediation for IS+MTDS + "make twins for ALL sports data
+lacking one across both buckets so the operator-gated delete loses nothing". Delete stays operator-gated (never
+executed). Concurrent agent af95b962 (IS coverage backfill) never collided — all my IS work was index-canonicalise +
+object-copy, never a fetch; the IS `_index` stayed stale-stable (2026-06-11) throughout my writes.
+
+**ALL deliverables COMPLETE + verified:**
+
+| Area                              | Result                                                                                                                                                   | Evidence                                                                            |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Twin coverage IS (operator ask)   | 9,723 legacy odds-api instrument objects → ALL canonical-twinned, delete-safe                                                                            | UAC@2224818 + IS@308013f; `sports_legacy_oddsapi_twin_migration_2026_06_19.parquet` |
+| Twin coverage MD (operator ask)   | 252,318 legacy objects ALL delete-safe (248,502 path + 3,116 content + 700 fanned-out); re-verify **3,816 TWIN-VERIFIED-SAFE / 0 MIGRATE-NEEDED / 100%** | e2e@1b07bcb; `sports_md_unmappable_verify_2026_06_19.parquet`                       |
+| MTDS `_index` v9 + canonical      | 100% v9; null-league 32,707→0; blank 17,288→0; captured 202,087→346,498 (per-league grain recovered)                                                     | mtds@ba21ee5                                                                        |
+| MTDS UNIBET/UNKNOWN remnants      | re-stamped batch_odds_api + league recovered                                                                                                             | mtds@ba21ee5                                                                        |
+| MTDS GCS paths                    | canonical pipeline_mode= (raw) + processed (odds_horizon_bucket) verified                                                                                | recovery day-map                                                                    |
+| IS `_index` v9                    | schema 100% v9; asset_group 100%; source 93.4% (UAC SSOT)                                                                                                | IS@5d7f6f0                                                                          |
+| IS catalogue + MVP/total_universe | PASS — 789-league catalogue fresh; sports in TOTAL_UNIVERSE_AXES + MVP_SCOPE; universe_membership MVP⊆TOTAL                                              | sub-agent verify                                                                    |
+| IS GCS paths                      | PASS — all 6 data_types resolve via candidate_parquet_paths()                                                                                            | sub-agent verify                                                                    |
+| Shard-atom (D)                    | PASS — (data_type, league_id, date) identical IS/MTDS/data-status/UI                                                                                     | data_status_axis_matrix.py:70,105                                                   |
+| Credentialed (SFI/Transfermarkt)  | scaffolds+tests confirmed; BLOCKED-CREDENTIALS ask filed                                                                                                 | ping slot_1.md                                                                      |
+
+**Forced-tradeoff / non-obvious decisions made under autonomy (rule 1/9):**
+
+1. **Plan claim corrections** (both surfaced + fixed honestly): (a) "9,723 unmappable/superseded, MIGRATE-FIRST=0" was
+   WRONG — they were genuinely-unique odds-api instrument data (canon venue=odds_api was empty_confirmed-only to
+   2020-06-05) → migrated, not abandoned. (b) "instruments-store `_index` v9-canonical for ALL 5 AGs — DONE" OVERCLAIMED
+   — it ran only blank/dedup; the v9-COLUMN populate was never run for ANY AG → done for sports here, fleet-wide gap
+   filed under the source-provenance plan.
+2. **MD 700 genuine gap**: the prior "all 3,816 TWIN-VERIFIED-SAFE (58,910 sampled)" was a 6-file sample; the FULL
+   verifier found 700 genuinely-unique 2022-2023 odds objects on days with ZERO canonical content → fanned out (not
+   declared safe on a sample).
+3. **3 captured-preservation bugs** caught by adversarial pre-apply verification before the MTDS recovery `--apply`
+   (existing_keys captured-only + supersede; processed/ root; footystats `league=`/lowercase-`odds`) — would have
+   wrongly emptied ~21k real captured cells.
+4. **Source-column scope split**: sports IS source backfilled now (UAC SSOT); the live-writer auto-stamp + cefi/tradfi/
+   defi backfill homed under the named cross-cutting `data_source_provenance_all_asset_groups_2026_06_01.md` (the source
+   RED-gap owner) — not a sports deferral.
+
+**Remaining open (all properly homed — NO sports-data-correctness deferral):** (1) FLEET-WIDE IS v9 for the OTHER AGs
+(source-provenance plan); (2) BLOCKED-CREDENTIALS SFI/Transfermarkt validate-rotate (operator-gated, the only sanctioned
+deferral; scaffolds+tests shipped); (3) catalogue mvp numeric-league-id P3 cosmetic fix. **Operator action: (a) the
+operator-gated DELETE of the now-fully-twinned sports legacy objects across both buckets; (b) validate/rotate the 2
+sports API keys.** Nothing else to pick up.
