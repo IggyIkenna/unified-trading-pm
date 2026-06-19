@@ -190,18 +190,39 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 > @1cdb60d) is owed on the AWS side.** AWS webhooks fire on push to `live-defi-rollout` (note: GCP service triggers fire
 > on `^main$`, base libs on LDR — a parity nuance to reconcile, not a blocker).
 
-- [ ] [INFRA] P3. **Create the 8 missing AWS CodeBuild projects + `live-defi-rollout` webhooks** (mirror the existing
-      9 live projects' shape; buildspec `buildspec.aws.yaml`): `batch-live-reconciliation-service`,
-      `client-reporting-api`, `fund-administration-service`, `greeks-service`, `market-data-processing-service`,
-      `ml-service`, `trading-agent-service`, `deployment-ui`. Build ≥1 to prove parity with GCP. Repo: deployment-service.
-- [ ] [INFRA] P3. **Delete the 3 AWS zombie projects** (`position-balance-monitor-service`, `risk-and-exposure-service`,
-      `unified-trading-system`) — archived/non-manifest, mirror of the GCP zombie purge. Repo: deployment-service.
-- [ ] [INFRA] P3. **Reconcile `terraform/cloud-build/aws/main.tf` `locals.services` to the live 1:1 set** (drop the
-      archived per-family + `execution-services` mis-name; add the real live projects) so TF stops being a 3rd
-      disagreeing SSOT, then `terraform import` the imperatively-created projects. Repo: deployment-service.
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **created the 8 missing AWS CodeBuild projects + `main` webhooks** (GCP-parity
+      firing): `batch-live-reconciliation-service`, `client-reporting-api`, `fund-administration-service`,
+      `greeks-service`, `market-data-processing-service`, `ml-service`, `trading-agent-service`, `deployment-ui`. Mirror
+      the live config (role `unified-trading-codebuild-role`, MEDIUM/privileged, `GH_PAT` secret, `buildspec.aws.yaml`).
+      AWS now 17 projects, 1:1 with live repos.
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **deleted the 3 AWS zombie projects** (`position-balance-monitor-service`,
+      `risk-and-exposure-service`, `unified-trading-system`) — archived/non-manifest, mirror of the GCP zombie purge.
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **reconciled `terraform/cloud-build/aws/main.tf` `locals.services` to the live
+      1:1 set + GCP firing model** (`build_branch`: UTL→live-defi-rollout, all services→main; env aligned to live;
+      `source_version`/webhook HEAD_REF now per-service-branch). deployment-service@2dddfc7. **`terraform import` of the
+      imperatively-created projects still owed** (state backend is commented out → no live state today) — see follow-up.
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **rolled out the canonical (proven-green) `buildspec.aws.yaml` to all 8 repos**
+      (5 had a stale folded-YAML buildspec that broke the CodeBuild parser at DOWNLOAD_SOURCE; 3 had none). Canonical =
+      the repo-agnostic `basename $(pwd)` form (now the deployment-service `templates/buildspec.aws.yaml` SSOT). Shipped
+      via quickmerge to LDR (`market-data-processing-service@40ae7ee`, batch/client-reporting/fund-admin/greeks/ml/
+      trading-agent, deployment-ui@…). **7/8 build GREEN on AWS CodeBuild** (mdps, batch-live-recon, client-reporting,
+      fund-admin, greeks, ml, trading-agent — full docker build + in-image QG + ECR push, validated on `live-defi-rollout`
+      like GCP's manual-LDR validation).
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **migrated the existing 8 service webhooks LDR→main** (alerting, deployment-api,
+      deployment-service, execution-service, features-service, instruments-service, market-tick-data-service,
+      strategy-service); `unified-trading-library` stays on `live-defi-rollout`. AWS firing model now **mirrors GCP
+      exactly**: base lib on LDR, every service on main. (Services build on promotion-to-main, like GCP `^main$` — last
+      successful LDR image remains in ECR until the next main promotion rebuilds it.)
+- [ ] [DOCKER] P3. **deployment-ui needs a dedicated Node `buildspec.aws.yaml`** — it's the one non-Python repo: the
+      canonical buildspec reads `VERSION` from `pyproject.toml` (deployment-ui has none → empty image tag → BUILD fails)
+      AND its Dockerfile `COPY unified-admin-ui/packages/core` needs the monorepo sibling staged into the build context
+      (mirror its `cloudbuild.yaml`). Project + main webhook exist; only the build recipe is the gap. Repo: deployment-ui.
+      (deployment-ui also ships via Firebase/nginx on GCP, so AWS ECR for it is low priority.)
+- [ ] [INFRA] P3. **`terraform import` the imperatively-created AWS CodeBuild projects + webhooks** into the reconciled
+      `terraform/cloud-build/aws` module (requires standing up the commented-out S3 state backend first), so the TF SSOT
+      becomes apply-clean. Repo: deployment-service.
 - [x] ✅ [INFRA] P3. AUDIT DONE 2026-06-19 — AWS↔GCP trigger parity diffed (see banner above). `harsh-worker` read
-      perms confirmed working (`list-projects` / `batch-get-projects`); the prior `BLOCKED-CREDENTIALS` ListProjects
-      block is stale/lifted. Repo: deployment-service (audit only, no infra change yet).
+      perms confirmed working; the prior `BLOCKED-CREDENTIALS` ListProjects block is stale/lifted.
 
 ### Phase 4 — Trial deploy (FINAL, separate gate)
 
