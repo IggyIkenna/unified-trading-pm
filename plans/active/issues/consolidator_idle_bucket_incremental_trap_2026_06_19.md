@@ -3,7 +3,6 @@ title:
   Manifest consolidator starves idle buckets — a per-VM shard written to an idle bucket never merges (incremental
   mtime-cutoff trap)
 created: 2026-06-19
-author: ikennaigboaka [slot-root·laptop]
 source:
   - unified-trading-library/unified_trading_library/manifest_consolidator.py (lines 355-373)
   - 2026-06-19 expected_unattempted materialisation run (cefi/tradfi shards never auto-merged)
@@ -12,6 +11,8 @@ parent_epic: mtds_mdps_master
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
+priority: P2
+status: active
 ---
 
 # Consolidator idle-bucket incremental trap

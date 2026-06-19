@@ -6,8 +6,10 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 created: 2026-06-19
-author: ikennaigboaka [slot-6·human-planning]
 status: active
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Cross-AG 4-pillar shard-validation harness
