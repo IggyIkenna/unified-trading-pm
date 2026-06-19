@@ -55,10 +55,13 @@ alert-unification. The `agent_kind`/`lifecycle` data is already served — it's 
       escalations view. Repo: agent-orchestrator (`server/` read path already has it + `dashboard/`).
 - [ ] [ORCHESTRATOR][UI] P2. Conditions tab collapsible (frontend-only): `COLLAPSED_COUNT=5`, sort OFF+`gates_queued>0`
       first, "Show N more ▾"/"Collapse ▴", keep the count chip. Repo: agent-orchestrator (dashboard).
-- [ ] [ORCHESTRATOR] P2. Human↔agent messaging (the ~1-min latency = agent-side `/loop` poll) — **DESIGN FORK, discuss
-      in prose before building**: ship (1) tmux "deliver now" nudge `POST /api/agents/{id}/nudge` + (2) adaptive cadence
-      (`AgentPollResponse.suggested_next_interval`) now; (3) long-poll/SSE as end-state; + a queued/delivered chip from
-      `pending_count`. Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR][UI] P2. Message-delivery VISIBILITY (operator decision 2026-06-19: **NO messaging-layer rewrite** —
+      the poll model is fine; ≤60s pickup doesn't bite the real interaction pattern (answering a waiting reconciler /
+      handing off direction), and urgent "stop" goes through pause/kill, not chat. The decided-against options — tmux
+      nudge, adaptive cadence, long-poll/SSE — solved a non-problem; the idle-poll COST win comes free with Phase-6
+      dormancy). **The only real gap is not knowing whether a sent message landed** → surface the already-computed
+      `count_pending_to_agent`/`pending_count` as a per-agent "queued → delivered" chip in the chat UI (data already
+      served; frontend-only). Repo: agent-orchestrator (dashboard).
 
 ## Track B — deployment-ui monitoring pane (repos: deployment-ui + deployment-api)
 
