@@ -66,13 +66,13 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
 
 ## Phase 4 — Delete / consolidate / route (P2)
 
-- [x] ✅ [ORCHESTRATOR] P2. Delete `notify_all_accounts_exhausted` (#15, no live caller — confirm then remove; consolidate
-      the 3 "no-capacity" alerts #9/#15/#21 to one). Repo: agent-orchestrator.
+- [x] ✅ [ORCHESTRATOR] P2. Delete `notify_all_accounts_exhausted` (#15, no live caller — confirm then remove;
+      consolidate the 3 "no-capacity" alerts #9/#15/#21 to one). Repo: agent-orchestrator.
 - [x] ✅ [ORCHESTRATOR] P2. Remove `notify_work_picked_up` (#20) from Slack or default-off
       (`ORCHESTRATOR_NOTIFY_WORK_PICKED_UP=false`) — steady-state monitoring in the failure channel. Repo:
       agent-orchestrator.
-- [x] ✅ [ORCHESTRATOR] P2. Split the overloaded `notify_agent_stuck_respawned` (#7) into purpose-specific functions (real
-      respawn vs plan-health dispatch vs escalation dispatch — kill the misleading "Auto-respawn" header). Repo:
+- [x] ✅ [ORCHESTRATOR] P2. Split the overloaded `notify_agent_stuck_respawned` (#7) into purpose-specific functions
+      (real respawn vs plan-health dispatch vs escalation dispatch — kill the misleading "Auto-respawn" header). Repo:
       agent-orchestrator.
 - [x] ✅ [SCRIPT] P2. Route `cloud-build-failure-watcher.yml:232-246` through `notify-slack.yml` (gain dedup + ledger +
       truthful severity); make it transition-based. Repo: unified-trading-pm.
@@ -83,6 +83,92 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
       asserts a same-op rotation DOES post exactly one alert, minus the cross-op marker). Genuine test-vs-spec conflict,
       not punted: needs a rotation-alert test redesign (operator decision) before `notify_account_rotated` can suppress
       same-op posts. This open checkbox tracks that remaining decision.
+
+## Phase 5 — Re-surface still-open alerts (severity-scaled re-nag) + carrier-routing follow-through (P1)
+
+> Operator design (2026-06-19): the Phase-1 dedup correctly killed _repeats_, but it converted standing conditions to
+> **page-once**. A single alert can get buried under newer messages and missed — and "page once + RESOLVED bookend"
+> never re-surfaces a condition that was **never acted upon**. We need a **re-nag**: while a condition stays open, page
+> again on a cadence matched to its expected MTTR, escalating, until it resolves. This is the inverse of Phase 1 (which
+> handles the case where the storm DID arrive); Phase 5 handles the case where it didn't.
+
+**Mechanism — carrier-native, no new watcher state.** The shared carrier (`notify-slack.yml`) already implements
+re-fire: a `dedup_key` posted `< cooldown_min` ago is suppressed; once `≥ cooldown_min` ago **and still re-detected**,
+it **re-arms (re-posts)** (`notify-slack.yml:174-186`), and a suppressed tick does NOT refresh the timestamp (`:331`) so
+the cadence is measured from the last real post. The GCS alert ledger IS the per-condition "last-posted" state — so the
+`ci-failure-watcher` (already `*/15`, stateless) just needs to emit **per-condition** alerts (each with a stable
+`dedup_key` + a severity-scaled `cooldown_min`) and report the **current** open set every tick; the carrier re-nags each
+independently. No persisted state added to the deliberately-stateless watcher.
+
+**Severity-scaled re-nag cadence (`cooldown_min`):**
+
+| Condition                                        | `dedup_key`                          | `cooldown_min`                    | Owner / cron                   |
+| ------------------------------------------------ | ------------------------------------ | --------------------------------- | ------------------------------ |
+| Stuck promotion PR (wedged, not handed off)      | `stuck-pr:{repo}:{number}`           | **20**                            | `ci-failure-watcher` `*/15`    |
+| Fleet frozen (GitHub Actions billing block)      | `ci-billing-block`                   | **20**                            | `ci-failure-watcher` `*/15`    |
+| Workflow / QG failing (incl. `quality-gates-v2`) | `ci-fail:{repo}:{branch}:{workflow}` | **60**                            | `ci-failure-watcher` `*/15`    |
+| Promotion lag (LDR↔staging↔main un-propagated) | `promotion-lag`                      | **60** (was 360)                  | `promotion-lag-monitor` `*/30` |
+| Recovered / resolved bookends                    | `ci-recovered:…` / `resolved-pr:…`   | 5 (distinct key, never swallowed) | —                              |
+
+Rationale: stuck-PR / fleet-frozen are the fast-MTTR, highest-urgency conditions → ~20 min (the operator's "15–20 min"
+band; `*/15` cron makes the effective floor 15–30 min). QG-red typically takes ~an hour to fix → 60 min. Promotion lag
+is slower-moving and less urgent than a frozen fleet → 60 min, left on its existing `*/30` cron (no faster cron = no
+added cost). The re-fire message escalates ("STILL OPEN {age}m") so a re-surfaced alert reads as a nag, not a fresh
+event.
+
+**Cost (operator question, answered):** Slack itself is **free** — incoming webhooks have no per-message charge (Slack
+bills per user-seat), so re-nagging more costs **$0** on Slack. The real $ is **GitHub Actions minutes** burned by the
+_detector_ cron workflows (~$0.008/min Linux/private beyond the free tier — the same lever behind the earlier
+`*/20→hourly` / `*/15→*/30` cron relaxations). Re-nag adds **≈$0** because it re-decides at an **already-running**
+`*/15` tick (posting is free); it would only cost more if we tightened a cron. We deliberately keep fleet-jam re-nag on
+the existing `*/15` watcher (billing block) and leave promotion-lag on `*/30` — **no cron is tightened**. The GCS dedup
+ledger is a few small read/append ops per tick (Cloud Storage Class A/B) → **pennies/month**; the AO-side alerts run on
+the always-on central VM → zero marginal cost.
+
+- [ ] [SCRIPT] P1. `ci-failure-watcher`: emit a per-condition `alerts` JSON output (one item per currently-open
+      condition: failing workflow / stuck PR / billing block / recovered / resolved), each carrying `dedup_key`,
+      `severity`, `cooldown_min`, and its own deep-link `message`; switch failing-workflow detection from flip-only to
+      **current-failing within a re-nag window** so a persistently-red QG re-surfaces. Switch `ci-failure-watcher.yml`
+      notify to a **matrix over `alerts`** (each item → `notify-slack.yml` with its `dedup_key`+`cooldown_min`). Unit
+      tests for the pure `build_alert_items`. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. `promotion-lag-monitor`: drop the `cooldown_min` 360→60 and add a **lag-cleared bookend** (RESOLVED
+      INFO when all branch-pairs are back in budget). Repo: unified-trading-pm.
+
+## Phase 6 — Carrier-routing + deep-link follow-through from the 2026-06-19 LDR audit (P1/P2)
+
+> Source: the 2026-06-19 read-only audit of both channels on LDR (two background agents). The re-nag (Phase 5) is the
+> headline; these are the remaining error-pointer-standard gaps the audit surfaced. Captured per the
+> Capture-Discoveries-As-Todos rule.
+
+- [ ] [SCRIPT] P1. Route the **raw-curl** CRITICAL Slack posters through `notify-slack.yml` (gain dedup + ledger +
+      re-nag eligibility): `semver-agent.yml` circuit-breaker / dispatch-fail pages (`:136`/`:229`/`:577`) and
+      `python-quality-gates-v2.yml:546` QG-slice-FAILED. Add a `dedup_key` keyed on repo+version (semver) /
+      repo+slice+sha (QG). These currently bypass the carrier entirely so a standing failure re-pages every run + never
+      reaches the ledger. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. Add a `dedup_key` to the remaining standing-condition workflows that lack one:
+      `sit-starvation-detector.yml` (also add a clickable run/deployment-ui link + a lock-cleared bookend; currently
+      CLI-only) and the `cascade-qg-ordering.yml` failure variant. Confirm `ruleset-drift-alert.yml` sets one. Repo:
+      unified-trading-pm.
+- [ ] [SCRIPT] P2. Route the lower-blast-radius raw posters through the carrier for ledger parity:
+      `request-major-bump.yml`, `major-bump-issue-handler.yml`, `fix-approval-timeout.yml`, `reap_stale_blockers.py`
+      (also has NO deep-link — add the orchestrator backlog link), `run-audit-reflog-with-alert.sh` (no deep-link).
+      Repo: unified-trading-pm.
+- [ ] [ORCHESTRATOR] P1. **Honest-header fix**: `notify_agent_stuck_respawned` (`server/notifications/slack.py:269`) is
+      hard-coded "Auto-respawn" but 2 of 3 callers never respawn — `main_agent_keeper.py:214` (a rate-limit page, fake
+      `slot_id=0`) and `worker_liveness_watchdog.py:923` (worker left FROZEN, explicitly not killed). Split into
+      `notify_main_agent_rate_limited` + `notify_worker_usage_frozen` (mirrors the Phase-4 plan-health/escalation
+      split). Verify `notify_escalation_dispatched` actually has a live caller (audit found none). Repo:
+      agent-orchestrator.
+- [ ] [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py:686`)
+      is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrate to the
+      `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR] P2. **Slot deep-link sweep**: swap the root `/vm/{id}` footer for
+      `_dashboard_deep_link("/fleet-git?slot=N", …)` (already used by quarantine + git-staleness) on
+      `notify_slot_stale`/`_failed`/`_blocked`, `notify_unpushed_plans`, `notify_agent_stuck_escalation`,
+      `notify_watchdog_kill`, `notify_context_burn`. Add a UI deep-link (accounts/fleet page) to the CLI-only
+      account/auth criticals (`notify_account_auth_failed`, `notify_all_accounts_unusable`,
+      `notify_setup_token_expiring`, `notify_account_usage_high`, `notify_account_pool_exhausted`) and move the account
+      id into the header. Repo: agent-orchestrator.
 
 ## Success criteria
 
@@ -103,14 +189,14 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
 All 5 `[SCRIPT]` items shipped in **unified-trading-pm@ab8e83028** (draining to main via PR #418, v2-gated auto-merge):
 
 - notify-slack.yml read-back dedup (`dedup_key` + `cooldown_min`; reads the date-partitioned ledger JSONL, skips within
-  cooldown, **fail-open**). **PM-only carrier, NOT a fleet template** (verified: absent from `scripts/workflow-templates/`,
-  not tracked by `detect_template_drift.py`, no sibling repo has it; all 34 callers PM-internal) → NO rollout, NO blast
-  radius.
-- `promotion_lag_monitor.py` stripped to a pure branch-pair lag monitor (`_stuck_prs`/`_classify_stuck_pr`/`_lock_dangle`
-  removed) — `ci-failure-watcher` is the stuck-PR SSOT.
+  cooldown, **fail-open**). **PM-only carrier, NOT a fleet template** (verified: absent from
+  `scripts/workflow-templates/`, not tracked by `detect_template_drift.py`, no sibling repo has it; all 34 callers
+  PM-internal) → NO rollout, NO blast radius.
+- `promotion_lag_monitor.py` stripped to a pure branch-pair lag monitor
+  (`_stuck_prs`/`_classify_stuck_pr`/`_lock_dangle` removed) — `ci-failure-watcher` is the stuck-PR SSOT.
 - `escalate-to-orchestrator.yml` notify gated (page once on hand-off, not on every retry tick).
-- promotion-lag + stuck-PR Slack lines rewritten to the error-pointer standard (transition-only, one deep-link); stuck-PR
-  line also gated on the `escalation-dispatched` label.
+- promotion-lag + stuck-PR Slack lines rewritten to the error-pointer standard (transition-only, one deep-link);
+  stuck-PR line also gated on the `escalation-dispatched` label.
 - `cloud-build-failure-watcher.yml` routed through `notify-slack.yml` (dedup + ledger; content-hash transition-based).
 
 QG green (`87s`); unit tests pass. The `[ORCHESTRATOR]` items are the agent-orchestrator side — Wave 7, DONE (below).
@@ -119,31 +205,32 @@ QG green (`87s`); unit tests pass. The `[ORCHESTRATOR]` items are the agent-orch
 
 All 4 `[ORCHESTRATOR]` items shipped (sub-agent rebased onto current LDR; `dedup_state.py` reconciled to a SUPERSET that
 preserves the shipped `load_seen_keys`/`save_seen_keys`/`diff_keys` semantics + adds bool-sentinel / cooldown-dict /
-int-map shapes). The 6 fully-done lines are flipped; the 7th (gh-rate 50% + same-op rotation) is **PARTIAL** (gh-rate-50%
-dropped; rotation half a documented test-conflict — see that checkbox).
+int-map shapes). The 6 fully-done lines are flipped; the 7th (gh-rate 50% + same-op rotation) is **PARTIAL**
+(gh-rate-50% dropped; rotation half a documented test-conflict — see that checkbox).
 
 - **P0 persist dedup** — persistence wired into all 6 targets: health `_stale_alerted`/`_idle_failed_alerted`,
   usage_poller alert sets, autospawn `_BRANCH_QUARANTINE_ALERTED` (the real branch-quarantine dedup — the literal
-  `_pool_exhaustion_alerted` name in the plan never existed), gh_rate_monitor `_level`, worker_liveness `_burn_flagged` +
-  the `_git_alerts` throttles (`load_throttle`/`persist_throttle` on disk). Load additive on init, save after mutation →
-  a central-VM restart stops re-firing every still-true alert. Tests: persist-across-restart (health + gh-rate) + full
-  test_dedup_state.
+  `_pool_exhaustion_alerted` name in the plan never existed), gh_rate_monitor `_level`, worker_liveness
+  `_burn_flagged` + the `_git_alerts` throttles (`load_throttle`/`persist_throttle` on disk). Load additive on init,
+  save after mutation → a central-VM restart stops re-firing every still-true alert. Tests: persist-across-restart
+  (health + gh-rate) + full test_dedup_state.
 - **P1 error-pointer + deep-links + RESOLVED bookends** — `notify_git_staleness_red`(→/fleet-git?slot=N),
   `notify_escalation_unresolved`(→GitHub PR/run), `notify_agent_stuck_escalation`/`notify_autospawn_flap`(→slot link);
   new bookends `notify_slot_recovered`/`notify_git_staleness_resolved`/`notify_account_auth_recovered` fire once on the
   true→false transition.
-- **P1 slot-quarantine alert** — `escalation.count_queued_walls()` + `notify_slot_quarantined()` (specific repo + cause +
-  wall count + deep-link); `_alert_branch_quarantine` pages the starvation alert when walls queue. Pairs with the
-  already-shipped anti-starvation skip (51bf0b6) + the Phase-7 dead-session self-heal (c4c96fb).
+- **P1 slot-quarantine alert** — `escalation.count_queued_walls()` + `notify_slot_quarantined()` (specific repo +
+  cause + wall count + deep-link); `_alert_branch_quarantine` pages the starvation alert when walls queue. Pairs with
+  the already-shipped anti-starvation skip (51bf0b6) + the Phase-7 dead-session self-heal (c4c96fb).
 - **P2 deletes/consolidations** — deleted `notify_all_accounts_exhausted` (no live caller; the live no-capacity path is
-  the single `notify_all_accounts_unusable`); default-off `notify_work_picked_up` (`ORCHESTRATOR_NOTIFY_WORK_PICKED_UP`);
-  split `notify_agent_stuck_respawned` → `notify_plan_health_dispatched` + `notify_escalation_dispatched` (honest
-  "Auto-respawn" header only for real respawns); dropped the gh-rate **50% NOTICE** tier (`USED_THRESHOLDS=(80,95,100)`).
+  the single `notify_all_accounts_unusable`); default-off `notify_work_picked_up`
+  (`ORCHESTRATOR_NOTIFY_WORK_PICKED_UP`); split `notify_agent_stuck_respawned` → `notify_plan_health_dispatched` +
+  `notify_escalation_dispatched` (honest "Auto-respawn" header only for real respawns); dropped the gh-rate **50%
+  NOTICE** tier (`USED_THRESHOLDS=(80,95,100)`).
 
-**Real-slot QG fix (mine, agent-orchestrator@c5fce01d, via `quickmerge --agent`)**: the sub-agent's worktree basedpyright
-passed, but the REAL-slot QG caught `reportUnusedFunction` on `worker_liveness/_persist_throttle` — a leading-underscore
-(module-private) helper used only CROSS-module (from `_git_alerts.py`), which basedpyright treats as unused. Fixed by
-dropping the underscore on the package-internal throttle pair (`_load_throttle`/`_persist_throttle` →
+**Real-slot QG fix (mine, agent-orchestrator@c5fce01d, via `quickmerge --agent`)**: the sub-agent's worktree
+basedpyright passed, but the REAL-slot QG caught `reportUnusedFunction` on `worker_liveness/_persist_throttle` — a
+leading-underscore (module-private) helper used only CROSS-module (from `_git_alerts.py`), which basedpyright treats as
+unused. Fixed by dropping the underscore on the package-internal throttle pair (`_load_throttle`/`_persist_throttle` →
 `load_throttle`/`persist_throttle`). `basedpyright server/` → 0 errors; full QG green; 767 tests pass in the real slot.
 
 **Provenance / staging promote:** 2d85b12 + 85f737d (dashboard) were direct-pushed from the sub-agents' worktrees

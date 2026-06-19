@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-06-19
 ---
 
 # Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
@@ -155,24 +156,48 @@ identical inputs.** The divergence is entirely downstream (fills + ledger).
 Given all three, the emitted instructions AND the simulated fills are deterministic functions of the snapshot ⇒
 trade-for-trade identical. This is the contract `reconcile_week` proves.
 
-### 4.2 The shared fill model (G1 — the core fix)
+### 4.2 The fill model — three concepts, two simulated, one real (G1 — the core fix)
 
-**Collapse the three fill models to one.** `BenchmarkFillEngine` (strategy-service) becomes the single **simulation**
-fill SSOT, imported by:
+There are **three distinct fill concepts**, not two competing engines. Per strategy instruction (which carries its
+**signal candle**):
 
-- **batch** (`GroupBRunner` already uses it) — retire the APY-haircut shortcut in the grid script; the grid script must
-  run the real `GroupBRunner` path on real GCS data, not synthetic LCG features.
-- **paper** (`colocated_engine` benchmark provider) — paper uses the **same** `BenchmarkFillEngine` against the live
-  data feed, **not** `PaperMatchingEngine`'s real-AMM math. Paper IS "batch running forward on the live stream."
+1. **Benchmark fill — the strategy's ASSUMED fill (the yardstick).** Liquidity-adjusted, priced at the **close of the
+   signal candle** that produced the instruction. Deterministic by construction (a pure function of the signal candle +
+   a liquidity haircut). Strategy-service `BenchmarkFillEngine` (Group B); execution-service knows it as the reference.
+   It is the reference both other fills measure against — **not** itself the booked simulation fill.
+2. **Smart-matching fill — EXECUTION-SERVICE's job, and its alone ("contained and specific").** The semi-realistic fill
+   the matching engine produces, with realism bounded by the **market-data fidelity** of the window: OHLCV (just the
+   candle → ≈ benchmark) → BBO (top of book) → L2 depth → trades tape → full L3 market-by-order (most realistic).
+   Execution-service **"benchmarks around"** the benchmark: **execution alpha = smart_fill − benchmark**. Paper books
+   this via `PaperMatchingEngine`; batch MUST book it via the SAME execution-service matching (Group C) on the same
+   data.
+3. **Real venue fill — live only** (`LiveMatchingEngine`). `live execution alpha = real_fill − benchmark`.
 
-`execution-service`'s `LiveMatchingEngine` (real venue fills) is the **only** mode that does not use the benchmark
-engine — that is the intentional `live↔paper` divergence. The execution-service `v2/benchmark_fills.py` pricing registry
-and the strategy-service `BenchmarkFillEngine` must be unified (one import, or a shared UAC-level fill-mode SSOT) so
-they cannot drift. (Phase 4 `GroupCRunner` completion measures execution alpha for non-TRADE actions too.)
+Plus **rate-matching** for DeFi yield legs (Aave / Compound / Lido / staking): the "fill" is the observed lending /
+staking **rate accrual** (priced 1.0 + the rate captured separately), not order-book matching.
 
-> **Design rule (new HARD RULE candidate):** there are exactly **two** fill realities — the **canonical simulation**
-> (`BenchmarkFillEngine`, used by batch AND paper) and **real venue fills** (`LiveMatchingEngine`, live only). A third
-> fill model anywhere on the batch/paper path is review-blocking — it re-creates the G1 divergence.
+**The determinism requirement:** paper and batch run the **same benchmark (1) AND the same execution-service smart
+matching (2)** on the same data ⇒ identical fills. The ONLY intentional divergence is **live swapping (2) for real venue
+fills (3)**.
+
+**The actual G1 gaps** (corrected 2026-06-19 per operator):
+
+- **Batch must run the same smart matching as paper.** Today batch (`GroupBRunner`) stops at the **benchmark** and does
+  NOT run execution-service's Group C smart matching — so batch ≠ paper (paper has the smart-matching layer, batch
+  doesn't). **Completing `GroupCRunner` (P1.4) is the linchpin** — it gives batch the same matching layer paper has.
+  (NOT "make paper drop to the benchmark" — paper's `PaperMatchingEngine` is correct.)
+- **The benchmark reference must agree** across strategy-service `BenchmarkFillEngine` and the execution-service
+  `v2/benchmark_fills` registry — unified to one UAC pricing SSOT (P1.1, shipped). A `PASSIVE_BBO` convention divergence
+  exists at the benchmark layer (strategy-service LONG→ask vs UAC buy→bid) — a latent edge mode since the benchmark is
+  normally the signal-candle close, but a real drift to correct.
+- **Retire the APY-haircut shortcut** in the grid script — it is a crude per-day haircut, not the benchmark and not the
+  smart matching; the grid must run the real `GroupBRunner` + `GCSFeatureProvider` path on real GCS data (P1.3).
+
+> **Design rule (new HARD RULE candidate):** there are exactly **two fill REALITIES** — the **simulated** path
+> (benchmark `BenchmarkFillEngine` + execution-service smart matching, used IDENTICALLY by batch AND paper) and **real
+> venue fills** (`LiveMatchingEngine`, live only). The benchmark is the shared reference both realities measure against,
+> never a third reality. A third _simulation_ on the batch/paper path — or batch and paper using _different_ matching
+> engines — is review-blocking (it re-creates the divergence).
 
 ### 4.3 The ledger pipeline (G3)
 
