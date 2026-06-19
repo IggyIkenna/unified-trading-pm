@@ -617,8 +617,10 @@ CONFIRMED in Databento: all 9 `EC*` event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/E
 
 Operator is acquiring these — record as pending-credential so the backfill runs the moment the keys land (NOT memory; tracked here per the durable-facts rule):
 
-- [ ] [DATA] P1. **Kalshi API keys — COMING SOON** (operator acquiring). Unblocks the **prediction** Kalshi venue (we have Polymarket; Kalshi is the second prediction venue for the Polymarket-vs-Kalshi dispersion archetype). On arrival: key → Secret Manager → run the Kalshi prediction instrument + market-data backfill (mirror the polymarket path); status `BLOCKED-CREDENTIALS` until then. — mtds / instruments-service (prediction)
-- [ ] [DATA] P1. **Extended (Extended Finance / EXTENDED-STARKNET) API — operator APPLYING.** A DeFi/perp venue (was an absent venue in the cefi/defi backfill). On approval: key → Secret Manager → run the Extended instrument + perp backfill; status `BLOCKED-CREDENTIALS` until then. — mtds / instruments-service (defi/cefi perp)
+- [x] ✅ **Kalshi credential UPLOADED 2026-06-19** — `kalshi-api-credentials` v1 in Secret Manager (JSON `api_key_id`/`key_id` + RSA `private_key` PEM; account has no funds, market-data-only). The credential-registry already maps `"kalshi" → kalshi-api-credentials`.
+- [ ] [CODE] P1. **Wire Kalshi into the pipeline (hist + live market data)** — the credential is stored; now wire the Kalshi market-data adapter to read `kalshi-api-credentials` + do RSA-PSS request signing (key_id + private_key), for prediction hist + live (mirror the polymarket path, second venue for Polymarket-vs-Kalshi dispersion). Verify the secret JSON field names match the adapter's expectation (I stored both `api_key_id` + `key_id`). Then run the Kalshi backfill. — mtds / instruments-service (prediction)
+- [ ] [DATA] P2. **Extended (Extended Finance / EXTENDED-STARKNET)** — operator APPLYING for the API. NOTE: SM entries ALREADY EXIST (`extended-starknet-api-key` + `extended-starknet-stark-private-key`) — likely placeholders; when the real API lands, REPLACE those secret versions, then run the Extended instrument + perp backfill. — mtds / instruments-service (defi/cefi perp)
+- Tardis: `tardis-api-key` (+ `-backup`, `-full`) already in SM — provisioned (not a gap).
 
 ## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
 
