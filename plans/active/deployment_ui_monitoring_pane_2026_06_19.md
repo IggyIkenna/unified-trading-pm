@@ -109,6 +109,41 @@ root-caused and FIXED 2026-06-19:
       so drift surfaces before it becomes a red build. Repos: all service Dockerfiles + PM (the check). Provenance:
       2026-06-19 mdps build fix.
 
+## Repo-CI table clarity + authoritative source (operator review 2026-06-19)
+
+Operator walked the Repo-CI overview table live and surfaced three confusions, all traceable to the table design + a
+stale-cache data source (full diagnosis in the 2026-06-19 session): (1) the single `CI status` lifecycle token
+conflates promotion-PROGRESS with branch-FAILURE — e.g. `STAGING_GREEN` reads as "stuck" when it means "furthest-green
+= staging"; (2) the dep-order HOLD that lags main is INVISIBLE — empty triage queue + empty breaking cascade while
+`last green (main)` sits days stale; (3) the UI reads `ci_status` from the committed `workspace-manifest.json` cache,
+NOT the authoritative Firestore side-store the promoter gate actually reads, so the dashboard can show a different
+status than what gates promotions.
+
+- [ ] [UI] P1. **Drop the `CI status` column; color-code the LDR/staging/main SHA cells per-branch** (green = that
+      branch's last `quality-gates-v2` succeeded · red = failed · gray = unknown) from `branch_ci`. The 9-state
+      `ci_status` token is noise — per-branch green/red is the simpler at-a-glance model. Needs the backend to populate
+      `branch_ci` for ALL repos (today `deployment_api/routes/repo_ci.py` bounds it to the red repos to save GitHub API
+      budget) — derive green branches from SHA-equality / `ci_status` where a live fetch is skipped, or widen the fetch.
+      Repos: deployment-ui + deployment-api. `pw:L2 ✓` + regression. Provenance: 2026-06-19 operator review.
+- [ ] [UI] P1. **Promotion-state surface — make the dep-order HOLD visible.** A repo can sit `STAGING_GREEN` with main
+      days behind and NOTHING in the triage queue / breaking cascade, because the staging→main STAGE 1.8 dep-order gate
+      is a silent designed HOLD (incident 2026-06-19: fleet blocked behind `unified-api-contracts` not yet
+      `MAIN_GREEN`). Add a per-repo surface: "main behind staging by N files · last promoted <when> · blocked-by:
+      <dep / lag>", sourced from the deltas already in the overview + the STAGE-1.8 block reason. Repos: deployment-ui +
+      deployment-api (expose the dep-order block reason). `pw:L2 ✓` + regression. Provenance: 2026-06-19 operator review.
+- [ ] [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the committed
+      `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed manifest's
+      `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}` Firestore
+      store, so the dashboard can show a DIFFERENT status than what actually gates promotions. Do the pending Phase-2
+      one-function swap (`ManifestView.ci_status_for` → `ci_status_store.resolve_ci_status_map`), adding
+      `google-cloud-firestore` to deployment-api. SSOT: `ci_status_firestore_side_store_2026_06_10.md`. Repo:
+      deployment-api. Provenance: 2026-06-19 operator review.
+- [ ] [PROMOTION] P2. **(track-3 cross-ref — do NOT implement in the UI track)** Forward staging→main promotion lags
+      fleet-wide (services ~2 days behind main while libs promote): STAGE 1.8 dep-order tiered-drain + a possible
+      `staging_versions` registration gap for `unified-api-contracts`. Diagnosed 2026-06-19; owned by the
+      CI-escalation / promotion track (`cicd_promotion_pipeline_2026_06_18.md`) — surfaced here only because it is what
+      makes the UI read "stuck". Repo: unified-trading-pm (promotion machinery).
+
 ## Out of scope here (already filed/blocked — coordinate, do NOT reimplement)
 
 - Version-coherence panel, rollout-ratchet panels (template-drift + Dockerfile digest-pin), G4 ruleset-drift, G5
