@@ -208,11 +208,13 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       trading-agent, deployment-ui@…). **7/8 build GREEN on AWS CodeBuild** (mdps, batch-live-recon, client-reporting,
       fund-admin, greeks, ml, trading-agent — full docker build + in-image QG + ECR push, validated on `live-defi-rollout`
       like GCP's manual-LDR validation).
-- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **migrated the existing 8 service webhooks LDR→main** (alerting, deployment-api,
-      deployment-service, execution-service, features-service, instruments-service, market-tick-data-service,
-      strategy-service); `unified-trading-library` stays on `live-defi-rollout`. AWS firing model now **mirrors GCP
-      exactly**: base lib on LDR, every service on main. (Services build on promotion-to-main, like GCP `^main$` — last
-      successful LDR image remains in ECR until the next main promotion rebuilds it.)
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **aligned webhooks to the GCP firing model.** GCP fires exactly 3 on
+      `live-defi-rollout`: `unified-trading-library` (base image), `unified-api-contracts` (base wheel), and
+      `market-tick-data-service` (a service that ALSO has a `-build` main trigger). Migrated 7 existing service webhooks
+      LDR→main (alerting, deployment-api, deployment-service, execution-service, features-service, instruments-service,
+      strategy-service); **kept `unified-trading-library` + `market-tick-data-service` on LDR** (mtds was first swept to
+      main, then reverted to match GCP). `unified-api-contracts` has **no AWS project** (intentional — see UAC follow-up).
+      AWS LDR-firing set = {unified-trading-library, market-tick-data-service}; all other services on main.
 - [ ] [DOCKER] P3. **deployment-ui needs a dedicated Node `buildspec.aws.yaml`** — it's the one non-Python repo: the
       canonical buildspec reads `VERSION` from `pyproject.toml` (deployment-ui has none → empty image tag → BUILD fails)
       AND its Dockerfile `COPY unified-admin-ui/packages/core` needs the monorepo sibling staged into the build context
@@ -221,6 +223,13 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 - [ ] [INFRA] P3. **`terraform import` the imperatively-created AWS CodeBuild projects + webhooks** into the reconciled
       `terraform/cloud-build/aws` module (requires standing up the commented-out S3 state backend first), so the TF SSOT
       becomes apply-clean. Repo: deployment-service.
+- [ ] [INFRA] P3. **DECISION: should `unified-api-contracts` build on AWS?** GCP builds the UAC wheel on LDR + publishes
+      to the AR Python index (baked into the UTL base image). On AWS there is **no CodeArtifact domain**, so AWS service
+      images get UAC from the GCP-AR base image (cross-cloud `FROM`) + an in-build source clone — no published AWS wheel
+      is consumed, and the canonical buildspec's CodeArtifact publish step is a no-op (`$CODEARTIFACT_DOMAIN` unset). UAC
+      *has* a `buildspec.aws.yaml`, so a project is one command away, but it would build a wheel with nowhere to publish.
+      To genuinely match GCP, first stand up AWS CodeArtifact (`unified-libraries` repo) + wire the lib-publish/consume
+      path, THEN add UAC (+ other libs) on LDR. Otherwise leave UAC AWS-absent by design. Repo: deployment-service.
 - [x] ✅ [INFRA] P3. AUDIT DONE 2026-06-19 — AWS↔GCP trigger parity diffed (see banner above). `harsh-worker` read
       perms confirmed working; the prior `BLOCKED-CREDENTIALS` ListProjects block is stale/lifted.
 
