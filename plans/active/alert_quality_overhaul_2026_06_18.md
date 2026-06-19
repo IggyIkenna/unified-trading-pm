@@ -153,10 +153,10 @@ the always-on central VM → zero marginal cost.
       `sit-starvation-detector.yml` (also add a clickable run/deployment-ui link + a lock-cleared bookend; currently
       CLI-only) and the `cascade-qg-ordering.yml` failure variant. Confirm `ruleset-drift-alert.yml` sets one. Repo:
       unified-trading-pm.
-- [ ] [SCRIPT] P2. Route the lower-blast-radius raw posters through the carrier for ledger parity:
+- [x] [SCRIPT] P2. Route the lower-blast-radius raw posters through the carrier for ledger parity:
       `request-major-bump.yml`, `major-bump-issue-handler.yml`, `fix-approval-timeout.yml`, `reap_stale_blockers.py`
       (also has NO deep-link — add the orchestrator backlog link), `run-audit-reflog-with-alert.sh` (no deep-link).
-      Repo: unified-trading-pm.
+      Repo: unified-trading-pm. ✅ — unified-trading-pm@3db205535
 - [ ] [ORCHESTRATOR] P1. **Honest-header fix**: `notify_agent_stuck_respawned` (`server/notifications/slack.py:269`) is
       hard-coded "Auto-respawn" but 2 of 3 callers never respawn — `main_agent_keeper.py:214` (a rate-limit page, fake
       `slot_id=0`) and `worker_liveness_watchdog.py:923` (worker left FROZEN, explicitly not killed). Split into
