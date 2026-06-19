@@ -93,6 +93,18 @@ are identified (2) and the ledger exists (3).
 - [ ] [CODE] P1.1. **Make `BenchmarkFillEngine` the single simulation SSOT** — unify the strategy-service
       `BenchmarkFillEngine` and execution-service `v2/benchmark_fills.py` pricing registry so they cannot drift (one
       import or a shared UAC fill-mode SSOT). Repo: strategy-service + execution-service + unified-api-contracts.
+      **PARTIAL (2026-06-19)**: ✅ UAC pricing SSOT shipped (`unified-api-contracts@bc4c756` —
+      `internal/architecture_v2/benchmark_fill_pricing.py`: `benchmark_fill_price()` + `DEFAULT_BENCHMARK_PRICING_FNS`,
+      7 modes, 7 tests). ✅ execution-service rewired to a thin adapter over it (`execution-service@e11854e5` — duplicate
+      primitives deleted). ⏳ **REMAINING — strategy-service `BenchmarkFillEngine` rewiring is a BEHAVIOURAL CORRECTION,
+      not a mechanical lift**: it computes `PASSIVE_BBO` OPPOSITELY to the UAC SSOT (`_resolve_trade_benchmark:133` maps
+      LONG→ask / SHORT→bid; UAC maps buy→bid / sell→ask — correct passive-maker semantics is buy@bid/sell@ask, so the
+      strategy-service convention is mislabeled, taking the far touch). This is a **concrete instance of the paper-sim ≠
+      batch-sim drift the operator named**. Correcting it changes historical backtest fill prices, so it MUST land with
+      the Phase 4 `reconcile_week` harness validating paper≡batch afterward (do NOT rush it). The strategy-service
+      engine also operates on a typed `MarketStateSnapshot` (raw TWAP/VWAP windows + None-fallbacks + ATOMIC per-leg)
+      vs the UAC flat-dict ctx — the rewiring builds the ctx from the snapshot (pre-computing twap/vwap) then calls
+      `benchmark_fill_price`, preserving the ARRIVAL_MID fallbacks. Until then P1.1 is NOT flipped.
 - [ ] [CODE] P1.2. **Paper uses `BenchmarkFillEngine`, NOT `PaperMatchingEngine` real-AMM** — the colocated_engine
       benchmark provider routes through the SAME engine batch uses; paper IS "batch forward on the live feed". Delete
       the divergent paper-AMM fill path (no parallel old+new). Repo: strategy-service + execution-service.
@@ -203,3 +215,16 @@ pricing primitives (twap/vwap/arrival_mid/pool_mid_at_block/passive_bbo/funding_
 primitives to a single UAC SSOT both engines call (no drift), route the colocated_engine paper provider through
 `BenchmarkFillEngine` (not `PaperMatchingEngine` real-AMM), and retire the `run_2yr_config_grid_backtest.py`
 APY-haircut shortcut in favour of the real `GroupBRunner` + `GCSFeatureProvider` path.
+
+### 2026-06-19 — Phase 1 P1.1 PARTIAL + a real drift finding
+
+Shipped the single benchmark-pricing SSOT (`unified-api-contracts@bc4c756`) + rewired execution-service to a thin
+adapter over it (`execution-service@e11854e5`, duplicate primitives deleted, QG green). **Finding (the operator's exact
+fear, concretely):** the strategy-service `BenchmarkFillEngine` computes `PASSIVE_BBO` OPPOSITELY to the UAC SSOT
+(LONG→ask/SHORT→bid vs the correct buy@bid/sell@ask) — so paper-sim ≠ batch-sim TODAY for any passive-BBO fill. The
+strategy-service rewiring therefore corrects a fill convention (changes historical backtest prices) and must land with
+Phase 4's `reconcile_week` proving paper≡batch afterward — sequenced deliberately, not rushed. P1.1 stays open until that
+correction lands. **Next concrete step**: rewire `strategy_service/engine/backtest/benchmark_fills.py`
+`_resolve_*_benchmark` to build the dict ctx from `MarketStateSnapshot` + call `benchmark_fill_price` (correct
+PASSIVE_BBO, preserve ARRIVAL_MID None-fallbacks), update the strategy-service benchmark-fill tests to the corrected
+convention, QG, ship → then flip P1.1.
