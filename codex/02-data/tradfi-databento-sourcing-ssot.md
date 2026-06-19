@@ -22,7 +22,7 @@ Databento gates its `(dataset, schema, start)` through the `assert_*` helpers in
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GLBX.MDP3`  | CME Globex — S&P futures (ES/MES), BTC/ETH futures (BTC/MBT, ETH/MET), gold (GC/COMEX), WTI crude (CL) + Henry Hub nat gas (NG) futures **and options-on-futures**, FX futures (6E/6B/6J…), E-mini sector index futures, **CME event contracts** (`EC*` series — ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) |
 | `DBEQ.BASIC` | Databento US Equities — single stocks (S&P constituents), ETFs (BTC/ETH spot ETFs, GLD, sector SPDRs)                                                                                                                                                                                                            |
-| `CFE`        | Cboe Futures Exchange — **VIX / VX futures**                                                                                                                                                                                                                                                                     |
+| `XCBF.PITCH` | Cboe Futures Exchange — **VIX / VX futures**. The operator calls this the "CFE" subscription, but Databento's dataset CODE is `XCBF.PITCH` (a bare `CFE` is rejected by the API with 400 validation_failed; verified live 2026-06-19). Coverage 2018-11-04→now; exposes `definition` / `ohlcv-1s` / `ohlcv-1m`.  |
 
 **Explicitly NOT subscribed** (querying them raises `DatabentoDatasetNotAllowedError`): all ICE feeds (`IFEU.IMPACT`
 Brent/Gasoil, `IFUS.IMPACT` ICE Dollar-Index + softs), `OPRA` (listed options), `EEX`, `Eurex`, and the per-venue equity
@@ -66,6 +66,19 @@ the migration / manifest / data-status path; `ohlcv-1s` is the finer-grained add
 Therefore only `ohlcv-1h` / `ohlcv-1d` are **NOT** fetch schemas — requesting them raises
 `DatabentoSchemaNotAllowedError`. Both `ohlcv_1s` and `ohlcv_1m` are registered TradFi `data_type`s
 (`registry/market_data_categories.py`).
+
+**Source provenance differs between 1s and 1m (codified 2026-06-19).** `ohlcv_1s` is **Databento-EXCLUSIVE** — Massive's
+flat-file connector does NOT serve a 1s schema (`massive_tradfi_rest_connector.SUPPORTED_DATA_TYPES` omits it). So
+`SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]` (databento-only) → `derive_pipeline_mode_for_row` stamps
+`pipeline_mode=batch_databento` (provenance-correct). `ohlcv_1m` (and `trades`/`tbbo`) stay `["massive","databento"]`
+(massive-first → `batch_massive`) because Massive DOES serve those. The MTDS download gate
+(`umi_tick_provider._DATABENTO_SUPPORTED_DATA_TYPES`) and the IS/MTDS routing both carry `ohlcv_1s`; without it the
+fetch silently wrote 0 rows. Wiring: CME `VENUE_DATA_TYPE_CAPABILITIES` + `EXPECTED_COVERAGE_BY_ASSET_GROUP` +
+`_PER_INSTRUMENT_SHARD_DATA_TYPES` all carry `ohlcv_1s`; `"1s"` is in the `BarTimeframe` closed-set
+(`canonical/crosscutting/bar_boundary.py`); `_OHLCV_DATA_TYPE_TIMEFRAME["ohlcv_1s"]="1s"` (MTDS edge conversion);
+`TradfiOhlcv1sAdapter` (MDPS passthrough). **Backfill horizon is gated by instruments-service per-date catalog
+coverage** — the download enumerates the IS instrument universe per date, so dates the IS catalog hasn't built yield 0
+rows ("no active venues"), independent of the OHLCV wiring (which is proven on every covered date).
 
 ### Batch policy — `batch.submit_job` is BANNED
 
@@ -128,9 +141,10 @@ wrongly routed it through the Databento fetch path, which nothing does.)
 
 ## VIX — futures vs the cash index (do not conflate)
 
-`CFE` gives **VX futures** (the VIX futures curve). It does **NOT** provide the **VIX cash index** at 15m. The VIX 15m
-**index** gap remains Barchart-preload + Yahoo-rolling-60d + honest gap (see `registry/data_source_continuity.py` and
-the VIX 15m one-liner in CLAUDE.md). Adding CFE does **not** close that index gap; it adds the futures.
+The CFE feed (`XCBF.PITCH` dataset) gives **VX futures** (the VIX futures curve). It does **NOT** provide the **VIX cash
+index** at 15m. The VIX 15m **index** gap remains Barchart-preload + Yahoo-rolling-60d + honest gap (see
+`registry/data_source_continuity.py` and the VIX 15m one-liner in CLAUDE.md). Adding CFE does **not** close that index
+gap; it adds the futures.
 
 ## Related SSOTs
 

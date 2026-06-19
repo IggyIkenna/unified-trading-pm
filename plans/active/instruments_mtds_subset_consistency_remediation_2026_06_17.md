@@ -972,3 +972,60 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       (ARBITRAGE_OPPORTUNITY/ODDS_MOVEMENT/ODDS_SNAPSHOT, 2 each) after the Step-2 `trades→odds_api` + case-insensitive
       bridge. Add these MDPS-derived data_types to the source bridge (or route to honest absence if not genuinely
       captured). — market-tick-data-service
+
+## SPORTS E2E audit + twin-migration drive (2026-06-19, autonomous dispatch) — Progress Log
+
+> Operator `/autonomous` 2026-06-19: full e2e sports audit+remediation for IS+MTDS (catalogue, data-status, manifest v9,
+> canonical schemas/paths) + **make canonical twins for ALL sports data lacking one across BOTH buckets so the
+> operator-gated delete loses nothing**. Coordinating: concurrent agent af95b962 fills IS coverage gaps (do NOT
+> double-fetch). Delete stays operator-gated. This log = the loop's handoff memory.
+
+**LIVE-STATE AUDIT (read-only, 2026-06-19):**
+
+- **MTDS `market-data-tick-sports-prd` `_index` = FULLY v9** ✅: 803,796 rows 100% schema_version=9,
+  pipeline_mode/source/asset_group 100% populated (api_football 599k / mdps_odds_horizon_bucket 111k / polymarket_clob
+  59k / footystats 35k / odds_api 8). capture_status: captured 202,087 / empty 584,257 / **NA(blank) 17,288 (=N9)** /
+  attempted_failed 164. **N3b (NULL-source) = 0 (RESOLVED on live)**. Writer idle since 2026-06-11 (`_index` written_at).
+- **MTDS remnants (OPEN)**: `UNIBET_EU`(11 captured) + `UNKNOWN`(3 captured) carry `pipeline_mode=batch_api_football` but
+  are odds bookmaker venues → should be `batch_odds_api`. captured NULL-league = **32,707** (F4 subset = ODDS_API/ODDS
+  2,127 + odds_horizon_bucket 1,813; rest = bookmaker `trades` per-book rows). N9 17,288 blank-status NA rows.
+- **IS `instruments-store-sports-prd` `_index`**: blank_status=0 + dup=0 ✅ (the "v9-canonical" canonicalize DID run). BUT
+  **schema_version MIXED** (v8 1.59M / v6 762k / v5 173k / **v9 only 75k** / v4 9k) + **source ABSENT (0 populated)** +
+  asset_group 13,176/2.6M + pipeline_mode 0. **THE PLAN'S "instruments-store _index v9-canonical for ALL 5 AGs — DONE"
+  OVERCLAIMS** — it only ran blank/dedup; the v9-COLUMN population (schema_version=9 + source + asset_group) was NEVER
+  run for ANY AG. **VERIFIED FLEET-WIDE**: cefi (sv 4/8/9 mixed, source=0/36k, asset_group ABSENT), tradfi (source=0),
+  defi (source=0); only prediction has source 298/791. So this is a FLEET-WIDE instruments-store gap (the IS analogue of
+  N9c which was the MTDS gap), NOT sports-specific. (af95b962 actively writes IS → in-place `_index` rewrite would race.)
+
+**TWIN-COVERAGE (operator's core ask) — characterised across BOTH sports buckets:**
+
+- **MD `legacy_dup_delete_list_sports.parquet`**: 252,318 objs = 248,502 SAFE-TO-DELETE (canonical_twin_verified) +
+  **3,816 MIGRATE-FIRST** (`source=ODDS_API[/league]/ticks.parquet` 3,245 + `venue=ODDS_API[/league]/ticks.parquet` 571;
+  reason=no_venue_or_data_type_in_path). Prior content-aware verifier sampled these TWIN-VERIFIED-SAFE (58,910/58,910
+  ids in canonical) — confirm + write authoritative verify parquet.
+- **IS `instruments_store_legacy_delete_list_sports.parquet`**: **9,723 UNMAPPABLE / twin_exists=False** = 9,721
+  `instrument_availability/by-date/day-{D}/{soccer_slug}/instruments.parquet` (legacy dash-separator odds-api INSTRUMENT
+  definitions: instrument_key/venue/bookmaker_key/odds_api_market_id/market/selection/line/home_team/away_team/
+  market_start_time) + 2 bare `day=2026-03-21/venue=BETFAIR/*.parquet`.
+  - **DECISIVE (corrects the plan's "superseded, MIGRATE-FIRST=0" verdict)**: canonical `venue=odds_api` in the `_index`
+    = 3,548 rows ALL `empty_confirmed`, dates only 2018-01-01..**2020-06-05**. The dash objects carry REAL data
+    2020-06-06..2025-12-15 (838/197/634 rows/obj, 9-bookmaker universe: pinnacle/betfair/onexbet/paddypower/bovada/
+    matchbook/coral/betsson/skybet). Recent canonical IS days (2026-05-13) carry `venue=API_FOOTBALL` ONLY — **no
+    canonical odds_api instruments exist**. → the odds-api instrument universe is GENUINELY-UNIQUE legacy data (backs the
+    odds-api MARKET data in market-data-tick-sports) → **must be MIGRATED (canonical twin), not declared unmappable**.
+  - **Migration = PATH canonicalisation** (data is fine): `instrument_availability/by-date/day-{D}/{soccer_slug}/
+    instruments.parquet` → canonical hive `instrument_availability/by_date/day={D}/league={canonical_league}/
+    venue=ODDS_API/instruments.parquet` (canonical IS shape confirmed = `by_date/day={D}/league={L}/venue={V}/`), via a
+    soccer_slug→canonical-league map (the-odds-api sport_keys). Untranslatable slugs preserved (no data loss). Then
+    re-audit → 0 migrate-first → operator-gated delete is safe.
+
+**CREDENTIALED SOURCES (C)**: SFI (`SoccerFootballInfoAdapter`, RapidAPI, SFI_PROGRESSIVE_STATS active) + Transfermarkt
+(`TransfermarktAdapter`, RapidAPI/Apify dual, PLAYER_VALUES active) BOTH have REAL adapter scaffolds + unit tests
+(test_sfi_adapter_coverage 35 / test_transfermarkt_adapter_coverage 33). Secrets `soccer-football-info-api-key` +
+`transfermarkt-api-key` EXIST in SM. cov 0.000 ⇒ keys likely expired/invalid → BLOCKED-CREDENTIALS (validate/rotate),
+NOT build. SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog, cov-0
+by-design — not a gap).
+
+**REMAINING DRIVE (this dispatch):** [twin-migrate IS 9,721 + MD 3,816 → 0 migrate-first] → [MTDS UNIBET/UNKNOWN +
+F4/N3a NULL-league + N9 classify] → [IS v9-column populate sports (coordinate af95b962)] → [credential asks] →
+[shard-atom D] → [report + flips].

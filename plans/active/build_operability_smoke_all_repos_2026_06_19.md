@@ -108,15 +108,16 @@ where in-image QG doesn't run (it only activates when the PM base script is abse
 but it has **NO build trigger**, so it can't be validated via Cloud Build. Either it's intentionally not-yet-imaged
 (WIP / deployed another way) or it's a pipeline gap. NEEDS OPERATOR TRIAGE (next todo).
 
-- [ ] [INFRA] P0. **Triage the trigger-less repos with the operator** — for each of {alerting-service,
-      batch-live-reconciliation-service, client-reporting-api, fund-administration-service, greeks-service,
-      trading-agent-service}: is it intentionally not built as a Cloud Build image (WIP / different deploy path), or is a
-      missing trigger a gap to fill? "Build all repos" can't include a repo with no trigger until this is answered.
-      Also confirm `deployment-ui`↔`deployment-dashboard-build` and the UTL base-image build path. Repo: PM/deployment-
-      service (trigger inventory) + operator decision.
-- [ ] [SCRIPT] P0. **Re-map the harness to the REAL trigger list** (not `<repo>-build`): drive `--all` off the 25
-      `-build` triggers, expand `features-service`→5 + `ml-service`→3, map `deployment-ui`→`deployment-dashboard`, and
-      SKIP trigger-less repos with an explicit "no trigger" row (never a silent omission). Repo: e2e-testing.
+- [x] ✅ [INFRA] P0. **Triage the trigger-less repos with the operator** — DONE 2026-06-19. All 6 were
+      pipeline GAPS (new repos predating the trigger pipeline): triggers created + builds GREEN (see Phase 2.5 + progress
+      log). `deployment-ui` → `deployment-ui-main-deploy` (Node UI bundled into deployment-api image; NOT a standalone
+      Python `-build` trigger; old `deployment-dashboard` zombie deleted). UTL base-image →
+      `unified-trading-library-live-defi-rollout` ("Build UTL base Docker image + publish wheel on live-defi-rollout
+      push"). 28 live triggers now 1:1 with live repos. — PM@ef452ee05
+- [x] ✅ [SCRIPT] P0. **Re-map the harness to the REAL trigger list** (not `<repo>-build`): drive `--all` off the 13
+      live service `-build` triggers (post 2026-06-19 zombie cleanup), emit explicit "NO TRIGGER" rows for
+      features-service / ml-service / agent-orchestrator / unified-trading-library / deployment-ui /
+      unified-trading-system-ui (never silently omitted). Repo: e2e-testing. — e2e-testing@0d0170e
 
 ## Phase 0 — Probe design + proof (DONE)
 
@@ -167,8 +168,10 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
       → triage (build-blocker vs genuine operability break vs probe-env gap) and fix. Definition of done: every Python
       service repo is `BUILD ✅ IMPORT ✅ RUN ✅`; UTL import-green; the 2 Node UIs build-green. Repo: e2e-testing
       (driver) + per-repo fixes.
-- [ ] [INFRA] P1. Capture per-repo build-minute cost + flag any repo whose image is unexpectedly large / slow (a
-      side-signal of a bad install). Repo: e2e-testing.
+- [x] ✅ [INFRA] P1. Capture per-repo build-minute cost + flag any repo whose image is unexpectedly large / slow (a
+      side-signal of a bad install). Repo: e2e-testing. — e2e-testing@d2206e3
+      (`scripts/build_smoke/build_cost_report.sh`: gcloud builds list → duration+cost per trigger; docker pull+inspect →
+      uncompressed GB; ⚠/❌ flags at 12m/20m build + 3GB/5GB image; summary with TOTAL_BUILD_MIN + TOTAL_COST)
 
 ## Phase 4 — Wire the probe into cloudbuild (durable, replaces the hollow Step #6)
 
@@ -184,7 +187,7 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
 `b2a975e4`, execution-service `f84a216f` — both build clean on their existing config). **9 FAILED**, root-caused into
 4 classes:
 
-- [ ] [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.** `features-{calendar,delta-one,
+- [x] ✅ [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.** `features-{calendar,delta-one,
       multi-timeframe,onchain,volatility}-service-build` + `ml-inference-service-build` + `ml-training-service-build`
       point at the SEPARATE GitHub repos `features-*-service` / `ml-*-service`, which were **archived read-only
       2026-05-08** when consolidated into `features-service` (8→sub-packages, `--feature-family` flag) and `ml-service`
@@ -192,6 +195,10 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
       `uv sync --frozen --no-dev --system` (`--system` invalid on `uv sync`) — but the repos are DEAD; the fix is to
       **DELETE the 7 obsolete triggers** (consolidation cleanup that never happened), NOT fix their Dockerfiles. Repo:
       deployment-service (trigger inventory) — operator confirm before deleting.
+      **DONE (prior session)**: 37 zombie triggers deleted (all 7 named + 30 more: unified-*-interface libs, execution-algo,
+      ml-training-ui, deployment-dashboard/unified-trading-deployment-v2); 8 dead `locals.services` entries removed from
+      terraform/cloud-build/gcp/main.tf — deployment-service@1ddf1d4. Confirmed: `gcloud builds triggers list` shows 28
+      live triggers, none of the zombie names present.
 - [ ] [INFRA] P0. **Create triggers for the LIVE consolidated repos** `features-service` + `ml-service` (same gap as the
       6 new repos — consolidation made the repos but no `-build` trigger). Their Dockerfiles are already correct
       (features-service `uv pip install --system -e . --no-sources`; ml-service `uv sync --frozen --no-dev`). Link +
@@ -283,3 +290,39 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   reference) — always read the actual `RUN`/source line, never trust the grep classification. NEXT: remaining ~19
   existing trigger units (build-first, fix-failures) + Phase 4 (uvicorn `/health` probe in the harness + cloudbuild) +
   Phase 5 (fan-out RCA) + TF reconcile (import the 6 imperative triggers, fix the `ln` drift).
+- **2026-06-19 (STALE-REF CLEANUP — operator: "12→70→25 repos, find+remove all refs to archived/old repos")** — the
+  remaining-sweep failures were mostly **debris from the repo-count churn**. Audited every trigger/link/config against
+  the canonical live 25 (`workspace-manifest.json.repositories`) + the authoritative dead lists (`prune_removed_
+  repositories.py` REMOVED frozenset + manifest `removedEntries`). **Removed**: (1) **37 ZOMBIE Cloud Build triggers**
+  (of 65) targeting archived repos — features-{calendar,delta-one,multi-timeframe,onchain,volatility}-service +
+  ml-{inference,training}-service (consolidated into features-service/ml-service), the 7 `unified-*-interface/services`
+  removed libs, `execution-algo-library`, `ml-training-ui`, and `deployment-dashboard`→`unified-trading-deployment-v2`
+  (the OLD deployment-ui name); **28 live triggers remain**. (2) **32 stale connection links** (incl. old names
+  `market-tick-data-handler`, `live-health-monitor-ui`, `unified-trading-deployment-v2`); 19 live remain. (3) **8 dead
+  `locals.services` entries** in `deployment-service/terraform/cloud-build/gcp/main.tf` (would have RECREATED the
+  zombies on `terraform apply`). (4) **+9 orphans to the `REMOVED` frozenset** (`unified-{cloud,domain}-services`,
+  `unified-{events,order}-interface`, `ml-training-ui`, `market-tick-data-handler`, `live-health-monitor-ui`,
+  `execution-results-api`, `market-data-api`) — they were live triggers/links but in NEITHER authoritative dead list
+  (the canonical list was incomplete). Trigger landscape is now 1:1 with live repos. NEXT (the actual "moving forward"):
+  create features-service + ml-service triggers (consolidated live repos, currently trigger-less after the zombie
+  purge) + fix strategy-service (cross-repo mtds COPY) + deployment-service (registry-auth ordering).
+- **2026-06-19 (DEFINITIVE image-build tally — verified, not assumed)** — of the live 25 repos:
+  - **13 build a Docker IMAGE green ✅**: market-data-processing-service, market-tick-data-service, deployment-api,
+    instruments-service, execution-service, deployment-ui (`f4f4968e`), + the 6 new (trading-agent, alerting,
+    client-reporting, greeks, fund-administration, batch-live-reconciliation) — PLUS the **unified-trading-library base
+    image** (`590050dc`).
+  - **4 image repos NEED WORK**: `features-service` + `ml-service` (no trigger — consolidated repos; create + build),
+    `strategy-service` (Dockerfile:47 cross-repo `COPY market-tick-data-service/` not staged), `deployment-service`
+    (cloudbuild registry-auth ordering + its QG is pre-existing-RED: coverage 69.72%/70% + 2 unrelated failing tests).
+  - **unified-api-contracts** is a **LIBRARY wheel-build (not an image)** whose publish-CI is RED — fails EARLY with an
+    empty build log (setup/config-level: source-fetch or cloudbuild config, NOT a Dockerfile issue). Separate library-CI
+    item; needs its own diagnosis. Repo: unified-api-contracts.
+  - **UI STATIC builds (NOT Docker images — operator-confirmed 2026-06-19)**: the UIs ship STATIC builds (`next build` /
+    Vite), not container images. `unified-trading-system-ui` → `next build` → **Firebase Hosting** via GH Actions
+    `deploy-uat-on-merge.yml` (on every `live-defi-rollout` push; last 3 runs GREEN through 2026-06-18) — NOT a gap, has
+    its own pipeline, does NOT need a Cloud Build Docker trigger. `deployment-ui` packages its static build into an
+    `nginx:alpine` image via Cloud Build (`deployment-ui-main-deploy`, green `f4f4968e`). `agent-orchestrator`'s Vite
+    dashboard is built + served by the orchestrator on its VM. So all three UIs are HANDLED.
+  - **7 don't build images by design**: agent-orchestrator (VM-deployed tarball; UI is static, served by the backend),
+    e2e-testing / system-integration-tests / unified-trading-pm / ibkr-gateway-infra / unified-trading-api (no Dockerfile
+    — test/plans/infra repos).

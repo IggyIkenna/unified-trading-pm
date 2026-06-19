@@ -214,7 +214,7 @@ def test_audit_output_deterministic() -> None:
 
 
 def test_audit_57_archetypes() -> None:
-    """Audit should report exactly 57 StrategyArchetype enum values."""
+    """Audit should report exactly 58 StrategyArchetype enum values."""
     uac_path = str(_UAC_ROOT)
     if uac_path not in sys.path:
         sys.path.insert(0, uac_path)
@@ -223,8 +223,8 @@ def test_audit_57_archetypes() -> None:
         from audit_prospectus_vs_codex import run_audit
 
         result = run_audit()
-        assert result["total_archetype_ids"] == 57, (
-            f"Expected 57 archetypes but got {result['total_archetype_ids']}. "
+        assert result["total_archetype_ids"] == 58, (
+            f"Expected 58 archetypes but got {result['total_archetype_ids']}. "
             "Update the plan if new archetypes were added (see F9 in findings tracker)."
         )
     except ImportError as e:

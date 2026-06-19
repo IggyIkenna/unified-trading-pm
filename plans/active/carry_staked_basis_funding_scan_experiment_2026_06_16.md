@@ -1167,9 +1167,88 @@ is the validated foundation + a runnable paper path TODAY.
 
 - [ ] [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 carry_and_yield + allocator with a
       complete-data DATA_SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
-      granted)
-- [ ] [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
-      **Repo: deployment-service.** (perm granted)
+      granted) — **PARTIAL: config piece DONE `strategy-service@c412f6af`** (2026-06-19): typed
+      `StrategyServiceConfig.data_source: Literal['live','gcs_complete']` + `gcs_complete_data_path` (the complete-data
+      env mode; NO os.getenv) + `ensemble_weight_{funding_dispersion,spot_perp_basis,dated_basis,staked_basis}` +
+      `ensemble_split()` accessor (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests. strategy-service
+      QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC archetype enum is
+      the follow-up below** (descoped this session — see why).
+- [x] ✅ [STRATEGY] P1. **funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)** — **DONE
+      `unified-api-contracts@487b9a9` + `strategy-service@6b285fad`** (2026-06-19, second autonomous pass when UAC was
+      clean). The new `CARRY_FUNDING_DISPERSION` archetype landed ATOMICALLY: UAC `enums.py`
+      (`StrategyArchetype.CARRY_FUNDING_DISPERSION` + `ARCHETYPE_TO_FAMILY=CARRY_AND_YIELD`) + a 2-perp-leg leg-spec seed
+      in `archetype_leg_spec_seeds._funding_dispersion_structure` (perp_long + perp_short, SEQUENCED_WITH_PACING,
+      dollar-neutral not delta-neutral) wired into `_carry_yield_seeds` + docstring counts 57→58 + the
+      `test_archetype_leg_spec` partition count 51→52 — **UAC QG GREEN, shipped via quickmerge** (additive enum =
+      non-breaking). strategy-service: `funding_dispersion.py` = `CarryFundingDispersionEngine` (reads `funding_rank_pct`
+      + `funding_rate_annualised_bps`, tercile LONG-lowest/SHORT-highest + the accretive `funding_squeeze_sigma` veto →
+      `TradeInstruction` + `declare_leg_portfolio_state`/`react_to_equity_change`), `__init__`/`factory` registration,
+      the **cascade of exhaustiveness maps** a new archetype triggers (catalog builder `build_funding_dispersion` +
+      registry; `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` mid-variance peer of STAT_ARB_CROSS_SECTIONAL;
+      `_STATEFUL_ARCHETYPES`; the factory family_map), + a 12-case engine unit test — **strategy-service QG GREEN,
+      shipped via quickmerge**. The rank allocator (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`)
+      remains a further increment (cross-sectional rank currently computed upstream / fed as the `funding_rank_pct`
+      feature; engine is the per-instrument leg engine, batch==live). **Repo: unified-api-contracts + strategy-service.**
+- [ ] [STRATEGY] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19)** Add the cross-sectional
+      `CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK` AllocatorArchetype so the rank is computed
+      inside strategy-service (today it arrives as the `funding_rank_pct` feature from upstream). **Repo:
+      unified-api-contracts + strategy-service.**
+- [ ] [UI] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19; operator-raised)** Surface `CARRY_FUNDING_DISPERSION`
+      in the strategy wizard/catalog. **NOT CI-breaking** — the UI's `lib/architecture-v2/enums.ts` is a hand-maintained
+      CURATED 18-archetype subset (the mirror test asserts `STRATEGY_ARCHETYPES_V2.toHaveLength(18)` + internal
+      consistency, NOT parity with UAC's 58), and `lib/registry/ui-reference-data.json` is a generated snapshot — so the
+      new archetype is simply absent from the wizard until deliberately surfaced. To surface: (1) add
+      `CARRY_FUNDING_DISPERSION` to `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY` (CARRY_AND_YIELD) in
+      `lib/architecture-v2/enums.ts` + bump `enums.test.ts` `toHaveLength(18)`→19; (2) regenerate
+      `lib/registry/ui-reference-data.json` via `unified-api-contracts/scripts/generate_ui_reference_data.py` (picks up
+      the catalog `build_funding_dispersion` slots) + any label/wizard-screener entry. **Playwright gate (HARD RULE):
+      ticking needs `[UI]` + `pw:L2 ✓` + a regression spec → a UI-capable slot. Repo: unified-trading-system-ui (+ UAC
+      generator).**
+- [ ] [HISTORICAL] P3. ~~funding_dispersion ENGINE + UAC archetype~~ (SUPERSEDED — DONE above; original blast-radius
+      analysis retained for the record). A new `StrategyArchetype.CARRY_FUNDING_DISPERSION` is fleet-import-breaking if
+      any exhaustive registry is missed:
+      `ARCHETYPE_LEG_STRUCTURES._build_registry()` RAISES at UAC import on a missing leg-spec seed; `ARCHETYPE_TO_FAMILY`
+      (enums.py) consumed by `strategy_naming` + `test_family_assignment`; `algo_compatibility`/`venue_set_variants`
+      auto-derive (OK once leg-spec added); the capability manifest is a partial `<=` map (no entry needed). Live
+      **foreign databento WIP in UAC clobbered the enum edits mid-session** (enums.py reverted under me) — so it MUST be
+      done when UAC is clean + via quickmerge (additive enum member = non-breaking public-surface). **The integration
+      manifest (all written + validated this session, then reverted):** (1) UAC `enums.py`:
+      `CARRY_FUNDING_DISPERSION` in `StrategyArchetype` (carry block) + `ARCHETYPE_TO_FAMILY[...]=CARRY_AND_YIELD` + a
+      single-perp leg-spec seed in `archetype_leg_spec.build_all_structures` (model on CARRY_BASIS_PERP); (2)
+      strategy-service `engine/strategies/v2/carry_and_yield/funding_dispersion.py` =
+      `CarryFundingDispersionEngine(BaseArchetypeEngineV2)` reading `funding_rank_pct` + `funding_rate_annualised_bps`
+      (tercile LONG lowest / SHORT highest + the accretive `funding_squeeze_sigma` veto) → `TradeInstruction` +
+      `declare_leg_portfolio_state` (modelled on `basis_perp.py`); (3) `__init__.py` export + `factory.py`
+      `ARCHETYPE_ENGINE_REGISTRY` row; (4) unit test on the engine; the rank allocator
+      (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`) is a further increment. The
+      cross-sectional rank is computed upstream (feature/allocator layer); the engine is the per-instrument leg engine
+      (batch==live, source-agnostic). **Repo: unified-api-contracts + strategy-service.**
+- [x] ✅ [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
+      **Repo: deployment-service.** (perm granted) — **DONE + VERIFIED ON A REAL VM
+      `deployment-service@5d74ed4`** (2026-06-19, second autonomous pass). `funding_ensemble_engine.py` now emits
+      `STARTED/STOPPED/FAILED` lifecycle events (`e2e-testing@9375904` — closes the "research script has no events" gap);
+      the launcher `launch-funding-ensemble-paper-cron-vm.sh` runs a **one-shot** `VM_TASK=strategy-paper`
+      `VM_BACKFILL_CMD` (via `_launch_with_tee` → `DEPLOYMENT_STARTED/COMPLETED` + GCS log) that uploads the desired-state
+      book to GCS + self-deletes; watchdog prefix `funding-ensemble-paper-` = EPHEMERAL_EXPERIMENT. **Verified end-to-end
+      on `funding-ensemble-paper-20260619-102853`**: RUNNING <60s ✅; engine STARTED `{capital:1M, gcs_complete,
+      Binance/Bybit/Aster}` → full ensemble book (funding_dispersion +39.2%/yr, spot_perp_basis +53.5%, dated_basis
+      +2.7%, staked_basis +8.7%, 54 perp legs, liq OK) → `WROTE` + STOPPED rc=0 ✅; DEPLOYMENT_STARTED ✅; output HTML
+      uploaded to `gs://deployment-scripts-…/funding_ensemble/2026-06-19/` (4.8 MB) ✅; VM self-deleted ✅. **Fixed a
+      pre-existing paper-VM install bug in `setup-data-pipeline-vm.sh` (benefits ALL strategy-paper/strategy-live VMs):**
+      (1) route `e2e-testing` to `_SVC_BENCH_NODEPS` — its `execution-service`/`strategy-service` deps make
+      `--no-sources` STD resolution fail ("No solution found"); `--no-deps` installs the scripts (deps are the other
+      editables); (2) add `plotly` (the desired-state HTML writer); (3) self-delete fallback `|| log` → `|| echo … ||
+      true` (the self-delete races its own process + `log` isn't in the `bash -c` subshell → was a FALSE
+      DEPLOYMENT_FAILED rc=127 on clean rc=0 runs). Diagnosed across 4 launches (wrong VM_TASK → install bug → venv path
+      → green).
+- [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Wire the DAILY recurrence — the funding-ensemble paper VM
+      is a verified one-shot self-deleting run; the daily trigger is an external scheduler re-launching it (a Cloud
+      Scheduler → Pub/Sub → Cloud Function running the launcher, or a crontab on an always-on VM invoking
+      `launch-funding-ensemble-paper-cron-vm.sh`, like `daily_positioning_dump.sh`). **Repo: deployment-service.**
+- [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Pre-existing ruff errors in
+      `deployment-service/scripts/vm/vm_zombie_watchdog.py` (lines 62/78/1143/1334 — NOT introduced by the P2 watchdog
+      registration; surfaced by the funding-ensemble dry-run lint) — clean them so the deployment-service QG is green.
+      **Repo: deployment-service.**
 
 ## Basis archetypes split + LIVE venue/coin coverage gap (operator 2026-06-18)
 
@@ -1212,7 +1291,73 @@ Operator dispatch (6h autonomous): the four P1/P2 todos below. Progress log (app
   - **Finding (P2/NICE-TO-HAVE, in-file todo below):** the broad top-volume universe now surfaces tokenized
     equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) that venues list — high-funding but not crypto.
     The winsor tames the extreme funding; an explicit asset-class filter is a refinement (todo added below).
-- **P1b — IN PROGRESS** (per-venue backtest completion).
+- **P1b DONE — `e2e-testing@de3da7d`** (see the P1b flip + entry below).
+- **P1c PARTIAL — `strategy-service@c412f6af` (config piece done).** Typed `data_source`/`gcs_complete_data_path` +
+  `ensemble_weight_*` + `ensemble_split()` on `StrategyServiceConfig` + 5 tests; strategy-service QG GREEN. The
+  funding_dispersion ENGINE + UAC `CARRY_FUNDING_DISPERSION` archetype was written + validated, then **reverted** — a
+  new UAC archetype RAISES at UAC import if any exhaustive registry (leg-spec seed / `ARCHETYPE_TO_FAMILY`) is missed
+  (fleet-import-breaking), and live foreign databento WIP in UAC clobbered the enum edits under me. Filed as the precise
+  follow-up todo (full integration manifest) needing a clean UAC + quickmerge to land atomically. **Least-bad path per
+  the autonomous contract (genuine blocker: fleet-breaking-if-incomplete + active foreign-WIP clobber) — config shipped
+  clean, engine documented for atomic landing, no broken state.**
+- **P2 LAUNCHER BUILT — `deployment-service@659f6bc`** (see the P2 flip below).
+
+### /autonomous SECOND PASS terminus (2026-06-19) — the two follow-ups finished to DONE
+
+Operator: "finish the implementation [the funding_dispersion engine + UAC archetype] then. and also fix [P2] to the
+end." Both done — no leftovers.
+
+- **P1c ENGINE + UAC archetype — COMPLETE, both QGs GREEN, shipped via quickmerge.** `unified-api-contracts@487b9a9`:
+  `CARRY_FUNDING_DISPERSION` (dollar-neutral, NOT delta-neutral — long-low/short-high funding, different coins, residual
+  beta hedged at the book level) + `ARCHETYPE_TO_FAMILY` + a 2-perp-leg leg-spec seed (SEQUENCED_WITH_PACING) +
+  docstring/partition counts 57→58 / 51→52 — **UAC QG GREEN**. `strategy-service@6b285fad`: `CarryFundingDispersionEngine`
+  + the full **cascade of exhaustiveness maps** a new archetype forces (factory + `__init__`; catalog builder + registry;
+  `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` mid-variance + `_STATEFUL_ARCHETYPES` + the factory family_map) +
+  a 12-case engine test — **strategy-service QG GREEN**. The clean-UAC window (foreign databento WIP had cleared) made the
+  atomic landing possible (the first pass had to revert it; this is why it's a second pass).
+- **P2 — DONE + VERIFIED ON A REAL VM `deployment-service@5d74ed4` + `e2e-testing@9375904`.** Engine now emits
+  STARTED/STOPPED/FAILED. **Verified end-to-end** (`funding-ensemble-paper-20260619-102853`): RUNNING <60s → engine
+  STARTED → full ensemble book printed → STOPPED rc=0 → DEPLOYMENT_STARTED → output HTML uploaded to GCS → VM
+  self-deleted. Took 4 launches to get green — each a real diagnosis: (1) `VM_TASK=funding-ensemble-paper` fell through to
+  the strategy-service CLI (`--operation paper` invalid) → `VM_TASK=strategy-paper`; (2) the strategy-paper install
+  `uv pip install --no-sources -e e2e-testing` failed because e2e-testing declares `execution-service` as a dep
+  --no-sources can't resolve → routed e2e-testing `--no-deps` (a **pre-existing bug fix for every paper VM**) + added
+  plotly; (3) `.venv-workspace/bin/python` relative-path miss → `../.venv-workspace/bin/python`; (4) green. Also fixed
+  the self-delete `|| log` → false-DEPLOYMENT_FAILED-rc127 artifact. No orphan VMs (all 4 self-deleted).
+- **Follow-ups filed** (`- [ ]`): the cross-sectional rank allocator (`CARRY_FUNDING_DISPERSION_RANK`) increment; the
+  daily-recurrence external scheduler; the pre-existing vm_zombie_watchdog ruff cleanup. **No DEFERRED-without-successor;
+  no broken state; the engine + archetype are live in the production spine and the paper VM runs end-to-end.**
+
+### /autonomous run terminus (2026-06-19) — final report
+
+Operator dispatch: production breadth + live-system fold (P1a/P1b/P1c/P2), 6h autonomous. **All four shipped to the
+extent safely completable without leaving broken state; two cross-repo pieces filed as precise atomic follow-ups
+(blocked by live foreign databento WIP in UAC, not by design).**
+
+- **P1a ✅ `e2e-testing@5eef20f`** — multi-venue × broad-universe live ensemble (Binance+Bybit+Aster bulk snapshots,
+  per-venue dispersion + spot_perp_basis on top-volume universes, liquidity-weighted venue allocator [35/65 rail],
+  funding winsor; HL excluded). Verified live (754/585/562 perps, 4 strats/4 venues, 60 legs, liq OK). e2e QG green.
+- **P1b ✅ `e2e-testing@de3da7d`** — per-venue backtest sweep (Bybit/Aster/OKX cached fetchers + `--venues`/
+  `--universe-size`; full causal stack per venue). Binance +1.80 / Bybit +2.27 (majors), Aster +0.07 (majors-efficient;
+  edge in the tail), OKX coverage-gated (~3mo public funding). ruff clean, runtime-validated.
+- **P1c PARTIAL ✅ `strategy-service@c412f6af`** — config piece (typed `data_source`/`gcs_complete_data_path` +
+  `ensemble_weight_*` + `ensemble_split()` + 5 tests; strategy-service QG GREEN). **Forced trade-off (rule 1):** the
+  funding_dispersion ENGINE + UAC `CARRY_FUNDING_DISPERSION` archetype was written + validated, then REVERTED — a new
+  UAC archetype RAISES at UAC import if any exhaustive registry (`ARCHETYPE_LEG_STRUCTURES`) lacks a seed
+  (fleet-import-breaking), and live foreign databento WIP in UAC clobbered the enum edits mid-session. Filed as a precise
+  atomic follow-up (full integration manifest) needing a clean UAC + quickmerge.
+- **P2 LAUNCHER ✅ `deployment-service@659f6bc`** — funding-ensemble paper-cron VM launcher + watchdog registration,
+  dry-run + bash-syntax + watchdog-parse validated. **Gated operational step:** the billed recurring-VM launch + per-run
+  progress events need the engine fold (no-fire-and-forget verification requires lifecycle events the research script
+  doesn't emit). Documented as the launch step.
+
+**Ship discipline:** every unit Commit+Push+Flipped same-turn; all via the sanctioned dirty-deps direct-LDR push
+(`Quickmerge: agent` trailer) — the foreign databento WIP in UAC/MTDS blocked quickmerge fleet-wide, exactly as the
+dispatch anticipated. **Foreign WIP preserved throughout** (one index-hygiene slip committed 3 foreign databento docs to
+PM LDR — content preserved, not lost; reverting would have destroyed the foreign author's pushed copy, so left intact).
+**Follow-ups filed (all tracked `- [ ]` above):** funding_dispersion engine+UAC-enum (atomic, clean-UAC); broad-universe
+P1b numbers fold-in; asset-class filter for the broad universe; P2 billed launch + event wrapping; pre-existing
+vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 
 - [ ] [STRATEGY] P2. **NICE-TO-HAVE (provenance: P1a 2026-06-19)** Asset-class filter for the live broad universe — the
       top-volume perp universe now includes tokenized equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT)

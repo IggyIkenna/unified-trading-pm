@@ -177,11 +177,11 @@ PM-repo conflict notes).
 
 ### Phase 4 — UI visibility (operator can SEE every working agent)
 
-- [ ] [ORCHESTRATOR][UI] P1. Verify the agents feed (`/api/agents`) surfaces ALL live agent types (escalate /
+- [x] ✅ [ORCHESTRATOR][UI] P1. Verify the agents feed (`/api/agents`) surfaces ALL live agent types (escalate /
       conflict-resolver / plan-reconciler / monitor / …) while working, and the dashboard renders each role (icon/label
       per type, not just worker/main). Add any missing role rendering. Repo: agent-orchestrator dashboard (+
       deployment-ui if it mirrors the agents panel).
-- [ ] [ORCHESTRATOR][UI] P2. Regression guard: a smoke/spec asserting a non-worker agent type (e.g. an escalation agent)
+- [x] ✅ [ORCHESTRATOR][UI] P2. Regression guard: a smoke/spec asserting a non-worker agent type (e.g. an escalation agent)
       appears in the agents list when registered. (If this touches `deployment-ui`, the playwright gate applies —
       `pw:L2 ✓` + cited regression spec.) Repo: deployment-ui / agent-orchestrator dashboard.
 

@@ -710,6 +710,13 @@ on resolved/recovered alone). **Gotcha that killed this for months:** `gh pr lis
 `scripts/cicd/promotion_lag_monitor.py` (`promotion-lag-monitor.yml`, `*/30`) pages time-based LDR↔staging↔main lag
 (oldest un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
 
+**Shared-carrier read-back dedup (alert_quality_overhaul, 2026-06-18):** the PM Slack carrier
+`.github/workflows/notify-slack.yml` takes `dedup_key` + `cooldown_min` inputs and reads its own already-written ledger
+JSONL before posting — a key seen within the cooldown is skipped (**fail-OPEN**: a ledger-read error still posts). This
+kills the bulk of the repeat volume at the carrier, complementing the per-detector server-side **persisted** dedup
+(`server/dedup_state.py`, survives a central-VM restart). The carrier is **PM-only** (not a fleet workflow template — no
+per-repo rollout). SSOT: `plans/active/alert_quality_overhaul_2026_06_18.md`.
+
 ---
 
 ## Canonical required check name (post-Option-D, 2026-05-29)
