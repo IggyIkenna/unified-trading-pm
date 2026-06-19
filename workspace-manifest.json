@@ -1810,9 +1810,10 @@
       "system-integration-tests",
       "deployment-api",
       "client-reporting-api",
-      "unified-api-contracts"
+      "unified-api-contracts",
+      "greeks-service"
     ],
-    "sit_retry_count": 1,
+    "sit_retry_count": 2,
     "locked_alert_sent": false,
     "breaking_pending": [
       "greeks-service",
