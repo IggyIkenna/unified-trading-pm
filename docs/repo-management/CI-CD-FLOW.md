@@ -1,7 +1,14 @@
-# Full CI/CD Flow — SSOT
+# Workspace Bootstrap & Setup Runbook (formerly "Full CI/CD Flow")
 
-**SSOT:** This document. Single entry point for dependency alignment, setup, sync-to-main, and conflict resolution.
-**Related:** `docs/ci-cd-ssot.md` §7 — Cloud Build/CodeBuild templates, rollout scripts, SIT build source.
+> **⚠️ NOT the CI/CD SSOT (banner added 2026-06-18).** The single CI/CD pipeline SSOT is now
+> **`codex/08-workflows/ci-cd-flow.md`** (the as-built LDR-trunk model + the canonical mermaid), with the per-workflow
+> drill-down in **`docs/repo-management/CICD-WORKFLOW-CATALOG.md`**. The **CI/CD-flow sections in the lower half of this
+> file** (Feature Branch Flow, Version Bump Rules, Staging Lock Lifecycle, SIT Batching, Multi-Project Cloud Build,
+> etc.) are **RETIRED / historical** — they describe the pre-LDR-trunk three-tier model; do **not** treat them as
+> current. What is still uniquely useful here is the **workspace bootstrap / venv / dependency-alignment /
+> mock-infrastructure setup** (top half). That content is slated to migrate into
+> `codex/05-infrastructure/workspace-setup.md` (tracked in `plans/active/cicd_quality_gates_2026_06_18.md`), after which
+> this file is deleted.
 
 **Run from workspace root:** All scripts assume you run from the workspace root (parent of unified-trading-pm). cd there
 first, then run any script.

@@ -5,11 +5,11 @@ Anthropic project key to prevent quota exhaustion in one tier from blocking anot
 
 ## Tier Map
 
-| Tier      | Secret Name                   | Workflows                                                                                              | Priority                                         | Volume |
-| --------- | ----------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------ | ------ |
-| CICD      | `ANTHROPIC_API_KEY_CICD`      | conflict-resolution-agent, rules-alignment-agent, codex-sync-agent, semver-agent                       | Critical path — never rate-limited by batch work | Low    |
-| SYSHEALTH | `ANTHROPIC_API_KEY_SYSHEALTH` | overnight-agent-orchestrator, agent-audit (all repos), claude-api-health-monitor, cassette-drift-check | Scheduled/batch — deferrable                     | High   |
-| ANALYSIS  | `ANTHROPIC_API_KEY_ANALYSIS`  | _(future)_ trading-quality-agent, performance-analysis, scenario-analysis                              | Future — separate Anthropic project              | —      |
+| Tier      | Secret Name                   | Workflows                                                                                        | Priority                                         | Volume |
+| --------- | ----------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------ | ------ |
+| CICD      | `ANTHROPIC_API_KEY_CICD`      | conflict-resolution-agent, rules-alignment-agent, codex-sync-agent, semver-agent                 | Critical path — never rate-limited by batch work | Low    |
+| SYSHEALTH | `ANTHROPIC_API_KEY_SYSHEALTH` | overnight-agent-orchestrator, agent-audit (all repos), cassette-drift-check, secret-health-check | Scheduled/batch — deferrable                     | High   |
+| ANALYSIS  | `ANTHROPIC_API_KEY_ANALYSIS`  | **_(WIP / not yet built)_** trading-quality-agent, performance-analysis, scenario-analysis       | Future — separate Anthropic project              | —      |
 
 All workflows use `|| secrets.ANTHROPIC_API_KEY` fallback so the shared key keeps everything working while dedicated
 keys are provisioned.
@@ -48,10 +48,10 @@ Rotate all keys every 90 days. On rotation:
 
 All agent workflows source `scripts/claude-helpers.sh` via `handle-claude-api-error` composite action. Error classes:
 
-| Class        | HTTP                   | Action                             | Retry |
-| ------------ | ---------------------- | ---------------------------------- | ----- |
-| auth_error   | 401/403                | Rotate key immediately, no retry   | No    |
-| rate_limited | 429/529                | Retry 3× with 15s/60s/300s backoff | Yes   |
-| service_down | 503/connection refused | Graceful skip, no pipeline failure | No    |
-| timeout      | job timeout            | TG alert with repo+branch, exit 1  | No    |
-| unknown      | other                  | TG with stderr excerpt for triage  | No    |
+| Class        | HTTP                   | Action                                              | Retry |
+| ------------ | ---------------------- | --------------------------------------------------- | ----- |
+| auth_error   | 401/403                | Rotate key immediately, no retry                    | No    |
+| rate_limited | 429/529                | Retry 3× with 15s/60s/300s backoff                  | Yes   |
+| service_down | 503/connection refused | Graceful skip, no pipeline failure                  | No    |
+| timeout      | job timeout            | Slack alert (#ci-failures) with repo+branch, exit 1 | No    |
+| unknown      | other                  | Slack (#ci-failures) with stderr excerpt for triage | No    |
