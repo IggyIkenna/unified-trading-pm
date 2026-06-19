@@ -92,11 +92,18 @@ jobs:
     if: needs.monitor.outputs.lag == 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: |
-        Promotion lag detected — branches out of sync beyond the threshold (LDR↔staging↔main):
-        ${{ needs.monitor.outputs.report }}
+      # The report is already in the error-pointer standard (header=WHAT+number, one deep-link,
+      # CLI hint secondary — promotion_lag_monitor.py builds it). Pass it through verbatim.
+      message: ${{ needs.monitor.outputs.report }}
       severity: WARNING
       workflow_name: promotion-lag-monitor
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # TRANSITION-ONLY (alert_quality_audit_2026_06_18): a standing lag must page on the
+      # 60m-CROSSING, NOT every */30 tick. A stable dedup_key + a cooldown longer than the cron
+      # period makes notify-slack suppress the re-page; when the lag clears (no `lag` output → no
+      # notify job) and later recrosses past the cooldown, it pages again. 6h covers the worst
+      # genuinely-stuck case without re-spamming (the operator's "branch behind" repeat complaint).
+      dedup_key: promotion-lag
+      cooldown_min: 360
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
