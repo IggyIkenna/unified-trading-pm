@@ -218,13 +218,13 @@ for price adjustment and by instruments-service for continuous contract construc
 | Field               | Value                                                                                                                                                    |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CLI operation**   | `collect-earnings` (earnings_result_handler)                                                                                                             |
-| **Sources**         | Polygon.io earnings API (`api.polygon.io/vX/reference/financials`)                                                                                       |
+| **Sources**         | yfinance (earnings dates + actual/estimated EPS via `YFinanceEarningsAdapter`)                                                                           |
 | **Shard key**       | venue × date (one shard per exchange per reporting date)                                                                                                 |
 | **Instrument type** | `equity`                                                                                                                                                 |
 | **Status**          | Production (reference data; daily batch — events fire on reporting dates)                                                                                |
 | **Schema fields**   | symbol, ts_event, venue, period, eps_actual, eps_estimate, eps_surprise, revenue_actual, revenue_estimate, revenue_surprise, fiscal_quarter, fiscal_year |
 | **Venues**          | NASDAQ, NYSE                                                                                                                                             |
-| **Requires**        | `polygon-api-key` (Secret Manager)                                                                                                                       |
+| **Requires**        | None — yfinance is keyless (no Secret Manager key)                                                                                                       |
 
 Quarterly earnings results. One row per company per earnings release. `eps_surprise` = actual − estimate (raw delta);
 `revenue_surprise` = same. Non-reporting days (the vast majority of trading days) are recorded as
@@ -256,16 +256,17 @@ for macro-regime signals and by strategy-service for rate-sensitivity modelling.
 
 ## Venue Coverage Matrix
 
-| venue   | MVP data_types                              | status     | notes                                                                               |
-| ------- | ------------------------------------------- | ---------- | ----------------------------------------------------------------------------------- |
-| CBOE    | ohlcv_15m                                   | Production | Options index only (limited Databento subscription)                                 |
-| CME     | ohlcv_1m                                    | Production | Backdated to 2019-01-01; tbbo + mbp_10 post-cutover                                 |
-| FX      | ohlcv_24h                                   | Production | Daily only (cost envelope); G10 crosses via FRED + Yahoo Finance                    |
-| ICE     | ohlcv_1m                                    | Production | Backdated to 2019-01-01                                                             |
-| NASDAQ  | ohlcv_1m                                    | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                       |
-| NYSE    | ohlcv_1m                                    | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                       |
-| FRED    | macro_result                                | Production | All FRED series IDs registered in UAC `registry/capability_declarations/_tradfi.py` |
-| POLYGON | corporate_action_confirmed, earnings_result | Production | Reference data APIs; `polygon-api-key` required                                     |
+| venue    | MVP data_types             | status     | notes                                                                               |
+| -------- | -------------------------- | ---------- | ----------------------------------------------------------------------------------- |
+| CBOE     | ohlcv_15m                  | Production | Options index only (limited Databento subscription)                                 |
+| CME      | ohlcv_1m                   | Production | Backdated to 2019-01-01; tbbo + mbp_10 post-cutover                                 |
+| FX       | ohlcv_24h                  | Production | Daily only (cost envelope); G10 crosses via FRED + Yahoo Finance                    |
+| ICE      | ohlcv_1m                   | Production | Backdated to 2019-01-01                                                             |
+| NASDAQ   | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                       |
+| NYSE     | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                       |
+| FRED     | macro_result               | Production | All FRED series IDs registered in UAC `registry/capability_declarations/_tradfi.py` |
+| POLYGON  | corporate_action_confirmed | Production | Dividends/splits via reference data APIs; `polygon-api-key` required                |
+| YFINANCE | earnings_result            | Production | Earnings actuals/estimates (`YFinanceEarningsAdapter`); keyless                     |
 
 ---
 
@@ -292,8 +293,9 @@ for macro-regime signals and by strategy-service for rate-sensitivity modelling.
 | Secret Manager key  | Data types                                                                             |
 | ------------------- | -------------------------------------------------------------------------------------- |
 | `databento-api-key` | ohlcv_1m, ohlcv_15m, tbbo (deferred), trades (deferred), mbp_10 (deferred)             |
-| `polygon-api-key`   | corporate_action_confirmed, earnings_result                                            |
+| `polygon-api-key`   | corporate_action_confirmed (dividends/splits only)                                     |
 | `fred-api-key`      | macro_result (public FRED API available but rate-limited; Secret Manager key for prod) |
+| _(none — keyless)_  | earnings_result (yfinance via `YFinanceEarningsAdapter`)                               |
 
 ### Deferred Tick Data — How Suppression Works
 
