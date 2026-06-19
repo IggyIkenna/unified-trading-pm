@@ -1,0 +1,127 @@
+---
+title: "Monitoring Surfaces Overhaul — agent-orchestrator dashboard + deployment-ui pane"
+created: 2026-06-18
+status: active
+parent_epic: infrastructure_master
+assigned_vm: planning
+plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
+audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
+locked_by: live-defi-rollout
+estimate_class: infra
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 4.8
+source:
+  - 2026-06-18 operator design session — orchestrator UI = agents/orchestrator lens; deployment-ui =
+    CICD/codebase/fleet/images
+  - plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)
+---
+
+# Monitoring Surfaces Overhaul
+
+## Why
+
+Operator (2026-06-18): the orchestrator dashboard owns everything about AGENTS + the orchestrator; the deployment-ui
+monitoring pane owns CI/CD + codebase + fleet + images; an alert clicks through to the right surface. Two tracks. Full
+evidence + per-ask current-state/gap/change-list: `plans/audit/results/monitoring_surfaces_audit_2026_06_18.md`. Audit
+reframe: CI/CD + image-build are already mature/planned; the real deployment-ui gaps are fleet-runtime +
+alert-unification. The `agent_kind`/`lifecycle` data is already served — it's rendering + retention that's missing.
+
+## Track A — agent-orchestrator dashboard (repo: agent-orchestrator; ALL `[UI]` → playwright/vitest gate, PLAN_FORMAT §9)
+
+- [ ] [ORCHESTRATOR] P0. **Retain finished one-shot/scheduled agents** (load-bearing): stop hard-deleting on completion
+      (`DELETE /api/agents/{id}` `routes/agents.py:703`); transition to a terminal status (`finished` +
+      `finished_at`/`exit_reason` on AgentRow) + a retention prune (last N per kind / 7d). Without this "show past
+      escalate/plan-health runs" is impossible. Repo: agent-orchestrator (server).
+- [ ] [ORCHESTRATOR] P1. Filterable `GET /api/agents` — honor the dead-contract `status` param + add `kind`/`lifecycle`/
+      `include_finished`/`limit`, pushed into `state_store.list_agents` (WHERE/ORDER BY). Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR][UI] P1. New `AgentTypesPanel` (one new tab, keyed on `agent_kind`, running+past) — `KINDS_ORDER` +
+      reuse `RoleHolders`/`AGENT_KIND_LABEL`; per-kind online count + show-finished toggle; mount desktop + mobile. Keep
+      role chat (`main/review/backup`) clean. Evidence: `— repo@sha | pw:L2 ✓ | regression: <spec>`. Repo:
+      agent-orchestrator (dashboard).
+- [ ] [ORCHESTRATOR] P1. Activity feed backend — push `slot`/`type`/category filters into SQL BEFORE the limit
+      (`activity.py:86` / `routes/state.py:91-111`), add cursor pagination (`before_id`/offset + envelope), add a
+      **denoise rollup** (`GROUP BY event_type[,slot] within window` → "×N in last 1h"; generalize
+      `count_recent_activity`). The denoise is the "90% repeats" fix. Repo: agent-orchestrator.
+- [ ] [ORCHESTRATOR][UI] P1. Activity feed frontend — "Load older"/cursor append (decouple from the live poll),
+      server-driven filter tabs, collapse duplicate rows with ×N badge + expand, smaller live poll (~25). Repo:
+      agent-orchestrator (dashboard).
+- [ ] [ORCHESTRATOR][UI] P2. Conditions tab collapsible (frontend-only): `COLLAPSED_COUNT=5`, sort OFF+`gates_queued>0`
+      first, "Show N more ▾"/"Collapse ▴", keep the count chip. Repo: agent-orchestrator (dashboard).
+- [ ] [ORCHESTRATOR] P2. Human↔agent messaging (the ~1-min latency = agent-side `/loop` poll) — **DESIGN FORK, discuss
+      in prose before building**: ship (1) tmux "deliver now" nudge `POST /api/agents/{id}/nudge` + (2) adaptive cadence
+      (`AgentPollResponse.suggested_next_interval`) now; (3) long-poll/SSE as end-state; + a queued/delivered chip from
+      `pending_count`. Repo: agent-orchestrator.
+
+## Track B — deployment-ui monitoring pane (repos: deployment-ui + deployment-api)
+
+- [ ] [INFRA] P0. **Mint `ORCHESTRATOR_API_TOKEN` into Secret Manager (both clouds)** — cheapest high-value fix: lights
+      up the already-built Fleet-Git page (currently degrades to unavailable, BLOCKED-CREDENTIALS). File as an operator
+      credential ask if mint requires operator. Repo: deployment-service/deployment-api.
+- [ ] [INFRA] P1. Central/infra-VM health: `GET /api/fleet/infra-vm-health` (proxy AO `/api/fleet/summary`) +
+      `GET /api/fleet/vm-census` (render `vm_zombie_watchdog.py` running-vs-expected-vs-zombie). Repo: deployment-api.
+- [ ] [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
+      today) — chip click-throughs to AO (not a rebuild; honors division-of-surfaces). `pw:L2 ✓` + regression. Repo:
+      deployment-ui.
+- [ ] [INFRA] P1. **Unify the alert ledger across domains** — non-CI watchers (VM-down, consolidator-down,
+      git-health-guard, worker-liveness, data-pipeline) write to a shared store; add `GET /api/alerts` superset of
+      `/api/repo-ci/alerts`. This is what makes "alert → open deployment-ui → full picture" work for ALL classes. Repo:
+      deployment-api (+ the watcher emitters). Composes with `alert_quality_overhaul_2026_06_18.md`.
+- [ ] [UI] P1. deployment-ui `/alerts` page consumes the unified ledger (not just `cicd/alerts`). `pw:L2 ✓` +
+      regression. Repo: deployment-ui.
+- [ ] [UI] P2. Unified single-glance fleet/infra landing tile (6th LandingTab: N VMs running · central-VM up ·
+      consolidator fresh · fleet-git clean · CI green — each click-through). Repo: deployment-ui.
+- [ ] [UI] P2. Codebase-health matrix column on `/repos` (fleet-wide coverage% / QG-red-reason / file-size-debt, not
+      per-service-tab-only). Repo: deployment-ui (+ a deployment-api roll-up if needed).
+- [ ] [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui.
+
+### Cloud Build visibility + build health (found 2026-06-18 operator Cloud Build smoke test)
+
+Operator-directed GCP Cloud Build smoke test (central-element-323112 / asia-northeast1): `roles/editor` confirmed; 3
+builds run via regional triggers — UTL base `590050dc` ✅ SUCCESS, mtds `4a7de34e` ✅ SUCCESS, mdps `40c74eab` ❌
+FAILURE. Two build-VISIBILITY bugs (deployment-ui Cloud Build pane is non-functional today) + one BUILD break, all
+root-caused:
+
+- [ ] [INFRA] P1. **deployment-api build history shows nothing (current build + history) — regional-vs-global
+      `list_builds`.** `get_build_history` (`routes/cloud_builds.py:387`) queries `ListBuildsRequest(project_id=...)`
+      (GLOBAL scope; the inline "regional parent 400s on REST" comment is STALE) but every build runs regionally in
+      `asia-northeast1`, so it always returns `builds:[]` (confirmed empty for both mtds `-live-defi-rollout` and mdps
+      `-build`). Fix: use the regional parent `projects/{p}/locations/asia-northeast1`, mirroring the proven
+      `_find_recent_build_sync` / `_get_recent_builds_for_triggers` helpers (which already use it). Secondarily map
+      service → ACTUAL live trigger (`-live-defi-rollout` where present, else `-build`; `cloud_builds.py:346`) so
+      LDR-built repos appear. Repo: deployment-api.
+- [ ] [INFRA] P1. **deployment-api `/api/cloud-builds/triggers` 500s when Redis is down (the triggers pane + last_build
+      is dead).** `list_triggers` wraps its fetch in `cache.get_or_fetch` (Redis-backed); `RedisCache.get/set/...`
+      (`utils/cache.py`) catch only `(OSError, ValueError, RuntimeError)`, but redis-py raises
+      `redis.exceptions.RedisError` (subclasses `Exception`, NOT `OSError`) on a dropped/unreachable connection → it
+      propagates → 500. (History is unaffected because it skips the cache — which is why it's 200-empty, not 500.) Fix:
+      make the cache best-effort — add `RedisError` to the caught set so a Redis outage degrades to a cache-miss (falls
+      through to live fetch), never a 500. Fleet-wide resilience: this fixes EVERY cached endpoint, not just triggers.
+      Repo: deployment-api.
+- [ ] [DOCKER] P1. **market-data-processing-service image build broken on `main` — sibling not staged.** `Dockerfile:57`
+      `uv sync --frozen --no-dev` needs the editable `../unified-api-contracts` at `/app/unified-api-contracts`, absent
+      from the GCP build context (`COPY . .` only; no `stage-siblings` step) →
+      `Distribution not found at:     file:///app/unified-api-contracts`. mtds is the green reference (`Dockerfile:62`
+      `uv pip install --system -e . --no-deps` against the base image). Fix mdps to mtds's pattern (+ any mdps-only
+      external deps, e.g. numba) or stage siblings into the context; validate via
+      `market-data-processing-service-feature-build` + a
+      `docker run … python -c "import market_data_processing_service"` check (a green build alone won't catch a
+      `--no-deps` runtime break). Repo: market-data-processing-service.
+
+## Out of scope here (already filed/blocked — coordinate, do NOT reimplement)
+
+- Version-coherence panel, rollout-ratchet panels (template-drift + Dockerfile digest-pin), G4 ruleset-drift, G5
+  change-freeze banner — blocked on the Firestore verdict-store (master plan); consolidator-health (G3) IN-PROGRESS
+  (slot-3); runtime deploy-signal v2 already filed (master L212).
+
+## Success criteria
+
+- Every agent type (escalate/conflict-resolver/plan-health/plan-reconciler/monitor) is visible in the AO dashboard while
+  running AND as past runs; activity feed is filterable + paginated + denoised; conditions collapse.
+- An alert of ANY class opens its deployment-ui surface and shows the full picture (fleet-runtime + central-VM
+  included).
+- Fleet-Git page is LIVE (token minted).
+
+## Codex SSOT updates
+
+- `codex/04-architecture/agent-orchestrator-overview.md` — AgentTypesPanel + agent-retention + messaging path.
+- `codex/04-architecture/runtime-deployment-topology.md` — deployment-ui fleet-runtime + unified-alert-ledger surfaces.
