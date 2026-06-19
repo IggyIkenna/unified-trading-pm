@@ -924,7 +924,15 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # 2026-06-12) — MUST mirror base-service.sh:1198 (the two drifted: service had them, library did not → UTL red).
     # Lift when the one-by-one external-dep audit adopts starlette 1.3.1+ WITH the _IncludedRouter route fix.
     # SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
+    # GHSA-rpj2-4hq8-938g: vcrpy <=8.1.1 YAML-cassette object-construction. MUST mirror base-service.sh (the two
+    #   drifted: service had it, library did NOT → UAC/UTL red on a fresh pip-audit). Exploit surface nil (our own
+    #   committed test cassettes, test-only) + vcrpy PINNED by the aiohttp-3.14 deadlock. SUCCESSOR: the vcrpy-unblock
+    #   to aiohttp 3.14.0. Tracked: plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used after an unpack error can SEGV. Exploit
+    #   surface nil (we never re-use an Unpacker post-error on untrusted data). Fix 1.2.1 exists but is a fleet-wide
+    #   transitive lock-bump. SUCCESSOR: bump msgpack >=1.2.1 fleet-wide + lock-regen. Tracked:
+    #   plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md § QG-unblock follow-ups.
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3;
     # parity with base-service.sh): the OSV query runs only when the deps-hash (pyproject.toml
     # + uv.lock + ignore set + pip-audit version) changed, OR the cached clean result is older

@@ -76,13 +76,11 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
       agent-orchestrator.
 - [x] ✅ [SCRIPT] P2. Route `cloud-build-failure-watcher.yml:232-246` through `notify-slack.yml` (gain dedup + ledger +
       truthful severity); make it transition-based. Repo: unified-trading-pm.
-- [ ] [ORCHESTRATOR] P2. Drop the gh-rate 50% NOTICE tier; same-operator account-rotation → dashboard-only (alert only
-      on cross-op). Repo: agent-orchestrator. **PARTIAL (agent-orchestrator@2d85b12)**: the gh-rate **50% NOTICE tier is
-      DROPPED** (`USED_THRESHOLDS=(80,95,100)`); the **same-op-rotation→dashboard-only half is DEFERRED** — it
-      contradicts the shipped `tests/test_rotation_slack_e2e.py::test_same_operator_rotation_no_cross_op_marker` (which
-      asserts a same-op rotation DOES post exactly one alert, minus the cross-op marker). Genuine test-vs-spec conflict,
-      not punted: needs a rotation-alert test redesign (operator decision) before `notify_account_rotated` can suppress
-      same-op posts. This open checkbox tracks that remaining decision.
+- [x] ✅ [ORCHESTRATOR] P2. Drop the gh-rate 50% NOTICE tier; same-operator account-rotation → dashboard-only (alert only
+      on cross-op). Repo: agent-orchestrator. **COMPLETE — agent-orchestrator@83d13f4**: gh-rate 50% tier dropped
+      (agent-orchestrator@2d85b12); same-op rotation suppressed in `notify_account_rotated` (early return when
+      `from_operator == to_operator`); test redesigned: `test_same_operator_rotation_no_slack_post` asserts 0 HTTP calls
+      (was 1); pre-existing env-var leak `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` fixed in conftest.py autouse fixture.
 
 ## Phase 5 — Re-surface still-open alerts (severity-scaled re-nag) + carrier-routing follow-through (P1)
 

@@ -1216,7 +1216,18 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   host-based trust decisions from request.url → exploit surface low. SUCCESSOR (remove this ignore): bump the
     #   fastapi/starlette floor to a >=1.3.1 line + fleet lock-regen. Tracked: v2_engine_venue_buildout_2026_06_15.md
     #   follow-ups (alongside the cryptography bump).
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln PYSEC-2026-196"
+    # GHSA-rpj2-4hq8-938g: vcrpy <=8.1.1 deserializes YAML cassettes with PyYAML's object-constructing loader
+    #   (yaml.Loader/CLoader) → arbitrary-object construction IF a cassette file is attacker-controlled. Exploit surface
+    #   nil for us: cassettes are our OWN committed test fixtures (tests/cassettes/), never untrusted input, and vcrpy is
+    #   test-only (never on a runtime path). vcrpy is PINNED at 8.1.1 by the aiohttp-3.14 deadlock (same block as
+    #   CVE-2026-34993/47265) so it cannot be bumped yet. SUCCESSOR (remove this ignore): the same vcrpy-unblock that
+    #   lets the fleet reach aiohttp 3.14.0. Tracked: plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used AFTER an unpack error can SEGV the process.
+    #   Exploit surface nil for us: we never feed untrusted msgpack to an Unpacker and then re-use it post-error.
+    #   A real fix exists (1.2.1) but msgpack is a transitive pin → bumping is a fleet-wide lock-regen campaign.
+    #   SUCCESSOR (remove this ignore): bump msgpack to >=1.2.1 fleet-wide + lock-regen. Tracked:
+    #   plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md § QG-unblock follow-ups.
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
     # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock
