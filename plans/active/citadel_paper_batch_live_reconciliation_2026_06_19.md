@@ -178,9 +178,11 @@ are identified (2) and the ledger exists (3).
       COMPOSITE verdict computes mean/p99 |fill_price_delta_bps| (nearest-rank). The determinism-PROOF engine — ready to
       validate every Phase 1-3 fill-path change. **This is the keystone: any fill-path correction now ships WITH a
       reconcile_day test proving paper≡batch.**
-- [ ] [CODE] P2.4.2. **Populate `DeviationRecord.instrument_id` + a `trade_key`** + roll up per
-      venue/instrument/strategy/`PnLFactor`; daily T+1 (one report per trading day; a week = 7 daily reports). Repo:
-      batch-live-reconciliation-service.
+- [x] ✅ [CODE] P4.2. **Daily T+1 `reconcile_day` stage + rollups** — DONE (`batch-live-reconciliation-service@4b611db`):
+      `engine/daily_determinism_stage.py` runs `reconcile_day` at T+1 (prior trading day's paper vs batch rerun) → the
+      DETERMINISM verdict; `engine/ledger_reader.py` reads the InstructionLedger JSONL the P3.1 writer emits; per-trade
+      keyed diff with instrument-level detail; daily T+1 cadence (one report per day). Recovered from session-limit
+      -orphaned WIP + shipped.
 - [ ] [CODE] P2.4.3. **The batch-rerun-from-manifest path** — take a paper `RunManifest`, assert code shas, replay
       `captured_tick_stream`, write a `mode=batch` ledger back-referencing the paper run. Repo: strategy-service (CLI
       subcommand) + e2e-testing harness.
@@ -385,3 +387,24 @@ The autonomous write-side dispatch ran, parallelised across repos, then hit the 
 continues: QG + ship the orphaned UTL `run_writer.py` (unblocks P4.2) → ship P4.2 → then P1.4 → P4.3 → P6 → P7. The
 on-disk WIP is the precise resume point; verify it QG-green before shipping (don't ship un-QG'd). Live leg stays
 BLOCKED-OPERATOR.
+
+### 2026-06-19 ~18:10 UTC — session-limit-orphaned WIP RECOVERED + shipped (P2 / P3.1-wiring / P4.2 / P6-alert)
+
+The session-limit reset; I recovered + shipped the orphaned-on-disk write-side WIP (verified QG-green before each ship):
+- **P3.1 write side** — `unified-trading-library@3cc6e3dd`: `ledger/run_writer.py` (`write_run_ledger` / `write_run_manifest`
+  / `fill_to_ledger_jsonl_obj` / `instruction_ledger_jsonl`) — persists keyed fills as InstructionLedger JSONL + the
+  as-of RunManifest to the run's `ledger_root`.
+- **P2 gateway + P3.1 engine wiring** — `strategy-service@fccee669`: `engine/backtest/ledger_emit.py` maps each
+  `BenchmarkFillRecord`→keyed `TradeFillRecord` (`make_trade_key` + side/qty/fill/fees) and calls the run_writer seam.
+  (Fixed an over-eager import-pattern `--fix` that had broken the UTL import + an in-function datetime import.)
+- **P4.2 + P6 alert** — `batch-live-reconciliation-service@4b611db`: `daily_determinism_stage.py` (runs `reconcile_day`
+  at T+1) + `ledger_reader.py` + `recon_alert_client.py` (posts the verdict to alerting-service).
+- Two ships used the sanctioned dirty-deps direct push (UTL carries FOREIGN uncommitted WIP in `honest_coverage_ratchet`
+  — a different workstream, left untouched).
+
+**P1.1 was already shipped pre-limit** (`strategy-service@b136f70e`, PASSIVE_BBO correction). **Remaining**: P1.4
+GroupCRunner (linchpin), P4.3 batch-rerun-from-manifest CLI, the P6 daily ledger Slack digest, P7 short-window e2e ε=0
+proof. Live leg stays BLOCKED-OPERATOR.
+
+**Process fix shipped** (`pm@aa3506ee8`): CLAUDE.md now bans bare `ScheduleWakeup` for unattended resume (it doesn't fire
+when the session is idle — 2nd incident) — use a tracked `run_in_background` waiter instead.
