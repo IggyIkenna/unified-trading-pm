@@ -575,8 +575,20 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   messaged): the pending tracked task is the harness's active wake source and SHADOWS the standalone timer (which is
   in-session best-effort, not an OS alarm — also won't fire if the session is idle/asleep). Use `ScheduleWakeup` ONLY
   when no tracked task is in flight (self-pacing `/loop`, or polling external/untracked state); if something MUST
-  resume, make it a tracked task that exits on the condition, never the timer alone. SSOT:
-  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage" + § "Wake sources".
+  resume, make it a tracked task that exits on the condition, never the timer alone. **STRENGTHENED 2026-06-19 (this
+  KEEPS happening — operator escalation): `ScheduleWakeup` is NOT a reliable unattended timer EVEN as the sole wake
+  source.** It is in-session best-effort and **does NOT fire when the session is idle/asleep — which an UNATTENDED wait
+  IS by definition.** Incident 2026-06-19: a `ScheduleWakeup` armed for an 18:30 UTC usage-limit reset NEVER FIRED — the
+  operator found it 18 min late (18:48) and called the wakeups "bogus" (2nd incident after 2026-06-16). **RULE: for ANY
+  wall-clock unattended resume — waiting out a usage/session-limit reset, a deploy, a cron, a quota window — the
+  reliable mechanism is a TRACKED `run_in_background` task that waits to the target then exits** (its completion
+  auto-re-invokes you; the OS-level wait runs in the shell, NOT blocked by the LLM usage limit). Shape it as a
+  Monitor/until-loop on `date -u`/the condition (foreground `sleep` is blocked; a backgrounded waiter is fine), e.g. a
+  `run_in_background` bash `until [ "$(date -u +%H%M)" -ge "1830" ]; do sleep 60; done; echo RESET-REACHED`. **NEVER arm
+  a `ScheduleWakeup` as the resume for an unattended wait and then tell the operator "it'll continue itself"** — it
+  won't; it strands the work until a human pings. `ScheduleWakeup` is reserved ONLY for in-session self-pacing where you
+  are ACTIVELY producing between ticks (never idle). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` §
+  "Watcher coverage" + § "Wake sources".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
