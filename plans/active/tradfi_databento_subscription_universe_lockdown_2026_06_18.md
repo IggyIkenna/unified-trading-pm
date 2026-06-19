@@ -78,8 +78,26 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
       1m); `base_adapter.get_interval_seconds["1s"]=1` + `granularity_detector` (`GRANULARITIES["1s"]`,
       `_NATIVE_GRANULARITY["ohlcv_1s"]="1s"`). 15m/24h continue to aggregate from the 1m/1s base via the candle engine;
       QG-green (NaN/session-grid covered by existing passthrough tests). Repo: market-data-processing-service.
-- [ ] [DATA] P1. Backfill: complete the `ohlcv_1m` corpus first (good test of migration/manifest/data-status), then run
-      the longer `ohlcv_1s` backfill. Manifest-verified rows + sample-inspected parquets per Plans-Run-To-Completion.
+- [~] [DATA] P1. Backfill CME ohlcv_1m + ohlcv_1s 2019-01-01→2026-06-19 — **WIRING PROVEN, FULL-HORIZON BLOCKED ON IS
+      CATALOG**. The MTDS download CLI works end-to-end on every catalog-covered date: smoke wrote **CME ohlcv_1m 216K
+      rows** (2026-06-17), **CME ohlcv_1s 1.01M rows** (2026-06-16, `pipeline_mode=batch_databento`, v9 manifest
+      `complete=True`), all verified in the `_index` (`schema_version=9`, `capture_status=captured`). A detached nohup
+      backfill (`/tmp/cme_ohlcv_backfill.sh` → `/tmp/cme_ohlcv_backfill.log`, 1m then 1s) is running the full range.
+      **BLOCKER (P1, see new todo below):** the per-date instrument enumeration returns 0 instruments for most historical
+      dates (probed 2019-2025 + several 2026 weekdays = "0 skipped (no instruments)" / "No active venues") — only a sparse
+      recent window (e.g. 06-10/15/16/17 ok; 06-12/18 empty) has IS-catalog coverage. CME futures expire daily and the
+      instruments-service catalog has not been historically backfilled, so the OHLCV download has no universe to fetch for
+      uncovered dates. This is an **instruments-service catalog-coverage gap, NOT an MTDS/OHLCV wiring gap** (the download
+      path is correct on every covered date). The detached backfill writes every covered date + honestly skips the rest.
+      Repo: market-tick-data-service.
+- [ ] [IS] P1. **Backfill the instruments-service CME (GLBX.MDP3) catalog for the full 2019-01-01→present horizon** so the
+      tradfi OHLCV download has a per-date instrument universe to fetch. Today the catalog only covers a sparse recent
+      window → the ohlcv_1m/1s backfill writes 0 rows / "no active venues" for ~all historical dates and several recent
+      weekdays. Re-run the IS Databento `definition`-schema enumeration per missing trading day (definition is L0/free 16y
+      — within subscription), then re-run the MTDS `download` backfill over the now-covered range. Provenance: discovered
+      2026-06-19 while running the Phase-1 DATA backfill — the OHLCV wiring is proven (smoke wrote 1m 216K + 1s 1.01M rows
+      on covered dates) but blocked on catalog coverage. Composes with "Never copy instrument definitions between dates"
+      (CME futures expire daily) + Data-Pipeline-Correctness. Repo: instruments-service.
 - [x] ✅ [UAC] P1. SOURCE_PRIORITY: `("tradfi","ohlcv_1s")` entry in `canonical/crosscutting/_source_priority_data.py` +
       matching `("tradfi","ohlcv_1s")` in `availability_semantics.py` (`tick_timestamp`). — unified-api-contracts@3b76c0bc.
       **CORRECTED uac@2cfc756:** flipped from the `["massive","databento"]` mirror to **`["databento"]` (databento-only)**
