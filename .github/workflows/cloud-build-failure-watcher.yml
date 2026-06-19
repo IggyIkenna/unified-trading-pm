@@ -14,9 +14,11 @@ name: cloud-build-failure-watcher
 # substitutions (no repo, no SHA, no trigger context) and reports NOTHING to GitHub —
 # from the developer's side it is indistinguishable from "no build configured".
 #
-# Dedup window: we look back 20 minutes on a 15-minute cron (5-min overlap so a build
-# created right at a tick boundary is never missed). A failed build can therefore
-# alert AT MOST TWICE — accepted tradeoff vs. missing one entirely.
+# Dedup window: we look back 20 minutes on a 30-minute cron (overlap so a build created
+# right at a tick boundary is never missed). Routing through notify-slack.yml (below) adds a
+# CONTENT dedup_key (the sorted set of failing build IDs) so the SAME failure-set inside the
+# carrier cooldown posts ONCE — collapsing the boundary-overlap double-fire to a single,
+# transition-based alert (alert_quality_audit_2026_06_18 item: route via carrier + transition).
 #
 # DEFAULT-BRANCH GOTCHA: GitHub `schedule:` triggers fire ONLY from the DEFAULT branch
 # (main). This workflow is INERT on live-defi-rollout until it reaches main via the
@@ -45,6 +47,10 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      alert: ${{ steps.poll.outputs.alert }}
+      report: ${{ steps.poll.outputs.report }}
+      dedup_key: ${{ steps.poll.outputs.dedup_key }}
     steps:
       # Secrets are not directly testable in `if:` without exposing them; map to env
       # in a probe step and emit presence flags so the auth steps can be skipped
@@ -124,11 +130,14 @@ jobs:
           import os
           from datetime import datetime, timedelta, timezone
 
+          import hashlib
+
           FAILURE_STATUSES = {"FAILURE", "TIMEOUT", "INTERNAL_ERROR", "EXPIRED"}
           # Builtins a GitHub-trigger build carries + the router-passed user subs.
           REPO_KEYS = ("_REPO_NAME", "REPO_NAME", "REPO_FULL_NAME")
           SHA_KEYS = ("_SHA", "COMMIT_SHA", "SHORT_SHA", "REVISION_ID")
           MAX_LINES = 8  # cap per tick; overflow collapses to "+N more"
+          failed_ids: list[str] = []  # for the carrier content dedup_key (sorted set of build IDs)
 
           lookback = timedelta(minutes=int(os.environ.get("LOOKBACK_MINUTES", "20")))
           cutoff = datetime.now(timezone.utc) - lookback
@@ -164,6 +173,7 @@ jobs:
                   continue
 
               build_id = str(build.get("id", "unknown-id"))
+              failed_ids.append(build_id)
               log_url = str(build.get("logUrl") or "no logUrl")
               # The rejection class: substitutions may be missing entirely, None, or
               # an empty map — never assume the key exists or is a dict.
@@ -204,18 +214,22 @@ jobs:
           if len(failed) > MAX_LINES:
               lines.append(f"... +{len(failed) - MAX_LINES} more failed build(s) this tick")
 
+          report = ""
+          dedup_key = ""
           if failed:
               header = (
-                  f":building_construction: cloud-build-failure-watcher: {len(failed)} failed "
-                  f"Cloud Build(s) in the last {int(lookback.total_seconds() // 60)}m "
+                  f":building_construction: *cloud-build-failure-watcher: {len(failed)} failed "
+                  f"Cloud Build(s)* in the last {int(lookback.total_seconds() // 60)}m "
                   f"({silent_count} silent config-rejection(s)) — project "
                   f"{os.environ.get('GCP_PROJECT', 'central-element-323112')}"
               )
-              with open("/tmp/cb_failure_report.txt", "w", encoding="utf-8") as fh:
-                  fh.write(header + "\n" + "\n".join(lines) + "\n")
-              print(header)
-              for line in lines:
-                  print(line)
+              report = header + "\n" + "\n".join(lines)
+              print(report)
+              # CONTENT dedup_key: the sorted SET of failing build IDs. The carrier suppresses a
+              # repeat of the SAME failure-set within its cooldown → the boundary-overlap re-detect
+              # posts once (transition-based), while a NEW failing build (different set) re-arms it.
+              digest = hashlib.sha256("\n".join(sorted(failed_ids)).encode()).hexdigest()[:16]
+              dedup_key = f"cloud-build-fail:{digest}"
           else:
               print(
                   f"No failed Cloud Builds in the last "
@@ -227,24 +241,12 @@ jobs:
               fh.write(f"alert={'true' if failed else 'false'}\n")
               fh.write(f"count={len(failed)}\n")
               fh.write(f"silent={silent_count}\n")
+              fh.write(f"dedup_key={dedup_key}\n")
+              # Multiline report via a randomized heredoc delimiter (GitHub-recommended).
+              fh.write("report<<__CB_RPT__\n")
+              fh.write(report + "\n")
+              fh.write("__CB_RPT__\n")
           PY
-
-      # One Slack message per tick carrying one line per failed build (capped above) —
-      # same inline webhook pattern as semver-agent / ci-failure-watcher.
-      - name: Page Slack (#ci-failures)
-        if: steps.poll.outputs.alert == 'true'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          set -euo pipefail
-          case "${SLACK_WEBHOOK_URL:-}" in
-            https://*)
-              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                --data "$(jq -n --rawfile t /tmp/cb_failure_report.txt '{text:$t}')" \
-                && echo "Cloud Build failure page sent to Slack" || true ;;
-            *)
-              echo "::warning::SLACK_CI_WEBHOOK_URL / SLACK_WEBHOOK_URL not set/https — cannot page Slack; report is in the step log above" ;;
-          esac
 
       - name: Job-log summary
         if: steps.poll.outputs.alert == 'true'
@@ -253,5 +255,26 @@ jobs:
           SILENT_COUNT: ${{ steps.poll.outputs.silent }}
         run: |
           set -euo pipefail
-          echo "::warning::cloud-build-failure-watcher: ${FAILED_COUNT} failed Cloud Build(s) in the last ${LOOKBACK_MINUTES}m (${SILENT_COUNT} silent config-rejection(s)) — see report below"
-          cat /tmp/cb_failure_report.txt
+          echo "::warning::cloud-build-failure-watcher: ${FAILED_COUNT} failed Cloud Build(s) in the last ${LOOKBACK_MINUTES}m (${SILENT_COUNT} silent config-rejection(s)) — see the job above"
+
+  # ── SLACK NOTIFY (via the shared carrier) ────────────────────────────────────
+  # Routed through notify-slack.yml instead of the old inline `curl` (alert_quality_audit_2026_06_18):
+  # this GAINS read-back dedup (the content dedup_key collapses the boundary-overlap double-fire),
+  # the alert ledger (deployment-ui Alerts page lifecycle), and truthful-severity classification —
+  # the three things the bypassing inline curl lacked. A Cloud Build failure freezes that repo's
+  # image promotion, so it pages CRITICAL.
+  notify:
+    needs: watch
+    if: needs.watch.outputs.alert == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.watch.outputs.report }}
+      severity: CRITICAL
+      workflow_name: cloud-build-failure-watcher
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Transition-based: the same set of failing build IDs posts ONCE per cooldown; a NEW failing
+      # build (different ID set → different key) re-arms. 45m > the 30m cron so the overlap re-detect
+      # is suppressed, but a genuinely-new failure on the next tick still pages.
+      dedup_key: ${{ needs.watch.outputs.dedup_key }}
+      cooldown_min: 45
+    secrets: inherit

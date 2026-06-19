@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Promotion-lag monitor — alert when LDR↔staging↔main fall out of sync for > N hours.
+"""Promotion-lag monitor — a PURE BRANCH-PAIR lag monitor (LDR↔staging↔main out of sync > N min).
 
 Under the Path-B / LDR-SSOT model the IDE's local-vs-upstream is ~always 0 (a slot is on
 live-defi-rollout and pushes immediately). The diff that actually matters is a PIPELINE
@@ -18,6 +18,17 @@ than the threshold (default 60 min):
 `[skip ci]` automation commits (ci_status / manifest writes) are EXCLUDED from forward lag
 (they're not meant to promote) but COUNTED in backmerge lag (they should sweep back to LDR).
 PM is treated main-direct (Option B) — its staging direction is skipped.
+
+SCOPE (alert_quality_audit_2026_06_18 — collapse the duplicate detectors): this monitor is the
+SSOT for branch-pair PROPAGATION lag ONLY. It deliberately does NOT detect stuck/conflict
+promotion PRs — `ci-failure-watcher` (scripts/repo-management/ci_failure_watcher.py) is the
+SSOT for those (it also auto-recovers + escalates them) — nor a dangling staging lock, which
+`sit-starvation-detector.yml` owns. A single event must page ONCE, not from three detectors.
+
+The Slack message is demoted to TRANSITION-ONLY at the EMIT layer: the workflow passes a stable
+`dedup_key` (`promotion-lag:<threshold>m`) + a `cooldown_min` to the notify-slack carrier, so a
+standing lag pages on the 60m-CROSSING and is suppressed thereafter until it clears + recrosses
+— it no longer re-pages every tick (the operator's "branch behind" repeat complaint).
 
 Stdlib + `gh` only. Prints a human report; with `--slack` prints a Slack-formatted block (the
 workflow posts it). Exit 1 if any lag exceeds the threshold (so a required-check/alert can gate).
@@ -202,120 +213,6 @@ def _lag(
     return len(relevant), age, omsg
 
 
-def _lock_dangle(now: dt.datetime, dangle_min: int = 30) -> str | None:
-    """Flag a DANGLING staging lock: `locked` held with `locked_since` older than dangle_min.
-
-    A staging lock should clear within one SIT cycle (~15 min); a longer hold means the
-    unlock mechanism (`sit-debounce-trigger`) stalled — the exact liveness gap behind the
-    2026-06-10 ~1.5h dangle (the `*/5` cron is GitHub-throttled to ~75 min and was being
-    displaced out of the `manifest-update` concurrency group). This check runs independently
-    of that workflow, so it pages even when the unlock path is wedged. Returns a finding
-    string (which triggers the Slack alert + non-zero exit) or None.
-    """
-    here = os.path.dirname(os.path.abspath(__file__))
-    mpath = os.path.join(here, "..", "..", "workspace-manifest.json")
-    try:
-        with open(mpath) as _mf:
-            m = cast("dict[str, object]", json.load(_mf))
-    except (OSError, json.JSONDecodeError):
-        return None
-    ss = cast("dict[str, object]", m.get("staging_status") or {})
-    if not ss.get("locked"):
-        return None
-    reason = str(ss.get("locked_reason") or "?")
-    pending = cast("list[object]", ss.get("pending_repos") or [])
-    since = ss.get("locked_since")
-    if not since:
-        return f"staging lock HELD with NO locked_since timestamp (reason: {reason}; pending={pending})"
-    try:
-        when = dt.datetime.fromisoformat(str(since).replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    age_min = (now - when).total_seconds() / 60.0
-    if age_min < dangle_min:
-        return None
-    return (
-        f"staging lock DANGLING {int(age_min)}m (> {dangle_min}m) — reason: {reason}; "
-        f"pending_repos={pending}. Unlock mechanism (sit-debounce-trigger) likely stalled; "
-        "recover via `gh workflow run sit-debounce-trigger.yml -f drain_pending=true`."
-    )
-
-
-_PROMOTION_BASES = ("staging", "main")
-
-
-def _is_promotion_pr(base_ref: str, head_ref: str) -> bool:
-    """A promote / dep-update PR worth watching for a conflict wall: into staging/main, the
-    standing LDR→main drain, or a dependency-update fan-out branch."""
-    return base_ref in _PROMOTION_BASES or head_ref == "live-defi-rollout" or head_ref.startswith("dep-update/")
-
-
-def _classify_stuck_pr(repo: str, pr: dict[str, object], now: dt.datetime, thresh_s: float) -> str | None:
-    """Pure: a finding string if this PR is a CONFLICT WALL (mergeable_state=='dirty') parked
-    longer than thresh_s, else None.
-
-    Closes the "lack alerts" gap (promotion_queue_conflict_wall_pileup_2026_06_17.md): a promote /
-    dep-update PR that goes `dirty` (CONFLICTING) sits invisibly for hours — the promote bots treat
-    it as a conflict to (maybe) resolve, the orchestrator backlog is plan-driven (never ingests open
-    PRs), and the existing lag monitor only watches branch-pair propagation, not PR mergeability. We
-    alert on `dirty` (the conflict-wall signal), NOT `blocked` (which is normally checks-in-progress).
-    """
-    if str(pr.get("mergeable_state") or "") != "dirty":
-        return None
-    base = cast("dict[str, object]", pr.get("base") or {})
-    head = cast("dict[str, object]", pr.get("head") or {})
-    base_ref = str(base.get("ref") or "")
-    head_ref = str(head.get("ref") or "")
-    if not _is_promotion_pr(base_ref, head_ref):
-        return None
-    ds = str(pr.get("updated_at") or pr.get("created_at") or "")
-    if not ds:
-        return None
-    try:
-        when = dt.datetime.fromisoformat(ds.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    age = (now - when).total_seconds()
-    if age < thresh_s:
-        return None
-    num = pr.get("number")
-    title = str(pr.get("title") or "")[:50]
-    return f'{repo} #{num} {head_ref}→{base_ref} CONFLICT-WALL {int(age // 60)}m — "{title}"'
-
-
-def _stuck_prs(repo: str, now: dt.datetime, thresh_s: float) -> list[str]:
-    """Open promote/dep-update PRs for `repo` stuck on a conflict wall beyond thresh_s.
-
-    Bounds API cost: ONE list call per repo (ETag-cached), then a single-PR GET only for promotion
-    PRs already older than the threshold (the list endpoint's mergeable_state is unreliable, so we
-    fetch the authoritative value per candidate — usually 0-2 per repo)."""
-    listing = _gh_json(f"repos/{OWNER}/{repo}/pulls?state=open&per_page=50")
-    if not isinstance(listing, list):
-        return []
-    findings: list[str] = []
-    for raw in cast("list[object]", listing):
-        if not isinstance(raw, dict):
-            continue
-        pr = cast("dict[str, object]", raw)
-        base_ref = str(cast("dict[str, object]", pr.get("base") or {}).get("ref") or "")
-        head_ref = str(cast("dict[str, object]", pr.get("head") or {}).get("ref") or "")
-        if not _is_promotion_pr(base_ref, head_ref):
-            continue
-        ds = str(pr.get("updated_at") or pr.get("created_at") or "")
-        try:
-            when = dt.datetime.fromisoformat(ds.replace("Z", "+00:00"))
-        except ValueError:
-            continue
-        if (now - when).total_seconds() < thresh_s:
-            continue  # not old enough — skip the per-PR GET
-        full = _gh_json(f"repos/{OWNER}/{repo}/pulls/{pr.get('number')}")
-        if isinstance(full, dict):
-            f = _classify_stuck_pr(repo, cast("dict[str, object]", full), now, thresh_s)
-            if f:
-                findings.append(f)
-    return findings
-
-
 def _write_firestore_promotion_lag(
     repo_lags: dict[str, dict[str, object]],
     now_iso: str,
@@ -335,17 +232,10 @@ def _write_firestore_promotion_lag(
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--threshold-min", type=int, default=60)
-    ap.add_argument(
-        "--stuck-pr-threshold-min",
-        type=int,
-        default=120,
-        help="alert on a promote/dep-update PR sitting CONFLICTING (dirty) longer than this (default 120m)",
-    )
     ap.add_argument("--now-iso", default="", help="UTC now (no wallclock in CI sandbox); else uses gh server time")
     ap.add_argument("--slack", action="store_true")
     args = ap.parse_args()
     thresh_s = cast(int, args.threshold_min) * 60.0
-    stuck_thresh_s = cast(int, args.stuck_pr_threshold_min) * 60.0
     now_iso = cast(str, args.now_iso)
     as_slack = cast(bool, args.slack)
 
@@ -405,24 +295,15 @@ def main() -> int:
                     f"template + promote it to staging"
                 )
 
-        # Stuck-conflict-wall check: a promote / dep-update PR parked CONFLICTING beyond the SLA is
-        # invisible today (the orchestrator backlog is plan-driven, never ingests open PRs; the
-        # promote bots only act on LDR→staging drains). Surface it here so it pages.
-        # SSOT: plans/active/issues/promotion_queue_conflict_wall_pileup_2026_06_17.md.
-        stuck = _stuck_prs(repo, now, stuck_thresh_s)
-        if stuck:
-            findings.extend(stuck)
-            repo_lags[repo]["conflict_wall_prs"] = {"count": len(stuck), "prs": stuck}
+        # NOTE: stuck/conflict promotion PRs are NOT detected here — `ci-failure-watcher` is the
+        # SSOT for those (it also auto-recovers + escalates them); a dangling staging lock is owned
+        # by `sit-starvation-detector.yml`. Both were stripped from this monitor 2026-06-18 to stop
+        # one event paging from three detectors (alert_quality_audit_2026_06_18). This stays a PURE
+        # branch-pair lag monitor.
 
     # Persist the warmed ETag cache so the next run's unchanged compares are free 304s.
     if cache_file:
         save_etag_cache(cache_file)
-
-    # Dangling staging-lock check — defense-in-depth for unlock liveness, independent of the
-    # cron-throttled/displaceable sit-debounce workflow. A lock held past one SIT cycle is an incident.
-    dangle = _lock_dangle(now)
-    if dangle:
-        findings.append("🔒 " + dangle)
 
     # Firestore write-through — best-effort; never blocks the monitor on SDK/credential absence.
     gcp_project = os.environ.get("GCP_PROJECT_ID")
@@ -434,9 +315,32 @@ def main() -> int:
         return 0
 
     if as_slack:
+        # ── ERROR-POINTER MESSAGE STANDARD (alert_quality_audit_2026_06_18) ──────────
+        # header = WHAT + the number(s); ≤N lines of load-bearing facts (CAPPED — NOT an
+        # audit dump); exactly ONE deep-link to the AUTHORITATIVE surface; CLI hint secondary.
+        # Surface routing (monitoring_control_plane_master § Division-of-surfaces): a CI/CD
+        # pipeline condition routes to the deployment-ui CI/CD Repos page (`/repos`), the
+        # roll-up surface where per-repo promotion state lives. (deployment-ui has no stable
+        # public domain yet — Cloud-Run hosted — so we name the ROUTE, not a fabricated host;
+        # a worker opens deployment-ui then `/repos`.) Promotion lag is fundamentally a
+        # branch-pair compare → also GitHub-authoritative, so the secondary pointer is the
+        # exact `gh api compare` the operator runs to inspect a specific pair.
+        # Transition-only firing is handled at the EMIT layer: the workflow passes a stable
+        # dedup_key + cooldown to notify-slack, so a standing lag pages on the 60m-CROSSING
+        # and is suppressed until it clears + recrosses.
         _m = int(thresh_s // 60)
-        header = f":hourglass_flowing_sand: PROMOTION LAG > {_m}m ({len(findings)} branch-pair(s) out of sync):"
-        print(header + "\\n" + "\\n".join(f"  • {f}" for f in findings))
+        _max_lines = 6
+        repos_affected = sorted({f.split()[0] for f in findings})
+        header = (
+            f":hourglass_flowing_sand: *PROMOTION LAG > {_m}m* — "
+            f"{len(findings)} branch-pair(s) across {len(repos_affected)} repo(s) un-propagated"
+        )
+        body_lines = [f"  • {f}" for f in findings[:_max_lines]]
+        if len(findings) > _max_lines:
+            body_lines.append(f"  • … +{len(findings) - _max_lines} more (full list on the surface below)")
+        pointer = "→ open *deployment-ui* → CI/CD Repos page (`/repos`) for per-repo promotion state"
+        cli_hint = "  (CLI: `gh api repos/IggyIkenna/<repo>/compare/<base>...<head>` to inspect a specific pair)"
+        print(header + "\\n" + "\\n".join(body_lines) + "\\n" + pointer + "\\n" + cli_hint)
     else:
         print(f"⚠️  promotion lag > {int(thresh_s // 60)}m ({len(findings)}):")
         for f in findings:

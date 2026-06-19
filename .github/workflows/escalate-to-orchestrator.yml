@@ -261,32 +261,43 @@ jobs:
           echo "Labelled ${OWNER}/${REPO}#${PR_NUMBER} escalation-dispatched (spawn confirmed)."
 
   # ── SLACK NOTIFY ──────────────────────────────────────────────────────────
+  # Gated (alert_quality_audit_2026_06_18): page ONCE on the "handed off" transition, NOT every
+  # */15 re-dispatch tick. The cross-channel contract is: this GHA dispatch pages when a worker is
+  # confirmed-spawned (dispatched=true); the agent-orchestrator server (S4) owns the lifecycle pages
+  # (escalation RESOLVED / ABANDONED). The retryable non-dispatch outcomes (`no_headroom` 503 / a
+  # `no_escalation_id` soft-200) re-fire every tick — they MUST NOT re-page; they stay visible as
+  # the escalate step's `::warning::` job-log line, and a PERSISTENT park is the server's S4 page,
+  # not an every-tick GHA spam. A HARD failure (401/400/000/unexpected — escalate job `failure`) IS
+  # paged, but deduped per repo+PR so a standing auth/DNS problem pages once, not every tick.
   notify:
     name: Slack — Escalation Dispatch
     needs: [escalate]
-    if: always()
+    # Fire only on a genuine TRANSITION worth a page:
+    #   • dispatched=true  → "handed off" (one-time per PR; the escalation-dispatched label gates re-dispatch)
+    #   • escalate failed  → a hard, actionable error (401/400/timeout) — deduped below so it pages once
+    # The soft-retryable no_headroom / no_escalation_id ticks are intentionally NOT paged here.
+    if: ${{ needs.escalate.outputs.dispatched == 'true' || needs.escalate.result == 'failure' }}
     uses: ./.github/workflows/notify-slack.yml
     with:
-      # 3-way: dispatched ✅ | headroom-exhausted ⚠️ (distinct + actionable) | generic-not-confirmed ⚠️.
-      # The headroom branch is the alert for a PARKED wall on the single live orchestrator (vm-0):
-      # a flat 503 won't self-resolve until a slot frees, so it names the manual stand-in explicitly
-      # and kills the "restore vm-planning" misdiagnosis (there is no separate vm-planning VM).
+      # 2-way now: dispatched ✅ (handed off) | hard-failure ⚠️ (actionable error). The headroom /
+      # no-id soft cases no longer reach notify (they re-fire and would re-page each tick).
       message:
         ${{ needs.escalate.outputs.dispatched == 'true' && format('✅ Escalation `{0}` dispatched → a Max-plan worker
         (slot {1}) is resolving {2}#{3} on live-defi-rollout. Verify the worker live on the orchestrator dashboard
         (Agents panel) → <{4}|open dashboard>.', needs.escalate.outputs.escalation_id, needs.escalate.outputs.slot_id,
-        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) ||
-        (needs.escalate.outputs.outcome == 'no_headroom' && format('⚠️ HEADROOM EXHAUSTED — the live orchestrator (vm-0,
-        api.agent-orchestrator) has NO free slot, so {0}#{1} is PARKED with no worker. It re-fires every ~15 min but
-        will NOT self-resolve until a slot frees — if it persists across ticks, manually stand in a worker on the
-        dashboard. (No separate vm-planning VM to restore; vm-0 IS the orchestrator — this is capacity, not a host being
-        down.) → <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
-        needs.escalate.outputs.orch_url) || format('⚠️ Escalation NOT confirmed for {0}#{1} — NO worker was spawned
-        (orchestrator returned no escalation_id, or was unreachable). The wall is STILL OPEN. Check the run log +
-        dashboard → <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
-        needs.escalate.outputs.orch_url)) }}
+        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) || format('⚠️
+        Escalation FAILED for {0}#{1} — the orchestrator dispatch errored (auth/DNS/TLS or a bad request; see the run
+        log). The wall is STILL OPEN and no worker was spawned. → <{2}|open dashboard>.', needs.escalate.outputs.repo,
+        needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) }}
       severity: ${{ needs.escalate.outputs.dispatched == 'true' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.escalate.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # A successful hand-off is a one-time transition (label-gated) → no dedup_key needed. A HARD
+      # failure can recur every tick if the orchestrator stays unreachable → dedup per repo+PR so a
+      # standing auth/DNS error pages ONCE per cooldown, not every */15 tick.
+      dedup_key:
+        ${{ needs.escalate.outputs.dispatched == 'true' && '' || format('escalation-dispatch-failed:{0}:{1}',
+        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number) }}
+      cooldown_min: 240
     secrets: inherit

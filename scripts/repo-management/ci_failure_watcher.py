@@ -717,12 +717,19 @@ def build_report(
             pusher = f"👤 pushed by {t['pusher_name']} [{t['pusher_role']}]"
             lines.append(f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} <{t['url']}|run>  {pusher}")
     if stuck:
-        lines.append(f":hourglass_flowing_sand: *{len(stuck)} promotion PR(s) STUCK (auto-merge wedged):*")
+        # Error-pointer standard (alert_quality_audit_2026_06_18): header = WHAT + number; each line
+        # carries the load-bearing facts (repo / PR# / state / age / auto-merge) + the ONE correct
+        # deep-link — the PR itself is the GitHub-authoritative surface for a wedged promotion. The
+        # `stuck` list reaching here is already the NEW (not-yet-handed-off) subset (main() filters
+        # out PRs carrying the escalation-dispatched label), so this no longer re-pages a PR a worker
+        # already owns. State is named so it self-classifies: CONFLICTING/DIRTY = a merge wall;
+        # BLOCKED = a failed/missing required check.
+        lines.append(f":hourglass_flowing_sand: *{len(stuck)} promotion PR(s) STUCK (wedged, not yet handed off):*")
         for s in stuck:
             am = "auto-merge ON" if s["auto_merge"] else "auto-merge OFF"
             lines.append(
                 f"  • `{s['repo']}` #{s['number']} {s['head']}→{s['base']} — "
-                f"{s['state']} for {s['age_min']}m, {am} <{s['url']}|PR>"
+                f"{s['state']} {s['age_min']}m, {am} → <{s['url']}|open PR>"
             )
     if resolved:
         lines.append(f":ballot_box_with_check: *{len(resolved)} promotion PR(s) RESOLVED (merged/closed):*")
@@ -794,6 +801,34 @@ def _pr_has_escalation_label(repo: str, number: int) -> bool:
     if not isinstance(labels, list):
         return False
     return any(isinstance(lbl, dict) and lbl.get("name") == _ESCALATION_LABEL for lbl in labels)
+
+
+def stuck_prs_to_page(stuck: list[dict], already_escalated: set[tuple[str, int]]) -> list[dict]:
+    """Pure: the subset of stuck PRs that should PAGE Slack — i.e. NOT already handed off.
+
+    Gates the stuck-PR Slack line on the ``escalation-dispatched`` label
+    (alert_quality_audit_2026_06_18): once a stuck PR has been handed to a worker, its lifecycle
+    is owned by that worker + the agent-orchestrator server (S4 pages RESOLVED/ABANDONED), so the
+    */15 watcher must NOT re-page it every tick (the operator's repeated-"stuck PR" complaint).
+    A stuck PR with no escalation label is still NEW → page it. No IO (the label set is injected),
+    so this is unit-testable without ``gh``/network.
+    """
+    return [s for s in stuck if (s.get("repo"), int(s.get("number", 0))) not in already_escalated]
+
+
+def _already_escalated_set(stuck: list[dict]) -> set[tuple[str, int]]:
+    """IO wrapper: read the escalation label per stuck PR → the already-handed-off identity set.
+
+    Best-effort (``_pr_has_escalation_label`` returns False on any error → a PR we can't read
+    stays PAGEABLE, never silently suppressed). Bounded: at most one ``gh`` call per stuck PR,
+    and the stuck list is already tiny (promotion PRs past the stuck threshold).
+    """
+    out: set[tuple[str, int]] = set()
+    for s in stuck:
+        repo, number = str(s.get("repo") or ""), int(s.get("number", 0))
+        if repo and number and _pr_has_escalation_label(repo, number):
+            out.add((repo, number))
+    return out
 
 
 def _dispatch_escalation(s: dict) -> bool:
@@ -1180,7 +1215,15 @@ def main() -> int:
             superseded.extend(detect_superseded_prs(repo))
 
     enrich_failure_reasons(transitions)  # N1: failed job/step + log excerpt for each failing transition
-    alert, severity, report = build_report(transitions, stuck, resolved, billing)
+
+    # Gate the stuck-PR Slack line on the escalation-dispatched label (alert_quality_audit_2026_06_18):
+    # PAGE only stuck PRs not yet handed off — a worker + the server (S4) own an escalated PR's
+    # lifecycle, so re-paging it every */15 tick is the operator's "stuck PR" repeat noise. The FULL
+    # `stuck` list still drives auto-recover + escalate below (those have their own per-PR idempotency).
+    # Skip the label lookups entirely on a diagnostic run (--repo/--now without the cron's escalate),
+    # so a hand-run never burns gh calls and the page shows everything.
+    stuck_to_page = stuck_prs_to_page(stuck, _already_escalated_set(stuck)) if (args.escalate and stuck) else stuck
+    alert, severity, report = build_report(transitions, stuck_to_page, resolved, billing)
     print(report)
     write_github_output(alert, severity, report)
 

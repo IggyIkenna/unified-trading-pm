@@ -34,17 +34,17 @@ missing. Full evidence + per-ask current-state/gap/change-list:
 
 ## Agent-orchestrator dashboard (repo: agent-orchestrator; ALL `[UI]` → playwright/vitest gate, PLAN_FORMAT §9)
 
-- [ ] [ORCHESTRATOR] P0. **Retain finished one-shot/scheduled agents** (load-bearing): stop hard-deleting on completion
+- [x] ✅ [ORCHESTRATOR] P0. **Retain finished one-shot/scheduled agents** (load-bearing): stop hard-deleting on completion
       (`DELETE /api/agents/{id}` `routes/agents.py:703`); transition to a terminal status (`finished` +
       `finished_at`/`exit_reason` on AgentRow) + a retention prune (last N per kind / 7d). Without this "show past
       escalate/plan-health runs" is impossible. Repo: agent-orchestrator (server).
-- [ ] [ORCHESTRATOR] P1. Filterable `GET /api/agents` — honor the dead-contract `status` param + add `kind`/`lifecycle`/
+- [x] ✅ [ORCHESTRATOR] P1. Filterable `GET /api/agents` — honor the dead-contract `status` param + add `kind`/`lifecycle`/
       `include_finished`/`limit`, pushed into `state_store.list_agents` (WHERE/ORDER BY). Repo: agent-orchestrator.
 - [ ] [ORCHESTRATOR][UI] P1. New `AgentTypesPanel` (one new tab, keyed on `agent_kind`, running+past) — `KINDS_ORDER` +
       reuse `RoleHolders`/`AGENT_KIND_LABEL`; per-kind online count + show-finished toggle; mount desktop + mobile. Keep
       role chat (`main/review/backup`) clean. Evidence: `— repo@sha | pw:L2 ✓ | regression: <spec>`. Repo:
       agent-orchestrator (dashboard).
-- [ ] [ORCHESTRATOR] P1. Activity feed backend — push `slot`/`type`/category filters into SQL BEFORE the limit
+- [x] ✅ [ORCHESTRATOR] P1. Activity feed backend — push `slot`/`type`/category filters into SQL BEFORE the limit
       (`activity.py:86` / `routes/state.py:91-111`), add cursor pagination (`before_id`/offset + envelope), add a
       **denoise rollup** (`GROUP BY event_type[,slot] within window` → "×N in last 1h"; generalize
       `count_recent_activity`). The denoise is the "90% repeats" fix. Repo: agent-orchestrator.
@@ -77,3 +77,24 @@ missing. Full evidence + per-ask current-state/gap/change-list:
 ## Codex SSOT updates
 
 - `codex/04-architecture/agent-orchestrator-overview.md` — AgentTypesPanel + agent-retention + messaging path.
+
+## Progress Log
+
+### Plan B server (Wave 5, 2026-06-19, slot-2) — agent-orchestrator
+
+The 3 SERVER items shipped (each QG-green + quickmerged to LDR); the 5 `[UI]` items follow (dashboard):
+
+- **Retain finished agents** (P0) — agent-orchestrator@47c67fa: AgentRow `finished_at`/`exit_reason` + status `finished`
+  (bootstrap migration); `DELETE /api/agents/{id}` now SOFT-deletes (`finish_agent` → status=finished + reason, row
+  retained, tmux killed) instead of hard-delete; the reaper stamps finished_at/exit_reason on archival;
+  `prune_finished_agents` (keep last N/kind, 7d) runs each AgentKeeper tick. Tests in test_reap_orphan_agents.py.
+- **Filterable `GET /api/agents`** (P1) — agent-orchestrator@47c67fa: `list_agents(status/kind/lifecycle/include_finished/
+  limit)` (SQL WHERE/ORDER BY/LIMIT); default excludes terminal (live roster stays clean), include_finished/status shows
+  past runs; AgentView gained finished_at/exit_reason.
+- **Activity feed backend** (P1) — agent-orchestrator@b86c727: `list_activity(slot/event_type/event_types/before_id/limit)`
+  filters in SQL BEFORE the limit (+ before_id cursor) + `activity_rollup` denoise (GROUP BY event_type[,slot] → counts);
+  `/api/activity` gained types(CSV)/before_id + per-row `id`; new `/api/activity/rollup`. Tests in test_activity_feed.py.
+
+The 5 `[UI]` items (AgentTypesPanel, activity frontend, failure-reason render, conditions collapse, message-delivery
+chip) build on this API. **AO dashboard gate is Vitest + tsc --noEmit + build smoke, NOT playwright** (the dashboard has
+no pw harness — evidence is a `.test.tsx` regression spec, per PLAN_FORMAT §9's vitest path).

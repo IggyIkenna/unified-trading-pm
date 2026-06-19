@@ -224,6 +224,36 @@ class TestBuildReportStuck:
         assert "CONFLICTING" in report
 
 
+class TestStuckPrsToPage:
+    """The escalation-label gate on the stuck-PR Slack line (alert_quality_audit_2026_06_18)."""
+
+    def _stuck(self, repo: str, number: int) -> dict:
+        return {
+            "repo": repo,
+            "number": number,
+            "head": "live-defi-rollout",
+            "base": "staging",
+            "state": "CONFLICTING",
+            "age_min": 45,
+            "auto_merge": True,
+            "url": f"https://github.com/{repo}/pull/{number}",
+        }
+
+    def test_unescalated_pr_is_paged(self) -> None:
+        stuck = [self._stuck("mtds", 1)]
+        assert MOD.stuck_prs_to_page(stuck, already_escalated=set()) == stuck
+
+    def test_escalated_pr_is_suppressed(self) -> None:
+        stuck = [self._stuck("mtds", 1), self._stuck("greeks-service", 2)]
+        # mtds#1 already handed off → suppressed from the page; greeks#2 is new → paged.
+        out = MOD.stuck_prs_to_page(stuck, already_escalated={("mtds", 1)})
+        assert out == [self._stuck("greeks-service", 2)]
+
+    def test_all_escalated_yields_empty_page(self) -> None:
+        stuck = [self._stuck("mtds", 1)]
+        assert MOD.stuck_prs_to_page(stuck, already_escalated={("mtds", 1)}) == []
+
+
 class TestBuildReportResolved:
     def _resolved(self, merged: bool = True) -> dict:
         return {

@@ -32,6 +32,23 @@ on:
         required: false
         type: string
         default: ""
+      dedup_key:
+        description: >-
+          Stable identity of the STANDING CONDITION this alert reports (e.g. "promotion-lag:mtds:LDR-main",
+          "cloud-build-fail:execution-service"). When set, the carrier reads the alert ledger and SKIPS this post if the
+          same key was seen within `cooldown_min` — converting "re-page while true" into "page on transition". Leave
+          blank for a genuinely per-event alert (every CI failure transition) that should never be suppressed.
+        required: false
+        type: string
+        default: ""
+      cooldown_min:
+        description: >-
+          Suppress a repeat of the same `dedup_key` posted within this many minutes (no effect unless dedup_key is set).
+          Default 240 (4h). A RESOLVED bookend should pass a SHORTER cooldown (or a distinct key) so closure is never
+          swallowed by an open-condition cooldown.
+        required: false
+        type: number
+        default: 240
     secrets:
       SLACK_WEBHOOK_URL:
         required: false
@@ -53,7 +70,128 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
+      # ── READ-BACK DEDUP (operator requirement 2026-06-18) ────────────────────────
+      # Authenticate up-front so the dedup gate below can READ the same alert ledger the
+      # persist step (further down) writes. Best-effort: a missing/failed auth degrades to
+      # FAIL-OPEN (the gate posts anyway) — dedup must NEVER swallow a real alert on infra
+      # error. Only runs on GCP (the ledger lives in GCS); the AWS/other path skips dedup
+      # and always posts (the prior behaviour).
+      - name: Authenticate to GCP (alert ledger — read+write)
+        id: gcp_auth
+        if: ${{ vars.CLOUD_PROVIDER == 'gcp' }}
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # The structural root-cause fix (alert_quality_audit_2026_06_18): the carrier used to
+      # post UNCONDITIONALLY and the ledger was WRITE-ONLY. Here we READ it back: if `dedup_key`
+      # is set and that key was last posted within `cooldown_min`, SKIP this post — turning the
+      # whole GHA fleet from "re-page while true" → "page on transition" in ONE place. A blank
+      # dedup_key (the default) means "never dedup" (per-event alerts like a CI-failure transition
+      # post every time). Output `should_post` gates the post + persist steps below.
+      - name: Dedup gate (read alert ledger)
+        id: dedup
+        continue-on-error: true
+        env:
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET || 'unified-trading-cicd-events' }}
+          CLOUD_PROVIDER: ${{ vars.CLOUD_PROVIDER }}
+          GCP_AUTH_OUTCOME: ${{ steps.gcp_auth.outcome }}
+          INPUT_DEDUP_KEY: ${{ inputs.dedup_key }}
+          INPUT_COOLDOWN_MIN: ${{ inputs.cooldown_min }}
+        run: |
+          set -euo pipefail
+
+          # FAIL-OPEN default: post unless we can PROVE this key is within its cooldown window.
+          decide_post() { echo "should_post=$1" >> "$GITHUB_OUTPUT"; echo "Dedup decision: should_post=$1 ($2)"; }
+
+          DEDUP_KEY="${INPUT_DEDUP_KEY:-}"
+          if [ -z "$DEDUP_KEY" ]; then
+            decide_post "true" "no dedup_key — per-event alert, always posts"
+            exit 0
+          fi
+          if [ "${CLOUD_PROVIDER:-}" != "gcp" ] || [ "${GCP_AUTH_OUTCOME:-}" != "success" ]; then
+            decide_post "true" "ledger unreadable (not GCP, or GCP auth failed) — fail-open"
+            exit 0
+          fi
+
+          COOLDOWN_MIN="${INPUT_COOLDOWN_MIN:-240}"
+          # The ledger is date-partitioned; a cooldown window can straddle UTC midnight, so read
+          # TODAY + YESTERDAY. Each is best-effort (a missing object → empty), so a brand-new key
+          # or a first-of-day key always posts.
+          TODAY=$(date -u +"%Y-%m-%d")
+          YESTERDAY=$(date -u -d "yesterday" +"%Y-%m-%d" 2>/dev/null || date -u -v-1d +"%Y-%m-%d")
+          MERGED="$(mktemp)"
+          : > "$MERGED"
+          for d in "$YESTERDAY" "$TODAY"; do
+            gsutil cp "gs://${CICD_EVENTS_BUCKET}/cicd/alerts/${d}/alerts.jsonl" "$MERGED.part" 2>/dev/null \
+              && cat "$MERGED.part" >> "$MERGED" || true
+          done
+
+          # Pure decision in python: find the LATEST ledger row carrying this dedup_key and compare
+          # its age to the cooldown. Any parse/IO hiccup → fail-open (post).
+          DEDUP_KEY="$DEDUP_KEY" COOLDOWN_MIN="$COOLDOWN_MIN" LEDGER_FILE="$MERGED" python3 - <<'PYEOF'
+          import json, os
+          from datetime import datetime, timedelta, timezone
+
+          key = os.environ["DEDUP_KEY"]
+          try:
+              cooldown = timedelta(minutes=float(os.environ.get("COOLDOWN_MIN", "240")))
+          except ValueError:
+              cooldown = timedelta(minutes=240)
+          path = os.environ["LEDGER_FILE"]
+
+          latest = None
+          try:
+              with open(path, encoding="utf-8") as fh:
+                  for line in fh:
+                      line = line.strip()
+                      if not line:
+                          continue
+                      try:
+                          row = json.loads(line)
+                      except json.JSONDecodeError:
+                          continue
+                      if not isinstance(row, dict) or row.get("dedup_key") != key:
+                          continue
+                      ts = str(row.get("timestamp") or "")
+                      try:
+                          when = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                      except ValueError:
+                          continue
+                      if latest is None or when > latest:
+                          latest = when
+          except OSError:
+              latest = None  # unreadable → fail-open
+
+          out = os.environ["GITHUB_OUTPUT"]
+          if latest is None:
+              with open(out, "a", encoding="utf-8") as fh:
+                  fh.write("should_post=true\n")
+              print(f"Dedup decision: should_post=true (key {key!r} not seen in window — first transition)")
+          else:
+              age = datetime.now(timezone.utc) - latest
+              if age < cooldown:
+                  with open(out, "a", encoding="utf-8") as fh:
+                      fh.write("should_post=false\n")
+                  print(
+                      f"Dedup decision: should_post=false (key {key!r} last posted "
+                      f"{int(age.total_seconds() // 60)}m ago < {int(cooldown.total_seconds() // 60)}m cooldown — suppressed)"
+                  )
+              else:
+                  with open(out, "a", encoding="utf-8") as fh:
+                      fh.write("should_post=true\n")
+                  print(
+                      f"Dedup decision: should_post=true (key {key!r} last posted "
+                      f"{int(age.total_seconds() // 60)}m ago ≥ {int(cooldown.total_seconds() // 60)}m cooldown — re-arming)"
+                  )
+          PYEOF
+
       - name: Post to Slack
+        # Gated by the dedup decision: a suppressed repeat (should_post=false) is skipped. A
+        # blank step output (gate errored before writing) is treated as POST (fail-open) via the
+        # `!= 'false'` test — an infra hiccup must never swallow a real alert.
+        if: ${{ steps.dedup.outputs.should_post != 'false' }}
         # Notifications are BEST-EFFORT: a webhook timeout / HTTP error / network blip
         # from the runner (e.g. `urlopen error timed out`) must NEVER fail the calling
         # workflow or flip its conclusion to failure. continue-on-error keeps the step's
@@ -182,19 +320,18 @@ jobs:
           PYEOF
 
       # ── ALERT LEDGER (operator traceability requirement 2026-06-10) ──────────────
-      # Every Slack alert is ALSO persisted as JSONL so the deployment-ui Alerts page can
+      # Every POSTED Slack alert is ALSO persisted as JSONL so the deployment-ui Alerts page can
       # show the full lifecycle: what alerted, when, at what severity, with the run link —
       # current + previous state per (repo, workflow) stream. Best-effort like the post
       # itself: any auth/bucket/network failure degrades to a no-op, never a red caller.
-      - name: Authenticate to GCP (alert ledger)
-        if: ${{ vars.CLOUD_PROVIDER == 'gcp' }}
-        continue-on-error: true
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
+      # (Auth is the single up-front `gcp_auth` step above — reused here, no second auth.)
+      #
+      # Gated on `should_post != 'false'`: a row is written ONLY when we actually posted, so the
+      # ledger is the timeline of POSTS, and the dedup gate's "last posted within cooldown" read
+      # stays truthful (a suppressed tick must NOT refresh the cooldown timestamp, else a standing
+      # condition would never re-arm). `dedup_key` is recorded so the read-back gate can find it.
       - name: Persist alert to ledger (best-effort)
-        if: ${{ vars.CLOUD_PROVIDER == 'gcp' }}
+        if: ${{ vars.CLOUD_PROVIDER == 'gcp' && steps.dedup.outputs.should_post != 'false' }}
         continue-on-error: true
         env:
           CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET || 'unified-trading-cicd-events' }}
@@ -204,6 +341,7 @@ jobs:
           INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
           INPUT_RUN_URL: ${{ inputs.run_url }}
           INPUT_CONCLUSION: ${{ inputs.conclusion }}
+          INPUT_DEDUP_KEY: ${{ inputs.dedup_key }}
         run: |
           set -euo pipefail
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -217,8 +355,9 @@ jobs:
             --arg conclusion "$INPUT_CONCLUSION" \
             --arg run_url "$INPUT_RUN_URL" \
             --arg message "$INPUT_MESSAGE" \
+            --arg dedup_key "${INPUT_DEDUP_KEY:-}" \
             '{event_type:$event_type, timestamp:$timestamp, repo:$repo, workflow_name:$workflow_name,
-              severity:$severity, conclusion:$conclusion, run_url:$run_url, message:$message}')
+              severity:$severity, conclusion:$conclusion, run_url:$run_url, message:$message, dedup_key:$dedup_key}')
           OBJECT_PATH="cicd/alerts/${DATE_PARTITION}/alerts.jsonl"
           GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
           LOCAL_FILE="/tmp/alerts.jsonl"

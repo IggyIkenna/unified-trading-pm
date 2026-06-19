@@ -178,14 +178,54 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
       cloudbuild template if one exists, else per-repo. This is the durable successor that lets Phase 1's standalone
       harness retire. Repos: all service repos (+ template SSOT).
 
+## Phase 3.5 — Remaining-repos build sweep results (2026-06-19) — the existing pipeline is broadly RED
+
+Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. **2 GREEN** (instruments-service
+`b2a975e4`, execution-service `f84a216f` — both build clean on their existing config). **9 FAILED**, root-caused into
+4 classes:
+
+- [ ] [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.** `features-{calendar,delta-one,
+      multi-timeframe,onchain,volatility}-service-build` + `ml-inference-service-build` + `ml-training-service-build`
+      point at the SEPARATE GitHub repos `features-*-service` / `ml-*-service`, which were **archived read-only
+      2026-05-08** when consolidated into `features-service` (8→sub-packages, `--feature-family` flag) and `ml-service`
+      (per `workspace-manifest.json` notes + `features_repo_consolidation_2026_05_08.md`). Their builds fail on stale
+      `uv sync --frozen --no-dev --system` (`--system` invalid on `uv sync`) — but the repos are DEAD; the fix is to
+      **DELETE the 7 obsolete triggers** (consolidation cleanup that never happened), NOT fix their Dockerfiles. Repo:
+      deployment-service (trigger inventory) — operator confirm before deleting.
+- [ ] [INFRA] P0. **Create triggers for the LIVE consolidated repos** `features-service` + `ml-service` (same gap as the
+      6 new repos — consolidation made the repos but no `-build` trigger). Their Dockerfiles are already correct
+      (features-service `uv pip install --system -e . --no-sources`; ml-service `uv sync --frozen --no-dev`). Link +
+      create trigger + build. NOTE: features-service builds ONE image parameterised by `--feature-family`; confirm the
+      trigger/cloudbuild shape. Repos: features-service, ml-service.
+- [ ] [DOCKER] P1. **strategy-service** build fails: `Dockerfile:47 COPY market-tick-data-service/` — a cross-repo
+      sibling COPY not staged in the build context (and a service→service coupling that the no-service-deps rule frowns
+      on). Diagnose why strategy needs the mtds tree (test fixtures? a vendored client?) → stage it in cloudbuild OR
+      remove the COPY. Repo: strategy-service.
+- [ ] [CI] P1. **deployment-service** build fails at Step #2 pulling the base image:
+      `denied: Unauthenticated request ... downloadArtifacts` — its cloudbuild runs the docker build BEFORE configuring
+      registry auth (the green repos have a `configure-docker` + `pull-base-image` step first). Add/reorder the auth
+      step. Repo: deployment-service.
+
 ## Phase 5 — Root-cause the stale-digest fan-out (so this doesn't recur)
 
-- [ ] [INFRA] P1. **Why is every service repo's `BASE_IMAGE_DIGEST` stale?** The fan-out
-      (`update-dependency-version.yml` digest-refresh PR on base republish) evidently has not landed fleet-wide (mdps
-      was 2 generations behind; the fleet is 1 behind). Diagnose: does the workflow run? does it open PRs? do they
-      merge? Fix the mechanism — hand-refreshing digests (Phase 2) is whack-a-mole without this. Composes with the
-      stale-pin audit todo in `deployment_ui_monitoring_pane_2026_06_19.md`. Repos: PM (fan-out workflow) + per-repo
-      `update-dependency-version.yml`.
+- [ ] [INFRA] P1. **Why is every service repo's `BASE_IMAGE_DIGEST` stale? — RCA DONE 2026-06-19, fix pending.**
+      Mechanism (traced): a repo version-bump → `repository_dispatch[version-bump]` → PM `update-repo-version.yml`
+      resolves the UTL base `:latest` digest (step ~line 408: `docker manifest`/registry read of
+      `unified-trading-library:latest`) and attaches `base_image_digest` to the `dependency-update` consumer fan-out;
+      each consumer's `update-dependency-version.yml` (trigger `repository_dispatch[dependency-update]`) rewrites the
+      `ARG BASE_IMAGE_DIGEST` default. **Root cause (3 compounding gaps):** (1) the digest is attached **ONLY when
+      resolved** — "missing GCP secrets or a registry miss → empty digest → consumers skip the digest step" (workflow
+      comment ~line 375) — so any GHA run without GCP auth silently propagates NO digest; (2) it only rides a **UTL
+      version-bump** event, not every base-image republish (a UAC/other-base-layer change republishes the base but
+      doesn't re-resolve+dispatch the digest); (3) the consumer fan-out follows the **dependency graph**, so a repo not
+      in that graph at dispatch time (e.g. the 6 NEW repos) never receives a digest dispatch → stuck at whatever digest
+      it was created with (hence the fleet sits at `c54f13d9` = last successful resolve+dispatch, new repos at
+      `e939b4ee`/varied). **Fix direction**: (a) ensure GCP auth (Workload-Identity/SA) is available in the
+      digest-resolve step + fail-LOUD on empty digest instead of silently skipping; (b) re-resolve+dispatch the digest
+      on **base-image republish** (a UTL/UAC `:latest` push), not only a UTL version-bump; (c) include ALL image-building
+      repos in the fan-out target set (or add a periodic digest-drift sweep cron that opens refresh PRs for any repo
+      whose pin lags `:latest`). Composes with the stale-pin audit in `deployment_ui_monitoring_pane_2026_06_19.md`.
+      Repo: PM (`update-repo-version.yml`) + per-repo `update-dependency-version.yml`.
 
 ## Success criteria
 
@@ -230,3 +270,16 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   fund-admin (digest+2×install+guard) landing via QG+quickmerge sweep. NEXT: build all 6 on `live-defi-rollout` +
   smoke, then the remaining trigger units (re-map harness to the real ~25 triggers: features×5, ml×3, the interface
   libs). Stale base digest = fleet-wide (Phase 5 fan-out RCA). Disk on this host runs ~95% — smoke prunes per image.
+- **2026-06-19 (cont.)** — ✅ **6/6 new repos build GREEN.** First pass: trading-agent `3f8c8f19`, alerting
+  `3d01d550`, client-reporting `de41d7da`, greeks `827af2f7` SUCCESS. 2 surfaced **pre-existing bugs** (these repos had
+  never been built): **batch** — Dockerfile `COPY configs/cloud-providers.yaml` referenced a context-absent file (stale;
+  UAC-packaged since 2026-06-10) + its in-image QG guard was incomplete (only handled the `/workspace`-staged CI mode,
+  not the no-PM-in-image case → fell to `git rev-parse` → empty WORKSPACE_ROOT); fixed both (`1215e6be`, then the guard
+  `…`) → rebuild `e4287026` SUCCESS. **fund-admin** — Dockerfile didn't `COPY scripts/`, so the in-image QG ran the BASE
+  IMAGE's leftover library QG (`base-library.sh`, unguarded); added `COPY scripts/` (`e9344230`) → rebuild `7f039a2d`
+  SUCCESS. **Smoke**: all IMPORT ✅; RUN ✅ for CLI entrypoints (trading-agent, client-reporting); RUN n/a for the
+  **uvicorn API services** (alerting, greeks — `--help` is not a valid probe; the boot+`/health` probe is Phase 4).
+  **Lesson**: the install-pattern + guard greps had FALSE POSITIVES (matched comments / a different `CLOUD_BUILD`
+  reference) — always read the actual `RUN`/source line, never trust the grep classification. NEXT: remaining ~19
+  existing trigger units (build-first, fix-failures) + Phase 4 (uvicorn `/health` probe in the harness + cloudbuild) +
+  Phase 5 (fan-out RCA) + TF reconcile (import the 6 imperative triggers, fix the `ln` drift).
