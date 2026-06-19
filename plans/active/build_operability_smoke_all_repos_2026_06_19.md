@@ -108,12 +108,12 @@ where in-image QG doesn't run (it only activates when the PM base script is abse
 but it has **NO build trigger**, so it can't be validated via Cloud Build. Either it's intentionally not-yet-imaged
 (WIP / deployed another way) or it's a pipeline gap. NEEDS OPERATOR TRIAGE (next todo).
 
-- [ ] [INFRA] P0. **Triage the trigger-less repos with the operator** — for each of {alerting-service,
-      batch-live-reconciliation-service, client-reporting-api, fund-administration-service, greeks-service,
-      trading-agent-service}: is it intentionally not built as a Cloud Build image (WIP / different deploy path), or is a
-      missing trigger a gap to fill? "Build all repos" can't include a repo with no trigger until this is answered.
-      Also confirm `deployment-ui`↔`deployment-dashboard-build` and the UTL base-image build path. Repo: PM/deployment-
-      service (trigger inventory) + operator decision.
+- [x] ✅ [INFRA] P0. **Triage the trigger-less repos with the operator** — DONE 2026-06-19. All 6 were
+      pipeline GAPS (new repos predating the trigger pipeline): triggers created + builds GREEN (see Phase 2.5 + progress
+      log). `deployment-ui` → `deployment-ui-main-deploy` (Node UI bundled into deployment-api image; NOT a standalone
+      Python `-build` trigger; old `deployment-dashboard` zombie deleted). UTL base-image →
+      `unified-trading-library-live-defi-rollout` ("Build UTL base Docker image + publish wheel on live-defi-rollout
+      push"). 28 live triggers now 1:1 with live repos. — PM@(flip)
 - [ ] [SCRIPT] P0. **Re-map the harness to the REAL trigger list** (not `<repo>-build`): drive `--all` off the 25
       `-build` triggers, expand `features-service`→5 + `ml-service`→3, map `deployment-ui`→`deployment-dashboard`, and
       SKIP trigger-less repos with an explicit "no trigger" row (never a silent omission). Repo: e2e-testing.
