@@ -178,6 +178,34 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
       cloudbuild template if one exists, else per-repo. This is the durable successor that lets Phase 1's standalone
       harness retire. Repos: all service repos (+ template SSOT).
 
+## Phase 3.5 — Remaining-repos build sweep results (2026-06-19) — the existing pipeline is broadly RED
+
+Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. **2 GREEN** (instruments-service
+`b2a975e4`, execution-service `f84a216f` — both build clean on their existing config). **9 FAILED**, root-caused into
+4 classes:
+
+- [ ] [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.** `features-{calendar,delta-one,
+      multi-timeframe,onchain,volatility}-service-build` + `ml-inference-service-build` + `ml-training-service-build`
+      point at the SEPARATE GitHub repos `features-*-service` / `ml-*-service`, which were **archived read-only
+      2026-05-08** when consolidated into `features-service` (8→sub-packages, `--feature-family` flag) and `ml-service`
+      (per `workspace-manifest.json` notes + `features_repo_consolidation_2026_05_08.md`). Their builds fail on stale
+      `uv sync --frozen --no-dev --system` (`--system` invalid on `uv sync`) — but the repos are DEAD; the fix is to
+      **DELETE the 7 obsolete triggers** (consolidation cleanup that never happened), NOT fix their Dockerfiles. Repo:
+      deployment-service (trigger inventory) — operator confirm before deleting.
+- [ ] [INFRA] P0. **Create triggers for the LIVE consolidated repos** `features-service` + `ml-service` (same gap as the
+      6 new repos — consolidation made the repos but no `-build` trigger). Their Dockerfiles are already correct
+      (features-service `uv pip install --system -e . --no-sources`; ml-service `uv sync --frozen --no-dev`). Link +
+      create trigger + build. NOTE: features-service builds ONE image parameterised by `--feature-family`; confirm the
+      trigger/cloudbuild shape. Repos: features-service, ml-service.
+- [ ] [DOCKER] P1. **strategy-service** build fails: `Dockerfile:47 COPY market-tick-data-service/` — a cross-repo
+      sibling COPY not staged in the build context (and a service→service coupling that the no-service-deps rule frowns
+      on). Diagnose why strategy needs the mtds tree (test fixtures? a vendored client?) → stage it in cloudbuild OR
+      remove the COPY. Repo: strategy-service.
+- [ ] [CI] P1. **deployment-service** build fails at Step #2 pulling the base image:
+      `denied: Unauthenticated request ... downloadArtifacts` — its cloudbuild runs the docker build BEFORE configuring
+      registry auth (the green repos have a `configure-docker` + `pull-base-image` step first). Add/reorder the auth
+      step. Repo: deployment-service.
+
 ## Phase 5 — Root-cause the stale-digest fan-out (so this doesn't recur)
 
 - [ ] [INFRA] P1. **Why is every service repo's `BASE_IMAGE_DIGEST` stale? — RCA DONE 2026-06-19, fix pending.**
