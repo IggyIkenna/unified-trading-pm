@@ -211,7 +211,7 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
 
 ## Phase 5 — Root-cause the stale-digest fan-out (so this doesn't recur)
 
-- [ ] [INFRA] P1. **Why is every service repo's `BASE_IMAGE_DIGEST` stale? — RCA DONE 2026-06-19, fix pending.**
+- [x] ✅ [INFRA] P1. **BASE_IMAGE_DIGEST stale root-cause FIXED 2026-06-19 — PM@0d5663d4d.** Fix-a: removed `continue-on-error: true` from `Resolve base-image digest` step in `update-repo-version.yml` + changed silent-skip to `exit 1` when GCP auth succeeds but registry read fails (so the fan-out never propagates an empty digest again). Fix-c: added `digest-drift-sweep.yml` (6h cron + manual trigger) that resolves UTL `:latest` and dispatches `dependency-update` (patch/non-breaking, digest-refresh-only) to all 16 ARG-converted repos whose pinned digest is stale — covers new repos not in the dep-graph and UAC/other-base republishes (fix-b partial coverage via cadence). Fleet currently at 11×`2baa8551` (fresh), 4×`c54f13d9` (stale — execution/instruments/mtds/strategy), 1×`9db3ae4b` (stale — agent-orchestrator); next cron run will dispatch refresh to those 5.
       Mechanism (traced): a repo version-bump → `repository_dispatch[version-bump]` → PM `update-repo-version.yml`
       resolves the UTL base `:latest` digest (step ~line 408: `docker manifest`/registry read of
       `unified-trading-library:latest`) and attaches `base_image_digest` to the `dependency-update` consumer fan-out;
