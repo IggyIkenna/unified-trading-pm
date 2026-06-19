@@ -5,7 +5,6 @@ assigned_vm: vm-cross-cutting
 status: active
 priority: P1
 created: 2026-06-19
-author: ikennaigboaka [slot-0·human-planning]
 estimate_class: infra
 estimate_baseline_ai_days: 48
 estimate_calibrated_ai_days: 38
