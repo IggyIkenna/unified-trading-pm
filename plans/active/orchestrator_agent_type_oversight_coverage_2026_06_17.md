@@ -125,6 +125,10 @@ PM-repo conflict notes).
       launch `recovery-audit` until finalised (e.g. exclude from the spawnable role set + an explicit `RuntimeError`/log
       if anything tries). Keep the supporting infra in place. Repo: agent-orchestrator (`agents/recovery-audit.md`,
       spawn/role wiring).
+  - **DEFERRED-ASPIRATIONAL (operator 2026-06-19):** the never-launch holding pattern (guard shipped) is the durable
+    state for now — **do NOT wire or delete it.** It "comes into picture later"; the wire-vs-delete finalization + what
+    Layer-1 signoff/actuation it performs is **pending Ikenna's design intent** (unknown to Harsh). Not an open decision
+    to action now — leave guarded + aspirational until Ikenna defines it.
 - [ ] [ORCHESTRATOR] P1. `usage_reporter`: DELETE (Q3). Remove `agents/usage_reporter.md` + its role from
       `spawn_agent_preview` / `/api/agents/spawn` role set + any other reference; usage stays on the httpx
       `UsagePoller`. Repo: agent-orchestrator (`agents/`, `routes/agents.py`, models).
