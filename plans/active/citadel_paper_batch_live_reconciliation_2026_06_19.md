@@ -166,8 +166,10 @@ are identified (2) and the ledger exists (3).
       accrual rows carry a QUOTE cash-flow `delta`, NOT a base-asset qty — they must NOT be fed to
       `materialize_position_ledger` (corrupts `net_qty`); fold TRADE rows into positions, add PASSIVE rows to realized
       PnL as a separate stream.**
-- [ ] [CODE] P3.5. **HWM from the ledger** — drive TWR / Notional / PnL-recovery HWM off the materialised ledger (not
-      `max(equities)`); assert `hwm_invariants`. Repo: unified-trading-library + client-reporting-api.
+- [x] ✅ [CODE] P3.5. **HWM from the ledger** — DONE (`client-reporting-api@52d8b7d`, 13 tests): `core/hwm_from_ledger.py`
+      `ledger_nav_series` (NAV = seed + cumulative realised+unrealised `total_pnl` from `compute_ledger_views`) +
+      `hwm_from_ledger` (running peak, `delta=max(0, nav-prior_peak)` — advances-only, NEVER `max(equities)`) emitting
+      `HighWaterMarkLedgerRow`s; mirrors the HWM invariants (monotonic peak, delta≥0, period ordering). Seeds untouched.
 
 ## Phase 4 — The trade-by-trade reconciliation harness (G5)
 
@@ -327,3 +329,18 @@ the WRITE/INTEGRATION side: the engine must emit keyed `TradeFillRecord`s (P2, t
 (P3.1-wiring) + capture the RunManifest, run Group C smart matching in batch (P1.4 linchpin), then the daily-T+1 rerun
 (P4.3) feeds `reconcile_day`. These are interconnected behavioural changes on live/backtest service code — P2 unblocks
 the rest; each ships with a `reconcile_day` proof.
+
+### 2026-06-19 — READ SIDE COMPLETE (P3.5 HWM shipped)
+
+`client-reporting-api@52d8b7d` — HWM off the materialised ledger NAV (advances-only, never max-equity). **The entire
+READ side of the determinism spine is now done end-to-end + tested**: the contract (Phase 0) → all four ledgers
+(Instruction/Position/Passive synthesisers + Pricing marks) → the operator eyeball surface (positions / balances per
+venue·instrument·share_class / realised+unrealised P&L / HWM) → the determinism-PROOF engine (`reconcile_day`). ~10 units
+across 6 repos (uac, es, utl, blrs, client-reporting-api, pm), every one QG-green + unit-tested.
+
+**Remaining = the WRITE / INTEGRATION side** (gated on P2): the engine must emit keyed `TradeFillRecord`s (P2 — the
+gateway, an execution-service event-format change the existing aggregate stages also read, so it needs deliberate
+migration not a rush), then call the ledger writers + capture the RunManifest (P3.1-wiring), run Group C smart matching
+in batch (P1.4 — the linchpin), correct the strategy-service PASSIVE_BBO benchmark (P1.1-strategy), the daily-T+1 rerun
+(P4.3) + recon stage (P4.2), Slack digests (P6), and the short-window e2e proof (P7). Each ships WITH a `reconcile_day`
+proof. These are interconnected behavioural changes on the live trading engines — the next focused tranche.
