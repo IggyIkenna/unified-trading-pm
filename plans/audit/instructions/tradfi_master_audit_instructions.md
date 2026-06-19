@@ -113,6 +113,19 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
       `source` populated. Status stays `BLOCKED-CREDENTIALS` until the key lands — but item (h) still RED-flags any
       blank source found in the meantime (it is a real data gap, not a pass).
 
+- [ ] (CF-26) **provenance stamped by the FETCHING ADAPTER, not `SOURCE_PRIORITY[0]` — VX is the precedent bug**
+      (cycle-gap hardening, added 2026-06-19). `SOURCE_PRIORITY` is READ-time resolution ONLY; a writer (or backfill
+      stamper, cf. item (o)) that stamps `source`/`pipeline_mode` from `SOURCE_PRIORITY[(tradfi, dt)][0]` LIES when a
+      non-priority vendor actually fetched the cell. **The concrete incident: VIX 15m is fetched by yahoo/barchart, but
+      Massive does NOT cover the VIX cash index** — stamping it `batch_massive` (or `source='massive'`) from priority[0]
+      is wrong. Likewise the item-(o) backfill must stamp `databento` only on rows Databento actually produced, never
+      blanket. Check every tradfi writer/backfill:
+      `rg -n "SOURCE_PRIORITY\[.*\]\[0\]|SOURCE_PRIORITY.*\[0\]" market-tick-data-service/ market-data-processing-service/ --include="*.py"`,
+      then read each callsite; data-state: sample VX 15m rows and assert `source` ∈ {yahoo, barchart}, never massive.
+      **Trap: item (h)/(i)/CF-4 pass on `source` present + in-closed-set while it is the WRONG vendor.** Green: 0
+      writers index `SOURCE_PRIORITY` to STAMP; VX 15m + any cross-vendor cell carries its true fetcher. SSOT:
+      `codex/02-data/tradfi-databento-sourcing-ssot.md` + `canonical_form_cross_service_audit_checklist.md` CF-26.
+
 ### E2E Batch, Paper, and Live Verification
 
 - (e2e-batch) **Batch e2e**: For the MVP archetypes of this domain, run a dry-run batch audit using mock upstream

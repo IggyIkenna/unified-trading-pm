@@ -297,6 +297,46 @@ READ-SIDE — every downstream consumer handles each of the four states per poli
       `--apply`, re-run the CF-17 orphan sweep and assert `orphan_class_E==0` still holds. Green: 0 candidates fail the
       in-manifest + crc32c-identity gate; 0 class-(C)/(C2)/(E) deletes; orphan-E still 0 post-apply.
 
+### Canonical-form coverage CF-22…CF-27 — cycle-gap hardening (added 2026-06-19; manifest_master owns the data-state checks)
+
+> The six gaps the 2026-06 data-migration cycle's audits MISSED — each passed on a PROXY (dedup-clean, schema-constant,
+> "data exists", per-candidate delete). SSOT = `canonical_form_cross_service_audit_checklist.md` CF-22…CF-27. These are
+> the manifest-data-state checks; the producer-side code checks live in `mtds_mdps_master` / `instruments_master`, the
+> 4-pillar RUN in `infrastructure_master`, the VX provenance precedent in `tradfi_master`, and the campaign-wide
+> delete-twin gate in the migration-cleanup owner. **Read the prod `_index` distributions, never a constant.**
+
+- [ ] **(CF-22) v9 = COLUMN-POPULATION, not just `schema_version` + dedup** — for EACH
+      `(bucket_kind ∈ {instruments-store, market-data-tick, processed_candles}, asset_group)` read FOUR `_index`
+      distributions: `schema_version==9` %, `pipeline_mode` non-blank % AND source-aware (`{mode}_{source}`, never
+      coarse `batch`/blank), `source` non-blank %, `asset_group` non-blank %. **The exact trap that made "sports already
+      clean" wrong: dedup/blank-status-clean ≠ v9.** Green: all four ≥99% on BOTH bucket kinds, every AG. (Strengthens
+      lettered (a) + CF-1/CF-2/CF-3/CF-4/CF-13 jointly — a green on any one of those is NOT a green on CF-22.)
+
+- [ ] **(CF-23) `expected_unattempted` 4th state is PRESENT — 0 rows = FAIL** — read the `capture_status` value-set per
+      `(asset_group, bucket_kind)` from the prod `_index`; assert `expected_unattempted` appears with **count > 0**
+      wherever the IS catalogue (CF-14) lists could-exist cells not yet backfilled. It was ABSENT fleet-wide → every
+      denominator under-counted. **Trap: a 3-state `_index` {captured, empty_confirmed, attempted_failed} is RED, not
+      "clean".** Green: `expected_unattempted` count > 0 on every AG with owed cells. (Data-state counterpart of CF-6 /
+      lettered (w-4) / (r-1); CF-6 proves the writer materialises it, CF-23 proves the rows actually landed.)
+
+- [ ] **(CF-26) provenance stamped by the FETCHING ADAPTER, not `SOURCE_PRIORITY[0]`** — `SOURCE_PRIORITY` is READ-time
+      resolution only. Data-state: pick a cell whose true fetcher ≠ priority[0] (VX 15m = yahoo/barchart, NOT massive —
+      Massive does not cover the VIX cash index) and assert the stamped `source`/`pipeline_mode` matches the REAL
+      fetcher. **Trap: `source` present + in-closed-set passes CF-4 while being the WRONG vendor.** Green: sampled
+      cross-vendor cells stamp the true fetcher; 0 writers index `SOURCE_PRIORITY` to stamp (code check in
+      `mtds_mdps_master` item (j) + `tradfi_master`). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+
+- [ ] **(CF-27) backfill coverage vs TARGET UNIVERSE across the WHOLE timeframe** — per
+      `(asset_group, data_type, venue)` compute
+      `coverage = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` over the FULL
+      intended date range (could-exist universe from the IS catalogue, CF-14/CF-16) and produce a ranked low-coverage
+      table. **Trap: "rows exist for venue X" is not coverage — a 5%-covered cell passes a data-exists check.** Green:
+      ratio computed per AG over the whole timeframe; low-coverage cells (< agreed floor) flagged as backfill todos;
+      none silently passed.
+
+> **(CF-24) shard 4-pillar RUN** and **(CF-25) 100%-twin-before-delete** are owned by `infrastructure_master` (the
+> shard-4-pillar SSOT) and the migration-cleanup owner respectively — cross-ref only here; do NOT duplicate.
+
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with

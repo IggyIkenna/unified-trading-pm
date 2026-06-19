@@ -200,6 +200,38 @@ constant said v8 while 0% of 7.4M rows were v8).
       `build_instrument_catalogue.py` shipped 2026-06-05). Green: a 0-captured cell shows a fully-enumerated denominator
       for every AG; `_enumerate_v2_cefi` / `_enumerate_v2_prediction` are exercised (no STUB return), grep-verified.
 
+## CF-22…CF-23 + CF-26…CF-27 — cycle-gap hardening (added 2026-06-19; instruments is the could-exist ROOT)
+
+> Four gaps the 2026-06 data-migration cycle's audits MISSED. instruments-service is the could-exist denominator ROOT
+> (CF-14/CF-16), so its `_index` must itself hold the populated v9 columns AND the `expected_unattempted` rows that
+> every downstream denominator reads. SSOT = `canonical_form_cross_service_audit_checklist.md` CF-22/CF-23/CF-26/CF-27.
+
+- [ ] (CF-22) **v9 = COLUMN-POPULATION, not `schema_version` + dedup** — per `instruments-store-{ag}` `_index` assert
+      all FOUR distributions ≥99%: `schema_version==9` %, `pipeline_mode` non-blank % AND source-aware
+      (`{mode}_{source}`, not coarse `batch`/blank), `source` non-blank %, `asset_group` non-blank %. **Trap:
+      dedup/blank-status-clean ≠ v9 (the "sports already clean" miss).** Strengthens CF-1 (which checks `schema_version`
+      only).
+
+- [ ] (CF-23) **`expected_unattempted` PRESENT in the instruments-store `_index` — 0 rows = FAIL** — read the
+      `capture_status` value-set per AG; assert `expected_unattempted` count > 0 wherever the
+      `build_instrument_catalogue` roll-up lists could-exist instruments not yet backfilled. The IS `_index` is the
+      manifest downstream pre-flights READ for owed cells, so a 3-state IS `_index` silently zeroes every downstream
+      denominator. **Trap: a 3-state `_index` is RED, not "clean".** Data-state counterpart of CF-6 + the CF-16
+      enumerator proof.
+
+- [ ] (CF-26) **provenance stamped by the FETCHING ADAPTER, not `SOURCE_PRIORITY[0]`** — code check: every
+      instruments-service reference-data writer's `source=` / `pipeline_mode=` value is the ADAPTER's own identity,
+      never indexed out of `SOURCE_PRIORITY` (READ-time only). Grep:
+      `rg -n "SOURCE_PRIORITY\[.*\]\[0\]|SOURCE_PRIORITY.*\[0\]" instruments-service/ --include="*.py"` then read each
+      writer callsite. **Trap: `source` present + in-closed-set passes CF-4 while being the WRONG vendor.**
+
+- [ ] (CF-27) **catalogue could-exist denominator drives a coverage-vs-timeframe check** — instruments owns the
+      `build_instrument_catalogue` × UAC universe (CF-14); confirm that universe is the denominator the downstream CF-27
+      coverage ratio (`captured / (captured+empty+failed+expected_unattempted)`) reads, over the FULL timeframe — a
+      catalogue that under-counts the universe yields a falsely-high coverage %. **Trap: "instruments listed" ≠ "data
+      backfilled" — a 5%-covered cell passes a data-exists check.** Green: the catalogue is a superset of the
+      present-set (CF-14) AND the downstream low-coverage table is computed against it, not against "data exists".
+
 ## Success Criteria
 
 - All 7 checklist items GREEN (especially QG STEP 5.70 triple-pass)

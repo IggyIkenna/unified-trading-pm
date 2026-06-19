@@ -185,6 +185,31 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
       slot worktree dirty for >1 working session (the Commit+Push+Flip HARD RULE applies to interactive operator slots
       too). Operator-judgment check.
 
+### Shard 4-pillar RUN + delete-safety twin coverage — cycle-gap hardening (CF-24 / CF-25, added 2026-06-19)
+
+> Two gaps the 2026-06 data-migration cycle's audits MISSED. infrastructure_master owns the **shard-granularity 4-pillar
+> SSOT** (`plans/epics/infrastructure_master.md`) and the bucket/migration-cleanup infra, so it owns the proof that the
+> 4-pillar validation was actually RUN and that the legacy-delete campaign is 100%-twin-covered. SSOT =
+> `canonical_form_cross_service_audit_checklist.md` CF-24 / CF-25. Read evidence/data-state, never a manifest proxy.
+
+- [ ] **(CF-24) shard 4-pillar validation was RUN comprehensively — evidence required** — require a cited, dated
+      cross-AG 4-pillar RUN artifact (the validation report / CLI output, per `asset_group × data_type`) covering all
+      four pillars: (1) row-count > 0 OR an explicit `record_empty`; (2) NaN-ratio < threshold; (3) schema matches the
+      UAC contract; (4) cluster coverage ≥ expected. Spot-open ≥1 parquet per AG and confirm the four pillars actually
+      evaluated. **Trap: "manifest divergence == 0" is a PROXY, not the 4-pillar run — a green manifest row does not
+      prove the parquet passed the pillars.** Green: a comprehensive 4-pillar run exists, is dated within the audit
+      window, covers every AG, and reports 0 pillar failures (or the failures are tracked backfill/fix todos). SSOT:
+      `plans/epics/infrastructure_master.md` § shard-granularity 4-pillar.
+
+- [ ] **(CF-25) 100% canonical-twin coverage BEFORE any legacy delete** — before any `--apply` legacy-object delete, per
+      `(asset_group, bucket_kind ∈ {instruments-store, market-data-tick})` enumerate legacy-shape objects and assert
+      EVERY one has a `gcs_describe_object`-verified canonical twin in the manifest (`captured` + crc32c-identity per
+      CF-21) OR is on the proven-superseded-covered list. **CF-21 gates each candidate; CF-25 gates the whole CAMPAIGN —
+      the gap was deleting after a sampled/per-candidate pass, leaving un-twinned legacy data unrecoverable.** Use the
+      UTL `gcs_describe_object` (never subprocess `gsutil`, per item (d)). Green: twin-coverage == 100% on BOTH bucket
+      kinds, every AG, with the coverage report cited, BEFORE a single delete runs. Cross-ref: `manifest_master`
+      CF-17/CF-21 (orphan sweep + per-candidate gate).
+
 ### E2E Cross-Cutting Verification
 
 - (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest row
