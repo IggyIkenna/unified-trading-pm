@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
 
 > **Status**: design SSOT (mapped 2026-06-19). Plan-of-record:
