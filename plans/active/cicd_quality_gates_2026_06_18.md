@@ -66,6 +66,20 @@ source:
 - [ ] [SCRIPT] P2. Finish the codex-not-a-separate-repo cleanup — `major-bump-approval.yml` write-back +
       `setup-workspace` clone remain. (qg_commit L808)
 
+### Docs / SSOT hygiene (from the 2026-06-18 `docs/repo-management/` reconciliation)
+
+- [ ] [DOCS] P2. Migrate `docs/repo-management/CI-CD-FLOW.md`'s unique bootstrap/venv/dependency-alignment/mock-infra
+      content → `codex/05-infrastructure/workspace-setup.md` (currently an 8-line stub), correcting the stale
+      sync-to-main / force-push / three-tier bits to as-built (LDR-trunk); then delete `CI-CD-FLOW.md` (it's bannered
+      NOT-the-SSOT in the meantime).
+- [ ] [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs (`CI-CD-FLOW.md` /
+      `docs/ci-cd-ssot.md` / `version-cascade-flow.md` / `sync-to-main-flow.md`) → `codex/08-workflows/ci-cd-flow.md`
+      across `.cursor/rules/*.mdc` (cicd-setup, ci-rollout-ownership, dependency-install-protocol,
+      dependency-alignment-and-setup-flow, single-repo-vs-workspace-setup, prettier-docs-formatting,
+      quality-gates-propagation-risk) + `codex/05-infrastructure/{cicd-setup,README,new-repo-setup}.md` +
+      `scripts/{workspace/workspace-bootstrap.sh, repo-management/sync-all-to-main.sh, repo-management/README-ALIGNMENT-AND-SETUP.md}`;
+      drop dead `§7`/`§2` anchors. The retired-doc stubs self-redirect, so this is cleanliness, not correctness.
+
 ## Verify-and-flip (likely shipped — confirm, then close)
 
 - [ ] [VERIFY] P3. uac `cassette_orphan_checker` intermittent xdist flakiness — the deterministic siblings were

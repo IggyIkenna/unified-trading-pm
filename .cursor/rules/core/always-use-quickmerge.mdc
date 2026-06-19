@@ -36,7 +36,7 @@ main     → always stable; NEVER a direct target for breaking changes
 - **`--branch NAME` + `--to-staging`** → hard fail (mutually exclusive).
 - The cascade is **selective**: only repos with a dependency edge to the changed repo are touched. Not all 60 repos.
 
-**SSOT:** `unified-trading-pm/docs/repo-management/version-cascade-flow.md`
+**SSOT:** `unified-trading-pm/codex/08-workflows/ci-cd-flow.md` (§ "Dependency promotion") + `codex/08-workflows/dependency-cascade.md`
 
 ## Agent Sessions — MANDATORY
 
