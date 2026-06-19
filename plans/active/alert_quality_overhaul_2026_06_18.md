@@ -13,6 +13,7 @@ estimate_calibrated_ai_days: 3.2
 source:
   - 2026-06-18 operator design session — Slack alerts repeated/low-info; want error-pointer alerts
   - plans/audit/results/alert_quality_audit_2026_06_18.md (Opus audit, 4 background agents)
+priority: P2
 ---
 
 # Alert Quality Overhaul

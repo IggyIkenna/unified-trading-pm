@@ -14,6 +14,7 @@ source:
   - 2026-06-18 operator design session — orchestrator UI = agents/orchestrator lens; deployment-ui =
     CICD/codebase/fleet/images
   - plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)
+priority: P2
 ---
 
 # Monitoring Surfaces Overhaul
