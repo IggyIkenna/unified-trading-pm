@@ -58,22 +58,35 @@ cluster coverage at `record_captured`).
 
 ## Phase 3 — Real findings surfaced by the first run
 
-- [ ] [DATA] P1. **DeFi `vault_share_price` silent-empty parquets** — 0-row parquets physically present in GCS
-      (`market-data-tick-defi-prd`, legacy 2021/2022 `batch_onchain_subgraph` dates, e.g.
-      `…/data_type=vault_share_price/vault_share_price_1647432000.parquet`) carry ONLY identity columns + 0 rows. Honest
-      absence IS recorded in the manifest (64410 `empty_confirmed` rows for this data_type), so these parquets are
-      redundant placeholders that should be manifest-only `empty_confirmed` with NO parquet object (the banned "empty
-      placeholder that looks populated" antipattern, CLAUDE.md § Manifest). **Fix**: delete the 0-row
-      `vault_share_price` parquets from GCS (manifest already correct) after a scoped walk confirms they are all
-      empty-confirmed-in-manifest; verify no consumer reads the parquet directly. Repo: market-tick-data-service.
-      Provenance: 4-pillar harness first comprehensive run 2026-06-19.
-- [ ] [DATA] P2. **Manifest `row_count` column 100% NULL in the tradfi index** (likely fleet-wide) — the
-      `_index/availability_index.parquet` `row_count` column is unpopulated for `captured` rows (100% null in tradfi),
-      so a manifest-side phantom check (`captured & row_count<=0`) cannot run from the index alone (the harness guards
-      against the false positive but loses the cheap manifest-side phantom signal). **Fix**: materialise `row_count` at
-      `record_captured` (the writer has the df length) so the consolidated index carries it; then the manifest-side
-      phantom detector becomes a cheap whole-corpus check. Repo: unified-trading-library (manifest_writer) +
-      market-tick-data-service (recorder). Provenance: 4-pillar harness first comprehensive run 2026-06-19.
+- [x] ✅ [DATA] P1. **DeFi `vault_share_price` silent-empty parquets — DELETED + harness GREEN** (2026-06-19). Scoped
+      walk of `market-data-tick-defi-prd` found 7,683 `vault_share_price` parquets; OPENED every footer (row count, never
+      size-as-proxy): **1,113 genuinely 0-row** (legacy 2020-2022 `batch_onchain_subgraph` VAULT cells) AND every one's
+      `(date,data_type)` manifest cell is NON-captured (honest `empty_confirmed`/`SOURCE_RETURNED_ZERO` after the N5
+      rebuild) → deleted (1,113/1,113, 0 failures, ~3.40 MB reclaimed); the other **6,570 HAS_DATA (≥1 row) were
+      PRESERVED** (real captured vault cells, e.g. MAKER 2023 / ETHENA 2024) — redundant-empty cleanup, NOT a
+      twin-delete. No consumer reads these parquets directly (the only writer of 0-row markers is the
+      vault_share_price_handler empty-marker path; the manifest empty_confirmed row is the cell SSOT). **4-pillar
+      re-run on defi: 67/67 GREEN, p1_fail=0 (was 2), manifest_phantom_captured_zero_rows=0, overall_green=True.** Script:
+      `market-tick-data-service/market_tick_data_service/scripts/delete_defi_zero_row_placeholders.py` (oneoff,
+      lifecycle-marked). Provenance: 4-pillar harness first comprehensive run 2026-06-19.
+- [x] ✅ [CODE] P2. **Manifest `row_count` now materialised on captured rows by the WRITER** — unified-trading-library
+      `manifest_writer._records_to_dataframe()` now emits a `row_count` column == `instrument_count` (the same logical
+      value: `effective_count`==`len(df)` at `record_captured` / `total_rows` at `record_captured_from_counts`; the
+      legacy `add(row_count=...)` path already maps row_count→instrument_count), and the read/merge backfill
+      (`_read_index._backfill` + `_writer_io._backfill_columns`) backfills `row_count` FROM `instrument_count` for legacy
+      indexes — so the consolidated `_index` carries `row_count` populated on captured rows going forward, making the
+      cheap manifest-side `captured & row_count<=0` phantom / 4-pillar proxy work from the index alone (it was 100% NULL).
+      Regression test `tests/unit/test_manifest_writer_row_count_materialised.py` (3 cases); 446 manifest tests pass.
+      **Diagnosis note**: the index ALREADY had a `row_count` COLUMN (from rebuild scripts) but the writer serializer
+      never populated it — `instrument_count` was the materialised count. Repo: unified-trading-library. Provenance:
+      4-pillar harness first comprehensive run 2026-06-19.
+- [ ] [SCRIPT] P3. **DEFERRED (optional) — backfill `row_count` into HISTORICAL consolidated `_index` rows fleet-wide**
+      (currently 100% NULL on captured rows in the existing on-disk indexes; the writer-fix only populates NEW captures).
+      Cheap: a single-walk pass per AG bucket that sets `row_count = instrument_count` where `capture_status=='captured'`
+      and `row_count` is null, then re-writes the index (or rides the next manifest canonicalisation walk). Until then,
+      the harness/read-path backfill already derives `row_count` from `instrument_count` at READ time, so the cheap
+      phantom check works for any consumer that reads via `read_availability_index`; this todo only materialises it ON
+      DISK. Repo: market-tick-data-service (index canonicalisation). Provenance: P2 follow-up, 2026-06-19.
 
 ## Continuous verification
 
