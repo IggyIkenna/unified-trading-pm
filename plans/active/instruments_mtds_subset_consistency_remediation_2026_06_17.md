@@ -1373,3 +1373,50 @@ could-exist grid — captured≈total is correct there).
 - **sports IS 112,049 failed + 36.7% honest-cov** = the honest sports universe (SFI/TM BLOCKED-CREDENTIALS 403 +
   off-season fixtures); mostly honest absence. af-backfill running to raise captured.
 - **sports IS 91.2% src** = 171,227 blank-source rows = SSOT-unmapped retired/catalog data_types (journaled honest).
+
+### Delete-ready manifest (2026-06-19, OPERATOR-FACING — no agent delete performed this session)
+
+Per-AG certified delete-lists (`_index/audit/legacy_dup_delete_list_{ag}.parquet` MTDS +
+`instruments_store_legacy_delete_list_{ag}.parquet` IS), classification = per-object `gcs_describe`-verified canonical
+twin (SAFE-TO-DELETE) vs no-twin (MIGRATE-FIRST, NOT delete-safe):
+
+| List | total | SAFE-TO-DELETE | MIGRATE-FIRST | status |
+|---|---|---|---|---|
+| cefi MTDS | 1,077,687 | 1,077,672 | 15 | legacy-flat twins; cefi MD 9.98 TB already deleted earlier; these 1.08M are the residual flat-shape dups |
+| defi MTDS | 352,234 | 346,902 | **5,332** | 5,332 MIGRATE-FIRST = no canonical twin yet → NOT delete-safe (migrate first) |
+| tradfi MTDS | 1,706,332 | 1,705,230 | **1,102** | 1,102 MIGRATE-FIRST not delete-safe |
+| sports MTDS | 252,318 | 248,502 | 3,816 | **ALREADY EXECUTED 2026-06-19** (3,816 content-twin verified safe at delete time) — list is pre-delete/historical |
+| pred MTDS | 573,451 | 573,451 | 0 | all twin-verified safe (canonical = `-pred-prd`) |
+| sports IS | 9,723 | (UNMAPPABLE→migrated) | — | **ALREADY EXECUTED 2026-06-19** (odds-api twins migrated then legacy deleted) |
+| cefi/defi/tradfi/pred IS | 0 | — | — | no legacy IS dups listed |
+
+**Delete-SAFE NOW (operator may delete; agent did NOT):** cefi MTDS 1,077,672 + defi MTDS 346,902 + tradfi MTDS
+1,705,230 + pred MTDS 573,451 legacy-flat objects (all `gcs_describe`-verified canonical twin present). Plus the
+**prediction legacy-flat BUCKETS** `instruments-store-prediction-…` (stale 2026-06-08) + `market-data-tick-prediction-…`
+are SUPERSEDED by canonical `-pred-prd` (which is live + 100%/97.8% certified) — candidate for bucket-level delete, but a
+per-object twin-walk on those two buckets has NOT been run this session, so they are CANDIDATE not CERTIFIED.
+
+**NOT delete-safe (MIGRATE-FIRST first):** defi MTDS 5,332 + tradfi MTDS 1,102 objects have no canonical twin → must be
+copied to canonical path BEFORE their legacy copy is deletable. **Caveat: the lists above are the LAST-COMPUTED snapshot;
+sports + cefi-MD + sports-IS deletes already EXECUTED, so re-run the per-AG rescan twin-verify before any new delete to
+refresh classification (fail-safe: stale list over-lists MIGRATE-FIRST, never under-flags an unsafe delete).**
+
+### Honest NOT-100% list (final, no false claims)
+
+1. **tradfi IS v9 = the ONE genuinely-open cell** (37.6% v9, 0% asset_group) — gated on `instr-backfill-tradfi-cme-b`
+   (CME GLBX.MDP3 daily-defs 2020→2026, ~108 days/h, **ETA ~17h from 19:48Z**). On its TERMINATION the close-out runs:
+   consolidator → `populate_is_index_v9 --asset-group tradfi --apply` → `build_instrument_catalogue --asset-group tradfi`
+   → verify 100% v9. Tracked waiter armed (`/tmp/wait_cme_b.sh`). NOT a code/decision blocker — pure backfill wall-clock.
+2. **cefi MTDS 801,975 attempted_failed = BILLING-BLOCKED** (operator: cefi tick vendor billing paused). Fillable
+   re-run is operator-gated, not agent-fixable.
+3. **sports IS 36.7% honest-cov + 112,049 failed** = SFI/Transfermarkt **BLOCKED-CREDENTIALS** (RapidAPI 403 not-subscribed)
+   + off-season fixture honest absence. af-backfill running to raise api-football captured. Operator: subscribe SFI/TM.
+4. **defi/tradfi MTDS low honest-cov (13.7/11.1%) = expected_unattempted BY DESIGN** — huge could-exist universe (every
+   IS instrument × every post-genesis day) is honest absence (the 4th state working), not pipeline failure. captured is real.
+5. **prediction MTDS 96.5% v9 / 93.9% src** — near-complete; 50 failed + 338 expU residual. Not a blocker.
+6. The **legacy-flat `_index` reads (prediction 0% v9, etc.) were a measurement artifact** — the CANONICAL `-prd`/`-pred-prd`
+   buckets (what `resolve_bucket_name` returns + what readers/writers use) are the certified ones in the matrix above.
+
+**Bottom line: 4 of 5 AGs (cefi, defi, sports, prediction) are CERTIFIED on canonical buckets (IS 100% v9; MTDS
+96.5-100% v9). tradfi IS is the single open cell, gated purely on a ~17h backfill (operator already accelerated via the
+9-VM shard fleet; 8 shards self-completed). No code, no decision, no un-run agent op remains for the certified AGs.**
