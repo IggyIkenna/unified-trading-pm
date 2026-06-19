@@ -163,10 +163,12 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
 
 ## Phase 3 — Run smoke across the fleet + report
 
-- [ ] [SCRIPT] P0. Run `build_smoke_all.sh --all` across every repo; produce the `BUILD / IMPORT / RUN` matrix. Any RED
+- [x] ✅ [SCRIPT] P0. Run `build_smoke_all.sh --all` across every repo; produce the `BUILD / IMPORT / RUN` matrix. Any RED
       → triage (build-blocker vs genuine operability break vs probe-env gap) and fix. Definition of done: every Python
       service repo is `BUILD ✅ IMPORT ✅ RUN ✅`; UTL import-green; the 2 Node UIs build-green. Repo: e2e-testing
-      (driver) + per-repo fixes.
+      (driver) + per-repo fixes. — ml-service@6b47fdf (ENTRYPOINT fix: python -m ml_service → ml-service CLI entry) |
+      instruments-service@c9abd5f (--no-deps → --no-sources: install all PyPI deps including exchange-calendars) |
+      e2e-testing@03c1968 (Phase 3.5: add features-service-build + ml-service-build to 15-trigger matrix)
 - [x] ✅ [INFRA] P1. Capture per-repo build-minute cost + flag any repo whose image is unexpectedly large / slow (a
       side-signal of a bad install). Repo: e2e-testing. — e2e-testing@d2206e3
       (`scripts/build_smoke/build_cost_report.sh`: gcloud builds list → duration+cost per trigger; docker pull+inspect →
