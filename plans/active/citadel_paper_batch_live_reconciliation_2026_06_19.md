@@ -153,9 +153,13 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 4 — The trade-by-trade reconciliation harness (G5)
 
-- [ ] [CODE] P2.4.1. **`reconcile_week(paper, batch, live)`** — keyed match on `trade_key`; paper↔batch DETERMINISM
-      verdict (ε=0, classify a diff as {NON_DETERMINISM | INPUT_CAPTURE_GAP | FILL_MODEL_DRIFT}); live↔paper EXECUTION
-      verdict (per-trade fill_price_delta_bps / qty_delta / timing_delta_ms). Repo: batch-live-reconciliation-service.
+- [x] ✅ [CODE] P4.1. **`reconcile_week(...)`** — DONE (`batch-live-reconciliation-service@7a84db8c`, 9 tests, QG green):
+      `engine/trade_recon.py` keyed match on `trade_key`; DETERMINISM verdict (`is_deterministic` iff no unmatched +
+      every matched dev has side_match ∧ qty_delta=0 ∧ fill_price_delta_bps=0 ∧ fees_delta=0) with the bug-classifier
+      ladder (unmatched→INPUT_CAPTURE_GAP, price/fee drift→FILL_MODEL_DRIFT, side/qty drift→NON_DETERMINISM); EXECUTION/
+      COMPOSITE verdict computes mean/p99 |fill_price_delta_bps| (nearest-rank). The determinism-PROOF engine — ready to
+      validate every Phase 1-3 fill-path change. **This is the keystone: any fill-path correction now ships WITH a
+      reconcile_week test proving paper≡batch.**
 - [ ] [CODE] P2.4.2. **Populate `DeviationRecord.instrument_id` + a `trade_key`** + roll up per
       venue/instrument/strategy/`PnLFactor`; weekly aggregation (7 dates → one report). Repo:
       batch-live-reconciliation-service.
@@ -241,3 +245,14 @@ that correction lands. **Next concrete step**: rewire `strategy_service/engine/b
 `_resolve_*_benchmark` to build the dict ctx from `MarketStateSnapshot` + call `benchmark_fill_price` (correct
 PASSIVE_BBO, preserve ARRIVAL_MID None-fallbacks), update the strategy-service benchmark-fill tests to the corrected
 convention, QG, ship → then flip P1.1.
+
+### 2026-06-19 — Phase 4 keystone SHIPPED (the determinism-PROOF engine)
+
+`batch-live-reconciliation-service@7a84db8c` — `engine/trade_recon.py::reconcile_week` (9 tests, QG green). Built BEFORE
+the fill-path changes (Phases 1-3) deliberately: it is the validator those changes must pass. The DETERMINISM verdict is
+binary (ε=0 or a classified bug); EXECUTION/COMPOSITE carries the alpha rollup. **Build-order rule from here on**: every
+fill-path or ledger change (P1.1-strategy / P1.2 / P1.4 / Phase 3) ships WITH a `reconcile_week` test asserting
+paper≡batch on a fixture — the harness turns each behavioural correction from "hope it matches" into a proof. Remaining
+big rocks: Phase 3 ledger materialisation (the as-if-filled ledger to eyeball) + P1.4 GroupCRunner (the linchpin that
+gives batch the smart-matching layer) + P4.3 batch-rerun-from-manifest. These are interconnected, multi-repo,
+behavioural — sequenced, harness-validated, not rushed.
