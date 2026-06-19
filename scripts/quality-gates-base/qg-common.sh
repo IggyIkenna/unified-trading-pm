@@ -155,7 +155,11 @@ _qg_src_content_key() {
 _qg_cache_age_hours() {  # $1=cache name → prints integer age in hours; rc 1 if absent
     local _f="${_QG_CACHE_DIR}/$1" _mt
     [ -f "$_f" ] || return 1
-    _mt=$(stat -f %m "$_f" 2>/dev/null || stat -c %Y "$_f" 2>/dev/null) || return 1
+    # GNU (Linux) first, BSD (macOS) fallback. `stat -f %m` on GNU coreutils is `--file-system` + an
+    # invalid format → exits 0 emitting a filesystem dump (NOT the mtime), so a BSD-first order never
+    # reaches the GNU form on Linux and feeds garbage to the arithmetic below (syntax error). Mirror
+    # the correct order already used in verify-slot-host-symmetry.sh.
+    _mt=$(stat -c %Y "$_f" 2>/dev/null || stat -f %m "$_f" 2>/dev/null) || return 1
     echo $(( ( $(date +%s) - _mt ) / 3600 ))
 }
 
