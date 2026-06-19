@@ -1173,9 +1173,29 @@ is the validated foundation + a runnable paper path TODAY.
       `ensemble_split()` accessor (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests. strategy-service
       QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC archetype enum is
       the follow-up below** (descoped this session — see why).
-- [ ] [STRATEGY] P1. **funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)** — needs a CLEAN UAC repo to
-      land ATOMICALLY (provenance: P1c 2026-06-19; engine written + reverted this session). A new
-      `StrategyArchetype.CARRY_FUNDING_DISPERSION` is **fleet-import-breaking if any exhaustive registry is missed**:
+- [x] ✅ [STRATEGY] P1. **funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)** — **DONE
+      `unified-api-contracts@487b9a9` + `strategy-service@6b285fad`** (2026-06-19, second autonomous pass when UAC was
+      clean). The new `CARRY_FUNDING_DISPERSION` archetype landed ATOMICALLY: UAC `enums.py`
+      (`StrategyArchetype.CARRY_FUNDING_DISPERSION` + `ARCHETYPE_TO_FAMILY=CARRY_AND_YIELD`) + a 2-perp-leg leg-spec seed
+      in `archetype_leg_spec_seeds._funding_dispersion_structure` (perp_long + perp_short, SEQUENCED_WITH_PACING,
+      dollar-neutral not delta-neutral) wired into `_carry_yield_seeds` + docstring counts 57→58 + the
+      `test_archetype_leg_spec` partition count 51→52 — **UAC QG GREEN, shipped via quickmerge** (additive enum =
+      non-breaking). strategy-service: `funding_dispersion.py` = `CarryFundingDispersionEngine` (reads `funding_rank_pct`
+      + `funding_rate_annualised_bps`, tercile LONG-lowest/SHORT-highest + the accretive `funding_squeeze_sigma` veto →
+      `TradeInstruction` + `declare_leg_portfolio_state`/`react_to_equity_change`), `__init__`/`factory` registration,
+      the **cascade of exhaustiveness maps** a new archetype triggers (catalog builder `build_funding_dispersion` +
+      registry; `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` mid-variance peer of STAT_ARB_CROSS_SECTIONAL;
+      `_STATEFUL_ARCHETYPES`; the factory family_map), + a 12-case engine unit test — **strategy-service QG GREEN,
+      shipped via quickmerge**. The rank allocator (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`)
+      remains a further increment (cross-sectional rank currently computed upstream / fed as the `funding_rank_pct`
+      feature; engine is the per-instrument leg engine, batch==live). **Repo: unified-api-contracts + strategy-service.**
+- [ ] [STRATEGY] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19)** Add the cross-sectional
+      `CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK` AllocatorArchetype so the rank is computed
+      inside strategy-service (today it arrives as the `funding_rank_pct` feature from upstream). **Repo:
+      unified-api-contracts + strategy-service.**
+- [ ] [HISTORICAL] P3. ~~funding_dispersion ENGINE + UAC archetype~~ (SUPERSEDED — DONE above; original blast-radius
+      analysis retained for the record). A new `StrategyArchetype.CARRY_FUNDING_DISPERSION` is fleet-import-breaking if
+      any exhaustive registry is missed:
       `ARCHETYPE_LEG_STRUCTURES._build_registry()` RAISES at UAC import on a missing leg-spec seed; `ARCHETYPE_TO_FAMILY`
       (enums.py) consumed by `strategy_naming` + `test_family_assignment`; `algo_compatibility`/`venue_set_variants`
       auto-derive (OK once leg-spec added); the capability manifest is a partial `<=` map (no entry needed). Live
