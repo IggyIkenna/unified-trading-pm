@@ -113,7 +113,7 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
       log). `deployment-ui` → `deployment-ui-main-deploy` (Node UI bundled into deployment-api image; NOT a standalone
       Python `-build` trigger; old `deployment-dashboard` zombie deleted). UTL base-image →
       `unified-trading-library-live-defi-rollout` ("Build UTL base Docker image + publish wheel on live-defi-rollout
-      push"). 28 live triggers now 1:1 with live repos. — PM@(flip)
+      push"). 28 live triggers now 1:1 with live repos. — PM@ef452ee05
 - [ ] [SCRIPT] P0. **Re-map the harness to the REAL trigger list** (not `<repo>-build`): drive `--all` off the 25
       `-build` triggers, expand `features-service`→5 + `ml-service`→3, map `deployment-ui`→`deployment-dashboard`, and
       SKIP trigger-less repos with an explicit "no trigger" row (never a silent omission). Repo: e2e-testing.
