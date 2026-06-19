@@ -30,10 +30,13 @@ source:
 > migration-drain consolidator freeze is lifted: I RESUMED the 11 paused market-data + instruments consolidator/watchdog
 > crons (`gcloud scheduler jobs resume`, asia-northeast1) and manually ran the md consolidator jobs (the
 > tradfi/defi/pred/sports `_index` heartbeat was >1900s stale). **Launched (EPHEMERAL_BATCH, per-VM shard isolation
-> `MANIFEST_PER_VM_SHARDS=true`+unique `VM_NAME`, self-stop at completion, zone asia-northeast1-c):** defi = 5 VMs
-> `mtds-backfill-defi-{y2021-22,y2023,y2024,y2025,y2026}-20260619-150025`; sports odds_api = 3 VMs
-> `mtds-backfill-odds-{y2020-22,y2023-24,y2025-26}-20260619-150224` + api-football fixtures `af-backfill-20260619-150255`;
-> prediction Polymarket = 3 VMs `mtds-prediction-20260619-{150326,150344,150357}`. **tradfi NOT relaunched** — the
+> `MANIFEST_PER_VM_SHARDS=true`+unique `VM_NAME`, self-stop at completion, zone asia-northeast1-c):** **defi = 7
+> collect-\* handler VMs** `mtds-{dex-pools,dex-swaps,liquidations}-backfill` +
+> `mtds-{lst-rates,lending-indices,gas-fees,vault-share-price}-2026...` (CORRECTED — the initial 5 `--asset-group DEFI`
+> unified VMs SKIP all 124 defi venues; defi market-data needs the per-data_type `collect-*` ops → deleted + relaunched
+> as these 7); sports odds_api = 3 VMs `mtds-backfill-odds-{y2020-22,y2023-24-fix,y2025-26}` + api-football fixtures
+> `af-backfill-20260619-150255`; prediction Polymarket = 3 VMs `mtds-prediction-20260619-{150326,150344(self-done),
+> 150357}`. **tradfi NOT relaunched** — the
 > Databento OHLCV backfill (CFE `XCBF.PITCH` / CME `GLBX.MDP3` / DBEQ.BASIC equities) already ran to completion today
 > (`/tmp/{cfe_vx,cme,dbeq}_ohlcv_backfill_v2.log` rc=0); the running `instr-backfill-tradfi-*` IS-def fan-out extends the
 > catalog and a tradfi MTDS top-up runs after it lands. Banner-removed by launcher at completion.
