@@ -1070,3 +1070,23 @@ F4/N3a NULL-league + N9 classify] → [IS v9-column populate sports (coordinate 
 **STILL OPEN (this tick → next):** MD 3,816 twin-verify (sub-agent parked — finishing); IS sports `_index` v9-column
 populate (schema_version=9 + source + asset_group — FLEET-WIDE gap, coordinate af95b962); IS
 catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENTIALS asks; shard-atom (D) verify.
+
+### Sports IS `_index` v9-column populate + fleet-wide finding (2026-06-19, autonomous tick 3)
+
+- [x] ✅ [SCRIPT] P1. **Sports instruments-store `_index` v9-COLUMN populate** — DONE 2026-06-19
+      (instruments-service@5d7f6f0 `populate_sports_is_index_v9_2026_06_19.py`, APPLIED+verified live
+      `instruments-store-sports-prd`). schema_version **mix(v4/5/6/8, 75k/2.6M v9) → 100% v9**, asset_group **13k/2.6M →
+      100% sports**, source **0 → 93.4%** (2,435,436 via the EXISTING UAC SSOT
+      `unified_api_contracts.sports.get_source_for_data_type`; 171,227 / 6.6% blank = SSOT-unmapped catalog/retired
+      data_types LEAGUES/VENUES/SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES — honest, the SSOT defines what is
+      source-attributable). ROW-PRESERVING — captured 659,693 unchanged. pipeline_mode left blank (reference data, no
+      mode model). Snapshot pre_sports_is_v9_20260619. — instruments-service
+- [ ] [DATA] P2. **FLEET-WIDE: instruments-store `_index` v9-COLUMN populate for cefi/tradfi/defi (+ prediction
+      source)** — the plan's earlier "instruments-store `_index` v9-canonical for ALL 5 AGs — DONE" (line ~575)
+      OVERCLAIMS: it ran only the blank-status/dedup canonicalisation, NOT the v9 columns. VERIFIED 2026-06-19 all IS
+      indices are the SAME as sports-was: schema_version mixed, **source=0** (cefi/tradfi/defi), asset_group ABSENT
+      column. Sports is now populated (above); apply the same per-AG (`get_source_for_data_type` analogue per AG —
+      cefi/defi need a UAC source SSOT; tradfi has databento/massive in UAC SOURCE_PRIORITY). The live-WRITER
+      source-auto-stamp (so NEW rows carry source, not just the historical backfill) is the larger scope. — homed under
+      `data_source_provenance_all_asset_groups_2026_06_01.md` (the named owning plan for the source RED gap). —
+      instruments-service / unified-trading-library (writer) / unified-api-contracts (per-AG source SSOT)
