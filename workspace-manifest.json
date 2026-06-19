@@ -67,7 +67,7 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.9.0",
+    "batch-live-reconciliation-service": "0.10.0",
     "deployment-api": "0.20.0",
     "deployment-service": "0.13.0",
     "deployment-ui": "0.1.0",
@@ -172,7 +172,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -1795,14 +1795,13 @@
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
-    "deployment-api": "0.21.0",
-    "batch-live-reconciliation-service": "0.10.0"
+    "deployment-api": "0.21.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1820,16 +1819,21 @@
       "branch": "staging",
       "sha": "0f2633e79cb594287f263c50034530d00d3b720a",
       "version": "0.21.0"
-    },
-    "batch-live-reconciliation-service": {
-      "branch": "staging",
-      "sha": "f420c3d3eec26715cef23104b872d64f06ce3b95",
-      "version": "0.10.0"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-19T16:17:06.357454Z",
+        "commits": {
+          "batch-live-reconciliation-service": {
+            "branch": "staging",
+            "sha": "f420c3d3eec26715cef23104b872d64f06ce3b95",
+            "version": "0.10.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-19T16:03:06.182104Z",
         "commits": {
@@ -1897,16 +1901,6 @@
             "branch": "staging",
             "sha": "bcf74c4b1fbf619d7aff654b7ee810685ed7207c",
             "version": "0.20.0"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-19T01:08:31.919554Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.21.0",
-            "sha": "c3d1bf7a6574d5564e869e225fb836c332b84153",
-            "branch": "staging"
           }
         }
       }
