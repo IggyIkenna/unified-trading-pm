@@ -125,14 +125,20 @@ the existing `*/15` watcher (billing block) and leave promotion-lag on `*/30` �
 ledger is a few small read/append ops per tick (Cloud Storage Class A/B) → **pennies/month**; the AO-side alerts run on
 the always-on central VM → zero marginal cost.
 
-- [ ] [SCRIPT] P1. `ci-failure-watcher`: emit a per-condition `alerts` JSON output (one item per currently-open
+- [x] ✅ [SCRIPT] P1. `ci-failure-watcher`: emit a per-condition `alerts` JSON output (one item per currently-open
       condition: failing workflow / stuck PR / billing block / recovered / resolved), each carrying `dedup_key`,
       `severity`, `cooldown_min`, and its own deep-link `message`; switch failing-workflow detection from flip-only to
       **current-failing within a re-nag window** so a persistently-red QG re-surfaces. Switch `ci-failure-watcher.yml`
       notify to a **matrix over `alerts`** (each item → `notify-slack.yml` with its `dedup_key`+`cooldown_min`). Unit
-      tests for the pure `build_alert_items`. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. `promotion-lag-monitor`: drop the `cooldown_min` 360→60 and add a **lag-cleared bookend** (RESOLVED
-      INFO when all branch-pairs are back in budget). Repo: unified-trading-pm.
+      tests for the pure `build_alert_items`. Repo: unified-trading-pm. — unified-trading-pm@cf51f081 |
+      `detect_currently_failing` + `build_alert_items` + matrix notify; 130 watcher unit tests green (18 new in
+      `test_ci_failure_watcher_renag.py`); QG green; PR #423.
+- [x] ✅ [SCRIPT] P1. `promotion-lag-monitor`: drop the `cooldown_min` 360→60 (re-nag a still-open lag hourly instead of
+      page-once-per-6h). Repo: unified-trading-pm. — unified-trading-pm@cf51f081 | PR #423.
+- [ ] [SCRIPT] P2. `promotion-lag-monitor`: add a **lag-cleared bookend** (RESOLVED INFO on the lagging→clear
+      transition). **DEFERRED** — the monitor is stateless for alerting (the cache is ETag-only), so a true
+      fire-once-on-clear needs transition state (read the carrier ledger for a recent `promotion-lag` post, or persist a
+      last-state flag). Repo: unified-trading-pm.
 
 ## Phase 6 — Carrier-routing + deep-link follow-through from the 2026-06-19 LDR audit (P1/P2)
 

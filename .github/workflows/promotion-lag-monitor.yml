@@ -98,12 +98,14 @@ jobs:
       severity: WARNING
       workflow_name: promotion-lag-monitor
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      # TRANSITION-ONLY (alert_quality_audit_2026_06_18): a standing lag must page on the
-      # 60m-CROSSING, NOT every */30 tick. A stable dedup_key + a cooldown longer than the cron
-      # period makes notify-slack suppress the re-page; when the lag clears (no `lag` output → no
-      # notify job) and later recrosses past the cooldown, it pages again. 6h covers the worst
-      # genuinely-stuck case without re-spamming (the operator's "branch behind" repeat complaint).
+      # RE-NAG (alert_quality_overhaul § Phase 5): a stable dedup_key + cooldown makes notify-slack
+      # suppress the re-page within the window and RE-ARM after it — so a STILL-OPEN lag re-surfaces
+      # on its MTTR clock instead of page-once (the buried-alert-never-acted-on case). 60m matches
+      # the Phase-5 tier for slower-moving promotion lag (the */30 cron makes the effective floor
+      # ~60m). Was 360m (page-once-per-6h) — too long to catch an un-acted lag. A lag-CLEARED bookend
+      # (fire-once on lagging→clear) needs transition state the stateless monitor lacks today — tracked
+      # as an open Phase-5 sub-item.
       dedup_key: promotion-lag
-      cooldown_min: 360
+      cooldown_min: 60
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}

@@ -126,6 +126,23 @@ _FAIL_CONCLUSIONS = {"failure", "startup_failure", "timed_out"}
 # statusCheckRollup conclusions are UPPERCASE. A BLOCKED PR is escalatable as a CI failure
 # ONLY when a required check actually FAILED (not merely pending / a transient staging-lock).
 _FAIL_CONCLUSIONS_UPPER = {"FAILURE", "TIMED_OUT", "STARTUP_FAILURE"}
+
+# ── Re-nag cadence (Phase 5) ───────────────────────────────────────────────────
+# A still-OPEN condition must RE-SURFACE on a cadence matched to its expected MTTR — not
+# page-once (an alert that got buried under newer messages and was never acted on must nag
+# again). The shared carrier (notify-slack.yml) owns the re-fire: each per-condition
+# `dedup_key` is suppressed within `cooldown_min` and RE-ARMS (re-posts) once that elapses
+# AND the watcher still re-detects it. So the deliberately-stateless watcher just emits the
+# CURRENT open set every */15 tick and the carrier paces the re-nag from the GCS ledger (the
+# per-condition last-posted state). SSOT: alert_quality_overhaul_2026_06_18.md § Phase 5.
+RENAG_STUCK_PR_MIN = 20  # wedged promotion PR — fast MTTR, high urgency (operator: 15-20m)
+RENAG_FLEET_FROZEN_MIN = 20  # GitHub Actions billing block freezes ALL CI — same urgency band
+RENAG_WORKFLOW_FAIL_MIN = 60  # a failing workflow / QG-red typically ~1h to fix (operator)
+BOOKEND_COOLDOWN_MIN = 5  # recovered/resolved bookends — distinct key + short cooldown so a
+# closure is never swallowed by an open-condition cooldown
+# A failure older than this is treated as known/abandoned (not re-surfaced) — bounds the
+# stateless current-failing detector the way --fresh-hours bounds the flip detector.
+RENAG_FAIL_WINDOW_HOURS = 6.0
 # A head commit carrying either marker tells GitHub Actions to skip push+pull_request runs for
 # that SHA — so close+reopen never re-fires v2; the recovery must be a workflow_dispatch instead.
 # GitHub's full CI-suppression token set (substring match ANYWHERE in the message — even a
@@ -283,6 +300,71 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                 }
             )
     return transitions
+
+
+def detect_currently_failing(repo: str, branch: str, limit: int, now: _dt.datetime, window_hours: float) -> list[dict]:
+    """Workflows whose LATEST completed run on ``branch`` is a failure, within ``window_hours``.
+
+    Unlike :func:`detect_transitions` (which fires once on the failure→failure FLIP and then
+    goes quiet — the gap that let a buried QG-red alert never re-surface), this reports the
+    CURRENT failing set on EVERY tick so the carrier can RE-NAG a still-red workflow on its
+    ``cooldown_min``. The window bounds re-nagging to live concerns: a failure whose latest run
+    is older than ``window_hours`` is treated as known/abandoned and not re-surfaced (the
+    stateless analogue of ``--fresh-hours`` for the flip detector). Records share the shape of a
+    ``failing`` transition (plus ``age_min``) so :func:`enrich_failure_reasons` and the alert-line
+    builder are reused. Stateless — the carrier's GCS ledger is the per-condition last-posted state.
+    """
+    cutoff = now - _dt.timedelta(hours=window_hours)
+    runs = gh_json(
+        [
+            "run",
+            "list",
+            "--repo",
+            f"{ORG}/{repo}",
+            "--branch",
+            branch,
+            "--limit",
+            str(limit),
+            "--json",
+            "workflowName,conclusion,status,createdAt,url,databaseId,event,headSha",
+        ]
+    )
+    if not isinstance(runs, list):
+        return []
+
+    by_workflow: dict[str, list[dict]] = {}
+    for run in runs:
+        if run.get("status") != "completed":
+            continue  # ignore in-flight runs; only completed runs have a conclusion
+        by_workflow.setdefault(run["workflowName"], []).append(run)
+
+    failing: list[dict] = []
+    for workflow_name, wf_runs in by_workflow.items():
+        wf_runs.sort(key=lambda r: _parse_ts(r["createdAt"]), reverse=True)
+        latest = wf_runs[0]
+        latest_ts = _parse_ts(latest["createdAt"])
+        if latest_ts < cutoff:
+            continue  # latest run too old — known/abandoned, not a live concern to re-nag
+        if latest.get("conclusion") not in _FAIL_CONCLUSIONS:
+            continue  # currently green (or non-failing) — nothing to surface
+        sha = latest.get("headSha") or ""
+        pusher_name, pusher_role = classify_pusher(repo, sha)
+        failing.append(
+            {
+                "kind": "failing",
+                "repo": repo,
+                "branch": branch,
+                "workflow": workflow_name,
+                "conclusion": latest.get("conclusion"),
+                "url": latest.get("url") or "",
+                "run_id": latest.get("databaseId"),
+                "head_sha": sha,
+                "pusher_name": pusher_name,
+                "pusher_role": pusher_role,
+                "age_min": int((now - latest_ts).total_seconds() / 60.0),
+            }
+        )
+    return failing
 
 
 def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[dict]:
@@ -743,7 +825,111 @@ def build_report(
     return (alert or bool(recovered) or bool(resolved)), severity, report
 
 
-def write_github_output(alert: bool, severity: str, report: str) -> None:
+def _wf_slug(name: str) -> str:
+    """Stable, dedup-key-safe slug for a workflow name (lowercase alnum, dashes elsewhere)."""
+    return "".join(c if c.isalnum() else "-" for c in str(name).lower()).strip("-") or "wf"
+
+
+def build_alert_items(
+    currently_failing: list[dict],
+    recovered: list[dict],
+    stuck: list[dict],
+    resolved: list[dict] | None = None,
+    billing: dict | None = None,
+) -> list[dict]:
+    """Per-condition alert items for the carrier's matrix notify (Phase 5 re-nag).
+
+    Each item is ``{key, severity, cooldown_min, message, url}``: ``key`` is the stable
+    ``dedup_key`` the carrier re-arms on, ``cooldown_min`` the severity-scaled re-nag cadence
+    (see the ``RENAG_*`` constants). Pure (no IO) → unit-testable. ``ci-failure-watcher.yml``
+    fans each item to ``notify-slack.yml`` with its own ``dedup_key``+``cooldown_min``, so each
+    open condition re-pages independently on its own MTTR clock and a recovered/resolved bookend
+    fires once on a distinct short-cooldown key. SSOT: alert_quality_overhaul_2026_06_18 § Phase 5.
+    """
+    items: list[dict] = []
+    if billing:
+        # Fleet frozen — ONE unmissable line, fast re-nag (it blocks everything).
+        items.append(
+            {
+                "key": "ci-billing-block",
+                "severity": "CRITICAL",
+                "cooldown_min": RENAG_FLEET_FROZEN_MIN,
+                "url": billing.get("url") or "",
+                "message": (
+                    ":rotating_light: *GitHub Actions BILLING BLOCK — all CI is FROZEN fleet-wide.* "
+                    "Every job fails at 'Set up job' (spending limit / failed payment). "
+                    "FIX: GitHub → Settings → Billing & plans (raise the Actions spending limit). "
+                    f"Evidence: `{billing.get('repo')}` {billing.get('workflow')} <{billing.get('url')}|run>."
+                ),
+            }
+        )
+    for t in currently_failing:
+        line = (
+            f":x: *CI FAILING ({t.get('age_min', 0)}m)* — `{t['repo']}`@`{t['branch']}` "
+            f"{t['workflow']} ({t.get('conclusion')}) <{t.get('url')}|run>  "
+            f"👤 {t.get('pusher_name', '?')} [{t.get('pusher_role', '?')}]"
+        )
+        failed_jobs = t.get("failed_jobs") or []
+        if failed_jobs:
+            line += f"\n      ↳ failed: {', '.join(failed_jobs[:4])}"
+        excerpt = t.get("log_excerpt") or ""
+        if excerpt:
+            line += f"\n      ```{excerpt}```"
+        items.append(
+            {
+                "key": f"ci-fail:{t['repo']}:{t['branch']}:{_wf_slug(t['workflow'])}",
+                "severity": "CRITICAL",
+                "cooldown_min": RENAG_WORKFLOW_FAIL_MIN,
+                "url": t.get("url") or "",
+                "message": line,
+            }
+        )
+    for s in stuck:
+        am = "auto-merge ON" if s.get("auto_merge") else "auto-merge OFF"
+        items.append(
+            {
+                "key": f"stuck-pr:{s['repo']}:{s['number']}",
+                "severity": "CRITICAL",
+                "cooldown_min": RENAG_STUCK_PR_MIN,
+                "url": s.get("url") or "",
+                "message": (
+                    f":hourglass_flowing_sand: *PROMOTION PR STUCK ({s.get('age_min')}m)* — "
+                    f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
+                    f"{s.get('state')}, {am} → <{s.get('url')}|open PR>"
+                ),
+            }
+        )
+    for t in recovered:
+        items.append(
+            {
+                "key": f"ci-recovered:{t['repo']}:{t['branch']}:{_wf_slug(t['workflow'])}",
+                "severity": "INFO",
+                "cooldown_min": BOOKEND_COOLDOWN_MIN,
+                "url": t.get("url") or "",
+                "message": (
+                    f":white_check_mark: *CI RECOVERED* — `{t['repo']}`@`{t['branch']}` "
+                    f"{t['workflow']} <{t.get('url')}|run>"
+                ),
+            }
+        )
+    for r in resolved or []:
+        verb = "merged" if r.get("merged") else "closed"
+        items.append(
+            {
+                "key": f"resolved-pr:{r['repo']}:{r['number']}",
+                "severity": "INFO",
+                "cooldown_min": BOOKEND_COOLDOWN_MIN,
+                "url": r.get("url") or "",
+                "message": (
+                    f":ballot_box_with_check: *PROMOTION PR RESOLVED* — `{r['repo']}` #{r['number']} "
+                    f"{r.get('head')}→{r.get('base')} {verb} <{r.get('url')}|PR>"
+                ),
+            }
+        )
+    return items
+
+
+def write_github_output(alert: bool, severity: str, report: str, alert_items: list[dict] | None = None) -> None:
     out_path = os.environ.get("GITHUB_OUTPUT")
     if not out_path:
         return
@@ -753,6 +939,10 @@ def write_github_output(alert: bool, severity: str, report: str) -> None:
         fh.write("report<<__RPT__\n")
         fh.write(report + "\n")
         fh.write("__RPT__\n")
+        # Per-condition alert items for the matrix notify (Phase 5). Compact single-line JSON
+        # (messages embed \n, which JSON escapes — so the value stays one line). Default '[]'
+        # so the workflow's `alerts != '[]'` guard skips notify when nothing is open.
+        fh.write(f"alerts={json.dumps(alert_items or [], separators=(',', ':'), ensure_ascii=False)}\n")
 
 
 def conflict_prs_to_escalate(stuck: list[dict], already_escalated: set[tuple[str, int]]) -> list[dict]:
@@ -1163,6 +1353,15 @@ def main() -> int:
         "(stateless guard against re-paging ancient dead workflows). Cron is */15m.",
     )
     parser.add_argument(
+        "--fail-window-hours",
+        type=float,
+        default=RENAG_FAIL_WINDOW_HOURS,
+        help="Re-nag (Phase 5): re-surface a workflow whose LATEST run is failing and within this "
+        "many hours, every tick, so the carrier re-pages it on RENAG_WORKFLOW_FAIL_MIN. Wider than "
+        "--fresh-hours (the flip guard) so a persistently-red QG keeps nagging until fixed; bounded "
+        "so an ancient/abandoned failure is not re-surfaced forever.",
+    )
+    parser.add_argument(
         "--resolved-hours",
         type=float,
         default=0.5,
@@ -1202,19 +1401,23 @@ def main() -> int:
     billing = detect_billing_block(repos, now, args.fresh_hours)
 
     transitions: list[dict] = []
+    currently_failing: list[dict] = []
     stuck: list[dict] = []
     resolved: list[dict] = []
     superseded: list[dict] = []
     for repo in repos:
         for branch in WATCHED_BRANCHES:
             transitions.extend(detect_transitions(repo, branch, args.limit, now, args.fresh_hours))
+            # Phase 5: current-failing set (not just flips) so a still-red workflow re-nags.
+            currently_failing.extend(detect_currently_failing(repo, branch, args.limit, now, args.fail_window_hours))
         stuck.extend(detect_stuck_prs(repo, args.stuck_minutes, now))
         if args.resolved_hours > 0:
             resolved.extend(detect_resolved_prs(repo, args.resolved_hours, now))
         if args.close_superseded:
             superseded.extend(detect_superseded_prs(repo))
 
-    enrich_failure_reasons(transitions)  # N1: failed job/step + log excerpt for each failing transition
+    enrich_failure_reasons(transitions)  # N1: failed job/step + log excerpt (consolidated log report)
+    enrich_failure_reasons(currently_failing)  # same reason enrichment for the per-condition re-nag items
 
     # Gate the stuck-PR Slack line on the escalation-dispatched label (alert_quality_audit_2026_06_18):
     # PAGE only stuck PRs not yet handed off — a worker + the server (S4) own an escalated PR's
@@ -1225,7 +1428,12 @@ def main() -> int:
     stuck_to_page = stuck_prs_to_page(stuck, _already_escalated_set(stuck)) if (args.escalate and stuck) else stuck
     alert, severity, report = build_report(transitions, stuck_to_page, resolved, billing)
     print(report)
-    write_github_output(alert, severity, report)
+    # Per-condition items drive the matrix notify (Phase 5 re-nag). The failing items come from
+    # the CURRENT-failing set (re-nag every tick via the carrier cooldown), not the one-shot
+    # flip; recovered/resolved bookends come from the flip/terminal detectors.
+    recovered = [t for t in transitions if t.get("kind") == "recovered"]
+    alert_items = build_alert_items(currently_failing, recovered, stuck_to_page, resolved, billing)
+    write_github_output(alert, severity, report, alert_items)
 
     # Firestore write-through — best-effort; never blocks the watcher on SDK/credential absence.
     gcp_project = os.environ.get("GCP_PROJECT_ID")
