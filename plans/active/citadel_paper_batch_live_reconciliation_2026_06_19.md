@@ -539,3 +539,23 @@ CLAUDE.md "Batch = Live" updated with the canonical-derivation HARD RULE (`unifi
 advisories (`pydantic-settings GHSA-4xgf-cpjx-pc3j`, `ujson CVE-2026-54911`) were failing every repo's pip-audit at
 max-0/max-4 — added both to the sanctioned `--ignore-vuln` block in `base-service.sh` + `base-library.sh` (transitive,
 exploit-surface-nil, mirrored). Also synced the PM `workspace-manifest.json` UTL 0.18→0.19 promotion-lag false-positive.
+
+### 2026-06-19 — P7.1-B/C CLI entrypoints VERIFIED DONE (stale TODO correction) + P7.1-A status
+
+Audited the three P7.1 cron-stage CLI entrypoints (the `paper_week_determinism_scheduler.tf` Stage A/B/C targets) —
+two of the three are ALREADY wired (peer-shipped; the earlier "P7.1-B/C TODO" notes are STALE):
+
+- **P7.1-B (Stage B — BLRS daily determinism) — DONE**: `batch_live_reconciliation_service/cli/handlers/
+  daily_determinism_handler.py` exists + is imported/dispatched in `cli/main.py` (the `--operation reconcile --mode batch`
+  path runs `daily_determinism_stage`).
+- **P7.1-C (Stage C — daily ledger digest) — DONE**: `client_reporting_api/cli/daily_digest_command.py`
+  (`cmd_daily_ledger_digest` → `build_daily_ledger_digest_event` + `post_daily_ledger_digest`) is registered in
+  `cli/main.py` via `_add_daily_ledger_digest_parser` (the `daily-ledger-digest` subcommand).
+- **P7.1-A (Stage A — strategy paper run) — the only genuine remainder, BLOCKED-CREDENTIALS**: `emit_paper_run_ledger`
+  (the engine-result → GCS InstructionLedger + RunManifest bridge) is shipped + tested + now canonical (no `*_of` maps),
+  but no `--operation paper-run --mode paper` ServiceCLI handler wires Group B's data-loading → `emit_paper_run_ledger`
+  yet. The data-loading orchestration (real GroupBTickInput stream + strategy definition/subscription) is the
+  credential-gated runtime piece — a 7-day paper soak needs real wallet/strategy credentials AND the operator to set
+  `paper_determinism_enabled = true` in TF (both operator-gated per the plan). The credential-free machinery
+  (`emit_paper_run_ledger` + `write_paper_run` + the ε=0 proof) is complete; Stage A's CLI handler + the soak are the
+  BLOCKED-CREDENTIALS remainder.
