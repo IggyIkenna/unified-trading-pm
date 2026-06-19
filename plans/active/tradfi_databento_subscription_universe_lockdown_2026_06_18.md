@@ -90,6 +90,24 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
       uncovered dates. This is an **instruments-service catalog-coverage gap, NOT an MTDS/OHLCV wiring gap** (the download
       path is correct on every covered date). The detached backfill writes every covered date + honestly skips the rest.
       Repo: market-tick-data-service.
+- [x] ✅ [DATA] P1. Backfill **DBEQ.BASIC equities** (NASDAQ + NYSE → `DBEQ.BASIC`) — instrument DEFINITIONS + OHLCV
+      1m+1s — now that the operator ACTIVATED the equities subscription (2026-06-19; was BLOCKED-OPERATOR). DBEQ.BASIC
+      equity fetch PROVEN end-to-end: IS `--operation instruments --venues NASDAQ` fetches 268 equity/ETF symbols + IBIT/
+      ETHA from `DBEQ.BASIC` (DBEQ.BASIC returned ~251–265 instruments; 41 NASDAQ active after date filter, written to
+      per-VM shard `dbeq-equities-defs-slot6.parquet`); MTDS `--operation download --venues NASDAQ --data-types ohlcv_1m`
+      wrote **28,110 rows across 43 NASDAQ equity instruments** (2026-06-17), canonical GCS
+      `pipeline_mode=batch_massive/asset_group=tradfi/venue=NASDAQ/instrument_type=equity/data_type=ohlcv_1m/` (41 parquet
+      files verified in GCS). **Source-provenance is CORRECT, not a bug**: `SOURCE_PRIORITY[("tradfi","ohlcv_1m")] =
+      ["massive","databento"]` → 1m stamps `batch_massive` (Massive is the 1m primary, Massive flat-files serve 1m);
+      `SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]` → 1s stamps `batch_databento`/`source=databento` (Databento
+      is 1s-exclusive). Detached full-horizon backfills running (`VM_NAME=dbeq-equities-{defs,ohlcv}-slot6`, per-VM shard
+      isolation, disjoint from gap-fill agent af95b962 + CFE agent acc0e591): IS defs `/tmp/dbeq_is_defs_backfill.sh`
+      (NASDAQ+NYSE, 2010→2026, clips to IS-catalog launch ≥2023-04-15); MTDS OHLCV `/tmp/dbeq_ohlcv_backfill.sh` (1m then
+      1s, both venues, 2023→2026). 1m equities largely pre-captured (Massive) → backfill verify-skips them; the genuinely
+      NEW data is the 1s (databento) leg. Same IS-catalog historical-coverage caveat as CME (detached backfill covers what
+      the catalog enumerates; deeper historical IS-catalog backfill is the `[ ] [IS] P1` item below). DBEQ.BASIC-only — no
+      CFE/CME re-fetch. Provenance: 2026-06-19 equities-activation dispatch. Repo: instruments-service +
+      market-tick-data-service.
 - [ ] [IS] P1. **Backfill the instruments-service CME (GLBX.MDP3) catalog for the full 2019-01-01→present horizon** so the
       tradfi OHLCV download has a per-date instrument universe to fetch. Today the catalog only covers a sparse recent
       window → the ohlcv_1m/1s backfill writes 0 rows / "no active venues" for ~all historical dates and several recent
