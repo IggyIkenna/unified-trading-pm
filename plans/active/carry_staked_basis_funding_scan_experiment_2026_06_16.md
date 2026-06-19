@@ -1170,3 +1170,26 @@ is the validated foundation + a runnable paper path TODAY.
       granted)
 - [ ] [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
       **Repo: deployment-service.** (perm granted)
+
+## Basis archetypes split + LIVE venue/coin coverage gap (operator 2026-06-18)
+
+**Dated basis fixed + basis split into TWO archetypes (e2e@5ba85b8):** `spot_perp_basis` (delta-neutral long-spot/
+short-PERP = the funding capture; perp basis ~= 0, realised as funding) vs `dated_basis` (delta-neutral long-spot/
+short-QUARTERLY-future = cash-and-carry, annualised basis CONVERGES at expiry — live BTC +3.8% / ETH +6.4%/yr). The v1
+conflated them on perps (where basis ~= 0). Now separate in the individual output, ensemble, and per-venue/liquidation.
+
+**HONEST coverage gap (operator: "we're missing loads of venues and coins vs backtest for live; did we evaluate all"):
+NO — we did not evaluate all venue x coin, and the LIVE ensemble is narrower than even the backtest.**
+
+- Backtest: Binance DEEP (30 survivors), Bybit/OKX MAJORS-only, Aster 14 coins live, HL full-230 (-> momentum, excluded
+  from reversion), Deribit too-few-perps. NOT exhaustive (no full per-venue universe except HL).
+- Live ensemble (current): **Binance-only, 30 survivors** (+ Bybit/Drift for staked-basis). Doesn't span the arbitraged
+  venues the reversion was confirmed on, nor the broad coin set.
+
+- [ ] [STRATEGY] P1. Expand the LIVE ensemble to MULTI-VENUE x BROAD universe: bulk live snapshots per venue (Binance
+      premiumIndex, Bybit /v5/market/tickers, Aster fapi — all return funding+mark in one call; OKX funding is
+      per-inst), run dispersion + spot_perp_basis per venue on each venue's top-volume liquid universe (not just 30
+      survivors), keep dated_basis (Binance quarterly) + staked_basis (Bybit/Drift). Per-venue balances + liquidation
+      already generalise. **Repo: e2e-testing.** (the venues/coins gap)
+- [ ] [STRATEGY] P1. Backtest-coverage completion: evaluate the full per-venue universe on Bybit/OKX/Aster (not just
+      majors) so live coverage is backed by backtest evidence per venue x coin. **Repo: e2e-testing.**

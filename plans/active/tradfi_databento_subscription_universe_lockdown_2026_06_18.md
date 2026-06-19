@@ -81,19 +81,32 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 
 ## Phase 2 — prune the instrument universe to the 3 datasets
 
-- [ ] [UAC] P0. Drop ICE-only instruments from `registry/tradfi_instrument_universe.py`: Brent (`BRN`), Gasoil (`G`),
+- [x] ✅ [UAC] P0. Drop ICE-only instruments from `registry/tradfi_instrument_universe.py`: Brent (`BRN`), Gasoil (`G`),
       ICE Dollar Index (`DX`), softs (`CT`/`CC`/`KC`/`SB`/`OJ`) — and remove `IFEU.IMPACT` / `IFUS.IMPACT` datasets.
-      Repo: unified-api-contracts.
-- [ ] [UAC] P0. Consolidate equity ETFs/stocks onto `DBEQ.BASIC` (currently ETFs on `XNAS.ITCH`); drop the per-venue
-      equity datasets. Repo: unified-api-contracts.
-- [ ] [UAC] P0. Wire `CFE` dataset + VX (VIX) futures instruments into `tradfi_instrument_universe.py` and the live-ws
+      Repo: unified-api-contracts. — **uac@6790981**: `_ICE_FUTURES`/`_ICE_US_FUTURES` lists deleted + dropped codes
+      removed from `EXCHANGE_CODE_TO_NAME`; `get_required_datasets()` now returns exactly `{GLBX.MDP3, DBEQ.BASIC, CFE}`.
+- [x] ✅ [UAC] P0. Consolidate equity ETFs/stocks onto `DBEQ.BASIC` (currently ETFs on `XNAS.ITCH`); drop the per-venue
+      equity datasets. Repo: unified-api-contracts. — **uac@6790981**: `_BTC_SPOT_ETFS`/`_ETH_SPOT_ETFS` (IBIT/ETHA)
+      moved `XNAS.ITCH` → `DBEQ.BASIC`; **mtds@d3590c2**: live-ws `_VENUE_TO_DATASET` NYSE+NASDAQ → `DBEQ.BASIC`
+      (per-venue XNYS/XNAS/XCBO/ARCX/BATS feeds dropped).
+- [x] ✅ [UAC] P0. Wire `CFE` dataset + VX (VIX) futures instruments into `tradfi_instrument_universe.py` and the live-ws
       venue→dataset map (`live/connectors/databento_tradfi_ws.py`, currently `IFEU.IMPACT`/per-venue equities). Repo:
-      market-tick-data-service + unified-api-contracts.
-- [ ] [UAC] P1. Remove `ICE` from `VENUES_BY_ASSET_GROUP["tradfi"]`; add a `CFE`/Cboe venue if VX futures need a
-      distinct venue token. Repo: unified-api-contracts.
-- [ ] [UAC] P1. Verify the CME event contracts (`EC*` series: ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) in
+      market-tick-data-service + unified-api-contracts. — **uac@6790981** (`_CFE_FUTURES` VX.FUT on CFE/CBOE) +
+      **uac@9fb2c33** (corrected `tradfi_symbology` `DATABENTO_VALID_PARENT_SYMBOLS` + `tradfi_roots.DATASET_CBOE_CFE`
+      VX dataset `XCBF.*` → `CFE`, since XCBF is out of the allowlist) + **mtds@d3590c2** (live-ws `CBOE` → `CFE`).
+- [x] ✅ [UAC] P1. Remove `ICE` from `VENUES_BY_ASSET_GROUP["tradfi"]`; add a `CFE`/Cboe venue if VX futures need a
+      distinct venue token. Repo: unified-api-contracts. — **DIAGNOSED: ICE KEPT (uac@6790981)**. The ICE Databento
+      *datasets* (IFEU/IFUS) are dropped, but `ICE` STAYS a tradfi venue because the ICE/NYBOT US Dollar Index (`DXY`)
+      is still Yahoo-sourced under venue `ICE` (non-Databento) and the market-session / data-status / source-resolution
+      registries + tests key off it (removing it breaks `data_source_continuity` + DXY source-resolution, which the
+      dispatch explicitly forbade touching). VX uses the existing `CBOE` venue token (no new venue needed; CFE is the
+      Databento *dataset*, CBOE the canonical venue). Plan-intent (remove ICE *Databento* exposure) is fully met.
+- [x] ✅ [UAC] P1. Verify the CME event contracts (`EC*` series: ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) in
       `tradfi_instrument_universe.py` survive the prune, stay on `GLBX.MDP3`, and are tagged `event_contract` (not bare
-      `option`) so the validity matrix admits `{trades, ohlcv_1s, tbbo}`. Repo: unified-api-contracts.
+      `option`) so the validity matrix admits `{trades, ohlcv_1s, tbbo}`. Repo: unified-api-contracts. — **VERIFIED
+      (uac@6790981)**: all 9 EC* contracts in `_CME_EVENT_CONTRACTS` survive untouched on `GLBX.MDP3`; `event_contract`
+      classification is by-symbol at normalize time (`external/databento/normalize._is_cme_event_contract_symbol`), so
+      the static `instrument_type="OPTION"` def is correct — the runtime classifier tags them event_contract.
 
 ## Phase 3 — enforcement + tests + codex alignment
 
