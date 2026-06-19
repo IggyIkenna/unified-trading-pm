@@ -470,6 +470,19 @@ unchanged:
 - No `FUNCTION_SIZE_EXTRA_EXCLUDES` glob hides an oversized file (every exclude removed or justified in-file).
 - Budgets only ratcheted DOWN; a bump is review-blocking (enforce in the PR template / reviewer checklist).
 
+## deployment-api — remaining 5 (added 2026-06-19)
+
+- [ ] [INFRA] P2. **Drive deployment-api codex violations 5 → 0.** Ratcheted **6→5** on 2026-06-19 (cleared the
+      deep-UAC-import in `utils/pipeline_mode_paths.py` → facade `from unified_api_contracts import Mode`). Remaining 5,
+      all pre-existing/foreign (surfaced when the version-alignment lag unblocked the QG during the dep-order-surface
+      ship): (1) **imports-inside-functions** (`firebase_auth.py`, `health_routes.py`, `workers/deployment_processor.py`
+      — some are deliberate lazy/circular-avoidance; triage each); (2) **direct cloud-SDK imports**
+      (`from google.cloud import …` in firebase_auth / health_routes — route through
+      `unified_trading_library.cloud_interface` `get_storage_client`/`get_secret_client`); (3) **files >900 lines**;
+      (4) **function/method size** (~24 over the limit, e.g. `deployment_manager.run_deployment_background` 155L,
+      `services/deploy_missing_launch.launch_deploy_missing_vm` 236L). Ratchet `CODEX_MAX_VIOLATIONS` down as each
+      clears. Repo: deployment-api. Provenance: 2026-06-19 operator review.
+
 ## Codex SSOT updates
 
 - `codex/06-coding-standards/quality-gates.md` § "CODEX_MAX_VIOLATIONS is a ratchet-down, ≤5 ceiling" + the file-size /
