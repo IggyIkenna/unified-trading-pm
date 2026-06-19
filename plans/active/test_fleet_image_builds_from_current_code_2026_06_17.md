@@ -234,17 +234,22 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       deployment-api project (live on `unified-trading-codebuild-role`'s `codebuild-permissions` inline policy — note
       the live policy name differs from the TF's `unified-trading-codebuild-policy`), and (b) a comment marking
       `deployment-ui` as a dispatch-only entry (no standalone image). Repo: deployment-service.
-- [ ] [INFRA] P3. **Pre-existing blocker (not mine): deployment-service quickmerge is gated by a UAC dep-floor drift**
-      (`unified-api-contracts` local `0.21.0` < remote main `0.22.0`) — `quality-gates.sh` version-alignment BLOCKS until
-      `pyproject.toml` floor + `uv.lock` are bumped to `0.22.0` (run-version-alignment.sh --fix from the workspace root).
-      Surfaced while shipping the TF doc above. Repo: deployment-service.
-- [ ] [INFRA] P3. **DECISION: should `unified-api-contracts` build on AWS?** GCP builds the UAC wheel on LDR + publishes
-      to the AR Python index (baked into the UTL base image). On AWS there is **no CodeArtifact domain**, so AWS service
-      images get UAC from the GCP-AR base image (cross-cloud `FROM`) + an in-build source clone — no published AWS wheel
-      is consumed, and the canonical buildspec's CodeArtifact publish step is a no-op (`$CODEARTIFACT_DOMAIN` unset). UAC
-      *has* a `buildspec.aws.yaml`, so a project is one command away, but it would build a wheel with nowhere to publish.
-      To genuinely match GCP, first stand up AWS CodeArtifact (`unified-libraries` repo) + wire the lib-publish/consume
-      path, THEN add UAC (+ other libs) on LDR. Otherwise leave UAC AWS-absent by design. Repo: deployment-service.
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **deployment-service version-alignment drift RESOLVED.** Two layers: (1) the
+      local `uv.lock` had stale internal path-dep versions (UAC `0.19.0`, UTL `0.13.0`) → `uv lock` regen picked up the
+      clones' `0.22.0`/`0.14.0`; (2) the REAL blocker was a **systemic PM-LDR manifest lag** — the workspace-manifest was
+      `0.14.0` on PM `main` but `0.13.0` on PM `live-defi-rollout`, and the version-alignment gate compares local-clone
+      manifest vs main. Resolved by triggering `main-backmerge-to-ldr.yml` (PM) → LDR manifest caught up to `0.14.0` →
+      FF-pull → QG green. (This gate blocks ALL deployment-service quickmerges when the manifest lags; the hourly
+      backmerge cron normally sweeps it.) Lock shipped: deployment-service quickmerge.
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **UAC now builds + publishes on AWS, matching GCP.** Stood up AWS **CodeArtifact**
+      domain `unified-trading` + repo `unified-libraries` (the AWS analogue of GCP's AR python index), granted the
+      `codeartifact:*` publish perms to `unified-trading-codebuild-role`, created the **`unified-api-contracts` CodeBuild
+      project on `live-defi-rollout`** (matching GCP's UAC LDR trigger → AWS now has the same 3 LDR-firing builds: UTL +
+      UAC + mtds), and rewrote UAC's `buildspec.aws.yaml` to build the wheel + publish to CodeArtifact (env-var twine
+      upload). Fixed 5 latent buildspec bugs (the repo had never built on AWS): stale `github-pat:token` secret ref
+      (JSON-parsed a plain string), no `uv` install, missing `--system`, a bare `ruff --line-length` that ignored the
+      repo config, and the twine-6.x `.pypirc` incompatibility. TF documents UAC + the CodeArtifact resources +
+      `CodeArtifactPublish` IAM. Repos: unified-api-contracts + deployment-service.
 - [x] ✅ [INFRA] P3. AUDIT DONE 2026-06-19 — AWS↔GCP trigger parity diffed (see banner above). `harsh-worker` read
       perms confirmed working; the prior `BLOCKED-CREDENTIALS` ListProjects block is stale/lifted.
 
