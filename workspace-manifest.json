@@ -79,7 +79,7 @@
     "market-tick-data-service": "0.19.0",
     "system-integration-tests": "0.12.0",
     "unified-api-contracts": "0.22.0",
-    "unified-trading-library": "0.18.0",
+    "unified-trading-library": "0.19.0",
     "unified-trading-pm": "1.2.182",
     "market-data-processing-service": "0.10.0",
     "e2e-testing": "0.7.0",
@@ -284,7 +284,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL \u2014 no-service-to-service-deps HARD RULE).",
-      "ci_status": "FAILING",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1141,7 +1141,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1796,7 +1796,6 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
     "deployment-api": "0.21.0",
-    "unified-trading-library": "0.19.0",
     "client-reporting-api": "0.11.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1822,11 +1821,6 @@
       "sha": "0f2633e79cb594287f263c50034530d00d3b720a",
       "version": "0.21.0"
     },
-    "unified-trading-library": {
-      "version": "0.19.0",
-      "sha": "055c9458a571999303bed577dab8e7a0de43d7c2",
-      "branch": "staging"
-    },
     "client-reporting-api": {
       "version": "0.11.0",
       "sha": "71f7fcb04cd626677ca0e36764db5b73f033bb1c",
@@ -1836,6 +1830,16 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-19T22:26:43.035502Z",
+        "commits": {
+          "unified-trading-library": {
+            "version": "0.19.0",
+            "sha": "055c9458a571999303bed577dab8e7a0de43d7c2",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-19T20:47:42.528008Z",
         "commits": {
@@ -1895,36 +1899,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-19T14:49:18.239052Z",
-        "commits": {
-          "market-data-processing-service": {
-            "version": "0.10.0",
-            "sha": "28461e4b0497c8395f30c318d919fa22d179ebca",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.16.0",
-            "sha": "31f972e2306704e481fe29f2d016e769baa5f401",
-            "branch": "staging"
-          },
-          "market-tick-data-service": {
-            "version": "0.19.0",
-            "sha": "b845f3a1ee8063154733e67f31b1c2cf7f970396",
-            "branch": "staging"
-          },
-          "unified-trading-library": {
-            "version": "0.14.0",
-            "sha": "4d84b2c9c6162d32f08e7c01c62efab1713e2956",
-            "branch": "staging"
-          },
-          "batch-live-reconciliation-service": {
-            "version": "0.9.0",
-            "sha": "697197a8a9e5aec7e21510e98fb4377174cb4679",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1939,8 +1913,6 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {
-    "unified-trading-library": 2
-  },
+  "promotion_failures": {},
   "promotion_quarantine": {}
 }
