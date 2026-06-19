@@ -1,13 +1,14 @@
 ---
 title: "Backfill VMs silently stall — dead worker masked by independent heartbeat sidecar; missing per-shard wall-clock watchdog + bounded HTTP/RPC timeouts"
 created: 2026-06-19
-author: "ikennaigboaka [slot-0·human-planning]"
 parent_epic: infrastructure_master
 source:
   - "vm-logs/sfi-backfill-chunk-2of4-20260619-161036/run.log (froze 3h25m after 1 date)"
   - "vm-logs/mtds-gas-fees-20260619-151404/run.log (froze ~1h48m mid-POLYGON sampling)"
   - "instruments-service@729fbdb (SFI ClientTimeout fix)"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
