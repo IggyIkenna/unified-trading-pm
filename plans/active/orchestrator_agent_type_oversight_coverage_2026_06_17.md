@@ -102,13 +102,13 @@ PM-repo conflict notes).
 
 **Decided division — Option B (health = cheap frequent radar; reconciler = daily fixer that consumes it):**
 
-- [ ] [ORCHESTRATOR] P1. **Route `doc_drift` → operator** (governance-doc edits are human-owned — the reconciler
+- [x] ✅ [ORCHESTRATOR] P1. **Route `doc_drift` → operator** (governance-doc edits are human-owned — the reconciler
       deliberately only flags them). In `plan_health.record_result`, when `doc_drift` is non-empty, (a) **Slack-page**
       it, DEDUPED by `(doc, contradicted_by, claim)` so the recurring tab-branch drift pages once, not every run, and
       (b) upsert a **single standing surface** (one issue doc, e.g. `plans/active/issues/governance_doc_drift.md`, or a
       standing todo) that persists until resolved — so re-detection updates the same entry instead of re-alerting. Repo:
       agent-orchestrator (`server/plan_health.py` + `notifications/slack.py`).
-- [ ] [ORCHESTRATOR] P1. **Route `contradictions` → the reconciler** (it already verifies + flips/banners these). The
+- [x] ✅ [ORCHESTRATOR] P1. **Route `contradictions` → the reconciler** (it already verifies + flips/banners these). The
       daily plan-reconciler INGESTS the latest plan-health `contradictions` as its STEP-3b candidate list (read the most
       recent `plan_health_result` for the contradiction half) — verify against code, then flip/banner/file — rather than
       re-deriving from scratch. Repo: agent-orchestrator (`server/plan_health.py` reconcile path +
@@ -518,3 +518,29 @@ ingestion (code in `plan_health.record_result` — today writes only the generic
 Phase 2 P3 plan-health hygiene-pulse (optional); Phase 4 full per-role render + regression spec (Wave 6, **AO dashboard
 gate is Vitest + tsc + build smoke — NO playwright, the dashboard has no pw harness**); Phase 5 live smoke (Wave 9);
 Phase 6 unified AgentKeeper (whole phase); Phase 7 dead-session dirty-dep self-heal.
+
+### Wave 2 — Phase 2 finding-routing (2026-06-19, slot-2)
+
+The contradictions→reconciler candidate feed was already emitted; the genuine gap was doc_drift dedup + the reconciler
+ingestion note. Shipped:
+
+- **`doc_drift` → operator, DEDUPED + persisted** — agent-orchestrator@568b83d. `plan_health.record_result` now pages
+  the operator ONLY on a NEW `(doc, contradicted_by, claim)` key via a persisted seen-set (`server/dedup_state.py`,
+  modelled on `ci_reconcile.load/save_etag_cache`, under `STATE_DIR/plan_health_doc_drift_alerted.json`). The recurring
+  tab-branch drift that paged on 3 consecutive runs now pages ONCE and re-arms when it clears — the persisted set IS the
+  "standing surface that persists until resolved" + survives a central-VM restart. Contradictions NO LONGER page the
+  operator (they route to the reconciler). A `doc_drift_open` activity event per new key gives the dashboard a standing
+  doc-drift feed. Tests: `test_record_result_doc_drift_dedupes_across_runs`,
+  `_contradictions_only_does_not_page_operator`, `_resolved_doc_drift_rearms`, `_emits_doc_drift_open_for_new_key` +
+  `tests/test_dedup_state.py` (7 cases).
+- **`contradictions` → reconciler** — server already emits `reconciler_candidate` events (deduped per run);
+  `agents/plan-reconciler.md` STEP 3 now names that candidate feed as its prioritisation shortlist (verify-then-flip,
+  re-derive if stale). agent-orchestrator@568b83d.
+- **config default → live** — agent-orchestrator@611d4c1 (mock is opt-in for tests/UI-demo; the mock-mode open
+  decision, batched into this QG).
+- `server/dedup_state.py` is the reusable persisted-dedup helper Wave 7 (alert-quality) will reuse for the in-memory
+  `_alerted` flags.
+
+QG green (717 passed, dashboard tsc+vitest); shipped via quickmerge (two units). **Still OPEN (this plan):** Phase 2 P3
+plan-health hygiene-pulse (optional → Wave 8); Phase 4 UI; Phase 5 live smoke; Phase 6 unified AgentKeeper; Phase 7
+self-heal.
