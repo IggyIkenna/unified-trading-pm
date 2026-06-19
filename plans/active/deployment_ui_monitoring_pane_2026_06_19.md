@@ -142,6 +142,11 @@ status than what gates promotions.
       popover on every card** (the role/what-it-says explanation) and **severity/A–Z/tier sort controls**. Cleared a
       pre-existing deployment-api deep-UAC-import en route (facade `from unified_api_contracts import Mode`; ratcheted
       `CODEX_MAX_VIOLATIONS` 6→5). Provenance: 2026-06-19 operator review.
+- [x] ✅ [UI] P2. **Per-column `?` help on every Repo-CI table column** (operator request 2026-06-19). Every header
+      (Repo · LDR · staging · main · last green (main) · LDR→main delta · SIT · PRs · Image) carries a click-to-open
+      `?` popover explaining what the column represents — reuses the `HelpPopover` primitive; right-edge columns drop
+      the popover inward so it doesn't run off the table. **DONE — deployment-ui@62b4fed | pw:L2 ✓ (repos-tab 28) |
+      regression: tests/smoke/repos-tab.spec.ts** ("every table column carries a ? help popover").
 - [ ] [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the committed
       `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed manifest's
       `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}` Firestore
