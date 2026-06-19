@@ -83,10 +83,11 @@ are identified (2) and the ledger exists (3).
       (the `Σ delta GROUP BY (account, asset, venue, instrument)` derived view; per-venue/instrument/share_class
       balance + realised/unrealised PnL) in `canonical/crosscutting/ledger/_position_ledger.py`, `ledger_type=position`
       partition, exported root + crosscutting + ledger facades.
-- [x] ✅ [SCHEMA] P0.3. **Per-trade key + recon report** — `unified-api-contracts@12597d8`: `make_trade_key(
-      instrument_key, strategy_instruction_id, tick_timestamp)` (deterministic, UTC-normalised) + `TradeFillRecord`
-      (the keyed per-trade fill carrying correlation_id/client_order_id) + `TradeDeviation` + `WeeklyReconReport`
-      (DETERMINISM/EXECUTION/COMPOSITE verdicts + `DeterminismBugClass`). `LedgerRow.trade_id` carries the key.
+- [x] ✅ [SCHEMA] P0.3. **Per-trade key + recon report** — `unified-api-contracts@12597d8`:
+      `make_trade_key(     instrument_key, strategy_instruction_id, tick_timestamp)` (deterministic, UTC-normalised) +
+      `TradeFillRecord` (the keyed per-trade fill carrying correlation_id/client_order_id) + `TradeDeviation` +
+      `WeeklyReconReport` (DETERMINISM/EXECUTION/COMPOSITE verdicts + `DeterminismBugClass`). `LedgerRow.trade_id`
+      carries the key.
 
 ## Phase 1 — Unify the fill model (G1, the core fix)
 
@@ -95,24 +96,33 @@ are identified (2) and the ledger exists (3).
       import or a shared UAC fill-mode SSOT). Repo: strategy-service + execution-service + unified-api-contracts.
       **PARTIAL (2026-06-19)**: ✅ UAC pricing SSOT shipped (`unified-api-contracts@bc4c756` —
       `internal/architecture_v2/benchmark_fill_pricing.py`: `benchmark_fill_price()` + `DEFAULT_BENCHMARK_PRICING_FNS`,
-      7 modes, 7 tests). ✅ execution-service rewired to a thin adapter over it (`execution-service@e11854e5` — duplicate
-      primitives deleted). ⏳ **REMAINING — strategy-service `BenchmarkFillEngine` rewiring is a BEHAVIOURAL CORRECTION,
-      not a mechanical lift**: it computes `PASSIVE_BBO` OPPOSITELY to the UAC SSOT (`_resolve_trade_benchmark:133` maps
-      LONG→ask / SHORT→bid; UAC maps buy→bid / sell→ask — correct passive-maker semantics is buy@bid/sell@ask, so the
-      strategy-service convention is mislabeled, taking the far touch). This is a **concrete instance of the paper-sim ≠
-      batch-sim drift the operator named**. Correcting it changes historical backtest fill prices, so it MUST land with
-      the Phase 4 `reconcile_week` harness validating paper≡batch afterward (do NOT rush it). The strategy-service
-      engine also operates on a typed `MarketStateSnapshot` (raw TWAP/VWAP windows + None-fallbacks + ATOMIC per-leg)
-      vs the UAC flat-dict ctx — the rewiring builds the ctx from the snapshot (pre-computing twap/vwap) then calls
-      `benchmark_fill_price`, preserving the ARRIVAL_MID fallbacks. Until then P1.1 is NOT flipped.
-- [ ] [CODE] P1.2. **Paper uses `BenchmarkFillEngine`, NOT `PaperMatchingEngine` real-AMM** — the colocated_engine
-      benchmark provider routes through the SAME engine batch uses; paper IS "batch forward on the live feed". Delete
-      the divergent paper-AMM fill path (no parallel old+new). Repo: strategy-service + execution-service.
+      7 modes, 7 tests). ✅ execution-service rewired to a thin adapter over it (`execution-service@e11854e5` —
+      duplicate primitives deleted). ⏳ **REMAINING — strategy-service `BenchmarkFillEngine` rewiring is a BEHAVIOURAL
+      CORRECTION, not a mechanical lift**: it computes `PASSIVE_BBO` OPPOSITELY to the UAC SSOT
+      (`_resolve_trade_benchmark:133` maps LONG→ask / SHORT→bid; UAC maps buy→bid / sell→ask — correct passive-maker
+      semantics is buy@bid/sell@ask, so the strategy-service convention is mislabeled, taking the far touch). This is a
+      **concrete instance of the paper-sim ≠ batch-sim drift the operator named**. Correcting it changes historical
+      backtest fill prices, so it MUST land with the Phase 4 `reconcile_week` harness validating paper≡batch afterward
+      (do NOT rush it). The strategy-service engine also operates on a typed `MarketStateSnapshot` (raw TWAP/VWAP
+      windows + None-fallbacks + ATOMIC per-leg) vs the UAC flat-dict ctx — the rewiring builds the ctx from the
+      snapshot (pre-computing twap/vwap) then calls `benchmark_fill_price`, preserving the ARRIVAL_MID fallbacks. Until
+      then P1.1 is NOT flipped.
+- [ ] [CODE] P1.2. **Batch runs the SAME execution-service smart matching as paper** (REVERSED 2026-06-19 per operator —
+      the prior "paper drops to BenchmarkFillEngine" framing was backwards). Paper correctly books smart-matched fills
+      via `PaperMatchingEngine` (execution-service, fidelity-bounded by OHLCV→BBO→depth→trades→MBO); the gap is that
+      batch (`GroupBRunner`) stops at the benchmark and does NOT run the Group C smart matching → batch ≠ paper. Make
+      batch run the SAME execution-service matching on the SAME data so paper≡batch. Do NOT remove paper's matching.
+      Folds into P1.4. Repo: strategy-service (Group B → Group C handoff) + execution-service.
 - [ ] [CODE] P1.3. **Retire the APY-haircut shortcut** — `run_2yr_config_grid_backtest.py` must run the real
       `GroupBRunner` + `GCSFeatureProvider` on real GCS data (not synthetic LCG features + `slippage_cap_bps*4/365`); a
-      "backtest of a real week" replays real parquets. Repo: strategy-service.
-- [ ] [CODE] P1.4. **Complete `GroupCRunner` Phase 4** — measure execution alpha for SWAP/LEND/STAKE/ATOMIC, not only
-      TRADE (so the live↔paper leg covers every action). Repo: execution-service.
+      "backtest of a real week" replays real parquets. (The haircut is neither the benchmark nor the smart matching — a
+      crude third thing to delete.) Repo: strategy-service.
+- [ ] [CODE] P1.4. **Complete `GroupCRunner` — THE LINCHPIN** (elevated 2026-06-19). Group C is execution-service's
+      smart matching measured against the benchmark (`execution alpha = smart_fill − benchmark`). Completing it for
+      every action (SWAP/LEND/STAKE/ATOMIC, not only TRADE) is what gives BATCH the same smart-matching layer paper
+      already has → the determinism leg (paper≡batch) and the execution-alpha leg (live−benchmark) both become
+      measurable. Realism is bounded by market-data fidelity (OHLCV→BBO→L2 depth→trades→L3 MBO); where only OHLCV
+      exists, smart matching ≈ benchmark (candle close). Repo: execution-service.
 - [x] ✅ [DOC] P1.5. **Codify the two-fill-realities HARD RULE** — DONE (`unified-trading-pm@2673bf04a`): the rule lives
       in CLAUDE.md § "Batch = Live" ("Two fill realities only: canonical-sim … + real-venue … — a third fill model on
       the batch/paper path is review-blocking") AND the codex SSOT §4.2 design rule (lines 174–176). The `FillModel`
@@ -169,9 +179,9 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 7 — The 19→26 operator dry-run (runs to completion)
 
-- [ ] [INFRA] P2.7.1. **Paper week** — run a promoted strategy (or the funding/basis ensemble) in `colocated_engine` paper
-      with the benchmark fill model over a real week, writing the 4 ledgers + the `RunManifest`. Daily Slack digest.
-      Repo: deployment-service (VM) + strategy-service.
+- [ ] [INFRA] P2.7.1. **Paper week** — run a promoted strategy (or the funding/basis ensemble) in `colocated_engine`
+      paper with the benchmark fill model over a real week, writing the 4 ledgers + the `RunManifest`. Daily Slack
+      digest. Repo: deployment-service (VM) + strategy-service.
 - [ ] [INFRA] P2.7.2. **T+7 batch rerun + `reconcile_week`** — rerun batch over the SAME pinned snapshot; produce the
       determinism verdict. **Target: ε=0.** Any diff STOPS + is diagnosed (one of the three bug classes). Repo:
       batch-live-reconciliation-service.
@@ -204,18 +214,20 @@ are identified (2) and the ledger exists (3).
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
 `unified-api-contracts@12597d8` (UAC QG green, 20 unit tests). The foundation contract every later phase builds on:
-`RunManifest` (as-of snapshot pin) · `make_trade_key` (deterministic match key) · `TradeFillRecord` · `WeeklyReconReport`
-+ `TradeDeviation` · `TradingMode`/`FillModel`/`ReconVerdictType`/`DeterminismBugClass` StrEnums · `PositionLedgerRow`
-(derived as-if-filled view). `FillModel` encodes the two-fill-realities rule (BENCHMARK=batch+paper, LIVE_VENUE=live).
-Additive surface → no SIT cascade. Recon types live in `internal/reconciliation.py`; `PositionLedgerRow` in the ledger
-package (root-exposed).
+`RunManifest` (as-of snapshot pin) · `make_trade_key` (deterministic match key) · `TradeFillRecord` ·
+`WeeklyReconReport`
+
+- `TradeDeviation` · `TradingMode`/`FillModel`/`ReconVerdictType`/`DeterminismBugClass` StrEnums · `PositionLedgerRow`
+  (derived as-if-filled view). `FillModel` encodes the two-fill-realities rule (BENCHMARK=batch+paper, LIVE_VENUE=live).
+  Additive surface → no SIT cascade. Recon types live in `internal/reconciliation.py`; `PositionLedgerRow` in the ledger
+  package (root-exposed).
 
 **Next — Phase 1 (the core fix): unify the fill model.** Both `BenchmarkFillEngine` (strategy-service) and the
 execution-service `BenchmarkFillRegistry` already share the UAC `BenchmarkFillMode` enum, but duplicate the per-mode
 pricing primitives (twap/vwap/arrival_mid/pool_mid_at_block/passive_bbo/funding_snapshot). Plan: lift the pricing
 primitives to a single UAC SSOT both engines call (no drift), route the colocated_engine paper provider through
-`BenchmarkFillEngine` (not `PaperMatchingEngine` real-AMM), and retire the `run_2yr_config_grid_backtest.py`
-APY-haircut shortcut in favour of the real `GroupBRunner` + `GCSFeatureProvider` path.
+`BenchmarkFillEngine` (not `PaperMatchingEngine` real-AMM), and retire the `run_2yr_config_grid_backtest.py` APY-haircut
+shortcut in favour of the real `GroupBRunner` + `GCSFeatureProvider` path.
 
 ### 2026-06-19 — Phase 1 P1.1 PARTIAL + a real drift finding
 
@@ -224,8 +236,8 @@ adapter over it (`execution-service@e11854e5`, duplicate primitives deleted, QG 
 fear, concretely):** the strategy-service `BenchmarkFillEngine` computes `PASSIVE_BBO` OPPOSITELY to the UAC SSOT
 (LONG→ask/SHORT→bid vs the correct buy@bid/sell@ask) — so paper-sim ≠ batch-sim TODAY for any passive-BBO fill. The
 strategy-service rewiring therefore corrects a fill convention (changes historical backtest prices) and must land with
-Phase 4's `reconcile_week` proving paper≡batch afterward — sequenced deliberately, not rushed. P1.1 stays open until that
-correction lands. **Next concrete step**: rewire `strategy_service/engine/backtest/benchmark_fills.py`
+Phase 4's `reconcile_week` proving paper≡batch afterward — sequenced deliberately, not rushed. P1.1 stays open until
+that correction lands. **Next concrete step**: rewire `strategy_service/engine/backtest/benchmark_fills.py`
 `_resolve_*_benchmark` to build the dict ctx from `MarketStateSnapshot` + call `benchmark_fill_price` (correct
 PASSIVE_BBO, preserve ARRIVAL_MID None-fallbacks), update the strategy-service benchmark-fill tests to the corrected
 convention, QG, ship → then flip P1.1.
