@@ -143,8 +143,12 @@ are identified (2) and the ledger exists (3).
       `LedgerRow(event_origin=INSTRUCTION, event_type=TRADE, trade_id=trade_key, delta=±qty signed by side, price,     fees)`.
       ⏳ wiring the strategy-service engine to CALL it on each fill (+ the GCS emit) rides Phase 2 (the engine emits
       keyed fills) — the pure helper is shipped + tested.
-- [ ] [CODE] P3.2. **`PassiveLedger` synthesiser** — funding/staking/lending accruals → `ledger_type=passive/` (the
-      architecture flags this as not-yet-implemented). Repo: unified-trading-library + strategy-service.
+- [x] ✅ [CODE] P3.2. **`PassiveLedger` synthesiser** — DONE (`unified-trading-library@09885861`, 16 tests):
+      `ledger/materialize.py::passive_ledger_row()` builds `LedgerRow(event_origin=PASSIVE, event_type=FUNDING_ACCRUAL/
+      STAKING_REWARD/LENDING_INTEREST, delta=±accrued, accrual_period_*, the matching rate column)` + `accrue_funding(
+      notional, rate)` (payer-debited sign: a LONG paying positive funding gets a negative accrual). For carry/funding
+      strategies these accruals ARE the P&L. ⏳ the engine wiring (emit accruals per period) rides Phase 2/5. (Closes the
+      "PassiveLedger not-yet-implemented" gap the global-ledger architecture flagged.)
 - [x] ✅ [CODE] P3.3. **`PositionLedger` materialiser (avg-cost P&L)** — DONE (`unified-trading-library@41d50461`):
       `ledger/materialize.py::materialize_position_ledger()` —
       `Σ delta GROUP BY (account, client, venue,     asset_canonical_id)` with **average-cost accounting** (VWAP on
@@ -280,3 +284,24 @@ linchpin) → P1.1-strategy (PASSIVE_BBO correction) → P3.4/P3.5 (client-repor
 (batch-rerun-from- manifest) → P5/P6 (views + Slack) → P7 (short-window e2e proof). Each ships WITH a reconcile_day test
 (the build-order rule). These are interconnected service changes on live/backtest code — deliberately sequenced +
 validated, not rushed.
+
+### 2026-06-19 — Daily T+1 cadence correction + PassiveLedger (ledger core complete)
+
+**Cadence fix (operator):** the reconciliation is **DAILY T+1**, not weekly — each day reconciles the prior trading day's
+paper vs a batch-rerun of that day (a week = 7 daily reports). Renamed `reconcile_week`→`reconcile_day` +
+`WeeklyReconReport`→`DailyReconReport` across `unified-api-contracts@4c058ce` + `batch-live-reconciliation-service@e36163a`
++ the codex SSOT/plan/CLAUDE.md. (Hit + reconciled a workspace promotion-lag: the PM `workspace-manifest.json` was 10
+commits behind main, false-blocking the version-alignment gate — backmerged the version bumps.)
+
+**P3.2 PassiveLedger shipped (`utl@09885861`)** — completes the ledger materialisation CORE: 3 of 4 SSOT ledgers now have
+pure, tested synthesisers (InstructionLedger P3.1 + PositionLedger P3.3 + PassiveLedger P3.2; PricingLedger = marks,
+already exists). The complete as-if-filled accounting (trades + positions/balances + carry accruals + P&L) is built and
+unit-tested across UTL.
+
+**Session tally (all QG-green + tested):** Phase 0 contract (uac@12597d8) · P1.1 pricing SSOT (uac@bc4c756 + es@e11854e5)
+· P1.5 rule · P4.1 reconcile_day keystone (blrs@7a84db8c→e36163a) · P3.1/P3.3/P3.2 ledger core (utl@41d50461→09885861) ·
+the 3-concepts/2-realities architecture correction · the daily-T+1 correction. **The entire pure-logic + accounting core
+of the determinism spine is DONE.** What remains is service INTEGRATION + behavioural fill-path changes (P2 event keying,
+P3.x engine-wiring, P1.4 GroupCRunner the linchpin, P1.1-strategy PASSIVE_BBO correction, P3.4/P3.5, P4.3, P5/P6, P7) —
+each now ships WITH a `reconcile_day` proof (the build-order rule). These are interconnected service changes on live/
+backtest code: sequenced + harness-validated, not rushed.
