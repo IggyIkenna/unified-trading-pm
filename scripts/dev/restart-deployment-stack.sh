@@ -138,9 +138,16 @@ start_api() {
   # knob set the build uses a thread pool (overlaps the I/O-bound index loads). Linux
   # VMs leave it unset → the fork pool runs (correct + faster there). Honour an
   # already-exported value so a beta-recipe prefix can still override.
+  # Must be a valid bool LITERAL — deployment-api's pydantic config parses it and
+  # rejects an empty string (bool_parsing error → uvicorn import crash on startup).
+  # "Leave it unset on Linux" means emit `false` (fork pool runs), NOT export "".
   local _ds_disable_pool="${DATA_STATUS_DISABLE_PROCESS_POOL:-}"
-  if [ -z "$_ds_disable_pool" ] && [ "$(uname -s)" = "Darwin" ]; then
-    _ds_disable_pool="true"
+  if [ -z "$_ds_disable_pool" ]; then
+    if [ "$(uname -s)" = "Darwin" ]; then
+      _ds_disable_pool="true"
+    else
+      _ds_disable_pool="false"
+    fi
   fi
   env CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false DISABLE_AUTH=true \
       ENVIRONMENT=development DEPLOYMENT_ENV=prod \
