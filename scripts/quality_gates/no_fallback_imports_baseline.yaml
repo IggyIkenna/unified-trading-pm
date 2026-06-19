@@ -46,7 +46,7 @@ repos:
   market-data-processing-service:
     count: 3
   market-tick-data-service:
-    count: 3
+    count: 2
   ml-service:
     count: 0
   strategy-service:
