@@ -58,7 +58,8 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
 - [x] ✅ [UI] P2. Codebase-health matrix column on `/repos` (fleet-wide coverage% / QG-red-reason / file-size-debt, not
       per-service-tab-only). Repo: deployment-ui (+ a deployment-api roll-up if needed).
       — deployment-ui@a1b7fbd | pw:L2 ✓ | regression: tests/smoke/repos-codebase-health.spec.ts
-- [ ] [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui.
+- [x] ✅ [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui.
+      — deployment-ui@a1b7fbd (already present at RepoCi.tsx:1637) | pw:L2 ✓ | regression: tests/smoke/gh_rate_budget.spec.ts
 
 ## Cloud Build visibility + build health (found 2026-06-18 operator Cloud Build smoke test)
 
