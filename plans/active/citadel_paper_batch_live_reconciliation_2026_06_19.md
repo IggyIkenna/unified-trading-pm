@@ -113,9 +113,10 @@ are identified (2) and the ledger exists (3).
       "backtest of a real week" replays real parquets. Repo: strategy-service.
 - [ ] [CODE] P1.4. **Complete `GroupCRunner` Phase 4** — measure execution alpha for SWAP/LEND/STAKE/ATOMIC, not only
       TRADE (so the live↔paper leg covers every action). Repo: execution-service.
-- [ ] [DOC] P1.5. **Codify the two-fill-realities HARD RULE** (SSOT §4.2): exactly canonical-sim (`BenchmarkFillEngine`,
-      batch+paper) + real-venue (`LiveMatchingEngine`, live); a third on the batch/paper path is review-blocking. Repo:
-      unified-trading-pm (CLAUDE.md + SSOT).
+- [x] ✅ [DOC] P1.5. **Codify the two-fill-realities HARD RULE** — DONE (`unified-trading-pm@2673bf04a`): the rule lives
+      in CLAUDE.md § "Batch = Live" ("Two fill realities only: canonical-sim … + real-venue … — a third fill model on
+      the batch/paper path is review-blocking") AND the codex SSOT §4.2 design rule (lines 174–176). The `FillModel`
+      StrEnum (`unified-api-contracts@12597d8`, BENCHMARK + LIVE_VENUE only) is the structural enforcement.
 
 ## Phase 2 — Per-trade identity in execution events (G2)
 
