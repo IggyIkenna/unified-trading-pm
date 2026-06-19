@@ -304,8 +304,8 @@ to logs.
       `https://docs.drift.trade/`); if all current endpoints are auth-gated this becomes **BLOCKED-CREDENTIALS** (file a
       Drift API-key ask per external-data-always-available). Fix `drift.py` `_DATA_API_URL`/path (the URL resolves via
       UAC `get_solana_protocol_url("drift","api_url")` — update the registry value, not a hardcode), classify the breach
-      properly, backfill 2026-05-09→06-18. — instruments-service / unified-api-contracts (registry URL)
-      ✅ SHIPPED 2026-06-19: rewrote `drift.py` to parse Drift SDK TypeScript constants on GitHub
+      properly, backfill 2026-05-09→06-18. — instruments-service / unified-api-contracts (registry URL) ✅ SHIPPED
+      2026-06-19: rewrote `drift.py` to parse Drift SDK TypeScript constants on GitHub
       (`MainnetPerpMarkets`/`MainnetSpotMarkets`) via regex bracket-depth walk — 55 active perps + 73 spots. SDK URLs in
       UAC registry at `sdk_perp_markets_url`/`sdk_spot_markets_url`. Backfill ran 2026-05-09→2026-06-19 (42 dates, 40
       instruments/day). Manifest now shows `DRIFT` + `chain=SOLANA` = `captured` (42 rows). IS@87099cc, UAC@74509df.
@@ -318,10 +318,10 @@ to logs.
       (none exists per the policy). The fix is in the IS `aave_v3.py` adapter: for OPTIMISM, route to the same RPC
       fallback the MTDS rate handler uses (or `record_empty(reason=...)` honest-absence if the IS layer has no RPC path)
       — never leave it attempted_failed (a known-policy state masquerading as a fetch failure). The sibling chains
-      (ETH/ARB/POLY/BASE/AVALANCHE) work fine. — instruments-service (NOT a UAC subgraph-ID change)
-      ✅ SHIPPED 2026-06-19: added static 7-reserve fallback (`_AAVE_V3_OPTIMISM_STATIC_RESERVES`) with DERIVED citations
-      per STEP 5.97. `get_instruments()` shortcircuits for OPTIMISM chain before subgraph call — returns 12 instruments
-      (5 borrowing-enabled × 2 = 10 + 2 non-borrowing × 1 = 2). Backfill 2026-05-09→2026-06-19 (42 dates). Manifest:
+      (ETH/ARB/POLY/BASE/AVALANCHE) work fine. — instruments-service (NOT a UAC subgraph-ID change) ✅ SHIPPED
+      2026-06-19: added static 7-reserve fallback (`_AAVE_V3_OPTIMISM_STATIC_RESERVES`) with DERIVED citations per STEP
+      5.97. `get_instruments()` shortcircuits for OPTIMISM chain before subgraph call — returns 12 instruments (5
+      borrowing-enabled × 2 = 10 + 2 non-borrowing × 1 = 2). Backfill 2026-05-09→2026-06-19 (42 dates). Manifest:
       `AAVE_V3` + `chain=OPTIMISM` = `captured` (42 rows). IS@87099cc.
 
 **DERIBIT-COMBO — fixed a NEVER-WORKING venue (4 stacked breaks, found during cefi diagnosis) — ✅ SHIPPED:** cefi's 22
@@ -1110,3 +1110,26 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
       `ikenna_orchestrator/pings/slot_1.md` § "CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19)".
       SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog — NOT a coverage
       gap). — instruments-service [BLOCKED-CREDENTIALS]
+
+### Sports A2/A3/D read-only verification — ALL PASS (2026-06-19, autonomous tick 4)
+
+- [x] ✅ [AUDIT] P1. **Sports A2/A3/D e2e consistency verification** — DONE 2026-06-19 (read-only sub-agent):
+  - **A2a catalogue PASS** — `gs://instruments-store-sports-prd/prod/catalog.parquet` = 789-league roll-up, FRESH
+    (rebuilt 2026-06-19T08:38Z), correct columns (instrument_id/league_id/available_from/mvp). available_to 100% null =
+    open-ended-active (correct). Finding → todo below.
+  - **A2b MVP vs TOTAL_UNIVERSE PASS** — sports present in `TOTAL_UNIVERSE_AXES["sports"]` (2 axes: fixtures
+    DOWNLOAD_DERIVED + data_type HARDCODED_GENESIS) AND `MVP_SCOPE["sports"]` (`SportsMvpRule` 4 leagues EPL/LA_LIGA/
+    NFL/NBA × 6 data_types); `universe_membership()` classifies MVP⊆TOTAL correctly (total_universe.py:241-254,
+    mvp_scope.py:475-498/755-761).
+  - **A3 paths PASS** — all 6 representative data_types (FIXTURES/STANDINGS/ODDS/PLAYER_VALUES/SFI_PROGRESSIVE_STATS/
+    WEATHER) resolve to actual GCS objects via `candidate_parquet_paths()`. No reader-shape drift.
+  - **D shard-atom PASS** — `(data_type, league_id, date)` atom IDENTICAL across IS SSOT
+    (`registry/data_status_axis_matrix.py:70`), MTDS SSOT (`:105` + `manifest_recorder.py:25`), data-status drilldown
+    (`deployment-api/.../data_status_hierarchical.py:15,43`), and the deployment-api drilldown alignment test. No
+    surface drops league_id. — verified read-only
+- [ ] [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs is_mvp() canonical strings)** —
+      `prod/catalog.parquet` `league_id` holds NUMERIC provider IDs (`'10'`/`'100'`) while `is_mvp()`'s SportsMvpRule
+      keys canonical strings (`EPL`/`LA_LIGA`/`NFL`/`NBA`) → no sports league ever tags `mvp=True`. The catalogue
+      builder should map the provider league_id → canonical league_id (UAC `league_data`/`provider_league_ids`) before
+      the `is_mvp()` check, so the MVP subset is tagged. Low-risk display/classification fix (MVP tag unused downstream
+      today). Provenance: 2026-06-19 sports A2a catalogue verify. — instruments-service (build_instrument_catalogue.py)
