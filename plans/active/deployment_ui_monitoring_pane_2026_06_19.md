@@ -119,12 +119,16 @@ conflates promotion-PROGRESS with branch-FAILURE — e.g. `STAGING_GREEN` reads 
 NOT the authoritative Firestore side-store the promoter gate actually reads, so the dashboard can show a different
 status than what gates promotions.
 
-- [ ] [UI] P1. **Drop the `CI status` column; color-code the LDR/staging/main SHA cells per-branch** (green = that
+- [x] ✅ [UI] P1. **Drop the `CI status` column; color-code the LDR/staging/main SHA cells per-branch** (green = that
       branch's last `quality-gates-v2` succeeded · red = failed · gray = unknown) from `branch_ci`. The 9-state
-      `ci_status` token is noise — per-branch green/red is the simpler at-a-glance model. Needs the backend to populate
-      `branch_ci` for ALL repos (today `deployment_api/routes/repo_ci.py` bounds it to the red repos to save GitHub API
-      budget) — derive green branches from SHA-equality / `ci_status` where a live fetch is skipped, or widen the fetch.
-      Repos: deployment-ui + deployment-api. `pw:L2 ✓` + regression. Provenance: 2026-06-19 operator review.
+      `ci_status` token is noise — per-branch green/red is the simpler at-a-glance model.
+      **DONE 2026-06-19 — deployment-ui@1e5b429 | pw:L2 ✓ (smoke 219 · repos-tab 23) | regression:
+      tests/smoke/repos-tab.spec.ts.** Frontend-DERIVE, no backend change needed: `branchTone` (in `src/lib/repoCi.ts`)
+      reads live `branch_ci` for FAILING repos (which the backend already fetches), greens non-FAILING repos (their
+      branches all last-passed), grays a missing branch — so the API-budget bound on `branch_ci` is moot. Colour =
+      solid dot + tinted SHA via `data-tone`; the `CI status` column is removed; staleness stays in last-green /
+      LDR→main-delta. Also shipped a click-to-open colour **legend** (operator add, same commit): `branch-legend-toggle`
+      → green/red/gray meanings + the behind-but-green note. + 4 `branchTone` unit tests in `src/lib/repoCi.test.ts`.
 - [ ] [UI] P1. **Promotion-state surface — make the dep-order HOLD visible.** A repo can sit `STAGING_GREEN` with main
       days behind and NOTHING in the triage queue / breaking cascade, because the staging→main STAGE 1.8 dep-order gate
       is a silent designed HOLD (incident 2026-06-19: fleet blocked behind `unified-api-contracts` not yet
