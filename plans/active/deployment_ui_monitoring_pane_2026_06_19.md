@@ -52,8 +52,9 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       deployment-api (+ the watcher emitters). Composes with `alert_quality_overhaul_2026_06_18.md`.
 - [ ] [UI] P1. deployment-ui `/alerts` page consumes the unified ledger (not just `cicd/alerts`). `pw:L2 ✓` +
       regression. Repo: deployment-ui.
-- [ ] [UI] P2. Unified single-glance fleet/infra landing tile (6th LandingTab: N VMs running · central-VM up ·
+- [x] ✅ [UI] P2. Unified single-glance fleet/infra landing tile (6th LandingTab: N VMs running · central-VM up ·
       consolidator fresh · fleet-git clean · CI green — each click-through). Repo: deployment-ui.
+      — deployment-ui@7e40055 | pw:L2 ✓ | regression: tests/smoke/fleet-infra-tab.spec.ts
 - [ ] [UI] P2. Codebase-health matrix column on `/repos` (fleet-wide coverage% / QG-red-reason / file-size-debt, not
       per-service-tab-only). Repo: deployment-ui (+ a deployment-api roll-up if needed).
 - [ ] [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui.
