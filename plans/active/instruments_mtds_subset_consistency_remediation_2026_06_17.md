@@ -1133,3 +1133,27 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
       builder should map the provider league_id → canonical league_id (UAC `league_data`/`provider_league_ids`) before
       the `is_mvp()` check, so the MVP subset is tagged. Low-risk display/classification fix (MVP tag unused downstream
       today). Provenance: 2026-06-19 sports A2a catalogue verify. — instruments-service (build_instrument_catalogue.py)
+
+### Sports MD (market-data-tick-sports) twin-coverage — verify + fan-out (2026-06-19, autonomous tick 5)
+
+Operator "make twins for ALL sports data lacking one so the delete loses nothing" — the MD bucket half.
+
+- [x] ✅ [DATA] P1. **MD legacy MIGRATE-FIRST twin-verification** — DONE 2026-06-19 (e2e-testing@1b07bcb
+      `verify_sports_md_unmappable_twins_2026_06_19.py`, ran full). The 3,816 MIGRATE-FIRST odds-api bundles
+      content-verified per-object against same-day canonical (raw_tick_data `pipeline_mode=` + processed) UNION: **3,116
+      TWIN-VERIFIED-SAFE** (content already canonical → delete-safe) + **700 MIGRATE-NEEDED** (genuinely-unique odds-api
+      odds, days 2022-03..2023-04, where the day carries ONLY the legacy `source=ODDS_API` shape — the v9 fan-out never
+      covered those days; verified day=2022-09-10 has 0 canonical/0 pipeline_mode objects). Verdict parquet
+      `_index/audit/sports_md_unmappable_verify_2026_06_19.parquet`. **CORRECTS the prior "all 3,816 TWIN-VERIFIED-SAFE
+      (58,910/58,910 sampled)" — that was a 6-file sample; the FULL run found the 700 gap.** — e2e-testing
+- [ ] [DATA] P1. **MD 700 MIGRATE-NEEDED content-aware fan-out to canonical** — IN PROGRESS 2026-06-19
+      (e2e-testing@1b07bcb `migrate_sports_md_unmappable_to_canonical_2026_06_19.py --apply`, RUNNING): fans the 700
+      genuinely-unique odds objects → canonical
+      `raw_tick_data/by_date/day={D}/pipeline_mode=batch_odds_api/     asset_group=sports/venue={V}/league_id={L}/instrument_type=odds/data_type=trades/ticks.parquet`
+      (41,206 cells / 10.1M rows; legacy schema == canonical minus 4 derivable cols; union-dedup on instrument_id, never
+      overwrite-lose, never delete legacy). On completion re-run the verify → MIGRATE-NEEDED must reach 0 → all 3,816
+      delete-safe. Flip once re-verify == 0. — e2e-testing
+
+**MD twin-coverage end-state (operator-gated delete-readiness):** 248,502 SAFE-TO-DELETE (path-twin-verified) + 3,116
+TWIN-VERIFIED-SAFE (content-twin-verified) + 700 fanned-out-to-canonical = ALL 252,318 MD legacy objects delete-safe
+once the fan-out completes + re-verifies. **Delete stays OPERATOR-GATED — never executed by the agent.**
