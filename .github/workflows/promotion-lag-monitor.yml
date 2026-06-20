@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       lag: ${{ steps.scan.outputs.lag }}
+      cleared: ${{ steps.scan.outputs.cleared }}
       report: ${{ steps.scan.outputs.report }}
     steps:
       - uses: actions/checkout@v5
@@ -58,6 +59,15 @@ jobs:
           key: gh-etag-lag-${{ github.run_id }}
           restore-keys: |
             gh-etag-lag-
+      # Lag-state cache: persists {"lag": true/false} across runs so we can detect the
+      # lagging→clear transition and fire a RESOLVED bookend (alert_quality_overhaul Phase 5).
+      - name: Restore lag state cache
+        uses: actions/cache@v5
+        with:
+          path: .lag-state.json
+          key: promotion-lag-state-${{ github.run_id }}
+          restore-keys: |
+            promotion-lag-state-
       - name: Authenticate to GCP (Firestore repo-state write — best-effort)
         id: gcp_auth_lag
         continue-on-error: true
@@ -77,11 +87,22 @@ jobs:
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
           set +e
-          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH")
+          # Read previous lag state for transition detection (lag-cleared bookend).
+          LAST_LAG=false
+          if [ -f .lag-state.json ]; then
+            LAST_LAG=$(jq -r '.lag // false' .lag-state.json 2>/dev/null || echo "false")
+          fi
+          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH" --slack)
           RC=$?
           echo "$REPORT"
+          if [ "$RC" -eq 1 ]; then LAG=true; else LAG=false; fi
+          # Persist current state so the next run can detect the clear transition.
+          echo "{\"lag\": $LAG}" > .lag-state.json
+          # CLEARED = previously lagging, now clean (fires the RESOLVED bookend once on transition).
+          if [ "$LAST_LAG" = "true" ] && [ "$LAG" = "false" ]; then CLEARED=true; else CLEARED=false; fi
           {
-            if [ "$RC" -eq 1 ]; then echo "lag=true"; else echo "lag=false"; fi
+            echo "lag=$LAG"
+            echo "cleared=$CLEARED"
             echo "report<<__EOR__"
             echo "$REPORT"
             echo "__EOR__"
@@ -107,5 +128,21 @@ jobs:
       # as an open Phase-5 sub-item.
       dedup_key: promotion-lag
       cooldown_min: 60
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+
+  notify-resolved:
+    needs: monitor
+    if: needs.monitor.outputs.cleared == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *PROMOTION LAG CLEARED* — all branch-pairs back in sync (lag was >${{
+        github.event.inputs.threshold_min || '60' }}m)"
+      severity: INFO
+      workflow_name: promotion-lag-monitor
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: promotion-lag-cleared
+      cooldown_min: 30
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}

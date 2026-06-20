@@ -828,7 +828,14 @@ legs use **rate-matching** (Aave/Lido accrual, not order matching). A third _sim
 engines, is review-blocking. "Citadel-grade paper trading" = the complete as-if-filled state (money movements / balances
 per venue+instrument+share_class / P&L / PnL attribution / instruments breakdown) in four ledgers (`InstructionLedger`
 tape + `PositionLedger` as-if-filled state + `PassiveLedger` accruals + `PricingLedger` marks) + a daily ledger +
-daily-T+1 recon Slack digest. SSOT: `codex/09-strategy/operational/paper-batch-live-reconciliation.md` + plan
+daily-T+1 recon Slack digest. **The spine integrates via canonical UAC/UTL SSOT derivation — NEVER hand-threaded
+metadata maps or bolt-on fixtures (HARD RULE, operator 2026-06-19).** Every fill carries the canonical
+`InstrumentKey` (`VENUE:INSTRUMENT_TYPE:SYMBOL`, built via UAC `instrument_type_for_action`); the ledger writers DERIVE
+asset_symbol / asset_canonical_id / asset_class from it (`derive_ledger_asset_fields` → `asset_class_for_instrument_type`,
+UAC `internal/reference/ledger_asset_resolution.py`) — banned: threading `instrument_type_of`/`asset_symbol_of`/
+`asset_canonical_id_of`/`asset_class_of` dicts, a hardcoded `_DEFAULT_INSTRUMENT_TYPE`, or any per-caller metadata map
+the canonical `InstrumentKey`/`InstrumentRecord`/registry can derive. Future strategies + agents build on the main infra,
+not on a re-invented local dict. SSOT: `codex/09-strategy/operational/paper-batch-live-reconciliation.md` + plan
 `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent epic `batch_live_symmetry_master`).
 
 ---

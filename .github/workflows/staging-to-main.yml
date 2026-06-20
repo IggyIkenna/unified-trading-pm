@@ -700,8 +700,6 @@ jobs:
               fi
             else
               echo "  PR already exists or merge conflict — checking mergeable state..."
-              FAILED="$FAILED $REPO"
-              FAILED_COUNT=$((FAILED_COUNT + 1))
 
               # Check if an existing staging→main PR is blocked by a content conflict
               EXISTING_PR_NUM=$(gh pr list \
@@ -738,11 +736,31 @@ jobs:
                     -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL_CONFLICT}\"}}" \
                     && echo "  Dispatched conflict-resolution-agent for $REPO" \
                     || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
+                  FAILED="$FAILED $REPO"
+                  FAILED_COUNT=$((FAILED_COUNT + 1))
                 else
-                  echo "  PR #$EXISTING_PR_NUM mergeable_state=$MERGEABLE_STATE (not a conflict)"
+                  # Not a content conflict — arm auto-merge on the existing PR so it merges
+                  # once required checks pass (mirrors what the PR-create path does).
+                  # Gap fix (2026-06-19): the create path arms auto-merge; the existing-PR path
+                  # previously counted as FAILED immediately → quarantine after 3 runs → promotion
+                  # deadlock even when quality-gates-v2 is green and the PR is cleanly mergeable.
+                  EXISTING_PR_URL="https://github.com/$OWNER/$REPO/pull/$EXISTING_PR_NUM"
+                  echo "  PR #$EXISTING_PR_NUM mergeable_state=$MERGEABLE_STATE — arming auto-merge"
+                  if gh pr merge "$EXISTING_PR_URL" --auto --squash --repo "$OWNER/$REPO" 2>/dev/null || \
+                     gh pr merge "$EXISTING_PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null; then
+                    echo "  auto-merge armed on existing PR #$EXISTING_PR_NUM for $REPO"
+                    PROMOTED="$PROMOTED $REPO"
+                    PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+                  else
+                    echo "  auto-merge arm refused on existing PR #$EXISTING_PR_NUM — will retry on next run"
+                    FAILED="$FAILED $REPO"
+                    FAILED_COUNT=$((FAILED_COUNT + 1))
+                  fi
                 fi
               else
                 echo "  No open staging→main PR found for $REPO (PR creation may have failed for another reason)"
+                FAILED="$FAILED $REPO"
+                FAILED_COUNT=$((FAILED_COUNT + 1))
               fi
 
               # NOTE: Partial failure Telegram notification handled by

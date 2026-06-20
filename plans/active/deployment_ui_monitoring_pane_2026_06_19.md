@@ -168,7 +168,7 @@ status than what gates promotions.
       one-function swap (`ManifestView.ci_status_for` → `ci_status_store.resolve_ci_status_map`), adding
       `google-cloud-firestore` to deployment-api. SSOT: `ci_status_firestore_side_store_2026_06_10.md`. Repo:
       deployment-api. Provenance: 2026-06-19 operator review.
-- [ ] [PROMOTION] P2. **(track-3 cross-ref — do NOT implement in the UI track)** Forward staging→main promotion lags
+- [x] ✅ [PROMOTION] P2. **(track-3 cross-ref — do NOT implement in the UI track)** Forward staging→main promotion lags
       fleet-wide (services ~2 days behind main while libs promote): STAGE 1.8 dep-order tiered-drain + a
       `staging_versions` registration gap. **Confirmed FLEET-WIDE 2026-06-19** via the new Stall-reason column: ~16
       repos render "staging→main not promoting · status stale" (ci_status reads MAIN_GREEN while staging is N files

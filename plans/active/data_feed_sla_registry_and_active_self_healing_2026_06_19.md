@@ -151,3 +151,21 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
 - A second/parallel fetch path — `refetch-feed` reuses the service CLIs.
 - Re-baselining the 8 `NEEDS-LIVE` alert thresholds (that is observability*master P3, auto-resumes when live feeds are
   up); this plan only relocates where those thresholds are \_declared*.
+
+## Progress Log (append-only — autonomous-loop memory across context compression)
+
+- **2026-06-19 — Phase 1 (1a/1c) SHIPPED** — UAC@`27a80d2`: `refetch_action` field + `"execution"` asset_group +
+  `ACCOUNT_STATE_FRESHNESS` (account/positions/recon) in `data_freshness.py`; 47 freshness tests + basedpyright 0-err +
+  full UAC QG green.
+- **2026-06-19 — fleet-QG unblock SHIPPED** — PM@`f7f393636` (carve-out #3): `base-service.sh`+`base-library.sh` ignore
+  msgpack `GHSA-6v7p-g79w-8964` + sync vcrpy `GHSA-rpj2-4hq8-938g` into base-library; `qg-common.sh` stat `-c %Y`-first.
+  Was blocking every fresh QG (pip-audit advisory drift) + Linux cache-age (BSD stat).
+- **2026-06-19 — `/autonomous` dispatch START** — finishing the rest to DONE. Ordered by dependency (rule 8): UAC T0
+  first → tests → Phase 2 → msgpack fleet (lowest priority/value, last) → codex docs → drop msgpack ignore → report.
+  - **vcrpy ignore = genuine impossibility (rule 1)** — vcrpy 8.2.1 fixes the YAML CVE but is gated by the aiohttp-3.14
+    pin (`aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`); cannot bump. Documented, ignore stays, keep going.
+  - **msgpack scope** — 1.1.2→1.2.1 (fix exists) across 20 repos (3 already 1.2.1: batch-live-reconciliation,
+    client-reporting-api, strategy-service); transitive, not centrally pinned → per-repo `uv lock --upgrade-package
+    msgpack`. Drop the msgpack ignore ONLY after all 20 land.
+  - **facade re-export UNBLOCKED** — the `ledger_asset_resolution` foreign WIP that blocked it has landed; UAC `__init__`
+    clean. Adding `ACCOUNT_STATE_FRESHNESS` to both `__init__.py` now.

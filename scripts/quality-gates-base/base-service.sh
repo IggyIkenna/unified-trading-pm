@@ -1227,7 +1227,14 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   A real fix exists (1.2.1) but msgpack is a transitive pin → bumping is a fleet-wide lock-regen campaign.
     #   SUCCESSOR (remove this ignore): bump msgpack to >=1.2.1 fleet-wide + lock-regen. Tracked:
     #   plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md § QG-unblock follow-ups.
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln PYSEC-2026-196"
+    # GHSA-4xgf-cpjx-pc3j: pydantic-settings <=2.13.x (TRANSITIVE) — NestedSecretsSettingsSource reads secret VALUES
+    #   from files in a configured secrets_dir. Exploit surface nil: services configure secrets_dir to trusted
+    #   Secret-Manager mount paths only, never untrusted input. Fleet-wide transitive lock-bump. MUST mirror
+    #   base-library.sh. SUCCESSOR: bump pydantic-settings to the fixed line + lock-regen fleet-wide (2026-06-19 advisory).
+    # CVE-2026-54911: ujson <=5.12.0 (TRANSITIVE) — ujson.dumps(reject_bytes=False) edge case on bytes encoding.
+    #   Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False. Fleet-wide transitive
+    #   lock-bump. MUST mirror base-library.sh. SUCCESSOR: bump ujson to the fixed line + lock-regen (2026-06-19 advisory).
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
     # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock

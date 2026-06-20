@@ -133,10 +133,9 @@ the always-on central VM → zero marginal cost.
       `test_ci_failure_watcher_renag.py`); QG green; PR #423.
 - [x] ✅ [SCRIPT] P1. `promotion-lag-monitor`: drop the `cooldown_min` 360→60 (re-nag a still-open lag hourly instead of
       page-once-per-6h). Repo: unified-trading-pm. — unified-trading-pm@cf51f081 | PR #423.
-- [ ] [SCRIPT] P2. `promotion-lag-monitor`: add a **lag-cleared bookend** (RESOLVED INFO on the lagging→clear
-      transition). **DEFERRED** — the monitor is stateless for alerting (the cache is ETag-only), so a true
-      fire-once-on-clear needs transition state (read the carrier ledger for a recent `promotion-lag` post, or persist a
-      last-state flag). Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. `promotion-lag-monitor`: add a **lag-cleared bookend** (RESOLVED INFO on the lagging→clear
+      transition). Implemented via GHA `actions/cache` lag-state persistence (`lag-state.json`) + `notify-resolved` job
+      gated on `cleared == 'true'`. Repo: unified-trading-pm. — unified-trading-pm@249d0962f
 
 ## Phase 6 — Carrier-routing + deep-link follow-through from the 2026-06-19 LDR audit (P1/P2)
 
@@ -153,10 +152,10 @@ the always-on central VM → zero marginal cost.
       `sit-starvation-detector.yml` (also add a clickable run/deployment-ui link + a lock-cleared bookend; currently
       CLI-only) and the `cascade-qg-ordering.yml` failure variant. Confirm `ruleset-drift-alert.yml` sets one. Repo:
       unified-trading-pm.
-- [ ] [SCRIPT] P2. Route the lower-blast-radius raw posters through the carrier for ledger parity:
+- [x] [SCRIPT] P2. Route the lower-blast-radius raw posters through the carrier for ledger parity:
       `request-major-bump.yml`, `major-bump-issue-handler.yml`, `fix-approval-timeout.yml`, `reap_stale_blockers.py`
       (also has NO deep-link — add the orchestrator backlog link), `run-audit-reflog-with-alert.sh` (no deep-link).
-      Repo: unified-trading-pm.
+      Repo: unified-trading-pm. ✅ — unified-trading-pm@3db205535
 - [ ] [ORCHESTRATOR] P1. **Honest-header fix**: `notify_agent_stuck_respawned` (`server/notifications/slack.py:269`) is
       hard-coded "Auto-respawn" but 2 of 3 callers never respawn — `main_agent_keeper.py:214` (a rate-limit page, fake
       `slot_id=0`) and `worker_liveness_watchdog.py:923` (worker left FROZEN, explicitly not killed). Split into
@@ -166,13 +165,13 @@ the always-on central VM → zero marginal cost.
 - [ ] [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py:686`)
       is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrate to the
       `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P2. **Slot deep-link sweep**: swap the root `/vm/{id}` footer for
+- [x] [ORCHESTRATOR] P2. **Slot deep-link sweep**: swap the root `/vm/{id}` footer for
       `_dashboard_deep_link("/fleet-git?slot=N", …)` (already used by quarantine + git-staleness) on
       `notify_slot_stale`/`_failed`/`_blocked`, `notify_unpushed_plans`, `notify_agent_stuck_escalation`,
       `notify_watchdog_kill`, `notify_context_burn`. Add a UI deep-link (accounts/fleet page) to the CLI-only
       account/auth criticals (`notify_account_auth_failed`, `notify_all_accounts_unusable`,
       `notify_setup_token_expiring`, `notify_account_usage_high`, `notify_account_pool_exhausted`) and move the account
-      id into the header. Repo: agent-orchestrator.
+      id into the header. Repo: agent-orchestrator. ✅ — agent-orchestrator@31a97bf
 
 ## Success criteria
 
