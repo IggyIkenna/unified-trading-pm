@@ -82,7 +82,7 @@
     "unified-trading-library": "0.19.0",
     "unified-trading-pm": "1.2.193",
     "market-data-processing-service": "0.10.0",
-    "e2e-testing": "0.7.0",
+    "e2e-testing": "0.8.0",
     "agent-orchestrator": "0.11.0",
     "greeks-service": "0.8.0",
     "trading-agent-service": "0.3.0",
@@ -90,7 +90,7 @@
     "ml-service": "0.8.0",
     "alerting-service": "0.11.0",
     "unified-trading-api": "0.2.3",
-    "client-reporting-api": "0.13.0"
+    "client-reporting-api": "0.14.0"
   },
   "repositories": {
     "alerting-service": {
@@ -1280,7 +1280,7 @@
       ],
       "completion_path": "infrastructure",
       "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep.",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "e2e",
@@ -1796,15 +1796,13 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
     "deployment-api": "0.21.0",
-    "greeks-service": "0.8.0",
-    "client-reporting-api": "0.14.0",
-    "e2e-testing": "0.8.0"
+    "greeks-service": "0.8.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1827,21 +1825,26 @@
       "branch": "staging",
       "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
       "version": "0.8.0"
-    },
-    "client-reporting-api": {
-      "branch": "staging",
-      "sha": "36d8526d8d39cca0e83138b66efdc5f1b3cdc75e",
-      "version": "0.14.0"
-    },
-    "e2e-testing": {
-      "branch": "staging",
-      "sha": "04733198901aba6f8aa8a2d22e10fc06a88c96ee",
-      "version": "0.8.0"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-20T13:21:29.789226Z",
+        "commits": {
+          "client-reporting-api": {
+            "branch": "staging",
+            "sha": "36d8526d8d39cca0e83138b66efdc5f1b3cdc75e",
+            "version": "0.14.0"
+          },
+          "e2e-testing": {
+            "branch": "staging",
+            "sha": "04733198901aba6f8aa8a2d22e10fc06a88c96ee",
+            "version": "0.8.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-20T12:10:04.288370Z",
         "commits": {
@@ -1888,26 +1891,6 @@
           "client-reporting-api": {
             "version": "0.12.0",
             "sha": "05577e5e3b5729353bacd7b4707cf20696b027e3",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-19T23:19:02.883351Z",
-        "commits": {
-          "client-reporting-api": {
-            "version": "0.11.0",
-            "sha": "71f7fcb04cd626677ca0e36764db5b73f033bb1c",
-            "branch": "staging"
-          },
-          "greeks-service": {
-            "version": "0.8.0",
-            "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.19.0",
-            "sha": "90e7a6f2328826729b183d09ea8504baf369f497",
             "branch": "staging"
           }
         }
