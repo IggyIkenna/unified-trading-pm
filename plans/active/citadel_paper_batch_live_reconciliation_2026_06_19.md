@@ -309,6 +309,32 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+### 2026-06-20 — Fill-model backtest (PB.7) decided + bps PnL wired everywhere (PB.9)
+
+**PB.7 — the fill model is backtest-decided, not blind-shipped.** `_fill_backtest.py` replayed the cs book over 8.8y
+under three execution policies, using the real 15m bar volume as the per-cycle liquidity budget:
+
+| policy                     | cum PnL | Sharpe | maxDD   | fill% | bps PnL |
+| -------------------------- | ------- | ------ | ------- | ----- | ------- |
+| full-fill (ideal)          | $742k   | 0.22   | −$1.79M | 100%  | 4.0     |
+| **single-shot (drop)**     | $589k   | 0.24   | −$1.06M | 68%   | 5.3     |
+| requote (chase over days)  | $751k   | 0.22   | −$1.79M | 100%  | 4.0     |
+
+**VERDICT: single-shot (drop the unfilled remainder) wins risk-adjusted** — Sharpe 0.24 vs 0.22, maxDD ≈ halved, bps
++33% — because under-filling the LARGEST rebalances is a free position-size cap. This **validates the deployed engine**
+(swept/touched + `missed`-drop = single-shot), **confirms PB.4**, and **rejects requote (PB.6)** for cs. Determinism
+held (same code+data). The flat `usd*0.34` was cosmetic — same fill price, just fake chunking; the new model is the
+first that actually MISSES, which is the point.
+
+**PB.9 — bps PnL ($ PnL / $ traded × 1e4) wired end-to-end** (operator ask). `_coin_history.py` now derives per-coin +
+per-strategy + aggregate **turnover** (`Σ|Δ notional|`) → `output/bps_summary.json` + per-coin `bps_cs/basis/short`;
+`paper_engine.py` surfaces `summary.pnl_bps`, the **exec-cost twin** `exec_cost_bps`, and `paper_live.pnl_bps` (live, from
+the trades ledger). UI: Cumulative-PnL + Exec-cost KPI cards, a per-strategy attribution column, per-coin KPI cards, and
+the booked-trades window (realized cost-bps). First numbers (cs/basis/short legs, $2.50B traded over 8.8y): **total +7.1
+bps** — **basis +21.4** (funding carry, low turnover = most efficient), **cs +4.0** (workhorse, thin edge), **short
+−14.7** (loses per dollar traded — a hedge, not a standalone alpha). Redeploying both Cloud Run jobs (PB.4 live +
+bps in the dashboard JSON).
+
 ### 2026-06-20 — client-reporting-api DEPLOYED to Cloud Run (serving layer go-live) + UI bring-up
 
 The canonical `client-reporting-api` (the dashboard's REAL serving layer, reading the GCS run ledger via
@@ -396,6 +422,39 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
 - [x] ✅ [UI] PB.3. Land the UI (Ledgers tab + per-coin analytics + hero reframe + real-margin panel) — DONE,
       `unified-trading-system-ui@d8362766` on `live-defi-rollout` (Tier-C drain → staging). `pw:L2` ✓ 6 passed.
       regression: `tests/smoke/paper-trading-live-ledgers.smoke.spec.ts`. Repo: unified-trading-system-ui.
+
+**Fill-model fidelity (operator design 2026-06-20 — the flat `usd*0.34` per-candle was cosmetic; replaced):**
+
+- [x] ✅ [CODE] PB.4. **Volume-scaled maker fill, swept-vs-touched** — DONE in `_ledgers.py`, **CONFIRMED by PB.7
+      backtest + REDEPLOYED** (it IS the risk-adjusted-best single-shot model). A 1m candle that trades a tick THROUGH
+      the limit (`low<limit` buy / `high>limit` sell) = a sweep that clears our level → fill the FULL minute volume (zero
+      queue priority still fills); a candle that only TOUCHES (`low==limit`) = a 25% queue share; never reaches → no
+      fill. Always AT the limit, never better. Validated vs real Binance UNI 1m: $59k order → 53% filled / 47% missed (vs
+      flat-1/3's fantasy 100%). Repo: e2e-testing (engine).
+- [ ] [CODE] PB.5. **Taker = VWAP-walk the live depth** — the IOC/taker path currently fills the whole order at
+      first-1m-open + flat slip; replace with a volume-weighted walk THROUGH the order book (the dashboard already pulls
+      live depth at $250k/$1M) so the taker fill price is the realistic average price through the book. Repo: e2e-testing.
+- [x] ✅ [CODE] PB.6. **Missed-remainder policy — DROP wins (backtest-decided, NOT requote)** — PB.7 verdict: dropping
+      the unfilled remainder (single-shot, no requote) is the risk-adjusted winner for cs (Sharpe 0.24 vs 0.22, maxDD
+      −$1.06M vs −$1.79M ≈ halved, 5.3 vs 4.0 bps), because under-filling the largest rebalances acts as a free
+      position-size cap. The live engine ALREADY drops (`missed`) → no change needed; requote is REJECTED for cs (it just
+      chases the same exposure over days = no risk benefit). Re-evaluate per-strategy if a future archetype is
+      capacity-bound. Repo: e2e-testing (`_ledgers.py` unchanged — drop confirmed).
+- [x] ✅ [INFRA] PB.7. **Backtest the fill assumptions per strategy — DONE** (`_fill_backtest.py`, 8.8y cs). Compared
+      full-fill / single-shot(drop) / requote over history with real 15m volume as the per-cycle liquidity budget.
+      **VERDICT: single-shot (= the live swept/touched + drop model) is most faithful AND risk-adjusted-best** — it
+      validates the deployed engine, rejects requote (PB.6), and confirms PB.4. Determinism held (same code+data). bps
+      PnL surfaced as a first-class column. Repo: e2e-testing (`_fill_backtest.py`).
+- [ ] [CODE] PB.8. **Paper-tape fidelity tier (aggTrades)** — capture the real Binance aggTrades/order-book stream so
+      paper fills resolve at TRUE volume-at-price (vs 1m-total-volume proxy); batch reruns the captured tape → ε=0
+      preserved; the coarse-1m vs granular-tape gap = the measured "execution realism." Repo: e2e-testing.
+- [x] ✅ [CODE+UI] PB.9. **bps PnL everywhere ($ PnL / $ traded × 1e4)** — operator ask 2026-06-20: surface the
+      efficiency lens alongside the $/yr exec cost. Engine computes per-coin + per-strategy + aggregate **turnover**
+      (`_coin_history.py` → `bps_summary.json`; per-coin `bps_cs/basis/short`) and the **exec-cost twin** (`exec_cost_bps`
+      in `paper_engine.py`); LIVE bps from the trades ledger (`paper_live.pnl_bps`). UI shows it on the Cumulative-PnL +
+      Exec-cost KPI cards, a per-strategy attribution column, the per-coin KPI cards, and the booked-trades window
+      (realized cost-bps). First numbers: total **+7.1 bps** (basis +21.4 / cs +4.0 / **short −14.7** — a hedge, not a
+      standalone alpha). Repos: e2e-testing (engine) + unified-trading-system-ui.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
