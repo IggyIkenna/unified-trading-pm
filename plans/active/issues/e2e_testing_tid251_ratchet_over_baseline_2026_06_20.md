@@ -1,7 +1,7 @@
 ---
 title: "e2e-testing STEP 5.95 TID251 ratchet is over baseline — pre-existing, blocks ALL e2e commits"
 created: 2026-06-20
-status: open
+status: resolved
 priority: P1
 source:
   - quality-gates STEP 5.95 (check_ruff_rule_ratchet.py --scope e2e-testing)
@@ -46,3 +46,16 @@ Sports/e2e-domain owner: for each of the 5 sites, either (a) route through `get_
 unblocks the e2e gate fleet-wide. The paper-trading POC source (`scripts/paper_trading/`, all OWN gate items green:
 ruff/basedpyright-excluded/codex/TID251-noqa/dockerfile-digest-pinned) lands as soon as this is resolved; meanwhile the
 engine is already DEPLOYED (Cloud Run jobs) and its source lives in `.tabs/1/` working copies.
+---
+
+## ✅ RESOLVED 2026-06-19 (e2e-testing@02912ad + PM baseline ratchet-down)
+
+Fixed via the **canonical cloud-agnostic route** (recommended option (a)), NOT noqa: all **7** direct
+`google.cloud` secretmanager/storage imports in `scripts/sports/*` (the 5 un-noqa'd over-baseline sites +
+the 2 pre-existing noqa'd ones) now route through `unified_trading_library.cloud_interface`
+`get_secret_client().get_secret(name)` / `get_storage_client().upload_file(...)` — UCI was folded into UTL, and
+`cloud_interface/` is the TID251-exempt SSOT. Behavior-preserving (same Secret-Manager/GCS backend). e2e
+**tid251 ratchet 15 → 5** (verified `check_ruff_rule_ratchet.py --scope e2e-testing` = `[OK] tid251: 5 == baseline`,
+exit 0); baseline ratcheted **10 → 5** to lock the floor (`ruff_rule_ratchet_baseline.yaml`). My edits added ZERO
+new ruff errors (sharpapi 20→11, run_weekly 9→0, others unchanged). The e2e gate is now GREEN fleet-wide — the
+paper-trading POC landing + any other e2e change is unblocked.
