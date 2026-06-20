@@ -522,7 +522,7 @@ baseline:
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/defi.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py:
-    count: 27
+    count: 23
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/manifest_schema.py:
     count: 4
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/scenario_overlay/_enums.py:
