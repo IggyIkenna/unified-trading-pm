@@ -251,3 +251,15 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 - `codex/02-data/tradfi-databento-sourcing-ssot.md` (NEW — authoritative).
 - `codex/02-data/tradfi-data-types-catalog.md` (Phase 3 — reflect **1m+1s** OHLCV — DONE: `ohlcv_1s` row + OHLCV note).
 - `codex/04-architecture/tradfi-batch-live.md` (Phase 3 — reflect 3-dataset + CFE).
+
+## Phase 2.5 — universe-CHANGE manifest reconciliation (GAP found 2026-06-20)
+
+Phase 2 pruned the universe SSOT (`tradfi_instrument_universe.py` uac@6790981: dropped ICE-Databento Brent/Gasoil/DX/softs + IFEU/IFUS datasets; moved equity ETFs XNAS.ITCH→DBEQ.BASIC; added CFE/VX; kept CME EC*). But the SSOT prune is only the EXPECTED side. The CAPTURED side (old parquets/manifest cells written under the prior universe) is NOT yet reconciled:
+- **Additions** (CFE/VX, equity-on-DBEQ, EC*) — HANDLED: expected_unattempted seeded by the v2 enumerator + the running CME-b backfill fills them + the tradfi-v9 close-out runs `build_instrument_catalogue --asset-group tradfi` (regenerates the catalogue/denominator from the NEW universe).
+- **Removals** (dropped ICE-Databento instruments) — **NOT reconciled**: no `reconcile_manifest_after_entity_change --mode remove` has run for them (no audit CSV; manifest is venue/data_type/instrument_type-grain with an `instrument_count`, not per-instrument). Old ICE cells keep their stale higher `instrument_count` (Brent/softs/DX included) until the date is re-fetched under the new universe; the venue=ICE token STAYS (DXY is Yahoo-sourced) so the cells aren't auto-dropped. Result: tradfi captured-side over-counts dropped instruments on un-refetched historical dates.
+
+### Follow-up todos
+
+- [ ] [SCRIPT] P1. instruments-service — after the tradfi-v9 close-out, run `reconcile_manifest_after_entity_change.py --mode remove --asset-group tradfi` for each dropped Databento instrument/dataset (Brent BRN, Gasoil G, ICE DX, softs CT/CC/KC/SB/OJ; datasets IFEU.IMPACT/IFUS.IMPACT) → flips their lingering captured rows to `REMOVED_ENTITY_TOMBSTONE` so they exit the coverage denominator (dry-run → audit CSV → --no-dry-run). Then a phantom sweep (`reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`). Target repo: instruments-service.
+- [ ] [SCRIPT] P2. instruments-service — for old tradfi dates whose `instrument_count` changed (equity ETFs moved XNAS.ITCH→DBEQ.BASIC; CME cells now include EC* event contracts) but were captured pre-prune, re-run the IS instruments fetch for a representative sample to confirm the new parquet's instrument set matches the new universe (re-fetch self-corrects the count); enumerate the un-refetched date range. Target repo: instruments-service.
+- [ ] [SCRIPT] P3. deployment-service/instruments-service — OPTIONAL physical-GCS cleanup of old ICE-Databento instrument parquets once the tombstone reconciliation confirms 0 consumers (twin-verify; operator-gated delete, never blind).
