@@ -533,7 +533,9 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       in `paper_engine.py`); LIVE bps from the trades ledger (`paper_live.pnl_bps`). UI shows it on the Cumulative-PnL +
       Exec-cost KPI cards, a per-strategy attribution column, the per-coin KPI cards, and the booked-trades window
       (realized cost-bps). First numbers: total **+7.1 bps** (basis +21.4 / cs +4.0 / **short −14.7** — a hedge, not a
-      standalone alpha). Repos: e2e-testing (engine) + unified-trading-system-ui.
+      standalone alpha). Evidence: engine deployed (both Cloud Run jobs) + GCS-mirrored (`bps_summary.json` total bps 7.07
+      live); unified-trading-system-ui@c0b669ab | pw:L2 ✓ (6 passed) | regression:
+      tests/smoke/paper-trading-live-ledgers.smoke.spec.ts.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
