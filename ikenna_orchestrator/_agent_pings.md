@@ -3535,3 +3535,23 @@ Plan-of-record: `plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_0
 (1) Stale codex pointer `09-strategy/operational/pnl-attribution.md` (missing) in 4 referrers incl. CLAUDE.md:654 + SUB_AGENT_MANDATORY_RULES.md:326 → correct path `architecture-v2/cross-cutting/pnl-attribution.md`.
 (2) Abandoned `plans/active/INDEX.md` — 99-entry drift, superseded by the master-plan auto-inventory.
 Corpus otherwise clean: 0 hard hygiene failures, no verified missed flips, no contradictions. 26 grace plans skipped.
+
+## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
+
+`run_hygiene_sweep.sh --ci` exit code: 1
+Hard failures: 1  |  Soft warnings: 1
+
+Run locally to see details:
+```bash
+cd $(git rev-parse --show-toplevel)
+bash scripts/plan-hygiene/run_hygiene_sweep.sh
+```
+
+Auto-fix frontmatter:
+```bash
+python3 scripts/plan-hygiene/fix_frontmatter.py
+```
+
+This notification will reappear daily at 05:00 UTC until the sweep passes clean.
+Clear by fixing violations and pushing to live-defi-rollout.
+

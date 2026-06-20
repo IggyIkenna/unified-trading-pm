@@ -1768,3 +1768,23 @@ path is the natural main-push/LDR-push auto-fire — which only fires for the ~4
 **Cost/vendor**: none — IAM grant only (GCP-native Cloud Build, already provisioned). No new subscription.
 
 **Status**: BLOCKED-CREDENTIALS — awaiting Ikenna grant. Auto-resolves when the role lands (re-run the trigger + watch).
+
+## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
+
+`run_hygiene_sweep.sh --ci` exit code: 1
+Hard failures: 1  |  Soft warnings: 1
+
+Run locally to see details:
+```bash
+cd $(git rev-parse --show-toplevel)
+bash scripts/plan-hygiene/run_hygiene_sweep.sh
+```
+
+Auto-fix frontmatter:
+```bash
+python3 scripts/plan-hygiene/fix_frontmatter.py
+```
+
+This notification will reappear daily at 05:00 UTC until the sweep passes clean.
+Clear by fixing violations and pushing to live-defi-rollout.
+
