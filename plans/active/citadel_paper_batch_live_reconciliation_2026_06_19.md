@@ -307,7 +307,7 @@ are identified (2) and the ledger exists (3).
       `cli/handlers/paper_run_handler.py`, `engine/strategies/v2/base.py`.
 - [x] ✅ [CODE] P9.C. **Guard — all-long carry run fails loud** — DONE (2026-06-20). `ledger_emit.assert_carry_basis_structure`
       (+ runtime call in `run_paper`); unit test `test_carry_staked_basis_hedge_short_regression.py`.
-- [ ] [SCRIPT] P9.1. **DEFERRED (pre-existing, NOT this work) — fix `Event logging not initialized` in non-carry engine
+- [ ] [SCRIPT] P3.1. **DEFERRED (pre-existing, NOT this work) — fix `Event logging not initialized` in non-carry engine
       unit tests.** `tests/unit/engine/strategies/v2/test_archetype_engines.py` (arbitrage_price_dispersion) +
       `test_arbitrage_price_dispersion_funding_rate_engine.py` + `test_archetype_rotation.py` +
       `test_archetype_state_persistence.py` + `test_batch_harness.py` + `cli/handlers/test_batch_handler_manifest_guard.py`
@@ -317,11 +317,11 @@ are identified (2) and the ledger exists (3).
       paths. ~33 tests red on the CLEAN tree (verified via `git stash`), blocking the full strategy-service QG. Fix:
       broaden the autouse fixture to `setup_events(..., "test")` (or patch each engine module's `log_event`). Repo:
       strategy-service. Provenance: paper/batch spine fix session 2026-06-20.
-- [ ] [SCRIPT] P9.2. **DEFERRED (pre-existing, NOT this work) — UAC version drift blocks strategy-service QG preflight.**
+- [ ] [SCRIPT] P3.2. **DEFERRED (pre-existing, NOT this work) — UAC version drift blocks strategy-service QG preflight.**
       `quality-gates.sh` version-alignment gate: local `unified-api-contracts=0.26.0` vs main `0.27.0`. Run
       `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix` (after `git pull origin main` in
       PM). Repo: strategy-service (dep alignment). Provenance: paper/batch spine fix session 2026-06-20.
-- [ ] [SCRIPT] P9.3. **NICE-TO-HAVE — SWAP leg `size_units` is denominated in the IN asset (USDC), not the OUT asset
+- [ ] [SCRIPT] P3.3. **NICE-TO-HAVE — SWAP leg `size_units` is denominated in the IN asset (USDC), not the OUT asset
       (ETH).** The `UNISWAP_V3:ETH` position materializes `net_qty=800000` (= 8×100k USDC-in) rather than ETH-out units,
       because the carry archetype's SWAP leg `size_units=usdc_to_stake`. Harmless to the delta-neutral thesis (the
       staked-ETH-vs-perp legs are the hedge pair) but a per-row unit-label inconsistency on the SWAP leg. Diagnose: align
@@ -510,7 +510,7 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       queue priority still fills); a candle that only TOUCHES (`low==limit`) = a 25% queue share; never reaches → no
       fill. Always AT the limit, never better. Validated vs real Binance UNI 1m: $59k order → 53% filled / 47% missed (vs
       flat-1/3's fantasy 100%). Repo: e2e-testing (engine).
-- [ ] [CODE] PB.5. **Taker = VWAP-walk the live depth** — the IOC/taker path currently fills the whole order at
+- [ ] [CODE] P2.5. **Taker = VWAP-walk the live depth** — the IOC/taker path currently fills the whole order at
       first-1m-open + flat slip; replace with a volume-weighted walk THROUGH the order book (the dashboard already pulls
       live depth at $250k/$1M) so the taker fill price is the realistic average price through the book. Repo: e2e-testing.
 - [x] ✅ [CODE] PB.6. **Missed-remainder policy — DROP wins (backtest-decided, NOT requote)** — PB.7 verdict: dropping
@@ -524,7 +524,7 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       **VERDICT: single-shot (= the live swept/touched + drop model) is most faithful AND risk-adjusted-best** — it
       validates the deployed engine, rejects requote (PB.6), and confirms PB.4. Determinism held (same code+data). bps
       PnL surfaced as a first-class column. Repo: e2e-testing (`_fill_backtest.py`).
-- [ ] [CODE] PB.8. **Paper-tape fidelity tier (aggTrades)** — capture the real Binance aggTrades/order-book stream so
+- [ ] [CODE] P2.8. **Paper-tape fidelity tier (aggTrades)** — capture the real Binance aggTrades/order-book stream so
       paper fills resolve at TRUE volume-at-price (vs 1m-total-volume proxy); batch reruns the captured tape → ε=0
       preserved; the coarse-1m vs granular-tape gap = the measured "execution realism." Repo: e2e-testing.
 - [x] ✅ [CODE+UI] PB.9. **bps PnL everywhere ($ PnL / $ traded × 1e4)** — operator ask 2026-06-20: surface the
