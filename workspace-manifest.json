@@ -165,7 +165,7 @@
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -211,7 +211,7 @@
       "role": "api",
       "tags": ["analytics", "cefi", "standard"],
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "deployment-api": {
       "auto_build_on_quickmerge": true,
@@ -261,7 +261,7 @@
       "serves_ui": ["deployment-ui"],
       "tags": ["cefi", "deployment", "standard"],
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -299,7 +299,7 @@
       "role": "service",
       "tags": ["cefi", "deployment", "standard"],
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "execution-service": {
       "type": "service",
@@ -507,7 +507,7 @@
       "role": "infrastructure",
       "tags": ["standard", "tradfi"],
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "instruments-service": {
       "type": "service",
@@ -792,7 +792,7 @@
       "role": "test",
       "tags": ["cefi", "monitoring", "standard"],
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "trading-agent-service": {
       "type": "service",
@@ -954,7 +954,7 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "semver_policy": "agent",
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "unified-trading-system-ui": {
       "auto_build_on_quickmerge": true,
@@ -1040,7 +1040,7 @@
       "tier": null,
       "role": "test",
       "tags": ["e2e", "testing", "cross-domain"],
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     },
     "agent-orchestrator": {
       "type": "tool",
@@ -1068,7 +1068,7 @@
           "required": true
         }
       ],
-      "cascade_invalidated_by": "unified-trading-library=0.12.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.24.0"
     }
   },
   "topologicalOrder": {
@@ -1478,7 +1478,7 @@
       "unified-api-contracts",
       "greeks-service"
     ],
-    "sit_retry_count": 2,
+    "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": ["greeks-service", "unified-api-contracts"]
   },
@@ -1494,9 +1494,9 @@
       "sha": "0f2633e79cb594287f263c50034530d00d3b720a",
       "version": "0.21.0"
     },
-    "client-reporting-api": {
-      "version": "0.11.0",
-      "sha": "71f7fcb04cd626677ca0e36764db5b73f033bb1c",
+    "unified-api-contracts": {
+      "version": "0.24.0",
+      "sha": "7f196105b47da83660ceaa3c1600fb5a33e48f93",
       "branch": "staging"
     },
     "unified-api-contracts": {
@@ -1513,6 +1513,26 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-19T23:19:02.883351Z",
+        "commits": {
+          "client-reporting-api": {
+            "version": "0.11.0",
+            "sha": "71f7fcb04cd626677ca0e36764db5b73f033bb1c",
+            "branch": "staging"
+          },
+          "greeks-service": {
+            "version": "0.8.0",
+            "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
+            "branch": "staging"
+          },
+          "strategy-service": {
+            "version": "0.19.0",
+            "sha": "90e7a6f2328826729b183d09ea8504baf369f497",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-19T22:26:43.035502Z",
         "commits": {
@@ -1565,21 +1585,6 @@
             "branch": "staging",
             "sha": "f420c3d3eec26715cef23104b872d64f06ce3b95",
             "version": "0.10.0"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-19T16:03:06.182104Z",
-        "commits": {
-          "unified-trading-library": {
-            "version": "0.15.0",
-            "sha": "670391d09cf294bf1f1c579746a8756210dca819",
-            "branch": "staging"
-          },
-          "client-reporting-api": {
-            "version": "0.9.0",
-            "sha": "0d7c7fc8b9570727dd4400a62203e9bca7ca57e2",
-            "branch": "staging"
           }
         }
       }
