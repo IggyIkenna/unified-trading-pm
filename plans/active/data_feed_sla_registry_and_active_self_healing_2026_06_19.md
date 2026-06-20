@@ -117,12 +117,20 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       greeks-service@`6f49522`, ibkr-gateway-infra@`415c8b0`, UAC@`e6c2ec7`, deployment-service@`510047e`. (Lock-only
       bumps via `quickmerge --agent --files 'uv.lock' --skip-preflight` — `--skip-preflight` because heavy concurrent
       foreign WIP in dep repos blocks the dirty-deps pre-flight; safe for a transitive lock bump; trailer intact.)
-      **2 BLOCKED on FOREIGN QG-red (NOT the msgpack bump — uv.lock is bumped + ready in both working trees):**
-      `agent-orchestrator` (pre-existing dashboard vitest-not-found + tsc TS2307 — UI test infra) and `alerting-service`
-      (the `DAILY_LEDGER_DIGEST` parity test, another agent's ledger-digest WIP — see Progress-Log finding). **The
-      `--ignore-vuln GHSA-6v7p-g79w-8964` MUST STAY until those 2 land** (their owners fix the foreign QG-red, then bump
-      + ship + drop the ignore). Removing the ignore now would red the 2 unbumped repos. Genuine-impossibility-in-scope
-      per autonomous rule 1 (cannot ship past a foreign red gate without editing foreign code).
+      **2 BLOCKED on PROMOTION-MACHINERY / FOREIGN gates — NOT the msgpack bump (verified 2026-06-20 — both repos'
+      uv.lock cleanly reaches 1.2.1):**
+      - `alerting-service` — the `DAILY_LEDGER_DIGEST` parity test that blocked it earlier is now GREEN (ledger-digest fix
+        landed alerting@`f5da821`). It now blocks on the **version/internal-dep-alignment gate** (`run-version-alignment`
+        — its UAC pin trails the fresh `dep-update/unified-api-contracts-0.24.0`); that gate blocks ANY alerting-service
+        ship right now (not feed-SLA-specific) and its remedy is the workspace-broad `run-version-alignment.sh --fix` or
+        the human-only `--skip-version-alignment` — out of feed-SLA scope. Bump reverted (regenerable); re-ship after the
+        dep-update flow reconciles alerting's version.
+      - `agent-orchestrator` — still red on the foreign UI dashboard `vitest: not found` + `tsc TS2307` (its
+        node-test-infra not installed/working on this host); foreign + out of feed-SLA scope. Owner fixes the dashboard,
+        then bump + ship.
+      **The `--ignore-vuln GHSA-6v7p-g79w-8964` MUST STAY until those 2 land** — removing it now would red the 2
+      unbumped repos. Genuine-impossibility-in-scope per autonomous rule 1 (can't ship past a foreign/version-machinery
+      red gate without a workspace-broad version op or editing foreign UI infra).
 - [x] ✅ [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** — UAC@`6b91f1f`: added to
       `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`); `from unified_api_contracts.internal
       import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the `ledger_asset_resolution` WIP landed.)

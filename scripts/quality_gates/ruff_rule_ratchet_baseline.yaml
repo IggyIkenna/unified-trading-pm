@@ -38,7 +38,7 @@ repos:
     tid251: 0
   e2e-testing:
     dtz: 6
-    tid251: 10
+    tid251: 5
   execution-service:
     dtz: 10
     tid251: 10

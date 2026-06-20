@@ -225,6 +225,27 @@ are identified (2) and the ledger exists (3).
       pass, incl. 11 paper-trading) | regression: `tests/smoke/paper-trading-dashboard.smoke.spec.ts` +
       `tests/smoke/paper-trading-ledger.smoke.spec.ts`. tsc clean · 0 ESLint warnings · vitest 285 files/3273 tests ·
       `NEXT_PUBLIC_MOCK_API=true pnpm build` ✓ · `quality-gates.sh --no-fix` exit 0. Repo: unified-trading-system-ui.
+- [x] ✅ [CODE] P2.5.3. **Dashboard data-coherence fix — single canonical run + ledger-derived trades/pnl** — DONE
+      (`client-reporting-api@1523a26`, deployed Cloud Run rev `client-reporting-api-00004-9s6` image `golive-1523a26`).
+      The live dashboard panels returned incoherent data: `/trades` read a stale OKX `trades.json` (0 fills), `/pnl`
+      keyed `entries` off an empty attribution parquet (`entries:[]`), and EACH per-client endpoint resolved "latest"
+      run independently (trades saw one run, positions another, recon another). Fix: `core/ledger_views.py` adds
+      `resolve_canonical_run()` — the SSOT resolver returning the newest COMPLETE paper run (batch-rerun `__batch__/`
+      objects excluded), used by every endpoint so they cannot diverge; `read_ledger_rows` is now RUN-SCOPED (was
+      reading all runs concatenated → doubled figures). `read_canonical_run_fills()` + the legacy `/api/v1/trades`
+      route (the UI's path) + a new `/api/v1/clients/{c}/trades` derive real fills from the canonical run's
+      InstructionLedger via UTL `load_instruction_ledger_fills`. `/pnl` now derives `entries` from the position ledger
+      (`compute_pnl_entries`) not the attribution parquet; `/transfers` returns a TYPED honest-empty
+      (`status=NO_TRANSFER_ROWS` + note) when the run has no money-movement rows (the carry run models capital as TRADE
+      legs); `/instructions` surfaces qty via `target_qty`/`size`/`quantity`. **Live-verified (real JWT, rev
+      00004-9s6)**: trades → 21 fills `source=ledger`; positions → 3 legs; pnl → 3 entries (realized 0 — all-open run,
+      correct avg-cost); instructions → 21 (non-blank sizes); transfers → typed NO_TRANSFER_ROWS; recon → DETERMINISTIC
+      21 matched / 0 unmatched / ε=0 — ALL resolving the SAME `run_id=paper-20260620004135-744d8e6c`. QG-green (70.94%
+      cov, 621 tests); 16 new tests (canonical-run resolution + no-doubling + ledger-derived trades/pnl). **Build note**:
+      the normal cloudbuild is blocked fleet-wide by a UAC dep-promotion lag (base image ships UAC 0.23.0, AR registry
+      ≤0.9.0, repo floor `>=0.24.0`) — image built locally against the workspace's editable UAC 0.25.0 + deployed
+      directly; the registry/base-image refresh is tracked in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
+      Repo: client-reporting-api.
 
 ## Phase 6 — Slack log
 
