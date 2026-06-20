@@ -316,13 +316,20 @@ The canonical `client-reporting-api` (the dashboard's REAL serving layer, readin
   Bearer HS256 JWT from the API's own `/auth/login` (`DEMO_USERS`, e.g. `admin@unified-trading.com` / `admin123`,
   internal role → reads any client). The full UI-equivalent flow (login → Bearer JWT → `/reconciliation/latest`) is
   verified 200 on the live service.
-- **UI**: the live `odum-portal` Cloud Run UI is a stale (2026-05-03) `unified-trading-system-ui` that **404s
-  `/paper-trading`** (predates the dashboard). A dedicated UI image was built (`uts-ui-papertrading`) from current HEAD
-  with `NEXT_PUBLIC_REPORTING_API_URL`=the live API, `NEXT_PUBLIC_MOCK_API=false`, `NEXT_PUBLIC_AUTH_PROVIDER=demo`
-  (build env `config/docker-build.env.papertrading`) for a Cloud Run deploy at `/paper-trading?client=firm-paper-
-  determinism`. **Note**: the production UI uses Firebase auth whose ID token the API's HS256 `decode_token` cannot
-  verify — that UI↔API auth bridge is the documented post-cutover surface; the `demo` provider path + the API's own
-  `/auth/login` is the working bridge.
+- **UI — DEPLOYED + LIVE-viewable (2026-06-20)**: the live `odum-portal` Cloud Run UI was a stale (2026-05-03)
+  `unified-trading-system-ui` that **404'd `/paper-trading`** (predated the dashboard). Rebuilt from current LDR HEAD
+  (`unified-trading-system-ui@1ed18e6c`, Cloud Build `7c9e0f93`, image tag `:papertrading`) with
+  `NEXT_PUBLIC_REPORTING_API_URL`=the live API, `NEXT_PUBLIC_MOCK_API=false`, `NEXT_PUBLIC_AUTH_PROVIDER=demo`
+  (build env `config/docker-build.env.papertrading`) and **deployed to `odum-portal` @ asia-northeast1 — revision
+  `odum-portal-00028-wts`, 100% traffic**. **Measured 200** at
+  `https://odum-portal-cldtjniqvq-an.a.run.app/paper-trading?client=firm-paper-determinism` (was 404). API rewrite
+  verified active (portal `/api/client-reporting/*` → live API returns 401-auth-required, not 404), and the native
+  `/api/paper-trading` route serves `x-paper-source: gcs-engine` (real engine output). Scoped to the asia-northeast1
+  region only (the URL the operator opens); the `www.odum-research.com` LB's eu/us regions stay on `:production`
+  (Firebase auth), unchanged. **Operator step**: log in via the `demo` provider (API `/auth/login`,
+  `admin@unified-trading.com` / `admin123`) so the `?client=` ledger panels carry a Bearer token. **Note**: the
+  production Firebase auth → API HS256 `decode_token` bridge remains the documented post-cutover surface; the `demo`
+  provider path + the API's own `/auth/login` is the working bridge.
 - **Daily-T+1 cron (`terraform/gcp/paper_week_determinism_scheduler.tf`)**: 6 resources (3 jobs + 3 schedulers) NOT
   applied. Left to the operator — the dir is a 399-resource shared state needing `-var` (project_id/environment/
   bucket_prefix) not committed as tfvars → blanket apply is high blast-radius. The dashboard is viewable WITHOUT the

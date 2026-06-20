@@ -156,15 +156,17 @@ the always-on central VM → zero marginal cost.
       `request-major-bump.yml`, `major-bump-issue-handler.yml`, `fix-approval-timeout.yml`, `reap_stale_blockers.py`
       (also has NO deep-link — add the orchestrator backlog link), `run-audit-reflog-with-alert.sh` (no deep-link).
       Repo: unified-trading-pm. ✅ — unified-trading-pm@3db205535
-- [ ] [ORCHESTRATOR] P1. **Honest-header fix**: `notify_agent_stuck_respawned` (`server/notifications/slack.py:269`) is
+- [x] ✅ [ORCHESTRATOR] P1. **Honest-header fix**: `notify_agent_stuck_respawned` (`server/notifications/slack.py:262`) is
       hard-coded "Auto-respawn" but 2 of 3 callers never respawn — `main_agent_keeper.py:214` (a rate-limit page, fake
       `slot_id=0`) and `worker_liveness_watchdog.py:923` (worker left FROZEN, explicitly not killed). Split into
       `notify_main_agent_rate_limited` + `notify_worker_usage_frozen` (mirrors the Phase-4 plan-health/escalation
-      split). Verify `notify_escalation_dispatched` actually has a live caller (audit found none). Repo:
-      agent-orchestrator.
-- [ ] [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py:686`)
-      is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrate to the
-      `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Repo: agent-orchestrator.
+      split). **Verified**: `notify_escalation_dispatched` IS live (`escalation.py:144`). Repo:
+      agent-orchestrator — agent-orchestrator@1a679e1
+- [x] ✅ [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py`)
+      is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrated to the
+      `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Added `escalation_pool_exhaustion_path()`
+      to `dedup_state.py`; replaced module global with `load/save_bool_sentinel` calls; updated tests. Repo:
+      agent-orchestrator — agent-orchestrator@2956fbc
 - [x] [ORCHESTRATOR] P2. **Slot deep-link sweep**: swap the root `/vm/{id}` footer for
       `_dashboard_deep_link("/fleet-git?slot=N", …)` (already used by quarantine + git-staleness) on
       `notify_slot_stale`/`_failed`/`_blocked`, `notify_unpushed_plans`, `notify_agent_stuck_escalation`,
