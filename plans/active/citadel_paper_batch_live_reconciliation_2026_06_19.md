@@ -448,6 +448,28 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+### 2026-06-20 — Autonomous finish: per-strategy execution (PB.12) wired + deployed, Slack reroute, UI on UAT, e2e source landing
+
+Operator `/autonomous` (4h, no prompts): optimise ALL strategies' execution, finalise paper, land everything in
+e2e-testing, deploy the UI, P&L plots + paper trading (batch + live) checkable.
+
+- **PB.12 per-strategy execution — all maker, taker eliminated.** `_exec_optimize.py` extended to cs/basis/short
+  (each reduced to (targets, alpha); basis alpha = funding, short = −return). TAKER is catastrophic on EVERY strategy
+  (spread+impact > edge: cs −$1.1M, basis taker costs $477k vs maker's $42k). Winners: **cs maker 25%+drop** (Sharpe
+  0.19, ½ DD), **basis maker FULL+requote** (Sharpe ~15 — fill the whole carry cheaply), **short maker 25%** (marginal
+  leg). WIRED: `_ledgers.EXEC_CONFIG` (per-strategy participation in the live fill sim — tested: all 3 legs fill maker)
+  + `paper_engine` trades all maker. Both Cloud Run jobs redeployed + executed clean.
+- **Slack reroute** → dedicated `agent-orchestrator-paper-trading-slack-webhook` (was the general orchestrator webhook)
+  in both deploy.sh; verified bound to `paper-trading-engine`. The "trades to do now" producer is THIS engine — it was
+  uncommitted, which is why the other agent's search found 0 hits; landing the source (below) fixes findability.
+- **UI deployed to UAT** — `deploy-uat-on-merge.yml` auto-deploys uat.odum-research.com on every LDR push; all 4
+  paper-trading commits (latest `0297a593`) show `success`. P&L plots + per-coin + ledgers + bps live on the sandbox.
+- **e2e-testing source landing** — the "N10" blocker (5 `scripts/sports/*` import-pattern violations) was fixed on
+  remote; pulled (14 commits) → 0 violations. Fixed a stale-stash manifest conflict + extended the paper_trading
+  ruff per-file-ignore (dense POC engine style). Gate green → quickmerge (the engine source is now committed/findable).
+- **Live paper verified** — `ledgers.json` fresh each cycle: 4 ledgers (signals/orders/trades/transfers) populating,
+  live_bps live; dashboard short 2.42 bps; engine source mirrored to GCS.
+
 ### 2026-06-20 — bps PnL correctness fix (short sign) + live-bps 15m cadence + per-coin exec cost (PB.9 follow-ups)
 
 **Bug (operator-caught): the dashboard short bar showed +$18.7k but its bps showed −14.66 — a sign contradiction.** Root
