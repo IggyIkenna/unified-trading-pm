@@ -404,7 +404,14 @@ pointer before acting on any of them.
   MEASURED, never a hardcoded conclusion stapled onto a proxy (2026-06-17)**: every clause after the colon must
   correspond to a variable the loop actually queried this iteration — `echo "PR MERGED — lock released"` when you only
   read the PR state (not the lock) is a FALSE conclusion ("PR merged" ≠ "chain complete"; staging-merge ≠ lock-release);
-  if the goal is "lock released" the check reads the lock flag, if "fix on main" it greps `main`. SSOT:
+  if the goal is "lock released" the check reads the lock flag, if "fix on main" it greps `main`. **The liveness/death
+  check MUST NOT self-match (2026-06-19)**: `pgrep -f foo.py` / `ps|grep foo.py` matches the watcher's OWN bash (its
+  argv contains `foo.py`) → always "alive" → a CRASH of the watched process is never detected, watcher hangs forever
+  (only exits on success). Watch the EXACT pid with `kill -0 <PID>` (grab the real worker PID via
+  `ps aux|grep "[p]ython3 foo.py"` — bracket-trick excludes the grep; the tiny-RSS/0%-CPU wrapper bash is NOT the
+  worker), or `pgrep -f pat|grep -v $$`; and race-guard death (after `kill -0` fails, sleep + re-check the success
+  marker — the worker may exit + write it in one tick). A `nohup … &` process is NOT harness-tracked (no auto-wake) —
+  prefer launching the worker itself with `run_in_background` so its exit wakes you. SSOT:
   `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § Watcher coverage.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **QG-sweep**: batch the GATE not the commits; shared-host ≤2 full QGs at once (governor floor raised 1→2, 2026-06-05);

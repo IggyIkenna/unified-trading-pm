@@ -567,8 +567,21 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   correspond to a variable the loop actually queried THIS iteration — if the goal is "lock released" the check reads the
   lock flag (`grep -q 'locked=False'`), if "fix on main" it greps `main`; "PR merged" / "staging green" / "SIT passed" /
   "lock released" / "content on main" are DISTINCT pipeline checkpoints and a watcher proves only the one it literally
-  queries (no editorial adjectives in the echo). **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick ONE
-  wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
+  queries (no editorial adjectives in the echo); (5) **the liveness/death check MUST NOT match the watcher's OWN command
+  line (HARD RULE, codified 2026-06-19)** — `pgrep -f <pattern>` / `ps aux | grep <pattern>` matches the watcher's own
+  bash (whose argv literally contains `<pattern>`, e.g. a loop body `if ! pgrep -f train.py`), so the check returns the
+  watcher's own PID → always "still alive" → the death branch NEVER fires → a watched process that CRASHES is never
+  detected and the watcher hangs forever, only ever exiting on the success marker (incident 2026-06-19: a
+  persist-watcher `pgrep -f _ens_persist.py` self-matched; would have waited out a real OOM crash silently). FIX: watch
+  the EXACT pid with `kill -0 <PID>` (no string match — capture the real `python3 …` PID once via
+  `ps aux | grep "[p]ython3 foo.py"`, the `[p]` bracket-trick excluding the grep itself, NOT the wrapper bash/nohup
+  whose tiny RSS + 0% CPU reveals it isn't the worker), or exclude self (`pgrep -f pat | grep -v $$`), or match a marker
+  the target has but the watcher doesn't. ALWAYS pair death-detection with a **race-guard**: after `kill -0` fails,
+  `sleep` briefly and re-check the success marker before declaring failure (the worker may finish + write the marker in
+  the same tick it exits). A `nohup … &` detached process is NOT a harness-tracked task (no auto-wake) — it MUST be
+  watched by a separate `run_in_background` pid-liveness watcher; prefer launching the worker itself with
+  `run_in_background` so its exit wakes you directly. **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick
+  ONE wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
   (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE
   background _orchestrator_ that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an
   active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator
@@ -829,13 +842,13 @@ engines, is review-blocking. "Citadel-grade paper trading" = the complete as-if-
 per venue+instrument+share_class / P&L / PnL attribution / instruments breakdown) in four ledgers (`InstructionLedger`
 tape + `PositionLedger` as-if-filled state + `PassiveLedger` accruals + `PricingLedger` marks) + a daily ledger +
 daily-T+1 recon Slack digest. **The spine integrates via canonical UAC/UTL SSOT derivation — NEVER hand-threaded
-metadata maps or bolt-on fixtures (HARD RULE, operator 2026-06-19).** Every fill carries the canonical
-`InstrumentKey` (`VENUE:INSTRUMENT_TYPE:SYMBOL`, built via UAC `instrument_type_for_action`); the ledger writers DERIVE
-asset_symbol / asset_canonical_id / asset_class from it (`derive_ledger_asset_fields` → `asset_class_for_instrument_type`,
-UAC `internal/reference/ledger_asset_resolution.py`) — banned: threading `instrument_type_of`/`asset_symbol_of`/
+metadata maps or bolt-on fixtures (HARD RULE, operator 2026-06-19).** Every fill carries the canonical `InstrumentKey`
+(`VENUE:INSTRUMENT_TYPE:SYMBOL`, built via UAC `instrument_type_for_action`); the ledger writers DERIVE asset_symbol /
+asset_canonical_id / asset_class from it (`derive_ledger_asset_fields` → `asset_class_for_instrument_type`, UAC
+`internal/reference/ledger_asset_resolution.py`) — banned: threading `instrument_type_of`/`asset_symbol_of`/
 `asset_canonical_id_of`/`asset_class_of` dicts, a hardcoded `_DEFAULT_INSTRUMENT_TYPE`, or any per-caller metadata map
-the canonical `InstrumentKey`/`InstrumentRecord`/registry can derive. Future strategies + agents build on the main infra,
-not on a re-invented local dict. SSOT: `codex/09-strategy/operational/paper-batch-live-reconciliation.md` + plan
+the canonical `InstrumentKey`/`InstrumentRecord`/registry can derive. Future strategies + agents build on the main
+infra, not on a re-invented local dict. SSOT: `codex/09-strategy/operational/paper-batch-live-reconciliation.md` + plan
 `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent epic `batch_live_symmetry_master`).
 
 ---

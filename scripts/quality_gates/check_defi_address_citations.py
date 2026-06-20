@@ -105,6 +105,12 @@ EXCLUDE_DIR_NAMES: Final[frozenset[str]] = frozenset(
         "mocks",
         "audits",
         "external",
+        # agent runtime / worktree trees — NOT repo source. A nested `.claude/worktrees/agent-*` (another agent's
+        # worktree) or a `.tabs/<N>` slot clone holds a full copy of the repo; scanning it double-counts every address
+        # and false-fails the ratchet from cruft the committing agent does not own (incident 2026-06-19).
+        ".claude",
+        ".tabs",
+        "worktrees",
     }
 )
 
