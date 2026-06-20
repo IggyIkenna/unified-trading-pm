@@ -344,6 +344,26 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+### 2026-06-20 — bps PnL correctness fix (short sign) + live-bps 15m cadence + per-coin exec cost (PB.9 follow-ups)
+
+**Bug (operator-caught): the dashboard short bar showed +$18.7k but its bps showed −14.66 — a sign contradiction.** Root
+cause: the per-strategy bps was sourced from `_coin_history`'s *re-derived* own_trend(200,20) short (a per-coin proxy)
+which **disagrees in SIGN with the real research short leg** (`legs_real`) — re-derived short = −$269k even since 2023,
+real short = +$18.7k. The re-derivation is a per-coin visualization proxy, NOT the canonical leg. **Fix:** the dashboard's
+per-strategy + aggregate bps now divide the **real leg PnL** (`legs_real`, the SAME number the chart plots) by the
+**since-2023 traded notional** (`turnover_y0`, new in `bps_summary.json`). Result: short **+2.42 bps** (positive, matches
+its bar); cs +7.56, basis +13.77, total **+8.53 bps**; exec-cost twin recomputed on the same window. The per-coin page
+keeps the re-derived attribution (the only per-coin source) — labelled as such; headline legs are canonical.
+
+**Live bps → 15-min cadence (operator ask):** moved `live_bps` out of the daily paper-engine into `_ledgers_json` (the
+signal engine writes it every 15m to `ledgers.json`, which the UI already polls every 30s) = `cum paper PnL / cum $
+filled`. UI prefers the 15m-fresh ledger value, falls back to the daily snapshot.
+
+**Per-coin realized exec cost (operator ask):** the dashboard depth table already charts per-coin *slippage* (the
+forward cost driver); added per-coin **realized** cost-bps (`Σcost/Σnotional` from the live fills) to `_coin_history`
+(`_live_cost`, refreshed in both the full build + the light per-cycle path) → shown on the per-coin "orders filled" card.
+Redeploying both Cloud Run jobs.
+
 ### 2026-06-20 — Fill-model backtest (PB.7) decided + bps PnL wired everywhere (PB.9)
 
 **PB.7 — the fill model is backtest-decided, not blind-shipped.** `_fill_backtest.py` replayed the cs book over 8.8y
