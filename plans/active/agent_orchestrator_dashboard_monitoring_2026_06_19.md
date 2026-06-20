@@ -78,8 +78,8 @@ missing. Full evidence + per-ask current-state/gap/change-list:
       only `api.agent-orchestrator.odum-research.com → :8765`; the dashboard is a **separate origin**
       `agent-orchestrator.odum-research.com`, not served here). Parameterize the target via env/arg + document the real
       dashboard host/deploy path. Repo: agent-orchestrator. — agent-orchestrator@48089f7
-- [ ] [ORCHESTRATOR] P3. `server/orm.py` `AgentRow` docstring still reads "main, review, backup, etc." + "promote backup
-      → main" — stale after the backup-role deprecation; update to main/review/custom. Repo: agent-orchestrator.
+- [x] ✅ [ORCHESTRATOR] P3. `server/orm.py` `AgentRow` docstring still reads "main, review, backup, etc." + "promote backup
+      → main" — stale after the backup-role deprecation; update to main/review/custom. Repo: agent-orchestrator. — agent-orchestrator@1376070
 - [x] ✅ [ORCHESTRATOR] P2. Review agent's `AgentRow.last_ping` isn't refreshed while its slot churns — a LIVE working
       review agent (owns a live `orch-slot-N` tmux, actively churning) shows `last_ping` hours stale and gets mislabeled
       `stale`/`offline` in the dashboard. **DONE** — three composing fixes, agent-orchestrator: (1)
