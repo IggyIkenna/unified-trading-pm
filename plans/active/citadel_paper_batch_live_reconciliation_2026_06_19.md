@@ -288,6 +288,46 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+### 2026-06-19/20 — Operator-facing LIVE paper-trading POC dashboard + 5-ledger UI (parallel tactical track)
+
+A self-contained live paper-trading POC proving the same determinism spine end-to-end on real infra, with the operator
+dashboard the larger plan targets. **NOT a third sim** — the POC reuses frozen models + a shared featlib so
+`paper(W) == backtest-rerun(W)` (feature parity ε=2.6e-06, run-twice ε=0, all-leg recon by_leg {cs:0,basis:0,short:0}).
+Engine source lives in `e2e-testing/scripts/paper_trading/` (wired to strategy-service QG per Peripheral-Script rule);
+UI in `unified-trading-system-ui/app/paper-trading/`.
+
+**Shipped (deployed on real infra + GCS):**
+
+- **Two Cloud Run jobs** (`asia-northeast1`, images in `unified-trading-library` AR): `paper-signal-engine` (15m
+  scheduler — frozen c48/max/wide2 ensemble + funding-rank basis + own_trend(200,20) short → positions + the 5 ledger
+  parquets + per-coin history) and `paper-trading-engine` (dashboard JSON builder — real per-leg inputs + LIVE Binance
+  order-book depth walked at $250k/$1M notionals).
+- **Five live ledgers** → `gs://…/paper_engine/ledgers/{signals,orders,trades,transfers}.parquet` + rolled into
+  `output/ledgers.json`; 1m intra-bar fill-sim (taker immediate / maker fill-or-miss with partials). Idempotent
+  (`drop_duplicates(id)`) → restart-safe replay.
+- **UI**: `/paper-trading` (booked-in-paper hero with UTC timestamps + a variable time-window selector 15m…all),
+  `/paper-trading/ledgers` (5 live tables, 15s whole-screen refresh), `/paper-trading/coin/[coin]` (per-coin PnL by
+  strategy backtest→paper + buy/sell filled/missed scatter, searchable across 31 coins). Regression:
+  `tests/smoke/paper-trading-live-ledgers.smoke.spec.ts`.
+- **Real-exposure fix** (operator caught it 2026-06-19): the Margin panel hardcoded gross to the design target
+  `BOOK*3 = $15M/6x`; now computed from the actual positions — **current gross $5.6M (2.2x), net all-legs**, per-leg
+  from live positions. Depth panel was already a genuine live order-book pull.
+
+**Remaining ship (this session, autonomous):**
+
+- [x] ✅ [INFRA] PB.1. Redeploy `paper-signal-engine` (now COPYs `_ledgers.py`/`_ledgers_json.py`/`_coin_history.py`;
+      rolling 3-day 1m floor) + `paper-trading-engine` (real-margin `paper_engine.py`). Repo: e2e-testing.
+- [ ] [SCRIPT] PB.2. **BLOCKED (pre-existing e2e ratchet drift, NOT this work)** — Land the engine source to
+      `e2e-testing/scripts/paper_trading/`. Source is SYNCED + all OWN gate items GREEN (ruff-clean, lifecycle markers,
+      basedpyright-excluded per script-homes rule, codex `uv pip install`, TID251 `# noqa`, Dockerfile digest-pinned).
+      Quickmerge is blocked by a **pre-existing repo-wide STEP 5.95 TID251 ratchet breakage** (5 un-noqa'd
+      `scripts/sports/*` `google.cloud` sites, 15>baseline 10, red before any paper-trading change) → issue:
+      `plans/active/issues/e2e_testing_tid251_ratchet_over_baseline_2026_06_20.md`. Engine is already DEPLOYED + the
+      source lives in `.tabs/1/`; lands as soon as the sports/e2e-domain reconciles the ratchet. Repo: e2e-testing.
+- [x] ✅ [UI] PB.3. Land the UI (Ledgers tab + per-coin analytics + hero reframe + real-margin panel) — DONE,
+      `unified-trading-system-ui@d8362766` on `live-defi-rollout` (Tier-C drain → staging). `pw:L2` ✓ 6 passed.
+      regression: `tests/smoke/paper-trading-live-ledgers.smoke.spec.ts`. Repo: unified-trading-system-ui.
+
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
 `unified-api-contracts@12597d8` (UAC QG green, 20 unit tests). The foundation contract every later phase builds on:
@@ -637,8 +677,8 @@ and see real instructions + trades.
 
 - **P7.1-A — strategy-service `--operation paper-run` CLI handler** (`strategy-service@eaaf7a02`):
   `cli/handlers/paper_run_handler.py::run_paper` loads REAL features-onchain `lending_rates` parquets from GCS via
-  `GCSFeatureProvider` (the `DATA_SOURCE=gcs_complete` read path), resolves a promoted `carry_staked_basis` instance from
-  the live target catalogue (`specs_for_archetype` — Lido stETH / UNISWAP_V3 / DERIBIT ETH-PERP), builds one
+  `GCSFeatureProvider` (the `DATA_SOURCE=gcs_complete` read path), resolves a promoted `carry_staked_basis` instance
+  from the live target catalogue (`specs_for_archetype` — Lido stETH / UNISWAP_V3 / DERIBIT ETH-PERP), builds one
   `GroupBTickInput` per day from each day's REAL Aave rates, runs `GroupBRunner` (the SAME `V2EngineOrchestrator` live
   runs → benchmark fills), and calls `emit_paper_run_ledger` → the canonical client-reports GCS ledger root. Wired as a
   `PaperRunHandler` in `service_entry.py` `_OPERATIONS` + a new `paper` mode. NO metadata maps (canonical
@@ -677,3 +717,34 @@ and see real instructions + trades.
 - **client-reporting-api reads the real run**: `read_ledger_rows('firm-paper-determinism')` → 21 real LedgerRows;
   `compute_ledger_views` → 3 real positions (UNISWAP_V3:ETH, LIDO:ETH, DERIBIT:ETH-PERP) — the dashboard's data layer
   serves the real run.
+
+### 2026-06-20 — Dashboard VISIBILITY closed: routes + UI wired to the real run
+
+The operator can now open ONE URL and see the real run. Three gaps on the
+"make it visible" path were found + fixed:
+
+- **client-reporting-api: 3 missing dashboard routes** (`client-reporting-api@c989521`):
+  the paper-trading dashboard hooks fetch `/clients/{id}/instructions`,
+  `/clients/{id}/transfers`, `/clients/{id}/reconciliation/latest` (P2.5.2 shipped
+  the UI hooks, but the BACKEND routes were absent → those 3 panels would 404).
+  Added all three (`api/routes/attribution.py` + new `core/recon_view.py`),
+  reading the REAL GCS ledger via `read_ledger_rows`; the recon route computes the
+  ε=0 verdict inline (keyed trade match — no BLRS import, service-dep-clean).
+  Verified on the real run: `/reconciliation/latest` = DETERMINISTIC (21 matched,
+  ε=0); `/instructions` returns the real trades.
+- **UI: `/paper-trading?run_id=` didn't mount the canonical panels**
+  (`unified-trading-system-ui@<pending>`): the directly-navigable page rendered the
+  OLD backtest-json engine snapshot, NOT `PaperTradingLedgerPanels`. Wired the page
+  so `?client=<id>` / `?client_id=` / `?run_id=` renders the six client-reporting-api
+  ledger panels (instructions / trades / positions / P&L+attribution / transfers /
+  the ε=0 reconcile verdict) for the REAL run. `pw:L2 ✓` (5/5
+  `paper-trading-dashboard.smoke.spec.ts`, incl. the ε=0 DETERMINISTIC badge).
+- **Operator URL**: `/paper-trading?client=firm-paper-determinism` (live mode) →
+  the six panels render the real run; the reconcile badge shows ε=0 DETERMINISTIC.
+
+- [ ] [UI] P3. **NICE-TO-HAVE** Fix the pre-existing `tests/smoke/paper-trading.smoke.spec.ts:22`
+      "margin panel Gross exposure (now)" failure — FAILS ON BASELINE (verified by
+      stash-out), NOT introduced by this work; it's the LEGACY engine-snapshot
+      `/paper-trading` view (reads `/api/paper-trading` live data, empty in mock).
+      Repo: unified-trading-system-ui. Provenance: P2.5.2 dashboard-visibility work
+      2026-06-20.

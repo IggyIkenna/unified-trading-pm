@@ -131,22 +131,45 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
      fix or a sanctioned manual fallback, as bug #11 did (per-repo staging→main PRs).
 
 3. **False-conclusion sin — a verdict the watcher never MEASURED (codified 2026-06-17).** Incident: a watcher's terminal
-   line was `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released";;`. `PR#81 MERGED` was a genuinely-true
-   measurement, but `— lock released` was a **hardcoded string stapled onto the success echo** — the watcher never read
-   the lock. It conflated "the proxy I watched reached its state" with "the whole chain completed". They were different
-   events: the PR merged into **staging**, while the breaking-cascade `staging_status.locked` flag was a SEPARATE state
-   still `True` ("SIT running"), gated on a downstream SIT the PR-merge said nothing about. The session reported "lock
-   released"; the lock was still held. Rules:
+   line was `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released";;`. `PR#81 MERGED` was a
+   genuinely-true measurement, but `— lock released` was a **hardcoded string stapled onto the success echo** — the
+   watcher never read the lock. It conflated "the proxy I watched reached its state" with "the whole chain completed".
+   They were different events: the PR merged into **staging**, while the breaking-cascade `staging_status.locked` flag
+   was a SEPARATE state still `True` ("SIT running"), gated on a downstream SIT the PR-merge said nothing about. The
+   session reported "lock released"; the lock was still held. Rules:
    - **The verdict line must be DERIVED from measuring the real terminal state, never a pre-decided interpretation of a
-     proxy signal.** If the goal is "lock released", the terminal check reads the lock flag
-     (`grep -q 'locked=False'`), not a different signal you *believe* implies it. If the goal is "fix on main", grep the
-     fix on `main` — don't infer it from a staging-PR merge.
+     proxy signal.** If the goal is "lock released", the terminal check reads the lock flag (`grep -q 'locked=False'`),
+     not a different signal you _believe_ implies it. If the goal is "fix on main", grep the fix on `main` — don't infer
+     it from a staging-PR merge.
    - **Name the end-state, then measure THAT.** "PR merged", "staging green", "SIT passed", "lock released", "content on
      `main`" are distinct checkpoints in one pipeline — a watcher proves only the checkpoint it literally queries. Echo
      only what you measured: `RESULT: PR#81=MERGED (lock + main NOT yet verified)`, not `RESULT: … — lock released`.
    - **No editorial adjectives in the echo.** Every clause after the colon must correspond to a variable the loop
      actually read this iteration. If you didn't query it, you may not assert it — downstream (and the operator) read
      the verdict line as ground truth.
+
+4. **Self-matching liveness sin — the death check matches the watcher's OWN process (codified 2026-06-19).** Incident
+   (slot-1): a `run_in_background` until-loop waited for a detached `nohup python3 _ens_persist.py &` model-training to
+   finish, with the failure branch `if ! pgrep -f _ens_persist.py >/dev/null; then echo DIED; break; fi`. But the
+   watcher's own bash argv literally contains `_ens_persist.py` (in that very `pgrep` line), so
+   `pgrep -f _ens_persist.py` returned the **watcher's own PID** → the check was always "alive" → the death branch could
+   NEVER fire. A real OOM crash of the training would have been invisible; the watcher would have hung until its
+   timeout, only ever exiting via the success marker (`meta.json`). The bug surfaced because a manual `ps` of the
+   matched PID showed **0% CPU + 1.2 MB RSS** — impossible for a pandas/lightgbm worker, the tell that the match was a
+   wrapper bash, not the worker. Rules:
+   - **The liveness/death check must not be able to match the watcher itself.** `pgrep -f <pat>` / `ps aux | grep <pat>`
+     match against full command lines, including the watcher's own (and any sibling shell whose argv contains `<pat>`).
+   - **Prefer EXACT-pid liveness: `kill -0 <PID>`** (no string matching at all). Capture the real worker PID once —
+     `PID=$(ps aux | grep "[p]ython3 _ens_persist.py" | awk '{print $2}')`, the `[p]` bracket-trick excluding the grep
+     line itself — and **sanity-check it's the worker** (a real ML worker is >100 MB RSS and >100% CPU; a 0%/tiny-RSS
+     match is the `nohup`/wrapper bash, the wrong PID). Alternatives: `pgrep -f pat | grep -v $$`, or match a marker the
+     target emits that the watcher never names.
+   - **Race-guard the death verdict:** after `kill -0` fails, `sleep` a few seconds and **re-check the success marker**
+     before declaring failure — the worker may exit and write its marker in the same tick
+     (`if ! kill -0 $PID; then sleep 4; [ -f meta.json ] && continue; echo FAILED; break; fi`).
+   - **A `nohup … &` detached process is NOT a harness-tracked task** — nothing auto-wakes you on its exit; it needs a
+     separate `run_in_background` pid-liveness watcher. Better: launch the long worker ITSELF with `run_in_background`
+     (not `nohup &`) so its own exit is the tracked wake, and the watcher is only for a worker you cannot relaunch.
 
 Composes with: Poll cadence + stall-intervention (above) — a flat metric and a silent watcher are the same smell;
 Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running", and "proxy reached its state" ≠

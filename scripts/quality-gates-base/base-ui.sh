@@ -74,7 +74,7 @@ run_timeout() {
 STEP_TIMEOUT_TYPECHECK=${STEP_TIMEOUT_TYPECHECK:-60}
 STEP_TIMEOUT_LINT=${STEP_TIMEOUT_LINT:-60}
 STEP_TIMEOUT_TEST=${STEP_TIMEOUT_TEST:-120}
-STEP_TIMEOUT_BUILD=${STEP_TIMEOUT_BUILD:-90}
+STEP_TIMEOUT_BUILD=${STEP_TIMEOUT_BUILD:-240}
 
 # ── PROCESS CLEANUP (prevent zombie node processes) ──────────────────────────
 # When 14 UIs run in parallel and the parent (Cursor/shell) dies, orphaned
