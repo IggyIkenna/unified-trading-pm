@@ -48,6 +48,48 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-20 (PM-2) — SOLVED: Kalshi history IS available (official `/historical/*` API) + LIVE works
+
+**Supersedes the "BLOCKED" framing below.** Operator chose option (b) — adapter R&D, verify the
+authenticated API serves pre-2026, ensure live works, vendor-research if not. Did all three; **outcome
+is better than expected — history is retrievable via Kalshi's OWN API.** Empirical findings (probed live
+with the SM `kalshi-api-credentials` RSA key, RSA-PSS signed):
+
+- **LIVE enumeration WORKS** — ran the real `KalshiReferenceDataAdapter.get_instruments()` end-to-end:
+  **2000 InstrumentRecords** (venue=kalshi, type=PREDICTION_MARKET, lifecycle captured). The adapter's
+  live path (`status=open`, unauth-OK) is fine; the daily/forward cron enumerates today's markets and
+  **accumulates history from now on**. The earlier all-zero backfill was ONLY because it walked HISTORICAL
+  dates with a current snapshot (the adapter ignored the target date).
+- **The live endpoint (`/markets`) is intentionally a rolling window** — `GET /trade-api/v2/historical/cutoff`
+  returns `{market_settled_ts: 2026-04-21}`: markets settled in the **last ~60 days** are on `/markets`;
+  everything older moved to the **`/historical/*` tier**. (That is exactly my "60d works / 90d empty"
+  boundary — not a true absence.)
+- **Deep history IS served by `/historical/*`** (authenticated): `/historical/markets` returns pre-cutoff
+  markets and **`/historical/trades?ticker=<T>` returns trades for 2022-era markets** (verified HTTP 200).
+  So markets + trades + candlesticks history back toward 2021 is available via the official API.
+- **Access pattern caveat (the real engineering nuance)**: `/historical/markets` IGNORES the
+  `min/max_close_ts` window (every year-window returns the same cutoff-boundary `S2026` markets) and its
+  cursor walks backward only ~hours/page (~12k markets/day → ~12M to reach 2021 = infeasible flat
+  pagination). **The tractable enumeration unit is SERIES**: `GET /trade-api/v2/series?limit=…` returns
+  **10,968 series** → per-series events/markets → per-market `/historical/trades` + candlesticks. So the
+  historical backfill must be **series-scoped**, not flat-market-paginated.
+- **Vendor research (sub-agent)** — confirms crypto vendors (Tardis/Kaiko/Amberdata/CoinAPI/Polygon) do
+  NOT cover Kalshi; Dune/Flipside are Polymarket-only. Best 3rd-party = **Jon-Becker
+  `prediction-market-analysis` (GitHub)** — free MIT 36 GiB Parquet (Kalshi trades + metadata to ~2021,
+  Cloudflare R2 `make setup`) + **Lychee** (lycheedata.com, "every trade since 2021", freemium). These
+  are the FAST deep-corpus path vs grinding 11k series via API.
+
+**DECISION RESOLVED** (was: forward-only vs R&D vs vendor): **(b) succeeds — no paid vendor needed.**
+Recommended build (3 todos below): cutoff-aware adapter routing (live works already) + series-scoped
+`/historical/*` enumeration for the authoritative gap, with the free Jon-Becker bulk Parquet as the fast
+deep-history seed. The auth is RSA-PSS (`api_key_id`+`private_key` from `kalshi-api-credentials`); the
+adapter's current `Authorization: Bearer` is wrong but live `status=open` is unauth-OK so live wasn't
+broken by it — the `/historical/*` tier DOES need the RSA-PSS signing.
+
+- [ ] [SCRIPT] P0. instruments-service — **cutoff-aware date routing** in `KalshiReferenceDataAdapter`: add a `date` param to `get_instruments` (the base `get_instruments_cached` auto-passes it via signature introspection). `date` ≥ `/historical/cutoff` (or None) → live `/markets` (current path); `date` < cutoff → `/historical/markets` (RSA-PSS signed). Cache the cutoff per run. Keep live unauth-OK. Repo: instruments-service.
+- [ ] [SCRIPT] P0. instruments-service — **RSA-PSS auth** for the `/historical/*` tier: parse `kalshi-api-credentials` JSON (`api_key_id`+`private_key`), sign `timestamp+method+path` (PSS/SHA256, DIGEST_LENGTH salt), headers `KALSHI-ACCESS-KEY/-SIGNATURE/-TIMESTAMP`. Replace the bogus `Authorization: Bearer` in `_get_headers` (make it method/path-aware). Repo: instruments-service (+ mirror in MTDS `kalshi_adapter.py` for historical trade fetch).
+- [ ] [SCRIPT] P1. e2e-testing/instruments-service — **series-scoped historical backfill**: enumerate `/series` (~11k) → per-series markets/events → per-market `/historical/trades` + candlesticks; write canonical per-date `venue=KALSHI` parquets. Seed the deep corpus (2021→cutoff) from the **free Jon-Becker 36 GiB Parquet dataset** (`github.com/jon-becker/prediction-market-analysis`, R2) to avoid grinding 11k series; use the `/historical/*` API for the bulk-end→cutoff gap + as cross-check. Then re-run MTDS Kalshi trades. Repo: e2e-testing (driver) + instruments-service (enumerator).
+
 ### 2026-06-20 (PM) — "is Kalshi downloading history?" ROOT-CAUSE + fix launched
 
 Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was NOT, two-stage gap now being fixed:**

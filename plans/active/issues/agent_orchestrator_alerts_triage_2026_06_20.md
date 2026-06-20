@@ -71,6 +71,24 @@ reuse the same Slack **app + the same backend notify code**, but you need a **se
 `channel` param) the bot can post to any channel it's invited to — then you'd just `/invite` the bot to
 `#paper-trading-alerts`. But today it's webhook-based, so the new-webhook path above is the route.
 
+**✅ DONE 2026-06-20 — `papertrading-alerts` Slack app created + all creds stored in GCP Secret Manager**
+(`central-element-323112`, values never in repo/chat-persisted): `agent-orchestrator-paper-trading-slack-webhook` (the
+incoming webhook — the only one the emitter needs) + `slack-papertrading-alerts-{app-id,client-id,client-secret,signing-secret,verification-token}`
+(for future OAuth/Events use). **Remaining = wire the emitter — BLOCKED on locating the producer (2026-06-20 search exhausted).**
+Searched + came up empty: (a) all local slot clones — by message text AND structural fragments (`trades to do now`,
+`book ROE`, `paper vs backtest`, `identical by construction`, `est cost`, `taker-IOC`, `Sharpe`) = 0 code hits; (b) the
+central orchestrator VM `i-0c9b283b31d6b5ca7` (registry `planning`) — source tree, venv site-packages, crontab (ubuntu +
+root), `journalctl -u orchestrator -n 3000`, `server/notifications/{slack,telegram}.py`, `.env.local` (no `*WEBHOOK*`/
+`*SLACK*`/`*PAPER*` var) — all 0. The digest **lacks the `Dashboard | from: vm-planning` footer that every AO notifier
+alert carries**, so it does NOT go through `server/notifications/slack.py` — it is an **external producer posting
+directly to the agent-orchestrator-alerts webhook**, ~hourly (10:39 → 12:25 UTC observed). **UNBLOCK (operator input
+needed):** where does the paper-trading "trades to do now" scan run / who set it up? (a strategy paper VM? a Cloud Run /
+scheduled scan? a colocated_engine cron on another host?) Once the producer host+config is named, the wiring is a
+one-liner: point its webhook env/secret at `agent-orchestrator-paper-trading-slack-webhook` + restart. The destination
+(channel + webhook + all app creds in SM) is 100% ready. Security note: the client/signing secrets transited chat — rotate them in the Slack app **if** the app is ever
+extended beyond the incoming webhook (inert for webhook-only use); the webhook URL can be regenerated in Slack + re-stored
+if you want it rotated.
+
 ## Why it matters
 - Paper-trading "trades to do now" is an OPERATOR ACTION feed (orders to place) — burying it in the noisy
   agent-orchestrator-alerts (worker deaths every 10 min) means real trade actions get lost. Its own channel is correct.
