@@ -597,21 +597,25 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       standalone alpha). Evidence: engine deployed (both Cloud Run jobs) + GCS-mirrored (`bps_summary.json` total bps 7.07
       live); unified-trading-system-ui@c0b669ab | pw:L2 ✓ (6 passed) | regression:
       tests/smoke/paper-trading-live-ledgers.smoke.spec.ts.
-- [x] ✅ [RESEARCH+CODE] PB.10. **Short alpha upgrade — regime-filtered momentum short (beats the naive baseline AND the
-      deployed leg).** Research `_short_research.py` (10 variants, full + since-2023): the naive `own_trend(200,20)` short
-      LOSES (−$49k full / −$260k since-2023, Sharpe −0.04/−0.27 — it shorts dips that bounce in the bull). Adding a BTC
-      regime gate (short only when BTC is itself in a confirmed downtrend, same 200/20 params — NOT param-mined) flips it
-      to a WINNER: **+$240k/+$29k, Sharpe 0.76/0.17, ~4× smaller DD, 62.9 bps** (vs the deployed legs_real short's +$18.7k
-      / 2.4 bps). All mean-reversion/RSI/vol-spike shorts lose (shorting crypto pumps = falling-knife-up). Robust across
-      (200,20)+(150,30); `regime_soft` (no slope) + faster params fail → the slope-confirmed bear gate is the lever.
-      WIRED: `_coin_history._short` (per-coin view) + `paper_engine` USES the improved leg (`input/short_leg_improved.parquet`,
-      defensive override of the naive short). Repo: e2e-testing (POC engine).
-- [ ] [STRATEGY] P1. **Port the regime-filtered short into the REAL strategy-service short leg (production).** The POC
-      override proves the alpha; the production deployment must regenerate `legs_real` with the BTC-regime gate on the
-      `own_trend(200,20)` short so the deployed strategy (not just the dashboard POC) carries the upgrade. Add the regime
-      filter to the short archetype + re-backtest + verify it beats the current leg on the live universe. Target repo:
-      strategy-service. Cold-start: read `_short_research.py` (the proven variant + the 10-variant comparison) +
-      `codex/09-strategy/architecture-v2/archetypes/`.
+- [x] ✅ [RESEARCH+CODE] PB.10. **Short research — regime gate beats the NAIVE baseline; the REAL leg is already good
+      (honest finding).** `_short_research.py` (10 variants, full + since-2023): the naive `own_trend(200,20)` short LOSES
+      (−$49k full / −$260k since-2023, Sharpe −0.04/−0.27 — shorts dips that bounce in the bull). A BTC regime gate (short
+      only when BTC is itself in a confirmed downtrend, same 200/20 params — NOT param-mined) flips it to **+$240k/+$29k,
+      Sharpe 0.76/0.17, ~4× smaller DD**; robust across (200,20)+(150,30) (`regime_soft`/faster params fail → the
+      slope-confirmed bear gate is the lever). All mean-rev/RSI/vol-spike shorts lose (shorting crypto pumps =
+      falling-knife-up). **BUT it does NOT cleanly beat the REAL `legs_real` short**: over the apples-to-apples common
+      window (to 06-17) regime = $10.0k < legs_real $18.7k; the +$29k edge is 2 volatile recent days (lost ~$25k
+      06-13→16, regained ~$26k 06-17→19), not clean alpha. So the deployed short was NEVER the loser (the −$269k was only
+      the per-coin own_trend PROXY). WIRED: regime short into `_coin_history._short` (per-coin reconstruction — far better
+      proxy: −$269k naive → +$29k, sign-matches the real leg). NOT overridden into the engine (the dashboard keeps the
+      real `legs_real` short — it's better). Repo: e2e-testing (POC engine).
+- [ ] [STRATEGY] P1. **Evaluate the BTC-regime gate against the REAL strategy-service short leg (production research).**
+      The regime gate beats the NAIVE own_trend baseline decisively; the open question is whether it (or a refinement)
+      can beat the REAL `legs_real` short — the POC reconstruction does NOT over the common window, but it's a simplified
+      proxy. In the real pipeline: add the BTC-regime gate to the short archetype, re-backtest on the live universe with
+      the real short's exact construction, and ship it ONLY if it genuinely beats the current leg (risk-adjusted, on the
+      common window — not a 2-day artifact). Target repo: strategy-service. Cold-start: read `_short_research.py` (the
+      10-variant comparison + the regime lever) + `codex/09-strategy/architecture-v2/archetypes/`.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
