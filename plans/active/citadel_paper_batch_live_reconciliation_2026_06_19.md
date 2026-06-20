@@ -697,6 +697,31 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       strategy-service. Cold-start: read `_short_research.py` (the 13-variant + IS/OOS harness) +
       `codex/09-strategy/architecture-v2/archetypes/`.
 
+**Execution-config optimization (operator design 2026-06-20 — pick the BEST REALISTIC execution per strategy; the
+full-fill fantasy is the ceiling, never a choice). Lever grid: style (maker rest / taker cross) × participation (¼/⅓/
+full of the candle volume) × timing (first-minute drop / subsequent-minute requote) × IOC-vs-resting. BATCH liquidity =
+minute-candle VOLUME; LIVE = real order-book DEPTH (same assumptions, better data) → the live−batch differential = the
+execution-realism gap.**
+
+- [x] ✅ [RESEARCH] PB.11. **cs execution sweep — DONE (`_exec_optimize.py`).** Net = alpha captured − exec cost −
+      missed alpha; cost model maker 1bp@limit / taker 2bp + 3bp spread + 8bp·√(order/vol) impact; 15m-bar volume / 96 =
+      per-cycle batch budget. **VERDICT for cs: TAKER IS CATASTROPHIC** (−$1.13M, Sharpe −0.33 — the ~10bp spread+impact
+      dwarfs cs's ~4bp edge); cs MUST be **maker**. Among maker configs **25% + drop is the best RISK-ADJUSTED** (Sharpe
+      0.19, maxDD −$1.09M = half of requote's, 64% of the ceiling) — under-filling caps position (confirms PB.7);
+      **requote/full capture more ABSOLUTE PnL** (76–100% of ceiling) at ~$1.88M DD. So cs ships maker-25%-drop (current
+      live model) for risk-adjusted, requote as the PnL-max knob. Repo: e2e-testing (`_exec_optimize.py`).
+- [ ] [RESEARCH] PB.12. **Per-strategy execution sweep (basis + short) — they will DIFFER from cs.** basis is
+      low-turnover (funding carry, large alpha/trade) → taker likely fine (fill in full, cost is a small fraction); short
+      is selective. Reconstruct each leg's positions (like `_coin_history._basis`/`_short`) + run the same lever sweep;
+      pick the best realistic config PER strategy (maker/taker is NOT one-size-fits-all — that's the whole point). Repo:
+      e2e-testing.
+- [ ] [CODE] PB.13. **Live order-book DEPTH fill model = batch assumptions + better liquidity data (the differential).**
+      Today batch uses 1m candle volume; live must walk the REAL order-book depth (already pulled at $250k/$1M) under the
+      SAME maker/taker/participation/timing config, so `live_fill − batch_fill` is the measured execution-realism gap and
+      `live − paper` is the execution alpha. Wire the per-strategy winner (PB.11/12) as the execution config; emit the
+      batch-vs-live fill differential to the reconciliation. Subsumes the old PB.5 (taker VWAP-walk) + composes with PB.8
+      (aggTrades tape = the highest-fidelity batch volume). Repo: e2e-testing + execution-service contract.
+
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
 `unified-api-contracts@12597d8` (UAC QG green, 20 unit tests). The foundation contract every later phase builds on:
