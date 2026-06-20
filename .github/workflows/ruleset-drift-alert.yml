@@ -67,5 +67,7 @@ jobs:
       severity: warning
       workflow_name: ruleset-drift-alert
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "ruleset-drift-detected"
+      cooldown_min: 120
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
