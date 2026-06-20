@@ -1477,3 +1477,19 @@ Operator clarified the SFI RapidAPI limits: **4 req/s (max 6), 100k/day**. This 
 ### Follow-up todos (corrected)
 
 - [ ] [SCRIPT] P2. deployment-service — `launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse `--chunks N>1`) because the RapidAPI key's 4/s limit is PER-ACCOUNT, not per-VM — N chunks just multiply 429 collisions. The `sfi_chunk_parallel_backfill_2026_04_22` plan's premise (independent per-chunk rate budgets) is invalid for a shared key; supersede it. Optionally tighten the per-instance pace 0.34s→0.25s to use the full 4/s on the single stream. Target repo: deployment-service (launcher) + instruments-service (`soccerfootball_info.py` `_min_request_interval`).
+
+## Autonomous batch (2026-06-20 ~00:10Z) — gross-now + Kalshi + residuals
+
+**gross-now (paper-trading dashboard):** the panel showed a single "Gross exposure" (planned ceiling) with no live counterpart while net had both (max)+(now). Verified against the live engine JSON: `margin.net_usd_now` == Σ signed `target_usd` over `positions` (MATCH), and Σ|target_usd| = the live gross. The paper engine (`paper_engine.py`, a deployed Cloud Run job — **source NOT in the workspace**, the foreign paper-determinism work) emits only a single `gross_usd` that flips planned-ceiling↔live with no gross_*_now split. **Fix (UI-derive):** added "Gross exposure (now)" = Σ|position notional| derived in `app/paper-trading/page.tsx` (relabelled the engine value "Gross exposure (max)"), `data-testid=pt-gross-now`, symmetric with net-now. tsc clean; **pw:L2 paper-trading smoke 2/2 green** (regression: tests/smoke/paper-trading.smoke.spec.ts). Shipping via UI quickmerge (QG running).
+**Kalshi:** the adapter was already built and uses **PUBLIC** read endpoints (markets/trades — no auth/RSA-PSS; signing is trading-only), and the MTDS factory routes `kalshi → KalshiAdapter`. The only gap was the prediction launcher hardcoding POLYMARKET. **Fix:** `launch-mtds-prediction-backfill-vm.sh` now takes `--venue POLYMARKET|KALSHI` (deployment-service@0a7c3f8). **Launched** `mtds-prediction-kalshi-20260620-000833` (2026-03-21..2026-06-19 — the ~3-month public trades window). "RSA-PSS wire" residual was a false premise (market data needs no signing).
+
+### Follow-up todos
+
+- [ ] [SCRIPT] P2. **paper_engine.py** (foreign paper-determinism Cloud Run job; source not yet on LDR) — emit `margin.gross_usd_now` (= Σ|position notional|) + `gross_leverage_now` explicitly, like `net_usd_now`/`net_leverage_now`, instead of a single `gross_usd` that conflates planned-ceiling vs live (it flips 15M/6x ↔ 5.6M/2.2x between runs). UI currently derives gross-now from positions as the interim. Target: whoever owns paper_engine.py (batch-live-reconciliation / citadel paper-determinism).
+- [ ] [SCRIPT] P3. deployment-service — `launch-mtds-prediction-backfill-vm.sh` singleton lock matches `^mtds-prediction-` so a KALSHI run is blocked by a concurrent POLYMARKET run (different APIs, no shared rate limit) → make the lock per-venue. `--force` is the current bypass.
+
+### Residuals status (operator-gated / foreign — NOT agent-fixable)
+
+- **cefi MTDS (801K failed)** — billing-blocked; enabling billing is operator-only. No code fix.
+- **Extended Finance** — no real API yet (placeholder secrets); operator is applying. Replace on arrival.
+- **MTDS STEP 5.88b** — the smoke-matrix agent's `quality-gates.sh` wiring is foreign uncommitted WIP, blocked on the foreign dirty UTL tree (`honest_coverage_ratchet`/`run_writer`) being committed by its owner. Not mine to ship.
