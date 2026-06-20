@@ -50,8 +50,9 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       git-health-guard, worker-liveness, data-pipeline) write to a shared store; add `GET /api/alerts` superset of
       `/api/repo-ci/alerts`. This is what makes "alert → open deployment-ui → full picture" work for ALL classes. Repo:
       deployment-api (+ the watcher emitters). Composes with `alert_quality_overhaul_2026_06_18.md`.
-- [ ] [UI] P1. deployment-ui `/alerts` page consumes the unified ledger (not just `cicd/alerts`). `pw:L2 ✓` +
+- [x] ✅ [UI] P1. deployment-ui `/alerts` page consumes the unified ledger (not just `cicd/alerts`). `pw:L2 ✓` +
       regression. Repo: deployment-ui.
+      — deployment-api@f87faf6 (GET /api/alerts endpoint) + deployment-ui@8cc8211 | pw:L2 ✓ 259/259 | regression: tests/smoke/alerts-page.spec.ts
 - [x] ✅ [UI] P2. Unified single-glance fleet/infra landing tile (6th LandingTab: N VMs running · central-VM up ·
       consolidator fresh · fleet-git clean · CI green — each click-through). Repo: deployment-ui.
       — deployment-ui@7e40055 | pw:L2 ✓ | regression: tests/smoke/fleet-infra-tab.spec.ts
