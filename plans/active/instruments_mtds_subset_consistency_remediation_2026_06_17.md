@@ -1503,3 +1503,11 @@ The first Kalshi launch (mtds-prediction-kalshi-000833) COMPLETED exit-0 but log
 ### Follow-up todos
 
 - [ ] [INFRA] P2. deployment-service — once the foreign dirty trees clear (MTDS scripts/quality-gates.sh + UTL honest_coverage_ratchet), rebuild the PREDICTION code tarball (`create-code-tarballs.sh --asset-group PREDICTION`) and relaunch the Kalshi backfill (`launch-mtds-prediction-backfill-vm.sh --force --venue KALSHI 2026-03-21 2026-06-19`); verify it fetches (not "No active venues"). Same tarball also delivers the gas parallelization (mtds@7421693, ~14x) to gas-fees VMs. Target repo: deployment-service.
+
+## Kalshi Q&A canonical parser — SHIPPED (2026-06-20, operator-requested)
+
+Operator: "build the [Kalshi] parser for market grouping/reconciliation same way as polymarket; map same markets to same canonicals for arb." DONE:
+- **unified-api-contracts@c3bf51d**: `KALSHI_TICKER_PREFIX_TO_GROUP` (72 rule entries, full KX* crypto/equity-index/commodity/FX/macro families); `classify_kalshi_to_canonical_group` upgraded override-only → 3-tier (exact override → longest-prefix → OTHER); +25 tests (63 total) incl. the **cross-venue arb invariant** (Kalshi KX* and Polymarket slugs for the same real-world question resolve to the SAME `CanonicalQuestionGroup`: `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `FED_RATE_DECISION_PER_FOMC`, `CPI_PRINT_PER_MONTH`, `NONFARM_PAYROLLS_PER_MONTH`). UAC QG green (sentinel 04822f65).
+- **instruments-service@b313b0e**: classifier docstring + 3 prediction tests updated. Shipped via the carve-out (Quickmerge: agent trailer) because a pre-existing CeFi test (`test_cefi_yields_no_rows_for_post_all_venue_launches`) blocked the sentinel — that failure is from the SEPARATE Kalshi/Polymarket PERPS venue addition (KALSHI-PERP CeFi launch date), tracked in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, owned by the perps build.
+
+Now Kalshi prediction-Q&A markets bucket to canonical groups (was OTHER) AND share canonicals with Polymarket → cross-venue dispersion arb works at the canonical layer. Next: IS Kalshi discover + MTDS download (once the VM tarball unblocks) to flow the actual data into those canonical buckets.
