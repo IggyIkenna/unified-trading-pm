@@ -64,15 +64,32 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
   `get_venues_for_asset_groups(["PREDICTION"])` returns `["POLYMARKET","KALSHI"]` (venue_core.py:258),
   and `process_write._write_prediction_venue` handles both — the enumeration just had never been **run**
   for Kalshi (separate from the MTDS get_venues KALSHI-disable I fixed earlier at mtds@ebf947b).
-- **Fix LAUNCHED (corrected sequence)**: IS PREDICTION instruments backfill
-  `instr-backfill-pred-20260620` (2021-07-30 Kalshi genesis → 2026-06-20), which enumerates KALSHI
-  (+ re-Polymarket, idempotent) → writes the `venue=KALSHI` lifecycle+instrument parquets. Verify
-  watcher confirms KALSHI parquets appear. **Next (gated on IS completion)**: re-launch the MTDS Kalshi
-  trades backfill — it will now find instruments via the primary lifecycle path. (Kalshi creds present:
-  SM `kalshi-api-credentials`.)
-- **Lesson**: prediction backfills are a 2-stage IS→MTDS pipeline — IS enumeration MUST precede the MTDS
-  download (the `launch-prediction-pipeline-vm.sh` combined launcher exists for exactly this; the bare
-  MTDS launcher assumes IS already ran).
+- **Ran the IS PREDICTION backfill `instr-backfill-pred-20260620` (2021-07-30→2026-06-20) — and "check
+  events" surfaced the DEEPER blocker (operator was right to verify):** the IS Kalshi enumeration RUNS
+  and hits the API (`URDI[KALSHI]: fetched 2000 instruments`) but returns **ZERO records for every
+  historical date** (2021-09-02…09-21: 106 zero-record errors). **Every one of 106,000 fetched tickers
+  is `…-S2026…` (current-settlement)** — i.e. the API returns the CURRENT market snapshot, not a
+  point-in-time list. **Stopped the VM** (it would walk ~1,700 dates producing all-zero).
+- **ROOT CAUSE #2 (the real one) — the Kalshi IS adapter is current-snapshot-ONLY**
+  (`instruments_service/reference_data/adapters/prediction/kalshi.py:113-178`): `get_instruments` takes
+  NO `as_of_date`, uses `now = datetime.now(UTC)`, and `_fetch_markets_page` sends
+  `params={"limit":…, "status":"open"}` — it can only ever return *currently-open* markets. The live/
+  forward daily enumeration is correct; **historical backfill is structurally impossible with it.**
+- **ROOT CAUSE #3 — Kalshi's public API historical depth is thin/unavailable unauthenticated:** direct
+  probes `GET /trade-api/v2/markets?status=settled&min_close_ts=…&max_close_ts=…` for 2023-06 / 2024-06 /
+  2025-06 windows all returned **0 markets** (while `status=open` returns 2000+). So even adding an
+  `as_of_date`/settled-windowed historical mode may not yield deep history without authenticated
+  settled-market pagination — or it may simply not be served.
+- **DECISION NEEDED (operator) — closed set:** (a) **forward-only Kalshi** — accept that historical
+  Kalshi instruments/trades are unavailable; run live enumeration from now on (works today), honest-
+  absence the past; (b) **adapter R&D** — add an authenticated `status=settled` + `min/max_close_ts`
+  windowed historical mode and verify how far back the authenticated API actually serves (uncertain
+  payoff); (c) **paid historical vendor** for Kalshi. The MTDS Kalshi trades backfill is moot until the
+  IS instrument universe exists for the target dates, so it stays un-relaunched pending this decision.
+- **Lesson (still valid):** prediction backfills are a 2-stage IS→MTDS pipeline — IS enumeration MUST
+  precede MTDS download. But for Kalshi the stage-1 itself can't reconstruct history with the current
+  adapter + public API.
+- [ ] [SCRIPT] P0. **instruments-service — Kalshi historical enumeration** (the actual blocker for "Kalshi history"). Add an `as_of_date`-aware historical mode to `KalshiReferenceDataAdapter.get_instruments` / `_fetch_markets_page` (`status=settled` + `min_close_ts`/`max_close_ts` window around the target date, authenticated via SM `kalshi-api-credentials`, cursor-paginate). **First verify** the authenticated settled endpoint serves pre-2026 markets at all (the unauthenticated probe returned 0 for 2023-25) — if it does NOT, this is BLOCKED-OPERATOR-DECISION (forward-only vs paid vendor), NOT a code task. Keep the live `status=open`+now() path as the default. Repo: instruments-service.
 
 ### 2026-06-20 — Phase 0 API research + Phase 1 UAC scaffold
 
