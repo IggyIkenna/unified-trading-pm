@@ -288,6 +288,47 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+### 2026-06-20 — client-reporting-api DEPLOYED to Cloud Run (serving layer go-live) + UI bring-up
+
+The canonical `client-reporting-api` (the dashboard's REAL serving layer, reading the GCS run ledger via
+`read_ledger_rows`) was **absent from Cloud Run** — code shipped, data present, but no runtime. Now LIVE:
+
+- **Service**: `client-reporting-api` on Cloud Run `asia-northeast1`, project `central-element-323112`. URL
+  `https://client-reporting-api-1060025368044.asia-northeast1.run.app` (rev `client-reporting-api-00003-b6v`,
+  `--allow-unauthenticated` at the perimeter, auth enforced in-app). Image `client-reporting-api:golive-9968cb1`
+  (Cloud Build, `--target api`).
+- **Proven serving the REAL run** `firm-paper-determinism / paper-20260620002237-378a3735` (measured 200s):
+  `/api/v1/clients/firm-paper-determinism/reconciliation/latest` → `verdict=DETERMINISTIC, is_deterministic=true,
+  matched_trades=21, unmatched_trades=0, max_abs_fill_price_delta_bps=0` (**the ε=0 badge, live**); `/positions` →
+  3 ledger-derived positions (UNISWAP_V3 ETH, LIDO ETH lst, DERIBIT ETH-PERP) folded from the 21 fills with
+  per-venue/per-instrument balance rollups; `/instructions` → the 7 strategy instructions; `/pnl`, `/attribution/
+  breakdown`, `/transfers`, `/trades` all 200 (honest-empty where no shards). No-token → 401 (auth enforced).
+- **First-deploy bugs fixed (real infra)**: (1) stale base-image digest pin in the Dockerfile (`sha256:56bbd5…` absent
+  in AR) → built with `--build-arg BASE_IMAGE_DIGEST=<live :latest>` + authenticated base pre-pull; (2) cloudbuild
+  builds the `batch` stage by default → `--target api`; (3) Cloud Run `exit(2)` at startup — `documents.py` does an
+  import-time `_store.create()` into the mock-state store, which resolves `${UNIFIED_TRADING_WORKSPACE_ROOT}/
+  .local-dev-cache` → `/` for the non-root `appuser` (PermissionError) → set `UNIFIED_TRADING_WORKSPACE_ROOT=/tmp`;
+  (4) base ENTRYPOINT is `python` + Dockerfile `CMD ["client-reporting"]` → ran `python client-reporting` → set Cloud
+  Run `--command=client-reporting`; (5) `run_lifecycle` publishes `RUN_STARTED` to PubSub topic
+  `client-reporting-api-events` which **did not exist** → created the topic + granted `unified-trading-sa`
+  `roles/pubsub.publisher`.
+- **Auth**: in-app `create_api_auth` accepts `X-Service-Token` (S2S, env `SERVICE_AUTH_TOKEN`), `X-API-Key`, or a
+  Bearer HS256 JWT from the API's own `/auth/login` (`DEMO_USERS`, e.g. `admin@unified-trading.com` / `admin123`,
+  internal role → reads any client). The full UI-equivalent flow (login → Bearer JWT → `/reconciliation/latest`) is
+  verified 200 on the live service.
+- **UI**: the live `odum-portal` Cloud Run UI is a stale (2026-05-03) `unified-trading-system-ui` that **404s
+  `/paper-trading`** (predates the dashboard). A dedicated UI image was built (`uts-ui-papertrading`) from current HEAD
+  with `NEXT_PUBLIC_REPORTING_API_URL`=the live API, `NEXT_PUBLIC_MOCK_API=false`, `NEXT_PUBLIC_AUTH_PROVIDER=demo`
+  (build env `config/docker-build.env.papertrading`) for a Cloud Run deploy at `/paper-trading?client=firm-paper-
+  determinism`. **Note**: the production UI uses Firebase auth whose ID token the API's HS256 `decode_token` cannot
+  verify — that UI↔API auth bridge is the documented post-cutover surface; the `demo` provider path + the API's own
+  `/auth/login` is the working bridge.
+- **Daily-T+1 cron (`terraform/gcp/paper_week_determinism_scheduler.tf`)**: 6 resources (3 jobs + 3 schedulers) NOT
+  applied. Left to the operator — the dir is a 399-resource shared state needing `-var` (project_id/environment/
+  bucket_prefix) not committed as tfvars → blanket apply is high blast-radius. The dashboard is viewable WITHOUT the
+  cron (the run + its `__batch__/` rerun already exist; reconciliation is computed live). Exact targeted command in the
+  final report.
+
 ### 2026-06-19/20 — Operator-facing LIVE paper-trading POC dashboard + 5-ledger UI (parallel tactical track)
 
 A self-contained live paper-trading POC proving the same determinism spine end-to-end on real infra, with the operator
