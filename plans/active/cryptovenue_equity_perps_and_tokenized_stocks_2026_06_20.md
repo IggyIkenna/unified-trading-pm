@@ -22,11 +22,11 @@ Operator 2026-06-20: crypto venues now list **single-stock perpetuals + tokenize
 Crypto-venue equity perps/tokenized-stocks are derivatives TRACKING a real equity → map to the **SAME canonical equity instrument** as the Databento (DBEQ.BASIC) real equity, as new venue×instrument cells, so **basis/dispersion arb (crypto-venue stock-perp vs real equity) + 24/7-vs-market-hours overnight-gap arb** work cross-venue. Funding-bearing perps also map to the crypto-perp funding canonical (sister of `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`). **Pre-IPO / SpaceX** instruments have NO real-equity twin → standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Phase 0 — research + opportunity sizing
-- [ ] [RESEARCH] P0. Per venue (Binance/OKX/Bybit), document: equity-perp + tokenized-stock contract list endpoint, symbol↔real-ticker mapping (SPCXUSDT→SPACEX, AAPLX→AAPL), trades/funding/orderbook-depth endpoints (REST+ws), 24/7 vs market-hours, auth, rate limits. Identify which symbols HAVE a Databento real-equity twin (basis-arb-able) vs pre-IPO/uniques (dispersion-only). Repo: instruments-service (findings → plan Progress Log).
-- [ ] [RESEARCH] P1. Tardis coverage check — do our existing Tardis/CeFi feeds already carry these equity-perp symbols (so historical comes free via the existing CeFi pipeline) or is a new fetch path needed?
+- [x] [RESEARCH] P0. Per venue (Binance/OKX/Bybit), document: equity-perp + tokenized-stock contract list endpoint, symbol↔real-ticker mapping (SPCXUSDT→SPACEX, AAPLX→AAPL), trades/funding/orderbook-depth endpoints (REST+ws), 24/7 vs market-hours, auth, rate limits. Identify which symbols HAVE a Databento real-equity twin (basis-arb-able) vs pre-IPO/uniques (dispersion-only). Repo: instruments-service (findings → plan Progress Log). ✅ unified-api-contracts@e4606ac0 — findings in Progress Log below.
+- [x] [RESEARCH] P1. Tardis coverage check — do our existing Tardis/CeFi feeds already carry these equity-perp symbols (so historical comes free via the existing CeFi pipeline) or is a new fetch path needed? ✅ unified-api-contracts@e4606ac0 — **KEY FINDING: Tardis ALREADY covers BINANCE-FUTURES, OKX-SWAP, OKX-FUTURES, BYBIT-FUTURES** (confirmed via `canonical_mappings.py` `DATA_SOURCE_TO_VENUES["tardis"]`). Equity-perp symbols on these venues flow through the existing CeFi pipeline — this is a universe+canonical-link add, not a new fetch path.
 
 ## Phase 1 — universe + canonical mapping
-- [ ] [UAC] P1. Add the equity-perp / tokenized-stock symbols to the crypto-perp/cefi instrument universe with a `tracks_equity=<canonical ticker>` link to the Databento equity canonical (mirror `cme_polymarket_link.py` cross-venue-link pattern). Venue tokens already exist (BINANCE/OKX/BYBIT) — new instrument_type (`equity_perp` / `tokenized_equity`). Repo: unified-api-contracts.
+- [x] [UAC] P1. Add the equity-perp / tokenized-stock symbols to the crypto-perp/cefi instrument universe with a `tracks_equity=<canonical ticker>` link to the Databento equity canonical (mirror `cme_polymarket_link.py` cross-venue-link pattern). Venue tokens already exist (BINANCE/OKX/BYBIT) — new instrument_type (`equity_perp` / `tokenized_equity`). Repo: unified-api-contracts. ✅ unified-api-contracts@e4606ac0
 
 ## Phase 2 — download (likely rides existing CeFi pipeline)
 - [ ] [SCRIPT] P1. market-tick-data-service — if Tardis/CeFi feeds carry these symbols, just add them to the CeFi venue universe (trades + funding + book already handled by the CeFi adapters); else add a fetch path. Verify historical + live. Repo: market-tick-data-service.
@@ -39,3 +39,52 @@ Crypto-venue equity perps/tokenized-stocks are derivatives TRACKING a real equit
 
 ## Codex SSOT updates
 - [ ] [DOCS] P2. codex/02-data + codex/09-strategy — crypto-venue equity-perp sourcing + the equity-basis arb archetype. Repo: unified-trading-pm.
+
+## Progress Log
+
+### 2026-06-20 — Phase 0 + Phase 1 shipped (unified-api-contracts@e4606ac0)
+
+**Phase 0 research findings:**
+
+**Tardis/CeFi coverage (P1 key finding — HIGHLY EFFICIENT):**
+- `unified_api_contracts.canonical.canonical_mappings.DATA_SOURCE_TO_VENUES["tardis"]` already includes `BINANCE-FUTURES`, `OKX-SWAP`, `OKX-FUTURES`, `BYBIT-FUTURES`.
+- This means equity-perp symbols on these venues (METAUSDT, NVDAUSDT, AAPLX, etc.) are ALREADY covered by the existing Tardis CeFi pipeline — Phase 2 is adding them to the CeFi universe filter, NOT building a new fetch path.
+
+**Per-venue endpoint summary (for Phase 2 implementer):**
+
+| Venue | Contract list endpoint | Symbol format | Instrument type | Hours |
+|---|---|---|---|---|
+| Binance | `GET /fapi/v1/exchangeInfo` (BINANCE-FUTURES) | `METAUSDT`, `NVDAUSDT`, `SPCXUSDT` | Linear USDT-margined perp | 24/7 |
+| OKX | `GET /api/v5/public/instruments?instType=SWAP` (OKX-SWAP) | `META-USDT-SWAP`, `AAPL-USDT-SWAP` | Linear USDT-margined swap | 24/7 |
+| Bybit | `GET /v5/market/instruments-info?category=linear` (BYBIT) | `TSLAPERP`, `AAPLX` | Linear/tokenized | 24/7 |
+
+Auth: Tardis covers these as archive (no auth for historical); live REST = venue API key.
+
+Rate limits: same CeFi perp venue limits already handled by adapters.
+
+**Basis-arb-able symbols (Databento DBEQ.BASIC twin exists):**
+AAPL, TSLA, AMZN, MSFT, GOOGL/GOOG (→GOOGL), META, NVDA, NFLX, AMD, INTC, BABA, COIN, MSTR, PLTR, GME, AMC, MARA — all 17 registered in `crypto_equity_link.py`.
+
+**Dispersion-only symbols (no real-equity twin, pre-IPO):**
+SPCX (SpaceX — Binance `SPCXUSDT`) — registered in `STANDALONE_EQUITY_PERP_SYMBOLS`.
+
+**Phase 1 implementation summary (unified-api-contracts@e4606ac0):**
+
+Files changed:
+- `unified_api_contracts/_instrument_enums.py` — added `EQUITY_PERP` + `TOKENIZED_EQUITY` to `InstrumentType`
+- `unified_api_contracts/canonical/crosscutting/crypto_equity_link.py` — NEW: `CRYPTO_EQUITY_PERP_TO_REAL_EQUITY` dict (18 entries), `LINKED_EQUITY_PERP_BASES` frozenset, `STANDALONE_EQUITY_PERP_SYMBOLS`, `tracks_equity()` lookup function
+- `unified_api_contracts/canonical/crosscutting/__init__.py` — export new module
+- `unified_api_contracts/canonical/crosscutting/mvp_scope.py` — added `EQUITY_PERP`/`TOKENIZED_EQUITY` to CeFi MVP rule instrument_types; `base_ccys` union with `CEFI_EQUITY_PERP_BASE_UNIVERSE`
+- `unified_api_contracts/registry/cefi_instrument_universe.py` — added `CEFI_EQUITY_PERP_BASE_UNIVERSE` (20 equity ticker bases)
+- `unified_api_contracts/registry/venue_constants.py` — added `equity_perps`/`tokenized_equities` to `INSTRUMENT_TYPE_FOLDER_MAP`
+- `unified_api_contracts/internal/reference/ledger_asset_resolution.py` — `EQUITY_PERP`→`PERP`, `TOKENIZED_EQUITY`→`SPOT_TOKEN`
+- `unified_api_contracts/internal/reference/canonical_id_builder.py` — added both types to `SUPPORTED_INSTRUMENT_TYPES` + `_build_cefi_simple` dispatch
+- `unified_api_contracts/__init__.py` + `unified_api_contracts/registry/__init__.py` — all new symbols exported
+- `tests/unit/test_crypto_equity_link.py` — NEW: 9 unit tests (all passing)
+
+QG: `bash scripts/quality-gates.sh --no-fix` → ✅ ALL QUALITY GATES PASSED (216s), 10116 passed, 557 skipped, 5 xfailed.
+
+## Temporary states + their canonical follow-up plans
+- Phase 2 (MTDS universe add) → this plan Phase 2 todo above (market-tick-data-service)
+- Phase 3 (live CLOB) → this plan Phase 3 todo above
+- Phase 4 (strategy arb wiring) → this plan Phase 4 todo above
