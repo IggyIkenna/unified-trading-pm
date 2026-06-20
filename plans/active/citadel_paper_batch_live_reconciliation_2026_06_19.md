@@ -239,16 +239,19 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 7 — The 19→26 operator dry-run (runs to completion)
 
-- [ ] [INFRA] P2.7.1. **Paper week** — run a promoted strategy (or the funding/basis ensemble) in `colocated_engine`
-      paper with the benchmark fill model over a real week, writing the 4 ledgers + the `RunManifest`. Daily Slack
-      digest. Repo: deployment-service (VM) + strategy-service. **Progress (2026-06-19)**: `write_paper_run()` ledger
-      driver shipped at `strategy-service/strategy_service/engine/backtest/ledger_emit.py` (strategy-service@4f5d294d) —
-      4 unit tests assert canonical GCS paths (`{root}ledger_type=instruction/{run_id}.jsonl`,
-      `{root}run_manifest.json`) + round-trip via `load_instruction_ledger_fills`. **P7.1 cron infra SHIPPED**
-      (`deployment-service@0fee514`, `paper_week_determinism_scheduler.tf`). Blocking remainder: P7.1-A/B/C CLI
-      entrypoints (strategy-service paper CLI, BLRS daily_determinism_stage op, client-reporting-api daily_ledger_digest
-      CLI) + real wallet/strategy credentials to sustain a 7-day paper run + operator sets
-      `paper_determinism_enabled = true` in TF.
+- [x] ✅ [INFRA] P2.7.1 / P7.1-A. **Paper week — REAL run executed on REAL GCS data** — DONE (2026-06-20). The
+      strategy-service `--operation paper-run` CLI (`cli/handlers/paper_run_handler.py` + `PaperRunHandler` in
+      `service_entry.py`) loads REAL features-onchain Aave `lending_rates` parquets via `GCSFeatureProvider`, runs a
+      promoted `carry_staked_basis` instance through `GroupBRunner` → benchmark fills → `emit_paper_run_ledger` → the
+      canonical client-reports GCS ledger root. **REAL run `paper-20260620002237-378a3735`** (client
+      `firm-paper-determinism`, window 2026-05-16..22, 7 real Aave days) wrote **7 instructions / 21 fills** to
+      `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-determinism/run_id=paper-20260620002237-378a3735/`
+      — manifest-verified + sample-inspected (real instrument keys, canonical asset_class). **T+1 reconcile ε=0 on real
+      data**: `reconcile_day(paper, batch)` → `is_deterministic=True`, bug_class=NONE, mean_fill_price_delta_bps=0.
+      Required fixes shipped WITH it: benchmark-fill ATOMIC TRANSFER-leg skip (`benchmark_fills.py`) + UTL run_writer
+      cloud-agnostic GCS read/write helpers (`ledger/run_writer.py`). Daily Slack digest + the soak ride P7.1 (cron
+      infra `deployment-service@0fee514`; Stage A/B/C entrypoints now all wired). Full run evidence: the 2026-06-20
+      Progress Log entry. Repo: strategy-service + unified-trading-library.
 - [x] ✅ [INFRA] P2.7.2. **Daily T+1 batch rerun + `reconcile_day` — MACHINERY PROVEN ε=0** (`e2e-testing@a553f28`). The
       short-window e2e proof `scripts/defi/determinism_spine_e2e.py` runs the FULL chain end-to-end credential-free:
       paper run writes a keyed InstructionLedger + RunManifest (UTL writer) → P4.3 batch-rerun-from-manifest reproduces
@@ -626,3 +629,51 @@ verified by stash-out — re-pointed them at the robust `/paper-trading?run_id=p
 **How the operator opens it:** navigate to `/paper-trading?run_id=<paper-run-id>` (or `?client=<client_id>`); the six
 ledger sections scope to that run via the client-reporting-api reconciliation/positions/pnl/attribution/trades/
 instructions/transfers routes. Default `paper-demo` renders the bundled fixtures in mock mode.
+
+### 2026-06-20 — P7.1-A SHIPPED + a REAL paper run on REAL GCS Aave data (ε=0 PROVEN on real data)
+
+The determinism spine now runs **end-to-end on REAL on-chain DeFi data**, not synthetic — the operator can open one URL
+and see real instructions + trades.
+
+- **P7.1-A — strategy-service `--operation paper-run` CLI handler** (`strategy-service@eaaf7a02`):
+  `cli/handlers/paper_run_handler.py::run_paper` loads REAL features-onchain `lending_rates` parquets from GCS via
+  `GCSFeatureProvider` (the `DATA_SOURCE=gcs_complete` read path), resolves a promoted `carry_staked_basis` instance from
+  the live target catalogue (`specs_for_archetype` — Lido stETH / UNISWAP_V3 / DERIBIT ETH-PERP), builds one
+  `GroupBTickInput` per day from each day's REAL Aave rates, runs `GroupBRunner` (the SAME `V2EngineOrchestrator` live
+  runs → benchmark fills), and calls `emit_paper_run_ledger` → the canonical client-reports GCS ledger root. Wired as a
+  `PaperRunHandler` in `service_entry.py` `_OPERATIONS` + a new `paper` mode. NO metadata maps (canonical
+  `InstrumentKey` derivation throughout); refuses to emit on an empty window (no synthetic fallback). The real-data
+  feature mapping is documented strategy-feature wiring (every value is a real Aave parquet row): `supply_apy`→staking
+  APY bps, `rate_spread` (supply−borrow basis)→funding-carry bps.
+
+- **Benchmark-fill ATOMIC TRANSFER-leg fix** (`strategy-service@eaaf7a02`, `engine/backtest/benchmark_fills.py`): the
+  carry archetype emits a 4-leg ATOMIC where leg 2 is a control-plane `TRANSFER` (margin post). `_compute_atomic_fill`
+  iterated ALL legs incl. TRANSFER → built a canonical key for it → `instrument_type_for_action(TRANSFER)` raised
+  `UnknownInstrumentTypeError`, BLOCKING every real carry-archetype run. Fix: `_compute_atomic_fill` now SKIPS the
+  control-plane no-fill actions (`TRANSFER`/`BRIDGE`/`CANCEL`/`CONVERT_DUST`) — consistent with the top-level
+  `compute_benchmark_fill` docstring ("transfers settle at zero cost in benchmark space"). The archetype now emits real
+  SWAP+STAKE+TRADE fills.
+
+- **UTL run_writer cloud-agnostic read/write fix** (`unified-trading-library@7addc5bb`, `ledger/run_writer.py`): the
+  writer/reader called native `blob.upload_from_string` / `download_as_text` / `bucket.list_blobs`, but
+  `get_storage_client()` returns the UCI client whose `GCSBlobHandle` has NO `upload_from_string` → every REAL GCS
+  ledger write/read raised `AttributeError` (the e2e proof only ever ran in its in-memory `_MemClient` fake, so this
+  latent bug never surfaced). Added `_upload_string` / `_download_string` / `_list_object_keys` helpers that prefer the
+  UCI `upload_bytes`/`download_bytes`/`list_blobs(bucket,prefix)` and fall back to the native/fake blob API — so the
+  spine works against REAL GCS and the injected-fake tests both pass.
+
+- **REAL paper run executed**: `run_id=paper-20260620002237-378a3735`, client `firm-paper-determinism`, archetype
+  `CARRY_STAKED_BASIS`, window 2026-05-16..2026-05-22 (7 real Aave days, staking 312–354 bps / funding 118–127 bps —
+  real measured on-chain rates). **7 instructions → 21 fills** written to
+  `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-determinism/run_id=paper-20260620002237-378a3735/`
+  (InstructionLedger JSONL + RunManifest, manifest-verified, sample-inspected: real instrument keys
+  `UNISWAP_V3:DEX_POOL:ETH` / `LIDO:STAKING:ETH` / `DERIBIT:PERPETUAL:ETH-PERP`, canonical asset_class derivation,
+  deterministic trade_keys).
+
+- **T+1 reconcile verdict = ε=0 on REAL data**: batch-rerun-from-manifest reproduced all 21 fills (code shas matched, 0
+  mismatches) → `reconcile_day(paper, batch, DETERMINISM)` returned **`is_deterministic=True`,
+  `determinism_bug_class=NONE`, `mean_fill_price_delta_bps=0`** — paper≡batch trade-for-trade on the real run.
+
+- **client-reporting-api reads the real run**: `read_ledger_rows('firm-paper-determinism')` → 21 real LedgerRows;
+  `compute_ledger_views` → 3 real positions (UNISWAP_V3:ETH, LIDO:ETH, DERIBIT:ETH-PERP) — the dashboard's data layer
+  serves the real run.

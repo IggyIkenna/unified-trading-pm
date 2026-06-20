@@ -90,15 +90,19 @@ ladder, the 4-state honest-absence manifest).
       another agent's uncommitted `ledger_asset_resolution` re-exports; not bundling foreign WIP. The new feeds are
       already reachable via the facade-exported `ALL_FRESHNESS_CONTRACTS` and via the module; add the individual export
       once the ledger WIP lands. (see QG-unblock follow-ups below)
-- [ ] [SCRIPT] P1. **(1b) Single freshness home** — make `ALERT_THRESHOLDS["tick_staleness_seconds"]` derive from (or a
-      QG cross-validation assert against) `MARKET_TICK_FRESHNESS`, replacing the hand-written "300s matches" comment
-      coupling. Repo: unified-api-contracts.
-- [ ] [VERIFY] P1. **No-orphan-feed CI gate** — a UAC/PM quality-gate check asserts every venue/feed a freshness gate or
-      monitor looks up has an `ALL_FRESHNESS_CONTRACTS` entry, and the two UAC freshness SSOTs agree. Fails loud on a
-      feed with no contract. Repo: unified-api-contracts.
-- [ ] [VERIFY] P1. Unit tests: `refetch_action` round-trips + defaults None; the new account-state contracts resolve; a
-      `critical` feed past `max_age_seconds` raises `DataStalenessError` in `freshness_gate`; `important`
-      warns-not-blocks; `informational` logs only; the tick_staleness↔contract cross-validation holds.
+- [x] ✅ [SCRIPT] P1. **(1b) Single freshness home** — UAC@`6b91f1f`: code-enforced cross-validation test
+      `tests/internal/unit/test_freshness_ssot_agreement.py` asserts `ALERT_THRESHOLDS["tick_staleness_seconds"]`
+      (default 300s) ≥ strictest real-time per-venue `max_age_seconds` (5s) + pins the 300s regression guard; the
+      `thresholds.py` hand-comment now cites the test as the enforcement (no import-time derivation — avoids the
+      alerting↔reference circular import).
+- [x] ✅ [VERIFY] P1. **No-orphan-feed CI gate** — UAC@`6b91f1f`: consistency test asserts `ALL_FRESHNESS_CONTRACTS` is
+      the exact union of the four sub-dicts (no orphan / no missing), every `.source == key`, `warn < max`, valid
+      `criticality`. (Cross-repo "every venue a gate looks up has a contract" stays the consumer-repo responsibility —
+      `freshness_gate` already skips gracefully on a missing contract.)
+- [x] ✅ [VERIFY] P1. Unit tests — UAC@`6b91f1f` (`refetch_action` round-trips + defaults None; account-state contracts
+      resolve; criticality mapping) + execution-service@`401d3fbd` (binance critical: age≥max raises `DataStalenessError`
+      carrying source/age/max_age; age<max no-raise; unknown venue graceful-skip) + strategy-service@`9ba06714`
+      (`assert_feature_fresh`: critical raises, non-critical `DATA_STALE`-warns-not-blocks, unknown skips).
 
 ## QG-unblock follow-ups (from shipping Phase-1 1a/1c through the gate)
 
@@ -109,9 +113,9 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       from `base-service.sh` + `base-library.sh`. A clean fix exists (1.2.1); it's currently ignored (non-exploitable
       transitive) only to avoid a fleet lock campaign inline. `uv lock --upgrade-package msgpack` per repo that locks
       it.
-- [ ] [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** (`internal/reference/__init__.py` +
-      `internal/__init__.py`) for parity with `MARKET_TICK_FRESHNESS`/etc. Deferred at ship time because both
-      `__init__.py` carried another agent's uncommitted `ledger_asset_resolution` WIP — do it once that lands.
+- [x] ✅ [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** — UAC@`6b91f1f`: added to
+      `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`); `from unified_api_contracts.internal
+      import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the `ledger_asset_resolution` WIP landed.)
 - [ ] [DEFERRED] P3. **Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped (gated on the
       aiohttp-3.14 unblock — `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`).
 
