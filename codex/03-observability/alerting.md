@@ -128,6 +128,28 @@ Every autonomous recovery action the system takes, mapped to its alert tier:
 
 ---
 
+## One freshness home — `tick_staleness_seconds` cross-validation (2026-06-20)
+
+`ALERT_THRESHOLDS["tick_staleness_seconds"]` in `unified_api_contracts/canonical/crosscutting/alerting/thresholds.py` is
+the coarse alerting floor for tick-staleness alerts (default 300 s). The per-venue freshness thresholds that govern
+whether a specific feed is actually stale live in `MARKET_TICK_FRESHNESS` inside
+`unified_api_contracts/internal/reference/data_freshness.py` — the feed-SLA registry SSOT
+(`codex/03-observability/data-feed-sla-registry.md`).
+
+The two values are **cross-validated, not import-time-derived** (import-time derivation would create an
+alerting↔reference circular import). The enforcement is the CI test:
+
+```
+unified-api-contracts/tests/internal/unit/test_freshness_ssot_agreement.py
+```
+
+This test asserts `ALERT_THRESHOLDS["tick_staleness_seconds"]` ≥ strictest real-time per-venue `max_age_seconds` in
+`MARKET_TICK_FRESHNESS` and pins the 300 s regression guard. Any change that makes the alert threshold stricter than the
+per-venue contract fails CI immediately. Never change `tick_staleness_seconds` without also verifying the per-venue
+contracts are consistent — the test is the single enforcement point.
+
+---
+
 ## Alerting-Service Routing Rules
 
 > **SSOT note (AL-3 reconciliation 2026-05-12).** Routing rules are **UAC-driven**, not an inline python block in this
@@ -264,6 +286,8 @@ codex_doc_currency_and_consolidation_post_cutover_2026_05_12 Sweep 3).
 
 ## Related
 
+- `03-observability/data-feed-sla-registry.md` — feed-SLA SSOT (`DataFreshnessContract` / `ALL_FRESHNESS_CONTRACTS`);
+  one freshness home; `refetch_action` binding
 - `04-architecture/autonomous-recovery-matrix.md` — full decision tree for failure scenarios
 - `04-architecture/kill-switch-circuit-breaker.md` — kill switch and circuit breaker mechanics
 - `04-architecture/recovery-defence-in-depth-layers.md` — **NEW 2026-05-23** the 5+1 layer recovery model (Layer-0
