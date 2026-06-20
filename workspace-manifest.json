@@ -79,14 +79,14 @@
     "market-tick-data-service": "0.20.0",
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.27.0",
-    "unified-trading-library": "0.19.0",
+    "unified-trading-library": "0.20.0",
     "unified-trading-pm": "1.2.196",
     "market-data-processing-service": "0.10.0",
     "e2e-testing": "0.8.0",
     "agent-orchestrator": "0.11.0",
     "greeks-service": "0.8.0",
     "trading-agent-service": "0.3.0",
-    "strategy-service": "0.19.0",
+    "strategy-service": "0.21.0",
     "ml-service": "0.8.0",
     "alerting-service": "0.11.0",
     "unified-trading-api": "0.2.3",
@@ -1796,9 +1796,7 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
     "deployment-api": "0.22.0",
-    "greeks-service": "0.8.0",
-    "unified-trading-library": "0.20.0",
-    "strategy-service": "0.21.0"
+    "greeks-service": "0.8.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1827,21 +1825,26 @@
       "branch": "staging",
       "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
       "version": "0.8.0"
-    },
-    "unified-trading-library": {
-      "version": "0.20.0",
-      "sha": "a5bf97fa77c2223b085caae9cd61ddec2c058b10",
-      "branch": "staging"
-    },
-    "strategy-service": {
-      "version": "0.21.0",
-      "sha": "d4bf230677b04faccb4e4d2fdea5105d69bd2a39",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-20T13:37:40.788403Z",
+        "commits": {
+          "unified-trading-library": {
+            "version": "0.20.0",
+            "sha": "a5bf97fa77c2223b085caae9cd61ddec2c058b10",
+            "branch": "staging"
+          },
+          "strategy-service": {
+            "version": "0.21.0",
+            "sha": "d4bf230677b04faccb4e4d2fdea5105d69bd2a39",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-20T13:21:29.789226Z",
         "commits": {
@@ -1888,21 +1891,6 @@
           "alerting-service": {
             "version": "0.11.0",
             "sha": "6c1b6a08876c9696d74e85e573237559fa99d77d",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-20T01:49:44.225808Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.25.0",
-            "sha": "cb4ecee13370bbce4cff4b2caac1355d3e695411",
-            "branch": "staging"
-          },
-          "client-reporting-api": {
-            "version": "0.12.0",
-            "sha": "05577e5e3b5729353bacd7b4707cf20696b027e3",
             "branch": "staging"
           }
         }
