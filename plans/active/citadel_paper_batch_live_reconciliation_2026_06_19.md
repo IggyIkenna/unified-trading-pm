@@ -307,25 +307,62 @@ are identified (2) and the ledger exists (3).
       `cli/handlers/paper_run_handler.py`, `engine/strategies/v2/base.py`.
 - [x] ✅ [CODE] P9.C. **Guard — all-long carry run fails loud** — DONE (2026-06-20). `ledger_emit.assert_carry_basis_structure`
       (+ runtime call in `run_paper`); unit test `test_carry_staked_basis_hedge_short_regression.py`.
-- [ ] [SCRIPT] P3.1. **DEFERRED (pre-existing, NOT this work) — fix `Event logging not initialized` in non-carry engine
-      unit tests.** `tests/unit/engine/strategies/v2/test_archetype_engines.py` (arbitrage_price_dispersion) +
-      `test_arbitrage_price_dispersion_funding_rate_engine.py` + `test_archetype_rotation.py` +
-      `test_archetype_state_persistence.py` + `test_batch_harness.py` + `cli/handlers/test_batch_handler_manifest_guard.py`
-      (Sports) raise `RuntimeError: Event logging not initialized` because the v2 conftest autouse fixture
-      (`tests/unit/engine/strategies/v2/conftest.py::_no_gcs_strategy_config`) patches only `staked_basis.log_event`, not
-      the arbitrage/sports engine modules' `log_event`, and no autouse `setup_events("svc","test")` exists for those
-      paths. ~33 tests red on the CLEAN tree (verified via `git stash`), blocking the full strategy-service QG. Fix:
-      broaden the autouse fixture to `setup_events(..., "test")` (or patch each engine module's `log_event`). Repo:
-      strategy-service. Provenance: paper/batch spine fix session 2026-06-20.
+- [x] ✅ [SCRIPT] P3.1. **Fixed `Event logging not initialized` in non-carry engine unit tests** — DONE
+      (strategy-service@67e7826c). Root cause confirmed: the v2 conftest autouse fixture only patched
+      `staked_basis.log_event`, never the arbitrage/sports engine modules nor the cli/handlers manifest-guard test, and no
+      autouse events init existed for those paths. Fix: a session-safe autouse fixture in the top-level
+      `tests/conftest.py` (`_events_initialized_for_tests`) initializes events in `mode="test"` (log_event → no-op, no
+      sink) for ALL tests, save/restoring `_mode`/`_writer`/`_service_name` so tests that manage events state themselves
+      (`test_cdc_strategy_state`, `test_risk_preflight_gate`, `test_event_logging`) are not polluted. The ~33 previously-red
+      non-carry engine + manifest-guard tests now pass; the full strategy-service unit suite is GREEN (2704 passed locally
+      with the credential-free env). NOTE: the full `quality-gates.sh` harness in the root/slot clones currently
+      mis-roots its TESTS phase to unified-trading-pm (`rootdir: …/unified-trading-pm`, runs PM's 6 tests) — a fleet-wide
+      QG-harness defect, NOT this code; the authoritative server `quality-gates-v2` runs test-in-image with correct rootdir.
+      Repo: strategy-service. Provenance: paper/batch spine fix session 2026-06-20.
 - [ ] [SCRIPT] P3.2. **DEFERRED (pre-existing, NOT this work) — UAC version drift blocks strategy-service QG preflight.**
       `quality-gates.sh` version-alignment gate: local `unified-api-contracts=0.26.0` vs main `0.27.0`. Run
       `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix` (after `git pull origin main` in
       PM). Repo: strategy-service (dep alignment). Provenance: paper/batch spine fix session 2026-06-20.
-- [ ] [SCRIPT] P3.3. **NICE-TO-HAVE — SWAP leg `size_units` is denominated in the IN asset (USDC), not the OUT asset
-      (ETH).** The `UNISWAP_V3:ETH` position materializes `net_qty=800000` (= 8×100k USDC-in) rather than ETH-out units,
-      because the carry archetype's SWAP leg `size_units=usdc_to_stake`. Harmless to the delta-neutral thesis (the
-      staked-ETH-vs-perp legs are the hedge pair) but a per-row unit-label inconsistency on the SWAP leg. Diagnose: align
-      SWAP `size_units` / ledger materialization to OUT units. Repo: strategy-service. Provenance: 2026-06-20.
+- [x] ✅ [SCRIPT] P3.3. **SWAP leg `size_units` now denominated in the OUT asset (ETH), not the USDC-in notional** — DONE
+      (strategy-service@67e7826c). `staked_basis.py` both SWAP legs (open `_build_atomic_legs` + rescale) now set
+      `size_units` to the canonical OUT-asset qty (`eth_qty = usdc_to_stake / eth_price`; rescale `eth_delta_qty`), derived
+      from the swap's out-amount (notional / price), NOT a hardcoded map; the USDC-in notional is preserved in
+      `params["from_amount"]`. The benchmark fill then books `eth_qty · eth_price == usdc_to_stake` (correct USD notional)
+      and the ledger qty is an ETH quantity consistent with the LIDO/DERIBIT legs. 3 stale tests updated to assert OUT
+      units. **Live-verified on real run `paper-20260620133928-d7a30df2`**: `UNISWAP_V3:DEX_POOL:ETH net_qty=233.33`
+      (ETH — was 800000 USDC), `LIDO:STAKING:ETH net_qty=233.33`, `DERIBIT:ETH-PERP net_qty=-215.83` (SHORT) → net ETH
+      ≈+17.5 (haircut residual, near-delta-neutral). Repo: strategy-service. Provenance: 2026-06-20.
+- [x] ✅ [CODE] P3.4. **MARKS → PricingLedger (producer)** — DONE (`unified-trading-library@5f941c6e` +
+      strategy-service@67e7826c). UTL gained the PricingLedger producer leg: `materialize.pricing_ledger_row` (a
+      `MARK_UPDATE` `LedgerRow`, `event_origin=PASSIVE`, `delta=0`, `price=mark`) + `run_writer.pricing_ledger_jsonl` /
+      `write_run_pricing_ledger` (deterministic JSONL → `{ledger_root}/ledger_type=pricing/{run_id}.jsonl`; asset identity
+      derived canonically from `instrument_key`, no metadata maps). strategy-service `ledger_emit.write_paper_run` now
+      derives per-instrument marks from the SAME benchmark fills (`marks_from_fills`: last `fill_price` per
+      `instrument_key` — deterministic + batch-re-derivable) and writes the PricingLedger alongside the InstructionLedger;
+      `write_paper_run`/`emit_paper_run_ledger` return `(ledger,manifest,pricing)` URIs. The position materialiser already
+      joins marks on `asset_canonical_id` → `unrealized_pnl`. 6 UTL + 2 strategy tests. **Live-verified
+      `paper-20260620133928-d7a30df2`**: 3 `mark_update` marks written to
+      `…/ledger_type=pricing/…jsonl` (DERIBIT ETH-PERP @3000, LIDO ETH @1, UNISWAP_V3 ETH @3000). Repo: UTL +
+      strategy-service. Provenance: 2026-06-20.
+- [x] ✅ [CODE] P3.5. **ATTRIBUTION → P&L attribution parquet (producer)** — DONE (strategy-service@67e7826c).
+      `paper_run_attribution.build_paper_run_attribution`/`emit_paper_run_attribution` build canonical `PnLAttributionRow`
+      records from the run's REAL captured carry rates — `CARRY` = LST staking yield, `BASIS` = Aave supply−borrow spread,
+      per held day, at `PnLLayer.STRATEGY`, accrual = `notional·rate/365` — and emit via the UTL SSOT
+      `emit_attribution_parquet` to exactly the path `attribution_reader.read_attribution_rows` scans
+      (`pnl_attribution/strategy_id={S}/client_id={C}/date={D}/rows.parquet`). Per-day rates surfaced on `StrategyReplay`;
+      wired into `run_paper`. **Honest gap (NOT fabricated):** the price/DELTA + FEES legs need a spot-price column the
+      lending-rates corpus does NOT carry (the handler prices SWAP/TRADE off `_REFERENCE_MID`); the position is
+      delta-neutral so the price leg nets ≈0 — omitted, not invented (lands when the price feature group is added). 5
+      tests. **Live-verified `paper-20260620133928-d7a30df2`**: 7 daily shards / 14 rows written (each date: CARRY+BASIS,
+      non-zero amounts from real Aave rates) — `attribution_reader` now has rows to read (was empty). Repo:
+      strategy-service. Provenance: 2026-06-20.
+- [x] ✅ [INFRA] P3.6. **Re-run + ε=0 verification with the new ledgers** — DONE (2026-06-20). New REAL run
+      `paper-20260620133928-d7a30df2` (client `firm-paper-determinism`, window 2026-05-16..22, 7 real Aave days) wrote
+      InstructionLedger (21 fills) + PricingLedger (3 marks) + RunManifest + 7 attribution shards to the canonical
+      client-reports GCS root. **Batch rerun re-derived ε=0 WITH the new ledgers**:
+      `rerun_from_manifest` → `ReconResult(deterministic=True, paper_count=21, batch_count=21, matched=21, deviations=[])`
+      (the deterministic marks don't break the proof). Perp still SHORT (`DERIBIT:ETH-PERP net_qty=-215.83`), book
+      near-delta-neutral. Repo: strategy-service. Provenance: 2026-06-20.
 
 ## Success criteria (per phase: QG/basedpyright/ruff green + tests)
 
