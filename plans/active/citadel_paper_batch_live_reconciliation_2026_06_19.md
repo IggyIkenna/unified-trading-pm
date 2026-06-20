@@ -677,3 +677,34 @@ and see real instructions + trades.
 - **client-reporting-api reads the real run**: `read_ledger_rows('firm-paper-determinism')` → 21 real LedgerRows;
   `compute_ledger_views` → 3 real positions (UNISWAP_V3:ETH, LIDO:ETH, DERIBIT:ETH-PERP) — the dashboard's data layer
   serves the real run.
+
+### 2026-06-20 — Dashboard VISIBILITY closed: routes + UI wired to the real run
+
+The operator can now open ONE URL and see the real run. Three gaps on the
+"make it visible" path were found + fixed:
+
+- **client-reporting-api: 3 missing dashboard routes** (`client-reporting-api@c989521`):
+  the paper-trading dashboard hooks fetch `/clients/{id}/instructions`,
+  `/clients/{id}/transfers`, `/clients/{id}/reconciliation/latest` (P2.5.2 shipped
+  the UI hooks, but the BACKEND routes were absent → those 3 panels would 404).
+  Added all three (`api/routes/attribution.py` + new `core/recon_view.py`),
+  reading the REAL GCS ledger via `read_ledger_rows`; the recon route computes the
+  ε=0 verdict inline (keyed trade match — no BLRS import, service-dep-clean).
+  Verified on the real run: `/reconciliation/latest` = DETERMINISTIC (21 matched,
+  ε=0); `/instructions` returns the real trades.
+- **UI: `/paper-trading?run_id=` didn't mount the canonical panels**
+  (`unified-trading-system-ui@<pending>`): the directly-navigable page rendered the
+  OLD backtest-json engine snapshot, NOT `PaperTradingLedgerPanels`. Wired the page
+  so `?client=<id>` / `?client_id=` / `?run_id=` renders the six client-reporting-api
+  ledger panels (instructions / trades / positions / P&L+attribution / transfers /
+  the ε=0 reconcile verdict) for the REAL run. `pw:L2 ✓` (5/5
+  `paper-trading-dashboard.smoke.spec.ts`, incl. the ε=0 DETERMINISTIC badge).
+- **Operator URL**: `/paper-trading?client=firm-paper-determinism` (live mode) →
+  the six panels render the real run; the reconcile badge shows ε=0 DETERMINISTIC.
+
+- [ ] [UI] P3. **NICE-TO-HAVE** Fix the pre-existing `tests/smoke/paper-trading.smoke.spec.ts:22`
+      "margin panel Gross exposure (now)" failure — FAILS ON BASELINE (verified by
+      stash-out), NOT introduced by this work; it's the LEGACY engine-snapshot
+      `/paper-trading` view (reads `/api/paper-trading` live data, empty in mock).
+      Repo: unified-trading-system-ui. Provenance: P2.5.2 dashboard-visibility work
+      2026-06-20.
