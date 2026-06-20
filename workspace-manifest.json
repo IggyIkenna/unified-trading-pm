@@ -1806,8 +1806,11 @@
     "locked_since": "2026-06-20T13:17:35.102657Z",
     "locked_reason": "Breaking MINOR bump cascade: e2e-testing=0.8.0 (pre-1.0.0)",
     "lock_version": "0.8.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "client-reporting-api",
+      "e2e-testing"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "e2e-testing"
