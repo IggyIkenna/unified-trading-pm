@@ -113,7 +113,11 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
+<<<<<<< Updated upstream
 _Last regenerated: 2026-06-20 13:06 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+=======
+_Last regenerated: 2026-06-20 13:01 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+>>>>>>> Stashed changes
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -135,6 +139,7 @@ _Last regenerated: 2026-06-20 13:06 UTC via `scripts/plans/regenerate_active_pla
 | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](./tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md) | master | brand-new | 0/5 | 0% | 4.0 | — |
 | [`carry_staked_basis_funding_scan_experiment_2026_06_16`](./carry_staked_basis_funding_scan_experiment_2026_06_16.md) | master | research | 5/54 | 9% | 3.3 | — |
 | [`cicd_sit_and_fleet_2026_06_18`](./cicd_sit_and_fleet_2026_06_18.md) | master | infra | 0/11 | 0% | 3.2 | — |
+| [`expected_unattempted_cqg_grain_and_full_history_2026_06_19`](./expected_unattempted_cqg_grain_and_full_history_2026_06_19.md) | master | infra | 0/5 | 0% | 3.2 | — |
 | [`codex_vs_repo_docs_ssot_audit_2026_06_01`](./codex_vs_repo_docs_ssot_audit_2026_06_01.md) | master | refactor | 1/24 | 4% | 3.1 | — |
 | [`bigquery_feature_ml_compute_engine_option_2026_06_08`](./bigquery_feature_ml_compute_engine_option_2026_06_08.md) | master | design | 2/7 | 29% | 3.0 | — |
 | [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) | cefi_master | brand-new | 6/8 | 75% | 3.0 | — |
@@ -224,7 +229,11 @@ _Last regenerated: 2026-06-20 13:06 UTC via `scripts/plans/regenerate_active_pla
 | [`regime_clustering_structure_allocator_2026_05_29`](./regime_clustering_structure_allocator_2026_05_29.md) | features_and_ml_master | brand-new | 29/29 | 100% | 0.0 | — |
 | [`tradfi_futures_roll_adjuster_centralisation_2026_06_17`](./tradfi_futures_roll_adjuster_centralisation_2026_06_17.md) | master | design | 5/5 | 100% | 0.0 | — |
 | [`utl_strictify_preexisting_pyright_suppressions_2026_06_09`](./utl_strictify_preexisting_pyright_suppressions_2026_06_09.md) | master | refactor | 20/20 | 100% | 0.0 | — |
+<<<<<<< Updated upstream
 | **TOTAL** (107 plans) | 0 orphans, 0 TBD | — | — | **60% done** | **228** | — |
+=======
+| **TOTAL** (108 plans) | 0 orphans, 0 TBD | — | — | **59% done** | **231** | — |
+>>>>>>> Stashed changes
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`

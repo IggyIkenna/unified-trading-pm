@@ -64,11 +64,37 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 > > `enumerate_expected_universe.py --enumerator-version v2 --apply-write` over a **bounded recent window**
 > > (`EXPECTED_UNIVERSE_START_DATE`, ~120 days) so the LIVE coverage denominator is honest. It writes a per-VM shard
 > > `_index/per_vm/enum-universe-v2-<ag>.parquet` (consolidator-merge-safe, concurrent with capture-writing backfills).
-> > **The unbounded full-history (2018→today) per-instrument universe is ~190M rows fleet-wide** — NOT materialised by
-> > the recurring job (it would ~100× the index size + slow every reader); the full-history slice is a gated follow-up
-> > (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §G1). The bounded window seeds both the
-> > alive-no-data `expected_unattempted` cells (reason="") AND the lifecycle-boundary
+> > The bounded window seeds both the alive-no-data `expected_unattempted` cells (reason="") AND the lifecycle-boundary
 > > `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED` `empty_confirmed` cells the v1 venue-grain pass did not reach.
+>
+> > **Full-history (2018→today) = a RANGE-ENCODED companion artifact, NOT per-day `_index` rows (Part 2, materialised
+> > 2026-06-19).** The naive full-history per-instrument-day universe is ~190M rows fleet-wide (~100× index blow-up +
+> > slows every reader). The chosen scalable representation (`expected_unattempted_cqg_grain_and_full_history_2026_06_19.md`):
+> > the IS enumerator `--full-history` mode (`--enumerator-version v2 --full-history --apply-write`) writes a SEPARATE
+> > **`_index/expected_universe_ranges.parquet`** companion — one row per contiguous `(shard-key, reason)` date-span
+> > (`date_start`/`date_end`/`n_days`) instead of one row per day. EU spans are almost entirely contiguous
+> > (alive-no-data ⟹ owed EVERY day in `[available_from, today]`), so this collapses ~190M day-rows → ~per-span rows
+> > (prediction: 138,802 EU-days → **90 range rows**, ~1500×). The hot-path per-day `_index` stays lean (recent window
+> > only — unchanged reader perf, no schema migration); a coverage consumer reads the companion ADDITIVELY for an honest
+> > full-timeframe denominator. **Reader-side SSOT (consumer-facing)**: UTL
+> > `unified_trading_library.honest_coverage_ratchet.full_timeframe_coverage(...)` +
+> > `sum_range_companion_eu_days(...)` — `denom = captured + empty + failed + max(eu_window, Σ range.n_days)` (the window
+> > EU is a SUBSET of the companion → `max`, never summed, so the overlap is not double-counted). The enumerator
+> > range-encodes **STREAMING** (`range_encode_stream`, O(open-spans) memory) so a dense AG (cefi/defi/tradfi: 200K+
+> > instruments × 8y) never buffers the per-day rows in memory (the prior buffered `range_encode(list)` OOM-tripped the
+> > 20M in-memory halt cap). Companion-only write → captured cells untouched (concurrency-safe vs capture backfills).
+> > Going-forward, the 01:30 nightly scheduler keeps the bounded window fresh; the full-history companion is re-runnable
+> > per-AG on demand.
+>
+> > **Prediction `expected_unattempted` is seeded at the cqg-BUNDLE grain ONLY, never per-conditionId (decision 338,
+> > 2026-06-19).** The prediction catalogue carries TWO grains: the cqg bundle
+> > (`data_type=prediction_canonical_question_group`, `instrument_id=<cqg>`, ~45 rows) AND per-conditionId
+> > (`trades`/`market_lifecycle`, ~870K rows = 435K conditionIds × 2). Seeding EU per-conditionId emits >50M FALSE rows
+> > (435K × ~574 days × 2) that NEVER match the per-conditionId captured present-set → catastrophic denominator
+> > inflation. So `_enumerate_v2_prediction` FILTERS the catalogue to its cqg-bundle rows before enumeration (CLI:
+> > `--data-types prediction_canonical_question_group`); a cqg-grain EU row is an HONEST "this cqg bundle existed but the
+> > bundle data_type was never captured". Materialised: ~21K cqg-grain `_index` cells (45 cqgs) + 90 full-history range
+> > rows. The per-conditionId universe is a feature-layer concern, NOT an EU seed.
 >
 > Every downstream consumer — the data-status coverage summary + drilldown, strategy/features pre-flight — **READS**
 > `capture_status` and the honest denominator

@@ -232,7 +232,6 @@ api_key = get_secret_client(
 | `tardis-api-key` (+ `tardis-api-key-full`, `tardis-api-key-backup`)                              | `TARDIS_API_KEY`    | Tardis.dev historical tick data (CSV.GZ batch files)            | ✅ Yes              | `KEY_IN_SM` — cassette not recorded     |
 | `databento-api-key`, `databento-api-key-1` … `databento-api-key-20`, `databento-alt-api-key-1/2` | `DATABENTO_API_KEY` | Databento market data — pool of 22 keys, rotated by `key_index` | ✅ Yes (pool of 22) | `KEY_IN_SM` — cassette not recorded     |
 | `fred-api-key`                                                                                   | `FRED_API_KEY`      | FRED macroeconomic time series                                  | ✅ Yes              | `VALIDATED` (cassette at `fred/mocks/`) |
-| `envio-api-key`                                                                                  | `ENVIO_API_KEY`     | Envio blockchain indexing/streaming                             | ✅ Yes              | `KEY_IN_SM` — no cassette               |
 
 #### On-Chain / DeFi
 
@@ -313,8 +312,6 @@ These are **market data** read keys, not execution keys. Binance and Deribit hav
 | Secret Name            | Env Var Fallback       | Purpose                                      | Key in SM? | VCR Status                                                      |
 | ---------------------- | ---------------------- | -------------------------------------------- | ---------- | --------------------------------------------------------------- |
 | `api-football-api-key` | `API_FOOTBALL_API_KEY` | API-Football leagues/fixtures/stats          | ❌ No      | `KEY_NOT_IN_SM`                                                 |
-| `openbb-fmp-api-key`   | `OPENBB_FMP_API_KEY`   | OpenBB / Financial Modeling Prep market data | ✅ Yes     | `KEY_IN_SM` — no cassette                                       |
-| `openbb-fred-api-key`  | `OPENBB_FRED_API_KEY`  | OpenBB / FRED macroeconomic data via OpenBB  | ✅ Yes     | `KEY_IN_SM` — no cassette (separate from direct `fred-api-key`) |
 | `glassnode-api-key`    | `GLASSNODE_API_KEY`    | Glassnode on-chain analytics                 | ❌ No      | `KEY_NOT_IN_SM`                                                 |
 
 #### Traditional Finance

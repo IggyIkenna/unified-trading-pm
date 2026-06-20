@@ -66,7 +66,7 @@ venue_types:
 
   data_provider:
     # Covers: tardis, databento, glassnode, coinglass, openbb, fred,
-    #         ecb, barchart, ofr, defillama, instadapp, envio, aavescan,
+    #         ecb, barchart, ofr, defillama, instadapp, aavescan,
     #         hyblock (read-only data APIs — no order flow)
     # Higher threshold (15): data provider errors rarely block trading;
     # tolerate more noise before marking a provider as unhealthy.
