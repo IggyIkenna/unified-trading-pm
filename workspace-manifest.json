@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.27.0",
     "unified-trading-library": "0.20.0",
-    "unified-trading-pm": "1.2.197",
+    "unified-trading-pm": "1.2.198",
     "market-data-processing-service": "0.10.0",
     "e2e-testing": "0.8.0",
     "agent-orchestrator": "0.11.0",
@@ -1795,7 +1795,7 @@
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
-    "deployment-api": "0.22.0",
+    "deployment-api": "0.23.0",
     "greeks-service": "0.8.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1817,8 +1817,8 @@
       "version": "0.14.0"
     },
     "deployment-api": {
-      "version": "0.22.0",
-      "sha": "9e8edbac98c50d748aa132d1d1ace90744f7a249",
+      "version": "0.23.0",
+      "sha": "cf0dc677af19c29420c28759bde65547dac70cca",
       "branch": "staging"
     },
     "greeks-service": {
