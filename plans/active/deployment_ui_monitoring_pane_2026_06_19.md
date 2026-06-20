@@ -161,13 +161,14 @@ status than what gates promotions.
       where `ci_status=MAIN_GREEN` masked a real 8-day lag (LDR→staging drained, staging 144 files ahead of main, no
       PR). **DONE — deployment-ui@82bcfe4 | pw:L2 ✓ (repos-tab 29) | regression: tests/smoke/repos-tab.spec.ts**
       ("per-hop + stall-reason columns localize a staging→main promoter stall (the AO class)").
-- [ ] [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the committed
+- [x] ✅ [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the committed
       `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed manifest's
       `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}` Firestore
       store, so the dashboard can show a DIFFERENT status than what actually gates promotions. Do the pending Phase-2
       one-function swap (`ManifestView.ci_status_for` → `ci_status_store.resolve_ci_status_map`), adding
       `google-cloud-firestore` to deployment-api. SSOT: `ci_status_firestore_side_store_2026_06_10.md`. Repo:
       deployment-api. Provenance: 2026-06-19 operator review.
+      **DONE — deployment-api@03c5d9f | `_ci_status_firestore_store.py` + `google-cloud-firestore>=2.0.0` in pyproject.toml; `load_manifest_view` overlays Firestore per-repo at cache-miss time**
 - [x] ✅ [PROMOTION] P2. **(track-3 cross-ref — do NOT implement in the UI track)** Forward staging→main promotion lags
       fleet-wide (services ~2 days behind main while libs promote): STAGE 1.8 dep-order tiered-drain + a
       `staging_versions` registration gap. **Confirmed FLEET-WIDE 2026-06-19** via the new Stall-reason column: ~16
