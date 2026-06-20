@@ -733,14 +733,51 @@ The operator can now open ONE URL and see the real run. Three gaps on the
   Verified on the real run: `/reconciliation/latest` = DETERMINISTIC (21 matched,
   ε=0); `/instructions` returns the real trades.
 - **UI: `/paper-trading?run_id=` didn't mount the canonical panels**
-  (`unified-trading-system-ui@<pending>`): the directly-navigable page rendered the
+  (`unified-trading-system-ui@1ed18e6c`): the directly-navigable page rendered the
   OLD backtest-json engine snapshot, NOT `PaperTradingLedgerPanels`. Wired the page
   so `?client=<id>` / `?client_id=` / `?run_id=` renders the six client-reporting-api
   ledger panels (instructions / trades / positions / P&L+attribution / transfers /
-  the ε=0 reconcile verdict) for the REAL run. `pw:L2 ✓` (5/5
-  `paper-trading-dashboard.smoke.spec.ts`, incl. the ε=0 DETERMINISTIC badge).
+  the ε=0 reconcile verdict) for the REAL run. The `useSearchParams()` call is
+  Suspense-wrapped (the inner body is `PaperTradingPageInner`, the default export
+  provides the `<Suspense>` boundary) so the Next 16 static build prerenders cleanly.
+  `pw:L2 ✓` (5/5 `paper-trading-dashboard.smoke.spec.ts`, incl. the ε=0 DETERMINISTIC
+  badge) | regression: `tests/smoke/paper-trading-dashboard.smoke.spec.ts`.
 - **Operator URL**: `/paper-trading?client=firm-paper-determinism` (live mode) →
   the six panels render the real run; the reconcile badge shows ε=0 DETERMINISTIC.
+
+### 2026-06-20 — FINALIZATION: UI dashboard-visibility shipped QG-green + build-timeout fix (spine DONE)
+
+The last on-disk WIP from the dashboard-visibility session is landed; the determinism spine is operationally complete
+end-to-end (paper run on real GCS data → ε=0 reconcile → operator dashboard).
+
+- **UI dashboard-visibility SHIPPED** (`unified-trading-system-ui@1ed18e6c`): `/paper-trading?client=<id>` (or
+  `?run_id=`/`?client_id=`) now mounts the canonical `PaperTradingLedgerPanels` (the six client-reporting-api ledger
+  sections) for the REAL run, replacing the legacy backtest-json snapshot. **Real build bug found + fixed**: the prior
+  on-disk WIP used only `export const dynamic = "force-dynamic"`, which is INSUFFICIENT for the Next 16 static export —
+  the production build hard-failed prerendering `/paper-trading` with `useSearchParams() should be wrapped in a suspense
+  boundary`. Fixed properly: split the search-param body into `PaperTradingPageInner` and made the default export a thin
+  `<Suspense>` wrapper. Build now generates all 223 static pages clean. Gates: `tsc` clean · 0 ESLint warnings · vitest
+  285 tests · `pnpm build` ✓ · `quality-gates.sh --no-fix` exit 0 (sentinel written) · **pw:L2 ✓** (5/5
+  `paper-trading-dashboard.smoke.spec.ts`, incl. the ε=0 DETERMINISTIC badge) | regression:
+  `tests/smoke/paper-trading-dashboard.smoke.spec.ts`. Shipped via `quickmerge --agent --files` (Quickmerge: agent
+  trailer; Tier-C drain → staging).
+- **QG build-timeout raised** (`unified-trading-pm@89bad8641`): the UI Next build legitimately exceeds the old
+  `STEP_TIMEOUT_BUILD=240` ceiling (~302 routes) — raised the `base-ui.sh` default to 900s with a `#` comment (CLAUDE.md
+  "bump MAX_DURATION over suppressing the time check"; the prior session's build timed out rather than failing on
+  content). Fleet-wide once the PM standing LDR→main PR drains. Carve-out #3 (PM scripts→main).
+- **Real-run state (re-confirmed)**: `run_id=paper-20260620002237-378a3735`, client `firm-paper-determinism`, 7
+  instructions / **21 fills** in `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-determinism/run_id=paper-20260620002237-378a3735/`;
+  T+1 `reconcile_day(paper, batch)` → **`is_deterministic=True`, bug_class=NONE, mean_fill_price_delta_bps=0** (ε=0 on
+  real on-chain Aave data). P7.1-A (`strategy-service@eaaf7a02`) + the daily-T+1 cron infra
+  (`deployment-service@aad2c1d`/`55df3ca`, `paper_determinism_enabled=true`) are DONE.
+- **Runtime step to VIEW it live**: the operator opens `/paper-trading?client=firm-paper-determinism`. For the live
+  fetch the panels call `/api/client-reporting/*` → Next rewrite → **client-reporting-api** `/api/v1/*`, which reads
+  `gs://central-element-323112-client-reports` via `read_ledger_rows`. So client-reporting-api must be DEPLOYED + serving
+  (pointed at that bucket) for the live UI fetch — the data + routes are committed (`@c989521`), but the service must be
+  up to render live. Mock mode (`NEXT_PUBLIC_MOCK_API=true`) renders the bundled fixtures with no backend.
+- **The ONE remaining leftover = the LIVE leg (P2.7.3), `BLOCKED-OPERATOR-DECISION`** — real venue fills need an
+  approved live wallet/custody (wallet keys are human-only). The paper↔batch determinism PROOF (ε=0) does not depend on
+  it; it is the only intentionally-open item.
 
 - [ ] [UI] P3. **NICE-TO-HAVE** Fix the pre-existing `tests/smoke/paper-trading.smoke.spec.ts:22`
       "margin panel Gross exposure (now)" failure — FAILS ON BASELINE (verified by
