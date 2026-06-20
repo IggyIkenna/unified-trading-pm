@@ -121,10 +121,10 @@ temp files and bounds working memory via `memory_limit`.
 The incremental cutoff reads a **dedicated content-write marker, separate from the freshness mtime** — the fix for the
 idle-bucket starvation trap. Two GCS object-metadata markers on the canonical `_index/availability_index.parquet`:
 
-| Marker                          | Set by                                                        | Read by                                                                |
-| ------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `consolidator_run_at`           | a real merge (`_write_consolidated`) **AND** the idle `_touch_canonical_mtime` | the READER freshness check (`_get_canonical_mtime`, 120 s threshold)   |
-| `consolidator_content_write_at` | **ONLY** a real merge (`_write_consolidated`)                 | the incremental **cutoff** + the post-merge **prune** (`_get_content_write_mtime`) |
+| Marker                          | Set by                                                                         | Read by                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `consolidator_run_at`           | a real merge (`_write_consolidated`) **AND** the idle `_touch_canonical_mtime` | the READER freshness check (`_get_canonical_mtime`, 120 s threshold)               |
+| `consolidator_content_write_at` | **ONLY** a real merge (`_write_consolidated`)                                  | the incremental **cutoff** + the post-merge **prune** (`_get_content_write_mtime`) |
 
 **Why two markers.** The `*/1` cron `_touch`es `consolidator_run_at` forward on every idle cycle (so the reader's
 freshness window stays valid on a bucket with no active writers). The OLD code used that same touch-advanced mtime as
@@ -276,6 +276,14 @@ item) + the engine invariant in `manifest_master_audit_instructions.md` (h2/h3/h
   data-pipeline-correctness issue.
 - `codex/02-data/data-pipeline-correctness-hard-rule.md` — slot-freeze protocol if consolidator goes silent for >120s.
 - `codex/05-infrastructure/per-tab-worktrees.md` — per-VM shard discipline for tab worktrees writing to manifests.
+- **Feed-SLA registry (2026-06-20)** — consolidator staleness is one feed in
+  `codex/03-observability/data-feed-sla-registry.md`. The `MANIFEST_CONSOLIDATED_STALENESS_SEC` threshold (default 120
+  s) follows the same criticality semantics as every other `critical` feed in `ALL_FRESHNESS_CONTRACTS`: a breach
+  loud-fails by default (`ManifestConsolidatorStaleError` / `CONSOLIDATOR_DOWN`), recovery is tracked via the
+  autonomous-recovery matrix, and the alert routing uses the same `CRITICAL` → PagerDuty + Telegram channel path. The
+  registry-keyed `refetch_action` pattern does NOT apply to the consolidator (it is infrastructure, not a data source,
+  and has its own watchdog); but its staleness semantics are intentionally aligned so the operator sees one consistent
+  freshness model across all feeds and infra components.
 
 ## Verification recipe
 

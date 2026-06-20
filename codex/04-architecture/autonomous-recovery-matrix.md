@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-20
 ---
 
 # Autonomous Recovery Matrix
@@ -139,6 +139,48 @@ ERROR DETECTED
 |       +-- Telegram + PagerDuty alert
 |       +-- Strategy-service pauses target-tracking for this strategy
 |       +-- Human reviews in Observe tab, decides to close or wait
+|
++-- STALE DATA FEED (market-tick / feature / account-state)
+|   |   Fired when a feed's age exceeds its DataFreshnessContract.max_age_seconds
+|   |   (registry SSOT: unified_api_contracts/internal/reference/data_freshness.py
+|   |    doc SSOT: codex/03-observability/data-feed-sla-registry.md)
+|   |
+|   +-- criticality == "critical"
+|   |   |
+|   |   +-- freshness_gate.py raises DataStalenessError → orders BLOCKED
+|   |   |
+|   |   +-- refetch_action != None
+|   |   |   |
+|   |   |   +-- fire refetch-feed:<source> (Layer-0 SILENT_RETRY)
+|   |   |   |   deployment-service/scripts/recovery/refetch_feed.py
+|   |   |   |   invokes: market-tick-data-service --operation download
+|   |   |   |            --mode batch --asset-group <ag> --venues <source>
+|   |   |   |            --day <today-UTC>
+|   |   |   |   emits AgentActionEvent; per-feed cooldown storm-guard
+|   |   |   |
+|   |   |   +-- refetch succeeds → feed age resets; gate re-evaluates
+|   |   |   |
+|   |   |   +-- refetch fails (per-feed CircuitBreaker 3 fails/30min)
+|   |   |       |
+|   |   |       +-- breaker OPEN → escalate CRITICAL/HIGH
+|   |   |           route_event_with_explicit_channels via alerting-service
+|   |   |           rules/feed_refetch_rules.py
+|   |   |           audit-ack lookup_sla(severity) → PagerDuty + Telegram
+|   |   |           sustained (breaker OPEN) → advisory: reduce_position
+|   |   |
+|   |   +-- refetch_action == None (execution / feature / ml feeds)
+|   |       |
+|   |       +-- UnroutableFeedError → escalation ladder owns them directly
+|   |           alert CRITICAL, orders remain blocked until manual fix
+|   |
+|   +-- criticality == "important"
+|   |   |
+|   |   +-- orders NOT blocked; DATA_STALE warning emitted
+|   |   +-- same refetch path as critical, lower severity ceiling (HIGH max)
+|   |
+|   +-- criticality == "informational"
+|       |
+|       +-- log only; no recovery action; no alert escalation
 |
 +-- RECONCILIATION FAILURE
     |
@@ -289,14 +331,15 @@ T+300s  PagerDuty CRITICAL: "Multiple venues down"
 > below before 2026-05-12 should treat the SHIPPED-status entries as authoritative; full implementation provenance
 > belongs to `plans/active/disaster_recovery_circuit_breakers_2026_05_10.md` Phase 3.
 
-| ID  | Gap                                                            | Status                    | Implementation                                                                                                                    |
-| --- | -------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| G1  | Circuit breaker → kill switch escalation (multi-venue cascade) | SHIPPED (DR Plan Phase 3) | execution-service: monitor venue breaker states, auto STOP_NEW_ONLY at >50% — wired per `kill-switch-circuit-breaker.md:218-244`  |
-| G2  | Reconciliation as pre-close gate                               | PLANNED                   | execution-service: check PBMS recon health before exit playbook                                                                   |
-| G3  | Dual failure event (recon + exec both down)                    | SHIPPED (DR Plan Phase 3) | PBMS: detect when both are broken, emit DUAL_FAILURE_DETECTED — reconciler shipped per `kill-switch-circuit-breaker.md:218-244`   |
-| G4  | Position drift → auto STOP_NEW_ONLY                            | SHIPPED (DR Plan Phase 3) | PBMS: on CRITICAL drift, call execution-service kill switch API — reconciler shipped per `kill-switch-circuit-breaker.md:218-244` |
-| G5  | Connectivity loss → mark recon as stale                        | PLANNED                   | PBMS: subscribe to CIRCUIT_OPEN, mark venue recon as unreliable                                                                   |
-| G6  | Playbook-to-scenario mapping                                   | PLANNED                   | UAC: map EmergencyExitType to trigger scenarios in config                                                                         |
+| ID  | Gap                                                            | Status                    | Implementation                                                                                                                                                                                                                                         |
+| --- | -------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| G1  | Circuit breaker → kill switch escalation (multi-venue cascade) | SHIPPED (DR Plan Phase 3) | execution-service: monitor venue breaker states, auto STOP_NEW_ONLY at >50% — wired per `kill-switch-circuit-breaker.md:218-244`                                                                                                                       |
+| G2  | Reconciliation as pre-close gate                               | PLANNED                   | execution-service: check PBMS recon health before exit playbook                                                                                                                                                                                        |
+| G3  | Dual failure event (recon + exec both down)                    | SHIPPED (DR Plan Phase 3) | PBMS: detect when both are broken, emit DUAL_FAILURE_DETECTED — reconciler shipped per `kill-switch-circuit-breaker.md:218-244`                                                                                                                        |
+| G4  | Position drift → auto STOP_NEW_ONLY                            | SHIPPED (DR Plan Phase 3) | PBMS: on CRITICAL drift, call execution-service kill switch API — reconciler shipped per `kill-switch-circuit-breaker.md:218-244`                                                                                                                      |
+| G5  | Connectivity loss → mark recon as stale                        | PLANNED                   | PBMS: subscribe to CIRCUIT_OPEN, mark venue recon as unreliable                                                                                                                                                                                        |
+| G6  | Playbook-to-scenario mapping                                   | PLANNED                   | UAC: map EmergencyExitType to trigger scenarios in config                                                                                                                                                                                              |
+| G7  | Stale data feed → active re-fetch + escalation                 | SHIPPED 2026-06-20        | deployment-service `scripts/recovery/refetch_feed.py` (Layer-0); UAC `ActionType.REFETCH_FEED`; UTL `RecoveryScriptRegistry`; alerting-service `rules/feed_refetch_rules.py` — per plan `data_feed_sla_registry_and_active_self_healing_2026_06_19.md` |
 
 ---
 
@@ -375,6 +418,14 @@ synthetic overlay, forces the condition, and asserts the expected recovery actio
 | HF2        | LST depeg kill                       | `DEFI_LST_DEPEG_STETH_5PCT`                 | `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` fired    |
 | CAS1       | Liquidation cascade → all-venue OPEN | `DEFI_LIQUIDATION_CASCADE_CASCADE_SCENARIO` | `KILL_ALL_LIVE` + firm-wide halt                 |
 
+**Stale-feed recovery pairings (G7 — shipped 2026-06-20):**
+
+| Gate label | Condition                               | Paired scenario / test                                                                           | Assertion checked                                                                                          |
+| ---------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| G7a        | critical feed aged past max_age_seconds | `deployment-service/tests/recovery/test_refetch_feed.py` (12 tests)                              | `refetch-feed` fires; `AgentActionEvent` emitted; cooldown guard respected                                 |
+| G7b        | repeated refetch failure (3×/30min)     | `alerting-service/tests/unit/test_feed_refetch_rules.py` (7 tests)                               | Breaker escalates WARN→CRITICAL; audit-ack `lookup_sla` fires; `reduce_position` advisory attached on OPEN |
+| G7c        | orders remain blocked until recovery    | execution-service `test_freshness_gate.py` — binance critical stale asserts `DataStalenessError` | Gate does not self-clear until feed age resets                                                             |
+
 **Running the matrix:**
 
 ```bash
@@ -411,6 +462,8 @@ CLAUDE.md § "Plans Run To Actual Completion → Hard-stop list".
 
 ## Related
 
+- `03-observability/data-feed-sla-registry.md` — `DataFreshnessContract` / `ALL_FRESHNESS_CONTRACTS` registry SSOT;
+  criticality tiers; `refetch_action` binding
 - `kill-switch-circuit-breaker.md` — detailed kill switch and circuit breaker mechanics
 - `circuit-breaker-rule-taxonomy.md` — `CircuitBreakerId` / `BreakerScope` / `BreakerAction` / `BreakerRecoveryMode`
   closed sets (DR plan Phase 8.A)
