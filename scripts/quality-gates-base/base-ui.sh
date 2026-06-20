@@ -74,7 +74,7 @@ run_timeout() {
 STEP_TIMEOUT_TYPECHECK=${STEP_TIMEOUT_TYPECHECK:-60}
 STEP_TIMEOUT_LINT=${STEP_TIMEOUT_LINT:-60}
 STEP_TIMEOUT_TEST=${STEP_TIMEOUT_TEST:-120}
-STEP_TIMEOUT_BUILD=${STEP_TIMEOUT_BUILD:-240}
+STEP_TIMEOUT_BUILD=${STEP_TIMEOUT_BUILD:-900}  # bumped 2026-06-20: the unified-trading-system-ui Next.js production build (~302 routes) legitimately exceeds 240s/420s cold-cache — raise the ceiling rather than skip the build (CLAUDE.md "bump MAX_DURATION over suppressing the time check")
 
 # ── PROCESS CLEANUP (prevent zombie node processes) ──────────────────────────
 # When 14 UIs run in parallel and the parent (Cursor/shell) dies, orphaned
