@@ -84,6 +84,37 @@ Files changed:
 
 QG: `bash scripts/quality-gates.sh --no-fix` → ✅ ALL QUALITY GATES PASSED (216s), 10116 passed, 557 skipped, 5 xfailed.
 
+### 2026-06-20 — data-ingestion launch sweep (autonomous) — universe→real-data
+
+After declaring the universe (Phase 1/1b–1f), kicked off the **real-data backfills for the
+expanded universe**. State of each leg (so a future agent doesn't re-launch a tracked/blocked one):
+
+- **VM code tarball REBUILT + on GCS** (`gs://deployment-scripts-central-element-323112/code/` +
+  `/vm/`) carrying UAC@`0fe9067e` (the full new universe: 12 DBEQ stocks + equity-perp link +
+  Kalshi/Polymarket perps), UTL@`a2128285`, MTDS@`c0f46973`. The tarball dirty-gate had blocked on
+  foreign WIP (strategy carry_staked_basis + UTL ledger-spine + deployment terraform-lock) — operator
+  authorised "just unblock it"; foreign WIP **stashed** (`orphan-wip-unblock-tarball-2026-06-20*`,
+  recoverable), my terraform provider-lock **committed** (deployment-service@`c77477d`).
+- **Kalshi trades — LAUNCHED** (the operator's explicit "is Kalshi downloading history?" ask):
+  VM `mtds-prediction-kalshi-20260620-130906`, full history `2021-07-30→2026-06-20`
+  (`--venue KALSHI`, genesis from `venue_launch_dates.py`). Creds present (`kalshi-api-credentials`).
+- **Polymarket trades** — existing baseline (already backfilled; not re-launched).
+- **DBEQ-12 single stocks (cash-stock leg)** — NOT blind-launched: correctly **rides the tracked
+  full-3-dataset backfill** (`tradfi_databento_subscription_universe_lockdown_2026_06_18.md` Phase 2.6
+  line 271 P1), gated behind the running CME-b close-out → `build_instrument_catalogue --asset-group
+  tradfi` (regenerates the denominator w/ the 12 new stocks). DBEQ.BASIC stock fetch is **proven**
+  (write-stamp force-smoke 2026-06-17, same plan line 95-100) — the old "0 records" was pre-subscription.
+- **Equity-perps (Binance/OKX/Bybit)** — fetch path EXISTS (Tardis CeFi archive already covers
+  BINANCE-FUTURES/OKX-SWAP/BYBIT-FUTURES, see Progress Log above); remaining work = the CeFi
+  **universe-filter add** (this plan Phase 2 P1, market-tick-data-service). Tracked, not blind-launchable.
+- **Kalshi/Polymarket perps** — fetch path is NOT wired (perp-funding launcher is Hyperliquid-S3-only);
+  tracked as `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` P1 (IS perp enumerator + MTDS
+  perp trades/funding adapters). Universe layer (`venue_launch_dates` KALSHI-PERP 2026-05-29 /
+  POLYMARKET-PERP 2026-04-21, venue_constants, coverage_starts) shipped d92ea1a.
+
+Net: the expanded-universe data ingestion is **launched (Kalshi) or correctly tracked+sequenced** —
+nothing silently dropped. The CME-b tradfi close-out is the linchpin that unlocks the DBEQ 3-dataset leg.
+
 ## Temporary states + their canonical follow-up plans
 - Phase 2 (MTDS universe add) → this plan Phase 2 todo above (market-tick-data-service)
 - Phase 3 (live CLOB) → this plan Phase 3 todo above
