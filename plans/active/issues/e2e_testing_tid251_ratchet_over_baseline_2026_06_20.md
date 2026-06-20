@@ -1,7 +1,6 @@
 ---
 title: "e2e-testing STEP 5.95 TID251 ratchet is over baseline — pre-existing, blocks ALL e2e commits"
 created: 2026-06-20
-author: ikennaigboaka [slot-1·laptop]
 status: open
 priority: P1
 source:
