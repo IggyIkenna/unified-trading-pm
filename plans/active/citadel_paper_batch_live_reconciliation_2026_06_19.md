@@ -362,7 +362,11 @@ filled`. UI prefers the 15m-fresh ledger value, falls back to the daily snapshot
 **Per-coin realized exec cost (operator ask):** the dashboard depth table already charts per-coin *slippage* (the
 forward cost driver); added per-coin **realized** cost-bps (`Σcost/Σnotional` from the live fills) to `_coin_history`
 (`_live_cost`, refreshed in both the full build + the light per-cycle path) → shown on the per-coin "orders filled" card.
-Redeploying both Cloud Run jobs.
+
+**SHIPPED + verified (both Cloud Run jobs redeployed, executed clean):** dashboard `short +2.42 bps` (was −14.66; total
+8.53, exec 2.43, **net 6.1 bps**); `ledgers.json live_bps` fresh on the 15m signal cadence (−26.49, gen 13:20Z);
+per-coin `UNI cost_bps_live 3.69`. UI: unified-trading-system-ui@f16ac596 | pw:L2 ✓ (6 passed) | regression:
+tests/smoke/paper-trading-live-ledgers.smoke.spec.ts. Engine source synced to e2e + GCS mirror.
 
 ### 2026-06-20 — Fill-model backtest (PB.7) decided + bps PnL wired everywhere (PB.9)
 
