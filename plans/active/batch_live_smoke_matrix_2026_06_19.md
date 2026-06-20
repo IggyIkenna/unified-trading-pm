@@ -64,7 +64,7 @@ prediction 2 / 8; sports 16 / 0 (10 blocked-cred); tradfi 40 / 0 (40 blocked-cre
 - [x] ✅ [SCRIPT] P0. RUN the matrix across all 5 AGs on the central VM (GCS network on) → 754 batch-pass / 0
       batch-fail, 339 live-wired / 50 blocked-cred / 0 live-fail, 135 symmetric / 0 divergent; L2 real Binance-spot tick
       proven. — e2e-testing@c92d50f
-- [ ] 🟡 BLOCKED-DEP [SCRIPT] P0. Wire as a repeatable smoke — MTDS `quality-gates.sh` STEP 5.88b (ruff-lint + warn-only
+- [ ] [SCRIPT] P0. **BLOCKED-DEP** Wire as a repeatable smoke — MTDS `quality-gates.sh` STEP 5.88b (ruff-lint + warn-only
       L1 `--smoke`), mirroring STEP 5.88's 4-pillar wiring. **DONE in the working tree + MTDS QG-green (sentinel == HEAD
       `b9a8d79`, the 5.88b block ran clean inside the gate); ship via quickmerge is BLOCKED on a FOREIGN dirty dep** —
       `unified-trading-library` carries 3 uncommitted source edits (test_honest_coverage_ratchet / core/asset_group /

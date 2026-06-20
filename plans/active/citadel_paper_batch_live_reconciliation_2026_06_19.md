@@ -317,7 +317,7 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
 
 - [x] ✅ [INFRA] PB.1. Redeploy `paper-signal-engine` (now COPYs `_ledgers.py`/`_ledgers_json.py`/`_coin_history.py`;
       rolling 3-day 1m floor) + `paper-trading-engine` (real-margin `paper_engine.py`). Repo: e2e-testing.
-- [ ] [SCRIPT] PB.2. **BLOCKED (pre-existing e2e ratchet drift, NOT this work)** — Land the engine source to
+- [ ] [SCRIPT] P2. **BLOCKED (pre-existing e2e ratchet drift, NOT this work)** — Land the engine source to
       `e2e-testing/scripts/paper_trading/`. Source is SYNCED + all OWN gate items GREEN (ruff-clean, lifecycle markers,
       basedpyright-excluded per script-homes rule, codex `uv pip install`, TID251 `# noqa`, Dockerfile digest-pinned).
       Quickmerge is blocked by a **pre-existing repo-wide STEP 5.95 TID251 ratchet breakage** (5 un-noqa'd
