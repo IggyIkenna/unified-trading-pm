@@ -1814,7 +1814,7 @@
       "greeks-service"
     ],
     "sit_retry_count": 3,
-    "locked_alert_sent": false,
+    "locked_alert_sent": true,
     "breaking_pending": [
       "greeks-service",
       "unified-api-contracts"
