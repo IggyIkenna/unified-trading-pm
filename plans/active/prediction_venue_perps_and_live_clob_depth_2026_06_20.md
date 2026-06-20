@@ -48,6 +48,32 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-20 (PM) — "is Kalshi downloading history?" ROOT-CAUSE + fix launched
+
+Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was NOT, two-stage gap now being fixed:**
+
+- **Stage-2 (MTDS download) was launched without stage-1 (IS enumeration).** Launched the MTDS Kalshi
+  trades backfill (`mtds-prediction-kalshi-20260620-130906`, 2021-07-30→2026-06-20) — it RAN but produced
+  **0 records every date**: 404 on `instruments-store-pred-prd/instrument_availability/by_date/day=X/venue=KALSHI/instruments.parquet`
+  → "no instruments" → SHARD_INCOMPLETE. **Stopped that VM** (can't produce data without stage-1).
+- **Root cause: IS never enumerated Kalshi** — `gsutil ls **venue=KALSHI**` = ZERO parquets fleet-wide
+  (Polymarket has full `canonical_question_group=*/day=*/venue=POLYMARKET/instruments.parquet` coverage).
+  The MTDS Kalshi adapter is fine: its primary path `_load_market_lifecycle_for_date` reads the
+  `market_lifecycle/by_canonical_group/` store (venue-agnostic, would include Kalshi once IS writes it);
+  the flat `by_date/day=X/venue=KALSHI` fallback 404 is just noise. IS *supports* Kalshi —
+  `get_venues_for_asset_groups(["PREDICTION"])` returns `["POLYMARKET","KALSHI"]` (venue_core.py:258),
+  and `process_write._write_prediction_venue` handles both — the enumeration just had never been **run**
+  for Kalshi (separate from the MTDS get_venues KALSHI-disable I fixed earlier at mtds@ebf947b).
+- **Fix LAUNCHED (corrected sequence)**: IS PREDICTION instruments backfill
+  `instr-backfill-pred-20260620` (2021-07-30 Kalshi genesis → 2026-06-20), which enumerates KALSHI
+  (+ re-Polymarket, idempotent) → writes the `venue=KALSHI` lifecycle+instrument parquets. Verify
+  watcher confirms KALSHI parquets appear. **Next (gated on IS completion)**: re-launch the MTDS Kalshi
+  trades backfill — it will now find instruments via the primary lifecycle path. (Kalshi creds present:
+  SM `kalshi-api-credentials`.)
+- **Lesson**: prediction backfills are a 2-stage IS→MTDS pipeline — IS enumeration MUST precede the MTDS
+  download (the `launch-prediction-pipeline-vm.sh` combined launcher exists for exactly this; the bare
+  MTDS launcher assumes IS already ran).
+
 ### 2026-06-20 — Phase 0 API research + Phase 1 UAC scaffold
 
 **Architecture resolved**: New venue tokens `KALSHI_PERP = "KALSHI-PERP"` and `POLYMARKET_PERP = "POLYMARKET-PERP"` (distinct from prediction YES/NO `KALSHI`/`POLYMARKET`). Both classified as `cefi` asset_group (CFTC-regulated crypto perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_TYPES_BY_VENUE` (PERPETUAL), `VENUE_CATEGORY_MAP` (cefi), `VENUE_FEE_MODEL_MAP` (MAKER_TAKER), `VENUE_ALPHA_PROFILE` (ALPHA_SEEKING), `VENUE_ORDER_CAPABILITIES` (_CEFI_BASIC, pending live order-type verification), `CEFI_VENUE_LAUNCH_DATES`, `CEFI_SOURCE_COVERAGE_START`, `VENUES_BY_ASSET_GROUP["cefi"]`, `VenueMapping.venue_start_dates`.
