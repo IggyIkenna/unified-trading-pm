@@ -48,6 +48,49 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-20 (PM) — "is Kalshi downloading history?" ROOT-CAUSE + fix launched
+
+Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was NOT, two-stage gap now being fixed:**
+
+- **Stage-2 (MTDS download) was launched without stage-1 (IS enumeration).** Launched the MTDS Kalshi
+  trades backfill (`mtds-prediction-kalshi-20260620-130906`, 2021-07-30→2026-06-20) — it RAN but produced
+  **0 records every date**: 404 on `instruments-store-pred-prd/instrument_availability/by_date/day=X/venue=KALSHI/instruments.parquet`
+  → "no instruments" → SHARD_INCOMPLETE. **Stopped that VM** (can't produce data without stage-1).
+- **Root cause: IS never enumerated Kalshi** — `gsutil ls **venue=KALSHI**` = ZERO parquets fleet-wide
+  (Polymarket has full `canonical_question_group=*/day=*/venue=POLYMARKET/instruments.parquet` coverage).
+  The MTDS Kalshi adapter is fine: its primary path `_load_market_lifecycle_for_date` reads the
+  `market_lifecycle/by_canonical_group/` store (venue-agnostic, would include Kalshi once IS writes it);
+  the flat `by_date/day=X/venue=KALSHI` fallback 404 is just noise. IS *supports* Kalshi —
+  `get_venues_for_asset_groups(["PREDICTION"])` returns `["POLYMARKET","KALSHI"]` (venue_core.py:258),
+  and `process_write._write_prediction_venue` handles both — the enumeration just had never been **run**
+  for Kalshi (separate from the MTDS get_venues KALSHI-disable I fixed earlier at mtds@ebf947b).
+- **Ran the IS PREDICTION backfill `instr-backfill-pred-20260620` (2021-07-30→2026-06-20) — and "check
+  events" surfaced the DEEPER blocker (operator was right to verify):** the IS Kalshi enumeration RUNS
+  and hits the API (`URDI[KALSHI]: fetched 2000 instruments`) but returns **ZERO records for every
+  historical date** (2021-09-02…09-21: 106 zero-record errors). **Every one of 106,000 fetched tickers
+  is `…-S2026…` (current-settlement)** — i.e. the API returns the CURRENT market snapshot, not a
+  point-in-time list. **Stopped the VM** (it would walk ~1,700 dates producing all-zero).
+- **ROOT CAUSE #2 (the real one) — the Kalshi IS adapter is current-snapshot-ONLY**
+  (`instruments_service/reference_data/adapters/prediction/kalshi.py:113-178`): `get_instruments` takes
+  NO `as_of_date`, uses `now = datetime.now(UTC)`, and `_fetch_markets_page` sends
+  `params={"limit":…, "status":"open"}` — it can only ever return *currently-open* markets. The live/
+  forward daily enumeration is correct; **historical backfill is structurally impossible with it.**
+- **ROOT CAUSE #3 — Kalshi's public API historical depth is thin/unavailable unauthenticated:** direct
+  probes `GET /trade-api/v2/markets?status=settled&min_close_ts=…&max_close_ts=…` for 2023-06 / 2024-06 /
+  2025-06 windows all returned **0 markets** (while `status=open` returns 2000+). So even adding an
+  `as_of_date`/settled-windowed historical mode may not yield deep history without authenticated
+  settled-market pagination — or it may simply not be served.
+- **DECISION NEEDED (operator) — closed set:** (a) **forward-only Kalshi** — accept that historical
+  Kalshi instruments/trades are unavailable; run live enumeration from now on (works today), honest-
+  absence the past; (b) **adapter R&D** — add an authenticated `status=settled` + `min/max_close_ts`
+  windowed historical mode and verify how far back the authenticated API actually serves (uncertain
+  payoff); (c) **paid historical vendor** for Kalshi. The MTDS Kalshi trades backfill is moot until the
+  IS instrument universe exists for the target dates, so it stays un-relaunched pending this decision.
+- **Lesson (still valid):** prediction backfills are a 2-stage IS→MTDS pipeline — IS enumeration MUST
+  precede MTDS download. But for Kalshi the stage-1 itself can't reconstruct history with the current
+  adapter + public API.
+- [ ] [SCRIPT] P0. **instruments-service — Kalshi historical enumeration** (the actual blocker for "Kalshi history"). Add an `as_of_date`-aware historical mode to `KalshiReferenceDataAdapter.get_instruments` / `_fetch_markets_page` (`status=settled` + `min_close_ts`/`max_close_ts` window around the target date, authenticated via SM `kalshi-api-credentials`, cursor-paginate). **First verify** the authenticated settled endpoint serves pre-2026 markets at all (the unauthenticated probe returned 0 for 2023-25) — if it does NOT, this is BLOCKED-OPERATOR-DECISION (forward-only vs paid vendor), NOT a code task. Keep the live `status=open`+now() path as the default. Repo: instruments-service.
+
 ### 2026-06-20 — Phase 0 API research + Phase 1 UAC scaffold
 
 **Architecture resolved**: New venue tokens `KALSHI_PERP = "KALSHI-PERP"` and `POLYMARKET_PERP = "POLYMARKET-PERP"` (distinct from prediction YES/NO `KALSHI`/`POLYMARKET`). Both classified as `cefi` asset_group (CFTC-regulated crypto perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_TYPES_BY_VENUE` (PERPETUAL), `VENUE_CATEGORY_MAP` (cefi), `VENUE_FEE_MODEL_MAP` (MAKER_TAKER), `VENUE_ALPHA_PROFILE` (ALPHA_SEEKING), `VENUE_ORDER_CAPABILITIES` (_CEFI_BASIC, pending live order-type verification), `CEFI_VENUE_LAUNCH_DATES`, `CEFI_SOURCE_COVERAGE_START`, `VENUES_BY_ASSET_GROUP["cefi"]`, `VenueMapping.venue_start_dates`.

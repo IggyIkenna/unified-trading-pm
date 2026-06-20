@@ -1,0 +1,83 @@
+---
+title: "Slack/orchestrator alert triage (2026-06-20) — alerts vs open PM plans; paper-trading channel split; 2 net-new gaps"
+created: 2026-06-20
+status: active
+priority: P2
+locked_by: live-defi-rollout
+source:
+  - 2026-06-20 operator paste — ci-failures + agent-orchestrator-alerts Slack dump
+  - 3 Explore sub-agents (slot-3) — alert↔plan cross-reference + Slack-routing map
+---
+
+# Slack / agent-orchestrator alert triage (2026-06-20)
+
+## What I found — every live alert theme mapped to its tracking plan (open vs done)
+
+| Alert (channel) | Tracking plan / issue | Status | Action |
+| --- | --- | --- | --- |
+| Worker heartbeat loop dead — slots 1/4/5/6, every ~10–15 min | `alert_quality_overhaul_2026_06_18.md` (dedup→disk SHIPPED) | TRACKED; **the absurd idle-minute values (5711, 1515) are a NET-NEW UNTRACKED BUG** | NEW todo ↓ |
+| Spawn failure — branch-state quarantine (slot 6, unified-trading-pm diverged, FM5/FM7) | `alert_quality_overhaul_2026_06_18.md` Phase 3 (alert SHIPPED) | TRACKED alert; **no auto-recovery (quarantine never auto-clears) = gap** | NEW todo ↓ |
+| Context-burn suspected (slot 1, flag-only) | `alert_quality_overhaul_2026_06_18.md` Phase 3 | TRACKED; flag-only BY DESIGN (kill gated off) | none — expected |
+| Orphan ping(s) detected (2) | `issue_docs_remediation_sweep_2026_06_02.md` + `codex/11-project-management/plan-hygiene.md` | TRACKED; process discipline | slot-1/harsh clear within cycle |
+| Slot N unpushed plan(s) (citadel…, master…) | `fleet_git_health_orchestrator_2026_06_10.md` | TRACKED; transient (Commit+Push+Flip) | slot owner pushes |
+| QG slice FAILED — market-tick-data-service PR#260 LDR→staging | (live code failure, not a plan gap) | OPEN — genuine red | fix the failing test/code now (like execution-service 2026-06-17) |
+| promotion-lag-monitor — 24 branch-pairs un-propagated (ages to 7305m) | `issues/staging_to_main_promotion_starvation_2026_06_19.md` + `cicd_promotion_pipeline_2026_06_18.md` Bug#11 (P0) + `promotion_queue_conflict_wall_pileup_2026_06_17.md` (squash-noise P1s) | TRACKED — but the **P0 root-cause fixes are OPEN** | drive the open P0/P1 promote-flow todos; large age = commit-count noise + the 2 unfixed structural causes |
+| plan-health doc-drift (5) + contradictions (6) — stale `tab/<op>/N` refs, IggyIkenna→OdumResearch | `cicd_quality_gates_2026_06_18.md` (AO worker.md/boot-prompt rewrite, P2) + `org_migration_to_odumresearch_2026_06_07.md` (Phase 5 sweep) + `issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md` | TRACKED; OPEN P2–P3 | unblock the Path-B AO doc rewrites |
+| **Paper-trading — "trades to do now"** (mis-routed to agent-orchestrator-alerts) | — none — | NET-NEW | route to `#paper-trading-alerts` ↓ |
+
+**Headline:** almost every alert is ALREADY tracked. The promotion-lag (P0 Bug#11 + the squash-noise/staging-merge-base
+structural P1s) is the biggest open theme and is the same un-done work from 2026-06-17/19 — not new. Three things are
+genuinely net-new and captured below.
+
+## Net-new todos (the gaps the alerts surfaced)
+
+- [ ] [BUG] P2. **WorkerLivenessWatchdog bogus idle-minute calc** — alerts show "idle for 5711min" (slot 4) / "1515min"
+      (slot 5) — physically impossible (≈4 days / 1 day). Root cause (per code read): the silence anchor in
+      `agent-orchestrator/server/health.py` (~L182, `max(last, last_spawned_at, assigned_at)`) inherits a PREDECESSOR
+      session's `last_spawned_at` after a silent respawn, so `silence` balloons backwards → `stale_min` (L273) reports
+      days. Fix: anchor silence to the CURRENT session's spawn/heartbeat only (reset on respawn), clamp to session age.
+      **Target repo:** agent-orchestrator. Composes with `alert_quality_overhaul_2026_06_18.md` (add as its Phase-4 item
+      if that plan owns watchdog-alert quality).
+- [ ] [INFRA] P2. **Quarantined-slot auto-recovery** — a slot stuck in "branch-state quarantine" (worktree not on
+      `live-defi-rollout`) is only ALERTED, never auto-cleaned; one quarantined slot starved escalation dispatch for
+      hours (2026-06-18 incident, escalation.py). Add a bounded auto-heal: on quarantine, attempt
+      `git -C .tabs/<N>/<repo> merge --abort || true; git checkout live-defi-rollout; git reset --hard origin/live-defi-rollout`
+      ONLY when the worktree is provably a dead session (no live `.agent-claim`, no tmux) per the liveness-gated
+      inherited-dirty-WIP rule — never stomp a live peer. **Target repo:** agent-orchestrator. Composes with
+      `alert_quality_overhaul_2026_06_18.md` Phase 3 + the respawn-hygiene rule.
+- [ ] [INFRA] P2. **Split paper-trading "trades to do now" alerts into `#paper-trading-alerts`** (operator created the
+      channel 2026-06-20). The `:zap: Paper-trading — trades to do now` digest currently posts to
+      `#agent-orchestrator-alerts`; it should go to the dedicated channel. **Operator Slack-setup required FIRST** (see
+      below). **Emitter NOT in any slot clone** (grep for `trades to do now` / `book ROE` / `paper vs backtest
+      divergence` = 0 code hits fleet-wide) → the paper-trading scan/notifier runs on the orchestrator VM (vm-planning)
+      or an un-cloned path; locate it there (`ssh human-planning-vm` / central VM) before wiring. **Target repo:**
+      agent-orchestrator (or wherever the paper-trading scan emitter lives) + the alerting webhook config.
+
+## Paper-trading channel split — operator Slack setup (the answer to "what do I need to do")
+
+**Slack reality:** a Slack-app **incoming webhook is bound to ONE channel at creation** — the `channel` field in the
+payload is IGNORED for modern app webhooks. So you **cannot** "reuse the same webhook URL but a different channel." You
+reuse the same Slack **app + the same backend notify code**, but you need a **separate webhook URL** for the new channel
+(the current alerts post via a webhook URL env `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` / SM `alerting-uts-live-alerts-slack-webhook`).
+
+**Operator steps:**
+1. Slack → the app that already posts to `#agent-orchestrator-alerts` → **Incoming Webhooks** → **Add New Webhook to
+   Workspace** → pick **`#paper-trading-alerts`** → copy the new URL (`https://hooks.slack.com/services/T…/B…/…`).
+2. Hand me the URL (or store it yourself) → I put it in Secret Manager as **`agent-orchestrator-paper-trading-slack-webhook`**.
+3. I point ONLY the paper-trading "trades to do now" emitter at that webhook (the other agent-orchestrator alerts stay
+   on the existing webhook/channel). One-line routing change once the emitter is located.
+
+**Alternative (no new webhook):** if the backend is switched to a Slack **bot token** (`chat.postMessage` with a
+`channel` param) the bot can post to any channel it's invited to — then you'd just `/invite` the bot to
+`#paper-trading-alerts`. But today it's webhook-based, so the new-webhook path above is the route.
+
+## Why it matters
+- Paper-trading "trades to do now" is an OPERATOR ACTION feed (orders to place) — burying it in the noisy
+  agent-orchestrator-alerts (worker deaths every 10 min) means real trade actions get lost. Its own channel is correct.
+- The idle-min bug + quarantine-no-autoheal make the alert stream cry-wolf + can starve dispatch — both erode trust in
+  the alert system the operator is trying to act on.
+
+## Composes with
+- `alert_quality_overhaul_2026_06_18.md` (watchdog/alert quality — the home for the 2 orchestrator bugs)
+- `issues/staging_to_main_promotion_starvation_2026_06_19.md` + `cicd_promotion_pipeline_2026_06_18.md` (promotion lag)
+- `cicd_quality_gates_2026_06_18.md` + `org_migration_to_odumresearch_2026_06_07.md` (doc-drift / contradictions)

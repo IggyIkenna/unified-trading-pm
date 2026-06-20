@@ -28,8 +28,12 @@ Crypto-venue equity perps/tokenized-stocks are derivatives TRACKING a real equit
 ## Phase 1 — universe + canonical mapping
 - [x] [UAC] P1. Add the equity-perp / tokenized-stock symbols to the crypto-perp/cefi instrument universe with a `tracks_equity=<canonical ticker>` link to the Databento equity canonical (mirror `cme_polymarket_link.py` cross-venue-link pattern). Venue tokens already exist (BINANCE/OKX/BYBIT) — new instrument_type (`equity_perp` / `tokenized_equity`). Repo: unified-api-contracts. ✅ unified-api-contracts@e4606ac0
 
-## Phase 2 — download (likely rides existing CeFi pipeline)
-- [ ] [SCRIPT] P1. market-tick-data-service — if Tardis/CeFi feeds carry these symbols, just add them to the CeFi venue universe (trades + funding + book already handled by the CeFi adapters); else add a fetch path. Verify historical + live. Repo: market-tick-data-service.
+## Phase 2 — download (rides existing CeFi/Tardis pipeline — fetch path EXISTS, enumeration is gated)
+- [ ] [SCRIPT] P1. **instruments-service** (NOT mtds — CeFi universe is IS-driven per the IS→MTDS contract; MTDS auto-downloads whatever IS enumerates via the existing Tardis archive that already covers BINANCE-FUTURES/OKX-SWAP/BYBIT-FUTURES). **Exact surface discovered 2026-06-20** — the equity-perp contracts ARE in the Tardis archive but are FILTERED OUT today by the curated base-asset universe gate. Two coupled edits, both must land together (filter-only = data-correctness regression: equity-perps would mis-stamp as `PERPETUAL` and pollute crypto-perp manifest shards — the heartbeat rule):
+  1. **Pass the filter**: `_passes_asset_filter` at `instruments_service/reference_data/adapters/cefi/tardis/parsing.py:357-367` rejects any base not in `_tardis.CEFI_BASE_ASSET_UNIVERSE`. Allow equity-perp bases too — union in UAC `CEFI_EQUITY_PERP_BASE_UNIVERSE` (from `unified_api_contracts.registry.cefi_instrument_universe`, already shipped uac@e4606ac0) + `STANDALONE_EQUITY_PERP_SYMBOLS` (SPCX). The same `CEFI_BASE_ASSET_UNIVERSE` gate is duplicated in the **hyperliquid** (`cefi/hyperliquid.py:124`) and **aster** (`cefi/aster.py:166`) adapters — only Binance/OKX/Bybit (Tardis) list equity-perps, so the tardis adapter is the required edit; HL/aster need it only if they list equity-perps (they don't today — leave or guard).
+  2. **Stamp the right type**: the Tardis type-resolution returns `InstrumentType.PERPETUAL` for these linear perps. Override to `InstrumentType.EQUITY_PERP` when the base ∈ `LINKED_EQUITY_PERP_BASES`/`STANDALONE_EQUITY_PERP_SYMBOLS` (UAC `crypto_equity_link.tracks_equity()` / the base-universe). Mirror the existing OPTION special-case in `_passes_asset_filter` / the type path. Tokenized-equity venues (Bybit `AAPLX`) → `InstrumentType.TOKENIZED_EQUITY`.
+  3. Unit tests: METAUSDT/NVDAUSDT(Binance) + META-USDT-SWAP(OKX) pass the filter AND stamp EQUITY_PERP; SPCXUSDT → EQUITY_PERP (standalone); a crypto perp (BTCUSDT) still stamps PERPETUAL (no regression); AAPLX(Bybit) → TOKENIZED_EQUITY. Then `bash scripts/quality-gates.sh` green.
+  4. After IS enumerates them → launch the CeFi Tardis backfill (existing launcher) for the equity-perp window (Binance equity-perp listings began ~2026; check `coverage_starts.py`/`venue_launch_dates.py` for per-venue genesis) → MTDS downloads trades+funding+book. Verify manifest `capture_status` for an EQUITY_PERP shard. Repo: instruments-service (enum) + deployment-service (launch).
 
 ## Phase 3 — live CLOB depth (shared with the prediction-perps plan's Phase 3)
 - [ ] [SCRIPT] P2. Live BBO+depth recording for these equity perps (for basis-arb slippage calibration) — reuse the CeFi live-ws book connectors. Repo: market-tick-data-service.
@@ -83,6 +87,37 @@ Files changed:
 - `tests/unit/test_crypto_equity_link.py` — NEW: 9 unit tests (all passing)
 
 QG: `bash scripts/quality-gates.sh --no-fix` → ✅ ALL QUALITY GATES PASSED (216s), 10116 passed, 557 skipped, 5 xfailed.
+
+### 2026-06-20 — data-ingestion launch sweep (autonomous) — universe→real-data
+
+After declaring the universe (Phase 1/1b–1f), kicked off the **real-data backfills for the
+expanded universe**. State of each leg (so a future agent doesn't re-launch a tracked/blocked one):
+
+- **VM code tarball REBUILT + on GCS** (`gs://deployment-scripts-central-element-323112/code/` +
+  `/vm/`) carrying UAC@`0fe9067e` (the full new universe: 12 DBEQ stocks + equity-perp link +
+  Kalshi/Polymarket perps), UTL@`a2128285`, MTDS@`c0f46973`. The tarball dirty-gate had blocked on
+  foreign WIP (strategy carry_staked_basis + UTL ledger-spine + deployment terraform-lock) — operator
+  authorised "just unblock it"; foreign WIP **stashed** (`orphan-wip-unblock-tarball-2026-06-20*`,
+  recoverable), my terraform provider-lock **committed** (deployment-service@`c77477d`).
+- **Kalshi trades — LAUNCHED** (the operator's explicit "is Kalshi downloading history?" ask):
+  VM `mtds-prediction-kalshi-20260620-130906`, full history `2021-07-30→2026-06-20`
+  (`--venue KALSHI`, genesis from `venue_launch_dates.py`). Creds present (`kalshi-api-credentials`).
+- **Polymarket trades** — existing baseline (already backfilled; not re-launched).
+- **DBEQ-12 single stocks (cash-stock leg)** — NOT blind-launched: correctly **rides the tracked
+  full-3-dataset backfill** (`tradfi_databento_subscription_universe_lockdown_2026_06_18.md` Phase 2.6
+  line 271 P1), gated behind the running CME-b close-out → `build_instrument_catalogue --asset-group
+  tradfi` (regenerates the denominator w/ the 12 new stocks). DBEQ.BASIC stock fetch is **proven**
+  (write-stamp force-smoke 2026-06-17, same plan line 95-100) — the old "0 records" was pre-subscription.
+- **Equity-perps (Binance/OKX/Bybit)** — fetch path EXISTS (Tardis CeFi archive already covers
+  BINANCE-FUTURES/OKX-SWAP/BYBIT-FUTURES, see Progress Log above); remaining work = the CeFi
+  **universe-filter add** (this plan Phase 2 P1, market-tick-data-service). Tracked, not blind-launchable.
+- **Kalshi/Polymarket perps** — fetch path is NOT wired (perp-funding launcher is Hyperliquid-S3-only);
+  tracked as `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` P1 (IS perp enumerator + MTDS
+  perp trades/funding adapters). Universe layer (`venue_launch_dates` KALSHI-PERP 2026-05-29 /
+  POLYMARKET-PERP 2026-04-21, venue_constants, coverage_starts) shipped d92ea1a.
+
+Net: the expanded-universe data ingestion is **launched (Kalshi) or correctly tracked+sequenced** —
+nothing silently dropped. The CME-b tradfi close-out is the linchpin that unlocks the DBEQ 3-dataset leg.
 
 ## Temporary states + their canonical follow-up plans
 - Phase 2 (MTDS universe add) → this plan Phase 2 todo above (market-tick-data-service)

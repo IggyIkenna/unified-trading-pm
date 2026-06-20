@@ -307,7 +307,7 @@ are identified (2) and the ledger exists (3).
       `cli/handlers/paper_run_handler.py`, `engine/strategies/v2/base.py`.
 - [x] ✅ [CODE] P9.C. **Guard — all-long carry run fails loud** — DONE (2026-06-20). `ledger_emit.assert_carry_basis_structure`
       (+ runtime call in `run_paper`); unit test `test_carry_staked_basis_hedge_short_regression.py`.
-- [ ] [SCRIPT] P9.1. **DEFERRED (pre-existing, NOT this work) — fix `Event logging not initialized` in non-carry engine
+- [ ] [SCRIPT] P3.1. **DEFERRED (pre-existing, NOT this work) — fix `Event logging not initialized` in non-carry engine
       unit tests.** `tests/unit/engine/strategies/v2/test_archetype_engines.py` (arbitrage_price_dispersion) +
       `test_arbitrage_price_dispersion_funding_rate_engine.py` + `test_archetype_rotation.py` +
       `test_archetype_state_persistence.py` + `test_batch_harness.py` + `cli/handlers/test_batch_handler_manifest_guard.py`
@@ -317,11 +317,11 @@ are identified (2) and the ledger exists (3).
       paths. ~33 tests red on the CLEAN tree (verified via `git stash`), blocking the full strategy-service QG. Fix:
       broaden the autouse fixture to `setup_events(..., "test")` (or patch each engine module's `log_event`). Repo:
       strategy-service. Provenance: paper/batch spine fix session 2026-06-20.
-- [ ] [SCRIPT] P9.2. **DEFERRED (pre-existing, NOT this work) — UAC version drift blocks strategy-service QG preflight.**
+- [ ] [SCRIPT] P3.2. **DEFERRED (pre-existing, NOT this work) — UAC version drift blocks strategy-service QG preflight.**
       `quality-gates.sh` version-alignment gate: local `unified-api-contracts=0.26.0` vs main `0.27.0`. Run
       `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix` (after `git pull origin main` in
       PM). Repo: strategy-service (dep alignment). Provenance: paper/batch spine fix session 2026-06-20.
-- [ ] [SCRIPT] P9.3. **NICE-TO-HAVE — SWAP leg `size_units` is denominated in the IN asset (USDC), not the OUT asset
+- [ ] [SCRIPT] P3.3. **NICE-TO-HAVE — SWAP leg `size_units` is denominated in the IN asset (USDC), not the OUT asset
       (ETH).** The `UNISWAP_V3:ETH` position materializes `net_qty=800000` (= 8×100k USDC-in) rather than ETH-out units,
       because the carry archetype's SWAP leg `size_units=usdc_to_stake`. Harmless to the delta-neutral thesis (the
       staked-ETH-vs-perp legs are the hedge pair) but a per-row unit-label inconsistency on the SWAP leg. Diagnose: align
@@ -343,6 +343,30 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+### 2026-06-20 — bps PnL correctness fix (short sign) + live-bps 15m cadence + per-coin exec cost (PB.9 follow-ups)
+
+**Bug (operator-caught): the dashboard short bar showed +$18.7k but its bps showed −14.66 — a sign contradiction.** Root
+cause: the per-strategy bps was sourced from `_coin_history`'s *re-derived* own_trend(200,20) short (a per-coin proxy)
+which **disagrees in SIGN with the real research short leg** (`legs_real`) — re-derived short = −$269k even since 2023,
+real short = +$18.7k. The re-derivation is a per-coin visualization proxy, NOT the canonical leg. **Fix:** the dashboard's
+per-strategy + aggregate bps now divide the **real leg PnL** (`legs_real`, the SAME number the chart plots) by the
+**since-2023 traded notional** (`turnover_y0`, new in `bps_summary.json`). Result: short **+2.42 bps** (positive, matches
+its bar); cs +7.56, basis +13.77, total **+8.53 bps**; exec-cost twin recomputed on the same window. The per-coin page
+keeps the re-derived attribution (the only per-coin source) — labelled as such; headline legs are canonical.
+
+**Live bps → 15-min cadence (operator ask):** moved `live_bps` out of the daily paper-engine into `_ledgers_json` (the
+signal engine writes it every 15m to `ledgers.json`, which the UI already polls every 30s) = `cum paper PnL / cum $
+filled`. UI prefers the 15m-fresh ledger value, falls back to the daily snapshot.
+
+**Per-coin realized exec cost (operator ask):** the dashboard depth table already charts per-coin *slippage* (the
+forward cost driver); added per-coin **realized** cost-bps (`Σcost/Σnotional` from the live fills) to `_coin_history`
+(`_live_cost`, refreshed in both the full build + the light per-cycle path) → shown on the per-coin "orders filled" card.
+
+**SHIPPED + verified (both Cloud Run jobs redeployed, executed clean):** dashboard `short +2.42 bps` (was −14.66; total
+8.53, exec 2.43, **net 6.1 bps**); `ledgers.json live_bps` fresh on the 15m signal cadence (−26.49, gen 13:20Z);
+per-coin `UNI cost_bps_live 3.69`. UI: unified-trading-system-ui@f16ac596 | pw:L2 ✓ (6 passed) | regression:
+tests/smoke/paper-trading-live-ledgers.smoke.spec.ts. Engine source synced to e2e + GCS mirror.
 
 ### 2026-06-20 — Fill-model backtest (PB.7) decided + bps PnL wired everywhere (PB.9)
 
@@ -510,7 +534,7 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       queue priority still fills); a candle that only TOUCHES (`low==limit`) = a 25% queue share; never reaches → no
       fill. Always AT the limit, never better. Validated vs real Binance UNI 1m: $59k order → 53% filled / 47% missed (vs
       flat-1/3's fantasy 100%). Repo: e2e-testing (engine).
-- [ ] [CODE] PB.5. **Taker = VWAP-walk the live depth** — the IOC/taker path currently fills the whole order at
+- [ ] [CODE] P2.5. **Taker = VWAP-walk the live depth** — the IOC/taker path currently fills the whole order at
       first-1m-open + flat slip; replace with a volume-weighted walk THROUGH the order book (the dashboard already pulls
       live depth at $250k/$1M) so the taker fill price is the realistic average price through the book. Repo: e2e-testing.
 - [x] ✅ [CODE] PB.6. **Missed-remainder policy — DROP wins (backtest-decided, NOT requote)** — PB.7 verdict: dropping
@@ -524,7 +548,7 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       **VERDICT: single-shot (= the live swept/touched + drop model) is most faithful AND risk-adjusted-best** — it
       validates the deployed engine, rejects requote (PB.6), and confirms PB.4. Determinism held (same code+data). bps
       PnL surfaced as a first-class column. Repo: e2e-testing (`_fill_backtest.py`).
-- [ ] [CODE] PB.8. **Paper-tape fidelity tier (aggTrades)** — capture the real Binance aggTrades/order-book stream so
+- [ ] [CODE] P2.8. **Paper-tape fidelity tier (aggTrades)** — capture the real Binance aggTrades/order-book stream so
       paper fills resolve at TRUE volume-at-price (vs 1m-total-volume proxy); batch reruns the captured tape → ε=0
       preserved; the coarse-1m vs granular-tape gap = the measured "execution realism." Repo: e2e-testing.
 - [x] ✅ [CODE+UI] PB.9. **bps PnL everywhere ($ PnL / $ traded × 1e4)** — operator ask 2026-06-20: surface the

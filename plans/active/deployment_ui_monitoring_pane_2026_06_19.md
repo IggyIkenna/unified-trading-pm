@@ -43,9 +43,9 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       deployment-api cold-start / SM read.
 - [ ] [INFRA] P1. Central/infra-VM health: `GET /api/fleet/infra-vm-health` (proxy AO `/api/fleet/summary`) +
       `GET /api/fleet/vm-census` (render `vm_zombie_watchdog.py` running-vs-expected-vs-zombie). Repo: deployment-api.
-- [ ] [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
+- [x] ✅ [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
       today) — chip click-throughs to AO (not a rebuild; honors division-of-surfaces). `pw:L2 ✓` + regression. Repo:
-      deployment-ui.
+      deployment-ui. — deployment-ui@3508fa2 | pw:L2 ✓ (256/256 passed) | regression: tests/smoke/fleet-infra-vm-census.spec.ts
 - [ ] [INFRA] P1. **Unify the alert ledger across domains** — non-CI watchers (VM-down, consolidator-down,
       git-health-guard, worker-liveness, data-pipeline) write to a shared store; add `GET /api/alerts` superset of
       `/api/repo-ci/alerts`. This is what makes "alert → open deployment-ui → full picture" work for ALL classes. Repo:
