@@ -162,9 +162,11 @@ the always-on central VM → zero marginal cost.
       `notify_main_agent_rate_limited` + `notify_worker_usage_frozen` (mirrors the Phase-4 plan-health/escalation
       split). **Verified**: `notify_escalation_dispatched` IS live (`escalation.py:144`). Repo:
       agent-orchestrator — agent-orchestrator@1a679e1
-- [ ] [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py:686`)
-      is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrate to the
-      `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Repo: agent-orchestrator.
+- [x] ✅ [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py`)
+      is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrated to the
+      `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Added `escalation_pool_exhaustion_path()`
+      to `dedup_state.py`; replaced module global with `load/save_bool_sentinel` calls; updated tests. Repo:
+      agent-orchestrator — agent-orchestrator@2956fbc
 - [x] [ORCHESTRATOR] P2. **Slot deep-link sweep**: swap the root `/vm/{id}` footer for
       `_dashboard_deep_link("/fleet-git?slot=N", …)` (already used by quarantine + git-staleness) on
       `notify_slot_stale`/`_failed`/`_blocked`, `notify_unpushed_plans`, `notify_agent_stuck_escalation`,
