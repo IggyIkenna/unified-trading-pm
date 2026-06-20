@@ -67,6 +67,24 @@ Firestore-side-store ci_status migration, and the prod image build.
       non-quickmerge readers. (cicd_contract_hardening #21)
 - [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
       serialization). (cicd_contract_hardening #29)
+- [ ] [SCRIPT] P1. **Unblock the last UAC-0.24.0 dep-update consumer — `e2e-testing` PR #333 v2 red on TID251 ratchet.**
+      The UAC-0.24.0 fan-out drained 10/11 once the honest_coverage adapter-contract baseline was fixed (PM@`d3ce018f9`,
+      see `data_feed_sla_registry_and_active_self_healing_2026_06_19.md`); `e2e-testing` is the lone straggler. Repo:
+      **e2e-testing**. Failure: `quality-gates-v2` `lint-codex` slice → STEP 5.95 `check_ruff_rule_ratchet.py` →
+      `e2e-testing/tid251 > baseline 5` (direct `google.cloud`/`boto3` in `scripts/sports/`:
+      `live_arb_scanner.py`/`odds_api_live_feed.py`/`prediction_market_scanner.py`/`run_weekly_pipeline.py`).
+      **Gotchas:** (1) plain `ruff --select TID251` shows CLEAN (repo pyproject has no banned-api table) — reproduce
+      with `.venv/bin/python scripts/quality_gates/check_ruff_rule_ratchet.py --workspace-root <ws> --scope e2e-testing`
+      (uses `ruff --isolated` + its own banned-api `--config`); (2) local QG may block first on "Version alignment
+      failed" (stale tag) → `git fetch origin --tags --force`; (3) e2e **LDR is already at baseline (tid251=5)** and
+      `agt-20cba0` landed `02912ad` routing google.cloud→UTL, so FIRST measure the dep-update branch TIP — it may just
+      be stale/needs regenerating vs current staging rather than new violations. **Fix** (if real): route remaining
+      sites through `from unified_trading_library.cloud_interface import get_storage_client, get_secret_client` — NEVER
+      raise `ruff_rule_ratchet_baseline.yaml`; land on LDR via quickmerge so the regenerated dep-update branch inherits
+      it. **Collision:** `agt-20cba0` + the dep-update flow are actively on this branch —
+      `git log origin/staging..dep-update/unified-api-contracts-0.24.0` first, coordinate, never force-push their WIP;
+      prefer the LDR root-cause fix over editing the dep-update branch. Done =
+      `check_ruff_rule_ratchet --scope e2e-testing` ≤ baseline on LDR/staging AND PR #333 `quality-gates-v2` green.
 - [ ] [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
       still unconditionally `feat!`). (cicd_contract_hardening #31)
 - [ ] [SCRIPT] P2. Review `cloud-build-router.yml` membership in the `manifest-update` concurrency group (non-replayable
