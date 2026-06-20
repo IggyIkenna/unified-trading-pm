@@ -609,13 +609,22 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       the per-coin own_trend PROXY). WIRED: regime short into `_coin_history._short` (per-coin reconstruction — far better
       proxy: −$269k naive → +$29k, sign-matches the real leg). NOT overridden into the engine (the dashboard keeps the
       real `legs_real` short — it's better). Repo: e2e-testing (POC engine).
-- [ ] [STRATEGY] P1. **Evaluate the BTC-regime gate against the REAL strategy-service short leg (production research).**
-      The regime gate beats the NAIVE own_trend baseline decisively; the open question is whether it (or a refinement)
-      can beat the REAL `legs_real` short — the POC reconstruction does NOT over the common window, but it's a simplified
-      proxy. In the real pipeline: add the BTC-regime gate to the short archetype, re-backtest on the live universe with
-      the real short's exact construction, and ship it ONLY if it genuinely beats the current leg (risk-adjusted, on the
-      common window — not a 2-day artifact). Target repo: strategy-service. Cold-start: read `_short_research.py` (the
-      10-variant comparison + the regime lever) + `codex/09-strategy/architecture-v2/archetypes/`.
+      **OOS check (operator-flagged — the original selection was IN-SAMPLE / data-snooping across 13 variants):** added a
+      proper split — IS = pre-2024 (select), OOS = 2024-2026 (held out). The regime CONCEPT generalizes OOS
+      (`regime_own_trend(200,20)` OOS Sharpe **1.12** / +$183k, `(150,30)` 1.01, vs naive 0.08) → a real effect, not pure
+      overfit; ALL mean-rev/RSI/vol shorts lose IS AND OOS (genuinely no edge). BUT param selection is fragile: the
+      IS-best `(100,10)` (IS Sharpe 0.76) DEGRADES to 0.12 OOS (overfit to IS noise). The `(200,20)` used for the per-coin
+      view is the OOS-best, so it's on solid ground — but partly luck (it wasn't IS-best). Lesson: a specific param config
+      is NOT proven without walk-forward; the regime IDEA is the durable finding.
+- [ ] [STRATEGY] P1. **Evaluate the BTC-regime gate against the REAL strategy-service short leg (production research,
+      WALK-FORWARD).** The regime gate beats the naive baseline AND generalizes OOS (2024-26 Sharpe 1.12) — but the
+      single IS/OOS split + 13-variant search means params need proper **walk-forward / nested-CV** validation before
+      production, and the open question remains whether it beats the REAL `legs_real` short (the POC reconstruction does
+      NOT over the common window). In the real pipeline: add the BTC-regime gate to the short archetype, walk-forward
+      backtest on the live universe with the real short's exact construction, select params OUT-OF-SAMPLE, and ship ONLY
+      if it genuinely beats the current leg risk-adjusted (not a 2-day artifact or an IS-overfit param). Target repo:
+      strategy-service. Cold-start: read `_short_research.py` (the 13-variant + IS/OOS harness) +
+      `codex/09-strategy/architecture-v2/archetypes/`.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
