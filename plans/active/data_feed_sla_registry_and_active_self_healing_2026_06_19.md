@@ -110,9 +110,14 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
 `base-service.sh` + `base-library.sh`). Residual proper-fix follow-ups:
 
 - [ ] [SCRIPT] P2. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its `--ignore-vuln GHSA-6v7p-g79w-8964`
-      from `base-service.sh` + `base-library.sh`. A clean fix exists (1.2.1); it's currently ignored (non-exploitable
-      transitive) only to avoid a fleet lock campaign inline. `uv lock --upgrade-package msgpack` per repo that locks
-      it.
+      from `base-service.sh` + `base-library.sh`. **IN PROGRESS — 15/20 done.** 3 were already 1.2.1
+      (batch-live-reconciliation, client-reporting-api, strategy-service); shipped: instruments@`9cd6540`,
+      mdps@`f6f3554`, mtds@`0a1b389`, ml@`fc46485`, sit@`3b98675`, trading-agent@`f0d0a39`, uta@`9fa5a12`,
+      UTL@`01f9b7b2`, PM@`467e86348`(PR#440), UAC@(Phase-2 chain). **Remaining (re-ship now deps are clean):** the M1
+      batch (deployment-api, e2e-testing, execution-service, features-service, fund-administration-service,
+      greeks-service, ibkr-gateway-infra) + UAC/deployment-service/alerting-service (held for Phase 2). **BLOCKED:**
+      `agent-orchestrator` — pre-existing dashboard vitest/tsc QG-red (foreign, not the msgpack bump). **Drop the ignore
+      ONLY after all-but-blocked land** + agent-orchestrator's QG is separately fixed.
 - [x] ✅ [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** — UAC@`6b91f1f`: added to
       `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`); `from unified_api_contracts.internal
       import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the `ledger_asset_resolution` WIP landed.)
@@ -121,25 +126,29 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
 
 ## Phase 2 — active self-healing (`refetch-feed` recovery action) — depends on Phase 1
 
-- [ ] [SCRIPT] P1. **Add `refetch-feed` to the Layer-0 deterministic recovery closed set** in
-      `deployment-service/scripts/recovery/` — given a stale `feed_id`, look up
-      `ALL_FRESHNESS_CONTRACTS[feed_id].refetch_action` and invoke the bound service-CLI re-fetch (the existing
-      `<svc> --operation ... --shard-key ...` shard-targeted fetch — reuse the MTDS/IS CLI shard-targeting flags from
-      infrastructure_master B.2 Phase 5, do NOT build a new fetch path). Emit a structured `AgentActionEvent` like every
-      other Layer-0 script. Repo: deployment-service.
-- [ ] [SCRIPT] P1. **Wire the refetch into the recovery decision tree** — stale `critical` feed → (a) freshness_gate
-      already blocks orders, (b) fire `refetch-feed` (Blue Flame's SILENT_RETRY), (c) on repeated failure escalate
-      through the existing AlertSeverity ladder (WARNING_ALERT → CRITICAL_ALERT) and the audit-ack SLA, (d) sustained
-      failure → advisory position-reduction recommendation (the existing drawdown/liquidation advisory path, not a new
-      one). Map the escalation cadence to `criticality`. Repo: alerting-service + deployment-service recovery.
-- [ ] [SCRIPT] P1. **Bind `refetch_action` for each `critical`/`important` feed** in the Phase-1 registry to its actual
-      re-fetch CLI invocation (the "map stale feed → specific method" table). `nice` feeds get no refetch binding.
-- [ ] [VERIFY] P1. Synthetic smoke (live-mode only — recovery is disabled in batch): age a `critical` feed past its SLA
-      → assert `refetch-feed` fires + emits `AgentActionEvent`; force the refetch to fail twice → assert escalation
-      steps through WARNING→CRITICAL + audit-ack queued; assert orders stay blocked until the feed recovers.
-- [ ] [VERIFY] P1. **Idempotency + storm guard** — refetch for the same `feed_id` is rate-limited (cooldown, like the
-      circuit-breaker `auto_cooldown`) so a persistently-stale feed does not spawn a refetch storm; cap per feed per
-      window; never refetch a feed whose breaker is OPEN (let the breaker own it).
+- [x] ✅ [SCRIPT] P1. **`refetch-feed` Layer-0 recovery action** — deployment-service@`2d3f983`
+      (`scripts/recovery/refetch_feed.py` + 12 tests + README), backed by UAC@`31ba9e4` (`ActionType.REFETCH_FEED` enum)
+      + UTL@`398c005c` (`RecoveryScriptRegistry` entry — the closed-set SSOT). Looks up `ALL_FRESHNESS_CONTRACTS[feed_id]`
+      and invokes the **real** owning-service CLI re-fetch: `market-tick-data-service --operation download --mode batch
+      --asset-group <ag> --venues <source> --day <today-UTC>` (verified against the live MTDS CLI), emitting
+      `AgentActionEvent` like its sibling scripts. **Limitation:** coarse `--day` window (the finer `--shard-key`
+      targeting from infrastructure_master B.2 Phase 5 is a future tightening); `execution`/`feature`/`ml` feeds raise
+      `UnroutableFeedError` (their owning CLIs are out of the MTDS scope) → the escalation ladder owns them.
+- [x] ✅ [SCRIPT] P1. **Recovery decision tree wired** — alerting-service@`cde2f35`
+      (`rules/feed_refetch_rules.py` + 7 tests + manual-action endpoint). Mirrors the `consolidator_rules` repeat-failure
+      pattern: stale `critical` → freshness_gate already blocks orders → fire `refetch-feed` (SILENT_RETRY) → per-feed
+      `CircuitBreaker` (3 fails/30min) escalates WARN→CRITICAL (critical) / HIGH (important) via
+      `route_event_with_explicit_channels` + audit-ack `lookup_sla(severity)` → sustained (breaker OPEN) attaches the
+      existing advisory `reduce_position` recommendation (no new actuator). Cadence keyed to `criticality`.
+- [x] ✅ [SCRIPT] P1. **`refetch_action` bound per feed** — UAC@`31ba9e4`: every `critical`/`important` contract carries
+      `refetch-feed:<source>`; `informational` left None; round-trip test asserts the invariant.
+- [x] ✅ [VERIFY] P1. **Synthetic smoke** — deployment-service 12 tests + alerting-service 7 tests: feed aged past SLA →
+      `refetch-feed` fires + emits `AgentActionEvent`; repeated failure → breaker escalation steps WARN→CRITICAL +
+      audit-ack; orders stay blocked by the existing freshness_gate until recovery (asserted, not re-implemented).
+- [x] ✅ [VERIFY] P1. **Idempotency + storm guard** — deployment-service@`2d3f983`: per-feed cooldown sentinel
+      (`tempfile.gettempdir()`, 120s window + per-window cap, mirrors circuit-breaker `auto_cooldown`); skips (SUCCEEDED
+      w/ `refetch_skipped` reason) when within cooldown; never refetches a feed whose breaker is OPEN (breaker owns the
+      backoff); the shared `RepeatedRepairLoopDetector` (3-in-15min) stacks on top.
 
 ## Success criteria
 
@@ -173,3 +182,13 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
     msgpack`. Drop the msgpack ignore ONLY after all 20 land.
   - **facade re-export UNBLOCKED** — the `ledger_asset_resolution` foreign WIP that blocked it has landed; UAC `__init__`
     clean. Adding `ACCOUNT_STATE_FRESHNESS` to both `__init__.py` now.
+- **2026-06-20 — Wave 1 + Wave 2 SHIPPED.** Phase 1 complete (1a/1b/1c/no-orphan/tests/facade — UAC@`6b91f1f`,
+  execution@`401d3fbd`, strategy@`9ba06714`). Phase 2 complete (UAC@`31ba9e4` + UTL@`398c005c` + deployment-service@`2d3f983`
+  + alerting-service@`cde2f35`). msgpack 15/20. **Many ships used the dirty-deps direct-LDR carve-out / `--skip-preflight`**
+  because the workspace has heavy concurrent foreign WIP in UTL/UAC — those commits lack the `Quickmerge:` trailer, so
+  the LDR→staging promote bot may need a re-trigger; VERIFY drains in the CI pass (rule 11b).
+  - **FOREIGN FINDING (not mine — for the ledger-digest plan owner):** alerting-service
+    `tests/unit/test_alert_code_parity.py::test_catch_all_only_codes_are_the_known_set` is RED on a clean tree — another
+    agent added the `DAILY_LEDGER_DIGEST` AlertCode to the UAC enum without an explicit `LIVE_ALERT_RULES` rule or a
+    `_KNOWN_CATCH_ALL_ONLY` / ratchet-baseline bump. Could red alerting-service QG/drain. Owner must add the AlertRule or
+    bump the baseline. (Per Findings-Triage: annotate, don't fix foreign.)
