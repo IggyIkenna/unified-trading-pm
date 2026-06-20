@@ -376,57 +376,57 @@ are identified (2) and the ledger exists (3).
 
 ### Data / producer (strategy-service + UTL + client-reporting-api)
 
-- [ ] [DATA] P10.0. FIX phantom `$700K` unrealized — canonical-instrument-key per-leg marks join (position key
+- [ ] [DATA] P1. FIX phantom `$700K` unrealized — canonical-instrument-key per-leg marks join (position key
       `VENUE:INSTRUMENT_TYPE:SYMBOL` must equal the pricing-ledger key; today `LIDO:ETH` collides on `asset=ETH` with
       the spot leg → grabs the wrong $3000 mark). Unrealized must be ≈0 per leg for the flat delta-neutral run. **IN
       FLIGHT.** Repos: unified-trading-library (materialize join) + client-reporting-api (read_marks key).
-- [ ] [STRATEGY] P10.1. Real cross-venue transfers / money-movements: emit Treasury/TransferLedger rows for the
+- [ ] [STRATEGY] P2. Real cross-venue transfers / money-movements: emit Treasury/TransferLedger rows for the
       carry_staked_basis capital flow (USDC deposit → Uniswap swap → Lido stake → Deribit margin posting), single
       `client_id` (funds-isolation), so the Wallet-transfers panel shows real movements not "0 movements". Repos:
       strategy-service (emit) + unified-trading-library (transfer-row SSOT) + client-reporting-api (read).
-- [ ] [STRATEGY] P10.2. Real multi-dimensional P&L attribution: by **venue** (Uniswap/Lido/Deribit), by **layer**
+- [ ] [STRATEGY] P2. Real multi-dimensional P&L attribution: by **venue** (Uniswap/Lido/Deribit), by **layer**
       (strategy/execution), by **factor** (carry / basis / funding / price / fees), per **strategy_id** — replace the
       flat `$87` (`by venue == by layer` placeholder). Producer emits the richer `PnLAttributionRow` dimensions; API
       exposes the breakdown; UI renders a real waterfall. Repos: strategy-service + client-reporting-api + UI.
-- [ ] [STRATEGY] P10.6. Multi-strategy paper run (≥2 strategies, e.g. carry_staked_basis + arbitrage_price_dispersion)
+- [ ] [STRATEGY] P2. Multi-strategy paper run (≥2 strategies, e.g. carry_staked_basis + arbitrage_price_dispersion)
       so the per-strategy breakdown is meaningful, not a single flat strategy. Repo: strategy-service
       (paper_run_handler).
 
 ### Metrics / API (client-reporting-api)
 
-- [ ] [API] P10.3. Net views: **net-in-dollars** (portfolio USD value), **net-in-coin** (net qty per coin),
+- [ ] [API] P2. Net views: **net-in-dollars** (portfolio USD value), **net-in-coin** (net qty per coin),
       **delta-per-coin** (net signed delta exposure per coin; ETH ≈ 0 for the delta-neutral book). Repo:
       client-reporting-api (ledger_views).
-- [ ] [API] P10.4. Per-strategy breakdown: group trades / positions / P&L / attribution by `strategy_id` (per-strategy
+- [ ] [API] P2. Per-strategy breakdown: group trades / positions / P&L / attribution by `strategy_id` (per-strategy
       detail + overall roll-up). Repo: client-reporting-api.
-- [ ] [API] P10.8. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall. Repo:
+- [ ] [API] P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall. Repo:
       client-reporting-api.
-- [ ] [API] P10.9. **% ROE annualised** (return on equity, annualised over the run window) per strategy + overall. Repo:
+- [ ] [API] P2. **% ROE annualised** (return on equity, annualised over the run window) per strategy + overall. Repo:
       client-reporting-api.
 
 ### Backtest visibility (client-reporting-api + UI)
 
-- [ ] [API] P10.7. Backtest results surface: historical PnL from the `__batch__` rerun, **execution cost** (execution
+- [ ] [API] P2. Backtest results surface: historical PnL from the `__batch__` rerun, **execution cost** (execution
       alpha = smart-matching fill − benchmark fill), and **execution assumptions** (fill-model fidelity tier
       OHLCV→BBO→depth→trades→MBO + the slippage/cost model used). Repo: client-reporting-api.
-- [ ] [UI] P10.12. **Unified batch↔paper view**: reconcile the dashboard so paper and batch are viewable together neatly
+- [ ] [UI] P3. **Unified batch↔paper view**: reconcile the dashboard so paper and batch are viewable together neatly
       (toggle/compare), `live − batch = (paper − batch ≈ 0) + (live − paper = execution α)` made legible. Repo:
       unified-trading-system-ui. (pw:L2 + regression spec required.)
 
 ### UI (unified-trading-system-ui — playwright-gated)
 
-- [ ] [UI] P10.5. Clarify `Strat α` / `Exec α` columns (label + tooltip: strategy alpha vs execution alpha =
+- [ ] [UI] P3. Clarify `Strat α` / `Exec α` columns (label + tooltip: strategy alpha vs execution alpha =
       smart−benchmark; 0 in paper because paper uses benchmark fills). (pw:L2 + regression.)
-- [ ] [UI] P10.10. PnL-over-time **graphs**, broken down by **strategy** AND by **coin** (timeseries from the daily
+- [ ] [UI] P3. PnL-over-time **graphs**, broken down by **strategy** AND by **coin** (timeseries from the daily
       ledger). (pw:L2 + regression.)
-- [ ] [UI] P10.11. **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically in the
+- [ ] [UI] P3. **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically in the
       batch view where there are real exits). (pw:L2 + regression.)
-- [ ] [UI] P10.13. Render the net-$/net-coin/delta panels, per-strategy breakdown, bps-on-turnover, and annualised ROE
+- [ ] [UI] P3. Render the net-$/net-coin/delta panels, per-strategy breakdown, bps-on-turnover, and annualised ROE
       from the new API surfaces (replace placeholder-looking tiles). (pw:L2 + regression.)
 
-> **Sequencing (foundation-completion-gate):** P10.0 (the marks-join fix) lands first; then producer/data (P10.1/2/6) on
-> strategy-service+UTL; then API metrics+backtest (P10.3/4/7/8/9) on client-reporting-api; then the UI wave
-> (P10.5/10/11/12/13) once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate
+> **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
+> P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
+> [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate
 > repo. **Codex SSOT to update on completion:** `codex/09-strategy/operational/pnl-attribution.md` (multi-dim
 > attribution + bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest surface +
 > transfers in the four-ledger model).
@@ -710,12 +710,12 @@ execution-realism gap.**
       0.19, maxDD −$1.09M = half of requote's, 64% of the ceiling) — under-filling caps position (confirms PB.7);
       **requote/full capture more ABSOLUTE PnL** (76–100% of ceiling) at ~$1.88M DD. So cs ships maker-25%-drop (current
       live model) for risk-adjusted, requote as the PnL-max knob. Repo: e2e-testing (`_exec_optimize.py`).
-- [ ] [RESEARCH] PB.12. **Per-strategy execution sweep (basis + short) — they will DIFFER from cs.** basis is
+- [ ] [RESEARCH] P2. **Per-strategy execution sweep (basis + short) — they will DIFFER from cs.** basis is
       low-turnover (funding carry, large alpha/trade) → taker likely fine (fill in full, cost is a small fraction); short
       is selective. Reconstruct each leg's positions (like `_coin_history._basis`/`_short`) + run the same lever sweep;
       pick the best realistic config PER strategy (maker/taker is NOT one-size-fits-all — that's the whole point). Repo:
       e2e-testing.
-- [ ] [CODE] PB.13. **Live order-book DEPTH fill model = batch assumptions + better liquidity data (the differential).**
+- [ ] [CODE] P2. **Live order-book DEPTH fill model = batch assumptions + better liquidity data (the differential).**
       Today batch uses 1m candle volume; live must walk the REAL order-book depth (already pulled at $250k/$1M) under the
       SAME maker/taker/participation/timing config, so `live_fill − batch_fill` is the measured execution-realism gap and
       `live − paper` is the execution alpha. Wire the per-strategy winner (PB.11/12) as the execution config; emit the
