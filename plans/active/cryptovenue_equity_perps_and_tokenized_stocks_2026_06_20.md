@@ -1,13 +1,14 @@
 ---
 title: Crypto-venue single-stock perps + tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
 created: 2026-06-20
-author: ikennaigboaka [slot-main·human-planning]
 parent_epic: cefi_master
 assigned_vm: human-planning
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # Crypto-venue equity perps + tokenized stocks

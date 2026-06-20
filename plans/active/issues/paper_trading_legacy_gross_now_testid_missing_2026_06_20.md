@@ -1,11 +1,12 @@
 ---
 title: Legacy paper-trading dashboard missing `pt-gross-now` testid — smoke spec fails
 created: 2026-06-20
-author: ikennaigboaka [slot-autonomous·laptop]
 source:
   - tests/smoke/paper-trading.smoke.spec.ts:22
   - unified-trading-system-ui/app/paper-trading/page.tsx
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
