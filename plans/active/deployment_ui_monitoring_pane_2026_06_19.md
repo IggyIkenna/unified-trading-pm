@@ -46,10 +46,11 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
 - [x] ✅ [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
       today) — chip click-throughs to AO (not a rebuild; honors division-of-surfaces). `pw:L2 ✓` + regression. Repo:
       deployment-ui. — deployment-ui@3508fa2 | pw:L2 ✓ (256/256 passed) | regression: tests/smoke/fleet-infra-vm-census.spec.ts
-- [ ] [INFRA] P1. **Unify the alert ledger across domains** — non-CI watchers (VM-down, consolidator-down,
+- [x] ✅ [INFRA] P1. **Unify the alert ledger across domains** — non-CI watchers (VM-down, consolidator-down,
       git-health-guard, worker-liveness, data-pipeline) write to a shared store; add `GET /api/alerts` superset of
       `/api/repo-ci/alerts`. This is what makes "alert → open deployment-ui → full picture" work for ALL classes. Repo:
       deployment-api (+ the watcher emitters). Composes with `alert_quality_overhaul_2026_06_18.md`.
+      — deployment-api@cb56889 | agent-orchestrator@8f6dfee
 - [x] ✅ [UI] P1. deployment-ui `/alerts` page consumes the unified ledger (not just `cicd/alerts`). `pw:L2 ✓` +
       regression. Repo: deployment-ui.
       — deployment-api@f87faf6 (GET /api/alerts endpoint) + deployment-ui@8cc8211 | pw:L2 ✓ 259/259 | regression: tests/smoke/alerts-page.spec.ts
