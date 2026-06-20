@@ -71,6 +71,15 @@ reuse the same Slack **app + the same backend notify code**, but you need a **se
 `channel` param) the bot can post to any channel it's invited to — then you'd just `/invite` the bot to
 `#paper-trading-alerts`. But today it's webhook-based, so the new-webhook path above is the route.
 
+**✅ DONE 2026-06-20 — `papertrading-alerts` Slack app created + all creds stored in GCP Secret Manager**
+(`central-element-323112`, values never in repo/chat-persisted): `agent-orchestrator-paper-trading-slack-webhook` (the
+incoming webhook — the only one the emitter needs) + `slack-papertrading-alerts-{app-id,client-id,client-secret,signing-secret,verification-token}`
+(for future OAuth/Events use). **Remaining = wire the emitter** (locate the paper-trading "trades to do now" scan on the
+orchestrator VM, point it at `agent-orchestrator-paper-trading-slack-webhook` instead of the agent-orchestrator-alerts
+webhook). Security note: the client/signing secrets transited chat — rotate them in the Slack app **if** the app is ever
+extended beyond the incoming webhook (inert for webhook-only use); the webhook URL can be regenerated in Slack + re-stored
+if you want it rotated.
+
 ## Why it matters
 - Paper-trading "trades to do now" is an OPERATOR ACTION feed (orders to place) — burying it in the noisy
   agent-orchestrator-alerts (worker deaths every 10 min) means real trade actions get lost. Its own channel is correct.
