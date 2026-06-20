@@ -148,10 +148,10 @@ the always-on central VM → zero marginal cost.
       `python-quality-gates-v2.yml:546` QG-slice-FAILED. Add a `dedup_key` keyed on repo+version (semver) /
       repo+slice+sha (QG). These currently bypass the carrier entirely so a standing failure re-pages every run + never
       reaches the ledger. Repo: unified-trading-pm. — unified-trading-pm@e68a1de7d (rescued orphan commit from slot-3)
-- [ ] [SCRIPT] P2. Add a `dedup_key` to the remaining standing-condition workflows that lack one:
+- [x] ✅ [SCRIPT] P2. Add a `dedup_key` to the remaining standing-condition workflows that lack one:
       `sit-starvation-detector.yml` (also add a clickable run/deployment-ui link + a lock-cleared bookend; currently
       CLI-only) and the `cascade-qg-ordering.yml` failure variant. Confirm `ruleset-drift-alert.yml` sets one. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@4c550cb24
 - [x] [SCRIPT] P2. Route the lower-blast-radius raw posters through the carrier for ledger parity:
       `request-major-bump.yml`, `major-bump-issue-handler.yml`, `fix-approval-timeout.yml`, `reap_stale_blockers.py`
       (also has NO deep-link — add the orchestrator backlog link), `run-audit-reflog-with-alert.sh` (no deep-link).

@@ -292,6 +292,41 @@ are identified (2) and the ledger exists (3).
       `PositionLedger`/`PassiveLedger`/realised-PnL gaps close. Bump the `EventType` count in
       `codex/02-data/ledger-event-taxonomy.md` (39, not 37). Repo: unified-trading-pm.
 
+## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
+
+- [x] ✅ [CODE] P9.A. **Perp hedge books SHORT (the all-long determinism-spine bug)** — DONE (2026-06-20,
+      strategy-service). `BenchmarkFillRecord` carries `side` (from `leg.side` / `instruction.direction`);
+      `ledger_emit._side_for_fill` prefers it + raises on a side-less TRADE; `_direction_side` maps BUY/LONG→+1,
+      SELL/SHORT→−1. LIVE: `DERIBIT:ETH-PERP net_qty=-246.67` (SHORT), net ETH ≈ +20 (haircut residual, near-neutral).
+      Files: `engine/backtest/benchmark_fills.py`, `engine/backtest/ledger_emit.py`. See Progress Log 2026-06-20.
+- [x] ✅ [CODE] P9.B. **Batch rerun genuinely RE-DERIVES (non-tautological ε=0)** — DONE (2026-06-20, strategy-service).
+      `batch_rerun.rerun_from_manifest` re-runs `GroupBRunner` over the paper manifest's pinned window+archetype
+      (`paper_run_handler.replay_carry_strategy`), NOT `load_instruction_ledger_fills`; `reconcile_paper_batch` proves
+      ε=0. `base.py::_next_instruction_id` made deterministic (`inst_{archetype}_{seq}`) so trade_keys match across runs.
+      LIVE: 24 re-derived fills, `recon.deterministic=true, matched=24/24`. Files: `cli/handlers/batch_rerun.py`,
+      `cli/handlers/paper_run_handler.py`, `engine/strategies/v2/base.py`.
+- [x] ✅ [CODE] P9.C. **Guard — all-long carry run fails loud** — DONE (2026-06-20). `ledger_emit.assert_carry_basis_structure`
+      (+ runtime call in `run_paper`); unit test `test_carry_staked_basis_hedge_short_regression.py`.
+- [ ] [SCRIPT] P9.1. **DEFERRED (pre-existing, NOT this work) — fix `Event logging not initialized` in non-carry engine
+      unit tests.** `tests/unit/engine/strategies/v2/test_archetype_engines.py` (arbitrage_price_dispersion) +
+      `test_arbitrage_price_dispersion_funding_rate_engine.py` + `test_archetype_rotation.py` +
+      `test_archetype_state_persistence.py` + `test_batch_harness.py` + `cli/handlers/test_batch_handler_manifest_guard.py`
+      (Sports) raise `RuntimeError: Event logging not initialized` because the v2 conftest autouse fixture
+      (`tests/unit/engine/strategies/v2/conftest.py::_no_gcs_strategy_config`) patches only `staked_basis.log_event`, not
+      the arbitrage/sports engine modules' `log_event`, and no autouse `setup_events("svc","test")` exists for those
+      paths. ~33 tests red on the CLEAN tree (verified via `git stash`), blocking the full strategy-service QG. Fix:
+      broaden the autouse fixture to `setup_events(..., "test")` (or patch each engine module's `log_event`). Repo:
+      strategy-service. Provenance: paper/batch spine fix session 2026-06-20.
+- [ ] [SCRIPT] P9.2. **DEFERRED (pre-existing, NOT this work) — UAC version drift blocks strategy-service QG preflight.**
+      `quality-gates.sh` version-alignment gate: local `unified-api-contracts=0.26.0` vs main `0.27.0`. Run
+      `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix` (after `git pull origin main` in
+      PM). Repo: strategy-service (dep alignment). Provenance: paper/batch spine fix session 2026-06-20.
+- [ ] [SCRIPT] P9.3. **NICE-TO-HAVE — SWAP leg `size_units` is denominated in the IN asset (USDC), not the OUT asset
+      (ETH).** The `UNISWAP_V3:ETH` position materializes `net_qty=800000` (= 8×100k USDC-in) rather than ETH-out units,
+      because the carry archetype's SWAP leg `size_units=usdc_to_stake`. Harmless to the delta-neutral thesis (the
+      staked-ETH-vs-perp legs are the hedge pair) but a per-row unit-label inconsistency on the SWAP leg. Diagnose: align
+      SWAP `size_units` / ledger materialization to OUT units. Repo: strategy-service. Provenance: 2026-06-20.
+
 ## Success criteria (per phase: QG/basedpyright/ruff green + tests)
 
 - **Determinism**: `reconcile_day(paper, batch)` returns ε=0 — **PROVEN** (P7.2, `e2e-testing@a553f28`): the
@@ -308,6 +343,76 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+### 2026-06-20 — Fill-model backtest (PB.7) decided + bps PnL wired everywhere (PB.9)
+
+**PB.7 — the fill model is backtest-decided, not blind-shipped.** `_fill_backtest.py` replayed the cs book over 8.8y
+under three execution policies, using the real 15m bar volume as the per-cycle liquidity budget:
+
+| policy                     | cum PnL | Sharpe | maxDD   | fill% | bps PnL |
+| -------------------------- | ------- | ------ | ------- | ----- | ------- |
+| full-fill (ideal)          | $742k   | 0.22   | −$1.79M | 100%  | 4.0     |
+| **single-shot (drop)**     | $589k   | 0.24   | −$1.06M | 68%   | 5.3     |
+| requote (chase over days)  | $751k   | 0.22   | −$1.79M | 100%  | 4.0     |
+
+**VERDICT: single-shot (drop the unfilled remainder) wins risk-adjusted** — Sharpe 0.24 vs 0.22, maxDD ≈ halved, bps
++33% — because under-filling the LARGEST rebalances is a free position-size cap. This **validates the deployed engine**
+(swept/touched + `missed`-drop = single-shot), **confirms PB.4**, and **rejects requote (PB.6)** for cs. Determinism
+held (same code+data). The flat `usd*0.34` was cosmetic — same fill price, just fake chunking; the new model is the
+first that actually MISSES, which is the point.
+
+**PB.9 — bps PnL ($ PnL / $ traded × 1e4) wired end-to-end** (operator ask). `_coin_history.py` now derives per-coin +
+per-strategy + aggregate **turnover** (`Σ|Δ notional|`) → `output/bps_summary.json` + per-coin `bps_cs/basis/short`;
+`paper_engine.py` surfaces `summary.pnl_bps`, the **exec-cost twin** `exec_cost_bps`, and `paper_live.pnl_bps` (live, from
+the trades ledger). UI: Cumulative-PnL + Exec-cost KPI cards, a per-strategy attribution column, per-coin KPI cards, and
+the booked-trades window (realized cost-bps). First numbers (cs/basis/short legs, $2.50B traded over 8.8y): **total +7.1
+bps** — **basis +21.4** (funding carry, low turnover = most efficient), **cs +4.0** (workhorse, thin edge), **short
+−14.7** (loses per dollar traded — a hedge, not a standalone alpha). Redeploying both Cloud Run jobs (PB.4 live +
+bps in the dashboard JSON).
+
+### 2026-06-20 — TWO correctness bugs fixed in the paper/batch determinism spine (perp-short + non-tautological ε=0)
+
+Two real correctness bugs in the carry_staked_basis paper/batch spine, fixed + verified live on real GCS (client
+`firm-paper-determinism`, window 2026-05-15..22, 8 real Aave days). Shipped: strategy-service (4 files) — no UAC/UTL
+public-surface change.
+
+- **BUG A — every leg booked LONG (the perp hedge was not SHORT).** The carry archetype correctly emits the perp leg as
+  `AtomicLeg(action=TRADE, side="SELL")`, but `engine/backtest/benchmark_fills.py::_compute_atomic_fill` DROPPED the
+  leg's `side`, and `engine/backtest/ledger_emit.py::_side_for_fill` matched the wrapping `AtomicInstruction` (not a
+  `TradeInstruction`) → `_ACTION_SIDE.get(TRADE, "BUY")` → **"BUY"**, so `DERIBIT:PERPETUAL:ETH-PERP` booked `delta=+`
+  (LONG) and the book was net-long, not delta-neutral. **Fix**: `BenchmarkFillRecord` now carries `side`, populated from
+  `leg.side` (ATOMIC) / `instruction.direction` (standalone TRADE); `_side_for_fill` prefers `fill.side` and RAISES on a
+  TRADE fill with no resolvable side (an all-long carry is a bug, not a default). `_direction_side` now maps BUY/LONG→+1,
+  SELL/SHORT→−1 explicitly (the prior bare `"LONG" → +1 else −1` mishandled "BUY"). **AFTER (live)**: perp books
+  `side=SELL`, `DERIBIT:ETH-PERP net_qty=-246.67` (SHORT); staked +266.67; **net ETH ≈ +20 ≈ the 7.5% Deribit-stETH
+  haircut residual** (the `dynamic_hedge_ratio` sizes the perp short to `eth_qty·(1−haircut)` so the hedge can't be
+  liquidated — near-delta-neutral by design, vs the BEFORE which was ~+513 fully long).
+- **BUG B — the determinism proof was tautological.** `cli/handlers/batch_rerun.py` did
+  `load_instruction_ledger_fills(paper_root)` + re-wrote them as `mode=batch` — batch was a COPY of paper's tape, so ε=0
+  was trivially true and never exercised the strategy. **Fix**: `rerun_from_manifest` now RE-RUNS `GroupBRunner` over the
+  paper manifest's pinned window + archetype (extracted `paper_run_handler.replay_carry_strategy`, the SAME engine path
+  paper uses), independently re-deriving the instructions/fills, then `reconcile_paper_batch` proves ε=0 trade-for-trade.
+  **Sub-bug found + fixed**: `engine/strategies/v2/base.py::_next_instruction_id` used `uuid.uuid4()` → every `trade_key`
+  was unique per run → the keyed reconcile could NEVER match; now a deterministic `inst_{archetype}_{seq:08d}` so paper
+  and a same-window batch re-run emit identical ids. **AFTER (live)**: `rerun_from_manifest` re-ran GroupBRunner (24
+  re-derived fills, code-sha asserted), `recon.deterministic=true, matched=24/24, deviations=[]` — a REAL re-derivation,
+  not a copy.
+- **BUG C — guard against silent return.** `engine/backtest/ledger_emit.py::assert_carry_basis_structure` (+ a runtime
+  call in `run_paper`) fails loud (`CarryStructureInvariantError`) on an all-long carry run (no SHORT hedge / <2 legs) —
+  the leg-structure invariant the original `test_csb_paper_e2e_smoke.py` encodes. Determinism alone can't catch an
+  all-long bug (paper+batch share it); this structural invariant is the catch. Unit test:
+  `tests/unit/engine/strategies/v2/test_carry_staked_basis_hedge_short_regression.py` (perp-is-SHORT, long+short both
+  present, all-long → raises). `test_batch_rerun.py` rewritten to the re-derive semantics (injected deterministic replay
+  proves it CALLS the strategy, not `load_instruction_ledger_fills`; same-window → ε=0).
+- **New run in GCS**: `paper-20260620121451-0dcdf922` (client `firm-paper-determinism`) at
+  `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-determinism/run_id=paper-20260620121451-0dcdf922/`.
+  **Live client-reporting-api confirms the fix**: `GET /api/v1/clients/firm-paper-determinism/positions` →
+  `DERIBIT:ETH-PERP net_qty="-246.67"` (asset_class `perp`, NEGATIVE/SHORT). The dashboard now shows the perp short with
+  no redeploy (latest-run resolution).
+- **QG**: ruff + basedpyright clean on all touched source; all carry/backtest/ledger/cli suites green (93 passed). The
+  repo's full `quality-gates.sh` is blocked by a PRE-EXISTING UAC version drift (local 0.26.0 vs main 0.27.0) +
+  PRE-EXISTING `Event logging not initialized` failures in non-carry engine tests (arbitrage + sports manifest-guard) —
+  both confirmed red on the clean tree (`git stash` verified), unrelated to this change; captured as P9.1 / P9.2 below.
 
 ### 2026-06-20 — client-reporting-api DEPLOYED to Cloud Run (serving layer go-live) + UI bring-up
 
@@ -396,6 +501,41 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
 - [x] ✅ [UI] PB.3. Land the UI (Ledgers tab + per-coin analytics + hero reframe + real-margin panel) — DONE,
       `unified-trading-system-ui@d8362766` on `live-defi-rollout` (Tier-C drain → staging). `pw:L2` ✓ 6 passed.
       regression: `tests/smoke/paper-trading-live-ledgers.smoke.spec.ts`. Repo: unified-trading-system-ui.
+
+**Fill-model fidelity (operator design 2026-06-20 — the flat `usd*0.34` per-candle was cosmetic; replaced):**
+
+- [x] ✅ [CODE] PB.4. **Volume-scaled maker fill, swept-vs-touched** — DONE in `_ledgers.py`, **CONFIRMED by PB.7
+      backtest + REDEPLOYED** (it IS the risk-adjusted-best single-shot model). A 1m candle that trades a tick THROUGH
+      the limit (`low<limit` buy / `high>limit` sell) = a sweep that clears our level → fill the FULL minute volume (zero
+      queue priority still fills); a candle that only TOUCHES (`low==limit`) = a 25% queue share; never reaches → no
+      fill. Always AT the limit, never better. Validated vs real Binance UNI 1m: $59k order → 53% filled / 47% missed (vs
+      flat-1/3's fantasy 100%). Repo: e2e-testing (engine).
+- [ ] [CODE] PB.5. **Taker = VWAP-walk the live depth** — the IOC/taker path currently fills the whole order at
+      first-1m-open + flat slip; replace with a volume-weighted walk THROUGH the order book (the dashboard already pulls
+      live depth at $250k/$1M) so the taker fill price is the realistic average price through the book. Repo: e2e-testing.
+- [x] ✅ [CODE] PB.6. **Missed-remainder policy — DROP wins (backtest-decided, NOT requote)** — PB.7 verdict: dropping
+      the unfilled remainder (single-shot, no requote) is the risk-adjusted winner for cs (Sharpe 0.24 vs 0.22, maxDD
+      −$1.06M vs −$1.79M ≈ halved, 5.3 vs 4.0 bps), because under-filling the largest rebalances acts as a free
+      position-size cap. The live engine ALREADY drops (`missed`) → no change needed; requote is REJECTED for cs (it just
+      chases the same exposure over days = no risk benefit). Re-evaluate per-strategy if a future archetype is
+      capacity-bound. Repo: e2e-testing (`_ledgers.py` unchanged — drop confirmed).
+- [x] ✅ [INFRA] PB.7. **Backtest the fill assumptions per strategy — DONE** (`_fill_backtest.py`, 8.8y cs). Compared
+      full-fill / single-shot(drop) / requote over history with real 15m volume as the per-cycle liquidity budget.
+      **VERDICT: single-shot (= the live swept/touched + drop model) is most faithful AND risk-adjusted-best** — it
+      validates the deployed engine, rejects requote (PB.6), and confirms PB.4. Determinism held (same code+data). bps
+      PnL surfaced as a first-class column. Repo: e2e-testing (`_fill_backtest.py`).
+- [ ] [CODE] PB.8. **Paper-tape fidelity tier (aggTrades)** — capture the real Binance aggTrades/order-book stream so
+      paper fills resolve at TRUE volume-at-price (vs 1m-total-volume proxy); batch reruns the captured tape → ε=0
+      preserved; the coarse-1m vs granular-tape gap = the measured "execution realism." Repo: e2e-testing.
+- [x] ✅ [CODE+UI] PB.9. **bps PnL everywhere ($ PnL / $ traded × 1e4)** — operator ask 2026-06-20: surface the
+      efficiency lens alongside the $/yr exec cost. Engine computes per-coin + per-strategy + aggregate **turnover**
+      (`_coin_history.py` → `bps_summary.json`; per-coin `bps_cs/basis/short`) and the **exec-cost twin** (`exec_cost_bps`
+      in `paper_engine.py`); LIVE bps from the trades ledger (`paper_live.pnl_bps`). UI shows it on the Cumulative-PnL +
+      Exec-cost KPI cards, a per-strategy attribution column, the per-coin KPI cards, and the booked-trades window
+      (realized cost-bps). First numbers: total **+7.1 bps** (basis +21.4 / cs +4.0 / **short −14.7** — a hedge, not a
+      standalone alpha). Evidence: engine deployed (both Cloud Run jobs) + GCS-mirrored (`bps_summary.json` total bps 7.07
+      live); unified-trading-system-ui@c0b669ab | pw:L2 ✓ (6 passed) | regression:
+      tests/smoke/paper-trading-live-ledgers.smoke.spec.ts.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 

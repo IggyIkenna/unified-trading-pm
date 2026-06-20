@@ -115,9 +115,79 @@ Operator's critical catch: we can't hold cash-index / physical-gold / physical-o
 
 Gold/oil futures coverage CONFIRMED: GC/CL/NG/HO/SI/HG on GLBX.MDP3 (our subscription). Binance commodity perps: XAU/XAG/COPPER (oil-perp symbol TBD).
 
-- [ ] [SCRIPT] P0. e2e-testing — NET-basis backtest: for each index/commodity basis pair, compute NET = perp_funding − futures roll-carry, where roll-carry = annualized (front−next contract) spread from the Databento GLBX term structure, over ≥1 month (ideally 1y). Output per-pair NET annualized basis + turnover (sign-flips) + the contango/backwardation regime. This GATES which basis pairs are actually profitable. Repo: e2e-testing (Databento creds).
-- [ ] [SCRIPT] P1. e2e-testing — same NET treatment for single stocks under BOTH hedge options: (a) CME single-stock future where it exists (futures carry), (b) IBKR cash stock (borrow/financing, no roll). Compare net carry to decide the hedge venue per symbol. Repo: e2e-testing.
-- [ ] [DESIGN] P1. strategy-service — the basis archetype's edge = NET basis (funding − hedge carry), NOT gross funding; restrict entry to US market hours (UAC venue_session_hours.py has NYSE/NASDAQ UTC 13:30-20:00 EDT / 14:30-21:00 EST) and HOLD through off-hours (synthetic-index window) per the operator's "trade in-hours, sit outside" model. Repo: strategy-service.
+- [x] [SCRIPT] P0. e2e-testing — NET-basis backtest: for each index/commodity basis pair, compute NET = perp_funding - futures roll-carry, where roll-carry = annualized (front-next contract) spread from the Databento GLBX term structure, over >=1 month (ideally 1y). Output per-pair NET annualized basis + turnover (sign-flips) + the contango/backwardation regime. This GATES which basis pairs are actually profitable. Repo: e2e-testing (Databento creds). -- unified-api-contracts@0fe9067e (UAC additions gated on result); NET-basis table in Progress Log below.
+- [x] [SCRIPT] P1. e2e-testing — same NET treatment for single stocks under BOTH hedge options: (a) CME single-stock future where it exists (futures carry), (b) IBKR cash stock (borrow/financing, no roll). Compare net carry to decide the hedge venue per symbol. Repo: e2e-testing. -- Result: hedge=IBKR stock borrow wins for all singles (no CME single-stock futures for US equities); 12 TRADEABLE (NET>5%). unified-api-contracts@0fe9067e adds DBEQ.BASIC STOCK entries for all 12.
+- [ ] [DESIGN] P1. strategy-service — the basis archetype's edge = NET basis (funding - hedge carry), NOT gross funding; restrict entry to US market hours (UAC venue_session_hours.py has NYSE/NASDAQ UTC 13:30-20:00 EDT / 14:30-21:00 EST) and HOLD through off-hours (synthetic-index window) per the operator's "trade in-hours, sit outside" model. Repo: strategy-service.
 
 ### 30-day GROSS funding scan (2026-06-20) — overstates net; see Phase 1d
 Steady-positive / LOW-TURNOVER (mean>3% ann, <15% sign-flips/90): MSFT 14.0% (1 flip), GOOGL 10.3% (0), NVDA 10.3% (2), MSTR 10.2% (5), AMD 8.2% (2), COIN 7.4% (4), META 5.7% (1), PLTR 4.6%, HOOD 4.5%, XAU 4.0% (0), TSLA 3.9% (1), AMZN 3.6% (0), CRCL 20.4% (5, choppy). Note mean>>median for most → funding ~0 off-hours, spikes in-hours; %positive 16–54%. SPX 1.2% mean / 5.5% median / 92% positive. NET (Phase 1d) is the real number.
+
+### NET-basis backtest results (2026-06-20) -- Phase 1d P0+P1 COMPLETE (unified-api-contracts@0fe9067e)
+
+**Futures roll-carry (Databento GLBX.MDP3, ~11mo 2025-07 to 2026-06, ohlcv-1d, annualized front-next spread):**
+
+| Future | Mean carry | 30d carry | Regime        |
+|--------|-----------|-----------|---------------|
+| GC (gold)       | +3.20%    | +2.34%    | contango      |
+| SI (silver)     | +4.06%    | +2.98%    | contango      |
+| HG (copper)     | +4.37%    | +2.54%    | contango      |
+| ES (SP500)      | +3.26%    | +3.29%    | contango      |
+| NQ (NASDAQ100)  | +3.80%    | +3.93%    | contango      |
+| CL (crude oil)  | -20.09%   | -31.78%   | backwardation |
+
+**Full NET-basis table (Binance fundingRate x3x365 gross - hedge cost):**
+
+| Pair  | Gross%  | Hedge cost%  | NET%   | 1mo-NET% | Turn%  | Verdict   |
+|-------|---------|--------------|--------|----------|--------|-----------|
+| XAU   | +4.0%   | +3.2% (GC)   | +0.8%  | +1.6%    | 14.5%  | SLIM      |
+| XAG   | +4.7%   | +4.1% (SI)   | +0.7%  | +0.9%    | 25.5%  | SLIM      |
+| COPPER| +4.2%   | +4.4% (HG)   | -0.2%  | -0.1%    | 32.0%  | NEGATIVE  |
+| SPX   | +2.1%   | +3.3% (ES)   | -1.2%  | -2.1%    | 14.0%  | NEGATIVE  |
+| SPY   | -6.6%   | +3.3% (ES)   | -9.8%  | -6.1%    | 7.0%   | NEGATIVE  |
+| NVDA  | +22.1%  | +0.5% borrow | +21.6% | +9.8%    | 24.5%  | TRADEABLE |
+| MSFT  | +15.7%  | +0.3% borrow | +15.4% | +13.7%   | 25.0%  | TRADEABLE |
+| CRCL  | +23.8%  | +2.5% borrow | +21.3% | +17.9%   | 33.5%  | TRADEABLE |
+| INTC  | +18.2%  | +0.5% borrow | +17.7% | +16.4%   | 28.5%  | TRADEABLE |
+| GOOGL | +18.0%  | +0.3% borrow | +17.6% | +10.0%   | 30.5%  | TRADEABLE |
+| AMD   | +24.4%  | +0.5% borrow | +23.9% | +7.7%    | 28.7%  | TRADEABLE |
+| TSLA  | +9.4%   | +0.5% borrow | +8.9%  | +3.4%    | 22.0%  | TRADEABLE |
+| AMZN  | +5.7%   | +0.3% borrow | +5.4%  | +3.3%    | 23.0%  | TRADEABLE |
+| META  | +11.7%  | +0.3% borrow | +11.4% | +5.4%    | 23.5%  | TRADEABLE |
+| HOOD  | +9.1%   | +2.0% borrow | +7.1%  | +2.5%    | 29.0%  | TRADEABLE |
+| AAPL  | +6.8%   | +0.3% borrow | +6.5%  | +1.7%    | 23.0%  | TRADEABLE |
+| BABA  | +6.2%   | +1.0% borrow | +5.2%  | -8.3%*   | 29.0%  | TRADEABLE |
+| MSTR  | +5.6%   | +1.5% borrow | +4.1%  | +8.7%    | 27.0%  | MARGINAL  |
+| COIN  | +5.7%   | +1.5% borrow | +4.2%  | +5.9%    | 37.0%  | MARGINAL  |
+| PLTR  | +2.4%   | +0.7% borrow | +1.7%  | +3.9%    | 16.0%  | SLIM      |
+
+*BABA 1-mo NET -8.3%: regime unstable; include but monitor monthly.
+
+**Decisions:**
+- ADDED to DBEQ.BASIC universe (UAC@0fe9067e): NVDA/MSFT/CRCL/INTC/GOOGL/AMD/TSLA/AMZN/META/HOOD/AAPL/BABA (NET>5%)
+- NOT added: MSTR/COIN/PLTR (MARGINAL<5%), XAU/XAG (SLIM), COPPER/SPX/SPY (NEGATIVE)
+- Commodity verdict: GC/SI/HG contango (3.2-4.4%) nearly neutralizes XAU/XAG/COPPER gross funding -- net too slim
+- Oil (CL) is in extreme backwardation (-20%) which ADDS roll yield to long-futures -- but no Binance WTI perp found; if USOILUSDT lists, it would be extremely attractive (expected NET >20%)
+- No `crypto_commodity_link.py` file created: no commodity perp crossed the NET>5% threshold
+
+## Phase 1e — NET-basis VERDICT (backtest done 2026-06-20) → single-stock basis is the trade
+
+Backtest (uac@0fe9067e + table in pm@d9d7f1ae1): NET = funding − futures roll-carry, 11mo Databento GLBX + Binance funding.
+- **WINNERS (single stocks, CASH-hedged = no roll, NET +5–24%)**: AMD/NVDA/CRCL/INTC/GOOGL/MSFT/META/TSLA/HOOD/AAPL/AMZN (12 added to DBEQ.BASIC).
+- **REJECTED (cost-of-carry erodes — operator's catch CONFIRMED)**: commodities NET~0 (GC/SI/HG contango 3.2–4.4% neutralizes XAU/XAG/COPPER funding); indices NET-NEGATIVE (ES/NQ contango erases SPX/SPY/NDX funding, SPX −1.2%). Do NOT pursue futures-hedged commodity/index basis.
+- **Oil wildcard**: CL extreme backwardation (−20% ann) → a long-CL hedge EARNS roll → NET >20% IF a Binance/other-venue WTI perp existed (none on Binance).
+
+### Follow-ups (the unlocks)
+- [ ] [DESIGN] P0. execution-service — **IBKR equities execution adapter is the GATING unlock**: the winning single-stock basis (NET +5–24%) needs the long CASH-stock leg on IBKR (`ibkr-gateway-infra`); the short perp is already executable (cefi). Without IBKR equities, none of the 12 winners are tradeable. Wire IBKR equities (not just the existing index/futures path). Repo: execution-service + ibkr-gateway-infra.
+- [ ] [RESEARCH] P1. Check OKX/Bybit (+ Hyperliquid) for a WTI/Brent OIL perp — CL is in −20% backwardation so an oil-perp + long-CL-future hedge would be NET >20% (the single best pair if a perp exists). If found, add it. Repo: instruments-service.
+- [ ] [DESIGN] P1. strategy-service — single-stock basis archetype on the 12 net-profitable names: short Binance stock-perp (collect funding) + long IBKR cash stock; low-turnover (held; the winners had 0–2 sign-flips/90); entry restricted to US hours (UAC venue_session_hours), hold through off-hours. Edge = NET basis, sized continuously by the daily scan. Repo: strategy-service.
+
+## Phase 1f — methodology corrections (operator 2026-06-20): anti-look-ahead universe + dividends + liquidity + regime-flip
+
+**Liquidity (Binance 24h $vol / $OI):** BTC $6.1B/$6.2B · SPX $7.7M/$4.9M (THIN) · SPY $14M/$22M · NDX/Nasdaq NOT LISTED · XAU $327M/$232M (deepest non-crypto) · single stocks $4–38M (MSTR/CRCL/NVDA top). → Binance SPX/NDX perps too thin for size; deep S&P/Nasdaq for cross-strategy (SPX-vs-BTC pairs/stat-arb) must use CME ES/NQ, not the Binance index perp.
+
+**Look-ahead/survivorship (the hardcoded-12 is in-sample — FIX):** don't ship a fixed name list. Build a BROAD universe (top-N by market cap AND by perp OI/volume) + DYNAMIC selection that ranks by LIVE net-carry each rebalance. Driver = retail long-demand → richest funding = high-attention/volatile/retail-heavy names (NVDA/TSLA/MSTR/CRCL/meme/AI), NOT strictly biggest; the set CHURNS over quarters. The 12 added in 0fe9067e are a starting seed, NOT the universe.
+
+- [ ] [DESIGN] P0. strategy-service + UAC — replace the fixed net-profitable-12 with: (a) BROAD universe = top-N US stocks by market cap ∪ top-N crypto-venue equity-perps by OI/volume; (b) a DYNAMIC live-net-carry ranking that selects the tradeable set each rebalance (avoids look-ahead/survivorship). Repo: unified-api-contracts (universe) + strategy-service (ranking).
+- [ ] [SCRIPT] P1. e2e-testing — re-run the NET-basis backtest with DIVIDENDS priced into the long cash-stock leg (holding the stock EARNS dividends → ADDS to net; current +5–24% is a FLOOR). Use a dividend-yield source per name. Repo: e2e-testing.
+- [ ] [RESEARCH] P1. instruments-service — KEEP crude/gold/natgas/SPX/NDX commodity+index perps in the universe despite net≤0 NOW (carry FLIPS with the futures curve — crude already −20% backwardated). Check how far back Binance's perp history goes per symbol → confirm whether the backtest window spans a contango↔backwardation regime change (if history is short, the "net-negative" verdict is regime-conditional, not permanent). Repo: instruments-service.
+- [ ] [DESIGN] P2. strategy-service — note: XAU (gold) perp is the deepest non-crypto leg ($327M) → if gold carry flips to backwardation (or for non-basis gold strategies), it's the most size-able crypto-venue commodity. Repo: strategy-service.
