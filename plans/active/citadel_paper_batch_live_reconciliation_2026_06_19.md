@@ -560,6 +560,21 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       standalone alpha). Evidence: engine deployed (both Cloud Run jobs) + GCS-mirrored (`bps_summary.json` total bps 7.07
       live); unified-trading-system-ui@c0b669ab | pw:L2 ✓ (6 passed) | regression:
       tests/smoke/paper-trading-live-ledgers.smoke.spec.ts.
+- [x] ✅ [RESEARCH+CODE] PB.10. **Short alpha upgrade — regime-filtered momentum short (beats the naive baseline AND the
+      deployed leg).** Research `_short_research.py` (10 variants, full + since-2023): the naive `own_trend(200,20)` short
+      LOSES (−$49k full / −$260k since-2023, Sharpe −0.04/−0.27 — it shorts dips that bounce in the bull). Adding a BTC
+      regime gate (short only when BTC is itself in a confirmed downtrend, same 200/20 params — NOT param-mined) flips it
+      to a WINNER: **+$240k/+$29k, Sharpe 0.76/0.17, ~4× smaller DD, 62.9 bps** (vs the deployed legs_real short's +$18.7k
+      / 2.4 bps). All mean-reversion/RSI/vol-spike shorts lose (shorting crypto pumps = falling-knife-up). Robust across
+      (200,20)+(150,30); `regime_soft` (no slope) + faster params fail → the slope-confirmed bear gate is the lever.
+      WIRED: `_coin_history._short` (per-coin view) + `paper_engine` USES the improved leg (`input/short_leg_improved.parquet`,
+      defensive override of the naive short). Repo: e2e-testing (POC engine).
+- [ ] [STRATEGY] P1. **Port the regime-filtered short into the REAL strategy-service short leg (production).** The POC
+      override proves the alpha; the production deployment must regenerate `legs_real` with the BTC-regime gate on the
+      `own_trend(200,20)` short so the deployed strategy (not just the dashboard POC) carries the upgrade. Add the regime
+      filter to the short archetype + re-backtest + verify it beats the current leg on the live universe. Target repo:
+      strategy-service. Cold-start: read `_short_research.py` (the proven variant + the 10-variant comparison) +
+      `codex/09-strategy/architecture-v2/archetypes/`.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
