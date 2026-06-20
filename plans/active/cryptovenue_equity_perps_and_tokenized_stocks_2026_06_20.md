@@ -168,3 +168,15 @@ Steady-positive / LOW-TURNOVER (mean>3% ann, <15% sign-flips/90): MSFT 14.0% (1 
 - Commodity verdict: GC/SI/HG contango (3.2-4.4%) nearly neutralizes XAU/XAG/COPPER gross funding -- net too slim
 - Oil (CL) is in extreme backwardation (-20%) which ADDS roll yield to long-futures -- but no Binance WTI perp found; if USOILUSDT lists, it would be extremely attractive (expected NET >20%)
 - No `crypto_commodity_link.py` file created: no commodity perp crossed the NET>5% threshold
+
+## Phase 1e — NET-basis VERDICT (backtest done 2026-06-20) → single-stock basis is the trade
+
+Backtest (uac@0fe9067e + table in pm@d9d7f1ae1): NET = funding − futures roll-carry, 11mo Databento GLBX + Binance funding.
+- **WINNERS (single stocks, CASH-hedged = no roll, NET +5–24%)**: AMD/NVDA/CRCL/INTC/GOOGL/MSFT/META/TSLA/HOOD/AAPL/AMZN (12 added to DBEQ.BASIC).
+- **REJECTED (cost-of-carry erodes — operator's catch CONFIRMED)**: commodities NET~0 (GC/SI/HG contango 3.2–4.4% neutralizes XAU/XAG/COPPER funding); indices NET-NEGATIVE (ES/NQ contango erases SPX/SPY/NDX funding, SPX −1.2%). Do NOT pursue futures-hedged commodity/index basis.
+- **Oil wildcard**: CL extreme backwardation (−20% ann) → a long-CL hedge EARNS roll → NET >20% IF a Binance/other-venue WTI perp existed (none on Binance).
+
+### Follow-ups (the unlocks)
+- [ ] [DESIGN] P0. execution-service — **IBKR equities execution adapter is the GATING unlock**: the winning single-stock basis (NET +5–24%) needs the long CASH-stock leg on IBKR (`ibkr-gateway-infra`); the short perp is already executable (cefi). Without IBKR equities, none of the 12 winners are tradeable. Wire IBKR equities (not just the existing index/futures path). Repo: execution-service + ibkr-gateway-infra.
+- [ ] [RESEARCH] P1. Check OKX/Bybit (+ Hyperliquid) for a WTI/Brent OIL perp — CL is in −20% backwardation so an oil-perp + long-CL-future hedge would be NET >20% (the single best pair if a perp exists). If found, add it. Repo: instruments-service.
+- [ ] [DESIGN] P1. strategy-service — single-stock basis archetype on the 12 net-profitable names: short Binance stock-perp (collect funding) + long IBKR cash stock; low-turnover (held; the winners had 0–2 sign-flips/90); entry restricted to US hours (UAC venue_session_hours), hold through off-hours. Edge = NET basis, sized continuously by the daily scan. Repo: strategy-service.
