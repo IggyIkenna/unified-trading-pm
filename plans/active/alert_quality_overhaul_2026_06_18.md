@@ -143,11 +143,11 @@ the always-on central VM → zero marginal cost.
 > headline; these are the remaining error-pointer-standard gaps the audit surfaced. Captured per the
 > Capture-Discoveries-As-Todos rule.
 
-- [ ] [SCRIPT] P1. Route the **raw-curl** CRITICAL Slack posters through `notify-slack.yml` (gain dedup + ledger +
+- [x] ✅ [SCRIPT] P1. Route the **raw-curl** CRITICAL Slack posters through `notify-slack.yml` (gain dedup + ledger +
       re-nag eligibility): `semver-agent.yml` circuit-breaker / dispatch-fail pages (`:136`/`:229`/`:577`) and
       `python-quality-gates-v2.yml:546` QG-slice-FAILED. Add a `dedup_key` keyed on repo+version (semver) /
       repo+slice+sha (QG). These currently bypass the carrier entirely so a standing failure re-pages every run + never
-      reaches the ledger. Repo: unified-trading-pm.
+      reaches the ledger. Repo: unified-trading-pm. — unified-trading-pm@e68a1de7d (rescued orphan commit from slot-3)
 - [ ] [SCRIPT] P2. Add a `dedup_key` to the remaining standing-condition workflows that lack one:
       `sit-starvation-detector.yml` (also add a clickable run/deployment-ui link + a lock-cleared bookend; currently
       CLI-only) and the `cascade-qg-ordering.yml` failure variant. Confirm `ruleset-drift-alert.yml` sets one. Repo:

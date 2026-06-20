@@ -75,6 +75,10 @@ jobs:
     # Only run when Quality Gates passed (workflow_run path) — never on failure;
     # the push:[staging] path is implicitly gated (staging only advances on a green promote).
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
+    outputs:
+      critical_msg: ${{ steps.circuit_breaker.outputs.critical_msg || steps.compute.outputs.critical_msg }}
+      critical_dedup_key:
+        ${{ steps.circuit_breaker.outputs.critical_dedup_key || steps.compute.outputs.critical_dedup_key }}
 
     steps:
       - name: Claude API health precheck (RETIRED — no-op)
@@ -110,6 +114,7 @@ jobs:
       # HEAD keeps this step a no-op-safe match with the SSOT .tmpl.
       # Plan: plans/active/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md §15.
       - name: Bump-rate circuit breaker (≥3 pending bumps on staging)
+        id: circuit_breaker
         run: |
           set -euo pipefail
 
@@ -135,22 +140,10 @@ jobs:
           if [ "$RECENT_BUMPS" -ge 3 ] || [ "$CONSECUTIVE" -ge 3 ]; then
             RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             TEXT=":rotating_light: *CRITICAL — semver-agent BUMP-RATE CIRCUIT BREAKER tripped* | unified-trading-pm | ${RECENT_BUMPS} chore(release) bump commit(s) on staging in the last hour (${CONSECUTIVE} consecutive at tip; threshold 3). Runaway re-bump loop suspected — check the PM baseline writer (update-repo-version.yml) health + staging_versions[unified-trading-pm]. REFUSING to dispatch another bump. ${RUN_URL}"
-            # Best-effort page on the canonical #ci-failures webhook; the loud signal is
-            # the run failure either way (a missing webhook must not mask the halt).
-            case "${SLACK_WEBHOOK_URL:-}" in
-              https://*)
-                curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                  --data "$(jq -n --arg t "$TEXT" '{text:$t}')" && echo "CRITICAL page sent to Slack" || true ;;
-              *) echo "SLACK_CI_WEBHOOK_URL not set/https — cannot page; failing the run loudly instead" ;;
-            esac
-            # Queue the page for the end-of-job ledger persist (alert-parity: every Slack
-            # page is also observable on the deployment-ui Alerts page) — the persist step
-            # runs `if: always()` so this survives the `exit 1` below.
-            jq -n -c --arg t "$TEXT" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg ru "$RUN_URL" \
-              '{event_type:"slack_alert", timestamp:$ts, repo:"unified-trading-pm", workflow_name:"semver-agent",
-                severity:"CRITICAL", conclusion:"", run_url:$ru, message:$t}' \
-              >> "$RUNNER_TEMP/semver_alert_ledger.jsonl" || true
-            echo "SEMVER_ALERT_EMITTED=1" >> "$GITHUB_ENV"
+            # Route through notify-slack.yml for dedup + ledger + re-nag eligibility
+            # (alert_quality_audit_2026_06_18 item 015 — replaces former inline curl).
+            echo "critical_msg=${TEXT}" >> "$GITHUB_OUTPUT"
+            echo "critical_dedup_key=semver-circuit-breaker:unified-trading-pm" >> "$GITHUB_OUTPUT"
             echo "::error::Bump-rate circuit breaker: ${RECENT_BUMPS} pending bumps in the last hour / ${CONSECUTIVE} consecutive at staging tip (threshold 3). Refusing to dispatch another bump."
             exit 1
           fi
@@ -227,18 +220,10 @@ jobs:
             if [ "$DISPATCH_OK" != "true" ]; then
               RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
               TEXT=":rotating_light: *CRITICAL — semver-agent version-bump dispatch FAILED* | unified-trading-pm v${NEW_VERSION} (always_patch) | dispatch to unified-trading-pm returned HTTP ${HTTP_STATUS} after 3 attempts. The PM staging_versions baseline will NOT record ${NEW_VERSION} → re-bump-loop fuel. Re-dispatch manually + check update-repo-version.yml health. ${RUN_URL}"
-              case "${SLACK_WEBHOOK_URL:-}" in
-                https://*)
-                  curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                    --data "$(jq -n --arg t "$TEXT" '{text:$t}')" && echo "CRITICAL page sent to Slack" || true ;;
-                *) echo "SLACK_CI_WEBHOOK_URL not set/https — cannot page; failing the run loudly instead" ;;
-              esac
-              # Queue the page for the end-of-job ledger persist (survives the exit 1).
-              jq -n -c --arg t "$TEXT" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg ru "$RUN_URL" \
-                '{event_type:"slack_alert", timestamp:$ts, repo:"unified-trading-pm", workflow_name:"semver-agent",
-                  severity:"CRITICAL", conclusion:"", run_url:$ru, message:$t}' \
-                >> "$RUNNER_TEMP/semver_alert_ledger.jsonl" || true
-              echo "SEMVER_ALERT_EMITTED=1" >> "$GITHUB_ENV"
+              # Route through notify-slack.yml for dedup + ledger + re-nag eligibility
+              # (alert_quality_audit_2026_06_18 item 015 — replaces former inline curl).
+              echo "critical_msg=${TEXT}" >> "$GITHUB_OUTPUT"
+              echo "critical_dedup_key=semver-dispatch-fail:unified-trading-pm:${NEW_VERSION}" >> "$GITHUB_OUTPUT"
               echo "::error::version-bump dispatch FAILED after 3 attempts (always_patch, last HTTP ${HTTP_STATUS}) — baseline NOT recorded for ${NEW_VERSION}."
               exit 1
             fi
@@ -572,52 +557,32 @@ jobs:
           if [ "$DISPATCH_OK" != "true" ]; then
             RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             TEXT=":rotating_light: *CRITICAL — semver-agent version-bump dispatch FAILED* | unified-trading-pm v${VERSION} | dispatch to unified-trading-pm returned HTTP ${HTTP_STATUS} after 3 attempts. The PM staging_versions baseline will NOT record ${VERSION} → every future QG-green on staging may re-bump (runaway-loop fuel, incident 2026-06-10). Re-dispatch manually + check update-repo-version.yml health. ${RUN_URL}"
-            case "${SLACK_WEBHOOK_URL:-}" in
-              https://*)
-                curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                  --data "$(jq -n --arg t "$TEXT" '{text:$t}')" && echo "CRITICAL page sent to Slack" || true ;;
-              *) echo "SLACK_CI_WEBHOOK_URL not set/https — cannot page; failing the run loudly instead" ;;
-            esac
-            # Queue the page for the end-of-job ledger persist (survives the exit 1).
-            jq -n -c --arg t "$TEXT" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg ru "$RUN_URL" \
-              '{event_type:"slack_alert", timestamp:$ts, repo:"unified-trading-pm", workflow_name:"semver-agent",
-                severity:"CRITICAL", conclusion:"", run_url:$ru, message:$t}' \
-              >> "$RUNNER_TEMP/semver_alert_ledger.jsonl" || true
-            echo "SEMVER_ALERT_EMITTED=1" >> "$GITHUB_ENV"
+            # Route through notify-slack.yml for dedup + ledger + re-nag eligibility
+            # (alert_quality_audit_2026_06_18 item 015 — replaces former inline curl).
+            echo "critical_msg=${TEXT}" >> "$GITHUB_OUTPUT"
+            echo "critical_dedup_key=semver-dispatch-fail:unified-trading-pm:${VERSION}" >> "$GITHUB_OUTPUT"
             echo "::error::version-bump dispatch to unified-trading-pm FAILED after 3 attempts (last HTTP ${HTTP_STATUS}) — baseline NOT recorded for ${VERSION}."
             exit 1
           fi
 
-      # ── ALERT-LEDGER PERSIST (best-effort; alert-parity) ─────────────────────
-      # The CRITICAL pages above (bump-rate circuit breaker / dispatch-fail) curl Slack
-      # directly — the notify/persist JOBS below only carry the INFO completion event, and
-      # $RUNNER_TEMP does not survive across jobs, so the queued page lines MUST persist
-      # in-job. Mirrors the SSOT .tmpl; continue-on-error: a missing SA key / bucket outage
-      # must NEVER mask the page or change run outcome.
-      - name: Authenticate to GCP (alert ledger)
-        if: ${{ always() && env.SEMVER_ALERT_EMITTED == '1' && vars.CLOUD_PROVIDER == 'gcp' }}
-        continue-on-error: true
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Persist CRITICAL pages to alert ledger (best-effort)
-        if: ${{ always() && env.SEMVER_ALERT_EMITTED == '1' && vars.CLOUD_PROVIDER == 'gcp' }}
-        continue-on-error: true
-        env:
-          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET || 'unified-trading-cicd-events' }}
-        run: |
-          set -euo pipefail
-          LEDGER_FILE="$RUNNER_TEMP/semver_alert_ledger.jsonl"
-          [ -s "$LEDGER_FILE" ] || { echo "no queued alerts"; exit 0; }
-          DATE_PARTITION=$(date -u +"%Y-%m-%d")
-          OBJECT_PATH="cicd/alerts/${DATE_PARTITION}/alerts.jsonl"
-          GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
-          LOCAL_FILE="$RUNNER_TEMP/alerts_merged.jsonl"
-          gsutil cp "$GCS_URI" "$LOCAL_FILE" 2>/dev/null || : > "$LOCAL_FILE"
-          cat "$LEDGER_FILE" >> "$LOCAL_FILE"
-          gsutil cp "$LOCAL_FILE" "$GCS_URI"
-          echo "$(wc -l < "$LEDGER_FILE" | tr -d ' ') CRITICAL page(s) persisted to $GCS_URI"
+  # ── SLACK NOTIFY — CRITICAL failures (circuit-breaker / dispatch-fail) ─────
+  # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):
+  # gains content dedup (same critical_dedup_key within cooldown_min suppressed),
+  # alert ledger (deployment-ui Alerts page lifecycle), and re-nag eligibility.
+  # Replaces the former inline curl that bypassed the carrier entirely.
+  notify-critical:
+    name: Slack CRITICAL — Semver Agent
+    needs: [semver]
+    if: always() && needs.semver.result == 'failure' && needs.semver.outputs.critical_msg != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.semver.outputs.critical_msg }}
+      severity: CRITICAL
+      workflow_name: semver-agent
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: ${{ needs.semver.outputs.critical_dedup_key }}
+      cooldown_min: 60
+    secrets: inherit
 
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:

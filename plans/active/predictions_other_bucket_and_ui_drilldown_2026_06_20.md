@@ -42,9 +42,11 @@ after each backfill VM run and recurring patterns promoted to first-class groups
       2026-05-07): audit `OTHER` membership after each backfill VM run + promote frequently-seen patterns to first-class
       groups; honest-absence catch-all, not "out of scope". ✅ — unified-api-contracts@306923a
 - [x] [SCRIPT] P0. UAC `PREDICTION_GROUPS` registry seeding MUST include `OTHER` as a special-case entry from day one.
-      Cluster validation for `OTHER` is per-day count > 0 (any markets fall through), NOT a target count. ✅ — unified-api-contracts@306923a
+      Cluster validation for `OTHER` is per-day count > 0 (any markets fall through), NOT a target count. ✅ —
+      unified-api-contracts@306923a
 - [x] [SCRIPT] P0. Classifier emits an `INFO`-level event `OTHER_BUCKET_MEMBER_ADDED` whenever it routes a `conditionId`
-      to `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion. ✅ — unified-api-contracts@306923a
+      to `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion. ✅ —
+      unified-api-contracts@306923a
 - [x] [SCRIPT] P0. Confirm the writer rebundles `OTHER`-routed rows into the
       `data_type=prediction_canonical_question_group` bundle for `OTHER` coverage (so `OTHER` appears in the manifest
       denominator like any curated group). NOTE: the writer-rebundling code path itself is owned by
@@ -57,12 +59,15 @@ after each backfill VM run and recurring patterns promoted to first-class groups
       scope"). Hover tooltip: "Markets not yet mapped to a curated canonical question group — review event stream +
       promote recurring patterns to first-class groups." `[UI]` — playwright gate:
       `npx playwright test --project=chromium tests/smoke/` exits 0 + cite a regression spec in
-      `tests/e2e|playbooks|widgets|smoke/` before ticking.
-      — deployment-ui@d5b7dd3 | [BLOCKED-PLAYWRIGHT] fleet VM has no dev server; pw:L2 gate pending UI-capable slot |
-      regression: tests/smoke/prediction_v9_breakdown.spec.ts (OTHER bucket out-of-scope badge + catch-all tooltip tests)
-- [ ] [SCRIPT][UI] P0. Predictions asset_group panel — drill-down shape: `(venue, canonical_question_group, day)`.
+      `tests/e2e|playbooks|widgets|smoke/` before ticking. — deployment-ui@d5b7dd3 | [BLOCKED-PLAYWRIGHT] fleet VM has
+      no dev server; pw:L2 gate pending UI-capable slot | regression: tests/smoke/prediction_v9_breakdown.spec.ts (OTHER
+      bucket out-of-scope badge + catch-all tooltip tests)
+- [x] ✅ [SCRIPT][UI] P0. Predictions asset_group panel — drill-down shape: `(venue, canonical_question_group, day)`.
       (Aligns with `infrastructure_master` Data-status multi-axis follow-up — cross-link only.) `[UI]` — playwright gate
-      before ticking.
+      before ticking. — deployment-ui@9ae6485 | [BLOCKED-PLAYWRIGHT] fleet VM has no dev server; pw:L2 gate pending
+      UI-capable slot | regression: tests/smoke/prediction_v9_breakdown.spec.ts (CQG breakdown axis
+      "canonical_question_group" present in PREDICTION BreakdownsAccordion; shard-axis-matrix stub wires breakdown_axes
+      for market-tick-data-service/prediction)
 - [ ] [SCRIPT][UI] P0. **deployment-ui 3-level hierarchy + per-shard parquet download**. MARKETS list is flat today;
       flip to `asset_group → canonical_question_group → cadence (HOURLY/DAILY/etc.)` 3-level drilldown matching the
       sports + tradfi pattern. Per-shard parquet download wires through the existing
@@ -75,10 +80,9 @@ after each backfill VM run and recurring patterns promoted to first-class groups
 - [x] ✅ [VERIFY] P0. Predictions timeline / panel VERIFY gate: Phase-1 timeline check + after-Phase-1 re-walk that
       POLYMARKET no longer renders "out of scope" in deployment-ui (the badge driven by UAC
       `VENUE_DATA_TYPE_CAPABILITIES` vs the live manifest data_type). This is the operator-facing acceptance gate for
-      the panel surface.
-      — Phase-1 shipped UAC@306923a; prediction_canonical_question_group added to VENUE_DATA_TYPE_CAPABILITIES
-        + EXPECTED_COVERAGE_BY_ASSET_GROUP["prediction"]["POLYMARKET"] — removes out-of-scope badge.
-        unified-api-contracts@44aa6bc5
+      the panel surface. — Phase-1 shipped UAC@306923a; prediction_canonical_question_group added to
+      VENUE_DATA_TYPE_CAPABILITIES + EXPECTED_COVERAGE_BY_ASSET_GROUP["prediction"]["POLYMARKET"] — removes out-of-scope
+      badge. unified-api-contracts@44aa6bc5
 
 ## P1 — canonical-groups backfill remainder
 

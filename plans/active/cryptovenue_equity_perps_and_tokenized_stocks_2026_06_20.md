@@ -88,3 +88,36 @@ QG: `bash scripts/quality-gates.sh --no-fix` → ✅ ALL QUALITY GATES PASSED (2
 - Phase 2 (MTDS universe add) → this plan Phase 2 todo above (market-tick-data-service)
 - Phase 3 (live CLOB) → this plan Phase 3 todo above
 - Phase 4 (strategy arb wiring) → this plan Phase 4 todo above
+
+## Phase 1b — Databento equity expansion + Binance index-mark capture (operator Q 2026-06-20)
+
+Operator question resolved: Binance marks stock-perps via an **Index Price** disclosed in the public API (`/fapi/v1/premiumIndex` → `indexPrice` + `markPrice`); funding = f(markPrice − indexPrice). During US market hours `indexPrice` ≈ NYSE/NASDAQ ≈ Databento DBEQ.BASIC (verified live: NVDA idx 209.85, MSTR idx 115.52). Stocks are heavily arbed → any liquid consolidated US-equity feed is a valid reference. Off-hours the index is SYNTHETIC (tape closed) — no cash hedge → funding spikes + overnight-gap risk. Quick funding scan: 19 Binance stock-perps; carry is EPISODIC (MSTR realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
+
+- [ ] [UAC] P1. Add the single-stock underlyings of all Binance/OKX/Bybit equity-perps (the `crypto_equity_link` 18 + the rest of Binance's ~7k as they list) to the tradfi **DBEQ.BASIC** instrument universe (`tradfi_instrument_universe.py`) so each crypto-venue equity-perp has a real-equity twin to MEASURE basis. DBEQ.BASIC is allowlist-approved + ohlcv-1s/1m is L0/free → low cost. Start with the 18 basis-able, then expand to Binance's full stock-perp list. Repo: unified-api-contracts.
+- [ ] [SCRIPT] P1. market-tick-data-service — capture Binance/OKX/Bybit `indexPrice` + `markPrice` + `fundingRate` for the equity-perps as a first-class data_type (the venue's DISCLOSED mark — needed for basis = mark−index and for OFF-HOURS synthetic-mark detection where the cash tape is closed). These ride the existing CeFi premiumIndex/funding endpoints. Repo: market-tick-data-service.
+- [ ] [SCRIPT] P2. e2e-testing — recurring DAILY funding/basis scan across all crypto-venue equity-perps (annualized funding + perp-vs-index basis + flag market-hours vs off-hours) → opportunity-sizing report. Wire as a scheduled job (mirror an existing scan). Repo: e2e-testing.
+- [ ] [DESIGN] P2. strategy-service — single-stock basis execution-venue gap: CME has index futures (ES/NQ for SPX/NDX basis) but NOT broad single-stock futures → the long-cash leg for NVDA/MSTR/etc needs IBKR (equities) OR a second tokenized/perp venue OR pure cross-crypto-venue basis. Decide per-symbol hedge venue; off-hours = no-cash-hedge (dispersion-only or unhedged-funding-capture with risk limits). Repo: strategy-service.
+
+## Phase 1c — INDEX perps are the executable-NOW basis (operator 2026-06-20)
+
+Confirmed Binance lists INDEX perps: `SPXUSDT` (S&P 500, funding +5.5% ann live), `SPYUSDT` (SPY ETF), `XAUUSDT` (gold) — likely `NAS100`/Nasdaq too (different symbol). These are the BEST basis candidates because the hedge leg is ALREADY wired + data-covered: CME `ES.FUT`(SP500)/`NQ.FUT`(NASDAQ100)/`RTY.FUT`(Russell)/`YM.FUT`(Dow) on GLBX.MDP3 + the execution-service `cme_adapter`. Advantages over single-stock perps: (1) deep real hedge (no IBKR/tokenized gap), (2) both legs already in universe + data, (3) CME Globex ~23h/day → hedge available nearly whenever the perp trades (single stocks go dark off-hours), (4) live SPX-perp carry ~5.5% ann vs ES. **This is the FIRST equity-perp basis to actually trade** — data-complete + hedge-executable now.
+
+- [ ] [UAC] P0. Map the index perps (`SPXUSDT`→ES/SPX, `NAS100/NDX`→NQ, `SPYUSDT`→ES/SPY-ETF, `XAUUSDT`→GC gold) to the CME index-future + Databento index canonical, carrying the **scale/multiplier** (Binance SPX-perp is a SCALED micro unit — mark 0.36 ≈ SPX/scale; sizing MUST use the multiplier for the ES hedge ratio). Extend `crypto_equity_link.py` with an index-perp link (or a sibling map) incl. contract_multiplier. Repo: unified-api-contracts.
+- [ ] [DESIGN] P1. strategy-service — INDEX-perp cash-and-carry as the FIRST equity-perp archetype: short Binance SPX/NAS perp (collect funding) + long CME ES/NQ (real hedge, ~23h), scale-adjusted; this is fully executable with current venues (cefi perp execution + cme_adapter). Sequence ahead of the single-stock basis (which is hedge-venue-blocked). Repo: strategy-service.
+
+## Phase 1d — NET basis (perp funding − futures cost-of-carry) — the gating economics (operator 2026-06-20)
+
+Operator's critical catch: we can't hold cash-index / physical-gold / physical-oil → the hedge leg is a FUTURE, which has its own cost-of-carry/roll that NETS against the perp funding. **GROSS perp funding ≠ NET capturable basis.** The 30-day GROSS funding scan (below) OVERSTATES the carry.
+- Gold (GC): contango ≈ financing (~4–5% ann) → long-GC-future decays to spot on roll → erodes funding; gold-perp ~4% gross funding − ~5% contango → net possibly NEGATIVE.
+- Oil (CL): curve-dependent — contango erodes, backwardation ADDS roll yield. Net swings with the term structure.
+- Equity index (ES): carry ≈ financing − dividends (~3–4% contango) → erodes the SPX-perp funding (mean only ~1.2% ann gross) → net slim/negative.
+- **Single stocks hedged with the ACTUAL stock (IBKR)**: NO roll decay (stock doesn't expire) — only borrow/financing → CLEANER net than the futures-hedged index/commodity, at the cost of the equities-venue gap. (Partly reverses "index = cleanest": index = cleanest EXECUTION; single-stock-vs-stock = cleanest NET carry.)
+
+Gold/oil futures coverage CONFIRMED: GC/CL/NG/HO/SI/HG on GLBX.MDP3 (our subscription). Binance commodity perps: XAU/XAG/COPPER (oil-perp symbol TBD).
+
+- [ ] [SCRIPT] P0. e2e-testing — NET-basis backtest: for each index/commodity basis pair, compute NET = perp_funding − futures roll-carry, where roll-carry = annualized (front−next contract) spread from the Databento GLBX term structure, over ≥1 month (ideally 1y). Output per-pair NET annualized basis + turnover (sign-flips) + the contango/backwardation regime. This GATES which basis pairs are actually profitable. Repo: e2e-testing (Databento creds).
+- [ ] [SCRIPT] P1. e2e-testing — same NET treatment for single stocks under BOTH hedge options: (a) CME single-stock future where it exists (futures carry), (b) IBKR cash stock (borrow/financing, no roll). Compare net carry to decide the hedge venue per symbol. Repo: e2e-testing.
+- [ ] [DESIGN] P1. strategy-service — the basis archetype's edge = NET basis (funding − hedge carry), NOT gross funding; restrict entry to US market hours (UAC venue_session_hours.py has NYSE/NASDAQ UTC 13:30-20:00 EDT / 14:30-21:00 EST) and HOLD through off-hours (synthetic-index window) per the operator's "trade in-hours, sit outside" model. Repo: strategy-service.
+
+### 30-day GROSS funding scan (2026-06-20) — overstates net; see Phase 1d
+Steady-positive / LOW-TURNOVER (mean>3% ann, <15% sign-flips/90): MSFT 14.0% (1 flip), GOOGL 10.3% (0), NVDA 10.3% (2), MSTR 10.2% (5), AMD 8.2% (2), COIN 7.4% (4), META 5.7% (1), PLTR 4.6%, HOOD 4.5%, XAU 4.0% (0), TSLA 3.9% (1), AMZN 3.6% (0), CRCL 20.4% (5, choppy). Note mean>>median for most → funding ~0 off-hours, spikes in-hours; %positive 16–54%. SPX 1.2% mean / 5.5% median / 92% positive. NET (Phase 1d) is the real number.

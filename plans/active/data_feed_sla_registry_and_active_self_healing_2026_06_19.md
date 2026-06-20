@@ -243,3 +243,14 @@ items genuinely blocked on OTHER agents' in-flight breakage (documented, owners 
   commits lack the `Quickmerge:` trailer, so the LDR→staging promote bot may need a re-trigger for those repos; the
   `--skip-preflight` quickmerge commits (the 18 msgpack bumps) DO carry the trailer and drain normally. Content is on LDR
   and green; staging delta is normal Tier-C drain lag.
+- **2026-06-20 — dep-fan-out drain unblocked (self-caused regression, fixed).** The `dep-update/unified-api-contracts-0.24.0`
+  propagation PRs (11 consumers, base=staging) were failing `quality-gates-v2`'s `lint-codex` slice on
+  `check_adapter_contract_regression`: `honest_coverage.py: 23 contract calls < baseline 27`. **Root cause = MY Phase-1
+  split** — relocating the cluster registries (docstrings mention `record_captured`/`record_empty`/…) into
+  `_honest_coverage_clusters.py` dropped honest_coverage.py's tracked pattern-count 27→23 (a relocation, not a removed
+  adapter contract call; the 4 moved to the sibling module, now a benign new-file INFO). The stale PM baseline (27) was
+  failing every UAC-scanning v2 → blocked the UAC-0.24.0 fan-out. **Fix:** lowered honest_coverage.py's entry in
+  `scripts/quality_gates/adapter_contract_baseline.yaml` 27→23 (PM@`d3ce018f9`, carve-out #3 — the check's own sanctioned
+  remedy for a legit refactor; loosening one file, rule-11a-safe). Re-triggered v2 on all 11 dep-update PRs (consumer CI
+  uses the reusable workflow `@live-defi-rollout`, so the baseline fix is live immediately). This was the actual drain
+  blocker the operator flagged — owned + fixed since it traces to this plan's work.
