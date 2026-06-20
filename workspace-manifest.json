@@ -78,7 +78,7 @@
     "instruments-service": "0.11.0",
     "market-tick-data-service": "0.20.0",
     "system-integration-tests": "0.14.0",
-    "unified-api-contracts": "0.24.0",
+    "unified-api-contracts": "0.25.0",
     "unified-trading-library": "0.19.0",
     "unified-trading-pm": "1.2.187",
     "market-data-processing-service": "0.10.0",
@@ -90,7 +90,7 @@
     "ml-service": "0.8.0",
     "alerting-service": "0.10.0",
     "unified-trading-api": "0.2.3",
-    "client-reporting-api": "0.11.0"
+    "client-reporting-api": "0.12.0"
   },
   "repositories": {
     "alerting-service": {
@@ -442,7 +442,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1796,8 +1796,6 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
     "deployment-api": "0.21.0",
-    "client-reporting-api": "0.12.0",
-    "unified-api-contracts": "0.25.0",
     "greeks-service": "0.8.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1823,25 +1821,30 @@
       "sha": "0f2633e79cb594287f263c50034530d00d3b720a",
       "version": "0.21.0"
     },
-    "unified-api-contracts": {
-      "version": "0.25.0",
-      "sha": "cb4ecee13370bbce4cff4b2caac1355d3e695411",
-      "branch": "staging"
-    },
     "greeks-service": {
       "version": "0.8.0",
       "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
-      "branch": "staging"
-    },
-    "client-reporting-api": {
-      "version": "0.12.0",
-      "sha": "05577e5e3b5729353bacd7b4707cf20696b027e3",
       "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-20T01:49:44.225808Z",
+        "commits": {
+          "unified-api-contracts": {
+            "version": "0.25.0",
+            "sha": "cb4ecee13370bbce4cff4b2caac1355d3e695411",
+            "branch": "staging"
+          },
+          "client-reporting-api": {
+            "version": "0.12.0",
+            "sha": "05577e5e3b5729353bacd7b4707cf20696b027e3",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-19T23:19:02.883351Z",
         "commits": {
@@ -1904,16 +1907,6 @@
             "version": "0.17.0",
             "sha": "edc88c33ee1dd3cc8c557d4b94b23371ea55ed54",
             "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-19T16:17:06.357454Z",
-        "commits": {
-          "batch-live-reconciliation-service": {
-            "branch": "staging",
-            "sha": "f420c3d3eec26715cef23104b872d64f06ce3b95",
-            "version": "0.10.0"
           }
         }
       }
