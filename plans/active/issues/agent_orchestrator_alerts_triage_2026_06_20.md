@@ -4,7 +4,6 @@ created: 2026-06-20
 status: active
 priority: P2
 locked_by: live-defi-rollout
-author: ikenna (slot-3)
 source:
   - 2026-06-20 operator paste — ci-failures + agent-orchestrator-alerts Slack dump
   - 3 Explore sub-agents (slot-3) — alert↔plan cross-reference + Slack-routing map
