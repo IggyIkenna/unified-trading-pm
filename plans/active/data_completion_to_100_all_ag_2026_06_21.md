@@ -282,6 +282,25 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 22:40 — DISPARATE-SOURCE CONCURRENCY (operator insight): all fixture-driven sources fired in parallel
+
+With fixtures 100%, every fixture-driven enrichment source runs CONCURRENTLY on its OWN rate limit — sidesteps the
+API-Football 300k/day cap for everything except API-Football itself. Launched the full fleet (14 sports VMs):
+- **API-Football** (fixture stats/events/lineups/players): sports-enrich-2019-2022 + 2023-2026 (300k/day cap)
+- **the-odds-api** (odds): mtds-backfill-odds-{2020..2026} (15M quota, no daily cap)
+- **Open-Meteo** (weather, was 7%): weather-backfill-* (free, keyless)
+- **Transfermarkt** (player_values 9%, tm_leagues 0%): tm-backfill-* (keyless scraper)
+- **FootyStats** (0%): fs-backfill-* (footystats-api-key)
+- **SFI/soccerfootball-info** (sfi_progressive 12%, sfi_leagues 0%): sfi-backfill-* + features-sfi-progressive-*
+  (soccer-football-info-api-key)
+- **Live** odds stream: mtds-live-sports-* (op=websocket-streaming)
+
+Each source = own adapter (open_meteo.py / transfermarkt.py / soccerfootball_info.py / footystats.py / api_football.py)
++ own API + own rate limit → true parallelism, no cross-source contention. This is the real throughput unlock: the
+API-Football daily cap only gates ITS 2 VMs; the other ~12 VMs fill weather/transfermarkt/SFI/footystats/odds with no
+daily ceiling. ONE full-fleet monitor (b1efcorlm) does a T+10 per-source health check (catches 401/scrape-block) then
+watches all to completion. Operator lever for the API-Football slice remains: bump to 1.5M/day.
+
 ### 2026-06-21 ~22:00 — tradfi `live_databento` source-stamp FIXED + 2 manifest cleanups actioned
 
 **`live_massive` -> `live_databento` (root cause FIXED, UAC@1205ae44).** The relaunched live producer
