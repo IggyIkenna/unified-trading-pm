@@ -152,6 +152,14 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       ✅ — `python3` → `"${WORKSPACE_ROOT}/.venv-workspace/bin/python3"` — deployment-service@e31817b
 - [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
       enumeration must precede the MTDS poll (same IS→MTDS ordering as the Kalshi seed). Repo: instruments-service.
+- [ ] [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding 2026-06-21]:
+      footystats fwd-poll fetches odds fine (29 snapshots/date) but the write FAILS validation — "Batch manifest row
+      `source='footystats'` disagrees with `pipeline_mode='batch_odds_api'` (expects source='odds_api')". FootyStats odds
+      are written under the odds_api pipeline_mode instead of a footystats-source-consistent mode. **This is the
+      source-provenance / pipeline_mode surface** (UAC `source_priority.py`/`pipeline_mode.py` — the in-flight provenance
+      lane's files). Fix belongs there: either footystats odds use `pipeline_mode=batch_footystats` (source=footystats) or
+      the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO write OK; only ODDS fail.
+      Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix from SPORTS lane (collision).
 - [x] [TERRAFORM] P0. ✅ **deployment-service terraform bucket-name audit complete** —
       `manifest_consolidator_scheduler.tf` confirmed correct (canonical `${local.deployment_env_short}` throughout for
       all Group A AG buckets; legacy entries intentional for MDPS Phase 0f); deleted deprecated
