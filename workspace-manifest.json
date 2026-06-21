@@ -1814,9 +1814,10 @@
       "system-integration-tests",
       "e2e-testing",
       "unified-api-contracts",
-      "features-service"
+      "features-service",
+      "alerting-service"
     ],
-    "sit_retry_count": 1,
+    "sit_retry_count": 2,
     "locked_alert_sent": false,
     "breaking_pending": [
       "unified-api-contracts"
