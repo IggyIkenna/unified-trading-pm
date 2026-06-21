@@ -1,12 +1,13 @@
 ---
 title: Live-mode lifecycle event sink publishes to non-existent `{service_name}-events` topics (fleet-wide latent)
 created: 2026-06-21
-author: cefi-lane (/autonomous, Opus)
 source:
   - unified-trading-library/unified_trading_library/service_framework/_sink_factory.py
   - deployment-service/terraform/gcp/main.tf
   - first-ever live MTDS launch (mtds-live-cefi-hyperliquid-trades, 2026-06-21)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # Live-mode event sink → missing `{service_name}-events` Pub/Sub topics (all AGs)
