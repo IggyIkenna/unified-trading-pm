@@ -662,6 +662,18 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-21 (autonomous, operator away) — MULTI-ARCHETYPE PAPER BOOK: 2 → 46 strategies across 4 archetypes, real
+  PnLs, ε=0.** Wired the production catalogue + portfolio_allocator into the paper book and read each archetype's data
+  from its canonical GCS bucket: CARRY_STAKED_BASIS (14, lending_rates+lst_rates), CARRY_BASIS_PERP (17, perp-funding
+  bucket = Hyperliquid), ARBITRAGE_PRICE_DISPERSION (10, dex-pools bucket), DEFI_LP_CONCENTRATED+POOL (5, dex-pools).
+  Shas: UTL@e797deac, strategy-service@4d0d98f4/d57394d0/0f415757. Verified runs `paper-p11-11-eps-v2` (31) +
+  `paper-p11dex-v2` (46), both batch-rerun ε=0 (541/541, 0 dev). Every row strategy-keyed (P11.9); fees (P11.8),
+  passive tape (P11.3), treasury split (P11.4) all live. P11.6 exec-alpha SHIPPED (execution-service@3d7d760c).
+  P11.9-ui SHIPPED (ui@608762a1, 14→drilldown). **Remaining for full coverage: CeFi perp_funding COMPUTE** — raw
+  derivative_ticker for Binance/Bybit/OKX/Deribit/Kraken EXISTS in market-data-tick-cefi (incl window) but the funding
+  feature is MVP-scoped to Binance ETH only → broaden + run to unlock CARRY_FUNDING_DISPERSION (52) + non-HL basis-perp
+  (P11.11 residual / P11.12). DEFI_LP_VAULT needs vault-share-price corpus (separate).
+
 - **2026-06-21 — CRON GRADUATED + Phase 10 dashboard complete (operator autonomous push).** The paper-engine Cloud Run
   job executes GREEN on the corrected engine: execution `uts-prod-paper-engine-run-2q8bj` succeeded → wrote run
   `paper-20260621134256-3c4eb321` (instruction+pricing+transfer ledgers, 2 strategy_ids, mode PAPER). Image
