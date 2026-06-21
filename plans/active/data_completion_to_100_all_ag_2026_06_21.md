@@ -152,11 +152,12 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       ✅ — `python3` → `"${WORKSPACE_ROOT}/.venv-workspace/bin/python3"` — deployment-service@e31817b
 - [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
       enumeration must precede the MTDS poll (same IS→MTDS ordering as the Kalshi seed). Repo: instruments-service.
-- [ ] [TERRAFORM] P0. **deployment-service terraform must reflect the CANONICAL bucket names after the bucket-name
-      updates** (operator 2026-06-21): the consolidator schedulers (`manifest_consolidator_scheduler.tf`) + any per-AG
-      bucket refs must use the canonical `market-data-tick-{ag}-prd-…` / `instruments-store-{ag}-prd-…` (env-short) —
-      the lst-rates malformed-bucket bug suggests launcher/terraform bucket drift; audit + `terraform apply` so every
-      consolidator + launcher targets the canonical bucket. Repo: deployment-service. SSOT: bucket_name_ssot plans.
+- [x] [TERRAFORM] P0. ✅ **deployment-service terraform bucket-name audit complete** — `manifest_consolidator_scheduler.tf`
+      confirmed correct (canonical `${local.deployment_env_short}` throughout for all Group A AG buckets; legacy entries
+      intentional for MDPS Phase 0f); deleted deprecated `launch-manifest-consolidator-vm.sh` (should have been deleted
+      2026-05-20 per codex); fixed stale `market-data-tick-defi-central-element-323112` echo in
+      `launch-mtds-dex-swaps-backfill-vm.sh` → `market-data-tick-defi-prd-${PROJECT_ID}`. No terraform apply needed
+      (scheduler already correct). — deployment-service@164e21d
 
 ## Codex SSOT updates
 
