@@ -94,6 +94,18 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       operational (rows accrue as trades flow; first window was empty_confirmed). Findings filed:
       `plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md`. Repo: market-tick-data-service /
       deployment-service. (CEFI lane 2026-06-21.)
+- [x] [DATA] P0. **cefi — bug#7 live-capture schema-validation FIXED + durably shipped (CAPTURED windows no longer
+      raise).** 6th first-run bug: live `record_captured` passes a row_count-only bookkeeping df (real ticks
+      validated+written by `LiveWebsocketTickSink`), but `ManifestWriter.record_captured` ran `_maybe_validate` →
+      `validate_row_df` against the full tick contract → every captured window raised `RowSchemaValidationError` (only
+      empties recorded). Fix BOTH paths (operator-directed; `pipeline_mode`+`source` carry provenance): UTL
+      `record_captured` gained a `validate: bool = True` gate (skips `_maybe_validate` when False) —
+      unified-trading-library@057264fd (converged with slot-3's `78481472`); the live recorder passes `validate=False`
+      — market-tick-data-service@e6b0f29. Both QG-green (UTL 139s / mtds 96s) via isolated name-correct worktrees
+      (churn-immune), on remote `live-defi-rollout`. Deployed: fresh UTL+mtds tarballs (fixes verified inside) →
+      `gs://deployment-scripts-central-element-323112/code/` @17:51Z; relaunched
+      `mtds-live-cefi-hyperliquid-trades-20260621-175349`. End-to-end captured-row verification in-flight on that VM.
+      Repo: unified-trading-library / market-tick-data-service. (CEFI lane 2026-06-21.)
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
 - [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
@@ -242,6 +254,43 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       live-mode-population gap as a tracked baseline. — unified-trading-pm@7c3926f3f
 
 ## Progress Log
+
+### 2026-06-21 — SPORTS lane STATE SNAPSHOT (autonomous, operator away 2h) — for context-compression resume
+
+**SHIPPED (all green):** `--tier` (deployment-service@b51729b) · silent-empty→attempted_failed (is@0db2450,+10 tests) ·
+team_mapping GCS-429 write-once (is@865aea9) · **concurrency-safe self-enforced rate limiter** (is@e29ba65 — fixes the
+burst→429→52s-minute-sleep thrash that capped enrichment at ~46/min vs 1200/min cap) · UAC entity-coverage map
+(uac@9ea84499, sub-agent C). IS tarball rebuilt @e29ba65.
+
+**RUNNING VMs:** odds-backfill `mtds-backfill-odds-{2020..2026}` (7, ODDS-API key, separate quota) · enrichment
+`sports-enrich-{2019-2022,2023-2026}` (2, RELAUNCHED on fixed throttle — verify rate post-boot) · **sports LIVE**
+`mtds-live-sports-odds-api-trades-20260621-174808` (JUST launched — the missing piece; verify ≥1 `live_odds_api` row at
+T+10). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
+
+**LIVE==BATCH (operator caught this):** sports had **0 `live_*` rows** — footystats fwd-poll wrote `batch_*`
+(forward-over-future, NOT live). FIX: launched true `launch-mtds-live.sh --asset-group sports --shard-spec
+sports:ODDS_API:trades --instrument-ids ODDS_API:SPORT:soccer_{epl,la_liga,serie_a,bundesliga,ligue_one}` → odds_api_ws
+connector → `live_odds_api` (same canonical schema as batch). Verify it produces a live row (cefi proved the live path
+works after its 5-bug first-run chain — those infra bugs are AG-agnostic + fixed).
+
+**3 MIGRATION SUB-AGENTS in flight (opus), IS ships BLOCKED on a LIVE foreign UTL WIP** (`manifest_writer/_writer_captured.py`,
+peer actively editing — do NOT stomp; their tracked waiters fire when UTL goes clean):
+- **A** (agentId in transcript): canonicalise legacy `batch_instruments_service` sports rows → `batch_<source>` + fill
+  blank reasons → fixes the 130,828 blank-reason cells + the ~1.16× double-count (pipeline_mode dedup-key drift). IS migration script.
+- **B**: odds (book×league) observed-coverage map + sentinel wiring + migration → fixes the ~72% mislabelled
+  `attempted_failed` (Kalshi/Polymarket removed as they're prediction-markets not Odds-API). UAC+MTDS.
+- **C** (a2c87b13142bd5311): UAC@9ea84499 shipped — `is_league_entity_covered(league,entity)` + new
+  `EmptyConfirmedReason.EXPECTED_NO_PROVIDER_COVERAGE`. Dry-run: **~92% of leagues never yield player-stats** → skip kills
+  the waste; **506,959 cells** relabel → expected-empty. IS write-path + migration ready, pending UTL-clear.
+
+**WRITE-PATH AUDIT (regression-proof):** record_empty rejects blank (`LegacyBlankErrorReasonError`) + invalid reasons;
+`pipeline_mode: PipelineMode` REQUIRED; schema_version=9. So all issues are LEGACY data → migrations fix them; no live regression.
+
+**NEXT (autonomous loop, `/tmp/sports_autoloop.sh` watcher armed):** (1) verify sports live ≥1 row; (2) verify enrichment
+post-throttle rate (if still latency-bound/sequential → the per-fixture fetch needs concurrency = next fix); (3) when UTL
+clears → resume A/B/C → ship + run their `--apply` migrations (snapshot first) → honest-cov jumps to reality; (4) once
+C's entity-skip lands → rebuild tarball + relaunch enrichment (drops ~92% wasted player-stat calls). Raw backfill is
+rate/credit-bound (multi-day, API ceiling) — running efficiently.
 
 ### 2026-06-21 — CEFI lane: live producer unblocked (missing lifecycle topic — fleet-wide finding)
 
@@ -514,3 +563,60 @@ UAC has `CME:{...,EVENT_CONTRACT}`. Findings:
 - ohlcv_1s health re-confirmed: CME-1s capturing (es-2024 `data_type=ohlcv_1s`); **0 rate-limit events across 38 VMs**
   (no self-cap needed). CME-1s full-history wave was timeout-killed partway → relaunched the remaining roots
   (CL/GC/ES_OPT + MNQ tail) in background.
+
+### 2026-06-21 17:49 — TRADFI LIVE producer launched (live_databento; live==batch)
+Operator probe: the forward-poll = `batch_databento` (T-1 download), NOT real-time `live_databento` → tradfi LIVE rows
+still 0. Launched the genuine live producer: `mtds-live-tradfi-cme-trades-20260621-174904` (e2-standard-8, LONG_LIVED_LIVE)
+via `launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids "ES;NQ;CL;GC"`. The
+`databento_tradfi_ws` connector subscribes `schema=trades`, `SType.PARENT`, aggregates → live candles stamped
+`live_databento` (live==batch: same schema/data_types, pipeline_mode=`live_<source>`). Uses the existing
+`databento-api-key` (in Secret Manager). US markets OPEN (17:49 UTC). Verifying it connects to Databento **Live**
+streaming (the one open question = whether the account's subscription includes Real-Time/Live; if not → genuine
+BLOCKED-CREDENTIALS, the only acceptable non-completion). Watcher armed.
+- [x] ✅ [SCRIPT] P2. **deployment-service: harden the VM log-uploader thread** — on the CME-1s VMs the GCS run.log
+  uploader froze ~16:35 (large 1s logs) while the run + heartbeat + shard-writes continued fine (heartbeat fresh, no
+  premature watchdog kill). Cosmetic (can't tail those logs) but worth a try/except + re-arm in the uploader loop. Repo:
+  deployment-service (setup-data-pipeline-vm.sh uploader daemon). — unified-trading-library@5ed6824c
+  (lifecycle/uploader.py: daemon-thread + 90s join timeout caps blocking upload_bytes(); test_blocking_upload_does_not_freeze_loop added)
+
+### 2026-06-21 — DEFI lane: RE-SEQUENCED per operator (IS→100%→rollup→MTDS) + real hang root-cause
+**Operator correction (CORRECT):** run the catalogue roll-up AFTER instruments are 100%, THEN MTDS — the catalog-stale
+honest-absence is EXPECTED (live catalog has no historical snapshots until the lifecycle roll-up builds them); don't run
+MTDS before the catalog. So I KILLED the premature 60-VM MTDS fan-out (was burning empties + hung).
+**Real stuck root-cause (fleet-health diag — NOT rate limits):** sync GCS read (`ManifestFreshnessCache.bulk_load()` /
+`assert_defi_catalog_fresh` → stale-index 28-shard merge) blocks the asyncio event loop every ~3rd date (60s cache TTL)
+→ log-uploader starves → VM looks hung. Fleet-wide. FIX in flight: agent af7784c36 wraps blocking reads in
+`asyncio.to_thread`. (A `VenueRateLimiter` 10rps token-bucket already exists → no rate-cap needed; 0 × 429 observed.)
+**TheGraph 9-key sharding SHIPPED (mtds@5830cc8):** dex_pools/dex_swaps were single-key (`thegraph-api-key`) → now
+round-robin across the 9-key SM pool (`thegraph-api-key[-2..9]`); base-client count 20→actual. (Operator's point.)
+**STATE NOW:** IS instruments backfill COMPLETE (VMs gone). Catalogue roll-up `lifecycle-catalogue-regen-defi-7844r`
+**FAILED** (failedCount=1) — diagnosing (bzjvsz4qj) + must re-run on the complete IS set. 12 leftover MTDS VMs killed.
+**LIVE (operator Q):** live==batch (same canonical schema/path/data_types; only `pipeline_mode=live`). Defi live source =
+ON-CHAIN (Alchemy RPC / TheGraph / Pyth Hermes), **NOT databento** (that's tradfi). Defi live = collect-* handlers
+`--mode live` polling forward (launch-defi-forward-poll.sh stub → wire).
+**REMAINING SEQUENCE (autonomous, operator away 2h):** (1) re-run roll-up (after confirming IS 100% + IS consolidated) →
+produces fresh instrument-catalog. (2) rebuild VM tarball with sharding+asyncio fixes. (3) re-run MTDS defi fan-out →
+VERIFY capture (canary) + no hang. (4) execution-defi consolidator → honest-cov climbing. (5) MDPS defi. (6) defi live
+forward-poll → ≥1 live row. (7) terminate at 100%. Live agents: af7784c36 (asyncio fix), bzjvsz4qj (rollup diag).
+
+### 2026-06-21 17:55 — TRADFI live_databento: diagnosed (3 bugs + subscription unknown) — FLAGGED not stomped
+Launched a real tradfi live producer (`mtds-live-tradfi-cme-trades`) to test live==batch. It FAILED — 3 precisely
+root-caused bugs in the (peer's, in-flight) `mtds-live` / `databento_tradfi_ws` live scaffold + 1 vendor unknown.
+**Deleted the broken VM** (it wrote 4 wrong `live_massive` empty rows). Bugs (filed for the live-pipeline lane; NOT
+fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + the subscription is unconfirmable):
+- [ ] [SCRIPT] P1. **mtds: `databento_tradfi_ws._get_api_key()` reads the raw Pydantic field `cfg.databento_api_key`**
+  (None unless `DATABENTO_API_KEY` env set) → logs `no API key — connection skipped (BLOCKED-CREDENTIALS)`. The BATCH
+  path resolves the key from the `databento-api-key` **secret** via the secret client (works). Fix: `_get_api_key`
+  fallback-resolves `databento_secret_name` via `get_secret_client()` like batch. Repo: market-tick-data-service.
+- [ ] [SCRIPT] P1. **UAC: `live_source_for_venue(tradfi,…)` returns `massive`** (`SOURCE_PRIORITY[(tradfi,trades)]=
+  ['massive','databento']`, primary=massive) — but **massive is batch-only (no live feed)**; the actual live vendor is
+  databento. Live rows mis-stamp `live_massive`. Fix: live source = first **LIVE-capable** source in the priority list
+  (skip batch-only sources via `modes_for_source`), not `get_primary_source`. Repo: unified-api-contracts
+  (`canonical/crosscutting/source_priority.py` — coordinate, peer is editing this file).
+- [ ] [DATA] P1. **launch-mtds-live.sh tradfi instrument-ids format** — must be `CME:FUTURES:ES;CME:FUTURES:NQ;…`
+  (`_parse_instrument_id` needs `venue:type:underlying`), not bare `ES;NQ`. Repo: deployment-service (invocation/doc).
+- [ ] [DATA-OPERATOR] P0. **Confirm the Databento account has the Real-Time/**Live** streaming subscription** (separate
+  from the historical 3-dataset subscription). Without it, the live websocket is genuine BLOCKED-CREDENTIALS regardless
+  of the code fixes. After the 3 fixes + a tarball rebuild + relaunch, this is the only remaining gate to `live_databento`.
+NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 + daily-cron host) IS done (`batch_databento`); `live_databento`
+websocket is beyond-dispatch peer-domain work, now fully diagnosed for them.

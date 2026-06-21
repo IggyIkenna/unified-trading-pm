@@ -1,0 +1,139 @@
+name: reconcile-staging-versions
+
+# DURABLE self-heal for the staging_versions starvation class
+# (plans/active/issues/staging_to_main_promotion_starvation_2026_06_19.md).
+#
+# The staging->main promoter (staging-to-main.yml) derives its promote SET from
+# manifest.staging_versions (readiness gate + dep-order gate both iterate
+# `staging_versions.items()` and promote where sv != versions[r]). If the writer
+# (update-repo-version.yml, branch=staging) ever MISSES recording an entry, that
+# repo's staging content is genuinely ahead of main but the promoter is blind to
+# it -> the repo is SILENTLY skipped EVERY run and starves indefinitely (observed
+# 2026-06-19: 16 repos absent from staging_versions, days behind main).
+#
+# This cron makes the manifest SELF-HEALING: it reads each repo's ACTUAL
+# origin/staging pyproject version (the source of truth for "what's on staging")
+# and backfills/corrects staging_versions, so an absent or stale entry can never
+# starve a repo again. It is a SAFETY NET layered under the writer (no-op when the
+# writer is healthy) — it does NOT replace it.
+#
+# Scope = the staging_versions VERSION MAP ONLY. It deliberately NEVER writes
+# staging_commits (which carries tested-SHA semantics the SHA-verification gate
+# relies on) — promotion eligibility is staging_versions-driven; staging_commits
+# only gates global idempotency + per-repo SHA-verification (which harmlessly
+# skips repos absent from it). Main-direct repos (PM) have no staging branch and
+# are excluded.
+
+on:
+  schedule:
+    - cron: "35 * * * *" # hourly, offset from the other manifest crons
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  # OWN group — never the shared `manifest-update` group (sharing evicts the
+  # writer / staging-to-main; GitHub keeps one pending run per group).
+  group: manifest-staging-versions-reconcile
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PM main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Reconcile staging_versions from staging branches
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import json, os, subprocess
+
+          owner = os.environ["OWNER"]
+          MAIN_DIRECT = {"unified-trading-pm"}  # no staging branch (Option-B)
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+          sv = manifest.setdefault("staging_versions", {})
+          versions = manifest.get("versions", {})
+
+          def staging_version(repo: str) -> str | None:
+              """Read pyproject.toml version on the repo's `staging` branch via the
+              GitHub contents API (raw). Returns None if the repo has no staging
+              branch / no pyproject (404) — those are skipped, never errored."""
+              r = subprocess.run(
+                  ["gh", "api", f"repos/{owner}/{repo}/contents/pyproject.toml?ref=staging",
+                   "-H", "Accept: application/vnd.github.raw"],
+                  capture_output=True, text=True,
+              )
+              if r.returncode != 0:
+                  return None
+              for line in r.stdout.splitlines():
+                  if line.strip().startswith("version"):
+                      try:
+                          return line.split('"')[1]
+                      except IndexError:
+                          return None
+              return None
+
+          changed: list[tuple[str, str, str]] = []
+          for repo in sorted(versions):
+              if repo.startswith("_") or repo in MAIN_DIRECT:
+                  continue
+              v = staging_version(repo)
+              if v and sv.get(repo) != v:
+                  changed.append((repo, sv.get(repo, "ABSENT"), v))
+                  sv[repo] = v
+
+          env_path = os.environ["GITHUB_ENV"]
+          if not changed:
+              print("staging_versions already in sync with all staging branches — no change.")
+              with open(env_path, "a") as ef:
+                  ef.write("RECONCILE_CHANGED=0\n")
+          else:
+              print(f"Reconciling {len(changed)} staging_versions entr(y/ies) from staging branches:")
+              for repo, old, new in changed:
+                  print(f"  {repo}: {old} -> {new}")
+              tmp = "workspace-manifest.json.tmp"
+              with open(tmp, "w") as f:
+                  json.dump(manifest, f, indent=2, ensure_ascii=False)
+                  f.write("\n")
+              os.replace(tmp, "workspace-manifest.json")
+              # Re-validate the file we just wrote before letting the push proceed.
+              with open("workspace-manifest.json") as f:
+                  json.load(f)
+              with open(env_path, "a") as ef:
+                  ef.write(f"RECONCILE_CHANGED={len(changed)}\n")
+          PYEOF
+
+      - name: Commit + push (retry-with-rebase)
+        if: env.RECONCILE_CHANGED != '0'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): self-heal staging_versions from staging branches (${RECONCILE_CHANGED} entr(y/ies)) [skip ci]"
+          # Same proven 5-attempt rebase-retry as update-repo-version.yml — the
+          # writer / staging-to-main / backmerge can land between checkout and push.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed staging_versions reconcile (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push staging_versions reconcile after 5 attempts."
+              exit 1
+            fi
+          done
