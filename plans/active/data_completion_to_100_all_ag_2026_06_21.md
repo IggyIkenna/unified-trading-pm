@@ -652,5 +652,6 @@ valid 24h via staleness=86400; MTDS writes market-data not instruments so env-le
   reader resolve canonical `-prd-` (verify per-AG it doesn't break cefi/tradfi/sports — they may be env-less-aligned), OR
   point the IS consolidator to also refresh env-less. Until then a periodic env-short→env-less index sync keeps defi
   capture alive. Repo: unified-trading-library (build_bucket) / instruments-service. Provenance: this Progress Log.
-- [ ] [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
+- [x] ✅ [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
   defi MTDS launchers — working locally, used by the live fan-out; persist via quickmerge). Repo: deployment-service.
+  — deployment-service@e74517c
