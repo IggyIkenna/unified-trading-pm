@@ -1769,24 +1769,6 @@ path is the natural main-push/LDR-push auto-fire — which only fires for the ~4
 
 **Status**: BLOCKED-CREDENTIALS — awaiting Ikenna grant. Auto-resolves when the role lands (re-run the trigger + watch).
 
-## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
-
-`run_hygiene_sweep.sh --ci` exit code: 1
-Hard failures: 1  |  Soft warnings: 1
-
-Run locally to see details:
-```bash
-cd $(git rev-parse --show-toplevel)
-bash scripts/plan-hygiene/run_hygiene_sweep.sh
-```
-
-Auto-fix frontmatter:
-```bash
-python3 scripts/plan-hygiene/fix_frontmatter.py
-```
-
-This notification will reappear daily at 05:00 UTC until the sweep passes clean.
-Clear by fixing violations and pushing to live-defi-rollout.
 
 
 ---
@@ -1945,24 +1927,6 @@ Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offse
 so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
 
-## [hygiene-sweep-cron] 2026-06-21T05:00:20Z — HARD FAILURES DETECTED
-
-`run_hygiene_sweep.sh --ci` exit code: 1
-Hard failures: 1  |  Soft warnings: 1
-
-Run locally to see details:
-```bash
-cd $(git rev-parse --show-toplevel)
-bash scripts/plan-hygiene/run_hygiene_sweep.sh
-```
-
-Auto-fix frontmatter:
-```bash
-python3 scripts/plan-hygiene/fix_frontmatter.py
-```
-
-This notification will reappear daily at 05:00 UTC until the sweep passes clean.
-Clear by fixing violations and pushing to live-defi-rollout.
 
 
 ---
@@ -2061,6 +2025,31 @@ ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [hygie
 ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-21T05:00:20Z — HARD FAILURES DETECTED
 ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
 ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-21T05:00:20Z — HARD FAILURES DETECTED
+
+```
+
+**Action required**: the agent who posted each orphan ping must either:
+1. **File a plan** in `plans/active/<slug>_2026_06_21.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline,
+   OR
+3. **Remove the ping** if it's resolved / no longer actionable.
+
+Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
+
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
+Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
+Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-06-21T18:41:37Z — ⚠️ 1 orphan ping(s) detected (no plan/issue/audit reference)
+
+Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
+
+```
+ORPHAN | /home/ubuntu/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-3 → ci] 2026-06-21 ~18:05 UTC
 
 ```
 
