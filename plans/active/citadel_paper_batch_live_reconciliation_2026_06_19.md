@@ -550,15 +550,17 @@ are identified (2) and the ledger exists (3).
 
 - [x] ✅ [INFRA] P11.1. **Roll-forward cron window** — DONE (deployment-service@f5a81d6 + strategy-service@ba63ab1c).
       Cloud Run Job `uts-prod-paper-engine-run` args now `--rolling-days 7` (verified live; no absolute dates); the CLI
-      flag computes a trailing 7-day window ending T-1 UTC at job start (`test_paper_run_rolling_window.py`, 5 tests). So
-      each 02:00 UTC run books a fresh day instead of re-running the fixed 05-16..22 week.
+      flag computes a trailing 7-day window ending T-1 UTC at job start (`test_paper_run_rolling_window.py`, 5 tests).
+      So each 02:00 UTC run books a fresh day instead of re-running the fixed 05-16..22 week.
 - [x] ✅ [CODE] P11.2. **Pin `code_shas` in the run manifest** — DONE (strategy-service@ba63ab1c). `_git_sha()` prefers
       config `code_version` (`CODE_SHA_STRATEGY_SERVICE`/`CODE_VERSION` via UnifiedCloudConfig) → `git rev-parse` →
-      "unknown"; stamped into the manifest so `assert_code_shas_match` proves SAME-code. `test_git_sha_prefers_configured_code_version`.
-- [x] ✅ [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period** — DONE (UTL@afc31764 + strategy-service@ba63ab1c).
-      UTL `write_run_passive_ledger`/`passive_ledger_jsonl` (`ledger_type=passive`); producer emits per-held-day
-      `STAKING_REWARD` + `LENDING_INTEREST` (staking venue) + `FUNDING_ACCRUAL` (perp), QUOTE cash-flow delta (NEVER fed
-      to `materialize_position_ledger`). batch_rerun re-derives it; ε=0 unaffected. 8 producer + 3 UTL writer tests.
+      "unknown"; stamped into the manifest so `assert_code_shas_match` proves SAME-code.
+      `test_git_sha_prefers_configured_code_version`.
+- [x] ✅ [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period** — DONE (UTL@afc31764 +
+      strategy-service@ba63ab1c). UTL `write_run_passive_ledger`/`passive_ledger_jsonl` (`ledger_type=passive`);
+      producer emits per-held-day `STAKING_REWARD` + `LENDING_INTEREST` (staking venue) + `FUNDING_ACCRUAL` (perp),
+      QUOTE cash-flow delta (NEVER fed to `materialize_position_ledger`). batch_rerun re-derives it; ε=0 unaffected. 8
+      producer + 3 UTL writer tests.
 - [x] ✅ [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — DONE (strategy-service@ba63ab1c). DeFi
       20% treasury / 80% hot TRANSFER legs at deploy, keyed by `share_class`, single `client_id` (funds-isolation);
       CeFi/Sports = 0% (no split); deploy flow sized off the hot budget. `test_treasury_hot_split_20_80` +
@@ -569,14 +571,16 @@ are identified (2) and the ledger exists (3).
       batch_rerun ε=0 intact.
 - [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — PARTIAL
       (strategy-service@ba63ab1c left manifest HONEST at `BENCHMARK`, NOT faked). Blocked by the no-service-deps HARD
-      RULE: strategy-service MUST NOT import execution-service, so smart-matching cannot be called in-process. **Remaining
-      (correct architecture):** a new **execution-service Layer-3 entrypoint** consuming `{run}/ledger_type=instruction`
-      + RunManifest → GroupCRunner smart-matching → an `execution_alpha_bps` artifact, driven from the e2e-testing
-      harness; CRA reads it at `PnLLayer.EXECUTION`; UI surfaces exec-α. (FEES is already the only EXECUTION-layer leg.)
+      RULE: strategy-service MUST NOT import execution-service, so smart-matching cannot be called in-process.
+      **Remaining (correct architecture):** a new **execution-service Layer-3 entrypoint** consuming
+      `{run}/ledger_type=instruction` + RunManifest → GroupCRunner smart-matching → an `execution_alpha_bps` artifact,
+      driven from the e2e-testing harness; CRA reads it at `PnLLayer.EXECUTION`; UI surfaces exec-α. (FEES is already
+      the only EXECUTION-layer leg.)
 - [x] ✅ [INFRA] P11.7. **Custom domain for the paper-trading UI** — DONE pending DNS (deployment-service@1168718 +
-      @3c54e64). `portal.odum-research.com` Cloud Run domain mapping created + tracked in `terraform/gcp/domain_mappings.tf`
-      (`DomainRoutable=True`, `CertificatePending`). **Operator DNS step:** add CNAME `portal` → `ghs.googlehosted.com.`
-      at the odum-research.com registrar; the managed cert auto-provisions once it resolves.
+      @3c54e64). `portal.odum-research.com` Cloud Run domain mapping created + tracked in
+      `terraform/gcp/domain_mappings.tf` (`DomainRoutable=True`, `CertificatePending`). **Operator DNS step:** add CNAME
+      `portal` → `ghs.googlehosted.com.` at the odum-research.com registrar; the managed cert auto-provisions once it
+      resolves.
 - [x] ✅ [CODE] P11.8. **Fee model — approximate maker/taker fees on turnover** — DONE (strategy-service@ba63ab1c).
       Deterministic **1 bp maker / 2 bps taker** on filled notional, per-venue overridable (`_VENUE_FEE_OVERRIDE_BPS`),
       booked as the `FEES` factor at `PnLLayer.EXECUTION`, one NEGATIVE row per leg (swap+stake+perp = taker); grand
@@ -590,8 +594,8 @@ are identified (2) and the ledger exists (3).
       id) to `LedgerRow` (UAC), stamp it on EVERY row in all UTL materialisers + the strategy-service emitters, GROUP-BY
       `strategy_id` in CRA across ALL ledger views (positions/PnL/trades/transfers/passive, not just attribution), and
       add a strategy filter + per-strategy drilldown to EVERY UI panel. Repo: unified-api-contracts (field) +
-      unified-trading-library (stamp) + strategy-service (emit) + client-reporting-api (group) + unified-trading-system-ui
-      (drilldown, playwright-gated).
+      unified-trading-library (stamp) + strategy-service (emit) + client-reporting-api (group) +
+      unified-trading-system-ui (drilldown, playwright-gated).
 
 ## Temporary states + their canonical follow-up plans
 
@@ -1672,3 +1676,48 @@ less useful." Investigated end-to-end:
       history exists but isn't used). Low priority since the regime analysis says pre-2021 hurts, but the inconsistency
       should be reconciled (use `altfull_*` + an explicit TRAINCUT, not a silent 2022 floor). Repo: e2e-testing. Prov:
       data-extent audit 2026-06-21.
+
+### 2026-06-21 — SIGNAL-vs-EXECUTION, walk-forward COIN/STRATEGY allocation, basis CAPACITY, HYPE universe gap
+
+Operator pushed on coin-pick / gross-vs-net / lookahead, then walk-forward allocation, then the basis capital
+constraint, then HYPE. Findings (all walk-forward, IS=2023-24 / OOS=2025-26):
+
+- **2023 is a SIGNAL problem, not execution (`_gross_net_decomp.py`)**: cs GROSS PnL (perfect-fill, zero-cost) was
+  **−$116k (Sharpe −0.55) in 2023** — there was no alpha to capture, execution didn't eat it. 2024/25 gross strongly
+  positive, exec drag only 7-22% (maker captures the spread: total cost $47k on $944k gross; the bigger exec piece is
+  $185k missed-alpha from partial fills). Per-coin: the bad names are bad because the **SIGNAL** loses on them (SOL
+  −$107k, LTC −$114k GROSS) not because they're expensive (SOL is the CHEAPEST at 4bp); ZEC is the best (+$596k) despite
+  the highest slip (26bp). So coin-pick = signal quality, not execution cost.
+- **Walk-forward COIN allocator (`_wf_coin_select.py`) — "drop SOL/LTC" was LOOKAHEAD BIAS**: a causal trailing-Sharpe
+  allocator (monthly, floor-kept-alive) correctly down-weights LTC (1.2% vs 3.3%) using only past data, BUT does NOT
+  beat equal-weight (+0.13 vs +0.21) — it chases the prior regime's winners into rotation years. **Coin-selection is not
+  a free edge; equal-weight + keep-every-coin-alive is the honest baseline** (operator's instinct vindicated).
+- **Comprehensive IS/OOS allocation study (`_alloc_comprehensive.py`) — scaling into WINNERS works, into LOSERS does
+  not**: slow momentum (180-365d, into winners) beats equal OOS for coins (1.00 vs 0.77) and **directional strategies
+  (1.63 vs 1.03)**; mean-reversion (into losers) FAILS OOS; fast (90d) momentum ≈ equal (chases rotation). The
+  directional-strategy edge is REAL (not a basis artifact).
+- **Basis is CAPACITY-BOUNDED, not "scaled into" (operator correction)**: you cannot deploy more than your capital ×
+  funding-coin liquidity into a delta-neutral long-spot/short-perp carry. So basis is a **fixed-capacity sleeve filled
+  first**; the momentum allocator distributes only the **directional** legs (cs/h32/ext/short/tsmom). With basis
+  excluded, capped slow-momentum lifts the directional book OOS **1.03→1.63** (full-window 0.42→0.70). Plot:
+  `book_updated_*.png`. The naive "momentum over all 6 legs → OOS 10.7" was just over-concentrating the capacity-bounded
+  basis — fixed by treating basis as a sleeve + a per-leg weight cap.
+- **HYPE universe gap (operator: "we should trade HYPE everywhere")**: the universe is FROZEN to 30 Binance-spot coins;
+  the entire post-2024 cohort (HYPE, SUI, …) is missing because the pipeline only pulls Binance spot, and **HYPE isn't
+  on Binance spot** (it's on Hyperliquid — the venue we trade — + Bybit). Fetched HYPE full history from **Bybit** (54k
+  15m bars, 2024-12-05→now → `altfull_HYPE_15m`); Hyperliquid `candleSnapshot` is recent-only (~52d). Adding HYPE
+  exposed + FIXED a latent `build_strategies` bug (basis leg crashed on a fundingless coin → now reindexes funding to
+  0). HYPE needs the cs-ensemble re-run to actually trade.
+
+**Follow-up todos:**
+
+- [ ] [DATA] P2. **Add HYPE + the post-2024 cohort (SUI, etc.) to the trading universe** — fetch from Bybit/Hyperliquid
+      (`_fetch_bybit.py`/`_fetch_hyperliquid.py`), fetch their funding, **re-run the cs ensemble (`_panel.py`) with them
+      in the universe** so they actually trade; the WF allocator then weights a new coin from the floor up as it earns a
+      trailing Sharpe. Repo: e2e-testing `scripts/paper_trading/` + strategy-service. Prov: HYPE gap 2026-06-21.
+- [ ] [RESEARCH] P2. **Implement the deployable allocator: basis filled-to-capacity + capped slow-momentum (180-365d)
+      over the directional legs** (cs/h32/ext/short/tsmom), monthly, lagged, per-leg cap so no sleeve dominates; coins
+      stay ~equal-weight (selection isn't a reliable edge). Repo: strategy-service. Prov: allocation study 2026-06-21.
+- [ ] [BUG] P3. **Combined-book vol-normalization uses full-period vol (mild in-sample scaling)** — does not affect
+      per-leg Sharpe but a strictly-OOS combined number should weight legs by TRAILING vol. Repo: e2e-testing. Prov:
+      walk-forward audit 2026-06-21.
