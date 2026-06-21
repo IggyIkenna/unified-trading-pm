@@ -81,7 +81,21 @@ data could not be honestly source-stamped (`record_captured(source=...)` would r
   → POLYMARKET=batch_polymarket_clob unchanged / KALSHI=batch_kalshi) + explicit `source=source_string_for(pm)`. Repo:
   market-tick-data-service. — (shipping)
 
+**Seed relaunch (corrected stack):** UAC 24706977 + UTL b336478f + mtds fcd6549 all shipped; PREDICTION
+tarball rebuilt to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tarball`);
+stale VM (pulled old mtds 884560a) deleted; fresh seed VM `mtds-prediction-kalshibulk-20260621-155058`
+RUNNING on the verified-fcd6549 stack.
+
 **Cross-cutting findings captured as todos:**
+
+- [ ] [SCRIPT] P1. **`rebuild_prediction_manifest` must gain a `--venue POLYMARKET` filter before the
+  Polymarket v4→v9 re-walk** (1454 v4 manifest stragglers + 338 cqg `expected_unattempted`). The tool
+  walks ALL venues by date-glob and derives cqg via `classify_polymarket_to_canonical_group` — now that
+  Kalshi parquets coexist in the same `raw_tick_data/by_date/day=*/` paths (the bulk seed), an
+  unfiltered re-walk would RE-WALK + MISCLASSIFY the Kalshi cells (polymarket classifier) and clobber
+  the correct `batch_kalshi` rows the converter emitted. Add a venue filter (skip non-POLYMARKET), THEN
+  launch the re-walk VM. Sequence AFTER the Kalshi seed completes. Repo: market-tick-data-service. NOTE:
+  the 1454 are already `captured` (counted in honest-cov) — this is v9-schema polish, not new coverage.
 
 - [ ] [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** (pre-existing): `manifest_finalize.py` prediction
   cqg writer now resolves a *batch* pipeline_mode even on the LIVE ingest path (the prior code hardcoded
