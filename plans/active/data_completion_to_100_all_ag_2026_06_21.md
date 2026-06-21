@@ -282,6 +282,24 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 22:55 — skip-fresh verified all sources; odds re-fetch FIXED; 2 follow-ups
+
+**Operator Q "are we skipping already-done data?":** YES (confirmed via logs). Mechanism = writer reads canonical v9
+manifest + `short-circuit: skipping orchestrator for date=X` (weather `OPEN_METEO short-circuit`, sfi
+`SOCCER_FOOTBALL_INFO short-circuit`, odds `SKIP date=...: all venues fresh`). **EXCEPTION FIXED**: odds shards were
+launched `--force` (bypass single-VM guard) which ALSO forces reprocess → re-fetching the done 13%. Added
+`--allow-parallel` to the launcher (decouples guard-bypass from VM_FORCE), relaunched all 7 odds shards skip-fresh.
+Weather has occasional Open-Meteo `400 Bad Request` per-location warnings (shard-isolated, non-fatal, recorded as
+failed cells) — minor, backfill continues.
+
+- [ ] [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
+  odds-backfill-vm.sh; backed up /tmp/odds_launcher_fixed.sh) once the deployment-service slot clone is clean — BLOCKED
+  by quickmerge-autostash residue (staged foreign launcher mods + dangling autostash stash@{0,1} + phantom-UU gas-fees
+  with no conflict markers; HEAD==origin/LDR). Cleanup = recover the 2 autostashes, reset index to HEAD, re-apply the
+  one-file fix. Do NOT blind-reset (foreign WIP in stashes). Repo: deployment-service.
+- [ ] [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue: `*_previous_day1`
+  archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo: instruments-service.
+
 ### 2026-06-21 22:40 — DISPARATE-SOURCE CONCURRENCY (operator insight): all fixture-driven sources fired in parallel
 
 With fixtures 100%, every fixture-driven enrichment source runs CONCURRENTLY on its OWN rate limit — sidesteps the
