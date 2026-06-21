@@ -165,10 +165,12 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       receives writes (2,099 per-VM shards, full history) alongside canonical `-prd`. Per bucket-SSOT migration the
       legacy bucket should be drained/cutover. Cross-side → flag Ikenna (MTDS/infra). Provenance: same investigation.
       **Flagged (2026-05-29):** scope is workspace-wide — `resolve_bucket_name` has 0 callsites; all consumers use
-      legacy `cloud_constants.get_bucket_name`. Documented in
-      [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md) +
-      cross-pinged ikenna-main 2026-05-28 for scope decision. SSOT:
-      `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I.A.
+      legacy `cloud_constants.get_bucket_name`. Live homes (the originally-referenced
+      `issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md` was never filed):
+      [`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`](./bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md)
+      (workspace-wide `resolve_bucket_name` adoption + legacy dual-write drain) +
+      [`cefi_manifest_canonicalisation_2026_06_01.md`](./cefi_manifest_canonicalisation_2026_06_01.md) (the cefi
+      legacy-bucket consolidation). Cross-pinged ikenna-main 2026-05-28 for the scope decision.
 
 ### Phase 2 — volatility `[P0]`
 

@@ -50,6 +50,28 @@ if [[ $exit_code -eq 1 ]]; then
   HIGH_RISK=$(sed -n '/=== HIGH RISK/,/=== MEDIUM RISK/p' "$RUN_LOG" \
     | grep -v "^===" | grep -v "^$" | sed 's/^  //' | head -10 || true)
 
+  # Dedup (G4b, orchestrator_self_healing_hardening_2026_06_21): the SAME orphaned
+  # reset SHAs re-trip high-risk on EVERY ~11-min run, so without this the alert
+  # re-fires forever on already-acknowledged discards (the chronic central-VM spam —
+  # 3rd documented occurrence). The signature is the STABLE set of `<repo>:<sha>`
+  # orphaned commits (from the "add ... to audit-reflog-ignore.txt" lines), NOT the
+  # climbing `HEAD@{N}` index which shifts every run. Only alert when that set CHANGES
+  # (a NEW high-risk SHA appears, or it shrinks after an ignore/recover). Persisted
+  # under ~/.cache so it survives a service restart.
+  _sig_dir="${XDG_CACHE_HOME:-$HOME/.cache}/audit-reflog"
+  mkdir -p "$_sig_dir" 2>/dev/null || true
+  _sig_file="$_sig_dir/last-alert.sig"
+  _sig=$(sed -n '/=== HIGH RISK/,/=== MEDIUM RISK/p' "$RUN_LOG" \
+    | grep -oE 'add [A-Za-z0-9._-]+:[0-9a-f]{7,40} to audit-reflog-ignore' \
+    | grep -oE '[A-Za-z0-9._-]+:[0-9a-f]{7,40}' | sort -u | tr '\n' ',' || true)
+  _last_sig="$(cat "$_sig_file" 2>/dev/null || true)"
+  if [[ -n "$_sig" && "$_sig" == "$_last_sig" ]]; then
+    echo "[audit-reflog $(date -u +%FT%TZ)] high-risk set unchanged (${_sig}) — alert deduped, not re-firing" >> "$LOG"
+    rm -f "$RUN_LOG"
+    exit "$exit_code"
+  fi
+  printf '%s' "$_sig" > "$_sig_file" 2>/dev/null || true
+
   # Desktop notification — cross-platform + BEST-EFFORT. Reached ONLY on high-risk (exit 1),
   # so success is always silent on every platform (no banner, no Telegram). Every call is
   # guarded `|| true` so a missing notifier under `set -e` can NEVER abort before the Telegram

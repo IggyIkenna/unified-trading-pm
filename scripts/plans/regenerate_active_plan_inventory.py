@@ -22,7 +22,9 @@ section + markers manually once).
 
 from __future__ import annotations
 
+import argparse
 import re
+import subprocess
 import sys
 from datetime import UTC
 from pathlib import Path
@@ -83,7 +85,48 @@ def find_owner(plan_stem: str, ref_corpus: dict[str, str]) -> str:
     return "**orphan**"
 
 
+def _commit_and_push_master() -> None:
+    """Self-commit the regenerated master-plan inventory so a run never leaves the
+    file dirty/unpushed (the "Slot N has unpushed plan(s)" fleet-git alert, 2026-06-21).
+
+    docs(plans) is the sanctioned direct-push carve-out, so a regenerate-then-commit is
+    safe. Best-effort: rebase onto LDR first (multi-agent), commit only when actually
+    dirty, push; a push reject is logged, not raised (the next FF-pull/quickmerge carries
+    it). SSOT: orchestrator_self_healing_hardening_2026_06_21 (2:37 inventory churn).
+    """
+    rel = str(MASTER_FILE.relative_to(PM_ROOT))
+
+    def _git(*args: str, check: bool = False) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(PM_ROOT), *args], capture_output=True, text=True, check=check, timeout=120
+        )
+
+    if not _git("status", "--porcelain", rel).stdout.strip():
+        print("inventory: no change to commit")
+        return
+    _git("pull", "--rebase", "--autostash", "origin", "live-defi-rollout")
+    _git("add", rel)
+    commit = _git("commit", "-m", "docs(plans): regenerate active-plan inventory dashboard")
+    if commit.returncode != 0:
+        print(f"WARN: inventory commit failed: {commit.stderr.strip()[:200]}", file=sys.stderr)
+        return
+    push = _git("push", "origin", "HEAD:live-defi-rollout")
+    if push.returncode != 0:
+        print(f"WARN: inventory push failed (will ride next FF-pull): {push.stderr.strip()[:200]}", file=sys.stderr)
+    else:
+        print("inventory: committed + pushed to live-defi-rollout")
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Regenerate the active-plan inventory dashboard in the master plan.")
+    parser.add_argument(
+        "--commit",
+        action="store_true",
+        help="Self-commit + push the regenerated master plan (docs(plans) carve-out) so a "
+        "scheduled/automated run never leaves it dirty/unpushed. Omit for a dry write-only run.",
+    )
+    args = parser.parse_args()
+
     if not MASTER_FILE.exists():
         print(f"ERROR: master plan not found at {MASTER_FILE}", file=sys.stderr)
         return 2
@@ -193,6 +236,8 @@ def main() -> int:
         f"Regenerated inventory: {len(rows)} plans, {orphan_count} orphans, {tbd_count} TBD, "
         f"{agg_pct:.0f}% done overall, {total_left_cal:.0f} cal AI-days left."
     )
+    if args.commit:
+        _commit_and_push_master()
     return 0
 
 

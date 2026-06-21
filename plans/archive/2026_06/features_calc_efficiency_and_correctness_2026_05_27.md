@@ -491,9 +491,11 @@ Phase-1.1 perf win.
 
 ## Codex SSOT updates (HARD RULE)
 
-- `codex/02-data/` — feature-calculation I/O-efficiency pattern (read-once + candle-resample; range-read; write-batch).
-- `codex/06-coding-standards/` — feature-correctness verification standard (registry + ta-lib-equality + lookahead +
-  edge fixtures); enumerate before archival.
+- `codex/06-coding-standards/session-aware-feature-calculator-pattern.md` — the read-once + candle-resample
+  I/O-efficiency calc pattern that shipped. (The deeper deferred I/O items — in-memory DAG handoff, one-parquet-per-(day,fg,tf)
+  consolidation, read-time column pruning — are tracked in `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md`.)
+- `codex/02-data/feature-formula-versioning.md` — feature registry + formula-version correctness (the ta-lib-equality +
+  lookahead + edge-fixture verification rides the registry's `feature_column_versions` footer metadata).
 
 ## Notes / cross-refs
 
