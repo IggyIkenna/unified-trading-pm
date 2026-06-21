@@ -487,9 +487,9 @@ are identified (2) and the ledger exists (3).
       `pnl-ts-toggle-coin`) driven by a new `useLedgerPnlTimeseries` hook (GET `/pnl-timeseries`). Until the API agent's
       `/pnl-timeseries` endpoint deploys (currently 404 → honest-empty `series:[]` → `pnl-timeseries-empty` clean empty
       state, NOT a fabricated line — auto-populates once live); snapshot by-strategy + Δ-USD-by-coin bars retained as
-      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) |
-      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries
-      (toggle strategy/coin) + snapshot bars (P10.10)").
+      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries (toggle
+      strategy/coin) + snapshot bars (P10.10)").
 - [x] [API] ✅ P3 (P10.10). **`GET /api/v1/clients/{client_id}/pnl-timeseries`** — the per-DAY series the UI P10.10
       graph is wired to (resolves the 404 the UI item notes; was "honest per-day-pending" at line 613). —
       client-reporting-api@ce1bd5f, deployed rev **client-reporting-api-00009-mr4** (asia-northeast1, base UTL digest
@@ -527,9 +527,9 @@ are identified (2) and the ledger exists (3).
 > **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
 > P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
 > [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate repo.
-> **Codex SSOT to update on completion:** `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (multi-dim attribution +
-> bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest surface + transfers in the
-> four-ledger model).
+> **Codex SSOT to update on completion:** `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
+> (multi-dim attribution + bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest
+> surface + transfers in the four-ledger model).
 
 ## Success criteria (per phase: QG/basedpyright/ruff green + tests)
 
@@ -543,8 +543,8 @@ are identified (2) and the ledger exists (3).
 
 ## Phase 11 — Autonomous rolling-book gaps (operator audit 2026-06-21)
 
-> Operator probe 2026-06-21: "is all the code and data real running autonomously to continue to generate trades and
-> PnL … how much of prod vs bolt-ons … is all money movement and treasury vs trading-wallet simulated properly". A
+> Operator probe 2026-06-21: "is all the code and data real running autonomously to continue to generate trades and PnL
+> … how much of prod vs bolt-ons … is all money movement and treasury vs trading-wallet simulated properly". A
 > live-state audit of the deployed cron + the GCS ledger (`run_id=paper-20260621134256-3c4eb321`) surfaced the gaps
 > below. All are real; filed per Capture-Discoveries HARD RULE; driven to done under `/autonomous` 2026-06-21.
 
@@ -555,15 +555,38 @@ are identified (2) and the ledger exists (3).
       (`terraform/gcp/paper_week_determinism_scheduler.tf` job args) + strategy-service (a `--rolling-days N` /
       relative-window flag on `paper-run` so the job needn't bake absolute dates). Re-apply tofu + verify the next
       execution's `run_manifest.window_*` advanced.
+<<<<<<< Updated upstream
 - [ ] [CODE] P1.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
       `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift
       guard silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the
       job, or `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
+||||||| Stash base
+- [ ] [CODE] P11.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
+      `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift
+      guard silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the
+      job, or `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
+=======
+- [ ] [CODE] P11.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
+      `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift guard
+      silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the job, or
+      `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
+>>>>>>> Stashed changes
       strategy-service (`cli/handlers/paper_run_handler.py` manifest build) + deployment-service (job env).
+<<<<<<< Updated upstream
 - [ ] [CODE] P1.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
       materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has
       NO `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
+||||||| Stash base
+- [ ] [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
+      materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has
+      NO `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
+=======
+- [ ] [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
+      materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has NO
+      `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
+>>>>>>> Stashed changes
       parquet (P3.5), not BOOKED as an accrual tape that feeds NAV. Wire the engine to emit per-held-day PASSIVE rows
+<<<<<<< Updated upstream
       (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis)
       to `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still
       holds (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE
@@ -571,10 +594,28 @@ are identified (2) and the ledger exists (3).
       (+ UTL emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation
       (recon includes passive).
 - [ ] [CODE] P1.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
+||||||| Stash base
+      (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis)
+      to `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still
+      holds (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE
+      cash-flow delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service
+      (+ UTL emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation
+      (recon includes passive).
+- [ ] [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
+=======
+      (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis) to
+      `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still holds
+      (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE cash-flow
+      delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service (+ UTL
+      emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation (recon
+      includes passive).
+- [ ] [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
+>>>>>>> Stashed changes
       (deposit→swap→stake→margin) but has ZERO treasury rows and no `share_class`-keyed 20% treasury / 80%
       hot-wallet-per-strategy-per-chain split (the `wallet-hierarchy-and-capital-flow` SSOT). Simulate the treasury→hot
       allocation as TRANSFER rows (DeFi 20/80, CeFi 0/100) at capital-deploy time, keyed by `share_class`, single
       `client_id` (funds-isolation HARD RULE). Repo: strategy-service (transfer emission) + UTL (treasury split helper).
+<<<<<<< Updated upstream
 - [ ] [CODE] P2.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
       bare `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk
       double-counting (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real
@@ -582,12 +623,39 @@ are identified (2) and the ledger exists (3).
       per-strategy panel + attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) +
       client-reporting-api (rollup) + verify UI.
 - [ ] [CODE] P2.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
+||||||| Stash base
+- [ ] [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
+      bare `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk
+      double-counting (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real
+      strategies; the bare archetype is a roll-up label, not a strategy row) and stamp consistently so the UI
+      per-strategy panel + attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) +
+      client-reporting-api (rollup) + verify UI.
+- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
+=======
+- [ ] [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the bare
+      `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk double-counting
+      (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real strategies; the bare
+      archetype is a roll-up label, not a strategy row) and stamp consistently so the UI per-strategy panel +
+      attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) + client-reporting-api
+      (rollup) + verify UI.
+- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
+>>>>>>> Stashed changes
       `execution-service@d36b751f`) exists but `run_manifest.fill_model` is still `BENCHMARK`; paper emits only the
       benchmark yardstick, so `execution_alpha = smart − benchmark` is not produced in the live paper output. Wire the
       strategy-service paper-run to call Group C after Group B with the same captured data (the thin handoff P1.2
+<<<<<<< Updated upstream
       named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg.
       Repo: strategy-service (+ execution-service `PaperMatchingEngine` handoff).
 - [ ] [INFRA] P3.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
+||||||| Stash base
+      named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg.
+      Repo: strategy-service (+ execution-service `PaperMatchingEngine` handoff).
+- [ ] [INFRA] P11.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
+=======
+      named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg. Repo:
+      strategy-service (+ execution-service `PaperMatchingEngine` handoff).
+- [ ] [INFRA] P11.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
+>>>>>>> Stashed changes
       `odum-portal-cldtjniqvq-an.a.run.app` URL (allUsers→run.invoker, anon HTTP 200). Map a stable
       `portal.odum-research.com` (or `paper.odum-research.com`) Cloud Run domain mapping so the operator has a durable
       link. DNS record at the registrar is the one operator-gated step — create the mapping + document the exact CNAME
@@ -595,12 +663,12 @@ are identified (2) and the ledger exists (3).
 
 - [ ] [CODE] P2.8. **Fee model — approximate maker/taker fees on turnover** (operator 2026-06-21: "0 fees … fees 1bp
       maker 2bps taker we should approximate"). The attribution FEES factor is ≈0 because the P3.5 producer OMITTED the
-      FEES leg (not baked into execution costs — genuinely unmodeled). Add a deterministic fee model: **1 bp maker /
-      2 bps taker on filled notional** (per-venue overridable later), booked as (a) a real `FEES` factor and (b) at
+      FEES leg (not baked into execution costs — genuinely unmodeled). Add a deterministic fee model: **1 bp maker / 2
+      bps taker on filled notional** (per-venue overridable later), booked as (a) a real `FEES` factor and (b) at
       `PnLLayer.EXECUTION` (fees are an execution-layer cost), so the grand total drops below the current $210 by the
       fee drag. Default the carry/stake legs to taker-on-entry/exit; the perp hedge maker/taker per order type.
-      Deterministic + batch-re-derivable → ε=0 must still hold. Surface the non-zero FEES bar + a fee-drag line.
-      Repo: strategy-service (attribution producer + fee constant in UAC/registry) + verify UI renders non-zero FEES.
+      Deterministic + batch-re-derivable → ε=0 must still hold. Surface the non-zero FEES bar + a fee-drag line. Repo:
+      strategy-service (attribution producer + fee constant in UAC/registry) + verify UI renders non-zero FEES.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -1632,3 +1700,52 @@ short leg ("why bleed in bulls? make it bull/bear-adaptive or a beta-hedge — m
 - [ ] [RESEARCH] P3. **Re-evaluate the short's book weight (15%→smaller or 0)** — at 15% it's net-neutral-to-slightly-
       negative for the book (1.33 w/ R8 vs 1.38 no-short). Size it by its marginal Sharpe contribution, not a fixed 15%.
       Repo: strategy-service. Provenance: short re-spec 2026-06-21.
+
+### 2026-06-21 — WHY ALL-STRATEGY 2023 PnL SUCKS: structural (not data); regime shift; funding risk; TS-momentum fix
+
+Operator: "why does everything lose in 2023 across all strategies — do we not have data for 2017-2023?" then "before
+dropping the training cutoff, see if it improves PnL — 2021 regime shift (institutionals/ETFs) means old data may be
+less useful." Investigated end-to-end:
+
+- **2023 is STRUCTURAL, not a data/model bug (`_dispersion_diag.py`)**: 2023 had the **lowest cross-sectional dispersion
+  of any year (2.28%)** + was the **regime-transition year** (2022 capitulation → 2023 V-recovery; every walk-forward
+  model was trained on data ending in the bear) + a **melt-up** (BTC +154%) the market-neutral book deliberately doesn't
+  capture. Cross-sectional alpha needs coins to DIVERGE; in 2023 everything pumped together → no XS spread to exploit.
+  All XS legs failed simultaneously because it's the MARKET, not the models.
+- **The 2021 institutional/ETF regime break is REAL and the operator's instinct is dead-on**: avg pairwise correlation
+  jumped **0.14-0.26 (2018-2021, retail/idiosyncratic) → 0.56-0.71 (2022+, institutional/macro-correlated)**; XS
+  dispersion halved (3.8-6.5% → 2.3-3.0%). Cross-sectional crypto alpha is STRUCTURALLY thinner post-2021.
+- **TRAINCUT verdict — pre-2021 data does NOT help (empirically tested before changing anything)**: ext walk-forward
+  full-history (incl. 2017-2020) vs 2021-cut → 2023 **−0.7 vs −0.6 (marginally WORSE)**, 2024-26 unchanged, and the
+  pre-2021 OOS itself is **−3.2/−3.0** (model forced to learn the dead retail regime). h32 full-history aggregate
+  dropped to 0.43. **KEEP the cutoff** — more history dilutes with a defunct regime. (Data DOES exist to 2017-2020 in
+  `altfull_*`; the cs ensemble `_panel.py` even reads the 2022+ `alt_*` instead — a real plumbing gap — but the regime
+  analysis says using the deeper history would hurt, so it's moot for now.)
+- **The XS legs are a 2024-25-favorable OVERLAY, not a foundation**: multi-cycle walk-forward (WFSTART=2020) shows ext
+  is positive ONLY in 2024-2025 across the whole 2020-2026 record (2020:−3.2 2021:−3.0 2022:−0.3 2023:−0.7 2024:+3.0
+  2025:+2.9 2026:−0.1). We had been viewing a window that happened to include its two good years.
+- **Operator: "basis can't be the only thing — others must contribute in low-funding years." CONFIRMED + quantified
+  (`_robustness_addons.py`)**: funding compressed **+12.0% (2024) → +0.9% (2025) → −0.4% (2026)** — basis carry is
+  structurally shrinking. 2026 is the danger case: basis thin AND XS weak. **The fix is a confirmed long+short
+  TS-MOMENTUM leg** (funding-independent, regime-adaptive): yearly `'23:+0.4 '24:+0.4 '25:+1.7 '26:−0.2` — positive-to-
+  flat in EVERY regime (long captures the 2023/24/25 melt-up beta the neutral book misses; short is the R8 selloff
+  function for 2026). The robust book = **XS (dispersion) + basis (funding) + TS-momentum (beta)** so something always
+  fires; the R8 short folds into the TS-momentum's short side.
+
+**Follow-up todos:**
+
+- [ ] [RESEARCH] P2. **Add a confirmed long+short TS-MOMENTUM leg** to `build_strategies` + the production book — the
+      missing regime-adaptive beta sleeve (funding-independent; long confirmed-uptrend coins, short confirmed-downtrend,
+      20d&60d momentum confirmation). Folds the R8 short into its short side. Repo: e2e-testing
+      `scripts/paper_trading/` + strategy-service. Provenance: robustness analysis 2026-06-21.
+- [ ] [RESEARCH] P3. **Funding-regime monitor + dynamic basis sizing** — funding compressed +12%→−0.4%; size the basis
+      sleeve by the prevailing funding level (down-weight as it compresses) so the book doesn't silently over-rely on a
+      shrinking carry. Repo: strategy-service. Provenance: robustness analysis 2026-06-21.
+- [ ] [BUG] P3. **`_mom_tb.py` daily-PnL save is skipped under `OOSLO`/`WFSTART`<2023** — the `MOMDAILY_TAG` parquet
+      never wrote for the multi-cycle run (the `ext` `WFSTART` path saved fine). Gate the daily-save on the predicted
+      range, not a hardcoded 2023+ window. Repo: e2e-testing `scripts/paper_trading/`. Provenance: multi-cycle run
+      2026-06-21.
+- [ ] [DATA] P3. **cs ensemble (`_panel.py`) reads `alt_*` (2022+) not `altfull_*` (2017+)** — a plumbing gap (the deep
+      history exists but isn't used). Low priority since the regime analysis says pre-2021 hurts, but the inconsistency
+      should be reconciled (use `altfull_*` + an explicit TRAINCUT, not a silent 2022 floor). Repo: e2e-testing. Prov:
+      data-extent audit 2026-06-21.
