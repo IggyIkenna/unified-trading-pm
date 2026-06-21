@@ -514,3 +514,17 @@ UAC has `CME:{...,EVENT_CONTRACT}`. Findings:
 - ohlcv_1s health re-confirmed: CME-1s capturing (es-2024 `data_type=ohlcv_1s`); **0 rate-limit events across 38 VMs**
   (no self-cap needed). CME-1s full-history wave was timeout-killed partway → relaunched the remaining roots
   (CL/GC/ES_OPT + MNQ tail) in background.
+
+### 2026-06-21 17:49 — TRADFI LIVE producer launched (live_databento; live==batch)
+Operator probe: the forward-poll = `batch_databento` (T-1 download), NOT real-time `live_databento` → tradfi LIVE rows
+still 0. Launched the genuine live producer: `mtds-live-tradfi-cme-trades-20260621-174904` (e2-standard-8, LONG_LIVED_LIVE)
+via `launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids "ES;NQ;CL;GC"`. The
+`databento_tradfi_ws` connector subscribes `schema=trades`, `SType.PARENT`, aggregates → live candles stamped
+`live_databento` (live==batch: same schema/data_types, pipeline_mode=`live_<source>`). Uses the existing
+`databento-api-key` (in Secret Manager). US markets OPEN (17:49 UTC). Verifying it connects to Databento **Live**
+streaming (the one open question = whether the account's subscription includes Real-Time/Live; if not → genuine
+BLOCKED-CREDENTIALS, the only acceptable non-completion). Watcher armed.
+- [ ] [SCRIPT] P2. **deployment-service: harden the VM log-uploader thread** — on the CME-1s VMs the GCS run.log
+  uploader froze ~16:35 (large 1s logs) while the run + heartbeat + shard-writes continued fine (heartbeat fresh, no
+  premature watchdog kill). Cosmetic (can't tail those logs) but worth a try/except + re-arm in the uploader loop. Repo:
+  deployment-service (setup-data-pipeline-vm.sh uploader daemon).
