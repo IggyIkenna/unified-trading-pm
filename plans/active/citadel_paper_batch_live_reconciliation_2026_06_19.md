@@ -384,21 +384,22 @@ are identified (2) and the ledger exists (3).
       rows for the carry_staked_basis capital flow (USDC deposit → spot swap → stake → perp margin posting), single
       `client_id` (funds-isolation). UTL transfer-row SSOT: `unified-trading-library@0c712f99`
       (`materialize.transfer_ledger_row` + `run_writer.write_run_transfer_ledger`/`transfer_ledger_jsonl`,
-      `ledger_type=transfer`, 4 new tests). Emit: `strategy-service@c1083310`
-      (`engine/backtest/paper_run_transfers.py` wired into `run_paper()`, 8 tests). VERIFIED on GCS — run
-      `paper-20260621105146-e7545ddb`: `ledger_type=transfer/{run}.jsonl` has **8 rows = 4 legs × 2 strategies**
-      (DEPOSIT@UNISWAP_V3/JUPITER, TRANSFER spot→staking, STAKE@LIDO/JITO, COLLATERAL_POSTED@DERIBIT/DRIFT), every row
-      single `client_id` + `counterparty_client_id=None`. **client-reporting-api (read) is still open** (the API agent's
-      repo: `/transfers` route currently scans only `ledger_type=instruction` — point it at `ledger_type=transfer`).
+      `ledger_type=transfer`, 4 new tests). Emit: `strategy-service@c1083310` (`engine/backtest/paper_run_transfers.py`
+      wired into `run_paper()`, 8 tests). VERIFIED on GCS — run `paper-20260621105146-e7545ddb`:
+      `ledger_type=transfer/{run}.jsonl` has **8 rows = 4 legs × 2 strategies** (DEPOSIT@UNISWAP_V3/JUPITER, TRANSFER
+      spot→staking, STAKE@LIDO/JITO, COLLATERAL_POSTED@DERIBIT/DRIFT), every row single `client_id` +
+      `counterparty_client_id=None`. **client-reporting-api (read) is still open** (the API agent's repo: `/transfers`
+      route currently scans only `ledger_type=instruction` — point it at `ledger_type=transfer`).
 - [ ] [STRATEGY] P2. **DEFERRED-FINDING (2026-06-21, surfaced by P10.3 net-views work, client-reporting-api):** the
       carry_staked_basis ledger emits the staked leg as a SEPARATE long position from the spot-acquisition leg
       (`UNISWAP_V3:DEX_POOL:ETH` 233 ETH long AND `LIDO:STAKING:ETH` 233 ETH long), so per-coin USD delta double-counts
       the economic long — net ETH delta reads **+$752K** (should be ≈$18K residual = 233 staked − 215 perp short). The
-      reader (`net_views`/`delta_per_coin`) is HONEST — it sums what the ledger says; the fix is producer-side: model the
-      USDC→Uniswap-swap→Lido-stake flow as ONE economic ETH long (the swap CONVERTS USDC→ETH, the stake RE-REPRESENTS
-      that same ETH as stETH, not a second long), or net the spot+LST legs in the position fold. Until then the
-      delta-neutral books will not read ≈0 per coin even though the hedge is correctly sized. Repos: strategy-service
-      (emit) + unified-trading-library (position fold). Provenance: live run paper-20260621100605-b33e4bf4.
+      reader (`net_views`/`delta_per_coin`) is HONEST — it sums what the ledger says; the fix is producer-side: model
+      the USDC→Uniswap-swap→Lido-stake flow as ONE economic ETH long (the swap CONVERTS USDC→ETH, the stake
+      RE-REPRESENTS that same ETH as stETH, not a second long), or net the spot+LST legs in the position fold. Until
+      then the delta-neutral books will not read ≈0 per coin even though the hedge is correctly sized. Repos:
+      strategy-service (emit) + unified-trading-library (position fold). Provenance: live run
+      paper-20260621100605-b33e4bf4.
 - [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real multi-dimensional P&L attribution: by **venue**, by **layer**, by
       **factor**, per **strategy_id** — replaces the flat `by venue == by layer` placeholder.
       `strategy-service@c1083310` (`engine/backtest/paper_run_attribution.py` now emits CARRY+BASIS+FEES @ the staking
@@ -409,28 +410,29 @@ are identified (2) and the ledger exists (3).
       waterfall), 2 distinct `strategy_id`s, partitioned per strategy_id+client_id+date (per-venue/per-strategy/per-day
       queryable). batch rerun ε=0 (42 fills, 0 deviations) with the new ledgers. **API breakdown + UI waterfall remain
       open** (client-reporting-api + unified-trading-system-ui agents — the producer dims they read now exist on GCS).
-- [x] [STRATEGY] ✅ P2. Multi-strategy paper run — strategy-service@94ca0b6c (specs 0+6: LIDO/ETH + JITO/SOL; run paper-20260621100605-b33e4bf4 → 2 strategy_ids, 42 fills, batch re-derives both ε=0). (≥2 strategies, e.g. carry_staked_basis + arbitrage_price_dispersion)
-      so the per-strategy breakdown is meaningful, not a single flat strategy. Repo: strategy-service
-      (paper_run_handler).
+- [x] [STRATEGY] ✅ P2. Multi-strategy paper run — strategy-service@94ca0b6c (specs 0+6: LIDO/ETH + JITO/SOL; run
+      paper-20260621100605-b33e4bf4 → 2 strategy_ids, 42 fills, batch re-derives both ε=0). (≥2 strategies, e.g.
+      carry_staked_basis + arbitrage_price_dispersion) so the per-strategy breakdown is meaningful, not a single flat
+      strategy. Repo: strategy-service (paper_run_handler).
 
 ### Metrics / API (client-reporting-api)
 
 - [x] [API] ✅ P2. Net views: **net-in-dollars** (portfolio USD value), **net-in-coin** (net qty per coin),
-      **delta-per-coin** (net signed delta exposure per coin; ETH ≈ 0 for the delta-neutral book) — client-reporting-api@501c731
-      `core/portfolio_metrics.py::net_views` (base-coin grouped so perp nets vs spot/LST) + `GET /api/v1/clients/{id}/net-views`.
-      LIVE `firm-paper-determinism`: ETH net 250.83 coin / SOL 210.0; per-coin delta surfaced (reads $752K ETH due to the
-      producer spot+LST double-count — captured as a [STRATEGY] finding above; reader is honest). Repo:
-      client-reporting-api (ledger_views).
+      **delta-per-coin** (net signed delta exposure per coin; ETH ≈ 0 for the delta-neutral book) —
+      client-reporting-api@501c731 `core/portfolio_metrics.py::net_views` (base-coin grouped so perp nets vs spot/LST) +
+      `GET /api/v1/clients/{id}/net-views`. LIVE `firm-paper-determinism`: ETH net 250.83 coin / SOL 210.0; per-coin
+      delta surfaced (reads $752K ETH due to the producer spot+LST double-count — captured as a [STRATEGY] finding
+      above; reader is honest). Repo: client-reporting-api (ledger_views).
 - [x] [API] ✅ P2. Per-strategy breakdown: group trades / positions / P&L / attribution by `strategy_id` (per-strategy
-      detail + overall roll-up) — client-reporting-api@501c731 `per_strategy_breakdown` + `GET /per-strategy`. LIVE: 2 strategies
-      (`@lido-uniswapv3-deribit` 21 trades / `@jito-jupiter-drift` 21 trades) mapped from venue via RunManifest.strategy_ids.
-      Repo: client-reporting-api.
-- [x] [API] ✅ P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall — client-reporting-api@501c731
-      `_bps_on_turnover` + `GET /bps-pnl`. LIVE: ETH-strat -2.60 bps, SOL-strat 0 bps, overall -1.53 bps (turnover $2.29M).
-      Repo: client-reporting-api.
+      detail + overall roll-up) — client-reporting-api@501c731 `per_strategy_breakdown` + `GET /per-strategy`. LIVE: 2
+      strategies (`@lido-uniswapv3-deribit` 21 trades / `@jito-jupiter-drift` 21 trades) mapped from venue via
+      RunManifest.strategy_ids. Repo: client-reporting-api.
+- [x] [API] ✅ P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall —
+      client-reporting-api@501c731 `_bps_on_turnover` + `GET /bps-pnl`. LIVE: ETH-strat -2.60 bps, SOL-strat 0 bps,
+      overall -1.53 bps (turnover $2.29M). Repo: client-reporting-api.
 - [x] [API] ✅ P2. **% ROE annualised** (return on equity, annualised over the run window) per strategy + overall —
-      client-reporting-api@501c731 `_annualised_roe` (window from RunManifest, linear annualise) + `GET /roe`. LIVE: overall
-      -6.05% annualised over the 6-day window. Repo: client-reporting-api.
+      client-reporting-api@501c731 `_annualised_roe` (window from RunManifest, linear annualise) + `GET /roe`. LIVE:
+      overall -6.05% annualised over the 6-day window. Repo: client-reporting-api.
 
 ### Backtest visibility (client-reporting-api + UI)
 
@@ -438,9 +440,9 @@ are identified (2) and the ledger exists (3).
       alpha = smart-matching fill − benchmark fill), and **execution assumptions** (fill-model fidelity tier
       OHLCV→BBO→depth→trades→MBO + the slippage/cost model used) — client-reporting-api@501c731 `backtest_surface` +
       `read_batch_total_pnl` + `GET /backtest`. Reads the canonical run's `__batch__` rerun (PENDING honestly when none
-      yet — the newest 2-strategy run has no batch rerun), exec-alpha=0 stated as a STRUCTURAL zero (BENCHMARK fill model),
-      assumptions surface fill_model=BENCHMARK + OHLCV signal-close tier + the fidelity ladder + paper-vs-batch payload.
-      Repo: client-reporting-api.
+      yet — the newest 2-strategy run has no batch rerun), exec-alpha=0 stated as a STRUCTURAL zero (BENCHMARK fill
+      model), assumptions surface fill_model=BENCHMARK + OHLCV signal-close tier + the fidelity ladder + paper-vs-batch
+      payload. Repo: client-reporting-api.
 - [ ] [UI] P3. **Unified batch↔paper view**: reconcile the dashboard so paper and batch are viewable together neatly
       (toggle/compare), `live − batch = (paper − batch ≈ 0) + (live − paper = execution α)` made legible. Repo:
       unified-trading-system-ui. (pw:L2 + regression spec required.)
@@ -449,19 +451,19 @@ are identified (2) and the ledger exists (3).
 
 - [ ] [UI] P3. Clarify `Strat α` / `Exec α` columns (label + tooltip: strategy alpha vs execution alpha =
       smart−benchmark; 0 in paper because paper uses benchmark fills). (pw:L2 + regression.)
-- [ ] [UI] P3. PnL-over-time **graphs**, broken down by **strategy** AND by **coin** (timeseries from the daily
-      ledger). (pw:L2 + regression.)
+- [ ] [UI] P3. PnL-over-time **graphs**, broken down by **strategy** AND by **coin** (timeseries from the daily ledger).
+      (pw:L2 + regression.)
 - [ ] [UI] P3. **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically in the
       batch view where there are real exits). (pw:L2 + regression.)
-- [ ] [UI] P3. Render the net-$/net-coin/delta panels, per-strategy breakdown, bps-on-turnover, and annualised ROE
-      from the new API surfaces (replace placeholder-looking tiles). (pw:L2 + regression.)
+- [ ] [UI] P3. Render the net-$/net-coin/delta panels, per-strategy breakdown, bps-on-turnover, and annualised ROE from
+      the new API surfaces (replace placeholder-looking tiles). (pw:L2 + regression.)
 
 > **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
 > P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
-> [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate
-> repo. **Codex SSOT to update on completion:** `codex/09-strategy/operational/pnl-attribution.md` (multi-dim
-> attribution + bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest surface +
-> transfers in the four-ledger model).
+> [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate repo.
+> **Codex SSOT to update on completion:** `codex/09-strategy/operational/pnl-attribution.md` (multi-dim attribution +
+> bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest surface + transfers in the
+> four-ledger model).
 
 ## Success criteria (per phase: QG/basedpyright/ruff green + tests)
 
@@ -488,12 +490,12 @@ are identified (2) and the ledger exists (3).
   → super-liquid (BTC/ETH) → fills IN FULL; thin alts fill against their genuine flow (tested: BTC/ETH capped→full, ENJ
   ~5%). `_ledgers._aggtrades_flow` + `simulate_fills(use_tape=True)`, bounded API (per-rebalance, ≤5 pages, early
   liquid-detection), 1m-volume fallback. Signal engine redeployed + executed clean.
-- **Robust short — exhaustive walk-forward, done properly: NO standalone short alpha is robust.** 16 candidates ranked by
-  rolling walk-forward (11 windows): the BEST (regime_mean_rev) is only +0.30 mean OOS Sharpe / 5-of-11 positive (a coin
-  flip); regime(200,20) is the WORST (−1.58) — the prior single-split 1.12 was luck. Rigorous conclusion: a crypto bull
-  has no persistent standalone-short alpha; the robust decision is to ship NO signal (all overfit). The real legs_real
-  short (thin +$18.7k hedge) stays; the genuine robust path is a ROLE change (vol-targeted beta hedge / fold into
-  cs+basis), an operator-gated strategy decision. P1 resolved.
+- **Robust short — exhaustive walk-forward, done properly: NO standalone short alpha is robust.** 16 candidates ranked
+  by rolling walk-forward (11 windows): the BEST (regime_mean_rev) is only +0.30 mean OOS Sharpe / 5-of-11 positive (a
+  coin flip); regime(200,20) is the WORST (−1.58) — the prior single-split 1.12 was luck. Rigorous conclusion: a crypto
+  bull has no persistent standalone-short alpha; the robust decision is to ship NO signal (all overfit). The real
+  legs_real short (thin +$18.7k hedge) stays; the genuine robust path is a ROLE change (vol-targeted beta hedge / fold
+  into cs+basis), an operator-gated strategy decision. P1 resolved.
 
 ### 2026-06-21 — Autonomous: h32/ext bps + PB.13 live−batch differential + PB.8 aggTrades fidelity + P1 walk-forward verdict
 
@@ -503,39 +505,39 @@ are identified (2) and the ledger exists (3).
   full book.
 - **PB.13 — live−batch execution-realism differential SHIPPED + live.** `paper_engine.execution_realism`: BATCH = rest
   as a maker (fee at limit) = **1.0 bps**; LIVE = cross the REAL order-book depth (taker) at each order's size = **22.4
-  bps**; **differential 21.4 bps** = the patient-execution alpha, only visible with live depth (the basis for
-  live−batch recon: live = batch fill model + real depth). New dashboard panel (`pt-execution-realism`).
+  bps**; **differential 21.4 bps** = the patient-execution alpha, only visible with live depth (the basis for live−batch
+  recon: live = batch fill model + real depth). New dashboard panel (`pt-execution-realism`).
 - **PB.8 — aggTrades fill-fidelity MEASURED** (`_aggtrades_fidelity.py`). Only **~19% of the 1m candle volume** actually
   trades at a mid±1bp resting maker (BTC/XLM <1%, UNI/SAND ~70%) → the batch (1m-volume) fill model **over-counts
   fillable volume ~5×**. The aggTrades tape gives the true volume-at-price = the "measured execution realism." Verdict:
   the over-count is large → wiring the aggTrades tier into the live maker fill is warranted (next step; it ~5×-shrinks
   fills, a material paper-PnL change that wants operator sign-off, not a silent flip).
 - **P1 — regime short walk-forward: do NOT port (rigorous verdict).** Added rolling walk-forward (18mo train→6mo test ×
-  11 windows) to `_short_research.py`. The regime gate beats the naive in only **4/11 windows** (mean OOS Sharpe **−1.58**
-  vs −0.19) — the single-split OOS win (Sharpe 1.12) was **luck**. NOT port-worthy; porting would likely degrade the real
-  strategy. Kept ONLY as the per-coin VIEW reconstruction (still a better proxy than the naive −$269k loser, labelled).
-  The strategy-service legs are offline research (`legs_real`), not a clean archetype to patch. P1 resolved =
-  don't-port.
+  11 windows) to `_short_research.py`. The regime gate beats the naive in only **4/11 windows** (mean OOS Sharpe
+  **−1.58** vs −0.19) — the single-split OOS win (Sharpe 1.12) was **luck**. NOT port-worthy; porting would likely
+  degrade the real strategy. Kept ONLY as the per-coin VIEW reconstruction (still a better proxy than the naive −$269k
+  loser, labelled). The strategy-service legs are offline research (`legs_real`), not a clean archetype to patch. P1
+  resolved = don't-port.
 
 ### 2026-06-20 — Autonomous finish: per-strategy execution (PB.12) wired + deployed, Slack reroute, UI on UAT, e2e source landing
 
 Operator `/autonomous` (4h, no prompts): optimise ALL strategies' execution, finalise paper, land everything in
 e2e-testing, deploy the UI, P&L plots + paper trading (batch + live) checkable.
 
-- **PB.12 per-strategy execution — all maker, taker eliminated.** `_exec_optimize.py` extended to cs/basis/short
-  (each reduced to (targets, alpha); basis alpha = funding, short = −return). TAKER is catastrophic on EVERY strategy
+- **PB.12 per-strategy execution — all maker, taker eliminated.** `_exec_optimize.py` extended to cs/basis/short (each
+  reduced to (targets, alpha); basis alpha = funding, short = −return). TAKER is catastrophic on EVERY strategy
   (spread+impact > edge: cs −$1.1M, basis taker costs $477k vs maker's $42k). Winners: **cs maker 25%+drop** (Sharpe
   0.19, ½ DD), **basis maker FULL+requote** (Sharpe ~15 — fill the whole carry cheaply), **short maker 25%** (marginal
   leg). WIRED: `_ledgers.EXEC_CONFIG` (per-strategy participation in the live fill sim — tested: all 3 legs fill maker)
-  + `paper_engine` trades all maker. Both Cloud Run jobs redeployed + executed clean.
+  - `paper_engine` trades all maker. Both Cloud Run jobs redeployed + executed clean.
 - **Slack reroute** → dedicated `agent-orchestrator-paper-trading-slack-webhook` (was the general orchestrator webhook)
   in both deploy.sh; verified bound to `paper-trading-engine`. The "trades to do now" producer is THIS engine — it was
   uncommitted, which is why the other agent's search found 0 hits; landing the source (below) fixes findability.
 - **UI deployed to UAT** — `deploy-uat-on-merge.yml` auto-deploys uat.odum-research.com on every LDR push; all 4
   paper-trading commits (latest `0297a593`) show `success`. P&L plots + per-coin + ledgers + bps live on the sandbox.
 - **e2e-testing source landing** — the "N10" blocker (5 `scripts/sports/*` import-pattern violations) was fixed on
-  remote; pulled (14 commits) → 0 violations. Fixed a stale-stash manifest conflict + extended the paper_trading
-  ruff per-file-ignore (dense POC engine style). Gate green → quickmerge (the engine source is now committed/findable).
+  remote; pulled (14 commits) → 0 violations. Fixed a stale-stash manifest conflict + extended the paper_trading ruff
+  per-file-ignore (dense POC engine style). Gate green → quickmerge (the engine source is now committed/findable).
 - **Live paper verified** — `ledgers.json` fresh each cycle: 4 ledgers (signals/orders/trades/transfers) populating,
   live_bps live; dashboard short 2.42 bps; engine source mirrored to GCS.
 
@@ -748,13 +750,14 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       validates the deployed engine, rejects requote (PB.6), and confirms PB.4. Determinism held (same code+data). bps
       PnL surfaced as a first-class column. Repo: e2e-testing (`_fill_backtest.py`).
 - [x] ✅ [CODE] P2.8 (PB.8). **Paper-tape fidelity tier (aggTrades) — WIRED into the live maker fill + DEPLOYED.** The
-      live maker fill now resolves against the REAL futures aggTrades flow that crossed the limit (true volume-at-price),
-      with a 1m-volume fallback (`_ledgers._aggtrades_flow` + `simulate_fills(use_tape=True)`; signal engine redeployed).
-      **The BTC "1% fidelity" was a MEASUREMENT BUG, not a finding** (operator caught it): a 1bp band on BTC is ~$6 — when
-      the close sits near a minute's low, almost nothing printed below close−1bp in that backward window, so the "% of 1m
-      volume at the level" reads ~0 — which is about price TRAVEL, not liquidity. The fix uses absolute flow-at-limit: a
-      **page-cap → super-liquid (BTC/ETH) fills IN FULL**; thin alts fill against their genuine (smaller) flow (tested:
-      BTC/ETH capped→full, ENJ ~5%). Bounded API (per-rebalance, ≤5 pages, early liquid-detection). Repo: e2e-testing.
+      live maker fill now resolves against the REAL futures aggTrades flow that crossed the limit (true
+      volume-at-price), with a 1m-volume fallback (`_ledgers._aggtrades_flow` + `simulate_fills(use_tape=True)`; signal
+      engine redeployed). **The BTC "1% fidelity" was a MEASUREMENT BUG, not a finding** (operator caught it): a 1bp
+      band on BTC is ~$6 — when the close sits near a minute's low, almost nothing printed below close−1bp in that
+      backward window, so the "% of 1m volume at the level" reads ~0 — which is about price TRAVEL, not liquidity. The
+      fix uses absolute flow-at-limit: a **page-cap → super-liquid (BTC/ETH) fills IN FULL**; thin alts fill against
+      their genuine (smaller) flow (tested: BTC/ETH capped→full, ENJ ~5%). Bounded API (per-rebalance, ≤5 pages, early
+      liquid-detection). Repo: e2e-testing.
 - [x] ✅ [CODE+UI] PB.9. **bps PnL everywhere ($ PnL / $ traded × 1e4)** — operator ask 2026-06-20: surface the
       efficiency lens alongside the $/yr exec cost. Engine computes per-coin + per-strategy + aggregate **turnover**
       (`_coin_history.py` → `bps_summary.json`; per-coin `bps_cs/basis/short`) and the **exec-cost twin**
@@ -786,15 +789,15 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
 - [x] ✅ [STRATEGY] P1. **Robust short — EXHAUSTIVE walk-forward: NO standalone short alpha is robust (done properly).**
       Expanded `_short_research.py` to **16 candidates** (own_trend ± regime/params, mean-rev, RSI, vol-spike, xs-loser,
       drawdown, low-vol-regime, breakdown) and ranked EVERY one by rolling walk-forward (18mo train→6mo test × 11
-      windows). The **best** candidate (regime_mean_rev) is only **+0.30 mean OOS Sharpe, positive in 5/11 windows (45%)**
-      — a coin flip, not an alpha. The regime(200,20) from the prior single-OOS-split is actually the **WORST** (−1.58
-      mean OOS) — the 1.12 split was pure luck. **Rigorous finding: a crypto bull market has NO persistent
+      windows). The **best** candidate (regime_mean_rev) is only **+0.30 mean OOS Sharpe, positive in 5/11 windows
+      (45%)** — a coin flip, not an alpha. The regime(200,20) from the prior single-OOS-split is actually the **WORST**
+      (−1.58 mean OOS) — the 1.12 split was pure luck. **Rigorous finding: a crypto bull market has NO persistent
       standalone-short ALPHA** (momentum shorts whipsaw, reversal shorts catch knives, regime gates are luck). The
       **robust decision is therefore NOT to ship any signal** (all overfit) — the real `legs_real` short (a thin +$18.7k
-      hedge) correctly stays. The genuine robust path is a ROLE change, not a signal: a vol-targeted **beta hedge** judged
-      on BOOK risk-reduction, or fold the short into the market-neutral cs / funding-carry basis legs that ARE robust —
-      a strategy decision (operator-gated, like the PB.8 wiring). Per-coin VIEW keeps the regime reconstruction (labelled
-      non-alpha proxy). Repo: e2e-testing (`_short_research.py`, 16-candidate walk-forward).
+      hedge) correctly stays. The genuine robust path is a ROLE change, not a signal: a vol-targeted **beta hedge**
+      judged on BOOK risk-reduction, or fold the short into the market-neutral cs / funding-carry basis legs that ARE
+      robust — a strategy decision (operator-gated, like the PB.8 wiring). Per-coin VIEW keeps the regime reconstruction
+      (labelled non-alpha proxy). Repo: e2e-testing (`_short_research.py`, 16-candidate walk-forward).
 
 **Execution-config optimization (operator design 2026-06-20 — pick the BEST REALISTIC execution per strategy; the
 full-fill fantasy is the ceiling, never a choice). Lever grid: style (maker rest / taker cross) × participation (¼/⅓/
@@ -809,17 +812,17 @@ execution-realism gap.**
       0.19, maxDD −$1.09M = half of requote's, 64% of the ceiling) — under-filling caps position (confirms PB.7);
       **requote/full capture more ABSOLUTE PnL** (76–100% of ceiling) at ~$1.88M DD. So cs ships maker-25%-drop (current
       live model) for risk-adjusted, requote as the PnL-max knob. Repo: e2e-testing (`_exec_optimize.py`).
-- [ ] [RESEARCH] P2. **Per-strategy execution sweep (basis + short) — they will DIFFER from cs.** basis is
-      low-turnover (funding carry, large alpha/trade) → taker likely fine (fill in full, cost is a small fraction); short
-      is selective. Reconstruct each leg's positions (like `_coin_history._basis`/`_short`) + run the same lever sweep;
+- [ ] [RESEARCH] P2. **Per-strategy execution sweep (basis + short) — they will DIFFER from cs.** basis is low-turnover
+      (funding carry, large alpha/trade) → taker likely fine (fill in full, cost is a small fraction); short is
+      selective. Reconstruct each leg's positions (like `_coin_history._basis`/`_short`) + run the same lever sweep;
       pick the best realistic config PER strategy (maker/taker is NOT one-size-fits-all — that's the whole point). Repo:
       e2e-testing.
-- [x] ✅ [CODE] P2 (PB.13). **Live−batch execution-realism differential — SHIPPED + live.** `paper_engine.execution_realism`
-      emits BATCH (resting maker, fee at limit) = 1.0 bps vs LIVE (cross the REAL order-book depth at each order's size)
-      = 22.4 bps → **differential 21.4 bps** = patient-execution alpha (only visible with live depth; the basis for
-      live−batch recon = live = batch fill model + real depth). Dashboard panel `pt-execution-realism`. The full
-      per-order live-depth WALK (vs the snapshot cost proxy) + the per-strategy config (PB.12, done) compose here.
-      Repo: e2e-testing. Evidence: `paper_trading.json.execution_realism` live + UAT panel.
+- [x] ✅ [CODE] P2 (PB.13). **Live−batch execution-realism differential — SHIPPED + live.**
+      `paper_engine.execution_realism` emits BATCH (resting maker, fee at limit) = 1.0 bps vs LIVE (cross the REAL
+      order-book depth at each order's size) = 22.4 bps → **differential 21.4 bps** = patient-execution alpha (only
+      visible with live depth; the basis for live−batch recon = live = batch fill model + real depth). Dashboard panel
+      `pt-execution-realism`. The full per-order live-depth WALK (vs the snapshot cost proxy) + the per-strategy config
+      (PB.12, done) compose here. Repo: e2e-testing. Evidence: `paper_trading.json.execution_realism` live + UAT panel.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
@@ -1271,3 +1274,27 @@ end-to-end (paper run on real GCS data → ε=0 reconcile → operator dashboard
       exposure (now)" failure — FAILS ON BASELINE (verified by stash-out), NOT introduced by this work; it's the LEGACY
       engine-snapshot `/paper-trading` view (reads `/api/paper-trading` live data, empty in mock). Repo:
       unified-trading-system-ui. Provenance: P2.5.2 dashboard-visibility work 2026-06-20.
+
+### 2026-06-21 — MACHINE-INDEPENDENCE: full POC research corpus + data mirrored off-laptop (GCS + e2e repo)
+
+Operator: "what's left is everything in e2e testing repo and gcs" — nothing of the paper-trading research/build/data may
+live only on this laptop. Audited the on-machine state vs the durable stores and closed every gap. The 40G `.tabs/1`
+total is mostly the **sibling repo clones** (execution-service / strategy-service / system-integration-tests / etc. —
+each already version-controlled in its own GitHub repo + the orchestrator clones, reproducible via `git clone`); the
+genuinely machine-only payload is the paper-trading POC research corpus + its data, now mirrored:
+
+- **e2e-testing repo** (`scripts/paper_trading/`): the MAINTAINED deployable engine + research harnesses were already
+  landed (`e2e-testing@237d4d8d`, incl. the PB.8 aggTrades tape-fill `_ledgers.py` — verified byte-identical to the root
+  deployed copy). Added **`RECOVERY.md`** (`e2e-testing@5f1fd149`, Pass-1 QG exit 0 + strict-quickmerge clean) — the
+  SSOT restore manifest: documents the full GCS `research_archive/` layout + the `gcloud storage rsync` restore
+  commands + the two `deploy*.sh` redeploy steps, so a wiped machine rebuilds from repo + GCS alone.
+- **GCS `paper_engine/research_archive/`** (comprehensive archive — was only ~41 of 234 code files + a 340-day cache
+  seed before): `code/` = all **234 `.py` + 16 `.sh`** (the entire research corpus — every backtest/feature/panel/dune/
+  cryptoquant sweep, browsable); `plots/` = **262 result PNGs**; `_ens_model/` = the frozen LightGBM ensemble joblibs +
+  meta (the 40M that takes ~81 min to retrain); `cache/` = the full **6.7G `_cache`** (8+yr 1m/15m bars + funding + the
+  parquets the backtests ran on — IN PROGRESS, uploading) + the `_handoff_funding_strategy.tar.gz` (127M, redundant
+  prior packaging, uploading). No loose root-level data artifacts exist outside `_cache`/`_ens_model` (verified — 0
+  stray parquet/npy/csv/joblib at root).
+- **Net**: the deployable code + the model + the plots + the research code are fully off-machine NOW; the 6.7G data
+  cache finishes uploading in the background. Machine-independence achieved — `RECOVERY.md` is the single restore entry
+  point.
