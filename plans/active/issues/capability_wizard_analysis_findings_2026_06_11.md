@@ -1,6 +1,7 @@
 ---
 title: Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
 created: 2026-06-11
+parent_epic: strategy_master
 locked_by: live-defi-rollout
 priority: P2
 status: active
