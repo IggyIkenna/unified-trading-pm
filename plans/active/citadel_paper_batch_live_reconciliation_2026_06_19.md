@@ -676,6 +676,14 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-21 (autonomous) — PAPER BOOK NOW 141 STRATEGIES / 6 ARCHETYPES (was 2).** Verification run
+  `paper-20260621215559-4337e2aa` after the CeFi venue-normalization fix (strategy-service@bbdb4f1e): CARRY_BASIS_PERP
+  **79** (was 17 HL-only → +62 CeFi venues), CARRY_FUNDING_DISPERSION **33** (was 0 — lit up, e.g. BYBIT ARB real
+  funding 50.8bps), CARRY_STAKED_BASIS 14, ARBITRAGE_PRICE_DISPERSION 10, DEFI_LP_CONCENTRATED 3, DEFI_LP_POOL 2. All
+  strategy-keyed (P11.9) + passive tape (2691 rows) + treasury + fees. 149 specs honestly skipped (genuinely-absent /
+  unwired families incl. DEFI_LP_VAULT → P11.13). ε=0 batch-rerun proof running against the 141-strategy universe.
+  Cosmetic: a pandas-concat FutureWarning in canonical_perp_funding_provider (noqa/cleanup pending).
+
 - **2026-06-21 (autonomous) — CeFi funding data FOUND in canonical GCS (not a backfill).** The earlier "CeFi perp
   funding genuinely absent" conclusion was WRONG: it exists via the **Tardis vendor** at
   `perp-funding-prd/raw_tick_data/by_date/day={D}/pipeline_mode=batch_tardis/asset_group=cefi/venue={V}/.../data_type=perp_funding/`
