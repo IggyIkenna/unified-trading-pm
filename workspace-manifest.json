@@ -79,10 +79,10 @@
     "market-tick-data-service": "0.25.0",
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.33.0",
-    "unified-trading-library": "0.23.0",
+    "unified-trading-library": "0.29.0",
     "unified-trading-pm": "1.2.251",
     "market-data-processing-service": "0.10.3",
-    "e2e-testing": "0.14.0",
+    "e2e-testing": "0.19.0",
     "agent-orchestrator": "0.21.0",
     "greeks-service": "0.12.0",
     "trading-agent-service": "0.8.0",
@@ -1109,7 +1109,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1796,9 +1796,7 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.5",
     "ibkr-gateway-infra": "0.4.1",
-    "unified-trading-library": "0.29.0",
     "market-tick-data-service": "0.28.0",
-    "e2e-testing": "0.19.0",
     "agent-orchestrator": "0.23.0",
     "alerting-service": "0.18.0",
     "batch-live-reconciliation-service": "0.19.0",
@@ -1845,19 +1843,9 @@
       "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
       "branch": "staging"
     },
-    "unified-trading-library": {
-      "version": "0.29.0",
-      "sha": "513315787427f3c5ab2ac86a088b1ec16de24c5d",
-      "branch": "staging"
-    },
     "market-tick-data-service": {
       "version": "0.27.0",
       "sha": "845119d93daa265e2591841c18cbfd48138c5c91",
-      "branch": "staging"
-    },
-    "e2e-testing": {
-      "version": "0.18.0",
-      "sha": "0c041cf00abf3c77f6385ff53a70f6486fffa300",
       "branch": "staging"
     },
     "deployment-service": {
@@ -1874,6 +1862,21 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T20:17:18.941992Z",
+        "commits": {
+          "unified-trading-library": {
+            "version": "0.29.0",
+            "sha": "513315787427f3c5ab2ac86a088b1ec16de24c5d",
+            "branch": "staging"
+          },
+          "e2e-testing": {
+            "version": "0.18.0",
+            "sha": "0c041cf00abf3c77f6385ff53a70f6486fffa300",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T18:52:11.331432Z",
         "commits": {
@@ -1958,21 +1961,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-21T17:01:29.930177Z",
-        "commits": {
-          "fund-administration-service": {
-            "branch": "staging",
-            "sha": "c9fb9c9fb921f2ca7ca1fbc912725c9012f73818",
-            "version": "0.9.0"
-          },
-          "execution-service": {
-            "branch": "staging",
-            "sha": "901d014ef27e30e2696d464c30976b0b6ac77a50",
-            "version": "0.18.0"
-          }
-        }
       }
     ]
   },
@@ -1988,16 +1976,7 @@
     ]
   },
   "promotion_failures": {
-    "unified-trading-library": 3,
-    "market-tick-data-service": 1,
-    "e2e-testing": 1
+    "market-tick-data-service": 1
   },
-  "promotion_quarantine": {
-    "unified-trading-library": {
-      "since": "2026-06-21T18:52:10.179910Z",
-      "attempts": 3,
-      "escalated": true,
-      "next_probe_after": "2026-06-21T19:52:10.179978Z"
-    }
-  }
+  "promotion_quarantine": {}
 }
