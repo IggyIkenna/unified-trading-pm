@@ -1813,9 +1813,7 @@
     ],
     "sit_retry_count": 1,
     "locked_alert_sent": false,
-    "breaking_pending": [
-      "unified-api-contracts"
-    ]
+    "breaking_pending": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
