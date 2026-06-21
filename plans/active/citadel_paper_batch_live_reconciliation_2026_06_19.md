@@ -631,7 +631,7 @@ are identified (2) and the ledger exists (3).
       new e2e file imports only execution_service + UAC + UTL; strategy-service SOURCE on LDR is unchanged, so zero
       blast-radius on this ship).
 
-- [ ] [DATA] P2.11.11. **Backfill the DeFi feature groups so the non-staked-basis archetypes light up** — P11.10 wired
+- [x] ✅ [DATA] P11.12. **CeFi funding READ from canonical GCS (Tardis) — DONE, NOT a backfill.** The data was already in `perp-funding-prd/.../pipeline_mode=batch_tardis/asset_group=cefi/` (7 venues); the only gap was a venue-name mismatch, fixed by `_canonical_venue` (strategy-service@bbdb4f1e). Verified run `paper-20260621215559-4337e2aa`: **141 strategies / 6 archetypes** (CARRY_BASIS_PERP 79, CARRY_FUNDING_DISPERSION 33, CARRY_STAKED_BASIS 14, ARBITRAGE_PRICE_DISPERSION 10, DEFI_LP 5), real funding PnLs, **ε=0 PROVEN (1016 trades matched, 0 deviations)**. 149 specs honestly skipped (genuinely-absent / unwired → P11.13 for vault+fees; perp_funding for non-Tardis venues genuinely absent).
       30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the paper
       window: `perp_funding` (→ CARRY*BASIS_PERP 144, CARRY_FUNDING_DISPERSION 52), `dex_pool_state` (→
       ARBITRAGE_PRICE_DISPERSION 17, DEFI_LP*_ 9), `lst_rates` beyond Lido/Jito/Marinade, dated/recursive inputs. Only
