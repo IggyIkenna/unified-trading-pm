@@ -102,6 +102,17 @@ RUNNING on the verified-fcd6549 stack.
 
 **Cross-cutting findings captured as todos:**
 
+- [ ] [SCRIPT] P2. **Self-enforced rate-limit caps (token-bucket) on the prediction REST adapters** —
+  operator 2026-06-21: reactive backoff wastes time vs a proactive cap at the published limit. Current
+  state is REACTIVE: `kalshi_adapter.py:196` does `if resp.status == 429: await asyncio.sleep(2.0)`
+  (flat sleep AFTER hitting the limit, behind a `max_concurrent` semaphore); polymarket carries
+  `_RETRYABLE_STATUS_CODES={408,429,500,502,503,504}` (retry/backoff). Add a shared async token-bucket
+  limiter sized to each venue's published read limit (Kalshi tiered ~10 rps basic; Polymarket Gamma
+  generous) so the historical-fan-out adapters (Kalshi `/historical` per-series, Polymarket per-market
+  trades) NEVER hit 429 + never burn the discover-then-backoff round-trip. NOTE: the bulk-corpus seed +
+  the 30s live Gamma poll do NOT hit rate limits — this is for the Phase-2 historical fan-out. Repos:
+  market-tick-data-service + instruments-service.
+
 - [ ] [SCRIPT] P1. **`rebuild_prediction_manifest` must gain a `--venue POLYMARKET` filter before the
   Polymarket v4→v9 re-walk** (1454 v4 manifest stragglers + 338 cqg `expected_unattempted`). The tool
   walks ALL venues by date-glob and derives cqg via `classify_polymarket_to_canonical_group` — now that
