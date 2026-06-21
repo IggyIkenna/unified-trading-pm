@@ -5,6 +5,7 @@ source:
   - e2e-testing/scripts/defi/*
   - unified-api-contracts/openapi/capability-verdict-matrix.json
   - unified-trading-system-ui/lib/registry/capability-manifest.json
+parent_epic: strategy_master
 locked_by: live-defi-rollout
 priority: P2
 status: active

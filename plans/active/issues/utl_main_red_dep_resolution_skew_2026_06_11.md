@@ -76,6 +76,6 @@ promotion-ordering problem: UTL's main needs the aligned UAC release first.
       (range-absorb per the pull-not-push model — only re-pin on a real breaking change). NOTE distinct from the v0.15.0
       CASCADE failures (features-service/fund-administration-service), which are a REAL breaking change — UAC renamed a
       `CoverageVerdict` value (`out_of_coverage`→`upstream_missing`) — needing code updates, not a dep-lag.
-- [ ] [CICD] P2. **DEFERRED** Confirm whether the `ValueError: I/O operation on closed file` cascade is purely a
+- [ ] [CICD] P2. **DEFERRED — successor: `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` (parent_epic infrastructure_master); migrated 2026-06-21** Confirm whether the `ValueError: I/O operation on closed file` cascade is purely a
       teardown artifact of the registry-empty failures (expected to vanish once the registry resolves) or a separate
       logging-fixture bug; if the former, no action — provenance: run 27357450067.

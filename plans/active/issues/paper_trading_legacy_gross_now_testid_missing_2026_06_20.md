@@ -39,6 +39,6 @@ any UI change touching `tests/smoke/`.
   and a "Gross exposure (max)" row (Σ|position notional| ceiling, mirroring the
   net (now)/(max) pair) so the 2026-06-19 gross-now-gap regression spec
   (`tests/smoke/paper-trading.smoke.spec.ts:22`) passes. Verify `pw:L2 ✓` on
-  that spec. **DEFERRED** — separate from the real-ledger auth bug; needs the
+  that spec. **DEFERRED — successor: `citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent_epic batch_live_symmetry_master); migrated 2026-06-21** — separate from the real-ledger auth bug; needs the
   gross-now derivation decision for the legacy engine-snapshot panel. Provenance:
   surfaced while fixing the deployed `?client` paper-trading hang 2026-06-20.
