@@ -210,3 +210,4 @@
 {"timestamp": "2026-06-21T14:29:33Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.16.0 (branch=staging, bump=minor)", "commit_sha": "ae2a0730b97718ebe27019835649b981ddfdcab6"}
 {"timestamp": "2026-06-21T14:33:21Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-data-processing-service=0.10.1 (branch=staging, bump=patch)", "commit_sha": "b19f9c489190bd164854f0e348078dc6e7568821"}
 {"timestamp": "2026-06-21T14:41:26Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.23.0 (branch=staging, bump=minor)", "commit_sha": "9e173d6c838ea1967bd8fc85809bf6e130428340"}
+{"timestamp": "2026-06-21T15:21:09Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "strategy-service=0.25.0 (branch=staging, bump=minor)", "commit_sha": "ac6c3b9d365d696d3706ca053bc7e10ea32fd85e"}
