@@ -621,6 +621,17 @@ are identified (2) and the ledger exists (3).
       server-rate-limited at 0 tokens; deliverable (execution-service smart-fill-replay → `execution_alpha` artifact +
       e2e harness) stands. Re-dispatch.
 
+- [ ] [DATA] P11.11. **Backfill the DeFi feature groups so the non-staked-basis archetypes light up** — P11.10 wired
+      30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the
+      paper window: `perp_funding` (→ CARRY_BASIS_PERP 144, CARRY_FUNDING_DISPERSION 52), `dex_pool_state` (→
+      ARBITRAGE_PRICE_DISPERSION 17, DEFI_LP_* 9), `lst_rates` beyond Lido/Jito/Marinade, dated/recursive inputs. Only
+      `lending_rates` (Aave/Compound/Spark) is present → CARRY_STAKED_BASIS is the only data-drivable family today.
+      Backfill these feature groups for the firm-paper-determinism window (2026-05-16..22, then rolling) via the MTDS /
+      features pipeline (data-pipeline-correctness HARD RULE — every venue × data_type × range, honest absence where a
+      venue genuinely lacks history). The e2e launch_*_vm.sh scripts name the sources (perp_funding / dex_pools /
+      lst_rates / lending_indices / gas_fees). Once the data lands, the SAME wired archetypes auto-populate — no code
+      change. Repo: mtds / features-service / e2e-testing (sourcing); parent epic data/mtds master.
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
