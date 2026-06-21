@@ -1885,3 +1885,21 @@ rare basis-blowout TAIL (deleveraging events) a funding-only backtest can't capt
       ~$800k liquid-majors capital (Sharpe ~7-12 after 2-leg exec + financing), with an unmodeled deleveraging-tail
       risk; stop showing the 10%-vol-normed 400%-cum line as the headline. Add a basis-dislocation/borrow cost model + a
       tail reserve. Repo: strategy-service. Prov: basis realism audit 2026-06-21.
+
+### 2026-06-21 — 2026 ALPHA DEATH: no clean crypto bear-alpha; de-risk + small short MITIGATE (operator-validated)
+
+2026-H1 is a SELLOFF (BTC −29%); the book is long-biased/market-neutral with NO bear-alpha (we retired the short; basis
+funding compresses to ~0/−0.4%). Two grounded bear-ALPHA candidates BOTH FAIL (`_2026_alpha*.py`): funding-gated short
+WHIPSAWS (−8 in 2023, transition), and bidirectional/reverse-carry has NOTHING to harvest (even in 2026 only ~1 coin
+funded < −5%/yr). **No clean crypto bear-alpha for a mild selloff with ~0 funding.** BUT de-risk + a SMALL short
+MITIGATE (`_2026_derisk_short.py`): de-risk (gross 0.5× in confirmed risk-off = BTC 60d-mom<0 ∧ funding compressing,
+lagged) fires 60%/2026, 0%/2024; + a 12% R8 short. **Combined: 2026 Sh −1.10→−0.42 (loss cut ~60%), maxDD −6.3%→−5.4%,
+full 2.26→2.21 (negligible), no lookahead.** HONEST: 2026 still −0.42 = risk MITIGATION not alpha; genuine bear-alpha is
+CROSS-ASSET.
+
+- [ ] [RESEARCH] P2. **Ship de-risk overlay + 12% short to the deployable book** — gross 0.5× in confirmed risk-off (BTC
+      60d-mom<0 ∧ funding compressing, lagged) + R8 short at ~12%. Cuts 2026 loss ~60% + drawdown, negligible cost, no
+      lookahead. Repo: strategy-service. Prov: 2026 audit 2026-06-21.
+- [ ] [STRATEGY] P1. **Accelerate non-crypto archetypes (TradFi/sports/prediction) for genuine bear-regime alpha** —
+      2026 proves the crypto carry+directional book is flat-to-negative in a crypto selloff; cross-asset is the only
+      real diversifier. Repo: epics. Prov: 2026 audit 2026-06-21.
