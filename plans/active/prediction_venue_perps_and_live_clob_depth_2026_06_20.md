@@ -48,6 +48,20 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-21 (PM-2) — LIVE prediction LAUNCHED (free Gamma poll) + Kalshi seed running
+
+- [x] ✅ [SCRIPT] P1. LIVE prediction is WIRED + launchable end-to-end (no build needed): `polymarket_ws.py`
+  + `kalshi_ws.py` live connectors EXIST + auto-register (`connectors/__init__.py` autoload),
+  `launch-mtds-live.sh --asset-group prediction --shard-spec prediction:POLYMARKET:trades` exists, and the
+  live `MTDSShardManifestRecorder` (fixed: asset_group is a writer kwarg) stamps `live_polymarket_clob` via
+  the venue-source map. Polymarket live = free public Gamma REST poll (30s, no auth). **LAUNCHED**
+  `mtds-live-prediction-polymarket-trades-20260621-155845` (10 high-volume active markets) → first-ever
+  LIVE prediction rows (LIVE=0 across all AGs before this). Repo: deployment-service + market-tick-data-service.
+- [ ] [SCRIPT] P2. Expand the live producer instrument set (currently 10 high-vol Polymarket markets) to the
+  full IS-enumerated active universe + add a KALSHI live shard (`prediction:KALSHI:trades`, kalshi_ws). Repo:
+  deployment-service.
+
+
 ### 2026-06-21 — ROOT GAP: Kalshi was never a registered canonical UAC source → registered it (batch=live)
 
 **Discovery (autonomous prediction-to-100% drive):** while wiring the bulk-seed converter's manifest emission, found
