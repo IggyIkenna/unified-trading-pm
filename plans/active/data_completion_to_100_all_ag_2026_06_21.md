@@ -479,3 +479,12 @@ pipeline_mode bump — overlaps peer's UAC source_priority work), LIVE forward-p
   both-sides reconcile (ds@f43f50a restore + @3bed824 venue fix).
 - Batch fan-out (15 VMs CME/NASDAQ/NYSE) still draining + capturing `batch_databento`. CBOE + forward-poll capture
   verification in flight. The 3-dataset tradfi batch (GLBX+DBEQ+XCBF) is now ALL launched.
+
+### 2026-06-21 16:25 — ohlcv_1s added (CME+CBOE only; equities don't support it)
+Operator: grab ohlcv_1s. Shipped ds@47c56d7 — lib + forward-poll default VM_DATA_TYPES now `ohlcv_1m;ohlcv_1s`
+(OHLCV_DATA_TYPES env override). **Key correction:** ohlcv_1s is expected ONLY for **CME + CBOE (futures)** per UAC
+`expected_coverage` (`CME:[trades,ohlcv_1s,ohlcv_1m,tbbo]`, `CBOE:[ohlcv_15m,ohlcv_1s,ohlcv_1m]`); **NASDAQ/NYSE list
+`[ohlcv_1m]` only** — equities (DBEQ.BASIC) have NO 1s, and the MTDS pre-flight correctly drops it (`dropping data_types
+not supported per UAC: ['ohlcv_1s']`). So equity-1s is NOT a gap. Deleted the 8 no-op equity-1s VMs; launched **CME-1s
+full-history** (7 roots × 2019-2026) + CBOE-1s. The default-both is harmless for equities (pre-flight drops 1s, fetches
+1m). Operational health verified: 0 real rate-limit events fleet-wide, 0 code failures, liquid tickers captured.
