@@ -283,6 +283,29 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 ~23:00 — DEPLOYED + VERIFIED: live_databento (prod-confirmed) + equity ohlcv_1s (capturing) + MDPS batching
+
+Operator said "do both" (live_databento deploy + MDPS batching) + fetch equity 1s. Executed all three end-to-end with
+clean tarball rebuilds (from origin/LDR worktrees, NOT the peer-WIP workspace) + VM relaunches:
+
+1. **live_databento — DEPLOYED + PROD-CONFIRMED.** Rebuilt UAC tarball (UAC@1205ae44) + relaunched the live producer
+   (`mtds-live-tradfi-cme-trades-20260621-224032`). Verified the actual per-VM manifest rows:
+   `pipeline_mode = {'live_databento': 4}` (was live_massive). ✅
+
+2. **equity ohlcv_1s — DEPLOYED + CAPTURING.** Added ohlcv_1s to `VENUE_DATA_TYPE_CAPABILITIES`+`expected_coverage`
+   NASDAQ/NYSE (UAC@87c60b50) → pre-flight now fetches it. Launched NASDAQ+NYSE 1s year-shard backfill (8 VMs).
+   Verified: `dt=ohlcv_1s … captured=45` (NASDAQ), `captured=158` (NYSE). ✅
+
+3. **MDPS 429 batching — 2 fixes shipped, residual deeper issue diagnosed.** UTL per-VM write-debounce (UTL@94d9de30) +
+   MTDS finalize batch_size 1→500 (MTDS@d0f42ba), both deployed via fresh tarballs + MDPS relaunch
+   (`mdps-backfill-tradfi-20260621-225740`). 429s PERSIST — root cause refined: CONCURRENT per-unit finalize threads
+   race-write the shared per-VM shard with `final=True` (non-monotonic counts 54→65→56), which `batch_size`
+   (per-instance) can't fix. NOT a correctness blocker (retries succeed, consolidator still merges 15m/24h). Deeper fix
+   (serialize per-VM shard write + coalesce final=True) captured as a todo. The UTL debounce DID fix the live producer's
+   `final=False` writes (fleet-wide benefit).
+
+All shipped via isolated-worktree promotion (UAC/MTDS had concurrent live peer WIP — preserved, never bundled).
+
 ### 2026-06-21 22:55 — skip-fresh verified all sources; odds re-fetch FIXED; 2 follow-ups
 
 **Operator Q "are we skipping already-done data?":** YES (confirmed via logs). Mechanism = writer reads canonical v9
@@ -290,35 +313,37 @@ manifest + `short-circuit: skipping orchestrator for date=X` (weather `OPEN_METE
 `SOCCER_FOOTBALL_INFO short-circuit`, odds `SKIP date=...: all venues fresh`). **EXCEPTION FIXED**: odds shards were
 launched `--force` (bypass single-VM guard) which ALSO forces reprocess → re-fetching the done 13%. Added
 `--allow-parallel` to the launcher (decouples guard-bypass from VM_FORCE), relaunched all 7 odds shards skip-fresh.
-Weather has occasional Open-Meteo `400 Bad Request` per-location warnings (shard-isolated, non-fatal, recorded as
-failed cells) — minor, backfill continues.
+Weather has occasional Open-Meteo `400 Bad Request` per-location warnings (shard-isolated, non-fatal, recorded as failed
+cells) — minor, backfill continues.
 
 - [ ] [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
-  odds-backfill-vm.sh; backed up /tmp/odds_launcher_fixed.sh) once the deployment-service slot clone is clean — BLOCKED
-  by quickmerge-autostash residue (staged foreign launcher mods + dangling autostash stash@{0,1} + phantom-UU gas-fees
-  with no conflict markers; HEAD==origin/LDR). Cleanup = recover the 2 autostashes, reset index to HEAD, re-apply the
-  one-file fix. Do NOT blind-reset (foreign WIP in stashes). Repo: deployment-service.
+      odds-backfill-vm.sh; backed up /tmp/odds_launcher_fixed.sh) once the deployment-service slot clone is clean —
+      BLOCKED by quickmerge-autostash residue (staged foreign launcher mods + dangling autostash stash@{0,1} +
+      phantom-UU gas-fees with no conflict markers; HEAD==origin/LDR). Cleanup = recover the 2 autostashes, reset index
+      to HEAD, re-apply the one-file fix. Do NOT blind-reset (foreign WIP in stashes). Repo: deployment-service.
 - [ ] [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue: `*_previous_day1`
-  archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo: instruments-service.
+      archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo: instruments-service.
 
 ### 2026-06-21 22:40 — DISPARATE-SOURCE CONCURRENCY (operator insight): all fixture-driven sources fired in parallel
 
 With fixtures 100%, every fixture-driven enrichment source runs CONCURRENTLY on its OWN rate limit — sidesteps the
 API-Football 300k/day cap for everything except API-Football itself. Launched the full fleet (14 sports VMs):
+
 - **API-Football** (fixture stats/events/lineups/players): sports-enrich-2019-2022 + 2023-2026 (300k/day cap)
 - **the-odds-api** (odds): mtds-backfill-odds-{2020..2026} (15M quota, no daily cap)
-- **Open-Meteo** (weather, was 7%): weather-backfill-* (free, keyless)
-- **Transfermarkt** (player_values 9%, tm_leagues 0%): tm-backfill-* (keyless scraper)
-- **FootyStats** (0%): fs-backfill-* (footystats-api-key)
-- **SFI/soccerfootball-info** (sfi_progressive 12%, sfi_leagues 0%): sfi-backfill-* + features-sfi-progressive-*
+- **Open-Meteo** (weather, was 7%): weather-backfill-\* (free, keyless)
+- **Transfermarkt** (player_values 9%, tm_leagues 0%): tm-backfill-\* (keyless scraper)
+- **FootyStats** (0%): fs-backfill-\* (footystats-api-key)
+- **SFI/soccerfootball-info** (sfi*progressive 12%, sfi_leagues 0%): sfi-backfill-* + features-sfi-progressive-\_
   (soccer-football-info-api-key)
-- **Live** odds stream: mtds-live-sports-* (op=websocket-streaming)
+- **Live** odds stream: mtds-live-sports-\* (op=websocket-streaming)
 
 Each source = own adapter (open_meteo.py / transfermarkt.py / soccerfootball_info.py / footystats.py / api_football.py)
-+ own API + own rate limit → true parallelism, no cross-source contention. This is the real throughput unlock: the
-API-Football daily cap only gates ITS 2 VMs; the other ~12 VMs fill weather/transfermarkt/SFI/footystats/odds with no
-daily ceiling. ONE full-fleet monitor (b1efcorlm) does a T+10 per-source health check (catches 401/scrape-block) then
-watches all to completion. Operator lever for the API-Football slice remains: bump to 1.5M/day.
+
+- own API + own rate limit → true parallelism, no cross-source contention. This is the real throughput unlock: the
+  API-Football daily cap only gates ITS 2 VMs; the other ~12 VMs fill weather/transfermarkt/SFI/footystats/odds with no
+  daily ceiling. ONE full-fleet monitor (b1efcorlm) does a T+10 per-source health check (catches 401/scrape-block) then
+  watches all to completion. Operator lever for the API-Football slice remains: bump to 1.5M/day.
 
 ### 2026-06-21 ~22:00 — tradfi `live_databento` source-stamp FIXED + 2 manifest cleanups actioned
 
@@ -820,9 +845,9 @@ fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + 
       The daily forward-poll cron relaunches but REUSES the existing tarball — a tarball rebuild is the gating step.
       Repo: deployment-service. Provenance: this Progress Log. NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 +
       daily-cron host) IS done (`batch_databento`); `live_databento` websocket is beyond-dispatch peer-domain work, now
-      fully diagnosed for them.
-      — slot-4@vm-planning | tarball rebuilt from UAC@04ca4647 (incl 1205ae44 fix) | old VM deleted | new VM
-      `mtds-live-tradfi-cme-trades-20260621-223242` RUNNING | T+5min manifest: pipeline_mode=live_databento ✓
+      fully diagnosed for them. — slot-4@vm-planning | tarball rebuilt from UAC@04ca4647 (incl 1205ae44 fix) | old VM
+      deleted | new VM `mtds-live-tradfi-cme-trades-20260621-223242` RUNNING | T+5min manifest:
+      pipeline_mode=live_databento ✓
 
 ### 2026-06-21 — DEFI lane: CATALOG GATE OPEN — capturing real data; full fan-out relaunched
 
@@ -860,29 +885,26 @@ Landed: NYSE ohlcv_1m **125,915** (full DBEQ equity history — was ~0/wrongly-e
 **structural honest-absence**, not a gap: trades/tbbo/mbp_10 (L1/L2 window-bound, un-backfillable historically),
 ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real manifest items found:
 
-- [ ] [DATA-OPERATOR] P2. **NYSE/NASDAQ `ohlcv_1s` expected_unattempted (~31k cells) — GENUINE OPERATOR DECISION, not a
-      clean phantom (investigated 2026-06-21).** The original "equities don't support 1s → drop" framing is WRONG: the
-      Databento allowlist ALLOWS `DBEQ.BASIC + ohlcv-1s` (it IS available), and the `(tradfi,equity)`/`(tradfi,etf)`
-      validity matrix + the design comment explicitly list equity 1s ("fetched alongside 1m for every GLBX.MDP3 /
-      DBEQ.BASIC instrument_type"). BUT `expected_coverage NASDAQ/NYSE=[ohlcv_1m]` DELIBERATELY excludes 1s (equity 1s =
-      thousands of tickers × seconds = enormous volume — a plausible deliberate exclusion), and the MTDS pre-flight
-      drops it. So the two registries genuinely DISAGREE and the resolution is **opposite-direction +
-      high-cost-if-wrong**: (A) if equity 1s is in-scope → ADD it to `expected_coverage` + backfill (the cells become
-      CAPTURED, more data); (B) if deliberately excluded → gate the IS enumerator's seed on `expected_coverage` (the
-      cells stop being seeded). Per "don't fix apparent inconsistency blindly" this needs the operator's call on whether
-      equity `ohlcv_1s` is in-scope to fetch. Repo: unified-api-contracts (expected_coverage / market_data_categories) +
-      instruments-service enumerator. Provenance: this Progress Log.
-- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s), not MTDS-fetched — they
-      convert to captured when MDPS aggregation runs over the new 1m/1s corpus. **LAUNCHED 2026-06-21:**
-      `mdps-backfill-tradfi-20260621-213646` (RUNNING, `launch-mdps-backfill-vm.sh tradfi 2020-01-01 2026-06-20 full`) —
-      re-aggregates the captured 1m corpus into 15m/24h. Leave open until the manifest shows the 15m/24h cells
-      converting captured (verify post-drain). Repo: market-data-processing-service. **PRACTICAL BLOCKER (2026-06-21):**
-      the MDPS `ManifestWriter` rewrites the WHOLE per-VM shard parquet PER CELL ("930 total entries, 1 new" every
-      ~30ms) → sustained GCS 429 object-mutation rate-limits + O(n²) cost; at 207k target cells it will not
-      realistically complete (consolidated index still shows 103,651 unattempted each for 15m/24h while the VM has
-      written only ~930 entries). Pre-existing MDPS behavior. Needs the per-VM shard write BATCHED (accumulate N cells /
-      debounce, then one write) before a large MDPS backfill is practical. Repo: market-data-processing-service
-      ManifestWriter.
+- [x] ✅ [DATA] P2. **NYSE/NASDAQ `ohlcv_1s` — OPERATOR CHOSE FETCH (option A), DEPLOYED + CAPTURING (2026-06-21).**
+      Investigated: DBEQ.BASIC serves equity 1s (allowlist allows) but
+      `expected_coverage`+`VENUE_DATA_TYPE_CAPABILITIES` had NASDAQ/NYSE=[ohlcv_1m] only → pre-flight dropped 1s.
+      Operator confirmed equity 1s is in-scope. Fix: added `ohlcv_1s` (start 2023-04-15) to BOTH
+      `VENUE_DATA_TYPE_CAPABILITIES[NASDAQ/NYSE]` (pre-flight fetches it) AND `expected_coverage[tradfi][NASDAQ/NYSE]`
+      (denominator) — unified-api-contracts@87c60b50. Rebuilt UAC tarball from clean LDR + launched NASDAQ+NYSE
+      `ohlcv_1s` year-shard backfill (`OHLCV_DATA_TYPES=ohlcv_1s`, 2023→2026, 8 VMs). VERIFIED CAPTURING in prod:
+      `tradfi-bf-nasdaq-ohlcv-1m-2025` log `dt=ohlcv_1s … captured=45`, NYSE `captured=158`.
+- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s) — convert when MDPS
+      aggregation runs over the 1m corpus. RUNNING: `mdps-backfill-tradfi-20260621-225740` (re-launched on fresh
+      tarball). **429 mitigation (2026-06-21) — TWO fixes shipped, residual deeper issue diagnosed:** (a) UTL per-VM
+      shard WRITE-DEBOUNCE (accumulate 50 entries / 5s, atexit final-drain) — unified-trading-library@94d9de30; (b) MTDS
+      finalize `ManifestWriter(batch_size 1→500)` — market-tick-data-service@d0f42ba. Both DEPLOYED (clean tarballs).
+      **BUT 429s persist** — root cause REFINED: the per-VM shard write counts are NON-MONOTONIC (54→55→65→56) =
+      CONCURRENT per-unit finalize threads race-writing the SAME shared `_index/per_vm/<vm>.parquet` with `final=True`
+      (read-modify-write race + force-flush bypasses the debounce). batch_size (per-instance) can't fix a many-writers
+      race. **NOT a correctness blocker** — writes retry + succeed, counts climb, the consolidator still merges 15m/24h
+      (just slow/noisy). DEEPER FIX needed: serialize the per-VM shard write (process-level lock per `per_vm_path`) AND
+      make the shared-shard coalesce ignore per-call `final=True` (only the VM-level atexit is truly final). Repo:
+      unified-trading-library `manifest_writer` (`_write_per_vm_shard`). Provenance: this Progress Log.
 
 ### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
 
