@@ -83,10 +83,10 @@
     "unified-trading-pm": "1.2.221",
     "market-data-processing-service": "0.10.2",
     "e2e-testing": "0.8.0",
-    "agent-orchestrator": "0.12.0",
+    "agent-orchestrator": "0.18.1",
     "greeks-service": "0.8.0",
     "trading-agent-service": "0.3.0",
-    "strategy-service": "0.25.0",
+    "strategy-service": "0.27.0",
     "ml-service": "0.9.0",
     "alerting-service": "0.11.0",
     "unified-trading-api": "0.2.3",
@@ -876,7 +876,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1796,16 +1796,14 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.1",
     "greeks-service": "0.8.0",
-    "agent-orchestrator": "0.18.1",
     "fund-administration-service": "0.7.0",
-    "strategy-service": "0.27.0",
     "execution-service": "0.18.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1824,20 +1822,10 @@
       "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
       "version": "0.8.0"
     },
-    "agent-orchestrator": {
-      "branch": "staging",
-      "sha": "8c2eb4d5e3b7bc7bac86dfe45a48112bfeabbdf9",
-      "version": "0.18.1"
-    },
     "fund-administration-service": {
       "branch": "staging",
       "sha": "b8b6351f0cf679be5cfdeba6a47768681336abea",
       "version": "0.7.0"
-    },
-    "strategy-service": {
-      "branch": "staging",
-      "sha": "3a60fd11a99bf016cdd0554ba0e98e70fa481f35",
-      "version": "0.27.0"
     },
     "execution-service": {
       "branch": "staging",
@@ -1848,6 +1836,21 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T16:26:04.876072Z",
+        "commits": {
+          "agent-orchestrator": {
+            "branch": "staging",
+            "sha": "8c2eb4d5e3b7bc7bac86dfe45a48112bfeabbdf9",
+            "version": "0.18.1"
+          },
+          "strategy-service": {
+            "branch": "staging",
+            "sha": "3a60fd11a99bf016cdd0554ba0e98e70fa481f35",
+            "version": "0.27.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T16:01:29.371835Z",
         "commits": {
@@ -1927,21 +1930,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-21T11:44:31.490910Z",
-        "commits": {
-          "client-reporting-api": {
-            "version": "0.15.0",
-            "sha": "6f8e4d0136a2455895fad6575fbcce8fa9992913",
-            "branch": "staging"
-          },
-          "unified-trading-library": {
-            "version": "0.21.0",
-            "sha": "5a8c43dc4ff93eb7c0fb9afba4a7f2fd4053842e",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1957,14 +1945,8 @@
     ]
   },
   "promotion_failures": {
-    "agent-orchestrator": 3
+    "execution-service": 1,
+    "fund-administration-service": 1
   },
-  "promotion_quarantine": {
-    "agent-orchestrator": {
-      "since": "2026-06-21T15:15:20.861692Z",
-      "attempts": 3,
-      "escalated": true,
-      "next_probe_after": "2026-06-21T16:15:20.861734Z"
-    }
-  }
+  "promotion_quarantine": {}
 }
