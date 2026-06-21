@@ -555,38 +555,15 @@ are identified (2) and the ledger exists (3).
       (`terraform/gcp/paper_week_determinism_scheduler.tf` job args) + strategy-service (a `--rolling-days N` /
       relative-window flag on `paper-run` so the job needn't bake absolute dates). Re-apply tofu + verify the next
       execution's `run_manifest.window_*` advanced.
-<<<<<<< Updated upstream
 - [ ] [CODE] P1.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
       `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift
       guard silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the
       job, or `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
-||||||| Stash base
-- [ ] [CODE] P11.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
-      `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift
-      guard silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the
-      job, or `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
-=======
-- [ ] [CODE] P11.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
-      `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift guard
-      silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the job, or
-      `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
->>>>>>> Stashed changes
       strategy-service (`cli/handlers/paper_run_handler.py` manifest build) + deployment-service (job env).
-<<<<<<< Updated upstream
 - [ ] [CODE] P1.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
       materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has
       NO `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
-||||||| Stash base
-- [ ] [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
-      materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has
-      NO `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
-=======
-- [ ] [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
-      materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has NO
-      `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
->>>>>>> Stashed changes
       parquet (P3.5), not BOOKED as an accrual tape that feeds NAV. Wire the engine to emit per-held-day PASSIVE rows
-<<<<<<< Updated upstream
       (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis)
       to `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still
       holds (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE
@@ -594,28 +571,10 @@ are identified (2) and the ledger exists (3).
       (+ UTL emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation
       (recon includes passive).
 - [ ] [CODE] P1.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
-||||||| Stash base
-      (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis)
-      to `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still
-      holds (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE
-      cash-flow delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service
-      (+ UTL emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation
-      (recon includes passive).
-- [ ] [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
-=======
-      (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis) to
-      `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still holds
-      (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE cash-flow
-      delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service (+ UTL
-      emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation (recon
-      includes passive).
-- [ ] [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
->>>>>>> Stashed changes
       (deposit→swap→stake→margin) but has ZERO treasury rows and no `share_class`-keyed 20% treasury / 80%
       hot-wallet-per-strategy-per-chain split (the `wallet-hierarchy-and-capital-flow` SSOT). Simulate the treasury→hot
       allocation as TRANSFER rows (DeFi 20/80, CeFi 0/100) at capital-deploy time, keyed by `share_class`, single
       `client_id` (funds-isolation HARD RULE). Repo: strategy-service (transfer emission) + UTL (treasury split helper).
-<<<<<<< Updated upstream
 - [ ] [CODE] P2.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
       bare `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk
       double-counting (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real
@@ -623,39 +582,12 @@ are identified (2) and the ledger exists (3).
       per-strategy panel + attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) +
       client-reporting-api (rollup) + verify UI.
 - [ ] [CODE] P2.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
-||||||| Stash base
-- [ ] [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
-      bare `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk
-      double-counting (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real
-      strategies; the bare archetype is a roll-up label, not a strategy row) and stamp consistently so the UI
-      per-strategy panel + attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) +
-      client-reporting-api (rollup) + verify UI.
-- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
-=======
-- [ ] [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the bare
-      `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk double-counting
-      (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real strategies; the bare
-      archetype is a roll-up label, not a strategy row) and stamp consistently so the UI per-strategy panel +
-      attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) + client-reporting-api
-      (rollup) + verify UI.
-- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
->>>>>>> Stashed changes
       `execution-service@d36b751f`) exists but `run_manifest.fill_model` is still `BENCHMARK`; paper emits only the
       benchmark yardstick, so `execution_alpha = smart − benchmark` is not produced in the live paper output. Wire the
       strategy-service paper-run to call Group C after Group B with the same captured data (the thin handoff P1.2
-<<<<<<< Updated upstream
       named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg.
       Repo: strategy-service (+ execution-service `PaperMatchingEngine` handoff).
 - [ ] [INFRA] P3.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
-||||||| Stash base
-      named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg.
-      Repo: strategy-service (+ execution-service `PaperMatchingEngine` handoff).
-- [ ] [INFRA] P11.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
-=======
-      named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg. Repo:
-      strategy-service (+ execution-service `PaperMatchingEngine` handoff).
-- [ ] [INFRA] P11.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
->>>>>>> Stashed changes
       `odum-portal-cldtjniqvq-an.a.run.app` URL (allUsers→run.invoker, anon HTTP 200). Map a stable
       `portal.odum-research.com` (or `paper.odum-research.com`) Cloud Run domain mapping so the operator has a durable
       link. DNS record at the registrar is the one operator-gated step — create the mapping + document the exact CNAME
