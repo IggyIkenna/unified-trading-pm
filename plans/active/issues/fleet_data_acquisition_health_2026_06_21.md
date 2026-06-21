@@ -1,10 +1,11 @@
 ---
 title: Fleet data-acquisition health sweep 2026-06-21 — fixable code errors (no rate-limiting)
 created: 2026-06-21
-author: cefi-lane (/autonomous, Opus) — operator-requested fleet sweep
 source:
   - GCS vm-logs sweep of ~75 running VMs (all lanes), 2026-06-21 ~16:10 UTC
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # Fleet data-acquisition health — 2026-06-21 (operator-requested)
