@@ -78,7 +78,7 @@
     "instruments-service": "0.16.0",
     "market-tick-data-service": "0.25.0",
     "system-integration-tests": "0.14.0",
-    "unified-api-contracts": "0.33.0",
+    "unified-api-contracts": "0.34.0",
     "unified-trading-library": "0.29.0",
     "unified-trading-pm": "1.2.259",
     "market-data-processing-service": "0.10.3",
@@ -1812,7 +1812,6 @@
     "ml-service": "0.15.0",
     "strategy-service": "0.35.0",
     "trading-agent-service": "0.10.0",
-    "unified-api-contracts": "0.34.0",
     "unified-trading-api": "0.2.8",
     "e2e-testing": "0.19.0",
     "unified-trading-library": "0.29.0"
@@ -1871,16 +1870,21 @@
       "version": "0.13.0",
       "sha": "4b40d284d8d76168b9b504a345292b370a63cb52",
       "branch": "staging"
-    },
-    "unified-api-contracts": {
-      "version": "0.34.0",
-      "sha": "c8cab1312096f53bdab4f554668704abe7c17a3f",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T22:11:17.473038Z",
+        "commits": {
+          "unified-api-contracts": {
+            "version": "0.34.0",
+            "sha": "c8cab1312096f53bdab4f554668704abe7c17a3f",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T20:17:18.941992Z",
         "commits": {
@@ -1962,21 +1966,6 @@
           "deployment-api": {
             "version": "0.28.0",
             "sha": "fda7a097747cae878e4611cd4507efadbcbcba14",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-21T17:07:42.523434Z",
-        "commits": {
-          "greeks-service": {
-            "version": "0.12.0",
-            "sha": "15b6bd44b0e21c7f1c7b62f81ec87d71750e8681",
-            "branch": "staging"
-          },
-          "alerting-service": {
-            "version": "0.14.0",
-            "sha": "8a9d9caa0e5a205ac95d5e1de0379dc8735300f5",
             "branch": "staging"
           }
         }
