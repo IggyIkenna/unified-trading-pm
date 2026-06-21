@@ -1808,9 +1808,10 @@
     "lock_version": "0.7.0",
     "pending_repos": [
       "system-integration-tests",
-      "fund-administration-service"
+      "fund-administration-service",
+      "strategy-service"
     ],
-    "sit_retry_count": 2,
+    "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
       "fund-administration-service"
