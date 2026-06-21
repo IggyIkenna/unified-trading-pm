@@ -74,6 +74,31 @@ SHAs were never acknowledged.
       `git checkout live-defi-rollout` → drop `_escalation_work`) in every repo touched. Composes with Fix (c)'s
       auto-heal (defense in depth: prompt prevents it; auto-heal recovers it). — agent-orchestrator@8953d98
 
+- [x] ✅ [ORCHESTRATOR] P0. **Orphan-wip inherit realigns even when a prior `wip-preserve` ref exists — the ROOT CAUSE
+      of the "Slot 4 quarantined — escalation wall starved" alert (2026-06-21 15:57).** The respawn-hygiene inherit path
+      (`_orphan.py`) committed a dead predecessor's WIP, then pushed it to a FIXED-name
+      `wip-preserve/orchestrator-slot-<N>` ref with `--force-with-lease` and **only realigned the slot to
+      `origin/<base>` inside the push-success branch**. That ref already existed from an earlier inherit (`f19aca03`),
+      and a Path-B slot has no `refs/remotes/origin/wip-preserve/orchestrator-slot-<N>` tracking ref to satisfy the
+      lease → **push REJECTED → realign SKIPPED → the slot was left at the orphan commit on a stale base = DIVERGED
+      (ahead 1 / behind 82) → FM5 quarantine → the queued escalation it should have handled was starved.** Fix: a
+      **content-unique** preserve ref `wip-preserve/orchestrator-slot-<N>-<sha>` + a **plain push** (a ref named by the
+      orphan's own SHA never collides destructively — new content creates it, a retry is `Everything up-to-date`/rc 0),
+      so the push always succeeds and the realign (fetch + `checkout -B`, audit-quiet) always runs. The slot is never
+      left diverged. — agent-orchestrator@9a09c42 | tests: test_dirty_state_resolution.py
+      (`test_resolve_pathb_realigns_even_when_prior_preserve_ref_exists` regression + prefix-match update)
+- [x] ✅ [OPS] P0. **Live central-VM remediation (slot-4 incident, 2026-06-21 16:00-16:42).** (1) Manually recovered the
+      wedged slot — preserved the orphan commit `c16b36a8` to `wip-preserve/slot-4-orphan-2026-06-21T1557Z`, realigned
+      to `origin/live-defi-rollout` (clean, ahead 0/behind 0). (2) Diagnosed why Fix (c)'s auto-heal had NOT recovered
+      it: the **running orchestrator PROCESS (started 11:45 UTC) was executing stale in-memory code from before today's
+      heal-wiring landed** — the heal was on disk (`b02d65f`) + on LDR but never loaded (proven by the live log emitting
+      the pre-heal `(FM5/FM7): {branch dict}` message, not the wired `auto-heal failed: {heal dict}`). (3)
+      `pull --ff-only` the service repo to `9a09c42` + `systemctl restart orchestrator.service` (per `agents/main.md`).
+      Post-restart verified: all 13 daemon loops up; **the heal is now live and already auto-realigned slot 1**
+      (`wrong_branch ->     origin/live-defi-rollout`, the operator's earlier slot-1 quarantine alert); slot 4 `working`
+      on `data_completion_to_100_all_ag-009`, all 24 repos clean; 0 open escalation tasks; no new branch-quarantine
+      alerts.
+
 ## Remaining work — to 100%
 
 ### Concern 1 — account selection (already strong; these close races + spread load)
