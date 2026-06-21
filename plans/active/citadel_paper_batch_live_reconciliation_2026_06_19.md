@@ -655,6 +655,19 @@ are identified (2) and the ledger exists (3).
     2026-05-16..22 + rolling, honest-absence where a venue genuinely lacks history. Repo: features-service (cefi
     perp_funding calculator) + mtds (if derivative_ticker gaps surface).
 
+- [ ] [DATA] P11.13. **Source DEFI_LP_VAULT share-price + the fees_usd=0 pool fees with credentials** (operator
+      2026-06-21: "fix that, we can get data, we got creds"). Two honest-skip gaps from P11.11/dex tranche are
+      sourceable, not walls: (a) DEFI_LP_VAULT (ERC-4626 yearn/etc) needs a vault-share-price series — read
+      `convertToAssets(1e18)` / `pricePerShare()` historically via the Alchemy/Helius archive RPC (creds
+      `alchemy-api-key`/`helius-api-key` in Secret Manager) OR the vault subgraph (`thegraph-api-key`); (b) the
+      `fees_usd=0` LP pools (Curve threepool/crvusdusdc, balancer) need real fee data — pull `feesUSD` from the
+      Uniswap/Curve/Balancer subgraph (The Graph, `thegraph-api-key`..`-7`) or compute `volume_usd × fee_rate_bps`
+      where volume is present. Materialise both into the canonical dex/vault feature location the engine reads
+      (resolve_bucket_name SSOT), then wire DEFI_LP_VAULT into the paper run + re-derive the fee-0 LP pools so they
+      produce real fee/IL PnL. Honest absence only where a vault/pool genuinely has no on-chain history. Backtest +
+      ε=0. Repo: mtds / features-onchain (sourcing) + strategy-service (DEFI_LP_VAULT wiring). Creds via
+      get_secret_client — never raw values in repo.
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
