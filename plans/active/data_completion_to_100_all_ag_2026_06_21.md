@@ -50,6 +50,10 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       lst-rates×7 (2020-26), dex-pools×6 (2021-26), dex-swaps×6 (2021-26), lending-indices×5 (2022-26),
       liquidations×6 (2021-26), vault-share×6 (2021-26), pyth-archive×1 (2022-11→2023-09); forward-poll=STUB (skip).
       PATH fix required: export PATH="/snap/google-cloud-cli/current/bin:$PATH" before launcher calls.
+      **LIVE PATH WIRED 2026-06-21**: stub replaced with real launcher (deployment-service@48d57a5);
+      VM `defi-fwd-20260621-212906` launched (`collect-lst-rates --mode live`, e2-standard-8,
+      `VM_TASK=defi-live-lst`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, `MANIFEST_PER_VM_SHARDS=true`);
+      T+10min verify pending.
 - [x] ✅ [DATA] P0. **tradfi** — full 3-dataset batch (GLBX done via CME-b; **DBEQ.BASIC**
       `launch-tradfi-bf-nasdaq/nyse-ohlcv-1m.sh` + **CFE/XCBF**) to fill 818k unattempted +
       `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service. — deployment-service@f243eb4 | 17 VMs RUNNING
@@ -128,6 +132,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       (run by prior session sub-agent; see progress note 2026-06-21 15:42).
 - [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
       canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
+- [ ] [DATA] P1. **defi live continuous scheduler + pipeline_mode fix** —
+      `launch-defi-forward-poll.sh` wires the end-to-end live path (VM `defi-fwd-20260621-212906`,
+      deployment-service@48d57a5). T+10min verified: VM RUNNING (118% CPU, 5.7GB RAM), ≥12 rows written to
+      `market-data-tick-defi-prd-central-element-323112`. **BLOCKER found**: `lst_rates_handler.py`
+      hardcodes `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` on all 7 write calls — ignores `--mode live` arg →
+      rows land as `pipeline_mode=batch_onchain_subgraph` not `live_onchain_subgraph`. Fix: in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py` replace
+      hardcoded `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` with `PipelineMode.LIVE_ONCHAIN_SUBGRAPH` when
+      `self.args.mode == "live"` (or read from the CLI arg). All 7 occurrences on lines 456/600/608/617/
+      625/714/724. Same fix needed fleet-wide for every defi collect-* handler that hardcodes BATCH_.
+      Repo: market-tick-data-service. **DEFERRED** — successor: this todo (2026-06-21).
+      Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh` daily; (ii) add
+      collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs.
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
@@ -717,4 +734,13 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
 Full ~60-VM fan-out CAPTURING real data (dex-pools 5232 rec/day, dex-swaps 44k-102k/yr, lst/liq/vault/pyth/gas/jito/marinade) → canonical v9 path. BUT **honest-cov only 6.0%→6.2%** after 50min: captured 369k→384k, **expected_unattempted FLAT at 2.31M** — captures create NEW rows, DON'T convert the unattempted. **ROOT CAUSE: format mismatch.** expected_unattempted rows: venue=`BALANCER-ARBITRUM` (legacy combined PROTOCOL-CHAIN) + chain=`''` (blank) + dates 2026-02-20..06-18 (recent window only). Captured rows: venue=`BALANCER` + chain=`ARBITRUM` (CANONICAL per defi-canonical-naming-ssot) + dates 2021..2026. Different shard keys → never match → the 2.31M legacy-format unattempted are effectively PHANTOMS the canonical captures can't convert. (Also 3.5M empty_confirmed = genuine honest absence → max honest-cov ≈ 43% once 2.31M convert, NOT 100%; "100%"=fetchable-gap-closed.)
 **FIX (in flight):** re-seed the defi expected-universe in CANONICAL venue/chain format (the `expected-universe-v2-defi` enumerator / `enumerate_expected_universe.py` still emits legacy PROTOCOL-CHAIN) so captures convert it; OR phantom-reconcile the legacy unattempted. The CAPTURING is correct + real; only the seeded denominator is mis-formatted. Agent dispatched. Batch fan-out continues (39 VMs mid-year-shard, progressing).
 - [x] ✅ [DATA] P0. **DEFI expected-universe canonical re-seed:** `enumerate_expected_universe.py` / `expected-universe-v2-defi` seeds expected_unattempted with LEGACY venue=`PROTOCOL-CHAIN`/chain=blank; handlers capture canonical venue=`PROTOCOL`/chain=X → no conversion → honest-cov stuck. Fix enumerator to emit canonical venue/chain (per defi-canonical-naming-ssot) + re-seed (replace legacy unattempted) + phantom-reconcile leftovers. Repo: instruments-service. Provenance: this Progress Log. — instruments-service@38cec01 | `_enumerate_defi` now emits `venue=protocol.upper()` (e.g. BALANCER) + `chain=ARBITRUM` separately; conflict-merged with concurrent upstream fix at 3e8fcd0
+
+### 2026-06-21 — DEFI honest-cov fix LANDED (root-cause in code) + codified
+Enumerator root-caused + FIXED in code: `enumerate_expected_universe.py:395` emitted legacy `venue=PROTOCOL-CHAIN` →
+canonical `venue=PROTOCOL` (quickmerged). The 2.31M `expected_unattempted` were ALL legacy-format phantoms → removed;
+canonical universe re-seeded. **honest-cov 6.2% → 10.1%** (captured 392k; expected_unattempted 2.31M→0; total 6.21M→3.88M
+after phantom removal) and CLIMBING as the fan-out flips canonical empties→captured. 3.46M empty_confirmed = genuine
+pre-genesis/pre-launch honest absence (correct denominator). **5 durable root-causes codified** in CLAUDE.md + codex
+`defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas" (pm@d752c584c). Durable build_bucket env-less→-prd-
+reader-align dispatched (replacing the stop-gap index-copy). Batch fan-out still capturing (drive monitor bdnexk0ku).
 

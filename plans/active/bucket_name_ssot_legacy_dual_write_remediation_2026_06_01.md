@@ -233,6 +233,14 @@ relaunch.
 - [ ] [SCRIPT] P1. `unified-trading-library` `cloud_interface/constants.py` legacy `get_bucket_name` → delete or
       redirect to `resolve_bucket_name` (kill the latent flat-`market_data` foot-gun). Confirm zero top-level importers
       first.
+- [ ] [SCRIPT] P1. MTDS remaining env-LESS instruments-store readers: `engine/orchestrator/__init__.py:445-451`
+      (`_sports_instr_bucket`/`_cefi_instr_bucket`/`_defi_instr_bucket`/`_tradfi_instr_bucket` all use `get_bucket_name`
+      → env-LESS) + `cli/handlers/_instruments_metadata.py:218,442,518` (`build_bucket("instruments", …, "defi")`).
+      **DEFERRED** from the `assert_defi_catalog_fresh` durable fix (market-tick-data-service@ea33d38, 2026-06-21)
+      which fixed only the preflight reader. All 4 should use `resolve_bucket_name(cloud="gcp", kind="instruments-store",
+      asset_group=ag)`. Blast-radius: `_instruments_metadata.py` reads/writes manifest for IS catalog; orchestrator
+      uses the bucket for its per-shard IS availability check — both read the env-LESS bucket today; canonical
+      `-prd-` indexes exist and are fresh for all 4 AGs.
 - [x] ✅ [SCRIPT] P0. QG STEP guardrail (model on STEP 5.69 bucket-name SSOT): AST-walk grep-gate that no
       `market-data-tick-` / `instruments-store-` name is built by string-concat outside `resolve_bucket_name` in
       production source (exclude migration/audit scripts + tests). Landed as STEP 5.96 in

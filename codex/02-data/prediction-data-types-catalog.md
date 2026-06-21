@@ -15,6 +15,9 @@ MTDS collects Prediction market data in 3 distinct data types across trade execu
 market lifecycle domains. Each data type maps to one or more MTDS CLI operations (`--operation collect-<type>`), one or
 more venues (Polymarket, Kalshi), and a canonical GCS path under the Prediction tick-data bucket.
 
+> **Crypto perps (Kalshi-Perp / Polymarket-Perp)** are a SEPARATE `cefi` product (regulated crypto perpetual futures),
+> NOT prediction YES/NO markets — sourcing SSOT: [`prediction-perps-sourcing.md`](./prediction-perps-sourcing.md).
+
 The 3 data types are:
 
 - `trades` — individual trade executions on prediction markets

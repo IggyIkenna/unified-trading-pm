@@ -391,7 +391,7 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
     rc=0/1 otherwise). `ohlcv_1s` is **FUTURES-only (CME/CBOE)** — equities `NASDAQ/NYSE=[ohlcv_1m]` (pre-flight drops
     1s). End-date ≤ yesterday (Databento T+1). CME **event contracts** (`EC*` binary markets) need the IS instruments
     backfill (`launch-tradfi-event-contract-backfill.sh`) + MTDS OHLCV of the `EC*.OPT` parents. **Live producer
-    (`live_databento`)** has 3 known bugs (`_get_api_key` reads the None field not the secret; `live_source_for_venue`
+    (`live_databento`)** has 3 known bugs (`_get_api_key` resolves field→secret but SWALLOWS the secret-load exception at `logger.debug`→None; `live_source_for_venue`
     returns batch-only `massive` not live-capable `databento`; instrument-ids need `venue:type:underlying`) + needs the
     Databento **Real-Time/Live** subscription. Full detail + code refs: `codex/02-data/tradfi-databento-sourcing-ssot.md`
     § "Operational gotchas".
