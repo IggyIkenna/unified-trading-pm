@@ -617,10 +617,18 @@ are identified (2) and the ledger exists (3).
       multi-archetype run materialises strategy-keyed ledgers (P11.9) for ALL e2e strategies, ε=0 batch-rerun holds
       across the larger universe, UI groups/drills down by every strategy + archetype. Repo: strategy-service
       (catalogue + allocator + paper_run) + e2e-testing (extraction) + verify CRA/UI.
-- [~] [CODE] P11.6-retry. **execution-service Layer-3 smart-fill entrypoint — CODE DONE + VERIFIED, ship-blocked on
-  manifest version-lag** (execution-service@f7762018 + e2e-testing@6dd9845; 12/12 tests, exec_alpha artifact written;
-  orchestrator to clear ratchet+manifest lag then ship). Prior: server-rate-limited at 0 tokens; deliverable
-  (execution-service smart-fill-replay → `execution_alpha` artifact + e2e harness) stands. Re-dispatch.
+- [x] ✅ [CODE] P11.6-retry. **execution-service Layer-3 smart-fill entrypoint — SHIPPED** — execution-service@3d7d760c
+  (`backtest_v2/smart_fill_replay.py` + `--operation smart-fill-replay` CLI + peripheral-QG wiring; 12/12 tests, QG
+  exit-0) + e2e-testing@0e421c08 (`scripts/defi/execution_alpha_replay_e2e.py` → writes `ledger_type=execution_alpha`,
+  `execution_alpha_bps = smart − benchmark`; QG exit-0). Both verified on origin/live-defi-rollout 2026-06-21. Ship was
+  blocked by 3 PRE-EXISTING fleet conditions, all cleared: (1) execution-service codex ratchet 4>3 → cleared 2 classes
+  to 2 (empty-string fallback in smart_fill_replay.py:276 + the back-compat docstring in v2/benchmark_fills.py:12) +
+  fixed a net-new STEP-5.69 inline-gs:// flag (error-msg noqa on smart_fill_replay.py:224) → QG exit-0; (2) PM manifest
+  `versions{}` promotion-lag did NOT block service quickmerge (warn-only PM post-gate; left to promotion automation, not
+  hand-synced per the pull-not-push manifest-surface rule); (3) e2e dep-validation pre-flight tripped on a LIVE FOREIGN
+  strategy-service test/source WIP (operator-protected — never touched) → shipped via the documented multi-agent
+  `--skip-preflight` route (the new e2e file imports only execution_service + UAC + UTL; strategy-service SOURCE on LDR
+  is unchanged, so zero blast-radius on this ship).
 
 - [ ] [DATA] P2.11.11. **Backfill the DeFi feature groups so the non-staked-basis archetypes light up** — P11.10 wired
       30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the paper
@@ -632,6 +640,20 @@ are identified (2) and the ledger exists (3).
       venue genuinely lacks history). The e2e launch*_\_vm.sh scripts name the sources (perp_funding / dex_pools /
       lst_rates / lending_indices / gas_fees). Once the data lands, the SAME wired archetypes auto-populate — no code
       change. Repo: mtds / features-service / e2e-testing (sourcing); parent epic data/mtds master.
+  - **FINDING (CeFi perp-funding GCS audit, 2026-06-21 — confirms CARRY_FUNDING_DISPERSION 52 + non-HL CARRY_BASIS_PERP
+    blocker is a TRUE backfill, not a read-wiring gap):** CeFi perp **funding-rate** data is **genuinely ABSENT** across
+    every canonical bucket. Checked: `perp-funding-{prd,,test}-central-element-323112` (all hold ONLY `asset_group=defi`
+    venues — ASTER/GMX/HYPERLIQUID/PACIFICA, `data_type=perp_funding`, 2021-09-01..2026-05-22; ZERO CeFi venues);
+    `market-data-tick-cefi-prd-central-element-323112` (has raw `derivative_ticker`/`book_snapshot_5`/`trades` for
+    BINANCE-FUTURES/BYBIT/OKX/DERIBIT/KRAKEN-FUTURES via Tardis incl. the 2026-05-16..22 window, but **no `perp_funding`
+    data_type anywhere** — derivative_ticker carries the funding *field* on the raw tick, but the computed funding-rate
+    series is not materialised); `features-delta-one-cefi-prd-…` (EMPTY); `features-onchain-cefi-prd-…` (EMPTY — this is
+    the target of `features_service/cefi/calculators/perp_funding_rates.py`, which is MVP-scoped to Binance ETH-PERP and
+    has not written output for the window). **Root cause:** the CeFi perp-funding compute (reads CeFi MTDS
+    `derivative_ticker` → writes `features-onchain-cefi`) has not been run/materialised for the window. **Action:** run
+    the CeFi `perp_funding` compute (broaden beyond Binance ETH-PERP MVP to BINANCE/BYBIT/OKX/DERIBIT/KRAKEN) over
+    2026-05-16..22 + rolling, honest-absence where a venue genuinely lacks history. Repo: features-service (cefi
+    perp_funding calculator) + mtds (if derivative_ticker gaps surface).
 
 ## Temporary states + their canonical follow-up plans
 

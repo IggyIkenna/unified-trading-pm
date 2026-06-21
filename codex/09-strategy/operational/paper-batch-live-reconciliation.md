@@ -293,6 +293,39 @@ def reconcile_day(paper: RunManifest, batch: RunManifest, live: RunManifest | No
 (deterministic or bug); the live↔paper verdict is the calibrated tolerance check that already exists
 (`batch-live-reconciliation-threshold-calibration.md`), now per-trade instead of per-date-average.
 
+### 4.6 Per-archetype canonical data source (P11.11) — read the real corpus, never fake
+
+The paper engine drives each archetype's PRODUCTION engine (`factory.py`) off the data type that archetype's signal
+needs, read directly from its **dedicated canonical GCS bucket** (resolved via `resolve_bucket_name` — never an inline
+`gs://`). This is wiring the production engine to a second data source, NOT a fork:
+
+| Archetype                                       | Engine                                 | Feature / data type                      | Canonical bucket (kind)   | Provider                       |
+| ----------------------------------------------- | -------------------------------------- | ---------------------------------------- | ------------------------- | ------------------------------ |
+| `CARRY_STAKED_BASIS`                            | `CarryBasisStakedEngine`               | `lending_rates`                          | `features-onchain` (defi) | `GCSFeatureProvider`           |
+| `CARRY_BASIS_PERP` / `CARRY_FUNDING_DISPERSION` | `CarryBasisPerpEngine` / `…Dispersion` | `perp_funding` (+ `perp_daily_ctx` mark) | `perp-funding` (defi)     | `CanonicalPerpFundingProvider` |
+
+`CARRY_BASIS_PERP` reads `funding_rate_annualised_bps` + `mid_price` (mark); `CARRY_FUNDING_DISPERSION` adds a
+cross-sectional `funding_rank_pct` computed from the day cohort (deterministic). Funding is annualised hourly×8760×1e4
+(the SOL*BASIS convention). Honest absence (HARD RULE): a spec whose VENUE has no real data for the window is SKIPPED at
+RUNTIME (`run_paper` → `no_gcs_data_in_window`), never faked; an archetype whose corpus/tick-shape is not yet wired
+(`ARBITRAGE_PRICE_DISPERSION` /
+`DEFI_LP*\*`need`dex_pool_state` + a different tick shape) is a STATIC skip (`engine_tick_builder_unwired`). New
+data-backed archetypes auto-populate when their feature group + tick builder land — no code change to the run loop.
+
+**FLAT/CLOSE is a valid fill side (UTL ledger SSOT).** The carry/funding engines emit a position close as
+`direction="FLAT"` (a `TradeInstruction` Literal LONG/SHORT/FLAT). UTL `_signed_delta` (`ledger/materialize.py`) +
+strategy-service `_direction_side` (`benchmark_fills.py`) recognise FLAT/CLOSE → the carried (signed) delta / a
+mid-priced benchmark; a zero-unit flatten is a no-op 0 delta. (Before P11.11 these raised "Unknown fill side 'FLAT'",
+crashing any funding-archetype run that closed a position.)
+
+**ε=0 allocator-denominator invariant (HARD).** `resolve_paper_universe` sizes each spec's capital off the allocator
+denominator = the FULL static-drivable universe (config × `specs_for_archetype` minus engine/config skips), NOT the
+post-data-skip survivor set (the data-skip happens at RUNTIME, after selection). So `resolve_selection_for_slot_labels`
+(batch rerun) MUST re-derive that same full-universe selection and FILTER to the manifest's slot ids — allocating over
+only the survived ids uses a smaller denominator → larger per-spec weight → larger capital → larger qty → a spurious ε≠0
+(the 6.5× qty deviation incident, 2026-06-21). SSOT code: `strategy_service/cli/handlers/paper_universe.py` +
+`paper_run_handler.py` + `engine/core/canonical_perp_funding_provider.py`.
+
 ---
 
 ## 5. The operator workflow — DAILY T+1 (19→26 concretely)

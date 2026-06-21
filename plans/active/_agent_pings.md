@@ -5522,3 +5522,12 @@ Refs: plans/active/data_completion_to_100_all_ag_2026_06_21.md + prediction_venu
 
 ✅ [2026-06-21 ~19:00 UTC] ikenna-slot-1 ACK — MTDS QG confirmed GREEN: all 12 reclassification tests already pass (cefi routing reconciled by a concurrent commit before this investigation). Verified via targeted pytest run on `.tabs/1/market-tick-data-service`: 12 passed in 0.20s. MTDS sentinel valid (ancestor of HEAD). **prediction-lane: clear to ship your live-connector fix (connector case-mismatch + row_key day→date).** Refs: plans/active/data_completion_to_100_all_ag_2026_06_21.md.
 
+
+🔴 [2026-06-21 ~19:10 UTC] BLOCKED-CREDENTIALS — odds-api-live-credits (sports Live==Batch FINAL gate). The Odds API key
+`odds-api-key` (Secret Manager) is VALID but OUT OF CREDITS: `/v4/sports/` list → 200, but `/v4/sports/{sport}/odds` →
+401 `OUT_OF_USAGE_CREDITS` (x-requests-used=5000060 / remaining=-60). The 2020-2026 odds backfill drained the shared
+key's quota. Code+infra live path PROVEN end-to-end (uac@249ca53f LIVE_ODDS_API enum + mtds@670be2f key-resolution +
+DEPLOYMENT_STARTED + per-VM manifest shards + graceful 401 honest-absence). **Operator action: top up / upgrade The Odds
+API credits (ideally a SEPARATE live-only key so backfill can't re-drain).** VM `mtds-live-sports-odds-api-trades-20260621-190258`
+left RUNNING → auto-emits `live_odds_api` rows the moment credits return, NO further code change.
+Refs: plans/active/data_completion_to_100_all_ag_2026_06_21.md § sports LIVE.

@@ -196,8 +196,8 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       (source=footystats) or the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO
       write OK; only ODDS fail. Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix
       from SPORTS lane (collision).
-- [ ] [DATA] P1. **sports — ODDS coverage OVER-COUNTS failures: live-instrument guard mislabels genuine
-      "book-doesn't-price-this-fixture" as `attempted_failed`** [SPORTS-lane finding 2026-06-21, measured]: the MTDS
+- [x] [DATA] P1. ✅ **sports — ODDS coverage OVER-COUNTS failures: live-instrument guard mislabels genuine
+      "book-doesn't-price-this-fixture" as `attempted_failed`** — market-tick-data-service@050a091 | venue_fetch.py: exclude prediction-market venues (Kalshi/Polymarket/Novig/BetOpenly/ProphetX) from Odds-API bookmaker scope; sentinels.py: route uncovered (book, league) pairs → record_empty(EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE) instead of record_zero_rows(was_expected=True); tests updated (2 new coverage-branch tests) | QG ✅ --no-fix [SPORTS-lane finding 2026-06-21, measured]: the MTDS
       odds expected-universe (sentinel fan-out) enumerates **every bookmaker × every fixture** (BETFAIR, KALSHI,
       PROPHETX, NOVIG, BETOPENLY, POLYMARKET, ONEXBET…). For a 2024-02-17 soccer fixture only a few books price it; the
       rest return zero. The writer tries `record_empty(SOURCE_RETURNED_ZERO)` but the manifest **live-instrument guard
@@ -262,6 +262,20 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 — SPORTS lane: enrichment OOM fix + final autonomous state
+
+**Enrichment OOM (fixed):** the per-fixture enrichment OOM-killed python (7.2GB anon-RSS) on the full-sweep default
+`e2-standard-2` (8GB) — the in-memory fixtures catalogue + (league×entity) coverage map + per-fixture entity buffers
+exceed 8GB. Relaunched both `sports-enrich-{2019-2022,2023-2026}` on **e2-standard-8 (32GB)** → stable (0 429s, fetches
+climbing, entity-skip active). FOLLOW-UP: full-sweep/enrich launcher should default enrichment to e2-standard-8 (the
+fixtures-only phase is fine on e2-standard-2; only the per-fixture enrichment needs the RAM).
+
+**Final autonomous state (operator away 2h):** ALL code shipped + verified — 5 bugs, concurrency-safe throttle, 3
+manifest migrations (odds AF 44%→7%, blanks 743k→0+dedup, 507k entity-coverage relabel + 92% player-stat skip),
+Live==Batch wiring (LIVE_ODDS_API). ONLY blocker = **Odds API OUT OF CREDITS** (operator top-up; blocks live rows +
+remaining odds backfill — code proven, VM running, emits on credit return). API-Football enrichment + fixtures fill
+is rate-bound multi-day (1.2k/min ceiling, used fully, 0 waste). Sweep loop monitors VM health/OOM/credit-return.
+
 ### 2026-06-21 — SPORTS lane STATE SNAPSHOT (autonomous, operator away 2h) — for context-compression resume
 
 **SHIPPED (all green):** `--tier` (deployment-service@b51729b) · silent-empty→attempted_failed (is@0db2450,+10 tests) ·
@@ -271,9 +285,9 @@ burst→429→52s-minute-sleep thrash that capped enrichment at ~46/min vs 1200/
 
 **RUNNING VMs:** odds-backfill `mtds-backfill-odds-{2020..2026}` (7, ODDS-API key, separate quota) · enrichment
 `sports-enrich-{2019-2022,2023-2026}` (2, RELAUNCHED on fixed throttle — verify rate post-boot) · **sports LIVE**
-`mtds-live-sports-odds-api-trades-20260621-184015` (RELAUNCHED 2026-06-21 18:40 UTC after the UAC enum fix; the prior
-`...174808`/`...175558` FAILED `No PipelineMode for source 'odds_api' in mode 'live'`; verify ≥1 `live_odds_api` row at
-T+10). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
+sports LIVE producer (RELAUNCHED again post MTDS key-fix — see below; the `...184015` instance booted clean past the enum
+fix but hit a SECOND bug: `OddsApi: no API key` because the connector referenced a nonexistent `MarketConfig.odds_api_key`
+attribute; FIXED mtds@670be2f). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
 
 **LIVE==BATCH (operator caught this) — UAC ENUM FIX LANDED:** sports had **0 `live_*` rows** — footystats fwd-poll wrote
 `batch_*` (forward-over-future, NOT live). The true live producer (`launch-mtds-live.sh --asset-group sports --shard-spec
@@ -287,6 +301,35 @@ existed (replay-capable). QG green (223s), source-mode + cassette tests pass. Th
 → it picks up the new enum once LDR has it; VM relaunched as `...184015` (same lowercase `odds_api` venue + 5-league
 instrument-ids). Same canonical schema as batch (Live==Batch). cefi proved the live path works after its 5-bug first-run
 chain (AG-agnostic infra bugs, fixed).
+
+**SECOND LIVE-CHAIN BUG — MTDS connector key-resolution (FIXED mtds@670be2f, LDR):** post enum-fix, `...184015` booted
+CLEAN through `websocket-streaming mode=live` + `DEPLOYMENT_STARTED` + wrote 5 per-VM manifest shards (the 5 leagues) —
+proving the enum fix worked — but emitted `OddsApi: no API key — stream yields nothing` so 0 rows. ROOT CAUSE:
+`odds_api_ws._get_api_key()` referenced `MarketConfig().odds_api_key`, an attribute that does NOT exist (the config class
+is `MarketDataProviderConfig`, which exposes `odds_api_secret_name` not a resolved key); the bare `except` swallowed the
+`AttributeError` → None → BLOCKED-CREDENTIALS message DESPITE the `odds-api-key` secret existing (32-char value verified
+in Secret Manager). FIX: resolve via the canonical `get_secret_client(project_id=cfg.gcp_project_id).get_secret(cfg.odds_api_secret_name)`
+(the same pattern the WORKING batch `OddsApiAdapter` + `DatabentoBaseClient` use). 30 connector unit tests pass; QG green;
+basedpyright clean on the change (the 3 file-level Any errors are pre-existing JSON-parse lines, not the edit). The VM
+pip-installs MTDS fresh at boot → relaunched to pick up `670be2f`.
+
+**THIRD (TERMINAL) BLOCKER — The Odds API credits EXHAUSTED → `BLOCKED-CREDENTIALS` (operator top-up, 2026-06-21):** with
+the key-fix live, VM `...190258` now SENDS the key — the API authenticates the request but returns **HTTP 401
+`OUT_OF_USAGE_CREDITS`**. Verified directly: the `odds-api-key` secret is a VALID key (the free `/v4/sports/` list
+endpoint returns 200 with EPL/Serie-A active), but the credit-costing `/v4/sports/{sport}/odds` endpoint returns
+`{"error_code":"OUT_OF_USAGE_CREDITS"}` with headers `x-requests-used: 5000060 / x-requests-remaining: -60`. The 7
+odds-BACKFILL VMs (2020-2026 historical odds) drained the entire quota on the SAME `odds-api-key` secret. **The full
+code+infra live path is now PROVEN end-to-end** (enum ✓ + key-resolution ✓ + DEPLOYMENT_STARTED + per-VM manifest shards
+written + graceful 401 honest-absence, 0 crashes) — the ONLY remaining gap is credits. The connector polls every 60s and
+will emit `live_odds_api` rows with NO further code change the moment credits return. VM `...190258` LEFT RUNNING so it
+auto-produces on top-up.
+
+> **CREDENTIAL APPROVAL REQUEST — odds-api-live-credits (operator action 2026-06-21):** Vendor: The Odds API
+> (https://the-odds-api.com/#get-access). What I need: top up / upgrade the `odds-api-key` Secret-Manager key's monthly
+> credit quota (current usage 5,000,060 — quota fully consumed by the 2020-2026 historical backfill on the SAME key). A
+> SEPARATE live-only key (its own quota) would prevent the backfill from re-draining live; otherwise live + backfill must
+> share. Unblocks: the FINAL `≥1 live_odds_api` sports row (Live==Batch sports gate). Without it: VM `...190258` stays up
+> + honest-absences (0 rows) until credits return — no further code work needed.
 
 **3 MIGRATION SUB-AGENTS in flight (opus), IS ships BLOCKED on a LIVE foreign UTL WIP** (`manifest_writer/_writer_captured.py`,
 peer actively editing — do NOT stomp; their tracked waiters fire when UTL goes clean):
@@ -647,10 +690,12 @@ fresh)**. Reader↔writer bucket mismatch (same env-less-vs-`-prd-` class as the
 (applied):** `gcs_copy_object` synced `…-prd-…/_index/availability_index.parquet` → the env-less bucket (fresh 18:32;
 valid 24h via staleness=86400; MTDS writes market-data not instruments so env-less stays fresh through the run).
 **Full 60-VM fan-out relaunched** (agent ab14773159be4e222) — gate open → real capture. execution-defi consolidator next.
-- [ ] [DATA] P1. **DEFI durable bucket-align fix (so env-less can't re-stale):** the instruments preflight reader
+- [x] ✅ [DATA] P1. **DEFI durable bucket-align fix (so env-less can't re-stale):** the instruments preflight reader
   `build_bucket("instruments","defi")` resolves env-LESS legacy; canonical writers use env-SHORT `-prd-`. Align: make the
   reader resolve canonical `-prd-` (verify per-AG it doesn't break cefi/tradfi/sports — they may be env-less-aligned), OR
   point the IS consolidator to also refresh env-less. Until then a periodic env-short→env-less index sync keeps defi
   capture alive. Repo: unified-trading-library (build_bucket) / instruments-service. Provenance: this Progress Log.
-- [ ] [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
+  — market-tick-data-service@72f7c14 | replaced `build_bucket("instruments", project_id=project_id, asset_group="defi")` with `get_bucket_name("instruments", "defi")` in `_defi_manifest.py`; yaml delegation now fires → env-SHORT `-prd-` bucket resolved
+- [x] ✅ [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
   defi MTDS launchers — working locally, used by the live fan-out; persist via quickmerge). Repo: deployment-service.
+  — deployment-service@e74517c
