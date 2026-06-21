@@ -279,6 +279,20 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 21:40 — ODDS API UPGRADED (blocker RESOLVED) + API-Football rate analysis
+
+**Odds API blocker GONE:** operator upgraded the Odds API; `odds-api-key` (the secret the sports MTDS pipeline uses)
+now returns HTTP 200 with **14,999,964 requests remaining**. Relaunched: odds backfill `mtds-backfill-odds-1`
+(2020-06→2026-03, `--tier` bug already fixed) + fresh live VM `mtds-live-sports-odds-api-trades-20260621-213937`
+(old one 401-dead since 19:07). Both verifying T+10min → live_odds_api rows + historical odds backfill resume.
+
+**API-Football rate (operator Q "is 18k/30min maximising"):** NO per-minute (600/min vs 1200 ceiling, 704 free when
+checked) — but per-minute is NOT the bottleneck. Plan=**Custom300** (300k/day); used 67.8k today, 232k left. The
+per-fixture enrichment = millions of calls → **daily-cap-bound, inherently multi-day**. Pushing per-minute just
+exhausts 300k sooner then stalls to reset (same daily total). **The 5x completion lever = bump the daily cap to
+1.5M/day** (operator plan upgrade) — NOT a code/throttle/VM-count change. Throttle left at 0.12s (correct; lowering
+it is pointless + 429-risky when daily-bound).
+
 ### 2026-06-21 — SPORTS lane: enrichment OOM fix + final autonomous state
 
 **Enrichment OOM (fixed):** the per-fixture enrichment OOM-killed python (7.2GB anon-RSS) on the full-sweep default
