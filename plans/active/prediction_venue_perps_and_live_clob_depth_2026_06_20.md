@@ -317,3 +317,16 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 - `tests/unit/test_get_perp_venues.py` — KALSHI_PERP + POLYMARKET_PERP asserted in test_includes_all_known_perp_venues
 
 - [ ] [TEST] P1. instruments-service — fix `test_cefi_yields_no_rows_for_post_all_venue_launches`: adding KALSHI-PERP (launch 2026-05-29) + POLYMARKET-PERP (2026-04-21) to the CeFi venue universe shifted the "max venue launch date" the test keys off → update the test's post-all-launch date (or the fixture) to include the new perp venues. Owned by the perps venue add (Phase 1). Repo: instruments-service.
+
+### 2026-06-21 20:47 — Polymarket v4→v9 re-walk: CF-11 phantom-row fix + relaunch (v2)
+- **First re-walk (VM 183617) FAILED at ~112min** on `MalformedRowKeyError`: the CF-11 honest-absence
+  re-emit (`_rebuild_prediction_cf11.py::reemit_honest_absence_rows`) iterated stale pre-canonical
+  phantom rows with a BLANK `instrument_id` (`data_type='trades'`, `instrument_id=''`) and built a
+  per-instrument `row_key` with `instrument_id=''` → Phase-4 `hard_schema_enforcement` rejects it; the
+  crash hit BEFORE the per-VM shard flush, so nothing landed.
+- **Fix**: `reemit_honest_absence_rows` now SKIPS blank-`instrument_id` rows (`counters['reemit_skipped_blank_iid']`);
+  the canonical cqg bundle atom supersedes those legacy per-instrument phantoms. Committed durable:
+  market-tick-data-service@LDR (`fix(prediction): rebuild CF-11 re-emit skips malformed blank-instrument_id phantom rows`).
+- **Relaunch**: tarball rebuilt with the fix; re-walk VM v2 `mtds-prediction-polyrewalk-20260621-204658`
+  RUNNING (`--venue POLYMARKET`, concurrent-safe with the Kalshi seed). ETA ~112min. P1 item flips on its clean exit.
+- **Kalshi seed (VM 170001)** healthy + climbing: last converted day `kalshi-bulk 2024-08-03` (was 2024-05-15). THE deliverable.
