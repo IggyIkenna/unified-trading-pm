@@ -1,13 +1,14 @@
 ---
 title: Live tardis-machine stream-normalized option + HL/ASTER batch via S3 archive (operator-directed, batch-live symmetry)
 created: 2026-06-21
-author: cefi-lane (/autonomous, Opus) — operator architecture direction
 source:
   - operator messages 2026-06-21 (tardis normalised / live free / batch-live symmetry / avoid conversion)
   - market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py
   - market-tick-data-service/market_tick_data_service/live/connectors/ (18 per-venue WS connectors)
 locked_by: live-defi-rollout
 parent_epic: mtds_mdps_master
+priority: P2
+status: active
 ---
 
 # Live tardis-machine option + HL/ASTER S3 batch (batch-live symmetry)

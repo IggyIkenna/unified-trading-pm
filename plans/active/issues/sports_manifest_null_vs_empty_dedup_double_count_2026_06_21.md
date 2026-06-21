@@ -1,12 +1,13 @@
 ---
 title: Sports IS manifest double-count is caused by NULL-vs-empty-string in optional dedup columns, not pipeline_mode
 created: 2026-06-21
-author: ikennaigboaka [slot-?·vm]
 source:
   - instruments-store-sports-prd/_index/availability_index.parquet (live read 2026-06-21)
   - unified_trading_library/manifest_consolidator.py (_resolve_dedup_cols / _DEDUP_NULL_SENTINEL)
   - instruments-service/scripts/canonicalize_sports_legacy_pipeline_mode_2026_06_21.py
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
