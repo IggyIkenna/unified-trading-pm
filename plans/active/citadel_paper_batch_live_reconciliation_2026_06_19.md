@@ -687,12 +687,34 @@ are identified (2) and the ledger exists (3).
       return target so the signal is less whipsawed by the noisy 15m next-bar label. No lookahead (trailing features,
       shifted target; IS-select 2023-24 / OOS-validate 2025-26). Repo: features/strategy research (`_panel.py`).
 
+- [ ] [UI] P11.14. **Prod UI selector resolves the 14-strategy run, not the 145-run** (found 2026-06-21). The CRA API
+      correctly resolves + serves the newest run `paper-20260621225959-e86237f7` (145 strategies / 7 archetypes —
+      verified authenticated: `net-views.run_id` = the 145-run on every call). But the prod odum-portal UI's strategy
+      selector renders only the 14 CARRY_STAKED_BASIS strategies of an OLDER run (`paper-20260621171725-fcf31316`). The
+      UI calls SAME-ORIGIN `/api/*` (Next.js server-side proxy to the CRA — no `*_API_URL` env on odum-portal, so the
+      target is baked in next.config rewrites). DIAGNOSIS: the selector's endpoint (instructions/manifest list) resolves
+      or caches a different run than the CRA `per-strategy` SSOT `resolve_canonical_run` — likely (a) the proxy points
+      at a different CRA, (b) a Next.js/React-Query cache, or (c) the selector endpoint doesn't key off
+      `resolve_canonical_run`. FIX: confirm the next.config `/api` rewrite target == the deployed CRA, ensure the
+      selector reads the same `resolve_canonical_run` SSOT, bust any cache. The 145-run data + ε=0 + all ledgers are
+      correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui
+      (+ verify next.config proxy target).
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-21 (autonomous) — FINAL: 145 strategies / 7 archetypes, ε=0 PROVEN, prod-deployed.** Both ε=0 proofs pass
+  (141-run 1016 trades + 145-run 1020 trades, paper≡batch, 0 deviations). UI drilldown deployed to PROD
+  (odum-portal-00032-4nq, www.odum-research.com, 3 regions, browser-verified render). CRA deployed to PROD
+  (client-reporting-api-00011, resolves the 145-run — authenticated API confirmed). Cleaned 4 throwaway verify runs
+  (paper-p11*) out of the canonical client prefix (they polluted the lexical run resolver) → moved to
+  client_id=_session-verify-archive. **ONE open item (P11.14): the prod UI selector still displays the 14-run, not the
+  145-run — a UI `/api` proxy / selector run-resolution nuance (CRA API is correct). Data + determinism + ledgers all
+  verified.**
 
 - **2026-06-21 (autonomous) — FULL MULTI-ARCHETYPE BOOK: 145 strategies / 7 archetypes + PROD UI LIVE.** Final run
   `paper-20260621225959-e86237f7`: CARRY_BASIS_PERP 79, CARRY_FUNDING_DISPERSION 33, CARRY_STAKED_BASIS 14,
