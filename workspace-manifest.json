@@ -1813,7 +1813,8 @@
       "deployment-api",
       "strategy-service",
       "deployment-service",
-      "unified-api-contracts"
+      "unified-api-contracts",
+      "ml-service"
     ],
     "sit_retry_count": 1,
     "locked_alert_sent": false,
