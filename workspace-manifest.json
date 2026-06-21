@@ -74,16 +74,16 @@
     "execution-service": "0.18.0",
     "features-service": "0.12.0",
     "fund-administration-service": "0.9.0",
-    "ibkr-gateway-infra": "0.4.0",
+    "ibkr-gateway-infra": "0.4.1",
     "instruments-service": "0.16.0",
     "market-tick-data-service": "0.25.0",
     "system-integration-tests": "0.14.0",
-    "unified-api-contracts": "0.34.0",
+    "unified-api-contracts": "0.35.0",
     "unified-trading-library": "0.29.0",
     "unified-trading-pm": "1.2.262",
     "market-data-processing-service": "0.10.3",
     "e2e-testing": "0.19.0",
-    "agent-orchestrator": "0.21.0",
+    "agent-orchestrator": "0.23.0",
     "greeks-service": "0.12.0",
     "trading-agent-service": "0.8.0",
     "strategy-service": "0.30.0",
@@ -1063,7 +1063,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1795,14 +1795,12 @@
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.5",
-    "ibkr-gateway-infra": "0.4.1",
     "market-tick-data-service": "0.32.0",
-    "agent-orchestrator": "0.23.0",
     "alerting-service": "0.18.0",
     "batch-live-reconciliation-service": "0.19.0",
     "client-reporting-api": "0.15.7",
     "deployment-api": "0.29.0",
-    "deployment-service": "0.24.0",
+    "deployment-service": "0.25.0",
     "execution-service": "0.23.0",
     "features-service": "0.13.0",
     "fund-administration-service": "0.9.0",
@@ -1814,8 +1812,7 @@
     "trading-agent-service": "0.10.0",
     "unified-trading-api": "0.2.8",
     "e2e-testing": "0.19.0",
-    "unified-trading-library": "0.29.0",
-    "unified-api-contracts": "0.35.0"
+    "unified-trading-library": "0.29.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1871,16 +1868,21 @@
       "version": "0.13.0",
       "sha": "4b40d284d8d76168b9b504a345292b370a63cb52",
       "branch": "staging"
-    },
-    "unified-api-contracts": {
-      "version": "0.35.0",
-      "sha": "4f9cfe4be6a074ea16561498a676dfc3617d4d53",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T23:13:40.640208Z",
+        "commits": {
+          "unified-api-contracts": {
+            "version": "0.35.0",
+            "sha": "4f9cfe4be6a074ea16561498a676dfc3617d4d53",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T22:11:17.473038Z",
         "commits": {
@@ -1950,31 +1952,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-21T17:35:46.803297Z",
-        "commits": {
-          "agent-orchestrator": {
-            "version": "0.20.0",
-            "sha": "758ea6542f7b7fc4e27e1833e8e46fa24a8b5c27",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.29.0",
-            "sha": "28a4ad779f412833fe94a2f12b4483c32ee05886",
-            "branch": "staging"
-          },
-          "trading-agent-service": {
-            "version": "0.8.0",
-            "sha": "f9234a0270c9f38b75a1a73e5e124aec0fca7b59",
-            "branch": "staging"
-          },
-          "deployment-api": {
-            "version": "0.28.0",
-            "sha": "fda7a097747cae878e4611cd4507efadbcbcba14",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1990,8 +1967,7 @@
     ]
   },
   "promotion_failures": {
-    "market-tick-data-service": 1,
-    "unified-api-contracts": 1
+    "market-tick-data-service": 1
   },
   "promotion_quarantine": {}
 }
