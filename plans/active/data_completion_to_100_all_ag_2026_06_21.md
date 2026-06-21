@@ -171,6 +171,39 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 Coverage snapshot above (measured, not memory). Kalshi seed VM re-launched (runner set-u fix mtds@74e228c). Fleet
 launch + monitoring loop starting (this plan is the path-to-100% plan-of-record).
 
+### 2026-06-21 — SPORTS lane (/autonomous, Opus): odds flowing; API-Football credential block + silent-empty bug FIXED
+
+**Shipped:** `--tier` launcher bug (deployment-service@b51729b). Silent-empty manifest bug (instruments-service@0db2450,
+QG-green sentinel b5b8b72; direct-LDR under dirty-deps carve-out — UAC/UTL dirty with concurrent provenance WIP).
+
+**MTDS odds = HEALTHY + flowing hard.** 7 year-shard VMs `mtds-backfill-odds-{2020..2026}` (--force, 2020-06→2026-06)
+RUNNING, writing real bookmaker odds (WilliamHill/DraftKings/Ladbrokes/… EPL); odds-2026 124k rows, odds-2020 30k,
+climbing. `pipeline_mode=batch_odds_api` → `market-data-tick-sports-prd-…` (canonical consolidator ENABLED */1).
+
+**Root cause (operator-confirmed): IS fixtures gap = CREDENTIAL block, now lifted.** Full-sweep fetched 0 fixtures/date →
+`errors.plan` (free API-Football, dates 2026-06-20..22 only). Operator upgraded → **Custom 1200 r/min, 5 seats, 300k
+r/day** (re-tested: 2024-01-13 → 927 fixtures). Killed 8 false-writing full-sweep VMs (each wrote only ~2 dates false
+`empty_confirmed` before kill → small blast radius).
+
+**Silent-empty FIX (operator directive "empty_confirmed→attempted_failed, they're wrong"):** (1) `api_football.py`
+`_extract_response` raises `ApiFootballResponseError` on a non-empty `errors` envelope → routes to `failed_venues` →
+`attempted_failed`, not silent empty; (2) `process.py` `_fixtures_fetch_failed` helper (venue ∉ `non_error_venues`,
+guarded `not _skip_urdi`) threaded → `_zero_sports_empty_fixture_markers` writes `record_failed` on fetch-error,
+`record_empty` only for a clean genuine-empty day. +10 unit tests; QG 71s green.
+
+**ARCHITECTURE (operator Q): odds coverage IS gated on fixtures.** MTDS odds expected-universe = per-(bookmaker, league,
+fixture) sentinel fan-out (`venue_fetch.py:89`, `sentinels.py`) from the IS fixtures catalogue; `sports_catalog_reader.py:150`
+"no row in catalog → silently skipped". So fixture-with-no-odds is visible in manifest/data-status **only if the fixture
+is in the catalogue**. IS fixtures 15.9% ⇒ odds `expected_unattempted=0` (artificially complete). **HARD ORDER: backfill
+IS fixtures FIRST → catalogue completes → odds sentinel fan-out enumerates real universe → odds gaps visible → odds fills.**
+
+**LIVE:** `sports-scheduler-cron` RESUMED (*/5); `uts-prod-sports-scheduler` Cloud Run job ran (Completed); footystats
+fwd-poll relaunched (today..+14d). Only deprecated `*-legacy-cron` paused (expected).
+
+**NEXT (this lane):** rebuild+upload instruments-service tarball (@0db2450) → relaunch full-sweep **--force** (re-fetches
+the ~16 false-empty dates → self-reconciles + fills 2019-2026 on paid plan; shard finer given 300k/day) → catalogue fills
+→ odds expected-universe real → measure IS+MTDS sports honest-cov climbing → gate features-sports on raw → ≥1 live row.
+
 ### 2026-06-21 — DEFI lane (/autonomous, Opus): bucket bug is FLEET-WIDE across defi handlers
 
 Canonical defi bucket CONFIRMED = consolidated `market-data-tick-defi-prd-central-element-323112` (only defi bucket with
