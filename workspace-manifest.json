@@ -69,21 +69,21 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.14.0",
     "deployment-api": "0.28.0",
-    "deployment-service": "0.19.0",
+    "deployment-service": "0.21.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.18.0",
     "features-service": "0.7.0",
     "fund-administration-service": "0.9.0",
     "ibkr-gateway-infra": "0.4.0",
     "instruments-service": "0.14.0",
-    "market-tick-data-service": "0.24.0",
+    "market-tick-data-service": "0.25.0",
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.29.0",
     "unified-trading-library": "0.23.0",
-    "unified-trading-pm": "1.2.243",
+    "unified-trading-pm": "1.2.244",
     "market-data-processing-service": "0.10.3",
     "e2e-testing": "0.8.0",
-    "agent-orchestrator": "0.20.0",
+    "agent-orchestrator": "0.21.0",
     "greeks-service": "0.12.0",
     "trading-agent-service": "0.8.0",
     "strategy-service": "0.29.0",
@@ -876,7 +876,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1799,11 +1799,9 @@
     "ibkr-gateway-infra": "0.4.0",
     "unified-api-contracts": "0.31.0",
     "features-service": "0.12.0",
-    "deployment-service": "0.21.0",
     "instruments-service": "0.16.0",
     "unified-trading-library": "0.27.0",
-    "strategy-service": "0.30.0",
-    "agent-orchestrator": "0.21.0"
+    "strategy-service": "0.30.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1822,6 +1820,7 @@
     "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
+      "market-tick-data-service",
       "unified-api-contracts"
     ]
   },
@@ -1842,11 +1841,6 @@
       "sha": "6319a63806d13293ab370f75e2bb3c4dd09f52af",
       "branch": "staging"
     },
-    "deployment-service": {
-      "version": "0.21.0",
-      "sha": "ab3b6d373d26686fed65268d6126f831b23b1cf9",
-      "branch": "staging"
-    },
     "instruments-service": {
       "version": "0.16.0",
       "sha": "b6d90e7902c316a57ed663a608f2e684d40389cc",
@@ -1861,16 +1855,31 @@
       "version": "0.30.0",
       "sha": "4a2a3456653eb49d18571a02c76b9f588181bc87",
       "branch": "staging"
-    },
-    "agent-orchestrator": {
-      "version": "0.21.0",
-      "sha": "155ea24b9bcf092b6b926cafdfccc48cfc2acd7b",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T18:13:12.028009Z",
+        "commits": {
+          "deployment-service": {
+            "version": "0.21.0",
+            "sha": "ab3b6d373d26686fed65268d6126f831b23b1cf9",
+            "branch": "staging"
+          },
+          "agent-orchestrator": {
+            "version": "0.21.0",
+            "sha": "155ea24b9bcf092b6b926cafdfccc48cfc2acd7b",
+            "branch": "staging"
+          },
+          "market-tick-data-service": {
+            "version": "0.25.0",
+            "sha": "f2959beeff1eff113a036139b617fc439a55f312",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T17:35:46.803297Z",
         "commits": {
@@ -1935,21 +1944,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-21T16:26:04.876072Z",
-        "commits": {
-          "agent-orchestrator": {
-            "branch": "staging",
-            "sha": "8c2eb4d5e3b7bc7bac86dfe45a48112bfeabbdf9",
-            "version": "0.18.1"
-          },
-          "strategy-service": {
-            "branch": "staging",
-            "sha": "3a60fd11a99bf016cdd0554ba0e98e70fa481f35",
-            "version": "0.27.0"
-          }
-        }
       }
     ]
   },
@@ -1965,19 +1959,12 @@
     ]
   },
   "promotion_failures": {
-    "unified-api-contracts": 3,
     "features-service": 3,
-    "unified-trading-library": 1,
-    "instruments-service": 1,
-    "deployment-service": 1
+    "unified-trading-library": 2,
+    "instruments-service": 2,
+    "strategy-service": 1
   },
   "promotion_quarantine": {
-    "unified-api-contracts": {
-      "since": "2026-06-21T17:35:45.280631Z",
-      "attempts": 3,
-      "escalated": true,
-      "next_probe_after": "2026-06-21T18:35:45.280709Z"
-    },
     "features-service": {
       "since": "2026-06-21T17:35:45.280631Z",
       "attempts": 3,
