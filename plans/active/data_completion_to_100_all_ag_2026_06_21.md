@@ -488,3 +488,18 @@ Operator: grab ohlcv_1s. Shipped ds@47c56d7 — lib + forward-poll default VM_DA
 not supported per UAC: ['ohlcv_1s']`). So equity-1s is NOT a gap. Deleted the 8 no-op equity-1s VMs; launched **CME-1s
 full-history** (7 roots × 2019-2026) + CBOE-1s. The default-both is harmless for equities (pre-flight drops 1s, fetches
 1m). Operational health verified: 0 real rate-limit events fleet-wide, 0 code failures, liquid tickers captured.
+
+### 2026-06-21 16:40 — CME event contracts (binary/event markets) — IS + MTDS
+Operator: capture CME event markets. The 9 CME event-contract roots (ECES/ECBTC/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ,
+GLBX.MDP3 .OPT parents, Databento coverage from 2025-09-28, classified EVENT_CONTRACT). On-allowlist (GLBX subscribed);
+UAC has `CME:{...,EVENT_CONTRACT}`. Findings:
+- **IS index had ZERO event-contract instruments** — `launch-tradfi-event-contract-backfill.sh` (VM_TASK=instruments-
+  backfill, `--operation instruments`, no `--source` needed) had **never run**. Launched it
+  (`tradfi-event-contract-backfill-20260621-163633`); verifying EC instrument definitions land in
+  `instruments-store-tradfi-prd` `_index`.
+- **MTDS had 1438 captured EC\* cells** (all 9 roots, 2025-09-28→2026-06-17: trades 1296, ohlcv_1m 124, ohlcv_1s 18) —
+  ohlcv sparse because the EC roots weren't in the CME OHLCV backfill. Launched a dedicated **MTDS EC\* OHLCV backfill**
+  (9 EC roots, 2025-09-28→yesterday, ohlcv_1m+1s) to complete it.
+- ohlcv_1s health re-confirmed: CME-1s capturing (es-2024 `data_type=ohlcv_1s`); **0 rate-limit events across 38 VMs**
+  (no self-cap needed). CME-1s full-history wave was timeout-killed partway → relaunched the remaining roots
+  (CL/GC/ES_OPT + MNQ tail) in background.
