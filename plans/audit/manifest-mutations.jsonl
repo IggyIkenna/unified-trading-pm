@@ -201,3 +201,4 @@
 {"timestamp": "2026-06-20T16:12:59Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.23.0 (branch=staging, bump=minor)", "commit_sha": "ac0f04e95c03cc626573b6d9572bd4104f46105f"}
 {"timestamp": "2026-06-21T11:36:11Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "client-reporting-api=0.15.0 (branch=staging, bump=minor)", "commit_sha": "9ce33dd206ea512b8b7602bddefe86b4bdd11801"}
 {"timestamp": "2026-06-21T11:37:22Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "strategy-service=0.23.0 (branch=staging, bump=minor)", "commit_sha": "1a2f3c02d98889a122a6cbcbd2f0c4fd2d594e4a"}
+{"timestamp": "2026-06-21T11:40:03Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.21.0 (branch=staging, bump=minor)", "commit_sha": "982b1f1de540f34b53086af6cb9a767ddf9a77d5"}
