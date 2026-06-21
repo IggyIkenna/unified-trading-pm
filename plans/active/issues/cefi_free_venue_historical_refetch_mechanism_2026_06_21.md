@@ -1,13 +1,14 @@
 ---
 title: CeFi free-venue (HYPERLIQUID/ASTER) historical re-fetch has no working batch mechanism
 created: 2026-06-21
-author: cefi-lane (/autonomous, Opus)
 source:
   - plans/active/data_completion_to_100_all_ag_2026_06_21.md
   - market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py
   - market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py
   - market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # CeFi HYPERLIQUID/ASTER historical re-fetch — no working batch launcher
