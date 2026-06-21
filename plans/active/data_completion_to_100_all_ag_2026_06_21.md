@@ -200,6 +200,27 @@ IS fixtures FIRST → catalogue completes → odds sentinel fan-out enumerates r
 **LIVE:** `sports-scheduler-cron` RESUMED (*/5); `uts-prod-sports-scheduler` Cloud Run job ran (Completed); footystats
 fwd-poll relaunched (today..+14d). Only deprecated `*-legacy-cron` paused (expected).
 
+### 2026-06-21 — DEFI lane: blocker fixes IN FLIGHT — full dependency chain mapped
+The defi MTDS backfill has a hard prerequisite CHAIN (same IS→MTDS contract as sports). Status of each link:
+1. **Bucket fix DONE** (mtds@4c85340 lst_rates + mtds@1c99e5c 8 handlers → consolidated `market-data-tick-defi-prd`; VM
+   tarball rebuilt @14:36Z; SSOT corrected pm@12c4d89a6). Proof CONFIRMED writes to consolidated bucket.
+2. **Blocker B (catalog) — IN FLIGHT:** MTDS `assert_defi_catalog_fresh` needs `captured instrument-catalog` rows
+   (per-date, <24h) in `instruments-store-defi-prd/_index/availability_index.parquet` — they were ABSENT for the range.
+   FIX: launched 7 year-shard IS catalog VMs `instr-backfill-defi-{2020..2026}` (e2-standard-8, RUNNING). **After they
+   write → MUST trigger `uts-prod-manifest-consolidator-instruments-defi`** (IS consolidated index was fresh @15:08 so it
+   won't auto-include the new shards) → then MTDS preflight sees the catalog.
+3. **Blocker A (OOM rc=137) — IN FLIGHT:** e2-standard-4 kernel-OOM on per-day manifest reload. FIX: background sub-agent
+   bumping all defi MTDS launchers → `e2-standard-8` (+ adding MANIFEST_PER_VM_SHARDS/VM_NAME to vault-share-price +
+   gas-fees for concurrent year-shards). Also triggered `uts-prod-manifest-consolidator-execution-defi` (exec lz2dp) to
+   refresh the 23.7d-stale market-data index (reduces per-day reload memory).
+**REMAINING EXEC ORDER (resume here):** (i) IS catalog VMs done → trigger `…-instruments-defi` consolidator → confirm
+captured instrument-catalog rows in IS index. (ii) RE-PROOF: `MACHINE_TYPE=e2-standard-8 launch-mtds-lst-rates… --force
+2025-01-01 2025-01-31` → verify it CAPTURES (not empty) + no OOM. (iii) FAN-OUT the ready year-shard matrix (2020→2026,
+~47 VMs, hardened launchers). (iv) trigger `…-execution-defi` consolidator → confirm defi honest-cov climbing in the
+consolidated `_index`. (v) MDPS defi (`launch-mdps-sharded-backfill.sh defi`). (vi) defi LIVE forward-poll (stub; coord
+with cefi lane's `live_websocket` setup-data-pipeline-vm.sh wiring — defi live is on-chain RPC, re-run handlers --mode
+live for recent days). Watchers in flight: IS-catalog completion + launcher-edit sub-agent.
+
 **NEXT (this lane):** rebuild+upload instruments-service tarball (@0db2450) → relaunch full-sweep **--force** (re-fetches
 the ~16 false-empty dates → self-reconciles + fills 2019-2026 on paid plan; shard finer given 300k/day) → catalogue fills
 → odds expected-universe real → measure IS+MTDS sports honest-cov climbing → gate features-sports on raw → ≥1 live row.
