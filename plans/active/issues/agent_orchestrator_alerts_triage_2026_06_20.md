@@ -102,16 +102,25 @@ if you want it rotated.
 
 ## 2026-06-20 PM — ci-failures channel sweep (round 2)
 
-- [x] ✅ [CICD] **Build Smoke (All Repos) FAILED — root-caused + FIXED.** `build-smoke-all-repos.yml` ran a bare
-  `docker build .` with NO `--build-arg PROJECT_ID` and NO Artifact-Registry auth, so every service/API/UI Dockerfile
-  (`FROM asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library@<digest>`) failed at parse with
-  `pkg.dev//unified-trading-library@… invalid reference format` (empty `${PROJECT_ID}` → `//`) — surfaced by the
-  digest-pin migration; instruments-service was the first in the matrix to error. **Fix shipped** (PM@c59ea0b1c, LDR →
-  reaches `main` via the Option-B standing PR): added `google-github-actions/auth` (`GCP_SA_KEY`) +
-  `gcloud auth configure-docker asia-northeast1-docker.pkg.dev` + `--build-arg PROJECT_ID=central-element-323112` on the
-  non-library branches (mirrors `ci-status-update.yml`/`cloud-build-router.yml` auth pattern). Verifying via a quick
-  smoke dispatch on the LDR ref. **If still red:** the `GCP_SA_KEY` SA needs `roles/artifactregistry.reader` on
-  `central-element-323112` to pull the base — grantable by operator (Owner).
+- [x] ✅ [CICD] **Build Smoke — 1st-order error (PROJECT_ID/GAR auth) FIXED** (PM@c59ea0b1c). The bare `docker build .`
+  (no `--build-arg PROJECT_ID`, no AR auth) failed at parse with `pkg.dev//unified-trading-library@… invalid reference
+  format` (empty `${PROJECT_ID}` → `//`) for every service Dockerfile. Added `google-github-actions/auth` (`GCP_SA_KEY`)
+  + `gcloud auth configure-docker` + `--build-arg PROJECT_ID=central-element-323112`. **Verified (LDR quick smoke run
+  27905420638): the `//` invalid-reference is GONE — base image resolves + the GAR pull works** (SA has AR-reader). Real
+  progress, keep it.
+- [ ] [CICD] P2. **Build Smoke — 2nd-order DESIGN gap (the smoke is still RED; this is the real blocker, needs a
+  decision).** With the base image resolving, the smoke now hits the actual problem: a standalone single-repo
+  `docker build .` **cannot build the fleet's images** because (a) **service images need sibling editable path-deps in
+  the build context** — `uv sync --frozen` → `Distribution not found at: file:///app/unified-api-contracts` (ml-service
+  + every service that `[tool.uv.sources]`-path-deps UAC/UTL/…); Cloud Build supplies the multi-repo context, a lone
+  `docker build .` does not; and (b) **Dockerfile-less repo types are still `docker build`ed** — `system-integration-tests`
+  + `unified-trading-api` → `open Dockerfile: no such file or directory`. **Decision (operator):** (i) give the smoke the
+  same multi-repo context as Cloud Build (checkout/COPY sibling deps, or reuse `create-code-tarballs`) — heaviest, truest;
+  (ii) scope the matrix to only repos with a self-contained root Dockerfile + skip the editable-dep `uv sync` (Dockerfile
+  lint/parse smoke only); or (iii) RETIRE the build-smoke and rely on Cloud Build (the real image gate with the correct
+  context) — the live pipeline already builds via `cloud-build-router.yml`, so a red weekly smoke is not blocking
+  deploys. **Recommend (iii) or (ii)** — (i) re-implements Cloud Build's context in GHA for marginal value. **Target:**
+  `unified-trading-pm/.github/workflows/build-smoke-all-repos.yml`. Provenance: run 27905420638.
 - **mtds#260 QG red** — self-resolved earlier (MERGED; green run superseded the failure). No action.
 - **Paper-trading re-route** — ALREADY WIRED in code: `e2e-testing/scripts/paper_trading/_engine_docker/deploy.sh`
   sets `SLACK_WEBHOOK=agent-orchestrator-paper-trading-slack-webhook:latest` ("reroute 2026-06-20" — the SM secret from
