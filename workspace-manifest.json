@@ -1809,8 +1809,14 @@
     "locked_since": "2026-06-21T14:41:24.061941Z",
     "locked_reason": "Breaking MINOR bump cascade: market-tick-data-service=0.23.0 (pre-1.0.0)",
     "lock_version": "0.23.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "deployment-api",
+      "client-reporting-api",
+      "deployment-service",
+      "market-data-processing-service",
+      "market-tick-data-service"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "market-tick-data-service"
