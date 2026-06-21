@@ -135,16 +135,34 @@ jobs:
             esac
           done < <(git log -10 --format=%s "$SCAN_REF" 2>/dev/null || true)
 
-          echo "Pending-bump scan on ${SCAN_REF}: ${RECENT_BUMPS} bump commit(s) in the last hour; ${CONSECUTIVE} consecutive at tip"
+          # Adjacent re-bump PAIRS in the last-hour window — a bump whose
+          # immediately-newer neighbour is ALSO a bump (no content commit between)
+          # is the genuine runaway signature. A healthy high-velocity repo bumps
+          # ONCE per LDR->staging drain (each bump preceded by a real feat:/fix:
+          # drain commit) => strictly-climbing versions, ZERO adjacent pairs. The
+          # raw RECENT_BUMPS>=3/hr count false-tripped on that interleaved climb
+          # (deployment-service 0.15->0.16->0.17, 2026-06-21). Climbing-aware.
+          REBUMP_PAIRS=0
+          PREV_WAS_BUMP=0
+          while IFS= read -r msg; do
+            case "$msg" in
+              "chore(release): bump version to "*)
+                [ "$PREV_WAS_BUMP" -eq 1 ] && REBUMP_PAIRS=$((REBUMP_PAIRS + 1))
+                PREV_WAS_BUMP=1 ;;
+              *) PREV_WAS_BUMP=0 ;;
+            esac
+          done < <(git log --since="1 hour ago" --format=%s "$SCAN_REF" 2>/dev/null || true)
 
-          if [ "$RECENT_BUMPS" -ge 3 ] || [ "$CONSECUTIVE" -ge 3 ]; then
+          echo "Pending-bump scan on ${SCAN_REF}: ${RECENT_BUMPS} bump(s)/hr; ${CONSECUTIVE} consecutive at tip; ${REBUMP_PAIRS} adjacent re-bump pair(s)"
+
+          if [ "$REBUMP_PAIRS" -ge 2 ] || [ "$CONSECUTIVE" -ge 3 ] || [ "$RECENT_BUMPS" -ge 6 ]; then
             RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            TEXT=":rotating_light: *CRITICAL — semver-agent BUMP-RATE CIRCUIT BREAKER tripped* | unified-trading-pm | ${RECENT_BUMPS} chore(release) bump commit(s) on staging in the last hour (${CONSECUTIVE} consecutive at tip; threshold 3). Runaway re-bump loop suspected — check the PM baseline writer (update-repo-version.yml) health + staging_versions[unified-trading-pm]. REFUSING to dispatch another bump. ${RUN_URL}"
+            TEXT=":rotating_light: *CRITICAL — semver-agent BUMP-RATE CIRCUIT BREAKER tripped* | unified-trading-pm | runaway re-bump signature on staging: ${REBUMP_PAIRS} adjacent re-bump pair(s) / ${CONSECUTIVE} consecutive at tip / ${RECENT_BUMPS} bump(s)/hr (trip: pairs>=2 OR consecutive>=3 OR rate>=6). A bump with NO content commit between it and the prior bump => the baseline never recorded. Check the PM baseline writer (update-repo-version.yml) health + staging_versions[unified-trading-pm]. REFUSING to dispatch another bump. ${RUN_URL}"
             # Route through notify-slack.yml for dedup + ledger + re-nag eligibility
             # (alert_quality_audit_2026_06_18 item 015 — replaces former inline curl).
             echo "critical_msg=${TEXT}" >> "$GITHUB_OUTPUT"
             echo "critical_dedup_key=semver-circuit-breaker:unified-trading-pm" >> "$GITHUB_OUTPUT"
-            echo "::error::Bump-rate circuit breaker: ${RECENT_BUMPS} pending bumps in the last hour / ${CONSECUTIVE} consecutive at staging tip (threshold 3). Refusing to dispatch another bump."
+            echo "::error::Bump-rate circuit breaker: ${REBUMP_PAIRS} adjacent re-bump pair(s) / ${CONSECUTIVE} consecutive at staging tip / ${RECENT_BUMPS} bumps/hr (trip: pairs>=2 OR consecutive>=3 OR rate>=6). Refusing to dispatch another bump."
             exit 1
           fi
 
