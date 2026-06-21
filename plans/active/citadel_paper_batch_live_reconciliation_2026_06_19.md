@@ -388,8 +388,8 @@ are identified (2) and the ledger exists (3).
       wired into `run_paper()`, 8 tests). VERIFIED on GCS — run `paper-20260621105146-e7545ddb`:
       `ledger_type=transfer/{run}.jsonl` has **8 rows = 4 legs × 2 strategies** (DEPOSIT@UNISWAP_V3/JUPITER, TRANSFER
       spot→staking, STAKE@LIDO/JITO, COLLATERAL_POSTED@DERIBIT/DRIFT), every row single `client_id` +
-      `counterparty_client_id=None`. **client-reporting-api (read) is still open** (the API agent's repo: `/transfers`
-      route currently scans only `ledger_type=instruction` — point it at `ledger_type=transfer`).
+      `counterparty_client_id=None`. **client-reporting-api (read) DONE 2026-06-21** — `/transfers` now reads
+      `ledger_type=transfer` (client-reporting-api@50ae187, rev -00008-7gp; LIVE returns the 8 rows / both strategies).
 - [ ] [STRATEGY] P2. **DEFERRED-FINDING (2026-06-21, surfaced by P10.3 net-views work, client-reporting-api):** the
       carry_staked_basis ledger emits the staked leg as a SEPARATE long position from the spot-acquisition leg
       (`UNISWAP_V3:DEX_POOL:ETH` 233 ETH long AND `LIDO:STAKING:ETH` 233 ETH long), so per-coin USD delta double-counts
@@ -408,8 +408,10 @@ are identified (2) and the ledger exists (3).
       `paper-20260621105146-e7545ddb`: 14 attribution shards, **56 rows = 7 days × 4 factors × 2 strategies**, factors
       {CARRY,BASIS,FUNDING,FEES}, **4 distinct venues {LIDO,JITO,DERIBIT,DRIFT}** so `by venue` ≠ `by layer` (a real
       waterfall), 2 distinct `strategy_id`s, partitioned per strategy_id+client_id+date (per-venue/per-strategy/per-day
-      queryable). batch rerun ε=0 (42 fills, 0 deviations) with the new ledgers. **API breakdown + UI waterfall remain
-      open** (client-reporting-api + unified-trading-system-ui agents — the producer dims they read now exist on GCS).
+      queryable). batch rerun ε=0 (42 fills, 0 deviations) with the new ledgers. **API breakdown DONE 2026-06-21**
+      (client-reporting-api@50ae187: `/attribution/breakdown` surfaces by-venue/by-layer/by-factor/per-strategy + nested
+      waterfall; LIVE 5 venues / 4 factors / by venue ≠ by layer). **UI waterfall remains open**
+      (unified-trading-system-ui agent — the producer dims + the API breakdown they read now both exist).
 - [x] [STRATEGY] ✅ P2. Multi-strategy paper run — strategy-service@94ca0b6c (specs 0+6: LIDO/ETH + JITO/SOL; run
       paper-20260621100605-b33e4bf4 → 2 strategy_ids, 42 fills, batch re-derives both ε=0). (≥2 strategies, e.g.
       carry_staked_basis + arbitrage_price_dispersion) so the per-strategy breakdown is meaningful, not a single flat
@@ -427,6 +429,21 @@ are identified (2) and the ledger exists (3).
       detail + overall roll-up) — client-reporting-api@501c731 `per_strategy_breakdown` + `GET /per-strategy`. LIVE: 2
       strategies (`@lido-uniswapv3-deribit` 21 trades / `@jito-jupiter-drift` 21 trades) mapped from venue via
       RunManifest.strategy_ids. Repo: client-reporting-api.
+- [x] [API] ✅ P2. **`/transfers` READER (was open)** — point the route at the canonical run's `ledger_type=transfer`
+      ledger (NOT `ledger_type=instruction`) so it returns the producer's REAL money-movement rows, surfacing ALL
+      money-movement actions (the prior InstructionLedger-subset scan dropped STAKE/COLLATERAL_POSTED → always
+      `NO_TRANSFER_ROWS`). New `read_transfer_rows` reader (`core/ledger_views.py`) + rewired `GET /transfers` with
+      per-`strategy_id` grouping + `?strategy_id=` filter (venue→strategy via RunManifest.strategy_ids).
+      client-reporting-api@50ae187 (rev `client-reporting-api-00008-7gp`). LIVE `firm-paper-determinism` /transfers:
+      **status=OK, 8 rows**, actions {DEPOSIT,TRANSFER,STAKE,COLLATERAL_POSTED}, **both strategies** (4 legs each,
+      `by_strategy` net 100000 / 75000), `?strategy_id=jito` → 4 legs. Repo: client-reporting-api.
+- [x] [API] ✅ P2. **`/attribution/breakdown` multi-dim READER (was open)** — surface the real multi-dimensional
+      waterfall now the parquet carries venue+layer+factor+strategy_id dims: `attribution_breakdown` adds
+      `per_strategy_total` + nested `by_strategy` (each strategy's own factor split) alongside by-venue/by-layer/by-factor.
+      client-reporting-api@50ae187. LIVE `firm-paper-determinism` /attribution/breakdown: **5 venues**
+      {UNISWAP_V3,JITO,DRIFT,LIDO,DERIBIT}, **4 factors** {CARRY,BASIS,FUNDING,FEES}, **per-strategy** totals + nested
+      waterfall, **by venue ≠ by layer** (venue splits 5 ways, layer = STRATEGY only — EXECUTION=0 in benchmark paper),
+      total_amount 210.26. Repo: client-reporting-api.
 - [x] [API] ✅ P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall —
       client-reporting-api@501c731 `_bps_on_turnover` + `GET /bps-pnl`. LIVE: ETH-strat -2.60 bps, SOL-strat 0 bps,
       overall -1.53 bps (turnover $2.29M). Repo: client-reporting-api.
