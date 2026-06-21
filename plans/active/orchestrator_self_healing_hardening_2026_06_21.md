@@ -93,9 +93,13 @@ SHAs were never acknowledged.
       worker to POST `/api/accounts/<ACCOUNT_ID>/rate-limited` on a tool-level 429/usage-limit (while it can still act),
       so rotation fires in seconds. The FROZEN-on-modal case (worker can't POST) stays covered by the TmuxPruner
       pane-scan + watchdog (documented inline). 95% stays spawn-gate-only (not changed). — agent-orchestrator@39cbf10
-- [ ] [ORCHESTRATOR] P2. Wire the heartbeat-silent/crashed-worker watchdog reap→respawn to
-      `--resume <SlotRow.claude_session_id>` (context-preserving). **Already tracked** as Phase 5 of
-      `orchestrator_account_failover_resume_respawn_2026_06_17.md` — referenced here, not duplicated.
+- [x] ✅ [ORCHESTRATOR] P2. G2b — heartbeat-silent reap now does a context-preserving `--resume` (operator-permitted
+      2026-06-21). `_resume_or_fresh_respawn` kills the wedged session + `claude --resume <claude_session_id>` on the
+      SAME account (it's not capped — that's a separate trigger), so the worker continues with conversation intact.
+      Guarded against a resume-loop: resume ONCE per silence episode (`_HEARTBEAT_RESUME_MAX`); if it goes silent AGAIN
+      it's genuinely stuck → fresh respawn. No session id / no env → fresh respawn. Supersedes the Phase-5 cross-ref in
+      `orchestrator_account_failover_resume_respawn_2026_06_17.md`. — agent-orchestrator@b02d65f | tests:
+      test_self_healing_hardening.py (2 cases)
 
 ### Concern 3 — self-healing (re-trigger dirty / rolled-back / stale)
 
@@ -119,9 +123,14 @@ SHAs were never acknowledged.
       inherited a predecessor's ancient `last_spawned_at` can't balloon backwards. Closes the triage
       `agent_orchestrator_alerts_triage_2026_06_20` G3c. — agent-orchestrator@68d27b5 | tests:
       test_self_healing_hardening.py::test_effective_silence_clamped_by_session_created
-- [ ] [ORCHESTRATOR] P1. Central-VM backend single-process-manager (systemd + main-agent `nohup` dual-manager → one).
-      **Already tracked** in `plans/active/issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md` Gap 4 — referenced,
-      not duplicated.
+- [x] ✅ [ORCHESTRATOR] P1. Central-VM backend single-process-manager (operator-permitted 2026-06-21) — the launch path
+      `server.server.main()` now calls `_assert_single_instance(8765)`: if :8765 is already bound it logs + exits 1
+      rather than racing a second uvicorn (the orphaned-uvicorn-re-persists-stale-backlog incident, 2026-06-16).
+      `agents/main.md` gains a HARD rule: restart the backend with `sudo systemctl restart orchestrator.service` (stops
+      the old instance first), NEVER `nohup uvicorn`. Override for dev/second-port via
+      `ORCHESTRATOR_ALLOW_PORT_CONFLICT=1`. Closes `orchestrator_agent_lifecycle_gaps_2026_06_16` Gap 4. —
+      agent-orchestrator@e20fd30 | tests:
+      test_self_healing_hardening.py::test_single_instance_guard_refuses_when_port_bound
 
 ### Audit-reflog — kill the recurring spam class for good
 
@@ -190,6 +199,20 @@ net-new capability (not robustness closures) and are dispatched to the central V
 - **5 OPERATOR-gated awaiting, no respond option** (this section): now page with a dashboard respond-link.
 - escalation dispatched/RESOLVED + plan-health dispatched (INFO bookends): healthy — the conflict-escalate + daily
   reconcile loops working as designed.
+
+### Operator follow-ups round 2 (2026-06-21)
+
+- [x] ✅ [ORCHESTRATOR] Slack alert footers point at the `/vm/<vm-id>` UI, not the `api.*` host — the footer's raw
+      `API (query): https://api.…` text read as "the link" and sent operators to the JSON API. `_footer` now emits
+      exactly one clickable `open dashboard` link (`/vm/<VM_ID>` on the SPA) + host + ts; the api origin is dropped
+      (agents read it from env, not Slack). — agent-orchestrator@ba0b56a | tests: test_slack_notifications.py.
+- [x] ✅ [PLANS] Agents were self-competing on the operator's own stable plans (defi data-completion, slots #3-#6).
+      Tagged `data_completion_to_100_all_ag_2026_06_21.md` with `execution_scope: local-only` — the established
+      "operator works it locally, orchestrator never ingests it" frontmatter (12 plans already use it). Next regen
+      prunes its queued tasks; running slots finish their item then stop picking up defi work. Agents keep doing CI/CD
+      escalations + plan-health (separate dispatch paths, unaffected). — unified-trading-pm@4e48264b. **MECHANISM for
+      the operator: add `execution_scope: local-only` to any other plan you're driving yourself** (or remove it to
+      re-enable agent dispatch).
 
 ## Codex SSOT updates
 
