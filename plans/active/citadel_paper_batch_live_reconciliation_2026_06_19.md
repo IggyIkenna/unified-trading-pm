@@ -1721,3 +1721,15 @@ constraint, then HYPE. Findings (all walk-forward, IS=2023-24 / OOS=2025-26):
 - [ ] [BUG] P3. **Combined-book vol-normalization uses full-period vol (mild in-sample scaling)** — does not affect
       per-leg Sharpe but a strictly-OOS combined number should weight legs by TRAILING vol. Repo: e2e-testing. Prov:
       walk-forward audit 2026-06-21.
+
+**CORRECTION (2026-06-21, operator caught a −1.49 TS-momentum line on the plot)**: the TS-momentum leg was being
+normalized by the UNSHIFTED signal count (`tsig.abs().sum`) while the numerator was the shifted signal — a 1-day
+misalignment that CORRUPTED the leg to a fake −1.49 Sharpe in `_updated_book_plot.py` + `_alloc_comprehensive.py`. The
+TRUE leg is **+0.75 (OOS +1.13, '25 +1.75)** — a positive trend-follower. Fixed both (normalize by the shifted signal).
+**Two consequences**: (1) the directional book ~tripled — equal-weight **full +0.42→+1.37, OOS +1.03→+2.18** (the bug
+was dragging it ~1 Sharpe); (2) the "capped slow-momentum beats equal (1.03→1.63)" claim above was **partly the buggy
+baseline** — with the leg fixed, all directional allocation rules land ~2.0–2.3 OOS and equal-weight (+2.18) is
+competitive, so **the allocation tilt is marginal (~+0.1), not ~+0.6**. Net: equal-weight directional +
+basis-to-capacity is the robust deployable; the clever tilt is a rounding error. Lesson: a losing backtest line is more
+often a BUG or overfit than free inverse-alpha — fix/verify it, don't reflexively flip it (flip is in-sample by
+construction).
