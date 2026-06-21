@@ -196,8 +196,8 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       (source=footystats) or the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO
       write OK; only ODDS fail. Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix
       from SPORTS lane (collision).
-- [ ] [DATA] P1. **sports — ODDS coverage OVER-COUNTS failures: live-instrument guard mislabels genuine
-      "book-doesn't-price-this-fixture" as `attempted_failed`** [SPORTS-lane finding 2026-06-21, measured]: the MTDS
+- [x] [DATA] P1. ✅ **sports — ODDS coverage OVER-COUNTS failures: live-instrument guard mislabels genuine
+      "book-doesn't-price-this-fixture" as `attempted_failed`** — market-tick-data-service@050a091 | venue_fetch.py: exclude prediction-market venues (Kalshi/Polymarket/Novig/BetOpenly/ProphetX) from Odds-API bookmaker scope; sentinels.py: route uncovered (book, league) pairs → record_empty(EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE) instead of record_zero_rows(was_expected=True); tests updated (2 new coverage-branch tests) | QG ✅ --no-fix [SPORTS-lane finding 2026-06-21, measured]: the MTDS
       odds expected-universe (sentinel fan-out) enumerates **every bookmaker × every fixture** (BETFAIR, KALSHI,
       PROPHETX, NOVIG, BETOPENLY, POLYMARKET, ONEXBET…). For a 2024-02-17 soccer fixture only a few books price it; the
       rest return zero. The writer tries `record_empty(SOURCE_RETURNED_ZERO)` but the manifest **live-instrument guard
