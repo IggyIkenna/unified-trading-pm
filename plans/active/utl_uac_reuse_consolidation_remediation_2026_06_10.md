@@ -433,7 +433,7 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 
 - [ ] [AUDIT] P1. Update codex for every contract this plan changes: `codex/06-coding-standards/README.md`
       (reuse-before-reimplement rule + the new UTL retry helper), `codex/04-architecture/agent-orchestrator-overview.md`
-      (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/operational/pnl-attribution.md` (strategy
+      (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (strategy
       equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a future
       audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in UTL).
 - [ ] [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM, execution order-CB, hwm_seeds, etc.) in the

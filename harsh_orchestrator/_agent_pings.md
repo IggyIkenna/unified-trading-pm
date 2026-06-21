@@ -1744,7 +1744,7 @@ Key for Harsh's agents:
 ### [plan-reconciler · agt-3591cc] 2026-06-17 — daily reconciliation: 2 doc-hygiene findings filed
 
 Plan-of-record: `plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md`.
-(1) Stale codex pointer `09-strategy/operational/pnl-attribution.md` (missing) in 4 referrers incl. CLAUDE.md:654 + SUB_AGENT_MANDATORY_RULES.md:326 → correct path `architecture-v2/cross-cutting/pnl-attribution.md`.
+(1) Stale codex pointer `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (missing) in 4 referrers incl. CLAUDE.md:654 + SUB_AGENT_MANDATORY_RULES.md:326 → correct path `architecture-v2/cross-cutting/pnl-attribution.md`.
 (2) Abandoned `plans/active/INDEX.md` — 99-entry drift, superseded by the master-plan auto-inventory.
 Corpus otherwise clean: 0 hard hygiene failures, no verified missed flips, no contradictions. 26 grace plans skipped.
 

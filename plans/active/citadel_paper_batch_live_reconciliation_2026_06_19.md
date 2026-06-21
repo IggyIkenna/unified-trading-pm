@@ -537,7 +537,7 @@ are identified (2) and the ledger exists (3).
 > **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
 > P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
 > [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate repo.
-> **Codex SSOT to update on completion:** `codex/09-strategy/operational/pnl-attribution.md` (multi-dim attribution +
+> **Codex SSOT to update on completion:** `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (multi-dim attribution +
 > bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest surface + transfers in the
 > four-ledger model).
 

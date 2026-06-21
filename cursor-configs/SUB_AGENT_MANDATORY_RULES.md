@@ -324,7 +324,7 @@ pointer before acting on any of them.
 - **instruments-service owns reference data + venue URLs/universe** (MTDS derives, never hardcodes); MTDS is market data
   only; never copy instrument definitions between dates (re-run the IS CLI; VIX index is the only static exception).
 - **HWM is never raw equity** (TWR / Notional / PnL-recovery); **treasury keyed by `share_class`, not chain**. SSOTs:
-  `codex/09-strategy/operational/pnl-attribution.md`, `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
+  `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`, `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
 - **Client funds NEVER move between clients** — every transfer scoped to one `client_id`; "cross-client rebalancing" is
   review-blocking (say "intra-client multi-portfolio/wallet"). SSOT: `codex/04-architecture/client-funds-isolation.md`.
 - **Server-side Next.js routes use `firebase-admin`, never the client SDK** (silent 200-no-write on UAT). SSOT:

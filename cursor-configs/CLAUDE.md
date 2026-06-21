@@ -666,7 +666,7 @@ line):
 - **HWM is never raw equity** — three simultaneous methods: TWR HWM (perf %), Notional HWM (transfer-adjusted native
   units), PnL Recovery (USDT for `pnl_based` accounts); never `max(equities)`, never convert a USDT recovery seed to
   BTC. Code: UTL `post_trade/hwm_invariants.py` + client-reporting-api `core/hwm_seeds.py`. SSOT:
-  `codex/09-strategy/operational/pnl-attribution.md`.
+  `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
 - **Treasury/wallet hierarchy is keyed by `share_class`, not chain** (USDC/ETH/SOL/BTC) — DeFi 20% treasury / 80%
   hot-per-strategy-per-chain, CeFi 0/100, Sports no split; Copper MPC custody. SSOT:
   `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
