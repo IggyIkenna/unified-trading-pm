@@ -238,8 +238,8 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Codex SSOT updates
 
-- [ ] [DOCS] P2. codex/02-data/availability-manifest-and-data-status.md — add the 2026-06-21 per-AG snapshot + the
-      live-mode-population gap as a tracked baseline.
+- [x] ✅ [DOCS] P2. codex/02-data/availability-manifest-and-data-status.md — add the 2026-06-21 per-AG snapshot + the
+      live-mode-population gap as a tracked baseline. — unified-trading-pm@7c3926f3f
 
 ## Progress Log
 
