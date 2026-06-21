@@ -99,3 +99,28 @@ if you want it rotated.
 - `alert_quality_overhaul_2026_06_18.md` (watchdog/alert quality — the home for the 2 orchestrator bugs)
 - `issues/staging_to_main_promotion_starvation_2026_06_19.md` + `cicd_promotion_pipeline_2026_06_18.md` (promotion lag)
 - `cicd_quality_gates_2026_06_18.md` + `org_migration_to_odumresearch_2026_06_07.md` (doc-drift / contradictions)
+
+## 2026-06-20 PM — ci-failures channel sweep (round 2)
+
+- [x] ✅ [CICD] **Build Smoke (All Repos) FAILED — root-caused + FIXED.** `build-smoke-all-repos.yml` ran a bare
+  `docker build .` with NO `--build-arg PROJECT_ID` and NO Artifact-Registry auth, so every service/API/UI Dockerfile
+  (`FROM asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library@<digest>`) failed at parse with
+  `pkg.dev//unified-trading-library@… invalid reference format` (empty `${PROJECT_ID}` → `//`) — surfaced by the
+  digest-pin migration; instruments-service was the first in the matrix to error. **Fix shipped** (PM@c59ea0b1c, LDR →
+  reaches `main` via the Option-B standing PR): added `google-github-actions/auth` (`GCP_SA_KEY`) +
+  `gcloud auth configure-docker asia-northeast1-docker.pkg.dev` + `--build-arg PROJECT_ID=central-element-323112` on the
+  non-library branches (mirrors `ci-status-update.yml`/`cloud-build-router.yml` auth pattern). Verifying via a quick
+  smoke dispatch on the LDR ref. **If still red:** the `GCP_SA_KEY` SA needs `roles/artifactregistry.reader` on
+  `central-element-323112` to pull the base — grantable by operator (Owner).
+- **mtds#260 QG red** — self-resolved earlier (MERGED; green run superseded the failure). No action.
+- **Paper-trading re-route** — ALREADY WIRED in code: `e2e-testing/scripts/paper_trading/_engine_docker/deploy.sh`
+  sets `SLACK_WEBHOOK=agent-orchestrator-paper-trading-slack-webhook:latest` ("reroute 2026-06-20" — the SM secret from
+  this session), and `paper_engine.py` posts via `SLACK_WEBHOOK`. The producer I couldn't find last session is the
+  **e2e-testing paper-trading Cloud Run job** (`scripts/paper_trading/`, added with e2e-testing 0.8.0). Remaining: confirm
+  the running Cloud Run job was re-deployed with the new secret (run `deploy.sh`) so the next digest lands in
+  #paper-trading-alerts.
+- **strategy-service `staging-to-main` FAILED (repeating) + market-tick-data-service `update-repo-version` FAILED
+  (v0.21.0) + promotion-lag 22–30 pairs** — all symptoms of the **tracked staging→main promotion starvation**
+  (`issues/staging_to_main_promotion_starvation_2026_06_19.md` + `cicd_promotion_pipeline_2026_06_18.md` Bug#11, P0).
+  NOT new + NOT a quick patch — the P0 fix (promote non-bumping QG-green content + the manifest version-desync /
+  squash-fallback label-loss modes) is the genuinely-completable big item; recommend tackling as a focused unit.
