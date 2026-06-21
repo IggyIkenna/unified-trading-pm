@@ -618,17 +618,18 @@ are identified (2) and the ledger exists (3).
       across the larger universe, UI groups/drills down by every strategy + archetype. Repo: strategy-service
       (catalogue + allocator + paper_run) + e2e-testing (extraction) + verify CRA/UI.
 - [x] ✅ [CODE] P11.6-retry. **execution-service Layer-3 smart-fill entrypoint — SHIPPED** — execution-service@3d7d760c
-  (`backtest_v2/smart_fill_replay.py` + `--operation smart-fill-replay` CLI + peripheral-QG wiring; 12/12 tests, QG
-  exit-0) + e2e-testing@0e421c08 (`scripts/defi/execution_alpha_replay_e2e.py` → writes `ledger_type=execution_alpha`,
-  `execution_alpha_bps = smart − benchmark`; QG exit-0). Both verified on origin/live-defi-rollout 2026-06-21. Ship was
-  blocked by 3 PRE-EXISTING fleet conditions, all cleared: (1) execution-service codex ratchet 4>3 → cleared 2 classes
-  to 2 (empty-string fallback in smart_fill_replay.py:276 + the back-compat docstring in v2/benchmark_fills.py:12) +
-  fixed a net-new STEP-5.69 inline-gs:// flag (error-msg noqa on smart_fill_replay.py:224) → QG exit-0; (2) PM manifest
-  `versions{}` promotion-lag did NOT block service quickmerge (warn-only PM post-gate; left to promotion automation, not
-  hand-synced per the pull-not-push manifest-surface rule); (3) e2e dep-validation pre-flight tripped on a LIVE FOREIGN
-  strategy-service test/source WIP (operator-protected — never touched) → shipped via the documented multi-agent
-  `--skip-preflight` route (the new e2e file imports only execution_service + UAC + UTL; strategy-service SOURCE on LDR
-  is unchanged, so zero blast-radius on this ship).
+      (`backtest_v2/smart_fill_replay.py` + `--operation smart-fill-replay` CLI + peripheral-QG wiring; 12/12 tests, QG
+      exit-0) + e2e-testing@0e421c08 (`scripts/defi/execution_alpha_replay_e2e.py` → writes
+      `ledger_type=execution_alpha`, `execution_alpha_bps = smart − benchmark`; QG exit-0). Both verified on
+      origin/live-defi-rollout 2026-06-21. Ship was blocked by 3 PRE-EXISTING fleet conditions, all cleared: (1)
+      execution-service codex ratchet 4>3 → cleared 2 classes to 2 (empty-string fallback in smart_fill_replay.py:276 +
+      the back-compat docstring in v2/benchmark_fills.py:12) + fixed a net-new STEP-5.69 inline-gs:// flag (error-msg
+      noqa on smart_fill_replay.py:224) → QG exit-0; (2) PM manifest `versions{}` promotion-lag did NOT block service
+      quickmerge (warn-only PM post-gate; left to promotion automation, not hand-synced per the pull-not-push
+      manifest-surface rule); (3) e2e dep-validation pre-flight tripped on a LIVE FOREIGN strategy-service test/source
+      WIP (operator-protected — never touched) → shipped via the documented multi-agent `--skip-preflight` route (the
+      new e2e file imports only execution_service + UAC + UTL; strategy-service SOURCE on LDR is unchanged, so zero
+      blast-radius on this ship).
 
 - [ ] [DATA] P2.11.11. **Backfill the DeFi feature groups so the non-staked-basis archetypes light up** — P11.10 wired
       30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the paper
@@ -646,7 +647,7 @@ are identified (2) and the ledger exists (3).
     venues — ASTER/GMX/HYPERLIQUID/PACIFICA, `data_type=perp_funding`, 2021-09-01..2026-05-22; ZERO CeFi venues);
     `market-data-tick-cefi-prd-central-element-323112` (has raw `derivative_ticker`/`book_snapshot_5`/`trades` for
     BINANCE-FUTURES/BYBIT/OKX/DERIBIT/KRAKEN-FUTURES via Tardis incl. the 2026-05-16..22 window, but **no `perp_funding`
-    data_type anywhere** — derivative_ticker carries the funding *field* on the raw tick, but the computed funding-rate
+    data_type anywhere** — derivative_ticker carries the funding _field_ on the raw tick, but the computed funding-rate
     series is not materialised); `features-delta-one-cefi-prd-…` (EMPTY); `features-onchain-cefi-prd-…` (EMPTY — this is
     the target of `features_service/cefi/calculators/perp_funding_rates.py`, which is MVP-scoped to Binance ETH-PERP and
     has not written output for the window). **Root cause:** the CeFi perp-funding compute (reads CeFi MTDS
@@ -661,12 +662,12 @@ are identified (2) and the ledger exists (3).
       `convertToAssets(1e18)` / `pricePerShare()` historically via the Alchemy/Helius archive RPC (creds
       `alchemy-api-key`/`helius-api-key` in Secret Manager) OR the vault subgraph (`thegraph-api-key`); (b) the
       `fees_usd=0` LP pools (Curve threepool/crvusdusdc, balancer) need real fee data — pull `feesUSD` from the
-      Uniswap/Curve/Balancer subgraph (The Graph, `thegraph-api-key`..`-7`) or compute `volume_usd × fee_rate_bps`
-      where volume is present. Materialise both into the canonical dex/vault feature location the engine reads
+      Uniswap/Curve/Balancer subgraph (The Graph, `thegraph-api-key`..`-7`) or compute `volume_usd × fee_rate_bps` where
+      volume is present. Materialise both into the canonical dex/vault feature location the engine reads
       (resolve_bucket_name SSOT), then wire DEFI_LP_VAULT into the paper run + re-derive the fee-0 LP pools so they
-      produce real fee/IL PnL. Honest absence only where a vault/pool genuinely has no on-chain history. Backtest +
-      ε=0. Repo: mtds / features-onchain (sourcing) + strategy-service (DEFI_LP_VAULT wiring). Creds via
-      get_secret_client — never raw values in repo.
+      produce real fee/IL PnL. Honest absence only where a vault/pool genuinely has no on-chain history. Backtest + ε=0.
+      Repo: mtds / features-onchain (sourcing) + strategy-service (DEFI_LP_VAULT wiring). Creds via get_secret_client —
+      never raw values in repo.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -680,12 +681,12 @@ are identified (2) and the ledger exists (3).
   from its canonical GCS bucket: CARRY_STAKED_BASIS (14, lending_rates+lst_rates), CARRY_BASIS_PERP (17, perp-funding
   bucket = Hyperliquid), ARBITRAGE_PRICE_DISPERSION (10, dex-pools bucket), DEFI_LP_CONCENTRATED+POOL (5, dex-pools).
   Shas: UTL@e797deac, strategy-service@4d0d98f4/d57394d0/0f415757. Verified runs `paper-p11-11-eps-v2` (31) +
-  `paper-p11dex-v2` (46), both batch-rerun ε=0 (541/541, 0 dev). Every row strategy-keyed (P11.9); fees (P11.8),
-  passive tape (P11.3), treasury split (P11.4) all live. P11.6 exec-alpha SHIPPED (execution-service@3d7d760c).
-  P11.9-ui SHIPPED (ui@608762a1, 14→drilldown). **Remaining for full coverage: CeFi perp_funding COMPUTE** — raw
-  derivative_ticker for Binance/Bybit/OKX/Deribit/Kraken EXISTS in market-data-tick-cefi (incl window) but the funding
-  feature is MVP-scoped to Binance ETH only → broaden + run to unlock CARRY_FUNDING_DISPERSION (52) + non-HL basis-perp
-  (P11.11 residual / P11.12). DEFI_LP_VAULT needs vault-share-price corpus (separate).
+  `paper-p11dex-v2` (46), both batch-rerun ε=0 (541/541, 0 dev). Every row strategy-keyed (P11.9); fees (P11.8), passive
+  tape (P11.3), treasury split (P11.4) all live. P11.6 exec-alpha SHIPPED (execution-service@3d7d760c). P11.9-ui SHIPPED
+  (ui@608762a1, 14→drilldown). **Remaining for full coverage: CeFi perp_funding COMPUTE** — raw derivative_ticker for
+  Binance/Bybit/OKX/Deribit/Kraken EXISTS in market-data-tick-cefi (incl window) but the funding feature is MVP-scoped
+  to Binance ETH only → broaden + run to unlock CARRY_FUNDING_DISPERSION (52) + non-HL basis-perp (P11.11 residual /
+  P11.12). DEFI_LP_VAULT needs vault-share-price corpus (separate).
 
 - **2026-06-21 — CRON GRADUATED + Phase 10 dashboard complete (operator autonomous push).** The paper-engine Cloud Run
   job executes GREEN on the corrected engine: execution `uts-prod-paper-engine-run-2q8bj` succeeded → wrote run
@@ -1856,3 +1857,20 @@ NOT the fills (gross is also ~1 full). cs and tsmom are the genuinely weak ones.
       leg-quality audit 2026-06-21.
 - [ ] [RESEARCH] P3. **h32 is the next weak leg (0.54 full)** — give it the same denoise/horizon treatment (it's a
       momentum leg; likely over-trading like cs). Repo: e2e-testing. Prov: leg-quality audit 2026-06-21.
+
+### 2026-06-21 — BASIS-CARRY REALISM AUDIT (operator: "basis seems crazy high — yield? execution? $2.5M unleveraged? not super-illiquid?")
+
+`_basis_audit.py` answers all four empirically: (1) **NOT illiquid** — the liquid-9 basis holds only liquid majors
+(LINK/LTC/ZEC/DOGE/XRP/ETH/ADA/SOL/BNB), zero illiquid-tail. (2) **Unleveraged + UNDER-deployed** — mean gross notional
+$804k (max $2.0M) vs the $2.5M CAP, delta-neutral, uses CAP not the 2x BOOK. (3) **Yield realistic** — held-coin funding
++9.8%/yr mean (real Binance funding on liquid perps), NOT the 50%+ illiquid-small-cap funding. (4) **Sharpe real but
+OPTIMISTIC** — funding-only 13.6 → 11.7 (2-leg maker) → 7.8 (+3%/yr financing) → 7.1 (+basis-dislocation MTM). **The
+deployable basis Sharpe is ~7-12, not 13.** TWO clarifications: (a) the raw $ is MODEST — $264k cum over 3.5yr on ~$800k
+= ~10%/yr, sane low-vol carry, NOT crazy; (b) the "400%+ cum" on the leg plots is a PRESENTATION ARTIFACT — every leg is
+vol-normalized to 10% vol, which LEVERS the low-vol carry up for Sharpe-comparability. The one unmodeled risk is the
+rare basis-blowout TAIL (deleveraging events) a funding-only backtest can't capture.
+
+- [ ] [RESEARCH] P2. **Re-present + size basis on RAW economics, not vol-normed** — the deployable carry is ~10%/yr on
+      ~$800k liquid-majors capital (Sharpe ~7-12 after 2-leg exec + financing), with an unmodeled deleveraging-tail
+      risk; stop showing the 10%-vol-normed 400%-cum line as the headline. Add a basis-dislocation/borrow cost model + a
+      tail reserve. Repo: strategy-service. Prov: basis realism audit 2026-06-21.
