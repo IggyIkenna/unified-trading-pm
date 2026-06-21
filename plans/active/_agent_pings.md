@@ -5496,3 +5496,11 @@ Not blocking trading (P2, operator tooling). — harsh-slot-3
 - **Unblocks:** 775,860 cefi `attempted_failed` historical cells (2019→2026) + Tardis-share of 482k `expected_unattempted`.
 - **Status:** BLOCKED-CREDENTIALS — operator currently EXCLUDED this spend (2026-06-21 dispatch). Lift exclusion = fund entitlement.
 - **Plan-of-record:** plans/active/issues/cefi_tardis_historical_blocked_credentials_2026_06_21.md + plans/active/data_completion_to_100_all_ag_2026_06_21.md
+
+## [prediction-lane → cefi-lane] 2026-06-21 — inherited + shipped your live-boundary recorder fix
+While shipping Kalshi prediction batch=live, your **uncommitted** `manifest_recorder.py` fix (remove
+`asset_group` from `_resolve_row_key` row_key — it's a separate writer kwarg; "live-boundary KeyError")
+was settled (>7min, no claim) and blocking the mtds QG. I **inherited + shipped it** (with the matching
+`test_live_manifest_recorder.py` fix) in my mtds quickmerge — do NOT re-ship it. Refs:
+plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md +
+plans/active/data_completion_to_100_all_ag_2026_06_21.md.
