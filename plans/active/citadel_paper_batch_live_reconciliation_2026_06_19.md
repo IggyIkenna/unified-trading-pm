@@ -656,7 +656,7 @@ are identified (2) and the ledger exists (3).
     2026-05-16..22 + rolling, honest-absence where a venue genuinely lacks history. Repo: features-service (cefi
     perp_funding calculator) + mtds (if derivative_ticker gaps surface).
 
-- [ ] [DATA] P2.11.13. **Source DEFI_LP_VAULT share-price + the fees_usd=0 pool fees with credentials** (operator
+- [x] ✅ [DATA] P11.13. **DEFI_LP_VAULT share-price + fee-0 pool fees — DONE** (strategy-service@70a76d87). Vault APY from the ERC-4626 `vault_share_price` corpus via `CanonicalVaultProvider` (yvUSDC ~335bps, sUSDe ~420bps, sDAI 124bps); fee-0 LP pools fixed with The-Graph `feesUSD` (Curve 18-46bps, Balancer 56-169bps). 24 unit tests. Verified run `paper-20260621225959-e86237f7`: **145 strategies / 7 archetypes** (DEFI_LP_VAULT 3 lit, DEFI_LP_POOL 2→3). 197 specs honestly skipped.
       2026-06-21: "fix that, we can get data, we got creds"). Two honest-skip gaps from P11.11/dex tranche are
       sourceable, not walls: (a) DEFI_LP_VAULT (ERC-4626 yearn/etc) needs a vault-share-price series — read
       `convertToAssets(1e18)` / `pricePerShare()` historically via the Alchemy/Helius archive RPC (creds
@@ -693,6 +693,15 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-21 (autonomous) — FULL MULTI-ARCHETYPE BOOK: 145 strategies / 7 archetypes + PROD UI LIVE.** Final run
+  `paper-20260621225959-e86237f7`: CARRY_BASIS_PERP 79, CARRY_FUNDING_DISPERSION 33, CARRY_STAKED_BASIS 14,
+  ARBITRAGE_PRICE_DISPERSION 10, DEFI_LP_CONCENTRATED 3, DEFI_LP_POOL 3, DEFI_LP_VAULT 3 — every archetype reading real
+  data from canonical GCS. P11.13 (vault APY + subgraph fees) shipped strategy-service@70a76d87. **UI drilldown DEPLOYED
+  TO PROD** (odum-portal-00032-4nq, www.odum-research.com, 3 regions; browser-verified selector + archetype grouping +
+  by-factor render, 0 console errors). CRA prod deploying the strategy_id-filter image (latest f665e0b) so the prod URL
+  shows all 145 (was resolving an old 14-strategy run). ε=0 proof on the 145-run running. CRA strategy_id endpoint was
+  erroring on the stale prod rev — fixed by the deploy.
 
 - **2026-06-21 (autonomous) — BTC-trend VALIDATED on the proper-execution base; "best of both" resolved → trend
   SUBSUMES the old de-risk/short (don't stack — it over-hedges).** Correction to the prior entry's plot: the first
