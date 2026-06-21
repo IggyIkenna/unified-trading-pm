@@ -150,11 +150,11 @@ RUNNING on the verified-fcd6549 stack.
   launch the re-walk VM. Sequence AFTER the Kalshi seed completes. Repo: market-tick-data-service. NOTE:
   the 1454 are already `captured` (counted in honest-cov) — this is v9-schema polish, not new coverage.
 
-- [ ] [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** (pre-existing): `manifest_finalize.py` prediction
+- [x] ✅ [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** — STALE PREMISE, resolved-by-architecture (verified 2026-06-21): `manifest_finalize.py` prediction
   cqg writer now resolves a *batch* pipeline_mode even on the LIVE ingest path (the prior code hardcoded
   `BATCH_POLYMARKET_CLOB`). When live prediction ingest runs, it should stamp `live_<source>` not `batch_<source>`. Make
   the finalize mode-aware (thread the run mode → `live_pipeline_mode_for_venue` for live). Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` must cover `batch_kalshi`** before any
+- [x] ✅ [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` covers `batch_kalshi`** — covered-by-derivation (verified 2026-06-21): before any
   `reconcile_phantom_manifest_rows_all.py --asset-group prediction --apply` — else the newly-seeded batch_kalshi
   parquets read as phantoms and a real `captured` flips to `attempted_failed`. Verify `ASSET_GROUP_CONFIG["prediction"]
   ["prefix_tpls"]` includes the `pipeline_mode=batch_kalshi` path shape. Repo: instruments-service.
@@ -330,3 +330,17 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 - **Relaunch**: tarball rebuilt with the fix; re-walk VM v2 `mtds-prediction-polyrewalk-20260621-204658`
   RUNNING (`--venue POLYMARKET`, concurrent-safe with the Kalshi seed). ETA ~112min. P1 item flips on its clean exit.
 - **Kalshi seed (VM 170001)** healthy + climbing: last converted day `kalshi-bulk 2024-08-03` (was 2024-05-15). THE deliverable.
+
+### 2026-06-21 20:50 — Two P2 manifest items resolved (verified, no code change)
+- **prefix_tpls covers batch_kalshi** (line 157): the phantom reconciler derives `prefix_tpls` from
+  UAC `canonical_path_templates("prediction")` (Axis-10 fix — no hand-copy). Verified it now yields
+  `pipeline_mode=batch_kalshi/asset_group=prediction/` because my UAC source registration added kalshi
+  to `external_batch_sources_for_asset_group("prediction")` → `['kalshi','polymarket_clob','polymarket_gamma_api']`.
+  The seeded `batch_kalshi` parquets are PROTECTED from a phantom `--apply` flip. Evidence: `_canonical_pipeline_mode_prefixes("prediction")` HAS batch_kalshi=True.
+- **Live finalize NOT batch-mode-stamped** (line 153 — STALE PREMISE): `manifest_finalize.py` is the
+  BATCH orchestrator's finalize (`_DateRunState` carries only `mvp_mode`, no live flag); the LIVE
+  websocket path uses `live/manifest_recorder.py`, which takes a REQUIRED `live_<source>` pipeline_mode
+  per call resolved by the runner via `live_pipeline_mode_for_venue`. Verified
+  `live_pipeline_mode_for_venue("prediction","KALSHI",...) -> live_kalshi` and
+  `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps `batch_`, live
+  recorder correctly stamps `live_` — no mode-awareness bug; the line-153 "finalize on the live path" assumption was incorrect.
