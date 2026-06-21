@@ -548,19 +548,19 @@ are identified (2) and the ledger exists (3).
 > live-state audit of the deployed cron + the GCS ledger (`run_id=paper-20260621134256-3c4eb321`) surfaced the gaps
 > below. All are real; filed per Capture-Discoveries HARD RULE; driven to done under `/autonomous` 2026-06-21.
 
-- [ ] [INFRA] P11.1. **Roll-forward cron window** — the deployed `uts-prod-paper-engine-run` Cloud Run Job args pin a
+- [ ] [INFRA] P1.1. **Roll-forward cron window** — the deployed `uts-prod-paper-engine-run` Cloud Run Job args pin a
       HARDCODED window `--start-date 2026-05-16 --end-date 2026-05-22`, so the 02:00 UTC cron RE-RUNS THE SAME WEEK
       nightly (determinism harness) and never advances to generate NEW trades/PnL. Make the window roll: a trailing
       7-day window ending T-1 (computed at job start, UTC), so each night books a fresh day. Repo: deployment-service
       (`terraform/gcp/paper_week_determinism_scheduler.tf` job args) + strategy-service (a `--rolling-days N` /
       relative-window flag on `paper-run` so the job needn't bake absolute dates). Re-apply tofu + verify the next
       execution's `run_manifest.window_*` advanced.
-- [ ] [CODE] P11.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
+- [ ] [CODE] P1.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
       `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift
       guard silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the
       job, or `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
       strategy-service (`cli/handlers/paper_run_handler.py` manifest build) + deployment-service (job env).
-- [ ] [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
+- [ ] [CODE] P1.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
       materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has
       NO `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
       parquet (P3.5), not BOOKED as an accrual tape that feeds NAV. Wire the engine to emit per-held-day PASSIVE rows
@@ -570,30 +570,30 @@ are identified (2) and the ledger exists (3).
       cash-flow delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service
       (+ UTL emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation
       (recon includes passive).
-- [ ] [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
+- [ ] [CODE] P1.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
       (deposit→swap→stake→margin) but has ZERO treasury rows and no `share_class`-keyed 20% treasury / 80%
       hot-wallet-per-strategy-per-chain split (the `wallet-hierarchy-and-capital-flow` SSOT). Simulate the treasury→hot
       allocation as TRANSFER rows (DeFi 20/80, CeFi 0/100) at capital-deploy time, keyed by `share_class`, single
       `client_id` (funds-isolation HARD RULE). Repo: strategy-service (transfer emission) + UTL (treasury split helper).
-- [ ] [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
+- [ ] [CODE] P2.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
       bare `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk
       double-counting (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real
       strategies; the bare archetype is a roll-up label, not a strategy row) and stamp consistently so the UI
       per-strategy panel + attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) +
       client-reporting-api (rollup) + verify UI.
-- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
+- [ ] [CODE] P2.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
       `execution-service@d36b751f`) exists but `run_manifest.fill_model` is still `BENCHMARK`; paper emits only the
       benchmark yardstick, so `execution_alpha = smart − benchmark` is not produced in the live paper output. Wire the
       strategy-service paper-run to call Group C after Group B with the same captured data (the thin handoff P1.2
       named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg.
       Repo: strategy-service (+ execution-service `PaperMatchingEngine` handoff).
-- [ ] [INFRA] P11.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
+- [ ] [INFRA] P3.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
       `odum-portal-cldtjniqvq-an.a.run.app` URL (allUsers→run.invoker, anon HTTP 200). Map a stable
       `portal.odum-research.com` (or `paper.odum-research.com`) Cloud Run domain mapping so the operator has a durable
       link. DNS record at the registrar is the one operator-gated step — create the mapping + document the exact CNAME
       to add. Repo: deployment-service (domain-mapping tf) — NICE-TO-HAVE.
 
-- [ ] [CODE] P11.8. **Fee model — approximate maker/taker fees on turnover** (operator 2026-06-21: "0 fees … fees 1bp
+- [ ] [CODE] P2.8. **Fee model — approximate maker/taker fees on turnover** (operator 2026-06-21: "0 fees … fees 1bp
       maker 2bps taker we should approximate"). The attribution FEES factor is ≈0 because the P3.5 producer OMITTED the
       FEES leg (not baked into execution costs — genuinely unmodeled). Add a deterministic fee model: **1 bp maker /
       2 bps taker on filled notional** (per-venue overridable later), booked as (a) a real `FEES` factor and (b) at
