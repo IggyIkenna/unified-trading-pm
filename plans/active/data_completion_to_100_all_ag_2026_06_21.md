@@ -74,6 +74,28 @@ captured-row count climbing + `live_*` rows appearing. Monitor re-checks the con
 each tick; relaunches any stalled/failed/terminated backfill VM; flat metric → diagnose (`run.log`), never
 spin. Excluded from 100%: cefi batch-Tardis historical (billing).
 
+## Wave-1 verify findings (2026-06-21) — fix before the sharded fan-out
+
+The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these):
+- [x] **Manifest consolidator HEALTHY** — cefi/defi/tradfi/prediction market-data consolidator Cloud Run
+  Jobs all executed 13:45 (crons ENABLED). NOT a global blocker. (sports/instruments-tradfi-legacy crons PAUSED — expected.)
+- [x] **kalshi converter bug FIXED** — `_slice_day` filter type-mismatch (corpus `timestamp[s]` vs tz-aware-ns)
+  → ArrowNotImplementedError; now adapts to the column type + timestamp[s] regression test (mtds, QG-green).
+- [ ] [SCRIPT] P0. deployment-service — **`launch-mtds-lst-rates-backfill-vm.sh` bucket bug**: resolved a MALFORMED
+  bucket `lst-rates-central-element-323112` → ManifestConsolidatorStaleError. Fix the bucket resolution to the
+  canonical `market-data-tick-defi-prd-…`. Repo: deployment-service.
+- [ ] [SCRIPT] P0. deployment-service — **`launch-mtds-sports-odds-backfill-vm.sh` passes `--tier 1`** which the MTDS
+  CLI rejects (`unrecognized arguments: --tier 1`). Drop/fix the arg. Repo: deployment-service.
+- [ ] [SCRIPT] P0. deployment-service — **`launch-tradfi-bf-nasdaq-ohlcv-1m.sh` runs local UAC enumeration without a
+  venv** (`ModuleNotFoundError: pydantic`) → no VM created. Invoke via the workspace venv. Repo: deployment-service.
+- [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
+  enumeration must precede the MTDS poll (same IS→MTDS ordering as the Kalshi seed). Repo: instruments-service.
+- [ ] [TERRAFORM] P0. **deployment-service terraform must reflect the CANONICAL bucket names after the bucket-name
+  updates** (operator 2026-06-21): the consolidator schedulers (`manifest_consolidator_scheduler.tf`) + any per-AG
+  bucket refs must use the canonical `market-data-tick-{ag}-prd-…` / `instruments-store-{ag}-prd-…` (env-short) — the
+  lst-rates malformed-bucket bug suggests launcher/terraform bucket drift; audit + `terraform apply` so every
+  consolidator + launcher targets the canonical bucket. Repo: deployment-service. SSOT: bucket_name_ssot plans.
+
 ## Codex SSOT updates
 - [ ] [DOCS] P2. codex/02-data/availability-manifest-and-data-status.md — add the 2026-06-21 per-AG snapshot + the live-mode-population gap as a tracked baseline.
 
