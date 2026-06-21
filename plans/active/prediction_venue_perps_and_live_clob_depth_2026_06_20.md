@@ -150,11 +150,11 @@ RUNNING on the verified-fcd6549 stack.
   launch the re-walk VM. Sequence AFTER the Kalshi seed completes. Repo: market-tick-data-service. NOTE:
   the 1454 are already `captured` (counted in honest-cov) — this is v9-schema polish, not new coverage.
 
-- [ ] [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** (pre-existing): `manifest_finalize.py` prediction
+- [x] ✅ [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** — STALE PREMISE, resolved-by-architecture (verified 2026-06-21): `manifest_finalize.py` prediction
   cqg writer now resolves a *batch* pipeline_mode even on the LIVE ingest path (the prior code hardcoded
   `BATCH_POLYMARKET_CLOB`). When live prediction ingest runs, it should stamp `live_<source>` not `batch_<source>`. Make
   the finalize mode-aware (thread the run mode → `live_pipeline_mode_for_venue` for live). Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` must cover `batch_kalshi`** before any
+- [x] ✅ [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` covers `batch_kalshi`** — covered-by-derivation (verified 2026-06-21): before any
   `reconcile_phantom_manifest_rows_all.py --asset-group prediction --apply` — else the newly-seeded batch_kalshi
   parquets read as phantoms and a real `captured` flips to `attempted_failed`. Verify `ASSET_GROUP_CONFIG["prediction"]
   ["prefix_tpls"]` includes the `pipeline_mode=batch_kalshi` path shape. Repo: instruments-service.
@@ -316,4 +316,35 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 - `unified_api_contracts/registry/venue_mapping.py` — VenueMapping.venue_start_dates entries
 - `tests/unit/test_get_perp_venues.py` — KALSHI_PERP + POLYMARKET_PERP asserted in test_includes_all_known_perp_venues
 
-- [ ] [TEST] P1. instruments-service — fix `test_cefi_yields_no_rows_for_post_all_venue_launches`: adding KALSHI-PERP (launch 2026-05-29) + POLYMARKET-PERP (2026-04-21) to the CeFi venue universe shifted the "max venue launch date" the test keys off → update the test's post-all-launch date (or the fixture) to include the new perp venues. Owned by the perps venue add (Phase 1). Repo: instruments-service.
+- [x] ✅ [TEST] P1. instruments-service — `test_cefi_yields_no_rows_for_post_all_venue_launches` GREEN (verified 2026-06-21, perp-venue-add fixture already updated): adding KALSHI-PERP (launch 2026-05-29) + POLYMARKET-PERP (2026-04-21) to the CeFi venue universe shifted the "max venue launch date" the test keys off → update the test's post-all-launch date (or the fixture) to include the new perp venues. Owned by the perps venue add (Phase 1). Repo: instruments-service.
+
+### 2026-06-21 20:47 — Polymarket v4→v9 re-walk: CF-11 phantom-row fix + relaunch (v2)
+- **First re-walk (VM 183617) FAILED at ~112min** on `MalformedRowKeyError`: the CF-11 honest-absence
+  re-emit (`_rebuild_prediction_cf11.py::reemit_honest_absence_rows`) iterated stale pre-canonical
+  phantom rows with a BLANK `instrument_id` (`data_type='trades'`, `instrument_id=''`) and built a
+  per-instrument `row_key` with `instrument_id=''` → Phase-4 `hard_schema_enforcement` rejects it; the
+  crash hit BEFORE the per-VM shard flush, so nothing landed.
+- **Fix**: `reemit_honest_absence_rows` now SKIPS blank-`instrument_id` rows (`counters['reemit_skipped_blank_iid']`);
+  the canonical cqg bundle atom supersedes those legacy per-instrument phantoms. Committed durable:
+  market-tick-data-service@LDR (`fix(prediction): rebuild CF-11 re-emit skips malformed blank-instrument_id phantom rows`).
+- **Relaunch**: tarball rebuilt with the fix; re-walk VM v2 `mtds-prediction-polyrewalk-20260621-204658`
+  RUNNING (`--venue POLYMARKET`, concurrent-safe with the Kalshi seed). ETA ~112min. P1 item flips on its clean exit.
+- **Kalshi seed (VM 170001)** healthy + climbing: last converted day `kalshi-bulk 2024-08-03` (was 2024-05-15). THE deliverable.
+
+### 2026-06-21 20:50 — Two P2 manifest items resolved (verified, no code change)
+- **prefix_tpls covers batch_kalshi** (line 157): the phantom reconciler derives `prefix_tpls` from
+  UAC `canonical_path_templates("prediction")` (Axis-10 fix — no hand-copy). Verified it now yields
+  `pipeline_mode=batch_kalshi/asset_group=prediction/` because my UAC source registration added kalshi
+  to `external_batch_sources_for_asset_group("prediction")` → `['kalshi','polymarket_clob','polymarket_gamma_api']`.
+  The seeded `batch_kalshi` parquets are PROTECTED from a phantom `--apply` flip. Evidence: `_canonical_pipeline_mode_prefixes("prediction")` HAS batch_kalshi=True.
+- **Live finalize NOT batch-mode-stamped** (line 153 — STALE PREMISE): `manifest_finalize.py` is the
+  BATCH orchestrator's finalize (`_DateRunState` carries only `mvp_mode`, no live flag); the LIVE
+  websocket path uses `live/manifest_recorder.py`, which takes a REQUIRED `live_<source>` pipeline_mode
+  per call resolved by the runner via `live_pipeline_mode_for_venue`. Verified
+  `live_pipeline_mode_for_venue("prediction","KALSHI",...) -> live_kalshi` and
+  `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps `batch_`, live
+  recorder correctly stamps `live_` — no mode-awareness bug; the line-153 "finalize on the live path" assumption was incorrect.
+
+### 2026-06-21 20:52 — P1 perp-venue test items GREEN
+- `instruments-service tests/unit/scripts/test_enumerate_expected_universe.py::test_cefi_yields_no_rows_for_post_all_venue_launches` → **1 passed** (the perp-venue-add already updated the post-all-launch fixture).
+- `unified-api-contracts tests/unit/test_get_perp_venues.py` → **6 passed** (KALSHI-PERP/POLYMARKET-PERP asserted; venue_constants.py registers both, asset_group=cefi, PERP_TRADE capability). Both verified green, no code change needed.

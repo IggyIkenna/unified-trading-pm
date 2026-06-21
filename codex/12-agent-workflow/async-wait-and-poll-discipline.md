@@ -174,3 +174,32 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
 Composes with: Poll cadence + stall-intervention (above) — a flat metric and a silent watcher are the same smell;
 Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running", and "proxy reached its state" ≠
 "chain completed", until a verdict line says which from a real measurement.
+
+## Don't over-watch + no-sawtooth (codified 2026-06-21)
+
+**Root cause of the recurring "operator finds me asleep" — it is NOT a wake-mechanism failure.** A tracked
+`run_in_background` task's completion reliably auto-re-invokes the agent (verified 2026-06-21: the completion
+notification fired on time; the operator had simply pinged 1 min before a 12-min watcher finished). The real defect is
+the agent **manufacturing dormancy windows**, two banned patterns:
+
+1. **Over-watching.** Arming a long (10-min+) watcher to "prove" a metric that is ALREADY visibly moving. Incident
+   2026-06-21: a 12-min enrichment watcher was armed to confirm a fetch count that had already climbed 274→2760 by the
+   2nd (~90s) check. The climb was obvious in two ticks; the remaining ~10 min were pure needless dormancy. **Rule:**
+   confirm a climbing metric in **≤2 quick (~90s) checks**, conclude, and move on — never arm a long watcher to re-prove
+   something already visible.
+
+2. **Sawtooth.** Chaining many SHORT watchers (arm 5-min → wake → check → arm another 5-min → …). Each short watcher
+   leaves a fresh dormancy gap the operator pings into, and if any re-arm is skipped or a watcher exits inconclusively,
+   the loop dies silently → permanent dormancy until a human ping. **Rule:** for a genuinely long unattended wait
+   (multi-day backfill, operator-gated credit/quota top-up) where there is **no autonomous code work left**, arm **ONE
+   long event-driven monitor** in a single tracked task that: (a) polls at an interval matched to how slowly the watched
+   state changes (hours for a multi-day backfill, not 5 min); (b) watches **ALL** actionable conditions in one place
+   (stall / OOM / crash / the external unblock returning / completion); (c) exits — waking the agent — ONLY on an
+   actionable event or completion. The agent then wakes on SIGNAL, not on a timer it must keep re-arming.
+
+3. **Manage the expectation.** When the remaining work is genuinely just "wait on operator action + slow external rate,"
+   SAY SO explicitly — name exactly what wakes the agent and what is the operator's action — instead of implying
+   continuous active work. Don't fake liveness; an honest "nothing more to do autonomously, monitoring, here's the one
+   signal I'm waiting on" beats a sawtooth of short watchers that reads as flaky.
+
+Composes with the Watcher-coverage rule above (terminal verdict on every path; verify the awaited mechanism exists).

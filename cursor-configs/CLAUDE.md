@@ -384,6 +384,17 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   `assert_batch_api_allowed` (raise = never billed silently). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` +
   `registry/databento_subscription_allowlist.py`; rollout
   `plans/active/tradfi_databento_subscription_universe_lockdown_2026_06_18.md`.
+  - **TradFi OHLCV backfill-launcher gotchas (silent-0-row class — codified 2026-06-21)**: the
+    `deployment-service/scripts/vm/launch-tradfi-bf-*` launchers MUST use `VM_TASK=mtds-backfill` (NOT `cefi-backfill` —
+    routes away from the `--source`-passing branch) + set `VM_SOURCE` in metadata + `setup-data-pipeline-vm.sh` MUST
+    forward `--source $VM_SOURCE` (the `TickDataHandler` RAISES `--source ... REQUIRED` for tradfi OHLCV → 0 rows at
+    rc=0/1 otherwise). `ohlcv_1s` is **FUTURES-only (CME/CBOE)** — equities `NASDAQ/NYSE=[ohlcv_1m]` (pre-flight drops
+    1s). End-date ≤ yesterday (Databento T+1). CME **event contracts** (`EC*` binary markets) need the IS instruments
+    backfill (`launch-tradfi-event-contract-backfill.sh`) + MTDS OHLCV of the `EC*.OPT` parents. **Live producer
+    (`live_databento`)** has 3 known bugs (`_get_api_key` reads the None field not the secret; `live_source_for_venue`
+    returns batch-only `massive` not live-capable `databento`; instrument-ids need `venue:type:underlying`) + needs the
+    Databento **Real-Time/Live** subscription. Full detail + code refs: `codex/02-data/tradfi-databento-sourcing-ssot.md`
+    § "Operational gotchas".
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms. **After a GCS path migration, large phantom counts are usually false positives** — verify
@@ -550,7 +561,22 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   actively polling to keep cache warm; 20–30 min only for idle waits). A **flat** metric across ticks = **STALL → STOP
   and diagnose the blocker** (`gh run view --log-failed`), never wait it out — a jammed pipeline does not self-unstick
   (incident: a frozen `ci_status` writer caught in ~6 min by short polling that a 16-min done-watcher would have
-  wasted). Stay productive on independent work during the wait; never idle-burn the window. **Watcher-coverage (HARD
+  wasted). Stay productive on independent work during the wait; never idle-burn the window. **Don't over-watch +
+  no-sawtooth (HARD RULE, codified 2026-06-21 — operator escalation "whenever you wanna wake you don't fix the root
+  cause"):** the wake mechanism (a tracked `run_in_background` task's completion auto-re-invokes you) is RELIABLE — the
+  recurring "operator finds me asleep" is NOT a wake failure, it's that I MANUFACTURE dormancy windows two ways, both
+  banned: (a) **over-watching** — arming a long (10-min+) watcher to "prove" a metric that's ALREADY visibly moving (a
+  fetch count climbing 274→2760 by check #2 does not need a 12-min confirmation run; incident 2026-06-21). Confirm a
+  climbing metric in **≤2 quick (~90s) checks**, conclude, move on — never arm a long watcher to re-prove the obvious.
+  (b) **sawtooth** — chaining many SHORT watchers (arm 5-min → wake → check → arm another 5-min → …), each leaving a
+  fresh dormancy gap the operator pings into. For a genuinely long unattended wait (multi-day backfill, operator-gated
+  credit top-up) where there is **no autonomous code work left**, arm **ONE long event-driven monitor** in a single
+  tracked task: poll at an interval matched to how slowly the watched state changes (hours for a multi-day backfill,
+  NOT 5 min), watch **ALL** actionable conditions in one place (stall / OOM / crash / external-unblock-returned /
+  completion), and exit (wake me) ONLY on an actionable event or completion — so I wake on SIGNAL, not on a timer I
+  must keep re-arming. And when the remaining work is genuinely just "wait on operator action + slow external rate,"
+  **SAY SO explicitly** (what wakes me / what is YOUR action) instead of implying continuous active work — manage the
+  expectation, don't fake liveness. **Watcher-coverage (HARD
   RULE, codified 2026-06-10 — never infinitely wait)**: (1) a watcher must reach a TERMINAL verdict on EVERY path —
   watch `state != OPEN` (covers merged/closed/failed), never only the success marker, and PRINT an explicit verdict line
   so empty output is impossible (a timeout-killed silent watcher reads as "still waiting" forever — incident 2026-06-10:
@@ -728,6 +754,16 @@ Pointer chain. Full specs in codex:
   HL*\_ + 2 ORACLE\_\_ + 5 CCTP; updated 2026-05-22). Routes on FAIL/RETRY/SKIP prefix. Full table in
   `codex/04-architecture/defi-execution-overview.md` § "Error Classification".
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
+- **DeFi MTDS capture/honest-cov DURABLE gotchas (codified 2026-06-21 — these kept defi stuck at 6%)**: (1) the capture
+  preflight reader `build_bucket("instruments","defi")` resolves env-LESS `instruments-store-defi-{pid}` but writers use
+  env-SHORT `-prd-` → stale-read → `age=None` → honest-absence → zero capture (align reader to `-prd-`); (2) consolidated
+  staleness default 120s is too short for a DAILY catalog → falls back to per-VM shards w/ blank `data_type` → defi MTDS
+  launchers MUST pass `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`; (3) the expected-universe enumerator MUST seed
+  `expected_unattempted` in CANONICAL `venue=PROTOCOL`+`chain=X` (NOT legacy `PROTOCOL-CHAIN`/blank) or captures never
+  convert it (honest-cov stays flat); (4) never call sync GCS reads (`bulk_load`/`assert_defi_catalog_fresh`, the latter
+  keyword-only) directly in async handlers — wrap in `asyncio.to_thread(lambda: …kwargs)`; (5) DEX subgraph handlers MUST
+  round-robin the 9-key `thegraph-api-key[-2..9]` SM pool, not a single key. SSOT:
+  `codex/02-data/defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas".
 - **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura, Kaiko, Polygon.io (TradFi data; Polygon
   L2 blockchain intact).
 - **Pyth UNBANNED 2026-05-06** for Solana on-chain price feeds. Solana-only; other chains use Chainlink.
