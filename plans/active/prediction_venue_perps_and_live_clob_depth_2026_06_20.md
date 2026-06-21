@@ -72,9 +72,20 @@ schema. NOT spin-fixable by relaunching.
   (partial depth); (c) use the CLOB websocket (auth) for true depth instead of the Gamma poll. Then wire
   the runner's tick->candle for it so live captures row_count>0. Live INFRA is done; this is the
   capture-schema decision. Repo: market-tick-data-service (runner/sink) + UAC (data_type/schema).
-- [ ] [DESIGN] P2. **UAC naming: SOURCE_PRIORITY uses `book_snapshot` but DataType enum uses
-  `book_snapshot_5`** (pre-existing mismatch surfaced here). Reconcile to one canonical name across
-  SOURCE_PRIORITY + DataType + candidate_parquet_paths. Repo: unified-api-contracts.
+- [ ] [DESIGN] P2. **UAC naming: SOURCE_PRIORITY uses `book_snapshot` but DataType enum uses `book_snapshot_5`**.
+  DIAGNOSED 2026-06-21 (grep-then-read, NOT a safe blind rename): canonical = **`book_snapshot_5`**
+  (`candle_schema.py` StrEnum `BOOK_SNAPSHOT_5='book_snapshot_5'` + `data_type_capability.py:61` comment
+  'book_snapshot_5 (NOT book_snapshot)' + `contracts.py` keys `(cefi,perpetual,book_snapshot_5)` + nautilus/tardis
+  schemas + 865 fleet uses). The bare `book_snapshot` (33 UAC uses) is the stale mismatch in SOURCE_PRIORITY
+  (`_source_priority_data.py` 83/299), availability_semantics (98/220), required_inputs, schema_spec (301/442),
+  CONTRACT_REGISTRY (555). **NOT a blind rename** — two reasons: (1) cross-AG blast radius (cefi `(cefi,book_snapshot)`
+  is the cefi lane's live-book domain — aligning it could fix OR break their live capture depending on what their
+  MTDS handler emits; needs a cefi-handler audit first); (2) **ENTANGLED with item 69** — prediction order books are
+  TOP-OF-BOOK (1-level quote), likely NOT the cefi 5-level `book_snapshot_5`, so prediction's canonical name depends
+  on the item-69 quote-schema decision (could be `book_snapshot`/`prediction_quote`, NOT `book_snapshot_5`). Safe path:
+  decide 69 first → then reconcile cefi→`book_snapshot_5` + prediction→(69's choice) in ONE phased breaking change
+  with a fleet consumer pre-audit + tests. No current PREDICTION data impact (prediction book capture is the 69 empty
+  design-gap). Repo: unified-api-contracts.
 
 
 ### 2026-06-21 (PM-2) — LIVE prediction LAUNCHED (free Gamma poll) + Kalshi seed running
@@ -142,15 +153,7 @@ RUNNING on the verified-fcd6549 stack.
   the 30s live Gamma poll do NOT hit rate limits — this is for the Phase-2 historical fan-out. Repos:
   market-tick-data-service + instruments-service.
 
-- [ ] [SCRIPT] P1. **`rebuild_prediction_manifest` must gain a `--venue POLYMARKET` filter before the
-  Polymarket v4→v9 re-walk** (1454 v4 manifest stragglers + 338 cqg `expected_unattempted`). The tool
-  walks ALL venues by date-glob and derives cqg via `classify_polymarket_to_canonical_group` — now that
-  Kalshi parquets coexist in the same `raw_tick_data/by_date/day=*/` paths (the bulk seed), an
-  unfiltered re-walk would RE-WALK + MISCLASSIFY the Kalshi cells (polymarket classifier) and clobber
-  the correct `batch_kalshi` rows the converter emitted. Add a venue filter (skip non-POLYMARKET), THEN
-  launch the re-walk VM. Sequence AFTER the Kalshi seed completes. Repo: market-tick-data-service. NOTE:
-  the 1454 are already `captured` (counted in honest-cov) — this is v9-schema polish, not new coverage.
-
+- [x] ✅ [SCRIPT] P1. **`rebuild_prediction_manifest --venue POLYMARKET` filter + v4→v9 re-walk DONE** (re-walk VM mtds-prediction-polyrewalk-20260621-204658, 5244s, terminal): re-walked POLYMARKET cqg 2025-03-14→2026-06-21 → **7196 captured cqg bundles at v9**, reemit_empty 22257, failed_* 0, source_returned_zero_preserved 1175. The `--venue POLYMARKET` filter kept it off the coexisting batch_kalshi seed parquets; the CF-11 phantom fix (skip blank-instrument_id, `reemit_skipped_blank_iid: 2331`) let it complete (the prior v1 crashed at the CF-11 re-emit). v9-schema polish — the 1454 were already captured. — 2026-06-21
 - [x] ✅ [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** — STALE PREMISE, resolved-by-architecture (verified 2026-06-21): `manifest_finalize.py` prediction
   cqg writer now resolves a *batch* pipeline_mode even on the LIVE ingest path (the prior code hardcoded
   `BATCH_POLYMARKET_CLOB`). When live prediction ingest runs, it should stamp `live_<source>` not `batch_<source>`. Make
@@ -365,3 +368,8 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 ### 2026-06-21 23:35 — strategy archetype wiring (line 44) — PERPS WORKSTREAM COMPLETE
 - strategy-service@31ba481f: Kalshi-perp + Polymarket-perp added to the carry/basis perp venue bundles + funding-dispersion venues (cross-venue dispersion vs the existing CeFi perp universe). 8 unit tests, QG green.
 - **Perps workstream (Phases 1-4) COMPLETE for Kalshi-perp end-to-end**: enumerator (IS@fdc9bad) → batch trades+funding (mtds@88c2f0c + UAC) → live CLOB ws (mtds@c487a78 + UAC resolver fix@a6444476) → launcher (deployment@86f517d) → strategy archetypes (strategy@31ba481f) → docs (codex prediction-perps-sourcing.md). The ONLY open perp item is the Polymarket-perp live endpoint (BLOCKED-UPSTREAM — `perps-api.polymarket.com` DNS-dead; scaffold shipped at every layer + operator ping filed; flows with zero code change when the endpoint is confirmed).
+
+### 2026-06-21 23:50 — Polymarket v9 re-walk COMPLETE + book_snapshot naming diagnosed
+- **Re-walk v2 DONE** (VM 204658, terminal): 7196 POLYMARKET cqg bundles re-walked to v9 (2025-03-14→2026-06-21), CF-11 phantom fix confirmed working (reemit_skipped_blank_iid 2331, failed_* 0). The v1 crash (MalformedRowKeyError) is resolved.
+- **book_snapshot naming (item 75)**: diagnosed canonical=`book_snapshot_5`; bare `book_snapshot` is the stale mismatch BUT reconciliation is entangled with item 69 (prediction = top-of-book, not 5-level) + carries cross-AG cefi blast radius → kept tracked with the full diagnosis + safe phased path (decide 69 → reconcile in one audited breaking change). No current prediction data impact.
+- **Kalshi seed (deliverable)** still converting (at 2025-02-10 of ~2025-11 target; ~72M trades day-by-day, healthy). Re-arming a single long watcher; honest-coverage verification + flip 196/240 fire on seed completion.
