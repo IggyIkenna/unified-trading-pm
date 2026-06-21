@@ -5536,3 +5536,19 @@ Refs: plans/active/data_completion_to_100_all_ag_2026_06_21.md § sports LIVE.
 - commit: strategy-service@443f12f9 (live-defi-rollout)
 - fix: STEP 5.97 defi-citation gate — added # DERIVED 2026-06-21 citations to 3 Ethereum addresses in scripts/materialize_dex_pool_fees.py
 - QG exit 0; Tier-C drain picks up within 15min
+## [slot-4 → ci-reconcile] agt-bfae00 COMPLETE — 2026-06-21
+
+**From**: slot-4 (escalation task agt-bfae00)
+**To**: ci-reconcile
+**Ref**: `plans/active/canary_coverage_qg_enforcement_2026_05_20.md` Phase 4 + Phase 5
+
+unified-api-contracts QG green, fix shipped to `live-defi-rollout@46a83fe8`.
+
+Fixes:
+1. `kalshi_perp_ws` / `polymarket_perp_ws` / `tardis_machine_ws` added to `_CONNECTOR_TO_VENUE` in `tests/test_ws_cassette_coexistence.py`
+2. `polymarket_perp_ws` stub cassette created (`BLOCKED-UPSTREAM-OUTAGE` — wss://perps-ws.polymarket.com NXDOMAIN)
+3. `tardis_machine_ws` stub cassette created (`LOCAL-SIDECAR` — ws://localhost:8001, plaintext by design)
+4. `test_ws_cassette_has_ws_url` + `test_ws_cassette_has_wss_url` updated to allow `ws://localhost` for local sidecars
+5. `tests/unit/test_data_status_registries.py`: NASDAQ/NYSE `ohlcv_1s` assertions updated per operator 2026-06-21
+
+Slot clean on `live-defi-rollout`, no temp branches.
