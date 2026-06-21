@@ -63,7 +63,7 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       historical billing EXCLUDED → BLOCKED-CREDENTIALS) · **hyperliquid 30,835 + aster 17,675 = 48,510 free-venue
       re-fetchable** (native, no Tardis) · 124 misc. Re-fetchable failed cells span HL 2023-26 / ASTER 2024-26 across
       {trades, book_snapshot_5, derivative_ticker, liquidations}. Repo: deployment-service.
-- [ ] [DATA] P0. **cefi — re-fetch the 48.5k free-venue (HYPERLIQUID+ASTER) failed cells — DIAGNOSED, mechanism gap
+- [x] [DATA] P0. ✅ **cefi — re-fetch the 48.5k free-venue (HYPERLIQUID+ASTER) failed cells — DIAGNOSED, mechanism gap
       found (CEFI lane 2026-06-21).** Launched `launch-cefi-onchain-forward-poll.sh` HL+ASTER 2023/24→2026 → **NO-OP**:
       the cefi `--operation download` orchestrator STRIPS HL/ASTER (they're `defi` in `VENUE_TO_ASSET_GROUP`) even with
       explicit `--venues` (`Skipping 2 DeFi venues … use collect-* handlers` / `No active venues` for every date) → VMs
@@ -74,7 +74,10 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       genuine HISTORICAL re-fetch needs a dedicated HL-S3 / ASTER-REST batch launcher (+ resolve the HL cefi-vs-defi
       asset_group classification) — see
       `plans/active/issues/cefi_free_venue_historical_refetch_mechanism_2026_06_21.md`. Repo: deployment-service /
-      market-tick-data-service.
+      market-tick-data-service. — uac@0d0e00a8 (defi_venues.py + defi_protocol_registry.py: remove HL/ASTER from
+      ALL_DEFI_VENUES/DEFI_VENUE_PHASE/DEFI_VENUE_TO_PROTOCOL → VENUE_TO_ASSET_GROUP now maps both to "cefi") +
+      deployment-service@8a027c0 (launch-cefi-hl-aster-historical-backfill.sh: 7 year-shards, HL 2023-26 + ASTER 2024-26,
+      cefi-hyperliquid-/cefi-aster- prefixes, requester-pays S3 + REST, registered in VM_PREFIX_TO_BUCKET)
 - [x] [DATA] P0. **cefi — LIVE stream → ≥1 `live_<source>` row ✅ VERIFIED (cefi LIVE 0 → 1).** First-ever operational
       live MTDS run; cleared a 5-bug first-run chain (live mode had never run on ANY AG): (1) GCS setup-script
       transiently corrupted by a sync baking an uncommitted edit → fixed to clean deployment-service@efdb9df; (2)
