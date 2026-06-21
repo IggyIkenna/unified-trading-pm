@@ -38,7 +38,7 @@ gas-fees + monitoring running) — nothing non-billing was driving to 100%.
 Each batch backfill fills `expected_unattempted` → captured; each forward-poll starts the LIVE stream
 (live accumulates from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forget).
 
-- [ ] [DATA] P0. **prediction** — Kalshi deep-history seed (bulk→canonical, IN FLIGHT: `mtds-prediction-kalshibulk-*`) + Polymarket batch re-fetch for `expected_unattempted` + `launch-prediction-forward-poll.sh` (LIVE). Repo: deployment-service.
+- [x] [DATA] P0. **prediction** — Kalshi deep-history seed (bulk→canonical, IN FLIGHT: `mtds-prediction-kalshibulk-*`) + Polymarket batch re-fetch for `expected_unattempted` + `launch-prediction-forward-poll.sh` (LIVE). Repo: deployment-service. ✅ — VMs running: kalshi-seed=mtds-prediction-kalshibulk-20260621-135650, polymarket-batch=mtds-prediction-polymarket-20260621-140847 (2025-03-13→2026-06-20), fwd-poll=prediction-fwd-20260621-140902 (deployment-service@26af6dd)
 - [ ] [DATA] P0. **defi** — `launch-defi-backfill-vm.sh` (fill 2.31M unattempted: gas-fees [running] + lst-rates + dex-pools/swaps + lending-indices + liquidations + vault-share + pyth) + `launch-defi-forward-poll.sh` (LIVE). Repo: deployment-service.
 - [ ] [DATA] P0. **tradfi** — full 3-dataset batch (GLBX done via CME-b; **DBEQ.BASIC** `launch-tradfi-bf-nasdaq/nyse-ohlcv-1m.sh` + **CFE/XCBF**) to fill 818k unattempted + `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service.
 - [ ] [DATA] P0. **sports** — `launch-mtds-sports-odds-backfill-vm.sh` + `launch-sports-is-gap-fill.sh` / `launch-sports-full-sweep-vm.sh` (IS sports 15.9%→100%) + `launch-footystats-forward-poll.sh` (LIVE). Repo: deployment-service.
