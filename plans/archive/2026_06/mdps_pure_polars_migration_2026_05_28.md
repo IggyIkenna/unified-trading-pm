@@ -27,6 +27,8 @@ locked_since: 2026-05-28
 
 # MDPS pure-Polars migration — staged engine cutover
 
+> **✅ ARCHIVED 2026-06-21 — pure-Polars engine shipped + codex-LOCKED (data-engine-selection.md). Deferred adapter-protocol pandas→polars + Phase-6 emission-check → mdps_adapter_protocol_pandas_to_polars_2026_06_21. [unlock-plan]**
+
 ## Goal
 
 Migrate MDPS to pure-Polars end-to-end per the Layer 0 decision locked in `data-engine-selection.md` 2026-05-28.
