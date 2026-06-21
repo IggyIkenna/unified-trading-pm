@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.34.0",
     "unified-trading-library": "0.29.0",
-    "unified-trading-pm": "1.2.260",
+    "unified-trading-pm": "1.2.261",
     "market-data-processing-service": "0.10.3",
     "e2e-testing": "0.19.0",
     "agent-orchestrator": "0.21.0",
@@ -1063,7 +1063,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1796,7 +1796,7 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.5",
     "ibkr-gateway-infra": "0.4.1",
-    "market-tick-data-service": "0.31.0",
+    "market-tick-data-service": "0.32.0",
     "agent-orchestrator": "0.23.0",
     "alerting-service": "0.18.0",
     "batch-live-reconciliation-service": "0.19.0",
@@ -1843,8 +1843,8 @@
       "branch": "staging"
     },
     "market-tick-data-service": {
-      "version": "0.30.0",
-      "sha": "1a1f968853174a3a3df23575f11d4b51cf499e21",
+      "version": "0.32.0",
+      "sha": "06eba59e1cf24f23e2ad59220f4b80552a7698a0",
       "branch": "staging"
     },
     "deployment-service": {
