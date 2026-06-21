@@ -490,6 +490,17 @@ are identified (2) and the ledger exists (3).
       secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) |
       regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries
       (toggle strategy/coin) + snapshot bars (P10.10)").
+- [x] [API] ✅ P3 (P10.10). **`GET /api/v1/clients/{client_id}/pnl-timeseries`** — the per-DAY series the UI P10.10
+      graph is wired to (resolves the 404 the UI item notes; was "honest per-day-pending" at line 613). —
+      client-reporting-api@ce1bd5f, deployed rev **client-reporting-api-00009-mr4** (asia-northeast1, base UTL digest
+      sha256:467ba8). New run-scoped reader `core/pnl_timeseries.py::pnl_timeseries_series` folds the canonical run's
+      per-DAY attribution parquet (CARRY/BASIS/FUNDING/FEES factors) into one row per `(date × strategy_id × coin)` with
+      `realized` / `unrealized` / `total` / `carry`; coin derives canonically from `instrument_id`
+      (`LIDO:STAKING:stETH`→ETH, `JITO:STAKING:JitoSOL`→SOL). `total = realized + (unrealized or 0) + carry`;
+      `unrealized` is HONEST null (no MTM-factor row on the flat corpus — never a fabricated 0). MEASURED live curl
+      (`firm-paper-determinism`, admin JWT): HTTP 200, `run_id=paper-20260621134256-3c4eb321`, **22 rows over 8 days
+      2026-05-15→05-22, coins {ETH,SOL}, 2+ strategies (lido ETH + jito SOL)**. regression:
+      tests/unit/test_pnl_timeseries.py + tests/unit/test_attribution_routes.py::TestPnlTimeseriesRoute | QG-green.
 - [x] [UI] ✅ P3 (P10.x). **Attribution by-FACTOR view in the UI** (was the Progress-Log "remaining minor"): the
       `/attribution/breakdown` API already returns by-factor (CARRY/BASIS/FUNDING/FEES); the UI rendered only
       venue+layer. — unified-trading-system-ui@685623df | `AttributionPanel` now renders a **By-factor waterfall**
