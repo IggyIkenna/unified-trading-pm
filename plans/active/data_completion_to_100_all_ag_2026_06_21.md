@@ -776,13 +776,15 @@ fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + 
 - [x] ✅ [DATA-OPERATOR] P0. **Databento Real-Time/Live subscription CONFIRMED** (operator 2026-06-21: the usage-based
       plan includes Live data + 1yr L1 / 1mo L2-L3 history — the live WS is NOT subscription-blocked). The producer
       connects + authenticates against `wss://live.databento.com`.
-- [ ] [DATA] P1. **Deploy the `live_databento` stamp fix (UAC@1205ae44) to the running live producer** — the live VM
+- [x] ✅ [DATA] P1. **Deploy the `live_databento` stamp fix (UAC@1205ae44) to the running live producer** — the live VM
       bakes UAC from a GCS **tarball** (working-tree tar), so `mtds-live-tradfi-cme-trades-*` keeps `live_massive` until
       a `create-code-tarballs.sh` rebuild **from a clean LDR checkout** (NOT this peer-WIP dev workspace) + relaunch.
       The daily forward-poll cron relaunches but REUSES the existing tarball — a tarball rebuild is the gating step.
       Repo: deployment-service. Provenance: this Progress Log. NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 +
       daily-cron host) IS done (`batch_databento`); `live_databento` websocket is beyond-dispatch peer-domain work, now
       fully diagnosed for them.
+      — slot-4@vm-planning | tarball rebuilt from UAC@04ca4647 (incl 1205ae44 fix) | old VM deleted | new VM
+      `mtds-live-tradfi-cme-trades-20260621-223242` RUNNING | T+5min manifest: pipeline_mode=live_databento ✓
 
 ### 2026-06-21 — DEFI lane: CATALOG GATE OPEN — capturing real data; full fan-out relaunched
 
