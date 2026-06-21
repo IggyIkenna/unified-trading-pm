@@ -487,7 +487,6 @@ are identified (2) and the ledger exists (3).
       `pnl-ts-toggle-coin`) driven by a new `useLedgerPnlTimeseries` hook (GET `/pnl-timeseries`). Until the API agent's
       `/pnl-timeseries` endpoint deploys (currently 404 → honest-empty `series:[]` → `pnl-timeseries-empty` clean empty
       state, NOT a fabricated line — auto-populates once live); snapshot by-strategy + Δ-USD-by-coin bars retained as
-<<<<<<< Updated upstream
       secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) |
       regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries
       (toggle strategy/coin) + snapshot bars (P10.10)").
@@ -502,15 +501,6 @@ are identified (2) and the ledger exists (3).
       (`firm-paper-determinism`, admin JWT): HTTP 200, `run_id=paper-20260621134256-3c4eb321`, **22 rows over 8 days
       2026-05-15→05-22, coins {ETH,SOL}, 2+ strategies (lido ETH + jito SOL)**. regression:
       tests/unit/test_pnl_timeseries.py + tests/unit/test_attribution_routes.py::TestPnlTimeseriesRoute | QG-green.
-||||||| Stash base
-      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) |
-      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries
-      (toggle strategy/coin) + snapshot bars (P10.10)").
-=======
-      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) | regression:
-      tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries (toggle
-      strategy/coin) + snapshot bars (P10.10)").
->>>>>>> Stashed changes
 - [x] [UI] ✅ P3 (P10.x). **Attribution by-FACTOR view in the UI** (was the Progress-Log "remaining minor"): the
       `/attribution/breakdown` API already returns by-factor (CARRY/BASIS/FUNDING/FEES); the UI rendered only
       venue+layer. — unified-trading-system-ui@685623df | `AttributionPanel` now renders a **By-factor waterfall**
