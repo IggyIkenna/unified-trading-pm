@@ -132,15 +132,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       (run by prior session sub-agent; see progress note 2026-06-21 15:42).
 - [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
       canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
-- [ ] [DATA] P1. **defi live continuous scheduler** — `launch-defi-forward-poll.sh` now proves the live path
-      end-to-end (collect-lst-rates --mode live, VM `defi-fwd-20260621-212906`, deployment-service@48d57a5).
-      Remainder: (i) T+10min verify ≥1 `pipeline_mode=live_onchain_subgraph` row in
-      `market-data-tick-defi-prd-central-element-323112`; (ii) set up a cron/Cloud Scheduler to run
-      `launch-defi-forward-poll.sh` daily (T-0 day, similar to `launch-tradfi-forward-poll.sh` daily cron);
-      (iii) add remaining cheap collect-* ops (collect-oracle-prices, collect-gas-fees) as additional
-      daily forward-poll VMs; (iv) update vm_zombie_watchdog.py `defi-fwd-` entry to LONG_LIVED_LIVE if
-      continuous (currently EPHEMERAL_BATCH).
-      Repo: deployment-service. **DEFERRED** — successor: this todo (2026-06-21).
+- [ ] [DATA] P1. **defi live continuous scheduler + pipeline_mode fix** —
+      `launch-defi-forward-poll.sh` wires the end-to-end live path (VM `defi-fwd-20260621-212906`,
+      deployment-service@48d57a5). T+10min verified: VM RUNNING (118% CPU, 5.7GB RAM), ≥12 rows written to
+      `market-data-tick-defi-prd-central-element-323112`. **BLOCKER found**: `lst_rates_handler.py`
+      hardcodes `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` on all 7 write calls — ignores `--mode live` arg →
+      rows land as `pipeline_mode=batch_onchain_subgraph` not `live_onchain_subgraph`. Fix: in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py` replace
+      hardcoded `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` with `PipelineMode.LIVE_ONCHAIN_SUBGRAPH` when
+      `self.args.mode == "live"` (or read from the CLI arg). All 7 occurrences on lines 456/600/608/617/
+      625/714/724. Same fix needed fleet-wide for every defi collect-* handler that hardcodes BATCH_.
+      Repo: market-tick-data-service. **DEFERRED** — successor: this todo (2026-06-21).
+      Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh` daily; (ii) add
+      collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs.
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
