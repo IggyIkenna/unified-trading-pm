@@ -264,14 +264,22 @@ burst→429→52s-minute-sleep thrash that capped enrichment at ~46/min vs 1200/
 
 **RUNNING VMs:** odds-backfill `mtds-backfill-odds-{2020..2026}` (7, ODDS-API key, separate quota) · enrichment
 `sports-enrich-{2019-2022,2023-2026}` (2, RELAUNCHED on fixed throttle — verify rate post-boot) · **sports LIVE**
-`mtds-live-sports-odds-api-trades-20260621-174808` (JUST launched — the missing piece; verify ≥1 `live_odds_api` row at
+`mtds-live-sports-odds-api-trades-20260621-184015` (RELAUNCHED 2026-06-21 18:40 UTC after the UAC enum fix; the prior
+`...174808`/`...175558` FAILED `No PipelineMode for source 'odds_api' in mode 'live'`; verify ≥1 `live_odds_api` row at
 T+10). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
 
-**LIVE==BATCH (operator caught this):** sports had **0 `live_*` rows** — footystats fwd-poll wrote `batch_*`
-(forward-over-future, NOT live). FIX: launched true `launch-mtds-live.sh --asset-group sports --shard-spec
-sports:ODDS_API:trades --instrument-ids ODDS_API:SPORT:soccer_{epl,la_liga,serie_a,bundesliga,ligue_one}` → odds_api_ws
-connector → `live_odds_api` (same canonical schema as batch). Verify it produces a live row (cefi proved the live path
-works after its 5-bug first-run chain — those infra bugs are AG-agnostic + fixed).
+**LIVE==BATCH (operator caught this) — UAC ENUM FIX LANDED:** sports had **0 `live_*` rows** — footystats fwd-poll wrote
+`batch_*` (forward-over-future, NOT live). The true live producer (`launch-mtds-live.sh --asset-group sports --shard-spec
+sports:odds_api:trades` → `odds_api_ws` WSFeedConnector → `live_odds_api`) FAILED at boot with
+`No PipelineMode for source 'odds_api' in mode 'live'` — the `PipelineMode` closed set had `BATCH_ODDS_API`/`REPLAY_ODDS_API`
+but no `LIVE_ODDS_API`. FIX (uac@249ca53f, LDR): added `PipelineMode.LIVE_ODDS_API` + flipped
+`SOURCE_MODE_CAPABILITY["odds_api"]` to `{BATCH, LIVE, REPLAY}` + the test-side SSOT
+`EXPECTED_SOURCE_MODE_CAPABILITY` + replaced `test_no_sports_source_is_live_yet` with
+`test_odds_api_is_the_first_live_sports_source` (the other sports vendors stay live-less). `REPLAY_ODDS_API` already
+existed (replay-capable). QG green (223s), source-mode + cassette tests pass. The live VM pip-installs UAC fresh at boot
+→ it picks up the new enum once LDR has it; VM relaunched as `...184015` (same lowercase `odds_api` venue + 5-league
+instrument-ids). Same canonical schema as batch (Live==Batch). cefi proved the live path works after its 5-bug first-run
+chain (AG-agnostic infra bugs, fixed).
 
 **3 MIGRATION SUB-AGENTS in flight (opus), IS ships BLOCKED on a LIVE foreign UTL WIP** (`manifest_writer/_writer_captured.py`,
 peer actively editing — do NOT stomp; their tracked waiters fire when UTL goes clean):
