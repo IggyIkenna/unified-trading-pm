@@ -194,34 +194,43 @@ captured**, manifest unmoved):
    `setup-data-pipeline-vm.sh` that builds the CLI + passes `--source`. `cefi-backfill` (a copy-paste in the old
    `_tradfi-ohlcv-launcher-lib.sh` / `launch-tradfi-forward-poll.sh`) falls to the catch-all no-op → the download still
    runs via a fallback but **without `--source`** → fails. Fixed fleet-wide ds@9aca3a5 + ds@47c56d7.
-2. **`VM_SOURCE` MUST be in the VM metadata AND `setup-data-pipeline-vm.sh` MUST forward it** as `--source $VM_SOURCE` in
-   the mtds-backfill `BASE_CLI` — the `TickDataHandler` raises `--source databento|massive is REQUIRED` for ANY tradfi
-   OHLCV download (provenance-ambiguous massive-vs-databento; no `SOURCE_PRIORITY[0]` default). Per the source model
-   above: `ohlcv_1m`→`massive` (canonical) **or** `databento` (operator free-switch; both serve 1m, dual-source);
+2. **`VM_SOURCE` MUST be in the VM metadata AND `setup-data-pipeline-vm.sh` MUST forward it** as `--source $VM_SOURCE`
+   in the mtds-backfill `BASE_CLI` — the `TickDataHandler` raises `--source databento|massive is REQUIRED` for ANY
+   tradfi OHLCV download (provenance-ambiguous massive-vs-databento; no `SOURCE_PRIORITY[0]` default). Per the source
+   model above: `ohlcv_1m`→`massive` (canonical) **or** `databento` (operator free-switch; both serve 1m, dual-source);
    `ohlcv_1s`→`databento` only. The GCS-hosted `setup-data-pipeline-vm.sh` is what the VM actually runs — re-upload it
    after editing (a peer's `create-code-tarballs` re-upload can clobber an un-committed edit; commit to LDR so the next
    tarball preserves it).
 3. **`ohlcv_1s` is FUTURES-only (CME + CBOE).** UAC `expected_coverage`: `CME:[trades,ohlcv_1s,ohlcv_1m,tbbo]`,
    `CBOE:[ohlcv_15m,ohlcv_1s,ohlcv_1m]`, but **`NASDAQ:[ohlcv_1m]`, `NYSE:[ohlcv_1m]`** — equities (DBEQ.BASIC) have no
-   1s; the MTDS pre-flight drops it (`dropping data_types not supported per UAC: ['ohlcv_1s']`). So a 1s wave for
-   equity venues is a pure no-op; only launch 1s for CME/CBOE. The launcher lib default is `ohlcv_1m;ohlcv_1s`
+   1s; the MTDS pre-flight drops it (`dropping data_types not supported per UAC: ['ohlcv_1s']`). So a 1s wave for equity
+   venues is a pure no-op; only launch 1s for CME/CBOE. The launcher lib default is `ohlcv_1m;ohlcv_1s`
    (`OHLCV_DATA_TYPES` env override) — harmless for equities (pre-flight drops 1s, keeps 1m).
 4. **CME event contracts** (binary/event markets: `ECES/ECBTC/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ`, GLBX.MDP3 `.OPT`
    parents, coverage from 2025-09-28) need BOTH the IS instruments backfill (`launch-tradfi-event-contract-backfill.sh`,
-   `--operation instruments`, no `--source`) AND MTDS OHLCV (pass the `EC*.OPT` parents as instrument-ids to a CME
-   OHLCV launch). Sparse/event-driven → low row counts are normal.
+   `--operation instruments`, no `--source`) AND MTDS OHLCV (pass the `EC*.OPT` parents as instrument-ids to a CME OHLCV
+   launch). Sparse/event-driven → low row counts are normal.
 5. **VM `end_date` must be ≤ yesterday** — Databento historical is T+1; requesting today returns
    `DATA_NOT_AVAILABLE: is in the future` for the final day.
 
-**Live producer (`live_databento`, websocket) — known bugs as of 2026-06-21 (live-pipeline lane, NOT yet fixed):**
-the `databento_tradfi_ws` connector + `launch-mtds-live.sh` path has (a) `_get_api_key()` DOES try field→secret (`get_secret_client(project_id=cfg.gcp_project_id).get_secret(cfg.databento_secret_name)`)
-but the secret resolution THROWS and is **swallowed at `logger.debug`** → returns None → caller logs `no API key —
-connection skipped`. Root cause is HIDDEN (likely a live-VM `gcp_project_id`/Secret-Manager-access gap); fix = surface the
-swallowed exception (`logger.debug`→`warning`) + diagnose with the real error; (b) `live_source_for_venue(tradfi,…)` returning
-`SOURCE_PRIORITY[0]=massive` (a **batch-only** source — no live feed) → rows mis-stamp `live_massive`; the live source
-MUST be the first **LIVE-capable** source in the priority list (skip batch-only via `modes_for_source`) → `databento`;
-(c) instrument-ids need the `venue:type:underlying` form (`CME:FUTURES:ES`), not bare `ES`. Also: the live websocket needs
-the Databento **Real-Time/Live** subscription (separate from the historical 3-dataset sub) — confirm before relying on it.
+**Live producer (`live_databento`, websocket) — VERIFIED WORKING 2026-06-21:** the `databento_tradfi_ws` connector +
+`launch-mtds-live.sh` path CONNECTS, authenticates against the Databento Live gateway (`wss://live.databento.com`,
+`session_id` issued), and streams real databento ticks. **Live data IS in our subscription** (operator 2026-06-21 — the
+usage-based plan includes Live + 1yr L1 / 1mo L2-L3 history), so the live WS is NOT subscription-blocked. Notes: (a)
+`_get_api_key()` resolves the `databento-api-key` **secret** correctly — VERIFIED locally (32-char key via
+`get_secret_client(project_id=cfg.gcp_project_id).get_secret(cfg.databento_secret_name)`). A
+`no API key — connection skipped` log is a VM-env / SM-access cascade (check `GCP_PROJECT_ID` + Secret-Manager access on
+the VM), **NOT a code bug**. (b) **Source-stamp bug FIXED — UAC@1205ae44 (2026-06-21):**
+`live_source_for_venue(tradfi,…)` returned the BATCH `SOURCE_PRIORITY[0]=massive` → live rows mis-stamped
+`pipeline_mode=live_massive`. `massive` **is** live-capable (operator 2026-06-05, Polygon.io 15-min-delayed REST — do
+NOT "fix" by removing its `Mode.LIVE`), but the SOLE tradfi live **WS producer** is `databento_tradfi_ws`
+(massive/yahoo/barchart have no live WS connector). Fix = a `tradfi` branch in `live_source_for_venue` returning
+`databento` (mirrors `_PREDICTION_LIVE_SOURCE_FOR_VENUE`); batch path unchanged
+(`get_primary_source(tradfi,*)=massive`). Verified `live_pipeline_mode_for_venue(tradfi,*) → live_databento`. **Deploy
+note:** the live VM bakes UAC from a GCS **tarball** (working-tree tar), so the RUNNING producer keeps `live_massive`
+until its tarball is rebuilt from clean LDR (`create-code-tarballs.sh`) + relaunched — the daily forward-poll cron
+relaunches but reuses the existing tarball, so a tarball rebuild is required to deploy the label fix. (c) instrument-ids
+need the `venue:type:underlying` form (`CME:FUTURES:ES`), not bare `ES`.
 
 ## Related SSOTs
 
