@@ -699,3 +699,22 @@ valid 24h via staleness=86400; MTDS writes market-data not instruments so env-le
 - [x] ✅ [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
   defi MTDS launchers — working locally, used by the live fan-out; persist via quickmerge). Repo: deployment-service.
   — deployment-service@e74517c
+
+### 2026-06-21 19:40 — TRADFI honest-cov re-measured: 5.3% → 13.8% (captured TRIPLED), still climbing
+Consolidated `_index`: captured **102,936 → 310,180** (3×), `ohlcv_1s` **3,187 → 48,656** (15×), schema 99.7% v9.
+Landed: NYSE ohlcv_1m **125,915** (full DBEQ equity history — was ~0/wrongly-empty), CME ohlcv_1m 68,729 + ohlcv_1s
+49,171, NASDAQ 36,295, CBOE 135. **0 failures from this backfill** (the 9,998 `attempted_failed` are STALE 2026-04-30→
+05-26 pre-existing runs). 12 CME-1s VMs still finishing (re-armed finalizer). The flat 818k `expected_unattempted` is
+**structural honest-absence**, not a gap: trades/tbbo/mbp_10 (L1/L2 window-bound, un-backfillable historically),
+ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real manifest items found:
+- [ ] [DATA] P2. **Phantom NYSE/NASDAQ `ohlcv_1s` expected_unattempted (~31k cells)** — equities don't support 1s
+  (UAC expected_coverage NASDAQ/NYSE=[ohlcv_1m]); the IS enumerator seeded 1s for them. These can never be captured →
+  deflate honest-cov. Reconcile (drop the phantom 1s seeds for equity venues). Repo: instruments-service enumerator.
+- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s), not MTDS-fetched —
+  they convert to captured when MDPS aggregation runs over the new 1m/1s corpus. Repo: market-data-processing-service.
+
+### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
+Full ~60-VM fan-out CAPTURING real data (dex-pools 5232 rec/day, dex-swaps 44k-102k/yr, lst/liq/vault/pyth/gas/jito/marinade) → canonical v9 path. BUT **honest-cov only 6.0%→6.2%** after 50min: captured 369k→384k, **expected_unattempted FLAT at 2.31M** — captures create NEW rows, DON'T convert the unattempted. **ROOT CAUSE: format mismatch.** expected_unattempted rows: venue=`BALANCER-ARBITRUM` (legacy combined PROTOCOL-CHAIN) + chain=`''` (blank) + dates 2026-02-20..06-18 (recent window only). Captured rows: venue=`BALANCER` + chain=`ARBITRUM` (CANONICAL per defi-canonical-naming-ssot) + dates 2021..2026. Different shard keys → never match → the 2.31M legacy-format unattempted are effectively PHANTOMS the canonical captures can't convert. (Also 3.5M empty_confirmed = genuine honest absence → max honest-cov ≈ 43% once 2.31M convert, NOT 100%; "100%"=fetchable-gap-closed.)
+**FIX (in flight):** re-seed the defi expected-universe in CANONICAL venue/chain format (the `expected-universe-v2-defi` enumerator / `enumerate_expected_universe.py` still emits legacy PROTOCOL-CHAIN) so captures convert it; OR phantom-reconcile the legacy unattempted. The CAPTURING is correct + real; only the seeded denominator is mis-formatted. Agent dispatched. Batch fan-out continues (39 VMs mid-year-shard, progressing).
+- [ ] [DATA] P0. **DEFI expected-universe canonical re-seed:** `enumerate_expected_universe.py` / `expected-universe-v2-defi` seeds expected_unattempted with LEGACY venue=`PROTOCOL-CHAIN`/chain=blank; handlers capture canonical venue=`PROTOCOL`/chain=X → no conversion → honest-cov stuck. Fix enumerator to emit canonical venue/chain (per defi-canonical-naming-ssot) + re-seed (replace legacy unattempted) + phantom-reconcile leftovers. Repo: instruments-service. Provenance: this Progress Log.
+
