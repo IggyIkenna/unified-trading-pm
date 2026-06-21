@@ -257,3 +257,4 @@
 {"timestamp": "2026-06-21T20:50:56Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.29.0 (branch=staging, bump=minor)", "commit_sha": "98ca70a06abcfb472e8fed55a24c65889c3b0374"}
 {"timestamp": "2026-06-21T21:16:13Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.30.0 (branch=staging, bump=minor)", "commit_sha": "fc357bc03daa6ace3f46f2df999a01ba334e32be"}
 {"timestamp": "2026-06-21T21:46:29Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "features-service=0.13.0 (branch=staging, bump=minor)", "commit_sha": "54865fb59990b5373fbd9ef28393f11615031c0f"}
+{"timestamp": "2026-06-21T21:50:17Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.21.0 (branch=staging, bump=minor)", "commit_sha": "635cebc142f03ec078a06031069cd2ba26c3832e"}
