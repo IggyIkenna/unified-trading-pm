@@ -443,20 +443,39 @@ are identified (2) and the ledger exists (3).
       yet — the newest 2-strategy run has no batch rerun), exec-alpha=0 stated as a STRUCTURAL zero (BENCHMARK fill
       model), assumptions surface fill_model=BENCHMARK + OHLCV signal-close tier + the fidelity ladder + paper-vs-batch
       payload. Repo: client-reporting-api.
-- [ ] [UI] P3. **Unified batch↔paper view**: reconcile the dashboard so paper and batch are viewable together neatly
-      (toggle/compare), `live − batch = (paper − batch ≈ 0) + (live − paper = execution α)` made legible. Repo:
-      unified-trading-system-ui. (pw:L2 + regression spec required.)
+- [x] [UI] ✅ P3 (P10.12). **Unified batch↔paper view**: reconcile the dashboard so paper and batch are viewable
+      together neatly, `live − batch = (paper − batch ≈ 0) + (live − paper = execution α)` made legible. Repo:
+      unified-trading-system-ui. — unified-trading-system-ui@02e3b59f | `BatchPaperPanel` consumes `/backtest` + the
+      recon verdict: identity banner + paper/batch/paper−batch/exec-α KPIs + execution-assumptions surface (fill_model
+      BENCHMARK / fidelity ladder OHLCV→…→MBO) + honest PENDING until the `__batch__` rerun lands. pw:L2 ✓ (60/60 smoke)
+      | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("batch↔paper panel shows the determinism identity +
+      execution assumptions (P10.12)").
 
 ### UI (unified-trading-system-ui — playwright-gated)
 
-- [ ] [UI] P3. Clarify `Strat α` / `Exec α` columns (label + tooltip: strategy alpha vs execution alpha =
-      smart−benchmark; 0 in paper because paper uses benchmark fills). (pw:L2 + regression.)
-- [ ] [UI] P3. PnL-over-time **graphs**, broken down by **strategy** AND by **coin** (timeseries from the daily ledger).
-      (pw:L2 + regression.)
-- [ ] [UI] P3. **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically in the
-      batch view where there are real exits). (pw:L2 + regression.)
-- [ ] [UI] P3. Render the net-$/net-coin/delta panels, per-strategy breakdown, bps-on-turnover, and annualised ROE from
-      the new API surfaces (replace placeholder-looking tiles). (pw:L2 + regression.)
+- [x] [UI] ✅ P3 (P10.5). Clarify `Strat α` / `Exec α` columns (label + tooltip: strategy alpha vs execution alpha =
+      smart−benchmark; 0 in paper because paper uses benchmark fills). — unified-trading-system-ui@02e3b59f | PnL-panel
+      headers `pnl-strat-alpha-header` / `pnl-exec-alpha-header` carry `title=` tooltips (exec α = smart−benchmark fill,
+      ≈0 in paper / real only at the live boundary). pw:L2 ✓ | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("Strat α / Exec α columns carry clarifying tooltips (P10.5)").
+- [x] [UI] ✅ P3 (P10.10). PnL-over-time **graphs**, broken down by **strategy** AND by **coin**. —
+      unified-trading-system-ui@02e3b59f | `PnlOverTimePanel`: total-PnL-by-strategy + Δ-USD-by-coin bar breakdowns from
+      `/per-strategy` + `/net-views`; per-DAY timeseries renders an HONEST pending note (`pnl-timeseries-pending`) — the
+      reader does not expose a daily series yet (`/pnl` entries are per-position, not per-day), not faked. pw:L2 ✓ |
+      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders by-strategy + by-coin
+      bars and an honest per-day-pending note (P10.10)").
+- [x] [UI] ✅ P3 (P10.11). **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically
+      in the batch view where there are real exits). — unified-trading-system-ui@02e3b59f | trade-tape `E/X` column:
+      entry (opens/adds, no realised PnL) vs exit (closes/reduces, realises PnL or `trade_type=exit`),
+      `trade-entry-marker` / `trade-exit-marker`. pw:L2 ✓ | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts
+      ("trade tape shows entry / exit markers (P10.11)").
+- [x] [UI] ✅ P3 (P10.13). Render the
+      net-$/net-coin/delta panels, per-strategy breakdown, bps-on-turnover, and annualised
+      ROE from the new API surfaces. — unified-trading-system-ui@02e3b59f | `NetViewsPanel` (net-$/gross-$
+      KPIs + net-in-coin table ETH+SOL + delta-per-coin table) from `/net-views`; `PerStrategyPanel` (2 strategies +
+      overall roll-up: trades / turnover / gross / total PnL / bps-on-turnover / annualised ROE) from `/per-strategy`.
+      pw:L2 ✓ | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("net-views panel shows net-in-coin ETH + SOL
+      … (P10.13)" + "per-strategy panel shows 2 strategies + an overall roll-up with bps/ROE (P10.13)").
 
 > **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
 > P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
@@ -481,6 +500,40 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+### 2026-06-21 — Autonomous (UI): Phase-10 fund-desk panels SHIPPED + DEPLOYED to odom-portal
+
+**unified-trading-system-ui@02e3b59f** — all 5 Phase-10 UI items (P10.5/10/11/12/13) + the pre-existing gross-now smoke
+fix, landed on LDR via quickmerge. The `?client=firm-paper-determinism` real-ledger view (`PaperTradingLedgerPanels`)
+now renders, **above** the existing instructions/trades/positions/PnL/attribution/transfers panels:
+
+- **NetViewsPanel** (P10.13) — net-$/gross-$ KPIs + net-in-coin table (ETH+SOL) + delta-per-coin table, from
+  `/net-views`.
+- **PerStrategyPanel** (P10.13) — 2 strategies (`@lido-uniswapv3-deribit` + `@jito-jupiter-drift`) + overall roll-up:
+  trades / turnover / gross / total-PnL / **bps-on-turnover** / **annualised ROE**, from `/per-strategy`. Tiny decimals
+  (`E-25`) render `≈0` honestly.
+- **PnlOverTimePanel** (P10.10) — total-PnL-by-strategy + Δ-USD-by-coin bar breakdowns (from `/per-strategy` +
+  `/net-views`); a per-DAY timeseries is **honest-pending** (reader's `/pnl` entries are per-position, not per-day — not
+  faked).
+- **BatchPaperPanel** (P10.12) — `/backtest` + recon verdict: the `live − batch = (paper − batch ≈ 0) + execution α`
+  identity banner + paper/batch/paper−batch/exec-α KPIs + execution-assumptions surface (fill_model BENCHMARK / fidelity
+  ladder); honest PENDING until the `__batch__` rerun lands.
+- **Trade tape entry/exit markers** (P10.11) — `E/X` column (entry = opens, no realised PnL; exit = closes/realises).
+- **Strat α / Exec α tooltips** (P10.5) — PnL-panel header `title=` tooltips clarify strategy-α vs exec-α =
+  smart−benchmark (≈0 in paper).
+- **gross-now smoke fix** — legacy margin panel: `pt-gross-now` testid + "Gross exposure (max)" row.
+
+API surfaces (all live, rev `client-reporting-api-00007-vgw`) verified against the live reader before coding (exact JSON
+shapes: high-precision decimal STRINGS, `parseFloat`-safe). No new Next rewrite needed (`/api/client-reporting/*`
+already covers `/api/v1/clients/*`). New hooks added: `useLedgerNetViews` / `useLedgerPerStrategy` / `useLedgerBacktest`
+(reuse the reporting-auth-bridge + fixture pattern). **Honest-empty preserved** for transfers + venue/layer/factor
+attribution (producer-side `ledger_type=transfer` + multi-dim attribution land in the parallel [STRATEGY] items — reads
+already wired, populate automatically).
+
+**Gates**: tsc 0 errors · ESLint 0 warnings · vitest 285 passed · build green · coverage 50.88% · **pw:L2 ✓ 60/60
+smoke** (7 new Phase-10 regression tests + the 2 gross-now tests now green). Regression spec:
+`tests/smoke/paper-trading-ledger.smoke.spec.ts`. **DEPLOY**: rebuild `:papertrading` image via Cloud Build + redeploy
+`odom-portal` (asia-northeast1) + live-URL browser proof PENDING in this same session (next steps below).
 
 ### 2026-06-21 — Autonomous: PB.8 aggTrades fill WIRED (BTC "1%" was a measurement bug) + exhaustive robust-short search
 
@@ -1270,10 +1323,11 @@ end-to-end (paper run on real GCS data → ε=0 reconcile → operator dashboard
   approved live wallet/custody (wallet keys are human-only). The paper↔batch determinism PROOF (ε=0) does not depend on
   it; it is the only intentionally-open item.
 
-- [ ] [UI] P3. **NICE-TO-HAVE** Fix the pre-existing `tests/smoke/paper-trading.smoke.spec.ts:22` "margin panel Gross
-      exposure (now)" failure — FAILS ON BASELINE (verified by stash-out), NOT introduced by this work; it's the LEGACY
-      engine-snapshot `/paper-trading` view (reads `/api/paper-trading` live data, empty in mock). Repo:
-      unified-trading-system-ui. Provenance: P2.5.2 dashboard-visibility work 2026-06-20.
+- [x] [UI] ✅ P3. **NICE-TO-HAVE** Fix the pre-existing `tests/smoke/paper-trading.smoke.spec.ts:22` "margin panel Gross
+      exposure (now)" failure — DONE, unified-trading-system-ui@02e3b59f | the legacy engine-snapshot margin panel now
+      tags the gross-now value `data-testid="pt-gross-now"` and adds a "Gross exposure (max)" ceiling row (gross target
+      leverage), making gross symmetric with net (now)/(max). pw:L2 ✓ — both `tests/smoke/paper-trading.smoke.spec.ts`
+      tests pass; full smoke 60/60. Provenance: P2.5.2 dashboard-visibility work 2026-06-20.
 
 ### 2026-06-21 — MACHINE-INDEPENDENCE: full POC research corpus + data mirrored off-laptop (GCS + e2e repo)
 
