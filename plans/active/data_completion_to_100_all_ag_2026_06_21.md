@@ -101,9 +101,12 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `plans/active/issues/cefi_tardis_historical_blocked_credentials_2026_06_21.md` + `CREDENTIAL APPROVAL REQUEST` in
       `plans/active/_agent_pings.md`. **Batch Tardis (historical) EXCLUDED — billing-gated (operator).** Repo:
       deployment-service. (CEFI lane 2026-06-21.)
-- [ ] [IS] P1. **IS tradfi v9 canonicalisation** — only 46.6% at schema_version=9; run the tradfi `_index`
+- [x] ✅ [IS] P1. **IS tradfi v9 canonicalisation** — only 46.6% at schema_version=9; run the tradfi `_index`
       canonicalisation walk (8→9: source/asset_group/pipeline_mode) so the index is fully v9. Repo: instruments-service
       / market-tick-data-service.
+      — GCS-verified 2026-06-21: `instruments-store-tradfi-prd` `_index` = 14629 rows, 100% schema_version=9,
+      asset_group=tradfi (100%), source 0% blank. Mechanism: `instruments-service/scripts/populate_is_index_v9_2026_06_19.py --apply`
+      (run by prior session sub-agent; see progress note 2026-06-21 15:42).
 - [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
       canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
 
