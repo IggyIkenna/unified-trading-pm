@@ -3817,3 +3817,32 @@ so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
 
 [2026-06-21 16:14 UTC] agt-bcc1f2 (slot-5) — DONE plan-health gate auto-remediation for PR #470. Hard failures: 0. Pushed live-defi-rollout@91720389f. Fixes: P11.6→P1.6, P11.9→P1.9 (citadel_paper_batch_live_reconciliation_2026_06_19.md); P2 **→P2. ** (staging_to_main_promotion_starvation_2026_06_19.md). plan_health wall unblocked.
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-06-21T18:15:22Z — ⚠️ 5 orphan ping(s) detected (no plan/issue/audit reference)
+
+Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
+
+```
+ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-3 → ci] 2026-06-21 ~18:05 UTC
+ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
+ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-21T05:00:20Z — HARD FAILURES DETECTED
+ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
+ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-21T05:00:20Z — HARD FAILURES DETECTED
+
+```
+
+**Action required**: the agent who posted each orphan ping must either:
+1. **File a plan** in `plans/active/<slug>_2026_06_21.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline,
+   OR
+3. **Remove the ping** if it's resolved / no longer actionable.
+
+Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
+
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
+Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
+Phase -1 (workspace-discipline prereq).
