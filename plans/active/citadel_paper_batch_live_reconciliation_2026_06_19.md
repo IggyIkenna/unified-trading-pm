@@ -1733,3 +1733,13 @@ competitive, so **the allocation tilt is marginal (~+0.1), not ~+0.6**. Net: equ
 basis-to-capacity is the robust deployable; the clever tilt is a rounding error. Lesson: a losing backtest line is more
 often a BUG or overfit than free inverse-alpha — fix/verify it, don't reflexively flip it (flip is in-sample by
 construction).
+
+**SHORT-LEG FINAL VERDICT (2026-06-21, operator: "short still needs fixing in 2023")**: the book short's GROSS signal is
+NEGATIVE in 2023 (−0.72) AND 2024 (−4.01) — it shorts INTO the bull; SIGNAL problem, not execution (net −0.52/−3.24 ≈
+gross). NO gate fix works — every stronger gate shorts deeper into the rally/bottom (drawdown-gate −18 in 2023).
+**Decisive test: the directional book is STRICTLY BETTER without the standalone short — full +1.37→+1.54, 2024
++2.19→+2.66, 2025 +3.19→+3.31, only 2026 −0.22→−0.52 (covered by basis + tsmom's short side).** 6th independent
+confirmation the short has no standalone edge; first DECISIVE one. **Action: RETIRE the standalone short as a leg** (the
+R8 gate from earlier today made it less-catastrophic but the right answer is removal). **Deployable directional book =
+cs + h32 + ext + TS-momentum (no standalone short) + basis-to-capacity.** Scripts: `_short_2023_fix.py` /
+`_short_net_book.py`.
