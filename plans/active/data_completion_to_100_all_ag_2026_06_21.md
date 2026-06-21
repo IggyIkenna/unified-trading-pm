@@ -573,10 +573,11 @@ via `launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --i
 `databento-api-key` (in Secret Manager). US markets OPEN (17:49 UTC). Verifying it connects to Databento **Live**
 streaming (the one open question = whether the account's subscription includes Real-Time/Live; if not → genuine
 BLOCKED-CREDENTIALS, the only acceptable non-completion). Watcher armed.
-- [ ] [SCRIPT] P2. **deployment-service: harden the VM log-uploader thread** — on the CME-1s VMs the GCS run.log
+- [x] ✅ [SCRIPT] P2. **deployment-service: harden the VM log-uploader thread** — on the CME-1s VMs the GCS run.log
   uploader froze ~16:35 (large 1s logs) while the run + heartbeat + shard-writes continued fine (heartbeat fresh, no
   premature watchdog kill). Cosmetic (can't tail those logs) but worth a try/except + re-arm in the uploader loop. Repo:
-  deployment-service (setup-data-pipeline-vm.sh uploader daemon).
+  deployment-service (setup-data-pipeline-vm.sh uploader daemon). — unified-trading-library@5ed6824c
+  (lifecycle/uploader.py: daemon-thread + 90s join timeout caps blocking upload_bytes(); test_blocking_upload_does_not_freeze_loop added)
 
 ### 2026-06-21 — DEFI lane: RE-SEQUENCED per operator (IS→100%→rollup→MTDS) + real hang root-cause
 **Operator correction (CORRECT):** run the catalogue roll-up AFTER instruments are 100%, THEN MTDS — the catalog-stale
