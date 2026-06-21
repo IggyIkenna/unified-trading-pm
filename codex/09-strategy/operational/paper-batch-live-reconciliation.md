@@ -102,13 +102,13 @@ identical inputs.** The divergence is entirely downstream (fills + ledger).
 - `InstrumentRecord` + per-venue enumeration (`instruments_service/engine/orchestrator/venue_core.py:227`); canonical
   `instrument_key = VENUE:INSTRUMENT_TYPE:SYMBOL`.
 
-**Canonical SSOT derivation — never hand-threaded metadata maps (HARD RULE, operator 2026-06-19).** The spine
-integrates via the canonical UAC/UTL SSOT, NOT a bolt-on. Every fill carries the canonical `instrument_key`
+**Canonical SSOT derivation — never hand-threaded metadata maps (HARD RULE, operator 2026-06-19).** The spine integrates
+via the canonical UAC/UTL SSOT, NOT a bolt-on. Every fill carries the canonical `instrument_key`
 (`VENUE:INSTRUMENT_TYPE:SYMBOL`, built by the engine via the UAC `instrument_type_for_action` SSOT — the instrument type
 is intrinsic to the action), and the ledger writers DERIVE the ledger asset identity from it:
 `derive_ledger_asset_fields(instrument_key)` → `(asset_symbol, asset_canonical_id, asset_class)` where
-`asset_class = asset_class_for_instrument_type(InstrumentType)` (the `InstrumentType → LedgerAssetClass` SSOT). All three
-live in UAC `internal/reference/ledger_asset_resolution.py` (`asset_class_for_instrument_type` /
+`asset_class = asset_class_for_instrument_type(InstrumentType)` (the `InstrumentType → LedgerAssetClass` SSOT). All
+three live in UAC `internal/reference/ledger_asset_resolution.py` (`asset_class_for_instrument_type` /
 `instrument_type_for_action` / `derive_ledger_asset_fields`). **BANNED on the spine**: threading
 `instrument_type_of`/`asset_symbol_of`/`asset_canonical_id_of`/`asset_class_of` dicts through `write_run_ledger` /
 `write_paper_run` / `rerun_from_manifest` / `ledger_emit`, a hardcoded `_DEFAULT_INSTRUMENT_TYPE`, or any per-caller
@@ -237,6 +237,22 @@ instruction (V2EngineOrchestrator.on_tick)
 ```
 
 The same writer runs in paper (benchmark fills) and live (real fills); batch produces the same ledger from a replay.
+
+**Shipped writer seams (P10.1 / P10.2, 2026-06-21).** The TreasuryLedger leg is the UTL SSOT
+`unified_trading_library.ledger.write_run_transfer_ledger` + `transfer_ledger_row` (writes
+`{ledger_root}/ledger_type=transfer/{run_id}.jsonl`; capital-movement `LedgerRow`s with a money-movement `event_type` —
+DEPOSIT / TRANSFER / STAKE / COLLATERAL_POSTED — a single `client_id` and `counterparty_client_id=None`, funds-isolation
+HARD RULE; asset identity derived canonically from each leg's `instrument_key` via `derive_ledger_asset_fields`, no
+metadata maps). `strategy-service` `engine/backtest/paper_run_transfers.py` builds the carry deploy flow (USDC deposit →
+spot swap → stake → perp-margin posting) per spec and `run_paper()` writes one merged transfer ledger for the run. The
+**multi-dimensional PnLAttributionRow** is produced by `engine/backtest/paper_run_attribution.py`: per held day it emits
+CARRY + BASIS + FEES at the staking venue and FUNDING at the perp venue (so `by venue` ≠ `by layer`), all at
+`PnLLayer.STRATEGY` (EXECUTION layer = 0 in a paper run — benchmark fills); FEES is an HONEST explicit 0 and the
+price/DELTA leg is omitted (no spot-price column) rather than fabricated. The `emit_attribution_parquet` SSOT partitions
+by `strategy_id` / `client_id` / `date` so per-venue + per-strategy + per-day are queryable. Verified end-to-end on run
+`paper-20260621105146-e7545ddb` (8 transfer rows = 4 legs × 2 strategies; 56 attribution rows = 7 days × 4 factors × 2
+strategies, 4 venues, 2 strategy_ids; batch rerun ε=0, 42 fills, 0 deviations). The client-reporting-api `/transfers`
+reader still scans only `ledger_type=instruction` — pointing it at `ledger_type=transfer` is the open downstream item.
 `realized_pnl` is computed (not `"0.00"`), `PositionLedger` is the materialised `Σ delta` view (not a CCXT snapshot),
 and `PassiveLedger` accruals are synthesised (not dropped).
 
