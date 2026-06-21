@@ -106,3 +106,18 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 ### 2026-06-21 — snapshot measured + fleet launch begun
 Coverage snapshot above (measured, not memory). Kalshi seed VM re-launched (runner set-u fix mtds@74e228c).
 Fleet launch + monitoring loop starting (this plan is the path-to-100% plan-of-record).
+
+### 2026-06-21 — DEFI lane (/autonomous, Opus): bucket bug is FLEET-WIDE across defi handlers
+Canonical defi bucket CONFIRMED = consolidated `market-data-tick-defi-prd-central-element-323112` (only defi bucket with
+a live consolidator + the measured 6.16M-row v9 `_index`; dedicated `{stem}-prd` buckets are un-consolidated/index-less).
+slot-4 already fixed **lst_rates** (mtds@4c85340). STILL BROKEN (same `get_write_bucket_name("<dash-data-type>")`
+orphan-bucket bug → ManifestConsolidatorStaleError, data lands where the `_index` never sees = why defi is stuck at 6%):
+gas_fee×3, dex_pools, dex_swaps(check), lending_indices, liquidations, oracle_prices, perp_funding, evm_defi,
+aggregator_route. Already-correct (do NOT touch): vault_share_price, solana_defi, lst_rates. UTL `_DOMAIN_TO_YAML_KIND`
+has no dash-data-type kinds → legacy `{label}-{pid}` fallback. Fix = `→ get_write_bucket_name("market_data","defi")`.
+**SSOT note:** `codex/02-data/defi-canonical-naming-ssot.md` "bucket" row (locked 2026-05-28, dedicated `{stem}-prd`) is
+OPERATIONALLY STALE — proceeding consolidated per 2026-06-21 plan P0 + ground truth; row must be corrected (todo).
+**Operator: overrode a locked-SSOT row (big finding).** Exec order (HARD): mtds handler fix → rebuild VM tarball
+(deployment-service create-code-tarballs.sh) → year-shard defi backfill (2020→2026, 1 VM/data_type×year, consolidated
+bucket, MANIFEST_PER_VM_SHARDS) → T+10 verify → MDPS defi → live forward-poll (launch-defi-forward-poll.sh = STUB) →
+monitor `_index` honest-cov. MINE this session: the remaining-handlers fix + tarball + fan-out + SSOT-row correction.
