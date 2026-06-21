@@ -49,9 +49,9 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       Repo: deployment-service.
 - [x] ✅ [DATA] P0. **tradfi** — full 3-dataset batch (GLBX done via CME-b; **DBEQ.BASIC**
       `launch-tradfi-bf-nasdaq/nyse-ohlcv-1m.sh` + **CFE/XCBF**) to fill 818k unattempted +
-      `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service. — deployment-service@f243eb4 |
-      17 VMs RUNNING (CME×7 2026, NASDAQ×4 2023-26, NYSE×4 2023-26, CBOE/XCBF×1 2026, tradfi-fwd×1 2026-06-20);
-      VM_TASK=mtds-backfill + VM_SOURCE=databento + MANIFEST_PER_VM_SHARDS=true confirmed on all.
+      `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service. — deployment-service@f243eb4 | 17 VMs RUNNING
+      (CME×7 2026, NASDAQ×4 2023-26, NYSE×4 2023-26, CBOE/XCBF×1 2026, tradfi-fwd×1 2026-06-20); VM_TASK=mtds-backfill +
+      VM_SOURCE=databento + MANIFEST_PER_VM_SHARDS=true confirmed on all.
 - [x] [DATA] P0. **sports** — `launch-mtds-sports-odds-backfill-vm.sh` + `launch-sports-is-gap-fill.sh` /
       `launch-sports-full-sweep-vm.sh` (IS sports 15.9%→100%) + `launch-footystats-forward-poll.sh` (LIVE). Repo:
       deployment-service. ✅ — VMs RUNNING (T+10min verified): odds-backfill=mtds-backfill-odds-{2020..2026} (7 VMs,
@@ -75,13 +75,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       asset_group classification) — see
       `plans/active/issues/cefi_free_venue_historical_refetch_mechanism_2026_06_21.md`. Repo: deployment-service /
       market-tick-data-service.
-- [ ] [DATA] P0. **cefi — LIVE stream → ≥1 `live_<source>` row — BUGS FIXED, VM relaunched, verifying.** **ROOT CAUSE
-      FOUND + FIXED:** `MTDSShardManifestRecorder._resolve_row_key` had 2 bugs crashing all cefi live VMs at startup:
-      (1) `asset_group` included in row_key dict — UTL `_coerce_row_key` rejects it (hive partition key, not a manifest
-      column); (2) key `"day"` used but UTL `_ROW_KEY_COLUMNS` defines it as `"date"` (matches batch path). Both fixed
-      in market-tick-data-service@46adace. Tarball rebuilt (mtds-code.tar.gz @15:50Z). Relaunched
-      `mtds-live-cefi-hyperliquid-trades-20260621-155352` (RUNNING). Verification: ≥1 `live_hyperliquid` row in
-      manifest expected within ~10 min of VM startup (per-vm shard). Repo: market-tick-data-service.
+- [x] [DATA] P0. **cefi — LIVE stream → ≥1 `live_<source>` row ✅ VERIFIED (cefi LIVE 0 → 1).** First-ever operational
+      live MTDS run; cleared a 5-bug first-run chain (live mode had never run on ANY AG): (1) GCS setup-script
+      transiently corrupted by a sync baking an uncommitted edit → fixed to clean deployment-service@efdb9df; (2)
+      missing Pub/Sub lifecycle topic `market-tick-data-service-events` (UTL `_sink_factory` `{service}-events`) →
+      created (unblocks live for ALL AGs); (3) topic IAM — granted `pubsub.publisher` to the compute SA; (4)+(5)
+      `MTDSShardManifestRecorder._resolve_row_key` row_key bugs (`asset_group` not a row-key column + `"day"`→`"date"`
+      per UTL `_ROW_KEY_COLUMNS`) → market-tick-data-service@46adace (slot-3 shipped the equivalent fix to LDR; I
+      deployed it via the mtds tarball). **Evidence:** `mtds-live-cefi-hyperliquid-trades-20260621-155352` per_vm shard
+      `gs://market-data-tick-cefi-prd-…/_index/per_vm/…155352.parquet` @15:57Z holds a row
+      `venue=HYPERLIQUID data_type=trades date=2026-06-21 pipeline_mode=live_hyperliquid` — the cefi live pipeline is
+      operational (rows accrue as trades flow; first window was empty_confirmed). Findings filed:
+      `plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md`. Repo: market-tick-data-service /
+      deployment-service. (CEFI lane 2026-06-21.)
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
 - [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
@@ -150,14 +156,15 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       ✅ — `python3` → `"${WORKSPACE_ROOT}/.venv-workspace/bin/python3"` — deployment-service@e31817b
 - [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
       enumeration must precede the MTDS poll (same IS→MTDS ordering as the Kalshi seed). Repo: instruments-service.
-- [ ] [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding 2026-06-21]:
-      footystats fwd-poll fetches odds fine (29 snapshots/date) but the write FAILS validation — "Batch manifest row
-      `source='footystats'` disagrees with `pipeline_mode='batch_odds_api'` (expects source='odds_api')". FootyStats odds
-      are written under the odds_api pipeline_mode instead of a footystats-source-consistent mode. **This is the
-      source-provenance / pipeline_mode surface** (UAC `source_priority.py`/`pipeline_mode.py` — the in-flight provenance
-      lane's files). Fix belongs there: either footystats odds use `pipeline_mode=batch_footystats` (source=footystats) or
-      the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO write OK; only ODDS fail.
-      Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix from SPORTS lane (collision).
+- [ ] [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding
+      2026-06-21]: footystats fwd-poll fetches odds fine (29 snapshots/date) but the write FAILS validation — "Batch
+      manifest row `source='footystats'` disagrees with `pipeline_mode='batch_odds_api'` (expects source='odds_api')".
+      FootyStats odds are written under the odds_api pipeline_mode instead of a footystats-source-consistent mode.
+      **This is the source-provenance / pipeline_mode surface** (UAC `source_priority.py`/`pipeline_mode.py` — the
+      in-flight provenance lane's files). Fix belongs there: either footystats odds use `pipeline_mode=batch_footystats`
+      (source=footystats) or the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO
+      write OK; only ODDS fail. Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix
+      from SPORTS lane (collision).
 - [x] [TERRAFORM] P0. ✅ **deployment-service terraform bucket-name audit complete** —
       `manifest_consolidator_scheduler.tf` confirmed correct (canonical `${local.deployment_env_short}` throughout for
       all Group A AG buckets; legacy entries intentional for MDPS Phase 0f); deleted deprecated
@@ -203,24 +210,25 @@ r/day** (re-tested: 2024-01-13 → 927 fixtures). Killed 8 false-writing full-sw
 `empty_confirmed` before kill → small blast radius).
 
 ### 2026-06-21 — DEFI lane: FULL FAN-OUT LAUNCHED + real root-cause of catalog blocker FIXED
+
 **60 MTDS defi market-data VMs LAUNCHED** (all data_types × years 2020→2026; lst-rates×7, dex-pools×6, dex-swaps×6,
 lending×5, liquidations×7, vault×6, pyth-archive×1, pyth-lst×4, gas-fees×7, jito×5, marinade×6) — no quota errors, no
-OOM, ALL confirmed writing to **consolidated `market-data-tick-defi-prd`** (bucket fix verified live). Plus 6→ IS catalog
-year-shard VMs (capturing real instruments). Drive-to-done monitor armed (refresh consolidators + wake on fleet drain).
-**CATALOG BLOCKER — REAL ROOT CAUSE (corrects earlier diagnosis):** MTDS `assert_defi_catalog_fresh` →
+OOM, ALL confirmed writing to **consolidated `market-data-tick-defi-prd`** (bucket fix verified live). Plus 6→ IS
+catalog year-shard VMs (capturing real instruments). Drive-to-done monitor armed (refresh consolidators + wake on fleet
+drain). **CATALOG BLOCKER — REAL ROOT CAUSE (corrects earlier diagnosis):** MTDS `assert_defi_catalog_fresh` →
 `run_preflight(DEFI_COLLECT_DAILY)` requires the **`instrument-catalog` lifecycle ROLL-UP artifact**
 (`build_instrument_catalogue.py`), NOT the per-venue instrument records. The IS instruments-backfill writes records with
 **blank data_type** (consolidated IS index = 117k rows, data_type all empty) → preflight finds no `instrument-catalog` →
-`age=None` → MTDS routes honest-absence (empty). FIX: triggered Cloud Run jobs **`lifecycle-catalogue-regen-defi`
-(exec 7844r)** + `instrument-catalogue-regen` (c2cwk) — the roll-up producer (last defi run was 2026-06-19 = stale, the
-reason defi was stuck). Once the artifact is fresh (<24h) the per-date preflight passes → MTDS captures. **Watcher
-besyyb23t** waits for the roll-up → consolidates instruments-defi → verifies a dex-pools VM flips empty→capturing.
-**RESUME:** if besyyb23t shows capturing → the running 60 VMs auto-capture their remaining dates; **re-run any shard that
-recorded early empties** (catalog wasn't fresh when they started) after the roll-up — empties aren't terminal
-(empty_confirmed is re-attempted; only `captured` is skip-worthy). Then: execution-defi consolidator → measure defi
-honest-cov climbing → MDPS defi (`launch-mdps-sharded-backfill.sh defi`) → defi live (reuse cefi `live_websocket`/
-`--shard-spec` wiring deployment-service@efdb9df, or scheduled collect-* re-run for recent days). Live background tasks:
-drive-monitor b874zr2s4 + catalog-gate besyyb23t.
+`age=None` → MTDS routes honest-absence (empty). FIX: triggered Cloud Run jobs **`lifecycle-catalogue-regen-defi` (exec
+7844r)** + `instrument-catalogue-regen` (c2cwk) — the roll-up producer (last defi run was 2026-06-19 = stale, the reason
+defi was stuck). Once the artifact is fresh (<24h) the per-date preflight passes → MTDS captures. **Watcher besyyb23t**
+waits for the roll-up → consolidates instruments-defi → verifies a dex-pools VM flips empty→capturing. **RESUME:** if
+besyyb23t shows capturing → the running 60 VMs auto-capture their remaining dates; **re-run any shard that recorded
+early empties** (catalog wasn't fresh when they started) after the roll-up — empties aren't terminal (empty_confirmed is
+re-attempted; only `captured` is skip-worthy). Then: execution-defi consolidator → measure defi honest-cov climbing →
+MDPS defi (`launch-mdps-sharded-backfill.sh defi`) → defi live (reuse cefi `live_websocket`/ `--shard-spec` wiring
+deployment-service@efdb9df, or scheduled collect-\* re-run for recent days). Live background tasks: drive-monitor
+b874zr2s4 + catalog-gate besyyb23t.
 
 **Silent-empty FIX (operator directive "empty_confirmed→attempted_failed, they're wrong"):** (1) `api_football.py`
 `_extract_response` raises `ApiFootballResponseError` on a non-empty `errors` envelope → routes to `failed_venues` →
@@ -276,10 +284,10 @@ fleet collapsed to **~22 req/min** (operator's dashboard: ~1k/hr). The heavy loa
 fan-out (`/fixtures/players`, `/fixtures/events`, lineups, stats — N calls/fixture).
 
 **Fix (operator-steered: fixtures-first + fewer VMs):** killed the 8 thrashing VMs. Relaunched **2 FIXTURES-ONLY VMs**
-(is-gap-fill `--entity FIXTURES`, split 2019-2022 / 2023-2026) = 2×600/min ≈ the 1.2k/min cap with **NO thundering herd**.
-**Verified flowing at full speed, zero rate-limiting** ("Fetched 639 fixtures for date=2019-03-02", multiple dates/sec).
-FIXTURES = ~1 call/date (~2920 total for 8yr) → catalogue fills in **minutes**, not days. Also shipped full-sweep
-`--entity` flag (deployment-service@4caeaf3) for fixtures-first phasing.
+(is-gap-fill `--entity FIXTURES`, split 2019-2022 / 2023-2026) = 2×600/min ≈ the 1.2k/min cap with **NO thundering
+herd**. **Verified flowing at full speed, zero rate-limiting** ("Fetched 639 fixtures for date=2019-03-02", multiple
+dates/sec). FIXTURES = ~1 call/date (~2920 total for 8yr) → catalogue fills in **minutes**, not days. Also shipped
+full-sweep `--entity` flag (deployment-service@4caeaf3) for fixtures-first phasing.
 
 **Architecture confirmed (operator's Q): enrichment reads fixtures from GCS** — `_per_fixture_gcs_fast_path`
 (process.py:191) lets per-fixture entities read fixture IDs from GCS, so fixtures-first composes: Phase-1 FIXTURES
@@ -386,6 +394,7 @@ CBOE→XCBF.PITCH (launcher header comments mentioning XNAS.ITCH are stale; rout
       capturing (`GLBX.MDP3/ohlcv_1m → batch_databento` parquets + per-VM manifest shard).
 
 ### 2026-06-21 15:18 — TRADFI batch fan-out LIVE + PROVEN (15 VMs capturing)
+
 Launcher fix committed ds@9aca3a5 (isolated-worktree promotion past peer collision). **15 tradfi-bf VMs all confirmed
 capturing** `→ batch_databento` parquets + per-VM manifest shards: CME-2026 (7 roots, GLBX.MDP3), NASDAQ full-history
 2023-26 (4, DBEQ.BASIC), NYSE full-history 2023-26 (4, DBEQ). NASDAQ-2024 proven writing REAL equity data (SNPS/INTU/…
@@ -396,11 +405,12 @@ failure on wave completion. REMAINING tradfi: CBOE/XCBF (VX-futures wrapper — 
 pipeline_mode bump — overlaps peer's UAC source_priority work), LIVE forward-poll (peer building `mtds-live` branch).
 
 ### 2026-06-21 15:42 — TRADFI lane: ALL 3 dispatch items launched/done
+
 - ✅ [IS] **IS tradfi v9 canonicalisation DONE** (sub-agent, verified on live blob): `instruments-store-tradfi-prd`
   `_index` now **schema_version 100% v9** (was 46.6%), **asset_group 100% `tradfi`** (was absent), **source 0% blank**
   (`instruments_service`), **pipeline_mode 0% blank** (`batch_instruments_service`), capture_status 14045/581 unchanged
-  (no fabrication). Mechanism = `instruments-service/scripts/populate_is_index_v9_2026_06_19.py --apply` (the column-bump
-  walk; the named `canonicalize_instruments_store_index.py` is dedup-only). Pre-apply snapshot written.
+  (no fabrication). Mechanism = `instruments-service/scripts/populate_is_index_v9_2026_06_19.py --apply` (the
+  column-bump walk; the named `canonicalize_instruments_store_index.py` is dedup-only). Pre-apply snapshot written.
 - ✅ [DATA] **LIVE forward-poll wired** — fixed `launch-tradfi-forward-poll.sh` (same cefi-backfill/no-`--source` bug):
   ds-commit (VM_TASK=mtds-backfill + VM_SOURCE=databento + VM_DATA_TYPES=ohlcv_1m). Launched the **daily-cron host VM**
   `tradfi-fwd-daily-cron-20260621-154132` (RUNNING, fires 06:00 UTC daily → `launch-tradfi-forward-poll.sh` T-1) + an
