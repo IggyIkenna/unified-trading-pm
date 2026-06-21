@@ -699,3 +699,16 @@ valid 24h via staleness=86400; MTDS writes market-data not instruments so env-le
 - [x] ✅ [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
   defi MTDS launchers — working locally, used by the live fan-out; persist via quickmerge). Repo: deployment-service.
   — deployment-service@e74517c
+
+### 2026-06-21 19:40 — TRADFI honest-cov re-measured: 5.3% → 13.8% (captured TRIPLED), still climbing
+Consolidated `_index`: captured **102,936 → 310,180** (3×), `ohlcv_1s` **3,187 → 48,656** (15×), schema 99.7% v9.
+Landed: NYSE ohlcv_1m **125,915** (full DBEQ equity history — was ~0/wrongly-empty), CME ohlcv_1m 68,729 + ohlcv_1s
+49,171, NASDAQ 36,295, CBOE 135. **0 failures from this backfill** (the 9,998 `attempted_failed` are STALE 2026-04-30→
+05-26 pre-existing runs). 12 CME-1s VMs still finishing (re-armed finalizer). The flat 818k `expected_unattempted` is
+**structural honest-absence**, not a gap: trades/tbbo/mbp_10 (L1/L2 window-bound, un-backfillable historically),
+ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real manifest items found:
+- [ ] [DATA] P2. **Phantom NYSE/NASDAQ `ohlcv_1s` expected_unattempted (~31k cells)** — equities don't support 1s
+  (UAC expected_coverage NASDAQ/NYSE=[ohlcv_1m]); the IS enumerator seeded 1s for them. These can never be captured →
+  deflate honest-cov. Reconcile (drop the phantom 1s seeds for equity venues). Repo: instruments-service enumerator.
+- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s), not MTDS-fetched —
+  they convert to captured when MDPS aggregation runs over the new 1m/1s corpus. Repo: market-data-processing-service.
