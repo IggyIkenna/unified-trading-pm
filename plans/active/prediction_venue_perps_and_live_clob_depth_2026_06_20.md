@@ -41,7 +41,7 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Phase 4 — arb wiring
 
-- [ ] [DESIGN] P2. strategy-service — wire Kalshi/Polymarket perp funding into the funding-rate-arb + basis archetypes (cross-venue dispersion vs CeFi perps), now that they share the canonical perp instrument. Repo: strategy-service.
+- [x] ✅ [DESIGN] P2. strategy-service — perp funding wired into funding-rate-arb + basis archetypes SHIPPED (strategy-service@31ba481f): `catalog_carry.py` `_CARRY_BASIS_PERP_VENUE_BUNDLES` (10→12) + `_FUNDING_DISPERSION_VENUES` (4→6) += `(kalshi,KALSHI-PERP,USDC)` + `(polymarket,POLYMARKET-PERP,USDC)` (slot tokens from UAC `_PREDICTION_TOKENS`); 8 tests; QG green. POLYMARKET-PERP wired for honest-absence (BLOCKED-UPSTREAM — flows when endpoint recovers, no code change). — 2026-06-21
 
 ## Codex SSOT updates
 
@@ -362,3 +362,7 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 - mtds@c487a78: `kalshi_perp_ws.py` (full live CLOB, snapshot+delta orderbook, BBO+depth→canonical `book_snapshot`) + `polymarket_perp_ws.py` (scaffold, `_ENDPOINT_LIVE=False`, BLOCKED-UPSTREAM); 65 unit tests; QG green.
 - **Caught at flip-verify**: `live_pipeline_mode_for_venue("cefi","KALSHI-PERP","book_snapshot")` raised `ValueError: No PipelineMode for source 'tardis' in mode 'live'` — the perp venue (hyphen) fell through to the cefi book_snapshot SOURCE_PRIORITY primary `tardis` (batch-only flat-file, no LIVE_ mode). The live runner would crash at pipeline_mode resolution. FIX (UAC@a6444476, committed via orphan-wip inherit + pushed): added `_CEFI_PERP_LIVE_SOURCE_FOR_VENUE` override in `live_source_for_venue` (KALSHI-PERP→kalshi_perp, POLYMARKET-PERP→polymarket_perp) checked before CEFI_LIVE_VENUES; verified KALSHI-PERP/POLYMARKET-PERP → live_kalshi_perp/live_polymarket_perp, binance unregressed; regression test `test_live_source_for_cefi_crypto_perp_venue_is_its_own_ws_feed`.
 - Also corrected 2 stale TradFi assertions (NASDAQ/NYSE `ohlcv_1m`→`ohlcv_1m,ohlcv_1s`) — foreign-lane registry change (DBEQ.BASIC serves both per Databento SSOT) that had left the asserts stale on LDR HEAD.
+
+### 2026-06-21 23:35 — strategy archetype wiring (line 44) — PERPS WORKSTREAM COMPLETE
+- strategy-service@31ba481f: Kalshi-perp + Polymarket-perp added to the carry/basis perp venue bundles + funding-dispersion venues (cross-venue dispersion vs the existing CeFi perp universe). 8 unit tests, QG green.
+- **Perps workstream (Phases 1-4) COMPLETE for Kalshi-perp end-to-end**: enumerator (IS@fdc9bad) → batch trades+funding (mtds@88c2f0c + UAC) → live CLOB ws (mtds@c487a78 + UAC resolver fix@a6444476) → launcher (deployment@86f517d) → strategy archetypes (strategy@31ba481f) → docs (codex prediction-perps-sourcing.md). The ONLY open perp item is the Polymarket-perp live endpoint (BLOCKED-UPSTREAM — `perps-api.polymarket.com` DNS-dead; scaffold shipped at every layer + operator ping filed; flows with zero code change when the endpoint is confirmed).
