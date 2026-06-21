@@ -1805,9 +1805,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-21T15:39:06.183172Z",
-    "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.28.0 (pre-1.0.0)",
-    "lock_version": "0.28.0",
+    "locked_since": "2026-06-21T15:40:39.790522Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "deployment-api",
       "strategy-service",
@@ -1838,24 +1838,24 @@
       "version": "0.8.0"
     },
     "agent-orchestrator": {
-      "version": "0.16.0",
+      "branch": "staging",
       "sha": "2bab075babb39a77314054f5afcc201927efafdd",
-      "branch": "staging"
+      "version": "0.16.0"
     },
     "strategy-service": {
-      "version": "0.25.0",
+      "branch": "staging",
       "sha": "867bd48829767242b59e1a7e37443dbd11068101",
-      "branch": "staging"
+      "version": "0.25.0"
     },
     "deployment-service": {
-      "version": "0.18.0",
+      "branch": "staging",
       "sha": "10e73625f7ea5d87a675ab86a9c5889aed5fa266",
-      "branch": "staging"
+      "version": "0.18.0"
     },
     "unified-api-contracts": {
-      "version": "0.28.0",
+      "branch": "staging",
       "sha": "d4c042dc5809a5b8ce1eb369a4fe6a5776792910",
-      "branch": "staging"
+      "version": "0.28.0"
     }
   },
   "main_commits": {
