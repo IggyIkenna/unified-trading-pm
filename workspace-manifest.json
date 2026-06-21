@@ -67,30 +67,30 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.12.0",
-    "deployment-api": "0.23.0",
-    "deployment-service": "0.18.0",
+    "batch-live-reconciliation-service": "0.14.0",
+    "deployment-api": "0.26.0",
+    "deployment-service": "0.19.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.16.0",
-    "features-service": "0.5.0",
+    "features-service": "0.7.0",
     "fund-administration-service": "0.5.0",
     "ibkr-gateway-infra": "0.4.0",
-    "instruments-service": "0.11.0",
-    "market-tick-data-service": "0.23.0",
+    "instruments-service": "0.14.0",
+    "market-tick-data-service": "0.24.0",
     "system-integration-tests": "0.14.0",
-    "unified-api-contracts": "0.28.0",
-    "unified-trading-library": "0.21.0",
+    "unified-api-contracts": "0.29.0",
+    "unified-trading-library": "0.23.0",
     "unified-trading-pm": "1.2.222",
-    "market-data-processing-service": "0.10.2",
+    "market-data-processing-service": "0.10.3",
     "e2e-testing": "0.8.0",
     "agent-orchestrator": "0.18.1",
     "greeks-service": "0.8.0",
-    "trading-agent-service": "0.3.0",
+    "trading-agent-service": "0.5.0",
     "strategy-service": "0.27.0",
-    "ml-service": "0.9.0",
-    "alerting-service": "0.11.0",
-    "unified-trading-api": "0.2.3",
-    "client-reporting-api": "0.15.1"
+    "ml-service": "0.10.0",
+    "alerting-service": "0.13.0",
+    "unified-trading-api": "0.2.5",
+    "client-reporting-api": "0.15.3"
   },
   "repositories": {
     "alerting-service": {
@@ -172,7 +172,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -284,7 +284,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL — no-service-to-service-deps HARD RULE).",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -876,7 +876,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1798,24 +1798,10 @@
     "greeks-service": "0.8.0",
     "fund-administration-service": "0.7.0",
     "execution-service": "0.18.0",
-    "instruments-service": "0.14.0",
     "agent-orchestrator": "0.18.1",
-    "alerting-service": "0.13.0",
-    "batch-live-reconciliation-service": "0.14.0",
-    "client-reporting-api": "0.15.3",
-    "deployment-api": "0.26.0",
-    "deployment-service": "0.19.0",
     "e2e-testing": "0.14.0",
-    "features-service": "0.7.0",
     "ibkr-gateway-infra": "0.4.0",
-    "market-data-processing-service": "0.10.3",
-    "market-tick-data-service": "0.24.0",
-    "ml-service": "0.10.0",
-    "strategy-service": "0.27.0",
-    "trading-agent-service": "0.5.0",
-    "unified-api-contracts": "0.29.0",
-    "unified-trading-api": "0.2.5",
-    "unified-trading-library": "0.23.0"
+    "strategy-service": "0.27.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1849,16 +1835,21 @@
       "branch": "staging",
       "sha": "901d014ef27e30e2696d464c30976b0b6ac77a50",
       "version": "0.18.0"
-    },
-    "instruments-service": {
-      "version": "0.14.0",
-      "sha": "6bc7c44236140664cd4b100fa12a2de6a8aa507a",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T16:30:56.334818Z",
+        "commits": {
+          "instruments-service": {
+            "version": "0.14.0",
+            "sha": "6bc7c44236140664cd4b100fa12a2de6a8aa507a",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T16:26:04.876072Z",
         "commits": {
@@ -1938,21 +1929,6 @@
             "version": "0.23.0"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-21T14:17:40.269321Z",
-        "commits": {
-          "strategy-service": {
-            "version": "0.24.0",
-            "sha": "1ab2d7da5e2238f819baed670cfd9e7315d694d2",
-            "branch": "staging"
-          },
-          "agent-orchestrator": {
-            "version": "0.12.0",
-            "sha": "7522a3d4fbe2e497b8b97e6f091cef78b0498059",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -1968,8 +1944,8 @@
     ]
   },
   "promotion_failures": {
-    "execution-service": 1,
-    "fund-administration-service": 1
+    "execution-service": 2,
+    "fund-administration-service": 2
   },
   "promotion_quarantine": {}
 }
