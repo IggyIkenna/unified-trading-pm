@@ -1806,9 +1806,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-21T14:41:24.061941Z",
-    "locked_reason": "Breaking MINOR bump cascade: market-tick-data-service=0.23.0 (pre-1.0.0)",
-    "lock_version": "0.23.0",
+    "locked_since": "2026-06-21T14:42:30.535344Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "deployment-api",
       "client-reporting-api",
@@ -1830,9 +1830,9 @@
       "version": "0.14.0"
     },
     "deployment-api": {
-      "version": "0.23.0",
+      "branch": "staging",
       "sha": "cf0dc677af19c29420c28759bde65547dac70cca",
-      "branch": "staging"
+      "version": "0.23.0"
     },
     "greeks-service": {
       "branch": "staging",
@@ -1840,29 +1840,29 @@
       "version": "0.8.0"
     },
     "client-reporting-api": {
-      "version": "0.15.1",
+      "branch": "staging",
       "sha": "a383e846dd09cd4709ed49112bae4d40a6a804a5",
-      "branch": "staging"
+      "version": "0.15.1"
     },
     "deployment-service": {
-      "version": "0.16.0",
+      "branch": "staging",
       "sha": "23fcbcffc1f807347c2807062f34ada03cb198bb",
-      "branch": "staging"
+      "version": "0.16.0"
     },
     "agent-orchestrator": {
-      "version": "0.14.0",
+      "branch": "staging",
       "sha": "73a20094eb3a0145e56a9f304f6dc0b7d6bd7694",
-      "branch": "staging"
+      "version": "0.14.0"
     },
     "market-data-processing-service": {
-      "version": "0.10.1",
+      "branch": "staging",
       "sha": "db01b0a7127bdd61461c595264ee4827e5f653e2",
-      "branch": "staging"
+      "version": "0.10.1"
     },
     "market-tick-data-service": {
-      "version": "0.23.0",
+      "branch": "staging",
       "sha": "7c32ff614a25557f6ee8a810757862a3029db526",
-      "branch": "staging"
+      "version": "0.23.0"
     }
   },
   "main_commits": {
