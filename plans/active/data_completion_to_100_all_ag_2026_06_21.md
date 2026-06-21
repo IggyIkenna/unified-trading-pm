@@ -405,7 +405,7 @@ SSOT row corrected (pm@12c4d89a6). **PROOF VM** (lst-rates Jan-2025, fresh tarba
       expected_unattempted would convert to empty_confirmed NOT captured. **The DeFi instrument-catalog must be
       built/fresh (<24h) BEFORE the MTDS defi backfill.** Diagnosing exact catalog blob path + IS build command
       (sub-agent). Repo: instruments-service + market-tick-data-service.
-- [ ] [SCRIPT] P0. **DEFI BLOCKER A: rc=137 (SIGKILL/OOM)** on e2-standard-4 after ~2 days — likely
+- [x] ✅ [SCRIPT] P0. **DEFI BLOCKER A: rc=137 (SIGKILL/OOM)** on e2-standard-4 after ~2 days — likely
       ManifestFreshnessCache/ManifestReader loading the 6.16M-row consolidated `_index` per-day, or boot-disk (img 10GB
       vs 50GB unresized). Fix = bump MACHINE_TYPE (e2-standard-8/16) on the defi launchers and/or a manifest-read memory
       knob. Repo: deployment-service (+ maybe mtds/utl). Diagnosing (sub-agent). **Fan-out matrix is READY** (year-shard
@@ -413,6 +413,8 @@ SSOT row corrected (pm@12c4d89a6). **PROOF VM** (lst-rates Jan-2025, fresh tarba
       `MANIFEST_PER_VM_SHARDS` → must add it or run sequential; dex-pools/dex-swaps/liquidations need `VM_NAME=` per
       shard; pyth-archive = single fixed window; `launch-defi-backfill-vm.sh` = IS instruments, NOT the MTDS matrix).
       Execute the matrix only AFTER B+A are green + a re-proof shows `captured` climbing.
+      — deployment-service@c89c90c | All defi MTDS launchers confirmed e2-standard-8 + MANIFEST_PER_VM_SHARDS=true;
+      added VM_NAME to METADATA in vault-share-price + gas-fees launchers (were missing from per-VM shard key).
 
 ### 2026-06-21 — TRADFI lane: launcher bugs diagnosed + fixed; CME-2026 canary verifying
 
