@@ -63,6 +63,8 @@ related_plans:
 
 # Regime Clustering + Proximity → Factor-Targeted Structure Allocator
 
+> **✅ ARCHIVED 2026-06-21 — all phases done; codex regime-clustering-structure-allocator.md aligned. Deferred: LedgerRow vanna/volga emission = small epic-owned follow-up (features_and_ml_master); Tardis hist sub → issues/cefi_tardis_historical_blocked_credentials. [unlock-plan]**
+
 > **Provenance**: distilled from a design conversation (Ikenna ↔ external collaborator "Kade"/Blue Flame, 2026-05-29).
 > The "best of both worlds" merge: our existing PIT-guarded, walk-forward, batch=live infra **+** the genuinely good
 > ideas surfaced externally — (a) factor-targeted _dynamic_ structure construction instead of a fixed-structure menu

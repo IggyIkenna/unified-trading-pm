@@ -20,6 +20,8 @@ related_plans:
 
 # TradFi futures roll-adjuster centralisation
 
+> **✅ ARCHIVED 2026-06-21 — all 4 phases shipped+flipped; only residual is operator-gated CME backfill RUNS owned by tradfi_master + tradfi_cme_event_contract_backfill_2026_06_20. [unlock-plan]**
+
 ## Decision (operator 2026-06-17 — FULL centralisation)
 
 Futures **back-adjusted continuous-contract construction** (the "roll adjuster") is a **data-PROCESSING-layer** concern.

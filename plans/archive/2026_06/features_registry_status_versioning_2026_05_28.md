@@ -24,6 +24,8 @@ related_plans:
 
 # Features registry expansion + status tags + formula versioning
 
+> **✅ ARCHIVED 2026-06-21 — ships clean (own temp-states: none); 4 codex docs written/aligned. Consumer-pin + other-family rollout are epic-owned (features_and_ml_master). [unlock-plan]**
+
 > **Why now**: `codex/04-architecture/artifact-versioning.md` declares the contract (every feature_group has
 > `content_hash + monotonic v`, consumers pin by `@vN`, registry retained for replay). features-service has **not
 > implemented it**: `formula_version` / `feature_group_version` / `calculator_version` return 0 grep hits across the
