@@ -68,8 +68,8 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.12.0",
-    "deployment-api": "0.21.0",
-    "deployment-service": "0.16.0",
+    "deployment-api": "0.23.0",
+    "deployment-service": "0.18.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.16.0",
     "features-service": "0.5.0",
@@ -78,7 +78,7 @@
     "instruments-service": "0.11.0",
     "market-tick-data-service": "0.23.0",
     "system-integration-tests": "0.14.0",
-    "unified-api-contracts": "0.27.0",
+    "unified-api-contracts": "0.28.0",
     "unified-trading-library": "0.21.0",
     "unified-trading-pm": "1.2.215",
     "market-data-processing-service": "0.10.1",
@@ -86,8 +86,8 @@
     "agent-orchestrator": "0.12.0",
     "greeks-service": "0.8.0",
     "trading-agent-service": "0.3.0",
-    "strategy-service": "0.24.0",
-    "ml-service": "0.8.0",
+    "strategy-service": "0.25.0",
+    "ml-service": "0.9.0",
     "alerting-service": "0.11.0",
     "unified-trading-api": "0.2.3",
     "client-reporting-api": "0.15.1"
@@ -284,7 +284,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL — no-service-to-service-deps HARD RULE).",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -815,7 +815,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -876,7 +876,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1795,19 +1795,14 @@
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.0",
-    "deployment-api": "0.23.0",
     "greeks-service": "0.8.0",
-    "agent-orchestrator": "0.17.0",
-    "strategy-service": "0.25.0",
-    "deployment-service": "0.18.0",
-    "unified-api-contracts": "0.28.0",
-    "ml-service": "0.9.0"
+    "agent-orchestrator": "0.17.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-21T15:40:39.790522Z",
-    "locked_reason": "SIT running",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [
       "deployment-api",
@@ -1829,11 +1824,6 @@
       "sha": "ec350a97ddac4e76eca1980432b9bf1da7799135",
       "version": "0.14.0"
     },
-    "deployment-api": {
-      "branch": "staging",
-      "sha": "cf0dc677af19c29420c28759bde65547dac70cca",
-      "version": "0.23.0"
-    },
     "greeks-service": {
       "branch": "staging",
       "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
@@ -1843,31 +1833,41 @@
       "version": "0.17.0",
       "sha": "50f5bb34942e77618129b006ad3960291bf7c9e0",
       "branch": "staging"
-    },
-    "strategy-service": {
-      "branch": "staging",
-      "sha": "867bd48829767242b59e1a7e37443dbd11068101",
-      "version": "0.25.0"
-    },
-    "deployment-service": {
-      "branch": "staging",
-      "sha": "10e73625f7ea5d87a675ab86a9c5889aed5fa266",
-      "version": "0.18.0"
-    },
-    "unified-api-contracts": {
-      "branch": "staging",
-      "sha": "d4c042dc5809a5b8ce1eb369a4fe6a5776792910",
-      "version": "0.28.0"
-    },
-    "ml-service": {
-      "version": "0.9.0",
-      "sha": "dfaec4636a1c592ffa0e3ddb58a14e2c3f74847f",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T15:48:45.025759Z",
+        "commits": {
+          "deployment-api": {
+            "branch": "staging",
+            "sha": "cf0dc677af19c29420c28759bde65547dac70cca",
+            "version": "0.23.0"
+          },
+          "strategy-service": {
+            "branch": "staging",
+            "sha": "867bd48829767242b59e1a7e37443dbd11068101",
+            "version": "0.25.0"
+          },
+          "deployment-service": {
+            "branch": "staging",
+            "sha": "10e73625f7ea5d87a675ab86a9c5889aed5fa266",
+            "version": "0.18.0"
+          },
+          "unified-api-contracts": {
+            "branch": "staging",
+            "sha": "d4c042dc5809a5b8ce1eb369a4fe6a5776792910",
+            "version": "0.28.0"
+          },
+          "ml-service": {
+            "version": "0.9.0",
+            "sha": "dfaec4636a1c592ffa0e3ddb58a14e2c3f74847f",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T14:45:37.396494Z",
         "commits": {
@@ -1929,21 +1929,6 @@
           "strategy-service": {
             "version": "0.22.0",
             "sha": "328dafb7fa83b54c549c9c89e7ad2cf3adf419e9",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-20T13:37:40.788403Z",
-        "commits": {
-          "unified-trading-library": {
-            "version": "0.20.0",
-            "sha": "a5bf97fa77c2223b085caae9cd61ddec2c058b10",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.21.0",
-            "sha": "d4bf230677b04faccb4e4d2fdea5105d69bd2a39",
             "branch": "staging"
           }
         }
