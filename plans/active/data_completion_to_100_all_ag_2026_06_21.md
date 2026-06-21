@@ -271,9 +271,9 @@ burst→429→52s-minute-sleep thrash that capped enrichment at ~46/min vs 1200/
 
 **RUNNING VMs:** odds-backfill `mtds-backfill-odds-{2020..2026}` (7, ODDS-API key, separate quota) · enrichment
 `sports-enrich-{2019-2022,2023-2026}` (2, RELAUNCHED on fixed throttle — verify rate post-boot) · **sports LIVE**
-`mtds-live-sports-odds-api-trades-20260621-184015` (RELAUNCHED 2026-06-21 18:40 UTC after the UAC enum fix; the prior
-`...174808`/`...175558` FAILED `No PipelineMode for source 'odds_api' in mode 'live'`; verify ≥1 `live_odds_api` row at
-T+10). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
+sports LIVE producer (RELAUNCHED again post MTDS key-fix — see below; the `...184015` instance booted clean past the enum
+fix but hit a SECOND bug: `OddsApi: no API key` because the connector referenced a nonexistent `MarketConfig.odds_api_key`
+attribute; FIXED mtds@670be2f). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
 
 **LIVE==BATCH (operator caught this) — UAC ENUM FIX LANDED:** sports had **0 `live_*` rows** — footystats fwd-poll wrote
 `batch_*` (forward-over-future, NOT live). The true live producer (`launch-mtds-live.sh --asset-group sports --shard-spec
@@ -287,6 +287,17 @@ existed (replay-capable). QG green (223s), source-mode + cassette tests pass. Th
 → it picks up the new enum once LDR has it; VM relaunched as `...184015` (same lowercase `odds_api` venue + 5-league
 instrument-ids). Same canonical schema as batch (Live==Batch). cefi proved the live path works after its 5-bug first-run
 chain (AG-agnostic infra bugs, fixed).
+
+**SECOND LIVE-CHAIN BUG — MTDS connector key-resolution (FIXED mtds@670be2f, LDR):** post enum-fix, `...184015` booted
+CLEAN through `websocket-streaming mode=live` + `DEPLOYMENT_STARTED` + wrote 5 per-VM manifest shards (the 5 leagues) —
+proving the enum fix worked — but emitted `OddsApi: no API key — stream yields nothing` so 0 rows. ROOT CAUSE:
+`odds_api_ws._get_api_key()` referenced `MarketConfig().odds_api_key`, an attribute that does NOT exist (the config class
+is `MarketDataProviderConfig`, which exposes `odds_api_secret_name` not a resolved key); the bare `except` swallowed the
+`AttributeError` → None → BLOCKED-CREDENTIALS message DESPITE the `odds-api-key` secret existing (32-char value verified
+in Secret Manager). FIX: resolve via the canonical `get_secret_client(project_id=cfg.gcp_project_id).get_secret(cfg.odds_api_secret_name)`
+(the same pattern the WORKING batch `OddsApiAdapter` + `DatabentoBaseClient` use). 30 connector unit tests pass; QG green;
+basedpyright clean on the change (the 3 file-level Any errors are pre-existing JSON-parse lines, not the edit). The VM
+pip-installs MTDS fresh at boot → relaunched to pick up `670be2f`.
 
 **3 MIGRATION SUB-AGENTS in flight (opus), IS ships BLOCKED on a LIVE foreign UTL WIP** (`manifest_writer/_writer_captured.py`,
 peer actively editing — do NOT stomp; their tracked waiters fire when UTL goes clean):
