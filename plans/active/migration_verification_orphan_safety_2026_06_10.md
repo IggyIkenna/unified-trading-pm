@@ -1213,3 +1213,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   `@requires_credentials` S3 verify are Phase-4b follow-ons tracked in the plan. Decisions (rule 1): corrected my own
   prior wrong flip; took the SSOT-aligned flat-files transport; finished the dead sub-agent's work in-slot rather than
   re-dispatch.
+
+- 2026-06-21 (empirical live-index schema audit — operator "is v9 actually migrated, can I check the real status?") —
+  **The LIVE consolidated `_index/availability_index.parquet` is ALREADY ~v9 across every asset_group** (measured the
+  actual `schema_version` distribution, per the "trust the distribution, never the constant/checkbox" rule — NOT the
+  projected/beta index): **defi 100.0% (3.90M rows) · sports 100.0% (1.76M) · tradfi 99.7% (2.28M, v4 tail 0.3%) ·
+  prediction 97.9% (70K, v4 tail 2.1%) · cefi 96.6% (3.87M, v4/v5/v6 tail 3.4%)**, and the v9-added columns
+  (`source` / `asset_group` / `pipeline_mode`) are present in all five. So the writers emit v9 and the overwhelming
+  majority of historical rows are v9 — the migration is **effectively live in prod**, which the stale "G4 `--apply`
+  parked (operator HARD-STOP)" framing above no longer reflects for the steady-state DATA. **NOT a clean 100%-everywhere
+  bulk `--apply`** — the cefi/tradfi/pred legacy tails (old un-restamped shards) remain, so a final re-stamp sweep of
+  those tails is the only residual; defi/sports are fully v9. **Operational consequence:** the data-status surfaces read
+  real v9 in the DEFAULT (non-beta) path — the CF-20 beta-manifest preview (`DATA_STATUS_BETA_MANIFEST_BLOB` + the
+  static `_index/audit/projected_index_*.parquet`, last written Jun 11/17) is now redundant and slated for retirement
+  (operator 2026-06-21). Provenance: read on the human-planning VM via pyarrow over the live `-prd-` market-data-tick
+  buckets.
