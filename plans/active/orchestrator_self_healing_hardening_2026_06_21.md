@@ -74,6 +74,31 @@ SHAs were never acknowledged.
       `git checkout live-defi-rollout` → drop `_escalation_work`) in every repo touched. Composes with Fix (c)'s
       auto-heal (defense in depth: prompt prevents it; auto-heal recovers it). — agent-orchestrator@8953d98
 
+- [x] ✅ [ORCHESTRATOR] P0. **Orphan-wip inherit realigns even when a prior `wip-preserve` ref exists — the ROOT CAUSE
+      of the "Slot 4 quarantined — escalation wall starved" alert (2026-06-21 15:57).** The respawn-hygiene inherit path
+      (`_orphan.py`) committed a dead predecessor's WIP, then pushed it to a FIXED-name
+      `wip-preserve/orchestrator-slot-<N>` ref with `--force-with-lease` and **only realigned the slot to
+      `origin/<base>` inside the push-success branch**. That ref already existed from an earlier inherit (`f19aca03`),
+      and a Path-B slot has no `refs/remotes/origin/wip-preserve/orchestrator-slot-<N>` tracking ref to satisfy the
+      lease → **push REJECTED → realign SKIPPED → the slot was left at the orphan commit on a stale base = DIVERGED
+      (ahead 1 / behind 82) → FM5 quarantine → the queued escalation it should have handled was starved.** Fix: a
+      **content-unique** preserve ref `wip-preserve/orchestrator-slot-<N>-<sha>` + a **plain push** (a ref named by the
+      orphan's own SHA never collides destructively — new content creates it, a retry is `Everything up-to-date`/rc 0),
+      so the push always succeeds and the realign (fetch + `checkout -B`, audit-quiet) always runs. The slot is never
+      left diverged. — agent-orchestrator@9a09c42 | tests: test_dirty_state_resolution.py
+      (`test_resolve_pathb_realigns_even_when_prior_preserve_ref_exists` regression + prefix-match update)
+- [x] ✅ [OPS] P0. **Live central-VM remediation (slot-4 incident, 2026-06-21 16:00-16:42).** (1) Manually recovered the
+      wedged slot — preserved the orphan commit `c16b36a8` to `wip-preserve/slot-4-orphan-2026-06-21T1557Z`, realigned
+      to `origin/live-defi-rollout` (clean, ahead 0/behind 0). (2) Diagnosed why Fix (c)'s auto-heal had NOT recovered
+      it: the **running orchestrator PROCESS (started 11:45 UTC) was executing stale in-memory code from before today's
+      heal-wiring landed** — the heal was on disk (`b02d65f`) + on LDR but never loaded (proven by the live log emitting
+      the pre-heal `(FM5/FM7): {branch dict}` message, not the wired `auto-heal failed: {heal dict}`). (3)
+      `pull --ff-only` the service repo to `9a09c42` + `systemctl restart orchestrator.service` (per `agents/main.md`).
+      Post-restart verified: all 13 daemon loops up; **the heal is now live and already auto-realigned slot 1**
+      (`wrong_branch ->     origin/live-defi-rollout`, the operator's earlier slot-1 quarantine alert); slot 4 `working`
+      on `data_completion_to_100_all_ag-009`, all 24 repos clean; 0 open escalation tasks; no new branch-quarantine
+      alerts.
+
 ## Remaining work — to 100%
 
 ### Concern 1 — account selection (already strong; these close races + spread load)
@@ -93,9 +118,13 @@ SHAs were never acknowledged.
       worker to POST `/api/accounts/<ACCOUNT_ID>/rate-limited` on a tool-level 429/usage-limit (while it can still act),
       so rotation fires in seconds. The FROZEN-on-modal case (worker can't POST) stays covered by the TmuxPruner
       pane-scan + watchdog (documented inline). 95% stays spawn-gate-only (not changed). — agent-orchestrator@39cbf10
-- [ ] [ORCHESTRATOR] P2. Wire the heartbeat-silent/crashed-worker watchdog reap→respawn to
-      `--resume <SlotRow.claude_session_id>` (context-preserving). **Already tracked** as Phase 5 of
-      `orchestrator_account_failover_resume_respawn_2026_06_17.md` — referenced here, not duplicated.
+- [x] ✅ [ORCHESTRATOR] P2. G2b — heartbeat-silent reap now does a context-preserving `--resume` (operator-permitted
+      2026-06-21). `_resume_or_fresh_respawn` kills the wedged session + `claude --resume <claude_session_id>` on the
+      SAME account (it's not capped — that's a separate trigger), so the worker continues with conversation intact.
+      Guarded against a resume-loop: resume ONCE per silence episode (`_HEARTBEAT_RESUME_MAX`); if it goes silent AGAIN
+      it's genuinely stuck → fresh respawn. No session id / no env → fresh respawn. Supersedes the Phase-5 cross-ref in
+      `orchestrator_account_failover_resume_respawn_2026_06_17.md`. — agent-orchestrator@b02d65f | tests:
+      test_self_healing_hardening.py (2 cases)
 
 ### Concern 3 — self-healing (re-trigger dirty / rolled-back / stale)
 
@@ -119,9 +148,14 @@ SHAs were never acknowledged.
       inherited a predecessor's ancient `last_spawned_at` can't balloon backwards. Closes the triage
       `agent_orchestrator_alerts_triage_2026_06_20` G3c. — agent-orchestrator@68d27b5 | tests:
       test_self_healing_hardening.py::test_effective_silence_clamped_by_session_created
-- [ ] [ORCHESTRATOR] P1. Central-VM backend single-process-manager (systemd + main-agent `nohup` dual-manager → one).
-      **Already tracked** in `plans/active/issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md` Gap 4 — referenced,
-      not duplicated.
+- [x] ✅ [ORCHESTRATOR] P1. Central-VM backend single-process-manager (operator-permitted 2026-06-21) — the launch path
+      `server.server.main()` now calls `_assert_single_instance(8765)`: if :8765 is already bound it logs + exits 1
+      rather than racing a second uvicorn (the orphaned-uvicorn-re-persists-stale-backlog incident, 2026-06-16).
+      `agents/main.md` gains a HARD rule: restart the backend with `sudo systemctl restart orchestrator.service` (stops
+      the old instance first), NEVER `nohup uvicorn`. Override for dev/second-port via
+      `ORCHESTRATOR_ALLOW_PORT_CONFLICT=1`. Closes `orchestrator_agent_lifecycle_gaps_2026_06_16` Gap 4. —
+      agent-orchestrator@e20fd30 | tests:
+      test_self_healing_hardening.py::test_single_instance_guard_refuses_when_port_bound
 
 ### Audit-reflog — kill the recurring spam class for good
 
@@ -190,6 +224,35 @@ net-new capability (not robustness closures) and are dispatched to the central V
 - **5 OPERATOR-gated awaiting, no respond option** (this section): now page with a dashboard respond-link.
 - escalation dispatched/RESOLVED + plan-health dispatched (INFO bookends): healthy — the conflict-escalate + daily
   reconcile loops working as designed.
+
+### Operator follow-ups round 2 (2026-06-21)
+
+- [x] ✅ [ORCHESTRATOR] Slack alert footers point at the `/vm/<vm-id>` UI, not the `api.*` host — the footer's raw
+      `API (query): https://api.…` text read as "the link" and sent operators to the JSON API. `_footer` now emits
+      exactly one clickable `open dashboard` link (`/vm/<VM_ID>` on the SPA) + host + ts; the api origin is dropped
+      (agents read it from env, not Slack). — agent-orchestrator@ba0b56a | tests: test_slack_notifications.py.
+- [x] ✅ [PLANS] Agents were self-competing on the operator's own stable plans (defi data-completion, slots #3-#6).
+      Tagged `data_completion_to_100_all_ag_2026_06_21.md` with `execution_scope: local-only` — the established
+      "operator works it locally, orchestrator never ingests it" frontmatter (12 plans already use it). Next regen
+      prunes its queued tasks; running slots finish their item then stop picking up defi work. Agents keep doing CI/CD
+      escalations + plan-health (separate dispatch paths, unaffected). — unified-trading-pm@4e48264b. **MECHANISM for
+      the operator: add `execution_scope: local-only` to any other plan you're driving yourself** (or remove it to
+      re-enable agent dispatch).
+- [x] ✅ [ORCHESTRATOR] P1. ROOT CAUSE — the tag alone did NOT stop them (verified live via SSM: 7 defi tasks still
+      queued + slots 3/6 still working after the tag). Bug: `regen_backlog_from_plan._prune_stale` built
+      `current_briefs` from ALL plans **including local-only ones** (it only filtered by `vm_id`), so a local-only
+      plan's already-queued tasks stayed "current" by brief-match and were never pruned — `local-only` blocked NEW
+      ingestion but not EXISTING tasks. Fixed: `_prune_stale` now skips `execution_scope: local-only` plans when
+      collecting current briefs, so their queued tasks become orphans → pruned (yaml + state.db). —
+      agent-orchestrator@183d573 | tests:
+      test_regen_backlog_from_plan.py::test_prune_stale_removes_tasks_of_local_only_plan.
+- [x] ✅ [OPS] LIVE remediation (central VM, SSM 2026-06-21): the running orchestrator's backlog source is the harsh
+      `backlog.yaml` (Gap-5 desync) which still held 9 defi tasks + state.db had the queued zombies. Cleaned both via
+      the backlog module + a surgical `DELETE` of queued+undispatched defi rows only (4 dispatched in-flight + 6 done
+      kept): **0 queued defi remaining, verified held across a regen cycle.** Slots 3/6 finish their 2 in-flight items
+      (`-013`/`-022`) then stop; no more defi dispatch. NOTE: Gap-5 (`ORCHESTRATOR_BACKLOG` → retired harsh path) is the
+      underlying desync — tracked in `orchestrator_agent_lifecycle_gaps_2026_06_16` Gap 5; repointing it to the
+      canonical backlog prevents future zombies.
 
 ## Codex SSOT updates
 

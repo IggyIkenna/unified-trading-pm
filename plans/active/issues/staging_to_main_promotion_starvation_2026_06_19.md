@@ -244,3 +244,73 @@ e2e-testing#348 recovered via close+reopen (clean pull_request v2, no workflow g
 **Dashboard UX (operator request 2026-06-21) — SHIPPED:** per-stage CI status (Feature/Staging/Main) now always visible
 on the Repos CI page (backend `branch_ci` populated for all repos incl. green; deployment-api@d2078ae +
 deployment-ui@94e14de, tsc/eslint/vitest/QG green, pw:L2 ✓ regression `tests/smoke/repos-tab.spec.ts:96`).
+
+### 2026-06-21 (~16:20 UTC) — follow-up wave: bump-rate breaker false-positive + ao quarantine (post-FINAL-REPORT)
+
+Two CRITICAL Slack alerts fired AFTER the FINAL REPORT above; both are **direct, diagnosed consequences of the Mode-B
+fix** (now-correct semver bumping is working — almost too well), NOT a regression of the starvation fix.
+
+**1. `deployment-service` — BUMP-RATE CIRCUIT BREAKER tripped (FALSE POSITIVE).** Ground truth from `origin/staging`:
+
+```
+feat: LDR → staging (Tier C auto-drain)   ← Mode-B titles the drain "feat:"
+chore(release): bump version to 0.15.0    ← semver sees feat: → MINOR bump
+feat: LDR → staging (Tier C auto-drain)
+chore(release): bump version to 0.16.0
+feat: LDR → staging (Tier C auto-drain)
+chore(release): bump version to 0.17.0
+```
+
+The versions are **strictly climbing 0.15→0.16→0.17 (distinct, monotonic)** — healthy high-velocity dev, NOT a stuck
+re-bump loop (the alert even reports "1 consecutive at tip" — the real-loop detector correctly did NOT trip). Root
+cause: Mode-B titles every `*/15` Tier-C drain `feat:`, so semver MINOR-bumps on **every drain** of feature content →
+on an active repo that's up to ~4 bumps/hr → trips the breaker's raw `RECENT_BUMPS ≥ 3/hr` **count**-trip. The
+count-trip cannot tell a healthy interleaved climb from a true loop; the `CONSECUTIVE ≥ 3` detector already catches the
+real runaway (re-bumps with no content between). Breaker is SAFE-contained (refusing further bumps), no corruption.
+
+**2. `staging_versions` is broadly sparse (8 of 25 repos).** `versions[deployment-service]=0.16.0` but
+`staging_versions[deployment-service]=ABSENT`, while its staging pyproject is already `0.17.0`. The PM baseline writer
+(`update-repo-version.yml`, branch=staging) records `staging_versions[repo]` only when dispatched — for the 17 absent
+repos the dispatch either never fired or didn't record. The version-driven staging→main promoter compares
+`staging_versions[r] != versions[r]`; an absent entry means it can't compute a delta → those repos can't promote (a
+second starvation vector, distinct from Mode-A's per-repo cases) AND semver re-attempts because the baseline never
+advances. Push step already retries-with-rebase, so this is a DISPATCH/record gap, not a push race.
+
+**3. `agent-orchestrator` quarantined (3 failed staging→main promotions).** Same workflow-file-change PR-approval gate
+as the residual above; quarantine skips ao on future runs (queue unblocked) + "auto-clears on next successful
+promotion." Since ao#350 already carried ao's content to main directly (15:11Z), ao main == LDR content → the next
+promote is a near-no-op success → clears. Low-harm; verify it clears.
+
+- [x] ✅ [CICD] P1. **Bump-rate breaker climbing-aware — TEMPLATE SSOT SHIPPED PM@c1329c97c.** Replaced the raw
+      `RECENT_BUMPS ≥ 3/hr` count-trip in `scripts/workflow-templates/semver-agent.yml.tmpl` with an **adjacent
+      re-bump-PAIR** count (`REBUMP_PAIRS ≥ 2` — a bump whose immediately-newer neighbour is also a bump = no content
+      between = genuine baseline-never-recorded loop) + kept `CONSECUTIVE ≥ 3` + a `RECENT_BUMPS ≥ 6/hr` backstop.
+      Verified by simulation: deployment-service real healthy-climb (0.15→0.16→0.17, pairs=0) NO-TRIP; true
+      consecutive/interrupted loops TRIP; YAML parses. Provenance: deployment-service breaker trip 2026-06-21 16:20 UTC.
+- [x] ✅ [CICD] P1. **Climbing-aware breaker ROLLED OUT FLEET-WIDE 2026-06-21.** `rollout-workflow-templates.sh
+      --template semver-agent.yml` → all 24 repos' `.github/workflows/semver-agent.yml` committed + pushed to LDR
+      (per-repo `ci(semver): roll out climbing-aware bump-rate breaker`; deployment-service@a4ec754, UTL@34501d8, …);
+      PM's own hand-maintained copy aligned (PM@ace296d51). `detect_template_drift.py --workflows` → NEW drift
+      (blocking): 0; per-repo diff verified = ONLY the breaker block. Takes effect per-repo as the workflow reaches that
+      repo's `main` (default-branch trigger) via normal promotion — until then deployment-service's OLD `main` breaker
+      may still false-page (benign: refusing only, versions climbing healthily).
+- [x] ✅ [CICD] P1. **`staging_versions` starvation RECONCILED 2026-06-21 (PM@a73a7c1a5).** Confirmed root:
+      `staging-to-main.yml:588` iterates ONLY keys present in `staging_versions`, so 16 repos with staging genuinely
+      ahead of main but absent from the map were silently skipped EVERY promotion run. Reconciled all 25
+      `staging_versions` entries to the actual `origin/staging` pyproject version (truth); ~19 service repos now
+      `staging_v != versions` → promotable. The `*/15` promoter carries them to main at its metered cadence once the
+      breaking-SIT `staging_status.locked` (currently True) clears. JSON valid; no VERSION_SPLIT introduced (only
+      pre-existing VESTIGIAL_SCALAR_DRIFT warns).
+- [ ] [CICD] P1. **DURABLE FIX — make staging→main promotion robust to a sparse `staging_versions` (prevent
+      re-desync).** The reconcile above is a point-in-time data fix; the map re-desyncs if the writer keeps losing
+      entries. Recommended (deliberate — NOT to be rushed into the live core promoter): make `staging-to-main.yml`
+      self-healing — before deriving the promote set, backfill `staging_versions[r]` from each repo's actual
+      `origin/staging` pyproject version so an absent/lost entry can NEVER starve a repo again — OR a standalone hourly
+      reconcile cron. Secondary: log-archaeology on WHY entries were lost since the 2026-06-01 restore (writer dispatch
+      SPOF vs a force-sync reset). repo: unified-trading-pm. Provenance: reconcile PM@a73a7c1a5 2026-06-21.
+- [x] ✅ [CICD] P2. **ao quarantine CLEARED** — manifest `staging_status` has no quarantine key + `breaking_pending: []`
+      (ao#350 carried ao content to main; the dashboard-link RED is fixed). No action; re-verify only if it re-alerts.
+- [x] ✅ [CICD] P2. **Mode-B per-drain bump cadence — CLOSED, won't-change (decision 2026-06-21).** Per-drain MINOR
+      bumping is acceptable high-velocity behaviour (0.x versions are cheap; each drain carries real content); the only
+      problem was the breaker count-trip false-positive, now fixed climbing-aware. Computing the bump once at the
+      staging→main boundary would re-introduce the Mode-B starvation tension (chore→no-bump→frozen). No code change.

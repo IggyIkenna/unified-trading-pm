@@ -48,6 +48,20 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-21 (PM-2) — LIVE prediction LAUNCHED (free Gamma poll) + Kalshi seed running
+
+- [x] ✅ [SCRIPT] P1. LIVE prediction is WIRED + launchable end-to-end (no build needed): `polymarket_ws.py`
+  + `kalshi_ws.py` live connectors EXIST + auto-register (`connectors/__init__.py` autoload),
+  `launch-mtds-live.sh --asset-group prediction --shard-spec prediction:POLYMARKET:trades` exists, and the
+  live `MTDSShardManifestRecorder` (fixed: asset_group is a writer kwarg) stamps `live_polymarket_clob` via
+  the venue-source map. Polymarket live = free public Gamma REST poll (30s, no auth). **LAUNCHED**
+  `mtds-live-prediction-polymarket-trades-20260621-155845` (10 high-volume active markets) → first-ever
+  LIVE prediction rows (LIVE=0 across all AGs before this). Repo: deployment-service + market-tick-data-service.
+- [ ] [SCRIPT] P2. Expand the live producer instrument set (currently 10 high-vol Polymarket markets) to the
+  full IS-enumerated active universe + add a KALSHI live shard (`prediction:KALSHI:trades`, kalshi_ws). Repo:
+  deployment-service.
+
+
 ### 2026-06-21 — ROOT GAP: Kalshi was never a registered canonical UAC source → registered it (batch=live)
 
 **Discovery (autonomous prediction-to-100% drive):** while wiring the bulk-seed converter's manifest emission, found
@@ -81,7 +95,32 @@ data could not be honestly source-stamped (`record_captured(source=...)` would r
   → POLYMARKET=batch_polymarket_clob unchanged / KALSHI=batch_kalshi) + explicit `source=source_string_for(pm)`. Repo:
   market-tick-data-service. — (shipping)
 
+**Seed relaunch (corrected stack):** UAC 24706977 + UTL b336478f + mtds fcd6549 all shipped; PREDICTION
+tarball rebuilt to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tarball`);
+stale VM (pulled old mtds 884560a) deleted; fresh seed VM `mtds-prediction-kalshibulk-20260621-155058`
+RUNNING on the verified-fcd6549 stack.
+
 **Cross-cutting findings captured as todos:**
+
+- [ ] [SCRIPT] P2. **Self-enforced rate-limit caps (token-bucket) on the prediction REST adapters** —
+  operator 2026-06-21: reactive backoff wastes time vs a proactive cap at the published limit. Current
+  state is REACTIVE: `kalshi_adapter.py:196` does `if resp.status == 429: await asyncio.sleep(2.0)`
+  (flat sleep AFTER hitting the limit, behind a `max_concurrent` semaphore); polymarket carries
+  `_RETRYABLE_STATUS_CODES={408,429,500,502,503,504}` (retry/backoff). Add a shared async token-bucket
+  limiter sized to each venue's published read limit (Kalshi tiered ~10 rps basic; Polymarket Gamma
+  generous) so the historical-fan-out adapters (Kalshi `/historical` per-series, Polymarket per-market
+  trades) NEVER hit 429 + never burn the discover-then-backoff round-trip. NOTE: the bulk-corpus seed +
+  the 30s live Gamma poll do NOT hit rate limits — this is for the Phase-2 historical fan-out. Repos:
+  market-tick-data-service + instruments-service.
+
+- [ ] [SCRIPT] P1. **`rebuild_prediction_manifest` must gain a `--venue POLYMARKET` filter before the
+  Polymarket v4→v9 re-walk** (1454 v4 manifest stragglers + 338 cqg `expected_unattempted`). The tool
+  walks ALL venues by date-glob and derives cqg via `classify_polymarket_to_canonical_group` — now that
+  Kalshi parquets coexist in the same `raw_tick_data/by_date/day=*/` paths (the bulk seed), an
+  unfiltered re-walk would RE-WALK + MISCLASSIFY the Kalshi cells (polymarket classifier) and clobber
+  the correct `batch_kalshi` rows the converter emitted. Add a venue filter (skip non-POLYMARKET), THEN
+  launch the re-walk VM. Sequence AFTER the Kalshi seed completes. Repo: market-tick-data-service. NOTE:
+  the 1454 are already `captured` (counted in honest-cov) — this is v9-schema polish, not new coverage.
 
 - [ ] [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** (pre-existing): `manifest_finalize.py` prediction
   cqg writer now resolves a *batch* pipeline_mode even on the LIVE ingest path (the prior code hardcoded

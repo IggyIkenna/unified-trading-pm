@@ -548,127 +548,78 @@ are identified (2) and the ledger exists (3).
 > live-state audit of the deployed cron + the GCS ledger (`run_id=paper-20260621134256-3c4eb321`) surfaced the gaps
 > below. All are real; filed per Capture-Discoveries HARD RULE; driven to done under `/autonomous` 2026-06-21.
 
-- [ ] [INFRA] P1.1. **Roll-forward cron window** — the deployed `uts-prod-paper-engine-run` Cloud Run Job args pin a
-      HARDCODED window `--start-date 2026-05-16 --end-date 2026-05-22`, so the 02:00 UTC cron RE-RUNS THE SAME WEEK
-      nightly (determinism harness) and never advances to generate NEW trades/PnL. Make the window roll: a trailing
-      7-day window ending T-1 (computed at job start, UTC), so each night books a fresh day. Repo: deployment-service
-      (`terraform/gcp/paper_week_determinism_scheduler.tf` job args) + strategy-service (a `--rolling-days N` /
-      relative-window flag on `paper-run` so the job needn't bake absolute dates). Re-apply tofu + verify the next
-      execution's `run_manifest.window_*` advanced.
-<<<<<<< Updated upstream
-- [ ] [CODE] P1.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
-      `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift
-      guard silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the
-      job, or `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
-||||||| Stash base
-- [ ] [CODE] P11.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
-      `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift
-      guard silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the
-      job, or `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
-=======
-- [ ] [CODE] P11.2. **Pin `code_shas` in the run manifest** — `run_manifest.json` carries
-      `code_shas: {"strategy-service": "unknown"}`, defeating `assert_code_shas_match` (the rerun's loud sha-drift guard
-      silently no-ops on "unknown"). Capture the real running sha (env `CODE_SHA_STRATEGY_SERVICE` set by the job, or
-      `git rev-parse` at build bake-time / importlib metadata) so paper↔batch rerun proves SAME-code. Repo:
->>>>>>> Stashed changes
-      strategy-service (`cli/handlers/paper_run_handler.py` manifest build) + deployment-service (job env).
-<<<<<<< Updated upstream
-- [ ] [CODE] P1.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
-      materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has
-      NO `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
-||||||| Stash base
-- [ ] [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
-      materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has
-      NO `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
-=======
-- [ ] [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period (engine wiring)** — the P3.2 `passive_ledger_row`
-      materialiser + `accrue_funding` exist in UTL but the strategy-service engine does NOT call them, so the run has NO
-      `ledger_type=passive/` (only instruction/pricing/transfer). Carry/funding P&L lives only in the attribution
->>>>>>> Stashed changes
-      parquet (P3.5), not BOOKED as an accrual tape that feeds NAV. Wire the engine to emit per-held-day PASSIVE rows
-<<<<<<< Updated upstream
-      (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis)
-      to `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still
-      holds (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE
-      cash-flow delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service
-      (+ UTL emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation
-      (recon includes passive).
-- [ ] [CODE] P1.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
-||||||| Stash base
-      (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis)
-      to `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still
-      holds (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE
-      cash-flow delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service
-      (+ UTL emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation
-      (recon includes passive).
-- [ ] [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
-=======
-      (`STAKING_REWARD` for the LST leg, `FUNDING_ACCRUAL` for the perp hedge, `LENDING_INTEREST` for the Aave basis) to
-      `{ledger_root}/ledger_type=passive/{run_id}.jsonl`, deterministic + batch-re-derivable, and assert ε=0 still holds
-      (reconcile_day must include the passive tape). Per the P3.4 correctness note: PASSIVE rows carry a QUOTE cash-flow
-      delta — fold into realized-PnL stream, NEVER into `materialize_position_ledger`. Repo: strategy-service (+ UTL
-      emit helper if missing) + client-reporting-api (read passive into NAV/PnL) + batch-live-reconciliation (recon
-      includes passive).
-- [ ] [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — the transfer tape models intra-trade flow
->>>>>>> Stashed changes
-      (deposit→swap→stake→margin) but has ZERO treasury rows and no `share_class`-keyed 20% treasury / 80%
-      hot-wallet-per-strategy-per-chain split (the `wallet-hierarchy-and-capital-flow` SSOT). Simulate the treasury→hot
-      allocation as TRANSFER rows (DeFi 20/80, CeFi 0/100) at capital-deploy time, keyed by `share_class`, single
-      `client_id` (funds-isolation HARD RULE). Repo: strategy-service (transfer emission) + UTL (treasury split helper).
-<<<<<<< Updated upstream
-- [ ] [CODE] P2.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
-      bare `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk
-      double-counting (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real
-      strategies; the bare archetype is a roll-up label, not a strategy row) and stamp consistently so the UI
-      per-strategy panel + attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) +
-      client-reporting-api (rollup) + verify UI.
-- [ ] [CODE] P2.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
-||||||| Stash base
-- [ ] [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the
-      bare `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk
-      double-counting (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real
-      strategies; the bare archetype is a roll-up label, not a strategy row) and stamp consistently so the UI
-      per-strategy panel + attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) +
-      client-reporting-api (rollup) + verify UI.
-- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
-=======
-- [ ] [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — `run_manifest.strategy_ids` carries BOTH the bare
-      `CARRY_STAKED_BASIS` AND the two `@`-qualified slot ids; attribution/per-strategy rollups risk double-counting
-      (bare = sum of the two). Decide one canonical key (the `@`-qualified slot ids are the real strategies; the bare
-      archetype is a roll-up label, not a strategy row) and stamp consistently so the UI per-strategy panel +
-      attribution don't double-count. Repo: strategy-service (ledger/attribution stamping) + client-reporting-api
-      (rollup) + verify UI.
-- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — `GroupCRunner` (P1.4,
->>>>>>> Stashed changes
-      `execution-service@d36b751f`) exists but `run_manifest.fill_model` is still `BENCHMARK`; paper emits only the
-      benchmark yardstick, so `execution_alpha = smart − benchmark` is not produced in the live paper output. Wire the
-      strategy-service paper-run to call Group C after Group B with the same captured data (the thin handoff P1.2
-<<<<<<< Updated upstream
-      named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg.
-      Repo: strategy-service (+ execution-service `PaperMatchingEngine` handoff).
-- [ ] [INFRA] P3.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
-||||||| Stash base
-      named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg.
-      Repo: strategy-service (+ execution-service `PaperMatchingEngine` handoff).
-- [ ] [INFRA] P11.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
-=======
-      named), emit both benchmark + smart fills, and surface `execution_alpha_bps`. Keep ε=0 on the benchmark leg. Repo:
-      strategy-service (+ execution-service `PaperMatchingEngine` handoff).
-- [ ] [INFRA] P11.7. **Custom domain for the paper-trading UI** — `odum-portal` is public on the raw
->>>>>>> Stashed changes
-      `odum-portal-cldtjniqvq-an.a.run.app` URL (allUsers→run.invoker, anon HTTP 200). Map a stable
-      `portal.odum-research.com` (or `paper.odum-research.com`) Cloud Run domain mapping so the operator has a durable
-      link. DNS record at the registrar is the one operator-gated step — create the mapping + document the exact CNAME
-      to add. Repo: deployment-service (domain-mapping tf) — NICE-TO-HAVE.
+- [x] ✅ [INFRA] P11.1. **Roll-forward cron window** — DONE (deployment-service@f5a81d6 + strategy-service@ba63ab1c).
+      Cloud Run Job `uts-prod-paper-engine-run` args now `--rolling-days 7` (verified live; no absolute dates); the CLI
+      flag computes a trailing 7-day window ending T-1 UTC at job start (`test_paper_run_rolling_window.py`, 5 tests).
+      So each 02:00 UTC run books a fresh day instead of re-running the fixed 05-16..22 week.
+- [x] ✅ [CODE] P11.2. **Pin `code_shas` in the run manifest** — DONE (strategy-service@ba63ab1c). `_git_sha()` prefers
+      config `code_version` (`CODE_SHA_STRATEGY_SERVICE`/`CODE_VERSION` via UnifiedCloudConfig) → `git rev-parse` →
+      "unknown"; stamped into the manifest so `assert_code_shas_match` proves SAME-code.
+      `test_git_sha_prefers_configured_code_version`.
+- [x] ✅ [CODE] P11.3. **Emit the PASSIVE accrual ledger TAPE per period** — DONE (UTL@afc31764 +
+      strategy-service@ba63ab1c). UTL `write_run_passive_ledger`/`passive_ledger_jsonl` (`ledger_type=passive`);
+      producer emits per-held-day `STAKING_REWARD` + `LENDING_INTEREST` (staking venue) + `FUNDING_ACCRUAL` (perp),
+      QUOTE cash-flow delta (NEVER fed to `materialize_position_ledger`). batch_rerun re-derives it; ε=0 unaffected. 8
+      producer + 3 UTL writer tests.
+- [x] ✅ [CODE] P11.4. **Treasury ↔ hot-wallet split in the TRANSFER ledger** — DONE (strategy-service@ba63ab1c). DeFi
+      20% treasury / 80% hot TRANSFER legs at deploy, keyed by `share_class`, single `client_id` (funds-isolation);
+      CeFi/Sports = 0% (no split); deploy flow sized off the hot budget. `test_treasury_hot_split_20_80` +
+      `test_cefi_has_no_treasury_split`.
+- [x] ✅ [CODE] P11.5. **De-dup the bare vs `@`-qualified strategy_id** — DONE (strategy-service@ba63ab1c). Manifest
+      `strategy_ids` = ONLY the `@`-qualified slot ids (bare archetype dropped → no per-strategy double-count); batch
+      rerun resolves archetype via `archetype_for_slot_label`. `test_slot_labels_are_qualified_not_bare_archetype`;
+      batch_rerun ε=0 intact.
+- [ ] [CODE] P1.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — PARTIAL
+      (strategy-service@ba63ab1c left manifest HONEST at `BENCHMARK`, NOT faked). Blocked by the no-service-deps HARD
+      RULE: strategy-service MUST NOT import execution-service, so smart-matching cannot be called in-process.
+      **Remaining (correct architecture):** a new **execution-service Layer-3 entrypoint** consuming
+      `{run}/ledger_type=instruction` + RunManifest → GroupCRunner smart-matching → an `execution_alpha_bps` artifact,
+      driven from the e2e-testing harness; CRA reads it at `PnLLayer.EXECUTION`; UI surfaces exec-α. (FEES is already
+      the only EXECUTION-layer leg.)
+- [x] ✅ [INFRA] P11.7. **Custom domain for the paper-trading UI** — DONE pending DNS (deployment-service@1168718 +
+      @3c54e64). `portal.odum-research.com` Cloud Run domain mapping created + tracked in
+      `terraform/gcp/domain_mappings.tf` (`DomainRoutable=True`, `CertificatePending`). **Operator DNS step:** add CNAME
+      `portal` → `ghs.googlehosted.com.` at the odum-research.com registrar; the managed cert auto-provisions once it
+      resolves.
+- [x] ✅ [CODE] P11.8. **Fee model — approximate maker/taker fees on turnover** — DONE (strategy-service@ba63ab1c).
+      Deterministic **1 bp maker / 2 bps taker** on filled notional, per-venue overridable (`_VENUE_FEE_OVERRIDE_BPS`),
+      booked as the `FEES` factor at `PnLLayer.EXECUTION`, one NEGATIVE row per leg (swap+stake+perp = taker); grand
+      total drops by the fee drag. ε=0 preserved (benchmark `TradeFillRecord`s stay fees=0).
+      `test_fees_are_execution_layer_and_nonzero` + `test_maker_taker_rates`.
+- [ ] [CODE] P11.9. **Strategy-keyed ledgers + UI drilldown across ALL ledger types** (operator 2026-06-21: "associate
+      pnl, trade, order and position ledgers to strategies … all parts of the UI should group + drilldown by strategy").
+      `LedgerRow` has NO `strategy_id` column today — only the attribution parquet is strategy-partitioned, so trade /
+      position / transfer / passive / pricing ledgers can NOT be grouped by strategy (the strategy is only a substring
+      of the composite `trade_id`, and was the bare archetype). Add a canonical `strategy_id` field (the `@`-qualified
+      id) to `LedgerRow` (UAC), stamp it on EVERY row in all UTL materialisers + the strategy-service emitters, GROUP-BY
+      `strategy_id` in CRA across ALL ledger views (positions/PnL/trades/transfers/passive, not just attribution), and
+      add a strategy filter + per-strategy drilldown to EVERY UI panel. Repo: unified-api-contracts (field) +
+      unified-trading-library (stamp) + strategy-service (emit) + client-reporting-api (group) +
+      unified-trading-system-ui (drilldown, playwright-gated).
 
-- [ ] [CODE] P2.8. **Fee model — approximate maker/taker fees on turnover** (operator 2026-06-21: "0 fees … fees 1bp
-      maker 2bps taker we should approximate"). The attribution FEES factor is ≈0 because the P3.5 producer OMITTED the
-      FEES leg (not baked into execution costs — genuinely unmodeled). Add a deterministic fee model: **1 bp maker / 2
-      bps taker on filled notional** (per-venue overridable later), booked as (a) a real `FEES` factor and (b) at
-      `PnLLayer.EXECUTION` (fees are an execution-layer cost), so the grand total drops below the current $210 by the
-      fee drag. Default the carry/stake legs to taker-on-entry/exit; the perp hedge maker/taker per order type.
-      Deterministic + batch-re-derivable → ε=0 must still hold. Surface the non-zero FEES bar + a fee-drag line. Repo:
-      strategy-service (attribution producer + fee constant in UAC/registry) + verify UI renders non-zero FEES.
+- [ ] [CODE] P11.10. **Replicate the full e2e experiment universe in the paper book + wire the portfolio_allocator**
+      (operator 2026-06-21: "missing lots of strategies and venues from our e2e_testing work … basis, staked basis,
+      funding rate dispersion/arb … many more venues and coins … production archetypes are flexible enough … give them
+      strategy IDs + configs matching the e2e experiment … how we weight allocations per archetype, which venues, which
+      coins at any one time, and moving money around"). The paper run hardcodes `PAPER_RUN_SPEC_INDICES = (0, 6)` (2 of
+      14 `CARRY_STAKED_BASIS` specs); the production catalogue ALREADY builds **468 specs / 30 archetypes**
+      (`specs_for_archetype`) incl. the e2e archetypes: `CARRY_STAKED_BASIS` (14), `CARRY_BASIS_PERP` (144),
+      `CARRY_FUNDING_DISPERSION` (52), `ARBITRAGE_PRICE_DISPERSION` (17), `CARRY_BASIS_DATED`, `CARRY_RECURSIVE_STAKED`,
+      `YIELD_*`, `DEFI_LP_*`. SUB-TASKS:
+      - P11.10a. Extract the e2e experiment's universe (archetypes × venues × coins × weights) from
+        `e2e-testing/scripts/defi/` (funding_reversion_*, funding_ensemble_engine, backtest_solana_basis,
+        funding_reversion_multivenue_capital) as the documented intent.
+      - P11.10b. Map e2e universe → catalogue specs (`specs_for_archetype`); add any missing venue/coin spec in the
+        right `catalog_*.py` (flexible archetypes — add the spec, do not fork the engine); canonical `@`-qualified ids.
+      - P11.10c. Wire `portfolio_allocator/archetypes*.py` into the paper run: replace hardcoded indices + 100k/75k
+        split with allocator-driven per-archetype weight + which venues/coins active per rebalance + capital deploy
+        (treasury→hot per P11.4, single client_id).
+      - P11.10d. Verify a multi-archetype run materialises strategy-keyed ledgers (P11.9) for ALL e2e strategies, ε=0
+        batch-rerun holds across the larger universe, UI groups/drills down by every strategy + archetype. Repo:
+        strategy-service (catalogue + allocator + paper_run) + e2e-testing (extraction) + verify CRA/UI.
+- [ ] [CODE] P11.6-retry. **Re-run the P11.6 execution-service Layer-3 smart-fill entrypoint** — agent D was
+      server-rate-limited at 0 tokens; deliverable (execution-service smart-fill-replay → `execution_alpha` artifact +
+      e2e harness) stands. Re-dispatch.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -1749,3 +1700,70 @@ less useful." Investigated end-to-end:
       history exists but isn't used). Low priority since the regime analysis says pre-2021 hurts, but the inconsistency
       should be reconciled (use `altfull_*` + an explicit TRAINCUT, not a silent 2022 floor). Repo: e2e-testing. Prov:
       data-extent audit 2026-06-21.
+
+### 2026-06-21 — SIGNAL-vs-EXECUTION, walk-forward COIN/STRATEGY allocation, basis CAPACITY, HYPE universe gap
+
+Operator pushed on coin-pick / gross-vs-net / lookahead, then walk-forward allocation, then the basis capital
+constraint, then HYPE. Findings (all walk-forward, IS=2023-24 / OOS=2025-26):
+
+- **2023 is a SIGNAL problem, not execution (`_gross_net_decomp.py`)**: cs GROSS PnL (perfect-fill, zero-cost) was
+  **−$116k (Sharpe −0.55) in 2023** — there was no alpha to capture, execution didn't eat it. 2024/25 gross strongly
+  positive, exec drag only 7-22% (maker captures the spread: total cost $47k on $944k gross; the bigger exec piece is
+  $185k missed-alpha from partial fills). Per-coin: the bad names are bad because the **SIGNAL** loses on them (SOL
+  −$107k, LTC −$114k GROSS) not because they're expensive (SOL is the CHEAPEST at 4bp); ZEC is the best (+$596k) despite
+  the highest slip (26bp). So coin-pick = signal quality, not execution cost.
+- **Walk-forward COIN allocator (`_wf_coin_select.py`) — "drop SOL/LTC" was LOOKAHEAD BIAS**: a causal trailing-Sharpe
+  allocator (monthly, floor-kept-alive) correctly down-weights LTC (1.2% vs 3.3%) using only past data, BUT does NOT
+  beat equal-weight (+0.13 vs +0.21) — it chases the prior regime's winners into rotation years. **Coin-selection is not
+  a free edge; equal-weight + keep-every-coin-alive is the honest baseline** (operator's instinct vindicated).
+- **Comprehensive IS/OOS allocation study (`_alloc_comprehensive.py`) — scaling into WINNERS works, into LOSERS does
+  not**: slow momentum (180-365d, into winners) beats equal OOS for coins (1.00 vs 0.77) and **directional strategies
+  (1.63 vs 1.03)**; mean-reversion (into losers) FAILS OOS; fast (90d) momentum ≈ equal (chases rotation). The
+  directional-strategy edge is REAL (not a basis artifact).
+- **Basis is CAPACITY-BOUNDED, not "scaled into" (operator correction)**: you cannot deploy more than your capital ×
+  funding-coin liquidity into a delta-neutral long-spot/short-perp carry. So basis is a **fixed-capacity sleeve filled
+  first**; the momentum allocator distributes only the **directional** legs (cs/h32/ext/short/tsmom). With basis
+  excluded, capped slow-momentum lifts the directional book OOS **1.03→1.63** (full-window 0.42→0.70). Plot:
+  `book_updated_*.png`. The naive "momentum over all 6 legs → OOS 10.7" was just over-concentrating the capacity-bounded
+  basis — fixed by treating basis as a sleeve + a per-leg weight cap.
+- **HYPE universe gap (operator: "we should trade HYPE everywhere")**: the universe is FROZEN to 30 Binance-spot coins;
+  the entire post-2024 cohort (HYPE, SUI, …) is missing because the pipeline only pulls Binance spot, and **HYPE isn't
+  on Binance spot** (it's on Hyperliquid — the venue we trade — + Bybit). Fetched HYPE full history from **Bybit** (54k
+  15m bars, 2024-12-05→now → `altfull_HYPE_15m`); Hyperliquid `candleSnapshot` is recent-only (~52d). Adding HYPE
+  exposed + FIXED a latent `build_strategies` bug (basis leg crashed on a fundingless coin → now reindexes funding to
+  0). HYPE needs the cs-ensemble re-run to actually trade.
+
+**Follow-up todos:**
+
+- [ ] [DATA] P2. **Add HYPE + the post-2024 cohort (SUI, etc.) to the trading universe** — fetch from Bybit/Hyperliquid
+      (`_fetch_bybit.py`/`_fetch_hyperliquid.py`), fetch their funding, **re-run the cs ensemble (`_panel.py`) with them
+      in the universe** so they actually trade; the WF allocator then weights a new coin from the floor up as it earns a
+      trailing Sharpe. Repo: e2e-testing `scripts/paper_trading/` + strategy-service. Prov: HYPE gap 2026-06-21.
+- [ ] [RESEARCH] P2. **Implement the deployable allocator: basis filled-to-capacity + capped slow-momentum (180-365d)
+      over the directional legs** (cs/h32/ext/short/tsmom), monthly, lagged, per-leg cap so no sleeve dominates; coins
+      stay ~equal-weight (selection isn't a reliable edge). Repo: strategy-service. Prov: allocation study 2026-06-21.
+- [ ] [BUG] P3. **Combined-book vol-normalization uses full-period vol (mild in-sample scaling)** — does not affect
+      per-leg Sharpe but a strictly-OOS combined number should weight legs by TRAILING vol. Repo: e2e-testing. Prov:
+      walk-forward audit 2026-06-21.
+
+**CORRECTION (2026-06-21, operator caught a −1.49 TS-momentum line on the plot)**: the TS-momentum leg was being
+normalized by the UNSHIFTED signal count (`tsig.abs().sum`) while the numerator was the shifted signal — a 1-day
+misalignment that CORRUPTED the leg to a fake −1.49 Sharpe in `_updated_book_plot.py` + `_alloc_comprehensive.py`. The
+TRUE leg is **+0.75 (OOS +1.13, '25 +1.75)** — a positive trend-follower. Fixed both (normalize by the shifted signal).
+**Two consequences**: (1) the directional book ~tripled — equal-weight **full +0.42→+1.37, OOS +1.03→+2.18** (the bug
+was dragging it ~1 Sharpe); (2) the "capped slow-momentum beats equal (1.03→1.63)" claim above was **partly the buggy
+baseline** — with the leg fixed, all directional allocation rules land ~2.0–2.3 OOS and equal-weight (+2.18) is
+competitive, so **the allocation tilt is marginal (~+0.1), not ~+0.6**. Net: equal-weight directional +
+basis-to-capacity is the robust deployable; the clever tilt is a rounding error. Lesson: a losing backtest line is more
+often a BUG or overfit than free inverse-alpha — fix/verify it, don't reflexively flip it (flip is in-sample by
+construction).
+
+**SHORT-LEG FINAL VERDICT (2026-06-21, operator: "short still needs fixing in 2023")**: the book short's GROSS signal is
+NEGATIVE in 2023 (−0.72) AND 2024 (−4.01) — it shorts INTO the bull; SIGNAL problem, not execution (net −0.52/−3.24 ≈
+gross). NO gate fix works — every stronger gate shorts deeper into the rally/bottom (drawdown-gate −18 in 2023).
+**Decisive test: the directional book is STRICTLY BETTER without the standalone short — full +1.37→+1.54, 2024
++2.19→+2.66, 2025 +3.19→+3.31, only 2026 −0.22→−0.52 (covered by basis + tsmom's short side).** 6th independent
+confirmation the short has no standalone edge; first DECISIVE one. **Action: RETIRE the standalone short as a leg** (the
+R8 gate from earlier today made it less-catastrophic but the right answer is removal). **Deployable directional book =
+cs + h32 + ext + TS-momentum (no standalone short) + basis-to-capacity.** Scripts: `_short_2023_fix.py` /
+`_short_net_book.py`.
