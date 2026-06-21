@@ -43,3 +43,31 @@ No rate-limit caps now (nothing is rate-limited). The data gaps are CODE/CONFIG,
 (trivial case-insensitive lookup) are the highest-value — #2 unblocks ALL lowercase-registered live venues (prediction +
 defi). Items 3–5 are per-lane backfill/source fixes. The owning lanes (or the operator) should land 2–5; cefi-lane fixed
 #1 operationally + will file the launcher-canonical-instrument-id default as a follow-up.
+
+## UPDATE 2026-06-21 (cefi-lane, after fixing #1) — next bug: live capture fails tick-schema validation
+
+Fixing #1 (canonical instrument-ids `HYPERLIQUID:PERP:<coin>`) **worked** — HL trades now reach the runner buffers and
+windows capture. But the NEXT first-run bug surfaced (cefi live VM `…161527` run.log):
+
+```
+RowSchemaValidationError (venue=HYPERLIQUID): missing required columns:
+['instrument_id','symbol','ts_event','price','size','side']
+  … MTDSShardManifestRecorder.record_captured → ManifestWriter.record_captured
+  → _maybe_validate → _validate_with_source → validate_row_df  (RAISES)
+```
+
+**Root cause:** the live `record_captured` passes a **bookkeeping** `_make_row_count_only_df` (just `row_count`) — its
+own docstring says "row_count alone satisfies the manifest contract; the canonical write path lives in the runner's
+`LiveWebsocketTickSink`". But `ManifestWriter.record_captured` runs `_maybe_validate` → `validate_row_df` against the
+FULL tick contract and **raises** (strict on this VM). So **captured windows error out; only empty windows record** →
+the manifest shows `empty_confirmed` even though trades ARE flowing. (live-mode never ran before → never exercised.)
+
+**Fix (live-pipeline lane — slot-3 owns `manifest_recorder.py` + the UTL writer, shipped 46adace):** the live
+`record_captured` bookkeeping df must **skip row-schema validation** (the real ticks are validated+written by
+`LiveWebsocketTickSink` separately) — e.g. a `validate=False`/`skip_row_validation` kwarg on
+`ManifestWriter.record_captured` passed by the live recorder; OR have the runner pass the REAL aggregated tick df
+(instrument_id/symbol/ts_event/price/size/side) instead of the row-count-only synthetic. cefi-lane did NOT patch this
+(slot-3's actively-churning file; collision-risk + a UTL+mtds design call). The cefi live VM stays up emitting
+`live_hyperliquid` rows; it flips empty→captured the moment this lands. This is the LAST blocker for end-to-end live
+trade capture — the 7-bug first-run chain: GCS-deploy · topic · IAM · row_key(asset_group) · row_key(day→date) ·
+instrument-id-buffer-key · capture-schema-validation.
