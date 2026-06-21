@@ -569,7 +569,7 @@ are identified (2) and the ledger exists (3).
       `strategy_ids` = ONLY the `@`-qualified slot ids (bare archetype dropped → no per-strategy double-count); batch
       rerun resolves archetype via `archetype_for_slot_label`. `test_slot_labels_are_qualified_not_bare_archetype`;
       batch_rerun ε=0 intact.
-- [ ] [CODE] P11.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — PARTIAL
+- [ ] [CODE] P1.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — PARTIAL
       (strategy-service@ba63ab1c left manifest HONEST at `BENCHMARK`, NOT faked). Blocked by the no-service-deps HARD
       RULE: strategy-service MUST NOT import execution-service, so smart-matching cannot be called in-process.
       **Remaining (correct architecture):** a new **execution-service Layer-3 entrypoint** consuming
@@ -586,7 +586,7 @@ are identified (2) and the ledger exists (3).
       booked as the `FEES` factor at `PnLLayer.EXECUTION`, one NEGATIVE row per leg (swap+stake+perp = taker); grand
       total drops by the fee drag. ε=0 preserved (benchmark `TradeFillRecord`s stay fees=0).
       `test_fees_are_execution_layer_and_nonzero` + `test_maker_taker_rates`.
-- [ ] [CODE] P11.9. **Strategy-keyed ledgers + UI drilldown across ALL ledger types** (operator 2026-06-21: "associate
+- [ ] [CODE] P1.9. **Strategy-keyed ledgers + UI drilldown across ALL ledger types** (operator 2026-06-21: "associate
       pnl, trade, order and position ledgers to strategies … all parts of the UI should group + drilldown by strategy").
       `LedgerRow` has NO `strategy_id` column today — only the attribution parquet is strategy-partitioned, so trade /
       position / transfer / passive / pricing ledgers can NOT be grouped by strategy (the strategy is only a substring

@@ -300,7 +300,7 @@ promote is a near-no-op success → clears. Low-harm; verify it clears.
       audit 2026-06-21 (staging_versions has 8 entries vs versions 25).
 - [ ] [CICD] P2. **Verify ao quarantine auto-clears** on the next successful ao staging→main promotion (ao main already
       == LDR via ao#350). repo: agent-orchestrator. Provenance: quarantine alert 2026-06-21 16:15 UTC.
-- [ ] [CICD] P2 **NICE-TO-HAVE (design)**. Reconsider whether a `*/15` LDR→staging drain should mint a MINOR bump on
+- [ ] [CICD] P2. **NICE-TO-HAVE (design)**. Reconsider whether a `*/15` LDR→staging drain should mint a MINOR bump on
       EVERY drain, or whether the bump should be computed ONCE at the staging→main boundary from the promoted commit
       range — per-drain bumping races deployment-service through ~4 versions/hr. repo: unified-trading-pm. Provenance:
       Mode-B cadence review 2026-06-21.
