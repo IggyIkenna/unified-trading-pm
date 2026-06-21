@@ -1806,13 +1806,10 @@
     "locked_reason": "Breaking MINOR bump cascade: fund-administration-service=0.7.0 (pre-1.0.0)",
     "lock_version": "0.7.0",
     "pending_repos": [
-      "deployment-api",
-      "strategy-service",
-      "deployment-service",
-      "unified-api-contracts",
-      "ml-service"
+      "system-integration-tests",
+      "fund-administration-service"
     ],
-    "sit_retry_count": 1,
+    "sit_retry_count": 2,
     "locked_alert_sent": false,
     "breaking_pending": [
       "fund-administration-service"
