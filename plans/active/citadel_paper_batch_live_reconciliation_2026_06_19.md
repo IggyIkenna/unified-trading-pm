@@ -586,7 +586,7 @@ are identified (2) and the ledger exists (3).
       booked as the `FEES` factor at `PnLLayer.EXECUTION`, one NEGATIVE row per leg (swap+stake+perp = taker); grand
       total drops by the fee drag. ε=0 preserved (benchmark `TradeFillRecord`s stay fees=0).
       `test_fees_are_execution_layer_and_nonzero` + `test_maker_taker_rates`.
-- [ ] [CODE] P1.9. **Strategy-keyed ledgers + UI drilldown across ALL ledger types** (operator 2026-06-21: "associate
+- [ ] [CODE] P11.9. **Strategy-keyed ledgers + UI drilldown across ALL ledger types** (operator 2026-06-21: "associate
       pnl, trade, order and position ledgers to strategies … all parts of the UI should group + drilldown by strategy").
       `LedgerRow` has NO `strategy_id` column today — only the attribution parquet is strategy-partitioned, so trade /
       position / transfer / passive / pricing ledgers can NOT be grouped by strategy (the strategy is only a substring
@@ -596,6 +596,30 @@ are identified (2) and the ledger exists (3).
       add a strategy filter + per-strategy drilldown to EVERY UI panel. Repo: unified-api-contracts (field) +
       unified-trading-library (stamp) + strategy-service (emit) + client-reporting-api (group) +
       unified-trading-system-ui (drilldown, playwright-gated).
+
+- [ ] [CODE] P11.10. **Replicate the full e2e experiment universe in the paper book + wire the portfolio_allocator**
+      (operator 2026-06-21: "missing lots of strategies and venues from our e2e_testing work … basis, staked basis,
+      funding rate dispersion/arb … many more venues and coins … production archetypes are flexible enough … give them
+      strategy IDs + configs matching the e2e experiment … how we weight allocations per archetype, which venues, which
+      coins at any one time, and moving money around"). The paper run hardcodes `PAPER_RUN_SPEC_INDICES = (0, 6)` (2 of
+      14 `CARRY_STAKED_BASIS` specs); the production catalogue ALREADY builds **468 specs / 30 archetypes**
+      (`specs_for_archetype`) incl. the e2e archetypes: `CARRY_STAKED_BASIS` (14), `CARRY_BASIS_PERP` (144),
+      `CARRY_FUNDING_DISPERSION` (52), `ARBITRAGE_PRICE_DISPERSION` (17), `CARRY_BASIS_DATED`, `CARRY_RECURSIVE_STAKED`,
+      `YIELD_*`, `DEFI_LP_*`. SUB-TASKS:
+      - P11.10a. Extract the e2e experiment's universe (archetypes × venues × coins × weights) from
+        `e2e-testing/scripts/defi/` (funding_reversion_*, funding_ensemble_engine, backtest_solana_basis,
+        funding_reversion_multivenue_capital) as the documented intent.
+      - P11.10b. Map e2e universe → catalogue specs (`specs_for_archetype`); add any missing venue/coin spec in the
+        right `catalog_*.py` (flexible archetypes — add the spec, do not fork the engine); canonical `@`-qualified ids.
+      - P11.10c. Wire `portfolio_allocator/archetypes*.py` into the paper run: replace hardcoded indices + 100k/75k
+        split with allocator-driven per-archetype weight + which venues/coins active per rebalance + capital deploy
+        (treasury→hot per P11.4, single client_id).
+      - P11.10d. Verify a multi-archetype run materialises strategy-keyed ledgers (P11.9) for ALL e2e strategies, ε=0
+        batch-rerun holds across the larger universe, UI groups/drills down by every strategy + archetype. Repo:
+        strategy-service (catalogue + allocator + paper_run) + e2e-testing (extraction) + verify CRA/UI.
+- [ ] [CODE] P11.6-retry. **Re-run the P11.6 execution-service Layer-3 smart-fill entrypoint** — agent D was
+      server-rate-limited at 0 tokens; deliverable (execution-service smart-fill-replay → `execution_alpha` artifact +
+      e2e harness) stands. Re-dispatch.
 
 ## Temporary states + their canonical follow-up plans
 
