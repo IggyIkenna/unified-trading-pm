@@ -448,6 +448,21 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+### 2026-06-21 — Autonomous: PB.8 aggTrades fill WIRED (BTC "1%" was a measurement bug) + exhaustive robust-short search
+
+- **PB.8 aggTrades tape — wired into the live maker fill + deployed.** Operator caught the BTC "~1% fidelity": it was a
+  MEASUREMENT BUG (a 1bp band on BTC ≈ $6; the close-anchored backward window measured price TRAVEL, not liquidity). The
+  fix resolves the maker fill against the REAL futures aggTrades flow at the limit (absolute, not "% of 1m"): a page-cap
+  → super-liquid (BTC/ETH) → fills IN FULL; thin alts fill against their genuine flow (tested: BTC/ETH capped→full, ENJ
+  ~5%). `_ledgers._aggtrades_flow` + `simulate_fills(use_tape=True)`, bounded API (per-rebalance, ≤5 pages, early
+  liquid-detection), 1m-volume fallback. Signal engine redeployed + executed clean.
+- **Robust short — exhaustive walk-forward, done properly: NO standalone short alpha is robust.** 16 candidates ranked by
+  rolling walk-forward (11 windows): the BEST (regime_mean_rev) is only +0.30 mean OOS Sharpe / 5-of-11 positive (a coin
+  flip); regime(200,20) is the WORST (−1.58) — the prior single-split 1.12 was luck. Rigorous conclusion: a crypto bull
+  has no persistent standalone-short alpha; the robust decision is to ship NO signal (all overfit). The real legs_real
+  short (thin +$18.7k hedge) stays; the genuine robust path is a ROLE change (vol-targeted beta hedge / fold into
+  cs+basis), an operator-gated strategy decision. P1 resolved.
+
 ### 2026-06-21 — Autonomous: h32/ext bps + PB.13 live−batch differential + PB.8 aggTrades fidelity + P1 walk-forward verdict
 
 - **h32/ext bps fixed** (were "—"): they're ML cross-sectional legs without a per-coin book, so paper_engine proxies
@@ -700,12 +715,14 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       **VERDICT: single-shot (= the live swept/touched + drop model) is most faithful AND risk-adjusted-best** — it
       validates the deployed engine, rejects requote (PB.6), and confirms PB.4. Determinism held (same code+data). bps
       PnL surfaced as a first-class column. Repo: e2e-testing (`_fill_backtest.py`).
-- [x] ✅ [CODE] P2.8 (PB.8). **Paper-tape fidelity tier (aggTrades) — MEASURED** (`_aggtrades_fidelity.py`). Fetches real
-      Binance aggTrades + computes the true volume-at-price for a mid±1bp resting maker. Finding: only **~19% of the 1m
-      candle volume** actually trades at the maker's level (BTC/XLM <1%, UNI/SAND ~70%) → the batch (1m-volume) fill
-      model **over-counts fillable volume ~5×** = the measured "execution realism" gap. WIRING the tape into the live
-      maker fill (replacing 1m-volume) is the remaining step — it ~5×-shrinks fills (a material paper-PnL change) so it
-      wants operator sign-off, NOT a silent flip; the measurement (the deliverable) is done. Repo: e2e-testing.
+- [x] ✅ [CODE] P2.8 (PB.8). **Paper-tape fidelity tier (aggTrades) — WIRED into the live maker fill + DEPLOYED.** The
+      live maker fill now resolves against the REAL futures aggTrades flow that crossed the limit (true volume-at-price),
+      with a 1m-volume fallback (`_ledgers._aggtrades_flow` + `simulate_fills(use_tape=True)`; signal engine redeployed).
+      **The BTC "1% fidelity" was a MEASUREMENT BUG, not a finding** (operator caught it): a 1bp band on BTC is ~$6 — when
+      the close sits near a minute's low, almost nothing printed below close−1bp in that backward window, so the "% of 1m
+      volume at the level" reads ~0 — which is about price TRAVEL, not liquidity. The fix uses absolute flow-at-limit: a
+      **page-cap → super-liquid (BTC/ETH) fills IN FULL**; thin alts fill against their genuine (smaller) flow (tested:
+      BTC/ETH capped→full, ENJ ~5%). Bounded API (per-rebalance, ≤5 pages, early liquid-detection). Repo: e2e-testing.
 - [x] ✅ [CODE+UI] PB.9. **bps PnL everywhere ($ PnL / $ traded × 1e4)** — operator ask 2026-06-20: surface the
       efficiency lens alongside the $/yr exec cost. Engine computes per-coin + per-strategy + aggregate **turnover**
       (`_coin_history.py` → `bps_summary.json`; per-coin `bps_cs/basis/short`) and the **exec-cost twin**
@@ -734,14 +751,18 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       DEGRADES to 0.12 OOS (overfit to IS noise). The `(200,20)` used for the per-coin view is the OOS-best, so it's on
       solid ground — but partly luck (it wasn't IS-best). Lesson: a specific param config is NOT proven without
       walk-forward; the regime IDEA is the durable finding.
-- [x] ✅ [STRATEGY] P1. **Regime-gate short: WALK-FORWARD says DO NOT PORT (resolved).** Added a rolling walk-forward to
-      `_short_research.py` (18mo train→6mo test × 11 windows). The regime gate beats the naive in only **4/11 windows**
-      (mean OOS Sharpe **−1.58** vs −0.19) — the single-split 2024-26 OOS win (Sharpe 1.12) was **luck** (one good window,
-      e.g. 2023 regime −21.92 shorting into a recovery). So it is **NOT port-worthy** — porting would likely degrade the
-      real strategy. Kept ONLY as the per-coin VIEW reconstruction (a better proxy than the naive −$269k loser; the view
-      doesn't need a production-grade alpha). The strategy-service legs are offline research (`legs_real`), not a clean
-      archetype to patch. Decision: don't port; the regime IDEA is interesting but not robust enough. Repo: e2e-testing
-      (`_short_research.py` walk-forward).
+- [x] ✅ [STRATEGY] P1. **Robust short — EXHAUSTIVE walk-forward: NO standalone short alpha is robust (done properly).**
+      Expanded `_short_research.py` to **16 candidates** (own_trend ± regime/params, mean-rev, RSI, vol-spike, xs-loser,
+      drawdown, low-vol-regime, breakdown) and ranked EVERY one by rolling walk-forward (18mo train→6mo test × 11
+      windows). The **best** candidate (regime_mean_rev) is only **+0.30 mean OOS Sharpe, positive in 5/11 windows (45%)**
+      — a coin flip, not an alpha. The regime(200,20) from the prior single-OOS-split is actually the **WORST** (−1.58
+      mean OOS) — the 1.12 split was pure luck. **Rigorous finding: a crypto bull market has NO persistent
+      standalone-short ALPHA** (momentum shorts whipsaw, reversal shorts catch knives, regime gates are luck). The
+      **robust decision is therefore NOT to ship any signal** (all overfit) — the real `legs_real` short (a thin +$18.7k
+      hedge) correctly stays. The genuine robust path is a ROLE change, not a signal: a vol-targeted **beta hedge** judged
+      on BOOK risk-reduction, or fold the short into the market-neutral cs / funding-carry basis legs that ARE robust —
+      a strategy decision (operator-gated, like the PB.8 wiring). Per-coin VIEW keeps the regime reconstruction (labelled
+      non-alpha proxy). Repo: e2e-testing (`_short_research.py`, 16-candidate walk-forward).
 
 **Execution-config optimization (operator design 2026-06-20 — pick the BEST REALISTIC execution per strategy; the
 full-fill fantasy is the ceiling, never a choice). Lever grid: style (maker rest / taker cross) × participation (¼/⅓/
