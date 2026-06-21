@@ -987,8 +987,21 @@ jobs:
     # on EVERY staging QG pass for every non-library service (alerting-service, etc.) = pure noise about a
     # known-incomplete state. Gate to env=='prod' so the channel only pages when it's actionable; provision
     # staging triggers deliberately via `scripts/create-cloud-build-feature-triggers.sh <repo>` when ready.
+    #
+    # BUILD-ONLY PRE-CUTOVER (2026-06-21, alerts-triage L150 / orchestrator_human_central_vm_split):
+    # the SAME reasoning now applies to PROD too. We are PRE live-cutover — core service/trading repos
+    # (strategy-service, instruments-service, …) are INTENTIONALLY build-only: they have a `<repo>-build`
+    # trigger but no `<repo>-prod` prod-DEPLOY trigger, by design (auto-deploying a trading service to prod
+    # on every main-merge is exactly what we do NOT want before going live). So the prod "not-configured"
+    # page fired on every main promotion for every such repo = pure noise about a known, intentional state.
+    # Gate the page behind the explicit opt-in repo variable `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` (default
+    # unset ⇒ build-only, no page). At live cutover the operator sets the variable `true` (and provisions
+    # the prod triggers via `scripts/create-cloud-build-feature-triggers.sh <repo>`), which RE-ARMS this
+    # alert so a genuinely-missing prod trigger pages again. This neither enables nor blocks any prod
+    # deploy — it only silences a noise alert about the deliberate pre-cutover build-only posture.
     if: |
       always() &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true' &&
       needs.route-build.outputs.env == 'prod' &&
       needs.route-build.outputs.repo_type != 'library' &&
       needs.route-build.outputs.build_triggered == 'false' &&
@@ -997,8 +1010,10 @@ jobs:
     with:
       message:
         "Cloud Build Trigger Not Configured | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
-        needs.route-build.outputs.env }} | Project: ${{ needs.route-build.outputs.gcp_project }} | Setup: bash
-        scripts/create-cloud-build-feature-triggers.sh ${{ needs.route-build.outputs.repo }}"
+        needs.route-build.outputs.env }} | Project: ${{ needs.route-build.outputs.gcp_project }} | Setup: provision the
+        `${{ needs.route-build.outputs.repo }}-prod` Cloud Build trigger (the router runs `<repo>-<env>`). NOTE:
+        `create-cloud-build-feature-triggers.sh` only creates `<repo>-feature-build` triggers for `feat/*`, NOT the
+        prod-deploy trigger — provision that separately at cutover."
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
