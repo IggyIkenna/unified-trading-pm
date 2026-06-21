@@ -439,11 +439,11 @@ are identified (2) and the ledger exists (3).
       `by_strategy` net 100000 / 75000), `?strategy_id=jito` → 4 legs. Repo: client-reporting-api.
 - [x] [API] ✅ P2. **`/attribution/breakdown` multi-dim READER (was open)** — surface the real multi-dimensional
       waterfall now the parquet carries venue+layer+factor+strategy_id dims: `attribution_breakdown` adds
-      `per_strategy_total` + nested `by_strategy` (each strategy's own factor split) alongside by-venue/by-layer/by-factor.
-      client-reporting-api@50ae187. LIVE `firm-paper-determinism` /attribution/breakdown: **5 venues**
-      {UNISWAP_V3,JITO,DRIFT,LIDO,DERIBIT}, **4 factors** {CARRY,BASIS,FUNDING,FEES}, **per-strategy** totals + nested
-      waterfall, **by venue ≠ by layer** (venue splits 5 ways, layer = STRATEGY only — EXECUTION=0 in benchmark paper),
-      total_amount 210.26. Repo: client-reporting-api.
+      `per_strategy_total` + nested `by_strategy` (each strategy's own factor split) alongside
+      by-venue/by-layer/by-factor. client-reporting-api@50ae187. LIVE `firm-paper-determinism` /attribution/breakdown:
+      **5 venues** {UNISWAP_V3,JITO,DRIFT,LIDO,DERIBIT}, **4 factors** {CARRY,BASIS,FUNDING,FEES}, **per-strategy**
+      totals + nested waterfall, **by venue ≠ by layer** (venue splits 5 ways, layer = STRATEGY only — EXECUTION=0 in
+      benchmark paper), total_amount 210.26. Repo: client-reporting-api.
 - [x] [API] ✅ P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall —
       client-reporting-api@501c731 `_bps_on_turnover` + `GET /bps-pnl`. LIVE: ETH-strat -2.60 bps, SOL-strat 0 bps,
       overall -1.53 bps (turnover $2.29M). Repo: client-reporting-api.
@@ -549,8 +549,23 @@ already wired, populate automatically).
 
 **Gates**: tsc 0 errors · ESLint 0 warnings · vitest 285 passed · build green · coverage 50.88% · **pw:L2 ✓ 60/60
 smoke** (7 new Phase-10 regression tests + the 2 gross-now tests now green). Regression spec:
-`tests/smoke/paper-trading-ledger.smoke.spec.ts`. **DEPLOY**: rebuild `:papertrading` image via Cloud Build + redeploy
-`odom-portal` (asia-northeast1) + live-URL browser proof PENDING in this same session (next steps below).
+`tests/smoke/paper-trading-ledger.smoke.spec.ts`.
+
+**DEPLOYED + LIVE-PROVEN (2026-06-21)**: rebuilt the `:papertrading` image (Cloud Build `53374216`,
+`--build-arg BUILD_ENV_FILE=config/docker-build.env.papertrading`, `NEXT_PUBLIC_MOCK_API=false` → the live
+`client-reporting-api`) and **deployed to `odum-portal` @ asia-northeast1 — revision `odum-portal-00030-9gs`, 100%
+traffic** (was `odum-portal-00029-lxh`). **Measured headless-Chromium proof against the LIVE url**
+`https://odum-portal-cldtjniqvq-an.a.run.app/paper-trading?client=firm-paper-determinism` (HTTP 200) — the new panels
+render REAL data: Net views = net-$ $1M / gross-$ $4M / net-in-coin **ETH 250.8333 + SOL 210.0000** / delta-per-coin
+**ETH $753K + SOL $630K**; Per-strategy = **2 strategies** (`@lido-uniswapv3-deribit` 21 trades $1M turnover +
+`@jito-jupiter-drift` 21 trades $945K) + Overall (42 trades $2M) with bps-on-turnover + annualised-ROE columns;
+PnL-over-time = by-strategy + by-coin bars + honest per-day-pending note; Unified batch↔paper = the identity banner +
+KPIs + execution-assumptions (BENCHMARK / fidelity ladder) + **the batch rerun has since LANDED so it shows the real "42
+trades matched · ε=0" verdict** (not PENDING — the panel handles both branches honestly); trade tape = 42 fills with
+entry/exit (`E/X`) markers. Screenshot captured. **YES — the live dashboard now shows per-strategy + net/coin/delta +
+bps/ROE + a real backtest section.** The only honest-empty remaining is producer-side: transfers (`ledger_type=transfer`
+not yet emitted) + venue/layer/factor attribution dimensions (the parallel [STRATEGY] P2 items) — the reads are wired
+and populate automatically when the producer lands them.
 
 ### 2026-06-21 — Autonomous: PB.8 aggTrades fill WIRED (BTC "1%" was a measurement bug) + exhaustive robust-short search
 
