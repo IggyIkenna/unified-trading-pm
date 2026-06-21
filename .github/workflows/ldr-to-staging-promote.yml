@@ -172,13 +172,22 @@ jobs:
             # Fail-safe: defaults to `chore` (no bump) only when no feat/fix/breaking is found (a genuinely
             # non-bumping drain stays non-bumping); over-detection (e.g. an already-promoted feat in range) →
             # an extra harmless monotonic bump, never a starve.
+            # Derive ONLY the semver BUMP SIGNAL (feat=MINOR / fix=PATCH / chore=none) — NEVER emit the
+            # `!` breaking-override. `feat!`/`fix!` headlines still map to feat/fix (the `!?` in the
+            # patterns), but the `!` is DROPPED. Breaking is the AST public-surface differ's verdict
+            # (scripts/cicd/detect_breaking_change.py — the SoT; CLAUDE.md "feat! is an explicit HUMAN
+            # override"), which runs on the staging PR independently, so a genuine breaking change is
+            # still caught + SIT-gated. An AUTOMATED drain must NOT force a breaking SIT cascade.
+            # WHY (incident 2026-06-21, UAC froze the whole fleet): the prior `_bk`→`feat!` branch was
+            # SELF-PERPETUATING — the backmerge re-includes a prior `feat!: LDR → staging (auto-drain)`
+            # commit in the next drain's PR range, so the `!:` test re-matched the drain's OWN earlier
+            # subject → every drain re-flagged breaking → the repo stuck in staging_status.breaking_pending
+            # → UTL held at STAGING_GREEN → the dep-order gate skipped all 18 dependents (promotion lag).
             _squash_subject() {
-              local _pr="$1" _t="chore" _h _bk
+              local _pr="$1" _t="chore" _h
               _h="$(gh pr view "$_pr" --repo "$OWNER/$REPO" --json commits --jq '.commits[].messageHeadline' 2>/dev/null || true)"
-              _bk="$(gh pr view "$_pr" --repo "$OWNER/$REPO" --json commits --jq '.commits[] | select((.messageHeadline|test("!:")) or ((.messageBody // "")|test("BREAKING CHANGE"))) | .oid' 2>/dev/null || true)"
-              if [ -n "$_bk" ]; then _t="feat!"
-              elif printf '%s\n' "$_h" | grep -qE '^feat(\([^)]+\))?:'; then _t="feat"
-              elif printf '%s\n' "$_h" | grep -qE '^fix(\([^)]+\))?:'; then _t="fix"
+              if printf '%s\n' "$_h" | grep -qE '^feat(\([^)]+\))?!?:'; then _t="feat"
+              elif printf '%s\n' "$_h" | grep -qE '^fix(\([^)]+\))?!?:'; then _t="fix"
               fi
               printf '%s: LDR → staging (Tier C auto-drain)' "$_t"
             }
