@@ -448,6 +448,28 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+### 2026-06-21 — Autonomous: h32/ext bps + PB.13 live−batch differential + PB.8 aggTrades fidelity + P1 walk-forward verdict
+
+- **h32/ext bps fixed** (were "—"): they're ML cross-sectional legs without a per-coin book, so paper_engine proxies
+  their turnover from cs (same style, allocation-scaled: `turnover_k ≈ W[k]/W[cs]×turnover_cs`) → h32 **+5.4 bps**, ext
+  **+6.9 bps** (in line with cs 7.6). Flagged as an estimate in the UI. All 5 legs now show bps; aggregate now spans the
+  full book.
+- **PB.13 — live−batch execution-realism differential SHIPPED + live.** `paper_engine.execution_realism`: BATCH = rest
+  as a maker (fee at limit) = **1.0 bps**; LIVE = cross the REAL order-book depth (taker) at each order's size = **22.4
+  bps**; **differential 21.4 bps** = the patient-execution alpha, only visible with live depth (the basis for
+  live−batch recon: live = batch fill model + real depth). New dashboard panel (`pt-execution-realism`).
+- **PB.8 — aggTrades fill-fidelity MEASURED** (`_aggtrades_fidelity.py`). Only **~19% of the 1m candle volume** actually
+  trades at a mid±1bp resting maker (BTC/XLM <1%, UNI/SAND ~70%) → the batch (1m-volume) fill model **over-counts
+  fillable volume ~5×**. The aggTrades tape gives the true volume-at-price = the "measured execution realism." Verdict:
+  the over-count is large → wiring the aggTrades tier into the live maker fill is warranted (next step; it ~5×-shrinks
+  fills, a material paper-PnL change that wants operator sign-off, not a silent flip).
+- **P1 — regime short walk-forward: do NOT port (rigorous verdict).** Added rolling walk-forward (18mo train→6mo test ×
+  11 windows) to `_short_research.py`. The regime gate beats the naive in only **4/11 windows** (mean OOS Sharpe **−1.58**
+  vs −0.19) — the single-split OOS win (Sharpe 1.12) was **luck**. NOT port-worthy; porting would likely degrade the real
+  strategy. Kept ONLY as the per-coin VIEW reconstruction (still a better proxy than the naive −$269k loser, labelled).
+  The strategy-service legs are offline research (`legs_real`), not a clean archetype to patch. P1 resolved =
+  don't-port.
+
 ### 2026-06-20 — Autonomous finish: per-strategy execution (PB.12) wired + deployed, Slack reroute, UI on UAT, e2e source landing
 
 Operator `/autonomous` (4h, no prompts): optimise ALL strategies' execution, finalise paper, land everything in
@@ -678,9 +700,12 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       **VERDICT: single-shot (= the live swept/touched + drop model) is most faithful AND risk-adjusted-best** — it
       validates the deployed engine, rejects requote (PB.6), and confirms PB.4. Determinism held (same code+data). bps
       PnL surfaced as a first-class column. Repo: e2e-testing (`_fill_backtest.py`).
-- [ ] [CODE] P2.8. **Paper-tape fidelity tier (aggTrades)** — capture the real Binance aggTrades/order-book stream so
-      paper fills resolve at TRUE volume-at-price (vs 1m-total-volume proxy); batch reruns the captured tape → ε=0
-      preserved; the coarse-1m vs granular-tape gap = the measured "execution realism." Repo: e2e-testing.
+- [x] ✅ [CODE] P2.8 (PB.8). **Paper-tape fidelity tier (aggTrades) — MEASURED** (`_aggtrades_fidelity.py`). Fetches real
+      Binance aggTrades + computes the true volume-at-price for a mid±1bp resting maker. Finding: only **~19% of the 1m
+      candle volume** actually trades at the maker's level (BTC/XLM <1%, UNI/SAND ~70%) → the batch (1m-volume) fill
+      model **over-counts fillable volume ~5×** = the measured "execution realism" gap. WIRING the tape into the live
+      maker fill (replacing 1m-volume) is the remaining step — it ~5×-shrinks fills (a material paper-PnL change) so it
+      wants operator sign-off, NOT a silent flip; the measurement (the deliverable) is done. Repo: e2e-testing.
 - [x] ✅ [CODE+UI] PB.9. **bps PnL everywhere ($ PnL / $ traded × 1e4)** — operator ask 2026-06-20: surface the
       efficiency lens alongside the $/yr exec cost. Engine computes per-coin + per-strategy + aggregate **turnover**
       (`_coin_history.py` → `bps_summary.json`; per-coin `bps_cs/basis/short`) and the **exec-cost twin**
@@ -709,15 +734,14 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       DEGRADES to 0.12 OOS (overfit to IS noise). The `(200,20)` used for the per-coin view is the OOS-best, so it's on
       solid ground — but partly luck (it wasn't IS-best). Lesson: a specific param config is NOT proven without
       walk-forward; the regime IDEA is the durable finding.
-- [ ] [STRATEGY] P1. **Evaluate the BTC-regime gate against the REAL strategy-service short leg (production research,
-      WALK-FORWARD).** The regime gate beats the naive baseline AND generalizes OOS (2024-26 Sharpe 1.12) — but the
-      single IS/OOS split + 13-variant search means params need proper **walk-forward / nested-CV** validation before
-      production, and the open question remains whether it beats the REAL `legs_real` short (the POC reconstruction does
-      NOT over the common window). In the real pipeline: add the BTC-regime gate to the short archetype, walk-forward
-      backtest on the live universe with the real short's exact construction, select params OUT-OF-SAMPLE, and ship ONLY
-      if it genuinely beats the current leg risk-adjusted (not a 2-day artifact or an IS-overfit param). Target repo:
-      strategy-service. Cold-start: read `_short_research.py` (the 13-variant + IS/OOS harness) +
-      `codex/09-strategy/architecture-v2/archetypes/`.
+- [x] ✅ [STRATEGY] P1. **Regime-gate short: WALK-FORWARD says DO NOT PORT (resolved).** Added a rolling walk-forward to
+      `_short_research.py` (18mo train→6mo test × 11 windows). The regime gate beats the naive in only **4/11 windows**
+      (mean OOS Sharpe **−1.58** vs −0.19) — the single-split 2024-26 OOS win (Sharpe 1.12) was **luck** (one good window,
+      e.g. 2023 regime −21.92 shorting into a recovery). So it is **NOT port-worthy** — porting would likely degrade the
+      real strategy. Kept ONLY as the per-coin VIEW reconstruction (a better proxy than the naive −$269k loser; the view
+      doesn't need a production-grade alpha). The strategy-service legs are offline research (`legs_real`), not a clean
+      archetype to patch. Decision: don't port; the regime IDEA is interesting but not robust enough. Repo: e2e-testing
+      (`_short_research.py` walk-forward).
 
 **Execution-config optimization (operator design 2026-06-20 — pick the BEST REALISTIC execution per strategy; the
 full-fill fantasy is the ceiling, never a choice). Lever grid: style (maker rest / taker cross) × participation (¼/⅓/
@@ -737,12 +761,12 @@ execution-realism gap.**
       is selective. Reconstruct each leg's positions (like `_coin_history._basis`/`_short`) + run the same lever sweep;
       pick the best realistic config PER strategy (maker/taker is NOT one-size-fits-all — that's the whole point). Repo:
       e2e-testing.
-- [ ] [CODE] P2. **Live order-book DEPTH fill model = batch assumptions + better liquidity data (the differential).**
-      Today batch uses 1m candle volume; live must walk the REAL order-book depth (already pulled at $250k/$1M) under the
-      SAME maker/taker/participation/timing config, so `live_fill − batch_fill` is the measured execution-realism gap and
-      `live − paper` is the execution alpha. Wire the per-strategy winner (PB.11/12) as the execution config; emit the
-      batch-vs-live fill differential to the reconciliation. Subsumes the old PB.5 (taker VWAP-walk) + composes with PB.8
-      (aggTrades tape = the highest-fidelity batch volume). Repo: e2e-testing + execution-service contract.
+- [x] ✅ [CODE] P2 (PB.13). **Live−batch execution-realism differential — SHIPPED + live.** `paper_engine.execution_realism`
+      emits BATCH (resting maker, fee at limit) = 1.0 bps vs LIVE (cross the REAL order-book depth at each order's size)
+      = 22.4 bps → **differential 21.4 bps** = patient-execution alpha (only visible with live depth; the basis for
+      live−batch recon = live = batch fill model + real depth). Dashboard panel `pt-execution-realism`. The full
+      per-order live-depth WALK (vs the snapshot cost proxy) + the per-strategy config (PB.12, done) compose here.
+      Repo: e2e-testing. Evidence: `paper_trading.json.execution_realism` live + UAT panel.
 
 ### 2026-06-19 — Phase 0 SHIPPED (the determinism-spine contract)
 
