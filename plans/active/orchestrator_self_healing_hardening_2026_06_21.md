@@ -168,6 +168,29 @@ net-new capability (not robustness closures) and are dispatched to the central V
       worker's review branch so the STEP-5 PR is still the human safety gate. **HARD STOP**: `locked_by:` plans +
       grace-set + any unverified plan stay active + suggest-only (operator unlocks). — agent-orchestrator@39cbf10.
 
+### Operator-gated blocked todos must page (with a respond-link)
+
+- [x] ✅ [ORCHESTRATOR] P1. OPERATOR-gated plan todos fire a Slack alert with a respond deep-link — `[OPERATOR]`-tagged
+      todos are seeded `status=blocked` + a synthetic `BlockedRow` (slot 0) by `bootstrap.sync_backlog_to_db`; they
+      NEVER pass through `/api/slots/{id}/blocked`, so NO alert fired and 5 sat in the dashboard "awaiting" for 1 day
+      (operator report 2026-06-21). `_alert_unanswered_operator_gated_blocks` now fires `notify_operator_gated_blocked`
+      (":raising_hand: Operator decision needed" + `/#blocked` deep-link to the dashboard answer surface), DISK-BACKED
+      deduped per blocked_id — so each unanswered op-gated todo pages exactly once (the existing 5 page on the
+      post-deploy restart; new ones page on creation; answered/seen ones never re-page). — agent-orchestrator@7b435a3 |
+      tests: test_self_healing_hardening.py::test_operator_gated_blocked_alerts_once_then_dedups
+
+### Live Slack alerts addressed (2026-06-21)
+
+- **Audit Reflog — High Risk** (every ~11 min): ignore-file ack + WIP preserve (#464); G3a fixes the SOURCE
+  (checkout-not-reset); G4b dedups the alerter. Triple-covered.
+- **Spawn failure — branch quarantine slot 1** (14:47): escalate.md leave-slot-clean (root cause) + Fix (c) auto-heal.
+- **Slot 5 FAILED — heartbeat loop dead** (14:38): Fix (b) reclaims the wedged session → AutoSpawn respawns; the alert
+  message now says "Auto-recovering" instead of "Re-spawn via dashboard".
+- **Slot 1 unpushed plan(s)** (14:37): regen `--commit` self-commits the inventory (slot-1 owns the master plan).
+- **5 OPERATOR-gated awaiting, no respond option** (this section): now page with a dashboard respond-link.
+- escalation dispatched/RESOLVED + plan-health dispatched (INFO bookends): healthy — the conflict-escalate + daily
+  reconcile loops working as designed.
+
 ## Codex SSOT updates
 
 - [x] ✅ [DOC] P2. `codex/04-architecture/agent-orchestrator-worker-liveness.md` — documented all 5 closures (fix a/b/c,
