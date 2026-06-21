@@ -67,17 +67,25 @@ SHAs were never acknowledged.
       `origin/wip-preserve/e2e-slot4-orphan-pred-bucket-2026-06-20`. — unified-trading-pm@57072ee9d (PR #464); reaches
       the central VM via `pm-pull`.
 
+- [x] ✅ [ORCHESTRATOR] P1. **Escalate-worker branch cleanup (root cause of the recurring "Spawn failure — branch-state
+      quarantine slot 1" alert, 2026-06-21 14:47).** The escalate worker creates a temp `_escalation_work` branch to
+      resolve a wall but EXITED without returning the slot's repos to `live-defi-rollout` → the next spawn trips FM5/FM7
+      → quarantine. `agents/escalate.md` now mandates a LEAVE-THE-SLOT-CLEAN step before EXIT (`merge/rebase --abort` →
+      `git checkout live-defi-rollout` → drop `_escalation_work`) in every repo touched. Composes with Fix (c)'s
+      auto-heal (defense in depth: prompt prevents it; auto-heal recovers it). — agent-orchestrator@8953d98
+
 ## Remaining work — to 100%
 
 ### Concern 1 — account selection (already strong; these close races + spread load)
 
-- [ ] [ORCHESTRATOR] P2. Late-binding account re-check in `_do_spawn` — re-query the picked account's status AFTER
-      dirty/branch resolution but BEFORE `tmux_spawn.spawn`; if it went `rate_limited`/`auth_failed` in the pick→spawn
-      window, swap to a replacement headroom account instead of landing the worker on an exhausted one. Target:
-      agent-orchestrator `server/autospawn.py::_do_spawn`.
-- [ ] [ORCHESTRATOR] P3. Load-spread secondary sort in `_pick_headroom_account` — after the (5h%, weekly%) headroom
-      rank, prefer accounts with FEWER active slots bound, so a burst of spawns doesn't stack onto one near-ceiling
-      account. Target: agent-orchestrator `server/autospawn.py::_pick_headroom_account`.
+- [x] ✅ [ORCHESTRATOR] P2. Late-binding account re-check in `_do_spawn` — re-queries the picked account's usability
+      AFTER dirty/branch resolution but BEFORE `tmux_spawn.spawn`; if it went `rate_limited`/`auth_failed` in the
+      pick→spawn window, refuse (next tick re-picks a fresh headroom account, re-rendering account_id cleanly).
+      Best-effort (proceeds on a DB hiccup). — agent-orchestrator@8953d98
+- [x] ✅ [ORCHESTRATOR] P3. Load-spread secondary sort in `_pick_headroom_account` — `_active_slot_counts_by_account`
+      adds active-slot-count as the third sort key after (5h%, weekly%), so equal-usage spawns fan out across the pool.
+      — agent-orchestrator@8953d98 | tests:
+      test_self_healing_hardening.py::test_pick_headroom_prefers_account_with_fewer_active_slots
 
 ### Concern 2 — inline rotation (on-run-out path; 95% stays a spawn-gate, never a preempt)
 
@@ -93,11 +101,13 @@ SHAs were never acknowledged.
 
 ### Concern 3 — self-healing (re-trigger dirty / rolled-back / stale)
 
-- [ ] [ORCHESTRATOR] P1. Orphan-wip `COMMIT_AND_PUSH` must DURABLY PUSH to a `wip-preserve/` ref before ANY later
-      realign/reset can discard it — root cause of the cc89557/53bbd95 orphans (committed locally, never durably pushed,
-      then reset away). Verify `commit_and_push_dirty_repos` pushes succeed (not best-effort-silent) OR fall back to
-      quarantine; assert the wip-preserve ref exists on origin before returning `inherited`. Target: agent-orchestrator
-      `server/worktree_clean_check/_orphan.py`.
+- [x] ✅ [ORCHESTRATOR] P1. Orphan-wip inherit now realigns via `git checkout -B <base> origin/<base>` instead of
+      `git reset --hard origin/<base>` — the reset emitted the `reset: moving to origin/<base>` reflog signature the
+      audit-reflog guard pages on, so EVERY dead-predecessor WIP inherit re-armed the "Audit Reflog — High Risk" alert
+      (the chronic central-VM 11-min spam, incl. cc89557/53bbd95) even though the WIP was preserved to wip-preserve.
+      Checkout reaches the same clean end-state with a `checkout:` reflog the audit ignores — **fixes the spam at its
+      SOURCE** (the ignore-file was the symptom-level fix). — agent-orchestrator@8953d98 | tests:
+      test_dirty_state_resolution.py
 - [ ] [ORCHESTRATOR] P2. Watchdog-loop self-supervisor — if any daemon loop (`WorkerLivenessWatchdog`, `AutoSpawnLoop`,
       `TmuxPruner`, `HealthMonitor`, `UsagePoller`) exits/crashes, restart it without a full backend restart (today only
       systemd restart of the whole process recovers a dead thread). Target: agent-orchestrator `server/server.py`
