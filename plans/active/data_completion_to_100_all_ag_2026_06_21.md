@@ -279,6 +279,22 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 22:00 — "finish the current": parallelized for speed; honest completion picture
+
+**Odds backfill 1→7 parallel year-shards** (`mtds-backfill-odds-{2020..2026}`, all RUNNING) — odds has ~15M req
+remaining (no rate concern) so sharded with `--force` (idempotent re-fetch of static historical odds → guarantees
+100% coverage, ~7x faster than the single 304-chunk VM). **Enrichment** healthy: `sports-enrich-2019-2022` chunk
+24/49, `2023-2026` chunk 17/43 — finish current ranges ~2h. **Live** VM relaunched (`...213937`), op=websocket-
+streaming mode=live (no 401 from the new VM; verifying publish).
+
+**Coverage measured (availability_index):** core enrichment entities 8-13% captured-of-TOTAL (FIXTURE_STATS 13%,
+EVENTS/LINEUPS 11%, MATCHES 13%, PLAYER_STATS 8%, ODDS 13%) — but TOTAL includes many no-fixture cells that become
+empty_confirmed (raw log: "No fixtures for date → empty_confirmed markers"), so honest-cov is higher. Climbs as the
+2 enrich VMs finish their chunks. **API-Football is daily-cap-bound (Custom300=300k/day, only 70k used — UNDER-used
+because of empty-date stretches).** The 2 VMs finish their first pass ~2h; full multi-year enrichment to 100% needs
+either more API-Football daily budget (operator → 1.5M/day = the 5x lever) or a multi-day multi-pass. ONE monitor
+(b2tp3vezk) watches all 10 sports VMs, wakes on actionable event only.
+
 ### 2026-06-21 21:40 — ODDS API UPGRADED (blocker RESOLVED) + API-Football rate analysis
 
 **Odds API blocker GONE:** operator upgraded the Odds API; `odds-api-key` (the secret the sports MTDS pipeline uses)
@@ -698,16 +714,24 @@ fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + 
   path resolves the key from the `databento-api-key` **secret** via the secret client (works). Fix: `_get_api_key`
   fallback-resolves `databento_secret_name` via `get_secret_client()` like batch. Repo: market-tick-data-service.
   — market-tick-data-service@e532105
-- [ ] [SCRIPT] P1. **UAC: `live_source_for_venue(tradfi,…)` returns `massive`** (`SOURCE_PRIORITY[(tradfi,trades)]=
-  ['massive','databento']`, primary=massive) — but **massive is batch-only (no live feed)**; the actual live vendor is
-  databento. Live rows mis-stamp `live_massive`. Fix: live source = first **LIVE-capable** source in the priority list
-  (skip batch-only sources via `modes_for_source`), not `get_primary_source`. Repo: unified-api-contracts
-  (`canonical/crosscutting/source_priority.py` — coordinate, peer is editing this file).
-- [ ] [DATA] P1. **launch-mtds-live.sh tradfi instrument-ids format** — must be `CME:FUTURES:ES;CME:FUTURES:NQ;…`
-  (`_parse_instrument_id` needs `venue:type:underlying`), not bare `ES;NQ`. Repo: deployment-service (invocation/doc).
-- [ ] [DATA-OPERATOR] P0. **Confirm the Databento account has the Real-Time/**Live** streaming subscription** (separate
-  from the historical 3-dataset subscription). Without it, the live websocket is genuine BLOCKED-CREDENTIALS regardless
-  of the code fixes. After the 3 fixes + a tarball rebuild + relaunch, this is the only remaining gate to `live_databento`.
+- [x] ✅ [SCRIPT] P1. **UAC: `live_source_for_venue(tradfi,…)` mis-stamped live rows `live_massive`** — resolved tradfi
+  live/replay via the BATCH `SOURCE_PRIORITY[0]=massive`. **CORRECTION** to the original framing: `massive` IS live-capable
+  (operator 2026-06-05, Polygon.io 15-min REST — NOT batch-only; do NOT remove its `Mode.LIVE`). Real root cause: the SOLE
+  tradfi live **WS producer** is `databento_tradfi_ws` (massive/yahoo/barchart have no live WS connector). Fix = a `tradfi`
+  branch in `live_source_for_venue` → `databento` (mirrors `_PREDICTION_LIVE_SOURCE_FOR_VENUE`); batch path unchanged
+  (`get_primary_source(tradfi,*)=massive`). — unified-api-contracts@1205ae44 | verified
+  `live_pipeline_mode_for_venue(tradfi,*)=live_databento` + 48/48 `test_source_priority_pipeline_mode.py` green |
+  isolated-worktree promotion (concurrent peer WIP on `_source_priority_data.py` preserved, not bundled).
+- [x] ✅ [DATA] P1. **launch-mtds-live.sh tradfi instrument-ids format** — `CME:FUTURES:ES;CME:FUTURES:NQ;CME:FUTURES:CL;CME:FUTURES:GC`
+  (`_parse_instrument_id` needs `venue:type:underlying`). — relaunched `mtds-live-tradfi-cme-trades-20260621-213416` → CONNECTED + authenticated (`session_id` issued) + streaming live ticks.
+- [x] ✅ [DATA-OPERATOR] P0. **Databento Real-Time/Live subscription CONFIRMED** (operator 2026-06-21: the usage-based plan
+  includes Live data + 1yr L1 / 1mo L2-L3 history — the live WS is NOT subscription-blocked). The producer connects +
+  authenticates against `wss://live.databento.com`.
+- [ ] [DATA] P1. **Deploy the `live_databento` stamp fix (UAC@1205ae44) to the running live producer** — the live VM bakes
+  UAC from a GCS **tarball** (working-tree tar), so `mtds-live-tradfi-cme-trades-*` keeps `live_massive` until a
+  `create-code-tarballs.sh` rebuild **from a clean LDR checkout** (NOT this peer-WIP dev workspace) + relaunch. The daily
+  forward-poll cron relaunches but REUSES the existing tarball — a tarball rebuild is the gating step. Repo:
+  deployment-service. Provenance: this Progress Log.
 NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 + daily-cron host) IS done (`batch_databento`); `live_databento`
 websocket is beyond-dispatch peer-domain work, now fully diagnosed for them.
 
@@ -738,11 +762,22 @@ Landed: NYSE ohlcv_1m **125,915** (full DBEQ equity history — was ~0/wrongly-e
 05-26 pre-existing runs). 12 CME-1s VMs still finishing (re-armed finalizer). The flat 818k `expected_unattempted` is
 **structural honest-absence**, not a gap: trades/tbbo/mbp_10 (L1/L2 window-bound, un-backfillable historically),
 ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real manifest items found:
-- [ ] [DATA] P2. **Phantom NYSE/NASDAQ `ohlcv_1s` expected_unattempted (~31k cells)** — equities don't support 1s
-  (UAC expected_coverage NASDAQ/NYSE=[ohlcv_1m]); the IS enumerator seeded 1s for them. These can never be captured →
-  deflate honest-cov. Reconcile (drop the phantom 1s seeds for equity venues). Repo: instruments-service enumerator.
-- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s), not MTDS-fetched —
-  they convert to captured when MDPS aggregation runs over the new 1m/1s corpus. Repo: market-data-processing-service.
+- [ ] [DATA-OPERATOR] P2. **NYSE/NASDAQ `ohlcv_1s` expected_unattempted (~31k cells) — GENUINE OPERATOR DECISION, not a
+  clean phantom (investigated 2026-06-21).** The original "equities don't support 1s → drop" framing is WRONG: the Databento
+  allowlist ALLOWS `DBEQ.BASIC + ohlcv-1s` (it IS available), and the `(tradfi,equity)`/`(tradfi,etf)` validity matrix +
+  the design comment explicitly list equity 1s ("fetched alongside 1m for every GLBX.MDP3 / DBEQ.BASIC instrument_type").
+  BUT `expected_coverage NASDAQ/NYSE=[ohlcv_1m]` DELIBERATELY excludes 1s (equity 1s = thousands of tickers × seconds =
+  enormous volume — a plausible deliberate exclusion), and the MTDS pre-flight drops it. So the two registries genuinely
+  DISAGREE and the resolution is **opposite-direction + high-cost-if-wrong**: (A) if equity 1s is in-scope → ADD it to
+  `expected_coverage` + backfill (the cells become CAPTURED, more data); (B) if deliberately excluded → gate the IS
+  enumerator's seed on `expected_coverage` (the cells stop being seeded). Per "don't fix apparent inconsistency blindly"
+  this needs the operator's call on whether equity `ohlcv_1s` is in-scope to fetch. Repo: unified-api-contracts
+  (expected_coverage / market_data_categories) + instruments-service enumerator. Provenance: this Progress Log.
+- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s), not MTDS-fetched — they
+  convert to captured when MDPS aggregation runs over the new 1m/1s corpus. **LAUNCHED 2026-06-21:**
+  `mdps-backfill-tradfi-20260621-213646` (RUNNING, `launch-mdps-backfill-vm.sh tradfi 2020-01-01 2026-06-20 full`) —
+  re-aggregates the captured 1m corpus into 15m/24h. Leave open until the manifest shows the 15m/24h cells converting
+  captured (verify post-drain). Repo: market-data-processing-service.
 
 ### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
 Full ~60-VM fan-out CAPTURING real data (dex-pools 5232 rec/day, dex-swaps 44k-102k/yr, lst/liq/vault/pyth/gas/jito/marinade) → canonical v9 path. BUT **honest-cov only 6.0%→6.2%** after 50min: captured 369k→384k, **expected_unattempted FLAT at 2.31M** — captures create NEW rows, DON'T convert the unattempted. **ROOT CAUSE: format mismatch.** expected_unattempted rows: venue=`BALANCER-ARBITRUM` (legacy combined PROTOCOL-CHAIN) + chain=`''` (blank) + dates 2026-02-20..06-18 (recent window only). Captured rows: venue=`BALANCER` + chain=`ARBITRUM` (CANONICAL per defi-canonical-naming-ssot) + dates 2021..2026. Different shard keys → never match → the 2.31M legacy-format unattempted are effectively PHANTOMS the canonical captures can't convert. (Also 3.5M empty_confirmed = genuine honest absence → max honest-cov ≈ 43% once 2.31M convert, NOT 100%; "100%"=fetchable-gap-closed.)
