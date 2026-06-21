@@ -71,3 +71,39 @@ the manifest shows `empty_confirmed` even though trades ARE flowing. (live-mode 
 `live_hyperliquid` rows; it flips empty→captured the moment this lands. This is the LAST blocker for end-to-end live
 trade capture — the 7-bug first-run chain: GCS-deploy · topic · IAM · row_key(asset_group) · row_key(day→date) ·
 instrument-id-buffer-key · capture-schema-validation.
+
+## UPDATE 2026-06-21 (cefi-lane) — bug#7 FIXED + durably shipped; bug#8 surfaced + fixed (MissingSourceError)
+
+**Bug#7 RESOLVED (operator-directed "fix both paths"):** UTL `ManifestWriter.record_captured` gained a
+`validate: bool = True` gate; the live recorder passes `validate=False` (bookkeeping df — real ticks
+validated+written by `LiveWebsocketTickSink`; `pipeline_mode`+`source` carry provenance). Shipped durably to
+`live-defi-rollout` via isolated name-correct worktrees (churn-immune; both QG-green): UTL@`057264fd` (converged with
+slot-3's `78481472`) + market-tick-data-service@`e6b0f29`. Tarballs rebuilt+deployed; VM
+`mtds-live-cefi-hyperliquid-trades-20260621-175349` relaunched. **`RowSchemaValidationError` is GONE** (confirmed in
+that VM's run.log — the fix works end-to-end).
+
+**Bug#8 surfaced (8th first-run bug) — `MissingSourceError`:** with schema-validation correctly skipped, the live
+`record_captured` then raised:
+
+```
+MissingSourceError: Manifest write passed source='hyperliquid' which is not a registered source for
+asset_group='cefi' data_type='trades'. Allowed (UAC SOURCE_PRIORITY): ['tardis'].
+  row_key={venue=HYPERLIQUID, data_type=trades, date=2026-06-21, instrument_type=PERPETUAL, instrument_id=HYPERLIQUID:PERP:SOL}
+```
+
+**Root cause:** HYPERLIQUID/ASTER were reclassified to `cefi` (UAC 0.30.0) but their **sources were never registered**
+in `SOURCE_PRIORITY` for the cefi data_types they produce — `(cefi, trades)` etc. listed only `['tardis']`, so the
+writer-side source gate (`_resolve_and_validate_source`) rejected `source='hyperliquid'`. This is the documented cefi
+**source-provenance RED gap** (CLAUDE.md § "source= provenance is CROSSCUTTING — cefi/defi/sports are RED gaps").
+
+**Fix (cefi-lane, UAC):** registered `hyperliquid` + `aster` as cefi sources on the 5 cefi perp market-data types they
+produce — `(cefi, trades|ohlcv_1m|book_snapshot|liquidations|derivative_ticker)` (additive; `tardis` stays index-0 batch
+primary; mirrors the pre-existing `aster`-in-`derivative_ticker` registration). `unified-api-contracts`
+`canonical/crosscutting/_source_priority_data.py`. Additive + matches the venue-override per-venue source-stamp design.
+
+**Correction to issue `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` §2 (STALE PREMISE):** that doc says the
+cefi download "STRIPS HL/ASTER (they're defi in VENUE_TO_ASSET_GROUP)." **Verified 2026-06-21: `VENUE_TO_ASSET_GROUP`
+now resolves `HYPERLIQUID`→`cefi` and `ASTER`→`cefi`** (post UAC 0.30.0 — NOT defi). So the strip premise is stale; the
+actual 48.5k-cell `attempted_failed` cause needs fresh diagnosis (and the **defi lane is actively running on HL S3
+data** → a blind cefi HL/ASTER batch could collide — diagnose-first, not blind-execute). First-run chain now 8 bugs:
+…instrument-id-buffer-key · capture-schema-validation(bug#7) · source-registration(bug#8).
