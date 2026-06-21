@@ -123,12 +123,19 @@ UAC additionally had a stuck `staging→main` promote PR #370. Timeline:
 
 Two upstream fixes (NOT a new/per-repo promoter — the promoter is central and fine):
 
-1. **Mode B (systemic, the real freeze): preserve the semver signal through the squash fallback.** Preferred: in
-   `ldr-to-staging-promote.yml`, when falling back to `--squash`, compute the **aggregate bump level** across the
-   squashed LDR commits (`max(breaking, feat, fix)`) and title the squash commit `feat:`/`fix:`/`feat!:` accordingly
-   (instead of a flat `chore(promote)`), so semver-agent bumps correctly. Alternatives to evaluate: (a) keep LDR
-   rebaseable so `--rebase` arms and individual labels survive; (b) have semver-agent resolve the bump from the LDR
-   commit _range_ rather than the single squash-commit label.
+1. **Mode B (systemic, the real freeze): preserve the semver signal through the squash fallback. ✅ FIXED 2026-06-21
+   (PM@6acde3fe7).** Implemented the preferred option: `ldr-to-staging-promote.yml` now has `_squash_subject()` which
+   derives the aggregate conventional type (`feat!` if any `!:`/`BREAKING CHANGE`, else `feat`, else `fix`, else
+   `chore`) from the commits the squash collapses, and titles the squash subject `<type>: LDR → staging (Tier C
+   auto-drain)` at ALL 3 squash sites (initial fallback + close-reopen recovery + idempotent re-arm). Fail-safe: `chore`
+   only when no feat/fix/breaking is found; over-detection → a harmless monotonic bump, never a starve. **Effect:**
+   future Tier-C squash drains carry the real type → semver-agent bumps → version delta → the version-driven promoter
+   carries the repo. **Verify (not yet confirmed):** watch the next drains on a Mode-B repo (e.g. strategy-service) —
+   squash subject now `feat:`/`fix:` + semver bumps + it promotes. **Caveat — does NOT retro-drain the ALREADY-frozen
+   backlog:** repos already squash-drained to staging (content==staging, version frozen) have no new LDR-ahead content →
+   no new drain → stay frozen until new content arrives OR a one-shot (Mode A); active repos self-heal on next drain.
+   Alternatives kept as hardening if insufficient: (a) keep LDR rebaseable so `--rebase` arms; (b) semver-agent resolves
+   the bump from the LDR commit _range_.
 
 2. **Mode A (quick unblock for the 5 already-bumped repos): re-sync + harden the manifest dispatch.** Reconcile
    `manifest.staging_versions`/`staging_commits` to the repos' actual `pyproject` versions (one-shot reconcile), and

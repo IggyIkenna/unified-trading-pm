@@ -99,3 +99,37 @@ if you want it rotated.
 - `alert_quality_overhaul_2026_06_18.md` (watchdog/alert quality — the home for the 2 orchestrator bugs)
 - `issues/staging_to_main_promotion_starvation_2026_06_19.md` + `cicd_promotion_pipeline_2026_06_18.md` (promotion lag)
 - `cicd_quality_gates_2026_06_18.md` + `org_migration_to_odumresearch_2026_06_07.md` (doc-drift / contradictions)
+
+## 2026-06-20 PM — ci-failures channel sweep (round 2)
+
+- [x] ✅ [CICD] **Build Smoke — 1st-order error (PROJECT_ID/GAR auth) FIXED** (PM@c59ea0b1c). The bare `docker build .`
+  (no `--build-arg PROJECT_ID`, no AR auth) failed at parse with `pkg.dev//unified-trading-library@… invalid reference
+  format` (empty `${PROJECT_ID}` → `//`) for every service Dockerfile. Added `google-github-actions/auth` (`GCP_SA_KEY`)
+  + `gcloud auth configure-docker` + `--build-arg PROJECT_ID=central-element-323112`. **Verified (LDR quick smoke run
+  27905420638): the `//` invalid-reference is GONE — base image resolves + the GAR pull works** (SA has AR-reader). Real
+  progress, keep it.
+- [ ] [CICD] P2. **Build Smoke — 2nd-order DESIGN gap (the smoke is still RED; this is the real blocker, needs a
+  decision).** With the base image resolving, the smoke now hits the actual problem: a standalone single-repo
+  `docker build .` **cannot build the fleet's images** because (a) **service images need sibling editable path-deps in
+  the build context** — `uv sync --frozen` → `Distribution not found at: file:///app/unified-api-contracts` (ml-service
+  + every service that `[tool.uv.sources]`-path-deps UAC/UTL/…); Cloud Build supplies the multi-repo context, a lone
+  `docker build .` does not; and (b) **Dockerfile-less repo types are still `docker build`ed** — `system-integration-tests`
+  + `unified-trading-api` → `open Dockerfile: no such file or directory`. **Decision (operator):** (i) give the smoke the
+  same multi-repo context as Cloud Build (checkout/COPY sibling deps, or reuse `create-code-tarballs`) — heaviest, truest;
+  (ii) scope the matrix to only repos with a self-contained root Dockerfile + skip the editable-dep `uv sync` (Dockerfile
+  lint/parse smoke only); or (iii) RETIRE the build-smoke and rely on Cloud Build (the real image gate with the correct
+  context) — the live pipeline already builds via `cloud-build-router.yml`, so a red weekly smoke is not blocking
+  deploys. **Recommend (iii) or (ii)** — (i) re-implements Cloud Build's context in GHA for marginal value. **Target:**
+  `unified-trading-pm/.github/workflows/build-smoke-all-repos.yml`. Provenance: run 27905420638.
+- **mtds#260 QG red** — self-resolved earlier (MERGED; green run superseded the failure). No action.
+- **Paper-trading re-route** — ALREADY WIRED in code: `e2e-testing/scripts/paper_trading/_engine_docker/deploy.sh`
+  sets `SLACK_WEBHOOK=agent-orchestrator-paper-trading-slack-webhook:latest` ("reroute 2026-06-20" — the SM secret from
+  this session), and `paper_engine.py` posts via `SLACK_WEBHOOK`. The producer I couldn't find last session is the
+  **e2e-testing paper-trading Cloud Run job** (`scripts/paper_trading/`, added with e2e-testing 0.8.0). Remaining: confirm
+  the running Cloud Run job was re-deployed with the new secret (run `deploy.sh`) so the next digest lands in
+  #paper-trading-alerts.
+- **strategy-service `staging-to-main` FAILED (repeating) + market-tick-data-service `update-repo-version` FAILED
+  (v0.21.0) + promotion-lag 22–30 pairs** — all symptoms of the **tracked staging→main promotion starvation**
+  (`issues/staging_to_main_promotion_starvation_2026_06_19.md` + `cicd_promotion_pipeline_2026_06_18.md` Bug#11, P0).
+  NOT new + NOT a quick patch — the P0 fix (promote non-bumping QG-green content + the manifest version-desync /
+  squash-fallback label-loss modes) is the genuinely-completable big item; recommend tackling as a focused unit.

@@ -1,10 +1,15 @@
-# Build Smoke — verify all repos build (image or wheel) in GHA
+# Build Smoke — verify all repos lint/build in GHA (NO full image build)
 #
-# Runs docker build for services/APIs/UIs, python -m build for libraries.
-# Parallel matrix: one job per repo. Wall clock ~slowest batch (~10–15 min).
+# Scope (operator decision 2026-06-21, option (ii)): libraries build a wheel; repos with a Dockerfile get a
+# Dockerfile LINT (`docker buildx build --check` — parses + validates the build graph incl. the FROM reference,
+# WITHOUT executing RUN/`uv sync` or pulling layers); repos with no Dockerfile + not a library are skipped.
+#   WHY NOT a full `docker build .`: the fleet's service images need sibling editable path-deps (UAC/UTL/…) in the
+#   build context, which Cloud Build supplies but a single-repo checkout does NOT (`uv sync --frozen` →
+#   "Distribution not found at file:///app/unified-api-contracts"). The REAL image gate is Cloud Build
+#   (`cloud-build-router.yml`) with the correct multi-repo context; this smoke is a cheap Dockerfile-correctness +
+#   wheel-buildability check (it would have caught the `${PROJECT_ID}`→`//` invalid-reference that reddened it).
 #
-# Trigger: workflow_dispatch (manual) or schedule (e.g. weekly).
-# Use for: smoke-testing that every repo builds without full Cloud Build.
+# Parallel matrix: one job per repo. Trigger: workflow_dispatch (manual) or weekly schedule.
 
 name: Build Smoke (All Repos)
 
@@ -83,7 +88,24 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: repo
 
-      - name: Build (image or wheel)
+      # Service/API/UI Dockerfiles `FROM asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library@<digest>`
+      # — a PRIVATE Artifact Registry base. A bare `docker build .` (no PROJECT_ID, no GAR auth) fails at parse with
+      # `pkg.dev//unified-trading-library@…  invalid reference format` (empty ${PROJECT_ID} → `//`), which is exactly
+      # what reddened this smoke after the digest-pin migration. Authenticate + pass PROJECT_ID so the base image
+      # resolves + pulls. Libraries build a wheel (no base image) → skip GCP auth for them.
+      - name: GCP auth (private base-image pull — non-library repos)
+        if: matrix.type != 'library'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure docker for Artifact Registry
+        if: matrix.type != 'library'
+        run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+
+      - name: Smoke (wheel for libs · Dockerfile-lint for images · skip otherwise)
+        env:
+          PROJECT_ID: central-element-323112
         run: |
           set -e
           cd repo
@@ -91,18 +113,21 @@ jobs:
           TYPE="${{ matrix.type }}"
 
           if [[ "$TYPE" == "library" ]]; then
-            echo "=== Building wheel for $REPO ==="
+            echo "=== wheel build: $REPO ==="
             pip install uv build -q
             uv run python -m build --wheel --outdir dist/ 2>/dev/null || python -m build --wheel --outdir dist/
             ls -la dist/*.whl
-          elif [[ "$TYPE" == "ui" ]]; then
-            echo "=== Building Docker image for UI $REPO ==="
-            docker build -t "$REPO:smoke" .
+            echo "✓ $REPO wheel built"
+          elif [[ -f Dockerfile ]]; then
+            # Dockerfile LINT only (BuildKit checks): validates the build graph incl. FROM reference + lint rules,
+            # WITHOUT executing RUN/`uv sync` or pulling layers — so it needs neither the multi-repo context nor a
+            # base-image pull. Pass PROJECT_ID so the digest-pinned base reference resolves (empty → `//` invalid ref).
+            echo "=== Dockerfile lint (buildx --check, no full build): $REPO ==="
+            docker buildx build --check --build-arg PROJECT_ID="$PROJECT_ID" .
+            echo "✓ $REPO Dockerfile lint passed"
           else
-            echo "=== Building Docker image for $REPO ==="
-            docker build -t "$REPO:smoke" .
+            echo "=== $REPO ($TYPE): no Dockerfile + not a library — nothing to smoke, skipping ==="
           fi
-          echo "✓ $REPO built successfully"
 
   notify-failure:
     name: Slack — Build Smoke Failure
