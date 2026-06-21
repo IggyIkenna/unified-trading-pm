@@ -380,10 +380,16 @@ are identified (2) and the ledger exists (3).
       `VENUE:INSTRUMENT_TYPE:SYMBOL` must equal the pricing-ledger key; today `LIDO:ETH` collides on `asset=ETH` with
       the spot leg → grabs the wrong $3000 mark). Unrealized must be ≈0 per leg for the flat delta-neutral run. **IN
       FLIGHT.** Repos: unified-trading-library (materialize join) + client-reporting-api (read_marks key).
-- [ ] [STRATEGY] P2. Real cross-venue transfers / money-movements: emit Treasury/TransferLedger rows for the
-      carry_staked_basis capital flow (USDC deposit → Uniswap swap → Lido stake → Deribit margin posting), single
-      `client_id` (funds-isolation), so the Wallet-transfers panel shows real movements not "0 movements". Repos:
-      strategy-service (emit) + unified-trading-library (transfer-row SSOT) + client-reporting-api (read).
+- [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real cross-venue transfers / money-movements: emit Treasury/TransferLedger
+      rows for the carry_staked_basis capital flow (USDC deposit → spot swap → stake → perp margin posting), single
+      `client_id` (funds-isolation). UTL transfer-row SSOT: `unified-trading-library@0c712f99`
+      (`materialize.transfer_ledger_row` + `run_writer.write_run_transfer_ledger`/`transfer_ledger_jsonl`,
+      `ledger_type=transfer`, 4 new tests). Emit: `strategy-service@c1083310`
+      (`engine/backtest/paper_run_transfers.py` wired into `run_paper()`, 8 tests). VERIFIED on GCS — run
+      `paper-20260621105146-e7545ddb`: `ledger_type=transfer/{run}.jsonl` has **8 rows = 4 legs × 2 strategies**
+      (DEPOSIT@UNISWAP_V3/JUPITER, TRANSFER spot→staking, STAKE@LIDO/JITO, COLLATERAL_POSTED@DERIBIT/DRIFT), every row
+      single `client_id` + `counterparty_client_id=None`. **client-reporting-api (read) is still open** (the API agent's
+      repo: `/transfers` route currently scans only `ledger_type=instruction` — point it at `ledger_type=transfer`).
 - [ ] [STRATEGY] P2. **DEFERRED-FINDING (2026-06-21, surfaced by P10.3 net-views work, client-reporting-api):** the
       carry_staked_basis ledger emits the staked leg as a SEPARATE long position from the spot-acquisition leg
       (`UNISWAP_V3:DEX_POOL:ETH` 233 ETH long AND `LIDO:STAKING:ETH` 233 ETH long), so per-coin USD delta double-counts
@@ -393,10 +399,16 @@ are identified (2) and the ledger exists (3).
       that same ETH as stETH, not a second long), or net the spot+LST legs in the position fold. Until then the
       delta-neutral books will not read ≈0 per coin even though the hedge is correctly sized. Repos: strategy-service
       (emit) + unified-trading-library (position fold). Provenance: live run paper-20260621100605-b33e4bf4.
-- [ ] [STRATEGY] P2. Real multi-dimensional P&L attribution: by **venue** (Uniswap/Lido/Deribit), by **layer**
-      (strategy/execution), by **factor** (carry / basis / funding / price / fees), per **strategy_id** — replace the
-      flat `$87` (`by venue == by layer` placeholder). Producer emits the richer `PnLAttributionRow` dimensions; API
-      exposes the breakdown; UI renders a real waterfall. Repos: strategy-service + client-reporting-api + UI.
+- [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real multi-dimensional P&L attribution: by **venue**, by **layer**, by
+      **factor**, per **strategy_id** — replaces the flat `by venue == by layer` placeholder.
+      `strategy-service@c1083310` (`engine/backtest/paper_run_attribution.py` now emits CARRY+BASIS+FEES @ the staking
+      venue and FUNDING @ the perp venue, all at `PnLLayer.STRATEGY`; EXECUTION layer = 0 in paper (benchmark fills);
+      FEES is an HONEST explicit 0; price/DELTA omitted honestly — no spot-price column). VERIFIED on GCS — run
+      `paper-20260621105146-e7545ddb`: 14 attribution shards, **56 rows = 7 days × 4 factors × 2 strategies**, factors
+      {CARRY,BASIS,FUNDING,FEES}, **4 distinct venues {LIDO,JITO,DERIBIT,DRIFT}** so `by venue` ≠ `by layer` (a real
+      waterfall), 2 distinct `strategy_id`s, partitioned per strategy_id+client_id+date (per-venue/per-strategy/per-day
+      queryable). batch rerun ε=0 (42 fills, 0 deviations) with the new ledgers. **API breakdown + UI waterfall remain
+      open** (client-reporting-api + unified-trading-system-ui agents — the producer dims they read now exist on GCS).
 - [x] [STRATEGY] ✅ P2. Multi-strategy paper run — strategy-service@94ca0b6c (specs 0+6: LIDO/ETH + JITO/SOL; run paper-20260621100605-b33e4bf4 → 2 strategy_ids, 42 fills, batch re-derives both ε=0). (≥2 strategies, e.g. carry_staked_basis + arbitrage_price_dispersion)
       so the per-strategy breakdown is meaningful, not a single flat strategy. Repo: strategy-service
       (paper_run_handler).
