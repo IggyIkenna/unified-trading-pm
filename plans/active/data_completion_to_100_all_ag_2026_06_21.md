@@ -299,6 +299,24 @@ in Secret Manager). FIX: resolve via the canonical `get_secret_client(project_id
 basedpyright clean on the change (the 3 file-level Any errors are pre-existing JSON-parse lines, not the edit). The VM
 pip-installs MTDS fresh at boot → relaunched to pick up `670be2f`.
 
+**THIRD (TERMINAL) BLOCKER — The Odds API credits EXHAUSTED → `BLOCKED-CREDENTIALS` (operator top-up, 2026-06-21):** with
+the key-fix live, VM `...190258` now SENDS the key — the API authenticates the request but returns **HTTP 401
+`OUT_OF_USAGE_CREDITS`**. Verified directly: the `odds-api-key` secret is a VALID key (the free `/v4/sports/` list
+endpoint returns 200 with EPL/Serie-A active), but the credit-costing `/v4/sports/{sport}/odds` endpoint returns
+`{"error_code":"OUT_OF_USAGE_CREDITS"}` with headers `x-requests-used: 5000060 / x-requests-remaining: -60`. The 7
+odds-BACKFILL VMs (2020-2026 historical odds) drained the entire quota on the SAME `odds-api-key` secret. **The full
+code+infra live path is now PROVEN end-to-end** (enum ✓ + key-resolution ✓ + DEPLOYMENT_STARTED + per-VM manifest shards
+written + graceful 401 honest-absence, 0 crashes) — the ONLY remaining gap is credits. The connector polls every 60s and
+will emit `live_odds_api` rows with NO further code change the moment credits return. VM `...190258` LEFT RUNNING so it
+auto-produces on top-up.
+
+> **CREDENTIAL APPROVAL REQUEST — odds-api-live-credits (operator action 2026-06-21):** Vendor: The Odds API
+> (https://the-odds-api.com/#get-access). What I need: top up / upgrade the `odds-api-key` Secret-Manager key's monthly
+> credit quota (current usage 5,000,060 — quota fully consumed by the 2020-2026 historical backfill on the SAME key). A
+> SEPARATE live-only key (its own quota) would prevent the backfill from re-draining live; otherwise live + backfill must
+> share. Unblocks: the FINAL `≥1 live_odds_api` sports row (Live==Batch sports gate). Without it: VM `...190258` stays up
+> + honest-absences (0 rows) until credits return — no further code work needed.
+
 **3 MIGRATION SUB-AGENTS in flight (opus), IS ships BLOCKED on a LIVE foreign UTL WIP** (`manifest_writer/_writer_captured.py`,
 peer actively editing — do NOT stomp; their tracked waiters fire when UTL goes clean):
 - **A** (agentId in transcript): canonicalise legacy `batch_instruments_service` sports rows → `batch_<source>` + fill
