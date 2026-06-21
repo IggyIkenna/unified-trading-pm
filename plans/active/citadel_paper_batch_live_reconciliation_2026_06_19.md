@@ -676,8 +676,11 @@ are identified (2) and the ledger exists (3).
       +$659k; '23 +1.4 '26 +2.3; corr to BTC buy&hold +0.00 full / −0.85 in the selloff = genuinely shorts the
       downtrend, not closet-long; corr to XS book −0.11). Implement as a production strategy archetype/leg in
       **strategy-service** (TS-momentum signal from the canonical OHLCV the engine already reads; batch=live one path;
-      ε=0 batch-rerun proof; realistic fills via execution-service GroupC). Modest sizing (~15% sleeve, tunable).
-      Composes with the existing short leg (P-respec) — both are the directional/beta sleeves. Repo: strategy-service.
+      ε=0 batch-rerun proof; realistic fills via execution-service GroupC). Sizing = **co-equal sleeve** (`W["trend"]`
+      ≈0.28, IS-validated robustness pick; on the proper-execution base it flattens 2023 −0.6→+0.1 + 2026 −1.1→+0.1,
+      preserves full Sharpe +2.28→+2.26, trims maxDD −6.3→−5.0%). NOTE: the trend leg **subsumes** the old de-risk
+      overlay + 12% short (does their 2026 job + fixes 2023 + keeps the Sharpe they cost) — make those light DD-insurance,
+      NOT core sleeves; stacking all three over-hedges (−0.18 full Sharpe). Repo: strategy-service.
 - [ ] [CODE] P2.11.15. **cs leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`** — the cross-sectional ML book
       (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
       EWMA denoise (shipped) is the 80% cheap fix; the proper fix is retraining the pooled LightGBM on a longer-horizon
@@ -690,6 +693,25 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-21 (autonomous) — BTC-trend VALIDATED on the proper-execution base; "best of both" resolved → trend
+  SUBSUMES the old de-risk/short (don't stack — it over-hedges).** Correction to the prior entry's plot: the first
+  `book_trend_strengthened` plot used a STALE cs cache (`_cs_daily_book_1D`, 2026 −4.0) + vnorm 10%-vol leverage, which
+  made the BASE read −3.3/OOS+0.04 (operator flagged "pnl went to crap"). That was a plotting-cache artifact — NOT the
+  trend leg and NOT execution cost (these vnorm books are pre-cost); the trend leg is green-≥-grey in EVERY run. Rebuilt
+  on the EXACT production base (cs via engine `legnet` net through the real fill model = the +2.28 book): **base +2.28 /
+  2023 −0.6 / 2026 −1.1 / maxDD −6.3%** → **+ trend (co-equal w≈1.25) +2.26 / 2023 +0.1 / 2026 +0.1 / maxDD −5.0%** —
+  both flat-spot years flattened, full Sharpe preserved, DD improved, only a tiny 2024/25 give-back. **CRITICAL finding:
+  stacking ALL three 2026-mitigations (trend + de-risk-overlay + 12% short = +2.08 / 2026 +0.5 / maxDD −4.4%)
+  OVER-HEDGES** — marginal bad-year gain bought at −0.18 full / −0.26 OOS Sharpe (the de-risk haircut + short bite into
+  the great 2024/25). The trend leg SUBSUMES the de-risk+short (does their 2026 job + fixes 2023 which they could not +
+  keeps the Sharpe they cost) → the old de-risk overlay + 12% short are now **largely redundant**, keep only as thin DD
+  insurance, NOT core sleeves. **Full deployable book = directional(base+trend) + basis spine: +8.72 full, every year
+  green (2023 +8.8 · 2024 +12.5 · 2025 +7.4 · 2026 +3.0), maxDD −1.7%.** Recommend ship **B+basis** (drop de-risk/short
+  as core). Engine `W["trend"]` 0.15→0.28 (co-equal sleeve, the IS-validated robustness pick; sweep
+  `_trend_weight_sweep.py` showed full-Sharpe peaks at co-equal, everything-else monotone-improves with more trend).
+  SSOT scripts: `_best_of_both.py` / `_trend_book_plot2.py` / `_trend_weight_sweep.py`; plots `book_best_of_both.png` /
+  `book_directional_plus_trend_correct.png`.
 
 - **2026-06-21 (autonomous) — WHY THE DIRECTIONAL BOOK MAKES ~0 IN 2023 & 2026 + THE FIX (BTC-trend / CTA leg).**
   Operator: "making no directional money 2023 and 2026 still feels weird, be critical, no lookahead, strengthen."

@@ -32,12 +32,12 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Phase 2 — historical download (trades) + funding
 
-- [ ] [SCRIPT] P1. market-tick-data-service — adapters to download Kalshi + Polymarket perp **trades** (historical window) + **funding rates** into the canonical perp schema (mirror the CeFi perp-funding handler `perp_funding_handler.py`). Honest-absence pre-launch (record_empty EXPECTED_PRE_VENUE_LAUNCH before the venue launch date). Repo: market-tick-data-service.
+- [x] ✅ [SCRIPT] P1. market-tick-data-service — perp trades+funding adapters SHIPPED (mtds@88c2f0c + UAC perp-source registration on LDR): `_perp_funding_kalshi_polymarket.py` stage (Kalshi `GET /markets?category=Crypto` → `/markets/{ticker}/funding_rates`, day-windowed, 429/5xx retry, shard-isolated) + `perp_funding_handler.py` wired (`_resolve_pipeline_mode_for_protocol`→`pipeline_mode_for_source`, pre-launch `record_empty(EXPECTED_PRE_VENUE_LAUNCH)` kalshi_perp<2026-05-29 / polymarket_perp<2026-04-21, DEFAULT_PROTOCOLS+chain_map extended); 16 unit tests; QG green (5060 pass, 80.77%). UAC: `PipelineMode.BATCH/LIVE/REPLAY_KALSHI_PERP` + `BATCH/LIVE_POLYMARKET_PERP` + `SOURCE_PRIORITY[(cefi,trades)]+=kalshi_perp,polymarket_perp` (committed LDR). **Kalshi-perp live-ready; Polymarket-perp scaffold BLOCKED-UPSTREAM** (endpoint NXDOMAIN — see enumerator sub-item + slot_0 ping). — 2026-06-21
 
 ## Phase 3 — LIVE CLOB depth + quotes (the arb-backtest data)
 
 - [ ] [SCRIPT] P1. market-tick-data-service — LIVE websocket connectors recording **CLOB quotes (BBO) + order-book depth** for Kalshi + Polymarket perps (and, where available, their prediction Q&A markets too — historical=trades-only, live=full book). Dump to the canonical live tick schema (book_snapshot/depth), `pipeline_mode=live_<source>`. This is the proper arb-backtest dataset (depth → slippage calibration). Mirror the existing live ws connectors (`live/connectors/`). Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. deployment-service — live-recording launcher + forward-poll for the perp CLOB streams (mirror `launch-prediction-forward-poll.sh`); ensure live=batch schema parity. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. deployment-service — perp CLOB live-recording launcher SHIPPED (deployment-service@86f517d): `scripts/vm/launch-perp-clob-live.sh` — KALSHI-PERP → e2-standard-8 VM (`VM_TASK=mtds-live`/`VM_OPERATION=live_websocket`/`MANIFEST_PER_VM_SHARDS=true`, shard `cefi:KALSHI-PERP:book_snapshot`→slug `cefi-kalshi-perp-book-snapshot`, prefix covered by `mtds-live-cefi-` in vm_zombie_watchdog LONG_LIVED_LIVE), singleton-locked per shard; POLYMARKET-PERP → clean early-exit BLOCKED-UPSTREAM (no doomed VM); live=batch parity (same UAC `book_snapshot`, only pipeline_mode differs live_kalshi_perp vs batch_kalshi_perp); lifecycle marker (Epic predictions_master/permanent). QG green. — 2026-06-21
 
 ## Phase 4 — arb wiring
 
@@ -354,3 +354,6 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 - instruments-service@fdc9bad: `cefi/kalshi_perp.py` + `cefi/polymarket_perp.py` adapters + factory/router wiring + 38 unit tests, QG green (cov 88.29%). Sub-agent build.
 - **Kalshi-perp**: public read endpoint verified earlier in Phase-0; adapter live-ready.
 - **Polymarket-perp**: probed the documented beta host `perps-api.polymarket.com` → **DNS NXDOMAIN** (control `gamma-api.polymarket.com`→200, `clob`/`api.polymarket.com` resolve), and perp paths under resolving hosts all 404. Real upstream-endpoint gap (NOT credentials — read is public per Phase-0). Scaffold + mocked tests shipped; finalize when the live beta endpoint is confirmed. Operator ask logged in slot_0 ping.
+
+### 2026-06-21 21:10 — MTDS perp trades+funding shipped (line 34)
+- mtds@88c2f0c (dirty-deps carve-out — UTL had orphan WIP at pre-flight; now clean) + UAC perp-source registration (PipelineMode KALSHI_PERP/POLYMARKET_PERP members + SOURCE_PRIORITY cefi/trades) committed on LDR. Verified: `_resolve_pipeline_mode_for_protocol` derives via canonical `pipeline_mode_for_source` (NOT a hand-threaded map); honest pre-launch absence; mirrors the existing hyperliquid/aster perp-funding handler. Kalshi-perp live; Polymarket-perp scaffold (BLOCKED-UPSTREAM, endpoint DNS-dead).

@@ -282,6 +282,43 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 22:55 — skip-fresh verified all sources; odds re-fetch FIXED; 2 follow-ups
+
+**Operator Q "are we skipping already-done data?":** YES (confirmed via logs). Mechanism = writer reads canonical v9
+manifest + `short-circuit: skipping orchestrator for date=X` (weather `OPEN_METEO short-circuit`, sfi
+`SOCCER_FOOTBALL_INFO short-circuit`, odds `SKIP date=...: all venues fresh`). **EXCEPTION FIXED**: odds shards were
+launched `--force` (bypass single-VM guard) which ALSO forces reprocess → re-fetching the done 13%. Added
+`--allow-parallel` to the launcher (decouples guard-bypass from VM_FORCE), relaunched all 7 odds shards skip-fresh.
+Weather has occasional Open-Meteo `400 Bad Request` per-location warnings (shard-isolated, non-fatal, recorded as
+failed cells) — minor, backfill continues.
+
+- [ ] [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
+  odds-backfill-vm.sh; backed up /tmp/odds_launcher_fixed.sh) once the deployment-service slot clone is clean — BLOCKED
+  by quickmerge-autostash residue (staged foreign launcher mods + dangling autostash stash@{0,1} + phantom-UU gas-fees
+  with no conflict markers; HEAD==origin/LDR). Cleanup = recover the 2 autostashes, reset index to HEAD, re-apply the
+  one-file fix. Do NOT blind-reset (foreign WIP in stashes). Repo: deployment-service.
+- [ ] [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue: `*_previous_day1`
+  archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo: instruments-service.
+
+### 2026-06-21 22:40 — DISPARATE-SOURCE CONCURRENCY (operator insight): all fixture-driven sources fired in parallel
+
+With fixtures 100%, every fixture-driven enrichment source runs CONCURRENTLY on its OWN rate limit — sidesteps the
+API-Football 300k/day cap for everything except API-Football itself. Launched the full fleet (14 sports VMs):
+- **API-Football** (fixture stats/events/lineups/players): sports-enrich-2019-2022 + 2023-2026 (300k/day cap)
+- **the-odds-api** (odds): mtds-backfill-odds-{2020..2026} (15M quota, no daily cap)
+- **Open-Meteo** (weather, was 7%): weather-backfill-* (free, keyless)
+- **Transfermarkt** (player_values 9%, tm_leagues 0%): tm-backfill-* (keyless scraper)
+- **FootyStats** (0%): fs-backfill-* (footystats-api-key)
+- **SFI/soccerfootball-info** (sfi_progressive 12%, sfi_leagues 0%): sfi-backfill-* + features-sfi-progressive-*
+  (soccer-football-info-api-key)
+- **Live** odds stream: mtds-live-sports-* (op=websocket-streaming)
+
+Each source = own adapter (open_meteo.py / transfermarkt.py / soccerfootball_info.py / footystats.py / api_football.py)
++ own API + own rate limit → true parallelism, no cross-source contention. This is the real throughput unlock: the
+API-Football daily cap only gates ITS 2 VMs; the other ~12 VMs fill weather/transfermarkt/SFI/footystats/odds with no
+daily ceiling. ONE full-fleet monitor (b1efcorlm) does a T+10 per-source health check (catches 401/scrape-block) then
+watches all to completion. Operator lever for the API-Football slice remains: bump to 1.5M/day.
+
 ### 2026-06-21 ~22:00 — tradfi `live_databento` source-stamp FIXED + 2 manifest cleanups actioned
 
 **`live_massive` -> `live_databento` (root cause FIXED, UAC@1205ae44).** The relaunched live producer
@@ -776,13 +813,15 @@ fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + 
 - [x] ✅ [DATA-OPERATOR] P0. **Databento Real-Time/Live subscription CONFIRMED** (operator 2026-06-21: the usage-based
       plan includes Live data + 1yr L1 / 1mo L2-L3 history — the live WS is NOT subscription-blocked). The producer
       connects + authenticates against `wss://live.databento.com`.
-- [ ] [DATA] P1. **Deploy the `live_databento` stamp fix (UAC@1205ae44) to the running live producer** — the live VM
+- [x] ✅ [DATA] P1. **Deploy the `live_databento` stamp fix (UAC@1205ae44) to the running live producer** — the live VM
       bakes UAC from a GCS **tarball** (working-tree tar), so `mtds-live-tradfi-cme-trades-*` keeps `live_massive` until
       a `create-code-tarballs.sh` rebuild **from a clean LDR checkout** (NOT this peer-WIP dev workspace) + relaunch.
       The daily forward-poll cron relaunches but REUSES the existing tarball — a tarball rebuild is the gating step.
       Repo: deployment-service. Provenance: this Progress Log. NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 +
       daily-cron host) IS done (`batch_databento`); `live_databento` websocket is beyond-dispatch peer-domain work, now
       fully diagnosed for them.
+      — slot-4@vm-planning | tarball rebuilt from UAC@04ca4647 (incl 1205ae44 fix) | old VM deleted | new VM
+      `mtds-live-tradfi-cme-trades-20260621-223242` RUNNING | T+5min manifest: pipeline_mode=live_databento ✓
 
 ### 2026-06-21 — DEFI lane: CATALOG GATE OPEN — capturing real data; full fan-out relaunched
 
