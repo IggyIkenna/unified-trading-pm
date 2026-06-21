@@ -1810,8 +1810,14 @@
     "locked_since": "2026-06-21T16:34:46.114616Z",
     "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.30.0 (pre-1.0.0)",
     "lock_version": "0.30.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "system-integration-tests",
+      "fund-administration-service",
+      "execution-service",
+      "e2e-testing",
+      "unified-api-contracts"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "unified-api-contracts"
