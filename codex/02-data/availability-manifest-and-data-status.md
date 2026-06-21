@@ -1751,3 +1751,36 @@ from `unified-trading-pm/scripts/quality_gates/`) to statically enforce that eve
 inside the UTL source tree carries a `source=` kwarg. Callsites that forward `source` via `**kwargs` carry the
 `# QG-allow: tradfi-source-not-applicable` inline marker. The baseline YAML (`tradfi_source_explicit_baseline.yaml`) is
 empty — all UTL source callsites are already clean.
+
+---
+
+## Coverage baseline snapshot — 2026-06-21
+
+Measured from the consolidated v9 `_index` (production bucket `central-element-323112`) with the fleet DRAINED (only
+gas-fees + monitoring running). Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` § "Measured
+snapshot 2026-06-21".
+
+| AG     | MTDS rows | MTDS v9% | MTDS honest-cov% | MTDS capture (cap/empty/failed/unattempted) | IS honest-cov%          | LIVE rows |
+| ------ | --------- | -------- | ---------------- | ------------------------------------------- | ----------------------- | --------- |
+| cefi   | 3.87M     | 96.6%    | **33.9%**        | 1.31M / 1.28M / **802k failed** / 482k      | 99.9%                   | **0**     |
+| defi   | 6.17M     | 100%     | **6.0%**         | 369k / 3.48M / 6k / 2.31M                  | 100%                    | **0**     |
+| tradfi | 1.94M     | 99.7%    | **5.3%**         | 103k / 1.01M / 10k / 818k                  | 96% (v9 only **46.6%**) | **0**     |
+| sports | 920k      | 100%     | **37.7%**        | 346k / 574k / 164 / 0                      | **15.9%**               | **0**     |
+| pred   | 42k       | 96.5%    | **40.5%**        | 17k / 24.5k / 50 / 338                     | 100%                    | **0**     |
+
+**Three structural findings as of 2026-06-21:**
+
+1. **LIVE = 0 rows on every AG** (MTDS + IS) — the live/forward pipeline had never been populated; all rows are
+   batch-only. The first operational live run (cefi HYPERLIQUID trades) was initiated as part of the
+   `data_completion_to_100_all_ag_2026_06_21.md` plan.
+2. **Low defi/tradfi honest-cov% reflects honest absence, not data loss** — the `expected_unattempted` and
+   `empty_confirmed` cells dominate (writer-seeded). Converting them to `captured` requires running the batch
+   backfill fleet.
+3. **cefi carries 802k `attempted_failed`** — of which 775.9k (96.7%) are Tardis-gated historical cells
+   (BLOCKED-CREDENTIALS, billing-gated); the remaining ~48.5k free-venue (Hyperliquid+Aster) failed cells have a
+   dedicated historical re-fetch launcher (`launch-cefi-hl-aster-historical-backfill.sh`,
+   deployment-service@8a027c0).
+
+**Target**: per-AG MTDS honest-cov% → ~100% (modulo genuine `empty_confirmed` honest absence) AND ≥1
+`live_<source>` row per AG AND IS sports/tradfi fully v9. Excluded from 100%: cefi batch-Tardis historical
+(billing).
