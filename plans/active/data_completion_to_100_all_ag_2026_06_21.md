@@ -658,11 +658,12 @@ fresh)**. Reader↔writer bucket mismatch (same env-less-vs-`-prd-` class as the
 (applied):** `gcs_copy_object` synced `…-prd-…/_index/availability_index.parquet` → the env-less bucket (fresh 18:32;
 valid 24h via staleness=86400; MTDS writes market-data not instruments so env-less stays fresh through the run).
 **Full 60-VM fan-out relaunched** (agent ab14773159be4e222) — gate open → real capture. execution-defi consolidator next.
-- [ ] [DATA] P1. **DEFI durable bucket-align fix (so env-less can't re-stale):** the instruments preflight reader
+- [x] ✅ [DATA] P1. **DEFI durable bucket-align fix (so env-less can't re-stale):** the instruments preflight reader
   `build_bucket("instruments","defi")` resolves env-LESS legacy; canonical writers use env-SHORT `-prd-`. Align: make the
   reader resolve canonical `-prd-` (verify per-AG it doesn't break cefi/tradfi/sports — they may be env-less-aligned), OR
   point the IS consolidator to also refresh env-less. Until then a periodic env-short→env-less index sync keeps defi
   capture alive. Repo: unified-trading-library (build_bucket) / instruments-service. Provenance: this Progress Log.
+  — market-tick-data-service@72f7c14 | replaced `build_bucket("instruments", project_id=project_id, asset_group="defi")` with `get_bucket_name("instruments", "defi")` in `_defi_manifest.py`; yaml delegation now fires → env-SHORT `-prd-` bucket resolved
 - [x] ✅ [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
   defi MTDS launchers — working locally, used by the live fan-out; persist via quickmerge). Repo: deployment-service.
   — deployment-service@e74517c
