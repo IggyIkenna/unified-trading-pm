@@ -1384,3 +1384,12 @@ genuinely machine-only payload is the paper-trading POC research corpus + its da
 - **Net**: the deployable code + the model + the plots + the research code are fully off-machine NOW; the 6.7G data
   cache finishes uploading in the background. Machine-independence achieved — `RECOVERY.md` is the single restore entry
   point.
+- **DONE-confirmed (final state)**: 6.7G `_cache` upload COMPLETE — GCS `research_archive/` counts now match local
+  exactly (cache 1880=1880 / code 234=234 / plots 262=262 / model 4=4; total **7.45 GB**) + the 127M handoff tarball +
+  15 export/CQ/dune research CSVs. **e2e deployable verified current**: all engine files were committed to e2e
+  (2026-06-20 19:19 / `237d4d8d`) AFTER their root mtimes — the 7 apparent root↔e2e "drifts" are gate-clean ruff-autofix
+  equivalences (`dict.fromkeys`↔comprehension, `["BTC"]+sorted`↔`*sorted`, redundant `int(round)`) + lifecycle headers,
+  NOT missing logic (the exact dense deployed source is also independently in GCS `research_archive/code/`). Final
+  `RECOVERY.md` manifest = `e2e-testing@061e0f78` (the in-repo research-corpus tarball was correctly NOT committed — the
+  e2e repo gitignores binary archives by design, so GCS is the corpus home + the repo holds maintained source + the
+  manifest). Nothing paper-trading-specific lives only on this laptop.
