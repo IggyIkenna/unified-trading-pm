@@ -655,7 +655,7 @@ are identified (2) and the ledger exists (3).
     2026-05-16..22 + rolling, honest-absence where a venue genuinely lacks history. Repo: features-service (cefi
     perp_funding calculator) + mtds (if derivative_ticker gaps surface).
 
-- [ ] [DATA] P11.13. **Source DEFI_LP_VAULT share-price + the fees_usd=0 pool fees with credentials** (operator
+- [ ] [DATA] P2.11.13. **Source DEFI_LP_VAULT share-price + the fees_usd=0 pool fees with credentials** (operator
       2026-06-21: "fix that, we can get data, we got creds"). Two honest-skip gaps from P11.11/dex tranche are
       sourceable, not walls: (a) DEFI_LP_VAULT (ERC-4626 yearn/etc) needs a vault-share-price series — read
       `convertToAssets(1e18)` / `pricePerShare()` historically via the Alchemy/Helius archive RPC (creds
