@@ -27,7 +27,8 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 ## Phase 1 — universe + venue mapping (crypto-perp canonical)
 
 - [x] [UAC] P1. Add KALSHI_PERP + POLYMARKET_PERP venues to the crypto-perp universe + `VENUES_BY_ASSET_GROUP`, with launch dates (Kalshi ~2026-05-29, Polymarket ~2026-04-21) in `venue_launch_dates.py` + `coverage_starts.py`. Map their BTC/ETH/alt perps to the SHARED canonical perp instrument (mirror the CeFi perp instrument universe). Repo: unified-api-contracts. ✅ — unified-api-contracts@(shipped 2026-06-20): venue_constants.py, venue_launch_dates.py, coverage_starts.py, market_data_categories.py, venue_mapping.py, test_get_perp_venues.py
-- [ ] [SCRIPT] P1. instruments-service — perp-contract enumerator for both venues (list contracts → write to the instruments store under the crypto-perp asset_group), mirroring the existing perp/cefi instrument enumeration. Repo: instruments-service.
+- [x] ✅ [SCRIPT] P1. instruments-service — perp-contract enumerator for both venues SHIPPED (instruments-service@fdc9bad): `KalshiPerpReferenceDataAdapter` (public `GET /markets?status=open&category=Crypto`, cursor-paginated, `InstrumentType.PERPETUAL`, 16 unit tests) + `PolymarketPerpReferenceDataAdapter` scaffold (22 unit tests); wired into `factory.py`/`router.py`; QG green (cov 88.29%). Kalshi live endpoint verified. **Polymarket-perp live endpoint BLOCKED-UPSTREAM** — see next item.
+- [ ] [SCRIPT] P1. **Polymarket-perp enumerator — BLOCKED-UPSTREAM-OUTAGE**: the Phase-0-documented beta host `perps-api.polymarket.com` does NOT resolve (verified 2026-06-21; control hosts gamma/clob/api.polymarket.com resolve + 200), and no perp path exists under the resolving hosts (`api.polymarket.com/perps/markets`, `/markets`, `clob/perps/markets`, `gamma/perpetuals` all 404). The scaffold ships with best-effort Phase-0 field names + mocked unit tests; finalize the adapter (confirm field names/pagination) + correct the docstring blocker label (currently BLOCKED-CREDENTIALS → should be the live-endpoint gap) ONCE the operator confirms the current live Polymarket perp beta endpoint. Ping: ikenna_orchestrator/pings/slot_0.md. Repo: instruments-service.
 
 ## Phase 2 — historical download (trades) + funding
 
@@ -348,3 +349,8 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 ### 2026-06-21 20:52 — P1 perp-venue test items GREEN
 - `instruments-service tests/unit/scripts/test_enumerate_expected_universe.py::test_cefi_yields_no_rows_for_post_all_venue_launches` → **1 passed** (the perp-venue-add already updated the post-all-launch fixture).
 - `unified-api-contracts tests/unit/test_get_perp_venues.py` → **6 passed** (KALSHI-PERP/POLYMARKET-PERP asserted; venue_constants.py registers both, asset_group=cefi, PERP_TRADE capability). Both verified green, no code change needed.
+
+### 2026-06-21 21:00 — perp enumerator shipped (Kalshi live; Polymarket endpoint BLOCKED-UPSTREAM)
+- instruments-service@fdc9bad: `cefi/kalshi_perp.py` + `cefi/polymarket_perp.py` adapters + factory/router wiring + 38 unit tests, QG green (cov 88.29%). Sub-agent build.
+- **Kalshi-perp**: public read endpoint verified earlier in Phase-0; adapter live-ready.
+- **Polymarket-perp**: probed the documented beta host `perps-api.polymarket.com` → **DNS NXDOMAIN** (control `gamma-api.polymarket.com`→200, `clob`/`api.polymarket.com` resolve), and perp paths under resolving hosts all 404. Real upstream-endpoint gap (NOT credentials — read is public per Phase-0). Scaffold + mocked tests shipped; finalize when the live beta endpoint is confirmed. Operator ask logged in slot_0 ping.
