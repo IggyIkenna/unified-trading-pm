@@ -79,3 +79,40 @@ buckets/paths to fit code" regression this SSOT prevents.
 - `plans/active/solana_defi_legacy_migration_2026_05_27.md` — dedicated-bucket directive; uses `dex_pool_state`.
 - `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` — owns the legacy DELETE (RD5), gated
   per-AG on C-GREEN.
+
+## DeFi data-pipeline DURABLE gotchas (codified 2026-06-21 — root causes that kept defi MTDS stuck at 6% honest-cov)
+
+These are reader/writer + seeding contracts an agent MUST honour; each was a multi-hour root-cause hunt. Read before
+touching defi MTDS capture / honest-cov.
+
+1. **Instruments preflight reader ↔ writer bucket MISMATCH (env-less vs `-prd-`).** The MTDS DeFi capture preflight
+   `assert_defi_catalog_fresh` → `run_preflight(DEFI_COLLECT_DAILY)` resolves its bucket via
+   `_defi_manifest.build_bucket("instruments", asset_group="defi")` → **`instruments-store-defi-{pid}` (env-LESS legacy)**.
+   But every WRITER (IS instruments backfill, `build_instrument_catalogue` roll-up, the instruments consolidator) writes
+   **`instruments-store-defi-prd-{pid}` (env-SHORT canonical)**. So the reader reads a stale/empty legacy index → catalog
+   preflight `age=None` → handlers route honest-absence → **zero capture**. FIX (durable): align the reader to canonical
+   `-prd-` (or write both). Stop-gap: `gcs_copy_object` the fresh `-prd-` `_index/availability_index.parquet` → the
+   env-less bucket (valid ≤24h per the staleness window). Same env-less-vs-`-prd-` class as the market-data bucket bug.
+2. **Consolidated-index staleness default (120s) is FAR too short for a DAILY reference catalog.** `read_availability_index`
+   (`manifest_writer/_read_index.py`) checks the consolidated blob's GCS `updated` vs `MANIFEST_CONSOLIDATED_STALENESS_SEC`
+   (default **120s**); if older AND per-VM shards exist it FALLS BACK to merging per-VM shards. For the daily instrument
+   catalog the consolidated blob is minutes-to-hours old in normal operation → it ALWAYS fell back to per-VM shards, which
+   carry **pre-canonicalisation columns (blank `data_type`)** → the `data_type='instrument-catalog'` filter matched 0 rows
+   → `age=None`. FIX: defi MTDS launchers pass **`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`** (24h — a daily catalog is
+   fresh for 24h) so the reader trusts the consolidated index. `setup-data-pipeline-vm.sh` already propagates the metadata.
+3. **`expected_unattempted` MUST be seeded in CANONICAL venue/chain or captures NEVER convert it.** The IS expected-universe
+   enumerator (`enumerate_expected_universe.py` / `expected-universe-v2-defi`) seeded defi `expected_unattempted` with the
+   LEGACY combined `venue=PROTOCOL-CHAIN`, `chain=''`. Handlers CAPTURE canonical `venue=PROTOCOL` + separate `chain=X`
+   (this SSOT). Different shard keys → captures create NEW rows, the legacy unattempted persist → honest-cov flat at ~6%
+   despite real data flowing. The enumerator/seeder MUST emit the canonical venue/chain split (this SSOT applies to the
+   SEEDER, not only the migration + handlers).
+4. **NEVER call a synchronous GCS read inside an `async def` handler.** `ManifestFreshnessCache.bulk_load()` /
+   `assert_defi_catalog_fresh` do blocking GCS I/O; called directly in async handler code they block the event loop →
+   the 120s log-uploader heartbeat starves → the VM LOOKS hung (no log progress) though it's alive. Wrap in
+   `await asyncio.to_thread(...)`. And `assert_defi_catalog_fresh` is **keyword-only** (`*, project_id, on_date,
+   correlation_id`) — wrap as `asyncio.to_thread(lambda: assert_defi_catalog_fresh(project_id=…, on_date=…, correlation_id=…))`,
+   never positional (positional → `takes 0 positional arguments but 3 were given`).
+5. **DeFi DEX subgraph handlers MUST shard across the 9-key TheGraph pool.** `thegraph-api-key` + `thegraph-api-key-2..9`
+   exist in Secret Manager for sharding; `TheGraphBaseClient` has round-robin but `dex_pools_handler`/`dex_swaps_handler`
+   hand-rolled a SINGLE key → all DEX VMs collided on key #1. Use the round-robin pool (per-request) — not a single key.
+
