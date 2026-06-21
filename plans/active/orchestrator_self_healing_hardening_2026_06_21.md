@@ -108,11 +108,13 @@ SHAs were never acknowledged.
       Checkout reaches the same clean end-state with a `checkout:` reflog the audit ignores — **fixes the spam at its
       SOURCE** (the ignore-file was the symptom-level fix). — agent-orchestrator@8953d98 | tests:
       test_dirty_state_resolution.py
-- [ ] [ORCHESTRATOR] P2. Watchdog-loop self-supervisor — if any daemon loop (`WorkerLivenessWatchdog`, `AutoSpawnLoop`,
-      `TmuxPruner`, `HealthMonitor`, `UsagePoller`) exits/crashes, restart it without a full backend restart (today only
-      systemd restart of the whole process recovers a dead thread). Target: agent-orchestrator `server/server.py`
-      lifespan
-  - a thin per-loop liveness check.
+- [x] ✅ [ORCHESTRATOR] P2. Watchdog-loop self-supervisor — new `server/loop_supervisor.py::LoopSupervisor` checks every
+      registered daemon loop's thread liveness every 120s and revives a dead one via its idempotent `start()` (no-op
+      when alive, recreates the thread when dead) — so a crashed `WorkerLivenessWatchdog`/`AutoSpawnLoop`/`TmuxPruner`/
+      `HealthMonitor`/`UsagePoller`/etc never silently stops the fleet self-healing; only the supervisor itself (root)
+      needs a backend restart. Wired into the lifespan (started last, stopped first); env-disabled loops are not
+      registered (not forced on). — agent-orchestrator@470c13c | tests:
+      test_self_healing_hardening.py::test_loop_supervisor_revives_dead_but_not_alive_or_disabled
 - [ ] [ORCHESTRATOR] P2. WorkerLivenessWatchdog bogus idle-minute calc — the silence anchor can inherit a predecessor
       session's `last_spawned_at` and balloon backwards (reported 5711 min / 1515 min, physically impossible). **Already
       tracked** in `plans/active/issues/agent_orchestrator_alerts_triage_2026_06_20.md` — referenced, not duplicated.
