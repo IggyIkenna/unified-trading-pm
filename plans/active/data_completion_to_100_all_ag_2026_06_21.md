@@ -82,8 +82,13 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 - [x] **kalshi converter bug FIXED** — `_slice_day` filter type-mismatch (corpus `timestamp[s]` vs tz-aware-ns)
   → ArrowNotImplementedError; now adapts to the column type + timestamp[s] regression test (mtds, QG-green).
 - [x] [SCRIPT] P0. ✅ **`launch-mtds-lst-rates-backfill-vm.sh` bucket bug FIXED** — `get_write_bucket_name("lst-rates")` → `get_write_bucket_name("market_data", asset_group="DEFI")` at 4 sites in `lst_rates_handler.py`. Now resolves canonical `market-data-tick-defi-prd-central-element-323112`. Repo: market-tick-data-service — mtds@4c85340
-- [ ] [SCRIPT] P0. deployment-service — **`launch-mtds-sports-odds-backfill-vm.sh` passes `--tier 1`** which the MTDS
-  CLI rejects (`unrecognized arguments: --tier 1`). Drop/fix the arg. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P0. deployment-service — **`launch-mtds-sports-odds-backfill-vm.sh` passes `--tier 1`** which the MTDS
+  CLI rejects (`unrecognized arguments: --tier 1`). Drop/fix the arg. Repo: deployment-service. — deployment-service@b51729b:
+  root cause = `setup-data-pipeline-vm.sh` mtds-backfill handler assembled `--tier $VM_TIER`, but the MTDS download CLI
+  has NO `--tier` flag ("Tier-1=Odds API" is an ARCHITECTURE label, selected by asset_group→venue auto-routing; the
+  Odds-API paid-plan tier is encoded in the SM API key). Removed the bad arg; VM_TIER now logged informational-only.
+  Fixed handler uploaded to `gs://deployment-scripts-…/vm/setup-data-pipeline-vm.sh`; broken `mtds-backfill-odds-1` VM
+  (was erroring every chunk ~1.5h) deleted; odds backfill relaunching on the fixed handler.
 - [ ] [SCRIPT] P0. deployment-service — **`launch-tradfi-bf-nasdaq-ohlcv-1m.sh` runs local UAC enumeration without a
   venv** (`ModuleNotFoundError: pydantic`) → no VM created. Invoke via the workspace venv. Repo: deployment-service.
 - [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
