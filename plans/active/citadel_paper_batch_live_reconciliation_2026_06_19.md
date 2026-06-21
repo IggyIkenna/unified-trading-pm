@@ -390,16 +390,22 @@ are identified (2) and the ledger exists (3).
       spot→staking, STAKE@LIDO/JITO, COLLATERAL_POSTED@DERIBIT/DRIFT), every row single `client_id` +
       `counterparty_client_id=None`. **client-reporting-api (read) DONE 2026-06-21** — `/transfers` now reads
       `ledger_type=transfer` (client-reporting-api@50ae187, rev -00008-7gp; LIVE returns the 8 rows / both strategies).
-- [ ] [STRATEGY] P2. **DEFERRED-FINDING (2026-06-21, surfaced by P10.3 net-views work, client-reporting-api):** the
-      carry_staked_basis ledger emits the staked leg as a SEPARATE long position from the spot-acquisition leg
-      (`UNISWAP_V3:DEX_POOL:ETH` 233 ETH long AND `LIDO:STAKING:ETH` 233 ETH long), so per-coin USD delta double-counts
-      the economic long — net ETH delta reads **+$752K** (should be ≈$18K residual = 233 staked − 215 perp short). The
-      reader (`net_views`/`delta_per_coin`) is HONEST — it sums what the ledger says; the fix is producer-side: model
-      the USDC→Uniswap-swap→Lido-stake flow as ONE economic ETH long (the swap CONVERTS USDC→ETH, the stake
-      RE-REPRESENTS that same ETH as stETH, not a second long), or net the spot+LST legs in the position fold. Until
-      then the delta-neutral books will not read ≈0 per coin even though the hedge is correctly sized. Repos:
-      strategy-service (emit) + unified-trading-library (position fold). Provenance: live run
-      paper-20260621100605-b33e4bf4.
+- [x] [STRATEGY] ✅ P2. **DELTA DOUBLE-COUNT FIXED (2026-06-21)** — strategy-service@a2d12217 +
+      unified-trading-library@ef5b1699. The carry_staked_basis `_build_legs` flow booked the SWAP-acquired native ETH
+      (`UNISWAP_V3:DEX_POOL:ETH` +eth_qty) AND the STAKE leg (also `instrument=native_asset` ETH, +eth_qty) as TWO longs
+      of the SAME economic ETH → net-in-coin ETH ≈ 2×eth_qty. **Fix (producer-side, option a):** the swap→stake is ONE
+      economic long — the SWAP acquires native ETH which the STAKE CONSUMES. Added a `stake_consume` leg (SWAP/SELL of
+      the swap-acquired native at the staking protocol, −eth_qty) that cancels the swap's spot ETH so the staked ETH
+      delta is counted ONCE; the STAKE leg keeps `instrument=native_asset` (ETH-denominated delta) so it nets against
+      the ETH-PERP short in net-in-coin. 4-leg ATOMIC → 5-leg (SWAP + stake_consume + STAKE + TRANSFER + TRADE);
+      `make_trade_key` collision avoided by booking the consume at the staking venue (distinct instrument_key).
+      **Measured (ETH, equity=100k @ 3000): BEFORE net-in-coin ETH ≈ +35.83 (≈ a full extra staked leg, the visible
+      ~+250 bug); AFTER ETH = +2.50 = staked 33.33 − perp 30.83 = the Deribit-haircut residual, near-delta-neutral.**
+      Unit test `tests/unit/engine/strategies/v2/test_carry_staked_basis_net_coin_no_double_count.py` asserts net coin ≈
+      haircut residual (not 2×) for both ETH (Lido/Deribit) + SOL (Jito/Drift). Batch rerun replays the same shared
+      `_build_legs` → ε=0 preserved. 6 carry leg-count tests updated 4→5 (all green; full carry+backtest suite 1361
+      pass). Provenance finding: live run paper-20260621100605-b33e4bf4 (read +$752K ETH); reader
+      (`net_views`/`delta_per_coin`) was HONEST throughout — the fix is producer-side.
 - [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real multi-dimensional P&L attribution: by **venue**, by **layer**, by
       **factor**, per **strategy_id** — replaces the flat `by venue == by layer` placeholder.
       `strategy-service@c1083310` (`engine/backtest/paper_run_attribution.py` now emits CARRY+BASIS+FEES @ the staking
@@ -517,6 +523,36 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+### 2026-06-21 — Autonomous: two producer-side paper-run fixes (delta double-count + `--mode paper` launch)
+
+**Repos:** strategy-service@a2d12217 + unified-trading-library@ef5b1699 (both on LDR; Tier-C drain → staging ≤15min).
+
+1. **FIX 1 — carry_staked_basis delta DOUBLE-COUNT (the visible net-in-coin bug).** `_build_legs` booked the
+   SWAP-acquired native ETH/SOL AND the STAKE leg as two separate longs of the SAME economic coin → net-in-coin ETH ≈
+   2×eth_qty (~+250) / SOL ~+210, not delta-neutral. Modelled the swap→stake as ONE economic long: added a
+   `stake_consume` SWAP/SELL leg (booked at the staking protocol, −eth_qty) that cancels the swap's spot ETH, so the
+   staked delta is counted once; the STAKE leg stays ETH-denominated so it nets the ETH-PERP short. **Measured ETH
+   (equity 100k @ 3000): BEFORE ≈+35.83 → AFTER +2.50 (= staked 33.33 − perp 30.83 = haircut residual).** 4→5-leg
+   ATOMIC; trade_key collision avoided via the staking-venue key. Unit test
+   `test_carry_staked_basis_net_coin_no_double_count.py` (ETH+SOL) asserts net coin ≈ residual (not 2×); 6 carry
+   leg-count tests updated 4→5; full carry+backtest suite 1361 pass; batch ε=0 preserved (shared `_build_legs`).
+2. **FIX 2 — `--mode paper` ServiceBootstrap launch bug.** The strategy-service paper-run CLI registers
+   `modes=[batch,live,paper]`, but UTL `ServiceRuntime.from_env_and_args` (ServiceBootstrap's preliminary mode
+   validation) rejected `paper` because the canonical `RuntimeMode` enum is {LIVE, BATCH} only → the cron could not
+   launch `run_paper()`. Added a `paper`→BATCH runtime alias in `service_runtime.py` (`_RUNTIME_MODE_ALIASES`):
+   `--mode paper` resolves `mode` to `RuntimeMode.BATCH` for every infra decision (paper = scheduled/historical replay
+   with simulated fills = batch semantics) while `requested_mode` preserves `"paper"` for the new `is_paper` property.
+   Bogus modes still rejected. Test `tests/unit/test_service_runtime_paper_mode.py` (5 cases). `RuntimeMode` enum itself
+   unchanged (lives in UAC; the alias is the minimal in-owned-repo fix). **`--mode paper` now launches cleanly.**
+3. **FIX 3 (minor) — attribution strategy_id stamping: already correct.** `emit_paper_run_attribution` is called with
+   `strategy_id=r.spec.slot_label`, which IS the `@`-qualified label (`CARRY_STAKED_BASIS@lido-uniswapv3-deribit-…`);
+   every attribution row already stamps it. The bare `carry_staked_basis` only appears as the separate `archetype_id`
+   field and as the archetype-resolution hint in the run manifest's `strategy_ids[0]` (intentional). No change needed.
+
+**NOTE for operator: UTL CHANGED → base image rebuild + redeploy needed** before the live `/net-views` API reflects FIX
+1 (the consumer reads the GCS ledger; a NEW paper run re-run below writes corrected fills, but the strategy-service
+paper-run image must carry UTL@ef5b1699 + strategy-service@a2d12217 for the cron path).
 
 ### 2026-06-21 — Autonomous (UI): Phase-10 fund-desk panels SHIPPED + DEPLOYED to odom-portal
 
