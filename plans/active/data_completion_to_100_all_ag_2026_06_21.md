@@ -207,6 +207,26 @@ climbing. `pipeline_mode=batch_odds_api` → `market-data-tick-sports-prd-…` (
 r/day** (re-tested: 2024-01-13 → 927 fixtures). Killed 8 false-writing full-sweep VMs (each wrote only ~2 dates false
 `empty_confirmed` before kill → small blast radius).
 
+### 2026-06-21 — DEFI lane: FULL FAN-OUT LAUNCHED + real root-cause of catalog blocker FIXED
+**60 MTDS defi market-data VMs LAUNCHED** (all data_types × years 2020→2026; lst-rates×7, dex-pools×6, dex-swaps×6,
+lending×5, liquidations×7, vault×6, pyth-archive×1, pyth-lst×4, gas-fees×7, jito×5, marinade×6) — no quota errors, no
+OOM, ALL confirmed writing to **consolidated `market-data-tick-defi-prd`** (bucket fix verified live). Plus 6→ IS catalog
+year-shard VMs (capturing real instruments). Drive-to-done monitor armed (refresh consolidators + wake on fleet drain).
+**CATALOG BLOCKER — REAL ROOT CAUSE (corrects earlier diagnosis):** MTDS `assert_defi_catalog_fresh` →
+`run_preflight(DEFI_COLLECT_DAILY)` requires the **`instrument-catalog` lifecycle ROLL-UP artifact**
+(`build_instrument_catalogue.py`), NOT the per-venue instrument records. The IS instruments-backfill writes records with
+**blank data_type** (consolidated IS index = 117k rows, data_type all empty) → preflight finds no `instrument-catalog` →
+`age=None` → MTDS routes honest-absence (empty). FIX: triggered Cloud Run jobs **`lifecycle-catalogue-regen-defi`
+(exec 7844r)** + `instrument-catalogue-regen` (c2cwk) — the roll-up producer (last defi run was 2026-06-19 = stale, the
+reason defi was stuck). Once the artifact is fresh (<24h) the per-date preflight passes → MTDS captures. **Watcher
+besyyb23t** waits for the roll-up → consolidates instruments-defi → verifies a dex-pools VM flips empty→capturing.
+**RESUME:** if besyyb23t shows capturing → the running 60 VMs auto-capture their remaining dates; **re-run any shard that
+recorded early empties** (catalog wasn't fresh when they started) after the roll-up — empties aren't terminal
+(empty_confirmed is re-attempted; only `captured` is skip-worthy). Then: execution-defi consolidator → measure defi
+honest-cov climbing → MDPS defi (`launch-mdps-sharded-backfill.sh defi`) → defi live (reuse cefi `live_websocket`/
+`--shard-spec` wiring deployment-service@efdb9df, or scheduled collect-* re-run for recent days). Live background tasks:
+drive-monitor b874zr2s4 + catalog-gate besyyb23t.
+
 **Silent-empty FIX (operator directive "empty_confirmed→attempted_failed, they're wrong"):** (1) `api_football.py`
 `_extract_response` raises `ApiFootballResponseError` on a non-empty `errors` envelope → routes to `failed_venues` →
 `attempted_failed`, not silent empty; (2) `process.py` `_fixtures_fetch_failed` helper (venue ∉ `non_error_venues`,
