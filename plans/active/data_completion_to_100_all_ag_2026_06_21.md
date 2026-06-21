@@ -103,9 +103,16 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       unified-trading-library@057264fd (converged with slot-3's `78481472`); the live recorder passes `validate=False`
       — market-tick-data-service@e6b0f29. Both QG-green (UTL 139s / mtds 96s) via isolated name-correct worktrees
       (churn-immune), on remote `live-defi-rollout`. Deployed: fresh UTL+mtds tarballs (fixes verified inside) →
-      `gs://deployment-scripts-central-element-323112/code/` @17:51Z; relaunched
-      `mtds-live-cefi-hyperliquid-trades-20260621-175349`. End-to-end captured-row verification in-flight on that VM.
-      Repo: unified-trading-library / market-tick-data-service. (CEFI lane 2026-06-21.)
+      `gs://deployment-scripts-central-element-323112/code/` @17:51Z. **Relaunch surfaced bug#8 (`MissingSourceError`):
+      HYPERLIQUID/ASTER reclassified to cefi (UAC 0.30.0) but their sources were never registered — `SOURCE_PRIORITY
+      [(cefi,trades)]` was `['tardis']` only → writer rejected `source='hyperliquid'`. Fixed: registered
+      `hyperliquid`+`aster` on the 5 cefi perp data_types (trades/ohlcv_1m/book_snapshot/liquidations/derivative_ticker)
+      — unified-api-contracts@`061cfd01` (QG-green 225s, +4 tests updated); closes the cefi source-provenance RED gap for
+      HL/ASTER. UAC tarball redeployed @18:24Z; VM relaunched `…182708`.** ✅ **VERIFIED end-to-end:** per-VM shard
+      `market-data-tick-cefi-prd-…/_index/per_vm/…182708.parquet` holds **3 `capture_status=captured` rows, row_count>0
+      (BTC 87 / ETH 238 / SOL 40), source=hyperliquid, pipeline_mode=live_hyperliquid** — NO RowSchemaValidationError, NO
+      MissingSourceError. cefi LIVE now captures real trades (not just empty). Repo: unified-trading-library /
+      market-tick-data-service / unified-api-contracts. (CEFI lane 2026-06-21.)
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
 - [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
