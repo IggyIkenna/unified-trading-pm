@@ -171,10 +171,11 @@ net-new capability (not robustness closures) and are dispatched to the central V
 
 ## Codex SSOT updates
 
-- [ ] [DOC] P2. `codex/04-architecture/agent-orchestrator-worker-liveness.md` — document the `stale`-lingering reclaim
-      coverage (fix b) + the branch-quarantine auto-heal (fix c) trigger contracts.
-- [ ] [DOC] P2. `codex/04-architecture/agent-orchestrator-overview.md` § Watchdog/Failover — note the deterministic
-      rotation-failure recovery (fix a) and that auto-heal realigns via `checkout` (no audit-reflog page).
+- [x] ✅ [DOC] P2. `codex/04-architecture/agent-orchestrator-worker-liveness.md` — documented all 5 closures (fix a/b/c,
+      G3a checkout-not-reset, G3b LoopSupervisor) + the account-selection closures in a "Self-healing hardening
+      (2026-06-21)" section. — unified-trading-pm@4dbc4eb1d
+- [ ] [DOC] P3. `codex/04-architecture/agent-orchestrator-overview.md` § Watchdog/Failover — cross-link the new
+      worker-liveness § (covered by the worker-liveness doc above; overview cross-link is a nice-to-have).
 
 ## Success criteria
 
