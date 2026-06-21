@@ -598,3 +598,25 @@ ON-CHAIN (Alchemy RPC / TheGraph / Pyth Hermes), **NOT databento** (that's tradf
 produces fresh instrument-catalog. (2) rebuild VM tarball with sharding+asyncio fixes. (3) re-run MTDS defi fan-out →
 VERIFY capture (canary) + no hang. (4) execution-defi consolidator → honest-cov climbing. (5) MDPS defi. (6) defi live
 forward-poll → ≥1 live row. (7) terminate at 100%. Live agents: af7784c36 (asyncio fix), bzjvsz4qj (rollup diag).
+
+### 2026-06-21 17:55 — TRADFI live_databento: diagnosed (3 bugs + subscription unknown) — FLAGGED not stomped
+Launched a real tradfi live producer (`mtds-live-tradfi-cme-trades`) to test live==batch. It FAILED — 3 precisely
+root-caused bugs in the (peer's, in-flight) `mtds-live` / `databento_tradfi_ws` live scaffold + 1 vendor unknown.
+**Deleted the broken VM** (it wrote 4 wrong `live_massive` empty rows). Bugs (filed for the live-pipeline lane; NOT
+fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + the subscription is unconfirmable):
+- [ ] [SCRIPT] P1. **mtds: `databento_tradfi_ws._get_api_key()` reads the raw Pydantic field `cfg.databento_api_key`**
+  (None unless `DATABENTO_API_KEY` env set) → logs `no API key — connection skipped (BLOCKED-CREDENTIALS)`. The BATCH
+  path resolves the key from the `databento-api-key` **secret** via the secret client (works). Fix: `_get_api_key`
+  fallback-resolves `databento_secret_name` via `get_secret_client()` like batch. Repo: market-tick-data-service.
+- [ ] [SCRIPT] P1. **UAC: `live_source_for_venue(tradfi,…)` returns `massive`** (`SOURCE_PRIORITY[(tradfi,trades)]=
+  ['massive','databento']`, primary=massive) — but **massive is batch-only (no live feed)**; the actual live vendor is
+  databento. Live rows mis-stamp `live_massive`. Fix: live source = first **LIVE-capable** source in the priority list
+  (skip batch-only sources via `modes_for_source`), not `get_primary_source`. Repo: unified-api-contracts
+  (`canonical/crosscutting/source_priority.py` — coordinate, peer is editing this file).
+- [ ] [DATA] P1. **launch-mtds-live.sh tradfi instrument-ids format** — must be `CME:FUTURES:ES;CME:FUTURES:NQ;…`
+  (`_parse_instrument_id` needs `venue:type:underlying`), not bare `ES;NQ`. Repo: deployment-service (invocation/doc).
+- [ ] [DATA-OPERATOR] P0. **Confirm the Databento account has the Real-Time/**Live** streaming subscription** (separate
+  from the historical 3-dataset subscription). Without it, the live websocket is genuine BLOCKED-CREDENTIALS regardless
+  of the code fixes. After the 3 fixes + a tarball rebuild + relaunch, this is the only remaining gate to `live_databento`.
+NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 + daily-cron host) IS done (`batch_databento`); `live_databento`
+websocket is beyond-dispatch peer-domain work, now fully diagnosed for them.
