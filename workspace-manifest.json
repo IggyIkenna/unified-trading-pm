@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.29.0",
     "unified-trading-library": "0.23.0",
-    "unified-trading-pm": "1.2.230",
+    "unified-trading-pm": "1.2.231",
     "market-data-processing-service": "0.10.3",
     "e2e-testing": "0.8.0",
     "agent-orchestrator": "0.18.1",
@@ -1794,7 +1794,7 @@
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "deployment-ui": "0.1.0",
     "unified-trading-pm": "1.2.45",
-    "system-integration-tests": "0.14.1",
+    "system-integration-tests": "0.14.4",
     "agent-orchestrator": "0.19.0",
     "e2e-testing": "0.14.0",
     "ibkr-gateway-infra": "0.4.0",
@@ -1826,9 +1826,9 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "system-integration-tests": {
-      "branch": "staging",
-      "sha": "2cea76d64847356f228ba6f3e7a2339d1b0b6a3b",
-      "version": "0.14.1"
+      "version": "0.14.4",
+      "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
+      "branch": "staging"
     },
     "unified-api-contracts": {
       "version": "0.31.0",
