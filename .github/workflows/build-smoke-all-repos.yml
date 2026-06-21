@@ -83,7 +83,24 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: repo
 
+      # Service/API/UI Dockerfiles `FROM asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library@<digest>`
+      # — a PRIVATE Artifact Registry base. A bare `docker build .` (no PROJECT_ID, no GAR auth) fails at parse with
+      # `pkg.dev//unified-trading-library@…  invalid reference format` (empty ${PROJECT_ID} → `//`), which is exactly
+      # what reddened this smoke after the digest-pin migration. Authenticate + pass PROJECT_ID so the base image
+      # resolves + pulls. Libraries build a wheel (no base image) → skip GCP auth for them.
+      - name: GCP auth (private base-image pull — non-library repos)
+        if: matrix.type != 'library'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure docker for Artifact Registry
+        if: matrix.type != 'library'
+        run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+
       - name: Build (image or wheel)
+        env:
+          PROJECT_ID: central-element-323112
         run: |
           set -e
           cd repo
@@ -97,10 +114,10 @@ jobs:
             ls -la dist/*.whl
           elif [[ "$TYPE" == "ui" ]]; then
             echo "=== Building Docker image for UI $REPO ==="
-            docker build -t "$REPO:smoke" .
+            docker build --build-arg PROJECT_ID="$PROJECT_ID" -t "$REPO:smoke" .
           else
             echo "=== Building Docker image for $REPO ==="
-            docker build -t "$REPO:smoke" .
+            docker build --build-arg PROJECT_ID="$PROJECT_ID" -t "$REPO:smoke" .
           fi
           echo "✓ $REPO built successfully"
 
