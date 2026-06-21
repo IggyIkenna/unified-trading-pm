@@ -46,6 +46,26 @@ Each batch backfill fills `expected_unattempted` → captured; each forward-poll
 - [ ] [IS] P1. **IS tradfi v9 canonicalisation** — only 46.6% at schema_version=9; run the tradfi `_index` canonicalisation walk (8→9: source/asset_group/pipeline_mode) so the index is fully v9. Repo: instruments-service / market-tick-data-service.
 - [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>` canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
 
+## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
+
+Goal: ALL data downloaded within **12h** via fan-out, not serial single-VMs. Quota is NOT the
+constraint — asia-northeast1 **CPUS 50,532 / E2_CPUS 600 / PREEMPTIBLE 60,000** (used ~19) → room for
+~75 e2-standard-8 (or hundreds preemptible) in parallel. Shard model (from `launch-mdps-sharded-backfill.sh`):
+**one VM per (asset_group × data_type × year)**; per-VM manifest shards merge cleanly (UTL ManifestWriter
+`MANIFEST_PER_VM_SHARDS`). 7yr × ~5 AG × ~N data-types → a few-hundred-VM fan-out; each VM does ONE
+year → wall-clock collapses from weeks → ~1yr-of-runtime (hours).
+
+**Ordering (HARD — raw before merge):** (1) **MTDS raw** year-sharded FIRST (the actual download) →
+(2) **MDPS** `launch-mdps-sharded-backfill.sh` (merge, ~30 VMs, one cmd) AFTER raw lands →
+(3) **live runners**. Launching MDPS before raw is complete merges incomplete raw — gate it.
+
+**Sharding mechanism per layer:**
+- MTDS raw: each per-data-type launcher takes `START END`; wrap as `for y in 2020..2026: launch … $y-01-01 $y-12-31` → one VM per (data_type × year). Data-types: defi {lst-rates, dex-pools, dex-swaps, lending-indices, liquidations, vault-share, pyth, gas-fees, jito/marinade}; tradfi {DBEQ-nasdaq, DBEQ-nyse, CFE/XCBF}; sports {odds}; pred {kalshi(bulk-seed=1 VM, can't shard the 33GB download but convert is year-internal), polymarket}.
+- **Wave-1 caveat (2026-06-21):** the first single-VM launches (lst-rates/odds/pred-fwd) defaulted to a
+  SINGLE DAY (2026-06-20) — inadequate for full history; the loop RE-LAUNCHES them year-sharded.
+- `backfill-cluster.sh --cluster <name> --start-date --end-date --asset-group` = generic date-range cluster fan-out.
+- Use `--preview`/`--dry-run` on each sharded launcher before the real fan-out; cap concurrent at the E2 quota (≤~70 e2-standard-8) — overflow → preemptible or stagger.
+
 ## Autonomous loop (don't-stop-till-done)
 
 Termination: per-AG MTDS honest-cov% → ~100% (modulo genuine `empty_confirmed` honest absence) AND
