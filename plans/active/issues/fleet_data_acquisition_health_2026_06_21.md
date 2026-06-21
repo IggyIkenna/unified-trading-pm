@@ -118,3 +118,15 @@ data_type). Not blocking (the trades VM is the bug#8 proof; book shards don't ra
 unenforced fleet-wide. **Fix (P2, live-pipeline lane):** align the key — either register `("cefi", "book_snapshot_5")`
 (additive) or rename the SOURCE_PRIORITY/data_type to one canonical spelling. Same audit should sweep all AGs for
 book_snapshot vs book_snapshot_5 key drift. Repo: unified-api-contracts (+ any data_type emitters).
+
+### Follow-up finding (P1, 2026-06-21) — mtds version-surface drift blocks LDR→staging QG
+
+While shipping the HL/ASTER batch codex fix, full `quality-gates.sh` for **market-tick-data-service** is BLOCKED at the
+version-alignment pre-gate ("local BEHIND remote staging/main") for the WHOLE repo (not any one change). Measured: pyproject
+`0.31.0` == origin/staging `0.31.0`, origin/main `0.24.0`, latest tag `v0.24.0`, workspace-manifest `versions.mtds=0.25.0`,
+`repositories.mtds.version=0.20.0`. The pyproject↔manifest split (0.31.0 vs 0.25.0) is a VERSION_SPLIT the alignment gate
+trips on. This is **semver-agent / version-management territory** (agents MUST NOT `--skip-version-alignment` or hand-bump).
+Consequence: the mtds LDR→staging promotion (and any mtds quickmerge needing full local QG) is gated until the version
+surfaces are reconciled — run `scripts/repo-management/run-version-alignment.sh --fix` (operator/semver) or let the
+semver-agent re-align. Code-correctness is unaffected (the cefi batch + tardis-machine commits are ruff/basedpyright/size/
+test-clean — verified piecemeal); this is purely the version-surface gate. Repo: market-tick-data-service (version mgmt).
