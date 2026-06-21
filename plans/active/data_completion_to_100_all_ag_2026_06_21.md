@@ -51,25 +51,39 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service.
 - [x] [DATA] P0. **sports** — `launch-mtds-sports-odds-backfill-vm.sh` + `launch-sports-is-gap-fill.sh` /
       `launch-sports-full-sweep-vm.sh` (IS sports 15.9%→100%) + `launch-footystats-forward-poll.sh` (LIVE). Repo:
-      deployment-service. ✅ — VMs RUNNING (T+10min verified): odds-backfill=mtds-backfill-odds-{2020..2026} (7 VMs, chunk 1/31 writing rows), IS-sweep=sports-full-sweep-{2019..2026} (8 VMs, writing instruments-store parquets), fwd-poll=footystats-fwd-20260621-142249 (RUNNING). Bug fix: deployment-service@b42d98c (removed VM_TIER from sports MTDS launcher; --tier has no MTDS CLI arg)
+      deployment-service. ✅ — VMs RUNNING (T+10min verified): odds-backfill=mtds-backfill-odds-{2020..2026} (7 VMs,
+      chunk 1/31 writing rows), IS-sweep=sports-full-sweep-{2019..2026} (8 VMs, writing instruments-store parquets),
+      fwd-poll=footystats-fwd-20260621-142249 (RUNNING). Bug fix: deployment-service@b42d98c (removed VM_TIER from
+      sports MTDS launcher; --tier has no MTDS CLI arg)
 - [x] [DATA] P0. **cefi — 802k `attempted_failed` TRIAGED** (CEFI lane 2026-06-21, measured from consolidated v9
       `_index`): by source — **tardis 753,341 + 22,519 phantom = 775,860 (96.7%) Tardis-gated** (batch_tardis;
       historical billing EXCLUDED → BLOCKED-CREDENTIALS) · **hyperliquid 30,835 + aster 17,675 = 48,510 free-venue
       re-fetchable** (native, no Tardis) · 124 misc. Re-fetchable failed cells span HL 2023-26 / ASTER 2024-26 across
       {trades, book_snapshot_5, derivative_ticker, liquidations}. Repo: deployment-service.
-- [ ] [DATA] P0. **cefi — re-fetch the 48.5k free-venue (HYPERLIQUID+ASTER) failed cells** year-sharded via
-      `launch-cefi-onchain-forward-poll.sh` (native venues = free; `--mode batch`). Expect a portion to resolve
-      `attempted_failed→empty_confirmed` where the venue genuinely has no historical data_type (honest absence). Repo:
-      deployment-service.
-- [ ] [DATA] P0. **cefi — LIVE stream → ≥1 `live_<source>` row.** **BIG FINDING:** the named
-      `launch-cefi-forward-poll.sh`/`launch-cefi-onchain-forward-poll.sh` run `--mode batch` → BILLED Tardis replay +
-      `batch_<source>` rows (NOT free, NOT live) — running them as-named would violate the Tardis-billing exclusion AND
-      miss the live goal. The FREE live path is `launch-mtds-live.sh --asset-group cefi` →
-      `--operation websocket-streaming --mode live` (real-time exchange WS proxy, free; 18 cefi connectors registered
-      since 2026-05-17 Phase 3.5). Blocker: that path is NOT wired into `setup-data-pipeline-vm.sh` (no `live_websocket`
-      branch → falls through to `--mode batch`) + needs `--shard-spec`/`--instrument-ids`/`streaming_redis_url`. Fix =
-      wire the live branch + local redis, then launch. Repo: deployment-service (+ verify MTDS handler). Reusable across
-      ALL AGs (live=0 everywhere).
+- [ ] [DATA] P0. **cefi — re-fetch the 48.5k free-venue (HYPERLIQUID+ASTER) failed cells — DIAGNOSED, mechanism gap
+      found (CEFI lane 2026-06-21).** Launched `launch-cefi-onchain-forward-poll.sh` HL+ASTER 2023/24→2026 → **NO-OP**:
+      the cefi `--operation download` orchestrator STRIPS HL/ASTER (they're `defi` in `VENUE_TO_ASSET_GROUP`) even with
+      explicit `--venues` (`Skipping 2 DeFi venues … use collect-* handlers` / `No active venues` for every date) → VMs
+      deleted (no fire-and-forget). Actual HL batch source = **requester-pays S3** (`HyperliquidS3Downloader`,
+      `_fetch_hyperliquid_s3`; `aws-hyperliquid-s3` secret EXISTS) + ASTER REST, routed via umi/onchain-perps, **but no
+      launcher exists + the orchestrator defi-strip blocks the cefi download path**. The data_types (trades /
+      book_snapshot_5 / derivative_ticker) are **live-WS-primary → now covered FORWARD by the launched mtds-live VM**. A
+      genuine HISTORICAL re-fetch needs a dedicated HL-S3 / ASTER-REST batch launcher (+ resolve the HL cefi-vs-defi
+      asset_group classification) — see
+      `plans/active/issues/cefi_free_venue_historical_refetch_mechanism_2026_06_21.md`. Repo: deployment-service /
+      market-tick-data-service.
+- [ ] [DATA] P0. **cefi — LIVE stream → ≥1 `live_<source>` row — wiring SHIPPED, VM launched, verifying.** **BIG FINDING
+      (stands):** the named `launch-cefi-forward-poll.sh`/`launch-cefi-onchain-forward-poll.sh` run `--mode     batch` →
+      BILLED Tardis replay + `batch_<source>` rows (NOT free/live). The FREE live path is
+      `launch-mtds-live.sh     --asset-group cefi --shard-spec cefi:HYPERLIQUID:trades --instrument-ids BTC;ETH;SOL` →
+      `--operation websocket-streaming --mode live` (real-time exchange-WS proxy, free; 18 cefi connectors registered
+      since the 2026-05-17 Phase 3.5 rollout — handler "registry empty" docstring is STALE). The `live_websocket`
+      `setup-data-pipeline-vm.sh` branch + `--shard-spec` launcher support were **shipped by a concurrent agent =
+      deployment-service@efdb9df** (committed + on origin + deployed to GCS @14:51Z; my duplicate edit discarded to
+      avoid collision). **Launched `mtds-live-cefi-hyperliquid-trades-20260621-145407`** (RUNNING, redis up); ≥1
+      `live_hyperliquid` row verification in flight (per*vm manifest shard watcher). Minor finding: the launcher's
+      VM-name slug doesn't sanitize `*`→ a`derivative_ticker` shard 400s at GCE create (underscore-in-name); trades
+      shard unaffected. Reusable across ALL AGs (live=0 fleet-wide). Repo: deployment-service.
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
 - [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
@@ -192,21 +206,54 @@ fleet-wide). Then year-shard the 48.5k free-venue failed re-fetch + file the BLO
 Tardis-gated.
 
 ### 2026-06-21 — DEFI lane: bucket fix SHIPPED + PROOF found 2 more blockers (gating the fan-out)
+
 Shipped: mtds@1c99e5c (8 remaining defi handlers → consolidated bucket, QG green) + rebuilt mtds-code.tar.gz @14:36Z +
 SSOT row corrected (pm@12c4d89a6). **PROOF VM** (lst-rates Jan-2025, fresh tarball, mtds-lst-rates-20260621-144131):
-**bucket fix CONFIRMED WORKS** — wrote per-VM shards to `market-data-tick-defi-prd-central-element-323112/_index/per_vm/`,
-NO ManifestConsolidatorStaleError. BUT proof surfaced 2 NEW blockers that gate the whole defi fan-out (do NOT mass-launch
-until both fixed — would yield 0 captured + OOM):
+**bucket fix CONFIRMED WORKS** — wrote per-VM shards to
+`market-data-tick-defi-prd-central-element-323112/_index/per_vm/`, NO ManifestConsolidatorStaleError. BUT proof surfaced
+2 NEW blockers that gate the whole defi fan-out (do NOT mass-launch until both fixed — would yield 0 captured + OOM):
+
 - [ ] [DATA] P0. **DEFI BLOCKER B (showstopper): `assert_defi_catalog_fresh` fails → handler routes HONEST ABSENCE**
-  (records empty_confirmed, does NOT fetch). Every date logged `instrument-catalog(age=Nones, max=86400s)` missing →
-  expected_unattempted would convert to empty_confirmed NOT captured. **The DeFi instrument-catalog must be built/fresh
-  (<24h) BEFORE the MTDS defi backfill.** Diagnosing exact catalog blob path + IS build command (sub-agent). Repo:
-  instruments-service + market-tick-data-service.
+      (records empty_confirmed, does NOT fetch). Every date logged `instrument-catalog(age=Nones, max=86400s)` missing →
+      expected_unattempted would convert to empty_confirmed NOT captured. **The DeFi instrument-catalog must be
+      built/fresh (<24h) BEFORE the MTDS defi backfill.** Diagnosing exact catalog blob path + IS build command
+      (sub-agent). Repo: instruments-service + market-tick-data-service.
 - [ ] [SCRIPT] P0. **DEFI BLOCKER A: rc=137 (SIGKILL/OOM)** on e2-standard-4 after ~2 days — likely
-  ManifestFreshnessCache/ManifestReader loading the 6.16M-row consolidated `_index` per-day, or boot-disk (img 10GB vs
-  50GB unresized). Fix = bump MACHINE_TYPE (e2-standard-8/16) on the defi launchers and/or a manifest-read memory knob.
-  Repo: deployment-service (+ maybe mtds/utl). Diagnosing (sub-agent).
-**Fan-out matrix is READY** (year-shard 2020→2026 per data_type, ~47 concurrent-safe VMs; vault-share-price + gas-fees
-launchers MISSING `MANIFEST_PER_VM_SHARDS` → must add it or run sequential; dex-pools/dex-swaps/liquidations need
-`VM_NAME=` per shard; pyth-archive = single fixed window; `launch-defi-backfill-vm.sh` = IS instruments, NOT the MTDS
-matrix). Execute the matrix only AFTER B+A are green + a re-proof shows `captured` climbing.
+      ManifestFreshnessCache/ManifestReader loading the 6.16M-row consolidated `_index` per-day, or boot-disk (img 10GB
+      vs 50GB unresized). Fix = bump MACHINE_TYPE (e2-standard-8/16) on the defi launchers and/or a manifest-read memory
+      knob. Repo: deployment-service (+ maybe mtds/utl). Diagnosing (sub-agent). **Fan-out matrix is READY** (year-shard
+      2020→2026 per data_type, ~47 concurrent-safe VMs; vault-share-price + gas-fees launchers MISSING
+      `MANIFEST_PER_VM_SHARDS` → must add it or run sequential; dex-pools/dex-swaps/liquidations need `VM_NAME=` per
+      shard; pyth-archive = single fixed window; `launch-defi-backfill-vm.sh` = IS instruments, NOT the MTDS matrix).
+      Execute the matrix only AFTER B+A are green + a re-proof shows `captured` climbing.
+
+### 2026-06-21 — TRADFI lane: launcher bugs diagnosed + fixed; CME-2026 canary verifying
+
+Measured (consolidated v9 `_index`, `market-data-tick-tradfi-prd-…`): **1.94M rows, 99.7% v9** (only 6444 at v4). The
+dispatch's "v9 46.6%" is the **instruments-store (IS)** index, NOT the MTDS market-data index — MTDS tradfi is already
+v9. Capture: 102936 captured / 1.007M empty / 10013 failed / **818k expected_unattempted** (5.3% honest-cov).
+**Fillable-gap reality (3-dataset subscription):** only `ohlcv_1s`/`ohlcv_1m` on GLBX.MDP3(CME) /
+DBEQ.BASIC(NASDAQ,NYSE) / XCBF.PITCH(CBOE) are batch-fillable; the unattempted ohlcv_1s/1m is **ALL 2026-YTD** (CME
+160767, NYSE 48270, NASDAQ 14184, CBOE 212; pre-2026 already attempted=empty/captured). The remaining ~595k unattempted
+is genuine honest absence under the subscription: `trades`/`tbbo` (L1, >1yr free window), `mbp_10` (L2, >1mo),
+`ohlcv_15m`/`24h` (DERIVED, aggregated not fetched), and `ICE`/`BARCHART`/`YAHOO`/`FX` venues (off the 3-dataset
+allowlist; ICE→IFUS.IMPACT not subscribed). Adapter `_get_dataset_for_exchange` correctly maps NASDAQ/NYSE→DBEQ.BASIC,
+CBOE→XCBF.PITCH (launcher header comments mentioning XNAS.ITCH are stale; routing is on-allowlist). **Two launcher bugs
+(root-caused via T+10min run.log verify — both rc=0/1 with 0 rows = SILENT FAILURE):**
+
+1. Wrapper bare-`python3` UAC enumeration (ModuleNotFoundError) — **already fixed by peer @e31817b** (uses
+   `${WORKSPACE_ROOT}/.venv-workspace/bin/python3`; verified UAC-importable). No action.
+2. **`VM_TASK=cefi-backfill` (copy-paste) + no `--source`** → routed AWAY from the chunked MTDS-download branch; handler
+   raised `--source databento|massive is REQUIRED` on every payload. FIX (deployment-service): lib
+   `_tradfi-ohlcv-launcher-lib.sh` → `VM_TASK=mtds-backfill` + `VM_SOURCE=${OHLCV_SOURCE:-databento}`;
+   `setup-data-pipeline-vm.sh` reads `VM_SOURCE` + adds `--source $VM_SOURCE` in the mtds-backfill BASE_CLI. (UAC
+   `_VENUE_SOURCE_EXCLUSIONS` excludes only `massive` for CBOE → `databento` is capable for every tradfi OHLCV venue.)
+   Plus end-date clipped to **yesterday** (Databento T+1). GCS startup re-uploaded with the fix (reset/collision-proof).
+   **CME-2026 canary `tradfi-bf-cme-ohlcv-1m-es-2026-145146` relaunched + watcher armed.** ⚠️ Peer concurrently adding
+   the `mtds-live` branch to the SAME `setup-data-pipeline-vm.sh` (live, dispatch item 3) — non-overlapping hunks.
+
+- [ ] [DATA] P0. **tradfi fan-out after canary-green**: NASDAQ + NYSE full DBEQ year-shards (2023-04-15→2026,
+      force-window re-attempts wrongly-empty equity history) + CBOE/XCBF (needs a CBOE wrapper — VX-futures universe) +
+      CME 2026. Repo: deployment-service.
+- [ ] [SCRIPT] P1. **deployment-service: commit the launcher fix durably** (lib + startup `--source`) once canary proves
+      capture — reconcile with peer's concurrent `mtds-live` edit to the same startup file. Repo: deployment-service.
