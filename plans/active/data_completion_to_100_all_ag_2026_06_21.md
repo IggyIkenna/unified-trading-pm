@@ -132,7 +132,7 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       progress note 2026-06-21 15:42).
 - [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
       canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
-- [ ] [DATA] P1. **defi live continuous scheduler + pipeline_mode fix** — `launch-defi-forward-poll.sh` wires the
+- [x] [DATA] P1. **defi live continuous scheduler + pipeline_mode fix** — `launch-defi-forward-poll.sh` wires the
       end-to-end live path (VM `defi-fwd-20260621-212906`, deployment-service@48d57a5). T+10min verified: VM RUNNING
       (118% CPU, 5.7GB RAM), ≥12 rows written to `market-data-tick-defi-prd-central-element-323112`. **BLOCKER found**:
       `lst_rates_handler.py` hardcodes `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` on all 7 write calls — ignores
@@ -143,6 +143,7 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       for every defi collect-\* handler that hardcodes BATCH\_. Repo: market-tick-data-service. **DEFERRED** —
       successor: this todo (2026-06-21). Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh`
       daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs.
+      — market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
