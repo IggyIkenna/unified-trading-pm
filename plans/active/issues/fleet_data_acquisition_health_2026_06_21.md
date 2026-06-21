@@ -107,3 +107,14 @@ now resolves `HYPERLIQUID`→`cefi` and `ASTER`→`cefi`** (post UAC 0.30.0 — 
 actual 48.5k-cell `attempted_failed` cause needs fresh diagnosis (and the **defi lane is actively running on HL S3
 data** → a blind cefi HL/ASTER batch could collide — diagnose-first, not blind-execute). First-run chain now 8 bugs:
 …instrument-id-buffer-key · capture-schema-validation(bug#7) · source-registration(bug#8).
+
+### Follow-up finding (P2, cefi-lane 2026-06-21) — `book_snapshot` vs `book_snapshot_5` SOURCE_PRIORITY key mismatch
+
+The live connectors + canonical pipeline emit `data_type="book_snapshot_5"` (e.g. `coinbase_book_ws.py`,
+`binance_futures_ws.py`), but `SOURCE_PRIORITY` keys it as `("cefi", "book_snapshot")`. `has_source_priority("cefi",
+"book_snapshot_5")` → **False** → book_snapshot_5 writes are source-EXEMPT (no `MissingSourceError`, but also **no source
+validation** — the `book_snapshot` registration incl. the new hyperliquid/aster sources is effectively DEAD for the real
+data_type). Not blocking (the trades VM is the bug#8 proof; book shards don't raise), but cefi book source-provenance is
+unenforced fleet-wide. **Fix (P2, live-pipeline lane):** align the key — either register `("cefi", "book_snapshot_5")`
+(additive) or rename the SOURCE_PRIORITY/data_type to one canonical spelling. Same audit should sweep all AGs for
+book_snapshot vs book_snapshot_5 key drift. Repo: unified-api-contracts (+ any data_type emitters).

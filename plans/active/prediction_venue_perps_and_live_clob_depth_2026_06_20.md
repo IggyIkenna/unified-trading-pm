@@ -48,6 +48,34 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-21 (PM-3) — LIVE prediction: infra PROVEN end-to-end; capture = design-gap tail (documented)
+
+**Live pipeline is fully wired + proven** (7 sequential never-run-before bugs found+fixed): connector
+case-insensitive resolve, bucket kind (market-data-tick-prediction flat key), recorder source-derive,
+row_key day->date, Gamma query `condition_ids` (was clob_token_ids -> 422), launcher `_`->`-` VM-name
+sanitization, CandleBoundaryCrossedEvent data_type enum (book_snapshot -> book_snapshot_5). The live VM
+now runs clean: connector fetches REAL Gamma prices (HTTP 200, no 422), manifest writes per-VM shards
+with correct `pipeline_mode=live_polymarket_clob`, candle boundary flushes without error.
+
+**Remaining: capture is `empty_confirmed` (row_count=0) — a DESIGN GAP, not a bug.** The Polymarket
+Gamma poller yields a TOP-OF-BOOK quote (yes_price/no_price/best_bid/best_ask/last_trade_price), but no
+existing capturable data_type candle-schema matches it: `trades` = actual trades (a price poll has none
+-> honest empty), `book_snapshot_5` = depth-5 levels (Gamma gives only top-of-book -> 0-row candle).
+Connector yields ticks correctly (verified: _poll_one_cycle -> _parse_market_response -> yield); the
+runner's tick->candle aggregator produces 0-row candles because the tick shape doesn't fit the data_type
+schema. NOT spin-fixable by relaunching.
+
+- [ ] [DESIGN] P2. **Decide the canonical data_type/schema for Polymarket live Gamma quotes** (top-of-book
+  yes/no + best_bid/ask + last_trade_price). Options: (a) a new `prediction_quote` data_type + candle
+  schema that captures the quote fields; (b) extend book_snapshot_5 aggregation to accept top-of-book
+  (partial depth); (c) use the CLOB websocket (auth) for true depth instead of the Gamma poll. Then wire
+  the runner's tick->candle for it so live captures row_count>0. Live INFRA is done; this is the
+  capture-schema decision. Repo: market-tick-data-service (runner/sink) + UAC (data_type/schema).
+- [ ] [DESIGN] P2. **UAC naming: SOURCE_PRIORITY uses `book_snapshot` but DataType enum uses
+  `book_snapshot_5`** (pre-existing mismatch surfaced here). Reconcile to one canonical name across
+  SOURCE_PRIORITY + DataType + candidate_parquet_paths. Repo: unified-api-contracts.
+
+
 ### 2026-06-21 (PM-2) — LIVE prediction LAUNCHED (free Gamma poll) + Kalshi seed running
 
 - [x] ✅ [SCRIPT] P1. LIVE prediction is WIRED + launchable end-to-end (no build needed): `polymarket_ws.py`

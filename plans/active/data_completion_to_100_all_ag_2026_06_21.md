@@ -103,9 +103,16 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       unified-trading-library@057264fd (converged with slot-3's `78481472`); the live recorder passes `validate=False`
       — market-tick-data-service@e6b0f29. Both QG-green (UTL 139s / mtds 96s) via isolated name-correct worktrees
       (churn-immune), on remote `live-defi-rollout`. Deployed: fresh UTL+mtds tarballs (fixes verified inside) →
-      `gs://deployment-scripts-central-element-323112/code/` @17:51Z; relaunched
-      `mtds-live-cefi-hyperliquid-trades-20260621-175349`. End-to-end captured-row verification in-flight on that VM.
-      Repo: unified-trading-library / market-tick-data-service. (CEFI lane 2026-06-21.)
+      `gs://deployment-scripts-central-element-323112/code/` @17:51Z. **Relaunch surfaced bug#8 (`MissingSourceError`):
+      HYPERLIQUID/ASTER reclassified to cefi (UAC 0.30.0) but their sources were never registered — `SOURCE_PRIORITY
+      [(cefi,trades)]` was `['tardis']` only → writer rejected `source='hyperliquid'`. Fixed: registered
+      `hyperliquid`+`aster` on the 5 cefi perp data_types (trades/ohlcv_1m/book_snapshot/liquidations/derivative_ticker)
+      — unified-api-contracts@`061cfd01` (QG-green 225s, +4 tests updated); closes the cefi source-provenance RED gap for
+      HL/ASTER. UAC tarball redeployed @18:24Z; VM relaunched `…182708`.** ✅ **VERIFIED end-to-end:** per-VM shard
+      `market-data-tick-cefi-prd-…/_index/per_vm/…182708.parquet` holds **3 `capture_status=captured` rows, row_count>0
+      (BTC 87 / ETH 238 / SOL 40), source=hyperliquid, pipeline_mode=live_hyperliquid** — NO RowSchemaValidationError, NO
+      MissingSourceError. cefi LIVE now captures real trades (not just empty). Repo: unified-trading-library /
+      market-tick-data-service / unified-api-contracts. (CEFI lane 2026-06-21.)
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
 - [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
@@ -264,14 +271,22 @@ burst→429→52s-minute-sleep thrash that capped enrichment at ~46/min vs 1200/
 
 **RUNNING VMs:** odds-backfill `mtds-backfill-odds-{2020..2026}` (7, ODDS-API key, separate quota) · enrichment
 `sports-enrich-{2019-2022,2023-2026}` (2, RELAUNCHED on fixed throttle — verify rate post-boot) · **sports LIVE**
-`mtds-live-sports-odds-api-trades-20260621-174808` (JUST launched — the missing piece; verify ≥1 `live_odds_api` row at
+`mtds-live-sports-odds-api-trades-20260621-184015` (RELAUNCHED 2026-06-21 18:40 UTC after the UAC enum fix; the prior
+`...174808`/`...175558` FAILED `No PipelineMode for source 'odds_api' in mode 'live'`; verify ≥1 `live_odds_api` row at
 T+10). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
 
-**LIVE==BATCH (operator caught this):** sports had **0 `live_*` rows** — footystats fwd-poll wrote `batch_*`
-(forward-over-future, NOT live). FIX: launched true `launch-mtds-live.sh --asset-group sports --shard-spec
-sports:ODDS_API:trades --instrument-ids ODDS_API:SPORT:soccer_{epl,la_liga,serie_a,bundesliga,ligue_one}` → odds_api_ws
-connector → `live_odds_api` (same canonical schema as batch). Verify it produces a live row (cefi proved the live path
-works after its 5-bug first-run chain — those infra bugs are AG-agnostic + fixed).
+**LIVE==BATCH (operator caught this) — UAC ENUM FIX LANDED:** sports had **0 `live_*` rows** — footystats fwd-poll wrote
+`batch_*` (forward-over-future, NOT live). The true live producer (`launch-mtds-live.sh --asset-group sports --shard-spec
+sports:odds_api:trades` → `odds_api_ws` WSFeedConnector → `live_odds_api`) FAILED at boot with
+`No PipelineMode for source 'odds_api' in mode 'live'` — the `PipelineMode` closed set had `BATCH_ODDS_API`/`REPLAY_ODDS_API`
+but no `LIVE_ODDS_API`. FIX (uac@249ca53f, LDR): added `PipelineMode.LIVE_ODDS_API` + flipped
+`SOURCE_MODE_CAPABILITY["odds_api"]` to `{BATCH, LIVE, REPLAY}` + the test-side SSOT
+`EXPECTED_SOURCE_MODE_CAPABILITY` + replaced `test_no_sports_source_is_live_yet` with
+`test_odds_api_is_the_first_live_sports_source` (the other sports vendors stay live-less). `REPLAY_ODDS_API` already
+existed (replay-capable). QG green (223s), source-mode + cassette tests pass. The live VM pip-installs UAC fresh at boot
+→ it picks up the new enum once LDR has it; VM relaunched as `...184015` (same lowercase `odds_api` venue + 5-league
+instrument-ids). Same canonical schema as batch (Live==Batch). cefi proved the live path works after its 5-bug first-run
+chain (AG-agnostic infra bugs, fixed).
 
 **3 MIGRATION SUB-AGENTS in flight (opus), IS ships BLOCKED on a LIVE foreign UTL WIP** (`manifest_writer/_writer_captured.py`,
 peer actively editing — do NOT stomp; their tracked waiters fire when UTL goes clean):
@@ -604,10 +619,11 @@ Launched a real tradfi live producer (`mtds-live-tradfi-cme-trades`) to test liv
 root-caused bugs in the (peer's, in-flight) `mtds-live` / `databento_tradfi_ws` live scaffold + 1 vendor unknown.
 **Deleted the broken VM** (it wrote 4 wrong `live_massive` empty rows). Bugs (filed for the live-pipeline lane; NOT
 fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + the subscription is unconfirmable):
-- [ ] [SCRIPT] P1. **mtds: `databento_tradfi_ws._get_api_key()` reads the raw Pydantic field `cfg.databento_api_key`**
+- [x] ✅ [SCRIPT] P1. **mtds: `databento_tradfi_ws._get_api_key()` reads the raw Pydantic field `cfg.databento_api_key`**
   (None unless `DATABENTO_API_KEY` env set) → logs `no API key — connection skipped (BLOCKED-CREDENTIALS)`. The BATCH
   path resolves the key from the `databento-api-key` **secret** via the secret client (works). Fix: `_get_api_key`
   fallback-resolves `databento_secret_name` via `get_secret_client()` like batch. Repo: market-tick-data-service.
+  — market-tick-data-service@e532105
 - [ ] [SCRIPT] P1. **UAC: `live_source_for_venue(tradfi,…)` returns `massive`** (`SOURCE_PRIORITY[(tradfi,trades)]=
   ['massive','databento']`, primary=massive) — but **massive is batch-only (no live feed)**; the actual live vendor is
   databento. Live rows mis-stamp `live_massive`. Fix: live source = first **LIVE-capable** source in the priority list
@@ -620,3 +636,21 @@ fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + 
   of the code fixes. After the 3 fixes + a tarball rebuild + relaunch, this is the only remaining gate to `live_databento`.
 NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 + daily-cron host) IS done (`batch_databento`); `live_databento`
 websocket is beyond-dispatch peer-domain work, now fully diagnosed for them.
+
+### 2026-06-21 — DEFI lane: CATALOG GATE OPEN — capturing real data; full fan-out relaunched
+**BREAKTHROUGH:** canary captured real lst_rates to
+`market-data-tick-defi-prd/raw_tick_data/by_date/day=2026-06-14/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=STAKEWISE/.../data_type=lst_rates/...` (stakewise/ankr/etherfi/puffer ETHEREUM + jito SOLANA). Full fix stack works.
+**TRUE catalog root-cause (after bucket/sharding/asyncio/rollup/data_type/staleness layers):** the MTDS preflight reads
+`build_bucket("instruments","defi")` = **`instruments-store-defi-central-element-323112` (env-LESS legacy, 23.9d stale)**,
+but ALL writers (IS backfill, catalogue roll-up, data_type stamp) wrote **`instruments-store-defi-prd-…` (env-SHORT,
+fresh)**. Reader↔writer bucket mismatch (same env-less-vs-`-prd-` class as the orig market-data bug). **IMMEDIATE FIX
+(applied):** `gcs_copy_object` synced `…-prd-…/_index/availability_index.parquet` → the env-less bucket (fresh 18:32;
+valid 24h via staleness=86400; MTDS writes market-data not instruments so env-less stays fresh through the run).
+**Full 60-VM fan-out relaunched** (agent ab14773159be4e222) — gate open → real capture. execution-defi consolidator next.
+- [ ] [DATA] P1. **DEFI durable bucket-align fix (so env-less can't re-stale):** the instruments preflight reader
+  `build_bucket("instruments","defi")` resolves env-LESS legacy; canonical writers use env-SHORT `-prd-`. Align: make the
+  reader resolve canonical `-prd-` (verify per-AG it doesn't break cefi/tradfi/sports — they may be env-less-aligned), OR
+  point the IS consolidator to also refresh env-less. Until then a periodic env-short→env-less index sync keeps defi
+  capture alive. Repo: unified-trading-library (build_bucket) / instruments-service. Provenance: this Progress Log.
+- [ ] [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
+  defi MTDS launchers — working locally, used by the live fan-out; persist via quickmerge). Repo: deployment-service.

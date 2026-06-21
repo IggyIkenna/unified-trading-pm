@@ -68,10 +68,32 @@ some cells to resolve `attempted_failed→empty_confirmed` (honest absence). Sup
 `cefi_free_venue_historical_refetch_mechanism_2026_06_21.md` (the mechanism EXISTS — the adapter — it just isn't wired
 into a prod launcher).
 
+## §2 UPDATE 2026-06-21 — DIAGNOSED + premise corrected (cefi-lane)
+
+The §2 premise ("cefi download STRIPS HL/ASTER because they're defi in VENUE_TO_ASSET_GROUP") is **STALE**: verified
+`VENUE_TO_ASSET_GROUP['HYPERLIQUID']=='cefi'` and `['ASTER']=='cefi'` (post UAC 0.30.0). The 48.5k `attempted_failed`
+were diagnosed from the consolidated cefi `availability_index.parquet` (read-only, 2026-06-21):
+
+- **pipeline_mode**: `batch_hyperliquid` 30,835 + `batch_aster` 17,675 → these are **BATCH** on-chain-perp cells (the
+  HyperliquidAdapter S3 archive / AsterAdapter REST path), **NOT** the cefi-live path.
+- **error_reason**: `UNCLASSIFIED_ADAPTER_ERROR` **45,109** + `VENUE_FETCH_FAILED` 3,220 + 181 phantom-no-parquet.
+- **data_type**: trades 16,524 / book_snapshot_5 16,522 / derivative_ticker 13,804 / liquidations 1,479.
+- (For context HL/ASTER cefi already has captured=15,002 / empty_confirmed=15,226 / expected_unattempted=24,390.)
+
+**Conclusion:** the gap is a **batch on-chain-perp ADAPTER bug** — the HyperliquidAdapter/AsterAdapter batch fetch hits
+an error it does NOT classify (violates the "every adapter classifies via UAC `classify_venue_error()`" rule → the
+`UNCLASSIFIED_ADAPTER_ERROR` bucket), so the cells never resolve to captured/empty. This is **defi-lane / batch-adapter
+owned** (they own `HyperliquidAdapter` + actively run HL S3 batch — a blind cefi re-fetch would COLLIDE). **Next step
+(defi-lane, P0):** read a sample `batch_hyperliquid` cell's adapter run.log to root-cause the unclassified error, fix the
+adapter's error classification + the underlying fetch, then re-run the batch backfill for the 48.5k range. NOT a
+cefi-lane / cefi-live task; the cefi LIVE path is fully fixed (bugs #6/#7/#8, captured rows verified).
+
 ## Status
 
-- **Bug #7 (live capture validation) — FIXED 2026-06-21 (cefi-lane)**: `ManifestWriter.record_captured` gained a
-  `validate=False` gate; the live recorder passes it (bookkeeping df; real ticks validated+written by
-  `LiveWebsocketTickSink`; `pipeline_mode`+`source` carry provenance). This unblocks CAPTURE for BOTH live sources
-  (per-venue connectors AND the future tardis-machine source) — foundational for #1.
-- #1 + #2 are P0 follow-ups for the live-pipeline / mtds lane.
+- **Bug #7 (live capture validation) — FIXED + VERIFIED 2026-06-21 (cefi-lane)**: UTL `ManifestWriter.record_captured`
+  gained a `validate=False` gate; the live recorder passes it (bookkeeping df; real ticks validated+written by
+  `LiveWebsocketTickSink`; `pipeline_mode`+`source` carry provenance). Durably shipped (UTL@`057264fd` + mtds@`e6b0f29`).
+- **Bug #8 (MissingSourceError) — FIXED + VERIFIED 2026-06-21 (cefi-lane)**: registered `hyperliquid`/`aster` as cefi
+  sources on the 5 cefi perp data_types (UAC@`061cfd01`). cefi LIVE HL trades now captured (row_count>0, verified).
+- #1 (tardis-machine live option) is a P0 follow-up for the live-pipeline / mtds lane.
+- #2 (HL/ASTER batch) is DIAGNOSED above → defi-lane / batch-adapter P0 (unclassified-adapter-error fix + re-fetch).
