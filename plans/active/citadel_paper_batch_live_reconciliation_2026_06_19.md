@@ -676,6 +676,17 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-21 (autonomous) — CeFi funding data FOUND in canonical GCS (not a backfill).** The earlier "CeFi perp
+  funding genuinely absent" conclusion was WRONG: it exists via the **Tardis vendor** at
+  `perp-funding-prd/raw_tick_data/by_date/day={D}/pipeline_mode=batch_tardis/asset_group=cefi/venue={V}/.../data_type=perp_funding/`
+  for 7 venues (BINANCE-FUTURES/BYBIT-FUTURES/OKX-FUTURES/DERIBIT/KRAKEN-FUTURES/BITGET-FUTURES/BITFINEX-FUTURES) +
+  marks, full window. The provider already lists by `data_type=perp_funding` so it READ the rows — the only gap was a
+  **venue-name mismatch** (Tardis `BINANCE-FUTURES` vs catalogue `binance`). Fix SHIPPED: `_canonical_venue` normalizer
+  in `canonical_perp_funding_provider.py` (strip `-FUTURES`, lowercase; HL/aster/gmx/pacifica unchanged) —
+  strategy-service@bbdb4f1e on LDR. Verification paper run in progress to confirm CARRY_FUNDING_DISPERSION (52) +
+  non-HL CARRY_BASIS_PERP light up + ε=0. (The features-service@f33b2324 recompute is redundant given Tardis but
+  harmless — normalizer de-dups by (venue,coin,day) mean.)
+
 - **2026-06-21 (autonomous, operator away) — MULTI-ARCHETYPE PAPER BOOK: 2 → 46 strategies across 4 archetypes, real
   PnLs, ε=0.** Wired the production catalogue + portfolio_allocator into the paper book and read each archetype's data
   from its canonical GCS bucket: CARRY_STAKED_BASIS (14, lending_rates+lst_rates), CARRY_BASIS_PERP (17, perp-funding
