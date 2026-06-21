@@ -259,8 +259,11 @@ jobs:
               # recovery below. Fail-quiet (best-effort; a missing signal must never jam the loop).
               if printf '%s' "$GATE_OUT" | grep -q 'Tier A'; then
                 HEAD_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
+                # Exclude action_required/cancelled: those are NOT a real report (action_required = a PR-event
+                # workflow-approval gate, seen on agent-orchestrator/e2e-testing 2026-06-21) — counting them as
+                # "v2 present" masked the missing-check signal so the bot never re-dispatched → PR stuck forever.
                 HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
-                  --json headSha -q "[.[] | select(.headSha == \"$HEAD_SHA\")] | length" 2>/dev/null || echo "0")
+                  --json headSha,conclusion -q "[.[] | select(.headSha == \"$HEAD_SHA\" and .conclusion != \"action_required\" and .conclusion != \"cancelled\")] | length" 2>/dev/null || echo "0")
                 if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" -eq 0 ]; then
                   echo "  ↻ Tier-A FAILING is STALE for $REPO (no quality-gates-v2 on current LDR HEAD ${HEAD_SHA:0:8}) — re-dispatching v2 to refresh ci_status; next drain tick re-evaluates"
                   gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref live-defi-rollout 2>/dev/null || true
@@ -376,8 +379,10 @@ jobs:
                 # stale → spurious close+reopen churn. The Actions API works with the PAT; "a v2
                 # RUN exists for this head SHA" is the same stale-check signal. ERR ≠ 0: on query
                 # failure leave the PR alone (fail-safe), never recover blind.
+                # action_required/cancelled excluded (see note above): a PR-event approval-gated run is not a report —
+                # treating it as "present" wedged the blocked PR; excluding it lets the close+reopen/dispatch recovery fire.
                 HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
-                  --json headSha --jq "[.[]|select(.headSha==\"$HEAD_SHA\")]|length" 2>/dev/null || echo "ERR")
+                  --json headSha,conclusion --jq "[.[]|select(.headSha==\"$HEAD_SHA\" and .conclusion!=\"action_required\" and .conclusion!=\"cancelled\")]|length" 2>/dev/null || echo "ERR")
                 if [ "$HAS_V2" = "ERR" ]; then
                   echo "  WARN: statusCheckRollup query failed for PR #$PR_NUM — leaving it (no blind recovery)"
                 fi
