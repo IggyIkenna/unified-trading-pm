@@ -384,6 +384,15 @@ are identified (2) and the ledger exists (3).
       carry_staked_basis capital flow (USDC deposit → Uniswap swap → Lido stake → Deribit margin posting), single
       `client_id` (funds-isolation), so the Wallet-transfers panel shows real movements not "0 movements". Repos:
       strategy-service (emit) + unified-trading-library (transfer-row SSOT) + client-reporting-api (read).
+- [ ] [STRATEGY] P2. **DEFERRED-FINDING (2026-06-21, surfaced by P10.3 net-views work, client-reporting-api):** the
+      carry_staked_basis ledger emits the staked leg as a SEPARATE long position from the spot-acquisition leg
+      (`UNISWAP_V3:DEX_POOL:ETH` 233 ETH long AND `LIDO:STAKING:ETH` 233 ETH long), so per-coin USD delta double-counts
+      the economic long — net ETH delta reads **+$752K** (should be ≈$18K residual = 233 staked − 215 perp short). The
+      reader (`net_views`/`delta_per_coin`) is HONEST — it sums what the ledger says; the fix is producer-side: model the
+      USDC→Uniswap-swap→Lido-stake flow as ONE economic ETH long (the swap CONVERTS USDC→ETH, the stake RE-REPRESENTS
+      that same ETH as stETH, not a second long), or net the spot+LST legs in the position fold. Until then the
+      delta-neutral books will not read ≈0 per coin even though the hedge is correctly sized. Repos: strategy-service
+      (emit) + unified-trading-library (position fold). Provenance: live run paper-20260621100605-b33e4bf4.
 - [ ] [STRATEGY] P2. Real multi-dimensional P&L attribution: by **venue** (Uniswap/Lido/Deribit), by **layer**
       (strategy/execution), by **factor** (carry / basis / funding / price / fees), per **strategy_id** — replace the
       flat `$87` (`by venue == by layer` placeholder). Producer emits the richer `PnLAttributionRow` dimensions; API
@@ -394,21 +403,32 @@ are identified (2) and the ledger exists (3).
 
 ### Metrics / API (client-reporting-api)
 
-- [ ] [API] P2. Net views: **net-in-dollars** (portfolio USD value), **net-in-coin** (net qty per coin),
-      **delta-per-coin** (net signed delta exposure per coin; ETH ≈ 0 for the delta-neutral book). Repo:
+- [x] [API] ✅ P2. Net views: **net-in-dollars** (portfolio USD value), **net-in-coin** (net qty per coin),
+      **delta-per-coin** (net signed delta exposure per coin; ETH ≈ 0 for the delta-neutral book) — client-reporting-api@501c731
+      `core/portfolio_metrics.py::net_views` (base-coin grouped so perp nets vs spot/LST) + `GET /api/v1/clients/{id}/net-views`.
+      LIVE `firm-paper-determinism`: ETH net 250.83 coin / SOL 210.0; per-coin delta surfaced (reads $752K ETH due to the
+      producer spot+LST double-count — captured as a [STRATEGY] finding above; reader is honest). Repo:
       client-reporting-api (ledger_views).
-- [ ] [API] P2. Per-strategy breakdown: group trades / positions / P&L / attribution by `strategy_id` (per-strategy
-      detail + overall roll-up). Repo: client-reporting-api.
-- [ ] [API] P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall. Repo:
-      client-reporting-api.
-- [ ] [API] P2. **% ROE annualised** (return on equity, annualised over the run window) per strategy + overall. Repo:
-      client-reporting-api.
+- [x] [API] ✅ P2. Per-strategy breakdown: group trades / positions / P&L / attribution by `strategy_id` (per-strategy
+      detail + overall roll-up) — client-reporting-api@501c731 `per_strategy_breakdown` + `GET /per-strategy`. LIVE: 2 strategies
+      (`@lido-uniswapv3-deribit` 21 trades / `@jito-jupiter-drift` 21 trades) mapped from venue via RunManifest.strategy_ids.
+      Repo: client-reporting-api.
+- [x] [API] ✅ P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall — client-reporting-api@501c731
+      `_bps_on_turnover` + `GET /bps-pnl`. LIVE: ETH-strat -2.60 bps, SOL-strat 0 bps, overall -1.53 bps (turnover $2.29M).
+      Repo: client-reporting-api.
+- [x] [API] ✅ P2. **% ROE annualised** (return on equity, annualised over the run window) per strategy + overall —
+      client-reporting-api@501c731 `_annualised_roe` (window from RunManifest, linear annualise) + `GET /roe`. LIVE: overall
+      -6.05% annualised over the 6-day window. Repo: client-reporting-api.
 
 ### Backtest visibility (client-reporting-api + UI)
 
-- [ ] [API] P2. Backtest results surface: historical PnL from the `__batch__` rerun, **execution cost** (execution
+- [x] [API] ✅ P2. Backtest results surface: historical PnL from the `__batch__` rerun, **execution cost** (execution
       alpha = smart-matching fill − benchmark fill), and **execution assumptions** (fill-model fidelity tier
-      OHLCV→BBO→depth→trades→MBO + the slippage/cost model used). Repo: client-reporting-api.
+      OHLCV→BBO→depth→trades→MBO + the slippage/cost model used) — client-reporting-api@501c731 `backtest_surface` +
+      `read_batch_total_pnl` + `GET /backtest`. Reads the canonical run's `__batch__` rerun (PENDING honestly when none
+      yet — the newest 2-strategy run has no batch rerun), exec-alpha=0 stated as a STRUCTURAL zero (BENCHMARK fill model),
+      assumptions surface fill_model=BENCHMARK + OHLCV signal-close tier + the fidelity ladder + paper-vs-batch payload.
+      Repo: client-reporting-api.
 - [ ] [UI] P3. **Unified batch↔paper view**: reconcile the dashboard so paper and batch are viewable together neatly
       (toggle/compare), `live − batch = (paper − batch ≈ 0) + (live − paper = execution α)` made legible. Repo:
       unified-trading-system-ui. (pw:L2 + regression spec required.)
