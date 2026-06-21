@@ -5489,3 +5489,10 @@ realignment recipe above when this signature appears (zero-unique-content + froz
    deployment grows beyond build-status.
 
 Not blocking trading (P2, operator tooling). — harsh-slot-3
+
+## [CREDENTIAL APPROVAL REQUEST] 2026-06-21 — Tardis historical (cefi) — cefi-lane (/autonomous)
+- **Vendor/tier:** Tardis.dev historical `replay-normalized` subscription (per-exchange historical entitlement, cefi venue set).
+- **SM key:** `tardis-api-key` (present; entitlement is the gate).
+- **Unblocks:** 775,860 cefi `attempted_failed` historical cells (2019→2026) + Tardis-share of 482k `expected_unattempted`.
+- **Status:** BLOCKED-CREDENTIALS — operator currently EXCLUDED this spend (2026-06-21 dispatch). Lift exclusion = fund entitlement.
+- **Plan-of-record:** plans/active/issues/cefi_tardis_historical_blocked_credentials_2026_06_21.md + plans/active/data_completion_to_100_all_ag_2026_06_21.md

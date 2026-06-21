@@ -72,9 +72,11 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       ALL AGs (live=0 everywhere).
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
-- [ ] [DATA] P1. **cefi — file BLOCKED-CREDENTIALS ask** for the 775.9k Tardis-gated failed cells (Tardis historical
-      replay subscription) in `plans/active/issues/` + ping ledger. **Batch Tardis (historical) EXCLUDED — billing-gated
-      (operator).** Repo: deployment-service.
+- [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
+      replay subscription, SM key `tardis-api-key`) — issue doc
+      `plans/active/issues/cefi_tardis_historical_blocked_credentials_2026_06_21.md` + `CREDENTIAL APPROVAL REQUEST` in
+      `plans/active/_agent_pings.md`. **Batch Tardis (historical) EXCLUDED — billing-gated (operator).** Repo:
+      deployment-service. (CEFI lane 2026-06-21.)
 - [ ] [IS] P1. **IS tradfi v9 canonicalisation** — only 46.6% at schema_version=9; run the tradfi `_index`
       canonicalisation walk (8→9: source/asset_group/pipeline_mode) so the index is fully v9. Repo: instruments-service
       / market-tick-data-service.
