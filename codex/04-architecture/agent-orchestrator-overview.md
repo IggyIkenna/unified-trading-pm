@@ -496,12 +496,20 @@ trigger does a **context-preserving** failover (`_handle_usage_cap`) rather than
   (`slot.last_msg`) so it never reads as healthy, and the trigger re-checks every tick → it resumes the instant headroom
   appears. A per-slot frozen-page dedup (`_cap_frozen_paged`) fires the page once per frozen episode.
 
+**Self-healing hardening (2026-06-21)** — five further closures keep the fleet recovering "for any other reason": a
+failed account-rotation respawn now deterministically releases the task + recovers the slot; `stale`-lingering live
+sessions are reclaimed (not only `idle`); a provably-dead branch-quarantined slot auto-heals (preserve→`checkout -B`
+realign); the orphan-wip inherit realigns via `checkout` not `reset --hard` (no audit-reflog page); a `LoopSupervisor`
+revives any dead daemon-loop thread without a backend restart; and the heartbeat-silence anchor is clamped to the live
+tmux session's age (no "idle for 5711min"). Full trigger contracts:
+[`agent-orchestrator-worker-liveness.md` § "Self-healing hardening"](agent-orchestrator-worker-liveness.md).
+
 The deterministic session id is generated at spawn (`tmux_spawn.new_session_id()` → `claude --session-id <uuid>`) and
 persisted on `SlotRow.claude_session_id` (workers) / `AgentRow.claude_session_id` (main agent) — owned from t=0, no
 transcript-filename scraping. The unified `AgentKeeper` (formerly `MainAgentKeeper`; now also keeps the review agent(s)
-— see § "Unified AgentKeeper" below) applies the identical headroom-gated resume logic to the singleton
-main agent (`_handle_rate_limit_modal` → `resumed` / `killed_fresh` / `frozen_no_headroom`), with a failover cooldown so
-a lingering modal in the pane scrollback doesn't re-failover every tick. SSOT:
+— see § "Unified AgentKeeper" below) applies the identical headroom-gated resume logic to the singleton main agent
+(`_handle_rate_limit_modal` → `resumed` / `killed_fresh` / `frozen_no_headroom`), with a failover cooldown so a
+lingering modal in the pane scrollback doesn't re-failover every tick. SSOT:
 `plans/active/orchestrator_account_failover_resume_respawn_2026_06_17.md`.
 
 ### Anti-thrash gates
@@ -534,15 +542,15 @@ execution, interaction with AutoSpawnLoop).
 `server/main_agent_keeper.py` — class **`AgentKeeper`** (renamed from `MainAgentKeeper`) — the ONE keeper that
 guarantees the MANDATORY agents on EVERY VM: the singleton **main** (`orch-agent-main`) AND the slot-bound **review**
 agent(s) (`ORCHESTRATOR_REVIEW_SLOTS`). Review-ensure was merged out of `AutoSpawnLoop` into the public free function
-`autospawn.ensure_review_agents(...)` that the keeper calls each tick — so **review comes up even when AutoSpawn is OFF**
-(the dev-box gap where review rode AutoSpawn and never spawned). AutoSpawn now handles ONLY on-demand task workers + the
-escalation drains.
+`autospawn.ensure_review_agents(...)` that the keeper calls each tick — so **review comes up even when AutoSpawn is
+OFF** (the dev-box gap where review rode AutoSpawn and never spawned). AutoSpawn now handles ONLY on-demand task
+workers + the escalation drains.
 
-- **Env-configurable /loop cadences**: `ORCHESTRATOR_MAIN_LOOP_SECONDS` (default 60) / `ORCHESTRATOR_REVIEW_LOOP_SECONDS`
-  (default 900 = 15 min) — `prompts.render` fills `<LOOP_SECONDS>` per role (safety-default so a missed call site never
-  ships a literal placeholder).
-- **Wake-on-message nudge**: `POST /api/agents/{id}/nudge` → `tmux_spawn.nudge()` (best-effort send-keys), AND auto-fired
-  on a by-role message — so a long idle loop is responsive to a UI message WITHOUT fast polling.
+- **Env-configurable /loop cadences**: `ORCHESTRATOR_MAIN_LOOP_SECONDS` (default 60) /
+  `ORCHESTRATOR_REVIEW_LOOP_SECONDS` (default 900 = 15 min) — `prompts.render` fills `<LOOP_SECONDS>` per role
+  (safety-default so a missed call site never ships a literal placeholder).
+- **Wake-on-message nudge**: `POST /api/agents/{id}/nudge` → `tmux_spawn.nudge()` (best-effort send-keys), AND
+  auto-fired on a by-role message — so a long idle loop is responsive to a UI message WITHOUT fast polling.
 - **Fleet-worker cap**: `config.fleet_worker_cap()` (10 default; **6 on the planning VM**) bounds CONCURRENT on-demand
   workers; the mandatory main+review are NOT counted against it.
 - **`backup` role DEPRECATED**: removed from `AgentRole`/`AgentKind` (server + dashboard), `ROLES_ORDER`,
@@ -570,8 +578,8 @@ HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (u
 - **Agent retention**: a terminal agent is RETAINED (soft-delete to status `finished` + `finished_at`/`exit_reason`, or
   archived by the reaper which stamps the same) so the dashboard shows past escalate/plan-health runs;
   `DELETE /api/agents/{id}` soft-deletes; `prune_finished_agents` (keep last N per kind, 7d) runs each keeper tick.
-- **Filterable `GET /api/agents`**: `status`/`kind`/`lifecycle`/`include_finished`/`limit` (SQL `WHERE`/`LIMIT`); default
-  excludes terminal records so the live roster stays clean.
+- **Filterable `GET /api/agents`**: `status`/`kind`/`lifecycle`/`include_finished`/`limit` (SQL `WHERE`/`LIMIT`);
+  default excludes terminal records so the live roster stays clean.
 - **Activity backend**: `list_activity` filters (slot/event_type/event_types) in SQL BEFORE the limit + a `before_id`
   cursor; `activity_rollup` denoise (`GROUP BY event_type[,slot]` → counts). `/api/activity` gained
   `types`/`before_id`/per-row `id`; new `/api/activity/rollup`. The `AgentTypesPanel` + activity-frontend (load-older,
@@ -587,8 +595,7 @@ bookend** on true→false (`notify_slot_recovered` / `notify_git_staleness_resol
 never every tick. The dedup that makes "once" hold is **persisted to disk** (`server/dedup_state.py` under `STATE_DIR`:
 seen-key sets, bool sentinels, cooldown dicts), so a central-VM restart inherits "already alerted at T" instead of
 re-firing every still-true alert. The new slot-quarantine page (`notify_slot_quarantined`) names the specific repo +
-cause + queued-wall count when a quarantine starves dispatch. SSOT:
-`plans/active/alert_quality_overhaul_2026_06_18.md`.
+cause + queued-wall count when a quarantine starves dispatch. SSOT: `plans/active/alert_quality_overhaul_2026_06_18.md`.
 
 ## Host-offline failover lifecycle (FailoverLoop — design 2026-05-30)
 
