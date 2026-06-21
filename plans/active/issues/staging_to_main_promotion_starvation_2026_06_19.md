@@ -281,14 +281,18 @@ as the residual above; quarantine skips ao on future runs (queue unblocked) + "a
 promotion." Since ao#350 already carried ao's content to main directly (15:11Z), ao main == LDR content → the next
 promote is a near-no-op success → clears. Low-harm; verify it clears.
 
-- [ ] [CICD] P1. **Make the semver-agent bump-rate breaker climbing-aware** so a healthy interleaved version climb
-      (feat-drain → bump → feat-drain → bump, strictly increasing) does NOT false-trip the count-gate, while a true
-      re-bump loop still trips. Edit `scripts/workflow-templates/semver-agent.yml.tmpl` (SSOT): replace the raw
-      `RECENT_BUMPS ≥ 3/hr` count-trip with an **adjacent re-bump-PAIR** count (a bump whose immediately-newer neighbour
-      is also a bump = no content between = genuine loop) + keep `CONSECUTIVE ≥ 3` + raise the raw ceiling to ≥6/hr as a
-      backstop. Then `rollout-workflow-templates.sh --template semver-agent.yml` to all repos + commit each + hand-align
-      PM's own copy. repo: unified-trading-pm (template) + all service repos. Provenance: deployment-service breaker
-      trip 2026-06-21 16:20 UTC.
+- [x] ✅ [CICD] P1. **Bump-rate breaker climbing-aware — TEMPLATE SSOT SHIPPED PM@c1329c97c.** Replaced the raw
+      `RECENT_BUMPS ≥ 3/hr` count-trip in `scripts/workflow-templates/semver-agent.yml.tmpl` with an **adjacent
+      re-bump-PAIR** count (`REBUMP_PAIRS ≥ 2` — a bump whose immediately-newer neighbour is also a bump = no content
+      between = genuine baseline-never-recorded loop) + kept `CONSECUTIVE ≥ 3` + a `RECENT_BUMPS ≥ 6/hr` backstop.
+      Verified by simulation: deployment-service real healthy-climb (0.15→0.16→0.17, pairs=0) NO-TRIP; true
+      consecutive/interrupted loops TRIP; YAML parses. Provenance: deployment-service breaker trip 2026-06-21 16:20 UTC.
+- [ ] [CICD] P1. **Roll the climbing-aware breaker to the fleet** — `rollout-workflow-templates.sh --template
+      semver-agent.yml` writes all 24 repos' `.github/workflows/semver-agent.yml` (no auto-commit); commit + push each
+      to its LDR (`.github/**` carve-out) + hand-align PM's own copy (rollout skips PM). Takes effect per-repo when the
+      workflow reaches that repo's `main` (the default-branch trigger gotcha). NOT done in-session (24-repo commit unit +
+      dirty-fleet risk if interrupted). repo: unified-trading-pm (rollout) + all service repos. Provenance: template
+      shipped PM@c1329c97c 2026-06-21.
 - [ ] [CICD] P1. **Diagnose the `update-repo-version.yml` baseline-writer dispatch gap** (why `staging_versions` is
       8/25 sparse despite repos bumping on staging — e.g. deployment-service bumped 3× yet `staging_versions` absent).
       Confirm the semver-agent→PM `repository_dispatch` (branch=staging) actually fires + records for every staging
