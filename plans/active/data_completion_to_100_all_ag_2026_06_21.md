@@ -319,8 +319,11 @@ cells) — minor, backfill continues.
 - [x] ✅ [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
       odds-backfill-vm.sh; backed up /tmp/odds_launcher_fixed.sh) once the deployment-service slot clone is clean —
       deployment-service@3448ce3 | Added ALLOW_PARALLEL var + --allow-parallel arg + guard bypass without VM_FORCE
-- [ ] [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue: `*_previous_day1`
+- [x] ✅ [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue: `*_previous_day1`
       archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo: instruments-service.
+      — instruments-service@6c91bb3 | Root cause: (1) Previous Runs API (*_previous_day1 vars) only served from
+      2024-01-01 — added _PREV_RUNS_START guard; (2) customer-archive-api returns 400 for pre-2024 dates — added
+      free-tier ERA5 archive fallback on 400.
 
 ### 2026-06-21 22:40 — DISPARATE-SOURCE CONCURRENCY (operator insight): all fixture-driven sources fired in parallel
 
