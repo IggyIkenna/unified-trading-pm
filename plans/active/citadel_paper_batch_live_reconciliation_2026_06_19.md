@@ -647,7 +647,7 @@ are identified (2) and the ledger exists (3).
     venues — ASTER/GMX/HYPERLIQUID/PACIFICA, `data_type=perp_funding`, 2021-09-01..2026-05-22; ZERO CeFi venues);
     `market-data-tick-cefi-prd-central-element-323112` (has raw `derivative_ticker`/`book_snapshot_5`/`trades` for
     BINANCE-FUTURES/BYBIT/OKX/DERIBIT/KRAKEN-FUTURES via Tardis incl. the 2026-05-16..22 window, but **no `perp_funding`
-    data_type anywhere** — derivative_ticker carries the funding _field_ on the raw tick, but the computed funding-rate
+    data_type anywhere** — derivative*ticker carries the funding \_field* on the raw tick, but the computed funding-rate
     series is not materialised); `features-delta-one-cefi-prd-…` (EMPTY); `features-onchain-cefi-prd-…` (EMPTY — this is
     the target of `features_service/cefi/calculators/perp_funding_rates.py`, which is MVP-scoped to Binance ETH-PERP and
     has not written output for the window). **Root cause:** the CeFi perp-funding compute (reads CeFi MTDS
@@ -683,9 +683,9 @@ are identified (2) and the ledger exists (3).
   marks, full window. The provider already lists by `data_type=perp_funding` so it READ the rows — the only gap was a
   **venue-name mismatch** (Tardis `BINANCE-FUTURES` vs catalogue `binance`). Fix SHIPPED: `_canonical_venue` normalizer
   in `canonical_perp_funding_provider.py` (strip `-FUTURES`, lowercase; HL/aster/gmx/pacifica unchanged) —
-  strategy-service@bbdb4f1e on LDR. Verification paper run in progress to confirm CARRY_FUNDING_DISPERSION (52) +
-  non-HL CARRY_BASIS_PERP light up + ε=0. (The features-service@f33b2324 recompute is redundant given Tardis but
-  harmless — normalizer de-dups by (venue,coin,day) mean.)
+  strategy-service@bbdb4f1e on LDR. Verification paper run in progress to confirm CARRY_FUNDING_DISPERSION (52) + non-HL
+  CARRY_BASIS_PERP light up + ε=0. (The features-service@f33b2324 recompute is redundant given Tardis but harmless —
+  normalizer de-dups by (venue,coin,day) mean.)
 
 - **2026-06-21 (autonomous, operator away) — MULTI-ARCHETYPE PAPER BOOK: 2 → 46 strategies across 4 archetypes, real
   PnLs, ε=0.** Wired the production catalogue + portfolio_allocator into the paper book and read each archetype's data
