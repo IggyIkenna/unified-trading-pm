@@ -1812,12 +1812,13 @@
     "lock_version": "0.31.0",
     "pending_repos": [
       "system-integration-tests",
+      "greeks-service",
       "e2e-testing",
       "unified-api-contracts",
       "features-service",
       "alerting-service"
     ],
-    "sit_retry_count": 2,
+    "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
       "unified-api-contracts"
