@@ -50,6 +50,10 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       lst-rates×7 (2020-26), dex-pools×6 (2021-26), dex-swaps×6 (2021-26), lending-indices×5 (2022-26),
       liquidations×6 (2021-26), vault-share×6 (2021-26), pyth-archive×1 (2022-11→2023-09); forward-poll=STUB (skip).
       PATH fix required: export PATH="/snap/google-cloud-cli/current/bin:$PATH" before launcher calls.
+      **LIVE PATH WIRED 2026-06-21**: stub replaced with real launcher (deployment-service@48d57a5);
+      VM `defi-fwd-20260621-212906` launched (`collect-lst-rates --mode live`, e2-standard-8,
+      `VM_TASK=defi-live-lst`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, `MANIFEST_PER_VM_SHARDS=true`);
+      T+10min verify pending.
 - [x] ✅ [DATA] P0. **tradfi** — full 3-dataset batch (GLBX done via CME-b; **DBEQ.BASIC**
       `launch-tradfi-bf-nasdaq/nyse-ohlcv-1m.sh` + **CFE/XCBF**) to fill 818k unattempted +
       `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service. — deployment-service@f243eb4 | 17 VMs RUNNING
@@ -128,6 +132,15 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       (run by prior session sub-agent; see progress note 2026-06-21 15:42).
 - [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
       canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
+- [ ] [DATA] P1. **defi live continuous scheduler** — `launch-defi-forward-poll.sh` now proves the live path
+      end-to-end (collect-lst-rates --mode live, VM `defi-fwd-20260621-212906`, deployment-service@48d57a5).
+      Remainder: (i) T+10min verify ≥1 `pipeline_mode=live_onchain_subgraph` row in
+      `market-data-tick-defi-prd-central-element-323112`; (ii) set up a cron/Cloud Scheduler to run
+      `launch-defi-forward-poll.sh` daily (T-0 day, similar to `launch-tradfi-forward-poll.sh` daily cron);
+      (iii) add remaining cheap collect-* ops (collect-oracle-prices, collect-gas-fees) as additional
+      daily forward-poll VMs; (iv) update vm_zombie_watchdog.py `defi-fwd-` entry to LONG_LIVED_LIVE if
+      continuous (currently EPHEMERAL_BATCH).
+      Repo: deployment-service. **DEFERRED** — successor: this todo (2026-06-21).
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
