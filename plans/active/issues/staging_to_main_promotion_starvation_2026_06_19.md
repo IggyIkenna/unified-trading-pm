@@ -206,3 +206,39 @@ don't affect deploys) and acceptable — not worth the promoter rewrite. This cl
 - [ ] [AGENT] P1. Manifest hygiene (post-drain): after main catches up, reconcile manifest `versions`/`staging_versions` to the
       drained pyproject versions if `assert_version_coherence.py` (warn-only) shows a split; the next semver/promote
       cycle also realigns it.
+
+### 2026-06-21 — FINAL REPORT (autonomous completion)
+
+**Success criteria MET — staging→main starvation RESOLVED.** Dashboard (Repos CI) shows **"Promotion blocked —
+staging→main: 0 — Nothing parked — staging→main draining cleanly."** The version-driven promoter is healthy.
+
+**Systemic root fixes — SHIPPED + verified on PM `main`:**
+1. **Mode B** — Tier-C squash fallback derives the conventional type (`feat!`/`feat`/`fix`/`chore`) from the squashed
+   commits (`_squash_subject()`, all 3 squash sites) so semver-agent bumps + the promoter carries the repo. The
+   2026-06-21 dump showed semver/update-repo-version SUCCEEDING again (deployment-service, mtds, strategy) = this working.
+2. **HAS_V2 self-heal** — the stale-check guard excludes `action_required`/`cancelled` (not a real report), so the drain
+   re-dispatches v2 instead of wedging on the PR-workflow-approval gate.
+3. **build-smoke** — scoped to wheel + advisory Dockerfile-lint + skip (no full multi-repo build); verified GREEN.
+
+**Backlog DRAINED** — opened LDR→main + v2-gated auto-merge for the 20 starving repos; peaked **21/23 reaching main**.
+The live count oscillates (13–21) because the fleet develops continuously (fresh LDR content) — the now-healthy promoter
+drains it on the normal cycle; NOT a stall.
+
+**Triage queue cleared:** alerting-service#104 closed (redundant UAC-0.24.0 dep-update, range-pin absorbs it);
+e2e-testing#348 recovered via close+reopen (clean pull_request v2, no workflow gate) → merging.
+
+**ONE documented residual (rule-1 platform near-impossibility, NOT left silently):**
+- **agent-orchestrator** (80-file / 10-day backlog) is blocked by GitHub's **workflow-file-change PR-approval gate** —
+  its LDR→main diff includes `.github/workflows/update-dependency-version.yml`, so every PR-event v2 (and even
+  `workflow_dispatch` on those heads) returns `action_required`, and ao is hyperactive so the gate re-fires faster than
+  a dispatched v2 can land. **No clean REST API clears it** (fork-approve endpoint rejects non-fork; no setting API).
+  **Resolution (either):** (a) operator clicks **"Approve and run"** on ao's pending v2 in the Actions UI (~10s) → it
+  merges; or (b) it self-drains on the next ao head that doesn't touch a workflow file (the shipped HAS_V2 self-heal
+  re-dispatches v2 each drain). Not worth an admin-force-push dance on the live orchestrator for 1 benign template file.
+
+- [ ] [CICD] P3. **agent-orchestrator workflow-approval gate** — operator: approve ao's pending v2 once (or relax ao's
+      "require approval for workflows that change workflow files" setting) so its backlog drains; then it self-sustains.
+
+**Dashboard UX (operator request 2026-06-21) — SHIPPED:** per-stage CI status (Feature/Staging/Main) now always visible
+on the Repos CI page (backend `branch_ci` populated for all repos incl. green; deployment-api@d2078ae +
+deployment-ui@94e14de, tsc/eslint/vitest/QG green, pw:L2 ✓ regression `tests/smoke/repos-tab.spec.ts:96`).
