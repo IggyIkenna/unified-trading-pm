@@ -343,7 +343,7 @@ source:
       uac@15e67b93 + ist@77272120, verified RUNNING T+10min @ 15:49:32Z (273 event files, STARTED@15:42:17Z, run.log
       shows 44,489 lending-indices rows written for 2025-01-03 across AAVE_V3/COMPOUND_V3 on multiple chains;
       AAVE_V3-OPTIMISM still 0 rows on `messari_lending` fallback — separate side-issue tracked under Bug-A relaunch
-      evidence at line ~509, NOT a relaunch-IAM blocker). <<<<<<< Updated upstream
+      evidence at line ~509, NOT a relaunch-IAM blocker).
 - [x] ✅ [INFRA] P3. **Reset corrupt PM worktree on vm-ml (`tab/rootm/1`)** — `git fsck` reports unreachable objects
       under `tab/rootm/1` for unified-trading-pm
       (`Could not read 83fac63... Failed to traverse parents of commit 09b84d21`). Tarball build still worked (only PM
@@ -352,23 +352,13 @@ source:
       SSM. Next maintenance pass: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 1` on vm-ml
       (operator-only since slot reset destroys local state). Surfaced 2026-05-29 during Drift+Aave OP backfill launch
       dispatch. — vm-ml slot-6: ran setup-tab-worktrees.sh --reset-slot 1 2026-05-30; fsck clean, all repos rebased LDR
-- [x] # ✅ [INFRA] P3. Capture GCP IAM grants on `unified-trading-sa@central-element-323112` in the canonical IAM SSOT
-- [x] ✅ [INFRA] P3. **Reset corrupt PM worktree on vm-ml (`tab/rootm/1`)** — `git fsck` reports unreachable objects
-      under `tab/rootm/1` for unified-trading-pm
-      (`Could not read 83fac63... Failed to traverse parents of commit 09b84d21`). Tarball build still worked (only PM
-      worktree corrupted; 6 service dep repos clean). Workaround: do all PM plan-flips from the operator's laptop (local
-      cwd `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm`) instead of from vm-ml
-      SSM. Next maintenance pass: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 1` on vm-ml
-      (operator-only since slot reset destroys local state). Surfaced 2026-05-29 during Drift+Aave OP backfill launch
-      dispatch. — vm-ml slot-6: ran setup-tab-worktrees.sh --reset-slot 1 2026-05-30; fsck clean, all repos rebased LDR
-- [ ] [INFRA] P3. Capture GCP IAM grants on `unified-trading-sa@central-element-323112` in the canonical IAM SSOT
-  > > > > > > > Stashed changes
-        (likely `deployment-service/terraform/gcp/*.tf` or a setup script). Roles granted ad-hoc 2026-05-29 during vm-ml
-        backfill dispatch: `roles/compute.instanceAdmin.v1` + `roles/iam.serviceAccountUser` (project-scope). Without SSOT
-        sync, a future `tofu apply` could revert them. — deployment-service@dab9a60 (2026-05-30). Added
-        `google_project_iam_member.unified_trading_compute_instance_admin` +
-        `google_project_iam_member.unified_trading_service_account_user` to `terraform/gcp/main.tf` after the existing SA
-        IAM block.
+- [x] ✅ [INFRA] P3. Capture GCP IAM grants on `unified-trading-sa@central-element-323112` in the canonical IAM SSOT
+      (likely `deployment-service/terraform/gcp/*.tf` or a setup script). Roles granted ad-hoc 2026-05-29 during vm-ml
+      backfill dispatch: `roles/compute.instanceAdmin.v1` + `roles/iam.serviceAccountUser` (project-scope). Without SSOT
+      sync, a future `tofu apply` could revert them. — deployment-service@dab9a60 (2026-05-30). Added
+      `google_project_iam_member.unified_trading_compute_instance_admin` +
+      `google_project_iam_member.unified_trading_service_account_user` to `terraform/gcp/main.tf` after the existing SA
+      IAM block.
 
 ## Not in scope (separately tracked)
 
