@@ -161,6 +161,28 @@ jobs:
             REPO="$1"
             _done() { printf '%s\n' "$1" > "$RESULT_DIR/$REPO"; }
 
+            # ── Mode-B fix (staging_to_main_promotion_starvation_2026_06_19) ──────────────────────────────
+            # The --squash fallback below USED to title the merge commit a flat `chore(promote)`. When LDR is
+            # merge-laden (backmerge bot) `--rebase` won't arm, so the drain squashes — collapsing every
+            # underlying feat:/fix:/feat!: into that one `chore` subject. semver-agent reads the staging commit's
+            # conventional type → sees `chore` → NO bump → the version-driven staging→main promoter
+            # (`promoting=[r for r,sv in staging_versions if sv!=versions[r]]`) never carries the repo → ≈15 repos
+            # froze on staging for days. Fix: derive the AGGREGATE conventional type from the commits the squash
+            # will collapse and title the squash subject accordingly, so the semver signal survives the squash.
+            # Fail-safe: defaults to `chore` (no bump) only when no feat/fix/breaking is found (a genuinely
+            # non-bumping drain stays non-bumping); over-detection (e.g. an already-promoted feat in range) →
+            # an extra harmless monotonic bump, never a starve.
+            _squash_subject() {
+              local _pr="$1" _t="chore" _h _bk
+              _h="$(gh pr view "$_pr" --repo "$OWNER/$REPO" --json commits --jq '.commits[].messageHeadline' 2>/dev/null || true)"
+              _bk="$(gh pr view "$_pr" --repo "$OWNER/$REPO" --json commits --jq '.commits[] | select((.messageHeadline|test("!:")) or ((.messageBody // "")|test("BREAKING CHANGE"))) | .oid' 2>/dev/null || true)"
+              if [ -n "$_bk" ]; then _t="feat!"
+              elif printf '%s\n' "$_h" | grep -qE '^feat(\([^)]+\))?:'; then _t="feat"
+              elif printf '%s\n' "$_h" | grep -qE '^fix(\([^)]+\))?:'; then _t="fix"
+              fi
+              printf '%s: LDR → staging (Tier C auto-drain)' "$_t"
+            }
+
             if [ -n "$ONLY_REPO" ] && [ "$REPO" != "$ONLY_REPO" ]; then return 0; fi
 
             # Skip repos without a staging branch (e.g. agent-orchestrator on the main-direct path).
@@ -309,8 +331,8 @@ jobs:
               # LDR commit-message [skip ci] poisons the staging push (closes hardening @4941).
               gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
                 || gh pr merge "$PR_URL" --auto --squash \
-                     --subject "chore(promote): LDR → staging (Tier C auto-drain)" \
-                     --body "Tier C automated drain — squash fallback (LDR not rebaseable); sanitized body." \
+                     --subject "$(_squash_subject "$PR_URL")" \
+                     --body "Tier C automated drain — squash fallback (LDR not rebaseable); sanitized body. Subject conventional-type derived from the squashed commits (Mode-B semver-signal preservation)." \
                      --repo "$OWNER/$REPO" 2>/dev/null \
                 || echo "  WARN: auto-merge unavailable for $REPO — merge manually: $PR_URL"
               _done PROMOTED; return 0
@@ -377,8 +399,8 @@ jobs:
                     gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
                       && { gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
                            || gh pr merge "$PR_NUM" --auto --squash \
-                                --subject "chore(promote): LDR → staging (Tier C auto-drain)" \
-                                --body "Tier C automated drain — squash fallback." \
+                                --subject "$(_squash_subject "$PR_NUM")" \
+                                --body "Tier C automated drain — squash fallback (subject conventional-type derived from squashed commits, Mode-B)." \
                                 --repo "$OWNER/$REPO" 2>/dev/null; } || true
                     echo "    re-triggered (fresh pull_request event → v2 on current head)"
                     _done PROMOTED; return 0
@@ -399,8 +421,8 @@ jobs:
                 echo "  $REPO: existing PR #$PR_NUM mergeable_state=$MSTATE — (re)arming auto-merge idempotently"
                 gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
                   || gh pr merge "$PR_NUM" --auto --squash \
-                       --subject "chore(promote): LDR → staging (Tier C auto-drain)" \
-                       --body "Tier C automated drain — squash fallback." \
+                       --subject "$(_squash_subject "$PR_NUM")" \
+                       --body "Tier C automated drain — squash fallback (subject conventional-type derived from squashed commits, Mode-B)." \
                        --repo "$OWNER/$REPO" 2>/dev/null \
                   || echo "    WARN: auto-merge arm failed for #$PR_NUM — merge manually"
                 _done PROMOTED; return 0
