@@ -69,19 +69,19 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.12.0",
     "deployment-api": "0.21.0",
-    "deployment-service": "0.13.0",
+    "deployment-service": "0.16.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.16.0",
     "features-service": "0.5.0",
     "fund-administration-service": "0.5.0",
     "ibkr-gateway-infra": "0.4.0",
     "instruments-service": "0.11.0",
-    "market-tick-data-service": "0.20.0",
+    "market-tick-data-service": "0.23.0",
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.27.0",
     "unified-trading-library": "0.21.0",
     "unified-trading-pm": "1.2.209",
-    "market-data-processing-service": "0.10.0",
+    "market-data-processing-service": "0.10.1",
     "e2e-testing": "0.8.0",
     "agent-orchestrator": "0.12.0",
     "greeks-service": "0.8.0",
@@ -90,7 +90,7 @@
     "ml-service": "0.8.0",
     "alerting-service": "0.11.0",
     "unified-trading-api": "0.2.3",
-    "client-reporting-api": "0.15.0"
+    "client-reporting-api": "0.15.1"
   },
   "repositories": {
     "alerting-service": {
@@ -339,7 +339,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1797,17 +1797,13 @@
     "system-integration-tests": "0.14.0",
     "deployment-api": "0.23.0",
     "greeks-service": "0.8.0",
-    "client-reporting-api": "0.15.1",
-    "deployment-service": "0.16.0",
-    "agent-orchestrator": "0.14.0",
-    "market-data-processing-service": "0.10.1",
-    "market-tick-data-service": "0.23.0"
+    "agent-orchestrator": "0.14.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1831,35 +1827,40 @@
       "sha": "6cafc79cc95f2bd4ffb95bc4b00c7f2569a7b09c",
       "version": "0.8.0"
     },
-    "client-reporting-api": {
-      "branch": "staging",
-      "sha": "a383e846dd09cd4709ed49112bae4d40a6a804a5",
-      "version": "0.15.1"
-    },
-    "deployment-service": {
-      "branch": "staging",
-      "sha": "23fcbcffc1f807347c2807062f34ada03cb198bb",
-      "version": "0.16.0"
-    },
     "agent-orchestrator": {
       "branch": "staging",
       "sha": "73a20094eb3a0145e56a9f304f6dc0b7d6bd7694",
       "version": "0.14.0"
-    },
-    "market-data-processing-service": {
-      "branch": "staging",
-      "sha": "db01b0a7127bdd61461c595264ee4827e5f653e2",
-      "version": "0.10.1"
-    },
-    "market-tick-data-service": {
-      "branch": "staging",
-      "sha": "7c32ff614a25557f6ee8a810757862a3029db526",
-      "version": "0.23.0"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-21T14:45:37.396494Z",
+        "commits": {
+          "client-reporting-api": {
+            "branch": "staging",
+            "sha": "a383e846dd09cd4709ed49112bae4d40a6a804a5",
+            "version": "0.15.1"
+          },
+          "deployment-service": {
+            "branch": "staging",
+            "sha": "23fcbcffc1f807347c2807062f34ada03cb198bb",
+            "version": "0.16.0"
+          },
+          "market-data-processing-service": {
+            "branch": "staging",
+            "sha": "db01b0a7127bdd61461c595264ee4827e5f653e2",
+            "version": "0.10.1"
+          },
+          "market-tick-data-service": {
+            "branch": "staging",
+            "sha": "7c32ff614a25557f6ee8a810757862a3029db526",
+            "version": "0.23.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-21T14:17:40.269321Z",
         "commits": {
@@ -1914,21 +1915,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-20T13:21:29.789226Z",
-        "commits": {
-          "client-reporting-api": {
-            "branch": "staging",
-            "sha": "36d8526d8d39cca0e83138b66efdc5f1b3cdc75e",
-            "version": "0.14.0"
-          },
-          "e2e-testing": {
-            "branch": "staging",
-            "sha": "04733198901aba6f8aa8a2d22e10fc06a88c96ee",
-            "version": "0.8.0"
-          }
-        }
       }
     ]
   },
@@ -1943,6 +1929,8 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {},
+  "promotion_failures": {
+    "agent-orchestrator": 1
+  },
   "promotion_quarantine": {}
 }
