@@ -301,13 +301,18 @@ promote is a near-no-op success → clears. Low-harm; verify it clears.
       `staging_v != versions` → promotable. The `*/15` promoter carries them to main at its metered cadence once the
       breaking-SIT `staging_status.locked` (currently True) clears. JSON valid; no VERSION_SPLIT introduced (only
       pre-existing VESTIGIAL_SCALAR_DRIFT warns).
-- [ ] [CICD] P1. **DURABLE FIX — make staging→main promotion robust to a sparse `staging_versions` (prevent
-      re-desync).** The reconcile above is a point-in-time data fix; the map re-desyncs if the writer keeps losing
-      entries. Recommended (deliberate — NOT to be rushed into the live core promoter): make `staging-to-main.yml`
-      self-healing — before deriving the promote set, backfill `staging_versions[r]` from each repo's actual
-      `origin/staging` pyproject version so an absent/lost entry can NEVER starve a repo again — OR a standalone hourly
-      reconcile cron. Secondary: log-archaeology on WHY entries were lost since the 2026-06-01 restore (writer dispatch
-      SPOF vs a force-sync reset). repo: unified-trading-pm. Provenance: reconcile PM@a73a7c1a5 2026-06-21.
+- [x] ✅ [CICD] P1. **DURABLE FIX SHIPPED — `reconcile-staging-versions.yml` cron** (PM@00919ffd4, on LDR → rides the
+      standing PR to main). Chose the standalone-cron option over modifying the 1449-line core promoter (lower blast
+      radius, doesn't bloat the `*/15` promoter with 24 per-run API calls). Hourly (`35 * * * *`) safety-net under
+      `update-repo-version.yml`: reads each repo's ACTUAL `origin/staging` pyproject version via `gh api` and
+      backfills/corrects `manifest.staging_versions` (version-map ONLY — never `staging_commits`, whose tested-SHA
+      semantics the SHA-verification gate relies on), so an absent/lost entry can NEVER starve a repo again. Verified
+      safe because the promote-set is `staging_versions`-driven (readiness gate L169 + dep-order gate both iterate
+      `staging_versions.items()`); `staging_commits` only gates global idempotency + per-repo SHA-verify (harmlessly
+      skips absent repos). No-op when the writer is healthy. Activates once the standing PR carries it to `main` (schedule
+      fires from the default branch). Secondary log-archaeology on the ORIGINAL loss cause is now MOOT for starvation
+      (the cron makes it self-correct regardless of cause). repo: unified-trading-pm. Provenance: reconcile
+      PM@a73a7c1a5 + cron PM@00919ffd4 2026-06-21.
 - [x] ✅ [CICD] P2. **ao quarantine CLEARED** — manifest `staging_status` has no quarantine key + `breaking_pending: []`
       (ao#350 carried ao content to main; the dashboard-link RED is fixed). No action; re-verify only if it re-alerts.
 - [x] ✅ [CICD] P2. **Mode-B per-drain bump cadence — CLOSED, won't-change (decision 2026-06-21).** Per-drain MINOR
