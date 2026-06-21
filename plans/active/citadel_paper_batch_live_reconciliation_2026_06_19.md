@@ -524,6 +524,24 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-21 — CRON GRADUATED + Phase 10 dashboard complete (operator autonomous push).** The paper-engine Cloud Run
+  job executes GREEN on the corrected engine: execution `uts-prod-paper-engine-run-2q8bj` succeeded → wrote run
+  `paper-20260621134256-3c4eb321` (instruction+pricing+transfer ledgers, 2 strategy_ids, mode PAPER). Image
+  `strategy-service:latest`=`f5af20b8` (5-leg delta-fold a2d12217 + UTL RuntimeMode 9177a807, off fresh UTL base). The 3
+  schedulers stay ENABLED (paper-run 02:00 / determinism 02:30 / digest 03:15 UTC). Root cause of the prior red:
+  job args had `--asset-group defi` (lowercase → argparse exit 2; CLI choices are UPPERCASE) + unsubstituted
+  `PAPER_RUN_START_DATE`/`END_DATE` placeholders (the "scheduler overrides dates" was an empty-body TODO, never wired) —
+  fixed in `deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf` (DEFI + real 2026-05-16..22 window).
+  Dashboard live-verified (odum-portal-00030): ε=0, per-strategy(2), real transfers, real attribution waterfall
+  (5 venues / 4 factors), net-$/coin/delta (delta-neutral after the 5-leg fold: ETH 17.5/SOL 35), PnL graphs,
+  entries/exits, batch↔paper.
+- **FINDING (tracked, not fixed here)**: strategy-service PR#232 (staging→main) is CONFLICTING → blocks the NORMAL
+  `:latest` promotion (a peer/worker rebase needed); I built `:latest` directly to unblock the cron. The UTL base + CRA
+  reader + strategy-service image were all rebuilt off-pipeline; the conflict resolution restores the auto-promotion.
+- **Remaining minor (tracked)**: attribution by-FACTOR in the UI (API exposes CARRY/BASIS/FUNDING; UI shows venue+layer);
+  per-day PnL timeseries (reader returns per-position, not a daily series). Both honest-rendered, neither placeholder.
+
+
 ### 2026-06-21 — Autonomous: two producer-side paper-run fixes (delta double-count + `--mode paper` launch)
 
 **Repos:** strategy-service@a2d12217 + unified-trading-library@ef5b1699 + unified-trading-library@9177a807 (the
@@ -1438,3 +1456,44 @@ genuinely machine-only payload is the paper-trading POC research corpus + its da
   `RECOVERY.md` manifest = `e2e-testing@061e0f78` (the in-repo research-corpus tarball was correctly NOT committed — the
   e2e repo gitignores binary archives by design, so GCS is the corpus home + the repo holds maintained source + the
   manifest). Nothing paper-trading-specific lives only on this laptop.
+
+### 2026-06-21 — EXECUTION-REALISM AUDIT (operator-driven): liquidity-scan artifact + liquid-universe rebuild
+
+Operator probed the regenerated-under-maker book ("nothing is taker anymore?" / "GALA 27% slip?" / "basis yield really
+high?"). Findings, all measured:
+
+- **Maker-vs-taker IS settled per-coin (not assumed)**: `_exec_by_vol.py` measured IOC-taker vs maker-resting per coin
+  on the 1m candles → **maker wins 28/28** (taker spread+impact exceeds the thin cs edge; maker fills at a credit). So
+  the all-maker `EXEC_CONFIG` is the OUTCOME of a per-strategy sweep, correct for the directional legs.
+- **The maker-WIDTH dimension was NEVER swept** (both `_exec_optimize` + `_exec_by_vol` fix maker at 1bp inside) — the
+  "rest at 1/2/5/10bp from prev close, fill-prob vs price" sweep the design intended was not executed. OPEN.
+- **The illiquid-tail slippage is a SINGLE-SNAPSHOT ARTIFACT**: `_liquidity_scan.py` is ONE Binance-perp order-book
+  snapshot with an instant full-$1M market sweep → GALA `slip_1M=2777bp` (27%), `slip_2M=nan` ("book too thin"). That is
+  a CAPACITY flag (can't push $1M instantly into a sub-penny token), NOT a recurring cost. It distorts the illiquid-tail
+  taker-vs-maker comparison (garbage-in); the liquid-coin scan (ETH 1.2bp / SOL 3.7bp) is realistic.
+- **Liquid-universe rebuild (`_book_liquid_compare.py`, maker exec, full vs liq<30/100/300bp)**: excluding the illiquid
+  tail makes the DIRECTIONAL book BETTER — cs net PnL 468k→712k, cost 109k→47k, drawdown −1.07M→−322k (3×), Sharpe
+  0.19→0.75; combined directional 0.17→0.76. The illiquid coins were net DRAG, not diversification. **basis** PnL
+  collapses 762k→247k (−68%) — confirming ~2/3 of the raw carry is uncapturable small-cap funding — but its **Sharpe
+  holds (14.96→12.59)**: real carry quality, far less capacity than the raw $ implied. Liquid-9 5-leg book = **OOS
+  Sharpe 2.64 / +basis 9.65** (≈ the full-30 headline, but 3× smaller drawdown + a tradeable basis). New generators:
+  `_book_latest_exec.py` / `_book_liquid_compare.py` / `_book_liquid9_plot.py`; the deployable plot is
+  `book_liquid9_*.png`.
+
+**Follow-up todos (execution-realism hardening):**
+
+- [ ] [RESEARCH] P2. **Time-average the liquidity scan** — `_liquidity_scan.py` is ONE snapshot (the GALA-27%/`nan`
+      artifact). Take N snapshots over a session + average (or use rolling depth), so the illiquid-tail slip is robust,
+      not a single thin-book instant. Repo: e2e-testing `scripts/paper_trading/` (research harness). Provenance:
+      execution-realism audit 2026-06-21.
+- [ ] [RESEARCH] P2. **Gate the tradeable universe by ADV/depth capacity** (structural exclusion) — drop coins where the
+      depth can't absorb the per-coin allocation, BEFORE the execution comparison, so illiquid names are excluded by
+      capacity not modeled at 100s–1000s bp. Deployable cut ≈ liquid<30–100bp (9–17 coins). Repo: strategy-service /
+      e2e-testing. Provenance: execution-realism audit 2026-06-21.
+- [ ] [RESEARCH] P2. **Run the maker-WIDTH sweep** (rest at 0/1/2/5/10bp from prev close per vol-tercile; fill-prob vs
+      price improvement) — the one execution dimension never actually swept; feed the per-coin optimal width into the
+      live `EXEC_CONFIG` + the book. Repo: e2e-testing `scripts/paper_trading/`. Provenance: execution-realism audit
+      2026-06-21.
+- [ ] [RESEARCH] P3. **Deployable basis = liquid-only carry** — rebuild the basis sleeve on the liquid universe (ADV ≥
+      $5M, the `_carry_liq_daily` path) as the SIZED number (~$250k, Sharpe ~12–13), not the raw top-third (incl.
+      uncapturable small-caps). Repo: strategy-service / e2e-testing. Provenance: execution-realism audit 2026-06-21.

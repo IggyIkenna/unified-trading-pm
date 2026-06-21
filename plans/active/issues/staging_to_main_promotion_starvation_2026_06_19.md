@@ -179,3 +179,30 @@ Two upstream fixes (NOT a new/per-repo promoter — the promoter is central and 
 - `plans/active/cicd_quality_gates_2026_06_18.md`
 - `codex/08-workflows/ci-cd-flow.md` (§ "LDR-trunk decoupling", § "[skip ci] and required checks")
 - CLAUDE.md § "v2-never-reported deadlock", § semver-agent dispatch SPOF
+
+## Progress Log
+
+### 2026-06-21 — autonomous completion (operator `/autonomous`: finish, don't prompt, verified done-state)
+
+**Decision (content-vs-version promoter question, made under autonomous authority + documented intent):** do NOT
+rewrite the central 1449-line `staging-to-main.yml` to be content-delta-aware (high blast radius; the issue doc's own
+stance is "the promoter is central and fine"). Instead: (1) keep the version-driven promoter as primary; (2) **Mode B
+fix (PM@6acde3fe7) makes future bumping content flow normally**; (3) **drain the CURRENT frozen backlog via per-repo
+LDR→main PRs + v2-gated auto-merge** (the proven 2026-06-17 reconcile mechanism — promotes content to main regardless of
+version-delta, covers Mode A + Mode B uniformly, "LDR is the SSOT / main is a projection"); (4) residual pure-non-bumping
+content (docs/chore that legitimately never bumps) staying on staging is LOW-HARM (main = deploy/image source; docs
+don't affect deploys) and acceptable — not worth the promoter rewrite. This closes the doc's open design question.
+
+- [x] **Backlog drain ARMED 2026-06-21** — 20 starving repos (real content off main) each got an `LDR→main` PR with
+      v2-gated auto-merge: agent-orchestrator#350 (78f), e2e-testing#348 (50f), instruments-service#491 (44f),
+      deployment-service#119 (41f), unified-trading-system-ui#285 (29f), deployment-api#146 (18f), deployment-ui#277
+      (17f), execution-service#327 (16f), features-service#581 (12f), market-tick-data-service#265 (12f),
+      batch-live-reconciliation-service#110 (10f), fund-administration-service#206/ml-service#132/trading-agent#225
+      (8f), system-integration-tests#250/unified-trading-api#419 (4f), market-data-processing-service#319 (3f),
+      alerting#110/greeks#225/ibkr-gateway-infra#235 (1f). Skipped 3 already-content-identical (strategy-service /
+      unified-api-contracts / unified-trading-library / client-reporting-api — drained earlier). v2 gates each; reds
+      stay open for the per-repo fix (none expected — all staging-green).
+- [ ] **VERIFY (in progress):** watch main catch up to LDR per repo (content-delta → 0); diagnose any v2-red straggler.
+- [ ] **Manifest hygiene (post-drain):** after main catches up, reconcile manifest `versions`/`staging_versions` to the
+      drained pyproject versions if `assert_version_coherence.py` (warn-only) shows a split; the next semver/promote
+      cycle also realigns it.

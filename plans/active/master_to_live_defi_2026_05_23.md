@@ -113,19 +113,19 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-06-21 13:39 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-06-21 14:00 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
 | [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) | master | research | 12/44 | 27% | 48.0 | — |
 | [`path_to_100pct_backfill_mtds_is_2026_06_17`](./path_to_100pct_backfill_mtds_is_2026_06_17.md) | master | infra | 0/9 | 0% | 16.0 | — |
 | [`cicd_release_machinery_2026_06_18`](./cicd_release_machinery_2026_06_18.md) | master | infra | 0/42 | 0% | 9.6 | — |
-| [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) | **orphan** | infra | 0/8 | 0% | 8.0 | — |
 | [`org_migration_to_odumresearch_2026_06_07`](./org_migration_to_odumresearch_2026_06_07.md) | master | infra | 0/27 | 0% | 8.0 | — |
+| [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md) | master | infra | 59/73 | 81% | 7.3 | — |
+| [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) | master | infra | 2/15 | 13% | 6.9 | — |
 | [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md) | master | brand-new | 7/11 | 64% | 6.5 | — |
 | [`cicd_promotion_pipeline_2026_06_18`](./cicd_promotion_pipeline_2026_06_18.md) | master | infra | 0/31 | 0% | 6.4 | — |
 | [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md) | master | infra | 12/30 | 40% | 5.8 | — |
-| [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md) | master | infra | 59/69 | 86% | 5.5 | — |
 | [`utl_uac_reuse_consolidation_remediation_2026_06_10`](./utl_uac_reuse_consolidation_remediation_2026_06_10.md) | master | refactor | 16/59 | 27% | 5.2 | — |
 | [`monitoring_surfaces_overhaul_2026_06_18`](./monitoring_surfaces_overhaul_2026_06_18.md) | master | infra | — | — | 4.8 | — |
 | [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](./prediction_venue_perps_and_live_clob_depth_2026_06_20.md) | master | brand-new | 7/17 | 41% | 4.7 | — |
@@ -140,7 +140,7 @@ _Last regenerated: 2026-06-21 13:39 UTC via `scripts/plans/regenerate_active_pla
 | [`bigquery_feature_ml_compute_engine_option_2026_06_08`](./bigquery_feature_ml_compute_engine_option_2026_06_08.md) | master | design | 2/7 | 29% | 3.0 | — |
 | [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) | cefi_master | brand-new | 6/8 | 75% | 3.0 | — |
 | [`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`](./proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md) | master | brand-new | 16/25 | 64% | 2.9 | — |
-| [`instruments_mtds_subset_consistency_remediation_2026_06_17`](./instruments_mtds_subset_consistency_remediation_2026_06_17.md) | master | infra | 47/85 | 55% | 2.9 | — |
+| [`instruments_mtds_subset_consistency_remediation_2026_06_17`](./instruments_mtds_subset_consistency_remediation_2026_06_17.md) | master | infra | 48/85 | 56% | 2.8 | — |
 | [`bucket_env_split_rollout_2026_06`](./bucket_env_split_rollout_2026_06.md) | master | infra | 2/9 | 22% | 2.5 | — |
 | [`migration_verification_orphan_safety_2026_06_10`](./migration_verification_orphan_safety_2026_06_10.md) | master | design | 28/44 | 64% | 2.4 | — |
 | [`bar_edge_left_vs_right_remediation_2026_06_08`](./bar_edge_left_vs_right_remediation_2026_06_08.md) | master | brand-new | 6/11 | 55% | 2.3 | — |
@@ -191,17 +191,15 @@ _Last regenerated: 2026-06-21 13:39 UTC via `scripts/plans/regenerate_active_pla
 | [`audit_criteria_automation_2026_06_08`](./audit_criteria_automation_2026_06_08.md) | master | infra | 10/11 | 91% | 0.3 | — |
 | [`cross_ag_shard_4pillar_validation_harness_2026_06_19`](./cross_ag_shard_4pillar_validation_harness_2026_06_19.md) | master | infra | 5/6 | 83% | 0.3 | — |
 | [`orchestrator_account_failover_resume_respawn_2026_06_17`](./orchestrator_account_failover_resume_respawn_2026_06_17.md) | master | infra | 11/12 | 92% | 0.3 | — |
-| [`defi_venue_name_canonicalisation_and_reth_2026_06_17`](./defi_venue_name_canonicalisation_and_reth_2026_06_17.md) | master | refactor | 2/5 | 40% | 0.2 | — |
 | [`orchestrator_agent_type_oversight_coverage_2026_06_17`](./orchestrator_agent_type_oversight_coverage_2026_06_17.md) | master | infra | 31/34 | 91% | 0.2 | — |
 | [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) | master | design | 62/71 | 87% | 0.2 | — |
 | [`mtds_honest_absence_swallow_remediation_2026_06_10`](./mtds_honest_absence_swallow_remediation_2026_06_10.md) | master | refactor | 14/17 | 82% | 0.1 | — |
 | [`deployment_ui_monitoring_pane_2026_06_19`](./deployment_ui_monitoring_pane_2026_06_19.md) | master | infra | 17/18 | 94% | 0.1 | — |
 | [`orchestrator_human_central_vm_split_2026_06_12`](./orchestrator_human_central_vm_split_2026_06_12.md) | master | infra | 10/12 | 83% | 0.1 | — |
-| [`solana_defi_legacy_migration_2026_05_27`](./solana_defi_legacy_migration_2026_05_27.md) | master | infra | 33/34 | 97% | 0.1 | — |
 | [`harsh_day_master_2026_06_02`](./harsh_day_master_2026_06_02.md) | master | infra | 14/15 | 93% | 0.1 | — |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 168/172 | 98% | 0.1 | — |
+| [`defi_venue_name_canonicalisation_and_reth_2026_06_17`](./defi_venue_name_canonicalisation_and_reth_2026_06_17.md) | master | refactor | 4/5 | 80% | 0.1 | — |
 | [`uac_coverage_90pct_2026_06_10`](./uac_coverage_90pct_2026_06_10.md) | master | infra | 11/12 | 92% | 0.1 | — |
-| [`manifest_reader_fail_fast_on_stale_fallback_2026_05_28`](./manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md) | master | refactor | 9/13 | 69% | 0.1 | — |
 | [`mdps_coverage_85pct_2026_06_10`](./mdps_coverage_85pct_2026_06_10.md) | master | infra | 9/10 | 90% | 0.1 | — |
 | [`alert_quality_overhaul_2026_06_18`](./alert_quality_overhaul_2026_06_18.md) | master | infra | 21/21 | 100% | 0.0 | — |
 | [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md) | infrastructure_master | brand-new | 25/25 | 100% | 0.0 | — |
@@ -216,6 +214,7 @@ _Last regenerated: 2026-06-21 13:39 UTC via `scripts/plans/regenerate_active_pla
 | [`features_registry_status_versioning_2026_05_28`](./features_registry_status_versioning_2026_05_28.md) | master | brand-new | 20/20 | 100% | 0.0 | — |
 | [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md) | global_ledger_pnl_attribution_master | refactor | 27/27 | 100% | 0.0 | — |
 | [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md) | instruments_master | infra | 26/26 | 100% | 0.0 | — |
+| [`manifest_reader_fail_fast_on_stale_fallback_2026_05_28`](./manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md) | master | refactor | 13/13 | 100% | 0.0 | — |
 | [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md) | master | infra | 46/46 | 100% | 0.0 | — |
 | [`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28`](./mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md) | master | infra | 14/14 | 100% | 0.0 | — |
 | [`mdps_long_running_multi_shard_architecture_audit_2026_05_28`](./mdps_long_running_multi_shard_architecture_audit_2026_05_28.md) | master | research | 24/24 | 100% | 0.0 | — |
@@ -223,9 +222,10 @@ _Last regenerated: 2026-06-21 13:39 UTC via `scripts/plans/regenerate_active_pla
 | [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md) | master | infra | 42/42 | 100% | 0.0 | — |
 | [`orchestrator_spawn_reliability_db_lock_2026_06_10`](./orchestrator_spawn_reliability_db_lock_2026_06_10.md) | master | infra | 10/10 | 100% | 0.0 | — |
 | [`regime_clustering_structure_allocator_2026_05_29`](./regime_clustering_structure_allocator_2026_05_29.md) | features_and_ml_master | brand-new | 29/29 | 100% | 0.0 | — |
+| [`solana_defi_legacy_migration_2026_05_27`](./solana_defi_legacy_migration_2026_05_27.md) | master | infra | 32/32 | 100% | 0.0 | — |
 | [`tradfi_futures_roll_adjuster_centralisation_2026_06_17`](./tradfi_futures_roll_adjuster_centralisation_2026_06_17.md) | master | design | 5/5 | 100% | 0.0 | — |
 | [`utl_strictify_preexisting_pyright_suppressions_2026_06_09`](./utl_strictify_preexisting_pyright_suppressions_2026_06_09.md) | master | refactor | 20/20 | 100% | 0.0 | — |
-| **TOTAL** (108 plans) | 1 orphans, 0 TBD | — | — | **60% done** | **230** | — |
+| **TOTAL** (108 plans) | 0 orphans, 0 TBD | — | — | **60% done** | **230** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
