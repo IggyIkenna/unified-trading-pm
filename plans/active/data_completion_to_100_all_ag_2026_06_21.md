@@ -81,9 +81,7 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
   Jobs all executed 13:45 (crons ENABLED). NOT a global blocker. (sports/instruments-tradfi-legacy crons PAUSED — expected.)
 - [x] **kalshi converter bug FIXED** — `_slice_day` filter type-mismatch (corpus `timestamp[s]` vs tz-aware-ns)
   → ArrowNotImplementedError; now adapts to the column type + timestamp[s] regression test (mtds, QG-green).
-- [ ] [SCRIPT] P0. deployment-service — **`launch-mtds-lst-rates-backfill-vm.sh` bucket bug**: resolved a MALFORMED
-  bucket `lst-rates-central-element-323112` → ManifestConsolidatorStaleError. Fix the bucket resolution to the
-  canonical `market-data-tick-defi-prd-…`. Repo: deployment-service.
+- [x] [SCRIPT] P0. ✅ **`launch-mtds-lst-rates-backfill-vm.sh` bucket bug FIXED** — `get_write_bucket_name("lst-rates")` → `get_write_bucket_name("market_data", asset_group="DEFI")` at 4 sites in `lst_rates_handler.py`. Now resolves canonical `market-data-tick-defi-prd-central-element-323112`. Repo: market-tick-data-service — mtds@4c85340
 - [ ] [SCRIPT] P0. deployment-service — **`launch-mtds-sports-odds-backfill-vm.sh` passes `--tier 1`** which the MTDS
   CLI rejects (`unrecognized arguments: --tier 1`). Drop/fix the arg. Repo: deployment-service.
 - [ ] [SCRIPT] P0. deployment-service — **`launch-tradfi-bf-nasdaq-ohlcv-1m.sh` runs local UAC enumeration without a
