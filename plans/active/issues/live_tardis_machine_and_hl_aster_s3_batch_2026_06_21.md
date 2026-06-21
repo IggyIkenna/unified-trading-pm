@@ -150,3 +150,33 @@ batch onchain-perp data_types to wire are therefore: `trades`, `book_snapshot_5`
 included). **Possible cleanup (P2, operator-decision):** retire the standalone `(cefi, funding_rate)` data_type in
 favour of `derivative_ticker.funding_rate` (has downstream consumers — needs an audit before removal; do NOT drop
 unilaterally).
+
+## §4 — bug#9: CEX live-source provenance gap (surfaced by the tardis-machine smoke, 2026-06-21)
+
+Launching the tardis-machine smoke on `cefi:BINANCE-FUTURES:trades --live-source tardis-machine` FAILED at startup:
+`ValueError: No PipelineMode for source 'tardis' in mode 'live'`. **Root cause (NOT tardis-specific — affects native CEX
+live too):** the live writer resolves pipeline_mode via `live_pipeline_mode_for_venue` → `live_source_for_venue(asset_group,
+venue, data_type)` (mode-agnostic) → for a CEX venue with no venue→vendor entry it defaults to `SOURCE_PRIORITY[(cefi,
+trades)][0] = "tardis"` → `pipeline_mode_for_source("tardis", LIVE)` raises because **tardis is batch-only** (academic
+licence blocks CeFi live/replay; `SOURCE_MODE_CAPABILITY[tardis]={batch}`). So **any CEX venue (binance/okx/bybit/kraken/
+deribit) live capture — native connector OR tardis-machine — currently dies at preflight**; CEX native live was simply
+never run before so it never surfaced. (HYPERLIQUID/ASTER work because `live_source_for_venue` returns their own vendor,
+which has LIVE_<vendor> + is a registered cefi source.)
+
+**The architecture tension:** a CEX venue's BATCH source is `tardis` (archive) but its LIVE source must be the EXCHANGE
+itself (`binance` live WS → `live_binance`). `live_source_for_venue` returns ONE source per venue (mode-agnostic), so it
+cannot today say "tardis for batch, binance for live." The fix (P1, careful — provenance layer; the code SSOT warns
+SOURCE_PRIORITY[0] mis-stamping caused the VX/CFE incident):
+1. Add `LIVE_<vendor>` PipelineMode members for the CEX vendors that lack them (`LIVE_BINANCE` exists; check OKX/BYBIT/
+   KRAKEN/DERIBIT) + `SOURCE_MODE_CAPABILITY[<vendor>] ⊇ {live}`.
+2. Register the CEX vendors as cefi LIVE sources for trades/book_snapshot_5/derivative_ticker (additive to SOURCE_PRIORITY;
+   tardis stays index-0 BATCH primary).
+3. Make `live_source_for_venue` mode-aware (or add a venue→live-vendor map) so a CEX venue resolves to its exchange vendor
+   in LIVE mode while staying `tardis` in BATCH — so `batch_tardis` (archive) and `live_binance` (exchange) coexist on the
+   same shard, source column distinguishing them (Live=batch schema, different provenance — which is correct: the live
+   data genuinely comes from the exchange, the historical from the Tardis archive).
+
+**Tardis-machine smoke PROVEN instead on `cefi:HYPERLIQUID:derivative_ticker --live-source tardis-machine`** (VM
+`mtds-live-cefi-hyperliquid-derivative-ticker-20260621-225252`) — HL resolves cleanly (`hyperliquid` vendor, LIVE_HYPERLIQUID,
+registered source), so it validates the tardis-machine connector + Node sidecar + dispatch + capture end-to-end. The CEX
+flagship case is gated on the §4 fix above (not on the tardis-machine code, which is correct).
