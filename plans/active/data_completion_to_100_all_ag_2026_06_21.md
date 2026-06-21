@@ -604,10 +604,11 @@ Launched a real tradfi live producer (`mtds-live-tradfi-cme-trades`) to test liv
 root-caused bugs in the (peer's, in-flight) `mtds-live` / `databento_tradfi_ws` live scaffold + 1 vendor unknown.
 **Deleted the broken VM** (it wrote 4 wrong `live_massive` empty rows). Bugs (filed for the live-pipeline lane; NOT
 fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + the subscription is unconfirmable):
-- [ ] [SCRIPT] P1. **mtds: `databento_tradfi_ws._get_api_key()` reads the raw Pydantic field `cfg.databento_api_key`**
+- [x] ✅ [SCRIPT] P1. **mtds: `databento_tradfi_ws._get_api_key()` reads the raw Pydantic field `cfg.databento_api_key`**
   (None unless `DATABENTO_API_KEY` env set) → logs `no API key — connection skipped (BLOCKED-CREDENTIALS)`. The BATCH
   path resolves the key from the `databento-api-key` **secret** via the secret client (works). Fix: `_get_api_key`
   fallback-resolves `databento_secret_name` via `get_secret_client()` like batch. Repo: market-tick-data-service.
+  — market-tick-data-service@e532105
 - [ ] [SCRIPT] P1. **UAC: `live_source_for_venue(tradfi,…)` returns `massive`** (`SOURCE_PRIORITY[(tradfi,trades)]=
   ['massive','databento']`, primary=massive) — but **massive is batch-only (no live feed)**; the actual live vendor is
   databento. Live rows mis-stamp `live_massive`. Fix: live source = first **LIVE-capable** source in the priority list
