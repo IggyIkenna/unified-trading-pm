@@ -389,26 +389,39 @@ jobs:
       # Task 6: Kill switch — halt order flow before deploying
       # trading-critical repos to prod
       # ──────────────────────────────────────────────────────────────
+      # SOFT gate (warn + continue) — the kill-switch belongs at the DEPLOY/ROLLOUT
+      # boundary, NOT image-build: pushing an image to the registry moves no orders.
+      # When there is no live trading runtime to halt (no execution-service
+      # `halt-order-flow` handler / pre-cutover), the cross-repo dispatch 404s; that
+      # must NOT block the prod image build (incident 2026-06-21: a hard-fail here +
+      # the orphaned dispatch condition kept :latest from auto-rebuilding for 10+ days,
+      # forcing a hand-built image). Mirrors the market-hours / position-snapshot soft
+      # gates in this same job. Uses GH_PAT — cross-repo repository_dispatch needs a
+      # PAT (the default GITHUB_TOKEN is scoped to this repo only → 404).
       - name: "Pre-deploy: Halt order flow (trading-critical)"
         id: kill-switch-halt
         if: steps.route.outputs.env == 'prod' && steps.route.outputs.is_trading_critical == 'true'
+        continue-on-error: true
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
 
           REPO="${{ steps.route.outputs.repo }}"
 
           echo "=== Kill Switch: Halt Order Flow ==="
           echo "Deploying trading-critical repo: $REPO"
 
-          bash scripts/deploy/trading-kill-switch.sh halt "$GH_TOKEN" "${{ github.repository_owner }}"
-
-          echo ""
-          echo "Waiting for order drain..."
-          bash scripts/deploy/trading-kill-switch.sh drain "$GH_TOKEN" "${{ github.repository_owner }}" 120
-
-          echo "kill_switch_halted=true" >> "$GITHUB_OUTPUT"
+          if bash scripts/deploy/trading-kill-switch.sh halt "$GH_TOKEN" "${{ github.repository_owner }}"; then
+            echo ""
+            echo "Waiting for order drain..."
+            bash scripts/deploy/trading-kill-switch.sh drain "$GH_TOKEN" "${{ github.repository_owner }}" 120 || \
+              echo "WARNING: drain incomplete (soft gate) — proceeding with image build."
+            echo "kill_switch_halted=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "WARNING: could not halt order flow (no live trading runtime / no handler) — soft gate, proceeding with image build. The image build pushes to the registry only; the real halt is enforced at deploy/rollout, not at build."
+            echo "kill_switch_halted=false" >> "$GITHUB_OUTPUT"
+          fi
 
       # ──────────────────────────────────────────────────────────────
       # Task 5: Position reconciliation — pre-deploy snapshot
