@@ -213,6 +213,21 @@ net-new capability (not robustness closures) and are dispatched to the central V
       escalations + plan-health (separate dispatch paths, unaffected). — unified-trading-pm@4e48264b. **MECHANISM for
       the operator: add `execution_scope: local-only` to any other plan you're driving yourself** (or remove it to
       re-enable agent dispatch).
+- [x] ✅ [ORCHESTRATOR] P1. ROOT CAUSE — the tag alone did NOT stop them (verified live via SSM: 7 defi tasks still
+      queued + slots 3/6 still working after the tag). Bug: `regen_backlog_from_plan._prune_stale` built
+      `current_briefs` from ALL plans **including local-only ones** (it only filtered by `vm_id`), so a local-only
+      plan's already-queued tasks stayed "current" by brief-match and were never pruned — `local-only` blocked NEW
+      ingestion but not EXISTING tasks. Fixed: `_prune_stale` now skips `execution_scope: local-only` plans when
+      collecting current briefs, so their queued tasks become orphans → pruned (yaml + state.db). —
+      agent-orchestrator@183d573 | tests:
+      test_regen_backlog_from_plan.py::test_prune_stale_removes_tasks_of_local_only_plan.
+- [x] ✅ [OPS] LIVE remediation (central VM, SSM 2026-06-21): the running orchestrator's backlog source is the harsh
+      `backlog.yaml` (Gap-5 desync) which still held 9 defi tasks + state.db had the queued zombies. Cleaned both via
+      the backlog module + a surgical `DELETE` of queued+undispatched defi rows only (4 dispatched in-flight + 6 done
+      kept): **0 queued defi remaining, verified held across a regen cycle.** Slots 3/6 finish their 2 in-flight items
+      (`-013`/`-022`) then stop; no more defi dispatch. NOTE: Gap-5 (`ORCHESTRATOR_BACKLOG` → retired harsh path) is the
+      underlying desync — tracked in `orchestrator_agent_lifecycle_gaps_2026_06_16` Gap 5; repointing it to the
+      canonical backlog prevents future zombies.
 
 ## Codex SSOT updates
 
