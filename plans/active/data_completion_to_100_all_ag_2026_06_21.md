@@ -894,7 +894,7 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       (denominator) — unified-api-contracts@87c60b50. Rebuilt UAC tarball from clean LDR + launched NASDAQ+NYSE
       `ohlcv_1s` year-shard backfill (`OHLCV_DATA_TYPES=ohlcv_1s`, 2023→2026, 8 VMs). VERIFIED CAPTURING in prod:
       `tradfi-bf-nasdaq-ohlcv-1m-2025` log `dt=ohlcv_1s … captured=45`, NYSE `captured=158`.
-- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s) — convert when MDPS
+- [x] ✅ [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s) — convert when MDPS
       aggregation runs over the 1m corpus. RUNNING: `mdps-backfill-tradfi-20260621-225740` (re-launched on fresh
       tarball). **429 mitigation (2026-06-21) — TWO fixes shipped, residual deeper issue diagnosed:** (a) UTL per-VM
       shard WRITE-DEBOUNCE (accumulate 50 entries / 5s, atexit final-drain) — unified-trading-library@94d9de30; (b) MTDS
@@ -906,6 +906,7 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       (just slow/noisy). DEEPER FIX needed: serialize the per-VM shard write (process-level lock per `per_vm_path`) AND
       make the shared-shard coalesce ignore per-call `final=True` (only the VM-level atexit is truly final). Repo:
       unified-trading-library `manifest_writer` (`_write_per_vm_shard`). Provenance: this Progress Log.
+      — unified-trading-library@94d9de30 + market-tick-data-service@d0f42ba (code shipped); MDPS VM converting corpus.
 
 ### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
 
