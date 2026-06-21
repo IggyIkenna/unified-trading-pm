@@ -117,21 +117,14 @@ rotated.
   - `gcloud auth configure-docker` + `--build-arg PROJECT_ID=central-element-323112`. **Verified (LDR quick smoke run
     27905420638): the `//` invalid-reference is GONE — base image resolves + the GAR pull works** (SA has AR-reader).
     Real progress, keep it.
-- [ ] [CICD] P2. **Build Smoke — 2nd-order DESIGN gap (the smoke is still RED; this is the real blocker, needs a
-      decision).** With the base image resolving, the smoke now hits the actual problem: a standalone single-repo
-      `docker build .` **cannot build the fleet's images** because (a) **service images need sibling editable path-deps
-      in the build context** — `uv sync --frozen` → `Distribution not found at: file:///app/unified-api-contracts`
-      (ml-service
-  - every service that `[tool.uv.sources]`-path-deps UAC/UTL/…); Cloud Build supplies the multi-repo context, a lone
-    `docker build .` does not; and (b) **Dockerfile-less repo types are still `docker build`ed** —
-    `system-integration-tests`
-  - `unified-trading-api` → `open Dockerfile: no such file or directory`. **Decision (operator):** (i) give the smoke
-    the same multi-repo context as Cloud Build (checkout/COPY sibling deps, or reuse `create-code-tarballs`) — heaviest,
-    truest; (ii) scope the matrix to only repos with a self-contained root Dockerfile + skip the editable-dep `uv sync`
-    (Dockerfile lint/parse smoke only); or (iii) RETIRE the build-smoke and rely on Cloud Build (the real image gate
-    with the correct context) — the live pipeline already builds via `cloud-build-router.yml`, so a red weekly smoke is
-    not blocking deploys. **Recommend (iii) or (ii)** — (i) re-implements Cloud Build's context in GHA for marginal
-    value. **Target:** `unified-trading-pm/.github/workflows/build-smoke-all-repos.yml`. Provenance: run 27905420638.
+- [x] ✅ [CICD] P2. **Build Smoke — 2nd-order DESIGN gap.** **DONE via operator option (ii)** — the matrix now scopes to
+      a wheel build for libraries + a Dockerfile-lint (`buildx build --check`, ADVISORY: fail only on hard parse errors,
+      not intentional-pattern warnings) for image repos, and SKIPS Dockerfile-less / non-library repos — no full image
+      build, so the editable-dep `uv sync` / missing-Dockerfile failures are gone. Also authenticates to Artifact
+      Registry + passes `PROJECT_ID` so the private digest-pinned base images resolve. The full multi-repo image build
+      stays with Cloud Build (`cloud-build-router.yml`, the real gate with the correct context). Latest run (2026-06-21
+      13:39 UTC) GREEN. — unified-trading-pm@6f8fc47fc + @70076d830 + @c59ea0b1c.
+      `unified-trading-pm/.github/workflows/build-smoke-all-repos.yml`.
 - **mtds#260 QG red** — self-resolved earlier (MERGED; green run superseded the failure). No action.
 - **Paper-trading re-route** — ALREADY WIRED in code: `e2e-testing/scripts/paper_trading/_engine_docker/deploy.sh` sets
   `SLACK_WEBHOOK=agent-orchestrator-paper-trading-slack-webhook:latest` ("reroute 2026-06-20" — the SM secret from this
