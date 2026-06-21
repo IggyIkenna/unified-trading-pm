@@ -316,7 +316,7 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 - `unified_api_contracts/registry/venue_mapping.py` — VenueMapping.venue_start_dates entries
 - `tests/unit/test_get_perp_venues.py` — KALSHI_PERP + POLYMARKET_PERP asserted in test_includes_all_known_perp_venues
 
-- [ ] [TEST] P1. instruments-service — fix `test_cefi_yields_no_rows_for_post_all_venue_launches`: adding KALSHI-PERP (launch 2026-05-29) + POLYMARKET-PERP (2026-04-21) to the CeFi venue universe shifted the "max venue launch date" the test keys off → update the test's post-all-launch date (or the fixture) to include the new perp venues. Owned by the perps venue add (Phase 1). Repo: instruments-service.
+- [x] ✅ [TEST] P1. instruments-service — `test_cefi_yields_no_rows_for_post_all_venue_launches` GREEN (verified 2026-06-21, perp-venue-add fixture already updated): adding KALSHI-PERP (launch 2026-05-29) + POLYMARKET-PERP (2026-04-21) to the CeFi venue universe shifted the "max venue launch date" the test keys off → update the test's post-all-launch date (or the fixture) to include the new perp venues. Owned by the perps venue add (Phase 1). Repo: instruments-service.
 
 ### 2026-06-21 20:47 — Polymarket v4→v9 re-walk: CF-11 phantom-row fix + relaunch (v2)
 - **First re-walk (VM 183617) FAILED at ~112min** on `MalformedRowKeyError`: the CF-11 honest-absence
@@ -344,3 +344,7 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
   `live_pipeline_mode_for_venue("prediction","KALSHI",...) -> live_kalshi` and
   `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps `batch_`, live
   recorder correctly stamps `live_` — no mode-awareness bug; the line-153 "finalize on the live path" assumption was incorrect.
+
+### 2026-06-21 20:52 — P1 perp-venue test items GREEN
+- `instruments-service tests/unit/scripts/test_enumerate_expected_universe.py::test_cefi_yields_no_rows_for_post_all_venue_launches` → **1 passed** (the perp-venue-add already updated the post-all-launch fixture).
+- `unified-api-contracts tests/unit/test_get_perp_venues.py` → **6 passed** (KALSHI-PERP/POLYMARKET-PERP asserted; venue_constants.py registers both, asset_group=cefi, PERP_TRADE capability). Both verified green, no code change needed.
