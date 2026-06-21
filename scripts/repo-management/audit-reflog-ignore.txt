@@ -92,3 +92,15 @@ batch-live-reconciliation-service:ab4b25a
 # guard was re-alerting every ~11 min on these.)
 deployment-ui:758050c
 deployment-ui:6903b90
+
+# Central-VM slot-4 orphan-wip discards — acknowledged 2026-06-21 (re-alerting every ~11 min).
+# Both are `chore(orphan-wip)` commits the pre-spawn dirty-state gate created from a dead
+# predecessor's WIP, then a reset to origin/live-defi-rollout discarded them locally:
+#   - agent-orchestrator:cc89557 — EMPTY commit (0 insertions/0 deletions); nothing discarded.
+#   - e2e-testing:53bbd95 — 3-line `pred` bucket special-case in the oneoff
+#     scripts/defi/migrate_legacy_twins_from_audit.py; PRESERVED to
+#     origin/wip-preserve/e2e-slot4-orphan-pred-bucket-2026-06-20 for the prediction owner to
+#     evaluate (LDR routes pred through the standard market-data path; orphan special-cases a flat
+#     market-data-tick-prediction kind). No unrecoverable work discarded.
+agent-orchestrator:cc89557
+e2e-testing:53bbd95
