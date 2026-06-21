@@ -114,7 +114,26 @@ cefi-lane / cefi-live task; the cefi LIVE path is fully fixed (bugs #6/#7/#8, ca
   `--live-source tardis-machine` to the CLI. Shipped: mtds@`0aa6163` (connector + handler dispatch + config +
   `--live-source` CLI arg + 24-test `test_tardis_machine_ws_connector.py`, QG-green) + deployment-service@`b5246a6`
   (launcher + VM setup, QG-green). Both on `origin/live-defi-rollout`.
-- #2 (HL/ASTER batch) is DIAGNOSED above → defi-lane / batch-adapter P0 (unclassified-adapter-error fix + re-fetch).
+- **#2 (HL/ASTER batch) — ✅ HANDLER + LAUNCHER SHIPPED + PROVEN + QG-GREEN 2026-06-21**: instead of patching the
+  orchestrator-routed `HyperliquidAdapter`/`AsterAdapter` (whose `fetch_trades` S3-dated branch returns `[]`
+  "delegated to MTDS" → the unclassified-error gap), built a **dedicated batch CLI handler** `OnchainPerpBatchHandler`
+  (`market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py`, op `collect-onchain-perp-batch`) that drives
+  `HyperliquidS3Downloader` (requester-pays S3, `aws-hyperliquid-s3` secret) + `AsterAdapter` REST **directly**,
+  bypassing the orchestrator DeFi-strip. Writes cefi canonical parquet via the orchestrator `PartitionedTickWriter`
+  (byte-identical paths → Batch=Live) + manifest captured/empty/failed rows via `ManifestWriter` with
+  `asset_group=cefi`, `source=hyperliquid/aster`, `pipeline_mode=batch_hyperliquid/batch_aster` — matching the failed
+  cells' provenance so they resolve `attempted_failed → captured`. data_types: `trades` / `book_snapshot_5` /
+  `derivative_ticker` (funding inline); ASTER `book_snapshot_5` = honest absence (no historical depth endpoint); HL
+  liquidations out of scope. Shard-level isolation + UAC `classify_venue_error` + `ADAPTER_FETCH_FAILED`.
+  **PROVEN on a real S3 fetch**: HL `derivative_ticker` BTC 2023-05-21 → **1440 rows captured**, canonical parquet at
+  `gs://market-data-tick-cefi-prd-…/raw_tick_data/by_date/day=2023-05-21/pipeline_mode=batch_hyperliquid/asset_group=cefi/venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/BTC-PERP.parquet`
+  + a **captured manifest row** in `_index/availability_index.parquet`
+  (`HYPERLIQUID | derivative_ticker | BTC-PERP | captured | source=hyperliquid | batch_hyperliquid | asset_group=cefi`).
+  14 unit tests; ruff/basedpyright/pytest green on touched files. Shipped: mtds@`1e4dfb2` (handler + cli/main.py op-map
+  + `--onchain-perp-symbols`/`--onchain-perp-data-types` args + tests) + deployment-service@`b04cfcc` (launcher
+  `VM_OPERATION=download`→`collect-onchain-perp-batch` + `cefi-hl-aster-backfill` VM_TASK routing in
+  `setup-data-pipeline-vm.sh`). Both on `origin/live-defi-rollout`. **REMAINING (operator/infra)**: run the launcher
+  over the HL 2023→26 / ASTER 2024→26 ranges to backfill all 48.5k cells to completion (fire-and-verify VMs).
 
 ## §3 — funding_rate is a FIELD in derivative_ticker (data-model note, operator 2026-06-21)
 

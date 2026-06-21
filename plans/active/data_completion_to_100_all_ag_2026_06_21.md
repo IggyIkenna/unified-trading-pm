@@ -836,7 +836,13 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       convert to captured when MDPS aggregation runs over the new 1m/1s corpus. **LAUNCHED 2026-06-21:**
       `mdps-backfill-tradfi-20260621-213646` (RUNNING, `launch-mdps-backfill-vm.sh tradfi 2020-01-01 2026-06-20 full`) —
       re-aggregates the captured 1m corpus into 15m/24h. Leave open until the manifest shows the 15m/24h cells
-      converting captured (verify post-drain). Repo: market-data-processing-service.
+      converting captured (verify post-drain). Repo: market-data-processing-service. **PRACTICAL BLOCKER (2026-06-21):**
+      the MDPS `ManifestWriter` rewrites the WHOLE per-VM shard parquet PER CELL ("930 total entries, 1 new" every
+      ~30ms) → sustained GCS 429 object-mutation rate-limits + O(n²) cost; at 207k target cells it will not
+      realistically complete (consolidated index still shows 103,651 unattempted each for 15m/24h while the VM has
+      written only ~930 entries). Pre-existing MDPS behavior. Needs the per-VM shard write BATCHED (accumulate N cells /
+      debounce, then one write) before a large MDPS backfill is practical. Repo: market-data-processing-service
+      ManifestWriter.
 
 ### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
 
