@@ -133,8 +133,9 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       bad arg; VM_TIER now logged informational-only. Fixed handler uploaded to
       `gs://deployment-scripts-…/vm/setup-data-pipeline-vm.sh`; broken `mtds-backfill-odds-1` VM (was erroring every
       chunk ~1.5h) deleted; odds backfill relaunching on the fixed handler.
-- [ ] [SCRIPT] P0. deployment-service — **`launch-tradfi-bf-nasdaq-ohlcv-1m.sh` runs local UAC enumeration without a
+- [x] [SCRIPT] P0. deployment-service — **`launch-tradfi-bf-nasdaq-ohlcv-1m.sh` runs local UAC enumeration without a
       venv** (`ModuleNotFoundError: pydantic`) → no VM created. Invoke via the workspace venv. Repo: deployment-service.
+      ✅ — `python3` → `"${WORKSPACE_ROOT}/.venv-workspace/bin/python3"` — deployment-service@e31817b
 - [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
       enumeration must precede the MTDS poll (same IS→MTDS ordering as the Kalshi seed). Repo: instruments-service.
 - [ ] [TERRAFORM] P0. **deployment-service terraform must reflect the CANONICAL bucket names after the bucket-name
