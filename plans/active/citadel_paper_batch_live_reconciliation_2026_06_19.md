@@ -668,6 +668,21 @@ are identified (2) and the ledger exists (3).
       produce real fee/IL PnL. Honest absence only where a vault/pool genuinely has no on-chain history. Backtest + ε=0.
       Repo: mtds / features-onchain (sourcing) + strategy-service (DEFI_LP_VAULT wiring). Creds via get_secret_client —
       never raw values in repo.
+- [ ] [CODE] P2.11.14. **Wire the BTC-level trend-following (CTA) leg into the production directional book** — proven in
+      research (`_exec_optimize.py` `trend` leg, 15% sleeve; Progress Log 2026-06-21 "WHY THE DIRECTIONAL BOOK MAKES ~0
+      IN 2023 & 2026"). The directional book is market-neutral + long-biased so it makes ~0 in the two BETA years (2023
+      melt-up / 2026 selloff); a BTC multi-horizon (1/3/6/12mo) TSMOM leg — long confirmed up-trend, short confirmed
+      down-trend, sign-averaged, lagged (no lookahead) — earns exactly there (standalone realistic Sharpe +0.74 net
+      +$659k; '23 +1.4 '26 +2.3; corr to BTC buy&hold +0.00 full / −0.85 in the selloff = genuinely shorts the
+      downtrend, not closet-long; corr to XS book −0.11). Implement as a production strategy archetype/leg in
+      **strategy-service** (TS-momentum signal from the canonical OHLCV the engine already reads; batch=live one path;
+      ε=0 batch-rerun proof; realistic fills via execution-service GroupC). Modest sizing (~15% sleeve, tunable).
+      Composes with the existing short leg (P-respec) — both are the directional/beta sleeves. Repo: strategy-service.
+- [ ] [CODE] P2.11.15. **cs leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`** — the cross-sectional ML book
+      (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
+      EWMA denoise (shipped) is the 80% cheap fix; the proper fix is retraining the pooled LightGBM on a longer-horizon
+      return target so the signal is less whipsawed by the noisy 15m next-bar label. No lookahead (trailing features,
+      shifted target; IS-select 2023-24 / OOS-validate 2025-26). Repo: features/strategy research (`_panel.py`).
 
 ## Temporary states + their canonical follow-up plans
 
@@ -675,6 +690,30 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-21 (autonomous) — WHY THE DIRECTIONAL BOOK MAKES ~0 IN 2023 & 2026 + THE FIX (BTC-trend / CTA leg).**
+  Operator: "making no directional money 2023 and 2026 still feels weird, be critical, no lookahead, strengthen."
+  **Diagnosis (structural, not a bug):** the directional book is market-NEUTRAL (cs/ext cross-sectional) + long-biased
+  (h32/tsmom-long), so it earns from cross-sectional DISPERSION — which is exactly what vanishes in the two big BETA
+  years. 2023 (BTC +154% melt-up) and 2026 (BTC −29% selloff) are strong-directional regimes where everything moves
+  together (low dispersion), so the neutral legs have no relative-value spread to harvest and the long-biased legs are
+  on the wrong side in 2026. We were leaving the entire directional move on the table (long 2023, short 2026 both
+  unowned). **Fix = add a BTC-level multi-horizon (1/3/6/12-month) time-series-momentum (CTA) leg** — long confirmed
+  up-trends, short confirmed down-trends, sign-averaged, lagged 1 day (no lookahead). Evidence (`_tsmom_proper.py`,
+  `_book_with_trend2.py`, `_book_final_trend.py`): standalone realistic Sharpe **+0.74 net +$659k** through the full
+  fill model (engine `run_strategy`, maker-25%-drop; the largest net of any directional leg — cs +$393k, short −$22k)
+  / +1.07 vnorm; yearly **'23 +1.4 · '24 +1.2 · '25 −0.2 · '26 +2.3** (positive in BOTH blind-spot years, mildly
+  negative only in 2025 = the XS book's BEST year → complementary). **Proved NOT closet-long beta:** corr to BTC
+  buy&hold **+0.00 full / −0.85 in 2026**; in 2026 BTC buy&hold is −1.16 Sharpe vs this leg **+2.34** (opposite sign →
+  genuinely shorts the downtrend). corr to the XS book **−0.11** (true diversifier, anti-correlated exactly when the XS
+  book bleeds). Adding it lifts the book in both years (2023 −0.6→~0, 2026 loss more than halved) and raises full + OOS
+  Sharpe. **Wired into production engine** `_exec_optimize.py` as the `trend` leg at a modest 15% sleeve (W["trend"]
+  =0.15). Honest caveats: thin crypto sample (~4 bets/yr × 4yr) but trend-following is the strongest decades-validated
+  systematic prior (Moskowitz-Ooi-Pedersen 2012, 58 instruments) and the construction is non-overfit (standard
+  multi-horizon, no tuned params); it does NOT manufacture large alpha in the beta years — it brings them to flat/
+  positive, the correct outcome for taking measured directional risk. **Residual:** the worst 2026 leg is cs (the ML
+  cross-sectional book) — separate from this fix; the cs longer-horizon TARGET retrain (`_panel.py`) is the standing
+  todo to address its 2026 drag. SSOT scripts: root `_tsmom_proper.py` / `_book_final_trend.py` / `_exec_optimize.py`.
 
 - **2026-06-21 (autonomous) — PAPER BOOK NOW 141 STRATEGIES / 6 ARCHETYPES (was 2).** Verification run
   `paper-20260621215559-4337e2aa` after the CeFi venue-normalization fix (strategy-service@bbdb4f1e): CARRY_BASIS_PERP
