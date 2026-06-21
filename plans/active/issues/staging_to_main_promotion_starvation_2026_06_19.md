@@ -319,3 +319,40 @@ promote is a near-no-op success → clears. Low-harm; verify it clears.
       bumping is acceptable high-velocity behaviour (0.x versions are cheap; each drain carries real content); the only
       problem was the breaker count-trip false-positive, now fixed climbing-aware. Computing the bump once at the
       staging→main boundary would re-introduce the Mode-B starvation tension (chore→no-bump→frozen). No code change.
+
+### 2026-06-21 (~22:00 UTC) — promotion-lag wave root-caused to a recursive `feat!` regression (fixed) + content-vs-version residual
+
+A `promotion-lag-monitor` WARNING (25 branch-pairs / 22 repos >60m) traced through five layers to a regression
+**I introduced in the Mode-B fix**, plus a downstream residual:
+
+**Chain:** lag → dep-order gate skips all 18 dependents (`dep unified-trading-library is STAGING_GREEN`) → UTL held
+because UTL→main can't promote → UTL (and the fleet) dep-blocked behind UAC, which sat in
+`staging_status.breaking_pending` → UAC flagged breaking by a `feat!: LDR → staging (Tier C auto-drain)` subject.
+
+**Root cause (regression):** `ldr-to-staging-promote.yml::_squash_subject()` (the Mode-B semver-signal helper) scanned the
+drain PR's commits for `!:` and emitted `feat!`. The backmerge re-includes a prior `feat!: LDR → staging (auto-drain)`
+commit in the next drain's range → the `!:` test **re-matched the drain's OWN earlier subject** → every drain
+re-flagged breaking → UAC/mtds froze in `breaking_pending` (self-perpetuating). `feat!` is meant to be a HUMAN
+breaking-override; the AST differ (`detect_breaking_change.py`) is the breaking SoT — an automated drain must never
+force it.
+
+- [x] ✅ [CICD] P0. **`_squash_subject()` never auto-emits `feat!`** — derives only the bump signal (feat/fix, `!`
+      dropped; `feat!`/`fix!` headlines still map to feat/fix). PM@b1561bdef (LDR) + activated on `main`@204f4074f
+      (direct, so the `*/15` drain stops re-flagging immediately). The AST differ remains the breaking SoT.
+- [x] ✅ [CICD] P0. **Cleared the false `breaking_pending` [unified-api-contracts, market-tick-data-service]** —
+      both AST-verified non-breaking (`detect_breaking_change.py`: UAC 949→949 exports `is_breaking=false`; mtds
+      95→106 additive `is_breaking=false`). main@3918b032b `[skip ci]`. Unblocks the breaking-SIT hold; mtds now reports
+      "SAFE … safe to promote", waiting only on UTL→main (correct topological order).
+
+**Residual (NOT a stuck pipeline — drains organically):** while the fleet was blocked, the version maps were promoted
+(`staging_versions→versions`, `c78338c90`) WITHOUT the content merges, leaving ~20 repos at **version-parity with
+content divergence** (e.g. UTL staging_v 0.29.0 == versions 0.29.0 but `main...staging` = 21 files; UAC 0.33.0==0.33.0
+but 6 files). The version-driven promoter sees parity → won't re-merge. This drains on each repo's NEXT bump
+(`staging_v > versions` → the promoter carries the whole staging backlog) — now unblocked. A fleet-wide
+content force-sync (CLAUDE.md "clean-start force-sync") would expedite but is **operator-gated** (high blast radius,
+~20 repos) — flagged for operator decision, not forced autonomously.
+
+- [ ] [CICD] P2 **BLOCKED-OPERATOR-DECISION**. Expedite the content-vs-version drain (hollow versions on main: ~20 repos
+      at version-parity with real `main...staging` content divergence, e.g. UTL 21 files / UAC 6 files). Options: (a)
+      let it drain organically as repos bump (safe, automatic, now unblocked); (b) operator-gated clean-start force-sync
+      main←staging content. Provenance: promotion-lag wave 2026-06-21; consequence of the now-fixed false-breaking block.
