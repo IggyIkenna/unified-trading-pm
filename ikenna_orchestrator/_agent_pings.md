@@ -3759,3 +3759,31 @@ Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local cro
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
 so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-06-21T10:15:24Z — ⚠️ 4 orphan ping(s) detected (no plan/issue/audit reference)
+
+Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
+
+```
+ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
+ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-21T05:00:20Z — HARD FAILURES DETECTED
+ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-20T05:00:20Z — HARD FAILURES DETECTED
+ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [hygiene-sweep-cron] 2026-06-21T05:00:20Z — HARD FAILURES DETECTED
+
+```
+
+**Action required**: the agent who posted each orphan ping must either:
+1. **File a plan** in `plans/active/<slug>_2026_06_21.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline,
+   OR
+3. **Remove the ping** if it's resolved / no longer actionable.
+
+Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
+
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
+Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
+Phase -1 (workspace-discipline prereq).

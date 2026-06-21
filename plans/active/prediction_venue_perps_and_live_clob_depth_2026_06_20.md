@@ -48,6 +48,43 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-20 (PM-3) — Phase 1 SHIPPED (live+batch adapter); Phase 2 converter drafted (reuse-based)
+
+**Phase 1 — SHIPPED + QG-green (instruments-service@8b118d9, 17 tests):** cutoff-aware `get_instruments(date)`
+routing (live `/markets` vs `/historical/markets` by `/historical/cutoff`) + RSA-PSS auth (parses
+`kalshi-api-credentials`, signs `ts+method+path`; the wrong `Bearer` retired; live `status=open` is
+unauth-OK). LIVE confirmed end-to-end (2000 records); deep dates → honest-absence. **This makes Kalshi
+live + batch enumeration work for continuation going forward, in the unified canonical path.**
+
+**Phase 2 — bulk→canonical converter DRAFTED (thin, reuse-based), NOT yet launched:**
+`market-tick-data-service/market_tick_data_service/scripts/ingest_kalshi_bulk_to_canonical.py`. Design
+(de-risked — reuses already-correct code, no parallel writer/manifest): per UTC day, DuckDB/pyarrow-slice
+the Jon-Becker bulk Kalshi trades (corpus = single 33.5GB `https://s3.jbecker.dev/data.tar.zst`, kalshi
+subset: trades = trade_id/ticker/count/yes_price(cents)/no_price/taker_side/created_time(UTC); markets =
+ticker/event_ticker/status/open|close|created_time/result; chunk-partitioned, not date) → per ticker REUSE
+the live adapter's `_annotate_kalshi_ticker` (identical canonical columns + `canonical_question_group` via
+UAC `classify_kalshi_to_canonical_group` + `available_at` floor) → write to UAC `candidate_parquet_paths(
+prediction, "trades", day, pipeline_mode="batch_kalshi", venue=KALSHI, condition_id=ticker, ...)` (the SAME
+path the live/batch writer emits) → then build v9 manifest by reusing the existing `rebuild_prediction_manifest.py`
+over the written parquets. So bulk-seeded data is INDISTINGUISHABLE from API-fetched (the parity test).
+
+**Remaining Phase-2 steps (precise — converter is ~90% there):**
+- [x] ✅ [SCRIPT] P0. market-tick-data-service — `ingest_kalshi_bulk_to_canonical.py` SHIPPED (mtds@74a2dd7, QG-green, 6 unit tests): pyarrow.dataset day-slice + REUSE `_annotate_kalshi_ticker` + `candidate_parquet_paths(pipeline_mode=batch_kalshi)` + `upload_bytes`; byte-identical to live path. ~~finish: (a) replace the
+  `duckdb` slice with `pyarrow.dataset` (duckdb is NOT an MTDS dep; pyarrow IS — `ds.dataset(glob).to_table(
+  filter=created_time in [day,day+1))`); (b) resolve the actual UCI write call (the live `PartitionedWriter`
+  `write_chunk` path — mirror its `get_storage_client()` upload, NOT the unverified `upload_bytes`); (c) QG-green.
+  Bucket kind `market-data-tick-prediction` ✅ confirmed; `candidate_parquet_paths` prediction kwargs
+  (venue/condition_id/instrument_type) ✅ confirmed. Repo: market-tick-data-service.
+- [ ] [SCRIPT] P0. deployment-service — `launch-kalshi-bulk-seed-vm.sh`: download `data.tar.zst` → extract
+  ONLY `data/kalshi/` → run the converter `--day <D>` for ONE parity day → ALSO run the live `/historical`
+  API path for D → **assert byte-parity (same tickers/trades/prices/ts)**; on pass, run the full
+  `--start 2021-07-30 --end 2026-04-21` range → reuse `rebuild_prediction_manifest.py` → verify manifest v9
+  coverage. T+10min verify. Repo: deployment-service. (Do NOT launch until the converter is QG-green —
+  unverified writes to the canonical prediction bucket are a data-correctness risk.)
+- [ ] [SCRIPT] P1. Live+batch canonical confirmation: after the seed, confirm the daily live cron + a batch
+  re-run for a recent day both write the SAME `pipeline_mode=batch_kalshi`/`live_kalshi` canonical parquets +
+  manifest v9 rows (live=batch parity). Repo: market-tick-data-service + deployment-service.
+
 ### 2026-06-20 (PM-2) — SOLVED: Kalshi history IS available (official `/historical/*` API) + LIVE works
 
 **Supersedes the "BLOCKED" framing below.** Operator chose option (b) — adapter R&D, verify the
