@@ -94,6 +94,18 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       operational (rows accrue as trades flow; first window was empty_confirmed). Findings filed:
       `plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md`. Repo: market-tick-data-service /
       deployment-service. (CEFI lane 2026-06-21.)
+- [x] [DATA] P0. **cefi — bug#7 live-capture schema-validation FIXED + durably shipped (CAPTURED windows no longer
+      raise).** 6th first-run bug: live `record_captured` passes a row_count-only bookkeeping df (real ticks
+      validated+written by `LiveWebsocketTickSink`), but `ManifestWriter.record_captured` ran `_maybe_validate` →
+      `validate_row_df` against the full tick contract → every captured window raised `RowSchemaValidationError` (only
+      empties recorded). Fix BOTH paths (operator-directed; `pipeline_mode`+`source` carry provenance): UTL
+      `record_captured` gained a `validate: bool = True` gate (skips `_maybe_validate` when False) —
+      unified-trading-library@057264fd (converged with slot-3's `78481472`); the live recorder passes `validate=False`
+      — market-tick-data-service@e6b0f29. Both QG-green (UTL 139s / mtds 96s) via isolated name-correct worktrees
+      (churn-immune), on remote `live-defi-rollout`. Deployed: fresh UTL+mtds tarballs (fixes verified inside) →
+      `gs://deployment-scripts-central-element-323112/code/` @17:51Z; relaunched
+      `mtds-live-cefi-hyperliquid-trades-20260621-175349`. End-to-end captured-row verification in-flight on that VM.
+      Repo: unified-trading-library / market-tick-data-service. (CEFI lane 2026-06-21.)
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
 - [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
