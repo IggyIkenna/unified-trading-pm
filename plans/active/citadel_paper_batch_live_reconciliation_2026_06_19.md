@@ -526,7 +526,16 @@ are identified (2) and the ledger exists (3).
 
 ### 2026-06-21 — Autonomous: two producer-side paper-run fixes (delta double-count + `--mode paper` launch)
 
-**Repos:** strategy-service@a2d12217 + unified-trading-library@ef5b1699 (both on LDR; Tier-C drain → staging ≤15min).
+**Repos:** strategy-service@a2d12217 + unified-trading-library@ef5b1699 + unified-trading-library@9177a807 (the
+bootstrap-observability follow-on for FIX 2) — all on LDR; Tier-C drain → staging ≤15min.
+
+**VERIFIED on GCS — new run `paper-20260621130232-d652e200`** (`--mode paper`, client `firm-paper-determinism`,
+2026-05-16..05-22): 56 InstructionLedger fills + 8 Pricing marks + 8 Transfer rows + 28+28 attribution rows (2
+`@`-qualified strategy_ids), mode=PAPER. **net-in-coin (7-day cumulative from the GCS instruction ledger): ETH = +17.50,
+SOL = +35.00** — the delta-neutral haircut residual (per-day ETH +2.50 = staked 33.33 − perp 30.83), **NOT** the prior
+~+250 double-count. The conversion legs net exactly: `UNISWAP_V3:ETH +233.33` (swap) / `LIDO:ETH 0` (consume −233.33 +
+stake +233.33) / `DERIBIT:ETH-PERP −215.83` → ETH +17.50; same shape for SOL (`JUPITER +175 / JITO 0 / DRIFT −140` →
++35).
 
 1. **FIX 1 — carry_staked_basis delta DOUBLE-COUNT (the visible net-in-coin bug).** `_build_legs` booked the
    SWAP-acquired native ETH/SOL AND the STAKE leg as two separate longs of the SAME economic coin → net-in-coin ETH ≈
