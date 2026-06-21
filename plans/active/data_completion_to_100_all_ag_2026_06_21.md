@@ -3,6 +3,7 @@ title: Data completion to 100% — all asset groups, batch + live, manifest v9 (
 created: 2026-06-21
 parent_epic: mtds_mdps_master
 assigned_vm: planning
+execution_scope: local-only # operator-owned 2026-06-21 — Ikenna drives this himself; orchestrator agents must NOT auto-dispatch its todos (they handle only CI/CD escalations + plan-health). Remove this line to re-enable agent dispatch.
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
