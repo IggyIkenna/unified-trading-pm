@@ -133,3 +133,23 @@ if you want it rotated.
   (`issues/staging_to_main_promotion_starvation_2026_06_19.md` + `cicd_promotion_pipeline_2026_06_18.md` Bug#11, P0).
   NOT new + NOT a quick patch — the P0 fix (promote non-bumping QG-green content + the manifest version-desync /
   squash-fallback label-loss modes) is the genuinely-completable big item; recommend tackling as a focused unit.
+
+### 2026-06-21 PM — cloud-build-router prod-deploy warnings (downstream of the drain)
+
+The staging→main backlog drain (pushing content to main) made `cloud-build-router` attempt prod deploys and emit
+two WARNINGs (not failures) for strategy-service:
+
+- **Cloud Build Trigger Not Configured | strategy-service | prod** — but strategy-service ALREADY has
+  `strategy-service-build` + `strategy-service-feature-build` triggers in `central-element-323112`, and the alert's
+  suggested remediation `scripts/create-cloud-build-feature-triggers.sh` **does not exist** in the repo. So this is a
+  **router prod-deploy trigger-DETECTION** nuance (the router expects a prod-deploy-named trigger, e.g. a `-main-deploy`
+  like deployment-ui/api have, that service repos lack), NOT a literally-missing build trigger. Stale remediation text.
+- **Tier-Ordered Deploy Warning | strategy-service blocked by instruments-service(not-deployed)** — the dep-order gate
+  working as DESIGNED (strategy-service must deploy after instruments-service).
+
+- [ ] [INFRA] P3. **cloud-build-router prod-deploy readiness for service repos** — decide (deploy-readiness, pre-cutover):
+  do core service repos (strategy-service, instruments-service, …) get a prod-deploy trigger + auto-deploy on main now,
+  or stay build-only until live cutover? If yes, fix the router's trigger-detection / add the prod-deploy triggers + fix
+  the stale `create-cloud-build-feature-triggers.sh` remediation pointer. NOT triggering prod deploys of trading
+  services autonomously (consequential; outside the starvation scope). The semver/update-repo-version SUCCESSES in the
+  same dump confirm the Mode-B fix is working (repos bumping again). Provenance: 2026-06-21 ci-failures dump.
