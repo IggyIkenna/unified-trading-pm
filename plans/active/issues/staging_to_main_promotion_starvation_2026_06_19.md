@@ -202,7 +202,7 @@ don't affect deploys) and acceptable — not worth the promoter rewrite. This cl
       alerting#110/greeks#225/ibkr-gateway-infra#235 (1f). Skipped 3 already-content-identical (strategy-service /
       unified-api-contracts / unified-trading-library / client-reporting-api — drained earlier). v2 gates each; reds
       stay open for the per-repo fix (none expected — all staging-green).
-- [ ] **VERIFY (in progress):** watch main catch up to LDR per repo (content-delta → 0); diagnose any v2-red straggler.
-- [ ] **Manifest hygiene (post-drain):** after main catches up, reconcile manifest `versions`/`staging_versions` to the
+- [ ] [VERIFY] P0. watch main catch up to LDR per repo (content-delta → 0); diagnose any v2-red straggler.
+- [ ] [AGENT] P1. Manifest hygiene (post-drain): after main catches up, reconcile manifest `versions`/`staging_versions` to the
       drained pyproject versions if `assert_version_coherence.py` (warn-only) shows a split; the next semver/promote
       cycle also realigns it.
