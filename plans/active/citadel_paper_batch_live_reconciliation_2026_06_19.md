@@ -1903,3 +1903,23 @@ CROSS-ASSET.
 - [ ] [STRATEGY] P1. **Accelerate non-crypto archetypes (TradFi/sports/prediction) for genuine bear-regime alpha** —
       2026 proves the crypto carry+directional book is flat-to-negative in a crypto selloff; cross-asset is the only
       real diversifier. Repo: epics. Prov: 2026 audit 2026-06-21.
+
+### 2026-06-21 — EXECUTION CALIBRATION vs Binance RFQ/screen (operator: "are we too aggressive on ourselves?")
+
+Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, SOL/BNB/XRP ~1-6bp, DOGE/ADA/LINK
+~3-15bp)
+
+- flagged RFQ can execute the BASIS as one combo. `_rfq_calibrate.py`: **at the REAL ~$250k trade size our liquidity
+  scan matches the operator table almost exactly** (ETH 0.2 vs ~0.5-2, SOL 1.8 vs ~1-6, ADA 8.4 / LINK 6.2 / LTC 9.3 vs
+  ~3-15). The apparent over-charge was a SIZE error — we'd read the **$1M** column (3-4× wider) when we trade
+  ~$65-270k/coin. **The deployable book was already fine** (`simulate` uses the maker model, never the $1M scan; only
+  audit scripts read the wrong column). The **maker-25%+missed model is CHEAPER than RFQ full-fill** for our
+  low-turnover smoothed legs ($23k vs $54k on cs → keep the maker method). RFQ is a genuine upgrade ONLY for (a) the
+  **basis combo** (one ticket → my earlier basis 2nd-leg haircut was too harsh) + (b) high-turnover legs. NOT
+  over-aggressive at the right size; maker model is slightly conservative if anything.
+
+* [ ] [BUG] P3. **Audit scripts read the $1M slip column; use the size-correct $250k column** —
+      `_exec_by_vol`/`_exec_bps` over-state cost 3-4×; deployable `simulate` unaffected. Repo: e2e-testing. Prov: RFQ
+      calibration 2026-06-21.
+* [ ] [RESEARCH] P3. **Model basis execution as a Binance RFQ combo** (one ~0.5-5bp width for long-spot+short-perp) not
+      two-leg taker — removes the 2nd-leg haircut. Repo: strategy-service. Prov: RFQ calibration 2026-06-21.
