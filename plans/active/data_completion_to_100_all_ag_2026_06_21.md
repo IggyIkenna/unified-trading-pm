@@ -168,6 +168,27 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       (source=footystats) or the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO
       write OK; only ODDS fail. Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix
       from SPORTS lane (collision).
+- [ ] [DATA] P1. **sports — ODDS coverage OVER-COUNTS failures: live-instrument guard mislabels genuine
+      "book-doesn't-price-this-fixture" as `attempted_failed`** [SPORTS-lane finding 2026-06-21, measured]: the MTDS
+      odds expected-universe (sentinel fan-out) enumerates **every bookmaker × every fixture** (BETFAIR, KALSHI,
+      PROPHETX, NOVIG, BETOPENLY, POLYMARKET, ONEXBET…). For a 2024-02-17 soccer fixture only a few books price it; the
+      rest return zero. The writer tries `record_empty(SOURCE_RETURNED_ZERO)` but the manifest **live-instrument guard
+      REJECTS it** ("instruments-service catalog says 'trades' was ALIVE on KALSHI/2024-02-17 → use record_failed,
+      EmptyFromLiveInstrumentError") → marks `attempted_failed`. Result: odds shard reads **~72% attempted_failed**
+      (1,260/1,758 on the sampled date) while 128k odds rows DID land — coverage looks far worse than reality. Root: the
+      odds expected-universe is too broad (a niche US book ≠ a valid venue for EPL) AND/OR the live-instrument guard is
+      too coarse for per-(bookmaker,league,fixture) odds — a bookmaker not pricing a fixture is **honest absence**
+      (empty_confirmed), not a fetch failure. Fix belongs in MTDS odds-writer + the odds expected-universe enumeration
+      (scope to valid book×league pairs) + possibly relax the EmptyFromLiveInstrumentError guard for odds. Repo:
+      market-tick-data-service / unified-api-contracts. Same class as the IS fixtures silent-empty fix (is@0db2450) but
+      INVERTED (genuine-empty forced to failed). DO NOT fix from SPORTS-IS lane.
+- [x] ✅ [SCRIPT] P1. **sports — IS `_write_team_mapping` GCS-429 redundant-write FIXED** (instruments-service, this
+      lane): the STATIC team-mapping table (UAC EPL/Bundesliga constants, byte-identical every call) was re-written to
+      the SAME GCS blob on EVERY backfill date (~1.1k writes/run/VM → GCS hot-object 429s, ~16% rejected, no retry; the
+      blob was still correct since 84% succeeded — waste + 429-spam, not data loss). Now write-once-per-process. The
+      operator's transfer-window point: the canonical source `unified_api_contracts.canonical.domain.sports.transfer_windows.is_transfer_window_open()`
+      ALREADY gates `transfer_records` (sports_per_source_rules.py) — applies to roster/transfer data, NOT this static
+      table nor per-fixture match stats. Repo: instruments-service.
 - [x] [TERRAFORM] P0. ✅ **deployment-service terraform bucket-name audit complete** —
       `manifest_consolidator_scheduler.tf` confirmed correct (canonical `${local.deployment_env_short}` throughout for
       all Group A AG buckets; legacy entries intentional for MDPS Phase 0f); deleted deprecated
