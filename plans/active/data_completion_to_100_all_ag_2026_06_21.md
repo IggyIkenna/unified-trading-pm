@@ -621,3 +621,21 @@ fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + 
   of the code fixes. After the 3 fixes + a tarball rebuild + relaunch, this is the only remaining gate to `live_databento`.
 NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 + daily-cron host) IS done (`batch_databento`); `live_databento`
 websocket is beyond-dispatch peer-domain work, now fully diagnosed for them.
+
+### 2026-06-21 — DEFI lane: CATALOG GATE OPEN — capturing real data; full fan-out relaunched
+**BREAKTHROUGH:** canary captured real lst_rates to
+`market-data-tick-defi-prd/raw_tick_data/by_date/day=2026-06-14/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=STAKEWISE/.../data_type=lst_rates/...` (stakewise/ankr/etherfi/puffer ETHEREUM + jito SOLANA). Full fix stack works.
+**TRUE catalog root-cause (after bucket/sharding/asyncio/rollup/data_type/staleness layers):** the MTDS preflight reads
+`build_bucket("instruments","defi")` = **`instruments-store-defi-central-element-323112` (env-LESS legacy, 23.9d stale)**,
+but ALL writers (IS backfill, catalogue roll-up, data_type stamp) wrote **`instruments-store-defi-prd-…` (env-SHORT,
+fresh)**. Reader↔writer bucket mismatch (same env-less-vs-`-prd-` class as the orig market-data bug). **IMMEDIATE FIX
+(applied):** `gcs_copy_object` synced `…-prd-…/_index/availability_index.parquet` → the env-less bucket (fresh 18:32;
+valid 24h via staleness=86400; MTDS writes market-data not instruments so env-less stays fresh through the run).
+**Full 60-VM fan-out relaunched** (agent ab14773159be4e222) — gate open → real capture. execution-defi consolidator next.
+- [ ] [DATA] P1. **DEFI durable bucket-align fix (so env-less can't re-stale):** the instruments preflight reader
+  `build_bucket("instruments","defi")` resolves env-LESS legacy; canonical writers use env-SHORT `-prd-`. Align: make the
+  reader resolve canonical `-prd-` (verify per-AG it doesn't break cefi/tradfi/sports — they may be env-less-aligned), OR
+  point the IS consolidator to also refresh env-less. Until then a periodic env-short→env-less index sync keeps defi
+  capture alive. Repo: unified-trading-library (build_bucket) / instruments-service. Provenance: this Progress Log.
+- [ ] [SCRIPT] P2. **commit the defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 added to 11
+  defi MTDS launchers — working locally, used by the live fan-out; persist via quickmerge). Repo: deployment-service.
