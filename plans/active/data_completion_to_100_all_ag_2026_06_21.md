@@ -310,5 +310,8 @@ CBOE→XCBF.PITCH (launcher header comments mentioning XNAS.ITCH are stale; rout
 - [ ] [DATA] P0. **tradfi fan-out after canary-green**: NASDAQ + NYSE full DBEQ year-shards (2023-04-15→2026,
       force-window re-attempts wrongly-empty equity history) + CBOE/XCBF (needs a CBOE wrapper — VX-futures universe) +
       CME 2026. Repo: deployment-service.
-- [ ] [SCRIPT] P1. **deployment-service: commit the launcher fix durably** (lib + startup `--source`) once canary proves
-      capture — reconcile with peer's concurrent `mtds-live` edit to the same startup file. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P1. **deployment-service: launcher fix committed durably** — deployment-service@9aca3a5 (lib
+      `VM_TASK=mtds-backfill` + `VM_SOURCE=databento` + yesterday-end; startup `--source $VM_SOURCE` in mtds-backfill
+      BASE_CLI). Shipped via isolated-worktree promotion (peer's relentless reset of the shared tree + the dirty-deps
+      carve-out blocked normal quickmerge); QG-green 51s; GCS startup re-uploaded with the fix. CME-2026 canary PROVEN
+      capturing (`GLBX.MDP3/ohlcv_1m → batch_databento` parquets + per-VM manifest shard).
