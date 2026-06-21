@@ -244,3 +244,59 @@ e2e-testing#348 recovered via close+reopen (clean pull_request v2, no workflow g
 **Dashboard UX (operator request 2026-06-21) — SHIPPED:** per-stage CI status (Feature/Staging/Main) now always visible
 on the Repos CI page (backend `branch_ci` populated for all repos incl. green; deployment-api@d2078ae +
 deployment-ui@94e14de, tsc/eslint/vitest/QG green, pw:L2 ✓ regression `tests/smoke/repos-tab.spec.ts:96`).
+
+### 2026-06-21 (~16:20 UTC) — follow-up wave: bump-rate breaker false-positive + ao quarantine (post-FINAL-REPORT)
+
+Two CRITICAL Slack alerts fired AFTER the FINAL REPORT above; both are **direct, diagnosed consequences of the Mode-B
+fix** (now-correct semver bumping is working — almost too well), NOT a regression of the starvation fix.
+
+**1. `deployment-service` — BUMP-RATE CIRCUIT BREAKER tripped (FALSE POSITIVE).** Ground truth from `origin/staging`:
+
+```
+feat: LDR → staging (Tier C auto-drain)   ← Mode-B titles the drain "feat:"
+chore(release): bump version to 0.15.0    ← semver sees feat: → MINOR bump
+feat: LDR → staging (Tier C auto-drain)
+chore(release): bump version to 0.16.0
+feat: LDR → staging (Tier C auto-drain)
+chore(release): bump version to 0.17.0
+```
+
+The versions are **strictly climbing 0.15→0.16→0.17 (distinct, monotonic)** — healthy high-velocity dev, NOT a stuck
+re-bump loop (the alert even reports "1 consecutive at tip" — the real-loop detector correctly did NOT trip). Root
+cause: Mode-B titles every `*/15` Tier-C drain `feat:`, so semver MINOR-bumps on **every drain** of feature content →
+on an active repo that's up to ~4 bumps/hr → trips the breaker's raw `RECENT_BUMPS ≥ 3/hr` **count**-trip. The
+count-trip cannot tell a healthy interleaved climb from a true loop; the `CONSECUTIVE ≥ 3` detector already catches the
+real runaway (re-bumps with no content between). Breaker is SAFE-contained (refusing further bumps), no corruption.
+
+**2. `staging_versions` is broadly sparse (8 of 25 repos).** `versions[deployment-service]=0.16.0` but
+`staging_versions[deployment-service]=ABSENT`, while its staging pyproject is already `0.17.0`. The PM baseline writer
+(`update-repo-version.yml`, branch=staging) records `staging_versions[repo]` only when dispatched — for the 17 absent
+repos the dispatch either never fired or didn't record. The version-driven staging→main promoter compares
+`staging_versions[r] != versions[r]`; an absent entry means it can't compute a delta → those repos can't promote (a
+second starvation vector, distinct from Mode-A's per-repo cases) AND semver re-attempts because the baseline never
+advances. Push step already retries-with-rebase, so this is a DISPATCH/record gap, not a push race.
+
+**3. `agent-orchestrator` quarantined (3 failed staging→main promotions).** Same workflow-file-change PR-approval gate
+as the residual above; quarantine skips ao on future runs (queue unblocked) + "auto-clears on next successful
+promotion." Since ao#350 already carried ao's content to main directly (15:11Z), ao main == LDR content → the next
+promote is a near-no-op success → clears. Low-harm; verify it clears.
+
+- [ ] [CICD] P1. **Make the semver-agent bump-rate breaker climbing-aware** so a healthy interleaved version climb
+      (feat-drain → bump → feat-drain → bump, strictly increasing) does NOT false-trip the count-gate, while a true
+      re-bump loop still trips. Edit `scripts/workflow-templates/semver-agent.yml.tmpl` (SSOT): replace the raw
+      `RECENT_BUMPS ≥ 3/hr` count-trip with an **adjacent re-bump-PAIR** count (a bump whose immediately-newer neighbour
+      is also a bump = no content between = genuine loop) + keep `CONSECUTIVE ≥ 3` + raise the raw ceiling to ≥6/hr as a
+      backstop. Then `rollout-workflow-templates.sh --template semver-agent.yml` to all repos + commit each + hand-align
+      PM's own copy. repo: unified-trading-pm (template) + all service repos. Provenance: deployment-service breaker
+      trip 2026-06-21 16:20 UTC.
+- [ ] [CICD] P1. **Diagnose the `update-repo-version.yml` baseline-writer dispatch gap** (why `staging_versions` is
+      8/25 sparse despite repos bumping on staging — e.g. deployment-service bumped 3× yet `staging_versions` absent).
+      Confirm the semver-agent→PM `repository_dispatch` (branch=staging) actually fires + records for every staging
+      bump; the SPOF-retry/alert is supposed to prevent silent loss. repo: unified-trading-pm. Provenance: manifest
+      audit 2026-06-21 (staging_versions has 8 entries vs versions 25).
+- [ ] [CICD] P2. **Verify ao quarantine auto-clears** on the next successful ao staging→main promotion (ao main already
+      == LDR via ao#350). repo: agent-orchestrator. Provenance: quarantine alert 2026-06-21 16:15 UTC.
+- [ ] [CICD] P2 **NICE-TO-HAVE (design)**. Reconsider whether a `*/15` LDR→staging drain should mint a MINOR bump on
+      EVERY drain, or whether the bump should be computed ONCE at the staging→main boundary from the promoted commit
+      range — per-drain bumping races deployment-service through ~4 versions/hr. repo: unified-trading-pm. Provenance:
+      Mode-B cadence review 2026-06-21.
