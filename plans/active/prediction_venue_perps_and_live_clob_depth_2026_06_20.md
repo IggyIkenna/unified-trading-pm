@@ -37,7 +37,7 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 ## Phase 3 — LIVE CLOB depth + quotes (the arb-backtest data)
 
 - [ ] [SCRIPT] P1. market-tick-data-service — LIVE websocket connectors recording **CLOB quotes (BBO) + order-book depth** for Kalshi + Polymarket perps (and, where available, their prediction Q&A markets too — historical=trades-only, live=full book). Dump to the canonical live tick schema (book_snapshot/depth), `pipeline_mode=live_<source>`. This is the proper arb-backtest dataset (depth → slippage calibration). Mirror the existing live ws connectors (`live/connectors/`). Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. deployment-service — live-recording launcher + forward-poll for the perp CLOB streams (mirror `launch-prediction-forward-poll.sh`); ensure live=batch schema parity. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. deployment-service — perp CLOB live-recording launcher SHIPPED (deployment-service@86f517d): `scripts/vm/launch-perp-clob-live.sh` — KALSHI-PERP → e2-standard-8 VM (`VM_TASK=mtds-live`/`VM_OPERATION=live_websocket`/`MANIFEST_PER_VM_SHARDS=true`, shard `cefi:KALSHI-PERP:book_snapshot`→slug `cefi-kalshi-perp-book-snapshot`, prefix covered by `mtds-live-cefi-` in vm_zombie_watchdog LONG_LIVED_LIVE), singleton-locked per shard; POLYMARKET-PERP → clean early-exit BLOCKED-UPSTREAM (no doomed VM); live=batch parity (same UAC `book_snapshot`, only pipeline_mode differs live_kalshi_perp vs batch_kalshi_perp); lifecycle marker (Epic predictions_master/permanent). QG green. — 2026-06-21
 
 ## Phase 4 — arb wiring
 
