@@ -185,6 +185,36 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       (scope to valid book×league pairs) + possibly relax the EmptyFromLiveInstrumentError guard for odds. Repo:
       market-tick-data-service / unified-api-contracts. Same class as the IS fixtures silent-empty fix (is@0db2450) but
       INVERTED (genuine-empty forced to failed). DO NOT fix from SPORTS-IS lane.
+      **CANONICAL-COVERAGE DESIGN (operator 2026-06-21):** record genuine non-coverage as honest absence, not failure,
+      via OBSERVED-coverage rules (so honest-cov reflects reality + existing mislabels migrate):
+      (1) **Source separation** — Kalshi/Polymarket are PREDICTION MARKETS (asset_group=prediction; sourced via
+      polymarket_clob/kalshi connectors), NOT Odds-API bookmakers. Remove KALSHI/POLYMARKET from the Odds-API book set;
+      their prices flow through the prediction pipeline into canonical format; pred-vs-book dispersion is a FEATURE-layer
+      join, not a source merge. (2) **(bookmaker × league) observed-coverage map** = the 80/20: `covered := observed
+      odds-count > 0 across history`. A book that NEVER priced a league doesn't cover it → all (book, league, *) cells
+      are NOT-EXPECTED / `empty_confirmed(reason=BOOKMAKER_NO_LEAGUE_COVERAGE)`, never attempted_failed (handles regional
+      books: a UK book ≠ Brazil Série B; Pinnacle≈global; DraftKings≈US). (3) **(book × league × season)** rolling window
+      — coverage changes per season (book adds/drops leagues). (4) **per-fixture big-vs-small** (finest, optional) — within
+      a covered league a book may skip minor fixtures; conservative: covered-league + both-teams-top-tier ⇒ expect, else
+      allow empty_confirmed. **Where:** observed-coverage registry → UAC canonical (DERIVED from captured odds, refreshed
+      periodically); odds expected-universe (sentinel fan-out, MTDS) reads it → only enumerates in-coverage; relax the
+      EmptyFromLiveInstrumentError guard for odds so in-coverage-but-unpriced ⇒ empty_confirmed. **Migration:** reconcile
+      script re-labels existing `attempted_failed` → `empty_confirmed(BOOKMAKER_NO_COVERAGE)` where (book,league)
+      observed-out-of-coverage → the ~72%-failed collapses to genuine absence + honest-cov reads healthy. Repo: UAC +
+      market-tick-data-service (coordinate with provenance lane).
+- [ ] [DATA] P1. **sports — manifest DOUBLE-COUNTING: consolidated FIXTURES inflated ~1.16× by pipeline_mode dedup-key
+      drift** [SPORTS-lane finding 2026-06-21, operator: "fix duplications, no double counting"]: the consolidated
+      `availability_index` has 2 rows for the same (date, league, fixture) cell — e.g. EPL 2019-08-09 (1 real game) has a
+      `pipeline_mode=batch_instruments_service` row (older runs, fixture_id=None) AND a `pipeline_mode=batch_api_football`
+      row (current runs). The consolidator dedups "last-write-wins BY MANIFEST KEY", but pipeline_mode is IN the dedup key
+      → the same logical cell under two pipeline_modes survives as 2 rows → inflates captured counts (76,087 raw →
+      65,521 distinct-by-fixture_id, ~16%). Root = the source-aware pipeline_mode standardization is MID-FLIGHT (old =
+      generic `batch_instruments_service`, new = `batch_api_football`); historical rows not yet migrated to the canonical
+      source-aware mode. **This is the provenance/pipeline_mode lane's domain** (they are editing `pipeline_mode.py` /
+      `source_priority.py` now). Fix = (a) standardize sports IS-fixtures pipeline_mode to ONE canonical value +
+      (b) migrate historical `batch_instruments_service` sports rows → canonical, so the dedup-key collapses the dups.
+      Repo: unified-api-contracts + unified-trading-library (manifest_consolidator) — coordinate with provenance lane.
+      DO NOT fix from SPORTS-IS lane (collision with active pipeline_mode edits).
 - [x] ✅ [SCRIPT] P1. **sports — IS `_write_team_mapping` GCS-429 redundant-write FIXED** (instruments-service, this
       lane): the STATIC team-mapping table (UAC EPL/Bundesliga constants, byte-identical every call) was re-written to
       the SAME GCS blob on EVERY backfill date (~1.1k writes/run/VM → GCS hot-object 429s, ~16% rejected, no retry; the
