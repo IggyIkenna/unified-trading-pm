@@ -44,7 +44,7 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Codex SSOT updates
 
-- [ ] [DOCS] P2. codex/02-data — new prediction-perps sourcing doc; update the prediction/crypto-perp instrument-universe docs to include KALSHI_PERP/POLYMARKET_PERP. Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P2. codex/02-data — prediction-perps sourcing doc WRITTEN (`prediction-perps-sourcing.md`) + prediction-data-types-catalog.md cross-links it (KALSHI_PERP/POLYMARKET_PERP). Repo: unified-trading-pm. — 2026-06-21
 
 ## Progress Log
 

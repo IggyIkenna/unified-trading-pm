@@ -97,3 +97,18 @@ cefi-lane / cefi-live task; the cefi LIVE path is fully fixed (bugs #6/#7/#8, ca
   sources on the 5 cefi perp data_types (UAC@`061cfd01`). cefi LIVE HL trades now captured (row_count>0, verified).
 - #1 (tardis-machine live option) is a P0 follow-up for the live-pipeline / mtds lane.
 - #2 (HL/ASTER batch) is DIAGNOSED above → defi-lane / batch-adapter P0 (unclassified-adapter-error fix + re-fetch).
+
+## §3 — funding_rate is a FIELD in derivative_ticker (data-model note, operator 2026-06-21)
+
+Operator: "isn't funding rate inside derivative ticker?" — **Confirmed.** HL `derivative_ticker` (from `activeAssetCtx`,
+`hyperliquid_ticker_ws.py`) carries `funding_rate` + `predicted_funding_rate` + `open_interest` + `mark_price` +
+`index_price` in ONE snapshot. So funding arrives 3 ways: (1) `derivative_ticker.funding_rate` field, (2) standalone
+`(cefi, funding_rate)` data_type, (3) standalone `(defi, perp_funding)` REST `candleSnapshot` leg. (2) is **largely
+redundant** with (1); (3) is justified by the carry archetype's distinct cadence/semantics (realized-vs-predicted,
+funding-interval granularity — `perp_funding_data_semantics_and_cadence_2026_06_16.md`).
+
+**Consequence for #2 (HL/ASTER batch):** wiring the `derivative_ticker` batch fetch resolves the 13,804 failed
+`derivative_ticker` cells AND delivers funding inline — no separate funding fetch needed for the ticker snapshot. The
+batch onchain-perp data_types to wire are therefore: `trades`, `book_snapshot_5`, `derivative_ticker` (funding included).
+**Possible cleanup (P2, operator-decision):** retire the standalone `(cefi, funding_rate)` data_type in favour of
+`derivative_ticker.funding_rate` (has downstream consumers — needs an audit before removal; do NOT drop unilaterally).
