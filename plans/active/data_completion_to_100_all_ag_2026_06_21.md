@@ -243,6 +243,43 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 — SPORTS lane STATE SNAPSHOT (autonomous, operator away 2h) — for context-compression resume
+
+**SHIPPED (all green):** `--tier` (deployment-service@b51729b) · silent-empty→attempted_failed (is@0db2450,+10 tests) ·
+team_mapping GCS-429 write-once (is@865aea9) · **concurrency-safe self-enforced rate limiter** (is@e29ba65 — fixes the
+burst→429→52s-minute-sleep thrash that capped enrichment at ~46/min vs 1200/min cap) · UAC entity-coverage map
+(uac@9ea84499, sub-agent C). IS tarball rebuilt @e29ba65.
+
+**RUNNING VMs:** odds-backfill `mtds-backfill-odds-{2020..2026}` (7, ODDS-API key, separate quota) · enrichment
+`sports-enrich-{2019-2022,2023-2026}` (2, RELAUNCHED on fixed throttle — verify rate post-boot) · **sports LIVE**
+`mtds-live-sports-odds-api-trades-20260621-174808` (JUST launched — the missing piece; verify ≥1 `live_odds_api` row at
+T+10). Fixtures phase COMPLETE (265k captured / 1,356 leagues; VMs self-deleted).
+
+**LIVE==BATCH (operator caught this):** sports had **0 `live_*` rows** — footystats fwd-poll wrote `batch_*`
+(forward-over-future, NOT live). FIX: launched true `launch-mtds-live.sh --asset-group sports --shard-spec
+sports:ODDS_API:trades --instrument-ids ODDS_API:SPORT:soccer_{epl,la_liga,serie_a,bundesliga,ligue_one}` → odds_api_ws
+connector → `live_odds_api` (same canonical schema as batch). Verify it produces a live row (cefi proved the live path
+works after its 5-bug first-run chain — those infra bugs are AG-agnostic + fixed).
+
+**3 MIGRATION SUB-AGENTS in flight (opus), IS ships BLOCKED on a LIVE foreign UTL WIP** (`manifest_writer/_writer_captured.py`,
+peer actively editing — do NOT stomp; their tracked waiters fire when UTL goes clean):
+- **A** (agentId in transcript): canonicalise legacy `batch_instruments_service` sports rows → `batch_<source>` + fill
+  blank reasons → fixes the 130,828 blank-reason cells + the ~1.16× double-count (pipeline_mode dedup-key drift). IS migration script.
+- **B**: odds (book×league) observed-coverage map + sentinel wiring + migration → fixes the ~72% mislabelled
+  `attempted_failed` (Kalshi/Polymarket removed as they're prediction-markets not Odds-API). UAC+MTDS.
+- **C** (a2c87b13142bd5311): UAC@9ea84499 shipped — `is_league_entity_covered(league,entity)` + new
+  `EmptyConfirmedReason.EXPECTED_NO_PROVIDER_COVERAGE`. Dry-run: **~92% of leagues never yield player-stats** → skip kills
+  the waste; **506,959 cells** relabel → expected-empty. IS write-path + migration ready, pending UTL-clear.
+
+**WRITE-PATH AUDIT (regression-proof):** record_empty rejects blank (`LegacyBlankErrorReasonError`) + invalid reasons;
+`pipeline_mode: PipelineMode` REQUIRED; schema_version=9. So all issues are LEGACY data → migrations fix them; no live regression.
+
+**NEXT (autonomous loop, `/tmp/sports_autoloop.sh` watcher armed):** (1) verify sports live ≥1 row; (2) verify enrichment
+post-throttle rate (if still latency-bound/sequential → the per-fixture fetch needs concurrency = next fix); (3) when UTL
+clears → resume A/B/C → ship + run their `--apply` migrations (snapshot first) → honest-cov jumps to reality; (4) once
+C's entity-skip lands → rebuild tarball + relaunch enrichment (drops ~92% wasted player-stat calls). Raw backfill is
+rate/credit-bound (multi-day, API ceiling) — running efficiently.
+
 ### 2026-06-21 — CEFI lane: live producer unblocked (missing lifecycle topic — fleet-wide finding)
 
 First-ever operational live MTDS launch crashed: `NotFound: 404 … market-tick-data-service-events`. UTL
