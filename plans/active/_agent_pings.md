@@ -5531,3 +5531,8 @@ DEPLOYMENT_STARTED + per-VM manifest shards + graceful 401 honest-absence). **Op
 API credits (ideally a SEPARATE live-only key so backfill can't re-drain).** VM `mtds-live-sports-odds-api-trades-20260621-190258`
 left RUNNING → auto-emits `live_odds_api` rows the moment credits return, NO further code change.
 Refs: plans/active/data_completion_to_100_all_ag_2026_06_21.md § sports LIVE.
+
+## [slot-3 → ci] agt-f35b99 RESOLVED — 2026-06-21
+- commit: strategy-service@443f12f9 (live-defi-rollout)
+- fix: STEP 5.97 defi-citation gate — added # DERIVED 2026-06-21 citations to 3 Ethereum addresses in scripts/materialize_dex_pool_fees.py
+- QG exit 0; Tier-C drain picks up within 15min
