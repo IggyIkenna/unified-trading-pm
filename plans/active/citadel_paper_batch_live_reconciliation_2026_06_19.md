@@ -621,7 +621,7 @@ are identified (2) and the ledger exists (3).
       server-rate-limited at 0 tokens; deliverable (execution-service smart-fill-replay → `execution_alpha` artifact +
       e2e harness) stands. Re-dispatch.
 
-- [ ] [DATA] P11.11. **Backfill the DeFi feature groups so the non-staked-basis archetypes light up** — P11.10 wired
+- [ ] [DATA] P2.11.11. **Backfill the DeFi feature groups so the non-staked-basis archetypes light up** — P11.10 wired
       30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the
       paper window: `perp_funding` (→ CARRY_BASIS_PERP 144, CARRY_FUNDING_DISPERSION 52), `dex_pool_state` (→
       ARBITRAGE_PRICE_DISPERSION 17, DEFI_LP_* 9), `lst_rates` beyond Lido/Jito/Marinade, dated/recursive inputs. Only
