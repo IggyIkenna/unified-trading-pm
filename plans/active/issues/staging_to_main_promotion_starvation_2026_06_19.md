@@ -356,3 +356,22 @@ content force-sync (CLAUDE.md "clean-start force-sync") would expedite but is **
       at version-parity with real `main...staging` content divergence, e.g. UTL 21 files / UAC 6 files). Options: (a)
       let it drain organically as repos bump (safe, automatic, now unblocked); (b) operator-gated clean-start force-sync
       main←staging content. Provenance: promotion-lag wave 2026-06-21; consequence of the now-fixed false-breaking block.
+
+### 2026-06-21 (~22:40 UTC) — operator-requested expedite: resolution
+
+Operator asked to expedite main←staging. Investigation found the literal "force main := LDR" was UNSAFE (LDR's
+pyproject sits BELOW staging's semver-bumped versions — `admin-force-sync-all-to-main.sh`'s version-guard correctly
+BLOCKED it; a force would have reverted versions fleet-wide). The real state, post root-fixes: `breaking_pending`
+clear, **20 repos promotable**, promoter healthy (~6-min cadence). The only blocker was the **linchpin UTL**, whose
+standing staging→main PR #416 was MERGEABLE + auto-merge-armed but `BLOCKED` on the v2-never-reported deadlock (v2 ran
+green on an older staging head; the advanced head had no v2 report). A `workflow_dispatch` v2 did NOT satisfy the
+`pull_request`-context required check; **close+reopen** (the documented recovery) re-fired v2 in the right context →
+#416 **MERGED** (UTL content on main; v2-on-main running → MAIN_GREEN → unblocks the 20 dependents → they cascade via
+the healthy promoter, topological).
+
+- [x] ✅ [CICD] P1. **Linchpin UTL promoted** — #416 unblocked via close+reopen (v2-never-reported recovery); cascade
+      unblocking. Chose the safe v2-gated PR path over a version-reverting force-sync.
+- [x] ✅ [CICD] P2. **Parity-stuck leaves nudged** — opened staging→main content PRs deployment-ui#280 + fund-admin#216
+      (auto-merge armed); e2e-testing in-sync (no-op). Version-parity repos need a content-PR (the version-driven
+      promoter skips them at parity) — if they hit the same v2-never-reported deadlock, close+reopen / ci-failure-watcher
+      recovers them.
