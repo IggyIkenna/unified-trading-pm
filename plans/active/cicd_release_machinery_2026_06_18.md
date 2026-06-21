@@ -68,6 +68,33 @@ surface, the workflow-template sprawl/consolidation, the watcher/auto-recovery f
 
 ### Watchers + self-healing
 
+- [x] [WORKFLOW] P0. ✅ Restore the prod image auto-build dispatch — A3 (2026-06-10) dropped `push:[staging]` from the
+      `quality-gates-v2` trigger but left `dispatch-cloud-build` gated on `refs/heads/staging` (an event that can no
+      longer fire) → the `qg-passed`→cloud-build-router dispatch went DEAD fleet-wide (router last ran 2026-06-10).
+      Fixed the canonical template to fire on `push:[main]` (the surviving push event + prod release point) — PM template
+      unified-trading-pm@06d611adc; rolled out + committed to strategy-service@0fb38abe (LDR, promoting via PR#237→#239).
+      **NOTE: the dispatch path is a SECONDARY trigger — the PRIMARY `:latest` build is the GitHub-push `{repo}-build`
+      Cloud Build trigger on main (it auto-fires on every main push). Both now work.**
+- [x] [WORKFLOW] P0. ✅ Soft-gate the cloud-build-router kill-switch halt — it used the PM-scoped `GITHUB_TOKEN` (404 on
+      cross-repo dispatch to execution-service) and hard-failed, blocking the prod `route-build` for trading-critical
+      repos when there is no live trading runtime to halt. Switched to `GH_PAT` + `continue-on-error` + graceful warn
+      (mirrors market-hours / position-snapshot soft gates). unified-trading-pm@06d611adc (on main via PR#466).
+- [x] [BUILD-FIX] P0. ✅ Fix the cloudbuild.yaml operability-probe `--help` (was exit 127) — the image sets
+      `ENTRYPOINT []` + `CMD [uvicorn ...]`, so the probe's bare `docker run $IMG --help` exec'd `--help` as a binary →
+      127, marking EVERY trading-critical main build FAILURE *after Step #6 already built the image* (the push step gates
+      on the probe → the corrected-code `:latest` was BUILT but NEVER PUSHED; registry `:latest` stayed the 13:33
+      hand-built image). Fixed to `--entrypoint python -m $_PKG_NAME --help`; verified locally exit 0.
+      strategy-service@6f696579 (LDR, promoting via PR#238→staging→main).
+- [ ] [BUILD-FIX] P1. **Fleet-wide rollout** — commit + push the rolled-out `quality-gates-v2.yml` (push:[main] dispatch
+      fix) to all 23 repos' `live-defi-rollout` (rollout WROTE the working trees via
+      `rollout-workflow-templates.sh --template quality-gates-v2.yml` on the human-planning VM; only strategy-service was
+      committed). Per the HARD RULE a template rollout is not done until every per-repo copy is committed + pushed +
+      `detect_template_drift.py --workflows` exits 0. Target repos: all in `workspace-manifest.json.repositories`.
+- [ ] [BUILD-FIX] P1. **Audit the cloudbuild.yaml operability-probe `--help` drift fleet-wide** — strategy-service had a
+      bespoke probe NOT in the PM `configs/cloudbuild-service-template.yaml` (which uses `--entrypoint ""`). Grep every
+      repo's `cloudbuild.yaml` for `"$$IMG" --help` (bare, no `--entrypoint`); each is the same exit-127 trap on a
+      uvicorn-CMD image. Fix each like strategy-service@6f696579 OR reconcile to the canonical template probe. Especially
+      the other trading-critical repos (execution-service, risk-and-exposure-service, trading-agent-service).
 - [ ] [WORKFLOW] P2. Build/validate the image on the `staging→main` PR head — the REAL deploy gate (must land before any
       main-required build check). (self_healing G5)
 - [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two superseded
