@@ -316,11 +316,9 @@ launched `--force` (bypass single-VM guard) which ALSO forces reprocess → re-f
 Weather has occasional Open-Meteo `400 Bad Request` per-location warnings (shard-isolated, non-fatal, recorded as failed
 cells) — minor, backfill continues.
 
-- [ ] [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
+- [x] ✅ [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
       odds-backfill-vm.sh; backed up /tmp/odds_launcher_fixed.sh) once the deployment-service slot clone is clean —
-      BLOCKED by quickmerge-autostash residue (staged foreign launcher mods + dangling autostash stash@{0,1} +
-      phantom-UU gas-fees with no conflict markers; HEAD==origin/LDR). Cleanup = recover the 2 autostashes, reset index
-      to HEAD, re-apply the one-file fix. Do NOT blind-reset (foreign WIP in stashes). Repo: deployment-service.
+      deployment-service@3448ce3 | Added ALLOW_PARALLEL var + --allow-parallel arg + guard bypass without VM_FORCE
 - [ ] [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue: `*_previous_day1`
       archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo: instruments-service.
 
