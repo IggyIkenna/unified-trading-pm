@@ -237,3 +237,4 @@
 {"timestamp": "2026-06-21T17:14:27Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.25.0 (branch=staging, bump=minor)", "commit_sha": "c08c008b1535a00ebb44a8c21bf61aa15045ae78"}
 {"timestamp": "2026-06-21T17:21:33Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "agent-orchestrator=0.20.0 (branch=staging, bump=minor)", "commit_sha": "33bfd6c003670e7c60a9e867e99c682e54726008"}
 {"timestamp": "2026-06-21T17:24:21Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "trading-agent-service=0.8.0 (branch=staging, bump=minor)", "commit_sha": "be2bebc6cbbac8ef041fe7e8fa5fbdca55ffc7fc"}
+{"timestamp": "2026-06-21T17:24:58Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.21.0 (branch=staging, bump=minor)", "commit_sha": "0238fa0da82ce991f6d62ad796ed5421076a5f00"}
