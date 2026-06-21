@@ -190,3 +190,23 @@ batch`), and the handler needs `--shard-spec`+`--instrument-ids`+`streaming_redi
 local redis into setup-data-pipeline-vm.sh → launch mtds-live cefi → verify ≥1 live row** (reusable for all AGs — live=0
 fleet-wide). Then year-shard the 48.5k free-venue failed re-fetch + file the BLOCKED-CREDENTIALS ask for the 775.9k
 Tardis-gated.
+
+### 2026-06-21 — DEFI lane: bucket fix SHIPPED + PROOF found 2 more blockers (gating the fan-out)
+Shipped: mtds@1c99e5c (8 remaining defi handlers → consolidated bucket, QG green) + rebuilt mtds-code.tar.gz @14:36Z +
+SSOT row corrected (pm@12c4d89a6). **PROOF VM** (lst-rates Jan-2025, fresh tarball, mtds-lst-rates-20260621-144131):
+**bucket fix CONFIRMED WORKS** — wrote per-VM shards to `market-data-tick-defi-prd-central-element-323112/_index/per_vm/`,
+NO ManifestConsolidatorStaleError. BUT proof surfaced 2 NEW blockers that gate the whole defi fan-out (do NOT mass-launch
+until both fixed — would yield 0 captured + OOM):
+- [ ] [DATA] P0. **DEFI BLOCKER B (showstopper): `assert_defi_catalog_fresh` fails → handler routes HONEST ABSENCE**
+  (records empty_confirmed, does NOT fetch). Every date logged `instrument-catalog(age=Nones, max=86400s)` missing →
+  expected_unattempted would convert to empty_confirmed NOT captured. **The DeFi instrument-catalog must be built/fresh
+  (<24h) BEFORE the MTDS defi backfill.** Diagnosing exact catalog blob path + IS build command (sub-agent). Repo:
+  instruments-service + market-tick-data-service.
+- [ ] [SCRIPT] P0. **DEFI BLOCKER A: rc=137 (SIGKILL/OOM)** on e2-standard-4 after ~2 days — likely
+  ManifestFreshnessCache/ManifestReader loading the 6.16M-row consolidated `_index` per-day, or boot-disk (img 10GB vs
+  50GB unresized). Fix = bump MACHINE_TYPE (e2-standard-8/16) on the defi launchers and/or a manifest-read memory knob.
+  Repo: deployment-service (+ maybe mtds/utl). Diagnosing (sub-agent).
+**Fan-out matrix is READY** (year-shard 2020→2026 per data_type, ~47 concurrent-safe VMs; vault-share-price + gas-fees
+launchers MISSING `MANIFEST_PER_VM_SHARDS` → must add it or run sequential; dex-pools/dex-swaps/liquidations need
+`VM_NAME=` per shard; pyth-archive = single fixed window; `launch-defi-backfill-vm.sh` = IS instruments, NOT the MTDS
+matrix). Execute the matrix only AFTER B+A are green + a re-proof shows `captured` climbing.
