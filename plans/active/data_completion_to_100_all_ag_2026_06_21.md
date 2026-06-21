@@ -577,3 +577,23 @@ BLOCKED-CREDENTIALS, the only acceptable non-completion). Watcher armed.
   uploader froze ~16:35 (large 1s logs) while the run + heartbeat + shard-writes continued fine (heartbeat fresh, no
   premature watchdog kill). Cosmetic (can't tail those logs) but worth a try/except + re-arm in the uploader loop. Repo:
   deployment-service (setup-data-pipeline-vm.sh uploader daemon).
+
+### 2026-06-21 — DEFI lane: RE-SEQUENCED per operator (IS→100%→rollup→MTDS) + real hang root-cause
+**Operator correction (CORRECT):** run the catalogue roll-up AFTER instruments are 100%, THEN MTDS — the catalog-stale
+honest-absence is EXPECTED (live catalog has no historical snapshots until the lifecycle roll-up builds them); don't run
+MTDS before the catalog. So I KILLED the premature 60-VM MTDS fan-out (was burning empties + hung).
+**Real stuck root-cause (fleet-health diag — NOT rate limits):** sync GCS read (`ManifestFreshnessCache.bulk_load()` /
+`assert_defi_catalog_fresh` → stale-index 28-shard merge) blocks the asyncio event loop every ~3rd date (60s cache TTL)
+→ log-uploader starves → VM looks hung. Fleet-wide. FIX in flight: agent af7784c36 wraps blocking reads in
+`asyncio.to_thread`. (A `VenueRateLimiter` 10rps token-bucket already exists → no rate-cap needed; 0 × 429 observed.)
+**TheGraph 9-key sharding SHIPPED (mtds@5830cc8):** dex_pools/dex_swaps were single-key (`thegraph-api-key`) → now
+round-robin across the 9-key SM pool (`thegraph-api-key[-2..9]`); base-client count 20→actual. (Operator's point.)
+**STATE NOW:** IS instruments backfill COMPLETE (VMs gone). Catalogue roll-up `lifecycle-catalogue-regen-defi-7844r`
+**FAILED** (failedCount=1) — diagnosing (bzjvsz4qj) + must re-run on the complete IS set. 12 leftover MTDS VMs killed.
+**LIVE (operator Q):** live==batch (same canonical schema/path/data_types; only `pipeline_mode=live`). Defi live source =
+ON-CHAIN (Alchemy RPC / TheGraph / Pyth Hermes), **NOT databento** (that's tradfi). Defi live = collect-* handlers
+`--mode live` polling forward (launch-defi-forward-poll.sh stub → wire).
+**REMAINING SEQUENCE (autonomous, operator away 2h):** (1) re-run roll-up (after confirming IS 100% + IS consolidated) →
+produces fresh instrument-catalog. (2) rebuild VM tarball with sharding+asyncio fixes. (3) re-run MTDS defi fan-out →
+VERIFY capture (canary) + no hang. (4) execution-defi consolidator → honest-cov climbing. (5) MDPS defi. (6) defi live
+forward-poll → ≥1 live row. (7) terminate at 100%. Live agents: af7784c36 (asyncio fix), bzjvsz4qj (rollup diag).
