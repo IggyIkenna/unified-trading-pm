@@ -69,7 +69,7 @@ path the live/batch writer emits) → then build v9 manifest by reusing the exis
 over the written parquets. So bulk-seeded data is INDISTINGUISHABLE from API-fetched (the parity test).
 
 **Remaining Phase-2 steps (precise — converter is ~90% there):**
-- [ ] [SCRIPT] P0. market-tick-data-service — finish `ingest_kalshi_bulk_to_canonical.py`: (a) replace the
+- [x] ✅ [SCRIPT] P0. market-tick-data-service — `ingest_kalshi_bulk_to_canonical.py` SHIPPED (mtds@74a2dd7, QG-green, 6 unit tests): pyarrow.dataset day-slice + REUSE `_annotate_kalshi_ticker` + `candidate_parquet_paths(pipeline_mode=batch_kalshi)` + `upload_bytes`; byte-identical to live path. ~~finish: (a) replace the
   `duckdb` slice with `pyarrow.dataset` (duckdb is NOT an MTDS dep; pyarrow IS — `ds.dataset(glob).to_table(
   filter=created_time in [day,day+1))`); (b) resolve the actual UCI write call (the live `PartitionedWriter`
   `write_chunk` path — mirror its `get_storage_client()` upload, NOT the unverified `upload_bytes`); (c) QG-green.
