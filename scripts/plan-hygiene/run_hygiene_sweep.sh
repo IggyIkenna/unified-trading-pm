@@ -43,6 +43,9 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # fleet-wide. Running the schema check here closes that bypass at commit time. SSOT: check_frontmatter_schema.py.
     python3 "$SCRIPT_DIR/check_frontmatter_schema.py" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Frontmatter schema (staged plans)" || { echo "  ❌ Frontmatter schema — missing/empty required field (staged plans)"; PF=$(( PF + 1 )); }
     "$SCRIPT_DIR/check_todo_format.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Todo format (staged plans)" || { echo "  ❌ Todo format (staged plans)"; PF=$(( PF + 1 )); }
+    # Conflict-marker gate — catches committed git markers incl. mid-line + prettier-mangled
+    # (`> > > > > > >`) forms the other checks miss (see check_conflict_markers.sh, 2026-06-21).
+    "$SCRIPT_DIR/check_conflict_markers.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ No conflict markers (staged plans)" || { echo "  ❌ Conflict marker(s) in staged plans — resolve before commit"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
@@ -87,6 +90,7 @@ run_check "Todo regression vs origin"       hard "$SCRIPT_DIR/check_todo_regress
 run_check "Frontmatter validity"             hard "$SCRIPT_DIR/check_frontmatter.sh"
 run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_format.sh"
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
+run_check "No conflict markers (mid-line + mangled)" hard "$SCRIPT_DIR/check_conflict_markers.sh"
 run_check "Line caps (500 soft/1000 hard)"   soft "$SCRIPT_DIR/check_line_caps.sh"
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
