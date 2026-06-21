@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.33.0",
     "unified-trading-library": "0.29.0",
-    "unified-trading-pm": "1.2.251",
+    "unified-trading-pm": "1.2.254",
     "market-data-processing-service": "0.10.3",
     "e2e-testing": "0.19.0",
     "agent-orchestrator": "0.21.0",
@@ -1109,7 +1109,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1796,7 +1796,7 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.5",
     "ibkr-gateway-infra": "0.4.1",
-    "market-tick-data-service": "0.28.0",
+    "market-tick-data-service": "0.29.0",
     "agent-orchestrator": "0.23.0",
     "alerting-service": "0.18.0",
     "batch-live-reconciliation-service": "0.19.0",
@@ -1807,13 +1807,15 @@
     "features-service": "0.12.0",
     "fund-administration-service": "0.9.0",
     "greeks-service": "0.15.0",
-    "instruments-service": "0.19.0",
+    "instruments-service": "0.20.0",
     "market-data-processing-service": "0.10.8",
     "ml-service": "0.15.0",
-    "strategy-service": "0.33.0",
+    "strategy-service": "0.34.0",
     "trading-agent-service": "0.10.0",
     "unified-api-contracts": "0.33.0",
-    "unified-trading-api": "0.2.8"
+    "unified-trading-api": "0.2.8",
+    "e2e-testing": "0.19.0",
+    "unified-trading-library": "0.29.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1844,8 +1846,8 @@
       "branch": "staging"
     },
     "market-tick-data-service": {
-      "version": "0.27.0",
-      "sha": "845119d93daa265e2591841c18cbfd48138c5c91",
+      "version": "0.29.0",
+      "sha": "0a3ad3cc6c03383f2d718a0c0e5bd303d441095b",
       "branch": "staging"
     },
     "deployment-service": {
@@ -1856,6 +1858,16 @@
     "deployment-api": {
       "version": "0.29.0",
       "sha": "e2546e076939966694fb3bda2086a77a17e4ab10",
+      "branch": "staging"
+    },
+    "instruments-service": {
+      "version": "0.20.0",
+      "sha": "06c2fa4afa3d3904093a36ca074888fee951b256",
+      "branch": "staging"
+    },
+    "strategy-service": {
+      "version": "0.34.0",
+      "sha": "ec9e455fec6453494976e40f6fc8b239c0a218c9",
       "branch": "staging"
     }
   },
