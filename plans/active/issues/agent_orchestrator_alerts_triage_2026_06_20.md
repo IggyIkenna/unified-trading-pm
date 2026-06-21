@@ -44,14 +44,18 @@ genuinely net-new and captured below.
       the central VM restart loaded the wiring, it auto-realigned slot-1's `strategy-service`
       (`wrong_branch →     live-defi-rollout`) with no human intervention. Composes with the orphan-wip realign
       root-cause fix (agent-orchestrator@9a09c42, `orchestrator_self_healing_hardening_2026_06_21.md`).
-- [ ] [INFRA] P2. **Split paper-trading "trades to do now" alerts into `#paper-trading-alerts`** (operator created the
-      channel 2026-06-20). The `:zap: Paper-trading — trades to do now` digest currently posts to
-      `#agent-orchestrator-alerts`; it should go to the dedicated channel. **Operator Slack-setup required FIRST** (see
-      below). **Emitter NOT in any slot clone** (grep for `trades to do now` / `book ROE` /
-      `paper vs backtest     divergence` = 0 code hits fleet-wide) → the paper-trading scan/notifier runs on the
-      orchestrator VM (vm-planning) or an un-cloned path; locate it there (`ssh human-planning-vm` / central VM) before
-      wiring. **Target repo:** agent-orchestrator (or wherever the paper-trading scan emitter lives) + the alerting
-      webhook config.
+- [x] ✅ [INFRA] P2. **Split paper-trading "trades to do now" alerts into `#paper-trading-alerts`.** **DONE + VERIFIED
+      2026-06-21.** PRODUCER LOCATED: the `⚡ Paper-trading — trades to do now` digest is emitted by `slack_alert()` in
+      **`e2e-testing/scripts/paper_trading/paper_engine.py`**, which runs as the **GCP Cloud Run job
+      `paper-trading-engine`** (`central-element-323112` / `asia-northeast1`, triggered by the daily
+      `uts-prod-paper-engine-run-cron` 02:00 UTC) — NOT in any slot clone / central VM, which is why the 2026-06-20
+      source search came up empty (it's a containerized Cloud Run job). The live job's `SLACK_WEBHOOK` is bound to the
+      dedicated `agent-orchestrator-paper-trading-slack-webhook` secret (deploy reroute in `_engine_docker/deploy.sh` is
+      the live revision, gen 11), so the digest now posts to `#paper-trading-alerts`, not `#agent-orchestrator-alerts`.
+      The sibling `paper-signal-engine` 15-min job carries only `DB_API_KEY` (no Slack), so it is not a second producer.
+      Verified end-to-end: secret value is a valid `hooks.slack.com` incoming-webhook; a labeled routing-test POST to it
+      returned HTTP 200 (delivered to the channel). **Target:** Cloud Run job `paper-trading-engine` (already wired) —
+      no code change needed; e2e-testing@21db7fa carries the rerouted deploy script.
 
 ## Paper-trading channel split — operator Slack setup (the answer to "what do I need to do")
 
@@ -78,20 +82,18 @@ reuse the same Slack **app + the same backend notify code**, but you need a **se
 (`central-element-323112`, values never in repo/chat-persisted): `agent-orchestrator-paper-trading-slack-webhook` (the
 incoming webhook — the only one the emitter needs) +
 `slack-papertrading-alerts-{app-id,client-id,client-secret,signing-secret,verification-token}` (for future OAuth/Events
-use). **Remaining = wire the emitter — BLOCKED on locating the producer (2026-06-20 search exhausted).** Searched + came
-up empty: (a) all local slot clones — by message text AND structural fragments (`trades to do now`, `book ROE`,
-`paper vs backtest`, `identical by construction`, `est cost`, `taker-IOC`, `Sharpe`) = 0 code hits; (b) the central
-orchestrator VM `i-0c9b283b31d6b5ca7` (registry `planning`) — source tree, venv site-packages, crontab (ubuntu + root),
-`journalctl -u orchestrator -n 3000`, `server/notifications/{slack,telegram}.py`, `.env.local` (no `*WEBHOOK*`/
-`*SLACK*`/`*PAPER*` var) — all 0. The digest **lacks the `Dashboard | from: vm-planning` footer that every AO notifier
-alert carries**, so it does NOT go through `server/notifications/slack.py` — it is an **external producer posting
-directly to the agent-orchestrator-alerts webhook**, ~hourly (10:39 → 12:25 UTC observed). **UNBLOCK (operator input
-needed):** where does the paper-trading "trades to do now" scan run / who set it up? (a strategy paper VM? a Cloud Run /
-scheduled scan? a colocated_engine cron on another host?) Once the producer host+config is named, the wiring is a
-one-liner: point its webhook env/secret at `agent-orchestrator-paper-trading-slack-webhook` + restart. The destination
-(channel + webhook + all app creds in SM) is 100% ready. Security note: the client/signing secrets transited chat —
-rotate them in the Slack app **if** the app is ever extended beyond the incoming webhook (inert for webhook-only use);
-the webhook URL can be regenerated in Slack + re-stored if you want it rotated.
+use). **✅ PRODUCER LOCATED + WIRED 2026-06-21.** The 2026-06-20 search came up empty because the producer is NOT in any
+slot clone or on the central VM — it is the **GCP Cloud Run job `paper-trading-engine`** (`central-element-323112` /
+`asia-northeast1`), built from `e2e-testing/scripts/paper_trading/paper_engine.py` (`slack_alert()`, line ~246, header
+`⚡ Paper-trading — trades to do now`) and deployed by `_engine_docker/deploy.sh`; it is triggered by the daily
+`uts-prod-paper-engine-run-cron` (02:00 UTC) — the prior ~hourly observation was manual `gcloud run jobs execute` test
+runs during setup. The live job's `SLACK_WEBHOOK` is bound to `agent-orchestrator-paper-trading-slack-webhook:latest`
+(the deploy reroute is the live revision, gen 11), so the digest now posts to `#paper-trading-alerts`. Verified
+end-to-end: secret value is a valid `hooks.slack.com` incoming-webhook; a labeled routing-test POST returned HTTP 200
+(delivered). The sibling `paper-signal-engine` 15-min job carries only `DB_API_KEY` (no Slack) → not a second producer.
+Security note: the client/signing secrets transited chat — rotate them in the Slack app **if** it's ever extended beyond
+the incoming webhook (inert for webhook-only use); the webhook URL can be regenerated + re-stored if you want it
+rotated.
 
 ## Why it matters
 
@@ -115,21 +117,14 @@ the webhook URL can be regenerated in Slack + re-stored if you want it rotated.
   - `gcloud auth configure-docker` + `--build-arg PROJECT_ID=central-element-323112`. **Verified (LDR quick smoke run
     27905420638): the `//` invalid-reference is GONE — base image resolves + the GAR pull works** (SA has AR-reader).
     Real progress, keep it.
-- [ ] [CICD] P2. **Build Smoke — 2nd-order DESIGN gap (the smoke is still RED; this is the real blocker, needs a
-      decision).** With the base image resolving, the smoke now hits the actual problem: a standalone single-repo
-      `docker build .` **cannot build the fleet's images** because (a) **service images need sibling editable path-deps
-      in the build context** — `uv sync --frozen` → `Distribution not found at: file:///app/unified-api-contracts`
-      (ml-service
-  - every service that `[tool.uv.sources]`-path-deps UAC/UTL/…); Cloud Build supplies the multi-repo context, a lone
-    `docker build .` does not; and (b) **Dockerfile-less repo types are still `docker build`ed** —
-    `system-integration-tests`
-  - `unified-trading-api` → `open Dockerfile: no such file or directory`. **Decision (operator):** (i) give the smoke
-    the same multi-repo context as Cloud Build (checkout/COPY sibling deps, or reuse `create-code-tarballs`) — heaviest,
-    truest; (ii) scope the matrix to only repos with a self-contained root Dockerfile + skip the editable-dep `uv sync`
-    (Dockerfile lint/parse smoke only); or (iii) RETIRE the build-smoke and rely on Cloud Build (the real image gate
-    with the correct context) — the live pipeline already builds via `cloud-build-router.yml`, so a red weekly smoke is
-    not blocking deploys. **Recommend (iii) or (ii)** — (i) re-implements Cloud Build's context in GHA for marginal
-    value. **Target:** `unified-trading-pm/.github/workflows/build-smoke-all-repos.yml`. Provenance: run 27905420638.
+- [x] ✅ [CICD] P2. **Build Smoke — 2nd-order DESIGN gap.** **DONE via operator option (ii)** — the matrix now scopes to
+      a wheel build for libraries + a Dockerfile-lint (`buildx build --check`, ADVISORY: fail only on hard parse errors,
+      not intentional-pattern warnings) for image repos, and SKIPS Dockerfile-less / non-library repos — no full image
+      build, so the editable-dep `uv sync` / missing-Dockerfile failures are gone. Also authenticates to Artifact
+      Registry + passes `PROJECT_ID` so the private digest-pinned base images resolve. The full multi-repo image build
+      stays with Cloud Build (`cloud-build-router.yml`, the real gate with the correct context). Latest run (2026-06-21
+      13:39 UTC) GREEN. — unified-trading-pm@6f8fc47fc + @70076d830 + @c59ea0b1c.
+      `unified-trading-pm/.github/workflows/build-smoke-all-repos.yml`.
 - **mtds#260 QG red** — self-resolved earlier (MERGED; green run superseded the failure). No action.
 - **Paper-trading re-route** — ALREADY WIRED in code: `e2e-testing/scripts/paper_trading/_engine_docker/deploy.sh` sets
   `SLACK_WEBHOOK=agent-orchestrator-paper-trading-slack-webhook:latest` ("reroute 2026-06-20" — the SM secret from this

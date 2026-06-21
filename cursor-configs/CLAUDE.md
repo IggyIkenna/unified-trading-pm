@@ -391,10 +391,15 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
     rc=0/1 otherwise). `ohlcv_1s` is **FUTURES-only (CME/CBOE)** — equities `NASDAQ/NYSE=[ohlcv_1m]` (pre-flight drops
     1s). End-date ≤ yesterday (Databento T+1). CME **event contracts** (`EC*` binary markets) need the IS instruments
     backfill (`launch-tradfi-event-contract-backfill.sh`) + MTDS OHLCV of the `EC*.OPT` parents. **Live producer
-    (`live_databento`)** has 3 known bugs (`_get_api_key` resolves field→secret but SWALLOWS the secret-load exception at `logger.debug`→None; `live_source_for_venue`
-    returns batch-only `massive` not live-capable `databento`; instrument-ids need `venue:type:underlying`) + needs the
-    Databento **Real-Time/Live** subscription. Full detail + code refs: `codex/02-data/tradfi-databento-sourcing-ssot.md`
-    § "Operational gotchas".
+    (`live_databento`) is VERIFIED WORKING (2026-06-21)** — `databento_tradfi_ws` connects + authenticates + streams
+    (Live data IS in our usage-based subscription, operator-confirmed; `_get_api_key` resolves the SM secret correctly —
+    a "no API key" log is a VM-env/SM-access cascade, not a code bug). The `live_massive` source-stamp bug is **FIXED
+    (UAC@1205ae44)**: `live_source_for_venue` resolved tradfi live via the BATCH `SOURCE_PRIORITY[0]=massive`; `massive`
+    IS live-capable (operator 2026-06-05 — do NOT remove its `Mode.LIVE`), but the sole tradfi live WS producer is
+    databento, so a `tradfi` branch now returns `databento` (batch path unchanged). Instrument-ids need
+    `venue:type:underlying` (`CME:FUTURES:ES`). **Deploy:** the live VM bakes UAC from a GCS tarball, so the running
+    producer keeps `live_massive` until a `create-code-tarballs.sh` rebuild from clean LDR + relaunch. Full detail +
+    code refs: `codex/02-data/tradfi-databento-sourcing-ssot.md` § "Operational gotchas".
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms. **After a GCS path migration, large phantom counts are usually false positives** — verify
@@ -571,63 +576,63 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   (b) **sawtooth** — chaining many SHORT watchers (arm 5-min → wake → check → arm another 5-min → …), each leaving a
   fresh dormancy gap the operator pings into. For a genuinely long unattended wait (multi-day backfill, operator-gated
   credit top-up) where there is **no autonomous code work left**, arm **ONE long event-driven monitor** in a single
-  tracked task: poll at an interval matched to how slowly the watched state changes (hours for a multi-day backfill,
-  NOT 5 min), watch **ALL** actionable conditions in one place (stall / OOM / crash / external-unblock-returned /
-  completion), and exit (wake me) ONLY on an actionable event or completion — so I wake on SIGNAL, not on a timer I
-  must keep re-arming. And when the remaining work is genuinely just "wait on operator action + slow external rate,"
-  **SAY SO explicitly** (what wakes me / what is YOUR action) instead of implying continuous active work — manage the
-  expectation, don't fake liveness. **Watcher-coverage (HARD
-  RULE, codified 2026-06-10 — never infinitely wait)**: (1) a watcher must reach a TERMINAL verdict on EVERY path —
-  watch `state != OPEN` (covers merged/closed/failed), never only the success marker, and PRINT an explicit verdict line
-  so empty output is impossible (a timeout-killed silent watcher reads as "still waiting" forever — incident 2026-06-10:
-  a main-arrival watcher died at its Bash timeout with zero output while the awaited drain could never fire); (2)
-  **verify the awaited MECHANISM exists before arming a long wait** — name who fires the next hop (`rg` the trigger
-  chain: which workflow/dispatch/cron moves it?); if you cannot name it, that is a diagnosis task, not a wait (the drain
-  gap was bug #11: `staging_commits` was never written for non-breaking merges, so no watcher duration would ever have
-  succeeded); (3) ONE deadline = one expected-cadence interval of the mechanism, then STOP and diagnose — never re-arm
-  the same watcher after a silent expiry; (4) **the verdict line must be MEASURED, never a hardcoded conclusion stapled
-  onto a proxy signal (codified 2026-06-17)** — incident: a terminal check
-  `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released"` reported a TRUE measurement (`PR#81 MERGED`)
-  but a FALSE conclusion (`lock released`) it never read; the PR merged into _staging_ while the breaking-cascade
-  `staging_status.locked` flag was a SEPARATE state still `True` ("SIT running"). Every clause after the colon must
-  correspond to a variable the loop actually queried THIS iteration — if the goal is "lock released" the check reads the
-  lock flag (`grep -q 'locked=False'`), if "fix on main" it greps `main`; "PR merged" / "staging green" / "SIT passed" /
-  "lock released" / "content on main" are DISTINCT pipeline checkpoints and a watcher proves only the one it literally
-  queries (no editorial adjectives in the echo); (5) **the liveness/death check MUST NOT match the watcher's OWN command
-  line (HARD RULE, codified 2026-06-19)** — `pgrep -f <pattern>` / `ps aux | grep <pattern>` matches the watcher's own
-  bash (whose argv literally contains `<pattern>`, e.g. a loop body `if ! pgrep -f train.py`), so the check returns the
-  watcher's own PID → always "still alive" → the death branch NEVER fires → a watched process that CRASHES is never
-  detected and the watcher hangs forever, only ever exiting on the success marker (incident 2026-06-19: a
-  persist-watcher `pgrep -f _ens_persist.py` self-matched; would have waited out a real OOM crash silently). FIX: watch
-  the EXACT pid with `kill -0 <PID>` (no string match — capture the real `python3 …` PID once via
-  `ps aux | grep "[p]ython3 foo.py"`, the `[p]` bracket-trick excluding the grep itself, NOT the wrapper bash/nohup
-  whose tiny RSS + 0% CPU reveals it isn't the worker), or exclude self (`pgrep -f pat | grep -v $$`), or match a marker
-  the target has but the watcher doesn't. ALWAYS pair death-detection with a **race-guard**: after `kill -0` fails,
-  `sleep` briefly and re-check the success marker before declaring failure (the worker may finish + write the marker in
-  the same tick it exits). A `nohup … &` detached process is NOT a harness-tracked task (no auto-wake) — it MUST be
-  watched by a separate `run_in_background` pid-liveness watcher; prefer launching the worker itself with
-  `run_in_background` so its exit wakes you directly. **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick
-  ONE wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
-  (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE
-  background _orchestrator_ that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an
-  active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator
-  messaged): the pending tracked task is the harness's active wake source and SHADOWS the standalone timer (which is
-  in-session best-effort, not an OS alarm — also won't fire if the session is idle/asleep). Use `ScheduleWakeup` ONLY
-  when no tracked task is in flight (self-pacing `/loop`, or polling external/untracked state); if something MUST
-  resume, make it a tracked task that exits on the condition, never the timer alone. **STRENGTHENED 2026-06-19 (this
-  KEEPS happening — operator escalation): `ScheduleWakeup` is NOT a reliable unattended timer EVEN as the sole wake
-  source.** It is in-session best-effort and **does NOT fire when the session is idle/asleep — which an UNATTENDED wait
-  IS by definition.** Incident 2026-06-19: a `ScheduleWakeup` armed for an 18:30 UTC usage-limit reset NEVER FIRED — the
-  operator found it 18 min late (18:48) and called the wakeups "bogus" (2nd incident after 2026-06-16). **RULE: for ANY
-  wall-clock unattended resume — waiting out a usage/session-limit reset, a deploy, a cron, a quota window — the
-  reliable mechanism is a TRACKED `run_in_background` task that waits to the target then exits** (its completion
-  auto-re-invokes you; the OS-level wait runs in the shell, NOT blocked by the LLM usage limit). Shape it as a
-  Monitor/until-loop on `date -u`/the condition (foreground `sleep` is blocked; a backgrounded waiter is fine), e.g. a
-  `run_in_background` bash `until [ "$(date -u +%H%M)" -ge "1830" ]; do sleep 60; done; echo RESET-REACHED`. **NEVER arm
-  a `ScheduleWakeup` as the resume for an unattended wait and then tell the operator "it'll continue itself"** — it
-  won't; it strands the work until a human pings. `ScheduleWakeup` is reserved ONLY for in-session self-pacing where you
-  are ACTIVELY producing between ticks (never idle). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` §
-  "Watcher coverage" + § "Wake sources".
+  tracked task: poll at an interval matched to how slowly the watched state changes (hours for a multi-day backfill, NOT
+  5 min), watch **ALL** actionable conditions in one place (stall / OOM / crash / external-unblock-returned /
+  completion), and exit (wake me) ONLY on an actionable event or completion — so I wake on SIGNAL, not on a timer I must
+  keep re-arming. And when the remaining work is genuinely just "wait on operator action + slow external rate," **SAY SO
+  explicitly** (what wakes me / what is YOUR action) instead of implying continuous active work — manage the
+  expectation, don't fake liveness. **Watcher-coverage (HARD RULE, codified 2026-06-10 — never infinitely wait)**: (1) a
+  watcher must reach a TERMINAL verdict on EVERY path — watch `state != OPEN` (covers merged/closed/failed), never only
+  the success marker, and PRINT an explicit verdict line so empty output is impossible (a timeout-killed silent watcher
+  reads as "still waiting" forever — incident 2026-06-10: a main-arrival watcher died at its Bash timeout with zero
+  output while the awaited drain could never fire); (2) **verify the awaited MECHANISM exists before arming a long
+  wait** — name who fires the next hop (`rg` the trigger chain: which workflow/dispatch/cron moves it?); if you cannot
+  name it, that is a diagnosis task, not a wait (the drain gap was bug #11: `staging_commits` was never written for
+  non-breaking merges, so no watcher duration would ever have succeeded); (3) ONE deadline = one expected-cadence
+  interval of the mechanism, then STOP and diagnose — never re-arm the same watcher after a silent expiry; (4) **the
+  verdict line must be MEASURED, never a hardcoded conclusion stapled onto a proxy signal (codified 2026-06-17)** —
+  incident: a terminal check `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released"` reported a TRUE
+  measurement (`PR#81 MERGED`) but a FALSE conclusion (`lock released`) it never read; the PR merged into _staging_
+  while the breaking-cascade `staging_status.locked` flag was a SEPARATE state still `True` ("SIT running"). Every
+  clause after the colon must correspond to a variable the loop actually queried THIS iteration — if the goal is "lock
+  released" the check reads the lock flag (`grep -q 'locked=False'`), if "fix on main" it greps `main`; "PR merged" /
+  "staging green" / "SIT passed" / "lock released" / "content on main" are DISTINCT pipeline checkpoints and a watcher
+  proves only the one it literally queries (no editorial adjectives in the echo); (5) **the liveness/death check MUST
+  NOT match the watcher's OWN command line (HARD RULE, codified 2026-06-19)** — `pgrep -f <pattern>` /
+  `ps aux | grep <pattern>` matches the watcher's own bash (whose argv literally contains `<pattern>`, e.g. a loop body
+  `if ! pgrep -f train.py`), so the check returns the watcher's own PID → always "still alive" → the death branch NEVER
+  fires → a watched process that CRASHES is never detected and the watcher hangs forever, only ever exiting on the
+  success marker (incident 2026-06-19: a persist-watcher `pgrep -f _ens_persist.py` self-matched; would have waited out
+  a real OOM crash silently). FIX: watch the EXACT pid with `kill -0 <PID>` (no string match — capture the real
+  `python3 …` PID once via `ps aux | grep "[p]ython3 foo.py"`, the `[p]` bracket-trick excluding the grep itself, NOT
+  the wrapper bash/nohup whose tiny RSS + 0% CPU reveals it isn't the worker), or exclude self
+  (`pgrep -f pat | grep -v $$`), or match a marker the target has but the watcher doesn't. ALWAYS pair death-detection
+  with a **race-guard**: after `kill -0` fails, `sleep` briefly and re-check the success marker before declaring failure
+  (the worker may finish + write the marker in the same tick it exits). A `nohup … &` detached process is NOT a
+  harness-tracked task (no auto-wake) — it MUST be watched by a separate `run_in_background` pid-liveness watcher;
+  prefer launching the worker itself with `run_in_background` so its exit wakes you directly. **`ScheduleWakeup` and
+  `run_in_background` DO NOT COMPOSE — pick ONE wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a
+  **tracked background task's completion** (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) —
+  for a long unattended wait use a SINGLE background _orchestrator_ that waits + works + exits. **NEVER set a
+  `ScheduleWakeup` as a "fallback" alongside an active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min
+  overdue, agent dormant until the operator messaged): the pending tracked task is the harness's active wake source and
+  SHADOWS the standalone timer (which is in-session best-effort, not an OS alarm — also won't fire if the session is
+  idle/asleep). Use `ScheduleWakeup` ONLY when no tracked task is in flight (self-pacing `/loop`, or polling
+  external/untracked state); if something MUST resume, make it a tracked task that exits on the condition, never the
+  timer alone. **STRENGTHENED 2026-06-19 (this KEEPS happening — operator escalation): `ScheduleWakeup` is NOT a
+  reliable unattended timer EVEN as the sole wake source.** It is in-session best-effort and **does NOT fire when the
+  session is idle/asleep — which an UNATTENDED wait IS by definition.** Incident 2026-06-19: a `ScheduleWakeup` armed
+  for an 18:30 UTC usage-limit reset NEVER FIRED — the operator found it 18 min late (18:48) and called the wakeups
+  "bogus" (2nd incident after 2026-06-16). **RULE: for ANY wall-clock unattended resume — waiting out a
+  usage/session-limit reset, a deploy, a cron, a quota window — the reliable mechanism is a TRACKED `run_in_background`
+  task that waits to the target then exits** (its completion auto-re-invokes you; the OS-level wait runs in the shell,
+  NOT blocked by the LLM usage limit). Shape it as a Monitor/until-loop on `date -u`/the condition (foreground `sleep`
+  is blocked; a backgrounded waiter is fine), e.g. a `run_in_background` bash
+  `until [ "$(date -u +%H%M)" -ge "1830" ]; do sleep 60; done; echo RESET-REACHED`. **NEVER arm a `ScheduleWakeup` as
+  the resume for an unattended wait and then tell the operator "it'll continue itself"** — it won't; it strands the work
+  until a human pings. `ScheduleWakeup` is reserved ONLY for in-session self-pacing where you are ACTIVELY producing
+  between ticks (never idle). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage" + §
+  "Wake sources".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
@@ -756,14 +761,14 @@ Pointer chain. Full specs in codex:
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
 - **DeFi MTDS capture/honest-cov DURABLE gotchas (codified 2026-06-21 — these kept defi stuck at 6%)**: (1) the capture
   preflight reader `build_bucket("instruments","defi")` resolves env-LESS `instruments-store-defi-{pid}` but writers use
-  env-SHORT `-prd-` → stale-read → `age=None` → honest-absence → zero capture (align reader to `-prd-`); (2) consolidated
-  staleness default 120s is too short for a DAILY catalog → falls back to per-VM shards w/ blank `data_type` → defi MTDS
-  launchers MUST pass `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`; (3) the expected-universe enumerator MUST seed
-  `expected_unattempted` in CANONICAL `venue=PROTOCOL`+`chain=X` (NOT legacy `PROTOCOL-CHAIN`/blank) or captures never
-  convert it (honest-cov stays flat); (4) never call sync GCS reads (`bulk_load`/`assert_defi_catalog_fresh`, the latter
-  keyword-only) directly in async handlers — wrap in `asyncio.to_thread(lambda: …kwargs)`; (5) DEX subgraph handlers MUST
-  round-robin the 9-key `thegraph-api-key[-2..9]` SM pool, not a single key. SSOT:
-  `codex/02-data/defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas".
+  env-SHORT `-prd-` → stale-read → `age=None` → honest-absence → zero capture (align reader to `-prd-`); (2)
+  consolidated staleness default 120s is too short for a DAILY catalog → falls back to per-VM shards w/ blank
+  `data_type` → defi MTDS launchers MUST pass `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`; (3) the expected-universe
+  enumerator MUST seed `expected_unattempted` in CANONICAL `venue=PROTOCOL`+`chain=X` (NOT legacy
+  `PROTOCOL-CHAIN`/blank) or captures never convert it (honest-cov stays flat); (4) never call sync GCS reads
+  (`bulk_load`/`assert_defi_catalog_fresh`, the latter keyword-only) directly in async handlers — wrap in
+  `asyncio.to_thread(lambda: …kwargs)`; (5) DEX subgraph handlers MUST round-robin the 9-key `thegraph-api-key[-2..9]`
+  SM pool, not a single key. SSOT: `codex/02-data/defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas".
 - **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura, Kaiko, Polygon.io (TradFi data; Polygon
   L2 blockchain intact).
 - **Pyth UNBANNED 2026-05-06** for Solana on-chain price feeds. Solana-only; other chains use Chainlink.
