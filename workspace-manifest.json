@@ -1816,7 +1816,8 @@
       "fund-administration-service",
       "execution-service",
       "e2e-testing",
-      "unified-api-contracts"
+      "unified-api-contracts",
+      "features-service"
     ],
     "sit_retry_count": 1,
     "locked_alert_sent": false,
