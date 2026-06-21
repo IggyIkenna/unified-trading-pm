@@ -19,6 +19,8 @@ locked_since: 2026-05-28
 
 # MDPS architectural audit — long-running multi-shard execution
 
+> **✅ ARCHIVED 2026-06-21 — all phases complete + codex-aligned (Phase 6 documented in codex/05-infrastructure/manifest-consolidator-ssot.md); 0 deferred work. [unlock-plan]**
+
 ## Codex audit (run 2026-05-28 before starting Phase 0)
 
 Operator asked: "do my four findings contradict anything in codex?" Sub-agent audited `codex/04-architecture/`,

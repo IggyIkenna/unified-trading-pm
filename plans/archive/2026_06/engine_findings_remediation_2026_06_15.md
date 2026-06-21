@@ -17,6 +17,8 @@ status: active
 
 # Engine findings remediation (2026-06-15)
 
+> **✅ ARCHIVED 2026-06-21 — all engine findings remediated + ## Codex SSOT updates applied. Deferred: the F48 build_matrix() test-hermetic refactor → migrated to capability_wizard_and_manifest_2026_06_11. [unlock-plan]**
+
 Wrapper plan dispatching the OPEN engine findings the capability-wizard initiative surfaced (F1–F53 + margin audit).
 Operator decisions (2026-06-15):
 

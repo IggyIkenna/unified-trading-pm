@@ -17,6 +17,8 @@ source:
 
 # Orchestrator spawn reliability — the HEADROOM-EXHAUSTED wedge
 
+> **✅ ARCHIVED 2026-06-21 — 10/10 done; the 2 temporary-states are resolved by the in-plan Phase 2 fix (spawn-out-of-transaction + CLI pin); no external deferral. [unlock-plan]**
+
 > **Incident (2026-06-10):** `/api/escalate` 503'd repeatedly ("HEADROOM EXHAUSTED — no free slot") for
 > execution-service#250 + deployment-service#46. vm-0 had **6 tmux sessions** (slots 1,2,4,5,9,10) all running idle
 > Claude REPLs at the blank welcome prompt, every slot row `status=killed` / `tmux_session=NULL`. No worker was doing
