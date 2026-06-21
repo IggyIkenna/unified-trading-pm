@@ -718,3 +718,12 @@ Full ~60-VM fan-out CAPTURING real data (dex-pools 5232 rec/day, dex-swaps 44k-1
 **FIX (in flight):** re-seed the defi expected-universe in CANONICAL venue/chain format (the `expected-universe-v2-defi` enumerator / `enumerate_expected_universe.py` still emits legacy PROTOCOL-CHAIN) so captures convert it; OR phantom-reconcile the legacy unattempted. The CAPTURING is correct + real; only the seeded denominator is mis-formatted. Agent dispatched. Batch fan-out continues (39 VMs mid-year-shard, progressing).
 - [x] ✅ [DATA] P0. **DEFI expected-universe canonical re-seed:** `enumerate_expected_universe.py` / `expected-universe-v2-defi` seeds expected_unattempted with LEGACY venue=`PROTOCOL-CHAIN`/chain=blank; handlers capture canonical venue=`PROTOCOL`/chain=X → no conversion → honest-cov stuck. Fix enumerator to emit canonical venue/chain (per defi-canonical-naming-ssot) + re-seed (replace legacy unattempted) + phantom-reconcile leftovers. Repo: instruments-service. Provenance: this Progress Log. — instruments-service@38cec01 | `_enumerate_defi` now emits `venue=protocol.upper()` (e.g. BALANCER) + `chain=ARBITRUM` separately; conflict-merged with concurrent upstream fix at 3e8fcd0
 
+### 2026-06-21 — DEFI honest-cov fix LANDED (root-cause in code) + codified
+Enumerator root-caused + FIXED in code: `enumerate_expected_universe.py:395` emitted legacy `venue=PROTOCOL-CHAIN` →
+canonical `venue=PROTOCOL` (quickmerged). The 2.31M `expected_unattempted` were ALL legacy-format phantoms → removed;
+canonical universe re-seeded. **honest-cov 6.2% → 10.1%** (captured 392k; expected_unattempted 2.31M→0; total 6.21M→3.88M
+after phantom removal) and CLIMBING as the fan-out flips canonical empties→captured. 3.46M empty_confirmed = genuine
+pre-genesis/pre-launch honest absence (correct denominator). **5 durable root-causes codified** in CLAUDE.md + codex
+`defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas" (pm@d752c584c). Durable build_bucket env-less→-prd-
+reader-align dispatched (replacing the stop-gap index-copy). Batch fan-out still capturing (drive monitor bdnexk0ku).
+
