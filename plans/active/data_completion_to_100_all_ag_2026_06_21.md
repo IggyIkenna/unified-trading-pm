@@ -75,18 +75,13 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       asset_group classification) — see
       `plans/active/issues/cefi_free_venue_historical_refetch_mechanism_2026_06_21.md`. Repo: deployment-service /
       market-tick-data-service.
-- [ ] [DATA] P0. **cefi — LIVE stream → ≥1 `live_<source>` row — wiring SHIPPED, VM launched, verifying.** **BIG FINDING
-      (stands):** the named `launch-cefi-forward-poll.sh`/`launch-cefi-onchain-forward-poll.sh` run `--mode     batch` →
-      BILLED Tardis replay + `batch_<source>` rows (NOT free/live). The FREE live path is
-      `launch-mtds-live.sh     --asset-group cefi --shard-spec cefi:HYPERLIQUID:trades --instrument-ids BTC;ETH;SOL` →
-      `--operation websocket-streaming --mode live` (real-time exchange-WS proxy, free; 18 cefi connectors registered
-      since the 2026-05-17 Phase 3.5 rollout — handler "registry empty" docstring is STALE). The `live_websocket`
-      `setup-data-pipeline-vm.sh` branch + `--shard-spec` launcher support were **shipped by a concurrent agent =
-      deployment-service@efdb9df** (committed + on origin + deployed to GCS @14:51Z; my duplicate edit discarded to
-      avoid collision). **Launched `mtds-live-cefi-hyperliquid-trades-20260621-145407`** (RUNNING, redis up); ≥1
-      `live_hyperliquid` row verification in flight (per*vm manifest shard watcher). Minor finding: the launcher's
-      VM-name slug doesn't sanitize `*`→ a`derivative_ticker` shard 400s at GCE create (underscore-in-name); trades
-      shard unaffected. Reusable across ALL AGs (live=0 fleet-wide). Repo: deployment-service.
+- [ ] [DATA] P0. **cefi — LIVE stream → ≥1 `live_<source>` row — BUGS FIXED, VM relaunched, verifying.** **ROOT CAUSE
+      FOUND + FIXED:** `MTDSShardManifestRecorder._resolve_row_key` had 2 bugs crashing all cefi live VMs at startup:
+      (1) `asset_group` included in row_key dict — UTL `_coerce_row_key` rejects it (hive partition key, not a manifest
+      column); (2) key `"day"` used but UTL `_ROW_KEY_COLUMNS` defines it as `"date"` (matches batch path). Both fixed
+      in market-tick-data-service@46adace. Tarball rebuilt (mtds-code.tar.gz @15:50Z). Relaunched
+      `mtds-live-cefi-hyperliquid-trades-20260621-155352` (RUNNING). Verification: ≥1 `live_hyperliquid` row in
+      manifest expected within ~10 min of VM startup (per-vm shard). Repo: market-tick-data-service.
 - [x] [DATA] P0. **cefi — IS reference-data VERIFIED 99.9%** (36,062/36,084 captured, fully schema_version=9, only 22
       failed) — done, no re-run. (CEFI lane 2026-06-21.)
 - [x] [DATA] P1. **cefi — BLOCKED-CREDENTIALS ask FILED** for the 775.9k Tardis-gated failed cells (Tardis historical
