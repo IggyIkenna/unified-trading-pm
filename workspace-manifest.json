@@ -1813,7 +1813,9 @@
     "strategy-service": "0.34.0",
     "trading-agent-service": "0.10.0",
     "unified-api-contracts": "0.33.0",
-    "unified-trading-api": "0.2.8"
+    "unified-trading-api": "0.2.8",
+    "e2e-testing": "0.19.0",
+    "unified-trading-library": "0.29.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
