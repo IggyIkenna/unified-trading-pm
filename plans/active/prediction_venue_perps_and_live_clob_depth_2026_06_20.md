@@ -48,6 +48,50 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-21 — ROOT GAP: Kalshi was never a registered canonical UAC source → registered it (batch=live)
+
+**Discovery (autonomous prediction-to-100% drive):** while wiring the bulk-seed converter's manifest emission, found
+that **Kalshi was never registered as a canonical source in UAC at all** — `PipelineMode.BATCH_KALSHI` did not exist, no
+`EMISSION_LATENCY_MS_BY_SOURCE["kalshi"]`, no `SOURCE_PRIORITY` entry, and the UTL resolver `_VENUE_OVERRIDES["KALSHI"]`
+was **stubbed to `BATCH_POLYMARKET_CLOB`** (mis-attributing every Kalshi shard to Polymarket). This is exactly why the
+1,306 existing KALSHI manifest rows are stuck at schema v4 with blank source — Kalshi-as-source was never wired (matches
+the "cefi/defi/sports are RED gaps; prediction wired = polymarket only" CLAUDE.md note). Without this, seeded Kalshi
+data could not be honestly source-stamped (`record_captured(source=...)` would raise `MissingSourceError`).
+
+**Fixed (shipping b8dzw4g8g — UAC → UTL → mtds, QG-green Pass-1 → quickmerge):**
+
+- [x] ✅ [UAC] P0. Register Kalshi as a first-class prediction source: `PipelineMode.BATCH_KALSHI` + `LIVE_KALSHI` +
+  `REPLAY_KALSHI`; `SOURCE_PRIORITY[(prediction, trades|book_snapshot|prediction_canonical_question_group)] +=
+  "kalshi"`; `SOURCE_MODE_CAPABILITY["kalshi"]={BATCH,LIVE,REPLAY}`; `EMISSION_LATENCY_MS_BY_SOURCE["kalshi"]=200`;
+  `live_source_for_venue` prediction venue→source map (KALSHI→kalshi, POLYMARKET→polymarket_clob, unchanged). Test
+  mirrors updated (capability `_BLR`, possible-manifest set, source_priority single→multi-source). Verified resolving:
+  KALSHI/trades→batch_kalshi, POLYMARKET/trades→polymarket_clob (unchanged), live_kalshi/replay_kalshi. Repo:
+  unified-api-contracts. — (shipping)
+- [x] ✅ [UTL] P0. `pipeline_mode_resolver._VENUE_OVERRIDES["KALSHI"]` = `BATCH_KALSHI` (was the polymarket stub). Repo:
+  unified-trading-library. — (shipping)
+- [x] ✅ [SCRIPT] P0. mtds Kalshi bulk-seed converter — **batch=live inline cqg manifest**: emit one
+  `record_captured_from_counts(source="kalshi", pipeline_mode=BATCH_KALSHI, asset_group=prediction)` per (day, KALSHI,
+  cqg) bundle as it writes (single GCS walk; reads the cqg + available_at the converter already computes), unclassified
+  tickers → `record_failed[ClassifierConfidenceLow]`. **Dropped the broken `rebuild_prediction_manifest --venue KALSHI`
+  call from the runner** (wrong args + polymarket-cqg-specific classifier → would mis-classify Kalshi). 12 unit tests
+  green. Repo: market-tick-data-service. — (shipping)
+- [x] ✅ [SCRIPT] P0. mtds `manifest_finalize.py` — **prediction multi-source break-fix**: the live prediction cqg
+  writer hardcoded `BATCH_POLYMARKET_CLOB` + auto-stamped source via `default_source` (now returns None for the
+  multi-source cell → `MissingSourceError`). Made it venue-aware (`_resolve_pipeline_mode_for_sentinel(pred_venue, cqg)`
+  → POLYMARKET=batch_polymarket_clob unchanged / KALSHI=batch_kalshi) + explicit `source=source_string_for(pm)`. Repo:
+  market-tick-data-service. — (shipping)
+
+**Cross-cutting findings captured as todos:**
+
+- [ ] [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** (pre-existing): `manifest_finalize.py` prediction
+  cqg writer now resolves a *batch* pipeline_mode even on the LIVE ingest path (the prior code hardcoded
+  `BATCH_POLYMARKET_CLOB`). When live prediction ingest runs, it should stamp `live_<source>` not `batch_<source>`. Make
+  the finalize mode-aware (thread the run mode → `live_pipeline_mode_for_venue` for live). Repo: market-tick-data-service.
+- [ ] [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` must cover `batch_kalshi`** before any
+  `reconcile_phantom_manifest_rows_all.py --asset-group prediction --apply` — else the newly-seeded batch_kalshi
+  parquets read as phantoms and a real `captured` flips to `attempted_failed`. Verify `ASSET_GROUP_CONFIG["prediction"]
+  ["prefix_tpls"]` includes the `pipeline_mode=batch_kalshi` path shape. Repo: instruments-service.
+
 ### 2026-06-20 (PM-3) — Phase 1 SHIPPED (live+batch adapter); Phase 2 converter drafted (reuse-based)
 
 **Phase 1 — SHIPPED + QG-green (instruments-service@8b118d9, 17 tests):** cutoff-aware `get_instruments(date)`

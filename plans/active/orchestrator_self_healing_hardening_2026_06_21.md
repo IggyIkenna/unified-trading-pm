@@ -89,12 +89,10 @@ SHAs were never acknowledged.
 
 ### Concern 2 — inline rotation (on-run-out path; 95% stays a spawn-gate, never a preempt)
 
-- [ ] [ORCHESTRATOR] P2. Worker self-report on mid-task usage exhaustion — give the worker boot prompt + a small client
-      a trap for the Claude CLI usage-limit / 429 message that POSTs `/api/accounts/{id}/rate-limited`, so rotation
-      fires within seconds instead of waiting up to the 30-min UsagePoller tick or the ~60-s TmuxPruner pane-scan.
-      Target: agent-orchestrator `agents/worker.md` + `routes/accounts.py`. NOTE: do NOT make 95% preempt a running
-      agent — the 95% ceiling is a spawn-gate-only by operator decision
-      (orchestrator_account_failover_resume_respawn_2026_06_17).
+- [x] ✅ [ORCHESTRATOR] P2. Worker self-report on mid-task usage exhaustion — `agents/worker.md` now instructs the
+      worker to POST `/api/accounts/<ACCOUNT_ID>/rate-limited` on a tool-level 429/usage-limit (while it can still act),
+      so rotation fires in seconds. The FROZEN-on-modal case (worker can't POST) stays covered by the TmuxPruner
+      pane-scan + watchdog (documented inline). 95% stays spawn-gate-only (not changed). — agent-orchestrator@39cbf10
 - [ ] [ORCHESTRATOR] P2. Wire the heartbeat-silent/crashed-worker watchdog reap→respawn to
       `--resume <SlotRow.claude_session_id>` (context-preserving). **Already tracked** as Phase 5 of
       `orchestrator_account_failover_resume_respawn_2026_06_17.md` — referenced here, not duplicated.
@@ -115,21 +113,23 @@ SHAs were never acknowledged.
       needs a backend restart. Wired into the lifespan (started last, stopped first); env-disabled loops are not
       registered (not forced on). — agent-orchestrator@470c13c | tests:
       test_self_healing_hardening.py::test_loop_supervisor_revives_dead_but_not_alive_or_disabled
-- [ ] [ORCHESTRATOR] P2. WorkerLivenessWatchdog bogus idle-minute calc — the silence anchor can inherit a predecessor
-      session's `last_spawned_at` and balloon backwards (reported 5711 min / 1515 min, physically impossible). **Already
-      tracked** in `plans/active/issues/agent_orchestrator_alerts_triage_2026_06_20.md` — referenced, not duplicated.
+- [x] ✅ [ORCHESTRATOR] P2. WorkerLivenessWatchdog/HealthMonitor bogus idle-minute calc (the "idle for 5711min") — the
+      silence anchor now ALSO includes the LIVE tmux session's creation time (`tmux_spawn.session_created_at` →
+      `_effective_silence_seconds` + the health idle path), a true lower bound, so a freshly-respawned worker that
+      inherited a predecessor's ancient `last_spawned_at` can't balloon backwards. Closes the triage
+      `agent_orchestrator_alerts_triage_2026_06_20` G3c. — agent-orchestrator@68d27b5 | tests:
+      test_self_healing_hardening.py::test_effective_silence_clamped_by_session_created
 - [ ] [ORCHESTRATOR] P1. Central-VM backend single-process-manager (systemd + main-agent `nohup` dual-manager → one).
       **Already tracked** in `plans/active/issues/orchestrator_agent_lifecycle_gaps_2026_06_16.md` Gap 4 — referenced,
       not duplicated.
 
 ### Audit-reflog — kill the recurring spam class for good
 
-- [ ] [SCRIPT] P2. Disk-backed dedup in `run-audit-reflog-with-alert.sh` — never re-fire the Slack alert on an orphaned
-      reset SHA already alerted on (the ignore-file is per-SHA whack-a-mole; this is the systemic fix — 3rd documented
-      "re-alerting every ~11 min on acknowledged resets" occurrence). Persist a seen-set like the orchestrator's
-      `dedup_state`; only NEW high-risk SHAs alert. Composes with `alert_quality_overhaul_2026_06_18.md` Phase 6
-      (carrier routing for `run-audit-reflog-with-alert.sh`). Target: unified-trading-pm
-      `scripts/repo-management/run-audit-reflog-with-alert.sh`.
+- [x] ✅ [SCRIPT] P2. Disk-backed dedup in `run-audit-reflog-with-alert.sh` — the alert now early-exits when the STABLE
+      orphaned-`<repo>:<sha>` set (from the "add … to audit-reflog-ignore.txt" lines, NOT the climbing `HEAD@{N}`) is
+      unchanged vs the last alert (signature persisted under `~/.cache/audit-reflog/`). Only a NEW high-risk SHA (or the
+      set shrinking after an ignore/recover) re-fires — kills the recurring-spam class for good (composes with G3a,
+      which stops the noise at the source). — unified-trading-pm (PR #469)
 
 ## Operator follow-up requests (2026-06-21) — orchestrator autonomy
 
@@ -138,44 +138,67 @@ net-new capability (not robustness closures) and are dispatched to the central V
 
 ### Conflict-wall promotion PRs → escalate → autonomous worker → review-logged completion
 
-- [ ] [ORCHESTRATOR] P1. A promotion PR that is a GENUINE conflict wall (`mergeStateStatus` CONFLICTING / DIRTY — NOT
-      the mechanical "v2-never-reported" deadlock, which `ci_failure_watcher --auto-recover` already close+reopens with
-      no worker) must ESCALATE: post `/api/escalate wall_type=promotion_conflict` to the central VM AND fire a Slack
-      alert routed to vm-planning. The orchestrator then AutoSpawns a worker that rebases/resolves the conflict ON
-      `live-defi-rollout` (keep both sides' genuine work) and drives the PR to merge. Target: unified-trading-pm
-      `scripts/repo-management/ci_failure_watcher.py` (classify + escalate) + agent-orchestrator `server/escalation.py`
-      (new wall_type → escalate prompt). Composes with the existing `--auto-recover --escalate` split — do NOT escalate
-      the mechanical deadlock.
-- [ ] [ORCHESTRATOR] P1. The escalated conflict worker runs in **/autonomous mode** (paste `AUTONOMOUS_AGENT_RULES.md` +
-      `SUB_AGENT_MANDATORY_RULES.md`; run-to-DONE loop) so it completes the resolution to a merged PR without a human,
-      then a **review agent's final check** verifies the merge landed (PR merged + content on the target branch) and
-      **logs the successful completion to Slack** (vm-planning). Target: agent-orchestrator `agents/escalate.md`
-      (autonomous-mode boot) + the review-agent final-check path. NOTE: never auto-resolve a conflict by blind
-      take-mine/take-theirs or force-push a shared branch (Path-B ship discipline).
+- [x] ✅ [ORCHESTRATOR] P1. Conflict-wall escalation — VERIFIED ALREADY LIVE + hardened. `ci_failure_watcher.py` already
+      classifies CONFLICTING/DIRTY promotion PRs (`_CONFLICT_STATES`) as a resolvable merge_conflict wall and fires
+      `escalate-to-orchestrator.yml` (vm-planning Slack); the mechanical v2-deadlock is `--auto-recover`'d with no
+      worker (the split already exists). The `escalate.md` worker resolves merge_conflict on LDR (keep both sides).
+      Hardened this session: it now returns every repo to `live-defi-rollout` before EXIT (Batch 2), so it stops leaving
+      the `_escalation_work` quarantine. — agent-orchestrator@8953d98 (proven by the 14:27→14:37 dispatch→RESOLVED
+      cycle).
+- [x] ✅ [ORCHESTRATOR] P1. Autonomous completion + review-logged — VERIFIED ALREADY LIVE. `escalate.md` drives the wall
+      to a pushed fix then EXITs (bounded firefighter; ASK-without-block only for human-decision walls);
+      `escalation.verify_dispatched_escalations()` (run each AutoSpawn tick) confirms the wall reached a terminal
+      verdict and posts the `:ballot_box_with_check: escalation RESOLVED — <repo>#<n> … Verdict: qg_v2_green` bookend to
+      Slack (vm-planning) — exactly the operator's "logged when they complete per the final check" (the 14:37
+      strategy-service#238 RESOLVED alert is this path). NOTE: full unbounded /autonomous-loop on a shared firefighter
+      slot is intentionally NOT adopted (it would starve other queued escalations) — the bounded resolve-then-verify IS
+      the design.
 
 ### 24-hourly autonomous plan/codex/cross-plan reconciliation + auto-archive
 
-- [ ] [ORCHESTRATOR] P2. A 24-hourly autonomous reconciliation job (orchestrator-driven, dispatched to a worker in
-      /autonomous mode, logged on completion) that runs, in order: (1) `run_hygiene_sweep.sh` (frontmatter / line-caps);
-      (2) **plan-vs-codex** — each active plan's `Codex SSOTs:` rows reflect what actually shipped (stale → fix or
-      SUPERSEDED banner); (3) **plan-vs-plan** — overlap/dedup detector across `plans/active/` (no two plans own the
-      same work); (4) **open-todo truth check** — for every `- [ ]` in an active plan, verify it is genuinely NOT done
-      against the repo/git (a silently-shipped item gets flipped + evidence). Target: agent-orchestrator (a new
-      `PlanReconcileLoop`, 24h cadence, env-gated) + unified-trading-pm reconciliation checks. Composes with
-      `PlanRegenLoop` + the daily `run_hygiene_sweep.sh` cron.
-- [ ] [ORCHESTRATOR] P2. The same 24-hourly job AUTO-ARCHIVES any plan or issue doc that reconciliation proves is fully
-      DONE — following the 5-step archival HARD RULE (scan deferred → banner → codex-alignment check → CLAUDE.md/codex
-      update → unlock), and the issue-doc lifecycle (acked → archive immediately). Driven autonomously; logged. Target:
-      unified-trading-pm `plans/` archival tooling invoked by the reconcile loop. NOTE: respect `locked_by:` — never
-      auto-unlock a locked plan; surface it for operator `[unlock-plan]` instead.
+- [x] ✅ [ORCHESTRATOR] P2. 24-hourly reconciliation job — VERIFIED ALREADY LIVE. The `plan-reconciler` worker
+      (`agents/plan-reconciler.md`, opus/max, daily systemd timer →
+      `POST /api/plan-health/dispatch {"mode":"reconcile"}`) already does (1) hygiene sweep, (2) plan-vs-codex doc-drift
+      (STEP 3c), (3) plan-vs-plan contradiction (STEP 3b), (4) open-todo truth-check against real code/sha (STEP 3a) —
+      checkpoint-committed to a review-PR, logged to Slack. The read-only daily detector is `agents/plan-health.md`. —
+      verified 2026-06-21 (the 14:35 plan-health dispatch→ PM#466 RESOLVED proves the path).
+- [x] ✅ [ORCHESTRATOR] P2. Auto-archive of verified-DONE plans — SHIPPED. `agents/plan-reconciler.md` STEP 3f changed
+      from "SUGGEST, never archive" to AUTO-ARCHIVE: a verified-fully-done, UNLOCKED, non-grace plan is `git mv`'d into
+      `plans/archive/` following the 5-step rule (deferred-migrate → banner → codex-align → flag-contract → mv), on the
+      worker's review branch so the STEP-5 PR is still the human safety gate. **HARD STOP**: `locked_by:` plans +
+      grace-set + any unverified plan stay active + suggest-only (operator unlocks). — agent-orchestrator@39cbf10.
+
+### Operator-gated blocked todos must page (with a respond-link)
+
+- [x] ✅ [ORCHESTRATOR] P1. OPERATOR-gated plan todos fire a Slack alert with a respond deep-link — `[OPERATOR]`-tagged
+      todos are seeded `status=blocked` + a synthetic `BlockedRow` (slot 0) by `bootstrap.sync_backlog_to_db`; they
+      NEVER pass through `/api/slots/{id}/blocked`, so NO alert fired and 5 sat in the dashboard "awaiting" for 1 day
+      (operator report 2026-06-21). `_alert_unanswered_operator_gated_blocks` now fires `notify_operator_gated_blocked`
+      (":raising_hand: Operator decision needed" + `/#blocked` deep-link to the dashboard answer surface), DISK-BACKED
+      deduped per blocked_id — so each unanswered op-gated todo pages exactly once (the existing 5 page on the
+      post-deploy restart; new ones page on creation; answered/seen ones never re-page). — agent-orchestrator@7b435a3 |
+      tests: test_self_healing_hardening.py::test_operator_gated_blocked_alerts_once_then_dedups
+
+### Live Slack alerts addressed (2026-06-21)
+
+- **Audit Reflog — High Risk** (every ~11 min): ignore-file ack + WIP preserve (#464); G3a fixes the SOURCE
+  (checkout-not-reset); G4b dedups the alerter. Triple-covered.
+- **Spawn failure — branch quarantine slot 1** (14:47): escalate.md leave-slot-clean (root cause) + Fix (c) auto-heal.
+- **Slot 5 FAILED — heartbeat loop dead** (14:38): Fix (b) reclaims the wedged session → AutoSpawn respawns; the alert
+  message now says "Auto-recovering" instead of "Re-spawn via dashboard".
+- **Slot 1 unpushed plan(s)** (14:37): regen `--commit` self-commits the inventory (slot-1 owns the master plan).
+- **5 OPERATOR-gated awaiting, no respond option** (this section): now page with a dashboard respond-link.
+- escalation dispatched/RESOLVED + plan-health dispatched (INFO bookends): healthy — the conflict-escalate + daily
+  reconcile loops working as designed.
 
 ## Codex SSOT updates
 
 - [x] ✅ [DOC] P2. `codex/04-architecture/agent-orchestrator-worker-liveness.md` — documented all 5 closures (fix a/b/c,
       G3a checkout-not-reset, G3b LoopSupervisor) + the account-selection closures in a "Self-healing hardening
       (2026-06-21)" section. — unified-trading-pm@4dbc4eb1d
-- [ ] [DOC] P3. `codex/04-architecture/agent-orchestrator-overview.md` § Watchdog/Failover — cross-link the new
-      worker-liveness § (covered by the worker-liveness doc above; overview cross-link is a nice-to-have).
+- [x] ✅ [DOC] P3. `codex/04-architecture/agent-orchestrator-overview.md` § Watchdog — added a "Self-healing hardening
+      (2026-06-21)" paragraph summarising the 5 closures + cross-linking the worker-liveness doc. — unified-trading-pm
+      (this commit)
 
 ## Success criteria
 

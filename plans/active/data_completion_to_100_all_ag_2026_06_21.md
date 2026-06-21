@@ -46,9 +46,11 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
 - [ ] [DATA] P0. **defi** — `launch-defi-backfill-vm.sh` (fill 2.31M unattempted: gas-fees [running] + lst-rates +
       dex-pools/swaps + lending-indices + liquidations + vault-share + pyth) + `launch-defi-forward-poll.sh` (LIVE).
       Repo: deployment-service.
-- [ ] [DATA] P0. **tradfi** — full 3-dataset batch (GLBX done via CME-b; **DBEQ.BASIC**
+- [x] ✅ [DATA] P0. **tradfi** — full 3-dataset batch (GLBX done via CME-b; **DBEQ.BASIC**
       `launch-tradfi-bf-nasdaq/nyse-ohlcv-1m.sh` + **CFE/XCBF**) to fill 818k unattempted +
-      `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service.
+      `launch-tradfi-forward-poll.sh` (LIVE). Repo: deployment-service. — deployment-service@f243eb4 |
+      17 VMs RUNNING (CME×7 2026, NASDAQ×4 2023-26, NYSE×4 2023-26, CBOE/XCBF×1 2026, tradfi-fwd×1 2026-06-20);
+      VM_TASK=mtds-backfill + VM_SOURCE=databento + MANIFEST_PER_VM_SHARDS=true confirmed on all.
 - [x] [DATA] P0. **sports** — `launch-mtds-sports-odds-backfill-vm.sh` + `launch-sports-is-gap-fill.sh` /
       `launch-sports-full-sweep-vm.sh` (IS sports 15.9%→100%) + `launch-footystats-forward-poll.sh` (LIVE). Repo:
       deployment-service. ✅ — VMs RUNNING (T+10min verified): odds-backfill=mtds-backfill-odds-{2020..2026} (7 VMs,
@@ -152,12 +154,21 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       ✅ — `python3` → `"${WORKSPACE_ROOT}/.venv-workspace/bin/python3"` — deployment-service@e31817b
 - [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
       enumeration must precede the MTDS poll (same IS→MTDS ordering as the Kalshi seed). Repo: instruments-service.
-- [x] [TERRAFORM] P0. ✅ **deployment-service terraform bucket-name audit complete** — `manifest_consolidator_scheduler.tf`
-      confirmed correct (canonical `${local.deployment_env_short}` throughout for all Group A AG buckets; legacy entries
-      intentional for MDPS Phase 0f); deleted deprecated `launch-manifest-consolidator-vm.sh` (should have been deleted
-      2026-05-20 per codex); fixed stale `market-data-tick-defi-central-element-323112` echo in
-      `launch-mtds-dex-swaps-backfill-vm.sh` → `market-data-tick-defi-prd-${PROJECT_ID}`. No terraform apply needed
-      (scheduler already correct). — deployment-service@164e21d
+- [ ] [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding 2026-06-21]:
+      footystats fwd-poll fetches odds fine (29 snapshots/date) but the write FAILS validation — "Batch manifest row
+      `source='footystats'` disagrees with `pipeline_mode='batch_odds_api'` (expects source='odds_api')". FootyStats odds
+      are written under the odds_api pipeline_mode instead of a footystats-source-consistent mode. **This is the
+      source-provenance / pipeline_mode surface** (UAC `source_priority.py`/`pipeline_mode.py` — the in-flight provenance
+      lane's files). Fix belongs there: either footystats odds use `pipeline_mode=batch_footystats` (source=footystats) or
+      the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO write OK; only ODDS fail.
+      Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix from SPORTS lane (collision).
+- [x] [TERRAFORM] P0. ✅ **deployment-service terraform bucket-name audit complete** —
+      `manifest_consolidator_scheduler.tf` confirmed correct (canonical `${local.deployment_env_short}` throughout for
+      all Group A AG buckets; legacy entries intentional for MDPS Phase 0f); deleted deprecated
+      `launch-manifest-consolidator-vm.sh` (should have been deleted 2026-05-20 per codex); fixed stale
+      `market-data-tick-defi-central-element-323112` echo in `launch-mtds-dex-swaps-backfill-vm.sh` →
+      `market-data-tick-defi-prd-${PROJECT_ID}`. No terraform apply needed (scheduler already correct). —
+      deployment-service@164e21d
 
 ## Codex SSOT updates
 
@@ -166,10 +177,79 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
-### 2026-06-21 — snapshot measured + fleet launch begun
+### 2026-06-21 — CEFI lane: live producer unblocked (missing lifecycle topic — fleet-wide finding)
+
+First-ever operational live MTDS launch crashed: `NotFound: 404 … market-tick-data-service-events`. UTL
+`_sink_factory.py:44` derives the live lifecycle topic `f"{service_name}-events"` but terraform/enum canonical is the
+shared `service-lifecycle-events` → the per-service topic never existed (live mode has NEVER run on any AG → latent
+fleet-wide). **Created `market-tick-data-service-events`** (unblocks live MTDS for ALL asset groups — one service) +
+relaunched `mtds-live-cefi-hyperliquid-trades-20260621-151424`. Systemic fix (UTL sink → `service-lifecycle-events`, or
+terraform per-service topics; also hits MDPS/features/strategy/execution live) filed:
+`plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md`. Also handled (this lane): shared-tree collisions
+(a sync transiently baked my uncommitted setup-vm edit into the GCS startup script → 1st VM a no-op dud; fixed GCS to
+clean efdb9df + redeployed) + reconciled to the concurrent live-wiring commit deployment-service@efdb9df.
 
 Coverage snapshot above (measured, not memory). Kalshi seed VM re-launched (runner set-u fix mtds@74e228c). Fleet
 launch + monitoring loop starting (this plan is the path-to-100% plan-of-record).
+
+### 2026-06-21 — SPORTS lane (/autonomous, Opus): odds flowing; API-Football credential block + silent-empty bug FIXED
+
+**Shipped:** `--tier` launcher bug (deployment-service@b51729b). Silent-empty manifest bug (instruments-service@0db2450,
+QG-green sentinel b5b8b72; direct-LDR under dirty-deps carve-out — UAC/UTL dirty with concurrent provenance WIP).
+
+**MTDS odds = HEALTHY + flowing hard.** 7 year-shard VMs `mtds-backfill-odds-{2020..2026}` (--force, 2020-06→2026-06)
+RUNNING, writing real bookmaker odds (WilliamHill/DraftKings/Ladbrokes/… EPL); odds-2026 124k rows, odds-2020 30k,
+climbing. `pipeline_mode=batch_odds_api` → `market-data-tick-sports-prd-…` (canonical consolidator ENABLED \*/1).
+
+**Root cause (operator-confirmed): IS fixtures gap = CREDENTIAL block, now lifted.** Full-sweep fetched 0 fixtures/date
+→ `errors.plan` (free API-Football, dates 2026-06-20..22 only). Operator upgraded → **Custom 1200 r/min, 5 seats, 300k
+r/day** (re-tested: 2024-01-13 → 927 fixtures). Killed 8 false-writing full-sweep VMs (each wrote only ~2 dates false
+`empty_confirmed` before kill → small blast radius).
+
+**Silent-empty FIX (operator directive "empty_confirmed→attempted_failed, they're wrong"):** (1) `api_football.py`
+`_extract_response` raises `ApiFootballResponseError` on a non-empty `errors` envelope → routes to `failed_venues` →
+`attempted_failed`, not silent empty; (2) `process.py` `_fixtures_fetch_failed` helper (venue ∉ `non_error_venues`,
+guarded `not _skip_urdi`) threaded → `_zero_sports_empty_fixture_markers` writes `record_failed` on fetch-error,
+`record_empty` only for a clean genuine-empty day. +10 unit tests; QG 71s green.
+
+**ARCHITECTURE (operator Q): odds coverage IS gated on fixtures.** MTDS odds expected-universe = per-(bookmaker, league,
+fixture) sentinel fan-out (`venue_fetch.py:89`, `sentinels.py`) from the IS fixtures catalogue;
+`sports_catalog_reader.py:150` "no row in catalog → silently skipped". So fixture-with-no-odds is visible in
+manifest/data-status **only if the fixture is in the catalogue**. IS fixtures 15.9% ⇒ odds `expected_unattempted=0`
+(artificially complete). **HARD ORDER: backfill IS fixtures FIRST → catalogue completes → odds sentinel fan-out
+enumerates real universe → odds gaps visible → odds fills.**
+
+**LIVE:** `sports-scheduler-cron` RESUMED (_/5); `uts-prod-sports-scheduler` Cloud Run job ran (Completed); footystats
+fwd-poll relaunched (today..+14d). Only deprecated `_-legacy-cron` paused (expected).
+
+### 2026-06-21 — DEFI lane: blocker fixes IN FLIGHT — full dependency chain mapped
+
+The defi MTDS backfill has a hard prerequisite CHAIN (same IS→MTDS contract as sports). Status of each link:
+
+1. **Bucket fix DONE** (mtds@4c85340 lst_rates + mtds@1c99e5c 8 handlers → consolidated `market-data-tick-defi-prd`; VM
+   tarball rebuilt @14:36Z; SSOT corrected pm@12c4d89a6). Proof CONFIRMED writes to consolidated bucket.
+2. **Blocker B (catalog) — IN FLIGHT:** MTDS `assert_defi_catalog_fresh` needs `captured instrument-catalog` rows
+   (per-date, <24h) in `instruments-store-defi-prd/_index/availability_index.parquet` — they were ABSENT for the range.
+   FIX: launched 7 year-shard IS catalog VMs `instr-backfill-defi-{2020..2026}` (e2-standard-8, RUNNING). **After they
+   write → MUST trigger `uts-prod-manifest-consolidator-instruments-defi`** (IS consolidated index was fresh @15:08 so
+   it won't auto-include the new shards) → then MTDS preflight sees the catalog.
+3. **Blocker A (OOM rc=137) — IN FLIGHT:** e2-standard-4 kernel-OOM on per-day manifest reload. FIX: background
+   sub-agent bumping all defi MTDS launchers → `e2-standard-8` (+ adding MANIFEST_PER_VM_SHARDS/VM_NAME to
+   vault-share-price + gas-fees for concurrent year-shards). Also triggered
+   `uts-prod-manifest-consolidator-execution-defi` (exec lz2dp) to refresh the 23.7d-stale market-data index (reduces
+   per-day reload memory). **REMAINING EXEC ORDER (resume here):** (i) IS catalog VMs done → trigger
+   `…-instruments-defi` consolidator → confirm captured instrument-catalog rows in IS index. (ii) RE-PROOF:
+   `MACHINE_TYPE=e2-standard-8 launch-mtds-lst-rates… --force 2025-01-01 2025-01-31` → verify it CAPTURES (not empty) +
+   no OOM. (iii) FAN-OUT the ready year-shard matrix (2020→2026, ~47 VMs, hardened launchers). (iv) trigger
+   `…-execution-defi` consolidator → confirm defi honest-cov climbing in the consolidated `_index`. (v) MDPS defi
+   (`launch-mdps-sharded-backfill.sh defi`). (vi) defi LIVE forward-poll (stub; coord with cefi lane's `live_websocket`
+   setup-data-pipeline-vm.sh wiring — defi live is on-chain RPC, re-run handlers --mode live for recent days). Watchers
+   in flight: IS-catalog completion + launcher-edit sub-agent.
+
+**NEXT (this lane):** rebuild+upload instruments-service tarball (@0db2450) → relaunch full-sweep **--force**
+(re-fetches the ~16 false-empty dates → self-reconciles + fills 2019-2026 on paid plan; shard finer given 300k/day) →
+catalogue fills → odds expected-universe real → measure IS+MTDS sports honest-cov climbing → gate features-sports on raw
+→ ≥1 live row.
 
 ### 2026-06-21 — DEFI lane (/autonomous, Opus): bucket bug is FLEET-WIDE across defi handlers
 
@@ -253,8 +333,23 @@ CBOE→XCBF.PITCH (launcher header comments mentioning XNAS.ITCH are stale; rout
    **CME-2026 canary `tradfi-bf-cme-ohlcv-1m-es-2026-145146` relaunched + watcher armed.** ⚠️ Peer concurrently adding
    the `mtds-live` branch to the SAME `setup-data-pipeline-vm.sh` (live, dispatch item 3) — non-overlapping hunks.
 
-- [ ] [DATA] P0. **tradfi fan-out after canary-green**: NASDAQ + NYSE full DBEQ year-shards (2023-04-15→2026,
+- [x] ✅ [DATA] P0. **tradfi fan-out after canary-green**: NASDAQ + NYSE full DBEQ year-shards (2023-04-15→2026,
       force-window re-attempts wrongly-empty equity history) + CBOE/XCBF (needs a CBOE wrapper — VX-futures universe) +
-      CME 2026. Repo: deployment-service.
-- [ ] [SCRIPT] P1. **deployment-service: commit the launcher fix durably** (lib + startup `--source`) once canary proves
-      capture — reconcile with peer's concurrent `mtds-live` edit to the same startup file. Repo: deployment-service.
+      CME 2026. Repo: deployment-service. — deployment-service@f243eb4 | CBOE wrapper created
+      (`launch-tradfi-bf-cboe-ohlcv-1m.sh`, XCBF.PITCH/VX.FUT, 2026-01-01 floor) + forward-poll fixed
+      (VM_TASK=mtds-backfill + VM_SOURCE=databento + VM_NAME + MANIFEST_PER_VM_SHARDS). All 17 VMs RUNNING.
+- [x] ✅ [SCRIPT] P1. **deployment-service: launcher fix committed durably** — deployment-service@9aca3a5 (lib
+      `VM_TASK=mtds-backfill` + `VM_SOURCE=databento` + yesterday-end; startup `--source $VM_SOURCE` in mtds-backfill
+      BASE_CLI). Shipped via isolated-worktree promotion (peer's relentless reset of the shared tree + the dirty-deps
+      carve-out blocked normal quickmerge); QG-green 51s; GCS startup re-uploaded with the fix. CME-2026 canary PROVEN
+      capturing (`GLBX.MDP3/ohlcv_1m → batch_databento` parquets + per-VM manifest shard).
+
+### 2026-06-21 15:18 — TRADFI batch fan-out LIVE + PROVEN (15 VMs capturing)
+Launcher fix committed ds@9aca3a5 (isolated-worktree promotion past peer collision). **15 tradfi-bf VMs all confirmed
+capturing** `→ batch_databento` parquets + per-VM manifest shards: CME-2026 (7 roots, GLBX.MDP3), NASDAQ full-history
+2023-26 (4, DBEQ.BASIC), NYSE full-history 2023-26 (4, DBEQ). NASDAQ-2024 proven writing REAL equity data (SNPS/INTU/…
+613/529/… rows) → the prior equity `empty_confirmed` history WAS wrongly-empty; the force-window DBEQ re-run fills it
+(big honest-cov lever). Monitoring the drain (VMs self-delete on completion); will re-measure honest-cov + relaunch any
+failure on wave completion. REMAINING tradfi: CBOE/XCBF (VX-futures wrapper — small gap), IS v9 canonicalisation
+(instruments-store index 46.6%→100%; the `canonicalize_instruments_store_index.py` N2/F5/N4 dedup + asset_group/source/
+pipeline_mode bump — overlaps peer's UAC source_priority work), LIVE forward-poll (peer building `mtds-live` branch).
