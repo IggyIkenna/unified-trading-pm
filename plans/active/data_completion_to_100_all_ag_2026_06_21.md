@@ -163,8 +163,11 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 - [x] [SCRIPT] P0. deployment-service — **`launch-tradfi-bf-nasdaq-ohlcv-1m.sh` runs local UAC enumeration without a
       venv** (`ModuleNotFoundError: pydantic`) → no VM created. Invoke via the workspace venv. Repo: deployment-service.
       ✅ — `python3` → `"${WORKSPACE_ROOT}/.venv-workspace/bin/python3"` — deployment-service@e31817b
-- [ ] [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
+- [x] ✅ [DATA] P1. prediction forward-poll returns **0 instruments** (Kalshi/Polymarket IS-enum gap) — IS prediction
       enumeration must precede the MTDS poll (same IS→MTDS ordering as the Kalshi seed). Repo: instruments-service.
+      — VM `instr-backfill-pred` launched 2026-06-21 16:57 UTC, confirmed RUNNING + writing Kalshi instruments (log:
+      `date=2026-06-14: 1 stale + 1 missing venues/entities — will re-fetch (stale=['POLYMARKET'], missing=['KALSHI'])`).
+      IS prediction index will have Kalshi rows after this run (prior state: 1944 POLYMARKET rows, 0 KALSHI rows).
 - [ ] [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding
       2026-06-21]: footystats fwd-poll fetches odds fine (29 snapshots/date) but the write FAILS validation — "Batch
       manifest row `source='footystats'` disagrees with `pipeline_mode='batch_odds_api'` (expects source='odds_api')".
@@ -235,8 +238,8 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Codex SSOT updates
 
-- [ ] [DOCS] P2. codex/02-data/availability-manifest-and-data-status.md — add the 2026-06-21 per-AG snapshot + the
-      live-mode-population gap as a tracked baseline.
+- [x] ✅ [DOCS] P2. codex/02-data/availability-manifest-and-data-status.md — add the 2026-06-21 per-AG snapshot + the
+      live-mode-population gap as a tracked baseline. — unified-trading-pm@7c3926f3f
 
 ## Progress Log
 
@@ -403,11 +406,14 @@ SSOT row corrected (pm@12c4d89a6). **PROOF VM** (lst-rates Jan-2025, fresh tarba
 `market-data-tick-defi-prd-central-element-323112/_index/per_vm/`, NO ManifestConsolidatorStaleError. BUT proof surfaced
 2 NEW blockers that gate the whole defi fan-out (do NOT mass-launch until both fixed — would yield 0 captured + OOM):
 
-- [ ] [DATA] P0. **DEFI BLOCKER B (showstopper): `assert_defi_catalog_fresh` fails → handler routes HONEST ABSENCE**
+- [x] ✅ [DATA] P0. **DEFI BLOCKER B (showstopper): `assert_defi_catalog_fresh` fails → handler routes HONEST ABSENCE**
       (records empty_confirmed, does NOT fetch). Every date logged `instrument-catalog(age=Nones, max=86400s)` missing →
-      expected_unattempted would convert to empty_confirmed NOT captured. **The DeFi instrument-catalog must be
-      built/fresh (<24h) BEFORE the MTDS defi backfill.** Diagnosing exact catalog blob path + IS build command
-      (sub-agent). Repo: instruments-service + market-tick-data-service.
+      expected_unattempted would convert to empty_confirmed NOT captured. **Root cause: ALL 145,467 rows in
+      `instruments-store-defi-prd-central-element-323112/_index/availability_index.parquet` had `data_type=''` (empty)
+      and 70,410 rows had `asset_group=None` — UTL `_filter_index()` requires `data_type='instrument-catalog'` AND
+      `asset_group='defi'`.  Backfill script set both columns on all rows (145,343 rows now satisfy the preflight
+      filter). Source-code fix `e8acef1` (IS `_write_catalogue_record` DeFi branch) prevents recurrence.**
+      — instruments-service@de8e164 (backfill script) | 2026-06-21 17:22 UTC
 - [x] ✅ [SCRIPT] P0. **DEFI BLOCKER A: rc=137 (SIGKILL/OOM)** on e2-standard-4 after ~2 days — likely
       ManifestFreshnessCache/ManifestReader loading the 6.16M-row consolidated `_index` per-day, or boot-disk (img 10GB
       vs 50GB unresized). Fix = bump MACHINE_TYPE (e2-standard-8/16) on the defi launchers and/or a manifest-read memory
