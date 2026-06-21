@@ -214,9 +214,10 @@ captured**, manifest unmoved):
    `DATA_NOT_AVAILABLE: is in the future` for the final day.
 
 **Live producer (`live_databento`, websocket) — known bugs as of 2026-06-21 (live-pipeline lane, NOT yet fixed):**
-the `databento_tradfi_ws` connector + `launch-mtds-live.sh` path has (a) `_get_api_key()` reading the raw Pydantic field
-`cfg.databento_api_key` (None unless `DATABENTO_API_KEY` env set) instead of resolving the `databento-api-key` **secret**
-like the batch adapter → logs `no API key — connection skipped`; (b) `live_source_for_venue(tradfi,…)` returning
+the `databento_tradfi_ws` connector + `launch-mtds-live.sh` path has (a) `_get_api_key()` DOES try field→secret (`get_secret_client(project_id=cfg.gcp_project_id).get_secret(cfg.databento_secret_name)`)
+but the secret resolution THROWS and is **swallowed at `logger.debug`** → returns None → caller logs `no API key —
+connection skipped`. Root cause is HIDDEN (likely a live-VM `gcp_project_id`/Secret-Manager-access gap); fix = surface the
+swallowed exception (`logger.debug`→`warning`) + diagnose with the real error; (b) `live_source_for_venue(tradfi,…)` returning
 `SOURCE_PRIORITY[0]=massive` (a **batch-only** source — no live feed) → rows mis-stamp `live_massive`; the live source
 MUST be the first **LIVE-capable** source in the priority list (skip batch-only via `modes_for_source`) → `databento`;
 (c) instrument-ids need the `venue:type:underlying` form (`CME:FUTURES:ES`), not bare `ES`. Also: the live websocket needs
