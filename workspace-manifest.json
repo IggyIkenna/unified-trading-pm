@@ -1804,13 +1804,14 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-21T16:11:51.182686Z",
-    "locked_reason": "Breaking MINOR bump cascade: fund-administration-service=0.7.0 (pre-1.0.0)",
-    "lock_version": "0.7.0",
+    "locked_since": "2026-06-21T16:22:34.940445Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "system-integration-tests",
       "fund-administration-service",
-      "strategy-service"
+      "strategy-service",
+      "execution-service"
     ],
     "sit_retry_count": 3,
     "locked_alert_sent": false,
@@ -1821,9 +1822,9 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "system-integration-tests": {
-      "version": "0.14.1",
+      "branch": "staging",
       "sha": "2cea76d64847356f228ba6f3e7a2339d1b0b6a3b",
-      "branch": "staging"
+      "version": "0.14.1"
     },
     "greeks-service": {
       "branch": "staging",
@@ -1831,24 +1832,24 @@
       "version": "0.8.0"
     },
     "agent-orchestrator": {
-      "version": "0.18.1",
+      "branch": "staging",
       "sha": "8c2eb4d5e3b7bc7bac86dfe45a48112bfeabbdf9",
-      "branch": "staging"
+      "version": "0.18.1"
     },
     "fund-administration-service": {
-      "version": "0.7.0",
+      "branch": "staging",
       "sha": "b8b6351f0cf679be5cfdeba6a47768681336abea",
-      "branch": "staging"
+      "version": "0.7.0"
     },
     "strategy-service": {
-      "version": "0.27.0",
+      "branch": "staging",
       "sha": "3a60fd11a99bf016cdd0554ba0e98e70fa481f35",
-      "branch": "staging"
+      "version": "0.27.0"
     },
     "execution-service": {
-      "version": "0.18.0",
+      "branch": "staging",
       "sha": "901d014ef27e30e2696d464c30976b0b6ac77a50",
-      "branch": "staging"
+      "version": "0.18.0"
     }
   },
   "main_commits": {
