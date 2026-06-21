@@ -482,11 +482,24 @@ are identified (2) and the ledger exists (3).
       ≈0 in paper / real only at the live boundary). pw:L2 ✓ | regression:
       tests/smoke/paper-trading-ledger.smoke.spec.ts ("Strat α / Exec α columns carry clarifying tooltips (P10.5)").
 - [x] [UI] ✅ P3 (P10.10). PnL-over-time **graphs**, broken down by **strategy** AND by **coin**. —
-      unified-trading-system-ui@02e3b59f | `PnlOverTimePanel`: total-PnL-by-strategy + Δ-USD-by-coin bar breakdowns from
-      `/per-strategy` + `/net-views`; per-DAY timeseries renders an HONEST pending note (`pnl-timeseries-pending`) — the
-      reader does not expose a daily series yet (`/pnl` entries are per-position, not per-day), not faked. pw:L2 ✓ |
-      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders by-strategy + by-coin
-      bars and an honest per-day-pending note (P10.10)").
+      unified-trading-system-ui@685623df | **UPGRADED to a real per-DAY line/area timeseries** (`PnlTimeseriesChart`,
+      recharts `AreaChart` over a 7-day window) with a **by-strategy / by-coin toggle** (`pnl-ts-toggle-strategy` /
+      `pnl-ts-toggle-coin`) driven by a new `useLedgerPnlTimeseries` hook (GET `/pnl-timeseries`). Until the API agent's
+      `/pnl-timeseries` endpoint deploys (currently 404 → honest-empty `series:[]` → `pnl-timeseries-empty` clean empty
+      state, NOT a fabricated line — auto-populates once live); snapshot by-strategy + Δ-USD-by-coin bars retained as
+      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) |
+      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries
+      (toggle strategy/coin) + snapshot bars (P10.10)").
+- [x] [UI] ✅ P3 (P10.x). **Attribution by-FACTOR view in the UI** (was the Progress-Log "remaining minor"): the
+      `/attribution/breakdown` API already returns by-factor (CARRY/BASIS/FUNDING/FEES); the UI rendered only
+      venue+layer. — unified-trading-system-ui@685623df | `AttributionPanel` now renders a **By-factor waterfall**
+      (`attribution-by-factor` / `attribution-factor-bars`) FIRST (the desk's primary lens — positive carry+basis,
+      negative funding, ≈0/honest-empty FEES), plus by-venue + by-layer. **Bug fixed in scope**: the bars read `b.key`
+      but the LIVE API emits per-DIM keys (`venue`/`factor`/`layer`/`instrument_id`) → by-venue/by-layer rendered BLANK
+      labels against live data; `useLedgerAttribution` now normalises every dim to `{label, amount}` (fixture updated to
+      the live byte-for-byte raw shape). pw:L2 ✓ (63/63 smoke) | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("attribution panel shows the by-FACTOR breakdown (CARRY / BASIS /
+      FUNDING)").
 - [x] [UI] ✅ P3 (P10.11). **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically
       in the batch view where there are real exits). — unified-trading-system-ui@02e3b59f | trade-tape `E/X` column:
       entry (opens/adds, no realised PnL) vs exit (closes/reduces, realises PnL or `trade_type=exit`),
@@ -538,8 +551,12 @@ are identified (2) and the ledger exists (3).
 - **FINDING (tracked, not fixed here)**: strategy-service PR#232 (staging→main) is CONFLICTING → blocks the NORMAL
   `:latest` promotion (a peer/worker rebase needed); I built `:latest` directly to unblock the cron. The UTL base + CRA
   reader + strategy-service image were all rebuilt off-pipeline; the conflict resolution restores the auto-promotion.
-- **Remaining minor (tracked)**: attribution by-FACTOR in the UI (API exposes CARRY/BASIS/FUNDING; UI shows venue+layer);
-  per-day PnL timeseries (reader returns per-position, not a daily series). Both honest-rendered, neither placeholder.
+- **Remaining minor — ✅ DONE (unified-trading-system-ui@685623df, 2026-06-21):** attribution by-FACTOR view now in the
+  UI (`AttributionPanel` CARRY/BASIS/FUNDING/FEES waterfall first, + a fixed per-dim label-normalisation bug that had
+  by-venue/by-layer rendering blank against the LIVE API); per-day PnL timeseries upgraded from snapshot bars to a real
+  per-day line/area (`PnlTimeseriesChart`, by-strategy/by-coin toggle, new `useLedgerPnlTimeseries` hook). The
+  `/pnl-timeseries` endpoint is not yet deployed by the API agent → honest-empty clean state (auto-populates when live);
+  by-factor renders REAL CARRY/BASIS/FUNDING values live. pw:L2 ✓ 63/63. Deployed odum-portal asia-northeast1.
 
 
 ### 2026-06-21 — Autonomous: two producer-side paper-run fixes (delta double-count + `--mode paper` launch)
