@@ -262,6 +262,20 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-21 — SPORTS lane: enrichment OOM fix + final autonomous state
+
+**Enrichment OOM (fixed):** the per-fixture enrichment OOM-killed python (7.2GB anon-RSS) on the full-sweep default
+`e2-standard-2` (8GB) — the in-memory fixtures catalogue + (league×entity) coverage map + per-fixture entity buffers
+exceed 8GB. Relaunched both `sports-enrich-{2019-2022,2023-2026}` on **e2-standard-8 (32GB)** → stable (0 429s, fetches
+climbing, entity-skip active). FOLLOW-UP: full-sweep/enrich launcher should default enrichment to e2-standard-8 (the
+fixtures-only phase is fine on e2-standard-2; only the per-fixture enrichment needs the RAM).
+
+**Final autonomous state (operator away 2h):** ALL code shipped + verified — 5 bugs, concurrency-safe throttle, 3
+manifest migrations (odds AF 44%→7%, blanks 743k→0+dedup, 507k entity-coverage relabel + 92% player-stat skip),
+Live==Batch wiring (LIVE_ODDS_API). ONLY blocker = **Odds API OUT OF CREDITS** (operator top-up; blocks live rows +
+remaining odds backfill — code proven, VM running, emits on credit return). API-Football enrichment + fixtures fill
+is rate-bound multi-day (1.2k/min ceiling, used fully, 0 waste). Sweep loop monitors VM health/OOM/credit-return.
+
 ### 2026-06-21 — SPORTS lane STATE SNAPSHOT (autonomous, operator away 2h) — for context-compression resume
 
 **SHIPPED (all green):** `--tier` (deployment-service@b51729b) · silent-empty→attempted_failed (is@0db2450,+10 tests) ·
