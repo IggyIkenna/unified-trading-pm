@@ -1228,3 +1228,17 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   static `_index/audit/projected_index_*.parquet`, last written Jun 11/17) is now redundant and slated for retirement
   (operator 2026-06-21). Provenance: read on the human-planning VM via pyarrow over the live `-prd-` market-data-tick
   buckets.
+
+  - [ ] [CODE] P2. **Retire the CF-20 beta-manifest preview machinery** (target repo: **deployment-api**) — live index
+        is now ~v9 (96.6-100% all AGs), so the projected/beta preview is redundant. Remove the beta path:
+        `DATA_STATUS_BETA_MANIFEST_BLOB` setting + `data_status_beta_manifest_blob` config field;
+        `services/manifest_source.py` `is_beta_mode`/`is_service_beta`/`beta_eligible`/`BETA_ELIGIBLE_SERVICES` + the
+        projected-index read branch in `read_manifest_index`; the two-phase beta leg of
+        `routes/data_status/_rollup.py` + `scripts/data_status_rollup_worker.py` (`full.beta.json.gz`); the beta-aware
+        `rollup_blob_path`. Update the tests that assert beta behaviour. Then GCS-delete the static
+        `_index/audit/projected_index_*.parquet` (5 buckets) once code no longer reads them. Ship via quickmerge + QG;
+        redeploy. (Operator-acked 2026-06-21. Provenance: live-index v9 audit, this plan's 2026-06-21 progress entry.)
+  - [ ] [DATA] P3. **Re-stamp the legacy schema_version tails** (target: instruments-service / mtds v9 migrator) —
+        cefi 3.4% (v4/v5/v6), prediction 2.1% (v4), tradfi 0.3% (v4) of live `_index` rows are pre-v9; defi/sports are
+        100%. Run the existing v9 restamp over the tail shards so the live index is uniformly v9 (no new walk — fold
+        into the next scheduled canonicalisation pass).
