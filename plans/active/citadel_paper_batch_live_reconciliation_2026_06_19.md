@@ -388,7 +388,7 @@ are identified (2) and the ledger exists (3).
       (strategy/execution), by **factor** (carry / basis / funding / price / fees), per **strategy_id** — replace the
       flat `$87` (`by venue == by layer` placeholder). Producer emits the richer `PnLAttributionRow` dimensions; API
       exposes the breakdown; UI renders a real waterfall. Repos: strategy-service + client-reporting-api + UI.
-- [ ] [STRATEGY] P2. Multi-strategy paper run (≥2 strategies, e.g. carry_staked_basis + arbitrage_price_dispersion)
+- [x] [STRATEGY] ✅ P2. Multi-strategy paper run — strategy-service@94ca0b6c (specs 0+6: LIDO/ETH + JITO/SOL; run paper-20260621100605-b33e4bf4 → 2 strategy_ids, 42 fills, batch re-derives both ε=0). (≥2 strategies, e.g. carry_staked_basis + arbitrage_price_dispersion)
       so the per-strategy breakdown is meaningful, not a single flat strategy. Repo: strategy-service
       (paper_run_handler).
 
