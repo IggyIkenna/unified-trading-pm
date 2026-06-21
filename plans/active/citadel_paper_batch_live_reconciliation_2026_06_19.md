@@ -524,6 +524,24 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-21 — CRON GRADUATED + Phase 10 dashboard complete (operator autonomous push).** The paper-engine Cloud Run
+  job executes GREEN on the corrected engine: execution `uts-prod-paper-engine-run-2q8bj` succeeded → wrote run
+  `paper-20260621134256-3c4eb321` (instruction+pricing+transfer ledgers, 2 strategy_ids, mode PAPER). Image
+  `strategy-service:latest`=`f5af20b8` (5-leg delta-fold a2d12217 + UTL RuntimeMode 9177a807, off fresh UTL base). The 3
+  schedulers stay ENABLED (paper-run 02:00 / determinism 02:30 / digest 03:15 UTC). Root cause of the prior red:
+  job args had `--asset-group defi` (lowercase → argparse exit 2; CLI choices are UPPERCASE) + unsubstituted
+  `PAPER_RUN_START_DATE`/`END_DATE` placeholders (the "scheduler overrides dates" was an empty-body TODO, never wired) —
+  fixed in `deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf` (DEFI + real 2026-05-16..22 window).
+  Dashboard live-verified (odum-portal-00030): ε=0, per-strategy(2), real transfers, real attribution waterfall
+  (5 venues / 4 factors), net-$/coin/delta (delta-neutral after the 5-leg fold: ETH 17.5/SOL 35), PnL graphs,
+  entries/exits, batch↔paper.
+- **FINDING (tracked, not fixed here)**: strategy-service PR#232 (staging→main) is CONFLICTING → blocks the NORMAL
+  `:latest` promotion (a peer/worker rebase needed); I built `:latest` directly to unblock the cron. The UTL base + CRA
+  reader + strategy-service image were all rebuilt off-pipeline; the conflict resolution restores the auto-promotion.
+- **Remaining minor (tracked)**: attribution by-FACTOR in the UI (API exposes CARRY/BASIS/FUNDING; UI shows venue+layer);
+  per-day PnL timeseries (reader returns per-position, not a daily series). Both honest-rendered, neither placeholder.
+
+
 ### 2026-06-21 — Autonomous: two producer-side paper-run fixes (delta double-count + `--mode paper` launch)
 
 **Repos:** strategy-service@a2d12217 + unified-trading-library@ef5b1699 + unified-trading-library@9177a807 (the
