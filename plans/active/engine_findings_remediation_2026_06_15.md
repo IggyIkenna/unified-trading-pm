@@ -259,7 +259,7 @@ wiring would re-introduce the F47 over-claim — so the token is added ONLY when
 ## Codex SSOT updates
 
 - `codex/04-architecture/client-funds-isolation.md` / margin-traceability section (margin cluster end-to-end).
-- `codex/09-strategy/operational/pnl-attribution.md` (net-delta / exposure-normalization owner).
+- `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (net-delta / exposure-normalization owner).
 - Collateral haircut SSOT note (which of venue_collateral.py / lst_collateral_resolver.py is canonical post-F28).
 - **Phase C (2026-06-15):** `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` — reconciled
   the stale registered/stub counts (26→**29** registered / 31→**28** not-engine-backed; the 3 stub→registered since the

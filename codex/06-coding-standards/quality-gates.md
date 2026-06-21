@@ -452,8 +452,8 @@ catalog+batch_handler (11→10), MDPS canonical_writer+live_workers (10→7), ex
 | infrastructure | **70%**         | `max(70, actual_coverage - 1)` |
 | docs-only      | N/A             | —                              |
 
-**`unified-api-contracts` (UAC) special target — 90% combined (2026-06-10)**: UAC is the T0 schema SSOT; as of
-2026-06-10 it runs `branch=True` (combined statement + branch metric) with `fail_under = 90`. The combined metric is
+**`unified-api-contracts` (UAC) special target — 94% combined (raised 90→94 2026-06-20, Phase 5 tests + `gcp/protocols.py` omit reaching 94.62%)**: UAC is the T0 schema SSOT; as of
+2026-06-10 it runs `branch=True` (combined statement + branch metric) with `fail_under = 94` (the `[tool.coverage.report]` toml is the SSOT; the floor was raised above the original 90% target as coverage improved). The combined metric is
 `(lines_covered + branches_covered) / (lines_valid + branches_valid)` — lower than statement-only because branch
 coverage is harder. The 90% target is maintained via: (a) targeted tests for all logic modules, and (b) a curated omit
 list of pure Pydantic stub packages that have no conditional logic (vendored schema shapes whose coverage adds no signal

@@ -482,11 +482,45 @@ are identified (2) and the ledger exists (3).
       ≈0 in paper / real only at the live boundary). pw:L2 ✓ | regression:
       tests/smoke/paper-trading-ledger.smoke.spec.ts ("Strat α / Exec α columns carry clarifying tooltips (P10.5)").
 - [x] [UI] ✅ P3 (P10.10). PnL-over-time **graphs**, broken down by **strategy** AND by **coin**. —
-      unified-trading-system-ui@02e3b59f | `PnlOverTimePanel`: total-PnL-by-strategy + Δ-USD-by-coin bar breakdowns from
-      `/per-strategy` + `/net-views`; per-DAY timeseries renders an HONEST pending note (`pnl-timeseries-pending`) — the
-      reader does not expose a daily series yet (`/pnl` entries are per-position, not per-day), not faked. pw:L2 ✓ |
-      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders by-strategy + by-coin
-      bars and an honest per-day-pending note (P10.10)").
+      unified-trading-system-ui@685623df | **UPGRADED to a real per-DAY line/area timeseries** (`PnlTimeseriesChart`,
+      recharts `AreaChart` over a 7-day window) with a **by-strategy / by-coin toggle** (`pnl-ts-toggle-strategy` /
+      `pnl-ts-toggle-coin`) driven by a new `useLedgerPnlTimeseries` hook (GET `/pnl-timeseries`). Until the API agent's
+      `/pnl-timeseries` endpoint deploys (currently 404 → honest-empty `series:[]` → `pnl-timeseries-empty` clean empty
+      state, NOT a fabricated line — auto-populates once live); snapshot by-strategy + Δ-USD-by-coin bars retained as
+<<<<<<< Updated upstream
+      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) |
+      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries
+      (toggle strategy/coin) + snapshot bars (P10.10)").
+- [x] [API] ✅ P3 (P10.10). **`GET /api/v1/clients/{client_id}/pnl-timeseries`** — the per-DAY series the UI P10.10
+      graph is wired to (resolves the 404 the UI item notes; was "honest per-day-pending" at line 613). —
+      client-reporting-api@ce1bd5f, deployed rev **client-reporting-api-00009-mr4** (asia-northeast1, base UTL digest
+      sha256:467ba8). New run-scoped reader `core/pnl_timeseries.py::pnl_timeseries_series` folds the canonical run's
+      per-DAY attribution parquet (CARRY/BASIS/FUNDING/FEES factors) into one row per `(date × strategy_id × coin)` with
+      `realized` / `unrealized` / `total` / `carry`; coin derives canonically from `instrument_id`
+      (`LIDO:STAKING:stETH`→ETH, `JITO:STAKING:JitoSOL`→SOL). `total = realized + (unrealized or 0) + carry`;
+      `unrealized` is HONEST null (no MTM-factor row on the flat corpus — never a fabricated 0). MEASURED live curl
+      (`firm-paper-determinism`, admin JWT): HTTP 200, `run_id=paper-20260621134256-3c4eb321`, **22 rows over 8 days
+      2026-05-15→05-22, coins {ETH,SOL}, 2+ strategies (lido ETH + jito SOL)**. regression:
+      tests/unit/test_pnl_timeseries.py + tests/unit/test_attribution_routes.py::TestPnlTimeseriesRoute | QG-green.
+||||||| Stash base
+      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) |
+      regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries
+      (toggle strategy/coin) + snapshot bars (P10.10)").
+=======
+      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries (toggle
+      strategy/coin) + snapshot bars (P10.10)").
+>>>>>>> Stashed changes
+- [x] [UI] ✅ P3 (P10.x). **Attribution by-FACTOR view in the UI** (was the Progress-Log "remaining minor"): the
+      `/attribution/breakdown` API already returns by-factor (CARRY/BASIS/FUNDING/FEES); the UI rendered only
+      venue+layer. — unified-trading-system-ui@685623df | `AttributionPanel` now renders a **By-factor waterfall**
+      (`attribution-by-factor` / `attribution-factor-bars`) FIRST (the desk's primary lens — positive carry+basis,
+      negative funding, ≈0/honest-empty FEES), plus by-venue + by-layer. **Bug fixed in scope**: the bars read `b.key`
+      but the LIVE API emits per-DIM keys (`venue`/`factor`/`layer`/`instrument_id`) → by-venue/by-layer rendered BLANK
+      labels against live data; `useLedgerAttribution` now normalises every dim to `{label, amount}` (fixture updated to
+      the live byte-for-byte raw shape). pw:L2 ✓ (63/63 smoke) | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("attribution panel shows the by-FACTOR breakdown (CARRY / BASIS /
+      FUNDING)").
 - [x] [UI] ✅ P3 (P10.11). **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically
       in the batch view where there are real exits). — unified-trading-system-ui@02e3b59f | trade-tape `E/X` column:
       entry (opens/adds, no realised PnL) vs exit (closes/reduces, realises PnL or `trade_type=exit`),
@@ -503,7 +537,7 @@ are identified (2) and the ledger exists (3).
 > **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
 > P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
 > [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate repo.
-> **Codex SSOT to update on completion:** `codex/09-strategy/operational/pnl-attribution.md` (multi-dim attribution +
+> **Codex SSOT to update on completion:** `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (multi-dim attribution +
 > bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest surface + transfers in the
 > four-ledger model).
 
@@ -528,19 +562,22 @@ are identified (2) and the ledger exists (3).
   job executes GREEN on the corrected engine: execution `uts-prod-paper-engine-run-2q8bj` succeeded → wrote run
   `paper-20260621134256-3c4eb321` (instruction+pricing+transfer ledgers, 2 strategy_ids, mode PAPER). Image
   `strategy-service:latest`=`f5af20b8` (5-leg delta-fold a2d12217 + UTL RuntimeMode 9177a807, off fresh UTL base). The 3
-  schedulers stay ENABLED (paper-run 02:00 / determinism 02:30 / digest 03:15 UTC). Root cause of the prior red:
-  job args had `--asset-group defi` (lowercase → argparse exit 2; CLI choices are UPPERCASE) + unsubstituted
+  schedulers stay ENABLED (paper-run 02:00 / determinism 02:30 / digest 03:15 UTC). Root cause of the prior red: job
+  args had `--asset-group defi` (lowercase → argparse exit 2; CLI choices are UPPERCASE) + unsubstituted
   `PAPER_RUN_START_DATE`/`END_DATE` placeholders (the "scheduler overrides dates" was an empty-body TODO, never wired) —
   fixed in `deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf` (DEFI + real 2026-05-16..22 window).
-  Dashboard live-verified (odum-portal-00030): ε=0, per-strategy(2), real transfers, real attribution waterfall
-  (5 venues / 4 factors), net-$/coin/delta (delta-neutral after the 5-leg fold: ETH 17.5/SOL 35), PnL graphs,
+  Dashboard live-verified (odum-portal-00030): ε=0, per-strategy(2), real transfers, real attribution waterfall (5
+  venues / 4 factors), net-$/coin/delta (delta-neutral after the 5-leg fold: ETH 17.5/SOL 35), PnL graphs,
   entries/exits, batch↔paper.
 - **FINDING (tracked, not fixed here)**: strategy-service PR#232 (staging→main) is CONFLICTING → blocks the NORMAL
   `:latest` promotion (a peer/worker rebase needed); I built `:latest` directly to unblock the cron. The UTL base + CRA
   reader + strategy-service image were all rebuilt off-pipeline; the conflict resolution restores the auto-promotion.
-- **Remaining minor (tracked)**: attribution by-FACTOR in the UI (API exposes CARRY/BASIS/FUNDING; UI shows venue+layer);
-  per-day PnL timeseries (reader returns per-position, not a daily series). Both honest-rendered, neither placeholder.
-
+- **Remaining minor — ✅ DONE (unified-trading-system-ui@685623df, 2026-06-21):** attribution by-FACTOR view now in the
+  UI (`AttributionPanel` CARRY/BASIS/FUNDING/FEES waterfall first, + a fixed per-dim label-normalisation bug that had
+  by-venue/by-layer rendering blank against the LIVE API); per-day PnL timeseries upgraded from snapshot bars to a real
+  per-day line/area (`PnlTimeseriesChart`, by-strategy/by-coin toggle, new `useLedgerPnlTimeseries` hook). The
+  `/pnl-timeseries` endpoint is not yet deployed by the API agent → honest-empty clean state (auto-populates when live);
+  by-factor renders REAL CARRY/BASIS/FUNDING values live. pw:L2 ✓ 63/63. Deployed odum-portal asia-northeast1.
 
 ### 2026-06-21 — Autonomous: two producer-side paper-run fixes (delta double-count + `--mode paper` launch)
 
@@ -1497,3 +1534,50 @@ high?"). Findings, all measured:
 - [ ] [RESEARCH] P3. **Deployable basis = liquid-only carry** — rebuild the basis sleeve on the liquid universe (ADV ≥
       $5M, the `_carry_liq_daily` path) as the SIZED number (~$250k, Sharpe ~12–13), not the raw top-third (incl.
       uncapturable small-caps). Repo: strategy-service / e2e-testing. Provenance: execution-realism audit 2026-06-21.
+
+### 2026-06-21 — MULTI-YEAR WALK-FORWARD OOS + SHORT-LEG RE-SPEC (operator-driven, `/autonomous`)
+
+Operator pushed two things: (1) show OOS for ALL walk-forward years (2017+ data exists), not just 2025; (2) re-spec the
+short leg ("why bleed in bulls? make it bull/bear-adaptive or a beta-hedge — make it work"). Done, measured:
+
+- **Multi-year walk-forward OOS exposed (`_book_liquid9_plot.py`, LO→2023)**: every ML leg IS expanding-window
+  walk-forward (`_panel.py` cs / `_mom_tb.py` h32 / `_gate_regime.py` ext all do `train yr<Y → test yr==Y` for
+  Y∈2023-2026) — so 2023/2024 are genuine OOS the book was hiding by measuring 2025+ only. Honest framing: model-fit is
+  walk-forward every year, but strategy DESIGN was developed on 2023-24, so 2023-24 = walk-forward-but-in-development,
+  **2025 = clean holdout** (design frozen), 2026-H1 = live-forward. **The full-OOS directional book is Sh ~1.3-1.4
+  (yearly ['23:-1.5 '24:+2.8 '25:+2.8 '26:-0.5]) — NOT the 2.6 the 2025-only view showed; 2023 was a LOSING year.** The
+  plot now shades 2023-24 dev + marks the 2025 clean-holdout boundary.
+- **WHY 2023 negative despite 4-leg diversification (`_book2023_decomp.py`)**: diversification WORKED (the 3 long legs
+  are near-uncorrelated, mean |corr| 0.08) but it cuts VARIANCE, not regime alpha-decay — in 2023 EVERY leg individually
+  had no edge (cs/h32/ext all ~−1 Sharpe; the post-2022-bottom recovery was a regime shift the pre-2023 models hadn't
+  learned), so the diversified average is a tighter loss, not a profit. short contributed only −0.8% of the −7.5% (the
+  −19.6 short Sharpe is a low-$ steady bleed; short was actually −0.57 corr with cs = a partial hedge).
+- **Short re-spec (`_short_respec.py`) — both operator ideas tested:**
+  - **(B) Vol-targeted BETA-HEDGE = NOT APPLICABLE**: the directional book's rolling beta to BTC is **−0.01
+    (market-neutral)** — cs/h32/ext net to ~zero market exposure, so there is NO net-long to hedge; the beta-hedge
+    (gated on book-net-long ∧ confirmed-risk-off, sized to net beta) correctly NEVER fires. The book's 2023 loss was
+    alpha-failure, not market beta; a beta-hedge can't fix it. (This VALIDATES the book as neutral — it doesn't need a
+    directional hedge.)
+  - **(A) CONFIRMED-MOMENTUM GATE = SHIPPED**: the −19.6 Sharpe 2023 bleed came from the lagging `BTC<200dSMA-falling`
+    gate shorting INTO the recovery rally (gate fired on days BTC ran +533% annualized). Swept 10 gates; **R8 = short
+    only when BTC 20d AND 60d returns both <0** (confirmed negative momentum, never shorts a rising market) is the
+    robust winner: short 2023 **−23.2→+0.8** Sharpe, no catastrophic year, book maxDD **−8.8%→−7.9%**, strictly better
+    than the naive short. **Wired into `_exec_optimize.build_strategies` short gate** (the research/book short).
+- **Honest ceiling**: R8 makes the short SAFE (no whipsaw) but NOT accretive — the book is ~1.33-1.38 with or without it
+  (5th independent confirmation the short has no robust standalone alpha). Deployable: keep R8 at a SMALL weight, or
+  drop. The real crash risk is in the BASIS carry (liquidation deleveraging), so a tail hedge belongs THERE, not on the
+  market-neutral directional book.
+
+**Follow-up todos:**
+
+- [ ] [RESEARCH] P2. **Wire the R8 confirmed-momentum short gate into the PRODUCTION short** (live paper engine
+      `_ledgers.py`/`_signal_engine.py` strat-signals + strategy-service archetype) — the research `_exec_optimize`
+      short is fixed; the live short still uses the lagging SMA gate. Repo: e2e-testing `scripts/paper_trading/` +
+      strategy-service. Provenance: short re-spec 2026-06-21.
+- [ ] [RESEARCH] P3. **Re-cast the short as a BASIS tail-hedge, not a directional sleeve** — the directional book is
+      market-neutral (no beta to hedge); the genuine left-tail is the basis carry's liquidation-deleveraging risk. Test
+      a convex hedge (long vol / deep-OTM / index short in confirmed risk-off) sized to the BASIS sleeve's crash
+      exposure. Repo: strategy-service / e2e-testing. Provenance: short re-spec 2026-06-21.
+- [ ] [RESEARCH] P3. **Re-evaluate the short's book weight (15%→smaller or 0)** — at 15% it's net-neutral-to-slightly-
+      negative for the book (1.33 w/ R8 vs 1.38 no-short). Size it by its marginal Sharpe contribution, not a fixed 15%.
+      Repo: strategy-service. Provenance: short re-spec 2026-06-21.

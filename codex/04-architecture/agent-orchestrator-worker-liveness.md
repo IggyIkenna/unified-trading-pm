@@ -230,3 +230,42 @@ Expected: kill event within 180s, fresh tmux session within 300s total.
 | `AutoSpawnLoop`                              | Cold-start + respawn after kill        | Respawns within 60s of kill. Together they close the warm-recovery loop.                                                                  |
 | `harsh_pc_dispatch_failover`                 | Host-level offline detection (>10 min) | Different granularity: this plan handles slot-level liveness (180s–15min). Both required for full self-healing.                           |
 | `agent_orchestrator_backlog_state_alignment` | Prune-stale / zombie cleanup           | Ensures workers always have honest queue state to `/boot` against; without it, watchdog would respawn workers into zombie-task purgatory. |
+
+---
+
+## Self-healing hardening (2026-06-21 — `orchestrator_self_healing_hardening_2026_06_21`)
+
+Five robustness closures (all in `agent-orchestrator`, tested) for the operator's "always pick accounts with usage left,
+rotate inline when they run out, re-trigger anything dirty / rolled-back / stale":
+
+- **Deterministic rotation-failure recovery** — `server.server._recover_slot_after_failed_rotation`: when
+  `spawn_with_account_bg` fails AFTER the old session is killed, the slot was left half-dead (`working` + dead
+  `tmux_session` + bound `current_task`), relying on a later `TmuxPruner` grace-tick. It now immediately releases the
+  task to the queue (never stranded `dispatched`) + flips the slot `killed` for an AutoSpawn re-pick on a fresh account;
+  `paused` is preserved (operator intent).
+- **`stale`-lingering reclaim** — `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` now reaps `stale` (not only
+  `idle`) lingering live sessions, with an `_is_actively_thinking` pane guard. A finished/wedged worker the
+  HealthMonitor flipped idle→`stale` no longer occupies its slot until the 15-min heartbeat-silent kill; queued work
+  resumes in ~`_IDLE_SESSION_RECLAIM_TICKS`.
+- **Provably-dead branch-quarantine auto-heal** — `worktree_clean_check.heal_dead_slot_branch_quarantine`, called from
+  `_do_spawn` when the FM5/FM7 branch gate would quarantine. For a provably-DEAD slot only (never stomps a live peer),
+  it PRESERVES every commit not on `origin/<base>` to a durable `origin/wip-preserve/...` ref FIRST (refuses to realign
+  if the preserve push fails), then realigns HEAD to `origin/<base>` via `git checkout -B` — so a diverged/wrong-branch/
+  detached dead slot recovers instead of wedging `killed` forever. This is also the recurring "Spawn failure — branch
+  quarantine" recovery; the escalate worker's leftover `_escalation_work` branch is now ALSO prevented at the source by
+  `agents/escalate.md`'s mandatory leave-the-slot-clean step before EXIT.
+- **Orphan-wip realign via `checkout`, not `reset`** — `worktree_clean_check/_orphan.py` realigns an inherited
+  dead-predecessor WIP slot with `git checkout -B <base> origin/<base>` instead of `git reset --hard origin/<base>`. The
+  reset emitted the `reset: moving to origin/<base>` reflog signature the audit-reflog guard pages on, so every WIP
+  inherit re-armed "Audit Reflog — High Risk" even though the WIP was preserved — the chronic central-VM ~11-min spam. A
+  checkout reaches the same clean end-state with a `checkout:` reflog the audit ignores: the spam is fixed at SOURCE.
+- **`LoopSupervisor`** (`server/loop_supervisor.py`) — checks every background daemon loop's thread liveness every 120s
+  and revives a dead one via its idempotent `start()` (no-op when alive, recreates the thread when dead). A crashed
+  `WorkerLivenessWatchdog`/`AutoSpawnLoop`/`TmuxPruner`/`HealthMonitor`/`UsagePoller`/etc no longer silently stops the
+  fleet self-healing without a full backend restart; only the supervisor itself (root) needs a process restart.
+  Env-disabled loops are not registered.
+
+Account-selection closures (same plan): a **late-binding account re-check** in `_do_spawn` (refuse to spawn onto an
+account that went unusable in the pick→spawn window; next tick re-picks) + a **load-spread tiebreaker** in
+`_pick_headroom_account` (active-slot-count as the 3rd sort key after 5h%/weekly%). SSOT:
+`plans/active/orchestrator_self_healing_hardening_2026_06_21.md`.

@@ -23,12 +23,12 @@ This run otherwise found a clean corpus: 0 hard hygiene failures, no missed flip
 traced to a genuinely-open todo — a done prerequisite is not a done todo), and no clear plan-vs-plan / plan-vs-epic
 contradictions.
 
-## Finding 1 — stale codex pointer `codex/09-strategy/operational/pnl-attribution.md` (4 referrers)
+## Finding 1 — stale codex pointer `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (4 referrers)
 
 ### What I found
 
-The SSOT pointer `codex/09-strategy/operational/pnl-attribution.md` **does not exist** — it was never committed at that
-path (`git log --all -- codex/09-strategy/operational/pnl-attribution.md` is empty). The actual doc lives at
+The SSOT pointer `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` **does not exist** — it was never committed at that
+path (`git log --all -- codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` is empty). The actual doc lives at
 **`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`** (64 KB, the canonical PnL-attribution SSOT),
 referenced correctly by `codex/09-strategy/README.md`, `codex/04-architecture/client-reporting-architecture.md`, the
 epic `plans/epics/global_ledger_pnl_attribution_master.md`, and the `codex_ssots:` of
@@ -52,15 +52,15 @@ the SSOT pointers.
 
 ### Recommended decision
 
-Rewrite all four referrers `operational/pnl-attribution.md` → `architecture-v2/cross-cutting/pnl-attribution.md`. The
+Rewrite all four referrers `architecture-v2/cross-cutting/pnl-attribution.md` → `architecture-v2/cross-cutting/pnl-attribution.md`. The
 two rule-doc edits (CLAUDE.md, SUB_AGENT_MANDATORY_RULES.md) are the authoritative fix and need a human/operator (they
 govern every agent); the two plan edits are mechanical once their constraints clear.
 
-- [ ] [DOCS] P3. Rewrite the stale codex pointer `09-strategy/operational/pnl-attribution.md` →
-      `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` in all 4 referrers (CLAUDE.md:654,
-      SUB_AGENT_MANDATORY_RULES.md:326, engine_findings_remediation_2026_06_15.md:262,
-      utl_uac_reuse_consolidation_remediation_2026_06_10.md:436). Verified-missing path: `git log --all` empty; correct
-      doc is 64 KB at the architecture-v2 path. Provenance: plan-reconciler agt-3591cc 2026-06-17.
+- [x] ✅ [DOCS] P3. Rewrite the stale codex pointer `operational/pnl-attribution.md` →
+      `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` in all referrers — DONE 2026-06-21 (8 referrers
+      fixed: CLAUDE.md, SUB_AGENT_MANDATORY_RULES.md, engine_findings_remediation, utl_uac_reuse_consolidation,
+      citadel_paper_batch_live_reconciliation, plan_reconciler + the 2 ping ledgers; 0 stale `operational/` refs
+      remain). Correct doc is 64 KB at the architecture-v2 path. Provenance: plan-reconciler agt-3591cc 2026-06-17.
 
 ## Finding 2 — `plans/active/INDEX.md` is abandoned (99-entry drift vs the live plan set)
 
