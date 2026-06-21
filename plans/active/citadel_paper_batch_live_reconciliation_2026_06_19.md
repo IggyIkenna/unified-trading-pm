@@ -586,49 +586,50 @@ are identified (2) and the ledger exists (3).
       booked as the `FEES` factor at `PnLLayer.EXECUTION`, one NEGATIVE row per leg (swap+stake+perp = taker); grand
       total drops by the fee drag. ε=0 preserved (benchmark `TradeFillRecord`s stay fees=0).
       `test_fees_are_execution_layer_and_nonzero` + `test_maker_taker_rates`.
-- [x] ✅ [CODE] P11.9. **Strategy-keyed ledgers — BACKEND DONE (UAC@70695806 / UTL@cc5ebe5a / strategy-service@77f3c5b6 / CRA@981f14d: optional `strategy_id` on every LedgerRow, stamped on instruction/pricing/passive/transfer per @-qualified id, CRA `by_strategy` + `?strategy_id=` filter, ε=0). UI per-strategy/archetype drilldown REMAINS (tracked in Final).** Orig:**Strategy-keyed ledgers + UI drilldown across ALL ledger types** (operator 2026-06-21: "associate
-      pnl, trade, order and position ledgers to strategies … all parts of the UI should group + drilldown by strategy").
-      `LedgerRow` has NO `strategy_id` column today — only the attribution parquet is strategy-partitioned, so trade /
-      position / transfer / passive / pricing ledgers can NOT be grouped by strategy (the strategy is only a substring
-      of the composite `trade_id`, and was the bare archetype). Add a canonical `strategy_id` field (the `@`-qualified
-      id) to `LedgerRow` (UAC), stamp it on EVERY row in all UTL materialisers + the strategy-service emitters, GROUP-BY
-      `strategy_id` in CRA across ALL ledger views (positions/PnL/trades/transfers/passive, not just attribution), and
-      add a strategy filter + per-strategy drilldown to EVERY UI panel. Repo: unified-api-contracts (field) +
-      unified-trading-library (stamp) + strategy-service (emit) + client-reporting-api (group) +
+- [x] ✅ [CODE] P11.9. **Strategy-keyed ledgers — BACKEND DONE (UAC@70695806 / UTL@cc5ebe5a / strategy-service@77f3c5b6
+      / CRA@981f14d: optional `strategy_id` on every LedgerRow, stamped on instruction/pricing/passive/transfer per
+      @-qualified id, CRA `by_strategy` + `?strategy_id=` filter, ε=0). UI per-strategy/archetype drilldown REMAINS
+      (tracked in Final).** Orig:**Strategy-keyed ledgers + UI drilldown across ALL ledger types** (operator 2026-06-21:
+      "associate pnl, trade, order and position ledgers to strategies … all parts of the UI should group + drilldown by
+      strategy"). `LedgerRow` has NO `strategy_id` column today — only the attribution parquet is strategy-partitioned,
+      so trade / position / transfer / passive / pricing ledgers can NOT be grouped by strategy (the strategy is only a
+      substring of the composite `trade_id`, and was the bare archetype). Add a canonical `strategy_id` field (the
+      `@`-qualified id) to `LedgerRow` (UAC), stamp it on EVERY row in all UTL materialisers + the strategy-service
+      emitters, GROUP-BY `strategy_id` in CRA across ALL ledger views (positions/PnL/trades/transfers/passive, not just
+      attribution), and add a strategy filter + per-strategy drilldown to EVERY UI panel. Repo: unified-api-contracts
+      (field) + unified-trading-library (stamp) + strategy-service (emit) + client-reporting-api (group) +
       unified-trading-system-ui (drilldown, playwright-gated).
 
-- [x] ✅ [CODE] P11.10. **Replicate the full e2e experiment universe + wire the portfolio_allocator — DONE** (UTL@e797deac / strategy-service@4e2c14c6): `paper_universe.py` allocator-driven selection replaced hardcoded indices; verified live `paper-20260621171725-fcf31316` = **14 strategy_ids, allocator-weighted, all strategy-keyed ledgers + passive + treasury, batch-rerun ε=0**; 266 specs honestly skipped (no in-window data → P11.11). Orig intent:
-      (operator 2026-06-21: "missing lots of strategies and venues from our e2e_testing work … basis, staked basis,
-      funding rate dispersion/arb … many more venues and coins … production archetypes are flexible enough … give them
-      strategy IDs + configs matching the e2e experiment … how we weight allocations per archetype, which venues, which
-      coins at any one time, and moving money around"). The paper run hardcodes `PAPER_RUN_SPEC_INDICES = (0, 6)` (2 of
-      14 `CARRY_STAKED_BASIS` specs); the production catalogue ALREADY builds **468 specs / 30 archetypes**
+- [x] ✅ [CODE] P11.10. **Replicate the full e2e experiment universe + wire the portfolio_allocator — DONE**
+      (UTL@e797deac / strategy-service@4e2c14c6): `paper_universe.py` allocator-driven selection replaced hardcoded
+      indices; verified live `paper-20260621171725-fcf31316` = **14 strategy_ids, allocator-weighted, all strategy-keyed
+      ledgers + passive + treasury, batch-rerun ε=0**; 266 specs honestly skipped (no in-window data → P11.11). Orig
+      intent: (operator 2026-06-21: "missing lots of strategies and venues from our e2e*testing work … basis, staked
+      basis, funding rate dispersion/arb … many more venues and coins … production archetypes are flexible enough … give
+      them strategy IDs + configs matching the e2e experiment … how we weight allocations per archetype, which venues,
+      which coins at any one time, and moving money around"). The paper run hardcodes `PAPER_RUN_SPEC_INDICES = (0, 6)`
+      (2 of 14 `CARRY_STAKED_BASIS` specs); the production catalogue ALREADY builds **468 specs / 30 archetypes**
       (`specs_for_archetype`) incl. the e2e archetypes: `CARRY_STAKED_BASIS` (14), `CARRY_BASIS_PERP` (144),
       `CARRY_FUNDING_DISPERSION` (52), `ARBITRAGE_PRICE_DISPERSION` (17), `CARRY_BASIS_DATED`, `CARRY_RECURSIVE_STAKED`,
-      `YIELD_*`, `DEFI_LP_*`. SUB-TASKS:
-      - P11.10a. Extract the e2e experiment's universe (archetypes × venues × coins × weights) from
-        `e2e-testing/scripts/defi/` (funding_reversion_*, funding_ensemble_engine, backtest_solana_basis,
-        funding_reversion_multivenue_capital) as the documented intent.
-      - P11.10b. Map e2e universe → catalogue specs (`specs_for_archetype`); add any missing venue/coin spec in the
-        right `catalog_*.py` (flexible archetypes — add the spec, do not fork the engine); canonical `@`-qualified ids.
-      - P11.10c. Wire `portfolio_allocator/archetypes*.py` into the paper run: replace hardcoded indices + 100k/75k
-        split with allocator-driven per-archetype weight + which venues/coins active per rebalance + capital deploy
-        (treasury→hot per P11.4, single client_id).
-      - P11.10d. Verify a multi-archetype run materialises strategy-keyed ledgers (P11.9) for ALL e2e strategies, ε=0
-        batch-rerun holds across the larger universe, UI groups/drills down by every strategy + archetype. Repo:
-        strategy-service (catalogue + allocator + paper_run) + e2e-testing (extraction) + verify CRA/UI.
-- [~] [CODE] P11.6-retry. **execution-service Layer-3 smart-fill entrypoint — CODE DONE + VERIFIED, ship-blocked on manifest version-lag** (execution-service@f7762018 + e2e-testing@6dd9845; 12/12 tests, exec_alpha artifact written; orchestrator to clear ratchet+manifest lag then ship). Prior:
-      server-rate-limited at 0 tokens; deliverable (execution-service smart-fill-replay → `execution_alpha` artifact +
-      e2e harness) stands. Re-dispatch.
+      `YIELD*_`, `DEFI*LP*_`. SUB-TASKS:     - P11.10a. Extract the e2e experiment's universe (archetypes × venues × coins × weights) from       `e2e-testing/scripts/defi/` (funding_reversion_*, funding_ensemble_engine, backtest_solana_basis,       funding_reversion_multivenue_capital) as the documented intent.     - P11.10b. Map e2e universe → catalogue specs (`specs*for_archetype`); add any missing venue/coin spec in the       right `catalog*_.py`(flexible archetypes — add the spec, do not fork the engine); canonical`@`-qualified ids.     - P11.10c. Wire `portfolio_allocator/archetypes_.py`
+      into the paper run: replace hardcoded indices + 100k/75k split with allocator-driven per-archetype weight + which
+      venues/coins active per rebalance + capital deploy (treasury→hot per P11.4, single client_id). - P11.10d. Verify a
+      multi-archetype run materialises strategy-keyed ledgers (P11.9) for ALL e2e strategies, ε=0 batch-rerun holds
+      across the larger universe, UI groups/drills down by every strategy + archetype. Repo: strategy-service
+      (catalogue + allocator + paper_run) + e2e-testing (extraction) + verify CRA/UI.
+- [~] [CODE] P11.6-retry. **execution-service Layer-3 smart-fill entrypoint — CODE DONE + VERIFIED, ship-blocked on
+  manifest version-lag** (execution-service@f7762018 + e2e-testing@6dd9845; 12/12 tests, exec_alpha artifact written;
+  orchestrator to clear ratchet+manifest lag then ship). Prior: server-rate-limited at 0 tokens; deliverable
+  (execution-service smart-fill-replay → `execution_alpha` artifact + e2e harness) stands. Re-dispatch.
 
 - [ ] [DATA] P2.11.11. **Backfill the DeFi feature groups so the non-staked-basis archetypes light up** — P11.10 wired
-      30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the
-      paper window: `perp_funding` (→ CARRY_BASIS_PERP 144, CARRY_FUNDING_DISPERSION 52), `dex_pool_state` (→
-      ARBITRAGE_PRICE_DISPERSION 17, DEFI_LP_* 9), `lst_rates` beyond Lido/Jito/Marinade, dated/recursive inputs. Only
-      `lending_rates` (Aave/Compound/Spark) is present → CARRY_STAKED_BASIS is the only data-drivable family today.
+      30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the paper
+      window: `perp_funding` (→ CARRY*BASIS_PERP 144, CARRY_FUNDING_DISPERSION 52), `dex_pool_state` (→
+      ARBITRAGE_PRICE_DISPERSION 17, DEFI_LP*_ 9), `lst_rates` beyond Lido/Jito/Marinade, dated/recursive inputs. Only
+      `lending_rates` (Aave/Compound/Spark) is present → CARRY*STAKED_BASIS is the only data-drivable family today.
       Backfill these feature groups for the firm-paper-determinism window (2026-05-16..22, then rolling) via the MTDS /
       features pipeline (data-pipeline-correctness HARD RULE — every venue × data_type × range, honest absence where a
-      venue genuinely lacks history). The e2e launch_*_vm.sh scripts name the sources (perp_funding / dex_pools /
+      venue genuinely lacks history). The e2e launch*_\_vm.sh scripts name the sources (perp_funding / dex_pools /
       lst_rates / lending_indices / gas_fees). Once the data lands, the SAME wired archetypes auto-populate — no code
       change. Repo: mtds / features-service / e2e-testing (sourcing); parent epic data/mtds master.
 
@@ -1778,3 +1779,33 @@ confirmation the short has no standalone edge; first DECISIVE one. **Action: RET
 R8 gate from earlier today made it less-catastrophic but the right answer is removal). **Deployable directional book =
 cs + h32 + ext + TS-momentum (no standalone short) + basis-to-capacity.** Scripts: `_short_2023_fix.py` /
 `_short_net_book.py`.
+
+### 2026-06-21 — cs/tsmom UNDERPERFORM THE 2-BAR: diagnosed + fixed (IS-chosen, no-lookahead, robust)
+
+Operator: "each strategy going in is supposed to be Sharpe 2 even with realistic fills" — then "make sure robust OOS +
+no lookahead". Per-leg audit (realistic maker, liquid-9): the legs HIT ~2-3 in the clean years (ext 2.7-3.1, h32 2.6
+in 2025) but the FULL walk-forward drags them (cs 0.75, h32 0.54, ext 1.39, tsmom 0.75) — the 2023 structural drought,
+NOT the fills (gross is also ~1 full). cs and tsmom are the genuinely weak ones. Dug in (`_cs_tsmom_audit.py` /
+`_honest_optimize.py`):
+
+- **cs was OVER-TRADING a noisy 15m next-bar signal (turnover ~1873x)**. Smoothing the ML book (EWMA span, trailing →
+  lookahead-free) DENOISES it — robust across EVERY span 3-40 (OOS 0.84→1.05-1.33; longer spans overfit IS so kept a
+  short denoise). **Wired span-7 into `build_strategies` (`bk.ewm(span=7).mean()`) → OOS 1.26 (from 0.84).** Proper fix
+  is a longer-horizon TARGET retrain in `_panel.py`; this is the easy 80%.
+- **tsmom's SHORT side was the whole drag** — LONG-ONLY beats long+short across ALL 18 sweep configs (mean OOS 1.48 vs
+  0.81). HONEST: the IS-chosen config (MA20 10/30 long-only) → **OOS 1.38** (my first pass cherry-picked the OOS-best
+  2.36 — overfit, corrected). Make tsmom long-only.
+- **DISCIPLINE (operator demand)**: every hyperparameter chosen on IS(2023-24), reported on OOS(2025-26) untouched; all
+  smoothers/signals are trailing+shifted (no lookahead); robustness shown by the whole-grid spread, not a tuned point.
+- **Result (honest)**: the DIVERSIFIED directional book = **full +2.26 / OOS +2.72 — CLEARS the 2-bar via
+  diversification** (legs individually 1.3-1.8; four near-uncorrelated legs combine above any one). + basis = +8.28.
+  2023 (−0.6) / 2026 (−1.1) still negative (drought/compression) — basis carries those. Plot `book_improved_*.png`.
+
+**Follow-up todos:**
+
+- [ ] [RESEARCH] P2. **Apply the cs denoise + tsmom-long-only to the production legs** — cs: `ewm(span≈7)` on the ML
+      book (or a longer-horizon target retrain in `_panel.py`); tsmom: ship LONG-ONLY (drop the short side). Both
+      IS-chosen, OOS-validated, lookahead-free. Repo: e2e-testing `scripts/paper_trading/` + strategy-service. Prov:
+      leg-quality audit 2026-06-21.
+- [ ] [RESEARCH] P3. **h32 is the next weak leg (0.54 full)** — give it the same denoise/horizon treatment (it's a
+      momentum leg; likely over-trading like cs). Repo: e2e-testing. Prov: leg-quality audit 2026-06-21.
