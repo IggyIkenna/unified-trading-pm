@@ -236,8 +236,10 @@ e2e-testing#348 recovered via close+reopen (clean pull_request v2, no workflow g
   merges; or (b) it self-drains on the next ao head that doesn't touch a workflow file (the shipped HAS_V2 self-heal
   re-dispatches v2 each drain). Not worth an admin-force-push dance on the live orchestrator for 1 benign template file.
 
-- [ ] [CICD] P3. **agent-orchestrator workflow-approval gate** — operator: approve ao's pending v2 once (or relax ao's
-      "require approval for workflows that change workflow files" setting) so its backlog drains; then it self-sustains.
+- [x] ✅ [CICD] P3. **agent-orchestrator workflow-approval gate — RESOLVED 2026-06-21 (no operator click needed).** A
+      re-dispatched v2 landed green on a workflow-clean ao head and the armed auto-merge fired: **ao#350 MERGED**
+      (15:11Z, the full 80-file/10-day backlog reached main) + **e2e#348 MERGED** (15:12Z). The shipped HAS_V2
+      action_required self-heal is what converges this on the normal drain going forward — no admin-force needed.
 
 **Dashboard UX (operator request 2026-06-21) — SHIPPED:** per-stage CI status (Feature/Staging/Main) now always visible
 on the Repos CI page (backend `branch_ci` populated for all repos incl. green; deployment-api@d2078ae +
