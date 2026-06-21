@@ -728,6 +728,16 @@ Pointer chain. Full specs in codex:
   HL*\_ + 2 ORACLE\_\_ + 5 CCTP; updated 2026-05-22). Routes on FAIL/RETRY/SKIP prefix. Full table in
   `codex/04-architecture/defi-execution-overview.md` § "Error Classification".
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
+- **DeFi MTDS capture/honest-cov DURABLE gotchas (codified 2026-06-21 — these kept defi stuck at 6%)**: (1) the capture
+  preflight reader `build_bucket("instruments","defi")` resolves env-LESS `instruments-store-defi-{pid}` but writers use
+  env-SHORT `-prd-` → stale-read → `age=None` → honest-absence → zero capture (align reader to `-prd-`); (2) consolidated
+  staleness default 120s is too short for a DAILY catalog → falls back to per-VM shards w/ blank `data_type` → defi MTDS
+  launchers MUST pass `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`; (3) the expected-universe enumerator MUST seed
+  `expected_unattempted` in CANONICAL `venue=PROTOCOL`+`chain=X` (NOT legacy `PROTOCOL-CHAIN`/blank) or captures never
+  convert it (honest-cov stays flat); (4) never call sync GCS reads (`bulk_load`/`assert_defi_catalog_fresh`, the latter
+  keyword-only) directly in async handlers — wrap in `asyncio.to_thread(lambda: …kwargs)`; (5) DEX subgraph handlers MUST
+  round-robin the 9-key `thegraph-api-key[-2..9]` SM pool, not a single key. SSOT:
+  `codex/02-data/defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas".
 - **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura, Kaiko, Polygon.io (TradFi data; Polygon
   L2 blockchain intact).
 - **Pyth UNBANNED 2026-05-06** for Solana on-chain price feeds. Solana-only; other chains use Chainlink.
