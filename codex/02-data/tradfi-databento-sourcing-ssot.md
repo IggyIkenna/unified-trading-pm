@@ -184,6 +184,44 @@ For `("tradfi","ohlcv_1m")` priority is `["massive","databento"]`, so EVERY 1m r
 `MASSIVE_INCAPABLE_VENUES` / `_route_massive` (venue-aware FUTURE/EQUITY). Re-stamp of historically-wrong CBOE cells:
 `plans/active/tradfi_databento_subscription_universe_lockdown_2026_06_18.md` § "Source-provenance write-stamp fix".
 
+## Operational gotchas — backfill launchers + live producers (codified 2026-06-21)
+
+Learned the hard way (a whole-fleet silent 0-row failure). The TradFi OHLCV **backfill launchers** in
+`deployment-service/scripts/vm/` MUST get three things right or every payload silently fails (rc=0/1, **0 rows
+captured**, manifest unmoved):
+
+1. **`VM_TASK=mtds-backfill` — NOT `cefi-backfill`.** Only `mtds-backfill` routes to the chunked MTDS-download branch in
+   `setup-data-pipeline-vm.sh` that builds the CLI + passes `--source`. `cefi-backfill` (a copy-paste in the old
+   `_tradfi-ohlcv-launcher-lib.sh` / `launch-tradfi-forward-poll.sh`) falls to the catch-all no-op → the download still
+   runs via a fallback but **without `--source`** → fails. Fixed fleet-wide ds@9aca3a5 + ds@47c56d7.
+2. **`VM_SOURCE` MUST be in the VM metadata AND `setup-data-pipeline-vm.sh` MUST forward it** as `--source $VM_SOURCE` in
+   the mtds-backfill `BASE_CLI` — the `TickDataHandler` raises `--source databento|massive is REQUIRED` for ANY tradfi
+   OHLCV download (provenance-ambiguous massive-vs-databento; no `SOURCE_PRIORITY[0]` default). Per the source model
+   above: `ohlcv_1m`→`massive` (canonical) **or** `databento` (operator free-switch; both serve 1m, dual-source);
+   `ohlcv_1s`→`databento` only. The GCS-hosted `setup-data-pipeline-vm.sh` is what the VM actually runs — re-upload it
+   after editing (a peer's `create-code-tarballs` re-upload can clobber an un-committed edit; commit to LDR so the next
+   tarball preserves it).
+3. **`ohlcv_1s` is FUTURES-only (CME + CBOE).** UAC `expected_coverage`: `CME:[trades,ohlcv_1s,ohlcv_1m,tbbo]`,
+   `CBOE:[ohlcv_15m,ohlcv_1s,ohlcv_1m]`, but **`NASDAQ:[ohlcv_1m]`, `NYSE:[ohlcv_1m]`** — equities (DBEQ.BASIC) have no
+   1s; the MTDS pre-flight drops it (`dropping data_types not supported per UAC: ['ohlcv_1s']`). So a 1s wave for
+   equity venues is a pure no-op; only launch 1s for CME/CBOE. The launcher lib default is `ohlcv_1m;ohlcv_1s`
+   (`OHLCV_DATA_TYPES` env override) — harmless for equities (pre-flight drops 1s, keeps 1m).
+4. **CME event contracts** (binary/event markets: `ECES/ECBTC/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ`, GLBX.MDP3 `.OPT`
+   parents, coverage from 2025-09-28) need BOTH the IS instruments backfill (`launch-tradfi-event-contract-backfill.sh`,
+   `--operation instruments`, no `--source`) AND MTDS OHLCV (pass the `EC*.OPT` parents as instrument-ids to a CME
+   OHLCV launch). Sparse/event-driven → low row counts are normal.
+5. **VM `end_date` must be ≤ yesterday** — Databento historical is T+1; requesting today returns
+   `DATA_NOT_AVAILABLE: is in the future` for the final day.
+
+**Live producer (`live_databento`, websocket) — known bugs as of 2026-06-21 (live-pipeline lane, NOT yet fixed):**
+the `databento_tradfi_ws` connector + `launch-mtds-live.sh` path has (a) `_get_api_key()` reading the raw Pydantic field
+`cfg.databento_api_key` (None unless `DATABENTO_API_KEY` env set) instead of resolving the `databento-api-key` **secret**
+like the batch adapter → logs `no API key — connection skipped`; (b) `live_source_for_venue(tradfi,…)` returning
+`SOURCE_PRIORITY[0]=massive` (a **batch-only** source — no live feed) → rows mis-stamp `live_massive`; the live source
+MUST be the first **LIVE-capable** source in the priority list (skip batch-only via `modes_for_source`) → `databento`;
+(c) instrument-ids need the `venue:type:underlying` form (`CME:FUTURES:ES`), not bare `ES`. Also: the live websocket needs
+the Databento **Real-Time/Live** subscription (separate from the historical 3-dataset sub) — confirm before relying on it.
+
 ## Related SSOTs
 
 - `codex/02-data/tradfi-data-types-catalog.md` — TradFi data_type catalog.

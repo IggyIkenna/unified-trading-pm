@@ -384,6 +384,17 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   `assert_batch_api_allowed` (raise = never billed silently). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` +
   `registry/databento_subscription_allowlist.py`; rollout
   `plans/active/tradfi_databento_subscription_universe_lockdown_2026_06_18.md`.
+  - **TradFi OHLCV backfill-launcher gotchas (silent-0-row class — codified 2026-06-21)**: the
+    `deployment-service/scripts/vm/launch-tradfi-bf-*` launchers MUST use `VM_TASK=mtds-backfill` (NOT `cefi-backfill` —
+    routes away from the `--source`-passing branch) + set `VM_SOURCE` in metadata + `setup-data-pipeline-vm.sh` MUST
+    forward `--source $VM_SOURCE` (the `TickDataHandler` RAISES `--source ... REQUIRED` for tradfi OHLCV → 0 rows at
+    rc=0/1 otherwise). `ohlcv_1s` is **FUTURES-only (CME/CBOE)** — equities `NASDAQ/NYSE=[ohlcv_1m]` (pre-flight drops
+    1s). End-date ≤ yesterday (Databento T+1). CME **event contracts** (`EC*` binary markets) need the IS instruments
+    backfill (`launch-tradfi-event-contract-backfill.sh`) + MTDS OHLCV of the `EC*.OPT` parents. **Live producer
+    (`live_databento`)** has 3 known bugs (`_get_api_key` reads the None field not the secret; `live_source_for_venue`
+    returns batch-only `massive` not live-capable `databento`; instrument-ids need `venue:type:underlying`) + needs the
+    Databento **Real-Time/Live** subscription. Full detail + code refs: `codex/02-data/tradfi-databento-sourcing-ssot.md`
+    § "Operational gotchas".
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms. **After a GCS path migration, large phantom counts are usually false positives** — verify
