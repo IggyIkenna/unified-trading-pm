@@ -283,12 +283,18 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       `dp-reprobe-empty` @ `0 9 * * *` UTC. **CAVEAT — the jobs do not RUN until the image gap below is closed** (no
       existing image bundles the e2e audit scripts; `var.dp_audit_image` defaults to the MTDS image which lacks
       `/app/e2e-testing/...`). — **deployment-service**
-- [ ] [INFRA] P1. **Build the e2e-audit container image** so the 4 `dp-audit` Cloud Run Jobs above actually run
-      `python3 /app/e2e-testing/scripts/audit/<script>.py`. Add `e2e-testing/Dockerfile` `FROM` the UTL base image (has
-      UTL+UAC+deps) + `COPY . /app/e2e-testing` + `e2e-testing/cloudbuild.yaml`; `gcloud builds submit` → publish to
-      Artifact Registry; set `var.dp_audit_image` default to it. (An agent began this but was cut off by a session limit
-      — verify nothing partial landed before redoing.) Provenance: `deployment-service@7b84146` IMAGE-GAP header. —
-      **e2e-testing, deployment-service**
+- [x] ✅ [INFRA] P1. **Build the e2e-audit container image** — DONE: Cloud Build `e3cd1017` SUCCESS →
+      `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/e2e-audit:latest` (digest
+      `sha256:13f3851206080fe8a38b3dc26a2d8ffdd178a5630b4b21c46bfc72d1b7877bf9`), `FROM` UTL base (DP\_\* events
+      present), `COPY . /app/e2e-testing`. **In-build smoke GREEN** — all 3 audits import+arg-parse inside the image.
+      The image is LIVE in Artifact Registry now. Source (`e2e-testing/Dockerfile`+`cloudbuild.yaml`) +
+      `var.dp_audit_image` default → on `origin/wip-preserve/e2e-audit-image-2026-06-22@48b23114` +
+      `origin/wip-preserve/dp-audit-image-var-2026-06-22@1d49f962`, quickmerge dirty-dep-blocked (live peer UAC +
+      strategy-service) → land both when deps clean. — **e2e-testing, deployment-service**
+- [ ] [INFRA] P2. **Apply the data-pipeline-audit terraform** (the crons run only once deployed): after the var-change
+      lands, targeted `terraform apply -target=...` the 4 `dp-audit` Cloud Run Jobs + 4 schedulers (NOT a blanket apply
+      of `terraform/gcp/` — drift risk). The `cf_manifest_audit` apply convention is the model. Until applied, the crons
+      exist in code + the image is ready, but the schedulers are not yet provisioned. — **deployment-service**
 - [x] ✅ P1. **Register `DP_DAILY_DIGEST` + `DP_HYGIENE_SUMMARY`** — DONE registry@PM 6e0ef283c + uac@63cb2bbd (DIGEST
       category + 2 INFO rules, parity test 40 rules green). Digest now ROUTES to #data-pipeline-alerts. UTL
       string-constants (cleanliness, non-routing) left on-disk in slot clone — see todo below.
