@@ -13,7 +13,7 @@ Usage:
 
 Environment:
   WORKSPACE_ROOT: path to workspace root (default: parent of this script's grandparent)
-  CODEX_PATH: path to unified-trading-codex (default: {WORKSPACE_ROOT}/unified-trading-codex)
+  CODEX_PATH: path to codex root (default: unified-trading-pm/codex/ derived from script location)
 """
 
 from __future__ import annotations
@@ -603,7 +603,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         dest="codex_path",
-        help="Path to unified-trading-codex (default: {workspace_root}/unified-trading-codex)",
+        help="Path to codex root (default: unified-trading-pm/codex/ derived from script location)",
     )
     return parser
 
@@ -613,11 +613,11 @@ def main() -> int:
     args = parser.parse_args(namespace=_ParsedArgs())
 
     workspace_root: Path = args.workspace_root if args.workspace_root is not None else _DEFAULT_WORKSPACE_ROOT
-    codex_path: Path = args.codex_path if args.codex_path is not None else (workspace_root / "unified-trading-codex")
+    codex_path: Path = args.codex_path if args.codex_path is not None else (_PM_ROOT / "codex")
 
     if not codex_path.exists():
         print(
-            f"WARNING: unified-trading-codex not found at {codex_path}. "
+            f"WARNING: codex not found at {codex_path}. "
             "Declared-state verification will fall back to plan file.",
             file=sys.stderr,
         )
