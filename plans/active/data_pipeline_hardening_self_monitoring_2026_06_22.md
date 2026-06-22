@@ -600,13 +600,15 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Reship + batch-heartbeat residual (tracked todos — 2026-06-22 reship run)
 
-- [ ] [CODE] P1. **Land the MTDS `TickDataHandler` batch-loop heartbeat** — `emit_pipeline_heartbeat` per completed date
-      in the generic CeFi/TradFi/multi-AG backfill loop (`market_tick_data_service/cli/handlers/tick_data_handler.py`,
-      `_emit_date_heartbeat`). Validated (basedpyright 0, ruff clean) + dirty in the slot clone; BLOCKED only on the
-      environmental semver version-alignment lag (PM-manifest `versions{}` LDR-behind-main; `--skip-version-alignment`
-      human-only). Ship via `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'` on
-      the next clean version-alignment window (rides the next MTDS tarball — batch backfills then emit heartbeat →
-      DP_VM_STALL/DP_VM_GONE_NO_CAPTURE on a hung/idle batch VM). — market-tick-data-service
+- [x] ✅ [CODE] P1. **Land the MTDS `TickDataHandler` batch-loop heartbeat** — DONE
+      **market-tick-data-service@e7177bd** (version-align cleared `aligned:True` → shipped via
+      `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'`; QG content-sentinel
+      verified byte-identical Pass-1 green, STAGE 0.4 FF-reconciled `26202e129→059df5f8a` cleanly, landed LDR). Adds
+      `_emit_date_heartbeat` + per-date `emit_pipeline_heartbeat` in the generic CeFi/TradFi/multi-AG backfill loop
+      (`process()` → after each `process_ticks` date completes; `rows_captured_cum` cross-check for
+      DP_VM_GONE_NO_CAPTURE; best-effort, never aborts the backfill — pattern mirrors the shipped
+      `onchain_perp_batch_handler` + IS `InstrumentsHandler@1a44cbf`). A hung/idle batch backfill date now trips
+      DP_VM_STALL fleet-wide once the tarball rebuilds. — market-tick-data-service
 - [ ] [INFRA] P1. **Reship sports-live + prediction-live producers on the hardened tarball** —
       `mtds-live-sports-odds-api` + `prediction-live-{polymarket,kalshi}-{trades,book-snapshot-5}` are still on the
       PRE-17:16 tarball (no keystone/heartbeat). Graceful drain/replace via `launch-mtds-live.sh` /
