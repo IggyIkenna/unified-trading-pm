@@ -351,6 +351,29 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       fleet launched yet. **Action**: operator decide whether to launch pyth-archive + pyth-lst now (free tier viable
       for backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service.
       **BLOCKED-OPERATOR-DECISION**.
+- [ ] [DATA] P1. **Manifest writer omits `asset_group` column on some shards → blank `asset_group` on CAPTURED rows
+      after consolidation (writer bug, NOT a migration)**. Canonical-form session-scoped audit 2026-06-22 (consolidated
+      `-prd-` `_index`, all 5 AGs, vs `written_at|attempted_at == 2026-06-22`): every OTHER canonical field on this
+      session's captured writes is GREEN — `schema_version=9` 100%, `pipeline_mode` 0-blank, `source` 0-blank, no glued
+      `PROTOCOL-CHAIN` venue. The ONE real defect: captured rows with `asset_group=None`. **defi 61,989** captured rows
+      (`swaps_ohlcv_{15s..1d}`, venues UNISWAP_V3/V4/V2/BALANCER/CURVE/…, `pipeline_mode=batch_onchain_subgraph`,
+      `source=onchain_subgraph`, `row_count>0` real data) — origin = the MDPS defi per-VM shard
+      `_index/per_vm/mdps-defi-2025-20260622-074035.parquet` which **has NO `asset_group` column at all** (its
+      `df.columns` lacks it), so on consolidation those rows merge as `asset_group=NaN`. **cefi 1,515** captured rows
+      (HYPERLIQUID `derivative_ticker`/`book_snapshot_5`, `batch_hyperliquid`) — same class from an earlier
+      in-session HL backfill shard; the FRESH cefi-hyperliquid shards (20:27Z) correctly stamp `asset_group=cefi`, so
+      cefi self-heals as new shards consolidate, defi does NOT (the column-less shard persists in `_index/per_vm/`).
+      **An index-only re-stamp is NON-DURABLE** — the live consolidator re-merges the column-less shard every tick and
+      re-blanks. **Durable fix = the writer**: MDPS swaps_ohlcv manifest-write path must emit the `asset_group` column
+      on the per-VM shard (`io/writer.py` passes `asset_group=self.asset_group` to its record calls — find the
+      swaps_ohlcv shard-write path that drops it; `app/adapters/defi/swap_adapter.py` +
+      `app/core/canonical_writer_shaping.py` are the candidates). After the writer fix lands + a fresh defi MDPS shard
+      consolidates, the blank-ag count drops to 0 (verify via the CF audit). If the operator wants the existing 61,989
+      rows fixed immediately rather than waiting for re-consolidation, a one-shot index re-stamp is safe ONLY paired
+      with the writer fix + after deleting/superseding the column-less `mdps-defi-2025-…` shard (else it re-blanks).
+      Repo: market-data-processing-service (writer) + market-tick-data-service (verify via
+      `market_tick_data_service/scripts/audit_canonical_form.py`). Provenance: canonical-form audit Progress Log
+      2026-06-22.
 
 ## Live/forward sports data-availability matrix + continuation gaps (2026-06-22)
 
@@ -592,6 +615,46 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
    to the empirical VALIDATED verdict, citing the observation sample size per source.
 
 ## Progress Log
+
+### 2026-06-22 (canonical-form session audit) — this session's backfills wrote CANONICAL data; one writer-bug residue (blank asset_group), NO migration needed
+
+Operator dispatch: backfills that ran THIS SESSION before the canonical fixes landed may have written NON-CANONICAL data
+— AUDIT (read-only, all AGs) then migrate only what's needed + safe.
+
+**STEP 1 — ASSESS (read-only, all 5 AGs).** Ran `market_tick_data_service/scripts/audit_canonical_form.py` (CF-1..CF-7)
+against each AG's CANONICAL consolidated `-prd-` `_index/availability_index.parquet` (all fresh, consolidator ran
+21:01–21:02Z; defi 4.06M / cefi 3.91M / tradfi 6.81M / sports 1.76M / prediction 142k rows). Then a **session-scoped**
+pass isolating rows with `written_at|attempted_at == 2026-06-22` (the session's writes) vs the legacy baseline.
+
+- **This session's CAPTURED writes are CANONICAL across the board.** `schema_version=9` = 100% of session writes in
+  EVERY AG (zero sub-v9); blank `pipeline_mode` = 0 captured; blank `source` = 0 captured; no glued `PROTOCOL-CHAIN`
+  venue in defi/tradfi/sports/prediction.
+- **CF-7 cefi `BINANCE-FUTURES`/`BYBIT-FUTURES`/… is a FALSE POSITIVE** — the audit's `_VENUE_CHAIN` regex
+  (`^[A-Z0-9_]+-[A-Z]+$`) is defi-shaped; cefi venues carry a CANONICAL market-type suffix
+  (`venue_constants.py:12 BINANCE_FUTURES="BINANCE-FUTURES"`). 27 session live rows under those venues are canonical. No
+  migration.
+- **The sub-v9 / blank-source / blank-pm counts the whole-corpus CF audit reports (cefi 131k sub-v9, defi/tradfi blank
+  pm/source, prediction 1,454 sub-v9) are PRE-EXISTING legacy** (the ongoing `*_manifest_canonicalisation` walk +
+  empty/expected_unattempted rows) — NONE are in this session's captured writes.
+- **The ONE genuine session-written defect — blank `asset_group` on captured rows** (filed as the new P1 todo above):
+  defi **61,989** (`swaps_ohlcv_*`, MDPS `batch_onchain_subgraph`) + cefi **1,515** (HYPERLIQUID `batch_hyperliquid`).
+  Root cause = a per-VM manifest shard written WITHOUT the `asset_group` column (defi: `mdps-defi-2025-20260622-074035`;
+  `df.columns` lacks `asset_group`) → consolidates as `asset_group=NaN`. Every other field on these rows is canonical +
+  `row_count>0` (real data).
+
+**STEP 2 — MIGRATE: deliberately NOT performed (it would be non-durable + unsafe).** (1) An index-only `asset_group`
+re-stamp is **transient** — the live consolidator re-merges the column-less per-VM shard every tick and re-blanks it; the
+durable fix is the WRITER (MDPS swaps_ohlcv shard must emit the `asset_group` column) → filed as a tracked code todo, not
+a data migration. (2) **Live/active writers are producing RIGHT NOW** — cefi per-VM shards timestamped 20:23Z/20:27Z +
+live mtds shards (mtime < minutes); per the mission's liveness rule I do NOT migrate actively-written defi/cefi cells.
+(3) cefi self-heals (fresh HL shards stamp `asset_group=cefi`); defi needs the writer fix then re-consolidation. No
+`_index` was mutated → no snapshot needed (read-only audit; zero collision with the live writers + the peer DeFi agent).
+
+**Conclusion (no over-claim):** this session's backfills did NOT write the bad-data classes the dispatch worried about
+(non-canonical venue / sub-v9 / blank source/pm / wrong-env bucket / glued paths) — those are all either pre-existing
+legacy or false positives. The single real residue is a blank-`asset_group` WRITER bug (73.5k captured rows, defi+cefi),
+which is a code fix (now tracked), not a safe/durable data migration. Audit scripts: `/tmp/session_scope_analyze.py` +
+`audit_canonical_form.py` (the latter is the committed CF tool).
 
 ### 2026-06-22 (autonomous, continuous-paper FINISH dispatch) — blocker #1 was a MISDIAGNOSIS; item A LANDED; B2 design locked
 
