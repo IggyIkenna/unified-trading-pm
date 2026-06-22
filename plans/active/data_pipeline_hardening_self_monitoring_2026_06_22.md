@@ -254,15 +254,23 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   `git show origin/wip-preserve/…:<path>` into a clean MTDS worktree off origin →
   `quickmerge --agent --files     'scripts/quality-gates.sh scripts/quality_gates/check_reader_writer_bucket_parity.py'`.
   — **market-tick-data-service**
-- [ ] [CODE] P1. **Fix the 8 C6 reader-bucket-env bugs** the parity check found (defi-domain — route to the
-      `data_completion_to_100_all_ag` / defi lane, which owns instruments-store-defi capture correctness): align each
-      env-LESS reader to the writer's env-short bucket via `resolve_bucket_name`. Sites:
-      `mtds/engine/orchestrator/__init__.py:445/447/449/451` (`_register_all_catalog_readers` — all 4 AG catalog
-      readers, F4 expected-universe path; verify whether `get_bucket_name` is env-aware first — possible partial
-      false-positive), `mtds/cli/handlers/_instruments_metadata.py:218/442/518`
-      (`build_bucket("instruments",…,asset_group="defi")` — the EXACT CLAUDE.md-documented defi-6% bug),
-      `mtds/live/websocket_runner.py:626` (peer-owned). Provenance: bucket-parity check `wip-preserve@32e8b6e` warn-only
-      output (ratchets to BLOCK once fixed). — **market-tick-data-service**
+- [~] [CODE] P1. **Fix the 8 C6 reader-bucket-env bugs** the parity check found — **7 of 8 SHIPPED on origin/LDR**
+      (`market-tick-data-service@fbac3a9`, swept in via the peer's keystone-threading quickmerge): all sites aligned to
+      `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (env-short `-prd-`, the IS writers'
+      bucket). DONE: `engine/orchestrator/__init__.py:445/447/449/451` (`_register_all_catalog_readers` — 4 AG catalog
+      readers, F4 expected-universe path; `get_bucket_name("instruments",ag)` was env-LESS Group-A `instruments-store-{ag}-{pid}`
+      → confirmed genuine bug, fixed) + `cli/handlers/_instruments_metadata.py:218/442/518` (3 defi reads — the EXACT
+      CLAUDE.md-documented defi-6% bug). Test `test_instruments_metadata_loader.py` updated to assert the env-short bucket
+      (the prior 2 assertions encoded the bug — diagnosed test-wrong-not-code-wrong). Live-probe verified:
+      `resolve_bucket_name(kind="instruments-store", asset_group="defi")` → `instruments-store-defi-prd-{pid}` (vs the OLD
+      env-less `instruments-store-defi-{pid}`). **8th site — `live/websocket_runner.py` `_read_is_parquet_sync` (`build_bucket("instruments",…)`)
+      — DEFERRED to the live MTDS-threading lane** (`data_completion_to_100_all_ag`): the file carries a large in-flight
+      `fetch_evidence`-threading refactor the peer is actively committing (fbac3a9/26202e1); a clean local QG sentinel is
+      also blocked by an environmental semver version-alignment lag (PM clone 11 behind origin/main; `--skip-version-alignment`
+      is human-only). Fix is fully prepared + validated (helper `_instruments_store_bucket(ag)` mirroring the prediction
+      reader; ruff/basedpyright-baseline/31-tests green; method ≤50L) — the threading lane lands it on its next clean window.
+      Parity check is **warn-only** so the 1 remaining site does NOT redden the fleet; flip to hard-block when the 8th lands.
+      Provenance: bucket-parity check `wip-preserve@32e8b6e`. — **market-tick-data-service**
 - [ ] [SCRIPT] P2. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
       present-set) from SKIP to real checks inside `cf_manifest_audit_all.py`. — **market-tick-data-service**
 - [ ] [SCRIPT] P2. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
@@ -547,6 +555,29 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   `scripts/migrate_onchain_perp_canonical_instrument_id.py` (one-off migration, 0 fetch_evidence). **Per-AG reprobe
   hooks / rate-events / heartbeat (the OTHER half of each per-AG dispatch item) remain the per-AG agents' job** — this
   run completed the keystone THREADING half only.
+- **2026-06-22 C6 READER-BUCKET-ENV FIXES (Phase 3, slot-6·human-planning, Opus 4.8)** — operator "fix pls" the 8 C6
+  reader-bucket-env bugs the new parity check surfaced (the defi-6% stale-read class). **Restored + RAN
+  `check_reader_writer_bucket_parity.py`** (from `wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622`) → confirmed
+  **8 violations**: `engine/orchestrator/__init__.py:445/447/449/451` (`get_bucket_name("instruments",ag)` ×4 catalog
+  readers, F4 path), `cli/handlers/_instruments_metadata.py:218/442/518` (`build_bucket("instruments",…,"defi")` ×3),
+  `live/websocket_runner.py` (`build_bucket("instruments",…)` ×1). Verified ALL 8 are genuine bugs (both env-less
+  resolvers yield `instruments-store-{ag}-{pid}` — NO `-prd-`; writers yield `instruments-store-{ag}-prd-{pid}`, live-probed).
+  **FIXED 7 of 8** → aligned to `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (the
+  already-shipped `_defi_manifest.py` pattern). Diagnosed `test_instruments_metadata_loader.py` asserting the OLD
+  env-less bucket = **test-wrong-not-code-wrong** → updated 4 assertions to env-short. **All 7 + the test fix LANDED on
+  `origin/live-defi-rollout@fbac3a9`** (swept in via the live peer's keystone-threading quickmerge — my 3 files were
+  clean in the shared workspace clone when the peer ran `quickmerge`; verified my exact comment signatures present on
+  origin: orchestrator C6 comment ×1, _instruments_metadata C6 comment ×3, test env-short ×4). **Parity check re-run vs
+  pushed origin = 1 violation (down from 8)** — only `websocket_runner.py:467` (peer-owned). **8th site DEFERRED to the
+  live MTDS-threading lane** (`data_completion_to_100_all_ag`): (a) the peer is actively committing that exact file
+  (fbac3a9→26202e1, mtime fresh), (b) a clean local QG sentinel is blocked by an environmental semver version-alignment
+  lag (PM clone 11 behind origin/main; one dep version drifted; `--skip-version-alignment` is human-only). The 8th fix is
+  fully PREPARED + validated (helper `_instruments_store_bucket(ag)` mirroring the prediction reader; ruff ✅ /
+  basedpyright == baseline 12 / 31 websocket tests ✅ / `_read_is_parquet_sync` ≤50L / import-patterns 0 / parity 0) —
+  the threading lane lands it on its next clean window. Parity check is **warn-only** so 1 remaining site does NOT redden
+  the fleet; flip to hard-block once the 8th lands. NOTE: the parity check + QG STEP 5.90/5.91 wiring (the `[~]` Wave-4b
+  row above) was being landed in parallel by a separate `_land_mtds_qg` agent (staged `scripts/quality-gates.sh` +
+  `check_reader_writer_bucket_parity.py`) — left to that agent's unit, not duplicated here.
 
 ---
 
