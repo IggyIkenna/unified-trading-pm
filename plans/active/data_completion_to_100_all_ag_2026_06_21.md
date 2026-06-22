@@ -283,6 +283,29 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 05:25 — overnight result: 3 sources OOM-crashed (e2-standard-2 too small); relaunched e2-standard-8
+
+Overnight the fleet drained 14→1 VM. Status by exit_code: weather/enrich×2/odds = exit 0 CLEAN (coverage genuine:
+FIXTURE_STATS 34% / EVENTS 31% / LINEUPS 30% / ODDS 26% / WEATHER 17% honest — rest empty_confirmed no-fixture dates +
+daily-cap unattempted). **Transfermarkt + FootyStats + SFI = exit 137 OOM** on e2-standard-2 (8GB too small for the
+fixtures-catalogue + per-fixture footprint — SAME root cause as the enrichment OOM earlier) → 0% captured, mass
+attempted_failed (TM 75929, SFI_LEAGUES 12769). **Relaunched all 3 on e2-standard-8** (tm/fs/sfi-...0524xx). SFI-
+progressive = exit 1 code bug (below).
+
+**Monitor blind spot (why no wake):** the fleet monitor only fired on a RUNNING-VM crash or RUN=0; the OOM'd VMs
+self-deleted (drain), read as healthy completion — it never checked exit_codes. New OOM/exit-aware monitor (bbrgg16qr)
+watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill monitors must check terminal exit_code
+(137=OOM / 1=err), not just RUNNING-count.
+
+- [ ] [DEPLOY] P1. Sports backfill launchers default MACHINE_TYPE=e2-standard-2 → OOMs for sports (catalogue+per-fixture
+  in RAM). Bump default to e2-standard-8 for openmeteo/transfermarkt/footystats/sfi/odds backfill launchers. Repo:
+  deployment-service (blocked by the same clone-residue as the odds-launcher todo).
+- [ ] [CODE] P1. features-sports-service SFI-progressive: `MissingFeatureFamilyError: feature_group=sfi_progressive
+  requires a sibling feature_family kwarg (UAC FeatureFamily enum)` — add the feature_family kwarg to the manifest
+  write in the sfi_progressive features path; rebuild tarball; relaunch features-sfi-progressive. Repo: features-sports.
+- [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
+  (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
+
 ### 2026-06-21 ~23:00 — DEPLOYED + VERIFIED: live_databento (prod-confirmed) + equity ohlcv_1s (capturing) + MDPS batching
 
 Operator said "do both" (live_databento deploy + MDPS batching) + fetch equity 1s. Executed all three end-to-end with
