@@ -80,11 +80,7 @@ schema. NOT spin-fixable by relaunching.
   the venue-source map. Polymarket live = free public Gamma REST poll (30s, no auth). **LAUNCHED**
   `mtds-live-prediction-polymarket-trades-20260621-155845` (10 high-volume active markets) → first-ever
   LIVE prediction rows (LIVE=0 across all AGs before this). Repo: deployment-service + market-tick-data-service.
-- [ ] [SCRIPT] P2. Expand the live producer instrument set (currently 10 high-vol Polymarket markets) to the
-  full IS-enumerated active universe + add a KALSHI live shard (`prediction:KALSHI:trades`, kalshi_ws). Repo:
-  deployment-service.
-
-
+- [x] ✅ [SCRIPT] P2. Live producer expanded to the FULL IS-enumerated active universe (WS-based) + all 4 prediction shards SHIPPED+LAUNCHED (mtds@b10c0fe runner `_resolve_is_universe` resolves the active universe from IS when `--instrument-ids` omitted, honest-absence via `record_zero_rows`; deployment@499a86c `launch-prediction-live.sh` + zombie-watchdog `prediction-live-` prefix LONG_LIVED_LIVE). **LAUNCHED 4 shards (2026-06-22, e2-standard-4, RUNNING)**: POLYMARKET×{trades,book_snapshot_5} + KALSHI×{trades,book_snapshot_5}, IS-resolved full universe, replacing the old 10-market limited producer. WS-subscription path → no per-request rate limit (sidesteps item 128). T+10/+20 verification armed. — 2026-06-22
 ### 2026-06-21 — ROOT GAP: Kalshi was never a registered canonical UAC source → registered it (batch=live)
 
 **Discovery (autonomous prediction-to-100% drive):** while wiring the bulk-seed converter's manifest emission, found
