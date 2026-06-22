@@ -662,6 +662,25 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   MET**: every live + batch producer is on hardened code (keystone hard-raise + per-date/per-window heartbeat) and the
   detect→route→Slack alert path is live off-the-bat. Both residual todos flipped; the data-pipeline-hardening reship is
   CLOSED.
+- **2026-06-22 TEE-FLUSH FIX + SPORTS RESHIP (slot·human-planning, Opus 4.8, /autonomous)** — operator close-ask: the
+  persisted GCS `run.log` FREEZES ~5 min after launch while the worker runs for HOURS, so the GCS-log-based watchers
+  (`dp-heartbeat-watcher` / `dp-exit-code-monitor` / stall-mtime) read a stale log. **ROOT CAUSE (confirmed, two
+  timestamps):** the bug is NOT a dying bash daemon — `vm-exec-with-gcs-tee.sh` delegates to the UTL
+  `HeartbeatDaemon`'s `LogUploader` thread (lives the VM's whole lifetime; never dies). The `LogUploader.upload_once()`
+  anti-churn gate (`deployment_scripts_bucket_softdelete_log_churn`, 2026-06-01) only re-uploaded after the log grew by
+  `min_growth_bytes` (256 KiB) — a PURE growth gate with NO time ceiling. A SLOW-but-live scraper (transfermarkt/
+  footystats: a few loglines/min) never accumulates 256 KiB → the GCS copy froze. PROOF: `tm-backfill-20260622-125650`
+  on-VM `/tmp/vm-exec-7122.log` @ **19:24:33 / 172,267 bytes (168 KiB)** actively fetching, but GCS `run.log` frozen at
+  **13:01:03 GMT — 6h23m stale** and only 168 KiB total after 6h (never crossed the 256 KiB re-upload threshold).
+  **FIX (UTL@13653f9f):** added `LogUploader.max_staleness_sec` (default 90s) — a CHANGED log (grew ≥1 byte OR mtime
+  advanced) is force-re-uploaded once the ceiling elapses even below `min_growth_bytes`; an IDLE log still skips (no
+  churn reintroduced; the soft-delete-churn fix preserved). Wired through `daemon.py` + deployment-service
+  `heartbeat_cli.py` + `DeploymentConfig.upload_max_staleness_sec` (env `UPLOAD_MAX_STALENESS_SEC=90`) +
+  `upload_interval_sec` lowered 120→60 (stat-check cadence so the ceiling fires on time). 3 UTL regression tests
+  (force-fresh-when-stale / idle-never-uploaded / disabled-staleness=pure-growth-gate) + a deployment-service ctor-wiring
+  guard. Shell header documents the freshness invariant + that the uploader never dies. Net: GCS run.log stays within
+  ~1-2 min of the on-VM log for the VM's whole lifetime. Reship of the 3 sports VMs on the fixed tarball + verification
+  below.
 - [x] ✅ [DATA] P0. **ROOT-CAUSED + FIXED — tradfi CME live captured 0 rows** (`market-tick-data-service@a808ae9` + test
       fix). The databento WS authenticated + subscribed but **never streamed**: `databento_tradfi_ws.py` gated
       `live.start()` behind `if not live.is_connected:` — but `subscribe()` already connects, so `is_connected` is True
@@ -954,6 +973,18 @@ dispatch prompts.
       `send_data_pipeline_alert` + `_mirror_to_data_pipeline_slack` thread base+log_bucket; tests block-network)
 - [ ] [CODE] P2. deployment-service exit_code monitor: add `run_log_tail` (last N lines of RUN_LOG_BLOB) to the finding
       `details` for the inline trace. — deployment-service
+- [ ] [CODE] P0. **Fix the GCS run.log freshness freeze (tee-flush lag) — the GCS-log watchers' substrate.** The UTL
+      `LogUploader` (`unified_trading_library/lifecycle/uploader.py`, the GCS uploader thread inside `HeartbeatDaemon`
+      that `vm-exec-with-gcs-tee.sh` launches) only re-uploaded a VM run.log after it grew by `min_growth_bytes`
+      (256 KiB) — a pure anti-churn gate with NO time ceiling. A SLOW-but-live log (low-volume scraper) never
+      accumulates 256 KiB → the GCS `run.log` FROZE for hours while the on-VM `/tmp/vm-exec-*.log` advanced, blinding
+      `dp-heartbeat-watcher` / `dp-exit-code-monitor` / the stall-mtime monitor (CONFIRMED: `tm-backfill-20260622-125650`
+      on-VM log @19:24 / 168 KiB but GCS run.log frozen @13:01 — 6h23m stale). FIX: add `max_staleness_sec` (default 90s)
+      — a CHANGED log (grew ≥1 byte OR mtime advanced) is force-re-uploaded once the ceiling elapses even below the
+      growth threshold; an idle log still skips (no churn reintroduced). Wire through UTL `daemon.py` +
+      deployment-service `heartbeat_cli.py` + `DeploymentConfig.upload_max_staleness_sec` (env `UPLOAD_MAX_STALENESS_SEC`)
+      + lower `upload_interval_sec` 120→60 so the ceiling fires on time. Regression tests in UTL `test_uploader.py` +
+      deployment-service `test_vm_event_emission.py`. — unified-trading-library, deployment-service
 
 ### Self-healing completion (C — wire tiers to existing recovery, add actuators)
 
