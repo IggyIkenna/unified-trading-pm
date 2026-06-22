@@ -938,3 +938,16 @@ genuine pre-genesis/pre-launch honest absence (correct denominator). **5 durable
 codex `defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas" (pm@d752c584c). Durable build_bucket
 env-less→-prd- reader-align dispatched (replacing the stop-gap index-copy). Batch fan-out still capturing (drive monitor
 bdnexk0ku).
+
+### 2026-06-22 05:25 — DEFI status + gas-fees MANTLE BLOCKED-CREDENTIALS
+~8h run: honest-cov 6.0%→11.3% (captured 448k); 24 VMs still capturing (19 drained); LIVE rows still 0 → forward-poll
+relaunched `defi-fwd-20260622-052323` on the pipeline_mode-fixed tarball (mtds@2c5e2b5 deployed) → expect live_onchain_subgraph
+rows ~10min (monitor b2vo0rlas verifying). **Wake-failure post-mortem:** the prior drive-orchestrator used
+`while pgrep -f create-code-tarballs` — its OWN argv contained that string → pgrep self-matched → infinite hang ~8h, never
+woke (the documented self-match foot-gun; new monitor uses gcloud/gsutil only). Batch VMs ran independently throughout.
+- [ ] [DATA] P1 BLOCKED-CREDENTIALS. **gas-fees MANTLE paid RPC.** gas-fees on MANTLE uses the FREE public RPC
+  (mantle.xyz) which 429-rate-limits `eth_feeHistory` (hundreds of `HTTP 429 retry N/12`); each MANTLE day takes ~10-15min
+  vs ~2-3min → gas-fees is the batch long-pole (~1.5M blocks/yr on MANTLE). NOT hung, NOT a code bug — public-RPC throttle.
+  Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then gas-fees completes slowly.
+  Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config). Ping filed.
+
