@@ -65,21 +65,8 @@ Connector yields ticks correctly (verified: _poll_one_cycle -> _parse_market_res
 runner's tick->candle aggregator produces 0-row candles because the tick shape doesn't fit the data_type
 schema. NOT spin-fixable by relaunching.
 
-- [x] ✅ [DESIGN] P2. **Polymarket live book = `book_snapshot_5` via the public CLOB order book** (operator decision 2026-06-22 — NOT heavy design): the Gamma poll only gives top-of-book, BUT `clob.polymarket.com/book?token_id=<T>` returns the FULL depth ladder PUBLIC + NO AUTH (verified 2026-06-22: live bids 0.01/0.02/0.03/0.04/… w/ sizes). Decision = option (c)+canonical: take top-5 levels → emit `book_snapshot_5` (the exact cefi-canonical name, NO new data_type) — batch via REST `/book`, live via CLOB market WS `wss://ws-subscriptions-clob.polymarket.com/ws/`. Build = a Polymarket CLOB orderbook connector (depth) + runner tick→candle for book_snapshot_5 so live captures row_count>0. This also resolves the prediction side of item 75. Repo: market-tick-data-service (live/connectors + runner/sink). — BUILDING (sub-agent)
-- [ ] [DESIGN] P2. **UAC naming: SOURCE_PRIORITY uses `book_snapshot` but DataType enum uses `book_snapshot_5`**.
-  DIAGNOSED 2026-06-21 (grep-then-read, NOT a safe blind rename): canonical = **`book_snapshot_5`**
-  (`candle_schema.py` StrEnum `BOOK_SNAPSHOT_5='book_snapshot_5'` + `data_type_capability.py:61` comment
-  'book_snapshot_5 (NOT book_snapshot)' + `contracts.py` keys `(cefi,perpetual,book_snapshot_5)` + nautilus/tardis
-  schemas + 865 fleet uses). The bare `book_snapshot` (33 UAC uses) is the stale mismatch in SOURCE_PRIORITY
-  (`_source_priority_data.py` 83/299), availability_semantics (98/220), required_inputs, schema_spec (301/442),
-  CONTRACT_REGISTRY (555). **NOT a blind rename** — two reasons: (1) cross-AG blast radius (cefi `(cefi,book_snapshot)`
-  is the cefi lane's live-book domain — aligning it could fix OR break their live capture depending on what their
-  MTDS handler emits; needs a cefi-handler audit first); (2) **ENTANGLED with item 69** — prediction order books are
-  TOP-OF-BOOK (1-level quote), likely NOT the cefi 5-level `book_snapshot_5`, so prediction's canonical name depends
-  on the item-69 quote-schema decision (could be `book_snapshot`/`prediction_quote`, NOT `book_snapshot_5`). Safe path:
-  decide 69 first → then reconcile cefi→`book_snapshot_5` + prediction→(69's choice) in ONE phased breaking change
-  with a fleet consumer pre-audit + tests. No current PREDICTION data impact (prediction book capture is the 69 empty
-  design-gap). Repo: unified-api-contracts.
+- [x] ✅ [DESIGN] P2. **Polymarket live book = `book_snapshot_5` via the public CLOB order book** (operator decision 2026-06-22 — NOT heavy design): the Gamma poll only gives top-of-book, BUT `clob.polymarket.com/book?token_id=<T>` returns the FULL depth ladder PUBLIC + NO AUTH (verified 2026-06-22: live bids 0.01/0.02/0.03/0.04/… w/ sizes). Decision = option (c)+canonical: take top-5 levels → emit `book_snapshot_5` (the exact cefi-canonical name, NO new data_type) — batch via REST `/book`, live via CLOB market WS `wss://ws-subscriptions-clob.polymarket.com/ws/`. Build = a Polymarket CLOB orderbook connector (depth) + runner tick→candle for book_snapshot_5 so live captures row_count>0. This also resolves the prediction side of item 75. Repo: market-tick-data-service (live/connectors + runner/sink). — mtds@26297e4 + uac@fb3b6999 | QG: mtds PASSED + uac PASSED — 2026-06-22
+- [x] ✅ [DESIGN] P2. **UAC naming: SOURCE_PRIORITY uses `book_snapshot` but DataType enum uses `book_snapshot_5`** — FIXED (prediction-side only; cefi untouched per item 75-cefi scope): renamed prediction `book_snapshot` → `book_snapshot_5` in `_source_priority_data.py`, `availability_semantics.py`, `_sports_prediction_contracts.py`, `required_inputs.py`, 4 test files + added `test_live_pipeline_mode_for_prediction_polymarket_book_snapshot_5`. cefi `(cefi, book_snapshot)` entries deliberately preserved pending a separate cefi-handler audit (item 75-cefi). uac@fb3b6999 — 2026-06-22
 
 
 ### 2026-06-21 (PM-2) — LIVE prediction LAUNCHED (free Gamma poll) + Kalshi seed running
