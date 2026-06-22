@@ -1481,6 +1481,55 @@ owning plan + the plan body's todo carries the closure status. When Phase 2.A fl
 `record_empty(...)`, this paragraph is reduced to a one-line "Fixed at writegate Phase 2.A @<commit-sha>" historical
 note.
 
+### 6a. Proof-of-honest-absence contract (`FetchEvidence` gate — operator decision 2026-06-22)
+
+> The writer already rejects a _blank_ reason (`LegacyBlankErrorReasonError`, after the 2026-05-07 RED ALERT). The
+> remaining gap this closes: `record_empty(reason=SOURCE_RETURNED_ZERO)` was taken on **trust** — nothing proved the
+> HTTP call returned 200+empty rather than a 401/403/429/5xx/timeout/exception that fell through to honest absence. This
+> made it possible for an adapter to run for hours, mark everything `empty_confirmed`, when the data could have been
+> fetched with a code fix (failure-class C1, the operator's #1). Honest absence is now a **proven** state, not a claimed
+> one.
+
+**The rule (HARD, runtime-enforced — `utl@39f8ec85`).** A `record_empty(...)` / `record_zero_rows(...)` call that stamps
+`reason=SOURCE_RETURNED_ZERO` MUST pass a `fetch_evidence: FetchEvidence` that **`proves_honest_absence()`**, or the UTL
+`ManifestWriter` HARD-RAISES `UnprovenHonestAbsenceError` (and emits `DP_UNPROVEN_HONEST_ABSENCE` CRITICAL). A
+`FetchEvidence` proves honest absence iff **all** of:
+
+- `http_status` is 2xx, **and**
+- `response_received is True`, **and**
+- `rows_in_response == 0`, **and**
+- `error_signal == ""` (no disqualifying signal).
+
+`FetchEvidence` is a UAC value-object (`unified_api_contracts.canonical.crosscutting`):
+`{http_status:int, response_received:bool, rows_in_response:int, source, endpoint, attempted_at, error_signal:str}`.
+
+**Disqualifying signals (`FetchErrorSignal`, closed set — any present ⇒ NOT honest absence ⇒ `record_failed`).** The 10
+members are `HTTP_NON_2XX`, `AUTH_401`, `AUTH_403`, `RATE_LIMITED_429`, `SERVER_5XX`, `TIMEOUT`, `CONNECT_ERROR`,
+`ADAPTER_EXCEPTION`, `MISSING_CREDENTIAL`, `SOURCE_UNREACHABLE` (UAC `DISQUALIFYING_FETCH_SIGNALS`). Any of these means
+the source was never proven empty — the shard routes to `attempted_failed` via `record_failed`, never `empty_confirmed`.
+This subsumes the prior "401 ≠ honest absence" rule
+([`honest-absence-downstream-handling.md` § "401 ≠ honest absence"](honest-absence-downstream-handling.md)) into a
+single structural gate covering every error class, not just 401.
+
+**`EXPECTED_*` calendar reasons are EXEMPT.** A delisted / not-yet-listed / calendar-closed shard
+(`EXPECTED_INSTRUMENT_DELISTED`, `EXPECTED_INSTRUMENT_NOT_LISTED`, etc.) needs no evidence — no fetch was attempted, so
+the gate does not apply.
+
+**How the evidence is threaded.** At each adapter's HTTP site (the existing `classify_venue_error()` call), build a
+`FetchEvidence` from the actual response and pass it to `record_empty`/`record_zero_rows`. An error branch that
+previously fell through to `SOURCE_RETURNED_ZERO` now sets the matching `FetchErrorSignal` → routes to `record_failed`.
+The per-AG adapter threading is tracked in
+[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](../../plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+(Phase 1, per-AG dispatch). Until an adapter is threaded it raises at runtime — that break is intentional (operator
+2026-06-22): it is the mechanism that stops the "ran for hours, marked everything empty, just needed a code fix" class.
+
+**Commit-time twin (static ratchet).** PM QG **STEP 5.99**
+(`scripts/quality_gates/check_source_returned_zero_needs_fetch_evidence.py`, baselined grind-down) catches the same
+shape at commit time: a `record_empty/record_zero_rows(...SOURCE_RETURNED_ZERO...)` call **reachable from an `except`
+branch** that lacks `fetch_evidence=` fails the gate with a precise `file:line` — so an adapter never re-regresses to a
+runtime crash on a VM. (The companion **STEP 5.86** ratchets raw `record_empty(SOURCE_RETURNED_ZERO)` toward
+`record_zero_rows` routing; 5.99 layers the evidence requirement on top.)
+
 ### 7. Per-VM shard isolation for concurrent backfills (workspace rule, codified 2026-05-06)
 
 Every multi-worker backfill (multiple chunk processes locally OR multiple GCE VMs writing to the same manifest) MUST set

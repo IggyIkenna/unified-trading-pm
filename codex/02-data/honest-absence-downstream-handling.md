@@ -364,6 +364,59 @@ pending-download situation, not as an honest absence:
 | Transient vendor error (5xx, timeout) | `attempted_failed` | `CLASSIFIED_VENUE_ERROR`         | Retry-eligible                                    |
 | Source returned zero rows (no error)  | `empty_confirmed`  | `SOURCE_RETURNED_ZERO`           | Source truth — data does not exist for this shard |
 
+> **The last row is now PROVEN, not trusted (2026-06-22).** A `SOURCE_RETURNED_ZERO` write requires a `FetchEvidence`
+> that proves HTTP 2xx + response_received + 0 rows + no `error_signal`, or UTL's `ManifestWriter` HARD-RAISES
+> `UnprovenHonestAbsenceError`. The "no error" qualifier is enforced by the closed `FetchErrorSignal` disqualifying set,
+> not by adapter convention. Full contract:
+> [`availability-manifest-and-data-status.md` § "Proof-of-honest-absence contract"](availability-manifest-and-data-status.md).
+
+## Daily re-probe of new `empty_confirmed` cells + escalation flow (2026-06-22)
+
+The `FetchEvidence` writer gate (above) makes a misclassified empty impossible to **commit**. The daily re-probe is the
+second line of defence — it catches an `empty_confirmed` that was _committed honestly_ (real 2xx + 0 rows at the time)
+but where the source actually **does** have data the oracle expected (a too-narrow coverage window, a transient upstream
+gap that later filled, a wrong genesis/launch date). It closes the loop within a day instead of waiting for a periodic
+audit.
+
+**Mechanism** — `e2e-testing/scripts/audit/reprobe_new_empty_confirmed.py` (cron `0 9 * * *` UTC, read-only over the
+availability index, credential-free selector core):
+
+1. **Select** today's newly-written `empty_confirmed` rows whose `error_reason == SOURCE_RETURNED_ZERO`, per
+   asset_group, from the availability index (`available_at` on today).
+2. **Cross-check the UAC coverage oracle** (`expected_coverage()` / `was_instrument_alive(venue, instrument_id, day)`):
+   does the oracle say this cell `SHOULD_HAVE_DATA` for that day?
+3. **Optionally live re-fetch** via the per-AG hook (extension point below): does a fresh fetch return rows now?
+4. **Emit `DP_EMPTY_REPROBE_DISAGREEMENT` (WARN)** to `#data-pipeline-alerts` when the oracle disagrees
+   (`SHOULD_HAVE_DATA` for a cell stamped empty) OR a wired re-fetch returns rows — either signal means the empty was
+   likely a bug.
+5. **Ambiguous verdict → Phase-5 issue file.** When the disagreement is non-deterministic to classify (oracle says
+   should-have-data but a re-fetch also returns 0, or the coverage map itself is suspect), the deterministic script
+   writes a candidate CSV to `plans/audit/results/<slug>_<date>.csv` and auto-files
+   `plans/active/issues/<slug>_<date>.md` (standard `title`/`created`/`author`/`source`/`locked_by` frontmatter +
+   `## What I found` / `## Why it matters` / `## Recommended decision`) for a planning-VM slot to adjudicate. This is
+   the scripted→LLM escalation hop.
+
+**Per-AG live re-FETCH is a clean extension point** — the cross-cutting selector / oracle / emit is shipped; each
+asset_group plugs in its own re-fetch by registering a hook:
+
+```python
+register_reprobe_hook("<ag>", reprobe_source)
+# where:
+#   reprobe_source(asset_group, venue, data_type, day) -> ReprobeResult(
+#       reached_source: bool, rows_returned: int, detail: str)
+```
+
+The per-adapter HTTP / auth wiring lives in the per-AG agent's repo (`reprobe_source(...)`); the selector, oracle
+cross-check, `DP_EMPTY_REPROBE_DISAGREEMENT` emission, and issue-file are the shared cross-cutting code. Without a
+registered hook the re-probe still runs the oracle cross-check (steps 1-2, 4-5) — the live re-fetch (step 3) is the
+opt-in refinement.
+
+**Event family.** `DP_EMPTY_REPROBE_DISAGREEMENT` is a WARN-tier `DP_*` event routed to `#data-pipeline-alerts`
+(registry class `DP-FETCH-006`). Full alert taxonomy + routing:
+[`codex/05-infrastructure/data-pipeline-alerts.md`](../05-infrastructure/data-pipeline-alerts.md). Plan SSOT:
+[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](../../plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+Phase 1 (keystone) + Phase 5 (escalation hop).
+
 ---
 
 ## §6A honest-absence-violation classes (anti-patterns — codified 2026-05-27)
