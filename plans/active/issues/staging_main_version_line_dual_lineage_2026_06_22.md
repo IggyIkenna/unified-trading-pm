@@ -190,6 +190,44 @@ that today dispatches `conflict-resolution-agent`). Inject the auto-resolve **be
   version-only conflicts; `staging→main` PRs stop recurring `dirty`. Update `codex/08-workflows/ci-cd-flow.md` to record
   the single-writer / version-line-auto-resolve invariant.
 
+## Durability hardening (2026-06-22 #2 — "fix it properly, don't drain the repos every time")
+
+The initial cure-B injection (above) landed at **one** spot — the `mergeable_state == "dirty"` branch of the promoter,
+which is reached **only when `gh pr create` no-ops because a staging→main PR already exists**. First-hand re-audit
+(2026-06-22, fleet 22/25 behind, T0 `unified-trading-library` head-of-line-blocked) showed the promoter had **two
+divergent merge paths and cure B was in only one of them**:
+
+- **New-PR path** (`gh pr create` succeeds → `PR_URL` set): blind-armed `gh pr merge --auto --rebase` and counted the
+  repo **PROMOTED without ever reading `mergeable_state`**. So a version-line conflict on a **freshly-created** PR was
+  (a) **never auto-resolved on the run it was born** — it had to survive to a *later* run (hours; GitHub throttles the
+  `*/15` schedule to ~2 h under load) before the existing-PR branch (and thus cure B) ever saw it; and (b) **falsely
+  recorded as promoted** → manifest-vs-reality skew + the per-repo `main…staging` compare re-attempting forever.
+- **Existing-PR path**: the only branch that polled `mergeable_state` and ran cure B.
+
+This is *why the drain kept needing a manual kick* even with cure B "shipped": the version conflict was real and the
+resolver worked (proven: utl base `0.29.0` / main `0.31.0` / staging `0.35.0` → driver resolves `0.35.0`, exit 0, zero
+markers), but the conflict simply **wasn't routed to cure B on the run it appeared**.
+
+**The durable fix (PM@`staging-to-main.yml`):** collapse the two paths into **one unified merge path** —
+`gh pr create` (idempotent no-op if open) → resolve the open PR number (new **or** pre-existing) → **poll
+`mergeable_state` for both** → `dirty` ⇒ cure B (same-run); anything else ⇒ arm `--auto --rebase`. Net effects:
+
+1. Cure B fires **proactively, same-run**, for **every** conflicting promote — the multi-run / multi-hour latency is
+   gone.
+2. No more false-positive PROMOTED on a born-dirty PR.
+3. A reliable same-run staging→main means the **Class-D `staging-conflict-ldr-main-fallback` (LDR→main) rarely fires**
+   → the *other* writer lineage stops re-seeding the conflict (the treadmill's second half shrinks).
+
+Genuine (non-version) conflicts + any resolver error **still escalate** to `conflict-resolution-agent` exactly as before
+(AO escalators own those — explicit operator scope 2026-06-22). Kill-switch `CURE_B_VERSION_AUTORESOLVE=false`
+unchanged. Validated: `bash -n` clean on all 5 promote run-blocks; YAML parses.
+
+**Remaining lever (documented, not yet shipped — cadence, not correctness):** the `*/15` schedule is GitHub-throttled to
+~2 h, so a conflict that forms just after a run is *visible as "behind"* until the next run even though it will
+auto-resolve. Tightening this needs an **event-driven trigger** (e.g. `ldr-to-staging-promote` / `semver-agent`
+dispatching the promote when it lands content on staging), which the workflow's existing readiness/SIT gates make safe.
+Tracked as a follow-up todo; the correctness fix above is independent of it.
+
 ## Defense-in-depth (independent of the cure — low-risk, ship-able now)
 
 Neither `conflict-resolution-agent` nor the Class-D fallback alerts on **its own** failure; `promotion-lag-monitor`
