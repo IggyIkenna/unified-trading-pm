@@ -1069,7 +1069,7 @@ for g in ${CLOUD_SDK_EXCLUDE_GLOBS[@]+"${CLOUD_SDK_EXCLUDE_GLOBS[@]}"}; do _csdk
 DIRECT_CLOUD=$(codex_rg 'from google\.cloud import|^import boto3\b|^from boto3 import|^from botocore import' \
     --type py "${_csdk_extra[@]}" "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ | grep -v '\.venv' | grep -v '# noqa: cloud-sdk-direct' || :)
 [[ -n "$DIRECT_CLOUD" ]] && {
-    log_fail "Direct cloud SDK imports found (route through unified-cloud-interface instead):"
+    log_fail "Direct cloud SDK imports found (route through unified_trading_library.cloud_interface — use get_storage_client()/get_secret_client()):"
     echo "$DIRECT_CLOUD" | head -5
     V=$(( V + 1 ))
 } || log_success "No direct cloud SDK imports"
@@ -1443,7 +1443,7 @@ PROTOCOL_VIOLATIONS=$(codex_rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigqu
     "${HARDCODED_PROTO_EXCLUDE_GLOBS[@]}" \
     -l . 2>/dev/null || :)
 if [ -n "$PROTOCOL_VIOLATIONS" ]; then
-    log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UCI instead:"
+    log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UTL instead:"
     echo "$PROTOCOL_VIOLATIONS"
     V=$(( V + 1 ))
 else
@@ -1471,24 +1471,23 @@ else
 fi
 
 # ============================================================
-# STEP 5.12b — §12 No hardcoded gs:// or s3:// URIs outside unified-cloud-interface
+# STEP 5.12b — §12 No hardcoded gs:// or s3:// URIs outside unified_trading_library.cloud_interface
 # ============================================================
 GCS_URI_VIOLATIONS=$(codex_rg '"gs://|"s3://' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!**/tests/**' --glob '!**/scripts/**' \
-    --glob '!**/unified-cloud-interface/**' \
     -l "$SOURCE_DIR" 2>/dev/null \
     | xargs -I{} grep -l '"gs://\|"s3://' {} 2>/dev/null \
     | xargs grep -n '"gs://\|"s3://' 2>/dev/null \
     | grep -v '# noqa: gs-uri' \
     || :)
 if [ -n "$GCS_URI_VIOLATIONS" ]; then
-    log_fail "STEP 5.12b: Hardcoded cloud URIs found (use UCI StorageClient — download_bytes/upload_bytes/list_blobs):"
+    log_fail "STEP 5.12b: Hardcoded cloud URIs found (use get_storage_client() from unified_trading_library.cloud_interface):"
     echo "$GCS_URI_VIOLATIONS" | head -10
     V=$(( V + 1 ))
 else
-    log_success "STEP 5.12b: No hardcoded gs:// or s3:// URIs outside UCI"
+    log_success "STEP 5.12b: No hardcoded gs:// or s3:// URIs outside UTL cloud_interface"
 fi
 
 # STEP 5.13 — Schema placement advisory (cross-repo contract check)

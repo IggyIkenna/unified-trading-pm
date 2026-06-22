@@ -507,7 +507,7 @@ if [[ "$PACKAGE_NAME" != "unified-config-interface" ]]; then
         | grep -v "# noqa:.*qg-os-environ\|# noqa: qg-os-environ\|# config-bootstrap:" || :)
     [[ -n "$_OSENV" ]] && { log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"; echo "$_OSENV" | head -3; V=$(( V + 1 )); } || log_success "No os.getenv()/os.environ"
 else
-    log_success "os.getenv/bootstrap — UCI is config layer (bypass §2.4)"
+    log_success "os.getenv/bootstrap — UTL cloud_interface is config layer (bypass §2.4)"
 fi
 
 codex_rg 'os\.getenv\s*\([^)]+,\s*""\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
@@ -757,7 +757,7 @@ else
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' -l . 2>/dev/null || :)
 fi
 [[ -n "$PROTOCOL_VIOLATIONS" ]] && {
-    log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UCI instead:"
+    log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UTL instead:"
     echo "$PROTOCOL_VIOLATIONS"
     V=$(( V + 1 ))
 } || log_success "STEP 5.11: No protocol-specific symbols in library code"
