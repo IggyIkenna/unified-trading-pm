@@ -1309,7 +1309,13 @@
         "cross-domain",
         "trading",
         "standard"
-      ]
+      ],
+      "codebase_health": {
+        "coverage_pct": 50.88,
+        "qg_red_reason": null,
+        "large_file_count": 32,
+        "warn_file_count": 39
+      }
     },
     "deployment-ui": {
       "auto_build_on_quickmerge": true,
