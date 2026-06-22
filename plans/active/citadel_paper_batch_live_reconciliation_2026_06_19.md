@@ -736,6 +736,11 @@ are identified (2) and the ledger exists (3).
       ×√365. Source = the daily BTC mark from the perp-funding corpus (`perp_daily_ctx`) the providers already read.
       batch=live one path. Repo: features-service (+ resolve_bucket_name SSOT / UTC). This is the CRITICAL-PATH gate for
       a non-null CTA paper run.
+      **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@653cf158.** `btc_trailing_return_{1,3,6,12}m` + `btc_realized_vol`
+      added to delta_one's `returns` calculator + `registry_specs.yaml` (no-lookahead trailing windows, NaN until filled),
+      `test_returns` unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the
+      delta_one feature corpus** so these columns exist in GCS for the live paper run (a features-service backfill —
+      shared with the P2.11.18 reversion-feature corpus recompute; run both together).
 - [ ] [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui** — `lib/architecture-v2/
       enums.ts` (`StrategyArchetype` union + `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY`) + regen `lib/registry/
       ui-reference-data.json` via `unified-api-contracts/scripts/generate_ui_reference_data.py` + bump
