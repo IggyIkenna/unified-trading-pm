@@ -261,8 +261,8 @@ are identified (2) and the ledger exists (3).
       `await post_recon_alert(report, alerting_service_url=cfg.alerting_service_url, channel=cfg.recon_alert_channel)`.
       `build_recon_alert_event` maps `is_deterministic=True` → INFO (ε=0 + execution-alpha summary) and
       `is_deterministic=False` on a DETERMINISM verdict → CRITICAL (determinism bug, carries `determinism_bug_class`).
-      Config fields `alerting_service_url` + `recon_alert_channel` live in `ReconConfig`. Empty URL → logged-only
-      (no HTTP; honest no-op). Tests: `test_daily_determinism_handler.py` (no-op / deterministic / bug paths). Code-read
+      Config fields `alerting_service_url` + `recon_alert_channel` live in `ReconConfig`. Empty URL → logged-only (no
+      HTTP; honest no-op). Tests: `test_daily_determinism_handler.py` (no-op / deterministic / bug paths). Code-read
       verified 2026-06-22; all in `engine/recon_alert_client.py` + `cli/handlers/daily_determinism_handler.py`.
       Provenance: agt-f35b99 2026-06-22.
 
@@ -299,9 +299,9 @@ are identified (2) and the ledger exists (3).
       (`unified-trading-pm@dc624d2b`). §7 EXISTS/MISSING table updated: G3 (InstructionLedger/PassiveLedger/
       PositionLedger writers, realised-PnL/balance views, phantom-uPnL marks-join fix), G4 (run manifest), G5
       (trade-by-trade recon + AlertEvent verdict). `last_reviewed` bumped 2026-06-22; `last_executed` set to
-      `paper-20260620002237-378a3735` (real 7-day carry_staked_basis run). G1/G2 remain MISSING (P1.6/P2.1-P2.2
-      still open). `codex/04-architecture/global-ledger-architecture.md` + `ledger-event-taxonomy.md` count
-      update deferred to P3.8.2 when GroupC/execution-events land. Provenance: agt-f35b99 2026-06-22.
+      `paper-20260620002237-378a3735` (real 7-day carry_staked_basis run). G1/G2 remain MISSING (P1.6/P2.1-P2.2 still
+      open). `codex/04-architecture/global-ledger-architecture.md` + `ledger-event-taxonomy.md` count update deferred to
+      P3.8.2 when GroupC/execution-events land. Provenance: agt-f35b99 2026-06-22.
 
 ## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
 
@@ -648,16 +648,22 @@ are identified (2) and the ledger exists (3).
       new e2e file imports only execution_service + UAC + UTL; strategy-service SOURCE on LDR is unchanged, so zero
       blast-radius on this ship).
 
-- [x] ✅ [DATA] P11.12. **CeFi funding READ from canonical GCS (Tardis) — DONE, NOT a backfill.** The data was already in `perp-funding-prd/.../pipeline_mode=batch_tardis/asset_group=cefi/` (7 venues); the only gap was a venue-name mismatch, fixed by `_canonical_venue` (strategy-service@bbdb4f1e). Verified run `paper-20260621215559-4337e2aa`: **141 strategies / 6 archetypes** (CARRY_BASIS_PERP 79, CARRY_FUNDING_DISPERSION 33, CARRY_STAKED_BASIS 14, ARBITRAGE_PRICE_DISPERSION 10, DEFI_LP 5), real funding PnLs, **ε=0 PROVEN (1016 trades matched, 0 deviations)**. 149 specs honestly skipped (genuinely-absent / unwired → P11.13 for vault+fees; perp_funding for non-Tardis venues genuinely absent).
-      30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is absent for the paper
-      window: `perp_funding` (→ CARRY*BASIS_PERP 144, CARRY_FUNDING_DISPERSION 52), `dex_pool_state` (→
-      ARBITRAGE_PRICE_DISPERSION 17, DEFI_LP*_ 9), `lst_rates` beyond Lido/Jito/Marinade, dated/recursive inputs. Only
-      `lending_rates` (Aave/Compound/Spark) is present → CARRY*STAKED_BASIS is the only data-drivable family today.
-      Backfill these feature groups for the firm-paper-determinism window (2026-05-16..22, then rolling) via the MTDS /
-      features pipeline (data-pipeline-correctness HARD RULE — every venue × data_type × range, honest absence where a
-      venue genuinely lacks history). The e2e launch*_\_vm.sh scripts name the sources (perp_funding / dex_pools /
-      lst_rates / lending_indices / gas_fees). Once the data lands, the SAME wired archetypes auto-populate — no code
-      change. Repo: mtds / features-service / e2e-testing (sourcing); parent epic data/mtds master.
+- [x] ✅ [DATA] P11.12. **CeFi funding READ from canonical GCS (Tardis) — DONE, NOT a backfill.** The data was already
+      in `perp-funding-prd/.../pipeline_mode=batch_tardis/asset_group=cefi/` (7 venues); the only gap was a venue-name
+      mismatch, fixed by `_canonical_venue` (strategy-service@bbdb4f1e). Verified run `paper-20260621215559-4337e2aa`:
+      **141 strategies / 6 archetypes** (CARRY*BASIS_PERP 79, CARRY_FUNDING_DISPERSION 33, CARRY_STAKED_BASIS 14,
+      ARBITRAGE_PRICE_DISPERSION 10, DEFI_LP 5), real funding PnLs, **ε=0 PROVEN (1016 trades matched, 0 deviations)**.
+      149 specs honestly skipped (genuinely-absent / unwired → P11.13 for vault+fees; perp_funding for non-Tardis venues
+      genuinely absent). 30 archetypes + the allocator, but 266/468 specs honestly SKIP because their market data is
+      absent for the paper window: `perp_funding` (→ CARRY*BASIS_PERP 144, CARRY_FUNDING_DISPERSION 52),
+      `dex_pool_state` (→ ARBITRAGE_PRICE_DISPERSION 17, DEFI_LP\** 9), `lst_rates` beyond Lido/Jito/Marinade,
+      dated/recursive inputs. Only `lending_rates` (Aave/Compound/Spark) is present → CARRY*STAKED_BASIS is the only
+      data-drivable family today. Backfill these feature groups for the firm-paper-determinism window (2026-05-16..22,
+      then rolling) via the MTDS / features pipeline (data-pipeline-correctness HARD RULE — every venue × data_type ×
+      range, honest absence where a venue genuinely lacks history). The e2e launch\*\_\_vm.sh scripts name the sources
+      (perp_funding / dex_pools / lst_rates / lending_indices / gas_fees). Once the data lands, the SAME wired
+      archetypes auto-populate — no code change. Repo: mtds / features-service / e2e-testing (sourcing); parent epic
+      data/mtds master.
   - **FINDING (CeFi perp-funding GCS audit, 2026-06-21 — confirms CARRY_FUNDING_DISPERSION 52 + non-HL CARRY_BASIS_PERP
     blocker is a TRUE backfill, not a read-wiring gap):** CeFi perp **funding-rate** data is **genuinely ABSENT** across
     every canonical bucket. Checked: `perp-funding-{prd,,test}-central-element-323112` (all hold ONLY `asset_group=defi`
@@ -673,91 +679,79 @@ are identified (2) and the ledger exists (3).
     2026-05-16..22 + rolling, honest-absence where a venue genuinely lacks history. Repo: features-service (cefi
     perp_funding calculator) + mtds (if derivative_ticker gaps surface).
 
-- [x] ✅ [DATA] P11.13. **DEFI_LP_VAULT share-price + fee-0 pool fees — DONE** (strategy-service@70a76d87). Vault APY from the ERC-4626 `vault_share_price` corpus via `CanonicalVaultProvider` (yvUSDC ~335bps, sUSDe ~420bps, sDAI 124bps); fee-0 LP pools fixed with The-Graph `feesUSD` (Curve 18-46bps, Balancer 56-169bps). 24 unit tests. Verified run `paper-20260621225959-e86237f7`: **145 strategies / 7 archetypes** (DEFI_LP_VAULT 3 lit, DEFI_LP_POOL 2→3). 197 specs honestly skipped.
-      2026-06-21: "fix that, we can get data, we got creds"). Two honest-skip gaps from P11.11/dex tranche are
-      sourceable, not walls: (a) DEFI_LP_VAULT (ERC-4626 yearn/etc) needs a vault-share-price series — read
-      `convertToAssets(1e18)` / `pricePerShare()` historically via the Alchemy/Helius archive RPC (creds
-      `alchemy-api-key`/`helius-api-key` in Secret Manager) OR the vault subgraph (`thegraph-api-key`); (b) the
-      `fees_usd=0` LP pools (Curve threepool/crvusdusdc, balancer) need real fee data — pull `feesUSD` from the
-      Uniswap/Curve/Balancer subgraph (The Graph, `thegraph-api-key`..`-7`) or compute `volume_usd × fee_rate_bps` where
-      volume is present. Materialise both into the canonical dex/vault feature location the engine reads
-      (resolve_bucket_name SSOT), then wire DEFI_LP_VAULT into the paper run + re-derive the fee-0 LP pools so they
-      produce real fee/IL PnL. Honest absence only where a vault/pool genuinely has no on-chain history. Backtest + ε=0.
-      Repo: mtds / features-onchain (sourcing) + strategy-service (DEFI_LP_VAULT wiring). Creds via get_secret_client —
-      never raw values in repo.
+- [x] ✅ [DATA] P11.13. **DEFI_LP_VAULT share-price + fee-0 pool fees — DONE** (strategy-service@70a76d87). Vault APY
+      from the ERC-4626 `vault_share_price` corpus via `CanonicalVaultProvider` (yvUSDC ~335bps, sUSDe ~420bps, sDAI
+      124bps); fee-0 LP pools fixed with The-Graph `feesUSD` (Curve 18-46bps, Balancer 56-169bps). 24 unit tests.
+      Verified run `paper-20260621225959-e86237f7`: **145 strategies / 7 archetypes** (DEFI_LP_VAULT 3 lit, DEFI_LP_POOL
+      2→3). 197 specs honestly skipped. 2026-06-21: "fix that, we can get data, we got creds"). Two honest-skip gaps
+      from P11.11/dex tranche are sourceable, not walls: (a) DEFI_LP_VAULT (ERC-4626 yearn/etc) needs a
+      vault-share-price series — read `convertToAssets(1e18)` / `pricePerShare()` historically via the Alchemy/Helius
+      archive RPC (creds `alchemy-api-key`/`helius-api-key` in Secret Manager) OR the vault subgraph
+      (`thegraph-api-key`); (b) the `fees_usd=0` LP pools (Curve threepool/crvusdusdc, balancer) need real fee data —
+      pull `feesUSD` from the Uniswap/Curve/Balancer subgraph (The Graph, `thegraph-api-key`..`-7`) or compute
+      `volume_usd × fee_rate_bps` where volume is present. Materialise both into the canonical dex/vault feature
+      location the engine reads (resolve_bucket_name SSOT), then wire DEFI_LP_VAULT into the paper run + re-derive the
+      fee-0 LP pools so they produce real fee/IL PnL. Honest absence only where a vault/pool genuinely has no on-chain
+      history. Backtest + ε=0. Repo: mtds / features-onchain (sourcing) + strategy-service (DEFI_LP_VAULT wiring). Creds
+      via get_secret_client — never raw values in repo.
 - [x] ✅ [CODE] P2.11.14. **Wire the BTC-level trend-following (CTA) leg — SHIPPED 2026-06-22: UAC@61ac3ad2
       (TSMOM_BTC_CTA enum+family+leg-spec) + strategy-service@f5f00109 (TsmomBtcCtaEngine + catalogue + paper-universe
       gating + unit test), both on LDR, QG-green. Version-promotion-lag cleared via run-version-alignment --fix
-      (PM@0df3854f). Remaining for a non-null live paper run: P2.11.16 features + the ε=0 run.** — proven in
-      research (`_exec_optimize.py` `trend` leg, 15% sleeve; Progress Log 2026-06-21 "WHY THE DIRECTIONAL BOOK MAKES ~0
-      IN 2023 & 2026"). The directional book is market-neutral + long-biased so it makes ~0 in the two BETA years (2023
-      melt-up / 2026 selloff); a BTC multi-horizon (1/3/6/12mo) TSMOM leg — long confirmed up-trend, short confirmed
-      down-trend, sign-averaged, lagged (no lookahead) — earns exactly there (standalone realistic Sharpe +0.74 net
-      +$659k; '23 +1.4 '26 +2.3; corr to BTC buy&hold +0.00 full / −0.85 in the selloff = genuinely shorts the
-      downtrend, not closet-long; corr to XS book −0.11). Implement as a production strategy archetype/leg in
-      **strategy-service** (TS-momentum signal from the canonical OHLCV the engine already reads; batch=live one path;
-      ε=0 batch-rerun proof; realistic fills via execution-service GroupC). Sizing = **co-equal sleeve** (`W["trend"]`
-      ≈0.28, IS-validated robustness pick; on the proper-execution base it flattens 2023 −0.6→+0.1 + 2026 −1.1→+0.1,
-      preserves full Sharpe +2.28→+2.26, trims maxDD −6.3→−5.0%). NOTE: the trend leg **subsumes** the old de-risk
-      overlay + 12% short (does their 2026 job + fixes 2023 + keeps the Sharpe they cost) — make those light DD-insurance,
-      NOT core sleeves; stacking all three over-hedges (−0.18 full Sharpe). Repo: strategy-service.
-      **DESIGN LOCKED 2026-06-22 + BUILD DISPATCHED**: dedicated `TSMOM_BTC_CTA` archetype (not a `RULES_DIRECTIONAL_
-      CONTINUOUS` reuse — the factory routes by archetype + clean per-leg PnL attribution). 11-step change set mapped:
-      UAC (enum + `ARCHETYPE_TO_FAMILY`→RULES_DIRECTIONAL + `archetype_leg_spec_seeds`) → strategy-service (new
-      `rules_directional/tsmom_btc_cta.py` `TsmomBtcCtaEngine` reading `btc_trailing_return_{1,3,6,12}m`+`btc_realized_
-      vol` features, sign-averaged + vol-scaled + lagged; `factory` registry; `archetype_defaults` Kelly→`V1_ARCHETYPES_
-      IN_SCOPE`; `catalog_directional.build_tsmom_btc_cta` slot `TSMOM_BTC_CTA@binance-btc-tsmom-1d-usdt-v1-prod`;
-      `catalog._BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `_ENGINE_DRIVABLE`+`E2E_UNIVERSE`; unit
-      test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null
-      signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run.
-      **STATUS 2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the
-      archetype). UAC edits now STASHED to unblock an unrelated features-service quickmerge (the dirty UAC clone tripped
-      the dirty-deps pre-flight) — recover with `git -C .tabs/1/unified-api-contracts stash pop` (stash msg "TSMOM_BTC_CTA
-      archetype + WS-mapping fix — blocked on UAC version-lag"); strategy-service edits remain UNCOMMITTED in its clone.**
-      The UAC files: `enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py` (52→53)
-      + `tests/test_ws_cassette_coexistence.py` (added the LEGIT `kalshi_clob_ws`/`polymarket_clob_ws` venue mappings —
-      a pre-existing cross-repo cassette gap, real connectors, needed for green); strategy-service new
-      `rules_directional/tsmom_btc_cta.py` + `tests/.../test_tsmom_btc_cta.py` + factory/defaults/slots/catalog/
-      catalog_directional/paper_universe/batch_utils/`rules_directional/__init__.py`/test_ml_directional_continuous.
-      UAC full QG = **10,215 passed** (incl. the new leg-spec test) once the WS mappings were added; strategy-service =
-      content-sentinel green. **BLOCKER**: UAC local `quality-gates.sh` version-alignment HARD-fails because the PM
-      `workspace-manifest.json` `versions[unified-api-contracts]` is **0.39.0** on origin/LDR while UAC-main is
-      **0.40.0** (the manifest-update workflow hasn't synced the bump — the documented VERSION_SPLIT promotion-lag, here
-      hard-blocking the consumer's local QG). `--skip-version-alignment` is human-only. **TO COMPLETE (once the PM
-      manifest syncs to UAC 0.40.0, or a human aligns it)**: re-run `cd unified-api-contracts && bash
-      scripts/quality-gates.sh --no-fix` → quickmerge UAC (`enums.py archetype_leg_spec_seeds.py
-      tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):` commit for the WS mappings → then quickmerge
-      strategy-service (it depends on the UAC enum, so promote UAC first). The agent's first pass left it unshipped +
-      had ONE hallucinated WS-test edit (invented connectors) which was dropped; the real WS mappings were re-added.
+      (PM@0df3854f). Remaining for a non-null live paper run: P2.11.16 features + the ε=0 run.** — proven in research
+      (`_exec_optimize.py` `trend` leg, 15% sleeve; Progress Log 2026-06-21 "WHY THE DIRECTIONAL BOOK MAKES ~0 IN 2023 &
+      2026"). The directional book is market-neutral + long-biased so it makes ~0 in the two BETA years (2023 melt-up /
+      2026 selloff); a BTC multi-horizon (1/3/6/12mo) TSMOM leg — long confirmed up-trend, short confirmed down-trend,
+      sign-averaged, lagged (no lookahead) — earns exactly there (standalone realistic Sharpe +0.74 net +$659k; '23 +1.4
+      '26 +2.3; corr to BTC buy&hold +0.00 full / −0.85 in the selloff = genuinely shorts the downtrend, not
+      closet-long; corr to XS book −0.11). Implement as a production strategy archetype/leg in **strategy-service**
+      (TS-momentum signal from the canonical OHLCV the engine already reads; batch=live one path; ε=0 batch-rerun proof;
+      realistic fills via execution-service GroupC). Sizing = **co-equal sleeve** (`W["trend"]` ≈0.28, IS-validated
+      robustness pick; on the proper-execution base it flattens 2023 −0.6→+0.1 + 2026 −1.1→+0.1, preserves full Sharpe
+      +2.28→+2.26, trims maxDD −6.3→−5.0%). NOTE: the trend leg **subsumes** the old de-risk overlay + 12% short (does
+      their 2026 job + fixes 2023 + keeps the Sharpe they cost) — make those light DD-insurance, NOT core sleeves;
+      stacking all three over-hedges (−0.18 full Sharpe). Repo: strategy-service. **DESIGN LOCKED 2026-06-22 + BUILD
+      DISPATCHED**: dedicated `TSMOM_BTC_CTA` archetype (not a `RULES_DIRECTIONAL_     CONTINUOUS` reuse — the factory
+      routes by archetype + clean per-leg PnL attribution). 11-step change set mapped: UAC (enum +
+      `ARCHETYPE_TO_FAMILY`→RULES*DIRECTIONAL + `archetype_leg_spec_seeds`) → strategy-service (new
+      `rules_directional/tsmom_btc_cta.py` `TsmomBtcCtaEngine` reading `btc_trailing_return*{1,3,6,12}m`+`btc*realized*
+      vol`features, sign-averaged + vol-scaled + lagged;`factory`registry;`archetype*defaults` Kelly→`V1_ARCHETYPES*
+      IN_SCOPE`; `catalog_directional.build_tsmom_btc_cta`slot`TSMOM_BTC_CTA@binance-btc-tsmom-1d-usdt-v1-prod`;     `catalog.\_BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `\_ENGINE_DRIVABLE`+`E2E_UNIVERSE`; unit     test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null     signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run.     **STATUS 2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the     archetype). UAC edits now STASHED to unblock an unrelated features-service quickmerge (the dirty UAC clone tripped     the dirty-deps pre-flight) — recover with `git
+      -C .tabs/1/unified-api-contracts stash
+      pop`(stash msg "TSMOM_BTC_CTA     archetype + WS-mapping fix — blocked on UAC version-lag"); strategy-service edits remain UNCOMMITTED in its clone.**     The UAC files:`enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py`(52→53)     +`tests/test_ws_cassette_coexistence.py`(added the LEGIT`kalshi_clob_ws`/`polymarket_clob_ws`venue mappings —     a pre-existing cross-repo cassette gap, real connectors, needed for green); strategy-service new    `rules_directional/tsmom_btc_cta.py`+`tests/.../test_tsmom_btc_cta.py` + factory/defaults/slots/catalog/     catalog_directional/paper_universe/batch_utils/`rules_directional/**init**.py`/test_ml_directional_continuous.     UAC full QG = **10,215 passed** (incl. the new leg-spec test) once the WS mappings were added; strategy-service =     content-sentinel green. **BLOCKER**: UAC local `quality-gates.sh`version-alignment HARD-fails because the PM    `workspace-manifest.json` `versions[unified-api-contracts]`is **0.39.0** on origin/LDR while UAC-main is     **0.40.0** (the manifest-update workflow hasn't synced the bump — the documented VERSION_SPLIT promotion-lag, here     hard-blocking the consumer's local QG).`--skip-version-alignment`is human-only. **TO COMPLETE (once the PM     manifest syncs to UAC 0.40.0, or a human aligns it)**: re-run`cd
+      unified-api-contracts && bash scripts/quality-gates.sh --no-fix` → quickmerge UAC (`enums.py
+      archetype_leg_spec_seeds.py tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):` commit for the WS
+      mappings → then quickmerge strategy-service (it depends on the UAC enum, so promote UAC first). The agent's first
+      pass left it unshipped + had ONE hallucinated WS-test edit (invented connectors) which was dropped; the real WS
+      mappings were re-added.
 - [ ] [DATA] P2.11.16. **features-service: compute + write BTC trend features `btc_trailing_return_{1m,3m,6m,12m}` +
       `btc_realized_vol` to the canonical GCS feature corpus the paper run reads** — the CTA engine (P2.11.14) reads
-      these from `features: dict[str,float]`; without them the paper run produces null signals (honest absence). Trailing
-      returns = BTC daily mark `pct_change(21/63/126/252)` shifted (T-1, no lookahead); realized_vol = rolling 60d std
-      ×√365. Source = the daily BTC mark from the perp-funding corpus (`perp_daily_ctx`) the providers already read.
-      batch=live one path. Repo: features-service (+ resolve_bucket_name SSOT / UTC). This is the CRITICAL-PATH gate for
-      a non-null CTA paper run.
-      **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@653cf158.** `btc_trailing_return_{1,3,6,12}m` + `btc_realized_vol`
-      added to delta_one's `returns` calculator + `registry_specs.yaml` (no-lookahead trailing windows, NaN until filled),
-      `test_returns` unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the
-      delta_one feature corpus** so these columns exist in GCS for the live paper run (a features-service backfill —
-      shared with the P2.11.18 reversion-feature corpus recompute; run both together).
+      these from `features: dict[str,float]`; without them the paper run produces null signals (honest absence).
+      Trailing returns = BTC daily mark `pct_change(21/63/126/252)` shifted (T-1, no lookahead); realized*vol = rolling
+      60d std ×√365. Source = the daily BTC mark from the perp-funding corpus (`perp_daily_ctx`) the providers already
+      read. batch=live one path. Repo: features-service (+ resolve_bucket_name SSOT / UTC). This is the CRITICAL-PATH
+      gate for a non-null CTA paper run. **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@653cf158.**
+      `btc_trailing_return*{1,3,6,12}m`+`btc_realized_vol`    added to delta_one's`returns`calculator +`registry_specs.yaml`(no-lookahead trailing windows, NaN until filled),    `test_returns`
+      unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the delta_one feature
+      corpus** so these columns exist in GCS for the live paper run (a features-service backfill — shared with the
+      P2.11.18 reversion-feature corpus recompute; run both together).
 - [x] ✅ [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui — SHIPPED + VERIFIED
       2026-06-22: ui@6442d46e | pw:L2 ✓ (67 passed, 4.0m) | regression: tests/unit/lib/architecture-v2/enums.test.ts
-      (toHaveLength 19) + tests/unit/wizard/parity-gates.test.ts (58 archetypes) — both fail on TSMOM removal.** 15 files
-      (`lib/architecture-v2/enums.ts`+`coverage.ts`+`archetypes.ts`, `lib/help/help-tree-generated.ts`,
-      `lib/mocks/fixtures/trading-data.ts`, `lib/registry/ui-reference-data.json`, `components/briefings/
-      strategy-coverage-matrix.tsx`, `components/marketing/strategy-family-catalogue.tsx`, `public/
-      capability-verdict-matrix.json` + 6 test files). tsc clean, 286 Vitest pass, `quality-gates.sh` exit 0. The
-      playwright SMOKE gate (`tests/smoke/`) self-starts `PORT=3100 pnpm dev:mock` (120s boot) — the earlier
+      (toHaveLength 19) + tests/unit/wizard/parity-gates.test.ts (58 archetypes) — both fail on TSMOM removal.** 15
+      files (`lib/architecture-v2/enums.ts`+`coverage.ts`+`archetypes.ts`, `lib/help/help-tree-generated.ts`,
+      `lib/mocks/fixtures/trading-data.ts`, `lib/registry/ui-reference-data.json`,
+      `components/briefings/     strategy-coverage-matrix.tsx`, `components/marketing/strategy-family-catalogue.tsx`,
+      `public/     capability-verdict-matrix.json` + 6 test files). tsc clean, 286 Vitest pass, `quality-gates.sh`
+      exit 0. The playwright SMOKE gate (`tests/smoke/`) self-starts `PORT=3100 pnpm dev:mock` (120s boot) — the earlier
       BLOCKED-PLAYWRIGHT was just not waiting for boot; ran green here. Repo: unified-trading-system-ui.
 - [ ] [CODE] P2.11.20. **Complete TSMOM_BTC_CTA capability wiring — add it to the UAC archetype_capability_manifest**
       (found 2026-06-22 via the e2e archetype-capability playbook). `TSMOM_BTC_CTA` is in `StrategyArchetype` + the UI
-      enum/capability-verdict-matrix but **MISSING from `unified-api-contracts/.../internal/architecture_v2/
-      archetype_capability_manifest.json`** (22 archetypes, no TSMOM) → the archetype is half-wired (no per-venue/
-      asset-group capability cells) and the e2e playbook `tests/e2e/playbooks/refactor/
-      refactor-g1-8-uac-archetype-capability.spec.ts` would fail. Fix: add TSMOM's capability declaration to the source
-      (`registry/archetype_capability_matrix.py` — family RULES_DIRECTIONAL, BTC-level CTA → CEFI perp+spot on the major
-      venues, signal `price`/trend) → regen via `scripts/generate_archetype_capability_manifest.py` → sync to UI via
+      enum/capability-verdict-matrix but **MISSING from
+      `unified-api-contracts/.../internal/architecture_v2/     archetype_capability_manifest.json`** (22 archetypes, no
+      TSMOM) → the archetype is half-wired (no per-venue/ asset-group capability cells) and the e2e playbook
+      `tests/e2e/playbooks/refactor/     refactor-g1-8-uac-archetype-capability.spec.ts` would fail. Fix: add TSMOM's
+      capability declaration to the source (`registry/archetype_capability_matrix.py` — family RULES_DIRECTIONAL,
+      BTC-level CTA → CEFI perp+spot on the major venues, signal `price`/trend) → regen via
+      `scripts/generate_archetype_capability_manifest.py` → sync to UI via
       `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Then the e2e playbook becomes the
       proper playwright-dir regression for the archetype. Repo: unified-api-contracts (+ UI sync). Confirm the exact
       venue/asset-group capability profile with the operator (CeFi-only BTC, or the DeFi+CeFi hybrid).
@@ -769,47 +763,49 @@ are identified (2) and the ledger exists (3).
       features do NOT capture (orthogonal), so it should ADD to the pooled-LightGBM cs ensemble. NOTE: the signal is NOT
       standalone-tradeable (its alpha is inside the execution-cost band — see the research arc: daily Monday-wick edge
       decayed, migrated to 1h, but realistic 1.5bp-taker fills cap it at a marginal +1.14 Sharpe); its value is as a
-      FEATURE (here) + an execution-timing overlay (P2.11.19), where it never pays its own round-trip. Implement: add the
-      reversion z-score feature spec(s) to the **features-service** `delta_one/app/features/registry.py` (new
+      FEATURE (here) + an execution-timing overlay (P2.11.19), where it never pays its own round-trip. Implement: add
+      the reversion z-score feature spec(s) to the **features-service** `delta_one/app/features/registry.py` (new
       `feature_group` or extend an existing momentum/reversion group; bump `formula_version`; HIVE-partition + footer
       metadata per the feature-formula-versioning SSOT), compute + write to the feature corpus, then retrain + validate
       the cs model (does it lift cs Sharpe / reduce the 2026 drag — composes with P2.11.15). No lookahead (trailing
-      window, shifted). Repo: features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`.
-      **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@1110ee1d.** `reversion_zscore_60m`/`reversion_zscore_240m` added
-      to delta_one's `anomaly` calculator + `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window /
+      window, shifted). Repo: features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`. **STEP
+      1 ✅ SHIPPED 2026-06-22 — features-service@1110ee1d.** `reversion_zscore_60m`/`reversion_zscore_240m` added to
+      delta_one's `anomaly` calculator + `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window /
       no-lookahead, honest NaN until filled), 6 `test_anomaly` unit tests GREEN, full QG passed (402s), on origin LDR
       (Tier-C drain → staging). **REMAINING (downstream operational/ML — both feature specs (reversion @1110ee1d + BTC
       trend @653cf158) are on LDR promoting; these run AFTER the spec deploy):** (a) **corpus recompute** — once the new
       feature image deploys (LDR→staging→main→image), backfill the `returns` + `anomaly` groups for cefi/BTC so the
-      columns land in GCS: `features-service` CLI `--operation calculate --mode batch --asset-group cefi --feature-group
-      returns` (and `anomaly`), at scale via `deployment-service/scripts/vm/launch-features-backfill-vm.sh` (no-fire-and-
-      forget: T+10min verify + manifest-row check). Also gates the P2.11.16 BTC-feature corpus for a non-null CTA paper
-      run. (b) **cs retrain** — after the corpus has the columns, retrain the pooled-LightGBM cs model including the
-      reversion features; validate it lifts cs Sharpe / cuts the 2026 drag (composes with P2.11.15's longer-horizon
-      retrain — do both in one train). (c) `features-status --check-drift` verification. Sequenced-later; not in-session.
+      columns land in GCS: `features-service` CLI
+      `--operation calculate --mode batch --asset-group cefi --feature-group     returns` (and `anomaly`), at scale via
+      `deployment-service/scripts/vm/launch-features-backfill-vm.sh` (no-fire-and- forget: T+10min verify + manifest-row
+      check). Also gates the P2.11.16 BTC-feature corpus for a non-null CTA paper run. (b) **cs retrain** — after the
+      corpus has the columns, retrain the pooled-LightGBM cs model including the reversion features; validate it lifts
+      cs Sharpe / cuts the 2026 drag (composes with P2.11.15's longer-horizon retrain — do both in one train). (c)
+      `features-status --check-drift` verification. Sequenced-later; not in-session.
 - [x] ✅ [CODE] P2.11.19. **Reversion execution-timing model — SHIPPED 2026-06-22: execution-service@4b8dc545.** New
       `backtest_v2/reversion_timing.py` (`time_reversion_fill`): the research z-score `-(p−mean_W)/std_W` times the fill
       to the first over-extension bar in the trade's favour (BUY at z>thr / SELL at z<−thr) within the window, **CLAMPED
       so smart ≥ benchmark by construction → `execution_alpha_bps ≥ 0`** (a fired-but-snapped-back bar clamps to the
       benchmark, alpha 0; no over-extension → honest BENCHMARK_FALLBACK). Decimal-exact + no now()/random → ε=0
       (paper↔batch determinism preserved); wired into `smart_fill_replay.py` (GroupC) + `compute_execution_alpha`. Unit
-      tests (over-extension → alpha>0; no-fire → benchmark) GREEN, full QG passed. **Wire the reversion signal as the execution-timing model in execution-service GroupC
-      smart-matching** (research 2026-06-22, root `_ic_test.py`). The SAME reversion z-score, used to TIME fills on the
-      book's existing turnover (not as a standalone trade), captures **~+1.5 bps/leg** vs naive window-close fills (z>0.5
-      +1.4bp fires 100% of 4h windows; z>1.5 +1.7bp fires 96%) — a buy waits for an intraday over-extension-down within
-      the rebalance window, a sell for an over-extension-up. This is **riskless execution alpha** (the trade happens
-      regardless → no standalone round-trip cost, no adverse-selection/cost-floor problem) on every strategy's turnover
-      (cs / trend / basis), compounding into net-Sharpe. This is PRECISELY the citadel "execution alpha" layer
-      (`execution_alpha = smart − benchmark`) — implement the reversion z-score as the **smart-matching execution-timing
-      model in execution-service GroupCRunner** (the smart-fill entrypoint shipped @3d7d760c, P11.6-retry), bounded by
-      the rebalance-window timeout (fall back to benchmark fill if no over-extension fires). batch=live one path; the
-      improvement surfaces as `execution_alpha_bps` in the ledger (P11.6). Repo: execution-service. Evidence:
-      execution-timing table in `_ic_test.py`. Higher immediate value than the marginal standalone fade (which is
-      shelved — see Progress Log 2026-06-22 "intraday reversion is a feature/exec-timing signal, not a standalone trade").
-- [ ] [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent**
-      (operator 2026-06-22). Today the RESEARCH customises fills per leg (cs maker-25% / ext taker / basis maker-1bp /
-      on-chain maker-0.5bp) — that's a measurement scaffold, NOT production. Production = execution-service GroupC: the
-      strategy declares an **intent** (maker-inside-N-bp / taker-cross; urgency picked from a universe) and **one** engine
+      tests (over-extension → alpha>0; no-fire → benchmark) GREEN, full QG passed. **Wire the reversion signal as the
+      execution-timing model in execution-service GroupC smart-matching** (research 2026-06-22, root `_ic_test.py`). The
+      SAME reversion z-score, used to TIME fills on the book's existing turnover (not as a standalone trade), captures
+      **~+1.5 bps/leg** vs naive window-close fills (z>0.5 +1.4bp fires 100% of 4h windows; z>1.5 +1.7bp fires 96%) — a
+      buy waits for an intraday over-extension-down within the rebalance window, a sell for an over-extension-up. This
+      is **riskless execution alpha** (the trade happens regardless → no standalone round-trip cost, no
+      adverse-selection/cost-floor problem) on every strategy's turnover (cs / trend / basis), compounding into
+      net-Sharpe. This is PRECISELY the citadel "execution alpha" layer (`execution_alpha = smart − benchmark`) —
+      implement the reversion z-score as the **smart-matching execution-timing model in execution-service GroupCRunner**
+      (the smart-fill entrypoint shipped @3d7d760c, P11.6-retry), bounded by the rebalance-window timeout (fall back to
+      benchmark fill if no over-extension fires). batch=live one path; the improvement surfaces as `execution_alpha_bps`
+      in the ledger (P11.6). Repo: execution-service. Evidence: execution-timing table in `_ic_test.py`. Higher
+      immediate value than the marginal standalone fade (which is shelved — see Progress Log 2026-06-22 "intraday
+      reversion is a feature/exec-timing signal, not a standalone trade").
+- [ ] [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent** (operator
+      2026-06-22). Today the RESEARCH customises fills per leg (cs maker-25% / ext taker / basis maker-1bp / on-chain
+      maker-0.5bp) — that's a measurement scaffold, NOT production. Production = execution-service GroupC: the strategy
+      declares an **intent** (maker-inside-N-bp / taker-cross; urgency picked from a universe) and **one** engine
       executes uniformly by **replaying post-signal 1m candles** — fill on the first bar trading through the resting
       order, **MISS (~10%) on adverse selection** (price runs away favorably; driven by liquidity+price on the 1m bars,
       NOT a flat haircut). `_extreme_ml.py` (ext leg: limit rests, fills on 1m trade-through) is the working template;
@@ -821,8 +817,8 @@ are identified (2) and the ledger exists (3).
       Repo: execution-service (GroupC) + e2e-testing (1m-candle download + per-leg fill replay). Composes with P2.11.19.
       **Execution-intent UNIVERSE — sweep per strategy, MEASURED via the 1m replay, pick best/worst (operator
       2026-06-22):** (a) **IOC taker** — cross, full immediate fill, pay spread+impact; (b) **resting-limit taker** —
-      marketable/cross, but unfilled residual RESTS + fills on subsequent 1m candles (not cancelled); (c) **limit
-      {0, 0.5, 1, 2} bp inside the taker/cross price** — maker, posted passive, fills on the first 1m bar trading through,
+      marketable/cross, but unfilled residual RESTS + fills on subsequent 1m candles (not cancelled); (c) **limit {0,
+      0.5, 1, 2} bp inside the taker/cross price** — maker, posted passive, fills on the first 1m bar trading through,
       can MISS on adverse selection (price runs away). The strategy declares which intent it uses (its urgency); the
       engine measures all and the best is the per-strategy verdict — e.g. ext-REVERT wants maker-inside (patient fade),
       ext-CONTINUE wants taker (urgent with-trend). **`_extreme_ml.py` ALREADY implements this exact mechanism** (the
@@ -848,8 +844,8 @@ are identified (2) and the ledger exists (3).
       at a different CRA, (b) a Next.js/React-Query cache, or (c) the selector endpoint doesn't key off
       `resolve_canonical_run`. FIX: confirm the next.config `/api` rewrite target == the deployed CRA, ensure the
       selector reads the same `resolve_canonical_run` SSOT, bust any cache. The 145-run data + ε=0 + all ledgers are
-      correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui
-      (+ verify next.config proxy target).
+      correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui (+ verify
+      next.config proxy target).
 
 - [ ] [CODE] P2.15. **Match the e2e weighting: per-archetype RANK allocators, not FIXED equal-weight** (operator
       2026-06-22: "in our e2e plots we picked several venues for e.g. basis and WEIGHTED across opportunities — I
@@ -862,30 +858,44 @@ are identified (2) and the ledger exists (3).
       SAME deterministic captured GCS rates (funding/carry/vol per window) → **ε=0 preserved** (pure fn of the window,
       not live calls — the FIXED default's determinism worry was overcautious). Verify ε=0 batch-rerun holds with rank
       weights. Repo: strategy-service (paper_universe allocator default + per-archetype rank wiring).
-- [x] ✅ [UI] P11.16. **Archetype-level default view + all-145 per-strategy — DONE + prod-verified** (CRA@336e2dc rev 00016-lcj = 145/7; ui@2f4c7016 = 7 books→legs w/ weights; browser-verified). Orig:**Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
-      headline selector should read ~7 weighted archetype strategies (the e2e "strategy" granularity), each expandable
-      to its weighted per-(venue,coin) legs, rather than 145 flat legs. The archetype roll-up already exists (P11.9-ui
-      group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
-      leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated). ALSO: the per-strategy rollup currently shows only 13 (the attribution-parquet subset for the 145-run) — make it reflect ALL 145 by reading the manifest/instruction-ledger strategy_ids (or emit attribution for all 145), so the count + archetype grouping cover the full book.
+- [x] ✅ [UI] P11.16. **Archetype-level default view + all-145 per-strategy — DONE + prod-verified** (CRA@336e2dc rev
+      00016-lcj = 145/7; ui@2f4c7016 = 7 books→legs w/ weights; browser-verified). Orig:**Default the paper-trading view
+      to archetype-level "strategies" (legs as drill-down)** — the headline selector should read ~7 weighted archetype
+      strategies (the e2e "strategy" granularity), each expandable to its weighted per-(venue,coin) legs, rather than
+      145 flat legs. The archetype roll-up already exists (P11.9-ui group-by-archetype) — make it the DEFAULT framing +
+      label the legs "candidate legs / constituents", show each leg's allocator weight. Repo: unified-trading-system-ui
+      (playwright-gated). ALSO: the per-strategy rollup currently shows only 13 (the attribution-parquet subset for the
+      145-run) — make it reflect ALL 145 by reading the manifest/instruction-ledger strategy_ids (or emit attribution
+      for all 145), so the count + archetype grouping cover the full book.
 
-- [x] ✅ [UI] P11.14-hook. **Prod paper-trading hooks now render REAL CRA data** — ROOT CAUSE (from the live console): `lib/api/mock-handler.ts`'s global fetch interceptor (NEXT_PUBLIC_MOCK_API=true) had no passthrough for `/api/client-reporting*`, so it returned empty `{}` → login got no access_token → every panel "Failed to load" with no network request. FIX (ui@f0ebd216): added `/api/client-reporting` to `realRoutePrefixes`. Now ALL 10 ledger endpoints return 200, no errors, real CeFi venues render (odum-portal-00036-pzm). The full 4-part P11.14 fix: isReportingLive hook gate + fs env-loader in next.config + rewrites-emit-in-mock + mock-handler passthrough. Verified browser-side.
-      bugs are fixed (CRA reachable from the page: manual in-page fetch → 200, 13 strategies). But `useLedgerPerStrategy`
-      / `useLedgerNetViews` etc. show "Failed to load" with NO `/api/client-reporting*` request issued, despite
-      isMock=false (var inlined), clientId set (`?client=firm-paper-determinism`), no service worker, mock defined, fix
-      code in the deployed chunks. Resolve from the LIVE browser console (the actual react-query error) — not headless
-      inference. Likely candidates: an SSR/prefetch error, a QueryClient retry/throwOnError config, or the hook erroring
-      in a transform before fetch. Repo: unified-trading-system-ui.
+- [x] ✅ [UI] P11.14-hook. **Prod paper-trading hooks now render REAL CRA data** — ROOT CAUSE (from the live console):
+      `lib/api/mock-handler.ts`'s global fetch interceptor (NEXT_PUBLIC_MOCK_API=true) had no passthrough for
+      `/api/client-reporting*`, so it returned empty `{}` → login got no access_token → every panel "Failed to load"
+      with no network request. FIX (ui@f0ebd216): added `/api/client-reporting` to `realRoutePrefixes`. Now ALL 10
+      ledger endpoints return 200, no errors, real CeFi venues render (odum-portal-00036-pzm). The full 4-part P11.14
+      fix: isReportingLive hook gate + fs env-loader in next.config + rewrites-emit-in-mock + mock-handler passthrough.
+      Verified browser-side. bugs are fixed (CRA reachable from the page: manual in-page fetch → 200, 13 strategies).
+      But `useLedgerPerStrategy` / `useLedgerNetViews` etc. show "Failed to load" with NO `/api/client-reporting*`
+      request issued, despite isMock=false (var inlined), clientId set (`?client=firm-paper-determinism`), no service
+      worker, mock defined, fix code in the deployed chunks. Resolve from the LIVE browser console (the actual
+      react-query error) — not headless inference. Likely candidates: an SSR/prefetch error, a QueryClient
+      retry/throwOnError config, or the hook erroring in a transform before fetch. Repo: unified-trading-system-ui.
 
-- [ ] [CODE] P2.17. **Structurally forbid the synthetic-input seam in PAPER/LIVE prod runs** (operator audit
-      2026-06-22: "all reads should be live+batch from real prod sources/schemas/GCS paths; writes canonical with just
-      the paper→live tag swap"). AUDIT RESULT — already canonical: reads resolve every bucket via `resolve_bucket_name`
+- [x] ✅ [CODE] P2.17 (P11.17). **Structurally forbid the synthetic-input seam in PAPER/LIVE prod runs** — DONE + LANDED
+      (`strategy-service@a786d463`, on origin/live-defi-rollout, QG-green). `run_paper()` (the PAPER/LIVE
+      mode=`TradingMode.PAPER` engine path — paper≡live one path) now calls `get_synthetic_input_override()` and RAISES
+      loud if a synthetic override is active before booking any ledger (`paper_run_handler.py:1143-1152`); regression
+      `tests/unit/cli/handlers/test_paper_run_synthetic_guard.py`. Makes "paper reads exactly like live" structural, not
+      flag-dependent (the live handler is gated on custody, shares this engine path). (operator audit 2026-06-22: "all
+      reads should be live+batch from real prod sources/schemas/GCS paths; writes canonical with just the paper→live tag
+      swap"). AUDIT RESULT — already canonical: reads resolve every bucket via `resolve_bucket_name`
       (perp-funding/dex-pools/market-data/lending, real prod schemas+granularity, honest-skip never synthetic); writes
       go through the shared `write_run_ledger` seam to the canonical `client-reports` ledger path
       (`ledger/client_id=/run_id=/ledger_type=`) with `mode=TradingMode` (PAPER→LIVE swap; paper/batch IDENTICAL shape).
       The e2e synthetic seam (`set_synthetic_input_override`/`--synthetic-input`) is opt-in + default-None (only tests +
       the CLI flag set it) → OFF in the prod paper job. HARDENING: add a guard so `get_synthetic_input_override()` MUST
-      be None when `mode ∈ {PAPER, LIVE}` (raise if a synthetic override is active in a prod-mode run) — makes
-      "paper reads exactly like live" structural, not flag-dependent. Repo: strategy-service + unified-trading-library.
+      be None when `mode ∈ {PAPER, LIVE}` (raise if a synthetic override is active in a prod-mode run) — makes "paper
+      reads exactly like live" structural, not flag-dependent. Repo: strategy-service + unified-trading-library.
 
 - [x] ✅ [UI] P11.18. **Archetype-grouped WEIGHTED PnL-over-time plot + batch/paper symmetry overlay** — SHIPPED
       unified-trading-system-ui@423e237d (PnlTimeseriesChart archetype-weighted lines via buildWeightMap +
@@ -902,8 +912,8 @@ are identified (2) and the ledger exists (3).
 - [x] ✅ [CODE+UI] P11.19. **Paper-trading data-quality + VM events stream panel** — SHIPPED + VERIFIED LIVE on prod.
       (a) CRA `GET /clients/{c}/data-quality` (client-reporting-api@7f3ac8a) = skipped_specs grouped by
       archetype/venue/reason + manifest coverage + alerting-service alerts merged (best-effort). **CRITICAL crash-fix:
-      `coverage.by_archetype` was emitted as a dict → the UI's `DataQualityCoverageRow[].reduce` threw → the WHOLE
-      paper dashboard white-screened ("Something went wrong"). Fixed CRA to emit the canonical array shape (image
+      `coverage.by_archetype` was emitted as a dict → the UI's `DataQualityCoverageRow[].reduce` threw → the WHOLE paper
+      dashboard white-screened ("Something went wrong"). Fixed CRA to emit the canonical array shape (image
       `client-reporting-api:dqarrayfix` deployed to prod rev 00018-njv; source quickmerge PENDING a live UTL-dep WIP
       settling — fix is LIVE regardless) + UI Array.isArray guard (unified-trading-system-ui@85369f75) + CRA unit-test
       now asserts the array contract (the smoke spec used the mock fixture which was already array-shaped, so it missed
@@ -925,23 +935,24 @@ are identified (2) and the ledger exists (3).
       populates when the fleet emits events. Remaining (NOT blocking): the per-env URL is a constant default (P11.21
       folds it into the deployment-api-SSOT client); the per-epic data fleet that emits ADAPTER_FETCH_FAILED/
       honest-absence is post-cutover/not-running so the stream is empty until it runs. Repo: client-reporting-api.
-      regression: client-reporting-api/tests/unit/test_data_quality.py (alerts merge + shape-map + degrade-to-unavailable).
+      regression: client-reporting-api/tests/unit/test_data_quality.py (alerts merge + shape-map +
+      degrade-to-unavailable).
 - [x] ✅ [CODE+UI] P11.21. **Reconcile the paper data-quality panel against the deployment-api data-status SSOT** —
       SHIPPED + VERIFIED LIVE (operator 2026-06-22: "lets use SSOT so if it breaks there we fix at the source"). CRA:
-      new `core/deployment_api_client.py` — ONE typed client for the deployment-api (consolidates P11.20 alerts +
-      P11.21 coverage, single base-URL home); the data-quality endpoint now returns `manifest_coverage` (the corpus
-      manifest 4-state per asset_group: `captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`/
-      `coverage_pct`) from `/api/data-status/honest-coverage` — the SAME SSOT the deployment-ui data-status bars read.
-      VERIFIED on prod (rev `client-reporting-api-00020-9sp`): `manifest_source: deployment-api`, 5 AG rows (cefi
-      11.68%, defi, tradfi, sports, prediction) — identical numbers to the deployment-ui page. UI: dual-lens panel
+      new `core/deployment_api_client.py` — ONE typed client for the deployment-api (consolidates P11.20 alerts + P11.21
+      coverage, single base-URL home); the data-quality endpoint now returns `manifest_coverage` (the corpus manifest
+      4-state per asset_group: `captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`/ `coverage_pct`)
+      from `/api/data-status/honest-coverage` — the SAME SSOT the deployment-ui data-status bars read. VERIFIED on prod
+      (rev `client-reporting-api-00020-9sp`): `manifest_source: deployment-api`, 5 AG rows (cefi 11.68%, defi, tradfi,
+      sports, prediction) — identical numbers to the deployment-ui page. UI: dual-lens panel
       (`paper-trading-ledger-panels.tsx`) — run lens ("this run could drive", skipped_specs) + corpus lens ("data
       EXISTS", manifest SSOT) with an "SSOT unavailable" honest-degrade. pw:L2 ✓ (21 passed) | regression:
       tests/smoke/paper-trading-ledger.smoke.spec.ts (data-quality-manifest) + client-reporting-api/tests/unit/
       test_data_quality.py (TestDeploymentApiClient + manifest_coverage). Repo: client-reporting-api (live) +
-      unified-trading-system-ui (landed LDR, prod UI deploy in flight). NOTE: per-env base URL is a constant default;
-      the `UnifiedCloudConfig` URL field is deferred (a UTL public-surface change — not worth the SIT cascade for a
-      working constant; do it when UTL is next touched). CRA source-quickmerge auto-drains when UTL/UAC settle.
-- [ ] [CODE+UI] P11.22. **Min-coverage threshold — "drivable-but-thin" state** (operator 2026-06-22: "is it only 100%
+      unified-trading-system-ui (landed LDR, prod UI deploy in flight). **CRA source-quickmerge LANDED**
+      (`client-reporting-api@5a65b10`, on origin/live-defi-rollout — verified `merge-base --is-ancestor`). NOTE: per-env
+      base URL is a constant default; the `UnifiedCloudConfig` URL field is now done as P11.21-polish (see below).
+- [ ] [CODE+UI] P2.11.22. **Min-coverage threshold — "drivable-but-thin" state** (operator 2026-06-22: "is it only 100%
       or is >80% still relevant for backtest"). Today a spec is BINARY drivable-vs-skipped: any data in window → runs
       (drivable, regardless of how complete); zero → skipped. ADD a configurable per-archetype min-window-coverage
       threshold (e.g. ≥80% of expected bars present) → a third "drivable-but-thin" state so a backtest run on sparse
@@ -949,7 +960,7 @@ are identified (2) and the ledger exists (3).
       (`paper_universe._skip_reason_for_spec` + the `run_paper` data-fetch), carry it on the spec, surface it in the
       data-quality panel + gate weighting. Repo: strategy-service (threshold + coverage %) + client-reporting-api
       (surface) + unified-trading-system-ui (panel). NICE-TO-HAVE (paper book is honest binary today).
-- [ ] [UI] P11.23. **deployment-ui "Backend unreachable" debounce** — SHIPPED (deployment-ui, pending quickmerge).
+- [ ] [UI] P2.11.23. **deployment-ui "Backend unreachable" debounce** — SHIPPED (deployment-ui, pending quickmerge).
       Operator 2026-06-22: the data-status page flashed a red "Backend unreachable — signal timed out" banner + "Unknown
       error" detail even though the backend was up (coverage bars rendered; min-instances=1, `/api/health` 46ms warm).
       Root cause: a SINGLE transient `/api/health` poll timeout (a heavy data-status manifest-merge briefly saturating
@@ -967,32 +978,34 @@ are identified (2) and the ledger exists (3).
 
 - **2026-06-22 (autonomous finish-everything) — RUN COMPLETE: all 5 CODE items shipped across 6 repos (7 commits).**
   Final state of the `/autonomous` "complete everything" dispatch:
-  - ✅ **P2.11.14 TSMOM_BTC_CTA archetype** — UAC@61ac3ad2 (enum+family+leg-spec+WS-mappings) + strategy-service@f5f00109
-    (`TsmomBtcCtaEngine`+catalogue+gating+test). The blocker all session — the UAC version-promotion-lag (manifest 0.43
-    vs UAC-LDR 0.44) — was BEATEN with `run-version-alignment.sh --fix` → PM manifest@0df3854f.
+  - ✅ **P2.11.14 TSMOM_BTC_CTA archetype** — UAC@61ac3ad2 (enum+family+leg-spec+WS-mappings) +
+    strategy-service@f5f00109 (`TsmomBtcCtaEngine`+catalogue+gating+test). The blocker all session — the UAC
+    version-promotion-lag (manifest 0.43 vs UAC-LDR 0.44) — was BEATEN with `run-version-alignment.sh --fix` → PM
+    manifest@0df3854f.
   - ✅ **P2.11.16 BTC trailing-return features** (step 1) — features-service@653cf158 (`btc_trailing_return_{1,3,6,12}m`
-    + `btc_realized_vol`, no-lookahead, in `returns` calculator).
+    - `btc_realized_vol`, no-lookahead, in `returns` calculator).
   - ✅ **P2.11.18 reversion feature** (step 1) — features-service@1110ee1d (`reversion_zscore_60m/240m`, IC≈0.05).
   - ✅ **P2.11.19 reversion execution-timing** — execution-service@4b8dc545 (`reversion_timing.py` → GroupC
     `smart_fill_replay`; clamp smart≥benchmark so `execution_alpha_bps≥0`; ε=0; ~+1.5bps/leg riskless on book turnover).
-  - 🟡 **P2.11.17 UI mirror** — CODE shipped ui@6442d46e (15 files, tsc+286 Vitest green); **BLOCKED-PLAYWRIGHT** (no dev
-    server on this host — a UI-capable slot must run `pw:L2` to clear the gate + tick).
+  - 🟡 **P2.11.17 UI mirror** — CODE shipped ui@6442d46e (15 files, tsc+286 Vitest green); **BLOCKED-PLAYWRIGHT** (no
+    dev server on this host — a UI-capable slot must run `pw:L2` to clear the gate + tick).
   - **REMAINING (downstream operational/ML — NOT in-session; precise next steps in P2.11.16/P2.11.18 todos):** (a) the
     delta_one **corpus recompute** of the `returns`+`anomaly` groups (cefi/BTC) once the feature image deploys
     (LDR→staging→main→image), via `features-service --operation calculate` / `launch-features-backfill-vm.sh` — gates a
     non-null CTA paper run; (b) the **cs LightGBM retrain** with the reversion features (composes w/ P2.11.15) to answer
-    "does the feature lift cs Sharpe / cut the 2026 drag"; (c) the P2.11.17 playwright verify. These are deploy-dependent
-    + multi-hour; the code that produces them is all live.
-  Verification: all 7 commits confirmed `merge-base --is-ancestor … origin/live-defi-rollout`.
+    "does the feature lift cs Sharpe / cut the 2026 drag"; (c) the P2.11.17 playwright verify. These are
+    deploy-dependent
+    - multi-hour; the code that produces them is all live. Verification: all 7 commits confirmed
+      `merge-base --is-ancestor … origin/live-defi-rollout`.
 
 - **2026-06-22 (autonomous finish-everything) — TSMOM_BTC_CTA archetype UAC half SHIPPED; version-lag BEATEN.** The UAC
   version-promotion-lag (PM manifest `versions[uac]` lagged UAC-LDR pyproject — it had churned 0.39→0.44) was cleared
   with `run-version-alignment.sh --fix` (synced the manifest to current repo versions; "All dependencies aligned"
   passed), committed PM@0df3854f. Then popped the stashed UAC archetype WIP → UAC QG GREEN (327s, version-alignment
   passed) → **quickmerged UAC@61ac3ad2** (`TSMOM_BTC_CTA` enum + family-map + leg-spec + the legit kalshi/polymarket
-  clob WS-connector mappings). UAC clean → dirty-deps gate cleared for downstream. strategy-service WIP reconciled
-  (15 commits behind, popped clean, no conflicts) — QG re-running with `IGNORE_TIMEOUT=true` (first run exit 1 ONLY on
-  the `<300s` META-gate at 797s + FOREIGN pre-existing ratchet violations in `transport.py`/`greek_model.py`/
+  clob WS-connector mappings). UAC clean → dirty-deps gate cleared for downstream. strategy-service WIP reconciled (15
+  commits behind, popped clean, no conflicts) — QG re-running with `IGNORE_TIMEOUT=true` (first run exit 1 ONLY on the
+  `<300s` META-gate at 797s + FOREIGN pre-existing ratchet violations in `transport.py`/`greek_model.py`/
   `analog_execution_gate.py` — NOT the archetype; `test_tsmom_btc_cta` passed, basedpyright clean on the archetype).
   In-flight: features BTC trailing-return features (P2.11.16, agent built → re-QG), UI mirror (P2.11.17, agent).
   Remaining heavy: cs retrain (P2.11.18 finish), execution-service GroupC exec-timing (P2.11.19).
@@ -1004,18 +1017,19 @@ are identified (2) and the ledger exists (3).
   `/api/data-status/honest-coverage` — corpus 4-state per AG, the SAME numbers deployment-ui shows; CRA rev
   `client-reporting-api-00020-9sp`, UI dual-lens landed), P11.23 (deployment-ui "Backend unreachable" debounce + form
   a11y, live via deployment-api rev `uts-shared-deployment-api-00079-qg6`), P11.17 (synthetic-seam guard — PAPER run
-  refuses if `--synthetic-input` override active; basedpyright-clean, draining). **REMAINING (drive ALL to done):**
-  (1) confirm the CRA P11.21 + strategy-service P11.17 source-quickmerges LANDED on LDR (they auto-drain when UTL +
-  unified-api-contracts both go clean — parallel agents are refactoring them, which BLOCKS the quickmerge dep pre-flight;
-  NEVER stomp foreign WIP, just drain); (2) verify the odom-portal UI deploy rendered the dual-lens corpus section
-  (`data-testid="data-quality-manifest"`); (3) **P11.21 polish** — fold the deployment-api base URL into
-  `UnifiedCloudConfig` (a `deployment_api_url` field, no `os.getenv`) so `client-reporting-api/core/
-  deployment_api_client.py` reads it per-env (do when UTL is clean; expect the SIT cascade); (4) **P11.22** — min-coverage
-  "drivable-but-thin" threshold (multi-loader window-coverage % in `paper_run_handler.py` + CRA surface + UI panel);
-  (5) **P11.6** — the GroupCRunner LINCHPIN (batch runs the SAME execution-service matching engine as paper, ε=0).
-  **Deploy/verify recipes:** CRA/deployment-api image = `gcloud builds submit --config=cloudbuild.yaml
-  --substitutions=SHORT_SHA=<tag>,_BRANCH=live-defi-rollout .` (add `substitution_option: ALLOW_LOOSE` under `options:`
-  LOCALLY first — NEVER commit it, QG STEP 5.17 rejects it — then `git checkout cloudbuild.yaml` post-upload) →
+  refuses if `--synthetic-input` override active; basedpyright-clean, draining). **REMAINING (drive ALL to done):** (1)
+  confirm the CRA P11.21 + strategy-service P11.17 source-quickmerges LANDED on LDR (they auto-drain when UTL +
+  unified-api-contracts both go clean — parallel agents are refactoring them, which BLOCKS the quickmerge dep
+  pre-flight; NEVER stomp foreign WIP, just drain); (2) verify the odom-portal UI deploy rendered the dual-lens corpus
+  section (`data-testid="data-quality-manifest"`); (3) **P11.21 polish** — fold the deployment-api base URL into
+  `UnifiedCloudConfig` (a `deployment_api_url` field, no `os.getenv`) so
+  `client-reporting-api/core/ deployment_api_client.py` reads it per-env (do when UTL is clean; expect the SIT cascade);
+  (4) **P11.22** — min-coverage "drivable-but-thin" threshold (multi-loader window-coverage % in
+  `paper_run_handler.py` + CRA surface + UI panel); (5) **P11.6** — the GroupCRunner LINCHPIN (batch runs the SAME
+  execution-service matching engine as paper, ε=0). **Deploy/verify recipes:** CRA/deployment-api image =
+  `gcloud builds submit --config=cloudbuild.yaml --substitutions=SHORT_SHA=<tag>,_BRANCH=live-defi-rollout .` (add
+  `substitution_option: ALLOW_LOOSE` under `options:` LOCALLY first — NEVER commit it, QG STEP 5.17 rejects it — then
+  `git checkout cloudbuild.yaml` post-upload) →
   `gcloud run deploy <svc> --image=...:<tag> --region=asia-northeast1 --project=central-element-323112 --quiet`;
   deployment-api's fetch-ui clones deployment-ui at LDR so a deployment-api rebuild ships deployment-ui changes. UI =
   `bash scripts/deploy-cloud-run.sh --env=prod --cloud`. Browser-verify with lean chromium
@@ -1034,8 +1048,8 @@ are identified (2) and the ledger exists (3).
   idea) show the naive passive fade is adversely selected (−4 bps); two LOOKAHEAD bugs caught via absurd Sharpes (+15
   follow-leg fill-at-stale-level; +9 fill-at-candle-open-after-high-trigger). (5) Honest realistic model (live
   level-cross taker fill at anchor, 1.5bp taker + 0.5bp slip, no Saturday): **marginal +1.14 Sharpe ONLY at the wide
-  sweep-40**, knife's-edge / execution-critical → **shelved as a borderline pilot candidate, NOT built standalone**.
-  (6) ES direction (corr −0.05), CME gap-fill (52% on Mondays, hurts the combo), Tuesday-after-Monday (corr −0.03),
+  sweep-40**, knife's-edge / execution-critical → **shelved as a borderline pilot candidate, NOT built standalone**. (6)
+  ES direction (corr −0.05), CME gap-fill (52% on Mondays, hurts the combo), Tuesday-after-Monday (corr −0.03),
   day-selection (overfit — all-week +2.47 > Mon/Tue/Sun +2.00, diversification), Saturday (no-CME thinnest-flow day,
   unstable — excluded): all correctly REJECTED. **The productive landing (operator reframe):** the reversion signal has
   **stable IC ≈ +0.05** vs forward returns → a real cs ML FEATURE (P2.11.18); and timing existing turnover with it
@@ -1044,8 +1058,8 @@ are identified (2) and the ledger exists (3).
 
 - **2026-06-22 (P11.20 alerts STREAM live + deployment-ui banner fix + SSOT follow-ups filed).** Wired the paper
   data-quality panel's alert feed to the reachable deployment-api unified ledger (`alerts_source: deployment-api`, prod
-  rev `client-reporting-api-00019-8k2`) — same source deployment-ui shows; empty until the data fleet runs, but the
-  feed is live (was hardcoded to the unreachable k8s `alerting-service:8080`). Diagnosed + fixed the operator-reported
+  rev `client-reporting-api-00019-8k2`) — same source deployment-ui shows; empty until the data fleet runs, but the feed
+  is live (was hardcoded to the unreachable k8s `alerting-service:8080`). Diagnosed + fixed the operator-reported
   deployment-ui "Backend unreachable" false-alarm: not a real outage (min-instances=1, `/api/health` 46ms warm) — a
   single transient poll timeout latched the red banner for 30s; added a 2-consecutive-failure debounce in
   `MockModeBanner` (deployment-ui, pending quickmerge). Filed P11.21 (reconcile the paper panel against the
@@ -1071,15 +1085,16 @@ are identified (2) and the ledger exists (3).
   granularity, honest-skip never synthetic; the e2e synthetic seam is opt-in + OFF in the prod job) and writes the four
   ledgers through the shared `write_run_ledger` seam to the canonical `client-reports` path with `mode=TradingMode`
   (PAPER now). Live = the SAME seam with `mode=LIVE` + a live client_id; reads unchanged; only the execution fill
-  diverges at the live boundary. Filed P11.17 to make the synthetic-seam-off guarantee structural (guard mode∈{PAPER,LIVE}).
+  diverges at the live boundary. Filed P11.17 to make the synthetic-seam-off guarantee structural (guard
+  mode∈{PAPER,LIVE}).
 
 - **2026-06-22 (autonomous) — PAPER-TRADING DASHBOARD COMPLETE on prod.** Full chain live + browser-verified at
-  www.odum-research.com/paper-trading?client=firm-paper-determinism: **7 archetype books → 145 weighted legs**, real
-  CRA data, rank-weighted allocations (P11.15), all 4 ledgers, ε=0. P11.16 shipped: CRA all-145 per-strategy
-  (CRA@336e2dc → prod rev 00016-lcj, per-strategy returns 145/7 verified) + UI archetype-grouping default (ui@2f4c7016).
-  P11.14 (real-data plumbing) was a 5-layer mock trap, all fixed: isReportingLive gate + fs env-loader + rewrites-in-mock
-  + mock-handler passthrough + (root) the live-console-found mock interceptor. CRA cloudbuild ALLOW_LOOSE fix lets manual
-  builds work. Operator's e2e vision (weighted-across-venues archetype books, drill to legs) is LIVE.
+  www.odum-research.com/paper-trading?client=firm-paper-determinism: **7 archetype books → 145 weighted legs**, real CRA
+  data, rank-weighted allocations (P11.15), all 4 ledgers, ε=0. P11.16 shipped: CRA all-145 per-strategy (CRA@336e2dc →
+  prod rev 00016-lcj, per-strategy returns 145/7 verified) + UI archetype-grouping default (ui@2f4c7016). P11.14
+  (real-data plumbing) was a 5-layer mock trap, all fixed: isReportingLive gate + fs env-loader + rewrites-in-mock
+  - mock-handler passthrough + (root) the live-console-found mock interceptor. CRA cloudbuild ALLOW_LOOSE fix lets
+    manual builds work. Operator's e2e vision (weighted-across-venues archetype books, drill to legs) is LIVE.
 
 - **2026-06-22 (autonomous) — PROD UI NOW SHOWS REAL DATA (the "old/mock thing" is FIXED).** Live-console paste
   pinpointed the 4th/final bug: the `mock-handler.ts` global fetch interceptor swallowed `/api/client-reporting*`
@@ -1099,10 +1114,10 @@ are identified (2) and the ledger exists (3).
   under pnpm); (3) rewrites() did `return []` whenever mock → `/api/client-reporting` 404'd → now emits the
   client-reporting rewrites even in mock mode. PROOF the data is now reachable from the prod page: an in-page
   `fetch('/api/client-reporting-auth/login')` → 200 (token len 343), `fetch('/api/client-reporting/.../per-strategy')` →
-  200 with 13 strategies. **OPEN (P11.14-hook):** the React-Query hooks (`useLedgerPerStrategy` etc.) render
-  "Failed to load" WITHOUT issuing any fetch, while the identical manual fetch succeeds — a client-runtime bug not
-  resolvable headless (ruled out: clientId-missing, service-worker, undefined-mock, stale-bundle, rewrite). Needs the
-  live browser console error. CRA per-strategy returns 13 (attribution subset) not 145 — separate sparsity note.
+  200 with 13 strategies. **OPEN (P11.14-hook):** the React-Query hooks (`useLedgerPerStrategy` etc.) render "Failed to
+  load" WITHOUT issuing any fetch, while the identical manual fetch succeeds — a client-runtime bug not resolvable
+  headless (ruled out: clientId-missing, service-worker, undefined-mock, stale-bundle, rewrite). Needs the live browser
+  console error. CRA per-strategy returns 13 (attribution subset) not 145 — separate sparsity note.
 
 - **2026-06-22 (operator) — LOCKED the deployable book: cs + h32 + ext + tsmom + BTC-trend + basis spine; R8 short
   DROPPED.** Per-leg proper-execution Sharpes (engine `legnet` net through the real fill model, vnorm 10%): basis
@@ -1121,8 +1136,8 @@ are identified (2) and the ledger exists (3).
   (141-run 1016 trades + 145-run 1020 trades, paper≡batch, 0 deviations). UI drilldown deployed to PROD
   (odum-portal-00032-4nq, www.odum-research.com, 3 regions, browser-verified render). CRA deployed to PROD
   (client-reporting-api-00011, resolves the 145-run — authenticated API confirmed). Cleaned 4 throwaway verify runs
-  (paper-p11*) out of the canonical client prefix (they polluted the lexical run resolver) → moved to
-  client_id=_session-verify-archive. **ONE open item (P11.14): the prod UI selector still displays the 14-run, not the
+  (paper-p11\*) out of the canonical client prefix (they polluted the lexical run resolver) → moved to
+  client_id=\_session-verify-archive. **ONE open item (P11.14): the prod UI selector still displays the 14-run, not the
   145-run — a UI `/api` proxy / selector run-resolution nuance (CRA API is correct). Data + determinism + ledgers all
   verified.**
 
@@ -1135,8 +1150,8 @@ are identified (2) and the ledger exists (3).
   shows all 145 (was resolving an old 14-strategy run). ε=0 proof on the 145-run running. CRA strategy_id endpoint was
   erroring on the stale prod rev — fixed by the deploy.
 
-- **2026-06-21 (autonomous) — BTC-trend VALIDATED on the proper-execution base; "best of both" resolved → trend
-  SUBSUMES the old de-risk/short (don't stack — it over-hedges).** Correction to the prior entry's plot: the first
+- **2026-06-21 (autonomous) — BTC-trend VALIDATED on the proper-execution base; "best of both" resolved → trend SUBSUMES
+  the old de-risk/short (don't stack — it over-hedges).** Correction to the prior entry's plot: the first
   `book_trend_strengthened` plot used a STALE cs cache (`_cs_daily_book_1D`, 2026 −4.0) + vnorm 10%-vol leverage, which
   made the BASE read −3.3/OOS+0.04 (operator flagged "pnl went to crap"). That was a plotting-cache artifact — NOT the
   trend leg and NOT execution cost (these vnorm books are pre-cost); the trend leg is green-≥-grey in EVERY run. Rebuilt
@@ -1164,14 +1179,14 @@ are identified (2) and the ledger exists (3).
   unowned). **Fix = add a BTC-level multi-horizon (1/3/6/12-month) time-series-momentum (CTA) leg** — long confirmed
   up-trends, short confirmed down-trends, sign-averaged, lagged 1 day (no lookahead). Evidence (`_tsmom_proper.py`,
   `_book_with_trend2.py`, `_book_final_trend.py`): standalone realistic Sharpe **+0.74 net +$659k** through the full
-  fill model (engine `run_strategy`, maker-25%-drop; the largest net of any directional leg — cs +$393k, short −$22k)
-  / +1.07 vnorm; yearly **'23 +1.4 · '24 +1.2 · '25 −0.2 · '26 +2.3** (positive in BOTH blind-spot years, mildly
-  negative only in 2025 = the XS book's BEST year → complementary). **Proved NOT closet-long beta:** corr to BTC
-  buy&hold **+0.00 full / −0.85 in 2026**; in 2026 BTC buy&hold is −1.16 Sharpe vs this leg **+2.34** (opposite sign →
-  genuinely shorts the downtrend). corr to the XS book **−0.11** (true diversifier, anti-correlated exactly when the XS
-  book bleeds). Adding it lifts the book in both years (2023 −0.6→~0, 2026 loss more than halved) and raises full + OOS
-  Sharpe. **Wired into production engine** `_exec_optimize.py` as the `trend` leg at a modest 15% sleeve (W["trend"]
-  =0.15). Honest caveats: thin crypto sample (~4 bets/yr × 4yr) but trend-following is the strongest decades-validated
+  fill model (engine `run_strategy`, maker-25%-drop; the largest net of any directional leg — cs +$393k, short −$22k) /
+  +1.07 vnorm; yearly **'23 +1.4 · '24 +1.2 · '25 −0.2 · '26 +2.3** (positive in BOTH blind-spot years, mildly negative
+  only in 2025 = the XS book's BEST year → complementary). **Proved NOT closet-long beta:** corr to BTC buy&hold **+0.00
+  full / −0.85 in 2026**; in 2026 BTC buy&hold is −1.16 Sharpe vs this leg **+2.34** (opposite sign → genuinely shorts
+  the downtrend). corr to the XS book **−0.11** (true diversifier, anti-correlated exactly when the XS book bleeds).
+  Adding it lifts the book in both years (2023 −0.6→~0, 2026 loss more than halved) and raises full + OOS Sharpe.
+  **Wired into production engine** `_exec_optimize.py` as the `trend` leg at a modest 15% sleeve (W["trend"] =0.15).
+  Honest caveats: thin crypto sample (~4 bets/yr × 4yr) but trend-following is the strongest decades-validated
   systematic prior (Moskowitz-Ooi-Pedersen 2012, 58 instruments) and the construction is non-overfit (standard
   multi-horizon, no tuned params); it does NOT manufacture large alpha in the beta years — it brings them to flat/
   positive, the correct outcome for taking measured directional risk. **Residual:** the worst 2026 leg is cs (the ML
