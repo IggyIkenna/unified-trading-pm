@@ -58,7 +58,7 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       (`4940972`) independently took the count to exactly 5 (= `CODEX_MAX_VIOLATIONS`), so the noqa-less category
       stacked to 6 > 5 on the integration branch → QG red. Backfilled the noqa+reason on all 8 lines → codex back to 5,
       ALL GATES PASSED (68s). Classic two-agent stacking collision; the violation was mine.
-- [ ] [INFRA] P3. **Live zombie/OOM census signal (vm-census follow-up).** `/api/fleet/vm-census` currently reports
+- [x] ✅ [INFRA] P3. **Live zombie/OOM census signal (vm-census follow-up).** `/api/fleet/vm-census` currently reports
       `zombie`/`oom` as `0` because the deployment-service `vm_zombie_watchdog.py` computes `WatchdogVerdict`s in-memory
       each poll but persists NO readable census/verdict snapshot (its only non-heartbeat GCS write is forensic
       log/serial-console archival at kill time). To surface TRUE live zombie/OOM in the FleetInfra tile, the watchdog
@@ -66,6 +66,7 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       `_fleet_census.py` reads (degrading to 0 when absent/stale). Repo: deployment-service (watchdog GCS write) +
       deployment-api (read it). Low priority — the live fleet is 2 long-lived VMs; zombie/OOM matters for the
       not-yet-running ephemeral fleet. Provenance: 2026-06-22 fleet vm-census backend (deployment-api@86050f0).
+      — deployment-service@95af8e7, deployment-api@ffbaf9a | watchdog writes `vm-census/watchdog-census.json` after each poll; `_fleet_census.py` reads + degrades honestly to 0 when absent/stale (>30 min)
 - [x] ✅ [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
       today) — chip click-throughs to AO (not a rebuild; honors division-of-surfaces). `pw:L2 ✓` + regression. Repo:
       deployment-ui. — deployment-ui@3508fa2 | pw:L2 ✓ (256/256 passed) | regression:
