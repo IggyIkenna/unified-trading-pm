@@ -91,14 +91,16 @@ source:
   branches + the tab-mirror are retired). (qg_commit L184)
 - `[~]` Semantic cross-plan conflict-detector — CLOSED: SUPERSEDED →
   `orchestrator_agent_type_oversight_coverage_2026_06_17` (cross-link already in-body). (qg_commit L796)
-- [ ] [SCRIPT] P2. **Fix the STALE `unified-cloud-interface` reference in the QG cloud-SDK check.**
+- [x] ✅ [SCRIPT] P2. **Fix the STALE `unified-cloud-interface` reference in the QG cloud-SDK check.**
       `scripts/quality-gates-base/base-service.sh:1072` logs _"Direct cloud SDK imports found (route through
       unified-cloud-interface instead)"_ — but `unified-cloud-interface` is NOT a live repo (absorbed into UTL;
       `get_storage_client`/`get_secret_client` now live in `unified_trading_library.cloud_interface`). Update the message
       to name the current package, and review the stale `--glob '!**/unified-cloud-interface/**'` dead-repo exclusions
       (base-service.sh:1462 + STEP 5.12b § "No hardcoded gs:///s3:// outside unified-cloud-interface"). Edit the PM
       base template, then `rollout-quality-gates-unified.py` fleet-wide. Repo: unified-trading-pm. Provenance:
-      2026-06-19 operator spotted the stale ref in the deployment-api QG output.
+      2026-06-19 operator spotted the stale ref in the deployment-api QG output. — PM@923ee2e3f | QG-green;
+      updated 5 messages in base-service.sh (STEP 5.5/5.11/5.12b) + 2 messages in base-library.sh; removed
+      dead `!**/unified-cloud-interface/**` glob exclusion; fleet-wide via sourcing (no rollout needed).
 
 ## Continuous verification
 
