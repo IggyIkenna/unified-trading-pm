@@ -52,15 +52,15 @@ Mined from git history across instruments-service / MTDS / MDPS / features / UAC
 recently-archived PM issue docs. **Every guard in this plan maps to a class below.** This is the shared findings pool
 the per-AG IS/MTDS agents feed into — append new classes here as they surface.
 
-| #   | Failure class                                                                                | Concrete incidents (sha)                                                                                                                                                                                                                                                                                                       | Root cause                                                                                                                    | Guard (phase)                                                                     |
-| --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| C1  | **Real-empty misclassified as `empty_confirmed`/`SOURCE_RETURNED_ZERO`** (operator's #1)     | sports API-Football errors→empty (IS `0db2450`); odds_api_ws nonexistent key→0 live rows (MTDS `670be2f`); Databento WS key unresolved + mis-stamped `live_massive` (MTDS `e532105`, UAC `1205ae44`); defi catalog missing `manifest_data_type`→`assert_defi_catalog_fresh` always False→zero capture (IS `e8acef1`,`de8e164`) | error/missing-key/exception paths fall through to honest-absence recorders; writer **trusts** the adapter's "200+empty" claim | **Phase 1 (keystone): proof-of-honest-absence gate + daily re-probe**             |
-| C2  | **Bad genesis/launch/coverage windows** → wrong `expected_unattempted` vs `attempted_failed` | HL/ASTER misclassified DeFi→cefi, flipped 48.5k `attempted_failed` (UAC `0d0e00a8`,`061cfd01`; MTDS `912dad5`); Aster/Kraken/Deribit genesis (UAC `159f29cc`); sports coverage maps + `EXPECTED_*_NO_COVERAGE` reasons (UAC `9ea84499`,`99361f66`; MTDS `050a091`)                                                             | UAC coverage oracle wrong/missing for a data_type×chain×league×venue                                                          | **Phase 3 (hygiene audit: oracle-vs-manifest divergence)**                        |
-| C3  | **Wrong / non-canonical GCS write paths + pipeline_mode drift**                              | 9 defi handlers wrong bucket (MTDS `1c99e5c`); hardcoded `batch` mode (MTDS `2c5e2b5`,`ad3318d`; MDPS `30e7672`; features `795e4f41`); non-canonical `SYM-PERP` keys → renamed 39,205 objects, flipped 20,404 (MTDS `912dad5`,`fbd32b4`)                                                                                       | handlers bypass canonical path builders / hardcode partitions                                                                 | **Phase 3 (path-canonicality validator)** + **Phase 4 (writer-side path assert)** |
-| C4  | **Rate-limit / silent stall / OOM-self-delete masking failure** (most frequent)              | sports OOM exit137 self-delete (IS `505dcd9`); GCS 429 hot-object (IS `865aea9`; UTL `94d9de30`); unbounded-socket stalls (IS `06ee145`; MTDS `7ff6c05`,`64789a7`); event-loop starvation blocking GCS read (MTDS `6dfa1a8`)                                                                                                   | no bounded timeouts; self-deleting VM hides exit_code; no heartbeat                                                           | **Phase 2 (heartbeat + exit_code-aware fleet monitor + alerts)**                  |
-| C5  | **Subgraph / single-key stalls**                                                             | DeFi DEX subgraph stuck on 1 TheGraph key (MTDS `5830cc8`)                                                                                                                                                                                                                                                                     | single-key, no rotation                                                                                                       | **Phase 2 (per-source rate/health event)**                                        |
-| C6  | **Reader/writer bucket-env mismatch**                                                        | defi preflight READER env-less vs WRITER env-short `-prd-` → stale read → honest-absence → zero capture (MTDS `ea33d38`,`72f7c14`)                                                                                                                                                                                             | reader/writer disagree on bucket env                                                                                          | **Phase 3 (reader/writer bucket parity check)**                                   |
-| C7  | **Ordering / downstream-missing + live-boundary schema**                                     | live `record_captured` schema (`asset_group` kwarg not column) (UTL `057264fd`; MTDS `e6b0f29`); sports fixtures missing→downstream features missing; null-vs-`""` dedup double-count (sports)                                                                                                                                 | DAG ordering not enforced; live/batch schema skew                                                                             | **Phase 3 (4-pillar + dedup)** + **Phase 2 (ordering-gap alert)**                 |
+| #   | Failure class                                                                                | Concrete incidents (sha)                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Root cause                                                                                                                    | Guard (phase)                                                                                                        |
+| --- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| C1  | **Real-empty misclassified as `empty_confirmed`/`SOURCE_RETURNED_ZERO`** (operator's #1)     | sports API-Football errors→empty (IS `0db2450`); odds_api_ws nonexistent key→0 live rows (MTDS `670be2f`); Databento WS key unresolved + mis-stamped `live_massive` (MTDS `e532105`, UAC `1205ae44`); defi catalog missing `manifest_data_type`→`assert_defi_catalog_fresh` always False→zero capture (IS `e8acef1`,`de8e164`)                                                                                                                                                      | error/missing-key/exception paths fall through to honest-absence recorders; writer **trusts** the adapter's "200+empty" claim | **Phase 1 (keystone): proof-of-honest-absence gate + daily re-probe**                                                |
+| C2  | **Bad genesis/launch/coverage windows** → wrong `expected_unattempted` vs `attempted_failed` | HL/ASTER misclassified DeFi→cefi, flipped 48.5k `attempted_failed` (UAC `0d0e00a8`,`061cfd01`; MTDS `912dad5`); Aster/Kraken/Deribit genesis (UAC `159f29cc`); sports coverage maps + `EXPECTED_*_NO_COVERAGE` reasons (UAC `9ea84499`,`99361f66`; MTDS `050a091`)                                                                                                                                                                                                                  | UAC coverage oracle wrong/missing for a data_type×chain×league×venue                                                          | **Phase 3 (hygiene audit: oracle-vs-manifest divergence)**                                                           |
+| C3  | **Wrong / non-canonical GCS write paths + pipeline_mode drift**                              | 9 defi handlers wrong bucket (MTDS `1c99e5c`); hardcoded `batch` mode (MTDS `2c5e2b5`,`ad3318d`; MDPS `30e7672`; features `795e4f41`); non-canonical `SYM-PERP` keys → renamed 39,205 objects, flipped 20,404 (MTDS `912dad5`,`fbd32b4`); **CeFi/prediction live silent-empty — IS universe bare ticker (KALSHI `KXMVE-26JAN`) not rebuilt to connector form `KALSHI:PREDICTION_MARKET:{ticker}` → WS "unknown instrument; skipping" → 0 capture (MTDS, 2026-06-22 → DP-PATH-006)** | handlers bypass canonical path builders / hardcode partitions; live reader passes a non-connector bare instrument key         | **Phase 3 (path-canonicality validator)** + **Phase 4 (writer-side `is_canonical` assert on `live_tick_blob_path`)** |
+| C4  | **Rate-limit / silent stall / OOM-self-delete masking failure** (most frequent)              | sports OOM exit137 self-delete (IS `505dcd9`); GCS 429 hot-object (IS `865aea9`; UTL `94d9de30`); unbounded-socket stalls (IS `06ee145`; MTDS `7ff6c05`,`64789a7`); event-loop starvation blocking GCS read (MTDS `6dfa1a8`)                                                                                                                                                                                                                                                        | no bounded timeouts; self-deleting VM hides exit_code; no heartbeat                                                           | **Phase 2 (heartbeat + exit_code-aware fleet monitor + alerts)**                                                     |
+| C5  | **Subgraph / single-key stalls**                                                             | DeFi DEX subgraph stuck on 1 TheGraph key (MTDS `5830cc8`)                                                                                                                                                                                                                                                                                                                                                                                                                          | single-key, no rotation                                                                                                       | **Phase 2 (per-source rate/health event)**                                                                           |
+| C6  | **Reader/writer bucket-env mismatch**                                                        | defi preflight READER env-less vs WRITER env-short `-prd-` → stale read → honest-absence → zero capture (MTDS `ea33d38`,`72f7c14`)                                                                                                                                                                                                                                                                                                                                                  | reader/writer disagree on bucket env                                                                                          | **Phase 3 (reader/writer bucket parity check)**                                                                      |
+| C7  | **Ordering / downstream-missing + live-boundary schema**                                     | live `record_captured` schema (`asset_group` kwarg not column) (UTL `057264fd`; MTDS `e6b0f29`); sports fixtures missing→downstream features missing; null-vs-`""` dedup double-count (sports)                                                                                                                                                                                                                                                                                      | DAG ordering not enforced; live/batch schema skew                                                                             | **Phase 3 (4-pillar + dedup)** + **Phase 2 (ordering-gap alert)**                                                    |
 
 **Frequency:** C4 > C3 > C1 ≈ C2 > C5/C6/C7. All cited fixes landed; the systemic guards are what's missing.
 
@@ -124,9 +124,12 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       tier auto-files `plans/active/issues/<slug>_<date>.md` + pings the orchestrator inbox when a deterministic
       candidate list is non-empty; `auto_recover` runs the in-band fix; `page_operator` routes CRITICAL with no recover
       scope. — **deployment-service / unified-trading-pm**
-- [x] ✅ [DISCOVERY] P2. **RECONCILED + DONE 2026-06-22**: the Wave-3 sub-agent's `quality-gates-v2.yml` edit was NOT off-scope drift — it was a correct (premature) application of the in-flight cicd template rollout. Real owner = `cicd_release_machinery_2026_06_18.md` P1 (NOT orchestrator_master). I finished the full fleet rollout (12 repos committed+pushed, drift green) — see that plan. Original (superseded) note: **Off-scope find (Wave-3 sub-agent drift, discarded here)**: a valuable
-      `escalate-ldr-qg-failure` job for `quality-gates-v2.yml` (FAILED promotion-PR →
-      `repository_dispatch escalate-to-orchestrator` with `wall_type=ldr_qg_failure`) + a `dispatch-cloud-build`
+- [x] ✅ [DISCOVERY] P2. **RECONCILED + DONE 2026-06-22**: the Wave-3 sub-agent's `quality-gates-v2.yml` edit was NOT
+      off-scope drift — it was a correct (premature) application of the in-flight cicd template rollout. Real owner =
+      `cicd_release_machinery_2026_06_18.md` P1 (NOT orchestrator_master). I finished the full fleet rollout (12 repos
+      committed+pushed, drift green) — see that plan. Original (superseded) note: **Off-scope find (Wave-3 sub-agent
+      drift, discarded here)**: a valuable `escalate-ldr-qg-failure` job for `quality-gates-v2.yml` (FAILED promotion-PR
+      → `repository_dispatch escalate-to-orchestrator` with `wall_type=ldr_qg_failure`) + a `dispatch-cloud-build`
       staging→main trigger fix (A3 decoupling orphaned it). Belongs in the PM **template** (not a per-repo edit —
       drift), rolled out fleet-wide via `rollout-workflow-templates.sh`. File under `orchestrator_master` P2
       'event-driven LDR-QG-failure escalation'. NOT shipped in this plan.
@@ -151,7 +154,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       empty-key/`MISSING_CREDENTIAL`, empty-but-source-was-never-reached. — **unified-api-contracts**
 - [x] ✅ P0. **KEYSTONE LIVE** — DONE utl@39f8ec85: record*empty gains `fetch_evidence: FetchEvidence|None`;
       SOURCE_RETURNED_ZERO without `.proves_honest_absence()` emits DP_UNPROVEN_HONEST_ABSENCE(CRITICAL)+raises
-      UnprovenHonestAbsenceError (hard-raise, operator 2026-06-22). EXPECTED*_ exempt. 15 test files + 2 internal
+      UnprovenHonestAbsenceError (hard-raise, operator 2026-06-22). EXPECTED*\_ exempt. 15 test files + 2 internal
       callers threaded; QG green 117s. Gate `record_empty(reason=SOURCE_RETURNED_ZERO)` in `_writer_record.py`: require
       an accompanying `fetch_evidence` proving
       `http_status in 2xx AND response_received AND rows_in_response==0 AND error_signal==""`; otherwise raise
@@ -376,27 +379,28 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   work preserved, not lost.
 - **2026-06-22 RESUME (autonomous /autonomous run #2, slot-0·human-planning, Opus 4.8)** — operator directive: "action
   it fully … apply all alerts+hardening then reship live+batch VMs so long-lived jobs harden + emit Slack alerts; fix
-  all the issues that cause raise so it works off the bat." **Situation assessment**: the keystone gate
-  (utl@39f8ec85, ON ORIGIN) HARD-RAISES `UnprovenHonestAbsenceError` on any `record_empty/record_zero_rows(reason=
-  SOURCE_RETURNED_ZERO)` lacking a proving `FetchEvidence` (verified `_writer_record.py:238-249` on origin). Tradfi
-  batch+live are NOT threaded on origin (massive_futures_backfill=1, websocket_runner=2, sentinels=6 un-threaded
-  SOURCE_RETURNED_ZERO sites) → **re-ship would crash on every legitimate zero-trade strike**. **BUT the per-adapter
-  threading is PEER-IN-FLIGHT**: MTDS `live/websocket_runner.py`+`live/manifest_recorder.py`+`live/_is_universe.py`
-  and UTL `manifest_writer/` are mid-edit-dirty under the `data_completion_to_100_all_ag` lane (the plan's own
-  Coordination note designates that lane the per-adapter owner; "each adapter that plan touches threads fetch_evidence
-  Phase-1 P0"). Per the multi-agent HARD RULE (don't edit mid-edit-dirty peer files) + the operator's "fix the raises
-  PROPERLY" (a stubbed FetchEvidence defeats the gate), **per-adapter threading stays the peer lane's; re-ship is GATED
-  on it landing on origin**. **My non-colliding half this run** = make the self-monitoring actually LIVE +
-  regression-proofed, then re-ship the instant threading lands: (1) Wave-4b INFRA — schedule the 3 e2e daily-audit
-  crons (deployment-service, mirror `cf_manifest_audit_scheduler.tf`); (2) Wave-4b — MTDS QG STEP 5.89 wiring the 3
-  audits (mirror 5.88) + Phase-3 reader/writer bucket-env parity; (3) Phase-1 ratchet — extend the existing
-  `check_unrouted_source_returned_zero.py` (PM QG 5.86 + baseline) to flag except-reachable SOURCE_RETURNED_ZERO
-  lacking fetch_evidence; (4) Codex docs ×3. Dispatched as 3 disjoint-repo sub-agents (deployment / MTDS / PM) shipping
-  via isolated worktree off origin (workspace clones dirty). **RE-SHIP TRIGGER (for a compressed future-me)**: when
-  `git -C market-tick-data-service show origin/live-defi-rollout:market_tick_data_service/live/websocket_runner.py |
-  grep -c fetch_evidence` > 0 (live path threaded) → rebuild tarball `create-code-tarballs.sh` from clean LDR +
-  relaunch the live producer (`mtds-live-tradfi-*`, LONG_LIVED_LIVE) with `emit_pipeline_heartbeat` wired; batch tarball
-  re-ship makes the next backfill wave hardened (running CME fleet is on pre-gate code → finishes fine, no crash).
+  all the issues that cause raise so it works off the bat." **Situation assessment**: the keystone gate (utl@39f8ec85,
+  ON ORIGIN) HARD-RAISES `UnprovenHonestAbsenceError` on any
+  `record_empty/record_zero_rows(reason= SOURCE_RETURNED_ZERO)` lacking a proving `FetchEvidence` (verified
+  `_writer_record.py:238-249` on origin). Tradfi batch+live are NOT threaded on origin (massive_futures_backfill=1,
+  websocket_runner=2, sentinels=6 un-threaded SOURCE_RETURNED_ZERO sites) → **re-ship would crash on every legitimate
+  zero-trade strike**. **BUT the per-adapter threading is PEER-IN-FLIGHT**: MTDS
+  `live/websocket_runner.py`+`live/manifest_recorder.py`+`live/_is_universe.py` and UTL `manifest_writer/` are
+  mid-edit-dirty under the `data_completion_to_100_all_ag` lane (the plan's own Coordination note designates that lane
+  the per-adapter owner; "each adapter that plan touches threads fetch_evidence Phase-1 P0"). Per the multi-agent HARD
+  RULE (don't edit mid-edit-dirty peer files) + the operator's "fix the raises PROPERLY" (a stubbed FetchEvidence
+  defeats the gate), **per-adapter threading stays the peer lane's; re-ship is GATED on it landing on origin**. **My
+  non-colliding half this run** = make the self-monitoring actually LIVE + regression-proofed, then re-ship the instant
+  threading lands: (1) Wave-4b INFRA — schedule the 3 e2e daily-audit crons (deployment-service, mirror
+  `cf_manifest_audit_scheduler.tf`); (2) Wave-4b — MTDS QG STEP 5.89 wiring the 3 audits (mirror 5.88) + Phase-3
+  reader/writer bucket-env parity; (3) Phase-1 ratchet — extend the existing `check_unrouted_source_returned_zero.py`
+  (PM QG 5.86 + baseline) to flag except-reachable SOURCE_RETURNED_ZERO lacking fetch_evidence; (4) Codex docs ×3.
+  Dispatched as 3 disjoint-repo sub-agents (deployment / MTDS / PM) shipping via isolated worktree off origin (workspace
+  clones dirty). **RE-SHIP TRIGGER (for a compressed future-me)**: when
+  `git -C market-tick-data-service show origin/live-defi-rollout:market_tick_data_service/live/websocket_runner.py | grep -c fetch_evidence` >
+  0 (live path threaded) → rebuild tarball `create-code-tarballs.sh` from clean LDR + relaunch the live producer
+  (`mtds-live-tradfi-*`, LONG_LIVED_LIVE) with `emit_pipeline_heartbeat` wired; batch tarball re-ship makes the next
+  backfill wave hardened (running CME fleet is on pre-gate code → finishes fine, no crash).
 
 ---
 
@@ -587,3 +591,47 @@ prompt that aggregates each AG's findings + harder tests/alerts/audits. Hard-rai
 and silently mark fetchable data `empty_confirmed`, OOM-self-delete unnoticed, or write a non-canonical path without a
 gate/alert. The per-AG agents now harden their own adapters against their own documented incident history via the
 dispatch prompts.
+
+---
+
+## Phase 6 — Alert enrichment (Tier 1) + Self-healing completion (reopened 2026-06-22 under /autonomous)
+
+> Composed with `deployment_observability_parity_live_batch_paper_2026_06_22.md`. Reuse the freshness SLA registry
+> (`unified_api_contracts/internal/reference/data_freshness.py`), the Layer-0 recovery-script pattern
+> (`deployment-service/scripts/recovery/`, `RecoveryScriptRegistry`, the shipped `refetch-feed`), the
+> `autonomous-recovery-matrix.md` breaker model, and `escalate-to-orchestrator`/AutoSpawn — no reinventing.
+
+### Alert enrichment (B — inline trace + deep-links)
+
+- [ ] [CODE] P1. alerting-service: add `deployment_ui_base_url` (+ `deployment_scripts_log_bucket`) config, SM/env
+      hot-reloaded (none exists today). — alerting-service
+- [ ] [CODE] P1. UTL writer-gate `_emit_unproven_honest_absence`: add `venue`/`data_type`/`day` (from `row_key`) + an
+      `error_message` to the DP_UNPROVEN_HONEST_ABSENCE `details`. — unified-trading-library
+- [ ] [CODE] P1. `data_pipeline_slack.py::_build_blocks`: append a fenced-code trace block
+      (evidence/exit_code/run_log_tail, ≤3000 chars) + an actions block with deep-link buttons — data-status
+      `{base}/service/{svc}/data-status`, VM logs `{base}/ops/vms/{vm}`, GCS `run.log` console link. Thread
+      `deployment_ui_base_url` from `router._mirror_to_data_pipeline_slack`. — alerting-service
+- [ ] [CODE] P2. deployment-service exit_code monitor: add `run_log_tail` (last N lines of RUN_LOG_BLOB) to the finding
+      `details` for the inline trace. — deployment-service
+
+### Self-healing completion (C — wire tiers to existing recovery, add actuators)
+
+- [ ] [CODE] P0. Add `data_pipeline_failure` to `escalate-to-orchestrator` `WALL_TYPES`
+      (`agent-orchestrator/server/escalation.py`) + a boot-prompt template, so a DP `file_issue`/`page` finding can
+      fast-spawn an autonomous worker (today WALL_TYPES has no DP member → ValueError). — agent-orchestrator,
+      unified-trading-pm (.github)
+- [ ] [CODE] P1. Wire `escalation.py::route_finding` `auto_recover` tier → the Layer-0 `RecoveryScriptRegistry` (the
+      `refetch-feed` pattern); register DP actuators. — deployment-service
+- [ ] [CODE] P1. **Actuators (today detect+page only)**: consolidator auto-relaunch (Cloud Run Job re-execute on
+      CONSOLIDATOR_DOWN), backfill-VM auto-relaunch on exit-137 within retry budget. — deployment-service
+- [ ] [CODE] P1. **Schedule** the daily empty-reprobe (`reprobe_new_empty_confirmed.py`) + auto-flip
+      confirmed-misclassified `empty_confirmed`→`attempted_failed` cells (the reclassifier). — deployment-service /
+      e2e-testing
+- [ ] [CODE] P1. **Bucket-env parity preflight** (DP-ENV-001 — reader env-less vs writer env-short) as a generic gate. —
+      market-tick-data-service
+- [ ] [CODE] P1. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key currently degrades
+      silently to unauth). — market-tick-data-service
+- [ ] [DOC] P1. **`RB-DATA-*` DR runbook** — the consolidator→MTDS→features cascade with RTO/RPO + auto-vs-human scope
+      (none of the 22 `rb_*` runbooks is data-pipeline). — unified-trading-pm
+- [ ] [CODE] P2. Flip `data-pipeline-alerts.registry.yaml` modes `verbose`→`active` as each `escalation:` tier is wired
+      to plumbing. — unified-trading-pm
