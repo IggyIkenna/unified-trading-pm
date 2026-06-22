@@ -352,7 +352,7 @@ but 6 files). The version-driven promoter sees parity → won't re-merge. This d
 content force-sync (CLAUDE.md "clean-start force-sync") would expedite but is **operator-gated** (high blast radius,
 ~20 repos) — flagged for operator decision, not forced autonomously.
 
-- [ ] [CICD] P2 **BLOCKED-OPERATOR-DECISION**. Expedite the content-vs-version drain (hollow versions on main: ~20 repos
+- [ ] [CICD] P2. **BLOCKED-OPERATOR-DECISION**. Expedite the content-vs-version drain (hollow versions on main: ~20 repos
       at version-parity with real `main...staging` content divergence, e.g. UTL 21 files / UAC 6 files). Options: (a)
       let it drain organically as repos bump (safe, automatic, now unblocked); (b) operator-gated clean-start force-sync
       main←staging content. Provenance: promotion-lag wave 2026-06-21; consequence of the now-fixed false-breaking block.

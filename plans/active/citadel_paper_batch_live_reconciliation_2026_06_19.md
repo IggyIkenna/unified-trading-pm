@@ -704,7 +704,7 @@ are identified (2) and the ledger exists (3).
       return target so the signal is less whipsawed by the noisy 15m next-bar label. No lookahead (trailing features,
       shifted target; IS-select 2023-24 / OOS-validate 2025-26). Repo: features/strategy research (`_panel.py`).
 
-- [ ] [UI] P11.14. **Prod UI selector resolves the 14-strategy run, not the 145-run** (found 2026-06-21). The CRA API
+- [ ] [UI] P2.14. **Prod UI selector resolves the 14-strategy run, not the 145-run** (found 2026-06-21). The CRA API
       correctly resolves + serves the newest run `paper-20260621225959-e86237f7` (145 strategies / 7 archetypes —
       verified authenticated: `net-views.run_id` = the 145-run on every call). But the prod odum-portal UI's strategy
       selector renders only the 14 CARRY_STAKED_BASIS strategies of an OLDER run (`paper-20260621171725-fcf31316`). The
