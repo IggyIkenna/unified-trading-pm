@@ -180,3 +180,36 @@ SOURCE_PRIORITY[0] mis-stamping caused the VX/CFE incident):
 `mtds-live-cefi-hyperliquid-derivative-ticker-20260621-225252`) — HL resolves cleanly (`hyperliquid` vendor, LIVE_HYPERLIQUID,
 registered source), so it validates the tardis-machine connector + Node sidecar + dispatch + capture end-to-end. The CEX
 flagship case is gated on the §4 fix above (not on the tardis-machine code, which is correct).
+
+## §5 — tardis-machine smoke RESULT + bug#10/#12 + bug#9 full diagnosis (2026-06-21, monitored run)
+
+**bug#10 (tardis-machine 404) — FIXED + PROVEN.** Root cause (SSH-diagnosed): tardis-machine serves its WebSocket API on
+**HTTP port + 1** (started `--port 8001` → HTTP :8001, WS :8002); the connector hit :8001 → 404 on every WS route. Fixed
+the WS URL :8001→:8002 in mtds (`tardis_machine_ws.py` + `config/service_config.py` + `websocket_streaming_handler.py`,
+market-tick-data-service@`7c9c148`) + deployment-service setup-vm (@`d0a2c17`), redeployed. **PROVEN: a direct
+stream-normalized probe on the VM returned 596 binance-futures `trade` messages in 10s** with the exact canonical
+normalised schema (`{type:trade, symbol:BTCUSDT, exchange:binance-futures, price, amount, side, timestamp}`). The
+connector + Node sidecar + 8002 WS + normalised-→-canonical mapping all work end-to-end.
+
+**bug#12 — HYPERLIQUID is NOT a tardis-machine *stream-normalized* venue.** The HL smoke (trades + derivative_ticker)
+connected (no 404) but recorded empty windows — a VM-side probe confirmed tardis-machine emits **0** hyperliquid messages
+(binance-futures gave 596 in the same probe). Tardis covers HL for HISTORICAL replay, but its real-time stream proxies
+**CeFi exchange WSs**; HL is a DEX → use the **native HL connector** for HL live (which works — bugs #6/#7/#8). So the
+tardis-machine OPTION's value is the big CeFi CEX venues (binance/okx/bybit/kraken/deribit), NOT HL/ASTER.
+
+**bug#9 (FULL diagnosis) — CEX live capture-to-manifest is the remaining gate for the tardis-machine CEX value.** A
+binance-futures tardis VM streams fine (596 msgs) but cannot WRITE the manifest: `live_pipeline_mode_for_venue` →
+`live_source_for_venue` → CeFi branch resolves a venue in `CEFI_LIVE_VENUES` to its vendor, else falls back to
+`SOURCE_PRIORITY[(cefi,trades)][0] = tardis` which is **batch-only** (`SOURCE_MODE_CAPABILITY[tardis]={batch}`, academic
+licence) → `No PipelineMode for source 'tardis' in mode 'live'`. HL live works (resolves HYPERLIQUID→hyperliquid→
+LIVE_HYPERLIQUID); BINANCE-FUTURES does not (venue `binance-futures` ≠ vendor `binance`). **The fix is a careful
+multi-surface provenance change (P1 — the code SSOT warns SOURCE_PRIORITY[0] mis-stamping caused the VX/CFE incident, so
+NOT a tail-of-session autonomous patch):** (1) map CEX venue→vendor for live (`BINANCE-FUTURES`→`binance`, `OKX-SWAP`→
+`okx`, …) so `live_source_for_venue` returns the vendor in LIVE mode (tardis stays the BATCH source); (2) register
+`binance`/`okx`/`bybit`/`kraken`/`deribit` as cefi LIVE sources + `SOURCE_MODE_CAPABILITY[<vendor>] ⊇ {live}`; (3) add
+`LIVE_<vendor>` PipelineMode members where missing (`LIVE_BINANCE` exists; OKX/BYBIT/KRAKEN/DERIBIT need adding). This
+unblocks CEX live for BOTH the native connectors AND the tardis-machine source. **Affects native CEX live too** (CEX
+native live was never run before, so this gap was latent).
+
+**Net tardis-machine status:** code SHIPPED + mechanism PROVEN (596 real CEX msgs); HL correctly excluded; CEX
+manifest-capture gated on the bug#9 provenance build (P1, fully diagnosed above). Native HL:trades live feed restored.

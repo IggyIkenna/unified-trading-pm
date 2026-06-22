@@ -142,8 +142,8 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       (or read from the CLI arg). All 7 occurrences on lines 456/600/608/617/ 625/714/724. Same fix needed fleet-wide
       for every defi collect-\* handler that hardcodes BATCH\_. Repo: market-tick-data-service. **DEFERRED** —
       successor: this todo (2026-06-21). Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh`
-      daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs.
-      — market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
+      daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs. —
+      market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
@@ -203,7 +203,7 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       `instr-backfill-pred` launched 2026-06-21 16:57 UTC, confirmed RUNNING + writing Kalshi instruments (log:
       `date=2026-06-14: 1 stale + 1 missing venues/entities — will re-fetch (stale=['POLYMARKET'], missing=['KALSHI'])`).
       IS prediction index will have Kalshi rows after this run (prior state: 1944 POLYMARKET rows, 0 KALSHI rows).
-- [ ] [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding
+- [x] ✅ [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding
       2026-06-21]: footystats fwd-poll fetches odds fine (29 snapshots/date) but the write FAILS validation — "Batch
       manifest row `source='footystats'` disagrees with `pipeline_mode='batch_odds_api'` (expects source='odds_api')".
       FootyStats odds are written under the odds_api pipeline_mode instead of a footystats-source-consistent mode.
@@ -211,7 +211,7 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       in-flight provenance lane's files). Fix belongs there: either footystats odds use `pipeline_mode=batch_footystats`
       (source=footystats) or the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO
       write OK; only ODDS fail. Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix
-      from SPORTS lane (collision).
+      from SPORTS lane (collision). — unified-api-contracts@b843863b (pipeline_mode.py line 428 + test line 324)
 - [x] [DATA] P1. ✅ **sports — ODDS coverage OVER-COUNTS failures: live-instrument guard mislabels genuine
       "book-doesn't-price-this-fixture" as `attempted_failed`** — market-tick-data-service@050a091 | venue_fetch.py:
       exclude prediction-market venues (Kalshi/Polymarket/Novig/BetOpenly/ProphetX) from Odds-API bookmaker scope;
@@ -316,13 +316,14 @@ launched `--force` (bypass single-VM guard) which ALSO forces reprocess → re-f
 Weather has occasional Open-Meteo `400 Bad Request` per-location warnings (shard-isolated, non-fatal, recorded as failed
 cells) — minor, backfill continues.
 
-- [ ] [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
+- [x] ✅ [DEPLOY] P2. Commit the odds-launcher `--allow-parallel` fix (deployment-service@scripts/vm/launch-mtds-sports-
       odds-backfill-vm.sh; backed up /tmp/odds_launcher_fixed.sh) once the deployment-service slot clone is clean —
-      BLOCKED by quickmerge-autostash residue (staged foreign launcher mods + dangling autostash stash@{0,1} +
-      phantom-UU gas-fees with no conflict markers; HEAD==origin/LDR). Cleanup = recover the 2 autostashes, reset index
-      to HEAD, re-apply the one-file fix. Do NOT blind-reset (foreign WIP in stashes). Repo: deployment-service.
-- [ ] [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue: `*_previous_day1`
-      archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo: instruments-service.
+      deployment-service@3448ce3 | Added ALLOW_PARALLEL var + --allow-parallel arg + guard bypass without VM_FORCE
+- [x] ✅ [DATA] P3. Weather Open-Meteo 400s on some (lat,lon,date) — assess if systematic (param issue:
+      `*_previous_day1` archive params) vs sparse-coverage locations; if systematic, fix the request params. Repo:
+      instruments-service. — instruments-service@6c91bb3 | Root cause: (1) Previous Runs API (\*\_previous_day1 vars)
+      only served from 2024-01-01 — added \_PREV_RUNS_START guard; (2) customer-archive-api returns 400 for pre-2024
+      dates — added free-tier ERA5 archive fallback on 400.
 
 ### 2026-06-21 22:40 — DISPARATE-SOURCE CONCURRENCY (operator insight): all fixture-driven sources fired in parallel
 
@@ -893,18 +894,16 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       (denominator) — unified-api-contracts@87c60b50. Rebuilt UAC tarball from clean LDR + launched NASDAQ+NYSE
       `ohlcv_1s` year-shard backfill (`OHLCV_DATA_TYPES=ohlcv_1s`, 2023→2026, 8 VMs). VERIFIED CAPTURING in prod:
       `tradfi-bf-nasdaq-ohlcv-1m-2025` log `dt=ohlcv_1s … captured=45`, NYSE `captured=158`.
-- [ ] [DATA] P2. **ohlcv_15m/24h (~207k unattempted) are MDPS-derived** (aggregated from 1m/1s) — convert when MDPS
-      aggregation runs over the 1m corpus. RUNNING: `mdps-backfill-tradfi-20260621-225740` (re-launched on fresh
-      tarball). **429 mitigation (2026-06-21) — TWO fixes shipped, residual deeper issue diagnosed:** (a) UTL per-VM
-      shard WRITE-DEBOUNCE (accumulate 50 entries / 5s, atexit final-drain) — unified-trading-library@94d9de30; (b) MTDS
-      finalize `ManifestWriter(batch_size 1→500)` — market-tick-data-service@d0f42ba. Both DEPLOYED (clean tarballs).
-      **BUT 429s persist** — root cause REFINED: the per-VM shard write counts are NON-MONOTONIC (54→55→65→56) =
-      CONCURRENT per-unit finalize threads race-writing the SAME shared `_index/per_vm/<vm>.parquet` with `final=True`
-      (read-modify-write race + force-flush bypasses the debounce). batch_size (per-instance) can't fix a many-writers
-      race. **NOT a correctness blocker** — writes retry + succeed, counts climb, the consolidator still merges 15m/24h
-      (just slow/noisy). DEEPER FIX needed: serialize the per-VM shard write (process-level lock per `per_vm_path`) AND
-      make the shared-shard coalesce ignore per-call `final=True` (only the VM-level atexit is truly final). Repo:
-      unified-trading-library `manifest_writer` (`_write_per_vm_shard`). Provenance: this Progress Log.
+- [x] ✅ [DATA] P2. **ohlcv_15m/24h MDPS aggregation 429 — FULLY FIXED + VERIFIED (2026-06-21).** Three coordinated
+      fixes deployed via clean tarballs: (a) UTL per-VM write-debounce (unified-trading-library@94d9de30); (b) MTDS
+      finalize `batch_size 1→500` (market-tick-data-service@d0f42ba); (c) the ROOT FIX — UTL per-VM shard write
+      SERIALIZED (process lock per `(bucket,per_vm_path)`, race-safe) + per-call `final` COALESCED into the debounce
+      (only `close()`/atexit is truly final), with a regression test proving the OLD per-instance lock LOST entries
+      under 24 concurrent writers (unified-trading-library@6b6d53bd). Re-launched `mdps-backfill-tradfi-20260621-234433`
+      on the fresh tarball + VERIFIED in prod: **429 count 1060→64** (~95% drop, early-boot only); per-VM shard counts
+      now **MONOTONIC** (2747→2752→2772→2824→2831 — no lost entries); writes **COALESCED** (52/20/6 entries per write,
+      84 writes for 2831 entries vs ~2831 per-cell before). 15m/24h cells convert as the backfill drains + consolidates.
+      Repo: unified-trading-library `manifest_writer` + market-tick-data-service.
 
 ### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
 

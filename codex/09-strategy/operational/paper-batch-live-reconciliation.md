@@ -1,11 +1,11 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-06-19
+last_reviewed: 2026-06-22
 ---
 
 # Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
 
-> **Status**: design SSOT (mapped 2026-06-19). Plan-of-record:
+> **Status**: partially shipped (G3/G4/G5 DONE; G1/G2 open). Plan-of-record:
 > `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent epic `batch_live_symmetry_master`).
 > Composes with `codex/04-architecture/global-ledger-architecture.md`,
 > `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`,
@@ -14,7 +14,8 @@ last_reviewed: 2026-06-19
 > **trade-by-trade** extension and the **as-if-filled ledger**.
 >
 > **owner**: vm-cross-cutting · **cadence**: per-paper-run (daily ledger) + T+1 (daily recon) · **verifier**:
-> `reconcile_day` determinism verdict + the daily ledger digest · **last_executed**: not yet (design)
+> `reconcile_day` determinism verdict + the daily ledger digest · **last_executed**: `paper-20260620002237-378a3735`
+> (2026-06-20 — real 7-day `carry_staked_basis` run, 7 instructions / 21 fills, ε=0 determinism verified)
 
 ---
 
@@ -362,25 +363,29 @@ Match key: `(instrument_key, strategy_instruction_id, tick_timestamp ± ε)`. Pe
 
 ## 7. EXISTS / MISSING inventory (the precise gap list)
 
-| Component                                                | Status           | Location                                                           |
-| -------------------------------------------------------- | ---------------- | ------------------------------------------------------------------ |
-| Shared decision path (`V2EngineOrchestrator.on_tick`)    | EXISTS           | strategy-service (batch + paper + live)                            |
-| `LedgerRow` + 4 aliases + 5 enums                        | EXISTS           | `uac …/crosscutting/ledger/`                                       |
-| `PnLAttributionRow` / `PnLFactor` / `PnLLayer` + emitter | EXISTS           | `uac internal/risk.py` + `utl pnl_attribution/emitter.py`          |
-| HWM (3 methods) + invariants + seeds                     | EXISTS           | `utl post_trade/hwm_invariants.py` + `client-reporting-api`        |
-| `BenchmarkFillEngine` (sim fills)                        | EXISTS           | `strategy_service/engine/backtest/benchmark_fills.py`              |
-| aggregate recon (stage 3b/3c)                            | EXISTS           | `batch-live-reconciliation-service`                                |
-| Slack via alerting-service (`AlertEvent`)                | EXISTS           | `alerting-service notifiers/slack.py` + `core/slack_dispatcher.py` |
-| immutable GCS market data + feature versioning           | EXISTS           | `uts-prod-market-data-*` + `feature_group_version` hive key        |
-| **Single shared fill model** (batch≡paper)               | **MISSING (G1)** | three divergent models                                             |
-| **Per-trade identity in execution events**               | **MISSING (G2)** | events are date-level float dicts                                  |
-| **`PositionLedger` schema + writer**                     | **MISSING (G3)** | named as a derived view, never materialised                        |
-| **`InstructionLedger` writer from fills**                | **MISSING (G3)** | fills don't emit `LedgerRow(event_type=TRADE)`                     |
-| **`PassiveLedger` synthesiser**                          | **MISSING (G3)** | funding/staking/lending accruals not written                       |
-| **realised-PnL computation**                             | **MISSING (G3)** | hardcoded `"0.00"` `client-reporting-api attribution.py:189`       |
-| **per-venue/instrument balance from ledger**             | **MISSING (G3)** | balances from CCXT snapshots, not `Σ delta`                        |
-| **run manifest / as-of snapshot**                        | **MISSING (G4)** | no pinned input/code-sha record                                    |
-| **trade-by-trade keyed diff + daily T+1 recon**          | **MISSING (G5)** | recon is `abs(mean_a−mean_b)`, single-date                         |
+Last updated: 2026-06-22 (G3/G4/G5 landed; G1/G2 still open).
+
+| Component                                                | Status              | Location / commit                                                                                    |
+| -------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------- |
+| Shared decision path (`V2EngineOrchestrator.on_tick`)    | EXISTS              | strategy-service (batch + paper + live)                                                              |
+| `LedgerRow` + 4 aliases + 5 enums                        | EXISTS              | `uac …/crosscutting/ledger/`                                                                         |
+| `PnLAttributionRow` / `PnLFactor` / `PnLLayer` + emitter | EXISTS              | `uac internal/risk.py` + `utl pnl_attribution/emitter.py`                                           |
+| HWM (3 methods) + invariants + seeds                     | EXISTS              | `utl post_trade/hwm_invariants.py` + `client-reporting-api`                                         |
+| `BenchmarkFillEngine` (sim fills)                        | EXISTS              | `strategy_service/engine/backtest/benchmark_fills.py`                                               |
+| aggregate recon (stage 3b/3c)                            | EXISTS              | `batch-live-reconciliation-service`                                                                  |
+| Slack via alerting-service (`AlertEvent`)                | EXISTS              | `alerting-service notifiers/slack.py` + `core/slack_dispatcher.py`                                  |
+| immutable GCS market data + feature versioning           | EXISTS              | `uts-prod-market-data-*` + `feature_group_version` hive key                                         |
+| **`InstructionLedger` writer from fills**                | **EXISTS** (P3.1)   | `utl ledger/materialize.py::ledger_row_from_trade_fill` — UTL@41d50461                              |
+| **`PassiveLedger` synthesiser**                          | **EXISTS** (P3.2)   | `utl ledger/materialize.py::passive_ledger_row` + `accrue_funding` — UTL@09885861                   |
+| **`PositionLedger` materialiser (avg-cost P&L)**         | **EXISTS** (P3.3)   | `utl ledger/materialize.py::materialize_position_ledger` — UTL@41d50461                             |
+| **realised-PnL computation**                             | **EXISTS** (P3.4)   | `client-reporting-api core/ledger_views.py::compute_ledger_views` — CRA@0d9b1bec                    |
+| **per-venue/instrument balance from ledger**             | **EXISTS** (P3.4)   | `client-reporting-api core/ledger_views.py` (by_venue/by_instrument rollups) — CRA@0d9b1bec         |
+| **marks join by canonical `instrument_key`**             | **EXISTS** (P1-fix) | `utl ledger/run_writer.py::pricing_ledger_jsonl` stamps key; `materialize_position_ledger` joins on it — UTL@68540e7a (fixes phantom $700K uPnL when two legs share `asset_canonical_id`) |
+| **run manifest / as-of snapshot**                        | **EXISTS** (P4.1)   | `utl ledger/run_writer.py::write_run_manifest` + `read_run_manifest`                                |
+| **trade-by-trade keyed diff + daily T+1 recon**          | **EXISTS** (P4.2)   | `blrs engine/trade_recon.py::reconcile_day` + `engine/daily_determinism_stage.py` — BLRS@4b611db    |
+| **daily T+1 recon verdict → AlertEvent (INFO/CRITICAL)** | **EXISTS** (P6.2)   | `blrs engine/recon_alert_client.py::post_recon_alert` called by `cli/handlers/daily_determinism_handler.py` — BLRS@0fabc9c |
+| **Single shared fill model** (batch≡paper)               | **MISSING (G1)**    | P1.6 open — `GroupCRunner` smart-matching not yet wired in paper path                               |
+| **Per-trade identity in execution events**               | **MISSING (G2)**    | P2.1/P2.2 open — events are date-level float dicts; `trade_key` not yet on execution events         |
 
 ---
 

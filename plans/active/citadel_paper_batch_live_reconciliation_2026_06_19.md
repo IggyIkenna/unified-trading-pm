@@ -255,8 +255,16 @@ are identified (2) and the ledger exists (3).
       NAV/HWM (`hwm_from_ledger`, advances-only) into one `AlertEvent(severity=INFO, code=DAILY_LEDGER_DIGEST)` carrying
       the trade-tape counts + P&L totals + HWM peak + per-venue balances, POSTed to alerting-service over HTTP (httpx;
       no cross-service import) → `#uts-live-alerts`. Companion to the P6.2 T+1 recon verdict digest.
-- [ ] [CODE] P2.6.2. **Daily T+1 recon verdict** → `AlertEvent` (INFO on ε=0 determinism + the execution-alpha summary;
-      CRITICAL on a determinism bug). Repo: batch-live-reconciliation-service.
+- [x] ✅ [CODE] P2.6.2. **Daily T+1 recon verdict** → `AlertEvent` — DONE (`batch-live-reconciliation-service@0fabc9c`
+      "feat(cli): daily-determinism CLI op (P7.1-B) + recon verdict post (P2.6.2)"). `DailyDeterminismHandler.run()`
+      (async) calls `run_daily_determinism_stage` (sync engine, returns `(report, rollup)`) then
+      `await post_recon_alert(report, alerting_service_url=cfg.alerting_service_url, channel=cfg.recon_alert_channel)`.
+      `build_recon_alert_event` maps `is_deterministic=True` → INFO (ε=0 + execution-alpha summary) and
+      `is_deterministic=False` on a DETERMINISM verdict → CRITICAL (determinism bug, carries `determinism_bug_class`).
+      Config fields `alerting_service_url` + `recon_alert_channel` live in `ReconConfig`. Empty URL → logged-only
+      (no HTTP; honest no-op). Tests: `test_daily_determinism_handler.py` (no-op / deterministic / bug paths). Code-read
+      verified 2026-06-22; all in `engine/recon_alert_client.py` + `cli/handlers/daily_determinism_handler.py`.
+      Provenance: agt-f35b99 2026-06-22.
 
 ## Phase 7 — The 19→26 operator dry-run (runs to completion)
 
@@ -287,10 +295,13 @@ are identified (2) and the ledger exists (3).
 
 ## Codex SSOT updates (Citadel §6 / Post-Plan-Phase Codex Audit)
 
-- [ ] [DOC] P3.8.1. Keep `codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync as each phase lands
-      (EXISTS/MISSING table → EXISTS). Update `codex/04-architecture/global-ledger-architecture.md` when the
-      `PositionLedger`/`PassiveLedger`/realised-PnL gaps close. Bump the `EventType` count in
-      `codex/02-data/ledger-event-taxonomy.md` (39, not 37). Repo: unified-trading-pm.
+- [x] ✅ [DOC] P3.8.1. Keep `codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync — DONE
+      (`unified-trading-pm@dc624d2b`). §7 EXISTS/MISSING table updated: G3 (InstructionLedger/PassiveLedger/
+      PositionLedger writers, realised-PnL/balance views, phantom-uPnL marks-join fix), G4 (run manifest), G5
+      (trade-by-trade recon + AlertEvent verdict). `last_reviewed` bumped 2026-06-22; `last_executed` set to
+      `paper-20260620002237-378a3735` (real 7-day carry_staked_basis run). G1/G2 remain MISSING (P1.6/P2.1-P2.2
+      still open). `codex/04-architecture/global-ledger-architecture.md` + `ledger-event-taxonomy.md` count
+      update deferred to P3.8.2 when GroupC/execution-events land. Provenance: agt-f35b99 2026-06-22.
 
 ## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
 
@@ -376,10 +387,16 @@ are identified (2) and the ledger exists (3).
 
 ### Data / producer (strategy-service + UTL + client-reporting-api)
 
-- [ ] [DATA] P1. FIX phantom `$700K` unrealized — canonical-instrument-key per-leg marks join (position key
-      `VENUE:INSTRUMENT_TYPE:SYMBOL` must equal the pricing-ledger key; today `LIDO:ETH` collides on `asset=ETH` with
-      the spot leg → grabs the wrong $3000 mark). Unrealized must be ≈0 per leg for the flat delta-neutral run. **IN
-      FLIGHT.** Repos: unified-trading-library (materialize join) + client-reporting-api (read_marks key).
+- [x] ✅ [DATA] P1. FIX phantom `$700K` unrealized — canonical-instrument-key per-leg marks join — DONE
+      (`unified-trading-library@68540e7a` "fix(ledger): join marks + group positions by canonical instrument_key (kill
+      phantom uPnL)"). `materialize_position_ledger` groups positions and joins marks on `_row_instrument_key(row)`
+      (`instrument_key_by_row_id[row.row_id]` when stamped, else `_legacy_instrument_key` = `{venue}:{asset}`) rather
+      than `asset_canonical_id` alone — LIDO:STAKING:ETH ≠ UNISWAP_V3:DEX_POOL:ETH even though both are `asset=ETH`.
+      `_parse_mark_jsonl` (CRA) already keys marks by the `instrument_key` field stamped by `pricing_ledger_jsonl` (UTL
+      `run_writer.py:445`). Full chain verified code-read 2026-06-22: write → JSONL `instrument_key` stamp → read_marks
+      dict → materialize join → each leg gets OWN mark → unrealized ≈ 0. Regression test:
+      `UTL/tests/unit/ledger/test_materialize.py::test_same_asset_different_venue_legs_get_own_marks_no_phantom_pnl`.
+      Repos: unified-trading-library + client-reporting-api. Provenance: agt-f35b99 2026-06-22.
 - [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real cross-venue transfers / money-movements: emit Treasury/TransferLedger
       rows for the carry_staked_basis capital flow (USDC deposit → spot swap → stake → perp margin posting), single
       `client_id` (funds-isolation). UTL transfer-row SSOT: `unified-trading-library@0c712f99`
@@ -656,7 +673,7 @@ are identified (2) and the ledger exists (3).
     2026-05-16..22 + rolling, honest-absence where a venue genuinely lacks history. Repo: features-service (cefi
     perp_funding calculator) + mtds (if derivative_ticker gaps surface).
 
-- [ ] [DATA] P2.11.13. **Source DEFI_LP_VAULT share-price + the fees_usd=0 pool fees with credentials** (operator
+- [x] ✅ [DATA] P11.13. **DEFI_LP_VAULT share-price + fee-0 pool fees — DONE** (strategy-service@70a76d87). Vault APY from the ERC-4626 `vault_share_price` corpus via `CanonicalVaultProvider` (yvUSDC ~335bps, sUSDe ~420bps, sDAI 124bps); fee-0 LP pools fixed with The-Graph `feesUSD` (Curve 18-46bps, Balancer 56-169bps). 24 unit tests. Verified run `paper-20260621225959-e86237f7`: **145 strategies / 7 archetypes** (DEFI_LP_VAULT 3 lit, DEFI_LP_POOL 2→3). 197 specs honestly skipped.
       2026-06-21: "fix that, we can get data, we got creds"). Two honest-skip gaps from P11.11/dex tranche are
       sourceable, not walls: (a) DEFI_LP_VAULT (ERC-4626 yearn/etc) needs a vault-share-price series — read
       `convertToAssets(1e18)` / `pricePerShare()` historically via the Alchemy/Helius archive RPC (creds
@@ -687,12 +704,43 @@ are identified (2) and the ledger exists (3).
       return target so the signal is less whipsawed by the noisy 15m next-bar label. No lookahead (trailing features,
       shifted target; IS-select 2023-24 / OOS-validate 2025-26). Repo: features/strategy research (`_panel.py`).
 
+- [ ] [UI] P11.14. **Prod UI selector resolves the 14-strategy run, not the 145-run** (found 2026-06-21). The CRA API
+      correctly resolves + serves the newest run `paper-20260621225959-e86237f7` (145 strategies / 7 archetypes —
+      verified authenticated: `net-views.run_id` = the 145-run on every call). But the prod odum-portal UI's strategy
+      selector renders only the 14 CARRY_STAKED_BASIS strategies of an OLDER run (`paper-20260621171725-fcf31316`). The
+      UI calls SAME-ORIGIN `/api/*` (Next.js server-side proxy to the CRA — no `*_API_URL` env on odum-portal, so the
+      target is baked in next.config rewrites). DIAGNOSIS: the selector's endpoint (instructions/manifest list) resolves
+      or caches a different run than the CRA `per-strategy` SSOT `resolve_canonical_run` — likely (a) the proxy points
+      at a different CRA, (b) a Next.js/React-Query cache, or (c) the selector endpoint doesn't key off
+      `resolve_canonical_run`. FIX: confirm the next.config `/api` rewrite target == the deployed CRA, ensure the
+      selector reads the same `resolve_canonical_run` SSOT, bust any cache. The 145-run data + ε=0 + all ledgers are
+      correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui
+      (+ verify next.config proxy target).
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-21 (autonomous) — FINAL: 145 strategies / 7 archetypes, ε=0 PROVEN, prod-deployed.** Both ε=0 proofs pass
+  (141-run 1016 trades + 145-run 1020 trades, paper≡batch, 0 deviations). UI drilldown deployed to PROD
+  (odum-portal-00032-4nq, www.odum-research.com, 3 regions, browser-verified render). CRA deployed to PROD
+  (client-reporting-api-00011, resolves the 145-run — authenticated API confirmed). Cleaned 4 throwaway verify runs
+  (paper-p11*) out of the canonical client prefix (they polluted the lexical run resolver) → moved to
+  client_id=_session-verify-archive. **ONE open item (P11.14): the prod UI selector still displays the 14-run, not the
+  145-run — a UI `/api` proxy / selector run-resolution nuance (CRA API is correct). Data + determinism + ledgers all
+  verified.**
+
+- **2026-06-21 (autonomous) — FULL MULTI-ARCHETYPE BOOK: 145 strategies / 7 archetypes + PROD UI LIVE.** Final run
+  `paper-20260621225959-e86237f7`: CARRY_BASIS_PERP 79, CARRY_FUNDING_DISPERSION 33, CARRY_STAKED_BASIS 14,
+  ARBITRAGE_PRICE_DISPERSION 10, DEFI_LP_CONCENTRATED 3, DEFI_LP_POOL 3, DEFI_LP_VAULT 3 — every archetype reading real
+  data from canonical GCS. P11.13 (vault APY + subgraph fees) shipped strategy-service@70a76d87. **UI drilldown DEPLOYED
+  TO PROD** (odum-portal-00032-4nq, www.odum-research.com, 3 regions; browser-verified selector + archetype grouping +
+  by-factor render, 0 console errors). CRA prod deploying the strategy_id-filter image (latest f665e0b) so the prod URL
+  shows all 145 (was resolving an old 14-strategy run). ε=0 proof on the 145-run running. CRA strategy_id endpoint was
+  erroring on the stale prod rev — fixed by the deploy.
 
 - **2026-06-21 (autonomous) — BTC-trend VALIDATED on the proper-execution base; "best of both" resolved → trend
   SUBSUMES the old de-risk/short (don't stack — it over-hedges).** Correction to the prior entry's plot: the first
