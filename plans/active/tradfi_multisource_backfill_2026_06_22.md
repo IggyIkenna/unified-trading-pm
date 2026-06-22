@@ -43,7 +43,7 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 - [x] [SCRIPT] P1. **CBOE cash-index reclass** — confirm VX-futures captured (✅ 134 futures_chain ohlcv_1m captured via
       XCBF.PITCH), then reclass CBOE cash-index (instrument_type=index, CBOE:INDEX:VIX/SPX) 1,614 expected_unattempted
       cells → empty_confirmed/EXPECTED_NO_PROVIDER_COVERAGE in-place with snapshot + GATE (rows + captured unchanged). —
-      market-tick-data-service@<sha> `reclass_cboe_cash_index_no_provider.py`; APPLIED to live tradfi `_index` (snapshot
+      market-tick-data-service@2c6425b `reclass_cboe_cash_index_no_provider.py`; APPLIED to live tradfi `_index` (snapshot
       `pre_cboe_cash_index_reclass_2026_06_22.parquet`); verified 1,614 index cells now empty_confirmed, VX
       futures_chain (134) preserved.
 - [x] [SCRIPT] P1. **FX via yahoo launcher** — `launch-tradfi-bf-fx-ohlcv-24h.sh` (Yahoo daily ohlcv_24h, venue-routed;
