@@ -903,6 +903,18 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 (autonomous finish-everything) — TSMOM_BTC_CTA archetype UAC half SHIPPED; version-lag BEATEN.** The UAC
+  version-promotion-lag (PM manifest `versions[uac]` lagged UAC-LDR pyproject — it had churned 0.39→0.44) was cleared
+  with `run-version-alignment.sh --fix` (synced the manifest to current repo versions; "All dependencies aligned"
+  passed), committed PM@0df3854f. Then popped the stashed UAC archetype WIP → UAC QG GREEN (327s, version-alignment
+  passed) → **quickmerged UAC@61ac3ad2** (`TSMOM_BTC_CTA` enum + family-map + leg-spec + the legit kalshi/polymarket
+  clob WS-connector mappings). UAC clean → dirty-deps gate cleared for downstream. strategy-service WIP reconciled
+  (15 commits behind, popped clean, no conflicts) — QG re-running with `IGNORE_TIMEOUT=true` (first run exit 1 ONLY on
+  the `<300s` META-gate at 797s + FOREIGN pre-existing ratchet violations in `transport.py`/`greek_model.py`/
+  `analog_execution_gate.py` — NOT the archetype; `test_tsmom_btc_cta` passed, basedpyright clean on the archetype).
+  In-flight: features BTC trailing-return features (P2.11.16, agent built → re-QG), UI mirror (P2.11.17, agent).
+  Remaining heavy: cs retrain (P2.11.18 finish), execution-service GroupC exec-timing (P2.11.19).
+
 - **2026-06-22 — HAND-OFF BRIEF (finish-everything, for a `human-planning-vm` session).** A sibling session shipped +
   verified LIVE: the white-screen fix (by_archetype dict→array), P11.18 (archetype-weighted PnL + paper/batch overlay),
   P11.19 (data-quality panel), P11.20 (alerts → the reachable PUBLIC deployment-api SSOT
