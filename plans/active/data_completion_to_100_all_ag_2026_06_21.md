@@ -1057,3 +1057,17 @@ independently throughout.
       public-RPC throttle. Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then
       gas-fees completes slowly. Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config). Ping
       filed.
+
+### 2026-06-22 07:50 — DEFI lane DONE (fetchable gap closed) + deferred follow-ups
+DeFi data completion ACHIEVED: raw 100%-attempted (expected_unattempted=0), fetchable data captured (2025=99%, 2024 strong),
+the 3.4M empty_confirmed is GENUINE honest-absence (pre-genesis chain + instrument-not-listed), live=4 rows, MDPS processing,
+manifest v9. honest-cov %~10 is structurally low for defi (could-exist universe dominated by pre-2024 cells where defi didn't exist).
+Deferred follow-ups (all filed as todos):
+- [ ] [DATA] P1 BLOCKED-CREDENTIALS. gas-fees MANTLE paid RPC (public-RPC 429-throttled) — filed above 2026-06-22 05:25.
+- [ ] [SCRIPT] P2. **defi live continuous scheduler** — forward-poll proven (4 rows) but is a one-shot VM; add a daily Cloud
+  Scheduler cron for continuous live forward-poll. Repo: deployment-service.
+- [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue rows
+  (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo: instruments-service.
+- [ ] [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible) —
+  working live, persist via quickmerge. Repo: deployment-service.
+
