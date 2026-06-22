@@ -772,7 +772,7 @@ are identified (2) and the ledger exists (3).
       group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
       leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated).
 
-- [ ] [UI] P11.14-hook. **Prod paper-trading React-Query hooks error without fetching** (open 2026-06-22). The 3 proxy
+- [ ] [UI] P2.14. **Prod paper-trading React-Query hooks error without fetching** (open 2026-06-22). The 3 proxy
       bugs are fixed (CRA reachable from the page: manual in-page fetch → 200, 13 strategies). But `useLedgerPerStrategy`
       / `useLedgerNetViews` etc. show "Failed to load" with NO `/api/client-reporting*` request issued, despite
       isMock=false (var inlined), clientId set (`?client=firm-paper-determinism`), no service worker, mock defined, fix
