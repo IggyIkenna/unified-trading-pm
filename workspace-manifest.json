@@ -852,7 +852,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.84,
+        "coverage_pct": 83.95,
         "qg_red_reason": "ruff",
         "large_file_count": 0,
         "warn_file_count": 26
