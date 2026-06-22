@@ -1913,7 +1913,17 @@
     "agent-orchestrator": "0.40.0",
     "e2e-testing": "0.24.0",
     "deployment-service": "0.39.0",
-    "unified-api-contracts": "0.48.0"
+    "unified-api-contracts": "0.48.0",
+    "alerting-service": "0.25.0",
+    "batch-live-reconciliation-service": "0.24.0",
+    "execution-service": "0.29.0",
+    "features-service": "0.24.0",
+    "fund-administration-service": "0.9.5",
+    "instruments-service": "0.36.0",
+    "market-data-processing-service": "0.10.11",
+    "market-tick-data-service": "0.45.0",
+    "ml-service": "0.20.0",
+    "unified-trading-library": "0.35.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
