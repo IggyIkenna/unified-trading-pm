@@ -1339,3 +1339,28 @@ lane.** Filed as targeted todos:
       Actions/compute spend. Verify the tradfi swarm is draining (self-deleting on completion) + that none OOM'd silently;
       if stalled, throttle. Repo: deployment-service (tradfi lane). Provenance: this Progress Log; this is a TradFi-lane
       finding surfaced during the defi audit, not defi-blocking.
+
+### 2026-06-22 13:00 — DEFI 2nd defect found+fixed: 441k blank-asset_group captures (honest_cov 10.67%→18.66%)
+
+While verifying captured counts, found a SECOND denominator defect: **441,008 defi rows with BLANK `asset_group`**
+(should be `defi`), of which **354,294 are CAPTURED** real data (canonical venues UNISWAP_V3/BALANCER/AAVE_V3, canonical
+chains, schema v9, `batch_onchain_subgraph`/`rpc` pipeline_modes, blank `enumerator_run_id` = WRITER-produced captures).
+A consumer filtering `asset_group=='defi'` (deployment-UI denominator) UNDERCOUNTS captured by ~354k. **SNAPSHOT**
+`_index/snapshots/pre_asset_group_stamp_2026_06_22.parquet`. **APPLIED a surgical stamp** (guard: bucket has no non-defi
+asset_group; row-count + captured-count preserved): stamped all 441,008 blank-ag rows → `asset_group=defi`. Result: ALL
+3,848,270 rows now `asset_group=defi`, captured **718,197**, empty_confirmed 3.10M, attempted_failed 30,214, schema 100%
+v9 → **honest_cov_defi = 18.66%** (bucket-wide; was 7.50% at session start, 10.67% after the legacy-phantom delete).
+**ROOT CAUSE is a LIVE writer bug** (NOT just legacy): ALL 2026-06 captured rows (387k written 2026-06-22, 53k
+2026-06-21 by the CURRENT capture fleet) arrive blank-ag → new captures keep arriving blank until the writer is fixed.
+The index-stamp is the re-runnable interim mitigation.
+
+- [ ] [DATA] P1. **DEFI writer must stamp `asset_group=defi` on the manifest ROW** — the defi MTDS capture path
+      (`record_captured`/`record_empty`/`record_zero_rows` → UTL `manifest_writer`) threads `asset_group` for
+      source-stamping but does NOT write it into the row's `asset_group` COLUMN (it is NOT in `_ROW_KEY_COLUMNS`; the
+      column is populated elsewhere/not at all for defi captures) → every defi capture lands blank-ag. Trace where the
+      `asset_group` column value is set on a captured row in UTL `manifest_writer/_writer_io.py`/`_rows.py` and ensure
+      the defi handlers pass + persist it. Add a unit test asserting a defi `record_captured` row carries
+      `asset_group=defi`. Until fixed, re-run the index-stamp (`pre_asset_group_stamp_2026_06_22.parquet` snapshot is the
+      rollback). Repo: unified-trading-library (+ market-tick-data-service handler call sites). Provenance: this Progress
+      Log; cross-repo data-correctness — also affects cefi/tradfi/sports/prediction if their writers share the gap (audit
+      each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.**
