@@ -412,20 +412,25 @@ safe-gate (running service untouched until a verified restart) worked as designe
       VALIDATED on the VM: `get_storage_client(provider="gcp").download_bytes(orchestrator-creds, internal-private.pem)`
       → `bytes=241` with the env var unset. Fix = remove the (redundant) `GOOGLE_APPLICATION_CREDENTIALS` line from the
       central VM's `.env.local`.
-- [ ] [ORCHESTRATOR/UTL] P1. **Blocker 1b — UTL hardening (the proper fleet-wide fix).** `_get_native_client` must NOT
-      assume `GOOGLE_APPLICATION_CREDENTIALS` points at a service-account — it should detect the cred type
-      (`json type == "service_account"` → `from_service_account_json`, else default ADC which handles authorized_user)
-      so a user-ADC VM works without the env-unset workaround. Repo: `unified-trading-library`
-      `cloud_interface/providers/gcp.py:80-86`. Ship via quickmerge → the orchestrator picks it up on redeploy.
-- [ ] [OPS] P1. **Blocker 2 — account token wiring (REMAINS; the real redeploy gate).** With Blocker 1 fixed, the new
-      code boots, loads the internal keys, and the `CredsEnvPoller` populates 4 accounts (the "0 accounts" at Ready was
-      async-load timing, not a fault) — BUT it reads every account as having **no `oauth_token_env_file`** →
-      `usage poller: … skipping /usage probe (operator: run claude setup-token and add the env file)` for all 4 →
-      **`ACCOUNT POOL EXHAUSTED — no headroom account`** → it cannot spawn any worker. The old code reads the same
-      accounts as usable (spawns fine), so the new code's account/token resolution (post-refactor `CredsEnvPoller` +
-      account schema vs the VM's S3 `accounts/` + local `~/.claude-accounts/<id>.env` token files) diverged. **Reconcile
-      the new code's `oauth_token_env_file` wiring with the VM's account setup before redeploying.** Owner: planning VM /
-      operator (account/token setup knowledge).
+- [x] ✅ [UTL] P1. **Blocker 1b — UTL hardening (SHIPPED).** `_get_native_client` now only calls
+      `storage.Client.from_service_account_json` when the creds file is an actual service-account key
+      (`type == "service_account"`); a user/authorized_user ADC (or no path) goes through `storage.Client(project=…)` →
+      `google.auth.default()`, which handles both cred types — so a user-ADC host works without the env-unset workaround.
+      `_is_service_account_json` helper + 2 regression tests (real SA → `from_service_account_json`; authorized_user ADC
+      → default path), QG-green. — unified-trading-library@5e413c7f
+- [ ] [OPS] P1. **Blocker 2 — account roster file (ROOT CAUSE NAILED; operator-domain fix).** The new code REQUIRES an
+      explicit `oauth_token_env_file` per account; the **old code derived** the token path by convention
+      (`~/.claude-accounts/<id>.env`), so it spawns fine without the field. The running 4-account state (sub-a/b/c/d,
+      from the DB/snapshot) lacks `oauth_token_env_file` → new code = `ACCOUNT POOL EXHAUSTED`. The correctly-schema'd
+      roster (WITH `oauth_token_env_file`) lives at **S3 `s3://uts-orchestrator-creds-427895769566/config/accounts.json`
+      but is STALE** (2026-05-22; only 3 accounts — sub-a/b/c, missing sub-d) AND is **not present locally** at
+      `data/config/accounts.json` (the new code's read path — only `accounts.mock.json` is there; the live one is
+      operator-edited/committed and went missing). All 4 token `.env` files exist in `~/.claude-accounts/`. **Fix: place
+      a current `data/config/accounts.json` with all 4 accounts each carrying `oauth_token_env_file:
+      ~/.claude-accounts/<id>.env`** (+ refresh the stale S3 copy to match). The schema is known (matches the S3 copy);
+      the roster (which accounts / limits / sub-d) is the operator's live account config — confirm the roster, then the
+      redeploy runs both validated fixes (unset `GOOGLE_APPLICATION_CREDENTIALS` + this file) safe-gated. Owner: operator
+      (account roster).
 - [ ] [OPS] P2. **Then: catch the 128-stale orchestrator clone up to current LDR + redeploy** (activates the FM7 fix +
       the cap-default + 128 commits of other self-healing improvements). Recipe proven: stash dirty → ff-pull → dry-run →
       restart → verify (4 usable accounts + spawning) → rollback on degrade. **Also consider an AO deploy cron** so the
