@@ -25,7 +25,7 @@ zero trades on a day → `empty_confirmed` (we fetched, no trades), NOT `expecte
 manifest: every listed strike-day is `captured` (had trades) or `empty_confirmed`; `expected_unattempted → ~0`.
 honest-cov will be LOW (most option strikes illiquid) but honest + complete. Databento is a FIXED monthly
 subscription billed only for the 3-dataset allowlist (GLBX.MDP3 + DBEQ.BASIC + XCBF.PITCH; ohlcv-1s/1m) —
-billing-fail-closed gate (`assert_databento_request_allowed`) makes off-allowlist impossible, so launch freely.
+billing-fail-closed gate (`assert_databento_request_allowed`) makes off-allowlist impossible, so launch freely. **Schema levels (`DATABENTO_SCHEMA_LEVEL`):** L0 = ohlcv-1s/1m/1h/1d + defs/stats/status (16y incl. history) — the batch fleet fetches L0 only; L1 = trades/tbbo/mbp-1/bbo (1y incl.); L2 mbp-10 / L3 mbo (1mo). Live streaming includes ALL levels; the gate enforces per-level rolling-history floors so deep L1+ historical fetch can't trip pay-as-you-go.
 Rate limit is **per-IP** (100 concurrent connections/IP, `databento_client_config.py`) — so the horizontal
 fleet SCALES (each VM its own IP); no shared bottleneck. `DATABENTO_NUM_API_KEYS` key-pool exists if a per-account
 limit ever bites.
@@ -105,7 +105,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       `venue:type:underlying` e.g. `CME:FUTURES:ES`). Launch per shard: `deployment-service/scripts/vm/launch-mtds-live.sh
       --asset-group tradfi --shard-spec tradfi:<VENUE>:<DATA_TYPE> --instrument-ids "<...>"`. WORK: register the
       databento_tradfi_ws factory for all tradfi venues (CME/NASDAQ/NYSE/CBOE/ICE) in `WS_FEED_CONNECTOR_FACTORIES`, confirm it
-      streams ohlcv_1s/1m + trades + tbbo (not just trades), then launch a producer per (venue,data_type) shard + a forward-poll
+      streams ohlcv_1s/1m + trades + tbbo (not just trades), then launch a producer per (venue,data_type) shard + a forward-poll (**SCHEMA-LEVEL NOTE:** trades/tbbo are **L1** not L0 — in-package + fully covered for LIVE streaming, which includes all levels, but only **1 year** of included BATCH history vs L0 ohlcv-1s/1m 16y; the gate caps L1 historical fetch at ~1y so don't assume tbbo is free-16y like the bars)
       daily cron (`launch-tradfi-fwd-daily-cron-vm.sh`). **This is the largest remaining piece** (a live-rollout build, not a
       backfill). **Success:** live_databento producers for every tradfi (venue,data_type) shard; a recent day's live rows ==
       batch rerun (live==batch parity, per `codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Repos:
