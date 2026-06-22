@@ -1241,7 +1241,7 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 72.47,
-        "qg_red_reason": "pytest",
+        "qg_red_reason": "basedpyright",
         "large_file_count": 0,
         "warn_file_count": 0
       }
