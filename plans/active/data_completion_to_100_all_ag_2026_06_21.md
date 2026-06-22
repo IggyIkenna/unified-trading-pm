@@ -15,11 +15,11 @@ status: active
 # Data completion to 100% — all AGs, batch + live, manifest v9
 
 > **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) public perp backfill (2026-06-22 14:46Z)**: 3 year-shard VMs
-> `cefi-extended-{2024,2025,2026}-20260622-144652` (e2-standard-8, `VM_TASK=mtds-backfill`, `--venues EXTENDED-STARKNET
-> --asset-group CEFI --data-types trades book_snapshot_5 derivative_ticker ohlcv_1m`, `MANIFEST_PER_VM_SHARDS=true`,
-> `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, self-delete on completion). Converting cefi `_index` Extended
-> `expected_unattempted` (61,800 cells @ launch) → captured. P2 of the Extended-Starknet lane. Banner removed by launcher
-> at completion.
+> `cefi-extended-{2024,2025,2026}-20260622-144652` (e2-standard-8, `VM_TASK=mtds-backfill`,
+> `--venues EXTENDED-STARKNET --asset-group CEFI --data-types trades book_snapshot_5 derivative_ticker ohlcv_1m`,
+> `MANIFEST_PER_VM_SHARDS=true`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, self-delete on completion). Converting
+> cefi `_index` Extended `expected_unattempted` (61,800 cells @ launch) → captured. P2 of the Extended-Starknet lane.
+> Banner removed by launcher at completion.
 
 Operator 2026-06-21: drive MTDS market-data + IS reference-data to **100% honest-coverage across every asset group,
 batch AND live, manifest v9** — and DON'T STOP until done. The **only** sanctioned exclusion is **batch Tardis (cefi
@@ -182,22 +182,24 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `market_tick_data_service/adapters/_umi_extended.py` (window-aware candle paging + truncation guard + per-leaf
       failure routing for funding/trades, funding-start aligned to UAC coverage_start 2025-07-18). Public market data
       needs NO API key (read-only REST verified live 2026-06-22). Verify adapter+creds reachable, ship both files
-      QG-green. Repo: instruments-service / market-tick-data-service.
-      — instruments-service@9bb7cdf + market-tick-data-service@3b9b27e | QG: both green (IS 18s, MTDS 110s)
+      QG-green. Repo: instruments-service / market-tick-data-service. — instruments-service@9bb7cdf +
+      market-tick-data-service@3b9b27e | QG: both green (IS 18s, MTDS 110s)
 - [ ] [DATA] P2. **cefi — run the now-unblocked PUBLIC EXTENDED-STARKNET instrument + perp backfill** (Extended-Starknet
-      lane 2026-06-22). Extended public market data needs NO API key. Run IS instrument-catalogue for EXTENDED-STARKNET +
-      MTDS batch backfill for its perp data_types (candles 2024-07-26→yesterday, funding_rates 2025-07-18→yesterday,
-      orderbook, trades). `MANIFEST_PER_VM_SHARDS=true`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, e2-standard-8,
-      canonical `venue=EXTENDED-STARKNET`, `asset_group=cefi`. VERIFY `expected_unattempted`→`captured` for Extended cells
-      (read cefi `_index` before/after). Exit-code-aware monitor (read GCS run.log `exit_code`, never infer from VM-gone).
-      Repo: deployment-service / instruments-service / market-tick-data-service.
+      lane 2026-06-22). Extended public market data needs NO API key. Run IS instrument-catalogue for
+      EXTENDED-STARKNET + MTDS batch backfill for its perp data_types (candles 2024-07-26→yesterday, funding_rates
+      2025-07-18→yesterday, orderbook, trades). `MANIFEST_PER_VM_SHARDS=true`,
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, e2-standard-8, canonical `venue=EXTENDED-STARKNET`,
+      `asset_group=cefi`. VERIFY `expected_unattempted`→`captured` for Extended cells (read cefi `_index` before/after).
+      Exit-code-aware monitor (read GCS run.log `exit_code`, never infer from VM-gone). Repo: deployment-service /
+      instruments-service / market-tick-data-service.
 - [ ] [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
       2026-06-22). TWO Extended code paths exist: `adapters/_umi_extended.py` (CANONICAL — wired via
       `umi_tick_provider._route_extended` for `EXTENDED-STARKNET`) vs
       `market_interface/adapters/onchain_perps/extended_adapter.py` + `market_interface/clients/extended_base_client.py`
-      (UNUSED — `factory.py` registers only Aster/Hyperliquid from onchain_perps; `ExtendedAdapter` referenced only by its
-      own `__init__` re-export + one integration test). Delete the unused dup + its `__init__` exports + the integration
-      test, update consumers (no parallel old+new paths — delete-deprecated rule). Repo: market-tick-data-service.
+      (UNUSED — `factory.py` registers only Aster/Hyperliquid from onchain_perps; `ExtendedAdapter` referenced only by
+      its own `__init__` re-export + one integration test). Delete the unused dup + its `__init__` exports + the
+      integration test, update consumers (no parallel old+new paths — delete-deprecated rule). Repo:
+      market-tick-data-service.
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
@@ -591,46 +593,119 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
 
 ## Progress Log
 
+### 2026-06-22 (autonomous, continuous-paper dispatch) — B1 capture + B3 UI live-feed shipping; B2 engine next
+
+Operator dispatch: "make DeFi paper trading run CONTINUOUSLY like it's live" (continuous on-chain data → streaming paper
+engine → existing UI live). Substrate mapped by 3 Explore agents. Status:
+
+- **B1 (continuous DeFi capture) — deployment-service LANDED `deployment-service@2e396f8`** (on origin/LDR):
+  parameterized `scripts/vm/launch-defi-forward-poll.sh` over `--operation` (collect-dex-swaps/dex-pools/oracle-prices +
+  the existing lst-rates), per-op singleton lock, + NEW `terraform/gcp/defi_forward_poll_scheduler.tf` = a `*/5` Cloud
+  Scheduler firing the forward-poll for the 3 price-sensitive ops, gated by new var `enable_defi_forward_poll` (default
+  true). Slow ops (lst-rates/lending-indices) stay daily. QG-green (114s).
+  - **mtds pipeline_mode live-tag fix WRITTEN + test-green (5243 passed) but local quickmerge BLOCKED by the known
+    QG-harness coverage mis-root** (`rootdir: unified-trading-pm, collected 6 items` → false 32.69% coverage, plan P3.1
+    fleet defect; server `quality-gates-v2` is authoritative). Files staged in clone:
+    `market_tick_data_service/cli/handlers/{dex_pools,dex_swaps,oracle_prices}_handler.py` +
+    `tests/unit/test_dex_pools_handler.py`. The fix: live runs wrote `pipeline_mode=batch_*` because the parquet write
+    used `run_tag` (defaults batch, independent of `--mode`); now folds `runtime.mode` into `_run_tag` so `--mode live`
+    → `live_*`. **TODO P1: land this once the coverage-harness mis-root is fixed (or via server gate).** Heartbeat
+    (`emit_pipeline_heartbeat`) on the DeFi live path deferred (UTL top-level export or sanctioned noqa) — **TODO P2**.
+- **B3 (UI live feed) — LANDED `unified-trading-system-ui@a67e3c34`** (origin/LDR, QG+pw:L2 69-pass green). **Prod
+  odom-portal deploy BLOCKED in this env:** the SA lacks `serviceusage.services.use` on
+  `central-element-323112_cloudbuild` → `gcloud builds submit` forbidden (operator/CI must deploy the image; code is
+  landed regardless). `unified-trading-system-ui`: ledger React-Query hooks already polled 30s; introduced DRY
+  `LIVE_LEDGER_REFETCH_MS=5000` (+`*2` for heavy rollups) + `refetchIntervalInBackground` + `staleTime:0` so the
+  existing `/paper-trading` page refreshes ~5s (near-real-time); added a "LIVE • updated Ns ago" indicator + a
+  regression smoke (`tests/smoke/paper-trading-ledger.smoke.spec.ts`, fails if reverted to 30s). pw:L2 ✓ (69 passed).
+  **ALSO fixed the UI capability-verdict-matrix parity drift** (= P2.11.20 UI half):
+  `public/ capability-verdict-matrix.json` was stale at 57 archetypes (no TSMOM_BTC_CTA) vs UAC 58 → copied UAC
+  byte-identical + bumped `tests/unit/wizard/parity-gates.test.ts` 57→58. This unblocked ALL UI ships (the UI repo QG
+  was red on LDR).
+- **B2 (continuous streaming paper engine) — NOT STARTED (design locked).** Minimal safe path: a new strategy-service
+  `--operation paper-stream --mode paper` = a bounded loop (duration+interval) that each tick calls the EXISTING
+  `run_paper` machinery against the latest rolling window, writing to a STABLE continuous `run_id` (e.g.
+  `paper-stream-{ag}-{date}`) so the CRA `resolve_canonical_run` keeps resolving it + the UI (now 5s-poll) renders it
+  live. Reuse ALL existing ledger writers + canonical InstrumentKey (NO new metadata maps). DISTINCT from the daily
+  determinism run (different op + run_id; do NOT touch `uts-prod-paper-engine-run-cron`). batch=live preserved (each
+  tick is a deterministic run). Deploy as a Cloud Run job / scheduled. Repos: strategy-service (+deployment-service
+  job).
+- **Deploy steps owned by parent (no fire-and-forget):** (1) `terraform apply` defi*forward_poll_scheduler in
+  `deployment-service/terraform/gcp/` (target the new scheduler + var); (2) manual one-shot verify:
+  `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices` → T+10min check
+  rows land at
+  `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=<today>/pipeline_mode=live*\*/asset_group=defi/`; (3) odom-portal UI deploy `cd
+  unified-trading-system-ui && bash scripts/deploy-cloud-run.sh --env=prod --cloud`.
+
 ### 2026-06-22 — GAP (operator): paper trading is DAILY-recon + 15-min-signal, NOT continuous/block-level
 
 Operator: even for PAPER we want >daily (block-level) trade/position updates + UI at that rate. Found: the deployed
 paper engine is PRODUCTION `strategy-service:latest` (NOT e2e-testing; e2e has only the run-paper.sh smoke). Cadence:
-`uts-prod-paper-engine-run-cron 0 2 * * *` (DAILY, `--mode paper --rolling-days 7`, `purpose=paper-week-determinism`
-= the citadel paper==batch ε=0 RECONCILIATION, not a live trader) + `paper-signal-engine-15m */15`. So paper trades/
-positions update 15-min (signals) / daily (recon), NEVER block-level.
-Cadence cascade for block-level paper (the operator vision): (1) continuous market data [DeFi daily-batch gap above];
-(2) a CONTINUOUS/streaming paper engine consuming the live tick/block stream + booking positions per-tick — distinct
-from the daily determinism job; (3) UI (DART/deployment-ui) streaming trade/position updates at that rate. None exist
-today. Relates to citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; this is the LIVE-
-continuous companion).
+`uts-prod-paper-engine-run-cron 0 2 * * *` (DAILY, `--mode paper --rolling-days 7`, `purpose=paper-week-determinism` =
+the citadel paper==batch ε=0 RECONCILIATION, not a live trader) + `paper-signal-engine-15m */15`. So paper trades/
+positions update 15-min (signals) / daily (recon), NEVER block-level. Cadence cascade for block-level paper (the
+operator vision): (1) continuous market data [DeFi daily-batch gap above]; (2) a CONTINUOUS/streaming paper engine
+consuming the live tick/block stream + booking positions per-tick — distinct from the daily determinism job; (3) UI
+(DART/deployment-ui) streaming trade/position updates at that rate. None exist today. Relates to
+citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; this is the LIVE- continuous companion).
 
-- [ ] [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — `BLOCKED-UPSTREAM-OUTAGE` (DeFi continuous-data P1 not yet built; see item below). Beyond the daily determinism run: a streaming strategy-service paper mode that consumes the live market-data stream (per CeFi live VMs + the new DeFi continuous capture) and books trades/positions per-tick, emitting block-level updates the UI (DART) renders live.
-  **Depends on the DeFi continuous-data P1 (item below).** CeFi-only partial implementation is possible (CeFi live VMs ARE running), but the `arbitrage_price_dispersion` archetype requires DeFi continuous data. Repos: strategy-service + unified-trading-system-ui + deployment-service.
-  SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md (determinism) + this (live-continuous).
-  **UI EXISTS — feed it, don't build it**: the page is `unified-trading-system-ui/app/paper-trading/{ledgers,
-  coin/[coin]}` + DART (`components/dart/`); today it renders the DAILY paper-run output. Continuous mode = the live-
-  paper engine writes the 4 ledgers (Instruction/Position/Passive/Pricing) + PnL per-tick → this existing page polls/
-  streams them real-time (block-level trades/positions/PnL), SAME page, just a live feed. Daily determinism recon stays
-  untouched alongside. Unblocked once DeFi continuous-data P1 ships.
+- [ ] [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — **UI HALF SHIPPED 2026-06-22**
+      (`unified-trading-system-ui@a67e3c34`, QG+pw:L2-green): the existing `/paper-trading` page now polls the ledgers
+      at **5s** (`LIVE_LEDGER_REFETCH_MS`, was 30s) + "LIVE • updated Ns ago" indicator + regression smoke — so the
+      moment a continuous engine writes the stable run_id, the page renders it live (CRA `resolve_canonical_run`
+      resolves by file-existence, no completion flag needed). **ENGINE HALF (B2) NOT BUILT** — design locked in the
+      autonomous Progress Log entry above (new strategy-service `--operation paper-stream`, bounded loop reusing
+      `run_paper` → stable continuous run_id, distinct from the daily determinism run; deploy as a Cloud Run job).
+      **Prod UI deploy BLOCKED here:** this env's SA lacks `serviceusage.services.use` on
+      `central-element-323112_cloudbuild` → `gcloud builds submit` forbidden; the odom-portal image deploy is an
+      operator/CI step. Beyond the daily determinism run: a streaming strategy-service paper mode that consumes the live
+      market-data stream (per CeFi live VMs + the new DeFi continuous capture) and books trades/positions per-tick,
+      emitting block-level updates the UI (DART) renders live. **Depends on the DeFi continuous-data P1 (item below).**
+      CeFi-only partial implementation is possible (CeFi live VMs ARE running), but the `arbitrage_price_dispersion`
+      archetype requires DeFi continuous data. Repos: strategy-service + unified-trading-system-ui + deployment-service.
+      SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md (determinism) + this (live-continuous). **UI EXISTS —
+      feed it, don't build it**: the page is `unified-trading-system-ui/app/paper-trading/{ledgers, coin/[coin]}` + DART
+      (`components/dart/`); today it renders the DAILY paper-run output. Continuous mode = the live- paper engine writes
+      the 4 ledgers (Instruction/Position/Passive/Pricing) + PnL per-tick → this existing page polls/ streams them
+      real-time (block-level trades/positions/PnL), SAME page, just a live feed. Daily determinism recon stays untouched
+      alongside. Unblocked once DeFi continuous-data P1 ships.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
-Operator caught it: DeFi live market-data = `uts-prod-mtds-collect-{dex-swaps,dex-pools,oracle-prices,evm-defi,
-solana-defi,lending-indices,lst-rates,perp-funding}` Cloud Run jobs, ALL `--mode batch` on a ONCE-DAILY cron (00:05-
-02:05). NOT continuous. (These are MTDS market-data, NOT strategy — strategy/execution = paper-trading-engine etc.)
-CeFi/prediction/sports/tradfi run CONTINUOUS live VMs (websocket streams, ephemeral=miss-is-lost). DeFi has no
-continuous-live equivalent (only the daily batch + an UNUSED launch-defi-forward-poll.sh).
-WHY it matters: on-chain is retroactively queryable so daily batch is gap-free for FEATURES/BACKTEST (≤24h latent),
-but LIVE TRADING `arbitrage_price_dispersion` needs near-real-time DEX+oracle prices (move every block) → a daily
-snapshot cannot feed a live arb. `carry_staked_basis` (LST APR/Aave rates, slow) is arguably daily-OK.
+Operator caught it: DeFi live market-data =
+`uts-prod-mtds-collect-{dex-swaps,dex-pools,oracle-prices,evm-defi, solana-defi,lending-indices,lst-rates,perp-funding}`
+Cloud Run jobs, ALL `--mode batch` on a ONCE-DAILY cron (00:05- 02:05). NOT continuous. (These are MTDS market-data, NOT
+strategy — strategy/execution = paper-trading-engine etc.) CeFi/prediction/sports/tradfi run CONTINUOUS live VMs
+(websocket streams, ephemeral=miss-is-lost). DeFi has no continuous-live equivalent (only the daily batch + an UNUSED
+launch-defi-forward-poll.sh). WHY it matters: on-chain is retroactively queryable so daily batch is gap-free for
+FEATURES/BACKTEST (≤24h latent), but LIVE TRADING `arbitrage_price_dispersion` needs near-real-time DEX+oracle prices
+(move every block) → a daily snapshot cannot feed a live arb. `carry_staked_basis` (LST APR/Aave rates, slow) is
+arguably daily-OK.
 
-- [ ] [INFRA] P1. **DeFi continuous live market-data capture** — stand up a persistent/high-frequency DEX-price +
-  oracle-price capture for the live-trading archetypes (per-block or near-real-time), not the once-daily batch. Either
-  a persistent live VM (mirror the CeFi `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent
-  Cloud Run cron (e.g. */1) for the price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow
-  ones (lst-rates, lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat.
-  Repo: market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi
-  arb archetype going live.
+- [ ] [INFRA] P1. **DeFi continuous live market-data capture** — **IaC SHIPPED 2026-06-22**
+      (`deployment-service@2e396f8`, QG-green): `launch-defi-forward-poll.sh` parameterized over `--operation`
+      (collect-dex-swaps/dex-pools/oracle-prices + the existing lst-rates, per-op singleton lock) + NEW
+      `terraform/gcp/defi_forward_poll_scheduler.tf` = a `*/5` Cloud Scheduler firing the forward-poll for the 3
+      price-sensitive ops (gated by `enable_defi_forward_poll`, default true; slow ops stay daily). **REMAINING:** (a)
+      **mtds live pipeline_mode fix WRITTEN + test-green (5243 passed) but NOT LANDED** — local quickmerge blocked by
+      the QG-harness coverage mis-root (`rootdir: unified-trading-pm, collected 6 → false 32.69%`, plan P3.1 fleet
+      defect); fix folds `runtime.mode` into `_run_tag` so `--mode live` writes `pipeline_mode=live_*` (files staged in
+      the mtds clone: `cli/handlers/{dex_pools,dex_swaps,oracle_prices}_handler.py` +
+      `tests/unit/test_dex_pools_handler.py`); land via server `quality-gates-v2` or once the harness is fixed. (b)
+      **`terraform apply`** the scheduler (operator/CI infra op — broad apply blast-radius in a live project; use
+      `-target` for the new scheduler) + a `create-code-tarballs.sh` rebuild so the live-tag fix reaches the launched
+      VMs. (c) **heartbeat** (`emit_pipeline_heartbeat`) on the DeFi live path deferred (UTL top-level export or
+      sanctioned `noqa`). Manual verify when applied:
+      `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices` → T+10min check
+      rows at
+      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`. Orig
+      intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading archetypes
+      (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the CeFi
+      `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1) for the
+      price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates,
+      lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat. Repo:
+      market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb
+      archetype going live.
 
 ### 2026-06-22 ~14:36 — Per-AG re-stamp COMPLETE (all 5 AGs, guarded) + deploy-gap pinned (writer fix not yet on VMs)
 
@@ -715,8 +790,14 @@ job ran a STALE image (pre IS@42dd37c — the canonical-venue enum fix is on LDR
 ~1.44M legacy-venue (`PROTOCOL-CHAIN`/blank-chain) phantom empties nightly (drops honest_cov_defi 18.66%→~7.5%). Pausing
 stops it definitively; the legacy-venue DELETE (IS@7b6512c) is re-runnable interim mitigation.
 
-- [x] [DEPLOY] P0. **Resume `expected-universe-v2-defi-daily`** once IS@42dd37c is on `main` + the `expected-universe-v2-defi` Cloud Run image is rebuilt past it (VERIFY deployed image SHA post-dates 42dd37c first). `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`. Currently PAUSED 2026-06-22. ✅ — IS PR#523 merged 2026-06-22T14:21Z; image rebuilt (sha256:0b7f3f7a = 0.35.0 :latest, built 14:31Z); scheduler ENABLED — instruments-service@22398eb
-- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator); pause+delete+canonical-reseed per-AG if found.
+- [x] [DEPLOY] P0. **Resume `expected-universe-v2-defi-daily`** once IS@42dd37c is on `main` + the
+      `expected-universe-v2-defi` Cloud Run image is rebuilt past it (VERIFY deployed image SHA post-dates 42dd37c
+      first).
+      `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`.
+      Currently PAUSED 2026-06-22. ✅ — IS PR#523 merged 2026-06-22T14:21Z; image rebuilt (sha256:0b7f3f7a = 0.35.0
+      :latest, built 14:31Z); scheduler ENABLED — instruments-service@22398eb
+- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator);
+      pause+delete+canonical-reseed per-AG if found.
 
 **P1 (DRAFTED, NOT shipped — INCOMPLETE):** the UTL writer fix was started (asset_group field on `AvailabilityRecord`,
 `MissingAssetGroupError`, serializer + call-site wiring) but the agent died (transient API rate-limit) BEFORE writing
@@ -755,20 +836,24 @@ blanks already stamped); new captures still leak blank until this ships — re-r
       captured-blank leak):** a fresh dry-run ~40s post-apply showed blanks RE-ACCRUING (cefi +37, defi +498, tradfi
       +1368) because the ~20+ RUNNING live/backfill VMs (mtds-live-cefi-_, mdps-defi-_, mdps-backfill-tradfi,
       cefi-hyperliquid-resume, fs-backfill) still bake the PRE-fix UTL from tarball — the writer fix is on LDR but not
-      yet in their image. A one-shot stamp can't win a race against stale producers; the durable no-new-blank closure
-      is the tarball rebuild + relaunch (next todo). The stamp tool is idempotent + guarded → re-runnable as interim
+      yet in their image. A one-shot stamp can't win a race against stale producers; the durable no-new-blank closure is
+      the tarball rebuild + relaunch (next todo). The stamp tool is idempotent + guarded → re-runnable as interim
       mitigation any time. instruments-service@00f73c6.
 - [x] ✅ [DEPLOY] P1. **Rebuild VM code tarball from clean LDR (≥ unified-trading-library@2b0ba65e) + relaunch the
-      market-data producers** so NEW captures stamp `asset_group` at write-time (the `_resolve_asset_group` writer fix is
-      on LDR but the ~20+ RUNNING live/backfill VMs bake the pre-fix UTL from their tarball → keep leaking blank
+      market-data producers** so NEW captures stamp `asset_group` at write-time (the `_resolve_asset_group` writer fix
+      is on LDR but the ~20+ RUNNING live/backfill VMs bake the pre-fix UTL from their tarball → keep leaking blank
       `asset_group` on new captured rows — verified 2026-06-22: blanks re-accrued cefi +37/defi +498/tradfi +1368 within
-      ~40s of the re-stamp). Recipe: `bash deployment-service/scripts/vm/create-code-tarballs.sh` from a clean LDR clone,
-      then relaunch via the standard MTDS launchers (do NOT mass-kill live producers mid-flight — relaunch on the normal
-      cadence, drain+verify per VM). Until then, re-run `instruments-service@00f73c6 stamp_asset_group_manifest_rows...
-      --apply` as interim mitigation (idempotent, guarded). Provenance: deploy gap surfaced finishing the per-AG
-      re-stamp 2026-06-22. Target: deployment-service. Continuous-verify: dry-run the stamp tool → captured-blank
-      delta == 0 across two consecutive runs.
-      — Tarballs rebuilt from clean LDR (UAC d9b4e8480a94 + UTL 091774f0c9bd [includes 2b0ba65e] + MTDS 0eee1ab51e29 + IS 5312b2ff6853 + all service repos) uploaded to GCS 2026-06-22T18:16Z. Live producers (mtds-live-cefi-*) NOT killed — relaunch on normal cadence. Interim stamp `--apply` run 2026-06-22T18:31Z: cefi 4882→0 blanks (3079 captured), defi 97521→0 (97521 captured), tradfi 135170→0 (82297 captured), sports 0, prediction 7054→0 (3054 captured). Continuous-verify check at 18:31Z: all 5 AGs blank_asset_group_before=0 ✅.
+      ~40s of the re-stamp). Recipe: `bash deployment-service/scripts/vm/create-code-tarballs.sh` from a clean LDR
+      clone, then relaunch via the standard MTDS launchers (do NOT mass-kill live producers mid-flight — relaunch on the
+      normal cadence, drain+verify per VM). Until then, re-run
+      `instruments-service@00f73c6 stamp_asset_group_manifest_rows...     --apply` as interim mitigation (idempotent,
+      guarded). Provenance: deploy gap surfaced finishing the per-AG re-stamp 2026-06-22. Target: deployment-service.
+      Continuous-verify: dry-run the stamp tool → captured-blank delta == 0 across two consecutive runs. — Tarballs
+      rebuilt from clean LDR (UAC d9b4e8480a94 + UTL 091774f0c9bd [includes 2b0ba65e] + MTDS 0eee1ab51e29 + IS
+      5312b2ff6853 + all service repos) uploaded to GCS 2026-06-22T18:16Z. Live producers (mtds-live-cefi-\*) NOT killed
+      — relaunch on normal cadence. Interim stamp `--apply` run 2026-06-22T18:31Z: cefi 4882→0 blanks (3079 captured),
+      defi 97521→0 (97521 captured), tradfi 135170→0 (82297 captured), sports 0, prediction 7054→0 (3054 captured).
+      Continuous-verify check at 18:31Z: all 5 AGs blank_asset_group_before=0 ✅.
 
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
@@ -1033,8 +1118,8 @@ machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progr
       wheel) + repointed the launcher to `VM_SERVICE=features_service` +
       `python -m features_service.sports.scripts.compute_sfi_progressive_only`.
 
-- [x] ✅ [SCRIPT] P1. **DEFERRED — same stale-`features_sports_service`-tarball class bug in TWO OTHER launchers** (found
-      2026-06-22 while fixing SFI-progressive): (1)
+- [x] ✅ [SCRIPT] P1. **DEFERRED — same stale-`features_sports_service`-tarball class bug in TWO OTHER launchers**
+      (found 2026-06-22 while fixing SFI-progressive): (1)
       `deployment-service/scripts/vm/launch-features-sports-backfill-vm.sh` sets `VM_SERVICE=features_sports_service` +
       invokes `python -m features_sports_service --operation compute --tables     fixture_features` → pulls the same
       STALE archived tarball; (2) `e2e-testing/scripts/common/vm_fss_features.sh` imports
@@ -1042,8 +1127,8 @@ machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progr
       consolidated `features_service` package (`VM_SERVICE=features_service`, module `features_service` / the
       `features_service.cli`/`features_service.sports.*` paths) — the `features-sports-service` repo no longer exists in
       the workspace + `create-code-tarballs.sh` no longer builds `features-sports-service-code`, so any launcher still
-      naming it runs whatever stale copy lingers in GCS. Repo: deployment-service + e2e-testing.
-      — deployment-service@5075a3e + e2e-testing@fbcdc45 | QG: both green
+      naming it runs whatever stale copy lingers in GCS. Repo: deployment-service + e2e-testing. —
+      deployment-service@5075a3e + e2e-testing@fbcdc45 | QG: both green
 
 ### 2026-06-22 06:30 — honest-cov is UNDERSTATED fleet-wide: ~1M phantom expected_unattempted (operator caught it on weather)
 
@@ -1831,8 +1916,8 @@ cells where defi didn't exist). Deferred follow-ups (all filed as todos):
 - [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue
       rows (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo:
       instruments-service.
-- [x] ✅ [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible)
-      — working live, persist via quickmerge. Repo: deployment-service. deployment-service@53d1736
+- [x] ✅ [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 +
+      --preemptible) — working live, persist via quickmerge. Repo: deployment-service. deployment-service@53d1736
 
 ### 2026-06-22 12:40 — DEFI REGRESSION found + fixed: stale-enumerator-build re-seeded 1.44M LEGACY-venue phantoms
 
@@ -1857,12 +1942,12 @@ dispatch text). Findings:
 - ✅ verified: `_legacy_seed.parquet` per-VM shard = 10k captured (0 legacy) → won't re-merge. The enum-run per-VM shard
   was already consolidated+cleared.
 
-- [x] ✅ [SCRIPT] P0. **PROMOTE enumerator fix `42dd37c` LDR→main on instruments-service so `:latest` image + GCS tarball
-      rebuild** — the daily Cloud Scheduler `expected-universe-v2-defi-daily` (01:30 UTC) runs the `:latest` image;
-      while that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The legacy-venue
-      delete is idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild. Repo:
-      instruments-service. Provenance: this Progress Log.
-      — instruments-service@289f1a3 (v0.36.0 on main, Tier-C drain auto-promoted); `git merge-base --is-ancestor 42dd37c origin/main` → exit 0 confirmed 2026-06-22.
+- [x] ✅ [SCRIPT] P0. **PROMOTE enumerator fix `42dd37c` LDR→main on instruments-service so `:latest` image + GCS
+      tarball rebuild** — the daily Cloud Scheduler `expected-universe-v2-defi-daily` (01:30 UTC) runs the `:latest`
+      image; while that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The
+      legacy-venue delete is idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild.
+      Repo: instruments-service. Provenance: this Progress Log. — instruments-service@289f1a3 (v0.36.0 on main, Tier-C
+      drain auto-promoted); `git merge-base --is-ancestor 42dd37c origin/main` → exit 0 confirmed 2026-06-22.
 
 The legacy-venue phantom DELETE tool shipped: instruments-service@7b6512c (`reconcile_phantom_manifest_rows_all.py`
 `--report-legacy-venue-defi-phantoms [--apply]`, QG green 82s, landed LDR). **Gap-analysis VERDICT** (measured from live
