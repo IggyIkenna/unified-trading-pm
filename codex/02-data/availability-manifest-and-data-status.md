@@ -517,6 +517,24 @@ class AvailabilityRecord:
   `attempted_failed` (exception during fetch; classified via `error_reason`), `expected_unattempted` (downstream service
   skipped shard because upstream was empty/failed or instrument is outside scope; counts in denominator; superseded by
   `captured` when data arrives).
+- **PROOF-OF-HONEST-ABSENCE — `empty_confirmed[SOURCE_RETURNED_ZERO]` is PROVEN, not trusted (HARD RULE, codified
+  2026-06-22; SSOT `codex/05-infrastructure/data-pipeline-alerts.md`)**: the "source returned 200 + zero rows" claim
+  above used to be taken on the adapter's word — the #1 source of "a VM ran for hours then marked everything
+  `empty_confirmed` when the data was actually fetchable with a code fix" (defi/sports especially). Now `record_empty`
+  REQUIRES a UAC
+  `FetchEvidence(http_status, response_received, rows_in_response, source, endpoint, attempted_at, error_signal)`
+  whenever `reason == SOURCE_RETURNED_ZERO`: it HARD-RAISES `UnprovenHonestAbsenceError` (+ emits
+  `DP_UNPROVEN_HONEST_ABSENCE` CRITICAL → `#data-pipeline-alerts`) unless `evidence.proves_honest_absence()`
+  (`2xx AND response_received AND rows_in_response==0 AND error_signal==""`). Any disqualifying signal
+  (`FetchErrorSignal`:
+  `AUTH_401`/`AUTH_403`/`RATE_LIMITED_429`/`SERVER_5XX`/`TIMEOUT`/`CONNECT_ERROR`/`ADAPTER_EXCEPTION`/
+  `MISSING_CREDENTIAL`/`SOURCE_UNREACHABLE`/`HTTP_NON_2XX`) routes to `record_failed` (`attempted_failed`), NOT
+  honest-absence. The `EXPECTED_*` calendar reasons are exempt (no fetch attempted). This is the structural enforcement
+  of the line below ("per-instrument-day `empty_confirmed` is NOT legitimate — a writer bug"); adapters thread
+  `fetch_evidence` from the `classify_venue_error()` site. A **daily re-probe** (`reprobe_new_empty_confirmed.py`)
+  re-fetches today's new `SOURCE_RETURNED_ZERO` cells and emits `DP_EMPTY_REPROBE_DISAGREEMENT` when the source actually
+  returns data. Shipped: `uac@6c27bfa0` (FetchEvidence) + `utl@39f8ec85` (the gate). Plan:
+  `data_pipeline_hardening_self_monitoring_2026_06_22.md`.
 - **Per-asset-group + per-data-source empty-rule asymmetry** (codex audit IN-12 2026-05-12):
   - **cefi / defi / tradfi tick data**: `empty_confirmed` only at venue-level (HOLIDAY / WEEKEND / PRE_LAUNCH /
     PRE_GENESIS / PARTIAL_HALF_DAY). Per-instrument-day `empty_confirmed` is NOT legitimate — points to a writer bug.
@@ -1613,8 +1631,8 @@ Idempotent + safe to run concurrently with the scheduled cycle.
 
 ### Read path fail-fast on stale-fallback (2026-05-28 opt-in) — SUPERSEDED 2026-06-01
 
-> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK`
-> opt-in described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
+> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK` opt-in
+> described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
 > `ManifestConsolidatorStaleError` by default; the escape hatch is now `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverted
 > from the original opt-in). See "Read path fail-fast (consolidator liveness contract, 2026-06-01)" above for the
 > current SSOT.
@@ -1757,16 +1775,16 @@ empty — all UTL source callsites are already clean.
 ## Coverage baseline snapshot — 2026-06-21
 
 Measured from the consolidated v9 `_index` (production bucket `central-element-323112`) with the fleet DRAINED (only
-gas-fees + monitoring running). Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` § "Measured
-snapshot 2026-06-21".
+gas-fees + monitoring running). Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` § "Measured snapshot
+2026-06-21".
 
 | AG     | MTDS rows | MTDS v9% | MTDS honest-cov% | MTDS capture (cap/empty/failed/unattempted) | IS honest-cov%          | LIVE rows |
 | ------ | --------- | -------- | ---------------- | ------------------------------------------- | ----------------------- | --------- |
 | cefi   | 3.87M     | 96.6%    | **33.9%**        | 1.31M / 1.28M / **802k failed** / 482k      | 99.9%                   | **0**     |
-| defi   | 6.17M     | 100%     | **6.0%**         | 369k / 3.48M / 6k / 2.31M                  | 100%                    | **0**     |
-| tradfi | 1.94M     | 99.7%    | **5.3%**         | 103k / 1.01M / 10k / 818k                  | 96% (v9 only **46.6%**) | **0**     |
-| sports | 920k      | 100%     | **37.7%**        | 346k / 574k / 164 / 0                      | **15.9%**               | **0**     |
-| pred   | 42k       | 96.5%    | **40.5%**        | 17k / 24.5k / 50 / 338                     | 100%                    | **0**     |
+| defi   | 6.17M     | 100%     | **6.0%**         | 369k / 3.48M / 6k / 2.31M                   | 100%                    | **0**     |
+| tradfi | 1.94M     | 99.7%    | **5.3%**         | 103k / 1.01M / 10k / 818k                   | 96% (v9 only **46.6%**) | **0**     |
+| sports | 920k      | 100%     | **37.7%**        | 346k / 574k / 164 / 0                       | **15.9%**               | **0**     |
+| pred   | 42k       | 96.5%    | **40.5%**        | 17k / 24.5k / 50 / 338                      | 100%                    | **0**     |
 
 **Three structural findings as of 2026-06-21:**
 
@@ -1774,13 +1792,11 @@ snapshot 2026-06-21".
    batch-only. The first operational live run (cefi HYPERLIQUID trades) was initiated as part of the
    `data_completion_to_100_all_ag_2026_06_21.md` plan.
 2. **Low defi/tradfi honest-cov% reflects honest absence, not data loss** — the `expected_unattempted` and
-   `empty_confirmed` cells dominate (writer-seeded). Converting them to `captured` requires running the batch
-   backfill fleet.
+   `empty_confirmed` cells dominate (writer-seeded). Converting them to `captured` requires running the batch backfill
+   fleet.
 3. **cefi carries 802k `attempted_failed`** — of which 775.9k (96.7%) are Tardis-gated historical cells
    (BLOCKED-CREDENTIALS, billing-gated); the remaining ~48.5k free-venue (Hyperliquid+Aster) failed cells have a
-   dedicated historical re-fetch launcher (`launch-cefi-hl-aster-historical-backfill.sh`,
-   deployment-service@8a027c0).
+   dedicated historical re-fetch launcher (`launch-cefi-hl-aster-historical-backfill.sh`, deployment-service@8a027c0).
 
-**Target**: per-AG MTDS honest-cov% → ~100% (modulo genuine `empty_confirmed` honest absence) AND ≥1
-`live_<source>` row per AG AND IS sports/tradfi fully v9. Excluded from 100%: cefi batch-Tardis historical
-(billing).
+**Target**: per-AG MTDS honest-cov% → ~100% (modulo genuine `empty_confirmed` honest absence) AND ≥1 `live_<source>` row
+per AG AND IS sports/tradfi fully v9. Excluded from 100%: cefi batch-Tardis historical (billing).
