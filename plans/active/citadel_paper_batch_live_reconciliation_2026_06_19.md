@@ -736,6 +736,32 @@ are identified (2) and the ledger exists (3).
       ui-reference-data.json` via `unified-api-contracts/scripts/generate_ui_reference_data.py` + bump
       `tests/unit/lib/architecture-v2/enums.test.ts` `toHaveLength`. Silent cross-repo gap (no CI catches it from UAC).
       Playwright-gated (`pw:L2 ✓` + regression spec). Repo: unified-trading-system-ui.
+- [ ] [CODE] P2.11.18. **Add the intraday BTC mean-reversion signal as a cs ML feature** (research 2026-06-22, root
+      `_ic_test.py`). A short-horizon reversion z-score (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m +
+      4h on the canonical OHLCV) has a **stable Spearman IC ≈ +0.05 vs forward 15m–1h returns, positive across all
+      horizons + every recent year** (2022-26). It is intraday-microstructure information the daily-horizon delta_one
+      features do NOT capture (orthogonal), so it should ADD to the pooled-LightGBM cs ensemble. NOTE: the signal is NOT
+      standalone-tradeable (its alpha is inside the execution-cost band — see the research arc: daily Monday-wick edge
+      decayed, migrated to 1h, but realistic 1.5bp-taker fills cap it at a marginal +1.14 Sharpe); its value is as a
+      FEATURE (here) + an execution-timing overlay (P2.11.19), where it never pays its own round-trip. Implement: add the
+      reversion z-score feature spec(s) to the **features-service** `delta_one/app/features/registry.py` (new
+      `feature_group` or extend an existing momentum/reversion group; bump `formula_version`; HIVE-partition + footer
+      metadata per the feature-formula-versioning SSOT), compute + write to the feature corpus, then retrain + validate
+      the cs model (does it lift cs Sharpe / reduce the 2026 drag — composes with P2.11.15). No lookahead (trailing
+      window, shifted). Repo: features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`.
+- [ ] [CODE] P2.11.19. **Wire the reversion signal as the execution-timing model in execution-service GroupC
+      smart-matching** (research 2026-06-22, root `_ic_test.py`). The SAME reversion z-score, used to TIME fills on the
+      book's existing turnover (not as a standalone trade), captures **~+1.5 bps/leg** vs naive window-close fills (z>0.5
+      +1.4bp fires 100% of 4h windows; z>1.5 +1.7bp fires 96%) — a buy waits for an intraday over-extension-down within
+      the rebalance window, a sell for an over-extension-up. This is **riskless execution alpha** (the trade happens
+      regardless → no standalone round-trip cost, no adverse-selection/cost-floor problem) on every strategy's turnover
+      (cs / trend / basis), compounding into net-Sharpe. This is PRECISELY the citadel "execution alpha" layer
+      (`execution_alpha = smart − benchmark`) — implement the reversion z-score as the **smart-matching execution-timing
+      model in execution-service GroupCRunner** (the smart-fill entrypoint shipped @3d7d760c, P11.6-retry), bounded by
+      the rebalance-window timeout (fall back to benchmark fill if no over-extension fires). batch=live one path; the
+      improvement surfaces as `execution_alpha_bps` in the ledger (P11.6). Repo: execution-service. Evidence:
+      execution-timing table in `_ic_test.py`. Higher immediate value than the marginal standalone fade (which is
+      shelved — see Progress Log 2026-06-22 "intraday reversion is a feature/exec-timing signal, not a standalone trade").
 - [ ] [CODE] P2.11.15. **cs leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`** — the cross-sectional ML book
       (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
       EWMA denoise (shipped) is the 80% cheap fix; the proper fix is retraining the pooled LightGBM on a longer-horizon
@@ -865,6 +891,26 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-22 (research) — Monday/weekend-wick → intraday mean-reversion investigation: standalone DEAD, but a real
+  FEATURE + execution-timing signal (→ P2.11.18 / P2.11.19).** Operator hypothesis: BTC Mondays often two-way-auction
+  (fade the sweep) except on drive days. Full no-lookahead / stratified-by-year-CV / realistic-fills arc (root scripts
+  `_monday_*.py`, `_cme_gap.py`, `_es_*.py`, `_intraday_*.py`, `_reclaim_*.py`, `_realistic_exec.py`, `_final_real.py`,
+  `_ic_test.py`): (1) **daily Monday-wick fade**: naive loses; reclaim-confirmed +0.12; regime-adaptive combo (fade the
+  two-way / follow the drive) +0.67 full-sample BUT **decayed — flat-to-negative on 2021-2026** (the pooled-CV metric
+  masked the time decay; per-year exposed it). (2) **Doesn't migrate to alts** (median −0.28, 19% positive; HYPE +1.25
+  is an n=80 multiple-comparisons outlier). (3) **DOES migrate to intraday** (operator was right) — gross 1h Sharpe +12,
+  stable every year incl 2026. (4) But the gross was a **fill mirage**: empirical 1m cross-through fills (operator's
+  idea) show the naive passive fade is adversely selected (−4 bps); two LOOKAHEAD bugs caught via absurd Sharpes (+15
+  follow-leg fill-at-stale-level; +9 fill-at-candle-open-after-high-trigger). (5) Honest realistic model (live
+  level-cross taker fill at anchor, 1.5bp taker + 0.5bp slip, no Saturday): **marginal +1.14 Sharpe ONLY at the wide
+  sweep-40**, knife's-edge / execution-critical → **shelved as a borderline pilot candidate, NOT built standalone**.
+  (6) ES direction (corr −0.05), CME gap-fill (52% on Mondays, hurts the combo), Tuesday-after-Monday (corr −0.03),
+  day-selection (overfit — all-week +2.47 > Mon/Tue/Sun +2.00, diversification), Saturday (no-CME thinnest-flow day,
+  unstable — excluded): all correctly REJECTED. **The productive landing (operator reframe):** the reversion signal has
+  **stable IC ≈ +0.05** vs forward returns → a real cs ML FEATURE (P2.11.18); and timing existing turnover with it
+  captures **~+1.5 bps/leg riskless execution alpha** → the GroupC smart-matching execution-timing model (P2.11.19).
+  Cost-dominated as a trade, valuable as a feature/exec-overlay where it never pays its own round-trip.
 
 - **2026-06-22 (P11.20 alerts STREAM live + deployment-ui banner fix + SSOT follow-ups filed).** Wired the paper
   data-quality panel's alert feed to the reachable deployment-api unified ledger (`alerts_source: deployment-api`, prod
