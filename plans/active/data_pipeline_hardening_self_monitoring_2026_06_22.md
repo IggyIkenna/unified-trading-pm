@@ -1095,3 +1095,8 @@ dispatch prompts.
       millions of rows) → the actual OOM driver (16Gi is a band-aid). Restrict `read_manifest_index(columns=[pipeline_mode,
       venue,chain,data_type,capture_status])` + aggregate counts without list-expansion; then the jobs can drop back to ~4–8Gi.
       — e2e-testing
+
+## Progress Log — Self-healing (C) SHIPPED + LIVE-RELAY PROVEN (2026-06-22)
+- **DELIVERY GAP CLOSED — alerts FIRE end-to-end**: live `#data-pipeline-alerts` post at 2026-06-22 19:55Z — `manifest_hygiene_daily.py (defi)` → `DP_DIVERGENT_EMPTY` (WARN, 5 oracle-expects-but-empty defi cells) reached the channel via PubSub `lifecycle-events`→subscriber→router. The emitter `setup_events(mode=live)` + subscriber `lifecycle-events` sub + the deployment-service `escalation.route_finding` emit all landed. **PROOF the whole substrate works.**
+- **C self-healing SHIPPED**: actuators deployment-service@e695fa3 (`relaunch_consolidator` 1/120s, `relaunch_backfill_vm` ≤2/vm-day, auto_recover→Layer-0 `_DP_RECOVERY_ACTIONS`, no-actuator→file_issue) · wall-type agent-orchestrator@8e24912 + pm@d4746eb02 (`data_pipeline_failure` in WALL_TYPES → generic push-fix worker + `agents/data_pipeline_failure.md` boot prompt + escalate-to-orchestrator.yml) · bucket-env parity + 429 rotation mtds@477de66 · RB-DATA-001 runbook.
+- **First real finding surfaced by the live system**: 5 defi `DP_DIVERGENT_EMPTY` cells (oracle expects data, manifest empty) — the file_issue tier should auto-file an issue; with the new `data_pipeline_failure` wall-type it can auto-spawn a worker to diagnose. This is the system doing its job. REMAINING C: reprobe-cron scheduling + auto-flip reclassifier (deployment-service terraform, peer-contended).
