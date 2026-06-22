@@ -123,12 +123,13 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       runs: `fund-administration-service` `{coverage_pct: 83.9, qg_red_reason: null, large/warn 0}` +
       `system-integration-tests` `{coverage_pct: 9.09, …}`. Real coverage% + file-debt + green-✓ reason. The fleet fills
       in per-repo as v2 cycles.
-- [ ] [INFRA] P3. **codebase_health for UI repos + qg_red_reason granularity (fast-follow to the P2 above).** (a) Mirror
+- [x] ✅ [INFRA] P3. **codebase_health for UI repos + qg_red_reason granularity (fast-follow to the P2 above).** (a) Mirror
       the agg-job compute + `codebase_health_b64` forward into the **`ui-quality-gates-v2.yml`** reusable (vitest
       coverage from `coverage/coverage-summary.json`; file-debt over `.ts`/`.tsx`) so `deployment-ui` +
       `unified-trading-system-ui` populate too. (b) Thread the per-leg slice result into the agg job so `qg_red_reason`
       is the specific failing step (`pytest` / `basedpyright` / `ruff` / `bandit`) instead of the generic `"qg"`. Repo:
-      unified-trading-pm. Provenance: 2026-06-22 (codebase_health backend v1 scope cut).
+      unified-trading-pm. Provenance: 2026-06-22 (codebase_health backend v1 scope cut). — deployment-ui@946be88 |
+      unified-trading-system-ui@456d4609 | unified-trading-pm@b19048e66 (PR #495)
 - [x] ✅ [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui. —
       deployment-ui@a1b7fbd (already present at RepoCi.tsx:1637) | pw:L2 ✓ | regression:
       tests/smoke/gh_rate_budget.spec.ts
