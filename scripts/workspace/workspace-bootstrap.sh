@@ -870,6 +870,19 @@ if [ "$CHECK_ONLY" = false ]; then
     fi
   done
 
+  # Claude Code agent assets for the ROOT workspace: top-level CLAUDE.md (the startup-load ruleset)
+  # + .claude/skills/* (the /<skill> slash-commands like /autonomous). Without this the root only
+  # gets them incidentally on its first quality-gates.sh run, leaving a freshly-bootstrapped root
+  # bare (no /autonomous). Same SSOT helper setup-tab-worktrees.sh (per-slot) + quality-gates.sh
+  # (per-run) use — always exits 0, self-skips under CI. SSOT: scripts/workspace/link-claude-skills.sh.
+  SKILL_LINKER="$PM_ROOT/scripts/workspace/link-claude-skills.sh"
+  if [ -f "$SKILL_LINKER" ]; then
+    bash "$SKILL_LINKER" "$WORKSPACE_ROOT" 2>&1 | sed 's/^/  /' || true
+    log_ok "link-claude-skills.sh (root CLAUDE.md + .claude/skills/*)"
+  else
+    log_warn "link-claude-skills.sh not found — /autonomous etc. will not surface at root"
+  fi
+
   # Ensure workspace root bootstrap.sh symlink
   BOOTSTRAP_SYMLINK="$WORKSPACE_ROOT/bootstrap.sh"
   BOOTSTRAP_TARGET="unified-trading-pm/scripts/workspace/workspace-bootstrap.sh"
