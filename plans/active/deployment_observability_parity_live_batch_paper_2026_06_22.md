@@ -137,8 +137,16 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 5 — AWS parity (after GCP complete)
 
-- [ ] [CODE] P1. AWS compute (EC2 backfill VMs + Batch Fargate) into `/api/deployments` under the same umbrellas;
-      cloud=aws. Reuse the AWS launchers (`*-aws.sh`) + the AWS census. — **deployment-api, deployment-service**
+- [x] ✅ [CODE] P1. AWS compute (EC2 backfill VMs + Batch Fargate) into `/api/deployments` under the same umbrellas;
+      cloud=aws. Reuse the AWS launchers (`*-aws.sh`) + the AWS census. — **deployment-api, deployment-service** —
+      deployment-service@53be0f1 (read-only `backends/aws_census.py` seam: `list_ec2_census` + `list_batch_census` via
+      the deferred-boto3 boundary; honest-degrades to `[]`) + deployment-api@ab11b36 (`routes/_aws_deployments.py`
+      censuses EC2 + Batch → `classify_deployment_target(cloud=DeploymentCloud.AWS)`; EC2 exit_code from the durable S3
+      `vm-logs/{name}/EXIT_STATUS` blob via cloud-agnostic `get_storage_client(provider='aws')`; wired into
+      `GET /api/deployments/inventory` — `cloud` unset|aws includes AWS, `cloud=gcp` unchanged). Tests: moto
+      (`@mock_aws`, `importorskip`) EC2 + Batch census + pure classification / exit-137 EXIT_STATUS=failed/137 /
+      no-GCP-regression. `cd deployment-api && bash scripts/quality-gates.sh` exit 0 (cov 79.39%). Live-wiring note: no
+      AWS deployments running today — wiring verified-by-shape via moto + pure tests.
 
 ## Phase 6 — Documentation (HARD: "all documented and done")
 
