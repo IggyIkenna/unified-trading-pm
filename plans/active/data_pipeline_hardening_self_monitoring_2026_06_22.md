@@ -696,6 +696,21 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   `UnprovenHonestAbsenceError`/crash. Tradfi live went 0 (never-worked) → thousands of rows/window. This completes the
   operator's run-#2 mandate (hardening live + re-ship + fix-the-raises + CME flush).
 
+- **2026-06-22 DEPLOYMENT-GAP CORRECTION + operator mandate (slot-0·human-planning, Opus 4.8)** — operator caught that
+  NO alerts ever fire for tradfi. **Verified root cause (corrects the prior "alerting substrate LIVE" framing — the CODE
+  shipped but was never DEPLOYED end-to-end):** (1) the **alerting-service consumer is not running anywhere** (no Cloud
+  Run service in any region, no VM) → the fleet monitors emit `DP_*` to the `lifecycle-events` topic every 5 min but
+  **nothing consumes it** → 0 DP** events routed in 24h, even the reused `CONSOLIDATOR_DOWN` path silent. The topic
+  WIRING is correct (monitors→`lifecycle-events`, subscriber→`lifecycle-events-sub`); only the running consumer was
+  missing. (2) the **daily-audit crons** (digest/hygiene/reprobe — which detect the 12.5k tradfi `attempted_failed` +
+  misclassified empties) were **never applied** (terraform on origin but image-var unapplied). (3) the real-time
+  monitors only catch VM *crashes* — and tradfi-bf VMs *succeed\* (exit 0) — so nothing to fire on. (4) **No autonomous
+  wave-launcher** — the 8-VM tradfi-bf wave was MANUAL; no cron fires waves → backfill stalls at ~68% honest coverage,
+  never reaches 100% on its own. **Operator /autonomous mandate: deploy all 3** — (A) the alerting-service consumer
+  (Cloud Run subscriber on `lifecycle-events`), (B) the daily-audit crons (on the built `e2e-audit:latest` image), (C) a
+  capacity-capped autonomous wave-launcher driving tradfi to 100%. Each verified end-to-end (a real DP*\* event must
+  land in #data-pipeline-alerts). In progress.
+
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
 - [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path;
