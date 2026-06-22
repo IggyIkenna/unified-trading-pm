@@ -41,27 +41,46 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       (`central-element-323112/ORCHESTRATOR_API_TOKEN`) + AWSCURRENT in AWS SM (`ap-northeast-1/427895769566`). Token
       validates against `ORCHESTRATOR_JWT_SECRET` on this host. Fleet-Git page should now degrade→live on next
       deployment-api cold-start / SM read.
-- [ ] [INFRA] P1. Central/infra-VM health: `GET /api/fleet/infra-vm-health` (proxy AO `/api/fleet/summary`) +
+- [x] ✅ [INFRA] P1. Central/infra-VM health: `GET /api/fleet/infra-vm-health` (proxy AO `/api/fleet/summary`) +
       `GET /api/fleet/vm-census` (render `vm_zombie_watchdog.py` running-vs-expected-vs-zombie). Repo: deployment-api.
+      **DONE — deployment-api@86050f0** | new router `routes/fleet.py` (prefix `/api/fleet`) +
+      `_fleet_{types,census,infra_health,mocks}.py`, wired in `main.py`. **vm-census** = live compute `aggregatedList`
+      (`vm_utils.get_vm_instance_details`) rolled into running/expected/stopped + per-VM entries; lifecycle via UAC
+      `classify_vm_name` over a small **honest local prefix registry** (NOT a copy of deployment-service's ~50-entry
+      `VM_PREFIX_TO_BUCKET` — drift/coupling avoided), unknown prefix → `EPHEMERAL_BATCH`. **infra-vm-health** = AO
+      `/api/fleet/summary` server-side proxy mirroring `_repo_ci_fleet.py` (SM token, 10s timeout, **honest
+      degradation** `available=false`+empty on any failure, never fabricated). Matches the deployment-ui `client.ts`
+      contract field-for-field; 10 unit tests; basedpyright 0/0/0; QG green (70s). **Honest gap (by design): live
+      `zombie`/`oom` are `0`** — see the follow-up below.
+- [ ] [INFRA] P3. **Live zombie/OOM census signal (vm-census follow-up).** `/api/fleet/vm-census` currently reports
+      `zombie`/`oom` as `0` because the deployment-service `vm_zombie_watchdog.py` computes `WatchdogVerdict`s in-memory
+      each poll but persists NO readable census/verdict snapshot (its only non-heartbeat GCS write is forensic
+      log/serial-console archival at kill time). To surface TRUE live zombie/OOM in the FleetInfra tile, the watchdog
+      must write a small census JSON to GCS (running set + zombie names + OOM-terminated names + ts) that
+      `_fleet_census.py` reads (degrading to 0 when absent/stale). Repo: deployment-service (watchdog GCS write) +
+      deployment-api (read it). Low priority — the live fleet is 2 long-lived VMs; zombie/OOM matters for the
+      not-yet-running ephemeral fleet. Provenance: 2026-06-22 fleet vm-census backend (deployment-api@86050f0).
 - [x] ✅ [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
       today) — chip click-throughs to AO (not a rebuild; honors division-of-surfaces). `pw:L2 ✓` + regression. Repo:
-      deployment-ui. — deployment-ui@3508fa2 | pw:L2 ✓ (256/256 passed) | regression: tests/smoke/fleet-infra-vm-census.spec.ts
+      deployment-ui. — deployment-ui@3508fa2 | pw:L2 ✓ (256/256 passed) | regression:
+      tests/smoke/fleet-infra-vm-census.spec.ts
 - [x] ✅ [INFRA] P1. **Unify the alert ledger across domains** — non-CI watchers (VM-down, consolidator-down,
       git-health-guard, worker-liveness, data-pipeline) write to a shared store; add `GET /api/alerts` superset of
       `/api/repo-ci/alerts`. This is what makes "alert → open deployment-ui → full picture" work for ALL classes. Repo:
-      deployment-api (+ the watcher emitters). Composes with `alert_quality_overhaul_2026_06_18.md`.
-      — deployment-api@cb56889 | agent-orchestrator@8f6dfee
+      deployment-api (+ the watcher emitters). Composes with `alert_quality_overhaul_2026_06_18.md`. —
+      deployment-api@cb56889 | agent-orchestrator@8f6dfee
 - [x] ✅ [UI] P1. deployment-ui `/alerts` page consumes the unified ledger (not just `cicd/alerts`). `pw:L2 ✓` +
-      regression. Repo: deployment-ui.
-      — deployment-api@f87faf6 (GET /api/alerts endpoint) + deployment-ui@8cc8211 | pw:L2 ✓ 259/259 | regression: tests/smoke/alerts-page.spec.ts
+      regression. Repo: deployment-ui. — deployment-api@f87faf6 (GET /api/alerts endpoint) + deployment-ui@8cc8211 |
+      pw:L2 ✓ 259/259 | regression: tests/smoke/alerts-page.spec.ts
 - [x] ✅ [UI] P2. Unified single-glance fleet/infra landing tile (6th LandingTab: N VMs running · central-VM up ·
-      consolidator fresh · fleet-git clean · CI green — each click-through). Repo: deployment-ui.
-      — deployment-ui@7e40055 | pw:L2 ✓ | regression: tests/smoke/fleet-infra-tab.spec.ts
+      consolidator fresh · fleet-git clean · CI green — each click-through). Repo: deployment-ui. —
+      deployment-ui@7e40055 | pw:L2 ✓ | regression: tests/smoke/fleet-infra-tab.spec.ts
 - [x] ✅ [UI] P2. Codebase-health matrix column on `/repos` (fleet-wide coverage% / QG-red-reason / file-size-debt, not
-      per-service-tab-only). Repo: deployment-ui (+ a deployment-api roll-up if needed).
-      — deployment-ui@a1b7fbd | pw:L2 ✓ | regression: tests/smoke/repos-codebase-health.spec.ts
-- [x] ✅ [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui.
-      — deployment-ui@a1b7fbd (already present at RepoCi.tsx:1637) | pw:L2 ✓ | regression: tests/smoke/gh_rate_budget.spec.ts
+      per-service-tab-only). Repo: deployment-ui (+ a deployment-api roll-up if needed). — deployment-ui@a1b7fbd | pw:L2
+      ✓ | regression: tests/smoke/repos-codebase-health.spec.ts
+- [x] ✅ [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui. —
+      deployment-ui@a1b7fbd (already present at RepoCi.tsx:1637) | pw:L2 ✓ | regression:
+      tests/smoke/gh_rate_budget.spec.ts
 
 ## Cloud Build visibility + build health (found 2026-06-18 operator Cloud Build smoke test)
 
@@ -103,8 +122,8 @@ root-caused and FIXED 2026-06-19:
       `git rev-parse --show-toplevel` which is empty in-image → sourced `//unified-trading-pm/.../base-service.sh` (404)
       → added the fleet-canonical mtds `CLOUD_BUILD=true` guard (skip in-image gate when the PM base script is absent)
       (mdps@8025264d). Build `3c501b1f` green end-to-end. Repo: market-data-processing-service.
-- [x] ✅ [INFRA] P1. **Audit the fleet for STALE `BASE_IMAGE_DIGEST` pins + add a warn-level QG/cron drift check.** mdps's
-      pin had drifted to `e939b4ee` (base UTL 0.11.0 / UAC 0.15.0) while its own floors require UTL ≥0.12.0 / UAC
+- [x] ✅ [INFRA] P1. **Audit the fleet for STALE `BASE_IMAGE_DIGEST` pins + add a warn-level QG/cron drift check.**
+      mdps's pin had drifted to `e939b4ee` (base UTL 0.11.0 / UAC 0.15.0) while its own floors require UTL ≥0.12.0 / UAC
       ≥0.19.0 → the build re-resolved from the registry and failed; the digest-refresh fan-out
       (`update-dependency-version.yml`) evidently never landed for mdps. A stale pin is **silent** until someone runs
       the build (red build, never a warning). Sweep every repo's `Dockerfile` `ARG BASE_IMAGE_DIGEST`, compare against
@@ -112,7 +131,8 @@ root-caused and FIXED 2026-06-19:
       repo's `pyproject.toml` floors (the actual break condition — a merely-not-`:latest` pin is fine if it still
       satisfies). Add it as a warn-level signal (PM post-gate or the digest-pin ratchet panel already in "Out of scope")
       so drift surfaces before it becomes a red build. Repos: all service Dockerfiles + PM (the check). Provenance:
-      2026-06-19 mdps build fix. — unified-trading-pm@be47dece8 | fleet consistent (16/16 pinned repos at sha256:6b27286abac3…) | new post-gate: scripts/quality_gates/check_base_image_digest_drift.py | PR #427
+      2026-06-19 mdps build fix. — unified-trading-pm@be47dece8 | fleet consistent (16/16 pinned repos at
+      sha256:6b27286abac3…) | new post-gate: scripts/quality_gates/check_base_image_digest_drift.py | PR #427
 
 ## Repo-CI table clarity + authoritative source (operator review 2026-06-19)
 
@@ -163,14 +183,15 @@ status than what gates promotions.
       where `ci_status=MAIN_GREEN` masked a real 8-day lag (LDR→staging drained, staging 144 files ahead of main, no
       PR). **DONE — deployment-ui@82bcfe4 | pw:L2 ✓ (repos-tab 29) | regression: tests/smoke/repos-tab.spec.ts**
       ("per-hop + stall-reason columns localize a staging→main promoter stall (the AO class)").
-- [x] ✅ [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the committed
-      `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed manifest's
-      `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}` Firestore
-      store, so the dashboard can show a DIFFERENT status than what actually gates promotions. Do the pending Phase-2
-      one-function swap (`ManifestView.ci_status_for` → `ci_status_store.resolve_ci_status_map`), adding
+- [x] ✅ [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the
+      committed `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed
+      manifest's `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}`
+      Firestore store, so the dashboard can show a DIFFERENT status than what actually gates promotions. Do the pending
+      Phase-2 one-function swap (`ManifestView.ci_status_for` → `ci_status_store.resolve_ci_status_map`), adding
       `google-cloud-firestore` to deployment-api. SSOT: `ci_status_firestore_side_store_2026_06_10.md`. Repo:
-      deployment-api. Provenance: 2026-06-19 operator review.
-      **DONE — deployment-api@03c5d9f | `_ci_status_firestore_store.py` + `google-cloud-firestore>=2.0.0` in pyproject.toml; `load_manifest_view` overlays Firestore per-repo at cache-miss time**
+      deployment-api. Provenance: 2026-06-19 operator review. **DONE — deployment-api@03c5d9f |
+      `_ci_status_firestore_store.py` + `google-cloud-firestore>=2.0.0` in pyproject.toml; `load_manifest_view` overlays
+      Firestore per-repo at cache-miss time**
 - [x] ✅ [PROMOTION] P2. **(track-3 cross-ref — do NOT implement in the UI track)** Forward staging→main promotion lags
       fleet-wide (services ~2 days behind main while libs promote): STAGE 1.8 dep-order tiered-drain + a
       `staging_versions` registration gap. **Confirmed FLEET-WIDE 2026-06-19** via the new Stall-reason column: ~16
