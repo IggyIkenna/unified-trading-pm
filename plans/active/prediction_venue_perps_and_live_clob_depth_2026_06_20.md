@@ -157,20 +157,26 @@ fixed + verified, one systemic + still open:
   `venue=KALSHI` → the universe would never be found even once written. Canonical venue is `KALSHI` (UAC
   `partition_paths` "POLYMARKET / KALSHI"; manifest already uppercased via `.upper()`). Fixed `venue → "KALSHI"`; 15
   adapter tests updated + green vs clean UTL. Repo: instruments-service (kalshi.py). — 2026-06-22
-- [ ] [SCRIPT] P0. **SYSTEMIC OPEN BUG — prediction `instruments.parquet` (instrument-definitions universe) is NOT
-  persisting to GCS** (the LAST blocker for Kalshi live; affects Polymarket too). In `process_write._write_prediction_venue`
-  the per-cqg `_gated_sink_write(sink, …, filename="instruments.parquet")` (line ~250) logs success and
-  `record_captured` (after it) persists (manifest shows `captured`), and the SIBLING `market_lifecycle.parquet` write
-  (separate `lifecycle_sink`) DOES land — but **no object ever appears under
-  `instrument_availability/by_date/day=2026-06-22/venue=KALSHI/…/instruments.parquet`** (verified absent after a `--force`
-  run that wrote the per-VM shard + lifecycle in the same pass). Polymarket's `instruments.parquet` is dated 2026-05-12
-  → prediction instrument-definition parquets have NOT refreshed fleet-wide since ~May (live still works for Polymarket
-  only because the live runner reads ALL accumulated historical days' parquets; Kalshi has ZERO so it never resolves).
-  `InstrumentsWriteGate.validate_and_write` always calls `sink.write` (never skips), so the data sink itself is dropping
-  the instruments write while persisting lifecycle + manifest. Needs: instrument the `get_data_sink` write for the
-  `instrument_availability/by_date` prefix vs `market_lifecycle/by_canonical_group` to find why the former no-ops.
-  Provenance: prediction-to-100% drive 2026-06-22. Repo: instruments-service (engine/orchestrator/process_write.py +
-  sink.py + UTL instruments_write_gate.py / data sink). **Cross-cutting → also file issue doc.**
+- [x] ✅ **FALSE ALARM (resolved 2026-06-22) — instruments.parquet DOES persist; I was checking the wrong path key
+  order.** `_build_partition_path` SORTS partition keys alphabetically, so the instruments universe lands at
+  `instrument_availability/by_date/canonical_question_group=OTHER/day=2026-06-22/venue=KALSHI/instruments.parquet`
+  (cqg-FIRST, not day-first). Verified present (94KB, venue=KALSHI uppercase — the venue fix). DEBUG_SINKWRITE confirmed
+  `rows=2000 wrote=True`. The "stale May-12 Polymarket" was the OLD day-first layout; current writes are cqg-sorted. So
+  the full chain WORKS: filter (2000 survive) → cqg bucket → instruments.parquet @venue=KALSHI → manifest captured
+  (source=kalshi) → lifecycle. **Kalshi LIVE producers RESOLVED the universe** (`prediction-live-kalshi-{trades,book_snapshot_5}`
+  read venue=KALSHI; keep-alive ended 2026-06-22 14:06). No code change needed.
+- [ ] [SCRIPT] P0. **RESIDUAL — Kalshi live RESOLVES but SKIPS ticks (id-format mismatch)**: the live producers now
+  find the Kalshi universe but log `KalshiClob: unknown instrument 'KXMVE…' — expected KALSHI:PREDICTION_MARKET:{ticker}; skipping`
+  for every market → no real Kalshi ticks captured yet. Root: mtds `live/_is_universe.py::prediction_instrument_ids_from_df`
+  short-circuits `if "instrument_key" in df.columns: return bare instrument_key` (line 27-28), and the IS Kalshi
+  universe's `instrument_key` is the BARE ticker (the adapter sets `instrument_key=ticker`), while the KalshiClob WS
+  connector parses the canonical `KALSHI:PREDICTION_MARKET:{ticker}`. Polymarket is unaffected (its connector accepts the
+  bare `condition_id`). **Fix (pick one, Kalshi-scoped to avoid regressing Polymarket)**: (a) make the `instrument_key`-wins
+  branch venue-aware — for KALSHI, if the key lacks `:PREDICTION_MARKET:`, rebuild `KALSHI:PREDICTION_MARKET:{ticker}`; OR
+  (b) set the IS Kalshi adapter `instrument_key = f"KALSHI:PREDICTION_MARKET:{ticker}"` (canonical InstrumentKey form) —
+  cleaner but audit cross-consumers (cqg classifier uses the ticker arg, not instrument_key, so likely safe). Verify the
+  live connector captures after redeploy. Repo: market-tick-data-service (live/_is_universe.py) and/or instruments-service
+  (kalshi.py). Provenance: prediction-to-100% drive 2026-06-22.
 
 - [ ] [SCRIPT] P3. **DISPLAY-ONLY bug (cosmetic, ≤2min)**: `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh:83` echoes `Tarball: gs://.../instruments-code.tar.gz` but the VM setup (`setup-data-pipeline-vm.sh:311`) actually fetches `instruments-service-code.tar.gz` (correct). The echo misleads tarball-freshness debugging — fix the echo string. Provenance: prediction-to-100% drive 2026-06-22. Repo: deployment-service.
 
