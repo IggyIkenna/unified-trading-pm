@@ -791,6 +791,23 @@ are identified (2) and the ledger exists (3).
       be None when `mode ∈ {PAPER, LIVE}` (raise if a synthetic override is active in a prod-mode run) — makes
       "paper reads exactly like live" structural, not flag-dependent. Repo: strategy-service + unified-trading-library.
 
+- [ ] [UI] P11.18. **Archetype-grouped WEIGHTED PnL-over-time plot + batch/paper symmetry overlay** (operator
+      2026-06-22: "where is our grouped PnL plots of the strategy_ids in strategy-archetype groups where we weight
+      between strategy_ids ... I don't see it on the page"). Today: a single selection-filtered PnL series +
+      `BatchPaperPanel` showing the `live−batch=(paper−batch≈0)+(live−paper=exec α)` identity as NUMBERS. ADD: a
+      multi-line PnL-over-time CHART with ONE line per ARCHETYPE BOOK (the allocator-weighted sum of its strategy_id
+      legs — the e2e weighting), toggle archetype↔leg↔coin; AND overlay the BATCH-rerun PnL line vs the PAPER line so
+      the ε=0 symmetry is visually legible per archetype (not just a verdict badge). Repo: unified-trading-system-ui
+      (consumes /pnl-timeseries + /backtest + /per-strategy weights; playwright-gated).
+- [ ] [CODE+UI] P11.19. **Paper-trading data-quality + VM events stream panel** (operator 2026-06-22: "alerts should
+      stream in ALL events from the VMs — missing/incomplete data etc — I know we don't have 100% of our data
+      everywhere yet"). The run already writes `skipped_specs/{run_id}.json` (honest-absence: which archetypes/venues/
+      coins had NO data, with reason) + the manifest 4-state coverage; the CRA proxies alerting-service `/alerts`. ADD:
+      (a) CRA `GET /clients/{c}/data-quality` = the run's skipped_specs grouped by archetype/venue/reason + manifest
+      coverage % + the live alerting-service alerts merged; (b) a paper-trading "Data Quality & Alerts" panel that polls
+      it + streams VM lifecycle events (ADAPTER_FETCH_FAILED / FAILED / honest-absence), so missing/incomplete data is
+      visible on the page. Repo: client-reporting-api (endpoint) + unified-trading-system-ui (panel, playwright-gated).
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
