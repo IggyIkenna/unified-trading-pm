@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.37.0",
     "unified-trading-library": "0.30.0",
-    "unified-trading-pm": "1.2.268",
+    "unified-trading-pm": "1.2.269",
     "market-data-processing-service": "0.10.8",
     "e2e-testing": "0.19.0",
     "agent-orchestrator": "0.23.0",
@@ -1809,7 +1809,7 @@
     "ibkr-gateway-infra": "0.4.1",
     "instruments-service": "0.23.0",
     "market-data-processing-service": "0.10.8",
-    "market-tick-data-service": "0.33.0",
+    "market-tick-data-service": "0.34.0",
     "ml-service": "0.15.0",
     "strategy-service": "0.36.0",
     "trading-agent-service": "0.10.0",
@@ -1839,6 +1839,11 @@
     "system-integration-tests": {
       "version": "0.14.4",
       "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
+      "branch": "staging"
+    },
+    "market-tick-data-service": {
+      "version": "0.34.0",
+      "sha": "d870f0b326770e99adcb895eab19b43df7788b02",
       "branch": "staging"
     }
   },
