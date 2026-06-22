@@ -1312,3 +1312,30 @@ prior driver's "DeFi fetchable gap closed" was correct; the only real defect was
 (now removed → 10.67%). NOT launching a redundant massive re-fetch fan-out (would re-OOM + waste quota on 99.9%-captured
 data). Remaining genuine work = 6.2k attempted_failed (Solana schema bugs + perp_funding + dex_swaps 404s) + 7 OOM'd
 year-shards (top-off tail) + the image-promote above.
+
+**OOM'd-shard audit (7 VMs exit 137, run.log persisted):** of the 7, the dex-swaps Q2/Q3 are **already COMPLETE** despite
+the OOM (manifest shows captured 91/92 distinct days each — the per-VM shard merged before the OOM-at-tail);
+`mtds-dex-swaps-backfill` was the FULL 2021→2026 range in ONE VM (correctly superseded by the year-shards). Genuinely
+incomplete: lst-rates 2025-01 (17/31 days; rest pre-launch tokens), lending-indices 2025-03 (0 captured — OOM truncated
+before shard write), gas-fees 2024-01/2026-02 (0 captured — gas-fees is the MANTLE-paid-RPC long-pole, already
+BLOCKED-CREDENTIALS). **NOT relaunching now: the fleet is at 329 RUNNING backfill VMs (tradfi CME swarm — far over the
+≤40 cap), so adding defi VMs into an over-cap fleet is imprudent + the gaps are marginal in a structurally-complete
+lane.** Filed as targeted todos:
+
+- [ ] [DATA] P2. **DEFI top-off the 2 genuinely-incomplete non-gas OOM'd shards** — relaunch `collect-lending-indices`
+      2025-03 + `collect-lst-rates` 2025-01 on **e2-standard-8 --preemptible** (`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`,
+      freshness-skip makes it safe) once the tradfi fleet drains below the ≤40 concurrent cap. Marginal coverage
+      (lending-indices 2025-03 was writing real rows pre-OOM; lst-rates is a 13-token data_type). Repo: deployment-service.
+      Provenance: this Progress Log (OOM'd-shard audit).
+- [ ] [DATA] P2. **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
+      failures (`RowSchemaValidationError` venue=KAMINO/ORCA/RAYDIUM/MARINADE: missing `ts_event`/`supply_rate`/
+      `price_a`/etc — a HANDLER contract bug, not a backfill) + drift_v2 sig-index-missing (build via
+      `build_drift_v2_sig_index.py`) + dex_swaps `404 GET` (1747) + perp_funding 424 + rewards 730. The 3,550
+      `phantom_captured_no_parquet_at_canonical_path` re-validate via `reconcile_phantom_manifest_rows_all.py --unphantom`.
+      Repo: market-tick-data-service. Provenance: this Progress Log (failed-cell breakdown).
+- [ ] [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** — `gcloud compute instances list --filter=status=RUNNING`
+      shows **329 RUNNING backfill VMs** (dominated by ~280 `tradfi-bf-cme-ohlcv-1m-*` year×contract shards launched by a
+      prior driver), far over the ≤40 concurrent cap. On-demand E2 quota=600 but this risks preemption cascades +
+      Actions/compute spend. Verify the tradfi swarm is draining (self-deleting on completion) + that none OOM'd silently;
+      if stalled, throttle. Repo: deployment-service (tradfi lane). Provenance: this Progress Log; this is a TradFi-lane
+      finding surfaced during the defi audit, not defi-blocking.
