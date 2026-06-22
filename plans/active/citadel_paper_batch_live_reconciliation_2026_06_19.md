@@ -803,7 +803,18 @@ are identified (2) and the ledger exists (3).
       immediate value than the marginal standalone fade (which is shelved — see Progress Log 2026-06-22 "intraday
       reversion is a feature/exec-timing signal, not a standalone trade").
 - [ ] [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent** (operator
-      2026-06-22). Today the RESEARCH customises fills per leg (cs maker-25% / ext taker / basis maker-1bp / on-chain
+      2026-06-22). **ENGINE SHIPPED 2026-06-22 — execution-service@c50c467d:** shared `backtest_v2/candle_fill_engine.py`
+      (`replay_candle_fill`) with the `ExecutionIntent` StrEnum universe — `IOC_TAKER` (cross, bar-0 full fill),
+      `RESTING_LIMIT_TAKER` (residual rests at cross, fills on trade-back, never misses), `LIMIT_MAKER` (posted
+      `improve_bps` inside the cross, fills at the EXACT posted price on the first 1m bar trading through by
+      `FILL_THROUGH`=0.25bp, **MISSES on adverse selection**). Lifts the `_extreme_ml.py` 1m-trade-through mechanism into
+      GroupC, consumes canonical `CanonicalOHLCV`, Decimal/ε=0, 12 unit tests GREEN, basedpyright clean. Generalizes the
+      shipped `reversion_timing` (4b8dc545). **REMAINING:** (a) wire the per-strategy `execution_intent` flag into each
+      strategy + the `smart_fill_replay` call; (b) **download EVM-perp + basis spot/perp 1m candles** for the full
+      cross-strategy style sweep (CeFi spot majors + 30 perp 1m series already cached, e.g. `perp_BTC_1m` 1.7M bars
+      2020→2026; gap = the EVM perps + basis pairs — the e2e-testing download); (c) apply the cost corrections at the
+      central model (basis 5bp/leg×2, on-chain 1bp — measured per the honest book +110% on CAP / Sh 1.93 / -10% maxDD).
+      Today the RESEARCH customises fills per leg (cs maker-25% / ext taker / basis maker-1bp / on-chain
       maker-0.5bp) — that's a measurement scaffold, NOT production. Production = execution-service GroupC: the strategy
       declares an **intent** (maker-inside-N-bp / taker-cross; urgency picked from a universe) and **one** engine
       executes uniformly by **replaying post-signal 1m candles** — fill on the first bar trading through the resting
