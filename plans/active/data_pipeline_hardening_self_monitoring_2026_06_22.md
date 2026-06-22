@@ -160,10 +160,16 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       `http_status in 2xx AND response_received AND rows_in_response==0 AND error_signal==""`; otherwise raise
       `UnprovenHonestAbsenceError` (callsite hint, steers to `record_failed`). `EXPECTED\__` calendar reasons are exempt
       (no fetch attempted). — **unified-trading-library**
-- [ ] [CODE] P0. Thread `fetch_evidence` from the adapter HTTP layer (the UAC `classify_venue_error()` site that already
-      exists per-adapter) into the manifest writer, for all 5 AGs. Adapters that today call
-      `record_empty(SOURCE_RETURNED_ZERO)` on an exception path are exactly the C1 bugs — they will now fail loudly at
-      the writer and route to `record_failed`. — **market-tick-data-service, instruments-service**
+- [x] ✅ [CODE] P0. Thread `fetch_evidence` from the adapter HTTP layer (the UAC `classify_venue_error()` site that
+      already exists per-adapter) into the manifest writer, for all 5 AGs — DONE **market-tick-data-service@fbac3a9**
+      (defi/tradfi/extended/cefi/prediction handlers + live runner + sentinels + orchestrator catalog readers threaded;
+      17 source files + 17 tests + extracted `_ws_window_helpers.py`; QG green, sentinel == HEAD) +
+      **instruments-service@c4687fc** (sports/defi IS threading, peer-lane). **GREP-PROOF**:
+      `check_source_returned_zero_needs_fetch_evidence.py` returns 0 unproven callsites for BOTH MTDS and IS — every
+      `record_empty(SOURCE_RETURNED_ZERO)`/`record_zero_rows` reachable from a fetch/except is now evidence-gated;
+      exception/401/403/429/5xx/timeout/missing-key paths route to `record_failed`. Bonus C6 fix: 4 orchestrator catalog
+      readers + 3 `_instruments_metadata.py` sites aligned env-less→env-short `resolve_bucket_name` (the defi-6%
+      stale-read class, DP-ENV-001). — **market-tick-data-service, instruments-service**
 - [x] ✅ P0. Unit gate tests DONE utl@39f8ec85 (test*record_empty_fetch_evidence_gate.py:
       None/signal/401/429/500/rows>0/not-received raise; EXPECTED*\* exempt). Unit: a 401/429/timeout/exception path
       that previously stamped `SOURCE_RETURNED_ZERO` now raises `UnprovenHonestAbsenceError`; a genuine 200+empty
@@ -512,6 +518,35 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   evidence synthesis grep=0 on origin/LDR) — so it IS the real remaining ship. **Residual left to peer lanes**: UAC
   `lifecycle_class.py` `umbrella`-field tail (deployment-observability lane — its sibling `Deployment*` enums + exports
   already on origin; small coherent dead-WIP tail, not threading, left for that lane).
+- **2026-06-22 KEYSTONE-THREADING LANDED (autonomous /autonomous run, Opus 4.8 — resumed the `defi-keystone-finish`
+  claim).** The MTDS threading WIP left by the limit-killed agents is now COMMITTED + pushed: **MTDS@fbac3a9** (34 files
+  — 17 source + 17 tests + extracted `_ws_window_helpers.py`). Broke the deadlock by FINISHING the threading to QG-green
+  (NOT by isolating — the whole tree greened so no stash was needed). **Fixes I made to get green** (all on my own
+  threading files, none weakening the gate): (a) removed unused `MASSIVE_S3_BUCKET` import (F401) in
+  `massive_futures_backfill_handler.py`; (b) updated 1 stale test assertion in `test_massive_futures_backfill_handler.py`
+  (`endpoint.startswith("s3://")` → `startswith(f"{MASSIVE_SOURCE}:")` — the threading deliberately changed the
+  FetchEvidence endpoint to a `{source}:{key}` provenance token to satisfy bucket-SSOT ratchet 5.12b; test was stale);
+  (c) extracted 2 helpers to clear the 50L method cap that threading pushed over —
+  `oracle_prices_handler._record_chainlink_empty` + `aggregator_route_handler._aggregator_preflight_guard`
+  (behaviour-identical); (d) narrowed 2 threading-introduced broad `except Exception:` to the repo-canonical tuples
+  (`sentinels.py` → `(KeyError,ValueError,AttributeError,TypeError)`; `onchain_perp_batch_handler.py` →
+  `(OSError,ValueError,KeyError,RuntimeError)`) — origin had 0 broad-excepts so the gate counted these as violations; the
+  narrow set keeps the keystone-safe "any failure → disqualifying signal → record_failed" intent; (e) fixed import alias
+  for the relocated `make_live_window_evidence` (size sub-agent renamed `_make_live_window_evidence`→`make_…` during the
+  helper extraction) in the new `test_cefi_keystone_fetch_evidence.py`; (f) updated 4 stale `instruments-store-defi-*`
+  bucket literals (env-less→env-short `-prd-`) in `test_instruments_metadata_loader.py` to match the C6 reader fix the
+  threading applied (the defi-6% stale-read class — `_instruments_metadata.py` ×3 + `orchestrator/__init__.py` ×4 catalog
+  readers now use `resolve_bucket_name`, env-short). **GREP-PROOF**: `check_source_returned_zero_needs_fetch_evidence.py`
+  = 0 unproven callsites for BOTH MTDS and IS. **AGs now raise-free / ready for VM re-ship**: defi, tradfi, cefi,
+  prediction (MTDS handlers all threaded), extended (umi), + sports/defi on IS (peer `c4687fc`). **Findings**: (1) the
+  adapter-contract-call baseline warned on websocket_runner (11→8) + lending_indices (6→5) — both FALSE POSITIVES (the 6
+  websocket calls MOVED into the new `_ws_window_helpers.py`, not in the per-file baseline; the lending "6th" was a
+  `record_zero_rows` literal in a COMMENT the threading reworded) — QG still EXIT=0 so warn-only; left baseline untouched
+  (no masking). (2) Left dirty + UNSHIPPED (NOT keystone — belong to other lanes, deliberately excluded from the commit):
+  `scripts/run_polymarket_v9_rewalk.sh` (one-off, predictions_master) +
+  `scripts/migrate_onchain_perp_canonical_instrument_id.py` (one-off migration, 0 fetch_evidence). **Per-AG reprobe
+  hooks / rate-events / heartbeat (the OTHER half of each per-AG dispatch item) remain the per-AG agents' job** — this
+  run completed the keystone THREADING half only.
 
 ---
 
