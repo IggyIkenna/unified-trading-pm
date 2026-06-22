@@ -983,7 +983,13 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "coverage_pct": 85.03,
+        "qg_red_reason": null,
+        "large_file_count": 3,
+        "warn_file_count": 5
+      }
     },
     "system-integration-tests": {
       "type": "test-harness",
