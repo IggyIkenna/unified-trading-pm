@@ -819,6 +819,18 @@ are identified (2) and the ledger exists (3).
       exchange floor); basis **5bp/leg ×2 + impact** (both spot+perp legs fill to stay delta-neutral → re-cost halves
       basis: +31%→+11-16% on CAP, Sharpe 15→4.5-7, since it turns 48x notional/yr — a slower basis rebal recovers some).
       Repo: execution-service (GroupC) + e2e-testing (1m-candle download + per-leg fill replay). Composes with P2.11.19.
+      **Execution-intent UNIVERSE — sweep per strategy, MEASURED via the 1m replay, pick best/worst (operator
+      2026-06-22):** (a) **IOC taker** — cross, full immediate fill, pay spread+impact; (b) **resting-limit taker** —
+      marketable/cross, but unfilled residual RESTS + fills on subsequent 1m candles (not cancelled); (c) **limit
+      {0, 0.5, 1, 2} bp inside the taker/cross price** — maker, posted passive, fills on the first 1m bar trading through,
+      can MISS on adverse selection (price runs away). The strategy declares which intent it uses (its urgency); the
+      engine measures all and the best is the per-strategy verdict — e.g. ext-REVERT wants maker-inside (patient fade),
+      ext-CONTINUE wants taker (urgent with-trend). **`_extreme_ml.py` ALREADY implements this exact mechanism** (the
+      extreme triple-barrier 3-class model: REVERT→maker-inside with an `improve_bp` sweep + `FILL_THROUGH`=0.25bp + the
+      limit RESTS and fills on ANY 1m trade-through within order-life; CONTINUE→taker; NEITHER→skip/ML-gate). The build
+      is to **LIFT that mechanism out into the shared GroupC engine** + expose the intent as a per-strategy flag — NOT
+      write new. Correct the "ext (reversion)" mislabel → "ext (extreme triple-barrier: continue/revert/neither)" in the
+      plots/docs as part of this (research plots already fixed 2026-06-22).
 
 - [ ] [CODE] P2.11.15. **cs leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`** — the cross-sectional ML book
       (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
