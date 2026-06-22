@@ -320,6 +320,35 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 ~10:00 — TRADFI "download everything" campaign: grain reconciliation + full options backfill
+
+Operator 2026-06-22: download EVERYTHING, no client-side filters — the market is the filter (a listed,
+non-delisted strike with zero trades on a day -> empty_confirmed, not expected_unattempted). Goal = COMPLETE
+manifest: every listed strike-day captured (had trades) or empty (listed, no trades); expected_unattempted -> 0.
+honest-cov will be LOW (most option strikes illiquid) but honest+complete.
+
+**Universe (prod catalog, 686,348 instruments):** OPTION+COMBO 681,557 / 79 underlyings; FUTURE 4,298 / 49 roots.
+Fetched at databento PARENT grain: CME 47 future roots x {.FUT,.OPT}, ICE {BRN,G}, CBOE VX, NASDAQ/NYSE equities,
++ EC* event contracts. ~376 CME VMs (47 roots x ~8yr x {1s,1m}). Quota unlimited (50,427 CPUs free) — the only
+constraint is databento API cost.
+
+**3-axis grain reconciliation SHIPPED** (could-exist now seeds at the WRITER grain so captures convert, not
+re-phantom): (1) instrument_type lowercase instruments-service@cf2e9a2; (2) UAC FUTURE@CME/ICE->futures_chain,
+COMBO->combo + source_priority<900 unified-api-contracts@c0a15a50; (3) bundle instrument_id=''+underlying
+instruments-service@f6d479f. v2 enumerator (--enumerator-version v2 --catalog-path .../prod/catalog.parquet)
+projects ~6M+ could-exist (halt-safety gated; 624k option strikes) = the honest full denominator.
+
+**Launcher expanded:** launch-tradfi-bf-cme-ohlcv-1m.sh CME_ROOTS 7 -> ALL 47 catalogue roots (.FUT;.OPT).
+**Wave 1 launched (2026, all 47 roots).** Remaining: 2019-2025 x 47 roots + ICE + equities + event contracts.
+
+- [ ] [DATA] P1. **TRADFI full options backfill — remaining waves.** Launch 2019-2025 x all 47 CME roots
+      (.FUT;.OPT) + ICE (BRN,G) + EC* event contracts + re-launch NASDAQ/NYSE for the equity 1s/1m gaps; each ->
+      captured/empty_confirmed. Then v2 re-seed (--apply-write, cap > 6M) so the denominator = full could-exist;
+      verify expected_unattempted -> ~0 + sample option parquets. Repo: deployment-service + instruments-service.
+- [ ] [DATA] P2. **~8.5k attempted_failed (UNKNOWN/ticks_migrated bad-id)** migration-artifact 1m corpus — re-key
+      or re-backfill so MDPS can aggregate. Repo: market-tick-data-service / migration.
+
+
 ### 2026-06-22 06:30 — honest-cov is UNDERSTATED fleet-wide: ~1M phantom expected_unattempted (operator caught it on weather)
 
 Operator Q "is weather really 17%, we completed it ages ago": VERIFIED **NO** — 17% is an over-enumeration artifact.
