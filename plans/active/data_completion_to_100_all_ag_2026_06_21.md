@@ -203,7 +203,7 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       `instr-backfill-pred` launched 2026-06-21 16:57 UTC, confirmed RUNNING + writing Kalshi instruments (log:
       `date=2026-06-14: 1 stale + 1 missing venues/entities — will re-fetch (stale=['POLYMARKET'], missing=['KALSHI'])`).
       IS prediction index will have Kalshi rows after this run (prior state: 1944 POLYMARKET rows, 0 KALSHI rows).
-- [ ] [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding
+- [x] ✅ [DATA] P1. **sports — FootyStats ODDS source↔pipeline_mode mismatch (fail_fast)** [SPORTS-lane finding
       2026-06-21]: footystats fwd-poll fetches odds fine (29 snapshots/date) but the write FAILS validation — "Batch
       manifest row `source='footystats'` disagrees with `pipeline_mode='batch_odds_api'` (expects source='odds_api')".
       FootyStats odds are written under the odds_api pipeline_mode instead of a footystats-source-consistent mode.
@@ -211,7 +211,7 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       in-flight provenance lane's files). Fix belongs there: either footystats odds use `pipeline_mode=batch_footystats`
       (source=footystats) or the writer derives pipeline_mode from source. footystats fixtures/predictions/matches DO
       write OK; only ODDS fail. Repo: market-tick-data-service / unified-api-contracts (provenance lane). DO NOT fix
-      from SPORTS lane (collision).
+      from SPORTS lane (collision). — unified-api-contracts@b843863b (pipeline_mode.py line 428 + test line 324)
 - [x] [DATA] P1. ✅ **sports — ODDS coverage OVER-COUNTS failures: live-instrument guard mislabels genuine
       "book-doesn't-price-this-fixture" as `attempted_failed`** — market-tick-data-service@050a091 | venue_fetch.py:
       exclude prediction-market venues (Kalshi/Polymarket/Novig/BetOpenly/ProphetX) from Odds-API bookmaker scope;
