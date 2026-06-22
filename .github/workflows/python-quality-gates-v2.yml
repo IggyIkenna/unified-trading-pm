@@ -666,7 +666,9 @@ jobs:
                       cov = round(float(m.group(1)) * 100, 2)
               except (OSError, ValueError):
                   pass
-          reason = None if os.environ.get("SLICES_RESULT") == "success" else "qg"
+          # green = slices passed ('success') OR content-cache hit ('skipped', tree already green);
+          # only a real failure/cancel sets the generic "qg" reason (the specific step is in the excerpt).
+          reason = "qg" if os.environ.get("SLICES_RESULT") in ("failure", "cancelled", "timed_out") else None
           print(json.dumps({"coverage_pct": cov, "qg_red_reason": reason, "large_file_count": large, "warn_file_count": warn}))
           PYEOF
           echo "codebase-health: $(cat .qg_codebase_health.json)"
