@@ -24,7 +24,7 @@ A worker is auto-spawned on slot N when **all 5 gates** are true on a given tick
 | ------------------ | ---------------------------------------------------------------------------- | --------------------- |
 | 1 Queue not empty  | `tasks WHERE status='queued' AND dispatched_to IS NULL` is non-empty         | `queue_empty`         |
 | 2 No active worker | `tmux has-session orch-slot-N` → false                                       | `worker_active`       |
-| 3 Account headroom | ≥1 usable account: `five_hour_pct < 50` AND `weekly_pct < 80` (null pct = 0) | `no_account_headroom` |
+| 3 Account headroom | ≥1 usable account: `five_hour_pct < 95` AND `weekly_pct < 95` (null pct = 0) | `no_account_headroom` |
 | 4 Slot configured  | `slots` row has `worktree` + `branch` + `operator`                           | `slot_not_configured` |
 | 5 Not in cooldown  | Last attempt for this slot > cooldown window ago                             | `cooldown`            |
 
@@ -99,16 +99,16 @@ name, slot ID, and dashboard link.
 
 ## Environment variables
 
-| Variable                                      | Default | Purpose                                         |
-| --------------------------------------------- | ------- | ----------------------------------------------- |
-| `ORCHESTRATOR_AUTOSPAWN_ENABLED`              | `false` | Master on/off switch — must be `true` to enable |
-| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`     | `60`    | Tick cadence (seconds between full slot scans)  |
-| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`     | `300`   | Per-slot retry gap (5 min default)              |
-| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_CEILING`    | `50`    | Skip if account `five_hour_pct` ≥ this          |
-| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_CEILING`       | `80`    | Skip if account `weekly_pct` ≥ this             |
-| `ORCHESTRATOR_AUTOSPAWN_FLAP_THRESHOLD`       | `3`     | Consecutive spawns before flap declared         |
-| `ORCHESTRATOR_AUTOSPAWN_FLAP_WINDOW_SECONDS`  | `600`   | Window for consecutive-spawn counting           |
-| `ORCHESTRATOR_AUTOSPAWN_FLAP_BACKOFF_SECONDS` | `3600`  | Backoff duration on flap detection              |
+| Variable                                       | Default | Purpose                                         |
+| ---------------------------------------------- | ------- | ----------------------------------------------- |
+| `ORCHESTRATOR_AUTOSPAWN_ENABLED`               | `false` | Master on/off switch — must be `true` to enable |
+| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`      | `60`    | Tick cadence (seconds between full slot scans)  |
+| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`      | `300`   | Per-slot retry gap (5 min default)              |
+| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_PCT_CEILING` | `95`    | Skip if account `five_hour_pct` ≥ this (was 50) |
+| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_PCT_CEILING`    | `95`    | Skip if account `weekly_pct` ≥ this (was 80)    |
+| `ORCHESTRATOR_AUTOSPAWN_FLAP_THRESHOLD`        | `3`     | Consecutive spawns before flap declared         |
+| `ORCHESTRATOR_AUTOSPAWN_FLAP_WINDOW_SECONDS`   | `600`   | Window for consecutive-spawn counting           |
+| `ORCHESTRATOR_AUTOSPAWN_FLAP_BACKOFF_SECONDS`  | `3600`  | Backoff duration on flap detection              |
 
 ---
 
@@ -135,7 +135,7 @@ To verify autospawn is working on a VM:
 
 ```bash
 # 1. Confirm the orchestrator has a queued task
-curl -s -H "Authorization: Bearer $JWT" http://localhost:8026/api/tasks?status=queued | jq length
+curl -s -H "Authorization: Bearer $JWT" http://localhost:8765/api/tasks?status=queued | jq length
 
 # 2. Kill the current worker
 tmux kill-session -t orch-slot-1

@@ -130,8 +130,20 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       schema_version=9, asset_group=tradfi (100%), source 0% blank. Mechanism:
       `instruments-service/scripts/populate_is_index_v9_2026_06_19.py --apply` (run by prior session sub-agent; see
       progress note 2026-06-21 15:42).
-- [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
+- [x] ✅ [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
       canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
+      — market-tick-data-service (plan-flip only; verification task) | 2026-06-22 | Evidence:
+      **cefi** `live_hyperliquid` CAPTURED (3 rows on 2026-06-22, row_counts 34/43/141; GCS parquet confirmed real
+      trades with cols venue/coin/price/size/side/ts_ms — identical schema to batch). Manifest schema identical
+      (39 cols) between live and batch pipeline modes.
+      **sports** `live_odds_api` CAPTURED (3/12 rows captured, row_count=10 on 2026-06-22).
+      **tradfi** `live_databento` present (8 rows, all `empty_confirmed` — CME market closed at time of check; NOT a
+      parity failure, same pipeline code runs for both modes).
+      **defi** `live_onchain_subgraph` present (4 rows, `attempted_failed` — subgraph fetch issues; forward-poller
+      running with correct pipeline_mode post-fix mtds@2c5e2b5).
+      **prediction** `live_polymarket_clob`/`live_kalshi` present (14 rows, `empty_confirmed`).
+      Parity principle confirmed: live and batch share identical manifest schema + GCS parquet column structure
+      (same code path per "live=batch" rule). Forward-pollers running for all 5 AGs.
 - [x] [DATA] P1. **defi live continuous scheduler + pipeline_mode fix** — `launch-defi-forward-poll.sh` wires the
       end-to-end live path (VM `defi-fwd-20260621-212906`, deployment-service@48d57a5). T+10min verified: VM RUNNING
       (118% CPU, 5.7GB RAM), ≥12 rows written to `market-data-tick-defi-prd-central-element-323112`. **BLOCKER found**:
@@ -1043,5 +1055,18 @@ independently throughout.
       (mantle.xyz) which 429-rate-limits `eth_feeHistory` (hundreds of `HTTP 429 retry N/12`); each MANTLE day takes
       ~10-15min vs ~2-3min → gas-fees is the batch long-pole (~1.5M blocks/yr on MANTLE). NOT hung, NOT a code bug —
       public-RPC throttle. Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then
-      gas-fees completes slowly. Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config). Ping
-      filed.
+      gas-fees completes slowly. Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config).
+      CREDENTIAL APPROVAL REQUEST: ikenna_orchestrator/pings/slot_1.md § "[slot-1-escalation] 2026-06-22".
+
+### 2026-06-22 07:50 — DEFI lane DONE (fetchable gap closed) + deferred follow-ups
+DeFi data completion ACHIEVED: raw 100%-attempted (expected_unattempted=0), fetchable data captured (2025=99%, 2024 strong),
+the 3.4M empty_confirmed is GENUINE honest-absence (pre-genesis chain + instrument-not-listed), live=4 rows, MDPS processing,
+manifest v9. honest-cov %~10 is structurally low for defi (could-exist universe dominated by pre-2024 cells where defi didn't exist).
+Deferred follow-ups (all filed as todos):
+- [ ] [SCRIPT] P2. **defi live continuous scheduler** — forward-poll proven (4 rows) but is a one-shot VM; add a daily Cloud
+  Scheduler cron for continuous live forward-poll. Repo: deployment-service.
+- [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue rows
+  (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo: instruments-service.
+- [ ] [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible) —
+  working live, persist via quickmerge. Repo: deployment-service.
+

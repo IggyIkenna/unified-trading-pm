@@ -37,7 +37,8 @@
 # Cron install (every 5 min):
 #   */5 * * * * cd ${WORKSPACE_ROOT}/.tabs/1 && bash unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh --all-slots --quiet >> /tmp/slot-cron-ff-pull.log 2>&1
 #
-# Lock file at /tmp/slot-cron-ff-pull.lock prevents overlapping cron runs.
+# Lock file at ${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).lock prevents overlapping cron
+# runs (per-uid so a root run and an ubuntu run never collide on the same lock).
 #
 # Codex SSOT: codex/05-infrastructure/per-tab-worktrees.md
 
@@ -49,7 +50,7 @@ QUIET=0
 DRY_RUN=0
 PARALLEL_WORKERS="${SLOT_FF_PULL_WORKERS:-4}"
 DO_PREFETCH=1
-LOCK_FILE="/tmp/slot-cron-ff-pull.lock"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).lock"
 OVERRIDES_FILE="$(dirname "${BASH_SOURCE[0]}")/cron-branch-overrides.txt"
 
 # Per-repo branch overrides, loaded from OVERRIDES_FILE if present.

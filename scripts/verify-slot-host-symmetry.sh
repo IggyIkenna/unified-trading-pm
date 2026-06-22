@@ -279,7 +279,7 @@ host_fail=$(( fail - soft_fail ))
 # debounce alone could NOT silence — that is fixed by the soft_fail demotion above, not the debounce;
 # debounce remains the second layer for genuine single-tick flaps in the page-worthy set.
 SYMMETRY_ALERT_THRESHOLD="${SYMMETRY_ALERT_THRESHOLD:-2}"
-_streak_file="$(dirname "${FF_LOG}")/.slot-host-symmetry-fail-streak"
+_streak_file="${XDG_RUNTIME_DIR:-/tmp}/.slot-host-symmetry-fail-streak.$(id -u)"
 if [[ ${host_fail} -gt 0 ]]; then
     _prev_streak=$(cat "${_streak_file}" 2>/dev/null || echo 0)
     [[ "${_prev_streak}" =~ ^[0-9]+$ ]] || _prev_streak=0

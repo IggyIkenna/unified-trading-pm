@@ -54,6 +54,7 @@ jobs:
           STATUS: ${{ github.event.client_payload.status }}
           SHA: ${{ github.event.client_payload.sha || '' }}
           BRANCH: ${{ github.event.client_payload.branch || '' }}
+          CODEBASE_HEALTH_B64: ${{ github.event.client_payload.codebase_health_b64 || '' }}
         run: |
           set -euo pipefail
 
@@ -111,6 +112,21 @@ jobs:
               print(f"No-downgrade: keeping {repo} ci_status={prev} (ignoring lower non-main {branch} v2 -> {status})")
               status = prev
           repos[repo]["ci_status"] = status
+          # codebase_health (Repo-CI Cov% / QG-reason / File-debt) — decode the forwarded blob
+          # and store it on the manifest entry: this is the deployment-api FALLBACK when the
+          # Firestore side-store is unavailable (it reads Firestore-authoritative, manifest-cache).
+          # Best-effort: a malformed/absent blob never blocks the ci_status write.
+          ch_b64 = os.environ.get("CODEBASE_HEALTH_B64", "")
+          if ch_b64:
+              try:
+                  import base64
+
+                  ch = json.loads(base64.b64decode(ch_b64).decode("utf-8"))
+                  if isinstance(ch, dict):
+                      repos[repo]["codebase_health"] = ch
+                      print(f"codebase_health updated for {repo}: {ch}")
+              except (ValueError, TypeError):
+                  print("codebase_health_b64 not valid base64-JSON; skipping (ci_status write unaffected)")
           # Remove deprecated quality_gate_status from all repos (ci_status is SSOT)
           for r in repos.values():
               r.pop("quality_gate_status", None)
@@ -176,11 +192,15 @@ jobs:
           STATUS: ${{ github.event.client_payload.status }}
           BRANCH: ${{ github.event.client_payload.branch || '' }}
           SHA: ${{ github.event.client_payload.sha || '' }}
+          CODEBASE_HEALTH_B64: ${{ github.event.client_payload.codebase_health_b64 || '' }}
           GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
         run: |
           python3 -m pip install --quiet "google-cloud-firestore>=2,<3" \
             || { echo "firestore SDK install failed — skipping dual-write (manifest remains SSOT)"; exit 0; }
+          # --codebase-health-b64 carries the Repo-CI metrics blob; an empty value is a no-op
+          # (set_status merge-preserves the existing codebase_health), so it's always safe to pass.
           python3 scripts/cicd/ci_status_store.py "$REPO" "$STATUS" "$BRANCH" "$SHA" \
+            --codebase-health-b64 "${CODEBASE_HEALTH_B64}" \
             || echo "Firestore dual-write failed (non-fatal in Phase 1; manifest remains SSOT)"
 
       - name: Commit and push

@@ -285,10 +285,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `custody/cloud_kms.py` + `custody/withdrawal_signing.py` secret-fetch → UTL `get_secret_client()` (KMS Decrypt
       kept local); `providers/solana_amm_depth_provider.py` GCP-only `gcs.Client` blob loop → UTL `get_storage_client()`
       (now cloud-agnostic / AWS-safe). Tests updated to the `SecretClient` interface.
-- [ ] [AGENT] P1. **agent-orchestrator**: `server/gcs_sync.py:30` raw `boto3`+`google.cloud.storage` → UTL
-      `get_storage_client()` (already cloud-agnostic incl. S3). `server/auth.py:99` gs:// secret fetch → UTL
-      `get_storage_client()`/`get_secret_client()`. **Keep the HS256/ES256 JWT signing logic** (intentional custom per
-      orchestrator-auth SSOT — touch only the cloud-fetch).
+- [x] ✅ [AGENT] P1. **(SHIPPED `agent-orchestrator@62894565` 2026-06-22)** **agent-orchestrator**: `server/gcs_sync.py`
+      raw `boto3`+`google.cloud.storage` → UTL `get_storage_client(provider="gcp"|"aws")` (GCS+S3 dual-mirror preserved
+      via explicit per-provider clients; `upload_bytes`/`upload_file`). `server/auth.py` `_load_gcs_secret` gs:// blob →
+      `get_storage_client(provider="gcp", project_id=…).download_bytes()`. HS256/ES256 JWT signing untouched. QG green.
 - [x] ✅ [AGENT] P1. **market-tick-data-service** — DONE `market-tick-data-service@696249df` (988 handler tests ✓, QG
       0). Replaced the raw `secretmanager.SecretManagerServiceClient()` + bare-`except` across 9 CLI handlers (11 sites)
       with `from unified_trading_library import get_secret_client` → `.get_secret(name)` (cloud-agnostic, no swallow).
@@ -325,11 +325,20 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 - [x] ✅ [AGENT] P2. **alerting-service** — DONE `alerting-service@39181c7` (348 tests ✓, QG 0). Replaced
       `Literal["WARNING","CRITICAL"]` in `rules/connectivity_rules.py` + `rules/reconciliation_rules.py` with UAC
       `AlertSeverity` (`.WARN`/`.CRITICAL`); also fixed a dropped `"delivered": False` found in passing.
-- [ ] [AGENT] P2. **agent-orchestrator**: migrate the ~30 `os.environ.get` config reads to a `UnifiedCloudConfig`
-      subclass; move secret-bearing ones (`TELEGRAM_BOT_TOKEN`, JWT secret) to `get_secret_client()`; add UTL
-      `setup_events`/`log_event` lifecycle emission (the repo emits none today). Local `utcnow()`/`to_utc()` may stay
-      (thin tz-aware wrappers) but replace `logging.basicConfig` call sites. **Scope-flag:** orchestrator is partly
-      intentionally standalone — migrate config/secrets/events, do not blanket-rewrite the custom dashboard auth.
+- [x] ✅ [AGENT] P2. **agent-orchestrator — CORE SHIPPED `agent-orchestrator@32efe2ca` (2026-06-22)**: the
+      `UnifiedCloudConfig` foundation (`OrchestratorConfig` + `get_config()` singleton in `server/config.py`); the
+      secret-bearing `TELEGRAM_BOT_TOKEN` → env-first + `get_secret_client()` SM fallback
+      (`alerting-telegram-bot-token`, same bot as PM/alerting); UTL `setup_events`/`log_event` STARTED/STOPPED lifecycle
+      emission in the lifespan (the repo emitted ZERO events before). The JWT secret was already made cloud-agnostic by
+      P1 (gs:// blob via `get_storage_client`) + its Cloud-Run env tier. Mode/path resolvers stay live functions (tests
+      monkeypatch them → class is additive); dashboard auth untouched. +6 tests, QG green.
+- [ ] [AGENT] P3. **agent-orchestrator — P2 follow-up wave (read-migration + basicConfig)**: migrate the remaining ~60
+      read-once `ORCHESTRATOR_*` watchdog/cadence tunable `os.environ.get` reads (`worker_liveness_watchdog.py`,
+      `autospawn.py`, `main_agent_keeper.py`, `server.py`, …) onto `OrchestratorConfig` fields, and replace the 2
+      `logging.basicConfig` sites (`server/server.py` `main()`, `regen_backlog_from_plan.py`) with a shared
+      observability init. **DEFERRED** (provenance: utl_uac P2 core 2026-06-22 — deferred because the live config funcs
+      are monkeypatched in tests, so routing them through a cached settings singleton changes per-test semantics; needs
+      a careful separately-tested pass; pure consolidation churn, no behaviour change). Repo: agent-orchestrator.
 - [x] ✅ [AGENT] P3. **unified-trading-api** — DONE `unified-trading-api@e3fbd8d` (QG 0). `routes/chat.py`
       `ANTHROPIC_API_KEY` now via `UnifiedCloudConfig().get_secret("anthropic-api-key")` (name confirmed from
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
@@ -433,9 +442,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 
 - [ ] [AUDIT] P1. Update codex for every contract this plan changes: `codex/06-coding-standards/README.md`
       (reuse-before-reimplement rule + the new UTL retry helper), `codex/04-architecture/agent-orchestrator-overview.md`
-      (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (strategy
-      equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a future
-      audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in UTL).
+      (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
+      (strategy equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a
+      future audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in
+      UTL).
 - [ ] [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM, execution order-CB, hwm_seeds, etc.) in the
       relevant codex docs so the next reuse audit doesn't re-open them.
 - [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners; run plan-hygiene + active-inventory regen; archive per the

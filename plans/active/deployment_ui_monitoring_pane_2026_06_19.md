@@ -65,8 +65,9 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       must write a small census JSON to GCS (running set + zombie names + OOM-terminated names + ts) that
       `_fleet_census.py` reads (degrading to 0 when absent/stale). Repo: deployment-service (watchdog GCS write) +
       deployment-api (read it). Low priority — the live fleet is 2 long-lived VMs; zombie/OOM matters for the
-      not-yet-running ephemeral fleet. Provenance: 2026-06-22 fleet vm-census backend (deployment-api@86050f0).
-      — deployment-service@95af8e7, deployment-api@ffbaf9a | watchdog writes `vm-census/watchdog-census.json` after each poll; `_fleet_census.py` reads + degrades honestly to 0 when absent/stale (>30 min)
+      not-yet-running ephemeral fleet. Provenance: 2026-06-22 fleet vm-census backend (deployment-api@86050f0). —
+      deployment-service@95af8e7, deployment-api@ffbaf9a | watchdog writes `vm-census/watchdog-census.json` after each
+      poll; `_fleet_census.py` reads + degrades honestly to 0 when absent/stale (>30 min)
 - [x] ✅ [UI] P1. deployment-ui central/infra-VM status tile + VM census/zombie surface (the vm-0 OOM class is invisible
       today) — chip click-throughs to AO (not a rebuild; honors division-of-surfaces). `pw:L2 ✓` + regression. Repo:
       deployment-ui. — deployment-ui@3508fa2 | pw:L2 ✓ (256/256 passed) | regression:
@@ -82,9 +83,46 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
 - [x] ✅ [UI] P2. Unified single-glance fleet/infra landing tile (6th LandingTab: N VMs running · central-VM up ·
       consolidator fresh · fleet-git clean · CI green — each click-through). Repo: deployment-ui. —
       deployment-ui@7e40055 | pw:L2 ✓ | regression: tests/smoke/fleet-infra-tab.spec.ts
-- [x] ✅ [UI] P2. Codebase-health matrix column on `/repos` (fleet-wide coverage% / QG-red-reason / file-size-debt, not
-      per-service-tab-only). Repo: deployment-ui (+ a deployment-api roll-up if needed). — deployment-ui@a1b7fbd | pw:L2
-      ✓ | regression: tests/smoke/repos-codebase-health.spec.ts
+- [x] ✅ [UI] P2. **Codebase-health matrix COLUMN (frontend) on `/repos`** (fleet-wide coverage% / QG-red-reason /
+      file-size-debt). The UI column + chips render `row.codebase_health`. **DONE — deployment-ui@a1b7fbd | pw:L2 ✓ |
+      regression: tests/smoke/repos-codebase-health.spec.ts.** ⚠️ **SCOPE CORRECTION 2026-06-22:** this shipped the
+      column + the MOCK seed ONLY — the field is `codebase_health?` (optional) in `client.ts`, populated by
+      `mock-api.ts` per ci_status, NOT by the live backend (`codebase_health` appears in ZERO deployment-api files;
+      `_overview_row` never sets it). So against the LIVE backend all three columns render "—". The previous unqualified
+      ✅ was frontend-only; backend population is the OPEN item below.
+- [x] ✅ [INFRA] P2. **Backend population of codebase_health (CI → Firestore → deployment-api read).** The Cov% /
+      QG-reason / File-debt columns are now REAL (no longer mock-only). Pipeline (all transport rides the LIVE
+      `CI_STATUS_FIRESTORE_DUALWRITE` path): (1) the **agg job of the reusable `python-quality-gates-v2.yml`** computes
+      per-repo
+      `{coverage_pct (parsed from the tests-slice `coverage.xml`artifact), qg_red_reason, large_file_count,     warn_file_count (file-debt via`os.walk` on its checkout, mirroring the gate's >900/700-899 zones)}`
+      — every step is `continue-on-error`, so it can NEVER red the required `quality-gates-v2` context; (2) it forwards
+      `codebase_health_b64` in the EXISTING `ci-status-update` dispatch — **one reusable-workflow edit → live for ALL
+      repos via `uses:@live-defi-rollout`, NO 22-repo template rollout** (the original base-service.sh emit idea was
+      reverted: CI runs the gate SLICED, so coverage and file-debt land in different slices — the agg job is the single
+      place with both); (3) `ci-status-update.yml` decodes it → writes `repositories[repo].codebase_health` in the
+      manifest (deployment-api's fallback cache) AND passes `--codebase-health-b64` to `ci_status_store.py`, whose
+      `set_status` writes it into the Firestore `ci_status/{repo}.codebase_health` (**merge-preserving** — a status-only
+      update never wipes the last-known metrics); (4) deployment-api `resolve_codebase_health_map` reads it
+      Firestore-authoritative / manifest-fallback (honest-degradation: warns + manifest-only on any Firestore error) and
+      `_overview_row` attaches `codebase_health`. **DONE 2026-06-22 — deployment-api@8050d21** (read:
+      `CodebaseHealthDict` + `resolve_codebase_health_map` + `ManifestView.codebase_health_for` + `_overview_row`; 13
+      tests; full QG green) **+ unified-trading-pm@c7b6bff73** (`ci_status_store.py` merge-preserving write +
+      `--codebase-health-b64` CLI + 3 tests = 18 pass; reusable v2 agg-job compute+forward + tests-slice coverage
+      artifact; `ci-status-update.yml` manifest+Firestore write; PM QG green 98s). Contract verified field-for-field vs
+      deployment-ui `client.ts` (4 nullable fields). Compute proven locally on alerting-service
+      (`{cov 80.08, large 0, warn 1}`); b64 transport + write + read all unit-tested. **v1 scope notes (documented, not
+      deferred work):** `qg_red_reason` is `null` on a green run (→ "✓") and a generic `"qg"` on a failing run (the
+      specific failing step is already in the failure-excerpt / stuck-PR check the dashboard surfaces) — per-step
+      granularity (pytest vs basedpyright) is a future refinement; and the **UI repos** (deployment-ui /
+      unified-trading-system-ui) use the vitest reusable, so their codebase_health is a fast-follow (see the new P3
+      below) — the Python-service majority populates now. Provenance: 2026-06-22 operator review (the columns showed "—"
+      against live data).
+- [ ] [INFRA] P3. **codebase_health for UI repos + qg_red_reason granularity (fast-follow to the P2 above).** (a) Mirror
+      the agg-job compute + `codebase_health_b64` forward into the **`ui-quality-gates-v2.yml`** reusable (vitest
+      coverage from `coverage/coverage-summary.json`; file-debt over `.ts`/`.tsx`) so `deployment-ui` +
+      `unified-trading-system-ui` populate too. (b) Thread the per-leg slice result into the agg job so `qg_red_reason`
+      is the specific failing step (`pytest` / `basedpyright` / `ruff` / `bandit`) instead of the generic `"qg"`. Repo:
+      unified-trading-pm. Provenance: 2026-06-22 (codebase_health backend v1 scope cut).
 - [x] ✅ [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui. —
       deployment-ui@a1b7fbd (already present at RepoCi.tsx:1637) | pw:L2 ✓ | regression:
       tests/smoke/gh_rate_budget.spec.ts
@@ -201,6 +239,16 @@ status than what gates promotions.
       regression: tests/smoke/repos-tab.spec.ts** ("full-width shell + per-column dividers on a wide monitor" — asserts
       `<main>` width >2200px + a middle header-cell `border-r` at a 2560px viewport, both of which the old
       cap/no-divider table fail). Provenance: 2026-06-22 operator review.
+- [x] ✅ [UI] P2. **Full-width follow-up — shell gutter, no horizontal-scroll flicker, no whole-panel focus ring**
+      (operator review 2026-06-22, after the full-width change). Three fixes: (1) the right edge had NO gap — Tailwind
+      `px-*` is DEAD on `<main>` because the unlayered `* { padding: 0 }` reset outranks Tailwind v4's layered
+      utilities; added an explicit `.app-shell-gutter` CSS class (5px small / 20px lg+). (2) a horizontal scrollbar
+      flickered on every background refresh — added `overflow-x: clip` on the shell root (the data table scrolls in its
+      own `overflow-x-auto`). (3) a cyan focus ring flashed around the WHOLE Repos-CI panel during refresh — removed the
+      whole-panel `focus-visible:ring-*` from the Radix `TabsContent` primitive (affects all 6 tabs; the panel-level
+      ring isn't useful). Verified by DOM probe: `padR=20px`/`5px` responsive, `hOverflow=-6` across a refresh, panel
+      ring class gone. **DONE — deployment-ui@17fa95e | pw:L2 ✓ (261 passed) + UI-QG ✓ (82 tests · build) | regression:
+      tests/smoke/repos-tab.spec.ts** ("shell gutter + no horizontal scrollbar + no whole-panel focus ring").
 - [x] ✅ [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the
       committed `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed
       manifest's `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}`

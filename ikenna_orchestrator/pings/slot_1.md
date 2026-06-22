@@ -5406,3 +5406,19 @@ player_values rows + master/snapshot tables + manifest. Prior 403 "not subscribe
 (auto-shutdown): `sfi-backfill-chunk-{1..4}of4-20260619-161036` (2020→now) + `tm-backfill-20260619-161123` (2015→now,
 PLAYER_VALUES). Plan-flip: `instruments_mtds_subset_consistency_remediation_2026_06_17.md` § "Sports credentialed
 sources (C)". **This credential ask is CLOSED — no further operator action needed.**
+
+## [slot-1-escalation] 2026-06-22 — CREDENTIAL APPROVAL REQUEST: Mantle paid RPC for gas-fees backfill
+
+**Plan refs**: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` (§ "2026-06-22 05:25 — DEFI status + gas-fees MANTLE BLOCKED-CREDENTIALS")
+
+**Issue**: gas-fees on MANTLE chain uses the free public RPC (`rpc.mantle.xyz`) which 429-rate-limits `eth_feeHistory`. Each MANTLE day takes ~10-15 min vs ~2-3 min on paid RPCs. This makes the gas-fees task the batch long-pole (~1.5M blocks/yr on MANTLE chain).
+
+**Request**:
+- Vendor: Alchemy or dRPC (Mantle-chain RPC provider)
+- Plan tier: paid tier with no `eth_feeHistory` throttle
+- SM key name: `mantle-rpc-url` (or similar in deployment-service RPC config)
+- Repo: `deployment-service` / MTDS RPC config
+
+**Unblocks**: MANTLE gas-fees batch speed (10-15 min/day → 2-3 min/day); no code change needed, just RPC URL swap in config.
+
+**Status**: BLOCKED-CREDENTIALS awaiting operator [ack]

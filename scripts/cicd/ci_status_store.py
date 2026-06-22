@@ -26,6 +26,7 @@ The cloud SDK is imported lazily inside the default factory (mirrors
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
 from collections.abc import Callable
@@ -149,6 +150,7 @@ def set_status(
     branch: str,
     sha: str,
     *,
+    codebase_health: dict[str, object] | None = None,
     project_id: str | None = None,
     firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
 ) -> tuple[str, str]:
@@ -157,6 +159,12 @@ def set_status(
     The transaction makes the read→resolve→write atomic PER DOCUMENT, so two rapid transitions of
     the SAME repo serialize correctly (Firestore retries on contention); different repos never
     contend (Layer 1). Returns ``(prev_status, written_status)``.
+
+    ``codebase_health`` (coverage_pct / qg_red_reason / large_file_count / warn_file_count) is the
+    per-repo QG-metric blob the deployment-ui Repo-CI table reads (Cov% / QG-reason / File-debt).
+    ``txn.set`` REPLACES the whole document, so when a status-only update arrives (codebase_health
+    is None) we carry the EXISTING blob forward — a ci_status transition must never wipe the
+    last-known metrics. Pass a fresh dict to overwrite it.
     """
     fs = firestore_module_factory()
     client = fs.Client(project=project_id)
@@ -166,20 +174,22 @@ def set_status(
     @fs.transactional
     def _apply(txn: _TxnProto) -> object:
         snap = doc_ref.get(transaction=txn)
-        prev = "NONE"
-        if snap.exists:
-            prev = str((snap.to_dict() or {}).get("status", "NONE"))
+        prev_dict = (snap.to_dict() or {}) if snap.exists else {}
+        prev = str(prev_dict.get("status", "NONE"))
         written = resolve_status(prev, status, branch)
-        txn.set(
-            doc_ref,
-            {
-                "status": written,
-                "rank": rank(written),
-                "branch": branch,
-                "sha": sha,
-                "updated_at": fs.SERVER_TIMESTAMP,
-            },
-        )
+        doc: dict[str, object] = {
+            "status": written,
+            "rank": rank(written),
+            "branch": branch,
+            "sha": sha,
+            "updated_at": fs.SERVER_TIMESTAMP,
+        }
+        # Merge-preserve codebase_health: write the fresh blob when provided, else carry the
+        # existing one forward (txn.set is a full-document replace).
+        health = codebase_health if codebase_health is not None else prev_dict.get("codebase_health")
+        if health is not None:
+            doc["codebase_health"] = health
+        txn.set(doc_ref, doc)
         outcome["prev"] = prev
         outcome["written"] = written
         return None
@@ -296,13 +306,27 @@ if __name__ == "__main__":
     # (an explicit `set` verb is also accepted).
     if _args and _args[0] == "set":
         _args = _args[1:]
+    # Optional --codebase-health-b64 <base64-json>: the per-repo QG metrics blob
+    # (coverage_pct / qg_red_reason / large_file_count / warn_file_count) that the CI agg job
+    # forwards. Extracted before the 4 positional args so the legacy call signature is unchanged.
+    _health: dict[str, object] | None = None
+    if "--codebase-health-b64" in _args:
+        _i = _args.index("--codebase-health-b64")
+        _b64 = _args[_i + 1] if _i + 1 < len(_args) else ""
+        _args = _args[:_i] + _args[_i + 2 :]
+        if _b64:
+            try:
+                _decoded = cast("object", json.loads(base64.b64decode(_b64).decode("utf-8")))
+                _health = cast("dict[str, object]", _decoded) if isinstance(_decoded, dict) else None
+            except ValueError:
+                print("warning: --codebase-health-b64 not valid base64-JSON; ignoring", file=sys.stderr)
     if len(_args) != 4:
         print(
-            "usage: ci_status_store.py <repo> <status> <branch> <sha>\n"
+            "usage: ci_status_store.py <repo> <status> <branch> <sha> [--codebase-health-b64 <b64-json>]\n"
             "       ci_status_store.py get-map [--manifest PATH] [--project-id ID]",
             file=sys.stderr,
         )
         raise SystemExit(2)
     _repo, _status, _branch, _sha = _args
-    _prev, _written = set_status(_repo, _status, _branch, _sha)
+    _prev, _written = set_status(_repo, _status, _branch, _sha, codebase_health=_health)
     print(f"ci_status/{_repo}: {_prev} -> {_written}")
