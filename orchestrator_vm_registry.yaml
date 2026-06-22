@@ -318,6 +318,21 @@ vms:
       Manages dashboard aggregation, auth failover, planning VM coordination, sub-agent spawn (per-spawn account
       isolation per agent_orchestrator_per_spawn_account_isolation_2026_05_20).
 
+  # ---------- Local dev hosts (laptops; NOT cloud VMs) ----------
+
+  - id: harsh_pc
+    cloud: local
+    role: laptop
+    label: "Harsh's laptop — local STANDALONE orchestrator backend (fleet-dispatch test host)"
+    accounts:
+      primary: harshkantariyawork@gmail.com
+    notes: |
+      Local dev/test host (NOT a cloud VM). Runs an isolated orchestrator backend
+      (ORCHESTRATOR_VM_ID=harsh_pc + ORCHESTRATOR_STANDALONE=true) to exercise the
+      reconciler → worker-spawn loop WITHOUT touching the production fleet. Added
+      2026-06-22 so a plan can be assigned_vm: harsh_pc for the local fleet test.
+      Host env SSOT: agent-orchestrator/docs/ENV_VARS.md.
+
 # ---------- Account-to-VM round-robin (informational; runtime selection is lowest-weekly-pct-first per failover order) ----------
 
 accounts:
