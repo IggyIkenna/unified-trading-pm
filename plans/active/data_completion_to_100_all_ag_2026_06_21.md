@@ -320,34 +320,18 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
-### 2026-06-22 ~10:00 — TRADFI "download everything" campaign: grain reconciliation + full options backfill
+### 2026-06-22 10:05 — memory fix HELD; enrichment 2nd-pass + SFI complete; one relaunch blocked on foreign WIP
 
-Operator 2026-06-22: download EVERYTHING, no client-side filters — the market is the filter (a listed,
-non-delisted strike with zero trades on a day -> empty_confirmed, not expected_unattempted). Goal = COMPLETE
-manifest: every listed strike-day captured (had trades) or empty (listed, no trades); expected_unattempted -> 0.
-honest-cov will be LOW (most option strikes illiquid) but honest+complete.
+Memory fix (IS@505dcd9) verified — NO re-OOM: SFI completed clean, TM/FootyStats running past the old date-#2 death
+point, all 4 enrichment shards COMPLETED (chunk 25/25×3 + 18/18 — covered Feb-June 2026 on the fresh 300k/day).
+Launcher machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progressive code bug fixed
+(features-service@06c44c02, feature_family="sports" ×5 sites).
 
-**Universe (prod catalog, 686,348 instruments):** OPTION+COMBO 681,557 / 79 underlyings; FUTURE 4,298 / 49 roots.
-Fetched at databento PARENT grain: CME 47 future roots x {.FUT,.OPT}, ICE {BRN,G}, CBOE VX, NASDAQ/NYSE equities,
-+ EC* event contracts. ~376 CME VMs (47 roots x ~8yr x {1s,1m}). Quota unlimited (50,427 CPUs free) — the only
-constraint is databento API cost.
-
-**3-axis grain reconciliation SHIPPED** (could-exist now seeds at the WRITER grain so captures convert, not
-re-phantom): (1) instrument_type lowercase instruments-service@cf2e9a2; (2) UAC FUTURE@CME/ICE->futures_chain,
-COMBO->combo + source_priority<900 unified-api-contracts@c0a15a50; (3) bundle instrument_id=''+underlying
-instruments-service@f6d479f. v2 enumerator (--enumerator-version v2 --catalog-path .../prod/catalog.parquet)
-projects ~6M+ could-exist (halt-safety gated; 624k option strikes) = the honest full denominator.
-
-**Launcher expanded:** launch-tradfi-bf-cme-ohlcv-1m.sh CME_ROOTS 7 -> ALL 47 catalogue roots (.FUT;.OPT).
-**Wave 1 launched (2026, all 47 roots).** Remaining: 2019-2025 x 47 roots + ICE + equities + event contracts.
-
-- [ ] [DATA] P1. **TRADFI full options backfill — remaining waves.** Launch 2019-2025 x all 47 CME roots
-      (.FUT;.OPT) + ICE (BRN,G) + EC* event contracts + re-launch NASDAQ/NYSE for the equity 1s/1m gaps; each ->
-      captured/empty_confirmed. Then v2 re-seed (--apply-write, cap > 6M) so the denominator = full could-exist;
-      verify expected_unattempted -> ~0 + sample option parquets. Repo: deployment-service + instruments-service.
-- [ ] [DATA] P2. **~8.5k attempted_failed (UNKNOWN/ticks_migrated bad-id)** migration-artifact 1m corpus — re-key
-      or re-backfill so MDPS can aggregate. Repo: market-tick-data-service / migration.
-
+- [ ] [SCRIPT] P2. RELAUNCH features-sfi-progressive — code fix shipped (features-service@06c44c02) but the SPORTS
+  tarball rebuild is BLOCKED: `create-code-tarballs.sh --asset-group SPORTS` refuses while market-tick-data-service has
+  a DIFFERENT agent's uncommitted WIP (10 modified handlers + 2 untracked scripts — not ours, not stomped). Once MTDS
+  is clean: rebuild SPORTS tarball → `RECOMPUTE_FORCE=true launch-sfi-progressive-features-backfill-vm.sh --force` →
+  verify run.log has no MissingFeatureFamilyError. Repo: deployment-service (tarball) + features-service (done).
 
 ### 2026-06-22 06:30 — honest-cov is UNDERSTATED fleet-wide: ~1M phantom expected_unattempted (operator caught it on weather)
 
