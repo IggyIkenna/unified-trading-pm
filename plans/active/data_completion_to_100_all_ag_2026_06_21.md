@@ -34,6 +34,21 @@ unattempted cells need batch runs to convert to captured); (3) cefi carries **80
 re-fetch/diagnosis). Fleet was DRAINED at snapshot time (only gas-fees + monitoring running) — nothing non-billing was
 driving to 100%.
 
+## ⚠️ Post-fleet-completion dependency — v9 `schema_version` tail re-stamp (P3)
+
+The **MTDS v9%** column above (cefi 96.6% / tradfi 99.7% / pred 96.5%; defi+sports already 100%) reaching **100% v9** is
+the LAST mile of "manifest v9" — and it is its OWN gated step, NOT something this plan's backfill VMs produce. Those
+tails are a fixed set of **pre-v9 manifest rows written 2026-04-05..04-24** (cefi **131,034** [118k `empty_confirmed`,
+no data object / 12.6k captured] · tradfi **6,415** · pred **1,454**; all `pipeline_mode`=`source`=NULL; **none are
+stale v9-duplicates**) that the June canonicalisation walk missed. **Re-stamping them is HARD-gated on a pre-migration
+VM drain**, so it MUST run **AFTER this plan's fleet has STOPPED** — i.e. once `cefi-hyperliquid-2023..26`,
+`mdps-backfill-tradfi`, `mdps-sports-*`, the `mtds-dex-pools-*` swarm, and the prediction/sports backfill VMs are no
+longer RUNNING (`gcloud compute instances list --filter=status=RUNNING`). **When the fleet finishes → trigger the
+re-stamp.** Full characterisation + run-order + the manifest-only-re-stamp subtlety (the data-walk migrator physically
+cannot reach the empty cells — they have no data object) live in `migration_verification_orphan_safety_2026_06_10.md`
+**§P3** (deferred by operator 2026-06-22). Done = live `-prd-` consolidated `_index` `schema_version` distribution is
+**100% v9 on every AG**.
+
 ## Path to 100% — per-AG launch matrix (the fleet)
 
 Each batch backfill fills `expected_unattempted` → captured; each forward-poll starts the LIVE stream (live accumulates
