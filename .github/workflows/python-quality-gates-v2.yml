@@ -509,6 +509,18 @@ jobs:
           echo "── QG_SLICE=${QG_SLICE} ──"
           bash scripts/quality-gates.sh --no-fix 2>&1 | tee /tmp/qg_output.log
 
+      - name: Upload coverage.xml for codebase-health (tests slice; best-effort)
+        # The aggregation job parses this into the deployment-ui Repo-CI Cov% column. ALWAYS
+        # best-effort — never fail/red the slice (continue-on-error + if-no-files-found: ignore).
+        if: always() && matrix.slice == 'tests'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebase-health-coverage
+          path: coverage.xml
+          if-no-files-found: ignore
+          retention-days: 1
+
   # ── AGGREGATION JOB — the REQUIRED check context ────────────────────────────
   # Job key `quality-gates-v2` ⟹ context `Quality Gates (<repo>) / quality-gates-v2`
   # (branch-protection required check). Succeeds iff EVERY matrix leg passed; carries
@@ -604,6 +616,63 @@ jobs:
           path: .qg_ci_green_marker
           key: ${{ needs.content-gate.outputs.cache_key }}
 
+      # ── CODEBASE-HEALTH (Repo-CI Cov% / QG-reason / File-debt columns) ───────────
+      # Compute per-repo metrics on the agg-job checkout + the tests-slice coverage artifact,
+      # then the dispatch step below forwards them to ci-status-update (manifest + Firestore
+      # ci_status/{repo}.codebase_health), which deployment-api reads. BOTH steps are
+      # continue-on-error → a hiccup can NEVER red the required quality-gates-v2 context.
+      - name: Download coverage.xml for codebase-health (best-effort)
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: codebase-health-coverage
+      - name: Compute codebase-health metrics (best-effort, non-fatal)
+        id: codebase_health
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          SLICES_RESULT: ${{ needs.qg-slices.result }}
+        run: |
+          # file-debt: count source .py by line (mirror the gate's >900 hard / 700-899 warn
+          # zones + dir exclusions). coverage: parse the tests-slice coverage.xml if present.
+          # reason: null when green, else a generic "qg" marker (the specific step is in the
+          # failure excerpt / stuck-PR check the dashboard already surfaces).
+          python3 - <<'PYEOF' > .qg_codebase_health.json || echo '{}' > .qg_codebase_health.json
+          import json, os, re
+          _SKIP = {".venv", ".venv-workspace", "build", ".git", "tests", "scripts", "node_modules", "dist"}
+          large = warn = 0
+          for root, dirs, files in os.walk("."):
+              dirs[:] = [d for d in dirs if d not in _SKIP and not d.endswith(".egg-info")]
+              if "site-packages" in root:
+                  continue
+              for f in files:
+                  if not f.endswith(".py"):
+                      continue
+                  try:
+                      n = open(os.path.join(root, f), "rb").read().count(b"\n")
+                  except OSError:
+                      continue
+                  if n > 900:
+                      large += 1
+                  elif n >= 700:
+                      warn += 1
+          cov = None
+          if os.path.exists("coverage.xml"):
+              try:
+                  m = re.search(r'line-rate="([0-9.]+)"', open("coverage.xml", encoding="utf-8").read(4000))
+                  if m:
+                      cov = round(float(m.group(1)) * 100, 2)
+              except (OSError, ValueError):
+                  pass
+          reason = None if os.environ.get("SLICES_RESULT") == "success" else "qg"
+          print(json.dumps({"coverage_pct": cov, "qg_red_reason": reason, "large_file_count": large, "warn_file_count": warn}))
+          PYEOF
+          echo "codebase-health: $(cat .qg_codebase_health.json)"
+          CH_B64=$(base64 -w0 < .qg_codebase_health.json 2>/dev/null || base64 < .qg_codebase_health.json | tr -d '\n')
+          echo "ch_b64=${CH_B64}" >> "$GITHUB_OUTPUT"
+
       - name: Record CI status (branch-aware lifecycle)
         if: always()
         shell: bash
@@ -613,6 +682,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           SLICES_RESULT: ${{ needs.qg-slices.result }}
           CACHE_HIT: ${{ needs.content-gate.outputs.cache_hit }}
+          CH_B64: ${{ steps.codebase_health.outputs.ch_b64 }}
         run: |
           [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
           # Branch→status mapping mirrors the ci_status lifecycle in ci-status-update.yml:
@@ -642,7 +712,7 @@ jobs:
             -H "Authorization: token ${GH_PAT}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
-            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${EFFECTIVE_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\"}}"
+            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${EFFECTIVE_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\", \"codebase_health_b64\": \"${CH_B64:-}\"}}"
 
   # ── SLACK NOTIFY — QG slice failure / cancellation ───────────────────────────
   # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):

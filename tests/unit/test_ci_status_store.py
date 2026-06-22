@@ -176,6 +176,42 @@ def test_set_status_failing_overrides(store: dict[str, dict[str, object]]):
     assert store["uac"]["status"] == "FAILING"
 
 
+def test_set_status_writes_codebase_health(store: dict[str, dict[str, object]]):
+    health = {"coverage_pct": 76.7, "qg_red_reason": None, "large_file_count": 2, "warn_file_count": 1}
+    set_status(
+        "uac", "STAGING_GREEN", "staging", "abc", codebase_health=health, firestore_module_factory=_factory(store)
+    )
+    assert store["uac"]["codebase_health"] == health
+
+
+def test_set_status_preserves_codebase_health_on_status_only_update(store: dict[str, dict[str, object]]):
+    # A ci_status transition with NO fresh metrics must carry the existing blob forward
+    # (txn.set is a full-document replace) — not wipe it.
+    prior = {"coverage_pct": 88.0, "qg_red_reason": None, "large_file_count": 0, "warn_file_count": 0}
+    store["uac"] = {"status": "FEATURE_GREEN", "rank": 1, "branch": "ldr", "sha": "x", "codebase_health": prior}
+    set_status("uac", "STAGING_GREEN", "staging", "y", firestore_module_factory=_factory(store))
+    assert store["uac"]["status"] == "STAGING_GREEN"
+    assert store["uac"]["codebase_health"] == prior  # preserved
+
+
+def test_set_status_overwrites_codebase_health_when_provided(store: dict[str, dict[str, object]]):
+    store["uac"] = {
+        "status": "FEATURE_GREEN",
+        "rank": 1,
+        "branch": "ldr",
+        "sha": "x",
+        "codebase_health": {
+            "coverage_pct": 10.0,
+            "qg_red_reason": "pytest",
+            "large_file_count": 9,
+            "warn_file_count": 9,
+        },
+    }
+    fresh = {"coverage_pct": 91.0, "qg_red_reason": None, "large_file_count": 0, "warn_file_count": 0}
+    set_status("uac", "STAGING_GREEN", "staging", "y", codebase_health=fresh, firestore_module_factory=_factory(store))
+    assert store["uac"]["codebase_health"] == fresh  # overwritten
+
+
 def test_get_all_aggregates(store: dict[str, dict[str, object]]):
     set_status("uac", "MAIN_GREEN", "main", "a", firestore_module_factory=_factory(store))
     set_status("utl", "STAGING_GREEN", "staging", "b", firestore_module_factory=_factory(store))
