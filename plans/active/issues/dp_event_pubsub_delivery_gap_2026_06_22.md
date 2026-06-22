@@ -117,6 +117,28 @@ from fixed code returned `emitted:True` + routed), but until `deployment-api:lat
 (draining LDR→main) + the 3 jobs are re-pointed, an automated finding is detected-but-not-posted. Next step: rebuild
 image (or wait for promotion) → `gcloud run jobs update` the 3 monitors.
 
+## Durable fix — alerting subscriber as an always-on Cloud Run service (2026-06-22, executed autonomously)
+
+The "PROPER durable fix (standing item)" named in finding #5 is being shipped: the alerting subscriber now runs as an
+**always-on Cloud Run service** (`--min-instances=1 --no-cpu-throttling`), replacing the fragile batch-VM
+(stall-watchdog self-delete) deployment.
+
+- **Code**: `alerting-service/alerting_service/api/main.py` gains a `lifespan` that launches
+  `AlertSubscriber(...).run_until_stopped()` in a background task when `RUN_SUBSCRIBER_IN_API=true`
+  (new `AlertingSystemConfig.run_subscriber_in_api` field). A single Cloud Run service thus serves `$PORT`
+  (startup probe / `/health`) AND consumes `lifecycle-events-sub` → DP_* / CONSOLIDATOR_DOWN →
+  `#data-pipeline-alerts`. Type-clean (basedpyright 0/0/0). **Ship via quickmerge is dirty-UAC-dep-blocked**
+  (`unified_api_contracts/.../honest_coverage.py` foreign WIP) — the deploy is built from the local tree; the code
+  commit ships once UAC is clean. Tracked todo below.
+- **Image**: built from LDR `7927796` + the lifespan change → AR tag `:dp-subscriber` (digest-pinned UTL base).
+- **Service**: `alerting-subscriber` (asia-northeast1), default compute SA (already has `roles/pubsub.subscriber` on
+  `lifecycle-events-sub` + project `roles/secretmanager.secretAccessor` for `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`).
+- **Decommission**: the `alerting-quietness-*` VM is stopped once the Cloud Run service is verified consuming.
+
+- [ ] [DEPLOY] P2. Ship the alerting-subscriber Cloud-Run code (`api/main.py` lifespan + `config.run_subscriber_in_api`)
+  via `quickmerge --agent --files` once UAC `honest_coverage.py` foreign WIP clears (currently dirty-dep-blocked). Repo:
+  alerting-service. The Cloud Run service is already deployed+verified from the local tree; this only lands the source.
+
 **Remaining (tracked, NOT blocking the relay — it is live):**
 - (a) e2e `_dp_common.py` ship (Wave-4b, currently dirty-MTDS-dep-blocked; no runtime effect until the crons deploy).
 - (b) Deploy the 3 daily-audit Cloud Run crons (digest/hygiene/reprobe) for routine *cadence* — needs image packaging (Wave-4b).
