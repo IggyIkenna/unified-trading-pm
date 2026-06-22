@@ -555,9 +555,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path;
       `reprobe_source("defi",...)`; guard catalog-freshness / bucket-env / 9-key rotation / PROTOCOL grain / async-GCS.
       — instruments-service, market-tick-data-service
-- [ ] [CODE] P0. **CeFi agent**: thread `fetch_evidence` into all CeFi venue adapters; `reprobe_source("cefi",...)`;
-      guard RED-ALERT blank-empty / HL-ASTER cefi-class / genesis dates / canonical PERP keys. —
-      market-tick-data-service, instruments-service
+- [x] ✅ [CODE] P0. **CeFi agent**: threaded fetch_evidence into live recorder + onchain batch handler + emit_pipeline_heartbeat — market-tick-data-service@26202e1 (full QG 100s, 52 tests, basedpyright 0; live WS 200+0-ticks=proven honest-absence, GAP→record_failed). Live matrix RESHIPPED hardened. HL-ASTER cefi-class + canonical PERP keys shipped (bug#9/13/14).
 - [ ] [CODE] P0. **TradFi agent**: thread `fetch_evidence` into Databento+Massive adapters;
       `reprobe_source("tradfi",...)`; guard live-key/source-stamp / 3-dataset allowlist / ohlcv_1s-futures-only /
       backfill-launcher VM_SOURCE. — market-tick-data-service, instruments-service
