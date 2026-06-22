@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-06-22
 ---
 
 # Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)
