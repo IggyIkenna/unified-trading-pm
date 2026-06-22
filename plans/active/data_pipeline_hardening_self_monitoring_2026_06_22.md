@@ -975,6 +975,18 @@ items:
   databento-fillable venues (or those get their own Barchart/Yahoo backfill) — else it never reads 0. Follow-up. —
   market-tick-data-service
 
+- **2026-06-22 multi-source backfill RESOLVED (slot-0·human-planning, Opus 4.8)** — agent built the
+  venue→source→fillable matrix + wired it. **Massive does NOT have ICE** (probed S3:
+  crypto/forex/us_futures-CME/indices/options/stocks prefixes, no ICE; `_MASSIVE_FUTURES_VENUES={CME}`) — so per
+  operator ICE flipped → `empty_confirmed`/`EXPECTED_NO_PROVIDER_COVERAGE` (530,600; snapshot
+  `pre_ice_final_reclass_2026_06_22.parquet`; credential-ask on file if ever wanted). **CBOE cash-index** (1,614
+  VIX/SPX) → `empty_confirmed` (not in any databento dataset; VX futures via XCBF.PITCH ARE captured + preserved) —
+  `market-tick-data-service@2c6425b`. **FX-spot** (USD/KRW) → yahoo daily `launch-tradfi-bf-fx-ohlcv-24h.sh` +
+  **wave-launcher multi-source** (`LAUNCHER_FOR_VENUE`+FX, per-venue data_types, ICE excluded) —
+  `deployment-service@eab5aeb`. NASDAQ/NYSE confirmed DBEQ.BASIC equities (correctly databento). **Net: honest coverage
+  76.2%, remaining FILLABLE eu=1,607,003 (all databento/yahoo) = the wave-launcher's reachable 100% target.** Plan:
+  `tradfi_multisource_backfill_2026_06_22.md`.
+
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
 - [x] ✅ [CODE] P0. **DeFi agent — CORRECTNESS-CORE DONE + ALL GUARDS VERIFIED on LDR (2026-06-22 resume-run); lone
