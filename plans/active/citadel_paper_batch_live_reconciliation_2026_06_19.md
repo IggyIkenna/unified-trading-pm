@@ -766,7 +766,7 @@ are identified (2) and the ledger exists (3).
       SAME deterministic captured GCS rates (funding/carry/vol per window) → **ε=0 preserved** (pure fn of the window,
       not live calls — the FIXED default's determinism worry was overcautious). Verify ε=0 batch-rerun holds with rank
       weights. Repo: strategy-service (paper_universe allocator default + per-archetype rank wiring).
-- [ ] [UI] P2.16. **Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
+- [x] ✅ [UI] P11.16. **Archetype-level default view + all-145 per-strategy — DONE + prod-verified** (CRA@336e2dc rev 00016-lcj = 145/7; ui@2f4c7016 = 7 books→legs w/ weights; browser-verified). Orig:**Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
       headline selector should read ~7 weighted archetype strategies (the e2e "strategy" granularity), each expandable
       to its weighted per-(venue,coin) legs, rather than 145 flat legs. The archetype roll-up already exists (P11.9-ui
       group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
