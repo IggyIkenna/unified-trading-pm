@@ -40,8 +40,11 @@ source:
       gate (three named writers still churn the worktree). (cicd_contract_hardening #2)
 - [x] ✅ [SCRIPT] P1. e2e-testing editable self-install — add package-discovery to `pyproject.toml` (QG hygiene).
       (cicd_contract_hardening #1) — e2e-testing@23424ff | changed `[tool.setuptools.packages.find] include = []` → `[tool.setuptools] packages = []`; bypasses flat-layout autodiscovery that caused "Multiple top-level packages" error on `uv pip install -e .`; QG green.
-- [ ] [SCRIPT] P2. Wave-1 accommodation cleanup — revert the gate-loosenings now that the fleet is green.
-      (cicd_contract_hardening #8)
+- [x] ✅ [SCRIPT] P2. Wave-1 accommodation cleanup — revert the gate-loosenings now that the fleet is green.
+      (cicd_contract_hardening #8) — PM@7adfefec9 (centralize PYSEC-2024-277/2025-183/2026-161 to fleet base) | e2e-testing@33549fe (MAX_DURATION env-override + remove centralized CVEs) | features-service@8e11b2e4 (MAX_DURATION env-override + remove centralized CVE comment block)
+- [ ] [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from remaining repos:
+      alerting-service, client-reporting-api, ml-service, system-integration-tests, trading-agent-service,
+      unified-trading-api, unified-trading-library, greeks-service, strategy-service. (cicd_contract_hardening #8 follow-up)
 
 ### Path-B worktree ship discipline (worktree_ldr finish)
 
