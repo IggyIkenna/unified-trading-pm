@@ -708,8 +708,10 @@ are identified (2) and the ledger exists (3).
       test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null
       signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run.
       **STATUS 2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the
-      archetype).** All edits are in the slot clones (UNCOMMITTED, recover from `.tabs/1/{unified-api-contracts,
-      strategy-service}`): UAC `enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py` (52→53)
+      archetype). UAC edits now STASHED to unblock an unrelated features-service quickmerge (the dirty UAC clone tripped
+      the dirty-deps pre-flight) — recover with `git -C .tabs/1/unified-api-contracts stash pop` (stash msg "TSMOM_BTC_CTA
+      archetype + WS-mapping fix — blocked on UAC version-lag"); strategy-service edits remain UNCOMMITTED in its clone.**
+      The UAC files: `enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py` (52→53)
       + `tests/test_ws_cassette_coexistence.py` (added the LEGIT `kalshi_clob_ws`/`polymarket_clob_ws` venue mappings —
       a pre-existing cross-repo cassette gap, real connectors, needed for green); strategy-service new
       `rules_directional/tsmom_btc_cta.py` + `tests/.../test_tsmom_btc_cta.py` + factory/defaults/slots/catalog/
@@ -749,6 +751,12 @@ are identified (2) and the ledger exists (3).
       metadata per the feature-formula-versioning SSOT), compute + write to the feature corpus, then retrain + validate
       the cs model (does it lift cs Sharpe / reduce the 2026 drag — composes with P2.11.15). No lookahead (trailing
       window, shifted). Repo: features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`.
+      **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@1110ee1d.** `reversion_zscore_60m`/`reversion_zscore_240m` added
+      to delta_one's `anomaly` calculator + `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window /
+      no-lookahead, honest NaN until filled), 6 `test_anomaly` unit tests GREEN, full QG passed (402s), on origin LDR
+      (Tier-C drain → staging). **REMAINING (heavier, open):** (a) recompute the feature corpus so the columns exist in
+      GCS; (b) retrain + validate the pooled-LightGBM cs model with the new features — does it lift cs Sharpe / cut the
+      2026 drag (composes with P2.11.15); (c) `features-status` verification.
 - [ ] [CODE] P2.11.19. **Wire the reversion signal as the execution-timing model in execution-service GroupC
       smart-matching** (research 2026-06-22, root `_ic_test.py`). The SAME reversion z-score, used to TIME fills on the
       book's existing turnover (not as a standalone trade), captures **~+1.5 bps/leg** vs naive window-close fills (z>0.5
