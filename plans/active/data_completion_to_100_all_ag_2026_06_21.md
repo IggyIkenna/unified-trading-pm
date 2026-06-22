@@ -302,6 +302,10 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       `market-data-tick-defi-central-element-323112` echo in `launch-mtds-dex-swaps-backfill-vm.sh` →
       `market-data-tick-defi-prd-${PROJECT_ID}`. No terraform apply needed (scheduler already correct). —
       deployment-service@164e21d
+- [x] ✅ [TERRAFORM] P0. **add `roles/run.invoker` IAM for the enumerator SA to `expected_universe_v2_scheduler.tf`**
+      — the missing IAM that caused Cloud Scheduler to get HTTP 403 when invoking Cloud Run Jobs via OAuth token. Added
+      `google_project_iam_member "expected_universe_v2_run_invoker"` (project-scoped, matching canonical pattern from
+      `t1_batch_scheduler.tf`). — deployment-service@f77d76a
 
 ## Codex SSOT updates
 
