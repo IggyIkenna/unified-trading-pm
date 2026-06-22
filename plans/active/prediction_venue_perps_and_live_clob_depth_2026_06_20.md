@@ -121,6 +121,8 @@ data could not be honestly source-stamped (`record_captured(source=...)` would r
   `record_captured_from_counts` `datetime` UnboundLocalError (introduced by the foreign DP_*/FetchEvidence WIP) was
   fixed and rode UTL@39f8ec85 to LDR. Repo: instruments-service@07272da4. — 2026-06-22
 
+- [ ] [SCRIPT] P3. **DISPLAY-ONLY bug (cosmetic, ≤2min)**: `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh:83` echoes `Tarball: gs://.../instruments-code.tar.gz` but the VM setup (`setup-data-pipeline-vm.sh:311`) actually fetches `instruments-service-code.tar.gz` (correct). The echo misleads tarball-freshness debugging — fix the echo string. Provenance: prediction-to-100% drive 2026-06-22. Repo: deployment-service.
+
 **Seed relaunch (corrected stack):** UAC 24706977 + UTL b336478f + mtds fcd6549 all shipped; PREDICTION
 tarball rebuilt to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tarball`);
 stale VM (pulled old mtds 884560a) deleted; fresh seed VM `mtds-prediction-kalshibulk-20260621-155058`
