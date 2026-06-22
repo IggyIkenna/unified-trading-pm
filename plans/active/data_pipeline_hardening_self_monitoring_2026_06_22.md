@@ -818,6 +818,19 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       (POLYMARKET/KALSHI × trades/book_snapshot_5) relaunched on the hardened tarball + T+10-verified — RUNNING,
       heartbeat=4 each, **KALSHI kalshi_skips=0** (resolves+captures, was skipping every market), resolved 8–9/shard.
       Repos: market-tick-data-service, instruments-service, unified-api-contracts. — 2026-06-22 slot-0·human-planning
+- [x] ✅ [CODE] P0. **Prediction live WS — capture + alert fix SHIPPED** (market-tick-data-service@5acbf78,
+      isolated-worktree promotion): T+10 verification of the 4 reshipped shards found the live producers NOT capturing —
+      **Polymarket WS 404** (connector hit `/ws/` not `/ws/market`) + **Kalshi WS 401** (connector wrongly assumed the
+      WS was public; it needs RSA-PSS auth) → 0 flush; and both WS errors logged as plain WARNING (ADAPTER_FETCH_FAILED=0
+      → the operator's "no alerts firing" gap). Fix (operator-confirmed 3): (1) `polymarket_clob_ws._CLOB_WS_URL` →
+      `wss://ws-subscriptions-clob.polymarket.com/ws/market`; (2) `kalshi_clob_ws._signed_ws_headers()` signs the
+      handshake with the `kalshi-api-credentials` SM blob (RSA-PSS-SHA256(ts+"GET"+path), KALSHI-ACCESS-{KEY,SIG,TS}),
+      **fail-safe to unauthenticated** so a missing-cred path still 401s + ALERTS rather than crashing the VM; (3) both
+      connectors' `except` now call `_emit_ws_fetch_failed(exc)` → `log_event("ADAPTER_FETCH_FAILED", …)` via
+      `classify_venue_error` so a 401/404/timeout reaches #data-pipeline-alerts. QG GREEN (isolated worktree off
+      origin/LDR, 86s, 5275+ tests) — shipped around a shared-clone with foreign `_h`-lane onchain WIP that poisoned the
+      main-clone whole-tree QG. RESHIP of the 4 shards + running-behaviour verification IN PROGRESS. Repo:
+      market-tick-data-service. — 2026-06-22 slot-0·human-planning
 - [ ] [CODE] P1. **FOLLOW-UP (C6 / DP-ENV-001, non-prediction, on-VMs-not-LDR)**: the live IS-universe NON-prediction
       reader `websocket_runner._read_is_parquet_sync` still uses `build_bucket("instruments", asset_group=...)`
       (env-LESS legacy shape → stale/absent read → empty universe → silent zero capture) on origin/LDR. Fix =
