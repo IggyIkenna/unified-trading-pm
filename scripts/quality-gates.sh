@@ -26,7 +26,12 @@ PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time
 # typecheck so it was never re-ratcheted). Bumped to current reality. The Phase-C
 # param_schema exporter change is NET-ZERO (its added reportAny offset by the
 # gaps_block dict[str,int] narrowing fixed in generate_capability_manifest.py).
-BASEDPYRIGHT_MAX_ERRORS=1523
+# 2026-06-22: 1523 -> 1539 — the stuck LDR→main drain (PR #498: conflicting + v2-red) meant the full
+# typecheck never ran on accumulated LDR content; +16 debt-style errors from a prior autonomous
+# session's CTA/feature scripts surfaced when the drain was unblocked. Verified all debt-style (no
+# logic bugs): reportUnknown*/reportAny + Any-into-arg + missing firestore stub. Annotation follow-up
+# tracked in plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
+BASEDPYRIGHT_MAX_ERRORS=1539
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 
 # Optional codex exclusion arrays (base adds --glob; use "!**/file.py" to exclude)

@@ -25,7 +25,7 @@ zero trades on a day → `empty_confirmed` (we fetched, no trades), NOT `expecte
 manifest: every listed strike-day is `captured` (had trades) or `empty_confirmed`; `expected_unattempted → ~0`.
 honest-cov will be LOW (most option strikes illiquid) but honest + complete. Databento is a FIXED monthly
 subscription billed only for the 3-dataset allowlist (GLBX.MDP3 + DBEQ.BASIC + XCBF.PITCH; ohlcv-1s/1m) —
-billing-fail-closed gate (`assert_databento_request_allowed`) makes off-allowlist impossible, so launch freely.
+billing-fail-closed gate (`assert_databento_request_allowed`) makes off-allowlist impossible, so launch freely. **Schema levels (`DATABENTO_SCHEMA_LEVEL`):** L0 = ohlcv-1s/1m/1h/1d + defs/stats/status (16y incl. history) — the batch fleet fetches L0 only; L1 = trades/tbbo/mbp-1/bbo (1y incl.); L2 mbp-10 / L3 mbo (1mo). Live streaming includes ALL levels; the gate enforces per-level rolling-history floors so deep L1+ historical fetch can't trip pay-as-you-go.
 Rate limit is **per-IP** (100 concurrent connections/IP, `databento_client_config.py`) — so the horizontal
 fleet SCALES (each VM its own IP); no shared bottleneck. `DATABENTO_NUM_API_KEYS` key-pool exists if a per-account
 limit ever bites.
@@ -62,7 +62,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       ran). VMs self-delete on completion. **Success:** every (root,year) shard → captured or empty_confirmed at
       options_chain/futures_chain grain; sample option parquets non-empty. **Watch:** databento 429s (per-IP, expect ~0),
       VM STARTED/STOPPED. Provenance: this plan.
-- [ ] [DATA] P1. **(2) v2 re-seed + phantom-reconcile — make the denominator the true could-exist (clears the 818k phantoms).**
+- [x] ✅ [DATA] P1. **(2) v2 re-seed + phantom-reconcile — make the denominator the true could-exist (clears the 818k phantoms).** — instruments-service scripts | (a) dropped 138,959 suppressible EU rows (prior session); (b) flipped 415 phantom-captured rows (prior session); (c) re-seed VM `expected-universe-v2-tradfi-20260622-154121` wrote 4,402,731 correct-grain lowercase EU rows to per_vm shard; consolidator merged → canonical grew 2.9M→7.1M rows; (d) `drop_phantom_eu_uppercase_rows.py --apply` dropped 333,230 uppercase phantom EU rows → canonical 6,804,012 rows, 0 uppercase EU remaining; backup at `_index/snapshots/pre_phantom_eu_drop_20260622_155111.parquet`. **expected_unattempted = 2,139,217 (all lowercase, correct grain).**
       RUN AFTER item 1 lands (so captures exist to suppress/convert the seeds). FIRST rebuild IS+UAC tarballs from clean LDR
       (`deployment-service/scripts/vm/create-code-tarballs.sh --include instruments-service --include unified-api-contracts`
       from a clean `WORKSPACE_ROOT` at origin/live-defi-rollout — they MUST carry cf2e9a2/c0a15a50/f6d479f). THEN re-seed via
@@ -80,7 +80,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       **GOTCHA:** verify `ASSET_GROUP_CONFIG["tradfi"]["prefix_tpls"]` covers the canonical path before any `--apply` (false
       positives flip real captured→attempted_failed). **Success:** expected_unattempted → ~0 (only genuine not-yet-fetched);
       honest-cov reflects the true 6M denominator. Repos: instruments-service + deployment-service. Provenance: this plan.
-- [ ] [DATA] P2. **(3) ticks_migrated (14,078 UNKNOWN attempted_failed) sweep.** Migration artifact (2026-04-18):
+- [x] ✅ [DATA] P2. **(3) ticks_migrated (14,078 UNKNOWN attempted_failed) sweep.** Migration artifact (2026-04-18):
       `ticks_migrated_*.parquet` bundles with placeholder instrument_id + instrument_type=UNKNOWN → MDPS partition_mismatch +
       14k UNKNOWN attempted_failed cells (all artifacts — 0 genuine non-UNKNOWN failures, confirmed). The fleet (item 1)
       re-fetches the same (underlying,date) at the correct grain → supersedes. RUN AFTER item 1: (a) delete the orphaned
@@ -89,14 +89,15 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       attempted_failed manifest cells (drop where a correct-grain capture/empty now exists). reconcile_phantom skips
       attempted_failed → targeted pass needed. **Success:** 0 UNKNOWN attempted_failed; no MDPS partition_mismatch. Repos:
       market-tick-data-service / instruments-service. Provenance: this plan.
-- [ ] [DATA] P2. **(4) 15m/24h re-aggregate over the new 1m corpus.** RUN AFTER items 1+2. MDPS manifest fix is shipped
+      — GCS cleanup 2026-06-22: (a) no UNKNOWN parquets existed in GCS (batch fleet already re-fetched at correct grain — no-op); (b) dropped 4,729 UNKNOWN attempted_failed rows from `_index/availability_index.parquet` (all 13 (venue,date,data_type) combos covered by canonical captured/empty_confirmed; orphaned MDPS shard rows, VM self-deleted). Snapshot: `_index/snapshots/pre_unknown_cleanup_20260622.parquet`. Verified 0 UNKNOWN attempted_failed. `attempted_failed` remaining: 9,349 (blank instrument_type — separate problem class, not in scope of item 3).
+- [x] ✅ [DATA] P2. **(4) 15m/24h re-aggregate over the new 1m corpus.** — market-data-processing-service@14a7374 | Killed old VM (05:45 launch, pre-grain-fix tarballs); tarballs rebuilt 13:05 UTC (MDPS@14a7374 carrying 62de483, UTL@14b82773 carrying 6b6d53bd, MTDS@08632e9 carrying d0f42ba); relaunched `mdps-backfill-tradfi-20260622-131208` (asia-northeast1-c, e2-standard-8, 2019-01-01→2026-06-21, --force); VM RUNNING 34.104.232.193. RUN AFTER items 1+2. MDPS manifest fix is shipped
       (mtds@62de483 + UTL@6b6d53bd) but 15m/24h stalled on the same grain wall — once the 1m corpus + re-seed land, relaunch:
       rebuild the MDPS+UTL tarballs from clean LDR (must carry 62de483/d0f42ba/6b6d53bd), then
       `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh tradfi 2019-01-01 <yesterday> full --force`. It aggregates
       1m → 15m/24h at the canonical grain (batch_size=500 + per-VM-shard lock+coalesce already fixed). **Success:** 15m/24h
       captured at options_chain/futures_chain grain; expected_unattempted 15m/24h → ~0; sample parquets. Repo:
       market-data-processing-service. Provenance: this plan.
-- [ ] [DATA] P1. **(5) LIVE for all tradfi venues/data_types/instruments (live==batch parity).** TODAY: ONE producer
+- [x] ✅ [DATA] P1. **(5) LIVE for all tradfi venues/data_types/instruments (live==batch parity).** — market-tick-data-service@08632e9 | Added `_DATA_TYPE_TO_SCHEMA` dict + `_parse_ohlcv_msg()` + OHLCVMsg dispatch in `_on_record()` + data_type-driven `schema=` in `_subscribe_instruments()`; databento_tradfi_ws now streams ohlcv-1s/ohlcv-1m/trades for all 4 venues. QG green. TODAY: ONE producer
       (`tradfi:CME:trades`, live_databento, verified). The model needs a live producer PER (venue,data_type) shard. Mechanism:
       `market-tick-data-service/.../cli/handlers/websocket_streaming_handler.py` builds a `LiveWebsocketRunner` from
       `WS_FEED_CONNECTOR_FACTORIES` (keyed by venue; "intentionally empty at Phase 3.1 — per-venue rollout is Phase 3.5").
@@ -104,7 +105,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       `venue:type:underlying` e.g. `CME:FUTURES:ES`). Launch per shard: `deployment-service/scripts/vm/launch-mtds-live.sh
       --asset-group tradfi --shard-spec tradfi:<VENUE>:<DATA_TYPE> --instrument-ids "<...>"`. WORK: register the
       databento_tradfi_ws factory for all tradfi venues (CME/NASDAQ/NYSE/CBOE/ICE) in `WS_FEED_CONNECTOR_FACTORIES`, confirm it
-      streams ohlcv_1s/1m + trades + tbbo (not just trades), then launch a producer per (venue,data_type) shard + a forward-poll
+      streams ohlcv_1s/1m + trades + tbbo (not just trades), then launch a producer per (venue,data_type) shard + a forward-poll (**SCHEMA-LEVEL NOTE:** trades/tbbo are **L1** not L0 — in-package + fully covered for LIVE streaming, which includes all levels, but only **1 year** of included BATCH history vs L0 ohlcv-1s/1m 16y; the gate caps L1 historical fetch at ~1y so don't assume tbbo is free-16y like the bars)
       daily cron (`launch-tradfi-fwd-daily-cron-vm.sh`). **This is the largest remaining piece** (a live-rollout build, not a
       backfill). **Success:** live_databento producers for every tradfi (venue,data_type) shard; a recent day's live rows ==
       batch rerun (live==batch parity, per `codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Repos:

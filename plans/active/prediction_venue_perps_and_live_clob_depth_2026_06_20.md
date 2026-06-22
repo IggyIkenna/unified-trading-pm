@@ -29,6 +29,17 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 - [x] [UAC] P1. Add KALSHI_PERP + POLYMARKET_PERP venues to the crypto-perp universe + `VENUES_BY_ASSET_GROUP`, with launch dates (Kalshi ~2026-05-29, Polymarket ~2026-04-21) in `venue_launch_dates.py` + `coverage_starts.py`. Map their BTC/ETH/alt perps to the SHARED canonical perp instrument (mirror the CeFi perp instrument universe). Repo: unified-api-contracts. ✅ — unified-api-contracts@(shipped 2026-06-20): venue_constants.py, venue_launch_dates.py, coverage_starts.py, market_data_categories.py, venue_mapping.py, test_get_perp_venues.py
 - [x] ✅ [SCRIPT] P1. instruments-service — perp-contract enumerator for both venues SHIPPED (instruments-service@fdc9bad): `KalshiPerpReferenceDataAdapter` (public `GET /markets?status=open&category=Crypto`, cursor-paginated, `InstrumentType.PERPETUAL`, 16 unit tests) + `PolymarketPerpReferenceDataAdapter` scaffold (22 unit tests); wired into `factory.py`/`router.py`; QG green (cov 88.29%). Kalshi live endpoint verified. **Polymarket-perp live endpoint BLOCKED-UPSTREAM** — see next item.
 - [ ] [SCRIPT] P1. **Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet — CONFIRMED 2026-06-22)**: the perps are LIVE (CFTC-DCM-approved, launched 2026-04-21, beta to restricted users 2026-05-28, up to 20x, S&P500/NVDA/NFLX/HOOD) but **web-UI beta only**; `perps-api.polymarket.com`/`perps.polymarket.com`/`perp.polymarket.com` are ALL NXDOMAIN on Google+Cloudflare (not region, not auth — the host doesn't exist), and the official docs (docs.polymarket.com + llms.txt) have ZERO perps/perpetual/funding entries. So there is NO public REST/WS perps endpoint to build against. Scaffold (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector + launcher gating + strategy honest-absence) is shipped at every layer; the REAL unblock is Polymarket publishing the public perps API (or operator-provisioned beta API access). Auto-flows on endpoint availability. Ping: slot_0. Repo: instruments-service.
+  - **2026-06-22 unified-CLOB re-verification (operator said "perps ride the unified CLOB `clob.polymarket.com` + Gamma
+    `active=true`")**: probed empirically — `clob.polymarket.com/clob-markets` IS reachable (HTTP 200, 38,969 markets,
+    opaque short-key schema `r/t/c/mos/mts/mbf/tbf/ao/cbos/aot/ibce/fd`) but Gamma `/markets?active=true` AND
+    `/events?active=true` return **ZERO** perp/perpetual/funding markets, and the `tag=crypto-perpetuals` /
+    `series_slug=crypto-perpetuals` filters are **silently IGNORED** (tagged vs untagged queries return byte-identical
+    regular-Q&A slugs: `new-rhianna-album-before-gta-vi`, `will-bitcoin-hit-1m-before-gta-vi`, …). So perpetuals are
+    **not publicly enumerable** via the documented Gamma/CLOB discovery path — corroborating the web-UI-beta-only
+    finding. **DISCREPANCY for operator**: the unified-CLOB host works for prediction markets, but the perp product is
+    gated (beta/restricted). The unblock is **operator-provisioned beta API credentials** (or Polymarket publishing the
+    public perps endpoint), NOT a buildable public path — status stays BLOCKED-CREDENTIALS, not descoped. Kalshi-perp is
+    fully live (separate public API). Verified via `prediction-to-100%` drive.
 ## Phase 2 — historical download (trades) + funding
 
 - [x] ✅ [SCRIPT] P1. market-tick-data-service — perp trades+funding adapters SHIPPED (mtds@88c2f0c + UAC perp-source registration on LDR): `_perp_funding_kalshi_polymarket.py` stage (Kalshi `GET /markets?category=Crypto` → `/markets/{ticker}/funding_rates`, day-windowed, 429/5xx retry, shard-isolated) + `perp_funding_handler.py` wired (`_resolve_pipeline_mode_for_protocol`→`pipeline_mode_for_source`, pre-launch `record_empty(EXPECTED_PRE_VENUE_LAUNCH)` kalshi_perp<2026-05-29 / polymarket_perp<2026-04-21, DEFAULT_PROTOCOLS+chain_map extended); 16 unit tests; QG green (5060 pass, 80.77%). UAC: `PipelineMode.BATCH/LIVE/REPLAY_KALSHI_PERP` + `BATCH/LIVE_POLYMARKET_PERP` + `SOURCE_PRIORITY[(cefi,trades)]+=kalshi_perp,polymarket_perp` (committed LDR). **Kalshi-perp live-ready; Polymarket-perp scaffold BLOCKED-UPSTREAM** (endpoint NXDOMAIN — see enumerator sub-item + slot_0 ping). — 2026-06-21
@@ -120,6 +131,54 @@ data could not be honestly source-stamped (`record_captured(source=...)` would r
   explicit `source=source_string_for(_cqg_pm)`. IS QG-green (sentinel 42dd37c7). The companion UTL
   `record_captured_from_counts` `datetime` UnboundLocalError (introduced by the foreign DP_*/FetchEvidence WIP) was
   fixed and rode UTL@39f8ec85 to LDR. Repo: instruments-service@07272da4. — 2026-06-22
+
+### 2026-06-22 — DEEPER root-cause chain (the source= fix was necessary but NOT sufficient — found by running the IS Kalshi enumeration end-to-end)
+
+The `venue=KALSHI` universe was STILL silent-empty after the source= fix. Ran the IS prediction enumeration locally
+(scoped `--venues KALSHI --start-date 2026-06-22 --force`, real GCS, against a clean UTL@39f8ec85 worktree to bypass a
+concurrent UTL-refactor lane) and walked the full fetch→filter→bucket→write→manifest path. Three further bugs, two
+fixed + verified, one systemic + still open:
+
+- [x] ✅ [SCRIPT] P0. instruments-service `kalshi.py` — **date-filter silent-drop fix**: the Kalshi adapter's live
+  `/markets?status=open` snapshot stamps `open_time` as an INTRADAY timestamp on the current day (e.g.
+  `2026-06-22T13:21Z`), but `filter_instruments_by_date` compares `available_from <= date_dt` where
+  `date_dt = fromisoformat(date)` = MIDNIGHT → `13:21 > 00:00` dropped EVERY Kalshi market on EVERY day (incl. today) →
+  `0 records after filtering` → never reached the cqg write (so the source= error never even fired). Fix: floor
+  `available_from_datetime` to the open DATE (a market opening any time on day D belongs to day D's universe; precise
+  `market_created_at` still carried on the lifecycle for MTDS tick-gating). **Verified: 6/6 sample markets now survive
+  (was 0/6); full enum `KALSHI: 2000 instruments after date filter` → manifest `availability_index` now shows KALSHI
+  captured date=2026-06-22 with source=kalshi/pipeline_mode=batch_kalshi.** Repo: instruments-service (kalshi.py,
+  QG-green vs clean UTL; ship BLOCKED on the concurrent UTL clone being conflict-marker-broken — quickmerge dep
+  pre-flight). — 2026-06-22
+- [x] ✅ [SCRIPT] P0. instruments-service `kalshi.py` — **venue-case fix (venue ≠ source)**: the Kalshi adapter's
+  `venue` property returned the lowercase SOURCE name `"kalshi"` while Polymarket returns `"POLYMARKET"`. So the
+  instrument-parquet partition wrote `venue=kalshi` (lowercase) while the MTDS live runner
+  (`websocket_runner._read_prediction_is_universe_sync`) searches `venue={venue}.upper()/instruments.parquet` =
+  `venue=KALSHI` → the universe would never be found even once written. Canonical venue is `KALSHI` (UAC
+  `partition_paths` "POLYMARKET / KALSHI"; manifest already uppercased via `.upper()`). Fixed `venue → "KALSHI"`; 15
+  adapter tests updated + green vs clean UTL. Repo: instruments-service (kalshi.py). — 2026-06-22
+- [x] ✅ **FALSE ALARM (resolved 2026-06-22) — instruments.parquet DOES persist; I was checking the wrong path key
+  order.** `_build_partition_path` SORTS partition keys alphabetically, so the instruments universe lands at
+  `instrument_availability/by_date/canonical_question_group=OTHER/day=2026-06-22/venue=KALSHI/instruments.parquet`
+  (cqg-FIRST, not day-first). Verified present (94KB, venue=KALSHI uppercase — the venue fix). DEBUG_SINKWRITE confirmed
+  `rows=2000 wrote=True`. The "stale May-12 Polymarket" was the OLD day-first layout; current writes are cqg-sorted. So
+  the full chain WORKS: filter (2000 survive) → cqg bucket → instruments.parquet @venue=KALSHI → manifest captured
+  (source=kalshi) → lifecycle. **Kalshi LIVE producers RESOLVED the universe** (`prediction-live-kalshi-{trades,book_snapshot_5}`
+  read venue=KALSHI; keep-alive ended 2026-06-22 14:06). No code change needed.
+- [ ] [SCRIPT] P0. **RESIDUAL — Kalshi live RESOLVES but SKIPS ticks (id-format mismatch)**: the live producers now
+  find the Kalshi universe but log `KalshiClob: unknown instrument 'KXMVE…' — expected KALSHI:PREDICTION_MARKET:{ticker}; skipping`
+  for every market → no real Kalshi ticks captured yet. Root: mtds `live/_is_universe.py::prediction_instrument_ids_from_df`
+  short-circuits `if "instrument_key" in df.columns: return bare instrument_key` (line 27-28), and the IS Kalshi
+  universe's `instrument_key` is the BARE ticker (the adapter sets `instrument_key=ticker`), while the KalshiClob WS
+  connector parses the canonical `KALSHI:PREDICTION_MARKET:{ticker}`. Polymarket is unaffected (its connector accepts the
+  bare `condition_id`). **Fix (pick one, Kalshi-scoped to avoid regressing Polymarket)**: (a) make the `instrument_key`-wins
+  branch venue-aware — for KALSHI, if the key lacks `:PREDICTION_MARKET:`, rebuild `KALSHI:PREDICTION_MARKET:{ticker}`; OR
+  (b) set the IS Kalshi adapter `instrument_key = f"KALSHI:PREDICTION_MARKET:{ticker}"` (canonical InstrumentKey form) —
+  cleaner but audit cross-consumers (cqg classifier uses the ticker arg, not instrument_key, so likely safe). Verify the
+  live connector captures after redeploy. Repo: market-tick-data-service (live/_is_universe.py) and/or instruments-service
+  (kalshi.py). Provenance: prediction-to-100% drive 2026-06-22.
+
+- [ ] [SCRIPT] P3. **DISPLAY-ONLY bug (cosmetic, ≤2min)**: `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh:83` echoes `Tarball: gs://.../instruments-code.tar.gz` but the VM setup (`setup-data-pipeline-vm.sh:311`) actually fetches `instruments-service-code.tar.gz` (correct). The echo misleads tarball-freshness debugging — fix the echo string. Provenance: prediction-to-100% drive 2026-06-22. Repo: deployment-service.
 
 **Seed relaunch (corrected stack):** UAC 24706977 + UTL b336478f + mtds fcd6549 all shipped; PREDICTION
 tarball rebuilt to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tarball`);

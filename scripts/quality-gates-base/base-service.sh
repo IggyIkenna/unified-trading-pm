@@ -3134,6 +3134,43 @@ else
     log_success "STEP 5.86: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.99: proof-of-honest-absence ratchet (Phase-1 keystone twin) ─────────
+#
+# Companion to STEP 5.86. The keystone runtime gate (utl@39f8ec85, operator decision
+# 2026-06-22) HARD-RAISES UnprovenHonestAbsenceError when a record_empty/record_zero_rows
+# call stamps SOURCE_RETURNED_ZERO without a FetchEvidence proving http 2xx + response_received
+# + 0 rows + no error_signal. THIS static check catches the same bug shape — a
+# SOURCE_RETURNED_ZERO write reachable from an `except`/error branch that lacks `fetch_evidence=`
+# — at COMMIT time with a precise file:line, so an adapter never re-regresses to a runtime crash
+# on a VM. An error path (401/403/429/5xx/timeout/exception) is NOT honest absence → record_failed.
+#
+# Baselined GRIND-DOWN ratchet (same shape as STEP 5.86): each pre-threading unproven
+# except-reachable callsite is in source_returned_zero_needs_fetch_evidence_baseline.yaml → it
+# WARNs (exit-clean) until its AG-slot threads fetch_evidence; a NEW one (or a non-baselined file
+# with one) FAILS. EXPECTED_* calendar reasons are exempt; an audited callsite uses '# QG-allow:'.
+#
+# SSOT: data_pipeline_hardening_self_monitoring_2026_06_22.md Phase 1 +
+#       codex/02-data/availability-manifest-and-data-status.md "Proof-of-honest-absence contract".
+_SRZE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_source_returned_zero_needs_fetch_evidence.py"
+if [ -f "$_SRZE_CHECKER" ]; then
+    _SRZE_REPO=$(basename "$PROJECT_ROOT")
+    if $PYTHON_CMD "$_SRZE_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_SRZE_REPO" >/tmp/srz_needs_evidence_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/srz_needs_evidence_qg.log 2>/dev/null; then
+            log_warn "STEP 5.99: $(grep -c '^\[WARN\]' /tmp/srz_needs_evidence_qg.log) baselined unproven SOURCE_RETURNED_ZERO callsite(s) pending fetch_evidence threading; 0 new"
+        else
+            log_success "STEP 5.99: every except-reachable SOURCE_RETURNED_ZERO write carries fetch_evidence (or # QG-allow:)"
+        fi
+    else
+        log_fail "STEP 5.99: NEW except-reachable record_empty/record_zero_rows(SOURCE_RETURNED_ZERO) without fetch_evidence= — an error path is NOT honest absence (route to record_failed) or thread a proving FetchEvidence (Phase-1 keystone):"
+        cat /tmp/srz_needs_evidence_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_source_returned_zero_needs_fetch_evidence.py --workspace-root $REPO_ROOT --scope $_SRZE_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.99: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call

@@ -661,133 +661,106 @@ jobs:
               continue
             fi
 
-            # Create PR staging → main and auto-merge
+            # Create the staging → main PR (idempotent — `gh pr create` no-ops if one is already
+            # open), then resolve a SINGLE unified merge path for BOTH the freshly-created and the
+            # pre-existing PR.
+            #
+            # ── Durability fix (2026-06-22, cure-B hardening) ─────────────────────────────────────
+            # The prior code had TWO divergent paths: the new-PR path blind-armed `--auto --rebase`
+            # and counted the repo PROMOTED *without ever checking mergeable_state*, while cure B
+            # (version-line auto-resolve) lived ONLY on the existing-PR path. Consequences that made
+            # the drain "keep needing a manual fix":
+            #   1. A version-line conflict on a FRESH PR was never auto-resolved on the run it was
+            #      born — it had to survive to a LATER run (~hours, given GitHub throttles the */15
+            #      schedule) before cure B ever saw it.
+            #   2. The fresh conflicting PR was falsely counted PROMOTED → manifest-vs-reality skew.
+            # Unifying the path makes cure B fire PROACTIVELY, same-run, for EVERY conflicting promote
+            # (new or existing). A reliable same-run staging→main also stops the Class-D LDR→main
+            # fallback from firing → less dual-lineage re-seeding (the treadmill's other half).
+            # SSOT: plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md § Durability.
             BODY="Automated: SIT validated staging. Promoting staging → main. Triggered by: staging-validated dispatch from system-integration-tests. Staging lock will be cleared after all repos are promoted."
-            PR_URL=$(gh pr create \
+            gh pr create \
               --repo "$OWNER/$REPO" \
               --title "chore(release): promote staging to main" \
               --body "$BODY" \
               --base main \
               --head staging \
-              2>/dev/null || true)
+              >/dev/null 2>&1 || true
 
-            if [ -n "$PR_URL" ]; then
-              echo "  PR created: $PR_URL"
-              # Enable auto-merge (requires branch protection to be configured).
-              # If the arm is REFUSED (repo allow_auto_merge=false / protection mismatch), fall back
-              # to a direct merge with a retry window for in-flight checks. A repo is counted
-              # PROMOTED only when the merge is armed or landed — recording an unmerged PR writes
-              # versions[] for content that never reached main (manifest-vs-reality divergence,
-              # incident 2026-06-10: greeks-service recorded 0.3.0 while its main stayed 0.2.0).
-              if gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null; then
+            # Resolve the open staging→main PR number (newly created OR already-open).
+            PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head staging --state open \
+              --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
+              echo "  ERROR: no open staging→main PR for $REPO (create failed for a non-conflict reason) — NOT recording as promoted"
+              FAILED="$FAILED $REPO"
+              FAILED_COUNT=$((FAILED_COUNT + 1))
+              continue
+            fi
+            PR_URL="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
+            echo "  staging→main PR #$PR_NUM ($PR_URL)"
+
+            # Poll mergeable_state — GitHub computes it asynchronously, so it reads null/unknown for
+            # a few seconds after `gh pr create` (this is exactly why the old new-PR path could not
+            # see a conflict: it never waited for, or read, this field).
+            MERGEABLE_STATE=""
+            for _i in 1 2 3 4 5 6; do
+              MERGEABLE_STATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+              [ -n "$MERGEABLE_STATE" ] && [ "$MERGEABLE_STATE" != "null" ] && [ "$MERGEABLE_STATE" != "unknown" ] && break
+              sleep 5
+            done
+
+            if [ "$MERGEABLE_STATE" = "dirty" ]; then
+              # "dirty" = content conflict (GitHub REST). The version is bumped one-commit-per-bump
+              # and main's version line is also written by the LDR→main drain lineage, so staging→main
+              # recurs `dirty` ONLY on pyproject.toml `version =`. Cure B resolves that deterministically
+              # (higher semver wins) BEFORE escalating. Genuine (non-version) conflicts + any operational
+              # error STILL escalate to the conflict-resolution-agent (AO picks those up). Kill-switch:
+              # CURE_B_VERSION_AUTORESOLVE=false.
+              echo "  CONFLICT detected on PR #$PR_NUM"
+              AR_VERDICT="DISABLED"
+              if [ "${CURE_B_VERSION_AUTORESOLVE:-true}" = "true" ]; then
+                AR_VERDICT=$(bash scripts/cicd/auto_resolve_version_promote.sh "$OWNER" "$REPO" "$PR_NUM" 2>&1 | tail -1)
+              fi
+              if echo "$AR_VERDICT" | grep -q "^AUTO_RESOLVED"; then
+                echo "  Cure-B auto-resolved version-line conflict for $REPO -> $AR_VERDICT"
                 PROMOTED="$PROMOTED $REPO"
                 PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
               else
-                echo "  auto-merge arm refused for $REPO — direct-merge fallback (retry up to 3m for checks)"
-                MERGED_OK=""
-                for _i in 1 2 3 4 5 6 7 8 9; do
-                  if gh pr merge "$PR_URL" --rebase --repo "$OWNER/$REPO" 2>/dev/null; then
-                    MERGED_OK=1
-                    break
-                  fi
-                  sleep 20
-                done
-                if [ -n "$MERGED_OK" ]; then
-                  echo "  direct merge landed for $REPO"
-                  PROMOTED="$PROMOTED $REPO"
-                  PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
-                else
-                  echo "  ERROR: $REPO promote PR could not be merged (checks pending/red or merge refused) — NOT recording as promoted: $PR_URL"
-                  FAILED="$FAILED $REPO"
-                  FAILED_COUNT=$((FAILED_COUNT + 1))
-                fi
-              fi
-            else
-              echo "  PR already exists or merge conflict — checking mergeable state..."
-
-              # Check if an existing staging→main PR is blocked by a content conflict
-              EXISTING_PR_NUM=$(gh pr list \
-                --repo "$OWNER/$REPO" \
-                --base main \
-                --head staging \
-                --state open \
-                --json number \
-                --jq '.[0].number' 2>/dev/null || echo "")
-
-              if [ -n "$EXISTING_PR_NUM" ] && [ "$EXISTING_PR_NUM" != "null" ]; then
-                # Poll for mergeable_state (GitHub computes it asynchronously — may be null briefly)
-                MERGEABLE_STATE=""
-                for _i in 1 2 3; do
-                  MERGEABLE_STATE=$(gh api "repos/$OWNER/$REPO/pulls/$EXISTING_PR_NUM" \
-                    --jq '.mergeable_state' 2>/dev/null || echo "")
-                  [ "$MERGEABLE_STATE" != "null" ] && [ -n "$MERGEABLE_STATE" ] && break
-                  sleep 5
-                done
-
-                if [ "$MERGEABLE_STATE" = "dirty" ]; then
-                  # "dirty" = content conflict in GitHub REST API
-                  PR_URL_CONFLICT="https://github.com/$OWNER/$REPO/pull/$EXISTING_PR_NUM"
-                  echo "  CONFLICT detected on PR #$EXISTING_PR_NUM ($PR_URL_CONFLICT)"
-
-                  # ── Cure B: auto-resolve a version-line-only conflict (higher semver wins) BEFORE
-                  # escalating. The version is bumped one-commit-per-bump and main's version line is
-                  # also written by the LDR->main drain lineage, so staging->main recurs `dirty` ONLY
-                  # on pyproject.toml `version =`; resolve it deterministically. Genuine (non-version)
-                  # conflicts + any error still escalate. Kill-switch: CURE_B_VERSION_AUTORESOLVE=false.
-                  # SSOT: plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md.
-                  AR_VERDICT="DISABLED"
-                  if [ "${CURE_B_VERSION_AUTORESOLVE:-true}" = "true" ]; then
-                    AR_VERDICT=$(bash scripts/cicd/auto_resolve_version_promote.sh "$OWNER" "$REPO" "$EXISTING_PR_NUM" 2>&1 | tail -1)
-                  fi
-                  if echo "$AR_VERDICT" | grep -q "^AUTO_RESOLVED"; then
-                    echo "  Cure-B auto-resolved version-line conflict for $REPO -> $AR_VERDICT"
-                    PROMOTED="$PROMOTED $REPO"
-                    PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
-                  else
-                    echo "  Conflict not version-line-only ($AR_VERDICT) — escalating to conflict-resolution-agent"
-
-                    # NOTE: Telegram notification handled by conflict-resolution-agent's
-                    # notify-working job (reusable workflow). No inline curl needed here.
-
-                    # Dispatch conflict-resolution-agent
-                    curl -s -X POST \
-                      "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
-                      -H "Authorization: Bearer $GH_TOKEN" \
-                      -H "Content-Type: application/json" \
-                      -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL_CONFLICT}\"}}" \
-                      && echo "  Dispatched conflict-resolution-agent for $REPO" \
-                      || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
-                    FAILED="$FAILED $REPO"
-                    FAILED_COUNT=$((FAILED_COUNT + 1))
-                  fi
-                else
-                  # Not a content conflict — arm auto-merge on the existing PR so it merges
-                  # once required checks pass (mirrors what the PR-create path does).
-                  # Gap fix (2026-06-19): the create path arms auto-merge; the existing-PR path
-                  # previously counted as FAILED immediately → quarantine after 3 runs → promotion
-                  # deadlock even when quality-gates-v2 is green and the PR is cleanly mergeable.
-                  EXISTING_PR_URL="https://github.com/$OWNER/$REPO/pull/$EXISTING_PR_NUM"
-                  echo "  PR #$EXISTING_PR_NUM mergeable_state=$MERGEABLE_STATE — arming auto-merge"
-                  if gh pr merge "$EXISTING_PR_URL" --auto --squash --repo "$OWNER/$REPO" 2>/dev/null || \
-                     gh pr merge "$EXISTING_PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null; then
-                    echo "  auto-merge armed on existing PR #$EXISTING_PR_NUM for $REPO"
-                    PROMOTED="$PROMOTED $REPO"
-                    PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
-                  else
-                    echo "  auto-merge arm refused on existing PR #$EXISTING_PR_NUM — will retry on next run"
-                    FAILED="$FAILED $REPO"
-                    FAILED_COUNT=$((FAILED_COUNT + 1))
-                  fi
-                fi
-              else
-                echo "  No open staging→main PR found for $REPO (PR creation may have failed for another reason)"
+                echo "  Conflict not version-line-only ($AR_VERDICT) — escalating to conflict-resolution-agent"
+                # NOTE: Telegram notification handled by conflict-resolution-agent's notify-working job.
+                curl -s -X POST \
+                  "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                  -H "Authorization: Bearer $GH_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL}\"}}" \
+                  && echo "  Dispatched conflict-resolution-agent for $REPO" \
+                  || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
                 FAILED="$FAILED $REPO"
                 FAILED_COUNT=$((FAILED_COUNT + 1))
               fi
-
-              # NOTE: Partial failure Telegram notification handled by
-              # notify-partial-failure job (reusable workflow). No inline curl needed here.
+            else
+              # Not a content conflict (clean / blocked-on-checks / behind / unstable / has_hooks /
+              # unknown): arm auto-merge so the PR lands once required checks pass. `--rebase` is the
+              # canonical promote method (replays staging's bump commits → linear main history); fall
+              # back to squash/merge only where the repo disallows rebase. A repo is counted PROMOTED
+              # only when the merge is armed or landed — never on a bare unmerged PR (manifest-vs-reality
+              # divergence guard, incident 2026-06-10: greeks-service recorded 0.3.0 / main 0.2.0).
+              echo "  PR #$PR_NUM mergeable_state=${MERGEABLE_STATE:-unknown} — arming auto-merge"
+              if gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                 || gh pr merge "$PR_URL" --auto --squash --repo "$OWNER/$REPO" 2>/dev/null \
+                 || gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null; then
+                echo "  auto-merge armed on PR #$PR_NUM for $REPO"
+                PROMOTED="$PROMOTED $REPO"
+                PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              else
+                echo "  auto-merge arm refused on PR #$PR_NUM — will retry on next run"
+                FAILED="$FAILED $REPO"
+                FAILED_COUNT=$((FAILED_COUNT + 1))
+              fi
             fi
+
+            # NOTE: Partial failure Telegram notification handled by the
+            # notify-partial-failure job (reusable workflow). No inline curl needed here.
 
           done <<< "$REPOS"
 

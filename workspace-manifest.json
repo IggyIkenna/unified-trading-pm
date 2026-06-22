@@ -101,7 +101,7 @@
       "codex_sections": [
         "03-observability"
       ],
-      "version": "0.10.0",
+      "version": "0.22.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -143,13 +143,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
-      "codebase_health": {
-        "coverage_pct": 80.76,
-        "qg_red_reason": null,
-        "large_file_count": 1,
-        "warn_file_count": 0
-      }
+      "ldr_ci_status": "GREEN"
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -203,13 +197,7 @@
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-api-contracts=0.31.0",
-      "codebase_health": {
-        "coverage_pct": 87.04,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 0
-      }
+      "cascade_invalidated_by": "unified-api-contracts=0.31.0"
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -270,7 +258,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 74.65,
+        "coverage_pct": 74.55,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 4
@@ -337,7 +325,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 82.0,
+        "coverage_pct": 82.01,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 13
@@ -347,8 +335,8 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.31.0",
-      "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
+      "version": "0.33.0",
+      "description": "Deployment orchestration service — Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -695,7 +683,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.28.0",
+      "version": "0.32.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -739,7 +727,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.81,
+        "coverage_pct": 90.8,
         "qg_red_reason": null,
         "large_file_count": 2,
         "warn_file_count": 6
@@ -797,13 +785,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
-      "codebase_health": {
-        "coverage_pct": 88.17,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 6
-      }
+      "ldr_ci_status": "GREEN"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -814,7 +796,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.37.0",
+      "version": "0.41.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
       "dependencies": [
@@ -858,7 +840,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.86,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 26
@@ -921,13 +903,7 @@
       ],
       "consolidation_status": "skeleton",
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
-      "created": "2026-05-19",
-      "codebase_health": {
-        "coverage_pct": 82.68,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 5
-      }
+      "created": "2026-05-19"
     },
     "strategy-service": {
       "type": "service",
@@ -1135,13 +1111,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "GREEN",
-      "codebase_health": {
-        "coverage_pct": 73.53,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 0
-      }
+      "ldr_ci_status": "GREEN"
     },
     "unified-api-contracts": {
       "type": "library",
@@ -1152,7 +1122,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.40.0",
+      "version": "0.43.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
       "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
@@ -1197,7 +1167,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.13.0",
+      "version": "0.32.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/unified-trading-library",
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
@@ -1237,7 +1207,7 @@
         "coverage_pct": 90.03,
         "qg_red_reason": null,
         "large_file_count": 4,
-        "warn_file_count": 20
+        "warn_file_count": 18
       }
     },
     "unified-trading-pm": {
@@ -1351,13 +1321,7 @@
         "cross-domain",
         "trading",
         "standard"
-      ],
-      "codebase_health": {
-        "coverage_pct": 50.88,
-        "qg_red_reason": null,
-        "large_file_count": 32,
-        "warn_file_count": 39
-      }
+      ]
     },
     "deployment-ui": {
       "auto_build_on_quickmerge": true,
@@ -1451,7 +1415,7 @@
       "upstream_url": null,
       "integration_branch": "live-defi-rollout",
       "codex_sections": [],
-      "version": "0.28.0",
+      "version": "0.33.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "notes": "Canonical orchestrator \u2014 IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab\u2192LDR\u2192main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged \u2014 2026-05-24 incident.",
