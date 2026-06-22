@@ -1,7 +1,6 @@
 ---
 title: "Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification)"
 created: 2026-06-22
-author: ikennaigboaka [slot-1·human-planning]
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra
@@ -21,6 +20,8 @@ related_plans:
   - issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md
   - issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md
   - issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md
+priority: P2
+status: active
 ---
 
 # Data-Pipeline Hardening + Self-Monitoring

@@ -8,7 +8,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
 created: 2026-06-22
-author: ikennaigboaka
+priority: P2
+status: active
 ---
 
 # TradFi data completion — the SSOT runbook to drive ALL remaining tradfi live+batch work
