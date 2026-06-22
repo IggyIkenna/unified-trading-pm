@@ -770,7 +770,7 @@ blanks already stamped); new captures still leak blank until this ships — re-r
       --apply` as interim mitigation (idempotent, guarded). Provenance: deploy gap surfaced finishing the per-AG
       re-stamp 2026-06-22. Target: deployment-service. Continuous-verify: dry-run the stamp tool → captured-blank
       delta == 0 across two consecutive runs.
-      — Tarballs rebuilt from clean LDR (CEFI set: UAC d9b4e8480a94 + UTL 091774f0c9bd [includes 2b0ba65e] + MTDS e7177bd29604 + IS 5312b2ff6853) uploaded to GCS 2026-06-22T18:02:58Z. Live producers (mtds-live-cefi-*) NOT killed — relaunch on normal cadence.
+      — Tarballs rebuilt from clean LDR (UAC d9b4e8480a94 + UTL 091774f0c9bd [includes 2b0ba65e] + MTDS 0eee1ab51e29 + IS 5312b2ff6853 + all service repos) uploaded to GCS 2026-06-22T18:16Z. Live producers (mtds-live-cefi-*) NOT killed — relaunch on normal cadence. Interim stamp `--apply` run 2026-06-22T18:31Z: cefi 4882→0 blanks (3079 captured), defi 97521→0 (97521 captured), tradfi 135170→0 (82297 captured), sports 0, prediction 7054→0 (3054 captured). Continuous-verify check at 18:31Z: all 5 AGs blank_asset_group_before=0 ✅.
 
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
