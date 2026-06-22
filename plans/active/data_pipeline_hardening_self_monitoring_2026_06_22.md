@@ -274,6 +274,35 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [ ] [SCRIPT] P2. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
       100%==9, read actual rows not the constant) and alert on any AG <100%. Reuse `audit_canonical_form.py` CF-1. —
       **e2e-testing**
+- [x] ✅ [CODE] P0. **Chain-blind defi DIVERGENT_EMPTY root cause — flat-protocol launch gate (C2)** — DONE
+      `unified-api-contracts@c8f4bbd7` (QG green 213s, 45 oracle tests pass; landed on LDR). The `DP_DIVERGENT_EMPTY` + `DP_EMPTY_REPROBE_DISAGREEMENT` defi alerts were
+      driven by the UAC `expected_coverage()` oracle being **chain-blind + flat-venue-blind**: the manifest writes FLAT
+      venue names (`UNISWAP_V4`, `CURVE`, `AAVE_V3`, `ETHERFI`…) but `DEFI_VENUE_LAUNCH_DATES` was keyed mostly by
+      `PROTOCOL-CHAIN` (`UNISWAP_V4-ETHEREUM`=2025-01-31), so the exact launch lookup MISSED → the pre-launch gate never
+      fired → the oracle returned `SHOULD_HAVE_DATA` for every date back to the 2018 window-start, flagging tens of
+      thousands of **honest pre-launch empties** as divergent. ALL 85,900 divergent cells were historical (max
+      2025-11-18; the operational window was already 0). Fix: `_venue_launch_date_for` now falls back to the EARLIEST
+      `PROTOCOL-*` chain launch for a flat defi protocol (conservative floor) + added 13 missing bare-protocol launch
+      dates (MORPHO/AERODROME_V3/CAMELOT_V3/FLUID/SPARK/PUFFER/SWELL/STAKEWISE/STADER/MANTLE/ANKR/COINBASE/EIGENLAYER).
+      Measured: **85,900 → 22,140 DIVERGENT_EMPTY (−74%)**, 0 in operational window. 5 regression tests added. —
+      **unified-api-contracts**
+- [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY (~22,140) — DeFi per-(venue,data_type) `coverage_start` registry
+      (C2)** **DEFERRED**: the residual is all HISTORICAL (max 2025-11-18, 0 in the operational window) pre-collection
+      empties — protocols whose data_type has data captured from when collection BEGAN (mid-2025) but the oracle expects
+      it from protocol launch (e.g. PANCAKESWAP_V3 dex pre-collection, AAVE_V3 liquidation_events, STAKEWISE/MANTLE
+      staking_yields). Root cause: DeFi (venue, data_type) `SourceCapability.coverage_start` is unregistered
+      (`get_source_coverage_start_for_data_type` returns None for all defi), so the `EXPECTED_PRE_SOURCE_COVERAGE_START`
+      gate never fires. Fix = register defi per-(protocol,data_type) coverage_start (the first-observed-capture date per
+      pair is the data-driven floor). Larger campaign across ~40 protocols × data_types — separate from the alert
+      hot-fix. — **unified-api-contracts**
+- [ ] [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — the per-AG defi re-fetch hook
+      (`e2e-testing/scripts/audit/reprobe_defi.py`) probes EVM chains in priority order (ETHEREUM-first) for a flat-venue
+      empty REGARDLESS of which chain the empty was actually on. So an empty on a chain where the protocol has no subgraph
+      (e.g. CURVE/OPTIMISM — `get_subgraph_id` None) gets a FALSE `REPROBE_RETURNED_ROWS` because the hook finds rows on
+      ETHEREUM. The reprobe selector also dedups to (venue,data_type) dropping chain (line 143). Fix: thread `chain` into
+      the reprobe cell key + the hook so it probes the CORRECT chain, and short-circuit `reached_source=False` when
+      `get_subgraph_id(protocol, chain) is None` (protocol not deployed on that chain → honest-empty, the oracle decides).
+      — **e2e-testing**
 
 ### Wave 4b out-of-repo wiring (the daily-audit scripts shipped in e2e-testing; these reach other repos)
 
@@ -1128,3 +1157,16 @@ dispatch prompts.
 - **Watcher tuned**: deployment-service `ed4147e` — `heartbeat_stall_watcher.DEFAULT_STALL_MINUTES` 15→10 (≈10 missed 60s beats; loose enough for GCS-tee blob lag + `*/5` poll jitter, tight enough to alert a mid-chunk hang in ~10min not 45+).
 - **Ship path**: all 4 via the **dirty-deps direct-LDR carve-out** — UAC was live-dirty (`honest_coverage.py`, mtime<120s = live editor, PROTECTED not stomped) so quickmerge pre-flight blocked; each repo direct-pushed ONLY its named files (`Quickmerge: agent` trailer), foreign peer WIP (onchain_perp / deployment terraform) excluded from `--files`. Per-repo QG `--no-fix` green first (UTL 110s, IS 93s, deployment 56s; MTDS files individually clean — basedpyright 0, ruff clean — the one QG size-violation was the PEER's dirty `onchain_perp_batch_handler.py`, not my files).
 - **RESHIP + VERIFY**: rebuild SPORTS tarball from a CLEAN detached worktree off origin/LDR (now carrying the timer) → delete+relaunch `tm-backfill` / `fs-backfill` (e2-standard-8, skip-fresh) + the live odds VM (`launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades`) → confirm two PIPELINE_HEARTBEAT timestamps ~60s apart. (in progress this run)
+
+## Progress Log — defi DP-alert ROOT-CAUSE: chain-blind oracle over-expect (C2), 85,900→22,140 (−74%) (2026-06-22, slot·human-planning, Opus 4.8, /autonomous)
+
+- **MISSION**: operator "how do we resolve these slack alerts" — drive the two live defi DP WARNs (`DP_DIVERGENT_EMPTY` "5 oracle-expects-but-empty", `DP_EMPTY_REPROBE_DISAGREEMENT` "9 SOURCE_RETURNED_ZERO") to root-cause-fixed.
+- **DIAGNOSIS (authoritative, manifest-walked 2026-06-22 against `market-data-tick-defi-prd-…` 4.04M-row `_index`)**: BOTH alerts are the SAME class, and it is **C2 (UAC coverage oracle OVER-EXPECTING), not C1**. The full-history divergence detector = **85,900 DIVERGENT_EMPTY**, but **all historical (date range 2018-01-01 → 2025-11-18; the OPERATIONAL window is 0** — re-ran `detect_manifest_divergence.py --start 2026-06-15 --end 2026-06-21` = `DIVERGENT_EMPTY: 0`). So the live pipeline is healthy; the alert fires on a chain-blind full-history artifact. Root cause: `expected_coverage()` is **flat-venue-blind** — the manifest writes FLAT venues (`UNISWAP_V4`, `CURVE`, `AAVE_V3`, `ETHERFI`…) but `DEFI_VENUE_LAUNCH_DATES` is keyed by `PROTOCOL-CHAIN` (`UNISWAP_V4-ETHEREUM`=2025-01-31) → exact launch lookup MISSED → pre-launch gate never fired → oracle wrongly returned `SHOULD_HAVE_DATA` back to 2018 for honest pre-launch empties. The "5"/"9" in the alerts are the truncated-tail counts of the hygiene script's `out.count("DIVERGENT_EMPTY")` over the 2000-char stdout tail (selector dedups to (venue,data_type) dropping chain), NOT 5/9 distinct cells.
+- **PER-CELL VERDICTS** (the reprobe CSV's 4 + hygiene's UNISWAP_V4): ALCHEMY/gas_fees, CHAINLINK/oracle_prices, CURVE/dex_pool_state, PANCAKESWAP_V3/dex_pool_state, UNISWAP_V4/dex_pool_swaps — per-chain inspection: each is a (venue,data_type) where SOME chain captures daily but a chain WITHOUT a subgraph/feed (e.g. CURVE/OPTIMISM `cap=0 emp=2481`, PANCAKESWAP_V3/ARBITRUM `cap=0 emp=1316`, ALCHEMY gas on BLAST/FANTOM/SOLANA/ZKSYNC `cap=0`, CELO `attempted_failed RPC error eth_feeHistory`) is **genuinely empty** → oracle-over-expecting-corrected (the protocol isn't deployed on that chain), NOT a real fetch gap. The DEX cells additionally hit the flat-venue pre-launch miss. CHAINLINK/POLYGON was a 1-day transient (captured the next day) — self-resolved.
+- **FIX SHIPPED `unified-api-contracts@c8f4bbd7`** (LDR, Quickmerge: agent; Tier-C drain → staging ≤15min): (1) `expected_coverage._venue_launch_date_for` flat-protocol fallback — a flat defi venue with no exact key inherits the EARLIEST `PROTOCOL-*` chain launch (conservative floor; never marks real data pre-launch). (2) added 13 missing bare-protocol launch dates (MORPHO/AERODROME_V3/CAMELOT_V3/FLUID/SPARK/PUFFER/SWELL/STAKEWISE/STADER/MANTLE/ANKR/COINBASE/EIGENLAYER). 5 regression tests (`TestDefiFlatProtocolLaunchFallback`), 24 oracle tests green, basedpyright/ruff clean. **Measured on the live manifest: 85,900 → 22,140 DIVERGENT_EMPTY (−63,760, −74%); 0 in operational window.** Peer-safe: only touched 2 clean files (`expected_coverage.py`, `venue_launch_dates.py`) + 1 test; the LIVE-dirty UAC `honest_coverage.py` was NOT touched.
+- **RESIDUAL (tracked todos under Phase 3)**: ~22,140 remaining = historical pre-collection-start empties (DeFi per-(venue,data_type) `coverage_start` unregistered → P1 deferred campaign, all historical/0-in-window) + the `reprobe_defi.py` chain-blind false-disagreement bug (P2). Broader backlog characterized: 48,924 SOURCE_RETURNED_ZERO empties (dominated by sparse `liquidations`/event types + the per-chain-not-deployed DEX class — mostly C2 honest empties); raw-HTTP errors (400=7097, 404=1747, eth_feeHistory rpc=2195, 429=237) are CORRECTLY `attempted_failed` (the keystone gate works — NOT misclassified empties); 3,550 phantoms are already `attempted_failed`. No real-gap backfill needed in the operational window.
+
+## Progress Log — reprobe auto-flip + the image-gap finding (2026-06-22)
+- **Auto-flip cron arg SHIPPED** deployment-service@d287d20: `dp_reprobe_empty_job args=["--reclassify-apply"]` (proof-gated — only REPROBE_RETURNED_ROWS flips). Auto-flip code e2e@1b220fc. The detect→prove→flip→re-capture loop is CODE-complete + CONFIG-enabled.
+- **REAL BLOCKER surfaced — the Cloud Run audit-cron IMAGE GAP (not the arg)**: `dp_audit_image_resolved` falls back to `market-tick-data-service:latest`, which does NOT contain `/app/e2e-testing/scripts/audit/*.py` → the Cloud Run digest/hygiene/reprobe jobs fail at the script PATH. The audit scripts run TODAY via the GCS code-tarball/VM path (that's how the 19:55Z hygiene alert fired). A peer attempted a dedicated `e2e-audit:latest` runner image but left it BROKEN (terraform points at the image but there is NO `e2e-testing/Dockerfile` and `cloudbuild.yaml` was DELETED — phantom reference). I did NOT ship that broken terraform (clean-base + arg only; peer WIP preserved in `git stash@{0}` on deployment-service).
+- [ ] [INFRA] P1. **Close the Cloud Run audit-cron image gap PROPERLY** — build `e2e-testing/Dockerfile` (FROM the UTL base image so `StorageClient`/`log_event`/UAC/pandas/gcsfs are present + `COPY . /app/e2e-testing`) + `e2e-testing/cloudbuild.yaml` (build → credential-free `--smoke` each audit script → push `…/unified-trading-library/e2e-audit:latest`) + set `var.dp_audit_image` default to that image (supersede the peer's broken stash). Verify with a real Cloud Build run. Until this lands, the digest/hygiene/reprobe Cloud Run crons are image-gap-blocked; the scripts run via the tarball/VM path. Repo: e2e-testing + deployment-service.
