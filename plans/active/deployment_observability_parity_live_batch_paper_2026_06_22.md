@@ -118,9 +118,12 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 3 — Slack parity (deployments → channel at /repos grade)
 
-- [ ] [CODE] P1. Deployment lifecycle events (STARTED/COMPLETED/FAILED/exit-nonzero) → Slack with the umbrella + cloud +
+- [x] ✅ [CODE] P1. Deployment lifecycle events (STARTED/COMPLETED/FAILED/exit-nonzero) → Slack with the umbrella + cloud +
       deep-link to the `/deployments` detail (reuse the alerting router + the data-pipeline notifier pattern; a
-      `#deployments` channel or fold into `#data-pipeline-alerts` per operator). — **alerting-service**
+      `#deployments` channel or fold into `#data-pipeline-alerts` per operator). — **alerting-service@868872c**
+      (`rules/deployment_rules.py` routes UTL DEPLOYMENT_STARTED/COMPLETED/FAILED via the shared
+      `_route_data_pipeline_event` path → #data-pipeline-alerts mirror with umbrella/cloud fields + `/deployments/{vm}`
+      deep-link; FAILED=CRITICAL also pages. Folded into #data-pipeline-alerts per the notifier reuse.)
 - [ ] [CODE] P2. Per-umbrella daily Slack digest (live up / batch completion / paper status) — reuse the daily-digest
       cron pattern. — **e2e-testing / deployment-service**
 

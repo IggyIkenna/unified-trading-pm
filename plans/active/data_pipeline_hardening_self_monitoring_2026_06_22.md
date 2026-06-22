@@ -841,14 +841,17 @@ dispatch prompts.
 
 ### Alert enrichment (B — inline trace + deep-links)
 
-- [ ] [CODE] P1. alerting-service: add `deployment_ui_base_url` (+ `deployment_scripts_log_bucket`) config, SM/env
-      hot-reloaded (none exists today). — alerting-service
+- [x] ✅ [CODE] P1. alerting-service: add `deployment_ui_base_url` (+ `deployment_scripts_log_bucket`) config, SM/env
+      hot-reloaded (none exists today). — alerting-service@868872c (config.py fields + config_reloaders.py SM keys
+      DEPLOYMENT_UI_BASE_URL/DEPLOYMENT_SCRIPTS_LOG_BUCKET + get_paging_credentials; default "" → links omitted)
 - [ ] [CODE] P1. UTL writer-gate `_emit_unproven_honest_absence`: add `venue`/`data_type`/`day` (from `row_key`) + an
       `error_message` to the DP_UNPROVEN_HONEST_ABSENCE `details`. — unified-trading-library
-- [ ] [CODE] P1. `data_pipeline_slack.py::_build_blocks`: append a fenced-code trace block
+- [x] ✅ [CODE] P1. `data_pipeline_slack.py::_build_blocks`: append a fenced-code trace block
       (evidence/exit_code/run_log_tail, ≤3000 chars) + an actions block with deep-link buttons — data-status
       `{base}/service/{svc}/data-status`, VM logs `{base}/ops/vms/{vm}`, GCS `run.log` console link. Thread
-      `deployment_ui_base_url` from `router._mirror_to_data_pipeline_slack`. — alerting-service
+      `deployment_ui_base_url` from `router._mirror_to_data_pipeline_slack`. — alerting-service@868872c
+      (`_build_trace_block` truncates to 3000 + `_build_action_block` omits links when inputs absent / base="" ;
+      `send_data_pipeline_alert` + `_mirror_to_data_pipeline_slack` thread base+log_bucket; tests block-network)
 - [ ] [CODE] P2. deployment-service exit_code monitor: add `run_log_tail` (last N lines of RUN_LOG_BLOB) to the finding
       `details` for the inline trace. — deployment-service
 
