@@ -56,7 +56,7 @@ source:
 
 ### Cron / infra residuals
 
-- [ ] [SCRIPT] P1. `orphan-ping-audit` 4h local crontab — add a self-pull (Cloud Run copy exempt). (qg_commit L399)
+- [x] ✅ [SCRIPT] P1. `orphan-ping-audit` 4h local crontab — add a self-pull (Cloud Run copy exempt). (qg_commit L399) — PM@aa65d40a3 | added `K_SERVICE`-guarded `git pull --ff-only` at top of `audit_ping_orphans.sh`; Cloud Run exempt (clones fresh); lifecycle header added.
 - [ ] [OPS] P0. AWS-VM half — verify `ROOT_PM`/`SLOT_DIR` + crons + not-stranded (Harsh-laptop half done; must run on
       the VM). (qg_commit L435/L441)
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the self-pull already removed
