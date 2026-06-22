@@ -250,3 +250,22 @@ snapshots). (3) HL needs UPPERCASE symbol (tardis hyperliquid is case-sensitive)
 
 **Status: tardis-machine live OPTION fully delivered + CEX live provenance resolved.** Remaining cefi gap is only the
 ~753k Tardis HISTORICAL (batch) cells = BLOCKED-CREDENTIALS (operator billing).
+
+## §7 — live captures land in CANONICAL paths + are reusable as batch (operator 2026-06-22)
+
+**Verified: live feeds write real tick parquet to canonical GCS, identical schema to batch** (Live=batch). Path:
+`gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=<d>/pipeline_mode=live_<source>/`
+`asset_group=cefi/venue=<VENUE>/instrument_type=perpetual/data_type=<dt>/<INSTRUMENT_ID>.parquet`
+- e.g. `…/pipeline_mode=live_binance/…/venue=BINANCE-FUTURES/…/data_type=trades/BINANCE-FUTURES:PERP:BTCUSDT.parquet`
+  (3,404 tick rows: `symbol,price,size,side,ts_ms,trade_id`); `…/pipeline_mode=live_hyperliquid/…/HYPERLIQUID:PERP:BTC.parquet`.
+- Manifest rows: `capture_status=captured, source=<vendor>, pipeline_mode=live_<vendor>` in the cefi `_index`.
+
+**Reuse**: the read path prefix-matches `batch**`/`live**`/`replay**` (pipeline-mode-partition SSOT), so live data is
+ALREADY consumed alongside batch — capturing live now SAVES future batch vendor queries for those windows. A future
+`live_<source>→batch_<source>` copy is trivial (identical canonical schema) if a consumer specifically needs the batch
+partition. **Strategy: keep the live feeds running to accrue canonical history we don't have to re-buy from Tardis.**
+
+**2-day health/gap check (in progress)**: keep the HL + binance live VMs up ≥2 days; verify (a) VMs stay RUNNING +
+heartbeat, (b) manifest rows climb every minute (no missing 1m windows), (c) no `UPSTREAM_LIVE_GAP`/`attempted_failed`
+live rows (the connectivity watchdog records gaps honestly). Gap-audit = compare captured 1m windows vs expected per
+(venue,data_type,instrument) over the run.
