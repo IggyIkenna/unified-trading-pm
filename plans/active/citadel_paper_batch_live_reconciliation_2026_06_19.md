@@ -864,18 +864,21 @@ are identified (2) and the ledger exists (3).
       folds it into the deployment-api-SSOT client); the per-epic data fleet that emits ADAPTER_FETCH_FAILED/
       honest-absence is post-cutover/not-running so the stream is empty until it runs. Repo: client-reporting-api.
       regression: client-reporting-api/tests/unit/test_data_quality.py (alerts merge + shape-map + degrade-to-unavailable).
-- [ ] [CODE+UI] P11.21. **Reconcile the paper data-quality panel against the deployment-api data-status SSOT** (operator
-      2026-06-22: "lets use SSOT so if it breaks there we fix at the source"). Today the paper panel's coverage is
-      RUN-sourced (the run's `skipped_specs` + `run_manifest`) — a DIFFERENT surface from the deployment-ui data-status,
-      which reads the corpus-wide manifest 4-state via deployment-api (`/api/data-status/honest-coverage` +
-      `/manifest` + `/coverage-summary`, all reachable + public on Cloud Run, verified 200). WIRE: a CRA
-      `deployment_api_client` (single typed HTTP client, env-overridable base URL via `UnifiedCloudConfig` — also serves
-      P11.20's alerts URL) that the data-quality endpoint calls to cross-reference the manifest 4-state, so a coverage
-      cell's status (`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`) is the SAME truth
-      deployment-ui shows + a break is fixed once at the deployment-api source. Surface BOTH lenses in the panel: "this
-      run could drive" (skipped_specs) vs "corpus has data" (manifest) — and flag divergence (spec captured-in-manifest
-      but run-skipped = config-unmappable, vs genuinely no-data). Repo: client-reporting-api (client + endpoint) +
-      unified-trading-system-ui (dual-lens panel, playwright-gated) + unified-trading-library (config URL field).
+- [x] ✅ [CODE+UI] P11.21. **Reconcile the paper data-quality panel against the deployment-api data-status SSOT** —
+      SHIPPED + VERIFIED LIVE (operator 2026-06-22: "lets use SSOT so if it breaks there we fix at the source"). CRA:
+      new `core/deployment_api_client.py` — ONE typed client for the deployment-api (consolidates P11.20 alerts +
+      P11.21 coverage, single base-URL home); the data-quality endpoint now returns `manifest_coverage` (the corpus
+      manifest 4-state per asset_group: `captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`/
+      `coverage_pct`) from `/api/data-status/honest-coverage` — the SAME SSOT the deployment-ui data-status bars read.
+      VERIFIED on prod (rev `client-reporting-api-00020-9sp`): `manifest_source: deployment-api`, 5 AG rows (cefi
+      11.68%, defi, tradfi, sports, prediction) — identical numbers to the deployment-ui page. UI: dual-lens panel
+      (`paper-trading-ledger-panels.tsx`) — run lens ("this run could drive", skipped_specs) + corpus lens ("data
+      EXISTS", manifest SSOT) with an "SSOT unavailable" honest-degrade. pw:L2 ✓ (21 passed) | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts (data-quality-manifest) + client-reporting-api/tests/unit/
+      test_data_quality.py (TestDeploymentApiClient + manifest_coverage). Repo: client-reporting-api (live) +
+      unified-trading-system-ui (landed LDR, prod UI deploy in flight). NOTE: per-env base URL is a constant default;
+      the `UnifiedCloudConfig` URL field is deferred (a UTL public-surface change — not worth the SIT cascade for a
+      working constant; do it when UTL is next touched). CRA source-quickmerge auto-drains when UTL/UAC settle.
 - [ ] [CODE+UI] P11.22. **Min-coverage threshold — "drivable-but-thin" state** (operator 2026-06-22: "is it only 100%
       or is >80% still relevant for backtest"). Today a spec is BINARY drivable-vs-skipped: any data in window → runs
       (drivable, regardless of how complete); zero → skipped. ADD a configurable per-archetype min-window-coverage
