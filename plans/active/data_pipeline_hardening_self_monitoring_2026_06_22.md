@@ -303,8 +303,8 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       (MORPHO/AERODROME_V3/CAMELOT_V3/FLUID/SPARK/PUFFER/SWELL/STAKEWISE/STADER/MANTLE/ANKR/COINBASE/EIGENLAYER).
       Measured: **85,900 → 22,140 DIVERGENT_EMPTY (−74%)**, 0 in operational window. 5 regression tests added. —
       **unified-api-contracts**
-- [x] ✅ [CODE] P1. **Residual defi DIVERGENT_EMPTY — DeFi per-(venue,data_type) `coverage_start` registry (C2)** —
-      DONE `unified-api-contracts@bfe6736b` (QG green --no-fix, 27 oracle tests incl. 6 new defi). Added
+- [x] ✅ [CODE] P1. **Residual defi DIVERGENT_EMPTY — DeFi per-(venue,data_type) `coverage_start` registry (C2)** — DONE
+      `unified-api-contracts@bfe6736b` (QG green --no-fix, 27 oracle tests incl. 6 new defi). Added
       `DEFI_DATA_TYPE_COVERAGE_START` to `canonical/coverage_starts.py` (20 measured first-capture floors across 14
       venues, read live from the prod defi `_index` 2026-06-22 = 925,820 captured rows) + wired
       `get_source_coverage_start_for_data_type` to consult it BEFORE the capability dict. **PER-PAIR + DATA-DRIVEN, NO
@@ -323,13 +323,14 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       (filter classification=DIVERGENT_EMPTY). — **unified-api-contracts, market-tick-data-service**
 - [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
       --no-fix exit 0, sentinel==HEAD, 20 dp_audit tests green incl. 3 new; dirty-deps direct-LDR carve-out —
-      strategy-service had live PEER WIP at quickmerge time). Threaded `chain` through the shared `ReprobeHook` signature
-      → `ReprobeCandidate.chain` → `_select_new_empties` (dedup now by **(venue,data_type,CHAIN)**, not flat) →
-      `_crosscheck` → the hook → the auto-flip reclassifier match (now **(venue,data_type,chain)**-keyed — a flip can't
-      clear an empty on a chain the protocol was never deployed on). `reprobe_defi.reprobe_source` probes the empty's OWN
-      chain + SHORT-CIRCUITS `reached_source=False` when the protocol has no subgraph on that chain (CURVE/OPTIMISM no
-      longer false-clears via ETHEREUM) AND when chain is blank. cefi/sports hooks accept+ignore chain. New regression
-      tests: chain-keyed dedup / two-chains-two-cells / blank-chain-never-clears. — **e2e-testing**
+      strategy-service had live PEER WIP at quickmerge time). Threaded `chain` through the shared `ReprobeHook`
+      signature → `ReprobeCandidate.chain` → `_select_new_empties` (dedup now by **(venue,data_type,CHAIN)**, not flat)
+      → `_crosscheck` → the hook → the auto-flip reclassifier match (now **(venue,data_type,chain)**-keyed — a flip
+      can't clear an empty on a chain the protocol was never deployed on). `reprobe_defi.reprobe_source` probes the
+      empty's OWN chain + SHORT-CIRCUITS `reached_source=False` when the protocol has no subgraph on that chain
+      (CURVE/OPTIMISM no longer false-clears via ETHEREUM) AND when chain is blank. cefi/sports hooks accept+ignore
+      chain. New regression tests: chain-keyed dedup / two-chains-two-cells / blank-chain-never-clears. —
+      **e2e-testing**
 
 ### Wave 4b out-of-repo wiring (the daily-audit scripts shipped in e2e-testing; these reach other repos)
 
@@ -855,12 +856,24 @@ Status after the 3-deploy /autonomous run: alerting consumer LIVE (`dp-alerting-
 jobs LIVE. tradfi = **84.1% cell-complete** (13 failed cells; 31% rows still `expected_unattempted`). Remaining tradfi
 items:
 
-- [ ] [INFRA] P0. **Autonomous wave-launcher → tradfi 100%** — NOT DONE (the building agent hit the session limit at
-      22:10 UTC reset). Need `deployment-service/scripts/wave_launcher.py` (reads tradfi `expected_unattempted` gaps by
-      root×year×data_type, launches `launch-tradfi-backfill-vm.sh` waves, HARD cap `MAX_CONCURRENT≤12` never >20,
-      dry-run-first, completion at expected_unattempted=0) + a Cloud Scheduler firing every 2-3h. Without it the 8-VM
-      manual wave stalls; tradfi never reaches 100% autonomously. The alerting is now live so launcher failures alert. —
-      deployment-service
+- [x] ✅ [INFRA] P0. **Autonomous wave-launcher → tradfi 100% — LIVE 2026-06-22** (`deployment-service@ebfe6e3`
+      `scripts/wave_launcher.py`). Reads the tradfi index, groups gap cells by root×year×data_type (BOTH
+      `expected_unattempted` AND `attempted_failed` — the P1 retry is FOLDED IN), caps at `WAVE_MAX_CONCURRENT=12` (hard
+      ceiling 20, `budget=cap-running`), drops cells running VMs own, launches via the per-venue
+      `launch-tradfi-bf-*-ohlcv-1m.sh`. **LIVE-PROVEN**: a controlled tick launched NYSE-2023/NASDAQ-2024/NYSE-2024
+      (fleet 8→11, cap-respected, 1 expected fail = CBOE-2025-no-shards). **Automated** via a `0 */3 * * *` cron on the
+      planning host (gcloud+workspace+venv present; needs `WORKSPACE_ROOT` so the launchers resolve UAC). **Caveats /
+      follow-ups**: (a) CBOE-2025 + ICE + YAHOO cells are permanently un-backfillable (no databento shards /
+      out-of-subscription) → they stay `expected_unattempted` forever, so the completion target must EXCLUDE unfillable
+      cells or it never reads 100% (refine the completion oracle). (b) host-cron is the immediate autonomy; the durable
+      cloud-native form is a Cloud Scheduler → gcloud-equipped ephemeral runner (a Cloud Run Job can't launch VMs — no
+      gcloud) — follow-up. (c) wave events emit mode='local' (DP_TRADFI_WAVE_LAUNCHED isn't registered in the alert
+      registry, so wouldn't route anyway; the VMs it launches ARE covered by the exit_code/heartbeat monitors). — NOT
+      DONE (the building agent hit the session limit at 22:10 UTC reset). Need
+      `deployment-service/scripts/wave_launcher.py` (reads tradfi `expected_unattempted` gaps by root×year×data_type,
+      launches `launch-tradfi-backfill-vm.sh` waves, HARD cap `MAX_CONCURRENT≤12` never >20, dry-run-first, completion
+      at expected_unattempted=0) + a Cloud Scheduler firing every 2-3h. Without it the 8-VM manual wave stalls; tradfi
+      never reaches 100% autonomously. The alerting is now live so launcher failures alert. — deployment-service
 - [x] ✅ [DATA] P1. **tradfi schema-drift — `DP_NOT_V9=13670` RESOLVED 2026-06-22**
       (`populate_v9_index_columns_inplace --asset-group tradfi --apply`: the 13,670 rows were `schema_version=4` legacy;
       derived pipeline_mode/source in-place + bumped to 9; ALSO filled 903k blank pipeline_mode + 1.4M blank source on
@@ -897,10 +910,9 @@ items:
       snapshotted both consolidated indexes to `_index/snapshots/pre_mdps_ag_restamp_2026_06_22.parquet`, re-stamped
       defi 79,689 + cefi 2,297 blank rows → bucket-AG (rowcount + captured-count preserved; `blank_after=0` both) AND
       the per-VM shards (mdps-defi-2025 + both `_legacy_seed`) so even the pre-deploy Cloud Run consolidator keeps the
-      column. **Residual (bounded, self-healing)**: the still-running pre-v9 `mdps-defi-2025` VM appends NEW
-      column-less rows until it finishes/self-deletes; the consolidator fix heals them every `*/1` cycle once the
-      consolidator image rebuilds from `main` (the durable guarantee — no manual re-stamp needed thereafter). —
-      unified-trading-library
+      column. **Residual (bounded, self-healing)**: the still-running pre-v9 `mdps-defi-2025` VM appends NEW column-less
+      rows until it finishes/self-deletes; the consolidator fix heals them every `*/1` cycle once the consolidator image
+      rebuilds from `main` (the durable guarantee — no manual re-stamp needed thereafter). — unified-trading-library
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
