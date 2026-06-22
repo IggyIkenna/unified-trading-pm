@@ -1033,7 +1033,7 @@ machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progr
       wheel) + repointed the launcher to `VM_SERVICE=features_service` +
       `python -m features_service.sports.scripts.compute_sfi_progressive_only`.
 
-- [ ] [SCRIPT] P1. **DEFERRED — same stale-`features_sports_service`-tarball class bug in TWO OTHER launchers** (found
+- [x] ✅ [SCRIPT] P1. **DEFERRED — same stale-`features_sports_service`-tarball class bug in TWO OTHER launchers** (found
       2026-06-22 while fixing SFI-progressive): (1)
       `deployment-service/scripts/vm/launch-features-sports-backfill-vm.sh` sets `VM_SERVICE=features_sports_service` +
       invokes `python -m features_sports_service --operation compute --tables     fixture_features` → pulls the same
@@ -1043,6 +1043,7 @@ machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progr
       `features_service.cli`/`features_service.sports.*` paths) — the `features-sports-service` repo no longer exists in
       the workspace + `create-code-tarballs.sh` no longer builds `features-sports-service-code`, so any launcher still
       naming it runs whatever stale copy lingers in GCS. Repo: deployment-service + e2e-testing.
+      — deployment-service@5075a3e + e2e-testing@fbcdc45 | QG: both green
 
 ### 2026-06-22 06:30 — honest-cov is UNDERSTATED fleet-wide: ~1M phantom expected_unattempted (operator caught it on weather)
 
