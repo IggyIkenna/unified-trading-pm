@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.38.0",
     "unified-trading-library": "0.30.0",
-    "unified-trading-pm": "1.2.283",
+    "unified-trading-pm": "1.2.286",
     "market-data-processing-service": "0.10.8",
     "e2e-testing": "0.21.0",
     "agent-orchestrator": "0.23.0",
@@ -763,7 +763,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1802,7 +1802,7 @@
     "client-reporting-api": "0.15.7",
     "deployment-api": "0.29.0",
     "execution-service": "0.24.0",
-    "features-service": "0.14.0",
+    "features-service": "0.17.0",
     "greeks-service": "0.17.0",
     "ibkr-gateway-infra": "0.4.1",
     "market-data-processing-service": "0.10.9",
@@ -1815,7 +1815,7 @@
     "e2e-testing": "0.22.0",
     "deployment-service": "0.28.0",
     "unified-api-contracts": "0.39.0",
-    "instruments-service": "0.25.0"
+    "instruments-service": "0.27.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1883,6 +1883,16 @@
     "alerting-service": {
       "version": "0.21.0",
       "sha": "ce49dd266615d086003b6a7a9408b03b615eacfc",
+      "branch": "staging"
+    },
+    "features-service": {
+      "version": "0.17.0",
+      "sha": "2459a963e09b2fecea70a749ed94bfff76abcabb",
+      "branch": "staging"
+    },
+    "instruments-service": {
+      "version": "0.27.0",
+      "sha": "b775aef714774d289158e6f5a3e1befcab5da99c",
       "branch": "staging"
     }
   },
