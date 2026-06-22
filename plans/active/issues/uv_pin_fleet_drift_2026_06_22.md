@@ -109,3 +109,50 @@ exactly the churn the pin prevents). Align the fleet TO the pin.
   from strategy-service. Diagnose the editable-install failures (likely stale lock — `uv lock` — or a real dep
   conflict); these block local `quality-gates.sh` in those 6 repos only. `.venv-workspace` + the other 19 repos
   are fine.
+
+---
+
+## Update 2026-06-22 (session cont.) — human-planning-vm bring-up + root causes
+
+### Operational fixes COMPLETED (human-planning-vm `i-0dd9812a96cdda5dc`)
+- [x] [INFRA] P1. Full workspace bootstrap: 25 repos on `live-defi-rollout` + clean; `.venv-workspace` built;
+  pnpm installed; UI setup green; FF-pull cron healthy (fixed: 21 root repos were cloned on `main`, +
+  bootstrap `--rollout-first` churn left every repo dirty → cron skipped them; + a root-owned stale lock).
+- [x] [INFRA] P1. Workspace git-detection bug: the bootstrap created the root `.code-workspace` as a SYMLINK
+  → `.cursor/workspace-configs/...` whose folder paths are `../../<repo>`. Opened via the root symlink, VS
+  Code/Cursor resolved `../../` above the workspace root → Source Control showed "no folders containing Git
+  repositories". Replaced with a REGULAR root-relative file. (Durable fix below.)
+
+### BIG FINDING — starlette cross-repo dep conflict (real fleet bug, NOT VM-specific) → operator decision
+`unified-trading-library` pins **`starlette>=1.3.1,<2.0.0`** (on BOTH `main` and `live-defi-rollout`), but
+`strategy-service` / `trading-agent-service` / `fund-administration-service` + the **canonical manifest** pin
+**`starlette>=1.1.0,<1.3.0`**. A fresh `uv pip install -e .` of any of those services (they install UTL as an
+editable sibling) is **unsatisfiable** → editable install FAILS on any fresh setup fleet-wide; `e2e-testing` +
+`system-integration-tests` cascade from strategy-service. agent-orch-vm's working venvs only predate UTL's bump.
+- [ ] [DEPS] P1. **Operator decision**: either lower UTL's starlette to `>=1.1.0,<1.3.0` (align to the canonical
+  cap — what the version-aligner already wants) OR raise the canonical cap + re-pin all consumers to allow
+  `>=1.3.1`. Do NOT unilaterally change the T0 lib. Repos: `unified-trading-library` + the 3 consumers.
+- [ ] [DEPS] P2. After the pin decision, re-lock affected repos (uv 0.10.8) + re-verify editable install.
+
+### Durable boot-script hardening — WRITTEN + VALIDATED, BLOCKED from landing (see version divergence below)
+Validated locally on slot-3 (`bash -n` + `shellcheck -S error` clean + sed-rewrite verified); stashed as
+`git stash` msg `boot-script-hardening-uv-pin-pnpm-branch-symlink-2026-06-22` on the slot-3 PM clone.
+- [ ] [INFRA] P1. `scripts/workspace/workspace-bootstrap.sh`: (a) Phase 1 — enforce pinned uv `0.10.8` via the
+  astral installer when the present uv differs (was `[SKIP] uv already installed`, letting 0.11.x ride); (b)
+  Phase 1 — install pnpm (corepack → npm → sudo npm fallback) so the UI repo's setup.sh works; (c) after the
+  clone loop — `git checkout live-defi-rollout` for every repo (git clone leaves them on the default `main`,
+  which the FF-pull cron skips + causes cross-branch dep conflicts).
+- [ ] [INFRA] P1. `scripts/workspace/setup-workspace-config-symlink.sh`: emit the root `.code-workspace` as a
+  REGULAR file with root-relative paths (sed-rewrite `"../../X"`→`"X"`, `"../../"`→`"."`) instead of the
+  symlink-to-cursor-configs (the git-detection bug above).
+- [ ] [INFRA] P2. `scripts/setup.sh` astral-uv fallback (the per-repo fix above) — couples to the fleet rollout.
+
+### PM version-promotion divergence — the blocker (operator/machinery)
+`origin/live-defi-rollout` PM = **1.2.324**, `origin/main` = **1.2.325**; `main-backmerge-to-ldr.yml` runs green
+but does NOT sync the bump (a ~30-file content delta exists main↔LDR). The local `quality-gates.sh`
+version-alignment gate **HARD-blocks any PM commit** while this split exists (`--skip-version-alignment` is
+human-only), so the boot-script fixes above cannot quickmerge. NOTE: this is the LOCAL QG gate being stricter
+than `assert_version_coherence.py` (which treats VERSION_SPLIT as warn-only promotion lag).
+- [ ] [CICD] P1. Reconcile PM `main`↔`live-defi-rollout` (operator clean-start force-sync per
+  `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT"); unblocks PM script commits (incl. the boot-script
+  hardening above).
