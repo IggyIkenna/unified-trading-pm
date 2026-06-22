@@ -320,6 +320,62 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 — empty_confirmed-integrity fix (chain-level defi false-empties) — CODE shipped, manifest flip is DRY-RUN-only (phase 1 of N)
+
+ROOT CAUSE (operator-pinned, confirmed against live `market-data-tick-defi-prd` `_index`): the IS expected-universe
+enumerator `_enumerate_defi()` iterated ALL `DATA_TYPES_BY_ASSET_GROUP["defi"]` — including CHAIN-LEVEL types — for every
+`(chain, protocol)` in `PROTOCOL_LAUNCH_DATES`, emitting `empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED / EXPECTED_PRE_GENESIS_CHAIN]`
+keyed `venue=<PROTOCOL>` (e.g. `venue=AAVE_V3, data_type=gas_fees`) for pre-protocol-launch dates. But gas/transfers/MEV
+exist from CHAIN genesis regardless of when a DEX launched, and the real capture is keyed `venue=ALCHEMY`/`venue=FLASHBOTS`
++ `chain=X`. ~142k false rows per chain-level data_type masked real coverage as "confirmed empty".
+
+CODE shipped (each QG-green via quickmerge):
+
+- [x] [SCRIPT] P0. **IS enumerator** — `instruments-service/scripts/enumerate_expected_universe.py` `_enumerate_defi()`:
+  EXCLUDE chain-level data_types (`gas_fees`/`token_transfers`/`mev_events` — declared only by synthetic infra
+  pseudo-protocols ALCHEMY-ONCHAIN/FLASHBOTS, fetched at synthetic venues) from the per-protocol loop; ADD chain-level
+  `gas_fees` enumeration at `venue=ALCHEMY` for **pre-CHAIN-genesis dates only** → `EXPECTED_PRE_GENESIS_CHAIN`
+  (gas chains derived UAC-only from `MAINNET_CHAIN_IDS` ∩ `GAS_FEE_CHAIN_START_DATES` + SOLANA; post-genesis gas absence is
+  the handler/backfill's concern). `oracle_prices` is KEPT per-protocol (verified genuinely per-protocol: captured at
+  AAVE_V3/ETHENA/LIDO/ETHERFI venues; ~15 LST/yield/staking/perp protocols emit it as their exchange rate). Smoke: fixed
+  `_enumerate_defi` yields 47,990 gas rows ALL `venue=ALCHEMY`/`EXPECTED_PRE_GENESIS_CHAIN`, 0 `venue=PROTOCOL` gas, 0
+  token_transfers/mev per-protocol, 315k oracle_prices kept. — instruments-service@0e08237 (origin LDR) | QG green (81s)
+- [x] [SCRIPT] P0. **UAC `_defi.py`** — removed `"gas_fees"` (22) + `"collect-gas-fees"` (22) from every protocol's
+  `data_types`/`mtds_operations` (gas is chain-level). Verified: 0 protocols declare gas_fees; `gas_fees` stays in the
+  chain-level `DATA_TYPES_BY_ASSET_GROUP["defi"]` list; `collect-gas-fees` dispatch is standalone (`launch-mtds-gas-fees-*-vm.sh`,
+  `VM_OPERATION=collect-gas-fees`) so gas collection is unaffected. **Companion fix:** the lazy DeFi validity matrix
+  (`market_data_categories.py` `valid_data_types_for_instrument_type`) derives from `PROTOCOL_CAPABILITIES.data_types`, so
+  removing gas_fees orphaned the `("defi","gas_fees")` SOURCE_PRIORITY pair (UAC `test_validity_matrix_completeness` caught
+  it) — re-injected `gas_fees` onto the chain-level `spot_asset` set in the lazy builder (now reachable + green). —
+  unified-api-contracts@cbdef56d (origin LDR) | QG green
+- [x] [SCRIPT] P0. **MTDS handler silent-zero audit + eigenlayer fix** — audited every defi handler's caught-fetch-exception
+  routing: all main per-shard `except` blocks correctly `record_failed` (staking_yields/dex_pools/dex_swaps/lending_indices/
+  solana_defi); the ONE genuine silent-zero bug was `eigenlayer_rewards_handler._collect_date` (`except (...): return 0` →
+  outer `record_zero_rows` → `empty_confirmed`). FIXED: expanded the except tuple (`aiohttp.ServerTimeoutError`/
+  `ServerDisconnectedError`/`TimeoutError`/`json.JSONDecodeError`/…) and **re-raise** instead of `return 0`, so a caught
+  fetch error on expected data routes to the outer `record_failed` (`attempted_failed`), not a false empty. Updated the
+  test that encoded the buggy `return 0` to assert the raise. — market-tick-data-service@56435ac (origin LDR) | QG green
+
+MANIFEST FLIP — DRY-RUN ONLY (NO MUTATION; apply left to parent after review). Extended
+`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` with `--report-chain-level-defi-phantoms` (single
+`_index` read, no GCS walk, returns before any mutation). Live `market-data-tick-defi-prd` `_index` (4.16M rows) report:
+
+| data_type | total | captured@chain-venue | empty_confirmed @venue!=chain-venue (PHANTOM) | reason split | DECISION |
+| --------- | ----- | -------------------- | --------------------------------------------- | ------------ | -------- |
+| `gas_fees` | 158,166 | 11,902 @ALCHEMY | **141,688** | NOT_LISTED 85,605 + PRE_GENESIS_CHAIN 56,083 | **DELETE** (captured dupes — gas IS captured at venue=ALCHEMY) |
+| `token_transfers` | 142,111 | 0 @ALCHEMY | **141,688** | NOT_LISTED 85,605 + PRE_GENESIS_CHAIN 56,083 | **DELETE** (wrong-key; canonical = venue=ALCHEMY) |
+| `mev_events` | 142,111 | 0 @FLASHBOTS | **141,732** | NOT_LISTED 85,649 + PRE_GENESIS_CHAIN 56,083 | **DELETE** (wrong-key; canonical = venue=FLASHBOTS) |
+
+Decision = DELETE (not flip-to-attempted_failed): gas is CAPTURED at `venue=ALCHEMY` (proven: 5,749 of the 11,185
+protocol-keyed NOT_LISTED chain-dates are captured at ALCHEMY), so the `venue=PROTOCOL` rows are wrong-key phantom
+duplicates; the genuine pre-genesis cells re-seed correctly at `venue=ALCHEMY` via the fixed enumerator. token_transfers/
+mev_events are structurally chain-level (canonical key venue=ALCHEMY/FLASHBOTS) — same DELETE. **`oracle_prices` EXCLUDED**:
+genuinely per-protocol (captured at venue=<PROTOCOL>); its venue=<PROTOCOL> empties are CORRECT, not phantoms — left untouched.
+
+NOT done (operator runs after review): the manifest DELETE apply; an APPLY pass on the reconcile script (only the dry-run
+report is wired); deploying the fixed enumerator on the recurring `expected-universe-v2-defi` Cloud Run job. This is phase 1
+of the empty_confirmed-integrity fix — NOT complete.
+
 ### 2026-06-22 10:55 — API-Football stopped = COMPLETED-not-stalled, BUT real 2026 gap found + now fetching
 
 Operator Q "API usage stopped ~10am — done or stalled?": ANSWER = **completed-not-stalled** (VMs exit 0 + self-
