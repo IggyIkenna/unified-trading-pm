@@ -339,8 +339,21 @@ loop regardless of where it is stuck → raises `asyncio.TimeoutError` (subclass
 per-league/per-date handler `record_failed`s + the loop CONTINUES (shard isolation, no VM-killing raise; skip-fresh +
 per-source coverage gating untouched). QG-green (`--no-fix`, 73s) → quickmerge LDR. Tarball rebuilt + uploaded
 (`gs://deployment-scripts-central-element-323112/code/instruments-service-code.tar.gz`, fix verified present); 2 hung
-VMs deleted; relaunched e2-standard-8: `tm-backfill-20260622-125650`, `fs-backfill-20260622-125711`. Verifying
-`date=` markers advance past 2019-02-13 / 2019-07-25.
+VMs deleted; relaunched e2-standard-8: `tm-backfill-20260622-125650`, `fs-backfill-20260622-125711`. VERIFIED via on-VM live logs (GCS run.log mirror lags
+on tee-flush cadence — read the on-VM `/tmp/vm-exec-*.log` for authoritative liveness): TM worker PID7142 `Sl`/36%
+CPU at `date=2019-03-25` (last action `RapidAPI: fetched 24 clubs ... Fetched 24 teams league=GB2`, mtime live) — far
+past the 2019-02-13 freeze; FS worker PID7141 `Rl`/104% CPU at `date=2019-01-08` climbing date-by-date (16
+predictions + 16 odds/date), well past where it would have wedged. Both processed many dates the old code could not —
+hang fixed.
+
+- [ ] [BUG] P1. **FootyStats ODDS pipeline_mode/source mislabel** — surfaced 2026-06-22 in `fs-backfill-20260622-125711`
+      run.log: `Batch manifest row source='footystats' disagrees with pipeline_mode='batch_odds_api' (expects
+      source='odds_api')` on ODDS rows (`data_type='ODDS', league_id='EPL', date='2019-01-02'`). The footystats ODDS
+      writer stamps `pipeline_mode=batch_odds_api` (the-odds-api lane) but `source='footystats'` — a silent multi-source
+      mislabel that `record_*` rejects (`recovery=fail_fast`), so footystats ODDS rows fail to land. NOT the hang
+      (predictions+matches write fine). Repo: instruments-service — fix the footystats ODDS path to stamp
+      `pipeline_mode=batch_footystats` (matching `source='footystats'`) OR route footystats odds through the correct
+      source. Provenance: TM+FootyStats hang-fix verification, 2026-06-22.
 
 ### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
 
