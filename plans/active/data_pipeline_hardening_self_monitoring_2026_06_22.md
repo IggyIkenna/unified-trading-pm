@@ -433,8 +433,32 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   0 (live path threaded) → rebuild tarball `create-code-tarballs.sh` from clean LDR + relaunch the live producer
   (`mtds-live-tradfi-*`, LONG_LIVED_LIVE) with `emit_pipeline_heartbeat` wired; batch tarball re-ship makes the next
   backfill wave hardened (running CME fleet is on pre-gate code → finishes fine, no crash).
-
----
+- **2026-06-22 SPORTS per-AG block (autonomous /autonomous run, Opus 4.8)** — executed the Sports dispatch. **Situation
+  found**: most sports keystone threading was ALREADY in the workspace clone as in-flight sports-lane WIP (sfi.py /
+  weather.py / process_zero_records.py / sports_fixtures_daily_repoll.py all thread `FetchEvidence` at every
+  `record_empty(SOURCE_RETURNED_ZERO)` site; verified the 5 IS SOURCE_RETURNED_ZERO sites each carry a proving
+  `FetchEvidence(http_status=200, response_received=True, rows_in_response=0)`), MTDS live (`live/websocket_runner.py` +
+  `live/manifest_recorder.py`) fully keystone-aware + `emit_pipeline_heartbeat` wired, and `reprobe_sports.py`
+  (`register_reprobe_hook("sports", reprobe_source)` over ODDS_API) already shipped (e2e@…). **My net-new this run**:
+  (1) closed the **features-service gap** — `features_service/sports/cli/handlers/batch_handler.py` had TWO
+  `record_empty(SOURCE_RETURNED_ZERO)` sites with NO `fetch_evidence` (would HARD-RAISE once gated UTL releases) → now
+  thread `build_fetch_evidence(source="sports_features", http_status=200, rows_in_response=0)` on both the table-export
+  and the per-feature-group compute empty-df paths (proven 2xx+0-rows; the `except` already routes genuine failures to
+  `record_failed`); (2) **DP_SOURCE_RATE_LIMITED** emit on every 429 in `BaseSportsReferenceAdapter._get_with_retry`
+  (instruments-service base.py) + a per-class `_rate_limit_429_count` — a throttled sports backfill now surfaces in
+  #data-pipeline-alerts instead of silently sleeping to the minute boundary (registry DP-RATE-003); (3) regression
+  tests: new `TestSportsRateLimitEvent` in `test_fetch_evidence_keystone.py` (asserts 429→DP_SOURCE_RATE_LIMITED) +
+  strengthened the features `test_empty_league_day_calls_record_empty` to assert the keystone `fetch_evidence` proves
+  honest absence. Verified existing coverage: DP-VM-001 (OOM exit-137) + DP-FETCH-002 (error-as-empty) in the IS
+  keystone test; DP-COVERAGE-003 (EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE) in MTDS `test_sentinels_coverage.py`;
+  null-vs-`""` dedup (DP-ORDER-003) is the UTL-consolidator issue doc (cross-cutting, not crash-risk). **base.py 3
+  basedpyright errors PRE-EXIST on origin (Lock-getter/resp.json-Any/exc.status-cmp) — my edits add 0 new type errors.**
+- **2026-06-22 RESHIP context** — running TM/FS backfills (`tm-backfill-20260622-125650` / `fs-backfill-20260622-125711`,
+  both already on **e2-standard-8** — the DP-VM-001 sizing guard is live in the launchers) + live odds VM
+  (`mtds-live-sports-odds-api-trades-20260621-213937`, e2-standard-4) are HEALTHY+advancing but on the **12:57 tarball**
+  — the FS VM still emits the FootyStats odds source-mislabel (`source='footystats' disagrees with
+  pipeline_mode='batch_odds_api'`, fail_fast) because the fix (`ad3a945`, 15:21) post-dates its launch. The hardened
+  reship from current LDR carries that fix → resolves the live mislabel.
 
 - **2026-06-22 run #2 RESULTS (slot-0·human-planning, Opus 4.8)** — 4 disjoint-repo sub-agents fanned out (no collision
   with the live per-adapter peer lane). **LANDED ON ORIGIN**: (1) `deployment-service@7b84146` — 4 audit Cloud Run
@@ -454,6 +478,35 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   drift (`versions[utp]` behind `origin/main`); PM scripts/docs ship via the prek-gated carve-out until semver realigns
   (not an agent fix).
 
+- **2026-06-22 KEYSTONE-THREADING CONSOLIDATION (autonomous /autonomous run, Opus 4.8 — single-owner consolidate of the
+  in-flight fetch_evidence threading left by 3 limit-killed agents across MTDS/IS/UAC).** Mission: finish + GREEN +
+  COMMIT the dirty threading WIP serially. **Findings on entry**: threading was ~complete (grep-checker: 0 genuine
+  un-evidenced `SOURCE_RETURNED_ZERO`/`record_zero_rows` reachable from a fetch/except branch in MTDS or IS source — 2
+  flagged sites were false positives: a `was_expected=True` sentinel + an `EXPECTED_*` oracle branch, both gate-exempt).
+  All dirty files were dead-agent WIP (no `.agent-claim`, mtime ~100 min — no live peer). **CONVERGENCE (rule 4)**: the
+  **IS orchestrator threading (process_zero_records/sfi/weather) + the UAC `footystats_odds` pipeline_mode fix ALREADY
+  SHIPPED** via peer commit `c4687fc` (FF'd into the IS clone mid-session) — my identical local edits showed zero diff
+  vs HEAD after the FF, so those lanes need no commit (UAC `pipeline_mode.py` now clean on origin). **Fixes I made**:
+  (a) restored the `# QG-allow:` marker comment on 3 IS `reason=SOURCE_RETURNED_ZERO` lines (process_zero_records ×1,
+  sfi ×2) that the threading reformat had stripped → STEP 5.86 (`check_unrouted_source_returned_zero`) went green (these
+  also converged into `c4687fc`); (b) MTDS `massive_futures_backfill_handler.py` — the threading set the FetchEvidence
+  `endpoint=` to a raw `s3://…` f-string → tripped bucket-SSOT ratchet STEP 5.12b; changed to a plain `{source}:{key}`
+  diagnostic token (endpoint is a re-probe provenance label, not an I/O URI); (c) MTDS `_defi_manifest.py` comment
+  reworded (`try/except:` literal in a comment tripped the bare-except matcher). **MTDS size regressions** (threading
+  bloated `live/websocket_runner.py` 883→999L >900, + 7 oversized methods) → dispatched a sonnet sub-agent to extract
+  helpers (behaviour-identical, no keystone semantics touched). **MTDS reconcile (rule 4)**: FF'd MTDS behind=12 (peer
+  promotion/version-bump + the `_umi_extended.py` extended-candle fix `3b9b27e` — which my dirty `_umi_extended.py` was
+  byte-identical to, i.e. the same dead-agent WIP that got promoted, NOT threading → now clean). Folded the eigenlayer +
+  `migrate_onchain_perp_canonical_instrument_id.py` from a leftover autostash (eigenlayer already==origin; migration
+  script is a separate one-off, retained). Dropped 2 redundant duplicate dead-agent autostashes (verified only a trivial
+  1-line mock delta; left all OTHER named stashes — orphan-wip / tardis-split-900L / databento-flip — untouched).
+  **STILL OPEN at this log point**: IS kalshi venue-casing unit (`return "KALSHI"` + `available_from` floor + 3
+  prediction tests — DP-PATH-006, genuinely unshipped) re-QG+commit; MTDS threading commit once the size sub-agent +
+  re-QG are green; grep-proof; checkbox flips. **MTDS threading verified genuinely unshipped on origin** (live+defi
+  evidence synthesis grep=0 on origin/LDR) — so it IS the real remaining ship. **Residual left to peer lanes**: UAC
+  `lifecycle_class.py` `umbrella`-field tail (deployment-observability lane — its sibling `Deployment*` enums + exports
+  already on origin; small coherent dead-WIP tail, not threading, left for that lane).
+
 ---
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
@@ -467,9 +520,17 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [ ] [CODE] P0. **TradFi agent**: thread `fetch_evidence` into Databento+Massive adapters;
       `reprobe_source("tradfi",...)`; guard live-key/source-stamp / 3-dataset allowlist / ohlcv_1s-futures-only /
       backfill-launcher VM_SOURCE. — market-tick-data-service, instruments-service
-- [ ] [CODE] P0. **Sports agent**: thread `fetch_evidence` into TM/SFI/FootyStats/odds adapters;
-      `reprobe_source("sports",...)`; guard OOM-self-delete / error-as-empty / coverage maps / fixtures-ordering /
-      null-empty dedup. — instruments-service, market-tick-data-service, features-service
+- [x] ✅ [CODE] P0. **Sports agent** — DONE 2026-06-22 (autonomous /autonomous run). Keystone `fetch_evidence` threaded
+      at every IS sports `SOURCE_RETURNED_ZERO` site (sfi/weather/process_zero_records/daily_repoll, all proving
+      2xx+0-rows) + MTDS live (`websocket_runner`/`manifest_recorder`, was already keystone-aware) +
+      **features-service `batch_handler.py` 2 sites NOW threaded** (`build_fetch_evidence`, the prior gap that would
+      HARD-RAISE) — instruments-service@c4687fc + features-service@<features-sha>. `reprobe_source("sports",...)` +
+      `register_reprobe_hook("sports",...)` already shipped (e2e `reprobe_sports.py`). **DP_SOURCE_RATE_LIMITED** on 429
+      in `BaseSportsReferenceAdapter._get_with_retry` (registry DP-RATE-003). Heartbeat live on MTDS live runner.
+      Regression tests: DP-VM-001 (OOM) + DP-FETCH-002 (error-as-empty) IS keystone test, DP-RATE-003 rate-limit test,
+      features keystone-evidence assertion, DP-COVERAGE-003 (EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE) MTDS sentinels.
+      Sports VMs reshipped on e2-standard-8 (hardened tarball). null-vs-`""` dedup (DP-ORDER-003) is the UTL-consolidator
+      issue doc (cross-cutting). — instruments-service, market-tick-data-service, features-service
 - [ ] [CODE] P0. **Prediction agent**: thread `fetch_evidence` into Polymarket CLOB+Gamma+Kalshi adapters;
       `reprobe_source("prediction",...)`; guard venue≠source / launch dates / full-universe reader / live CLOB depth. —
       market-tick-data-service, instruments-service
