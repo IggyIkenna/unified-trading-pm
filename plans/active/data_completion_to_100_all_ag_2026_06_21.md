@@ -604,16 +604,14 @@ from the daily determinism job; (3) UI (DART/deployment-ui) streaming trade/posi
 today. Relates to citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; this is the LIVE-
 continuous companion).
 
-- [ ] [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — beyond the daily determinism run: a
-  streaming strategy-service paper mode that consumes the live market-data stream (per CeFi live VMs + the new DeFi
-  continuous capture) and books trades/positions per-tick, emitting block-level updates the UI (DART) renders live.
-  Depends on the DeFi continuous-data P1. Repos: strategy-service + unified-trading-system-ui + deployment-service.
+- [ ] [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — `BLOCKED-UPSTREAM-OUTAGE` (DeFi continuous-data P1 not yet built; see item below). Beyond the daily determinism run: a streaming strategy-service paper mode that consumes the live market-data stream (per CeFi live VMs + the new DeFi continuous capture) and books trades/positions per-tick, emitting block-level updates the UI (DART) renders live.
+  **Depends on the DeFi continuous-data P1 (item below).** CeFi-only partial implementation is possible (CeFi live VMs ARE running), but the `arbitrage_price_dispersion` archetype requires DeFi continuous data. Repos: strategy-service + unified-trading-system-ui + deployment-service.
   SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md (determinism) + this (live-continuous).
   **UI EXISTS — feed it, don't build it**: the page is `unified-trading-system-ui/app/paper-trading/{ledgers,
   coin/[coin]}` + DART (`components/dart/`); today it renders the DAILY paper-run output. Continuous mode = the live-
   paper engine writes the 4 ledgers (Instruction/Position/Passive/Pricing) + PnL per-tick → this existing page polls/
   streams them real-time (block-level trades/positions/PnL), SAME page, just a live feed. Daily determinism recon stays
-  untouched alongside.
+  untouched alongside. Unblocked once DeFi continuous-data P1 ships.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
