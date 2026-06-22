@@ -247,10 +247,12 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       → `empty_confirmed(BOOKMAKER_NO_COVERAGE)` where (book,league) observed-out-of-coverage → the ~72%-failed
       collapses to genuine absence + honest-cov reads healthy. Repo: UAC + market-tick-data-service (coordinate with
       provenance lane).
-- [x] ✅ [DATA] P1. **sports — manifest DOUBLE-COUNTING: consolidated FIXTURES inflated ~1.16× by pipeline_mode dedup-key
-      drift** — UAC@40751840 (footystats_odds BATCH_FOOTYSTATS→BATCH_ODDS_API, test aligned) + IS@9273508 (canonicalize script: ArrowInvalid handler broadened, no-op write guard added); migration script is idempotent — existing data already canonicalised by v9 populate run. The consolidated
-      `availability_index` has 2 rows for the same (date, league, fixture) cell — e.g. EPL 2019-08-09 (1 real game) has
-      a `pipeline_mode=batch_instruments_service` row (older runs, fixture_id=None) AND a
+- [x] ✅ [DATA] P1. **sports — manifest DOUBLE-COUNTING: consolidated FIXTURES inflated ~1.16× by pipeline_mode
+      dedup-key drift** — UAC@40751840 (footystats_odds BATCH_FOOTYSTATS→BATCH_ODDS_API, test aligned) + IS@9273508
+      (canonicalize script: ArrowInvalid handler broadened, no-op write guard added); migration script is idempotent —
+      existing data already canonicalised by v9 populate run. The consolidated `availability_index` has 2 rows for the
+      same (date, league, fixture) cell — e.g. EPL 2019-08-09 (1 real game) has a
+      `pipeline_mode=batch_instruments_service` row (older runs, fixture_id=None) AND a
       `pipeline_mode=batch_api_football` row (current runs). The consolidator dedups "last-write-wins BY MANIFEST KEY",
       but pipeline_mode is IN the dedup key → the same logical cell under two pipeline_modes survives as 2 rows →
       inflates captured counts (76,087 raw → 65,521 distinct-by-fixture_id, ~16%). Root = the source-aware pipeline_mode
@@ -298,13 +300,14 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
 (137=OOM / 1=err), not just RUNNING-count.
 
 - [ ] [DEPLOY] P1. Sports backfill launchers default MACHINE_TYPE=e2-standard-2 → OOMs for sports (catalogue+per-fixture
-  in RAM). Bump default to e2-standard-8 for openmeteo/transfermarkt/footystats/sfi/odds backfill launchers. Repo:
-  deployment-service (blocked by the same clone-residue as the odds-launcher todo).
-- [ ] [CODE] P1. features-sports-service SFI-progressive: `MissingFeatureFamilyError: feature_group=sfi_progressive
-  requires a sibling feature_family kwarg (UAC FeatureFamily enum)` — add the feature_family kwarg to the manifest
-  write in the sfi_progressive features path; rebuild tarball; relaunch features-sfi-progressive. Repo: features-sports.
+      in RAM). Bump default to e2-standard-8 for openmeteo/transfermarkt/footystats/sfi/odds backfill launchers. Repo:
+      deployment-service (blocked by the same clone-residue as the odds-launcher todo).
+- [ ] [CODE] P1. features-sports-service SFI-progressive:
+      `MissingFeatureFamilyError: feature_group=sfi_progressive requires a sibling feature_family kwarg (UAC FeatureFamily enum)`
+      — add the feature_family kwarg to the manifest write in the sfi_progressive features path; rebuild tarball;
+      relaunch features-sfi-progressive. Repo: features-sports.
 - [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
-  (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
+      (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
 
 ### 2026-06-21 ~23:00 — DEPLOYED + VERIFIED: live_databento (prod-confirmed) + equity ohlcv_1s (capturing) + MDPS batching
 
@@ -917,16 +920,21 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       (denominator) — unified-api-contracts@87c60b50. Rebuilt UAC tarball from clean LDR + launched NASDAQ+NYSE
       `ohlcv_1s` year-shard backfill (`OHLCV_DATA_TYPES=ohlcv_1s`, 2023→2026, 8 VMs). VERIFIED CAPTURING in prod:
       `tradfi-bf-nasdaq-ohlcv-1m-2025` log `dt=ohlcv_1s … captured=45`, NYSE `captured=158`.
-- [x] ✅ [DATA] P2. **ohlcv_15m/24h MDPS aggregation 429 — FULLY FIXED + VERIFIED (2026-06-21).** Three coordinated
-      fixes deployed via clean tarballs: (a) UTL per-VM write-debounce (unified-trading-library@94d9de30); (b) MTDS
-      finalize `batch_size 1→500` (market-tick-data-service@d0f42ba); (c) the ROOT FIX — UTL per-VM shard write
-      SERIALIZED (process lock per `(bucket,per_vm_path)`, race-safe) + per-call `final` COALESCED into the debounce
-      (only `close()`/atexit is truly final), with a regression test proving the OLD per-instance lock LOST entries
-      under 24 concurrent writers (unified-trading-library@6b6d53bd). Re-launched `mdps-backfill-tradfi-20260621-234433`
-      on the fresh tarball + VERIFIED in prod: **429 count 1060→64** (~95% drop, early-boot only); per-VM shard counts
-      now **MONOTONIC** (2747→2752→2772→2824→2831 — no lost entries); writes **COALESCED** (52/20/6 entries per write,
-      84 writes for 2831 entries vs ~2831 per-cell before). 15m/24h cells convert as the backfill drains + consolidates.
-      Repo: unified-trading-library `manifest_writer` + market-tick-data-service.
+- [ ] [DATA] P2. **ohlcv_15m/24h conversion — 429 FIXED but NOT done; 4-part diagnosis (corrected 2026-06-22, I had
+      prematurely flipped this ✅).** The 429 storm IS fixed (UTL per-VM shard lock+coalesce @6b6d53bd + MTDS batch_size
+      @d0f42ba: 429 1060→64, monotonic counts) — but that only UNMASKED that MDPS's manifest writes FAIL VALIDATION, so
+      0 CME/NASDAQ/NYSE 15m/24h convert. Four parts: (1) ✅ MDPS row_key passed `instrument_id=''` for aggregated
+      candles → MalformedRowKeyError — FIXED (omit instrument_id for non-per-instrument shards,
+      market-data-processing-service); (2) ✅ MDPS missing `source=` for multi-source tradfi → manifest write rejected —
+      FIXED (thread source from the input `pipeline_mode`); both in canonical_writer, tests green, DEPLOY PENDING
+      (tarball+relaunch). (3) ❌ ~64k of the 1m corpus is OLD migrated data with malformed
+      `instrument_id='ticks_migrated_20260418T143552Z'` → StreamingParquet partition_mismatch on the aggregated DATA
+      write (the 167k databento 1m are clean + aggregate fine; only the 64k massive-migrated fail) — needs the migrated
+      1m re-keyed/re-backfilled. (4) ❌ the 15m/24h `expected_unattempted` is seeded `source=massive`/blank (legacy —
+      massive used to serve aggregated bars) but the real path is now databento→MDPS (`source=databento`), so databento
+      15m/24h captures land as NEW rows and the massive-keyed unattempted (103,651 cells) never converts — PHANTOM seeds
+      needing reconcile to databento (IS enumerator). Repo: market-data-processing-service +
+      unified-api-contracts/instruments-service (seeding). Provenance: this Progress Log.
 
 ### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
 
@@ -963,14 +971,17 @@ env-less→-prd- reader-align dispatched (replacing the stop-gap index-copy). Ba
 bdnexk0ku).
 
 ### 2026-06-22 05:25 — DEFI status + gas-fees MANTLE BLOCKED-CREDENTIALS
-~8h run: honest-cov 6.0%→11.3% (captured 448k); 24 VMs still capturing (19 drained); LIVE rows still 0 → forward-poll
-relaunched `defi-fwd-20260622-052323` on the pipeline_mode-fixed tarball (mtds@2c5e2b5 deployed) → expect live_onchain_subgraph
-rows ~10min (monitor b2vo0rlas verifying). **Wake-failure post-mortem:** the prior drive-orchestrator used
-`while pgrep -f create-code-tarballs` — its OWN argv contained that string → pgrep self-matched → infinite hang ~8h, never
-woke (the documented self-match foot-gun; new monitor uses gcloud/gsutil only). Batch VMs ran independently throughout.
-- [ ] [DATA] P1 BLOCKED-CREDENTIALS. **gas-fees MANTLE paid RPC.** gas-fees on MANTLE uses the FREE public RPC
-  (mantle.xyz) which 429-rate-limits `eth_feeHistory` (hundreds of `HTTP 429 retry N/12`); each MANTLE day takes ~10-15min
-  vs ~2-3min → gas-fees is the batch long-pole (~1.5M blocks/yr on MANTLE). NOT hung, NOT a code bug — public-RPC throttle.
-  Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then gas-fees completes slowly.
-  Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config). Ping filed.
 
+~8h run: honest-cov 6.0%→11.3% (captured 448k); 24 VMs still capturing (19 drained); LIVE rows still 0 → forward-poll
+relaunched `defi-fwd-20260622-052323` on the pipeline_mode-fixed tarball (mtds@2c5e2b5 deployed) → expect
+live_onchain_subgraph rows ~10min (monitor b2vo0rlas verifying). **Wake-failure post-mortem:** the prior
+drive-orchestrator used `while pgrep -f create-code-tarballs` — its OWN argv contained that string → pgrep self-matched
+→ infinite hang ~8h, never woke (the documented self-match foot-gun; new monitor uses gcloud/gsutil only). Batch VMs ran
+independently throughout.
+
+- [ ] [DATA] P1 BLOCKED-CREDENTIALS. **gas-fees MANTLE paid RPC.** gas-fees on MANTLE uses the FREE public RPC
+      (mantle.xyz) which 429-rate-limits `eth_feeHistory` (hundreds of `HTTP 429 retry N/12`); each MANTLE day takes
+      ~10-15min vs ~2-3min → gas-fees is the batch long-pole (~1.5M blocks/yr on MANTLE). NOT hung, NOT a code bug —
+      public-RPC throttle. Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then
+      gas-fees completes slowly. Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config). Ping
+      filed.
