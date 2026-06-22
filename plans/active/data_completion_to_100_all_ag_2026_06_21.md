@@ -293,6 +293,21 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 06:05 — wake-fix codified; 300k/day in use; TM/SFI/FootyStats OOM ROOT-CAUSED + fixed
+
+**(1) Wake-on-exit-code codified** (operator "fix so next time you wake"): CLAUDE.md + the new monitor check terminal
+`exit_code` (137=OOM) on persisted GCS logs, NOT just RUN-count — self-deleting VMs make OOM look like clean drain.
+Proven: the exit-code monitor caught the repeat-OOM that the drain-only one missed.
+**(2) 300k/day in use** (operator "use them first, no bump yet"): daily quota reset to 0/300k → relaunched enrichment
+as 4 shards (2-yr each) on e2-standard-8, skip-fresh → consuming the fresh budget on missing/unattempted cells.
+**(3) TM/SFI/FootyStats OOM root cause FOUND+FIXED** (IS@505dcd9): the per-league skip-check RE-READ a 6.5GB manifest
+frame ONCE PER LEAGUE (93 leagues → memory explosion, OOM on date #2 even at 32GB; weather never leaked = no
+93-league fan-out). Fix = single index-read. Rebuilt IS tarball + relaunched all 3 on e2-standard-8 (…0600xx).
+
+Fleet now: 4 enrich + TM/FS/SFI (memory-fixed) + live, all RUNNING e2-standard-8; odds(26%)/weather(17%) completed
+clean. Monitor bvkqe417y = exit-code-aware, wakes on any 137/non-zero or all-terminal. Remaining lever (operator):
+1.5M/day to push enrichment past ~34%/run (staying 300k for now).
+
 ### 2026-06-22 05:40 — defi fan-out: 14 new year-sharded VMs launched (dex-pools/swaps/liquidations/lending gaps)
 
 **Diagnosis (STEP 1 — binding constraint):** confirmed NO 429/rate-limit on any defi data_type (TheGraph 9-key pool
