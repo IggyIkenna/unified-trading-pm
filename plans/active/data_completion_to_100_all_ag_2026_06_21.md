@@ -931,6 +931,18 @@ liveness): TM worker PID7142 `Sl`/36% CPU at `date=2019-03-25` (last action
 PID7141 `Rl`/104% CPU at `date=2019-01-08` climbing date-by-date (16 predictions + 16 odds/date), well past where it
 would have wedged. Both processed many dates the old code could not — hang fixed.
 
+- **2026-06-22 TEE-FLUSH LAG NOW FIXED + sports VMs reshipped (slot·human-planning, Opus 4.8, /autonomous).** The
+  caveat above ("GCS run.log mirror lags on tee-flush cadence — read the on-VM log") was a real bug, now ROOT-CAUSED +
+  FIXED: the UTL `LogUploader` only re-uploaded after +256 KiB growth (no time ceiling), so a slow scraper's GCS
+  run.log froze for HOURS (`tm-backfill-20260622-125650`: on-VM @19:24 but GCS frozen @13:01 = 6h23m). Fix
+  **UTL@13653f9f + deployment-service@82431d1** adds `max_staleness_sec=90` — a CHANGED log force-re-uploads on a time
+  ceiling. The 2 backfills `tm-backfill-20260622-125650` + `fs-backfill-20260622-125711` (and the live odds VM) were
+  **deleted + reshipped** on a clean-LDR SPORTS tarball baking the fix: `tm-backfill-20260622-193803` +
+  `fs-backfill-20260622-193812` + `mtds-live-sports-odds-api-trades-20260622-193840` (skip-fresh resume,
+  2019-01-01..2026-06-21). After this reship the GCS run.log stays within ~1-2 min of the on-VM log, so future liveness
+  checks can trust the GCS mirror. Detail + T+20min verification:
+  `data_pipeline_hardening_self_monitoring_2026_06_22.md` Progress Log.
+
 - [x] ✅ [BUG] P1. **FootyStats ODDS pipeline_mode/source mislabel** — surfaced 2026-06-22 in
       `fs-backfill-20260622-125711` run.log:
       `Batch manifest row source='footystats' disagrees with pipeline_mode='batch_odds_api' (expects     source='odds_api')`
