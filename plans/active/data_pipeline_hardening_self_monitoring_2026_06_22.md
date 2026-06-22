@@ -303,6 +303,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       (MORPHO/AERODROME_V3/CAMELOT_V3/FLUID/SPARK/PUFFER/SWELL/STAKEWISE/STADER/MANTLE/ANKR/COINBASE/EIGENLAYER).
       Measured: **85,900 → 22,140 DIVERGENT_EMPTY (−74%)**, 0 in operational window. 5 regression tests added. —
       **unified-api-contracts**
+<<<<<<< Updated upstream
 - [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY (~22,140) — DeFi per-(venue,data_type) `coverage_start` registry (C2)**
       **DEFERRED**: the residual is all HISTORICAL (max 2025-11-18, 0 in the operational window) pre-collection empties
       — protocols whose data_type has data captured from when collection BEGAN (mid-2025) but the oracle expects it from
@@ -320,6 +321,48 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       thread `chain` into the reprobe cell key + the hook so it probes the CORRECT chain, and short-circuit
       `reached_source=False` when `get_subgraph_id(protocol, chain) is None` (protocol not deployed on that chain →
       honest-empty, the oracle decides). — **e2e-testing**
+=======
+- [x] ✅ [CODE] P1. **Residual defi DIVERGENT_EMPTY — DeFi per-(venue,data_type) `coverage_start` registry (C2)** —
+      DONE `unified-api-contracts@bfe6736b` (QG green --no-fix, 27 oracle tests incl. 6 new defi). Added
+      `DEFI_DATA_TYPE_COVERAGE_START` to `canonical/coverage_starts.py` (20 measured first-capture floors across 14
+      venues, read live from the prod defi `_index` 2026-06-22 = 925,820 captured rows) + wired
+      `get_source_coverage_start_for_data_type` to consult it BEFORE the capability dict. **PER-PAIR + DATA-DRIVEN, NO
+      flat fallback** (operator HARD POINT): each pair has its own measured floor; a pair absent → None (= no clip).
+      Verified: pre-collection dates (e.g. AERODROME_V3 dex_pool_state < 2024-05-01, PANCAKESWAP_V3 dex_pool_swaps <
+      2024-01-01) now return `EXPECTED_PRE_SOURCE_COVERAGE_START`; interior gaps AFTER the floor (UNISWAP_V3 swaps
+      2023-08-08) correctly STAY `SHOULD_HAVE_DATA`. Clips ≈8,380 of the 22,140 (the genuine pre-collection prefix). The
+      flat value is the EARLIEST across chains the pair was captured on (conservative; matches the chain-less grain of
+      the divergence oracle). The REMAINING ~13,760 are NOT pre-collection — they split into the two real-gap classes
+      below. — **unified-api-contracts**
+- [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY real-gaps (~13,760, 2 classes) — backfill OR handler↔oracle data_type
+      reconciliation (C2/C3)** — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the
+      post-coverage_start residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window):
+      **(a) data_type NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
+      (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
+      `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
+      `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
+      `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name → diagnose
+      both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or correct the
+      oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real gaps (~7k
+      cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`, PYTH
+      `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,
+      ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
+      OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
+      carry_staked_basis/arbitrage_price_dispersion data needs). Decision per venue: real-MVP-need → defi MTDS
+      historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
+      `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
+      `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). — **unified-api-contracts,
+      market-tick-data-service**
+- [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
+      --no-fix exit 0, sentinel==HEAD, 20 dp_audit tests green incl. 3 new; dirty-deps direct-LDR carve-out —
+      strategy-service had live PEER WIP at quickmerge time). Threaded `chain` through the shared `ReprobeHook` signature
+      → `ReprobeCandidate.chain` → `_select_new_empties` (dedup now by **(venue,data_type,CHAIN)**, not flat) →
+      `_crosscheck` → the hook → the auto-flip reclassifier match (now **(venue,data_type,chain)**-keyed — a flip can't
+      clear an empty on a chain the protocol was never deployed on). `reprobe_defi.reprobe_source` probes the empty's OWN
+      chain + SHORT-CIRCUITS `reached_source=False` when the protocol has no subgraph on that chain (CURVE/OPTIMISM no
+      longer false-clears via ETHEREUM) AND when chain is blank. cefi/sports hooks accept+ignore chain. New regression
+      tests: chain-keyed dedup / two-chains-two-cells / blank-chain-never-clears. — **e2e-testing**
+>>>>>>> Stashed changes
 
 ### Wave 4b out-of-repo wiring (the daily-audit scripts shipped in e2e-testing; these reach other repos)
 
@@ -1377,6 +1420,7 @@ dispatch prompts.
   proof.
 
 ## Progress Log — Cloud Run audit-cron IMAGE GAP CLOSED (2026-06-22, verified)
+<<<<<<< Updated upstream
 
 - **e2e-audit runner image LIVE + verified**: `e2e-testing/Dockerfile` (UTL base + COPY scripts/audit/\*) +
   `cloudbuild-e2e-audit.yaml` (build→smoke→push) → `…/unified-trading-library/e2e-audit:latest` (e2e@5b73591).
@@ -1388,3 +1432,23 @@ dispatch prompts.
   `cloudbuild-e2e-audit.yaml` is a SEPARATE hand-maintained build (rollout-cloudbuild.py manages only `cloudbuild.yaml`,
   won't clobber it) + the rebuild-on-script-change rule. The repo's CI `cloudbuild.yaml` (template SIT lint+smoke) was
   preserved. Peer's broken phantom-image WIP left in deployment-service `stash@{0}` (superseded, recoverable).
+=======
+- **e2e-audit runner image LIVE + verified**: `e2e-testing/Dockerfile` (UTL base + COPY scripts/audit/*) + `cloudbuild-e2e-audit.yaml` (build→smoke→push) → `…/unified-trading-library/e2e-audit:latest` (e2e@5b73591). `deployment-service@ae84086` points `dp_audit_image` at it (keeps `args=--reclassify-apply`). **Real Cloud Build 286913a2 SUCCESS; direct in-image smoke PASSED** (7 audit scripts present + UTL/UAC/pandas import OK). The Cloud Run digest/hygiene/reprobe crons now run on an image that actually contains the scripts — the self-healing loop is operational on the Cloud Run schedule, not just the tarball/VM path.
+- **SSOT updated**: codex `data-pipeline-alerts.md` § Runtime documents the runner image + that `cloudbuild-e2e-audit.yaml` is a SEPARATE hand-maintained build (rollout-cloudbuild.py manages only `cloudbuild.yaml`, won't clobber it) + the rebuild-on-script-change rule. The repo's CI `cloudbuild.yaml` (template SIT lint+smoke) was preserved. Peer's broken phantom-image WIP left in deployment-service `stash@{0}` (superseded, recoverable).
+
+## Progress Log — DIVERGENT_EMPTY residual triaged to 3 root-cause classes + 2 fixes shipped (2026-06-22, slot·human-planning, Opus 4.8, /autonomous)
+
+- **RE-RAN the audits**: `manifest_hygiene_daily.py --asset-group defi --mode changed` (RED, 22,140 DIVERGENT_EMPTY confirmed, all historical max 2025-11-18, 0 in operational window) + analysed the full per-cell `divergence_2026-06-22.csv` (the hygiene candidate CSV truncates to 5 rows; the detector writes the full list). Cross-referenced every divergent `(venue, data_type)` pair against the MEASURED first-`captured` date per pair, read live from the prod defi `_index` (4.06M rows / 925,820 captured, 2026-06-22).
+- **TRIAGE — the 22,140 split into 3 distinct root-cause classes (23 venues × 16 data_types):**
+  1. **Pre-collection-start (~8,380 cells, 20 pairs)** — divergent dates precede the pair's first-captured date: data exists on-chain back to launch but our adapter only began materialising this data_type later (e.g. AERODROME_V3 dex_pool_state firstcap 2024-05-01, PANCAKESWAP_V3 dex_pool_swaps 2024-01-01, ALCHEMY gas_fees 2020-01-01). Legitimate oracle over-expectation → `coverage_start` clip.
+  2. **data_type NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: oracle scope expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (a legacy `liquidations_handler.py` coexists with `liquidation_events_handler.py`; the MORPHO subgraph emits `rate_indices`/`utilization`). The data EXISTS under a different name — C3 handler↔oracle contract drift, NOT a real gap.
+  3. **NEVER-COLLECTED real gaps (~7k cells)** — STARGATE/ACROSS bridge_events, PYTH oracle_prices, FLASHBOTS mev_events, ASTER/GMX perp_funding, FLUID lending, AAVE governance_events, ALCHEMY token_transfers, *staking_yields: ZERO captured rows for ANY scoped data_type. Most are OUT-OF-MVP-archetype scope (bridge/mev/governance/flash-loan ≠ carry_staked_basis/arbitrage_price_dispersion data needs) → either defi MTDS historical backfill (per-VM, canonical venue+chain, PER-CHAIN launch dates) or trim oracle scope / move to `EMPTY_OR_DEPRECATED_DEFI_VENUES`.
+- **FIX 1 SHIPPED `unified-api-contracts@bfe6736b`** (LDR, Quickmerge: agent, QG --no-fix green, sentinel==HEAD; only 3 clean files — peer-safe): `DEFI_DATA_TYPE_COVERAGE_START` in `canonical/coverage_starts.py` = 20 MEASURED per-(venue,data_type) first-capture floors across 14 venues; `get_source_coverage_start_for_data_type` consults it BEFORE the capability dict. **PER-PAIR + DATA-DRIVEN, NO flat fallback** (operator HARD POINT confirmed): each pair its own measured value; absent → None (no clip). Verified live: pre-collection dates → `EXPECTED_PRE_SOURCE_COVERAGE_START` (not divergent); interior gaps AFTER the floor STAY `SHOULD_HAVE_DATA` (real gaps, not masked). 6 new oracle regression tests (`TestDefiDataTypeCoverageStart`), 27 total green. **Clips ≈8,380 of 22,140 → projected ~13,760 remaining** (the 2 real-gap classes, all historical).
+- **FIX 2 SHIPPED (e2e-testing) — `reprobe_defi.py` chain-blind bug (Phase 3 P2)**: threaded `chain` through the shared `ReprobeHook` signature → `ReprobeCandidate.chain` → `_select_new_empties` (dedup now by (venue,data_type,CHAIN), not flat) → `_crosscheck` → the hook → the reclassifier match (now (venue,data_type,chain)-keyed). `reprobe_defi.reprobe_source` now probes the empty's OWN chain and SHORT-CIRCUITS `reached_source=False` when the protocol has no subgraph on that chain (CURVE/OPTIMISM no longer false-clears via ETHEREUM). cefi/sports hooks accept+ignore chain (no chain axis). 3 new regression tests (chain-keyed dedup / two chains → two cells / blank-chain-never-clears). The auto-flip reclassifier can no longer clear an empty on a chain the protocol was never deployed on. (Shipped alongside the inherited prior-session DP-event PubSub-delivery WIP in scripts/audit/ — coherent audit-hardening unit.)
+- **Net DIVERGENT_EMPTY trajectory**: 85,900 (chain-blind) → 22,140 (peer per-chain launch fix UAC@c8f4bbd7) → ~13,760 projected (this run's coverage_start clip UAC@bfe6736b). Remaining ~13,760 are ALL historical real-gap classes (2+3) — tracked as the new Phase 3 P1 real-gaps todo + the existing Phase 3 P2 reprobe-bug (now FIXED). Operational-window divergent = 0 throughout. The defi hygiene alert trends toward GREEN; the historical tail needs the per-venue backfill-vs-scope decision (tracked, not a flat clip).
+>>>>>>> Stashed changes
+
+## Progress Log — OPERATIONALLY VERIFIED (deployed + running, not just built) 2026-06-22
+- **Image fix DEPLOYED + RUNNING (proven by a live execution)**: the live Cloud Run audit jobs (`uts-prod-dp-{daily-digest,manifest-hygiene-changed,reprobe-empty}`) resolve to `e2e-audit:latest`. Manually executed `uts-prod-dp-daily-digest` → **Completed successfully in 1m43.66s, exit(0), succeededCount=1** (imported the e2e-audit container + ran the script). So the gap is closed in REALITY, not just in the terraform source.
+- **Auto-flip arg APPLIED to the live reprobe job**: `uts-prod-dp-reprobe-empty` was committed-not-applied (live `args=[]`); ran `gcloud run jobs update --args=--reclassify-apply` → live job now `image=e2e-audit:latest, command=reprobe_new_empty_confirmed.py, args=['--reclassify-apply']` (matches the committed terraform — no drift). The daily reprobe cron (0 9 UTC) now detects→proves→auto-flips on the runner image.
+- **End-state**: the full data-pipeline self-monitoring + self-healing loop is LIVE on the Cloud Run schedule (digest 0 7 / hygiene 0 8 / reprobe+auto-flip 0 9), alerting end-to-end to #data-pipeline-alerts (proven by the 19:55Z DP_DIVERGENT_EMPTY relay). NOTE (reproducibility follow-up): the e2e-audit image was built from a local tree that may carry the still-uncommitted per-AG reprobe hooks; a clean rebuild needs those hooks committed (auto-flip is proof-gated so it safely no-ops without them).
