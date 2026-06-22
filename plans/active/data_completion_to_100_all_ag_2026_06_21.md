@@ -323,6 +323,38 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
+
+Operator dispatch (autonomous): defi captures write manifest rows with BLANK `asset_group`; a prior one-off stamped 441k
+existing defi rows but NEW captures keep arriving blank; suspected fleet-wide.
+
+**ROOT CAUSE (layer a = the WRITER, UTL).** `AvailabilityRecord` (`unified-trading-library/.../manifest_writer/_rows.py`
+line 284 dataclass + line 93 `_ROW_KEY_COLUMNS`) has **NO `asset_group` field**, and the serializer
+`_records_to_dataframe` (`manifest_writer/_writer_io.py` line 413) **never emits an `asset_group` column** — the explicit
+comment at `_writer_io.py:408` says "asset_group is NOT an AvailabilityRecord field — it is derived from the GCS
+hive-partition key at consolidation/read time, so there is nothing to serialize here." **But that derivation is
+UNIMPLEMENTED**: the consolidator (`manifest_consolidator.py`) has ZERO `asset_group` references (DuckDB unions per-VM
+shard columns by name; per-VM shards are flat blobs, not hive-partitioned by asset_group). So nothing ever computes
+asset_group at consolidation. Meanwhile every `record_captured`/`record_empty`/`record_failed`/`add()` ALREADY receives
+`asset_group` as a kwarg (used only to resolve source/pipeline_mode, then discarded). NOT a call-site bug — call sites
+pass it; the writer drops it. Fix layer = UTL (all 5 AGs benefit).
+
+**FLEET AUDIT (consolidated v9 `_index`, prd, GCS-read 2026-06-22) — blank `asset_group` per AG:**
+
+| AG         | rows  | blank     | populated | recent-2026-06 blank/total |
+| ---------- | ----- | --------- | --------- | -------------------------- |
+| cefi       | 3.88M | 179,330   | 3.70M     | 48,296/1,671,530           |
+| defi       | 3.86M | 12,142    | 3.85M     | 12,142/2,456,144           |
+| tradfi     | 2.85M | 933,550   | 1.91M     | 927,135/2,712,867          |
+| sports     | 1.76M | 1,231,203 | 528,852   | 1,231,203/1,231,223        |
+| prediction | 113k  | 74,165    | 39,215    | 72,711/96,608              |
+
+Confirmed fleet-wide (every AG has recent-2026-06 blanks). Bucket names: market-data-tick-{cefi,defi,tradfi,sports}-prd
++ market-data-tick-pred-prd. FIX (next): add `asset_group` field to `AvailabilityRecord` + thread the existing kwarg
+into every record-construction site + serialize it; raise `MissingAssetGroupError` when a market-data row can't resolve
+it (mirror `source`/`MissingSourceError`); QG ratchet + unit test. Then backfill-stamp existing blanks per-AG (the
+bucket IS the AG; snapshot-first; reuse the `populate_is_index_v9` stamp pattern).
+
 ### 2026-06-22 13:10 — TM/FS unbounded-HTTP HANG fixed; ETA + hang-detection codified
 
 Caught (answering "is everything progressing"): TM + FootyStats had HUNG 6.5h (RUNNING, no exit, log frozen 06:05) on
