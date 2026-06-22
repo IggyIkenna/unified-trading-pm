@@ -1073,11 +1073,11 @@ dispatch prompts.
 - [ ] [CODE] P1. **Schedule** the daily empty-reprobe (`reprobe_new_empty_confirmed.py`) + auto-flip
       confirmed-misclassified `empty_confirmed`→`attempted_failed` cells (the reclassifier). — deployment-service /
       e2e-testing
-- [ ] [CODE] P1. **Bucket-env parity preflight** (DP-ENV-001 — reader env-less vs writer env-short) as a generic gate. —
+- [x] ✅ [CODE] P1. DONE mtds@477de66. **Bucket-env parity preflight** (DP-ENV-001 — reader env-less vs writer env-short) as a generic gate. —
       market-tick-data-service
-- [ ] [CODE] P1. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key currently degrades
+- [x] ✅ [CODE] P1. DONE mtds@477de66. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key currently degrades
       silently to unauth). — market-tick-data-service
-- [ ] [DOC] P1. **`RB-DATA-*` DR runbook** — the consolidator→MTDS→features cascade with RTO/RPO + auto-vs-human scope
+- [x] ✅ [DOC] P1. DONE codex/15-runbooks/incidents/rb_data_001.md. **`RB-DATA-*` DR runbook** — the consolidator→MTDS→features cascade with RTO/RPO + auto-vs-human scope
       (none of the 22 `rb_*` runbooks is data-pipeline). — unified-trading-pm
 - [ ] [CODE] P2. Flip `data-pipeline-alerts.registry.yaml` modes `verbose`→`active` as each `escalation:` tier is wired
       to plumbing. — unified-trading-pm
