@@ -102,6 +102,21 @@ now reach `route_event()`.
 lifecycle-events-sub (no 403) → route_event → _route_data_pipeline_event → #data-pipeline-alerts (webhook verified 200,
 DP_DAILY_DIGEST INFO rule live in UAC).
 
+5. **Alerting VM stall-watchdog self-delete loop (the recurring "no alerts" cause)** — the alerting subscriber runs
+   under the batch-VM wrapper (`setup-data-pipeline-vm.sh`), whose stall-watchdog SIGKILLs (exit 137 → VM self-delete)
+   when the on-VM log doesn't grow for `STALL_TIMEOUT_SEC` (default 1800s). A **quietness-baseline is meant to be
+   quiet**, so a quiet subscriber was killed every ~30 min → alerting offline most of the time. FIXED:
+   `launch-alerting-quietness-baseline.sh` now sets `STALL_TIMEOUT_SEC=190800` (>48h run) so quiet ≠ stall-kill. The fix
+   is LIVE on the running VM (launched from the edited launcher); the LDR ship is dirty-MTDS-dep-blocked (tracked).
+   PROPER durable fix (standing item): run alerting as a permanent long-lived service (systemd / Cloud Run min-instances=1),
+   not under the batch stall-watchdog.
+
+**Monitor-image gap (automated VM-issue alerts):** the 3 DP fleet-monitor Cloud Run jobs run `deployment-api:latest`
+built 14:29 (pre the 17:52 escalation emit-fix). The emit path is PROVEN (a real `route_finding(DP_VM_EXIT_NONZERO)`
+from fixed code returned `emitted:True` + routed), but until `deployment-api:latest` rebuilds with the escalation fix
+(draining LDR→main) + the 3 jobs are re-pointed, an automated finding is detected-but-not-posted. Next step: rebuild
+image (or wait for promotion) → `gcloud run jobs update` the 3 monitors.
+
 **Remaining (tracked, NOT blocking the relay — it is live):**
 - (a) e2e `_dp_common.py` ship (Wave-4b, currently dirty-MTDS-dep-blocked; no runtime effect until the crons deploy).
 - (b) Deploy the 3 daily-audit Cloud Run crons (digest/hygiene/reprobe) for routine *cadence* — needs image packaging (Wave-4b).
