@@ -394,9 +394,12 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
         + both `logging.basicConfig` sites → `get_config().log_level`. **Raw secret VALUES kept env-first** (JWT/INTERNAL
         secret, GH-App PEM, slack webhook + the dynamic ES256 PEM reads) — opaque secrets at the security boundary gain
         nothing from a typed field and routing them risks the login-200/backends-401 regression; all `noqa`-documented.
-  - [x] ✅ **Wave 6 — final audit** (2026-06-22): residual `os.environ`/`os.getenv` = **14 SANCTIONED** reads only
-        (5 secret values + 3 dynamic PEM + 3 workspace passthroughs + telegram token), each `# noqa`-tagged. Full suite
-        858✓ on HEAD. Codex: `OrchestratorConfig` is now the documented runtime SSOT (in-file docstring + this plan).
+  - [x] ✅ **Wave 6 — final audit + hygiene** (`agent-orchestrator@3ac884d`, QG 858✓ 2026-06-22): inline-`# noqa`-tagged
+        the last un-marked sanctioned reads (workspace passthroughs in autospawn/tmux_spawn, telegram env-first bot-token,
+        auth generic PEM/key loader) so **"every `os.environ` read is migrated-away or noqa-justified" is a greppable
+        invariant** (`rg 'os\.environ\.get\(|os\.getenv\(' server/ | rg -v 'noqa:|\{\*\*os\.environ'` → only a docstring
+        match). Residual = **14 SANCTIONED** reads (5 secret values + 3 dynamic PEM + 3 workspace passthroughs + telegram
+        token + the GH-App PEM). Codex: `OrchestratorConfig` is now the documented runtime SSOT (in-file docstring).
 
   > **Progress Log (autonomous loop — this IS the handoff doc; no summary file).** Slot model = one shared clone per
   > repo, so AO waves run **serially** (shared git index; background agents would race on commit) — different-repo /
