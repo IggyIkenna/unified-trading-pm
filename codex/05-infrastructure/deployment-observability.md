@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)
 
 > Every compute unit (a **VM** or a **Cloud Run job**) is a **classified deployment target** tracked under a
