@@ -581,7 +581,7 @@ liveness): TM worker PID7142 `Sl`/36% CPU at `date=2019-03-25` (last action
 PID7141 `Rl`/104% CPU at `date=2019-01-08` climbing date-by-date (16 predictions + 16 odds/date), well past where it
 would have wedged. Both processed many dates the old code could not — hang fixed.
 
-- [ ] [BUG] P1. **FootyStats ODDS pipeline_mode/source mislabel** — surfaced 2026-06-22 in `fs-backfill-20260622-125711`
+- [x] ✅ [BUG] P1. **FootyStats ODDS pipeline_mode/source mislabel** — surfaced 2026-06-22 in `fs-backfill-20260622-125711`
       run.log:
       `Batch manifest row source='footystats' disagrees with pipeline_mode='batch_odds_api' (expects     source='odds_api')`
       on ODDS rows (`data_type='ODDS', league_id='EPL', date='2019-01-02'`). The footystats ODDS writer stamps
@@ -589,7 +589,7 @@ would have wedged. Both processed many dates the old code could not — hang fix
       `record_*` rejects (`recovery=fail_fast`), so footystats ODDS rows fail to land. NOT the hang (predictions+matches
       write fine). Repo: instruments-service — fix the footystats ODDS path to stamp `pipeline_mode=batch_footystats`
       (matching `source='footystats'`) OR route footystats odds through the correct source. Provenance: TM+FootyStats
-      hang-fix verification, 2026-06-22.
+      hang-fix verification, 2026-06-22. — instruments-service@04f38a2 (code fix slot-3) + IS@b616d2d (comment cleanup slot-5)
 
 ### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
 
