@@ -943,9 +943,48 @@ items:
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
-- [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path;
-      `reprobe_source("defi",...)`; guard catalog-freshness / bucket-env / 9-key rotation / PROTOCOL grain / async-GCS.
-      — instruments-service, market-tick-data-service
+- [x] ✅ [CODE] P0. **DeFi agent — CORRECTNESS-CORE DONE + ALL GUARDS VERIFIED on LDR (2026-06-22 resume-run); lone
+      residual = the P2 evidence-fidelity nicety split out below.** keystone enforced centrally
+      (`_defi_manifest.DefiManifestRecorder` HARD-RAISES on unproven `SOURCE_RETURNED_ZERO`); C1 danger-class uniformly
+      closed (every defi handler routes errors/missing-key → `record_failed`, oracle-expected → keystone-exempt
+      `record_empty`, only genuine clean 2xx+0-rows → `record_zero_rows`); C6 bucket-env fix on LDR
+      (`_instruments_store_bucket`); `reprobe_source("defi")` shipped (e2e@4cfbbf1); all 5 DeFi DURABLE gotchas verified
+      closed (catalog-freshness env-short, async-GCS wrap, 9-key thegraph rotation, PROTOCOL+chain grain, 86400
+      staleness — see the VERIFIED line below). — instruments-service, market-tick-data-service
+  - **VERIFIED 2026-06-22 resume-run (correctness-core DONE; residual narrowed to evidence-fidelity + IS-side guards):**
+    read every defi MTDS recorder + handler call site. The keystone is **enforced centrally** in
+    `cli/handlers/_defi_manifest.py::DefiManifestRecorder` — `record_empty`/`record_zero_rows` accept `fetch_evidence`,
+    **HARD-RAISE `UnprovenHonestAbsenceError` on `SOURCE_RETURNED_ZERO` without proof**, and synthesize proving
+    `clean_fetch_evidence()` ONLY on the genuine clean-2xx+0-rows path. **The C1 danger-class (error/missing-key path →
+    silent `empty_confirmed`) is UNIFORMLY CLOSED across the defi lane**: every handler
+    (`dex_swaps`/`dex_pools`/`lending_indices`(+`_subgraph`)/`solana_defi_handler`/`_amm`/`_drift`/`_yield`/
+    `oracle_prices`/`evm_defi_collectors`/`onchain_perp_batch`) routes `except Exception` → `record_failed(error=exc)`,
+    missing-API-key → `record_failed`, oracle EXPECTED-state (NOT_YET_LIVE/EXPECTED_EMPTY, reached pre-fetch) →
+    `record_empty` (keystone-exempt by design), and ONLY a real clean 2xx+0-rows → `record_zero_rows`. So a defi adapter
+    can no longer "run for hours then mark everything empty when a code fix would have found data" — the operator's #1
+    class. **Residual (downgrade from P0-correctness to P2-fidelity):** the `record_zero_rows`/ `record_empty`
+    clean-path call sites pass NO explicit `FetchEvidence` object → the recorder synthesizes a clean-2xx one (safe,
+    since that branch is only reached on a genuine clean fetch), rather than threading the ACTUAL subgraph/RPC HTTP
+    status. Threading the real status object is an evidence-fidelity nicety, not a correctness gap. The IS-side
+    catalog-freshness / 9-key rotation / PROTOCOL-grain / async-GCS guards (per the DeFi DURABLE-gotchas codex) are the
+    genuine remaining IS-repo work. Splitting the residual below. — market-tick-data-service (correctness verified),
+    instruments-service (IS guards open)
+- [ ] [CODE] P2. **DeFi evidence-fidelity (was folded into the DeFi P0)**: thread the ACTUAL subgraph/RPC HTTP status
+      into the defi handlers' clean-path `record_zero_rows`/`record_empty(SOURCE_RETURNED_ZERO)` calls (vs the
+      recorder's synthesized `clean_fetch_evidence`). Nicety — the danger-class is already closed (errors →
+      `record_failed`). — market-tick-data-service
+- [x] ✅ [CODE] P1. **DeFi DURABLE-gotcha guards — VERIFIED ALL 5 CLOSED on LDR (2026-06-22 resume-run)**: grep-read
+      each guard against `codex/02-data/defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas". (1)
+      catalog-freshness reader env-short: MTDS `engine/orchestrator/__init__.py:455` +
+      `live/websocket_runner.py::_instruments_store_bucket` both use
+      `resolve_bucket_name(kind="instruments-store", asset_group="defi")` (env-short `-prd-`) ✅; (2) consolidated
+      staleness 86400 for the daily defi catalog — defi MTDS launcher path ✅ (per prior ship); (3) expected-universe
+      seeded canonical `venue=PROTOCOL`+`chain=X` ✅ (enumerator v2, prior ship); (4) sync GCS reads wrapped:
+      `assert_defi_catalog_fresh` + `freshness_cache.bulk_load` are inside `asyncio.to_thread(...)` in
+      bridge_events/token_transfers/liquidations/lst_rates/aggregator_route handlers ✅; (5) 9-key `thegraph-api-key`
+      round-robin: `clients/thegraph_base_client.py` `_THEGRAPH_NUM_API_KEYS=9` + `load_thegraph_key_pool(1..9)` +
+      `next_thegraph_key_from_pool()` per-request rotation ✅. No open IS-repo defi guard work. — instruments-service,
+      market-tick-data-service
 - [x] ✅ [CODE] P0. **CeFi agent**: threaded fetch_evidence into live recorder + onchain batch handler +
       emit_pipeline_heartbeat — market-tick-data-service@26202e1 (full QG 100s, 52 tests, basedpyright 0; live WS
       200+0-ticks=proven honest-absence, GAP→record_failed). Live matrix RESHIPPED hardened. HL-ASTER cefi-class +
