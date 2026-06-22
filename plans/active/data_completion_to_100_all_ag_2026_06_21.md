@@ -283,7 +283,35 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 - [x] ✅ [DOCS] P2. codex/02-data/availability-manifest-and-data-status.md — add the 2026-06-21 per-AG snapshot + the
       live-mode-population gap as a tracked baseline. — unified-trading-pm@7c3926f3f
 
+- [ ] [DATA] P1. **defi oracle/pyth — no launcher for `collect-oracle-prices` data_type (BLOCKED-OPERATOR-DECISION)**:
+      `launch-mtds-pyth-archive-backfill-vm.sh` covers the pre-2023-10 Pyth Hermes gap (2022-11→2023-09, Pythnet RPC
+      fallback + CoinGecko), and `launch-mtds-pyth-lst-backfill-vm.sh` covers 2023-10→today for LST feeds — both scripts
+      exist and are ready. pyth-archive launches without an ack requirement; pyth-lst requires operator `[ack]` per the
+      script comment (covers 7+ months; Birdeye paid-tier is the alternative). No `collect-oracle-prices` year-sharded
+      fleet launched yet. **Action**: operator decide whether to launch pyth-archive + pyth-lst now (free tier viable for
+      backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service. **BLOCKED-OPERATOR-DECISION**.
+
 ## Progress Log
+
+### 2026-06-22 05:40 — defi fan-out: 14 new year-sharded VMs launched (dex-pools/swaps/liquidations/lending gaps)
+
+**Diagnosis (STEP 1 — binding constraint):** confirmed NO 429/rate-limit on any defi data_type (TheGraph 9-key pool
+not saturated). Binding constraint = under-parallelization: only 24 VMs running serially per (data_type×year). Aggregate
+~50 cells/min across all 24 VMs vs ~600+ achievable.
+
+**Acceleration (STEP 2) — new VMs launched all RUNNING at 05:40 UTC:**
+- dex-pools: +5 year-VMs (2020/2021/2022/2024/2026) — now 7/7 year-slots covered (2020-2026)
+- dex-swaps: +3 VMs (2021, 2025-q2, 2025-q3) — fills all 2025 quarters + 2021 year
+- liquidations: +6 year-VMs (2021-2026) — was 0 running; now fully covered
+- lending-indices: +2 year-VMs (2021, 2026 via timestamp-based launcher)
+
+**Capture confirmed (T+10 verify):** `mtds-dex-pools-2022` → 24 new manifest entries per ~60s capturing 1622 records/day
+at day=2022-01-02. `mtds-dex-pools-2020` → 25 entries/day but routing `empty_confirmed` (pre-DEX-launch; Uniswap V3
+launched May 2021 — 2020 honest absence expected). `mtds-liquidations-2023/2024` logs confirm completion of prior-session
+VMs; new VMs booting. No 429 errors on any VM.
+
+**Oracle/pyth gap filed:** `launch-mtds-pyth-archive-backfill-vm.sh` + `launch-mtds-pyth-lst-backfill-vm.sh` exist but
+not yet launched — pyth-lst requires operator `[ack]`; todo filed above as BLOCKED-OPERATOR-DECISION.
 
 ### 2026-06-22 05:25 — overnight result: 3 sources OOM-crashed (e2-standard-2 too small); relaunched e2-standard-8
 
