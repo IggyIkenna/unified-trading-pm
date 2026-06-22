@@ -374,6 +374,38 @@ clears the flag on recovery.
       (2026-06-21)" paragraph summarising the 5 closures + cross-linking the worker-liveness doc. — unified-trading-pm
       (this commit)
 
+## Live incident + fix (2026-06-22 evening) — slot-3 "Auto-respawn FAILED" spam + cap-burn
+
+**Symptom:** `agent-orchestrator-alerts` fired "Auto-respawn FAILED slot 3 — kick failed, pane='frozen',
+last_ping>15m / Attempted: branch-state quarantine (FM5/FM7); respawn skipped" every ~2 min. Root cause: slot-3's
+`instruments-service` clone was left on a leftover `_tmp-stage-rebase2` branch (clean, fully merged to origin) from an
+isolated-worktree promote → FM7 `wrong_branch` → `should_stop` → the watchdog skipped respawn + paged. Compounded by the
+watchdog daily kill-cap (20) being burned by frozen-slot churn → dormant-until-UTC-midnight → fleet stranded.
+
+- [x] ✅ [OPS] P0. **Immediate recovery (live, central VM).** Cleaned slot-3's leftover `_tmp` branch (verified 0
+      unpushed-unique commits first); raised `ORCHESTRATOR_WATCHDOG_DAILY_CAP` 20→**50** in `.env.local` (operator
+      request) + restarted the orchestrator → dormancy cleared, watchdog resumed, fleet recovered (slots 1/3/5/6 fresh)
+      on **dynamically-selected** healthy accounts (`_pick_headroom_account` — not hardcoded; sub-d@100%/auth-failed
+      excluded, re-funded accounts auto-rejoin). — central-VM SSM.
+- [x] ✅ [ORCHESTRATOR] P1. **FM7 auto-reclaim of a leftover clean+fully-merged throwaway branch** (the slot-3
+      respawn-blocker, made automatic). `_branch_state.py::_reclaim_leftover_merged_branch` — a leading-`_` throwaway
+      branch (`_tmp-*`/`_backmerge`) that is CLEAN **and** an ancestor of `origin/<base>` (0 unpushed) auto-switches back
+      to `<base>` + deletes the leftover (new `reclaimed` non-stop status); a dirty tree, unpushed work, or a deliberate
+      branch (`feature/*`, `main`) still STOPs (never loses work). + `config.py` `watchdog_daily_cap` default 20→50. 5
+      regression tests (`tests/test_branch_state_reclaim.py`), QG-green. — agent-orchestrator@76970857
+- [ ] [OPS] P1. **DEPLOY BLOCKER — the central-VM orchestrator deploy clone cannot be redeployed to current code.** The
+      deploy clone (`/home/ubuntu/.../agent-orchestrator`, runs the live brain) was **128 commits behind**
+      `origin/live-defi-rollout` (predates the entire `utl_uac` typed-config refactor) with **no auto-deploy cron**, so
+      the FM7 fix above is NOT live on the running orchestrator. A safe-gated catch-up (ff-pull → dry-run import+config
+      against the live env → restart) was attempted 2026-06-22: the new code **boots DEGRADED** — fails to read the
+      internal ES256 keys from GCS (`google.auth MalformedError: Service account info … missing fields token_uri,
+      client_email`; log hint "set GOOGLE_CLOUD_PROJECT if None") and reports **"0 accounts"** at Ready (vs 4 on the old
+      code). Rolled back to the working sha `980217d` (verified 4 accounts restored). **The new typed-config/GCS-cred
+      resolution needs a valid GCP service-account + `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT_ID` provisioned on the AWS VM
+      (or a fix to the new GCS-cred path) before the orchestrator can be redeployed to current LDR.** Until then the live
+      brain runs 128-commit-stale code and the FM7 fix + cap-default are shipped-but-undeployed. Owner: planning VM /
+      operator (cred provisioning).
+
 ## Success criteria
 
 - A failed rotation respawn never leaves a `dispatched` task stranded or a slot wedged `working` with a dead session
