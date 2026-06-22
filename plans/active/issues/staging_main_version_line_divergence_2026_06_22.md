@@ -3,7 +3,6 @@ title:
   staging→main promote PRs recur as version-line (pyproject) conflicts — dual-path version divergence; the LDR→main
   fallback drains them but they regenerate every cycle (structural cure = single-lineage version stamping)
 created: 2026-06-22
-author: harshkantariya [slot-4·laptop]
 source:
   - 2026-06-22 triage-queue investigation (deployment-ui /repos "Stuck — triage queue")
   - instruments-service git history (merge-base 9c0d29b / main tip "Merge PR #511 from live-defi-rollout")
