@@ -69,21 +69,21 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.24.0",
     "deployment-api": "0.29.0",
-    "deployment-service": "0.38.0",
+    "deployment-service": "0.39.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.29.0",
     "features-service": "0.24.0",
     "fund-administration-service": "0.9.5",
     "ibkr-gateway-infra": "0.4.2",
-    "instruments-service": "0.35.0",
+    "instruments-service": "0.36.0",
     "market-tick-data-service": "0.45.0",
     "system-integration-tests": "0.14.6",
-    "unified-api-contracts": "0.47.0",
+    "unified-api-contracts": "0.48.0",
     "unified-trading-library": "0.35.0",
     "unified-trading-pm": "1.2.329",
     "market-data-processing-service": "0.10.11",
-    "e2e-testing": "0.23.0",
-    "agent-orchestrator": "0.39.0",
+    "e2e-testing": "0.24.0",
+    "agent-orchestrator": "0.40.0",
     "greeks-service": "0.17.0",
     "trading-agent-service": "0.12.0",
     "strategy-service": "0.36.0",
@@ -1910,16 +1910,11 @@
     "ibkr-gateway-infra": "0.4.2",
     "system-integration-tests": "0.14.6",
     "trading-agent-service": "0.12.0",
-    "agent-orchestrator": "0.40.0",
-    "e2e-testing": "0.24.0",
-    "deployment-service": "0.39.0",
-    "unified-api-contracts": "0.48.0",
     "alerting-service": "0.25.0",
     "batch-live-reconciliation-service": "0.24.0",
     "execution-service": "0.29.0",
     "features-service": "0.24.0",
     "fund-administration-service": "0.9.5",
-    "instruments-service": "0.36.0",
     "market-data-processing-service": "0.10.11",
     "market-tick-data-service": "0.45.0",
     "ml-service": "0.20.0",
@@ -1937,31 +1932,36 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "agent-orchestrator": {
-      "version": "0.40.0",
-      "sha": "48d2de1464925420ccd391b8a1b02d12d29414b0",
-      "branch": "staging"
-    },
-    "e2e-testing": {
-      "version": "0.24.0",
-      "sha": "28b8f29d5ebc7fac20f045830912ee1e21f8559f",
-      "branch": "staging"
-    },
-    "deployment-service": {
-      "version": "0.39.0",
-      "sha": "b9ad829bf2c6781025ac98e34892c8958e6496f4",
-      "branch": "staging"
-    },
-    "unified-api-contracts": {
-      "version": "0.48.0",
-      "sha": "0cb4a520020ba38e6a255e46bb9e9f4f82472e58",
-      "branch": "staging"
-    }
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-22T17:19:56.720324Z",
+        "commits": {
+          "agent-orchestrator": {
+            "version": "0.40.0",
+            "sha": "48d2de1464925420ccd391b8a1b02d12d29414b0",
+            "branch": "staging"
+          },
+          "e2e-testing": {
+            "version": "0.24.0",
+            "sha": "28b8f29d5ebc7fac20f045830912ee1e21f8559f",
+            "branch": "staging"
+          },
+          "deployment-service": {
+            "version": "0.39.0",
+            "sha": "b9ad829bf2c6781025ac98e34892c8958e6496f4",
+            "branch": "staging"
+          },
+          "unified-api-contracts": {
+            "version": "0.48.0",
+            "sha": "0cb4a520020ba38e6a255e46bb9e9f4f82472e58",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-22T15:34:31.014491Z",
         "commits": {
@@ -2098,76 +2098,6 @@
           "market-tick-data-service": {
             "version": "0.36.0",
             "sha": "5e10c86c46ceb7c787251b5e11294b276c057f8b",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-22T07:20:19.230556Z",
-        "commits": {
-          "system-integration-tests": {
-            "version": "0.14.4",
-            "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
-            "branch": "staging"
-          },
-          "e2e-testing": {
-            "version": "0.22.0",
-            "sha": "4d282d2a3b910fe03e7c1e63921f43c6b0f5ee24",
-            "branch": "staging"
-          },
-          "market-data-processing-service": {
-            "version": "0.10.9",
-            "sha": "1d87f0632425accb6705d6f7eadfa5eff8a7f6e8",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.28.0",
-            "sha": "df79d71f00bfe632614a335f07cde9ed47eca9b1",
-            "branch": "staging"
-          },
-          "unified-api-contracts": {
-            "version": "0.39.0",
-            "sha": "b2cc0ae0c02e531e7cef437a51f6f8c8b5dad878",
-            "branch": "staging"
-          },
-          "fund-administration-service": {
-            "version": "0.9.1",
-            "sha": "d3a82cb797a821bac9140fbd7d4f487aa408ca6f",
-            "branch": "staging"
-          },
-          "batch-live-reconciliation-service": {
-            "version": "0.21.0",
-            "sha": "73ce27d8cf97ff68c1a8673e724a9808f3742a9a",
-            "branch": "staging"
-          },
-          "execution-service": {
-            "version": "0.24.0",
-            "sha": "94f955444a6e463016f091524c9e816e648262a3",
-            "branch": "staging"
-          },
-          "unified-trading-library": {
-            "version": "0.31.0",
-            "sha": "d02c7fc772640c58b079289cec6e480f6a8d46ed",
-            "branch": "staging"
-          },
-          "greeks-service": {
-            "version": "0.17.0",
-            "sha": "c405e0dc341e282aabe60efebe7a7f0413c054bb",
-            "branch": "staging"
-          },
-          "alerting-service": {
-            "version": "0.21.0",
-            "sha": "ce49dd266615d086003b6a7a9408b03b615eacfc",
-            "branch": "staging"
-          },
-          "features-service": {
-            "version": "0.17.0",
-            "sha": "2459a963e09b2fecea70a749ed94bfff76abcabb",
-            "branch": "staging"
-          },
-          "instruments-service": {
-            "version": "0.27.0",
-            "sha": "b775aef714774d289158e6f5a3e1befcab5da99c",
             "branch": "staging"
           }
         }
