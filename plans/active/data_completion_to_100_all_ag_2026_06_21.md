@@ -323,7 +323,32 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
-### 2026-06-22 — empty_confirmed-integrity fix (chain-level defi false-empties) — CODE shipped, manifest flip is DRY-RUN-only (phase 1 of N)
+### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
+
+Operator dispatch "backfill everything (defi)": drive defi to high+honest coverage. Snapshot at start (live consolidated
+`market-data-tick-defi-prd` v9 `_index`, 3,812,106 rows): **honest_cov_defi = 17.89%** (captured 682,033 / empty_confirmed
+3,099,859 / attempted_failed 30,214 / **expected_unattempted 0**). 100% schema_version=9. Date range 2018-01-01→2026-06-22.
+
+**PHASE A root cause (the `expected_unattempted=0` symptom) — NOT the "scheduler never applied" hypothesis in the dispatch.**
+The `expected-universe-v2-*-daily` Cloud Scheduler + the 5 per-AG Cloud Run Jobs WERE `tofu apply`'d 2026-06-19 (all
+ENABLED). But the defi scheduler's last attempt (2026-06-22 01:31) returned **`status code: 7` = PERMISSION_DENIED**, and
+`gcloud run jobs executions list --job expected-universe-v2-defi` was EMPTY (never executed; only prediction ran once, hand-
+triggered, 2026-06-19). Cause: the enumerator SA `expected-universe-v2-enum@…` had **NO `run.invoker`** binding (neither job-
+level — empty `etag: ACAB` policy — nor project-level). `expected_universe_v2_scheduler.tf` grants the SA `objectViewer`
+(catalogue) + `objectAdmin` (manifest) but OMITS the `roles/run.invoker` the scheduler→job OIDC call needs → every daily
+defi/cefi/tradfi/sports trigger was silently rejected → 0 `expected_unattempted` seeded fleet-wide. (cefi/tradfi/sports also
+never executed — same gap.)
+
+- [ ] [TERRAFORM] P0. **add `run.invoker` for the enumerator SA to `expected_universe_v2_scheduler.tf`** (the missing IAM that
+      made every scheduled run `code 7`). Stop-gap applied live via `gcloud run jobs add-iam-policy-binding` on all 5 jobs
+      (`cefi/defi/tradfi/sports/prediction`) → defi job now executes. Durable fix = a `google_cloud_run_v2_job_iam_member`
+      (role=`roles/run.invoker`, member=the enum SA) per-AG in the TF. Repo: deployment-service. Provenance: this Progress Log.
+
+Manual `gcloud run jobs execute expected-universe-v2-defi` (exec `…-h5djp`) launched + RUNNING (image imported clean, catalog
+`gs://instruments-store-defi-prd-…/prod/catalog.parquet` present 302KB). The v2 `--apply-write` path loads the catalog +
+builds the manifest `present_set` + calls `enumerate_v2(present_set=…)` → emits `expected_unattempted` for alive-but-uncaptured
+defi cells over the bounded window (`--start-date 2026-02-20`, the recent-honest-denominator window; full-history is the gated
+companion artifact, not this job). Verifying the seed count next.
 
 ROOT CAUSE (operator-pinned, confirmed against live `market-data-tick-defi-prd` `_index`): the IS expected-universe
 enumerator `_enumerate_defi()` iterated ALL `DATA_TYPES_BY_ASSET_GROUP["defi"]` — including CHAIN-LEVEL types — for
@@ -1246,3 +1271,32 @@ cells where defi didn't exist). Deferred follow-ups (all filed as todos):
       instruments-service.
 - [ ] [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible)
       — working live, persist via quickmerge. Repo: deployment-service.
+
+### 2026-06-22 12:40 — DEFI REGRESSION found + fixed: stale-enumerator-build re-seeded 1.44M LEGACY-venue phantoms
+
+Continuation of the "backfill EVERYTHING" dispatch. Verified the running state from gcloud+GCS+manifest (NOT the stale
+dispatch text). Findings:
+
+- **PhaseA enumerator VM `expected-universe-v2-defi-20260622-122534` FAILED at setup** (`SETUP_EXIT_STATUS=2`, `uv pip
+  install` rc=2 transient; no run.log, never ran the enumerator) → self-deleted. It produced NOTHING.
+- **But the daily Cloud Run Job `expected-universe-v2-defi` ran at 12:05Z** (`enum-universe-defi-20260622-120550`,
+  SUCCEEDED) and **seeded 1,444,842 `empty_confirmed` rows in the LEGACY combined `venue=PROTOCOL-CHAIN` + blank-chain
+  form** (e.g. `UNISWAPV3-ARBITRUM`) — the EXACT regression the prior driver's enumerator fix targeted. ROOT CAUSE: the
+  Cloud Run `instruments-service:latest` image is `0.29.0/bca1231` (built 11:48Z) and the GCS tarball baked `2c6a71e`
+  (0.30.0) — **both PREDATE the fix `42dd37c` (committed 12:20Z, on LDR)**. So the stale build re-emitted legacy-form
+  phantoms. These can NEVER convert vs canonical `venue=PROTOCOL`+`chain=X` captures → pure honest-cov DENOMINATOR poison
+  (dragged honest_cov_defi 10.67%→7.50%).
+- **Manifest snapshot** `_index/snapshots/pre_legacy_venue_phantom_delete_2026_06_22.parquet` (rollback).
+- **Added + APPLIED a surgical legacy-venue phantom DELETE** to
+  `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (`--report-legacy-venue-defi-phantoms [--apply]`,
+  predicate `empty_confirmed AND venue contains '-' AND chain==''`, same guards as the chain-level delete — REFUSES if it
+  selects any non-empty_confirmed row / changes captured/failed totals). **DELETED 1,444,842 rows** (index
+  5,287,366→3,842,524; captured 712,451 PRESERVED; attempted_failed 30,214 PRESERVED). **honest_cov_defi 7.50%→10.67%.**
+- ✅ verified: `_legacy_seed.parquet` per-VM shard = 10k captured (0 legacy) → won't re-merge. The enum-run per-VM shard
+  was already consolidated+cleared.
+
+- [ ] [SCRIPT] P0. **PROMOTE enumerator fix `42dd37c` LDR→main on instruments-service so `:latest` image + GCS tarball
+      rebuild** — the daily Cloud Scheduler `expected-universe-v2-defi-daily` (01:30 UTC) runs the `:latest` image; while
+      that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The legacy-venue delete is
+      idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild. Repo: instruments-service.
+      Provenance: this Progress Log.
