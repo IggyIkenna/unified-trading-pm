@@ -247,8 +247,8 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       → `empty_confirmed(BOOKMAKER_NO_COVERAGE)` where (book,league) observed-out-of-coverage → the ~72%-failed
       collapses to genuine absence + honest-cov reads healthy. Repo: UAC + market-tick-data-service (coordinate with
       provenance lane).
-- [ ] [DATA] P1. **sports — manifest DOUBLE-COUNTING: consolidated FIXTURES inflated ~1.16× by pipeline_mode dedup-key
-      drift** [SPORTS-lane finding 2026-06-21, operator: "fix duplications, no double counting"]: the consolidated
+- [x] ✅ [DATA] P1. **sports — manifest DOUBLE-COUNTING: consolidated FIXTURES inflated ~1.16× by pipeline_mode dedup-key
+      drift** — UAC@40751840 (footystats_odds BATCH_FOOTYSTATS→BATCH_ODDS_API, test aligned) + IS@9273508 (canonicalize script: ArrowInvalid handler broadened, no-op write guard added); migration script is idempotent — existing data already canonicalised by v9 populate run. The consolidated
       `availability_index` has 2 rows for the same (date, league, fixture) cell — e.g. EPL 2019-08-09 (1 real game) has
       a `pipeline_mode=batch_instruments_service` row (older runs, fixture_id=None) AND a
       `pipeline_mode=batch_api_football` row (current runs). The consolidator dedups "last-write-wins BY MANIFEST KEY",
