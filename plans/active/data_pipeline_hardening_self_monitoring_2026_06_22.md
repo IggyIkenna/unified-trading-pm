@@ -776,6 +776,8 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   `mark_rate_limited`) as that lane's dirty WIP (mtime <120s = live editor → PROTECTED, not stomped per the
   multi-agent HARD RULE) — awaiting that lane's quickmerge; I did NOT re-implement (would collide).
 
+- [ ] [CODE] P1. **Heartbeat is PER-CHUNK, not time-based → too coarse for slow jobs (operator 2026-06-22)**: `instruments_handler.py:323` (+ `websocket_runner.py`) emit `emit_pipeline_heartbeat` only after each CHUNK completes → cadence = chunk duration (~15+ min for the TM/FS transfer-window/season scrapers), and a MID-CHUNK hang emits ZERO heartbeat for the whole chunk (only the slower log-mtime stall watcher ≥45min catches it). FIX: emit on a BACKGROUND TIMER (~60s, asyncio task / thread) independent of chunk boundaries, so cadence is constant and a mid-chunk hang trips dp-heartbeat-watcher within ~60s+poll. Tune the watcher stall threshold to match (e.g. silent >5-10min → DP_VM_STALL). Reship the affected VMs after. Repos: instruments-service + market-tick-data-service + (watcher) deployment-service.
+
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
 - [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path;
