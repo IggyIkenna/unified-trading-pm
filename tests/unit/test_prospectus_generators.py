@@ -223,8 +223,8 @@ def test_audit_57_archetypes() -> None:
         from audit_prospectus_vs_codex import run_audit
 
         result = run_audit()
-        assert result["total_archetype_ids"] == 58, (
-            f"Expected 58 archetypes but got {result['total_archetype_ids']}. "
+        assert result["total_archetype_ids"] == 59, (
+            f"Expected 59 archetypes but got {result['total_archetype_ids']}. "
             "Update the plan if new archetypes were added (see F9 in findings tracker)."
         )
     except ImportError as e:
