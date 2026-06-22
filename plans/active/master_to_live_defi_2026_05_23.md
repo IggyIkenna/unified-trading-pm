@@ -113,7 +113,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-06-22 12:44 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-06-22 12:45 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -159,17 +159,17 @@ _Last regenerated: 2026-06-22 12:44 UTC via `scripts/plans/regenerate_active_pla
 | [`defi_governance_params_refresh_2026_06_20`](./defi_governance_params_refresh_2026_06_20.md) | defi_master | brand-new | 5/6 | 83% | 1.5 | — |
 | [`instruments_manifest_canonicalisation_2026_06_01`](./instruments_manifest_canonicalisation_2026_06_01.md) | master | infra | 5/13 | 38% | 1.5 | — |
 | [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](./predictions_other_bucket_and_ui_drilldown_2026_06_20.md) | master | brand-new | 7/11 | 64% | 1.5 | — |
+| [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) | master | infra | 52/63 | 83% | 1.4 | — |
 | [`tradfi_massive_dual_source_2026_05_28`](./tradfi_massive_dual_source_2026_05_28.md) | master | infra | 41/51 | 80% | 1.4 | — |
-| [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) | master | infra | 51/60 | 85% | 1.2 | — |
 | [`pipeline_mode_partition_migration_2026_06_01`](./pipeline_mode_partition_migration_2026_06_01.md) | master | infra | 0/2 | 0% | 1.2 | — |
 | [`sports_features_readiness_for_predictions_2026_06_20`](./sports_features_readiness_for_predictions_2026_06_20.md) | master | infra | 0/2 | 0% | 1.2 | — |
 | [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) | master | infra | 0/18 | 0% | 1.2 | — |
 | [`tradfi_cme_event_contract_backfill_2026_06_20`](./tradfi_cme_event_contract_backfill_2026_06_20.md) | master | infra | 2/4 | 50% | 1.2 | — |
 | [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) | master | infra | 0/4 | 0% | 1.2 | — |
 | [`defi_manifest_canonicalisation_2026_06_01`](./defi_manifest_canonicalisation_2026_06_01.md) | defi_master | refactor | 73/104 | 70% | 1.1 | — |
-| [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](./prediction_venue_perps_and_live_clob_depth_2026_06_20.md) | master | brand-new | 27/31 | 87% | 1.0 | — |
 | [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](./defi_onchain_derivable_values_and_date_drift_2026_06_20.md) | defi_master | design | 10/14 | 71% | 1.0 | — |
 | [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](./cefi_deribit_binance_futures_bundle_verification_2026_06_20.md) | cefi_master | infra | 4/7 | 57% | 1.0 | — |
+| [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](./prediction_venue_perps_and_live_clob_depth_2026_06_20.md) | master | brand-new | 28/32 | 88% | 1.0 | — |
 | [`downstream_services_manifest_canonicalisation_2026_06_01`](./downstream_services_manifest_canonicalisation_2026_06_01.md) | master | infra | 30/50 | 60% | 1.0 | — |
 | [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md) | master | brand-new | 37/44 | 84% | 1.0 | — |
 | [`mtds_coverage_75_and_codex_zero_2026_06_11`](./mtds_coverage_75_and_codex_zero_2026_06_11.md) | master | refactor | 5/8 | 62% | 0.9 | — |
