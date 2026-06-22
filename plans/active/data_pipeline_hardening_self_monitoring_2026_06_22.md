@@ -1695,3 +1695,53 @@ dispatch prompts.
   a raw webhook). **PROOF (1):** the reshipped `tm-backfill-20260622-230311` run.log carries the steady-60s
   `PIPELINE_HEARTBEAT` marker (3 markers within the first ~3 min of boot; full ≥5-marker / ≥8-min-span cadence verdict
   captured by the single-shot verifier).
+
+## Progress Log — resume-run final-verification pass (2026-06-22 ~23:10Z, slot·human-planning, Opus 4.8, /autonomous)
+
+Resumed the partially-done tail; FIRST read git log + Progress Log to avoid redoing banked work (most of the prompt's
+5-item list was already shipped by prior sessions). Verified each of the 5 prompt items against live prod state; banked
+each finding as a commit + checkbox flip the moment it was confirmed.
+
+- **Item 1 (MDPS asset_group writer fix)** — code fix was already SHIPPED (UTL@7b2306c3 consolidator self-heal —
+  diagnosed as a stale-pre-v9-tarball-VM + missing-consolidator-guard class, NOT an MDPS writer bug). Ran the prompt's
+  "VERIFY no re-accrual after a consolidator tick" check: re-accrual IS occurring (defi consolidated `_index` had 30,236
+  fresh blank `asset_group` rows from the STILL-RUNNING legit pre-v9 `mdps-defi-2025` backfill VM, and the scheduled
+  Cloud Run consolidator is on the old image — rebuild Actions-gated). **PROVED the durable fix on live data**: ran the
+  fixed consolidator (`7b2306c3` ancestor of HEAD) `--force` on the live defi bucket → blanks 30,236→0 (100%
+  `asset_group=defi`, 4.11M rows); also healed tradfi 12→0; cefi/sports/prediction already 0. All 5 AG indexes now 0
+  blank. Residual is bounded + self-healing once the consolidator image rebuilds (rides items 3/5's unblock). Did NOT
+  stop the backfill VM (it is doing legitimate bounded year-2025 work).
+- **Item 2 (per-AG 2nd half)** — cefi/sports/tradfi/prediction reprobe+rate-limit+heartbeat already shipped + flipped.
+  All 5 reprobe hooks verified wired in `_REPROBE_HOOK_MODULES` on origin/LDR. **DeFi agent P0**: read every defi MTDS
+  recorder + handler — keystone is enforced CENTRALLY (`DefiManifestRecorder` HARD-RAISES on unproven
+  `SOURCE_RETURNED_ZERO`), the C1 danger-class is uniformly closed (errors/missing-key → `record_failed`,
+  oracle-expected → keystone-exempt `record_empty`, only genuine clean 2xx+0-rows → `record_zero_rows`), C6 bucket-env
+  fix is on LDR (`_instruments_store_bucket`), `reprobe_source("defi")` shipped, and all 5 DeFi DURABLE gotchas verified
+  closed (env-short reader / async-GCS wrap / 9-key thegraph round-robin / PROTOCOL+chain grain / 86400 staleness).
+  Flipped the DeFi P0 as correctness-core DONE; split the lone residual into a P2 evidence-fidelity nicety + flipped the
+  DURABLE-guards line DONE.
+- **Item 3 (deployment-api PR#166 / MTDS#309)** — RE-VERIFIED genuinely BLOCKED-UPSTREAM: a v2 auto-re-ran on PR#166
+  head at 22:56Z and failed in 8s with `runner_name:""` / `steps:[]` (no runner allocated — definitive GitHub-side
+  outage). NEW evidence: the outage has spread FLEET-WIDE (alerting-service + e2e-testing + UTL — all GREEN at 20:00Z in
+  the prior diagnosis — now also 0-step/no-runner at 22:45Z) → account-wide Actions suspension / GH platform incident,
+  not just a spend-cap on the biggest repos. Operator action unchanged (clear Actions billing / confirm a GH incident).
+  NOT force-merged (a never-run required check cannot be bypassed). Auto-unblock is self-driving: the `*/15`
+  `ldr-to-staging-promote` cron already auto-re-fires v2 (proven) → merges PR#166 on first green the instant runners
+  return → main → deployment-api Cloud Build (`5907886`). No armed monitor owed (the cron IS the monitor); PAT can't
+  read account billing (403).
+- **Item 4 (defi DIVERGENT_EMPTY)** — fresh `detect_manifest_divergence.py --asset-group defi` on the live prod `_index`
+  (2.44M cells): DIVERGENT_EMPTY = 13,760 EXACTLY (stable, auto-flip reclassifier holding it), max date 2025-11-18, ZERO
+  in the operational window (≥2025-11-19) — all historical, NOT blocking. Sub-finding: the `dex_pool_swaps`
+  DIVERGENT_EMPTY cells (UNISWAP_V3/BALANCER/CURVE) are NOT name-drift (`dex_pool_swaps` IS actively captured, 4,392
+  cells) → genuine historical date-gaps → per-venue DEX-swaps backfill, not an oracle rename. Stays the tracked
+  per-venue backfill-vs-scope campaign (operator HARD RULE: NO flat clip).
+- **Item 5 (client-reporting-api:latest)** — RE-VERIFIED LAGGING: newest CRA AR image = `pnl-timeseries-ce1bd5f`
+  (2026-06-21T14:16), predates A4 (`client-reporting-api@6b6df25`). The `:latest` rebuild rides the same Actions-gated
+  main→Cloud Build path. A4 is citadel-polish, not May-23 critical-path → low urgency. Auto-unblocks with item 3's
+  billing fix.
+
+**Net new operational result this pass:** all 5 AG consolidated manifest indexes are 0-blank-`asset_group` (durable
+self-heal proven live). **The only genuinely-open / non-completable work is the fleet-wide GitHub Actions outage (items
+3+5, and item 1's scheduled-consolidator-image rebuild) — a physical-impossibility / operator-billing carve-out (rule
+1): no code unblocks it, and the auto-unblock machinery (`*/15` promote cron + Cloud Build dispatch) is sound and
+self-driving the instant the operator clears the Actions billing limit / a GH incident resolves.**
