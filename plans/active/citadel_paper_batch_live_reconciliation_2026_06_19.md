@@ -791,7 +791,11 @@ are identified (2) and the ledger exists (3).
       be None when `mode ∈ {PAPER, LIVE}` (raise if a synthetic override is active in a prod-mode run) — makes
       "paper reads exactly like live" structural, not flag-dependent. Repo: strategy-service + unified-trading-library.
 
-- [ ] [UI] P2.18. **Archetype-grouped WEIGHTED PnL-over-time plot + batch/paper symmetry overlay** (operator
+- [x] ✅ [UI] P11.18. **Archetype-grouped WEIGHTED PnL-over-time plot + batch/paper symmetry overlay** — SHIPPED
+      unified-trading-system-ui@423e237d (PnlTimeseriesChart archetype-weighted lines via buildWeightMap +
+      PaperBatchOverlayChart). VERIFIED LIVE on prod (odom-portal): the PnL-over-time panel renders the
+      archetype-weighted lines + the "Paper vs batch (rerun) overlay" carrying the **"ε=0 PROVEN — paper ≡ batch"**
+      badge. pw:L2 ✓ (21 passed) | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts (P11.18 cases). (operator
       2026-06-22: "where is our grouped PnL plots of the strategy_ids in strategy-archetype groups where we weight
       between strategy_ids ... I don't see it on the page"). Today: a single selection-filtered PnL series +
       `BatchPaperPanel` showing the `live−batch=(paper−batch≈0)+(live−paper=exec α)` identity as NUMBERS. ADD: a
@@ -799,14 +803,32 @@ are identified (2) and the ledger exists (3).
       legs — the e2e weighting), toggle archetype↔leg↔coin; AND overlay the BATCH-rerun PnL line vs the PAPER line so
       the ε=0 symmetry is visually legible per archetype (not just a verdict badge). Repo: unified-trading-system-ui
       (consumes /pnl-timeseries + /backtest + /per-strategy weights; playwright-gated).
-- [ ] [CODE+UI] P2.19. **Paper-trading data-quality + VM events stream panel** (operator 2026-06-22: "alerts should
-      stream in ALL events from the VMs — missing/incomplete data etc — I know we don't have 100% of our data
-      everywhere yet"). The run already writes `skipped_specs/{run_id}.json` (honest-absence: which archetypes/venues/
-      coins had NO data, with reason) + the manifest 4-state coverage; the CRA proxies alerting-service `/alerts`. ADD:
-      (a) CRA `GET /clients/{c}/data-quality` = the run's skipped_specs grouped by archetype/venue/reason + manifest
-      coverage % + the live alerting-service alerts merged; (b) a paper-trading "Data Quality & Alerts" panel that polls
-      it + streams VM lifecycle events (ADAPTER_FETCH_FAILED / FAILED / honest-absence), so missing/incomplete data is
-      visible on the page. Repo: client-reporting-api (endpoint) + unified-trading-system-ui (panel, playwright-gated).
+- [x] ✅ [CODE+UI] P11.19. **Paper-trading data-quality + VM events stream panel** — SHIPPED + VERIFIED LIVE on prod.
+      (a) CRA `GET /clients/{c}/data-quality` (client-reporting-api@7f3ac8a) = skipped_specs grouped by
+      archetype/venue/reason + manifest coverage + alerting-service alerts merged (best-effort). **CRITICAL crash-fix:
+      `coverage.by_archetype` was emitted as a dict → the UI's `DataQualityCoverageRow[].reduce` threw → the WHOLE
+      paper dashboard white-screened ("Something went wrong"). Fixed CRA to emit the canonical array shape (image
+      `client-reporting-api:dqarrayfix` deployed to prod rev 00018-njv; source quickmerge PENDING a live UTL-dep WIP
+      settling — fix is LIVE regardless) + UI Array.isArray guard (unified-trading-system-ui@85369f75) + CRA unit-test
+      now asserts the array contract (the smoke spec used the mock fixture which was already array-shaped, so it missed
+      the real-data dict — the CRA test closes that gap).** (b) UI "Data Quality & Alerts" panel
+      (unified-trading-system-ui@423e237d). VERIFIED on prod: headline **145/342 drivable · 197 skipped**, 12
+      per-archetype coverage rows, 8 skipped-by-reason groups / 197 skipped (venue,coin) rows (top reason
+      `no_gcs_data_in_window:2026-05-16..2026-05-22`, 127 cells), alerts section renders (honest `unavailable` — see
+      P11.20). pw:L2 ✓ (21 passed) | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts (P11.19 cases) +
+      client-reporting-api/tests/unit/test_data_quality.py (array contract). Repo: client-reporting-api +
+      unified-trading-system-ui.
+- [ ] [INFRA] P11.20. **Live VM alert STREAM into the data-quality panel** (split from P11.19; operator 2026-06-22
+      "alerts should stream in ALL events from the VMs"). Today the panel's alerts section renders but shows
+      `alerts_source: unavailable` because (1) both CRA routes (`/alerts` + `/data-quality`) hardcode the k8s DNS
+      `http://alerting-service:8080` which does NOT resolve from Cloud Run (the "overridable via env" comment is stale —
+      no actual read), and (2) no alerting-service is deployed reachable from prod CRA, and (3) the per-epic data fleet
+      that emits ADAPTER_FETCH_FAILED/honest-absence events is post-cutover/not-running. WIRE: (a) add an
+      `alerting_service_url` field to `UnifiedCloudConfig` (no `os.getenv`) + have BOTH CRA routes read it; (b) deploy /
+      expose an alerting-service reachable from prod CRA (or point at the existing one); (c) verify a real VM
+      data-event (missing/incomplete data) appears as an alert row in the panel. Repo: unified-trading-library (config) +
+      client-reporting-api (routes) + deployment-service (alerting-service reachability). NOTE: blocked on a live UTL
+      refactor in flight (21 dirty files 2026-06-22) — do the UTL config field once that settles.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -815,6 +837,20 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 (P11.18/19 SHIPPED + white-screen crash FIXED).** The archetype-weighted PnL plot + paper/batch overlay
+  (P11.18) and the Data Quality & Alerts panel (P11.19) are LIVE + browser-verified on prod. Root-caused a full-page
+  white-screen ("Something went wrong — `((intermediate value) ?? []).reduce is not a function`"): CRA emitted
+  `coverage.by_archetype` as a **dict** but the UI's `DataQualityCoverageRow[]` contract `.reduce/.map`s it as an
+  **array** (the `?? []` never fired on a dict) → the panel threw → the page-level error boundary blanked the whole
+  dashboard. The mock-fixture-based smoke spec was already array-shaped so it never caught the real-data shape — a
+  classic mock-vs-real drift. Fixed CRA → array (`client-reporting-api:dqarrayfix`, prod rev 00018-njv) + added a CRA
+  unit-test asserting the array contract + a UI `Array.isArray` guard (so a future shape-drift degrades to empty, never
+  white-screens). Live verify: 145/342 drivable · 197 skipped, 12 archetype rows, 8 reason groups, 197 skipped cells,
+  PnL overlay with the ε=0 PROVEN badge. Filed P11.20 for the live VM alert STREAM (the panel's alerts section honestly
+  shows `unavailable` — no alerting-service reachable from Cloud Run yet). NOTE: the CRA **source** quickmerge is
+  pending a large live UTL-dep refactor (21 dirty files) settling — the prod image is the array fix regardless; re-run
+  `quickmerge --agent --files 'client_reporting_api/core/data_quality.py tests/unit/test_data_quality.py'` from
+  client-reporting-api once UTL is clean, else a redeploy-from-LDR would regress the dict bug.
 - **2026-06-22 (audit) — CANONICAL READ/WRITE CONFIRMED.** Paper-trading reads from real prod data sources via
   `resolve_bucket_name` (perp-funding/dex-pools/market-data/lending — same buckets live/batch use, real schemas +
   granularity, honest-skip never synthetic; the e2e synthetic seam is opt-in + OFF in the prod job) and writes the four
