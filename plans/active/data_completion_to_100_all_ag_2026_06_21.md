@@ -1022,7 +1022,7 @@ drive-orchestrator used `while pgrep -f create-code-tarballs` — its OWN argv c
 → infinite hang ~8h, never woke (the documented self-match foot-gun; new monitor uses gcloud/gsutil only). Batch VMs ran
 independently throughout.
 
-- [ ] [DATA] P1 BLOCKED-CREDENTIALS. **gas-fees MANTLE paid RPC.** gas-fees on MANTLE uses the FREE public RPC
+- [ ] [DATA] P1. BLOCKED-CREDENTIALS. **gas-fees MANTLE paid RPC.** gas-fees on MANTLE uses the FREE public RPC
       (mantle.xyz) which 429-rate-limits `eth_feeHistory` (hundreds of `HTTP 429 retry N/12`); each MANTLE day takes
       ~10-15min vs ~2-3min → gas-fees is the batch long-pole (~1.5M blocks/yr on MANTLE). NOT hung, NOT a code bug —
       public-RPC throttle. Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then

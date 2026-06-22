@@ -717,7 +717,7 @@ are identified (2) and the ledger exists (3).
       correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui
       (+ verify next.config proxy target).
 
-- [ ] [CODE] P11.15. **Match the e2e weighting: per-archetype RANK allocators, not FIXED equal-weight** (operator
+- [ ] [CODE] P2.15. **Match the e2e weighting: per-archetype RANK allocators, not FIXED equal-weight** (operator
       2026-06-22: "in our e2e plots we picked several venues for e.g. basis and WEIGHTED across opportunities — I
       thought that was a production config"). CONFIRMED: a catalogue `@`-qualified id is a per-(venue,coin) CANDIDATE
       leg (145 of them); the e2e "strategy" is the ARCHETYPE + its rank allocator that ranks+weights across the cohort
@@ -728,7 +728,7 @@ are identified (2) and the ledger exists (3).
       SAME deterministic captured GCS rates (funding/carry/vol per window) → **ε=0 preserved** (pure fn of the window,
       not live calls — the FIXED default's determinism worry was overcautious). Verify ε=0 batch-rerun holds with rank
       weights. Repo: strategy-service (paper_universe allocator default + per-archetype rank wiring).
-- [ ] [UI] P11.16. **Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
+- [ ] [UI] P2.16. **Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
       headline selector should read ~7 weighted archetype strategies (the e2e "strategy" granularity), each expandable
       to its weighted per-(venue,coin) legs, rather than 145 flat legs. The archetype roll-up already exists (P11.9-ui
       group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
