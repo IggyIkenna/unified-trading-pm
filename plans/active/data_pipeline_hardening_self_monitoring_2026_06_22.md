@@ -281,3 +281,120 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - **2026-06-22 Wave 3 (alerting-service) SHIPPED** `alerting-service@6e8b551` — QG green (68s, exit 0). `notifiers/data_pipeline_slack.py` + `rules/data_pipeline_rules.py` (`data_pipeline_rule_for`) + router `_route_data_pipeline_event` (mirror `#data-pipeline-alerts`; CRITICAL also pagerduty+telegram via existing incident path, dedup/ack reused; generic routing short-circuited so DP_* don't double-fire to #uts-live-alerts) + `config.data_pipeline_slack_webhook` SM-hot-reloaded from `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` + CONFIGURATION.md row. Updated `test_paging_credentials_reloader` (9→10 keys). **Reconcile note**: the dead sub-agent (transient server rate-limit) left an off-scope `quality-gates-v2.yml` edit (escalate-ldr-qg-failure job + cloud-build trigger fix) — DISCARDED (per-repo workflow edit = template drift; CLAUDE.md), captured as a DISCOVERY todo → orchestrator_master. DP_* events reach the subscriber via the existing CONSOLIDATOR_DOWN topic path (no new topic).
 - **2026-06-22 Wave 4a (deployment-service fleet monitors) SHIPPED** `deployment-service@5866f12` — QG green (56s). `deployment_service/data_pipeline_monitors/`: `exit_code_fleet_monitor.py` (DP_VM_EXIT_NONZERO/DP_VM_GONE_NO_CAPTURE — reads GCS run.log terminal exit_code, survives self-delete, cross-checks captured-climbed), `heartbeat_stall_watcher.py` (DP_VM_STALL/DP_EVENT_LOOP_STARVED), `meta_watchers.py` (DP_CATALOG_NOT_RUNNING/DP_ZOMBIE_WATCHDOG_DOWN/DP_CRON_DID_NOT_FIRE), `escalation.py::route_finding` (auto_recover/file_issue→PM issue-doc/page). Terraform: 3 Cloud Run Jobs+schedulers (`*/5`,`*/5`,`*/15`) + SM accessor for the webhook. 54 tests, coverage 87%. Shipped via dirty-deps direct-LDR carve-out (UTL dep was live-dirty — peer editing manifest_writer).
 - **2026-06-22 RECONCILE (autonomous rule 4)**: the 4a sub-agent's quickmerge autostash left a stash-pop conflict in `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf` — the `data_completion_to_100_all_ag` DEFI lane's **per-job `run.invoker`** fix (google_cloud_run_v2_job_iam_member for_each; fixes `expected_unattempted=0` PERMISSION_DENIED fleet-wide) existed ONLY in the working-tree conflict (verified absent from all 3 autostashes + origin). 12-min stale (dead session, not a live editor) → inherited per the dirty-WIP rule, resolved keeping the per-job version (supersedes the project-level it conflicted with), shipped as `deployment-service@e45c07e`. Foreign work preserved, not lost.
+
+---
+
+## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
+
+- [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path; `reprobe_source("defi",...)`; guard catalog-freshness / bucket-env / 9-key rotation / PROTOCOL grain / async-GCS. — instruments-service, market-tick-data-service
+- [ ] [CODE] P0. **CeFi agent**: thread `fetch_evidence` into all CeFi venue adapters; `reprobe_source("cefi",...)`; guard RED-ALERT blank-empty / HL-ASTER cefi-class / genesis dates / canonical PERP keys. — market-tick-data-service, instruments-service
+- [ ] [CODE] P0. **TradFi agent**: thread `fetch_evidence` into Databento+Massive adapters; `reprobe_source("tradfi",...)`; guard live-key/source-stamp / 3-dataset allowlist / ohlcv_1s-futures-only / backfill-launcher VM_SOURCE. — market-tick-data-service, instruments-service
+- [ ] [CODE] P0. **Sports agent**: thread `fetch_evidence` into TM/SFI/FootyStats/odds adapters; `reprobe_source("sports",...)`; guard OOM-self-delete / error-as-empty / coverage maps / fixtures-ordering / null-empty dedup. — instruments-service, market-tick-data-service, features-service
+- [ ] [CODE] P0. **Prediction agent**: thread `fetch_evidence` into Polymarket CLOB+Gamma+Kalshi adapters; `reprobe_source("prediction",...)`; guard venue≠source / launch dates / full-universe reader / live CLOB depth. — market-tick-data-service, instruments-service
+
+## Per-AG dispatch prompts (FINAL DELIVERY — paste one per AG agent tab)
+
+> The cross-cutting substrate is LIVE (Phases 0/1 + the watchers/audits). Each AG now does its **per-AG half**:
+> thread the keystone, harden its recurring failure classes, and feed its session's findings back into this plan's
+> catalogue + the registry. **The keystone gate HARD-RAISES** (`record_empty(SOURCE_RETURNED_ZERO)` without a proving
+> `FetchEvidence` → `UnprovenHonestAbsenceError`) — so each AG's adapters that fall through to empty WILL raise at
+> runtime + go QG-red until threaded. That break is intentional (operator 2026-06-22): it is the mechanism that stops
+> "ran for hours, marked everything empty_confirmed, actually just needed a code fix."
+
+### Shared preamble (prepend to every AG prompt)
+```
+Read SUB_AGENT_MANDATORY_RULES.md + AUTONOMOUS_AGENT_RULES.md (cursor-configs/) and follow ALL rules. Read the plan
+`unified-trading-pm/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md` (the failure catalogue C1-C7,
+the Phase list, the Progress Log) + codex `05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml`.
+
+SHIPPED + LIVE (build on these, don't rebuild): UAC `FetchEvidence(http_status,response_received,rows_in_response,
+source,endpoint,attempted_at,error_signal).proves_honest_absence()` + `FetchErrorSignal`(10 codes) +
+`DISQUALIFYING_FETCH_SIGNALS` + `UnprovenHonestAbsenceError` + `is_canonical(path)`/`canonical_path_violations` +
+`DATA_PIPELINE_ALERT_RULES`. UTL `record_empty(..., fetch_evidence=...)` HARD-RAISES on SOURCE_RETURNED_ZERO without
+proof; `from unified_trading_library.events import DP_*` (37 events) + `emit_pipeline_heartbeat(...)`. alerting-service
+routes DP_* → #data-pipeline-alerts (CRITICAL also pages). e2e-testing daily audits emit DP_* + call
+`register_reprobe_hook("<ag>", reprobe_source)` where `reprobe_source(asset_group,venue,data_type,day)->ReprobeResult(
+reached_source:bool,rows_returned:int,detail:str)`.
+
+YOUR 6 JOBS (run to DONE, ship via quickmerge per repo, flip plan checkboxes, journal to the Progress Log):
+1. THREAD THE KEYSTONE: at every adapter HTTP site (the `classify_venue_error()` call), build a `FetchEvidence` and
+   pass it to `record_empty`/`record_zero_rows`. A 401/403/429/5xx/timeout/exception/missing-key path → set the
+   matching `FetchErrorSignal` → it now routes to `record_failed` (attempted_failed), NOT empty. Only a real HTTP-2xx +
+   0-rows stamps SOURCE_RETURNED_ZERO. Your repo QG must go green WITH this threaded (NEVER by reverting the gate).
+2. IMPLEMENT `reprobe_source(...)` for your sources + `register_reprobe_hook("<ag>", ...)` so the daily re-probe can
+   re-fetch today's new empties and catch a misclassification within a day.
+3. PER-SOURCE RATE/HEALTH events: emit `DP_SOURCE_RATE_LIMITED` / `DP_KEY_POOL_EXHAUSTED` for your sources (bounded
+   timeouts, key-pool rotation) so a slow/rate-limited run alerts instead of silently stalling.
+4. EMIT `emit_pipeline_heartbeat(...)` from your running batch/live VMs (progress every N min) so a hung VM trips
+   DP_VM_STALL.
+5. HARDER TESTS + AUTOMATED AUDITS for EACH recurring failure below — a regression guard per past incident (cite the
+   sha), wired into your repo QG. Add a writer-side `is_canonical(path)` assert before write.
+6. POOL YOUR FINDINGS: append every new silent-failure class you hit this session to the plan's C1-C7 catalogue AND a
+   new `DP-<CAT>-NNN` row in the registry yaml — so it's monitored, not re-discovered. Capture deferrals as `- [ ]`.
+```
+
+### DeFi (the operator's "worst" — most silent-empty hours lost)
+```
+[shared preamble] — repos: instruments-service, market-tick-data-service, unified-api-contracts.
+Your recurring failures to guard (regression test each): catalog-freshness `assert_defi_catalog_fresh` always-False from
+missing `manifest_data_type=instrument-catalog` (IS e8acef1/de8e164 → DP-FETCH-008); reader/writer bucket-env mismatch
+env-less vs `-prd-` → stale-read → false honest-absence → zero capture (MTDS ea33d38/72f7c14 → DP-ENV-001); consolidated
+staleness default too short for a DAILY catalog → blank-data_type shard fallback (set
+`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` → DP-ENV-002); `expected_unattempted` seeded `PROTOCOL-CHAIN`/blank instead
+of canonical `venue=PROTOCOL`+`chain=X` → never converts (IS 38cec01/3e8fcd0 → DP-COVERAGE-004); DEX subgraph stuck on
+1 TheGraph key → round-robin the 9-key pool (MTDS 5830cc8 → DP-RATE-002); sync GCS reads (`bulk_load`/
+`assert_defi_catalog_fresh`) called in async handlers → wrap in `asyncio.to_thread`; eigenlayer/protocol fetch-exception
+→ `attempted_failed` not empty (MTDS 56435ac → DP-FETCH-004). Thread fetch_evidence into all 9 defi MTDS handlers +
+the IS defi catalog path. SSOT: codex/02-data/defi-canonical-naming-ssot.md "DeFi data-pipeline DURABLE gotchas".
+```
+
+### CeFi
+```
+[shared preamble] — repos: market-tick-data-service, instruments-service, unified-api-contracts.
+Recurring failures to guard: the original RED-ALERT class — bitfinex/bitget/kraken 96-100% empty with blank reason
+(the reason the writer was hardened; your fetch_evidence threading is the structural fix → DP-FETCH-007); HL/ASTER must
+be classified **cefi** not defi (UAC 0d0e00a8/061cfd01; MTDS 912dad5 flipped 48.5k attempted_failed → DP-COVERAGE-002)
++ registered as cefi sources (MissingSourceError); genesis/launch dates Aster 2023-07-22 / KRAKEN-FUTURES 2020-01-01 /
+Deribit carve-out (UAC 159f29cc → DP-COVERAGE-001); non-canonical `SYM-PERP` instrument keys → canonical
+`VENUE:PERP:SYMBOL` (MTDS 912dad5/fbd32b4 → DP-PATH-004, add the `is_canonical` writer assert). Perp-funding semantics +
+cadence per perp_funding_data_semantics_and_cadence. Thread fetch_evidence across all CeFi venue adapters
+(Binance/Bybit/OKX/Deribit/Hyperliquid/Aster/Kraken).
+```
+
+### TradFi
+```
+[shared preamble] — repos: market-tick-data-service, instruments-service, unified-api-contracts.
+Recurring failures to guard: Databento WS/live key unresolved → 0 rows + mis-stamped `live_massive` instead of
+`live_databento` (MTDS e532105, UAC 1205ae44 → DP-FETCH-005); the subscription allowlist is EXACTLY 3 datasets
+(`GLBX.MDP3`+`DBEQ.BASIC`+`XCBF.PITCH`) — every call gates `assert_databento_request_allowed`/`assert_schema_allowed`/
+`assert_batch_api_allowed` (billing-fail-closed); `ohlcv_1s` is FUTURES-only (equities=ohlcv_1m); backfill launcher
+must use `VM_TASK=mtds-backfill` + set `VM_SOURCE` + forward `--source` (else TickDataHandler RAISES → 0 rows at rc=0/1
+→ DP-FETCH-005); end-date ≤ yesterday (Databento T+1). Thread fetch_evidence into the Databento + Massive adapters; emit
+DP_SOURCE_RATE_LIMITED on Databento throttling. SSOT: codex/02-data/tradfi-databento-sourcing-ssot.md "Operational
+gotchas".
+```
+
+### Sports (ordering-critical — missing fixtures cascade downstream)
+```
+[shared preamble] — repos: instruments-service, market-tick-data-service, features-service, unified-api-contracts.
+Recurring failures to guard: OOM exit-137 self-delete from re-reading a 6.5GB frame per league → single index-read per
+league (IS 505dcd9 → DP-VM-001, the exit_code monitor now catches it — add the e2-standard-8 sizing guard); API-Football
+error responses recorded empty_confirmed instead of attempted_failed (IS 0db2450 → DP-FETCH-002, your fetch_evidence
+threading fixes it); coverage maps — observed (league×entity) + (bookmaker×league) with `EXPECTED_NO_PROVIDER_COVERAGE`/
+`EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` reasons (UAC 9ea84499/99361f66; MTDS 050a091 → DP-COVERAGE-003); ORDERING —
+missing fixtures → downstream features missing (enforce the DAG-readiness gate → DP-ORDER-001); NULL-vs-`""` dedup
+double-count (sports_manifest_null_vs_empty_dedup → DP-ORDER-003); odds_api_ws nonexistent key → 0 live rows (MTDS
+670be2f → DP-FETCH-005). GCS paths via `candidate_parquet_paths()`. Thread fetch_evidence into TM/SFI/FootyStats/odds
+adapters.
+```
+
+### Prediction
+```
+[shared preamble] — repos: market-tick-data-service, instruments-service, unified-api-contracts.
+Recurring failures to guard: `venue ≠ source` — Polymarket-vs-Kalshi dispersion is a feature-layer concern, NOT a
+source merge; source pairs are `polymarket_clob`/`polymarket_gamma_api` (single-source auto-stamps via default_source →
+DP-COVERAGE); launch dates KALSHI-PERP 2026-05-29 / POLYMARKET-PERP 2026-04-21 (IS 019ff27 → DP-COVERAGE-001); the
+19117-instrument Polymarket universe reader fix (verify the reader resolves the full universe, not a stale subset);
+live CLOB depth (prediction_venue_perps_and_live_clob_depth). Thread fetch_evidence into the Polymarket CLOB + Gamma +
+Kalshi adapters; emit DP_SOURCE_RATE_LIMITED on CLOB throttling. SSOT: prediction canonicalisation plan.
+```
