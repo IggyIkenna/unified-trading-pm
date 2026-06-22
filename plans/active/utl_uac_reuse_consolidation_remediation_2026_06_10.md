@@ -349,9 +349,12 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
         backlog / accounts / backends / claude_accounts_dir / server_url / operator / vm_id / review_slots /
         main_loop_seconds / review_loop_seconds / fleet_worker_cap onto typed fields; fail-loud on bad MODE / non-int /
         ≤0 loop-seconds; deleted `_positive_int_env`. Proved the mechanism (170 monkeypatched-resolver tests green).
-  - [ ] **Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG_* + 4 CONTEXT_BURN_*) + `worker_liveness/__init__.py`**:
-        defer the import-frozen `_CONST = os.environ.get(...)` module constants to `__init__`/use-site; typed+bounded
-        fields; shared bool-env validator (blank→False, exact `{1,true,yes,on}` truthy parity).
+  - [x] ✅ **Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG_* + 4 CONTEXT_BURN_*) + `worker_liveness/__init__.py`
+        (4)** (`agent-orchestrator@2fe6266`, QG ✓ 2026-06-22): 24 knobs onto typed+bounded fields (gt=0 intervals,
+        ge=0 caps, le=100 pct); shared `BoolEnvFalse` (blank→False, `{1,true,yes,on}` parity); import-frozen module
+        constants now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the
+        lenient `try/except`-on-bad LIVENESS read is now fail-loud; deleted the orphaned `DEFAULT_INTERVAL_SECONDS`
+        + dropped the dead `_WATCHDOG_ENABLED_ENV`/`import os`. +5 config-bounds/BoolEnvFalse tests.
   - [ ] **Wave 3 — daemon/loop tunables**: `autospawn.py`, `main_agent_keeper.py`, `failover.py`, `escalation.py`,
         `tmux_spawn.py`, `tmux_pruner.py`, `creds_env_poller.py`, `usage_poller.py`, `regen_backlog_from_plan.py`. Flip
         the silent-fallback test (`test_ceiling_helpers_bad_env_falls_back`) to assert fail-loud.
@@ -366,7 +369,7 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 
   > **Progress Log (autonomous loop — this IS the handoff doc; no summary file).** Slot model = one shared clone per
   > repo, so AO waves run **serially** (shared git index; background agents would race on commit) — different-repo /
-  > read-only fan-out is the only safe parallelism here. Wave 1 shipped 2026-06-22 @ `agent-orchestrator@86abf79`.
+  > read-only fan-out is the only safe parallelism here. Wave 1 @ `agent-orchestrator@86abf79`; Wave 2 @ `agent-orchestrator@2fe6266` (2026-06-22).
 - [x] ✅ [AGENT] P3. **unified-trading-api** — DONE `unified-trading-api@e3fbd8d` (QG 0). `routes/chat.py`
       `ANTHROPIC_API_KEY` now via `UnifiedCloudConfig().get_secret("anthropic-api-key")` (name confirmed from
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
