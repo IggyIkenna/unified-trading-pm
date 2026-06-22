@@ -376,10 +376,16 @@ are identified (2) and the ledger exists (3).
 
 ### Data / producer (strategy-service + UTL + client-reporting-api)
 
-- [ ] [DATA] P1. FIX phantom `$700K` unrealized — canonical-instrument-key per-leg marks join (position key
-      `VENUE:INSTRUMENT_TYPE:SYMBOL` must equal the pricing-ledger key; today `LIDO:ETH` collides on `asset=ETH` with
-      the spot leg → grabs the wrong $3000 mark). Unrealized must be ≈0 per leg for the flat delta-neutral run. **IN
-      FLIGHT.** Repos: unified-trading-library (materialize join) + client-reporting-api (read_marks key).
+- [x] ✅ [DATA] P1. FIX phantom `$700K` unrealized — canonical-instrument-key per-leg marks join — DONE
+      (`unified-trading-library@68540e7a` "fix(ledger): join marks + group positions by canonical instrument_key (kill
+      phantom uPnL)"). `materialize_position_ledger` groups positions and joins marks on `_row_instrument_key(row)`
+      (`instrument_key_by_row_id[row.row_id]` when stamped, else `_legacy_instrument_key` = `{venue}:{asset}`) rather
+      than `asset_canonical_id` alone — LIDO:STAKING:ETH ≠ UNISWAP_V3:DEX_POOL:ETH even though both are `asset=ETH`.
+      `_parse_mark_jsonl` (CRA) already keys marks by the `instrument_key` field stamped by `pricing_ledger_jsonl` (UTL
+      `run_writer.py:445`). Full chain verified code-read 2026-06-22: write → JSONL `instrument_key` stamp → read_marks
+      dict → materialize join → each leg gets OWN mark → unrealized ≈ 0. Regression test:
+      `UTL/tests/unit/ledger/test_materialize.py::test_same_asset_different_venue_legs_get_own_marks_no_phantom_pnl`.
+      Repos: unified-trading-library + client-reporting-api. Provenance: agt-f35b99 2026-06-22.
 - [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real cross-venue transfers / money-movements: emit Treasury/TransferLedger
       rows for the carry_staked_basis capital flow (USDC deposit → spot swap → stake → perp margin posting), single
       `client_id` (funds-isolation). UTL transfer-row SSOT: `unified-trading-library@0c712f99`
