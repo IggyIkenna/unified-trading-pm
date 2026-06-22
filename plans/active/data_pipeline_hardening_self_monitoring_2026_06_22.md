@@ -578,8 +578,48 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   the fleet; flip to hard-block once the 8th lands. NOTE: the parity check + QG STEP 5.90/5.91 wiring (the `[~]` Wave-4b
   row above) was being landed in parallel by a separate `_land_mtds_qg` agent (staged `scripts/quality-gates.sh` +
   `check_reader_writer_bucket_parity.py`) — left to that agent's unit, not duplicated here.
+- **2026-06-22 BATCH-LOOP HEARTBEAT WIRING + RESHIP-VERIFY (slot·human-planning, Opus 4.8, /autonomous reship run)** —
+  operator close-ask: wire heartbeat → reship → verify Slack alerts fire off-the-bat. **Findings on entry**: a peer had
+  ALREADY reshipped the cefi + tradfi LIVE matrix on the hardened **17:16 UTC tarball** (`mtds-live-cefi-*` +
+  `mtds-live-tradfi-cme-trades` relaunched `20260622-1718xx`→`1721xx`); verified the tarball's `websocket_runner.py`
+  carries `emit_pipeline_heartbeat` (count=2) + onchain_perp keystone (7 markers) + raise-free; a reshipped cefi VM
+  (`...171809`) boots CLEAN (no `UnprovenHonestAbsenceError`/traceback) + is producing (per-VM manifest shard 1→3
+  entries 17:21-17:22). So the **critical keystone+heartbeat hardening is live on cefi/tradfi producers**. **My net-new
+  this run (the cross-cutting batch-backfill heartbeat gap — per-AG live recorders + onchain were wired, but the GENERIC
+  multi-day batch backfill loops were NOT)**: (1) **instruments-service@1a44cbf** — wired `emit_pipeline_heartbeat` per
+  completed date into `InstrumentsHandler.process()`, full QG green 71s + sentinel, shipped via quickmerge `--files`;
+  (2) **MTDS `TickDataHandler.process()`** — same per-date heartbeat into the GENERIC CeFi/TradFi/multi-AG backfill loop
+  (`process_ticks` returns → emit cumulative rows_captured + asset_group + source); basedpyright 0-errors, ruff clean
+  (noqa form == onchain_perp). **BLOCKED on ship** by the SAME environmental semver version-alignment lag the 8th-C6
+  entry hit — PM-manifest `versions{}` on LDR is behind origin/main for ~6 repos (uac 0.47 vs 0.48, ao 0.39 vs 0.40,
+  deployment 0.38 vs 0.39, e2e 0.23 vs 0.24, IS 0.35 vs 0.36); the QG version-alignment PRE-check hard-BLOCKS before any
+  substantive gate; `--skip-version-alignment` is human-only. The PM manifest fix (`versions.uac→0.48.0`) sits
+  DIRTY+unpushed in the shared PM clone (a peer's in-flight `run-version-alignment.sh --fix`, co-dirty with
+  `canonical-dependency-manifest.json` — NOT mine to push). MTDS heartbeat edit validated + left dirty in the slot clone;
+  lands on the next clean window (todo below). **STEP 4 verified**: `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` smoke = **HTTP
+  200 `ok`** (live message in #data-pipeline-alerts); alerting-service `data_pipeline_slack`+`data_pipeline_rules`+router
+  on LDR; the 3 DP fleet monitors are LIVE Cloud Run crons (`uts-prod-dp-heartbeat-watcher` `*/5`, `dp-exit-code-monitor`
+  `*/5`, `dp-meta-watchers` `*/15`, all ENABLED, last-fired 17:20, exit 0) reading the reshipped fleet's
+  `vm-heartbeat/{vm}.txt` durable blob + the `PIPELINE_HEARTBEAT` event stream. **Reship GAPS (todos below)**: sports-live
+  + prediction-live NOT yet on the 17:16 tarball; running backfills are on the old tarball (finish fine — the keystone
+  gate only hard-raises in the NEW code; the old running fleet won't hit it; next backfill wave is hardened).
 
 ---
+
+## Reship + batch-heartbeat residual (tracked todos — 2026-06-22 reship run)
+
+- [ ] [CODE] P1. **Land the MTDS `TickDataHandler` batch-loop heartbeat** — `emit_pipeline_heartbeat` per completed date
+      in the generic CeFi/TradFi/multi-AG backfill loop (`market_tick_data_service/cli/handlers/tick_data_handler.py`,
+      `_emit_date_heartbeat`). Validated (basedpyright 0, ruff clean) + dirty in the slot clone; BLOCKED only on the
+      environmental semver version-alignment lag (PM-manifest `versions{}` LDR-behind-main; `--skip-version-alignment`
+      human-only). Ship via `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'`
+      on the next clean version-alignment window (rides the next MTDS tarball — batch backfills then emit heartbeat →
+      DP_VM_STALL/DP_VM_GONE_NO_CAPTURE on a hung/idle batch VM). — market-tick-data-service
+- [ ] [INFRA] P1. **Reship sports-live + prediction-live producers on the hardened tarball** — `mtds-live-sports-odds-api`
+      + `prediction-live-{polymarket,kalshi}-{trades,book-snapshot-5}` are still on the PRE-17:16 tarball (no
+      keystone/heartbeat). Graceful drain/replace via `launch-mtds-live.sh` / `launch-prediction-live.sh` once the
+      8th-C6 + batch-heartbeat tarball rebuild lands (LONG_LIVED_LIVE — singleton-locked, drain not SIGKILL). Verify
+      T+10min STARTED-clean + run.log has no `UnprovenHonestAbsenceError`. — deployment-service
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
