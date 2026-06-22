@@ -213,3 +213,40 @@ native live was never run before, so this gap was latent).
 
 **Net tardis-machine status:** code SHIPPED + mechanism PROVEN (596 real CEX msgs); HL correctly excluded; CEX
 manifest-capture gated on the bug#9 provenance build (P1, fully diagnosed above). Native HL:trades live feed restored.
+
+## §6 — CEX live provenance (bug#9+#14) RESOLVED + tardis-machine matrix (2026-06-22)
+
+**bug#9 (live pipeline_mode) + bug#14 (write source-gate) — FIXED + VERIFIED END-TO-END.** A CeFi CEX live capture now
+resolves the exchange vendor (BINANCE-FUTURES→binance→`live_binance`, bug#9 `_CEFI_CEX_VENDOR_FOR_VENUE_PREFIX` in
+unified-api-contracts@`e67a7ef`) AND passes the manifest source-gate (bug#14: a write-validation predicate
+`is_valid_manifest_source` = SOURCE_PRIORITY ∪ the asset_group's live/replay vendors; UAC@`50df949e` + UTL gate
+@`e5128e22`; SOURCE_PRIORITY stays the batch read-priority, untouched — adding live-only vendors to it broke the batch
+read-path closed-set, the wrong fix). **PROOF** (VM `mtds-live-cefi-binance-futures-trades-20260622-134033`, tardis-machine
+source): `BINANCE-FUTURES:PERP:BTCUSDT` + `ETHUSDT` → **capture_status=captured, source=binance, pipeline_mode=live_binance,
+row_count 4465+9872**, MissingSourceError=0, NoPipelineMode=0. CEX live capture (native connectors AND tardis-machine) is
+unblocked.
+
+**tardis-machine stream-normalized capture matrix** (live sidecar probe, msgs in ~6-8s):
+
+| venue (tardis exch)            | trade | book_snapshot_5 (`book_snapshot_5_0ms`) | derivative_ticker |
+| ------------------------------ | ----- | --------------------------------------- | ----------------- |
+| binance-futures                | ✅     | ✅ bids=5 asks=5                          | ✅                 |
+| binance (spot)                 | ✅     | ✅ 5×5                                    | n/a               |
+| bybit (futures)                | ✅     | ✅ 5×5                                    | ✅                 |
+| bybit-spot                     | ✅     | ✅ 5×5                                    | n/a               |
+| okex-swap                      | ✅     | ✅ 5×5                                    | ✅                 |
+| okex (spot)                    | ✅     | ✅ 5×5                                    | n/a               |
+| deribit                        | ✅     | ✅ 5×5                                    | ✅                 |
+| cryptofacilities (kraken-fut)  | ⚠️ 0* | ✅ 5×5                                    | ✅                 |
+| coinbase                       | ✅     | ✅ 5×5                                    | n/a               |
+| hyperliquid                    | ✅     | ✅ 5×5                                    | ✅                 |
+
+\*kraken-futures `trade`=0 = probe symbol `PI_XBTUSD` likely wrong, not a tardis gap (book+ticker stream fine).
+**Connector learnings (market-tick-data-service@`5fde6d1`):** (1) book uses the parameterized request dataType
+`book_snapshot_5_0ms` (bare `book_snapshot_5` matched nothing) — tardis-machine IS the order-book builder (maintains the L2
+book per-venue, emits top-5 continuously); the connector converts it to canonical `book_snapshot_5` (same schema). (2)
+**5-levels-each-side readiness gate** (operator): emit a book tick only once bids≥5 AND asks≥5 (skip partial book-building
+snapshots). (3) HL needs UPPERCASE symbol (tardis hyperliquid is case-sensitive); CeFi CEX use lowercase.
+
+**Status: tardis-machine live OPTION fully delivered + CEX live provenance resolved.** Remaining cefi gap is only the
+~753k Tardis HISTORICAL (batch) cells = BLOCKED-CREDENTIALS (operator billing).
