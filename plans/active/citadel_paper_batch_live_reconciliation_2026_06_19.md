@@ -755,12 +755,34 @@ are identified (2) and the ledger exists (3).
       group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
       leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated).
 
+- [ ] [UI] P11.14-hook. **Prod paper-trading React-Query hooks error without fetching** (open 2026-06-22). The 3 proxy
+      bugs are fixed (CRA reachable from the page: manual in-page fetch → 200, 13 strategies). But `useLedgerPerStrategy`
+      / `useLedgerNetViews` etc. show "Failed to load" with NO `/api/client-reporting*` request issued, despite
+      isMock=false (var inlined), clientId set (`?client=firm-paper-determinism`), no service worker, mock defined, fix
+      code in the deployed chunks. Resolve from the LIVE browser console (the actual react-query error) — not headless
+      inference. Likely candidates: an SSR/prefetch error, a QueryClient retry/throwOnError config, or the hook erroring
+      in a transform before fetch. Repo: unified-trading-system-ui.
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-22 (autonomous) — P11.14 prod-UI data: 3 plumbing bugs FIXED + PROVEN browser-reachable; 1 client-hook bug
+  open (awaiting live console).** The prod paper-trading panels showed stale/mock not the real 145-strategy run due to
+  THREE stacked bugs, all fixed + deployed (odum-portal-00035-nsc): (1) hooks returned the 14-strategy mock fixture
+  because global `NEXT_PUBLIC_MOCK_API=true` → added `isReportingLive()` so paper-trading goes live when the CRA URL is
+  set (ui data-mode.ts + use-paper-trading-ledger.ts); (2) `next.config.mjs` rewrites() read the reporting URL before
+  Next loaded .env → fell back to localhost:8014 → added an fs-based env loader (no @next/env bare import — unresolvable
+  under pnpm); (3) rewrites() did `return []` whenever mock → `/api/client-reporting` 404'd → now emits the
+  client-reporting rewrites even in mock mode. PROOF the data is now reachable from the prod page: an in-page
+  `fetch('/api/client-reporting-auth/login')` → 200 (token len 343), `fetch('/api/client-reporting/.../per-strategy')` →
+  200 with 13 strategies. **OPEN (P11.14-hook):** the React-Query hooks (`useLedgerPerStrategy` etc.) render
+  "Failed to load" WITHOUT issuing any fetch, while the identical manual fetch succeeds — a client-runtime bug not
+  resolvable headless (ruled out: clientId-missing, service-worker, undefined-mock, stale-bundle, rewrite). Needs the
+  live browser console error. CRA per-strategy returns 13 (attribution subset) not 145 — separate sparsity note.
 
 - **2026-06-22 (operator) — LOCKED the deployable book: cs + h32 + ext + tsmom + BTC-trend + basis spine; R8 short
   DROPPED.** Per-leg proper-execution Sharpes (engine `legnet` net through the real fill model, vnorm 10%): basis
