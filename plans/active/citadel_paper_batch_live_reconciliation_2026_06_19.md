@@ -255,8 +255,16 @@ are identified (2) and the ledger exists (3).
       NAV/HWM (`hwm_from_ledger`, advances-only) into one `AlertEvent(severity=INFO, code=DAILY_LEDGER_DIGEST)` carrying
       the trade-tape counts + P&L totals + HWM peak + per-venue balances, POSTed to alerting-service over HTTP (httpx;
       no cross-service import) → `#uts-live-alerts`. Companion to the P6.2 T+1 recon verdict digest.
-- [ ] [CODE] P2.6.2. **Daily T+1 recon verdict** → `AlertEvent` (INFO on ε=0 determinism + the execution-alpha summary;
-      CRITICAL on a determinism bug). Repo: batch-live-reconciliation-service.
+- [x] ✅ [CODE] P2.6.2. **Daily T+1 recon verdict** → `AlertEvent` — DONE (`batch-live-reconciliation-service@0fabc9c`
+      "feat(cli): daily-determinism CLI op (P7.1-B) + recon verdict post (P2.6.2)"). `DailyDeterminismHandler.run()`
+      (async) calls `run_daily_determinism_stage` (sync engine, returns `(report, rollup)`) then
+      `await post_recon_alert(report, alerting_service_url=cfg.alerting_service_url, channel=cfg.recon_alert_channel)`.
+      `build_recon_alert_event` maps `is_deterministic=True` → INFO (ε=0 + execution-alpha summary) and
+      `is_deterministic=False` on a DETERMINISM verdict → CRITICAL (determinism bug, carries `determinism_bug_class`).
+      Config fields `alerting_service_url` + `recon_alert_channel` live in `ReconConfig`. Empty URL → logged-only
+      (no HTTP; honest no-op). Tests: `test_daily_determinism_handler.py` (no-op / deterministic / bug paths). Code-read
+      verified 2026-06-22; all in `engine/recon_alert_client.py` + `cli/handlers/daily_determinism_handler.py`.
+      Provenance: agt-f35b99 2026-06-22.
 
 ## Phase 7 — The 19→26 operator dry-run (runs to completion)
 
