@@ -780,7 +780,7 @@ are identified (2) and the ledger exists (3).
       inference. Likely candidates: an SSR/prefetch error, a QueryClient retry/throwOnError config, or the hook erroring
       in a transform before fetch. Repo: unified-trading-system-ui.
 
-- [ ] [CODE] P11.17. **Structurally forbid the synthetic-input seam in PAPER/LIVE prod runs** (operator audit
+- [ ] [CODE] P2.17. **Structurally forbid the synthetic-input seam in PAPER/LIVE prod runs** (operator audit
       2026-06-22: "all reads should be live+batch from real prod sources/schemas/GCS paths; writes canonical with just
       the paper→live tag swap"). AUDIT RESULT — already canonical: reads resolve every bucket via `resolve_bucket_name`
       (perp-funding/dex-pools/market-data/lending, real prod schemas+granularity, honest-skip never synthetic); writes
@@ -791,7 +791,7 @@ are identified (2) and the ledger exists (3).
       be None when `mode ∈ {PAPER, LIVE}` (raise if a synthetic override is active in a prod-mode run) — makes
       "paper reads exactly like live" structural, not flag-dependent. Repo: strategy-service + unified-trading-library.
 
-- [ ] [UI] P11.18. **Archetype-grouped WEIGHTED PnL-over-time plot + batch/paper symmetry overlay** (operator
+- [ ] [UI] P2.18. **Archetype-grouped WEIGHTED PnL-over-time plot + batch/paper symmetry overlay** (operator
       2026-06-22: "where is our grouped PnL plots of the strategy_ids in strategy-archetype groups where we weight
       between strategy_ids ... I don't see it on the page"). Today: a single selection-filtered PnL series +
       `BatchPaperPanel` showing the `live−batch=(paper−batch≈0)+(live−paper=exec α)` identity as NUMBERS. ADD: a
@@ -799,7 +799,7 @@ are identified (2) and the ledger exists (3).
       legs — the e2e weighting), toggle archetype↔leg↔coin; AND overlay the BATCH-rerun PnL line vs the PAPER line so
       the ε=0 symmetry is visually legible per archetype (not just a verdict badge). Repo: unified-trading-system-ui
       (consumes /pnl-timeseries + /backtest + /per-strategy weights; playwright-gated).
-- [ ] [CODE+UI] P11.19. **Paper-trading data-quality + VM events stream panel** (operator 2026-06-22: "alerts should
+- [ ] [CODE+UI] P2.19. **Paper-trading data-quality + VM events stream panel** (operator 2026-06-22: "alerts should
       stream in ALL events from the VMs — missing/incomplete data etc — I know we don't have 100% of our data
       everywhere yet"). The run already writes `skipped_specs/{run_id}.json` (honest-absence: which archetypes/venues/
       coins had NO data, with reason) + the manifest 4-state coverage; the CRA proxies alerting-service `/alerts`. ADD:

@@ -5,7 +5,6 @@ title:
   and the reactive drain that fixes it re-seeds the next conflict (treadmill). Structural cure = collapse to one
   writer lineage.
 created: 2026-06-22
-author: ikennaigboaka [slot-3·laptop]
 source:
   - 2026-06-22 first-hand verification (this doc's Appendix A — reproducible git/gh commands + outputs)
   - instruments-service `git log -p pyproject.toml origin/main` (two interleaved version-line authors)
