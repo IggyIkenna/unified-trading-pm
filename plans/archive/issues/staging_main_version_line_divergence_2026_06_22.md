@@ -15,8 +15,36 @@ estimate_class: design
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.2
 priority: P2
-status: active
+status: false-positive
+resolution: RESOLVED 2026-06-22 — NOT a defect. The version-line divergence is the deliberate, accepted cost of
+  `--rebase` promotion (commit 0a76d0103, chosen to avoid the BEHIND re-jam deadlock). Every cure was audited and
+  rejected — see the RESOLVED banner below. The only real bug in this area (the dead conflict-resolution-agent,
+  duplicate-`env:`) was fixed separately (PR #490).
 ---
+
+> ## ✅ RESOLVED 2026-06-22 — FALSE POSITIVE (by-design trade-off, NO action)
+>
+> Full audit concluded this is **not a defect** and **no change should be made**. The recurring `version =` conflict is
+> the deliberate, accepted cost of the topology — every proposed cure was audited and rejected:
+>
+> - **Option-2 (promoter auto-resolves version line):** REDUNDANT — the live `staging-conflict-ldr-main-fallback`
+>   already drains this conflict class via clean `LDR→main` routing. A second resolver = competing parallel path.
+> - **4a (`staging→main` `--rebase`→`--merge`):** UNSAFE — reverts the deliberate fix `0a76d0103` ("promote via --rebase
+>   not --merge so staging never diverges from LDR"). `--merge` creates merge nodes → target diverges from LDR → the
+>   next promote PR goes **BEHIND** → blocked by "require branches up to date" (`strict`). Audit found **6 repos still
+>   `strict=True`** (market-data-processing, trading-agent, client-reporting-api, deployment-api, ibkr-gateway-infra,
+>   system-integration-tests) → `--merge` would reintroduce the deadlock there. (All 24 allow merge commits / none
+>   require linear history — feasibility was fine; the BEHIND regression is the blocker.)
+> - **4b (routine force-sync staging/main ← LDR):** REJECTED — force-sync is operator-gated CI/CD-repair only, never a
+>   routine promotion model.
+> - **strict-standardization (turn `strict` off fleet-wide → then `--merge`):** REJECTED by operator — at 200-300
+>   commits/day across the fleet, dropping the up-to-date guarantee / changing promotion would gut velocity. Not worth
+>   it.
+>
+> **Net:** the `--rebase` topology + the Class-D `LDR→main` fallback + the (now-fixed) conflict-resolution-agent is the
+> correct, deliberately-chosen equilibrium. The version-line conflicts are auto-drained reactively; that is acceptable.
+> The "What I found" / mechanism analysis below is RETAINED only so this is never re-investigated — it is NOT a backlog
+> item. Everything under "## Recommended decision" is SUPERSEDED by this banner.
 
 ## What I found
 
@@ -71,7 +99,7 @@ this conflict class, more cleanly, via LDR→main). Adding a second resolver wou
 delete-deprecated / no-parallel-paths). **Decision: do not build it.** The fallback + the now-fixed agent cover the
 reactive drain.
 
-## Recommended decision
+## Recommended decision (SUPERSEDED — see ✅ RESOLVED banner at top; retained for history only)
 
 1. **Structural cure (this issue) — single-lineage version stamping.** Make the `version =` line have ONE history so it
    cannot diverge:
