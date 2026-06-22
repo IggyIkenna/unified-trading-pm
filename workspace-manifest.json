@@ -69,21 +69,21 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.21.0",
     "deployment-api": "0.29.0",
-    "deployment-service": "0.31.0",
+    "deployment-service": "0.32.0",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.25.0",
-    "features-service": "0.17.0",
+    "execution-service": "0.26.0",
+    "features-service": "0.18.0",
     "fund-administration-service": "0.9.2",
     "ibkr-gateway-infra": "0.4.2",
-    "instruments-service": "0.28.0",
-    "market-tick-data-service": "0.36.0",
+    "instruments-service": "0.29.0",
+    "market-tick-data-service": "0.40.0",
     "system-integration-tests": "0.14.6",
     "unified-api-contracts": "0.40.0",
     "unified-trading-library": "0.31.0",
     "unified-trading-pm": "1.2.296",
     "market-data-processing-service": "0.10.10",
     "e2e-testing": "0.22.0",
-    "agent-orchestrator": "0.27.0",
+    "agent-orchestrator": "0.31.0",
     "greeks-service": "0.17.0",
     "trading-agent-service": "0.12.0",
     "strategy-service": "0.36.0",
@@ -823,7 +823,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1237,7 +1237,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1931,18 +1931,12 @@
     "alerting-service": "0.21.0",
     "batch-live-reconciliation-service": "0.21.0",
     "e2e-testing": "0.22.0",
-    "features-service": "0.18.0",
     "greeks-service": "0.17.0",
     "unified-trading-api": "0.2.9",
     "unified-trading-library": "0.31.0",
-    "agent-orchestrator": "0.31.0",
-    "market-tick-data-service": "0.40.0",
-    "execution-service": "0.26.0",
     "client-reporting-api": "0.15.9",
-    "deployment-service": "0.32.0",
     "fund-administration-service": "0.9.2",
     "ibkr-gateway-infra": "0.4.2",
-    "instruments-service": "0.29.0",
     "market-data-processing-service": "0.10.10",
     "ml-service": "0.17.0",
     "system-integration-tests": "0.14.6",
@@ -1961,36 +1955,41 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "agent-orchestrator": {
-      "version": "0.30.0",
-      "sha": "ff78edcdbcf5fab56cc147f88ebdd819251937ef",
-      "branch": "staging"
-    },
-    "features-service": {
-      "version": "0.18.0",
-      "sha": "bc136da793ba9e781a446787153127c84429f618",
-      "branch": "staging"
-    },
-    "market-tick-data-service": {
-      "version": "0.40.0",
-      "sha": "95df3b8eb199d6f59e5848fdb77d54a024b36045",
-      "branch": "staging"
-    },
-    "execution-service": {
-      "version": "0.26.0",
-      "sha": "c0506f341f310c288271286811202db7de70b4bb",
-      "branch": "staging"
-    },
-    "instruments-service": {
-      "version": "0.29.0",
-      "sha": "39911e888460d3beedcf1f87602761033f8f8d02",
-      "branch": "staging"
-    }
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-22T11:42:24.385751Z",
+        "commits": {
+          "agent-orchestrator": {
+            "version": "0.30.0",
+            "sha": "ff78edcdbcf5fab56cc147f88ebdd819251937ef",
+            "branch": "staging"
+          },
+          "features-service": {
+            "version": "0.18.0",
+            "sha": "bc136da793ba9e781a446787153127c84429f618",
+            "branch": "staging"
+          },
+          "market-tick-data-service": {
+            "version": "0.40.0",
+            "sha": "95df3b8eb199d6f59e5848fdb77d54a024b36045",
+            "branch": "staging"
+          },
+          "execution-service": {
+            "version": "0.26.0",
+            "sha": "c0506f341f310c288271286811202db7de70b4bb",
+            "branch": "staging"
+          },
+          "instruments-service": {
+            "version": "0.29.0",
+            "sha": "39911e888460d3beedcf1f87602761033f8f8d02",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-22T09:32:39.051218Z",
         "commits": {
@@ -2097,16 +2096,6 @@
           "market-tick-data-service": {
             "version": "0.34.0",
             "sha": "d870f0b326770e99adcb895eab19b43df7788b02",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-22T02:06:34.816158Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.37.0",
-            "sha": "e9e30f1341b48b5002cb042ec50575bc0c3d289d",
             "branch": "staging"
           }
         }
