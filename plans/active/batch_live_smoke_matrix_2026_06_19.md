@@ -64,15 +64,9 @@ prediction 2 / 8; sports 16 / 0 (10 blocked-cred); tradfi 40 / 0 (40 blocked-cre
 - [x] ✅ [SCRIPT] P0. RUN the matrix across all 5 AGs on the central VM (GCS network on) → 754 batch-pass / 0
       batch-fail, 339 live-wired / 50 blocked-cred / 0 live-fail, 135 symmetric / 0 divergent; L2 real Binance-spot tick
       proven. — e2e-testing@c92d50f
-- [ ] [SCRIPT] P0. **BLOCKED-DEP** Wire as a repeatable smoke — MTDS `quality-gates.sh` STEP 5.88b (ruff-lint + warn-only
-      L1 `--smoke`), mirroring STEP 5.88's 4-pillar wiring. **DONE in the working tree + MTDS QG-green (sentinel == HEAD
-      `b9a8d79`, the 5.88b block ran clean inside the gate); ship via quickmerge is BLOCKED on a FOREIGN dirty dep** —
-      `unified-trading-library` carries 3 uncommitted source edits (test_honest_coverage_ratchet / core/asset_group /
-      honest_coverage_ratchet) from another agent's in-flight work on the shared central VM, and quickmerge's pre-flight
-      refuses to build against a dirty dep (correct — never quickmerge with dirty deps). Lands the moment UTL is clean:
-      `cd market-tick-data-service && bash scripts/quickmerge.sh "ci(quality-gates): wire     batch+live smoke matrix STEP 5.88b" --agent --files 'scripts/quality-gates.sh'`.
-      The block is purely the shared-host foreign-dep state, not my change. — market-tick-data-service (working tree
-      ready, QG-green)
+- [x] ✅ [SCRIPT] P0. Wire as a repeatable smoke — MTDS `quality-gates.sh` STEP 5.89 (ruff-lint + warn-only L1
+      `--smoke`), mirroring STEP 5.88's 4-pillar wiring. QG-green (sentinel == HEAD, 5.89 block ran clean). —
+      market-tick-data-service@eda9902
 - [ ] [SCRIPT] P2. **NICE-TO-HAVE** Add catalog-aware live-instrument discovery to L2 so the network-enabled scheduled
       run gets a real tick for prediction/DeFi-polling venues (not only Binance) — today L2 uses a best-effort
       `_representative_instrument` map; a real `clob_token_id`/condition_id discovery would upgrade more cells from
