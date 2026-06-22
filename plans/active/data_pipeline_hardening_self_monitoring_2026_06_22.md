@@ -1337,6 +1337,14 @@ dispatch prompts.
       Actions) OR confirm a GH incident. Code is locally QG-green; the promote bot auto-merges on the first green v2 once
       runners return → deployment-api Cloud Build rebuild (digest `5907886`) follows automatically. No code change owed.
       — deployment-service, market-tick-data-service (operator/billing)
+- [ ] [INFRA] P2. **client-reporting-api:latest is LAGGING (A4 not in any image) — BLOCKED-UPSTREAM (same GH Actions
+      spend cap).** Verified 2026-06-22: A4 (`client-reporting-api@6b6df25`, deployment-api URL from typed config) is on
+      LDR but NOT main; the CRA AR repo's newest image is 2026-06-21 (`pnl-timeseries-ce1bd5f`) — predates A4. CRA shows
+      the SAME GREEN→fail Actions cliff (green ≤18:49Z, backmerge/promote fails from 20:02Z). The `:latest` rebuild is
+      driven by the v2 `push:[main]` → PM `cloud-build-router` dispatch, which is blocked with the rest. A4 is a
+      citadel-polish (typed deployment_api_url), NOT May-23 critical-path → low urgency. Unblocks automatically with the
+      operator billing fix above (A4 promotes to main → Cloud Build rebuild). No code change owed. — client-reporting-api
+      (operator/billing)
 
 ## Progress Log — 60s background-timer heartbeat (per-chunk → time-based) SHIPPED (2026-06-22)
 
