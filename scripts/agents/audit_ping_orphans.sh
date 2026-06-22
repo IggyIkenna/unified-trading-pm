@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
 # audit_ping_orphans.sh — flag pings that don't reference a plan / issue / audit doc.
 #
 # Enforces CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item"
@@ -34,6 +36,13 @@
 set -uo pipefail
 
 PM_ROOT="${PM_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+
+# Self-pull so local cron scans current ping state, not stale checkout.
+# Cloud Run sets K_SERVICE and clones fresh each invocation — skip there.
+if [[ -z "${K_SERVICE:-}" ]]; then
+  git -C "$PM_ROOT" pull --ff-only origin live-defi-rollout 2>&1 || true
+fi
+
 TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 PING_FILES=(
