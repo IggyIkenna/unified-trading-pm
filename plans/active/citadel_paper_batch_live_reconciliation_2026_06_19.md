@@ -741,15 +741,27 @@ are identified (2) and the ledger exists (3).
       `test_returns` unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the
       delta_one feature corpus** so these columns exist in GCS for the live paper run (a features-service backfill —
       shared with the P2.11.18 reversion-feature corpus recompute; run both together).
-- [ ] [BLOCKED-PLAYWRIGHT] [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui — CODE
-      SHIPPED 2026-06-22: ui@6442d46e** (15 files: `lib/architecture-v2/enums.ts`+`coverage.ts`+`archetypes.ts`,
-      `lib/help/help-tree-generated.ts`, `lib/mocks/fixtures/trading-data.ts`, `lib/registry/ui-reference-data.json`,
-      `components/briefings/strategy-coverage-matrix.tsx`, `components/marketing/strategy-family-catalogue.tsx`,
-      `public/capability-verdict-matrix.json` + 6 test files with count bumps 18→19 / 57→58). **tsc clean, 286 Vitest
-      pass (3280 full suite), `quality-gates.sh` exit 0.** **BLOCKED-PLAYWRIGHT**: no Next dev server on the build host
-      (`localhost:3100`) → `pw:L2 ✓` + regression spec can't be produced here; a UI-capable slot must run
-      `npx playwright test --project=chromium tests/smoke/` to clear the gate + tick. (Silent cross-repo gap; the code is
-      live + type/unit-green.) Repo: unified-trading-system-ui.
+- [x] ✅ [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui — SHIPPED + VERIFIED
+      2026-06-22: ui@6442d46e | pw:L2 ✓ (67 passed, 4.0m) | regression: tests/unit/lib/architecture-v2/enums.test.ts
+      (toHaveLength 19) + tests/unit/wizard/parity-gates.test.ts (58 archetypes) — both fail on TSMOM removal.** 15 files
+      (`lib/architecture-v2/enums.ts`+`coverage.ts`+`archetypes.ts`, `lib/help/help-tree-generated.ts`,
+      `lib/mocks/fixtures/trading-data.ts`, `lib/registry/ui-reference-data.json`, `components/briefings/
+      strategy-coverage-matrix.tsx`, `components/marketing/strategy-family-catalogue.tsx`, `public/
+      capability-verdict-matrix.json` + 6 test files). tsc clean, 286 Vitest pass, `quality-gates.sh` exit 0. The
+      playwright SMOKE gate (`tests/smoke/`) self-starts `PORT=3100 pnpm dev:mock` (120s boot) — the earlier
+      BLOCKED-PLAYWRIGHT was just not waiting for boot; ran green here. Repo: unified-trading-system-ui.
+- [ ] [CODE] P2.11.20. **Complete TSMOM_BTC_CTA capability wiring — add it to the UAC archetype_capability_manifest**
+      (found 2026-06-22 via the e2e archetype-capability playbook). `TSMOM_BTC_CTA` is in `StrategyArchetype` + the UI
+      enum/capability-verdict-matrix but **MISSING from `unified-api-contracts/.../internal/architecture_v2/
+      archetype_capability_manifest.json`** (22 archetypes, no TSMOM) → the archetype is half-wired (no per-venue/
+      asset-group capability cells) and the e2e playbook `tests/e2e/playbooks/refactor/
+      refactor-g1-8-uac-archetype-capability.spec.ts` would fail. Fix: add TSMOM's capability declaration to the source
+      (`registry/archetype_capability_matrix.py` — family RULES_DIRECTIONAL, BTC-level CTA → CEFI perp+spot on the major
+      venues, signal `price`/trend) → regen via `scripts/generate_archetype_capability_manifest.py` → sync to UI via
+      `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Then the e2e playbook becomes the
+      proper playwright-dir regression for the archetype. Repo: unified-api-contracts (+ UI sync). Confirm the exact
+      venue/asset-group capability profile with the operator (CeFi-only BTC, or the DeFi+CeFi hybrid).
+- [ ] [CODE] P2.11.18. **Add the intraday BTC mean-reversion signal as a cs ML feature** (research 2026-06-22, root
 - [ ] [CODE] P2.11.18. **Add the intraday BTC mean-reversion signal as a cs ML feature** (research 2026-06-22, root
       `_ic_test.py`). A short-horizon reversion z-score (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m +
       4h on the canonical OHLCV) has a **stable Spearman IC ≈ +0.05 vs forward 15m–1h returns, positive across all
