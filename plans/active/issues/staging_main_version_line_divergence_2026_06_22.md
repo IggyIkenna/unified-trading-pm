@@ -14,15 +14,58 @@ parent_epic: infrastructure_master
 estimate_class: design
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.2
-priority: P2
-status: false-positive
-resolution: RESOLVED 2026-06-22 — NOT a defect. The version-line divergence is the deliberate, accepted cost of
-  `--rebase` promotion (commit 0a76d0103, chosen to avoid the BEHIND re-jam deadlock). Every cure was audited and
-  rejected — see the RESOLVED banner below. The only real bug in this area (the dead conflict-resolution-agent,
-  duplicate-`env:`) was fixed separately (PR #490).
+priority: P1
+status: active
+resolution:
+  REOPENED 2026-06-22 (slot-3) — operator OVERRODE the false-positive/no-action close ("fix this properly"). The
+  mechanism below is now VERIFIED first-hand (not relayed) and the acute multi-day JAM is confirmed RESOLVED, but the
+  structural cure to stop the conflicts RE-FORMING is pending an operator approach-decision (B vs A vs C). The prior
+  RESOLVED banner is retained but SUPERSEDED.
 ---
 
-> ## ✅ RESOLVED 2026-06-22 — FALSE POSITIVE (by-design trade-off, NO action)
+> ## ⚠️ REOPENED 2026-06-22 (slot-3) — operator override; VERIFIED root cause + final cure (supersedes the FALSE-POSITIVE banner below)
+>
+> **Verified first-hand (not relayed).** `git log -p pyproject.toml` on `instruments-service` and `agent-orchestrator`
+> `main` shows the `version =` line written by **two interleaved bot lineages**: `semver-agent[bot]` sequential
+> `chore(release): bump to X` (the gated `--rebase` promote) AND `uts-ci-poller[bot]` `feat: LDR → staging (Tier C
+> auto-drain)` commits landing on `main` (the LDR→main drain). ao bumped **14× in 20 h** (one commit per bump) → the hot
+> line churns fast and is written by both lineages.
+>
+> **Mechanism (proven, not inferred):** `staging→main` promotes via `--rebase`, replaying staging's individual bump
+> commits onto `main`. When `main`'s version line was last written by the DRAIN lineage (not the bump sequence), the
+> rebase conflicts on that one line. The Class-D `LDR→main` fallback that drains the conflict writes the line via the
+> drain lineage AGAIN → **seeds the next conflict** → self-perpetuating treadmill.
+>
+> **Why it became a multi-day JAM (the amplifier the prior banner missed):** the escalation worker
+> `conflict-resolution-agent` was a **SILENT OUTAGE** — a duplicate `env:` block (Max-plan-worker cutover regression)
+> made it invalid YAML so every dispatch failed with **no failure alert**. With the drain net dead, the transient
+> version-line conflicts piled up fleet-wide for days. Fixed 2026-06-22 (PR #490) + the weekend Mode-A/B
+> version-recording fixes (`staging_to_main_promotion_starvation_2026_06_19.md`).
+>
+> **Current health (verified 2026-06-22):** 23/25 repos have `version` IDENTICAL across main/staging/LDR;
+> `staging-to-main` + Class-D fallback + `conflict-resolution-agent` all GREEN; only `agent-orchestrator` shows a benign
+> 1-bump lag. The pipeline self-heals again — the acute jam is RESOLVED.
+>
+> **FINAL CURE — make conflicts NEVER form (not just drain). Remove the dual-lineage on the version line. Operator picks
+> the approach (fleet-wide release-flow → blast radius):**
+>
+> - **(B) RECOMMENDED — version-line-neutral drains.** The LDR→main drain lineage must NOT write `version =`; `main`'s
+>   version advances ONLY via the gated `staging→main` promote. Removes the second writer → no dual-write → no rebase
+>   conflict. Targeted (the drain/backmerge workflows + a version-line keep-ours policy). Does **not** touch `--rebase`
+>   (no BEHIND regression), no routine force-sync, no `strict` change — avoids every pitfall the prior audit flagged.
+> - **(A) dynamic/tag version.** Stop committing the bump; derive version from a git tag (`dynamic`). Zero version-bump
+>   commits → zero conflict surface. Cleanest long-term, highest blast radius (every repo's build + semver-agent +
+>   manifest reader).
+> - **(C) accept the now-healthy reactive equilibrium** (the prior stance) — drains self-heal it; the flicker is
+>   cosmetic. Operator already leaned here; now overridden.
+>
+> **Defense-in-depth (independent of the cure, low-risk, ship-able now):** neither `conflict-resolution-agent` nor the
+> Class-D fallback alerts on its OWN failure — `promotion-lag-monitor` only catches the lagging *symptom* (days late).
+> Add a drain-net workflow-health alert so a silent outage can never again become a multi-day jam.
+>
+> ---
+>
+> ## ✅ RESOLVED 2026-06-22 — FALSE POSITIVE (by-design trade-off, NO action) — **SUPERSEDED by the REOPENED banner above**
 >
 > Full audit concluded this is **not a defect** and **no change should be made**. The recurring `version =` conflict is
 > the deliberate, accepted cost of the topology — every proposed cure was audited and rejected:
