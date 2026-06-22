@@ -66,7 +66,7 @@
     "stable_threshold": "1.0.0+ = passed full quickmerge on main with Phase 0-CI infrastructure in place."
   },
   "versions": {
-    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
+    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.19.0",
     "deployment-api": "0.29.0",
     "deployment-service": "0.26.0",
@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.36.0",
     "unified-trading-library": "0.29.0",
-    "unified-trading-pm": "1.2.267",
+    "unified-trading-pm": "1.2.268",
     "market-data-processing-service": "0.10.8",
     "e2e-testing": "0.19.0",
     "agent-orchestrator": "0.23.0",
@@ -283,7 +283,7 @@
         }
       ],
       "completion_path": "cefi",
-      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL \u2014 no-service-to-service-deps HARD RULE).",
+      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL — no-service-to-service-deps HARD RULE).",
       "ci_status": "FEATURE_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1797,7 +1797,25 @@
     "system-integration-tests": "0.14.5",
     "fund-administration-service": "0.9.0",
     "e2e-testing": "0.19.0",
-    "unified-trading-library": "0.29.0"
+    "unified-trading-library": "0.30.0",
+    "agent-orchestrator": "0.23.0",
+    "alerting-service": "0.18.0",
+    "batch-live-reconciliation-service": "0.19.0",
+    "client-reporting-api": "0.15.7",
+    "deployment-api": "0.29.0",
+    "deployment-service": "0.26.0",
+    "execution-service": "0.23.0",
+    "features-service": "0.13.0",
+    "greeks-service": "0.15.0",
+    "ibkr-gateway-infra": "0.4.1",
+    "instruments-service": "0.23.0",
+    "market-data-processing-service": "0.10.8",
+    "market-tick-data-service": "0.33.0",
+    "ml-service": "0.15.0",
+    "strategy-service": "0.36.0",
+    "trading-agent-service": "0.10.0",
+    "unified-api-contracts": "0.37.0",
+    "unified-trading-api": "0.2.8"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1822,6 +1840,11 @@
     "system-integration-tests": {
       "version": "0.14.4",
       "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
+      "branch": "staging"
+    },
+    "unified-api-contracts": {
+      "version": "0.37.0",
+      "sha": "e9e30f1341b48b5002cb042ec50575bc0c3d289d",
       "branch": "staging"
     }
   },
