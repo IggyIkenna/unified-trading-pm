@@ -74,12 +74,19 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 1 — deployment-api: unified deployment inventory at /repos grade (GCP first)
 
-- [ ] [CODE] P0. `GET /api/deployments?umbrella=&cloud=&service=&asset_group=&status=` — unified inventory of VMs
-      **and** Cloud Run executions, classified, with status/last-run/exit_code/heartbeat/captured-progress. Reuse
-      `/api/vm-deployments` + add Cloud Run executions (GCP `run.googleapis.com` jobs list/executions). —
-      **deployment-api**
-- [ ] [CODE] P0. `GET /api/deployments/{umbrella}/summary` — per-umbrella rollup (counts by status, last failure, SLA
-      breaches) — the /repos-overview equivalent. — **deployment-api**
+- [x] [CODE] P0. ✅ `GET /api/deployments/inventory?umbrella=&cloud=&service=&asset_group=&status=` — unified inventory of
+      VMs **and** Cloud Run executions, classified, with status/last-run/exit_code/heartbeat/captured-progress. Reuses the
+      deployment registry (`DeploymentsRegistry`) for VMs + `CLOUD_RUN_JOBS` enriched with Cloud Run executions (GCP
+      `run.googleapis.com` jobs/executions via the deployment-service `_gcp_sdk` `run_v2` boundary, honest-degrades to
+      empty map on any GCP error). exit-137 VM → status=failed/exit_code=137. Path is `/api/deployments/inventory` (NOT
+      bare `/api/deployments`, which the existing `routes/deployments/` service-deploy CRUD package already owns —
+      collision-free). — **deployment-api** — deployment-api@5df5f01 (`routes/deployments_inventory.py` +
+      `routes/_cloud_run_executions.py`; QG exit 0 / 76s; 13 credential-free tests in
+      `tests/unit/test_route_deployments_inventory.py`)
+- [x] [CODE] P0. ✅ `GET /api/deployments/umbrella/{umbrella}/summary` — per-umbrella rollup (counts by status, stale
+      count, last failure name+exit_code+time) — the /repos-overview equivalent; 404 on an unknown umbrella (closed UAC
+      `DeploymentUmbrella` set). — **deployment-api** — deployment-api@5df5f01
+      (`deployments_inventory.build_umbrella_summary` + `GET /api/deployments/umbrella/{umbrella}/summary`)
 - [ ] [CODE] P1. Cloud Run execution logs + events surfaced through the same `/api/vm/logs` / `/api/vm/events` shape (so
       the UI is uniform VM-vs-job). — **deployment-api**
 - [ ] [CODE] P1. Wire the deployment lifecycle (STARTED/PROGRESS/COMPLETED/FAILED/EXIT_STATUS) + the umbrella into the
@@ -161,3 +168,22 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
   paper prefixes → PAPER, consolidator → BATCH, unknown lifecycle raises. `bash scripts/quality-gates.sh` exit 0
   (deployment-service 51s, UAC 38s). The [DESIGN] enums shipped earlier at UAC@34bb0f16. Phase 1 (deployment-api
   `/api/deployments`) is next — it imports `classify_deployment_target` + `CLOUD_RUN_JOBS` from these modules.
+- **2026-06-22 Phase 1 P0 (the two unified-inventory endpoints) COMPLETE** (deployment-api@5df5f01). Shipped
+  `routes/deployments_inventory.py` (`GET /api/deployments/inventory` filterable VM+Cloud-Run inventory +
+  `GET /api/deployments/umbrella/{umbrella}/summary` rollup) + `routes/_cloud_run_executions.py` (Cloud Run latest-
+  execution status via the deployment-service `_gcp_sdk` `run_v2` boundary — `JobsClient.list_jobs` +
+  `ExecutionsClient.list_executions`, honest-degrades to `{}` on any GCP error → jobs fall back to
+  `status="unknown"`). **Path is `/api/deployments/inventory`, NOT bare `/api/deployments`** — the existing
+  `routes/deployments/` package already owns `GET /api/deployments` + `/{deployment_id}` (service-version deploys), so the
+  plan's bare path would collide; `/deployments/inventory` + `/deployments/umbrella/{umbrella}/summary` are collision-free
+  and stay under the deployments namespace. VM rows reuse `DeploymentsRegistry` (same source as `/api/vm-deployments`);
+  classification is the single `classify_deployment_target` resolver (a local honest prefix→lifecycle registry seeds the
+  VM lifecycle, mirroring `_fleet_census`). exit-137 VM → `status=failed`/`exit_code=137`; running VM heartbeat > 15 min →
+  `stale`. Registered in `main.py` under `/api`, tag "Deployment Inventory". 13 credential-free / block-network tests
+  (registry + Cloud Run client + GCS all mocked). `bash scripts/quality-gates.sh --no-fix` exit 0 (76s). Shipped via the
+  dirty-deps direct-LDR carve-out (deployment-service had foreign uncommitted WIP → quickmerge pre-flight refuses; commit
+  carries the `Quickmerge: agent` provenance trailer). Wire shape for the deployment-ui consumer: `DeploymentItem`
+  `{name, kind, umbrella, cloud, service, asset_group, status, last_run_at, exit_code, heartbeat_age_seconds,
+  captured_progress, run_log_uri}`; `DeploymentInventoryResponse` `{items[], total, vm_count, cloud_run_job_count}`;
+  `UmbrellaSummaryResponse` `{umbrella, total, counts_by_status{}, stale_count, last_failure{name,exit_code,last_run_at}}`.
+  Remaining Phase 1: the P1 Cloud-Run logs/events `/api/vm/logs`-shape uniformity + the `/api/alerts` `deployment` kind.
