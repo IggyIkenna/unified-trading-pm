@@ -124,7 +124,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       tier auto-files `plans/active/issues/<slug>_<date>.md` + pings the orchestrator inbox when a deterministic
       candidate list is non-empty; `auto_recover` runs the in-band fix; `page_operator` routes CRITICAL with no recover
       scope. — **deployment-service / unified-trading-pm**
-- [ ] [DISCOVERY→orchestrator_master] P2. **Off-scope find (Wave-3 sub-agent drift, discarded here)**: a valuable
+- [x] ✅ [DISCOVERY] P2. **RECONCILED + DONE 2026-06-22**: the Wave-3 sub-agent's `quality-gates-v2.yml` edit was NOT off-scope drift — it was a correct (premature) application of the in-flight cicd template rollout. Real owner = `cicd_release_machinery_2026_06_18.md` P1 (NOT orchestrator_master). I finished the full fleet rollout (12 repos committed+pushed, drift green) — see that plan. Original (superseded) note: **Off-scope find (Wave-3 sub-agent drift, discarded here)**: a valuable
       `escalate-ldr-qg-failure` job for `quality-gates-v2.yml` (FAILED promotion-PR →
       `repository_dispatch escalate-to-orchestrator` with `wall_type=ldr_qg_failure`) + a `dispatch-cloud-build`
       staging→main trigger fix (A3 decoupling orphaned it). Belongs in the PM **template** (not a per-repo edit —

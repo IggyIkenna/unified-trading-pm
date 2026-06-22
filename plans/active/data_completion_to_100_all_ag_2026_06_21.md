@@ -681,7 +681,7 @@ only prediction ran once, hand- triggered, 2026-06-19). Cause: the enumerator SA
 `roles/run.invoker` the scheduler→job OIDC call needs → every daily defi/cefi/tradfi/sports trigger was silently
 rejected → 0 `expected_unattempted` seeded fleet-wide. (cefi/tradfi/sports also never executed — same gap.)
 
-- [ ] [TERRAFORM] P0. **add `run.invoker` for the enumerator SA to `expected_universe_v2_scheduler.tf`** (the missing
+- [x] ✅ [TERRAFORM] P0. **Durable per-AG `run.invoker` SHIPPED** deployment-service@e45c07e — the `google_cloud_run_v2_job_iam_member` for_each per-AG binding replaced the insufficient project-level one. (Recovered from a stash-pop conflict by the data-pipeline-hardening run 2026-06-22 — it existed only in a working-tree conflict; now landed.) **add `run.invoker` for the enumerator SA to `expected_universe_v2_scheduler.tf`** (the missing
       IAM that made every scheduled run `code 7`). Stop-gap applied live via `gcloud run jobs add-iam-policy-binding` on
       all 5 jobs (`cefi/defi/tradfi/sports/prediction`) → defi job now executes. Durable fix = a
       `google_cloud_run_v2_job_iam_member` (role=`roles/run.invoker`, member=the enum SA) per-AG in the TF. Repo:
