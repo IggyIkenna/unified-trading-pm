@@ -206,6 +206,17 @@ failure_modes:
       status: verbose,
       fires: "handler writes to wrong bucket",
     }
+  - {
+      id: DP-PATH-006,
+      category: PATH,
+      severity: CRITICAL,
+      event: DP_BARE_INSTRUMENT_KEY_UNRESOLVED,
+      detector: live_universe_connector_key_rebuild,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "IS universe bare ticker (e.g. KALSHI KXMVE-26JAN) not rebuilt to connector form KALSHI:PREDICTION_MARKET:{ticker} -> WS 'unknown instrument; skipping' -> 0 capture (cefi/prediction live silent-empty, 2026-06-22)",
+    }
 
   # --- DP-VM (class C4) ---
   - {
