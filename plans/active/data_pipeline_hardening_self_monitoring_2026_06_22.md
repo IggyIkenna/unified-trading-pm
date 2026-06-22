@@ -255,22 +255,23 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   `quickmerge --agent --files     'scripts/quality-gates.sh scripts/quality_gates/check_reader_writer_bucket_parity.py'`.
   — **market-tick-data-service**
 - [~] [CODE] P1. **Fix the 8 C6 reader-bucket-env bugs** the parity check found — **7 of 8 SHIPPED on origin/LDR**
-      (`market-tick-data-service@fbac3a9`, swept in via the peer's keystone-threading quickmerge): all sites aligned to
-      `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (env-short `-prd-`, the IS writers'
-      bucket). DONE: `engine/orchestrator/__init__.py:445/447/449/451` (`_register_all_catalog_readers` — 4 AG catalog
-      readers, F4 expected-universe path; `get_bucket_name("instruments",ag)` was env-LESS Group-A `instruments-store-{ag}-{pid}`
-      → confirmed genuine bug, fixed) + `cli/handlers/_instruments_metadata.py:218/442/518` (3 defi reads — the EXACT
-      CLAUDE.md-documented defi-6% bug). Test `test_instruments_metadata_loader.py` updated to assert the env-short bucket
-      (the prior 2 assertions encoded the bug — diagnosed test-wrong-not-code-wrong). Live-probe verified:
-      `resolve_bucket_name(kind="instruments-store", asset_group="defi")` → `instruments-store-defi-prd-{pid}` (vs the OLD
-      env-less `instruments-store-defi-{pid}`). **8th site — `live/websocket_runner.py` `_read_is_parquet_sync` (`build_bucket("instruments",…)`)
-      — DEFERRED to the live MTDS-threading lane** (`data_completion_to_100_all_ag`): the file carries a large in-flight
-      `fetch_evidence`-threading refactor the peer is actively committing (fbac3a9/26202e1); a clean local QG sentinel is
-      also blocked by an environmental semver version-alignment lag (PM clone 11 behind origin/main; `--skip-version-alignment`
-      is human-only). Fix is fully prepared + validated (helper `_instruments_store_bucket(ag)` mirroring the prediction
-      reader; ruff/basedpyright-baseline/31-tests green; method ≤50L) — the threading lane lands it on its next clean window.
-      Parity check is **warn-only** so the 1 remaining site does NOT redden the fleet; flip to hard-block when the 8th lands.
-      Provenance: bucket-parity check `wip-preserve@32e8b6e`. — **market-tick-data-service**
+  (`market-tick-data-service@fbac3a9`, swept in via the peer's keystone-threading quickmerge): all sites aligned to
+  `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (env-short `-prd-`, the IS writers'
+  bucket). DONE: `engine/orchestrator/__init__.py:445/447/449/451` (`_register_all_catalog_readers` — 4 AG catalog
+  readers, F4 expected-universe path; `get_bucket_name("instruments",ag)` was env-LESS Group-A
+  `instruments-store-{ag}-{pid}` → confirmed genuine bug, fixed) + `cli/handlers/_instruments_metadata.py:218/442/518`
+  (3 defi reads — the EXACT CLAUDE.md-documented defi-6% bug). Test `test_instruments_metadata_loader.py` updated to
+  assert the env-short bucket (the prior 2 assertions encoded the bug — diagnosed test-wrong-not-code-wrong). Live-probe
+  verified: `resolve_bucket_name(kind="instruments-store", asset_group="defi")` → `instruments-store-defi-prd-{pid}` (vs
+  the OLD env-less `instruments-store-defi-{pid}`). **8th site — `live/websocket_runner.py` `_read_is_parquet_sync`
+  (`build_bucket("instruments",…)`) — DEFERRED to the live MTDS-threading lane** (`data_completion_to_100_all_ag`): the
+  file carries a large in-flight `fetch_evidence`-threading refactor the peer is actively committing (fbac3a9/26202e1);
+  a clean local QG sentinel is also blocked by an environmental semver version-alignment lag (PM clone 11 behind
+  origin/main; `--skip-version-alignment` is human-only). Fix is fully prepared + validated (helper
+  `_instruments_store_bucket(ag)` mirroring the prediction reader; ruff/basedpyright-baseline/31-tests green; method
+  ≤50L) — the threading lane lands it on its next clean window. Parity check is **warn-only** so the 1 remaining site
+  does NOT redden the fleet; flip to hard-block when the 8th lands. Provenance: bucket-parity check
+  `wip-preserve@32e8b6e`. — **market-tick-data-service**
 - [ ] [SCRIPT] P2. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
       present-set) from SKIP to real checks inside `cf_manifest_audit_all.py`. — **market-tick-data-service**
 - [ ] [SCRIPT] P2. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
@@ -473,12 +474,12 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   keystone test; DP-COVERAGE-003 (EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE) in MTDS `test_sentinels_coverage.py`;
   null-vs-`""` dedup (DP-ORDER-003) is the UTL-consolidator issue doc (cross-cutting, not crash-risk). **base.py 3
   basedpyright errors PRE-EXIST on origin (Lock-getter/resp.json-Any/exc.status-cmp) — my edits add 0 new type errors.**
-- **2026-06-22 RESHIP context** — running TM/FS backfills (`tm-backfill-20260622-125650` / `fs-backfill-20260622-125711`,
-  both already on **e2-standard-8** — the DP-VM-001 sizing guard is live in the launchers) + live odds VM
-  (`mtds-live-sports-odds-api-trades-20260621-213937`, e2-standard-4) are HEALTHY+advancing but on the **12:57 tarball**
-  — the FS VM still emits the FootyStats odds source-mislabel (`source='footystats' disagrees with
-  pipeline_mode='batch_odds_api'`, fail_fast) because the fix (`ad3a945`, 15:21) post-dates its launch. The hardened
-  reship from current LDR carries that fix → resolves the live mislabel.
+- **2026-06-22 RESHIP context** — running TM/FS backfills (`tm-backfill-20260622-125650` /
+  `fs-backfill-20260622-125711`, both already on **e2-standard-8** — the DP-VM-001 sizing guard is live in the
+  launchers) + live odds VM (`mtds-live-sports-odds-api-trades-20260621-213937`, e2-standard-4) are HEALTHY+advancing
+  but on the **12:57 tarball** — the FS VM still emits the FootyStats odds source-mislabel
+  (`source='footystats' disagrees with pipeline_mode='batch_odds_api'`, fail_fast) because the fix (`ad3a945`, 15:21)
+  post-dates its launch. The hardened reship from current LDR carries that fix → resolves the live mislabel.
 
 - **2026-06-22 run #2 RESULTS (slot-0·human-planning, Opus 4.8)** — 4 disjoint-repo sub-agents fanned out (no collision
   with the live per-adapter peer lane). **LANDED ON ORIGIN**: (1) `deployment-service@7b84146` — 4 audit Cloud Run
@@ -531,53 +532,43 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   — 17 source + 17 tests + extracted `_ws_window_helpers.py`). Broke the deadlock by FINISHING the threading to QG-green
   (NOT by isolating — the whole tree greened so no stash was needed). **Fixes I made to get green** (all on my own
   threading files, none weakening the gate): (a) removed unused `MASSIVE_S3_BUCKET` import (F401) in
-  `massive_futures_backfill_handler.py`; (b) updated 1 stale test assertion in `test_massive_futures_backfill_handler.py`
-  (`endpoint.startswith("s3://")` → `startswith(f"{MASSIVE_SOURCE}:")` — the threading deliberately changed the
-  FetchEvidence endpoint to a `{source}:{key}` provenance token to satisfy bucket-SSOT ratchet 5.12b; test was stale);
-  (c) extracted 2 helpers to clear the 50L method cap that threading pushed over —
-  `oracle_prices_handler._record_chainlink_empty` + `aggregator_route_handler._aggregator_preflight_guard`
+  `massive_futures_backfill_handler.py`; (b) updated 1 stale test assertion in
+  `test_massive_futures_backfill_handler.py` (`endpoint.startswith("s3://")` → `startswith(f"{MASSIVE_SOURCE}:")` — the
+  threading deliberately changed the FetchEvidence endpoint to a `{source}:{key}` provenance token to satisfy
+  bucket-SSOT ratchet 5.12b; test was stale); (c) extracted 2 helpers to clear the 50L method cap that threading pushed
+  over — `oracle_prices_handler._record_chainlink_empty` + `aggregator_route_handler._aggregator_preflight_guard`
   (behaviour-identical); (d) narrowed 2 threading-introduced broad `except Exception:` to the repo-canonical tuples
   (`sentinels.py` → `(KeyError,ValueError,AttributeError,TypeError)`; `onchain_perp_batch_handler.py` →
-  `(OSError,ValueError,KeyError,RuntimeError)`) — origin had 0 broad-excepts so the gate counted these as violations; the
-  narrow set keeps the keystone-safe "any failure → disqualifying signal → record_failed" intent; (e) fixed import alias
-  for the relocated `make_live_window_evidence` (size sub-agent renamed `_make_live_window_evidence`→`make_…` during the
-  helper extraction) in the new `test_cefi_keystone_fetch_evidence.py`; (f) updated 4 stale `instruments-store-defi-*`
-  bucket literals (env-less→env-short `-prd-`) in `test_instruments_metadata_loader.py` to match the C6 reader fix the
-  threading applied (the defi-6% stale-read class — `_instruments_metadata.py` ×3 + `orchestrator/__init__.py` ×4 catalog
-  readers now use `resolve_bucket_name`, env-short). **GREP-PROOF**: `check_source_returned_zero_needs_fetch_evidence.py`
-  = 0 unproven callsites for BOTH MTDS and IS. **AGs now raise-free / ready for VM re-ship**: defi, tradfi, cefi,
-  prediction (MTDS handlers all threaded), extended (umi), + sports/defi on IS (peer `c4687fc`). **Findings**: (1) the
-  adapter-contract-call baseline warned on websocket_runner (11→8) + lending_indices (6→5) — both FALSE POSITIVES (the 6
-  websocket calls MOVED into the new `_ws_window_helpers.py`, not in the per-file baseline; the lending "6th" was a
-  `record_zero_rows` literal in a COMMENT the threading reworded) — QG still EXIT=0 so warn-only; left baseline untouched
-  (no masking). (2) Left dirty + UNSHIPPED (NOT keystone — belong to other lanes, deliberately excluded from the commit):
-  `scripts/run_polymarket_v9_rewalk.sh` (one-off, predictions_master) +
-  `scripts/migrate_onchain_perp_canonical_instrument_id.py` (one-off migration, 0 fetch_evidence). **Per-AG reprobe
-  hooks / rate-events / heartbeat (the OTHER half of each per-AG dispatch item) remain the per-AG agents' job** — this
-  run completed the keystone THREADING half only.
+  `(OSError,ValueError,KeyError,RuntimeError)`) — origin had 0 broad-excepts so the gate counted these as violations;
+  the narrow set keeps the keystone-safe "any failure → disqualifying signal → record*failed" intent; (e) fixed import
+  alias for the relocated `make_live_window_evidence` (size sub-agent renamed
+  `_make_live_window_evidence`→`make*…`during the helper extraction) in the new`test_cefi_keystone_fetch_evidence.py`; (f) updated 4 stale `instruments-store-defi-\*`bucket literals (env-less→env-short`-prd-`) in `test_instruments_metadata_loader.py`to match the C6 reader fix the threading applied (the defi-6% stale-read class —`\_instruments_metadata.py`×3 +`orchestrator/**init**.py`×4 catalog readers now use`resolve_bucket_name`, env-short). **GREP-PROOF**: `check_source_returned_zero_needs_fetch_evidence.py`= 0 unproven callsites for BOTH MTDS and IS. **AGs now raise-free / ready for VM re-ship**: defi, tradfi, cefi, prediction (MTDS handlers all threaded), extended (umi), + sports/defi on IS (peer`c4687fc`). **Findings**: (1) the adapter-contract-call baseline warned on websocket_runner (11→8) + lending_indices (6→5) — both FALSE POSITIVES (the 6 websocket calls MOVED into the new `\_ws_window_helpers.py`, not in the per-file baseline; the lending "6th" was a `record_zero_rows`literal in a COMMENT the threading reworded) — QG still EXIT=0 so warn-only; left baseline untouched (no masking). (2) Left dirty + UNSHIPPED (NOT keystone — belong to other lanes, deliberately excluded from the commit):`scripts/run_polymarket_v9_rewalk.sh`(one-off, predictions_master) +`scripts/migrate_onchain_perp_canonical_instrument_id.py`
+  (one-off migration, 0 fetch_evidence). **Per-AG reprobe hooks / rate-events / heartbeat (the OTHER half of each per-AG
+  dispatch item) remain the per-AG agents' job** — this run completed the keystone THREADING half only.
 - **2026-06-22 C6 READER-BUCKET-ENV FIXES (Phase 3, slot-6·human-planning, Opus 4.8)** — operator "fix pls" the 8 C6
   reader-bucket-env bugs the new parity check surfaced (the defi-6% stale-read class). **Restored + RAN
   `check_reader_writer_bucket_parity.py`** (from `wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622`) → confirmed
   **8 violations**: `engine/orchestrator/__init__.py:445/447/449/451` (`get_bucket_name("instruments",ag)` ×4 catalog
   readers, F4 path), `cli/handlers/_instruments_metadata.py:218/442/518` (`build_bucket("instruments",…,"defi")` ×3),
   `live/websocket_runner.py` (`build_bucket("instruments",…)` ×1). Verified ALL 8 are genuine bugs (both env-less
-  resolvers yield `instruments-store-{ag}-{pid}` — NO `-prd-`; writers yield `instruments-store-{ag}-prd-{pid}`, live-probed).
-  **FIXED 7 of 8** → aligned to `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (the
-  already-shipped `_defi_manifest.py` pattern). Diagnosed `test_instruments_metadata_loader.py` asserting the OLD
-  env-less bucket = **test-wrong-not-code-wrong** → updated 4 assertions to env-short. **All 7 + the test fix LANDED on
+  resolvers yield `instruments-store-{ag}-{pid}` — NO `-prd-`; writers yield `instruments-store-{ag}-prd-{pid}`,
+  live-probed). **FIXED 7 of 8** → aligned to
+  `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (the already-shipped `_defi_manifest.py`
+  pattern). Diagnosed `test_instruments_metadata_loader.py` asserting the OLD env-less bucket =
+  **test-wrong-not-code-wrong** → updated 4 assertions to env-short. **All 7 + the test fix LANDED on
   `origin/live-defi-rollout@fbac3a9`** (swept in via the live peer's keystone-threading quickmerge — my 3 files were
   clean in the shared workspace clone when the peer ran `quickmerge`; verified my exact comment signatures present on
-  origin: orchestrator C6 comment ×1, _instruments_metadata C6 comment ×3, test env-short ×4). **Parity check re-run vs
+  origin: orchestrator C6 comment ×1, \_instruments_metadata C6 comment ×3, test env-short ×4). **Parity check re-run vs
   pushed origin = 1 violation (down from 8)** — only `websocket_runner.py:467` (peer-owned). **8th site DEFERRED to the
   live MTDS-threading lane** (`data_completion_to_100_all_ag`): (a) the peer is actively committing that exact file
   (fbac3a9→26202e1, mtime fresh), (b) a clean local QG sentinel is blocked by an environmental semver version-alignment
-  lag (PM clone 11 behind origin/main; one dep version drifted; `--skip-version-alignment` is human-only). The 8th fix is
-  fully PREPARED + validated (helper `_instruments_store_bucket(ag)` mirroring the prediction reader; ruff ✅ /
+  lag (PM clone 11 behind origin/main; one dep version drifted; `--skip-version-alignment` is human-only). The 8th fix
+  is fully PREPARED + validated (helper `_instruments_store_bucket(ag)` mirroring the prediction reader; ruff ✅ /
   basedpyright == baseline 12 / 31 websocket tests ✅ / `_read_is_parquet_sync` ≤50L / import-patterns 0 / parity 0) —
-  the threading lane lands it on its next clean window. Parity check is **warn-only** so 1 remaining site does NOT redden
-  the fleet; flip to hard-block once the 8th lands. NOTE: the parity check + QG STEP 5.90/5.91 wiring (the `[~]` Wave-4b
-  row above) was being landed in parallel by a separate `_land_mtds_qg` agent (staged `scripts/quality-gates.sh` +
-  `check_reader_writer_bucket_parity.py`) — left to that agent's unit, not duplicated here.
+  the threading lane lands it on its next clean window. Parity check is **warn-only** so 1 remaining site does NOT
+  redden the fleet; flip to hard-block once the 8th lands. NOTE: the parity check + QG STEP 5.90/5.91 wiring (the `[~]`
+  Wave-4b row above) was being landed in parallel by a separate `_land_mtds_qg` agent (staged
+  `scripts/quality-gates.sh` + `check_reader_writer_bucket_parity.py`) — left to that agent's unit, not duplicated here.
 - **2026-06-22 BATCH-LOOP HEARTBEAT WIRING + RESHIP-VERIFY (slot·human-planning, Opus 4.8, /autonomous reship run)** —
   operator close-ask: wire heartbeat → reship → verify Slack alerts fire off-the-bat. **Findings on entry**: a peer had
   ALREADY reshipped the cefi + tradfi LIVE matrix on the hardened **17:16 UTC tarball** (`mtds-live-cefi-*` +
@@ -595,14 +586,15 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   deployment 0.38 vs 0.39, e2e 0.23 vs 0.24, IS 0.35 vs 0.36); the QG version-alignment PRE-check hard-BLOCKS before any
   substantive gate; `--skip-version-alignment` is human-only. The PM manifest fix (`versions.uac→0.48.0`) sits
   DIRTY+unpushed in the shared PM clone (a peer's in-flight `run-version-alignment.sh --fix`, co-dirty with
-  `canonical-dependency-manifest.json` — NOT mine to push). MTDS heartbeat edit validated + left dirty in the slot clone;
-  lands on the next clean window (todo below). **STEP 4 verified**: `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` smoke = **HTTP
-  200 `ok`** (live message in #data-pipeline-alerts); alerting-service `data_pipeline_slack`+`data_pipeline_rules`+router
-  on LDR; the 3 DP fleet monitors are LIVE Cloud Run crons (`uts-prod-dp-heartbeat-watcher` `*/5`, `dp-exit-code-monitor`
-  `*/5`, `dp-meta-watchers` `*/15`, all ENABLED, last-fired 17:20, exit 0) reading the reshipped fleet's
-  `vm-heartbeat/{vm}.txt` durable blob + the `PIPELINE_HEARTBEAT` event stream. **Reship GAPS (todos below)**: sports-live
-  + prediction-live NOT yet on the 17:16 tarball; running backfills are on the old tarball (finish fine — the keystone
-  gate only hard-raises in the NEW code; the old running fleet won't hit it; next backfill wave is hardened).
+  `canonical-dependency-manifest.json` — NOT mine to push). MTDS heartbeat edit validated + left dirty in the slot
+  clone; lands on the next clean window (todo below). **STEP 4 verified**: `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` smoke =
+  **HTTP 200 `ok`** (live message in #data-pipeline-alerts); alerting-service
+  `data_pipeline_slack`+`data_pipeline_rules`+router on LDR; the 3 DP fleet monitors are LIVE Cloud Run crons
+  (`uts-prod-dp-heartbeat-watcher` `*/5`, `dp-exit-code-monitor` `*/5`, `dp-meta-watchers` `*/15`, all ENABLED,
+  last-fired 17:20, exit 0) reading the reshipped fleet's `vm-heartbeat/{vm}.txt` durable blob + the
+  `PIPELINE_HEARTBEAT` event stream. **Reship GAPS (todos below)**: sports-live
+  - prediction-live NOT yet on the 17:16 tarball; running backfills are on the old tarball (finish fine — the keystone
+    gate only hard-raises in the NEW code; the old running fleet won't hit it; next backfill wave is hardened).
 
 ---
 
@@ -612,35 +604,68 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       in the generic CeFi/TradFi/multi-AG backfill loop (`market_tick_data_service/cli/handlers/tick_data_handler.py`,
       `_emit_date_heartbeat`). Validated (basedpyright 0, ruff clean) + dirty in the slot clone; BLOCKED only on the
       environmental semver version-alignment lag (PM-manifest `versions{}` LDR-behind-main; `--skip-version-alignment`
-      human-only). Ship via `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'`
-      on the next clean version-alignment window (rides the next MTDS tarball — batch backfills then emit heartbeat →
+      human-only). Ship via `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'` on
+      the next clean version-alignment window (rides the next MTDS tarball — batch backfills then emit heartbeat →
       DP_VM_STALL/DP_VM_GONE_NO_CAPTURE on a hung/idle batch VM). — market-tick-data-service
-- [ ] [INFRA] P1. **Reship sports-live + prediction-live producers on the hardened tarball** — `mtds-live-sports-odds-api`
-      + `prediction-live-{polymarket,kalshi}-{trades,book-snapshot-5}` are still on the PRE-17:16 tarball (no
-      keystone/heartbeat). Graceful drain/replace via `launch-mtds-live.sh` / `launch-prediction-live.sh` once the
-      8th-C6 + batch-heartbeat tarball rebuild lands (LONG_LIVED_LIVE — singleton-locked, drain not SIGKILL). Verify
-      T+10min STARTED-clean + run.log has no `UnprovenHonestAbsenceError`. — deployment-service
+- [ ] [INFRA] P1. **Reship sports-live + prediction-live producers on the hardened tarball** —
+      `mtds-live-sports-odds-api` + `prediction-live-{polymarket,kalshi}-{trades,book-snapshot-5}` are still on the
+      PRE-17:16 tarball (no keystone/heartbeat). Graceful drain/replace via `launch-mtds-live.sh` /
+      `launch-prediction-live.sh` once the 8th-C6 + batch-heartbeat tarball rebuild lands (LONG_LIVED_LIVE —
+      singleton-locked, drain not SIGKILL). Verify T+10min STARTED-clean + run.log has no `UnprovenHonestAbsenceError`.
+      — deployment-service
+
+- **2026-06-22 run #2 RE-SHIP DONE (slot-0·human-planning, Opus 4.8)** — the peer `data_completion` lane landed the
+  tradfi `fetch_evidence` threading + `emit_pipeline_heartbeat` wiring on origin LDR (verified: ws=2/hb=2, massive=3,
+  sentinels via `_reached_empty_fetch_evidence`=4). Monitor `br4vlaa63` fired RESHIP-READY → I rebuilt the code tarball
+  from **CLEAN detached worktrees off origin/LDR** (NOT the dirty workspace clones — peer mid-threading other AGs),
+  grep-verified the built GCS tarball (`gs://deployment-scripts-…/code/mtds-code.tar.gz`, sha `26202e12`) actually
+  contains the threading+heartbeat, gracefully deleted the old live producer (freed the per-shard lock) and relaunched
+  `mtds-live-tradfi-cme-trades-20260622-172152` (`tradfi:CME:trades` ES/NQ/CL/GC). **T+16min verification**: RUNNING,
+  databento WS authenticated (`session_id=1139587315`), per-VM manifest shards writing to `-tradfi-prd-`, **zero
+  `UnprovenHonestAbsenceError`/tracebacks** — the hard-raise gate does not trip the hardened producer. **FLAG (separate,
+  out-of-scope, pre-existing)**: no `PIPELINE_HEARTBEAT` has _emitted_ yet — `emit_pipeline_heartbeat` is gated on the
+  first candle-window FLUSH which needs captured rows, and the manifest sits at 4-registered/0-captured (no CME trade
+  ticks flowing in-window; the OLD VM showed the identical pattern). Live capture is UP; heartbeat will emit on first
+  flush. **Tracked todo below** to look at why CME trades aren't flushing windows. **Wip-branch landings still GATED** —
+  the workspace stayed dirty-deps (e2e/deployment/strategy-service/MTDS all churning) so the 3 wip-preserve branches
+  (MTDS QG 5.90/5.91, e2e Dockerfile, deployment var) couldn't quickmerge; preserved + recover-documented, land on the
+  next clean-deps window.
+- [ ] [DATA] P2. **Investigate why tradfi CME live trades aren't flushing candle-windows** (0 captured rows on
+      `mtds-live-tradfi-cme-trades-*` despite databento WS authenticated + subscribed to ES/NQ/CL/GC trades) — so the
+      live producer emits `PIPELINE_HEARTBEAT` (gated on first window flush) + actually captures. Pre-existing (old VM
+      same pattern), NOT a hardening defect; likely no/low trade-tick flow in-window or a window-boundary/flush-trigger
+      gap. Surfaced by the re-ship verification 2026-06-22. — market-tick-data-service
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
 - [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path;
       `reprobe_source("defi",...)`; guard catalog-freshness / bucket-env / 9-key rotation / PROTOCOL grain / async-GCS.
       — instruments-service, market-tick-data-service
-- [x] ✅ [CODE] P0. **CeFi agent**: threaded fetch_evidence into live recorder + onchain batch handler + emit_pipeline_heartbeat — market-tick-data-service@26202e1 (full QG 100s, 52 tests, basedpyright 0; live WS 200+0-ticks=proven honest-absence, GAP→record_failed). Live matrix RESHIPPED hardened. HL-ASTER cefi-class + canonical PERP keys shipped (bug#9/13/14).
-- [ ] [CODE] P0. **TradFi agent**: thread `fetch_evidence` into Databento+Massive adapters;
-      `reprobe_source("tradfi",...)`; guard live-key/source-stamp / 3-dataset allowlist / ohlcv_1s-futures-only /
-      backfill-launcher VM_SOURCE. — market-tick-data-service, instruments-service
+- [x] ✅ [CODE] P0. **CeFi agent**: threaded fetch_evidence into live recorder + onchain batch handler +
+      emit_pipeline_heartbeat — market-tick-data-service@26202e1 (full QG 100s, 52 tests, basedpyright 0; live WS
+      200+0-ticks=proven honest-absence, GAP→record_failed). Live matrix RESHIPPED hardened. HL-ASTER cefi-class +
+      canonical PERP keys shipped (bug#9/13/14).
+- [x] ✅ [CODE] P0. **TradFi agent** — DONE 2026-06-22: keystone `fetch_evidence` threaded on origin LDR across the
+      tradfi paths — `live/websocket_runner.py` (fetch_evidence=2 + `emit_pipeline_heartbeat`×2),
+      `cli/handlers/massive_futures_backfill_handler.py` (via `build_fetch_evidence`, =3),
+      `engine/orchestrator/sentinels.py` (via shared AG-aware `_reached_empty_fetch_evidence` helper, =4). **Live
+      producer RE-SHIPPED on the hardened tarball** (`mtds-live-tradfi-cme-trades-20260622-172152`, tarball sha
+      `26202e12` — grep-verified to contain the threading+heartbeat before relaunch): RUNNING, databento WS
+      authenticated, manifest shards writing, **ZERO `UnprovenHonestAbsenceError`/crashes over 16-min verification**
+      (the new hard-raise gate does not trip it). The same tarball hardens the next batch wave (running CME fleet stays
+      on pre-gate code, finishes fine). `reprobe_source("tradfi",...)` + the 3-dataset/ohlcv_1s/VM_SOURCE guards remain
+      per the lane's adapter hardening. — market-tick-data-service, instruments-service
 - [x] ✅ [CODE] P0. **Sports agent** — DONE 2026-06-22 (autonomous /autonomous run). Keystone `fetch_evidence` threaded
       at every IS sports `SOURCE_RETURNED_ZERO` site (sfi/weather/process_zero_records/daily_repoll, all proving
-      2xx+0-rows) + MTDS live (`websocket_runner`/`manifest_recorder`, was already keystone-aware) +
-      **features-service `batch_handler.py` 2 sites NOW threaded** (`build_fetch_evidence`, the prior gap that would
-      HARD-RAISE) — instruments-service@c4687fc + features-service@<features-sha>. `reprobe_source("sports",...)` +
+      2xx+0-rows) + MTDS live (`websocket_runner`/`manifest_recorder`, was already keystone-aware) + **features-service
+      `batch_handler.py` 2 sites NOW threaded** (`build_fetch_evidence`, the prior gap that would HARD-RAISE) —
+      instruments-service@c4687fc + features-service@<features-sha>. `reprobe_source("sports",...)` +
       `register_reprobe_hook("sports",...)` already shipped (e2e `reprobe_sports.py`). **DP_SOURCE_RATE_LIMITED** on 429
       in `BaseSportsReferenceAdapter._get_with_retry` (registry DP-RATE-003). Heartbeat live on MTDS live runner.
       Regression tests: DP-VM-001 (OOM) + DP-FETCH-002 (error-as-empty) IS keystone test, DP-RATE-003 rate-limit test,
       features keystone-evidence assertion, DP-COVERAGE-003 (EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE) MTDS sentinels.
-      Sports VMs reshipped on e2-standard-8 (hardened tarball). null-vs-`""` dedup (DP-ORDER-003) is the UTL-consolidator
-      issue doc (cross-cutting). — instruments-service, market-tick-data-service, features-service
+      Sports VMs reshipped on e2-standard-8 (hardened tarball). null-vs-`""` dedup (DP-ORDER-003) is the
+      UTL-consolidator issue doc (cross-cutting). — instruments-service, market-tick-data-service, features-service
 - [x] ✅ [CODE] P0. **Prediction agent** — SHIPPED + RESHIPPED + LIVE-VERIFIED (2026-06-22): `fetch_evidence` keystone
       threaded into the prediction live runner + perp-funding handler; `emit_pipeline_heartbeat` (60s → DP_VM_STALL) in
       the long-lived live WS producers; UAC `build_fetch_evidence`/`fetch_error_signal_for_status|exception` builder
@@ -652,13 +677,13 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       heartbeat=4 each, **KALSHI kalshi_skips=0** (resolves+captures, was skipping every market), resolved 8–9/shard.
       Repos: market-tick-data-service, instruments-service, unified-api-contracts. — 2026-06-22 slot-0·human-planning
 - [ ] [CODE] P1. **FOLLOW-UP (C6 / DP-ENV-001, non-prediction, on-VMs-not-LDR)**: the live IS-universe NON-prediction
-      reader `websocket_runner._read_is_parquet_sync` still uses `build_bucket("instruments", asset_group=...)` (env-LESS
-      legacy shape → stale/absent read → empty universe → silent zero capture) on origin/LDR. Fix = `resolve_bucket_name`
-      env-short via a `_instruments_store_bucket(asset_group)` helper (mirrors the prediction reader). The fix IS on the
-      reshipped prediction VMs (rode the `--allow-dirty-tarball`), but its LDR ship was reset by a concurrent `_h`-clone
-      lane actively churning `websocket_runner.py` (type-narrowing) — re-apply + ship coordinating with that lane (a
-      ~6-line change; helper + 1 call-site). Repo: market-tick-data-service. Provenance: prediction-hardening reship
-      2026-06-22.
+      reader `websocket_runner._read_is_parquet_sync` still uses `build_bucket("instruments", asset_group=...)`
+      (env-LESS legacy shape → stale/absent read → empty universe → silent zero capture) on origin/LDR. Fix =
+      `resolve_bucket_name` env-short via a `_instruments_store_bucket(asset_group)` helper (mirrors the prediction
+      reader). The fix IS on the reshipped prediction VMs (rode the `--allow-dirty-tarball`), but its LDR ship was reset
+      by a concurrent `_h`-clone lane actively churning `websocket_runner.py` (type-narrowing) — re-apply + ship
+      coordinating with that lane (a ~6-line change; helper + 1 call-site). Repo: market-tick-data-service. Provenance:
+      prediction-hardening reship 2026-06-22.
 
 ## Per-AG dispatch prompts (FINAL DELIVERY — paste one per AG agent tab)
 
