@@ -259,8 +259,8 @@ net-new capability (not robustness closures) and are dispatched to the central V
 **Operator request (2026-06-22):** when an account is disabled (org turns off Claude Code — e.g. sub-b-iggy2london:
 "Your organization has disabled Claude subscription access for Claude Code"), the orchestrator must (1) stop using it
 for NEW spawns AND (2) **divert the agents already running on it** to a working account. **Caveat (operator):** a
-_missing heartbeat_ must NOT be presumed an account-auth failure — Claude's backend has outages, and a good account
-must not be marked bad on a blip; it must be reused once the servers recover. All accounts can be down simultaneously.
+_missing heartbeat_ must NOT be presumed an account-auth failure — Claude's backend has outages, and a good account must
+not be marked bad on a blip; it must be reused once the servers recover. All accounts can be down simultaneously.
 
 ### What already exists (verified 2026-06-22 — do NOT rebuild)
 
@@ -272,9 +272,9 @@ must not be marked bad on a blip; it must be reused once the servers recover. Al
 - **New-spawn avoidance (requirement 1 — DONE):** `account_is_usable` excludes auth-failed-in-cooldown + rate-limited +
   disabled → `pick_headroom_account`/`pick_next_account` skip a bad account.
 - **Auto-recovery (the "reuse when servers recover" — DONE):** auth_failed accounts are held out only for an exponential
-  cooldown (`AUTH_FAILED_COOLDOWN_BASE_SECONDS=600` → 6h cap), re-enter the pool for a re-probe after, and are CLEARED on
-  the next successful probe (`_clear_auth_failed_db`) or a successful worker heartbeat (`slots_worker.py` healing path →
-  `clear_account_auth_failed`).
+  cooldown (`AUTH_FAILED_COOLDOWN_BASE_SECONDS=600` → 6h cap), re-enter the pool for a re-probe after, and are CLEARED
+  on the next successful probe (`_clear_auth_failed_db`) or a successful worker heartbeat (`slots_worker.py` healing
+  path → `clear_account_auth_failed`).
 - **Eviction primitive (the fan-out — EXISTS):** `rotate_all_slots_off_account(account_id, *, trigger)` diverts EVERY
   running slot off an account → next usable account (resume-respawn via `spawn_with_account_bg`), with the
   **global-outage guard already built in** (`pick_next_account is None` → logs `account_rotation_no_fallback`, does NOT
@@ -290,9 +290,9 @@ must not be marked bad on a blip; it must be reused once the servers recover. Al
    usage-refresh) — never to the poller's confirmed-401/403 path. So agents already running on a disabled account are
    NOT diverted; they wedge individually and recover only slowly via the heartbeat-silent reap. **This is requirement
    (2), unfulfilled.**
-2. **The spawn-heartbeat watchdog PRESUMES auth_failed on a bare timeout** (`_auth_failover.check_spawn_heartbeat_timeouts`
-   → `mark_account_auth_failed`) — exactly the operator's caveat violated. During an outage every spawn timeout
-   false-marks its account + churns rotations.
+2. **The spawn-heartbeat watchdog PRESUMES auth_failed on a bare timeout**
+   (`_auth_failover.check_spawn_heartbeat_timeouts` → `mark_account_auth_failed`) — exactly the operator's caveat
+   violated. During an outage every spawn timeout false-marks its account + churns rotations.
 3. **The main-agent keeper has no auth_failed branch** — `main_agent_keeper` fails over only on usage caps
    (`pick_headroom_account` at the cap modal), so a disabled account under the main agent is never diverted.
 4. `rotate_all_slots_off_account` hardcodes `RotationReason.rate_limit` — an auth_failed eviction would mis-log /
@@ -308,43 +308,51 @@ clears the flag on recovery.
 
 ### Phased todos
 
-- [ ] [ORCHESTRATOR] P1. **Task A — parametrize the eviction primitive.** Add `reason: RotationReason =
-      RotationReason.rate_limit` to `rotate_all_slots_off_account` (`server/server.py`); thread it into the two
-      `log_activity` `rotation_reason` fields, the `account_rotation_no_fallback` log, and the `fire_rotation_alert`
-      call. Back-compat default keeps the 3 existing rate-limit callers unchanged. Repo: agent-orchestrator
-      (`server/server.py`).
-- [ ] [ORCHESTRATOR] P1. **Task B — wire poller-confirmed auth_failed → eviction fan-out (requirement 2).** New
-      `UsagePoller._evict_slots_on_auth_failed(account_id)` (lazy-import `rotate_all_slots_off_account`, try/except, never
-      raises) called from the 401/403 branch right after `_mark_auth_failed_db(account_id)`, with
+- [x] ✅ [ORCHESTRATOR] P1. **Task A — parametrize the eviction primitive.** Added
+      `reason: RotationReason =     RotationReason.rate_limit` to `rotate_all_slots_off_account` (`server/server.py`);
+      threaded into both `log_activity` `rotation_reason` fields, the `account_rotation_no_fallback` log, and
+      `fire_rotation_alert`. Back-compat default keeps the 3 existing rate-limit callers unchanged. —
+      agent-orchestrator@30c2828c
+- [x] ✅ [ORCHESTRATOR] P1. **Task B — wire poller-confirmed auth_failed → eviction fan-out (requirement 2).**
+      `UsagePoller._evict_slots_on_auth_failed(account_id)` (lazy-import + try/except, never raises) folded into
+      `_mark_auth_failed_db` (covers both the 401/403 + no-token sites), with
       `reason=RotationReason.auth_failed, trigger="poller-auth-failed"`. Relies on the primitive's built-in
-      global-outage guard (no usable target → no kill) + no-op-after-moved (safe every tick). Repo: agent-orchestrator
-      (`server/usage_poller.py`).
-- [ ] [ORCHESTRATOR] P1. **Task C — harden the spawn-heartbeat watchdog (the operator's caveat).** In
-      `_auth_failover.check_spawn_heartbeat_timeouts`, STOP calling `mark_account_auth_failed` on a bare timeout. On
-      timeout: if the account is ALREADY poller-confirmed `account_is_auth_failed` → rotate to a usable account
-      (global-outage guarded — if none, back off, do NOT kill); else → retry-respawn on the SAME account (transient
-      spawn issue), bounded by the existing `spawn_retry_count`. Relabel the activity to a spawn-timeout liveness event
-      (not `account_auth_failed_marked`). After this, `account_status == "auth_failed"` is a poller-only (401/403)
-      signal. Repo: agent-orchestrator (`server/worker_liveness/_auth_failover.py`).
-- [ ] [ORCHESTRATOR] P1. **Task D — keeper auth_failed branch for the main agent.** In `main_agent_keeper` each tick, if
-      the main agent's account is poller-confirmed `account_is_auth_failed` → fail over main to a usable account (reuse
-      the keeper's existing resume/headroom failover machinery, gated on auth_failed instead of the usage-cap modal),
-      global-outage guarded (no usable account → do NOT kill, leave main in place, rely on the all-accounts-down page +
-      auto-recovery). Repo: agent-orchestrator (`server/main_agent_keeper.py`).
-- [ ] [ORCHESTRATOR] P2. **Task E — global-outage safety (verify + harden).** Confirm with tests that a
-      transient/timeout/5xx sweep marks NO account auth_failed (no false eviction) and that with every account unusable
-      the eviction/keeper paths do NOT kill (back off) while `_fire_all_accounts_down_if_needed` pages once. (Stretch /
-      may split to a follow-up: a distinct "likely Claude outage — not churning" detector when ALL `/usage` probes fail
-      transiently in one tick, since that case leaves accounts healthy-status so `all_accounts_unusable` stays False.)
-      Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P1. **Task F — tests.** poller 401/403 → mark + fan-out rotation (slots diverted); poller
-      timeout/5xx → NOT marked, NO rotation; spawn-heartbeat timeout on a not-confirmed account → retry same, NOT
-      marked auth_failed; spawn-heartbeat timeout on a poller-confirmed-bad account → rotate to usable; all-accounts
-      unusable → no kill (back off) + page; keeper main on auth_failed account → failover to usable, no-usable → no
-      kill; auto-recovery: successful probe clears auth_failed → account re-usable. Repo: agent-orchestrator (`tests/`).
-- [ ] [DOC] P2. **Codex SSOT.** Document the auth-failure eviction flow + the "missing-heartbeat-is-not-auth" invariant +
-      global-outage guard + auto-recovery in `codex/04-architecture/agent-orchestrator-worker-liveness.md` (and a pointer
-      paragraph in `agent-orchestrator-overview.md` § Watchdog). Repo: unified-trading-pm.
+      global-outage guard + no-op-after-moved. — agent-orchestrator@30c2828c
+- [x] ✅ [ORCHESTRATOR] P1. **Task C — harden the spawn-heartbeat watchdog (the operator's caveat).**
+      `_auth_failover.check_spawn_heartbeat_timeouts` NO LONGER marks `mark_account_auth_failed` on a bare timeout. On
+      timeout: if the account is ALREADY poller-confirmed `account_is_auth_failed` → DEFER to the poller's eviction (no
+      respawn here, no retry burn); else → retry-respawn on the SAME account (`reason="spawn_timeout_retry"`), bounded
+      by `spawn_retry_count`. Activity relabelled (`spawn_heartbeat_retry` /
+      `spawn_heartbeat_deferred_to_poller_eviction`). `account_status == "auth_failed"` is now a poller-only signal. —
+      agent-orchestrator@30c2828c
+- [x] ✅ [ORCHESTRATOR] P1. **Task D — keeper auth_failed branch for the main agent.**
+      `main_agent_keeper._handle_auth_failed_account` (runs before the usage-cap modal check) fails main over off a
+      poller-confirmed auth_failed account: kill + `--resume` on a usable account (re-points `AgentRow.account_id` to
+      prevent a re-failover loop) / kill-for-fresh (no sid) / leave-in-place (no usable account → global-outage guard).
+      — agent-orchestrator@30c2828c
+- [x] ✅ [ORCHESTRATOR] P2. **Task E — global-outage safety (core verified).** Tests lock: transient/timeout/5xx marks
+      NO account + evicts NO slot (`test_transient_error_does_not_evict_slots`); no-usable-account → keeper does NOT
+      kill (`test_auth_failed_account_no_usable_left_in_place`); `rotate_all_slots_off_account`'s `next_acc is None`
+      guard + `_fire_all_accounts_down_if_needed` are pre-existing. **Stretch SPLIT to a follow-up** (see below). —
+      agent-orchestrator@30c2828c
+- [x] ✅ [ORCHESTRATOR] P1. **Task F — tests.** New `test_spawn_heartbeat_liveness.py` (retry-same / defer / heartbeated
+      no-op, never-marks) + poller eviction tests (`_evict_slots_on_auth_failed` reason, `_mark_auth_failed_db` fan-out,
+      skip-on-mark-raise, transient-no-evict) + keeper auth_failed tests (resume / no-usable-frozen / no-sid-fresh /
+      healthy-no-failover). Full QG green: **819 passed, 1 skipped**; dashboard tsc + 51 vitest green. —
+      agent-orchestrator@30c2828c
+- [ ] [ORCHESTRATOR] P3. **Task E stretch (SPLIT-OUT follow-up) — transient fleet-wide-outage detector + page.** A
+      purely transient global outage (ALL `/usage` probes time out / 5xx in one tick, none classified 401/403/429)
+      leaves every account healthy-status, so `all_accounts_unusable` stays False and the all-accounts-down page does
+      NOT fire — the operator isn't told. The eviction itself is already outage-SAFE (no marks, no churn, auto-resume);
+      this is an OBSERVABILITY gap only. Add a poller per-tick counter (n_probed / n_success / n_transient_fail) → when
+      `n_success == 0 and n_transient_fail == n_probed (> 0)` fire a distinct deduped "likely Claude backend outage —
+      not churning" page (reset on the next success). Repo: agent-orchestrator (`server/usage_poller.py`). **DEFERRED**
+      (provenance: operator caveat 2026-06-22 "all accounts could be down simultaneously"; the core eviction shipped
+      without it).
+- [x] ✅ [DOC] P2. **Codex SSOT.** Documented the auth-failure eviction flow + the "missing-heartbeat-is-not-auth"
+      invariant + global-outage guard + auto-recovery in `codex/04-architecture/agent-orchestrator-worker-liveness.md` §
+      "Account auth-failure eviction" + a pointer paragraph in `agent-orchestrator-overview.md` § Watchdog. —
+      unified-trading-pm (this commit)
 
 ### Success criteria
 

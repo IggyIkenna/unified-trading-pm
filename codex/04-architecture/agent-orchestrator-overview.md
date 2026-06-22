@@ -504,6 +504,15 @@ revives any dead daemon-loop thread without a backend restart; and the heartbeat
 tmux session's age (no "idle for 5711min"). Full trigger contracts:
 [`agent-orchestrator-worker-liveness.md` § "Self-healing hardening"](agent-orchestrator-worker-liveness.md).
 
+**Account auth-failure eviction (2026-06-22)** — a disabled/token-rejected account is detected ONLY by the
+`usage_poller`'s classified HTTP 401/403 (never by a missing heartbeat — Claude outages must not sideline a good
+account), which then both excludes it from new spawns AND diverts the agents already on it: workers via
+`rotate_all_slots_off_account(reason=auth_failed)`, the main agent via `main_agent_keeper._handle_auth_failed_account`.
+The spawn-heartbeat watchdog no longer presumes auth on a timeout (retries same account / defers to the poller). All
+paths are global-outage-safe (no usable account → leave in place, never churn) and auto-recover when the poller clears
+the flag on the next good probe. Full flow:
+[`agent-orchestrator-worker-liveness.md` § "Account auth-failure eviction"](agent-orchestrator-worker-liveness.md).
+
 The deterministic session id is generated at spawn (`tmux_spawn.new_session_id()` → `claude --session-id <uuid>`) and
 persisted on `SlotRow.claude_session_id` (workers) / `AgentRow.claude_session_id` (main agent) — owned from t=0, no
 transcript-filename scraping. The unified `AgentKeeper` (formerly `MainAgentKeeper`; now also keeps the review agent(s)
