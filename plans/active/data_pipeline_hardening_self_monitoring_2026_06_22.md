@@ -315,8 +315,16 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       flat value is the EARLIEST across chains the pair was captured on (conservative; matches the chain-less grain of
       the divergence oracle). The REMAINING ~13,760 are NOT pre-collection — they split into the two real-gap classes
       below. — **unified-api-contracts**
-- [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY real-gaps (~13,760, 2 classes) — backfill OR handler↔oracle data_type
-      reconciliation (C2/C3)** — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the
+- [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY real-gaps (13,760, 2 classes) — backfill OR handler↔oracle data_type
+      reconciliation (C2/C3)** — **RE-VERIFIED 2026-06-22 (post-coverage_start-fix re-run of `detect_manifest_divergence.py
+      --asset-group defi` on the live prod `_index`): 22,140 → 13,760 confirmed (−8,380 clip by UAC@bfe6736b), MAX DATE
+      2025-11-18, ZERO in the operational window (≥2025-11-19) — all historical, NOT blocking. The 13,760 are exactly the
+      two classes: name-drift [AAVE_V3 position_data/liquidation_events/flash_loan_events ×1063 each, MORPHO
+      risk_params/position_data/liquidation_events/lending_indices, COMPOUND_V3] + never-collected/out-of-MVP
+      [STAKEWISE/STADER staking_yields, STARGATE/ACROSS bridge_events, ALCHEMY token_transfers/gas_fees, ASTER/GMX
+      perp_funding, FLASHBOTS mev_events, PYTH oracle_prices, AAVE governance_events]. Candidate CSV regenerated:
+      `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). Stays a tracked campaign
+      (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).** — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the
       post-coverage*start residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a)
       data_type NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
       (`\_DEFI_LENDING*\*\_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/     `lending_indices`but the manifest CAPTURED`liquidations`/`rate_indices`/`utilization`(legacy    `liquidations_handler.py`still exists alongside`liquidation_events_handler.py`; MORPHO subgraph emits     `rate_indices`/`utilization`not the AAVE-style names). The data EXISTS under a different data_type name → diagnose     both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or correct the     oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real gaps (~7k     cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS`bridge_events`, PYTH     `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,     ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields`— the adapter never ran a historical backfill,     OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the     carry_staked_basis/arbitrage_price_dispersion data needs). Decision per venue: real-MVP-need → defi MTDS     historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to    `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED`or trim the oracle scope. Candidate CSV:    `plans/audit/results/divergence_2026-06-22.csv`
