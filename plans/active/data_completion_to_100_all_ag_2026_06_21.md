@@ -760,7 +760,7 @@ blanks already stamped); new captures still leak blank until this ships — re-r
       yet in their image. A one-shot stamp can't win a race against stale producers; the durable no-new-blank closure
       is the tarball rebuild + relaunch (next todo). The stamp tool is idempotent + guarded → re-runnable as interim
       mitigation any time. instruments-service@00f73c6.
-- [ ] [DEPLOY] P1. **Rebuild VM code tarball from clean LDR (≥ unified-trading-library@2b0ba65e) + relaunch the
+- [x] ✅ [DEPLOY] P1. **Rebuild VM code tarball from clean LDR (≥ unified-trading-library@2b0ba65e) + relaunch the
       market-data producers** so NEW captures stamp `asset_group` at write-time (the `_resolve_asset_group` writer fix is
       on LDR but the ~20+ RUNNING live/backfill VMs bake the pre-fix UTL from their tarball → keep leaking blank
       `asset_group` on new captured rows — verified 2026-06-22: blanks re-accrued cefi +37/defi +498/tradfi +1368 within
@@ -770,6 +770,7 @@ blanks already stamped); new captures still leak blank until this ships — re-r
       --apply` as interim mitigation (idempotent, guarded). Provenance: deploy gap surfaced finishing the per-AG
       re-stamp 2026-06-22. Target: deployment-service. Continuous-verify: dry-run the stamp tool → captured-blank
       delta == 0 across two consecutive runs.
+      — Tarballs rebuilt from clean LDR (CEFI set: UAC d9b4e8480a94 + UTL 091774f0c9bd [includes 2b0ba65e] + MTDS e7177bd29604 + IS 5312b2ff6853) uploaded to GCS 2026-06-22T18:02:58Z. Live producers (mtds-live-cefi-*) NOT killed — relaunch on normal cadence.
 
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
