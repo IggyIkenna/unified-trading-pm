@@ -685,7 +685,10 @@ are identified (2) and the ledger exists (3).
       produce real fee/IL PnL. Honest absence only where a vault/pool genuinely has no on-chain history. Backtest + ε=0.
       Repo: mtds / features-onchain (sourcing) + strategy-service (DEFI_LP_VAULT wiring). Creds via get_secret_client —
       never raw values in repo.
-- [ ] [CODE] P2.11.14. **Wire the BTC-level trend-following (CTA) leg into the production directional book** — proven in
+- [x] ✅ [CODE] P2.11.14. **Wire the BTC-level trend-following (CTA) leg — SHIPPED 2026-06-22: UAC@61ac3ad2
+      (TSMOM_BTC_CTA enum+family+leg-spec) + strategy-service@f5f00109 (TsmomBtcCtaEngine + catalogue + paper-universe
+      gating + unit test), both on LDR, QG-green. Version-promotion-lag cleared via run-version-alignment --fix
+      (PM@0df3854f). Remaining for a non-null live paper run: P2.11.16 features + the ε=0 run.** — proven in
       research (`_exec_optimize.py` `trend` leg, 15% sleeve; Progress Log 2026-06-21 "WHY THE DIRECTIONAL BOOK MAKES ~0
       IN 2023 & 2026"). The directional book is market-neutral + long-biased so it makes ~0 in the two BETA years (2023
       melt-up / 2026 selloff); a BTC multi-horizon (1/3/6/12mo) TSMOM leg — long confirmed up-trend, short confirmed
