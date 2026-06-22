@@ -6,8 +6,10 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 created: 2026-06-22
-author: claude [slot·human-planning]
 status: active
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Sports reference backfill OOM — per-league skip-check re-read the 6.5 GB index
