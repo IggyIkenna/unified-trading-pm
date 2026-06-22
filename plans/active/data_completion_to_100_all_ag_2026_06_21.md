@@ -583,6 +583,28 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
 
 ## Progress Log
 
+### 2026-06-22 ~14:36 — Per-AG re-stamp COMPLETE (all 5 AGs, guarded) + deploy-gap pinned (writer fix not yet on VMs)
+
+**RESUMED** the rate-limit-killed asset_group-fix session. Verified the UTL writer fix is SHIPPED + on LDR:
+`unified-trading-library@2b0ba65e` is an ancestor of LDR HEAD; `_resolve_asset_group` lives in
+`manifest_writer/_writer_ingest.py:502`, `MissingAssetGroupError` in `_schema.py:375`, wired into all 5 captured/record/
+add/zero-fill call sites, exported from `__init__.py` — UTL tree clean. UTL = DONE.
+
+**Per-AG re-stamp DONE** (was the open `[DATA] P1`). instruments-service@00f73c6
+(`scripts/stamp_asset_group_manifest_rows_2026_06_22.py`). `--apply` ran all 5 AGs; per-AG snapshot
+`_index/snapshots/pre_asset_group_stamp_{ag}_2026_06_22.parquet` written FIRST; guards held EVERYWHERE (rowcount +
+captured preserved exactly, `nonblank_mismatch=0`). Stamped: cefi 242 / defi 7,938 / tradfi 26,317 / sports 5 /
+prediction 42,234 blanks → bucket AG. Post-stamp `blank_after=0` on every bucket at write-time. The live `_index` had
+already been largely canonicalised since the stale plan figures (1.23M etc.), so residuals were far smaller.
+
+**Deploy gap (filed as new `[DEPLOY] P1`):** a dry-run ~40s after apply showed captured-blanks RE-ACCRUING (cefi +37 /
+defi +498 / tradfi +1368) — the ~20+ RUNNING live+backfill VMs (`mtds-live-cefi-*`, `mdps-defi-*`,
+`mdps-backfill-tradfi`, `cefi-hyperliquid-resume`, `fs-backfill`) bake the PRE-fix UTL from their tarball, so new
+captures keep leaking blank `asset_group`. A one-shot stamp cannot win a race against stale producers; the durable
+closure is `create-code-tarballs.sh` from clean LDR + relaunch (NOT a mass mid-flight kill). Stamp tool is idempotent +
+guarded → interim re-run mitigation. Ship: direct-to-LDR (quickmerge blocked by a peer's dirty UAC dep I do not own;
+ruff-clean `scripts/` one-off, no source gate).
+
 ### 2026-06-22 ~14:15 — UTL asset_group writer fix COMPLETED + SHIPPED (resolver layered on peer baseline)
 
 **SHIPPED (unified-trading-library):** `ManifestWriterIngestMixin._resolve_asset_group` + `MissingAssetGroupError` + the
@@ -673,10 +695,30 @@ blanks already stamped); new captures still leak blank until this ships — re-r
       `VENUES_BY_ASSET_GROUP` (`BINANCE-SPOT` likely needs normalization → `BINANCE`). If a venue doesn't resolve,
       either normalize the venue lookup in `_resolve_asset_group` or add the `asset_group=` kwarg to that test. Iterate
       `quality-gates.sh --no-fix` until the 193 pass; UTL QG ~80s/run.
-- [ ] [DATA] P1. **Per-AG backfill-stamp existing blank-asset_group rows** (after the writer fix ships): sports
-      1,231,203 / tradfi 933,550 / cefi 179,330 / prediction 74,165 / defi 12,142 (the bucket IS the AG → unambiguous).
-      Snapshot each `_index` first; assert captured/rowcount preserved; `gcs_*` ops not gsutil; reuse the defi stamp
-      pattern. Target: instruments-service reconcile tool.
+- [x] ✅ [DATA] P1. **Per-AG backfill-stamp existing blank-asset_group rows** — DONE 2026-06-22 ~14:36,
+      instruments-service@00f73c6 (`scripts/stamp_asset_group_manifest_rows_2026_06_22.py`, ruff-clean one-off).
+      `--apply` ran all 5 AGs, snapshots `_index/snapshots/pre_asset_group_stamp_{ag}_2026_06_22.parquet` written FIRST;
+      guards held everywhere (rowcount + captured preserved EXACTLY, `nonblank_mismatch=0` → no cross-AG contamination).
+      Stamped blanks→AG: cefi 242 (161 cap) / defi 7,938 (7,932 cap) / tradfi 26,317 (13,583 cap) / sports 5 (2 cap) /
+      prediction 42,234 (0 cap, all honest-absence denominator rows). NOTE — the live `_index` had ALREADY been
+      substantially re-stamped/canonicalised since the plan figures above were taken (the 1.23M/933k/179k/74k/12k
+      figures were stale), so the residual blank counts at apply-time were far smaller. **DEPLOY GAP found (NEW
+      captured-blank leak):** a fresh dry-run ~40s post-apply showed blanks RE-ACCRUING (cefi +37, defi +498, tradfi
+      +1368) because the ~20+ RUNNING live/backfill VMs (mtds-live-cefi-_, mdps-defi-_, mdps-backfill-tradfi,
+      cefi-hyperliquid-resume, fs-backfill) still bake the PRE-fix UTL from tarball — the writer fix is on LDR but not
+      yet in their image. A one-shot stamp can't win a race against stale producers; the durable no-new-blank closure
+      is the tarball rebuild + relaunch (next todo). The stamp tool is idempotent + guarded → re-runnable as interim
+      mitigation any time. instruments-service@00f73c6.
+- [ ] [DEPLOY] P1. **Rebuild VM code tarball from clean LDR (≥ unified-trading-library@2b0ba65e) + relaunch the
+      market-data producers** so NEW captures stamp `asset_group` at write-time (the `_resolve_asset_group` writer fix is
+      on LDR but the ~20+ RUNNING live/backfill VMs bake the pre-fix UTL from their tarball → keep leaking blank
+      `asset_group` on new captured rows — verified 2026-06-22: blanks re-accrued cefi +37/defi +498/tradfi +1368 within
+      ~40s of the re-stamp). Recipe: `bash deployment-service/scripts/vm/create-code-tarballs.sh` from a clean LDR clone,
+      then relaunch via the standard MTDS launchers (do NOT mass-kill live producers mid-flight — relaunch on the normal
+      cadence, drain+verify per VM). Until then, re-run `instruments-service@00f73c6 stamp_asset_group_manifest_rows...
+      --apply` as interim mitigation (idempotent, guarded). Provenance: deploy gap surfaced finishing the per-AG
+      re-stamp 2026-06-22. Target: deployment-service. Continuous-verify: dry-run the stamp tool → captured-blank
+      delta == 0 across two consecutive runs.
 
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
