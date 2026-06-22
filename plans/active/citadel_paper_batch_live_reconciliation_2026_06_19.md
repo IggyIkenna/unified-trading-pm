@@ -987,6 +987,19 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 (P2.11.21 autonomous) — honest book + CandleFillEngine + style-sweep verdict.** Honest consolidated book
+  on corrected costs (basis 5bp/leg×2, on-chain 1bp): **+110% on CAP / Sharpe 1.93 / maxDD −10%**, all years + (the
+  basis re-cost cost ~16pts but the on-chain diversifier holds Sharpe/maxDD). Shipped the shared `CandleFillEngine`
+  (execution-service@c50c467d) — the central 1m-candle fill engine with the ExecutionIntent universe (IOC_TAKER /
+  RESTING_LIMIT_TAKER / LIMIT_MAKER N-bp-inside), lifting the `_extreme_ml.py` mechanism into GroupC + generalizing
+  reversion_timing. **Style-sweep verdict (Item 2, cs/basis/trend on real cached 1m candles, `_style_sweep.py`):**
+  posting the limit inside the LIVE open, **LIMIT_MAKER 2bp-inside is best for ALL patient legs** — cs −2.2bps (vs IOC
+  +1.3), basis +3.2 (vs +6.7), trend −7.7 (vs −4.3), ~3.5bps saved vs IOC each, 1-2% miss (taker-cross fallback),
+  monotonic 0→2bp (gap-relative post ~99% fills); IOC taker is worst. Matches ext's measured split (REVERT→maker-inside /
+  CONTINUE→taker). **Default intent mapping settled: patient (cs/basis/trend/on-chain) → LIMIT_MAKER ~2bp; urgent → taker.**
+  In-flight: EVM-perp 1m download (87 coins, ~1hr → on-chain sweep), Item 3 intent-wiring (re-dispatched after a
+  transient sub-agent rate-limit).
+
 - **2026-06-22 (autonomous finish-everything) — RUN COMPLETE: all 5 CODE items shipped across 6 repos (7 commits).**
   Final state of the `/autonomous` "complete everything" dispatch:
   - ✅ **P2.11.14 TSMOM_BTC_CTA archetype** — UAC@61ac3ad2 (enum+family+leg-spec+WS-mappings) +
