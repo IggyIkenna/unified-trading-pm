@@ -393,18 +393,43 @@ watchdog daily kill-cap (20) being burned by frozen-slot churn → dormant-until
       to `<base>` + deletes the leftover (new `reclaimed` non-stop status); a dirty tree, unpushed work, or a deliberate
       branch (`feature/*`, `main`) still STOPs (never loses work). + `config.py` `watchdog_daily_cap` default 20→50. 5
       regression tests (`tests/test_branch_state_reclaim.py`), QG-green. — agent-orchestrator@76970857
-- [ ] [OPS] P1. **DEPLOY BLOCKER — the central-VM orchestrator deploy clone cannot be redeployed to current code.** The
-      deploy clone (`/home/ubuntu/.../agent-orchestrator`, runs the live brain) was **128 commits behind**
-      `origin/live-defi-rollout` (predates the entire `utl_uac` typed-config refactor) with **no auto-deploy cron**, so
-      the FM7 fix above is NOT live on the running orchestrator. A safe-gated catch-up (ff-pull → dry-run import+config
-      against the live env → restart) was attempted 2026-06-22: the new code **boots DEGRADED** — fails to read the
-      internal ES256 keys from GCS (`google.auth MalformedError: Service account info … missing fields token_uri,
-      client_email`; log hint "set GOOGLE_CLOUD_PROJECT if None") and reports **"0 accounts"** at Ready (vs 4 on the old
-      code). Rolled back to the working sha `980217d` (verified 4 accounts restored). **The new typed-config/GCS-cred
-      resolution needs a valid GCP service-account + `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT_ID` provisioned on the AWS VM
-      (or a fix to the new GCS-cred path) before the orchestrator can be redeployed to current LDR.** Until then the live
-      brain runs 128-commit-stale code and the FM7 fix + cap-default are shipped-but-undeployed. Owner: planning VM /
-      operator (cred provisioning).
+### DEPLOY BLOCKER — central-VM orchestrator clone is 128 commits stale + the new code has 2 deploy-time incompatibilities
+
+The deploy clone (`/home/ubuntu/.../agent-orchestrator`, runs the live brain) is **128 commits behind**
+`origin/live-defi-rollout` (predates the entire `utl_uac` typed-config refactor) with **no auto-deploy cron**, so the FM7
+fix above is NOT live on the running orchestrator. Two safe-gated catch-up attempts (ff-pull → dry-run → restart →
+rollback) on 2026-06-22 surfaced **two distinct new-code incompatibilities with this VM's setup**. Each attempt was
+cleanly rolled back to `980217d`; the fleet stayed healthy (4 usable accounts, spawning) on the old code throughout. The
+safe-gate (running service untouched until a verified restart) worked as designed.
+
+- [x] ✅ [OPS] P1. **Blocker 1 — GCS internal-key read (SOLVED + validated).** The VM authenticates to GCP with
+      `ikenna@odum-research.com`'s **`authorized_user`** ADC (`gcloud auth application-default login`), not a
+      service-account. UTL's `cloud_interface/providers/gcp.py::_get_native_client` does
+      `storage.Client.from_service_account_json(creds_path)` **whenever `GOOGLE_APPLICATION_CREDENTIALS` is set** —
+      which chokes on the authorized_user file (`MalformedError: missing token_uri, client_email`). `get_credentials_path()`
+      = `os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")`, so **unsetting that env var** makes it fall to
+      `storage.Client(project=…)` default ADC, which loads the same authorized_user creds from the well-known path.
+      VALIDATED on the VM: `get_storage_client(provider="gcp").download_bytes(orchestrator-creds, internal-private.pem)`
+      → `bytes=241` with the env var unset. Fix = remove the (redundant) `GOOGLE_APPLICATION_CREDENTIALS` line from the
+      central VM's `.env.local`.
+- [ ] [ORCHESTRATOR/UTL] P1. **Blocker 1b — UTL hardening (the proper fleet-wide fix).** `_get_native_client` must NOT
+      assume `GOOGLE_APPLICATION_CREDENTIALS` points at a service-account — it should detect the cred type
+      (`json type == "service_account"` → `from_service_account_json`, else default ADC which handles authorized_user)
+      so a user-ADC VM works without the env-unset workaround. Repo: `unified-trading-library`
+      `cloud_interface/providers/gcp.py:80-86`. Ship via quickmerge → the orchestrator picks it up on redeploy.
+- [ ] [OPS] P1. **Blocker 2 — account token wiring (REMAINS; the real redeploy gate).** With Blocker 1 fixed, the new
+      code boots, loads the internal keys, and the `CredsEnvPoller` populates 4 accounts (the "0 accounts" at Ready was
+      async-load timing, not a fault) — BUT it reads every account as having **no `oauth_token_env_file`** →
+      `usage poller: … skipping /usage probe (operator: run claude setup-token and add the env file)` for all 4 →
+      **`ACCOUNT POOL EXHAUSTED — no headroom account`** → it cannot spawn any worker. The old code reads the same
+      accounts as usable (spawns fine), so the new code's account/token resolution (post-refactor `CredsEnvPoller` +
+      account schema vs the VM's S3 `accounts/` + local `~/.claude-accounts/<id>.env` token files) diverged. **Reconcile
+      the new code's `oauth_token_env_file` wiring with the VM's account setup before redeploying.** Owner: planning VM /
+      operator (account/token setup knowledge).
+- [ ] [OPS] P2. **Then: catch the 128-stale orchestrator clone up to current LDR + redeploy** (activates the FM7 fix +
+      the cap-default + 128 commits of other self-healing improvements). Recipe proven: stash dirty → ff-pull → dry-run →
+      restart → verify (4 usable accounts + spawning) → rollback on degrade. **Also consider an AO deploy cron** so the
+      brain doesn't silently drift 128 commits stale again.
 
 ## Success criteria
 
