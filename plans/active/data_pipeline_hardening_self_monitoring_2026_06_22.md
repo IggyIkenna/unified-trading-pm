@@ -1048,10 +1048,15 @@ dispatch prompts.
       gap fixed; one-shot AgentRow `agent_kind=data_pipeline_failure`; 5 new tests; QG green exit 0) +
       **unified-trading-pm@d4746eb02** (`.github/workflows/escalate-to-orchestrator.yml` accepts `data_pipeline_failure`
       in the workflow_call/dispatch choice + bash case guard + error message — sanctioned `.github` carve-out).
-- [ ] [CODE] P1. Wire `escalation.py::route_finding` `auto_recover` tier → the Layer-0 `RecoveryScriptRegistry` (the
-      `refetch-feed` pattern); register DP actuators. — deployment-service
-- [ ] [CODE] P1. **Actuators (today detect+page only)**: consolidator auto-relaunch (Cloud Run Job re-execute on
-      CONSOLIDATOR_DOWN), backfill-VM auto-relaunch on exit-137 within retry budget. — deployment-service
+- [x] ✅ [CODE] P1. Wire `escalation.py::route_finding` `auto_recover` tier → the Layer-0 recovery actuators (the
+      `refetch-feed` pattern) via a `_DP_RECOVERY_ACTIONS` dispatch; an auto_recover event with no wired actuator OR a
+      FAILED/budget-paged actuator falls through to `file_issue` (never a silent no-op). — deployment-service@e695fa3
+      (CONSOLIDATOR_DOWN→relaunch_consolidator, DP_VM_EXIT_NONZERO-OOM→relaunch_backfill_vm; QG --no-fix exit 0 53s)
+- [x] ✅ [CODE] P1. **Actuators (were detect+page only)**: `scripts/recovery/relaunch_consolidator.py` (re-execute
+      `manifest-consolidator-{ag}` Cloud Run Job on CONSOLIDATOR_DOWN via sanctioned `_gcp_sdk` run_v2.JobsClient,
+      bounded 1/120s-cooldown, emits CONSOLIDATOR_RECOVERED) + `scripts/recovery/relaunch_backfill_vm.py` (re-launch
+      OOM exit-137 backfill via its launcher — streams durable logs + registers, never fire-and-forget — budget ≤2 per
+      (vm-prefix, day) then page_operator). 14 credential-free tests. — deployment-service@e695fa3
 - [ ] [CODE] P1. **Schedule** the daily empty-reprobe (`reprobe_new_empty_confirmed.py`) + auto-flip
       confirmed-misclassified `empty_confirmed`→`attempted_failed` cells (the reclassifier). — deployment-service /
       e2e-testing
