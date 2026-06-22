@@ -1325,7 +1325,13 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "skipped_gates": [],
       "semver_policy": "agent",
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "coverage_pct": 76.77,
+        "qg_red_reason": null,
+        "large_file_count": 10,
+        "warn_file_count": 6
+      }
     },
     "e2e-testing": {
       "type": "test-harness",
