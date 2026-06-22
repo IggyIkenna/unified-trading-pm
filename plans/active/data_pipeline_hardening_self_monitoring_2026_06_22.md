@@ -110,7 +110,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [ ] [CODE] P0. **UAC `DATA_PIPELINE_ALERT_RULES`** (parallel to `LIVE_ALERT_RULES`) generated from the registry so
       emitters + router share one contract; subscribe the data-pipeline PubSub topic in `alert_subscriber`. —
       **unified-api-contracts, alerting-service**
-- [ ] [CODE] P0. **Event constants** for every `event:` in the registry added to UTL `events/event_types.py` (DP*\*
+- [x] ✅ P0. **Event constants** — DONE utl@39f8ec85 (37 DP_* + PIPELINE_HEARTBEAT in events/event_types.py, DATA_PIPELINE_EVENT_TYPES set, re-exported via events/__init__). **Event constants** for every `event:` in the registry added to UTL `events/event_types.py` (DP*\*
       family), so `log_event(DP*\*)` from any VM/watcher/audit routes correctly. — **unified-trading-library**
 - [ ] [CODE] P1. **Escalation hop** mirroring `ci_failure_watcher.py`: `file_issue` tier auto-files
       `plans/active/issues/<slug>_<date>.md` + pings the orchestrator inbox when a deterministic candidate list is
@@ -131,7 +131,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       The closed set of **disqualifying signals** (any present ⇒ NOT honest-absence ⇒ must `record_failed`): non-2xx
       HTTP, auth (401/403), rate-limit (429/`RATE_LIMITED`), 5xx, timeout/`CONNECT_ERROR`, exception-in-adapter,
       empty-key/`MISSING_CREDENTIAL`, empty-but-source-was-never-reached. — **unified-api-contracts**
-- [ ] [CODE] P0. Gate `record_empty(reason=SOURCE_RETURNED_ZERO)` in `_writer_record.py`: require an accompanying
+- [x] ✅ P0. **KEYSTONE LIVE** — DONE utl@39f8ec85: record_empty gains `fetch_evidence: FetchEvidence|None`; SOURCE_RETURNED_ZERO without `.proves_honest_absence()` emits DP_UNPROVEN_HONEST_ABSENCE(CRITICAL)+raises UnprovenHonestAbsenceError (hard-raise, operator 2026-06-22). EXPECTED_* exempt. 15 test files + 2 internal callers threaded; QG green 117s. Gate `record_empty(reason=SOURCE_RETURNED_ZERO)` in `_writer_record.py`: require an accompanying
       `fetch_evidence` proving `http_status in 2xx AND response_received AND rows_in_response==0 AND error_signal==""`;
       otherwise raise `UnprovenHonestAbsenceError` (callsite hint, steers to `record_failed`). `EXPECTED_*` calendar
       reasons are exempt (no fetch attempted). — **unified-trading-library**
@@ -139,7 +139,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       exists per-adapter) into the manifest writer, for all 5 AGs. Adapters that today call
       `record_empty(SOURCE_RETURNED_ZERO)` on an exception path are exactly the C1 bugs — they will now fail loudly at
       the writer and route to `record_failed`. — **market-tick-data-service, instruments-service**
-- [ ] [TEST] P0. Unit: a 401/429/timeout/exception path that previously stamped `SOURCE_RETURNED_ZERO` now raises
+- [x] ✅ P0. Unit gate tests DONE utl@39f8ec85 (test_record_empty_fetch_evidence_gate.py: None/signal/401/429/500/rows>0/not-received raise; EXPECTED_* exempt). Unit: a 401/429/timeout/exception path that previously stamped `SOURCE_RETURNED_ZERO` now raises
       `UnprovenHonestAbsenceError`; a genuine 200+empty passes. One test per disqualifying signal. —
       **unified-trading-library, market-tick-data-service**
 - [ ] [SCRIPT] P0. **Daily empty re-probe** (`scripts/audit/reprobe_new_empty_confirmed.py`, e2e-testing → wired to MTDS
@@ -240,3 +240,4 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - **Build order (rule 8, T0→leaves)**: Wave1 UAC (FetchEvidence VO + UnprovenHonestAbsenceError + DISQUALIFYING_FETCH_SIGNALS + DATA_PIPELINE_ALERT_RULES from registry + is_canonical(path)) → Wave2 UTL (DP_* events + record_empty FetchEvidence hard-raise gate + heartbeat primitive + tests) → Wave3 alerting-service (data_pipeline_slack notifier + data_pipeline_rules loader + subscriber + config) → Wave4 deployment-service/e2e (exit_code fleet monitor, heartbeat watcher, daily per-AG digest, hygiene orchestrator, empty re-probe, escalation hop) → Final per-AG aggregation prompts.
 - Per-AG `fetch_evidence` threading in MTDS/IS adapters is the per-AG half → goes to the AG agents via the final prompts (not built cross-cutting here).
 - **2026-06-22 Wave 1 (UAC T0) SHIPPED** `unified-api-contracts@6c27bfa0` — QG green (220s, exit 0), 59 new tests. Exports `FetchEvidence`/`FetchErrorSignal`(10 members: HTTP_NON_2XX,AUTH_401,AUTH_403,RATE_LIMITED_429,SERVER_5XX,TIMEOUT,CONNECT_ERROR,ADAPTER_EXCEPTION,MISSING_CREDENTIAL,SOURCE_UNREACHABLE)/`DISQUALIFYING_FETCH_SIGNALS`/`UnprovenHonestAbsenceError(callsite_hint, evidence)`/`is_canonical`/`canonical_path_violations`/`DATA_PIPELINE_ALERT_RULES`(38, parity-tested vs registry yaml)/`DataPipelineAlertRule`. Decision: DP_* events aren't `AlertCode` members → built parallel `DataPipelineAlertRule` (mirrors AlertRule shape) not reusing the AlertCode-validated AlertRule. `is_canonical(require_pipeline_mode=False)` default (bare builder output stays canonical; opt-in strict for hygiene walk).
+- **2026-06-22 Wave 2 (UTL T0) SHIPPED** `unified-trading-library@39f8ec85` — QG green (117s). KEYSTONE gate live in `manifest_writer/_writer_record.py::record_empty` (+ `record_zero_rows`, `_core` stub, `manifest_writer_normalising`): `fetch_evidence` kw; SOURCE_RETURNED_ZERO hard-raises `UnprovenHonestAbsenceError` + emits `DP_UNPROVEN_HONEST_ABSENCE` unless `.proves_honest_absence()`. Heartbeat: `unified_trading_library.events.emit_pipeline_heartbeat(vm_name,asset_group,data_type,rows_captured_cum,source,extra)` → `log_event(PIPELINE_HEARTBEAT)`. 37 DP_* + PIPELINE_HEARTBEAT in `events.event_types`. **Blast-radius note (operator hard-raise choice)**: MTDS/IS adapters calling SOURCE_RETURNED_ZERO without evidence will now raise at runtime + their QG goes red until they thread `fetch_evidence` — that per-AG threading is the per-AG agents' job (final prompts), the cross-cutting gate is intentionally strict.
