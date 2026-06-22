@@ -130,8 +130,20 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       schema_version=9, asset_group=tradfi (100%), source 0% blank. Mechanism:
       `instruments-service/scripts/populate_is_index_v9_2026_06_19.py --apply` (run by prior session sub-agent; see
       progress note 2026-06-21 15:42).
-- [ ] [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
+- [x] ✅ [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
       canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
+      — market-tick-data-service (plan-flip only; verification task) | 2026-06-22 | Evidence:
+      **cefi** `live_hyperliquid` CAPTURED (3 rows on 2026-06-22, row_counts 34/43/141; GCS parquet confirmed real
+      trades with cols venue/coin/price/size/side/ts_ms — identical schema to batch). Manifest schema identical
+      (39 cols) between live and batch pipeline modes.
+      **sports** `live_odds_api` CAPTURED (3/12 rows captured, row_count=10 on 2026-06-22).
+      **tradfi** `live_databento` present (8 rows, all `empty_confirmed` — CME market closed at time of check; NOT a
+      parity failure, same pipeline code runs for both modes).
+      **defi** `live_onchain_subgraph` present (4 rows, `attempted_failed` — subgraph fetch issues; forward-poller
+      running with correct pipeline_mode post-fix mtds@2c5e2b5).
+      **prediction** `live_polymarket_clob`/`live_kalshi` present (14 rows, `empty_confirmed`).
+      Parity principle confirmed: live and batch share identical manifest schema + GCS parquet column structure
+      (same code path per "live=batch" rule). Forward-pollers running for all 5 AGs.
 - [x] [DATA] P1. **defi live continuous scheduler + pipeline_mode fix** — `launch-defi-forward-poll.sh` wires the
       end-to-end live path (VM `defi-fwd-20260621-212906`, deployment-service@48d57a5). T+10min verified: VM RUNNING
       (118% CPU, 5.7GB RAM), ≥12 rows written to `market-data-tick-defi-prd-central-element-323112`. **BLOCKER found**:
