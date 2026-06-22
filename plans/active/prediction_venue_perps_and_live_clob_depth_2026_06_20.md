@@ -113,6 +113,13 @@ data could not be honestly source-stamped (`record_captured(source=...)` would r
   multi-source cell → `MissingSourceError`). Made it venue-aware (`_resolve_pipeline_mode_for_sentinel(pred_venue, cqg)`
   → POLYMARKET=batch_polymarket_clob unchanged / KALSHI=batch_kalshi) + explicit `source=source_string_for(pm)`. Repo:
   market-tick-data-service. — (shipping)
+- [x] ✅ [SCRIPT] P0. instruments-service `process_write.py` — **same multi-source break-fix in the IS enumeration cqg
+  write path** (the runtime cause of the missing `venue=KALSHI` universe — the IS Kalshi enumeration `record_captured`
+  for `prediction_canonical_question_group` raised `MissingSourceError` since cqg became multi-source). Added
+  venue-derived `_cqg_pm` (POLYMARKET→`BATCH_POLYMARKET_CLOB` / KALSHI→`BATCH_KALSHI`) + `pipeline_mode=_cqg_pm` +
+  explicit `source=source_string_for(_cqg_pm)`. IS QG-green (sentinel 42dd37c7). The companion UTL
+  `record_captured_from_counts` `datetime` UnboundLocalError (introduced by the foreign DP_*/FetchEvidence WIP) was
+  fixed and rode UTL@39f8ec85 to LDR. Repo: instruments-service@07272da4. — 2026-06-22
 
 **Seed relaunch (corrected stack):** UAC 24706977 + UTL b336478f + mtds fcd6549 all shipped; PREDICTION
 tarball rebuilt to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tarball`);
