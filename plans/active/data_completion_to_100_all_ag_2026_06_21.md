@@ -293,6 +293,23 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 06:30 — honest-cov is UNDERSTATED fleet-wide: ~1M phantom expected_unattempted (operator caught it on weather)
+
+Operator Q "is weather really 17%, we completed it ages ago": VERIFIED **NO** — 17% is an over-enumeration artifact.
+WEATHER data EXISTS in GCS for **2899 day-parquets (2015→2026)** (paid Open-Meteo, customer-* subdomain). The manifest
+has **1,027,396 `expected_unattempted` rows, ALL in 120 recent dates (2026-02-20→06-19) × 789 league_ids** — every
+data_type ~70k (789×~89). But captured weather uses only **57 leagues**; the other ~732 are women/youth/cup comps that
+won't have most data_types, AND the unattempted dates ALREADY have weather parquets in GCS. So the enumerator expanded
+the recent months across all 789 leagues → phantom unattempted inflating EVERY entity's denominator → honest-cov
+understated fleet-wide (weather "17%" really ~done; same drag on FIXTURE_STATS/ODDS/etc).
+
+- [ ] [DATA] P1. Post-backfill (after the 6 running backfill VMs finish — relabel races a live manifest, migration C
+  needed a drain): extend the entity-coverage relabel (refresh_sports_league_entity_coverage / migration C logic) over
+  the 120 recent dates (2026-02-20→06-19) × 789 leagues — no-coverage (league,data_type) pairs → expected_empty
+  (EXPECTED_NO_PROVIDER_COVERAGE), and reconcile cells whose data already exists in GCS (weather + any drained by the
+  running backfills) → captured. Then re-measure honest-cov (expect large jump across all sports entities). Drain
+  consolidator + stop VMs first. Repo: instruments-service + mtds (manifest migration).
+
 ### 2026-06-22 06:05 — wake-fix codified; 300k/day in use; TM/SFI/FootyStats OOM ROOT-CAUSED + fixed
 
 **(1) Wake-on-exit-code codified** (operator "fix so next time you wake"): CLAUDE.md + the new monitor check terminal
@@ -1022,7 +1039,7 @@ drive-orchestrator used `while pgrep -f create-code-tarballs` — its OWN argv c
 → infinite hang ~8h, never woke (the documented self-match foot-gun; new monitor uses gcloud/gsutil only). Batch VMs ran
 independently throughout.
 
-- [ ] [DATA] P1 BLOCKED-CREDENTIALS. **gas-fees MANTLE paid RPC.** gas-fees on MANTLE uses the FREE public RPC
+- [ ] [DATA] P1. BLOCKED-CREDENTIALS. **gas-fees MANTLE paid RPC.** gas-fees on MANTLE uses the FREE public RPC
       (mantle.xyz) which 429-rate-limits `eth_feeHistory` (hundreds of `HTTP 429 retry N/12`); each MANTLE day takes
       ~10-15min vs ~2-3min → gas-fees is the batch long-pole (~1.5M blocks/yr on MANTLE). NOT hung, NOT a code bug —
       public-RPC throttle. Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then

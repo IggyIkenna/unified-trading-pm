@@ -98,7 +98,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           REPO_NAME: ${{ steps.in.outputs.repo_name }}
           PR_NUMBER: ${{ steps.in.outputs.pr_number }}
-        env:
           SOURCE_BRANCH: ${{ steps.in.outputs.source_branch }}
           TARGET_BRANCH: ${{ steps.in.outputs.target_branch }}
         run: |

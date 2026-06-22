@@ -269,3 +269,52 @@ Account-selection closures (same plan): a **late-binding account re-check** in `
 account that went unusable in the pick→spawn window; next tick re-picks) + a **load-spread tiebreaker** in
 `_pick_headroom_account` (active-slot-count as the 3rd sort key after 5h%/weekly%). SSOT:
 `plans/active/orchestrator_self_healing_hardening_2026_06_21.md`.
+
+## Account auth-failure eviction + outage-safe detection (2026-06-22)
+
+When an account is disabled (org turns off Claude Code, or its OAuth token is rejected) the orchestrator must stop using
+it for NEW spawns AND divert the agents already running on it — without ever mistaking a transient Claude-backend outage
+for an account fault.
+
+**Design invariant — "account-bad" is a POLLER verdict, never a heartbeat inference.** The `usage_poller` is the sole
+authority on account health: it probes `/usage` per account per tick and CLASSIFIES the failure — HTTP **401/403 →
+`mark_account_auth_failed`** (token rejected/disabled); **429 → `mark_account_rate_limited`**; **5xx / network / timeout
+→ nothing** ("transient; do NOT auth-alert"). A missing `/heartbeat` is NEVER treated as an auth fault. This is the
+operator caveat (2026-06-22): Claude's servers have outages, and a good account must not be sidelined on a blip — it is
+reused automatically once the servers recover.
+
+Flow:
+
+- **Detection (poller):** on a classified 401/403, `_mark_auth_failed_db` persists `account_status='auth_failed'` THEN
+  fans out the eviction via `_evict_slots_on_auth_failed` →
+  `rotate_all_slots_off_account(account_id, trigger="poller-auth-failed", reason=RotationReason.auth_failed)`. Re-marked
+  each tick the token stays bad; cleared instantly by the next successful probe (`_clear_auth_failed_db`) or a worker
+  heartbeat (`slots_worker` healing path).
+- **Worker eviction:** `rotate_all_slots_off_account` (now `reason`-parametrized; default `rate_limit` for the cap
+  callers) diverts every running slot bound to the account onto the next usable one (`spawn_with_account_bg`). Its
+  **global-outage guard is built in**: `pick_next_account is None` → logs `account_rotation_no_fallback`, does NOT kill.
+  No-op once the slots have moved off, so it is safe to call on every re-mark.
+- **Main-agent eviction:** `main_agent_keeper._handle_auth_failed_account` (runs each tick BEFORE the usage-cap modal
+  check — auth failure is more fundamental) fails the main agent over off a poller-confirmed auth_failed account: kill +
+  `--resume` on a usable account when a `claude_session_id` is stored (context intact) / kill-for-fresh when not / leave
+  in place when no usable account exists. The resumed main uses an empty boot prompt + nudge (no re-registration), so
+  the keeper **re-points the main `AgentRow.account_id` to the new account** to stop the auth check re-firing next tick.
+- **Spawn-heartbeat watchdog hardened:** `_auth_failover.check_spawn_heartbeat_timeouts` NO LONGER marks an account
+  auth_failed on a bare spawn timeout. It DEFERS to the poller's eviction when the account is already poller-confirmed
+  auth_failed, otherwise RETRIES the spawn on the SAME account (transient spawn failure: slow start / worktree / OOM),
+  bounded by `spawn_retry_count`. This removes the false-fail-during-outage class.
+- **Auto-recovery:** an auth_failed account is held out of the pool only for an exponential cooldown
+  (`AUTH_FAILED_COOLDOWN_BASE_SECONDS=600` → 6h cap), re-probed after, and cleared on the next success — so a recovered
+  account rejoins the pool with no human action.
+- **All-accounts-down page:** `_fire_all_accounts_down_if_needed` + `all_accounts_unusable` fire one Slack page when
+  every account is MARKED unusable (rate-limited / auth-failed / disabled).
+- **Likely-Claude-outage page:** a purely transient fleet-wide outage (all `/usage` probes timing out / 5xx in a tick,
+  none classified 401/403/429) leaves accounts healthy-status, so the all-accounts-down page above can't fire. The
+  poller tallies per-tick reachability (`n_probed` / `n_success` / `n_transient_fail`) and `_check_likely_outage` fires
+  a distinct disk-deduped `notify_likely_claude_outage` page on the clean all-transient signature
+  (`n_probed > 0 and n_success == 0 and n_transient_fail == n_probed`), re-arming on the next successful probe. A mixed
+  tick (some 401/403 + some transient) neither fires nor re-arms. NO account is marked (a transient outage is not an
+  account fault); agents auto-resume — it is an awareness page, not an action item unless it persists. Routes to Slack
+  #agent-orchestrator-alerts with an `/accounts` deep-link (sibling of `notify_all_accounts_unusable`).
+
+SSOT: `plans/active/orchestrator_self_healing_hardening_2026_06_21.md` § "Operator follow-up (2026-06-22)".
