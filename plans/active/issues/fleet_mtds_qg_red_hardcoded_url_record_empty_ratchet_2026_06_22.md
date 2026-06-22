@@ -1,9 +1,10 @@
 ---
 title: Fleet MTDS QG red — qg-base ratchet ERRORs pre-existing hardcoded-URL + record_empty-string debt (blocks ALL MTDS ships)
 created: 2026-06-22
-author: ikennaigboaka [slot-autonomous·laptop]
 source: [prediction live-producer ship blocked, market-tick-data-service quality-gates.sh]
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
