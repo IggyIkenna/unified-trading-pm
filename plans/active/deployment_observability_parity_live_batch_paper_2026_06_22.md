@@ -142,10 +142,10 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 6 — Documentation (HARD: "all documented and done")
 
-- [ ] [DOC] P1. New codex `codex/05-infrastructure/deployment-observability.md` — the umbrella model, the classification
+- [x] ✅ P1. New codex `codex/05-infrastructure/deployment-observability.md` — DONE (umbrella model + classification SSOT + /api/deployments contract + /deployments UI + Slack parity + GCP-complete/AWS-pending). New codex `codex/05-infrastructure/deployment-observability.md` — the umbrella model, the classification
       SSOT, the `/api/deployments` contract, the `/deployments` UI surface, the Slack parity, GCP-vs-AWS coverage. —
       **unified-trading-pm**
-- [ ] [DOC] P2. One-liner + pointer in CLAUDE.md (new canonical contract: every compute unit is a classified deployment
+- [x] ✅ P2. One-liner + pointer in CLAUDE.md — DONE (cursor-configs/CLAUDE.md VM-launchers section: every compute unit = classified DeploymentTarget). One-liner + pointer in CLAUDE.md (new canonical contract: every compute unit is a classified deployment
       target). — **unified-trading-pm**
 
 ## Composed-with (tracked in `data_pipeline_hardening_self_monitoring_2026_06_22.md`)
@@ -201,3 +201,6 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
   captured_progress, run_log_uri}`; `DeploymentInventoryResponse` `{items[], total, vm_count, cloud_run_job_count}`;
   `UmbrellaSummaryResponse` `{umbrella, total, counts_by_status{}, stale_count, last_failure{name,exit_code,last_run_at}}`.
   Remaining Phase 1: the P1 Cloud-Run logs/events `/api/vm/logs`-shape uniformity + the `/api/alerts` `deployment` kind.
+
+## Progress Log
+- **2026-06-22 (autonomous, Opus 4.8) — GCP observability parity SHIPPED**: Phase0 spine (uac@34bb0f16/3c7dd51a DeploymentUmbrella/Target/classify, deployment-service@360678e resolver + 61-job CLOUD_RUN_JOBS registry + unclassified guard) → Phase1 deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`, VMs+CloudRun classified, exit_code/status) → Phase2 deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs at /repos grade, pw:L2 ✓ 265/265, drill-down reuses VmEventsTimeline+StreamingLogsPanel) → Phase3 alerting-service@868872c (DEPLOYMENT_* → #data-pipeline-alerts with umbrella + `/deployments/{name}` deep-link) + Tier-1 enrichment (deployment_ui_base_url config + inline trace block + deep-link buttons to /ops/vms,/deployments,data-status,GCS run.log) → Phase4 deployment-service@5d07bb1f (durable-log streamer backfilled into 4 unconverted GCP launchers + coverage guard). Phase6 docs: codex deployment-observability.md + CLAUDE.md one-liner. **3 CI guards make 0-unclassified/0-untracked a fleet invariant** (VM-prefix classify, scheduler-tf registry, launcher durable-log). REMAINING: Phase1-P1 (CloudRun logs uniformity + /api/alerts deployment kind), Phase2-P1 (/alerts→/deployments cross-link), Phase5 AWS, + the data_pipeline Phase-6 self-healing (C). Peer filed `issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (DP events emitted but the alerting subscriber may not subscribe their topic — verify end-to-end delivery).
