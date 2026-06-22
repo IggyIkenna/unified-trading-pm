@@ -69,20 +69,20 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.19.0",
     "deployment-api": "0.29.0",
-    "deployment-service": "0.26.0",
+    "deployment-service": "0.27.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.23.0",
     "features-service": "0.13.0",
     "fund-administration-service": "0.9.0",
     "ibkr-gateway-infra": "0.4.1",
-    "instruments-service": "0.23.0",
+    "instruments-service": "0.24.0",
     "market-tick-data-service": "0.34.0",
     "system-integration-tests": "0.14.0",
-    "unified-api-contracts": "0.37.0",
+    "unified-api-contracts": "0.38.0",
     "unified-trading-library": "0.30.0",
     "unified-trading-pm": "1.2.272",
     "market-data-processing-service": "0.10.8",
-    "e2e-testing": "0.19.0",
+    "e2e-testing": "0.21.0",
     "agent-orchestrator": "0.23.0",
     "greeks-service": "0.15.0",
     "trading-agent-service": "0.10.0",
@@ -1796,26 +1796,22 @@
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.5",
     "fund-administration-service": "0.9.0",
-    "e2e-testing": "0.21.0",
     "agent-orchestrator": "0.23.0",
     "alerting-service": "0.18.0",
     "batch-live-reconciliation-service": "0.19.0",
     "client-reporting-api": "0.15.7",
     "deployment-api": "0.29.0",
-    "deployment-service": "0.27.0",
     "execution-service": "0.23.0",
     "features-service": "0.13.0",
     "greeks-service": "0.15.0",
     "ibkr-gateway-infra": "0.4.1",
-    "instruments-service": "0.24.0",
     "market-data-processing-service": "0.10.8",
     "ml-service": "0.15.0",
     "strategy-service": "0.36.0",
     "trading-agent-service": "0.10.0",
     "unified-trading-api": "0.2.8",
     "unified-trading-library": "0.30.0",
-    "market-tick-data-service": "0.34.0",
-    "unified-api-contracts": "0.38.0"
+    "market-tick-data-service": "0.34.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1823,15 +1819,8 @@
     "locked_since": null,
     "locked_reason": null,
     "lock_version": null,
-    "pending_repos": [
-      "system-integration-tests",
-      "greeks-service",
-      "e2e-testing",
-      "unified-api-contracts",
-      "features-service",
-      "alerting-service"
-    ],
-    "sit_retry_count": 3,
+    "pending_repos": [],
+    "sit_retry_count": 0,
     "locked_alert_sent": false,
     "breaking_pending": []
   },
@@ -1841,21 +1830,26 @@
       "version": "0.14.4",
       "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
       "branch": "staging"
-    },
-    "e2e-testing": {
-      "version": "0.21.0",
-      "sha": "4d62bd8221bc9de0a06362ca9572cdf73a4989d8",
-      "branch": "staging"
-    },
-    "deployment-service": {
-      "version": "0.27.0",
-      "sha": "4a4cab6ff46694d1b6d9237ccf687975647a4a6c",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-22T04:42:36.844824Z",
+        "commits": {
+          "e2e-testing": {
+            "version": "0.21.0",
+            "sha": "4d62bd8221bc9de0a06362ca9572cdf73a4989d8",
+            "branch": "staging"
+          },
+          "deployment-service": {
+            "version": "0.27.0",
+            "sha": "4a4cab6ff46694d1b6d9237ccf687975647a4a6c",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-22T03:27:23.837519Z",
         "commits": {
@@ -1922,16 +1916,6 @@
           "unified-api-contracts": {
             "version": "0.35.0",
             "sha": "4f9cfe4be6a074ea16561498a676dfc3617d4d53",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-21T22:11:17.473038Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.34.0",
-            "sha": "c8cab1312096f53bdab4f554668704abe7c17a3f",
             "branch": "staging"
           }
         }
