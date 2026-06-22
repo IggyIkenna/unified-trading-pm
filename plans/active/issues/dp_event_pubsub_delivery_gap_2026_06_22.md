@@ -1,11 +1,12 @@
 ---
 title: "DP_* events have no end-to-end PubSub→subscriber→router path — cron/monitor alerts never reach #data-pipeline-alerts"
 created: 2026-06-22
-author: ikennaigboaka [slot-0·human-planning]
 source:
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
   - DP-WATCHER (delivery substrate)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # DP\_\* event delivery gap — cron/monitor emits never reach Slack
