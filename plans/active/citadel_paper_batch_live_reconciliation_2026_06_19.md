@@ -903,6 +903,31 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 — HAND-OFF BRIEF (finish-everything, for a `human-planning-vm` session).** A sibling session shipped +
+  verified LIVE: the white-screen fix (by_archetype dict→array), P11.18 (archetype-weighted PnL + paper/batch overlay),
+  P11.19 (data-quality panel), P11.20 (alerts → the reachable PUBLIC deployment-api SSOT
+  `uts-shared-deployment-api-cldtjniqvq-an.a.run.app/api/alerts`), P11.21 (CRA `manifest_coverage` from
+  `/api/data-status/honest-coverage` — corpus 4-state per AG, the SAME numbers deployment-ui shows; CRA rev
+  `client-reporting-api-00020-9sp`, UI dual-lens landed), P11.23 (deployment-ui "Backend unreachable" debounce + form
+  a11y, live via deployment-api rev `uts-shared-deployment-api-00079-qg6`), P11.17 (synthetic-seam guard — PAPER run
+  refuses if `--synthetic-input` override active; basedpyright-clean, draining). **REMAINING (drive ALL to done):**
+  (1) confirm the CRA P11.21 + strategy-service P11.17 source-quickmerges LANDED on LDR (they auto-drain when UTL +
+  unified-api-contracts both go clean — parallel agents are refactoring them, which BLOCKS the quickmerge dep pre-flight;
+  NEVER stomp foreign WIP, just drain); (2) verify the odom-portal UI deploy rendered the dual-lens corpus section
+  (`data-testid="data-quality-manifest"`); (3) **P11.21 polish** — fold the deployment-api base URL into
+  `UnifiedCloudConfig` (a `deployment_api_url` field, no `os.getenv`) so `client-reporting-api/core/
+  deployment_api_client.py` reads it per-env (do when UTL is clean; expect the SIT cascade); (4) **P11.22** — min-coverage
+  "drivable-but-thin" threshold (multi-loader window-coverage % in `paper_run_handler.py` + CRA surface + UI panel);
+  (5) **P11.6** — the GroupCRunner LINCHPIN (batch runs the SAME execution-service matching engine as paper, ε=0).
+  **Deploy/verify recipes:** CRA/deployment-api image = `gcloud builds submit --config=cloudbuild.yaml
+  --substitutions=SHORT_SHA=<tag>,_BRANCH=live-defi-rollout .` (add `substitution_option: ALLOW_LOOSE` under `options:`
+  LOCALLY first — NEVER commit it, QG STEP 5.17 rejects it — then `git checkout cloudbuild.yaml` post-upload) →
+  `gcloud run deploy <svc> --image=...:<tag> --region=asia-northeast1 --project=central-element-323112 --quiet`;
+  deployment-api's fetch-ui clones deployment-ui at LDR so a deployment-api rebuild ships deployment-ui changes. UI =
+  `bash scripts/deploy-cloud-run.sh --env=prod --cloud`. Browser-verify with lean chromium
+  (`--no-sandbox --disable-dev-shm-usage --single-process`) — a 200 API ≠ a rendered panel (hit that twice). The image
+  deploy does NOT need the source quickmerge; the quickmerge stops a redeploy-from-LDR regressing. Ship each unit via
+  `quality-gates.sh --no-fix` → `quickmerge --agent --files` and flip the checkbox same-turn.
 - **2026-06-22 (research) — Monday/weekend-wick → intraday mean-reversion investigation: standalone DEAD, but a real
   FEATURE + execution-timing signal (→ P2.11.18 / P2.11.19).** Operator hypothesis: BTC Mondays often two-way-auction
   (fade the sweep) except on drive days. Full no-lookahead / stratified-by-year-CV / realistic-fills arc (root scripts
