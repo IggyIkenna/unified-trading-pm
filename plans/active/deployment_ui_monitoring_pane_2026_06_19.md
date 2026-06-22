@@ -90,15 +90,39 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       `mock-api.ts` per ci_status, NOT by the live backend (`codebase_health` appears in ZERO deployment-api files;
       `_overview_row` never sets it). So against the LIVE backend all three columns render "—". The previous unqualified
       ✅ was frontend-only; backend population is the OPEN item below.
-- [ ] [INFRA] P2. **Backend population of codebase_health (CI → Firestore → deployment-api read).** Make the Cov% /
-      QG-reason / File-debt columns REAL: (1) `quality-gates.sh` (base-service.sh + base-ui.sh) emits
-      `.qg_codebase_health.json` `{coverage_pct, qg_red_reason, large_file_count, warn_file_count}`; (2) the
-      quality-gates-v2 → ci-status-update dispatch forwards it; (3) `ci-status-update.yml` writes it to the manifest +
-      `ci_status_store.py` writes it into the Firestore `ci_status/{repo}` doc (rides the LIVE
-      `CI_STATUS_FIRESTORE_DUALWRITE` path); (4) deployment-api reads it Firestore-authoritative / manifest-fallback
-      (mirroring `resolve_ci_status_map`) and attaches `codebase_health` in `_overview_row`. Repos: unified-trading-pm
-      (QG base + workflows + `ci_status_store.py`) + deployment-api (read side). Provenance: 2026-06-22 operator review
-      (the columns showed "—" against live data). **IN PROGRESS 2026-06-22 (this session).**
+- [x] ✅ [INFRA] P2. **Backend population of codebase_health (CI → Firestore → deployment-api read).** The Cov% /
+      QG-reason / File-debt columns are now REAL (no longer mock-only). Pipeline (all transport rides the LIVE
+      `CI_STATUS_FIRESTORE_DUALWRITE` path): (1) the **agg job of the reusable `python-quality-gates-v2.yml`** computes
+      per-repo
+      `{coverage_pct (parsed from the tests-slice `coverage.xml`artifact), qg_red_reason, large_file_count,     warn_file_count (file-debt via`os.walk` on its checkout, mirroring the gate's >900/700-899 zones)}`
+      — every step is `continue-on-error`, so it can NEVER red the required `quality-gates-v2` context; (2) it forwards
+      `codebase_health_b64` in the EXISTING `ci-status-update` dispatch — **one reusable-workflow edit → live for ALL
+      repos via `uses:@live-defi-rollout`, NO 22-repo template rollout** (the original base-service.sh emit idea was
+      reverted: CI runs the gate SLICED, so coverage and file-debt land in different slices — the agg job is the single
+      place with both); (3) `ci-status-update.yml` decodes it → writes `repositories[repo].codebase_health` in the
+      manifest (deployment-api's fallback cache) AND passes `--codebase-health-b64` to `ci_status_store.py`, whose
+      `set_status` writes it into the Firestore `ci_status/{repo}.codebase_health` (**merge-preserving** — a status-only
+      update never wipes the last-known metrics); (4) deployment-api `resolve_codebase_health_map` reads it
+      Firestore-authoritative / manifest-fallback (honest-degradation: warns + manifest-only on any Firestore error) and
+      `_overview_row` attaches `codebase_health`. **DONE 2026-06-22 — deployment-api@8050d21** (read:
+      `CodebaseHealthDict` + `resolve_codebase_health_map` + `ManifestView.codebase_health_for` + `_overview_row`; 13
+      tests; full QG green) **+ unified-trading-pm@c7b6bff73** (`ci_status_store.py` merge-preserving write +
+      `--codebase-health-b64` CLI + 3 tests = 18 pass; reusable v2 agg-job compute+forward + tests-slice coverage
+      artifact; `ci-status-update.yml` manifest+Firestore write; PM QG green 98s). Contract verified field-for-field vs
+      deployment-ui `client.ts` (4 nullable fields). Compute proven locally on alerting-service
+      (`{cov 80.08, large 0, warn 1}`); b64 transport + write + read all unit-tested. **v1 scope notes (documented, not
+      deferred work):** `qg_red_reason` is `null` on a green run (→ "✓") and a generic `"qg"` on a failing run (the
+      specific failing step is already in the failure-excerpt / stuck-PR check the dashboard surfaces) — per-step
+      granularity (pytest vs basedpyright) is a future refinement; and the **UI repos** (deployment-ui /
+      unified-trading-system-ui) use the vitest reusable, so their codebase_health is a fast-follow (see the new P3
+      below) — the Python-service majority populates now. Provenance: 2026-06-22 operator review (the columns showed "—"
+      against live data).
+- [ ] [INFRA] P3. **codebase_health for UI repos + qg_red_reason granularity (fast-follow to the P2 above).** (a) Mirror
+      the agg-job compute + `codebase_health_b64` forward into the **`ui-quality-gates-v2.yml`** reusable (vitest
+      coverage from `coverage/coverage-summary.json`; file-debt over `.ts`/`.tsx`) so `deployment-ui` +
+      `unified-trading-system-ui` populate too. (b) Thread the per-leg slice result into the agg job so `qg_red_reason`
+      is the specific failing step (`pytest` / `basedpyright` / `ruff` / `bandit`) instead of the generic `"qg"`. Repo:
+      unified-trading-pm. Provenance: 2026-06-22 (codebase_health backend v1 scope cut).
 - [x] ✅ [UI] P2. Confirm `GhRateBudget` is placed as a standing element on `/repos`. Repo: deployment-ui. —
       deployment-ui@a1b7fbd (already present at RepoCi.tsx:1637) | pw:L2 ✓ | regression:
       tests/smoke/gh_rate_budget.spec.ts
