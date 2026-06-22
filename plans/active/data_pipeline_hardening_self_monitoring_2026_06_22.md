@@ -232,3 +232,9 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - Daily per-AG completion digest + once-daily hygiene-vs-GCS RED/GREEN posted to `data-pipeline-alerts` (Phase 3).
 - Non-canonical path / non-v9 / phantom / divergence each have a deterministic daily check, with LLM-escalation for
   ambiguous verdicts (Phases 3/5).
+
+## Progress Log (autonomous /autonomous run — append-only, cross-compression memory)
+
+- **2026-06-22 T0 foundation (slot-0·human-planning, Opus 4.8)**: Phase-0 design shipped — SM secrets `DATA_PIPELINE_ALERTS_SLACK_*` (webhook smoke 200 ok), codex SSOT `data-pipeline-alerts.md` + `.registry.yaml` (~40 modes), plan @ PM `6c4f01b2b`/`a5942dec3`. Coordination note added: `data_completion_to_100_all_ag` does per-adapter C1 point-fixes → Phase-1 gate generalizes; citadel P11.19 owns VM-events panel.
+- **Build order (rule 8, T0→leaves)**: Wave1 UAC (FetchEvidence VO + UnprovenHonestAbsenceError + DISQUALIFYING_FETCH_SIGNALS + DATA_PIPELINE_ALERT_RULES from registry + is_canonical(path)) → Wave2 UTL (DP_* events + record_empty FetchEvidence hard-raise gate + heartbeat primitive + tests) → Wave3 alerting-service (data_pipeline_slack notifier + data_pipeline_rules loader + subscriber + config) → Wave4 deployment-service/e2e (exit_code fleet monitor, heartbeat watcher, daily per-AG digest, hygiene orchestrator, empty re-probe, escalation hop) → Final per-AG aggregation prompts.
+- Per-AG `fetch_evidence` threading in MTDS/IS adapters is the per-AG half → goes to the AG agents via the final prompts (not built cross-cutting here).
