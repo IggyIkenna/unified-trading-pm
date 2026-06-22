@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.0",
     "unified-api-contracts": "0.38.0",
     "unified-trading-library": "0.30.0",
-    "unified-trading-pm": "1.2.272",
+    "unified-trading-pm": "1.2.276",
     "market-data-processing-service": "0.10.8",
     "e2e-testing": "0.21.0",
     "agent-orchestrator": "0.23.0",
@@ -284,7 +284,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL \u2014 no-service-to-service-deps HARD RULE).",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -763,7 +763,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1805,13 +1805,16 @@
     "features-service": "0.13.0",
     "greeks-service": "0.15.0",
     "ibkr-gateway-infra": "0.4.1",
-    "market-data-processing-service": "0.10.8",
+    "market-data-processing-service": "0.10.9",
     "ml-service": "0.15.0",
     "strategy-service": "0.36.0",
     "trading-agent-service": "0.10.0",
     "unified-trading-api": "0.2.8",
     "unified-trading-library": "0.30.0",
-    "market-tick-data-service": "0.34.0"
+    "market-tick-data-service": "0.34.0",
+    "e2e-testing": "0.22.0",
+    "deployment-service": "0.28.0",
+    "unified-api-contracts": "0.39.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1829,6 +1832,26 @@
     "system-integration-tests": {
       "version": "0.14.4",
       "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
+      "branch": "staging"
+    },
+    "e2e-testing": {
+      "version": "0.22.0",
+      "sha": "4d282d2a3b910fe03e7c1e63921f43c6b0f5ee24",
+      "branch": "staging"
+    },
+    "market-data-processing-service": {
+      "version": "0.10.9",
+      "sha": "1d87f0632425accb6705d6f7eadfa5eff8a7f6e8",
+      "branch": "staging"
+    },
+    "deployment-service": {
+      "version": "0.28.0",
+      "sha": "df79d71f00bfe632614a335f07cde9ed47eca9b1",
+      "branch": "staging"
+    },
+    "unified-api-contracts": {
+      "version": "0.39.0",
+      "sha": "b2cc0ae0c02e531e7cef437a51f6f8c8b5dad878",
       "branch": "staging"
     }
   },
