@@ -762,9 +762,15 @@ are identified (2) and the ledger exists (3).
       **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@1110ee1d.** `reversion_zscore_60m`/`reversion_zscore_240m` added
       to delta_one's `anomaly` calculator + `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window /
       no-lookahead, honest NaN until filled), 6 `test_anomaly` unit tests GREEN, full QG passed (402s), on origin LDR
-      (Tier-C drain → staging). **REMAINING (heavier, open):** (a) recompute the feature corpus so the columns exist in
-      GCS; (b) retrain + validate the pooled-LightGBM cs model with the new features — does it lift cs Sharpe / cut the
-      2026 drag (composes with P2.11.15); (c) `features-status` verification.
+      (Tier-C drain → staging). **REMAINING (downstream operational/ML — both feature specs (reversion @1110ee1d + BTC
+      trend @653cf158) are on LDR promoting; these run AFTER the spec deploy):** (a) **corpus recompute** — once the new
+      feature image deploys (LDR→staging→main→image), backfill the `returns` + `anomaly` groups for cefi/BTC so the
+      columns land in GCS: `features-service` CLI `--operation calculate --mode batch --asset-group cefi --feature-group
+      returns` (and `anomaly`), at scale via `deployment-service/scripts/vm/launch-features-backfill-vm.sh` (no-fire-and-
+      forget: T+10min verify + manifest-row check). Also gates the P2.11.16 BTC-feature corpus for a non-null CTA paper
+      run. (b) **cs retrain** — after the corpus has the columns, retrain the pooled-LightGBM cs model including the
+      reversion features; validate it lifts cs Sharpe / cuts the 2026 drag (composes with P2.11.15's longer-horizon
+      retrain — do both in one train). (c) `features-status --check-drift` verification. Sequenced-later; not in-session.
 - [ ] [CODE] P2.11.19. **Wire the reversion signal as the execution-timing model in execution-service GroupC
       smart-matching** (research 2026-06-22, root `_ic_test.py`). The SAME reversion z-score, used to TIME fills on the
       book's existing turnover (not as a standalone trade), captures **~+1.5 bps/leg** vs naive window-close fills (z>0.5
