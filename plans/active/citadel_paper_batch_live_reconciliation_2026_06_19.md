@@ -787,6 +787,14 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 (autonomous) — PAPER-TRADING DASHBOARD COMPLETE on prod.** Full chain live + browser-verified at
+  www.odum-research.com/paper-trading?client=firm-paper-determinism: **7 archetype books → 145 weighted legs**, real
+  CRA data, rank-weighted allocations (P11.15), all 4 ledgers, ε=0. P11.16 shipped: CRA all-145 per-strategy
+  (CRA@336e2dc → prod rev 00016-lcj, per-strategy returns 145/7 verified) + UI archetype-grouping default (ui@2f4c7016).
+  P11.14 (real-data plumbing) was a 5-layer mock trap, all fixed: isReportingLive gate + fs env-loader + rewrites-in-mock
+  + mock-handler passthrough + (root) the live-console-found mock interceptor. CRA cloudbuild ALLOW_LOOSE fix lets manual
+  builds work. Operator's e2e vision (weighted-across-venues archetype books, drill to legs) is LIVE.
+
 - **2026-06-22 (autonomous) — PROD UI NOW SHOWS REAL DATA (the "old/mock thing" is FIXED).** Live-console paste
   pinpointed the 4th/final bug: the `mock-handler.ts` global fetch interceptor swallowed `/api/client-reporting*`
   (returned empty `{}` → no JWT → panels errored). Added the passthrough (ui@f0ebd216, odum-portal-00036-pzm).
