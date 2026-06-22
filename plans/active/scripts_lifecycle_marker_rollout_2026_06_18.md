@@ -71,8 +71,10 @@ source:
       `Epic: infrastructure_master` (or the contracts epic). Target: **unified-api-contracts**.
 - [ ] [SCRIPT] P2. Stamp `strategy-service/scripts/` (~28; DeFi tracers = `campaign:master_to_live_defi`).
       `Epic: strategy_master`. Target: **strategy-service**.
-- [ ] [SCRIPT] P2. Stamp `agent-orchestrator/scripts/` (~24; self-fleet tooling = `permanent`).
-      `Epic: orchestrator_master`. Target: **agent-orchestrator**.
+- [x] ✅ [SCRIPT] P2. Stamp `agent-orchestrator/scripts/` (~24; self-fleet tooling = `permanent`).
+      `Epic: orchestrator_master`. Target: **agent-orchestrator**. — **SHIPPED `agent-orchestrator@ebb0c6f`
+      2026-06-22**: all 23 non-symlink scripts stamped `Epic: orchestrator_master` + `Lifecycle: permanent` after the
+      shebang (idempotent; `quickmerge.sh` symlink → PM SSOT skipped). `grep -rl '^# Lifecycle:' scripts/` → 23.
 - [ ] [SCRIPT] P2. Stamp `unified-trading-system-ui/scripts/` (~17; 7 are 2026-03 run-once splitters = `oneoff`).
       `Epic:` the UI epic. Target: **unified-trading-system-ui**.
 - [ ] [SCRIPT] P2. Stamp `execution-service/scripts/` (~12; validation runbooks = `campaign`/`permanent`).

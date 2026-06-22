@@ -55,8 +55,8 @@ Known coverage so far:
 
 ### Phase 1 — Audit every agent type (the coverage matrix)
 
-- [x] ✅ [ORCHESTRATOR] P1. For each template in `agents/`, document: PURPOSE, is it LIVE/used (which code path spawns it,
-      or is it dead), the spawn entrypoint, whether it calls `register_agent` (→ AgentRow), whether `health.py`
+- [x] ✅ [ORCHESTRATOR] P1. For each template in `agents/`, document: PURPOSE, is it LIVE/used (which code path spawns
+      it, or is it dead), the spawn entrypoint, whether it calls `register_agent` (→ AgentRow), whether `health.py`
       staleness + `reap_orphan_agents` + a watchdog cover it, and whether it shows in the dashboard. Produce a coverage
       matrix in this plan's Progress Log. Repo: agent-orchestrator (audit; no code).
 - [x] ✅ [ORCHESTRATOR] P1. Classify each type: KEEP (register + cover), CLARIFY (live but boot-prompt/role unclear →
@@ -64,8 +64,8 @@ Known coverage so far:
 
 ### Phase 2 — Rationalize the set (per Phase-1 decisions)
 
-- [x] ✅ [ORCHESTRATOR] P2. `plan-health` + `plan-reconciler`: KEEP BOTH (Q1), document them in the `agents/*.md` headers +
-      codex as the two modes of `run_plan_health` (report vs reconcile). See the dedicated "plan-health +
+- [x] ✅ [ORCHESTRATOR] P2. `plan-health` + `plan-reconciler`: KEEP BOTH (Q1), document them in the `agents/*.md`
+      headers + codex as the two modes of `run_plan_health` (report vs reconcile). See the dedicated "plan-health +
       plan-reconciler — duties + finding routing" section below for the decided design (Option B + routing). Repo:
       agent-orchestrator (`agents/`, codex).
 
@@ -88,16 +88,16 @@ PM-repo conflict notes).
 
 **Reconciler lifecycle — async-ask → e2e → loop-and-wait → apply (operator 2026-06-17):**
 
-- [x] ✅ [ORCHESTRATOR] P1. Change `agents/plan-reconciler.md` from strict one-shot to **persistent-until-resolved**: run
-      the full e2e reconciliation pass first (auto-fix verifiable easy ones; on any issue/question **post an async
+- [x] ✅ [ORCHESTRATOR] P1. Change `agents/plan-reconciler.md` from strict one-shot to **persistent-until-resolved**:
+      run the full e2e reconciliation pass first (auto-fix verifiable easy ones; on any issue/question **post an async
       alert + a filed todo/ping and CONTINUE — never block/wait**). After the pass, **re-check whether its questions
       were answered**: answered → apply; any still-open → **enter the heartbeat wait-loop like the persistent agents**,
       re-checking + applying each answer as it arrives, until resolved, THEN exit. Answers arrive via the dashboard-chat
       → message/poll path. Repo: agent-orchestrator (`agents/plan-reconciler.md`).
-- [x] ✅ [ORCHESTRATOR] P1. While waiting, the reconciler sets **`status=blocked`** (the watchdog never reaps a `blocked`
-      slot) and its `AgentRow` shows "blocked — waiting for operator answer" (honest, not fake-"working") — composing
-      with the Phase-3 AgentRow registration so a waiting reconciler is visible in the dashboard. Each open question is
-      ALSO filed (alert + todo/ping) so the loop is the fast path and the filed item the durable one. Repo:
+- [x] ✅ [ORCHESTRATOR] P1. While waiting, the reconciler sets **`status=blocked`** (the watchdog never reaps a
+      `blocked` slot) and its `AgentRow` shows "blocked — waiting for operator answer" (honest, not fake-"working") —
+      composing with the Phase-3 AgentRow registration so a waiting reconciler is visible in the dashboard. Each open
+      question is ALSO filed (alert + todo/ping) so the loop is the fast path and the filed item the durable one. Repo:
       agent-orchestrator.
 
 **Decided division — Option B (health = cheap frequent radar; reconciler = daily fixer that consumes it):**
@@ -113,18 +113,21 @@ PM-repo conflict notes).
       recent `plan_health_result` for the contradiction half) — verify against code, then flip/banner/file — rather than
       re-deriving from scratch. Repo: agent-orchestrator (`server/plan_health.py` reconcile path +
       `agents/plan-reconciler.md`).
-- [x] ✅ [ORCHESTRATOR] P2. **Boot-prompt updates reflecting the routing:** `agents/plan-health.md` — note its findings now
-      have real consumers (doc_drift→operator, contradictions→reconciler), so the output matters; keep it cheap +
+- [x] ✅ [ORCHESTRATOR] P2. **Boot-prompt updates reflecting the routing:** `agents/plan-health.md` — note its findings
+      now have real consumers (doc_drift→operator, contradictions→reconciler), so the output matters; keep it cheap +
       report-only (skeleton-only, no repo FF, fast model). `agents/plan-reconciler.md` — add the STEP that consumes the
       latest plan-health contradictions as its candidate set. Repo: agent-orchestrator (`agents/`).
-- [ ] [ORCHESTRATOR] P3. Optional `plan-health` enrichment: surface a one-line hygiene/orphan pulse (it already builds
-      the digest) in its report so the operator gets a daily snapshot. Repo: agent-orchestrator
-      (`agents/plan-health.md`, `plan_health.py`).
-- [x] ✅ [ORCHESTRATOR] P1. `recovery-audit`: KEEP but mark WIP / NOT-FINALISED (Q2). Banner `agents/recovery-audit.md` as
-      WIP (boot prompt + duties owed) and add a HARD never-launch guard — the spawn/role surface must refuse to actually
-      launch `recovery-audit` until finalised (e.g. exclude from the spawnable role set + an explicit `RuntimeError`/log
-      if anything tries). Keep the supporting infra in place. Repo: agent-orchestrator (`agents/recovery-audit.md`,
-      spawn/role wiring).
+- [x] ✅ [ORCHESTRATOR] P3. Optional `plan-health` enrichment: surface a one-line hygiene/orphan pulse (it already
+      builds the digest) in its report so the operator gets a daily snapshot. Repo: agent-orchestrator
+      (`agents/plan-health.md`, `plan_health.py`). — **SHIPPED `agent-orchestrator@f3282a70` 2026-06-22**: the worker
+      reports a `hygiene_pulse` one-liner (active/epics/orphans/hygiene-fail/archive-candidates) from its digest;
+      `record_result` logs it to the `plan_health_result` activity (daily-report + dashboard surface) and carries it
+      into the Slack findings digest. +1 test.
+- [x] ✅ [ORCHESTRATOR] P1. `recovery-audit`: KEEP but mark WIP / NOT-FINALISED (Q2). Banner `agents/recovery-audit.md`
+      as WIP (boot prompt + duties owed) and add a HARD never-launch guard — the spawn/role surface must refuse to
+      actually launch `recovery-audit` until finalised (e.g. exclude from the spawnable role set + an explicit
+      `RuntimeError`/log if anything tries). Keep the supporting infra in place. Repo: agent-orchestrator
+      (`agents/recovery-audit.md`, spawn/role wiring).
   - **DEFERRED-ASPIRATIONAL (operator 2026-06-19):** the never-launch holding pattern (guard shipped) is the durable
     state for now — **do NOT wire or delete it.** It "comes into picture later"; the wire-vs-delete finalization + what
     Layer-1 signoff/actuation it performs is **pending Ikenna's design intent** (unknown to Harsh). Not an open decision
@@ -132,8 +135,8 @@ PM-repo conflict notes).
 - [x] ✅ [ORCHESTRATOR] P1. `usage_reporter`: DELETE (Q3). Remove `agents/usage_reporter.md` + its role from
       `spawn_agent_preview` / `/api/agents/spawn` role set + any other reference; usage stays on the httpx
       `UsagePoller`. Repo: agent-orchestrator (`agents/`, `routes/agents.py`, models).
-- [x] ✅ [ORCHESTRATOR] P2. `monitor`: KEEP (Q4). Confirm/clarify the `agents/monitor.md` header documents it as the manual
-      external-watch (custom-role) pattern, manual-spawn only. Repo: agent-orchestrator (`agents/`).
+- [x] ✅ [ORCHESTRATOR] P2. `monitor`: KEEP (Q4). Confirm/clarify the `agents/monitor.md` header documents it as the
+      manual external-watch (custom-role) pattern, manual-spawn only. Repo: agent-orchestrator (`agents/`).
 
 ### Phase 3 — Register every LIVE agent type + capture its identity/attach handles
 
@@ -166,12 +169,12 @@ PM-repo conflict notes).
       (`server/escalation.py`).
 - [x] ✅ [ORCHESTRATOR] P1. `plan-health` + `plan-reconciler`: `register_agent` at spawn (`plan_health.py`) with
       role/label/`tmux_session`/`claude_session_id`. Repo: agent-orchestrator (`server/plan_health.py`).
-- [x] ✅ [ORCHESTRATOR] P1. Widen `AgentRole` (`models/_types.py:14` = `Literal["main","review","backup","custom"]`) — add
-      escalate/conflict-resolver/plan-health/plan-reconciler (or a parallel role field) so their registration is
+- [x] ✅ [ORCHESTRATOR] P1. Widen `AgentRole` (`models/_types.py:14` = `Literal["main","review","backup","custom"]`) —
+      add escalate/conflict-resolver/plan-health/plan-reconciler (or a parallel role field) so their registration is
       well-typed (reconcile with the `spawn_agent_preview` role set after the usage_reporter delete). Repo:
       agent-orchestrator (`server/models/_types.py`, `orm.py`).
-- [x] ✅ [ORCHESTRATOR] P2. Backend can ATTACH/inspect any agent from its stored handles: a uniform "capture this agent's
-      pane" path keyed off `tmux_session` works for every registered type (the reaper's dead-session check + the
+- [x] ✅ [ORCHESTRATOR] P2. Backend can ATTACH/inspect any agent from its stored handles: a uniform "capture this
+      agent's pane" path keyed off `tmux_session` works for every registered type (the reaper's dead-session check + the
       liveness probes already key off `tmux_session`; confirm they now cover the newly-registered types). Repo:
       agent-orchestrator.
 
@@ -181,8 +184,8 @@ PM-repo conflict notes).
       conflict-resolver / plan-reconciler / monitor / …) while working, and the dashboard renders each role (icon/label
       per type, not just worker/main). Add any missing role rendering. Repo: agent-orchestrator dashboard (+
       deployment-ui if it mirrors the agents panel).
-- [x] ✅ [ORCHESTRATOR][UI] P2. Regression guard: a smoke/spec asserting a non-worker agent type (e.g. an escalation agent)
-      appears in the agents list when registered. (If this touches `deployment-ui`, the playwright gate applies —
+- [x] ✅ [ORCHESTRATOR][UI] P2. Regression guard: a smoke/spec asserting a non-worker agent type (e.g. an escalation
+      agent) appears in the agents list when registered. (If this touches `deployment-ui`, the playwright gate applies —
       `pw:L2 ✓` + cited regression spec.) Repo: deployment-ui / agent-orchestrator dashboard.
 
 ### Phase 5 — Uniform staleness/liveness verification + tests
@@ -206,53 +209,61 @@ PM-repo conflict notes).
 >
 > **Architecture (operator 2026-06-19):**
 >
-> - **ONE unified `AgentKeeper` runs on EVERY VM** (local / planning / each worker VM) — merges today's `MainAgentKeeper`
->   + AutoSpawn's `_ensure_review_agents` into a single keeper that guarantees the MANDATORY set is present + respawns it
->   if it dies. Fixes the dev-box gap (review didn't come up because it rode AutoSpawn).
+> - **ONE unified `AgentKeeper` runs on EVERY VM** (local / planning / each worker VM) — merges today's
+>   `MainAgentKeeper`
+>   - AutoSpawn's `_ensure_review_agents` into a single keeper that guarantees the MANDATORY set is present + respawns
+>     it if it dies. Fixes the dev-box gap (review didn't come up because it rode AutoSpawn).
 > - **Mandatory on ALL VMs: `main` AND `review`** (both, every VM — not central-only).
 >   - `main`: default **60s** loop; **env-configurable interval** (e.g. raise to 5 min when not needed; up to 60 min on
 >     slow-moving VMs).
->   - `review`: default **15-min** loop; env-configurable. Keeps the `/compact`-discipline + the advisory reviewed-ledger
->     (below). The long idle loop is made responsive by the wake-nudge, NOT by fast workload-signal polling.
+>   - `review`: default **15-min** loop; env-configurable. Keeps the `/compact`-discipline + the advisory
+>     reviewed-ledger (below). The long idle loop is made responsive by the wake-nudge, NOT by fast workload-signal
+>     polling.
 > - **Wake-on-message nudge (IN SCOPE — the enabler for long loops):** when a UI message arrives for an agent, the
 >   backend wakes it from its (possibly 15–60 min) loop via `tmux_spawn.send_command(session, …)` (the send-keys
->   primitive already exists, `tmux_spawn.py:829`). So a long idle loop saves tokens WITHOUT adding message latency. This
->   is NOT the dropped messaging-layer rewrite (no adaptive-cadence / long-poll / SSE) — just a one-shot tmux wake.
+>   primitive already exists, `tmux_spawn.py:829`). So a long idle loop saves tokens WITHOUT adding message latency.
+>   This is NOT the dropped messaging-layer rewrite (no adaptive-cadence / long-poll / SSE) — just a one-shot tmux wake.
 > - **On-demand agents via AutoSpawn (unchanged split):** escalate / conflict-resolver / plan-health / plan-reconciler /
 >   fleet / workers — spawned as needed per VM-type policy.
 > - **Fleet-worker cap (on-demand pool, SEPARATE from the 2 mandatory): 10 default on all VMs; 6 on the planning VM**
 >   (planning also runs main+review+orchestration, so a lower fleet ceiling).
 > - Loop intervals are env-vars per agent type/VM; **live UI loop-control is a P3 nice-to-have (not mandatory).**
 
-- [x] ✅ [ORCHESTRATOR] P1. Unified `AgentKeeper` (every VM): merge `MainAgentKeeper` + `_ensure_review_agents` → one keeper
-      that guarantees mandatory {main, review} present + respawns on death; remove the AutoSpawn `_ensure_review_agents`
-      path. Repo: agent-orchestrator (`server/`).
+- [x] ✅ [ORCHESTRATOR] P1. Unified `AgentKeeper` (every VM): merge `MainAgentKeeper` + `_ensure_review_agents` → one
+      keeper that guarantees mandatory {main, review} present + respawns on death; remove the AutoSpawn
+      `_ensure_review_agents` path. Repo: agent-orchestrator (`server/`).
 - [x] ✅ [ORCHESTRATOR] P1. Env-configurable loop intervals: `main` default 60s, `review` default 900s (15 min), each
       overridable per VM (e.g. `ORCHESTRATOR_MAIN_LOOP_SECONDS` / `ORCHESTRATOR_REVIEW_LOOP_SECONDS`); thread the value
-      into the boot-prompt `/loop <N>s` render. Repo: agent-orchestrator (`server/` + `agents/main.md`,`agents/review.md`).
-- [x] ✅ [ORCHESTRATOR] P1. Wake-on-message nudge: `POST /api/agents/{id}/nudge` (and auto-fire on a UI message to an agent)
-      → `tmux_spawn.send_command(tmux_session, …)` to wake the agent from a long loop for an immediate poll/drain. Repo:
-      agent-orchestrator (`server/`).
-- [x] ✅ [ORCHESTRATOR] P1. AutoSpawn VM-type policy: on-demand fleet-worker cap = **10** default (all VMs), **6** on the
-      planning VM; mandatory main+review are not counted against it. Config-driven per VM. Repo:
-      agent-orchestrator (`server/autospawn.py` + config).
-- [x] ✅ [ORCHESTRATOR] P1. **DEPRECATE the `backup` agent** (operator 2026-06-19 — supersedes the 2026-06-17 "KEEP backup"
-      below): the AgentKeeper makes main+review mandatory + auto-respawns them, so the manual promote-from-backup failover
-      is redundant; if the keeper ever fails, the operator spawns a fresh main/review from the UI. Remove `backup` from
-      `AgentRole` + `AgentKind` (`models/_types.py`), `ROLES_ORDER`/`KINDS_ORDER` (`dashboard/`), `_default_kind_lifecycle`
-      (`state_store/agents.py`), and **delete `agents/backup.md`**. Keep the generic `promote` (role-swap) mechanism. NOTE
-      `ROLES_ORDER` is also touched by `agent_orchestrator_dashboard_monitoring_2026_06_19.md` (AgentTypesPanel) — same
-      agent should own both to avoid a collision. Repo: agent-orchestrator.
-- [x] ✅ [ORCHESTRATOR] P2. Reviewed-ledger (advisory, NOT a gate): persist reviewed (sha/task/event_id + verdict + ts) per
-      `review` role + a mark-reviewed endpoint; review reads it to skip redundant **isolated** re-review but stays free to
-      review across multiple commits/plans at its own discretion. Repo: agent-orchestrator (`server/`).
-- [x] ✅ [ORCHESTRATOR] P2. `agents/review.md`: 15-min default loop + `/compact` discipline + mark-reviewed call + ledger is
-      an aid not a limit + responds to the wake-nudge. Repo: agent-orchestrator.
-- [ ] [ORCHESTRATOR] P3. (nice-to-have) Live loop-interval control from the dashboard UI (re-issue an agent's `/loop`
-      cadence via the nudge/tmux path). Repo: agent-orchestrator.
-- [x] ✅ [ORCHESTRATOR] P2. Tests: keeper brings up {main, review} on a VM with AutoSpawn OFF; env loop-interval override
-      lands in the rendered loop; nudge wakes an agent mid-long-loop; fleet cap enforced (10 / planning 6) excluding
-      mandatory. Repo: agent-orchestrator (`tests/`).
+      into the boot-prompt `/loop <N>s` render. Repo: agent-orchestrator (`server/` +
+      `agents/main.md`,`agents/review.md`).
+- [x] ✅ [ORCHESTRATOR] P1. Wake-on-message nudge: `POST /api/agents/{id}/nudge` (and auto-fire on a UI message to an
+      agent) → `tmux_spawn.send_command(tmux_session, …)` to wake the agent from a long loop for an immediate
+      poll/drain. Repo: agent-orchestrator (`server/`).
+- [x] ✅ [ORCHESTRATOR] P1. AutoSpawn VM-type policy: on-demand fleet-worker cap = **10** default (all VMs), **6** on
+      the planning VM; mandatory main+review are not counted against it. Config-driven per VM. Repo: agent-orchestrator
+      (`server/autospawn.py` + config).
+- [x] ✅ [ORCHESTRATOR] P1. **DEPRECATE the `backup` agent** (operator 2026-06-19 — supersedes the 2026-06-17 "KEEP
+      backup" below): the AgentKeeper makes main+review mandatory + auto-respawns them, so the manual
+      promote-from-backup failover is redundant; if the keeper ever fails, the operator spawns a fresh main/review from
+      the UI. Remove `backup` from `AgentRole` + `AgentKind` (`models/_types.py`), `ROLES_ORDER`/`KINDS_ORDER`
+      (`dashboard/`), `_default_kind_lifecycle` (`state_store/agents.py`), and **delete `agents/backup.md`**. Keep the
+      generic `promote` (role-swap) mechanism. NOTE `ROLES_ORDER` is also touched by
+      `agent_orchestrator_dashboard_monitoring_2026_06_19.md` (AgentTypesPanel) — same agent should own both to avoid a
+      collision. Repo: agent-orchestrator.
+- [x] ✅ [ORCHESTRATOR] P2. Reviewed-ledger (advisory, NOT a gate): persist reviewed (sha/task/event_id + verdict + ts)
+      per `review` role + a mark-reviewed endpoint; review reads it to skip redundant **isolated** re-review but stays
+      free to review across multiple commits/plans at its own discretion. Repo: agent-orchestrator (`server/`).
+- [x] ✅ [ORCHESTRATOR] P2. `agents/review.md`: 15-min default loop + `/compact` discipline + mark-reviewed call +
+      ledger is an aid not a limit + responds to the wake-nudge. Repo: agent-orchestrator.
+- [x] ✅ [ORCHESTRATOR] P3. (nice-to-have) Live loop-interval control from the dashboard UI (re-issue an agent's `/loop`
+      cadence via the nudge/tmux path). Repo: agent-orchestrator. — **SHIPPED `agent-orchestrator@35dd562f`
+      2026-06-22**: `POST /api/slots/{id}/loop-interval` (bounded 30–3600s `LoopIntervalRequest`) re-issues the cadence
+      via `tmux_spawn.nudge` (no respawn — keeps task+context); dashboard slot-card cadence button → `LoopIntervalModal`
+      (number input + 60/300/900/1800s presets) + `api.setLoopInterval` + `clampLoopSeconds`. +4 backend tests, +5
+      vitest, tsc green.
+- [x] ✅ [ORCHESTRATOR] P2. Tests: keeper brings up {main, review} on a VM with AutoSpawn OFF; env loop-interval
+      override lands in the rendered loop; nudge wakes an agent mid-long-loop; fleet cap enforced (10 / planning 6)
+      excluding mandatory. Repo: agent-orchestrator (`tests/`).
 
 ### Phase 7 — Escalation dispatch reliability (incident found on the central VM 2026-06-18)
 
@@ -339,19 +350,19 @@ A type is well-covered only if it lands cleanly in ONE of these. The gap class i
 
 **Coverage matrix** (✅ confirmed · ⚠️ needs deeper walk · ❌ confirmed-absent):
 
-| Type                | Purpose                                                                                       | Live?                                                | Spawn path                                                              | Oversight model                                                        | UI-visible while working | Class               |
-| ------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------ | ------------------- |
-| `main`              | the orchestrator agent                                                                        | ✅                                                   | `main_agent_keeper._spawn` (`orch-agent-main`)                          | AgentRow + health + reaper + keeper                                    | ✅ (agents list)         | KEEP                |
-| `worker`            | does plan-backlog work in a slot                                                              | ✅                                                   | `autospawn._do_spawn` (default template)                                | Slot + WorkerLivenessWatchdog                                          | ✅ (slots panel)         | KEEP                |
-| `review`            | reviews work                                                                                  | ✅                                                   | `autospawn` review slots (`_REVIEW_PROMPT_TEMPLATE`) AND an `AgentRole` | ⚠️ dual (slot AND AgentRow) — clarify                                  | ⚠️                       | KEEP+CLARIFY        |
+| Type                | Purpose                                                                                       | Live?                                                | Spawn path                                                              | Oversight model                                                        | UI-visible while working | Class                                                                       |
+| ------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------- |
+| `main`              | the orchestrator agent                                                                        | ✅                                                   | `main_agent_keeper._spawn` (`orch-agent-main`)                          | AgentRow + health + reaper + keeper                                    | ✅ (agents list)         | KEEP                                                                        |
+| `worker`            | does plan-backlog work in a slot                                                              | ✅                                                   | `autospawn._do_spawn` (default template)                                | Slot + WorkerLivenessWatchdog                                          | ✅ (slots panel)         | KEEP                                                                        |
+| `review`            | reviews work                                                                                  | ✅                                                   | `autospawn` review slots (`_REVIEW_PROMPT_TEMPLATE`) AND an `AgentRole` | ⚠️ dual (slot AND AgentRow) — clarify                                  | ⚠️                       | KEEP+CLARIFY                                                                |
 | `backup`            | idle, promote→main/review via dashboard                                                       | ✅                                                   | `/api/agents/spawn` (role)                                              | AgentRow + health + reaper                                             | ✅                       | ~~KEEP~~ → **DEPRECATE** (2026-06-19; AgentKeeper supersedes — see Phase 6) |
-| `escalate`          | resolves a CI wall on LDR                                                                     | ✅                                                   | `escalation.escalate` → free slot                                       | Slot watchdog + escalation_queue + EscalationWatchdog; **no AgentRow** | ⚠️ slot panel only       | KEEP+REGISTER       |
-| `conflict-resolver` | resolves a PR merge conflict                                                                  | ✅                                                   | `escalation.escalate` (PR walls) → free slot                            | same as escalate                                                       | ⚠️                       | KEEP+REGISTER       |
-| `plan-health`       | REPORT-mode cross-plan drift check                                                            | ⚠️ report-mode of `run_plan_health`                  | `plan_health.run_plan_health(mode="report")` → free slot                | Slot watchdog; **no AgentRow**                                         | ⚠️                       | DECISION (see Q1)   |
-| `plan-reconciler`   | RECONCILE-mode daily deep fixer (opus/max)                                                    | ⚠️ bringup (systemd timer pending per lifecycle doc) | `run_plan_health(mode="reconcile")` → free slot                         | Slot watchdog; **no AgentRow**                                         | ⚠️                       | DECISION (see Q1)   |
-| `monitor`           | manual "custom-role" pattern: watch an external long-running thing + ping                     | ⚠️ template/pattern only — no auto-spawner           | manual (custom role)                                                    | none specific                                                          | ❌                       | CLARIFY (Q4)        |
-| `recovery-audit`    | aspirational Layer-1 defence-in-depth signoff/actuator                                        | ❌ no spawner found in code                          | —                                                                       | none                                                                   | ❌                       | CLARIFY/DELETE (Q2) |
-| `usage_reporter`    | refresh account usage — **header self-declares DEFERRED**; real path is `UsagePoller` (httpx) | ⚠️ manually spawnable via agent-spawn dropdown only  | `/api/agents/spawn` (role)                                              | not in `AgentRole` enum → ⚠️ may not register cleanly                  | ⚠️                       | DECISION (Q3)       |
+| `escalate`          | resolves a CI wall on LDR                                                                     | ✅                                                   | `escalation.escalate` → free slot                                       | Slot watchdog + escalation_queue + EscalationWatchdog; **no AgentRow** | ⚠️ slot panel only       | KEEP+REGISTER                                                               |
+| `conflict-resolver` | resolves a PR merge conflict                                                                  | ✅                                                   | `escalation.escalate` (PR walls) → free slot                            | same as escalate                                                       | ⚠️                       | KEEP+REGISTER                                                               |
+| `plan-health`       | REPORT-mode cross-plan drift check                                                            | ⚠️ report-mode of `run_plan_health`                  | `plan_health.run_plan_health(mode="report")` → free slot                | Slot watchdog; **no AgentRow**                                         | ⚠️                       | DECISION (see Q1)                                                           |
+| `plan-reconciler`   | RECONCILE-mode daily deep fixer (opus/max)                                                    | ⚠️ bringup (systemd timer pending per lifecycle doc) | `run_plan_health(mode="reconcile")` → free slot                         | Slot watchdog; **no AgentRow**                                         | ⚠️                       | DECISION (see Q1)                                                           |
+| `monitor`           | manual "custom-role" pattern: watch an external long-running thing + ping                     | ⚠️ template/pattern only — no auto-spawner           | manual (custom role)                                                    | none specific                                                          | ❌                       | CLARIFY (Q4)                                                                |
+| `recovery-audit`    | aspirational Layer-1 defence-in-depth signoff/actuator                                        | ❌ no spawner found in code                          | —                                                                       | none                                                                   | ❌                       | CLARIFY/DELETE (Q2)                                                         |
+| `usage_reporter`    | refresh account usage — **header self-declares DEFERRED**; real path is `UsagePoller` (httpx) | ⚠️ manually spawnable via agent-spawn dropdown only  | `/api/agents/spawn` (role)                                              | not in `AgentRole` enum → ⚠️ may not register cleanly                  | ⚠️                       | DECISION (Q3)                                                               |
 
 **Confirmed findings:**
 
@@ -495,23 +506,23 @@ by another agent — explicitly out of scope here). Verified the post-compaction
 summary was stale): **Phases 1–5 were implemented + pushed in prior commits but the checkboxes were never flipped.**
 Backfilling now per the Commit+Push+Flip backfill rule. Evidence (all on `origin/live-defi-rollout`):
 
-| Item                                              | Evidence                                                                                                       |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| P1 coverage matrix + classify                     | this Progress Log (matrix + Phase-1 decisions)                                                                 |
-| P2 plan-health+reconciler KEEP BOTH (doc)         | agent-orchestrator@183910f boot prompts + headers                                                              |
-| P1 plan-reconciler.md persistent-until-resolved   | agent-orchestrator@183910f                                                                                     |
-| P1 reconciler status=blocked while waiting        | boot prompt @183910f + watchdog skips `blocked` (`worker_liveness_watchdog.py:565`)                            |
-| P2 boot-prompt updates reflecting routing         | agent-orchestrator@183910f (plan-health.md + plan-reconciler.md)                                               |
-| P1 recovery-audit KEEP/WIP + never-launch guard   | banner @b3ec360 + guard `prompts.py:71` `NEVER_LAUNCH` frozenset + `RuntimeError` + excluded from spawnable    |
-| P1 usage_reporter DELETE                          | agent-orchestrator@51bf0b6 (`agents/usage_reporter.md` gone; `spawn_agent_preview` = main/review/backup/worker) |
-| P2 monitor KEEP/clarify                           | agent-orchestrator@b3ec360 (manual-spawn-only, role=custom AgentRow)                                           |
-| P1 persist identity on escalation+plan-health     | `escalation.py:356-361` + `plan_health.py:198-204` write claude_session_id/tmux_session back to live SlotRow   |
-| P1 escalate/conflict-resolver register_agent      | `escalation.py:369` (kind=escalate/conflict_resolver, lifecycle=one_shot); `test_escalate_registers_one_shot_agent` |
-| P1 plan-health/reconciler register_agent          | `plan_health.py:207` (kind=plan_health/plan_reconciler, lifecycle=scheduled); `test_dispatch_registers_scheduled_agent` |
-| P1 widen role → two-axis kind+lifecycle           | `_types.py:23-37` AgentKind(11)+AgentLifecycle; `models/agents.py:28-29,56-57`                                 |
-| P2 backend attach/inspect from tmux_session       | tmux_session persisted for all types; reaper/liveness probes key off it                                        |
-| P1 health.py staleness+reaper cover every type    | `health.py:248-255` reaper is lifecycle-aware (one_shot/scheduled ending = EXPECTED, not a stale incident)     |
-| P1 unit tests per newly-registered type           | test_escalation.py + test_plan_health.py registration tests assert kind+lifecycle                              |
+| Item                                            | Evidence                                                                                                                |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| P1 coverage matrix + classify                   | this Progress Log (matrix + Phase-1 decisions)                                                                          |
+| P2 plan-health+reconciler KEEP BOTH (doc)       | agent-orchestrator@183910f boot prompts + headers                                                                       |
+| P1 plan-reconciler.md persistent-until-resolved | agent-orchestrator@183910f                                                                                              |
+| P1 reconciler status=blocked while waiting      | boot prompt @183910f + watchdog skips `blocked` (`worker_liveness_watchdog.py:565`)                                     |
+| P2 boot-prompt updates reflecting routing       | agent-orchestrator@183910f (plan-health.md + plan-reconciler.md)                                                        |
+| P1 recovery-audit KEEP/WIP + never-launch guard | banner @b3ec360 + guard `prompts.py:71` `NEVER_LAUNCH` frozenset + `RuntimeError` + excluded from spawnable             |
+| P1 usage_reporter DELETE                        | agent-orchestrator@51bf0b6 (`agents/usage_reporter.md` gone; `spawn_agent_preview` = main/review/backup/worker)         |
+| P2 monitor KEEP/clarify                         | agent-orchestrator@b3ec360 (manual-spawn-only, role=custom AgentRow)                                                    |
+| P1 persist identity on escalation+plan-health   | `escalation.py:356-361` + `plan_health.py:198-204` write claude_session_id/tmux_session back to live SlotRow            |
+| P1 escalate/conflict-resolver register_agent    | `escalation.py:369` (kind=escalate/conflict_resolver, lifecycle=one_shot); `test_escalate_registers_one_shot_agent`     |
+| P1 plan-health/reconciler register_agent        | `plan_health.py:207` (kind=plan_health/plan_reconciler, lifecycle=scheduled); `test_dispatch_registers_scheduled_agent` |
+| P1 widen role → two-axis kind+lifecycle         | `_types.py:23-37` AgentKind(11)+AgentLifecycle; `models/agents.py:28-29,56-57`                                          |
+| P2 backend attach/inspect from tmux_session     | tmux_session persisted for all types; reaper/liveness probes key off it                                                 |
+| P1 health.py staleness+reaper cover every type  | `health.py:248-255` reaper is lifecycle-aware (one_shot/scheduled ending = EXPECTED, not a stale incident)              |
+| P1 unit tests per newly-registered type         | test_escalation.py + test_plan_health.py registration tests assert kind+lifecycle                                       |
 
 **Still OPEN (this plan), driving next in order:** Phase 2 `doc_drift`→operator routing + `contradictions`→reconciler
 ingestion (code in `plan_health.record_result` — today writes only the generic activity_log row, the "black hole");
@@ -536,8 +547,8 @@ ingestion note. Shipped:
 - **`contradictions` → reconciler** — server already emits `reconciler_candidate` events (deduped per run);
   `agents/plan-reconciler.md` STEP 3 now names that candidate feed as its prioritisation shortlist (verify-then-flip,
   re-derive if stale). agent-orchestrator@568b83d.
-- **config default → live** — agent-orchestrator@611d4c1 (mock is opt-in for tests/UI-demo; the mock-mode open
-  decision, batched into this QG).
+- **config default → live** — agent-orchestrator@611d4c1 (mock is opt-in for tests/UI-demo; the mock-mode open decision,
+  batched into this QG).
 - `server/dedup_state.py` is the reusable persisted-dedup helper Wave 7 (alert-quality) will reuse for the in-memory
   `_alerted` flags.
 
@@ -555,9 +566,9 @@ All of Phase 6 shipped (6 sub-units, each QG-green + quickmerged to LDR):
   placeholder); `agents/main.md` /loop templated. Tests in test_prompts.py.
 - **3b — unified AgentKeeper** (agent-orchestrator@d8d15f7): `MainAgentKeeper` → **`AgentKeeper`** now ensures BOTH
   mandatory {main, review} every tick; `_ensure_review_agents` extracted out of AutoSpawnLoop into a public
-  `autospawn.ensure_review_agents(...)` the keeper calls with its own per-slot flap/cooldown state — so **review comes up
-  even when AutoSpawn is OFF** (the dev-box gap). server.py wires `AgentKeeper()`. Tests: keeper invokes review-ensure;
-  the 4 review-ensure tests adapted to the free function.
+  `autospawn.ensure_review_agents(...)` the keeper calls with its own per-slot flap/cooldown state — so **review comes
+  up even when AutoSpawn is OFF** (the dev-box gap). server.py wires `AgentKeeper()`. Tests: keeper invokes
+  review-ensure; the 4 review-ensure tests adapted to the free function.
 - **3c — wake-on-message nudge** (agent-orchestrator@6f8f5cf): `tmux_spawn.nudge()` (best-effort send-keys wake) +
   `POST /api/agents/{id}/nudge` + auto-fire on a by-role message → the holder polls NOW, making the long default loops
   responsive without fast polling. test_agent_nudge.py (7 cases).
@@ -565,10 +576,10 @@ All of Phase 6 shipped (6 sub-units, each QG-green + quickmerged to LDR):
   `fleet_worker_cap()` (10 / planning 6), counting active worker sessions, excluding mandatory main+review; logs
   `fleet_cap_reached`. test_tick_respects_fleet_worker_cap.
 - **3e — backup DEPRECATED** (agent-orchestrator@cd7e7a8): removed from `AgentRole`/`AgentKind` (server + dashboard
-  types), `ROLES_ORDER`, `AGENT_KIND_LABEL`, `_default_kind_lifecycle`, the spawn-modal `<option>` + role-default branch;
-  promote now demotes the displaced holder to **`custom`** (was `backup`); `agents/backup.md` deleted. Kept the generic
-  promote mechanism — the AgentKeeper auto-respawns main/review, so the manual promote-from-backup spare is redundant.
-  test_promote_demotes_displaced_holder_to_custom.
+  types), `ROLES_ORDER`, `AGENT_KIND_LABEL`, `_default_kind_lifecycle`, the spawn-modal `<option>` + role-default
+  branch; promote now demotes the displaced holder to **`custom`** (was `backup`); `agents/backup.md` deleted. Kept the
+  generic promote mechanism — the AgentKeeper auto-respawns main/review, so the manual promote-from-backup spare is
+  redundant. test_promote_demotes_displaced_holder_to_custom.
 - **3f — reviewed-ledger + review.md** (agent-orchestrator@5c9379b): `server/reviewed_ledger.py` (advisory persisted
   sha/task/event_id → verdict+ts under STATE_DIR, capped) + `POST/GET /api/agents/reviewed`; `agents/review.md` now the
   15-min `<LOOP_SECONDS>` loop + `/compact` discipline + mark-reviewed STEP-3e + "ledger is an aid, not a limit" +
@@ -585,10 +596,10 @@ playwright** (the dashboard has no pw harness).
 
 agent-orchestrator@c4c96fb: REORDERED the `_do_spawn` pre-spawn gate so `resolve_dirty_state` (liveness-gated — a dead
 predecessor's WIP → preserved to `wip-preserve/` + reset to origin/base = clean AND FF'd; a live peer → protected; a
-wiped index → quarantined) runs BEFORE `check_slot_branch_state`. Previously the branch-state gate's `git merge
---ff-only` failed on the dirty tree → quarantine FOREVER (the 2026-06-18 incident: slot-1 uac 88-behind + 1 orphan dirty
-file → 316 escalation retries). Now a dead-session dirty dep self-heals; only a live-peer / genuine non-dirty divergence
-quarantines. Tests: `test_do_spawn_self_heals_dead_session_dirty_dep_before_gate` +
+wiped index → quarantined) runs BEFORE `check_slot_branch_state`. Previously the branch-state gate's
+`git merge --ff-only` failed on the dirty tree → quarantine FOREVER (the 2026-06-18 incident: slot-1 uac 88-behind + 1
+orphan dirty file → 316 escalation retries). Now a dead-session dirty dep self-heals; only a live-peer / genuine
+non-dirty divergence quarantines. Tests: `test_do_spawn_self_heals_dead_session_dirty_dep_before_gate` +
 `test_do_spawn_protected_live_peer_blocks_before_gate`.
 
 **The oversight plan (Phases 1–7) is now CODE-COMPLETE + shipped.** Remaining in-scope rides the sibling plans + the

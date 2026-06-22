@@ -332,12 +332,13 @@ reconciler items are RESILIENCE, demoted from P0. Companion plans: `ci_status_fi
 - [ ] [CICD] P2. **Retire stale v1 emitter** — `unified-trading-system-ui/.github/workflows/ui-quality-gates.yml` (v1
       retired 2026-05-29) still live + dispatching ci-status-update; delete from main. Also fix uts-ui
       `Orphan Route Audit` (208/208 failures = pure red noise, public repo so $0 but alert-noise). (tiny)
-- [ ] [INFRA] P1. **Run-volume watchdog (backend-driven, agent-orchestrator)** — the generic catch-other-cases net
-      (operator ask 2026-06-12: "make sure that we are also going to catch other such cases"): new monitor loop in
-      `agent-orchestrator/server/` beside `GhRateLimitMonitor` polling per-workflow run counts (cheap REST `total_count`
-      with `created=` windows, ~30 calls/tick, 15-min tick) for the top-N workflows fleet-wide; alert Slack WARN at >3×
-      trailing-7-day baseline rate and CRITICAL at >10× or >50 runs/hr for any single workflow. Would have caught the
-      06-10 conflict-pair runaway and the 06-11 empty-promote loop ~2 days before the wall. (~1 day, Harsh repo)
+- [x] ✅ [INFRA] P1. **(SHIPPED `agent-orchestrator@675dd1f6` 2026-06-22)** **Run-volume watchdog (backend-driven,
+      agent-orchestrator)** — the generic catch-other-cases net (operator ask 2026-06-12): new `GhRunVolumeMonitor` loop
+      in `agent-orchestrator/server/` beside `GhRateLimitMonitor`, polls per-workflow run counts (REST recent-runs +
+      cached 7d baseline, ~1 call/repo, 15-min tick) fleet-wide; `notify_run_volume_spike` Slack WARN at >3× trailing-7d
+      baseline and CRITICAL at >10× or >50 runs/hr per workflow, disk-deduped + de-escalation re-arm, wired into the
+      lifespan + LoopSupervisor. +11 tests, QG green. Would have caught the 06-10 conflict-pair runaway + 06-11
+      empty-promote loop ~2 days before the wall.
 - [ ] [INFRA] P3. **Spend telemetry** — extend `GhRateLimitMonitor`/deployment-ui Repos-CI page with a billable-minutes
       tracker (runs×duration from the runs API) + Slack alert at 50/80/95% of monthly budget, so the NEXT runaway is
       caught in hours not at the wall. (~1 day) **BLOCKED-ON-DECISION (assessed 2026-06-15, slot-4):** the authoritative

@@ -162,7 +162,11 @@ UI-specific — audit only the data/path/contract docs, leave genuine UI docs): 
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
 - [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
 - [ ] [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
-- [ ] [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`.
+- [x] ✅ [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **SHIPPED
+      `unified-trading-pm@c6b2d9eb1` 2026-06-22**: reconciled 5 codex docs against the live code (PlanRegenLoop cadence
+      6h→30min; AutoSpawn ceilings 50/80→95/95 + env-name fixes; backend port 8026→8765 across overview/worker-liveness/
+      multi-vm-topology; ES256 internal-token + HS256-retired in the multi-vm auth diagram). Verified the failover /
+      worker-liveness / backlog-model / base-branch docs already-accurate.
 - [ ] [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8).
 - [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
       / **system-integration-tests** (1).

@@ -120,13 +120,13 @@ vitest/tsc (dashboard).
       disposable test VM not in the registry, left as-is / candidate for teardown); human-planning = FIXED (this
       incident). So bootstrap is the common origin; the central VM is the exception, not the rule.
 
-- [ ] [SCRIPT] P2. **Make the cron lock + state files per-uid (kill the root↔ubuntu contention class).**
-      `slot-cron-ff-pull.sh` (`/tmp/slot-cron-ff-pull.lock`) + `verify-slot-host-symmetry.sh`
-      (`/tmp/.slot-host-symmetry-fail-streak`) use FIXED `/tmp` paths → a root run leaves root-owned files the ubuntu
-      cron can't touch. Use `${XDG_RUNTIME_DIR:-/tmp}/<name>.$(id -u).lock` so contexts never collide. Repo:
-      unified-trading-pm (`scripts/dev/`). **STATUS 2026-06-16**: lower priority now the EUID guard (above) prevents the
-      root crontab entirely (the only remaining root-lock source is a manual root run of the puller). The puller-side
-      edit is awkward to land from a slot host — the `*/5` ff-pull cron does
+- [x] ✅ [SCRIPT] P2. **(SHIPPED `unified-trading-pm@4a2f88b9e` 2026-06-22)** **Make the cron lock + state files per-uid
+      (kill the root↔ubuntu contention class).** `slot-cron-ff-pull.sh` (`/tmp/slot-cron-ff-pull.lock`) +
+      `verify-slot-host-symmetry.sh` (`/tmp/.slot-host-symmetry-fail-streak`) use FIXED `/tmp` paths → a root run leaves
+      root-owned files the ubuntu cron can't touch. Use `${XDG_RUNTIME_DIR:-/tmp}/<name>.$(id -u).lock` so contexts
+      never collide. Repo: unified-trading-pm (`scripts/dev/`). **STATUS 2026-06-16**: lower priority now the EUID guard
+      (above) prevents the root crontab entirely (the only remaining root-lock source is a manual root run of the
+      puller). The puller-side edit is awkward to land from a slot host — the `*/5` ff-pull cron does
       `git checkout origin -- slot-cron-ff-pull.sh` and reverts local edits mid-flight — so land it from a
       clean/non-slot checkout (or a direct PR), not a slot worktree.
 
@@ -140,10 +140,11 @@ vitest/tsc (dashboard).
       so the cron now reports every 5 min. NOTE: the token expires 2027-06-16 — rotate before then (or shorten if a 1-yr
       worker token is too long-lived for policy). Repo: agent-orchestrator.
 
-- [ ] [SCRIPT] P3. **`agent-orchestrator/data/config/accounts.json` is tracked but `bootstrap_vm.sh`-regenerated** →
-      perpetually dirty on every VM's ao main clone (strips operator comments + `—`-escapes em-dashes; account DATA
-      identical) → FF-pull `[skip:dirty]`s ao main forever. Either gitignore it (per the generated-artifacts rule) or
-      make bootstrap emit byte-identical content. Repo: agent-orchestrator.
+- [x] ✅ [SCRIPT] P3. **(SHIPPED `agent-orchestrator@6385056`+`@78ca79c` 2026-06-22 — gitignored + `git rm --cached`;
+      creds-bucket SSOT, kept on disk)** **`agent-orchestrator/data/config/accounts.json` is tracked but
+      `bootstrap_vm.sh`-regenerated** → perpetually dirty on every VM's ao main clone (strips operator comments +
+      `—`-escapes em-dashes; account DATA identical) → FF-pull `[skip:dirty]`s ao main forever. Either gitignore it (per
+      the generated-artifacts rule) or make bootstrap emit byte-identical content. Repo: agent-orchestrator.
 
 ## Phase 4 — ship + docs
 
