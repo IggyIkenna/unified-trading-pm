@@ -368,9 +368,18 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
           require-vm-match, prune-stale, db-path); deleted orphaned `_PASTE_SETTLE_DEFAULT_S`; **flipped
           `test_paste_settle_bad_value_falls_back` → `_fails_loud`**; `test_planregenloop_reads_prune_stale_env` now
           `reset_config()`s between its two constructions (singleton contract: prod reads config once at startup).
-  - [ ] **Wave 4 — cloud/identity reads**: `GCP_PROJECT_ID`/`GOOGLE_CLOUD_PROJECT` via the UnifiedCloudConfig base,
-        `ORCHESTRATOR_GH_OWNER`, `*_BUCKET`, `ORCHESTRATOR_VM_ID`/host/public-URL across `routes/`, `slack.py`,
-        `gcs_sync.py`, `escalation.py`, `ci_reconcile.py`, workspace-root reads.
+  - [x] ✅ **Wave 4 — cloud/identity reads** (4a `agent-orchestrator@2eb63b5` + 4b-1 `@0d74f2f` + 4b-2 `@fb94fca`,
+        QG ✓ 2026-06-22): ~40 reads across 18 files → typed config — `VM_ID`/`GH_OWNER` unified (1 field each),
+        buckets (gcs/s3/creds), snapshot/sqlite/ci-reconcile/run-volume/gh-rate/usage-poll intervals (bounded,
+        fail-loud), URLs/labels (public/dashboard/host), vms id/role/registry/stale/standalone, git-health stale-secs,
+        mcp data-status+backtest-timeout, server cors/failover/port-conflict; deleted ~12 orphaned `_int_env`/
+        `_env_pct`/`DEFAULT_*` dupes. **Design call**: `workspace_root` scoped to `ORCHESTRATOR_WORKSPACE_ROOT` only
+        (orchestrator config); the ambient `WORKSPACE_ROOT`/`UNIFIED_TRADING_WORKSPACE_ROOT` stay direct `os.environ`
+        **passthrough** in tmux_spawn/autospawn (forwarded verbatim to a spawned worker — a unified alias wrongly let
+        an ambient var override a caller's explicit value; caught by test_e2e/test_capability_mcp). **INCIDENT**: the
+        first 4b pass (uncommitted) was LOST when the Tier-C drain+backmerge advanced the branch and a pull pulled HEAD
+        forward over the WIP — re-applied in small immediately-committed batches (4b-1/4b-2). Lesson: never leave a
+        large multi-file batch uncommitted while the integration branch is live.
   - [ ] **Wave 5 — secrets + logging**: route `auth.py` (JWT/INTERNAL/`*_GCS`), `GH_APP_CI_POLLER_*`,
         `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` through config secret-NAMES / `get_secret_client`; replace the 2
         `logging.basicConfig` sites (`server.py` `main()`, `regen_backlog_from_plan.py`) with a shared observability init.
