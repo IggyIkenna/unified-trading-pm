@@ -320,6 +320,20 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 10:55 — API-Football stopped = COMPLETED-not-stalled, BUT real 2026 gap found + now fetching
+
+Operator Q "API usage stopped ~10am — done or stalled?": ANSWER = **completed-not-stalled** (VMs exit 0 + self-
+deleted, no hung process) but **NOT fully done**. Historical 2018→2025 enriched. Real **2026 gap**: GCS had 134
+fixture-days for 2026 but only 30 with fixture_stats / 35 events → ~104 recent days have fixtures-but-no-stats. Root
+cause = **sequencing**: those 2026 fixtures were captured AFTER the first enrichment pass walked past them, so they
+were never enrichable at run time. Relaunched `sports-enrich-2026gap` (2026-01-01→06-21) — VERIFIED fetching: API
+usage +3489 in 11 min (91740→95229), so the idle 200k/300k budget is now being consumed on the real gap.
+
+**Sequencing lesson:** enrichment must run AFTER fixtures are fully captured; a fixtures-captured-after-enrichment
+window leaves a silent stats/events/lineups gap that only a RE-RUN catches (skip-fresh re-detects the now-enrichable
+fixtures). Worth a post-fixtures enrichment re-run as standard. Monitor bcp1yb5cd (exit-code-aware) watches 2026gap
++ TM + FS → on all-terminal: drain consolidator, run the 57-league Feb-June relabel, re-measure honest-cov.
+
 ### 2026-06-22 10:05 — memory fix HELD; enrichment 2nd-pass + SFI complete; one relaunch blocked on foreign WIP
 
 Memory fix (IS@505dcd9) verified — NO re-OOM: SFI completed clean, TM/FootyStats running past the old date-#2 death
