@@ -770,9 +770,9 @@ are identified (2) and the ledger exists (3).
       headline selector should read ~7 weighted archetype strategies (the e2e "strategy" granularity), each expandable
       to its weighted per-(venue,coin) legs, rather than 145 flat legs. The archetype roll-up already exists (P11.9-ui
       group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
-      leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated).
+      leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated). ALSO: the per-strategy rollup currently shows only 13 (the attribution-parquet subset for the 145-run) — make it reflect ALL 145 by reading the manifest/instruction-ledger strategy_ids (or emit attribution for all 145), so the count + archetype grouping cover the full book.
 
-- [ ] [UI] P2.14. **Prod paper-trading React-Query hooks error without fetching** (open 2026-06-22). The 3 proxy
+- [x] ✅ [UI] P11.14-hook. **Prod paper-trading hooks now render REAL CRA data** — ROOT CAUSE (from the live console): `lib/api/mock-handler.ts`'s global fetch interceptor (NEXT_PUBLIC_MOCK_API=true) had no passthrough for `/api/client-reporting*`, so it returned empty `{}` → login got no access_token → every panel "Failed to load" with no network request. FIX (ui@f0ebd216): added `/api/client-reporting` to `realRoutePrefixes`. Now ALL 10 ledger endpoints return 200, no errors, real CeFi venues render (odum-portal-00036-pzm). The full 4-part P11.14 fix: isReportingLive hook gate + fs env-loader in next.config + rewrites-emit-in-mock + mock-handler passthrough. Verified browser-side.
       bugs are fixed (CRA reachable from the page: manual in-page fetch → 200, 13 strategies). But `useLedgerPerStrategy`
       / `useLedgerNetViews` etc. show "Failed to load" with NO `/api/client-reporting*` request issued, despite
       isMock=false (var inlined), clientId set (`?client=firm-paper-determinism`), no service worker, mock defined, fix
@@ -786,6 +786,15 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-22 (autonomous) — PROD UI NOW SHOWS REAL DATA (the "old/mock thing" is FIXED).** Live-console paste
+  pinpointed the 4th/final bug: the `mock-handler.ts` global fetch interceptor swallowed `/api/client-reporting*`
+  (returned empty `{}` → no JWT → panels errored). Added the passthrough (ui@f0ebd216, odum-portal-00036-pzm).
+  Browser-verified: all 10 client-reporting endpoints 200, no "Failed to load", real CeFi venues. The paper-trading
+  panels read the live CRA. Remaining nuance (→ P11.16): the selector shows **13** (the per-strategy ATTRIBUTION
+  endpoint's subset for the 145-run) not 145 — attribution is emitted for a subset; the full 145 are in the
+  manifest/instruction/passive/transfer ledgers. Fix = emit attribution for all 145 OR have the per-strategy rollup
+  count off the manifest/instruction ledger (not just attribution), + the archetype-level default grouping.
 
 - **2026-06-22 (autonomous) — P11.14 prod-UI data: 3 plumbing bugs FIXED + PROVEN browser-reachable; 1 client-hook bug
   open (awaiting live console).** The prod paper-trading panels showed stale/mock not the real 145-strategy run due to
