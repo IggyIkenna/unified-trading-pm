@@ -80,7 +80,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       **GOTCHA:** verify `ASSET_GROUP_CONFIG["tradfi"]["prefix_tpls"]` covers the canonical path before any `--apply` (false
       positives flip real captured→attempted_failed). **Success:** expected_unattempted → ~0 (only genuine not-yet-fetched);
       honest-cov reflects the true 6M denominator. Repos: instruments-service + deployment-service. Provenance: this plan.
-- [ ] [DATA] P2. **(3) ticks_migrated (14,078 UNKNOWN attempted_failed) sweep.** Migration artifact (2026-04-18):
+- [x] ✅ [DATA] P2. **(3) ticks_migrated (14,078 UNKNOWN attempted_failed) sweep.** Migration artifact (2026-04-18):
       `ticks_migrated_*.parquet` bundles with placeholder instrument_id + instrument_type=UNKNOWN → MDPS partition_mismatch +
       14k UNKNOWN attempted_failed cells (all artifacts — 0 genuine non-UNKNOWN failures, confirmed). The fleet (item 1)
       re-fetches the same (underlying,date) at the correct grain → supersedes. RUN AFTER item 1: (a) delete the orphaned
@@ -89,6 +89,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       attempted_failed manifest cells (drop where a correct-grain capture/empty now exists). reconcile_phantom skips
       attempted_failed → targeted pass needed. **Success:** 0 UNKNOWN attempted_failed; no MDPS partition_mismatch. Repos:
       market-tick-data-service / instruments-service. Provenance: this plan.
+      — GCS cleanup 2026-06-22: (a) no UNKNOWN parquets existed in GCS (batch fleet already re-fetched at correct grain — no-op); (b) dropped 4,729 UNKNOWN attempted_failed rows from `_index/availability_index.parquet` (all 13 (venue,date,data_type) combos covered by canonical captured/empty_confirmed; orphaned MDPS shard rows, VM self-deleted). Snapshot: `_index/snapshots/pre_unknown_cleanup_20260622.parquet`. Verified 0 UNKNOWN attempted_failed. `attempted_failed` remaining: 9,349 (blank instrument_type — separate problem class, not in scope of item 3).
 - [ ] [DATA] P2. **(4) 15m/24h re-aggregate over the new 1m corpus.** RUN AFTER items 1+2. MDPS manifest fix is shipped
       (mtds@62de483 + UTL@6b6d53bd) but 15m/24h stalled on the same grain wall — once the 1m corpus + re-seed land, relaunch:
       rebuild the MDPS+UTL tarballs from clean LDR (must carry 62de483/d0f42ba/6b6d53bd), then
