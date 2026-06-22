@@ -707,6 +707,23 @@ are identified (2) and the ledger exists (3).
       `catalog._BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `_ENGINE_DRIVABLE`+`E2E_UNIVERSE`; unit
       test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null
       signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run.
+      **STATUS 2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the
+      archetype).** All edits are in the slot clones (UNCOMMITTED, recover from `.tabs/1/{unified-api-contracts,
+      strategy-service}`): UAC `enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py` (52→53)
+      + `tests/test_ws_cassette_coexistence.py` (added the LEGIT `kalshi_clob_ws`/`polymarket_clob_ws` venue mappings —
+      a pre-existing cross-repo cassette gap, real connectors, needed for green); strategy-service new
+      `rules_directional/tsmom_btc_cta.py` + `tests/.../test_tsmom_btc_cta.py` + factory/defaults/slots/catalog/
+      catalog_directional/paper_universe/batch_utils/`rules_directional/__init__.py`/test_ml_directional_continuous.
+      UAC full QG = **10,215 passed** (incl. the new leg-spec test) once the WS mappings were added; strategy-service =
+      content-sentinel green. **BLOCKER**: UAC local `quality-gates.sh` version-alignment HARD-fails because the PM
+      `workspace-manifest.json` `versions[unified-api-contracts]` is **0.39.0** on origin/LDR while UAC-main is
+      **0.40.0** (the manifest-update workflow hasn't synced the bump — the documented VERSION_SPLIT promotion-lag, here
+      hard-blocking the consumer's local QG). `--skip-version-alignment` is human-only. **TO COMPLETE (once the PM
+      manifest syncs to UAC 0.40.0, or a human aligns it)**: re-run `cd unified-api-contracts && bash
+      scripts/quality-gates.sh --no-fix` → quickmerge UAC (`enums.py archetype_leg_spec_seeds.py
+      tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):` commit for the WS mappings → then quickmerge
+      strategy-service (it depends on the UAC enum, so promote UAC first). The agent's first pass left it unshipped +
+      had ONE hallucinated WS-test edit (invented connectors) which was dropped; the real WS mappings were re-added.
 - [ ] [DATA] P2.11.16. **features-service: compute + write BTC trend features `btc_trailing_return_{1m,3m,6m,12m}` +
       `btc_realized_vol` to the canonical GCS feature corpus the paper run reads** — the CTA engine (P2.11.14) reads
       these from `features: dict[str,float]`; without them the paper run produces null signals (honest absence). Trailing
@@ -755,12 +772,34 @@ are identified (2) and the ledger exists (3).
       group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
       leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated).
 
+- [ ] [UI] P11.14-hook. **Prod paper-trading React-Query hooks error without fetching** (open 2026-06-22). The 3 proxy
+      bugs are fixed (CRA reachable from the page: manual in-page fetch → 200, 13 strategies). But `useLedgerPerStrategy`
+      / `useLedgerNetViews` etc. show "Failed to load" with NO `/api/client-reporting*` request issued, despite
+      isMock=false (var inlined), clientId set (`?client=firm-paper-determinism`), no service worker, mock defined, fix
+      code in the deployed chunks. Resolve from the LIVE browser console (the actual react-query error) — not headless
+      inference. Likely candidates: an SSR/prefetch error, a QueryClient retry/throwOnError config, or the hook erroring
+      in a transform before fetch. Repo: unified-trading-system-ui.
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-22 (autonomous) — P11.14 prod-UI data: 3 plumbing bugs FIXED + PROVEN browser-reachable; 1 client-hook bug
+  open (awaiting live console).** The prod paper-trading panels showed stale/mock not the real 145-strategy run due to
+  THREE stacked bugs, all fixed + deployed (odum-portal-00035-nsc): (1) hooks returned the 14-strategy mock fixture
+  because global `NEXT_PUBLIC_MOCK_API=true` → added `isReportingLive()` so paper-trading goes live when the CRA URL is
+  set (ui data-mode.ts + use-paper-trading-ledger.ts); (2) `next.config.mjs` rewrites() read the reporting URL before
+  Next loaded .env → fell back to localhost:8014 → added an fs-based env loader (no @next/env bare import — unresolvable
+  under pnpm); (3) rewrites() did `return []` whenever mock → `/api/client-reporting` 404'd → now emits the
+  client-reporting rewrites even in mock mode. PROOF the data is now reachable from the prod page: an in-page
+  `fetch('/api/client-reporting-auth/login')` → 200 (token len 343), `fetch('/api/client-reporting/.../per-strategy')` →
+  200 with 13 strategies. **OPEN (P11.14-hook):** the React-Query hooks (`useLedgerPerStrategy` etc.) render
+  "Failed to load" WITHOUT issuing any fetch, while the identical manual fetch succeeds — a client-runtime bug not
+  resolvable headless (ruled out: clientId-missing, service-worker, undefined-mock, stale-bundle, rewrite). Needs the
+  live browser console error. CRA per-strategy returns 13 (attribution subset) not 145 — separate sparsity note.
 
 - **2026-06-22 (operator) — LOCKED the deployable book: cs + h32 + ext + tsmom + BTC-trend + basis spine; R8 short
   DROPPED.** Per-leg proper-execution Sharpes (engine `legnet` net through the real fill model, vnorm 10%): basis

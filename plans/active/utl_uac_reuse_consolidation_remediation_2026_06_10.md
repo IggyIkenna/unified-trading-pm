@@ -332,13 +332,44 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       emission in the lifespan (the repo emitted ZERO events before). The JWT secret was already made cloud-agnostic by
       P1 (gs:// blob via `get_storage_client`) + its Cloud-Run env tier. Mode/path resolvers stay live functions (tests
       monkeypatch them → class is additive); dashboard auth untouched. +6 tests, QG green.
-- [ ] [AGENT] P3. **agent-orchestrator — P2 follow-up wave (read-migration + basicConfig)**: migrate the remaining ~60
-      read-once `ORCHESTRATOR_*` watchdog/cadence tunable `os.environ.get` reads (`worker_liveness_watchdog.py`,
-      `autospawn.py`, `main_agent_keeper.py`, `server.py`, …) onto `OrchestratorConfig` fields, and replace the 2
-      `logging.basicConfig` sites (`server/server.py` `main()`, `regen_backlog_from_plan.py`) with a shared
-      observability init. **DEFERRED** (provenance: utl_uac P2 core 2026-06-22 — deferred because the live config funcs
-      are monkeypatched in tests, so routing them through a cached settings singleton changes per-test semantics; needs
-      a careful separately-tested pass; pure consolidation churn, no behaviour change). Repo: agent-orchestrator.
+- [ ] [AGENT] P2. **agent-orchestrator — P2 read-migration (ALL `ORCHESTRATOR_*` reads → typed `OrchestratorConfig`)**:
+      migrate **107 distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22:
+      `rg '(?:os\.getenv|os\.environ\.get)\("([A-Z_]+)"' server/`) onto typed `OrchestratorConfig` fields. **Operator
+      2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by type
+      safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a deliberate
+      **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load** (typed +
+      bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the original
+      deferral reason): `OrchestratorConfig` reads **os.environ only** (`env_file=None` — parity with the old
+      `os.environ.get`, no stray-`.env` pollution), `get_config()` is a **reset-able** singleton, and a conftest autouse
+      `reset_config()` fixture rebuilds it per test so `monkeypatch.setenv` works unchanged. All reads **deferred** to
+      call/construction time (the watchdog's import-frozen module constants move into `__init__`/use-site). Blank/unset →
+      default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge → journal):
+  - [x] ✅ **Wave 1 — foundation + config.py resolver group** (`agent-orchestrator@86abf79`, QG 853✓ +6 tests
+        2026-06-22): `env_file=None` + `reset_config()` + conftest autouse reset; migrated mode / db_path / state_json /
+        backlog / accounts / backends / claude_accounts_dir / server_url / operator / vm_id / review_slots /
+        main_loop_seconds / review_loop_seconds / fleet_worker_cap onto typed fields; fail-loud on bad MODE / non-int /
+        ≤0 loop-seconds; deleted `_positive_int_env`. Proved the mechanism (170 monkeypatched-resolver tests green).
+  - [x] ✅ **Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG_* + 4 CONTEXT_BURN_*) + `worker_liveness/__init__.py`
+        (4)** (`agent-orchestrator@2fe6266`, QG ✓ 2026-06-22): 24 knobs onto typed+bounded fields (gt=0 intervals,
+        ge=0 caps, le=100 pct); shared `BoolEnvFalse` (blank→False, `{1,true,yes,on}` parity); import-frozen module
+        constants now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the
+        lenient `try/except`-on-bad LIVENESS read is now fail-loud; deleted the orphaned `DEFAULT_INTERVAL_SECONDS`
+        + dropped the dead `_WATCHDOG_ENABLED_ENV`/`import os`. +5 config-bounds/BoolEnvFalse tests.
+  - [ ] **Wave 3 — daemon/loop tunables**: `autospawn.py`, `main_agent_keeper.py`, `failover.py`, `escalation.py`,
+        `tmux_spawn.py`, `tmux_pruner.py`, `creds_env_poller.py`, `usage_poller.py`, `regen_backlog_from_plan.py`. Flip
+        the silent-fallback test (`test_ceiling_helpers_bad_env_falls_back`) to assert fail-loud.
+  - [ ] **Wave 4 — cloud/identity reads**: `GCP_PROJECT_ID`/`GOOGLE_CLOUD_PROJECT` via the UnifiedCloudConfig base,
+        `ORCHESTRATOR_GH_OWNER`, `*_BUCKET`, `ORCHESTRATOR_VM_ID`/host/public-URL across `routes/`, `slack.py`,
+        `gcs_sync.py`, `escalation.py`, `ci_reconcile.py`, workspace-root reads.
+  - [ ] **Wave 5 — secrets + logging**: route `auth.py` (JWT/INTERNAL/`*_GCS`), `GH_APP_CI_POLLER_*`,
+        `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` through config secret-NAMES / `get_secret_client`; replace the 2
+        `logging.basicConfig` sites (`server.py` `main()`, `regen_backlog_from_plan.py`) with a shared observability init.
+  - [ ] **Wave 6 — final audit**: `os.getenv`/`os.environ` residual count → near-zero (document any sanctioned
+        config-bootstrap holdouts with `# noqa`), codex doc update, plan close.
+
+  > **Progress Log (autonomous loop — this IS the handoff doc; no summary file).** Slot model = one shared clone per
+  > repo, so AO waves run **serially** (shared git index; background agents would race on commit) — different-repo /
+  > read-only fan-out is the only safe parallelism here. Wave 1 @ `agent-orchestrator@86abf79`; Wave 2 @ `agent-orchestrator@2fe6266` (2026-06-22).
 - [x] ✅ [AGENT] P3. **unified-trading-api** — DONE `unified-trading-api@e3fbd8d` (QG 0). `routes/chat.py`
       `ANTHROPIC_API_KEY` now via `UnifiedCloudConfig().get_secret("anthropic-api-key")` (name confirmed from
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
