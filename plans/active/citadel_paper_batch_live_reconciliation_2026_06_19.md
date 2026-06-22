@@ -818,7 +818,7 @@ are identified (2) and the ledger exists (3).
       P11.20). pw:L2 ✓ (21 passed) | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts (P11.19 cases) +
       client-reporting-api/tests/unit/test_data_quality.py (array contract). Repo: client-reporting-api +
       unified-trading-system-ui.
-- [ ] [INFRA] P11.20. **Live VM alert STREAM into the data-quality panel** (split from P11.19; operator 2026-06-22
+- [ ] [INFRA] P2.20. **Live VM alert STREAM into the data-quality panel** (split from P11.19; operator 2026-06-22
       "alerts should stream in ALL events from the VMs"). Today the panel's alerts section renders but shows
       `alerts_source: unavailable` because (1) both CRA routes (`/alerts` + `/data-quality`) hardcode the k8s DNS
       `http://alerting-service:8080` which does NOT resolve from Cloud Run (the "overridable via env" comment is stale —

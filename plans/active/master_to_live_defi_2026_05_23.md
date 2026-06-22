@@ -113,14 +113,14 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-06-22 12:23 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-06-22 12:44 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
 | [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) | master | research | 12/44 | 27% | 48.0 | — |
 | [`path_to_100pct_backfill_mtds_is_2026_06_17`](./path_to_100pct_backfill_mtds_is_2026_06_17.md) | master | infra | 0/9 | 0% | 16.0 | — |
-| [`data_pipeline_hardening_self_monitoring_2026_06_22`](./data_pipeline_hardening_self_monitoring_2026_06_22.md) | master | infra | 4/32 | 12% | 15.8 | — |
-| [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md) | master | infra | 78/114 | 68% | 12.0 | — |
+| [`data_pipeline_hardening_self_monitoring_2026_06_22`](./data_pipeline_hardening_self_monitoring_2026_06_22.md) | master | infra | 7/32 | 22% | 14.1 | — |
+| [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md) | master | infra | 80/115 | 70% | 11.6 | — |
 | [`cicd_release_machinery_2026_06_18`](./cicd_release_machinery_2026_06_18.md) | master | infra | 4/47 | 9% | 8.8 | — |
 | [`org_migration_to_odumresearch_2026_06_07`](./org_migration_to_odumresearch_2026_06_07.md) | master | infra | 0/27 | 0% | 8.0 | — |
 | [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md) | master | brand-new | 7/11 | 64% | 6.5 | — |
@@ -221,7 +221,7 @@ _Last regenerated: 2026-06-22 12:23 UTC via `scripts/plans/regenerate_active_pla
 | [`orchestrator_self_healing_hardening_2026_06_21`](./orchestrator_self_healing_hardening_2026_06_21.md) | master | infra | 35/35 | 100% | 0.0 | — |
 | [`solana_defi_legacy_migration_2026_05_27`](./solana_defi_legacy_migration_2026_05_27.md) | master | infra | 32/32 | 100% | 0.0 | — |
 | [`utl_strictify_preexisting_pyright_suppressions_2026_06_09`](./utl_strictify_preexisting_pyright_suppressions_2026_06_09.md) | master | refactor | 20/20 | 100% | 0.0 | — |
-| **TOTAL** (104 plans) | 0 orphans, 0 TBD | — | — | **55% done** | **245** | — |
+| **TOTAL** (104 plans) | 0 orphans, 0 TBD | — | — | **55% done** | **243** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
