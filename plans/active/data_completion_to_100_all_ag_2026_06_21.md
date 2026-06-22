@@ -422,10 +422,25 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
       e2-standard-4 (its driver ran clean). QG-green --no-fix (sentinel 3ba2b4d). Clone-residue was only dangling
       autostash stashes (not working-tree files) + a foreign WIP edit on launch-tradfi-bf-cme-ohlcv-1m.sh, excluded
       via --files scoping.
-- [ ] [CODE] P1. features-sports-service SFI-progressive:
+- [x] ✅ [CODE] P1. features-sports-service SFI-progressive:
       `MissingFeatureFamilyError: feature_group=sfi_progressive requires a sibling feature_family kwarg (UAC FeatureFamily enum)`
       — add the feature_family kwarg to the manifest write in the sfi_progressive features path; rebuild tarball;
-      relaunch features-sfi-progressive. Repo: features-sports.
+      relaunch features-sfi-progressive. Repo: features-service (NOT a separate features-sports repo — folded in
+      `features_service/sports/`). — **CODE FIX SHIPPED** features-service@06c44c02 | root cause: all 5 manifest
+      write call sites in `scripts/sports/compute_sfi_progressive_only.py` (1 record_empty + 2 record_failed + 2
+      manifest.add) set `feature_group="sfi_progressive"` but omitted the sibling `feature_family` kwarg the UTL
+      Phase-1B guard (`_check_feature_family_consistency`) requires; added `_FEATURE_FAMILY = "sports"`
+      (UAC FeatureFamily.SPORTS, per `_GROUP_FAMILY_MAP["sfi_progressive"]`) to all 5. QG-green --no-fix
+      (sentinel 871508b; the lone failure on a 1st run was a pre-existing unrelated calendar test-ordering flake —
+      `test_fomc_day_has_events` hits live GCP-SM/FRED via `get_config().fred_api_key`, blocked by --block-network;
+      passes in isolation + on retry; NOT my surface — features-service@0e73bc90 owns that calendar test).
+      **REBUILD-TARBALL + RELAUNCH BLOCKED — foreign dirty peer:** `create-code-tarballs.sh --asset-group SPORTS`
+      refuses at `market-tick-data-service has uncommitted changes` (10 modified handler/test files + 2 untracked
+      scripts — another agent's active websocket/defi WIP, NOT mine; must not stomp/package). Complete once MTDS is
+      clean: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS` (ships features-service
+      @06c44c02) → `RECOMPUTE_FORCE=true bash deployment-service/scripts/vm/launch-sfi-progressive-features-backfill-vm.sh
+      --force 2020-01-01 <today>` → after ~8min verify `gsutil cat gs://deployment-scripts-central-element-323112/
+      vm-logs/<VM_NAME>/run.log` shows NO MissingFeatureFamilyError + PROGRESSIVE_DAY_CAPTURED events (exit != 1).
 - [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
       (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
 
