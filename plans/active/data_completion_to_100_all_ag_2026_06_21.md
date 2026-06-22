@@ -1859,11 +1859,12 @@ dispatch text). Findings:
 - ✅ verified: `_legacy_seed.parquet` per-VM shard = 10k captured (0 legacy) → won't re-merge. The enum-run per-VM shard
   was already consolidated+cleared.
 
-- [ ] [SCRIPT] P0. **PROMOTE enumerator fix `42dd37c` LDR→main on instruments-service so `:latest` image + GCS tarball
+- [x] ✅ [SCRIPT] P0. **PROMOTE enumerator fix `42dd37c` LDR→main on instruments-service so `:latest` image + GCS tarball
       rebuild** — the daily Cloud Scheduler `expected-universe-v2-defi-daily` (01:30 UTC) runs the `:latest` image;
       while that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The legacy-venue
       delete is idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild. Repo:
       instruments-service. Provenance: this Progress Log.
+      — instruments-service@289f1a3 (v0.36.0 on main, Tier-C drain auto-promoted); `git merge-base --is-ancestor 42dd37c origin/main` → exit 0 confirmed 2026-06-22.
 
 The legacy-venue phantom DELETE tool shipped: instruments-service@7b6512c (`reconcile_phantom_manifest_rows_all.py`
 `--report-legacy-venue-defi-phantoms [--apply]`, QG green 82s, landed LDR). **Gap-analysis VERDICT** (measured from live
