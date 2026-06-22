@@ -112,6 +112,10 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       batch rerun (live==batch parity, per `codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Repos:
       market-tick-data-service (connectors/registry) + deployment-service (launchers). Provenance: this plan.
 
+## Gap-fill items (discovered post-fleet-audit 2026-06-22)
+
+- [ ] [DATA] P1. **(6) Hung-VM gap-fill — 8 VMs re-launched 2026-06-22T18:37Z.** 7 fleet VMs hung 3.5h (session persistence 4h limit likely; logs frozen at 15:00-15:30 UTC): YM-2020/2021/2023, ZB-2024, ZC-2025, ZL-2024, ZN-2025 — manifest shows 88-91% captured, 30-155 expected_unattempted remaining per root. 1 additional gap: RB-2025 (exit_code=None) captured only through 2025-10-07. **Action taken:** killed all 7 hung VMs + relaunched with `--force` (8 new VMs total incl. RB-2025). MTDS skip-existing handles deduplication automatically. ZC-2020 fully captured — no relaunch needed. **New VMs (all RUNNING):** ym-2020-20260622-183646, ym-2021-20260622-183701, ym-2023-20260622-183720, zb-2024-20260622-183739, zc-2025-20260622-183757, zl-2024-20260622-183814, zn-2025-20260622-183830, rb-2025-20260622-183127. **Success:** all expected_unattempted for these root/years → ~0 (weekends only); no attempted_failed. Provenance: post-fleet manifest audit + log-mtime check 2026-06-22T18:37Z.
+
 ## SSOTs to read
 - `codex/02-data/tradfi-databento-sourcing-ssot.md` (3-dataset allowlist, gotchas, live producer)
 - `codex/02-data/availability-manifest-and-data-status.md` (4-state + honest absence)
