@@ -659,7 +659,13 @@
         "tradfi"
       ],
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-api-contracts=0.31.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.31.0",
+      "codebase_health": {
+        "coverage_pct": 88.24,
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "warn_file_count": 0
+      }
     },
     "instruments-service": {
       "type": "service",
