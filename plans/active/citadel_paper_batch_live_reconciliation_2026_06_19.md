@@ -295,10 +295,13 @@ are identified (2) and the ledger exists (3).
 
 ## Codex SSOT updates (Citadel §6 / Post-Plan-Phase Codex Audit)
 
-- [ ] [DOC] P3.8.1. Keep `codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync as each phase lands
-      (EXISTS/MISSING table → EXISTS). Update `codex/04-architecture/global-ledger-architecture.md` when the
-      `PositionLedger`/`PassiveLedger`/realised-PnL gaps close. Bump the `EventType` count in
-      `codex/02-data/ledger-event-taxonomy.md` (39, not 37). Repo: unified-trading-pm.
+- [x] ✅ [DOC] P3.8.1. Keep `codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync — DONE
+      (`unified-trading-pm@dc624d2b`). §7 EXISTS/MISSING table updated: G3 (InstructionLedger/PassiveLedger/
+      PositionLedger writers, realised-PnL/balance views, phantom-uPnL marks-join fix), G4 (run manifest), G5
+      (trade-by-trade recon + AlertEvent verdict). `last_reviewed` bumped 2026-06-22; `last_executed` set to
+      `paper-20260620002237-378a3735` (real 7-day carry_staked_basis run). G1/G2 remain MISSING (P1.6/P2.1-P2.2
+      still open). `codex/04-architecture/global-ledger-architecture.md` + `ledger-event-taxonomy.md` count
+      update deferred to P3.8.2 when GroupC/execution-events land. Provenance: agt-f35b99 2026-06-22.
 
 ## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
 
