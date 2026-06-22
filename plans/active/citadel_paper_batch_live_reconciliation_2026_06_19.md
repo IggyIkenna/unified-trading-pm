@@ -818,17 +818,46 @@ are identified (2) and the ledger exists (3).
       P11.20). pw:L2 ✓ (21 passed) | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts (P11.19 cases) +
       client-reporting-api/tests/unit/test_data_quality.py (array contract). Repo: client-reporting-api +
       unified-trading-system-ui.
-- [ ] [INFRA] P2.20. **Live VM alert STREAM into the data-quality panel** (split from P11.19; operator 2026-06-22
-      "alerts should stream in ALL events from the VMs"). Today the panel's alerts section renders but shows
-      `alerts_source: unavailable` because (1) both CRA routes (`/alerts` + `/data-quality`) hardcode the k8s DNS
-      `http://alerting-service:8080` which does NOT resolve from Cloud Run (the "overridable via env" comment is stale —
-      no actual read), and (2) no alerting-service is deployed reachable from prod CRA, and (3) the per-epic data fleet
-      that emits ADAPTER_FETCH_FAILED/honest-absence events is post-cutover/not-running. WIRE: (a) add an
-      `alerting_service_url` field to `UnifiedCloudConfig` (no `os.getenv`) + have BOTH CRA routes read it; (b) deploy /
-      expose an alerting-service reachable from prod CRA (or point at the existing one); (c) verify a real VM
-      data-event (missing/incomplete data) appears as an alert row in the panel. Repo: unified-trading-library (config) +
-      client-reporting-api (routes) + deployment-service (alerting-service reachability). NOTE: blocked on a live UTL
-      refactor in flight (21 dirty files 2026-06-22) — do the UTL config field once that settles.
+- [x] ✅ [INFRA] P11.20. **Live VM alert STREAM into the data-quality panel** — SHIPPED + VERIFIED LIVE. Root cause of
+      the prior `alerts_source: unavailable`: the CRA route hardcoded the k8s DNS `http://alerting-service:8080` which
+      does NOT resolve from Cloud Run. FIX (client-reporting-api): repoint `_live_alerts` at the **reachable, public**
+      deployment-api unified alert ledger (`uts-shared-deployment-api…/api/alerts` — the SAME source deployment-ui's
+      monitoring pane shows: CI/CD + vm_down + consolidator_down + worker_liveness + git_health) + a `_map_alert` that
+      projects the ledger `AlertEntryDict` → the UI `DataQualityAlert` closed shape (severity coerced to
+      critical|warning|info). VERIFIED on prod (rev `client-reporting-api-00019-8k2`): `alerts_source: deployment-api`
+      (was "unavailable"); 0 active alerts → panel shows "fleet is clean" honestly. The alert FEED is now live; it
+      populates when the fleet emits events. Remaining (NOT blocking): the per-env URL is a constant default (P11.21
+      folds it into the deployment-api-SSOT client); the per-epic data fleet that emits ADAPTER_FETCH_FAILED/
+      honest-absence is post-cutover/not-running so the stream is empty until it runs. Repo: client-reporting-api.
+      regression: client-reporting-api/tests/unit/test_data_quality.py (alerts merge + shape-map + degrade-to-unavailable).
+- [ ] [CODE+UI] P11.21. **Reconcile the paper data-quality panel against the deployment-api data-status SSOT** (operator
+      2026-06-22: "lets use SSOT so if it breaks there we fix at the source"). Today the paper panel's coverage is
+      RUN-sourced (the run's `skipped_specs` + `run_manifest`) — a DIFFERENT surface from the deployment-ui data-status,
+      which reads the corpus-wide manifest 4-state via deployment-api (`/api/data-status/honest-coverage` +
+      `/manifest` + `/coverage-summary`, all reachable + public on Cloud Run, verified 200). WIRE: a CRA
+      `deployment_api_client` (single typed HTTP client, env-overridable base URL via `UnifiedCloudConfig` — also serves
+      P11.20's alerts URL) that the data-quality endpoint calls to cross-reference the manifest 4-state, so a coverage
+      cell's status (`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`) is the SAME truth
+      deployment-ui shows + a break is fixed once at the deployment-api source. Surface BOTH lenses in the panel: "this
+      run could drive" (skipped_specs) vs "corpus has data" (manifest) — and flag divergence (spec captured-in-manifest
+      but run-skipped = config-unmappable, vs genuinely no-data). Repo: client-reporting-api (client + endpoint) +
+      unified-trading-system-ui (dual-lens panel, playwright-gated) + unified-trading-library (config URL field).
+- [ ] [CODE+UI] P11.22. **Min-coverage threshold — "drivable-but-thin" state** (operator 2026-06-22: "is it only 100%
+      or is >80% still relevant for backtest"). Today a spec is BINARY drivable-vs-skipped: any data in window → runs
+      (drivable, regardless of how complete); zero → skipped. ADD a configurable per-archetype min-window-coverage
+      threshold (e.g. ≥80% of expected bars present) → a third "drivable-but-thin" state so a backtest run on sparse
+      data is flagged, not silently trusted. Compute window-coverage % at the engine's honest-skip decision
+      (`paper_universe._skip_reason_for_spec` + the `run_paper` data-fetch), carry it on the spec, surface it in the
+      data-quality panel + gate weighting. Repo: strategy-service (threshold + coverage %) + client-reporting-api
+      (surface) + unified-trading-system-ui (panel). NICE-TO-HAVE (paper book is honest binary today).
+- [ ] [UI] P11.23. **deployment-ui "Backend unreachable" debounce** — SHIPPED (deployment-ui, pending quickmerge).
+      Operator 2026-06-22: the data-status page flashed a red "Backend unreachable — signal timed out" banner + "Unknown
+      error" detail even though the backend was up (coverage bars rendered; min-instances=1, `/api/health` 46ms warm).
+      Root cause: a SINGLE transient `/api/health` poll timeout (a heavy data-status manifest-merge briefly saturating
+      the worker) LATCHED the red banner for a full 30s poll interval. FIX (`MockModeBanner.tsx` `useBackendHealth`):
+      debounce — keep last-good state + fast-retry on the 1st failure, go red only on the 2nd consecutive (a genuine
+      outage still surfaces within ~4s of the 2nd poll). regression: src/components/MockModeBanner.test.tsx (8 pass) +
+      the post-grace debounce path. pw:L2 pending the quickmerge. Repo: deployment-ui.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -837,6 +866,16 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 (P11.20 alerts STREAM live + deployment-ui banner fix + SSOT follow-ups filed).** Wired the paper
+  data-quality panel's alert feed to the reachable deployment-api unified ledger (`alerts_source: deployment-api`, prod
+  rev `client-reporting-api-00019-8k2`) — same source deployment-ui shows; empty until the data fleet runs, but the
+  feed is live (was hardcoded to the unreachable k8s `alerting-service:8080`). Diagnosed + fixed the operator-reported
+  deployment-ui "Backend unreachable" false-alarm: not a real outage (min-instances=1, `/api/health` 46ms warm) — a
+  single transient poll timeout latched the red banner for 30s; added a 2-consecutive-failure debounce in
+  `MockModeBanner` (deployment-ui, pending quickmerge). Filed P11.21 (reconcile the paper panel against the
+  deployment-api data-status SSOT — operator "use SSOT, fix at source") + P11.22 (min-coverage "drivable-but-thin"
+  threshold — operator's ">80% still relevant?" question; today it's honest binary). The CRA→deployment-api integration
+  is the canonical pattern (HTTP to a reachable peer / GCS data-transfer), not a service-Python import.
 - **2026-06-22 (P11.18/19 SHIPPED + white-screen crash FIXED).** The archetype-weighted PnL plot + paper/batch overlay
   (P11.18) and the Data Quality & Alerts panel (P11.19) are LIVE + browser-verified on prod. Root-caused a full-page
   white-screen ("Something went wrong — `((intermediate value) ?? []).reduce is not a function`"): CRA emitted
