@@ -741,11 +741,15 @@ are identified (2) and the ledger exists (3).
       `test_returns` unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the
       delta_one feature corpus** so these columns exist in GCS for the live paper run (a features-service backfill —
       shared with the P2.11.18 reversion-feature corpus recompute; run both together).
-- [ ] [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui** — `lib/architecture-v2/
-      enums.ts` (`StrategyArchetype` union + `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY`) + regen `lib/registry/
-      ui-reference-data.json` via `unified-api-contracts/scripts/generate_ui_reference_data.py` + bump
-      `tests/unit/lib/architecture-v2/enums.test.ts` `toHaveLength`. Silent cross-repo gap (no CI catches it from UAC).
-      Playwright-gated (`pw:L2 ✓` + regression spec). Repo: unified-trading-system-ui.
+- [ ] [BLOCKED-PLAYWRIGHT] [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui — CODE
+      SHIPPED 2026-06-22: ui@6442d46e** (15 files: `lib/architecture-v2/enums.ts`+`coverage.ts`+`archetypes.ts`,
+      `lib/help/help-tree-generated.ts`, `lib/mocks/fixtures/trading-data.ts`, `lib/registry/ui-reference-data.json`,
+      `components/briefings/strategy-coverage-matrix.tsx`, `components/marketing/strategy-family-catalogue.tsx`,
+      `public/capability-verdict-matrix.json` + 6 test files with count bumps 18→19 / 57→58). **tsc clean, 286 Vitest
+      pass (3280 full suite), `quality-gates.sh` exit 0.** **BLOCKED-PLAYWRIGHT**: no Next dev server on the build host
+      (`localhost:3100`) → `pw:L2 ✓` + regression spec can't be produced here; a UI-capable slot must run
+      `npx playwright test --project=chromium tests/smoke/` to clear the gate + tick. (Silent cross-repo gap; the code is
+      live + type/unit-green.) Repo: unified-trading-system-ui.
 - [ ] [CODE] P2.11.18. **Add the intraday BTC mean-reversion signal as a cs ML feature** (research 2026-06-22, root
       `_ic_test.py`). A short-horizon reversion z-score (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m +
       4h on the canonical OHLCV) has a **stable Spearman IC ≈ +0.05 vs forward 15m–1h returns, positive across all
