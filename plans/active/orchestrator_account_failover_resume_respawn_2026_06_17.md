@@ -160,13 +160,13 @@ reap→respawn path just never USES it. This is the third arm of the operator's 
 `--resume` so the new session starts with prior context") — arms 1 (usage-cap switch) + 2 (nudge) are shipped; this arm
 is the gap.
 
-- [ ] [ORCHESTRATOR] P2. Wire the watchdog reap → respawn to `--resume <SlotRow.claude_session_id>` when one is
-      persisted, **gated by kill REASON**: **heartbeat-silent / crashed → RESUME** (preserve in-flight context);
-      **context-full → FRESH** (resuming a maxed-out context just re-fills it — keep fresh); **stuck-at-prompt
-      nudge-exhausted fallback → design call** (resume risks re-wedging on the same stuck state; default FRESH unless
-      the wedge cause is detectable). Today every non-cap kill is a fresh respawn (context lost). Repo:
-      agent-orchestrator (`server/worker_liveness_watchdog.py` reap branches + `server/autospawn._do_spawn`). Composes
-      with this plan's usage-cap resume + the session-id persistence already shipped.
+- [x] ✅ [ORCHESTRATOR] P2. Wire the watchdog reap → respawn to `--resume <SlotRow.claude_session_id>` — **SHIPPED via
+      `orchestrator_self_healing_hardening_2026_06_21` Concern-2 G2b (agent-orchestrator@b02d65f).**
+      `_resume_or_fresh_respawn` (`server/worker_liveness_watchdog.py:1067`, wired at the heartbeat-silent kill ~:737)
+      resumes a heartbeat-silent worker on its persisted `claude_session_id` (context intact), guarded resume-once per
+      silence episode (`_HEARTBEAT_RESUME_MAX`) then fresh; no sid / no env → fresh. context-full + stuck-at-prompt keep
+      the existing FRESH default by design (resuming a maxed/wedged context just re-fills/re-wedges). Verified live
+      2026-06-22.
 
 ## Success criteria
 

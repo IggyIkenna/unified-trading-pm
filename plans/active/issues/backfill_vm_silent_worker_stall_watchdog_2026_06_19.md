@@ -74,11 +74,17 @@ progress and zero alert. The heartbeat sidecar proves _the box is up_, not _the 
       → metadata-safe; loose-but-progress-correlated → errs toward not-killing, never false-kills): **gas-fees** =
       `sampled|Wrote` (each per-block sample — the 2026-06-19 freeze was MID block-sampling — + per-date parquet write);
       **SFI** = `league` (every per-date "league mapping cache hit for date=…" line). — deployment-service@a8ee104e.
-- [ ] [INFRA] P2. **Wire `STALL_PROGRESS_REGEX` for the sports-MDPS launcher (`launch-mdps-sharded-backfill.sh`, the
-      `STALL_TIMEOUT_SEC=7200` 2h-threshold case — the worst blunt-threshold offender).** DEFERRED: no `mdps-sports`
-      `run.log` exists yet to verify the marker (only `mdps-backfill-tradfi`), and MDPS processes multiple categories
-      with different per-category markers — a wrong regex FALSE-KILLS a working VM, so this MUST be verified against a
-      real mdps-sports run before wiring. Until then it keeps the 2h size-based watchdog. Repo: `deployment-service`.
+- [x] ✅ [INFRA] P2. **Wire `STALL_PROGRESS_REGEX` for the sports-MDPS launcher (`launch-mdps-sharded-backfill.sh`, the
+      `STALL_TIMEOUT_SEC=7200` 2h-threshold case — the worst blunt-threshold offender).** **DONE** —
+      deployment-service@3f43c35. Marker = `Processing|Skipping` (=/space/comma-free → metadata-safe; category-agnostic
+      shared-orchestration markers — `process_handler.py:517/540/582` emit exactly one of "Processing candles for
+      <date>" / "Skipping <date> …" for EVERY date the per-date loop touches, so it resets on every healthy advance and
+      only fails to reset on a genuine mid-date hang → errs toward NOT killing). **Verified against a REAL
+      mdps-sports-2024 run** (the deferral's exact bar): marker advanced across 5 distinct dates, VM RUNNING ~17min,
+      never tripped (cadence ~3min ≪ 7200s); the VM watchdog heartbeat read `mode=progress` (end-to-end: launcher
+      metadata → `setup-data-pipeline-vm.sh` forward → `vm-exec` progress branch). Verification VM deleted. Scoped to
+      **sports only** (the sole `STALL_TIMEOUT_SEC=7200` case); cefi/defi/tradfi MDPS stay on the default 1800s
+      size-based watchdog (no blunt-threshold raise → no progress-marker needed). Repo: `deployment-service`.
       Provenance: 2026-06-21 P1 wiring.
 - [x] ✅ [INFRA] P3. **Audit other sports/data adapters for unbounded `aiohttp.ClientSession` timeouts.** **DONE** —
       **instruments-service**: bounded `BaseReferenceDataAdapter._make_session` (the generic base for all
@@ -90,13 +96,20 @@ progress and zero alert. The heartbeat sidecar proves _the box is up_, not _the 
       streaming needs `total=None`, per the tardis precedent), and 4 already-AT-900-line files (`gas_fee_handler` /
       `lending_indices_handler` / `polymarket_adapter` / `umi_tick_provider`) whose actual incident path (POLYGON web3
       HTTPProvider) is already bounded — see the follow-up below. Provenance: 2026-06-19.
-- [ ] [INFRA] P3. **Bound the 4 at-900-line mtds REST sites deferred from the P3 sweep**
+- [x] ✅ [INFRA] P3. **Bound the 4 at-900-line mtds REST sites deferred from the P3 sweep**
       (`cli/handlers/gas_fee_handler.py`, `cli/handlers/lending_indices_handler.py`,
-      `market_interface/adapters/prediction/polymarket_adapter.py`, `adapters/umi_tick_provider.py`). The
-      `_make_session` bounded-timeout addition tips each over the hard 900-line cap (and grew 2 gas-fee methods past the
-      50-line cap), so it can't land without trimming/splitting the file first. These are paginated small-request REST
-      sessions (loud-fail on timeout, not silent-hang) so the risk is low. Add the timeout in the SAME change that
-      splits each file under 900. Repo: `market-tick-data-service`. Provenance: 2026-06-22 mtds P3 sweep.
+      `market_interface/adapters/prediction/polymarket_adapter.py`, `adapters/umi_tick_provider.py`). **DONE** —
+      market-tick-data-service@64789a7f. Split each under the 900-line cap via cohesive sibling extractions
+      (gas_fee 864 + `_gas_fee_helpers.py` (pure row-builders); lending 851 + `_lending_subgraph.py` (subgraph
+      schema/query group); polymarket 716 + `_polymarket_helpers.py` (taxonomy/lifecycle helpers); umi 738 +
+      `_umi_yahoo.py` (Yahoo fetchers)), THEN added a per-file
+      `_BACKFILL_HTTP_TIMEOUT = aiohttp.ClientTimeout(sock_connect=15, sock_read=60, total=120)` to each
+      `_make_session` (matching the 37-site `dex_pools_handler.py` house pattern; module-level constant → no method
+      grew past the 50-line cap). QG-green (5217 tests pass, basedpyright/ruff clean). Two split-induced QG issues
+      fixed in the same unit: repointed 19 umi `YahooFinanceAdapter` test-patches `umi_tick_provider`→`_umi_yahoo`
+      (the moved functions look it up there), and added the 3 new siblings to the repo `_HANDLERS` codex-exclude list
+      (consistent with every existing handler sibling — empty-str JSON parsing / deferred imports are sanctioned
+      adapter patterns). Repo: `market-tick-data-service`. Provenance: 2026-06-22 mtds P3 sweep.
 
 ## Status of the immediate operational fix (DONE 2026-06-19)
 
