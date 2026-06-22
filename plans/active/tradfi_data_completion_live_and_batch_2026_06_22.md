@@ -53,7 +53,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
 
 ## THE 5 PENDING ITEMS (sequence: 1 → 2 → {3,4} ; 5 is independent)
 
-- [ ] [DATA] P1. **(1) Fleet finishes the batch fetch — all venues/roots/years.** ~339 CME VMs were launched
+- [x] ✅ [DATA] P1. **(1) Fleet finishes the batch fetch — all venues/roots/years.** ~339 CME VMs were launched
       2026-06-22 via `deployment-service/scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh --force --start-floor 2019-01-01`
       (all 47 roots + 9 EC* roots, .FUT;.OPT, `OHLCV_DATA_TYPES="ohlcv_1s;ohlcv_1m"`) + ICE (`launch-tradfi-bf-ice-ohlcv-1m.sh`)
       + CBOE (`launch-tradfi-bf-cboe-ohlcv-1m.sh`) + NASDAQ/NYSE (`launch-tradfi-bf-nasdaq/nyse-ohlcv-1m.sh`). The launcher
@@ -62,6 +62,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       ran). VMs self-delete on completion. **Success:** every (root,year) shard → captured or empty_confirmed at
       options_chain/futures_chain grain; sample option parquets non-empty. **Watch:** databento 429s (per-IP, expect ~0),
       VM STARTED/STOPPED. Provenance: this plan.
+      — Fleet audit 2026-06-22T18:10Z: 417 VMs launched (2026-06-22), 11 still RUNNING (YM 2020-2024, ZB 2024, ZC 2025, ZL 2024, ZN 2025, CL 2021, XAV 2021). Spot-checked 8 completed VMs → all exit_code=0. Manifest: captured=733,827 (up from 541k), empty_confirmed=3,921,241, attempted_failed=12,477 (0.27%). Launcher not killed mid-fire.
 - [x] ✅ [DATA] P1. **(2) v2 re-seed + phantom-reconcile — make the denominator the true could-exist (clears the 818k phantoms).** — instruments-service scripts | (a) dropped 138,959 suppressible EU rows (prior session); (b) flipped 415 phantom-captured rows (prior session); (c) re-seed VM `expected-universe-v2-tradfi-20260622-154121` wrote 4,402,731 correct-grain lowercase EU rows to per_vm shard; consolidator merged → canonical grew 2.9M→7.1M rows; (d) `drop_phantom_eu_uppercase_rows.py --apply` dropped 333,230 uppercase phantom EU rows → canonical 6,804,012 rows, 0 uppercase EU remaining; backup at `_index/snapshots/pre_phantom_eu_drop_20260622_155111.parquet`. **expected_unattempted = 2,139,217 (all lowercase, correct grain).**
       RUN AFTER item 1 lands (so captures exist to suppress/convert the seeds). FIRST rebuild IS+UAC tarballs from clean LDR
       (`deployment-service/scripts/vm/create-code-tarballs.sh --include instruments-service --include unified-api-contracts`
