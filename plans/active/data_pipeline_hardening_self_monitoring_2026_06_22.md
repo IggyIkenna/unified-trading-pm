@@ -1499,3 +1499,35 @@ dispatch prompts.
   DP_DIVERGENT_EMPTY relay). NOTE (reproducibility follow-up): the e2e-audit image was built from a local tree that may
   carry the still-uncommitted per-AG reprobe hooks; a clean rebuild needs those hooks committed (auto-flip is
   proof-gated so it safely no-ops without them).
+
+## Progress Log — all 5 per-AG reprobe hooks now WIRED + tradfi/prediction hooks added (2026-06-22, slot·human-planning, Opus 4.8, /autonomous)
+
+- **RESUME-RUN start**: resolved a stranded interactive-rebase conflict in this plan file (the `bcf6f118c` MDPS-flip
+  commit was mid-rebase with 4 conflict regions + nested `Stashed changes`/`Updated upstream` orphan markers). Kept the
+  more-recent ✅-DONE side for the coverage_start (UAC@bfe6736b) + reprobe_defi (e2e@4cfbbf1) items + the prettier-wrapped
+  Progress-Log text; verified zero markers remain; `git rebase --continue` → PM@657cff2dc pushed to LDR (docs(plans)
+  carve-out). **Item #1 (MDPS asset_group re-blank) was already SHIPPED** — UTL@7b2306c3 (consolidator self-heals
+  blank/absent asset_group at merge time, ancestor of origin/LDR) + the guarded re-stamp (defi 79,689 + cefi 2,297,
+  snapshot `_index/snapshots/pre_mdps_ag_restamp_2026_06_22.parquet`); the root cause was a stale pre-v9 tarball VM, NOT
+  an MDPS writer bug, so the durable fix is the consolidator self-heal, not a per-writer column add.
+- **FIX SHIPPED `e2e-testing@5db3860`** (dirty-deps direct-LDR carve-out — strategy-service had live PEER WIP at
+  quickmerge time; QG --no-fix exit 0 27s, sentinel written; 24/24 dp_audit tests + ruff green): the daily re-probe
+  loader `_REPROBE_HOOK_MODULES` only imported `reprobe_cefi` + `reprobe_defi` — so the **sports hook (registered but
+  never loaded) plus the entirely-missing tradfi + prediction hooks meant 3 of 5 AGs silently fell to oracle-only
+  re-probe** (no per-AG live re-fetch fired). Added `reprobe_sports` to the tuple (its hook existed but was orphaned) +
+  authored `reprobe_tradfi.py` (databento is billed/allowlist-gated + massive is a flat-file archive → no cheap
+  single-cell daily probe → conservative `reached_source=False`, oracle decides) + `reprobe_prediction.py`
+  (Polymarket/Kalshi are live-WS-primary CLOB-WS, and a Gamma-markets reachability probe would false-clear a
+  trades/book empty — the chain-blind false-clear trap → conservative `reached_source=False`, oracle decides). Both
+  hooks are REGISTERED (not absent) so the loader has an explicit documented per-AG decision for all 5 AGs rather than a
+  silent oracle-only fallback. `_load_reprobe_hooks` now RELOADS a cached-but-unregistered module so its
+  `register_reprobe_hook(...)` side-effect re-fires (a plain `import_module` of a cached module is a no-op), with a
+  per-AG skip-guard that never clobbers an already-registered (incl. test-injected) hook. 5 new regression tests
+  (tradfi/prediction never-clear, all-5-modules-wired, loader-registers-all-5).
+- **Follow-up (tracked below)**: the e2e-audit Cloud Run image should be rebuilt from clean LDR so the daily reprobe
+  cron runs with all 5 hooks wired (auto-flip is proof-gated → safely no-ops on the current image for tradfi/prediction,
+  which both return reached_source=False, so this is a correctness-completeness rebuild, not an outage).
+- [ ] [INFRA] P2. **Rebuild e2e-audit:latest from clean LDR** so the daily reprobe cron loads all 5 per-AG hooks
+      (currently the image predates `e2e-testing@5db3860`; tradfi/prediction hooks return reached_source=False so the
+      missing load is a no-op for them today, but a defi/cefi/sports hook update needs the rebuild to take effect). Reuse
+      the `cloudbuild-e2e-audit.yaml` build→smoke→push from the IMAGE-GAP-CLOSED run. — e2e-testing, deployment-service
