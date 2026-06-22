@@ -39,22 +39,23 @@ source:
 > `plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md` § Sequencing.
 
 > **🔴 APPLY GATE (operator 2026-06-17) — DRY-RUN EVERYTHING VIA MANIFEST-BETA BEFORE ANY `--apply`.** No v9 `--apply`
-> (path migration / object movement / `reconcile_phantom_manifest_rows_all.py --apply`) for ANY asset_group OR service
+> (path migration / object movement / `reconcile_phantom_manifest_rows_all.py --apply`) for ANY asset*group OR service
 > may run until the v9 **dry-run projected index has been built for EVERY service × asset_group** —
-> **instruments-service AND market-tick-data-service** (defi/cefi/tradfi/sports/prediction) AND the downstream services —
-> and each has been **eyeballed in the data-status tab under Manifest-beta mode** (the "m variable":
-> `DATA_STATUS_BETA_MANIFEST_BLOB=_index/audit/projected_index_{asset_group}.parquet`, Mode = Manifest). The dry-run is
-> non-destructive (`--projection requires --dry-run`): it routes every `add`/`record_empty`/`record_failed` into a
-> projected v9 `_index` parquet we read back, so we verify the movements make sense BEFORE committing them. **This gate
-> precedes TIER 2** — TIER 2's per-AG `--apply` is the LAST step, only after every projection is reviewed + signed off.
+> **instruments-service AND market-tick-data-service** (defi/cefi/tradfi/sports/prediction) AND the downstream services
+> — and each has been **eyeballed in the data-status tab under Manifest-beta mode** (the "m variable":
+> `DATA_STATUS_BETA_MANIFEST_BLOB=\_index/audit/projected_index*{asset_group}.parquet`, Mode = Manifest). The dry-run is non-destructive (`--projection
+> requires
+> --dry-run`): it routes every `add`/`record_empty`/`record_failed`into a projected v9`\_index`parquet we read back, so we verify the movements make sense BEFORE committing them. **This gate precedes TIER 2** — TIER 2's per-AG`--apply`
+> is the LAST step, only after every projection is reviewed + signed off.
 >
 > **MTDS gap to close first**: `BETA_ELIGIBLE_SERVICES` in `deployment-api/deployment_api/services/manifest_source.py`
 > is currently `{instruments-service}` ONLY — so the beta data-status read cannot preview MTDS even though the MTDS
 > projection writers already exist (`market-tick-data-service/scripts/rebuild_{defi,cefi,tradfi,prediction}_manifest.py`
-> + `rebuild_sports_manifest_v9.py`, all routing through `_rebuild_projection.write_projection`). Add MTDS (+ downstream
-> services) to `BETA_ELIGIBLE_SERVICES` once their projections are generated, so the all-AG beta view covers them. This
-> is why the operator's MTDS data-status currently shows the LIVE pre-migration index (DeFi ~36%), while
-> instruments-service (the one beta-eligible service) shows its projected/canonical numbers (DeFi ~93%).
+>
+> - `rebuild_sports_manifest_v9.py`, all routing through `_rebuild_projection.write_projection`). Add MTDS (+ downstream
+>   services) to `BETA_ELIGIBLE_SERVICES` once their projections are generated, so the all-AG beta view covers them.
+>   This is why the operator's MTDS data-status currently shows the LIVE pre-migration index (DeFi ~36%), while
+>   instruments-service (the one beta-eligible service) shows its projected/canonical numbers (DeFi ~93%).
 >
 > **What the projection LOCATES (it does not FETCH — corrects the "migration won't lift numbers" framing)**: the rebuild
 > **walks GCS** (`rebuild_defi_manifest.py:494` `_day_prefixes` probes BOTH `category=`/`asset_group=` hive vocabularies
@@ -105,8 +106,8 @@ source:
       mirroring UTL's recorded-column inference) — NO new whole-corpus walk. Going forward
       `writers.py::_derive_instrument_type` stamps the REAL single instrument_type per venue×date shard (blank when
       mixed/absent — never fabricated; the manifest row is venue-grain). Venues without a derivable suffix (e.g.
-      DERIBIT) stay "" by design (documented in code) → unlocks per-instrument_type scope + per-type UI drilldown +
-      §J Deribit-options signal once the gated v9 apply runs. Guards: `test_orchestrator_helpers.py` (3 writer tests) +
+      DERIBIT) stay "" by design (documented in code) → unlocks per-instrument_type scope + per-type UI drilldown + §J
+      Deribit-options signal once the gated v9 apply runs. Guards: `test_orchestrator_helpers.py` (3 writer tests) +
       `test_migrate_instruments_store_v9.py` (backfill + existing-value-preserved). — instruments-service.
 - [x] ✅ [CODE] P1. **Venue filter — backend** — DONE deployment-api@3d9a0e032: added repeatable `venue: list[str]` to
       the `/manifest` route + `get_manifest_status` (threaded through
@@ -152,10 +153,11 @@ source:
       asserts headline ≠ 11.7%) + `HonestCoverageCard.test.tsx`. — repo deployment-ui@`7007529` | pw:L2 ✓ (215/215
       smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
 - [x] ✅ [UI] P1. **Bar colours unreadable in HonestCoverageCard** — FIXED deployment-ui@`7007529`. The 6 segments used
-      three near-indistinguishable greens (emerald-500 / teal-400 / sky-300) + two low-contrast greys. New `SEGMENT_COLORS`
-      palette walks distinct hues (emerald → cyan → blue → amber → red → slate, all 500-stop, no <40%-opacity fills);
-      legend swatches kept in lockstep + enlarged (w-2.5) with higher-contrast text. — repo deployment-ui@`7007529` |
-      pw:L2 ✓ (215/215 smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts — deployment-ui `[UI]`
+      three near-indistinguishable greens (emerald-500 / teal-400 / sky-300) + two low-contrast greys. New
+      `SEGMENT_COLORS` palette walks distinct hues (emerald → cyan → blue → amber → red → slate, all 500-stop, no
+      <40%-opacity fills); legend swatches kept in lockstep + enlarged (w-2.5) with higher-contrast text. — repo
+      deployment-ui@`7007529` | pw:L2 ✓ (215/215 smoke) | regression: tests/smoke/data_status_coverage_labels.spec.ts —
+      deployment-ui `[UI]`
 - [x] ✅ [CODE] P1. **CeFi venues "out of scope" on the `/service/instruments-service/` board — REAL root cause was a
       reference-catalogue venue-token vocabulary mismatch (the prior "STALE DEPLOY" verdict was WRONG; corrected
       2026-06-17 after the operator confirmed it persisted post-redeploy + hard-refresh).** The IS view is a
@@ -165,28 +167,50 @@ source:
       reproduction tested — wrong path). `reference_genesis` did an EXACT uppercased lookup, but the catalogue lists
       **base exchanges** (`COINBASE`, `OKX`, `DERIBIT`) while the instruments-store manifest qualifies them by role
       (`COINBASE-SPOT`, `OKX-FUTURES/SPOT/SWAP`, `DERIBIT-COMBO`) → those resolved to `None` = out_of_scope. Two further
-      cefi venues (`BITFINEX-*`, `BITGET-*`) were real instruments-store venues simply absent from the catalogue. **FIX**
-      (deployment-api `reference_scope.py`): `reference_genesis` now falls back to the base token after stripping a
-      market-role suffix (`-SPOT/-FUTURES/-SWAP/-PERP/-PERPETUAL/-COMBO`) → COINBASE-SPOT/OKX-*/DERIBIT-COMBO resolve;
-      **+** PM `configs/data-catalogue.instruments-service.yaml` adds `BITFINEX-SPOT/FUTURES` (2020-01-01) +
-      `BITGET-SPOT/FUTURES` (2024-11-08), genesis transcribed from `VenueMapping`/the live instruments-store manifest.
-      VERIFIED: all **18** `instruments-store-cefi` venues now resolve in-scope; `tradfi`/`prediction` IS instruments-
-      stores already held only catalogued venues (no IS-view out-of-scope there). +1 regression test
-      (`test_reference_genesis_tolerates_market_role_suffix`). NOTE: `KRAKEN-*` (cefi) / `YAHOO_FINANCE` (tradfi) /
-      `KALSHI` (prediction) are NOT in any instruments-store → they never appear on the IS view; any out-of-scope the
-      operator sees for them is the **market-tick** `is_expected` path at the data_type grain (e.g. raw `ohlcv_1m` from
-      Yahoo/Kalshi), which is informative-by-design, not the IS-view bug — tracked separately below.
+      cefi venues (`BITFINEX-*`, `BITGET-*`) were real instruments-store venues simply absent from the catalogue.
+      **FIX** (deployment-api `reference_scope.py`): `reference_genesis` now falls back to the base token after
+      stripping a market-role suffix (`-SPOT/-FUTURES/-SWAP/-PERP/-PERPETUAL/-COMBO`) →
+      COINBASE-SPOT/OKX-_/DERIBIT-COMBO resolve; **+** PM `configs/data-catalogue.instruments-service.yaml` adds
+      `BITFINEX-SPOT/FUTURES` (2020-01-01) + `BITGET-SPOT/FUTURES` (2024-11-08), genesis transcribed from
+      `VenueMapping`/the live instruments-store manifest. VERIFIED: all **18** `instruments-store-cefi` venues now
+      resolve in-scope; `tradfi`/`prediction` IS instruments- stores already held only catalogued venues (no IS-view
+      out-of-scope there). +1 regression test (`test_reference_genesis_tolerates_market_role_suffix`). NOTE:
+      `KRAKEN-_`(cefi) /`YAHOO_FINANCE`(tradfi) /    `KALSHI`(prediction) are NOT in any instruments-store → they never appear on the IS view; any out-of-scope the     operator sees for them is the **market-tick**`is_expected`path at the data_type grain (e.g. raw`ohlcv_1m`
+      from Yahoo/Kalshi), which is informative-by-design, not the IS-view bug — tracked separately below.
 
 - [ ] [DATA] P2. **Verify the market-tick-view (`is_expected`) out-of-scope for YAHOO_FINANCE / KALSHI is
       correct-by-design vs a registry gap** (deployment-api `breakdowns_core` market-data path; UAC
-      `registry/expected_coverage.py`). On the `market-tick-data-service` view (NOT the IS view), `YAHOO_FINANCE ohlcv_1m`
-      + `KALSHI ohlcv_1m` resolve `out_of_scope=True` because `is_expected(...)==False` for those RAW fine-grained
-      data_types AND `is_processed_data_type==False`. For Yahoo (daily/coarse provider, no historical 1m) + Kalshi this is
-      almost certainly **correct/informative** (the source genuinely doesn't supply that granularity). Confirm per-venue
-      which raw data_types each source ACTUALLY provides; if a data_type that IS provided is wrongly out-of-scope, add it
-      to `EXPECTED_COVERAGE_BY_ASSET_GROUP[ag][venue]`; otherwise leave out-of-scope (it correctly signals "this source
-      doesn't provide this data_type"). Provenance: operator "I still see out of scope … prediction and tradfi"
-      2026-06-17; the IS-view cefi out-of-scope is the separate ✅ item above.
+      `registry/expected_coverage.py`). On the `market-tick-data-service` view (NOT the IS view),
+      `YAHOO_FINANCE ohlcv_1m` + `KALSHI ohlcv_1m` resolve `out_of_scope=True` because `is_expected(...)==False` for
+      those RAW fine-grained data_types AND `is_processed_data_type==False`. For Yahoo (daily/coarse provider, no
+      historical 1m) + Kalshi this is almost certainly **correct/informative** (the source genuinely doesn't supply that
+      granularity). Confirm per-venue which raw data_types each source ACTUALLY provides; if a data_type that IS
+      provided is wrongly out-of-scope, add it to `EXPECTED_COVERAGE_BY_ASSET_GROUP[ag][venue]`; otherwise leave
+      out-of-scope (it correctly signals "this source doesn't provide this data_type"). Provenance: operator "I still
+      see out of scope … prediction and tradfi" 2026-06-17; the IS-view cefi out-of-scope is the separate ✅ item above.
+
+- [x] ✅ [CODE] P1. **DeFi venue breakdown duplicates bare PROTOCOL alongside PROTOCOL-CHAIN** — FIXED
+      deployment-api@`67972d8`. Root cause: `_filter_to_canonical_defi_venues` used
+      `empty_axis = (venues == "") | (chains == "")` as its pass-through guard. Rows with a real DeFi protocol venue
+      (e.g. `TRADER_JOE_V2`) but blank chain were NOT in the canonical `(venue, chain)` whitelist yet passed through via
+      `chains == ""`. They then reached `_canonicalise_defi_venue_column` where `normalize_defi_venue(v, None)` emits
+      the bare `TRADER_JOE_V2` string, producing a duplicate entry alongside the canonical `TRADER_JOE_V2-AVALANCHE`
+      row. The same pattern affected `AAVE_V3`, `BALANCER`, `CURVE`, `SUSHISWAP_V3` (all with `–AVALANCHE` siblings).
+      Fix: tighten `empty_axis` to `empty_venue = venues == ""` only — rows with a blank chain but a non-empty venue are
+      dropped (they are sub-bucket phantom rows, NOT in the whitelist, and produce no canonical display label).
+      Regression test added:
+      `TestDefiLegacyVenueFilter::test_blank_chain_protocol_row_does_not_produce_bare_protocol_duplicate`.
+
+- [ ] [DATA] P2. **DEFERRED — Audit sub-bucket shards (oracle-prices / perp-funding / lst-rates) for blank-chain
+      manifest rows that produce phantom entries in the consolidated DeFi index.** The
+      `_filter_to_canonical_defi_venues` fix (item above) drops them from the display, but the underlying blank-chain
+      rows still exist in the MTDS manifest. These rows likely originate from older sub-bucket shards (oracle-prices /
+      perp-funding / lst-rates) that pre-date the chain split. A proper cleanup would: (1) run
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` to confirm
+      scope; (2) verify whether these rows correspond to real GCS data or are genuine phantoms; (3) if phantom, apply
+      `--apply` after the TIER-2 v9 migration is complete (gated on the same APPLY-GATE above). Do NOT address before
+      the v9 migration lands — path shapes change. **MIGRATED FROM:** deployment-api@`67972d8` investigation
+      (2026-06-22). — deployment-api + instruments-service (Phase C / TIER 2 scope).
 
 ## Phase C (TIER 1 cleanup) — CeFi universe extension (instruments completeness + EigenLayer dust)
 
@@ -216,17 +240,17 @@ the canon plan; track there, not as duplicate todos:
 
 ### APPLY-GATE todos (the dry-run-everything gate above — these BLOCK every TIER 2 `--apply`)
 
-- [x] ✅ [INFRA] P0. **Build the v9 dry-run projected index for market-tick-data-service, per asset_group** —
-      ALREADY DONE: verified all 5 MTDS projections exist in the prd buckets' `_index/audit/`
+- [x] ✅ [INFRA] P0. **Build the v9 dry-run projected index for market-tick-data-service, per asset_group** — ALREADY
+      DONE: verified all 5 MTDS projections exist in the prd buckets' `_index/audit/`
       (`projected_index_{defi,cefi,tradfi,sports,prediction}.parquet`; defi + prediction re-run 2026-06-17). DeFi
       projection diffed vs live: 100% v9, recovers +92k captured shards (orphan_sweep = 315,711 rows) and surfaces 15×
       more `attempted_failed` than the stale v8 live index. Non-destructive (`--projection requires --dry-run`). —
       market-tick-data-service
 - [x] ✅ [CODE] P0. **Add `market-tick-data-service` to `BETA_ELIGIBLE_SERVICES`** — DONE deployment-api@`a5b678e`:
-      `manifest_source.BETA_ELIGIBLE_SERVICES = {instruments-service, market-tick-data-service}` (premise satisfied — all
-      5 MTDS AGs now projected). Reworked 5 test sites to use a still-non-projected service (features-delta-one) as the
-      non-eligible exemplar; the two-phase rollup worker writes MTDS's `.beta` rollup in phase 2 so the beta read finds
-      its blob (no 503). QG green (87s); landed on LDR (Tier-C drain → staging ≤30 min). Inert in prod (beta is
+      `manifest_source.BETA_ELIGIBLE_SERVICES = {instruments-service, market-tick-data-service}` (premise satisfied —
+      all 5 MTDS AGs now projected). Reworked 5 test sites to use a still-non-projected service (features-delta-one) as
+      the non-eligible exemplar; the two-phase rollup worker writes MTDS's `.beta` rollup in phase 2 so the beta read
+      finds its blob (no 503). QG green (87s); landed on LDR (Tier-C drain → staging ≤30 min). Inert in prod (beta is
       env-gated on `DATA_STATUS_BETA_MANIFEST_BLOB`). Downstream services (features/strategy) stay non-eligible until
       their projections land. — deployment-api
 - [x] ✅ [INFRA] P0. **FIXED the rollup-svc phase-2 (BETA) 500 — root-caused + shipped + prod-verified green**
@@ -238,9 +262,9 @@ the canon plan; track there, not as duplicate todos:
       two-phase route path locally (events initialised). FIX (2 parts): (1) `defi.py::_read_defi_merged_index` returns
       empty for the `'shared'` pseudo-key instead of raising; (2) `data_status_rollup_worker.run_rollup` broadened both
       per-service catches to `except Exception` (shard-level failure isolation — one bad service must never abort the
-      sweep; also contains the separate per-service coverage errors tracked in the P2 follow-up below). VERIFIED in prod:
-      rollup-run flipped 500→**200** (335s), and the **prod cron auto-refreshed BOTH** beta blobs (instruments + MTDS) at
-      16:13 with zero manual intervention — self-healing every `*/10`. — deployment-api
+      sweep; also contains the separate per-service coverage errors tracked in the P2 follow-up below). VERIFIED in
+      prod: rollup-run flipped 500→**200** (335s), and the **prod cron auto-refreshed BOTH** beta blobs (instruments +
+      MTDS) at 16:13 with zero manual intervention — self-healing every `*/10`. — deployment-api
 - [x] ✅ [CODE] P2. **`features-cross-instrument` per-AG/prediction-kind bug FIXED + prod-verified** —
       deployment-api@`c1aab6e` (build `61eb6e93`): the `ag=="prediction"` branch resolved kind-only
       (`pred_kind if pred_kind else kind`), which for a per-AG kind with no `PREDICTION_KIND_MAP` entry raised
@@ -249,15 +273,16 @@ the canon plan; track there, not as duplicate todos:
       refreshes, ZERO `SERVICE_FAILED` for it in 40m. The SHARED services (features-calendar/ml-service) remain
       honest-empty BY DESIGN (routing them through the DeFi reader = garbage; real cross-asset coverage = a dedicated
       SHARED path, tracked in `instruments_mtds_subset_consistency_remediation_2026_06_17.md`). — deployment-api
-- [ ] [CODE] P3. **Per-service coverage `BucketNamingError`s surfaced by the rollup isolation fix (follow-up)** —
-      after the isolation fix (deployment-api@b014ae9) the rollup sweep no longer crashes, but it now logs `SERVICE_FAILED`
+- [ ] [CODE] P3. **Per-service coverage `BucketNamingError`s surfaced by the rollup isolation fix (follow-up)** — after
+      the isolation fix (deployment-api@b014ae9) the rollup sweep no longer crashes, but it now logs `SERVICE_FAILED`
       for cross-asset/edge services whose coverage build mis-resolves a bucket: (1) `features-calendar-service` /
       `ml-service` (SHARED pseudo-key → now honest-skipped to empty by the defi.py guard — they show no coverage until a
       `(service,'shared')` override or kind-only resolve is added); (2) `features-cross-instrument-service` →
       `resolve_bucket_name` called with `asset_group=None` for a per-AG kind ("asset_group= is required"). These are
-      PRE-EXISTING (were masked because the sweep crashed on `'shared'` first) and are now CONTAINED (rollup stays green,
-      beta blobs write) — but those services' coverage is degraded. Root-fix each service's coverage bucket resolution
-      (override / kind-only / correct cat enumeration) so their data-status panels are accurate. — deployment-api
+      PRE-EXISTING (were masked because the sweep crashed on `'shared'` first) and are now CONTAINED (rollup stays
+      green, beta blobs write) — but those services' coverage is degraded. Root-fix each service's coverage bucket
+      resolution (override / kind-only / correct cat enumeration) so their data-status panels are accurate. —
+      deployment-api
 - [ ] [DATA] P0. **APPLY GATE sign-off**: eyeball every service × asset_group projected index in the data-status tab
       under Manifest-beta mode (`DATA_STATUS_BETA_MANIFEST_BLOB` set); confirm the projected captured/attempted/empty/
       failed split makes sense (orphan recovery looks right, no phantom over-count) BEFORE any TIER 2 `--apply` runs for
