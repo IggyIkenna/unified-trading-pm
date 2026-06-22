@@ -177,9 +177,13 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       agents implement `reprobe_source(...)` + register it (the per-adapter HTTP/auth wiring is theirs, the
       cross-cutting selector/oracle/emit is shipped here). Tests planted a same-day SOURCE_RETURNED_ZERO row +
       oracle-disagree → emits. — **e2e-testing**
-- [ ] [RATCHET] P1. QG ratchet (extends `fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md`): static
-      check banning `record_empty(...SOURCE_RETURNED_ZERO...)` reachable from an `except`/error branch without
-      `fetch_evidence`. Baseline-down counter. — **market-tick-data-service, instruments-service**
+- [x] ✅ [RATCHET] P1. QG ratchet — DONE `unified-trading-pm@894610bc2` (sibling check
+      `scripts/quality_gates/check_source_returned_zero_needs_fetch_evidence.py`, QG STEP 5.99; AST
+      except-reachability + `fetch_evidence=` kwarg detection; baseline `{}` = 0 except-nested unproven sites on origin,
+      synthetic-fixture verified the detector fails the bad pattern + passes the threaded one; wired into
+      `base-service.sh` → picked up by MTDS+IS). Static check banning `record_empty(...SOURCE_RETURNED_ZERO...)`
+      reachable from an `except`/error branch without `fetch_evidence`. Baseline-down counter. —
+      **market-tick-data-service, instruments-service**
 
 ## Phase 2 — data-pipeline-alerts channel + streaming events + exit_code-aware fleet monitor (closes C4/C5; partial C7)
 
@@ -235,8 +239,24 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       builders). **Path-canonicality validator** `is_canonical(path)` in UAC (today `partition_paths.py` only BUILDs):
       parse a GCS path and assert it matches the canonical builder output for its AG/pipeline_mode/schema. Closes C3.
       Reused by the hygiene orchestrator AND the Phase 4 writer-side assert. — **unified-api-contracts**
-- [ ] [SCRIPT] P1. **Reader/writer bucket-env parity check** (closes C6): assert every preflight READER resolves the
-      same env-short bucket the WRITER uses, per AG. Static + live probe. — **market-tick-data-service**
+- [~] **Reader/writer bucket-env parity check** (closes C6) — BUILT + QG-GREEN, landing GATED on UAC clean: shipped to
+  `origin/wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622@32e8b6e`
+  (`scripts/quality_gates/check_reader_writer_bucket_parity.py`, QG STEP 5.91, warn-only ratchet). Quickmerge to LDR was
+  dirty-dep-blocked (live peer editing UAC). **It FOUND 8 GENUINE C6 reader bugs** (env-less
+  `build_bucket`/`get_bucket_name` reads vs env-short `-prd-` writers → stale-read → false honest-absence →
+  zero-capture; the defi-6% class) — captured as the todo below. **TO LAND**: when UAC is clean,
+  `git show origin/wip-preserve/…:<path>` into a clean MTDS worktree off origin →
+  `quickmerge --agent --files     'scripts/quality-gates.sh scripts/quality_gates/check_reader_writer_bucket_parity.py'`.
+  — **market-tick-data-service**
+- [ ] [CODE] P1. **Fix the 8 C6 reader-bucket-env bugs** the parity check found (defi-domain — route to the
+      `data_completion_to_100_all_ag` / defi lane, which owns instruments-store-defi capture correctness): align each
+      env-LESS reader to the writer's env-short bucket via `resolve_bucket_name`. Sites:
+      `mtds/engine/orchestrator/__init__.py:445/447/449/451` (`_register_all_catalog_readers` — all 4 AG catalog
+      readers, F4 expected-universe path; verify whether `get_bucket_name` is env-aware first — possible partial
+      false-positive), `mtds/cli/handlers/_instruments_metadata.py:218/442/518`
+      (`build_bucket("instruments",…,asset_group="defi")` — the EXACT CLAUDE.md-documented defi-6% bug),
+      `mtds/live/websocket_runner.py:626` (peer-owned). Provenance: bucket-parity check `wip-preserve@32e8b6e` warn-only
+      output (ratchets to BLOCK once fixed). — **market-tick-data-service**
 - [ ] [SCRIPT] P2. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
       present-set) from SKIP to real checks inside `cf_manifest_audit_all.py`. — **market-tick-data-service**
 - [ ] [SCRIPT] P2. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
@@ -250,18 +270,25 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 > scripts run from `e2e-testing/scripts/audit/`, are read-only over the manifest/GCS, emit `DP_*` via UTL `log_event`,
 > and write candidate CSVs + issue docs to the PM clone.
 
-- [ ] [SCRIPT] P1. **Wire the three audit scripts into MTDS QG STEP 5.89** (Peripheral-Script-QG HARD RULE — MTDS is the
-      primary consumer): add a block to `market-tick-data-service/scripts/quality-gates.sh` mirroring STEP 5.88, that
-      ruff-lints
-      `${WORKSPACE_ROOT}/e2e-testing/scripts/audit/{_dp_common,data_pipeline_daily_digest,manifest_hygiene_daily,reprobe_new_empty_confirmed}.py`
-      and runs each with `--smoke` warn-only (credential-free mechanism check; gate on `QG_BLOCK_NETWORK`/`CLOUD_BUILD`
-      like 5.88). Ruff-only per script-homes (basedpyright NO for scripts/). — **market-tick-data-service**
-- [ ] [INFRA] P1. **Schedule the three daily-audit crons** in deployment-service (match how `cf_manifest_audit` is
-      scheduled — Cloud Run Job + Scheduler / the repo's scheduling convention, NOT a VM):
-      `data_pipeline_daily_digest.py` @ `0 7 * * *` UTC, `manifest_hygiene_daily.py --mode changed` @ `0 8 * * *` UTC (+
-      a weekly `--mode full`), `reprobe_new_empty_confirmed.py` @ `0 9 * * *` UTC. Each needs `GCP_PROJECT_ID`/env +
-      UTL-on-a-VM checklist (the `cloud-providers.yaml` + `deployment_service` importable bits). —
-      **deployment-service**
+- [~] **Wire the three audit scripts into MTDS QG (STEP 5.90, not 5.89 — 5.89 already taken on origin)** — BUILT +
+  QG-GREEN (all 3 audits support `--smoke`, all smoke-passed; `_dp_common.py` lint-only), landing GATED on UAC clean:
+  shipped to `origin/wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622@32e8b6e`. Mirrors STEP 5.88 (ruff + `--smoke`
+  warn-only, `QG_BLOCK_NETWORK`/`CLOUD_BUILD` guard). Lands with the bucket-parity check above (same wip branch, same
+  quickmerge once UAC clean). — **market-tick-data-service**
+- [x] ✅ [INFRA] P1. **Schedule the three daily-audit crons** — DONE `deployment-service@7b84146`
+      (`terraform/gcp/data_pipeline_audit_scheduler.tf`: 4 Cloud Run Jobs + 4 Cloud Scheduler crons mirroring
+      `cf_manifest_audit_scheduler.tf` — runtime SA `unified_trading`, invoker `t1_batch`, env
+      `GCP_PROJECT_ID`/`DEPLOYMENT_ENV`/`CLOUD_PROVIDER`, `max_retries=0`): `dp-daily-digest` @ `0 7 * * *`,
+      `dp-manifest-hygiene-changed` @ `0 8 * * *`, `dp-manifest-hygiene-full` @ `0 8 * * 0` (weekly `--mode full`),
+      `dp-reprobe-empty` @ `0 9 * * *` UTC. **CAVEAT — the jobs do not RUN until the image gap below is closed** (no
+      existing image bundles the e2e audit scripts; `var.dp_audit_image` defaults to the MTDS image which lacks
+      `/app/e2e-testing/...`). — **deployment-service**
+- [ ] [INFRA] P1. **Build the e2e-audit container image** so the 4 `dp-audit` Cloud Run Jobs above actually run
+      `python3 /app/e2e-testing/scripts/audit/<script>.py`. Add `e2e-testing/Dockerfile` `FROM` the UTL base image (has
+      UTL+UAC+deps) + `COPY . /app/e2e-testing` + `e2e-testing/cloudbuild.yaml`; `gcloud builds submit` → publish to
+      Artifact Registry; set `var.dp_audit_image` default to it. (An agent began this but was cut off by a session limit
+      — verify nothing partial landed before redoing.) Provenance: `deployment-service@7b84146` IMAGE-GAP header. —
+      **e2e-testing, deployment-service**
 - [x] ✅ P1. **Register `DP_DAILY_DIGEST` + `DP_HYGIENE_SUMMARY`** — DONE registry@PM 6e0ef283c + uac@63cb2bbd (DIGEST
       category + 2 INFO rules, parity test 40 rules green). Digest now ROUTES to #data-pipeline-alerts. UTL
       string-constants (cleanliness, non-routing) left on-disk in slot clone — see todo below.
@@ -292,11 +319,16 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Codex SSOT updates (mandatory before archival)
 
-- [ ] [DOC] P2. `codex/02-data/availability-manifest-and-data-status.md` — add the **proof-of-honest-absence** contract
-      (FetchEvidence gate; `SOURCE_RETURNED_ZERO` requires proof).
-- [ ] [DOC] P2. `codex/02-data/honest-absence-downstream-handling.md` — the daily re-probe + escalation flow.
-- [ ] [DOC] P2. New `codex/05-infrastructure/data-pipeline-alerts.md` — the channel, event families, watchers, daily
-      digest, hygiene-audit cadence (start-verbose → reduce-spam policy).
+- [x] ✅ [DOC] P2. `codex/02-data/availability-manifest-and-data-status.md` — DONE `unified-trading-pm@894610bc2` (new
+      §6a "Proof-of-honest-absence contract": FetchEvidence 4-condition `proves_honest_absence()` gate +
+      `UnprovenHonestAbsenceError` hard-raise + 10-member `FetchErrorSignal` disqualifying set + `EXPECTED_*`
+      exemption + STEP 5.99 twin ref).
+- [x] ✅ [DOC] P2. `codex/02-data/honest-absence-downstream-handling.md` — DONE `unified-trading-pm@894610bc2` (new
+      "Daily re-probe + escalation flow": selector → UAC oracle cross-check → `DP_EMPTY_REPROBE_DISAGREEMENT` WARN →
+      Phase-5 issue-file; `register_reprobe_hook` extension point).
+- [x] ✅ [DOC] P2. `codex/05-infrastructure/data-pipeline-alerts.md` — VERIFIED complete `unified-trading-pm@894610bc2`
+      (Phase-0 already shipped it covering channel/DP\_\* families/watchers/digest+hygiene cadence/verbose→zeroed
+      policy; no edit needed).
 
 ## Success criteria
 
@@ -401,6 +433,26 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   0 (live path threaded) → rebuild tarball `create-code-tarballs.sh` from clean LDR + relaunch the live producer
   (`mtds-live-tradfi-*`, LONG_LIVED_LIVE) with `emit_pipeline_heartbeat` wired; batch tarball re-ship makes the next
   backfill wave hardened (running CME fleet is on pre-gate code → finishes fine, no crash).
+
+---
+
+- **2026-06-22 run #2 RESULTS (slot-0·human-planning, Opus 4.8)** — 4 disjoint-repo sub-agents fanned out (no collision
+  with the live per-adapter peer lane). **LANDED ON ORIGIN**: (1) `deployment-service@7b84146` — 4 audit Cloud Run
+  Jobs + schedulers (digest/hygiene-changed/hygiene-full-weekly/reprobe), mirroring cf_manifest; (2)
+  `unified-trading-pm@894610bc2` — Phase-1 ratchet (STEP 5.99 sibling check, baseline `{}`) + 3 codex docs
+  (proof-of-honest-absence contract, re-probe flow, alerts-doc verified). **BUILT + QG-GREEN BUT QUICKMERGE-GATED on
+  UAC-clean** (live peer editing UAC): MTDS QG STEP 5.90 (3-audit wiring, all `--smoke`-pass) + STEP 5.91 bucket-parity
+  check → on `origin/wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622@32e8b6e`. **NEW FINDING — 8 genuine C6
+  reader-bucket-env bugs** surfaced by the parity check (env-less defi-instruments reads → the defi-6% stale-read class)
+  → filed as a tracked P1 CODE todo routed to the defi/data_completion lane (the `_instruments_metadata.py:218/442/518`
+  ones match the exact CLAUDE.md-documented bug; the `orchestrator/__init__.py` ones use `get_bucket_name` — verify
+  env-awareness first). **IMAGE GAP**: the audit crons are wired but won't RUN until an e2e-audit image bundles the
+  scripts (a sub-agent began it but was cut off by a session limit → new tracked todo; verify nothing partial landed).
+  **RE-SHIP STILL GATED**: re-checked origin — tradfi batch+live still `fetch_evidence=0`; the peer landed
+  `build_fetch_evidence` to UAC origin (grep=2) but hasn't pushed the MTDS adapter threading yet. **NOTE — full PM QG
+  can't emit a green sentinel fleet-wide right now** due to a semver-owned `workspace-manifest.json` version-alignment
+  drift (`versions[utp]` behind `origin/main`); PM scripts/docs ship via the prek-gated carve-out until semver realigns
+  (not an agent fix).
 
 ---
 
