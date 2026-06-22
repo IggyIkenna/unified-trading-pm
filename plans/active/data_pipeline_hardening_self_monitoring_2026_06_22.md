@@ -302,26 +302,9 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       (conservative floor) + added 13 missing bare-protocol launch dates
       (MORPHO/AERODROME_V3/CAMELOT_V3/FLUID/SPARK/PUFFER/SWELL/STAKEWISE/STADER/MANTLE/ANKR/COINBASE/EIGENLAYER).
       Measured: **85,900 → 22,140 DIVERGENT_EMPTY (−74%)**, 0 in operational window. 5 regression tests added. —
-      **unified-api-contracts** <<<<<<< Updated upstream
-- [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY (~22,140) — DeFi per-(venue,data_type) `coverage_start` registry (C2)**
-      **DEFERRED**: the residual is all HISTORICAL (max 2025-11-18, 0 in the operational window) pre-collection empties
-      — protocols whose data_type has data captured from when collection BEGAN (mid-2025) but the oracle expects it from
-      protocol launch (e.g. PANCAKESWAP_V3 dex pre-collection, AAVE_V3 liquidation_events, STAKEWISE/MANTLE
-      staking_yields). Root cause: DeFi (venue, data_type) `SourceCapability.coverage_start` is unregistered
-      (`get_source_coverage_start_for_data_type` returns None for all defi), so the `EXPECTED_PRE_SOURCE_COVERAGE_START`
-      gate never fires. Fix = register defi per-(protocol,data_type) coverage_start (the first-observed-capture date per
-      pair is the data-driven floor). Larger campaign across ~40 protocols × data_types — separate from the alert
-      hot-fix. — **unified-api-contracts**
-- [ ] [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — the per-AG defi re-fetch hook
-      (`e2e-testing/scripts/audit/reprobe_defi.py`) probes EVM chains in priority order (ETHEREUM-first) for a
-      flat-venue empty REGARDLESS of which chain the empty was actually on. So an empty on a chain where the protocol
-      has no subgraph (e.g. CURVE/OPTIMISM — `get_subgraph_id` None) gets a FALSE `REPROBE_RETURNED_ROWS` because the
-      hook finds rows on ETHEREUM. The reprobe selector also dedups to (venue,data_type) dropping chain (line 143). Fix:
-      thread `chain` into the reprobe cell key + the hook so it probes the CORRECT chain, and short-circuit
-      `reached_source=False` when `get_subgraph_id(protocol, chain) is None` (protocol not deployed on that chain →
-      honest-empty, the oracle decides). — **e2e-testing** =======
-- [x] ✅ [CODE] P1. **Residual defi DIVERGENT_EMPTY — DeFi per-(venue,data_type) `coverage_start` registry (C2)** — DONE
-      `unified-api-contracts@bfe6736b` (QG green --no-fix, 27 oracle tests incl. 6 new defi). Added
+      **unified-api-contracts**
+- [x] ✅ [CODE] P1. **Residual defi DIVERGENT_EMPTY — DeFi per-(venue,data_type) `coverage_start` registry (C2)** —
+      DONE `unified-api-contracts@bfe6736b` (QG green --no-fix, 27 oracle tests incl. 6 new defi). Added
       `DEFI_DATA_TYPE_COVERAGE_START` to `canonical/coverage_starts.py` (20 measured first-capture floors across 14
       venues, read live from the prod defi `_index` 2026-06-22 = 925,820 captured rows) + wired
       `get_source_coverage_start_for_data_type` to consult it BEFORE the capability dict. **PER-PAIR + DATA-DRIVEN, NO
@@ -340,15 +323,13 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       (filter classification=DIVERGENT_EMPTY). — **unified-api-contracts, market-tick-data-service**
 - [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
       --no-fix exit 0, sentinel==HEAD, 20 dp_audit tests green incl. 3 new; dirty-deps direct-LDR carve-out —
-      strategy-service had live PEER WIP at quickmerge time). Threaded `chain` through the shared `ReprobeHook`
-      signature → `ReprobeCandidate.chain` → `_select_new_empties` (dedup now by **(venue,data_type,CHAIN)**, not flat)
-      → `_crosscheck` → the hook → the auto-flip reclassifier match (now **(venue,data_type,chain)**-keyed — a flip
-      can't clear an empty on a chain the protocol was never deployed on). `reprobe_defi.reprobe_source` probes the
-      empty's OWN chain + SHORT-CIRCUITS `reached_source=False` when the protocol has no subgraph on that chain
-      (CURVE/OPTIMISM no longer false-clears via ETHEREUM) AND when chain is blank. cefi/sports hooks accept+ignore
-      chain. New regression tests: chain-keyed dedup / two-chains-two-cells / blank-chain-never-clears. —
-      **e2e-testing**
-  > > > > > > > Stashed changes
+      strategy-service had live PEER WIP at quickmerge time). Threaded `chain` through the shared `ReprobeHook` signature
+      → `ReprobeCandidate.chain` → `_select_new_empties` (dedup now by **(venue,data_type,CHAIN)**, not flat) →
+      `_crosscheck` → the hook → the auto-flip reclassifier match (now **(venue,data_type,chain)**-keyed — a flip can't
+      clear an empty on a chain the protocol was never deployed on). `reprobe_defi.reprobe_source` probes the empty's OWN
+      chain + SHORT-CIRCUITS `reached_source=False` when the protocol has no subgraph on that chain (CURVE/OPTIMISM no
+      longer false-clears via ETHEREUM) AND when chain is blank. cefi/sports hooks accept+ignore chain. New regression
+      tests: chain-keyed dedup / two-chains-two-cells / blank-chain-never-clears. — **e2e-testing**
 
 ### Wave 4b out-of-repo wiring (the daily-audit scripts shipped in e2e-testing; these reach other repos)
 
@@ -897,6 +878,30 @@ items:
       its INFO/route logs don't surface in Cloud Logging → no observability into routing; the webhook still fires). Fix
       the logging handler/stdout config. — alerting-service
 
+## Blank `asset_group` re-blank class (C3 sibling — stale-tarball producer) — FIXED 2026-06-22
+
+- [x] ✅ [CODE] P0. **Consolidator self-heals blank/absent `asset_group` from the per-AG market-data bucket** —
+      `unified-trading-library@7b2306c3` (QG green 110s, sentinel==HEAD; 3 new regression tests, 31/31 consolidator
+      tests pass). **Root cause**: 73.9k defi (`onchain_subgraph`/`onchain_rpc` DEX swaps) + 2.3k cefi (`hyperliquid`)
+      `captured` rows read BLANK `asset_group` in the consolidated index, re-blanked every consolidation tick. The
+      `mdps-defi-2025-20260622-074035` VM launched **07:41 UTC** on a pre-v9 UTL tarball whose `record_captured`
+      predates the `asset_group` ROW COLUMN (landed UTL `4bd9487e` **13:59 UTC** — ~6h after launch) → its per-VM shard
+      has the column ABSENT → `union_by_name` fills NULL → canonical reads blank. `asset_group` is NOT a dedup key, so a
+      one-shot canonical re-stamp is re-blanked by the still-column-less shard on the next cycle. **Fix (systemic,
+      durable)**: `manifest_consolidator._asset_group_for_market_data_bucket(bucket)` derives the single AG a per-AG
+      `market-data-tick-{cefi|defi|tradfi|sports|pred}-` bucket holds; the DuckDB merge now `COALESCE`s a
+      blank/NULL/absent `asset_group` to that AG at merge time (both incremental + full-rebuild branches; `REPLACE` when
+      the column is present-but-blank, projected-`AS` when absent) — heals ANY stale-producer shard every cycle, no
+      per-VM coordination. The current `record_captured` already emits the column correctly (this is a
+      stale-running-VM + missing-consolidator-guard class, not a writer bug). **Operational re-stamp (guarded)**:
+      snapshotted both consolidated indexes to `_index/snapshots/pre_mdps_ag_restamp_2026_06_22.parquet`, re-stamped
+      defi 79,689 + cefi 2,297 blank rows → bucket-AG (rowcount + captured-count preserved; `blank_after=0` both) AND
+      the per-VM shards (mdps-defi-2025 + both `_legacy_seed`) so even the pre-deploy Cloud Run consolidator keeps the
+      column. **Residual (bounded, self-healing)**: the still-running pre-v9 `mdps-defi-2025` VM appends NEW
+      column-less rows until it finishes/self-deletes; the consolidator fix heals them every `*/1` cycle once the
+      consolidator image rebuilds from `main` (the durable guarantee — no manual re-stamp needed thereafter). —
+      unified-trading-library
+
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
 - [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path;
@@ -1410,18 +1415,6 @@ dispatch prompts.
 
 ## Progress Log — Cloud Run audit-cron IMAGE GAP CLOSED (2026-06-22, verified)
 
-<<<<<<< Updated upstream
-
-- **e2e-audit runner image LIVE + verified**: `e2e-testing/Dockerfile` (UTL base + COPY scripts/audit/\*) +
-  `cloudbuild-e2e-audit.yaml` (build→smoke→push) → `…/unified-trading-library/e2e-audit:latest` (e2e@5b73591).
-  `deployment-service@ae84086` points `dp_audit_image` at it (keeps `args=--reclassify-apply`). **Real Cloud Build
-  286913a2 SUCCESS; direct in-image smoke PASSED** (7 audit scripts present + UTL/UAC/pandas import OK). The Cloud Run
-  digest/hygiene/reprobe crons now run on an image that actually contains the scripts — the self-healing loop is
-  operational on the Cloud Run schedule, not just the tarball/VM path.
-- **SSOT updated**: codex `data-pipeline-alerts.md` § Runtime documents the runner image + that
-  `cloudbuild-e2e-audit.yaml` is a SEPARATE hand-maintained build (rollout-cloudbuild.py manages only `cloudbuild.yaml`,
-  won't clobber it) + the rebuild-on-script-change rule. The repo's CI `cloudbuild.yaml` (template SIT lint+smoke) was
-  preserved. Peer's broken phantom-image WIP left in deployment-service `stash@{0}` (superseded, recoverable). =======
 - **e2e-audit runner image LIVE + verified**: `e2e-testing/Dockerfile` (UTL base + COPY scripts/audit/\*) +
   `cloudbuild-e2e-audit.yaml` (build→smoke→push) → `…/unified-trading-library/e2e-audit:latest` (e2e@5b73591).
   `deployment-service@ae84086` points `dp_audit_image` at it (keeps `args=--reclassify-apply`). **Real Cloud Build
@@ -1478,7 +1471,6 @@ dispatch prompts.
   tracked as the new Phase 3 P1 real-gaps todo + the existing Phase 3 P2 reprobe-bug (now FIXED). Operational-window
   divergent = 0 throughout. The defi hygiene alert trends toward GREEN; the historical tail needs the per-venue
   backfill-vs-scope decision (tracked, not a flat clip).
-  > > > > > > > Stashed changes
 
 ## Progress Log — OPERATIONALLY VERIFIED (deployed + running, not just built) 2026-06-22
 
