@@ -374,6 +374,29 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   origin). 12-min stale (dead session, not a live editor) → inherited per the dirty-WIP rule, resolved keeping the
   per-job version (supersedes the project-level it conflicted with), shipped as `deployment-service@e45c07e`. Foreign
   work preserved, not lost.
+- **2026-06-22 RESUME (autonomous /autonomous run #2, slot-0·human-planning, Opus 4.8)** — operator directive: "action
+  it fully … apply all alerts+hardening then reship live+batch VMs so long-lived jobs harden + emit Slack alerts; fix
+  all the issues that cause raise so it works off the bat." **Situation assessment**: the keystone gate
+  (utl@39f8ec85, ON ORIGIN) HARD-RAISES `UnprovenHonestAbsenceError` on any `record_empty/record_zero_rows(reason=
+  SOURCE_RETURNED_ZERO)` lacking a proving `FetchEvidence` (verified `_writer_record.py:238-249` on origin). Tradfi
+  batch+live are NOT threaded on origin (massive_futures_backfill=1, websocket_runner=2, sentinels=6 un-threaded
+  SOURCE_RETURNED_ZERO sites) → **re-ship would crash on every legitimate zero-trade strike**. **BUT the per-adapter
+  threading is PEER-IN-FLIGHT**: MTDS `live/websocket_runner.py`+`live/manifest_recorder.py`+`live/_is_universe.py`
+  and UTL `manifest_writer/` are mid-edit-dirty under the `data_completion_to_100_all_ag` lane (the plan's own
+  Coordination note designates that lane the per-adapter owner; "each adapter that plan touches threads fetch_evidence
+  Phase-1 P0"). Per the multi-agent HARD RULE (don't edit mid-edit-dirty peer files) + the operator's "fix the raises
+  PROPERLY" (a stubbed FetchEvidence defeats the gate), **per-adapter threading stays the peer lane's; re-ship is GATED
+  on it landing on origin**. **My non-colliding half this run** = make the self-monitoring actually LIVE +
+  regression-proofed, then re-ship the instant threading lands: (1) Wave-4b INFRA — schedule the 3 e2e daily-audit
+  crons (deployment-service, mirror `cf_manifest_audit_scheduler.tf`); (2) Wave-4b — MTDS QG STEP 5.89 wiring the 3
+  audits (mirror 5.88) + Phase-3 reader/writer bucket-env parity; (3) Phase-1 ratchet — extend the existing
+  `check_unrouted_source_returned_zero.py` (PM QG 5.86 + baseline) to flag except-reachable SOURCE_RETURNED_ZERO
+  lacking fetch_evidence; (4) Codex docs ×3. Dispatched as 3 disjoint-repo sub-agents (deployment / MTDS / PM) shipping
+  via isolated worktree off origin (workspace clones dirty). **RE-SHIP TRIGGER (for a compressed future-me)**: when
+  `git -C market-tick-data-service show origin/live-defi-rollout:market_tick_data_service/live/websocket_runner.py |
+  grep -c fetch_evidence` > 0 (live path threaded) → rebuild tarball `create-code-tarballs.sh` from clean LDR +
+  relaunch the live producer (`mtds-live-tradfi-*`, LONG_LIVED_LIVE) with `emit_pipeline_heartbeat` wired; batch tarball
+  re-ship makes the next backfill wave hardened (running CME fleet is on pre-gate code → finishes fine, no crash).
 
 ---
 
