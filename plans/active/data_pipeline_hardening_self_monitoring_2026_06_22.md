@@ -4,6 +4,8 @@ created: 2026-06-22
 author: ikennaigboaka [slot-1·human-planning]
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
+priority: P1
+status: in-progress
 estimate_class: infra
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 18

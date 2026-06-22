@@ -1,3 +1,8 @@
+---
+scope: [engineer, admin]
+last_reviewed: 2026-06-22
+---
+
 # Data-Pipeline Alerts — SSOT (failure-mode registry + emit→route→escalate model)
 
 > **Purpose.** A running batch/live VM, a watcher, or a daily audit should be _incapable_ of failing silently. This doc
