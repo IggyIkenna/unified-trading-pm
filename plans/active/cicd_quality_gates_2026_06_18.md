@@ -63,8 +63,8 @@ source:
       the foot-gun). (qg_commit L452)
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
       (CodeBuild not required). (qg_commit L604)
-- [ ] [SCRIPT] P2. Finish the codex-not-a-separate-repo cleanup — `major-bump-approval.yml` write-back +
-      `setup-workspace` clone remain. (qg_commit L808)
+- [x] ✅ [SCRIPT] P2. Finish the codex-not-a-separate-repo cleanup — `major-bump-approval.yml` write-back +
+      `setup-workspace` clone remain. (qg_commit L808) — PM@8676d86 | fixed broken `unified-trading-codex/` runtime paths in `compute-epic-readiness.py` (WORKSPACE_ROOT→PM_ROOT, REPOS_DIR/EPICS_DIR now resolve to `unified-trading-pm/codex/`) and stale default in `check-repo-readiness.py` (`_PM_ROOT / "codex"`).
 
 ### Docs / SSOT hygiene (from the 2026-06-18 `docs/repo-management/` reconciliation)
 
