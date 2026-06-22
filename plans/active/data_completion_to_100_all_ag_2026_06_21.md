@@ -400,6 +400,86 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       — confirm `open_meteo.py` resolves `https://api.open-meteo.com/v1/forecast` (keyless free) rather than the
       `customer-api.open-meteo.com` paid host when no key is configured, so forward weather stays zero-cost. Repo:
       instruments-service. **NICE-TO-HAVE**.
+- [ ] [INFRA] P2. **Instrument the forward-poll/scheduler to capture per-fixture FIRST-PUBLISH lag → validate the
+      `source_data_latency.py` p95 constants live** (instruments-service + deployment-service). The five constants (SFI
+      300s · API-Football 1800s · FootyStats 3600s · Understat XG 7200s · Open-Meteo historical 3600s) are currently
+      **UNVALIDATABLE FROM BACKFILL** — every captured `available_at` is either `match_end + constant` (circular, e.g.
+      SFI writes `report_time = match_end + 300s` directly) or the backfill wall-clock (days-to-weeks late; e.g. a
+      2026-05-10 weather row stamped 2026-06-22), and manifest `written_at` is backfill-batch-clustered (16,600
+      `FIXTURE_STATS` rows share one `written_at`) with `fixture_id` null at index grain. To PROVE the real
+      source-publish lag: in the live/forward sports path (the `sports-scheduler` / per-source forward-poll VMs, on the
+      36 in-season leagues — MLS / Brasileirão / Argentina / J-League / K-League land matches daily right now), log, per
+      `fixture_id` per data_type, the **wall-clock of the FIRST successful fetch** of each post-match data_type and emit
+      `observed_publish_lag_s = first_fetch_ts − match_end_time` to a manifest column (or a small
+      `_index/latency_observations.parquet`). After ~2 weeks of forward data, recompute observed p50/p95/max per source
+      and reconcile vs the constants (CONFIRM / re-pin TOO-LOW / TOO-HIGH). Then update `source_data_latency.py` from
+      REAL data + re-doc this section. Repo: instruments-service (poller instrumentation) + deployment-service
+      (forward-poll VM cadence). Provenance: Source-latency validation (2026-06-22) above.
+
+## Source-latency validation (2026-06-22)
+
+Empirical validation of the assumed-p95 lag constants in
+`unified-api-contracts/unified_api_contracts/registry/source_data_latency.py` that feed
+`CanonicalFixture.report_time = match_end + lag` (consumed at
+`instruments-service/instruments_service/engine/orchestrator/sfi.py:354` → written into the per-row `available_at`).
+Validated against the consolidated v9 `_index`
+(`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 3.43M sports rows) +
+per-entity post-match parquets under `sports_reference/by_date/`.
+
+### Step 1 — leagues OPEN now (in-season on 2026-06-22)
+
+Computed via `footystats_season_status_for_day()` over the 101-league `LEAGUE_REGISTRY` (returns `None` ⟺ in-season):
+**36 of 101 leagues are in-season today.** The forward-validatable football set (where new completed matches land daily
+right now): **MLS, USL_CHAMPIONSHIP, US_OPEN_CUP** (US); **BRASILEIRAO, BRASILEIRAO_SERIE_B, COPA_DO_BRASIL** (BR);
+**ARGENTINA_PRIMERA, ARGENTINA_PRIMERA_NACIONAL, COPA_ARGENTINA, COPA_LIGA_PROFESIONAL** (AR); **CHILE_PRIMERA,
+CHILE_PRIMERA_B, COPA_CHILE** (CL); **ALLSVENSKAN, SUPERETTAN** (SE); **ELITESERIEN, NORWAY_1_DIVISJON, NORWEGIAN_CUP**
+(NO); **J1_LEAGUE, J2_LEAGUE, JLEAGUE_CUP, EMPEROR_CUP** (JP); **K_LEAGUE_1, K_LEAGUE_2, KOREAN_FA_CUP** (KR);
+**AUSTRALIA_CUP** (AU); **COPA_LIBERTADORES, COPA_SUDAMERICANA** (continental). Non-football in-season: **MLB, NBA, NHL,
+ATP, WTA**. (Caveat: **UCL/UEL/UECL** read "open" only because their `season_months=(9,6)` window includes June, but
+they are in the post-final summer break — no fixtures. European top-tier domestic leagues (EPL/LaLiga/Serie
+A/Bundesliga/Ligue 1) are all **off-season** today.)
+
+### Step 2 — observed lag vs constant (per source)
+
+**Critical caveat — what `available_at`/`written_at` actually measure here.** Both the manifest `written_at` and the
+per-entity `available_at` reflect **OUR backfill write time, not the source's first-publish time** — proven two ways:
+
+1. **Manifest `written_at` is backfill-batch-clustered, not per-fixture.** A single backfill run stamps thousands of
+   rows with one identical timestamp regardless of when each match ended — e.g. **16,600** `api_football/FIXTURE_STATS`
+   captured rows all share `written_at=2026-06-11 15:50:42Z`; 15,924 `FIXTURE_EVENTS` rows likewise. `fixture_id` is
+   **null at index grain** (manifest rows are date×league, not per-match), so a per-fixture `written_at − match_end`
+   join is impossible from the index.
+2. **The per-entity `available_at` for the lag-derived sources is CIRCULAR.** SFI progressive-stats parquets
+   (`pipeline_mode=batch_soccer_football_info/entity=progressive_stats/.../progressive_stats.parquet`, e.g.
+   day=2026-04-20 EPL, 200 rows) carry `match_end_time=16:30:00Z`, `report_time=16:35:00Z`, `available_at=16:35:00Z` —
+   i.e. `available_at = match_end + EXACTLY 300s = the constant itself`. Measuring `available_at − match_end` just
+   recovers the assumed 300 and proves nothing. api_football `fixture_events` `available_at` is snapped to a round 5-min
+   boundary on the match day (e.g. 2026-04-14 17:00:00Z, identical across rows). Open-Meteo weather `available_at` is
+   the raw backfill wall-clock — e.g. a **2026-05-10** match's weather row has `available_at=2026-06-22 02:15:29Z` (a
+   backfill **43 days later**, identical across all rows in the file).
+
+| Source / data_type                  | Assumed-p95 constant | Observed from backfill `available_at`/`written_at`                                                           | Verdict                                                            | Sample (captured rows) |
+| ----------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ | ---------------------- |
+| `sfi` SFI_PROGRESSIVE_STATS         | 300 s (5 min)        | `available_at = match_end + 300s` (constant written in)                                                      | **UNVALIDATABLE-FROM-BACKFILL** (circular — recovers the constant) | 639                    |
+| `api_football` FIXTURE_STATS/EVENTS | 1800 s (30 min)      | `available_at` snapped to match-day 5-min boundary; `written_at` = one backfill batch (16,600 rows @ one ts) | **UNVALIDATABLE-FROM-BACKFILL**                                    | 36,184 / 31,836        |
+| `footystats` MATCHES                | 3600 s (1 h)         | `written_at` = backfill batch clusters (484 distinct minutes over 30k rows)                                  | **UNVALIDATABLE-FROM-BACKFILL**                                    | 30,128                 |
+| `understat` XG                      | 7200 s (2 h)         | `written_at` = backfill batch clusters (top cluster 92 rows @ one ts)                                        | **UNVALIDATABLE-FROM-BACKFILL**                                    | 5,619                  |
+| `open_meteo` WEATHER (historical)   | 3600 s (1 h)         | `available_at` = backfill wall-clock, up to 43 days post-match                                               | **UNVALIDATABLE-FROM-BACKFILL**                                    | 13,963                 |
+
+**Verdict: all five constants are UNVALIDATABLE FROM BACKFILL DATA.** None can be confirmed or refuted from what GCS
+holds today, because no captured sports cell carries a real source-first-publish timestamp — every `available_at` is
+either the lag-constant arithmetic (`match_end + lag`, circular) or the backfill write wall-clock (days-to-weeks late).
+The constants are NOT changed (no evidence justifies a change in either direction). They remain plausible as
+order-of-magnitude assumptions (SFI is a live in-play feed → ~minutes is reasonable; understat xG genuinely posts ~hours
+after FT; api-football/footystats post-match stats within ~tens-of-minutes-to-an-hour), but "assumed" must NOT be
+re-labelled "validated" until a live-poll capture proves them.
+
+### Step 3 — how to validate LIVE (the only path that proves source-publish lag)
+
+The proof requires instrumenting the **forward/live path** to record, per fixture, the **wall-clock time of the FIRST
+successful fetch** of each post-match data_type and differencing it against that fixture's real `match_end_time`. The 36
+in-season leagues above (esp. MLS / Brasileirão / Argentina / J-League / K-League — matches land daily right now) are
+where this is capturable immediately. Todo filed below.
 
 ## Progress Log
 
