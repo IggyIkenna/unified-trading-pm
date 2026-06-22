@@ -302,8 +302,8 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       `market-data-tick-defi-central-element-323112` echo in `launch-mtds-dex-swaps-backfill-vm.sh` →
       `market-data-tick-defi-prd-${PROJECT_ID}`. No terraform apply needed (scheduler already correct). —
       deployment-service@164e21d
-- [x] ✅ [TERRAFORM] P0. **add `roles/run.invoker` IAM for the enumerator SA to `expected_universe_v2_scheduler.tf`**
-      — the missing IAM that caused Cloud Scheduler to get HTTP 403 when invoking Cloud Run Jobs via OAuth token. Added
+- [x] ✅ [TERRAFORM] P0. **add `roles/run.invoker` IAM for the enumerator SA to `expected_universe_v2_scheduler.tf`** —
+      the missing IAM that caused Cloud Scheduler to get HTTP 403 when invoking Cloud Run Jobs via OAuth token. Added
       `google_project_iam_member "expected_universe_v2_run_invoker"` (project-scoped, matching canonical pattern from
       `t1_batch_scheduler.tf`). — deployment-service@f77d76a
 
@@ -321,29 +321,109 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       for backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service.
       **BLOCKED-OPERATOR-DECISION**.
 
+## Live/forward sports data-availability matrix + continuation gaps (2026-06-22)
+
+> **Question (operator framing):** fixtures are determinable in advance then updated for cancelled/postponed; for the
+> rest (weather, understat, footystats, odds, transfermarkt, player-stats …) figure out what we can get LIVE going
+> FORWARD, the timestamps/latencies, and which sources we must scrape elsewhere or replace with a cheap API to keep
+> FEATURES + ML flowing forward (not just historical backfill).
+
+**Bottom line:** the sports pipeline already has a **live/forward driver** — the long-lived `sports-scheduler-*` VM
+(`deployment-service/scripts/vm/launch-sports-scheduler-vm.sh`, daemon, `poll=300s`, singleton-locked) running
+`deployment_service sports-trigger run --config configs/sports-trigger-tiers.yaml`. That tiers config IS the
+forward-scheduling SSOT: it fires **the same batch CLIs** on fixture-proximate / rolling windows ("sports live = batch
+with a fixture-proximate or rolling date window" — `sports-trigger-tiers.yaml` header). So the forward feed is **already
+coded for nearly every data_type**; the real gaps are (a) two scrape-only sources with NO forward poll (Transfermarkt,
+Understat-dedicated) and (b) the live ODDS WS being credit/quota-gated. "Live timestamp" below = when the data first
+exists relative to kickoff (KO) / full-time (FT); the post-match lags are the empirically-calibrated p95 values in
+`unified-api-contracts/.../registry/source_data_latency.py` (`report_time = match_end + lag`).
+
+### Matrix — (data_type × source): availability phase · live timestamp/cadence · live feed status TODAY · gap + cheap-source recommendation
+
+| data_type (source)                                               | Phase                           | Live timestamp / cadence                                                                                                                                                             | Live feed status TODAY                                                                                                                                                                                                               | Gap + recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **FIXTURES** (api_football)                                      | **FORWARD** / determinable      | Announced **KO−7d** (`_ANNOUNCED_AT_LEAD_DAYS=7`); re-polled every fire over `[today, today+8d]` → cancel/postpone propagates on `status_short` (PST→NS reverts, same `fixture_id`). | **LIVE — coded + scheduled.** `sports_fixtures_daily_repoll.py` (trigger `sports.fixtures.daily_repoll`) + Tier-1 `discovery` (6h, rolling `today−1..today+7`, `force_overwrite`). Manual: `launch-sfi-forward-poll.sh` is SFI-only. | **Covered, no gap.** Lifecycle = forward-determinable from the schedule + the daily re-poll captures cancel/postpone (`sports_fixtures_daily_repoll.py` docstring: "Today's fixtures get re-polled every fire so intra-day cancellation / postponement is captured").                                                                                                                                                                                                                 |
+| **STANDINGS / LEAGUES / TEAMS** (api_football)                   | FORWARD / periodic              | STANDINGS weekly (Tier-1 6h refresh); LEAGUES/TEAMS season-boundary only (`window_condition: season_boundary`).                                                                      | **LIVE — coded + scheduled** (Tier-1 `discovery` + Tier-2 `reference`).                                                                                                                                                              | Covered, no gap.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **INJURIES** (api_football)                                      | FORWARD / daily                 | Daily refresh (Tier-2 `reference`, `run_always: true`, 24h).                                                                                                                         | **LIVE — coded + scheduled.**                                                                                                                                                                                                        | Covered, no gap.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **PRE_MATCH_ODDS snapshot** (footystats ODDS)                    | FORWARD / pre-match             | `data_available_at = KO−72h` (98% by T−24h, 100% by T−72h; 68 markets, opening odds).                                                                                                | **LIVE — coded.** `launch-footystats-forward-poll.sh` (rolling `today..today+14`, `--force-window`, `ENTITY=ODDS`); also Tier-3 `odds_t24h`→PREDICTIONS.                                                                             | Covered. FootyStats is a paid sub already in use; forward window is free of extra cost (same key).                                                                                                                                                                                                                                                                                                                                                                                    |
+| **PREDICTIONS** (footystats model)                               | FORWARD / pre-match             | Pre-match model output; lands with the KO−72h..KO−24h snapshot window.                                                                                                               | **LIVE — coded** (Tier-3 `odds_t24h` + `launch-footystats-forward-poll.sh ENTITY=PREDICTIONS`).                                                                                                                                      | Covered, no gap (NB: never merge PREDICTIONS into ODDS — same-source label leakage, coverage-matrix §2.2).                                                                                                                                                                                                                                                                                                                                                                            |
+| **LIVE_ODDS / odds_horizon_bucket** (odds_api)                   | FORWARD→intra-play / continuous | Moves continuously; bucketed 8 horizons T−24h/−12h/−6h/−4h/−2h/−1h/−10m/T−0; live poll **60s** interval.                                                                             | **LIVE — coded + RUNNING.** WS connector `odds_api_ws.py` (60s poll) + running VM `mtds-live-sports-odds-api-trades`. Tier-3 `odds_t24h/t6h/t1h` MTDS snapshots also fire.                                                           | **GAP (quota, not code):** The Odds API live polling at 60s × markets burns credits (~30 credits/call h2h+spreads+totals; ~43k/mo on Starter ~$10). Cheap alts for breadth/CLV: **api_football `/odds` (in-play), OddsAPI Starter tier already-sized, or scrape OddsPortal/Betfair Exchange public API**. Decision = which books + quota tier.                                                                                                                                        |
+| **LINEUPS** (api_football)                                       | **FORWARD** / pre-match         | Confirmed lineups ~**KO−1h** (publication lag p95).                                                                                                                                  | **LIVE — coded + scheduled** (Tier-3 `odds_t1h` fires `--sports-entity LINEUPS`).                                                                                                                                                    | Covered, no gap.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **WEATHER forecast** (open_meteo)                                | **FORWARD** / pre-match         | Forecast point-in-time T−24h / T−12h / T−0 (per-fixture, venue coords). Match-day nowcast at KO−1h.                                                                                  | **LIVE — coded + scheduled.** `open_meteo.py` adapter uses the FREE `/v1/forecast` + Previous-Runs API for the T−24h/T−12h/T−0 horizons; Tier-3 `odds_t1h` fires `WEATHER` nowcast.                                                  | **Covered, no gap** — Open-Meteo **Forecast API is free, no key**, and is the canonical forward-weather source. (Historical reanalysis `WEATHER (actual)` lands T+24h via archive-api; that is the post-match leg, not the forward feed.)                                                                                                                                                                                                                                             |
+| **SFI_PROGRESSIVE_STATS** (soccer_football_info)                 | LIVE→MATCH_END                  | Streams ~every 30s in-play; freeze-stamped at `match_end_time`; stabilises **FT+5min** (`SFI_DATA_LAG_P95_SECONDS=300`).                                                             | **LIVE — coded.** `launch-sfi-forward-poll.sh` (singleton, `VM_TASK=sports-forward-poll`); SFI_LEAGUES/STANDINGS weekly.                                                                                                             | Covered, no gap (low post-match lag — best fast post-match source).                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **FIXTURE_STATS / FIXTURE_EVENTS / PLAYER_STATS** (api_football) | **POST-match + lag**            | `report_time = FT + API_FOOTBALL_RESULT_LAG_P95 = FT+30min`. Tier-4 `stats_immediate` fires FT+30min.                                                                                | **LIVE — coded + scheduled** (Tier-4 `post_match.stats_immediate`).                                                                                                                                                                  | Covered, no gap. Inherently post-match (can't be forward); the lag is the floor.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **XG** (understat)                                               | **POST-match + lag**            | Understat xG available **FT+2h** (`UNDERSTAT_DATA_LAG_P95_SECONDS=7200`); 5 leagues only (EPL/LaLiga/Bundesliga/SerieA/Ligue1). Tier-4 `stats_delayed` fires FT+24h.                 | **PARTIAL — scheduled via Tier-4 `stats_delayed` (XG), but NO dedicated understat forward/live launcher.** No `launch-understat-forward-poll.sh` exists (only backfill path).                                                        | **GAP (low):** Understat is scrape-only (no official API) + high latency (FT+2h) + 5 leagues. The Tier-4 `stats_delayed` XG trigger covers it on schedule, BUT for broader/faster forward xG use the **FootyStats pre-match xG (`xg_prematch_*`, already in PREDICTIONS) + api_football expected-goals fields**; understat stays the FT+2h enrichment. Add a `launch-understat-forward-poll.sh` for resilience.                                                                       |
+| **PLAYER_VALUES / TRANSFERMARKT_LEAGUES** (transfermarkt)        | **PERIODIC** (transfer windows) | Changes ~weekly; only expected inside transfer windows (`is_transfer_window_open`); 55 leagues.                                                                                      | **GAP — NO forward poll.** Only `launch-transfermarkt-backfill-vm.sh` exists; Tier-2 `reference` fires `TRANSFERS` (api_football transfers) on `window_condition: transfer_window_open`, NOT transfermarkt PLAYER_VALUES.            | **GAP (medium):** Transfermarkt is **scrape-only** (no API; the 6.5h-hang incident 2026-06-22 was an unbounded HTTP scrape). Forward continuation options: (1) add a weekly **transfermarkt forward-poll launcher** gated on transfer-window (cheap — values move slowly); (2) cheap API alt = **api_football `/players` market-value-adjacent fields** or **FootyStats squad/value fields** for the features that need a fresh value; keep transfermarkt as the periodic enrichment. |
+| **RESULTS / SETTLEMENT**                                         | POST-match + lag                | `FT + settlement_window`.                                                                                                                                                            | Derived from FIXTURES status + FIXTURE_STATS (Tier-4).                                                                                                                                                                               | Covered, no gap.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+### Continuation gaps & recommended cheap sources (ranked)
+
+1. **LIVE_ODDS quota (highest leverage for ML continuation)** — `odds_api_ws.py` is coded + the
+   `mtds-live-sports-odds-api-trades` VM runs, but 60s polling burns The Odds API credits (~43k/mo on Starter).
+   **Recommendation:** size the OddsAPI **Starter tier (~$10/mo, 50k credits)** for the live MVP league set; for
+   breadth/CLV without extra spend add **api_football `/odds` (in-play, already-subscribed key)** as a second source.
+   Repo: market-tick-data-service (connector tuning) + deployment-service (VM cadence). **BLOCKED-OPERATOR-DECISION**
+   (which books + quota tier).
+2. **Transfermarkt forward poll missing** — only a backfill launcher exists; scrape-only + slow-moving.
+   **Recommendation:** add a weekly transfer-window-gated `launch-transfermarkt-forward-poll.sh` (cheap; values change
+   ~weekly), AND wrap the scrape in `asyncio.wait_for` per-shard (the 6.5h-hang root cause). Cheap forward alt for the
+   value feature: **api_football `/players` or FootyStats squad fields**. Repo: deployment-service +
+   instruments-service.
+3. **Understat dedicated forward poll missing** — Tier-4 `stats_delayed` covers XG on schedule (FT+24h), but no
+   dedicated launcher + scrape-only + 5 leagues + FT+2h. **Recommendation:** for forward/fast xG use **FootyStats
+   pre-match xG (`xg_prematch_*`) + api_football expected-goals** (both already live), keep understat as the FT+2h
+   enrichment; add `launch-understat-forward-poll.sh` for resilience. Repo: deployment-service.
+4. **WEATHER forward — already optimal, just confirm the free path stays primary** — Open-Meteo **Forecast API is free +
+   keyless** (`/v1/forecast`); the adapter already uses it for T−24h/T−12h/T−0. No cheap-source swap needed;
+   **covered**. (Action: ensure the live VM resolves the free forecast URL, not the `customer-api` paid host, when no
+   key is set.)
+5. **No structural gap on FIXTURES / LINEUPS / api_football post-match stats** — all forward-determinable or scheduled;
+   lags are inherent floors, not feed gaps.
+
+### Continuation-gap todos
+
+- [ ] [INFRA] P2. **Add `launch-transfermarkt-forward-poll.sh`** (deployment-service) — weekly, transfer-window-gated
+      forward poll for PLAYER_VALUES / TRANSFERMARKT_LEAGUES (55 leagues) so values keep flowing forward (currently
+      backfill-only). Wrap the scrape per-shard in `asyncio.wait_for(timeout=N)` to prevent the unbounded-HTTP hang
+      (incident 2026-06-22). Repo: deployment-service (+ instruments-service if the trigger entity is missing).
+      **NICE-TO-HAVE** — slow-moving data; api_football `/players` is the cheap forward fallback for the value feature
+      meanwhile.
+- [ ] [INFRA] P2. **Add `launch-understat-forward-poll.sh`** (deployment-service) — dedicated forward poll for understat
+      XG (5 leagues) for resilience beyond the Tier-4 `stats_delayed` trigger; use FootyStats `xg_prematch_*` +
+      api_football xG as the live/forward primary. Repo: deployment-service.
+- [ ] [DATA] P2. **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) —
+      size The Odds API Starter (~$10/mo) for the live league set and/or wire **api_football `/odds` in-play** as a
+      second forward odds source so LIVE_ODDS / odds_horizon_bucket keeps feeding CLV/steam features forward without
+      exhausting credits. Repo: market-tick-data-service (connector) + deployment-service (VM cadence).
+      **BLOCKED-OPERATOR-DECISION** (book set + quota tier).
+- [ ] [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM** (instruments-service)
+      — confirm `open_meteo.py` resolves `https://api.open-meteo.com/v1/forecast` (keyless free) rather than the
+      `customer-api.open-meteo.com` paid host when no key is configured, so forward weather stays zero-cost. Repo:
+      instruments-service. **NICE-TO-HAVE**.
+
 ## Progress Log
 
 ### 2026-06-22 13:25 — SPORTS COMPLETION TARGET: ~2026-06-23/24
 
 **Expected full sports completion (all sources, batch+live, honest-100%): 2026-06-23 → 2026-06-24.** Per-track:
 
-| Track | Status (2026-06-22 13:25 UTC) | ETA |
-|---|---|---|
-| API-Football enrichment (stats/events/lineups/players, incl 2026 gap) | DONE (exit 0) | complete |
-| Odds (the-odds-api, all year shards + Apr-June gap) | DONE | complete |
-| Weather (Open-Meteo, paid) | DONE (2899 day-parquets) | complete |
-| SFI raw (soccerfootball-info) | DONE (exit 0, full range) | complete |
-| Fixtures / leagues / teams / standings / venues | DONE | complete |
-| SFI-progressive features | relaunched 13:20 (fix in tarball) | ~2h → **06-22 EOD** |
-| Transfermarkt (transfer-window-gated scraper) | running, advancing | ~hours → **06-22/23** |
-| **FootyStats (season-gated scraper) — LONG POLE** | running, advancing | **~1-2 days → 06-23/24** |
-| Per-source `is_expected_for_source` relabel (final denominator) | queued (fires when TM/FS done) | ~hours after → **06-24** |
+| Track                                                                 | Status (2026-06-22 13:25 UTC)     | ETA                      |
+| --------------------------------------------------------------------- | --------------------------------- | ------------------------ |
+| API-Football enrichment (stats/events/lineups/players, incl 2026 gap) | DONE (exit 0)                     | complete                 |
+| Odds (the-odds-api, all year shards + Apr-June gap)                   | DONE                              | complete                 |
+| Weather (Open-Meteo, paid)                                            | DONE (2899 day-parquets)          | complete                 |
+| SFI raw (soccerfootball-info)                                         | DONE (exit 0, full range)         | complete                 |
+| Fixtures / leagues / teams / standings / venues                       | DONE                              | complete                 |
+| SFI-progressive features                                              | relaunched 13:20 (fix in tarball) | ~2h → **06-22 EOD**      |
+| Transfermarkt (transfer-window-gated scraper)                         | running, advancing                | ~hours → **06-22/23**    |
+| **FootyStats (season-gated scraper) — LONG POLE**                     | running, advancing                | **~1-2 days → 06-23/24** |
+| Per-source `is_expected_for_source` relabel (final denominator)       | queued (fires when TM/FS done)    | ~hours after → **06-24** |
 
-So: **all data captured by ~06-23/24 (FootyStats-bound), then the relabel makes the dashboard show honest-100%** —
-each source at 100% of what it CAN provide (Understat 5 leagues, FootyStats in-season, TM transfer-windows, weather
-where venue coords exist, etc.); genuine-no-coverage cells typed-empty + excluded. Monitors bqb62pbvd (TM/FS hang+
-exit-aware) + bmsfjnewh (sfi-progressive) wake on completion/problem. Open P1 fix before relabel: footystats-odds
-source mislabel (FS predictions+matches land; only odds blocked).
+So: **all data captured by ~06-23/24 (FootyStats-bound), then the relabel makes the dashboard show honest-100%** — each
+source at 100% of what it CAN provide (Understat 5 leagues, FootyStats in-season, TM transfer-windows, weather where
+venue coords exist, etc.); genuine-no-coverage cells typed-empty + excluded. Monitors bqb62pbvd (TM/FS hang+
+exit-aware) + bmsfjnewh (sfi-progressive) wake on completion/problem. Open P1 fix before relabel: footystats-odds source
+mislabel (FS predictions+matches land; only odds blocked).
 
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
@@ -352,9 +432,9 @@ existing defi rows but NEW captures keep arriving blank; suspected fleet-wide.
 
 **ROOT CAUSE (layer a = the WRITER, UTL).** `AvailabilityRecord` (`unified-trading-library/.../manifest_writer/_rows.py`
 line 284 dataclass + line 93 `_ROW_KEY_COLUMNS`) has **NO `asset_group` field**, and the serializer
-`_records_to_dataframe` (`manifest_writer/_writer_io.py` line 413) **never emits an `asset_group` column** — the explicit
-comment at `_writer_io.py:408` says "asset_group is NOT an AvailabilityRecord field — it is derived from the GCS
-hive-partition key at consolidation/read time, so there is nothing to serialize here." **But that derivation is
+`_records_to_dataframe` (`manifest_writer/_writer_io.py` line 413) **never emits an `asset_group` column** — the
+explicit comment at `_writer_io.py:408` says "asset_group is NOT an AvailabilityRecord field — it is derived from the
+GCS hive-partition key at consolidation/read time, so there is nothing to serialize here." **But that derivation is
 UNIMPLEMENTED**: the consolidator (`manifest_consolidator.py`) has ZERO `asset_group` references (DuckDB unions per-VM
 shard columns by name; per-VM shards are flat blobs, not hive-partitioned by asset_group). So nothing ever computes
 asset_group at consolidation. Meanwhile every `record_captured`/`record_empty`/`record_failed`/`add()` ALREADY receives
@@ -372,15 +452,16 @@ pass it; the writer drops it. Fix layer = UTL (all 5 AGs benefit).
 | prediction | 113k  | 74,165    | 39,215    | 72,711/96,608              |
 
 Confirmed fleet-wide (every AG has recent-2026-06 blanks). Bucket names: market-data-tick-{cefi,defi,tradfi,sports}-prd
-+ market-data-tick-pred-prd. FIX (next): add `asset_group` field to `AvailabilityRecord` + thread the existing kwarg
-into every record-construction site + serialize it; raise `MissingAssetGroupError` when a market-data row can't resolve
-it (mirror `source`/`MissingSourceError`); QG ratchet + unit test. Then backfill-stamp existing blanks per-AG (the
-bucket IS the AG; snapshot-first; reuse the `populate_is_index_v9` stamp pattern).
+
+- market-data-tick-pred-prd. FIX (next): add `asset_group` field to `AvailabilityRecord` + thread the existing kwarg
+  into every record-construction site + serialize it; raise `MissingAssetGroupError` when a market-data row can't
+  resolve it (mirror `source`/`MissingSourceError`); QG ratchet + unit test. Then backfill-stamp existing blanks per-AG
+  (the bucket IS the AG; snapshot-first; reuse the `populate_is_index_v9` stamp pattern).
 
 ### 2026-06-22 13:10 — TM/FS unbounded-HTTP HANG fixed; ETA + hang-detection codified
 
-Caught (answering "is everything progressing"): TM + FootyStats had HUNG 6.5h (RUNNING, no exit, log frozen 06:05) on
-an unbounded HTTP/scrape call — invisible to the exit-code monitor (2nd monitor blind spot). Fixed IS@dcf87f5:
+Caught (answering "is everything progressing"): TM + FootyStats had HUNG 6.5h (RUNNING, no exit, log frozen 06:05) on an
+unbounded HTTP/scrape call — invisible to the exit-code monitor (2nd monitor blind spot). Fixed IS@dcf87f5:
 `asyncio.wait_for` around per-league TM `get_teams` (600s) + per-date FS fetches (300s) → stall cancelled → caught by
 existing per-shard handler → loop continues. Relaunched tm-125650/fs-125711 (e2-std-8), advancing. Codified the
 hang-detection rule (monitor watches LOG-MTIME, not just exit-code; ≥45min frozen = hang). New monitor bqb62pbvd is
@@ -391,69 +472,73 @@ fixtures/leagues/teams/standings. IN PROGRESS = TM (transfer-window-gated, skips
 per-date predictions/matches/odds, slower = LONG POLE ~1-2 days). Then per-source relabel (final denominator step,
 ~hours). So ~1-2 days to all-captured, then the relabel → honest 100%.
 
-- [x] ✅ [BUG] P1. FootyStats ODDS rows fail: `source=footystats disagrees with pipeline_mode=batch_odds_api (expects
-  source=odds_api)` recovery=fail_fast — source/pipeline_mode mislabel in the footystats odds writer (predictions +
-  matches land fine). Fix the footystats odds write to stamp source=footystats consistently. Repo: instruments-service.
-  — instruments-service@04f38a2 | 3× `record_captured` + `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE["ODDS"]` BATCH_ODDS_API→BATCH_FOOTYSTATS
+- [x] ✅ [BUG] P1. FootyStats ODDS rows fail:
+      `source=footystats disagrees with pipeline_mode=batch_odds_api (expects source=odds_api)` recovery=fail_fast —
+      source/pipeline_mode mislabel in the footystats odds writer (predictions + matches land fine). Fix the footystats
+      odds write to stamp source=footystats consistently. Repo: instruments-service. — instruments-service@04f38a2 | 3×
+      `record_captured` + `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE["ODDS"]` BATCH_ODDS_API→BATCH_FOOTYSTATS
 
 ### 2026-06-22 ~12:55 — ✅ TM+FootyStats UNBOUNDED-HTTP HANG fixed (uninherited path) + tarball + relaunch — instruments-service@dcf87f5
 
-`tm-backfill-20260622-060029` (and the FootyStats sibling) froze 6.5h on `date=2019-02-13` (3 leagues), python ALIVE,
-no traceback, no OOM, no progress — an awaited HTTP call wedged with no timeout firing. Root cause: the base sports
-session bounds each individual request (729fbdb: `total=120/sock_connect=15/sock_read=60`), but a single
-`adapter.get_teams` (TM: standings + ~20 per-club RapidAPI profiles, or a start+poll Apify run) / footystats
-per-date `/todays-matches` fetch has **no single ceiling**, and a connector/DNS/executor-level stall inside aiohttp
-can leave the awaited coroutine blocked WITHOUT ever surfacing the per-request `ClientTimeout` (the `try/except`
-shard-isolation already present cannot catch a hang that never raises). FIX (instruments-service@dcf87f5): wrap each
-per-shard adapter call in `asyncio.wait_for` — TM per-league `get_teams` ≤600s (`_TM_PER_LEAGUE_TIMEOUT_SECS`,
+`tm-backfill-20260622-060029` (and the FootyStats sibling) froze 6.5h on `date=2019-02-13` (3 leagues), python ALIVE, no
+traceback, no OOM, no progress — an awaited HTTP call wedged with no timeout firing. Root cause: the base sports session
+bounds each individual request (729fbdb: `total=120/sock_connect=15/sock_read=60`), but a single `adapter.get_teams`
+(TM: standings + ~20 per-club RapidAPI profiles, or a start+poll Apify run) / footystats per-date `/todays-matches`
+fetch has **no single ceiling**, and a connector/DNS/executor-level stall inside aiohttp can leave the awaited coroutine
+blocked WITHOUT ever surfacing the per-request `ClientTimeout` (the `try/except` shard-isolation already present cannot
+catch a hang that never raises). FIX (instruments-service@dcf87f5): wrap each per-shard adapter call in
+`asyncio.wait_for` — TM per-league `get_teams` ≤600s (`_TM_PER_LEAGUE_TIMEOUT_SECS`,
 `engine/orchestrator/transfermarkt.py`), FootyStats per-date predictions/matches/odds ≤300s
-(`_FS_PER_DATE_TIMEOUT_SECS`, `engine/orchestrator/footystats.py`). `wait_for` cancels the coroutine from the event
-loop regardless of where it is stuck → raises `asyncio.TimeoutError` (subclass of `Exception`) → the existing
+(`_FS_PER_DATE_TIMEOUT_SECS`, `engine/orchestrator/footystats.py`). `wait_for` cancels the coroutine from the event loop
+regardless of where it is stuck → raises `asyncio.TimeoutError` (subclass of `Exception`) → the existing
 per-league/per-date handler `record_failed`s + the loop CONTINUES (shard isolation, no VM-killing raise; skip-fresh +
 per-source coverage gating untouched). QG-green (`--no-fix`, 73s) → quickmerge LDR. Tarball rebuilt + uploaded
 (`gs://deployment-scripts-central-element-323112/code/instruments-service-code.tar.gz`, fix verified present); 2 hung
-VMs deleted; relaunched e2-standard-8: `tm-backfill-20260622-125650`, `fs-backfill-20260622-125711`. VERIFIED via on-VM live logs (GCS run.log mirror lags
-on tee-flush cadence — read the on-VM `/tmp/vm-exec-*.log` for authoritative liveness): TM worker PID7142 `Sl`/36%
-CPU at `date=2019-03-25` (last action `RapidAPI: fetched 24 clubs ... Fetched 24 teams league=GB2`, mtime live) — far
-past the 2019-02-13 freeze; FS worker PID7141 `Rl`/104% CPU at `date=2019-01-08` climbing date-by-date (16
-predictions + 16 odds/date), well past where it would have wedged. Both processed many dates the old code could not —
-hang fixed.
+VMs deleted; relaunched e2-standard-8: `tm-backfill-20260622-125650`, `fs-backfill-20260622-125711`. VERIFIED via on-VM
+live logs (GCS run.log mirror lags on tee-flush cadence — read the on-VM `/tmp/vm-exec-*.log` for authoritative
+liveness): TM worker PID7142 `Sl`/36% CPU at `date=2019-03-25` (last action
+`RapidAPI: fetched 24 clubs ... Fetched 24 teams league=GB2`, mtime live) — far past the 2019-02-13 freeze; FS worker
+PID7141 `Rl`/104% CPU at `date=2019-01-08` climbing date-by-date (16 predictions + 16 odds/date), well past where it
+would have wedged. Both processed many dates the old code could not — hang fixed.
 
 - [ ] [BUG] P1. **FootyStats ODDS pipeline_mode/source mislabel** — surfaced 2026-06-22 in `fs-backfill-20260622-125711`
-      run.log: `Batch manifest row source='footystats' disagrees with pipeline_mode='batch_odds_api' (expects
-      source='odds_api')` on ODDS rows (`data_type='ODDS', league_id='EPL', date='2019-01-02'`). The footystats ODDS
-      writer stamps `pipeline_mode=batch_odds_api` (the-odds-api lane) but `source='footystats'` — a silent multi-source
-      mislabel that `record_*` rejects (`recovery=fail_fast`), so footystats ODDS rows fail to land. NOT the hang
-      (predictions+matches write fine). Repo: instruments-service — fix the footystats ODDS path to stamp
-      `pipeline_mode=batch_footystats` (matching `source='footystats'`) OR route footystats odds through the correct
-      source. Provenance: TM+FootyStats hang-fix verification, 2026-06-22.
+      run.log:
+      `Batch manifest row source='footystats' disagrees with pipeline_mode='batch_odds_api' (expects     source='odds_api')`
+      on ODDS rows (`data_type='ODDS', league_id='EPL', date='2019-01-02'`). The footystats ODDS writer stamps
+      `pipeline_mode=batch_odds_api` (the-odds-api lane) but `source='footystats'` — a silent multi-source mislabel that
+      `record_*` rejects (`recovery=fail_fast`), so footystats ODDS rows fail to land. NOT the hang (predictions+matches
+      write fine). Repo: instruments-service — fix the footystats ODDS path to stamp `pipeline_mode=batch_footystats`
+      (matching `source='footystats'`) OR route footystats odds through the correct source. Provenance: TM+FootyStats
+      hang-fix verification, 2026-06-22.
 
 ### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
 
 Operator dispatch "backfill everything (defi)": drive defi to high+honest coverage. Snapshot at start (live consolidated
-`market-data-tick-defi-prd` v9 `_index`, 3,812,106 rows): **honest_cov_defi = 17.89%** (captured 682,033 / empty_confirmed
-3,099,859 / attempted_failed 30,214 / **expected_unattempted 0**). 100% schema_version=9. Date range 2018-01-01→2026-06-22.
+`market-data-tick-defi-prd` v9 `_index`, 3,812,106 rows): **honest_cov_defi = 17.89%** (captured 682,033 /
+empty_confirmed 3,099,859 / attempted_failed 30,214 / **expected_unattempted 0**). 100% schema_version=9. Date range
+2018-01-01→2026-06-22.
 
-**PHASE A root cause (the `expected_unattempted=0` symptom) — NOT the "scheduler never applied" hypothesis in the dispatch.**
-The `expected-universe-v2-*-daily` Cloud Scheduler + the 5 per-AG Cloud Run Jobs WERE `tofu apply`'d 2026-06-19 (all
-ENABLED). But the defi scheduler's last attempt (2026-06-22 01:31) returned **`status code: 7` = PERMISSION_DENIED**, and
-`gcloud run jobs executions list --job expected-universe-v2-defi` was EMPTY (never executed; only prediction ran once, hand-
-triggered, 2026-06-19). Cause: the enumerator SA `expected-universe-v2-enum@…` had **NO `run.invoker`** binding (neither job-
-level — empty `etag: ACAB` policy — nor project-level). `expected_universe_v2_scheduler.tf` grants the SA `objectViewer`
-(catalogue) + `objectAdmin` (manifest) but OMITS the `roles/run.invoker` the scheduler→job OIDC call needs → every daily
-defi/cefi/tradfi/sports trigger was silently rejected → 0 `expected_unattempted` seeded fleet-wide. (cefi/tradfi/sports also
-never executed — same gap.)
+**PHASE A root cause (the `expected_unattempted=0` symptom) — NOT the "scheduler never applied" hypothesis in the
+dispatch.** The `expected-universe-v2-*-daily` Cloud Scheduler + the 5 per-AG Cloud Run Jobs WERE `tofu apply`'d
+2026-06-19 (all ENABLED). But the defi scheduler's last attempt (2026-06-22 01:31) returned **`status code: 7` =
+PERMISSION_DENIED**, and `gcloud run jobs executions list --job expected-universe-v2-defi` was EMPTY (never executed;
+only prediction ran once, hand- triggered, 2026-06-19). Cause: the enumerator SA `expected-universe-v2-enum@…` had **NO
+`run.invoker`** binding (neither job- level — empty `etag: ACAB` policy — nor project-level).
+`expected_universe_v2_scheduler.tf` grants the SA `objectViewer` (catalogue) + `objectAdmin` (manifest) but OMITS the
+`roles/run.invoker` the scheduler→job OIDC call needs → every daily defi/cefi/tradfi/sports trigger was silently
+rejected → 0 `expected_unattempted` seeded fleet-wide. (cefi/tradfi/sports also never executed — same gap.)
 
-- [ ] [TERRAFORM] P0. **add `run.invoker` for the enumerator SA to `expected_universe_v2_scheduler.tf`** (the missing IAM that
-      made every scheduled run `code 7`). Stop-gap applied live via `gcloud run jobs add-iam-policy-binding` on all 5 jobs
-      (`cefi/defi/tradfi/sports/prediction`) → defi job now executes. Durable fix = a `google_cloud_run_v2_job_iam_member`
-      (role=`roles/run.invoker`, member=the enum SA) per-AG in the TF. Repo: deployment-service. Provenance: this Progress Log.
+- [ ] [TERRAFORM] P0. **add `run.invoker` for the enumerator SA to `expected_universe_v2_scheduler.tf`** (the missing
+      IAM that made every scheduled run `code 7`). Stop-gap applied live via `gcloud run jobs add-iam-policy-binding` on
+      all 5 jobs (`cefi/defi/tradfi/sports/prediction`) → defi job now executes. Durable fix = a
+      `google_cloud_run_v2_job_iam_member` (role=`roles/run.invoker`, member=the enum SA) per-AG in the TF. Repo:
+      deployment-service. Provenance: this Progress Log.
 
-Manual `gcloud run jobs execute expected-universe-v2-defi` (exec `…-h5djp`) launched + RUNNING (image imported clean, catalog
-`gs://instruments-store-defi-prd-…/prod/catalog.parquet` present 302KB). The v2 `--apply-write` path loads the catalog +
-builds the manifest `present_set` + calls `enumerate_v2(present_set=…)` → emits `expected_unattempted` for alive-but-uncaptured
-defi cells over the bounded window (`--start-date 2026-02-20`, the recent-honest-denominator window; full-history is the gated
-companion artifact, not this job). Verifying the seed count next.
+Manual `gcloud run jobs execute expected-universe-v2-defi` (exec `…-h5djp`) launched + RUNNING (image imported clean,
+catalog `gs://instruments-store-defi-prd-…/prod/catalog.parquet` present 302KB). The v2 `--apply-write` path loads the
+catalog + builds the manifest `present_set` + calls `enumerate_v2(present_set=…)` → emits `expected_unattempted` for
+alive-but-uncaptured defi cells over the bounded window (`--start-date 2026-02-20`, the recent-honest-denominator
+window; full-history is the gated companion artifact, not this job). Verifying the seed count next.
 
 ROOT CAUSE (operator-pinned, confirmed against live `market-data-tick-defi-prd` `_index`): the IS expected-universe
 enumerator `_enumerate_defi()` iterated ALL `DATA_TYPES_BY_ASSET_GROUP["defi"]` — including CHAIN-LEVEL types — for
@@ -1382,44 +1467,46 @@ cells where defi didn't exist). Deferred follow-ups (all filed as todos):
 Continuation of the "backfill EVERYTHING" dispatch. Verified the running state from gcloud+GCS+manifest (NOT the stale
 dispatch text). Findings:
 
-- **PhaseA enumerator VM `expected-universe-v2-defi-20260622-122534` FAILED at setup** (`SETUP_EXIT_STATUS=2`, `uv pip
-  install` rc=2 transient; no run.log, never ran the enumerator) → self-deleted. It produced NOTHING.
+- **PhaseA enumerator VM `expected-universe-v2-defi-20260622-122534` FAILED at setup** (`SETUP_EXIT_STATUS=2`,
+  `uv pip install` rc=2 transient; no run.log, never ran the enumerator) → self-deleted. It produced NOTHING.
 - **But the daily Cloud Run Job `expected-universe-v2-defi` ran at 12:05Z** (`enum-universe-defi-20260622-120550`,
   SUCCEEDED) and **seeded 1,444,842 `empty_confirmed` rows in the LEGACY combined `venue=PROTOCOL-CHAIN` + blank-chain
   form** (e.g. `UNISWAPV3-ARBITRUM`) — the EXACT regression the prior driver's enumerator fix targeted. ROOT CAUSE: the
   Cloud Run `instruments-service:latest` image is `0.29.0/bca1231` (built 11:48Z) and the GCS tarball baked `2c6a71e`
   (0.30.0) — **both PREDATE the fix `42dd37c` (committed 12:20Z, on LDR)**. So the stale build re-emitted legacy-form
-  phantoms. These can NEVER convert vs canonical `venue=PROTOCOL`+`chain=X` captures → pure honest-cov DENOMINATOR poison
-  (dragged honest_cov_defi 10.67%→7.50%).
+  phantoms. These can NEVER convert vs canonical `venue=PROTOCOL`+`chain=X` captures → pure honest-cov DENOMINATOR
+  poison (dragged honest_cov_defi 10.67%→7.50%).
 - **Manifest snapshot** `_index/snapshots/pre_legacy_venue_phantom_delete_2026_06_22.parquet` (rollback).
 - **Added + APPLIED a surgical legacy-venue phantom DELETE** to
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (`--report-legacy-venue-defi-phantoms [--apply]`,
-  predicate `empty_confirmed AND venue contains '-' AND chain==''`, same guards as the chain-level delete — REFUSES if it
-  selects any non-empty_confirmed row / changes captured/failed totals). **DELETED 1,444,842 rows** (index
+  predicate `empty_confirmed AND venue contains '-' AND chain==''`, same guards as the chain-level delete — REFUSES if
+  it selects any non-empty_confirmed row / changes captured/failed totals). **DELETED 1,444,842 rows** (index
   5,287,366→3,842,524; captured 712,451 PRESERVED; attempted_failed 30,214 PRESERVED). **honest_cov_defi 7.50%→10.67%.**
 - ✅ verified: `_legacy_seed.parquet` per-VM shard = 10k captured (0 legacy) → won't re-merge. The enum-run per-VM shard
   was already consolidated+cleared.
 
 - [ ] [SCRIPT] P0. **PROMOTE enumerator fix `42dd37c` LDR→main on instruments-service so `:latest` image + GCS tarball
-      rebuild** — the daily Cloud Scheduler `expected-universe-v2-defi-daily` (01:30 UTC) runs the `:latest` image; while
-      that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The legacy-venue delete is
-      idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild. Repo: instruments-service.
-      Provenance: this Progress Log.
+      rebuild** — the daily Cloud Scheduler `expected-universe-v2-defi-daily` (01:30 UTC) runs the `:latest` image;
+      while that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The legacy-venue
+      delete is idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild. Repo:
+      instruments-service. Provenance: this Progress Log.
 
 The legacy-venue phantom DELETE tool shipped: instruments-service@7b6512c (`reconcile_phantom_manifest_rows_all.py`
 `--report-legacy-venue-defi-phantoms [--apply]`, QG green 82s, landed LDR). **Gap-analysis VERDICT** (measured from live
-`_index` post-delete): defi `empty_confirmed` is **99.8% genuine honest-absence** (1.86M `EXPECTED_INSTRUMENT_NOT_LISTED`
-+ 1.17M `EXPECTED_PRE_GENESIS_CHAIN`; only 5,710 `SOURCE_RETURNED_ZERO`). **ZERO recent (2024-26) empties carry a
-non-lifecycle reason** → no fetchable cells hiding as empty. 2025 captured-ratios are 90-99.9% for the core data_types
-(dex_pool_state 99.9 / dex_pool_swaps 99.9 / oracle_prices 97.6 / risk_params 99.4 / utilization 99.6 / dex_swaps 90.5).
-**So the low honest-cov % is STRUCTURALLY GENUINE** (could-exist grid dominated by pre-launch instrument×date cells) — the
-prior driver's "DeFi fetchable gap closed" was correct; the only real defect was the legacy-phantom denominator poison
-(now removed → 10.67%). NOT launching a redundant massive re-fetch fan-out (would re-OOM + waste quota on 99.9%-captured
-data). Remaining genuine work = 6.2k attempted_failed (Solana schema bugs + perp_funding + dex_swaps 404s) + 7 OOM'd
-year-shards (top-off tail) + the image-promote above.
+`_index` post-delete): defi `empty_confirmed` is **99.8% genuine honest-absence** (1.86M
+`EXPECTED_INSTRUMENT_NOT_LISTED`
 
-**OOM'd-shard audit (7 VMs exit 137, run.log persisted):** of the 7, the dex-swaps Q2/Q3 are **already COMPLETE** despite
-the OOM (manifest shows captured 91/92 distinct days each — the per-VM shard merged before the OOM-at-tail);
+- 1.17M `EXPECTED_PRE_GENESIS_CHAIN`; only 5,710 `SOURCE_RETURNED_ZERO`). **ZERO recent (2024-26) empties carry a
+  non-lifecycle reason** → no fetchable cells hiding as empty. 2025 captured-ratios are 90-99.9% for the core data_types
+  (dex_pool_state 99.9 / dex_pool_swaps 99.9 / oracle_prices 97.6 / risk_params 99.4 / utilization 99.6 / dex_swaps
+  90.5). **So the low honest-cov % is STRUCTURALLY GENUINE** (could-exist grid dominated by pre-launch instrument×date
+  cells) — the prior driver's "DeFi fetchable gap closed" was correct; the only real defect was the legacy-phantom
+  denominator poison (now removed → 10.67%). NOT launching a redundant massive re-fetch fan-out (would re-OOM + waste
+  quota on 99.9%-captured data). Remaining genuine work = 6.2k attempted_failed (Solana schema bugs + perp_funding +
+  dex_swaps 404s) + 7 OOM'd year-shards (top-off tail) + the image-promote above.
+
+**OOM'd-shard audit (7 VMs exit 137, run.log persisted):** of the 7, the dex-swaps Q2/Q3 are **already COMPLETE**
+despite the OOM (manifest shows captured 91/92 distinct days each — the per-VM shard merged before the OOM-at-tail);
 `mtds-dex-swaps-backfill` was the FULL 2021→2026 range in ONE VM (correctly superseded by the year-shards). Genuinely
 incomplete: lst-rates 2025-01 (17/31 days; rest pre-launch tokens), lending-indices 2025-03 (0 captured — OOM truncated
 before shard write), gas-fees 2024-01/2026-02 (0 captured — gas-fees is the MANTLE-paid-RPC long-pole, already
@@ -1428,22 +1515,24 @@ BLOCKED-CREDENTIALS). **NOT relaunching now: the fleet is at 329 RUNNING backfil
 lane.** Filed as targeted todos:
 
 - [ ] [DATA] P2. **DEFI top-off the 2 genuinely-incomplete non-gas OOM'd shards** — relaunch `collect-lending-indices`
-      2025-03 + `collect-lst-rates` 2025-01 on **e2-standard-8 --preemptible** (`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`,
-      freshness-skip makes it safe) once the tradfi fleet drains below the ≤40 concurrent cap. Marginal coverage
-      (lending-indices 2025-03 was writing real rows pre-OOM; lst-rates is a 13-token data_type). Repo: deployment-service.
-      Provenance: this Progress Log (OOM'd-shard audit).
+      2025-03 + `collect-lst-rates` 2025-01 on **e2-standard-8 --preemptible**
+      (`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, freshness-skip makes it safe) once the tradfi fleet drains below the
+      ≤40 concurrent cap. Marginal coverage (lending-indices 2025-03 was writing real rows pre-OOM; lst-rates is a
+      13-token data_type). Repo: deployment-service. Provenance: this Progress Log (OOM'd-shard audit).
 - [ ] [DATA] P2. **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
       failures (`RowSchemaValidationError` venue=KAMINO/ORCA/RAYDIUM/MARINADE: missing `ts_event`/`supply_rate`/
       `price_a`/etc — a HANDLER contract bug, not a backfill) + drift_v2 sig-index-missing (build via
       `build_drift_v2_sig_index.py`) + dex_swaps `404 GET` (1747) + perp_funding 424 + rewards 730. The 3,550
-      `phantom_captured_no_parquet_at_canonical_path` re-validate via `reconcile_phantom_manifest_rows_all.py --unphantom`.
-      Repo: market-tick-data-service. Provenance: this Progress Log (failed-cell breakdown).
-- [ ] [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** — `gcloud compute instances list --filter=status=RUNNING`
-      shows **329 RUNNING backfill VMs** (dominated by ~280 `tradfi-bf-cme-ohlcv-1m-*` year×contract shards launched by a
-      prior driver), far over the ≤40 concurrent cap. On-demand E2 quota=600 but this risks preemption cascades +
-      Actions/compute spend. Verify the tradfi swarm is draining (self-deleting on completion) + that none OOM'd silently;
-      if stalled, throttle. Repo: deployment-service (tradfi lane). Provenance: this Progress Log; this is a TradFi-lane
-      finding surfaced during the defi audit, not defi-blocking.
+      `phantom_captured_no_parquet_at_canonical_path` re-validate via
+      `reconcile_phantom_manifest_rows_all.py --unphantom`. Repo: market-tick-data-service. Provenance: this Progress
+      Log (failed-cell breakdown).
+- [ ] [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** —
+      `gcloud compute instances list --filter=status=RUNNING` shows **329 RUNNING backfill VMs** (dominated by ~280
+      `tradfi-bf-cme-ohlcv-1m-*` year×contract shards launched by a prior driver), far over the ≤40 concurrent cap.
+      On-demand E2 quota=600 but this risks preemption cascades + Actions/compute spend. Verify the tradfi swarm is
+      draining (self-deleting on completion) + that none OOM'd silently; if stalled, throttle. Repo: deployment-service
+      (tradfi lane). Provenance: this Progress Log; this is a TradFi-lane finding surfaced during the defi audit, not
+      defi-blocking.
 
 ### 2026-06-22 13:00 — DEFI 2nd defect found+fixed: 441k blank-asset_group captures (honest_cov 10.67%→18.66%)
 
@@ -1465,7 +1554,7 @@ The index-stamp is the re-runnable interim mitigation.
       column is populated elsewhere/not at all for defi captures) → every defi capture lands blank-ag. Trace where the
       `asset_group` column value is set on a captured row in UTL `manifest_writer/_writer_io.py`/`_rows.py` and ensure
       the defi handlers pass + persist it. Add a unit test asserting a defi `record_captured` row carries
-      `asset_group=defi`. Until fixed, re-run the index-stamp (`pre_asset_group_stamp_2026_06_22.parquet` snapshot is the
-      rollback). Repo: unified-trading-library (+ market-tick-data-service handler call sites). Provenance: this Progress
-      Log; cross-repo data-correctness — also affects cefi/tradfi/sports/prediction if their writers share the gap (audit
-      each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.**
+      `asset_group=defi`. Until fixed, re-run the index-stamp (`pre_asset_group_stamp_2026_06_22.parquet` snapshot is
+      the rollback). Repo: unified-trading-library (+ market-tick-data-service handler call sites). Provenance: this
+      Progress Log; cross-repo data-correctness — also affects cefi/tradfi/sports/prediction if their writers share the
+      gap (audit each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.**
