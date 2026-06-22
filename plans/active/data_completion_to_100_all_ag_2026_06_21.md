@@ -1300,3 +1300,15 @@ dispatch text). Findings:
       that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The legacy-venue delete is
       idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild. Repo: instruments-service.
       Provenance: this Progress Log.
+
+The legacy-venue phantom DELETE tool shipped: instruments-service@7b6512c (`reconcile_phantom_manifest_rows_all.py`
+`--report-legacy-venue-defi-phantoms [--apply]`, QG green 82s, landed LDR). **Gap-analysis VERDICT** (measured from live
+`_index` post-delete): defi `empty_confirmed` is **99.8% genuine honest-absence** (1.86M `EXPECTED_INSTRUMENT_NOT_LISTED`
++ 1.17M `EXPECTED_PRE_GENESIS_CHAIN`; only 5,710 `SOURCE_RETURNED_ZERO`). **ZERO recent (2024-26) empties carry a
+non-lifecycle reason** → no fetchable cells hiding as empty. 2025 captured-ratios are 90-99.9% for the core data_types
+(dex_pool_state 99.9 / dex_pool_swaps 99.9 / oracle_prices 97.6 / risk_params 99.4 / utilization 99.6 / dex_swaps 90.5).
+**So the low honest-cov % is STRUCTURALLY GENUINE** (could-exist grid dominated by pre-launch instrument×date cells) — the
+prior driver's "DeFi fetchable gap closed" was correct; the only real defect was the legacy-phantom denominator poison
+(now removed → 10.67%). NOT launching a redundant massive re-fetch fan-out (would re-OOM + waste quota on 99.9%-captured
+data). Remaining genuine work = 6.2k attempted_failed (Solana schema bugs + perp_funding + dex_swaps 404s) + 7 OOM'd
+year-shards (top-off tail) + the image-promote above.
