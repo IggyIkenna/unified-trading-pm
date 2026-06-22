@@ -355,7 +355,7 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
         constants now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the
         lenient `try/except`-on-bad LIVENESS read is now fail-loud; deleted the orphaned `DEFAULT_INTERVAL_SECONDS`
         + dropped the dead `_WATCHDOG_ENABLED_ENV`/`import os`. +5 config-bounds/BoolEnvFalse tests.
-  - [ ] **Wave 3 — daemon/loop tunables** (3a+3b shipped; 3c remaining):
+  - [x] ✅ **Wave 3 — daemon/loop tunables** (3a+3b+3c all shipped 2026-06-22):
     - [x] ✅ **3a — autospawn.py** (`agent-orchestrator@b955bb5`, QG ✓): interval/cooldown/enabled/five-hour+weekly
           pct-ceilings/review-heartbeat-override onto typed fields; pct ceilings bounded 0..100; deleted `_env_pct` +
           2 orphaned DEFAULT_*; **flipped `test_ceiling_helpers_bad_env_falls_back` → `_fails_loud`** (the operator's
@@ -363,8 +363,11 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
     - [x] ✅ **3b — main_agent_keeper / failover / escalation / tmux_pruner / creds_env_poller / usage_poller**
           (`agent-orchestrator@2aa92af`, QG ✓): ~17 knobs typed; added `BoolEnvTrue` for default-on flags
           (escalation watchdog, usage TUI reconcile); deleted 6 orphaned `DEFAULT_*` dupes (runtime SSOT = config).
-    - [ ] **3c — tmux_spawn.py + regen_backlog_from_plan.py** (spawn-timeout/paste-settle/worker-mem/host/config-base
-          + pm-repo-path/regen-require-vm-match/prune-stale/db-path).
+    - [x] ✅ **3c — tmux_spawn.py + regen_backlog_from_plan.py** (`agent-orchestrator@f1cec7f`, QG ✓): 10 knobs typed
+          (spawn/paste timeouts gt=0/ge=0, worker mem/swap/host, claude-config-base, pm-repo-path, plan-regen interval,
+          require-vm-match, prune-stale, db-path); deleted orphaned `_PASTE_SETTLE_DEFAULT_S`; **flipped
+          `test_paste_settle_bad_value_falls_back` → `_fails_loud`**; `test_planregenloop_reads_prune_stale_env` now
+          `reset_config()`s between its two constructions (singleton contract: prod reads config once at startup).
   - [ ] **Wave 4 — cloud/identity reads**: `GCP_PROJECT_ID`/`GOOGLE_CLOUD_PROJECT` via the UnifiedCloudConfig base,
         `ORCHESTRATOR_GH_OWNER`, `*_BUCKET`, `ORCHESTRATOR_VM_ID`/host/public-URL across `routes/`, `slack.py`,
         `gcs_sync.py`, `escalation.py`, `ci_reconcile.py`, workspace-root reads.
@@ -377,10 +380,11 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
   > **Progress Log (autonomous loop — this IS the handoff doc; no summary file).** Slot model = one shared clone per
   > repo, so AO waves run **serially** (shared git index; background agents would race on commit) — different-repo /
   > read-only fan-out is the only safe parallelism here. Shipped 2026-06-22: Wave 1 @ `86abf79`; Wave 2 @ `2fe6266`;
-  > Wave 3a @ `b955bb5`; Wave 3b @ `2aa92af`. ~67 of 107 knobs typed so far; 3c (tmux_spawn+regen) + Wave 4
-  > (cloud/identity) + Wave 5 (secrets+logging) + Wave 6 (audit) remain. Note: `test_tick_invokes_review_ensure` fails
-  > when run ALONE (pre-existing DB-engine-caching isolation quirk — relies on a sibling creating tables first); the
-  > FULL suite is green (856 passed), which is the QG authority.
+  > Wave 3a @ `b955bb5`; Wave 3b @ `2aa92af`; Wave 3c @ `f1cec7f`. **Waves 1–3 DONE (~77 of 107 reads typed).** Remaining:
+  > Wave 4 (cloud/identity: VM_ID/GH_OWNER/buckets/workspace/slot-branch/host/public-URL across routes/slack/gcs_sync/
+  > server) + Wave 5 (secrets via get_secret_client: auth.py JWT/INTERNAL/GCS, GH_APP_CI_POLLER, slack webhook; 2
+  > basicConfig) + Wave 6 (audit). Note: `test_tick_invokes_review_ensure` fails when run ALONE (pre-existing
+  > DB-engine-caching isolation quirk — relies on a sibling creating tables first); FULL suite green (856), the QG authority.
 - [x] ✅ [AGENT] P3. **unified-trading-api** — DONE `unified-trading-api@e3fbd8d` (QG 0). `routes/chat.py`
       `ANTHROPIC_API_KEY` now via `UnifiedCloudConfig().get_secret("anthropic-api-key")` (name confirmed from
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
