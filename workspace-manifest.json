@@ -423,7 +423,13 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "coverage_pct": 84.01,
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "warn_file_count": 17
+      }
     },
     "features-service": {
       "type": "service",
