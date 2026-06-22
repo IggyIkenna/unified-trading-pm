@@ -590,6 +590,25 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
 
 ## Progress Log
 
+### 2026-06-22 — GAP (operator): paper trading is DAILY-recon + 15-min-signal, NOT continuous/block-level
+
+Operator: even for PAPER we want >daily (block-level) trade/position updates + UI at that rate. Found: the deployed
+paper engine is PRODUCTION `strategy-service:latest` (NOT e2e-testing; e2e has only the run-paper.sh smoke). Cadence:
+`uts-prod-paper-engine-run-cron 0 2 * * *` (DAILY, `--mode paper --rolling-days 7`, `purpose=paper-week-determinism`
+= the citadel paper==batch ε=0 RECONCILIATION, not a live trader) + `paper-signal-engine-15m */15`. So paper trades/
+positions update 15-min (signals) / daily (recon), NEVER block-level.
+Cadence cascade for block-level paper (the operator vision): (1) continuous market data [DeFi daily-batch gap above];
+(2) a CONTINUOUS/streaming paper engine consuming the live tick/block stream + booking positions per-tick — distinct
+from the daily determinism job; (3) UI (DART/deployment-ui) streaming trade/position updates at that rate. None exist
+today. Relates to citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; this is the LIVE-
+continuous companion).
+
+- [ ] [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — beyond the daily determinism run: a
+  streaming strategy-service paper mode that consumes the live market-data stream (per CeFi live VMs + the new DeFi
+  continuous capture) and books trades/positions per-tick, emitting block-level updates the UI (DART) renders live.
+  Depends on the DeFi continuous-data P1. Repos: strategy-service + unified-trading-system-ui + deployment-service.
+  SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md (determinism) + this (live-continuous).
+
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
 Operator caught it: DeFi live market-data = `uts-prod-mtds-collect-{dex-swaps,dex-pools,oracle-prices,evm-defi,
