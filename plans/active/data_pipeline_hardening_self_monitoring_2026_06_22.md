@@ -245,15 +245,12 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       builders). **Path-canonicality validator** `is_canonical(path)` in UAC (today `partition_paths.py` only BUILDs):
       parse a GCS path and assert it matches the canonical builder output for its AG/pipeline_mode/schema. Closes C3.
       Reused by the hygiene orchestrator AND the Phase 4 writer-side assert. — **unified-api-contracts**
-- [~] **Reader/writer bucket-env parity check** (closes C6) — BUILT + QG-GREEN, landing GATED on UAC clean: shipped to
-  `origin/wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622@32e8b6e`
-  (`scripts/quality_gates/check_reader_writer_bucket_parity.py`, QG STEP 5.91, warn-only ratchet). Quickmerge to LDR was
-  dirty-dep-blocked (live peer editing UAC). **It FOUND 8 GENUINE C6 reader bugs** (env-less
-  `build_bucket`/`get_bucket_name` reads vs env-short `-prd-` writers → stale-read → false honest-absence →
-  zero-capture; the defi-6% class) — captured as the todo below. **TO LAND**: when UAC is clean,
-  `git show origin/wip-preserve/…:<path>` into a clean MTDS worktree off origin →
-  `quickmerge --agent --files     'scripts/quality-gates.sh scripts/quality_gates/check_reader_writer_bucket_parity.py'`.
-  — **market-tick-data-service**
+- [x] ✅ **Reader/writer bucket-env parity check** (closes C6) — DONE `market-tick-data-service@0eee1ab` (QG STEP 5.91,
+      `scripts/quality_gates/check_reader_writer_bucket_parity.py`, warn-only ratchet). LANDED once the dep window
+      opened (UAC/UTL clean). **It FOUND 8 GENUINE C6 reader bugs** (env-less `build_bucket`/`get_bucket_name` reads vs
+      env-short `-prd-` writers → stale-read → false honest-absence → zero-capture; the defi-6% class) — filed as the P1
+      todo below; the defi lane already fixed one (`mtds@059df5f`, live IS-universe reader). —
+      **market-tick-data-service**
 - [~] [CODE] P1. **Fix the 8 C6 reader-bucket-env bugs** the parity check found — **7 of 8 SHIPPED on origin/LDR**
   (`market-tick-data-service@fbac3a9`, swept in via the peer's keystone-threading quickmerge): all sites aligned to
   `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (env-short `-prd-`, the IS writers'
@@ -285,11 +282,10 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 > scripts run from `e2e-testing/scripts/audit/`, are read-only over the manifest/GCS, emit `DP_*` via UTL `log_event`,
 > and write candidate CSVs + issue docs to the PM clone.
 
-- [~] **Wire the three audit scripts into MTDS QG (STEP 5.90, not 5.89 — 5.89 already taken on origin)** — BUILT +
-  QG-GREEN (all 3 audits support `--smoke`, all smoke-passed; `_dp_common.py` lint-only), landing GATED on UAC clean:
-  shipped to `origin/wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622@32e8b6e`. Mirrors STEP 5.88 (ruff + `--smoke`
-  warn-only, `QG_BLOCK_NETWORK`/`CLOUD_BUILD` guard). Lands with the bucket-parity check above (same wip branch, same
-  quickmerge once UAC clean). — **market-tick-data-service**
+- [x] ✅ **Wire the three audit scripts into MTDS QG (STEP 5.90, not 5.89 — 5.89 already taken on origin)** — DONE
+      `market-tick-data-service@0eee1ab`. All 3 audits support `--smoke` (smoke-passed); `_dp_common.py` lint-only.
+      Mirrors STEP 5.88 (ruff + `--smoke` warn-only, `QG_BLOCK_NETWORK`/`CLOUD_BUILD` guard). Landed with the
+      bucket-parity check when the dep window opened. — **market-tick-data-service**
 - [x] ✅ [INFRA] P1. **Schedule the three daily-audit crons** — DONE `deployment-service@7b84146`
       (`terraform/gcp/data_pipeline_audit_scheduler.tf`: 4 Cloud Run Jobs + 4 Cloud Scheduler crons mirroring
       `cf_manifest_audit_scheduler.tf` — runtime SA `unified_trading`, invoker `t1_batch`, env
@@ -600,8 +596,8 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Reship + batch-heartbeat residual (tracked todos — 2026-06-22 reship run)
 
-- [x] ✅ [CODE] P1. **Land the MTDS `TickDataHandler` batch-loop heartbeat** — DONE
-      **market-tick-data-service@e7177bd** (version-align cleared `aligned:True` → shipped via
+- [x] ✅ [CODE] P1. **Land the MTDS `TickDataHandler` batch-loop heartbeat** — DONE **market-tick-data-service@e7177bd**
+      (version-align cleared `aligned:True` → shipped via
       `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'`; QG content-sentinel
       verified byte-identical Pass-1 green, STAGE 0.4 FF-reconciled `26202e129→059df5f8a` cleanly, landed LDR). Adds
       `_emit_date_heartbeat` + per-date `emit_pipeline_heartbeat` in the generic CeFi/TradFi/multi-AG backfill loop
@@ -633,24 +629,44 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   (MTDS QG 5.90/5.91, e2e Dockerfile, deployment var) couldn't quickmerge; preserved + recover-documented, land on the
   next clean-deps window.
 - **2026-06-22 RESIDUAL CLOSE-OUT (autonomous /autonomous run, slot-0·human-planning, Opus 4.8)** — operator: the semver
-  version-alignment lag that blocked the 2 residuals is CLEARED (`check-dependency-alignment.py --json` → `aligned:True`,
-  verified on entry). **Residual-1 (MTDS batch-heartbeat) DONE** — `market-tick-data-service@e7177bd` via
-  `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'` (QG content-sentinel
+  version-alignment lag that blocked the 2 residuals is CLEARED (`check-dependency-alignment.py --json` →
+  `aligned:True`, verified on entry). **Residual-1 (MTDS batch-heartbeat) DONE** — `market-tick-data-service@e7177bd`
+  via `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'` (QG content-sentinel
   byte-identical Pass-1 green; STAGE 0.4 FF-reconciled `26202e129→059df5f8a` cleanly; landed origin/LDR — grep-verified
-  4 heartbeat markers). The 8th-C6 fix also landed on LDR in the same window (`059df5f` — live-hardening lane). **Residual-2
-  (reship sports+prediction live) IN PROGRESS** — rebuilt the code tarball from **CLEAN detached worktrees off
-  origin/LDR** (`/tmp/clean-ldr-wt-*`, NOT the dirty workspace clones: workspace MTDS had peer one-off
+  4 heartbeat markers). The 8th-C6 fix also landed on LDR in the same window (`059df5f` — live-hardening lane).
+  **Residual-2 (reship sports+prediction live) IN PROGRESS** — rebuilt the code tarball from **CLEAN detached worktrees
+  off origin/LDR** (`/tmp/clean-ldr-wt-*`, NOT the dirty workspace clones: workspace MTDS had peer one-off
   `migrate_onchain_perp` + untracked `run_polymarket_v9_rewalk.sh` dirty), CORE+IS scope, uploaded 17:56 UTC;
   **grep-PROOF on the shipped `mtds-code.tar.gz`**: tick_data_handler heartbeat=4 + websocket_runner heartbeat=2 (the
   `./`-prefixed tar paths confirmed). Gracefully DELETED the 5 PRE-17:16 live producers (sports-odds + 4 prediction
   shards — frees singleton lock + WS feed; confirmed all 5 gone) then relaunching all 5 on the hardened tarball via
   `launch-mtds-live.sh` (sports `sports:odds_api:trades`, 5 EPL/La-Liga/Serie-A/Bundesliga/Ligue-1 leagues) +
   `launch-prediction-live.sh` (POLYMARKET/KALSHI × trades/book_snapshot_5). T+10min verification pending.
-- [ ] [DATA] P2. **Investigate why tradfi CME live trades aren't flushing candle-windows** (0 captured rows on
-      `mtds-live-tradfi-cme-trades-*` despite databento WS authenticated + subscribed to ES/NQ/CL/GC trades) — so the
-      live producer emits `PIPELINE_HEARTBEAT` (gated on first window flush) + actually captures. Pre-existing (old VM
-      same pattern), NOT a hardening defect; likely no/low trade-tick flow in-window or a window-boundary/flush-trigger
-      gap. Surfaced by the re-ship verification 2026-06-22. — market-tick-data-service
+- [x] ✅ [DATA] P0. **ROOT-CAUSED + FIXED — tradfi CME live captured 0 rows** (`market-tick-data-service@a808ae9` + test
+      fix). The databento WS authenticated + subscribed but **never streamed**: `databento_tradfi_ws.py` gated
+      `live.start()` behind `if not live.is_connected:` — but `subscribe()` already connects, so `is_connected` is True
+      → `start()` (the call that actually delivers records to the callback) **never ran**. basedpyright even flagged it
+      (`reportUnnecessaryComparison: expression always evaluates to True`). **Proven**: a standalone databento Live
+      probe with the IDENTICAL subscription (GLBX.MDP3 trades, `stype_in=parent` ES/NQ/CL/GC.FUT) got **254 TradeMsg +
+      2637 SymbolMappingMsg in 15s** during open CME Monday hours — so market/databento/subscription were all fine; the
+      bug was purely the un-called `start()`. Fix: guard `start()` on a `self._started` flag (call once after first
+      subscribe, idempotent on re-subscribe) instead of `is_connected`. A unit test that _codified the bug_
+      (`...skips_start_when_already_connected`) was rewritten to assert the correct contract. This was a NEVER-WORKED
+      bug (the prior "verified working" only checked connect+auth, not capture). Live producer redeployed on the
+      fix-included tarball to confirm capture grows. — market-tick-data-service
+
+- **2026-06-22 run #2 CME-FLUSH ROOT-CAUSE + WIP-LANDING (slot-0·human-planning, Opus 4.8)** — operator: "dig into cme
+  flush then check wip." (1) **CME 0-capture = a never-worked databento-Live bug** (NOT market/databento/re-ship):
+  `databento_tradfi_ws.py` called `live.start()` only `if not live.is_connected`, but `subscribe()` connects first so
+  the guard was always False → `start()` never ran → authenticated-but-silent stream. A controlled 15s databento probe
+  (identical subscription) got 254 trades → proved the data flows; the producer just never started streaming. Fixed
+  (`a808ae9`, guard on `self._started`) + rewrote the unit test that codified the bug + redeployed (verification agent
+  in flight). (2) **Wip-landings — dep window opened** (UAC/UTL went clean): landed **MTDS QG 5.90/5.91 +
+  bucket-parity** (`0eee1ab`) via the canonical-clone quickmerge (the connector fix proved that path works again). The
+  **e2e Dockerfile + deployment-image var still gated** — their quickmerge is blocked by `strategy-service` (peer-dirty,
+  can't commit others' WIP); preserved on `wip-preserve/e2e-audit-image-2026-06-22` +
+  `wip-preserve/dp-audit-image-var-2026-06-22`, land on the next strategy-service-clean window. The defi lane meanwhile
+  fixed one of the 8 C6 bugs (`059df5f`).
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
