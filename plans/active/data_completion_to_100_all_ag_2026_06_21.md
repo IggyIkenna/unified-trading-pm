@@ -505,6 +505,18 @@ venue coords exist, etc.); genuine-no-coverage cells typed-empty + excluded. Mon
 exit-aware) + bmsfjnewh (sfi-progressive) wake on completion/problem. Open P1 fix before relabel: footystats-odds source
 mislabel (FS predictions+matches land; only odds blocked).
 
+### 2026-06-22 ~13:45 — P1 fix DRAFTED-BUT-INCOMPLETE (preserved to branch) + P0 scheduler PAUSED
+
+**P0 (DONE — re-poison blocked):** `gcloud scheduler jobs pause expected-universe-v2-defi-daily --location=asia-northeast1` → PAUSED. The `30 1 * * *` UTC job ran a STALE image (pre IS@42dd37c — the canonical-venue enum fix is on LDR/staging, NOT main/:latest) that re-seeds ~1.44M legacy-venue (`PROTOCOL-CHAIN`/blank-chain) phantom empties nightly (drops honest_cov_defi 18.66%→~7.5%). Pausing stops it definitively; the legacy-venue DELETE (IS@7b6512c) is re-runnable interim mitigation.
+
+- [ ] [DEPLOY] P0. **Resume `expected-universe-v2-defi-daily`** once IS@42dd37c is on `main` + the `expected-universe-v2-defi` Cloud Run image is rebuilt past it (VERIFY deployed image SHA post-dates 42dd37c first). `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`. Currently PAUSED 2026-06-22.
+- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator); pause+delete+canonical-reseed per-AG if found.
+
+**P1 (DRAFTED, NOT shipped — INCOMPLETE):** the UTL writer fix was started (asset_group field on `AvailabilityRecord`, `MissingAssetGroupError`, serializer + call-site wiring) but the agent died (transient API rate-limit) BEFORE writing the `_resolve_asset_group` IMPLEMENTATION — `_core.py` has only the abstract `raise NotImplementedError`, so all 193 captured-write tests fail with `NotImplementedError`. NOT shippable as-is (would break every capture fleet-wide). **WIP preserved + pushed: `origin/wip-preserve/asset-group-writer-fix-2026-06-22` (unified-trading-library).** UTL LDR tree restored clean (the broken WIP is NOT on the integration branch). Manifest is currently correct for defi (441k existing blanks already stamped); new captures still leak blank until this ships — re-run the per-AG stamp as interim mitigation.
+
+- [ ] [LIBRARY] P1. **Complete + ship the UTL asset_group writer fix.** Resume from `origin/wip-preserve/asset-group-writer-fix-2026-06-22`. Write `_resolve_asset_group` in `ManifestWriterIngestMixin` (per the `_core.py` docstring): caller `asset_group` kwarg → UAC `VENUE_TO_ASSET_GROUP[venue]` self-heal → blank; RAISE `MissingAssetGroupError` ONLY on a CAPTURED market-data row (venue+data_type, no feature_group) that resolves blank; features/ML/strategy/service rows EXEMPT (stay ""). Reconcile the 193 failing tests (verify their venues resolve via VENUE_TO_ASSET_GROUP or add asset_group kwarg; the `*_does_not_raise` tests must stay non-raising). QG-green, add a ratchet asserting captured rows stamp asset_group, ship via quickmerge. Target: unified-trading-library (T0 — all 5 AGs benefit). Verify VENUE_TO_ASSET_GROUP exists in UAC + covers the live venues first.
+- [ ] [DATA] P1. **Per-AG backfill-stamp existing blank-asset_group rows** (after the writer fix ships): sports 1,231,203 / tradfi 933,550 / cefi 179,330 / prediction 74,165 / defi 12,142 (the bucket IS the AG → unambiguous). Snapshot each `_index` first; assert captured/rowcount preserved; `gcs_*` ops not gsutil; reuse the defi stamp pattern. Target: instruments-service reconcile tool.
+
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
 Operator dispatch (autonomous): defi captures write manifest rows with BLANK `asset_group`; a prior one-off stamped 441k
