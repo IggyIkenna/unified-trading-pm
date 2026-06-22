@@ -1178,7 +1178,13 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "coverage_pct": 90.02,
+        "qg_red_reason": null,
+        "large_file_count": 4,
+        "warn_file_count": 18
+      }
     },
     "unified-trading-pm": {
       "type": "devops",
