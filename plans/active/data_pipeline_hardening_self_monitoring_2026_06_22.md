@@ -316,17 +316,19 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       the divergence oracle). The REMAINING ~13,760 are NOT pre-collection — they split into the two real-gap classes
       below. — **unified-api-contracts**
 - [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY real-gaps (13,760, 2 classes) — backfill OR handler↔oracle data_type
-      reconciliation (C2/C3)** — **RE-VERIFIED 2026-06-22 (post-coverage_start-fix re-run of `detect_manifest_divergence.py
-      --asset-group defi` on the live prod `_index`): 22,140 → 13,760 confirmed (−8,380 clip by UAC@bfe6736b), MAX DATE
-      2025-11-18, ZERO in the operational window (≥2025-11-19) — all historical, NOT blocking. The 13,760 are exactly the
-      two classes: name-drift [AAVE_V3 position_data/liquidation_events/flash_loan_events ×1063 each, MORPHO
+      reconciliation (C2/C3)** — **RE-VERIFIED 2026-06-22 (post-coverage_start-fix re-run of
+      `detect_manifest_divergence.py     --asset-group defi` on the live prod `_index`): 22,140 → 13,760 confirmed
+      (−8,380 clip by UAC@bfe6736b), MAX DATE 2025-11-18, ZERO in the operational window (≥2025-11-19) — all historical,
+      NOT blocking. The 13,760 are exactly the two classes: name-drift [AAVE_V3
+      position_data/liquidation_events/flash_loan_events ×1063 each, MORPHO
       risk_params/position_data/liquidation_events/lending_indices, COMPOUND_V3] + never-collected/out-of-MVP
       [STAKEWISE/STADER staking_yields, STARGATE/ACROSS bridge_events, ALCHEMY token_transfers/gas_fees, ASTER/GMX
       perp_funding, FLASHBOTS mev_events, PYTH oracle_prices, AAVE governance_events]. Candidate CSV regenerated:
       `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). Stays a tracked campaign
-      (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).** — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the
-      post-coverage*start residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a)
-      data_type NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
+      (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).** — the 2026-06-22 triage (divergence
+      CSV + measured first-capture cross-ref) split the post-coverage*start residual into two REAL classes, all
+      historical (≤2025-11-18, 0 in operational window): **(a) data_type NAME-DRIFT (~5–6k cells)** —
+      AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
       (`\_DEFI_LENDING*\*\_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/     `lending_indices`but the manifest CAPTURED`liquidations`/`rate_indices`/`utilization`(legacy    `liquidations_handler.py`still exists alongside`liquidation_events_handler.py`; MORPHO subgraph emits     `rate_indices`/`utilization`not the AAVE-style names). The data EXISTS under a different data_type name → diagnose     both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or correct the     oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real gaps (~7k     cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS`bridge_events`, PYTH     `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,     ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields`— the adapter never ran a historical backfill,     OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the     carry_staked_basis/arbitrage_price_dispersion data needs). Decision per venue: real-MVP-need → defi MTDS     historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to    `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED`or trim the oracle scope. Candidate CSV:    `plans/audit/results/divergence_2026-06-22.csv`
       (filter classification=DIVERGENT_EMPTY). — **unified-api-contracts, market-tick-data-service**
 - [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
@@ -922,6 +924,19 @@ items:
       rows until it finishes/self-deletes; the consolidator fix heals them every `*/1` cycle once the consolidator image
       rebuilds from `main` (the durable guarantee — no manual re-stamp needed thereafter). — unified-trading-library
 
+- **2026-06-22 unfillable-cell reclassification (slot-0·human-planning, Opus 4.8)** — operator: "class unfillable or
+  mass-enter as empty_confirmed with reason." Investigated the tradfi `expected_unattempted` by venue + the databento
+  3-dataset allowlist (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH). **ICE (530,600 cells) is genuinely unfillable** (out of
+  subscription — no databento dataset, not Barchart/Yahoo) → in-place re-classified to
+  `empty_confirmed`/`error_reason=EXPECTED_NO_PROVIDER_COVERAGE` (snapshot `pre_ice_reclassify_2026_06_22.parquet`,
+  GATE-passed: rows + captured unchanged). **Honest coverage 68.4%→76.2%** (cell-grain ~84%→higher). Deliberately LEFT:
+  CME/NYSE/NASDAQ (databento-fillable gaps the wave-launcher works), **CBOE (1,930 = VIX/SPX _index_ cells, fillable by
+  Barchart/Yahoo — a different source, not databento)**, **FX (3,228 spot pairs, already source-stamped
+  massive/databento — ambiguous, marking would hide a real gap)**. **RESIDUAL**: the wave-launcher (databento-only)
+  can't fill CBOE-index/FX (~5,158 cells), so its `expected_unattempted==0` completion check should SCOPE to
+  databento-fillable venues (or those get their own Barchart/Yahoo backfill) — else it never reads 0. Follow-up. —
+  market-tick-data-service
+
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
 - [ ] [CODE] P0. **DeFi agent**: thread `fetch_evidence` into all 9 defi MTDS handlers + IS catalog path;
@@ -1312,39 +1327,39 @@ dispatch prompts.
   Cloud Build rebuilds (digest-aware `5907886`) → 3 DP monitors get hardened code on next \*/5. Did NOT force-merge (the
   required check genuinely has not run; forcing past a real infra-blocked gate is banned). Monitor armed (event-driven,
   wakes on PR#166 terminal OR a v2 run executing >0 steps).
-- **🔴 BLOCKER RE-DIAGNOSED + SHARPENED 2026-06-22 ~22:25Z (slot·human-planning, Opus 4.8, /autonomous) — still down 3h+,
-  now points to an ACCOUNT-LEVEL Actions spend cap, NOT a transient runner flake (needs operator billing action):**
+- **🔴 BLOCKER RE-DIAGNOSED + SHARPENED 2026-06-22 ~22:25Z (slot·human-planning, Opus 4.8, /autonomous) — still down
+  3h+, now points to an ACCOUNT-LEVEL Actions spend cap, NOT a transient runner flake (needs operator billing action):**
   re-checked PR#166 (v2 run 27987650739, head ebfe6e3) + a FRESH `workflow_dispatch` v2 on deployment-service LDR
-  (27987901509) + MTDS LDR (27987902953) — ALL fail at job-setup in 2-3s, steps=0, no retrievable log (job-log blob
-  404s = the job never produced output). **Decisive new evidence it is GitHub-side, not code:** (1) on BOTH
+  (27987901509) + MTDS LDR (27987902953) — ALL fail at job-setup in 2-3s, steps=0, no retrievable log (job-log blob 404s
+  = the job never produced output). **Decisive new evidence it is GitHub-side, not code:** (1) on BOTH
   deployment-service + MTDS, **EVERY workflow** fails identically at setup — not just v2: `Staging Lock Check`,
   `Plan Alignment Agent`, `staging-backmerge-to-ldr`, `main-backmerge-to-ldr` all 0-step/2-3s/no-log; (2) a clean abrupt
   GREEN→100%-FAIL cliff (deployment-service last green = `Staging Lock Check` 19:31:17Z; MTDS last v2 green 19:13Z) — a
-  code regression cannot make *unrelated* workflows fail at setup simultaneously; (3) the IDENTICAL `quality-gates-v2`
+  code regression cannot make _unrelated_ workflows fail at setup simultaneously; (3) the IDENTICAL `quality-gates-v2`
   reusable template is GREEN right now on the smaller/less-active repos (alerting-service, e2e-testing both `success`);
   (4) the failure concentrates on the two HIGHEST-Actions-minute repos (deployment-service + MTDS) — the classic
   signature of a **GitHub Actions spending-limit / quota exhaustion** hitting the biggest consumers first. **ROOT CAUSE
   (highest-confidence): the IggyIkenna account's GitHub Actions spend cap is exhausted (or an org Actions setting was
   toggled) ~19:30Z.** This is genuinely OUTSIDE code-fixable scope. **OPERATOR ACTION REQUIRED (the only unblock):**
-  raise / clear the GitHub Actions spending limit at github.com → Settings → Billing → Plans and usage → Actions
-  (or confirm a GH Actions incident). The moment runners are restored, the Tier-C `ldr-to-staging-promote` bot's next
+  raise / clear the GitHub Actions spending limit at github.com → Settings → Billing → Plans and usage → Actions (or
+  confirm a GH Actions incident). The moment runners are restored, the Tier-C `ldr-to-staging-promote` bot's next
   ~15-min tick re-fires v2 → passes (code is locally QG-green) → PR#166 merges → main → deployment-api Cloud Build
-  rebuild (`5907886`) → 3 DP monitors hardened. NOT force-merged (a never-run required check cannot be bypassed, and
-  the carve-out for `.github/**` does not cover merging past a billing-blocked gate). Classified **BLOCKED-UPSTREAM
-  (GitHub Actions account infra / spend cap)** — composes with the existing armed monitor above.
-- [ ] [INFRA] P1. **BLOCKED-UPSTREAM (GitHub Actions account spend cap, ~19:30Z 2026-06-22) — deployment-api +
-      MTDS#309 promote PRs jammed.** Operator: raise/clear the GitHub Actions spending limit (Settings → Billing →
-      Actions) OR confirm a GH incident. Code is locally QG-green; the promote bot auto-merges on the first green v2 once
-      runners return → deployment-api Cloud Build rebuild (digest `5907886`) follows automatically. No code change owed.
-      — deployment-service, market-tick-data-service (operator/billing)
+  rebuild (`5907886`) → 3 DP monitors hardened. NOT force-merged (a never-run required check cannot be bypassed, and the
+  carve-out for `.github/**` does not cover merging past a billing-blocked gate). Classified **BLOCKED-UPSTREAM (GitHub
+  Actions account infra / spend cap)** — composes with the existing armed monitor above.
+- [ ] [INFRA] P1. **BLOCKED-UPSTREAM (GitHub Actions account spend cap, ~19:30Z 2026-06-22) — deployment-api + MTDS#309
+      promote PRs jammed.** Operator: raise/clear the GitHub Actions spending limit (Settings → Billing → Actions) OR
+      confirm a GH incident. Code is locally QG-green; the promote bot auto-merges on the first green v2 once runners
+      return → deployment-api Cloud Build rebuild (digest `5907886`) follows automatically. No code change owed. —
+      deployment-service, market-tick-data-service (operator/billing)
 - [ ] [INFRA] P2. **client-reporting-api:latest is LAGGING (A4 not in any image) — BLOCKED-UPSTREAM (same GH Actions
       spend cap).** Verified 2026-06-22: A4 (`client-reporting-api@6b6df25`, deployment-api URL from typed config) is on
       LDR but NOT main; the CRA AR repo's newest image is 2026-06-21 (`pnl-timeseries-ce1bd5f`) — predates A4. CRA shows
       the SAME GREEN→fail Actions cliff (green ≤18:49Z, backmerge/promote fails from 20:02Z). The `:latest` rebuild is
       driven by the v2 `push:[main]` → PM `cloud-build-router` dispatch, which is blocked with the rest. A4 is a
       citadel-polish (typed deployment_api_url), NOT May-23 critical-path → low urgency. Unblocks automatically with the
-      operator billing fix above (A4 promotes to main → Cloud Build rebuild). No code change owed. — client-reporting-api
-      (operator/billing)
+      operator billing fix above (A4 promotes to main → Cloud Build rebuild). No code change owed. —
+      client-reporting-api (operator/billing)
 
 ## Progress Log — 60s background-timer heartbeat (per-chunk → time-based) SHIPPED (2026-06-22)
 
@@ -1545,12 +1560,12 @@ dispatch prompts.
 
 - **RESUME-RUN start**: resolved a stranded interactive-rebase conflict in this plan file (the `bcf6f118c` MDPS-flip
   commit was mid-rebase with 4 conflict regions + nested `Stashed changes`/`Updated upstream` orphan markers). Kept the
-  more-recent ✅-DONE side for the coverage_start (UAC@bfe6736b) + reprobe_defi (e2e@4cfbbf1) items + the prettier-wrapped
-  Progress-Log text; verified zero markers remain; `git rebase --continue` → PM@657cff2dc pushed to LDR (docs(plans)
-  carve-out). **Item #1 (MDPS asset_group re-blank) was already SHIPPED** — UTL@7b2306c3 (consolidator self-heals
-  blank/absent asset_group at merge time, ancestor of origin/LDR) + the guarded re-stamp (defi 79,689 + cefi 2,297,
-  snapshot `_index/snapshots/pre_mdps_ag_restamp_2026_06_22.parquet`); the root cause was a stale pre-v9 tarball VM, NOT
-  an MDPS writer bug, so the durable fix is the consolidator self-heal, not a per-writer column add.
+  more-recent ✅-DONE side for the coverage_start (UAC@bfe6736b) + reprobe_defi (e2e@4cfbbf1) items + the
+  prettier-wrapped Progress-Log text; verified zero markers remain; `git rebase --continue` → PM@657cff2dc pushed to LDR
+  (docs(plans) carve-out). **Item #1 (MDPS asset_group re-blank) was already SHIPPED** — UTL@7b2306c3 (consolidator
+  self-heals blank/absent asset_group at merge time, ancestor of origin/LDR) + the guarded re-stamp (defi 79,689 + cefi
+  2,297, snapshot `_index/snapshots/pre_mdps_ag_restamp_2026_06_22.parquet`); the root cause was a stale pre-v9 tarball
+  VM, NOT an MDPS writer bug, so the durable fix is the consolidator self-heal, not a per-writer column add.
 - **FIX SHIPPED `e2e-testing@5db3860`** (dirty-deps direct-LDR carve-out — strategy-service had live PEER WIP at
   quickmerge time; QG --no-fix exit 0 27s, sentinel written; 24/24 dp_audit tests + ruff green): the daily re-probe
   loader `_REPROBE_HOOK_MODULES` only imported `reprobe_cefi` + `reprobe_defi` — so the **sports hook (registered but
@@ -1558,10 +1573,10 @@ dispatch prompts.
   re-probe** (no per-AG live re-fetch fired). Added `reprobe_sports` to the tuple (its hook existed but was orphaned) +
   authored `reprobe_tradfi.py` (databento is billed/allowlist-gated + massive is a flat-file archive → no cheap
   single-cell daily probe → conservative `reached_source=False`, oracle decides) + `reprobe_prediction.py`
-  (Polymarket/Kalshi are live-WS-primary CLOB-WS, and a Gamma-markets reachability probe would false-clear a
-  trades/book empty — the chain-blind false-clear trap → conservative `reached_source=False`, oracle decides). Both
-  hooks are REGISTERED (not absent) so the loader has an explicit documented per-AG decision for all 5 AGs rather than a
-  silent oracle-only fallback. `_load_reprobe_hooks` now RELOADS a cached-but-unregistered module so its
+  (Polymarket/Kalshi are live-WS-primary CLOB-WS, and a Gamma-markets reachability probe would false-clear a trades/book
+  empty — the chain-blind false-clear trap → conservative `reached_source=False`, oracle decides). Both hooks are
+  REGISTERED (not absent) so the loader has an explicit documented per-AG decision for all 5 AGs rather than a silent
+  oracle-only fallback. `_load_reprobe_hooks` now RELOADS a cached-but-unregistered module so its
   `register_reprobe_hook(...)` side-effect re-fires (a plain `import_module` of a cached module is a no-op), with a
   per-AG skip-guard that never clobbers an already-registered (incl. test-injected) hook. 5 new regression tests
   (tradfi/prediction never-clear, all-5-modules-wired, loader-registers-all-5).
@@ -1570,5 +1585,6 @@ dispatch prompts.
   which both return reached_source=False, so this is a correctness-completeness rebuild, not an outage).
 - [ ] [INFRA] P2. **Rebuild e2e-audit:latest from clean LDR** so the daily reprobe cron loads all 5 per-AG hooks
       (currently the image predates `e2e-testing@5db3860`; tradfi/prediction hooks return reached_source=False so the
-      missing load is a no-op for them today, but a defi/cefi/sports hook update needs the rebuild to take effect). Reuse
-      the `cloudbuild-e2e-audit.yaml` build→smoke→push from the IMAGE-GAP-CLOSED run. — e2e-testing, deployment-service
+      missing load is a no-op for them today, but a defi/cefi/sports hook update needs the rebuild to take effect).
+      Reuse the `cloudbuild-e2e-audit.yaml` build→smoke→push from the IMAGE-GAP-CLOSED run. — e2e-testing,
+      deployment-service
