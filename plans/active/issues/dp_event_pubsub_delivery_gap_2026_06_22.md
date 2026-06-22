@@ -89,6 +89,24 @@ now reach `route_event()`.
    lines produced invalid metadata keys (`  CODE_BUCKET`), so `gcloud instances create` 400-errored. FIXED (stripped
    indentation; shipped with escalation.py).
 
-**Remaining:** (a) e2e `_dp_common.py` ship (Wave-4b, dirty-dep-blocked); (b) deploy the 3 daily-audit Cloud Run crons
-(digest/hygiene/reprobe) for routine visible posts — needs image packaging (Wave-4b). The relay PATH is now LIVE; these
-add the routine *cadence*.
+4. **IAM 403 on `lifecycle-events-sub` AND `defi_data_quality_alerts`** — the VM's default compute SA
+   (`1060025368044-compute@developer.gserviceaccount.com`) had `roles/pubsub.subscriber` on the 5 original subs but
+   NOT on these two (empty IAM policy on `lifecycle-events-sub`; freshly-created `defi_data_quality_alerts` had no
+   binding). The reship's subscriber pulled them → `403 IAM_PERMISSION_DENIED` (the crash-resilience hardening caught +
+   skipped, so the subscriber stayed up, but DP events were still not consumed). FIXED: granted `roles/pubsub.subscriber`
+   to the compute SA on both subs (mirroring the `margin-events` binding). CONFIRMED LIVE: last 403 at 18:16:01,
+   zero 403s for 11+ min after (subscriber now pulls `lifecycle-events-sub` cleanly → DP_DAILY_DIGEST consumed +
+   routed). The grant is on the SUBSCRIPTION (persistent) → survives VM relaunches.
+
+**RELAY NOW LIVE END-TO-END (2026-06-22 18:27Z)**: emit (mode=live → lifecycle-events) → subscriber consumes
+lifecycle-events-sub (no 403) → route_event → _route_data_pipeline_event → #data-pipeline-alerts (webhook verified 200,
+DP_DAILY_DIGEST INFO rule live in UAC).
+
+**Remaining (tracked, NOT blocking the relay — it is live):**
+- (a) e2e `_dp_common.py` ship (Wave-4b, currently dirty-MTDS-dep-blocked; no runtime effect until the crons deploy).
+- (b) Deploy the 3 daily-audit Cloud Run crons (digest/hygiene/reprobe) for routine *cadence* — needs image packaging (Wave-4b).
+- (c) **Durability — codify in terraform**: `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions AND their
+  `roles/pubsub.subscriber` IAM bindings for the alerting VM SA are currently HAND-CREATED (the subgraph tf provisions
+  only the `defi_data_quality_alerts` *topic*). They survive VM relaunches (subs are persistent) but a `terraform apply`
+  or fresh-project bootstrap would drop them. Add to `deployment-service/terraform/gcp/` (alerting pubsub tf): both
+  `google_pubsub_subscription` + `google_pubsub_subscription_iam_member` resources.
