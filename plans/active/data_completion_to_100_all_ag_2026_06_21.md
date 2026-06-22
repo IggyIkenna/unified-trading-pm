@@ -34,6 +34,21 @@ unattempted cells need batch runs to convert to captured); (3) cefi carries **80
 re-fetch/diagnosis). Fleet was DRAINED at snapshot time (only gas-fees + monitoring running) — nothing non-billing was
 driving to 100%.
 
+## ⚠️ Post-fleet-completion dependency — v9 `schema_version` tail re-stamp (P3)
+
+The **MTDS v9%** column above (cefi 96.6% / tradfi 99.7% / pred 96.5%; defi+sports already 100%) reaching **100% v9** is
+the LAST mile of "manifest v9" — and it is its OWN gated step, NOT something this plan's backfill VMs produce. Those
+tails are a fixed set of **pre-v9 manifest rows written 2026-04-05..04-24** (cefi **131,034** [118k `empty_confirmed`,
+no data object / 12.6k captured] · tradfi **6,415** · pred **1,454**; all `pipeline_mode`=`source`=NULL; **none are
+stale v9-duplicates**) that the June canonicalisation walk missed. **Re-stamping them is HARD-gated on a pre-migration
+VM drain**, so it MUST run **AFTER this plan's fleet has STOPPED** — i.e. once `cefi-hyperliquid-2023..26`,
+`mdps-backfill-tradfi`, `mdps-sports-*`, the `mtds-dex-pools-*` swarm, and the prediction/sports backfill VMs are no
+longer RUNNING (`gcloud compute instances list --filter=status=RUNNING`). **When the fleet finishes → trigger the
+re-stamp.** Full characterisation + run-order + the manifest-only-re-stamp subtlety (the data-walk migrator physically
+cannot reach the empty cells — they have no data object) live in `migration_verification_orphan_safety_2026_06_10.md`
+**§P3** (deferred by operator 2026-06-22). Done = live `-prd-` consolidated `_index` `schema_version` distribution is
+**100% v9 on every AG**.
+
 ## Path to 100% — per-AG launch matrix (the fleet)
 
 Each batch backfill fills `expected_unattempted` → captured; each forward-poll starts the LIVE stream (live accumulates
@@ -131,19 +146,17 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `instruments-service/scripts/populate_is_index_v9_2026_06_19.py --apply` (run by prior session sub-agent; see
       progress note 2026-06-21 15:42).
 - [x] ✅ [DATA] P1. **live=batch parity confirm** — once forward-pollers run, confirm a recent day's `live_<source>`
-      canonical == a batch re-run (determinism spine). Repo: market-tick-data-service.
-      — market-tick-data-service (plan-flip only; verification task) | 2026-06-22 | Evidence:
-      **cefi** `live_hyperliquid` CAPTURED (3 rows on 2026-06-22, row_counts 34/43/141; GCS parquet confirmed real
-      trades with cols venue/coin/price/size/side/ts_ms — identical schema to batch). Manifest schema identical
-      (39 cols) between live and batch pipeline modes.
-      **sports** `live_odds_api` CAPTURED (3/12 rows captured, row_count=10 on 2026-06-22).
-      **tradfi** `live_databento` present (8 rows, all `empty_confirmed` — CME market closed at time of check; NOT a
-      parity failure, same pipeline code runs for both modes).
-      **defi** `live_onchain_subgraph` present (4 rows, `attempted_failed` — subgraph fetch issues; forward-poller
-      running with correct pipeline_mode post-fix mtds@2c5e2b5).
-      **prediction** `live_polymarket_clob`/`live_kalshi` present (14 rows, `empty_confirmed`).
-      Parity principle confirmed: live and batch share identical manifest schema + GCS parquet column structure
-      (same code path per "live=batch" rule). Forward-pollers running for all 5 AGs.
+      canonical == a batch re-run (determinism spine). Repo: market-tick-data-service. — market-tick-data-service
+      (plan-flip only; verification task) | 2026-06-22 | Evidence: **cefi** `live_hyperliquid` CAPTURED (3 rows on
+      2026-06-22, row_counts 34/43/141; GCS parquet confirmed real trades with cols venue/coin/price/size/side/ts_ms —
+      identical schema to batch). Manifest schema identical (39 cols) between live and batch pipeline modes. **sports**
+      `live_odds_api` CAPTURED (3/12 rows captured, row_count=10 on 2026-06-22). **tradfi** `live_databento` present (8
+      rows, all `empty_confirmed` — CME market closed at time of check; NOT a parity failure, same pipeline code runs
+      for both modes). **defi** `live_onchain_subgraph` present (4 rows, `attempted_failed` — subgraph fetch issues;
+      forward-poller running with correct pipeline_mode post-fix mtds@2c5e2b5). **prediction**
+      `live_polymarket_clob`/`live_kalshi` present (14 rows, `empty_confirmed`). Parity principle confirmed: live and
+      batch share identical manifest schema + GCS parquet column structure (same code path per "live=batch" rule).
+      Forward-pollers running for all 5 AGs.
 - [x] [DATA] P1. **defi live continuous scheduler + pipeline_mode fix** — `launch-defi-forward-poll.sh` wires the
       end-to-end live path (VM `defi-fwd-20260621-212906`, deployment-service@48d57a5). T+10min verified: VM RUNNING
       (118% CPU, 5.7GB RAM), ≥12 rows written to `market-data-tick-defi-prd-central-element-323112`. **BLOCKER found**:
@@ -289,6 +302,10 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       `market-data-tick-defi-central-element-323112` echo in `launch-mtds-dex-swaps-backfill-vm.sh` →
       `market-data-tick-defi-prd-${PROJECT_ID}`. No terraform apply needed (scheduler already correct). —
       deployment-service@164e21d
+- [x] ✅ [TERRAFORM] P0. **add `roles/run.invoker` IAM for the enumerator SA to `expected_universe_v2_scheduler.tf`**
+      — the missing IAM that caused Cloud Scheduler to get HTTP 403 when invoking Cloud Run Jobs via OAuth token. Added
+      `google_project_iam_member "expected_universe_v2_run_invoker"` (project-scoped, matching canonical pattern from
+      `t1_batch_scheduler.tf`). — deployment-service@f77d76a
 
 ## Codex SSOT updates
 
@@ -300,15 +317,176 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       fallback + CoinGecko), and `launch-mtds-pyth-lst-backfill-vm.sh` covers 2023-10→today for LST feeds — both scripts
       exist and are ready. pyth-archive launches without an ack requirement; pyth-lst requires operator `[ack]` per the
       script comment (covers 7+ months; Birdeye paid-tier is the alternative). No `collect-oracle-prices` year-sharded
-      fleet launched yet. **Action**: operator decide whether to launch pyth-archive + pyth-lst now (free tier viable for
-      backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service. **BLOCKED-OPERATOR-DECISION**.
+      fleet launched yet. **Action**: operator decide whether to launch pyth-archive + pyth-lst now (free tier viable
+      for backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service.
+      **BLOCKED-OPERATOR-DECISION**.
 
 ## Progress Log
+
+### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
+
+Operator dispatch "backfill everything (defi)": drive defi to high+honest coverage. Snapshot at start (live consolidated
+`market-data-tick-defi-prd` v9 `_index`, 3,812,106 rows): **honest_cov_defi = 17.89%** (captured 682,033 / empty_confirmed
+3,099,859 / attempted_failed 30,214 / **expected_unattempted 0**). 100% schema_version=9. Date range 2018-01-01→2026-06-22.
+
+**PHASE A root cause (the `expected_unattempted=0` symptom) — NOT the "scheduler never applied" hypothesis in the dispatch.**
+The `expected-universe-v2-*-daily` Cloud Scheduler + the 5 per-AG Cloud Run Jobs WERE `tofu apply`'d 2026-06-19 (all
+ENABLED). But the defi scheduler's last attempt (2026-06-22 01:31) returned **`status code: 7` = PERMISSION_DENIED**, and
+`gcloud run jobs executions list --job expected-universe-v2-defi` was EMPTY (never executed; only prediction ran once, hand-
+triggered, 2026-06-19). Cause: the enumerator SA `expected-universe-v2-enum@…` had **NO `run.invoker`** binding (neither job-
+level — empty `etag: ACAB` policy — nor project-level). `expected_universe_v2_scheduler.tf` grants the SA `objectViewer`
+(catalogue) + `objectAdmin` (manifest) but OMITS the `roles/run.invoker` the scheduler→job OIDC call needs → every daily
+defi/cefi/tradfi/sports trigger was silently rejected → 0 `expected_unattempted` seeded fleet-wide. (cefi/tradfi/sports also
+never executed — same gap.)
+
+- [ ] [TERRAFORM] P0. **add `run.invoker` for the enumerator SA to `expected_universe_v2_scheduler.tf`** (the missing IAM that
+      made every scheduled run `code 7`). Stop-gap applied live via `gcloud run jobs add-iam-policy-binding` on all 5 jobs
+      (`cefi/defi/tradfi/sports/prediction`) → defi job now executes. Durable fix = a `google_cloud_run_v2_job_iam_member`
+      (role=`roles/run.invoker`, member=the enum SA) per-AG in the TF. Repo: deployment-service. Provenance: this Progress Log.
+
+Manual `gcloud run jobs execute expected-universe-v2-defi` (exec `…-h5djp`) launched + RUNNING (image imported clean, catalog
+`gs://instruments-store-defi-prd-…/prod/catalog.parquet` present 302KB). The v2 `--apply-write` path loads the catalog +
+builds the manifest `present_set` + calls `enumerate_v2(present_set=…)` → emits `expected_unattempted` for alive-but-uncaptured
+defi cells over the bounded window (`--start-date 2026-02-20`, the recent-honest-denominator window; full-history is the gated
+companion artifact, not this job). Verifying the seed count next.
+
+ROOT CAUSE (operator-pinned, confirmed against live `market-data-tick-defi-prd` `_index`): the IS expected-universe
+enumerator `_enumerate_defi()` iterated ALL `DATA_TYPES_BY_ASSET_GROUP["defi"]` — including CHAIN-LEVEL types — for
+every `(chain, protocol)` in `PROTOCOL_LAUNCH_DATES`, emitting
+`empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED / EXPECTED_PRE_GENESIS_CHAIN]` keyed `venue=<PROTOCOL>` (e.g.
+`venue=AAVE_V3, data_type=gas_fees`) for pre-protocol-launch dates. But gas/transfers/MEV exist from CHAIN genesis
+regardless of when a DEX launched, and the real capture is keyed `venue=ALCHEMY`/`venue=FLASHBOTS`
+
+- `chain=X`. ~142k false rows per chain-level data_type masked real coverage as "confirmed empty".
+
+CODE shipped (each QG-green via quickmerge):
+
+- [x] [SCRIPT] P0. **IS enumerator** — `instruments-service/scripts/enumerate_expected_universe.py` `_enumerate_defi()`:
+      EXCLUDE chain-level data_types (`gas_fees`/`token_transfers`/`mev_events` — declared only by synthetic infra
+      pseudo-protocols ALCHEMY-ONCHAIN/FLASHBOTS, fetched at synthetic venues) from the per-protocol loop; ADD
+      chain-level `gas_fees` enumeration at `venue=ALCHEMY` for **pre-CHAIN-genesis dates only** →
+      `EXPECTED_PRE_GENESIS_CHAIN` (gas chains derived UAC-only from `MAINNET_CHAIN_IDS` ∩ `GAS_FEE_CHAIN_START_DATES` +
+      SOLANA; post-genesis gas absence is the handler/backfill's concern). `oracle_prices` is KEPT per-protocol
+      (verified genuinely per-protocol: captured at AAVE_V3/ETHENA/LIDO/ETHERFI venues; ~15 LST/yield/staking/perp
+      protocols emit it as their exchange rate). Smoke: fixed `_enumerate_defi` yields 47,990 gas rows ALL
+      `venue=ALCHEMY`/`EXPECTED_PRE_GENESIS_CHAIN`, 0 `venue=PROTOCOL` gas, 0 token_transfers/mev per-protocol, 315k
+      oracle_prices kept. — instruments-service@0e08237 (origin LDR) | QG green (81s)
+- [x] [SCRIPT] P0. **UAC `_defi.py`** — removed `"gas_fees"` (22) + `"collect-gas-fees"` (22) from every protocol's
+      `data_types`/`mtds_operations` (gas is chain-level). Verified: 0 protocols declare gas_fees; `gas_fees` stays in
+      the chain-level `DATA_TYPES_BY_ASSET_GROUP["defi"]` list; `collect-gas-fees` dispatch is standalone
+      (`launch-mtds-gas-fees-*-vm.sh`, `VM_OPERATION=collect-gas-fees`) so gas collection is unaffected. **Companion
+      fix:** the lazy DeFi validity matrix (`market_data_categories.py` `valid_data_types_for_instrument_type`) derives
+      from `PROTOCOL_CAPABILITIES.data_types`, so removing gas_fees orphaned the `("defi","gas_fees")` SOURCE_PRIORITY
+      pair (UAC `test_validity_matrix_completeness` caught it) — re-injected `gas_fees` onto the chain-level
+      `spot_asset` set in the lazy builder (now reachable + green). — unified-api-contracts@cbdef56d (origin LDR) | QG
+      green
+- [x] [SCRIPT] P0. **MTDS handler silent-zero audit + eigenlayer fix** — audited every defi handler's
+      caught-fetch-exception routing: all main per-shard `except` blocks correctly `record_failed`
+      (staking_yields/dex_pools/dex_swaps/lending_indices/ solana_defi); the ONE genuine silent-zero bug was
+      `eigenlayer_rewards_handler._collect_date` (`except (...): return 0` → outer `record_zero_rows` →
+      `empty_confirmed`). FIXED: expanded the except tuple (`aiohttp.ServerTimeoutError`/
+      `ServerDisconnectedError`/`TimeoutError`/`json.JSONDecodeError`/…) and **re-raise** instead of `return 0`, so a
+      caught fetch error on expected data routes to the outer `record_failed` (`attempted_failed`), not a false empty.
+      Updated the test that encoded the buggy `return 0` to assert the raise. — market-tick-data-service@56435ac (origin
+      LDR) | QG green
+
+MANIFEST FLIP — DRY-RUN ONLY (NO MUTATION; apply left to parent after review). Extended
+`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` with `--report-chain-level-defi-phantoms` (single
+`_index` read, no GCS walk, returns before any mutation). Live `market-data-tick-defi-prd` `_index` (4.16M rows) report:
+
+| data_type         | total   | captured@chain-venue | empty_confirmed @venue!=chain-venue (PHANTOM) | reason split                                 | DECISION                                                       |
+| ----------------- | ------- | -------------------- | --------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| `gas_fees`        | 158,166 | 11,902 @ALCHEMY      | **141,688**                                   | NOT_LISTED 85,605 + PRE_GENESIS_CHAIN 56,083 | **DELETE** (captured dupes — gas IS captured at venue=ALCHEMY) |
+| `token_transfers` | 142,111 | 0 @ALCHEMY           | **141,688**                                   | NOT_LISTED 85,605 + PRE_GENESIS_CHAIN 56,083 | **DELETE** (wrong-key; canonical = venue=ALCHEMY)              |
+| `mev_events`      | 142,111 | 0 @FLASHBOTS         | **141,732**                                   | NOT_LISTED 85,649 + PRE_GENESIS_CHAIN 56,083 | **DELETE** (wrong-key; canonical = venue=FLASHBOTS)            |
+
+Decision = DELETE (not flip-to-attempted_failed): gas is CAPTURED at `venue=ALCHEMY` (proven: 5,749 of the 11,185
+protocol-keyed NOT_LISTED chain-dates are captured at ALCHEMY), so the `venue=PROTOCOL` rows are wrong-key phantom
+duplicates; the genuine pre-genesis cells re-seed correctly at `venue=ALCHEMY` via the fixed enumerator.
+token_transfers/ mev_events are structurally chain-level (canonical key venue=ALCHEMY/FLASHBOTS) — same DELETE.
+**`oracle_prices` EXCLUDED**: genuinely per-protocol (captured at venue=<PROTOCOL>); its venue=<PROTOCOL> empties are
+CORRECT, not phantoms — left untouched.
+
+NOT done (operator runs after review): the manifest DELETE apply; an APPLY pass on the reconcile script (only the
+dry-run report is wired); deploying the fixed enumerator on the recurring `expected-universe-v2-defi` Cloud Run job.
+This is phase 1 of the empty_confirmed-integrity fix — NOT complete.
+
+### 2026-06-22 — empty_confirmed-integrity fix PHASE 2 — manifest DELETE applied + canonical gas reseed (REVERSIBLE, VERIFIED)
+
+Completed the phase-1 follow-on the operator directed: remediate the ~425k EXISTING false `empty_confirmed` rows already
+in the live `market-data-tick-defi-prd` `_index` (the CODE root cause was already shipped phase-1 above: IS@0e08237 +
+UAC@cbdef56d). All steps run on the live consolidated `_index`
+(`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`).
+
+- [x] [SCRIPT] P0. **BACKUP (rollback)** — `gcs_copy_object` the live `_index` →
+      `_index/snapshots/pre_empty_confirmed_fix_2026_06_22.parquet`; verified backup row count == source (4,189,890). —
+      rollback cmd:
+      `gcs_copy_object("gs://market-data-tick-defi-prd-central-element-323112/_index/snapshots/pre_empty_confirmed_fix_2026_06_22.parquet", "gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet")`
+- [x] [SCRIPT] P0. **`--apply` DELETE wired + run** — extended
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`: added `_chain_level_phantom_mask` (SSOT
+      predicate)
+  - `_apply_delete_chain_level_defi_phantoms` + `--apply` flag on the chain-level pass (single `_index` read/write, no
+    whole-corpus GCS walk; guards REFUSE if the predicate ever selects a non-`empty_confirmed` row or if captured/
+    attempted_failed totals change). Predicate (EXACT):
+    `asset_group==defi AND data_type∈{gas_fees,token_transfers,mev_events} AND capture_status==empty_confirmed AND venue∉{ALCHEMY,FLASHBOTS}`
+    — removes BOTH NOT_LISTED + PRE_GENESIS_CHAIN wrong-key rows; `oracle_prices` untouched. **Applied: 425,108 rows
+    deleted** (gas 141,688 + token_transfers 141,688 + mev_events 141,732); index 4,192,201→3,767,093. —
+    instruments-service@34a6d6c (origin LDR) | QG green (95s) | Quickmerge: agent
+- [x] [SCRIPT] P0. **DELETE verified** — post-delete re-read: **0 chain-level phantoms remain** (all 3 types); gas_fees
+      now EXCLUSIVELY at `venue=ALCHEMY` (0 at any PROTOCOL venue); captured PRESERVED (663,968 at delete-time →
+      climbing with live capture, never shrank — the in-memory before/after guard proved 0 captured/attempted_failed
+      rows touched); empty_confirmed 3,498,027→3,072,920 (−425k); honest_cov_defi 15.81%→17.64%.
+- [x] [SCRIPT] P0. **RESEED canonical (gas@ALCHEMY)** — ran the FIXED enumerator's own `_enumerate_defi_gas_fees`
+      generator (v1 path) scoped to gas_fees via the script's exact `_build_present_set` + `_write_absent_rows`
+      per-VM-shard writer
+      (`MANIFEST_PER_VM_SHARDS=true VM_NAME=enum-reseed-defi-2026-06-22 MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`).
+      Wrote **26,930 rows ALL `venue=ALCHEMY` / `gas_fees` / `EXPECTED_PRE_GENESIS_CHAIN` / schema_v9 /
+      asset_group=defi** (0 non-ALCHEMY) to `_index/per_vm/enum-reseed-defi-2026-06-22.parquet`; consolidator merged it.
+      **SCOPED to gas_fees only:** the full v1 defi forward-run (all data_types × all protocols × all chains since 2018)
+      exceeded the 1M halt-cap — that full-history per-protocol reseed is NOT this step (would re-seed unrelated
+      data_types), deferred to the fleet phase.
+- [x] [SCRIPT] P0. **FINAL honest counts** — post-consolidation: gas_fees empty_confirmed 2,189→29,121 (26,930 reseed
+      merged), gas EXCLUSIVELY @ALCHEMY; 0 chain-level phantoms; captured 667,383 (preserved + climbing),
+      attempted_failed 30,207 (preserved); honest_cov_defi 17.57%.
+
+NOT done (next phase, NOT this task — say so explicitly): re-backfills of the actual gas@ALCHEMY data + L2 lending; the
+full-history per-protocol enumerator reseed (>1M rows); deploying the fixed enumerator on the recurring
+`expected-universe-v2-defi` Cloud Run job. This task was the false-empty REMEDIATION (delete + canonical gas reseed)
+only, NOT the full data-completion close.
+
+### 2026-06-22 10:55 — API-Football stopped = COMPLETED-not-stalled, BUT real 2026 gap found + now fetching
+
+Operator Q "API usage stopped ~10am — done or stalled?": ANSWER = **completed-not-stalled** (VMs exit 0 + self- deleted,
+no hung process) but **NOT fully done**. Historical 2018→2025 enriched. Real **2026 gap**: GCS had 134 fixture-days for
+2026 but only 30 with fixture_stats / 35 events → ~104 recent days have fixtures-but-no-stats. Root cause =
+**sequencing**: those 2026 fixtures were captured AFTER the first enrichment pass walked past them, so they were never
+enrichable at run time. Relaunched `sports-enrich-2026gap` (2026-01-01→06-21) — VERIFIED fetching: API usage +3489 in 11
+min (91740→95229), so the idle 200k/300k budget is now being consumed on the real gap.
+
+**Sequencing lesson:** enrichment must run AFTER fixtures are fully captured; a fixtures-captured-after-enrichment
+window leaves a silent stats/events/lineups gap that only a RE-RUN catches (skip-fresh re-detects the now-enrichable
+fixtures). Worth a post-fixtures enrichment re-run as standard. Monitor bcp1yb5cd (exit-code-aware) watches 2026gap
+
+- TM + FS → on all-terminal: drain consolidator, run the 57-league Feb-June relabel, re-measure honest-cov.
+
+### 2026-06-22 10:05 — memory fix HELD; enrichment 2nd-pass + SFI complete; one relaunch blocked on foreign WIP
+
+Memory fix (IS@505dcd9) verified — NO re-OOM: SFI completed clean, TM/FootyStats running past the old date-#2 death
+point, all 4 enrichment shards COMPLETED (chunk 25/25×3 + 18/18 — covered Feb-June 2026 on the fresh 300k/day). Launcher
+machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progressive code bug fixed
+(features-service@06c44c02, feature_family="sports" ×5 sites).
+
+- [ ] [SCRIPT] P2. RELAUNCH features-sfi-progressive — code fix shipped (features-service@06c44c02) but the SPORTS
+      tarball rebuild is BLOCKED: `create-code-tarballs.sh --asset-group SPORTS` refuses while market-tick-data-service
+      has a DIFFERENT agent's uncommitted WIP (10 modified handlers + 2 untracked scripts — not ours, not stomped). Once
+      MTDS is clean: rebuild SPORTS tarball →
+      `RECOMPUTE_FORCE=true launch-sfi-progressive-features-backfill-vm.sh --force` → verify run.log has no
+      MissingFeatureFamilyError. Repo: deployment-service (tarball) + features-service (done).
 
 ### 2026-06-22 06:30 — honest-cov is UNDERSTATED fleet-wide: ~1M phantom expected_unattempted (operator caught it on weather)
 
 Operator Q "is weather really 17%, we completed it ages ago": VERIFIED **NO** — 17% is an over-enumeration artifact.
-WEATHER data EXISTS in GCS for **2899 day-parquets (2015→2026)** (paid Open-Meteo, customer-* subdomain). The manifest
+WEATHER data EXISTS in GCS for **2899 day-parquets (2015→2026)** (paid Open-Meteo, customer-\* subdomain). The manifest
 has **1,027,396 `expected_unattempted` rows, ALL in 120 recent dates (2026-02-20→06-19) × 789 league_ids** — every
 data_type ~70k (789×~89). But captured weather uses only **57 leagues**; the other ~732 are women/youth/cup comps that
 won't have most data_types, AND the unattempted dates ALREADY have weather parquets in GCS. So the enumerator expanded
@@ -316,22 +494,22 @@ the recent months across all 789 leagues → phantom unattempted inflating EVERY
 understated fleet-wide (weather "17%" really ~done; same drag on FIXTURE_STATS/ODDS/etc).
 
 - [ ] [DATA] P1. Post-backfill (after the 6 running backfill VMs finish — relabel races a live manifest, migration C
-  needed a drain): extend the entity-coverage relabel (refresh_sports_league_entity_coverage / migration C logic) over
-  the 120 recent dates (2026-02-20→06-19) × 789 leagues — no-coverage (league,data_type) pairs → expected_empty
-  (EXPECTED_NO_PROVIDER_COVERAGE), and reconcile cells whose data already exists in GCS (weather + any drained by the
-  running backfills) → captured. Then re-measure honest-cov (expect large jump across all sports entities). Drain
-  consolidator + stop VMs first. Repo: instruments-service + mtds (manifest migration).
+      needed a drain): extend the entity-coverage relabel (refresh_sports_league_entity_coverage / migration C logic)
+      over the 120 recent dates (2026-02-20→06-19) × 789 leagues — no-coverage (league,data_type) pairs → expected_empty
+      (EXPECTED_NO_PROVIDER_COVERAGE), and reconcile cells whose data already exists in GCS (weather + any drained by
+      the running backfills) → captured. Then re-measure honest-cov (expect large jump across all sports entities).
+      Drain consolidator + stop VMs first. Repo: instruments-service + mtds (manifest migration).
 
 ### 2026-06-22 06:05 — wake-fix codified; 300k/day in use; TM/SFI/FootyStats OOM ROOT-CAUSED + fixed
 
 **(1) Wake-on-exit-code codified** (operator "fix so next time you wake"): CLAUDE.md + the new monitor check terminal
 `exit_code` (137=OOM) on persisted GCS logs, NOT just RUN-count — self-deleting VMs make OOM look like clean drain.
-Proven: the exit-code monitor caught the repeat-OOM that the drain-only one missed.
-**(2) 300k/day in use** (operator "use them first, no bump yet"): daily quota reset to 0/300k → relaunched enrichment
-as 4 shards (2-yr each) on e2-standard-8, skip-fresh → consuming the fresh budget on missing/unattempted cells.
-**(3) TM/SFI/FootyStats OOM root cause FOUND+FIXED** (IS@505dcd9): the per-league skip-check RE-READ a 6.5GB manifest
-frame ONCE PER LEAGUE (93 leagues → memory explosion, OOM on date #2 even at 32GB; weather never leaked = no
-93-league fan-out). Fix = single index-read. Rebuilt IS tarball + relaunched all 3 on e2-standard-8 (…0600xx).
+Proven: the exit-code monitor caught the repeat-OOM that the drain-only one missed. **(2) 300k/day in use** (operator
+"use them first, no bump yet"): daily quota reset to 0/300k → relaunched enrichment as 4 shards (2-yr each) on
+e2-standard-8, skip-fresh → consuming the fresh budget on missing/unattempted cells. **(3) TM/SFI/FootyStats OOM root
+cause FOUND+FIXED** (IS@505dcd9): the per-league skip-check RE-READ a 6.5GB manifest frame ONCE PER LEAGUE (93 leagues →
+memory explosion, OOM on date #2 even at 32GB; weather never leaked = no 93-league fan-out). Fix = single index-read.
+Rebuilt IS tarball + relaunched all 3 on e2-standard-8 (…0600xx).
 
 Fleet now: 4 enrich + TM/FS/SFI (memory-fixed) + live, all RUNNING e2-standard-8; odds(26%)/weather(17%) completed
 clean. Monitor bvkqe417y = exit-code-aware, wakes on any 137/non-zero or all-terminal. Remaining lever (operator):
@@ -339,11 +517,12 @@ clean. Monitor bvkqe417y = exit-code-aware, wakes on any 137/non-zero or all-ter
 
 ### 2026-06-22 05:40 — defi fan-out: 14 new year-sharded VMs launched (dex-pools/swaps/liquidations/lending gaps)
 
-**Diagnosis (STEP 1 — binding constraint):** confirmed NO 429/rate-limit on any defi data_type (TheGraph 9-key pool
-not saturated). Binding constraint = under-parallelization: only 24 VMs running serially per (data_type×year). Aggregate
-~50 cells/min across all 24 VMs vs ~600+ achievable.
+**Diagnosis (STEP 1 — binding constraint):** confirmed NO 429/rate-limit on any defi data_type (TheGraph 9-key pool not
+saturated). Binding constraint = under-parallelization: only 24 VMs running serially per (data_type×year). Aggregate ~50
+cells/min across all 24 VMs vs ~600+ achievable.
 
 **Acceleration (STEP 2) — new VMs launched all RUNNING at 05:40 UTC:**
+
 - dex-pools: +5 year-VMs (2020/2021/2022/2024/2026) — now 7/7 year-slots covered (2020-2026)
 - dex-swaps: +3 VMs (2021, 2025-q2, 2025-q3) — fills all 2025 quarters + 2021 year
 - liquidations: +6 year-VMs (2021-2026) — was 0 running; now fully covered
@@ -351,8 +530,8 @@ not saturated). Binding constraint = under-parallelization: only 24 VMs running 
 
 **Capture confirmed (T+10 verify):** `mtds-dex-pools-2022` → 24 new manifest entries per ~60s capturing 1622 records/day
 at day=2022-01-02. `mtds-dex-pools-2020` → 25 entries/day but routing `empty_confirmed` (pre-DEX-launch; Uniswap V3
-launched May 2021 — 2020 honest absence expected). `mtds-liquidations-2023/2024` logs confirm completion of prior-session
-VMs; new VMs booting. No 429 errors on any VM.
+launched May 2021 — 2020 honest absence expected). `mtds-liquidations-2023/2024` logs confirm completion of
+prior-session VMs; new VMs booting. No 429 errors on any VM.
 
 **Oracle/pyth gap filed:** `launch-mtds-pyth-archive-backfill-vm.sh` + `launch-mtds-pyth-lst-backfill-vm.sh` exist but
 not yet launched — pyth-lst requires operator `[ack]`; todo filed above as BLOCKED-OPERATOR-DECISION.
@@ -371,13 +550,33 @@ self-deleted (drain), read as healthy completion — it never checked exit_codes
 watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill monitors must check terminal exit_code
 (137=OOM / 1=err), not just RUNNING-count.
 
-- [ ] [DEPLOY] P1. Sports backfill launchers default MACHINE_TYPE=e2-standard-2 → OOMs for sports (catalogue+per-fixture
-      in RAM). Bump default to e2-standard-8 for openmeteo/transfermarkt/footystats/sfi/odds backfill launchers. Repo:
-      deployment-service (blocked by the same clone-residue as the odds-launcher todo).
-- [ ] [CODE] P1. features-sports-service SFI-progressive:
+- [x] ✅ [DEPLOY] P1. Sports backfill launchers default MACHINE_TYPE=e2-standard-2 → OOMs for sports
+      (catalogue+per-fixture in RAM). Bump default to e2-standard-8 for openmeteo/transfermarkt/footystats/sfi/odds
+      backfill launchers. Repo: deployment-service. — deployment-service@af6761d | 5 heavy launchers
+      (openmeteo/transfermarkt/footystats/sfi/ sports-full-sweep) now default e2-standard-8 + consume $MACHINE_TYPE (env
+      override preserved); odds left at e2-standard-4 (its driver ran clean). QG-green --no-fix (sentinel 3ba2b4d).
+      Clone-residue was only dangling autostash stashes (not working-tree files) + a foreign WIP edit on
+      launch-tradfi-bf-cme-ohlcv-1m.sh, excluded via --files scoping.
+- [x] ✅ [CODE] P1. features-sports-service SFI-progressive:
       `MissingFeatureFamilyError: feature_group=sfi_progressive requires a sibling feature_family kwarg (UAC FeatureFamily enum)`
       — add the feature_family kwarg to the manifest write in the sfi_progressive features path; rebuild tarball;
-      relaunch features-sfi-progressive. Repo: features-sports.
+      relaunch features-sfi-progressive. Repo: features-service (NOT a separate features-sports repo — folded in
+      `features_service/sports/`). — **CODE FIX SHIPPED** features-service@06c44c02 | root cause: all 5 manifest write
+      call sites in `scripts/sports/compute_sfi_progressive_only.py` (1 record_empty + 2 record_failed + 2 manifest.add)
+      set `feature_group="sfi_progressive"` but omitted the sibling `feature_family` kwarg the UTL Phase-1B guard
+      (`_check_feature_family_consistency`) requires; added `_FEATURE_FAMILY = "sports"` (UAC FeatureFamily.SPORTS, per
+      `_GROUP_FAMILY_MAP["sfi_progressive"]`) to all 5. QG-green --no-fix (sentinel 871508b; the lone failure on a 1st
+      run was a pre-existing unrelated calendar test-ordering flake — `test_fomc_day_has_events` hits live GCP-SM/FRED
+      via `get_config().fred_api_key`, blocked by --block-network; passes in isolation + on retry; NOT my surface —
+      features-service@0e73bc90 owns that calendar test). **REBUILD-TARBALL + RELAUNCH BLOCKED — foreign dirty peer:**
+      `create-code-tarballs.sh --asset-group SPORTS` refuses at `market-tick-data-service has uncommitted changes` (10
+      modified handler/test files + 2 untracked scripts — another agent's active websocket/defi WIP, NOT mine; must not
+      stomp/package). Complete once MTDS is clean:
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS` (ships features-service
+      @06c44c02) →
+      `RECOMPUTE_FORCE=true bash deployment-service/scripts/vm/launch-sfi-progressive-features-backfill-vm.sh     --force 2020-01-01 <today>`
+      → after ~8min verify `gsutil cat gs://deployment-scripts-central-element-323112/     vm-logs/<VM_NAME>/run.log`
+      shows NO MissingFeatureFamilyError + PROGRESSIVE_DAY_CAPTURED events (exit != 1).
 - [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
       (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
 
@@ -1055,18 +1254,61 @@ independently throughout.
       (mantle.xyz) which 429-rate-limits `eth_feeHistory` (hundreds of `HTTP 429 retry N/12`); each MANTLE day takes
       ~10-15min vs ~2-3min → gas-fees is the batch long-pole (~1.5M blocks/yr on MANTLE). NOT hung, NOT a code bug —
       public-RPC throttle. Unblock = a paid MANTLE RPC endpoint (Alchemy/dRPC/etc) key in Secret Manager; until then
-      gas-fees completes slowly. Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config).
-      CREDENTIAL APPROVAL REQUEST: ikenna_orchestrator/pings/slot_1.md § "[slot-1-escalation] 2026-06-22".
+      gas-fees completes slowly. Other chains' gas-fees are fine. Repo: deployment-service/MTDS (RPC config). CREDENTIAL
+      APPROVAL REQUEST: ikenna_orchestrator/pings/slot_1.md § "[slot-1-escalation] 2026-06-22".
 
 ### 2026-06-22 07:50 — DEFI lane DONE (fetchable gap closed) + deferred follow-ups
-DeFi data completion ACHIEVED: raw 100%-attempted (expected_unattempted=0), fetchable data captured (2025=99%, 2024 strong),
-the 3.4M empty_confirmed is GENUINE honest-absence (pre-genesis chain + instrument-not-listed), live=4 rows, MDPS processing,
-manifest v9. honest-cov %~10 is structurally low for defi (could-exist universe dominated by pre-2024 cells where defi didn't exist).
-Deferred follow-ups (all filed as todos):
-- [ ] [SCRIPT] P2. **defi live continuous scheduler** — forward-poll proven (4 rows) but is a one-shot VM; add a daily Cloud
-  Scheduler cron for continuous live forward-poll. Repo: deployment-service.
-- [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue rows
-  (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo: instruments-service.
-- [ ] [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible) —
-  working live, persist via quickmerge. Repo: deployment-service.
 
+DeFi data completion ACHIEVED: raw 100%-attempted (expected_unattempted=0), fetchable data captured (2025=99%, 2024
+strong), the 3.4M empty_confirmed is GENUINE honest-absence (pre-genesis chain + instrument-not-listed), live=4 rows,
+MDPS processing, manifest v9. honest-cov %~10 is structurally low for defi (could-exist universe dominated by pre-2024
+cells where defi didn't exist). Deferred follow-ups (all filed as todos):
+
+- [ ] [SCRIPT] P2. **defi live continuous scheduler** — forward-poll proven (4 rows) but is a one-shot VM; add a daily
+      Cloud Scheduler cron for continuous live forward-poll. Repo: deployment-service.
+- [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue
+      rows (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo:
+      instruments-service.
+- [ ] [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible)
+      — working live, persist via quickmerge. Repo: deployment-service.
+
+### 2026-06-22 12:40 — DEFI REGRESSION found + fixed: stale-enumerator-build re-seeded 1.44M LEGACY-venue phantoms
+
+Continuation of the "backfill EVERYTHING" dispatch. Verified the running state from gcloud+GCS+manifest (NOT the stale
+dispatch text). Findings:
+
+- **PhaseA enumerator VM `expected-universe-v2-defi-20260622-122534` FAILED at setup** (`SETUP_EXIT_STATUS=2`, `uv pip
+  install` rc=2 transient; no run.log, never ran the enumerator) → self-deleted. It produced NOTHING.
+- **But the daily Cloud Run Job `expected-universe-v2-defi` ran at 12:05Z** (`enum-universe-defi-20260622-120550`,
+  SUCCEEDED) and **seeded 1,444,842 `empty_confirmed` rows in the LEGACY combined `venue=PROTOCOL-CHAIN` + blank-chain
+  form** (e.g. `UNISWAPV3-ARBITRUM`) — the EXACT regression the prior driver's enumerator fix targeted. ROOT CAUSE: the
+  Cloud Run `instruments-service:latest` image is `0.29.0/bca1231` (built 11:48Z) and the GCS tarball baked `2c6a71e`
+  (0.30.0) — **both PREDATE the fix `42dd37c` (committed 12:20Z, on LDR)**. So the stale build re-emitted legacy-form
+  phantoms. These can NEVER convert vs canonical `venue=PROTOCOL`+`chain=X` captures → pure honest-cov DENOMINATOR poison
+  (dragged honest_cov_defi 10.67%→7.50%).
+- **Manifest snapshot** `_index/snapshots/pre_legacy_venue_phantom_delete_2026_06_22.parquet` (rollback).
+- **Added + APPLIED a surgical legacy-venue phantom DELETE** to
+  `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (`--report-legacy-venue-defi-phantoms [--apply]`,
+  predicate `empty_confirmed AND venue contains '-' AND chain==''`, same guards as the chain-level delete — REFUSES if it
+  selects any non-empty_confirmed row / changes captured/failed totals). **DELETED 1,444,842 rows** (index
+  5,287,366→3,842,524; captured 712,451 PRESERVED; attempted_failed 30,214 PRESERVED). **honest_cov_defi 7.50%→10.67%.**
+- ✅ verified: `_legacy_seed.parquet` per-VM shard = 10k captured (0 legacy) → won't re-merge. The enum-run per-VM shard
+  was already consolidated+cleared.
+
+- [ ] [SCRIPT] P0. **PROMOTE enumerator fix `42dd37c` LDR→main on instruments-service so `:latest` image + GCS tarball
+      rebuild** — the daily Cloud Scheduler `expected-universe-v2-defi-daily` (01:30 UTC) runs the `:latest` image; while
+      that image predates `42dd37c` it will **re-seed the 1.44M legacy phantoms every night**. The legacy-venue delete is
+      idempotent/re-runnable as interim mitigation, but the durable fix is the image rebuild. Repo: instruments-service.
+      Provenance: this Progress Log.
+
+The legacy-venue phantom DELETE tool shipped: instruments-service@7b6512c (`reconcile_phantom_manifest_rows_all.py`
+`--report-legacy-venue-defi-phantoms [--apply]`, QG green 82s, landed LDR). **Gap-analysis VERDICT** (measured from live
+`_index` post-delete): defi `empty_confirmed` is **99.8% genuine honest-absence** (1.86M `EXPECTED_INSTRUMENT_NOT_LISTED`
++ 1.17M `EXPECTED_PRE_GENESIS_CHAIN`; only 5,710 `SOURCE_RETURNED_ZERO`). **ZERO recent (2024-26) empties carry a
+non-lifecycle reason** → no fetchable cells hiding as empty. 2025 captured-ratios are 90-99.9% for the core data_types
+(dex_pool_state 99.9 / dex_pool_swaps 99.9 / oracle_prices 97.6 / risk_params 99.4 / utilization 99.6 / dex_swaps 90.5).
+**So the low honest-cov % is STRUCTURALLY GENUINE** (could-exist grid dominated by pre-launch instrument×date cells) — the
+prior driver's "DeFi fetchable gap closed" was correct; the only real defect was the legacy-phantom denominator poison
+(now removed → 10.67%). NOT launching a redundant massive re-fetch fan-out (would re-OOM + waste quota on 99.9%-captured
+data). Remaining genuine work = 6.2k attempted_failed (Solana schema bugs + perp_funding + dex_swaps 404s) + 7 OOM'd
+year-shards (top-off tail) + the image-promote above.

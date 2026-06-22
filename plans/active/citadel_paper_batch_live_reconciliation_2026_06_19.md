@@ -707,6 +707,23 @@ are identified (2) and the ledger exists (3).
       `catalog._BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `_ENGINE_DRIVABLE`+`E2E_UNIVERSE`; unit
       test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null
       signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run.
+      **STATUS 2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the
+      archetype).** All edits are in the slot clones (UNCOMMITTED, recover from `.tabs/1/{unified-api-contracts,
+      strategy-service}`): UAC `enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py` (52→53)
+      + `tests/test_ws_cassette_coexistence.py` (added the LEGIT `kalshi_clob_ws`/`polymarket_clob_ws` venue mappings —
+      a pre-existing cross-repo cassette gap, real connectors, needed for green); strategy-service new
+      `rules_directional/tsmom_btc_cta.py` + `tests/.../test_tsmom_btc_cta.py` + factory/defaults/slots/catalog/
+      catalog_directional/paper_universe/batch_utils/`rules_directional/__init__.py`/test_ml_directional_continuous.
+      UAC full QG = **10,215 passed** (incl. the new leg-spec test) once the WS mappings were added; strategy-service =
+      content-sentinel green. **BLOCKER**: UAC local `quality-gates.sh` version-alignment HARD-fails because the PM
+      `workspace-manifest.json` `versions[unified-api-contracts]` is **0.39.0** on origin/LDR while UAC-main is
+      **0.40.0** (the manifest-update workflow hasn't synced the bump — the documented VERSION_SPLIT promotion-lag, here
+      hard-blocking the consumer's local QG). `--skip-version-alignment` is human-only. **TO COMPLETE (once the PM
+      manifest syncs to UAC 0.40.0, or a human aligns it)**: re-run `cd unified-api-contracts && bash
+      scripts/quality-gates.sh --no-fix` → quickmerge UAC (`enums.py archetype_leg_spec_seeds.py
+      tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):` commit for the WS mappings → then quickmerge
+      strategy-service (it depends on the UAC enum, so promote UAC first). The agent's first pass left it unshipped +
+      had ONE hallucinated WS-test edit (invented connectors) which was dropped; the real WS mappings were re-added.
 - [ ] [DATA] P2.11.16. **features-service: compute + write BTC trend features `btc_trailing_return_{1m,3m,6m,12m}` +
       `btc_realized_vol` to the canonical GCS feature corpus the paper run reads** — the CTA engine (P2.11.14) reads
       these from `features: dict[str,float]`; without them the paper run produces null signals (honest absence). Trailing
@@ -749,11 +766,69 @@ are identified (2) and the ledger exists (3).
       SAME deterministic captured GCS rates (funding/carry/vol per window) → **ε=0 preserved** (pure fn of the window,
       not live calls — the FIXED default's determinism worry was overcautious). Verify ε=0 batch-rerun holds with rank
       weights. Repo: strategy-service (paper_universe allocator default + per-archetype rank wiring).
-- [ ] [UI] P2.16. **Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
+- [x] ✅ [UI] P11.16. **Archetype-level default view + all-145 per-strategy — DONE + prod-verified** (CRA@336e2dc rev 00016-lcj = 145/7; ui@2f4c7016 = 7 books→legs w/ weights; browser-verified). Orig:**Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
       headline selector should read ~7 weighted archetype strategies (the e2e "strategy" granularity), each expandable
       to its weighted per-(venue,coin) legs, rather than 145 flat legs. The archetype roll-up already exists (P11.9-ui
       group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
-      leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated).
+      leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated). ALSO: the per-strategy rollup currently shows only 13 (the attribution-parquet subset for the 145-run) — make it reflect ALL 145 by reading the manifest/instruction-ledger strategy_ids (or emit attribution for all 145), so the count + archetype grouping cover the full book.
+
+- [x] ✅ [UI] P11.14-hook. **Prod paper-trading hooks now render REAL CRA data** — ROOT CAUSE (from the live console): `lib/api/mock-handler.ts`'s global fetch interceptor (NEXT_PUBLIC_MOCK_API=true) had no passthrough for `/api/client-reporting*`, so it returned empty `{}` → login got no access_token → every panel "Failed to load" with no network request. FIX (ui@f0ebd216): added `/api/client-reporting` to `realRoutePrefixes`. Now ALL 10 ledger endpoints return 200, no errors, real CeFi venues render (odum-portal-00036-pzm). The full 4-part P11.14 fix: isReportingLive hook gate + fs env-loader in next.config + rewrites-emit-in-mock + mock-handler passthrough. Verified browser-side.
+      bugs are fixed (CRA reachable from the page: manual in-page fetch → 200, 13 strategies). But `useLedgerPerStrategy`
+      / `useLedgerNetViews` etc. show "Failed to load" with NO `/api/client-reporting*` request issued, despite
+      isMock=false (var inlined), clientId set (`?client=firm-paper-determinism`), no service worker, mock defined, fix
+      code in the deployed chunks. Resolve from the LIVE browser console (the actual react-query error) — not headless
+      inference. Likely candidates: an SSR/prefetch error, a QueryClient retry/throwOnError config, or the hook erroring
+      in a transform before fetch. Repo: unified-trading-system-ui.
+
+- [ ] [CODE] P2.17. **Structurally forbid the synthetic-input seam in PAPER/LIVE prod runs** (operator audit
+      2026-06-22: "all reads should be live+batch from real prod sources/schemas/GCS paths; writes canonical with just
+      the paper→live tag swap"). AUDIT RESULT — already canonical: reads resolve every bucket via `resolve_bucket_name`
+      (perp-funding/dex-pools/market-data/lending, real prod schemas+granularity, honest-skip never synthetic); writes
+      go through the shared `write_run_ledger` seam to the canonical `client-reports` ledger path
+      (`ledger/client_id=/run_id=/ledger_type=`) with `mode=TradingMode` (PAPER→LIVE swap; paper/batch IDENTICAL shape).
+      The e2e synthetic seam (`set_synthetic_input_override`/`--synthetic-input`) is opt-in + default-None (only tests +
+      the CLI flag set it) → OFF in the prod paper job. HARDENING: add a guard so `get_synthetic_input_override()` MUST
+      be None when `mode ∈ {PAPER, LIVE}` (raise if a synthetic override is active in a prod-mode run) — makes
+      "paper reads exactly like live" structural, not flag-dependent. Repo: strategy-service + unified-trading-library.
+
+- [x] ✅ [UI] P11.18. **Archetype-grouped WEIGHTED PnL-over-time plot + batch/paper symmetry overlay** — SHIPPED
+      unified-trading-system-ui@423e237d (PnlTimeseriesChart archetype-weighted lines via buildWeightMap +
+      PaperBatchOverlayChart). VERIFIED LIVE on prod (odom-portal): the PnL-over-time panel renders the
+      archetype-weighted lines + the "Paper vs batch (rerun) overlay" carrying the **"ε=0 PROVEN — paper ≡ batch"**
+      badge. pw:L2 ✓ (21 passed) | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts (P11.18 cases). (operator
+      2026-06-22: "where is our grouped PnL plots of the strategy_ids in strategy-archetype groups where we weight
+      between strategy_ids ... I don't see it on the page"). Today: a single selection-filtered PnL series +
+      `BatchPaperPanel` showing the `live−batch=(paper−batch≈0)+(live−paper=exec α)` identity as NUMBERS. ADD: a
+      multi-line PnL-over-time CHART with ONE line per ARCHETYPE BOOK (the allocator-weighted sum of its strategy_id
+      legs — the e2e weighting), toggle archetype↔leg↔coin; AND overlay the BATCH-rerun PnL line vs the PAPER line so
+      the ε=0 symmetry is visually legible per archetype (not just a verdict badge). Repo: unified-trading-system-ui
+      (consumes /pnl-timeseries + /backtest + /per-strategy weights; playwright-gated).
+- [x] ✅ [CODE+UI] P11.19. **Paper-trading data-quality + VM events stream panel** — SHIPPED + VERIFIED LIVE on prod.
+      (a) CRA `GET /clients/{c}/data-quality` (client-reporting-api@7f3ac8a) = skipped_specs grouped by
+      archetype/venue/reason + manifest coverage + alerting-service alerts merged (best-effort). **CRITICAL crash-fix:
+      `coverage.by_archetype` was emitted as a dict → the UI's `DataQualityCoverageRow[].reduce` threw → the WHOLE
+      paper dashboard white-screened ("Something went wrong"). Fixed CRA to emit the canonical array shape (image
+      `client-reporting-api:dqarrayfix` deployed to prod rev 00018-njv; source quickmerge PENDING a live UTL-dep WIP
+      settling — fix is LIVE regardless) + UI Array.isArray guard (unified-trading-system-ui@85369f75) + CRA unit-test
+      now asserts the array contract (the smoke spec used the mock fixture which was already array-shaped, so it missed
+      the real-data dict — the CRA test closes that gap).** (b) UI "Data Quality & Alerts" panel
+      (unified-trading-system-ui@423e237d). VERIFIED on prod: headline **145/342 drivable · 197 skipped**, 12
+      per-archetype coverage rows, 8 skipped-by-reason groups / 197 skipped (venue,coin) rows (top reason
+      `no_gcs_data_in_window:2026-05-16..2026-05-22`, 127 cells), alerts section renders (honest `unavailable` — see
+      P11.20). pw:L2 ✓ (21 passed) | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts (P11.19 cases) +
+      client-reporting-api/tests/unit/test_data_quality.py (array contract). Repo: client-reporting-api +
+      unified-trading-system-ui.
+- [ ] [INFRA] P2.20. **Live VM alert STREAM into the data-quality panel** (split from P11.19; operator 2026-06-22
+      "alerts should stream in ALL events from the VMs"). Today the panel's alerts section renders but shows
+      `alerts_source: unavailable` because (1) both CRA routes (`/alerts` + `/data-quality`) hardcode the k8s DNS
+      `http://alerting-service:8080` which does NOT resolve from Cloud Run (the "overridable via env" comment is stale —
+      no actual read), and (2) no alerting-service is deployed reachable from prod CRA, and (3) the per-epic data fleet
+      that emits ADAPTER_FETCH_FAILED/honest-absence events is post-cutover/not-running. WIRE: (a) add an
+      `alerting_service_url` field to `UnifiedCloudConfig` (no `os.getenv`) + have BOTH CRA routes read it; (b) deploy /
+      expose an alerting-service reachable from prod CRA (or point at the existing one); (c) verify a real VM
+      data-event (missing/incomplete data) appears as an alert row in the panel. Repo: unified-trading-library (config) +
+      client-reporting-api (routes) + deployment-service (alerting-service reachability). NOTE: blocked on a live UTL
+      refactor in flight (21 dirty files 2026-06-22) — do the UTL config field once that settles.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -761,6 +836,58 @@ are identified (2) and the ledger exists (3).
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-22 (P11.18/19 SHIPPED + white-screen crash FIXED).** The archetype-weighted PnL plot + paper/batch overlay
+  (P11.18) and the Data Quality & Alerts panel (P11.19) are LIVE + browser-verified on prod. Root-caused a full-page
+  white-screen ("Something went wrong — `((intermediate value) ?? []).reduce is not a function`"): CRA emitted
+  `coverage.by_archetype` as a **dict** but the UI's `DataQualityCoverageRow[]` contract `.reduce/.map`s it as an
+  **array** (the `?? []` never fired on a dict) → the panel threw → the page-level error boundary blanked the whole
+  dashboard. The mock-fixture-based smoke spec was already array-shaped so it never caught the real-data shape — a
+  classic mock-vs-real drift. Fixed CRA → array (`client-reporting-api:dqarrayfix`, prod rev 00018-njv) + added a CRA
+  unit-test asserting the array contract + a UI `Array.isArray` guard (so a future shape-drift degrades to empty, never
+  white-screens). Live verify: 145/342 drivable · 197 skipped, 12 archetype rows, 8 reason groups, 197 skipped cells,
+  PnL overlay with the ε=0 PROVEN badge. Filed P11.20 for the live VM alert STREAM (the panel's alerts section honestly
+  shows `unavailable` — no alerting-service reachable from Cloud Run yet). NOTE: the CRA **source** quickmerge is
+  pending a large live UTL-dep refactor (21 dirty files) settling — the prod image is the array fix regardless; re-run
+  `quickmerge --agent --files 'client_reporting_api/core/data_quality.py tests/unit/test_data_quality.py'` from
+  client-reporting-api once UTL is clean, else a redeploy-from-LDR would regress the dict bug.
+- **2026-06-22 (audit) — CANONICAL READ/WRITE CONFIRMED.** Paper-trading reads from real prod data sources via
+  `resolve_bucket_name` (perp-funding/dex-pools/market-data/lending — same buckets live/batch use, real schemas +
+  granularity, honest-skip never synthetic; the e2e synthetic seam is opt-in + OFF in the prod job) and writes the four
+  ledgers through the shared `write_run_ledger` seam to the canonical `client-reports` path with `mode=TradingMode`
+  (PAPER now). Live = the SAME seam with `mode=LIVE` + a live client_id; reads unchanged; only the execution fill
+  diverges at the live boundary. Filed P11.17 to make the synthetic-seam-off guarantee structural (guard mode∈{PAPER,LIVE}).
+
+- **2026-06-22 (autonomous) — PAPER-TRADING DASHBOARD COMPLETE on prod.** Full chain live + browser-verified at
+  www.odum-research.com/paper-trading?client=firm-paper-determinism: **7 archetype books → 145 weighted legs**, real
+  CRA data, rank-weighted allocations (P11.15), all 4 ledgers, ε=0. P11.16 shipped: CRA all-145 per-strategy
+  (CRA@336e2dc → prod rev 00016-lcj, per-strategy returns 145/7 verified) + UI archetype-grouping default (ui@2f4c7016).
+  P11.14 (real-data plumbing) was a 5-layer mock trap, all fixed: isReportingLive gate + fs env-loader + rewrites-in-mock
+  + mock-handler passthrough + (root) the live-console-found mock interceptor. CRA cloudbuild ALLOW_LOOSE fix lets manual
+  builds work. Operator's e2e vision (weighted-across-venues archetype books, drill to legs) is LIVE.
+
+- **2026-06-22 (autonomous) — PROD UI NOW SHOWS REAL DATA (the "old/mock thing" is FIXED).** Live-console paste
+  pinpointed the 4th/final bug: the `mock-handler.ts` global fetch interceptor swallowed `/api/client-reporting*`
+  (returned empty `{}` → no JWT → panels errored). Added the passthrough (ui@f0ebd216, odum-portal-00036-pzm).
+  Browser-verified: all 10 client-reporting endpoints 200, no "Failed to load", real CeFi venues. The paper-trading
+  panels read the live CRA. Remaining nuance (→ P11.16): the selector shows **13** (the per-strategy ATTRIBUTION
+  endpoint's subset for the 145-run) not 145 — attribution is emitted for a subset; the full 145 are in the
+  manifest/instruction/passive/transfer ledgers. Fix = emit attribution for all 145 OR have the per-strategy rollup
+  count off the manifest/instruction ledger (not just attribution), + the archetype-level default grouping.
+
+- **2026-06-22 (autonomous) — P11.14 prod-UI data: 3 plumbing bugs FIXED + PROVEN browser-reachable; 1 client-hook bug
+  open (awaiting live console).** The prod paper-trading panels showed stale/mock not the real 145-strategy run due to
+  THREE stacked bugs, all fixed + deployed (odum-portal-00035-nsc): (1) hooks returned the 14-strategy mock fixture
+  because global `NEXT_PUBLIC_MOCK_API=true` → added `isReportingLive()` so paper-trading goes live when the CRA URL is
+  set (ui data-mode.ts + use-paper-trading-ledger.ts); (2) `next.config.mjs` rewrites() read the reporting URL before
+  Next loaded .env → fell back to localhost:8014 → added an fs-based env loader (no @next/env bare import — unresolvable
+  under pnpm); (3) rewrites() did `return []` whenever mock → `/api/client-reporting` 404'd → now emits the
+  client-reporting rewrites even in mock mode. PROOF the data is now reachable from the prod page: an in-page
+  `fetch('/api/client-reporting-auth/login')` → 200 (token len 343), `fetch('/api/client-reporting/.../per-strategy')` →
+  200 with 13 strategies. **OPEN (P11.14-hook):** the React-Query hooks (`useLedgerPerStrategy` etc.) render
+  "Failed to load" WITHOUT issuing any fetch, while the identical manual fetch succeeds — a client-runtime bug not
+  resolvable headless (ruled out: clientId-missing, service-worker, undefined-mock, stale-bundle, rewrite). Needs the
+  live browser console error. CRA per-strategy returns 13 (attribution subset) not 145 — separate sparsity note.
 
 - **2026-06-22 (operator) — LOCKED the deployable book: cs + h32 + ext + tsmom + BTC-trend + basis spine; R8 short
   DROPPED.** Per-leg proper-execution Sharpes (engine `legnet` net through the real fill model, vnorm 10%): basis

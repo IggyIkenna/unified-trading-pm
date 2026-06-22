@@ -113,6 +113,13 @@ data could not be honestly source-stamped (`record_captured(source=...)` would r
   multi-source cell → `MissingSourceError`). Made it venue-aware (`_resolve_pipeline_mode_for_sentinel(pred_venue, cqg)`
   → POLYMARKET=batch_polymarket_clob unchanged / KALSHI=batch_kalshi) + explicit `source=source_string_for(pm)`. Repo:
   market-tick-data-service. — (shipping)
+- [x] ✅ [SCRIPT] P0. instruments-service `process_write.py` — **same multi-source break-fix in the IS enumeration cqg
+  write path** (the runtime cause of the missing `venue=KALSHI` universe — the IS Kalshi enumeration `record_captured`
+  for `prediction_canonical_question_group` raised `MissingSourceError` since cqg became multi-source). Added
+  venue-derived `_cqg_pm` (POLYMARKET→`BATCH_POLYMARKET_CLOB` / KALSHI→`BATCH_KALSHI`) + `pipeline_mode=_cqg_pm` +
+  explicit `source=source_string_for(_cqg_pm)`. IS QG-green (sentinel 42dd37c7). The companion UTL
+  `record_captured_from_counts` `datetime` UnboundLocalError (introduced by the foreign DP_*/FetchEvidence WIP) was
+  fixed and rode UTL@39f8ec85 to LDR. Repo: instruments-service@07272da4. — 2026-06-22
 
 **Seed relaunch (corrected stack):** UAC 24706977 + UTL b336478f + mtds fcd6549 all shipped; PREDICTION
 tarball rebuilt to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tarball`);
@@ -352,3 +359,9 @@ Operator asked whether Kalshi IS+MTDS is downloading history. **Answer: it was N
 - **Re-walk v2 DONE** (VM 204658, terminal): 7196 POLYMARKET cqg bundles re-walked to v9 (2025-03-14→2026-06-21), CF-11 phantom fix confirmed working (reemit_skipped_blank_iid 2331, failed_* 0). The v1 crash (MalformedRowKeyError) is resolved.
 - **book_snapshot naming (item 75)**: diagnosed canonical=`book_snapshot_5`; bare `book_snapshot` is the stale mismatch BUT reconciliation is entangled with item 69 (prediction = top-of-book, not 5-level) + carries cross-AG cefi blast radius → kept tracked with the full diagnosis + safe phased path (decide 69 → reconcile in one audited breaking change). No current prediction data impact.
 - **Kalshi seed (deliverable)** still converting (at 2025-02-10 of ~2025-11 target; ~72M trades day-by-day, healthy). Re-arming a single long watcher; honest-coverage verification + flip 196/240 fire on seed completion.
+
+### 2026-06-22 11:05 — LIVE PREDICTION PRODUCING (Polymarket full universe) — reader fix verified
+- After the 3-bug live-path saga (Redis/launcher af4d0f2, IS-path 4ef4e02, reader column-mapping dfaada5) + clearing the fleet MTDS QG-red (option B), the 4 live shards re-launched on the fixed tarball:
+  - **POLYMARKET trades + book_snapshot_5: ✅ RESOLVED 19,117 instruments** (full active IS universe), per-VM manifest shards writing (2044/1059 entries, ~215 new/10s). Live prediction producing end-to-end via the unified CLOB.
+  - **KALSHI trades + book_snapshot_5: 🟡 keep-alive (IS universe empty)** — the Kalshi IS enumeration had never run for current days (venue=KALSHI universe absent). Launched the IS prediction enumeration for today (launch-instruments-backfill-vm.sh --asset-group PREDICTION) → once venue=KALSHI universe lands, the Kalshi keep-alive auto-resolves (no relaunch needed).
+- Net: live prediction is WORKING for Polymarket (the larger venue) at full universe, both data types; Kalshi follows on its IS enumeration. The reader fix correctly maps condition_id→POLYMARKET:PREDICTION_MARKET:{cid} / ticker→KALSHI:... from the cqg/day-partitioned IS store.

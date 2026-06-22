@@ -1251,7 +1251,21 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
         2026-06-22 (verified nothing reads them: live service env beta-free, no standalone rollup Cloud Run Job). Redeploy
         rides the normal LDR→staging→main→image pipeline (env-var removal already fixed prod; code retirement is cleanup).
         (Operator-acked 2026-06-21/22. Provenance: live-index v9 audit, this plan's 2026-06-21/22 progress entries.)
-  - [ ] [DATA] P3. **Re-stamp the legacy schema_version tails** (target: instruments-service / mtds v9 migrator) —
-        cefi 3.4% (v4/v5/v6), prediction 2.1% (v4), tradfi 0.3% (v4) of live `_index` rows are pre-v9; defi/sports are
-        100%. Run the existing v9 restamp over the tail shards so the live index is uniformly v9 (no new walk — fold
-        into the next scheduled canonicalisation pass).
+  - [ ] [DATA] P3. **Re-stamp the legacy schema_version tails** (target: mtds `migrate_*_to_v9_canonical.py` +
+        ManifestWriter rebuild). **DEFERRED — operator 2026-06-22: wait for the active backfill fleet to finish, then
+        run in a quiet window** (NOT a force-drain for a small mostly-empty tail). **Trigger to resume:** the
+        `cefi-hyperliquid-2023..2026`, `mdps-backfill-tradfi`, `mdps-sports`, and ~30 `mtds-dex-pools-*` backfill VMs
+        have STOPPED (`gcloud compute instances list --filter=status=RUNNING`).
+        **Characterised 2026-06-22** (read-only over the live `-prd-` consolidated `_index`): cefi **131,034** pre-v9
+        rows (v6=78,944 / v5=40,142 / v4=11,948 = 3.35%), tradfi **6,415** (v4, 0.25%), prediction **1,454** (v4, 1.93%);
+        defi/sports are 100% v9. All carry `pipeline_mode=None` + `source=None`, all written **2026-04-05..04-24** (before
+        the June canonicalisation walk), and **none are stale duplicates** of a v9 row (0 v9-twins) — they are genuine
+        unique cells the June walk missed. **KEY SUBTLETY:** cefi's tail is **118,292 `empty_confirmed`** (no data
+        object) + 12,618 captured; the `migrate_cefi_flat_to_v9_canonical.py` data-walk fixes object PATHS only (v9
+        manifest cols are added by the ManifestWriter rebuild that derives from DATA objects), so it **cannot reach the
+        empty cells** — they need a separate **manifest-only re-stamp** (derive `pipeline_mode`/`source` per venue+data_type
+        via the UAC canonical rules, set `schema_version=9`, write back the SOURCE per-VM shard, then re-consolidate).
+        **Gating (HARD):** pre-migration VM drain + operator sign-off on `--apply` (irreversible); the manifest-only
+        re-stamp must NOT race the live consolidator (`*/1` re-derives the consolidated index) or live writers → also
+        needs the quiet window. Run order when resumed: drain → consolidate+snapshot → mtds `--apply` (captured cells) +
+        manifest-only re-stamp (empty cells) → re-consolidate → re-verify the distribution is uniform v9.

@@ -50,6 +50,13 @@ chains, pre-venue-launch, no-fixture days, weekends/holidays, instrument-not-lis
 `% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` where the target is to drive
 `attempted_failed` and `expected_unattempted` to zero — NOT to eliminate honest `empty_confirmed`.
 
+> **Separate dimension — v9 `schema_version` uniformity (P3, gated on THIS fleet stopping).** "100% capture" (above)
+> and "100% manifest v9" are different axes. A residual tail of pre-v9 manifest rows remains (cefi 131,034 / tradfi
+> 6,415 / pred 1,454; written 2026-04-05..04-24; defi+sports already 100% v9). Re-stamping them to v9 is **HARD-gated on
+> a pre-migration VM drain**, so it runs **AFTER the backfill VMs this plan launched have STOPPED** — when the fleet is
+> idle, trigger the re-stamp. Owner/characterisation/run-order: `migration_verification_orphan_safety_2026_06_10.md`
+> **§P3** (deferred by operator 2026-06-22).
+
 > **Expectation-setting:** post-migration the % will JUMP vs today's dashboard even before any backfill — today's low
 > numbers are inflated-missing by recon-noise (cefi 1.4M "failed" → ~88k real) + honest-empty mis-counted. Size the real
 > backfill from the REGENERATED projection, not the current one.
