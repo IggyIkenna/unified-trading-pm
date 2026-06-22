@@ -391,9 +391,10 @@ fixtures/leagues/teams/standings. IN PROGRESS = TM (transfer-window-gated, skips
 per-date predictions/matches/odds, slower = LONG POLE ~1-2 days). Then per-source relabel (final denominator step,
 ~hours). So ~1-2 days to all-captured, then the relabel → honest 100%.
 
-- [ ] [BUG] P1. FootyStats ODDS rows fail: `source=footystats disagrees with pipeline_mode=batch_odds_api (expects
+- [x] ✅ [BUG] P1. FootyStats ODDS rows fail: `source=footystats disagrees with pipeline_mode=batch_odds_api (expects
   source=odds_api)` recovery=fail_fast — source/pipeline_mode mislabel in the footystats odds writer (predictions +
   matches land fine). Fix the footystats odds write to stamp source=footystats consistently. Repo: instruments-service.
+  — instruments-service@04f38a2 | 3× `record_captured` + `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE["ODDS"]` BATCH_ODDS_API→BATCH_FOOTYSTATS
 
 ### 2026-06-22 ~12:55 — ✅ TM+FootyStats UNBOUNDED-HTTP HANG fixed (uninherited path) + tarball + relaunch — instruments-service@dcf87f5
 
