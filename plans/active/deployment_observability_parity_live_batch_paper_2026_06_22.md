@@ -57,20 +57,20 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 0 — Classification spine (the SSOT every surface reads)
 
-- [ ] [DESIGN] P0. `DeploymentUmbrella` StrEnum (`live|batch|paper|experiment`) + `DeploymentTarget` value-object
+- [x] [DESIGN] P0. ✅ `DeploymentUmbrella` StrEnum (`live|batch|paper|experiment`) + `DeploymentTarget` value-object
       `{name, kind: vm|cloud_run_job, umbrella, cloud: gcp|aws, service, asset_group, lifecycle_class}` in UAC. —
-      **unified-api-contracts**
-- [ ] [CODE] P0. `classify_deployment_target(name, *, lifecycle_class=None, is_paper=None) -> DeploymentTarget` —
+      **unified-api-contracts** — unified-api-contracts@34bb0f16 (`DeploymentUmbrella`/`DeploymentTarget`/`DeploymentCloud`/`DeploymentKind`/`UMBRELLA_FOR_LIFECYCLE_CLASS` in `canonical/crosscutting/lifecycle_class.py`; importable `from unified_api_contracts import DeploymentUmbrella`)
+- [x] [CODE] P0. ✅ `classify_deployment_target(name, *, lifecycle_class=None, is_paper=None) -> DeploymentTarget` —
       derives umbrella from `lifecycle_class` + the paper-launcher set + VM-prefix; a single resolver both the watchdog
       and deployment-api call. Extend `VmPrefixSpec` with an explicit `umbrella` override where lifecycle_class is
       ambiguous (paper crons are SCHEDULED_RECURRING but umbrella=paper). — **unified-trading-library /
-      deployment-service**
-- [ ] [CODE] P0. **Cloud Run job registry** — enumerate the ~20 `*_scheduler.tf` jobs into a classified inventory (name
+      deployment-service** — deployment-service@360678e (`deployment_service/deployment_classification.py` resolver + `PAPER_PREFIXES` + `UnclassifiedDeploymentError` no-silent-default) + unified-api-contracts@3c7dd51a (`VmPrefixSpec.umbrella: DeploymentUmbrella | None = None` field) + watchdog sets `umbrella=DeploymentUmbrella.PAPER` on the 3 paper prefixes
+- [x] [CODE] P0. ✅ **Cloud Run job registry** — enumerate the ~20 `*_scheduler.tf` jobs into a classified inventory (name
       → umbrella/service/ag); a generator that reads terraform or a checked-in manifest so the surface knows every job,
-      not just VMs. — **deployment-service**
-- [ ] [TEST] P0. Every VM prefix + every Cloud Run job classifies to exactly one umbrella; paper launchers → paper; no
+      not just VMs. — **deployment-service** — deployment-service@360678e (`deployment_service/cloud_run_job_registry.py` `CLOUD_RUN_JOBS: Final[tuple[DeploymentTarget, ...]]` — 49 jobs from all 24 `*_scheduler.tf`: BATCH infra/consolidator/catalogue/expected-universe/monitors/digests/hygiene/rollups/t1-recon + 3 PAPER paper-week/paper-engine)
+- [x] [TEST] P0. ✅ Every VM prefix + every Cloud Run job classifies to exactly one umbrella; paper launchers → paper; no
       `UNCLASSIFIED` (a CI check fails on an unclassified compute unit — the "added launcher, forgot to register" guard,
-      extended to umbrellas). — **deployment-service**
+      extended to umbrellas). — **deployment-service** — deployment-service@360678e (`tests/unit/test_cloud_run_job_registry_guard.py`, 10 tests: every VmPrefixSpec prefix classifies, every `*_scheduler.tf` job stem ∈ `CLOUD_RUN_JOBS` + a vacuity-proof phantom-job test, 3 paper prefixes → PAPER, consolidator → BATCH, unknown lifecycle raises; QG-wired via repo `tests/unit/`)
 
 ## Phase 1 — deployment-api: unified deployment inventory at /repos grade (GCP first)
 
@@ -152,3 +152,12 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
   `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET`) + paper launchers; ~20 Cloud Run jobs in `terraform/gcp/*_scheduler.tf` need
   classifying; AWS launchers (`*-aws.sh`) exist. Gold standard = `RepoCi.tsx`/`/api/repos`. Build order: Phase0 spine →
   Phase1 api → Phase2 ui → Phase3 slack → Phase4 GCP-complete → Phase5 AWS → Phase6 docs.
+- **2026-06-22 Phase 0 COMPLETE** (deployment-service Step B). Shipped: `VmPrefixSpec.umbrella` override field
+  (UAC@3c7dd51a) + `classify_deployment_target` resolver with `UnclassifiedDeploymentError` no-silent-default
+  (deployment-service@360678e) + `CLOUD_RUN_JOBS` registry (49 jobs from all 24 `*_scheduler.tf`; BATCH for
+  infra/consolidator/catalogue/expected-universe/monitors/digests/hygiene/rollups/t1-recon, PAPER for the 3
+  paper-week/paper-engine jobs) + a 10-test guard (`tests/unit/test_cloud_run_job_registry_guard.py`) that asserts every
+  VmPrefixSpec prefix classifies, every scheduler-tf job stem is registered (with a vacuity-proof phantom-job test),
+  paper prefixes → PAPER, consolidator → BATCH, unknown lifecycle raises. `bash scripts/quality-gates.sh` exit 0
+  (deployment-service 51s, UAC 38s). The [DESIGN] enums shipped earlier at UAC@34bb0f16. Phase 1 (deployment-api
+  `/api/deployments`) is next — it imports `classify_deployment_target` + `CLOUD_RUN_JOBS` from these modules.
