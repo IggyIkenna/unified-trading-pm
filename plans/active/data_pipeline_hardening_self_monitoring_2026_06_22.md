@@ -1038,10 +1038,16 @@ dispatch prompts.
 
 ### Self-healing completion (C — wire tiers to existing recovery, add actuators)
 
-- [ ] [CODE] P0. Add `data_pipeline_failure` to `escalate-to-orchestrator` `WALL_TYPES`
+- [x] ✅ [CODE] P0. Add `data_pipeline_failure` to `escalate-to-orchestrator` `WALL_TYPES`
       (`agent-orchestrator/server/escalation.py`) + a boot-prompt template, so a DP `file_issue`/`page` finding can
       fast-spawn an autonomous worker (today WALL_TYPES has no DP member → ValueError). — agent-orchestrator,
-      unified-trading-pm (.github)
+      unified-trading-pm (.github) — DONE **agent-orchestrator@8e24912** (`data_pipeline_failure` added to `WALL_TYPES`
+      + `_DATA_PIPELINE_WALLS` + `_prompt_template_for()` routing to the dedicated `agents/data_pipeline_failure.md` boot
+      prompt — push-fix-to-LDR flow like main_ci_red/plan_health, NOT the conflict-resolver; the worker cold-starts on
+      SUB_AGENT_MANDATORY_RULES + the DP codex SSOTs + the filed issue doc; `EscalateRequest` Literal + `main_ci_red`
+      gap fixed; one-shot AgentRow `agent_kind=data_pipeline_failure`; 5 new tests; QG green exit 0) +
+      **unified-trading-pm@d4746eb02** (`.github/workflows/escalate-to-orchestrator.yml` accepts `data_pipeline_failure`
+      in the workflow_call/dispatch choice + bash case guard + error message — sanctioned `.github` carve-out).
 - [ ] [CODE] P1. Wire `escalation.py::route_finding` `auto_recover` tier → the Layer-0 `RecoveryScriptRegistry` (the
       `refetch-feed` pattern); register DP actuators. — deployment-service
 - [ ] [CODE] P1. **Actuators (today detect+page only)**: consolidator auto-relaunch (Cloud Run Job re-execute on
