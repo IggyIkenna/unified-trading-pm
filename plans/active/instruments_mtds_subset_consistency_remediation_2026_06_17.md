@@ -607,19 +607,59 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `kind="instruments-store-prediction",     asset_group=None` if prediction ever needs re-canonicalisation.
       **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
 
-## CME event contracts (binary-settlement EC* series) — FINISH the backfill (operator 2026-06-19)
+## CME event contracts (binary-settlement EC\* series) — FINISH the backfill (operator 2026-06-19)
 
-CONFIRMED in Databento: all 9 `EC*` event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/**ECBTC** — BTC binary, the killer leg vs Polymarket BTC binaries) are in `_CME_EVENT_CONTRACTS` (`unified_api_contracts/registry/tradfi_instrument_universe.py`) on **GLBX.MDP3**, covered by the existing 3-dataset subscription (no extra dataset), tagged `event_contract`, validity `{trades, ohlcv-1s, tbbo}`. Gather was STARTED, not finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
+CONFIRMED in Databento: all 9 `EC*` event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/**ECBTC** — BTC binary,
+the killer leg vs Polymarket BTC binaries) are in `_CME_EVENT_CONTRACTS`
+(`unified_api_contracts/registry/tradfi_instrument_universe.py`) on **GLBX.MDP3**, covered by the existing 3-dataset
+subscription (no extra dataset), tagged `event_contract`, validity `{trades, ohlcv-1s, tbbo}`. Gather was STARTED, not
+finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
 
-- [ ] [DATA] P1. **Finish the CME EC* event-contract backfill** — all 9 series (`.OPT` parents on GLBX.MDP3), data_types `{trades, ohlcv_1s, tbbo}`, full timeframe, via the tradfi Databento path (`--source databento`). Ensure the running tradfi Databento fan-out enumerates the `event_contract`/`.OPT`-parent series (not just standard futures); if not, a focused finish run. Verify EC* cells captured in the v9 `_index` + that the FINAL CERTIFICATION explicitly checks EC* coverage (esp. ECBTC). — market-tick-data-service / instruments-service
+- [ ] [DATA] P1. **Finish the CME EC\* event-contract backfill** — all 9 series (`.OPT` parents on GLBX.MDP3),
+      data_types `{trades, ohlcv_1s, tbbo}`, full timeframe, via the tradfi Databento path (`--source databento`).
+      Ensure the running tradfi Databento fan-out enumerates the `event_contract`/`.OPT`-parent series (not just
+      standard futures); if not, a focused finish run. Verify EC* cells captured in the v9 `_index` + that the FINAL
+      CERTIFICATION explicitly checks EC* coverage (esp. ECBTC). — market-tick-data-service / instruments-service
 
 ## Forthcoming credentials (operator 2026-06-19 — note now, unblock on arrival)
 
-Operator is acquiring these — record as pending-credential so the backfill runs the moment the keys land (NOT memory; tracked here per the durable-facts rule):
+Operator is acquiring these — record as pending-credential so the backfill runs the moment the keys land (NOT memory;
+tracked here per the durable-facts rule):
 
-- [x] ✅ **Kalshi credential UPLOADED 2026-06-19** — `kalshi-api-credentials` v1 in Secret Manager (JSON `api_key_id`/`key_id` + RSA `private_key` PEM; account has no funds, market-data-only). The credential-registry already maps `"kalshi" → kalshi-api-credentials`.
-- [ ] [CODE] P1. **Wire Kalshi into the pipeline (hist + live market data)** — the credential is stored; now wire the Kalshi market-data adapter to read `kalshi-api-credentials` + do RSA-PSS request signing (key_id + private_key), for prediction hist + live (mirror the polymarket path, second venue for Polymarket-vs-Kalshi dispersion). Verify the secret JSON field names match the adapter's expectation (I stored both `api_key_id` + `key_id`). Then run the Kalshi backfill. — mtds / instruments-service (prediction)
-- [ ] [DATA] P2. **Extended (Extended Finance / EXTENDED-STARKNET)** — operator APPLYING for the API. NOTE: SM entries ALREADY EXIST (`extended-starknet-api-key` + `extended-starknet-stark-private-key`) — likely placeholders; when the real API lands, REPLACE those secret versions, then run the Extended instrument + perp backfill. — mtds / instruments-service (defi/cefi perp)
+- [x] ✅ **Kalshi credential UPLOADED 2026-06-19** — `kalshi-api-credentials` v1 in Secret Manager (JSON
+      `api_key_id`/`key_id` + RSA `private_key` PEM; account has no funds, market-data-only). The credential-registry
+      already maps `"kalshi" → kalshi-api-credentials`.
+- [ ] [CODE] P1. **Wire Kalshi into the pipeline (hist + live market data)** — the credential is stored; now wire the
+      Kalshi market-data adapter to read `kalshi-api-credentials` + do RSA-PSS request signing (key_id + private_key),
+      for prediction hist + live (mirror the polymarket path, second venue for Polymarket-vs-Kalshi dispersion). Verify
+      the secret JSON field names match the adapter's expectation (I stored both `api_key_id` + `key_id`). Then run the
+      Kalshi backfill. — mtds / instruments-service (prediction)
+- [x] ✅ **Extended public market data needs NO API key — "operator applying for API" was a FALSE blocker for the data
+      pipeline (verified live 2026-06-22).** `api.starknet.extended.exchange/api/v1/info/{markets,candles,funding}` all
+      return HTTP 200 with only a `User-Agent` header (no `X-Api-Key`, no stark key). The stark private key is needed
+      ONLY for order placement (post-cutover execution), never read-only market data. The placeholder SM secrets do NOT
+      block instrument/candle/funding capture.
+- [x] ✅ **IS Extended adapter: per-instrument genesis (honest `available_from`)** — instruments-service@9bb7cdfd.
+      Probes each market's earliest daily candle (P1D `/info/candles`) and stamps `available_from_datetime`
+      per-instrument instead of a single global `2024-07-26`. Genesis audited across all 103 active markets: spans
+      2024-07-26→2026-05-22; **50/103 markets have candle history pre-dating their `createdAt`** (BTC/ETH from
+      2024-07-26 testnet vs createdAt 2025-07-18 mainnet-migration bulk-stamp), so neither a global constant nor
+      `createdAt` is honest — only the probed candle-genesis is. Fix produces 58 distinct `available_from` dates (was
+      1). basedpyright clean; IS QG green (88.24% cov).
+- [ ] [DATA] P2. **Run the Extended public instrument + perp backfill (UNBLOCKED — no key needed)** — IS daily-listing
+      CLI for EXTENDED-STARKNET (genesis-accurate now) + MTDS OHLCV/funding capture over 2024-07-26→yesterday (funding
+      only from 2025-08-01 mainnet). Verify honest coverage converts `expected_unattempted`→`captured`. — mtds /
+      instruments-service (defi/cefi perp)
+- [ ] [CODE] P2. **Harden MTDS Extended candle sharp edge (silent truncation)** — the live `_umi_extended.py` candle
+      fetch sends `{interval, limit:1440, endTime}` with NO `startTime`; the API caps a single response at ~2800–3000
+      rows and returns the most-recent `limit` ending at `endTime`, so any window needing more than one page silently
+      drops the earlier rows. Per-day shards (PT1M, 1440 bars) are currently safe, but add `startTime` + window-aware
+      `limit` + a LOUD truncation warning so a multi-day/finer-interval call can never under-capture silently. — mtds
+- [ ] [CODE] P3. **Align/consolidate the two parallel Extended candle paths** — the live path is
+      `adapters/_umi_extended.py`; `market_interface/adapters/onchain_perps/extended_adapter.py::ExtendedAdapter` is a
+      SEPARATE, tested-but-unused parallel impl that still carries the global `EXTENDED_DEPLOY_DATE` pre-launch floor
+      (vs per-instrument genesis). Decide: wire ExtendedAdapter as canonical (and make its `_check_pre_launch`
+      per-instrument) OR delete it (no live importers). Parallel-paths anti-pattern per Delete-Deprecated-Code. — mtds
 - Tardis: `tardis-api-key` (+ `-backup`, `-full`) already in SM — provisioned (not a gap).
 
 ## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
@@ -1134,21 +1174,22 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
 - [x] ✅ [DATA] P2. **SFI + Transfermarkt sports keys — UNBLOCKED + backfill launched** — DONE 2026-06-19. Operator
       provisioned the RapidAPI subscription (new key `840373…` on BOTH `soccer-football-info-api-key` v2 +
       `transfermarkt-api-key` v4, same key). **LIVE-SMOKED 2026-06-19 (slot-6, instruments-service .venv, real GCP)**:
-      (a) SFI `get_match_descriptors_for_date(2025-03-01)` → HTTP 200, 1525 completed matches; `_fetch_sfi_data` end-to-end
-      wrote **21,014 SFI_PROGRESSIVE_STATS rows** + manifest per-VM shard. (b) Transfermarkt RapidAPI
-      `competitions/standings` GB1/2024 → HTTP 200 (NOT apify path); `_fetch_transfermarkt_data(PLAYER_VALUES, GB1, 2024)`
-      → 20 player_values rows + master/snapshot tables + manifest shard. Prior 403 "not subscribed" is RESOLVED. Backfill
-      VMs launched (auto-shutdown-on-completion, per-VM shards): 4× `sfi-backfill-chunk-{1..4}of4-20260619-161036`
-      (2020-01-01→2026-06-19, SFI 4 req/s; backfills ~69.7k expected_unattempted SFI cells) + 1×
-      `tm-backfill-20260619-161123` (PLAYER_VALUES 2015-01-01→2026-06-19; per-league-trigger self-throttle keeps it inside
-      the 120k/mo budget; backfills ~71k expected_unattempted TM cells). Disjoint from the running `af-backfill`
-      (api-football) MTDS fan-out. SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES stay RETIRED (runtime-only UAC catalog).
-      — instruments-service + deployment-service VM launchers
-- [ ] [DATA] P2. **Verify SFI+TM backfill VMs ran to completion + manifest cells flipped** — the 5 backfill VMs
-      (run-id `20260619-161036` SFI ×4 + `tm-backfill-20260619-161123`) auto-shutdown on completion. After they drain:
-      (1) `gcloud compute instances list --filter='name~"^sfi-backfill" OR name~"^tm-backfill"'` = empty/STOPPED;
-      (2) run `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` to materialise empty_confirmed rows;
-      (3) re-read the sports availability index — `expected_unattempted` for `source∈{soccer_football_info,transfermarkt}`
+      (a) SFI `get_match_descriptors_for_date(2025-03-01)` → HTTP 200, 1525 completed matches; `_fetch_sfi_data`
+      end-to-end wrote **21,014 SFI_PROGRESSIVE_STATS rows** + manifest per-VM shard. (b) Transfermarkt RapidAPI
+      `competitions/standings` GB1/2024 → HTTP 200 (NOT apify path);
+      `_fetch_transfermarkt_data(PLAYER_VALUES, GB1, 2024)` → 20 player_values rows + master/snapshot tables + manifest
+      shard. Prior 403 "not subscribed" is RESOLVED. Backfill VMs launched (auto-shutdown-on-completion, per-VM shards):
+      4× `sfi-backfill-chunk-{1..4}of4-20260619-161036` (2020-01-01→2026-06-19, SFI 4 req/s; backfills ~69.7k
+      expected_unattempted SFI cells) + 1× `tm-backfill-20260619-161123` (PLAYER_VALUES 2015-01-01→2026-06-19;
+      per-league-trigger self-throttle keeps it inside the 120k/mo budget; backfills ~71k expected_unattempted TM
+      cells). Disjoint from the running `af-backfill` (api-football) MTDS fan-out.
+      SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES stay RETIRED (runtime-only UAC catalog). — instruments-service +
+      deployment-service VM launchers
+- [ ] [DATA] P2. **Verify SFI+TM backfill VMs ran to completion + manifest cells flipped** — the 5 backfill VMs (run-id
+      `20260619-161036` SFI ×4 + `tm-backfill-20260619-161123`) auto-shutdown on completion. After they drain: (1)
+      `gcloud compute instances list --filter='name~"^sfi-backfill" OR name~"^tm-backfill"'` = empty/STOPPED; (2) run
+      `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` to materialise empty_confirmed rows; (3)
+      re-read the sports availability index — `expected_unattempted` for `source∈{soccer_football_info,transfermarkt}`
       should drop sharply as cells flip to `captured`/`empty_confirmed`. — instruments-service [VM RUNNING]
 
 ### Sports A2/A3/D read-only verification — ALL PASS (2026-06-19, autonomous tick 4)
@@ -1310,26 +1351,29 @@ atom `(asset_group=sports, venue/source, data_type, league_id, day)` in `availab
 ### Progress Log — tradfi IS-defs VM fan-out (2026-06-19, operator "use more servers")
 
 The serial single-host tradfi IS-definition backfill (CBOE@2023-06, NASDAQ@2024-08, NYSE-not-started; gating Step-2c v9
-+ B1 catalogue) was replaced with a 9-VM sharded fleet for ~9x wall-clock speedup. Stopped the local serial runners
-(`dbeq_is_defs_backfill.sh` slot6, `cfe_vx_is_definitions.sh`, `tradfi_backfill_then_v9_monitor.sh` wrapper). Launched
-`deployment-service/scripts/vm/launch-tradfi-is-defs-sharded.sh` (new, shellcheck-clean, lifecycle:campaign) → 9 GCE VMs
-`instr-backfill-tradfi-{cboe-a/b/c,nasdaq-a/b,nyse-a/b,cme-a/b}-20260619-141559` (asia-northeast1-c, e2-standard-4,
-run-ts 20260619-141559), each a disjoint (venue, date-window) shard over 2010-06-19→2026-06-19, `VM_VENUE` scoped to the
-3 paid datasets (CME/NASDAQ/NYSE/CBOE; ICE/FX excluded — off the Databento billing allowlist), `MANIFEST_PER_VM_SHARDS=true`,
-unique `VM_NAME`, `VM_SHUTDOWN_ON_COMPLETION=true`, `VM_CHUNK_DAYS=30`. Reuses the proven `instruments-backfill` task in
-`setup-data-pipeline-vm.sh` (tarball `instruments-service-code` @ e1ec379 == local HEAD). T+10min verify (14:23Z): all 9
-RUNNING + chunk-loop progressing. BEFORE tradfi-IS `_index` (12471 rows): schema_v9=13.8%, source≈0%, asset_group ABSENT.
-Post-fleet sequence (pending VM self-shutdown): consolidator Cloud Run Job
-`uts-prod-manifest-consolidator-instruments-tradfi` → `populate_is_index_v9_2026_06_19.py --asset-group tradfi --apply`
-(row-preserving, aborts if captured drops) → `build_instrument_catalogue.py --asset-group tradfi` → delete VMs.
+
+- B1 catalogue) was replaced with a 9-VM sharded fleet for ~9x wall-clock speedup. Stopped the local serial runners
+  (`dbeq_is_defs_backfill.sh` slot6, `cfe_vx_is_definitions.sh`, `tradfi_backfill_then_v9_monitor.sh` wrapper). Launched
+  `deployment-service/scripts/vm/launch-tradfi-is-defs-sharded.sh` (new, shellcheck-clean, lifecycle:campaign) → 9 GCE
+  VMs `instr-backfill-tradfi-{cboe-a/b/c,nasdaq-a/b,nyse-a/b,cme-a/b}-20260619-141559` (asia-northeast1-c,
+  e2-standard-4, run-ts 20260619-141559), each a disjoint (venue, date-window) shard over 2010-06-19→2026-06-19,
+  `VM_VENUE` scoped to the 3 paid datasets (CME/NASDAQ/NYSE/CBOE; ICE/FX excluded — off the Databento billing
+  allowlist), `MANIFEST_PER_VM_SHARDS=true`, unique `VM_NAME`, `VM_SHUTDOWN_ON_COMPLETION=true`, `VM_CHUNK_DAYS=30`.
+  Reuses the proven `instruments-backfill` task in `setup-data-pipeline-vm.sh` (tarball `instruments-service-code` @
+  e1ec379 == local HEAD). T+10min verify (14:23Z): all 9 RUNNING + chunk-loop progressing. BEFORE tradfi-IS `_index`
+  (12471 rows): schema_v9=13.8%, source≈0%, asset_group ABSENT. Post-fleet sequence (pending VM self-shutdown):
+  consolidator Cloud Run Job `uts-prod-manifest-consolidator-instruments-tradfi` →
+  `populate_is_index_v9_2026_06_19.py --asset-group tradfi --apply` (row-preserving, aborts if captured drops) →
+  `build_instrument_catalogue.py --asset-group tradfi` → delete VMs.
 
 ### Progress Log — close-out drive + LIVE certification (2026-06-19, autonomous)
 
 **VM diagnosis (4 running at 19:30Z; freshness = per-VM SHARD update, NOT the lagging GCS log-tee):**
 
 - `instr-backfill-tradfi-cme-b` — **WORKING**, climbing (date=2021-07-14 of its 2020-01-01→2026-06-19 window). The 8
-  sibling tradfi IS-def shards (cboe-a/b/c, nasdaq-a/b, nyse-a/b, cme-a) **already self-deleted** (`VM_SHUTDOWN_ON_COMPLETION`)
-  — only CME-b remains. Genuine multi-year CME GLBX.MDP3 daily-definitions backfill → many hours ETA.
+  sibling tradfi IS-def shards (cboe-a/b/c, nasdaq-a/b, nyse-a/b, cme-a) **already self-deleted**
+  (`VM_SHUTDOWN_ON_COMPLETION`) — only CME-b remains. Genuine multi-year CME GLBX.MDP3 daily-definitions backfill → many
+  hours ETA.
 - `af-backfill` (sports MTDS api-football coverage) — **WORKING**, log fresh 19:33Z (multi-season league sweep; many
   `Fetched 0 teams` = off-season/no-data, normal honest absence).
 - `mtds-gas-fees` (defi gas_fees 2021→2026 multi-chain RPC) — **WORKING** (initially misread as stalled: GCS log-tee
@@ -1345,26 +1389,27 @@ Post-fleet sequence (pending VM self-shutdown): consolidator Cloud Run Job
 **LIVE CERTIFICATION MATRIX (read 19:40-19:50Z, CANONICAL `-prd` buckets via `resolve_bucket_name`; prediction canonical
 = `-pred-prd`, NOT the stale legacy-flat `-prediction-` buckets):**
 
-| AG×TYPE | rows | v9% | pmode% | src% | ag% | captured | empty(honest) | failed(fillable) | expU | honest-cov% |
-|---|---|---|---|---|---|---|---|---|---|---|
-| cefi IS | 36,084 | 100 | 100 | 100 | 100 | 36,062 | 0 | 22 | 0 | 99.9 |
-| defi IS | 75,081 | 100 | 100 | 100 | 100 | 75,081 | 0 | 0 | 0 | 100 |
-| tradfi IS | 13,727 | **37.6** | 36.3 | 24.4 | **0** | 13,385 | 342 | 0 | 0 | 100 |
-| sports IS | 4,069,112 | 100 | 97.8 | 91.2 | 97.6 | 659,697 | 2,269,970 | 112,049 | 1,027,396 | 36.7 |
-| prediction IS (`-pred-prd`) | 791 | 100 | 100 | 100 | 100 | 791 | 0 | 0 | 0 | 100 |
-| cefi MTDS | 3,872,296 | 96.6 | 85.5 | 85.5 | 96.6 | 1,311,984 | 1,276,223 | 801,975 | 482,114 | 50.5 |
-| defi MTDS | 6,165,919 | 100 | 100 | 100 | 99.8 | 368,605 | 3,483,771 | 6,185 | 2,307,358 | 13.7 |
-| tradfi MTDS | 1,938,910 | 99.7 | 75.1 | 74.9 | 99.1 | 102,936 | 1,007,650 | 10,013 | 818,311 | 11.1 |
-| sports MTDS | 920,230 | 100 | 100 | 100 | 100 | 346,498 | 573,568 | 164 | 0 | 100 |
-| prediction MTDS (`-pred-prd`) | 41,809 | 96.5 | 96.5 | 93.9 | 93.9 | 16,918 | 24,503 | 50 | 338 | 97.8 |
+| AG×TYPE                       | rows      | v9%      | pmode% | src% | ag%   | captured  | empty(honest) | failed(fillable) | expU      | honest-cov% |
+| ----------------------------- | --------- | -------- | ------ | ---- | ----- | --------- | ------------- | ---------------- | --------- | ----------- |
+| cefi IS                       | 36,084    | 100      | 100    | 100  | 100   | 36,062    | 0             | 22               | 0         | 99.9        |
+| defi IS                       | 75,081    | 100      | 100    | 100  | 100   | 75,081    | 0             | 0                | 0         | 100         |
+| tradfi IS                     | 13,727    | **37.6** | 36.3   | 24.4 | **0** | 13,385    | 342           | 0                | 0         | 100         |
+| sports IS                     | 4,069,112 | 100      | 97.8   | 91.2 | 97.6  | 659,697   | 2,269,970     | 112,049          | 1,027,396 | 36.7        |
+| prediction IS (`-pred-prd`)   | 791       | 100      | 100    | 100  | 100   | 791       | 0             | 0                | 0         | 100         |
+| cefi MTDS                     | 3,872,296 | 96.6     | 85.5   | 85.5 | 96.6  | 1,311,984 | 1,276,223     | 801,975          | 482,114   | 50.5        |
+| defi MTDS                     | 6,165,919 | 100      | 100    | 100  | 99.8  | 368,605   | 3,483,771     | 6,185            | 2,307,358 | 13.7        |
+| tradfi MTDS                   | 1,938,910 | 99.7     | 75.1   | 74.9 | 99.1  | 102,936   | 1,007,650     | 10,013           | 818,311   | 11.1        |
+| sports MTDS                   | 920,230   | 100      | 100    | 100  | 100   | 346,498   | 573,568       | 164              | 0         | 100         |
+| prediction MTDS (`-pred-prd`) | 41,809    | 96.5     | 96.5   | 93.9 | 93.9  | 16,918    | 24,503        | 50               | 338       | 97.8        |
 
 **expected_unattempted present (4th state materialised):** defi MTDS 2.31M, cefi MTDS 482K, tradfi MTDS 818K, sports IS
 1.03M, prediction MTDS 338. IS-side defi/cefi/tradfi/prediction = 0 expU (IS is a finite listed-universe, not a
 could-exist grid — captured≈total is correct there).
 
 **NOT-100% honest reasons (no false 100% claims):**
-- **tradfi IS 37.6% v9 / 0% ag = the ONE open cell** — awaits CME-b finish → `populate_is_index_v9 --asset-group tradfi
-  --apply` → `build_instrument_catalogue --asset-group tradfi`. IN PROGRESS.
+
+- **tradfi IS 37.6% v9 / 0% ag = the ONE open cell** — awaits CME-b finish →
+  `populate_is_index_v9 --asset-group tradfi --apply` → `build_instrument_catalogue --asset-group tradfi`. IN PROGRESS.
 - **Low honest-cov% on defi/tradfi/cefi MTDS (13.7/11.1/50.5) = expected_unattempted dominating, BY DESIGN** — the huge
   could-exist universe (every IS-listed instrument × every post-genesis day) is honest absence, not failure. captured is
   real; expU is the 4th-state working.
@@ -1380,42 +1425,46 @@ Per-AG certified delete-lists (`_index/audit/legacy_dup_delete_list_{ag}.parquet
 `instruments_store_legacy_delete_list_{ag}.parquet` IS), classification = per-object `gcs_describe`-verified canonical
 twin (SAFE-TO-DELETE) vs no-twin (MIGRATE-FIRST, NOT delete-safe):
 
-| List | total | SAFE-TO-DELETE | MIGRATE-FIRST | status |
-|---|---|---|---|---|
-| cefi MTDS | 1,077,687 | 1,077,672 | 15 | legacy-flat twins; cefi MD 9.98 TB already deleted earlier; these 1.08M are the residual flat-shape dups |
-| defi MTDS | 352,234 | 346,902 | **5,332** | 5,332 MIGRATE-FIRST = no canonical twin yet → NOT delete-safe (migrate first) |
-| tradfi MTDS | 1,706,332 | 1,705,230 | **1,102** | 1,102 MIGRATE-FIRST not delete-safe |
-| sports MTDS | 252,318 | 248,502 | 3,816 | **ALREADY EXECUTED 2026-06-19** (3,816 content-twin verified safe at delete time) — list is pre-delete/historical |
-| pred MTDS | 573,451 | 573,451 | 0 | all twin-verified safe (canonical = `-pred-prd`) |
-| sports IS | 9,723 | (UNMAPPABLE→migrated) | — | **ALREADY EXECUTED 2026-06-19** (odds-api twins migrated then legacy deleted) |
-| cefi/defi/tradfi/pred IS | 0 | — | — | no legacy IS dups listed |
+| List                     | total     | SAFE-TO-DELETE        | MIGRATE-FIRST | status                                                                                                            |
+| ------------------------ | --------- | --------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------- |
+| cefi MTDS                | 1,077,687 | 1,077,672             | 15            | legacy-flat twins; cefi MD 9.98 TB already deleted earlier; these 1.08M are the residual flat-shape dups          |
+| defi MTDS                | 352,234   | 346,902               | **5,332**     | 5,332 MIGRATE-FIRST = no canonical twin yet → NOT delete-safe (migrate first)                                     |
+| tradfi MTDS              | 1,706,332 | 1,705,230             | **1,102**     | 1,102 MIGRATE-FIRST not delete-safe                                                                               |
+| sports MTDS              | 252,318   | 248,502               | 3,816         | **ALREADY EXECUTED 2026-06-19** (3,816 content-twin verified safe at delete time) — list is pre-delete/historical |
+| pred MTDS                | 573,451   | 573,451               | 0             | all twin-verified safe (canonical = `-pred-prd`)                                                                  |
+| sports IS                | 9,723     | (UNMAPPABLE→migrated) | —             | **ALREADY EXECUTED 2026-06-19** (odds-api twins migrated then legacy deleted)                                     |
+| cefi/defi/tradfi/pred IS | 0         | —                     | —             | no legacy IS dups listed                                                                                          |
 
 **Delete-SAFE NOW (operator may delete; agent did NOT):** cefi MTDS 1,077,672 + defi MTDS 346,902 + tradfi MTDS
 1,705,230 + pred MTDS 573,451 legacy-flat objects (all `gcs_describe`-verified canonical twin present). Plus the
 **prediction legacy-flat BUCKETS** `instruments-store-prediction-…` (stale 2026-06-08) + `market-data-tick-prediction-…`
-are SUPERSEDED by canonical `-pred-prd` (which is live + 100%/97.8% certified) — candidate for bucket-level delete, but a
-per-object twin-walk on those two buckets has NOT been run this session, so they are CANDIDATE not CERTIFIED.
+are SUPERSEDED by canonical `-pred-prd` (which is live + 100%/97.8% certified) — candidate for bucket-level delete, but
+a per-object twin-walk on those two buckets has NOT been run this session, so they are CANDIDATE not CERTIFIED.
 
 **NOT delete-safe (MIGRATE-FIRST first):** defi MTDS 5,332 + tradfi MTDS 1,102 objects have no canonical twin → must be
-copied to canonical path BEFORE their legacy copy is deletable. **Caveat: the lists above are the LAST-COMPUTED snapshot;
-sports + cefi-MD + sports-IS deletes already EXECUTED, so re-run the per-AG rescan twin-verify before any new delete to
-refresh classification (fail-safe: stale list over-lists MIGRATE-FIRST, never under-flags an unsafe delete).**
+copied to canonical path BEFORE their legacy copy is deletable. **Caveat: the lists above are the LAST-COMPUTED
+snapshot; sports + cefi-MD + sports-IS deletes already EXECUTED, so re-run the per-AG rescan twin-verify before any new
+delete to refresh classification (fail-safe: stale list over-lists MIGRATE-FIRST, never under-flags an unsafe delete).**
 
 ### Honest NOT-100% list (final, no false claims)
 
 1. **tradfi IS v9 = the ONE genuinely-open cell** (37.6% v9, 0% asset_group) — gated on `instr-backfill-tradfi-cme-b`
    (CME GLBX.MDP3 daily-defs 2020→2026, ~108 days/h, **ETA ~17h from 19:48Z**). On its TERMINATION the close-out runs:
-   consolidator → `populate_is_index_v9 --asset-group tradfi --apply` → `build_instrument_catalogue --asset-group tradfi`
-   → verify 100% v9. Tracked waiter armed (`/tmp/wait_cme_b.sh`). NOT a code/decision blocker — pure backfill wall-clock.
-2. **cefi MTDS 801,975 attempted_failed = BILLING-BLOCKED** (operator: cefi tick vendor billing paused). Fillable
-   re-run is operator-gated, not agent-fixable.
-3. **sports IS 36.7% honest-cov + 112,049 failed** = SFI/Transfermarkt **BLOCKED-CREDENTIALS** (RapidAPI 403 not-subscribed)
-   + off-season fixture honest absence. af-backfill running to raise api-football captured. Operator: subscribe SFI/TM.
+   consolidator → `populate_is_index_v9 --asset-group tradfi --apply` →
+   `build_instrument_catalogue --asset-group tradfi` → verify 100% v9. Tracked waiter armed (`/tmp/wait_cme_b.sh`). NOT
+   a code/decision blocker — pure backfill wall-clock.
+2. **cefi MTDS 801,975 attempted_failed = BILLING-BLOCKED** (operator: cefi tick vendor billing paused). Fillable re-run
+   is operator-gated, not agent-fixable.
+3. **sports IS 36.7% honest-cov + 112,049 failed** = SFI/Transfermarkt **BLOCKED-CREDENTIALS** (RapidAPI 403
+   not-subscribed)
+   - off-season fixture honest absence. af-backfill running to raise api-football captured. Operator: subscribe SFI/TM.
 4. **defi/tradfi MTDS low honest-cov (13.7/11.1%) = expected_unattempted BY DESIGN** — huge could-exist universe (every
-   IS instrument × every post-genesis day) is honest absence (the 4th state working), not pipeline failure. captured is real.
+   IS instrument × every post-genesis day) is honest absence (the 4th state working), not pipeline failure. captured is
+   real.
 5. **prediction MTDS 96.5% v9 / 93.9% src** — near-complete; 50 failed + 338 expU residual. Not a blocker.
-6. The **legacy-flat `_index` reads (prediction 0% v9, etc.) were a measurement artifact** — the CANONICAL `-prd`/`-pred-prd`
-   buckets (what `resolve_bucket_name` returns + what readers/writers use) are the certified ones in the matrix above.
+6. The **legacy-flat `_index` reads (prediction 0% v9, etc.) were a measurement artifact** — the CANONICAL
+   `-prd`/`-pred-prd` buckets (what `resolve_bucket_name` returns + what readers/writers use) are the certified ones in
+   the matrix above.
 
 **Bottom line: 4 of 5 AGs (cefi, defi, sports, prediction) are CERTIFIED on canonical buckets (IS 100% v9; MTDS
 96.5-100% v9). tradfi IS is the single open cell, gated purely on a ~17h backfill (operator already accelerated via the
@@ -1423,94 +1472,252 @@ refresh classification (fail-safe: stale list over-lists MIGRATE-FIRST, never un
 
 ## Close-out continuation (2026-06-19 ~20:20Z) — Progress Log
 
-- **MTDS fallback-import ratchet 3→2 SHIPPED** (operator ask): `no_fallback_imports_baseline.yaml` lowered; `check_no_fallback_imports.py` confirms `market-tick-data-service: 2 (== baseline)` PASS; MTDS tree has no uncommitted `.py` (count durable on committed tree). **PM@953bc18fc** on LDR → standing PR #432 → main. Locks the import-pattern improvement against regression.
-- **batch+LIVE smoke matrix DONE** (af55592b): `e2e-testing@c92d50f` harness, 3401 cells × 5 AGs — **754 batch-pass / 0 fail; 339 L1-wired / 0 live-fail; 135 symmetric / 0 divergent**; real Binance-spot live tick verified L2. Wired repeatable as MTDS QG STEP 5.88b. Plan `batch_live_smoke_matrix_2026_06_19.md` (PM@d74e2899a). Honest gaps: non-Binance L2 = sandbox-egress-blocked (schema-only); TradFi-Databento + Sports-Odds-API live = blocked-credentials.
-- **SFI CONFLICT DEFINITIVELY RESOLVED** — the *new* `soccer-football-info-api-key` works: sfi-backfill-chunk-3of4 log shows **HTTP 200 ("Fetched 50 leagues")**, filters to 4 mapped prediction-leagues, writes **empty `{}` for off-season historical dates** (2023-02-26/27) = **honest-absence, NOT 403/blocked-credentials**. The earlier close-out conclusion ("403 not-subscribed / permanently dead") was the OLD dead VM/key, now superseded. Sports IS stays 100% v9; off-season empties are correct 4th-state absence.
-- **gas-fees re-launch VERIFIED CLIMBING** on the fixed log-streamer (BSC gas blocks, 2021 dates, 200 pts/chain/day) — the operator-flagged "log frozen" was the pre-fix streamer lag, now resolved (VM-observability fix live).
-- **CME-b (tradfi IS v9, the ONE open cell)**: `instr-backfill-tradfi-cme-b-20260619-141559` RUNNING + writing CME instruments to canonical `instruments-store-tradfi-prd`. **Main-loop-owned tracked waiter `b3e05u4d6` armed** (5-min poll of VM state + hourly climbing-metric breadcrumb + 2h-flat stall-trip + 20h cap). On terminal → re-invokes main loop to run: consolidator → `populate_is_index_v9 --asset-group tradfi --apply` → `build_instrument_catalogue --asset-group tradfi` → verify tradfi IS 100% v9. (Replaces the sub-agent-owned waiter that died when its parent came to rest — per CLAUDE.md "main loop owns the waiter".)
-- **State**: 4/5 IS at 100% v9 (canonical buckets); tradfi IS the single open cell on a ~17h backfill. Residuals are operator-gated (cefi MTDS billing; Extended placeholder; Kalshi RSA-PSS wire; ~7 bespoke launchers) or honest-absence-by-design (low defi/tradfi MTDS coverage = expected_unattempted 4th state).
+- **MTDS fallback-import ratchet 3→2 SHIPPED** (operator ask): `no_fallback_imports_baseline.yaml` lowered;
+  `check_no_fallback_imports.py` confirms `market-tick-data-service: 2 (== baseline)` PASS; MTDS tree has no uncommitted
+  `.py` (count durable on committed tree). **PM@953bc18fc** on LDR → standing PR #432 → main. Locks the import-pattern
+  improvement against regression.
+- **batch+LIVE smoke matrix DONE** (af55592b): `e2e-testing@c92d50f` harness, 3401 cells × 5 AGs — **754 batch-pass / 0
+  fail; 339 L1-wired / 0 live-fail; 135 symmetric / 0 divergent**; real Binance-spot live tick verified L2. Wired
+  repeatable as MTDS QG STEP 5.88b. Plan `batch_live_smoke_matrix_2026_06_19.md` (PM@d74e2899a). Honest gaps:
+  non-Binance L2 = sandbox-egress-blocked (schema-only); TradFi-Databento + Sports-Odds-API live = blocked-credentials.
+- **SFI CONFLICT DEFINITIVELY RESOLVED** — the _new_ `soccer-football-info-api-key` works: sfi-backfill-chunk-3of4 log
+  shows **HTTP 200 ("Fetched 50 leagues")**, filters to 4 mapped prediction-leagues, writes **empty `{}` for off-season
+  historical dates** (2023-02-26/27) = **honest-absence, NOT 403/blocked-credentials**. The earlier close-out conclusion
+  ("403 not-subscribed / permanently dead") was the OLD dead VM/key, now superseded. Sports IS stays 100% v9; off-season
+  empties are correct 4th-state absence.
+- **gas-fees re-launch VERIFIED CLIMBING** on the fixed log-streamer (BSC gas blocks, 2021 dates, 200 pts/chain/day) —
+  the operator-flagged "log frozen" was the pre-fix streamer lag, now resolved (VM-observability fix live).
+- **CME-b (tradfi IS v9, the ONE open cell)**: `instr-backfill-tradfi-cme-b-20260619-141559` RUNNING + writing CME
+  instruments to canonical `instruments-store-tradfi-prd`. **Main-loop-owned tracked waiter `b3e05u4d6` armed** (5-min
+  poll of VM state + hourly climbing-metric breadcrumb + 2h-flat stall-trip + 20h cap). On terminal → re-invokes main
+  loop to run: consolidator → `populate_is_index_v9 --asset-group tradfi --apply` →
+  `build_instrument_catalogue --asset-group tradfi` → verify tradfi IS 100% v9. (Replaces the sub-agent-owned waiter
+  that died when its parent came to rest — per CLAUDE.md "main loop owns the waiter".)
+- **State**: 4/5 IS at 100% v9 (canonical buckets); tradfi IS the single open cell on a ~17h backfill. Residuals are
+  operator-gated (cefi MTDS billing; Extended placeholder; Kalshi RSA-PSS wire; ~7 bespoke launchers) or
+  honest-absence-by-design (low defi/tradfi MTDS coverage = expected_unattempted 4th state).
 
 ## gas-fees + sfi backfill diagnosis (2026-06-19 ~20:50Z) — Progress Log
 
-The operator-flagged "frozen" gas-fees + sfi VMs were re-investigated to a definitive root cause (NOT the prior "climbing on fixed streamer" reading — that was the gsutil-tee daemon firing every 60s while the *work process* was silent; the run.log object mtime stayed frozen at 19:58 — 4min post-launch — for 46+min on BOTH).
+The operator-flagged "frozen" gas-fees + sfi VMs were re-investigated to a definitive root cause (NOT the prior
+"climbing on fixed streamer" reading — that was the gsutil-tee daemon firing every 60s while the _work process_ was
+silent; the run.log object mtime stayed frozen at 19:58 — 4min post-launch — for 46+min on BOTH).
 
-- **gas-fees — ROOT-CAUSED + FIXED.** The collector writes per-VM shards to the dedicated `gas-fees-central-element-323112` reference bucket and read-preflights it via `assert_consolidator_healthy()`, but **no consolidator job covered that bucket** (35 jobs exist; gas-fees absent) → the index was always >120s stale → `ManifestConsolidatorStaleError` raised (the earlier run 151404 shows the identical traceback after reaching 2021-01-26; the close-out agent's "non-fatal warning" claim was WRONG — it is fatal). **Fix: deployment-service@f0f7ded** adds `"gas-fees" = "gas-fees-${var.project_id}"` to `manifest_consolidator_buckets_extended` in `terraform/gcp/manifest_consolidator_scheduler.tf` (the `for_each` provisions both the Cloud Run job + the `*/1` cron; ~13 _index shards → default 4vCPU/16Gi/300s).
-- **🚩 OPERATOR FLAG — foreign TF blocks ALL gcp IaC apply.** `tofu plan/apply` in `deployment-service/terraform/gcp/` currently errors `Duplicate local value definition: blrs_image` — defined in BOTH `audit03_cron_provisioning.tf:17` (on LDR) AND `paper_week_determinism_scheduler.tf:63` (**untracked WIP**, the citadel paper-batch-determinism work). This is a foreign agent's in-flight file (hands-off per multi-agent rules) but it breaks every GCP terraform apply, including the deployment pipeline's. The gas-fees consolidator fix (and any other gcp IaC) cannot apply until the owner removes the duplicate `blrs_image` local from `paper_week_determinism_scheduler.tf` (reference the existing one in `audit03_cron_provisioning.tf`).
-- **sfi-chunk-3of4 — hung, different cause.** Log frozen 46min at the same 19:58 (was actively skipping off-season dates at 19:57:33, then stopped mid-processing — a hang, not a startup crash). It writes to the consolidated sports bucket (consolidator IS covered) so it is NOT the gas-fees failure mode; root cause unknown (likely a hung SFI API request or a manifest-write stall). The SFI *key itself works* (200, 50 leagues, honest-absence empties for off-season) — this is a runtime hang, not blocked-credentials.
+- **gas-fees — ROOT-CAUSED + FIXED.** The collector writes per-VM shards to the dedicated
+  `gas-fees-central-element-323112` reference bucket and read-preflights it via `assert_consolidator_healthy()`, but
+  **no consolidator job covered that bucket** (35 jobs exist; gas-fees absent) → the index was always >120s stale →
+  `ManifestConsolidatorStaleError` raised (the earlier run 151404 shows the identical traceback after reaching
+  2021-01-26; the close-out agent's "non-fatal warning" claim was WRONG — it is fatal). **Fix:
+  deployment-service@f0f7ded** adds `"gas-fees" = "gas-fees-${var.project_id}"` to
+  `manifest_consolidator_buckets_extended` in `terraform/gcp/manifest_consolidator_scheduler.tf` (the `for_each`
+  provisions both the Cloud Run job + the `*/1` cron; ~13 \_index shards → default 4vCPU/16Gi/300s).
+- **🚩 OPERATOR FLAG — foreign TF blocks ALL gcp IaC apply.** `tofu plan/apply` in `deployment-service/terraform/gcp/`
+  currently errors `Duplicate local value definition: blrs_image` — defined in BOTH `audit03_cron_provisioning.tf:17`
+  (on LDR) AND `paper_week_determinism_scheduler.tf:63` (**untracked WIP**, the citadel paper-batch-determinism work).
+  This is a foreign agent's in-flight file (hands-off per multi-agent rules) but it breaks every GCP terraform apply,
+  including the deployment pipeline's. The gas-fees consolidator fix (and any other gcp IaC) cannot apply until the
+  owner removes the duplicate `blrs_image` local from `paper_week_determinism_scheduler.tf` (reference the existing one
+  in `audit03_cron_provisioning.tf`).
+- **sfi-chunk-3of4 — hung, different cause.** Log frozen 46min at the same 19:58 (was actively skipping off-season dates
+  at 19:57:33, then stopped mid-processing — a hang, not a startup crash). It writes to the consolidated sports bucket
+  (consolidator IS covered) so it is NOT the gas-fees failure mode; root cause unknown (likely a hung SFI API request or
+  a manifest-write stall). The SFI _key itself works_ (200, 50 leagues, honest-absence empties for off-season) — this is
+  a runtime hang, not blocked-credentials.
 - Both hung VMs DELETED (STOPPING) to stop compute waste.
 
 ### Follow-up todos (tracked)
 
-- [x] ✅ [INFRA] P1. deployment-service — gas-fees consolidator job+cron APPLIED + VERIFIED. Foreign `paper_week_determinism_scheduler.tf` dup-`blrs_image` was fixed by its owner; `tofu apply` (targeted, 2 add/0 change/0 destroy) created `uts-prod-manifest-consolidator-gas-fees` job + `*/1` cron; ran once to seed the index; relaunched gas-fees (`mtds-gas-fees-20260619-211114`) which now CLIMBS past the crash point (ETHEREUM+BSC sampling, 2021-01-01/02, **no ManifestConsolidatorStaleError**) — deployment-service@f0f7ded.
-- [ ] [SCRIPT] P2. market-tick-data-service / deployment-service — diagnose the sfi backfill mid-processing hang (log froze 4min post-launch, no crash; SFI key works). Check for an SFI-API request timeout / manifest-write stall; add a request timeout + per-date isolation so a single hung request can't freeze the whole chunk. Then relaunch the SFI chunks. Target repo: market-tick-data-service (collector) + deployment-service (launcher).
-- [ ] [SCRIPT] P2. **DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the gas/sfi "VM RUNNING but work-process silent, log-tee daemon alive" class: detect work-process silence (run.log object mtime frozen N min while VM RUNNING) and auto-kill+alert, distinct from the existing heartbeat watchdog. Target repo: deployment-service.
+- [x] ✅ [INFRA] P1. deployment-service — gas-fees consolidator job+cron APPLIED + VERIFIED. Foreign
+      `paper_week_determinism_scheduler.tf` dup-`blrs_image` was fixed by its owner; `tofu apply` (targeted, 2 add/0
+      change/0 destroy) created `uts-prod-manifest-consolidator-gas-fees` job + `*/1` cron; ran once to seed the index;
+      relaunched gas-fees (`mtds-gas-fees-20260619-211114`) which now CLIMBS past the crash point (ETHEREUM+BSC
+      sampling, 2021-01-01/02, **no ManifestConsolidatorStaleError**) — deployment-service@f0f7ded.
+- [ ] [SCRIPT] P2. market-tick-data-service / deployment-service — diagnose the sfi backfill mid-processing hang (log
+      froze 4min post-launch, no crash; SFI key works). Check for an SFI-API request timeout / manifest-write stall; add
+      a request timeout + per-date isolation so a single hung request can't freeze the whole chunk. Then relaunch the
+      SFI chunks. Target repo: market-tick-data-service (collector) + deployment-service (launcher).
+- [ ] [SCRIPT] P2. **DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the
+      gas/sfi "VM RUNNING but work-process silent, log-tee daemon alive" class: detect work-process silence (run.log
+      object mtime frozen N min while VM RUNNING) and auto-kill+alert, distinct from the existing heartbeat watchdog.
+      Target repo: deployment-service.
 
 ## gas-fees FIX VERIFIED + sfi relaunch (2026-06-19 ~21:18Z) — Progress Log
 
-- **Foreign TF blocker RESOLVED by its owner** — `paper_week_determinism_scheduler.tf`'s duplicate `blrs_image` local was removed (now reuses `local.blrs_image` from `audit03_cron_provisioning.tf`). `tofu validate` clean. (No edit by me to the foreign file.)
-- **gas-fees consolidator cron APPLIED + FIX VERIFIED.** Targeted `tofu apply` (2 add / 0 change / 0 destroy) created `uts-prod-manifest-consolidator-gas-fees` (Cloud Run job) + `uts-prod-manifest-consolidator-gas-fees-cron` (`*/1`). Ran the job once to seed a fresh index. Relaunched `mtds-gas-fees-20260619-211114`, which is now **past the exact preflight that crashed the prior run** — log shows ETHEREUM gas sampling + BSC block resolution for 2021-01-01/02 with **no `ManifestConsolidatorStaleError` and no traceback**. Root cause (missing consolidator coverage) is genuinely closed.
-- **sfi — HTTP-layer hang ruled OUT; relaunched to reproduce-or-clear.** The SFI adapter base (`instruments-service/.../adapters/sports/adapters/base.py`) ALREADY sets a bounded `aiohttp.ClientTimeout` (`_HTTP_TOTAL_TIMEOUT` + sock bounds) and retries `asyncio.TimeoutError` — so a stalled SFI request CANNOT hang the worker forever. The earlier 46-min freeze is therefore NOT a missing-timeout bug; candidates are an orchestration-layer stall, a log-tee daemon death (work continued, only logging froze), or the chunk having effectively completed. Relaunched chunk-parallel 4 (`run-id 20260619-211603`; chunk 3of4 = 2023-02-26..2024-09-23, spanning the prior 2023-02-27 freeze date). Tracked waiter watches 3of4 cross 2023-02-27: **advance = transient (systemic fix = the already-filed silent-worker watchdog); re-freeze at the same point = a date/data-specific reproducer to root-cause** (NOT HTTP). Honest status: sfi root cause is NOT yet pinned to a code defect — relaunch is the reproduce-or-clear step, not a claimed fix.
+- **Foreign TF blocker RESOLVED by its owner** — `paper_week_determinism_scheduler.tf`'s duplicate `blrs_image` local
+  was removed (now reuses `local.blrs_image` from `audit03_cron_provisioning.tf`). `tofu validate` clean. (No edit by me
+  to the foreign file.)
+- **gas-fees consolidator cron APPLIED + FIX VERIFIED.** Targeted `tofu apply` (2 add / 0 change / 0 destroy) created
+  `uts-prod-manifest-consolidator-gas-fees` (Cloud Run job) + `uts-prod-manifest-consolidator-gas-fees-cron` (`*/1`).
+  Ran the job once to seed a fresh index. Relaunched `mtds-gas-fees-20260619-211114`, which is now **past the exact
+  preflight that crashed the prior run** — log shows ETHEREUM gas sampling + BSC block resolution for 2021-01-01/02 with
+  **no `ManifestConsolidatorStaleError` and no traceback**. Root cause (missing consolidator coverage) is genuinely
+  closed.
+- **sfi — HTTP-layer hang ruled OUT; relaunched to reproduce-or-clear.** The SFI adapter base
+  (`instruments-service/.../adapters/sports/adapters/base.py`) ALREADY sets a bounded `aiohttp.ClientTimeout`
+  (`_HTTP_TOTAL_TIMEOUT` + sock bounds) and retries `asyncio.TimeoutError` — so a stalled SFI request CANNOT hang the
+  worker forever. The earlier 46-min freeze is therefore NOT a missing-timeout bug; candidates are an
+  orchestration-layer stall, a log-tee daemon death (work continued, only logging froze), or the chunk having
+  effectively completed. Relaunched chunk-parallel 4 (`run-id 20260619-211603`; chunk 3of4 = 2023-02-26..2024-09-23,
+  spanning the prior 2023-02-27 freeze date). Tracked waiter watches 3of4 cross 2023-02-27: **advance = transient
+  (systemic fix = the already-filed silent-worker watchdog); re-freeze at the same point = a date/data-specific
+  reproducer to root-cause** (NOT HTTP). Honest status: sfi root cause is NOT yet pinned to a code defect — relaunch is
+  the reproduce-or-clear step, not a claimed fix.
 
 ## Backfill "freeze" ROOT CAUSE + fix shipped; rate-limit-vs-internal verdict (2026-06-19 ~21:45Z) — Progress Log
 
-**Definitive root cause (local faulthandler repro, per operator "run local, VM is slow"):** the "frozen backfill log" is NOT a hang — it is slow work + sparse logging. `gas_fee_client.get_historical_fees` sampled ~288 blocks STRICTLY SEQUENTIALLY (one blocking `eth_feeHistory` RPC each) and logged only every 200, so on an underpowered e2-standard-2/4 VM the long silent gap looked frozen. Local BSC 2021-01-01 completed in 86s; faulthandler caught the main thread mid-RPC at `_sample_one_block`.
+**Definitive root cause (local faulthandler repro, per operator "run local, VM is slow"):** the "frozen backfill log" is
+NOT a hang — it is slow work + sparse logging. `gas_fee_client.get_historical_fees` sampled ~288 blocks STRICTLY
+SEQUENTIALLY (one blocking `eth_feeHistory` RPC each) and logged only every 200, so on an underpowered e2-standard-2/4
+VM the long silent gap looked frozen. Local BSC 2021-01-01 completed in 86s; faulthandler caught the main thread mid-RPC
+at `_sample_one_block`.
 
 **Operator's question — rate-limited vs internally self-slowed — answered with evidence:**
-- **defi/gas = INTERNAL self-throttle (sequential), NOT rate-limited.** Parallel run hit 16 concurrent with ZERO 429s and scaled ~14× (86s→6s). FIXED in code.
-- **sfi = GENUINELY rate-limit bound (external).** VM log shows repeated `Rate limited (429) ... sleeping 60s to next minute` EVEN at the adapter's 0.34s self-pace → ~one 60s sleep/minute, ~a handful of matches/min effective. Parallelizing would worsen it; fix is a higher RapidAPI tier.
 
-**Fix shipped:** `gas_fee_client.get_historical_fees` parallelized — `ThreadPoolExecutor(max_workers=16)` (I/O-bound fleet default), first-block probe preserves the `use_fallback` mode, logs every 50, output sorted by block. **market-tick-data-service@7421693** on LDR (QG-green, sentinel 6b9af8f; ruff+basedpyright clean; local re-run 86s→6s verified). Direct-pushed because quickmerge was blocked by a FOREIGN dirty dep (UTL `honest_coverage_ratchet` WIP), not this change.
-**Fleet QG unblock:** MTDS pip-audit was failing fleet-wide on a new vcrpy CVE `GHSA-rpj2-4hq8-938g` (YAML cassette loader) absent from the ignore-block; added it (non-exploitable — own fixtures, vcrpy pinned by aiohttp-3.14 deadlock). **unified-trading-pm@78a4615d2**.
+- **defi/gas = INTERNAL self-throttle (sequential), NOT rate-limited.** Parallel run hit 16 concurrent with ZERO 429s
+  and scaled ~14× (86s→6s). FIXED in code.
+- **sfi = GENUINELY rate-limit bound (external).** VM log shows repeated
+  `Rate limited (429) ... sleeping 60s to next minute` EVEN at the adapter's 0.34s self-pace → ~one 60s sleep/minute, ~a
+  handful of matches/min effective. Parallelizing would worsen it; fix is a higher RapidAPI tier.
+
+**Fix shipped:** `gas_fee_client.get_historical_fees` parallelized — `ThreadPoolExecutor(max_workers=16)` (I/O-bound
+fleet default), first-block probe preserves the `use_fallback` mode, logs every 50, output sorted by block.
+**market-tick-data-service@7421693** on LDR (QG-green, sentinel 6b9af8f; ruff+basedpyright clean; local re-run 86s→6s
+verified). Direct-pushed because quickmerge was blocked by a FOREIGN dirty dep (UTL `honest_coverage_ratchet` WIP), not
+this change. **Fleet QG unblock:** MTDS pip-audit was failing fleet-wide on a new vcrpy CVE `GHSA-rpj2-4hq8-938g` (YAML
+cassette loader) absent from the ignore-block; added it (non-exploitable — own fixtures, vcrpy pinned by aiohttp-3.14
+deadlock). **unified-trading-pm@78a4615d2**.
 
 ### Follow-up todos (tracked)
 
-- [ ] [SCRIPT] P2. instruments-service / market-tick-data-service — apply the same parallelization pattern to the sfi/sports collector's per-date sequential loop **within the RapidAPI rate budget** (concurrency capped so it does not increase 429s) so it's not needlessly serial on top of being rate-limited. Target repo: instruments-service (SFI adapter) + market-tick-data-service (sports orchestration).
-- [x] ✅ [CREDENTIALS] P1. SUPERSEDED — NOT a tier ask. Operator 2026-06-19: SFI RapidAPI is **4 req/s (max tier 6 req/s) + 100k req/day**, so a tier upgrade is negligible (4→6). The 429s were SELF-INFLICTED: we ran **4 chunk-parallel VMs sharing ONE RapidAPI key** (each self-pacing 0.34s≈2.94/s → 4×2.94≈11.8/s vs the 4/s ACCOUNT limit) → constant 429 collisions → 60s back-off sleeps → aggregate throughput WORSE than one clean stream. **Fix = collapse to a single stream** (sfi-backfill-20260619-221723, chunk=single, 2.94/s < 4/s, no collision); incremental skip resumes from the chunks' captured dates. Binding ceiling is the 100k/day cap (a single ~2.94/s stream saturates it in ~9.4h), NOT rps.
-- [x] ✅ [INFRA] P3. deployment-service / unified-trading-pm — cosmetic `qg-common.sh:159` bug: `stat` output leaks into an arithmetic `(( ))` expression in the pip-audit deps-hash cache check → "syntax error in expression" + a redundant full pip-audit run (non-fatal). Fix the cache-hash comparison. Target repo: unified-trading-pm (qg-common.sh SSOT). — unified-trading-pm `qg-common.sh:162` (GNU-first guarded `stat -c %Y 2>/dev/null || stat -f %m` shipped).
+- [ ] [SCRIPT] P2. instruments-service / market-tick-data-service — apply the same parallelization pattern to the
+      sfi/sports collector's per-date sequential loop **within the RapidAPI rate budget** (concurrency capped so it does
+      not increase 429s) so it's not needlessly serial on top of being rate-limited. Target repo: instruments-service
+      (SFI adapter) + market-tick-data-service (sports orchestration).
+- [x] ✅ [CREDENTIALS] P1. SUPERSEDED — NOT a tier ask. Operator 2026-06-19: SFI RapidAPI is **4 req/s (max tier 6
+      req/s) + 100k req/day**, so a tier upgrade is negligible (4→6). The 429s were SELF-INFLICTED: we ran **4
+      chunk-parallel VMs sharing ONE RapidAPI key** (each self-pacing 0.34s≈2.94/s → 4×2.94≈11.8/s vs the 4/s ACCOUNT
+      limit) → constant 429 collisions → 60s back-off sleeps → aggregate throughput WORSE than one clean stream. **Fix =
+      collapse to a single stream** (sfi-backfill-20260619-221723, chunk=single, 2.94/s < 4/s, no collision);
+      incremental skip resumes from the chunks' captured dates. Binding ceiling is the 100k/day cap (a single ~2.94/s
+      stream saturates it in ~9.4h), NOT rps.
+- [x] ✅ [INFRA] P3. deployment-service / unified-trading-pm — cosmetic `qg-common.sh:159` bug: `stat` output leaks into
+      an arithmetic `(( ))` expression in the pip-audit deps-hash cache check → "syntax error in expression" + a
+      redundant full pip-audit run (non-fatal). Fix the cache-hash comparison. Target repo: unified-trading-pm
+      (qg-common.sh SSOT). — unified-trading-pm `qg-common.sh:162` (GNU-first guarded
+      `stat -c %Y 2>/dev/null || stat -f %m` shipped).
 
 ## sfi EFFICIENCY — corrected root cause (2026-06-19 ~22:18Z) — Progress Log
 
-Operator clarified the SFI RapidAPI limits: **4 req/s (max 6), 100k/day**. This INVALIDATES the "needs a higher tier" framing — 4→6 rps is negligible and the per-day 100k is the true ceiling. The real bug: **the chunk-parallel backfill ran 4 VMs against ONE shared RapidAPI key**, so 4 × the per-instance 2.94/s ≈ 11.8/s vs a 4/s ACCOUNT limit → 429 storms → 60s back-offs → effective throughput far BELOW a single clean stream. (Verified: all 4 chunks of run 211603 were RUNNING and each logging 429s.) The progressive loop itself is correctly sequential + incremental-skip-aware; over-fetching was never the issue.
+Operator clarified the SFI RapidAPI limits: **4 req/s (max 6), 100k/day**. This INVALIDATES the "needs a higher tier"
+framing — 4→6 rps is negligible and the per-day 100k is the true ceiling. The real bug: **the chunk-parallel backfill
+ran 4 VMs against ONE shared RapidAPI key**, so 4 × the per-instance 2.94/s ≈ 11.8/s vs a 4/s ACCOUNT limit → 429 storms
+→ 60s back-offs → effective throughput far BELOW a single clean stream. (Verified: all 4 chunks of run 211603 were
+RUNNING and each logging 429s.) The progressive loop itself is correctly sequential + incremental-skip-aware;
+over-fetching was never the issue.
 
-**Fix applied:** killed the 4 colliding chunks; relaunched a **single** stream `sfi-backfill-20260619-221723` (2.94/s, under the 4/s cap → no collisions). The chunk-parallel approach is fundamentally wrong for a per-account-rate-limited vendor.
+**Fix applied:** killed the 4 colliding chunks; relaunched a **single** stream `sfi-backfill-20260619-221723` (2.94/s,
+under the 4/s cap → no collisions). The chunk-parallel approach is fundamentally wrong for a per-account-rate-limited
+vendor.
 
 ### Follow-up todos (corrected)
 
-- [ ] [SCRIPT] P2. deployment-service — `launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse `--chunks N>1`) because the RapidAPI key's 4/s limit is PER-ACCOUNT, not per-VM — N chunks just multiply 429 collisions. The `sfi_chunk_parallel_backfill_2026_04_22` plan's premise (independent per-chunk rate budgets) is invalid for a shared key; supersede it. Optionally tighten the per-instance pace 0.34s→0.25s to use the full 4/s on the single stream. Target repo: deployment-service (launcher) + instruments-service (`soccerfootball_info.py` `_min_request_interval`).
+- [ ] [SCRIPT] P2. deployment-service — `launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse
+      `--chunks N>1`) because the RapidAPI key's 4/s limit is PER-ACCOUNT, not per-VM — N chunks just multiply 429
+      collisions. The `sfi_chunk_parallel_backfill_2026_04_22` plan's premise (independent per-chunk rate budgets) is
+      invalid for a shared key; supersede it. Optionally tighten the per-instance pace 0.34s→0.25s to use the full 4/s
+      on the single stream. Target repo: deployment-service (launcher) + instruments-service (`soccerfootball_info.py`
+      `_min_request_interval`).
 
 ## Autonomous batch (2026-06-20 ~00:10Z) — gross-now + Kalshi + residuals
 
-**gross-now (paper-trading dashboard):** the panel showed a single "Gross exposure" (planned ceiling) with no live counterpart while net had both (max)+(now). Verified against the live engine JSON: `margin.net_usd_now` == Σ signed `target_usd` over `positions` (MATCH), and Σ|target_usd| = the live gross. The paper engine (`paper_engine.py`, a deployed Cloud Run job — **source NOT in the workspace**, the foreign paper-determinism work) emits only a single `gross_usd` that flips planned-ceiling↔live with no gross_*_now split. **Fix (UI-derive):** added "Gross exposure (now)" = Σ|position notional| derived in `app/paper-trading/page.tsx` (relabelled the engine value "Gross exposure (max)"), `data-testid=pt-gross-now`, symmetric with net-now. tsc clean; **pw:L2 paper-trading smoke 2/2 green** (regression: tests/smoke/paper-trading.smoke.spec.ts). ✅ SHIPPED unified-trading-system-ui@f4afdd83 (UI QG green: tsc+ESLint+285 tests+build).
-**Kalshi:** the adapter was already built and uses **PUBLIC** read endpoints (markets/trades — no auth/RSA-PSS; signing is trading-only), and the MTDS factory routes `kalshi → KalshiAdapter`. The only gap was the prediction launcher hardcoding POLYMARKET. **Fix:** `launch-mtds-prediction-backfill-vm.sh` now takes `--venue POLYMARKET|KALSHI` (deployment-service@0a7c3f8). **Launched** `mtds-prediction-kalshi-20260620-000833` — but it hit a DEEPER gap ("No active venues", see below): KALSHI was hardcoded-disabled in `get_venues_for_asset_groups`. ✅ FIXED market-tick-data-service@ebf947b. "RSA-PSS wire" residual was a false premise (market data needs no signing). VM-deploy (tarball rebuild) pending foreign-tree-clean.
+**gross-now (paper-trading dashboard):** the panel showed a single "Gross exposure" (planned ceiling) with no live
+counterpart while net had both (max)+(now). Verified against the live engine JSON: `margin.net_usd_now` == Σ signed
+`target_usd` over `positions` (MATCH), and Σ|target*usd| = the live gross. The paper engine (`paper_engine.py`, a
+deployed Cloud Run job — **source NOT in the workspace**, the foreign paper-determinism work) emits only a single
+`gross_usd` that flips planned-ceiling↔live with no gross*\*\_now split. **Fix (UI-derive):** added "Gross exposure
+(now)" = Σ|position notional| derived in `app/paper-trading/page.tsx` (relabelled the engine value "Gross exposure
+(max)"), `data-testid=pt-gross-now`, symmetric with net-now. tsc clean; **pw:L2 paper-trading smoke 2/2 green**
+(regression: tests/smoke/paper-trading.smoke.spec.ts). ✅ SHIPPED unified-trading-system-ui@f4afdd83 (UI QG green:
+tsc+ESLint+285 tests+build). **Kalshi:** the adapter was already built and uses **PUBLIC** read endpoints
+(markets/trades — no auth/RSA-PSS; signing is trading-only), and the MTDS factory routes `kalshi → KalshiAdapter`. The
+only gap was the prediction launcher hardcoding POLYMARKET. **Fix:** `launch-mtds-prediction-backfill-vm.sh` now takes
+`--venue POLYMARKET|KALSHI` (deployment-service@0a7c3f8). **Launched** `mtds-prediction-kalshi-20260620-000833` — but it
+hit a DEEPER gap ("No active venues", see below): KALSHI was hardcoded-disabled in `get_venues_for_asset_groups`. ✅
+FIXED market-tick-data-service@ebf947b. "RSA-PSS wire" residual was a false premise (market data needs no signing).
+VM-deploy (tarball rebuild) pending foreign-tree-clean.
 
 ### Follow-up todos
 
-- [ ] [SCRIPT] P2. **paper_engine.py** (foreign paper-determinism Cloud Run job; source not yet on LDR) — emit `margin.gross_usd_now` (= Σ|position notional|) + `gross_leverage_now` explicitly, like `net_usd_now`/`net_leverage_now`, instead of a single `gross_usd` that conflates planned-ceiling vs live (it flips 15M/6x ↔ 5.6M/2.2x between runs). UI currently derives gross-now from positions as the interim. Target: whoever owns paper_engine.py (batch-live-reconciliation / citadel paper-determinism).
-- [ ] [SCRIPT] P3. deployment-service — `launch-mtds-prediction-backfill-vm.sh` singleton lock matches `^mtds-prediction-` so a KALSHI run is blocked by a concurrent POLYMARKET run (different APIs, no shared rate limit) → make the lock per-venue. `--force` is the current bypass.
+- [ ] [SCRIPT] P2. **paper_engine.py** (foreign paper-determinism Cloud Run job; source not yet on LDR) — emit
+      `margin.gross_usd_now` (= Σ|position notional|) + `gross_leverage_now` explicitly, like
+      `net_usd_now`/`net_leverage_now`, instead of a single `gross_usd` that conflates planned-ceiling vs live (it flips
+      15M/6x ↔ 5.6M/2.2x between runs). UI currently derives gross-now from positions as the interim. Target: whoever
+      owns paper_engine.py (batch-live-reconciliation / citadel paper-determinism).
+- [ ] [SCRIPT] P3. deployment-service — `launch-mtds-prediction-backfill-vm.sh` singleton lock matches
+      `^mtds-prediction-` so a KALSHI run is blocked by a concurrent POLYMARKET run (different APIs, no shared rate
+      limit) → make the lock per-venue. `--force` is the current bypass.
 
 ### Residuals status (operator-gated / foreign — NOT agent-fixable)
 
 - **cefi MTDS (801K failed)** — billing-blocked; enabling billing is operator-only. No code fix.
-- **Extended Finance** — no real API yet (placeholder secrets); operator is applying. Replace on arrival.
-- **MTDS STEP 5.88b** — the smoke-matrix agent's `quality-gates.sh` wiring is foreign uncommitted WIP, blocked on the foreign dirty UTL tree (`honest_coverage_ratchet`/`run_writer`) being committed by its owner. Not mine to ship.
+- **Extended Finance** — NOT a blocker for the data pipeline (corrected 2026-06-22): public `/info/*` market data
+  (markets/candles/funding) needs NO API key; verified live. The stark key is execution-only (post-cutover). IS genesis
+  adapter fixed + shipped (instruments-service@9bb7cdfd); the public backfill is unblocked (P2 above).
+- **MTDS STEP 5.88b** — the smoke-matrix agent's `quality-gates.sh` wiring is foreign uncommitted WIP, blocked on the
+  foreign dirty UTL tree (`honest_coverage_ratchet`/`run_writer`) being committed by its owner. Not mine to ship.
 
 ## Kalshi — deeper root cause found + fixed (2026-06-20 ~00:35Z)
 
-The first Kalshi launch (mtds-prediction-kalshi-000833) COMPLETED exit-0 but logged "No active venues for date=X asset_groups=['PREDICTION']" for all 91 dates → zero data. Root cause (deeper than the launcher): `get_venues_for_asset_groups` in `market_tick_data_service/engine/orchestrator/__init__.py` hardcoded PREDICTION→[POLYMARKET] with a stale "KALSHI disabled — requires API key + US jurisdiction" note, so `--venues KALSHI` intersected to empty. The note was WRONG for market data (KALSHI read endpoints are PUBLIC; RSA-PSS is trading-only; UAC registers KALSHI launch 2021-07-30 so the availability filter passes). **Fixed: added KALSHI to the prediction venue list — market-tick-data-service@ebf947b** (MTDS QG green). Combined with the launcher --venue param (0a7c3f8), Kalshi is now FULLY code-enabled.
+The first Kalshi launch (mtds-prediction-kalshi-000833) COMPLETED exit-0 but logged "No active venues for date=X
+asset_groups=['PREDICTION']" for all 91 dates → zero data. Root cause (deeper than the launcher):
+`get_venues_for_asset_groups` in `market_tick_data_service/engine/orchestrator/__init__.py` hardcoded
+PREDICTION→[POLYMARKET] with a stale "KALSHI disabled — requires API key + US jurisdiction" note, so `--venues KALSHI`
+intersected to empty. The note was WRONG for market data (KALSHI read endpoints are PUBLIC; RSA-PSS is trading-only; UAC
+registers KALSHI launch 2021-07-30 so the availability filter passes). **Fixed: added KALSHI to the prediction venue
+list — market-tick-data-service@ebf947b** (MTDS QG green). Combined with the launcher --venue param (0a7c3f8), Kalshi is
+now FULLY code-enabled.
 
-**VM-deploy gap (deployment nuance):** backfill VMs install service code from GCS tarballs (`create-code-tarballs.sh`), NOT fresh LDR git — so the get_venues fix (and the earlier gas parallelization mtds@7421693) reach a VM only after a tarball rebuild. The rebuild is currently BLOCKED: its per-repo dirty-tree gate trips on FOREIGN uncommitted WIP in the shared clone (MTDS `scripts/quality-gates.sh` = smoke-agent STEP 5.88b; UTL `honest_coverage_ratchet`/`run_writer`). Forcing `--allow-dirty-tarball` would bundle another agent's WIP into the deployed tarball (unsafe). Completes cleanly on the next routine tarball build once those foreign trees commit.
+**VM-deploy gap (deployment nuance):** backfill VMs install service code from GCS tarballs (`create-code-tarballs.sh`),
+NOT fresh LDR git — so the get_venues fix (and the earlier gas parallelization mtds@7421693) reach a VM only after a
+tarball rebuild. The rebuild is currently BLOCKED: its per-repo dirty-tree gate trips on FOREIGN uncommitted WIP in the
+shared clone (MTDS `scripts/quality-gates.sh` = smoke-agent STEP 5.88b; UTL `honest_coverage_ratchet`/`run_writer`).
+Forcing `--allow-dirty-tarball` would bundle another agent's WIP into the deployed tarball (unsafe). Completes cleanly
+on the next routine tarball build once those foreign trees commit.
 
 ### Follow-up todos
 
-- [ ] [INFRA] P2. deployment-service — once the foreign dirty trees clear (MTDS scripts/quality-gates.sh + UTL honest_coverage_ratchet), rebuild the PREDICTION code tarball (`create-code-tarballs.sh --asset-group PREDICTION`) and relaunch the Kalshi backfill (`launch-mtds-prediction-backfill-vm.sh --force --venue KALSHI 2026-03-21 2026-06-19`); verify it fetches (not "No active venues"). Same tarball also delivers the gas parallelization (mtds@7421693, ~14x) to gas-fees VMs. Target repo: deployment-service.
+- [ ] [INFRA] P2. deployment-service — once the foreign dirty trees clear (MTDS scripts/quality-gates.sh + UTL
+      honest_coverage_ratchet), rebuild the PREDICTION code tarball (`create-code-tarballs.sh --asset-group PREDICTION`)
+      and relaunch the Kalshi backfill
+      (`launch-mtds-prediction-backfill-vm.sh --force --venue KALSHI 2026-03-21 2026-06-19`); verify it fetches (not "No
+      active venues"). Same tarball also delivers the gas parallelization (mtds@7421693, ~14x) to gas-fees VMs. Target
+      repo: deployment-service.
 
 ## Kalshi Q&A canonical parser — SHIPPED (2026-06-20, operator-requested)
 
-Operator: "build the [Kalshi] parser for market grouping/reconciliation same way as polymarket; map same markets to same canonicals for arb." DONE:
-- **unified-api-contracts@c3bf51d**: `KALSHI_TICKER_PREFIX_TO_GROUP` (72 rule entries, full KX* crypto/equity-index/commodity/FX/macro families); `classify_kalshi_to_canonical_group` upgraded override-only → 3-tier (exact override → longest-prefix → OTHER); +25 tests (63 total) incl. the **cross-venue arb invariant** (Kalshi KX* and Polymarket slugs for the same real-world question resolve to the SAME `CanonicalQuestionGroup`: `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `FED_RATE_DECISION_PER_FOMC`, `CPI_PRINT_PER_MONTH`, `NONFARM_PAYROLLS_PER_MONTH`). UAC QG green (sentinel 04822f65).
-- **instruments-service@b313b0e**: classifier docstring + 3 prediction tests updated. Shipped via the carve-out (Quickmerge: agent trailer) because a pre-existing CeFi test (`test_cefi_yields_no_rows_for_post_all_venue_launches`) blocked the sentinel — that failure is from the SEPARATE Kalshi/Polymarket PERPS venue addition (KALSHI-PERP CeFi launch date), tracked in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, owned by the perps build.
+Operator: "build the [Kalshi] parser for market grouping/reconciliation same way as polymarket; map same markets to same
+canonicals for arb." DONE:
 
-Now Kalshi prediction-Q&A markets bucket to canonical groups (was OTHER) AND share canonicals with Polymarket → cross-venue dispersion arb works at the canonical layer. Next: IS Kalshi discover + MTDS download (once the VM tarball unblocks) to flow the actual data into those canonical buckets.
+- **unified-api-contracts@c3bf51d**: `KALSHI_TICKER_PREFIX_TO_GROUP` (72 rule entries, full KX*
+  crypto/equity-index/commodity/FX/macro families); `classify_kalshi_to_canonical_group` upgraded override-only → 3-tier
+  (exact override → longest-prefix → OTHER); +25 tests (63 total) incl. the **cross-venue arb invariant** (Kalshi KX*
+  and Polymarket slugs for the same real-world question resolve to the SAME `CanonicalQuestionGroup`:
+  `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `FED_RATE_DECISION_PER_FOMC`, `CPI_PRINT_PER_MONTH`,
+  `NONFARM_PAYROLLS_PER_MONTH`). UAC QG green (sentinel 04822f65).
+- **instruments-service@b313b0e**: classifier docstring + 3 prediction tests updated. Shipped via the carve-out
+  (Quickmerge: agent trailer) because a pre-existing CeFi test (`test_cefi_yields_no_rows_for_post_all_venue_launches`)
+  blocked the sentinel — that failure is from the SEPARATE Kalshi/Polymarket PERPS venue addition (KALSHI-PERP CeFi
+  launch date), tracked in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, owned by the perps build.
+
+Now Kalshi prediction-Q&A markets bucket to canonical groups (was OTHER) AND share canonicals with Polymarket →
+cross-venue dispersion arb works at the canonical layer. Next: IS Kalshi discover + MTDS download (once the VM tarball
+unblocks) to flow the actual data into those canonical buckets.
 
 ### Side-finding (2026-06-20, non-blocking)
-- [ ] [TEST] P3. unified-api-contracts — UEI-lifecycle contract-call ratchet baseline (27) for `canonical/crosscutting/honest_coverage.py` is STALE: commit `27a80d2 feat(freshness): feed-SLA Phase 1` split the honest_coverage cluster registries out (under the 900-line cap), so the contract calls MOVED to the new registry files (file now ~21, was 27) — NOT deleted, NOT a regression. Both UAC + IS QG pass overall (warn-tier cross-repo line). Re-baseline the ratchet for the post-split file set (sum across honest_coverage.py + the split-out registries). Owned by the 27a80d2 split author. Repo: unified-api-contracts.
+
+- [ ] [TEST] P3. unified-api-contracts — UEI-lifecycle contract-call ratchet baseline (27) for
+      `canonical/crosscutting/honest_coverage.py` is STALE: commit `27a80d2 feat(freshness): feed-SLA Phase 1` split the
+      honest_coverage cluster registries out (under the 900-line cap), so the contract calls MOVED to the new registry
+      files (file now ~21, was 27) — NOT deleted, NOT a regression. Both UAC + IS QG pass overall (warn-tier cross-repo
+      line). Re-baseline the ratchet for the post-split file set (sum across honest_coverage.py + the split-out
+      registries). Owned by the 27a80d2 split author. Repo: unified-api-contracts.
