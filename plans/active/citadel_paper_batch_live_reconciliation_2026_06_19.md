@@ -780,12 +780,30 @@ are identified (2) and the ledger exists (3).
       inference. Likely candidates: an SSR/prefetch error, a QueryClient retry/throwOnError config, or the hook erroring
       in a transform before fetch. Repo: unified-trading-system-ui.
 
+- [ ] [CODE] P11.17. **Structurally forbid the synthetic-input seam in PAPER/LIVE prod runs** (operator audit
+      2026-06-22: "all reads should be live+batch from real prod sources/schemas/GCS paths; writes canonical with just
+      the paper→live tag swap"). AUDIT RESULT — already canonical: reads resolve every bucket via `resolve_bucket_name`
+      (perp-funding/dex-pools/market-data/lending, real prod schemas+granularity, honest-skip never synthetic); writes
+      go through the shared `write_run_ledger` seam to the canonical `client-reports` ledger path
+      (`ledger/client_id=/run_id=/ledger_type=`) with `mode=TradingMode` (PAPER→LIVE swap; paper/batch IDENTICAL shape).
+      The e2e synthetic seam (`set_synthetic_input_override`/`--synthetic-input`) is opt-in + default-None (only tests +
+      the CLI flag set it) → OFF in the prod paper job. HARDENING: add a guard so `get_synthetic_input_override()` MUST
+      be None when `mode ∈ {PAPER, LIVE}` (raise if a synthetic override is active in a prod-mode run) — makes
+      "paper reads exactly like live" structural, not flag-dependent. Repo: strategy-service + unified-trading-library.
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-22 (audit) — CANONICAL READ/WRITE CONFIRMED.** Paper-trading reads from real prod data sources via
+  `resolve_bucket_name` (perp-funding/dex-pools/market-data/lending — same buckets live/batch use, real schemas +
+  granularity, honest-skip never synthetic; the e2e synthetic seam is opt-in + OFF in the prod job) and writes the four
+  ledgers through the shared `write_run_ledger` seam to the canonical `client-reports` path with `mode=TradingMode`
+  (PAPER now). Live = the SAME seam with `mode=LIVE` + a live client_id; reads unchanged; only the execution fill
+  diverges at the live boundary. Filed P11.17 to make the synthetic-seam-off guarantee structural (guard mode∈{PAPER,LIVE}).
 
 - **2026-06-22 (autonomous) — PAPER-TRADING DASHBOARD COMPLETE on prod.** Full chain live + browser-verified at
   www.odum-research.com/paper-trading?client=firm-paper-determinism: **7 archetype books → 145 weighted legs**, real
