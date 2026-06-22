@@ -644,13 +644,8 @@ job ran a STALE image (pre IS@42dd37c — the canonical-venue enum fix is on LDR
 ~1.44M legacy-venue (`PROTOCOL-CHAIN`/blank-chain) phantom empties nightly (drops honest_cov_defi 18.66%→~7.5%). Pausing
 stops it definitively; the legacy-venue DELETE (IS@7b6512c) is re-runnable interim mitigation.
 
-- [ ] [DEPLOY] P0. **Resume `expected-universe-v2-defi-daily`** once IS@42dd37c is on `main` + the
-      `expected-universe-v2-defi` Cloud Run image is rebuilt past it (VERIFY deployed image SHA post-dates 42dd37c
-      first).
-      `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`.
-      Currently PAUSED 2026-06-22.
-- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator);
-      pause+delete+canonical-reseed per-AG if found.
+- [x] [DEPLOY] P0. **Resume `expected-universe-v2-defi-daily`** once IS@42dd37c is on `main` + the `expected-universe-v2-defi` Cloud Run image is rebuilt past it (VERIFY deployed image SHA post-dates 42dd37c first). `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`. Currently PAUSED 2026-06-22. ✅ — IS PR#523 merged 2026-06-22T14:21Z; image rebuilt (sha256:0b7f3f7a = 0.35.0 :latest, built 14:31Z); scheduler ENABLED — instruments-service@22398eb
+- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator); pause+delete+canonical-reseed per-AG if found.
 
 **P1 (DRAFTED, NOT shipped — INCOMPLETE):** the UTL writer fix was started (asset_group field on `AvailabilityRecord`,
 `MissingAssetGroupError`, serializer + call-site wiring) but the agent died (transient API rate-limit) BEFORE writing
