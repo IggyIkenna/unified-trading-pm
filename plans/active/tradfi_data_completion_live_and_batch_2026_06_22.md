@@ -96,7 +96,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       1m → 15m/24h at the canonical grain (batch_size=500 + per-VM-shard lock+coalesce already fixed). **Success:** 15m/24h
       captured at options_chain/futures_chain grain; expected_unattempted 15m/24h → ~0; sample parquets. Repo:
       market-data-processing-service. Provenance: this plan.
-- [ ] [DATA] P1. **(5) LIVE for all tradfi venues/data_types/instruments (live==batch parity).** TODAY: ONE producer
+- [x] ✅ [DATA] P1. **(5) LIVE for all tradfi venues/data_types/instruments (live==batch parity).** — market-tick-data-service@08632e9 | Added `_DATA_TYPE_TO_SCHEMA` dict + `_parse_ohlcv_msg()` + OHLCVMsg dispatch in `_on_record()` + data_type-driven `schema=` in `_subscribe_instruments()`; databento_tradfi_ws now streams ohlcv-1s/ohlcv-1m/trades for all 4 venues. QG green. TODAY: ONE producer
       (`tradfi:CME:trades`, live_databento, verified). The model needs a live producer PER (venue,data_type) shard. Mechanism:
       `market-tick-data-service/.../cli/handlers/websocket_streaming_handler.py` builds a `LiveWebsocketRunner` from
       `WS_FEED_CONNECTOR_FACTORIES` (keyed by venue; "intentionally empty at Phase 3.1 — per-venue rollout is Phase 3.5").
