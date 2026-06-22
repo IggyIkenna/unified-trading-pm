@@ -332,7 +332,15 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       emission in the lifespan (the repo emitted ZERO events before). The JWT secret was already made cloud-agnostic by
       P1 (gs:// blob via `get_storage_client`) + its Cloud-Run env tier. Mode/path resolvers stay live functions (tests
       monkeypatch them → class is additive); dashboard auth untouched. +6 tests, QG green.
-- [ ] [AGENT] P2. **agent-orchestrator — P2 read-migration (ALL `ORCHESTRATOR_*` reads → typed `OrchestratorConfig`)**:
+- [x] ✅ [AGENT] P2. **agent-orchestrator — P2 read-migration (ALL `ORCHESTRATOR_*` reads → typed `OrchestratorConfig`)**
+      — **DONE 2026-06-22 (Waves 1–6 all shipped + QG-green; 858 tests on HEAD)**. ~93+ reads migrated to typed/bounded
+      config fields; **residual = 14 SANCTIONED env reads only** (audited `rg '(?:os.getenv|os.environ.get)\('`): 5 raw
+      secret VALUES (JWT/INTERNAL secret, GH-App PEM, telegram token, slack webhook — env-first at the security/alert
+      boundary, no type-safety to gain), 3 dynamic PEM reads (`auth._load_pem_from_env` ES256 key value/file/uri via a
+      generic helper), 3 workspace passthroughs (tmux_spawn/autospawn forward ambient `WORKSPACE_ROOT`/
+      `UNIFIED_TRADING_WORKSPACE_ROOT` verbatim to a spawned worker — NOT orchestrator config). All `noqa`-documented.
+      SHAs: W1 `86abf79` · W2 `2fe6266` · W3 `b955bb5`/`2aa92af`/`f1cec7f` · W4 `2eb63b5`/`0d74f2f`/`fb94fca` · W5
+      `3a055cf`/`6c2fbba`. Migrated:
       migrate **107 distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22:
       `rg '(?:os\.getenv|os\.environ\.get)\("([A-Z_]+)"' server/`) onto typed `OrchestratorConfig` fields. **Operator
       2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by type
@@ -380,20 +388,28 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
         first 4b pass (uncommitted) was LOST when the Tier-C drain+backmerge advanced the branch and a pull pulled HEAD
         forward over the WIP — re-applied in small immediately-committed batches (4b-1/4b-2). Lesson: never leave a
         large multi-file batch uncommitted while the integration branch is live.
-  - [ ] **Wave 5 — secrets + logging**: route `auth.py` (JWT/INTERNAL/`*_GCS`), `GH_APP_CI_POLLER_*`,
-        `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` through config secret-NAMES / `get_secret_client`; replace the 2
-        `logging.basicConfig` sites (`server.py` `main()`, `regen_backlog_from_plan.py`) with a shared observability init.
-  - [ ] **Wave 6 — final audit**: `os.getenv`/`os.environ` residual count → near-zero (document any sanctioned
-        config-bootstrap holdouts with `# noqa`), codex doc update, plan close.
+  - [x] ✅ **Wave 5 — secrets + logging** (`agent-orchestrator@3a055cf`+`6c2fbba`, QG 858✓ 2026-06-22): auth CONFIG
+        knobs typed (ALLOW_ANONYMOUS as `BoolEnvTrue`, JWT/INTERNAL alg, USERS_JSON, the 2 `*_GCS` URIs, the GCS-loader
+        project via `google_cloud_project`+base `gcp_project_id`) + GH-App `app_id`/`installation_id`/`private_key_file`
+        + both `logging.basicConfig` sites → `get_config().log_level`. **Raw secret VALUES kept env-first** (JWT/INTERNAL
+        secret, GH-App PEM, slack webhook + the dynamic ES256 PEM reads) — opaque secrets at the security boundary gain
+        nothing from a typed field and routing them risks the login-200/backends-401 regression; all `noqa`-documented.
+  - [x] ✅ **Wave 6 — final audit** (2026-06-22): residual `os.environ`/`os.getenv` = **14 SANCTIONED** reads only
+        (5 secret values + 3 dynamic PEM + 3 workspace passthroughs + telegram token), each `# noqa`-tagged. Full suite
+        858✓ on HEAD. Codex: `OrchestratorConfig` is now the documented runtime SSOT (in-file docstring + this plan).
 
   > **Progress Log (autonomous loop — this IS the handoff doc; no summary file).** Slot model = one shared clone per
   > repo, so AO waves run **serially** (shared git index; background agents would race on commit) — different-repo /
   > read-only fan-out is the only safe parallelism here. Shipped 2026-06-22: Wave 1 @ `86abf79`; Wave 2 @ `2fe6266`;
-  > Wave 3a @ `b955bb5`; Wave 3b @ `2aa92af`; Wave 3c @ `f1cec7f`. **Waves 1–3 DONE (~77 of 107 reads typed).** Remaining:
-  > Wave 4 (cloud/identity: VM_ID/GH_OWNER/buckets/workspace/slot-branch/host/public-URL across routes/slack/gcs_sync/
-  > server) + Wave 5 (secrets via get_secret_client: auth.py JWT/INTERNAL/GCS, GH_APP_CI_POLLER, slack webhook; 2
-  > basicConfig) + Wave 6 (audit). Note: `test_tick_invokes_review_ensure` fails when run ALONE (pre-existing
-  > DB-engine-caching isolation quirk — relies on a sibling creating tables first); FULL suite green (856), the QG authority.
+  > Wave 3a @ `b955bb5`; Wave 3b @ `2aa92af`; Wave 3c @ `f1cec7f`; Wave 4 `2eb63b5`/`0d74f2f`/`fb94fca`; Wave 5
+  > `3a055cf`/`6c2fbba`. **ALL 6 WAVES DONE — read-migration COMPLETE (858 tests green on HEAD).** ~93+ reads typed;
+  > 14 sanctioned residuals (secret values + dynamic PEM + workspace passthroughs). **Two WIP-loss incidents** during
+  > the run: the first 4b pass and (briefly) the Wave-5 batch were lost when the Tier-C drain/backmerge advanced
+  > `live-defi-rollout` and a pull pulled HEAD forward over uncommitted multi-file WIP (no stash, no conflict markers) —
+  > both re-applied + shipped in small immediately-committed batches. **Durable lesson: on a LIVE integration branch,
+  > never leave a large multi-file edit uncommitted across a QG run — commit/ship each small batch the moment it's
+  > green.** Test-semantics note: `test_tick_invokes_review_ensure` fails run-ALONE (pre-existing DB-engine-caching
+  > isolation quirk); the FULL suite is the QG authority + is green.
 - [x] ✅ [AGENT] P3. **unified-trading-api** — DONE `unified-trading-api@e3fbd8d` (QG 0). `routes/chat.py`
       `ANTHROPIC_API_KEY` now via `UnifiedCloudConfig().get_secret("anthropic-api-key")` (name confirmed from
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
