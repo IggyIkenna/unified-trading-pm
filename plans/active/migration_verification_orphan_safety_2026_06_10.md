@@ -1239,15 +1239,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   via `--set-env-vars` without beta, so a future deploy won't re-introduce it. This is the operational half of the P2
   beta-retirement below; the code-level removal still stands.
 
-  - [ ] [CODE] P2. **Retire the CF-20 beta-manifest preview machinery** (target repo: **deployment-api**) — live index
-        is now ~v9 (96.6-100% all AGs), so the projected/beta preview is redundant. Remove the beta path:
-        `DATA_STATUS_BETA_MANIFEST_BLOB` setting + `data_status_beta_manifest_blob` config field;
-        `services/manifest_source.py` `is_beta_mode`/`is_service_beta`/`beta_eligible`/`BETA_ELIGIBLE_SERVICES` + the
-        projected-index read branch in `read_manifest_index`; the two-phase beta leg of
-        `routes/data_status/_rollup.py` + `scripts/data_status_rollup_worker.py` (`full.beta.json.gz`); the beta-aware
-        `rollup_blob_path`. Update the tests that assert beta behaviour. Then GCS-delete the static
-        `_index/audit/projected_index_*.parquet` (5 buckets) once code no longer reads them. Ship via quickmerge + QG;
-        redeploy. (Operator-acked 2026-06-21. Provenance: live-index v9 audit, this plan's 2026-06-21 progress entry.)
+  - [x] ✅ [CODE] P2. **Retire the CF-20 beta-manifest preview machinery** (target repo: **deployment-api**) — DONE
+        2026-06-22. Operational half already live (beta env var removed, rev 00075). Code retirement shipped
+        **deployment-api@d93e54a** (11 files, +79/-525): removed `DATA_STATUS_BETA_MANIFEST_BLOB` setting +
+        `data_status_beta_manifest_blob` config field; `manifest_source.py`
+        `is_beta_mode`/`is_service_beta`/`beta_eligible`/`BETA_ELIGIBLE_SERVICES` + the projected-index branch in
+        `read_manifest_index` (live-only now, keeps the consolidated-blob stale fallback); the two-phase beta leg of
+        `_rollup.py` + `data_status_rollup_worker.py`; beta-namespacing in `rollup_blob_path` (always `{svc}/{kind}.json.gz`);
+        + beta tests removed. QG-green (ALL PASSED 65s, coverage ≥70%); 0 functional beta symbols remain. The 5 static
+        `_index/audit/projected_index_{ag}.parquet` (cefi/defi/tradfi/sports/prediction `-prd-` buckets) **GCS-deleted**
+        2026-06-22 (verified nothing reads them: live service env beta-free, no standalone rollup Cloud Run Job). Redeploy
+        rides the normal LDR→staging→main→image pipeline (env-var removal already fixed prod; code retirement is cleanup).
+        (Operator-acked 2026-06-21/22. Provenance: live-index v9 audit, this plan's 2026-06-21/22 progress entries.)
   - [ ] [DATA] P3. **Re-stamp the legacy schema_version tails** (target: instruments-service / mtds v9 migrator) —
         cefi 3.4% (v4/v5/v6), prediction 2.1% (v4), tradfi 0.3% (v4) of live `_index` rows are pre-v9; defi/sports are
         100%. Run the existing v9 restamp over the tail shards so the live index is uniformly v9 (no new walk — fold
