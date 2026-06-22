@@ -126,16 +126,16 @@ Two upstream fixes (NOT a new/per-repo promoter — the promoter is central and 
 1. **Mode B (systemic, the real freeze): preserve the semver signal through the squash fallback. ✅ FIXED 2026-06-21
    (PM@6acde3fe7).** Implemented the preferred option: `ldr-to-staging-promote.yml` now has `_squash_subject()` which
    derives the aggregate conventional type (`feat!` if any `!:`/`BREAKING CHANGE`, else `feat`, else `fix`, else
-   `chore`) from the commits the squash collapses, and titles the squash subject `<type>: LDR → staging (Tier C
-   auto-drain)` at ALL 3 squash sites (initial fallback + close-reopen recovery + idempotent re-arm). Fail-safe: `chore`
-   only when no feat/fix/breaking is found; over-detection → a harmless monotonic bump, never a starve. **Effect:**
-   future Tier-C squash drains carry the real type → semver-agent bumps → version delta → the version-driven promoter
-   carries the repo. **Verify (not yet confirmed):** watch the next drains on a Mode-B repo (e.g. strategy-service) —
-   squash subject now `feat:`/`fix:` + semver bumps + it promotes. **Caveat — does NOT retro-drain the ALREADY-frozen
-   backlog:** repos already squash-drained to staging (content==staging, version frozen) have no new LDR-ahead content →
-   no new drain → stay frozen until new content arrives OR a one-shot (Mode A); active repos self-heal on next drain.
-   Alternatives kept as hardening if insufficient: (a) keep LDR rebaseable so `--rebase` arms; (b) semver-agent resolves
-   the bump from the LDR commit _range_.
+   `chore`) from the commits the squash collapses, and titles the squash subject
+   `<type>: LDR → staging (Tier C auto-drain)` at ALL 3 squash sites (initial fallback + close-reopen recovery +
+   idempotent re-arm). Fail-safe: `chore` only when no feat/fix/breaking is found; over-detection → a harmless monotonic
+   bump, never a starve. **Effect:** future Tier-C squash drains carry the real type → semver-agent bumps → version
+   delta → the version-driven promoter carries the repo. **Verify (not yet confirmed):** watch the next drains on a
+   Mode-B repo (e.g. strategy-service) — squash subject now `feat:`/`fix:` + semver bumps + it promotes. **Caveat — does
+   NOT retro-drain the ALREADY-frozen backlog:** repos already squash-drained to staging (content==staging, version
+   frozen) have no new LDR-ahead content → no new drain → stay frozen until new content arrives OR a one-shot (Mode A);
+   active repos self-heal on next drain. Alternatives kept as hardening if insufficient: (a) keep LDR rebaseable so
+   `--rebase` arms; (b) semver-agent resolves the bump from the LDR commit _range_.
 
 2. **Mode A (quick unblock for the 5 already-bumped repos): re-sync + harden the manifest dispatch.** Reconcile
    `manifest.staging_versions`/`staging_commits` to the repos' actual `pyproject` versions (one-shot reconcile), and
@@ -184,14 +184,15 @@ Two upstream fixes (NOT a new/per-repo promoter — the promoter is central and 
 
 ### 2026-06-21 — autonomous completion (operator `/autonomous`: finish, don't prompt, verified done-state)
 
-**Decision (content-vs-version promoter question, made under autonomous authority + documented intent):** do NOT
-rewrite the central 1449-line `staging-to-main.yml` to be content-delta-aware (high blast radius; the issue doc's own
-stance is "the promoter is central and fine"). Instead: (1) keep the version-driven promoter as primary; (2) **Mode B
-fix (PM@6acde3fe7) makes future bumping content flow normally**; (3) **drain the CURRENT frozen backlog via per-repo
+**Decision (content-vs-version promoter question, made under autonomous authority + documented intent):** do NOT rewrite
+the central 1449-line `staging-to-main.yml` to be content-delta-aware (high blast radius; the issue doc's own stance is
+"the promoter is central and fine"). Instead: (1) keep the version-driven promoter as primary; (2) **Mode B fix
+(PM@6acde3fe7) makes future bumping content flow normally**; (3) **drain the CURRENT frozen backlog via per-repo
 LDR→main PRs + v2-gated auto-merge** (the proven 2026-06-17 reconcile mechanism — promotes content to main regardless of
-version-delta, covers Mode A + Mode B uniformly, "LDR is the SSOT / main is a projection"); (4) residual pure-non-bumping
-content (docs/chore that legitimately never bumps) staying on staging is LOW-HARM (main = deploy/image source; docs
-don't affect deploys) and acceptable — not worth the promoter rewrite. This closes the doc's open design question.
+version-delta, covers Mode A + Mode B uniformly, "LDR is the SSOT / main is a projection"); (4) residual
+pure-non-bumping content (docs/chore that legitimately never bumps) staying on staging is LOW-HARM (main = deploy/image
+source; docs don't affect deploys) and acceptable — not worth the promoter rewrite. This closes the doc's open design
+question.
 
 - [x] **Backlog drain ARMED 2026-06-21** — 20 starving repos (real content off main) each got an `LDR→main` PR with
       v2-gated auto-merge: agent-orchestrator#350 (78f), e2e-testing#348 (50f), instruments-service#491 (44f),
@@ -203,9 +204,9 @@ don't affect deploys) and acceptable — not worth the promoter rewrite. This cl
       unified-api-contracts / unified-trading-library / client-reporting-api — drained earlier). v2 gates each; reds
       stay open for the per-repo fix (none expected — all staging-green).
 - [ ] [VERIFY] P0. watch main catch up to LDR per repo (content-delta → 0); diagnose any v2-red straggler.
-- [ ] [AGENT] P1. Manifest hygiene (post-drain): after main catches up, reconcile manifest `versions`/`staging_versions` to the
-      drained pyproject versions if `assert_version_coherence.py` (warn-only) shows a split; the next semver/promote
-      cycle also realigns it.
+- [ ] [AGENT] P1. Manifest hygiene (post-drain): after main catches up, reconcile manifest `versions`/`staging_versions`
+      to the drained pyproject versions if `assert_version_coherence.py` (warn-only) shows a split; the next
+      semver/promote cycle also realigns it.
 
 ### 2026-06-21 — FINAL REPORT (autonomous completion)
 
@@ -213,9 +214,11 @@ don't affect deploys) and acceptable — not worth the promoter rewrite. This cl
 staging→main: 0 — Nothing parked — staging→main draining cleanly."** The version-driven promoter is healthy.
 
 **Systemic root fixes — SHIPPED + verified on PM `main`:**
+
 1. **Mode B** — Tier-C squash fallback derives the conventional type (`feat!`/`feat`/`fix`/`chore`) from the squashed
    commits (`_squash_subject()`, all 3 squash sites) so semver-agent bumps + the promoter carries the repo. The
-   2026-06-21 dump showed semver/update-repo-version SUCCEEDING again (deployment-service, mtds, strategy) = this working.
+   2026-06-21 dump showed semver/update-repo-version SUCCEEDING again (deployment-service, mtds, strategy) = this
+   working.
 2. **HAS_V2 self-heal** — the stale-check guard excludes `action_required`/`cancelled` (not a real report), so the drain
    re-dispatches v2 instead of wedging on the PR-workflow-approval gate.
 3. **build-smoke** — scoped to wheel + advisory Dockerfile-lint + skip (no full multi-repo build); verified GREEN.
@@ -228,6 +231,7 @@ drains it on the normal cycle; NOT a stall.
 e2e-testing#348 recovered via close+reopen (clean pull_request v2, no workflow gate) → merging.
 
 **ONE documented residual (rule-1 platform near-impossibility, NOT left silently):**
+
 - **agent-orchestrator** (80-file / 10-day backlog) is blocked by GitHub's **workflow-file-change PR-approval gate** —
   its LDR→main diff includes `.github/workflows/update-dependency-version.yml`, so every PR-event v2 (and even
   `workflow_dispatch` on those heads) returns `action_required`, and ao is hyperactive so the gate re-fires faster than
@@ -263,10 +267,10 @@ chore(release): bump version to 0.17.0
 
 The versions are **strictly climbing 0.15→0.16→0.17 (distinct, monotonic)** — healthy high-velocity dev, NOT a stuck
 re-bump loop (the alert even reports "1 consecutive at tip" — the real-loop detector correctly did NOT trip). Root
-cause: Mode-B titles every `*/15` Tier-C drain `feat:`, so semver MINOR-bumps on **every drain** of feature content →
-on an active repo that's up to ~4 bumps/hr → trips the breaker's raw `RECENT_BUMPS ≥ 3/hr` **count**-trip. The
-count-trip cannot tell a healthy interleaved climb from a true loop; the `CONSECUTIVE ≥ 3` detector already catches the
-real runaway (re-bumps with no content between). Breaker is SAFE-contained (refusing further bumps), no corruption.
+cause: Mode-B titles every `*/15` Tier-C drain `feat:`, so semver MINOR-bumps on **every drain** of feature content → on
+an active repo that's up to ~4 bumps/hr → trips the breaker's raw `RECENT_BUMPS ≥ 3/hr` **count**-trip. The count-trip
+cannot tell a healthy interleaved climb from a true loop; the `CONSECUTIVE ≥ 3` detector already catches the real
+runaway (re-bumps with no content between). Breaker is SAFE-contained (refusing further bumps), no corruption.
 
 **2. `staging_versions` is broadly sparse (8 of 25 repos).** `versions[deployment-service]=0.16.0` but
 `staging_versions[deployment-service]=ABSENT`, while its staging pyproject is already `0.17.0`. The PM baseline writer
@@ -287,13 +291,14 @@ promote is a near-no-op success → clears. Low-harm; verify it clears.
       between = genuine baseline-never-recorded loop) + kept `CONSECUTIVE ≥ 3` + a `RECENT_BUMPS ≥ 6/hr` backstop.
       Verified by simulation: deployment-service real healthy-climb (0.15→0.16→0.17, pairs=0) NO-TRIP; true
       consecutive/interrupted loops TRIP; YAML parses. Provenance: deployment-service breaker trip 2026-06-21 16:20 UTC.
-- [x] ✅ [CICD] P1. **Climbing-aware breaker ROLLED OUT FLEET-WIDE 2026-06-21.** `rollout-workflow-templates.sh
-      --template semver-agent.yml` → all 24 repos' `.github/workflows/semver-agent.yml` committed + pushed to LDR
-      (per-repo `ci(semver): roll out climbing-aware bump-rate breaker`; deployment-service@a4ec754, UTL@34501d8, …);
-      PM's own hand-maintained copy aligned (PM@ace296d51). `detect_template_drift.py --workflows` → NEW drift
-      (blocking): 0; per-repo diff verified = ONLY the breaker block. Takes effect per-repo as the workflow reaches that
-      repo's `main` (default-branch trigger) via normal promotion — until then deployment-service's OLD `main` breaker
-      may still false-page (benign: refusing only, versions climbing healthily).
+- [x] ✅ [CICD] P1. **Climbing-aware breaker ROLLED OUT FLEET-WIDE 2026-06-21.**
+      `rollout-workflow-templates.sh     --template semver-agent.yml` → all 24 repos'
+      `.github/workflows/semver-agent.yml` committed + pushed to LDR (per-repo
+      `ci(semver): roll out climbing-aware bump-rate breaker`; deployment-service@a4ec754, UTL@34501d8, …); PM's own
+      hand-maintained copy aligned (PM@ace296d51). `detect_template_drift.py --workflows` → NEW drift (blocking): 0;
+      per-repo diff verified = ONLY the breaker block. Takes effect per-repo as the workflow reaches that repo's `main`
+      (default-branch trigger) via normal promotion — until then deployment-service's OLD `main` breaker may still
+      false-page (benign: refusing only, versions climbing healthily).
 - [x] ✅ [CICD] P1. **`staging_versions` starvation RECONCILED 2026-06-21 (PM@a73a7c1a5).** Confirmed root:
       `staging-to-main.yml:588` iterates ONLY keys present in `staging_versions`, so 16 repos with staging genuinely
       ahead of main but absent from the map were silently skipped EVERY promotion run. Reconciled all 25
@@ -309,9 +314,9 @@ promote is a near-no-op success → clears. Low-harm; verify it clears.
       semantics the SHA-verification gate relies on), so an absent/lost entry can NEVER starve a repo again. Verified
       safe because the promote-set is `staging_versions`-driven (readiness gate L169 + dep-order gate both iterate
       `staging_versions.items()`); `staging_commits` only gates global idempotency + per-repo SHA-verify (harmlessly
-      skips absent repos). No-op when the writer is healthy. Activates once the standing PR carries it to `main` (schedule
-      fires from the default branch). Secondary log-archaeology on the ORIGINAL loss cause is now MOOT for starvation
-      (the cron makes it self-correct regardless of cause). repo: unified-trading-pm. Provenance: reconcile
+      skips absent repos). No-op when the writer is healthy. Activates once the standing PR carries it to `main`
+      (schedule fires from the default branch). Secondary log-archaeology on the ORIGINAL loss cause is now MOOT for
+      starvation (the cron makes it self-correct regardless of cause). repo: unified-trading-pm. Provenance: reconcile
       PM@a73a7c1a5 + cron PM@00919ffd4 2026-06-21.
 - [x] ✅ [CICD] P2. **ao quarantine CLEARED** — manifest `staging_status` has no quarantine key + `breaking_pending: []`
       (ao#350 carried ao content to main; the dashboard-link RED is fixed). No action; re-verify only if it re-alerts.
@@ -322,56 +327,103 @@ promote is a near-no-op success → clears. Low-harm; verify it clears.
 
 ### 2026-06-21 (~22:00 UTC) — promotion-lag wave root-caused to a recursive `feat!` regression (fixed) + content-vs-version residual
 
-A `promotion-lag-monitor` WARNING (25 branch-pairs / 22 repos >60m) traced through five layers to a regression
-**I introduced in the Mode-B fix**, plus a downstream residual:
+A `promotion-lag-monitor` WARNING (25 branch-pairs / 22 repos >60m) traced through five layers to a regression **I
+introduced in the Mode-B fix**, plus a downstream residual:
 
 **Chain:** lag → dep-order gate skips all 18 dependents (`dep unified-trading-library is STAGING_GREEN`) → UTL held
 because UTL→main can't promote → UTL (and the fleet) dep-blocked behind UAC, which sat in
 `staging_status.breaking_pending` → UAC flagged breaking by a `feat!: LDR → staging (Tier C auto-drain)` subject.
 
-**Root cause (regression):** `ldr-to-staging-promote.yml::_squash_subject()` (the Mode-B semver-signal helper) scanned the
-drain PR's commits for `!:` and emitted `feat!`. The backmerge re-includes a prior `feat!: LDR → staging (auto-drain)`
-commit in the next drain's range → the `!:` test **re-matched the drain's OWN earlier subject** → every drain
-re-flagged breaking → UAC/mtds froze in `breaking_pending` (self-perpetuating). `feat!` is meant to be a HUMAN
-breaking-override; the AST differ (`detect_breaking_change.py`) is the breaking SoT — an automated drain must never
-force it.
+**Root cause (regression):** `ldr-to-staging-promote.yml::_squash_subject()` (the Mode-B semver-signal helper) scanned
+the drain PR's commits for `!:` and emitted `feat!`. The backmerge re-includes a prior
+`feat!: LDR → staging (auto-drain)` commit in the next drain's range → the `!:` test **re-matched the drain's OWN
+earlier subject** → every drain re-flagged breaking → UAC/mtds froze in `breaking_pending` (self-perpetuating). `feat!`
+is meant to be a HUMAN breaking-override; the AST differ (`detect_breaking_change.py`) is the breaking SoT — an
+automated drain must never force it.
 
 - [x] ✅ [CICD] P0. **`_squash_subject()` never auto-emits `feat!`** — derives only the bump signal (feat/fix, `!`
       dropped; `feat!`/`fix!` headlines still map to feat/fix). PM@b1561bdef (LDR) + activated on `main`@204f4074f
       (direct, so the `*/15` drain stops re-flagging immediately). The AST differ remains the breaking SoT.
-- [x] ✅ [CICD] P0. **Cleared the false `breaking_pending` [unified-api-contracts, market-tick-data-service]** —
-      both AST-verified non-breaking (`detect_breaking_change.py`: UAC 949→949 exports `is_breaking=false`; mtds
-      95→106 additive `is_breaking=false`). main@3918b032b `[skip ci]`. Unblocks the breaking-SIT hold; mtds now reports
-      "SAFE … safe to promote", waiting only on UTL→main (correct topological order).
+- [x] ✅ [CICD] P0. **Cleared the false `breaking_pending` [unified-api-contracts, market-tick-data-service]** — both
+      AST-verified non-breaking (`detect_breaking_change.py`: UAC 949→949 exports `is_breaking=false`; mtds 95→106
+      additive `is_breaking=false`). main@3918b032b `[skip ci]`. Unblocks the breaking-SIT hold; mtds now reports "SAFE
+      … safe to promote", waiting only on UTL→main (correct topological order).
 
 **Residual (NOT a stuck pipeline — drains organically):** while the fleet was blocked, the version maps were promoted
 (`staging_versions→versions`, `c78338c90`) WITHOUT the content merges, leaving ~20 repos at **version-parity with
 content divergence** (e.g. UTL staging_v 0.29.0 == versions 0.29.0 but `main...staging` = 21 files; UAC 0.33.0==0.33.0
 but 6 files). The version-driven promoter sees parity → won't re-merge. This drains on each repo's NEXT bump
-(`staging_v > versions` → the promoter carries the whole staging backlog) — now unblocked. A fleet-wide
-content force-sync (CLAUDE.md "clean-start force-sync") would expedite but is **operator-gated** (high blast radius,
-~20 repos) — flagged for operator decision, not forced autonomously.
+(`staging_v > versions` → the promoter carries the whole staging backlog) — now unblocked. A fleet-wide content
+force-sync (CLAUDE.md "clean-start force-sync") would expedite but is **operator-gated** (high blast radius, ~20 repos)
+— flagged for operator decision, not forced autonomously.
 
-- [ ] [CICD] P2. **BLOCKED-OPERATOR-DECISION**. Expedite the content-vs-version drain (hollow versions on main: ~20 repos
-      at version-parity with real `main...staging` content divergence, e.g. UTL 21 files / UAC 6 files). Options: (a)
-      let it drain organically as repos bump (safe, automatic, now unblocked); (b) operator-gated clean-start force-sync
-      main←staging content. Provenance: promotion-lag wave 2026-06-21; consequence of the now-fixed false-breaking block.
+- [ ] [CICD] P2. **BLOCKED-OPERATOR-DECISION**. Expedite the content-vs-version drain (hollow versions on main: ~20
+      repos at version-parity with real `main...staging` content divergence, e.g. UTL 21 files / UAC 6 files). Options:
+      (a) let it drain organically as repos bump (safe, automatic, now unblocked); (b) operator-gated clean-start
+      force-sync main←staging content. Provenance: promotion-lag wave 2026-06-21; consequence of the now-fixed
+      false-breaking block.
 
 ### 2026-06-21 (~22:40 UTC) — operator-requested expedite: resolution
 
-Operator asked to expedite main←staging. Investigation found the literal "force main := LDR" was UNSAFE (LDR's
-pyproject sits BELOW staging's semver-bumped versions — `admin-force-sync-all-to-main.sh`'s version-guard correctly
-BLOCKED it; a force would have reverted versions fleet-wide). The real state, post root-fixes: `breaking_pending`
-clear, **20 repos promotable**, promoter healthy (~6-min cadence). The only blocker was the **linchpin UTL**, whose
-standing staging→main PR #416 was MERGEABLE + auto-merge-armed but `BLOCKED` on the v2-never-reported deadlock (v2 ran
-green on an older staging head; the advanced head had no v2 report). A `workflow_dispatch` v2 did NOT satisfy the
-`pull_request`-context required check; **close+reopen** (the documented recovery) re-fired v2 in the right context →
-#416 **MERGED** (UTL content on main; v2-on-main running → MAIN_GREEN → unblocks the 20 dependents → they cascade via
-the healthy promoter, topological).
+Operator asked to expedite main←staging. Investigation found the literal "force main := LDR" was UNSAFE (LDR's pyproject
+sits BELOW staging's semver-bumped versions — `admin-force-sync-all-to-main.sh`'s version-guard correctly BLOCKED it; a
+force would have reverted versions fleet-wide). The real state, post root-fixes: `breaking_pending` clear, **20 repos
+promotable**, promoter healthy (~6-min cadence). The only blocker was the **linchpin UTL**, whose standing staging→main
+PR #416 was MERGEABLE + auto-merge-armed but `BLOCKED` on the v2-never-reported deadlock (v2 ran green on an older
+staging head; the advanced head had no v2 report). A `workflow_dispatch` v2 did NOT satisfy the `pull_request`-context
+required check; **close+reopen** (the documented recovery) re-fired v2 in the right context → #416 **MERGED** (UTL
+content on main; v2-on-main running → MAIN_GREEN → unblocks the 20 dependents → they cascade via the healthy promoter,
+topological).
 
 - [x] ✅ [CICD] P1. **Linchpin UTL promoted** — #416 unblocked via close+reopen (v2-never-reported recovery); cascade
       unblocking. Chose the safe v2-gated PR path over a version-reverting force-sync.
 - [x] ✅ [CICD] P2. **Parity-stuck leaves nudged** — opened staging→main content PRs deployment-ui#280 + fund-admin#216
       (auto-merge armed); e2e-testing in-sync (no-op). Version-parity repos need a content-PR (the version-driven
-      promoter skips them at parity) — if they hit the same v2-never-reported deadlock, close+reopen / ci-failure-watcher
-      recovers them.
+      promoter skips them at parity) — if they hit the same v2-never-reported deadlock, close+reopen /
+      ci-failure-watcher recovers them.
+
+### 2026-06-22 (Mon AM) — triage-queue investigation: the UAC-0.24.0 dep-update wall + the bump runaway
+
+Operator flagged "few repos stuck in triage queue". Two findings, both sequels to this issue:
+
+**(1) The minor-bump runaway — already fixed.** UAC raced 0.23→0.38 over the weekend (15 monotone-minor bumps, zero
+patches). Cause: a first cut of the Mode-B fix here
+(`6acde3fe7 — preserve semver signal through the Tier-C squash fallback`) emitted `feat!` (breaking) on the squash
+subject, and the `main→LDR` backmerge **re-includes the prior `feat!: LDR→staging` drain commit**, so every subsequent
+drain's range re-contained a `feat!` → every drain re-emitted `feat!` → a breaking cascade + dep fan-out EVERY tick (the
+06-21 15:38–18:47 storm, 0.28–0.33). **Fixed 06-21 by `b1561bdef`** ("Tier-C drain subject never auto-emits feat!
+breaking-override" — maps `feat!`→`feat`, never the `!`, fail-safe `chore`). Current `feat:` bumps track real content.
+Residual: the squash range can re-count an already-promoted feat → an occasional harmless monotonic over-bump (flagged
+in-code, not a freeze).
+
+**(2) The 0.24.0 jam — 8 orphaned retired-pattern PRs.** The 0.24.0 breaking fan-out (06-19) opened
+`dep-update/unified-api-contracts-0.24.0 → staging` PRs in 8 consumers (instruments #487, execution #324, features #579,
+fund-admin #204, ml #130, trading-agent #223, unified-trading-api #417, SIT #248). That dep-update→staging pattern was
+**retired 06-18 (Phase 1.5a — breaking re-pins now land directly on LDR, no staging PR**, precisely because they
+"staleness-walled" — `promotion_queue_conflict_wall_pileup_2026_06_17`). The 8 PRs had **green v2 but auto-merge was
+never armed**, and the new pipeline has **no drain path** for them → they sat → went CONFLICTING as UAC reached 0.38.0
+and each consumer's staging advanced ~18 commits. **Why the cleanup didn't catch them:**
+`supersede-stale-dep-update-prs` SUPERSEDE only closes a dep-update PR when a **strictly-higher-version sibling** is
+also open; UAC's later bumps (0.25– 0.38) were non-breaking minors → created NO new dep-update PR → the lone 0.24.0 PR
+had no sibling → never superseded → ESCALATE punted it to the orchestrator triage queue indefinitely.
+
+- [x] ✅ [CICD] P1. **Closed the 8 obsolete UAC-0.24.0 dep-update PRs** (instruments #487 / execution #324 / features
+      #579 / fund-admin #204 / ml #130 / trading-agent #223 / unified-trading-api #417 / SIT #248) — obsolete: UAC is
+      0.38.0, consumers range-pin + editable-path-source (newer dep already in effect), retired pattern.
+- [x] ✅ [CICD] P1. **Closed the supersede-stale gap** — added an **OBSOLETE-CLOSE role** to
+      `supersede-stale-dep-update-prs.yml`: a lone dirty dep-update PR whose target version is strictly below the dep's
+      CURRENT released version (read from the dep repo's `main` pyproject) is auto-closed, instead of escalated forever.
+      **Safety (won't false-close):** closes ONLY when all hold — dirty + branch parses to `dep-update/<dep>-<X.Y.Z>` +
+      dep main pyproject reads a valid X.Y.Z + current `sort -V`-strictly-greater than target; any read/parse miss or
+      current==target falls through to ESCALATE (fail-safe to prior behaviour). Validated: target 0.24.0 vs current
+      0.38.0 → close; current==target → escalate; empty read → escalate.
+
+⚠️ Still-open follow-ups (NOT done — verify before closing this issue):
+
+- [ ] [CICD] P2. **Downstream conflict fallout** — after the dep wall cleared, re-check the secondary stuck PRs (the
+      staging→main promotes + LDR→main fallbacks + main→LDR backmerges that conflicted during the weekend storm); most
+      should auto-resolve, a few may need a rebase.
+- [ ] [CICD] P3. **EXPLORE: why the 0.24.0 fan-out used the retired pattern** despite consumers having the new
+      LDR-direct template on LDR since 06-18 — likely `repository_dispatch` runs the handler from `main` (default
+      branch), and the new template hadn't promoted to main yet (this very starvation issue). Confirm so it can't recur
+      on the next breaking bump.
