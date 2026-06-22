@@ -401,13 +401,13 @@ slots so the fleet self-heals without operator intervention.
 
 ### Trigger contract (all 5 must be true to spawn)
 
-| #   | Gate                 | Implementation                                                                                                                 |
-| --- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | **Queue not empty**  | `SELECT task_id FROM tasks WHERE status='queued' AND dispatched_to IS NULL LIMIT 1` → non-empty                                |
-| 2   | **No active worker** | `tmux has-session orch-slot-N` returns false                                                                                   |
-| 3   | **Account headroom** | At least one usable account: `five_hour_pct < 50` AND `weekly_pct < 80`. Null pct treated as 0 (fresh account assumed healthy) |
-| 4   | **Slot configured**  | `slots` table has `worktree` + `branch` + `operator` set                                                                       |
-| 5   | **Not in cooldown**  | Last autospawn attempt for this slot was > 5 min ago (`ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`, default 300)                  |
+| #   | Gate                 | Implementation                                                                                                                                                                      |
+| --- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Queue not empty**  | `SELECT task_id FROM tasks WHERE status='queued' AND dispatched_to IS NULL LIMIT 1` → non-empty                                                                                     |
+| 2   | **No active worker** | `tmux has-session orch-slot-N` returns false                                                                                                                                        |
+| 3   | **Account headroom** | At least one usable account: `five_hour_pct < 95` AND `weekly_pct < 95` (ceilings raised 50/80 → 95/95, operator 2026-06-17). Null pct treated as 0 (fresh account assumed healthy) |
+| 4   | **Slot configured**  | `slots` table has `worktree` + `branch` + `operator` set                                                                                                                            |
+| 5   | **Not in cooldown**  | Last autospawn attempt for this slot was > 5 min ago (`ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`, default 300)                                                                       |
 
 ### Account-pick rotation
 
@@ -441,13 +441,13 @@ Every spawn attempt logs to `log_activity` with `autospawn_succeeded` or `autosp
 
 ### Environment variables
 
-| Variable                                   | Default | Purpose                            |
-| ------------------------------------------ | ------- | ---------------------------------- |
-| `ORCHESTRATOR_AUTOSPAWN_ENABLED`           | `false` | Master on/off switch               |
-| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`  | `60`    | Tick cadence                       |
-| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`  | `300`   | Per-slot retry gap                 |
-| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_CEILING` | `50`    | Max 5h usage % before skipping     |
-| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_CEILING`    | `80`    | Max weekly usage % before skipping |
+| Variable                                       | Default | Purpose                                     |
+| ---------------------------------------------- | ------- | ------------------------------------------- |
+| `ORCHESTRATOR_AUTOSPAWN_ENABLED`               | `false` | Master on/off switch                        |
+| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`      | `60`    | Tick cadence                                |
+| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`      | `300`   | Per-slot retry gap                          |
+| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_PCT_CEILING` | `95`    | Max 5h usage % before skipping (was 50)     |
+| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_PCT_CEILING`    | `95`    | Max weekly usage % before skipping (was 80) |
 
 Enable via systemd drop-in: `Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true` in
 `/etc/systemd/system/orchestrator.service.d/autospawn.conf` — one VM at a time. Rollout script:

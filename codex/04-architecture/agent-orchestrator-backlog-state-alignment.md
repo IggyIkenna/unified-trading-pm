@@ -26,8 +26,11 @@ accumulate and inflate queue counts, causing false "work available" signals.
 
 ## Regen lifecycle
 
-`PlanRegenLoop` runs in the orchestrator background and calls `regen()` every 6 hours (default) after a 60 s startup
-settle.
+`PlanRegenLoop` runs in the orchestrator background and calls `regen()` every 30 minutes (default
+`DEFAULT_PLAN_REGEN_INTERVAL_SECONDS = 1800`, `regen_backlog_from_plan.py`) after a short startup settle (a
+freshly-pushed plan must reach the backlog within ~1 min of boot, so the first tick fires almost immediately, then
+normal cadence). The prior 6 h / 21600 s cadence lagged newly-pushed plans by up to 6 h and was tightened (operator cap
+2026-06-02: 30 min max).
 
 ```
 PM repo (plans/active/*.md)
@@ -104,7 +107,7 @@ Environment=ORCHESTRATOR_VM_ID=vm-ml
 | Variable                                   | Default                 | Purpose                                                             |
 | ------------------------------------------ | ----------------------- | ------------------------------------------------------------------- |
 | `ORCHESTRATOR_PM_REPO_PATH`                | `../unified-trading-pm` | Override PM repo location                                           |
-| `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` | `21600`                 | Tick cadence (6h); set to `0` to disable                            |
+| `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` | `1800`                  | Tick cadence (30 min; was 6 h/21600); set to `0` to disable         |
 | `ORCHESTRATOR_REGEN_PRUNE_STALE`           | `false`                 | Enable orphan pruning on every tick                                 |
 | `ORCHESTRATOR_REGEN_DB_PATH`               | —                       | state.db path for safe-row deletion (yaml-only prune when unset)    |
 | `ORCHESTRATOR_VM_ID`                       | —                       | VM identifier for `assigned_vm` scope filter (no filter when unset) |

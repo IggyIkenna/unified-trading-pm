@@ -52,9 +52,9 @@ last_reviewed: 2026-05-28
 │     (central-only key); never leaves this perimeter                              │
 │   - Server-side fan-out: /api/fleet/summary calls each VM in parallel + merges  │
 │   - Per-VM proxy: /api/vms/<id>/<path> → forwards to <id>'s private_url over     │
-│     the VPC, mints a fresh internal service token signed with                    │
-│     ORCHESTRATOR_INTERNAL_SECRET (fleet-shared key) for the upstream             │
-│     Authorization header — workers validate against the same internal key       │
+│     the VPC, mints a fresh 5-min ES256 internal JWT (private key; HS256 retired  │
+│     2026-06-01) for the upstream Authorization header — workers validate it      │
+│     against the fleet-distributed ES256 public key (see § ES256 model below)     │
 │   - Orchestrator roles: review · CI-escalation · plan-health · AutoSpawn         │
 └──────────────────────────────────────────┬──────────────────────────────────────┘
                                            │ HTTP private VPC (vpc-6ee70e08)
@@ -70,8 +70,8 @@ last_reviewed: 2026-05-28
 │  vm-ml / vm-trading-core / vm-operator-ops / vm-cross-cutting / vm-orchestrator │
 │                                                                                  │
 │  Each VM:                                                                        │
-│   - orchestrator backend on 0.0.0.0:8026 (no nginx, no per-VM TLS)              │
-│   - private_url = 172.31.x.x:8026 (what the central calls)                       │
+│   - orchestrator backend on 0.0.0.0:8765 (no nginx, no per-VM TLS)              │
+│   - private_url = 172.31.x.x:8765 (what the central calls)                       │
 │   - Public IP (currently dynamic; EIPs ship under Phase 11 deferred)             │
 │   - Slot 1: main (Opus 4.7 1M)                                                  │
 │   - Slot 2: review (Sonnet 4.6)                                                 │
@@ -101,9 +101,12 @@ the topology depends on:
   `ORCHESTRATOR_JWT_SECRET`, terminates that token, mints a fresh 5-min ES256 JWT (claims:
   `role=worker, machine=central-proxy, sub=orchestrator`), forwards THAT in the upstream Authorization. Worker validates
   against the public key. The operator's token never leaves the central VM.
-- **Dual-accept during 48h soak**: `decode_token()` tries ES256 first, then falls back to HS256
-  (`ORCHESTRATOR_INTERNAL_SECRET` legacy value) so workers migrated out-of-order still validate. Remove HS256 path after
-  soak period ends.
+- **ES256-only (HS256 accept + sign RETIRED 2026-06-03)**: `decode_token()` verifies the internal token against the
+  PUBLIC key with `algorithms` restricted to ES256/RS256 — there is **no HS256 JWT fallback** (removed after a ≥48h
+  all-ES256 soak with zero fallback hits, `orchestrator_asymmetric_auth_2026_06_01` Phase 4); HS256 signing now raises.
+  The `ORCHESTRATOR_INTERNAL_SECRET` object is RETAINED but ONLY as the pre-shared HMAC for `verify_internal_secret()` →
+  `POST /api/escalate` (the GHA → orchestrator dispatch surface), never for the proxy JWT. Code: `server/auth.py`
+  `decode_token()` / `sign_internal_token()`.
 
 Failure mode if keys get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
 `/api/backends`, etc.) and the dashboard bounces back to the login screen. Diagnosis: SSH to a worker + check the
@@ -181,8 +184,9 @@ matches a Host directive in `~/.ssh/config` for direct VSCode SSH (operator-pref
 Each VM runs its own orchestrator backend (FastAPI + uvicorn + systemd, same shape across the fleet). The central VM
 fronts them as documented in § "Target topology" above; epic VMs are not browser-reachable.
 
-- **Listen port** — fleet VMs: `0.0.0.0:8026` (no nginx, no per-VM TLS); central VM: `127.0.0.1:8765` behind nginx :443
-  with Let's Encrypt at `api.agent-orchestrator.odum-research.com`. Local dev = `:8026` on the operator's box.
+- **Listen port** — `8765` fleet-wide (legacy `8026` fully retired 2026-06-12 — the systemd template was the last
+  holdout): fleet VMs bind `0.0.0.0:8765` (no nginx, no per-VM TLS); central VM binds `127.0.0.1:8765` behind nginx :443
+  with Let's Encrypt at `api.agent-orchestrator.odum-research.com`. Local dev = `:8765` on the operator's box.
 - **VM identity** — `ORCHESTRATOR_VM_ID` env var (e.g. `vm-defi`); included in every agent event so dashboard
   aggregation can group by VM.
 - **Public URL** — fleet VMs declare their public IP in `data/config/backends.json` `url`; private IP in `private_url`
@@ -263,7 +267,7 @@ Per-VM endpoint: `GET /api/vm/summary` returns a `VmSummary` (current shape in `
 ```json
 {
   "vm_id": "vm-defi",
-  "fqdn": "172.31.2.75:8026",
+  "fqdn": "172.31.2.75:8765",
   "role": "epic",
   "master_plans": ["defi_master.md", "manifest_master.md"],
   "slots_total": 12,

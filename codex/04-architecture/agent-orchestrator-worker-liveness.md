@@ -194,11 +194,11 @@ End-to-end test (Phase 3 verification item):
 
 ```bash
 # 1. Confirm watchdog is enabled on target VM
-curl -s http://localhost:8026/api/state | jq '.watchdog_enabled'
+curl -s http://localhost:8765/api/state | jq '.watchdog_enabled'
 
 # 2. Leave a slot idle until stuck-at-prompt (or inject via tmux send-keys without C-m)
 # 3. Wait ≤ 3 ticks (180s); confirm kill event in activity log
-curl -s http://localhost:8026/api/activity?limit=5 | jq '.[] | select(.event_type=="watchdog_slot_killed")'
+curl -s http://localhost:8765/api/activity?limit=5 | jq '.[] | select(.event_type=="watchdog_slot_killed")'
 
 # 4. Confirm AutoSpawnLoop respawns within 60–120s of kill
 sleep 120 && tmux ls | grep orch-slot-<N>
