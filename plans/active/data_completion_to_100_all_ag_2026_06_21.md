@@ -590,6 +590,25 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
 
 ## Progress Log
 
+### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
+
+Operator caught it: DeFi live market-data = `uts-prod-mtds-collect-{dex-swaps,dex-pools,oracle-prices,evm-defi,
+solana-defi,lending-indices,lst-rates,perp-funding}` Cloud Run jobs, ALL `--mode batch` on a ONCE-DAILY cron (00:05-
+02:05). NOT continuous. (These are MTDS market-data, NOT strategy — strategy/execution = paper-trading-engine etc.)
+CeFi/prediction/sports/tradfi run CONTINUOUS live VMs (websocket streams, ephemeral=miss-is-lost). DeFi has no
+continuous-live equivalent (only the daily batch + an UNUSED launch-defi-forward-poll.sh).
+WHY it matters: on-chain is retroactively queryable so daily batch is gap-free for FEATURES/BACKTEST (≤24h latent),
+but LIVE TRADING `arbitrage_price_dispersion` needs near-real-time DEX+oracle prices (move every block) → a daily
+snapshot cannot feed a live arb. `carry_staked_basis` (LST APR/Aave rates, slow) is arguably daily-OK.
+
+- [ ] [INFRA] P1. **DeFi continuous live market-data capture** — stand up a persistent/high-frequency DEX-price +
+  oracle-price capture for the live-trading archetypes (per-block or near-real-time), not the once-daily batch. Either
+  a persistent live VM (mirror the CeFi `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent
+  Cloud Run cron (e.g. */1) for the price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow
+  ones (lst-rates, lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat.
+  Repo: market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi
+  arb archetype going live.
+
 ### 2026-06-22 ~14:36 — Per-AG re-stamp COMPLETE (all 5 AGs, guarded) + deploy-gap pinned (writer fix not yet on VMs)
 
 **RESUMED** the rate-limit-killed asset_group-fix session. Verified the UTL writer fix is SHIPPED + on LDR:
