@@ -610,12 +610,14 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       worktrees off origin/LDR (17:56 UTC; grep-PROOF on the shipped tarball: tick_data_handler heartbeat=4 +
       websocket_runner heartbeat=2 + keystone threading + 8th-C6). Gracefully DELETED the 5 PRE-17:16 producers (freed
       singleton lock + WS feed — drain, not SIGKILL) then relaunched all 5 on the hardened tarball:
-      `mtds-live-sports-odds-api-trades-20260622-181110` (`launch-mtds-live.sh --asset-group sports --shard-spec
-      sports:odds_api:trades`, 5 EPL/LaLiga/SerieA/Bundesliga/Ligue1 leagues) +
+      `mtds-live-sports-odds-api-trades-20260622-181110`
+      (`launch-mtds-live.sh --asset-group sports --shard-spec     sports:odds_api:trades`, 5
+      EPL/LaLiga/SerieA/Bundesliga/Ligue1 leagues) +
       `prediction-live-{polymarket,kalshi}-{trades,book-snapshot-5}-2026062218*` (`launch-prediction-live.sh`).
       **T+10min verification (18:23 UTC) — ALL 5 RUNNING, crash_signatures=0 (zero UnprovenHonestAbsenceError /
       Traceback / Fatal / CRITICAL), boot_markers present (authenticated/subscribed/resolved), polymarket shards already
-      9078–9079 loglines = actively streaming.** The hard-raise gate does NOT trip the hardened producers. — deployment-service
+      9078–9079 loglines = actively streaming.** The hard-raise gate does NOT trip the hardened producers. —
+      deployment-service
 
 - **2026-06-22 run #2 RE-SHIP DONE (slot-0·human-planning, Opus 4.8)** — the peer `data_completion` lane landed the
   tradfi `fetch_evidence` threading + `emit_pipeline_heartbeat` wiring on origin LDR (verified: ws=2/hb=2, massive=3,
@@ -656,8 +658,8 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   producers, all keystone-gated + raise-free + heartbeat-capable**. The 3 DP fleet monitors are LIVE Cloud Run crons
   reading them: `uts-prod-dp-heartbeat-watcher-cron` (`*/5`, last 18:10), `uts-prod-dp-exit-code-monitor-cron` (`*/5`,
   18:10), `uts-prod-dp-meta-watchers-cron` (`*/15`, 18:00) — all ENABLED + firing. **Slack live**:
-  `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` POST = HTTP 200 `ok` (message in #data-pipeline-alerts). **Operator close-ask MET**:
-  every live + batch producer is on hardened code (keystone hard-raise + per-date/per-window heartbeat) and the
+  `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` POST = HTTP 200 `ok` (message in #data-pipeline-alerts). **Operator close-ask
+  MET**: every live + batch producer is on hardened code (keystone hard-raise + per-date/per-window heartbeat) and the
   detect→route→Slack alert path is live off-the-bat. Both residual todos flipped; the data-pipeline-hardening reship is
   CLOSED.
 - [x] ✅ [DATA] P0. **ROOT-CAUSED + FIXED — tradfi CME live captured 0 rows** (`market-tick-data-service@a808ae9` + test
@@ -685,6 +687,14 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   can't commit others' WIP); preserved on `wip-preserve/e2e-audit-image-2026-06-22` +
   `wip-preserve/dp-audit-image-var-2026-06-22`, land on the next strategy-service-clean window. The defi lane meanwhile
   fixed one of the 8 C6 bugs (`059df5f`).
+
+- **2026-06-22 CME FIX VERIFIED LIVE (slot-0·human-planning, Opus 4.8)** — redeploy on the fix-baked tarball (commit
+  `3a760bf` = `a808ae9` + test fix; grep-confirmed `_started`×4 / zero `is_connected` guard) replaced the producer →
+  `mtds-live-tradfi-cme-trades-20260622-182251` (RUNNING). **Capture PROVEN GROWING**: all 4 CME instruments
+  `capture_status=captured` — window-1 4474 rows (NQ197/CL3867/GC14/ES396), window-2 1702 rows (counts advancing) →
+  window-flush rolling forward (the PIPELINE_HEARTBEAT gate). The exact inverse of the broken VM's frozen 0-captured; no
+  `UnprovenHonestAbsenceError`/crash. Tradfi live went 0 (never-worked) → thousands of rows/window. This completes the
+  operator's run-#2 mandate (hardening live + re-ship + fix-the-raises + CME flush).
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
