@@ -199,3 +199,22 @@ assert **58**:
 - [ ] [CICD] P2. Durable fix for the chronic version-split: make `main-backmerge-to-ldr` actually sync the `[skip ci]`
       manifest/version bumps down to LDR (today it "runs green" but leaves the split), so the local-only
       version-alignment gate stops perpetually blocking PM commits.
+
+### UPDATE — archetype tests-slice FIXED (operator chose engine-backed); residual blocker = a separate typecheck cascade
+
+- [x] [STRATEGY] P1. `TSMOM_BTC_CTA` is **engine-backed** — `TsmomBtcCtaEngine` is already in the live
+      `ARCHETYPE_ENGINE_REGISTRY` (`strategy_service/engine/strategies/v2/factory.py`), shipped at
+      `strategy-service@f5f00109` / `UAC@61ac3ad2` (per `citadel_paper_batch_live_reconciliation_2026_06_19.md`). The PM
+      tests were merely stale: added `TSMOM_BTC_CTA` to `_FIXTURE_ENGINE_BACKED` + bumped the 3 counts 58→59
+      (PM@`235774d59`). Verified: the 3 affected tests pass locally. **No strategy-service change needed.** v2's
+      `QG slice (tests)` is now GREEN.
+- [ ] [CICD] P1. **RESIDUAL BLOCKER (separate, pre-existing CI-infra incident)** — PR #498's v2 still RED on
+      `QG slice (typecheck)`: ~**3082 `reportAny`/`reportUnknown*` errors** cascaded across MANY _existing_ PM scripts
+      (`generate-cicd-diagram.py`, `fix_frontmatter.py`, `audit-library-imports.py`, …). This is the env-cascade the QG
+      base scripts themselves document ("~thousands of spurious reportUnknown\*/reportAny … isn't resolved in .venv (the
+      cascade root)") — a sibling dep not resolving in the CI typecheck venv → Unknown propagates everywhere; NOT real
+      type errors, NOT annotatable, NOT introduced by this session. PM v2 was GREEN at 12:47 UTC and surfaced this at
+      15:48 only because the stuck drain PR had never let v2 run on the full accumulated LDR content. Needs the PM-CI
+      owner to diagnose the typecheck-venv dep resolution (the `--python` sibling editable-install path in
+      `base-service.sh`). Until green, PR #498 (carrying boot-scripts + reconcile + archetype fix) cannot auto-merge —
+      everything is staged on LDR (`be9fe5785`..`235774d59`) ready to drain the moment typecheck is green.
