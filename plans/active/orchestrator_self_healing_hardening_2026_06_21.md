@@ -340,15 +340,16 @@ clears the flag on recovery.
       skip-on-mark-raise, transient-no-evict) + keeper auth_failed tests (resume / no-usable-frozen / no-sid-fresh /
       healthy-no-failover). Full QG green: **819 passed, 1 skipped**; dashboard tsc + 51 vitest green. —
       agent-orchestrator@30c2828c
-- [ ] [ORCHESTRATOR] P3. **Task E stretch (SPLIT-OUT follow-up) — transient fleet-wide-outage detector + page.** A
-      purely transient global outage (ALL `/usage` probes time out / 5xx in one tick, none classified 401/403/429)
-      leaves every account healthy-status, so `all_accounts_unusable` stays False and the all-accounts-down page does
-      NOT fire — the operator isn't told. The eviction itself is already outage-SAFE (no marks, no churn, auto-resume);
-      this is an OBSERVABILITY gap only. Add a poller per-tick counter (n_probed / n_success / n_transient_fail) → when
-      `n_success == 0 and n_transient_fail == n_probed (> 0)` fire a distinct deduped "likely Claude backend outage —
-      not churning" page (reset on the next success). Repo: agent-orchestrator (`server/usage_poller.py`). **DEFERRED**
-      (provenance: operator caveat 2026-06-22 "all accounts could be down simultaneously"; the core eviction shipped
-      without it).
+- [x] ✅ [ORCHESTRATOR] P3. **Task E stretch — transient fleet-wide-outage detector + page (SHIPPED 2026-06-22).** The
+      usage poller now tallies per-tick reachability (`n_probed` / `n_success` / `n_transient_fail`; a 5xx and a
+      network/timeout each count transient, 401/403/429 do not) and `_check_likely_outage` fires a distinct disk-deduped
+      `notify_likely_claude_outage` page on the clean all-transient signature
+      (`n_probed > 0 and n_success == 0 and n_transient_fail == n_probed`), re-arming on the next successful probe. A
+      mixed tick (some 401/403 + some transient) neither fires nor re-arms (the marked accounts are the
+      all-accounts-down page's job). NO account is marked (operator caveat: a transient outage is not an account fault);
+      agents auto-resume on recovery. Routes to Slack #agent-orchestrator-alerts (sibling of
+      `notify_all_accounts_unusable`) with an `/accounts` deep-link. — agent-orchestrator@d35c0f09 | tests:
+      test_usage_poller_auth_failover.py (+6 cases)
 - [x] ✅ [DOC] P2. **Codex SSOT.** Documented the auth-failure eviction flow + the "missing-heartbeat-is-not-auth"
       invariant + global-outage guard + auto-recovery in `codex/04-architecture/agent-orchestrator-worker-liveness.md` §
       "Account auth-failure eviction" + a pointer paragraph in `agent-orchestrator-overview.md` § Watchdog. —

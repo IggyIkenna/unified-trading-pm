@@ -307,9 +307,14 @@ Flow:
   (`AUTH_FAILED_COOLDOWN_BASE_SECONDS=600` → 6h cap), re-probed after, and cleared on the next success — so a recovered
   account rejoins the pool with no human action.
 - **All-accounts-down page:** `_fire_all_accounts_down_if_needed` + `all_accounts_unusable` fire one Slack page when
-  every account is MARKED unusable (rate-limited / auth-failed / disabled). NOTE: a purely transient fleet-wide outage
-  (all `/usage` probes timing out, none classified) leaves accounts healthy-status, so this page does not fire — a
-  distinct "likely Claude outage" detector is a tracked follow-up (the eviction itself is already outage-safe: no marks,
-  no churn, auto-resume).
+  every account is MARKED unusable (rate-limited / auth-failed / disabled).
+- **Likely-Claude-outage page:** a purely transient fleet-wide outage (all `/usage` probes timing out / 5xx in a tick,
+  none classified 401/403/429) leaves accounts healthy-status, so the all-accounts-down page above can't fire. The
+  poller tallies per-tick reachability (`n_probed` / `n_success` / `n_transient_fail`) and `_check_likely_outage` fires
+  a distinct disk-deduped `notify_likely_claude_outage` page on the clean all-transient signature
+  (`n_probed > 0 and n_success == 0 and n_transient_fail == n_probed`), re-arming on the next successful probe. A mixed
+  tick (some 401/403 + some transient) neither fires nor re-arms. NO account is marked (a transient outage is not an
+  account fault); agents auto-resume — it is an awareness page, not an action item unless it persists. Routes to Slack
+  #agent-orchestrator-alerts with an `/accounts` deep-link (sibling of `notify_all_accounts_unusable`).
 
 SSOT: `plans/active/orchestrator_self_healing_hardening_2026_06_21.md` § "Operator follow-up (2026-06-22)".
