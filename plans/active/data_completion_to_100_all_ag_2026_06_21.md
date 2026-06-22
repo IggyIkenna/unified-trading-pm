@@ -415,9 +415,13 @@ self-deleted (drain), read as healthy completion — it never checked exit_codes
 watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill monitors must check terminal exit_code
 (137=OOM / 1=err), not just RUNNING-count.
 
-- [ ] [DEPLOY] P1. Sports backfill launchers default MACHINE_TYPE=e2-standard-2 → OOMs for sports (catalogue+per-fixture
+- [x] ✅ [DEPLOY] P1. Sports backfill launchers default MACHINE_TYPE=e2-standard-2 → OOMs for sports (catalogue+per-fixture
       in RAM). Bump default to e2-standard-8 for openmeteo/transfermarkt/footystats/sfi/odds backfill launchers. Repo:
-      deployment-service (blocked by the same clone-residue as the odds-launcher todo).
+      deployment-service. — deployment-service@af6761d | 5 heavy launchers (openmeteo/transfermarkt/footystats/sfi/
+      sports-full-sweep) now default e2-standard-8 + consume $MACHINE_TYPE (env override preserved); odds left at
+      e2-standard-4 (its driver ran clean). QG-green --no-fix (sentinel 3ba2b4d). Clone-residue was only dangling
+      autostash stashes (not working-tree files) + a foreign WIP edit on launch-tradfi-bf-cme-ohlcv-1m.sh, excluded
+      via --files scoping.
 - [ ] [CODE] P1. features-sports-service SFI-progressive:
       `MissingFeatureFamilyError: feature_group=sfi_progressive requires a sibling feature_family kwarg (UAC FeatureFamily enum)`
       — add the feature_family kwarg to the manifest write in the sfi_progressive features path; rebuild tarball;
