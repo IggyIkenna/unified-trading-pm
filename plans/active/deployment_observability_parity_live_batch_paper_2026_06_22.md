@@ -94,14 +94,25 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 2 — deployment-ui: the /repos-grade Deployments surface
 
-- [ ] [UI] P0. A **Deployments** page at `/deployments` mirroring RepoCi grade: umbrella tabs (**Live / Batch /
+- [x] [UI] P0. ✅ A **Deployments** page at `/deployments` mirroring RepoCi grade: umbrella tabs (**Live / Batch /
       Paper**), each a matrix of VMs+Cloud-Run-jobs (status badge, last-run, exit_code, progress, cloud icon GCP/AWS),
       drill-down to per-target detail. Reuse `DeploymentHistory` + `VmEventsTimeline` + `StreamingLogsPanel`. `[UI]` +
-      `pw:L2 ✓` + regression spec. — **deployment-ui**
-- [ ] [UI] P0. Per-target detail (VM or Cloud Run job): live log tail + event timeline + exit_code + linked alerts + the
-      durable `run.log` link — same grade as a repo's CI detail. — **deployment-ui**
-- [ ] [UI] P1. Cloud filter (GCP/AWS) + status filter + asset_group filter, URL-param-backed (deep-linkable from an
-      alert). — **deployment-ui**
+      `pw:L2 ✓` + regression spec. — **deployment-ui** — deployment-ui@051c255 | pw:L2 ✓ | regression:
+      tests/smoke/deployments-page.spec.ts (`src/pages/Deployments.tsx` umbrella tabs Live/Batch/Paper + status-tone
+      matrix + GCP/AWS cloud badges + VM/Cloud-Run kind icon + exit-137 highlight + per-umbrella summary header;
+      `getDeploymentInventory`/`getUmbrellaSummary` in `src/api/deploymentApi.ts`; route+nav in App.tsx/Header.tsx;
+      mock-api handlers; 6 vitest + 4 pw specs; tsc 0 / eslint 0-warn / vitest 883 / pw 265/265 smoke / build 0)
+- [x] [UI] P0. ✅ Per-target detail (VM or Cloud Run job): live log tail + event timeline + exit_code + the durable
+      `run.log` link — same grade as a repo's CI detail. — **deployment-ui** — deployment-ui@051c255 | pw:L2 ✓ |
+      regression: tests/smoke/deployments-page.spec.ts (`src/pages/DeploymentDetail.tsx` route `/deployments/:name`
+      reuses `VmEventsTimeline` + `StreamingLogsPanel`; shows exit_code/137-OOM + GCS `run_log_uri` console link +
+      classified status/umbrella/cloud). NOTE: "linked alerts" inline on the detail is the P1 cross-link below (still
+      open — needs Alerts.tsx).
+- [x] [UI] P1. ✅ Cloud filter (GCP/AWS) + status filter + asset_group filter, URL-param-backed (deep-linkable from an
+      alert e.g. `/deployments?umbrella=batch&cloud=gcp&status=failed`). — **deployment-ui** — deployment-ui@051c255 |
+      pw:L2 ✓ | regression: tests/smoke/deployments-page.spec.ts (`useSearchParams`-backed umbrella tab + cloud/status/
+      asset_group selects; the status deep-link spec asserts the list narrows + the succeeded Cloud-Run row is filtered
+      out)
 - [ ] [UI] P1. Cross-link: an `/alerts` deployment/data_pipeline alert → its target's `/deployments` detail. —
       **deployment-ui**
 
