@@ -447,3 +447,27 @@ failure_modes:
       status: verbose,
       fires: "scheduled audit/consolidator/digest cron missed",
     }
+
+  # --- DP-DIGEST (daily summaries, INFO) ---
+  - {
+      id: DP-DIGEST-001,
+      category: DIGEST,
+      severity: INFO,
+      event: DP_DAILY_DIGEST,
+      detector: daily_completion_digest,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "daily per-AG completion digest",
+    }
+  - {
+      id: DP-DIGEST-002,
+      category: DIGEST,
+      severity: INFO,
+      event: DP_HYGIENE_SUMMARY,
+      detector: manifest_hygiene_orchestrator,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "daily manifest-hygiene-vs-GCS RED/GREEN summary",
+    }
