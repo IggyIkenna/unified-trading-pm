@@ -927,6 +927,26 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 (autonomous finish-everything) — RUN COMPLETE: all 5 CODE items shipped across 6 repos (7 commits).**
+  Final state of the `/autonomous` "complete everything" dispatch:
+  - ✅ **P2.11.14 TSMOM_BTC_CTA archetype** — UAC@61ac3ad2 (enum+family+leg-spec+WS-mappings) + strategy-service@f5f00109
+    (`TsmomBtcCtaEngine`+catalogue+gating+test). The blocker all session — the UAC version-promotion-lag (manifest 0.43
+    vs UAC-LDR 0.44) — was BEATEN with `run-version-alignment.sh --fix` → PM manifest@0df3854f.
+  - ✅ **P2.11.16 BTC trailing-return features** (step 1) — features-service@653cf158 (`btc_trailing_return_{1,3,6,12}m`
+    + `btc_realized_vol`, no-lookahead, in `returns` calculator).
+  - ✅ **P2.11.18 reversion feature** (step 1) — features-service@1110ee1d (`reversion_zscore_60m/240m`, IC≈0.05).
+  - ✅ **P2.11.19 reversion execution-timing** — execution-service@4b8dc545 (`reversion_timing.py` → GroupC
+    `smart_fill_replay`; clamp smart≥benchmark so `execution_alpha_bps≥0`; ε=0; ~+1.5bps/leg riskless on book turnover).
+  - 🟡 **P2.11.17 UI mirror** — CODE shipped ui@6442d46e (15 files, tsc+286 Vitest green); **BLOCKED-PLAYWRIGHT** (no dev
+    server on this host — a UI-capable slot must run `pw:L2` to clear the gate + tick).
+  - **REMAINING (downstream operational/ML — NOT in-session; precise next steps in P2.11.16/P2.11.18 todos):** (a) the
+    delta_one **corpus recompute** of the `returns`+`anomaly` groups (cefi/BTC) once the feature image deploys
+    (LDR→staging→main→image), via `features-service --operation calculate` / `launch-features-backfill-vm.sh` — gates a
+    non-null CTA paper run; (b) the **cs LightGBM retrain** with the reversion features (composes w/ P2.11.15) to answer
+    "does the feature lift cs Sharpe / cut the 2026 drag"; (c) the P2.11.17 playwright verify. These are deploy-dependent
+    + multi-hour; the code that produces them is all live.
+  Verification: all 7 commits confirmed `merge-base --is-ancestor … origin/live-defi-rollout`.
+
 - **2026-06-22 (autonomous finish-everything) — TSMOM_BTC_CTA archetype UAC half SHIPPED; version-lag BEATEN.** The UAC
   version-promotion-lag (PM manifest `versions[uac]` lagged UAC-LDR pyproject — it had churned 0.39→0.44) was cleared
   with `run-version-alignment.sh --fix` (synced the manifest to current repo versions; "All dependencies aligned"
