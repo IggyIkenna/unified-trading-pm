@@ -608,6 +608,11 @@ continuous companion).
   continuous capture) and books trades/positions per-tick, emitting block-level updates the UI (DART) renders live.
   Depends on the DeFi continuous-data P1. Repos: strategy-service + unified-trading-system-ui + deployment-service.
   SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md (determinism) + this (live-continuous).
+  **UI EXISTS — feed it, don't build it**: the page is `unified-trading-system-ui/app/paper-trading/{ledgers,
+  coin/[coin]}` + DART (`components/dart/`); today it renders the DAILY paper-run output. Continuous mode = the live-
+  paper engine writes the 4 ledgers (Instruction/Position/Passive/Pricing) + PnL per-tick → this existing page polls/
+  streams them real-time (block-level trades/positions/PnL), SAME page, just a live feed. Daily determinism recon stays
+  untouched alongside.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
