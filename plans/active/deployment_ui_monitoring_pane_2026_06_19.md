@@ -116,7 +116,13 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       granularity (pytest vs basedpyright) is a future refinement; and the **UI repos** (deployment-ui /
       unified-trading-system-ui) use the vitest reusable, so their codebase_health is a fast-follow (see the new P3
       below) — the Python-service majority populates now. Provenance: 2026-06-22 operator review (the columns showed "—"
-      against live data).
+      against live data). **LIVE-VERIFIED END-TO-END 2026-06-22:** triggered consumer v2 runs + watched the full path —
+      the agg job computed + dispatched `codebase_health_b64` (alerting-service run log), and once the receiver reached
+      PM `main` (`ci-status-update` is `repository_dispatch`-triggered → runs from the DEFAULT branch, so it had to
+      drain LDR→main first — a deploy-timing gotcha, not a code bug) the manifest populated organically from fleet v2
+      runs: `fund-administration-service` `{coverage_pct: 83.9, qg_red_reason: null, large/warn 0}` +
+      `system-integration-tests` `{coverage_pct: 9.09, …}`. Real coverage% + file-debt + green-✓ reason. The fleet fills
+      in per-repo as v2 cycles.
 - [ ] [INFRA] P3. **codebase_health for UI repos + qg_red_reason granularity (fast-follow to the P2 above).** (a) Mirror
       the agg-job compute + `codebase_health_b64` forward into the **`ui-quality-gates-v2.yml`** reusable (vitest
       coverage from `coverage/coverage-summary.json`; file-debt over `.ts`/`.tsx`) so `deployment-ui` +
