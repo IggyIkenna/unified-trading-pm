@@ -597,7 +597,16 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   wake; coverage was actually 0% with 75k+ attempted_failed rows). RULE: a backfill monitor must, per VM, read the
   persisted GCS run.log for the terminal `exit_code=<n>` (it survives self-delete) and WAKE on any `137`/non-zero — AND
   cross-check the manifest `attempted_failed`/`captured` counts, never infer success from "the VM is gone." The wake
-  condition is `exit_code != 0 OR captured did not climb`, not merely `RUN==0`. **Watcher-coverage (HARD RULE, codified 2026-06-10 — never infinitely wait)**: (1) a
+  condition is `exit_code != 0 OR captured did not climb`, not merely `RUN==0`. **And a HUNG process is invisible to an
+  exit-code/RUNNING check too — the monitor MUST also watch LOG-MTIME ADVANCEMENT (codified 2026-06-22):** a backfill VM
+  can sit `RUNNING` with no exit yet make zero progress for hours (incident 2026-06-22: Transfermarkt + FootyStats hung
+  6.5h on an unbounded-HTTP call — alive, exit_code absent, RUNNING — and an exit-code+RUNNING monitor never woke; only
+  a human spot-check caught it). So the monitor's progress signal must be the LOG MTIME / a climbing date|chunk marker,
+  and a frozen marker past a generous threshold (≥45 min — generous because a GCS-tee'd run.log LAGS the on-VM log by
+  minutes; SSH-read the on-VM `/tmp/vm-exec-*.log` for the authoritative tip) = HANG → WAKE. The bug behind such hangs is
+  almost always an outbound HTTP/scrape call with no `timeout=` AND not wrapped so a connector/DNS/executor stall can't
+  surface the per-request timeout — fix with `asyncio.wait_for(coro, timeout=N)` at the per-shard level so the stall is
+  cancelled → caught → loop continues (shard isolation), never a VM-wide hang. **Watcher-coverage (HARD RULE, codified 2026-06-10 — never infinitely wait)**: (1) a
   watcher must reach a TERMINAL verdict on EVERY path — watch `state != OPEN` (covers merged/closed/failed), never only
   the success marker, and PRINT an explicit verdict line so empty output is impossible (a timeout-killed silent watcher
   reads as "still waiting" forever — incident 2026-06-10: a main-arrival watcher died at its Bash timeout with zero

@@ -323,6 +323,24 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 13:10 — TM/FS unbounded-HTTP HANG fixed; ETA + hang-detection codified
+
+Caught (answering "is everything progressing"): TM + FootyStats had HUNG 6.5h (RUNNING, no exit, log frozen 06:05) on
+an unbounded HTTP/scrape call — invisible to the exit-code monitor (2nd monitor blind spot). Fixed IS@dcf87f5:
+`asyncio.wait_for` around per-league TM `get_teams` (600s) + per-date FS fetches (300s) → stall cancelled → caught by
+existing per-shard handler → loop continues. Relaunched tm-125650/fs-125711 (e2-std-8), advancing. Codified the
+hang-detection rule (monitor watches LOG-MTIME, not just exit-code; ≥45min frozen = hang). New monitor bqb62pbvd is
+hang+exit-aware.
+
+**ETA to completion-everywhere → relabel:** DONE = enrichment(+2026 gap), odds(all shards+Apr-June), SFI, weather,
+fixtures/leagues/teams/standings. IN PROGRESS = TM (transfer-window-gated, skips fast, ~hours) + FS (season-gated,
+per-date predictions/matches/odds, slower = LONG POLE ~1-2 days). Then per-source relabel (final denominator step,
+~hours). So ~1-2 days to all-captured, then the relabel → honest 100%.
+
+- [ ] [BUG] P1. FootyStats ODDS rows fail: `source=footystats disagrees with pipeline_mode=batch_odds_api (expects
+  source=odds_api)` recovery=fail_fast — source/pipeline_mode mislabel in the footystats odds writer (predictions +
+  matches land fine). Fix the footystats odds write to stamp source=footystats consistently. Repo: instruments-service.
+
 ### 2026-06-22 ~12:55 — ✅ TM+FootyStats UNBOUNDED-HTTP HANG fixed (uninherited path) + tarball + relaunch — instruments-service@dcf87f5
 
 `tm-backfill-20260622-060029` (and the FootyStats sibling) froze 6.5h on `date=2019-02-13` (3 leagues), python ALIVE,
