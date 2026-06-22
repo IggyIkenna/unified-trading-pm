@@ -1070,9 +1070,24 @@ dispatch prompts.
       bounded 1/120s-cooldown, emits CONSOLIDATOR_RECOVERED) + `scripts/recovery/relaunch_backfill_vm.py` (re-launch
       OOM exit-137 backfill via its launcher — streams durable logs + registers, never fire-and-forget — budget ≤2 per
       (vm-prefix, day) then page_operator). 14 credential-free tests. — deployment-service@e695fa3
-- [ ] [CODE] P1. **Schedule** the daily empty-reprobe (`reprobe_new_empty_confirmed.py`) + auto-flip
-      confirmed-misclassified `empty_confirmed`→`attempted_failed` cells (the reclassifier). — deployment-service /
-      e2e-testing
+- [x] ✅ [CODE] P1. **Auto-flip reclassifier** (the detect→prove→FLIP→re-capture loop) — DONE
+      **e2e-testing@1b220fc**. `reprobe_new_empty_confirmed.py` gains a `--reclassify-apply` mode (default OFF/dry-run):
+      ONLY a `REPROBE_RETURNED_ROWS` verdict (a wired live re-fetch hook ACTUALLY returned rows = PROVEN
+      misclassification) flips the manifest cell `empty_confirmed`→`attempted_failed` with typed reason
+      `error_reason="REPROBE_PROVED_FETCHABLE"` so the orchestrator's `_should_skip_shard` re-attempts it.
+      NEVER flips `ORACLE_EXPECTS_DATA`/`AMBIGUOUS`/`OK_HONEST_EMPTY` (an oracle expectation is not proof — auto-flipping
+      could corrupt a legitimate honest-empty; those stay file_issue-only). Backup-then-write (mirrors the canonical
+      `instruments-service/scripts/flip_phantom_to_attempted_failed.py`), idempotent, bounded ≤200 cells/run (loud
+      `CAP EXCEEDED` log + skip — no silent truncation). Emits `DP_EMPTY_REPROBE_DISAGREEMENT` with `reclassified:true`
+      on each flip. 7 new credential-free tests (mock GCS index read+write). QG: `quality-gates.sh --no-fix` exit 0 (45s).
+- [ ] [INFRA] P1. **Schedule** the auto-flip on the daily reprobe cron — the `dp_reprobe_empty_job` terraform stanza
+      (`deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`) currently runs detect-only
+      (`command=[python3, .../reprobe_new_empty_confirmed.py], args=[]`). Change `args = []` →
+      `args = ["--reclassify-apply"]` so the 09:00-UTC job both DETECTS and FLIPS proven cells daily, then `tofu apply`
+      the single targeted change. **BLOCKED on peer-dirty deployment-service** (Phase-6 INFRA item above: active foreign
+      WIP `cloud_run_job_registry.py`/`escalation.py`/`scripts/recovery/relaunch_*.py` + dirty UAC dep → no clean
+      QG-green/quickmerge boundary). Ship the single-line `.tf` arg change once that foreign WIP clears (pure-terraform,
+      cannot affect Python QG). — deployment-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **Bucket-env parity preflight** (DP-ENV-001 — reader env-less vs writer env-short) as a generic gate. —
       market-tick-data-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key currently degrades
