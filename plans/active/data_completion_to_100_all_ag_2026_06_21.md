@@ -323,6 +323,28 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 13:25 — SPORTS COMPLETION TARGET: ~2026-06-23/24
+
+**Expected full sports completion (all sources, batch+live, honest-100%): 2026-06-23 → 2026-06-24.** Per-track:
+
+| Track | Status (2026-06-22 13:25 UTC) | ETA |
+|---|---|---|
+| API-Football enrichment (stats/events/lineups/players, incl 2026 gap) | DONE (exit 0) | complete |
+| Odds (the-odds-api, all year shards + Apr-June gap) | DONE | complete |
+| Weather (Open-Meteo, paid) | DONE (2899 day-parquets) | complete |
+| SFI raw (soccerfootball-info) | DONE (exit 0, full range) | complete |
+| Fixtures / leagues / teams / standings / venues | DONE | complete |
+| SFI-progressive features | relaunched 13:20 (fix in tarball) | ~2h → **06-22 EOD** |
+| Transfermarkt (transfer-window-gated scraper) | running, advancing | ~hours → **06-22/23** |
+| **FootyStats (season-gated scraper) — LONG POLE** | running, advancing | **~1-2 days → 06-23/24** |
+| Per-source `is_expected_for_source` relabel (final denominator) | queued (fires when TM/FS done) | ~hours after → **06-24** |
+
+So: **all data captured by ~06-23/24 (FootyStats-bound), then the relabel makes the dashboard show honest-100%** —
+each source at 100% of what it CAN provide (Understat 5 leagues, FootyStats in-season, TM transfer-windows, weather
+where venue coords exist, etc.); genuine-no-coverage cells typed-empty + excluded. Monitors bqb62pbvd (TM/FS hang+
+exit-aware) + bmsfjnewh (sfi-progressive) wake on completion/problem. Open P1 fix before relabel: footystats-odds
+source mislabel (FS predictions+matches land; only odds blocked).
+
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
 Operator dispatch (autonomous): defi captures write manifest rows with BLANK `asset_group`; a prior one-off stamped 441k
