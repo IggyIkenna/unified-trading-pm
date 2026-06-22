@@ -601,9 +601,24 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       features keystone-evidence assertion, DP-COVERAGE-003 (EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE) MTDS sentinels.
       Sports VMs reshipped on e2-standard-8 (hardened tarball). null-vs-`""` dedup (DP-ORDER-003) is the UTL-consolidator
       issue doc (cross-cutting). — instruments-service, market-tick-data-service, features-service
-- [ ] [CODE] P0. **Prediction agent**: thread `fetch_evidence` into Polymarket CLOB+Gamma+Kalshi adapters;
-      `reprobe_source("prediction",...)`; guard venue≠source / launch dates / full-universe reader / live CLOB depth. —
-      market-tick-data-service, instruments-service
+- [x] ✅ [CODE] P0. **Prediction agent** — SHIPPED + RESHIPPED + LIVE-VERIFIED (2026-06-22): `fetch_evidence` keystone
+      threaded into the prediction live runner + perp-funding handler; `emit_pipeline_heartbeat` (60s → DP_VM_STALL) in
+      the long-lived live WS producers; UAC `build_fetch_evidence`/`fetch_error_signal_for_status|exception` builder
+      helpers (uac@LDR, precedence fix: TimeoutError→TIMEOUT not SOURCE_UNREACHABLE); Kalshi live id-format fix
+      (`_is_universe.prediction_instrument_ids_from_df` rebuilds `KALSHI:PREDICTION_MARKET:{ticker}` — was passing bare
+      tickers the KalshiClob WS connector skipped) on LDR; IS Kalshi adapter floor `available_from`→open-date + venue
+      `kalshi`→`KALSHI` (instruments-service@686e0ac, DP-PATH-006). **RESHIP**: all 4 prediction live shards
+      (POLYMARKET/KALSHI × trades/book_snapshot_5) relaunched on the hardened tarball + T+10-verified — RUNNING,
+      heartbeat=4 each, **KALSHI kalshi_skips=0** (resolves+captures, was skipping every market), resolved 8–9/shard.
+      Repos: market-tick-data-service, instruments-service, unified-api-contracts. — 2026-06-22 slot-0·human-planning
+- [ ] [CODE] P1. **FOLLOW-UP (C6 / DP-ENV-001, non-prediction, on-VMs-not-LDR)**: the live IS-universe NON-prediction
+      reader `websocket_runner._read_is_parquet_sync` still uses `build_bucket("instruments", asset_group=...)` (env-LESS
+      legacy shape → stale/absent read → empty universe → silent zero capture) on origin/LDR. Fix = `resolve_bucket_name`
+      env-short via a `_instruments_store_bucket(asset_group)` helper (mirrors the prediction reader). The fix IS on the
+      reshipped prediction VMs (rode the `--allow-dirty-tarball`), but its LDR ship was reset by a concurrent `_h`-clone
+      lane actively churning `websocket_runner.py` (type-narrowing) — re-apply + ship coordinating with that lane (a
+      ~6-line change; helper + 1 call-site). Repo: market-tick-data-service. Provenance: prediction-hardening reship
+      2026-06-22.
 
 ## Per-AG dispatch prompts (FINAL DELIVERY — paste one per AG agent tab)
 
