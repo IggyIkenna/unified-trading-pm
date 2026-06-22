@@ -143,12 +143,15 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [x] ✅ P0. Unit gate tests DONE utl@39f8ec85 (test_record_empty_fetch_evidence_gate.py: None/signal/401/429/500/rows>0/not-received raise; EXPECTED_* exempt). Unit: a 401/429/timeout/exception path that previously stamped `SOURCE_RETURNED_ZERO` now raises
       `UnprovenHonestAbsenceError`; a genuine 200+empty passes. One test per disqualifying signal. —
       **unified-trading-library, market-tick-data-service**
-- [ ] [SCRIPT] P0. **Daily empty re-probe** (`scripts/audit/reprobe_new_empty_confirmed.py`, e2e-testing → wired to MTDS
-      QG primary-consumer): select rows that became `empty_confirmed` with `SOURCE_RETURNED_ZERO` **today** (per AG),
-      re-hit the live source/endpoint for a sample, and cross-check against source docs/coverage oracle. Emit
-      `EMPTY_REPROBE_DISAGREEMENT` (the source returned data → the empty was a bug) to `data-pipeline-alerts`.
-      Scriptable for the re-fetch; **escalate the ambiguous verdicts to a planning-VM slot** (Phase 5). —
-      **e2e-testing**
+- [x] ✅ P0. **Daily empty re-probe** — DONE e2e-testing@c045426 (`scripts/audit/reprobe_new_empty_confirmed.py`):
+      cross-cutting SELECTOR (today's `empty_confirmed`+`SOURCE_RETURNED_ZERO` rows per AG, from the availability index)
+      + UAC coverage-oracle cross-check (`expected_coverage()`) + `DP_EMPTY_REPROBE_DISAGREEMENT` (WARN) emit when oracle
+      `SHOULD_HAVE_DATA` (or a wired re-fetch returns rows) + Phase-5 issue-file on ambiguous. **Per-AG live re-FETCH is
+      a clean extension point** — `register_reprobe_hook(asset_group, hook)` where
+      `hook: (asset_group, venue, data_type, day) -> ReprobeResult(reached_source, rows_returned, detail)`; the per-AG
+      agents implement `reprobe_source(...)` + register it (the per-adapter HTTP/auth wiring is theirs, the cross-cutting
+      selector/oracle/emit is shipped here). Tests planted a same-day SOURCE_RETURNED_ZERO row + oracle-disagree → emits.
+      — **e2e-testing**
 - [ ] [RATCHET] P1. QG ratchet (extends `fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md`): static
       check banning `record_empty(...SOURCE_RETURNED_ZERO...)` reachable from an `except`/error branch without
       `fetch_evidence`. Baseline-down counter. — **market-tick-data-service, instruments-service**
@@ -178,17 +181,23 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Phase 3 — Daily per-AG completion summary + once-daily manifest-hygiene-vs-GCS audit (closes C2/C3/C6/C7)
 
-- [ ] [SCRIPT] P1. **Daily per-AG completion digest** → `data-pipeline-alerts`: reuse `derive_capture_status_rates()`
-      per AG/day, **union across sources** where >1 source exists for the same data, split batch vs live; breakdown per
-      venue/chain/data_type. Thin wrapper over deployment-api readers + `notify-slack.yml`. — **e2e-testing /
-      deployment-service** (cron `0 7 * * *`)
-- [ ] [SCRIPT] P1. **Hygiene orchestrator** (`scripts/audit/manifest_hygiene_daily.py`): runs read-only, parallel
-      (workers=32 via `gcs_blob_ops`), per AG, composing the existing tools — phantom
-      (`reconcile_phantom_manifest_rows_all.py --dry-run`), divergence (`detect_manifest_divergence.py`), canonical-form
-      (`audit_canonical_form.py --probe-paths`), 4-pillar (`validate_shards_4pillar.py`). One consolidated RED/GREEN
-      report. **Note the cost**: full 7.4M-row GCS existence walk ≈ many hours — use prefix-bulk-listing (list once per
-      `(date,venue,data_type)`), and scope incrementally (changed-since-yesterday) for the daily run; full walk weekly.
-      — **e2e-testing**
+- [x] ✅ P1. **Daily per-AG completion digest** — DONE e2e-testing@c045426 (`scripts/audit/data_pipeline_daily_digest.py`,
+      cron `0 7 * * *` UTC): reads each AG's availability index, computes the 4-state ratio (the
+      `derive_capture_status_rates` formula REPLICATED in `_dp_common.capture_status_counts` — NOT a deployment-api
+      import, per the service↔service ban), **unions across sources** (≥1 source captured ⇒ cell captured), splits
+      batch/live/replay by `pipeline_mode`, breaks down per venue/chain/data_type, surfaces the worst-10 cells + overall
+      %. Posts an INFO `DP_DAILY_DIGEST` via `log_event` (alerting router mirrors → channel; never Slack-direct). Test
+      asserts the union + ratio on a 2-source fixture. — **e2e-testing**
+- [x] ✅ P1. **Hygiene orchestrator** — DONE e2e-testing@c045426 (`scripts/audit/manifest_hygiene_daily.py`, cron
+      `0 8 * * *` UTC): read-only, one consolidated RED/GREEN per AG composing the existing tools — phantom
+      (`reconcile_phantom_manifest_rows_all.py --dry-run` subprocess), divergence (`detect_manifest_divergence.py`
+      subprocess), path-canonicality (UAC `canonical_path_violations` over the index's path column), v9-distribution
+      (CF-1 logic inline), 4-pillar (`validate_shards_4pillar.py` subprocess). Emits a `DP_*` WARN per non-empty
+      finding-class (`DP_NOT_V9`/`DP_DIVERGENT_EMPTY`/`DP_NONCANONICAL_PATH_ON_DISK`/`DP_PHANTOM_ROWS`/
+      `DP_SHARD_PILLAR_FAIL`), writes candidate CSVs to `plans/audit/results/manifest_hygiene_<AG>_<date>.csv`, files a
+      Phase-5 escalation issue when non-empty. **COST-AWARE**: `--mode changed` (daily default) runs ONLY the index-only
+      checks (v9/divergence/path) — NO full-corpus walk; `--mode full` (weekly) adds the phantom + 4-pillar GCS walks;
+      every scope-out is LOGGED (no silent caps). Test plants a non-v9 + non-canonical row → flagged. — **e2e-testing**
 - [x] ✅ P1. **Path-canonicality validator** `is_canonical(path)` in UAC — DONE uac@6c27bfa0 (is_canonical + canonical_path_violations; rejects hyphen-day / glued VENUE-CHAIN / glued V{N} / out-of-set AG; round-trips builders). **Path-canonicality validator** `is_canonical(path)` in UAC (today `partition_paths.py` only BUILDs):
       parse a GCS path and assert it matches the canonical builder output for its AG/pipeline_mode/schema. Closes C3.
       Reused by the hygiene orchestrator AND the Phase 4 writer-side assert. — **unified-api-contracts**
@@ -200,6 +209,31 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       100%==9, read actual rows not the constant) and alert on any AG <100%. Reuse `audit_canonical_form.py` CF-1. —
       **e2e-testing**
 
+### Wave 4b out-of-repo wiring (the daily-audit scripts shipped in e2e-testing; these reach other repos)
+
+> The three daily audits + the `_dp_common` substrate landed in `e2e-testing/scripts/audit/` (QG-green). The remaining
+> hops touch sibling repos and are dispatched here (per the fan-out-is-a-tracked-todo rule). Cold-start context: the
+> scripts run from `e2e-testing/scripts/audit/`, are read-only over the manifest/GCS, emit `DP_*` via UTL `log_event`,
+> and write candidate CSVs + issue docs to the PM clone.
+
+- [ ] [SCRIPT] P1. **Wire the three audit scripts into MTDS QG STEP 5.89** (Peripheral-Script-QG HARD RULE — MTDS is the
+      primary consumer): add a block to `market-tick-data-service/scripts/quality-gates.sh` mirroring STEP 5.88, that
+      ruff-lints `${WORKSPACE_ROOT}/e2e-testing/scripts/audit/{_dp_common,data_pipeline_daily_digest,manifest_hygiene_daily,reprobe_new_empty_confirmed}.py`
+      and runs each with `--smoke` warn-only (credential-free mechanism check; gate on `QG_BLOCK_NETWORK`/`CLOUD_BUILD`
+      like 5.88). Ruff-only per script-homes (basedpyright NO for scripts/). — **market-tick-data-service**
+- [ ] [INFRA] P1. **Schedule the three daily-audit crons** in deployment-service (match how `cf_manifest_audit` is
+      scheduled — Cloud Run Job + Scheduler / the repo's scheduling convention, NOT a VM): `data_pipeline_daily_digest.py`
+      @ `0 7 * * *` UTC, `manifest_hygiene_daily.py --mode changed` @ `0 8 * * *` UTC (+ a weekly `--mode full`),
+      `reprobe_new_empty_confirmed.py` @ `0 9 * * *` UTC. Each needs `GCP_PROJECT_ID`/env + UTL-on-a-VM checklist (the
+      `cloud-providers.yaml` + `deployment_service` importable bits). — **deployment-service**
+- [ ] [CODE] P1. **Register `DP_DAILY_DIGEST` (+ `DP_HYGIENE_SUMMARY`) as INFO rules** so the digest event actually
+      routes to `#data-pipeline-alerts`: add the two events to UTL `events/event_types.py` (DP\_\* family +
+      `DATA_PIPELINE_EVENT_TYPES`), add the matching INFO `DataPipelineAlertRule`s to the UAC
+      `DATA_PIPELINE_ALERT_RULES` registry + `data-pipeline-alerts.registry.yaml` (severity INFO, channel-only), so the
+      alerting-service `data_pipeline_rule_for` exact-match mirrors them. Until then the digest emits but the router
+      drops it (exact-match only). The digest already emits `DP_DAILY_DIGEST` by name — this just registers it. —
+      **unified-trading-library, unified-api-contracts, unified-trading-pm**
+
 ## Phase 4 — Writer-side path + state invariants (defence-in-depth, closes residual C3/C7)
 
 - [ ] [CODE] P2. `record_captured`/`record_empty` assert the resolved GCS path `is_canonical()` (Phase 3 validator)
@@ -210,12 +244,13 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Phase 5 — Scripted→LLM escalation hop (the planning-VM handoff)
 
-- [ ] [DESIGN] P2. Define the handoff: deterministic scripts (Phases 1/3) produce **candidate lists** (suspicious
-      empties, divergences, non-canonical spellings, reprobe disagreements) as `plans/audit/results/<slug>_<date>.csv`.
-      Ambiguous verdicts — "is this `empty_confirmed` a real gap or a code bug?", "is this spelling a legacy straggler
-      or an intentional new venue?" — escalate to a **planning-VM slot** via the standard audit→issue→plan flow (write a
-      `plans/active/issues/<name>_<date>.md`, not chat). Wire the daily digest to auto-file the issue doc when the
-      candidate list is non-empty. — **unified-trading-pm + planning-VM**
+- [x] ✅ P2. Define the handoff — DONE e2e-testing@c045426 (`scripts/audit/_dp_common.py` `file_escalation_issue()` +
+      `write_candidate_csv()`, shared by the hygiene + re-probe audits): deterministic scripts write candidate lists to
+      `plans/audit/results/<slug>_<date>.csv`; when non-empty, `file_escalation_issue` auto-files
+      `plans/active/issues/<slug>_<date>.md` (the standard `title`/`created`/`author`/`source`/`locked_by` frontmatter +
+      `## What I found` / `## Why it matters` / `## Recommended decision` body, idempotent per (slug, UTC-day)) for a
+      planning-VM slot. Both the hygiene RED and the re-probe disagreement paths call it. Test asserts the doc is written
+      with the candidate CSV linked. — **unified-trading-pm (issue/CSV are data output to the PM clone) + planning-VM**
 
 ## Codex SSOT updates (mandatory before archival)
 
@@ -242,4 +277,5 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - Per-AG `fetch_evidence` threading in MTDS/IS adapters is the per-AG half → goes to the AG agents via the final prompts (not built cross-cutting here).
 - **2026-06-22 Wave 1 (UAC T0) SHIPPED** `unified-api-contracts@6c27bfa0` — QG green (220s, exit 0), 59 new tests. Exports `FetchEvidence`/`FetchErrorSignal`(10 members: HTTP_NON_2XX,AUTH_401,AUTH_403,RATE_LIMITED_429,SERVER_5XX,TIMEOUT,CONNECT_ERROR,ADAPTER_EXCEPTION,MISSING_CREDENTIAL,SOURCE_UNREACHABLE)/`DISQUALIFYING_FETCH_SIGNALS`/`UnprovenHonestAbsenceError(callsite_hint, evidence)`/`is_canonical`/`canonical_path_violations`/`DATA_PIPELINE_ALERT_RULES`(38, parity-tested vs registry yaml)/`DataPipelineAlertRule`. Decision: DP_* events aren't `AlertCode` members → built parallel `DataPipelineAlertRule` (mirrors AlertRule shape) not reusing the AlertCode-validated AlertRule. `is_canonical(require_pipeline_mode=False)` default (bare builder output stays canonical; opt-in strict for hygiene walk).
 - **2026-06-22 Wave 2 (UTL T0) SHIPPED** `unified-trading-library@39f8ec85` — QG green (117s). KEYSTONE gate live in `manifest_writer/_writer_record.py::record_empty` (+ `record_zero_rows`, `_core` stub, `manifest_writer_normalising`): `fetch_evidence` kw; SOURCE_RETURNED_ZERO hard-raises `UnprovenHonestAbsenceError` + emits `DP_UNPROVEN_HONEST_ABSENCE` unless `.proves_honest_absence()`. Heartbeat: `unified_trading_library.events.emit_pipeline_heartbeat(vm_name,asset_group,data_type,rows_captured_cum,source,extra)` → `log_event(PIPELINE_HEARTBEAT)`. 37 DP_* + PIPELINE_HEARTBEAT in `events.event_types`. **Blast-radius note (operator hard-raise choice)**: MTDS/IS adapters calling SOURCE_RETURNED_ZERO without evidence will now raise at runtime + their QG goes red until they thread `fetch_evidence` — that per-AG threading is the per-AG agents' job (final prompts), the cross-cutting gate is intentionally strict.
+- **2026-06-22 Wave 4b (daily audits + digest + escalation) SHIPPED** `e2e-testing@c045426` — QG green ("ALL QUALITY GATES PASSED", FINAL=0). New `e2e-testing/scripts/audit/`: `_dp_common.py` (shared substrate — manifest-index read reusing the divergence bucket/download pattern, 4-state `capture_status_counts` replicating `derive_capture_status_rates` WITHOUT a deployment-api import, `emit_dp_event` log_event wrapper, `write_candidate_csv` + `file_escalation_issue` Phase-5 hop), `data_pipeline_daily_digest.py` (per-AG completion, union-across-sources, batch/live split → `DP_DAILY_DIGEST` INFO; cron 0 7), `manifest_hygiene_daily.py` (one RED/GREEN per AG composing phantom+divergence+path-canonicality+v9+4-pillar; `--mode changed` index-only daily / `--mode full` weekly walk; cron 0 8), `reprobe_new_empty_confirmed.py` (today's SOURCE_RETURNED_ZERO selector + UAC oracle cross-check → `DP_EMPTY_REPROBE_DISAGREEMENT` WARN; `register_reprobe_hook(ag, hook)` extension point for the per-AG live re-fetch; cron 0 9). 13 unit tests (mock GCS via injected fake StorageClient, credential-free). **Re-probe extension-point signature**: `reprobe_source(asset_group, venue, data_type, day) -> ReprobeResult(reached_source: bool, rows_returned: int, detail: str)`, registered via `register_reprobe_hook("<ag>", reprobe_source)`. Out-of-repo hops filed as Wave-4b todos: MTDS QG STEP 5.89 wiring, deployment-service crons, UAC/UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` registry registration (the digest emits the event by NAME but the router exact-match drops it until registered).
 - **2026-06-22 Wave 3 (alerting-service) SHIPPED** `alerting-service@6e8b551` — QG green (68s, exit 0). `notifiers/data_pipeline_slack.py` + `rules/data_pipeline_rules.py` (`data_pipeline_rule_for`) + router `_route_data_pipeline_event` (mirror `#data-pipeline-alerts`; CRITICAL also pagerduty+telegram via existing incident path, dedup/ack reused; generic routing short-circuited so DP_* don't double-fire to #uts-live-alerts) + `config.data_pipeline_slack_webhook` SM-hot-reloaded from `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` + CONFIGURATION.md row. Updated `test_paging_credentials_reloader` (9→10 keys). **Reconcile note**: the dead sub-agent (transient server rate-limit) left an off-scope `quality-gates-v2.yml` edit (escalate-ldr-qg-failure job + cloud-build trigger fix) — DISCARDED (per-repo workflow edit = template drift; CLAUDE.md), captured as a DISCOVERY todo → orchestrator_master. DP_* events reach the subscriber via the existing CONSOLIDATOR_DOWN topic path (no new topic).
