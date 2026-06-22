@@ -141,3 +141,69 @@ lending_indices 904, umi_tick_provider 902) + 2 functions over 50L (gas_fee `_co
       extract the per-file `_BACKFILL_HTTP_TIMEOUT` (34 duplicates) into ONE shared module + import it (DRY; drops the 4
       over-900 files back under), trim the 2 over-50L gas_fee_handler functions, QG-green, quickmerge. repo:
       market-tick-data-service. Provenance: stale-WIP reconcile 2026-06-22.
+
+## Progress Log — 2026-06-22 autonomous rollout (coverage parallel-combine + mtds HTTP-timeout WIP)
+
+> Append-only journal for the `/autonomous` dispatch executing the two 2026-06-22 P1/P3 items. The loop's handoff doc
+> (no separate summary file). A compressed future-me resumes from here.
+
+**Target set (TASK 1 — coverage parallel-combine).** 19 python repos carry a coverage gate + run xdist `-n auto`
+(fleet-wide via `base-service.sh [3]`). 18 have an existing `[tool.coverage.run]` block; **greeks-service** has a
+coverage GATE (`[tool.coverage.report] fail_under=70`) + xdist but NO `[tool.coverage.run]` block — equally vulnerable
+to the spurious-partial-fail bug. **DECISION (rule 12f, within documented intent):** the dispatch's literal filter is
+"has `[tool.coverage.run]`" but the operator's stated GOAL is "every repo's coverage gate reads COMBINED xdist data" →
+greeks qualifies → include it (add a minimal `[tool.coverage.run]` parallel-combine block; no `branch`/`source` so the
+measured % is unchanged). mtds already shipped (@4a514cf) — skipped. No canonical pyproject coverage template exists in
+`scripts/propagation/` (the plan's "best via template" is aspirational) → per-repo edits.
+
+**Why adding the config is always safe (never newly-breaks a green repo):** combined coverage ≥ partial (controller-only)
+coverage always (union of covered lines), so the fix only moves the terminal fail-under number UP toward the true value.
+Any currently-GREEN repo has terminal ≥ fail_under ⟹ real ≥ fail_under ⟹ stays green. The only repos where real <
+fail_under are ones ALREADY red today (real debt) — there I revert the edit + record the repo, never ship a misleading
+`fix(ci)` commit.
+
+**Per-repo verification protocol:** edit `[tool.coverage.run]` → `quality-gates.sh --no-fix` → compare terminal coverage
+to `coverage.xml` line-rate → if QG exit 0 (real ≥ fail_under): quickmerge ship `pyproject.toml`, record sha. If
+coverage.xml real < fail_under: revert edit, record as real-debt (issue doc). If QG red for a NON-coverage reason:
+revert edit, record as blocked+reason (do not ship).
+
+**Shipped shas (TASK 1) — 18/19 (incl. mtds pre-dispatch):**
+
+- market-tick-data-service@4a514cf — already shipped pre-dispatch (the proven fix).
+- unified-trading-api@62a6d48 (real 80.6% ≥77) — pilot
+- greeks-service@85ac7ab (new `[tool.coverage.run]` block — special)
+- fund-administration-service@15627f3 (no-`branch` source-block — special; real 83.9%)
+- alerting-service@35b57ff (real 80.3% ≥76)
+- execution-service@da24dc0 (real 84.0% ≥70)
+- strategy-service@e6d48a43 (real 84.9% ≥74)
+- client-reporting-api@0a60e18 (real 73.9% ≥70)
+- ibkr-gateway-infra@bd3991a (real 88.2% ≥51)
+- batch-live-reconciliation-service@2fa6c9c (real 87.8% ≥80)
+- unified-api-contracts@2f89f5c (real 94.24% ≥94)
+- ml-service@249da21 (real 82.7% ≥70)
+- trading-agent-service@722608c (real 73.5% ≥70)
+- system-integration-tests@b059ee2 (real 9.09% ≥2)
+- unified-trading-library@a060eaa3 (real 90.1% ≥80)
+- deployment-service@f8cddf0 (real 72.3% ≥70)
+- features-service@070aa1a2 (real 85.6% ≥70)
+- market-data-processing-service@65b6954 (real 88.2% ≥85)
+
+Verified: all 18 carry `parallel = true` on `origin/live-defi-rollout` pyproject.toml.
+
+**Concurrency lesson (recorded so it doesn't recur):** running the base libraries (UAC/UTL) edits CONCURRENTLY with their
+dependents tripped each dependent's quickmerge dirty-deps guard (a dirty base dep). One sub-agent even committed UAC's
+in-flight pyproject as "inherited WIP" (harmlessly — the content was the same parallel-combine edit). FIX going forward:
+ship a base library (UAC, UTL) ALONE first, commit it, THEN fan out its dependents. UAC@2f89f5c + UTL@a060eaa3 were
+re-verified clean (6-insertion pyproject only). deployment-service was re-shipped after UAC settled.
+
+**2 repos BLOCKED by PRE-EXISTING, UNRELATED LDR-red (NOT the coverage config — their coverage gate itself PASSES):**
+
+- **instruments-service** — coverage PASSES at 88.23% (≥88), but QG exit 1 on 3 pre-existing test failures in
+  `tests/unit/scripts/test_enumerate_expected_universe_v2.py` (`future` vs `futures_chain` instrument_type mismatch:
+  `test_tradfi_v2_future_seeds_canonical_lowercase_instrument_type` / `_future_expected_unattempted_uses_writer_grain` /
+  `_capture_at_writer_grain_suppresses_seed`). Confirmed failing on clean HEAD before the coverage edit. Coverage edit
+  reverted. → being fixed (data-pipeline heartbeat red).
+- **deployment-api** — coverage PASSES at 81.9% (≥70), but QG exit 1 on the codex-compliance violation-count ratchet:
+  6 violations > max 5 (imports-inside-functions in health_routes.py/firebase_auth.py, function-size in
+  deployment_state.py, direct-cloud-SDK-imports). Pre-existing tech debt over budget by 1. Coverage edit reverted. →
+  being fixed (drop 1 violation to satisfy the ratchet).
