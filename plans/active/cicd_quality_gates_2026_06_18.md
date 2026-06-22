@@ -109,3 +109,35 @@ source:
 
 Local↔CI: a `quality-gates.sh --no-fix` green tree → the staging-PR `quality-gates-v2` is green with zero non-SIT-delta
 divergence. Path-B: no slot is stranded behind LDR (the `slot_drift_check.py` invariant holds fleet-wide).
+
+## 2026-06-22 — pytest-cov + xdist coverage-measurement bug (spurious fail-under)
+
+Discovered on market-tick-data-service: QG coverage gate FAILED reporting "total of 46.4% < fail-under=79.0", but the
+SAME run's `coverage.xml` (which combines the xdist workers) showed the REAL coverage = **83.95%** (only 1 genuinely
+untested file). Root cause: pytest-cov + xdist `-n auto` (2 workers) — the `--cov-report=xml` combines worker data
+correctly, but the terminal `--cov-fail-under` enforcement reads PARTIAL (controller-only) data → spurious low number →
+false gate failure. ALL repos set `[tool.coverage.run]` with NO `parallel`/`concurrency`, so this is LATENT fleet-wide
+(a bad xdist split can spuriously fail any repo's coverage gate). Fix = `parallel = true` +
+`concurrency = ["thread","multiprocessing"]` + `sigterm = true` in `[tool.coverage.run]` so the combine is deterministic
++ the fail-under reads combined data.
+
+- [x] ✅ [CICD] P1. **mtds coverage parallel-combine fix SHIPPED** (market-tick-data-service@4a514cf, on LDR) — QG now
+      green (coverage reads the real 83.95%, was spuriously failing at 46.4%). Verified: full QG PASSED 78s.
+- [ ] [CICD] P1. **Roll the coverage parallel-combine config fleet-wide** — add `parallel`/`concurrency`/`sigterm` to
+      every repo's `[tool.coverage.run]` (currently 0/24 set it) so the xdist spurious-fail-under can't strike another
+      repo. Best via the canonical pyproject template / propagation. repo: all service repos. Provenance: mtds spurious
+      46.4% coverage-gate failure 2026-06-22.
+
+## 2026-06-22 — mtds HTTP-timeout-hardening WIP (preserved, ship-blocked by file-size)
+
+A stale prior-session WIP in the mtds slot (bounded `aiohttp.ClientTimeout(sock_connect=15,sock_read=60,total=120)`
+across ~41 DeFi/handler/adapter fetch paths — `backfill_vm_silent_worker_stall_watchdog P3`) was reconciled best-of-both
+onto current LDR (1 conflict resolved) + preserved on `origin/wip-preserve/mtds-http-timeouts-2026-06-22`. All 5160
+tests pass, but it can't quickmerge-ship: the additive lines push 4 files over 900L (gas_fee_handler 909, polymarket 904,
+lending_indices 904, umi_tick_provider 902) + 2 functions over 50L (gas_fee `_collect_solana_live` 52L, `_collect_btc_fees`
+54L). The clone is now CLEAN + current (the operator's "dirty + behind LDR" is resolved); the WIP is safe on the branch.
+
+- [ ] [MTDS] P3. **Ship the mtds HTTP-timeout-hardening WIP** — restore from `wip-preserve/mtds-http-timeouts-2026-06-22`,
+      extract the per-file `_BACKFILL_HTTP_TIMEOUT` (34 duplicates) into ONE shared module + import it (DRY; drops the 4
+      over-900 files back under), trim the 2 over-50L gas_fee_handler functions, QG-green, quickmerge. repo:
+      market-tick-data-service. Provenance: stale-WIP reconcile 2026-06-22.
