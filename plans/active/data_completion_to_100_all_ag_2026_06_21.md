@@ -428,8 +428,8 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       post-match triggers AND writes ≥1 `_index/latency_observations/*.parquet` over the 36 in-season leagues. Repo:
       deployment-service. Provenance: Source-latency validation (2026-06-22).
 - [ ] [INFRA] P3. **True first-SUCCESS (polling-retry) latency enhancement** — the shipped recorder stamps the
-      first-ATTEMPT wall-clock (`fetched_rows=-1`, `first_success=False` sentinel — the scheduler dispatches async + does
-      not see the fetch's row count), which the aggregator treats as a CEILING on the true publish lag. For a TIGHT
+      first-ATTEMPT wall-clock (`fetched_rows=-1`, `first_success=False` sentinel — the scheduler dispatches async +
+      does not see the fetch's row count), which the aggregator treats as a CEILING on the true publish lag. For a TIGHT
       first-success measurement, add a poll-until-non-empty path: from `match_end`, re-attempt each post-match
       (data_type, source) on a tightening cadence (e.g. 15-min for the first few hours, then hourly) until the source
       returns `rows>0`, and stamp the genuine first-success row (`first_success=True`, `fetched_rows=N`). The aggregator
@@ -513,20 +513,68 @@ successful fetch** of each post-match data_type and differencing it against that
 in-season leagues above (esp. MLS / Brasileirão / Argentina / J-League / K-League — matches land daily right now) are
 where this is capturable immediately. Todo filed below.
 
+### Step 4 — SHIPPED instrumentation (2026-06-22) — the empirical-latency mechanism
+
+The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b + instruments-service@2fc4ac7):
+
+- **WHERE the lag is observed:** the long-lived `sports-scheduler` (`SportsTriggerScheduler`, the existing forward
+  driver) fires post-match triggers at `match_end + offset` (`match_end = kickoff + 105 min` estimate,
+  `MATCH_END_OFFSET_MIN`). On the FIRST fire of a `(trigger_name, fixture_id)` (`mark_fired` dedupes → first fire =
+  first attempt), after a successful dispatch,
+  `fire_trigger`→`_record_latency_observations`→`build_observations_for_fire` emits one observation per OBSERVABLE
+  post-match entity (`ENTITY_TO_OBSERVATION_TARGET`: FIXTURE_STATS/FIXTURE_EVENTS/PLAYER_STATS→api_football,
+  XG→understat, SFI_PROGRESSIVE_STATS→sfi).
+- **WHAT lands (`observed_publish_lag_s`):** a per-(fixture, data_type, source) row with
+  `observed_publish_lag_s = first_fetch_utc − match_end_utc`, `fetched_rows`, `first_success`, `trigger_name`, the
+  `assumed_lag_constant_s` (yardstick), `recorded_at_utc`. **GCS location:**
+  `gs://instruments-store-sports-prd-<pid>/_index/latency_observations/day=<YYYY-MM-DD>/<run_tag>.parquet` — a DEDICATED
+  observation file (hive-partitioned by match-day, per-run shard via `run_tag` for multi-scheduler isolation). Written
+  via UTL cloud-agnostic `get_storage_client().upload_bytes`; **NEVER overwrites `available_at`** (the circular
+  `available_at = match_end + constant` arithmetic stays intact — the observation is a sibling truth source).
+- **First-ATTEMPT vs first-SUCCESS:** the shipped recorder stamps the first-ATTEMPT wall-clock (sentinel
+  `fetched_rows=-1`, `first_success=False`) because the scheduler dispatches asynchronously and doesn't see the fetch's
+  row count. The aggregator treats this as a **CEILING** on the true publish lag (the source HAD published by
+  `first_fetch_utc`) — sufficient for a CONFIRM/TOO-LOW/TOO-HIGH verdict. The P3 polling-retry todo tightens it to a
+  genuine first-success (poll-until-`rows>0`, stamp `first_success=True`).
+
+### Migration plan — re-pinning `source_data_latency.py` from real data (after ~2-week accrual)
+
+1. **Accrue** (~1–2 weeks): the live `sports-scheduler` (after the P2 tarball-rebuild todo lands the recorder on the VM)
+   writes `_index/latency_observations/day=*/*.parquet` daily as matches complete in the 36 open leagues. Progress
+   metric = observation row count climbing per source (flat across days for a source = that source's post-match trigger
+   isn't firing → diagnose, don't wait).
+2. **Aggregate:**
+   `python3 instruments-service/scripts/aggregate_source_latency_observations.py [--first-success-only] [--emit-constants]`
+   → prints per-source `n / p50 / p95 / max / assumed / verdict` and (with `--emit-constants`) a ready-to-paste constant
+   block (p95 ceil-to-minute, floored at the current assumed unless `--allow-lower` — fail-safe: an under-sampled window
+   must never LOWER a lag floor and risk a too-early read). `--min-samples` (default 20) gates the recompute so a thin
+   window reads UNDER-SAMPLED, not a spurious re-pin.
+3. **Re-pin (human-reviewed UAC edit):** update the 5 `Final[int]` constants in
+   `unified-api-contracts/unified_api_contracts/registry/source_data_latency.py` from the observed p95. These feed
+   `CanonicalFixture.report_time = match_end + lag` (a cross-repo contract consumed at
+   `instruments-service/.../engine/orchestrator/sfi.py`) → semver-agent handles the bump; ship via quickmerge.
+4. **Historical rows — NO one-walk migration needed.** `available_at`/`report_time` on EXISTING captured parquets are
+   write-time stamps that do not retro-change when the constant moves; only NEW forward `report_time` derivation picks
+   up the re-pinned value (live=batch, one code path). (A future operator decision to recompute historical `report_time`
+   for the affected sources would be its own bounded single-walk over the sports corpus — out of scope.)
+5. **Re-doc:** flip the P2 re-pin todo + re-label this section's Step-2 verdict table from UNVALIDATABLE-FROM-BACKFILL
+   to the empirical VALIDATED verdict, citing the observation sample size per source.
+
 ## Progress Log
 
 ### 2026-06-22 ~14:15 — UTL asset_group writer fix COMPLETED + SHIPPED (resolver layered on peer baseline)
 
-**SHIPPED (unified-trading-library):** `ManifestWriterIngestMixin._resolve_asset_group` + `MissingAssetGroupError` +
-the resolver wired into all 5 captured/record/add/zero-fill call sites. Full UTL QG green (`--no-fix`, 6293 tests).
+**SHIPPED (unified-trading-library):** `ManifestWriterIngestMixin._resolve_asset_group` + `MissingAssetGroupError` + the
+resolver wired into all 5 captured/record/add/zero-fill call sites. Full UTL QG green (`--no-fix`, 6293 tests).
 
-**Reconciliation (semantic conflict — two agents, same task):** mid-ship a peer landed `4bd9487e feat(manifest): add
-asset_group as first-class AvailabilityRecord field` on LDR — the SIMPLER half (field + serializer + raw `asset_group=`
-pass-through, NO resolver / self-heal / error). Per the merge-the-best-version rule I reset to the peer baseline and
-LAYERED my superior resolver on top: caller kwarg (normalised + closed-set-validated against
-`POSSIBLE_MANIFEST_ASSET_GROUPS`) → UAC `VENUE_TO_ASSET_GROUP` venue self-heal (exact / upper / DeFi `{PROTOCOL}-{CHAIN}`)
-→ `""`. Both test files kept (peer's `*_column.py` + my resolver-focused `*_asset_group.py`). The peer's version left
-new captures BLANK whenever the caller omitted the kwarg; mine self-heals from the venue → genuinely closes the bug.
+**Reconciliation (semantic conflict — two agents, same task):** mid-ship a peer landed
+`4bd9487e feat(manifest): add asset_group as first-class AvailabilityRecord field` on LDR — the SIMPLER half (field +
+serializer + raw `asset_group=` pass-through, NO resolver / self-heal / error). Per the merge-the-best-version rule I
+reset to the peer baseline and LAYERED my superior resolver on top: caller kwarg (normalised + closed-set-validated
+against `POSSIBLE_MANIFEST_ASSET_GROUPS`) → UAC `VENUE_TO_ASSET_GROUP` venue self-heal (exact / upper / DeFi
+`{PROTOCOL}-{CHAIN}`) → `""`. Both test files kept (peer's `*_column.py` + my resolver-focused `*_asset_group.py`). The
+peer's version left new captures BLANK whenever the caller omitted the kwarg; mine self-heals from the venue → genuinely
+closes the bug.
 
 **Design change vs the original todo (verified-blast-radius downgrade — AUTONOMOUS rule 11):** the todo said RAISE
 `MissingAssetGroupError` on a captured-market-data blank. A hard runtime raise broke **40 existing writer tests** across
@@ -538,11 +586,12 @@ the `AAVE_V3`+`chain=ETHEREUM` class. The HARD no-blank-captured-market-data gat
 (below) — a counts-only ratchet, not a runtime crash.
 
 - [ ] [SCRIPT] P2. **DEFERRED — hard no-blank-asset_group QG ratchet (UTL).** Add a baselined ratchet
-  (`scripts/quality_gates/*_baseline.yaml` pattern) that counts CAPTURED market-data manifest rows serialized with a
-  blank `asset_group` and only lets the count go DOWN — the hard no-silent-blank gate, replacing the rejected runtime
-  raise (which crashed 40 writer tests + real legacy-venue writers). Target: unified-trading-library. **Provenance:**
-  reconciliation of the asset_group writer-fix ship 2026-06-22; the runtime raise was downgraded to fleet-safe `""` per
-  AUTONOMOUS rule 11 (blast-radius), so the no-blank invariant needs a counts-ratchet home instead.
+      (`scripts/quality_gates/*_baseline.yaml` pattern) that counts CAPTURED market-data manifest rows serialized with a
+      blank `asset_group` and only lets the count go DOWN — the hard no-silent-blank gate, replacing the rejected
+      runtime raise (which crashed 40 writer tests + real legacy-venue writers). Target: unified-trading-library.
+      **Provenance:** reconciliation of the asset_group writer-fix ship 2026-06-22; the runtime raise was downgraded to
+      fleet-safe `""` per AUTONOMOUS rule 11 (blast-radius), so the no-blank invariant needs a counts-ratchet home
+      instead.
 
 ### 2026-06-22 13:25 — SPORTS COMPLETION TARGET: ~2026-06-23/24
 
@@ -568,15 +617,50 @@ mislabel (FS predictions+matches land; only odds blocked).
 
 ### 2026-06-22 ~13:45 — P1 fix DRAFTED-BUT-INCOMPLETE (preserved to branch) + P0 scheduler PAUSED
 
-**P0 (DONE — re-poison blocked):** `gcloud scheduler jobs pause expected-universe-v2-defi-daily --location=asia-northeast1` → PAUSED. The `30 1 * * *` UTC job ran a STALE image (pre IS@42dd37c — the canonical-venue enum fix is on LDR/staging, NOT main/:latest) that re-seeds ~1.44M legacy-venue (`PROTOCOL-CHAIN`/blank-chain) phantom empties nightly (drops honest_cov_defi 18.66%→~7.5%). Pausing stops it definitively; the legacy-venue DELETE (IS@7b6512c) is re-runnable interim mitigation.
+**P0 (DONE — re-poison blocked):**
+`gcloud scheduler jobs pause expected-universe-v2-defi-daily --location=asia-northeast1` → PAUSED. The `30 1 * * *` UTC
+job ran a STALE image (pre IS@42dd37c — the canonical-venue enum fix is on LDR/staging, NOT main/:latest) that re-seeds
+~1.44M legacy-venue (`PROTOCOL-CHAIN`/blank-chain) phantom empties nightly (drops honest_cov_defi 18.66%→~7.5%). Pausing
+stops it definitively; the legacy-venue DELETE (IS@7b6512c) is re-runnable interim mitigation.
 
-- [ ] [DEPLOY] P0. **Resume `expected-universe-v2-defi-daily`** once IS@42dd37c is on `main` + the `expected-universe-v2-defi` Cloud Run image is rebuilt past it (VERIFY deployed image SHA post-dates 42dd37c first). `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`. Currently PAUSED 2026-06-22.
-- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator); pause+delete+canonical-reseed per-AG if found.
+- [ ] [DEPLOY] P0. **Resume `expected-universe-v2-defi-daily`** once IS@42dd37c is on `main` + the
+      `expected-universe-v2-defi` Cloud Run image is rebuilt past it (VERIFY deployed image SHA post-dates 42dd37c
+      first).
+      `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`.
+      Currently PAUSED 2026-06-22.
+- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator);
+      pause+delete+canonical-reseed per-AG if found.
 
-**P1 (DRAFTED, NOT shipped — INCOMPLETE):** the UTL writer fix was started (asset_group field on `AvailabilityRecord`, `MissingAssetGroupError`, serializer + call-site wiring) but the agent died (transient API rate-limit) BEFORE writing the `_resolve_asset_group` IMPLEMENTATION — `_core.py` has only the abstract `raise NotImplementedError`, so all 193 captured-write tests fail with `NotImplementedError`. NOT shippable as-is (would break every capture fleet-wide). **WIP preserved + pushed: `origin/wip-preserve/asset-group-writer-fix-2026-06-22` (unified-trading-library).** UTL LDR tree restored clean (the broken WIP is NOT on the integration branch). Manifest is currently correct for defi (441k existing blanks already stamped); new captures still leak blank until this ships — re-run the per-AG stamp as interim mitigation.
+**P1 (DRAFTED, NOT shipped — INCOMPLETE):** the UTL writer fix was started (asset_group field on `AvailabilityRecord`,
+`MissingAssetGroupError`, serializer + call-site wiring) but the agent died (transient API rate-limit) BEFORE writing
+the `_resolve_asset_group` IMPLEMENTATION — `_core.py` has only the abstract `raise NotImplementedError`, so all 193
+captured-write tests fail with `NotImplementedError`. NOT shippable as-is (would break every capture fleet-wide). **WIP
+preserved + pushed: `origin/wip-preserve/asset-group-writer-fix-2026-06-22` (unified-trading-library).** UTL LDR tree
+restored clean (the broken WIP is NOT on the integration branch). Manifest is currently correct for defi (441k existing
+blanks already stamped); new captures still leak blank until this ships — re-run the per-AG stamp as interim mitigation.
 
-- [x] ✅ [LIBRARY] P1. **Complete + ship the UTL asset_group writer fix.** — SHIPPED unified-trading-library@2b0ba65e (resolver `_resolve_asset_group` + `MissingAssetGroupError` + venue self-heal incl. DeFi `{PROTOCOL}-{CHAIN}` + closed-set validation + resolver test, layered on peer baseline 4bd9487e; full UTL QG green 120s/6293 tests). Design downgrade per AUTONOMOUS rule 11 (blast-radius): unresolvable-blank stays `""` (a hard runtime raise broke 40 writer tests + real legacy-venue writers) — hard no-blank gate deferred to a baselined QG ratchet (the P2 todo in the 14:15 Progress Log entry). Original spec: Resume from `origin/wip-preserve/asset-group-writer-fix-2026-06-22`. Write `_resolve_asset_group` in `ManifestWriterIngestMixin` (per the `_core.py` docstring): caller `asset_group` kwarg → UAC `VENUE_TO_ASSET_GROUP[venue]` self-heal → blank; features/ML/strategy/service rows EXEMPT (stay ""). Target: unified-trading-library (T0 — all 5 AGs benefit). **RECON DONE (2026-06-22):** `VENUE_TO_ASSET_GROUP` EXISTS — UAC `registry/market_data_categories.py:391` (`{venue: ag for ag, venues in VENUES_BY_ASSET_GROUP...}`), importable from `unified_api_contracts`. The `_resolve_asset_group` impl belongs in `ManifestWriterIngestMixin` (`manifest_writer/_writer_ingest.py`) per the `_core.py` abstract docstring. **RECONCILE RISK:** the 193 failures are all `NotImplementedError` (impl missing), NOT raise-logic — once the method exists they resolve IFF the venue self-heals. Failing `*_does_not_raise` tests use venues `CME`/`BINANCE-SPOT`; confirm these are keys in `VENUES_BY_ASSET_GROUP` (`BINANCE-SPOT` likely needs normalization → `BINANCE`). If a venue doesn't resolve, either normalize the venue lookup in `_resolve_asset_group` or add the `asset_group=` kwarg to that test. Iterate `quality-gates.sh --no-fix` until the 193 pass; UTL QG ~80s/run.
-- [ ] [DATA] P1. **Per-AG backfill-stamp existing blank-asset_group rows** (after the writer fix ships): sports 1,231,203 / tradfi 933,550 / cefi 179,330 / prediction 74,165 / defi 12,142 (the bucket IS the AG → unambiguous). Snapshot each `_index` first; assert captured/rowcount preserved; `gcs_*` ops not gsutil; reuse the defi stamp pattern. Target: instruments-service reconcile tool.
+- [x] ✅ [LIBRARY] P1. **Complete + ship the UTL asset_group writer fix.** — SHIPPED unified-trading-library@2b0ba65e
+      (resolver `_resolve_asset_group` + `MissingAssetGroupError` + venue self-heal incl. DeFi `{PROTOCOL}-{CHAIN}` +
+      closed-set validation + resolver test, layered on peer baseline 4bd9487e; full UTL QG green 120s/6293 tests).
+      Design downgrade per AUTONOMOUS rule 11 (blast-radius): unresolvable-blank stays `""` (a hard runtime raise broke
+      40 writer tests + real legacy-venue writers) — hard no-blank gate deferred to a baselined QG ratchet (the P2 todo
+      in the 14:15 Progress Log entry). Original spec: Resume from
+      `origin/wip-preserve/asset-group-writer-fix-2026-06-22`. Write `_resolve_asset_group` in
+      `ManifestWriterIngestMixin` (per the `_core.py` docstring): caller `asset_group` kwarg → UAC
+      `VENUE_TO_ASSET_GROUP[venue]` self-heal → blank; features/ML/strategy/service rows EXEMPT (stay ""). Target:
+      unified-trading-library (T0 — all 5 AGs benefit). **RECON DONE (2026-06-22):** `VENUE_TO_ASSET_GROUP` EXISTS — UAC
+      `registry/market_data_categories.py:391` (`{venue: ag for ag, venues in VENUES_BY_ASSET_GROUP...}`), importable
+      from `unified_api_contracts`. The `_resolve_asset_group` impl belongs in `ManifestWriterIngestMixin`
+      (`manifest_writer/_writer_ingest.py`) per the `_core.py` abstract docstring. **RECONCILE RISK:** the 193 failures
+      are all `NotImplementedError` (impl missing), NOT raise-logic — once the method exists they resolve IFF the venue
+      self-heals. Failing `*_does_not_raise` tests use venues `CME`/`BINANCE-SPOT`; confirm these are keys in
+      `VENUES_BY_ASSET_GROUP` (`BINANCE-SPOT` likely needs normalization → `BINANCE`). If a venue doesn't resolve,
+      either normalize the venue lookup in `_resolve_asset_group` or add the `asset_group=` kwarg to that test. Iterate
+      `quality-gates.sh --no-fix` until the 193 pass; UTL QG ~80s/run.
+- [ ] [DATA] P1. **Per-AG backfill-stamp existing blank-asset_group rows** (after the writer fix ships): sports
+      1,231,203 / tradfi 933,550 / cefi 179,330 / prediction 74,165 / defi 12,142 (the bucket IS the AG → unambiguous).
+      Snapshot each `_index` first; assert captured/rowcount preserved; `gcs_*` ops not gsutil; reuse the defi stamp
+      pattern. Target: instruments-service reconcile tool.
 
 ### 2026-06-22 — P1: LIVE manifest-writer `asset_group`-not-stamped bug — ROOT CAUSE PINNED + fleet audit
 
@@ -654,15 +738,16 @@ liveness): TM worker PID7142 `Sl`/36% CPU at `date=2019-03-25` (last action
 PID7141 `Rl`/104% CPU at `date=2019-01-08` climbing date-by-date (16 predictions + 16 odds/date), well past where it
 would have wedged. Both processed many dates the old code could not — hang fixed.
 
-- [x] ✅ [BUG] P1. **FootyStats ODDS pipeline_mode/source mislabel** — surfaced 2026-06-22 in `fs-backfill-20260622-125711`
-      run.log:
+- [x] ✅ [BUG] P1. **FootyStats ODDS pipeline_mode/source mislabel** — surfaced 2026-06-22 in
+      `fs-backfill-20260622-125711` run.log:
       `Batch manifest row source='footystats' disagrees with pipeline_mode='batch_odds_api' (expects     source='odds_api')`
       on ODDS rows (`data_type='ODDS', league_id='EPL', date='2019-01-02'`). The footystats ODDS writer stamps
       `pipeline_mode=batch_odds_api` (the-odds-api lane) but `source='footystats'` — a silent multi-source mislabel that
       `record_*` rejects (`recovery=fail_fast`), so footystats ODDS rows fail to land. NOT the hang (predictions+matches
       write fine). Repo: instruments-service — fix the footystats ODDS path to stamp `pipeline_mode=batch_footystats`
       (matching `source='footystats'`) OR route footystats odds through the correct source. Provenance: TM+FootyStats
-      hang-fix verification, 2026-06-22. — instruments-service@04f38a2 (code fix slot-3) + IS@b616d2d (comment cleanup slot-5)
+      hang-fix verification, 2026-06-22. — instruments-service@04f38a2 (code fix slot-3) + IS@b616d2d (comment cleanup
+      slot-5)
 
 ### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
 
@@ -681,11 +766,14 @@ only prediction ran once, hand- triggered, 2026-06-19). Cause: the enumerator SA
 `roles/run.invoker` the scheduler→job OIDC call needs → every daily defi/cefi/tradfi/sports trigger was silently
 rejected → 0 `expected_unattempted` seeded fleet-wide. (cefi/tradfi/sports also never executed — same gap.)
 
-- [x] ✅ [TERRAFORM] P0. **Durable per-AG `run.invoker` SHIPPED** deployment-service@e45c07e — the `google_cloud_run_v2_job_iam_member` for_each per-AG binding replaced the insufficient project-level one. (Recovered from a stash-pop conflict by the data-pipeline-hardening run 2026-06-22 — it existed only in a working-tree conflict; now landed.) **add `run.invoker` for the enumerator SA to `expected_universe_v2_scheduler.tf`** (the missing
-      IAM that made every scheduled run `code 7`). Stop-gap applied live via `gcloud run jobs add-iam-policy-binding` on
-      all 5 jobs (`cefi/defi/tradfi/sports/prediction`) → defi job now executes. Durable fix = a
-      `google_cloud_run_v2_job_iam_member` (role=`roles/run.invoker`, member=the enum SA) per-AG in the TF. Repo:
-      deployment-service. Provenance: this Progress Log.
+- [x] ✅ [TERRAFORM] P0. **Durable per-AG `run.invoker` SHIPPED** deployment-service@e45c07e — the
+      `google_cloud_run_v2_job_iam_member` for_each per-AG binding replaced the insufficient project-level one.
+      (Recovered from a stash-pop conflict by the data-pipeline-hardening run 2026-06-22 — it existed only in a
+      working-tree conflict; now landed.) **add `run.invoker` for the enumerator SA to
+      `expected_universe_v2_scheduler.tf`** (the missing IAM that made every scheduled run `code 7`). Stop-gap applied
+      live via `gcloud run jobs add-iam-policy-binding` on all 5 jobs (`cefi/defi/tradfi/sports/prediction`) → defi job
+      now executes. Durable fix = a `google_cloud_run_v2_job_iam_member` (role=`roles/run.invoker`, member=the enum SA)
+      per-AG in the TF. Repo: deployment-service. Provenance: this Progress Log.
 
 Manual `gcloud run jobs execute expected-universe-v2-defi` (exec `…-h5djp`) launched + RUNNING (image imported clean,
 catalog `gs://instruments-store-defi-prd-…/prod/catalog.parquet` present 302KB). The v2 `--apply-write` path loads the
@@ -824,23 +912,26 @@ machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progr
       has a DIFFERENT agent's uncommitted WIP (10 modified handlers + 2 untracked scripts — not ours, not stomped). Once
       MTDS is clean: rebuild SPORTS tarball →
       `RECOMPUTE_FORCE=true launch-sfi-progressive-features-backfill-vm.sh --force` → verify run.log has no
-      MissingFeatureFamilyError. Repo: deployment-service (tarball) + features-service (done).
-      **2026-06-22 RE-DIAGNOSIS (slot worker): the relaunch at 13:20 STILL failed `MissingFeatureFamilyError` — root
-      cause was NOT a stale/un-rebuilt tarball. The fresh `features-service-code` tarball @1b043d0a (built 13:17) ALREADY
-      contained the fix. The bug was the launcher pointed at the ARCHIVED `features_sports_service` package**: it set
-      `VM_SERVICE=features_sports_service` + invoked `python -m features_sports_service.scripts.compute_sfi_progressive_only`,
-      which made setup-data-pipeline-vm pull the STALE `features-sports-service-code` tarball (archived repo, pre-subtree-import,
-      pre-fix) → ran pre-fix code at the old `features_sports_service/scripts/...py:241` `.add()` w/o feature_family.
-      FIX (features-service@<sha> + deployment-service@<sha>): moved the script INTO the package
-      `features_service/sports/scripts/compute_sfi_progressive_only.py` (top-level `scripts/` is NOT in the hatch wheel)
-      + repointed the launcher to `VM_SERVICE=features_service` + `python -m features_service.sports.scripts.compute_sfi_progressive_only`.
+      MissingFeatureFamilyError. Repo: deployment-service (tarball) + features-service (done). **2026-06-22 RE-DIAGNOSIS
+      (slot worker): the relaunch at 13:20 STILL failed `MissingFeatureFamilyError` — root cause was NOT a
+      stale/un-rebuilt tarball. The fresh `features-service-code` tarball @1b043d0a (built 13:17) ALREADY contained the
+      fix. The bug was the launcher pointed at the ARCHIVED `features_sports_service` package**: it set
+      `VM_SERVICE=features_sports_service` + invoked
+      `python -m features_sports_service.scripts.compute_sfi_progressive_only`, which made setup-data-pipeline-vm pull
+      the STALE `features-sports-service-code` tarball (archived repo, pre-subtree-import, pre-fix) → ran pre-fix code
+      at the old `features_sports_service/scripts/...py:241` `.add()` w/o feature_family. FIX (features-service@<sha> +
+      deployment-service@<sha>): moved the script INTO the package
+      `features_service/sports/scripts/compute_sfi_progressive_only.py` (top-level `scripts/` is NOT in the hatch
+      wheel) + repointed the launcher to `VM_SERVICE=features_service` +
+      `python -m features_service.sports.scripts.compute_sfi_progressive_only`.
 
 - [ ] [SCRIPT] P1. **DEFERRED — same stale-`features_sports_service`-tarball class bug in TWO OTHER launchers** (found
-      2026-06-22 while fixing SFI-progressive): (1) `deployment-service/scripts/vm/launch-features-sports-backfill-vm.sh`
-      sets `VM_SERVICE=features_sports_service` + invokes `python -m features_sports_service --operation compute --tables
-      fixture_features` → pulls the same STALE archived tarball; (2) `e2e-testing/scripts/common/vm_fss_features.sh`
-      imports `from features_sports_service.cli.main import main` / `features_sports_service.service`. Both must repoint
-      to the consolidated `features_service` package (`VM_SERVICE=features_service`, module `features_service` / the
+      2026-06-22 while fixing SFI-progressive): (1)
+      `deployment-service/scripts/vm/launch-features-sports-backfill-vm.sh` sets `VM_SERVICE=features_sports_service` +
+      invokes `python -m features_sports_service --operation compute --tables     fixture_features` → pulls the same
+      STALE archived tarball; (2) `e2e-testing/scripts/common/vm_fss_features.sh` imports
+      `from features_sports_service.cli.main import main` / `features_sports_service.service`. Both must repoint to the
+      consolidated `features_service` package (`VM_SERVICE=features_service`, module `features_service` / the
       `features_service.cli`/`features_service.sports.*` paths) — the `features-sports-service` repo no longer exists in
       the workspace + `create-code-tarballs.sh` no longer builds `features-sports-service-code`, so any launcher still
       naming it runs whatever stale copy lingers in GCS. Repo: deployment-service + e2e-testing.
@@ -1729,5 +1820,6 @@ The index-stamp is the re-runnable interim mitigation.
       `asset_group=defi`. Until fixed, re-run the index-stamp (`pre_asset_group_stamp_2026_06_22.parquet` snapshot is
       the rollback). Repo: unified-trading-library (+ market-tick-data-service handler call sites). Provenance: this
       Progress Log; cross-repo data-correctness — also affects cefi/tradfi/sports/prediction if their writers share the
-      gap (audit each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.**
-      — utl@4bd9487e | asset_group added as first-class AvailabilityRecord field; threaded through record_captured/add/_records_to_dataframe/_V4_BACKFILL_COLUMNS; 7-test suite green; QG pass 110s
+      gap (audit each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.** —
+      utl@4bd9487e | asset_group added as first-class AvailabilityRecord field; threaded through
+      record_captured/add/\_records_to_dataframe/\_V4_BACKFILL_COLUMNS; 7-test suite green; QG pass 110s
