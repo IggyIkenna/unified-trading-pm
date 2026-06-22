@@ -593,6 +593,38 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
 
 ## Progress Log
 
+### 2026-06-22 (autonomous, continuous-paper FINISH dispatch) — blocker #1 was a MISDIAGNOSIS; item A LANDED; B2 design locked
+
+Resumed the "make DeFi paper trading run continuously like live" dispatch. **FIRST TASK (blocker #1) RESOLVED — it was
+NOT a fleet QG-harness coverage defect.** The prior session's "rootdir: unified-trading-pm, collected 6 → false 32.69%"
+is the **intentional `PM_INT_TEST` integration check** (base-service.sh runs
+`…/tests/integration/test_pm_scripts_integration.py` against PM by design; the MAIN unit run streams to a tempfile +
+passed = 5289 collected). The REAL local-QG failures on the staged mtds change were: (1) a missing
+`# noqa: qg-deep-import` on the new `from unified_trading_library.events import emit_pipeline_heartbeat` lines (the
+checker treats `…events import X` as a deep import of `unified_trading_library`; `emit_pipeline_heartbeat` is NOT
+top-level re-exported so the canonical pattern is the single-line import + `# noqa: qg-deep-import`, exactly as the
+green `tick_data_handler.py:39`); (2) ruff I001 wrapped the line >120c when my noqa carried prose → moved the marker off
+the `from` line → re-broke the checker (fix: short bare `# noqa: qg-deep-import`); (3) `oracle_prices_handler.process()`
+grew to 53L (>50 limit) → trimmed comments to 48L. **Conclusion: python service repos quickmerge locally fine — no
+`base-service.sh` change needed.**
+
+- **A. mtds live pipeline_mode + DeFi-live heartbeat — ✅ LANDED `market-tick-data-service@3f5c61f9`** (origin/LDR; full
+  `quality-gates.sh --no-fix` exit-0, content sentinel verified; quickmerge ff-rebased 368c488b→83b4a833, files
+  byte-identical). `--mode live` now writes `pipeline_mode=live_*` on dex_pools/dex_swaps/oracle_prices AND emits a
+  per-shard `emit_pipeline_heartbeat` on the live forward-poll path. Subsumes the old "(c) heartbeat deferred" TODO.
+- **B2 DESIGN LOCKED (building next):** strategy-service new `--operation paper-stream --mode paper` = a bounded loop
+  (`--stream-duration-seconds` + `--stream-interval-seconds`) that each tick calls the EXISTING
+  `run_paper(client_id=…, start_date, end_date, run_id=STABLE)` against a window ending TODAY (so continuous-capture
+  fills drive fresh trades), writing to a STABLE per-day run_id `paper-stream-{ag}-{YYYYMMDD}` under a **SEPARATE client
+  `firm-paper-stream`** (NOT `firm-paper-determinism` — `daily_ledger_digest.py` uses `resolve_canonical_run`, so a
+  same-client stream would HIJACK the determinism digest's run resolution; separate client = full isolation of the ε=0
+  proof). The existing `/paper-trading` page is **client-parameterised** (`searchParams.get("client")`) + already
+  5s-polls (B3 shipped), so `/paper-trading?client=firm-paper-stream` renders the live stream with ZERO UI change.
+  `run_paper` already accepts an explicit `run_id` (default `paper-{ts}-{uuid8}`); `paper-stream-…` sorts
+  lexicographically newest → canonical for its client. batch=live preserved (each tick is a deterministic run; loop
+  timing is operational, never in the ledger). Deploy as a Cloud Run job (deployment-service), distinct from
+  `uts-prod-paper-engine-run-cron` (untouched).
+
 ### 2026-06-22 (autonomous, continuous-paper dispatch) — B1 capture + B3 UI live-feed shipping; B2 engine next
 
 Operator dispatch: "make DeFi paper trading run CONTINUOUSLY like it's live" (continuous on-chain data → streaming paper
@@ -687,25 +719,25 @@ arguably daily-OK.
       (collect-dex-swaps/dex-pools/oracle-prices + the existing lst-rates, per-op singleton lock) + NEW
       `terraform/gcp/defi_forward_poll_scheduler.tf` = a `*/5` Cloud Scheduler firing the forward-poll for the 3
       price-sensitive ops (gated by `enable_defi_forward_poll`, default true; slow ops stay daily). **REMAINING:** (a)
-      **mtds live pipeline_mode fix WRITTEN + test-green (5243 passed) but NOT LANDED** — local quickmerge blocked by
-      the QG-harness coverage mis-root (`rootdir: unified-trading-pm, collected 6 → false 32.69%`, plan P3.1 fleet
-      defect); fix folds `runtime.mode` into `_run_tag` so `--mode live` writes `pipeline_mode=live_*` (files staged in
-      the mtds clone: `cli/handlers/{dex_pools,dex_swaps,oracle_prices}_handler.py` +
-      `tests/unit/test_dex_pools_handler.py`); land via server `quality-gates-v2` or once the harness is fixed. (b)
-      **`terraform apply`** the scheduler (operator/CI infra op — broad apply blast-radius in a live project; use
-      `-target` for the new scheduler) + a `create-code-tarballs.sh` rebuild so the live-tag fix reaches the launched
-      VMs. (c) **heartbeat** (`emit_pipeline_heartbeat`) on the DeFi live path deferred (UTL top-level export or
-      sanctioned `noqa`). Manual verify when applied:
+      ✅ **mtds live pipeline_mode fix + DeFi-live heartbeat LANDED 2026-06-22 — `market-tick-data-service@3f5c61f9`**
+      (on origin/live-defi-rollout, full QG `--no-fix` exit-0 + content sentinel verified). Folds `runtime.mode` into
+      `_run_tag` so `--mode live` writes `pipeline_mode=live_*` (dex*pools/dex_swaps/oracle_prices) AND emits a
+      per-shard `emit_pipeline_heartbeat` on the live forward-poll path (subsumes (c)). **NOTE on the prior "blocker":
+      the local QG was NOT a coverage mis-root** — that `rootdir: unified-trading-pm, collected 6` line is the
+      intentional `PM_INT_TEST` integration check (a red herring); the real failures were a missing
+      `# noqa: qg-deep-import` on the new `from unified_trading_library.events import emit_pipeline_heartbeat` lines
+      (events helper, not top-level re-exported) + a method-size trim on `oracle_prices_handler.process()` (53→48L).
+      Python service repos quickmerge locally fine. (b) **`terraform apply`** the scheduler (operator/CI infra op —
+      broad apply blast-radius in a live project; use `-target` for the new scheduler) + a `create-code-tarballs.sh`
+      rebuild so the live-tag fix reaches the launched VMs. (c) ✅ **heartbeat** (`emit_pipeline_heartbeat`) — DONE,
+      landed with (a) above. Manual verify when applied:
       `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices` → T+10min check
       rows at
-      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`. Orig
-      intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading archetypes
-      (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the CeFi
-      `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1) for the
-      price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates,
-      lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat. Repo:
-      market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb
-      archetype going live.
+      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live*_/asset_group=defi/`. Orig     intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading archetypes     (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the CeFi     `mtds-live-_`
+      pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1) for the price-sensitive
+      operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates, lending-indices) daily. Wire
+      it through the same live==batch schema + the hardening heartbeat. Repo: market-tick-data-service +
+      deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb archetype going live.
 
 ### 2026-06-22 ~14:36 — Per-AG re-stamp COMPLETE (all 5 AGs, guarded) + deploy-gap pinned (writer fix not yet on VMs)
 
@@ -931,13 +963,13 @@ liveness): TM worker PID7142 `Sl`/36% CPU at `date=2019-03-25` (last action
 PID7141 `Rl`/104% CPU at `date=2019-01-08` climbing date-by-date (16 predictions + 16 odds/date), well past where it
 would have wedged. Both processed many dates the old code could not — hang fixed.
 
-- **2026-06-22 TEE-FLUSH LAG NOW FIXED + sports VMs reshipped (slot·human-planning, Opus 4.8, /autonomous).** The
-  caveat above ("GCS run.log mirror lags on tee-flush cadence — read the on-VM log") was a real bug, now ROOT-CAUSED +
-  FIXED: the UTL `LogUploader` only re-uploaded after +256 KiB growth (no time ceiling), so a slow scraper's GCS
-  run.log froze for HOURS (`tm-backfill-20260622-125650`: on-VM @19:24 but GCS frozen @13:01 = 6h23m). Fix
-  **UTL@13653f9f + deployment-service@82431d1** adds `max_staleness_sec=90` — a CHANGED log force-re-uploads on a time
-  ceiling. The 2 backfills `tm-backfill-20260622-125650` + `fs-backfill-20260622-125711` (and the live odds VM) were
-  **deleted + reshipped** on a clean-LDR SPORTS tarball baking the fix: `tm-backfill-20260622-193803` +
+- **2026-06-22 TEE-FLUSH LAG NOW FIXED + sports VMs reshipped (slot·human-planning, Opus 4.8, /autonomous).** The caveat
+  above ("GCS run.log mirror lags on tee-flush cadence — read the on-VM log") was a real bug, now ROOT-CAUSED + FIXED:
+  the UTL `LogUploader` only re-uploaded after +256 KiB growth (no time ceiling), so a slow scraper's GCS run.log froze
+  for HOURS (`tm-backfill-20260622-125650`: on-VM @19:24 but GCS frozen @13:01 = 6h23m). Fix **UTL@13653f9f +
+  deployment-service@82431d1** adds `max_staleness_sec=90` — a CHANGED log force-re-uploads on a time ceiling. The 2
+  backfills `tm-backfill-20260622-125650` + `fs-backfill-20260622-125711` (and the live odds VM) were **deleted +
+  reshipped** on a clean-LDR SPORTS tarball baking the fix: `tm-backfill-20260622-193803` +
   `fs-backfill-20260622-193812` + `mtds-live-sports-odds-api-trades-20260622-193840` (skip-fresh resume,
   2019-01-01..2026-06-21). After this reship the GCS run.log stays within ~1-2 min of the on-VM log, so future liveness
   checks can trust the GCS mirror. Detail + T+20min verification:
