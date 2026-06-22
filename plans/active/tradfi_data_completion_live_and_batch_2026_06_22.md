@@ -2,16 +2,14 @@
 title: TradFi data completion — live + batch, all venues/data_types/instruments (cold-start runbook)
 parent_epic: tradfi_master
 assigned_vm: planning
-priority: P0
-status: in-progress
+priority: P2
+status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-22
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
 created: 2026-06-22
-priority: P2
-status: active
 ---
 
 # TradFi data completion — the SSOT runbook to drive ALL remaining tradfi live+batch work

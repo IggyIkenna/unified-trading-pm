@@ -3,8 +3,8 @@ title: "Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
-priority: P1
-status: in-progress
+priority: P2
+status: active
 estimate_class: infra
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 18
@@ -22,8 +22,6 @@ related_plans:
   - issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md
   - issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md
   - issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md
-priority: P2
-status: active
 ---
 
 # Data-Pipeline Hardening + Self-Monitoring
