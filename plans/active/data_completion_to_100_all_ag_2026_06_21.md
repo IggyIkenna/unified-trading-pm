@@ -176,13 +176,14 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       successor: this todo (2026-06-21). Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh`
       daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs. —
       market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
-- [ ] [DATA] P1. **cefi — EXTENDED-STARKNET IS+MTDS adapter integration FINISH + ship** (Extended-Starknet lane
+- [x] ✅ [DATA] P1. **cefi — EXTENDED-STARKNET IS+MTDS adapter integration FINISH + ship** (Extended-Starknet lane
       2026-06-22). Recover the rate-limit-killed prior agent's WIP: `instruments_service/.../adapters/defi/extended.py`
       (per-market genesis probe via P1D candle — `available_from` = earliest actual candle, NOT `createdAt`) +
       `market_tick_data_service/adapters/_umi_extended.py` (window-aware candle paging + truncation guard + per-leaf
       failure routing for funding/trades, funding-start aligned to UAC coverage_start 2025-07-18). Public market data
       needs NO API key (read-only REST verified live 2026-06-22). Verify adapter+creds reachable, ship both files
       QG-green. Repo: instruments-service / market-tick-data-service.
+      — instruments-service@9bb7cdf + market-tick-data-service@3b9b27e | QG: both green (IS 18s, MTDS 110s)
 - [ ] [DATA] P2. **cefi — run the now-unblocked PUBLIC EXTENDED-STARKNET instrument + perp backfill** (Extended-Starknet
       lane 2026-06-22). Extended public market data needs NO API key. Run IS instrument-catalogue for EXTENDED-STARKNET +
       MTDS batch backfill for its perp data_types (candles 2024-07-26→yesterday, funding_rates 2025-07-18→yesterday,
