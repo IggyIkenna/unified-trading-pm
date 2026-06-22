@@ -605,12 +605,17 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       DP_VM_GONE_NO_CAPTURE; best-effort, never aborts the backfill — pattern mirrors the shipped
       `onchain_perp_batch_handler` + IS `InstrumentsHandler@1a44cbf`). A hung/idle batch backfill date now trips
       DP_VM_STALL fleet-wide once the tarball rebuilds. — market-tick-data-service
-- [ ] [INFRA] P1. **Reship sports-live + prediction-live producers on the hardened tarball** —
-      `mtds-live-sports-odds-api` + `prediction-live-{polymarket,kalshi}-{trades,book-snapshot-5}` are still on the
-      PRE-17:16 tarball (no keystone/heartbeat). Graceful drain/replace via `launch-mtds-live.sh` /
-      `launch-prediction-live.sh` once the 8th-C6 + batch-heartbeat tarball rebuild lands (LONG_LIVED_LIVE —
-      singleton-locked, drain not SIGKILL). Verify T+10min STARTED-clean + run.log has no `UnprovenHonestAbsenceError`.
-      — deployment-service
+- [x] ✅ [INFRA] P1. **Reship sports-live + prediction-live producers on the hardened tarball** — DONE 2026-06-22
+      (slot-0·human-planning, Opus 4.8). Rebuilt `mtds-code.tar.gz` (+UAC/UTL/IS/deployment) from CLEAN detached
+      worktrees off origin/LDR (17:56 UTC; grep-PROOF on the shipped tarball: tick_data_handler heartbeat=4 +
+      websocket_runner heartbeat=2 + keystone threading + 8th-C6). Gracefully DELETED the 5 PRE-17:16 producers (freed
+      singleton lock + WS feed — drain, not SIGKILL) then relaunched all 5 on the hardened tarball:
+      `mtds-live-sports-odds-api-trades-20260622-181110` (`launch-mtds-live.sh --asset-group sports --shard-spec
+      sports:odds_api:trades`, 5 EPL/LaLiga/SerieA/Bundesliga/Ligue1 leagues) +
+      `prediction-live-{polymarket,kalshi}-{trades,book-snapshot-5}-2026062218*` (`launch-prediction-live.sh`).
+      **T+10min verification (18:23 UTC) — ALL 5 RUNNING, crash_signatures=0 (zero UnprovenHonestAbsenceError /
+      Traceback / Fatal / CRITICAL), boot_markers present (authenticated/subscribed/resolved), polymarket shards already
+      9078–9079 loglines = actively streaming.** The hard-raise gate does NOT trip the hardened producers. — deployment-service
 
 - **2026-06-22 run #2 RE-SHIP DONE (slot-0·human-planning, Opus 4.8)** — the peer `data_completion` lane landed the
   tradfi `fetch_evidence` threading + `emit_pipeline_heartbeat` wiring on origin LDR (verified: ws=2/hb=2, massive=3,
@@ -642,6 +647,19 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   shards — frees singleton lock + WS feed; confirmed all 5 gone) then relaunching all 5 on the hardened tarball via
   `launch-mtds-live.sh` (sports `sports:odds_api:trades`, 5 EPL/La-Liga/Serie-A/Bundesliga/Ligue-1 leagues) +
   `launch-prediction-live.sh` (POLYMARKET/KALSHI × trades/book_snapshot_5). T+10min verification pending.
+- **2026-06-22 RESIDUAL CLOSE-OUT — VERIFIED DONE (both residuals shipped + fleet hardened).** **Residual-1**:
+  `market-tick-data-service@e7177bd` (batch-heartbeat) on origin/LDR. **Residual-2**: all 5 sports+prediction live
+  producers RESHIPPED on the hardened 17:56 tarball + **T+10min-verified (18:23 UTC): 5/5 RUNNING, crash_signatures=0,
+  boot-clean** (sports-odds 6 markers; polymarket trades+book 12 markers / 9078–9079 loglines streaming; kalshi
+  trades+book 12 markers). **STEP 3 fleet verification**: the full live producer set is now on hardened code — 16
+  cefi-live (17:18+ tarball) + tradfi-cme-trades (peer relaunched `...182251`) + sports-odds + 4 prediction = **22 live
+  producers, all keystone-gated + raise-free + heartbeat-capable**. The 3 DP fleet monitors are LIVE Cloud Run crons
+  reading them: `uts-prod-dp-heartbeat-watcher-cron` (`*/5`, last 18:10), `uts-prod-dp-exit-code-monitor-cron` (`*/5`,
+  18:10), `uts-prod-dp-meta-watchers-cron` (`*/15`, 18:00) — all ENABLED + firing. **Slack live**:
+  `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` POST = HTTP 200 `ok` (message in #data-pipeline-alerts). **Operator close-ask MET**:
+  every live + batch producer is on hardened code (keystone hard-raise + per-date/per-window heartbeat) and the
+  detect→route→Slack alert path is live off-the-bat. Both residual todos flipped; the data-pipeline-hardening reship is
+  CLOSED.
 - [x] ✅ [DATA] P0. **ROOT-CAUSED + FIXED — tradfi CME live captured 0 rows** (`market-tick-data-service@a808ae9` + test
       fix). The databento WS authenticated + subscribed but **never streamed**: `databento_tradfi_ws.py` gated
       `live.start()` behind `if not live.is_connected:` — but `subscribe()` already connects, so `is_connected` is True
