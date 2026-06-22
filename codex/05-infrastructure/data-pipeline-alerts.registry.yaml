@@ -309,6 +309,17 @@ failure_modes:
       status: verbose,
       fires: "key pool exhausted / stuck on one key",
     }
+  - {
+      id: DP-RATE-003,
+      category: RATE,
+      severity: WARN,
+      event: DP_SOURCE_RATE_LIMITED,
+      detector: sports_adapter_429,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "sports REST adapter (api_football/SFI/transfermarkt/footystats) hit a 429 and slept to the minute boundary — a throttled backfill now surfaces in #data-pipeline-alerts instead of silently stalling (the TM/FootyStats 6.5h-hang blind spot). Emitted from BaseSportsReferenceAdapter._get_with_retry; sha instruments-service base.py 2026-06-22",
+    }
 
   # --- DP-ENV (class C6) ---
   - {

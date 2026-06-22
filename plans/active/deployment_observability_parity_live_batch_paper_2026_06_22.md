@@ -212,3 +212,24 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Progress Log
 - **2026-06-22 (autonomous, Opus 4.8) — GCP observability parity SHIPPED**: Phase0 spine (uac@34bb0f16/3c7dd51a DeploymentUmbrella/Target/classify, deployment-service@360678e resolver + 61-job CLOUD_RUN_JOBS registry + unclassified guard) → Phase1 deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`, VMs+CloudRun classified, exit_code/status) → Phase2 deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs at /repos grade, pw:L2 ✓ 265/265, drill-down reuses VmEventsTimeline+StreamingLogsPanel) → Phase3 alerting-service@868872c (DEPLOYMENT_* → #data-pipeline-alerts with umbrella + `/deployments/{name}` deep-link) + Tier-1 enrichment (deployment_ui_base_url config + inline trace block + deep-link buttons to /ops/vms,/deployments,data-status,GCS run.log) → Phase4 deployment-service@5d07bb1f (durable-log streamer backfilled into 4 unconverted GCP launchers + coverage guard). Phase6 docs: codex deployment-observability.md + CLAUDE.md one-liner. **3 CI guards make 0-unclassified/0-untracked a fleet invariant** (VM-prefix classify, scheduler-tf registry, launcher durable-log). REMAINING: Phase1-P1 (CloudRun logs uniformity + /api/alerts deployment kind), Phase2-P1 (/alerts→/deployments cross-link), Phase5 AWS, + the data_pipeline Phase-6 self-healing (C). Peer filed `issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (DP events emitted but the alerting subscriber may not subscribe their topic — verify end-to-end delivery).
+
+## FINAL REPORT (autonomous /autonomous — 2026-06-22, slot-0·human-planning, Opus 4.8)
+
+**Mandate**: bring live/batch/paper deployment observability (Slack + deployment-ui) to /repos grade, every VM + Cloud Run job classified under an umbrella across GCP+AWS (GCP first to completion), documented; compose with alert-enrichment + self-healing.
+
+**SHIPPED (end-to-end, GCP + AWS):**
+- Phase 0 spine — uac@34bb0f16/3c7dd51a + deployment-service@360678e (DeploymentUmbrella + classify_deployment_target + 61-job CLOUD_RUN_JOBS registry + unclassified guard).
+- Phase 1 API — deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`).
+- Phase 2 UI — deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs, pw:L2 ✓ 265/265, drill-down).
+- Phase 3 Slack + B enrichment — alerting-service@868872c (DEPLOYMENT_* → channel w/ umbrella + deep-link; inline trace + click-through buttons to /deployments,/ops/vms,data-status,GCS run.log; deployment_ui_base_url config).
+- Phase 4 GCP logs — deployment-service@5d07bb1f (durable-log streamer into 4 remaining GCP launchers + coverage guard).
+- Phase 5 AWS — deployment-service@53be0f1 + deployment-api@ab11b36 (EC2 + Batch Fargate → inventory cloud=AWS, moto-tested; GCP unchanged).
+- Phase 6 docs — codex `deployment-observability.md` + CLAUDE.md one-liner.
+
+**Invariant established**: 3 CI guard tests make "0 unclassified / 0 untracked" permanent (VM-prefix classify, scheduler-tf registry, launcher durable-log) — a future "added a VM/job/launcher, forgot to classify/stream" fails CI.
+
+**Forced-tradeoff decisions (rule 1/2):** (a) inventory at `/api/deployments/inventory` not bare `/api/deployments` (latter owned by service-version deploys); (b) inherited a peer's footystats_odds pipeline_mode fix trapped in the same UAC tree, shipped it; (c) AWS verified-by-shape (moto) — no live AWS estate today.
+
+**REMAINING (tracked, not silent):**
+- **C self-healing — delivery gap is being closed by a LIVE PEER session** (`issues/dp_event_pubsub_delivery_gap`): emitters now `setup_events(mode=live, topic=lifecycle-events)` + subscriber subscribes `lifecycle-events` (in-flight across alerting/e2e/deployment-service; deployment-service/escalation.py edited <3min ago — NOT stomped). The rest of C (actuators consolidator/backfill-relaunch, `data_pipeline_failure` WALL_TYPE, reprobe scheduling+auto-flip, bucket-env parity DP-ENV-001, 429-aware key rotation, RB-DATA runbook) builds on that substrate once it lands — tracked in `data_pipeline_hardening_self_monitoring_2026_06_22.md` Phase 6.
+- **P1 polish (tracked)**: `/api/alerts` deployment kind (deployment-api); `/alerts`→`/deployments` cross-link (deployment-ui).
