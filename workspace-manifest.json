@@ -78,7 +78,7 @@
     "instruments-service": "0.16.0",
     "market-tick-data-service": "0.25.0",
     "system-integration-tests": "0.14.0",
-    "unified-api-contracts": "0.34.0",
+    "unified-api-contracts": "0.35.0",
     "unified-trading-library": "0.29.0",
     "unified-trading-pm": "1.2.262",
     "market-data-processing-service": "0.10.3",
