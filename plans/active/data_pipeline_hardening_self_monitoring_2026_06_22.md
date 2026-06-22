@@ -1312,6 +1312,31 @@ dispatch prompts.
   Cloud Build rebuilds (digest-aware `5907886`) → 3 DP monitors get hardened code on next \*/5. Did NOT force-merge (the
   required check genuinely has not run; forcing past a real infra-blocked gate is banned). Monitor armed (event-driven,
   wakes on PR#166 terminal OR a v2 run executing >0 steps).
+- **🔴 BLOCKER RE-DIAGNOSED + SHARPENED 2026-06-22 ~22:25Z (slot·human-planning, Opus 4.8, /autonomous) — still down 3h+,
+  now points to an ACCOUNT-LEVEL Actions spend cap, NOT a transient runner flake (needs operator billing action):**
+  re-checked PR#166 (v2 run 27987650739, head ebfe6e3) + a FRESH `workflow_dispatch` v2 on deployment-service LDR
+  (27987901509) + MTDS LDR (27987902953) — ALL fail at job-setup in 2-3s, steps=0, no retrievable log (job-log blob
+  404s = the job never produced output). **Decisive new evidence it is GitHub-side, not code:** (1) on BOTH
+  deployment-service + MTDS, **EVERY workflow** fails identically at setup — not just v2: `Staging Lock Check`,
+  `Plan Alignment Agent`, `staging-backmerge-to-ldr`, `main-backmerge-to-ldr` all 0-step/2-3s/no-log; (2) a clean abrupt
+  GREEN→100%-FAIL cliff (deployment-service last green = `Staging Lock Check` 19:31:17Z; MTDS last v2 green 19:13Z) — a
+  code regression cannot make *unrelated* workflows fail at setup simultaneously; (3) the IDENTICAL `quality-gates-v2`
+  reusable template is GREEN right now on the smaller/less-active repos (alerting-service, e2e-testing both `success`);
+  (4) the failure concentrates on the two HIGHEST-Actions-minute repos (deployment-service + MTDS) — the classic
+  signature of a **GitHub Actions spending-limit / quota exhaustion** hitting the biggest consumers first. **ROOT CAUSE
+  (highest-confidence): the IggyIkenna account's GitHub Actions spend cap is exhausted (or an org Actions setting was
+  toggled) ~19:30Z.** This is genuinely OUTSIDE code-fixable scope. **OPERATOR ACTION REQUIRED (the only unblock):**
+  raise / clear the GitHub Actions spending limit at github.com → Settings → Billing → Plans and usage → Actions
+  (or confirm a GH Actions incident). The moment runners are restored, the Tier-C `ldr-to-staging-promote` bot's next
+  ~15-min tick re-fires v2 → passes (code is locally QG-green) → PR#166 merges → main → deployment-api Cloud Build
+  rebuild (`5907886`) → 3 DP monitors hardened. NOT force-merged (a never-run required check cannot be bypassed, and
+  the carve-out for `.github/**` does not cover merging past a billing-blocked gate). Classified **BLOCKED-UPSTREAM
+  (GitHub Actions account infra / spend cap)** — composes with the existing armed monitor above.
+- [ ] [INFRA] P1. **BLOCKED-UPSTREAM (GitHub Actions account spend cap, ~19:30Z 2026-06-22) — deployment-api +
+      MTDS#309 promote PRs jammed.** Operator: raise/clear the GitHub Actions spending limit (Settings → Billing →
+      Actions) OR confirm a GH incident. Code is locally QG-green; the promote bot auto-merges on the first green v2 once
+      runners return → deployment-api Cloud Build rebuild (digest `5907886`) follows automatically. No code change owed.
+      — deployment-service, market-tick-data-service (operator/billing)
 
 ## Progress Log — 60s background-timer heartbeat (per-chunk → time-based) SHIPPED (2026-06-22)
 
