@@ -169,6 +169,27 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       successor: this todo (2026-06-21). Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh`
       daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs. —
       market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
+- [ ] [DATA] P1. **cefi — EXTENDED-STARKNET IS+MTDS adapter integration FINISH + ship** (Extended-Starknet lane
+      2026-06-22). Recover the rate-limit-killed prior agent's WIP: `instruments_service/.../adapters/defi/extended.py`
+      (per-market genesis probe via P1D candle — `available_from` = earliest actual candle, NOT `createdAt`) +
+      `market_tick_data_service/adapters/_umi_extended.py` (window-aware candle paging + truncation guard + per-leaf
+      failure routing for funding/trades, funding-start aligned to UAC coverage_start 2025-07-18). Public market data
+      needs NO API key (read-only REST verified live 2026-06-22). Verify adapter+creds reachable, ship both files
+      QG-green. Repo: instruments-service / market-tick-data-service.
+- [ ] [DATA] P2. **cefi — run the now-unblocked PUBLIC EXTENDED-STARKNET instrument + perp backfill** (Extended-Starknet
+      lane 2026-06-22). Extended public market data needs NO API key. Run IS instrument-catalogue for EXTENDED-STARKNET +
+      MTDS batch backfill for its perp data_types (candles 2024-07-26→yesterday, funding_rates 2025-07-18→yesterday,
+      orderbook, trades). `MANIFEST_PER_VM_SHARDS=true`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, e2-standard-8,
+      canonical `venue=EXTENDED-STARKNET`, `asset_group=cefi`. VERIFY `expected_unattempted`→`captured` for Extended cells
+      (read cefi `_index` before/after). Exit-code-aware monitor (read GCS run.log `exit_code`, never infer from VM-gone).
+      Repo: deployment-service / instruments-service / market-tick-data-service.
+- [ ] [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
+      2026-06-22). TWO Extended code paths exist: `adapters/_umi_extended.py` (CANONICAL — wired via
+      `umi_tick_provider._route_extended` for `EXTENDED-STARKNET`) vs
+      `market_interface/adapters/onchain_perps/extended_adapter.py` + `market_interface/clients/extended_base_client.py`
+      (UNUSED — `factory.py` registers only Aster/Hyperliquid from onchain_perps; `ExtendedAdapter` referenced only by its
+      own `__init__` re-export + one integration test). Delete the unused dup + its `__init__` exports + the integration
+      test, update consumers (no parallel old+new paths — delete-deprecated rule). Repo: market-tick-data-service.
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
