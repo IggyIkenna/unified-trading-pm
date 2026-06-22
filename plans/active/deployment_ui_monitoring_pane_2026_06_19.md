@@ -183,6 +183,17 @@ status than what gates promotions.
       where `ci_status=MAIN_GREEN` masked a real 8-day lag (LDR→staging drained, staging 144 files ahead of main, no
       PR). **DONE — deployment-ui@82bcfe4 | pw:L2 ✓ (repos-tab 29) | regression: tests/smoke/repos-tab.spec.ts**
       ("per-hop + stall-reason columns localize a staging→main promoter stall (the AO class)").
+- [x] ✅ [UI] P2. **Full-width shell + per-column vertical dividers on the Repo-CI table** (operator request 2026-06-22
+      — "lots of space on the right we're not using" + "very little distinction between columns"). The deployment-ui
+      home shell capped `<main>` at `max-w-[1920px]` and centered it, wasting the right ~third of a ≥2560px monitor;
+      dropped the cap → `w-full` so the layout ADAPTS to the screen (visible effect only above 1920px, so the ≤1920
+      smoke + visual baselines are unaffected — no-op at their viewport). The 14-column overview table had no
+      inter-column separation; added per-column dividers (`border-r` on every cell but the last) + `px-3` breathing room
+      (first/last cells flush to the card edge), reusing the existing `/40`·`/15` border tokens. Pure CSS/className, NO
+      backend change. **DONE — deployment-ui@065edc1 | pw:L2 ✓ (76 passed) + UI-QG ✓ (82 tests · 76.73% cov · build) |
+      regression: tests/smoke/repos-tab.spec.ts** ("full-width shell + per-column dividers on a wide monitor" — asserts
+      `<main>` width >2200px + a middle header-cell `border-r` at a 2560px viewport, both of which the old
+      cap/no-divider table fail). Provenance: 2026-06-22 operator review.
 - [x] ✅ [INFRA] P1. **deployment-ui must read `ci_status` from the AUTHORITATIVE Firestore side-store, not the
       committed `workspace-manifest.json` cache.** `deployment_api/routes/_repo_ci_manifest.py` reads the committed
       manifest's `ci_status` (a CI-written cache, 120s TTL) — but the promoter gate overlays the LIVE `ci_status/{repo}`
