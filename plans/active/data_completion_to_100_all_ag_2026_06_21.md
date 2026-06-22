@@ -323,6 +323,25 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
 
 ## Progress Log
 
+### 2026-06-22 ~12:55 — ✅ TM+FootyStats UNBOUNDED-HTTP HANG fixed (uninherited path) + tarball + relaunch — instruments-service@dcf87f5
+
+`tm-backfill-20260622-060029` (and the FootyStats sibling) froze 6.5h on `date=2019-02-13` (3 leagues), python ALIVE,
+no traceback, no OOM, no progress — an awaited HTTP call wedged with no timeout firing. Root cause: the base sports
+session bounds each individual request (729fbdb: `total=120/sock_connect=15/sock_read=60`), but a single
+`adapter.get_teams` (TM: standings + ~20 per-club RapidAPI profiles, or a start+poll Apify run) / footystats
+per-date `/todays-matches` fetch has **no single ceiling**, and a connector/DNS/executor-level stall inside aiohttp
+can leave the awaited coroutine blocked WITHOUT ever surfacing the per-request `ClientTimeout` (the `try/except`
+shard-isolation already present cannot catch a hang that never raises). FIX (instruments-service@dcf87f5): wrap each
+per-shard adapter call in `asyncio.wait_for` — TM per-league `get_teams` ≤600s (`_TM_PER_LEAGUE_TIMEOUT_SECS`,
+`engine/orchestrator/transfermarkt.py`), FootyStats per-date predictions/matches/odds ≤300s
+(`_FS_PER_DATE_TIMEOUT_SECS`, `engine/orchestrator/footystats.py`). `wait_for` cancels the coroutine from the event
+loop regardless of where it is stuck → raises `asyncio.TimeoutError` (subclass of `Exception`) → the existing
+per-league/per-date handler `record_failed`s + the loop CONTINUES (shard isolation, no VM-killing raise; skip-fresh +
+per-source coverage gating untouched). QG-green (`--no-fix`, 73s) → quickmerge LDR. Tarball rebuilt + uploaded
+(`gs://deployment-scripts-central-element-323112/code/instruments-service-code.tar.gz`, fix verified present); 2 hung
+VMs deleted; relaunched e2-standard-8: `tm-backfill-20260622-125650`, `fs-backfill-20260622-125711`. Verifying
+`date=` markers advance past 2019-02-13 / 2019-07-25.
+
 ### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
 
 Operator dispatch "backfill everything (defi)": drive defi to high+honest coverage. Snapshot at start (live consolidated
