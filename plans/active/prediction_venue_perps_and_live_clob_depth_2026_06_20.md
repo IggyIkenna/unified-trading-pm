@@ -132,6 +132,46 @@ data could not be honestly source-stamped (`record_captured(source=...)` would r
   `record_captured_from_counts` `datetime` UnboundLocalError (introduced by the foreign DP_*/FetchEvidence WIP) was
   fixed and rode UTL@39f8ec85 to LDR. Repo: instruments-service@07272da4. — 2026-06-22
 
+### 2026-06-22 — DEEPER root-cause chain (the source= fix was necessary but NOT sufficient — found by running the IS Kalshi enumeration end-to-end)
+
+The `venue=KALSHI` universe was STILL silent-empty after the source= fix. Ran the IS prediction enumeration locally
+(scoped `--venues KALSHI --start-date 2026-06-22 --force`, real GCS, against a clean UTL@39f8ec85 worktree to bypass a
+concurrent UTL-refactor lane) and walked the full fetch→filter→bucket→write→manifest path. Three further bugs, two
+fixed + verified, one systemic + still open:
+
+- [x] ✅ [SCRIPT] P0. instruments-service `kalshi.py` — **date-filter silent-drop fix**: the Kalshi adapter's live
+  `/markets?status=open` snapshot stamps `open_time` as an INTRADAY timestamp on the current day (e.g.
+  `2026-06-22T13:21Z`), but `filter_instruments_by_date` compares `available_from <= date_dt` where
+  `date_dt = fromisoformat(date)` = MIDNIGHT → `13:21 > 00:00` dropped EVERY Kalshi market on EVERY day (incl. today) →
+  `0 records after filtering` → never reached the cqg write (so the source= error never even fired). Fix: floor
+  `available_from_datetime` to the open DATE (a market opening any time on day D belongs to day D's universe; precise
+  `market_created_at` still carried on the lifecycle for MTDS tick-gating). **Verified: 6/6 sample markets now survive
+  (was 0/6); full enum `KALSHI: 2000 instruments after date filter` → manifest `availability_index` now shows KALSHI
+  captured date=2026-06-22 with source=kalshi/pipeline_mode=batch_kalshi.** Repo: instruments-service (kalshi.py,
+  QG-green vs clean UTL; ship BLOCKED on the concurrent UTL clone being conflict-marker-broken — quickmerge dep
+  pre-flight). — 2026-06-22
+- [x] ✅ [SCRIPT] P0. instruments-service `kalshi.py` — **venue-case fix (venue ≠ source)**: the Kalshi adapter's
+  `venue` property returned the lowercase SOURCE name `"kalshi"` while Polymarket returns `"POLYMARKET"`. So the
+  instrument-parquet partition wrote `venue=kalshi` (lowercase) while the MTDS live runner
+  (`websocket_runner._read_prediction_is_universe_sync`) searches `venue={venue}.upper()/instruments.parquet` =
+  `venue=KALSHI` → the universe would never be found even once written. Canonical venue is `KALSHI` (UAC
+  `partition_paths` "POLYMARKET / KALSHI"; manifest already uppercased via `.upper()`). Fixed `venue → "KALSHI"`; 15
+  adapter tests updated + green vs clean UTL. Repo: instruments-service (kalshi.py). — 2026-06-22
+- [ ] [SCRIPT] P0. **SYSTEMIC OPEN BUG — prediction `instruments.parquet` (instrument-definitions universe) is NOT
+  persisting to GCS** (the LAST blocker for Kalshi live; affects Polymarket too). In `process_write._write_prediction_venue`
+  the per-cqg `_gated_sink_write(sink, …, filename="instruments.parquet")` (line ~250) logs success and
+  `record_captured` (after it) persists (manifest shows `captured`), and the SIBLING `market_lifecycle.parquet` write
+  (separate `lifecycle_sink`) DOES land — but **no object ever appears under
+  `instrument_availability/by_date/day=2026-06-22/venue=KALSHI/…/instruments.parquet`** (verified absent after a `--force`
+  run that wrote the per-VM shard + lifecycle in the same pass). Polymarket's `instruments.parquet` is dated 2026-05-12
+  → prediction instrument-definition parquets have NOT refreshed fleet-wide since ~May (live still works for Polymarket
+  only because the live runner reads ALL accumulated historical days' parquets; Kalshi has ZERO so it never resolves).
+  `InstrumentsWriteGate.validate_and_write` always calls `sink.write` (never skips), so the data sink itself is dropping
+  the instruments write while persisting lifecycle + manifest. Needs: instrument the `get_data_sink` write for the
+  `instrument_availability/by_date` prefix vs `market_lifecycle/by_canonical_group` to find why the former no-ops.
+  Provenance: prediction-to-100% drive 2026-06-22. Repo: instruments-service (engine/orchestrator/process_write.py +
+  sink.py + UTL instruments_write_gate.py / data sink). **Cross-cutting → also file issue doc.**
+
 - [ ] [SCRIPT] P3. **DISPLAY-ONLY bug (cosmetic, ≤2min)**: `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh:83` echoes `Tarball: gs://.../instruments-code.tar.gz` but the VM setup (`setup-data-pipeline-vm.sh:311`) actually fetches `instruments-service-code.tar.gz` (correct). The echo misleads tarball-freshness debugging — fix the echo string. Provenance: prediction-to-100% drive 2026-06-22. Repo: deployment-service.
 
 **Seed relaunch (corrected stack):** UAC 24706977 + UTL b336478f + mtds fcd6549 all shipped; PREDICTION
