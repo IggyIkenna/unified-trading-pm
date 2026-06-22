@@ -123,8 +123,8 @@ historical liq feed), so the re-run does NOT re-process the HL 103 + ASTER 562 `
 flip ASTER `liquidations`). The handler now routes them to EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE when invoked, but
 the launcher won't invoke them. Follow-up below.
 
-- [ ] [SCRIPT] P2. **deployment-service** — add `liquidations` to a targeted HL/ASTER re-run (or a manifest
-      reclassification) so the 103 HL + 562 ASTER `liquidations` attempted_failed cells flip to
-      `empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)` via the fixed `OnchainPerpBatchHandler`. The main
-      launcher excludes liquidations by design; needs a one-off `--include liquidations` run or a manifest migration.
-      Provenance: cefi_hl_aster_batch_data_gaps_2026_06_22 BUG #3 residual.
+- [x] ✅ [SCRIPT] P2. **deployment-service** — made `DATA_TYPES` env-overridable in
+      `launch-cefi-hl-aster-historical-backfill.sh` (deployment-service@62cbb72) + launched a targeted
+      `DATA_TYPES=liquidations FORCE=1` re-run (7 VMs `cefi-{hl,aster}-{year}-20260622-202736`) so the HL 103 + ASTER
+      562 `liquidations` attempted_failed cells flip to `empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)` via
+      the fixed `OnchainPerpBatchHandler` structural-unsupported path. Provenance: BUG #3 residual.
