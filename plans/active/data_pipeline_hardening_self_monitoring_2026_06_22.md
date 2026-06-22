@@ -596,6 +596,23 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Reship + batch-heartbeat residual (tracked todos — 2026-06-22 reship run)
 
+- [x] ✅ [INFRA] P0. **Reship + RESTART the 3 running sports VMs on the tee-flush-fixed tarball** — DONE 2026-06-22
+      (slot·human-planning, Opus 4.8, /autonomous). The running TM/FS backfills + live odds VM were on the
+      PRE-tee-flush-fix tarball (their GCS run.log froze ~5 min in → fleet watchers blind). Rebuilt the SPORTS tarball
+      from CLEAN detached worktrees off origin/LDR (`/tmp/clean-ldr-sports-193244`,
+      `WORKSPACE_ROOT=$CLEAN create-code-tarballs.sh --asset-group SPORTS`) — bakes TASK-1 (UTL@13653f9f uploader
+      staleness ceiling + deployment-service@82431d1 wrapper/cli) + keystone IS@aebbc83 (c4687fc FetchEvidence
+      threading, ancestor-verified) + the live/batch heartbeat wiring. **GREP-PROOF on the shipped GCS artifacts**:
+      `vm/vm-exec-with-gcs-tee.sh`=3 freshness markers; `unified-trading-library-code` uploader=7 `max_staleness_sec`;
+      `deployment-service-code` heartbeat_cli=3 `upload_max_staleness_sec`; `mtds-code` tick_data_handler=2
+      `emit_pipeline_heartbeat`. Gracefully DELETED the 3 old VMs (the live odds VM holds the WS singleton lock → waited
+      STOPPING→gone before relaunch) then relaunched all 3: `tm-backfill-20260622-193803` +
+      `fs-backfill-20260622-193812` (`launch-{transfermarkt,footystats}-backfill-vm.sh 2019-01-01 2026-06-21`,
+      e2-standard-8, skip-fresh re-walk-but-skip-captured) + the live odds VM
+      `mtds-live-sports-odds-api-trades-20260622-193840` (`launch-mtds-live.sh --asset-group sports --shard-spec
+      sports:odds_api:trades` 5 EPL/LaLiga/SerieA/Bundesliga/Ligue1 leagues, RUNNING off-the-bat). T+~20min
+      verification below. — deployment-service
+
 - [x] ✅ [CODE] P1. **Land the MTDS `TickDataHandler` batch-loop heartbeat** — DONE **market-tick-data-service@e7177bd**
       (version-align cleared `aligned:True` → shipped via
       `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'`; QG content-sentinel
@@ -729,6 +746,35 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   (Cloud Run subscriber on `lifecycle-events`), (B) the daily-audit crons (on the built `e2e-audit:latest` image), (C) a
   capacity-capped autonomous wave-launcher driving tradfi to 100%. Each verified end-to-end (a real DP*\* event must
   land in #data-pipeline-alerts). In progress.
+
+- **2026-06-22 RELAY ROOT-CAUSE — the `_extract_event_name` "event"-key bug (slot·human-planning, Opus 4.8,
+  /autonomous "I don't see any defi warns").** Operator: surely defi has alertable issues — make them actually fire.
+  **PROVED defi HAS real findings + the audits emit them LIVE**: ran `manifest_hygiene_daily.py --asset-group defi
+  --mode changed` (mode=live → publishes to `lifecycle-events`) → `defi hygiene: RED`, `oracle_expects_but_empty:
+  count=5` → emitted **`DP_DIVERGENT_EMPTY` WARN** (19:14:00Z); ran `reprobe_new_empty_confirmed.py --asset-group defi
+  --day 2026-06-21` → 9 new SOURCE_RETURNED_ZERO empties → emitted **`DP_EMPTY_REPROBE_DISAGREEMENT` WARN** (19:14/
+  19:20Z). The defi `_index` carries **48,924 SOURCE_RETURNED_ZERO** empty_confirmed cells + raw-HTTP error_reasons
+  (`400 Bad Request`/`RPC error (eth_feeHistory)`/`404 GET https`) + 3,550 phantoms — abundant real alertable signal.
+  **THE BREAK (decisive, root-caused — corrects the prior "consumer not running" framing):** the alerting subscriber IS
+  running (alerting-quietness-20260622-191426) + attached to `lifecycle-events-sub` (verified in run.log 19:17:13, no
+  403, no crash) + the messages DO land (I pulled my own `DP_DIVERGENT_EMPTY` off `lifecycle-events-sub` directly) + all
+  DP_* names match router rules (`data_pipeline_rule_for` → WARN/CRITICAL) + the webhook resolves — YET 0 DP events
+  routed in 14 min. **Root cause: UTL `PubSubEventSink.write_event` publishes the event name under the key `"event"`
+  (`{"event": name, "service":…, "metadata":{…}}`, event_sink.py:270-279), but the subscriber's `_extract_event_name`
+  only checked `("event_name","event_type","type","kind")` — NOT `"event"` → every DP_* (and CONSOLIDATOR_DOWN, and ANY
+  UTL log_event on lifecycle-events) mis-extracts to `UNKNOWN_EVENT` → no rule match → silently DROPPED before Slack.**
+  This is why the operator never saw defi (or any) DP alerts despite a live, attached, IAM-correct subscriber. **FIX
+  (alerting-service `alert_subscriber.py`): add `"event"` FIRST in the extractor key tuple** + 2 regression tests
+  (`test_utl_event_key_extracted`, `test_event_key_priority_over_legacy_keys`) — unit-verified the real pulled payload
+  now extracts `DP_DIVERGENT_EMPTY` + matches its WARN rule. Shipping QG-green + reshipping the subscriber VM to make
+  the relay deliver. **Task-2 (Wave-4b crons) DONE**: `tofu apply` (targeted, 8 add/0 change/0 destroy) deployed the 4
+  dp-audit Cloud Run Jobs + 4 schedulers (digest 0 7 / hygiene-changed 0 8 / hygiene-full 0 8 Sun / reprobe 0 9, all
+  ENABLED, on `e2e-audit:latest`); `gcloud run jobs execute uts-prod-dp-daily-digest` ran to Completed. **Task-3
+  (defi DP_SOURCE_RATE_LIMITED) is ALREADY DONE in the live peer defi lane** (`data_completion_to_100_all_ag`):
+  `ThegraphKeyPoolRotator` (DP-RATE-001/002, emits DP_SOURCE_RATE_LIMITED on 429 + DP_KEY_POOL_EXHAUSTED on exhaustion)
+  is fully written in `thegraph_base_client.py` + WIRED into `_dex_pools_subgraph.py` (instantiate→`next_key()`→on 429
+  `mark_rate_limited`) as that lane's dirty WIP (mtime <120s = live editor → PROTECTED, not stomped per the
+  multi-agent HARD RULE) — awaiting that lane's quickmerge; I did NOT re-implement (would collide).
 
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
