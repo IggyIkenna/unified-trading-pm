@@ -51,7 +51,13 @@ fleet-runtime + alert-unification. Full evidence + per-ask current-state/gap/cha
       `/api/fleet/summary` server-side proxy mirroring `_repo_ci_fleet.py` (SM token, 10s timeout, **honest
       degradation** `available=false`+empty on any failure, never fabricated). Matches the deployment-ui `client.ts`
       contract field-for-field; 10 unit tests; basedpyright 0/0/0; QG green (70s). **Honest gap (by design): live
-      `zombie`/`oom` are `0`** — see the follow-up below.
+      `zombie`/`oom` are `0`** — see the follow-up below. **QG follow-up — deployment-api@08654b0 (2026-06-22):** the 8
+      `.get("key", "")` monitoring defaults in `_fleet_census` (×3 GCE fields) + `_fleet_infra_health` (×5 AO-payload
+      fields) shipped WITHOUT the repo-standard `# noqa: qg-empty-fallback — <reason>` (every other such `.get(k,"")` in
+      the repo carries it). Pass-1 was green at an older base (codex ≤4), but a concurrent data-status commit
+      (`4940972`) independently took the count to exactly 5 (= `CODEX_MAX_VIOLATIONS`), so the noqa-less category
+      stacked to 6 > 5 on the integration branch → QG red. Backfilled the noqa+reason on all 8 lines → codex back to 5,
+      ALL GATES PASSED (68s). Classic two-agent stacking collision; the violation was mine.
 - [ ] [INFRA] P3. **Live zombie/OOM census signal (vm-census follow-up).** `/api/fleet/vm-census` currently reports
       `zombie`/`oom` as `0` because the deployment-service `vm_zombie_watchdog.py` computes `WatchdogVerdict`s in-memory
       each poll but persists NO readable census/verdict snapshot (its only non-heartbeat GCS write is forensic
