@@ -698,6 +698,27 @@ are identified (2) and the ledger exists (3).
       preserves full Sharpe +2.28→+2.26, trims maxDD −6.3→−5.0%). NOTE: the trend leg **subsumes** the old de-risk
       overlay + 12% short (does their 2026 job + fixes 2023 + keeps the Sharpe they cost) — make those light DD-insurance,
       NOT core sleeves; stacking all three over-hedges (−0.18 full Sharpe). Repo: strategy-service.
+      **DESIGN LOCKED 2026-06-22 + BUILD DISPATCHED**: dedicated `TSMOM_BTC_CTA` archetype (not a `RULES_DIRECTIONAL_
+      CONTINUOUS` reuse — the factory routes by archetype + clean per-leg PnL attribution). 11-step change set mapped:
+      UAC (enum + `ARCHETYPE_TO_FAMILY`→RULES_DIRECTIONAL + `archetype_leg_spec_seeds`) → strategy-service (new
+      `rules_directional/tsmom_btc_cta.py` `TsmomBtcCtaEngine` reading `btc_trailing_return_{1,3,6,12}m`+`btc_realized_
+      vol` features, sign-averaged + vol-scaled + lagged; `factory` registry; `archetype_defaults` Kelly→`V1_ARCHETYPES_
+      IN_SCOPE`; `catalog_directional.build_tsmom_btc_cta` slot `TSMOM_BTC_CTA@binance-btc-tsmom-1d-usdt-v1-prod`;
+      `catalog._BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `_ENGINE_DRIVABLE`+`E2E_UNIVERSE`; unit
+      test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null
+      signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run.
+- [ ] [DATA] P2.11.16. **features-service: compute + write BTC trend features `btc_trailing_return_{1m,3m,6m,12m}` +
+      `btc_realized_vol` to the canonical GCS feature corpus the paper run reads** — the CTA engine (P2.11.14) reads
+      these from `features: dict[str,float]`; without them the paper run produces null signals (honest absence). Trailing
+      returns = BTC daily mark `pct_change(21/63/126/252)` shifted (T-1, no lookahead); realized_vol = rolling 60d std
+      ×√365. Source = the daily BTC mark from the perp-funding corpus (`perp_daily_ctx`) the providers already read.
+      batch=live one path. Repo: features-service (+ resolve_bucket_name SSOT / UTC). This is the CRITICAL-PATH gate for
+      a non-null CTA paper run.
+- [ ] [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui** — `lib/architecture-v2/
+      enums.ts` (`StrategyArchetype` union + `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY`) + regen `lib/registry/
+      ui-reference-data.json` via `unified-api-contracts/scripts/generate_ui_reference_data.py` + bump
+      `tests/unit/lib/architecture-v2/enums.test.ts` `toHaveLength`. Silent cross-repo gap (no CI catches it from UAC).
+      Playwright-gated (`pw:L2 ✓` + regression spec). Repo: unified-trading-system-ui.
 - [ ] [CODE] P2.11.15. **cs leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`** — the cross-sectional ML book
       (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
       EWMA denoise (shipped) is the 80% cheap fix; the proper fix is retraining the pooled LightGBM on a longer-horizon
