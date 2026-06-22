@@ -553,6 +553,13 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   `setup_cloud_logging` / suggests skipping tests.
 - **No `python3 << EOF` / inline-Python for file analysis** — catastrophic `re` backtracking caused two 12–22h runaway
   processes; use `rg`/`grep`, and if Python is genuinely needed wrap it in `timeout 30` + read line-by-line.
+- **Inspect an agent's pane/output with DEPTH — read the last 20–50 lines, never just the last few (operator
+  2026-06-22)** — an auth/login/error modal (e.g. "Your organization has disabled Claude subscription access for Claude
+  Code", or a login prompt) sits ABOVE the latest `Cogitated for Ns` / `❯` prompt line, so a short `tail` (≤10) silently
+  misses it and you wrongly conclude "the agent is fine". Use `tmux capture-pane -t <session> -p -S -50`. Claude's TUI
+  redraws in place (alternate screen) so a transient modal may already have scrolled off — when a pane LOOKS idle but
+  the agent isn't registered/online, treat it as suspect (re-check the roster / test the account's auth), never declare
+  healthy from a clean-looking tail alone.
 - **Background-task honesty** — NEVER report a backgrounded task (`run_in_background` Bash / sub-agent / workflow / VM
   launch) as "done" before seeing its actual exit/output; a `| tail`/`| head` pipe buffers → empty until completion, so
   "no output yet" ≠ "finished" (say "still running" + why); let `run_in_background` stream to a file, then read it with
@@ -581,7 +588,16 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   completion), and exit (wake me) ONLY on an actionable event or completion — so I wake on SIGNAL, not on a timer I must
   keep re-arming. And when the remaining work is genuinely just "wait on operator action + slow external rate," **SAY SO
   explicitly** (what wakes me / what is YOUR action) instead of implying continuous active work — manage the
-  expectation, don't fake liveness. **Watcher-coverage (HARD RULE, codified 2026-06-10 — never infinitely wait)**: (1) a
+  expectation, don't fake liveness. **A self-deleting VM/job makes OOM/error indistinguishable from clean completion —
+  a fleet monitor MUST check terminal `exit_code`, not just RUNNING-count/drain (HARD RULE, codified 2026-06-22 —
+  operator "fix so next time you would wake up"):** backfill/batch VMs launched with `VM_SHUTDOWN_ON_COMPLETION=true`
+  self-delete on exit whether they SUCCEEDED (exit 0) or CRASHED (exit 137=OOM / non-zero=error). A monitor that only
+  watches the RUNNING set + treats a VM leaving as "completed/drained" is BLIND to mass failures (incident 2026-06-22:
+  3 sports backfills OOM-died exit 137, self-deleted, and the drain-only monitor read 14→1 as healthy completion → no
+  wake; coverage was actually 0% with 75k+ attempted_failed rows). RULE: a backfill monitor must, per VM, read the
+  persisted GCS run.log for the terminal `exit_code=<n>` (it survives self-delete) and WAKE on any `137`/non-zero — AND
+  cross-check the manifest `attempted_failed`/`captured` counts, never infer success from "the VM is gone." The wake
+  condition is `exit_code != 0 OR captured did not climb`, not merely `RUN==0`. **Watcher-coverage (HARD RULE, codified 2026-06-10 — never infinitely wait)**: (1) a
   watcher must reach a TERMINAL verdict on EVERY path — watch `state != OPEN` (covers merged/closed/failed), never only
   the success marker, and PRINT an explicit verdict line so empty output is impossible (a timeout-killed silent watcher
   reads as "still waiting" forever — incident 2026-06-10: a main-arrival watcher died at its Bash timeout with zero

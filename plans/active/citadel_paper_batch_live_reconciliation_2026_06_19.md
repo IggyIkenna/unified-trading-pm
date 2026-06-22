@@ -717,12 +717,42 @@ are identified (2) and the ledger exists (3).
       correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui
       (+ verify next.config proxy target).
 
+- [ ] [CODE] P11.15. **Match the e2e weighting: per-archetype RANK allocators, not FIXED equal-weight** (operator
+      2026-06-22: "in our e2e plots we picked several venues for e.g. basis and WEIGHTED across opportunities — I
+      thought that was a production config"). CONFIRMED: a catalogue `@`-qualified id is a per-(venue,coin) CANDIDATE
+      leg (145 of them); the e2e "strategy" is the ARCHETYPE + its rank allocator that ranks+weights across the cohort
+      (`portfolio_allocator/archetypes_rank.py` 2-stage: rank groups → top-N → weight-by-metric — long lowest / short
+      highest funding, rank-by-net-carry, inverse-vol). Production HAS this. GAP: `paper_universe.PaperUniverseConfig`
+      defaults to `AllocatorArchetype.FIXED` (equal-weight) — so the paper book equal-weights all legs instead of the
+      e2e opportunistic weighting. FIX: default each archetype to its rank allocator; the rank METRICS come from the
+      SAME deterministic captured GCS rates (funding/carry/vol per window) → **ε=0 preserved** (pure fn of the window,
+      not live calls — the FIXED default's determinism worry was overcautious). Verify ε=0 batch-rerun holds with rank
+      weights. Repo: strategy-service (paper_universe allocator default + per-archetype rank wiring).
+- [ ] [UI] P11.16. **Default the paper-trading view to archetype-level "strategies" (legs as drill-down)** — the
+      headline selector should read ~7 weighted archetype strategies (the e2e "strategy" granularity), each expandable
+      to its weighted per-(venue,coin) legs, rather than 145 flat legs. The archetype roll-up already exists (P11.9-ui
+      group-by-archetype) — make it the DEFAULT framing + label the legs "candidate legs / constituents", show each
+      leg's allocator weight. Repo: unified-trading-system-ui (playwright-gated).
+
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
   human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
 
 ## Progress Log
+
+- **2026-06-22 (operator) — LOCKED the deployable book: cs + h32 + ext + tsmom + BTC-trend + basis spine; R8 short
+  DROPPED.** Per-leg proper-execution Sharpes (engine `legnet` net through the real fill model, vnorm 10%): basis
+  **+12.6** (spine, all years +10..+19) · tsmom-long **+1.79** ('23 +1.8 but '26 −1.3) · ext **+1.39** · cs **+1.34** ·
+  BTC-trend (CTA) **+0.91** (the only leg + in 2026: +1.2) · h32 **+0.54** (weakest — future denoise candidate) · short
+  (R8 bear) **−0.15** (negative standalone, −3.4 in 2024 from shorting into the bull). **Decision: dropped the R8 short
+  from the core book** — it cost directional Sharpe (+2.26→+2.19) for a noise-level full-book bump, and the BTC-trend
+  leg already owns the 2026 downside cleaner. LOCKED book: **directional(base+trend) Sharpe +2.26 / 2023 +0.1 / 2026
+  +0.1 / maxDD −5.0%; FULL (+basis) Sharpe +8.54, EVERY YEAR GREEN (2023 +8.2 · 2024 +12.5 · 2025 +7.0 · 2026 +3.0),
+  maxDD −1.4%.** Engine `_exec_optimize.py`: `W` now `{cs0.31, h32, ext0.26, trend0.28}` (short removed; built as a
+  DIAGNOSTIC off `SHORT_DIAG_USD`, not a core sleeve — sweep stays visible, no KeyError). Canonical figure regenerated:
+  `book_LOCKED_final.png` (5 core legs + basis + book progression + drawdown). SSOT: `_book_locked.py` /
+  `_all_strats_plot.py`.
 
 - **2026-06-21 (autonomous) — FINAL: 145 strategies / 7 archetypes, ε=0 PROVEN, prod-deployed.** Both ε=0 proofs pass
   (141-run 1016 trades + 145-run 1020 trades, paper≡batch, 0 deviations). UI drilldown deployed to PROD

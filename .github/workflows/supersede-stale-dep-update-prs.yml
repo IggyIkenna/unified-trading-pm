@@ -9,11 +9,22 @@ name: supersede-stale-dep-update-prs
 # (e.g. UTL-0.11.0 alongside UTL-0.12.0) — and (b) go STALE — cut from staging, they conflict with the
 # advancing staging (`mergeable_state==dirty`). Neither had an owner.
 #
-# WHAT (two roles, per repo):
+# WHAT (three roles, per repo):
 #   1. SUPERSEDE — group open PRs by `dep-update/<dep>` prefix; close all but the highest-semver version
 #      ("superseded by #N"). STRICTLY bounded: only closes when a strictly-higher-version dep-update PR
 #      for the SAME (repo, dep) is ALSO open.
-#   2. ESCALATE — for a SURVIVING (non-superseded) PR that is CONFLICTING (`dirty`), dispatch
+#   2. OBSOLETE-CLOSE — for a SURVIVING (non-superseded) CONFLICTING (`dirty`) PR whose target version is
+#      STRICTLY BELOW the dep's CURRENT released version (read from the dep repo's `main` pyproject), close
+#      it as obsolete. WHY (staging_to_main_promotion_starvation_2026_06_19): a LONE stale dep-update PR has
+#      no higher sibling, so SUPERSEDE never fires → ESCALATE punted it to a worker forever (the UAC-0.24.0
+#      fleet jam: 8 PRs stuck in triage indefinitely while UAC raced to 0.38.0). The floor bump is moot once
+#      a higher dep is released — the consumer range-pins (`>=0.x,<1.0.0`) with an editable path source, so it
+#      already resolves the newer dep; the dedicated dep-update→staging PR pattern is retired (Phase 1.5a:
+#      breaking re-pins land on LDR). SAFETY (never false-close a needed PR): closes ONLY when ALL hold —
+#      (a) `dirty`, (b) branch parses to `dep-update/<dep>-<X.Y.Z>`, (c) the dep repo's main pyproject reads a
+#      valid version, (d) that current version is STRICTLY GREATER than the PR target (sort -V). Any read/parse
+#      failure or current==target → DOES NOT close (falls through to ESCALATE) — fail-safe to prior behaviour.
+#   3. ESCALATE — for a SURVIVING, NON-obsolete, CONFLICTING (`dirty`) PR, dispatch
 #      `merge-conflict-detected` → conflict-resolution-agent → escalate-to-orchestrator, so a worker
 #      RESOLVES it (rebase onto staging, keep the dep floor bump; per
 #      codex/08-workflows/dep-update-conflict-resolution.md) — and Slacks + asks the operator in the
@@ -79,7 +90,7 @@ jobs:
           PYEOF
           )
 
-          CLOSED=0; ESCALATED=0
+          CLOSED=0; ESCALATED=0; OBSOLETE=0
           while IFS= read -r REPO; do
             [ -z "$REPO" ] && continue
             # Open dep-update PRs in this repo (head branch dep-update/<dep>-<version>).
@@ -148,6 +159,37 @@ jobs:
               SNUM="${srow%% *}"; SBR="${srow#* }"
               MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$SNUM" --jq '.mergeable_state' 2>/dev/null || echo "")
               [ "$MSTATE" = "dirty" ] || continue
+
+              # ── OBSOLETE-CLOSE (role 2): a lone dirty dep-update PR whose floor target is below the dep's
+              # CURRENT released version is dead weight (superseded-without-a-sibling). Close it instead of
+              # punting to a worker forever. FAIL-SAFE: every guard below must pass or we fall through to
+              # ESCALATE — a read/parse miss never closes. SSOT: staging_to_main_promotion_starvation_2026_06_19.
+              DEP=""; TARGET=""
+              BODY="${SBR#dep-update/}"          # <dep>-<X.Y.Z>
+              if [[ "$BODY" =~ ^(.+)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                DEP="${BASH_REMATCH[1]}"; TARGET="${BASH_REMATCH[2]}"
+              fi
+              CUR=""
+              if [ -n "$DEP" ]; then
+                CUR=$( { gh api "repos/$OWNER/$DEP/contents/pyproject.toml?ref=main" --jq '.content' 2>/dev/null \
+                        | base64 -d 2>/dev/null \
+                        | grep -m1 -E '^version[[:space:]]*=' \
+                        | sed -E 's/.*=[[:space:]]*"([^"]+)".*/\1/'; } 2>/dev/null || true )
+              fi
+              # Strictly-greater test via `sort -V` (only when CUR is a clean X.Y.Z and != TARGET).
+              if [ -n "$TARGET" ] && [[ "$CUR" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && [ "$CUR" != "$TARGET" ] \
+                 && [ "$(printf '%s\n%s\n' "$TARGET" "$CUR" | sort -V | tail -1)" = "$CUR" ]; then
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "DRY-RUN: would OBSOLETE-CLOSE $REPO #$SNUM ($SBR) — $DEP current $CUR > target $TARGET"
+                else
+                  echo "OBSOLETE-CLOSE $REPO #$SNUM ($SBR) — $DEP current $CUR > target $TARGET (range pin absorbs newer dep)"
+                  gh pr close "$SNUM" --repo "$OWNER/$REPO" --delete-branch \
+                    --comment "Auto-closed as OBSOLETE: this floor-bump targets $DEP $TARGET, but $DEP is now at $CUR — the consumer range-pins (\`>=0.x,<1.0.0\`) with an editable path source, so the newer dep is already in effect; the bump changes nothing. The dep-update→staging PR pattern is retired (Phase 1.5a — breaking re-pins land on LDR). Closed by supersede-stale-dep-update-prs (obsolete-close role). SSOT: plans/active/issues/staging_to_main_promotion_starvation_2026_06_19.md." 2>/dev/null \
+                    && OBSOLETE=$((OBSOLETE + 1)) || echo "  WARN: obsolete-close failed for $REPO #$SNUM"
+                fi
+                continue
+              fi
+
               PRURL="https://github.com/$OWNER/$REPO/pull/$SNUM"
               if [ "$DRY_RUN" = "true" ]; then
                 echo "DRY-RUN: would escalate $REPO #$SNUM ($SBR, dirty) → conflict-resolution-agent"
@@ -164,4 +206,4 @@ jobs:
             done <<< "$SURV"
           done <<< "$REPOS"
 
-          echo "=== Superseded dep-update PRs closed: $CLOSED | conflicting survivors escalated: $ESCALATED ==="
+          echo "=== Superseded: $CLOSED | obsolete-closed: $OBSOLETE | conflicting survivors escalated: $ESCALATED ==="

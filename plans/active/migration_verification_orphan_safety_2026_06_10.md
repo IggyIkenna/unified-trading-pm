@@ -1223,11 +1223,21 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   majority of historical rows are v9 — the migration is **effectively live in prod**, which the stale "G4 `--apply`
   parked (operator HARD-STOP)" framing above no longer reflects for the steady-state DATA. **NOT a clean 100%-everywhere
   bulk `--apply`** — the cefi/tradfi/pred legacy tails (old un-restamped shards) remain, so a final re-stamp sweep of
-  those tails is the only residual; defi/sports are fully v9. **Operational consequence:** the data-status surfaces read
-  real v9 in the DEFAULT (non-beta) path — the CF-20 beta-manifest preview (`DATA_STATUS_BETA_MANIFEST_BLOB` + the
-  static `_index/audit/projected_index_*.parquet`, last written Jun 11/17) is now redundant and slated for retirement
-  (operator 2026-06-21). Provenance: read on the human-planning VM via pyarrow over the live `-prd-` market-data-tick
-  buckets.
+  those tails is the only residual; defi/sports are fully v9. Provenance: read on the human-planning VM via pyarrow over
+  the live `-prd-` market-data-tick buckets.
+
+- 2026-06-22 (CORRECTION + prod fix — the data-status "Unknown error" was BETA, not memory) — the live
+  `uts-shared-deployment-api` Cloud Run service **had `DATA_STATUS_BETA_MANIFEST_BLOB` SET** (to
+  `_index/audit/projected_index_{asset_group}.parquet`) — so the deployed data-status surfaces were rendering the
+  **projected/beta preview, NOT the live index** (correcting the 2026-06-21 note's implication that the default non-beta
+  path was already live). The market-tick-data-service detail (`/api/data-status/turbo`, full range) returned an
+  **empty-body HTTP 500** ("Unknown error" in the UI) — the beta projected-index path crashing the heavy per-AG compute;
+  a prior **8Gi→16Gi bump (rev 00073) stopped the OOM but NOT the 500**. **Fix: removed the beta env var**
+  (`gcloud run services update --remove-env-vars=DATA_STATUS_BETA_MANIFEST_BLOB`, rev 00075) → endpoint now **HTTP 200
+  with real live v9 data** (`overall_completion_pct 87.07`, `migration_in_progress:false`), verified stable (2nd call
+  200/4.2s/26MB) with no new errors. **Durable**: the shipped `deploy-shared.sh` (deployment-service@10e2ddc) sets env
+  via `--set-env-vars` without beta, so a future deploy won't re-introduce it. This is the operational half of the P2
+  beta-retirement below; the code-level removal still stands.
 
   - [ ] [CODE] P2. **Retire the CF-20 beta-manifest preview machinery** (target repo: **deployment-api**) — live index
         is now ~v9 (96.6-100% all AGs), so the projected/beta preview is redundant. Remove the beta path:
