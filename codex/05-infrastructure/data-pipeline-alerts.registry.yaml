@@ -1,0 +1,449 @@
+# Data-Pipeline failure-mode registry — machine-readable SSOT.
+# Human SSOT + model: data-pipeline-alerts.md (same dir). Consumed by:
+#   - alerting-service/alerting_service/rules/data_pipeline_rules.py  (router event_pattern -> severity)
+#   - the watchers + daily audits (which event each emits)
+# Lifecycle status: verbose -> baselined -> zeroed  (drive the count to zero, like CI/CD + agent-orchestrator).
+# Append a new entry the moment a new silent-failure class surfaces (shared pool for the per-AG agents).
+version: 1
+channel: "#data-pipeline-alerts"
+webhook_secret: DATA_PIPELINE_ALERTS_SLACK_WEBHOOK # SM, project central-element-323112
+severity_routing:
+  INFO: { channels: [data_pipeline_slack] }
+  WARN: { channels: [data_pipeline_slack], dedup: true }
+  CRITICAL: { channels: [data_pipeline_slack, telegram, pagerduty], incident_gateway: true }
+escalation_tiers: [auto_recover, file_issue, page_operator] # file_issue hop escalates LLM verdicts to planning-VM
+
+failure_modes:
+  # --- DP-FETCH (class C1, keystone) ---
+  - {
+      id: DP-FETCH-001,
+      category: FETCH,
+      severity: CRITICAL,
+      event: DP_UNPROVEN_HONEST_ABSENCE,
+      detector: writer_fetch_evidence_gate,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "record_empty(SOURCE_RETURNED_ZERO) without valid FetchEvidence",
+    }
+  - {
+      id: DP-FETCH-002,
+      category: FETCH,
+      severity: CRITICAL,
+      event: DP_AUTH_ERROR_NOT_FAILED,
+      detector: classify_venue_error,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "401/403 fell through to empty",
+    }
+  - {
+      id: DP-FETCH-003,
+      category: FETCH,
+      severity: WARN,
+      event: DP_RATELIMIT_AS_EMPTY,
+      detector: writer_fetch_evidence_gate,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "429 fell through to empty",
+    }
+  - {
+      id: DP-FETCH-004,
+      category: FETCH,
+      severity: CRITICAL,
+      event: DP_SERVER_ERROR_AS_EMPTY,
+      detector: writer_fetch_evidence_gate,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "5xx/timeout/connect-error -> empty",
+    }
+  - {
+      id: DP-FETCH-005,
+      category: FETCH,
+      severity: CRITICAL,
+      event: DP_MISSING_CREDENTIAL,
+      detector: preflight_key_resolve,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "unresolved credential -> 0 rows",
+    }
+  - {
+      id: DP-FETCH-006,
+      category: FETCH,
+      severity: WARN,
+      event: DP_EMPTY_REPROBE_DISAGREEMENT,
+      detector: daily_empty_reprobe,
+      kind: llm,
+      escalation: file_issue,
+      status: verbose,
+      fires: "re-probe of today's new empty_confirmed: source actually returned data",
+    }
+  - {
+      id: DP-FETCH-007,
+      category: FETCH,
+      severity: CRITICAL,
+      event: DP_RUN_MOSTLY_EMPTY,
+      detector: post_run_manifest_scan,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "VM run ended >=X% empty_confirmed (RED-ALERT shape)",
+    }
+  - {
+      id: DP-FETCH-008,
+      category: FETCH,
+      severity: CRITICAL,
+      event: DP_CATALOG_FRESH_ASSERT_FALSE,
+      detector: catalog_freshness_assert,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "catalog-freshness always-False masks zero capture",
+    }
+
+  # --- DP-COVERAGE (class C2) ---
+  - {
+      id: DP-COVERAGE-001,
+      category: COVERAGE,
+      severity: WARN,
+      event: DP_FAILED_BEFORE_GENESIS,
+      detector: oracle_vs_manifest,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "attempted_failed before UAC genesis/launch date",
+    }
+  - {
+      id: DP-COVERAGE-002,
+      category: COVERAGE,
+      severity: WARN,
+      event: DP_WRONG_ASSET_GROUP,
+      detector: uac_capability_crosscheck,
+      kind: llm,
+      escalation: file_issue,
+      status: verbose,
+      fires: "data_type/venue in wrong asset_group",
+    }
+  - {
+      id: DP-COVERAGE-003,
+      category: COVERAGE,
+      severity: INFO,
+      event: DP_VENUE_NOT_IN_ORACLE,
+      detector: present_set_minus_oracle,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "present venue/league/bookmaker has no UAC coverage map entry",
+    }
+  - {
+      id: DP-COVERAGE-004,
+      category: COVERAGE,
+      severity: WARN,
+      event: DP_EXPECTED_GRAIN_NONCANONICAL,
+      detector: enumerator_grain_check,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "expected_unattempted seeded in non-canonical grain -> never converts",
+    }
+
+  # --- DP-PATH (class C3) ---
+  - {
+      id: DP-PATH-001,
+      category: PATH,
+      severity: CRITICAL,
+      event: DP_NONCANONICAL_WRITE_PATH,
+      detector: writer_is_canonical_assert,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "resolved write path fails UAC is_canonical()",
+    }
+  - {
+      id: DP-PATH-002,
+      category: PATH,
+      severity: WARN,
+      event: DP_NONCANONICAL_PATH_ON_DISK,
+      detector: audit_canonical_form_probe,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "manifest row implies non-canonical GCS path",
+    }
+  - {
+      id: DP-PATH-003,
+      category: PATH,
+      severity: WARN,
+      event: DP_PIPELINE_MODE_DRIFT,
+      detector: pipeline_mode_scan,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "hardcoded batch on live / missing pipeline_mode= partition",
+    }
+  - {
+      id: DP-PATH-004,
+      category: PATH,
+      severity: WARN,
+      event: DP_LEGACY_SPELLING,
+      detector: no_malformed_by_date_paths,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "day-YYYY-MM-DD hyphen / VENUE-CHAIN / glued-V{N}",
+    }
+  - {
+      id: DP-PATH-005,
+      category: PATH,
+      severity: CRITICAL,
+      event: DP_WRONG_BUCKET,
+      detector: writer_bucket_resolve_assert,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "handler writes to wrong bucket",
+    }
+
+  # --- DP-VM (class C4) ---
+  - {
+      id: DP-VM-001,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_VM_EXIT_NONZERO,
+      detector: exit_code_fleet_monitor,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "run.log exit_code != 0 (incl 137 OOM), survives self-delete",
+    }
+  - {
+      id: DP-VM-002,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_VM_GONE_NO_CAPTURE,
+      detector: exit_code_fleet_monitor,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "VM drained but captured did not climb",
+    }
+  - {
+      id: DP-VM-003,
+      category: VM,
+      severity: WARN,
+      event: DP_VM_STALL,
+      detector: heartbeat_watcher,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "no heartbeat/progress > N min",
+    }
+  - {
+      id: DP-VM-004,
+      category: VM,
+      severity: WARN,
+      event: DP_EVENT_LOOP_STARVED,
+      detector: heartbeat_watcher,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "blocking GCS read on async loop, no logs > N min",
+    }
+  - {
+      id: DP-VM-005,
+      category: VM,
+      severity: INFO,
+      event: DP_NO_EARLY_PROGRESS,
+      detector: launch_verifier_t10,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "STARTED but no PROGRESS within first N min",
+    }
+  - {
+      id: DP-VM-006,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_GCS_429_THRASH,
+      detector: gcs_429_rate_event,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "GCS 429 hot-object thrash",
+    }
+
+  # --- DP-RATE (class C5) ---
+  - {
+      id: DP-RATE-001,
+      category: RATE,
+      severity: WARN,
+      event: DP_SOURCE_RATE_LIMITED,
+      detector: source_rate_event,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "sustained 429 from source/venue above threshold",
+    }
+  - {
+      id: DP-RATE-002,
+      category: RATE,
+      severity: CRITICAL,
+      event: DP_KEY_POOL_EXHAUSTED,
+      detector: key_pool_event,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "key pool exhausted / stuck on one key",
+    }
+
+  # --- DP-ENV (class C6) ---
+  - {
+      id: DP-ENV-001,
+      category: ENV,
+      severity: CRITICAL,
+      event: DP_READER_WRITER_BUCKET_MISMATCH,
+      detector: reader_writer_parity,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "reader env-less vs writer env-short -> stale read -> false honest-absence",
+    }
+  - {
+      id: DP-ENV-002,
+      category: ENV,
+      severity: WARN,
+      event: DP_STALENESS_BELOW_CADENCE,
+      detector: staleness_vs_cadence,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "consolidated staleness default < data cadence -> blank-data_type shard fallback",
+    }
+
+  # --- DP-ORDER (class C7) ---
+  - {
+      id: DP-ORDER-001,
+      category: ORDER,
+      severity: WARN,
+      event: DP_DOWNSTREAM_BEFORE_UPSTREAM,
+      detector: dag_readiness_gate,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "downstream ran before upstream complete",
+    }
+  - {
+      id: DP-ORDER-002,
+      category: ORDER,
+      severity: CRITICAL,
+      event: DP_LIVE_BATCH_SCHEMA_SKEW,
+      detector: writer_live_eq_batch_invariant,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "live record_captured schema skew vs batch",
+    }
+  - {
+      id: DP-ORDER-003,
+      category: ORDER,
+      severity: WARN,
+      event: DP_NULL_EMPTY_DOUBLE_COUNT,
+      detector: dedup_check,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "NULL-vs-empty-string dedup double-count",
+    }
+
+  # --- DP-MANIFEST / DP-CATALOG / DP-WATCHER (infra meta) ---
+  - {
+      id: DP-MANIFEST-001,
+      category: MANIFEST,
+      severity: CRITICAL,
+      event: CONSOLIDATOR_DOWN,
+      detector: assert_consolidator_healthy,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: active,
+      fires: "consolidator not running / stale _index with per-VM shards",
+    }
+  - {
+      id: DP-MANIFEST-002,
+      category: MANIFEST,
+      severity: WARN,
+      event: DP_NOT_V9,
+      detector: audit_canonical_form_cf1,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "schema_version dist < 100% v9 for an AG",
+    }
+  - {
+      id: DP-MANIFEST-003,
+      category: MANIFEST,
+      severity: WARN,
+      event: DP_PHANTOM_ROWS,
+      detector: reconcile_phantom_dryrun,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "captured cell with no GCS parquet",
+    }
+  - {
+      id: DP-MANIFEST-004,
+      category: MANIFEST,
+      severity: WARN,
+      event: DP_DIVERGENT_EMPTY,
+      detector: detect_manifest_divergence,
+      kind: llm,
+      escalation: file_issue,
+      status: verbose,
+      fires: "oracle expects data but 0 captured",
+    }
+  - {
+      id: DP-MANIFEST-005,
+      category: MANIFEST,
+      severity: WARN,
+      event: DP_SHARD_PILLAR_FAIL,
+      detector: validate_shards_4pillar,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "4-pillar shard validation fails",
+    }
+  - {
+      id: DP-CATALOG-001,
+      category: CATALOG,
+      severity: CRITICAL,
+      event: DP_CATALOG_NOT_RUNNING,
+      detector: catalogue_freshness_watcher,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "instrument catalogue for an AG not refreshed in 24h",
+    }
+  - {
+      id: DP-WATCHER-001,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: DP_ZOMBIE_WATCHDOG_DOWN,
+      detector: watchdog_liveness_probe,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "zombie-VM watchdog itself down (meta)",
+    }
+  - {
+      id: DP-WATCHER-002,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: DP_CRON_DID_NOT_FIRE,
+      detector: cron_alive_probe,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires: "scheduled audit/consolidator/digest cron missed",
+    }
