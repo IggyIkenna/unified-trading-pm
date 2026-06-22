@@ -32,6 +32,19 @@ related_plans:
 > asset groups (cefi/defi/tradfi/sports/prediction). Start verbose; reduce alert spam once the failure classes below are
 > closed.
 
+## Coordination with in-flight parallel work (do NOT duplicate — this plan generalizes)
+
+The per-AG IS/MTDS agents are already shipping **point-fixes** for these classes; this plan turns the recurring ones
+into **systemic guards** so they stop recurring. Feed point-fixes into the guard, don't re-solve per-adapter:
+
+- **`data_completion_to_100_all_ag_2026_06_21.md`** is doing per-adapter C1 fixes (e.g. eigenlayer
+  fetch-exception→`attempted_failed` MTDS@56435ac; enumerator chain-level false-empty stop IS@0e08237). **Phase 1 here
+  is the generalization**: the `FetchEvidence` writer gate makes that fix structural — every adapter, enforced at
+  `record_empty`, not one-by-one. Each adapter that plan touches should thread `fetch_evidence` (Phase 1 P0).
+- **`citadel_paper_batch_live_reconciliation_2026_06_19.md`** P11.19 (data-quality + VM events panel) overlaps the
+  **Phase 2** streaming-events pane — build the pane there, emit the `DP_*` events from here; don't fork the panel.
+- The "reuse, do not rebuild" table below is the canonical anti-duplication map for the other seven plans.
+
 ## Why this plan exists — the recurring failure catalogue (pooled from the last ~2 weeks of fleet work)
 
 Mined from git history across instruments-service / MTDS / MDPS / features / UAC / UTL (2026-06-13→22) plus the active +
