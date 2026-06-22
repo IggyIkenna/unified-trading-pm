@@ -1185,8 +1185,8 @@
       "codebase_health": {
         "coverage_pct": 96.02,
         "qg_red_reason": null,
-        "large_file_count": 21,
-        "warn_file_count": 31
+        "large_file_count": 22,
+        "warn_file_count": 30
       }
     },
     "unified-trading-library": {
