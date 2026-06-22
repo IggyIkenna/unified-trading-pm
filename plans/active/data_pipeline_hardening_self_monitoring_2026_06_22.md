@@ -329,8 +329,12 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       CSV + measured first-capture cross-ref) split the post-coverage*start residual into two REAL classes, all
       historical (≤2025-11-18, 0 in operational window): **(a) data_type NAME-DRIFT (~5–6k cells)** —
       AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
-      (`\_DEFI_LENDING*\*\_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/     `lending_indices`but the manifest CAPTURED`liquidations`/`rate_indices`/`utilization`(legacy    `liquidations_handler.py`still exists alongside`liquidation_events_handler.py`; MORPHO subgraph emits     `rate_indices`/`utilization`not the AAVE-style names). The data EXISTS under a different data_type name → diagnose     both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or correct the     oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real gaps (~7k     cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS`bridge_events`, PYTH     `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,     ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields`— the adapter never ran a historical backfill,     OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the     carry_staked_basis/arbitrage_price_dispersion data needs). Decision per venue: real-MVP-need → defi MTDS     historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to    `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED`or trim the oracle scope. Candidate CSV:    `plans/audit/results/divergence_2026-06-22.csv`
-      (filter classification=DIVERGENT_EMPTY). — **unified-api-contracts, market-tick-data-service**
+      (`\_DEFI_LENDING*\*\_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/     `lending_indices`but the manifest CAPTURED`liquidations`/`rate_indices`/`utilization`(legacy    `liquidations_handler.py`still exists alongside`liquidation_events_handler.py`; MORPHO subgraph emits     `rate_indices`/`utilization`not the AAVE-style names). The data EXISTS under a different data_type name → diagnose     both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or correct the     oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real gaps (~7k     cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS`bridge_events`, PYTH     `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,     ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields`— the adapter never ran a historical backfill,     OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the     carry_staked_basis/arbitrage_price_dispersion data needs). Decision per venue: real-MVP-need → defi MTDS     historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to    `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED`or trim the oracle scope. Candidate CSV:    `plans/audit/results/divergence_2026-06-22.csv`    (filter classification=DIVERGENT_EMPTY). — **unified-api-contracts, market-tick-data-service**     **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh`detect_manifest_divergence.py
+      --asset-group
+      defi`on live prod    `\_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it, not     growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT blocking.**     Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP). **Sub-finding     (refines class-a):** the `dex_pool_swaps`DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 / CURVE 43) are NOT     name-drift —`dex_pool_swaps`
+      IS actively captured (4,392 OK_CAPTURED cells), so these are genuine date-specific historical swap gaps on those
+      venues → resolve via per-venue historical DEX-swaps backfill (PER-CHAIN launch dates), not an oracle rename. Stays
+      the tracked per-venue backfill-vs-scope campaign (operator HARD RULE: NO flat clip).
 - [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
       --no-fix exit 0, sentinel==HEAD, 20 dp_audit tests green incl. 3 new; dirty-deps direct-LDR carve-out —
       strategy-service had live PEER WIP at quickmerge time). Threaded `chain` through the shared `ReprobeHook`
@@ -925,14 +929,14 @@ items:
       rebuilds from `main` (the durable guarantee — no manual re-stamp needed thereafter). — unified-trading-library
 
 - **2026-06-22 unfillable-cell reclassification (slot-0·human-planning, Opus 4.8)** — operator: "class unfillable or
-  mass-enter as empty_confirmed with reason." Investigated the tradfi `expected_unattempted` by venue + the databento
+  mass-enter as empty*confirmed with reason." Investigated the tradfi `expected_unattempted` by venue + the databento
   3-dataset allowlist (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH). **ICE (530,600 cells) is genuinely unfillable** (out of
   subscription — no databento dataset, not Barchart/Yahoo) → in-place re-classified to
   `empty_confirmed`/`error_reason=EXPECTED_NO_PROVIDER_COVERAGE` (snapshot `pre_ice_reclassify_2026_06_22.parquet`,
   GATE-passed: rows + captured unchanged). **Honest coverage 68.4%→76.2%** (cell-grain ~84%→higher). Deliberately LEFT:
-  CME/NYSE/NASDAQ (databento-fillable gaps the wave-launcher works), **CBOE (1,930 = VIX/SPX _index_ cells, fillable by
-  Barchart/Yahoo — a different source, not databento)**, **FX (3,228 spot pairs, already source-stamped
-  massive/databento — ambiguous, marking would hide a real gap)**. **RESIDUAL**: the wave-launcher (databento-only)
+  CME/NYSE/NASDAQ (databento-fillable gaps the wave-launcher works), \*\*CBOE (1,930 = VIX/SPX \_index* cells, fillable
+  by Barchart/Yahoo — a different source, not databento)**, **FX (3,228 spot pairs, already source-stamped
+  massive/databento — ambiguous, marking would hide a real gap)**. **RESIDUAL\*\*: the wave-launcher (databento-only)
   can't fill CBOE-index/FX (~5,158 cells), so its `expected_unattempted==0` completion check should SCOPE to
   databento-fillable venues (or those get their own Barchart/Yahoo backfill) — else it never reads 0. Follow-up. —
   market-tick-data-service
@@ -991,14 +995,14 @@ items:
       shipped around a shared-clone with foreign `_h`-lane onchain WIP that poisoned the main-clone whole-tree QG.
       RESHIP of the 4 shards + running-behaviour verification IN PROGRESS. Repo: market-tick-data-service. — 2026-06-22
       slot-0·human-planning
-- [ ] [CODE] P1. **FOLLOW-UP (C6 / DP-ENV-001, non-prediction, on-VMs-not-LDR)**: the live IS-universe NON-prediction
-      reader `websocket_runner._read_is_parquet_sync` still uses `build_bucket("instruments", asset_group=...)`
-      (env-LESS legacy shape → stale/absent read → empty universe → silent zero capture) on origin/LDR. Fix =
-      `resolve_bucket_name` env-short via a `_instruments_store_bucket(asset_group)` helper (mirrors the prediction
-      reader). The fix IS on the reshipped prediction VMs (rode the `--allow-dirty-tarball`), but its LDR ship was reset
-      by a concurrent `_h`-clone lane actively churning `websocket_runner.py` (type-narrowing) — re-apply + ship
-      coordinating with that lane (a ~6-line change; helper + 1 call-site). Repo: market-tick-data-service. Provenance:
-      prediction-hardening reship 2026-06-22.
+- [x] ✅ [CODE] P1. **FOLLOW-UP (C6 / DP-ENV-001, non-prediction) — SHIPPED ON LDR (verified 2026-06-22 resume-run)**:
+      `websocket_runner._read_is_parquet_sync` now resolves the IS-universe bucket via the
+      `_instruments_store_bucket(ag)` helper
+      (`resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group=...)`, env-SHORT `-prd-`) — mirrors the
+      prediction reader. Landed `market-tick-data-service@059df5f` (helper at `websocket_runner.py:69`, call-site
+      `:495`); both grep-confirmed present in `origin/live-defi-rollout` (the prior "reset by the `_h`-clone lane" state
+      no longer holds — the concurrent type-narrowing lane and this fix both reconciled onto LDR). No further action.
+      Repo: market-tick-data-service. Provenance: prediction-hardening reship 2026-06-22.
 
 ## Per-AG dispatch prompts (FINAL DELIVERY — paste one per AG agent tab)
 
