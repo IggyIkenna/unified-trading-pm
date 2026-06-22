@@ -1,13 +1,14 @@
 ---
 title: uv binary drifted off the pinned 0.10.8 on the running VM fleet — per-repo setup.sh fails, lockfile-determinism at risk
 created: 2026-06-22
-author: ikenna [slot-3·laptop]
 source:
   - human-planning-vm workspace bootstrap (2026-06-22) — Phase 5 per-repo setup failed for all 25 repos
   - plans/archive/2026_06/uv_lockfile_determinism_2026_06_02.md (the pin SSOT, ARCHIVED)
   - scripts/setup.sh:387-401 (the broken bootstrap-uv fallback)
   - scripts/quality-gates-base/base-service.sh:297 + base-library.sh:167
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

@@ -3,7 +3,6 @@ title:
   "Orchestrator pre-spawn dirty-state gate orphaned a LIVE session's uncommitted WIP (liveness-gating bypassed +
   commit-then-reset-on-push-reject)"
 created: 2026-06-22
-author: ikennaigboaka
 parent_epic: orchestrator_master
 priority: P2
 source:
@@ -13,6 +12,7 @@ source:
   - "CLAUDE.md § 'Inherited-dirty-WIP — liveness-gated, not identity-gated'"
   - "codex/05-infrastructure/per-tab-worktrees.md § respawn working-tree hygiene"
 locked_by: live-defi-rollout
+status: active
 ---
 
 ## What I found

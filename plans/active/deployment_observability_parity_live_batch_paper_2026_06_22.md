@@ -1,7 +1,6 @@
 ---
 title: "Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos grade"
 created: 2026-06-22
-author: ikennaigboaka [slot-0·human-planning]
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra
@@ -16,6 +15,8 @@ related_plans:
   - monitoring_control_plane_master_2026_06_10.md
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
   - data_feed_sla_registry_and_active_self_healing_2026_06_19.md
+priority: P2
+status: active
 ---
 
 # Deployment Observability Parity — live / batch / paper × GCP / AWS
