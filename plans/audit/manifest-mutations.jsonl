@@ -282,3 +282,4 @@
 {"timestamp": "2026-06-22T06:54:16Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "execution-service=0.24.0 (branch=staging, bump=minor)", "commit_sha": "c4e2c56f5b8b4aea4b1adc52e6da58f07cf59aaa"}
 {"timestamp": "2026-06-22T06:59:12Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.31.0 (branch=staging, bump=minor)", "commit_sha": "7363adcd788277204bdf1bc9774fd24f11132ff2"}
 {"timestamp": "2026-06-22T07:02:44Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "greeks-service=0.17.0 (branch=staging, bump=minor)", "commit_sha": "df4eca66cca5104d67dd3bc8507e16aefa601d0d"}
+{"timestamp": "2026-06-22T07:05:39Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "batch-live-reconciliation-service=0.21.0 (branch=staging, bump=minor)", "commit_sha": "15b58dd351b1de75675c378b90a30991baa1b611"}
