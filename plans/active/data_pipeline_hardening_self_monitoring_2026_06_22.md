@@ -632,6 +632,20 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   the workspace stayed dirty-deps (e2e/deployment/strategy-service/MTDS all churning) so the 3 wip-preserve branches
   (MTDS QG 5.90/5.91, e2e Dockerfile, deployment var) couldn't quickmerge; preserved + recover-documented, land on the
   next clean-deps window.
+- **2026-06-22 RESIDUAL CLOSE-OUT (autonomous /autonomous run, slot-0·human-planning, Opus 4.8)** — operator: the semver
+  version-alignment lag that blocked the 2 residuals is CLEARED (`check-dependency-alignment.py --json` → `aligned:True`,
+  verified on entry). **Residual-1 (MTDS batch-heartbeat) DONE** — `market-tick-data-service@e7177bd` via
+  `quickmerge --agent --files 'market_tick_data_service/cli/handlers/tick_data_handler.py'` (QG content-sentinel
+  byte-identical Pass-1 green; STAGE 0.4 FF-reconciled `26202e129→059df5f8a` cleanly; landed origin/LDR — grep-verified
+  4 heartbeat markers). The 8th-C6 fix also landed on LDR in the same window (`059df5f` — live-hardening lane). **Residual-2
+  (reship sports+prediction live) IN PROGRESS** — rebuilt the code tarball from **CLEAN detached worktrees off
+  origin/LDR** (`/tmp/clean-ldr-wt-*`, NOT the dirty workspace clones: workspace MTDS had peer one-off
+  `migrate_onchain_perp` + untracked `run_polymarket_v9_rewalk.sh` dirty), CORE+IS scope, uploaded 17:56 UTC;
+  **grep-PROOF on the shipped `mtds-code.tar.gz`**: tick_data_handler heartbeat=4 + websocket_runner heartbeat=2 (the
+  `./`-prefixed tar paths confirmed). Gracefully DELETED the 5 PRE-17:16 live producers (sports-odds + 4 prediction
+  shards — frees singleton lock + WS feed; confirmed all 5 gone) then relaunching all 5 on the hardened tarball via
+  `launch-mtds-live.sh` (sports `sports:odds_api:trades`, 5 EPL/La-Liga/Serie-A/Bundesliga/Ligue-1 leagues) +
+  `launch-prediction-live.sh` (POLYMARKET/KALSHI × trades/book_snapshot_5). T+10min verification pending.
 - [ ] [DATA] P2. **Investigate why tradfi CME live trades aren't flushing candle-windows** (0 captured rows on
       `mtds-live-tradfi-cme-trades-*` despite databento WS authenticated + subscribed to ES/NQ/CL/GC trades) — so the
       live producer emits `PIPELINE_HEARTBEAT` (gated on first window flush) + actually captures. Pre-existing (old VM
