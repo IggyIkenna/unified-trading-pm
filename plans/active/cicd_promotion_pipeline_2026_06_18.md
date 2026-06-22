@@ -106,6 +106,15 @@ Firestore-side-store ci_status migration, and the prod image build.
 - [ ] [OPERATOR] P3. Residual intermittent v2 `conclusion=action_required` — root is the GitHub-Settings approval toggle
       (auto-recover already self-heals the symptom). (promotion_queue)
 
+- [ ] [INFRA] P1. **GHA runner provisioning failures block PR #501 (LDR→main drain) — investigate quota/infrastructure. [agt-c251c2] [DEFERRED]**
+      Observed 2026-06-22 19:37–19:47 UTC: 5+ consecutive `quality-gates-v2` + 2+ `ldr-to-main-promote` runs on PM repo
+      all failed with `0 steps ran` in 1–2 seconds. Runner never starts. `content-gate` and all jobs show `"steps": []`.
+      Not a YAML/code issue (YAML valid, no workflow file changes since last passing run `1498a12ef0` at 19:18). Not
+      affecting other repos (UTL QG was green at 14:49). Pattern: per-repo transient GHA runner provisioning failure.
+      Possible causes: GHA concurrent-job quota exhausted, runner-pool issue, or GitHub service degradation.
+      PR #501 auto-merge will fire once GHA recovers + `ldr-to-main-promote` `*/15` cron re-triggers a passing v2.
+      **Named successor**: this plan. Monitor `ldr-to-main-promote` and `quality-gates-v2` cron recovery.
+
 ## Verify-and-flip (likely shipped — confirm, then close)
 
 - [ ] [VERIFY] P3. First-use watch (normal quickmerge lands on LDR, ~15m drain auto-merges, `--hotfix` hits the lock) —
