@@ -38,8 +38,8 @@ source:
       (cicd_contract_hardening #23; composes with the LDR→staging drain verify in cicd_promotion_pipeline)
 - [ ] [INFRA] P2. Churn-protection: idempotent plan-inventory regen + manifest-canonical-form + a `prettier --check`
       gate (three named writers still churn the worktree). (cicd_contract_hardening #2)
-- [ ] [SCRIPT] P1. e2e-testing editable self-install — add package-discovery to `pyproject.toml` (QG hygiene).
-      (cicd_contract_hardening #1)
+- [x] ✅ [SCRIPT] P1. e2e-testing editable self-install — add package-discovery to `pyproject.toml` (QG hygiene).
+      (cicd_contract_hardening #1) — e2e-testing@23424ff | changed `[tool.setuptools.packages.find] include = []` → `[tool.setuptools] packages = []`; bypasses flat-layout autodiscovery that caused "Multiple top-level packages" error on `uv pip install -e .`; QG green.
 - [ ] [SCRIPT] P2. Wave-1 accommodation cleanup — revert the gate-loosenings now that the fleet is green.
       (cicd_contract_hardening #8)
 
@@ -63,8 +63,8 @@ source:
       the foot-gun). (qg_commit L452)
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
       (CodeBuild not required). (qg_commit L604)
-- [ ] [SCRIPT] P2. Finish the codex-not-a-separate-repo cleanup — `major-bump-approval.yml` write-back +
-      `setup-workspace` clone remain. (qg_commit L808)
+- [x] ✅ [SCRIPT] P2. Finish the codex-not-a-separate-repo cleanup — `major-bump-approval.yml` write-back +
+      `setup-workspace` clone remain. (qg_commit L808) — PM@8676d86 | fixed broken `unified-trading-codex/` runtime paths in `compute-epic-readiness.py` (WORKSPACE_ROOT→PM_ROOT, REPOS_DIR/EPICS_DIR now resolve to `unified-trading-pm/codex/`) and stale default in `check-repo-readiness.py` (`_PM_ROOT / "codex"`).
 
 ### Docs / SSOT hygiene (from the 2026-06-18 `docs/repo-management/` reconciliation)
 

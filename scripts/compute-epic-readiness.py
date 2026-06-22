@@ -8,13 +8,13 @@ Usage:
     python unified-trading-pm/scripts/compute-epic-readiness.py [--output-dir <path>]
 
 Reads:
-    unified-trading-codex/10-audit/repos/*.yaml   (per-repo checklists)
-    unified-trading-codex/11-project-management/epics/*-epic.yaml   (epic definitions)
+    unified-trading-pm/codex/10-audit/repos/*.yaml   (per-repo checklists)
+    unified-trading-pm/codex/11-project-management/epics/*-epic.yaml   (epic definitions)
 
 Writes:
-    unified-trading-codex/11-project-management/epics/{epic_id}-status.yaml
+    unified-trading-pm/codex/11-project-management/epics/{epic_id}-status.yaml
 
-SSOT: unified-trading-codex/00-SSOT-INDEX.md § "Epic computed readiness status"
+SSOT: unified-trading-pm/codex/ (unified-trading-codex was archived and folded into PM)
 """
 
 from __future__ import annotations
@@ -31,10 +31,10 @@ import yaml
 # Constants
 # ---------------------------------------------------------------------------
 
-WORKSPACE_ROOT = Path(__file__).parent.parent.parent
+PM_ROOT = Path(__file__).parent.parent  # unified-trading-pm/
 
-REPOS_DIR = WORKSPACE_ROOT / "unified-trading-codex" / "10-audit" / "repos"
-EPICS_DIR = WORKSPACE_ROOT / "unified-trading-codex" / "11-project-management" / "epics"
+REPOS_DIR = PM_ROOT / "codex" / "10-audit" / "repos"
+EPICS_DIR = PM_ROOT / "codex" / "11-project-management" / "epics"
 
 CR_ORDINALS: dict[str, int] = {
     "cr0": 0,
@@ -318,7 +318,7 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"{status_icon} {priority_tag} {result['display_name']}: "
             f"{result['epic_pct']}% ({result['completed']}/{result['total_required']} repos) "
-            f"→ {out_path.relative_to(WORKSPACE_ROOT)}"
+            f"→ {out_path.relative_to(PM_ROOT)}"
         )
         if result["blocking_repos"]:
             blocking: list[dict[str, Any]] = cast(list[dict[str, Any]], result["blocking_repos"])
