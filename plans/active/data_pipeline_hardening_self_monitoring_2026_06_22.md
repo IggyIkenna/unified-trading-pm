@@ -1057,3 +1057,17 @@ dispatch prompts.
       (none of the 22 `rb_*` runbooks is data-pipeline). — unified-trading-pm
 - [ ] [CODE] P2. Flip `data-pipeline-alerts.registry.yaml` modes `verbose`→`active` as each `escalation:` tier is wired
       to plumbing. — unified-trading-pm
+- [ ] [INFRA] P1. **Ship the dp-audit OOM-fix + image-default terraform** (`deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`):
+      bump all 4 dp-audit Cloud Run jobs `4Gi/2cpu`→`16Gi/4cpu` (the digest/hygiene/reprobe scripts read the FULL per-AG
+      `_index` with `columns=None` → tradfi/cefi OOM-killed at 4Gi, signal-9 "configured memory limit reached", verified
+      2026-06-22), AND fold in `var.dp_audit_image` default → the `e2e-audit:latest` image (closes the IMAGE GAP). **Both
+      changes ALREADY APPLIED to live prod state** (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written
+      to the deployment-service working tree — **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`,
+      `escalation.py`, untracked `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep
+      (`honest_coverage.py`) → no clean QG-green / quickmerge boundary for a sibling agent's tree. Ship the single `.tf` file
+      once the foreign WIP clears (it is a pure-terraform change, cannot affect Python QG). — deployment-service
+- [ ] [PERF] P2. **DeFi/observability: `data_pipeline_daily_digest.py` + `_dp_common.read_manifest_index` memory antipattern**
+      — the digest reads the full index (`columns=None`) then count-EXPANDS into per-row Python lists (`["captured"]*N` for
+      millions of rows) → the actual OOM driver (16Gi is a band-aid). Restrict `read_manifest_index(columns=[pipeline_mode,
+      venue,chain,data_type,capture_status])` + aggregate counts without list-expansion; then the jobs can drop back to ~4–8Gi.
+      — e2e-testing
