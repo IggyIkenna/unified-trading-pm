@@ -125,7 +125,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 > returned 200+empty rather than a 401/403/429/5xx/timeout/exception that fell through. This phase makes honest-absence
 > a **proven** state, not a claimed one. **This is the highest-priority phase.**
 
-- [ ] [DESIGN] P0. Define `FetchEvidence` value-object in UAC (`unified_api_contracts.canonical.crosscutting`):
+- [x] ✅ P0. Define `FetchEvidence` value-object in UAC — DONE uac@6c27bfa0 (FetchEvidence.proves_honest_absence + FetchErrorSignal StrEnum + DISQUALIFYING_FETCH_SIGNALS + UnprovenHonestAbsenceError; QG green 220s, 59 tests). Define `FetchEvidence` value-object in UAC (`unified_api_contracts.canonical.crosscutting`):
       `{http_status:int, response_received:bool, rows_in_response:int, source, endpoint, attempted_at, error_signal:str|""}`.
       The closed set of **disqualifying signals** (any present ⇒ NOT honest-absence ⇒ must `record_failed`): non-2xx
       HTTP, auth (401/403), rate-limit (429/`RATE_LIMITED`), 5xx, timeout/`CONNECT_ERROR`, exception-in-adapter,
@@ -187,7 +187,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       report. **Note the cost**: full 7.4M-row GCS existence walk ≈ many hours — use prefix-bulk-listing (list once per
       `(date,venue,data_type)`), and scope incrementally (changed-since-yesterday) for the daily run; full walk weekly.
       — **e2e-testing**
-- [ ] [CODE] P1. **Path-canonicality validator** `is_canonical(path)` in UAC (today `partition_paths.py` only BUILDs):
+- [x] ✅ P1. **Path-canonicality validator** `is_canonical(path)` in UAC — DONE uac@6c27bfa0 (is_canonical + canonical_path_violations; rejects hyphen-day / glued VENUE-CHAIN / glued V{N} / out-of-set AG; round-trips builders). **Path-canonicality validator** `is_canonical(path)` in UAC (today `partition_paths.py` only BUILDs):
       parse a GCS path and assert it matches the canonical builder output for its AG/pipeline_mode/schema. Closes C3.
       Reused by the hygiene orchestrator AND the Phase 4 writer-side assert. — **unified-api-contracts**
 - [ ] [SCRIPT] P1. **Reader/writer bucket-env parity check** (closes C6): assert every preflight READER resolves the
@@ -238,3 +238,4 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - **2026-06-22 T0 foundation (slot-0·human-planning, Opus 4.8)**: Phase-0 design shipped — SM secrets `DATA_PIPELINE_ALERTS_SLACK_*` (webhook smoke 200 ok), codex SSOT `data-pipeline-alerts.md` + `.registry.yaml` (~40 modes), plan @ PM `6c4f01b2b`/`a5942dec3`. Coordination note added: `data_completion_to_100_all_ag` does per-adapter C1 point-fixes → Phase-1 gate generalizes; citadel P11.19 owns VM-events panel.
 - **Build order (rule 8, T0→leaves)**: Wave1 UAC (FetchEvidence VO + UnprovenHonestAbsenceError + DISQUALIFYING_FETCH_SIGNALS + DATA_PIPELINE_ALERT_RULES from registry + is_canonical(path)) → Wave2 UTL (DP_* events + record_empty FetchEvidence hard-raise gate + heartbeat primitive + tests) → Wave3 alerting-service (data_pipeline_slack notifier + data_pipeline_rules loader + subscriber + config) → Wave4 deployment-service/e2e (exit_code fleet monitor, heartbeat watcher, daily per-AG digest, hygiene orchestrator, empty re-probe, escalation hop) → Final per-AG aggregation prompts.
 - Per-AG `fetch_evidence` threading in MTDS/IS adapters is the per-AG half → goes to the AG agents via the final prompts (not built cross-cutting here).
+- **2026-06-22 Wave 1 (UAC T0) SHIPPED** `unified-api-contracts@6c27bfa0` — QG green (220s, exit 0), 59 new tests. Exports `FetchEvidence`/`FetchErrorSignal`(10 members: HTTP_NON_2XX,AUTH_401,AUTH_403,RATE_LIMITED_429,SERVER_5XX,TIMEOUT,CONNECT_ERROR,ADAPTER_EXCEPTION,MISSING_CREDENTIAL,SOURCE_UNREACHABLE)/`DISQUALIFYING_FETCH_SIGNALS`/`UnprovenHonestAbsenceError(callsite_hint, evidence)`/`is_canonical`/`canonical_path_violations`/`DATA_PIPELINE_ALERT_RULES`(38, parity-tested vs registry yaml)/`DataPipelineAlertRule`. Decision: DP_* events aren't `AlertCode` members → built parallel `DataPipelineAlertRule` (mirrors AlertRule shape) not reusing the AlertCode-validated AlertRule. `is_canonical(require_pipeline_mode=False)` default (bare builder output stays canonical; opt-in strict for hygiene walk).
