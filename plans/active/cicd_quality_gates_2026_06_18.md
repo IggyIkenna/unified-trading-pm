@@ -38,8 +38,8 @@ source:
       (cicd_contract_hardening #23; composes with the LDR→staging drain verify in cicd_promotion_pipeline)
 - [ ] [INFRA] P2. Churn-protection: idempotent plan-inventory regen + manifest-canonical-form + a `prettier --check`
       gate (three named writers still churn the worktree). (cicd_contract_hardening #2)
-- [ ] [SCRIPT] P1. e2e-testing editable self-install — add package-discovery to `pyproject.toml` (QG hygiene).
-      (cicd_contract_hardening #1)
+- [x] ✅ [SCRIPT] P1. e2e-testing editable self-install — add package-discovery to `pyproject.toml` (QG hygiene).
+      (cicd_contract_hardening #1) — e2e-testing@23424ff | changed `[tool.setuptools.packages.find] include = []` → `[tool.setuptools] packages = []`; bypasses flat-layout autodiscovery that caused "Multiple top-level packages" error on `uv pip install -e .`; QG green.
 - [ ] [SCRIPT] P2. Wave-1 accommodation cleanup — revert the gate-loosenings now that the fleet is green.
       (cicd_contract_hardening #8)
 
