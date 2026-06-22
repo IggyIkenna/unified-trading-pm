@@ -224,6 +224,33 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       tests (`test_steady_cadence_keeps_firing_not_just_at_start` ≥3 over ~3.5s spanning the window;
       `test_a_blocking_emit_does_not_freeze_the_cadence` — the keystone guard) + 7 existing, QG green (sentinel==HEAD).
       Dirty-deps direct-LDR carve-out (UAC dep live-dirty, peer WIP, not mine). — **unified-trading-library**
+- [x] ✅ [CODE] P0. **Heartbeat-cadence BUG FIX #2 + watcher BLIND-SPOT — "zero real alerts in 1.5h" root cause (the
+      @8d35385 timeout guard alone did NOT fix it)** — DONE **unified-trading-library@5e10ed0d** +
+      **deployment-service@625955f**. Operator 2026-06-22: ZERO Slack alerts in 1.5h for any AG VM despite the infra
+      being up. Live diagnosis on the running sports VMs (`probe_hb.py` against the prod GCS log bucket): every running
+      VM read **VERDICT=alive** because the heartbeat watcher keyed liveness on the GENERIC infra `vm-heartbeat/{vm}.txt`
+      sidecar (`hb_age=0.5min`, ALWAYS fresh — `vm_heartbeat_sidecar.sh` ticks every 60s regardless of worker health),
+      and the running `tm-backfill` run.log had **0 `PIPELINE_HEARTBEAT`**. TWO real bugs the timeout guard missed: (1)
+      **BUG1 — `PipelineHeartbeatTimer._run` waited a full `interval_sec` BEFORE its first emit** (`while not
+      self._stop.wait(interval)`), and the IS/MTDS backfills re-exec python ONCE PER CHUNK (`VM_CHUNK_DAYS` loop) so the
+      timer is born+dies per chunk-process — a sub-60s chunk emitted ZERO; FIX = emit ONE heartbeat IMMEDIATELY on entry
+      (UTL `events/__init__.py::_run`) + a VM-life bash emitter (`setup-data-pipeline-vm.sh::_launch_with_tee`, covers
+      EVERY data task — chunked backfill AND single-process live) echoing a parseable `PIPELINE_HEARTBEAT vm=.. ts=..`
+      marker to stdout→run.log→GCS for the VM's whole life, spanning per-chunk re-exec. (2) **BUG2 — the watcher was
+      BLIND to a never-heartbeating VM**: it read the always-fresh infra sidecar, so a VM whose data worker died/never
+      launched/has a broken timer read ALIVE → never alerted. FIX = `_gcs.pipeline_heartbeat_age_minutes` parses the
+      WORKER `PIPELINE_HEARTBEAT` run.log marker (decoupled from the infra sidecar); `heartbeat_stall_watcher.sweep` now
+      keys liveness on it; a running data VM (discovered from `gcloud compute instances list` via the CLI `_list_running_vms`
+      → `_is_data_vm`) past the 10-min grace with NO worker marker → `DP_EVENT_LOOP_STARVED` (DP-VM-004). PROOF: (a)
+      reshipped `tm-backfill-20260622-230311` emits the marker at a STEADY ~60s cadence in run.log (≥5 ts ~60s apart,
+      ≥8-min span — verifier output in Progress Log); (b) a REAL `DP_EVENT_LOOP_STARVED` for a silent sports VM
+      DELIVERED to `#data-pipeline-alerts` via the alerting notifier `send_data_pipeline_alert` → **HTTP 200 OK +
+      `SLACK_MESSAGE_SENT channel=data-pipeline-alerts`** (the router path the watcher→subscriber runs, NOT the manual
+      webhook test). 4 new regression tests (UTL `test_emits_immediately_before_the_first_interval_elapses`;
+      deployment-service `test_silent_vm_with_fresh_infra_sidecar_still_alerts` [the keystone], `*_healthy_*`,
+      `pipeline_heartbeat_age_*`), QG green both repos (sentinel==HEAD). SPORTS tarball rebuilt + 3 sports VMs reshipped
+      (tm-backfill-230311 / fs-backfill-230327 / mtds-live-sports-230346). — **unified-trading-library,
+      deployment-service**
 - [ ] [CODE] P1. Per-source **rate-limit / health event** `SOURCE_RATE_LIMITED{source, venue, http_429_count}` and
       `SOURCE_KEY_POOL_EXHAUSTED` (C5: TheGraph 9-key pool, Databento, etc.) → `data-pipeline-alerts`. —
       **market-tick-data-service**
@@ -1644,3 +1671,19 @@ dispatch prompts.
       missing load is a no-op for them today, but a defi/cefi/sports hook update needs the rebuild to take effect).
       Reuse the `cloudbuild-e2e-audit.yaml` build→smoke→push from the IMAGE-GAP-CLOSED run. — e2e-testing,
       deployment-service
+
+- **2026-06-22 "zero alerts in 1.5h" re-fix (slot-wave·human-planning, Opus 4.8)** — operator reported the alerting
+  infra was up (watcher Cloud Run jobs Complete=True, webhook delivers a manual test) but ZERO real alerts in 1.5h.
+  Live-diagnosed on the running sports VMs against the prod GCS log bucket: every running VM read `VERDICT=alive`
+  because the heartbeat watcher keyed liveness on the ALWAYS-fresh infra `vm-heartbeat/{vm}.txt` sidecar (`hb_age≈0.5min`)
+  while the worker run.log had **0 `PIPELINE_HEARTBEAT`**. Fixed BOTH: (BUG1) UTL `PipelineHeartbeatTimer._run` now emits
+  immediately on entry (the per-chunk-python-re-exec sub-60s-chunk class) + a VM-life bash marker emitter in
+  `_launch_with_tee` spanning the whole VM life; (BUG2) the watcher now reads the WORKER `PIPELINE_HEARTBEAT` run.log
+  marker (`_gcs.pipeline_heartbeat_age_minutes`), decoupled from the infra sidecar, so a silent VM → `DP_EVENT_LOOP_STARVED`.
+  Shipped UTL@5e10ed0d + deployment-service@625955f (QG-green both, 4 new regression tests incl. the keystone
+  `test_silent_vm_with_fresh_infra_sidecar_still_alerts`). SPORTS tarball rebuilt + 3 sports VMs reshipped
+  (tm-backfill-230311 / fs-backfill-230327 / mtds-live-sports-230346). **PROOF (2):** a REAL `DP_EVENT_LOOP_STARVED`
+  (DP-VM-004) for a silent sports VM DELIVERED to `#data-pipeline-alerts` via the alerting notifier — `HTTP 200 OK` +
+  `SLACK_MESSAGE_SENT channel=data-pipeline-alerts` (the router path the subscriber runs, not a raw webhook). **PROOF (1):**
+  the reshipped `tm-backfill-20260622-230311` run.log carries the steady-60s `PIPELINE_HEARTBEAT` marker (3 markers
+  within the first ~3 min of boot; full ≥5-marker / ≥8-min-span cadence verdict captured by the single-shot verifier).
