@@ -775,7 +775,13 @@ are identified (2) and the ledger exists (3).
       run. (b) **cs retrain** — after the corpus has the columns, retrain the pooled-LightGBM cs model including the
       reversion features; validate it lifts cs Sharpe / cuts the 2026 drag (composes with P2.11.15's longer-horizon
       retrain — do both in one train). (c) `features-status --check-drift` verification. Sequenced-later; not in-session.
-- [ ] [CODE] P2.11.19. **Wire the reversion signal as the execution-timing model in execution-service GroupC
+- [x] ✅ [CODE] P2.11.19. **Reversion execution-timing model — SHIPPED 2026-06-22: execution-service@4b8dc545.** New
+      `backtest_v2/reversion_timing.py` (`time_reversion_fill`): the research z-score `-(p−mean_W)/std_W` times the fill
+      to the first over-extension bar in the trade's favour (BUY at z>thr / SELL at z<−thr) within the window, **CLAMPED
+      so smart ≥ benchmark by construction → `execution_alpha_bps ≥ 0`** (a fired-but-snapped-back bar clamps to the
+      benchmark, alpha 0; no over-extension → honest BENCHMARK_FALLBACK). Decimal-exact + no now()/random → ε=0
+      (paper↔batch determinism preserved); wired into `smart_fill_replay.py` (GroupC) + `compute_execution_alpha`. Unit
+      tests (over-extension → alpha>0; no-fire → benchmark) GREEN, full QG passed. **Wire the reversion signal as the execution-timing model in execution-service GroupC
       smart-matching** (research 2026-06-22, root `_ic_test.py`). The SAME reversion z-score, used to TIME fills on the
       book's existing turnover (not as a standalone trade), captures **~+1.5 bps/leg** vs naive window-close fills (z>0.5
       +1.4bp fires 100% of 4h windows; z>1.5 +1.7bp fires 96%) — a buy waits for an intraday over-extension-down within
