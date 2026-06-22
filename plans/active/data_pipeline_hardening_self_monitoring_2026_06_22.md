@@ -1390,11 +1390,24 @@ dispatch prompts.
   rebuild (`5907886`) → 3 DP monitors hardened. NOT force-merged (a never-run required check cannot be bypassed, and the
   carve-out for `.github/**` does not cover merging past a billing-blocked gate). Classified **BLOCKED-UPSTREAM (GitHub
   Actions account infra / spend cap)** — composes with the existing armed monitor above.
-- [ ] [INFRA] P1. **BLOCKED-UPSTREAM (GitHub Actions account spend cap, ~19:30Z 2026-06-22) — deployment-api + MTDS#309
-      promote PRs jammed.** Operator: raise/clear the GitHub Actions spending limit (Settings → Billing → Actions) OR
-      confirm a GH incident. Code is locally QG-green; the promote bot auto-merges on the first green v2 once runners
-      return → deployment-api Cloud Build rebuild (digest `5907886`) follows automatically. No code change owed. —
-      deployment-service, market-tick-data-service (operator/billing)
+- [ ] [INFRA] P1. **BLOCKED-UPSTREAM (GitHub Actions account spend cap / account-wide Actions outage, since ~19:30Z
+      2026-06-22) — deployment-api PR#166 + MTDS#309 promote PRs jammed.** Operator: raise/clear the GitHub Actions
+      spending limit (Settings → Billing → Actions) OR confirm a GH incident. Code is locally QG-green; the promote bot
+      auto-merges on the first green v2 once runners return → deployment-api Cloud Build rebuild (digest `5907886`)
+      follows automatically. No code change owed. — deployment-service, market-tick-data-service (operator/billing)
+  - **🔴 RE-VERIFIED + OUTAGE-SPREAD-CONFIRMED 2026-06-22 ~22:57Z (resume-run, slot·human-planning, Opus 4.8):** still
+    down ~3.5h. PR#166 = OPEN/MERGEABLE/BLOCKED (waiting on the never-running `quality-gates-v2`); MTDS#309 =
+    OPEN/MERGEABLE/BLOCKED. A v2 auto-re-ran on PR#166 head at 22:56Z and **failed in 8s, 0 steps, empty `runner_name`**
+    (the job never got a runner assigned — definitive GitHub-side runner-allocation failure, via `actions/runs/.../jobs`
+    showing `runner_name:""`, `steps:[]`, 5-8s wall). **NEW evidence — the outage has now spread FLEET-WIDE**:
+    alerting-service + e2e-testing + unified-trading-library (all recorded GREEN at ~20:00Z in the prior diagnosis) are
+    NOW also failing 0-step/3-5s at their 22:45-22:47Z scheduled backmerge runs. This upgrades the diagnosis from
+    "spend-cap hitting the highest-minute repos first" to **account-wide Actions suspension or a GitHub platform
+    incident** — but the operator action is unchanged (clear the Actions billing limit / confirm a GH incident at
+    githubstatus.com). The auto-unblock mechanism is sound + self-driving: the Tier-C `ldr-to-staging-promote` `*/15`
+    cron (which already auto-re-fires v2 — proven by the 22:56Z re-run) will merge PR#166 on the FIRST green v2 the
+    instant runners return → main → deployment-api Cloud Build (`5907886`). No armed monitor from me is needed (the cron
+    IS the monitor). PAT cannot read account billing (403) — operator must check it directly.
 - [ ] [INFRA] P2. **client-reporting-api:latest is LAGGING (A4 not in any image) — BLOCKED-UPSTREAM (same GH Actions
       spend cap).** Verified 2026-06-22: A4 (`client-reporting-api@6b6df25`, deployment-api URL from typed config) is on
       LDR but NOT main; the CRA AR repo's newest image is 2026-06-21 (`pnl-timeseries-ce1bd5f`) — predates A4. CRA shows
