@@ -68,22 +68,35 @@ progress and zero alert. The heartbeat sidecar proves _the box is up_, not _the 
       parallelise freely; reduce N or provision a 2nd Alchemy key if 429/CU errors appear) so it's not blindly
       over-scaled. Dry-run verified (N=4 over 2021→2026 splits cleanly; single-stream default unchanged). —
       deployment-service@773b96e.
-- [ ] [INFRA] P1. **Wire `STALL_PROGRESS_REGEX` per backfill launcher (P1 follow-up — needs real-log verification).**
-      The P1 mechanism is live but OPT-IN; each launcher (`launch-sfi-backfill-vm.sh`,
-      `launch-mtds-gas-fees-backfill-vm.sh`, sports MDPS launchers — especially those that RAISE `STALL_TIMEOUT_SEC` for
-      empty-date gaps) should set a `STALL_PROGRESS_REGEX` in VM metadata matching that backfill's actual
-      per-date/per-shard completion line (e.g. gas-fees `No gas fee data for .* on [0-9]{4}-|wrote [0-9]+ .*records`;
-      verify against a live VM's `run.log` first — a wrong regex FALSE-KILLS a working VM, so this MUST be verified
-      against real output, not guessed). Until wired, those VMs keep the (still-protective) size-based watchdog. Repo:
-      `deployment-service`. Provenance: 2026-06-21 P1 mechanism ship.
-- [ ] [INFRA] P3. **Audit other sports/data adapters for unbounded `aiohttp.ClientSession` timeouts** — the SFI fix was
-      in the shared `BaseSportsReferenceAdapter._make_session` (covers all sports-reference adapters), but verify no
-      other adapter creates a bare `ClientSession()` without a bounded `ClientTimeout`. Repo: `instruments-service` +
-      `market-tick-data-service`. Provenance: 2026-06-19. **instruments-service half DONE** — bounded
-      `BaseReferenceDataAdapter._make_session` (the generic base for all defi/prediction adapters) +
+- [x] ✅ [INFRA] P1. **Wire `STALL_PROGRESS_REGEX` per backfill launcher — gas-fees + SFI DONE (verified markers).**
+      `setup-data-pipeline-vm.sh` now forwards `STALL_PROGRESS_REGEX` from metadata (mirroring `STALL_TIMEOUT_SEC`) to
+      `vm-exec-with-gcs-tee.sh`. Wired with markers VERIFIED against each launcher's live `run.log` (=/space/comma-free
+      → metadata-safe; loose-but-progress-correlated → errs toward not-killing, never false-kills): **gas-fees** =
+      `sampled|Wrote` (each per-block sample — the 2026-06-19 freeze was MID block-sampling — + per-date parquet write);
+      **SFI** = `league` (every per-date "league mapping cache hit for date=…" line). — deployment-service@a8ee104e.
+- [ ] [INFRA] P2. **Wire `STALL_PROGRESS_REGEX` for the sports-MDPS launcher (`launch-mdps-sharded-backfill.sh`, the
+      `STALL_TIMEOUT_SEC=7200` 2h-threshold case — the worst blunt-threshold offender).** DEFERRED: no `mdps-sports`
+      `run.log` exists yet to verify the marker (only `mdps-backfill-tradfi`), and MDPS processes multiple categories
+      with different per-category markers — a wrong regex FALSE-KILLS a working VM, so this MUST be verified against a
+      real mdps-sports run before wiring. Until then it keeps the 2h size-based watchdog. Repo: `deployment-service`.
+      Provenance: 2026-06-21 P1 wiring.
+- [x] ✅ [INFRA] P3. **Audit other sports/data adapters for unbounded `aiohttp.ClientSession` timeouts.** **DONE** —
+      **instruments-service**: bounded `BaseReferenceDataAdapter._make_session` (the generic base for all
+      defi/prediction adapters — the `729fbdb` SFI fix had only covered the SPORTS base) +
       `evm_creation_resolver._make_session` + `block_resolver._make_session` default (instruments-service@06ee145e).
-      **mtds half IN PROGRESS** (sub-agent sweep of the ~27 bare `ClientSession(connector=…)` handler sites — flip when
-      it lands).
+      **mtds**: bounded session-level `ClientTimeout` on 37 bare REST `ClientSession` sites across
+      defi/handler/adapter/script fetch paths (market-tick-data-service@7ff6c051). **Scoped out (deliberately):** the
+      ~20 `live/connectors/*_ws.py` WebSocket connectors (a bounded `total`/`sock_read` would kill a quiet live stream —
+      streaming needs `total=None`, per the tardis precedent), and 4 already-AT-900-line files (`gas_fee_handler` /
+      `lending_indices_handler` / `polymarket_adapter` / `umi_tick_provider`) whose actual incident path (POLYGON web3
+      HTTPProvider) is already bounded — see the follow-up below. Provenance: 2026-06-19.
+- [ ] [INFRA] P3. **Bound the 4 at-900-line mtds REST sites deferred from the P3 sweep**
+      (`cli/handlers/gas_fee_handler.py`, `cli/handlers/lending_indices_handler.py`,
+      `market_interface/adapters/prediction/polymarket_adapter.py`, `adapters/umi_tick_provider.py`). The
+      `_make_session` bounded-timeout addition tips each over the hard 900-line cap (and grew 2 gas-fee methods past the
+      50-line cap), so it can't land without trimming/splitting the file first. These are paginated small-request REST
+      sessions (loud-fail on timeout, not silent-hang) so the risk is low. Add the timeout in the SAME change that
+      splits each file under 900. Repo: `market-tick-data-service`. Provenance: 2026-06-22 mtds P3 sweep.
 
 ## Status of the immediate operational fix (DONE 2026-06-19)
 
