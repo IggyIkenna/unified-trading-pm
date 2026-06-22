@@ -69,6 +69,10 @@ jobs:
     # (observed live: "ModuleNotFoundError: No module named 'google' — using manifest fallback cache").
     env:
       GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      # Cure B (staging_main_version_line_dual_lineage_2026_06_22.md): version-line auto-resolve in
+      # the dirty-conflict branch below. Kill-switch — set repo/org variable
+      # CURE_B_VERSION_AUTORESOLVE=false to disable instantly (default on).
+      CURE_B_VERSION_AUTORESOLVE: ${{ vars.CURE_B_VERSION_AUTORESOLVE || 'true' }}
     outputs:
       promoted: ${{ steps.promote.outputs.promoted }}
       failed: ${{ steps.promote.outputs.failed }}
@@ -725,19 +729,37 @@ jobs:
                   PR_URL_CONFLICT="https://github.com/$OWNER/$REPO/pull/$EXISTING_PR_NUM"
                   echo "  CONFLICT detected on PR #$EXISTING_PR_NUM ($PR_URL_CONFLICT)"
 
-                  # NOTE: Telegram notification handled by conflict-resolution-agent's
-                  # notify-working job (reusable workflow). No inline curl needed here.
+                  # ── Cure B: auto-resolve a version-line-only conflict (higher semver wins) BEFORE
+                  # escalating. The version is bumped one-commit-per-bump and main's version line is
+                  # also written by the LDR->main drain lineage, so staging->main recurs `dirty` ONLY
+                  # on pyproject.toml `version =`; resolve it deterministically. Genuine (non-version)
+                  # conflicts + any error still escalate. Kill-switch: CURE_B_VERSION_AUTORESOLVE=false.
+                  # SSOT: plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md.
+                  AR_VERDICT="DISABLED"
+                  if [ "${CURE_B_VERSION_AUTORESOLVE:-true}" = "true" ]; then
+                    AR_VERDICT=$(bash scripts/cicd/auto_resolve_version_promote.sh "$OWNER" "$REPO" "$EXISTING_PR_NUM" 2>&1 | tail -1)
+                  fi
+                  if echo "$AR_VERDICT" | grep -q "^AUTO_RESOLVED"; then
+                    echo "  Cure-B auto-resolved version-line conflict for $REPO -> $AR_VERDICT"
+                    PROMOTED="$PROMOTED $REPO"
+                    PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+                  else
+                    echo "  Conflict not version-line-only ($AR_VERDICT) — escalating to conflict-resolution-agent"
 
-                  # Dispatch conflict-resolution-agent
-                  curl -s -X POST \
-                    "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
-                    -H "Authorization: Bearer $GH_TOKEN" \
-                    -H "Content-Type: application/json" \
-                    -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL_CONFLICT}\"}}" \
-                    && echo "  Dispatched conflict-resolution-agent for $REPO" \
-                    || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
-                  FAILED="$FAILED $REPO"
-                  FAILED_COUNT=$((FAILED_COUNT + 1))
+                    # NOTE: Telegram notification handled by conflict-resolution-agent's
+                    # notify-working job (reusable workflow). No inline curl needed here.
+
+                    # Dispatch conflict-resolution-agent
+                    curl -s -X POST \
+                      "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                      -H "Authorization: Bearer $GH_TOKEN" \
+                      -H "Content-Type: application/json" \
+                      -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL_CONFLICT}\"}}" \
+                      && echo "  Dispatched conflict-resolution-agent for $REPO" \
+                      || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
+                    FAILED="$FAILED $REPO"
+                    FAILED_COUNT=$((FAILED_COUNT + 1))
+                  fi
                 else
                   # Not a content conflict — arm auto-merge on the existing PR so it merges
                   # once required checks pass (mirrors what the PR-create path does).
