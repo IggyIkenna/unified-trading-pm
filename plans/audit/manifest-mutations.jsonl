@@ -331,3 +331,4 @@
 {"timestamp": "2026-06-22T17:00:03Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.39.0 (branch=staging, bump=minor)", "commit_sha": "08d37b706be17e8c72291eed5340a86f868cbde9"}
 {"timestamp": "2026-06-22T17:01:20Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-api-contracts=0.48.0 (branch=staging, bump=minor)", "commit_sha": "0c88a7767ade8193861123606285a6bff3da83f4"}
 {"timestamp": "2026-06-22T17:29:01Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.37.0 (branch=staging, bump=minor)", "commit_sha": "6869fc8ffef66f679a1ae578ea7359d95e284bae"}
+{"timestamp": "2026-06-22T18:04:48Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.25.0 (branch=staging, bump=minor)", "commit_sha": "e6302936459cf4b84d021b6553b88e8e1fa8e8fd"}
