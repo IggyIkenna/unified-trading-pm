@@ -1640,7 +1640,7 @@ v9 → **honest_cov_defi = 18.66%** (bucket-wide; was 7.50% at session start, 10
 2026-06-21 by the CURRENT capture fleet) arrive blank-ag → new captures keep arriving blank until the writer is fixed.
 The index-stamp is the re-runnable interim mitigation.
 
-- [ ] [DATA] P1. **DEFI writer must stamp `asset_group=defi` on the manifest ROW** — the defi MTDS capture path
+- [x] ✅ [DATA] P1. **DEFI writer must stamp `asset_group=defi` on the manifest ROW** — the defi MTDS capture path
       (`record_captured`/`record_empty`/`record_zero_rows` → UTL `manifest_writer`) threads `asset_group` for
       source-stamping but does NOT write it into the row's `asset_group` COLUMN (it is NOT in `_ROW_KEY_COLUMNS`; the
       column is populated elsewhere/not at all for defi captures) → every defi capture lands blank-ag. Trace where the
@@ -1650,3 +1650,4 @@ The index-stamp is the re-runnable interim mitigation.
       the rollback). Repo: unified-trading-library (+ market-tick-data-service handler call sites). Provenance: this
       Progress Log; cross-repo data-correctness — also affects cefi/tradfi/sports/prediction if their writers share the
       gap (audit each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.**
+      — utl@4bd9487e | asset_group added as first-class AvailabilityRecord field; threaded through record_captured/add/_records_to_dataframe/_V4_BACKFILL_COLUMNS; 7-test suite green; QG pass 110s
