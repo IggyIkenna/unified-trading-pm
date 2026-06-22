@@ -62,7 +62,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       ran). VMs self-delete on completion. **Success:** every (root,year) shard → captured or empty_confirmed at
       options_chain/futures_chain grain; sample option parquets non-empty. **Watch:** databento 429s (per-IP, expect ~0),
       VM STARTED/STOPPED. Provenance: this plan.
-- [ ] [DATA] P1. **(2) v2 re-seed + phantom-reconcile — make the denominator the true could-exist (clears the 818k phantoms).**
+- [x] ✅ [DATA] P1. **(2) v2 re-seed + phantom-reconcile — make the denominator the true could-exist (clears the 818k phantoms).** — instruments-service scripts | (a) dropped 138,959 suppressible EU rows (prior session); (b) flipped 415 phantom-captured rows (prior session); (c) re-seed VM `expected-universe-v2-tradfi-20260622-154121` wrote 4,402,731 correct-grain lowercase EU rows to per_vm shard; consolidator merged → canonical grew 2.9M→7.1M rows; (d) `drop_phantom_eu_uppercase_rows.py --apply` dropped 333,230 uppercase phantom EU rows → canonical 6,804,012 rows, 0 uppercase EU remaining; backup at `_index/snapshots/pre_phantom_eu_drop_20260622_155111.parquet`. **expected_unattempted = 2,139,217 (all lowercase, correct grain).**
       RUN AFTER item 1 lands (so captures exist to suppress/convert the seeds). FIRST rebuild IS+UAC tarballs from clean LDR
       (`deployment-service/scripts/vm/create-code-tarballs.sh --include instruments-service --include unified-api-contracts`
       from a clean `WORKSPACE_ROOT` at origin/live-defi-rollout — they MUST carry cf2e9a2/c0a15a50/f6d479f). THEN re-seed via
