@@ -1831,8 +1831,8 @@ cells where defi didn't exist). Deferred follow-ups (all filed as todos):
 - [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue
       rows (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo:
       instruments-service.
-- [ ] [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible)
-      — working live, persist via quickmerge. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **commit defi launcher staleness edits** (MANIFEST_CONSOLIDATED_STALENESS_SEC=86400 + --preemptible)
+      — working live, persist via quickmerge. Repo: deployment-service. deployment-service@53d1736
 
 ### 2026-06-22 12:40 — DEFI REGRESSION found + fixed: stale-enumerator-build re-seeded 1.44M LEGACY-venue phantoms
 
