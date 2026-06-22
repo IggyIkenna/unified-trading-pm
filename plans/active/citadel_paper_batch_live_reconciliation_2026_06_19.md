@@ -806,6 +806,20 @@ are identified (2) and the ledger exists (3).
       improvement surfaces as `execution_alpha_bps` in the ledger (P11.6). Repo: execution-service. Evidence:
       execution-timing table in `_ic_test.py`. Higher immediate value than the marginal standalone fade (which is
       shelved — see Progress Log 2026-06-22 "intraday reversion is a feature/exec-timing signal, not a standalone trade").
+- [ ] [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent**
+      (operator 2026-06-22). Today the RESEARCH customises fills per leg (cs maker-25% / ext taker / basis maker-1bp /
+      on-chain maker-0.5bp) — that's a measurement scaffold, NOT production. Production = execution-service GroupC: the
+      strategy declares an **intent** (maker-inside-N-bp / taker-cross; urgency picked from a universe) and **one** engine
+      executes uniformly by **replaying post-signal 1m candles** — fill on the first bar trading through the resting
+      order, **MISS (~10%) on adverse selection** (price runs away favorably; driven by liquidity+price on the 1m bars,
+      NOT a flat haircut). `_extreme_ml.py` (ext leg: limit rests, fills on 1m trade-through) is the working template;
+      generalise it to all legs. **Download 1m candles wherever missing** (EVM perps for on-chain, spot+perp for basis)
+      so every fill is MEASURED like the agent's 97 netflow names (2bp-inside-mid → 0.90 fill on real Binance 1m OHLC).
+      **Cost corrections (apply at the central model, fee tier set ONCE globally):** on-chain maker **1bp** (not 0.5 —
+      exchange floor); basis **5bp/leg ×2 + impact** (both spot+perp legs fill to stay delta-neutral → re-cost halves
+      basis: +31%→+11-16% on CAP, Sharpe 15→4.5-7, since it turns 48x notional/yr — a slower basis rebal recovers some).
+      Repo: execution-service (GroupC) + e2e-testing (1m-candle download + per-leg fill replay). Composes with P2.11.19.
+
 - [ ] [CODE] P2.11.15. **cs leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`** — the cross-sectional ML book
       (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
       EWMA denoise (shipped) is the 80% cheap fix; the proper fix is retraining the pooled LightGBM on a longer-horizon
