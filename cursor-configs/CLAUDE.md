@@ -553,6 +553,13 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   `setup_cloud_logging` / suggests skipping tests.
 - **No `python3 << EOF` / inline-Python for file analysis** — catastrophic `re` backtracking caused two 12–22h runaway
   processes; use `rg`/`grep`, and if Python is genuinely needed wrap it in `timeout 30` + read line-by-line.
+- **Inspect an agent's pane/output with DEPTH — read the last 20–50 lines, never just the last few (operator
+  2026-06-22)** — an auth/login/error modal (e.g. "Your organization has disabled Claude subscription access for Claude
+  Code", or a login prompt) sits ABOVE the latest `Cogitated for Ns` / `❯` prompt line, so a short `tail` (≤10) silently
+  misses it and you wrongly conclude "the agent is fine". Use `tmux capture-pane -t <session> -p -S -50`. Claude's TUI
+  redraws in place (alternate screen) so a transient modal may already have scrolled off — when a pane LOOKS idle but
+  the agent isn't registered/online, treat it as suspect (re-check the roster / test the account's auth), never declare
+  healthy from a clean-looking tail alone.
 - **Background-task honesty** — NEVER report a backgrounded task (`run_in_background` Bash / sub-agent / workflow / VM
   launch) as "done" before seeing its actual exit/output; a `| tail`/`| head` pipe buffers → empty until completion, so
   "no output yet" ≠ "finished" (say "still running" + why); let `run_in_background` stream to a file, then read it with
