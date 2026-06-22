@@ -741,6 +741,19 @@ are identified (2) and the ledger exists (3).
 
 ## Progress Log
 
+- **2026-06-22 (operator) — LOCKED the deployable book: cs + h32 + ext + tsmom + BTC-trend + basis spine; R8 short
+  DROPPED.** Per-leg proper-execution Sharpes (engine `legnet` net through the real fill model, vnorm 10%): basis
+  **+12.6** (spine, all years +10..+19) · tsmom-long **+1.79** ('23 +1.8 but '26 −1.3) · ext **+1.39** · cs **+1.34** ·
+  BTC-trend (CTA) **+0.91** (the only leg + in 2026: +1.2) · h32 **+0.54** (weakest — future denoise candidate) · short
+  (R8 bear) **−0.15** (negative standalone, −3.4 in 2024 from shorting into the bull). **Decision: dropped the R8 short
+  from the core book** — it cost directional Sharpe (+2.26→+2.19) for a noise-level full-book bump, and the BTC-trend
+  leg already owns the 2026 downside cleaner. LOCKED book: **directional(base+trend) Sharpe +2.26 / 2023 +0.1 / 2026
+  +0.1 / maxDD −5.0%; FULL (+basis) Sharpe +8.54, EVERY YEAR GREEN (2023 +8.2 · 2024 +12.5 · 2025 +7.0 · 2026 +3.0),
+  maxDD −1.4%.** Engine `_exec_optimize.py`: `W` now `{cs0.31, h32, ext0.26, trend0.28}` (short removed; built as a
+  DIAGNOSTIC off `SHORT_DIAG_USD`, not a core sleeve — sweep stays visible, no KeyError). Canonical figure regenerated:
+  `book_LOCKED_final.png` (5 core legs + basis + book progression + drawdown). SSOT: `_book_locked.py` /
+  `_all_strats_plot.py`.
+
 - **2026-06-21 (autonomous) — FINAL: 145 strategies / 7 archetypes, ε=0 PROVEN, prod-deployed.** Both ε=0 proofs pass
   (141-run 1016 trades + 145-run 1020 trades, paper≡batch, 0 deviations). UI drilldown deployed to PROD
   (odum-portal-00032-4nq, www.odum-research.com, 3 regions, browser-verified render). CRA deployed to PROD
