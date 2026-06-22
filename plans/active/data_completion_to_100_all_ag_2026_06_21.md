@@ -14,6 +14,13 @@ status: active
 
 # Data completion to 100% — all AGs, batch + live, manifest v9
 
+> **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) public perp backfill (2026-06-22 14:46Z)**: 3 year-shard VMs
+> `cefi-extended-{2024,2025,2026}-20260622-144652` (e2-standard-8, `VM_TASK=mtds-backfill`, `--venues EXTENDED-STARKNET
+> --asset-group CEFI --data-types trades book_snapshot_5 derivative_ticker ohlcv_1m`, `MANIFEST_PER_VM_SHARDS=true`,
+> `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, self-delete on completion). Converting cefi `_index` Extended
+> `expected_unattempted` (61,800 cells @ launch) → captured. P2 of the Extended-Starknet lane. Banner removed by launcher
+> at completion.
+
 Operator 2026-06-21: drive MTDS market-data + IS reference-data to **100% honest-coverage across every asset group,
 batch AND live, manifest v9** — and DON'T STOP until done. The **only** sanctioned exclusion is **batch Tardis (cefi
 historical)** which gates on billing; **live Tardis is free → hook it up**.
