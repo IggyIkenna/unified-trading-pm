@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.52.0",
     "unified-trading-library": "0.40.0",
-    "unified-trading-pm": "1.2.390",
+    "unified-trading-pm": "1.2.392",
     "market-data-processing-service": "0.10.15",
     "e2e-testing": "0.27.0",
     "agent-orchestrator": "0.55.0",
@@ -745,7 +745,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.75,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 2,
         "warn_file_count": 6
@@ -960,7 +960,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -992,7 +992,7 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 85.03,
-        "qg_red_reason": "ruff",
+        "qg_red_reason": null,
         "large_file_count": 3,
         "warn_file_count": 6
       }
@@ -1945,7 +1945,7 @@
     "unified-trading-pm": "1.2.45",
     "client-reporting-api": "0.15.9",
     "greeks-service": "0.18.0",
-    "unified-api-contracts": "0.55.0",
+    "unified-api-contracts": "0.56.0",
     "e2e-testing": "0.27.0",
     "execution-service": "0.31.0",
     "ibkr-gateway-infra": "0.4.4",
@@ -1963,7 +1963,7 @@
     "instruments-service": "0.52.0",
     "market-tick-data-service": "0.59.0",
     "ml-service": "0.28.0",
-    "strategy-service": "0.37.0",
+    "strategy-service": "0.38.0",
     "unified-trading-api": "0.2.11"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1980,13 +1980,18 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "unified-api-contracts": {
-      "version": "0.55.0",
-      "sha": "448744748306af228322d9d4b92847f9b9ca65d6",
+      "version": "0.56.0",
+      "sha": "ed4c384a1b3c6682ff888f62d6f19d1331bcc195",
       "branch": "staging"
     },
     "market-tick-data-service": {
       "version": "0.59.0",
       "sha": "2656617d9a36b0b94ca28df467d7e4521586ab7c",
+      "branch": "staging"
+    },
+    "strategy-service": {
+      "version": "0.38.0",
+      "sha": "9a19c194bbde3a2f11c304d22da08d0aa048aa20",
       "branch": "staging"
     }
   },
