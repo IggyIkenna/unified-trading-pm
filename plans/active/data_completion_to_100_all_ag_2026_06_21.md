@@ -955,7 +955,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       real-time (block-level trades/positions/PnL), SAME page, just a live feed. Daily determinism recon stays untouched
       alongside. Unblocked once DeFi continuous-data P1 ships.
 
-- [ ] [INFRA] P1 deploy (C). **[DeFi pipeline ✅ VERIFIED 2026-06-23] Deploy + verify the continuous DeFi pipeline + paper-stream — paper-stream still OPERATOR/CI-GATED** (the
+- [x] ✅ [INFRA] P1 deploy (C). **[DeFi pipeline ✅ VERIFIED 2026-06-23 · paper-stream ✅ DEPLOYED+VERIFIED 2026-06-23 (operator-creds slot)] Deploy + verify the continuous DeFi pipeline + paper-stream** — **PAPER-STREAM DONE**: rebuilt+pushed `strategy-service:latest`=`sha256:ec8eafef…` (`0.36.0,a7991b78`, Cloud Build `6589c139`) carrying the B2 `--operation paper-stream` op + 2 fixes shipped this session: (i) cloudbuild operability-probe `CLOUD_MOCK_MODE=true` `strategy-service@8b68cd3d` (was deterministically failing EVERY strategy-service image build since 06-21 — nested `docker run` can't reach metadata → GcsEventSink STARTED ConnectTimeout at step 8; canonical ml-service pattern restored); (ii) run_id `paper-stream-['DEFI']-…`→`paper-stream-defi-…` bug + regression test `strategy-service@f6ef1d2b` (`_cli_asset_group` is a LIST, `str(list)` embedded the Python repr). `tofu apply -target=module.paper_stream_job.google_cloud_run_v2_job.job -target='google_cloud_scheduler_job.paper_stream_cron[0]'` vs prod state (`terraform/state/prod`) → Cloud Run job `uts-prod-paper-stream` + hourly cron `uts-prod-paper-stream-cron` (ENABLED `0 * * * *`). Manual exec `uts-prod-paper-stream-vmspv` (fixed image) verified RUNNING, **no crash-loop @ T+10** (0 FAILED / 3 execs), writing `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-stream/run_id=paper-stream-defi-20260623/` = run_manifest.json + all 4 ledgers (instruction tape growing live 4.85kiB / passive / pricing / transfer), DISTINCT client from `firm-paper-determinism` (resolve_canonical_run isolation intact). Residual NON-paper-stream sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without it); (c) odom-portal UI image auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code landed `unified-trading-system-ui@a67e3c34`). (the
       CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`, B1 forward-poll IaC
       `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef` + job/scheduler
       `deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =
@@ -974,6 +974,17 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`; needs
       a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
       unified-trading-system-ui.
+- [ ] [INFRA] P2 **NICE-TO-HAVE** — paper-trading UI cold-start latency (discovered 2026-06-23 deploying B2). The
+      live `/paper-trading?client=firm-paper-stream` book is SLOW on first load after idle — NOT a network issue.
+      Root cause: both `odum-portal` (Next.js UI) AND `client-reporting-api` (CRA backend) run on Cloud Run with
+      **`min-instances=0`** → they scale to zero and cold-start on the first request. The CRA is the worst offender
+      (Python + the heavy UTL import chain + 2Gi → multi-second boot). The paper-trading panels async-fetch the CRA via
+      the Next rewrite `/api/client-reporting/:path* → CRA /api/v1/:path*`, so a cold CRA makes the panels spin for many
+      seconds. **Proof it's cold-start not network**: when warm, `/paper-trading`=~0.4s, CRA `/health`=~0.3s,
+      DNS/connect=ms. **Fix**: set `minScale>=1` (keep ≥1 warm instance) on `odum-portal` + `client-reporting-api` in
+      their Cloud Run config / deploy scripts (`unified-trading-system-ui/scripts/deploy-cloud-run.sh` + the CRA
+      service) — trade-off is a small always-on cost; operator decides. Repos: deployment-service (Cloud Run config) +
+      unified-trading-system-ui (UI deploy). Provenance: B2 paper-stream deploy session 2026-06-23.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
