@@ -906,6 +906,17 @@ Status after the 3-deploy /autonomous run: alerting consumer LIVE (`dp-alerting-
 jobs LIVE. tradfi = **84.1% cell-complete** (13 failed cells; 31% rows still `expected_unattempted`). Remaining tradfi
 items:
 
+> **✅ Tradfi EU universe-correction APPLIED 2026-06-23 (addresses caveat (a) below — the completion oracle now reads a
+> real fetchable target).** The live tradfi `_index` over-seeded `expected_unattempted` with unfillable cells; the
+> in-place row-preserving reclass (`instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py`,
+> instruments-service@e9e5128) moved **EU 1,466,157 → 1,084,542** (−381,615: floor-clipped out-of-rolling-window L1
+> trades/tbbo + L2 mbp_10 = 241,085 → `EXPECTED_OUT_OF_COVERAGE_WINDOW`; derived ohlcv_15m = 140,530 →
+> `EXPECTED_OUTSIDE_PROCESSING_SCOPE`). captured 733,338 + attempted_failed 16,358 UNCHANGED (absolute gate). Honest
+> coverage (captured/(captured+failed+EU)) 33.1% → 39.98%. Plan-of-record + full evidence:
+> `tradfi_multisource_backfill_2026_06_22.md` § "VIX-index DELETE + Databento universe floor-clip". The remaining EU is
+> now the genuine fetchable backfill target (ohlcv_1s/1m within the 16y L0 floor + in-window trades/tbbo/mbp_10 +
+> corporate_action/earnings refdata).
+
 - [x] ✅ [INFRA] P0. **Autonomous wave-launcher → tradfi 100% — LIVE 2026-06-22** (`deployment-service@ebfe6e3`
       `scripts/wave_launcher.py`). Reads the tradfi index, groups gap cells by root×year×data_type (BOTH
       `expected_unattempted` AND `attempted_failed` — the P1 retry is FOLDED IN), caps at `WAVE_MAX_CONCURRENT=12` (hard
