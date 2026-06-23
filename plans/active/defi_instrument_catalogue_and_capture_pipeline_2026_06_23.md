@@ -272,6 +272,12 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       Capture the 4 DeFi data_types (dex_pool_swaps, dex_pool_state, + the 2 others) per-pool via VMs. — market-tick-data-service
 - [ ] [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured` (the data exists;
       the writer fix makes them reconcile). Verify honest_cov jumps + the DELISTED-on-live-pool count → 0. — market-tick-data-service
+- [ ] [QG] P1. **DEFERRED** Restore `dex_swaps_handler.py` adapter contract baseline (QG STEP 5.70 ⚠️ regression): handler
+      currently has 4 contract calls vs baseline 5 (patterns: `classify_venue_error | ADAPTER_FETCH_FAILED | record_captured |
+      record_empty | record_zero_rows | record_failed`). Root cause: likely the per-pool writer refactor (Phase 4, ec877b8)
+      changed the call pattern. Regenerate baseline (`scripts/quality_gates/adapter_contract_baseline.yaml --regenerate-baseline`)
+      ONLY if the current pattern is correct; otherwise restore the missing call. Ref: `plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md`.
+      Surfaced by slot-6 QG on instruments-service (step 5.70 cross-checks MTDS), 2026-06-23. — market-tick-data-service
 
 ## Phase 5 — Genuine empty reasons (incl NOT_ENOUGH_TVL)
 
