@@ -1829,8 +1829,12 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
   fallback path (`router.py` Telegram→Slack)'s secret does not exist → those events (e.g. DP_FLEET_MONITOR_RUN_*) fail
   to post (caught by the new per-message isolation, so non-fatal). DP_\* alerts are UNAFFECTED (they use
   `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` which exists). Create the secret or repoint the generic path. (alerting-service)
-- [ ] [DEPLOY] P0. **Redeploy both images so the fixes are LIVE (not just local-proven)** — (a) rebuild `deployment-api`
-  (watcher transition-safety) + `gcloud run jobs update` the 3 dp-monitor jobs to the fresh digest; (b) rebuild
-  `alerting-service` image + redeploy `dp-alerting-subscriber` (subscriber crash fix). Until done, the */5 cron + the
-  always-on subscriber run the OLD crashing code → automated delivery still broken (local proof ≠ operationally shipped).
+- [x] ✅ [DEPLOY] P0. **Both images rebuilt + redeployed — fixes are LIVE (2026-06-23 01:43Z)** — (a) `deployment-api`
+  rebuilt (Cloud Build 6928db5) + the 3 dp-monitor jobs (`uts-prod-dp-{heartbeat-watcher,exit-code-monitor,meta-watchers}`)
+  re-resolved to the fresh digest (watcher transition-safety LIVE on the */5 cron); (b) `alerting-service:latest`
+  rebuilt (Cloud Build `7f3565bc`, digest `ea7fc1b7`) + `dp-alerting-subscriber` redeployed to revision `00005-b9f`.
+  **VERIFIED operationally**: emitted 12 fresh DP_VM_STALL → `lifecycle-events-sub` drained to 0 within ~2min (vs hours
+  of accumulation pre-fix) + ZERO `Event logging not initialized`/Traceback in the deployed subscriber logs → the
+  background pull task no longer dies. A pre-existing cloudbuild bug (the `--help` operability-probe is wrong for a
+  service image → exit 127 blocked the push) was fixed alongside (best-effort probe; IMPORT probe is the gate).
   (deployment-service / alerting-service)
