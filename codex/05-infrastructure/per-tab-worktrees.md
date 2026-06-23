@@ -273,6 +273,18 @@ parses — so one bad commit can never propagate fleet-wide and stop the cron. T
 `slot-git-status-report`. All installed/updated by `install-slot-cron-ff-pull.sh` (run once per host from the ROOT
 clone, never a slot — the Phase-D guard refuses a `.tabs/` cwd).
 
+**Per-uid log paths — a root-owned log must never block the operator cron (codified 2026-06-23).** All three crons
+redirect to `${XDG_RUNTIME_DIR:-/tmp}/<name>.$(id -u).log` (uid-suffixed), matching the already-per-uid lock
+(`slot-cron-ff-pull.$(id -u).lock`). **Why:** the lock was per-uid but the LOG was a shared `/tmp/slot-cron-ff-pull.log`
+— a one-off run as a DIFFERENT uid (e.g. a `sudo`/root invocation) created a root-owned log, after which the ubuntu
+cron's `>>` redirect silently failed every tick and the FF-pull stopped firing (reference incident: a 6-day silent
+outage to 2026-06-22 — clones drifted while the host looked healthy). Per-uid logs make the redirect collision
+impossible, so a **freshly-bootstrapped VM gets a working cron straight away** (this is the install default, no manual
+step). **Opt-in `--include-main-clones`:** the `--all-slots` sweep covers `.tabs/<N>/` clones; a host that does its work
+in the ROOT/main clones (an interactive dispatch host, not a `.tabs/` worker) passes `--include-main-clones` at install
+to also FF-pull the root clones on the standard `3,8,13,…` schedule. Standard data/paper/worker VMs work in `.tabs/` and
+need nothing extra.
+
 **Path-B per-slot ref refresh.** Under Path-B every slot is an independent `git clone --reference` with its OWN refs
 (objects shared via `objects/info/alternates`, refs NOT shared). `slot-cron-ff-pull.sh` PHASE-1 prefetch updates only
 the main-workspace clones' refs, so PHASE 2 MUST refresh each slot's `origin/<branch>` — a LOCAL ref-copy from the
@@ -314,9 +326,9 @@ set does not block `--ff-only`. **De-duplication:** one ping per (slot, repo) st
 
 ## Slot is durable; theme is daily
 
-The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with
-the operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents
-read on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
+The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with the
+operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents read
+on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
 
 Three benefits of fixed slots over ephemeral spin-ups:
 
