@@ -65,8 +65,11 @@ Firestore-side-store ci_status migration, and the prod image build.
       `old != new` so a content-only promote merges to main with NO spurious dependency-update cascade. Validated
       locally against the live manifest (candidates = 19 content-ahead ∪ {uac,utl} version-only = 21; cascade fires only
       for uac 0.48→0.49 + utl 0.35→0.36). Reuses dep-order + quarantine + cure-B unchanged; probe degrades to
-      version-only on error. **Continuous-verification**: the next `*/15` run drains the 15 backlog repos staging→main;
-      confirm a content-only repo's tree reaches main. (cicd_contract_hardening #35 ≡ self_healing G10; promotion-flow owner)
+      version-only on error. **VERIFIED LIVE 2026-06-23**: first new-code run `28024746546` (12:03 UTC) ran ALL new
+      steps SUCCESS (Content-ahead probe / Idempotency / STAGE 1.8 / Merge staging→main / version-promote); stranded
+      content drained to main — alerting/execution/strategy/deployment-api/features-service all show
+      `tree-SHA(main)==tree-SHA(staging)` (drained), instruments-service drains on the next tick. (cicd_contract_hardening
+      #35 ≡ self_healing G10; promotion-flow owner)
 - [x] ✅ [WORKFLOW] P0. Break the bottom-up dep-order deadlock — a T0 lib stuck `STAGING_GREEN` on chore (non-bumping)
       content blocks the cone — RESOLVED-BY-#11 (2026-06-23). The deadlock was: a T0 lib's non-bumping content never
       promoted to main → never emitted `MAIN_GREEN` → STAGE 1.8 kept every dependent `SKIPPED (dep not on main yet)`
@@ -79,6 +82,22 @@ Firestore-side-store ci_status migration, and the prod image build.
       inside the promote-step heredoc (`staging-to-main.yml:596`), and `gh pr create` carries
       `--title "chore(release): promote staging to main"` + `--body "$BODY"` (`:682-688`). Landed via the cure-B
       promote-path unification PM@9cdecc8ae (on main); YAML validates clean. (self_healing G10)
+- [ ] [WORKFLOW] P2. **`staging-to-main` "Commit manifest update" race amplified by bug #11 (NEW 2026-06-23)** — bug #11
+      makes the run reach the manifest-commit step every `*/15` (instead of early-skipping when `staging_commits` is
+      empty), so the single-file `workspace-manifest.json` push competes with the heavy concurrent manifest-writer set
+      MORE often → the 5-attempt rebase-retry exhausts → step `failure` → `Partial Staging Promotion Failure` CRITICAL
+      Slack alert, EVEN THOUGH the content promotion (step 11) succeeded and the content drained. The race is
+      PRE-EXISTING (run `28016620865` 09:32 failed the same way before the fix) — bug #11 only raised its frequency.
+      Fix options: (a) bump the rebase-retry count + jittered backoff; (b) make the manifest-commit non-fatal to the run
+      conclusion when step 11 (the actual promotion) succeeded — the manifest bookkeeping self-heals next run; (c) skip
+      the commit when a content-only run produced no version/lock delta. Repo: unified-trading-pm. Provenance: bug #11
+      verification 2026-06-23.
+- [ ] [WORKFLOW] P3. **Redundant empty staging→main PRs across consecutive runs (NICE-TO-HAVE, NEW 2026-06-23)** — a
+      `*/15` run can open a content-only staging→main PR for a repo whose content the PREVIOUS run already drained but
+      whose tree-SHA had not yet equalised at probe time (timing window) → a now-empty `BLOCKED` PR (alerting#135,
+      execution#358 on 2026-06-23). Self-resolves (the tree-SHA probe is idempotent once main catches up; the empty PR
+      no-ops/closes) but adds PR churn. Mitigate by re-checking tree-equality at PR-create time, or auto-closing an
+      empty staging→main PR. Provenance: bug #11 verification 2026-06-23.
 - [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR checks after
       lock clears. (cicd_contract_hardening #20)
 - [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
