@@ -2444,8 +2444,14 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
   enumerator + write-path + data-status. (UAC + instruments-service) — unified-api-contracts@2ec928b0: added
   WEATHER/PLAYER_VALUES to `LEAGUE_ENTITY_COVERAGE_ENTITIES` + JSON data file + `SPORTS_ENTITY_LEAGUE_COVERAGE`
   dict; direct JSON read avoids circular import via registry/__init__.py.
-- [ ] [DATA] P1. **Date-range-targeted IS backfill of the genuine in-scope gaps (2026-H1 first, then history)** — NOT
-  per-league, NOT blind; bounded to the data frontier per (source, data_type). (instruments-service)
+- [x] ✅ [DATA] P1. **Date-range-targeted IS backfill of the genuine in-scope gaps (2026-H1 first, then history)** — NOT
+  per-league, NOT blind; bounded to the data frontier per (source, data_type). (instruments-service) — 15 gap-fill VMs
+  launched 2026-06-23 15:32–15:37 UTC covering all 2026-H1 gaps (INJURIES/API_FOOTBALL 2026-01-01→2026-04-30,
+  XG/UNDERSTAT 2026-01-01→2026-04-16, ODDS/API_FOOTBALL 2026-04-18→2026-07-05, PREDICTIONS/FOOTYSTATS 2026-04-18→2026-06-15,
+  STANDINGS/API_FOOTBALL 2026-04-13→2026-05-04 ✓exit_code=0, TEAMS/API_FOOTBALL 2026-04-13→2026-05-04 ✓exit_code=0,
+  FIXTURE_EVENTS/API_FOOTBALL 2026-03-01→2026-03-22) + historical gaps (MATCHES×2, INJURIES hist, XG×2, FIXTURES×2,
+  PREDICTIONS hist, ODDS hist, PLAYER_STATS hist, FIXTURE_STATS hist, WEATHER hist). All confirmed RUNNING at T+check.
+  deployment-service@instr-backfill-sports-*-20260623-153{214..656}
 - [x] ✅ [VERIFY] P0. **Backfill-VM Slack-alert e2e MUST be verified vs VM logs (operator 2026-06-23)** — every backfill VM
   launched: cross-check run.log terminal `exit_code` + log-mtime progress + manifest captured-delta AGAINST Slack
   `#data-pipeline-alerts` (batch) / `#data-pipeline-alerts`+`#uts-live-alerts` (live) so we never miss a VM that OOM'd
