@@ -93,12 +93,14 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       remaining EU = real fetchable target (ohlcv_1m 313,720 + ohlcv_1s 308,871 + in-window trades 219,144/tbbo
       215,617/mbp_10 7,908 + corporate_action/earnings 9,641 each), **135 VX futures_chain captured cells preserved
       untouched**. Honest coverage (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
-- [ ] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects** (script SHIPPED; --apply RUNNING 2026-06-23) —
+- [x] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects — APPLIED 2026-06-23** —
       `instruments-service/scripts/delete_vix_cash_index_gcs_objects_2026_06_23.py` deletes the VIX cash-index parquet
       objects (instrument_type=index at venue=CBOE — CBOE's only cash index is VIX, across batch_massive/batch_databento
       pipeline_modes) via `unified_trading_library` `gcs_delete_object` (never gsutil). Gated on the
       VX-futures-vs-VIX-index sanity check (PASSED: corr 0.95-0.98, steady ~1.7-2.1 vol-point contango basis) + the
-      manifest correction above. — instruments-service@814b14a.
+      manifest correction above. **The op had NOT actually run before** (the prior "--apply RUNNING" was incomplete —
+      measured 2026-06-23: 1,621 VIX cash-index objects still present). **--apply re-run to completion 2026-06-23:
+      deleted 1,621 objects (exit 0); VX futures_chain/future objects NOT touched.** — instruments-service@814b14a.
 
 - [ ] [BACKFILL] P1. **Run the FX yahoo backfill to completion** (operational) — launch
       `launch-tradfi-bf-fx-ohlcv-24h.sh` per-year via the wave-launcher cron / manual, verify FX ohlcv_24h
