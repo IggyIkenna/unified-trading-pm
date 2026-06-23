@@ -188,12 +188,17 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       2026-06-23-rebuilt tarball (handler pipeline_mode fix baked). Consolidated defi `_index` @10:34:40Z holds DEFI
       LIVE = 37 rows / **7 captured / 128,642 captured rows**, modes `live_onchain_subgraph`+`live_chainlink`+
       `live_pyth_hermes`, date 2026-06-23; PIPELINE_HEARTBEAT emitting. Repo: deployment-service / market-tick-data-service.
-- [ ] [DATA] P1. **defi oracle Pyth-Hermes HTTP 400 ("Odd number of digits") — live oracle_prices partial-fail.** The
-      `collect-oracle-prices` live run logs `Pyth Hermes returned HTTP 400: Failed to deserialize query string. Error:
-      Odd number of digits` → some oracle cells `attempted_failed` (Chainlink leg works → 5 `live_chainlink` captured).
-      Diagnose the Pyth feed-id query encoding in the oracle_prices handler / Pyth Hermes client (a feed-id is being
-      passed with an odd hex length / wrong `ids[]` param shape). Repo: market-tick-data-service. Provenance: 2026-06-23
-      continuous-flow session Progress Log.
+- [x] ✅ [DATA] P1. **defi oracle Pyth-Hermes HTTP 400 ("Odd number of digits") FIXED — mtds@5906ebf.** ROOT CAUSE:
+      `bSOL/USD` + `INF/USD` in `_PYTH_FEEDS` carried **63-hex (odd-length) feed-ids** (both ALSO wrong values) → the
+      Hermes server-side hex-decode failed with exactly "Odd number of digits" and 400'd the WHOLE batched `ids[]`
+      request (every good feed lost in the single call → all oracle cells `attempted_failed`; Chainlink leg unaffected).
+      Replaced with the canonical 64-hex ids from `hermes.pyth.network/v2/price_feeds`
+      (bSOL=`0x89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c`,
+      INF=`0xf51570985c642c49c2d6e50156390fdba80bb6d5f7fa389d2f012ced4f7d208f`; both verified HTTP 200 + parsed live).
+      Added `_valid_pyth_feed_ids()` defensive guard dropping a malformed id from the batch (shard-isolation — a future
+      typo can't 400 the whole call) + strengthened the regression test to assert bare-hex==64 (the prior `[64,66]`
+      total-length window let the 63-hex bug through). QG-green (104s, sentinel written). Effective once a fresh tarball
+      rebuild + oracle-poll relaunch bakes it. Repo: market-tick-data-service. — mtds@5906ebf.
 - [ ] [DATA] P0. **prediction LIVE producing 68,314 rows but ALL `empty_confirmed` / 0 captured — real live-capture
       bug.** Per-VM shards (`prediction-live-polymarket-trades/-kalshi-trades/-book-snapshot-5-*`) show every window
       `empty_confirmed` despite the connector receiving messages. ROOT CAUSE from the VM log: `PolymarketClob: unknown
@@ -216,11 +221,18 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       2026-06-23 session. **NOTE: the recent-window tradfi/sports/prediction backfills are SERIALIZED behind the prior
       session's running backfill fleet — the `launch-tradfi-bf-*` global singleton lock REFUSES while
       `tradfi-bf-*-2025` shards are RUNNING; launch once that fleet drains (exit-code-verify it finishes first).**
-- [ ] [DATA] P1. **tradfi forward-poll daily cron is BROKEN — repair (2026-06-23).** `tradfi-fwd-daily-cron-*` run.log
-      shows "tradfi-fwd cron fire FAILED rc=0" with last actual fire 2026-06-21T15:43Z — the daily T-1 catch-up isn't
-      launching → the recurring source of the tradfi recent-date gap. Diagnose the on-VM cron wrapper (the launcher it
-      shells out to is failing silently at rc=0) + repair so the daily T-1 tradfi forward-poll fires. Repo:
-      deployment-service. Provenance: 2026-06-23 session.
+- [x] ✅ [DATA] P1. **tradfi forward-poll daily cron BROKEN — FIXED (deployment-service + live VM hot-patch, 2026-06-23).**
+      ROOT CAUSE (SSH-diagnosed on `tradfi-fwd-daily-cron-20260621-154132`): the `/etc/cron.d/tradfi-fwd-daily` `PATH=`
+      line was `…:/sbin:/bin` — MISSING `/snap/bin`. On Ubuntu-2404 GCE images `gcloud`/`gsutil` are the snap symlinked
+      into `/snap/bin` (NOT `/usr/bin`), so the cron's `gsutil cp` → `command not found` → the `&&` chain failed → the
+      fire never ran. The "FAILED rc=0" log line was ALSO misleading: the failure-echo's `$(date)`/`$?` were
+      single-escaped in the launcher heredoc → BAKED at launch time (frozen `2026-06-21T15:43:06Z` timestamp + rc=0) so
+      every failure wrote the same stale line. Verified the 06:00 cron CMD DID execute (journalctl) but died on the
+      missing gsutil. **FIX:** (1) launcher `launch-tradfi-fwd-daily-cron-vm.sh` cron PATH += `/snap/bin` + double-escape
+      (`\\\$`) the date/rc so they evaluate at FIRE time; (2) same fix to the cefi twin
+      `launch-cefi-fwd-daily-cron-vm.sh` (identical bug — only these two had it); (3) HOT-PATCHED the running tradfi cron
+      VM's crontab in place (so tomorrow's 06:00 fires without a relaunch) + verified `gsutil cp` of the launcher now
+      succeeds on the patched PATH. Repo: deployment-service. — deployment-service (launchers) + live VM hot-patch.
 - [x] ✅ [DATA] P1. **cefi — EXTENDED-STARKNET IS+MTDS adapter integration FINISH + ship** (Extended-Starknet lane
       2026-06-22). Recover the rate-limit-killed prior agent's WIP: `instruments_service/.../adapters/defi/extended.py`
       (per-market genesis probe via P1D candle — `available_from` = earliest actual candle, NOT `createdAt`) +
