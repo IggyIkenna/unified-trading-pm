@@ -10,6 +10,22 @@ priority: P2
 status: active
 ---
 
+## ✅ RESOLVED 2026-06-23 — aiohttp 3.14.1 shipped fleet-wide (vcrpy 8.2.1 unblock)
+
+The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1`
+(canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest.json`); all shipped to
+`live-defi-rollout` 2026-06-23 and drained to staging (quality-gates-v2 green in-image). vcrpy 8.2.1 rewrote `MockStream`
+so it no longer needs the removed `AsyncStreamReaderMixin` (verified: UAC's 649-cassette suite green on 3.14.1 with the
+conftest shim removed). The **11 aiohttp cookie CVEs** (CVE-2026-34993/47265/50269/54273–54280) + GHSA-rpj2 (vcrpy YAML,
+also fixed by 8.2.1) are closed for the 17 repos; the 11 aiohttp `--ignore-vuln` entries are RETAINED only for the
+holdout below.
+
+**Holdout — execution-service** stays on aiohttp 3.13.5 via `[tool.uv] override-dependencies` (mirrors the
+requests/betfair precedent — its `[project]` dep + canonical say `>=3.14.1` so alignment passes; the override forces the
+lock to 3.13.5) because its 8 `aioresponses` test files can't build aiohttp-3.14's `ClientResponse` (aioresponses 0.7.8
+has no 3.14 fix). Drop the override + the 11 aiohttp ignores once execution-service migrates off aioresponses →
+`plans/active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`.
+
 ## What I found
 
 Two **pre-existing, fleet-wide** dependency-infra blockers surfaced while shipping tradfi-manifest-canonicalisation code
