@@ -1328,6 +1328,44 @@ dispatch prompts.
       bounded 1/120s-cooldown, emits CONSOLIDATOR_RECOVERED) + `scripts/recovery/relaunch_backfill_vm.py` (re-launch OOM
       exit-137 backfill via its launcher — streams durable logs + registers, never fire-and-forget — budget ≤2 per
       (vm-prefix, day) then page_operator). 14 credential-free tests. — deployment-service@e695fa3
+- [x] ✅ [CODE] P0. **DP_VM_STALL self-heal actuator** (the loop was OPEN — DP_VM_STALL was `auto_recover` tier with NO
+      wired actuator → it fell through to `file_issue`; a hung VM like `tradfi-bf-cme` never auto-recovered). NEW
+      `scripts/recovery/relaunch_stalled_vm.py` (mirrors `relaunch_backfill_vm` — idempotent, ≤2/(vm-prefix, day) then
+      page, emits a lifecycle event, NEVER fire-and-forget; unconditional on exit code since the watchdog already killed
+      the VM, the stall verdict is the trigger) + registered `DP_VM_STALL → relaunch_stalled_vm` in `_DP_RECOVERY_ACTIONS`
+      + `heartbeat_stall_watcher.sweep` gains a `launcher_for_vm` resolver so the DP_VM_STALL finding carries
+      `relaunch_launcher` (absent → falls through to file_issue). DP_EVENT_LOOP_STARVED stays file_issue (a never-emitting
+      VM is a code bug, not a relaunch). 5 new credential-free tests. — deployment-service@1b529e4 (QG --no-fix exit 0 54s)
+- [x] ✅ [CODE] P1. **Make file_issue ACTIONABLE so an agent picks it up** — both issue writers
+      (`escalation.py::_write_issue_doc` + `e2e _dp_common.file_escalation_issue`) now emit frontmatter
+      `parent_epic: observability_master` + `assigned_vm: vm-cross-cutting` (PlanRegenLoop ONLY ingests an issues/ doc
+      with an explicit `assigned_vm` → was silently skipped) + a real `- [ ] [CODE] P1. <finding> — diagnose + fix <root
+      cause> in <target repo>` todo (VM-lifecycle → deployment-service, misclassified-empty/divergence → MTDS) + cold-start
+      context (read SUB_AGENT_MANDATORY_RULES + the DP codex + the finding details). Idempotent (overwrites same
+      slug+date doc). deployment-service half (`escalation.py`) SHIPPED **deployment-service@1b529e4**; e2e half
+      (`_dp_common.py`) QG-green but **🟡 BLOCKED ON DIRTY DEP** (quickmerge pre-flight refuses while peer's
+      `strategy-service` WIP is uncommitted — never quickmerge with dirty deps). Ship the e2e half once that foreign WIP
+      clears. — deployment-service@1b529e4 + e2e-testing (pending)
+- [x] ✅ [CODE] P1. **Fast CI-parity auto-spawn for CRITICAL** — `route_finding` now ALSO fires a best-effort
+      `repository_dispatch` (`escalate-to-orchestrator`, `client_payload[wall_type]=data_pipeline_failure`) for a
+      page_operator-tier (CRITICAL) OR confirmed file_issue finding, auth'd with the workflow-capable `GH_PAT` from Secret
+      Manager. Best-effort: a missing token (token-less Cloud Run Job) / SM-denied / network failure returns
+      `{dispatched: False}` and NEVER breaks the finding (mirrors the alerting soft-gates) — Fix 2's PlanRegenLoop path
+      still picks it up. — deployment-service@1b529e4
+- [ ] [CODE] P1. **Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half** (frontmatter
+      `parent_epic`/`assigned_vm` + `- [ ] [CODE] P1.` todo + `target_repo` routing + new
+      `test_file_escalation_issue_is_actionable`) — code is WRITTEN + QG-green (`quality-gates.sh --no-fix` exit 0 31s)
+      but quickmerge is **🟡 BLOCKED**: e2e's pre-flight refuses while peer `strategy-service` WIP is uncommitted (never
+      quickmerge with dirty deps). Re-run `quickmerge --agent --files 'scripts/audit/_dp_common.py
+      tests/unit/test_dp_audit.py'` from e2e-testing once `strategy-service` is clean. Provenance: slot-3 escalation-loop
+      2026-06-23. — e2e-testing
+- [ ] [INFRA] P2. **Wire `launcher_for_vm` in the dp-fleet-monitor CLI** for BOTH `heartbeat_stall_watcher.sweep` AND
+      `exit_code_fleet_monitor.sweep` (both accept the resolver; the CLI passes `None` today → the relaunch actuators fall
+      through to file_issue for want of a launcher binding). Add a deterministic `vm_name → launch-*.sh` resolver (the
+      VM-prefix → launcher map is NOT 1:1 — e.g. `tradfi-bf-cme-*` ← `launch-tradfi-bf-cme.sh`; build a registry, do NOT
+      guess) so a stalled/OOM'd VM actually auto-relaunches end-to-end. Until then the actuator + sweep param are ready but
+      inert (safe: file_issue + PlanRegenLoop still fire). **NICE-TO-HAVE** — provenance: slot-3 escalation-loop work
+      2026-06-23. — deployment-service
 - [x] ✅ [CODE] P1. **Auto-flip reclassifier** (the detect→prove→FLIP→re-capture loop) — DONE **e2e-testing@1b220fc**.
       `reprobe_new_empty_confirmed.py` gains a `--reclassify-apply` mode (default OFF/dry-run): ONLY a
       `REPROBE_RETURNED_ROWS` verdict (a wired live re-fetch hook ACTUALLY returned rows = PROVEN misclassification)
