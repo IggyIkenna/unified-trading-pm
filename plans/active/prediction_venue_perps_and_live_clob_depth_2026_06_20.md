@@ -1101,7 +1101,16 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   its IS enumeration. The reader fix correctly maps condition_id→POLYMARKET:PREDICTION_MARKET:{cid} / ticker→KALSHI:...
   from the cqg/day-partitioned IS store.
 
-- [ ] [DESIGN] P1. **CROSS-VENUE BLOCKER — Kalshi markets are NOT canonically grouped (all →
+- [x] ✅ [DESIGN] P1. **CROSS-VENUE BLOCKER RESOLVED + VERIFIED 2026-06-23** — Kalshi catalogue went from 1 cqg
+      partition (all OTHER) → **34 cqg partitions** for venue=KALSHI day=2026-06-23 (verified in GCS
+      `instruments-store-pred-prd`): crypto (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE up-down+range), indices (SPX/NDX/DJIA/RUT),
+      macro (CPI/FED/GDP/payrolls/PCE/treasury), commodity (crude), FX (EUR), **SPORTS_MLB_MATCH/SPREAD/TOTAL +
+      SPORTS_NFL_MATCH + SPORTS_WORLD_CUP_MATCH**. ROOT CAUSE was NOT the mapper (already comprehensive @c3bf51d1) — it
+      was the IS enum capping at 2000 `status=open` markets FLOODED by KXMVE* parlays → series-scoped enumeration fix
+      (IS@LDR) + Kalshi sports classifier + KXRIPPLE→XRP + EUR-FX collision fix (UAC@LDR). Cross-venue overlap (Kalshi ∩
+      Polymarket live) grew ~16→**~18 incl. SPORTS_MLB**. — UAC@LDR (classifiers) + IS@LDR (series-scoped+throttle+
+      Sports/Politics+guard-fix) + re-enum verified. Partition-completeness follow-ons (below). ~~ORIG: CROSS-VENUE
+      BLOCKER — Kalshi markets are NOT canonically grouped (all →
       `canonical_question_group=OTHER`), so no Polymarket↔Kalshi category matching is possible (DISCOVERED
       2026-06-23)**: the catalogue cqg taxonomy is Polymarket-COMPLETE (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE
       `*_UP_DOWN_DAILY`+`*_PRICE_RANGE_DAILY`, SPX/DJIA/RUT, CRUDE*OIL, SPORTS_MLB*\*/TENNIS,
@@ -1114,3 +1123,24 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
       becomes the realistic cross-venue universe. Composes with the Kalshi recent-window/mid-gap enumeration (PART1.2).
       Repo: unified-api-contracts (mapper) + instruments-service (re-enum). Provenance: coverage-proof + category-map
       session 2026-06-23.
+
+- [ ] [SCRIPT] P1. **cqg partition-completeness — LIVE relaunch (operator Q 2026-06-23: "do partition updates need
+      migrations/backfills for live+batch?")**: the 4 running `prediction-live-*` VMs baked a tarball at ~13:48 UTC
+      (BEFORE the ~20:30 UTC Kalshi-classifier ship) → they currently capture Kalshi sports/crypto as `OTHER`. Rebuild
+      the mtds+IS code tarball from clean LDR + relaunch the 4 shards so LIVE captures carry the new cqg going forward.
+      **NO raw-tick GCS migration** — cqg is NOT a raw-tick partition key (tick path = day/pipeline_mode/asset_group/
+      venue/instrument_type/data_type), so existing trade/book parquets do not move. Repo: market-tick-data-service
+      (tarball) + deployment-service (relaunch). Provenance: operator partition-completeness Q 2026-06-23.
+- [ ] [SCRIPT] P1. **cqg partition-completeness — BATCH re-classification re-walk**: the materialized
+      `prediction_canonical_question_group` manifest bundles for historical Kalshi dates carry the OLD (OTHER) cqg.
+      Re-classify them via `market_tick_data_service/scripts/rebuild_prediction_manifest.py --venue KALSHI` (the SAME
+      mechanism that did the Polymarket v4→v9 re-walk) — it re-reads existing tick parquets, re-runs the (now-fixed)
+      classifier, rewrites the cqg bundle. NOT a tick migration (cqg isn't a tick partition key). Deterministic classifier
+      (stable hash) → batch re-walk == fresh live capture (live=batch holds). Launch as a VM job (the Polymarket re-walk
+      took ~5000s). Repo: market-tick-data-service. Provenance: operator partition-completeness Q 2026-06-23.
+- [ ] [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration**: the cqg-partitioned
+      `instrument_availability` catalogue is refreshed for 2026-06-23 only (34 groups verified). Re-enumerate the recent
+      enumerated window (e.g. 2026-06-20..22) with the fixed classifier so those dates' catalogue also carries real cqg
+      (rides the 1.2 Kalshi recent-window enumeration). Deep history is the bulk-tick-seed (no per-date catalogue) →
+      covered by the BATCH re-walk above. Repo: instruments-service. Provenance: operator partition-completeness Q
+      2026-06-23.
