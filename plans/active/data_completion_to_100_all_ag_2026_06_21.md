@@ -2540,11 +2540,14 @@ the rest of history.
       builds c2beac49 (alerting-service:latest) + c0f6dc2f (deployment-api:latest) → redeploy dp-alerting-subscriber +
       uts-prod-dp-exit-code-monitor + e2e verify. Gap-4 root-cause + deploy todo:
       `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md`
-- [ ] [DATA] P0. **XG/understat backfill is OOMing (exit 137, MemoryError) — surfaced by the now-actionable alerts
+- [x] ✅ [DATA] P0. **XG/understat backfill is OOMing (exit 137, MemoryError) — surfaced by the now-actionable alerts
       2026-06-23.** The `instr-backfill-sports-xg-*` VMs (understat) hit `MemoryError`/`Killed`/rc=137 — memory-bound,
       so a blind restart re-OOMs. Remediation: relaunch XG/understat with a higher-memory machine type OR batch/stream
       the understat fetch (per-league/per-month chunks) so it fits. Blocks the XG slice of the golden-window backfill.
       (deployment-service launcher + instruments-service understat handler)
+      — instruments-service@bd32424 (free season JSON blob after dates extraction) +
+        deployment-service@cbdc0e4 (bump launcher to e2-standard-4); tarball rebuilt;
+        verification VM `us-backfill-20260623-171131` launched on e2-standard-4 2026-06-23
 
 ### DP alert FLOOD is mostly FALSE POSITIVES — monitors are too crude (diagnosed 2026-06-23, now alerts are readable)
 
