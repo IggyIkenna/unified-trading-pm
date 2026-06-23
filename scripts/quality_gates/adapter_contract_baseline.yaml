@@ -318,8 +318,10 @@ baseline:
     count: 12
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py:
     count: 8
+  market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py:
+    count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py:
-    count: 5
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/drift_v2_historical_handler.py:
     count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py:

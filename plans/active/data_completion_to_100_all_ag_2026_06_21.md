@@ -2802,6 +2802,54 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23` incident. — deployment-service@88d28be | QG green | 5
       new tests incl. `test_progressing_vm_is_never_reaped` (a STALL-verdict result with a fresh heartbeat is still
       vetoed). (deployment-service heartbeat_stall_watcher.py)
+
+#### Rate-limit hardening — UTC-aligned windows · empirical calibration · per-IP · key-pool (operator 2026-06-23)
+
+- [x] ✅ [CODE] P1. **PART 1 — embed UTC-BOUNDARY-ALIGNED windows in the proactive limiter.** Providers reset quota on
+      FIXED UTC wall-clock boundaries (per-minute at each `:00`, daily at `00:00 UTC`); the old monotonic
+      `_next_slot` spacer has arbitrary phase → straddles two provider minutes → bunches ~2× into one → 429. Added a
+      FIXED-WINDOW counter keyed to `floor(now_utc, minute)` (resets `:00`) + UTC-day (resets `00:00 UTC`) in the sports
+      adapter limiter: `_reserve_utc_window_slot()` is called under the rate-lock in `_throttle` and, when this VM has
+      spent its allocated share of the CURRENT provider window, sleeps to the NEXT boundary instead of spilling over —
+      so our "remaining this minute" equals the provider's `X-RateLimit-Remaining` (same window, same phase),
+      proactively, not via the reactive 429-then-sleep backoff. `set_rate_budget_rpm` now also sets the per-UTC-minute
+      cap; new `set_window_quota(per_minute, per_day)` carries the daily share. Allocator window logic: `allocate_rate_budget`
+      gained `per_vm_daily_quota` (= `SOURCE_DAILY_QUOTA//n_vms`) for the adapter's per-UTC-day cap. — instruments-service
+      `base.py` (`_reserve_utc_window_slot` + `set_window_quota`, ~line 312 `_throttle`) + `api_football.py:154`
+      (900→1200/0.05s) + deployment-service `launch_budget_registry.py` (`RateBudgetAllocation.per_vm_daily_quota`)
+- [ ] [SCRIPT] P1. **PART 2/3 — RUN the ramp-to-429 calibration probe on an EPHEMERAL VM** (operator-gated; "blast from
+      an IP, see when banned — one-time test"). Harness SHIPPED:
+      `instruments-service/scripts/calibrate_source_rate_limit.py` (lifecycle: campaign). It ramps request rate from a
+      single IP until 429/ban for **understat / transfermarkt / open_meteo / soccer_football_info** (Part 2) +
+      **polymarket_clob / polymarket_gamma_api** (Part 3, per-IP) and measures (break-rate, safe-rate=0.8×break,
+      recovery window). **MUST run from a throwaway VM IP** (a temporary ban there is acceptable; NEVER a prod IP) — it
+      cannot run in the credential-free `--block-network` sandbox or on a shared host. Then transcribe each
+      `safe_rate_rpm` + `recovery_seconds` into `launch_budget_registry.py` (`SOURCE_RATE_LIMITS_RPM` for fleet-divided,
+      `SOURCE_PER_IP_LIMITS` for per-IP), flip `calibrated=True` / drop the `# TODO: empirically calibrate` markers, and
+      record the measured table here. **Pending the operator-gated probe-VM run.** (instruments-service +
+      deployment-service)
+- [x] ✅ [CODE] P1. **PART 3 — model databento + polymarket as PER-IP in the registry** (not a shared fleet ceiling).
+      Added `SOURCE_PER_IP_LIMITS` (`PerIpLimit{rpm,calibrated,note}`) + `per_ip_rate_for_source()`: databento
+      (`rpm=None` — usage-billed, per-IP transport, scale via more IPs) + polymarket_clob / polymarket_gamma_api
+      (`rpm=600` placeholder, likely-per-IP, pending the Part-2/3 probe). `allocate_rate_budget` now RAISES on a per-IP
+      source (must not be fleet-divided — each VM/IP gets the full per-IP rate, scale by adding IPs). — deployment-service
+      `launch_budget_registry.py`
+- [x] ✅ [CODE] P1. **PART 4 — The Graph KEY-POOL sharding model + DeFi launcher wiring.** Added `SOURCE_KEY_POOL_LIMITS`
+      (`KeyPoolLimit{per_key_rpm, pool_size=9, effective_rpm=per_key×pool}`) + `key_pool_capacity_for_source()` —
+      effective ceiling = per-key × 9-key `thegraph-api-key[-2..9]` SM pool. Wired `--shard-index`/`--fleet-vms` +
+      `SHARD_INDEX` metadata stamp + registry capacity echo into both DeFi subgraph launchers
+      (`launch-mtds-dex-swaps-backfill-vm.sh`, `launch-mtds-dex-pools-backfill-vm.sh`); `setup-data-pipeline-vm.sh`
+      forwards `SHARD_INDEX` → mtds config so each VM STARTS on a distinct key (`key_number = SHARD_INDEX % 9 + 1`).
+      Handler-side per-request round-robin (`thegraph_base_client.next_thegraph_key_from_pool` /
+      `ThegraphKeyPoolRotator`) is already live + honored — the launch sharding spreads the START key across VMs. —
+      deployment-service (2 launchers + setup-data-pipeline-vm.sh) + launch_budget_registry.py
+- [x] ✅ [QG] P1. **Cleared the foreign red gate (dex_swaps_handler adapter-contract regression).** Diagnosed: commit
+      `mtds@ec877b8` RELOCATED the record_* emission from `dex_swaps_handler.py` (now 4 contract calls) into a NEW
+      sibling `_dex_swaps_queries.py` (7 contract calls — total PRESERVED, 5 → 4+7=11; legit refactor, not a drop).
+      Updated the PM `adapter_contract_baseline.yaml`: `dex_swaps_handler.py` 5→4 + added `_dex_swaps_queries.py`=7 →
+      `check_adapter_contract_regression.py` OK, instruments-service QG unblocked. — unified-trading-pm
+      `scripts/quality_gates/adapter_contract_baseline.yaml`
+
 - [x] ✅ [CODE] P0. **EXTEND THE OOM LADDER TO 256GB — consume the canonical machine-tier registry (import-only).**
       Replaced escalation.py's hardcoded `_OOM_MACHINE_LADDER`/`_escalated_machine_type` with consumption of
       `launch_budget_registry`'s canonical `MEMORY_TIER_LADDER` / `next_memory_tier` / `memory_tier_for_machine_type` /
