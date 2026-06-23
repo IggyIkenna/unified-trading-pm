@@ -1,12 +1,13 @@
 ---
 title: CeFi capture universe + perp-gated capture rule (authoritative)
 created: 2026-06-23
-author: ikennaigboaka
 source:
   - operator directive 2026-06-23
   - cefi_hl_aster_batch_data_gaps_2026_06_22.md
 locked_by: live-defi-rollout
 parent_epic: mtds_mdps_master
+priority: P2
+status: active
 ---
 
 ## What this is
