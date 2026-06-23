@@ -1373,13 +1373,7 @@ dispatch prompts.
       quickmerge with dirty deps). Re-run
       `quickmerge --agent --files 'scripts/audit/_dp_common.py     tests/unit/test_dp_audit.py'` from e2e-testing once
       `strategy-service` is clean. Provenance: slot-3 escalation-loop 2026-06-23. — e2e-testing
-- [ ] [INFRA] P2. **Wire `launcher_for_vm` in the dp-fleet-monitor CLI** for BOTH `heartbeat_stall_watcher.sweep` AND
-      `exit_code_fleet_monitor.sweep` (both accept the resolver; the CLI passes `None` today → the relaunch actuators
-      fall through to file_issue for want of a launcher binding). Add a deterministic `vm_name → launch-*.sh` resolver
-      (the VM-prefix → launcher map is NOT 1:1 — e.g. `tradfi-bf-cme-*` ← `launch-tradfi-bf-cme.sh`; build a registry,
-      do NOT guess) so a stalled/OOM'd VM actually auto-relaunches end-to-end. Until then the actuator + sweep param are
-      ready but inert (safe: file_issue + PlanRegenLoop still fire). **NICE-TO-HAVE** — provenance: slot-3
-      escalation-loop work 2026-06-23. — deployment-service
+- [x] ✅ [INFRA] P2. **Wire `launcher_for_vm` in the dp-fleet-monitor CLI** — deployment-service@3045b7f: CLI `_launcher_for_vm` (wraps `resolve_launcher_for_vm`, None→"") now passed into BOTH `exit_code_fleet_monitor.sweep` + `heartbeat_stall_watcher.sweep` (was `None`) → stall/OOM findings carry `relaunch_launcher` → actuator relaunches instead of file_issue. QG green (64s). — deployment-service
 - [x] ✅ [CODE] P1. **Auto-flip reclassifier** (the detect→prove→FLIP→re-capture loop) — DONE **e2e-testing@1b220fc**.
       `reprobe_new_empty_confirmed.py` gains a `--reclassify-apply` mode (default OFF/dry-run): ONLY a
       `REPROBE_RETURNED_ROWS` verdict (a wired live re-fetch hook ACTUALLY returned rows = PROVEN misclassification)
@@ -2019,7 +2013,4 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
 - **DEPLOY status (code-complete, deploying)**: e2e half → e2e-audit image rebuilding (Cloud Build ce6a88e4) →
   re-resolve audit jobs. deployment-service FIX1/FIX3 → the MONITORS run on `deployment-api:latest`, so they go live
   when deployment-api's image rebuilds (rides LDR→staging→main promotion; can expedite).
-- [ ] [CODE] P2. **launcher-for-vm registry** — `relaunch_stalled_vm`/`relaunch_backfill_vm` accept a `launcher_for_vm`
-      resolver but the monitor CLI passes `None` today, so a relaunch falls through to file_issue (agent) until a
-      `vm_name-prefix → launch-*.sh` registry exists (mirror `VM_PREFIX_TO_BUCKET`). Build it to make the AUTO-RELAUNCH
-      actually fire (vs file_issue→agent). Repo: deployment-service. (Safe/inert until then — never fire-and-forget.)
+- [x] ✅ [CODE] P2. **launcher-for-vm registry** — deployment-service@3045b7f: `deployment_service/data_pipeline_monitors/launcher_registry.py` maps all 189 `VM_PREFIX_TO_BUCKET` prefixes → `scripts/vm/launch-*.sh` (118 to a launcher, 71 explicit `None`+reason for fan-out/singleton/non-backfill); `resolve_launcher_for_vm(vm)` does longest-prefix match (fail-safe None→file_issue). Wired into both fleet-monitor sweeps (see INFRA todo above) → AUTO-RELAUNCH fires vs file_issue. Guard test `tests/unit/test_launcher_registry.py` (7 tests): every watchdog prefix has a registry entry + every non-None launcher file exists + bidirectional parity + `tradfi-bf-cme-ohlcv-1m-*` resolves non-None. QG green (64s). Repo: deployment-service.
