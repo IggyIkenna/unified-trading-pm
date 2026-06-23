@@ -1962,7 +1962,6 @@
     "deployment-service": "0.66.0",
     "execution-service": "0.32.0",
     "features-service": "0.39.0",
-    "greeks-service": "0.18.0",
     "market-data-processing-service": "0.12.0",
     "strategy-service": "0.40.0"
   },
