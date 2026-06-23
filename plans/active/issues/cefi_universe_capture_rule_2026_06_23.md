@@ -174,6 +174,26 @@ rotating baskets).
 
 ## Progress Log
 
+- **2026-06-23 (staking-spot exception EXPANDED 13 → 28 — UAC SSOT)** — operator wants ALL wrapped+unwrapped LST/LRT
+  equivalents in the carve-out (forward-looking allow-list; harmless extras). Shipped `unified-api-contracts@b6aca267`
+  (QG-green 218s, quickmerge → LDR, `Quickmerge: agent`). UAC-only — did NOT touch instruments-service (concurrent
+  catalogue-rollup session owns it).
+  - **`STAKING_SPOT_EXCEPTION`** (`registry/cefi_instrument_universe.py`) 13 → **28** members, sorted/deterministic:
+    `{ANKRETH, BSOL, CBETH, EETH, EIGEN, ETHFI, ETHX, EZETH, FRXETH, INF, JITOSOL, JSOL, JTO, KING, METH, MSOL, OSETH,
+    PUFETH, RETH, RSETH, RSTETH, RSWETH, SCNSOL, SFRXETH, STETH, SWETH, WEETH, WSTETH}`. Added 15: ETH LSTs/LRTs
+    FRXETH/SFRXETH (Frax), ANKRETH (Ankr), OSETH (StakeWise), SWETH/RSWETH (Swell), ETHX (Stader), METH (Mantle),
+    RSETH (Kelp), EZETH (Renzo), PUFETH (Puffer), RSTETH; + SOL LSTs JSOL, SCNSOL, INF (Sanctum).
+  - **Same 15 added to `CEFI_BASE_ASSET_UNIVERSE`** (each placed in its sorted slot) so the subset invariant
+    `STAKING_SPOT_EXCEPTION ⊆ CEFI_BASE_ASSET_UNIVERSE` holds — universe now **540** base assets (was 525). Size-band
+    floor `>= 500` (`test_cefi_universe_coverage.py`) still passes. Universe count-comment updated 525 → 540.
+  - **`MVP_SCOPE_CONFIG_VERSION` 6 → 7** (`mvp_scope.py`) with a v7 docstring — the cefi `base_ccys` content-hash flips
+    automatically with the universe constant. (mvp_scope.py is now 998 L; the QG 900-line check WARNs/non-blocking here —
+    overall gate PASSED, sentinel written.)
+  - **Tests** (`tests/unit/test_mvp_scope.py`): `test_staking_spot_exception_members` expected-set rewritten to the 28
+    (+ `len == 28` assert); `_NEWLY_ADDED_LSTS` extended to all 22 newly-added LSTs (7 v6 + 15 v7) so
+    `test_newly_added_lsts_present_in_base_universe` covers them; `test_capture_universe_config_version_bumped` floor
+    `>= 6` → `>= 7`. Targeted pytest 105/105 green; subset/no-dupe verified.
+
 - **2026-06-23 (staking-spot exception — UAC SSOT)** — wired the operator's spot-without-perp carve-out into the shared
   capture predicate. Shipped `unified-api-contracts@d5b1fb5` (QG-green 227s, quickmerge → LDR, `Quickmerge: agent`).
   - **New UAC constant** `STAKING_SPOT_EXCEPTION` (frozenset, sorted/deterministic) in
