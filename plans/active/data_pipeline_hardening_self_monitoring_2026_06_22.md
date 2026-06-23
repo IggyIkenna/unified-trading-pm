@@ -408,6 +408,14 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [x] ✅ P1. **Register `DP_DAILY_DIGEST` + `DP_HYGIENE_SUMMARY`** — DONE registry@PM 6e0ef283c + uac@63cb2bbd (DIGEST
       category + 2 INFO rules, parity test 40 rules green). Digest now ROUTES to #data-pipeline-alerts. UTL
       string-constants (cleanliness, non-routing) left on-disk in slot clone — see todo below.
+- [x] ✅ [SCRIPT] P1. **Reduce `#data-pipeline-alerts` emit-side spam** — e2e-testing@949fdc3. Digest `run()` now emits
+      `DP_DAILY_DIGEST` EXACTLY ONCE (union over all AGs: `details={message, asset_groups, per_ag}`) instead of the 5×
+      per-AG fan-out; every AG-scoped `emit_dp_event` in the 3 audit scripts (`manifest_hygiene_daily` DP_NOT_V9/etc +
+      `reprobe_new_empty_confirmed` DP_EMPTY_REPROBE_DISAGREEMENT) now carries `asset_group` + a human one-line
+      `message` so alerts render `… asset_group=X … <summary>` not bare `[DP_X] DP_X`. Tests: union-emitted-once for a
+      5-AG run + hygiene emit carries `asset_group`+`message` (`tests/unit/test_dp_audit.py`, 27 pass). QG green.
+      **e2e-audit image must be REBUILT to go live** (`gcloud builds submit --config=cloudbuild-e2e-audit.yaml
+      --region=asia-northeast1 .`). — **e2e-testing**
 - [ ] [CODE] P3. **UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` string constants** (cleanliness only — routing already
       works via the UAC rule matching the event string): 2-line add to `events/event_types.py` + `events/__init__`
       export; edits are green-and-ready on-disk in the slot UTL clone, ship on the next clean UTL window (a peer was
