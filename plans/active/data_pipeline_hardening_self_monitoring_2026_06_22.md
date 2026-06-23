@@ -414,8 +414,8 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       `reprobe_new_empty_confirmed` DP_EMPTY_REPROBE_DISAGREEMENT) now carries `asset_group` + a human one-line
       `message` so alerts render `… asset_group=X … <summary>` not bare `[DP_X] DP_X`. Tests: union-emitted-once for a
       5-AG run + hygiene emit carries `asset_group`+`message` (`tests/unit/test_dp_audit.py`, 27 pass). QG green.
-      **e2e-audit image must be REBUILT to go live** (`gcloud builds submit --config=cloudbuild-e2e-audit.yaml
-      --region=asia-northeast1 .`). — **e2e-testing**
+      **e2e-audit image must be REBUILT to go live**
+      (`gcloud builds submit --config=cloudbuild-e2e-audit.yaml     --region=asia-northeast1 .`). — **e2e-testing**
 - [ ] [CODE] P3. **UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` string constants** (cleanliness only — routing already
       works via the UAC rule matching the event string): 2-line add to `events/event_types.py` + `events/__init__`
       export; edits are green-and-ready on-disk in the slot UTL clone, ship on the next clean UTL window (a peer was
@@ -995,6 +995,18 @@ items:
   76.2%, remaining FILLABLE eu=1,607,003 (all databento/yahoo) = the wave-launcher's reachable 100% target.** Plan:
   `tradfi_multisource_backfill_2026_06_22.md`.
 
+- **2026-06-23 follow-ups RESOLVED (slot-0·human-planning, Opus 4.8)** — (P1) UAC image-packaging: clean alerting image
+  now bundles `registry/data/*.json`; `dp-alerting-subscriber` RE-DEPLOYED clean (rev 00008-csc, NO datafix layer);
+  published UAC wheel 0.48.0 exports `build_fetch_evidence` (fleet ImportError gone). (P3) FX→yahoo FIXED (3 bugs:
+  launcher var-order/databento-misroute, D+1/D+2 timestamp-bias zeroing rows, --source gate) + verified a live Yahoo FX
+  row — `deployment-service@6dbce30` `mtds@bf19ab8/5272143`. (P4) CBOE-316 options_chain (SPX/VIX OPRA options, no
+  provider) → `empty_confirmed/EXPECTED_NO_PROVIDER_COVERAGE` (`mtds@b3f67ac`, GATE-passed). (P2) alerting app-logs:
+  code FIXED (stdout handler + consume/route/POST INFO logs, `alerting@9b6d429/8e511d4/9e52751`) verified LOCALLY, but
+  the DEPLOYED instance still surfaces 0 app-logs in Cloud Logging (Cloud-Run stdout-ingestion quirk; webhook still
+  fires — alerting works, only visibility impacted) → `[INFRA] P2`. **NEW FINDING**: an FX cell marked `captured` with
+  NO backing parquet — possible pre-existing manifest/data mismatch → audit follow-up. **Backfill** running at cap=20,
+  ~11k captured/day (~85% rate), consolidator current; multi-day grind on the 1.6M backlog, monitor `bvcaydjvf` armed.
+
 ## Per-AG hardening dispatch (tracked todos — the prompts below are the cold-start context)
 
 - [x] ✅ [CODE] P0. **DeFi agent — CORRECTNESS-CORE DONE + ALL GUARDS VERIFIED on LDR (2026-06-22 resume-run); lone
@@ -1332,40 +1344,42 @@ dispatch prompts.
       wired actuator → it fell through to `file_issue`; a hung VM like `tradfi-bf-cme` never auto-recovered). NEW
       `scripts/recovery/relaunch_stalled_vm.py` (mirrors `relaunch_backfill_vm` — idempotent, ≤2/(vm-prefix, day) then
       page, emits a lifecycle event, NEVER fire-and-forget; unconditional on exit code since the watchdog already killed
-      the VM, the stall verdict is the trigger) + registered `DP_VM_STALL → relaunch_stalled_vm` in `_DP_RECOVERY_ACTIONS`
-      + `heartbeat_stall_watcher.sweep` gains a `launcher_for_vm` resolver so the DP_VM_STALL finding carries
-      `relaunch_launcher` (absent → falls through to file_issue). DP_EVENT_LOOP_STARVED stays file_issue (a never-emitting
-      VM is a code bug, not a relaunch). 5 new credential-free tests. — deployment-service@1b529e4 (QG --no-fix exit 0 54s)
+      the VM, the stall verdict is the trigger) + registered `DP_VM_STALL → relaunch_stalled_vm` in
+      `_DP_RECOVERY_ACTIONS` + `heartbeat_stall_watcher.sweep` gains a `launcher_for_vm` resolver so the DP_VM_STALL
+      finding carries `relaunch_launcher` (absent → falls through to file_issue). DP_EVENT_LOOP_STARVED stays file_issue
+      (a never-emitting VM is a code bug, not a relaunch). 5 new credential-free tests. — deployment-service@1b529e4 (QG
+      --no-fix exit 0 54s)
 - [x] ✅ [CODE] P1. **Make file_issue ACTIONABLE so an agent picks it up** — both issue writers
       (`escalation.py::_write_issue_doc` + `e2e _dp_common.file_escalation_issue`) now emit frontmatter
       `parent_epic: observability_master` + `assigned_vm: vm-cross-cutting` (PlanRegenLoop ONLY ingests an issues/ doc
-      with an explicit `assigned_vm` → was silently skipped) + a real `- [ ] [CODE] P1. <finding> — diagnose + fix <root
-      cause> in <target repo>` todo (VM-lifecycle → deployment-service, misclassified-empty/divergence → MTDS) + cold-start
-      context (read SUB_AGENT_MANDATORY_RULES + the DP codex + the finding details). Idempotent (overwrites same
-      slug+date doc). deployment-service half (`escalation.py`) SHIPPED **deployment-service@1b529e4**; e2e half
-      (`_dp_common.py`) QG-green but **🟡 BLOCKED ON DIRTY DEP** (quickmerge pre-flight refuses while peer's
-      `strategy-service` WIP is uncommitted — never quickmerge with dirty deps). Ship the e2e half once that foreign WIP
-      clears. — deployment-service@1b529e4 + e2e-testing (pending)
+      with an explicit `assigned_vm` → was silently skipped) + a real
+      `- [ ] [CODE] P1. <finding> — diagnose + fix <root     cause> in <target repo>` todo (VM-lifecycle →
+      deployment-service, misclassified-empty/divergence → MTDS) + cold-start context (read SUB_AGENT_MANDATORY_RULES +
+      the DP codex + the finding details). Idempotent (overwrites same slug+date doc). deployment-service half
+      (`escalation.py`) SHIPPED **deployment-service@1b529e4**; e2e half (`_dp_common.py`) QG-green but **🟡 BLOCKED ON
+      DIRTY DEP** (quickmerge pre-flight refuses while peer's `strategy-service` WIP is uncommitted — never quickmerge
+      with dirty deps). Ship the e2e half once that foreign WIP clears. — deployment-service@1b529e4 + e2e-testing
+      (pending)
 - [x] ✅ [CODE] P1. **Fast CI-parity auto-spawn for CRITICAL** — `route_finding` now ALSO fires a best-effort
       `repository_dispatch` (`escalate-to-orchestrator`, `client_payload[wall_type]=data_pipeline_failure`) for a
-      page_operator-tier (CRITICAL) OR confirmed file_issue finding, auth'd with the workflow-capable `GH_PAT` from Secret
-      Manager. Best-effort: a missing token (token-less Cloud Run Job) / SM-denied / network failure returns
+      page_operator-tier (CRITICAL) OR confirmed file_issue finding, auth'd with the workflow-capable `GH_PAT` from
+      Secret Manager. Best-effort: a missing token (token-less Cloud Run Job) / SM-denied / network failure returns
       `{dispatched: False}` and NEVER breaks the finding (mirrors the alerting soft-gates) — Fix 2's PlanRegenLoop path
       still picks it up. — deployment-service@1b529e4
 - [ ] [CODE] P1. **Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half** (frontmatter
       `parent_epic`/`assigned_vm` + `- [ ] [CODE] P1.` todo + `target_repo` routing + new
       `test_file_escalation_issue_is_actionable`) — code is WRITTEN + QG-green (`quality-gates.sh --no-fix` exit 0 31s)
       but quickmerge is **🟡 BLOCKED**: e2e's pre-flight refuses while peer `strategy-service` WIP is uncommitted (never
-      quickmerge with dirty deps). Re-run `quickmerge --agent --files 'scripts/audit/_dp_common.py
-      tests/unit/test_dp_audit.py'` from e2e-testing once `strategy-service` is clean. Provenance: slot-3 escalation-loop
-      2026-06-23. — e2e-testing
+      quickmerge with dirty deps). Re-run
+      `quickmerge --agent --files 'scripts/audit/_dp_common.py     tests/unit/test_dp_audit.py'` from e2e-testing once
+      `strategy-service` is clean. Provenance: slot-3 escalation-loop 2026-06-23. — e2e-testing
 - [ ] [INFRA] P2. **Wire `launcher_for_vm` in the dp-fleet-monitor CLI** for BOTH `heartbeat_stall_watcher.sweep` AND
-      `exit_code_fleet_monitor.sweep` (both accept the resolver; the CLI passes `None` today → the relaunch actuators fall
-      through to file_issue for want of a launcher binding). Add a deterministic `vm_name → launch-*.sh` resolver (the
-      VM-prefix → launcher map is NOT 1:1 — e.g. `tradfi-bf-cme-*` ← `launch-tradfi-bf-cme.sh`; build a registry, do NOT
-      guess) so a stalled/OOM'd VM actually auto-relaunches end-to-end. Until then the actuator + sweep param are ready but
-      inert (safe: file_issue + PlanRegenLoop still fire). **NICE-TO-HAVE** — provenance: slot-3 escalation-loop work
-      2026-06-23. — deployment-service
+      `exit_code_fleet_monitor.sweep` (both accept the resolver; the CLI passes `None` today → the relaunch actuators
+      fall through to file_issue for want of a launcher binding). Add a deterministic `vm_name → launch-*.sh` resolver
+      (the VM-prefix → launcher map is NOT 1:1 — e.g. `tradfi-bf-cme-*` ← `launch-tradfi-bf-cme.sh`; build a registry,
+      do NOT guess) so a stalled/OOM'd VM actually auto-relaunches end-to-end. Until then the actuator + sweep param are
+      ready but inert (safe: file_issue + PlanRegenLoop still fire). **NICE-TO-HAVE** — provenance: slot-3
+      escalation-loop work 2026-06-23. — deployment-service
 - [x] ✅ [CODE] P1. **Auto-flip reclassifier** (the detect→prove→FLIP→re-capture loop) — DONE **e2e-testing@1b220fc**.
       `reprobe_new_empty_confirmed.py` gains a `--reclassify-apply` mode (default OFF/dry-run): ONLY a
       `REPROBE_RETURNED_ROWS` verdict (a wired live re-fetch hook ACTUALLY returned rows = PROVEN misclassification)
@@ -1492,9 +1506,9 @@ dispatch prompts.
       pull-base fix `5907886` (so the `FROM utl@<pinned> denied` error is gone — the pinned `af5f6c1e` manifest is
       pre-pulled authenticated). The 3 DP monitor Cloud Run jobs (`uts-prod-dp-exit-code-monitor` /
       `-dp-heartbeat-watcher` / `-dp-meta-watchers`) pull `deployment-api:latest` and run hardened code on their next
-      `*/5` execution. **Residual (NOT owed by me): the PROPER version-tagged main-merge of PR#166 still waits on Actions
-      recovery** (operator: clear the GH Actions billing limit / confirm GH incident) — but functionally the hardened
-      image is already live. — deployment-service@a1ae267 | deployment-api:latest=084b690b
+      `*/5` execution. **Residual (NOT owed by me): the PROPER version-tagged main-merge of PR#166 still waits on
+      Actions recovery** (operator: clear the GH Actions billing limit / confirm GH incident) — but functionally the
+      hardened image is already live. — deployment-service@a1ae267 | deployment-api:latest=084b690b
   - **🔴 RE-VERIFIED + OUTAGE-SPREAD-CONFIRMED 2026-06-22 ~22:57Z (resume-run, slot·human-planning, Opus 4.8):** still
     down ~3.5h. PR#166 = OPEN/MERGEABLE/BLOCKED (waiting on the never-running `quality-gates-v2`); MTDS#309 =
     OPEN/MERGEABLE/BLOCKED. A v2 auto-re-ran on PR#166 head at 22:56Z and **failed in 8s, 0 steps, empty `runner_name`**
@@ -1510,22 +1524,22 @@ dispatch prompts.
     IS the monitor). PAT cannot read account billing (403) — operator must check it directly.
 - [x] ✅ [INFRA] P2. **client-reporting-api:latest REBUILT with A4 via DIRECT Cloud Build (2026-06-23 ~08:55Z,
       slot·human-planning, Opus 4.8, /autonomous).** Built `unified-trading-system/client-reporting-api:latest` directly
-      from CRA LDR tip `6b6df25` (which carries A4 — deployment-api URL from typed `UnifiedCloudConfig.deployment_api_url`)
-      via `gcloud builds submit` (build `be2336ca` SUCCESS). **cr-api:latest = `sha256:e6fa6c87…` tagged `6b6df25,latest`**
-      (was `6ae8e785` predating A4). The CRA cloudbuild template declares `_BRANCH` so a `submit` needs
-      `options.substitution_option: ALLOW_LOOSE` + an explicit `SHORT_SHA` (captured as a finding — the PM template API
-      variant isn't directly `gcloud builds submit`-able without that; see Progress Log). Residual: the proper
-      version-tagged main-merge still rides the Actions recovery, but A4 is live in the image now. —
-      client-reporting-api@6b6df25 | client-reporting-api:latest=e6fa6c87
+      from CRA LDR tip `6b6df25` (which carries A4 — deployment-api URL from typed
+      `UnifiedCloudConfig.deployment_api_url`) via `gcloud builds submit` (build `be2336ca` SUCCESS). **cr-api:latest =
+      `sha256:e6fa6c87…` tagged `6b6df25,latest`** (was `6ae8e785` predating A4). The CRA cloudbuild template declares
+      `_BRANCH` so a `submit` needs `options.substitution_option: ALLOW_LOOSE` + an explicit `SHORT_SHA` (captured as a
+      finding — the PM template API variant isn't directly `gcloud builds submit`-able without that; see Progress Log).
+      Residual: the proper version-tagged main-merge still rides the Actions recovery, but A4 is live in the image now.
+      — client-reporting-api@6b6df25 | client-reporting-api:latest=e6fa6c87
 
-- [ ] [INFRA] P1. **SCHEDULED consolidator asset_group guard — deliver via MTDS image (in flight 2026-06-23).** The
-      ~40 `uts-prod-manifest-consolidator-*` Cloud Run jobs run `unified_trading_library.manifest_consolidator` from
+- [ ] [INFRA] P1. **SCHEDULED consolidator asset_group guard — deliver via MTDS image (in flight 2026-06-23).** The ~40
+      `uts-prod-manifest-consolidator-*` Cloud Run jobs run `unified_trading_library.manifest_consolidator` from
       `market-tick-data-service:latest` (NOT the deployment-service-jobs image). The v9 blank-asset_group self-heal
       (`_asset_group_for_market_data_bucket`, UTL `7b2306c3`/`6acbb9ad`) is in UTL `:latest` (`3f2b47f2`) but NOT the
       MTDS-pinned base `af5f6c1e`. Bumped MTDS `Dockerfile` base-digest `af5f6c1e`→`3f2b47f2`
       (market-tick-data-service@81dbe37) + direct-built `market-tick-data-service:latest` from LDR `b3f67ac` (build
-      `beb0b08e`). **Flip when**: build SUCCESS + new MTDS:latest digest verified to differ + one consolidator
-      execution (e.g. `uts-prod-manifest-consolidator-instruments-defi`) runs exit 0 on the new image. — market-tick-data-service
+      `beb0b08e`). **Flip when**: build SUCCESS + new MTDS:latest digest verified to differ + one consolidator execution
+      (e.g. `uts-prod-manifest-consolidator-instruments-defi`) runs exit 0 on the new image. — market-tick-data-service
 
 ## Progress Log — Actions-gated image rebuilds DONE via DIRECT Cloud Build (2026-06-23, slot·human-planning, Opus 4.8, /autonomous)
 
@@ -1553,16 +1567,17 @@ from the **`market-tick-data-service:latest`** image (audited every job's `image
 image (tarball-cleanup + log-archival only) does NOT carry the consolidator runtime. The guard
 (`_asset_group_for_market_data_bucket`, the v9 blank-asset_group self-heal) is UTL@`7b2306c3`/`6acbb9ad`, and UTL bakes
 into MTDS via the pinned base-image digest. The MTDS image at `7662eba` (2026-06-22T16:32) pinned UTL base `af5f6c1e`
-(built 14:35, BEFORE the guard) → did NOT have the guard. UTL `:latest` = `3f2b47f2` (built 00:40Z from source `6acbb9a`)
-DOES carry the guard. So to give the SCHEDULED consolidators the guard permanently I bumped MTDS `Dockerfile`
+(built 14:35, BEFORE the guard) → did NOT have the guard. UTL `:latest` = `3f2b47f2` (built 00:40Z from source
+`6acbb9a`) DOES carry the guard. So to give the SCHEDULED consolidators the guard permanently I bumped MTDS `Dockerfile`
 `ARG BASE_IMAGE_DIGEST` `af5f6c1e` → `3f2b47f2` (the canonical FROM-digest-ratchet advance) and direct-built
 `market-tick-data-service:latest` from MTDS LDR `b3f67ac` (build `beb0b08e`, IN FLIGHT — runs full in-image QG).
 
 **FINDING — PM-template API-variant cloudbuilds aren't directly `gcloud builds submit`-able as-is.** The CRA template
-declares `_BRANCH` (default `live-defi-rollout`) but `submit` rejected it (`key "_BRANCH" … not matched in the template`)
-and `SHORT_SHA` is empty on a local-dir submit → empty image tag. Workaround used: temp `/tmp` copy with
-`options.substitution_option: ALLOW_LOOSE` + explicit `--substitutions=SHORT_SHA=<sha>`. (Not a code change; a
-direct-submit ergonomics note. Trigger-fired builds are unaffected — BRANCH_NAME/SHORT_SHA are auto-set there.)
+declares `_BRANCH` (default `live-defi-rollout`) but `submit` rejected it
+(`key "_BRANCH" … not matched in the template`) and `SHORT_SHA` is empty on a local-dir submit → empty image tag.
+Workaround used: temp `/tmp` copy with `options.substitution_option: ALLOW_LOOSE` + explicit
+`--substitutions=SHORT_SHA=<sha>`. (Not a code change; a direct-submit ergonomics note. Trigger-fired builds are
+unaffected — BRANCH_NAME/SHORT_SHA are auto-set there.)
 
 ## Progress Log — 60s background-timer heartbeat (per-chunk → time-based) SHIPPED (2026-06-22)
 
@@ -1889,10 +1904,10 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
 `#data-pipeline-alerts` mirror, no failure):
 
 1. **Subscriber crash (the actual "zero alerts" cause)** — `dp-alerting-subscriber` (Cloud Run, always-on) ran a
-   background pull task that **died on its FIRST DP_\* message at 20:20Z and stayed dead 4+h** (zero logs, messages
+   background pull task that **died on its FIRST DP\_\* message at 20:20Z and stayed dead 4+h** (zero logs, messages
    accumulating unacked in `lifecycle-events-sub`). Root cause: `AlertSubscriber._process_message` AND the whole
-   `route_event` path (`router.py` ALERT_ROUTED/ALERT_SENT telemetry) call `log_event`, but the subscriber **never
-   calls `setup_events()`** → `RuntimeError("Event logging not initialized")` → unhandled in the lifespan
+   `route_event` path (`router.py` ALERT_ROUTED/ALERT_SENT telemetry) call `log_event`, but the subscriber **never calls
+   `setup_events()`** → `RuntimeError("Event logging not initialized")` → unhandled in the lifespan
    `asyncio.create_task` → silent task death. FIX (alerting-service `alert_subscriber.py`): (a) `_ensure_local_events()`
    = `setup_events(mode="local")` at stream start — **LOCAL is mandatory** (LIVE would self-publish the telemetry back
    onto `lifecycle-events` which this subscriber consumes → loop; Slack delivery is the webhook, independent of the
@@ -1901,9 +1916,9 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
    emit 9 → 9 ALERT_RECEIVED → 9 ALERT_ROUTED+ALERT_SENT → `_mirror_to_data_pipeline_slack` (no mirror-raise).
 
 2. **Watcher false-positive storm (would have made it WORSE on deploy)** — the BUG2 watcher (reads worker
-   PIPELINE_HEARTBEAT) flagged **30 of 41 live VMs** EVENT_LOOP_STARVED because ~30 VMs predate the heartbeat-tarball and
-   emit no marker though healthy. FIX (deployment-service `heartbeat_stall_watcher.py`): heartbeat-ABSENT fallback on the
-   run.log PROGRESS signal — no heartbeat + fresh log = ALIVE (transitional old-tarball); + frozen log past
+   PIPELINE_HEARTBEAT) flagged **30 of 41 live VMs** EVENT_LOOP_STARVED because ~30 VMs predate the heartbeat-tarball
+   and emit no marker though healthy. FIX (deployment-service `heartbeat_stall_watcher.py`): heartbeat-ABSENT fallback
+   on the run.log PROGRESS signal — no heartbeat + fresh log = ALIVE (transitional old-tarball); + frozen log past
    `run_log_stall_minutes` = STALL; + no log = EVENT_LOOP_STARVED; run.log age now computed for ALL VMs (the live-sparse
    exemption only guards the heartbeat-FRESH hung-process check, via `is_backfill`). Result: **9 stalled (real) vs 30
    (29 false)**.
@@ -1915,62 +1930,96 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
 ### REAL OUTAGE surfaced by the fixed watcher (P0 — needs recovery)
 
 - [ ] [INFRA] P0. **9 live data VMs frozen 5.5–32h, silently RUNNING, zero capture** — the old infra-sidecar watcher was
-  blind to all of them: `mtds-live-cefi-deribit-{book-snapshot-5,derivative-ticker,trades}` (~6.8h),
-  `mtds-live-cefi-hyperliquid-{book-snapshot-5,derivative-ticker,trades}` (~6.8h), `mtds-live-tradfi-cme-trades` (5.8h),
-  `tradfi-bf-cme-ohlcv-1m-ym-2020` (5.5h), `tradfi-fwd-daily-cron-20260621-154132` (32h). Diagnose root cause per family
-  (binance live had a fatal `ValueError: live_tick_blob_path … glued 'VENUE-CHAIN' token` at 23:41 → likely the same
-  non-canonical-path crash class across the cefi live VMs) + relaunch. (deployment-service / mtds)
-- [ ] [CODE] P1. **binance/bybit/okx/kraken live-tick `live_tick_blob_path` glued-VENUE-CHAIN crash** — `venue='BINANCE-FUTURES'`
-  carries a glued `VENUE-CHAIN` token; the canonical-path builder raises → live producer dies. Fix the venue/chain split
-  in the live tick blob-path builder. (mtds / UAC)
-- [ ] [CODE] P1. **tradfi `ohlcv_15s` is a SPURIOUS aggregation tier (do NOT add a contract — it would MASK the bug)**
-  — `mdps-backfill-tradfi` spews CRITICAL `No SchemaContract registered for asset_group='tradfi'
-  instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`. Diagnosis (2026-06-23): tradfi OHLCV is `ohlcv_1s`/
-  `ohlcv_1m` (fetched) → aggregated to `ohlcv_15m`/`ohlcv_1h`/`ohlcv_24h`; a 15-**second** tradfi tier is NOT valid
-  (`ohlcv_15s` appears only as a CeFi example). The processing service is aggregating tradfi to a 15s tier it shouldn't
-  — fix the aggregation **tier list** for tradfi in market-data-processing-service (drop 15s for tradfi), NOT by adding
-  an `ohlcv_15s` CONTRACT_REGISTRY entry (which would legitimise a bogus tier). Shard-isolated (the VM stays alive), so
-  P1 not P0. (market-data-processing-service)
+      blind to all of them: `mtds-live-cefi-deribit-{book-snapshot-5,derivative-ticker,trades}` (~6.8h),
+      `mtds-live-cefi-hyperliquid-{book-snapshot-5,derivative-ticker,trades}` (~6.8h), `mtds-live-tradfi-cme-trades`
+      (5.8h), `tradfi-bf-cme-ohlcv-1m-ym-2020` (5.5h), `tradfi-fwd-daily-cron-20260621-154132` (32h). Diagnose root
+      cause per family (binance live had a fatal `ValueError: live_tick_blob_path … glued 'VENUE-CHAIN' token` at 23:41
+      → likely the same non-canonical-path crash class across the cefi live VMs) + relaunch. (deployment-service / mtds)
+- [ ] [CODE] P1. **binance/bybit/okx/kraken live-tick `live_tick_blob_path` glued-VENUE-CHAIN crash** —
+      `venue='BINANCE-FUTURES'` carries a glued `VENUE-CHAIN` token; the canonical-path builder raises → live producer
+      dies. Fix the venue/chain split in the live tick blob-path builder. (mtds / UAC)
+- [ ] [CODE] P1. **tradfi `ohlcv_15s` is a SPURIOUS aggregation tier (do NOT add a contract — it would MASK the bug)** —
+      `mdps-backfill-tradfi` spews CRITICAL
+      `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`.
+      Diagnosis (2026-06-23): tradfi OHLCV is `ohlcv_1s`/ `ohlcv_1m` (fetched) → aggregated to
+      `ohlcv_15m`/`ohlcv_1h`/`ohlcv_24h`; a 15-**second** tradfi tier is NOT valid (`ohlcv_15s` appears only as a CeFi
+      example). The processing service is aggregating tradfi to a 15s tier it shouldn't — fix the aggregation **tier
+      list** for tradfi in market-data-processing-service (drop 15s for tradfi), NOT by adding an `ohlcv_15s`
+      CONTRACT_REGISTRY entry (which would legitimise a bogus tier). Shard-isolated (the VM stays alive), so P1 not P0.
+      (market-data-processing-service)
 - [ ] [CODE] P1. **Make Slack the PRIMARY alerting transport — drop Telegram (operator decision 2026-06-23)** — the
-  generic/incident path in `alerting_service/notifiers/router.py` is currently TELEGRAM-primary (`_deliver_message`:
-  "Slack DEPRECATED: use Telegram"; `_match_routing_rules` no-match default = `{"telegram"}`; kill-switch/circuit-breaker/
-  preflight → Telegram). Operator wants **Slack-only**: (1) route generic/incident alerts to a DEDICATED
-  **#uts-live-alerts** Slack channel via `_mirror_to_uts_live_alerts_slack` (already exists) reading the
-  `alerting-slack-webhook-url` SM secret; (2) flip the no-match default + rule channels `telegram`→`slack`; (3) RETIRE
-  the Telegram transport (`send_telegram` / `alerting-telegram-bot-token` / `-chat-id` / `telegram_chat_id_ops`) + the
-  "DEPRECATED Slack" framing; (4) update routing-rule tests. **BLOCKED-CREDENTIALS**: needs the operator's Slack
-  incoming-webhook URL for #uts-live-alerts → store as SM secret `alerting-slack-webhook-url` (only the operator can
-  provide it). DP_* data-pipeline alerts already deliver to #data-pipeline-alerts (separate, working). (alerting-service)
+      generic/incident path in `alerting_service/notifiers/router.py` is currently TELEGRAM-primary (`_deliver_message`:
+      "Slack DEPRECATED: use Telegram"; `_match_routing_rules` no-match default = `{"telegram"}`;
+      kill-switch/circuit-breaker/ preflight → Telegram). Operator wants **Slack-only**: (1) route generic/incident
+      alerts to a DEDICATED **#uts-live-alerts** Slack channel via `_mirror_to_uts_live_alerts_slack` (already exists)
+      reading the `alerting-slack-webhook-url` SM secret; (2) flip the no-match default + rule channels
+      `telegram`→`slack`; (3) RETIRE the Telegram transport (`send_telegram` / `alerting-telegram-bot-token` /
+      `-chat-id` / `telegram_chat_id_ops`) + the "DEPRECATED Slack" framing; (4) update routing-rule tests.
+      **BLOCKED-CREDENTIALS**: needs the operator's Slack incoming-webhook URL for #uts-live-alerts → store as SM secret
+      `alerting-slack-webhook-url` (only the operator can provide it). DP\_\* data-pipeline alerts already deliver to
+      #data-pipeline-alerts (separate, working). (alerting-service)
 - [ ] [CODE] P2. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should not**
-  — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but `alerting-telegram-bot-token` +
-  `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the Slack-fallback secret only fires
-  when Telegram is unconfigured (my local test lacked Telegram → hit the miss; in prod the generic path uses Telegram).
-  So this is NOT a missing-secret blocker. The real refinement: routine DP telemetry (`DP_FLEET_MONITOR_RUN_STARTED`/
-  `_COMPLETED`) should NOT fall through to the generic INCIDENT path at all — they should mirror to #data-pipeline-alerts
-  as INFO only (or be suppressed), not page Telegram. Add a DP-telemetry routing rule so only genuine DP_* findings
-  (DP_VM_STALL / DP_EVENT_LOOP_STARVED / CONSOLIDATOR_DOWN) reach the incident path. DP_\* ALERTS already work via the
-  data-pipeline mirror (`DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). Non-fatal (per-message isolation skips it). (alerting-service)
+      — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but
+      `alerting-telegram-bot-token` + `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the
+      Slack-fallback secret only fires when Telegram is unconfigured (my local test lacked Telegram → hit the miss; in
+      prod the generic path uses Telegram). So this is NOT a missing-secret blocker. The real refinement: routine DP
+      telemetry (`DP_FLEET_MONITOR_RUN_STARTED`/ `_COMPLETED`) should NOT fall through to the generic INCIDENT path at
+      all — they should mirror to #data-pipeline-alerts as INFO only (or be suppressed), not page Telegram. Add a
+      DP-telemetry routing rule so only genuine DP*\* findings (DP_VM_STALL / DP_EVENT_LOOP_STARVED / CONSOLIDATOR_DOWN)
+      reach the incident path. DP*\* ALERTS already work via the data-pipeline mirror
+      (`DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). Non-fatal (per-message isolation skips it). (alerting-service)
 - [x] ✅ [DEPLOY] P0. **Both images rebuilt + redeployed — fixes are LIVE (2026-06-23 01:43Z)** — (a) `deployment-api`
-  rebuilt (Cloud Build 6928db5) + the 3 dp-monitor jobs (`uts-prod-dp-{heartbeat-watcher,exit-code-monitor,meta-watchers}`)
-  re-resolved to the fresh digest (watcher transition-safety LIVE on the */5 cron); (b) `alerting-service:latest`
-  rebuilt (Cloud Build `7f3565bc`, digest `ea7fc1b7`) + `dp-alerting-subscriber` redeployed to revision `00005-b9f`.
-  **VERIFIED operationally**: emitted 12 fresh DP_VM_STALL → `lifecycle-events-sub` drained to 0 within ~2min (vs hours
-  of accumulation pre-fix) + ZERO `Event logging not initialized`/Traceback in the deployed subscriber logs → the
-  background pull task no longer dies. A pre-existing cloudbuild bug (the `--help` operability-probe is wrong for a
-  service image → exit 127 blocked the push) was fixed alongside (best-effort probe; IMPORT probe is the gate).
-  (deployment-service / alerting-service)
+      rebuilt (Cloud Build 6928db5) + the 3 dp-monitor jobs
+      (`uts-prod-dp-{heartbeat-watcher,exit-code-monitor,meta-watchers}`) re-resolved to the fresh digest (watcher
+      transition-safety LIVE on the \*/5 cron); (b) `alerting-service:latest` rebuilt (Cloud Build `7f3565bc`, digest
+      `ea7fc1b7`) + `dp-alerting-subscriber` redeployed to revision `00005-b9f`. **VERIFIED operationally**: emitted 12
+      fresh DP_VM_STALL → `lifecycle-events-sub` drained to 0 within ~2min (vs hours of accumulation pre-fix) + ZERO
+      `Event logging not initialized`/Traceback in the deployed subscriber logs → the background pull task no longer
+      dies. A pre-existing cloudbuild bug (the `--help` operability-probe is wrong for a service image → exit 127
+      blocked the push) was fixed alongside (best-effort probe; IMPORT probe is the gate). (deployment-service /
+      alerting-service)
 
 ## Progress Log — ALERT SPAM REDUCTION (verbose→baselined, 2026-06-22/23)
-- **Channel triage** (operator showed the live #data-pipeline-alerts): the system WORKS (real findings — a hung tradfi-bf-cme VM after ApiKeyReloader, a silent sports VM, defi divergent-empty, schema-not-v9 — all via the real router/notifier path; watcher read 39 healthy VMs ALIVE, no false flood). Now reducing spam.
-- **Fix 1 — digest 5×→1 union** (e2e@949fdc3): `data_pipeline_daily_digest.py` was emitting `DP_DAILY_DIGEST` per-AG (5/day); now ONE union emit `{message:"5 AGs: cefi X% …", per_ag, asset_groups}`. Unit test asserts call_count==1. **DEPLOYED + VERIFIED**: e2e-audit image rebuilt (Cloud Build 119abbf1 SUCCESS), 3 audit jobs re-resolved `:latest`, digest executed → exit(0), 1m47s.
-- **Fix 2 — detail richness** (e2e@949fdc3): every `emit_dp_event` in digest/hygiene/reprobe now carries `asset_group` + a one-line `message` (e.g. `DP_NOT_V9` → "cefi: schema_version_not_v9 1/4 rows non-v9"), so alerts render distinguishably instead of bare `[DP_NOT_V9] DP_NOT_V9`. (The bare 3×/13× floods were mostly LEGIT-DISTINCT findings — 3 AGs not-v9, 13 stalled VMs — that only LOOKED like dupes because details weren't rendering.)
-- **Fix 3 — deep-links** : SM secret `DEPLOYMENT_UI_BASE_URL=https://deployment-dashboard-cldtjniqvq-an.a.run.app` created (alerting config_reloader hot-reloads it) → the VM-logs/Deployment/Data-status deep-link buttons now render (were suppressed when base="").
-- [ ] [CODE] P2. **Verify the deployment-service heartbeat-stall watcher emit carries `vm_name`+`asset_group`+`message`** so the per-VM DP_VM_STALL alerts render distinguishably (the 13× batch came from the OLD alerting revision 00005 @01:38 pre-base-url; confirm the current path renders vm_name). Repo: deployment-service `data_pipeline_monitors/heartbeat_stall_watcher.py`.
+
+- **Channel triage** (operator showed the live #data-pipeline-alerts): the system WORKS (real findings — a hung
+  tradfi-bf-cme VM after ApiKeyReloader, a silent sports VM, defi divergent-empty, schema-not-v9 — all via the real
+  router/notifier path; watcher read 39 healthy VMs ALIVE, no false flood). Now reducing spam.
+- **Fix 1 — digest 5×→1 union** (e2e@949fdc3): `data_pipeline_daily_digest.py` was emitting `DP_DAILY_DIGEST` per-AG
+  (5/day); now ONE union emit `{message:"5 AGs: cefi X% …", per_ag, asset_groups}`. Unit test asserts call_count==1.
+  **DEPLOYED + VERIFIED**: e2e-audit image rebuilt (Cloud Build 119abbf1 SUCCESS), 3 audit jobs re-resolved `:latest`,
+  digest executed → exit(0), 1m47s.
+- **Fix 2 — detail richness** (e2e@949fdc3): every `emit_dp_event` in digest/hygiene/reprobe now carries `asset_group` +
+  a one-line `message` (e.g. `DP_NOT_V9` → "cefi: schema_version_not_v9 1/4 rows non-v9"), so alerts render
+  distinguishably instead of bare `[DP_NOT_V9] DP_NOT_V9`. (The bare 3×/13× floods were mostly LEGIT-DISTINCT findings —
+  3 AGs not-v9, 13 stalled VMs — that only LOOKED like dupes because details weren't rendering.)
+- **Fix 3 — deep-links** : SM secret `DEPLOYMENT_UI_BASE_URL=https://deployment-dashboard-cldtjniqvq-an.a.run.app`
+  created (alerting config_reloader hot-reloads it) → the VM-logs/Deployment/Data-status deep-link buttons now render
+  (were suppressed when base="").
+- [ ] [CODE] P2. **Verify the deployment-service heartbeat-stall watcher emit carries
+      `vm_name`+`asset_group`+`message`** so the per-VM DP_VM_STALL alerts render distinguishably (the 13× batch came
+      from the OLD alerting revision 00005 @01:38 pre-base-url; confirm the current path renders vm_name). Repo:
+      deployment-service `data_pipeline_monitors/heartbeat_stall_watcher.py`.
 
 ## Progress Log — SELF-HEAL + AGENT-ESCALATION LOOP CLOSED (code) 2026-06-23
-- **Root cause why no agent ever picked up a finding**: `file_escalation_issue` wrote an issue doc with NO `assigned_vm` → `PlanRegenLoop` ONLY ingests `issues/*.md` with an explicit `assigned_vm` → the findings alerted but never became backlog tasks. FIXED.
-- **FIX 1 — DP_VM_STALL self-heal** (deployment-service@1b529e4): new `scripts/recovery/relaunch_stalled_vm.py` actuator + registered `DP_VM_STALL→_recover_stalled_vm` in `_DP_RECOVERY_ACTIONS` (≤2 relaunches/(vm-prefix,day) then page; idempotent; never fire-and-forget). So a hung VM (the tradfi-bf-cme stall) auto-relaunches instead of falling through. (DP_EVENT_LOOP_STARVED stays file_issue — never-emitting = code bug.)
-- **FIX 2 — actionable issues** (deployment-service@1b529e4 + e2e@2d262a9): both issue writers now emit frontmatter `parent_epic: observability_master` + `assigned_vm: vm-cross-cutting` + a `- [ ] [CODE] P1` todo naming the target repo (VM-lifecycle→deployment-service; data-correctness/not-v9/divergence→MTDS) → PlanRegenLoop→backlog→AutoSpawn → a worker fixes it.
-- **FIX 3 — fast CI-parity auto-spawn** (deployment-service@1b529e4): `route_finding` best-effort `repository_dispatch escalate-to-orchestrator(wall_type=data_pipeline_failure)` for CRITICAL/file_issue findings, auth via SM `GH_PAT`, soft-gated (never breaks the finding). Same path CI failures use.
-- **DEPLOY status (code-complete, deploying)**: e2e half → e2e-audit image rebuilding (Cloud Build ce6a88e4) → re-resolve audit jobs. deployment-service FIX1/FIX3 → the MONITORS run on `deployment-api:latest`, so they go live when deployment-api's image rebuilds (rides LDR→staging→main promotion; can expedite).
-- [ ] [CODE] P2. **launcher-for-vm registry** — `relaunch_stalled_vm`/`relaunch_backfill_vm` accept a `launcher_for_vm` resolver but the monitor CLI passes `None` today, so a relaunch falls through to file_issue (agent) until a `vm_name-prefix → launch-*.sh` registry exists (mirror `VM_PREFIX_TO_BUCKET`). Build it to make the AUTO-RELAUNCH actually fire (vs file_issue→agent). Repo: deployment-service. (Safe/inert until then — never fire-and-forget.)
+
+- **Root cause why no agent ever picked up a finding**: `file_escalation_issue` wrote an issue doc with NO `assigned_vm`
+  → `PlanRegenLoop` ONLY ingests `issues/*.md` with an explicit `assigned_vm` → the findings alerted but never became
+  backlog tasks. FIXED.
+- **FIX 1 — DP_VM_STALL self-heal** (deployment-service@1b529e4): new `scripts/recovery/relaunch_stalled_vm.py`
+  actuator + registered `DP_VM_STALL→_recover_stalled_vm` in `_DP_RECOVERY_ACTIONS` (≤2 relaunches/(vm-prefix,day) then
+  page; idempotent; never fire-and-forget). So a hung VM (the tradfi-bf-cme stall) auto-relaunches instead of falling
+  through. (DP_EVENT_LOOP_STARVED stays file_issue — never-emitting = code bug.)
+- **FIX 2 — actionable issues** (deployment-service@1b529e4 + e2e@2d262a9): both issue writers now emit frontmatter
+  `parent_epic: observability_master` + `assigned_vm: vm-cross-cutting` + a `- [ ] [CODE] P1` todo naming the target
+  repo (VM-lifecycle→deployment-service; data-correctness/not-v9/divergence→MTDS) → PlanRegenLoop→backlog→AutoSpawn → a
+  worker fixes it.
+- **FIX 3 — fast CI-parity auto-spawn** (deployment-service@1b529e4): `route_finding` best-effort
+  `repository_dispatch escalate-to-orchestrator(wall_type=data_pipeline_failure)` for CRITICAL/file_issue findings, auth
+  via SM `GH_PAT`, soft-gated (never breaks the finding). Same path CI failures use.
+- **DEPLOY status (code-complete, deploying)**: e2e half → e2e-audit image rebuilding (Cloud Build ce6a88e4) →
+  re-resolve audit jobs. deployment-service FIX1/FIX3 → the MONITORS run on `deployment-api:latest`, so they go live
+  when deployment-api's image rebuilds (rides LDR→staging→main promotion; can expedite).
+- [ ] [CODE] P2. **launcher-for-vm registry** — `relaunch_stalled_vm`/`relaunch_backfill_vm` accept a `launcher_for_vm`
+      resolver but the monitor CLI passes `None` today, so a relaunch falls through to file_issue (agent) until a
+      `vm_name-prefix → launch-*.sh` registry exists (mirror `VM_PREFIX_TO_BUCKET`). Build it to make the AUTO-RELAUNCH
+      actually fire (vs file_issue→agent). Repo: deployment-service. (Safe/inert until then — never fire-and-forget.)
