@@ -53,9 +53,13 @@ downstream of the sports-half FSS feature production (the Group E gate).
 
 ## P0 — FSS arb_calculator
 
-- [ ] [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
+- [x] ✅ [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
       (Verify shipped status against the features-sports-service catalog first; if already shipped, flip ✅ with the
       repo@sha evidence — otherwise implement.)
+      — features-service@9347dbeb (`features_service/sports/arb/vig.py`: `arb_calculator` added — returns `is_arb`,
+        `arb_pct`, `eligible_pairs` (dict[int, str] outcome→best-bookmaker), `duration_seconds`; exported via
+        `features_service/sports/arb/__init__.py`; 9 unit tests in
+        `tests/sports/unit/test_arb_calculator.py`; QG green 29s).
 
 ## P1 — model registry + MTDS slice
 
