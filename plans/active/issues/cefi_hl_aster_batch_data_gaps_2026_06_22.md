@@ -338,6 +338,21 @@ None, never raises) a pair-identity instrument with an unresolved quote — shar
 kill a venue. Local repro post-fix: binance-futures **869** (was 56), binance(-spot) **1167** (was 82), bybit **1497**
 (was 310), bitget-futures 951, cryptofacilities/KRAKEN-FUTURES 1148, bitfinex 288 — all parse, none raise.
 
+### ⚠️ OPERATOR DECISION — semantic conflict: full-venue-universe (this dispatch) vs wide-curated-whitelist (peer WIP)
+
+**Two concurrent, conflicting approaches to the SAME surface (cefi universe gating):**
+- **THIS dispatch (operator: "FULL universe per venue, binance-futures hundreds")** — IS@0fe8e71 + quote fix:
+  `_passes_asset_filter` DROPS the `CEFI_BASE_ASSET_UNIVERSE` base-whitelist gate for spot/perp/future → every active
+  instrument on a USD-family quote enumerates. Gate reduced to {accepted-quote, options=BTC/ETH}.
+- **Concurrent PEER (uncommitted WIP in `unified-api-contracts/.../cefi_instrument_universe.py`)** — rewrites
+  `CEFI_BASE_ASSET_UNIVERSE` into a wider survivorship-bias-free UNION (legacy-44 + historical-top-100-since-2019) but
+  DELIBERATELY KEEPS the whitelist gate ("NOT everything the venue lists — admits thousands of junk/wash pairs").
+- **Reconciliation (autonomous, per operator's explicit full-universe instruction + don't-stomp-peer-WIP)**: the edits
+  are in DIFFERENT files, no textual conflict — with my `_passes_asset_filter` change the base-whitelist is not consulted
+  for spot/perp, so the peer's widened list is moot-for-gating but harmless. Proceeded with the operator's explicit
+  "full universe" instruction. **If the operator prefers the peer's curated-gate model, revert 0fe8e71's base-gate drop
+  + adopt the peer's wide union.** Both valid; flagged for human confirmation. NOT a blocker for this dispatch.
+
 ### Progress Log (2026-06-23 — operator full-cefi-catalogue dispatch, in flight)
 
 - **Deploy mechanism resolved** (above). IS image build trigger `instruments-service-build` (asia-northeast1) fires on
@@ -443,3 +458,40 @@ Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the 
       to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the
       emitter umbrella-stamping contract (was: "DEPLOYMENT_* → #data-pipeline-alerts" only). Provenance: alerting routing
       split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
+
+## UAC capture-universe expansion — survivorship-bias-free (operator 2026-06-23)
+
+Scope: unified-api-contracts ONLY (IS catalogue re-enumeration + the CSV that CONSUMES this universe = another
+worker's lane). Replaced `CEFI_BASE_ASSET_UNIVERSE` (the 44-coin MVP cap gating `_passes_asset_filter` on the Tardis
+CEX venues) with the curated UNION of three tranches — KEEPS the gate, widens the universe:
+
+1. **Legacy 44** — all kept (top-cap majors + the 2026-06-16 operator-requested coverage incl. EIGEN dust + FTT/LUNA
+   delisting-test coins).
+2. **Top-100-by-mcap aggregated across TIME since 2019** — curated checked-in frozenset (no live mcap API) = the union
+   of coins that were top-100 at each year-end/cycle-peak 2019→today. Survivorship-bias-free by construction: includes
+   the retired/collapsed big names (LUNA, LUNC, UST, USTC, FTT, SRM, CEL, WAVES, OKB, HT, LEO, OMG, NEXO, HEDG, NANO,
+   STEEM, …) + all current majors/L1s/L2s/DeFi/memecoins (BONK, WIF, PEPE, SHIB, FLOKI, …).
+3. **All HYPERLIQUID + ASTER perp base assets** — read from `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`
+   (venue ∈ {HYPERLIQUID, ASTER}, instrument_type=PERPETUAL, deduped `base_asset` column), scaling prefixes (1000/k)
+   normalised, equity/tokenized-stock/macro tickers (already covered by `CEFI_EQUITY_PERP_BASE_UNIVERSE` +
+   `crypto_equity_link`) + non-ASCII garbage symbols excluded → 384 crypto-only HL/ASTER perp bases. HL/ASTER bypass
+   the filter themselves; the point is the CEX side captures the same coins for cross-venue dispersion.
+
+### Shipped
+- **unified-api-contracts** — `registry/cefi_instrument_universe.py`: `CEFI_BASE_ASSET_UNIVERSE` rewritten as the
+  SORTED curated union (**493 base assets**; was 44). Module docstring documents the 3-tranche rationale +
+  survivorship-bias-free + curated-because-no-live-mcap. Gate (`_passes_asset_filter`, lives in instruments-service)
+  intentionally NOT touched — still gates, just on the wider set.
+  Breakdown: legacy 44 + top-100-hist (+190 not-in-legacy) + HL/ASTER perp (+259 not-in-legacy|hist) = 493.
+- Reconciled docstrings: `canonical/crosscutting/mvp_scope.py` (no longer "44-base MVP" — bumped
+  `MVP_SCOPE_CONFIG_VERSION` 3→4 with a v4 changelog note; the computed content hash auto-flips) +
+  `canonical/crosscutting/total_universe.py` ("captured subset" not "MVP subset").
+- Tests: rewrote `tests/test_cefi_universe_coverage.py` (size ≥250 band; legacy-44 all present; retired-top-100 present
+  = survivorship-bias proof incl. LUNA/FTT/SRM/CEL/WAVES; key HL/ASTER bases incl. HYPE/PURR/ASTER/FARTCOIN; sorted +
+  no-dup determinism). Fixed `tests/unit/test_mvp_scope.py` two "non-MVP base" cases (SUI is now IN the universe →
+  switched to a synthetic out-of-universe token).
+- Verification: targeted tests 90 passed; basedpyright 0/0/0 on the 3 source files; ruff clean (replaced `∪` math
+  symbol with `+` to satisfy RUF001/002/003). Full `quality-gates.sh --no-fix` GREEN (see commit). Shipped via
+  `quickmerge --agent --files`.
+
+Note: the IS catalogue re-enumeration + the CSV consuming this universe is a DIFFERENT worker's lane (not touched here).
