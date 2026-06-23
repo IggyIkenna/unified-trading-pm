@@ -101,8 +101,8 @@ source:
       `Epic: features_and_ml_master`. Target: **features-service**. — features-service@d5e1b605 | 61 files stamped (1 already done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `unified-api-contracts/scripts/` (~33; codegen/QG checkers = `permanent`).
       `Epic: infrastructure_master` (or the contracts epic). Target: **unified-api-contracts**. — unified-api-contracts@14466d86 | 32 files stamped | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
-- [ ] [SCRIPT] P2. Stamp `strategy-service/scripts/` (~28; DeFi tracers = `campaign:master_to_live_defi`).
-      `Epic: strategy_master`. Target: **strategy-service**.
+- [x] ✅ [SCRIPT] P2. Stamp `strategy-service/scripts/` (~28; DeFi tracers = `campaign:master_to_live_defi`).
+      `Epic: strategy_master`. Target: **strategy-service**. — strategy-service@4d6104a9 | 27 files stamped (2 already done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [ ] [SCRIPT] P2. Stamp `agent-orchestrator/scripts/` (~24; self-fleet tooling = `permanent`).
       `Epic: orchestrator_master`. Target: **agent-orchestrator**. **PARTIAL — RE-STAMP NEEDED (2026-06-22 rule):** the
       first pass (`agent-orchestrator@ebb0c6f`) stamped `Epic:` + `Lifecycle: permanent` on all 23 non-symlink scripts
