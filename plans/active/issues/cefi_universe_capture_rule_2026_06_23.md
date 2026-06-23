@@ -172,7 +172,54 @@ rotating baskets).
       Phase D backfills now derive their universe from `mvp=true` rows. (Governs Phase C apply + Phase D — those remain
       operator/Phase-gated runs.)
 
+**Venue gaps + Upbit exception (operator 2026-06-23 — this dispatch):**
+
+- [ ] [UAC/IS] P0. Add `coinbase-international` (Coinbase Derivatives perps) → canonical `COINBASE-FUTURES` (entity
+      prefix `COINBASE` so the perp-gate pairs it with `COINBASE-SPOT`). UAC `all_tardis_exchanges`+`tardis_to_venue`+
+      `venue_start_dates`+`VENUES_BY_ASSET_GROUP["cefi"]`; IS `router._TARDIS_VENUE_EXCHANGES`. Enumerate → COINBASE-SPOT
+      (0/437 mvp) gates against the coinbase perps.
+- [ ] [UAC/IS] P0. Add `bybit-spot` → canonical `BYBIT-SPOT` (split from BYBIT; entity prefix `BYBIT` pairs with the
+      existing BYBIT perps). Same UAC+IS surfaces. Enumerate → BYBIT-SPOT gates against BYBIT perps.
+- [ ] [IS] P0. Diagnose+fix BITFINEX-SPOT (0/82) + BITGET-SPOT (0/634) mvp=0. Bitfinex: base-ticker normalization
+      (`ALG`→ALGO, `ATO`→ATOM, `DSH`→DASH, `IOT`→IOTA; strip `:`-suffix margin markets; `UDC`→USDC quote-drop) in the
+      bitfinex parse path. Also add BITFINEX-*/BITGET-* venues to the MVP rule `venues` (root cause: absent from the rule).
+- [ ] [UAC] P0. UPBIT carve-out: spot-only venue → make UPBIT the ONE perp-gate exception (its SPOT mvp=true despite no
+      perp). Accept KRW quote FOR UPBIT only (venue-scoped accepted-quote gate; keep USDT/USDC/USD elsewhere).
+- [ ] [IS/UAC] P0. Ship code QG-green + quickmerge per repo; re-enumerate the new venues (BYBIT-SPOT/COINBASE-FUTURES)
+      into by_date; re-run `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink`; verify mvp>0 for
+      COINBASE-SPOT, BYBIT-SPOT, BITFINEX-SPOT, BITGET-SPOT, UPBIT (incl. KRW pairs).
+
 ## Progress Log
+
+- **2026-06-23 (venue-gaps dispatch — DIAGNOSIS, autonomous worker)** — read the live `prod/catalog.parquet`
+  (226,484 rows, 155,292 mvp=true) + the by_date enumeration snapshots to root-cause every gap before coding:
+  - **The MVP rule `venues` set (mvp_scope.py) is the primary gate** — only declares BINANCE-SPOT/-FUTURES, BYBIT,
+    OKX-{SPOT,SWAP,FUTURES}, DERIBIT, HYPERLIQUID, ASTER, KRAKEN-{SPOT,FUTURES}. So COINBASE-SPOT/BITFINEX-*/BITGET-*/
+    UPBIT/BYBIT-SPOT all fail `_cefi_venue_in_rule` → mvp=0 REGARDLESS of perp-gate. → add them to the rule.
+  - **COINBASE-SPOT (437, mvp 0)**: no Coinbase perp venue exists → no perp sibling → perp-gate drops every spot even if
+    venue were in the rule. → add `coinbase-international` (Coinbase Derivatives, Tardis HTTP-200, availableSince
+    2024-10-31, perps like `1000BONK-PERP`/`2Z-PERP`) as canonical COINBASE-FUTURES.
+  - **BYBIT-SPOT: 0 rows in catalogue + by_date.** Tardis `bybit-spot` IS reachable (HTTP-200, availableSince
+    2021-12-04) and IS in `all_tardis_exchanges`, BUT the enumeration ROUTER (`router._TARDIS_VENUE_EXCHANGES`) maps
+    venue `bybit`→`["bybit"]` (perps only) and `tardis_to_venue` collapses `bybit-spot`→BYBIT — so bybit-spot is never
+    fetched as a distinct venue. → split it to canonical BYBIT-SPOT with its own router entry + venue-list membership.
+  - **BITFINEX-SPOT (82, mvp 0)**: BOTH causes. (1) venue absent from MVP rule. (2) 50/82 distinct bases out-of-universe
+    due to Bitfinex's non-standard tickers: `ALG`(ALGO), `ATO`(ATOM), `DSH`(DASH), `IOT`(IOTA), `UDC`(USDC=quote), +
+    `:`-suffixed margin markets (`AAVE:`,`LINK:`,`SHIB:`…). The 25-base spot↔perp overlap the operator cited =
+    `{ADA,ALG,ATO,BTC,CHZ,CRV,ENA,ETC,ETH,FIL,LDO,LTC,NEO,POL,SEI,SOL,STG,SUI,TON,TRX,UNI,XLM,XPL,XRP,ZEC}` — ALG/ATO
+    must normalize to ALGO/ATOM to be in-universe. → add a bitfinex base-alias map + strip the `:` suffix in the parse.
+  - **BITGET-SPOT (634, mvp 0)**: root cause is JUST the MVP-rule-venue gap — 346/593 bases ALREADY in-universe and
+    BITGET-FUTURES perps (682) exist to pair them. The out-of-universe remainder is equity perps (AAPL/AMZN — handled by
+    EQUITY_PERP) + genuinely-new alts (CETUS/DEEP/CATI) — not a normalization bug. → adding the venue + the existing
+    perp-gate fixes it.
+  - **UPBIT (202, mvp 0)**: spot-only Korean venue, no perp → perp-gate drops all. Operator wants it as the ONE
+    perp-gate exception (kimchi premium) + KRW quote accepted FOR UPBIT (its KRW pairs currently dropped by
+    `CEFI_ACCEPTED_QUOTE_ASSETS={USDT,USDC,USD}` at the IS `_passes_asset_filter` gate).
+  - **Materialization note**: the catalogue rollup is a pure aggregation of `instrument_availability/by_date/` snapshots
+    (written by the live `cefi-ext-full-*` RUN-3 backfill — DO NOT disturb). Re-running the rollup alone flips
+    mvp-tagging for venues whose by_date rows already exist (COINBASE-SPOT/BITFINEX/BITGET/UPBIT). BYBIT-SPOT +
+    COINBASE-FUTURES need NEW by_date snapshots → a scoped `--venues BYBIT-SPOT,COINBASE-FUTURES` enumeration over a
+    recent date (does not touch RUN-3's venues/years).
 
 - **2026-06-23 (staking-spot exception EXPANDED 13 → 28 — UAC SSOT)** — operator wants ALL wrapped+unwrapped LST/LRT
   equivalents in the carve-out (forward-looking allow-list; harmless extras). Shipped `unified-api-contracts@b6aca267`
