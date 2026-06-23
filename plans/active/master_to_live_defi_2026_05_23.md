@@ -113,7 +113,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-06-23 11:20 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-06-23 11:33 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -146,10 +146,10 @@ _Last regenerated: 2026-06-23 11:20 UTC via `scripts/plans/regenerate_active_pla
 | [`migration_verification_orphan_safety_2026_06_10`](./migration_verification_orphan_safety_2026_06_10.md) | master | design | 29/46 | 63% | 2.4 | — |
 | [`bar_edge_left_vs_right_remediation_2026_06_08`](./bar_edge_left_vs_right_remediation_2026_06_08.md) | master | brand-new | 6/11 | 55% | 2.3 | — |
 | [`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`](./bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md) | master | infra | 17/31 | 55% | 2.2 | — |
-| [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) | master | infra | 71/95 | 75% | 2.0 | — |
 | [`mdps_adapter_protocol_pandas_to_polars_2026_06_21`](./mdps_adapter_protocol_pandas_to_polars_2026_06_21.md) | master | refactor | 0/2 | 0% | 2.0 | — |
 | [`mtds_file_size_refactor_2026_06_08`](./mtds_file_size_refactor_2026_06_08.md) | master | refactor | 0/3 | 0% | 2.0 | — |
 | [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](./sports_odds_bookmaker_coverage_enumeration_2026_06_20.md) | master | brand-new | 1/3 | 33% | 2.0 | — |
+| [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) | master | infra | 72/95 | 76% | 1.9 | — |
 | [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](./defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md) | defi_master | refactor | 2/5 | 40% | 1.9 | — |
 | [`test_fleet_image_builds_from_current_code_2026_06_17`](./test_fleet_image_builds_from_current_code_2026_06_17.md) | master | research | 13/21 | 62% | 1.8 | — |
 | [`master_data_canonicalisation_migration_catalogue_2026_06_07`](./master_data_canonicalisation_migration_catalogue_2026_06_07.md) | defi_master | design | 36/72 | 50% | 1.8 | — |
