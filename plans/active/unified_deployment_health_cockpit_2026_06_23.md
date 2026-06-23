@@ -143,8 +143,10 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 > Ordering is FOLD-FIRST, then strip the nav (never orphan a surface).
 > `the data badge "LIVE" means live-vs-MOCK DATA, not trading-live` → relabel.
 
-- [ ] [UI] P1. **Relabel the data-mode badge** `LIVE`→`LIVE DATA` (MOCK chips already say MOCK) so it can't read as a
-      deployment/trading mode. (Header.tsx; update app.spec.ts badge assertion.) `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P1. **Relabel the data-mode badge** `LIVE`→`LIVE DATA` (MOCK chips already say MOCK) so it can't read as a
+      deployment/trading mode. — deployment-ui@99863af | pw:L2 ✓ (app.spec + nav_and_header green) | regression:
+      tests/smoke/nav_and_header.spec.ts. (Note: the playwright suite runs in MOCK mode so the Header shows "MOCK (UI)";
+      the "LIVE DATA" label shows in real cloud-data mode.)
 - [ ] [UI] P1. **Make `/cockpit` the default landing + give the per-service home shell its own path** (e.g. `/home`),
       redirect `/`→`/cockpit`, and **migrate the ~80 landing-assumption smoke/e2e specs** that `goto("/")` expecting the
       ServiceList + LandingTabs. Then **remove the redundant "Cockpit" top-nav button**. (the spine — supersedes the
