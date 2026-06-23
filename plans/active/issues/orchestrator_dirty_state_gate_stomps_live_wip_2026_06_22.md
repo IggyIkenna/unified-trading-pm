@@ -1,7 +1,7 @@
 ---
 title:
-  "Orchestrator pre-spawn dirty-state gate orphaned a LIVE session's uncommitted WIP (liveness-gating bypassed +
-  commit-then-reset-on-push-reject)"
+  "Orchestrator dirty-state/orphan gate stomps a LIVE session's uncommitted WIP (liveness-gating bypassed) — TWO
+  variants: (1) commit-then-reset-on-push-reject, (2) git-stash on slot-removal"
 created: 2026-06-22
 parent_epic: orchestrator_master
 priority: P2
@@ -9,6 +9,8 @@ source:
   - "git reflog (agent-orchestrator slot-2 clone) 2026-06-22: HEAD@{17-19}"
   - "orphaned commit 2c774030b40e4527f57e0608eb9473ac9e2a8dc7 (chore(orphan-wip))"
   - "server/worktree_clean_check/_orphan.py::commit_and_push_dirty_repos (DirtyStateResolution.COMMIT_AND_PUSH)"
+  - "Incident 2 (2026-06-23): stash 'slot-21-orphan-2026-06-23T13:26:17Z' on the main clone after tmux kill-session of
+    orch-slot-21/22/23; recovered → agent-orchestrator@cb082ed"
   - "CLAUDE.md § 'Inherited-dirty-WIP — liveness-gated, not identity-gated'"
   - "codex/05-infrastructure/per-tab-worktrees.md § respawn working-tree hygiene"
 locked_by: live-defi-rollout
@@ -76,3 +78,41 @@ read as data loss and the work was needlessly re-done.
 
 Evidence reproducible from the slot-2 clone: `git reflog` (`HEAD@{17}`/`{18}`), `git show 2c77403 --stat`. The
 read-migration plan (`utl_uac_reuse_consolidation_remediation_2026_06_10.md`) carries the corrected incident note.
+
+---
+
+## Incident 2 (2026-06-23) — SAME root cause, STASH variant triggered by slot REMOVAL
+
+A second manifestation of this gate, **different mechanism, same "live WIP silently vanishes" outcome** — the fix must
+cover both. During a live interactive session on the **main** `agent-orchestrator` clone (not a `.tabs/<N>` slot), an
+operator killed three orphan tmux sessions (`orch-slot-21/22/23` — leaked test-spawn sessions on phantom slots). That
+slot-removal tripped the clean-check / orphan hygiene, which **`git stash`ed the clone's uncommitted WIP** (3 actively-
+edited files) under the name **`slot-21-orphan-2026-06-23T13:26:17Z`**, leaving the tree clean. A `quickmerge --agent`
+running in the same window then saw a clean tree and exited **"Nothing to commit — exiting fast"** → the change appeared
+lost. Recovered via `git stash apply` (the stash held all 3 files intact); re-shipped as `agent-orchestrator@cb082ed`.
+
+**What this adds beyond Incident 1:**
+
+- The orphan path has (at least) **two resolutions** — `COMMIT_AND_PUSH` (Incident 1, → dangling commit) **and a
+  `git stash`** (Incident 2, → named `slot-<N>-orphan-<ts>` stash). Both bypass the liveness check; both read as data
+  loss.
+- **Trigger is not only pre-spawn** — here it fired on **slot REMOVAL / a `tmux kill-session`**, against a clone that is
+  NOT the removed slot (the live clone was the main repo; the killed sessions were `orch-slot-21/22/23`). So
+  "killing/orphaning slot N must never stash a _different_ live clone's WIP."
+- The misclassified tree was a **live interactive operator session** — exactly the case CLAUDE.md says to PROTECT, and
+  exactly the "interactive-session liveness" gap flagged in Recommended-decision #4.
+
+**Recommended decision (additions):**
+
+5. **The liveness guard must gate the STASH path too**, not just `COMMIT_AND_PUSH` — apply the same fresh-`.agent-claim`
+   / heartbeat / mtime<120s PROTECT check before `git stash` in the orphan/clean-check hygiene.
+6. **Slot-removal hygiene must scope to the removed slot's OWN clone.** Killing `orch-slot-N` must never touch a
+   different clone's working tree (the main clone / another slot). Verify the clean-check keys off the exact slot path,
+   not "any dirty orchestrator clone on this host."
+7. **A gate-stashed tree must be loudly surfaced + auto-restorable.** If the gate does stash, it must (a) log the stash
+   ref + name loudly, and (b) ideally re-apply on the next tick once it confirms the session is live — so a live session
+   never silently goes clean mid-edit. (A `slot-<N>-orphan-<ts>` stash on a clone with a live session is the signature.)
+
+Incident-2 evidence: `git stash list` (`slot-21-orphan-2026-06-23T13:26:17Z`), `git reflog -12` (HEAD fast-forwarded
+`b140e1d → a2c9af8` via the concurrent backmerge while the tree was stashed clean), quickmerge log "Nothing to commit —
+exiting fast." Recovery: `git stash apply` → re-QG → `quickmerge` (`cb082ed`).
