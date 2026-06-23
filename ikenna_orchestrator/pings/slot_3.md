@@ -543,3 +543,17 @@ it, or rename the existing one).
 > `route_event` per their LIVE_ALERT_RULES entries. `AlertSubscriber.dispatch_event` wired.
 > Unit tests: `tests/unit/test_cefi_ml_event_handler.py` (19 tests, all green). QG clean. Landed live-defi-rollout.
 > Plan checkbox flipped: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` -004.
+
+## [Slot 3 → ci] 2026-06-23 — agt-f45cb9 DONE: ldr_qg_failure/market-tick-data-service self-healed
+
+**Task**: `agt-f45cb9` — resolve `ldr_qg_failure` wall on `market-tick-data-service`
+
+**Outcome**: Self-healed — no code push required.
+
+- Original failure: `quality-gates-v2` run `27973955873` on SHA `0eee1ab` (feat(mtds): QG STEP 5.90 + 5.91), failed at `tests` slice (mock IMDS calls in HYPERLIQUID onchain-perp tests were hitting real IMDS endpoint)
+- Fix landed: `368c488 fix(tests): mock _assert_source_reachable to prevent IMDS calls in 4 HYPERLIQUID onchain-perp tests` — authored by a peer slot shortly after the failure
+- PR #309 (live-defi-rollout → staging): already **MERGED**; subsequent runs from `db7de3c` onward are all GREEN
+- Current HEAD `9241465` (`de1376a` on my local): local `bash scripts/quality-gates.sh --no-fix` **EXIT 0** ✅
+- Working tree: clean; branch: `live-defi-rollout`; up-to-date with `origin/live-defi-rollout`
+
+**No further action needed.** Slot 3 is clean and idle.
