@@ -255,9 +255,16 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       (a) **Kalshi batch 0-capture = the venue-agnostic `market_lifecycle/by_canonical_group/` store feeds Polymarket
       `0x` condition_ids to the Kalshi `/markets/trades` endpoint → HTTP 400 every ticker (observed on
       `mtds-prediction-kalshi-20260623-131108`). FIXED — mtds@9e3bbab `KalshiAdapter._load_lifecycles_from_gcs` now
-      filters to Kalshi-shaped tickers (`_is_kalshi_ticker`, drops `0x…`).** The running Kalshi batch VM baked the
-      pre-fix tarball → needs a relaunch on the fresh mtds@9e3bbab tarball (built 2026-06-23 13:44Z) to actually fill
-      05-23→06-22. (b) **Polymarket batch pre-flight FALSE-POSITIVE skip — `mtds-prediction-polymarket-20260623-131059`
+      filters to Kalshi-shaped tickers (`_is_kalshi_ticker`, drops `0x…`).** Relaunched on the fresh mtds@9e3bbab
+      tarball (`mtds-prediction-kalshi-20260623-135020`) + VERIFIED **ZERO 0x-pollution 400s** (fix confirmed). The
+      relaunch then exposed the REAL residual underneath: the IS `venue=KALSHI` instrument-availability universe exists
+      ONLY for `day=2026-06-22`+`06-23` (recent IS enum), NOT 05-23→06-21 (`404 … day=2026-05-25/venue=KALSHI/
+      instruments.parquet: No such object` → honest 0 records). So the Kalshi batch gap is now BLOCKED on the 2-stage
+      IS→MTDS prerequisite — **IS must enumerate `venue=KALSHI` for each historical date FIRST** (series-scoped
+      `/historical/*` enum + Jon-Becker bulk seed, designed in
+      `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` § "series-scoped historical backfill"). The 0x-fix
+      removed the WRONG failure (400s) + revealed the honest upstream absence; idle Kalshi batch VM deleted (no point
+      burning it with no IS universe). (b) **Polymarket batch pre-flight FALSE-POSITIVE skip — `mtds-prediction-polymarket-20260623-131059`
       ran `--start 2026-05-23 --end 2026-06-22` and pre-flight-skipped EVERY date ("all data_types fully covered (atoms
       ⊆ captured), skipping") yet `raw_tick_data/by_date/` has ZERO Polymarket parquets for 05-23→06-22 (jumps 05-22 →
       06-23-live).** The pre-flight reads the manifest as covered while the parquet data is absent (a manifest-vs-data
