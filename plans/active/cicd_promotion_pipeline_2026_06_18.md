@@ -85,7 +85,14 @@ Firestore-side-store ci_status migration, and the prod image build.
       non-quickmerge readers. (cicd_contract_hardening #21)
 - [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
       serialization). (cicd_contract_hardening #29)
-- [ ] [SCRIPT] P1. **Unblock the last UAC-0.24.0 dep-update consumer — `e2e-testing` PR #333 v2 red on TID251 ratchet.**
+- [x] ✅ [SCRIPT] P1. **Unblock the last UAC-0.24.0 dep-update consumer — `e2e-testing` PR #333 v2 red on TID251 ratchet.**
+      RESOLVED 2026-06-23: **PR #333 MERGED into `staging` on 2026-06-20** (mergeSha `047331989` — its `quality-gates-v2`
+      was green to merge a required-check base). e2e-testing's UAC pin on LDR is now `>=0.33.0` (the fan-out drained well
+      PAST 0.24.0). The 4 cited `scripts/sports/` violators
+      (`live_arb_scanner`/`odds_api_live_feed`/`prediction_market_scanner`/`run_weekly_pipeline`) now carry **0 direct
+      `google.cloud`/`boto3` refs** (routed through UTL per `agt-20cba0` @`02912ad`, as the item's gotcha-3 predicted —
+      it was the stale dep-update branch, not new violations). Remaining repo-wide refs are `# noqa: TID251` POCs
+      (`paper_trading/_gcs.py`) / lazy imports — within the baseline. Original investigation detail retained below.
       The UAC-0.24.0 fan-out drained 10/11 once the honest_coverage adapter-contract baseline was fixed (PM@`d3ce018f9`,
       see `data_feed_sla_registry_and_active_self_healing_2026_06_19.md`); `e2e-testing` is the lone straggler. Repo:
       **e2e-testing**. Failure: `quality-gates-v2` `lint-codex` slice → STEP 5.95 `check_ruff_rule_ratchet.py` →
