@@ -986,14 +986,17 @@ are identified (2) and the ledger exists (3).
       unified-trading-system-ui@558127f5 | pw:L2 ✓ (70/70 `tests/smoke/` serial — the all-cores-parallel local flakes
       reproduce on baseline with this change stashed, so unrelated) | regression:
       tests/smoke/paper-trading-ledger.smoke.spec.ts (the "drivable-but-thin state with coverage %" P11.22 case).
-- [ ] [UI] P2.11.23. **deployment-ui "Backend unreachable" debounce** — SHIPPED (deployment-ui, pending quickmerge).
+- [x] ✅ [UI] P11.23. **deployment-ui "Backend unreachable" debounce + form a11y** — SHIPPED + VERIFIED LIVE.
       Operator 2026-06-22: the data-status page flashed a red "Backend unreachable — signal timed out" banner + "Unknown
       error" detail even though the backend was up (coverage bars rendered; min-instances=1, `/api/health` 46ms warm).
       Root cause: a SINGLE transient `/api/health` poll timeout (a heavy data-status manifest-merge briefly saturating
       the worker) LATCHED the red banner for a full 30s poll interval. FIX (`MockModeBanner.tsx` `useBackendHealth`):
       debounce — keep last-good state + fast-retry on the 1st failure, go red only on the 2nd consecutive (a genuine
-      outage still surfaces within ~4s of the 2nd poll). regression: src/components/MockModeBanner.test.tsx (8 pass) +
-      the post-grace debounce path. pw:L2 pending the quickmerge. Repo: deployment-ui.
+      outage still surfaces within ~4s of the 2nd poll). ALSO fixed the operator's console a11y warnings — `id`/`name` +
+      label association on the 5 data-status filter inputs (`DataStatusTab.tsx`: symbol/venue search, start/end date,
+      freshness). LANDED on LDR (MockModeBanner debounce + DataStatusTab a11y both confirmed on origin/LDR) + LIVE via
+      the deployment-api rebuild (rev `uts-shared-deployment-api-00079-qg6`; served bundle confirmed to carry both).
+      regression: src/components/MockModeBanner.test.tsx (8 pass) + the data-status a11y ids. Repo: deployment-ui.
 
 ## Temporary states + their canonical follow-up plans
 
