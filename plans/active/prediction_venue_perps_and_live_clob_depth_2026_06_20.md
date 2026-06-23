@@ -332,6 +332,67 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-23 (autonomous) — P0 lifecycle ROOT CAUSE PROVEN + foundational IS fix shipped; remaining chain scoped
+
+Drove the P0 honest-coverage / NULL-lifecycle finding to a **proven root cause** (prior sessions had only a vague "raw
+gamma dump" hypothesis). Empirical findings (real GCS + live gamma API):
+
+- `available_from_datetime`/`available_to_datetime` = **0% populated** on bare-path POLYMARKET catalogue parquets
+  (`by_date/day=*/venue=POLYMARKET/instruments.parquet`, 0/452 sampled) and **~16%** on fresh cqg-first parquets
+  (`canonical_question_group=*/day=2026-06-23/venue=POLYMARKET/`, 1495/9416). Confirms operator's 0/25 drill-down.
+- `classify_lifecycle`'s parse logic is **CORRECT** — 200 live gamma markets (100 active + 100 closed) → **100% would
+  classify**. NULLs are NOT a parse bug.
+- **REAL root cause**: strict `classify_lifecycle` requires BOTH creation AND resolution ts; batch/date-mode markets are
+  enumerated via the **CLOB-history path** (opaque short-key schema `r/t/c/mos/…`) carrying **no gamma lifecycle
+  fields** → lifecycle None → both bounds NULL. Only the **gamma-active path** (`get_instruments(date=None)`/today)
+  carries them → the ~16%.
+- **Honest-coverage MATH confirmed** (`_honest_coverage_logic.compute_honest_coverage`): `empty_confirmed` (incl.
+  `EXPECTED_INSTRUMENT_NOT_LISTED`) is NUMERATOR credit → out-of-existence cell scored "honestly answered" → inflates %.
+  `was_instrument_alive(available_from, available_to, day)` **already exists** in UAC (`_honest_coverage_logic.py:400`)
+  but is only used by the `EmptyFromLiveInstrumentError` backstop, NOT by the empty-emission decision.
+
+**SHIPPED (foundational, strictly-better, verifiable):** IS `polymarket/parsing.py::_parse_market` now populates
+`available_from/to` **directly + best-effort from gamma fields** (from = startDate|createdAt, to =
+closedTime|endDateIso), preferring the strict lifecycle's settlement-lag-adjusted values when it classifies, else the
+raw gamma bound. So the **gamma-active/live universe now fully carries bounds**; partial-gamma markets get a partial
+bound (beats NULL). 2 regression tests added; 16/16 lifecycle tests pass; IS QG green. — **instruments-service@be45660**
+| QG-green sentinel.
+
+**BIG-FINDING — remaining P0 chain is a deep, fleet-blast-radius multi-stage fix (operator: this is data-correctness,
+honest-coverage semantics).** The `_parse_market` tweak is necessary-but-INSUFFICIENT: it does not help CLOB-history
+markets carrying NO gamma fields, and does not change the existing 142k manifest empties or the inflated %. Full fix =
+the open P0 sub-todos below (item-43a..43d).
+
+- [ ] [SCRIPT] P0. **43a — IS enumeration-merge: enrich EVERY POLYMARKET market with gamma lifecycle**: the batch/CLOB-
+      history enumeration path (markets that ended on a historical date, opaque schema) carries no gamma
+      startDate/endDate, so `_parse_market`'s new bound-derivation gets None. Fix = fetch the gamma record per
+      condition_id during CLOB-history enumeration (or derive `available_to` from the CLOB market's own resolution ts +
+      `available_from` from first-trade ts) so ALL catalogue rows carry `available_from/to`, not just the gamma-active
+      subset. Verify: re-enumerated POLYMARKET parquet shows `available_from/to` populated ≫16%. Repo:
+      instruments-service (`polymarket/markets.py` CLOB-history fetch). Provenance: autonomous P0 root-cause 2026-06-23.
+- [ ] [SCRIPT] P0. **43b — emission bounding (MTDS/UTL): only emit a manifest cell within the market's life**: the
+      honest-absence emitter (IS `enumerate_expected_universe.py` v2 + MTDS preflight) must call UAC
+      `was_instrument_alive(available_from, available_to, day)` so a date OUTSIDE `[available_from, available_to]` is an
+      honest BLANK / `expected_unattempted`, NEVER `empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED]`. Today the emit is
+      driven by per-date catalogue MEMBERSHIP, not lifecycle bounds. Repos: instruments-service +
+      market-tick-data-service / unified-trading-library. Provenance: autonomous P0 root-cause 2026-06-23.
+- [ ] [UAC] P0. **43c — coverage-math: exclude out-of-existence reasons from the numerator-credit (CROSSCUTTING — fleet
+      blast radius)**: `EXPECTED_INSTRUMENT_NOT_LISTED`/`EXPECTED_PRE_VENUE_LAUNCH`/`EXPECTED_INSTRUMENT_DELISTED` are
+      "market did not exist", not "honest empty" → exclude from BOTH numerator + denominator (mirror
+      `is_resolved_schedule_empty` for FIXTURES), so out-of-life cells read as BLANK, not coverage-success. Bucketing
+      lives in deployment-api `services/data_status/coverage_metrics.py` + UTL `manifest_writer/_queries.py` + mtds + IS
+      `api/data_status.py` — must change ALL consistently + VERIFY recomputed % on real GCS for EVERY asset_group +
+      check CI honest-coverage ratchets don't break (rule 11 — prove fleet-wide before shipping). Repo:
+      unified-api-contracts (define `OUT_OF_LIFECYCLE_EXCLUDED_REASONS` + helper) + the 4 consumer bucketers.
+      Provenance: operator empty_confirmed drill-down + autonomous P0 root-cause 2026-06-23.
+- [ ] [SCRIPT] P0. **43d — re-walk to reclassify the ~49.6k out-of-life empties**: after 43a-c land + a fresh tarball,
+      run `market_tick_data_service/scripts/rebuild_prediction_manifest.py --venue {POLYMARKET,KALSHI}` (VM job) to
+      physically convert out-of-life `empty_confirmed[EXPECTED_*]` cells → BLANK/`expected_unattempted`; audit whether
+      the 93,264 `SOURCE_RETURNED_ZERO` include out-of-lifecycle dates (same root cause). Verify honest % recomputed
+      over the in-lifecycle universe. KALSHI lifecycle already flows onto `available_from/to` (`kalshi.py:816-817`) —
+      verify it survives the same CLOB-vs-gamma split. Repo: market-tick-data-service. Provenance: autonomous P0
+      2026-06-23.
+
 ### 2026-06-23 (autonomous) — fixture-level cross-venue linking is FEASIBLE (Kalshi event tickers encode teams+date)
 
 Operator: there's a lot more cross-venue sports/politics we can DIRECTLY link via fixture ids (tennis/NFL/NBA/soccer).
