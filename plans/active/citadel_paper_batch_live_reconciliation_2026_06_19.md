@@ -70,6 +70,64 @@ are identified (2) and the ledger exists (3).
 
 ---
 
+## Remaining-work register + operator gating (cleaned 2026-06-23)
+
+> **The paper↔batch determinism + monitoring SPINE (Phases 0–11) is DONE.** Phase 11 is the last phase (no P12). The
+> ε=0 PROOF engine, the four ledgers, the recon harness, the Slack digest, the monitoring dashboard, the
+> deployment-api-SSOT reconcile (P11.21), the synthetic-seam guard (P11.17), the Group-C smart-fill replay (P11.6,
+> `execution-service@3d7d760c`) and the drivable-but-thin threshold (P11.22) all shipped. **89 boxes done / remaining
+> open boxes are classified below.** This register is an INDEX of the open `- [ ]` items in the phases below — it adds
+> no new dispatches; the canonical todos stay in-phase.
+
+**A — Agent-shippable infra/code (NO operator gate — a VM/agent can ship these):**
+
+- [CODE] Paper-side smart-fill handoff (`fill_model` BENCHMARK→SMART) — wire the paper-run to consume the now-shipped
+  `execution-service` Group-C smart-fill replay (P11.6); the determinism follow-through (currently honest at BENCHMARK).
+- [CODE] Phase-2 per-trade identity — execution events gain `trade_key` + side/qty/price/fees; colocated fill records
+  carry the key.
+- [DATA] features-service BTC trend features `btc_trailing_return_{1m,3m,6m,12m}`.
+- [CODE] Complete `TSMOM_BTC_CTA` capability wiring into the UAC `archetype_capability_manifest`.
+- [CODE] Intraday BTC mean-reversion signal as a cross-sectional ML feature.
+- [CODE] cs-leg longer-horizon TARGET retrain in `_panel.py` (2026 drag).
+- [BUG] `_mom_tb.py` daily-PnL save skipped under `OOSLO`/`WFSTART`<2023.
+- [BUG] Combined-book vol-normalisation uses full-period (in-sample) vol.
+- [DATA] cs ensemble (`_panel.py`) reads `alt_*` (2022+) not `altfull_*` (2017+).
+- [DATA] Add HYPE + the post-2024 cohort (SUI, …) to the trading universe.
+- [UI] Verify the prod UI selector resolves the **145**-strategy run (not the old 14-strategy run) — likely already
+  fixed by P11.16; verify + close.
+
+**B — Operator-gated: LIVE TRADING (hard-stop, human-only):**
+
+- [INFRA] **P7.3 — Live → reconcile to paper → (∴ batch).** `BLOCKED-OPERATOR-DECISION`: needs an approved live wallet +
+  custody (Copper/CEFFU). **Wallet keys are a human-only hard-stop.** The paper≡batch ε=0 proof does NOT depend on it;
+  once a live wallet exists this is the same machinery with real venue fills (measures live↔paper execution alpha).
+
+**C — Operator-gated: LIVE RESEARCH / trading-judgment (the strategy-alpha workstream — recommend its OWN plan):**
+
+> These 16 items are alpha-research + book-SIZING DECISIONS (which legs, what weights, whether to ship the short sleeve)
+> — they need **operator trading judgment**, not just code, so they are operator-gated (`BLOCKED-OPERATOR-DECISION`
+> class). They accumulated in this plan's Progress Log but are a DIFFERENT workstream from the paper-batch-live spine.
+> **Recommendation: migrate these to a dedicated `plans/active/crypto_alpha_research_2026_06_23.md` under the strategy
+> epic** so this determinism plan stays focused. (Say the word and I'll do the migration with `MIGRATED FROM:` banners.)
+
+- Short sleeve: re-cast as a basis tail-hedge · re-evaluate book weight (15%→smaller/0) · wire the R8 confirmed-momentum
+  short gate into production · ship the de-risk overlay + 12% short.
+- Basis: deployable = liquid-only carry · re-present + size on RAW economics (not vol-normed) · filled-to-capacity +
+  capped slow-momentum (180–365d) allocator.
+- Momentum: add a confirmed long+short TS-MOMENTUM leg · maker-WIDTH sweep · per-strategy execution sweep (basis+short).
+- Universe + risk: ADV/depth capacity gating · time-average the liquidity scan · funding-regime monitor + dynamic basis
+  sizing · `h32` next-weak-leg · apply cs-denoise + tsmom-long-only to the production legs.
+- [STRATEGY] Accelerate the non-crypto archetypes (TradFi/sports/prediction) for genuine bear-regime alpha.
+
+**D — Deferred / pre-existing / stale (parked or closed):**
+
+- [SCRIPT] `P3.2` — `DEFERRED` (pre-existing, NOT this work).
+- [SCRIPT] e2e-ratchet drift — `BLOCKED` (pre-existing e2e ratchet, NOT this work).
+- [CODE] "Match the e2e weighting / per-archetype RANK allocators" — **DUPLICATE of the shipped P11.15** (rank-weighted
+  allocations) → closed in this cleanup (flipped ✅).
+
+---
+
 ## Phase 0 — Pin the determinism contract
 
 - [x] ✅ [DESIGN] P0.0. **Pre-audit manifest** — DONE: 4 read-only Explore agents mapped every consumer of the fill
@@ -859,7 +917,9 @@ are identified (2) and the ledger exists (3).
       correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui (+ verify
       next.config proxy target).
 
-- [ ] [CODE] P2.15. **Match the e2e weighting: per-archetype RANK allocators, not FIXED equal-weight** (operator
+- [x] ✅ [CODE] P2.15. **Match the e2e weighting: per-archetype RANK allocators, not FIXED equal-weight** — DONE,
+      DUPLICATE of the shipped **P11.15** (`paper_universe` `allocator_archetype` default FIXED→rank; rank metrics from
+      the same deterministic captured GCS rates → ε=0 preserved). Closed in the 2026-06-23 register cleanup. (operator
       2026-06-22: "in our e2e plots we picked several venues for e.g. basis and WEIGHTED across opportunities — I
       thought that was a production config"). CONFIRMED: a catalogue `@`-qualified id is a per-(venue,coin) CANDIDATE
       leg (145 of them); the e2e "strategy" is the ARCHETYPE + its rank allocator that ranks+weights across the cohort
