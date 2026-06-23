@@ -2287,21 +2287,32 @@ Read the live sports manifest (`instruments-store-sports-prd/_index/availability
   `expected_unattempted` (a real GAP, in the denominator) instead of `EXPECTED_NO_PROVIDER_COVERAGE` (out-of-scope,
   EXCLUDED from the completion-% denominator by design — `unified_api_contracts/canonical/crosscutting/honest_coverage.py`
   line ~190). The denominator CODE is already correct; the MANIFEST DATA is mis-classified.
-- **Cause B — phantom false-positives**: TRANSFERMARKT_LEAGUES (75,929) + SFI_LEAGUES (12,769) + SFI_STANDINGS (42) +
-  INJURIES-failed (9,167) + ODDS-failed (3,848) are ALL `error_reason=phantom_captured_no_parquet_at_canonical_path` —
-  a phantom-audit `--apply` flipped real `captured`→`attempted_failed` with stale `prefix_tpls` (the CLAUDE.md phantom
-  gotcha). Data exists; manifest is wrong.
+- **Cause B — CORRECTED 2026-06-23 (verified before applying — diagnosis changed; earlier "flip all to captured" was
+  WRONG)**: the ~101k `error_reason=phantom_captured_no_parquet_at_canonical_path` cells are **two distinct sub-causes**:
+  - **B1 — RETIRED data_types (~88.7k): TRANSFERMARKT_LEAGUES (75,929) + SFI_LEAGUES (12,769) + SFI_STANDINGS (42).**
+    Verified in code: `transfermarkt.py:338,363` "TRANSFERMARKT_LEAGUES retired 2026-05-05"; `sfi.py:99,123`
+    "SFI_LEAGUES + SFI_STANDINGS retired 2026-04-24/2026-05-05" — the league catalog moved into UAC; **no parquet is
+    written anymore and none should be** (confirmed on GCS: `sports_reference_v2/by_date` has only
+    `entity=fixtures`/`fixture_stats`). **Flipping these to `captured` would FAKE coverage (banned).** Correct fix:
+    reclassify → `empty_confirmed` reason `EXPECTED_DEPRECATED_DATA_TYPE` (in the out-of-window exclusion set,
+    `honest_coverage.py:462-471` → excluded from the completion-% denominator).
+  - **B2 — INJURIES-failed (9,167) + ODDS-failed (3,848): ACTIVE data_types** — *may* be genuine phantom false-positives
+    (parquet at a path the audit's stale `prefix_tpls` missed) OR genuine failed fetches. **MUST verify the parquet
+    exists per cell before flipping** (CLAUDE.md phantom gotcha); no-parquet cells are real gaps (re-fetch), not a flip.
 
 - [ ] [SCRIPT] P1. **Reclassify over-seeded `expected_unattempted` → `EXPECTED_NO_PROVIDER_COVERAGE` for out-of-scope
   (league × source) sports cells** — drive from `unified_api_contracts.registry.sports_per_source_rules.is_expected_for_source`
   + the coverage maps (`sports_league_entity_coverage` / `sports_venue_coordinates` / `sports_bookmaker_league_coverage`).
   Corrects the denominator instantly (no re-fetch); WEATHER 16→68%, INJURIES 3→46%, ODDS 26→94%. (instruments-service)
+- [ ] [SCRIPT] P1. **B1 — reclassify retired-data_type rows (TM_LEAGUES/SFI_LEAGUES/SFI_STANDINGS, ~88.7k) →
+  `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE`** (NOT captured — retired, no data). Honestly excludes from denom.
+  (instruments-service migration)
 - [ ] [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
-  `expected_unattempted` for out-of-scope (league × source)** — seed `EXPECTED_NO_PROVIDER_COVERAGE` instead, so coverage
-  stays honest going forward (per `is_expected_for_source`). (instruments-service / UAC)
-- [ ] [SCRIPT] P1. **Fix phantom false-positives**: verify TM_LEAGUES / SFI_LEAGUES parquets exist at their real path,
-  fix sports `prefix_tpls` in `reconcile_phantom_manifest_rows_all.py` (`ASSET_GROUP_CONFIG['sports']`), `--dry-run`,
-  then flip the ~101k phantom-failed cells back to `captured`. NEVER `--apply` before verifying templates (CLAUDE.md
-  phantom gotcha). (instruments-service)
+  `expected_unattempted` for out-of-scope (league × source) AND to NOT seed retired data_types** — seed
+  `EXPECTED_NO_PROVIDER_COVERAGE` / skip retired, so coverage stays honest going forward. (instruments-service / UAC)
+- [ ] [SCRIPT] P1. **B2 — verify INJURIES/ODDS phantom-failed (~13k) parquet existence at real path**, fix sports
+  `prefix_tpls`/`_audit_sports` in `reconcile_phantom_manifest_rows_all.py` if a template mismatch is confirmed,
+  `--dry-run`, then flip ONLY confirmed-parquet cells back to `captured`. No-parquet cells stay failed (real gap →
+  re-fetch). (instruments-service)
 - INJURIES is otherwise NOT a real gap — the provider genuinely doesn't cover injuries for most leagues
   (`EXPECTED_NO_PROVIDER_COVERAGE` 262k) — those are correct honest-absence, excluded from the denominator once classified.
