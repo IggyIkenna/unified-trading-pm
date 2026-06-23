@@ -2473,7 +2473,10 @@ the rest of history.
   derived, like `sports_league_entity_coverage`) so out-of-scope is classifiable at manifest grain. Wire into
   enumerator + write-path + data-status. (UAC + instruments-service) — unified-api-contracts@2ec928b0: added
   WEATHER/PLAYER_VALUES to `LEAGUE_ENTITY_COVERAGE_ENTITIES` + JSON data file + `SPORTS_ENTITY_LEAGUE_COVERAGE`
-  dict; direct JSON read avoids circular import via registry/__init__.py.
+  dict; direct JSON read avoids circular import via registry/__init__.py. unified-api-contracts@a0c6064e: populated
+  WEATHER (33 leagues, open_meteo/SFI) + PLAYER_VALUES (32 leagues, Transfermarkt) arrays in
+  `sports_league_entity_coverage.json` (were empty `[]` → all leagues falsely `EXPECTED_NO_PROVIDER_COVERAGE`).
+  instruments-service@6fde5b89: bootstrap refresh script derives coverage from provider maps rather than GCS corpus.
 - [x] ✅ [DATA] P1. **Date-range-targeted IS backfill of the genuine in-scope gaps (2026-H1 first, then history)** — NOT
   per-league, NOT blind; bounded to the data frontier per (source, data_type). (instruments-service) — 15 gap-fill VMs
   launched 2026-06-23 15:32–15:37 UTC covering all 2026-H1 gaps (INJURIES/API_FOOTBALL 2026-01-01→2026-04-30,
