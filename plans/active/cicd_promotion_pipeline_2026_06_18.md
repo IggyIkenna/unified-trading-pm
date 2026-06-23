@@ -88,10 +88,13 @@ Firestore-side-store ci_status migration, and the prod image build.
       MORE often → the 5-attempt rebase-retry exhausts → step `failure` → `Partial Staging Promotion Failure` CRITICAL
       Slack alert, EVEN THOUGH the content promotion (step 11) succeeded and the content drained. The race is
       PRE-EXISTING (run `28016620865` 09:32 failed the same way before the fix) — bug #11 only raised its frequency.
-      Fix options: (a) bump the rebase-retry count + jittered backoff; (b) make the manifest-commit non-fatal to the run
-      conclusion when step 11 (the actual promotion) succeeded — the manifest bookkeeping self-heals next run; (c) skip
-      the commit when a content-only run produced no version/lock delta. Repo: unified-trading-pm. Provenance: bug #11
-      verification 2026-06-23.
+      **Alert-noise mitigation (b) SHIPPED PM@706b8f414 (2026-06-23)**: the "Commit manifest update" step now aborts a
+      conflicting rebase, bumps 5→8 attempts, and emits a `::warning::` + `exit 0` on exhaustion/conflict instead of
+      `exit 1` — so the run conclusion reflects the actual promotion (no false CRITICAL); the manifest bookkeeping
+      idempotently re-derives next run. **STILL OPEN — robust root fix (a)/(c)**: make the manifest-commit conflict-FREE
+      by re-deriving the mutation onto fresh `origin/main` inside the retry loop (eliminate the rebase conflict
+      entirely), so the bookkeeping actually lands every run rather than deferring. Repo: unified-trading-pm. Provenance:
+      bug #11 verification 2026-06-23.
 - [ ] [WORKFLOW] P3. **Redundant empty staging→main PRs across consecutive runs (NICE-TO-HAVE, NEW 2026-06-23)** — a
       `*/15` run can open a content-only staging→main PR for a repo whose content the PREVIOUS run already drained but
       whose tree-SHA had not yet equalised at probe time (timing window) → a now-empty `BLOCKED` PR (alerting#135,
