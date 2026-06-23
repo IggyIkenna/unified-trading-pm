@@ -91,8 +91,8 @@ source:
 - [x] ✅ [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the `defi_*_2026_06_01.py`
       set = `campaign:defi_manifest_canonicalisation`, NOT oneoff). `Epic: mtds_mdps_master`. Target:
       **market-tick-data-service**. — market-tick-data-service@4c8ea5bf | 70 files stamped; grep -rL '^# Delete-when:' returns only __init__.py
-- [ ] [SCRIPT] P2. Stamp `deployment-service/scripts/` (~270; ~217 `.sh` VM launchers = `permanent`).
-      `Epic: infrastructure_master`. Target: **deployment-service**.
+- [x] ✅ [SCRIPT] P2. Stamp `deployment-service/scripts/` (~270; ~217 `.sh` VM launchers = `permanent`).
+      `Epic: infrastructure_master`. Target: **deployment-service**. — deployment-service@51a2f4d | 275 files stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `e2e-testing/scripts/` (~107; the `<domain>/` harness bulk = `permanent`). `Epic:` per domain
       (defi→strategy, sports→sports, etc.) or `infrastructure_master`. Target: **e2e-testing**.
 - [ ] [SCRIPT] P2. Stamp `features-service/scripts/` (~62; per-family quintet = `permanent`).
