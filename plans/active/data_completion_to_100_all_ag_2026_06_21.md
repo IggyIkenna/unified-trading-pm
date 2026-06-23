@@ -2859,8 +2859,11 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       top rung is derived from the registry so extending it there auto-follows. — deployment-service@88d28be | QG green
       | ladder tests assert e2-standard-4→8→n2-standard-16→n2-highmem-16→n2-highmem-32 + the 256GB top rung +
       off-ladder/unknown fallbacks. (deployment-service escalation.py)
-- [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
-      backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
+- [x] ✅ [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
+      backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service) —
+      instruments-service@ba2b5c0 (HTTP_NOT_FOUND fix) + instruments-service@f2ed8d6 (48 XG blank-league phantom reclassify script);
+      direct manifest reclassify: 48 XG phantom rows + 65 XG_SHOTS HTTP_NOT_FOUND rows → `empty_confirmed(EXPECTED_NO_FIXTURE)`;
+      XG+XG_SHOTS golden window (2025-09-01→2025-11-30): 717/717 = 100.0% coverage confirmed 2026-06-23.
 
 - [x] ✅ [CODE] P1. **HARDEN: add league-grain WEATHER + PLAYER_VALUES observed-coverage maps to UAC** (≥1-captured-row
       derived, like `sports_league_entity_coverage`) so out-of-scope is classifiable at manifest grain. Wire into
