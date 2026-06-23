@@ -374,3 +374,19 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     (empty/expected, incl the 408k DELISTED — re-materialised canonically by the Phase-E re-seed), KEEPS captured
     glued_pair (defensive). Backup-then-write, dry-run→apply, idempotent (mirrors `delete_phantom_rows_from_shards.py`).
     10 reconcile tests green. RUN ORDER: rebuild catalogue + re-seed (Phase E) FIRST, then this reconcile.
+
+- **2026-06-23 (autonomous run — SHARED-CLONE COLLISION incident + recovery; durable commit state)**:
+  - **INCIDENT**: the `instruments-service` clone in this slot is SHARED with a live concurrent sports/tradfi worker
+    session. Mid-flight, that session ran a `git reset`/`checkout`/`pull` (reflog: `reset: moving to HEAD` + `checkout`)
+    that WIPED my uncommitted IS working-tree edits (catalogue builder dual-form, catalogue.py/sports_dependency.py
+    os.environ fix) AND a `git clean` removed my untracked files (reconcile script + 2 tests). UAC (committed @6262409b)
+    + UTL (committed @4d585023) were SAFE. RECOVERY: re-applied all 6 IS files in an ISOLATED worktree off
+    `origin/live-defi-rollout` (`_is-recover-wt`, per the rare-shared-clone rule) + **committed durably FIRST**
+    (instruments-service local commit d0b230a) so it can never be lost again; venv symlinked from the main clone (the
+    editable UAC/UTL there carry my committed converter + deployment_env param). 54 IS tests green in the worktree.
+  - **PROCESS LESSON (for any future agent on a shared clone)**: when a clone is live-contended, work in an isolated
+    worktree off origin/LDR AND commit before any QG/long-op — never leave recovery work uncommitted in a shared tree.
+    The throwaway worktree must be a WORKSPACE SIBLING (`<workspace>/_wt`) not an out-of-tree path, or `quality-gates.sh`
+    can't resolve WORKSPACE_ROOT (`git rev-parse --show-toplevel/..`) to find PM's `quality-gates-base/`.
+  - **SHIP STATE**: UAC@6262409b (converter) + UTL@4d585023 (deployment_env) on LDR. IS d0b230a committed locally in the
+    isolated worktree, QG + quickmerge-to-LDR next.
