@@ -45,8 +45,13 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
 - [x] ✅ [AGENT] P0. **SFI_STANDINGS 100% failed** (42/42 rows phantom 2026-04-29; all have empty `error_reason`).
       Diagnose whether the adapter or the upstream data is the cause; fix the side that's wrong (read both). Repo:
       instruments-service. — instruments-service@f3c5a56
-- [ ] [AGENT] P0. **open-meteo silent ≥2 days** (last `written_at` 2026-04-29 13:22 UTC). Diagnose the forward-poll
-      path. Repo: instruments-service.
+- [x] ✅ [AGENT] P0. **open-meteo silent ≥2 days** (last `written_at` 2026-04-29 13:22 UTC). Diagnose the forward-poll
+      path. Repo: instruments-service. — unified-api-contracts@edf27bdf | Root cause: `SPORTS_ENTITY_LEAGUE_COVERAGE["WEATHER"]`
+      held a frozenset of string league names (EPL, LA_LIGA, BUNDESLIGA…) while `_fixture_leagues_for_date` returns
+      numeric string IDs ("39", "140", "78"…) — the intersection is structurally always empty → WEATHER silently
+      excluded from `expected[]` in `_build_expected_entities` on every fixture date since the frozenset was populated
+      (2026-04-29). Fix: `"WEATHER": None` in UAC `provider_league_ids.py:795` — open-meteo is a global GPS-coordinates
+      weather API with no league restriction. QG green (228s).
 
 ## P0 — coverage-window reconciliation (d2 override-pattern shape)
 
