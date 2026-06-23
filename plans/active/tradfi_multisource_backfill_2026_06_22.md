@@ -122,6 +122,24 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       (databento ICE datasets re-added to the allowlist, or a Massive/other ICE feed). 530,600 expected_unattempted
       cells stay until an operator credential ask is acked. CREDENTIAL APPROVAL REQUEST logged in pings. Note: the IS
       ICE instrument catalogue (BRN/G FUTURE/COMBO, 2,067 rows) already exists — only the market-data source is missing.
+- [x] [SCRIPT] P0. **Lifecycle catalogue OOM fix — tradfi `prod/catalog.parquet` FROZEN 6 days (write-path bug, BUG-2
+      2026-06-23)** — ROOT CAUSE: the daily Cloud Run job `lifecycle-catalogue-regen-tradfi` ran but every execution
+      FAILED (`0/1`) — `Terminating task because it has reached the maximum timeout of 1800 seconds` +
+      `Container terminated on signal 9` (OOM) at 4/8/16/32Gi — so the monotonic-guard KEPT the last-good
+      catalogue (mtime 2026-06-17) and the v2 expected-universe enumerator cross-joined a STALE could-exist universe
+      (the `DP_CATALOG_NOT_RUNNING` alert was REAL). Crash site:
+      `build_instrument_catalogue.py::_iter_by_date_snapshots` used `ThreadPoolExecutor.map`, which eagerly downloaded +
+      buffered ALL 11.6k–13.5k tradfi by_date parquets in memory at once. FIX: `_bounded_parallel_load` sliding-window
+      (≤max_workers=16 frames in flight, each yielded into the streaming aggregate fold + dropped before the next) →
+      peak memory O(16 frames) not O(13.5k); applied to all 3 `_iter_*` sites + 3 regression tests. tf: tradfi job
+      32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) + `timeout_seconds` 1800→3600 (slow 13.5k-blob GCS read).
+      — instruments-service@b84cc4f (`scripts/build_instrument_catalogue.py` +
+      `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4 regression tests) + deployment-service@9b74416
+      (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi Cloud Run job updated to 16Gi/cpu4/`task-timeout`=3600
+      via gcloud (was 32Gi); IS image rebuilding (Cloud Build `c0b6772a`) so `:latest` bakes the fix. OPS (final
+      verification, 2026-06-23): once the image build lands, re-run `lifecycle-catalogue-regen-tradfi` on the fixed image
+      and confirm it COMPLETES without OOM + writes a fresh `prod/catalog.parquet` mtime=today (evidence appended in the
+      data_pipeline_hardening Progress Log). Other 4 AGs were already GREEN.
 
 ## Codex SSOT updates
 
