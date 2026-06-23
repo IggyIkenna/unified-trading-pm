@@ -355,7 +355,23 @@ clears the flag on recovery.
       "Account auth-failure eviction" + a pointer paragraph in `agent-orchestrator-overview.md` § Watchdog. —
       unified-trading-pm (this commit)
 
-### Success criteria
+#### Deploy-currency + SQLite hardening (operator 2026-06-23 follow-ups)
+
+- [x] ✅ [OPS] P1. **Deploy-currency wedge alert.** `ao-self-pull.sh` IS scheduled `*/15` (root crontab) + ff-pulls +
+      restarts-on-change — but its dirty-gate skips SILENTLY, so a stray dirty `quality-gates-v2.yml` left the
+      orchestrator 128 commits behind LDR on stale code, unnoticed (logged only to a file). Added `_alert_wedge`: a
+      deduped Slack alert when the self-pull is wedged (dirty/diverged) AND the clone is ≥`AO_DRIFT_ALERT_COMMITS`(10)
+      behind LDR — a wedge can never silently drift again. The clone is unwedged + current now (my redeploy stashes
+      cleared the dirty `v2.yml`). — agent-orchestrator@77f1873e
+- [x] ✅ [ORCHESTRATOR] P2. **SQLite raw-connection busy_timeout.** The main engine (db.py) already has WAL + 120s
+      busy_timeout, but two raw `sqlite3.connect()` hot-backup connections in `gcs_sync.py` bypassed it (could
+      `database is locked` under writer contention); added `PRAGMA busy_timeout=120000` to both + bumped
+      `regen_backlog`'s 30s→120s for parity. The residual boot-spawn-storm lock-STACKING (a spawn holds BEGIN IMMEDIATE
+      across the ~75s tmux spawn; stacked spawns exceed 120s) is the separate tracked **spawn-outside-txn** refactor
+      (`orchestrator_spawn_reliability_db_lock_2026_06_10`) — transient/non-fatal, the real fix is a careful follow-up.
+      — agent-orchestrator@77f1873e
+
+## Success criteria
 
 - An account disabled mid-run (poller 401/403) → every running agent on it (workers via `rotate_all_slots_off_account`,
   main via the keeper) is diverted to a usable account within ~1 poll tick; it is excluded from new spawns; it
