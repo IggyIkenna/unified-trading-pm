@@ -1014,7 +1014,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `--min-instances=1`, `gcloud run deploy` preserves the flag on image redeploy, and no deploy path forces `=0`.
       (us-central1 secondary/staging UIs left at 0 — not the operator's surface, warming them is needless cost.)
       Original finding:
-- [ ] [INFRA] P2 **NICE-TO-HAVE** — paper-trading UI cold-start latency (discovered 2026-06-23 deploying B2). The live
+- [x] ✅ ~~[INFRA] P2 **NICE-TO-HAVE**~~ **(superseded by the ✅ FIXED above — minScale=1 on odum-portal + client-reporting-api, verified warm 2026-06-23)** — paper-trading UI cold-start latency original finding (discovered 2026-06-23 deploying B2). The live
       `/paper-trading?client=firm-paper-stream` book is SLOW on first load after idle — NOT a network issue. Root cause:
       both `odum-portal` (Next.js UI) AND `client-reporting-api` (CRA backend) run on Cloud Run with
       **`min-instances=0`** → they scale to zero and cold-start on the first request. The CRA is the worst offender
