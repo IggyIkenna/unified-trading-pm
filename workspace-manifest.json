@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.6",
     "unified-api-contracts": "0.49.0",
     "unified-trading-library": "0.36.0",
-    "unified-trading-pm": "1.2.369",
+    "unified-trading-pm": "1.2.372",
     "market-data-processing-service": "0.10.11",
     "e2e-testing": "0.25.0",
     "agent-orchestrator": "0.41.0",
@@ -582,7 +582,7 @@
         "subscription-redemption"
       ],
       "codebase_health": {
-        "coverage_pct": 83.9,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
@@ -685,7 +685,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 88.24,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
@@ -745,7 +745,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.74,
+        "coverage_pct": 90.75,
         "qg_red_reason": null,
         "large_file_count": 2,
         "warn_file_count": 6
@@ -1082,7 +1082,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 9.09,
+        "coverage_pct": 9.18,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
@@ -1240,7 +1240,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.02,
+        "coverage_pct": 89.99,
         "qg_red_reason": null,
         "large_file_count": 4,
         "warn_file_count": 20
@@ -1948,21 +1948,21 @@
     "strategy-service": "0.36.0",
     "unified-trading-api": "0.2.10",
     "client-reporting-api": "0.15.9",
-    "ibkr-gateway-infra": "0.4.3",
-    "system-integration-tests": "0.14.6",
+    "ibkr-gateway-infra": "0.4.4",
+    "system-integration-tests": "0.14.7",
     "trading-agent-service": "0.12.0",
-    "batch-live-reconciliation-service": "0.26.0",
-    "features-service": "0.29.0",
-    "fund-administration-service": "0.9.6",
-    "market-data-processing-service": "0.10.11",
-    "ml-service": "0.24.0",
-    "alerting-service": "0.30.0",
+    "batch-live-reconciliation-service": "0.28.0",
+    "features-service": "0.30.0",
+    "fund-administration-service": "0.9.9",
+    "market-data-processing-service": "0.10.13",
+    "ml-service": "0.26.0",
+    "alerting-service": "0.31.0",
     "e2e-testing": "0.27.0",
     "execution-service": "0.31.0",
-    "instruments-service": "0.44.0",
-    "agent-orchestrator": "0.47.0",
-    "market-tick-data-service": "0.52.0",
-    "deployment-service": "0.48.0",
+    "instruments-service": "0.46.0",
+    "agent-orchestrator": "0.51.0",
+    "market-tick-data-service": "0.53.0",
+    "deployment-service": "0.52.0",
     "greeks-service": "0.18.0",
     "unified-api-contracts": "0.50.0",
     "unified-trading-library": "0.38.0"
@@ -1986,8 +1986,8 @@
       "branch": "staging"
     },
     "agent-orchestrator": {
-      "version": "0.47.0",
-      "sha": "a7dbc68df0a46537576e1ca50f7974652394e382",
+      "version": "0.51.0",
+      "sha": "f1799c878f0ab9f30b6755f09e5e79b11661d10a",
       "branch": "staging"
     },
     "market-tick-data-service": {
@@ -2006,8 +2006,8 @@
       "branch": "staging"
     },
     "deployment-service": {
-      "version": "0.48.0",
-      "sha": "83202603b3bf018fb741920c1dd141dd9e5b2b7b",
+      "version": "0.52.0",
+      "sha": "09678c0dd07dc55a0492e7a830a5b66b9732401c",
       "branch": "staging"
     },
     "alerting-service": {
@@ -2031,8 +2031,8 @@
       "branch": "staging"
     },
     "ml-service": {
-      "version": "0.24.0",
-      "sha": "71910f324c7e10de1725a5906b29f4743764e81f",
+      "version": "0.26.0",
+      "sha": "6ec15ab895ec077468846019c0834ca42d59d3b1",
       "branch": "staging"
     },
     "unified-trading-api": {
