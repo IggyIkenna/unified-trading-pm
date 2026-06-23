@@ -344,6 +344,20 @@ Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`
   cefi venues: BINANCE-SPOT/FUTURES, BYBIT, OKX-SPOT/SWAP/FUTURES, DERIBIT, DERIBIT-COMBO, COINBASE-SPOT, HYPERLIQUID,
   UPBIT, ASTER, KRAKEN-FUTURES/SPOT, BITFINEX-FUTURES/SPOT, BITGET-SPOT/FUTURES).
 
+**FOURTH ROOT BLOCKER — IS recon job has NO date default (FOUND + worked-around 2026-06-23):** the IS CLI date-loop
+framework (`UTL date_utils.get_date_range`) requires explicit `--start-date`/`--end-date`; the recon job args omitted
+them and the empty scheduler `httpTarget.body` injects none → `ValueError: Invalid date format ''` → `exit(1)`. So even
+had the prod job existed, the 06:00 schedule would have crashed on dates. Worked around by setting
+`--start-date=$TODAY --end-date=$TODAY` on the job. **FOLLOW-UP TODO below** — the recurring daily job must self-default
+to today (a hardcoded date goes stale tomorrow).
+
+- [ ] [SCRIPT] P2. **instruments-service / deployment-service** — make the cefi IS recon job's date default to "today"
+      (yesterday for true T+1) instead of a hardcoded `--start-date`/`--end-date`. Either (a) the IS CLI defaults
+      `--start-date`/`--end-date` to the run day when `--run-tag=t1-recon` and they're unset, OR (b) the
+      `t1_batch_scheduler.tf` scheduler injects `{start-date,end-date}=today` via `httpTarget.body` overrides. Until
+      fixed, the hardcoded job-arg date (set 2026-06-23) makes tomorrow's scheduled run re-fetch the stale 2026-06-23.
+      Provenance: this dispatch — the daily fetch crashed on empty dates (`Invalid date format ''`).
+
 - [ ] [INFRA] P1. **Manually trigger BOTH IS jobs** (`gcloud run jobs execute uts-prod-instruments-service-cefi-t1-recon`
       then `... instrument-catalogue-regen`) AFTER P0+P1 → confirm: daily shards written for ALL cefi venues (full
       symbol universe per venue, not a subset) + `prod/catalog.parquet` aggregated. Verify row count + per-venue symbol
