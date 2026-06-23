@@ -116,8 +116,8 @@ source:
       `Epic:` the UI epic. Target: **unified-trading-system-ui**. —
       unified-trading-system-ui@b7a1d4cd | 17 files stamped (7 oneoff splitters/codemods + 10 permanent) |
       grep -rL '^# Lifecycle:' scripts/ {.py,.sh} → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
-- [ ] [SCRIPT] P2. Stamp `execution-service/scripts/` (~12; validation runbooks = `campaign`/`permanent`).
-      `Epic: execution_master`. Target: **execution-service**.
+- [x] ✅ [SCRIPT] P2. Stamp `execution-service/scripts/` (~12; validation runbooks = `campaign`/`permanent`).
+      `Epic: execution_master`. Target: **execution-service**. — execution-service@b28d66ac | 12 files stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `ml-service/scripts/` (~12; per-family boilerplate = `permanent`).
       `Epic: features_and_ml_master`. Target: **ml-service**. —
       ml-service@f782d5c | 12 files stamped (all permanent) |
