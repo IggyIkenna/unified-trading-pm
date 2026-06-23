@@ -175,7 +175,14 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       for every defi collect-\* handler that hardcodes BATCH\_. Repo: market-tick-data-service. **DEFERRED** —
       successor: this todo (2026-06-21). Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh`
       daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs. —
-      market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
+      market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21. **✅ (i) RESOLVED 2026-06-23 —
+      CONTINUOUS scheduler DEPLOYED (`*/5`, not just daily):** `tofu apply -target=google_cloud_scheduler_job.defi_forward_poll`
+      (prod state `terraform/state/prod`) created the 3 jobs `defi-fwd-{dex-swaps,dex-pools,oracle-prices}-prd` ENABLED
+      (schedules `*/5` / `1-59/5` / `2-59/5`; SA `uts-prod-batch-sa@`; `defi_forward_poll_scheduler.tf` was authored but
+      NEVER applied — the jobs were absent). VERIFIED firing autonomously: the schedulers launched `defi-fwd-dex-{swaps,pools}-poll`
+      VMs at the 11:06Z tick (compute insert ops DONE); the identical `--mode live` code path is proven WRITING real rows
+      (manual `defi-fwd-dex-swaps` VM: 56,865→75,375→136,620 swap rows to `pipeline_mode=live_onchain_subgraph` parquets,
+      PIPELINE_HEARTBEAT/60s). DeFi live is now CONTINUOUS (no longer one-shot). Repo: deployment-service (terraform apply).
 - [x] ✅ [DATA] P0. **defi LIVE end-to-end VERIFIED CAPTURING (2026-06-23 continuous-flow session).** Launched the 3
       price-sensitive defi live ops (`defi-fwd-dex-swaps/-dex-pools/-oracle-prices-20260623-102*`) on the
       2026-06-23-rebuilt tarball (handler pipeline_mode fix baked). Consolidated defi `_index` @10:34:40Z holds DEFI
