@@ -259,3 +259,37 @@ the launcher won't invoke them. Follow-up below.
 - The 7-VM full re-run is mid-backfill — captured funding/trades climbing (ASTER deriv 8175→9223+, HL deriv 20736→20929+
   already). Full per-instrument coverage lands when the VMs complete (multi-hour). The catalogue-driven universe means
   every active perp on each date is attempted (small-coin funding history captured).
+
+---
+
+## EXPANDED PROGRAM — full cefi catalogue (ALL venues) + daily-job verification + MTDS run (operator 2026-06-23)
+
+Generalises BUG#4 from {HL,ASTER} to **all cefi venues**. Tardis access re-verified live: SSOT secret **`tardis-api-key`**
+(academic-unlimited, 62 venues, genesis 2019 → 2027, `dataPlan:unlimited`); the dup `tardis-api-key-full`/`-backup`
+(byte-identical) DELETED. IS Tardis reference-data now uses the **free no-auth** `api.tardis.dev/v1/exchanges/{exchange}`
+metadata for enumeration (no key consumed) — shipped instruments-service@`b99e586` (tested no-key enumeration).
+
+**Schedulers ALREADY exist** (both ENABLED): `uts-prod-instruments-cefi-t1-schedule` (06:00 UTC → Cloud Run job
+`uts-prod-instruments-service-cefi-t1-recon`, the daily IS fetch → daily shards `_catalogue/instruments-service/day=*/`)
++ `instrument-catalogue-regen-nightly` (02:00 UTC → job `instrument-catalogue-regen`, aggregates daily shards →
+`prod/catalog.parquet`). Both jobs currently run image `market-tick-data-service:latest` — the b99e586 no-auth fix
+reaches them only after that image rebuilds (resolve at redeploy step P1).
+
+### Gated sequence (each step waits on the prior)
+
+- [ ] [INFRA] P0. **GATE**: HL/ASTER since-genesis re-run (7 VMs `cefi-*-20260623-113700`) completes — captured-coverage
+      manifest re-read confirms full per-day universe captured. (Monitored; ~25–60% as of write.)
+- [ ] [DEPLOY] P1. **Redeploy the IS no-auth fix (b99e586)** to the catalogue jobs' image so tomorrow's 02:00 + 06:00
+      runs use no-key enumeration. Resolve which image the `instrument-catalogue-regen` + `cefi-t1-recon` jobs run
+      (currently `market-tick-data-service:latest`) and rebuild/repoint to carry the IS enumeration code.
+- [ ] [INFRA] P1. **Manually trigger BOTH IS jobs** (`gcloud run jobs execute uts-prod-instruments-service-cefi-t1-recon`
+      then `... instrument-catalogue-regen`) AFTER P0+P1 → confirm: daily shards written for ALL cefi venues (full
+      symbol universe per venue, not a subset) + `prod/catalog.parquet` aggregated. Verify row count + per-venue symbol
+      breadth (binance/bybit/okx[okex-swap]/deribit/kraken/coinbase/... each full universe with available_from/to).
+- [ ] [INFRA] P2. **Tomorrow-verify (2026-06-24)**: confirm both schedulers fired on the new day (02:00 + 06:00 UTC) +
+      produced fresh shards + aggregate on the new code. Flip only after 100% confirmed.
+- [ ] [MTDS] P2. **MTDS run for all cefi/Tardis venues** — since-genesis batch + live, full catalogue-driven universe.
+      (Tardis batch billing gate LIFTED — operator paid; access confirmed unlimited.) Year×data_type×venue shard.
+- [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
+      caused by the prior SMALL (≤33) instrument catalogue vs genuine absence → re-fetch the catalogue-caused ones now
+      that the full universe is known.
