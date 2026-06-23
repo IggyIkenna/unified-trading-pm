@@ -247,6 +247,24 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       correctly REFUSES a parallel launch — do NOT `--force` (double-bill risk). The repaired daily cron (item above)
       fires the tradfi T-1 catch-up at 06:00 UTC; remaining gap drains as the bf fleet finishes + the cron fires. tradfi
       recent-window stays BLOCKED-ON-FLEET-DRAIN (not deferred — the mechanism is live).
+      **CONTINUITY PASS 2026-06-23 (measured `_index` batch_max per data_type, T-1=2026-06-22):** cefi
+      trades+derivative_ticker=06-22 ✅, book_snapshot_5=06-01 / ohlcv_1m=05-06 (Tardis-gated + onchain-WS-primary,
+      tracked elsewhere); defi gas_fees+oracle_prices=06-22 ✅, lst/lending/liq/vault=06-21 (T-2, daily); tradfi
+      ohlcv_1m+1s=06-18 (cron+CME-bf draining, above); sports trades=06-19 (live capturing; ODDS batch=04-14 = Odds-API
+      historical-retention DATA-REALITY, not a gap); **prediction batch=05-22 — two REAL bugs found+addressed:**
+      (a) **Kalshi batch 0-capture = the venue-agnostic `market_lifecycle/by_canonical_group/` store feeds Polymarket
+      `0x` condition_ids to the Kalshi `/markets/trades` endpoint → HTTP 400 every ticker (observed on
+      `mtds-prediction-kalshi-20260623-131108`). FIXED — mtds@9e3bbab `KalshiAdapter._load_lifecycles_from_gcs` now
+      filters to Kalshi-shaped tickers (`_is_kalshi_ticker`, drops `0x…`).** The running Kalshi batch VM baked the
+      pre-fix tarball → needs a relaunch on the fresh mtds@9e3bbab tarball (built 2026-06-23 13:44Z) to actually fill
+      05-23→06-22. (b) **Polymarket batch pre-flight FALSE-POSITIVE skip — `mtds-prediction-polymarket-20260623-131059`
+      ran `--start 2026-05-23 --end 2026-06-22` and pre-flight-skipped EVERY date ("all data_types fully covered (atoms
+      ⊆ captured), skipping") yet `raw_tick_data/by_date/` has ZERO Polymarket parquets for 05-23→06-22 (jumps 05-22 →
+      06-23-live).** The pre-flight reads the manifest as covered while the parquet data is absent (a manifest-vs-data
+      divergence in the prediction batch pre-flight / `expected_unattempted` accounting) → the gap never fills. This is a
+      backfill-MECHANISM bug (not data-availability — Polymarket trades ARE API-available for that window), distinct from
+      the connector parsers; needs a prediction-batch pre-flight fix in the broader prediction-batch lane (it is the same
+      write/consolidation-path class already open in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`).
 - [x] ✅ [DATA] P1. **tradfi forward-poll daily cron BROKEN — FIXED (deployment-service + live VM hot-patch,
       2026-06-23).** ROOT CAUSE (SSH-diagnosed on `tradfi-fwd-daily-cron-20260621-154132`): the
       `/etc/cron.d/tradfi-fwd-daily` `PATH=` line was `…:/sbin:/bin` — MISSING `/snap/bin`. On Ubuntu-2404 GCE images
