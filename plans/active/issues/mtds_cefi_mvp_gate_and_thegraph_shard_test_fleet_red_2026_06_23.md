@@ -1,11 +1,12 @@
 ---
 title: "MTDS LDR fleet-red — cefi MVP-gate tests + thegraph 9-key shard tests fail on current live-defi-rollout"
 created: 2026-06-23
-author: ikennaigboaka [autonomous defi-catalogue dispatch]
 source:
   - "market-tick-data-service@fbf3db8 (feat(cefi): gate MTDS capture on MVP capture universe)"
   - "market-tick-data-service@5830cc8 (thegraph key count 20→9)"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
