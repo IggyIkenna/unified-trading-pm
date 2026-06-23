@@ -2331,7 +2331,13 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
     written anymore and none should be** (confirmed on GCS: `sports_reference_v2/by_date` has only
     `entity=fixtures`/`fixture_stats`). **Flipping these to `captured` would FAKE coverage (banned).** Correct fix:
     reclassify → `empty_confirmed` reason `EXPECTED_DEPRECATED_DATA_TYPE` (in the out-of-window exclusion set,
-    `honest_coverage.py:462-471` → excluded from the completion-% denominator).
+    `honest_coverage.py:462-471` → excluded from the completion-% denominator). **NOT a data loss — each has a LIVE
+    successor carrying the substantive data (verified 2026-06-23):** TRANSFERMARKT_LEAGUES = a static provider catalog
+    (provider_id→canonical_name+country), now UAC `TRANSFERMARKT_IDS` versioned config; the TM DATA is `PLAYER_VALUES`
+    (active). SFI_LEAGUES = SFI catalog, now in UAC; the SFI DATA is `SFI_PROGRESSIVE_STATS` (active). SFI_STANDINGS =
+    "SFI has no standings endpoint" (never fillable); standings come from the canonical `STANDINGS` data_type (footystats,
+    134k captured / 64.7% honest). The migration MUST record this successor mapping per retired data_type (auditable
+    exclude, not silent). **Scope: SPORTS ONLY (operator 2026-06-23 — no cefi/tradfi/prediction sweep).**
   - **B2 — INJURIES-failed (9,167) + ODDS-failed (3,848): ACTIVE data_types, but parquets confirmed ABSENT
     (REAL=False)** — these are NOT false positives. Each splits by `is_expected_for_source`: **out-of-scope**
     (league×source not covered) → reclassify `EXPECTED_NO_PROVIDER_COVERAGE` (excluded); **in-scope** → genuine GAP →
