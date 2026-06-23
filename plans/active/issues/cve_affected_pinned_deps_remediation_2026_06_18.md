@@ -98,13 +98,15 @@ gate is satisfied.
       failed ONLY under the 1.5b `--upgrade` pass (it passes on current working deps + Mode-B). When alerting's external
       deps are upgraded one-by-one, identify which upgraded dep changed the suppressed-event behaviour and fix the test
       or the code. Repo: alerting-service.
-- [ ] [SCRIPT] P2. **aiohttp / vcrpy unblock — the biggest CVE cluster (~11 ignores).** vcrpy 8.2.1 is now released (the
-      1.5b `--upgrade` pulled it). CHECK whether 8.2.1 supports aiohttp 3.14.0 (the removed `AsyncStreamReaderMixin`). If
-      yes: bump aiohttp `≥3.14`, regen locks, run the VCR cassette suites (UAC / UTL / execution-service / MTDS); on
-      green drop the ~11 aiohttp `--ignore-vuln` entries + the `aiohttp>=3.13.4,<3.14.0` range in
-      `workspace-constraints.toml` + `canonical-dependency-manifest.json` + the 18 declaring repos + the CLAUDE.md
-      KNOWN-EXCEPTION block. Repo: unified-trading-pm + the 18 aiohttp repos. SSOT:
-      `issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
+- [x] ✅ [SCRIPT] P2. **aiohttp / vcrpy unblock — biggest CVE cluster — DONE 2026-06-23.** vcrpy 8.2.1 confirmed
+      aiohttp-3.14-compatible (`MockStream` rewritten; UAC 649-cassette suite green on 3.14.1, conftest shim removed).
+      **17 of 18 repos** bumped to `aiohttp>=3.14.1,<4.0.0` + `vcrpy>=8.2.1` in `workspace-constraints.toml` +
+      `canonical-dependency-manifest.json` + each pyproject; all shipped to LDR + drained to staging (v2 green); CLAUDE.md
+      KNOWN-EXCEPTION block rewritten (cap LIFTED). GHSA-rpj2 ignore dropped (8.2.1 fixes it). **execution-service held on
+      3.13.5 via `[tool.uv] override`** (aioresponses 0.7.8 can't build aiohttp-3.14 ClientResponse) → the 11 aiohttp
+      ignores are retained ONLY for it; drop them when it migrates →
+      `issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`. Repo: unified-trading-pm + 18
+      aiohttp repos. SSOT: `issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (RESOLVED banner).
 - [ ] [SCRIPT] P3. **pip floor bump.** Bump the CI/base pip floor to a patched release (CVE-2026-3219 / -6357 /
       PYSEC-2026-196), re-validate, drop those 3 ignores. Repo: unified-trading-pm.
 - [ ] [SCRIPT] P3. **cryptography / idna / CVE-2026-4539 re-check.** Re-check upstream for patched releases; lift where

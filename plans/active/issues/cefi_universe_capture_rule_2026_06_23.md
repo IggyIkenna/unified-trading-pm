@@ -59,9 +59,14 @@ The "spot requires a perp for the base at that venue" rule has a CLOSED allow-li
 (LST) / liquid-restaking (LRT) tokens** whose SPOT we DO capture even when NO perp exists for them (these are the
 `carry_staked_basis` / DeFi-seasonal-rewards legs — we want their spot liquidity; they often have no perp anywhere):
 
-- **Restaking:** EIGEN, KING, ETHFI
-- **ETH LSTs/LRTs:** STETH, WSTETH, RETH, WEETH, EETH, CBETH (+ the staking class — sfrxETH/osETH/ankrETH etc. as they list)
-- **SOL LSTs:** MSOL (Marinade), JITOSOL + JTO (Jito), BSOL (+ class as they list)
+**Include ALL wrapped + unwrapped equivalents of each (operator 2026-06-23).** Extras are harmless (allow-list — only
+ones a CEX actually lists spot take effect):
+
+- **Restaking (spot-only):** EIGEN, ETHFI, KING
+- **ETH LSTs/LRTs (wrapped + unwrapped):** STETH, WSTETH (Lido); RETH (RocketPool); CBETH (Coinbase); EETH, WEETH
+  (ether.fi); FRXETH, SFRXETH (Frax); ANKRETH; OSETH (StakeWise); SWETH, RSWETH (Swell); ETHX (Stader); METH (Mantle);
+  + LRTs RSETH (Kelp), EZETH (Renzo), PUFETH (Puffer), RSTETH
+- **SOL LSTs:** MSOL (Marinade), JITOSOL + JTO (Jito), BSOL (BlazeStake), JSOL, SCNSOL, INF (Sanctum)
 
 Rule: if `base ∈ STAKING_SPOT_EXCEPTION` → SPOT is mvp=true on ANY venue that lists it, **regardless of perp existence**.
 This is the ONLY spot-without-perp carve-out. Consequence for **Upbit** (and other spot-only venues): NOT generally
@@ -153,12 +158,71 @@ rotating baskets).
       (OKX 17 US-equity perps + Binance/Bybit + KRX). `mvp_scope.py`/`total_universe.py` reconciled (v4 / ~518 docstrings,
       base_ccys = CEFI_BASE_ASSET_UNIVERSE | CEFI_EQUITY_PERP_BASE_UNIVERSE, content-hash auto-flips). Tests:
       size-band ≥500, all-25-present, restaking+historical-present, sorted/deterministic. QG green (221s).
-- [ ] [MTDS] P0. Implement the **hard perp-gate** in the MTDS capture-universe derivation: download `(venue, base)` only
-      if the venue lists a perp for the base at that time (from the full IS catalogue); spot rides only where the perp
-      exists; no-perp ⇒ download nothing for that base on that venue (even top-100). TradFi-linked perps allow-listed for
-      Binance/OKX/Bybit. This governs Phase D backfills.
+- [x] ✅ [MTDS] P0. Implement the **hard perp-gate** in the MTDS capture-universe derivation: download `(venue, base)`
+      only if the venue lists a perp for the base at that time; spot rides only where the perp exists; no-perp ⇒ download
+      nothing for that base on that venue (even top-100). TradFi-linked perps allow-listed for Binance/OKX/Bybit. —
+      Shipped as the shared UAC SSOT `is_in_mvp_capture_universe` (`mvp_scope.py`, v5; `unified-api-contracts@5bceb9fe`)
+      consumed by ALL THREE capture consumers: MTDS `cefi_catalog_reader` capture gate (CONSUMER 1,
+      `market-tick-data-service@fbf3db8`), `enumerate_expected_universe._enumerate_v2_cefi` denominator gate (CONSUMER 2,
+      `instruments-service@e21d681` — enumerator gate + rollup `_add_mvp_column` tagging; the catalogue-owner must RE-RUN
+      `build_instrument_catalogue.py` to re-tag the live `mvp` column with the perp-gate, MTDS/enumerator fall back to
+      computing the predicate until then), and the
+      Phase-C reclassification script (CONSUMER 3, `market-tick-data-service@fbf3db8`, dry-run-default). Perp-gate is per
+      base-EXCHANGE (BINANCE-SPOT↔BINANCE-FUTURES). Dated futures NOT perp-gated (spec); OPTION=Deribit-BTC/ETH only.
+      Phase D backfills now derive their universe from `mvp=true` rows. (Governs Phase C apply + Phase D — those remain
+      operator/Phase-gated runs.)
 
 ## Progress Log
+
+- **2026-06-23 (shared-SSOT + 3 consumers)** — STEP 0 + all three consumers WIRED to ONE predicate. **Shipped (all
+  QG-green, landed on LDR via quickmerge):** `unified-api-contracts@5bceb9fe` (STEP 0) ·
+  `market-tick-data-service@fbf3db8` (CONSUMER 1 + CONSUMER 3) · `instruments-service@e21d681` (CONSUMER 2 enumerator +
+  catalogue rollup tagging).
+  - **STEP 0 (UAC)** — added `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_perp_for_base, source=None)`
+    to `unified_api_contracts/canonical/crosscutting/mvp_scope.py` (exported from the package root + `__all__`).
+    Implements the FULL spec on top of `is_mvp`: base ∈ union universe; **HARD perp-gate** (SPOT mvp ONLY IF the EXCHANGE
+    lists a perp for the same base — `has_perp_for_base`; spot-no-perp ⇒ FALSE even top-100); PERP/EQUITY_PERP mvp on
+    base-membership (the perp self-qualifies); **DATED FUTURES** mvp on base-membership+venue (NOT perp-gated — futures
+    complex, per spec line); **OPTIONS** mvp ONLY venue==DERIBIT AND base∈{BTC,ETH} (fixed a latent `is_mvp` bug: the
+    options carve-out only narrowed base_ccy, so a Binance BTC option wrongly passed — the new fn gates venue==DERIBIT);
+    TradFi-perps (EQUITY_PERP, `CEFI_EQUITY_PERP_BASE_UNIVERSE`) on Binance/OKX/Bybit ⇒ mvp. Added `FUTURE` to the cefi
+    rule's `instrument_types`. `MVP_SCOPE_CONFIG_VERSION` 4→5. 11 new unit tests (all pass; 85/85 `test_mvp_scope.py`).
+  - **Measured mvp-true delta** (live `prod/catalog.parquet`, base-exchange-keyed perp set): **155,285 mvp-true** of
+    226,484 rows (OPTION 146,131 — all DERIBIT BTC/ETH, verified; FUTURE 5,761; PERPETUAL 1,989; SPOT_PAIR 1,404 of
+    3,893 → perp-gate dropped ~2,489 spot-only listings). vs the prior base-only `is_mvp` (~157,935) and base-asset-only
+    (~226,323). The doc's "152,158" was a base-only snapshot on an earlier catalogue (row count has since shifted with
+    the 2010-purge in flight). COMBO bundles correctly tag 0 leaves directly; they roll up to options_chain with the
+    OR-of-leaves mvp.
+  - **CONSUMER 1 (MTDS capture)** — `market_tick_data_service/engine/cefi_catalog_reader.py`: `list_instruments` +
+    `list_not_yet_listed` now gate every yielded row on `is_in_mvp_capture_universe` (prefer the catalogue `mvp` column,
+    else compute the predicate — same SSOT). `has_perp_for_base` computed once per call, keyed on the base-exchange token
+    (BINANCE covers BINANCE-SPOT+BINANCE-FUTURES). `include_non_mvp=True` ctor flag = diagnostic bypass. 5 unit tests in
+    `tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py` (pass).
+  - **CONSUMER 2 (expected_unattempted denominator)** — `instruments-service/scripts/enumerate_expected_universe.py`:
+    `InstrumentCatalogEntry` gained `base_asset` + `mvp` fields (read from the catalogue columns). `_enumerate_v2_cefi`
+    SKIPS any entry not in the MVP universe (out-of-MVP → NOT seeded → excluded from the denominator entirely). Bundle
+    roll-up (`_rollup_bundle_grain`) OR-aggregates leaf mvp into the synthetic options_chain/futures_chain entry +
+    carries `base_asset=underlying`+`mvp`, with `_mvp_capture_itype` normalising options_chain/combo→OPTION,
+    futures_chain→FUTURE so the bundle's mvp resolves. Shared module-level helpers `_cefi_perp_bases`/`_base_exchange`/
+    `_cefi_entry_in_mvp_universe`. 3 new gate tests + fixture canonicalisation (114/114 `test_enumerate_expected_universe_v2.py`).
+  - **CONSUMER 3 (manifest reclassification SCRIPT — build, do-NOT-run, Phase C)** —
+    `market-tick-data-service/scripts/reclassify_cefi_manifest_mvp_universe_2026_06_23.py` (lifecycle marker
+    `Epic: mtds_mdps_master` / `Lifecycle: oneoff`). Default **dry-run**; `--apply` gated (snapshots to
+    `_index/snapshots/pre_mvp_reclassify_<UTC>.parquet` before write). Rules: out-of-MVP rows REMOVED (not
+    empty_confirmed); in-MVP stale `empty_confirmed` (non-pre-genesis reason) → `expected_unattempted`; legit
+    pre-genesis empty_confirmed + attempted_failed + captured LEFT untouched. 3 unit tests in
+    `tests/unit/scripts/test_reclassify_cefi_manifest_mvp_universe.py` (QG-collected home). **Dry-run on the live 5.49M-row
+    manifest**: `out_of_mvp_removed=3,651,839 · in_mvp_kept=1,842,949 (new denominator) ·
+    empty_confirmed→expected_unattempted=206,673 · empty_confirmed_kept_legit=637,281 · attempted_failed_left=14,412 ·
+    captured_left=770,929`.
+  - **IS catalogue rollup** — `instruments-service/scripts/build_instrument_catalogue.py` `_add_mvp_column` now tags the
+    cefi `mvp` column via `is_in_mvp_capture_universe` (computes `has_perp_for_base` from the full frame, base-exchange
+    keyed). **The rollup must be RE-RUN by the catalogue-owning worker** to re-tag the live `mvp` column with the
+    perp-gate (it currently carries the base-only tag); MTDS/enumerator fall back to computing the predicate until then,
+    so they're correct regardless. NO new signature needed — the rollup change is internal to `_add_mvp_column`.
+  - **Multi-agent note**: the MTDS slot clone is contended by another live session (prediction-adapter WIP, mtime live);
+    my cefi_catalog_reader WIP was stashed by a concurrent ff-pull as "park foreign cefi WIP" then recovered from
+    `stash@{0}` (cefi_catalog_reader.py only — foreign prediction files untouched). Ship scoped via `--files`.
 
 - **2026-06-23** — UAC universe-set P0 COMPLETE (`unified-api-contracts@5d1f6542`). Inherited the prior worker's dirty
   WIP in UAC (the 493-coin expansion + `mvp_scope.py`/`total_universe.py`/test reconciliations — came to rest, QG had

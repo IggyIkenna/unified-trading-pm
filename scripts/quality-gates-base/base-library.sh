@@ -1273,6 +1273,25 @@ if [ -f "$_RUFFRR_CHECKER" ]; then
     fi
 fi
 
+# ── STEP 5.96: blank asset_group at record_captured callsites ratchet ─────────
+# Library-repo parity gate. `asset_group=""` / `asset_group=''` is banned —
+# blank asset_group produces silent cross-asset manifest confusion. Shrinking
+# ratchet: no_blank_asset_group_baseline.yaml. Per-line opt-out:
+# `# noqa: blank-asset-group  <reason>` with a one-line reason on the flagged line.
+# SSOT: data_completion_to_100_all_ag_2026_06_21.md task 042.
+_BAG_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_blank_asset_group.py"
+if [ -f "$_BAG_CHECKER" ]; then
+    _BAG_REPO=$(basename "$PROJECT_ROOT")
+    if "${PYTHON_CMD:-python3}" "$_BAG_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_BAG_REPO" >/tmp/no_blank_asset_group_qg.log 2>&1; then
+        log_success "STEP 5.96: No NEW blank asset_group at record_captured callsites (baseline-ratchet)"
+    else
+        log_fail "STEP 5.96: NEW blank asset_group callsite — use a non-blank asset_group or add '# noqa: blank-asset-group  <reason>' on the same line:"
+        cat /tmp/no_blank_asset_group_qg.log
+        exit 1
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
