@@ -98,6 +98,48 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 > THEN drill into completion (real backend wiring) pane-by-pane. So Phase 0 (scaffold) precedes the backend phases; each
 > later phase REPLACES a pane's placeholder with its real endpoint. Each phase is independently shippable + QG-green.
 
+> **Operator directive #2 (2026-06-23) — AUDIT-FIRST, REUSE-MAXIMALLY, DO NOT BOLT ON.** "Scan the deployment UI in its
+> ENTIRETY for existing functionality and rewire it into the centralised format. Click through it; reuse what's there as
+> much as possible. It's an audit first, then an implementation." So before any cockpit tab is considered DONE, its
+> source surface MUST have been audited (every page/route/component/endpoint catalogued) and the cockpit REWIRES the
+> existing component — never re-implements it. Net-new is only for genuine gaps the audit PROVES don't exist.
+
+### Phase 0.5 — Deployment-UI full-surface AUDIT (reuse-first; gates Phase 0.7 / 6 completion) — deployment-ui
+
+> Initial audit done 2026-06-23 (codebase scan — routes + components + deployment-api endpoints). The TABLE is the
+> rewire map; the open `- [ ]` is the CLICK-THROUGH pass (run the stack, exercise every surface live, confirm each truly
+> folds + reuses, fill gaps). The plan is NOT complete until every row is `folded` into a cockpit tab or explicitly
+> `keep-standalone` with a reason.
+
+| deployment-ui route / component                                       | What it does                                              | Cockpit destination          | State        |
+| --------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------- | ------------ |
+| `/deployments` (`Deployments`→`DeploymentsContent`)                   | umbrella inventory matrix                                 | Live/Batch/Paper tabs        | ✅ folded    |
+| `/vm-deployments` (`VmDeployments`→`VmDeploymentsContent`)            | VM census (active+archive)                                | Fleet tab                    | ✅ folded    |
+| `/repos` (`RepoCi`→`RepoCiContent`)                                   | CI matrix                                                 | CI tab                       | ✅ folded    |
+| `/alerts` (`Alerts`→`AlertsContent`)                                  | alert ledger                                              | Alerts&Logs tab              | ✅ folded    |
+| `/chaos` (`Chaos`→`ChaosContent`)                                     | resilience injection                                      | Chaos tab                    | ✅ folded    |
+| `/safety-ops` (`SafetyOps`→`SafetyOpsContent`)                        | layer-0 recovery                                          | Safety tab                   | ✅ folded    |
+| `/research/{ml,strategy,exec}-backtests`                              | launch consoles                                           | Launch tab (sub-tabs)        | ✅ folded    |
+| `StreamingLogsPanel`/`useDeployEventStream`/`useVmWebSocket`          | SSE/WS log tail                                           | Alerts&Logs tab              | ✅ reused    |
+| `/deployments/:name` (`DeploymentDetail`)                             | per-target event timeline                                 | drill from Live/Batch/Paper  | rewire       |
+| `/vm-deployments/:id` (`VmDeploymentDetails`) · `/ops/vms/:vm`        | per-VM events/logs                                        | drill from Fleet             | rewire       |
+| `/ops/live-deployments` (`LiveDeployments`)                           | live-ops WS log tail + live status                        | Live + Alerts&Logs           | rewire       |
+| `/ops/costs` (`DailyCosts`)                                           | tri-cloud cost                                            | Health Billing tile drill    | rewire       |
+| `/fleet/infra` (`FleetInfra`) · `/fleet/git` (`FleetGit`)            | orchestrator/infra + git health                           | Fleet + Health tiles         | rewire       |
+| `/epics` (`EpicsPlans`)                                               | epics/plans                                               | Health link / keep-standalone| audit        |
+| `DeployForm`+`DeployTrigger`+`BuildSelector`                          | deploy console (mode×cloud×runtime_profile× **image_tag** via `fetchBuilds(service,env)`) | Deploy tab | rewire (embed) |
+| `CloudBuildsTab`                                                       | **image-build history**                                   | Deploy tab / Health          | rewire       |
+| `DeploymentHistory`+`DeploymentFrequencyChart`                        | **deployment history**                                    | Deploy tab / per-tab drill   | rewire       |
+
+- [ ] [UI] P1. **CLICK-THROUGH the running stack** (`restart-deployment-stack.sh`, real cloud) and exercise EVERY route
+      above; for each, confirm the cockpit tab folds the SAME component + shows the SAME data, OR file the gap. No tab is
+      DONE until its source surface is click-verified. `[UI]` — evidence: per-route note in the Progress Log.
+- [ ] [UI] P1. **Rewire the per-row DRILL-DOWNS** (currently nav-away) — a Live/Batch/Paper/Fleet row's drill
+      (events/logs/timeline from `DeploymentDetail`/`VmDeploymentDetails`/`VmDetail`) opens IN the cockpit (panel/modal),
+      reusing those components chrome-less. `[UI]` — pw:L2 + regression.
+- [ ] [UI] P2. **Fold `/ops/live-deployments` + `/fleet/infra` + `/fleet/git`** into Live/Fleet/Health (reuse existing
+      components; no new fetch logic). `[UI]` — pw:L2 + regression.
+
 ### Phase 0 — Full cockpit scaffold with placeholders (the IA the operator approves first) — deployment-ui
 
 - [x] ✅ [UI] P1. New top-level **`/cockpit`** section (nav entry) — the monitoring landing `HealthOverview` with the
@@ -303,6 +345,37 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       monitoring-registration enforcement contract. Add `codex/05-infrastructure/data-pipeline-alerts.md` cross-ref for
       the alert→cockpit→logs→redeploy flow.
 - [ ] [DOC] P3. Master-plan continuous-verification column entry + archive readiness scan.
+
+### Phase 6 — Operational rewire: image/branch launch · build+deployment history · live controls (reuse-first) — deployment-ui + deployment-api
+
+> Operator (2026-06-23): we must be able to (a) manually launch a VM from a SPECIFIC IMAGE VERSION (rollback) AND from a
+> CODE BRANCH's image (LDR / main / staging builds); (b) see IMAGE-BUILD history + DEPLOYMENT history (logs/events/alerts,
+> honouring the ~7-day archive cutoff) so we can see what failed / self-deleted / was ephemeral / was a long-lived we
+> stopped; (c) PAUSE / STOP / RESTART live deployments from the UI. **AUDIT shows MOST of this already exists — REWIRE it,
+> don't rebuild.**
+
+- [ ] [UI] P1. **Image-version + branch launch (rollback)** — surface, in the cockpit Deploy/Live tabs, the EXISTING
+      `DeployForm`+`BuildSelector` (`fetchBuilds(service, env)` → `image_tag`; `runtime_profile` × cloud). Add explicit
+      **branch/env selection** so an operator launches from the LDR / main / staging image build (and a PRIOR image tag =
+      rollback). Reuse — do not rebuild the deploy form. `[UI]` — pw:L2 + regression.
+- [ ] [API] P2. **Branch→image resolution** — confirm/extend the builds endpoint (`fetchBuilds` / `cloud_builds.py` /
+      `builds.py`) returns builds keyed by branch (LDR/main/staging) + tag/sha so the UI can offer "launch from <branch>
+      latest" + "rollback to <tag>". Reuse the existing build endpoints. (deployment-api)
+- [ ] [UI] P1. **Image-build history** — fold `CloudBuildsTab` into the cockpit (Deploy tab or a Health drill) so build
+      history is centrally visible. `[UI]` — pw:L2 + regression.
+- [ ] [UI] P1. **Deployment history (incl. self-deleted / ephemeral / stopped)** — fold `DeploymentHistory` +
+      `DeploymentFrequencyChart`, reading the registry's **7-day archive** (`list_recent_archive(days=7)` +
+      `vm_log_archive_uri`) so a target that self-deleted / OOM-died / was a one-shot / was a long-lived we stopped still
+      shows its logs/events/alerts WHILE the archive retains them; render the 7-day cutoff honestly (older = "expired,
+      logs purged"). `[UI]` — pw:L2 + regression.
+- [ ] [UI] P1. **Live deployment controls (pause / stop / restart)** — on Live-tab rows + the live drill, wire buttons to
+      the EXISTING endpoints: `vm_admin` `/vm/admin/{vm}/pause|resume|cancel` (202) + `deployments/{id}/cancel|resume`
+      (UI `cancelDeployment`/`resumeDeployment`/`deleteDeployment`); "restart" = stop + relaunch-from-same-image via the
+      Deploy form. Protective actions (stop/pause) are safe-by-default; confirm-dialog on stop. Reuse — these exist.
+      `[UI]` — pw:L2 + regression.
+- [ ] [API] P3. **Gap-fill ONLY what the audit proves missing** — e.g. a one-call `restart` convenience if stop+relaunch
+      isn't already one; AWS parity for any GCP-only control. Do NOT add endpoints that duplicate `vm_admin`.
+      (deployment-api)
 
 ## Success Criteria (per phase)
 
