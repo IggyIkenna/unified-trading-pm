@@ -2513,6 +2513,36 @@ the rest of history.
   blind restart re-OOMs. Remediation: relaunch XG/understat with a higher-memory machine type OR batch/stream the
   understat fetch (per-league/per-month chunks) so it fits. Blocks the XG slice of the golden-window backfill.
   (deployment-service launcher + instruments-service understat handler)
+### DP alert FLOOD is mostly FALSE POSITIVES — monitors are too crude (diagnosed 2026-06-23, now alerts are readable)
+
+Dispatch B made the alerts actionable → the run_log traces reveal **the CRITICAL flood is ~80% false positive**, which is
+WHY nothing auto-resolves (you can't auto-recover noise; the real signal is buried). Per-event triage:
+- **DP_VM_GONE_NO_CAPTURE (captured "0→0")** — the heuristic can't distinguish silent-failure from: (a) **already
+  complete** (enrichment-only, "all entities already captured, fetching []" — fixtures/weather VMs), (b) **honest
+  absence** (settled polymarket market → 0 trades; off-season), (c) **VM wrote its per-VM shard but the consolidated
+  count is stale** (cefi-hyperliquid wrote 1.39M rows yet "6391→6391"; injuries wrote 290 shard entries yet "0→0"),
+  (d) **API-Football RATE LIMIT** (real-transient — needs backoff-retry, wrote partial). FIX: read the VM's OWN per-VM
+  shard rows-written + honest-absence reasons, not the consolidated captured-delta.
+- **DP_CRON_DID_NOT_FIRE (flood)** — most are **INTENTIONALLY-PAUSED crons** during the manual-backfill campaign (the
+  per-epic fleet + scheduled collection are paused-by-design per CLAUDE.md "expected"). The meta-watcher is NOT
+  pause-aware → floods CRITICAL for paused schedulers. A few are REAL: `dp-exit-code-monitor`/`dp-meta-monitor`
+  heartbeat stale, sports MTDS consolidator (`...-market-data-sports-legacy-cron` PAUSED, no active replacement).
+- **DP_CATALOG_NOT_RUNNING "> budget (missing)"** — "(missing)" = the freshness probe read `age=None`: it can't FIND
+  the catalogue at the path/bucket it checks. Same **env-less vs env-short reader-mismatch bug class** as the migration
+  bucket-bug (CLAUDE.md DeFi gotcha) AND/OR the regen genuinely didn't run (`lifecycle-catalogue-regen-sports-daily`
+  lastAttempt=-1). sports+defi+cefi affected.
+- **DP_ZOMBIE_WATCHDOG_DOWN** — the watchdog census artifact stale.
+
+- [ ] [CODE] P0. **Harden the DP meta-monitors to kill the false-positive flood** — (1) DP_VM_GONE_NO_CAPTURE reads the
+  VM's per-VM shard rows-written + honest-absence reasons (not consolidated captured-delta); (2) DP_CRON_DID_NOT_FIRE is
+  PAUSE-AWARE (skip schedulers in PAUSED state — they're paused-by-design during the campaign); (3) DP_CATALOG_NOT_RUNNING
+  reads the env-SHORT `-prd-` bucket via `resolve_bucket_name` (not env-less → age=None false "missing"). (deployment-service)
+- [ ] [INFRA] P0. **Restore the genuinely-down infra** — sports MTDS consolidator (legacy cron paused, no active
+  `manifest-consolidator-market-data-sports` replacement); `lifecycle-catalogue-regen-sports-daily` (never fired,
+  lastAttempt=-1) + defi/cefi catalogue regen; vm-zombie-watchdog; dp-exit-code/dp-meta heartbeat. (deployment-service)
+- [ ] [CODE] P1. **Match auto-recover actuator to failure MODE** — rate-limit→backoff-retry (not relaunch, re-hits
+  limit); OOM-137→relaunch with HIGHER-mem machine (not same, re-OOMs); paused-cron→suppress; real-cron-down→
+  relaunch_consolidator → file_issue → orchestrator slot. (deployment-service escalation.py)
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
   backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 
