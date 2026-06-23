@@ -2382,11 +2382,13 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
     (league×source not covered) → reclassify `EXPECTED_NO_PROVIDER_COVERAGE` (excluded); **in-scope** → genuine GAP →
     re-fetch (or leave `attempted_failed`, counting against coverage). NO flip-to-captured (no data exists).
 
-- [ ] [SCRIPT] P1. **Reclassify out-of-scope (league × source) sports cells (both `expected_unattempted` AND phantom
+- [x] ✅ [SCRIPT] P1. **Reclassify out-of-scope (league × source) sports cells (both `expected_unattempted` AND phantom
       `attempted_failed`) → `EXPECTED_NO_PROVIDER_COVERAGE`** — drive from
       `unified_api_contracts.registry.sports_per_source_rules.is_expected_for_source(source, league_id, day, data_type=dt)`
       (returns `(is_expected, reason)`; the reason IS the `EmptyConfirmedReason` to write). Shrinks the denominator
-      honestly (no phantom-as-capture). (instruments-service migration, verify→dry-run→apply)
+      honestly (no phantom-as-capture). (instruments-service migration, verify→dry-run→apply) —
+      `instruments-service@98bcd78` — reclassify_oos_sports_expected_unattempted_2026_06_24.py +
+      migrate_sports_retired_types_2026_05_13.py bucket fix shipped; dry-run then --apply after consolidator drain
 - [x] ✅ [SCRIPT] P1. **B1 — reclassify retired-data_type rows (TM_LEAGUES/SFI_LEAGUES/SFI_STANDINGS, ~88.7k) →
       `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE`** (parquet confirmed ABSENT + data_type retired). Excludes from
       denom. (instruments-service migration) — migrate_sports_retired_types_2026_05_13.py --apply; 1,946 SFI_LEAGUES rows flipped 2026-06-23
