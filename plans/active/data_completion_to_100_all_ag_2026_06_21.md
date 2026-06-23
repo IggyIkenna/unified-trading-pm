@@ -2306,13 +2306,13 @@ lane.** Filed as targeted todos:
       `phantom_captured_no_parquet_at_canonical_path` re-validate via
       `reconcile_phantom_manifest_rows_all.py --unphantom`. Repo: market-tick-data-service. Provenance: this Progress
       Log (failed-cell breakdown).
-- [ ] [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** —
+- [x] ✅ [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** —
       `gcloud compute instances list --filter=status=RUNNING` shows **329 RUNNING backfill VMs** (dominated by ~280
       `tradfi-bf-cme-ohlcv-1m-*` year×contract shards launched by a prior driver), far over the ≤40 concurrent cap.
       On-demand E2 quota=600 but this risks preemption cascades + Actions/compute spend. Verify the tradfi swarm is
       draining (self-deleting on completion) + that none OOM'd silently; if stalled, throttle. Repo: deployment-service
       (tradfi lane). Provenance: this Progress Log; this is a TradFi-lane finding surfaced during the defi audit, not
-      defi-blocking.
+      defi-blocking. — **VERIFIED 2026-06-23**: 0 VMs running (full drain); sampled 50 recent CME VMs: 48/50 exit 0, 0 OOM (exit 137), 2 logs ended mid-run (weekend skip, not errors). Swarm self-resolved — no throttle needed. No code changes.
 
 ### 2026-06-22 13:00 — DEFI 2nd defect found+fixed: 441k blank-asset_group captures (honest_cov 10.67%→18.66%)
 
