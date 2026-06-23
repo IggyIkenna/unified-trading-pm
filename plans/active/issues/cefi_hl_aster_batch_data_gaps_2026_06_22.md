@@ -543,3 +543,44 @@ ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe 
    reconciliation chosen (no textual conflict; my whitelist-drop makes the peer list moot-for-gating, harmless).
 4. The MTDS market-tick backfill of this expanded universe + manifest migration are POST-operator-check phases (NOT
    done here, per the dispatch STOP-after-CSV instruction).
+
+## OKX-SPOT 2010-poison residual purge + daily-mechanism verify (operator dispatch 2026-06-23)
+
+### TASK 1 — comprehensive 2010-poison scan (NOT hardcoded list)
+
+- **ROOT CAUSE CONFIRMED — OLD ccxt-era snapshot poison (NOT a code-default bug).** A predicate scan of ALL 35,038
+  `instrument_availability/by_date/day=*/venue=*/instruments.parquet` snapshots for `available_from_datetime < 2015`
+  found EXACTLY **2 remaining poisoned snapshots** (the prior hardcoded purge missed both):
+  - `day=2026-04-02/venue=OKX-SPOT/instruments.parquet` — 2869/2869 rows @ 2010-01-01
+  - `day=2026-04-02/venue=OKX-FUTURES/instruments.parquet` — 2869/2869 rows @ 2010-01-01
+- **Diagnosis (Read both, vs clean 06-23 reference)**: both are ccxt-era dumps — `instrument_key` is the ccxt-format
+  `USDT/SGD` (NOT canonical `OKX-SPOT:SPOT_PAIR:...`), `available_from_datetime` uniformly `2010-01-01` (the ccxt
+  placeholder), IDENTICAL 2869-row catch-all (OPTION 1332 + SPOT_PAIR 1202 + PERPETUAL 303 + FUTURE 32) misfiled under
+  each venue. The clean 06-23 OKX-SPOT snapshot (848 rows) uses canonical ids + real dates (min 2019-03-30). → these are
+  OLD ccxt snapshots, every OTHER OKX-SPOT/FUTURES day is the clean Tardis snapshot → PURGE the 2 blobs (UTL
+  `gcs_delete_object`). The source ccxt placeholder is already fixed (is@2217756); the no-auth Tardis enumeration does
+  NOT default to 2010 (clean snapshots prove it). NOT a code bug.
+
+### TASK 1.2 — PURGED (applied 2026-06-23)
+
+- `purge_ccxt_poison_cefi_by_date_snapshots_2026_06_23.py --apply` (generalised, predicate-based) DELETED both blobs via
+  UTL `gcs_delete_object` (DELETED logs confirmed). The OKX-SPOT/OKX-FUTURES 2026-04-02 ccxt dumps are gone.
+
+### TASK 1.3 — GENERALISED purge script (anti-recurrence)
+
+- Rewrote `instruments-service/scripts/purge_ccxt_poison_cefi_by_date_snapshots_2026_06_23.py` from a HARDCODED 6-blob
+  list to a **scan-and-purge by a `--cutoff` (default 2015-01-01) predicate** over ALL by_date snapshots (concurrent
+  read of `available_from_datetime`/legacy `available_from`, min < cutoff → purge). Lifecycle marker updated
+  (`Delete-when: no cefi by_date snapshot carries a pre-2015 available_from + the catalogue rebuilt clean`). ruff
+  lint+format clean. A future ccxt-era poison day can no longer recur silently behind a stale hardcoded list.
+
+### TASK 3 — daily-mechanism recon test VERDICT: ✅ SUCCEEDED
+
+- Cloud Run execution `uts-prod-instruments-service-cefi-t1-recon-cp8bh` (image `instruments-service:latest`=7489ed1)
+  for day 2026-06-22: **Completed successfully in 2m33s**. Wrote full-universe by_date snapshots for **ALL 18 cefi
+  venues** (10,845 instruments) — NOT just HL/ASTER; Tardis CEX venues included:
+  BINANCE-SPOT 763 / BINANCE-FUTURES 677 / BYBIT 640 / KRAKEN-SPOT 894 / KRAKEN-FUTURES 332 / OKX-SPOT 848 /
+  OKX-SWAP 388 / OKX-FUTURES 72 / BITGET-FUTURES 677 / BITGET-SPOT 625 / COINBASE-SPOT 429 / DERIBIT 3374 /
+  DERIBIT-COMBO 113 / UPBIT 201 / BITFINEX-SPOT 81 / BITFINEX-FUTURES 70 / ASTER 483 / HYPERLIQUID 178. This PROVES the
+  scheduled daily IS recon job works end-to-end on the new code (no-auth Tardis enumeration + full universe + dated
+  future quote fix).
