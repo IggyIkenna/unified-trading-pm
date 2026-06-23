@@ -2387,9 +2387,9 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
       `unified_api_contracts.registry.sports_per_source_rules.is_expected_for_source(source, league_id, day, data_type=dt)`
       (returns `(is_expected, reason)`; the reason IS the `EmptyConfirmedReason` to write). Shrinks the denominator
       honestly (no phantom-as-capture). (instruments-service migration, verify→dry-run→apply)
-- [ ] [SCRIPT] P1. **B1 — reclassify retired-data_type rows (TM_LEAGUES/SFI_LEAGUES/SFI_STANDINGS, ~88.7k) →
+- [x] ✅ [SCRIPT] P1. **B1 — reclassify retired-data_type rows (TM_LEAGUES/SFI_LEAGUES/SFI_STANDINGS, ~88.7k) →
       `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE`** (parquet confirmed ABSENT + data_type retired). Excludes from
-      denom. (instruments-service migration)
+      denom. (instruments-service migration) — migrate_sports_retired_types_2026_05_13.py --apply; 1,946 SFI_LEAGUES rows flipped 2026-06-23
 - [x] ✅ [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
       `expected_unattempted` for out-of-scope (league × source) AND to NOT seed retired data_types** — seed
       `EXPECTED_NO_PROVIDER_COVERAGE` / skip retired, so coverage stays honest going forward (per
