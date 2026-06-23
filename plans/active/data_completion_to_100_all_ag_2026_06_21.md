@@ -2390,10 +2390,10 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
 - [ ] [SCRIPT] P1. **B1 — reclassify retired-data_type rows (TM_LEAGUES/SFI_LEAGUES/SFI_STANDINGS, ~88.7k) →
       `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE`** (parquet confirmed ABSENT + data_type retired). Excludes from
       denom. (instruments-service migration)
-- [ ] [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
+- [x] ✅ [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
       `expected_unattempted` for out-of-scope (league × source) AND to NOT seed retired data_types** — seed
       `EXPECTED_NO_PROVIDER_COVERAGE` / skip retired, so coverage stays honest going forward (per
-      `is_expected_for_source`). (instruments-service / UAC)
+      `is_expected_for_source`). (instruments-service / UAC) — instruments-service@0bcf727 | entity_coverage gate now yields EXPECTED_NO_PROVIDER_COVERAGE rows per-date for post-coverage-start; is_expected_for_source integrated in alive branch for footystats season gate (EXPECTED_PRE_SEASON/EXPECTED_POST_SEASON); _RETIRED_SPORTS_DATA_TYPES defensive guard added
 - [ ] [DATA] P1. **In-scope phantom-failed cells = REAL GAPS → re-fetch** (the manifest claimed captured but no parquet
       exists). After the out-of-scope reclassify, the residual in-scope `attempted_failed` is the true sports gap —
       re-run the relevant IS backfill for those (data_type, date, league) cells. NOT a manifest edit.
