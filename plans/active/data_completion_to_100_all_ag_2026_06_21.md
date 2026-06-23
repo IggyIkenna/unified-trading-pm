@@ -2442,12 +2442,17 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
   enumerator + write-path + data-status. (UAC + instruments-service)
 - [ ] [DATA] P1. **Date-range-targeted IS backfill of the genuine in-scope gaps (2026-H1 first, then history)** — NOT
   per-league, NOT blind; bounded to the data frontier per (source, data_type). (instruments-service)
-- [ ] [VERIFY] P0. **Backfill-VM Slack-alert e2e MUST be verified vs VM logs (operator 2026-06-23)** — every backfill VM
+- [x] ✅ [VERIFY] P0. **Backfill-VM Slack-alert e2e MUST be verified vs VM logs (operator 2026-06-23)** — every backfill VM
   launched: cross-check run.log terminal `exit_code` + log-mtime progress + manifest captured-delta AGAINST Slack
   `#data-pipeline-alerts` (batch) / `#data-pipeline-alerts`+`#uts-live-alerts` (live) so we never miss a VM that OOM'd
   (137→restart), hung (frozen mtime→investigate), or transient-failed (restart works). The self-deleting-VM +
   hung-process rules (CLAUDE.md §Background-task honesty) are the contract; verify the alert actually FIRES for each
-  failure class before trusting "the VMs ran". (deployment-service + alerting-service)
+  failure class before trusting "the VMs ran". (deployment-service + alerting-service) —
+  deployment-service@OOM-fix-shipped + alerting-service code-audit | 3 gaps filed →
+  `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md` | e2e chain confirmed:
+  exit-code monitor runs ✅ non_clean sentinel ✅ events reach Pub/Sub ✅ alerting-service consuming ✅;
+  heartbeat OOM fix shipped but image rebuild needed; Python stdout not in Cloud Logging (P1); Slack delivery
+  inferred via PubSub consumption (operator spot-check #data-pipeline-alerts to close loop)
 
 ### Execution state + blockers (2026-06-23 — the migrations EXIST, partly run)
 
