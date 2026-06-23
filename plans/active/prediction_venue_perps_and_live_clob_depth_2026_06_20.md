@@ -332,6 +332,40 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
+
+Operator asked whether the 142,874 POLYMARKET `empty_confirmed` cells are genuine no-data days or instrument-catalogue
+mislabeling ("we don't have the right start/end times → labelling empty_confirmed when the market wasn't supposed to
+exist"). **CONFIRMED — mislabeling.** Drill-down (`market-data-tick-pred-prd/_index`):
+
+- error_reason: **`EXPECTED_INSTRUMENT_NOT_LISTED` = 47,922** + `EXPECTED_PRE_VENUE_LAUNCH` 974 +
+  `EXPECTED_INSTRUMENT_DELISTED` 713 = **~49.6k cells where the market was NOT listed / did not exist** for that date —
+  yet recorded `empty_confirmed` (counts in the honest-coverage NUMERATOR). The other 93,264 are `SOURCE_RETURNED_ZERO`
+  (legit only if the market existed+traded that day).
+- **ROOT CAUSE (verified)**: IS POLYMARKET instrument records carry `available_from_datetime` = **0/25 populated** and
+  `available_to_datetime` = **0/25** (all NULL) — the catalogue has NO market start/end times. The POLYMARKET prediction
+  enumeration writes a raw `PolymarketGammaMarket` dump that never maps gamma `startDate`/`endDate` → no lifecycle bound
+  → expected-universe + honest-absence enumerate (instrument/cqg × date) cells OUTSIDE the market's life →
+  out-of-existence dates become `empty_confirmed [EXPECTED_INSTRUMENT_NOT_LISTED]` instead of an honest blank. Exactly
+  the operator's call.
+- **Impact**: honest coverage (POLYMARKET 95.54%) is over an inflated set including non-existent-market cells; manifest
+  is full of meaningless empties rather than blanks-where-data-was-expected.
+
+- [ ] [SCRIPT] P0. **Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it (honest-
+      absence correctness)**: (1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path) MUST set
+      `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from `endDate`/`closedTime`
+      (today both NULL → 0/25). (2) MTDS/UTL honest-absence — only emit a cell (captured/empty/failed) for dates WITHIN
+      `[available_from, available_to]`; outside the market's life = honest BLANK (absence) / `expected_unattempted`,
+      NEVER `empty_confirmed`. Reconsider whether `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` belong
+      in `EMPTY_CONFIRMED_REASONS` (UAC) — operator: "better to have the blanks where we expected data." (3) Re-walk
+      (`rebuild_prediction_manifest --venue POLYMARKET`) to drop/reclassify the ~49.6k out-of-existence empties so
+      honest coverage reflects the in-lifecycle universe; audit whether the 93,264 `SOURCE_RETURNED_ZERO` include
+      out-of-lifecycle dates (same root cause). **Same NULL-lifecycle check for KALSHI** (adapter sets
+      `market_created_at`/`resolution_time` on MarketLifecycle — verify `available_from/to_datetime` flow onto the
+      InstrumentRecord). Repo: instruments-service (gamma lifecycle population) + market-tick-data-service / UTL
+      (emission bounding) + unified-api-contracts (EMPTY_CONFIRMED_REASONS taxonomy). Provenance: operator
+      empty_confirmed drill-down 2026-06-23. **BIG finding — data-correctness, honest-coverage semantics.**
+
 ### 2026-06-23 (autonomous) — FINAL REPORT: P1 cross-venue Kalshi canonicalization RESOLVED + VERIFIED + LIVE; partition-completeness answered (real GCS numbers)
 
 **P1 (cross-venue Kalshi grouping) — DONE + VERIFIED end-to-end.** Root cause was NOT the mapper (comprehensive since
