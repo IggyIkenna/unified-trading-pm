@@ -1941,17 +1941,22 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
       list** for tradfi in market-data-processing-service (drop 15s for tradfi), NOT by adding an `ohlcv_15s`
       CONTRACT_REGISTRY entry (which would legitimise a bogus tier). Shard-isolated (the VM stays alive), so P1 not P0.
       (market-data-processing-service)
-- [ ] [CODE] P1. **Make Slack the PRIMARY alerting transport — drop Telegram (operator decision 2026-06-23)** — the
-      generic/incident path in `alerting_service/notifiers/router.py` is currently TELEGRAM-primary (`_deliver_message`:
-      "Slack DEPRECATED: use Telegram"; `_match_routing_rules` no-match default = `{"telegram"}`;
-      kill-switch/circuit-breaker/ preflight → Telegram). Operator wants **Slack-only**: (1) route generic/incident
-      alerts to a DEDICATED **#uts-live-alerts** Slack channel via `_mirror_to_uts_live_alerts_slack` (already exists)
-      reading the `alerting-slack-webhook-url` SM secret; (2) flip the no-match default + rule channels
-      `telegram`→`slack`; (3) RETIRE the Telegram transport (`send_telegram` / `alerting-telegram-bot-token` /
-      `-chat-id` / `telegram_chat_id_ops`) + the "DEPRECATED Slack" framing; (4) update routing-rule tests.
-      **BLOCKED-CREDENTIALS**: needs the operator's Slack incoming-webhook URL for #uts-live-alerts → store as SM secret
-      `alerting-slack-webhook-url` (only the operator can provide it). DP\_\* data-pipeline alerts already deliver to
-      #data-pipeline-alerts (separate, working). (alerting-service)
+- [x] ✅ [CODE] P1. **Slack is now the PRIMARY alerting transport — Telegram RETIRED (operator decision 2026-06-23)** —
+      alerting-service@`1be4fe0` (router + full test-suite migration, QG-green sentinel `9e52751`). Flipped
+      `_deliver_to_channels`/`_match_routing_rules` to Slack-only: `_deliver_message`/`send_telegram`/deprecated-`slack_send_message`
+      REMOVED; renamed `_mirror_to_uts_live_alerts_slack` → `_deliver_to_uts_live_alerts_slack(...)->bool` (now the PRIMARY,
+      gates on `_is_runtime_alert`); no-match default `{"telegram"}`→`{"slack"}`. Webhook secret
+      `alerting-uts-live-alerts-slack-webhook` created (operator-provided #uts-live-alerts incoming webhook) + curl-tested
+      (`ok`). Image rebuilt (`alerting-service:slackprimary1011`) + `dp-alerting-subscriber` redeployed (rev 00010) with
+      `UTS_LIVE_ALERTS_SLACK_WEBHOOK` env secret. **VERIFIED**: a real runtime alert (CIRCUIT_BREAKER_OPEN) delivered to
+      #uts-live-alerts via the deployed code path. PagerDuty path untouched. DP_* still → #data-pipeline-alerts. (alerting-service)
+- [ ] [CODE] P2. **`get_paging_credentials` batch-fetch is fragile — one missing secret zeroes ALL paging creds** —
+      `config_reloaders._fetch` does `SecretManagerClient.get_secrets(_ALL_PAGING_SM_KEYS)` as ONE batch; 6 Twilio
+      secrets + `DEPLOYMENT_SCRIPTS_LOG_BUCKET` are absent in SM → the batch raises → `except` returns empty → EVERY
+      paging cred (incl. the #uts-live-alerts webhook) reads blank, so the SM-hot-reload path is dead (worked around by
+      the `UTS_LIVE_ALERTS_SLACK_WEBHOOK` env secret on the service). Fix: make `_fetch` tolerate missing secrets
+      (per-secret get, skip-missing) OR create the absent secrets as empty placeholders (the `if val:` mapping already
+      skips empties). Then SM-hot-reload works without the env fallback. (alerting-service)
 - [ ] [CODE] P2. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should not**
       — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but
       `alerting-telegram-bot-token` + `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the
