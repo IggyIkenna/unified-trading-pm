@@ -83,9 +83,9 @@ source:
       tooling (cicd / quality-gates-base / propagation / plan-hygiene / agents / dev / workflow-templates); flag the few
       genuine one-offs (`migrate_*`/`backfill_*`/`gen_*_<date>`) as `oneoff`+`Delete-when`.
       `Epic: infrastructure_master` (or the owning epic for a domain script). Target: **unified-trading-pm**.
-- [ ] [SCRIPT] P2. Stamp `instruments-service/scripts/` (~117) — use the characterization (64 DELETE/`oneoff`, 16
+- [x] ✅ [SCRIPT] P2. Stamp `instruments-service/scripts/` (~117) — use the characterization (64 DELETE/`oneoff`, 16
       KEEP-ONEOFF/`campaign:*-canonicalisation`, 17 permanent, etc.). `Epic: instruments_master`. Target:
-      **instruments-service**.
+      **instruments-service**. — instruments-service@6a64236 (123 stamped, 12 already done)
 - [ ] [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the `defi_*_2026_06_01.py`
       set = `campaign:defi_manifest_canonicalisation`, NOT oneoff). `Epic: mtds_mdps_master`. Target:
       **market-tick-data-service**.
