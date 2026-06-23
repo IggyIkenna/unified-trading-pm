@@ -79,10 +79,12 @@ source:
 
 ## Per-repo stamping todos (one worker each — Phase 1; every script gets all 3 fields incl. `Delete-when` = `NA`-or-condition)
 
-- [ ] [SCRIPT] P2. Stamp `unified-trading-pm/scripts/` (~248; 4 pilots already done — skip them). Mostly `permanent`
+- [x] ✅ [SCRIPT] P2. Stamp `unified-trading-pm/scripts/` (~248; 4 pilots already done — skip them). Mostly `permanent`
       tooling (cicd / quality-gates-base / propagation / plan-hygiene / agents / dev / workflow-templates); flag the few
       genuine one-offs (`migrate_*`/`backfill_*`/`gen_*_<date>`) as `oneoff`+`Delete-when`.
-      `Epic: infrastructure_master` (or the owning epic for a domain script). Target: **unified-trading-pm**.
+      `Epic: infrastructure_master` (or the owning epic for a domain script). Target: **unified-trading-pm**. —
+      unified-trading-pm@2dc131639 | 493 files stamped (484 new + 9 Delete-when: NA added to pre-existing) |
+      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `instruments-service/scripts/` (~117) — use the characterization (64 DELETE/`oneoff`, 16
       KEEP-ONEOFF/`campaign:*-canonicalisation`, 17 permanent, etc.). `Epic: instruments_master`. Target:
       **instruments-service**. — instruments-service@6a64236 (123 stamped, 12 already done)
