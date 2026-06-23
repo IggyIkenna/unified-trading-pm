@@ -1002,6 +1002,25 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       their Cloud Run config / deploy scripts (`unified-trading-system-ui/scripts/deploy-cloud-run.sh` + the CRA
       service) — trade-off is a small always-on cost; operator decides. Repos: deployment-service (Cloud Run config) +
       unified-trading-system-ui (UI deploy). Provenance: B2 paper-stream deploy session 2026-06-23.
+- [ ] [DATA] P1 **paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols** (found 2026-06-23 deep-dive
+      of `/paper-trading?client=firm-paper-stream`). The Net-in-coin / Delta-per-coin tables, the instruction-ledger
+      "Strategy" column, and the PnL-by-strategy snapshot all render raw DEX-pool contract addresses
+      (`0xBe53A1…`/`0x9D39A5…`/`0x83F20F…`) instead of canonical token symbols (yvUSDC / sUSDe / sDAI) — while the
+      drilldown dropdown DOES show canonical strategy slugs (`@yearnv3-yvusdc1-ethereum` etc). So the DeFi paper-run
+      InstrumentKey→`asset_symbol`/`asset_canonical_id`/`strategy_id` derivation (`derive_ledger_asset_fields`, UAC
+      `internal/reference/ledger_asset_resolution.py`) is NOT resolving DEX-pool addresses to symbols — it falls back to
+      the raw 0x; the instruction "Strategy" column = the pool ADDRESS, not the canonical strategy id. Violates the
+      batch=live "derive from canonical InstrumentKey, never raw" HARD RULE. Repos: strategy-service (paper_run_emit /
+      ledger writer) + UAC (DeFi DEX-pool asset resolution). Provenance: B2 deep-dive 2026-06-23.
+- [ ] [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** (found
+      2026-06-23). The candle-with-trade-markers chart EXISTS (`components/trading/candlestick-chart.tsx` +
+      `components/research/signal-overlay-chart.tsx` with `setMarkers` triangles, lightweight-charts v5) but only in the
+      RESEARCH/backtest surface — the live `/paper-trading` overview + per-coin page (`/paper-trading/coin/[coin]`,
+      recharts Area/Scatter + filled/missed counts) do NOT render the underlying-price candle with entry/exit triangles,
+      and the overview tables do NOT link to the per-coin drilldown (no click-through). Also: wallet movements are a
+      TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
+      unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
+      2026-06-23.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
@@ -2540,11 +2559,14 @@ the rest of history.
       builds c2beac49 (alerting-service:latest) + c0f6dc2f (deployment-api:latest) → redeploy dp-alerting-subscriber +
       uts-prod-dp-exit-code-monitor + e2e verify. Gap-4 root-cause + deploy todo:
       `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md`
-- [ ] [DATA] P0. **XG/understat backfill is OOMing (exit 137, MemoryError) — surfaced by the now-actionable alerts
+- [x] ✅ [DATA] P0. **XG/understat backfill is OOMing (exit 137, MemoryError) — surfaced by the now-actionable alerts
       2026-06-23.** The `instr-backfill-sports-xg-*` VMs (understat) hit `MemoryError`/`Killed`/rc=137 — memory-bound,
       so a blind restart re-OOMs. Remediation: relaunch XG/understat with a higher-memory machine type OR batch/stream
       the understat fetch (per-league/per-month chunks) so it fits. Blocks the XG slice of the golden-window backfill.
       (deployment-service launcher + instruments-service understat handler)
+      — instruments-service@bd32424 (free season JSON blob after dates extraction) +
+        deployment-service@cbdc0e4 (bump launcher to e2-standard-4); tarball rebuilt;
+        verification VM `us-backfill-20260623-171131` launched on e2-standard-4 2026-06-23
 
 ### DP alert FLOOD is mostly FALSE POSITIVES — monitors are too crude (diagnosed 2026-06-23, now alerts are readable)
 
@@ -2572,10 +2594,27 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
       DP_CRON_DID_NOT_FIRE is PAUSE-AWARE (skip schedulers in PAUSED state — they're paused-by-design during the
       campaign); (3) DP_CATALOG_NOT_RUNNING reads the env-SHORT `-prd-` bucket via `resolve_bucket_name` (not env-less →
       age=None false "missing"). (deployment-service)
-- [ ] [INFRA] P0. **Restore the genuinely-down infra** — sports MTDS consolidator (legacy cron paused, no active
-      `manifest-consolidator-market-data-sports` replacement); `lifecycle-catalogue-regen-sports-daily` (never fired,
-      lastAttempt=-1) + defi/cefi catalogue regen; vm-zombie-watchdog; dp-exit-code/dp-meta heartbeat.
-      (deployment-service)
+- [x] ✅ [INFRA] P0. **Restore the genuinely-down infra** — deployment-service@410304f (terraform; live gcloud applied).
+      VERDICTS (verified vs live execution-status, not "I enabled it"): (1) **sports MTDS consolidator** — NOT down:
+      the NON-legacy `uts-prod-manifest-consolidator-market-data-sports-cron` already EXISTS+ENABLED+fires clean every
+      */1 (the `-legacy-cron` is correctly paused-by-design); no action needed. (2) **catalogue regen** — genuinely
+      stale/failing → triggered catch-up runs + verified clean: sports ✅(41s) defi ✅(17m47s) cefi ✅(8m13s);
+      **tradfi OOM'd at 4Gi(2026-06-19)+8Gi → bumped to 16Gi/cpu4** (16Gi catch-up running, prior sizes confirmed-OOM).
+      The daily schedulers (`lifecycle-catalogue-regen-{ag}-daily`, lastAttempt=-1) are ENABLED with the `run.invoker`
+      grant; -1 = not-yet-hit-01:00, not broken. (3) **vm-zombie-watchdog** — genuinely DOWN: VM ran but on 2026-05-28
+      stale code (no census-write) → census blob ABSENT → DP_ZOMBIE_WATCHDOG_DOWN. Relaunched fresh-code; **census now
+      written `vm-census/watchdog-census.json`**. ⚠️INCIDENT: first relaunch ran dry_run=FALSE + reaped 9 LIVE campaign
+      backfills before I caught it → corrected to **`--dry-run`** (census WITHOUT reaping — required during the campaign);
+      killed-VM list + relaunch recipe + latent code-fix:
+      `plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`. (4) **dp-exit-code/dp-meta** —
+      NOT down: sentinels fresh (exit-code 16:55, meta 16:46), fire clean. **dp-heartbeat-watcher WAS down: OOM at
+      2Gi+4Gi every */5 → bumped 8Gi/cpu2 → ✅SUCCEEDED, `heartbeat-last-run.json` sentinel now PRESENT**. tradfi
+      catalogue OOM'd at 4/8/16Gi → bumped 32Gi/cpu8 (re-running); DURABLE roll-up-chunking fix noted in the issue doc.
+      HARD constraint: no collection cron re-enabled (the backfill-kill incident is filed + corrected). (deployment-service)
+- [x] ✅ [CODE] P1. **Fix api-football JSON-envelope rateLimit: retry with minute-boundary backoff instead of fail_fast** —
+      `ApiFootballResponseError(is_rate_limit=True)` now retried via `_fetch_and_extract()` (HTTP 200 +
+      `{"errors":{"rateLimit":"..."}}` was propagating as `attempted_failed`); `concurrency` lowered 50→10;
+      7 unit tests added. — instruments-service@b402294
 - [ ] [CODE] P1. **Match auto-recover actuator to failure MODE** — rate-limit→backoff-retry (not relaunch, re-hits
       limit); OOM-137→relaunch with HIGHER-mem machine (not same, re-OOMs); paused-cron→suppress; real-cron-down→
       relaunch_consolidator → file_issue → orchestrator slot. (deployment-service escalation.py)
