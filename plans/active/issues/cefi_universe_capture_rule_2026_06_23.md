@@ -193,6 +193,27 @@ rotating baskets).
 
 ## Progress Log
 
+- **2026-06-23 (venue-gaps dispatch — UAC SHIPPED `54325576`)** — all UAC code QG-green (220s) + quickmerge → LDR
+  (`Quickmerge: agent`). Changes: `venue_mapping.py` (coinbase-international in all_tardis_exchanges; tardis_to_venue
+  bybit-spot→BYBIT-SPOT [was BYBIT] + coinbase-international→COINBASE-FUTURES; start dates BYBIT-SPOT 2021-12-04 /
+  COINBASE-FUTURES 2024-10-31; venue_instrument_type_to_tardis + tardis_exchange_instrument_types entries),
+  `market_data_categories.py` (VENUES_BY_ASSET_GROUP[cefi] += BYBIT-SPOT, COINBASE-FUTURES),
+  `cefi_instrument_universe.py` (`accepted_quotes_for_venue` SSOT + `_CEFI_VENUE_QUOTE_EXTENSIONS={UPBIT:{KRW}}`),
+  `mvp_scope.py` (8 venues added to cefi rule `venues`; `_CEFI_SPOT_PERP_GATE_EXEMPT_VENUES={UPBIT}` venue carve-out in
+  `is_in_mvp_capture_universe`; MVP_SCOPE_CONFIG_VERSION 7→8), `data_type_capability.py` (BYBIT-SPOT spot surface +
+  COINBASE-FUTURES perp surface so neither has empty expected-data-types). Exports wired (registry + root `__init__`).
+  Tests: +`test_capture_universe_upbit_spot_no_perp_exempt`/`_new_venues_perp_gated`/`accepted_quotes_for_venue_upbit_krw`;
+  fixed 3 stale tests (UPBIT/COINBASE now MVP venues → use GATEIO as the non-MVP example); `all_cefi_venues` count 20→22.
+  98/98 test_mvp_scope green; 10336 UAC tests green.
+- **2026-06-23 (IS code + live enumeration smoke)** — IS changes (QG running, ship pending): `factory.py`
+  (CANONICAL_VENUE_TO_ADAPTER += COINBASE-FUTURES), `router.py` (_TARDIS_VENUE_EXCHANGES += bybit-spot/coinbase-futures),
+  `venue_core.py` (_CEFI_VENUES += BYBIT-SPOT, COINBASE-FUTURES — the enumeration list), `parsing.py`
+  (`_resolve_bitfinex_spot` + `_BITFINEX_BASE_ALIASES`{ALG→ALGO,ATO→ATOM,DSH→DASH,IOT→IOTA,UDC→USDC,UST→USDT,…} +
+  `_BITFINEX_QUOTE_ALIASES`{UST→USDT,UDC→USDC}; `_passes_asset_filter` now venue-aware via `accepted_quotes_for_venue`),
+  `adapter.py` (passes `canonical_venue` to `_passes_asset_filter`), tardis `__init__.py` re-exports. New test
+  `test_tardis_bitfinex_symbol_parse.py`. **Live adapter smoke (real Tardis, no-auth metadata):** bybit-spot→955
+  BYBIT-SPOT SPOT_PAIR; coinbase-international→252 COINBASE-FUTURES PERPETUAL + 19 SPOT_PAIR; bitfinex→570 SPOT (was 82
+  in stale catalogue) with in-universe bases 32→138, ALGO/ATOM/DASH now canonical, zero colon-leak bases.
 - **2026-06-23 (venue-gaps dispatch — DIAGNOSIS, autonomous worker)** — read the live `prod/catalog.parquet`
   (226,484 rows, 155,292 mvp=true) + the by_date enumeration snapshots to root-cause every gap before coding:
   - **The MVP rule `venues` set (mvp_scope.py) is the primary gate** — only declares BINANCE-SPOT/-FUTURES, BYBIT,
