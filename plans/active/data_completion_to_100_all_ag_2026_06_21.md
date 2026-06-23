@@ -2859,11 +2859,48 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       top rung is derived from the registry so extending it there auto-follows. — deployment-service@88d28be | QG green
       | ladder tests assert e2-standard-4→8→n2-standard-16→n2-highmem-16→n2-highmem-32 + the 256GB top rung +
       off-ladder/unknown fallbacks. (deployment-service escalation.py)
-- [x] ✅ [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
-      backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service) —
-      instruments-service@ba2b5c0 (HTTP_NOT_FOUND fix) + instruments-service@f2ed8d6 (48 XG blank-league phantom reclassify script);
-      direct manifest reclassify: 48 XG phantom rows + 65 XG_SHOTS HTTP_NOT_FOUND rows → `empty_confirmed(EXPECTED_NO_FIXTURE)`;
-      XG+XG_SHOTS golden window (2025-09-01→2025-11-30): 717/717 = 100.0% coverage confirmed 2026-06-23.
+- [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
+      backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
+      **IN PROGRESS 2026-06-23 ~20:44 UTC** — baseline honest cov **41.2%** (27,381 in-window gap cells, measured
+      `/tmp/golden_window_coverage.py` vs live `instruments-store-sports-prd` `_index`). **api_football 7-VM fleet
+      launched** (singleton-`--force`, `--fleet-vms 7`, `REMAINING_DAILY_QUOTA=85689` → daily-aware allocator
+      `SPORTS_ADAPTER_RATE_RPM=61–62`/VM, concurrency=5, fleet ≈428/min ≤ effective ceiling 431 — fail-closed
+      `assert_fleet_within_budget` passed on BOTH axes), one entity per VM over 2025-09-01..2025-11-30:
+      `af-backfill-20260623-204151`=FIXTURES (dependency root), `-204212`=MATCHES, `-204234`=INJURIES,
+      `-204254`=FIXTURE_LINEUPS, `-204314`=FIXTURE_STATS, `-204335`=FIXTURE_EVENTS, `-204358`=PLAYER_STATS — all 7
+      RUNNING at launch. Consumes the ~85.7k remaining Custom300 daily quota by 00:00 UTC. **Post-reset ramp REQUIRED**
+      (see todo below): relaunch the fleet at the full 1200/min on the fresh 300k to COMPLETE the per-fixture +
+      MATCHES/INJURIES gaps the truncated pre-reset budget can't finish. (instruments-service + deployment-service)
+- [ ] [DATA] P0. **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
+      fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
+      covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
+      `FLEET_VMS=N REMAINING_DAILY_QUOTA=<fresh-remaining-from-/status> bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --fleet-vms N --entity <E> 2025-09-01 2025-11-30`
+      for each of FIXTURES,MATCHES,INJURIES,FIXTURE_LINEUPS,FIXTURE_STATS,FIXTURE_EVENTS,PLAYER_STATS — size N so
+      `N×per_vm = ~1200/min` early in the day (e.g. ~13–20 VMs). Per-fixture entities read fixture IDs from the
+      now-fuller GCS fixtures (FIXTURES VM ran first). Re-measure `/tmp/golden_window_coverage.py` to verify 100%.
+      Read live remaining quota first: `curl -H "x-apisports-key: <SM:api-football-api-key>" https://v3.football.api-sports.io/status`.
+      (instruments-service + deployment-service) — **provenance: golden-window push 2026-06-23**
+- [ ] [DATA] P1. **footystats ODDS/PREDICTIONS golden-window gap — the running VMs are MISDIRECTED at 2020 dates +
+      OOM-cycling (`Killed`)** (diagnosed 2026-06-23 ~20:42 UTC from run.logs of `instr-backfill-sports-odds-20260623-150204`
+      + `instr-backfill-sports-predictions-20260623-150151`): both are walking history from ~2020-05 and will NOT reach
+      the 2025-09..11 golden window for a long time, leaving ODDS (gap 3257) / PREDICTIONS (gap 3257) / STANDINGS (gap
+      2973) in-window cells uncaptured. Launch **window-scoped** footystats VMs (`--sports-provider FOOTYSTATS
+      --sports-entity ODDS|PREDICTIONS|STANDINGS --start-date 2025-09-01 --end-date 2025-11-30`) — footystats has no
+      hard quota (registry `footystats=60/min`, no daily) so it's parallel-safe with api_football. The OOM-cycling is
+      tracked by `sports_reference_backfill_oom_2026_06_22.md`; this todo is the WINDOW-SCOPING fix. (instruments-service
+      + deployment-service) — **provenance: golden-window push 2026-06-23**
+- [ ] [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']=450000` is STALE — live API reports Custom300 plan =
+      300,000/day** (`GET /status` 2026-06-23: `subscription.plan=Custom300`, `requests.limit_day=300000`). The
+      daily-aware allocator still computed the CORRECT throttle this run because the launcher divides the OPERATOR-passed
+      `REMAINING_DAILY_QUOTA` (real remaining), and `SOURCE_DAILY_QUOTA` only gates WHETHER the daily term applies
+      (non-None ⇒ yes). But a future launch that OMITS `REMAINING_DAILY_QUOTA` would amortise against the wrong 450k.
+      Fix: set `SOURCE_DAILY_QUOTA['api_football'] = 300_000` + the per-minute stays 1200 (live `x-ratelimit-limit:
+      1200`). Update the docstring worked-examples (450,000 → 300,000). (deployment-service
+      `data_pipeline_monitors/launch_budget_registry.py`) — **provenance: golden-window push 2026-06-23 live /status**
+  - **XG/XG_SHOTS slice DONE** (peer 2026-06-23): instruments-service@ba2b5c0 (HTTP_NOT_FOUND fix) +
+    instruments-service@f2ed8d6 (48 XG blank-league phantom reclassify); 48 XG phantom + 65 XG_SHOTS HTTP_NOT_FOUND rows
+    → `empty_confirmed(EXPECTED_NO_FIXTURE)`; XG+XG_SHOTS window 717/717 = 100%. (parent todo stays OPEN — window-wide
+    honest cov is 41.2%; the api_football + footystats slices below remain).
 
 - [x] ✅ [CODE] P1. **HARDEN: add league-grain WEATHER + PLAYER_VALUES observed-coverage maps to UAC** (≥1-captured-row
       derived, like `sports_league_entity_coverage`) so out-of-scope is classifiable at manifest grain. Wire into
