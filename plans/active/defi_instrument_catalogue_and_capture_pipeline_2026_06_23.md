@@ -143,6 +143,44 @@ CONVERGENCE POINTS (all → `pool_address.lower()` + lowercase instrument_type):
   preserved) + `test_tardis_*`. These block the MTDS whole-tree QG sentinel; my ship deselects them (documented) +
   ships my 14 files via `quickmerge --files`.
 
+## Progress 2026-06-23 (CODE fixes all shipped; OPERATIONAL reconcile = remaining work — full state for resume)
+
+**SHIPPED (forward-correctness in place):** Phase 5 UAC `EXPECTED_NOT_ENOUGH_TVL` (uac@7459ee9a); Phase 4 MTDS per-pool
+writer (mtds@ec877b8 — dex handlers `record_captured(instrument_id=pool_address.lower(), instrument_type="pool")`); Phase 1
+IS seeder canonical (is@e98a5f3 — `_enumerate_v2_defi` seeds `instrument_id=raw_symbol(pool_address).lower()` + lowercase
+instrument_type). New captures + new seeds now reconcile.
+
+**MEASURED `_index` instrument_id-FORM × capture_status (6.52M rows, the reconcile target):**
+| form | captured | empty | expected_unatt |
+| --- | --- | --- | --- |
+| `canonical_0x` (`0x…`) | 259,708 | 0 | 0 |
+| `glued_venuechain_0x` (`UNISWAP_V3-ETH:POOL:0x…`) | 542,801 | 0 | 0 |
+| `glued_pair` (`…:POOL:WETH-DAI:500`, ALL instrument_type=POOL) | 0 | **463,607** | **1,312,445** |
+| `blank` (venue-aggregates + non-pool) | 124,530 | 3,098,254 | 0 |
+Honest_cov = captured/(cap+empty+failed+eu) = 1,005,848/6,519,518 = **15.43%**.
+
+**TWO remaining problems for the reconcile (Phase 4-DATA + Phase 2):**
+1. **1.78M `glued_pair` POOL phantom rows** (463k empty incl the 408k DELISTED + 1.31M expected_unattempted) are the
+   OLD pre-fix pair-name seeds — they never reconcile against the canonical-0x captured (the seeder fix stops producing
+   them GOING FORWARD, but the enumerator `--apply-write` writes per-VM SHARDS + APPENDS, does NOT supersede old rows).
+   → need a phantom-DELETE/supersede pass for the 1.78M glued_pair POOL rows (they're superseded by canonical captured +
+   canonical re-seed). dex_pool_state 703k + dex_pool_swaps 703k + position_data 369k.
+2. **TWO captured forms** (`canonical_0x` 259k bare + `glued_venuechain_0x` 542k) — the capture path is INCONSISTENT:
+   some writes stamp bare `pool_address.lower()`, some `build_instrument_id`'s `VENUE-CHAIN:POOL:0x…`. The MTDS writer fix
+   stamps bare (matches `_canonical_defi_id`); the `glued_venuechain_0x` form is from the data-file `instrument_id` column
+   (`build_instrument_id`) read by a rebuild path. These must converge to ONE form (bare `pool_address.lower()` per the
+   SSOT decision) — else the canonical re-seed matches only the bare-0x captured, leaving the 542k glued_venuechain_0x
+   captured as a parallel namespace. [Decide: re-key the 542k glued_venuechain_0x captured → bare 0x, OR confirm they're
+   distinct data_types not double-counting.]
+3. **Cause 2 — `lifecycle-catalogue-regen-defi` Cloud Run job ran ONCE** (observedGeneration=1 vs cefi=5/tradfi=4) → the
+   daily DeFi catalogue regen is NOT on schedule → stale `available_to` (the 2026-05-08 cliff on non-UNISWAP protocols).
+   Phase 2/3 infra: ensure the scheduler fires daily (terraform/Cloud Scheduler) + the snapshot writer keeps live pools.
+
+**RECONCILE PLAN (next):** (a) decide+unify the captured form (bare 0x); (b) re-run `enumerate_expected_universe
+--asset-group defi --enumerator-version v2 --catalog-path gs://instruments-store-defi-prd-…/prod/catalog.parquet
+--apply-write` (MANIFEST_PER_VM_SHARDS=true VM_NAME=…) → canonical-0x seeds; (c) phantom-DELETE the 1.78M glued_pair POOL
+rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lifecycle scheduler. ALL on real infra.
+
 ## Phase 1 — IS per-day instrument availability (TVL-qualifying, per venue×chain×data_type)
 
 - [ ] [CODE] P0. Per-day, enumerate every instrument (pool) meeting the **TVL criteria** for each venue × chain ×
