@@ -90,6 +90,41 @@ availability. The two causes compound — the 3,085 "active" pools STILL won't r
 - MTDS dex handlers: `record_captured(instrument_id=pool_address.lower(), venue=bare, chain=X)` per pool (Phase 4 writer).
 - Re-build catalogue + re-seed enumerator + re-capture → the 408k reconcile (Phase 4-data).
 
+## ⚠️ BIG FINDING + DECISION (operator-notify) — canonical pool instrument_id SSOT CONFLICT (2026-06-23)
+
+Pinpointed the EXACT axes that mismatch (measured on live `_index`, UNISWAP_V3/dex_pool_state): venue ✅ aligned
+(`UNISWAP_V3`), chain ✅ aligned (`ARBITRUM`/…) — the 38cec01 fix landed these. The remaining mismatch is TWO axes:
+| axis | captured (102,262 rows) | seeded DELISTED (84,778 rows) |
+| --- | --- | --- |
+| **instrument_type** | `pool` (lowercase) | `POOL` (uppercase) |
+| **instrument_id** | `0x1353fe...` (`pool_address.lower()`) | `UNISWAPV3-POLYGON:POOL:COMP-USDC:10000` (glued composite) |
+
+ROOT of the instrument_id split = **TWO competing "canonical" instrument_id builders, used on opposite sides**:
+1. **`build_instrument_id`** (UAC `internal/reference/canonical_id_builder.py`, the DOCUMENTED "Centralised canonical
+   instrument ID builder — SSOT", coverage-tested, used by `canonical_write.py` to stamp the parquet DATA `instrument_id`
+   COLUMN + by the IS catalogue's `instrument_key`): DeFi → `VENUE-CHAIN:TYPE:SYMBOL` = `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`.
+2. **`_canonical_defi_id`** (MTDS `engine/defi_catalog_reader.py`): POOL → `pool_address.lower()` = `0x...`.
+The **captured manifest rows use #2** (`0x...`), so they don't even match the parquet's OWN data `instrument_id` column (#1).
+
+**DECISION (documented-intent, per AUTONOMOUS_AGENT_RULES rule 1–2 — decide+document, don't block): canonical pool
+instrument_id = `pool_address.lower()`, venue+chain carried as SEPARATE manifest columns; instrument_type lowercase.**
+Rationale: (a) the operator's Phase-1 item 2 explicitly says "`venue=UNISWAP_V3` + `chain=ARBITRUM` (separate),
+instrument_id canonical (NOT glued `UNISWAPV3-ARBITRUM`)" — `build_instrument_id`'s `VENUE-CHAIN:` prefix RE-GLUES venue+chain
+INTO the id, redundant with the separate columns + exactly the form the operator flagged wrong; (b) `pool_address.lower()`
+is the clean per-pool atom (a pool's contract address IS its on-chain identity); (c) smallest data blast radius — the
+102k captured rows + the parquet `pool_address`/`pool_id` columns already carry it, only the catalogue/seeder + the
+data-`instrument_id`-column need re-keying; (d) matches `_canonical_defi_id` (the live reader). **OPERATOR: if you instead
+want `build_instrument_id`'s `VENUE-CHAIN:TYPE:SYMBOL` as the canonical manifest id, the fix flips direction (re-key the
+102k captured side instead) — flag on return; I proceeded on (a)–(d).** This finding + decision is the operator-notify.
+
+CONVERGENCE POINTS (all → `pool_address.lower()` + lowercase instrument_type):
+- IS `enumerate_expected_universe.py::_enumerate_v2_defi`: seed `instrument_id` + `instrument_type` canonically (the
+  `InstrumentCatalogEntry` lacks `raw_symbol`, so add it to the entry + `_catalog_from_dataframe` from the catalogue's
+  `raw_symbol` column which IS `pool_address.lower()`), OR fix at the catalogue builder so `instrument_id`=pool_address.
+- IS `build_instrument_catalogue.py`: emit catalogue `instrument_id = raw_symbol(pool_address).lower()` for POOL rows.
+- MTDS dex handlers already (separately) need per-pool `record_captured` — but the 102k captured ALREADY use
+  `pool_address.lower()` (some rebuild path), so the writer per-pool fix + the seeder fix converge.
+
 ## Phase 1 — IS per-day instrument availability (TVL-qualifying, per venue×chain×data_type)
 
 - [ ] [CODE] P0. Per-day, enumerate every instrument (pool) meeting the **TVL criteria** for each venue × chain ×
