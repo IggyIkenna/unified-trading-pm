@@ -103,13 +103,15 @@ source:
       `Epic: infrastructure_master` (or the contracts epic). Target: **unified-api-contracts**. — unified-api-contracts@14466d86 | 32 files stamped | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `strategy-service/scripts/` (~28; DeFi tracers = `campaign:master_to_live_defi`).
       `Epic: strategy_master`. Target: **strategy-service**. — strategy-service@4d6104a9 | 27 files stamped (2 already done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
-- [ ] [SCRIPT] P2. Stamp `agent-orchestrator/scripts/` (~24; self-fleet tooling = `permanent`).
+- [x] ✅ [SCRIPT] P2. Stamp `agent-orchestrator/scripts/` (~24; self-fleet tooling = `permanent`).
       `Epic: orchestrator_master`. Target: **agent-orchestrator**. **PARTIAL — RE-STAMP NEEDED (2026-06-22 rule):** the
       first pass (`agent-orchestrator@ebb0c6f`) stamped `Epic:` + `Lifecycle: permanent` on all 23 non-symlink scripts
       but **OMITTED `Delete-when`** (the old "permanent omits it" convention). Under the corrected rule every script
       needs `# Delete-when: NA` — add it after the `# Lifecycle: permanent` line on all 23 (idempotent; skip any already
       carrying `# Delete-when:`; `quickmerge.sh` symlink → PM SSOT skipped). Done when
-      `grep -rL '^# Delete-when:' scripts/` is empty.
+      `grep -rL '^# Delete-when:' scripts/` is empty. —
+      agent-orchestrator@337cb37 | 23 files updated (Delete-when: NA added) |
+      grep -rL '^# Delete-when:' scripts/ → empty ✓ | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Epic:' scripts/ → empty ✓
 - [ ] [SCRIPT] P2. Stamp `unified-trading-system-ui/scripts/` (~17; 7 are 2026-03 run-once splitters = `oneoff`).
       `Epic:` the UI epic. Target: **unified-trading-system-ui**.
 - [ ] [SCRIPT] P2. Stamp `execution-service/scripts/` (~12; validation runbooks = `campaign`/`permanent`).
