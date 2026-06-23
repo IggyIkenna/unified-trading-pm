@@ -61,8 +61,10 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
       `SOURCE_COVERAGE_START["api_football"]` updated 2018-01-01 → 2015-01-01 in
       `canonical/domain/sports/league_data.py`; 3 tests updated (test_sports_source_coverage_propagation +
       test_feature_upstream); QG green (216s).
-- [ ] [AGENT] P0. **understat date-range starts 2014-01-01** but UAC declares `SOURCE_COVERAGE_START` 2015-01-16. Same
-      per-(source, data_type) override reconciliation. Repo: unified-api-contracts.
+- [x] ✅ [AGENT] P0. **understat date-range starts 2014-01-01** but UAC declares `SOURCE_COVERAGE_START` 2015-01-16. Same
+      per-(source, data_type) override reconciliation. Repo: unified-api-contracts. — unified-api-contracts@eefc045f |
+      `SOURCE_COVERAGE_START["understat"]` updated 2015-01-16 → 2014-01-01 in `canonical/domain/sports/league_data.py`;
+      no tests needed updating (none asserted the old date). QG green (202s).
 
 ## P0 — scoped recon run + drain wait
 
