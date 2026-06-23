@@ -78,17 +78,10 @@
     "instruments-service": "0.55.0",
     "market-tick-data-service": "0.60.0",
     "system-integration-tests": "0.14.7",
-<<<<<<< Updated upstream
-    "unified-api-contracts": "0.52.0",
-    "unified-trading-library": "0.40.0",
-    "unified-trading-pm": "1.2.399",
-    "market-data-processing-service": "0.10.15",
-=======
     "unified-api-contracts": "0.57.0",
     "unified-trading-library": "0.41.0",
-    "unified-trading-pm": "1.2.394",
+    "unified-trading-pm": "1.2.399",
     "market-data-processing-service": "0.11.0",
->>>>>>> Stashed changes
     "e2e-testing": "0.27.0",
     "agent-orchestrator": "0.57.0",
     "greeks-service": "0.18.0",
