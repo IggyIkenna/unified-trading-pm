@@ -2905,14 +2905,17 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       e2-standard-8 32GB to dodge the OOM hitting the 2020 VMs) — RUNNING; covers ODDS/PREDICTIONS/STANDINGS for the
       window additively (2020 VMs untouched). Verify it converts the window gaps; if footystats key 429-thrashes from
       3 concurrent VMs, scope/serialize them.
-- [ ] [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']=450000` is STALE — live API reports Custom300 plan =
-      300,000/day** (`GET /status` 2026-06-23: `subscription.plan=Custom300`, `requests.limit_day=300000`). The
-      daily-aware allocator still computed the CORRECT throttle this run because the launcher divides the OPERATOR-passed
-      `REMAINING_DAILY_QUOTA` (real remaining), and `SOURCE_DAILY_QUOTA` only gates WHETHER the daily term applies
-      (non-None ⇒ yes). But a future launch that OMITS `REMAINING_DAILY_QUOTA` would amortise against the wrong 450k.
-      Fix: set `SOURCE_DAILY_QUOTA['api_football'] = 300_000` + the per-minute stays 1200 (live `x-ratelimit-limit:
-      1200`). Update the docstring worked-examples (450,000 → 300,000). (deployment-service
-      `data_pipeline_monitors/launch_budget_registry.py`) — **provenance: golden-window push 2026-06-23 live /status**
+- [x] ✅ [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']` corrected 450000→300000 + made the live `/status`
+      read AUTHORITATIVE (query, don't hardcode)** — deployment-service@8af2782 + instruments-service@6f96b98. The
+      adapter now reads the plan's REAL limits live: `ApiFootballAdapter.get_live_quota()` hits `GET /status` →
+      `(per_minute=X-RateLimit-Limit header, daily_limit=requests.limit_day, daily_remaining=limit_day−requests.current)`,
+      60s-cached, with a resilient registry fallback on any failure. The launcher defaults `REMAINING_DAILY_QUOTA` to a
+      live `/status` read (`limit_day − current`); `SOURCE_SUPPORTS_LIVE_QUOTA` records api_football exposes a live read;
+      `SOURCE_DAILY_QUOTA['api_football']=300_000` (Custom300) + docstring worked-examples updated 450,000→300,000 — the
+      constant is now FALLBACK-only, live `/status` wins. (deployment-service
+      `data_pipeline_monitors/launch_budget_registry.py` + `scripts/vm/launch-api-football-backfill-vm.sh`;
+      instruments-service `adapters/sports/adapters/api_football.py` + `__init__.py`) — also fixed the launcher heredoc
+      SC2259 (JSON via argv not piped stdin). **provenance: golden-window push 2026-06-23 live /status**
   - **XG/XG_SHOTS slice DONE** (peer 2026-06-23): instruments-service@ba2b5c0 (HTTP_NOT_FOUND fix) +
     instruments-service@f2ed8d6 (48 XG blank-league phantom reclassify); 48 XG phantom + 65 XG_SHOTS HTTP_NOT_FOUND rows
     → `empty_confirmed(EXPECTED_NO_FIXTURE)`; XG+XG_SHOTS window 717/717 = 100%. (parent todo stays OPEN — window-wide
