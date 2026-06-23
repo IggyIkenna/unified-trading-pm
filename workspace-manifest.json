@@ -846,10 +846,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 83.75,
         "qg_red_reason": null,
         "large_file_count": 0,
-        "warn_file_count": 29
+        "warn_file_count": 31
       }
     },
     "ml-service": {
