@@ -214,19 +214,23 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       deployment-ui@52c9f18 | pw:L2 ✓ (FULL tests/smoke 270 green at CI parity: `--workers=1 --retries=2`; multi-worker
       shows ~7 venue-test flakes, untouched by this change) | orphan-audit green | regression:
       tests/smoke/cockpit.spec.ts (`/`→`/cockpit` redirect test).
-- [ ] [UI] P1. **Fold Deployments + VM Deployments + Live Ops into the cockpit** Live/Batch/Paper/Fleet tabs with REAL
-      data (replace the placeholder tables with the existing `Deployments`/`VmDeployments` inventory + the Live-Ops WS
-      log tail). `[UI]` — pw:L2 + regression.
-- [ ] [UI] P1. **Fold Repos CI** → cockpit **CI** tab (reuse `RepoCi`). `[UI]` — pw:L2 + regression.
-- [ ] [UI] P1. **Fold Alerts → cockpit "Alerts & Logs" tab + build the UNIFIED STREAM** (operator: one place streaming
-      Slack-bound alerts + VM logs). Net-new: the Alerts page today is CI-only 60s-poll; add the non-CI alert classes
-      (vm_down/consolidator_down/git_health/worker_liveness — the DP\_\* Slack alerts) + a live VM-log tail, in one
-      timeline. `[UI]` — pw:L2 + regression.
-- [ ] [UI] P2. **Fold Chaos** → cockpit tab (failure-injection / resilience testing, non-prod). `[UI]` — pw:L2 +
-      regression.
-- [ ] [UI] P2. **Fold Research-launch (ML/Strategy/Exec-BT)** → a cockpit **"Launch"** tab. `[UI]` — pw:L2 + regression.
-- [ ] [UI] P2. **Fold Safety Ops** → cockpit tab (UI exists; backend is a STUB — wire `/safety-ops/*` routes later).
-      `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P1. **Fold Deployments + VM Deployments into the cockpit** Live/Batch/Paper (`DeploymentsContent
+      fixedUmbrella=`) + Fleet (`VmDeploymentsContent`) tabs with REAL inventory (placeholder tables replaced; chrome-less
+      extracts, the cockpit owns `?tab=`). — deployment-ui@2286121 | pw:L2 ✓ (277 passed --workers=1 --retries=2) |
+      regression: tests/smoke/cockpit.spec.ts. (Live-Ops WS log-tail fold → Phase 0.5 rewire todo.)
+- [x] ✅ [UI] P1. **Fold Repos CI** → cockpit **CI** tab (reuse `RepoCiContent`). — deployment-ui@2286121 | pw:L2 ✓ |
+      regression: tests/smoke/cockpit.spec.ts.
+- [x] ✅ [UI] P1. **Fold Alerts → cockpit "Alerts & Logs" tab + UNIFIED STREAM** — folds `AlertsContent` (the alert
+      ledger) + a live VM/cluster log-tail (reuses `StreamingLogsPanel` → the unified `/api/logs/stream/{ref}` incl. live
+      clusters), with a `?logs=<target>` deep-link (alert "Stream logs" → tail here). — deployment-ui@2286121 | pw:L2 ✓ |
+      regression: tests/smoke/cockpit.spec.ts. (Enriching the timeline with the non-CI DP\_\* alert classes
+      vm_down/consolidator_down/git_health/worker_liveness is a tracked follow-up.)
+- [x] ✅ [UI] P2. **Fold Chaos** → cockpit tab (reuse `ChaosContent`). — deployment-ui@2286121 | pw:L2 ✓ | regression:
+      tests/smoke/cockpit.spec.ts.
+- [x] ✅ [UI] P2. **Fold Research-launch (ML/Strategy/Exec-BT)** → cockpit **"Launch"** tab (lazy-loaded sub-tabs,
+      ErrorBoundary-isolated). — deployment-ui@2286121 | pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts.
+- [x] ✅ [UI] P2. **Fold Safety Ops** → cockpit tab (reuse `SafetyOpsContent`; backend `/safety-ops/*` still a stub). —
+      deployment-ui@2286121 | pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts.
 - [x] ✅ [UI] P1. **Strip the top bar to UTILITY-ONLY**: top bar is now DEV/STAGING/PROD badge · LIVE/MOCK DATA · Clear
       Cache · API status · GCP/AWS toggle · version + a single **Cockpit** entry. The 10 page-nav links (VM-Deps,
       Deployments, Chaos, Live-Ops, Repos-CI, Alerts, Safety-Ops, ML, Strategy, Exec-BT) moved into the cockpit (status
