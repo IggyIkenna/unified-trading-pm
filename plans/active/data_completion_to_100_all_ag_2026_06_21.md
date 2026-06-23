@@ -1002,6 +1002,25 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       their Cloud Run config / deploy scripts (`unified-trading-system-ui/scripts/deploy-cloud-run.sh` + the CRA
       service) — trade-off is a small always-on cost; operator decides. Repos: deployment-service (Cloud Run config) +
       unified-trading-system-ui (UI deploy). Provenance: B2 paper-stream deploy session 2026-06-23.
+- [ ] [DATA] P1 **paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols** (found 2026-06-23 deep-dive
+      of `/paper-trading?client=firm-paper-stream`). The Net-in-coin / Delta-per-coin tables, the instruction-ledger
+      "Strategy" column, and the PnL-by-strategy snapshot all render raw DEX-pool contract addresses
+      (`0xBe53A1…`/`0x9D39A5…`/`0x83F20F…`) instead of canonical token symbols (yvUSDC / sUSDe / sDAI) — while the
+      drilldown dropdown DOES show canonical strategy slugs (`@yearnv3-yvusdc1-ethereum` etc). So the DeFi paper-run
+      InstrumentKey→`asset_symbol`/`asset_canonical_id`/`strategy_id` derivation (`derive_ledger_asset_fields`, UAC
+      `internal/reference/ledger_asset_resolution.py`) is NOT resolving DEX-pool addresses to symbols — it falls back to
+      the raw 0x; the instruction "Strategy" column = the pool ADDRESS, not the canonical strategy id. Violates the
+      batch=live "derive from canonical InstrumentKey, never raw" HARD RULE. Repos: strategy-service (paper_run_emit /
+      ledger writer) + UAC (DeFi DEX-pool asset resolution). Provenance: B2 deep-dive 2026-06-23.
+- [ ] [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** (found
+      2026-06-23). The candle-with-trade-markers chart EXISTS (`components/trading/candlestick-chart.tsx` +
+      `components/research/signal-overlay-chart.tsx` with `setMarkers` triangles, lightweight-charts v5) but only in the
+      RESEARCH/backtest surface — the live `/paper-trading` overview + per-coin page (`/paper-trading/coin/[coin]`,
+      recharts Area/Scatter + filled/missed counts) do NOT render the underlying-price candle with entry/exit triangles,
+      and the overview tables do NOT link to the per-coin drilldown (no click-through). Also: wallet movements are a
+      TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
+      unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
+      2026-06-23.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
