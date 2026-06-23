@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.52.0",
     "unified-trading-library": "0.40.0",
-    "unified-trading-pm": "1.2.382",
+    "unified-trading-pm": "1.2.384",
     "market-data-processing-service": "0.10.15",
     "e2e-testing": "0.27.0",
     "agent-orchestrator": "0.51.0",
@@ -145,7 +145,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 80.9,
+        "coverage_pct": 81.01,
         "qg_red_reason": null,
         "large_file_count": 1,
         "warn_file_count": 0
@@ -205,7 +205,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 87.04,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
@@ -302,7 +302,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL \u2014 no-service-to-service-deps HARD RULE).",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -338,7 +338,7 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "coverage_pct": 81.95,
-        "qg_red_reason": null,
+        "qg_red_reason": "pytest",
         "large_file_count": 0,
         "warn_file_count": 13
       }
@@ -991,7 +991,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 85.03,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 3,
         "warn_file_count": 6
@@ -1191,8 +1191,8 @@
       "codebase_health": {
         "coverage_pct": 96.05,
         "qg_red_reason": null,
-        "large_file_count": 22,
-        "warn_file_count": 30
+        "large_file_count": 23,
+        "warn_file_count": 29
       }
     },
     "unified-trading-library": {
@@ -1255,7 +1255,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1948,10 +1948,10 @@
     "unified-api-contracts": "0.53.0",
     "deployment-api": "0.30.0",
     "instruments-service": "0.50.0",
-    "agent-orchestrator": "0.54.0",
+    "agent-orchestrator": "0.55.0",
     "alerting-service": "0.34.0",
     "batch-live-reconciliation-service": "0.30.0",
-    "deployment-service": "0.56.0",
+    "deployment-service": "0.57.0",
     "e2e-testing": "0.27.0",
     "execution-service": "0.31.0",
     "features-service": "0.34.0",
@@ -1992,6 +1992,16 @@
     "instruments-service": {
       "version": "0.50.0",
       "sha": "c20949b6843da366720966b7aeb1e66c39803727",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.55.0",
+      "sha": "a6e7d51aea1df14fad65b057de884034705005e0",
+      "branch": "staging"
+    },
+    "deployment-service": {
+      "version": "0.57.0",
+      "sha": "2516c8171dea9ba6bd563d1ff45107c2f462ad68",
       "branch": "staging"
     }
   },
