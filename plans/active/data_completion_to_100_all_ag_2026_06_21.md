@@ -2269,3 +2269,39 @@ The index-stamp is the re-runnable interim mitigation.
       gap (audit each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.** —
       utl@4bd9487e | asset_group added as first-class AvailabilityRecord field; threaded through
       record_captured/add/\_records_to_dataframe/\_V4_BACKFILL_COLUMNS; 7-test suite green; QG pass 110s
+
+## Sports honest-coverage is ARTIFICIALLY LOW — denominator over-seed + phantom false-positives (DIAGNOSED 2026-06-23)
+
+Read the live sports manifest (`instruments-store-sports-prd/_index/availability_index.parquet`, 4.55M cells). The
+"low coverage" is mostly a **measurement bug, not missing data**. Two root causes + proven impact when corrected
+(in-scope leagues + phantom-failed counted as the captures they are):
+
+| data_type | raw cov | corrected | why |
+| --- | --- | --- | --- |
+| WEATHER | 16% | **68%** | `expected_unattempted` seeded for 790 leagues; only 57 in weather scope (venue-coords). 72,683→6,610 unatt |
+| INJURIES | 3% | **46%** | 404k honest `EXPECTED_NO_PROVIDER_COVERAGE`/`NO_FIXTURE`; +9,167 phantom-failed→captured |
+| ODDS | 26% | **94%** | +3,848 phantom→captured; unatt 72k→2k once out-of-scope leagues stripped |
+| PLAYER_VALUES | 20% | **68%** | over-seeded unatt across out-of-scope leagues |
+
+- **Cause A — over-seeded `expected_unattempted`**: out-of-scope (league × source) cells are stored as
+  `expected_unattempted` (a real GAP, in the denominator) instead of `EXPECTED_NO_PROVIDER_COVERAGE` (out-of-scope,
+  EXCLUDED from the completion-% denominator by design — `unified_api_contracts/canonical/crosscutting/honest_coverage.py`
+  line ~190). The denominator CODE is already correct; the MANIFEST DATA is mis-classified.
+- **Cause B — phantom false-positives**: TRANSFERMARKT_LEAGUES (75,929) + SFI_LEAGUES (12,769) + SFI_STANDINGS (42) +
+  INJURIES-failed (9,167) + ODDS-failed (3,848) are ALL `error_reason=phantom_captured_no_parquet_at_canonical_path` —
+  a phantom-audit `--apply` flipped real `captured`→`attempted_failed` with stale `prefix_tpls` (the CLAUDE.md phantom
+  gotcha). Data exists; manifest is wrong.
+
+- [ ] [SCRIPT] P1. **Reclassify over-seeded `expected_unattempted` → `EXPECTED_NO_PROVIDER_COVERAGE` for out-of-scope
+  (league × source) sports cells** — drive from `unified_api_contracts.registry.sports_per_source_rules.is_expected_for_source`
+  + the coverage maps (`sports_league_entity_coverage` / `sports_venue_coordinates` / `sports_bookmaker_league_coverage`).
+  Corrects the denominator instantly (no re-fetch); WEATHER 16→68%, INJURIES 3→46%, ODDS 26→94%. (instruments-service)
+- [ ] [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
+  `expected_unattempted` for out-of-scope (league × source)** — seed `EXPECTED_NO_PROVIDER_COVERAGE` instead, so coverage
+  stays honest going forward (per `is_expected_for_source`). (instruments-service / UAC)
+- [ ] [SCRIPT] P1. **Fix phantom false-positives**: verify TM_LEAGUES / SFI_LEAGUES parquets exist at their real path,
+  fix sports `prefix_tpls` in `reconcile_phantom_manifest_rows_all.py` (`ASSET_GROUP_CONFIG['sports']`), `--dry-run`,
+  then flip the ~101k phantom-failed cells back to `captured`. NEVER `--apply` before verifying templates (CLAUDE.md
+  phantom gotcha). (instruments-service)
+- INJURIES is otherwise NOT a real gap — the provider genuinely doesn't cover injuries for most leagues
+  (`EXPECTED_NO_PROVIDER_COVERAGE` 262k) — those are correct honest-absence, excluded from the denominator once classified.
