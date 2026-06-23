@@ -854,7 +854,7 @@ consuming the live tick/block stream + booking positions per-tick — distinct f
 (DART/deployment-ui) streaming trade/position updates at that rate. None exist today. Relates to
 citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; this is the LIVE- continuous companion).
 
-- [ ] [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — **UI HALF SHIPPED 2026-06-22**
+- [x] ✅ [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — strategy-service@5557e7ef + deployment-service@ae9d6e6 (B2 engine + Cloud Run TF) — UI half: unified-trading-system-ui@a67e3c34. **UI HALF SHIPPED 2026-06-22**
       (`unified-trading-system-ui@a67e3c34`, QG+pw:L2-green): the existing `/paper-trading` page now polls the ledgers
       at **5s** (`LIVE_LEDGER_REFETCH_MS`, was 30s) + "LIVE • updated Ns ago" indicator + regression smoke — so the
       moment a continuous engine writes the stable run_id, the page renders it live (CRA `resolve_canonical_run`
