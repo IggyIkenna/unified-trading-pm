@@ -374,6 +374,68 @@ clears the flag on recovery.
       (2026-06-21)" paragraph summarising the 5 closures + cross-linking the worker-liveness doc. — unified-trading-pm
       (this commit)
 
+## Live incident + fix (2026-06-22 evening) — slot-3 "Auto-respawn FAILED" spam + cap-burn
+
+**Symptom:** `agent-orchestrator-alerts` fired "Auto-respawn FAILED slot 3 — kick failed, pane='frozen',
+last_ping>15m / Attempted: branch-state quarantine (FM5/FM7); respawn skipped" every ~2 min. Root cause: slot-3's
+`instruments-service` clone was left on a leftover `_tmp-stage-rebase2` branch (clean, fully merged to origin) from an
+isolated-worktree promote → FM7 `wrong_branch` → `should_stop` → the watchdog skipped respawn + paged. Compounded by the
+watchdog daily kill-cap (20) being burned by frozen-slot churn → dormant-until-UTC-midnight → fleet stranded.
+
+- [x] ✅ [OPS] P0. **Immediate recovery (live, central VM).** Cleaned slot-3's leftover `_tmp` branch (verified 0
+      unpushed-unique commits first); raised `ORCHESTRATOR_WATCHDOG_DAILY_CAP` 20→**50** in `.env.local` (operator
+      request) + restarted the orchestrator → dormancy cleared, watchdog resumed, fleet recovered (slots 1/3/5/6 fresh)
+      on **dynamically-selected** healthy accounts (`_pick_headroom_account` — not hardcoded; sub-d@100%/auth-failed
+      excluded, re-funded accounts auto-rejoin). — central-VM SSM.
+- [x] ✅ [ORCHESTRATOR] P1. **FM7 auto-reclaim of a leftover clean+fully-merged throwaway branch** (the slot-3
+      respawn-blocker, made automatic). `_branch_state.py::_reclaim_leftover_merged_branch` — a leading-`_` throwaway
+      branch (`_tmp-*`/`_backmerge`) that is CLEAN **and** an ancestor of `origin/<base>` (0 unpushed) auto-switches back
+      to `<base>` + deletes the leftover (new `reclaimed` non-stop status); a dirty tree, unpushed work, or a deliberate
+      branch (`feature/*`, `main`) still STOPs (never loses work). + `config.py` `watchdog_daily_cap` default 20→50. 5
+      regression tests (`tests/test_branch_state_reclaim.py`), QG-green. — agent-orchestrator@76970857
+### DEPLOY BLOCKER — central-VM orchestrator clone is 128 commits stale + the new code has 2 deploy-time incompatibilities
+
+The deploy clone (`/home/ubuntu/.../agent-orchestrator`, runs the live brain) is **128 commits behind**
+`origin/live-defi-rollout` (predates the entire `utl_uac` typed-config refactor) with **no auto-deploy cron**, so the FM7
+fix above is NOT live on the running orchestrator. Two safe-gated catch-up attempts (ff-pull → dry-run → restart →
+rollback) on 2026-06-22 surfaced **two distinct new-code incompatibilities with this VM's setup**. Each attempt was
+cleanly rolled back to `980217d`; the fleet stayed healthy (4 usable accounts, spawning) on the old code throughout. The
+safe-gate (running service untouched until a verified restart) worked as designed.
+
+- [x] ✅ [OPS] P1. **Blocker 1 — GCS internal-key read (SOLVED + validated).** The VM authenticates to GCP with
+      `ikenna@odum-research.com`'s **`authorized_user`** ADC (`gcloud auth application-default login`), not a
+      service-account. UTL's `cloud_interface/providers/gcp.py::_get_native_client` does
+      `storage.Client.from_service_account_json(creds_path)` **whenever `GOOGLE_APPLICATION_CREDENTIALS` is set** —
+      which chokes on the authorized_user file (`MalformedError: missing token_uri, client_email`). `get_credentials_path()`
+      = `os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")`, so **unsetting that env var** makes it fall to
+      `storage.Client(project=…)` default ADC, which loads the same authorized_user creds from the well-known path.
+      VALIDATED on the VM: `get_storage_client(provider="gcp").download_bytes(orchestrator-creds, internal-private.pem)`
+      → `bytes=241` with the env var unset. Fix = remove the (redundant) `GOOGLE_APPLICATION_CREDENTIALS` line from the
+      central VM's `.env.local`.
+- [x] ✅ [UTL] P1. **Blocker 1b — UTL hardening (SHIPPED).** `_get_native_client` now only calls
+      `storage.Client.from_service_account_json` when the creds file is an actual service-account key
+      (`type == "service_account"`); a user/authorized_user ADC (or no path) goes through `storage.Client(project=…)` →
+      `google.auth.default()`, which handles both cred types — so a user-ADC host works without the env-unset workaround.
+      `_is_service_account_json` helper + 2 regression tests (real SA → `from_service_account_json`; authorized_user ADC
+      → default path), QG-green. — unified-trading-library@5e413c7f
+- [ ] [OPS] P1. **Blocker 2 — account roster file (ROOT CAUSE NAILED; operator-domain fix).** The new code REQUIRES an
+      explicit `oauth_token_env_file` per account; the **old code derived** the token path by convention
+      (`~/.claude-accounts/<id>.env`), so it spawns fine without the field. The running 4-account state (sub-a/b/c/d,
+      from the DB/snapshot) lacks `oauth_token_env_file` → new code = `ACCOUNT POOL EXHAUSTED`. The correctly-schema'd
+      roster (WITH `oauth_token_env_file`) lives at **S3 `s3://uts-orchestrator-creds-427895769566/config/accounts.json`
+      but is STALE** (2026-05-22; only 3 accounts — sub-a/b/c, missing sub-d) AND is **not present locally** at
+      `data/config/accounts.json` (the new code's read path — only `accounts.mock.json` is there; the live one is
+      operator-edited/committed and went missing). All 4 token `.env` files exist in `~/.claude-accounts/`. **Fix: place
+      a current `data/config/accounts.json` with all 4 accounts each carrying `oauth_token_env_file:
+      ~/.claude-accounts/<id>.env`** (+ refresh the stale S3 copy to match). The schema is known (matches the S3 copy);
+      the roster (which accounts / limits / sub-d) is the operator's live account config — confirm the roster, then the
+      redeploy runs both validated fixes (unset `GOOGLE_APPLICATION_CREDENTIALS` + this file) safe-gated. Owner: operator
+      (account roster).
+- [ ] [OPS] P2. **Then: catch the 128-stale orchestrator clone up to current LDR + redeploy** (activates the FM7 fix +
+      the cap-default + 128 commits of other self-healing improvements). Recipe proven: stash dirty → ff-pull → dry-run →
+      restart → verify (4 usable accounts + spawning) → rollback on degrade. **Also consider an AO deploy cron** so the
+      brain doesn't silently drift 128 commits stale again.
+
 ## Success criteria
 
 - A failed rotation respawn never leaves a `dispatched` task stranded or a slot wedged `working` with a dead session

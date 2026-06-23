@@ -138,6 +138,23 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
   `deployment-api/.../data_status/coverage_metrics.derive_capture_status_rates`.
 - **Hygiene-vs-GCS RED/GREEN** (`0 8 * * *` UTC, parallel workers=32): composes phantom + divergence + canonical-form +
   4-pillar + v9-distribution into one report; full-corpus walk weekly, changed-since-yesterday daily.
+- **Empty re-probe + auto-flip** (`0 9 * * *` UTC): re-fetches today's new `SOURCE_RETURNED_ZERO` empties; on a
+  `REPROBE_RETURNED_ROWS` verdict (a live re-fetch PROVED data exists) auto-flips the cell
+  `empty_confirmed → attempted_failed` (cron arg `--reclassify-apply`) so the orchestrator re-captures it.
+  Oracle-only/ambiguous verdicts are NEVER flipped (proof-gated). Closes the detect→prove→flip→re-capture self-healing
+  loop.
+
+## Runtime — the audit-cron runner image (IMAGE GAP closed 2026-06-22)
+
+The three daily audits run as **Cloud Run jobs** (`deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`)
+on a **dedicated runner image** `…/unified-trading-library/e2e-audit:latest` — built by `e2e-testing/Dockerfile` (FROM
+the UTL base, `COPY . /app/e2e-testing`) + `e2e-testing/cloudbuild-e2e-audit.yaml` (build → `--smoke` each script →
+push). **This is a SEPARATE cloudbuild from the repo's template-generated CI `cloudbuild.yaml`** —
+`rollout-cloudbuild.py` manages only `cloudbuild.yaml`, so `cloudbuild-e2e-audit.yaml` is hand-maintained and won't be
+clobbered. The image MUST contain `/app/e2e-testing/scripts/audit/*.py` (the prior gap: the MTDS image's `COPY . .` only
+copied MTDS, so the audit jobs failed at the script PATH). `var.dp_audit_image` defaults to this image; rebuild it when
+an audit script changes. **Verified 2026-06-22**: Cloud Build `286913a2` SUCCESS; in-image smoke = 7 audit scripts
+present + UTL/UAC/pandas import.
 
 ## Anti-patterns (banned)
 

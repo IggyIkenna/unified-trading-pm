@@ -420,6 +420,15 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   (`EPHEMERAL_BATCH|EPHEMERAL_EXPERIMENT|SCHEDULED_RECURRING|LONG_LIVED_LIVE`); experiment VMs embed the run_id
   (`exp-{ml,strategy,execution}-{uuidv7}-{ts}`). **Zone** default `asia-northeast1-c`; stockout falls back within-region
   only (`-b`/`-a`), NEVER another region (all GCS data is in asia-northeast1).
+- **Every compute unit is a classified DEPLOYMENT TARGET — live/batch/paper umbrella × GCP/AWS (codified 2026-06-22)**:
+  every VM + Cloud Run job classifies to a `DeploymentUmbrella` (LIVE/BATCH/PAPER/EXPERIMENT) via the single resolver
+  `deployment_service.deployment_classification.classify_deployment_target` (raises `UnclassifiedDeploymentError`, never
+  a silent default) + the `cloud_run_job_registry.CLOUD_RUN_JOBS` registry (guard-tested: a scheduler tf / launcher
+  without an entry / durable-log fails CI). Surfaced at deployment-ui `/deployments` (umbrella tabs at /repos grade) via
+  `GET /api/deployments/inventory` + `…/umbrella/{u}/summary`, and in Slack (`DEPLOYMENT_*` → `#data-pipeline-alerts`
+  with umbrella + `/deployments/{name}` deep-link). GCP complete; AWS rides the same `DeploymentTarget`/`cloud=AWS`
+  contract. SSOT: `codex/05-infrastructure/deployment-observability.md` +
+  `plans/active/deployment_observability_parity_live_batch_paper_2026_06_22.md`.
 - **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify
   at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".

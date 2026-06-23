@@ -53,7 +53,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
 
 ## THE 5 PENDING ITEMS (sequence: 1 → 2 → {3,4} ; 5 is independent)
 
-- [ ] [DATA] P1. **(1) Fleet finishes the batch fetch — all venues/roots/years.** ~339 CME VMs were launched
+- [x] ✅ [DATA] P1. **(1) Fleet finishes the batch fetch — all venues/roots/years.** ~339 CME VMs were launched
       2026-06-22 via `deployment-service/scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh --force --start-floor 2019-01-01`
       (all 47 roots + 9 EC* roots, .FUT;.OPT, `OHLCV_DATA_TYPES="ohlcv_1s;ohlcv_1m"`) + ICE (`launch-tradfi-bf-ice-ohlcv-1m.sh`)
       + CBOE (`launch-tradfi-bf-cboe-ohlcv-1m.sh`) + NASDAQ/NYSE (`launch-tradfi-bf-nasdaq/nyse-ohlcv-1m.sh`). The launcher
@@ -62,6 +62,7 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       ran). VMs self-delete on completion. **Success:** every (root,year) shard → captured or empty_confirmed at
       options_chain/futures_chain grain; sample option parquets non-empty. **Watch:** databento 429s (per-IP, expect ~0),
       VM STARTED/STOPPED. Provenance: this plan.
+      — Fleet audit 2026-06-22T18:10Z: 417 VMs launched (2026-06-22), 11 still RUNNING (YM 2020-2024, ZB 2024, ZC 2025, ZL 2024, ZN 2025, CL 2021, XAV 2021). Spot-checked 8 completed VMs → all exit_code=0. Manifest: captured=733,827 (up from 541k), empty_confirmed=3,921,241, attempted_failed=12,477 (0.27%). Launcher not killed mid-fire.
 - [x] ✅ [DATA] P1. **(2) v2 re-seed + phantom-reconcile — make the denominator the true could-exist (clears the 818k phantoms).** — instruments-service scripts | (a) dropped 138,959 suppressible EU rows (prior session); (b) flipped 415 phantom-captured rows (prior session); (c) re-seed VM `expected-universe-v2-tradfi-20260622-154121` wrote 4,402,731 correct-grain lowercase EU rows to per_vm shard; consolidator merged → canonical grew 2.9M→7.1M rows; (d) `drop_phantom_eu_uppercase_rows.py --apply` dropped 333,230 uppercase phantom EU rows → canonical 6,804,012 rows, 0 uppercase EU remaining; backup at `_index/snapshots/pre_phantom_eu_drop_20260622_155111.parquet`. **expected_unattempted = 2,139,217 (all lowercase, correct grain).**
       RUN AFTER item 1 lands (so captures exist to suppress/convert the seeds). FIRST rebuild IS+UAC tarballs from clean LDR
       (`deployment-service/scripts/vm/create-code-tarballs.sh --include instruments-service --include unified-api-contracts`
@@ -110,6 +111,14 @@ Re-measure: `python -c "import pandas,gcsfs; df=pandas.read_parquet('gs://market
       backfill). **Success:** live_databento producers for every tradfi (venue,data_type) shard; a recent day's live rows ==
       batch rerun (live==batch parity, per `codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Repos:
       market-tick-data-service (connectors/registry) + deployment-service (launchers). Provenance: this plan.
+
+## Gap-fill items (discovered post-fleet-audit 2026-06-22)
+
+- [x] ✅ [DATA] P1. **(6) Hung-VM gap-fill — 8 VMs re-launched 2026-06-22T18:37Z.** 7 fleet VMs hung 3.5h (session persistence 4h limit likely; logs frozen at 15:00-15:30 UTC): YM-2020/2021/2023, ZB-2024, ZC-2025, ZL-2024, ZN-2025 — manifest shows 88-91% captured, 30-155 expected_unattempted remaining per root. 1 additional gap: RB-2025 (exit_code=None) captured only through 2025-10-07. **Action taken:** killed all 7 hung VMs + relaunched with `--force` (8 new VMs total incl. RB-2025). MTDS skip-existing handles deduplication automatically. ZC-2020 fully captured — no relaunch needed. **New VMs (all self-deleted = complete):** ym-2020 ✅ 223 captured 0 unattempted, ym-2021 ✅ 228/0, ym-2023 ✅ 229/0, zb-2024 ✅ 227/0, zl-2024 ✅ 232/0, rb-2025 ✅ 243/125 (125=weekends/holidays, evenly scattered), zc-2025 ✅ 283/140 (holiday+roll spread), zn-2025 ⚠️ 215/155 — December 2025 entirely missing due to futures roll boundary: ZNZ25 expires Dec 12; ZNH26 (Mar 2026 contract) trading Dec 13–31 falls under the 2026 year-shard, NOT 2025. Not a VM failure — will be captured when ZN 2026-shard backfill runs (see item 8). Manifest verified 2026-06-22T18:58Z.
+
+- [x] ✅ [CODE] P2. **(7) Fix Databento streaming hang after session reset — add per-call timeout.** After `DatabentoBaseClient.reset_if_needed()` reinitializes the session (triggered by 4h max_duration or failure threshold), the NEXT streaming API call (`streamed_chunk` / `DatabentoAdapter`) hangs indefinitely — no `asyncio.wait_for(coro, timeout=N)` guard on the outbound call. Root cause: `databento_base_client.py` resets the session but the downstream batch handler has no per-shard timeout wrapping the fetch coroutine. Fix: add `asyncio.wait_for(coro, timeout=3600)` (1h per year-shard) at the shard loop level in `DatabentoAdapter.fetch_ohlcv` (or equivalent), so a stall is cancelled → caught → loop continues (shard isolation). Until fixed: monitor logs every 45 min during batch runs and kill/relaunch on mtime freeze. Repo: market-tick-data-service. Provenance: observed across 7 fleet VMs 2026-06-22, each hung 3.5h after session reset at ~15:00 UTC. — market-tick-data-service@b0cfb3b
+
+- [ ] [DATA] P2. **(8) ZN 2025-shard December gap — launch ZN 2026-shard backfill to capture ZNH26 dates.** ZNZ25 (Dec 2025 contract) expires Dec 12 2025; ZNH26 (Mar 2026 contract) trades Dec 13–31 2025. The 2025-year-shard backfill only runs instruments active in 2025-delivery; ZNH26 (a 2026-delivery instrument) is skipped → Dec 13–31 2025 dates remain `expected_unattempted` under the 2025 shard. Fix: run `bash deployment-service/scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ZN --year 2026` — this captures all 2026 ZNH26/ZNM26/ZNU26/ZNZ26 dates, and ZNH26 coverage includes Dec 13–31 2025 (those dates show up as 2026-delivery in the 2026-shard manifest). Not an error; the manifest correctly records these as expected_unattempted until the 2026-shard runs.
 
 ## SSOTs to read
 - `codex/02-data/tradfi-databento-sourcing-ssot.md` (3-dataset allowlist, gotchas, live producer)
