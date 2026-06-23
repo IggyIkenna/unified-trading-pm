@@ -1074,7 +1074,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
       unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
       2026-06-23.
-- [ ] [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only cross-linked by inline text** (found
+- [ ] **[BLOCKED-PLAYWRIGHT]** [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only cross-linked by inline text** (found
       2026-06-23, operator UX complaint). `app/paper-trading/` has NO `layout.tsx` → it renders under the ROOT layout,
       NOT the `(platform)` shell (vertical-nav / site-header / `service-tabs`). So inside paper-trading there is NO
       persistent tab/banner; the 3 pages (`/paper-trading` overview, `/paper-trading/ledgers`, `/paper-trading/coin/[coin]`)
@@ -1082,7 +1082,9 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       drilldown. **Fix**: add `app/paper-trading/layout.tsx` with a tab bar (Overview · Ledgers · Coins) + direct
       overview→coin links + bring paper-trading under/into the platform shell so it's reachable from the top nav like the
       rest. Repos: unified-trading-system-ui (UI playwright gate applies: pw:L2 + regression spec). Provenance: B2
-      deep-dive 2026-06-23.
+      deep-dive 2026-06-23. **CODE SHIPPED**: `unified-trading-system-ui@0dba2705` — moved `app/paper-trading/` →
+      `app/(platform)/paper-trading/` (inherits platform shell) + added `layout.tsx` tab bar (Overview · Ledgers · Coins).
+      TS+ESLint clean. AWAITING pw:L2 ✓ from a UI-capable slot (no chromium on this fleet VM) before checkbox flip.
 - [ ] [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** (found
       2026-06-23). Research IS routed at `app/(platform)/services/research` (inside the shell, nav-reachable), BUT the
       execution/backtest/features panels use `MOCK_STRATEGY_BACKTESTS` / `fixtures/build-data` — demo data, NOT real
