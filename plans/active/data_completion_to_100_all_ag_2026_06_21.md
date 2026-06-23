@@ -202,6 +202,20 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       typo can't 400 the whole call) + strengthened the regression test to assert bare-hex==64 (the prior `[64,66]`
       total-length window let the 63-hex bug through). QG-green (104s, sentinel written). Effective once a fresh tarball
       rebuild + oracle-poll relaunch bakes it. Repo: market-tick-data-service. — mtds@5906ebf.
+- [x] ✅ [DATA] P1. **defi oracle Pyth STILL 0-captured after 5906ebf — SECOND root cause: JitoSOL well-formed-but-unknown
+      feed-id → Hermes HTTP 404 "Price ids not found" on the WHOLE batch (FIXED, mtds@db7de3c, 2026-06-23).** The 5906ebf
+      odd-length fix was correct but the fresh-tarball oracle VM (`defi-fwd-oracle-prices-20260623-123041`) then logged
+      `Pyth Hermes returned HTTP 404: Price ids not found: 0x67be9f51…4fe1ccf8` → `Collected 0 Pyth records` — Hermes 404s
+      the ENTIRE batched `ids[]` call when ANY id is well-formed (64-hex, so `_valid_pyth_feed_ids` passed it) but
+      unrecognised. Probed all 7 ids individually: 6 return 200, only **JitoSOL/USD** 404'd — its id was a transcription
+      slip (`…578024dc6081fd0837ff4fe1ccf8`, same first-39-hex prefix as canonical then diverged). FIX (a) corrected to
+      the canonical `Crypto.JITOSOL/USD` id `0x67be9f519b95cf24338801051f9a808eff0a578ccb388db73b7f6fe1de019ffb`
+      (verified HTTP 200); (b) added Hermes 404 resilience — `_parse_pyth_not_found_ids` parses the offending ids from the
+      body, drops them, retries the batch ONCE with the survivors (shard isolation — a future rotted id can't zero all 7
+      feeds). 2 regression tests (canonical id + not-found parser). QG-green (sentinel==HEAD). Effective on the db7de3c
+      tarball (built + uploaded; oracle relaunched `defi-fwd-oracle-prices-20260623-130347`; the `*/5`
+      `defi-fwd-oracle-prices-prd` scheduler also picks it up). Repo: market-tick-data-service. — mtds@db7de3c. Provenance:
+      continuous-flow session 2026-06-23.
 - [x] ✅ [DATA] P0. **prediction LIVE 0-capture root cause = STALE TARBALL on the live VMs (not a code/universe bug) —
       fresh tarball + relaunch (2026-06-23 continuous-flow session).** Re-measured the REAL bucket the live runner reads
       (env-SHORT `instruments-store-pred-prd-`, via `resolve_bucket_name(kind="instruments-store-prediction")` — the
