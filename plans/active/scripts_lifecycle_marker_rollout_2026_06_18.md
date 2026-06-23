@@ -143,7 +143,7 @@ source:
 - [x] ✅ [SCRIPT] P2. Stamp `deployment-api/scripts/` (~5; 1 ghost-venue one-shot). `Epic: deployment_and_user_management`.
       Target: **deployment-api**. — deployment-api@b9e2153 | 5 stamped (4 permanent + 1 oneoff) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `alerting-service/scripts/` (~5; clean `permanent`). `Epic: observability_master`. Target:
-      **alerting-service**. — alerting-service@cee6418 | 5 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      **alerting-service**. — alerting-service@8b19c23 | 5 stamped (3 infra permanent + 1 observability permanent + 1 campaign) | inject_synthetic_alert.py=campaign (Phase 8 rehearsal) | grep -rL '^# Lifecycle:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `trading-agent-service/scripts/` (~4; clean boilerplate `permanent`).
       `Epic: trading_agent_master`. Target: **trading-agent-service**. — trading-agent-service@5f2e864 | 4 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `batch-live-reconciliation-service/scripts/` (~4; clean boilerplate `permanent`). `Epic:` the
