@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.6",
     "unified-api-contracts": "0.49.0",
     "unified-trading-library": "0.36.0",
-    "unified-trading-pm": "1.2.368",
+    "unified-trading-pm": "1.2.369",
     "market-data-processing-service": "0.10.11",
     "e2e-testing": "0.25.0",
     "agent-orchestrator": "0.41.0",
@@ -864,7 +864,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.81,
+        "coverage_pct": 83.8,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 31
@@ -1240,7 +1240,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.01,
+        "coverage_pct": 90.02,
         "qg_red_reason": null,
         "large_file_count": 4,
         "warn_file_count": 20
@@ -1965,7 +1965,7 @@
     "deployment-service": "0.48.0",
     "greeks-service": "0.18.0",
     "unified-api-contracts": "0.50.0",
-    "unified-trading-library": "0.37.0"
+    "unified-trading-library": "0.38.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2041,8 +2041,8 @@
       "branch": "staging"
     },
     "unified-trading-library": {
-      "version": "0.37.0",
-      "sha": "b079a2ce1a3d1b81f4f6d4656a36c411a8b63dbb",
+      "version": "0.38.0",
+      "sha": "d443f62dbe76fb788ea54be4860f27105c4d21ff",
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
