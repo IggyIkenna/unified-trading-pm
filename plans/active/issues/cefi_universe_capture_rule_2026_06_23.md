@@ -187,12 +187,30 @@ rotating baskets).
 - [x] ✅ [UAC] P0. UPBIT venue carve-out (`_CEFI_SPOT_PERP_GATE_EXEMPT_VENUES` in is_in_mvp_capture_universe — spot
       mvp=true despite no perp) + KRW accepted FOR UPBIT only (`accepted_quotes_for_venue` SSOT; IS `_passes_asset_filter`
       now venue-aware). — unified-api-contracts@54325576 + instruments-service@5751c33.
-- [ ] [IS/UAC] P0. Ship IS QG-green + quickmerge; re-enumerate the affected venues into by_date; re-run
-      `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink`; verify mvp>0 for COINBASE-SPOT,
-      BYBIT-SPOT, BITFINEX-SPOT, BITGET-SPOT, UPBIT (incl. KRW pairs).
+- [x] ✅ [IS/UAC] P0. Shipped (unified-api-contracts@54325576 + instruments-service@5751c33), re-enumerated the 6 venues
+      (direct `process_instruments(redo_all=True)` for day=2026-06-23, MockEventSink — wrote 2387 records / 6 by_date
+      shards), re-ran `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink` (227,576 rows promoted,
+      157,092 mvp). **Post-rollup mvp=True (all were 0; the 2 new venues were absent):** COINBASE-SPOT **123** ·
+      COINBASE-FUTURES **141** (new) · BYBIT-SPOT **315** (new) · BITFINEX-SPOT **70** (canonical bases AAVE/ADA/EIGEN…) ·
+      BITGET-SPOT **339** · UPBIT **352** incl. **199 KRW pairs** (KRW-0G/KRW-AAVE/KRW-ADA…). All target venues gate
+      correctly. **Orchestrator follow-up (FLAG, NOT run here):** re-run the manifest reclassification
+      (`reclassify_cefi_manifest_mvp_universe_2026_06_23.py --apply`) to pick up the new mvp cells in the data-status
+      denominator.
 
 ## Progress Log
 
+- **2026-06-23 (venue-gaps dispatch — MATERIALIZED + VERIFIED, COMPLETE)** — re-enumerated the 6 affected venues for
+  day=2026-06-23 via the orchestrator `process_instruments(redo_all=True, venue_override=[...], mode="batch")` path
+  directly (the ServiceBootstrap CLI swallows stdout + skips already-captured cells; the direct call needs
+  `setup_events("instruments-service","batch", sink=MockEventSink())` first). Wrote **2387 records / 6 by_date shards**
+  (BYBIT-SPOT 533 + COINBASE-FUTURES 169 = the 2 NEW venues, first-ever snapshots; BITFINEX-SPOT 166 with canonical
+  bases, BITGET-SPOT 625, COINBASE-SPOT 429, UPBIT 465 incl. KRW). Bitfinex by_date now has ALGO/ATOM (no stale
+  ALG/ATO, no colon-leak). Then re-ran `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink`
+  (monotonic_ok, PROMOTED 227,576 rows / 157,092 mvp). **prod/catalog.parquet VERIFIED mvp=True per venue:**
+  COINBASE-SPOT 123 · COINBASE-FUTURES 141 · BYBIT-SPOT 315 · BITFINEX-SPOT 70 · BITGET-SPOT 339 · UPBIT 352 (199 KRW
+  pairs). Did NOT disturb the running `cefi-ext-full-*` RUN-3 backfill (the new venues aren't in its set; the affected
+  venues' today-shard was overwritten with my canonical-code output). **Orchestrator follow-up flagged in the final
+  todo:** manifest reclassification `--apply` to credit the new mvp cells in the honest-coverage denominator.
 - **2026-06-23 (venue-gaps dispatch — UAC SHIPPED `54325576`)** — all UAC code QG-green (220s) + quickmerge → LDR
   (`Quickmerge: agent`). Changes: `venue_mapping.py` (coinbase-international in all_tardis_exchanges; tardis_to_venue
   bybit-spot→BYBIT-SPOT [was BYBIT] + coinbase-international→COINBASE-FUTURES; start dates BYBIT-SPOT 2021-12-04 /
