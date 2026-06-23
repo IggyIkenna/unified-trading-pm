@@ -332,6 +332,48 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-23 (autonomous) — Kalshi canonicalization EXPANDED to sports + EUR-FX collision fix (operator: "do proper kalshi / more crossover")
+
+Operator flagged the cross-venue overlap was too narrow (only ~16 crypto/index groups) and wanted MORE — sports,
+commodities, FX, politics — wherever both venues have genuinely-arbable (same settlement event+time) markets. Two root
+causes found + fixed:
+
+1. **Capture gap** — the series-scoped enumeration only fetched Crypto/Economics/Financials categories → Kalshi's Sports
+   (2239 series) + Politics (2049) weren't enumerated at all. FIXED: `_SERIES_CATEGORIES` += Sports, Politics (IS
+   kalshi.py); `_MAX_SERIES_TOTAL` 200→350.
+2. **Classifier gap** — no Kalshi sports rules. FIXED (UAC classifiers.py): added `_kalshi_sports_group` — maps Kalshi
+   per-GAME markets (`KX{LEAGUE}…GAME` / `*SPREAD` / `*TOTAL` / `*NRFI`) to the SAME `SPORTS_{LEAGUE}_{BETTYPE}` groups
+   Polymarket uses (reuses the existing `_SPORTS_GROUP`), for the 17 leagues with a canonical group. **Arbability
+   judgment (the operator's "you're an LLM, understand the meaning"):** ONLY clean per-game markets map (same game =
+   same settlement = pairable); season-futures / draft / awards / within-match props / minor world leagues
+   (Liiga/KHL/NPB/…) stay OTHER — no false pairs. Verified vs live `/series?category=Sports`: 91 sports series now map
+   (was 0): NFL/NBA/MLB/NHL match+spread+total, EPL/LA_LIGA/SERIE_A/BUNDESLIGA/CHAMPIONS_LEAGUE/WORLD_CUP match, MLB
+   NRFI, tennis, boxing. Total Kalshi non-OTHER series 255→342.
+3. **EUR-FX collision (pre-existing bug) FIXED**: the greedy `KXEURO` prefix wrongly classified EuroLeague/EuroCup
+   basketball + Eurovision as `EUR_UP_DOWN_DAILY`. Dropped bare `KXEURO`; added `KXEURUSD` (the real EUR/USD daily
+   series KXEURUSDD etc. were previously UNMAPPED→OTHER). Now KXEUROLEAGUE*/KXEUROCUP*/KXEUROVISION*→OTHER, KXEURUSD*/
+   KXEUROIMF→EUR. Regression test added.
+
+Shipping: UAC classifiers.py + tests + IS kalshi.py category expansion. KXRIPPLE→XRP + series-scoped enum + throttle
+already on LDR.
+
+**Tracked tail (judgment-heavy, NOT silently deferred):**
+
+- [ ] [UAC] P2. **Politics/geo cross-venue canonicalization** — Kalshi Politics (2049 series: electoral-college
+      KXECDJT/KXECKH, KXTRUMPPUTIN, KXSWINGSTATES, KXMAG, geo) don't cleanly align with Polymarket's TRUMP_STATEMENTS /
+      TRUMP_APPROVAL / ELECTION_PRESIDENT_2028 / GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE groups — the specific events +
+      settlement wording differ, so blanket mapping would create FALSE arb pairs. Needs per-family arbability analysis
+      (which Kalshi political series resolve on the SAME event+criteria as a Polymarket group) + possibly the World
+      category
+  - new shared geo groups. Repo: unified-api-contracts (classifiers + maybe canonical_groups) + instruments-service (add
+    "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23.
+- [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
+      CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
+      CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
+      condition_id by teams+date / strike+expiry / release+date, with a same-settlement-time guard) lives in the
+      strategy/features arb layer, NOT the cqg classifier. Repo: strategy-service (arbitrage_price_dispersion) +
+      features-service. Provenance: operator 2026-06-23 — "so we can easily pair them up properly".
+
 ### 2026-06-23 (autonomous, continuous-flow) — fleet uv.lock unblock + P1 Kalshi-grouping ROOT CAUSE = enumeration KXMVE-flood (NOT the mapper)
 
 **Operator side-requests (DONE first):** (1) PM repo was 322 commits behind, blocked by a dirty
