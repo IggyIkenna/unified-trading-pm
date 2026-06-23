@@ -257,16 +257,7 @@ RUNNING on the verified-fcd6549 stack.
 
 **Cross-cutting findings captured as todos:**
 
-- [ ] [SCRIPT] P2. **Self-enforced rate-limit caps (token-bucket) on the prediction REST adapters** —
-  operator 2026-06-21: reactive backoff wastes time vs a proactive cap at the published limit. Current
-  state is REACTIVE: `kalshi_adapter.py:196` does `if resp.status == 429: await asyncio.sleep(2.0)`
-  (flat sleep AFTER hitting the limit, behind a `max_concurrent` semaphore); polymarket carries
-  `_RETRYABLE_STATUS_CODES={408,429,500,502,503,504}` (retry/backoff). Add a shared async token-bucket
-  limiter sized to each venue's published read limit (Kalshi tiered ~10 rps basic; Polymarket Gamma
-  generous) so the historical-fan-out adapters (Kalshi `/historical` per-series, Polymarket per-market
-  trades) NEVER hit 429 + never burn the discover-then-backoff round-trip. NOTE: the bulk-corpus seed +
-  the 30s live Gamma poll do NOT hit rate limits — this is for the Phase-2 historical fan-out. Repos:
-  market-tick-data-service + instruments-service.
+- [x] ✅ [SCRIPT] P2. **Self-enforced rate-limit caps (token-bucket) on the prediction REST adapters — SHIPPED (mtds@bc31da6, 2026-06-23)**: replaced the REACTIVE 429-backoff-only throttle with a PROACTIVE async token-bucket. `base_prediction_adapter._AsyncTokenBucket` (asyncio + `time.monotonic()` refill, non-blocking `await acquire()`); per-venue caps Kalshi 8/s burst 8 (conservative vs published ~10 rps basic), Polymarket gamma/CLOB 20/s burst 20; `await self._rate_limiter.acquire()` wired before EVERY outbound REST `session.get` in `kalshi_adapter` (get_trades_with_status) + `polymarket_adapter` (get_markets/get_prices/_fetch_trades_page/_fetch_book_raw) — so the Phase-2 historical fan-out (Kalshi `/historical` per-series, Polymarket per-market) never hits 429 + never burns the discover-then-backoff round-trip. The existing `Semaphore(max_concurrent)` + reactive 429-backoff RETAINED as defense-in-depth. 2 token-bucket unit tests; basedpyright clean; 21 prediction-adapter tests pass; QG-green (sentinel 7a6e6b6). (instruments-service Kalshi adapter shares the same `/historical` RSA-PSS path — its limiter is a NICE-TO-HAVE follow-up; mtds carries the fan-out today.) Provenance: autonomous catalogue/backfill session 2026-06-23.
 
 - [x] ✅ [SCRIPT] P1. **`rebuild_prediction_manifest --venue POLYMARKET` filter + v4→v9 re-walk DONE** (re-walk VM mtds-prediction-polyrewalk-20260621-204658, 5244s, terminal): re-walked POLYMARKET cqg 2025-03-14→2026-06-21 → **7196 captured cqg bundles at v9**, reemit_empty 22257, failed_* 0, source_returned_zero_preserved 1175. The `--venue POLYMARKET` filter kept it off the coexisting batch_kalshi seed parquets; the CF-11 phantom fix (skip blank-instrument_id, `reemit_skipped_blank_iid: 2331`) let it complete (the prior v1 crashed at the CF-11 re-emit). v9-schema polish — the 1454 were already captured. — 2026-06-21
 - [x] ✅ [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** — STALE PREMISE, resolved-by-architecture (verified 2026-06-21): `manifest_finalize.py` prediction
