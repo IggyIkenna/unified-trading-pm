@@ -136,8 +136,8 @@ source:
       `migrate_manifest_v8.py` = `oneoff`). `Epic: infrastructure_master`. Target: **unified-trading-library**.
 - [x] ✅ [SCRIPT] P2. Stamp `system-integration-tests/scripts/` (~7; SIT runners = `permanent`).
       `Epic: infrastructure_master`. Target: **system-integration-tests**. — system-integration-tests@6498514 | 7 new + 2 already stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [ ] [SCRIPT] P2. Stamp `unified-trading-api/scripts/` (~5; openapi/persona codegen = `permanent`). `Epic:` the api
-      epic. Target: **unified-trading-api**.
+- [x] ✅ [SCRIPT] P2. Stamp `unified-trading-api/scripts/` (~5; openapi/persona codegen = `permanent`). `Epic:` the api
+      epic. Target: **unified-trading-api**. — unified-trading-api@5b60a34 | 5 stamped (1 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `deployment-api/scripts/` (~5; 1 ghost-venue one-shot). `Epic: deployment_and_user_management`.
       Target: **deployment-api**.
 - [ ] [SCRIPT] P2. Stamp `alerting-service/scripts/` (~5; clean `permanent`). `Epic: observability_master`. Target:
