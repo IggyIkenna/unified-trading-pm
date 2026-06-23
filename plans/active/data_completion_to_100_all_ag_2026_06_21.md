@@ -1238,8 +1238,13 @@ stops it definitively; the legacy-venue DELETE (IS@7b6512c) is re-runnable inter
       `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`.
       Currently PAUSED 2026-06-22. ✅ — IS PR#523 merged 2026-06-22T14:21Z; image rebuilt (sha256:0b7f3f7a = 0.35.0
       :latest, built 14:31Z); scheduler ENABLED — instruments-service@22398eb
-- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator);
-      pause+delete+canonical-reseed per-AG if found.
+- [x] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator);
+      pause+delete+canonical-reseed per-AG if found. ✅ — 22,826 phantoms flipped (sports:5509 cefi:69 prediction:16267
+      tradfi:981); 8 consolidator schedulers paused/resumed; local enumerator reseeded all 4 AGs (Cloud Run containers
+      broken — UAC import error in new instruments-service:latest image, see
+      plans/active/issues/expected_universe_cloud_run_uac_import_failure_2026_06_23.md);
+      post-fix dry-run: sports:348 cefi:34 prediction:698 tradfi:4 (all transient live-pipeline writes, legacy rows gone)
+      — instruments-service@slot5·human-planning-vm 2026-06-23
 
 **P1 (DRAFTED, NOT shipped — INCOMPLETE):** the UTL writer fix was started (asset_group field on `AvailabilityRecord`,
 `MissingAssetGroupError`, serializer + call-site wiring) but the agent died (transient API rate-limit) BEFORE writing
