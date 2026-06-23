@@ -59,9 +59,14 @@ The "spot requires a perp for the base at that venue" rule has a CLOSED allow-li
 (LST) / liquid-restaking (LRT) tokens** whose SPOT we DO capture even when NO perp exists for them (these are the
 `carry_staked_basis` / DeFi-seasonal-rewards legs — we want their spot liquidity; they often have no perp anywhere):
 
-- **Restaking:** EIGEN, KING, ETHFI
-- **ETH LSTs/LRTs:** STETH, WSTETH, RETH, WEETH, EETH, CBETH (+ the staking class — sfrxETH/osETH/ankrETH etc. as they list)
-- **SOL LSTs:** MSOL (Marinade), JITOSOL + JTO (Jito), BSOL (+ class as they list)
+**Include ALL wrapped + unwrapped equivalents of each (operator 2026-06-23).** Extras are harmless (allow-list — only
+ones a CEX actually lists spot take effect):
+
+- **Restaking (spot-only):** EIGEN, ETHFI, KING
+- **ETH LSTs/LRTs (wrapped + unwrapped):** STETH, WSTETH (Lido); RETH (RocketPool); CBETH (Coinbase); EETH, WEETH
+  (ether.fi); FRXETH, SFRXETH (Frax); ANKRETH; OSETH (StakeWise); SWETH, RSWETH (Swell); ETHX (Stader); METH (Mantle);
+  + LRTs RSETH (Kelp), EZETH (Renzo), PUFETH (Puffer), RSTETH
+- **SOL LSTs:** MSOL (Marinade), JITOSOL + JTO (Jito), BSOL (BlazeStake), JSOL, SCNSOL, INF (Sanctum)
 
 Rule: if `base ∈ STAKING_SPOT_EXCEPTION` → SPOT is mvp=true on ANY venue that lists it, **regardless of perp existence**.
 This is the ONLY spot-without-perp carve-out. Consequence for **Upbit** (and other spot-only venues): NOT generally
