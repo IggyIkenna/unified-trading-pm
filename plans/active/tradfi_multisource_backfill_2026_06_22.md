@@ -72,17 +72,27 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       in the alive branch; and `_is_vix_cash_index(instr)` (instrument_type=index named VIX, or blank-id CBOE index
       legacy cell — DXY/treasury indices keep their own non-VIX id → unaffected) → skip the whole instrument so no VIX
       cash-index cell is ever seeded. — instruments-service@814b14a.
-- [x] [SCRIPT] P0. **Manifest correction (one-off, snapshot+GATE)** —
-      `instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py` (mirrors
-      `populate_v9_index_columns_inplace.py`): remove EU cells older than the L-floor, remove ALL VIX cash-index cells,
-      remove derived-databento (15m/24h source=databento) EU. GATE: captured/attempted_failed may only drop by the
-      VIX-index captured/af count (sanctioned), never else. APPLIED to live tradfi `_index` 2026-06-23 (snapshot
-      `_index/snapshots/pre_universe_floor_clip_2026_06_23.parquet`). EU universe 1,606,687 → 1,466,157 (−140,530
-      derived-databento phantom cells; EU-floor drop = 0, the universe was already clipped at the L0 floor); VIX
-      cash-index 1,651 cells removed (37 captured = Barchart series). GATE proof: captured 733,375 → 733,338 (delta 37 =
-      sanctioned VIX-index only), attempted_failed 16,346 → 16,346 (unchanged). Live re-read VERIFIED post-apply:
-      instrument_type=index rows = 0, derived-databento 15m/24h EU = 0, VX futures captured = 135 preserved. —
-      instruments-service@814b14a.
+- [x] [SCRIPT] P0. **Manifest correction (one-off, snapshot+GATE) — REWRITTEN to row-preserving reclass + re-APPLIED
+      2026-06-23** — `instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py` (mirrors
+      `populate_v9_index_columns_inplace.py`). **The 814b14a version was a NO-OP on EU** (it floor-clipped only
+      ohlcv_1s/1m which were already inside the 16y L0 floor = 0 dropped, and gated derived-removal on
+      `source==databento` while the 140,530 ohlcv_15m EU are `source=massive` = 0 matched) — so the live EU stayed
+      inflated at 1,466,157 and the "EU→1,466,157 / index rows=0 / derived 15m EU=0" claim above was inaccurate (measured
+      live: ohlcv_15m EU still 140,530, trades/tbbo/mbp_10 out-of-rolling-window still EU). **Rewrote** to: (1)
+      **reclass IN PLACE** EU→`empty_confirmed` with typed `EXPECTED_*` reasons (rows PRESERVED, never dropped — the
+      SSOT-canonical honest-absence flip; supersedes the prior row-DROP design); (2) floor-clip ALL fetched data_types
+      by DATE per billing level via UAC `earliest_allowed_start` (L0 16y ohlcv_1s/1m, L1 1y trades/tbbo, L2 1mo mbp_10) →
+      `EXPECTED_OUT_OF_COVERAGE_WINDOW`; (3) reclass derived ohlcv_15m/24h EU (ANY non-Yahoo/FX source) →
+      `EXPECTED_OUTSIDE_PROCESSING_SCOPE`; (4) VIX cash-index EU → `EXPECTED_DEPRECATED_DATA_TYPE` (0 cells — already
+      absent from the manifest). **ABSOLUTE GATE: captured + attempted_failed + row-count UNCHANGED** (only EU→empty
+      moves). APPLIED to live tradfi `_index` 2026-06-23 (fresh snapshot
+      `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 =
+      floor-clip 241,085 [trades 108,221 + tbbo 107,799 + mbp_10 25,065] + derived ohlcv_15m 140,530; VIX-index 0).
+      **GATE proof: captured 733,338 → 733,338 (delta 0), attempted_failed 16,358 → 16,358 (delta 0), rows 6,668,467
+      preserved.** Live re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093, `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530,
+      remaining EU = real fetchable target (ohlcv_1m 313,720 + ohlcv_1s 308,871 + in-window trades 219,144/tbbo
+      215,617/mbp_10 7,908 + corporate_action/earnings 9,641 each), **135 VX futures_chain captured cells preserved
+      untouched**. Honest coverage (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
 - [ ] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects** (script SHIPPED; --apply RUNNING 2026-06-23) —
       `instruments-service/scripts/delete_vix_cash_index_gcs_objects_2026_06_23.py` deletes the VIX cash-index parquet
       objects (instrument_type=index at venue=CBOE — CBOE's only cash index is VIX, across batch_massive/batch_databento
