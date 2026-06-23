@@ -54,13 +54,31 @@ Firestore-side-store ci_status migration, and the prod image build.
 
 ### Promote-flow correctness
 
-- [ ] [WORKFLOW] P0. **`staging-to-main` must promote non-bumping QG-green content** (not only repos in
-      `staging_commits`) — bug #11; non-breaking staging merges are currently INVISIBLE to the drain (only the manual
-      fallback works). (cicd_contract_hardening #35 ≡ self_healing G10; tracked HERE as the promotion-flow owner)
-- [ ] [WORKFLOW] P0. Break the bottom-up dep-order deadlock — a T0 lib stuck `STAGING_GREEN` on chore content blocks the
-      cone; verify once #11 lands. (cicd_contract_hardening, self_healing G10)
-- [ ] [WORKFLOW] P1. Fix the `Merge staging → main` step shell bug (`& ready_set`, missing `--title/--body`) + smoke.
-      (self_healing G10)
+- [x] ✅ [WORKFLOW] P0. **`staging-to-main` must promote non-bumping QG-green content** (not only repos in
+      `staging_commits`) — bug #11 FIXED 2026-06-23 (PM@<sha>). Root cause (confirmed live, tree-SHA verified): the
+      promote set was derived purely from version-bump signals — idempotency skipped on empty `staging_commits`
+      (`staging-to-main.yml:133`) and the promote `changed` set was `staging_versions != versions` (`:592`) — so 15
+      repos with non-bumping content on staging (deployment-api, strategy-service, execution-service, instruments,
+      uts-ui, alerting, …) were INVISIBLE to the drain; main starved. Fix: a **content-ahead probe** (tree-SHA equality
+      — squash-count-proof, unlike `compare/.files`) exports `CONTENT_AHEAD_REPOS`; the idempotency gate + STAGE 1.8 +
+      the promote loop now use the candidate set `version-delta ∪ content-ahead`; the version-promote/cascade guards on
+      `old != new` so a content-only promote merges to main with NO spurious dependency-update cascade. Validated
+      locally against the live manifest (candidates = 19 content-ahead ∪ {uac,utl} version-only = 21; cascade fires only
+      for uac 0.48→0.49 + utl 0.35→0.36). Reuses dep-order + quarantine + cure-B unchanged; probe degrades to
+      version-only on error. **Continuous-verification**: the next `*/15` run drains the 15 backlog repos staging→main;
+      confirm a content-only repo's tree reaches main. (cicd_contract_hardening #35 ≡ self_healing G10; promotion-flow owner)
+- [x] ✅ [WORKFLOW] P0. Break the bottom-up dep-order deadlock — a T0 lib stuck `STAGING_GREEN` on chore (non-bumping)
+      content blocks the cone — RESOLVED-BY-#11 (2026-06-23). The deadlock was: a T0 lib's non-bumping content never
+      promoted to main → never emitted `MAIN_GREEN` → STAGE 1.8 kept every dependent `SKIPPED (dep not on main yet)`
+      forever. With bug #11 fixed, the T0 lib's content-only changes now promote → on-main QG emits `MAIN_GREEN` → the
+      cone drains bottom-up on subsequent `*/15` runs (STAGE 1.8 already implements the backlog-drain; #11 supplies the
+      missing first hop). **Continuous-verification**: watch the cone unblock as `MAIN_GREEN` propagates after the first
+      content drain. (cicd_contract_hardening, self_healing G10)
+- [x] ✅ [WORKFLOW] P1. Fix the `Merge staging → main` step shell bug (`& ready_set`, missing `--title/--body`) + smoke —
+      ALREADY FIXED on `origin/main` (verified 2026-06-23): `changed & ready_set` is valid Python set-intersection
+      inside the promote-step heredoc (`staging-to-main.yml:596`), and `gh pr create` carries
+      `--title "chore(release): promote staging to main"` + `--body "$BODY"` (`:682-688`). Landed via the cure-B
+      promote-path unification PM@9cdecc8ae (on main); YAML validates clean. (self_healing G10)
 - [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR checks after
       lock clears. (cicd_contract_hardening #20)
 - [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
