@@ -3,7 +3,6 @@ title: "execution-service: migrate aioresponses test mocks → adapter-layer moc
 created: 2026-06-23
 status: active
 priority: P2
-author: ikennaigboaka [slot·laptop]
 source:
   - plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md
   - plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
