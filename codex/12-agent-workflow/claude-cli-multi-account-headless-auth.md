@@ -116,18 +116,18 @@ The orchestrator wires this via two layers:
 
 ```bash
 # Prove setup token works headless (no seed needed):
-set -a; . ~/.claude-accounts/harsh-primary.env; set +a
+set -a; . ~/.claude-accounts/sub-a-ikenna.env; set +a
 claude -p 'reply AUTH_OK'   # → AUTH_OK
 
 # Prove the interactive headless recipe (with seed):
 mkdir -p /tmp/ck && printf '%s' \
   '{"theme":"dark","hasCompletedOnboarding":true,"hasCompletedProjectOnboarding":true,"hasTrustDialogAccepted":true,"bypassPermissionsModeAccepted":true}' \
   > /tmp/ck/.claude.json
-tmux new-session -d -s ck "CLAUDE_CONFIG_DIR=/tmp/ck bash -c 'source ~/.claude-accounts/harsh-primary.env; cd /tmp; exec claude'"
+tmux new-session -d -s ck "CLAUDE_CONFIG_DIR=/tmp/ck bash -c 'source ~/.claude-accounts/sub-a-ikenna.env; cd /tmp; exec claude'"
 # → skips wizard, reaches chat prompt authenticated (accept one folder-trust prompt with Enter)
 
 # Prove the orchestrator spawn path:
-python3 -c "from server import tmux_spawn; print(tmux_spawn.spawn(slot_id=99, boot_prompt='reply SPAWN_WORKS', cwd='/tmp', env_file='$HOME/.claude-accounts/harsh-primary.env'))"
+python3 -c "from server import tmux_spawn; print(tmux_spawn.spawn(slot_id=99, boot_prompt='reply SPAWN_WORKS', cwd='/tmp', env_file='$HOME/.claude-accounts/sub-a-ikenna.env'))"
 tmux capture-pane -t orch-slot-99 -p | tail   # → authenticated, replied SPAWN_WORKS
 ```
 
@@ -154,7 +154,7 @@ file.
 ├── sub-a-ikenna.env                 # chmod 600
 ├── sub-b-iggy2london.env            # chmod 600
 ├── sub-c-ikenna-odum.env            # chmod 600
-└── harsh-primary.env                # chmod 600
+└── sub-d-odum1default.env           # chmod 600
 ```
 
 (Current roster verified 2026-05-28: 4 accounts, all with setup-tokens minted, all distributed to both
@@ -192,8 +192,8 @@ serve which worker slots. This "shared pool" design means:
 - The pool is the union of all `accounts.json` entries with `failover_allowed: true` (default) and a valid
   `oauth_token_env_file`.
 
-**Why**: the 4 accounts (sub-a-ikenna, sub-b-iggy2london, sub-c-ikenna-odum, harsh-primary) exist so BOTH operators can
-survive independently. Restricting by operator tag would waste the cross-operator failover benefit.
+**Why**: the 4 accounts (sub-a-ikenna, sub-b-iggy2london, sub-c-ikenna-odum, sub-d-odum1default) exist so BOTH operators
+can survive independently. Restricting by operator tag would waste the cross-operator failover benefit.
 
 SSOT: `plans/active/cross_operator_auth_failover_2026_05_29.md`.
 

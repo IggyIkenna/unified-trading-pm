@@ -7,14 +7,14 @@
       "id": "harsh-this-box",
       "label": "Harsh (this box)",
       "url": "",
-      "account_id": "harsh-primary",
+      "account_id": "sub-a-ikenna",
       "default": true
     },
     {
       "id": "demo",
       "label": "Demo (mock)",
       "url": "/demo",
-      "account_id": "harsh-primary"
+      "account_id": "sub-a-ikenna"
     }
   ]
 }
