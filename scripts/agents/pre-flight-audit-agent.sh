@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Pre-Flight Audit Agent (LLM-Powered)
 # Uses agent (model: auto - FREE) to audit quality compliance & Cursor rules
 # Runs BEFORE quality gates in quickmerge

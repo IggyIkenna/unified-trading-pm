@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Codex archetype doc loader for the prospectus generator.
 
 Maps StrategyArchetype enum values to their kebab-case codex doc filenames,

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Prettier wrapper that auto-stages files prettier modifies.
 #
 # Why: the upstream mirrors-prettier pre-commit hook runs `prettier --write` on staged

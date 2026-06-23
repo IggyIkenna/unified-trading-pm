@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # quality-gates-base-codex v1.0 — owned by unified-trading-pm
 #
 # Shared quality-gate body for docs-only repos (no Python source directory).

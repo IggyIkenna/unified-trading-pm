@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP — CanonicalFuturesContract construction kwarg validation.
 
 Enforces tradfi_master Q1 (UAC@2ac74e2 Phase 1A): every

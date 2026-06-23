@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Pre-Flight Audit for Quick Merge
 # Runs BEFORE quality gates to catch issues early
 #

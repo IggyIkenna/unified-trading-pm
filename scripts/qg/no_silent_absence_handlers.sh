@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: no-silent-absence-handlers
 # For every *_handler.py in MTDS + instruments-service, every function whose
 # name matches handle_*|collect_*|backfill_*|_fetch_* MUST contain at least

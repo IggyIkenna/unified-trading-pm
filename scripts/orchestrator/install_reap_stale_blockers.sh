@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # install_reap_stale_blockers.sh — install the stale-blocker reaper systemd timer.
 #
 # Must run as root (or with sudo) on the orchestrator VM.

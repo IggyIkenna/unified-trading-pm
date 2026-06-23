@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG snapshot staleness checker (B-018 Phase 4.A monitoring, 2026-05-15).
 
 Checks whether a QG snapshot parquet has been written to GCS for each of the

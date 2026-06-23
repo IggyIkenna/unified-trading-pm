@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-tab-worktrees.sh — provision + manage per-slot worktrees for parallel agent tabs.
 #
 # 3-tier isolation model (see codex/05-infrastructure/per-tab-worktrees.md):

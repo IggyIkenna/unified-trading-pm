@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Install launchd job for weekly audit-reflog-resets.
 # Run from: workspace root. Uses (cd to script dir) to find workspace root.
 set -euo pipefail

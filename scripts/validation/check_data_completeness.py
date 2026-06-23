@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Data completeness check script for unified-trading-pm.
 
 Verifies that each monitored data source has delivered the expected number of

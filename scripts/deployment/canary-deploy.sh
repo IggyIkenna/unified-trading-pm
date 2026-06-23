@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # DEPRECATED 2026-05-08 — wrapper to canonical deployment-service Cloud Run script.
 #
 # Per CLAUDE.md "VM launcher script SSOT (codified 2026-05-07)" + 2026-05-08

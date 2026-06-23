@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_mdps_bar_available_at_stamping.py (Phase 0.6 QG STEP).
 
 Run via pytest from a venv that has the workspace dependencies — pure Python,

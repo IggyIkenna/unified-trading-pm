@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Escalation emitter — append needs_code_scan todos to the gap tracker.
 
 Reads the capability manifest, finds ``needs_code_scan`` gap edges WITHOUT an

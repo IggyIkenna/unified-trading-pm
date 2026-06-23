@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §11 — Coverage Regression Prevention
 # Checks: MIN_COVERAGE calibration, fail_under alignment, cov-fail-under wired.
 # Usage: bash unified-trading-pm/scripts/audit/s11-coverage.sh

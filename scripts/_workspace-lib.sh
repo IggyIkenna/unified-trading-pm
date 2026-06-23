@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # _workspace-lib.sh — shared helpers for unified-trading-pm scripts
 # Source this file: source "$(dirname "${BASH_SOURCE[0]}")/_workspace-lib.sh"
 # Do NOT execute directly.

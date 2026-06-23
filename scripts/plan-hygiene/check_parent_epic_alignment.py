@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Soft check: detect active plans whose body-keyword profile doesn't match their
 declared parent_epic.
 

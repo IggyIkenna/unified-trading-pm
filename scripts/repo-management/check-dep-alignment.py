@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 check-dep-alignment.py — Dependency Reconciliation Gate (Phase 4)
 

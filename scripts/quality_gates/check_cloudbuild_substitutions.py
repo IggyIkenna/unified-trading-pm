@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.19 — cloudbuild.yaml unescaped-substitution validator.
 
 Cloud Build parses EVERY step string (``args`` / ``script`` / ``env``) for

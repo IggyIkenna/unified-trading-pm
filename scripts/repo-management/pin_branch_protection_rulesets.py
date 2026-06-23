@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Pin each repo's branch-protection RULESET required-status-check contexts to the
 check-run name that repo's CURRENT workflow file actually emits — so the gates never
 drift when a Quality Gates workflow is renamed.

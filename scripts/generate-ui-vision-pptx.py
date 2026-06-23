@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate the Unified Trading Platform UI/UX Redesign Vision PowerPoint.
 
 Uses real strategy data, SMA model, and actual P&L components from the system.

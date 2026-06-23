@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Conflict-marker hygiene gate — catches committed git conflict markers in plan/issue docs,
 # INCLUDING the two forms the frontmatter/todo-format checks miss:
 #   (1) MID-LINE markers, e.g. "...NOT a blocker). <<<<<<< Updated upstream"

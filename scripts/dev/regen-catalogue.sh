@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # regen-catalogue.sh — Regenerate strategy + instrument catalogue artefacts on GCS.
 #
 # Runs the UAC enumeration scripts (strategy envelope + availability +

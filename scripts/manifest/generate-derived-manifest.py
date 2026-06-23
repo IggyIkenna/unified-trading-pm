@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Extract dependencies from all pyproject.toml files and generate a derived manifest.
 
 Reads workspace-manifest.json for repo list and topological order, then parses each

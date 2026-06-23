@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG snapshot writer (B-018 Phase 4.A).
 #
 # Runs `bash scripts/quality-gates.sh --quick` for every repo in

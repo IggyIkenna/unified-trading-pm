@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # ADMIN ONLY: Force-sync all workspace repos — local HEAD overwrites remote main.
 #
 # What this does per repo (in topological tier order, parallel within each tier):

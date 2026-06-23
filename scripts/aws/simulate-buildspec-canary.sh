@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # Simulate buildspec.aws.yaml for 3 canary repos (codebuild-canary-run gate).
 # Runs the equivalent of AWS CodeBuild phases locally without AWS/CodeBuild.

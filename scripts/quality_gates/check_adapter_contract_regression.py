@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.83 — adapter contract-call regression ratchet (per-file minimums).
 
 Enforces CLAUDE.md "Every adapter MUST classify errors via UAC ``classify_venue_error()``

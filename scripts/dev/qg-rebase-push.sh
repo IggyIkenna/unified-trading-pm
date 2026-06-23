@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # qg-rebase-push.sh — close the "local QG green but CI red" gap for per-repo LDR pushes.
 #

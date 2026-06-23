@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # cursor-storage-management.sh — Cursor IDE storage management
 # Analyzes and cleans up Cursor storage to reduce disk usage
 #

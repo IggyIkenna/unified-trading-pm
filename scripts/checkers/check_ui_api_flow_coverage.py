@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """UI/API flow coverage checker -- validates test coverage against flow manifest.
 
 Loads ui-api-flow-test-manifest.yaml and checks that each declared journey

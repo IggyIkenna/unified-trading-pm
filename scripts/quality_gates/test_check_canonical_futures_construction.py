@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_canonical_futures_construction.py QG step."""
 
 from __future__ import annotations

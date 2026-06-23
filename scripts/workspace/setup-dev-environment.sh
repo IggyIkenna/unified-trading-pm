@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-dev-environment.sh — Automated dev environment setup for unified trading system.
 #
 # SSOT: unified-trading-pm/scripts/workspace/setup-dev-environment.sh

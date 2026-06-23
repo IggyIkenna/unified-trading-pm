@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Pre-merge vs post-merge feature-output parity diff.
 
 SSOT: unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md § Phase 6.

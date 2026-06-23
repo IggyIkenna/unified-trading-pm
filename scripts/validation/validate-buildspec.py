@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate AWS CodeBuild buildspec YAML files.
 
 Uses jsonschema + PyYAML (no extra deps). Schema: minimal embedded schema per AWS docs

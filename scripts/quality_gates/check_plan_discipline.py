@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Group A — plan-discipline grep-checks (G-2 + G-5 + G-13).
 
 Three sub-rules:

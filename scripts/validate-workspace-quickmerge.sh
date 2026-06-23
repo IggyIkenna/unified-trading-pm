@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Workspace Quickmerge Validation — run quickmerge --unit-only per repo in dependency order
 #
 # Reads workspace-manifest.json topologicalOrder; for each repo: run quickmerge --unit-only --no-pr.

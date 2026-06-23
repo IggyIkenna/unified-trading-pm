@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # demo-mode.sh — Single-command stakeholder demo environment
 # Starts all services (mock mode) + all UIs (VITE_MOCK_API=true)
 # No credentials required.

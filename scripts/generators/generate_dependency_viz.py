@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate interactive Mermaid dependency graph from workspace-manifest.json.
 
 Produces a Mermaid diagram of the full dependency graph, color-coded by tier:

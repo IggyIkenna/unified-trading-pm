@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Render or verify ``unified-trading-system-ui/lib/architecture-v2/coverage.ts``
 from the UAC archetype-capability manifest.
 

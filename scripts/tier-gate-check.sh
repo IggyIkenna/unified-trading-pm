@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Tier gate enforcement: verify all repos at tier N-1 are passing before working on tier N.
 # Usage: bash scripts/tier-gate-check.sh <repo_name> [--manifest path/to/workspace-manifest.json]
 # Exit 0 = gate open, Exit 1 = blocked (some T(N-1) repo is not passing).

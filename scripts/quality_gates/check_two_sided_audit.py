@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Phase 6B QG post-gate: two-sided prospectus vs codex audit (baselined ratchet).
 
 Runs ``audit_prospectus_vs_codex.py``'s ``run_audit()`` directly and compares

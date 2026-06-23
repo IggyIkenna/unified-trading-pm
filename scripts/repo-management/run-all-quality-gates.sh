@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # run-all-quality-gates.sh — Full pre-push validation pipeline
 #
 # Runs in order:

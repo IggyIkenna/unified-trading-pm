@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 check-pyrightconfig-extrapaths.py — Validate pyrightconfig.json extraPaths against
 the workspace manifest declared dependencies.

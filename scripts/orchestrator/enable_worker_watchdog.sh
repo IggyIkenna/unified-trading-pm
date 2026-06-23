@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # enable_worker_watchdog.sh — SSM script to enable ORCHESTRATOR_WORKER_WATCHDOG_ENABLED on one VM.
 #
 # Usage (run via AWS SSM SendCommand on each target VM, one at a time):

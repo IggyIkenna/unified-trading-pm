@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # sync-main — Admin force-sync all repos to main (preserve-local by default).
 #
 # Runs admin-force-sync-all-to-main.sh with --admin-confirm and default message.

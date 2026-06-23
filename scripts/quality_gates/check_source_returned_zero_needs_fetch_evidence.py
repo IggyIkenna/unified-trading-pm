@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.99 — ``SOURCE_RETURNED_ZERO`` reachable from an error/except branch MUST carry ``fetch_evidence=``.
 
 Companion to STEP 5.86 (``check_unrouted_source_returned_zero.py``). Where 5.86 ratchets raw

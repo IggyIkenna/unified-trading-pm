@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate workspace-manifest.json against schema and topological order.
 
 Phase 1: plans_to_deployable_unified_audit.md

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # apply_resource_limits.sh — Apply systemd MemoryHigh/MemoryMax/TasksMax limits
 # to orchestrator.service on the central API host (i-0c9b283b31d6b5ca7).
 #

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Deterministic plan-skeleton extractor for the Plan Health Agent.
 #
 # The full epics+active+issues corpus is ~3 MB (~800K tokens) — ~4x Haiku's 200K

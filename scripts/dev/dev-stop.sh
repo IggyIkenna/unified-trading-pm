@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # dev-stop.sh — Stop all dev servers started by dev-start.sh
 #
 # Usage:

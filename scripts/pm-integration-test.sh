@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # PM Integration Test — verify all repos integrate with unified-trading-pm scripts.
 #
 # Uses the canonical integration test in PM: tests/integration/test_pm_scripts_integration.py

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Rolls out canonical workflow templates to workspace repos.
 #
 # Two-tier template structure:

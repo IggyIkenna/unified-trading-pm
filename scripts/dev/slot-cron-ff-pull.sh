@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # slot-cron-ff-pull.sh — safe fast-forward-only puller for slot worktrees.
 #
 # Designed for cron (default cadence: every 5 minutes). For every repo worktree

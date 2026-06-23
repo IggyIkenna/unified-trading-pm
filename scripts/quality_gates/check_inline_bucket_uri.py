@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.69 — inline ``f"gs://..."`` / ``f"s3://..."`` cloud-URI formatter ratchet.
 
 Enforces CLAUDE.md "Bucket-name SSOT (b+)": every bucket lookup goes through

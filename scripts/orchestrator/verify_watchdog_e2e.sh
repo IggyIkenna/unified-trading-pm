@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # verify_watchdog_e2e.sh — Post-rollout E2E verification for WorkerLivenessWatchdog.
 #
 # Queries the activity_log on all 11 VMs (via SSM) to measure:

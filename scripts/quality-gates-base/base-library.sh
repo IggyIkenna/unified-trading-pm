@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # quality-gates-base-library v1.0 — owned by unified-trading-pm
 #
 # Shared quality-gate body for Python library/interface repos.

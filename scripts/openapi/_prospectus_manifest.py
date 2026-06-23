@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Capability manifest reader helpers for the prospectus generator.
 
 Reads capability-manifest.json and provides per-archetype queries:

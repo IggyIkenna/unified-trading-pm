@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # profile-cpu.sh — CPU profiling for a running service or a benchmark run
 #
 # Usage:

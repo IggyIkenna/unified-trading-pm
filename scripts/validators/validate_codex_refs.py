@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate codex references in T0-T2 repos and cursor rules.
 
 Phase 8: plans_to_deployable_unified_audit.md (Approach A — validator only).

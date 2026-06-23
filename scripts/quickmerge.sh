@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # CANONICAL QUICKMERGE — unified-trading-system
 #
 # Single source of truth for all repos. Copy to scripts/quickmerge.sh.

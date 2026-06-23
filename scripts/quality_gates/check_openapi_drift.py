@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Group D — openapi.json drift gate. **DEPRECATED 2026-05-16 — DO NOT WIRE INTO QG.**
 
 ORIGINAL INTENT: compare committed `unified-trading-api/openapi.json` against the

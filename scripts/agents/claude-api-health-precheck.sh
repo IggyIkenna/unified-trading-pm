@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # claude-api-health-precheck.sh — Check Claude API health before invoking agent workflows.
 #
 # Checks the last run of claude-api-health-monitor.yml via GH API.

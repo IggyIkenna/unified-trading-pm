@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # Create Cloud Build feature-branch triggers for all repos.
 # Run from workspace root. Requires gcloud auth and Cloud Build API.

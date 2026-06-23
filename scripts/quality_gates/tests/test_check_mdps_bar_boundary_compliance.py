@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for STEP 5.74 — check_mdps_bar_boundary_compliance.py.
 
 ≥8 tests covering: valid source (no violations), each banned pattern triggers,

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # teardown-tab-worktrees.sh — remove a per-slot worktree fleet.
 #
 # Usage:

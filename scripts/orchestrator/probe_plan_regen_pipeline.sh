@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # probe_plan_regen_pipeline.sh — synthetic health probe for the
 # PM-pull → PlanRegenLoop → /api/backlog ingestion pipeline.
 #

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 set -euo pipefail
 
 # log-manifest-mutation.sh — Append a JSON audit line to plans/audit/manifest-mutations.jsonl

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # cron-self-pull-lib.sh — shared emitter for the syntax-gated cron self-pull snippet.
 #
 # SOURCED by cron installers so the self-pull pattern is DRY in source, even though each

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Counterfactual "minimal unlock set" engine (Wave-2 #1).
 
 For every UNAVAILABLE capability edge in the manifest, derive the smallest set

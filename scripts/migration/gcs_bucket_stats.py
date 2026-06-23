@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Snapshot per-bucket GCS storage stats from Cloud Monitoring (instant, no object walk).
 
 Reads the ``storage.googleapis.com/storage/v2/total_bytes`` and ``.../total_count``

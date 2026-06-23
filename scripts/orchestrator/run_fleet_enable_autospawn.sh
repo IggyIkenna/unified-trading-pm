@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # run_fleet_enable_autospawn.sh — Sequential per-VM rollout of ORCHESTRATOR_AUTOSPAWN_ENABLED=true.
 #
 # Rolls autospawn to all 11 orchestrator VMs ONE AT A TIME. After each VM:

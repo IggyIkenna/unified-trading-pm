@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §4 — Architecture (+ §12 Cloud-Agnostic, which overlaps)
 # Checks: cross-service imports, cloud SDK confinement, GCS/boto3 refs, PubSub abstraction.
 # Usage: bash unified-trading-pm/scripts/audit/s04-architecture.sh

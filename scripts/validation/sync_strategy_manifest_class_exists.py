@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Set maturity.code.class_exists false when the manifest class_path module is absent.
 
 Legacy strategy modules were removed or moved under v2; this keeps the SSOT manifest

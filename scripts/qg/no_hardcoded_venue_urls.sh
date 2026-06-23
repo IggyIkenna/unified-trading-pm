@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: no-hardcoded-venue-urls
 # Handlers MUST source URLs from IS-loaded InstrumentRecord.source_archive_url_template.
 # Scanning for known hardcoded URL patterns in MTDS handler files.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: no-blank-empty-reason
 # Every record_empty() call MUST supply a typed EmptyConfirmedReason enum value.
 # Blank reason strings raise LegacyBlankErrorReasonError at runtime.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # G1.8 — UAC <-> UI archetype-capability parity.
 #
 # Reads the committed UAC manifest

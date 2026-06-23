@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # check-data-completeness.sh — Daily data completeness check wrapper.
 #
 # Delegates to the Python implementation at scripts/validation/check_data_completeness.py.

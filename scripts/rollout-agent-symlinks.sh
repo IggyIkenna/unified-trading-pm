@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # rollout-agent-symlinks.sh — Commit CLAUDE.md + SUB_AGENT_MANDATORY_RULES.md symlinks to ALL repos
 #

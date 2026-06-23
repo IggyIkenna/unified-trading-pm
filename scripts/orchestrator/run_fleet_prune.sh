@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Fleet-wide zombie prune — runs prune_state_db_zombies.py on all 11 orchestrator VMs via AWS SSM.
 #
 # Prerequisites:

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Create or add a new version of a secret in GCP Secret Manager.
 # Use from workspace root or PM repo. Requires gcloud CLI and auth.
 #

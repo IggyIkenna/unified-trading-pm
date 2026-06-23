@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # run-version-alignment.sh — Check and optionally fix dependency alignment
 #
 # Run BEFORE run-all-setup.sh. Ensures pyproject.toml, workspace-manifest.json,

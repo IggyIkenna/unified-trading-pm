@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: sports_master
+# Lifecycle: oneoff
+# Delete-when: after prod-run + orphan-sweep=0
 """Migrate player mappings from football-mapped-consolidated to sports-data bucket.
 
 Reads players.csv from old NSBS bucket, deduplicates by api_football_player_id,

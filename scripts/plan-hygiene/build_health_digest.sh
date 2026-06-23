@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Deterministic plan-health digest builder (for the daily Plan Health Agent GHA).
 #
 # Does ALL the heavy lifting deterministically — plan counts, the canonical hygiene

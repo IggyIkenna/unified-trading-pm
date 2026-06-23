@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Promotion-lag monitor — a PURE BRANCH-PAIR lag monitor (LDR↔staging↔main out of sync > N min).
 
 Under the Path-B / LDR-SSOT model the IDE's local-vs-upstream is ~always 0 (a slot is on

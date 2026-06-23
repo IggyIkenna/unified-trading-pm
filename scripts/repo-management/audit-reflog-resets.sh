@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Audit all workspace repos for reset/reset --hard/reset to origin in reflog.
 # Reports repos that may have had commits discarded. For manual review.
 #

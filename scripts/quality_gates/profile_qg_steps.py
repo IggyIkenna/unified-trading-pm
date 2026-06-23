@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Profile quality-gates.sh step wall-times by instrumenting QG output.
 
 Runs quality-gates.sh on a target repo, intercepts output line-by-line,

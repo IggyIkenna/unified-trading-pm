@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # rollout-remove-version-bump-hook.sh
 #
 # Removes the local bump-library-version pre-commit hook from all repos.

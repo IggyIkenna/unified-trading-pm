@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Route 53 DNS routing setup for unified-trading-system-ui on AWS.
 #
 # ARCHITECTURE: weighted A-record routing between GCP Cloud Run and AWS ALB.

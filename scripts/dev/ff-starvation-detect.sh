@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # ff-starvation-detect.sh — detect FF-pull starvation for ONE repo worktree.
 #
 # Failure mode (Item 5 of workspace_config_drift_remediation): a slot worktree

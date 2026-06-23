@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # smoke-test.sh — Lightweight post-deploy smoke test for Cloud Run services.
 #
 # Hits /health and /readiness endpoints and verifies response shape.

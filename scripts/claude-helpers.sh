@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # claude-helpers.sh — Unified error classification and Telegram notification for Claude API errors.
 #
 # Usage (source this file, then call the function):

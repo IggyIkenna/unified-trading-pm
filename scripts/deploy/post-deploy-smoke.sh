@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # post-deploy-smoke.sh — Post-deploy smoke test for Cloud Run services.
 #
 # Usage: bash scripts/deploy/post-deploy-smoke.sh <SERVICE_URL> [MAX_RETRIES] [RETRY_INTERVAL]

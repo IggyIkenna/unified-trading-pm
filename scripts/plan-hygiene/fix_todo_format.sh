@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Auto-rewrite non-canonical todo lines in plans/active/ to canonical form:
 #   - [ ] [TAG] P<0-3>. <description>
 #

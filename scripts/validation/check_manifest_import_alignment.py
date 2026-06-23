@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate workspace-manifest.json dependencies match actual Python imports.
 
 For each repo: validate dependencies[] match actual Python imports.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # validate-mock-upstream.sh — Validate that upstream mock data exists for a service before seeding.
 #
 # Checks the .local-dev-cache/mock-seed/ directory for .seed-complete markers

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Gap-registry + risk-surface + service-resident extraction helpers.
 
 Covers plan items (d) gap registries, (e) risk surface, (f) service-resident

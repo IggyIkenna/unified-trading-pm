@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """generate_coverage_targets_local.py — bootstrap per-repo coverage_targets_local.yaml.
 
 Phase 8.A P0 of deployment_and_qg_strategy_implementation_2026_05_13.

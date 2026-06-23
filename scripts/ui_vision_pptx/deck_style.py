@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Design tokens + shared drawing primitives for the UI vision deck."""
 
 from pptx.dml.color import RGBColor

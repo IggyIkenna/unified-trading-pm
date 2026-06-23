@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # enable_failover.sh — SSM script to enable ORCHESTRATOR_FAILOVER_ENABLED on ONE VM.
 #
 # IMPORTANT: Run this on vm-orchestrator ONLY.

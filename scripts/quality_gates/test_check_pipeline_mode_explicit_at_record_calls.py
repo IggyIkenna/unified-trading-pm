@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_pipeline_mode_explicit_at_record_calls.py.
 
 Pure-Python — no GCS/AWS/network. Mirrors test_check_banned_placeholder_methods.py

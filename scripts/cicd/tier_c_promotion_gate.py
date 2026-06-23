@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Tier C — LDR→staging auto-promotion gate (dep-order + Tier-A readiness).
 
 The Tier C promotion bot (`ldr-to-staging-promote.yml`) drains the committed

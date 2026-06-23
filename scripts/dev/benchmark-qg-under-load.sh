@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # benchmark-qg-under-load.sh — AGGREGATE-load quality-gates benchmark.
 #
 # Plan: plans/active/quality_gates_resource_contention_speedup_2026_06_02.md (todo: qg-bench-aggregate)

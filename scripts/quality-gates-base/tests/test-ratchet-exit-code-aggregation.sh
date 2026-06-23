@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Regression test for the QG hard-gate exit-code aggregation.
 #
 # Bug (qg_base_service_ratchet_exit_code_2026_06_11.md): $V is the violation

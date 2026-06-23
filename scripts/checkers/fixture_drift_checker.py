@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Fixture drift prevention checker — validates UI mock fixture schemas match contracts.
 
 Scans UI repos for mock fixture files (JSON/TS/JS) and compares their schema

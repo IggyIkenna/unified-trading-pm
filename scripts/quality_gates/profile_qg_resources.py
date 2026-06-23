@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Profile quality-gates.sh per-phase WALL-TIME + RAM (peak/mean RSS).
 
 Dependency-free. Drives a FULL, no-skip run by setting QG_PROFILE=1 (which

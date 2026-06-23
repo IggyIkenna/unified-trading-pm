@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Rule 08 internal-cost leakage guard.
 
 Scans external-audience docs (marketing, briefings, external docs, public UI

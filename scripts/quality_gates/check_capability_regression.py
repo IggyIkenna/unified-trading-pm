@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Capability-regression gate (Wave-2 #5) — FAIL on a lost capability without a plan ack.
 
 A capability edge that was ``available`` in the committed baseline

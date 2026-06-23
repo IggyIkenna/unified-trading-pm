@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate build auth before Cloud Build / CodeBuild runs.
 
 Checks that credentials have the right permissions so builds don't fail mid-way

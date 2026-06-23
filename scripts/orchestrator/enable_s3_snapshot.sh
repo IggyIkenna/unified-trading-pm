@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # enable_s3_snapshot.sh — SSM script to enable ORCHESTRATOR_S3_BUCKET on one VM.
 #
 # Activates the S3 state-snapshot mirror (server/gcs_sync.py upload_state_to_s3 +

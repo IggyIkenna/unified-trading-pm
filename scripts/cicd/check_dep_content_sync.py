@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Dep-content sync gate — every editable dep must be clean and == its LDR ref.
 
 The quickmerge dep gates (STAGE 1.6 version, STAGE 1.7 ci_status tier) are version-typed,

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP 5.96 — ban string-concat construction of legacy bucket names.
 
 Checks that no production source builds a ``market-data-tick-`` or

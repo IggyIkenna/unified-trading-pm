@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Run the codex V-counted Python sub-checkers in ONE interpreter.
 
 base-service.sh's [5] codex block spawns a separate `python3` for each of:

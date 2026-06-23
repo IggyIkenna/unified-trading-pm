@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Triad assertion checker — verifies every critical journey has all 3 proof points.
 
 For each critical journey in the manifest, checks that test files contain evidence of:

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # 2026-04-22 — QuestionnaireResponse UAC <-> UI parity (G1.10 §Deviations trigger).
 #
 # Confirms that the UI TypeScript mirror at

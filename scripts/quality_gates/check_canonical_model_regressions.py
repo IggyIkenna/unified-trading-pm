@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP — canonical data-model regression detector (AST, baseline-ratchet).
 
 Per ``audit_criteria_automation_2026_06_08.md`` Phase 1 (Tier-2 "code PATTERN

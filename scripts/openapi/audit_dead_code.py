@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Dead code audit for service repos.
 
 Finds Python modules/files in service repos that exist but are never imported

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Compute canonical version ranges for all external workspace dependencies.
 
 Reads all pyproject.toml files from repos in topological order (workspace-manifest.json),

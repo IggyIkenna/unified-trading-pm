@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # switch_active_account.sh — write the active-account sidecar.
 #
 # Phase 4a/4b of orchestrator_master.md r3. Replacement for

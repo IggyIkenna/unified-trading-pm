@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.97 — DeFi contract-address citation ratchet.
 
 Enforces that any new Ethereum contract address (``0x`` + 40 hex chars) added

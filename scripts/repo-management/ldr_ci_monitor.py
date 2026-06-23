@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Tier-A live-defi-rollout CI-red monitor.
 
 THE PROBLEM IT SOLVES

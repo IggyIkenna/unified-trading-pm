@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Telegram notification helpers with GitHub Issue fallback (add-secondary-notification-channel).
 # Usage: source scripts/telegram-helpers.sh
 # Requires: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, GH_PAT (for GH Issue fallback), GITHUB_REPOSITORY_OWNER

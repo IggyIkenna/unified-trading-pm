@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Dependency-order local QG sweep — the pre-promotion staging oracle.
 
 Runs `quality-gates.sh --no-fix` across the workspace in TOPOLOGICAL dependency order

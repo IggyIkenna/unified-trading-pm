@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Group C architectural ratchets (ST-19 + PB-19 + UI-18).
 
 Generic ratchet helper that walks per-rule target globs + flags banned

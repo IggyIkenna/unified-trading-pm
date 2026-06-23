@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP 5.89 — ``record_empty(reason=...)`` must use closed-set reasons.
 
 Every ``record_empty()`` / ``record_expected_empty()`` call that passes a literal

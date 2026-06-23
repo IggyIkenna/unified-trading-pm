@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # enable_prune_stale.sh — SSM script to enable ORCHESTRATOR_REGEN_PRUNE_STALE on one VM.
 #
 # Usage (run via AWS SSM SendCommand on each target VM, one at a time):

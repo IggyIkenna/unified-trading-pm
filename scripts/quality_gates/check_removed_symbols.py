@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP — workspace-wide removed-symbol detection.
 
 Enforces CLAUDE.md "Citadel-Grade Planning Standards § 6 Downstream Consumer

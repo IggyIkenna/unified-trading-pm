@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # verify_fleet_prune_state.sh — Post-rollout verification: confirm queued counts
 # match /api/backlog totals on all 11 VMs.
 #

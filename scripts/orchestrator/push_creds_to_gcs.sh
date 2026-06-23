@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # push_creds_to_gcs.sh — push r3 setup-token env files to GCS so every VM
 # can pull them during bootstrap (bootstrap_vm.sh step 5a).
 #

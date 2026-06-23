@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_banned_placeholder_methods.py (QG STEP 5.67).
 
 Run via pytest from a venv that has pyyaml installed (the workspace

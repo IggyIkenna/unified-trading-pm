@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """PM post-gate (warn-only): detect stale ``ARG BASE_IMAGE_DIGEST`` pins across the fleet.
 
 **Context**: Every Python service Dockerfile pins the ``unified-trading-library`` base image via::

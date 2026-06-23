@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Epic: infrastructure_master
 # Lifecycle: permanent
+# Delete-when: NA
 """Generate the CI/CD workflow catalog (the drill-down index) from the live `.github/workflows/*.yml`.
 
 Writes `docs/repo-management/CICD-WORKFLOW-CATALOG.md` — one row per workflow:

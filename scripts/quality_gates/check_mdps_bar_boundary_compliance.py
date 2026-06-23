@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """STEP 5.74 — AST-walk MDPS source for inline bar-boundary truncation bypasses.
 
 Asserts that MDPS calculators / writers emitting bars do NOT use inline

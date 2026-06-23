@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Slides 05-07 — Trading Command Center, Strategy Analytics, Markets + Ops."""
 
 from pptx.enum.shapes import MSO_SHAPE

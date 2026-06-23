@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Install plan-hygiene checks as git pre-push hook in unified-trading-pm.
 # Runs check_todo_regression.sh + check_frontmatter.sh before every push.
 # Safe to re-run — idempotent (overwrites existing hook with the same content).

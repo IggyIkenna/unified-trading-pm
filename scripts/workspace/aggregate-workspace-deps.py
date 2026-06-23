@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Aggregate all repo dependencies into .venv-workspace.
 
 Walks every pyproject.toml in the workspace, classifies deps as internal

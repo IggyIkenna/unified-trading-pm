@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # check-order-flow.sh — Pre-deploy market hours & order flow guard.
 #
 # For trading-critical services (execution-service, risk-and-exposure-service,

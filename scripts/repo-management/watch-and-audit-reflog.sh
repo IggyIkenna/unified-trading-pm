@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Run fswatch on workspace .git/logs; trigger audit on changes.
 # Event-based complement to the time-based launchd job.
 #

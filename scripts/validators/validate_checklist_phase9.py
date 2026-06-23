@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate deployment checklists have phase_9_deployable_enhancements (items 38-41).
 
 GATE: plans_to_deployable_unified_audit.md checklist-enhancements.

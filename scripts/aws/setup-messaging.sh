@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # Provision AWS SNS topics + SQS queues for the Unified Trading System messaging bus.
 #

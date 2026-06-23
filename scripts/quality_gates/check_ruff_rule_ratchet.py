@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.95 — ruff DTZ (UTC-datetime ban) + TID251 (cloud-SDK ban) count ratchet.
 
 Hardens two grep-able CLAUDE.md rules into CI

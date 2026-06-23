@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG STEP 5.90: every GET /data-status route file MUST import the canonical helper.
 #
 # Finds Python files in SOURCE_DIR that define a GET /data-status endpoint and

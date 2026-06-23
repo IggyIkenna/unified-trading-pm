@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Minimal unlock-set engine + demand-weighted gap report (Wave-2 #1).
 
 Reads the committed capability manifest, computes the minimal unlock set

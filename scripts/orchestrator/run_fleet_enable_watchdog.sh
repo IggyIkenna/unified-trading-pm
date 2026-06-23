@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # run_fleet_enable_watchdog.sh — Sequential per-VM rollout of ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true.
 #
 # Rolls the watchdog flag to all 11 orchestrator VMs ONE AT A TIME.

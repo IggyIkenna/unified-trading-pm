@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate codex/14-playbooks/commercial-model/pricing-building-blocks.md structure.
 
 Stage 3E G3.2 Phase A. Asserts:

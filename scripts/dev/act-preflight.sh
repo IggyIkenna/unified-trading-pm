@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # act-preflight.sh — wraps `act` invocation against a repo's quality-gates.yml workflow
 # so developers can validate CI locally before pushing.
 #

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # RETIRED 2026-03-13 — Referenced unified-trading-dev as a separate GCP project (never created).
 # Dev resources now live in central-element-323112 with -dev suffix, provisioned via Terraform:
 #   cd deployment-service/terraform/gcp

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 Find tracked files that match .gitignore in each workspace repo and remove them from the index.
 Run from workspace root: python3 unified-trading-pm/scripts/untrack-ignored-files.py

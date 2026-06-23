@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP — open-edge (left) bar ingestion detector (bar-boundary correctness).
 
 Per ``bar_edge_left_vs_right_remediation_2026_06_08.md`` Phase 0 (== the

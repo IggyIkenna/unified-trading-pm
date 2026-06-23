@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: no-inline-coverage-formula
 # Detects re-implementations of compute_honest_coverage() outside the canonical
 # UAC honest_coverage.py file. Any caller that derives numerator/denominator

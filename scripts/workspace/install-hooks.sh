@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Installs git pre-push hook in all workspace repos.
 # Run from WORKSPACE_ROOT.
 # Usage: bash unified-trading-pm/scripts/workspace/install-hooks.sh [--dry-run]

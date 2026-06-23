@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 One-time script: extract API key env vars from .env / .env.local across the workspace
 and write them to api_keys at the workspace root for validation before Secret Manager.

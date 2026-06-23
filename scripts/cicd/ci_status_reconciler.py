@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Guard 3 — ci_status drift reconciler (decision core).
 
 WHY (cicd_contract_hardening_2026_06_01 § "Guard 3"): the manifest ``ci_status``

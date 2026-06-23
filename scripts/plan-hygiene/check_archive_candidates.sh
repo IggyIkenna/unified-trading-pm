@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Find plans in plans/active/ where open todo count == 0 and done todo count > 0.
 # Prints candidates — does NOT archive. Operator reviews and archives manually.
 # Usage: bash scripts/plan-hygiene/check_archive_candidates.sh

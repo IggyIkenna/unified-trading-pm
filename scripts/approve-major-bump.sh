@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # approve-major-bump.sh — Admin script to REQUEST a major version bump via GitHub Issue
 #
 # NOTE: This script REQUESTS a major bump by triggering request-major-bump.yml.

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # pm-pull-ff.sh v2 — smart FF-pull for ubuntu-owned unified-trading-pm clone
 # Behaviour:
 #   - skip on untracked (?? entries)

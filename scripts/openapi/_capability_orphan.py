@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Orphan + dead-end analysis for the capability manifest (plan item 2).
 
 Two distinct findings:

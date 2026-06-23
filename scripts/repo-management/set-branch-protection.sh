@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # set-branch-protection.sh
 #
 # ⛔ DEPRECATED (2026-06-07, M2) — DO NOT RUN.

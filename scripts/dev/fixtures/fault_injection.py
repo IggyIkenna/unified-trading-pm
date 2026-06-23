@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Fault injection fixtures for integration testing.
 
 Provides FaultConfig, FaultInjectionTransport and preset scenario objects for

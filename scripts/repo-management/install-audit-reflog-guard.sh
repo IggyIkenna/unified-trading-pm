@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # install-audit-reflog-guard.sh — install the reflog-reset safety guard on THIS host, cross-platform.
 #
 #   macOS → launchd (delegates to launchd/install-audit-reflog*.sh + launchctl load)

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 set -euo pipefail
 
 # check-plan-gate.sh — Check if all todo items with a given prefix are marked done in a plan file.

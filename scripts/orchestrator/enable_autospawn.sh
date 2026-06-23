@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # enable_autospawn.sh — SSM script to enable ORCHESTRATOR_AUTOSPAWN_ENABLED on one VM.
 #
 # Usage (run via AWS SSM SendCommand on each target VM, one at a time):

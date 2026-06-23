@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate Tested gate: pytest --collect-only exits 0 (no import/path errors).
 
 Phase 9: plans_to_deployable_unified_audit.plan.md

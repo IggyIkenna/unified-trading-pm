@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Slides 08-09 — implementation path + temporal universality."""
 
 from pptx.enum.text import PP_ALIGN

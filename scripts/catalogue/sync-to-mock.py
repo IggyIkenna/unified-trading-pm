@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Copy date-partitioned GCS data into a mock-tier scenario bucket.
 
 Derives source/target buckets from the UCI three-tier model (get_bucket_name),

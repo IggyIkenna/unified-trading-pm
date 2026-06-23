@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Detect drift between per-repo quality-gates.sh / .pre-commit-config.yaml and SSOT templates.
 
 Reports repos where quality-gates.sh or .pre-commit-config.yaml has diverged from the canonical

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # rollout-agent-symlinks-fleet.sh — make the root CLAUDE.md + skills symlinks live on EVERY VM.
 #
 # WHAT IT DOES (per VM, via AWS SSM SendCommand → AWS-RunShellScript):

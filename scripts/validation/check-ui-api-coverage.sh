@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # check-ui-api-coverage.sh — Verify UI integration tests cover all mapped API endpoints.
 #
 # Reads ui-api-mapping.json and checks that each UI's integration test file

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG coverage-snapshot writer (Phase 8.E of deployment_and_qg_strategy_implementation_2026_05_13).
 #
 # Walks every repo in workspace-manifest.json; for each repo with a

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # migrate-slots-to-pathb.sh — convert existing tab-branch slot worktrees → Path-B reference-clones.
 #
 # Path-B (2026-06-08): each .tabs/<N>/<repo> becomes `git clone --reference <main> <url>` with its

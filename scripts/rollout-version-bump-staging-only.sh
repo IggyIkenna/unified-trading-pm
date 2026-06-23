@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # rollout-version-bump-staging-only.sh
 #
 # Updates version-bump.yml in all repos to trigger only on staging pushes

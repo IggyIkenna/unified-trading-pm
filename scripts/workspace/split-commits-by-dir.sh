@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Split current changes into one commit per directory, push after each.
 # Run from repo root. Pause iCloud first for speed: sudo pkill -SIGSTOP -x nsurlsessiond
 #

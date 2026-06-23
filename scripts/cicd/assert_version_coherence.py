@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Version-coherence gate — assert each repo's source ``version`` agrees with the manifest.
 
 The 2026-06-08 LDR-SSOT clean-start force-sync reverted source ``pyproject.version`` fleet-wide

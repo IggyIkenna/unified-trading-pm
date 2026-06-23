@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # dev-status.sh — Show status of dev servers started by dev-start.sh
 #
 # Shows expected vs actual state for each service based on the mode and

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """STEP 5.64 — PM script path-reference ratchet.
 
 Scans workflow templates, GHA workflows, and operator bash scripts for references

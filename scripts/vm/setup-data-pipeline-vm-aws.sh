@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-data-pipeline-vm-aws.sh — EC2 user-data startup script for data pipeline VMs.
 #
 # AWS equivalent of deployment-service/scripts/vm/setup-data-pipeline-vm.sh (GCE variant).

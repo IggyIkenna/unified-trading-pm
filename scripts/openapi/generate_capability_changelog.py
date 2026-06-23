@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Versioned capability manifest changelog + regression baseline (Wave-2 #5).
 
 Reads the committed capability manifest (``unified-api-contracts/openapi/

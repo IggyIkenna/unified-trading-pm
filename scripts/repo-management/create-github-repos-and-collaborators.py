@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 Create GitHub repos (if missing) and add datadodo + CosmicTrader as admin.
 Uses GH_PAT or GITHUB_TOKEN (same as instruments-service / Cloud Build).

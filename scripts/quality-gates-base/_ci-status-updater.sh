@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # SSOT for ci_status manifest updates — sourced by all base-*.sh scripts.
 # Provides _resolve_repo_name(), _qg_update_ci_status_failing(), _qg_update_ci_status_pass().
 # Uses fcntl file locking for safe parallel execution.

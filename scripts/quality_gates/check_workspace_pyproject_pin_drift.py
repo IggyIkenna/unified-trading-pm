@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Workspace-wide pyproject pin-drift audit — catches the next VM-launch failure
 before it happens.
 

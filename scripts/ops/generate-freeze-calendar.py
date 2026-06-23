@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate change-freeze-calendar.csv for a full year from a given start date.
 
 Produces recurring windows for:

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Sync manifest versions section with pyproject.toml versions.
 
 Reads workspace-manifest.json and for each repo reads its pyproject.toml

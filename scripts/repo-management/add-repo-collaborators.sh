@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Add datadodo and CosmicTrader as collaborators (read or write) to ALL repos in workspace-manifest.json.
 # Repo list is derived entirely from the manifest — no hardcoded list.
 # Requires: gh CLI + jq installed and authenticated (gh auth login).

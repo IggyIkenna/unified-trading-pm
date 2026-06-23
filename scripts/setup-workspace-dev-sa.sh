@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Create (or use existing) a service account for local workspace dev with access to
 # all Secret Manager secrets. Key file is stored at workspace root — never committed.
 # Rotate the key when people leave; no need to change IAM for individual users.

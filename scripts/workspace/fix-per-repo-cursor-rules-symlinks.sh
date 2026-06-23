@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # fix-per-repo-cursor-rules-symlinks.sh — Replace per-repo .cursor/rules copies with symlinks
 #
 # Per-repo .cursor/rules (real dirs with 108 .mdc files) cause context bloat when Cursor loads

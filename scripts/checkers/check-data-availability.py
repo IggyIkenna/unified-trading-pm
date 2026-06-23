@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Data availability validation checker.
 
 Reads workspace-manifest.json for all repos with service_declaration.capabilities_needed

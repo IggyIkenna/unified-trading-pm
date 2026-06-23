@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Cross-cloud egress cost watcher for the May-23 DeFi cutover soak period.
 #
 # Queries AWS Cost Explorer (inter-region + DataTransfer-Out-Bytes) and

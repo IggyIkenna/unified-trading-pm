@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Strict YAML parse of plan/epic frontmatter — the machine-readability gate.
 
 `check_frontmatter.sh` is grep-based (field-presence only): a frontmatter block whose

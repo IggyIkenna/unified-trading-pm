@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: sports_master
+# Lifecycle: oneoff
+# Delete-when: after prod-run + orphan-sweep=0
 """Migrate archived sports betting GCS data to UTS hive-partitioned format.
 
 Transforms:

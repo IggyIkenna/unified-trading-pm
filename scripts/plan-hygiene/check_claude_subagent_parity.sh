@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Check CLAUDE.md ↔ SUB_AGENT_MANDATORY_RULES.md TOPIC PARITY.
 #
 # Why: SUB_AGENT_MANDATORY_RULES.md must cover the same TOPICS as CLAUDE.md (one-liner

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """CI-status side store — Firestore, one document per repo (Phase 1 writer + CAS).
 
 SSOT design: plans/active/ci_status_firestore_side_store_2026_06_10.md.

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP 5.64 — explicit ``source=`` at every *multi-source* manifest write.
 
 Originally (``tradfi_massive_dual_source_2026_05_28.md`` Phase 3) this required

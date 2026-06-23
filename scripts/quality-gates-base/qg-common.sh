@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # qg-common.sh — Shared foundation for all quality-gate base scripts.
 # Owned by unified-trading-pm. Do NOT edit per-repo.
 #

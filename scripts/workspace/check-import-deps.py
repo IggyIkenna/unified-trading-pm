@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Check that Python imports match declared dependencies in pyproject.toml.
 
 The workspace venv installs all repos, so imports from undeclared packages

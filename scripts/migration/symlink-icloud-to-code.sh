@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Replace iCloud repo dirs with symlinks to Code.
 # Usage: ./symlink-icloud-to-code.sh [ICLOUD_ROOT] [CODE_ROOT]
 

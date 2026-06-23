@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """fix-gh-actions-pm-clone.py — Add unified-trading-pm clone to all GH Actions quality-gates.yml.
 
 All quality-gates.sh stubs source:

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate Mermaid DAG from strategy-manifest.json.
 
 Outputs a Mermaid diagram to stdout showing:

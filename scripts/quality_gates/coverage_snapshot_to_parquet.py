@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """coverage_snapshot_to_parquet.py — per-repo coverage → GCS daily writer.
 
 Sibling of snapshot_to_parquet.py (Phase 4.A). Reads JSON lines from stdin

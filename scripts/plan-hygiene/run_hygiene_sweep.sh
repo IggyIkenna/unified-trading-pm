@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Plan hygiene sweep — run by Ikenna and Harsh on the planning VM as a morning step.
 # Runs all checks in sequence; prints a PASS/FAIL table.
 # Hard checks: todo regression, frontmatter. Soft checks: line caps, archive candidates.

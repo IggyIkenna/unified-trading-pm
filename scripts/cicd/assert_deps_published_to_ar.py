@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Gap 9a — assert a repo's internal dependencies are PUBLISHED to Artifact Registry.
 
 Ref: plans/active/issues/ci_pipeline_self_healing_gaps_2026_06_11.md § Gap 9a.

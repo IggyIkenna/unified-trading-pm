@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate DATA_FLOW_DAG.svg from data-flow-manifest.json.
 
 SSOT: unified-trading-pm/data-flow-manifest.json

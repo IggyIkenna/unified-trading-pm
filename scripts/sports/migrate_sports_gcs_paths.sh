@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: sports_master
+# Lifecycle: oneoff
+# Delete-when: after prod-run + orphan-sweep=0
 # migrate_sports_gcs_paths.sh — Audit and migrate sports data GCS paths.
 #
 # Validates (and optionally migrates) sports reference data in GCS from any

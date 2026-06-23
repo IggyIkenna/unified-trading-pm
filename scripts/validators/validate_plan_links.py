@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate no broken relative links in plans/active/*.md.
 
 Phase 0b: plans_to_deployable_unified_audit.md

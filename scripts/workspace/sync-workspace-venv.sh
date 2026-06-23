@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # sync-workspace-venv.sh — Refresh .venv-workspace after version alignment.
 #
 # SSOT: unified-trading-pm/scripts/workspace/sync-workspace-venv.sh

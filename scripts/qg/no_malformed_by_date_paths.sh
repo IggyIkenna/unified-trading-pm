@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: no-malformed-by-date-paths
 # GCS paths containing ``raw_tick_data/by_date/`` MUST use the canonical Hive
 # ``key=value`` form: ``raw_tick_data/by_date/day=YYYY-MM-DD/``.

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 rollup_resolved_pings.py — Read-time rollup for per-slot ping files.
 

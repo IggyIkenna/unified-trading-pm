@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Guard 2 — structural 3-way reconcile of ``workspace-manifest.json`` for the
 ``main → live-defi-rollout`` back-merge.
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # validate-buildspec.sh — Validates buildspec.aws.yaml files across the workspace.
 #
 # Checks for:

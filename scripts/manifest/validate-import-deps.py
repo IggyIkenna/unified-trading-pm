@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate service import hygiene:
 
 1. Every direct import of an internal library must have a corresponding

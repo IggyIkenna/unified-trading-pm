@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Enforce canonical npm devDependency versions across all UI repos.
 
 Reads unified-trading-pm/workspace-npm-constraints.json and workspace-manifest.json,

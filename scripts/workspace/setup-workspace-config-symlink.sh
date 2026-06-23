@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-workspace-config-symlink.sh — Symlink .cursor/workspace-configs to PM cursor-configs
 # Canonical workspace configs live in unified-trading-pm/cursor-configs/. All paths use
 # ${workspaceFolder} for portability. Root workspace file symlinks to the canonical.

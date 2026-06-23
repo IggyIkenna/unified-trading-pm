@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-repo-cursor-rules-symlinks.sh — Replace per-repo .cursor/rules copies with symlinks
 #
 # P0 of CONTEXT_BLOAT_REMEDIATION: each repo's .cursor/rules points at unified-trading-pm/.cursor/rules.

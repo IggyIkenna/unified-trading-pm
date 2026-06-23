@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Transitive ci_status invalidation after a breaking dependency update.
 
 When repo X fails QG after a breaking change, all repos that transitively

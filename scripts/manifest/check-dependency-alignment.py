@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Check dependency alignment: derived manifest vs workspace-manifest.json.
 
 Compares:

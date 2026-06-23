@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Blind copy 36-37 clean repos from iCloud to Code.
 # Excludes .gitignore and .cursorignore from copy; applies PM-aligned versions after.
 # Usage: ./copy-clean-repos.sh [ICLOUD_ROOT] [CODE_ROOT]

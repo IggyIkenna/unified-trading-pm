@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Per-doc-type frontmatter SCHEMA gate for the PM repo (2026-06-16).
 
 Enforces required-NON-EMPTY fields + value resolutions per doc type, so agents can't

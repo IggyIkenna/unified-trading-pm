@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Verify branch-protection ruleset required-status-check contexts match each repo's
 emitted Quality Gates check-run name (require-quality-gates on main, require-staging-lock-check
 on staging). Read-only. See plans/active/issues/ci_v2_ruleset_check_name_drift_2026_05_30.md.
