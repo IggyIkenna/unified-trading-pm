@@ -2,6 +2,8 @@
 title: quickmerge silently no-ops on a new-file-only ship (untracked --files invisible to the "nothing to merge" guard)
 created: 2026-06-23
 author: ikennaigboaka [slot-3·laptop]
+status: active
+priority: P1
 source:
   - scripts/quickmerge.sh:1175
   - data_completion_to_100_all_ag_2026_06_21.md (B2 IntraClientRebalanceCoordinator ship, 2026-06-23)
