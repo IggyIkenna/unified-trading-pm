@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.52.0",
     "unified-trading-library": "0.40.0",
-    "unified-trading-pm": "1.2.394",
+    "unified-trading-pm": "1.2.399",
     "market-data-processing-service": "0.10.15",
     "e2e-testing": "0.27.0",
     "agent-orchestrator": "0.55.0",
@@ -387,7 +387,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 73.14,
+        "coverage_pct": 73.18,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 8
@@ -449,7 +449,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 84.12,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 17
@@ -522,7 +522,7 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 85.67,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 11
@@ -745,10 +745,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.79,
+        "coverage_pct": 90.77,
         "qg_red_reason": null,
-        "large_file_count": 2,
-        "warn_file_count": 7
+        "large_file_count": 3,
+        "warn_file_count": 6
       }
     },
     "market-data-processing-service": {
@@ -1189,7 +1189,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 96.05,
         "qg_red_reason": null,
         "large_file_count": 23,
         "warn_file_count": 29
@@ -1360,8 +1360,8 @@
       ],
       "codebase_health": {
         "coverage_pct": 50.9,
-        "qg_red_reason": "qg",
-        "large_file_count": 33,
+        "qg_red_reason": null,
+        "large_file_count": 32,
         "warn_file_count": 39
       }
     },
@@ -1945,20 +1945,20 @@
     "unified-trading-pm": "1.2.45",
     "client-reporting-api": "0.15.9",
     "greeks-service": "0.18.0",
-    "unified-api-contracts": "0.56.0",
+    "unified-api-contracts": "0.57.0",
     "e2e-testing": "0.27.0",
     "execution-service": "0.31.0",
     "ibkr-gateway-infra": "0.4.4",
     "market-data-processing-service": "0.10.15",
     "system-integration-tests": "0.14.7",
     "trading-agent-service": "0.12.0",
-    "unified-trading-library": "0.40.0",
-    "agent-orchestrator": "0.55.0",
+    "unified-trading-library": "0.41.0",
+    "agent-orchestrator": "0.57.0",
     "alerting-service": "0.35.0",
     "batch-live-reconciliation-service": "0.30.0",
     "deployment-api": "0.30.0",
-    "deployment-service": "0.61.0",
-    "features-service": "0.34.0",
+    "deployment-service": "0.62.0",
+    "features-service": "0.37.0",
     "fund-administration-service": "0.9.11",
     "instruments-service": "0.54.0",
     "market-tick-data-service": "0.59.0",
@@ -1995,13 +1995,28 @@
       "branch": "staging"
     },
     "deployment-service": {
-      "version": "0.61.0",
-      "sha": "d7a5ed98e00633e3cfb5c147e64e209109756e03",
+      "version": "0.62.0",
+      "sha": "93048e9ec3c8acde32504407ea89cc40192002d8",
       "branch": "staging"
     },
     "instruments-service": {
       "version": "0.54.0",
       "sha": "3de5cc801184fd999b690e3f937f1bfbfa31284d",
+      "branch": "staging"
+    },
+    "unified-trading-library": {
+      "version": "0.41.0",
+      "sha": "de837bc02f0606c18fc111179ea72a98a75485d9",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.57.0",
+      "sha": "8d949ca4df45977193b5a91ecf67b0fb37e3f54e",
+      "branch": "staging"
+    },
+    "features-service": {
+      "version": "0.37.0",
+      "sha": "54c51efd6740301b8cf99763705a66170bc24bac",
       "branch": "staging"
     }
   },
