@@ -2602,12 +2602,15 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
       **tradfi OOM'd at 4Gi(2026-06-19)+8Gi → bumped to 16Gi/cpu4** (16Gi catch-up running, prior sizes confirmed-OOM).
       The daily schedulers (`lifecycle-catalogue-regen-{ag}-daily`, lastAttempt=-1) are ENABLED with the `run.invoker`
       grant; -1 = not-yet-hit-01:00, not broken. (3) **vm-zombie-watchdog** — genuinely DOWN: VM ran but on 2026-05-28
-      stale code (no census-write) → census blob ABSENT → DP_ZOMBIE_WATCHDOG_DOWN. Relaunched
-      `vm-zombie-watchdog-20260623-165530` (fresh code, dry_run=false); **census now written
-      `vm-census/watchdog-census.json` @17:03:36** (52 zombies detected → now reaped). (4) **dp-exit-code/dp-meta** —
+      stale code (no census-write) → census blob ABSENT → DP_ZOMBIE_WATCHDOG_DOWN. Relaunched fresh-code; **census now
+      written `vm-census/watchdog-census.json`**. ⚠️INCIDENT: first relaunch ran dry_run=FALSE + reaped 9 LIVE campaign
+      backfills before I caught it → corrected to **`--dry-run`** (census WITHOUT reaping — required during the campaign);
+      killed-VM list + relaunch recipe + latent code-fix:
+      `plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`. (4) **dp-exit-code/dp-meta** —
       NOT down: sentinels fresh (exit-code 16:55, meta 16:46), fire clean. **dp-heartbeat-watcher WAS down: OOM at
-      2Gi+4Gi every */5 → bumped 8Gi/cpu2 → ✅SUCCEEDED, `heartbeat-last-run.json` sentinel now PRESENT**. HARD
-      constraint honored: no running backfill VM restarted; no collection cron re-enabled. (deployment-service)
+      2Gi+4Gi every */5 → bumped 8Gi/cpu2 → ✅SUCCEEDED, `heartbeat-last-run.json` sentinel now PRESENT**. tradfi
+      catalogue OOM'd at 4/8/16Gi → bumped 32Gi/cpu8 (re-running); DURABLE roll-up-chunking fix noted in the issue doc.
+      HARD constraint: no collection cron re-enabled (the backfill-kill incident is filed + corrected). (deployment-service)
 - [x] ✅ [CODE] P1. **Fix api-football JSON-envelope rateLimit: retry with minute-boundary backoff instead of fail_fast** —
       `ApiFootballResponseError(is_rate_limit=True)` now retried via `_fetch_and_extract()` (HTTP 200 +
       `{"errors":{"rateLimit":"..."}}` was propagating as `attempted_failed`); `concurrency` lowered 50→10;
