@@ -1033,10 +1033,10 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `ETHENA:DEX_POOL:sUSDe` / `MAKER:DEX_POOL:sDAI` — NO `0x`; `strategy_id` = full canonical slug
       `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod`. (Verification gotcha logged: an early/transitional ledger
       read at 18:41 still showed the address — re-reading the climbing metric at 19:03 confirmed the fix; don't conclude
-      a stall from one early read.) **Residual (trivial follow-up, NOT blocking):** a faithful live-path regression test
-      (`tests/unit/cli/handlers/test_paper_run_vault_symbol_live_path.py`, passes standalone) is STASHED in the slot
-      (`git stash` on strategy-service) — its quickmerge is gated only by a transient strategy-service version-drift
-      (local `0.36.0` < main `0.37.0` promotion-lag); ships on the next aligned QG (backmerge resolves the version).
+      a stall from one early read.) **Residual SHIPPED 2026-06-23 (autonomous):** the faithful live-path regression test
+      (`tests/unit/cli/handlers/test_paper_run_vault_symbol_live_path.py`) landed `strategy-service@4bf16796` (version
+      drift cleared — local==main 0.37.0; QG-green, the test PASSES against current HEAD, proving the tick-2 live-path
+      symbol fix is genuinely in the code, not just the engine-only unit path).
       Original finding:
 - [x] ✅ ~~[DATA] P1~~ **(superseded by the ✅ above — strategy-service@81d9dba2, live-verified 2026-06-23)**
       paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols (found 2026-06-23 deep-dive of
