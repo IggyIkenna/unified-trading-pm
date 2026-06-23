@@ -100,22 +100,38 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 ### Phase 0 — Full cockpit scaffold with placeholders (the IA the operator approves first) — deployment-ui
 
-- [ ] [UI] P1. New top-level **`/cockpit`** section (nav entry) — the monitoring landing `HealthOverview` with the full
-      tile grid as PLACEHOLDERS: Live / Batch / Paper deployment summaries, Fleet VMs (GCP+AWS census), Manifest
+- [x] ✅ [UI] P1. New top-level **`/cockpit`** section (nav entry) — the monitoring landing `HealthOverview` with the
+      full tile grid as PLACEHOLDERS: Live / Batch / Paper deployment summaries, Fleet VMs (GCP+AWS census), Manifest
       consolidators, Data coverage, CI/repos, Agent-orchestrator, GitHub health, Billing/cost, Alerts. Each tile is a
-      color-coded card with placeholder status + a working drill-down link. `[UI]` — pw:L2 + regression.
-- [ ] [UI] P1. Three umbrella **dynamics overview** sub-routes `/cockpit/{live,batch,paper}` with their distinct column
-      presets as placeholder tables (live=uptime/heartbeat/feed-health; batch=progress/coverage/exit-code;
-      paper=recon-drift/determinism-ε). Reuse the existing `/deployments` table component shell. `[UI]` — pw:L2 +
-      regression.
-- [ ] [UI] P1. **Drill panes** scaffold (placeholder): `/cockpit/fleet` (every-VM-accounted-for reconciliation table),
-      `/cockpit/consolidators`, `/cockpit/health/{orchestrator,github,billing}` — each a titled pane with a placeholder
-      table/cards + a "Stream logs" + "Redeploy" affordance where relevant, cross-linking to the EXISTING
-      `/deployments`, `/fleet/*`, `/alerts`, `/ops/costs`, `/repos` pages rather than duplicating them. `[UI]` — pw:L2 +
-      regression.
-- [ ] [UI] P1. Wire the alert→cockpit→logs→redeploy NAV path end-to-end on placeholders (buttons route correctly even
-      before data is real), so the operator can walk the whole flow. `[UI]` — pw:L2 + regression covering the route
-      walk.
+      color-coded card with placeholder status + a working drill-down link. — deployment-ui@be04198 | pw:L2 ✓ |
+      regression: tests/smoke/cockpit.spec.ts (`Cockpit.tsx` Overview tab + Header `nav-cockpit` link).
+- [x] ✅ [UI] P1. Three umbrella **dynamics overview** panes with their distinct column presets as placeholder tables
+      (live=uptime/heartbeat/feed-health; batch=progress/coverage/exit-code; paper=recon-drift/determinism-ε).
+      Implemented as deep-linkable `?tab={live,batch,paper}` query-param tabs (matches the existing `/deployments`
+      URL-param pattern — cleaner than path sub-routes, same deep-link). — deployment-ui@be04198 | pw:L2 ✓ | regression:
+      tests/smoke/cockpit.spec.ts.
+- [x] ✅ [UI] P1. **Drill panes** scaffold (placeholder): Fleet (`?tab=fleet`, every-VM-accounted-for reconciliation
+      table + 3 alarm cards), Consolidators (`?tab=consolidators`, per-AG cards), Health (`?tab=health`,
+      orchestrator/github/billing cards) — each a titled pane cross-linking to the EXISTING `/deployments`,
+      `/fleet/infra`, `/alerts`, `/ops/costs`, `/repos` pages rather than duplicating them. — deployment-ui@be04198 |
+      pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts. (The per-row "Stream logs"/"Redeploy" affordances land with the
+      real table rows in Phase 2/3 — see next item.)
+- [ ] [UI] P1. Wire the alert→cockpit→logs→redeploy NAV path end-to-end on placeholders (the per-target "Stream logs" +
+      "Redeploy" buttons route correctly even before data is real), so the operator can walk the whole flow.
+      **Partial**: cockpit is reachable + every tile drills to its source page; the Stream-logs/Redeploy buttons attach
+      to the dynamics table rows in Phase 2/3. `[UI]` — pw:L2 + regression covering the route walk.
+- [x] ✅ [UI] P1. **IA reshape per operator review (2026-06-23)**: Overview→**Health** (the landing tile grid IS the
+      health home; removed the redundant standalone Health tab); new **Deploy** tab (batch/live/**paper** entry points —
+      `DeployForm` already supports paper via `runtime_profile` × GCP/AWS; embedded form in Phase 2); **Fleet** now
+      accounts for the agent-orchestrator control-plane VMs (Purpose column) per "fold orchestrator into Fleet";
+      **Billing** tile is tri-cloud **GitHub+GCP+AWS**. Tabs: Health · Deploy · Live · Batch · Paper · Fleet ·
+      Consolidators. — deployment-ui@b9be2da | pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts.
+- [ ] [UI] P1. **Make `/cockpit` the DEFAULT page of the deployment UI (operator 2026-06-23).** A bare `/`→`/cockpit`
+      redirect is NOT viable as-is — it broke 81 smoke specs that assume `/` renders the home shell (ServiceList +
+      LandingTabs default Overview tab). Do it as a migration: give the home shell its own explicit path (e.g. `/home`),
+      redirect `/`→`/cockpit`, and migrate the ~handful of landing-assumption specs (app.spec / routes.spec /
+      url-sync.spec + the goto("/") service-item specs) to the new home path. `[UI]` — pw:L2 (FULL `tests/smoke/`
+      green) + regression.
 
 ### Phase 1 — Health rollup backend (foundation, pure reuse) — deployment-api
 

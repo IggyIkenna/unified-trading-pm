@@ -54,6 +54,77 @@ eliminates. THREE convergence points must all use `pool_address.lower()`: (a) MT
 / `CATALOG_COLUMNS`), (c) the `enumerate_expected_universe.py` seeder reading (b). The reconcile (Phase 4-data) re-stamps
 the 84,778 (×all venues = 408k) legacy-keyed empty cells once the namespaces converge.
 
+## TWO compounding root causes (measured 2026-06-23 from live IS catalogue + by_date snapshots) — both must be fixed
+
+The 408k DELISTED + the stuck honest-cov are TWO compounding defects, both in the IS catalogue/seeder vocabulary:
+
+**CAUSE 1 — namespace mismatch (3 axes).** The IS snapshot (`instrument_availability/by_date/.../instruments.parquet`)
++ rolled-up `prod/catalog.parquet` key POOL rows in LEGACY form, while MTDS captures in CANONICAL form:
+| axis | catalogue/seeder (legacy) | MTDS captured (canonical) |
+| --- | --- | --- |
+| instrument_id | `instrument_key` = `UNISWAP_V3-ARBITRUM:POOL:GHO-WETH:3000` (glued composite) | `pool_address.lower()` = `0xf9188aff...` (`_canonical_defi_id`) |
+| venue | `UNISWAP_V3-ARBITRUM` (glued, ALL 5,889 POOL rows) | `UNISWAP_V3` (bare) |
+| chain | BLANK (ALL 5,889 POOL rows) | `ARBITRUM` (populated) |
+The snapshot DOES carry `pool_address` as its own column + `raw_symbol`=pool_address.lower() (5,600/5,889 start `0x`),
+so the canonical atom is AVAILABLE for re-keying without re-fetch. Source of the glued form:
+`instruments-service/instruments_service/reference_data/adapters/defi/uniswap_v3.py:491` builds
+`instrument_key = f"{venue_tag}:POOL:{symbol}"` with `venue_tag=f"{prefix}-{chain}"`; `build_instrument_catalogue.py::_row_id`
+(`_ID_COLUMNS=("instrument_key","instrument_id")`) picks `instrument_key` → catalogue `instrument_id`; `_extract_meta`
+copies the glued `venue` + blank `chain`; `enumerate_expected_universe.py::_enumerate_v2_defi` seeds with those.
+
+**CAUSE 2 — STALE catalogue / premature delisting.** 2,804 of 5,889 POOL rows have a CLOSED `available_to`; **2,311 of
+them at a single cliff `2026-05-08`** (catalogue rebuilt TODAY 17:10 UTC still shows them closed). The IS DeFi instrument
+backfill stopped LISTING these pools in the by_date snapshots after ~2026-05-08, so the roll-up closed their lifecycle →
+`date > available_to` → `EXPECTED_INSTRUMENT_DELISTED` on still-live pools. This is the discontinuous-liquidity /
+premature-delisting nuance (Phase 2): a live pool that drops out of a daily TVL-ranked snapshot must NOT close its
+availability. The two causes compound — the 3,085 "active" pools STILL won't reconcile (namespace), and the 2,804
+"closed" are wrongly DELISTED (staleness).
+
+**FIX (canonical-convergence, lowest-risk highest-leverage point = the catalogue builder + the MTDS writer):**
+- IS `build_instrument_catalogue.py`: for DeFi POOL rows, derive canonical catalogue `instrument_id = pool_address.lower()`
+  (from the snapshot `pool_address`/`raw_symbol` column, NOT `instrument_key`) + bare `venue` (strip the `-CHAIN` suffix) +
+  populated `chain`. This re-keys the roll-up canonically → the seeder (reads the catalogue) auto-aligns all 3 axes. Keep
+  `instrument_key` untouched (it is the trading/execution identity; only the manifest-reconciliation `instrument_id` changes).
+- IS catalogue availability: a live pool dropping out of the daily snapshot must not prematurely close `available_to`
+  (Phase 2 — model the TVL-qualification window, not snapshot-presence). [Investigate WHY the backfill stopped at 05-08.]
+- MTDS dex handlers: `record_captured(instrument_id=pool_address.lower(), venue=bare, chain=X)` per pool (Phase 4 writer).
+- Re-build catalogue + re-seed enumerator + re-capture → the 408k reconcile (Phase 4-data).
+
+## ⚠️ BIG FINDING + DECISION (operator-notify) — canonical pool instrument_id SSOT CONFLICT (2026-06-23)
+
+Pinpointed the EXACT axes that mismatch (measured on live `_index`, UNISWAP_V3/dex_pool_state): venue ✅ aligned
+(`UNISWAP_V3`), chain ✅ aligned (`ARBITRUM`/…) — the 38cec01 fix landed these. The remaining mismatch is TWO axes:
+| axis | captured (102,262 rows) | seeded DELISTED (84,778 rows) |
+| --- | --- | --- |
+| **instrument_type** | `pool` (lowercase) | `POOL` (uppercase) |
+| **instrument_id** | `0x1353fe...` (`pool_address.lower()`) | `UNISWAPV3-POLYGON:POOL:COMP-USDC:10000` (glued composite) |
+
+ROOT of the instrument_id split = **TWO competing "canonical" instrument_id builders, used on opposite sides**:
+1. **`build_instrument_id`** (UAC `internal/reference/canonical_id_builder.py`, the DOCUMENTED "Centralised canonical
+   instrument ID builder — SSOT", coverage-tested, used by `canonical_write.py` to stamp the parquet DATA `instrument_id`
+   COLUMN + by the IS catalogue's `instrument_key`): DeFi → `VENUE-CHAIN:TYPE:SYMBOL` = `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`.
+2. **`_canonical_defi_id`** (MTDS `engine/defi_catalog_reader.py`): POOL → `pool_address.lower()` = `0x...`.
+The **captured manifest rows use #2** (`0x...`), so they don't even match the parquet's OWN data `instrument_id` column (#1).
+
+**DECISION (documented-intent, per AUTONOMOUS_AGENT_RULES rule 1–2 — decide+document, don't block): canonical pool
+instrument_id = `pool_address.lower()`, venue+chain carried as SEPARATE manifest columns; instrument_type lowercase.**
+Rationale: (a) the operator's Phase-1 item 2 explicitly says "`venue=UNISWAP_V3` + `chain=ARBITRUM` (separate),
+instrument_id canonical (NOT glued `UNISWAPV3-ARBITRUM`)" — `build_instrument_id`'s `VENUE-CHAIN:` prefix RE-GLUES venue+chain
+INTO the id, redundant with the separate columns + exactly the form the operator flagged wrong; (b) `pool_address.lower()`
+is the clean per-pool atom (a pool's contract address IS its on-chain identity); (c) smallest data blast radius — the
+102k captured rows + the parquet `pool_address`/`pool_id` columns already carry it, only the catalogue/seeder + the
+data-`instrument_id`-column need re-keying; (d) matches `_canonical_defi_id` (the live reader). **OPERATOR: if you instead
+want `build_instrument_id`'s `VENUE-CHAIN:TYPE:SYMBOL` as the canonical manifest id, the fix flips direction (re-key the
+102k captured side instead) — flag on return; I proceeded on (a)–(d).** This finding + decision is the operator-notify.
+
+CONVERGENCE POINTS (all → `pool_address.lower()` + lowercase instrument_type):
+- IS `enumerate_expected_universe.py::_enumerate_v2_defi`: seed `instrument_id` + `instrument_type` canonically (the
+  `InstrumentCatalogEntry` lacks `raw_symbol`, so add it to the entry + `_catalog_from_dataframe` from the catalogue's
+  `raw_symbol` column which IS `pool_address.lower()`), OR fix at the catalogue builder so `instrument_id`=pool_address.
+- IS `build_instrument_catalogue.py`: emit catalogue `instrument_id = raw_symbol(pool_address).lower()` for POOL rows.
+- MTDS dex handlers already (separately) need per-pool `record_captured` — but the 102k captured ALREADY use
+  `pool_address.lower()` (some rebuild path), so the writer per-pool fix + the seeder fix converge.
+
 ## Phase 1 — IS per-day instrument availability (TVL-qualifying, per venue×chain×data_type)
 
 - [ ] [CODE] P0. Per-day, enumerate every instrument (pool) meeting the **TVL criteria** for each venue × chain ×

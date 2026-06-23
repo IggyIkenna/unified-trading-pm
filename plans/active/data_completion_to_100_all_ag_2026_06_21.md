@@ -991,6 +991,15 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       collect-oracle-prices`) —     **runnable by this SA** (compute-capable) → T+10min check rows at     `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live*_/asset_group=defi/`;
       needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
       unified-trading-system-ui.
+- [x] ✅ [INFRA] P2 — paper-trading UI cold-start latency **FIXED 2026-06-23 (autonomous tick-1)**: set `minScale=1` on
+      Cloud Run `odum-portal` + `client-reporting-api` (asia-northeast1) via `gcloud run services update --min-instances=1`
+      — VERIFIED warm (odum-portal `/paper-trading`=0.61s, CRA `/health`=0.42s; was multi-second cold) + the previously
+      stuck panels now RENDER (`loadingCount=0`: **P&L Attribution** shows real data [By factor CARRY $38/FEES $-81; By
+      venue UNISWAP_V3 $-16/DERIBIT $-27; By layer], Data-quality 3/345 drivable) — so the **attribution "stuck Loading…"
+      was 100% cold-start, cured by the warm fix (no CRA "empty-not-error" code change needed)**. Durable:
+      `deploy-shared.sh:223` already passes `--min-instances=1`, `gcloud run deploy` preserves the flag on image redeploy,
+      and no deploy path forces `=0`. (us-central1 secondary/staging UIs left at 0 — not the operator's surface, warming
+      them is needless cost.) Original finding:
 - [ ] [INFRA] P2 **NICE-TO-HAVE** — paper-trading UI cold-start latency (discovered 2026-06-23 deploying B2). The live
       `/paper-trading?client=firm-paper-stream` book is SLOW on first load after idle — NOT a network issue. Root cause:
       both `odum-portal` (Next.js UI) AND `client-reporting-api` (CRA backend) run on Cloud Run with
@@ -1021,6 +1030,38 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
       unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
       2026-06-23.
+- [ ] [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only cross-linked by inline text** (found
+      2026-06-23, operator UX complaint). `app/paper-trading/` has NO `layout.tsx` → it renders under the ROOT layout,
+      NOT the `(platform)` shell (vertical-nav / site-header / `service-tabs`). So inside paper-trading there is NO
+      persistent tab/banner; the 3 pages (`/paper-trading` overview, `/paper-trading/ledgers`, `/paper-trading/coin/[coin]`)
+      are stitched only by inline `<Link>`s (overview→ledgers→coin), and the overview does NOT link directly to the coin
+      drilldown. **Fix**: add `app/paper-trading/layout.tsx` with a tab bar (Overview · Ledgers · Coins) + direct
+      overview→coin links + bring paper-trading under/into the platform shell so it's reachable from the top nav like the
+      rest. Repos: unified-trading-system-ui (UI playwright gate applies: pw:L2 + regression spec). Provenance: B2
+      deep-dive 2026-06-23.
+- [ ] [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** (found
+      2026-06-23). Research IS routed at `app/(platform)/services/research` (inside the shell, nav-reachable), BUT the
+      execution/backtest/features panels use `MOCK_STRATEGY_BACKTESTS` / `fixtures/build-data` — demo data, NOT real
+      strategy backtest performance; real backtest hooks exist (`use-strategies`/`use-orders` `BacktestsResponse`) but the
+      research equity/signal charts (`equity-chart-with-layers`, execution dialogs) are fed by mocks. And research is NOT
+      reachable from the paper-trading pages (they're outside the shell). **Fix**: wire the research charts to the real
+      backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
+      Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
+      2026-06-23.
+- [ ] [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
+      transfers "by strategy"** (found 2026-06-23, operator concern CONFIRMED by code read). `TransferIntent`
+      (`unified-api-contracts/.../canonical/crosscutting/transfer_events.py:107-161`) grain =
+      `client_id × source_venue × dest_venue × asset` — there is NO first-class `strategy_id` (only free-form `context`);
+      `LedgerRow.strategy_id` is a nullable reporting annotation, not a transfer key. `TransferCoordinator.execute()`
+      (`execution-service/.../transfer_coordinator.py:155`) takes ONE intent at a time — NO batching/netting. The designed
+      netting component `IntraClientRebalanceCoordinator` (Phase E.3, strategy-service) is **UNSHIPPED** (0 source files).
+      So a single client running >1 strategy emits N independent transfers with no netting → a per-strategy wallet
+      breakdown is misleading. **Two fixes**: (1) UI — the paper-trading "Wallet transfers / money movements" panel must
+      scope by client × VENUE × asset, NOT "by strategy" (remove/replace the by-strategy scoping for transfers only).
+      (2) Backend — ship `IntraClientRebalanceCoordinator` (strategy-service) to emit a SINGLE netted `TransferIntent`
+      per client × venue × asset × period (the canonical-correct grain per
+      `codex/04-architecture/client-funds-isolation.md` + per-client-isolation-architecture). Repos:
+      unified-trading-system-ui + strategy-service + UAC. Provenance: B2 deep-dive 2026-06-23 (sub-agent code read).
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
@@ -2589,11 +2630,20 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
   lastAttempt=-1). sports+defi+cefi affected.
 - **DP_ZOMBIE_WATCHDOG_DOWN** — the watchdog census artifact stale.
 
-- [ ] [CODE] P0. **Harden the DP meta-monitors to kill the false-positive flood** — (1) DP_VM_GONE_NO_CAPTURE reads the
-      VM's per-VM shard rows-written + honest-absence reasons (not consolidated captured-delta); (2)
-      DP_CRON_DID_NOT_FIRE is PAUSE-AWARE (skip schedulers in PAUSED state — they're paused-by-design during the
-      campaign); (3) DP_CATALOG_NOT_RUNNING reads the env-SHORT `-prd-` bucket via `resolve_bucket_name` (not env-less →
-      age=None false "missing"). (deployment-service)
+- [x] ✅ [CODE] P0. **Harden the DP meta-monitors to kill the false-positive flood** — deployment-service@7b579ee +
+      alerting-service@add3063. (1) **DP_VM_GONE_NO_CAPTURE is now run.log-reason-aware** — `_gcs.classify_no_capture_reason`
+      reads the VM's durable run.log for PROGRESS ("Wrote N rows" → shard climbed, consolidated lags), HONEST_ABSENCE
+      ("0 trades"/off-season/"already captured"/record_empty/`fetching []`), or RATE_LIMITED (HTTP-429/"Too many
+      requests"); only a SILENT flat (no benign signal) still CRITICAL-alerts (auth/0-universe/unexpected empty). New
+      verdicts EXPECTED_NO_CAPTURE (benign, no alert) + RATE_LIMITED (WARN, backoff). KEEPS firing the true silent zero.
+      (2) **DP_CRON_DID_NOT_FIRE is PAUSE-AWARE** — `FreshnessTarget.scheduler_job` + injected `SchedulerStateReader`;
+      a `PAUSED` scheduler suppresses (paused-by-design), ENABLED-but-stale + UNKNOWN/None still alert (fail-safe-on);
+      cli wires a deferred-import Cloud Scheduler `get_job` query. (3) **DP_CATALOG_NOT_RUNNING env-SHORT fix** — probes
+      `{env}/catalog.parquet` (the real writer path, was `_catalogue/instrument_catalogue.parquet` → age=None false
+      "missing") in the env-SHORT bucket via `resolve_bucket_name` (prediction via its flat key); the alert now SHOWS
+      `probed gs://<bucket>/<path>, artifact ABSENT, budget=Nh` + probed_path/budget_hours/artifact_present fields.
+      QG green both repos (deployment 47s / alerting 43s); 18 new dp-monitor tests + 2 new slack-formatter tests.
+      (deployment-service + alerting-service)
 - [x] ✅ [INFRA] P0. **Restore the genuinely-down infra** — deployment-service@410304f (terraform; live gcloud applied).
       VERDICTS (verified vs live execution-status, not "I enabled it"): (1) **sports MTDS consolidator** — NOT down:
       the NON-legacy `uts-prod-manifest-consolidator-market-data-sports-cron` already EXISTS+ENABLED+fires clean every
@@ -2615,9 +2665,14 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
       `ApiFootballResponseError(is_rate_limit=True)` now retried via `_fetch_and_extract()` (HTTP 200 +
       `{"errors":{"rateLimit":"..."}}` was propagating as `attempted_failed`); `concurrency` lowered 50→10;
       7 unit tests added. — instruments-service@b402294
-- [ ] [CODE] P1. **Match auto-recover actuator to failure MODE** — rate-limit→backoff-retry (not relaunch, re-hits
-      limit); OOM-137→relaunch with HIGHER-mem machine (not same, re-OOMs); paused-cron→suppress; real-cron-down→
-      relaunch_consolidator → file_issue → orchestrator slot. (deployment-service escalation.py)
+- [x] ✅ [CODE] P1. **Match auto-recover actuator to failure MODE** — deployment-service@7b579ee. **rate-limit** → a
+      flat-captured run whose run.log shows a 429 emits `DP_SOURCE_RATE_LIMITED` (WARN, AUTO_RECOVER tier with NO wired
+      relaunch actuator → falls through to backoff/file_issue, NOT a relaunch that re-hits the limit). **OOM-137** →
+      `_finding_for` stamps `bigger_machine=True`; `escalation._recover_backfill_vm` maps it (via `_OOM_MACHINE_LADDER` /
+      `_escalated_machine_type`) to a higher-mem `MACHINE_TYPE` passed through `launcher_env` so the relaunch lands on a
+      bigger tier (never the same → re-OOM). **paused-cron** → suppressed (KEY #2 above, no actuator). **real-cron-down** →
+      unchanged (CONSOLIDATOR_DOWN → relaunch_consolidator → file_issue → orchestrator dispatch). 5 new actuator/verdict
+      tests. (deployment-service escalation.py + exit_code_fleet_monitor.py)
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
       backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 
