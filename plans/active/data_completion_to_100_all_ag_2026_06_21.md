@@ -2589,11 +2589,20 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
   lastAttempt=-1). sports+defi+cefi affected.
 - **DP_ZOMBIE_WATCHDOG_DOWN** — the watchdog census artifact stale.
 
-- [ ] [CODE] P0. **Harden the DP meta-monitors to kill the false-positive flood** — (1) DP_VM_GONE_NO_CAPTURE reads the
-      VM's per-VM shard rows-written + honest-absence reasons (not consolidated captured-delta); (2)
-      DP_CRON_DID_NOT_FIRE is PAUSE-AWARE (skip schedulers in PAUSED state — they're paused-by-design during the
-      campaign); (3) DP_CATALOG_NOT_RUNNING reads the env-SHORT `-prd-` bucket via `resolve_bucket_name` (not env-less →
-      age=None false "missing"). (deployment-service)
+- [x] ✅ [CODE] P0. **Harden the DP meta-monitors to kill the false-positive flood** — deployment-service@7b579ee +
+      alerting-service@add3063. (1) **DP_VM_GONE_NO_CAPTURE is now run.log-reason-aware** — `_gcs.classify_no_capture_reason`
+      reads the VM's durable run.log for PROGRESS ("Wrote N rows" → shard climbed, consolidated lags), HONEST_ABSENCE
+      ("0 trades"/off-season/"already captured"/record_empty/`fetching []`), or RATE_LIMITED (HTTP-429/"Too many
+      requests"); only a SILENT flat (no benign signal) still CRITICAL-alerts (auth/0-universe/unexpected empty). New
+      verdicts EXPECTED_NO_CAPTURE (benign, no alert) + RATE_LIMITED (WARN, backoff). KEEPS firing the true silent zero.
+      (2) **DP_CRON_DID_NOT_FIRE is PAUSE-AWARE** — `FreshnessTarget.scheduler_job` + injected `SchedulerStateReader`;
+      a `PAUSED` scheduler suppresses (paused-by-design), ENABLED-but-stale + UNKNOWN/None still alert (fail-safe-on);
+      cli wires a deferred-import Cloud Scheduler `get_job` query. (3) **DP_CATALOG_NOT_RUNNING env-SHORT fix** — probes
+      `{env}/catalog.parquet` (the real writer path, was `_catalogue/instrument_catalogue.parquet` → age=None false
+      "missing") in the env-SHORT bucket via `resolve_bucket_name` (prediction via its flat key); the alert now SHOWS
+      `probed gs://<bucket>/<path>, artifact ABSENT, budget=Nh` + probed_path/budget_hours/artifact_present fields.
+      QG green both repos (deployment 47s / alerting 43s); 18 new dp-monitor tests + 2 new slack-formatter tests.
+      (deployment-service + alerting-service)
 - [x] ✅ [INFRA] P0. **Restore the genuinely-down infra** — deployment-service@410304f (terraform; live gcloud applied).
       VERDICTS (verified vs live execution-status, not "I enabled it"): (1) **sports MTDS consolidator** — NOT down:
       the NON-legacy `uts-prod-manifest-consolidator-market-data-sports-cron` already EXISTS+ENABLED+fires clean every
@@ -2615,9 +2624,14 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
       `ApiFootballResponseError(is_rate_limit=True)` now retried via `_fetch_and_extract()` (HTTP 200 +
       `{"errors":{"rateLimit":"..."}}` was propagating as `attempted_failed`); `concurrency` lowered 50→10;
       7 unit tests added. — instruments-service@b402294
-- [ ] [CODE] P1. **Match auto-recover actuator to failure MODE** — rate-limit→backoff-retry (not relaunch, re-hits
-      limit); OOM-137→relaunch with HIGHER-mem machine (not same, re-OOMs); paused-cron→suppress; real-cron-down→
-      relaunch_consolidator → file_issue → orchestrator slot. (deployment-service escalation.py)
+- [x] ✅ [CODE] P1. **Match auto-recover actuator to failure MODE** — deployment-service@7b579ee. **rate-limit** → a
+      flat-captured run whose run.log shows a 429 emits `DP_SOURCE_RATE_LIMITED` (WARN, AUTO_RECOVER tier with NO wired
+      relaunch actuator → falls through to backoff/file_issue, NOT a relaunch that re-hits the limit). **OOM-137** →
+      `_finding_for` stamps `bigger_machine=True`; `escalation._recover_backfill_vm` maps it (via `_OOM_MACHINE_LADDER` /
+      `_escalated_machine_type`) to a higher-mem `MACHINE_TYPE` passed through `launcher_env` so the relaunch lands on a
+      bigger tier (never the same → re-OOM). **paused-cron** → suppressed (KEY #2 above, no actuator). **real-cron-down** →
+      unchanged (CONSOLIDATOR_DOWN → relaunch_consolidator → file_issue → orchestrator dispatch). 5 new actuator/verdict
+      tests. (deployment-service escalation.py + exit_code_fleet_monitor.py)
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
       backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 
