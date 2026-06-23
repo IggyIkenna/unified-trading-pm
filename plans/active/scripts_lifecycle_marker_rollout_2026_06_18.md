@@ -130,8 +130,8 @@ source:
       `Epic: mtds_mdps_master`. Target: **market-data-processing-service**. —
       market-data-processing-service@b137537 | 10 files stamped (3 oneoff + 1 campaign + 6 permanent) |
       grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [ ] [SCRIPT] P2. Stamp `client-reporting-api/scripts/` (~9; `daily_update.py` recurring). `Epic:` the client-reporting
-      epic. Target: **client-reporting-api**.
+- [x] ✅ [SCRIPT] P2. Stamp `client-reporting-api/scripts/` (~9; `daily_update.py` recurring). `Epic:` the client-reporting
+      epic. Target: **client-reporting-api**. — client-reporting-api@2300eed | 8 files stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `unified-trading-library/scripts/` (~9; codegen/checkers = `permanent`;
       `migrate_manifest_v8.py` = `oneoff`). `Epic: infrastructure_master`. Target: **unified-trading-library**.
 - [ ] [SCRIPT] P2. Stamp `system-integration-tests/scripts/` (~7; SIT runners = `permanent`).
