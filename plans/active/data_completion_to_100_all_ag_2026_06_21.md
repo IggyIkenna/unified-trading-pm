@@ -1021,6 +1021,38 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
       unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
       2026-06-23.
+- [ ] [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only cross-linked by inline text** (found
+      2026-06-23, operator UX complaint). `app/paper-trading/` has NO `layout.tsx` → it renders under the ROOT layout,
+      NOT the `(platform)` shell (vertical-nav / site-header / `service-tabs`). So inside paper-trading there is NO
+      persistent tab/banner; the 3 pages (`/paper-trading` overview, `/paper-trading/ledgers`, `/paper-trading/coin/[coin]`)
+      are stitched only by inline `<Link>`s (overview→ledgers→coin), and the overview does NOT link directly to the coin
+      drilldown. **Fix**: add `app/paper-trading/layout.tsx` with a tab bar (Overview · Ledgers · Coins) + direct
+      overview→coin links + bring paper-trading under/into the platform shell so it's reachable from the top nav like the
+      rest. Repos: unified-trading-system-ui (UI playwright gate applies: pw:L2 + regression spec). Provenance: B2
+      deep-dive 2026-06-23.
+- [ ] [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** (found
+      2026-06-23). Research IS routed at `app/(platform)/services/research` (inside the shell, nav-reachable), BUT the
+      execution/backtest/features panels use `MOCK_STRATEGY_BACKTESTS` / `fixtures/build-data` — demo data, NOT real
+      strategy backtest performance; real backtest hooks exist (`use-strategies`/`use-orders` `BacktestsResponse`) but the
+      research equity/signal charts (`equity-chart-with-layers`, execution dialogs) are fed by mocks. And research is NOT
+      reachable from the paper-trading pages (they're outside the shell). **Fix**: wire the research charts to the real
+      backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
+      Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
+      2026-06-23.
+- [ ] [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
+      transfers "by strategy"** (found 2026-06-23, operator concern CONFIRMED by code read). `TransferIntent`
+      (`unified-api-contracts/.../canonical/crosscutting/transfer_events.py:107-161`) grain =
+      `client_id × source_venue × dest_venue × asset` — there is NO first-class `strategy_id` (only free-form `context`);
+      `LedgerRow.strategy_id` is a nullable reporting annotation, not a transfer key. `TransferCoordinator.execute()`
+      (`execution-service/.../transfer_coordinator.py:155`) takes ONE intent at a time — NO batching/netting. The designed
+      netting component `IntraClientRebalanceCoordinator` (Phase E.3, strategy-service) is **UNSHIPPED** (0 source files).
+      So a single client running >1 strategy emits N independent transfers with no netting → a per-strategy wallet
+      breakdown is misleading. **Two fixes**: (1) UI — the paper-trading "Wallet transfers / money movements" panel must
+      scope by client × VENUE × asset, NOT "by strategy" (remove/replace the by-strategy scoping for transfers only).
+      (2) Backend — ship `IntraClientRebalanceCoordinator` (strategy-service) to emit a SINGLE netted `TransferIntent`
+      per client × venue × asset × period (the canonical-correct grain per
+      `codex/04-architecture/client-funds-isolation.md` + per-client-isolation-architecture). Repos:
+      unified-trading-system-ui + strategy-service + UAC. Provenance: B2 deep-dive 2026-06-23 (sub-agent code read).
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
