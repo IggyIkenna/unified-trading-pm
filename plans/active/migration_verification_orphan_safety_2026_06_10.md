@@ -746,6 +746,22 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
     1,221,955 OOW empty · 6,016 within-window empty · 2,740 failed → denominator 358,082 → **97.55%** (vs 22.11% naive
     including OOW in denominator; +75.44pp improvement).
 
+- [x] ✅ [DATA] P1. **OOW partition is now DATA-TYPE-AWARE — schedule-defining FIXTURES `SOURCE_RETURNED_ZERO`
+      (no-match-day) counts as RESOLVED, not a gap (operator direction 2026-06-23).** A schedule-DEFINING data_type IS
+      the source-of-truth for what exists to capture; sports `FIXTURES` (API-Football) returning 200+0-rows for a
+      (league, day) means there genuinely were NO matches that day → out-of-window/resolved, like `EXPECTED_NO_FIXTURE`.
+      Data-type-aware on purpose: an ENRICHMENT (`FIXTURE_STATS`/`PLAYER_STATS`/`ODDS`/`MATCHES`) `SOURCE_RETURNED_ZERO`
+      stays an in-window gap (its zero may be a real miss; `MATCHES`/FootyStats is fixture-pinned, NOT schedule-defining
+      — only `FIXTURES` qualifies). Shipped: **UAC** new `SCHEDULE_DEFINING_DATA_TYPES` (`frozenset({"FIXTURES"})`) +
+      `is_resolved_schedule_empty(data_type, reason)` + `is_out_of_coverage_window(reason, data_type=None)` gains the
+      optional `data_type` (`_honest_coverage_logic.py` / `honest_coverage.py` / `__init__.py`; +1 test class, 45 pass).
+      **deployment-api** `coverage.py` + `coverage_metrics.compute_out_of_window_count` thread the `data_type` column
+      through (5 new tests, 38 pass). **Codex** `honest-absence-downstream-handling.md` § "OOW Denominator Partition" +
+      new subsection. **Re-measured golden window** (sports `_index`, 2025-09-01..2025-11-30): **FIXTURES 93.7% →
+      100.0%** (233 no-match-day SRZ cells reclassified gap→resolved); **overall sports 46.6% → 46.9%** (overall stays
+      low — the enrichment data_types are genuinely incomplete, correctly NOT affected). Repos: unified-api-contracts,
+      deployment-api, unified-trading-pm. Provenance: operator directive 2026-06-23.
+
 - 2026-06-12 (~11:45Z, operator eyeball session) — **unique-instruments headline SHIPPED + LIVE** (operator: "the
   headline should be unique... the catalogue should be deduplicating" — correct on all counts). The lifecycle catalogue
   (`prod/catalog.parquet`, one row per instrument identity) IS the dedup source; the headline was summing per-shard
