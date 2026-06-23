@@ -2497,6 +2497,11 @@ the rest of history.
   log-snippet regression tests | image builds c2beac49 (alerting-service:latest) + c0f6dc2f (deployment-api:latest) →
   redeploy dp-alerting-subscriber + uts-prod-dp-exit-code-monitor + e2e verify. Gap-4 root-cause + deploy todo:
   `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md`
+- [ ] [DATA] P0. **XG/understat backfill is OOMing (exit 137, MemoryError) — surfaced by the now-actionable alerts
+  2026-06-23.** The `instr-backfill-sports-xg-*` VMs (understat) hit `MemoryError`/`Killed`/rc=137 — memory-bound, so a
+  blind restart re-OOMs. Remediation: relaunch XG/understat with a higher-memory machine type OR batch/stream the
+  understat fetch (per-league/per-month chunks) so it fits. Blocks the XG slice of the golden-window backfill.
+  (deployment-service launcher + instruments-service understat handler)
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
   backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 
