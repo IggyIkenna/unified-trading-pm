@@ -375,13 +375,14 @@ clears the flag on recovery.
 
 - [ ] [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 are failing (resilience gap, pre-existing).** The
       auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
-      `NameResolutionError: Failed to resolve 'uts-orchestrator-state-427895769566.s3.asia-northeast1.amazonaws.com'`
-      → `s3_uri: None`, and `aws s3 ls …/snapshots/planning/2026-06-23/` is EMPTY (no snapshots land). Root cause: the
+      `NameResolutionError: Failed to resolve 'uts-orchestrator-state-427895769566.s3.asia-northeast1.amazonaws.com'` →
+      `s3_uri: None`, and `aws s3 ls …/snapshots/planning/2026-06-23/` is EMPTY (no snapshots land). Root cause: the
       cloud-agnostic config feeds the **GCP** region name `asia-northeast1` to the **AWS** S3 client, which needs
       `ap-northeast-1` (AWS Tokyo) — so the endpoint hostname is invalid. The orchestrator runs fine on local state, so
       this is non-urgent, BUT on a VM loss the state can't be recovered from S3. Likely fix: set
-      `AWS_REGION=ap-northeast-1` for the orchestrator (verify the bucket's region first via `aws s3api
-      get-bucket-location`) OR fix the per-cloud region mapping in the S3 client construction. Owner: ops/operator.
+      `AWS_REGION=ap-northeast-1` for the orchestrator (verify the bucket's region first via
+      `aws s3api     get-bucket-location`) OR fix the per-cloud region mapping in the S3 client construction. Owner:
+      ops/operator.
 
 ## Success criteria
 
@@ -404,11 +405,11 @@ clears the flag on recovery.
 
 ## Live incident + fix (2026-06-22 evening) — slot-3 "Auto-respawn FAILED" spam + cap-burn
 
-**Symptom:** `agent-orchestrator-alerts` fired "Auto-respawn FAILED slot 3 — kick failed, pane='frozen',
-last_ping>15m / Attempted: branch-state quarantine (FM5/FM7); respawn skipped" every ~2 min. Root cause: slot-3's
-`instruments-service` clone was left on a leftover `_tmp-stage-rebase2` branch (clean, fully merged to origin) from an
-isolated-worktree promote → FM7 `wrong_branch` → `should_stop` → the watchdog skipped respawn + paged. Compounded by the
-watchdog daily kill-cap (20) being burned by frozen-slot churn → dormant-until-UTC-midnight → fleet stranded.
+**Symptom:** `agent-orchestrator-alerts` fired "Auto-respawn FAILED slot 3 — kick failed, pane='frozen', last_ping>15m /
+Attempted: branch-state quarantine (FM5/FM7); respawn skipped" every ~2 min. Root cause: slot-3's `instruments-service`
+clone was left on a leftover `_tmp-stage-rebase2` branch (clean, fully merged to origin) from an isolated-worktree
+promote → FM7 `wrong_branch` → `should_stop` → the watchdog skipped respawn + paged. Compounded by the watchdog daily
+kill-cap (20) being burned by frozen-slot churn → dormant-until-UTC-midnight → fleet stranded.
 
 - [x] ✅ [OPS] P0. **Immediate recovery (live, central VM).** Cleaned slot-3's leftover `_tmp` branch (verified 0
       unpushed-unique commits first); raised `ORCHESTRATOR_WATCHDOG_DAILY_CAP` 20→**50** in `.env.local` (operator
@@ -417,15 +418,16 @@ watchdog daily kill-cap (20) being burned by frozen-slot churn → dormant-until
       excluded, re-funded accounts auto-rejoin). — central-VM SSM.
 - [x] ✅ [ORCHESTRATOR] P1. **FM7 auto-reclaim of a leftover clean+fully-merged throwaway branch** (the slot-3
       respawn-blocker, made automatic). `_branch_state.py::_reclaim_leftover_merged_branch` — a leading-`_` throwaway
-      branch (`_tmp-*`/`_backmerge`) that is CLEAN **and** an ancestor of `origin/<base>` (0 unpushed) auto-switches back
-      to `<base>` + deletes the leftover (new `reclaimed` non-stop status); a dirty tree, unpushed work, or a deliberate
-      branch (`feature/*`, `main`) still STOPs (never loses work). + `config.py` `watchdog_daily_cap` default 20→50. 5
-      regression tests (`tests/test_branch_state_reclaim.py`), QG-green. — agent-orchestrator@76970857
+      branch (`_tmp-*`/`_backmerge`) that is CLEAN **and** an ancestor of `origin/<base>` (0 unpushed) auto-switches
+      back to `<base>` + deletes the leftover (new `reclaimed` non-stop status); a dirty tree, unpushed work, or a
+      deliberate branch (`feature/*`, `main`) still STOPs (never loses work). + `config.py` `watchdog_daily_cap` default
+      20→50. 5 regression tests (`tests/test_branch_state_reclaim.py`), QG-green. — agent-orchestrator@76970857
+
 ### DEPLOY BLOCKER — central-VM orchestrator clone is 128 commits stale + the new code has 2 deploy-time incompatibilities
 
 The deploy clone (`/home/ubuntu/.../agent-orchestrator`, runs the live brain) is **128 commits behind**
-`origin/live-defi-rollout` (predates the entire `utl_uac` typed-config refactor) with **no auto-deploy cron**, so the FM7
-fix above is NOT live on the running orchestrator. Two safe-gated catch-up attempts (ff-pull → dry-run → restart →
+`origin/live-defi-rollout` (predates the entire `utl_uac` typed-config refactor) with **no auto-deploy cron**, so the
+FM7 fix above is NOT live on the running orchestrator. Two safe-gated catch-up attempts (ff-pull → dry-run → restart →
 rollback) on 2026-06-22 surfaced **two distinct new-code incompatibilities with this VM's setup**. Each attempt was
 cleanly rolled back to `980217d`; the fleet stayed healthy (4 usable accounts, spawning) on the old code throughout. The
 safe-gate (running service untouched until a verified restart) worked as designed.
@@ -434,18 +436,19 @@ safe-gate (running service untouched until a verified restart) worked as designe
       `ikenna@odum-research.com`'s **`authorized_user`** ADC (`gcloud auth application-default login`), not a
       service-account. UTL's `cloud_interface/providers/gcp.py::_get_native_client` does
       `storage.Client.from_service_account_json(creds_path)` **whenever `GOOGLE_APPLICATION_CREDENTIALS` is set** —
-      which chokes on the authorized_user file (`MalformedError: missing token_uri, client_email`). `get_credentials_path()`
-      = `os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")`, so **unsetting that env var** makes it fall to
-      `storage.Client(project=…)` default ADC, which loads the same authorized_user creds from the well-known path.
-      VALIDATED on the VM: `get_storage_client(provider="gcp").download_bytes(orchestrator-creds, internal-private.pem)`
-      → `bytes=241` with the env var unset. Fix = remove the (redundant) `GOOGLE_APPLICATION_CREDENTIALS` line from the
-      central VM's `.env.local`.
+      which chokes on the authorized_user file (`MalformedError: missing token_uri, client_email`).
+      `get_credentials_path()` = `os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")`, so **unsetting that env var** makes
+      it fall to `storage.Client(project=…)` default ADC, which loads the same authorized_user creds from the well-known
+      path. VALIDATED on the VM:
+      `get_storage_client(provider="gcp").download_bytes(orchestrator-creds, internal-private.pem)` → `bytes=241` with
+      the env var unset. Fix = remove the (redundant) `GOOGLE_APPLICATION_CREDENTIALS` line from the central VM's
+      `.env.local`.
 - [x] ✅ [UTL] P1. **Blocker 1b — UTL hardening (SHIPPED).** `_get_native_client` now only calls
       `storage.Client.from_service_account_json` when the creds file is an actual service-account key
       (`type == "service_account"`); a user/authorized_user ADC (or no path) goes through `storage.Client(project=…)` →
-      `google.auth.default()`, which handles both cred types — so a user-ADC host works without the env-unset workaround.
-      `_is_service_account_json` helper + 2 regression tests (real SA → `from_service_account_json`; authorized_user ADC
-      → default path), QG-green. — unified-trading-library@5e413c7f
+      `google.auth.default()`, which handles both cred types — so a user-ADC host works without the env-unset
+      workaround. `_is_service_account_json` helper + 2 regression tests (real SA → `from_service_account_json`;
+      authorized_user ADC → default path), QG-green. — unified-trading-library@5e413c7f
 - [ ] [OPS] P1. **Blocker 2 — account roster file (ROOT CAUSE NAILED; operator-domain fix).** The new code REQUIRES an
       explicit `oauth_token_env_file` per account; the **old code derived** the token path by convention
       (`~/.claude-accounts/<id>.env`), so it spawns fine without the field. The running 4-account state (sub-a/b/c/d,
@@ -454,11 +457,11 @@ safe-gate (running service untouched until a verified restart) worked as designe
       but is STALE** (2026-05-22; only 3 accounts — sub-a/b/c, missing sub-d) AND is **not present locally** at
       `data/config/accounts.json` (the new code's read path — only `accounts.mock.json` is there; the live one is
       operator-edited/committed and went missing). All 4 token `.env` files exist in `~/.claude-accounts/`. **Fix: place
-      a current `data/config/accounts.json` with all 4 accounts each carrying `oauth_token_env_file:
-      ~/.claude-accounts/<id>.env`** (+ refresh the stale S3 copy to match). The schema is known (matches the S3 copy);
-      the roster (which accounts / limits / sub-d) is the operator's live account config — confirm the roster, then the
-      redeploy runs both validated fixes (unset `GOOGLE_APPLICATION_CREDENTIALS` + this file) safe-gated. Owner: operator
-      (account roster).
+      a current `data/config/accounts.json` with all 4 accounts each carrying
+      `oauth_token_env_file:     ~/.claude-accounts/<id>.env`** (+ refresh the stale S3 copy to match). The schema is
+      known (matches the S3 copy); the roster (which accounts / limits / sub-d) is the operator's live account config —
+      confirm the roster, then the redeploy runs both validated fixes (unset `GOOGLE_APPLICATION_CREDENTIALS` + this
+      file) safe-gated. Owner: operator (account roster).
 - [x] ✅ [OPS] P2. **Redeploy DONE (2026-06-23).** Both fixes applied (restored S3 `config/accounts.json` → local
       `data/config/accounts.json` per operator; unset `GOOGLE_APPLICATION_CREDENTIALS`) + ff-pull to current LDR +
       restart. New code LIVE (`a169552`) with the FM7 fix + cap-default + 128 commits: 3 accounts loaded WITH
@@ -472,12 +475,58 @@ safe-gate (running service untouched until a verified restart) worked as designe
       `auth_failed` (not auto-reused). Root causes: **(1) route gap** — `/api/accounts/{id}/refresh-usage`
       (`routes/accounts.py`) updated usage on a successful probe but **never called `clear_account_auth_failed`** (a
       manual refresh updated usage 43→19% but left `auth_failed` set), unlike the poller's `_tick_once` which clears on
-      success; **(2) latency** — `UsagePoller` re-probes every account only every **30 min** (`DEFAULT_INTERVAL_MINUTES`),
-      so even with the clear-on-success a returned account waited up to 30 min. Fixes: (a) route now
-      `ss.clear_account_auth_failed` on a valid probe (parity with the poller); (b) new
+      success; **(2) latency** — `UsagePoller` re-probes every account only every **30 min**
+      (`DEFAULT_INTERVAL_MINUTES`), so even with the clear-on-success a returned account waited up to 30 min. Fixes: (a)
+      route now `ss.clear_account_auth_failed` on a valid probe (parity with the poller); (b) new
       `UsagePoller._reprobe_unhealthy_once` runs every `_FAST_REPROBE_SECONDS=120` between full ticks, re-probing ONLY
       `auth_failed`/`rate_limited` accounts and clearing them on a successful probe → a returned account self-heals
       within ~2 min, no manual `/refresh-usage`. 3 regression tests. — agent-orchestrator (shipping)
+
+### Operator review (2026-06-23) — incident-cluster hardening (fleet-resilience + outage-recovery + carve-out QG)
+
+Source: 2026-06-23 operator-requested codebase + boot-prompt review after a 3-incident day — account exhaustion →
+Anthropic server OUTAGE → a slot-22 `carveout=scripts` commit reddening PM's gate, which **starved the whole fleet**.
+Account-exhaustion is already closed (rotation headroom-gate `agent-orchestrator@f296fd4`, failover plan Phase 6) + the
+account self-recovery above; outage _detection_ is Task E. These close the remaining **fleet-resilience**,
+**outage-RECOVERY**, and **carve-out-QG** gaps. Boot-prompt audit verdict: `worker.md` DOES carry the Pass-1 QG → Pass-2
+quickmerge contract (lines 245-262) — the gaps are a stale section + a lane that skips the sentinel, below.
+
+- [ ] [ORCHESTRATOR] P0. **Fleet-resilience — a red PM gate must NOT starve dispatch.** slot-22's `carveout=scripts`
+      commit `unified-trading-pm@2dc131639` (lifecycle-marker frontmatter on 493 scripts) reddened PM `quality-gates-v2`
+      (PR #506 LDR→main) on pre-existing ratchet debt → PM `main` blocked → fleet dispatch starved (the central VM's PM
+      clone tracks `main`; `regen_backlog_from_plan` reads its `plans/active/`, so a stuck `main` froze the backlog for
+      everyone). Decouple dispatch from PM-`main` currency: `regen_backlog_from_plan` reads the PM clone's
+      `live-defi-rollout` content (or falls back to it when `main` is behind LDR), so a blocked PM gate degrades
+      gracefully — work keeps dispatching from LDR plans instead of freezing the fleet. Repo: agent-orchestrator
+      (`server/regen_backlog_from_plan.py`). +regression test.
+- [ ] [ORCHESTRATOR] P1. **Carve-out pushes must still pass LOCAL QG — the carve-out gates the ROUTE, not the TESTING.**
+      `Quickmerge: carveout=…` (PM `scripts/**` / `.github/**`) bypasses the STAGING route by design, but slot-22's
+      carve-out also skipped the Pass-1 `.qg_last_passed_sha` sentinel — so an untested change reached `main` directly.
+      Tighten the pre-push guard (`scripts/cicd/check_strict_quickmerge.py` + the pre-push hook) so a carve-out commit
+      still requires a fresh local QG sentinel (== HEAD); a pure-docs carve-out with no gate is explicitly scoped. The
+      carve-out lane proves the ROUTE is sanctioned, never that the code is tested. Repo: agent-orchestrator (PM-SSOT
+      `scripts/cicd/`). +tests.
+- [ ] [ORCHESTRATOR] P1. **Outage-aware flap-guard + force-resume-on-recovery.** Outage DETECTION exists (Task E:
+      5xx/timeout/connection = transient, never `auth_failed`/`rate_limit`; `_check_likely_outage` pages once). The
+      RECOVERY gap (the "by the time they came online the test was over" symptom): repeated spawn failures INTO a known
+      outage trip the 1h flap-backoff, and there is NO "outage cleared → release backoff + force a spawn tick" signal →
+      agents sit in backoff after the API returns. Fix: (a) the flap-guard does not count spawn failures that occur
+      during an active likely-outage window; (b) the poller's recovery signal (first successful re-probe /
+      `clear_likely_outage_alerted`) clears `_flap_backoff_until` fleet-wide + triggers an immediate AutoSpawn tick, so
+      agents resume within seconds of recovery, not after a stale 1h backoff. Repo: agent-orchestrator
+      (`server/autospawn.py` + `server/usage_poller.py`). +tests.
+- [ ] [CICD] P1. **basedpyright ratchet/cache fragility on bulk-frontmatter ops.** Diagnose-then-fix: confirm the
+      PR-#506 QG failure mode (the lifecycle-marker SSOT says `scripts/` are ruff-gated, NOT basedpyright/coverage — so
+      a benign frontmatter stamp should not red the typecheck). If a bulk-comment edit busts the incremental cache into
+      a full-repo run that surfaces latent debt over a too-tight ratchet: (a) force a clean basedpyright cache on the
+      lifecycle-marker rollout path (or keep `scripts/` out of the typecheck per the SSOT), and (b) widen the ratchet
+      safety buffer so a cache-bust can't red the gate on pre-existing debt. Repo: unified-trading-pm
+      (`scripts/quality-gates-base/*` + the ratchet baseline). Verify on ≥1 consumer repo.
+- [ ] [ORCHESTRATOR] P2. **`worker.md` stale G6 section.** Lines ~281-291 still describe the retired AO "no `staging`
+      branch yet / use `check.sh` / quickmerge not wired" exception — AO migration is COMPLETE (staging +
+      `quickmerge.sh` are live on AO). A worker following it would mis-ship AO. Replace with the standard Pass-1
+      `quality-gates.sh` → Pass-2 `quickmerge --agent --files` flow, same as any repo. Repo: agent-orchestrator
+      (`agents/worker.md`).
 
 ## Success criteria
 
