@@ -211,7 +211,7 @@ fixed + verified, one systemic + still open:
   the full chain WORKS: filter (2000 survive) → cqg bucket → instruments.parquet @venue=KALSHI → manifest captured
   (source=kalshi) → lifecycle. **Kalshi LIVE producers RESOLVED the universe** (`prediction-live-kalshi-{trades,book_snapshot_5}`
   read venue=KALSHI; keep-alive ended 2026-06-22 14:06). No code change needed.
-- [ ] [SCRIPT] P0. **RESIDUAL — Kalshi live RESOLVES but SKIPS ticks (id-format mismatch)**: the live producers now
+- [x] ✅ [SCRIPT] P0. **RESIDUAL — Kalshi live RESOLVES but SKIPS ticks (id-format mismatch)**: the live producers now
   find the Kalshi universe but log `KalshiClob: unknown instrument 'KXMVE…' — expected KALSHI:PREDICTION_MARKET:{ticker}; skipping`
   for every market → no real Kalshi ticks captured yet. Root: mtds `live/_is_universe.py::prediction_instrument_ids_from_df`
   short-circuits `if "instrument_key" in df.columns: return bare instrument_key` (line 27-28), and the IS Kalshi
@@ -222,7 +222,8 @@ fixed + verified, one systemic + still open:
   (b) set the IS Kalshi adapter `instrument_key = f"KALSHI:PREDICTION_MARKET:{ticker}"` (canonical InstrumentKey form) —
   cleaner but audit cross-consumers (cqg classifier uses the ticker arg, not instrument_key, so likely safe). Verify the
   live connector captures after redeploy. Repo: market-tick-data-service (live/_is_universe.py) and/or instruments-service
-  (kalshi.py). Provenance: prediction-to-100% drive 2026-06-22.
+  (kalshi.py). Provenance: prediction-to-100% drive 2026-06-22. — mtds@aed9fb2 (option-a: venue-aware instrument_key branch
+  rebuilds bare KALSHI ticker → `KALSHI:PREDICTION_MARKET:{ticker}`; docstring "KALSHI silent-empty fix 2026-06-22")
 
 - [ ] [SCRIPT] P3. **DISPLAY-ONLY bug (cosmetic, ≤2min)**: `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh:83` echoes `Tarball: gs://.../instruments-code.tar.gz` but the VM setup (`setup-data-pipeline-vm.sh:311`) actually fetches `instruments-service-code.tar.gz` (correct). The echo misleads tarball-freshness debugging — fix the echo string. Provenance: prediction-to-100% drive 2026-06-22. Repo: deployment-service.
 
