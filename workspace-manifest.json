@@ -1941,7 +1941,7 @@
     "alerting-service": "0.29.0",
     "e2e-testing": "0.26.0",
     "execution-service": "0.31.0",
-    "instruments-service": "0.41.0",
+    "instruments-service": "0.43.0",
     "agent-orchestrator": "0.45.0",
     "market-tick-data-service": "0.50.0",
     "deployment-service": "0.48.0",
