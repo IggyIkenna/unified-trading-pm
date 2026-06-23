@@ -164,9 +164,13 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 - [ ] [UI] P2. **Fold Research-launch (ML/Strategy/Exec-BT)** → a cockpit **"Launch"** tab. `[UI]` — pw:L2 + regression.
 - [ ] [UI] P2. **Fold Safety Ops** → cockpit tab (UI exists; backend is a STUB — wire `/safety-ops/*` routes later).
       `[UI]` — pw:L2 + regression.
-- [ ] [UI] P1. **Strip the top bar to UTILITY-ONLY** once every surface is a cockpit tab: keep DEV/STAGING/PROD badge ·
-      LIVE/MOCK DATA · Clear Cache · API status · GCP/AWS toggle · version; remove ALL page-nav links. `[UI]` — pw:L2
-      (FULL `tests/smoke/` green) + regression.
+- [x] ✅ [UI] P1. **Strip the top bar to UTILITY-ONLY**: top bar is now DEV/STAGING/PROD badge · LIVE/MOCK DATA · Clear
+      Cache · API status · GCP/AWS toggle · version + a single **Cockpit** entry. The 10 page-nav links (VM-Deps,
+      Deployments, Chaos, Live-Ops, Repos-CI, Alerts, Safety-Ops, ML, Strategy, Exec-BT) moved into the cockpit (status
+      tiles + a "Consoles & tools" section), so every surface stays reachable (orphan-audit green); the nav-click specs
+      were migrated to navigate via the cockpit. — deployment-ui@7e698d6 | pw:L2 ✓ (FULL tests/smoke 269 green) |
+      regression: tests/smoke/{nav_and_header,alerts-page,deployments-page,repos-tab,url-sync,cockpit}.spec.ts. (The
+      lone-remaining "Cockpit" button is removed when the cockpit becomes the literal default page — the next todo.)
 
 ### Phase 1 — Health rollup backend (foundation, pure reuse) — deployment-api
 
