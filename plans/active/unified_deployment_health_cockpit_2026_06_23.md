@@ -233,10 +233,16 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       reconciled against `DeploymentsRegistry` ∪ `CLOUD_RUN_JOBS` ∪ expected-from-launcher set. Surface UNKNOWN (running
       but unregistered) + EXPECTED-MISSING (registered/scheduled but not running) as distinct rows. (deployment-api,
       reuses both watchdog censuses)
-- [ ] [SCRIPT] P2. **Monitoring-registration declaration**: define the machine-readable "this deployable service
+- [x] ✅ [SCRIPT] P2. **Monitoring-registration declaration**: define the machine-readable "this deployable service
       registers for monitoring" surface (the natural home: a `DeploymentTarget`/service entry the inventory already
       classifies + a required `make_health_router(data_freshness=...)` self-report). Decide minimal marker that proves a
-      long-lived service is inventory-visible. (deployment-service + UAC if a registry entry is needed)
+      long-lived service is inventory-visible. (deployment-service + UAC if a registry entry is needed) —
+      deployment-service@0ad6b81: new `deployment_service/monitored_services.py` (`MONITORED_SERVICES` of 14 long-lived
+      services — all 12 data-plane svcs `data_freshness=True` + deployment-api/unified-trading-api gateways `False`;
+      each LIVE-classified via `classify_deployment_target`; accessors `is_service_monitored` +
+      `monitored_service_names`) + `tests/unit/test_monitored_services_registry_guard.py` (8 tests, GREEN on arrival —
+      every service/api-service/api repo registered). QG green (`--no-fix`, sentinel c66b5b3). batch-service repos
+      register as Cloud Run JOBS, not here.
 - [ ] [SCRIPT] P3. **QG enforcement = HARD-FAIL (operator 2026-06-23)**: extend `base-service.sh` (new STEP) + a guard
       test parallel to `test_cloud_run_job_registry_guard.py` so a deployable service lacking the
       monitoring-registration marker **fails QG/deploy outright** (not a ratchet). **Land green, not red**: in the SAME
