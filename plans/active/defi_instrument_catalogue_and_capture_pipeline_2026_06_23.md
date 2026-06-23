@@ -87,3 +87,37 @@ Plus the instrument_ids are non-canonical (`UNISWAPV3-ARBITRUM:POOL:…` = glued
   dex_swaps/pools writer records a blank-instrument venue×chain aggregate while the catalogue enumerates per-pool →
   408k live pools wrongly `EXPECTED_INSTRUMENT_DELISTED`. Operator chose canonical atom = per-pool (fix the writer).
   Plan captured. Next: Phase-4 per-pool writer fix (the bounded first code step), then the IS catalogue phases.
+
+- **2026-06-23 (autonomous takeover — fresh-context investigation COMPLETE, 3 parallel sub-agents)**: Mapped the full
+  surface before touching code. KEY FINDINGS (decisive — reshape the fix):
+  - **`instrument_id` IS already a first-class manifest dimension** — `unified-trading-library/.../manifest_writer/_writer_ingest.py`
+    `add()` accepts `instrument_id: str=""` (Phase-1.9); `_rows.py` `_ROW_KEY_COLUMNS` includes it; `AvailabilityRecord.instrument_id`
+    is a v9 column ("matches InstrumentRecord.instrument_key"); `_SHARD_ATOM_KEYS = frozenset({"instrument_id","chain"})`
+    means once in a row_key it MUST be non-blank. **The prediction handler already records per-instrument via
+    `instrument_id=cqg`** — that is the template. **NO UTL/UAC schema change needed** — the writer fix THREADS an existing column.
+  - **Live `_index` measured fresh** (`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`):
+    **6,519,518 rows, 100% schema_version=9**, `instrument_id` non-null on all, **11,628 distinct instrument_id values**.
+    capture_status: empty_confirmed 3,626,037 / expected_unattempted 1,856,985 / captured 1,005,848 / attempted_failed 30,648.
+    empty reasons: NOT_LISTED 1,977,666 · PRE_GENESIS_CHAIN 1,171,997 · **DELISTED 408,442 (matches plan)** · SOURCE_RETURNED_ZERO 48,925 ·
+    PRE_VENUE_LAUNCH 18,665. DELISTED spans live venues (UNISWAP_V3 254,334 / PANCAKESWAP_V3 33,652 / UNISWAP_V4 32,368 /
+    CAMELOT_V3 9,294 / AERODROME_V3 6,256) AND lending/perp/oracle (AAVE_V3/COMPOUND_V3/MORPHO) — so the fix touches MORE
+    handlers than just dex_swaps+dex_pools. 35 distinct data_types present (not 4); the 4 MVP DeFi data_types =
+    `dex_pool_state`, `dex_pool_swaps`, `oracle_prices`, + lending/lst.
+  - **ROOT CAUSE pinned (the grain mismatch, exactly)**: IS lifecycle catalogue `build_instrument_catalogue.py` →
+    `instruments-store-defi-prd/prod/catalog.parquet` emits per-pool rows (`instrument_id=pool_address.lower()`,
+    `available_from`/`available_to`, `mvp`). `enumerate_expected_universe.py::_enumerate_v2_defi` seeds the `_index`
+    PER-POOL with `instrument_id`: `date > available_to` → `EXPECTED_INSTRUMENT_DELISTED`. But the DEX/lending handlers'
+    `record_captured` pass **NO `instrument_id`** (`_defi_manifest.py::_emit_captured_add` + `_build_row_key` omit it) →
+    a captured venue×chain aggregate row `(date,UNISWAP_V3,ARBITRUM,dex_pool_state,instrument_id="")` NEVER reconciles
+    against the per-pool seeded cell `(...,instrument_id=0xabc...)` → the per-pool cell stays at its seeded
+    empty/DELISTED state. PLUS the catalogue `available_to` closes when a still-live pool drops out of a daily top-N-by-TVL
+    subgraph snapshot → next day `date>available_to` → DELISTED on a genuinely-live pool (the discontinuous-liquidity nuance, Phase 2).
+  - **EmptyConfirmedReason** = 36 values in `unified-api-contracts/.../canonical/crosscutting/honest_coverage.py` (line 89 enum;
+    `EMPTY_CONFIRMED_REASONS` frozenset auto-derives; `OUT_OF_COVERAGE_WINDOW_REASONS` line ~451 = denominator-excluded set).
+    Adding `EXPECTED_NOT_ENOUGH_TVL` = one enum line + add to `OUT_OF_COVERAGE_WINDOW_REASONS` (it's outside-coverage like NOT_LISTED).
+  - **Catalogue today**: lifecycle roll-up daily 01:00 UTC via `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf`
+    (`lifecycle-catalogue-regen-defi` Cloud Run job). Single `(available_from,available_to)` pair — NO discontinuous-range modeling yet (Phase 2).
+  - **PLAN OF ATTACK** (revised, dependency-ordered): (5) UAC `EXPECTED_NOT_ENOUGH_TVL` first (lowest-risk, unblocks correct
+    classification) → (4-writer) thread per-pool `instrument_id` through dex_swaps + dex_pools handlers (+ verify lending/oracle/perp
+    handlers' grain) → (1-3) IS catalogue per-pool availability + monotonic available_to (fix premature delisting) →
+    (4-data) re-capture/reconcile the 408k → (gates) answer the 4 verification gates with measured evidence.
