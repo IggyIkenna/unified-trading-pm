@@ -1083,27 +1083,23 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
 - [ ] [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** (found
       2026-06-23). Research IS routed at `app/(platform)/services/research` (inside the shell, nav-reachable), BUT the
       execution/backtest/features panels use `MOCK_STRATEGY_BACKTESTS` / `fixtures/build-data` — demo data, NOT real
-      strategy backtest performance; real backtest hooks exist (`use-strategies`/`use-orders` `BacktestsResponse`) but
-      the research equity/signal charts (`equity-chart-with-layers`, execution dialogs) are fed by mocks. And research
-      is NOT reachable from the paper-trading pages (they're outside the shell). **Fix**: wire the research charts to
-      the real backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔
-      paper-trading. Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2
-      deep-dive 2026-06-23.
-- [ ] [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not
-      scope transfers "by strategy"** (found 2026-06-23, operator concern CONFIRMED by code read). `TransferIntent`
-      (`unified-api-contracts/.../canonical/crosscutting/transfer_events.py:107-161`) grain =
-      `client_id × source_venue × dest_venue × asset` — there is NO first-class `strategy_id` (only free-form
-      `context`); `LedgerRow.strategy_id` is a nullable reporting annotation, not a transfer key.
-      `TransferCoordinator.execute()` (`execution-service/.../transfer_coordinator.py:155`) takes ONE intent at a time —
-      NO batching/netting. The designed netting component `IntraClientRebalanceCoordinator` (Phase E.3,
-      strategy-service) is **UNSHIPPED** (0 source files). So a single client running >1 strategy emits N independent
-      transfers with no netting → a per-strategy wallet breakdown is misleading. **Two fixes**: (1) UI — the
-      paper-trading "Wallet transfers / money movements" panel must scope by client × VENUE × asset, NOT "by strategy"
-      (remove/replace the by-strategy scoping for transfers only). (2) Backend — ship `IntraClientRebalanceCoordinator`
-      (strategy-service) to emit a SINGLE netted `TransferIntent` per client × venue × asset × period (the
-      canonical-correct grain per `codex/04-architecture/client-funds-isolation.md` +
-      per-client-isolation-architecture). Repos: unified-trading-system-ui + strategy-service + UAC. Provenance: B2
-      deep-dive 2026-06-23 (sub-agent code read).
+      strategy backtest performance; real backtest hooks exist (`use-strategies`/`use-orders` `BacktestsResponse`) but the
+      research equity/signal charts (`equity-chart-with-layers`, execution dialogs) are fed by mocks. And research is NOT
+      reachable from the paper-trading pages (they're outside the shell). **Fix**: wire the research charts to the real
+      backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
+      Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
+      2026-06-23.
+- [x] ✅ [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
+      transfers "by strategy"** — **UI FIX SHIPPED 2026-06-23** `unified-trading-system-ui@c58bc608`:
+      removed `strategyId` param from `useLedgerTransfers` + `TransfersPanel`; transfers panel now scopes by
+      `client × venue × asset` (correct grain) with explanatory note. `IntraClientRebalanceCoordinator` backend
+      **DEFERRED** to Phase E.3 (strategy-service, separate plan item below). Repos: unified-trading-system-ui. Provenance:
+      B2 deep-dive 2026-06-23 (sub-agent code read). **Note**: backend netting deferred — see next item.
+- [ ] [INFRA] P2 **DEFERRED from task-082** — ship `IntraClientRebalanceCoordinator` (strategy-service) to emit a SINGLE
+      netted `TransferIntent` per `client × venue × asset × period`. Currently `TransferCoordinator.execute()` takes ONE
+      intent at a time (no batching/netting); N independent transfers emitted per client×strategy. Repos: strategy-service +
+      UAC. SSOT: `codex/04-architecture/client-funds-isolation.md` + `codex/04-architecture/per-client-isolation-architecture.md`.
+      Phase E.3. Provenance: task-082 2026-06-23.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
