@@ -332,6 +332,29 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-23 (autonomous) — fixture-level cross-venue linking is FEASIBLE (Kalshi event tickers encode teams+date)
+
+Operator: there's a lot more cross-venue sports/politics we can DIRECTLY link via fixture ids (tennis/NFL/NBA/soccer).
+Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture cleanly: `KXMLBGAME-26JUN251945AZSTL` =
+`KX{LEAGUE}GAME-{YY}{MON}{DD}{HHMM}{AWAY}{HOME}` (title "Arizona vs St. Louis"). So a canonical fixture key
+`(league, {away,home} normalized, date)` is extractable per venue. **UAC schema already supports this** —
+`PredictionMarketCrossVenueMapping` (`kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id`/
+`odds_api_event_id`/`canonical_event_id`) + `CanonicalPredictionMarket.mapped_sport_event_id` exist but are unpopulated.
+
+- [ ] [DESIGN] P1. **Fixture-level cross-venue PAIRING — parse fixture identity from both venues + link to the sports
+      canonical fixture registry**: (1) Kalshi — parse `KX{LEAGUE}GAME-{YYMONDD}{HHMM}{AWAY}{HOME}` (and the per-league
+      variants) from the EVENT ticker → `(league, away, home, date)`; map Kalshi team abbreviations → canonical teams.
+      (2) Polymarket — parse the equivalent from the gamma slug/title (e.g. `nfl-{away}-{home}-{date}`). (3) Resolve
+      BOTH to a canonical fixture id via the existing **sports domain** fixture registry (api-football fixture /
+      odds-api event — the system already has canonical sport events), populating `mapped_sport_event_id` +
+      `PredictionMarketCrossVenueMapping`. (4) Same-settlement guard (same game/start-time) before pairing. This is the
+      per-instrument arb pair WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg category. Extend beyond the 17 mapped
+      leagues + to tennis (player-pair) + politics (election/Fed event ids). Build against REAL ticker/slug samples (no
+      guessing — per-league formats vary). Repo: unified-api-contracts (fixture parser + mapping populate) +
+      features-service/strategy-service (arb pairing) + instruments-service (sports-event link on enum). Provenance:
+      operator "parse fixture ids for tennis/nfl/nba/soccer" 2026-06-23. (Supersedes the earlier P2
+      per-instrument-pairing todo with the concrete fixture-encoding evidence.)
+
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 
 Operator asked whether the 142,874 POLYMARKET `empty_confirmed` cells are genuine no-data days or instrument-catalogue
