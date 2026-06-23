@@ -1038,7 +1038,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       (`git stash` on strategy-service) — its quickmerge is gated only by a transient strategy-service version-drift
       (local `0.36.0` < main `0.37.0` promotion-lag); ships on the next aligned QG (backmerge resolves the version).
       Original finding:
-- [ ] ~~[DATA] P1~~ **(superseded by the ✅ above)** paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols (found 2026-06-23 deep-dive
+- [x] ✅ ~~[DATA] P1~~ **(superseded by the ✅ above — strategy-service@81d9dba2, live-verified 2026-06-23)** paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols (found 2026-06-23 deep-dive
       of `/paper-trading?client=firm-paper-stream`). The Net-in-coin / Delta-per-coin tables, the instruction-ledger
       "Strategy" column, and the PnL-by-strategy snapshot all render raw DEX-pool contract addresses
       (`0xBe53A1…`/`0x9D39A5…`/`0x83F20F…`) instead of canonical token symbols (yvUSDC / sUSDe / sDAI) — while the
