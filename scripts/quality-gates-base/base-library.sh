@@ -901,13 +901,12 @@ qg_prof start pip-audit
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-4539: pygments 2.19.2 (latest, no fix version) — transitive via pytest+rich
     # CVE-2026-45409: idna 3.14 follow-up to CVE-2024-3651; fix: upgrade to idna>=3.15
-    # CVE-2026-34993: aiohttp <=3.13.5 CookieJar.load() RCE on UNTRUSTED input. fix_versions=[3.14.0] BUT 3.14.0
-    #   removed aiohttp.streams.AsyncStreamReaderMixin → breaks vcrpy 8.1.1 (latest) MockStream fleet-wide (64 VCR
-    #   AttributeError). These libs use aiohttp as a client and never CookieJar.load() untrusted files → surface nil.
-    #   SUCCESSOR: bump aiohttp>=3.14 + vcrpy when vcrpy ships aiohttp-3.14 compat. Tracked:
+    # aiohttp cookie-CVE cluster CVE-2026-34993/47265 (+ 50269/54273-54280 below): aiohttp <=3.13.5, all fixed in 3.14.0.
+    #   2026-06-23: 17 of 18 declaring repos bumped to aiohttp>=3.14.1 (vcrpy>=8.2.1 unblocked the cassette suites) → these
+    #   ignores are NO-OPs there; RETAINED ONLY for execution-service, held on 3.13.5 via [tool.uv] override (its aioresponses
+    #   test files can't build aiohttp-3.14 ClientResponse; aioresponses 0.7.8 has no fix). Client-only aiohttp → surface nil.
+    #   SUCCESSOR (drop): migrate execution-service off aioresponses + bump to 3.14. Tracked:
     #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
-    # CVE-2026-47265: aiohttp <=3.13.5 cookies re-sent after cross-origin redirect; fix_versions=[3.14.0] (same
-    #   vcrpy block). The aiohttp-3.13.5 CVE set grows until the fleet can reach 3.14.0 (vcrpy-unblock).
     # The three pip advisories below MUST stay in parity with base-service.sh — they are sanctioned
     # ignores for the SAME shared pip dep (operator-accepted 2026-06-05); a library-vs-service drift
     # here reddens UTL/UAC while services pass (incident 2026-06-11: PYSEC-2026-196 published, present
@@ -918,19 +917,12 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     #   resolved absolute path. Fleet stays on the vulnerable pip line because the next pip release is
     #   incompatible with the pinned vcrpy. Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove all three): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    # CVE-2026-50269 / -54273 / -54276 / -54277 / -54278 / -54279 / -54280: aiohttp <=3.13.5 2026-06-15 OSV advisory
-    #   batch — ALL fix_versions=[3.14.0], same vcrpy deadlock + client-only-usage exploit-surface-nil rationale as
-    #   CVE-2026-34993/47265. SUCCESSOR: the same vcrpy-unblock to aiohttp 3.14.0.
     # CVE-2026-54283 / -54282: starlette <1.3.0 (transitive via fastapi). The 1.5b Option-A cap LOWERED the
     # starlette floor 1.3.1->1.1.0 (to keep working route-introspection — 1.3.1's _IncludedRouter breaks it), which
     # re-exposes these two (1.3.1 was the CVE-fix floor). Sanctioned ignore (transitive, "speed > security" operator
     # 2026-06-12) — MUST mirror base-service.sh:1198 (the two drifted: service had them, library did not → UTL red).
     # Lift when the one-by-one external-dep audit adopts starlette 1.3.1+ WITH the _IncludedRouter route fix.
     # SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
-    # GHSA-rpj2-4hq8-938g: vcrpy <=8.1.1 YAML-cassette object-construction. MUST mirror base-service.sh (the two
-    #   drifted: service had it, library did NOT → UAC/UTL red on a fresh pip-audit). Exploit surface nil (our own
-    #   committed test cassettes, test-only) + vcrpy PINNED by the aiohttp-3.14 deadlock. SUCCESSOR: the vcrpy-unblock
-    #   to aiohttp 3.14.0. Tracked: plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
     # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used after an unpack error can SEGV. Exploit
     #   surface nil (we never re-use an Unpacker post-error on untrusted data). Fix 1.2.1 exists but is a fleet-wide
     #   transitive lock-bump. SUCCESSOR: bump msgpack >=1.2.1 fleet-wide + lock-regen. Tracked:
@@ -942,7 +934,7 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-54911: ujson <=5.12.0 (TRANSITIVE) — ujson.dumps(reject_bytes=False) edge case on bytes encoding.
     #   Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False. Fleet-wide transitive
     #   lock-bump. MUST mirror base-service.sh. SUCCESSOR: bump ujson to the fixed line + lock-regen (2026-06-19 advisory).
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161"
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3;
     # parity with base-service.sh): the OSV query runs only when the deps-hash (pyproject.toml
     # + uv.lock + ignore set + pip-audit version) changed, OR the cached clean result is older

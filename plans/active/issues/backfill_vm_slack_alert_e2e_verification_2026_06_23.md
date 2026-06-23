@@ -78,6 +78,47 @@ that stdout itself is not reaching Cloud Logging.
 - Whether `DP_VM_STALL` / `DP_VM_NO_HEARTBEAT` alert paths are exercised
   (heartbeat watcher is OOM-killed, so those paths cannot fire at all today)
 
+### Gap 4 — DELIVERED alerts were GENERIC: the UTL envelope was never unwrapped (ROOT CAUSE of the 16:48 useless alert; FIXED IN CODE 2026-06-23)
+
+**Operator escalation 2026-06-23:** the `#data-pipeline-alerts` posts (e.g. the
+16:48 `DP_VM_EXIT_NONZERO` / `DP_CRON_DID_NOT_FIRE` / `DP_CATALOG_NOT_RUNNING`
+batch) carried ONLY `Event / Severity / Source` — NO VM name, NO exit code, NO log
+link, NO error snippet, NO explanation. Gap 3 confirmed the chain reached Slack but
+never inspected the alert CONTENT.
+
+**Root cause (file:line):** `PubSubEventSink.write_event`
+(`unified-trading-library/unified_trading_library/event_sink.py:270`) publishes every
+`log_event` as `{"event": name, "service": ..., "metadata": {"severity": ...,
+"details": {<the emitter's real payload>}, "correlation_id": ...}}`. The alerting
+subscriber `alert_subscriber._deserialize_message` returned the RAW top-level dict as
+`details`, so the emitter's real payload sat TWO levels deep at
+`payload["metadata"]["details"]` and severity at `payload["metadata"]["severity"]`.
+The router (`router._mirror_to_data_pipeline_slack`) + the formatter
+(`data_pipeline_slack._build_blocks` / `_build_action_block`) look up
+`details.get("vm_name")` / `"exit_code"` / `"error_message"` / `"run_log_tail"` /
+`"severity"` / `"umbrella"` at the TOP level → all `None` → generic alert. The rich
+formatter + the emitter metadata both already existed; the metadata was lost in the
+unflattened envelope.
+
+**Fix shipped (code):**
+- alerting-service `alert_subscriber._unwrap_utl_envelope` — flattens
+  `metadata.details` + promotes `metadata.severity`/`correlation_id` to the top level
+  (flat legacy kill-switch/margin payloads pass through unchanged); + 2 regression tests.
+- alerting-service `data_pipeline_slack` — per-event human "*What happened* / *Recommended
+  action*" explain block (DP_VM_EXIT_NONZERO / DP_VM_GONE_NO_CAPTURE / DP_CRON_DID_NOT_FIRE
+  / DP_CATALOG_NOT_RUNNING / CONSOLIDATOR_DOWN) + renders an emitter-supplied `log_url`
+  as the run.log deep-link.
+- deployment-service `_gcs.error_snippet_from_run_log` + `run_log_console_url`; the
+  exit-code fleet monitor attaches `run_log_tail` (error/warn lines + tail of the
+  durable GCS-tee'd run.log, survives self-delete) + `log_url` to the finding;
+  `escalation.route_finding` now carries the finding's human `summary` as `message`
+  so the alert summary line is readable, not just the event name.
+
+**Still needed:** rebuild + redeploy BOTH `dp-alerting-subscriber` (alerting-service:latest)
+AND `uts-prod-dp-exit-code-monitor` (deployment-api:latest) Cloud Run units, then
+verify a real `DP_VM_EXIT_NONZERO` renders VM name + exit code + log link + snippet
++ explanation in `#data-pipeline-alerts`.
+
 ## Why it matters
 
 1. **Heartbeat gap**: The hung-process detection contract (CLAUDE.md
@@ -137,4 +178,11 @@ close the verification loop.
 
 - [ ] [VERIFY] P2. **Operator spot-check `#data-pipeline-alerts` channel** for
   the 2 `DP_VM_EXIT_NONZERO` CRITICAL alerts from ~13:45 UTC 2026-06-23
+
+- [ ] [DEPLOY] P0. **Rebuild + redeploy BOTH alerting-service (`dp-alerting-subscriber`)
+  AND deployment-api (`uts-prod-dp-exit-code-monitor`) Cloud Run units** so the Gap-4
+  verbose/actionable-alert fix (UTL envelope unwrap + explain block + run.log snippet +
+  log link) is live; then verify a real `DP_VM_EXIT_NONZERO` renders VM name + exit code
+  + log link + error snippet + explanation in `#data-pipeline-alerts`.
+  (alerting-service + deployment-service)
   to confirm end-to-end Slack delivery is working. (operator action)

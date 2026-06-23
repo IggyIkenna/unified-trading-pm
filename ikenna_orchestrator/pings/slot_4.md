@@ -560,3 +560,24 @@ Plan flip: `plans/epics/sports_master.md` per-fixture section ✅ — pm@30f6b72
 - Plan checkbox flipped: **PM@eb1f151ce**
 
 — slot-4 / 2026-06-04
+
+---
+
+## [slot-4 → operator] 2026-06-23 — BLOCKED-OPERATOR-DECISION: Task 033 (Live ODDS quota)
+
+**Task**: data_completion_to_100_all_ag-033
+**Plan ref**: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` line 561
+
+**What is needed**:
+Task 033 is tagged `BLOCKED-OPERATOR-DECISION (book set + quota tier)`:
+
+> **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) — size The Odds API Starter (~$10/mo) for the live league set and/or wire **api_football `/odds` in-play** as a second forward odds source so LIVE_ODDS / odds_horizon_bucket keeps feeding CLV/steam features forward without exhausting credits.
+
+**Operator decision needed**:
+1. **Book set** — which bookmakers / markets to subscribe to for The Odds API?
+2. **Quota tier** — The Odds API Starter (~$10/mo) or a different tier?
+3. **Source priority** — should we wire `api_football /odds` in-play as the primary second source, or wait for The Odds API tier decision?
+
+**Cannot implement without [ack]** — code scope (which endpoints to add, VM cadence, connector config) depends on operator choice of vendor + tier.
+
+— slot-4 / 2026-06-23

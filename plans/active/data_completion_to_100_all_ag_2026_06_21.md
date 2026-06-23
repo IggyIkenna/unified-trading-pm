@@ -555,9 +555,9 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       (incident 2026-06-22). Repo: deployment-service (+ instruments-service if the trigger entity is missing).
       **NICE-TO-HAVE** — slow-moving data; api_football `/players` is the cheap forward fallback for the value feature
       meanwhile. — deployment-service@cc863de | QG green | launcher + vm_zombie_watchdog + launcher_registry all registered
-- [ ] [INFRA] P2. **Add `launch-understat-forward-poll.sh`** (deployment-service) — dedicated forward poll for understat
+- [x] ✅ [INFRA] P2. **Add `launch-understat-forward-poll.sh`** (deployment-service) — dedicated forward poll for understat
       XG (5 leagues) for resilience beyond the Tier-4 `stats_delayed` trigger; use FootyStats `xg_prematch_*` +
-      api_football xG as the live/forward primary. Repo: deployment-service.
+      api_football xG as the live/forward primary. Repo: deployment-service. — deployment-service@5758e97 | QG green | launcher + vm_zombie_watchdog + launcher_registry all registered
 - [ ] [DATA] P2. **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) —
       size The Odds API Starter (~$10/mo) for the live league set and/or wire **api_football `/odds` in-play** as a
       second forward odds source so LIVE_ODDS / odds_horizon_bucket keeps feeding CLV/steam features forward without
@@ -955,7 +955,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       real-time (block-level trades/positions/PnL), SAME page, just a live feed. Daily determinism recon stays untouched
       alongside. Unblocked once DeFi continuous-data P1 ships.
 
-- [ ] [INFRA] P1 deploy (C). **Deploy + verify the continuous DeFi pipeline + paper-stream — OPERATOR/CI-GATED** (the
+- [ ] [INFRA] P1 deploy (C). **[DeFi pipeline ✅ VERIFIED 2026-06-23] Deploy + verify the continuous DeFi pipeline + paper-stream — paper-stream still OPERATOR/CI-GATED** (the
       CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`, B1 forward-poll IaC
       `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef` + job/scheduler
       `deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =
@@ -2230,8 +2230,11 @@ strong), the 3.4M empty_confirmed is GENUINE honest-absence (pre-genesis chain +
 MDPS processing, manifest v9. honest-cov %~10 is structurally low for defi (could-exist universe dominated by pre-2024
 cells where defi didn't exist). Deferred follow-ups (all filed as todos):
 
-- [ ] [SCRIPT] P2. **defi live continuous scheduler** — forward-poll proven (4 rows) but is a one-shot VM; add a daily
-      Cloud Scheduler cron for continuous live forward-poll. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **defi live continuous scheduler** — Cloud Scheduler jobs (`defi-fwd-dex-swaps-prd`,
+      `defi-fwd-dex-pools-prd`, `defi-fwd-oracle-prices-prd`) verified live, cycling every 5 min, writing parquets to
+      `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/.../pipeline_mode=live_onchain_subgraph/`.
+      IAM gaps (GCS write + SM keys + env=prod) diagnosed + fixed ad-hoc + codified in terraform.
+      deployment-service@d2ddb23
 - [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue
       rows (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo:
       instruments-service.
@@ -2299,20 +2302,20 @@ lane.** Filed as targeted todos:
       deployment-service | VMs: mtds-lending-indices-20260623-112822 (2025-03-01..31, e2-standard-8 preemptible) +
       mtds-lst-rates-20260623-112837 (2025-01-01..31, e2-standard-8); fleet was at 0 RUNNING backfill VMs (tradfi swarm
       drained)
-- [ ] [DATA] P2. **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
+- [x] [DATA] P2. ✅ **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
       failures (`RowSchemaValidationError` venue=KAMINO/ORCA/RAYDIUM/MARINADE: missing `ts_event`/`supply_rate`/
       `price_a`/etc — a HANDLER contract bug, not a backfill) + drift_v2 sig-index-missing (build via
       `build_drift_v2_sig_index.py`) + dex_swaps `404 GET` (1747) + perp_funding 424 + rewards 730. The 3,550
       `phantom_captured_no_parquet_at_canonical_path` re-validate via
       `reconcile_phantom_manifest_rows_all.py --unphantom`. Repo: market-tick-data-service. Provenance: this Progress
-      Log (failed-cell breakdown).
-- [ ] [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** —
+      Log (failed-cell breakdown). — market-tick-data-service@08fb898
+- [x] ✅ [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** —
       `gcloud compute instances list --filter=status=RUNNING` shows **329 RUNNING backfill VMs** (dominated by ~280
       `tradfi-bf-cme-ohlcv-1m-*` year×contract shards launched by a prior driver), far over the ≤40 concurrent cap.
       On-demand E2 quota=600 but this risks preemption cascades + Actions/compute spend. Verify the tradfi swarm is
       draining (self-deleting on completion) + that none OOM'd silently; if stalled, throttle. Repo: deployment-service
       (tradfi lane). Provenance: this Progress Log; this is a TradFi-lane finding surfaced during the defi audit, not
-      defi-blocking.
+      defi-blocking. — **VERIFIED 2026-06-23**: 0 VMs running (full drain); sampled 50 recent CME VMs: 48/50 exit 0, 0 OOM (exit 137), 2 logs ended mid-run (weekend skip, not errors). Swarm self-resolved — no throttle needed. No code changes.
 
 ### 2026-06-22 13:00 — DEFI 2nd defect found+fixed: 441k blank-asset_group captures (honest_cov 10.67%→18.66%)
 
@@ -2458,14 +2461,42 @@ the rest of history.
   instruments-service working tree, ruff-clean, dry-run on `-prd-` = 88,740 retired rows ready → EXPECTED_DEPRECATED.
   Ships once committed (QG adapter-gate now green).
 
-- [ ] [SCRIPT] P0. **Rework reclassify migrations → per-VM-shard (consolidator-merged) write** (directive b) — replace
-  the full-`_index`-overwrite in `migrate_sports_retired_types_2026_05_13.py` + `relabel_sports_no_provider_coverage_2026_06_21.py`
-  with a `MANIFEST_PER_VM_SHARDS` per-VM shard the consolidator merges; then apply the 88,740 retired flip + verify
-  before/after. (instruments-service)
-- [ ] [VERIFY] P0. **Proper alerting-e2e MONITOR for the ~25 live sports backfill VMs** (waves 15:00 + 15:35 UTC
+- [x] ✅ [SCRIPT] P0. **Rework reclassify migrations → per-VM-shard (consolidator-merged) write** (directive b) —
+  instruments-service@c7270e9. BOTH migrations now write flipped/relabeled rows ONLY as a per-VM shard at
+  `_index/per_vm/{VM_NAME}.parquet` (canonical fleet path, matches `manifest_writer._PER_VM_PATH_TEMPLATE`) — the
+  consolidator's DuckDB last-write-wins merge (`PARTITION BY date,venue,data_type,service_name,<dims> ORDER BY
+  attempted_at DESC, written_at DESC`) picks them via fresh `attempted_at`/`written_at`, NO `_index` overwrite, NO race
+  with live writers. Also resolved the committed merge-conflict markers in the retired-types script (single clean
+  `resolve_bucket_name` + env-short guard). **VERIFIED end-to-end on live `-prd-`**: retired-flip dry-run =
+  already_flipped 88,740 / will_flip 0 (idempotent — the flip is already in canonical from the prior apply). relabel
+  `--apply` wrote a 156,138-row per-VM shard (PLAYER_VALUES 65,293 + WEATHER 90,845, all wrong-empty→
+  `EXPECTED_NO_PROVIDER_COVERAGE`; now classifiable because the WEATHER/PLAYER_VALUES coverage maps landed) →
+  consolidator merged it within ~1 min → re-read canonical confirms PLAYER_VALUES_NOCOV=65,293 + WEATHER_NOCOV=90,845,
+  **ODDS rows intact** (226,391→226,395, captured 26,881→26,965 = live writers kept flowing + were preserved by the
+  anti-join), retired flip intact (88,740 `EXPECTED_DEPRECATED`). No live rows lost. Shipped scoped (dirty-deps
+  carve-out: foreign UAC + IS test/script WIP from live peer sessions broke the IS QG on files I don't own — NOT my 2
+  `scripts/` files, which are ruff-clean). (instruments-service)
+- [x] ✅ [VERIFY] P0. **Proper alerting-e2e MONITOR for the ~25 live sports backfill VMs** (waves 15:00 + 15:35 UTC
   2026-06-23, all data_types) — per VM: GCS `run.log` mtime advancement (hang) + terminal `exit_code` (OOM 137/error) +
   manifest captured-delta, cross-checked vs Slack `#data-pipeline-alerts`. Serial console shows VMs alive (log-tee every
   60s) + no crashes yet, but application progress is NOT yet confirmed (a RUNNING VM can be hung). (deployment-service)
+  — 2026-06-23T16:03Z: 23 VMs checked: 2 completed exit_code=0 (fixtures-153526, injuries-150123); 21 RUNNING all
+  confirmed active — log timestamps 15:56–16:01 UTC, manifest shard writes current (xg-153512 log tee lagged but
+  shard updated 16:02:57 confirming not hung); no exit_code=137 (OOM) on any VM. All progressing.
+- [x] ✅ [CODE] P0. **Make `#data-pipeline-alerts` VERBOSE + ACTIONABLE — fix the generic-alert metadata loss** (operator
+  escalation 2026-06-23: the 16:48 `DP_VM_EXIT_NONZERO`/`DP_CRON_DID_NOT_FIRE`/`DP_CATALOG_NOT_RUNNING` posts had only
+  Event/Severity/Source — no VM name, exit code, log link, error snippet, or explanation). ROOT CAUSE: `PubSubEventSink`
+  publishes `{event, metadata:{severity, details}}`; the alerting subscriber routed the RAW top-level dict as `details`,
+  so the formatter's `details.get(vm_name/exit_code/severity/...)` all returned None → generic alert. FIX (cross-repo):
+  alerting-service `_unwrap_utl_envelope` flattens `metadata.details` + promotes `severity`/`correlation_id` (legacy flat
+  payloads pass through unchanged); `data_pipeline_slack` per-event "What happened / Recommended action" explain block +
+  renders an emitter `log_url` deep-link; deployment-service exit-code monitor attaches `run_log_tail` (error/warn lines +
+  tail of the durable GCS-tee'd run.log, survives self-delete) + `log_url`, and `route_finding` carries the finding
+  `summary` as `message`. (alerting-service + deployment-service) — alerting-service@ceed827 + deployment-service@d2ddb23
+  | QG green both repos | 42 alerting + 81 deployment unit tests pass incl. new envelope-unwrap + explain-block +
+  log-snippet regression tests | image builds c2beac49 (alerting-service:latest) + c0f6dc2f (deployment-api:latest) →
+  redeploy dp-alerting-subscriber + uts-prod-dp-exit-code-monitor + e2e verify. Gap-4 root-cause + deploy todo:
+  `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md`
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
   backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 

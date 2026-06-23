@@ -39,6 +39,20 @@ A `(venue, base_asset, time)` cell is captured **ONLY IF that venue lists a PERP
   perp exists → apply the gate (drop spot-only, drop no-perp bases) in catalogue post-processing / capture-universe
   derivation. HL/ASTER are perp-native → unaffected.
 
+## COIN-MARGIN (inverse) perps — liquidity-picked per (venue, base) (operator 2026-06-23)
+
+Perps come in **linear** (USDT/USDC/USD-margined) and **inverse / coin-margined** (settled in the coin). Rule:
+
+- **Deribit**: coin-margin-native → its inverse `BTC-PERPETUAL`/`ETH-PERPETUAL`/`SOL-PERPETUAL` ALWAYS captured (already in catalogue ✅).
+- **Every other venue**: capture the **MORE LIQUID** margin type per `(venue, base)` — default **linear** (more liquid for ~all alts); capture **inverse** instead/also **where inverse is more liquid** (historically BTC/ETH inverse on some venues). Operator indifferent beyond "don't skip the liquid one."
+- **Generalize** the pick via a **live-data liquidity spot-check** (24h volume / open-interest per contract), per venue, across coins — not a hand-list.
+
+CURRENT GAP (2026-06-23): only linear-margin venues are enumerated — `BINANCE-DELIVERY` (coin-margined Binance) + the inverse Bybit/OKX/Huobi legs are ABSENT despite Tardis access (`binance-delivery, huobi-dm, huobi-dm-swap` in our plan), and the catalogue has **no `margin_type` field**. Deribit inverse is the only coin-margin captured.
+
+- [ ] [IS] P1. Add the inverse-margin Tardis venues we have access to (binance-delivery + inverse Bybit/OKX/Huobi legs) to the venue allow-list so inverse perps enumerate.
+- [ ] [IS/UAC] P1. Add a `margin_type` (linear|inverse) field to the catalogue + the canonical instrument key, so the mvp filter can select per (venue, base).
+- [ ] [MTDS] P1. Live-data liquidity spot-check (24h vol/OI per contract) → per (venue, base) tag the more-liquid margin mvp=true (Deribit inverse always; default linear). Wire into `is_in_mvp_capture_universe`.
+
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 
 The "spot requires a perp for the base at that venue" rule has a CLOSED allow-list of **staking / restaking / liquid-staking
