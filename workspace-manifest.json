@@ -67,28 +67,28 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.30.0",
+    "batch-live-reconciliation-service": "0.31.0",
     "deployment-api": "0.30.0",
-    "deployment-service": "0.62.0",
+    "deployment-service": "0.63.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.31.0",
     "features-service": "0.37.0",
-    "fund-administration-service": "0.9.11",
+    "fund-administration-service": "0.9.12",
     "ibkr-gateway-infra": "0.4.4",
-    "instruments-service": "0.54.0",
-    "market-tick-data-service": "0.59.0",
+    "instruments-service": "0.55.0",
+    "market-tick-data-service": "0.60.0",
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.57.0",
     "unified-trading-library": "0.41.0",
     "unified-trading-pm": "1.2.399",
-    "market-data-processing-service": "0.10.15",
+    "market-data-processing-service": "0.11.0",
     "e2e-testing": "0.27.0",
     "agent-orchestrator": "0.57.0",
     "greeks-service": "0.18.0",
     "trading-agent-service": "0.12.0",
-    "strategy-service": "0.38.0",
-    "ml-service": "0.28.0",
-    "alerting-service": "0.35.0",
+    "strategy-service": "0.39.0",
+    "ml-service": "0.29.0",
+    "alerting-service": "0.36.0",
     "unified-trading-api": "0.2.11",
     "client-reporting-api": "0.15.9"
   },
@@ -101,7 +101,7 @@
       "codex_sections": [
         "03-observability"
       ],
-      "version": "0.22.0",
+      "version": "0.36.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -159,7 +159,7 @@
         "04-architecture",
         "06-coding-standards"
       ],
-      "version": "0.12.0",
+      "version": "0.31.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "batch-services",
@@ -347,7 +347,7 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.33.0",
+      "version": "0.63.0",
       "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         {
@@ -539,7 +539,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.9.2",
+      "version": "0.9.12",
       "version_source": "pyproject.toml",
       "deployment_note": "IM Pooled subscription/redemption rail. Bridges Odum portal to fund administrator (POD) and qualified custodian (e.g. Copper). Does NOT serve SMA or DART clients.",
       "dependencies": [
@@ -701,7 +701,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.32.0",
+      "version": "0.55.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -760,7 +760,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.10.10",
+      "version": "0.11.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -820,7 +820,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.41.0",
+      "version": "0.60.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
       "dependencies": [
@@ -879,7 +879,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.17.0",
+      "version": "0.29.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -945,7 +945,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.19.0",
+      "version": "0.39.0",
       "version_source": "pyproject.toml",
       "deployment_note": "One instance per client (separately managed accounts)",
       "dependencies": [
