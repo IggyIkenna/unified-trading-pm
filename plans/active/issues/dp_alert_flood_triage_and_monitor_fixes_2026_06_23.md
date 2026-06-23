@@ -1,7 +1,6 @@
 ---
 title: DP #data-pipeline-alerts flood — real-vs-false triage + monitor signal fixes (2026-06-23)
 created: 2026-06-23
-author: ikennaigboaka [autonomous-infra-fix]
 source:
   - alerts.log (830 lines, 2026-06-23 #data-pipeline-alerts flood)
   - aggregated AG-agent prompts (deadman crash / tradfi fleet-monitor false-positives / alert-lifecycle gaps)

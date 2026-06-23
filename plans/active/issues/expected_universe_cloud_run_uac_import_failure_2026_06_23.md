@@ -1,12 +1,12 @@
 ---
 title: "expected-universe-v2-* Cloud Run jobs broken — UAC import failure in new instruments-service:latest image"
 created: 2026-06-23
-author: slot-5
 status: active
 priority: P1
 locked_by: live-defi-rollout
 source:
   - data_completion_to_100_all_ag_2026_06_21.md
+parent_epic: manifest_master
 ---
 
 ## What I found
