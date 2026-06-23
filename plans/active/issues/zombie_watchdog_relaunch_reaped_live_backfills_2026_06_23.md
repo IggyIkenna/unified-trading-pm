@@ -1,12 +1,13 @@
 ---
 title: vm-zombie-watchdog relaunch (dry_run=false) reaped 9 live campaign backfill VMs
 created: 2026-06-23
-author: ikennaigboaka [slot·ikenna-worker]
 source:
   - plans/active/data_completion_to_100_all_ag_2026_06_21.md (INFRA P0 "Restore the genuinely-down infra")
   - scripts/vm/launch-vm-zombie-watchdog.sh
   - scripts/vm/vm_zombie_watchdog.py
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
