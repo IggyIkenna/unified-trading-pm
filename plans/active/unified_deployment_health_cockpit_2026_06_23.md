@@ -133,6 +133,45 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       url-sync.spec + the goto("/") service-item specs) to the new home path. `[UI]` — pw:L2 (FULL `tests/smoke/`
       green) + regression.
 
+### Phase 0.7 — Consolidate the deployment UI into the cockpit (cockpit = the app) — deployment-ui
+
+> **Operator review (2026-06-23)**: "The top bar is doing two jobs. The cockpit is the landing — so the Cockpit nav
+> button is redundant; Deployments is already in the cockpit; fold the rest in too. The top bar should stay GENERIC:
+> DEV/STAGING/PROD badge · LIVE/MOCK DATA · Clear Cache · API status · GCP/AWS · version. And stream all alerts + VM
+> logs (the stuff already going to Slack + coming out of the VMs) in ONE place inside the cockpit." Operator confirmed
+> ALL wired surfaces fold in (Repos CI, Chaos, Research-launch ML/Strategy/Exec-BT, Safety-Ops) — nothing dropped.
+> Ordering is FOLD-FIRST, then strip the nav (never orphan a surface).
+> `the data badge "LIVE" means live-vs-MOCK DATA, not trading-live` → relabel.
+
+- [x] ✅ [UI] P1. **Relabel the data-mode badge** `LIVE`→`LIVE DATA` (MOCK chips already say MOCK) so it can't read as a
+      deployment/trading mode. — deployment-ui@99863af | pw:L2 ✓ (app.spec + nav_and_header green) | regression:
+      tests/smoke/nav_and_header.spec.ts. (Note: the playwright suite runs in MOCK mode so the Header shows "MOCK (UI)";
+      the "LIVE DATA" label shows in real cloud-data mode.)
+- [ ] [UI] P1. **Make `/cockpit` the default landing + give the per-service home shell its own path** (e.g. `/home`),
+      redirect `/`→`/cockpit`, and **migrate the ~80 landing-assumption smoke/e2e specs** that `goto("/")` expecting the
+      ServiceList + LandingTabs. Then **remove the redundant "Cockpit" top-nav button**. (the spine — supersedes the
+      Phase-0 default-page todo above.) `[UI]` — pw:L2 (FULL `tests/smoke/` green) + regression.
+- [ ] [UI] P1. **Fold Deployments + VM Deployments + Live Ops into the cockpit** Live/Batch/Paper/Fleet tabs with REAL
+      data (replace the placeholder tables with the existing `Deployments`/`VmDeployments` inventory + the Live-Ops WS
+      log tail). `[UI]` — pw:L2 + regression.
+- [ ] [UI] P1. **Fold Repos CI** → cockpit **CI** tab (reuse `RepoCi`). `[UI]` — pw:L2 + regression.
+- [ ] [UI] P1. **Fold Alerts → cockpit "Alerts & Logs" tab + build the UNIFIED STREAM** (operator: one place streaming
+      Slack-bound alerts + VM logs). Net-new: the Alerts page today is CI-only 60s-poll; add the non-CI alert classes
+      (vm_down/consolidator_down/git_health/worker_liveness — the DP\_\* Slack alerts) + a live VM-log tail, in one
+      timeline. `[UI]` — pw:L2 + regression.
+- [ ] [UI] P2. **Fold Chaos** → cockpit tab (failure-injection / resilience testing, non-prod). `[UI]` — pw:L2 +
+      regression.
+- [ ] [UI] P2. **Fold Research-launch (ML/Strategy/Exec-BT)** → a cockpit **"Launch"** tab. `[UI]` — pw:L2 + regression.
+- [ ] [UI] P2. **Fold Safety Ops** → cockpit tab (UI exists; backend is a STUB — wire `/safety-ops/*` routes later).
+      `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P1. **Strip the top bar to UTILITY-ONLY**: top bar is now DEV/STAGING/PROD badge · LIVE/MOCK DATA · Clear
+      Cache · API status · GCP/AWS toggle · version + a single **Cockpit** entry. The 10 page-nav links (VM-Deps,
+      Deployments, Chaos, Live-Ops, Repos-CI, Alerts, Safety-Ops, ML, Strategy, Exec-BT) moved into the cockpit (status
+      tiles + a "Consoles & tools" section), so every surface stays reachable (orphan-audit green); the nav-click specs
+      were migrated to navigate via the cockpit. — deployment-ui@7e698d6 | pw:L2 ✓ (FULL tests/smoke 269 green) |
+      regression: tests/smoke/{nav_and_header,alerts-page,deployments-page,repos-tab,url-sync,cockpit}.spec.ts. (The
+      lone-remaining "Cockpit" button is removed when the cockpit becomes the literal default page — the next todo.)
+
 ### Phase 1 — Health rollup backend (foundation, pure reuse) — deployment-api
 
 - [ ] [API] P1. Add `GET /api/health/overview` to deployment-api aggregating the EXISTING signals into one envelope:

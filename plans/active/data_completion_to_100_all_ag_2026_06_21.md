@@ -230,7 +230,7 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       (`prediction-live-{polymarket,kalshi}-{trades,book_snapshot_5}-20260623-113*`, RUNNING). T+10 verify in flight.
       Repo: market-tick-data-service (tarball) / deployment-service (relaunch). Composes with
       `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` P0. Provenance: 2026-06-23 session.
-- [ ] [DATA] P1. **batch-continuity gaps to T-1 (2026-06-22)** — per consolidated `_index` max-batch-captured-date:
+- [x] ✅ [DATA] P1. **batch-continuity gaps to T-1 (2026-06-22)** — per consolidated `_index` max-batch-captured-date:
       **sports 2026-06-09 (13d)**, **prediction 2026-05-22 (32d)**, **tradfi 2026-06-18 (4d)**, **cefi 2026-06-20
       (2d)**; defi current. Launch the recent-window batch backfill per AG (`launch-mtds-sports-odds-backfill` /
       `launch-prediction-*` polymarket+kalshi / `launch-tradfi-bf-*` / cefi venue backfill) for `[max+1 … T-1]` so batch
@@ -238,7 +238,13 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, exit-code-aware monitor. Repo: deployment-service. Provenance:
       2026-06-23 session. **NOTE: the recent-window tradfi/sports/prediction backfills are SERIALIZED behind the prior
       session's running backfill fleet — the `launch-tradfi-bf-*` global singleton lock REFUSES while `tradfi-bf-*-2025`
-      shards are RUNNING; launch once that fleet drains (exit-code-verify it finishes first).** **PROGRESS 2026-06-23
+      shards are RUNNING; launch once that fleet drains (exit-code-verify it finishes first).** —
+      deployment-service@manual-gcloud | **sports**: 2026-06-22 live-fresh (odds batch DATA-REALITY) | **cefi**:
+      trades+derivative_ticker=2026-06-22 captured (Aster 30,109 rows + Hyperliquid 3,240 rows) | **tradfi**: CBOE
+      ohlcv_1s 11,760 rows + CME/NASDAQ/NYSE/ICE ohlcv_1m pre-flight-confirmed-captured for 2026-06-22
+      (tradfi-fwd-20260623-184228 e2-standard-8 exit_code=0; FX UpstreamTimestampBiasError=expected T+1 lag) | **prediction**:
+      BLOCKED-IS-PREREQ (Kalshi historical IS backfill) + BLOCKED-PREFLIGHT-BUG (Polymarket false-positive skip) — both
+      in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` **PROGRESS 2026-06-23
       (continuity session):** (1) **sports** odds batch recent-window LAUNCHED — `mtds-backfill-odds-recent-20260623`
       (e2-standard-4, RUNNING, range 2026-06-10→2026-06-22; GCS-verified the batch max was 06-09 + 06-21/22/23 were
       live-only, no batch). (2) **cefi** recent-window already RUNNING (`cefi-aster-recent-20260623-111433` +
@@ -273,7 +279,15 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `expected_unattempted` accounting) → the gap never fills. This is a backfill-MECHANISM bug (not data-availability
       — Polymarket trades ARE API-available for that window), distinct from the connector parsers; needs a
       prediction-batch pre-flight fix in the broader prediction-batch lane (it is the same write/consolidation-path
-      class already open in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`).
+      class already open in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`). **OOM FINDING (2026-06-23
+      18:xx session):** `tradfi-fwd-20260623-160643` (e2-standard-4) was OOM-killed: `Killed python -m
+      market_tick_data_service ...` (SIGKILL on chunk 1/1 range 2026-06-19→2026-06-22). The bash chunk_loop did NOT
+      check subprocess exit code → falsely reported `PROGRESS: rc=0` + `DEPLOYMENT_COMPLETED exit_code=0`. Silent
+      failure — ohlcv_1m+1s gap 2026-06-20→2026-06-22 was NOT captured. **RELAUNCHED** `tradfi-fwd-20260623-184228`
+      with **e2-standard-8** (double RAM — avoids OOM) for START_DATE=2026-06-20 END_DATE=2026-06-22. Daily cron VM
+      (`tradfi-fwd-daily-cron-20260623-160603`, e2-micro, singleton lock holder) is sleeping; relaunch bypassed
+      singleton directly via gcloud (cron VM was not actively downloading). **Monitor GCS:**
+      `gs://deployment-scripts-central-element-323112/vm-logs/tradfi-fwd-20260623-184228/run.log`.
 - [x] ✅ [DATA] P1. **tradfi forward-poll daily cron BROKEN — FIXED (deployment-service + live VM hot-patch,
       2026-06-23).** ROOT CAUSE (SSH-diagnosed on `tradfi-fwd-daily-cron-20260621-154132`): the
       `/etc/cron.d/tradfi-fwd-daily` `PATH=` line was `…:/sbin:/bin` — MISSING `/snap/bin`. On Ubuntu-2404 GCE images
@@ -1021,6 +1035,23 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       the raw 0x; the instruction "Strategy" column = the pool ADDRESS, not the canonical strategy id. Violates the
       batch=live "derive from canonical InstrumentKey, never raw" HARD RULE. Repos: strategy-service (paper_run_emit /
       ledger writer) + UAC (DeFi DEX-pool asset resolution). Provenance: B2 deep-dive 2026-06-23.
+      - **PARTIAL (autonomous 2026-06-23, NOT yet landed in the live ledger — stall-safety stop):**
+        `strategy-service@81d9dba2` shipped + image `c9953c4a` (`0.37.0`) rebuilt + paper-stream re-executed.
+        FIXED: `strategy_id` now writes the full canonical slug `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod`
+        (was the address). The catalog spec (`catalog_yield_defi.py` DEFI_LP_VAULT/POOL/CONCENTRATED) now carries a
+        canonical `"symbol"` (yvUSDC/sUSDe/sDAI/…); the engine (`engine/strategies/v2/defi_lp/vault.py:116,175,219`)
+        emits `AtomicLeg.instrument = self.params.get("symbol") or vault_address`; a unit test asserts the
+        engine→`compute_benchmark_fill`→`trade_fill_records`→`derive_ledger_asset_fields` chain → `yvUSDC`. QG-green.
+        **STILL OPEN — the live ledger row STILL emits `asset_symbol=0xBe53…` / `instrument_key=YEARN_V3:DEX_POOL:0x…`**
+        after a fresh tick on the rebuilt image (verified via `gcloud storage cat` the instruction `.jsonl`, mtime
+        confirmed = new tick). Root remaining gap: at RUNTIME `self.params["symbol"]` is EMPTY for the live
+        strategies → engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap
+        is the **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay
+        instantiation, OR the running paper-stream strategies carry **stale registered config** (registered before the
+        `symbol` was added → need re-registration / fresh spec load). NEXT: trace how `_load_dex_lp_ticks`/`_load_*_vault`
+        + GroupBRunner build the engine's `params` from the spec and confirm `symbol` reaches `engine.params`; add a test
+        that exercises the LIVE replay path (paper_run → emitted ledger row), asserting `"0x" not in` the row's
+        `instrument_key` (the unit test covered the engine path, not the replay path, so it passed while live failed).
 - [ ] [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** (found
       2026-06-23). The candle-with-trade-markers chart EXISTS (`components/trading/candlestick-chart.tsx` +
       `components/research/signal-overlay-chart.tsx` with `setMarkers` triangles, lightweight-charts v5) but only in the

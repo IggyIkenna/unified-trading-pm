@@ -5552,3 +5552,15 @@ Fixes:
 5. `tests/unit/test_data_status_registries.py`: NASDAQ/NYSE `ohlcv_1s` assertions updated per operator 2026-06-21
 
 Slot clean on `live-defi-rollout`, no temp branches.
+
+## ESCALATION agt-61cf52 RESOLVED — 2026-06-23T18:44:27Z
+
+**Wall**: `ldr_qg_failure` on `market-tick-data-service`
+**Root cause**: 4 unit tests stale (written before UAC v8 2026-06-23); incorrectly expected UPBIT to be
+excluded from MVP capture universe. UAC v8 added UPBIT with `_CEFI_SPOT_PERP_GATE_EXEMPT_VENUES`
+perp-gate exemption. Production code was CORRECT — tests were WRONG.
+**Fix**: Updated `tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py` +
+`tests/unit/scripts/test_reclassify_cefi_manifest_mvp_universe.py` to expect UPBIT rows to pass the gate.
+Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs upstream fix).
+**Ship**: market-tick-data-service@c916e8378f8fe98bac8fc65265f19a2cf3cbd92e — QG EXIT 0, 8/8 tests pass.
+**Plan ref**: `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md`

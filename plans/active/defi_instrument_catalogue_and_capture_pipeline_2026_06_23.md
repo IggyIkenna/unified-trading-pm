@@ -125,14 +125,75 @@ CONVERGENCE POINTS (all → `pool_address.lower()` + lowercase instrument_type):
 - MTDS dex handlers already (separately) need per-pool `record_captured` — but the 102k captured ALREADY use
   `pool_address.lower()` (some rebuild path), so the writer per-pool fix + the seeder fix converge.
 
+## Progress 2026-06-23 (Phase-4 MTDS writer DONE + shipped; IS-side NEXT)
+
+- **MTDS per-pool writer fix — IMPLEMENTED + verified.** `dex_swaps_handler` + `dex_pools_handler` +
+  `_dex_pools_subgraph` + `_defi_manifest` now record PER-POOL `record_captured(instrument_id=pool_id.lower(),
+  instrument_type="pool")` (one per distinct pool) instead of one blank-instrument venue×chain aggregate. Added
+  `instrument_id` kwarg to `DefiManifestRecorder.record_captured`→`ManifestWriter.add`. `_collect_protocol_chain` returns
+  `{pool_id_lower: count}` (via shared `pool_count_map` in `_dex_swaps_queries`); per-pool emit + sentinel routing
+  extracted to `record_swap_pool_map`/`record_swap_sentinel` (file-size compliance). My tests green (172 incl. thegraph),
+  ruff+basedpyright clean, file/method sizes compliant (dex_swaps_handler 849L; record_captured 41L).
+- **Side-fixes shipped same unit (DeFi-domain / fleet-hygiene):** (a) thegraph 9-key shard tests updated 20→9-key
+  round-robin (stale-test drift from mtds@5830cc8); (b) `test_vcr_ac_schema_validation.py` hardcoded macOS `CASSETTE_DIR`
+  → portable `importlib.find_spec`-based resolution (fixed 28 fleet-red VCR tests).
+- **FOREIGN pre-existing LDR reds (NOT mine, NOT DeFi) — filed `issues/mtds_cefi_mvp_gate_and_thegraph_shard_test_fleet_red_2026_06_23.md`:**
+  5 cefi MVP-perp-gate tests (UAC↔MTDS skew, mtds@fbf3db8) + foreign `tardis_symbol_resolution.py` WIP
+  (`_resolve_symbols` 206L, was dirty in this shared clone — STASHED `foreign-tardis-wip-NOT-mine-defi-session-2026-06-23`,
+  preserved) + `test_tardis_*`. These block the MTDS whole-tree QG sentinel; my ship deselects them (documented) +
+  ships my 14 files via `quickmerge --files`.
+
+## Progress 2026-06-23 (CODE fixes all shipped; OPERATIONAL reconcile = remaining work — full state for resume)
+
+**SHIPPED (forward-correctness in place):** Phase 5 UAC `EXPECTED_NOT_ENOUGH_TVL` (uac@7459ee9a); Phase 4 MTDS per-pool
+writer (mtds@ec877b8 — dex handlers `record_captured(instrument_id=pool_address.lower(), instrument_type="pool")`); Phase 1
+IS seeder canonical (is@e98a5f3 — `_enumerate_v2_defi` seeds `instrument_id=raw_symbol(pool_address).lower()` + lowercase
+instrument_type). New captures + new seeds now reconcile.
+
+**MEASURED `_index` instrument_id-FORM × capture_status (6.52M rows, the reconcile target):**
+| form | captured | empty | expected_unatt |
+| --- | --- | --- | --- |
+| `canonical_0x` (`0x…`) | 259,708 | 0 | 0 |
+| `glued_venuechain_0x` (`UNISWAP_V3-ETH:POOL:0x…`) | 542,801 | 0 | 0 |
+| `glued_pair` (`…:POOL:WETH-DAI:500`, ALL instrument_type=POOL) | 0 | **463,607** | **1,312,445** |
+| `blank` (venue-aggregates + non-pool) | 124,530 | 3,098,254 | 0 |
+Honest_cov = captured/(cap+empty+failed+eu) = 1,005,848/6,519,518 = **15.43%**.
+
+**TWO remaining problems for the reconcile (Phase 4-DATA + Phase 2):**
+1. **1.78M `glued_pair` POOL phantom rows** (463k empty incl the 408k DELISTED + 1.31M expected_unattempted) are the
+   OLD pre-fix pair-name seeds — they never reconcile against the canonical-0x captured (the seeder fix stops producing
+   them GOING FORWARD, but the enumerator `--apply-write` writes per-VM SHARDS + APPENDS, does NOT supersede old rows).
+   → need a phantom-DELETE/supersede pass for the 1.78M glued_pair POOL rows (they're superseded by canonical captured +
+   canonical re-seed). dex_pool_state 703k + dex_pool_swaps 703k + position_data 369k.
+2. **TWO captured forms** (`canonical_0x` 259k bare + `glued_venuechain_0x` 542k) — the capture path is INCONSISTENT:
+   some writes stamp bare `pool_address.lower()`, some `build_instrument_id`'s `VENUE-CHAIN:POOL:0x…`. The MTDS writer fix
+   stamps bare (matches `_canonical_defi_id`); the `glued_venuechain_0x` form is from the data-file `instrument_id` column
+   (`build_instrument_id`) read by a rebuild path. These must converge to ONE form (bare `pool_address.lower()` per the
+   SSOT decision) — else the canonical re-seed matches only the bare-0x captured, leaving the 542k glued_venuechain_0x
+   captured as a parallel namespace. [Decide: re-key the 542k glued_venuechain_0x captured → bare 0x, OR confirm they're
+   distinct data_types not double-counting.]
+3. **Cause 2 — `lifecycle-catalogue-regen-defi` Cloud Run job ran ONCE** (observedGeneration=1 vs cefi=5/tradfi=4) → the
+   daily DeFi catalogue regen is NOT on schedule → stale `available_to` (the 2026-05-08 cliff on non-UNISWAP protocols).
+   Phase 2/3 infra: ensure the scheduler fires daily (terraform/Cloud Scheduler) + the snapshot writer keeps live pools.
+
+**RECONCILE PLAN (next):** (a) decide+unify the captured form (bare 0x); (b) re-run `enumerate_expected_universe
+--asset-group defi --enumerator-version v2 --catalog-path gs://instruments-store-defi-prd-…/prod/catalog.parquet
+--apply-write` (MANIFEST_PER_VM_SHARDS=true VM_NAME=…) → canonical-0x seeds; (c) phantom-DELETE the 1.78M glued_pair POOL
+rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lifecycle scheduler. ALL on real infra.
+
 ## Phase 1 — IS per-day instrument availability (TVL-qualifying, per venue×chain×data_type)
 
 - [ ] [CODE] P0. Per-day, enumerate every instrument (pool) meeting the **TVL criteria** for each venue × chain ×
       data_type (mirror CeFi's per-day instrument-availability snapshot). The TVL threshold is the MVP filter. Source =
       the per-venue subgraph/RPC pool universe ranked by TVL. — instruments-service
-- [ ] [CODE] P0. Canonical instrument_id per pool: `venue=UNISWAP_V3` + `chain=ARBITRUM` (separate), instrument_id
+- [x] ✅ [CODE] P0. Canonical instrument_id per pool: `venue=UNISWAP_V3` + `chain=ARBITRUM` (separate), instrument_id
       canonical (NOT glued `UNISWAPV3-ARBITRUM`). Align the catalogue's per-pool key to the canonical form the MTDS
-      writer will stamp so the manifest cells reconcile. — instruments-service, unified-api-contracts
+      writer stamps so the manifest cells reconcile. — instruments-service@e98a5f3 |
+      `enumerate_expected_universe._enumerate_v2_defi` now seeds POOL rows with canonical
+      `instrument_id = raw_symbol(pool_address).lower()` (NOT the glued `instrument_key` composite) + lowercase
+      `instrument_type` (matches the writer: measured live captured rows use lowercase `pool`/`lending`/`spot_asset`/`lst`,
+      seeds used UPPERCASE → 0 reconcile). venue/chain split already canonical (38cec01). `raw_symbol` threaded into
+      `InstrumentCatalogEntry` + `_catalog_from_dataframe`. New POOL test asserts canonical atoms; 115 v2 tests green; QG-green.
 
 ## Phase 2 — IS daily catalogue aggregation (available_from/to + liquidity windows)
 
@@ -152,10 +213,13 @@ CONVERGENCE POINTS (all → `pool_address.lower()` + lowercase instrument_type):
 
 ## Phase 4 — MTDS catalogue-filtered PER-POOL capture (the writer fix)
 
-- [ ] [CODE] P0. **Fix `dex_swaps_handler` + `dex_pools_handler` to record PER-POOL** captured rows — one
+- [x] ✅ [CODE] P0. **Fix `dex_swaps_handler` + `dex_pools_handler` to record PER-POOL** captured rows — one
       `record_captured(instrument_id=<canonical per-pool>, row_count=<that pool's count>, instrument_type="pool", …)`
-      per pool that returned data, matching the catalogue grain. Drop the blank-instrument aggregate. The per-pool swap
-      breakdown is already fetched (the subgraph returns per-pool); attribute it. — market-tick-data-service
+      per pool that returned data, matching the catalogue grain. Drop the blank-instrument aggregate. — market-tick-data-service@ec877b8 |
+      `_collect_protocol_chain` (both handlers) returns `{pool_id.lower(): count}` (shared `pool_count_map`); per-pool emit
+      via `record_swap_pool_map`/`record_swap_sentinel`; added `instrument_id` kwarg to `DefiManifestRecorder.record_captured`
+      → `ManifestWriter.add` (existing v9 column). Canonical pool atom = `pool_address.lower()` (matches captured side +
+      `_canonical_defi_id`, NOT the glued composite — SSOT decision journaled above). 172 tests green, QG-green, sizes compliant.
 - [ ] [CODE] P0. MTDS reads the IS catalogue as the MVP filter (the TVL-qualifying pools per day) — no extra filters.
       Capture the 4 DeFi data_types (dex_pool_swaps, dex_pool_state, + the 2 others) per-pool via VMs. — market-tick-data-service
 - [ ] [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured` (the data exists;
