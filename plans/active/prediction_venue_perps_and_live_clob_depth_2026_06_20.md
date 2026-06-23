@@ -332,7 +332,48 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
-### 2026-06-23 (autonomous) — P0 lifecycle ROOT CAUSE PROVEN + foundational IS fix shipped; remaining chain scoped
+### 2026-06-23 (autonomous, slot-continuation) — P0 independently re-confirmed (peer-owned, be45660 verified) + P1 fixture-parse REAL-SAMPLE spec captured
+
+Second autonomous session. Independently re-derived the P0 root cause (NULL `available_from/to` because the
+**CLOB-history enumeration path lacks gamma `createdAt`/`startDate`** while the **gamma-active path has them** —
+verified live: `gamma-api…/markets?active=true` returns `createdAt`/`startDate`/`endDateIso` populated, and
+`PolymarketGammaMarket.model_validate` correctly carries them) — **matches the peer's finding exactly** (adds
+confidence). The peer's IS code fix **`be45660`** (populate `available_from/to` directly+best-effort from gamma fields,
+preferring the strict lifecycle) is **on LDR + verified correct** (read `polymarket/parsing.py:107-128` — the
+`available_from = startDate|createdAt`, `available_to = closedTime|endDateIso`, lifecycle-preferred logic is present and
+the `InstrumentRecord(...)` return uses it). **P0 remaining = the peer's scoped 43a–43d chain** (IS CLOB-history gamma
+enrich · MTDS/UTL `was_instrument_alive`-bounded emission · UAC coverage-math exclude out-of-life reasons [fleet
+blast-radius] · mtds re-walk). **Left to the active peer to avoid file collision** (slot-cron FF-pull brought `be45660`
+in mid-session → a concurrent session is live in IS). My pivot: independent, non-colliding todos.
+
+**P1 fixture-level cross-venue pairing — REAL ticker/slug samples captured (de-risks the operator's "no guessing,
+per-league formats vary, false pairs dangerous" warning).** Verified live from
+`api.elections.kalshi.com/trade-api/v2/events?series_ticker=…&status=open`:
+
+- **MLB** `KXMLBGAME-{YY}{MON}{DD}{HHMM}{AWAY}{HOME}` — `KXMLBGAME-26JUN261910SEACLE` (title "Seattle vs Cleveland") =
+  26-JUN-26 19:10, away SEA, home CLE; 3-char team codes (`PHINYM`=PHI+NYM, `NYYBOS`=NYY+BOS). **Has HHMM.**
+- **NFL** `KXNFLGAME-{YY}{MON}{DD}{AWAY}{HOME}` — `KXNFLGAME-26SEP14DENKC` ("Denver vs Kansas City") = 26-SEP-14, away
+  DEN, home KC. **NO HHMM**; team codes are **VARIABLE 2–3 chars** (`DENKC`=DEN+KC, `DALNYG`=DAL+NYG, `WASPHI`=WAS+PHI)
+  → the 6-char-split assumption FAILS for NFL; must split by the **title** ("Away vs Home") + a Kalshi-abbrev→canonical
+  map, NOT a fixed offset.
+- **Tennis ATP/WTA** `KX{ATP,WTA}MATCH-{YY}{MON}{DD}{P1}{P2}` — `KXATPMATCH-26JUN24HUMBRO` ("Humbert vs Brooksby") =
+  player-pair, 3-char surname prefixes (HUM+BRO). Player-pair, not team.
+- **Season-futures are NOT per-game** — `KXNBA-27` ("2027 Pro Basketball Champion"), `KXNHL-27` ("…Stanley Cup Winner")
+  carry no fixture → MUST be excluded (only `KX{LEAGUE}GAME` / per-match tickers pair). The per-game NBA series is
+  `KXNBAGAME-*` (verify when in season).
+
+**Design (for the implementation tick):** the reliable fixture key is `(league, away_canonical, home_canonical, date)`
+derived from the **`title` "Away vs Home"** (deterministic) + the **`{YY}{MON}{DD}` date** from the ticker (NOT the
+brittle team-code split — NFL proves codes are variable-length). Then resolve to the canonical sport fixture via the
+sports domain registry (api-football fixture / odds-api event) → populate
+`CanonicalPredictionMarket.mapped_sport_event_id`
+
+- `PredictionMarketCrossVenueMapping` (schema EXISTS, `prediction_mapping.py:55-80`, unpopulated). Same-start-time guard
+  before pairing (MLB carries HHMM; NFL date-only → guard on date + team-pair only). Reuse
+  `_KALSHI_SPORTS_PREFIX_TO_LEAGUE` (`classifiers.py:603`) for league + the existing team-canonicalisation maps.
+  Polymarket side: parse the gamma slug/`event_title` ("Arsenal vs. Chelsea") via the existing
+  `_parse_vs_string`/`_extract_teams` (already in `polymarket/markets.py`) → same `(league, away, home, date)` key →
+  join on it. Build per-league (formats differ); validate against these REAL samples + a live fetch each run.
 
 Drove the P0 honest-coverage / NULL-lifecycle finding to a **proven root cause** (prior sessions had only a vague "raw
 gamma dump" hypothesis). Empirical findings (real GCS + live gamma API):
