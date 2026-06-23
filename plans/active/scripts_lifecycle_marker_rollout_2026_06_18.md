@@ -112,8 +112,10 @@ source:
       `grep -rL '^# Delete-when:' scripts/` is empty. —
       agent-orchestrator@337cb37 | 23 files updated (Delete-when: NA added) |
       grep -rL '^# Delete-when:' scripts/ → empty ✓ | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Epic:' scripts/ → empty ✓
-- [ ] [SCRIPT] P2. Stamp `unified-trading-system-ui/scripts/` (~17; 7 are 2026-03 run-once splitters = `oneoff`).
-      `Epic:` the UI epic. Target: **unified-trading-system-ui**.
+- [x] ✅ [SCRIPT] P2. Stamp `unified-trading-system-ui/scripts/` (~17; 7 are 2026-03 run-once splitters = `oneoff`).
+      `Epic:` the UI epic. Target: **unified-trading-system-ui**. —
+      unified-trading-system-ui@b7a1d4cd | 17 files stamped (7 oneoff splitters/codemods + 10 permanent) |
+      grep -rL '^# Lifecycle:' scripts/ {.py,.sh} → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `execution-service/scripts/` (~12; validation runbooks = `campaign`/`permanent`).
       `Epic: execution_master`. Target: **execution-service**.
 - [ ] [SCRIPT] P2. Stamp `ml-service/scripts/` (~12; per-family boilerplate = `permanent`).
