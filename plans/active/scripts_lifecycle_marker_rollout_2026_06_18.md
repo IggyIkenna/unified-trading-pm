@@ -122,8 +122,10 @@ source:
       `Epic: features_and_ml_master`. Target: **ml-service**. —
       ml-service@f782d5c | 12 files stamped (all permanent) |
       grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
-- [ ] [SCRIPT] P2. Stamp `ibkr-gateway-infra/scripts/` (~11; all clean `permanent` gateway/VM lifecycle).
-      `Epic: infrastructure_master`. Target: **ibkr-gateway-infra**.
+- [x] ✅ [SCRIPT] P2. Stamp `ibkr-gateway-infra/scripts/` (~11; all clean `permanent` gateway/VM lifecycle).
+      `Epic: infrastructure_master`. Target: **ibkr-gateway-infra**. —
+      ibkr-gateway-infra@3807913 | 11 files stamped (all permanent) |
+      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `market-data-processing-service/scripts/` (~10; 3 dated reconcilers = `oneoff`).
       `Epic: mtds_mdps_master`. Target: **market-data-processing-service**.
 - [ ] [SCRIPT] P2. Stamp `client-reporting-api/scripts/` (~9; `daily_update.py` recurring). `Epic:` the client-reporting
