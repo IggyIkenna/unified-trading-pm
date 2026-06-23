@@ -150,6 +150,21 @@ The actuator resolves **which launcher** to re-run from `data_pipeline_monitors/
 a silent miss). A prefix with no entry fails the guard test (every launchable VM-prefix must map or be explicitly `None`).
 Never fire-and-forget — the actuator verifies STARTED at T+60s (the no-fire-and-forget rule).
 
+> **PACKAGING — load-safe lazy import (2026-06-23 incident + fix; HARD RULE):** the actuator classes live in the
+> top-level `deployment-service/scripts/recovery/` dir, which is **NOT in the installed `deployment_service` wheel** — the
+> deployment-api Cloud Run image (where the monitors run) installs the package then DROPS the source, and `scripts/vm/`
+> launchers are absent too. A **module-level** `from scripts.recovery… import` in `escalation.py` therefore crashed
+> `data_pipeline_monitors/__init__.py` at load → **every monitor job (and the deadman) died at import** (caught 2026-06-23
+> by EXECUTING a job — a digest-only "deploy check" had missed it). Fix: `escalation.py` capability-checks
+> `_ACTUATORS_AVAILABLE = importlib.util.find_spec("scripts.recovery.relaunch_consolidator") is not None` at load (a
+> probe, not a try/except fallback) and loads the actuator via `importlib.import_module(...)` **inside** the dispatch fn
+> (a dynamic call, not an `import` statement — passes the no-imports-inside-functions gate AND ruff). When the actuators
+> are absent the `auto_recover` tier returns `status=UNAVAILABLE` → **degrades to `file_issue`, never a crash**. **OPEN
+> GAP (P1):** because `scripts/recovery` + `scripts/vm` are not in the image, the `auto_recover` tier currently CANNOT
+> actuate a relaunch from the Cloud Run monitors — it always degrades to `file_issue` there. To make self-heal actually
+> actuate, package the actuators (+ launchers) into the image (or run the monitors where `scripts/` exists). Tracked in
+> `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+
 When `auto_recover` is exhausted or N/A, the tier escalates: **`file_issue`** writes an _actionable_ plan-todo
 (frontmatter `assigned_vm` + `parent_epic` + a `- [ ] [CODE] P1` naming the target repo) → `PlanRegenLoop` → backlog →
 `AutoSpawn` picks up a fix agent; the **fast path** is a `repository_dispatch escalate-to-orchestrator`
