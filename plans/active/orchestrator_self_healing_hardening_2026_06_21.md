@@ -371,6 +371,18 @@ clears the flag on recovery.
       (`orchestrator_spawn_reliability_db_lock_2026_06_10`) — transient/non-fatal, the real fix is a careful follow-up.
       — agent-orchestrator@77f1873e
 
+### Incidental finding (2026-06-23) — S3 state-snapshot backup failing (region mismatch)
+
+- [ ] [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 are failing (resilience gap, pre-existing).** The
+      auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
+      `NameResolutionError: Failed to resolve 'uts-orchestrator-state-427895769566.s3.asia-northeast1.amazonaws.com'`
+      → `s3_uri: None`, and `aws s3 ls …/snapshots/planning/2026-06-23/` is EMPTY (no snapshots land). Root cause: the
+      cloud-agnostic config feeds the **GCP** region name `asia-northeast1` to the **AWS** S3 client, which needs
+      `ap-northeast-1` (AWS Tokyo) — so the endpoint hostname is invalid. The orchestrator runs fine on local state, so
+      this is non-urgent, BUT on a VM loss the state can't be recovered from S3. Likely fix: set
+      `AWS_REGION=ap-northeast-1` for the orchestrator (verify the bucket's region first via `aws s3api
+      get-bucket-location`) OR fix the per-cloud region mapping in the S3 client construction. Owner: ops/operator.
+
 ## Success criteria
 
 - An account disabled mid-run (poller 401/403) → every running agent on it (workers via `rotate_all_slots_off_account`,
