@@ -495,3 +495,11 @@ CEX venues) with the curated UNION of three tranches — KEEPS the gate, widens 
   `quickmerge --agent --files`.
 
 Note: the IS catalogue re-enumeration + the CSV consuming this universe is a DIFFERENT worker's lane (not touched here).
+
+
+### Full-universe fetch SUCCEEDED (2026-06-23, exec xqcxr, image :latest=7489ed1/0.43.0)
+18 cefi venues, **10,458 active instruments** written to instrument_availability/by_date/day=2026-06-23/. Per-venue
+active (old-cap → now): BINANCE-SPOT 82→763, BINANCE-FUTURES 56→677, BYBIT 310→640, KRAKEN-SPOT 75→894, OKX-SPOT 125→848,
+UPBIT 16→200, BITGET-FUTURES 677, BITGET-SPOT 625, KRAKEN-FUTURES 332, COINBASE-SPOT 429, DERIBIT 2983, OKX-SWAP 388,
+ASTER 484, HYPERLIQUID 178, BITFINEX-SPOT/FUTURES 81/70, DERIBIT-COMBO 117, OKX-FUTURES 72. Full universe per venue
+confirmed (binance hundreds). Next: build_instrument_catalogue.py rollup → prod/catalog.parquet → CSV export.
