@@ -2462,10 +2462,13 @@ the rest of history.
   the full-`_index`-overwrite in `migrate_sports_retired_types_2026_05_13.py` + `relabel_sports_no_provider_coverage_2026_06_21.py`
   with a `MANIFEST_PER_VM_SHARDS` per-VM shard the consolidator merges; then apply the 88,740 retired flip + verify
   before/after. (instruments-service)
-- [ ] [VERIFY] P0. **Proper alerting-e2e MONITOR for the ~25 live sports backfill VMs** (waves 15:00 + 15:35 UTC
+- [x] ✅ [VERIFY] P0. **Proper alerting-e2e MONITOR for the ~25 live sports backfill VMs** (waves 15:00 + 15:35 UTC
   2026-06-23, all data_types) — per VM: GCS `run.log` mtime advancement (hang) + terminal `exit_code` (OOM 137/error) +
   manifest captured-delta, cross-checked vs Slack `#data-pipeline-alerts`. Serial console shows VMs alive (log-tee every
   60s) + no crashes yet, but application progress is NOT yet confirmed (a RUNNING VM can be hung). (deployment-service)
+  — 2026-06-23T16:03Z: 23 VMs checked: 2 completed exit_code=0 (fixtures-153526, injuries-150123); 21 RUNNING all
+  confirmed active — log timestamps 15:56–16:01 UTC, manifest shard writes current (xg-153512 log tee lagged but
+  shard updated 16:02:57 confirming not hung); no exit_code=137 (OOM) on any VM. All progressing.
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
   backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 
