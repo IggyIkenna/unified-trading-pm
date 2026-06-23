@@ -2409,3 +2409,39 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
   (137→restart), hung (frozen mtime→investigate), or transient-failed (restart works). The self-deleting-VM +
   hung-process rules (CLAUDE.md §Background-task honesty) are the contract; verify the alert actually FIRES for each
   failure class before trusting "the VMs ran". (deployment-service + alerting-service)
+
+### Execution state + blockers (2026-06-23 — the migrations EXIST, partly run)
+
+The reclassify tooling already exists from this workstream — RUN/extend, don't rebuild:
+- ✅ **FIXED (bucket bug)** `instruments-service/scripts/migrate_sports_retired_types_2026_05_13.py` hardcoded
+  `instruments-store-sports-{pid}` (env-LESS, **STALE** bucket frozen 2026-06-08, 2.69M rows) → it was reclassifying a
+  DEAD bucket. The LIVE canonical manifest is env-short `-prd-` (4.55M rows, rewritten 12:54 today; `resolve_bucket_name`
+  returns it). Fixed to resolve via `resolve_bucket_name(cloud=gcp,kind=instruments-store,asset_group=sports)` + a
+  fail-loud guard requiring `DEPLOYMENT_ENV_SHORT`. **Fix is in the instruments-service working tree, ruff-clean, NOT yet
+  shipped** (blocked — see below). Dry-run on `-prd-` confirms **88,740 retired rows ready to flip → EXPECTED_DEPRECATED**
+  (TM_LEAGUES 75,929 + SFI_LEAGUES 12,769 + SFI_STANDINGS 42, all currently attempted_failed).
+- **`relabel_sports_no_provider_coverage_2026_06_21.py` dry-run = 0 to relabel** — the api_football out-of-scope cells
+  (INJURIES/STANDINGS/etc.) are ALREADY correctly `EXPECTED_NO_PROVIDER_COVERAGE` (the write-path handles them). That
+  slice is already honest; no migration needed for it.
+
+**BLOCKER 1 — apply-safety (pre-migration-drain rule):** BOTH migrations `--apply` by **full-overwriting the
+consolidated `_index`** (`blob.upload_from_file` / `to_parquet` of the whole frame, snapshot-first). A live-odds MTDS VM
+(`mtds-live-sports-odds-api-trades-20260622-230346`) is RUNNING + the consolidator is scheduled (rewrote `_index` 12:54
+today) → a full overwrite would race the consolidator and could DROP live rows added since read. Per CLAUDE.md
+pre-migration-drain, a full-index overwrite while VMs write is prohibited. **DECISION NEEDED:** (a) briefly drain/quiesce
+sports manifest writers + consolidate + apply + resume, OR (b) rework both migrations to write a consolidator-merged
+per-VM shard (the actually-safe pattern). The retired rows don't overlap the live-odds rows, but the overwrite is
+whole-index.
+- [ ] [SCRIPT] P1. **Make the reclassify migrations consolidator-safe** (per-VM-shard write merged by the consolidator,
+  OR an explicit drain-consolidate-apply-resume runbook) so retired→EXPECTED_DEPRECATED can apply without racing live
+  writers. THEN apply the 88,740-row retired flip + verify before/after on the live `-prd-` `_index`. (instruments-service)
+
+**BLOCKER 2 — foreign QG red blocks shipping the bucket fix:** `instruments-service` `quality-gates.sh` fails on
+**market-tick-data-service** adapter-contract-call regressions (`lending_indices_handler.py` 5<baseline 6;
+`websocket_runner.py` 8<baseline 11) — pre-existing, foreign to my edit. Blocks the QG sentinel → can't quickmerge the
+bucket fix until that mtds regression is restored (CLAUDE.md adapter-contract baseline; ref incident
+`lint_sweep_774602ea8_regression_audit_2026_05_20.md`).
+- [ ] [SCRIPT] P1. **mtds adapter-contract regression** — `lending_indices_handler.py` + `websocket_runner.py` lost
+  contract calls (classify_venue_error / record_* / ADAPTER_FETCH_FAILED) below baseline. Restore them (diagnose which
+  calls were dropped vs the baseline), then the instruments-service QG goes green + the sports bucket-fix ships.
+  (market-tick-data-service)
